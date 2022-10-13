@@ -21,14 +21,14 @@ class TGraphTimePainter extends ObjectPainter {
    /** @summary Decode drawing options */
    decodeOptions(opt) {
 
-      let d = new DrawOptions(opt || "REPEAT");
+      let d = new DrawOptions(opt || 'REPEAT');
 
       if (!this.options) this.options = {};
 
       Object.assign(this.options, {
-          once: d.check("ONCE"),
-          repeat: d.check("REPEAT"),
-          first: d.check("FIRST")
+          once: d.check('ONCE'),
+          repeat: d.check('REPEAT'),
+          first: d.check('FIRST')
       });
 
       this.storeDrawOpt(opt);
@@ -140,9 +140,9 @@ class TGraphTimePainter extends ObjectPainter {
       if (!gr.fFrame.fTitle && gr.fTitle)
          gr.fFrame.fTitle = gr.fTitle;
 
-      painter.selfid = "grtime" + internals.id_counter++; // use to identify primitives which should be clean
+      painter.selfid = 'grtime' + internals.id_counter++; // use to identify primitives which should be clean
 
-      return TH1Painter.draw(dom, gr.fFrame, "AXIS").then(() => {
+      return TH1Painter.draw(dom, gr.fFrame, 'AXIS').then(() => {
          painter.addToPadPrimitives();
          return painter.startDrawing();
       });

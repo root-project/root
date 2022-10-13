@@ -1001,7 +1001,7 @@ function Dispatch(_) {
 
 function parseTypenames$1(typenames, types) {
   return typenames.trim().split(/^|\s+/).map(function(t) {
-    var name = "", i = t.indexOf(".");
+    var name = "", i = t.indexOf('.');
     if (i >= 0) name = t.slice(i + 1), t = t.slice(0, i);
     if (t && !types.hasOwnProperty(t)) throw new Error("unknown type: " + t);
     return {type: t, name: name};
@@ -1382,7 +1382,7 @@ function selection_data(value, key) {
 // cause the data to change while iterating by using a key function, but please
 // don’t; we’d rather avoid a gratuitous copy.)
 function arraylike(data) {
-  return typeof data === "object" && "length" in data
+  return typeof data === 'object' && "length" in data
     ? data // Array, TypedArray, NodeList, array-like
     : Array.from(data); // Map, Set, iterable, string, or anything else
 }
@@ -1831,7 +1831,7 @@ function contextListener(listener) {
 
 function parseTypenames(typenames) {
   return typenames.trim().split(/^|\s+/).map(function(t) {
-    var name = "", i = t.indexOf(".");
+    var name = "", i = t.indexOf('.');
     if (i >= 0) name = t.slice(i + 1), t = t.slice(0, i);
     return {type: t, name: name};
   });
@@ -2457,7 +2457,7 @@ function intern_delete({_intern, _key}, value) {
 }
 
 function keyof(value) {
-  return value !== null && typeof value === "object" ? value.valueOf() : value;
+  return value !== null && typeof value === 'object' ? value.valueOf() : value;
 }
 
 function compareDefined(compare = ascending) {
@@ -2921,8 +2921,8 @@ function object(a, b) {
       c = {},
       k;
 
-  if (a === null || typeof a !== "object") a = {};
-  if (b === null || typeof b !== "object") b = {};
+  if (a === null || typeof a !== 'object') a = {};
+  if (b === null || typeof b !== 'object') b = {};
 
   for (k in b) {
     if (k in a) {
@@ -3361,7 +3361,7 @@ FormatSpecifier.prototype.toString = function() {
       + (this.zero ? "0" : "")
       + (this.width === undefined ? "" : Math.max(1, this.width | 0))
       + (this.comma ? "," : "")
-      + (this.precision === undefined ? "" : "." + Math.max(0, this.precision | 0))
+      + (this.precision === undefined ? "" : '.' + Math.max(0, this.precision | 0))
       + (this.trim ? "~" : "")
       + this.type;
 };
@@ -3370,7 +3370,7 @@ FormatSpecifier.prototype.toString = function() {
 function formatTrim(s) {
   out: for (var n = s.length, i = 1, i0 = -1, i1; i < n; ++i) {
     switch (s[i]) {
-      case ".": i0 = i1 = i; break;
+      case '.': i0 = i1 = i; break;
       case "0": if (i0 === 0) i0 = i; i1 = i; break;
       default: if (!+s[i]) break out; if (i0 > 0) i0 = 0; break;
     }
@@ -3389,7 +3389,7 @@ function formatPrefixAuto(x, p) {
       n = coefficient.length;
   return i === n ? coefficient
       : i > n ? coefficient + new Array(i - n + 1).join("0")
-      : i > 0 ? coefficient.slice(0, i) + "." + coefficient.slice(i)
+      : i > 0 ? coefficient.slice(0, i) + '.' + coefficient.slice(i)
       : "0." + new Array(1 - i).join("0") + formatDecimalParts(x, Math.max(0, p + i - 1))[0]; // less than 1y!
 }
 
@@ -3399,7 +3399,7 @@ function formatRounded(x, p) {
   var coefficient = d[0],
       exponent = d[1];
   return exponent < 0 ? "0." + new Array(-exponent).join("0") + coefficient
-      : coefficient.length > exponent + 1 ? coefficient.slice(0, exponent + 1) + "." + coefficient.slice(exponent + 1)
+      : coefficient.length > exponent + 1 ? coefficient.slice(0, exponent + 1) + '.' + coefficient.slice(exponent + 1)
       : coefficient + new Array(exponent - coefficient.length + 2).join("0");
 }
 
@@ -3430,7 +3430,7 @@ function formatLocale$1(locale) {
   var group = locale.grouping === undefined || locale.thousands === undefined ? identity$1 : formatGroup(map.call(locale.grouping, Number), locale.thousands + ""),
       currencyPrefix = locale.currency === undefined ? "" : locale.currency[0] + "",
       currencySuffix = locale.currency === undefined ? "" : locale.currency[1] + "",
-      decimal = locale.decimal === undefined ? "." : locale.decimal + "",
+      decimal = locale.decimal === undefined ? '.' : locale.decimal + "",
       numerals = locale.numerals === undefined ? identity$1 : formatNumerals(map.call(locale.numerals, String)),
       percent = locale.percent === undefined ? "%" : locale.percent + "",
       minus = locale.minus === undefined ? "\u2212" : locale.minus + "",
@@ -5848,8 +5848,8 @@ var frame = 0, // is an animation frame pending?
     clockLast = 0,
     clockNow = 0,
     clockSkew = 0,
-    clock = typeof performance === "object" && performance.now ? performance : Date,
-    setFrame = typeof window === "object" && window.requestAnimationFrame ? window.requestAnimationFrame.bind(window) : function(f) { setTimeout(f, 17); };
+    clock = typeof performance === 'object' && performance.now ? performance : Date,
+    setFrame = typeof window === 'object' && window.requestAnimationFrame ? window.requestAnimationFrame.bind(window) : function(f) { setTimeout(f, 17); };
 
 function now() {
   return clockNow || (setFrame(clearNow), clockNow = clock.now() + clockSkew);
@@ -6451,7 +6451,7 @@ function transition_merge(transition) {
 
 function start(name) {
   return (name + "").trim().split(/^|\s+/).every(function(t) {
-    var i = t.indexOf(".");
+    var i = t.indexOf('.');
     if (i >= 0) t = t.slice(0, i);
     return !t || t === "start";
   });

@@ -4,9 +4,9 @@ import { getColor, findColor } from './colors.mjs';
 
 
 const root_line_styles = [
-      "", "", "3,3", "1,2",
-      "3,4,1,4", "5,3,1,3", "5,3,1,3,1,3,1,3", "5,5",
-      "5,3,1,3,1,3", "20,5", "20,10,1,10", "1,3"];
+      '', '', '3,3', '1,2',
+      '3,4,1,4', '5,3,1,3', '5,3,1,3,1,3,1,3', '5,5',
+      '5,3,1,3,1,3', '20,5', '20,10,1,10', '1,3'];
 
 /**
   * @summary Handle for line attributes
@@ -27,7 +27,7 @@ class TAttLineHandler {
    /** @summary Set line attributes.
      * @param {object} args - specify attributes by different ways
      * @param {object} args.attr - TAttLine object with appropriate data members or
-     * @param {string} args.color - color in html like rgb(255,0,0) or "red" or "#ff0000"
+     * @param {string} args.color - color in html like rgb(255,0,0) or 'red' or '#ff0000'
      * @param {number} args.style - line style number
      * @param {number} args.width - line width */
    setArgs(args) {
@@ -109,12 +109,12 @@ class TAttLineHandler {
          selection.style('stroke', null)
                   .style('stroke-width', null)
                   .style('stroke-dasharray', null)
-                  .attr("rx", null).attr("ry", null);
+                  .attr('rx', null).attr('ry', null);
       else
          selection.style('stroke', this.color)
                   .style('stroke-width', this.width)
                   .style('stroke-dasharray', this.pattern)
-                  .attr("rx", this.rx || null).attr("ry", this.ry || null);
+                  .attr('rx', this.rx || null).attr('ry', this.ry || null);
    }
 
    /** @summary Change line attributes */
@@ -136,8 +136,8 @@ class TAttLineHandler {
    /** @summary Create sample element inside primitive SVG - used in context menu */
    createSample(svg, width, height, plain) {
       if (plain) svg = d3_select(svg);
-      svg.append("path")
-         .attr("d", `M0,${height/2}h${width}`)
+      svg.append('path')
+         .attr('d', `M0,${height/2}h${width}`)
          .call(this.func);
    }
 

@@ -47,12 +47,12 @@ class TH3Painter extends THistPainter {
       let histo = this.getHisto(), xaxis = histo.fXaxis, yaxis = histo.fYaxis, zaxis = histo.fZaxis,
           stat_sum0 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
           stat_sumz1 = 0, stat_sumx2 = 0, stat_sumy2 = 0, stat_sumz2 = 0,
-          i1 = this.getSelectIndex("x", "left"),
-          i2 = this.getSelectIndex("x", "right"),
-          j1 = this.getSelectIndex("y", "left"),
-          j2 = this.getSelectIndex("y", "right"),
-          k1 = this.getSelectIndex("z", "left"),
-          k2 = this.getSelectIndex("z", "right"),
+          i1 = this.getSelectIndex('x', 'left'),
+          i2 = this.getSelectIndex('x', 'right'),
+          j1 = this.getSelectIndex('y', 'left'),
+          j2 = this.getSelectIndex('y', 'right'),
+          k1 = this.getSelectIndex('z', 'left'),
+          k2 = this.getSelectIndex('z', 'right'),
           fp = this.getFramePainter(),
           res = { name: histo.fName, entries: 0, integral: 0, meanx: 0, meany: 0, meanz: 0, rmsx: 0, rmsy: 0, rmsz: 0 },
           xi, yi, zi, xx, xside, yy, yside, zz, zside, cont;
@@ -75,7 +75,7 @@ class TH3Painter extends THistPainter {
                cont = histo.getBinContent(xi, yi, zi);
                res.entries += cont;
 
-               if ((xside==1) && (yside==1) && (zside==1)) {
+               if ((xside == 1) && (yside == 1) && (zside == 1)) {
                   stat_sum0 += cont;
                   stat_sumx1 += xx * cont;
                   stat_sumy1 += yy * cont;
@@ -88,7 +88,7 @@ class TH3Painter extends THistPainter {
          }
       }
 
-      if ((histo.fTsumw > 0) && !fp.isAxisZoomed("x") && !fp.isAxisZoomed("y") && !fp.isAxisZoomed("z")) {
+      if ((histo.fTsumw > 0) && !fp.isAxisZoomed('x') && !fp.isAxisZoomed('y') && !fp.isAxisZoomed('z')) {
          stat_sum0  = histo.fTsumw;
          stat_sumx1 = histo.fTsumwx;
          stat_sumx2 = histo.fTsumwx2;
@@ -137,22 +137,22 @@ class TH3Painter extends THistPainter {
          stat.addText(data.name);
 
       if (print_entries > 0)
-         stat.addText("Entries = " + stat.format(data.entries,"entries"));
+         stat.addText('Entries = ' + stat.format(data.entries,'entries'));
 
       if (print_mean > 0) {
-         stat.addText("Mean x = " + stat.format(data.meanx));
-         stat.addText("Mean y = " + stat.format(data.meany));
-         stat.addText("Mean z = " + stat.format(data.meanz));
+         stat.addText('Mean x = ' + stat.format(data.meanx));
+         stat.addText('Mean y = ' + stat.format(data.meany));
+         stat.addText('Mean z = ' + stat.format(data.meanz));
       }
 
       if (print_rms > 0) {
-         stat.addText("Std Dev x = " + stat.format(data.rmsx));
-         stat.addText("Std Dev y = " + stat.format(data.rmsy));
-         stat.addText("Std Dev z = " + stat.format(data.rmsz));
+         stat.addText('Std Dev x = ' + stat.format(data.rmsx));
+         stat.addText('Std Dev y = ' + stat.format(data.rmsy));
+         stat.addText('Std Dev z = ' + stat.format(data.rmsz));
       }
 
       if (print_integral > 0) {
-         stat.addText("Integral = " + stat.format(data.integral,"entries"));
+         stat.addText('Integral = ' + stat.format(data.integral,'entries'));
       }
 
       if (dofit) stat.fillFunctionStat(this.findFunction('TF3'), dofit);
@@ -166,15 +166,15 @@ class TH3Painter extends THistPainter {
 
       lines.push(this.getObjectHint());
 
-      lines.push(`x = ${this.getAxisBinTip("x", histo.fXaxis, ix)}  xbin=${ix+1}`);
-      lines.push(`y = ${this.getAxisBinTip("y", histo.fYaxis, iy)}  ybin=${iy+1}`);
-      lines.push(`z = ${this.getAxisBinTip("z", histo.fZaxis, iz)}  zbin=${iz+1}`);
+      lines.push(`x = ${this.getAxisBinTip('x', histo.fXaxis, ix)}  xbin=${ix+1}`);
+      lines.push(`y = ${this.getAxisBinTip('y', histo.fYaxis, iy)}  ybin=${iy+1}`);
+      lines.push(`z = ${this.getAxisBinTip('z', histo.fZaxis, iz)}  zbin=${iz+1}`);
 
       let binz = histo.getBinContent(ix+1, iy+1, iz+1);
       if (binz === Math.round(binz))
-         lines.push("entries = " + binz);
+         lines.push('entries = ' + binz);
       else
-         lines.push("entries = " + floatToString(binz, gStyle.fStatFormat));
+         lines.push('entries = ' + floatToString(binz, gStyle.fStatFormat));
 
       return lines;
    }
@@ -186,12 +186,12 @@ class TH3Painter extends THistPainter {
 
       let histo = this.getObject(),
           main = this.getFramePainter(),
-          i1 = this.getSelectIndex("x", "left", 0.5),
-          i2 = this.getSelectIndex("x", "right", 0),
-          j1 = this.getSelectIndex("y", "left", 0.5),
-          j2 = this.getSelectIndex("y", "right", 0),
-          k1 = this.getSelectIndex("z", "left", 0.5),
-          k2 = this.getSelectIndex("z", "right", 0),
+          i1 = this.getSelectIndex('x', 'left', 0.5),
+          i2 = this.getSelectIndex('x', 'right', 0),
+          j1 = this.getSelectIndex('y', 'left', 0.5),
+          j2 = this.getSelectIndex('y', 'right', 0),
+          k1 = this.getSelectIndex('z', 'left', 0.5),
+          k2 = this.getSelectIndex('z', 'right', 0),
           i, j, k, bin_content;
 
       if ((i2 <= i1) || (j2 <= j1) || (k2 <= k1))
@@ -301,7 +301,7 @@ class TH3Painter extends THistPainter {
           tipscale = 0.5;
 
       if (!box_option && this.options.Lego)
-         box_option = (this.options.Lego===1) ? 10 : this.options.Lego;
+         box_option = (this.options.Lego === 1) ? 10 : this.options.Lego;
 
       if ((this.options.GLBox === 11) || (this.options.GLBox === 12)) {
 
@@ -347,27 +347,36 @@ class TH3Painter extends THistPainter {
             single_bin_verts[k*3+1] = vert.y-0.5;
             single_bin_verts[k*3+2] = vert.z-0.5;
 
-            if (k%6===0) nn+=3;
+            if (k%6 === 0) nn+=3;
             single_bin_norms[k*3]   = normals[nn];
             single_bin_norms[k*3+1] = normals[nn+1];
             single_bin_norms[k*3+2] = normals[nn+2];
          }
          use_helper = true;
 
-         if (box_option===12) { use_colors = true; } else
-         if (box_option===13) { use_colors = true; use_helper = false; }  else
-         if (this.options.GLColor) { use_colors = true; use_opacity = 0.5; use_scale = false; use_helper = false; use_lambert = true; }
+         if (box_option === 12) {
+            use_colors = true;
+         } else if (box_option === 13) {
+            use_colors = true;
+            use_helper = false;
+         }  else if (this.options.GLColor) {
+            use_colors = true;
+            use_opacity = 0.5;
+            use_scale = false;
+            use_helper = false;
+            use_lambert = true;
+         }
       }
 
       if (use_scale)
          use_scale = (this.gminbin || this.gmaxbin) ? 1 / Math.max(Math.abs(this.gminbin), Math.abs(this.gmaxbin)) : 1;
 
-      let i1 = this.getSelectIndex("x", "left", 0.5),
-          i2 = this.getSelectIndex("x", "right", 0),
-          j1 = this.getSelectIndex("y", "left", 0.5),
-          j2 = this.getSelectIndex("y", "right", 0),
-          k1 = this.getSelectIndex("z", "left", 0.5),
-          k2 = this.getSelectIndex("z", "right", 0);
+      let i1 = this.getSelectIndex('x', 'left', 0.5),
+          i2 = this.getSelectIndex('x', 'right', 0),
+          j1 = this.getSelectIndex('y', 'left', 0.5),
+          j2 = this.getSelectIndex('y', 'right', 0),
+          k1 = this.getSelectIndex('z', 'left', 0.5),
+          k2 = this.getSelectIndex('z', 'right', 0);
 
       if ((i2 <= i1) || (j2 <= j1) || (k2 <= k1))
          return false;
@@ -383,7 +392,7 @@ class TH3Painter extends THistPainter {
          for (j = j1; j < j2; ++j) {
             for (k = k1; k < k2; ++k) {
                bin_content = histo.getBinContent(i+1, j+1, k+1);
-               if (!this.options.GLColor && ((bin_content===0) || (bin_content < this.gminbin))) continue;
+               if (!this.options.GLColor && ((bin_content === 0) || (bin_content < this.gminbin))) continue;
                wei = use_scale ? Math.pow(Math.abs(bin_content*use_scale), 0.3333) : 1;
                if (wei < 1e-3) continue; // do not draw empty or very small bins
 
@@ -399,7 +408,7 @@ class TH3Painter extends THistPainter {
                   }
                   cols_size[colindx]+=1;
                } else {
-                  console.error('not found color for', bin_content);
+                  console.error(`not found color for value = ${bin_content}`);
                }
             }
          }
@@ -451,7 +460,7 @@ class TH3Painter extends THistPainter {
             biny = histo.fYaxis.GetBinCenter(j+1); gry = main.gry(biny);
             for (k = k1; k < k2; ++k) {
                bin_content = histo.getBinContent(i+1, j+1, k+1);
-               if (!this.options.GLColor && ((bin_content===0) || (bin_content < this.gminbin))) continue;
+               if (!this.options.GLColor && ((bin_content === 0) || (bin_content < this.gminbin))) continue;
 
                wei = use_scale ? Math.pow(Math.abs(bin_content*use_scale), 0.3333) : 1;
                if (wei < 1e-3) continue; // do not show very small bins
@@ -544,7 +553,7 @@ class TH3Painter extends THistPainter {
                return null;
             }
             let indx = Math.floor(intersect.faceIndex / this.bins_faces);
-            if ((indx<0) || (indx >= this.bins.length)) return null;
+            if ((indx < 0) || (indx >= this.bins.length)) return null;
 
             let p = this.painter,
                 histo = p.getHisto(),
@@ -592,7 +601,7 @@ class TH3Painter extends THistPainter {
           histo = this.getHisto(),
           pr = Promise.resolve(true);
 
-      if (reason == "resize") {
+      if (reason == 'resize') {
 
          if (main.resize3D()) main.render3D();
 
@@ -618,27 +627,27 @@ class TH3Painter extends THistPainter {
       let pp = this.getPadPainter();
       if (!pp) return;
 
-      pp.addPadButton("auto_zoom", 'Unzoom all axes', 'ToggleZoom', "Ctrl *");
+      pp.addPadButton('auto_zoom', 'Unzoom all axes', 'ToggleZoom', 'Ctrl *');
       if (this.draw_content)
-         pp.addPadButton("statbox", 'Toggle stat box', "ToggleStatBox");
+         pp.addPadButton('statbox', 'Toggle stat box', 'ToggleStatBox');
       pp.showPadButtons();
    }
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
    canZoomInside(axis,min,max) {
       let obj = this.getHisto();
-      if (obj) obj = obj["f"+axis.toUpperCase()+"axis"];
+      if (obj) obj = obj['f'+axis.toUpperCase()+'axis'];
       return !obj || (obj.FindBin(max,0.5) - obj.FindBin(min,0) > 1);
    }
 
    /** @summary Perform automatic zoom inside non-zero region of histogram */
    autoZoom() {
-      let i1 = this.getSelectIndex("x", "left"),
-          i2 = this.getSelectIndex("x", "right"),
-          j1 = this.getSelectIndex("y", "left"),
-          j2 = this.getSelectIndex("y", "right"),
-          k1 = this.getSelectIndex("z", "left"),
-          k2 = this.getSelectIndex("z", "right"),
+      let i1 = this.getSelectIndex('x', 'left'),
+          i2 = this.getSelectIndex('x', 'right'),
+          j1 = this.getSelectIndex('y', 'left'),
+          j2 = this.getSelectIndex('y', 'right'),
+          k1 = this.getSelectIndex('z', 'left'),
+          k2 = this.getSelectIndex('z', 'right'),
           i,j,k, histo = this.getObject();
 
       if ((i1 === i2) || (j1 === j2) || (k1 === k2)) return;
@@ -699,13 +708,13 @@ class TH3Painter extends THistPainter {
 
       let opts = this.getSupportedDrawOptions();
 
-      menu.addDrawMenu("Draw with", opts, arg => {
-         if (arg==='inspect')
+      menu.addDrawMenu('Draw with', opts, arg => {
+         if (arg === 'inspect')
             return this.showInspector();
 
          this.decodeOptions(arg);
 
-         this.interactiveRedraw(true, "drawopt");
+         this.interactiveRedraw(true, 'drawopt');
       });
    }
 
@@ -715,7 +724,7 @@ class TH3Painter extends THistPainter {
       let painter = new TH3Painter(dom, histo);
       painter.mode3d = true;
 
-      return ensureTCanvas(painter, "3d").then(() => {
+      return ensureTCanvas(painter, '3d').then(() => {
          painter.setAsMainPainter();
          painter.decodeOptions(opt);
          painter.checkPadRange();
@@ -724,7 +733,7 @@ class TH3Painter extends THistPainter {
       }).then(() => {
          let stats = painter.createStat(); // only when required
          if (stats)
-            return TPavePainter.draw(dom, stats, "");
+            return TPavePainter.draw(dom, stats, '');
       }).then(() => {
          painter.fillToolbar();
          return painter;
