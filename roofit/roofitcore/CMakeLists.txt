@@ -202,7 +202,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooSetProxy.h
     RooSharedProperties.h
     RooSimGenContext.h
-    RooSimPdfBuilder.h
     RooSimSplitGenContext.h
     RooSimultaneous.h
     RooSimWSTool.h
@@ -435,7 +434,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooSentinel.cxx
     src/RooSharedProperties.cxx
     src/RooSimGenContext.cxx
-    src/RooSimPdfBuilder.cxx
     src/RooSimSplitGenContext.cxx
     src/RooSimultaneous.cxx
     src/RooSimWSTool.cxx

@@ -269,7 +269,6 @@
            _pdfNSetList.emplace_back(nset);                                       \
          }                                                                        \
          }";
-#pragma link C++ class RooSimPdfBuilder+ ;
 #pragma link C++ class RooMCStudy+ ;
 #pragma link C++ class RooMsgService+ ;
 #pragma link C++ class RooMsgService::StreamConfig+ ;

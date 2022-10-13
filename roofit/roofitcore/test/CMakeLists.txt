@@ -17,7 +17,6 @@ ROOT_ADD_GTEST(testRooDataHist testRooDataHist.cxx LIBRARIES RooFitCore
                    ${CMAKE_CURRENT_SOURCE_DIR}/dataHistv5_ref.root
                    ${CMAKE_CURRENT_SOURCE_DIR}/dataHistv6_ref.root)
 ROOT_ADD_GTEST(testRooBinSamplingPdf testRooBinSamplingPdf.cxx LIBRARIES RooFitCore)
-ROOT_ADD_GTEST(testRooSimPdfBuilder testRooSimPdfBuilder.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooWrapperPdf testRooWrapperPdf.cxx LIBRARIES Gpad RooFitCore)
 ROOT_ADD_GTEST(testGenericPdf testGenericPdf.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooAbsPdf testRooAbsPdf.cxx LIBRARIES RooFitCore RooFit)
