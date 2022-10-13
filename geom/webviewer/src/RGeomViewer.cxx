@@ -34,7 +34,7 @@ using namespace ROOT::Experimental;
 RGeomViewer::RGeomViewer(TGeoManager *mgr, const std::string &volname)
 {
    fWebWindow = RWebWindow::Create();
-   fWebWindow->SetDefaultPage("file:rootui5sys/eve7/geom.html");
+   fWebWindow->SetDefaultPage("file:rootui5sys/geom/index.html");
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
