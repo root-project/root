@@ -9,15 +9,15 @@ function proivdeEvalPar(obj) {
 
    obj._math = jsroot_math;
 
-   let _func = obj.fTitle, isformula = false, pprefix = "[";
-   if (_func === "gaus") _func = "gaus(0)";
-   if (obj.fFormula && typeof obj.fFormula.fFormula == "string") {
-     if (obj.fFormula.fFormula.indexOf("[](double*x,double*p)")==0) {
-        isformula = true; pprefix = "p[";
+   let _func = obj.fTitle, isformula = false, pprefix = '[';
+   if (_func === 'gaus') _func = 'gaus(0)';
+   if (obj.fFormula && typeof obj.fFormula.fFormula == 'string') {
+     if (obj.fFormula.fFormula.indexOf('[](double*x,double*p)') == 0) {
+        isformula = true; pprefix = 'p[';
         _func = obj.fFormula.fFormula.slice(21);
      } else {
         _func = obj.fFormula.fFormula;
-        pprefix = "[p";
+        pprefix = '[p';
      }
      if (obj.fFormula.fClingParameters && obj.fFormula.fParams)
         obj.fFormula.fParams.forEach(pair => {
@@ -47,7 +47,7 @@ function proivdeEvalPar(obj) {
                .replace(/ROOT::Math::/g, 'this._math.');
 
   for (let i = 0; i < obj.fNpar; ++i)
-    _func = _func.replaceAll(pprefix + i + "]", `(${obj.GetParValue(i)})`);
+    _func = _func.replaceAll(pprefix + i + ']', `(${obj.GetParValue(i)})`);
 
   _func = _func.replace(/\b(sin)\b/gi, 'Math.sin')
                .replace(/\b(cos)\b/gi, 'Math.cos')
@@ -59,17 +59,17 @@ function proivdeEvalPar(obj) {
      _func = _func.replaceAll(`x^${n}`, `Math.pow(x,${n})`);
 
   if (isformula) {
-     _func = _func.replace(/x\[0\]/g,"x");
-     if (obj._typename === "TF2") {
-        _func = _func.replace(/x\[1\]/g,"y");
-        obj.evalPar = new Function("x", "y", _func).bind(obj);
+     _func = _func.replace(/x\[0\]/g,'x');
+     if (obj._typename === 'TF2') {
+        _func = _func.replace(/x\[1\]/g,'y');
+        obj.evalPar = new Function('x', 'y', _func).bind(obj);
      } else {
-        obj.evalPar = new Function("x", _func).bind(obj);
+        obj.evalPar = new Function('x', _func).bind(obj);
      }
-  } else if (obj._typename === "TF2")
-     obj.evalPar = new Function("x", "y", "return " + _func).bind(obj);
+  } else if (obj._typename === 'TF2')
+     obj.evalPar = new Function('x', 'y', 'return ' + _func).bind(obj);
   else
-     obj.evalPar = new Function("x", "return " + _func).bind(obj);
+     obj.evalPar = new Function('x', 'return ' + _func).bind(obj);
 }
 
 /**
@@ -179,10 +179,10 @@ class TF1Painter extends ObjectPainter {
          if (ymin < 0.0) ymin *= (1 + gStyle.fHistTopMargin);
       }
 
-      let histo = create("TH1I"),
+      let histo = create('TH1I'),
           tf1 = this.getObject();
 
-      histo.fName = tf1.fName + "_hist";
+      histo.fName = tf1.fName + '_hist';
       histo.fTitle = tf1.fTitle;
 
       histo.fXaxis.fXmin = xmin;
@@ -215,7 +215,7 @@ class TF1Painter extends ObjectPainter {
 
       if (cleanup) {
          if (this.draw_g)
-            this.draw_g.select(".tooltip_bin").remove();
+            this.draw_g.select('.tooltip_bin').remove();
          return null;
       }
 
@@ -229,14 +229,14 @@ class TF1Painter extends ObjectPainter {
 
       bin = this.bins[best];
 
-      let gbin = this.draw_g.select(".tooltip_bin"),
+      let gbin = this.draw_g.select('.tooltip_bin'),
           radius = this.lineatt.width + 3;
 
       if (gbin.empty())
-         gbin = this.draw_g.append("svg:circle")
-                           .attr("class","tooltip_bin")
-                           .style("pointer-events","none")
-                           .attr("r", radius)
+         gbin = this.draw_g.append('svg:circle')
+                           .attr('class', 'tooltip_bin')
+                           .style('pointer-events', 'none')
+                           .attr('r', radius)
                            .call(this.lineatt.func)
                            .call(this.fillatt.func);
 
@@ -249,14 +249,14 @@ class TF1Painter extends ObjectPainter {
                   lines: [],
                   exact: (Math.abs(bin.grx - pnt.x) < radius) && (Math.abs(bin.gry - pnt.y) < radius) };
 
-      res.changed = gbin.property("current_bin") !== best;
+      res.changed = gbin.property('current_bin') !== best;
       res.menu = res.exact;
       res.menu_dist = Math.sqrt((bin.grx - pnt.x)**2 + (bin.gry - pnt.y)**2);
 
       if (res.changed)
-         gbin.attr("cx", bin.grx)
-             .attr("cy", bin.gry)
-             .property("current_bin", best);
+         gbin.attr('cx', bin.grx)
+             .attr('cy', bin.gry)
+             .property('current_bin', best);
 
       let name = this.getObjectHint();
       if (name) res.lines.push(name);
@@ -264,7 +264,7 @@ class TF1Painter extends ObjectPainter {
       let pmain = this.getFramePainter(),
           funcs = pmain?.getGrFuncs(this.second_x, this.second_y);
       if (funcs)
-         res.lines.push(`x = ${funcs.axisAsText("x",bin.x)} y = ${funcs.axisAsText("y",bin.y)}`);
+         res.lines.push(`x = ${funcs.axisAsText('x',bin.x)} y = ${funcs.axisAsText('y',bin.y)}`);
 
       return res;
    }
@@ -305,26 +305,26 @@ class TF1Painter extends ObjectPainter {
             if ((h0 > h) || (h0 < 0)) h0 = h;
          }
 
-         let path = buildSvgPath("bezier", this.bins, h0, 2);
+         let path = buildSvgPath('bezier', this.bins, h0, 2);
 
          if (!this.lineatt.empty())
-            this.draw_g.append("svg:path")
-                .attr("class", "line")
-                .attr("d", path.path)
-                .style("fill", "none")
+            this.draw_g.append('svg:path')
+                .attr('class', 'line')
+                .attr('d', path.path)
+                .style('fill', 'none')
                 .call(this.lineatt.func);
 
          if (!this.fillatt.empty())
-            this.draw_g.append("svg:path")
-                .attr("class", "area")
-                .attr("d", path.path + path.close)
+            this.draw_g.append('svg:path')
+                .attr('class', 'area')
+                .attr('d', path.path + path.close)
                 .call(this.fillatt.func);
       }
    }
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
    canZoomInside(axis,min,max) {
-      if (axis !== "x") return false;
+      if (axis !== 'x') return false;
 
       let tf1 = this.getObject();
 
@@ -347,12 +347,12 @@ class TF1Painter extends ObjectPainter {
       let painter = new TF1Painter(dom, tf1, opt),
           d = new DrawOptions(opt),
           has_main = !!painter.getMainPainter(),
-          aopt = "AXIS";
+          aopt = 'AXIS';
       d.check('SAME'); // just ignore same
-      if (d.check('X+')) { aopt += "X+"; painter.second_x = has_main; }
-      if (d.check('Y+')) { aopt += "Y+"; painter.second_y = has_main; }
-      if (d.check('RX')) aopt += "RX";
-      if (d.check('RY')) aopt += "RY";
+      if (d.check('X+')) { aopt += 'X+'; painter.second_x = has_main; }
+      if (d.check('Y+')) { aopt += 'Y+'; painter.second_y = has_main; }
+      if (d.check('RX')) aopt += 'RX';
+      if (d.check('RY')) aopt += 'RY';
 
       proivdeEvalPar(tf1);
 

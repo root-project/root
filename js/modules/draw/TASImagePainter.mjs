@@ -16,7 +16,7 @@ class TASImagePainter extends ObjectPainter {
    decodeOptions(opt) {
       this.options = { Zscale: false };
 
-      if (opt && (opt.indexOf("z") >= 0)) this.options.Zscale = true;
+      if (opt && (opt.indexOf('z') >= 0)) this.options.Zscale = true;
    }
 
    /** @summary Create RGBA buffers */
@@ -57,7 +57,7 @@ class TASImagePainter extends ObjectPainter {
          max = Math.max(v, max);
       }
 
-      // does not work properly in Node.js, causes "Maximum call stack size exceeded" error
+      // does not work properly in Node.js, causes 'Maximum call stack size exceeded' error
       // min = Math.min.apply(null, obj.fImgBuf),
       // max = Math.max.apply(null, obj.fImgBuf);
 
@@ -67,9 +67,9 @@ class TASImagePainter extends ObjectPainter {
          rgba: this.rgba,
          getLevels() { return this.arr; },
          getPaletteColor(pal, zval) {
-            if (!this.arr || !this.rgba) return "white";
+            if (!this.arr || !this.rgba) return 'white';
             let indx = Math.round((zval - this.arr[0]) / (this.arr[this.arr.length-1] - this.arr[0]) * (this.rgba.length-4)/4) * 4;
-            return "#" + toHex(this.rgba[indx],1) + toHex(this.rgba[indx+1],1) + toHex(this.rgba[indx+2],1) + toHex(this.rgba[indx+3],1);
+            return '#' + toHex(this.rgba[indx],1) + toHex(this.rgba[indx+1],1) + toHex(this.rgba[indx+2],1) + toHex(this.rgba[indx+3],1);
          }
       };
       for (let k = 0; k < 200; k++)
@@ -125,15 +125,15 @@ class TASImagePainter extends ObjectPainter {
 
    /** @summary Produce data url from png data */
    async makeUrlFromPngBuf(obj) {
-      let buf = obj.fPngBuf, pngbuf = "";
+      let buf = obj.fPngBuf, pngbuf = '';
 
-      if (typeof buf == "string")
+      if (typeof buf == 'string')
          pngbuf = buf;
       else
          for (let k = 0; k < buf.length; ++k)
             pngbuf += String.fromCharCode(buf[k] < 0 ? 256 + buf[k] : buf[k]);
 
-      return { url: "data:image/png;base64," + btoa_func(pngbuf), constRatio: true };
+      return { url: 'data:image/png;base64,' + btoa_func(pngbuf), constRatio: true };
    }
 
    /** @summary Draw image */
@@ -151,7 +151,7 @@ class TASImagePainter extends ObjectPainter {
             obj.fImageCompression = obj._blob[2];
             obj.fConstRatio = obj._blob[3];
             obj.fPalette = {
-                _typename: "TImagePalette",
+                _typename: 'TImagePalette',
                 fUniqueID: obj._blob[4],
                 fBits: obj._blob[5],
                 fNumPoints: obj._blob[6],
@@ -168,7 +168,7 @@ class TASImagePainter extends ObjectPainter {
 
             if ((obj.fWidth * obj.fHeight != obj.fImgBuf.length) ||
                   (obj.fPalette.fNumPoints != obj.fPalette.fPoints.length)) {
-               console.error('TASImage _blob decoding error', obj.fWidth * obj.fHeight, '!=', obj.fImgBuf.length, obj.fPalette.fNumPoints, "!=", obj.fPalette.fPoints.length);
+               console.error(`TASImage _blob decoding error ${obj.fWidth * obj.fHeight} != ${obj.fImgBuf.length} ${obj.fPalette.fNumPoints} != ${obj.fPalette.fPoints.length}`);
                delete obj.fImgBuf;
                delete obj.fPalette;
             }
@@ -200,17 +200,17 @@ class TASImagePainter extends ObjectPainter {
 
          if (res.url)
             this.createG(fp ? true : false)
-                .append("image")
-                .attr("href", res.url)
-                .attr("width", rect.width)
-                .attr("height", rect.height)
-                .attr("preserveAspectRatio", res.constRatio ? null : "none");
+                .append('image')
+                .attr('href', res.url)
+                .attr('width', rect.width)
+                .attr('height', rect.height)
+                .attr('preserveAspectRatio', res.constRatio ? null : 'none');
 
          if (!res.url || !this.isMainPainter() || !res.is_buf || !fp)
             return this;
 
          return this.drawColorPalette(this.options.Zscale, true).then(() => {
-            fp.setAxesRanges(create("TAxis"), 0, 1, create("TAxis"), 0, 1, null, 0, 0);
+            fp.setAxesRanges(create('TAxis'), 0, 1, create('TAxis'), 0, 1, null, 0, 0);
             fp.createXY({ ndim: 2, check_pad_range: false });
             return fp.addInteractivity();
          })
@@ -224,9 +224,9 @@ class TASImagePainter extends ObjectPainter {
       if (!obj?.fImgBuf)
          return false;
 
-      if ((axis == "x") && ((max - min) * obj.fWidth > 3)) return true;
+      if ((axis == 'x') && ((max - min) * obj.fWidth > 3)) return true;
 
-      if ((axis == "y") && ((max - min) * obj.fHeight > 3)) return true;
+      if ((axis == 'y') && ((max - min) * obj.fHeight > 3)) return true;
 
       return false;
    }
@@ -241,10 +241,10 @@ class TASImagePainter extends ObjectPainter {
       if (!this.draw_palette) {
          let pal = create('TPave');
 
-         Object.assign(pal, { _typename: "TPaletteAxis", fName: "TPave", fH: null, fAxis: create('TGaxis'),
+         Object.assign(pal, { _typename: 'TPaletteAxis', fName: 'TPave', fH: null, fAxis: create('TGaxis'),
                                fX1NDC: 0.91, fX2NDC: 0.95, fY1NDC: 0.1, fY2NDC: 0.9, fInit: 1 } );
 
-         pal.fAxis.fChopt = "+";
+         pal.fAxis.fChopt = '+';
 
          this.draw_palette = pal;
          this.fPalette = true; // to emulate behaviour of hist painter
@@ -273,7 +273,7 @@ class TASImagePainter extends ObjectPainter {
 
       if (pal_painter) {
          pal_painter.Enabled = true;
-         return pal_painter.drawPave("");
+         return pal_painter.drawPave('');
       }
 
 
@@ -306,11 +306,11 @@ class TASImagePainter extends ObjectPainter {
 
    /** @summary Redraw image */
    redraw(reason) {
-      let img = this.draw_g ? this.draw_g.select("image") : null,
+      let img = this.draw_g ? this.draw_g.select('image') : null,
           fp = this.getFramePainter();
 
-      if (img && !img.empty() && (reason !== "zoom") && fp) {
-         img.attr("width", fp.getFrameWidth()).attr("height", fp.getFrameHeight());
+      if (img && !img.empty() && (reason !== 'zoom') && fp) {
+         img.attr('width', fp.getFrameWidth()).attr('height', fp.getFrameHeight());
       } else {
          return this.drawImage();
       }
@@ -321,7 +321,7 @@ class TASImagePainter extends ObjectPainter {
       if (!this.isMainPainter()) return false;
 
       switch(funcname) {
-         case "ToggleColorZ": this.toggleColz(); break;
+         case 'ToggleColorZ': this.toggleColz(); break;
          default: return false;
       }
 
@@ -332,7 +332,7 @@ class TASImagePainter extends ObjectPainter {
    fillToolbar() {
       let pp = this.getPadPainter(), obj = this.getObject();
       if (pp && obj?.fPalette) {
-         pp.addPadButton("th2colorz", "Toggle color palette", "ToggleColorZ");
+         pp.addPadButton('th2colorz', 'Toggle color palette', 'ToggleColorZ');
          pp.showPadButtons();
       }
    }

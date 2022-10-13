@@ -32,25 +32,25 @@ const _ENTIRE_SCENE = 0, _BLOOM_SCENE = 1;
   * @private */
 function buildOverlapVolume(overlap) {
 
-   let vol = create("TGeoVolume");
+   let vol = create('TGeoVolume');
 
    setGeoBit(vol, geoBITS.kVisDaughters, true);
    vol.$geoh = true; // workaround, let know browser that we are in volumes hierarchy
-   vol.fName = "";
+   vol.fName = '';
 
-   let node1 = create("TGeoNodeMatrix");
-   node1.fName = overlap.fVolume1.fName || "Overlap1";
+   let node1 = create('TGeoNodeMatrix');
+   node1.fName = overlap.fVolume1.fName || 'Overlap1';
    node1.fMatrix = overlap.fMatrix1;
    node1.fVolume = overlap.fVolume1;
    // node1.fVolume.fLineColor = 2; // color assigned with _splitColors
 
-   let node2 = create("TGeoNodeMatrix");
-   node2.fName = overlap.fVolume2.fName || "Overlap2";
+   let node2 = create('TGeoNodeMatrix');
+   node2.fName = overlap.fVolume2.fName || 'Overlap2';
    node2.fMatrix = overlap.fMatrix2;
    node2.fVolume = overlap.fVolume2;
    // node2.fVolume.fLineColor = 3;  // color assigned with _splitColors
 
-   vol.fNodes = create("TList");
+   vol.fNodes = create('TList');
    vol.fNodes.Add(node1);
    vol.fNodes.Add(node2);
 
@@ -66,39 +66,39 @@ function buildCompositeVolume(comp, maxlvl, side) {
    if (maxlvl === undefined) maxlvl = 1;
    if (!side) {
       $comp_col_cnt = 0;
-      side = "";
+      side = '';
    }
 
-   let vol = create("TGeoVolume");
+   let vol = create('TGeoVolume');
    setGeoBit(vol, geoBITS.kVisThis, true);
    setGeoBit(vol, geoBITS.kVisDaughters, true);
 
-   if ((side && (comp._typename!=='TGeoCompositeShape')) || (maxlvl<=0)) {
+   if ((side && (comp._typename !== 'TGeoCompositeShape')) || (maxlvl <= 0)) {
       vol.fName = side;
       vol.fLineColor = ($comp_col_cnt++ % 8) + 2;
       vol.fShape = comp;
       return vol;
    }
 
-   if (side) side += "/";
+   if (side) side += '/';
    vol.$geoh = true; // workaround, let know browser that we are in volumes hierarchy
-   vol.fName = "";
+   vol.fName = '';
 
-   let node1 = create("TGeoNodeMatrix");
+   let node1 = create('TGeoNodeMatrix');
    setGeoBit(node1, geoBITS.kVisThis, true);
    setGeoBit(node1, geoBITS.kVisDaughters, true);
-   node1.fName = "Left";
+   node1.fName = 'Left';
    node1.fMatrix = comp.fNode.fLeftMat;
-   node1.fVolume = buildCompositeVolume(comp.fNode.fLeft, maxlvl-1, side + "Left");
+   node1.fVolume = buildCompositeVolume(comp.fNode.fLeft, maxlvl-1, side + 'Left');
 
-   let node2 = create("TGeoNodeMatrix");
+   let node2 = create('TGeoNodeMatrix');
    setGeoBit(node2, geoBITS.kVisThis, true);
    setGeoBit(node2, geoBITS.kVisDaughters, true);
-   node2.fName = "Right";
+   node2.fName = 'Right';
    node2.fMatrix = comp.fNode.fRightMat;
-   node2.fVolume = buildCompositeVolume(comp.fNode.fRight, maxlvl-1, side + "Right");
+   node2.fVolume = buildCompositeVolume(comp.fNode.fRight, maxlvl-1, side + 'Right');
 
-   vol.fNodes = create("TList");
+   vol.fNodes = create('TList');
    vol.fNodes.Add(node1);
    vol.fNodes.Add(node2);
 
@@ -116,7 +116,7 @@ function createList(parent, lst, name, title) {
 
    let list_item = {
        _name: name,
-       _kind: "ROOT.TList",
+       _kind: 'ROOT.TList',
        _title: title,
        _more: true,
        _geoobj: lst,
@@ -167,10 +167,10 @@ function expandGeoObject(parent, obj) {
    if (parent._childs) return true;
 
    if (ismanager) {
-      createList(parent, obj.fMaterials, "Materials", "list of materials");
-      createList(parent, obj.fMedia, "Media", "list of media");
-      createList(parent, obj.fTracks, "Tracks", "list of tracks");
-      createList(parent, obj.fOverlaps, "Overlaps", "list of detected overlaps");
+      createList(parent, obj.fMaterials, 'Materials', 'list of materials');
+      createList(parent, obj.fMedia, 'Media', 'list of media');
+      createList(parent, obj.fTracks, 'Tracks', 'list of tracks');
+      createList(parent, obj.fOverlaps, 'Overlaps', 'list of detected overlaps');
       createItem(parent, obj.fMasterVolume);
       return true;
    }
@@ -193,7 +193,7 @@ function expandGeoObject(parent, obj) {
       shape = volume?.fShape;
    }
 
-   if (!subnodes && (shape?._typename === "TGeoCompositeShape") && shape?.fNode) {
+   if (!subnodes && (shape?._typename === 'TGeoCompositeShape') && shape?.fNode) {
       if (!parent._childs) {
          createItem(parent, shape.fNode.fLeft, 'Left');
          createItem(parent, shape.fNode.fRight, 'Right');
@@ -231,7 +231,7 @@ function findItemWithPainter(hitem, funcname) {
   * @private */
 function provideVisStyle(obj) {
    if ((obj._typename === 'TEveGeoShapeExtract') || (obj._typename === 'ROOT::Experimental::REveGeoShapeExtract'))
-      return obj.fRnrSelf ? " geovis_this" : "";
+      return obj.fRnrSelf ? ' geovis_this' : '';
 
    let vis = !testGeoBit(obj, geoBITS.kVisNone) &&
               testGeoBit(obj, geoBITS.kVisThis),
@@ -239,10 +239,10 @@ function provideVisStyle(obj) {
 
    if (chld && (!obj.fNodes || (obj.fNodes.arr.length === 0))) chld = false;
 
-   if (vis && chld) return " geovis_all";
-   if (vis) return " geovis_this";
-   if (chld) return " geovis_daughters";
-   return "";
+   if (vis && chld) return ' geovis_all';
+   if (vis) return ' geovis_this';
+   if (chld) return ' geovis_daughters';
+   return '';
 }
 
 
@@ -254,7 +254,7 @@ function updateBrowserIcons(obj, hpainter) {
    hpainter.forEachItem(m => {
       // update all items with that volume
       if ((obj === m._volume) || (obj === m._geoobj)) {
-         m._icon = m._icon.split(" ")[0] + provideVisStyle(obj);
+         m._icon = m._icon.split(' ')[0] + provideVisStyle(obj);
          hpainter.updateTreeNode(m);
       }
    });
@@ -265,29 +265,29 @@ function updateBrowserIcons(obj, hpainter) {
   * @private */
 function getShapeIcon(shape) {
    switch (shape._typename) {
-      case "TGeoArb8": return "img_geoarb8";
-      case "TGeoCone": return "img_geocone";
-      case "TGeoConeSeg": return "img_geoconeseg";
-      case "TGeoCompositeShape": return "img_geocomposite";
-      case "TGeoTube": return "img_geotube";
-      case "TGeoTubeSeg": return "img_geotubeseg";
-      case "TGeoPara": return "img_geopara";
-      case "TGeoParaboloid": return "img_geoparab";
-      case "TGeoPcon": return "img_geopcon";
-      case "TGeoPgon": return "img_geopgon";
-      case "TGeoShapeAssembly": return "img_geoassembly";
-      case "TGeoSphere": return "img_geosphere";
-      case "TGeoTorus": return "img_geotorus";
-      case "TGeoTrd1": return "img_geotrd1";
-      case "TGeoTrd2": return "img_geotrd2";
-      case "TGeoXtru": return "img_geoxtru";
-      case "TGeoTrap": return "img_geotrap";
-      case "TGeoGtra": return "img_geogtra";
-      case "TGeoEltu": return "img_geoeltu";
-      case "TGeoHype": return "img_geohype";
-      case "TGeoCtub": return "img_geoctub";
+      case 'TGeoArb8': return 'img_geoarb8';
+      case 'TGeoCone': return 'img_geocone';
+      case 'TGeoConeSeg': return 'img_geoconeseg';
+      case 'TGeoCompositeShape': return 'img_geocomposite';
+      case 'TGeoTube': return 'img_geotube';
+      case 'TGeoTubeSeg': return 'img_geotubeseg';
+      case 'TGeoPara': return 'img_geopara';
+      case 'TGeoParaboloid': return 'img_geoparab';
+      case 'TGeoPcon': return 'img_geopcon';
+      case 'TGeoPgon': return 'img_geopgon';
+      case 'TGeoShapeAssembly': return 'img_geoassembly';
+      case 'TGeoSphere': return 'img_geosphere';
+      case 'TGeoTorus': return 'img_geotorus';
+      case 'TGeoTrd1': return 'img_geotrd1';
+      case 'TGeoTrd2': return 'img_geotrd2';
+      case 'TGeoXtru': return 'img_geoxtru';
+      case 'TGeoTrap': return 'img_geotrap';
+      case 'TGeoGtra': return 'img_geogtra';
+      case 'TGeoEltu': return 'img_geoeltu';
+      case 'TGeoHype': return 'img_geohype';
+      case 'TGeoCtub': return 'img_geoctub';
    }
-   return "img_geotube";
+   return 'img_geotube';
 }
 
 
@@ -303,7 +303,7 @@ class Toolbar {
    constructor(container, bright) {
       this.bright = bright;
 
-      this.element = container.append("div").attr('class','geo_toolbar_group');
+      this.element = container.append('div').attr('class','geo_toolbar_group');
 
       injectStyle(
          `.geo_toolbar_group { float: left; box-sizing: border-box; position: relative; bottom: 23px; vertical-align: middle; white-space: nowrap; }
@@ -325,7 +325,7 @@ class Toolbar {
       buttons.forEach(buttonConfig => {
          let buttonName = buttonConfig.name;
          if (!buttonName)
-            throw new Error("must provide button name in button config");
+            throw new Error('must provide button name in button config');
          if (this.buttonsNames.indexOf(buttonName) !== -1)
             throw new Error(`button name ${buttonName} is taken`);
 
@@ -334,7 +334,7 @@ class Toolbar {
          let title = buttonConfig.title || buttonConfig.name;
 
          if (typeof buttonConfig.click !== 'function')
-            throw new Error('must provide button "click" function in button config');
+            throw new Error('must provide button click() function in button config');
 
          let button = this.element.append('a')
                            .attr('class', this.bright ? 'geo_toolbar_btn_bright' : 'geo_toolbar_btn')
@@ -351,8 +351,8 @@ class Toolbar {
    changeBrightness(bright) {
       this.bright = bright;
       if (this.element)
-         this.element.selectAll(bright ? '.geo_toolbar_btn' : ".geo_toolbar_btn_bright")
-                     .attr("class", !bright ? 'geo_toolbar_btn' : "geo_toolbar_btn_bright");
+         this.element.selectAll(bright ? '.geo_toolbar_btn' : '.geo_toolbar_btn_bright')
+                     .attr('class', !bright ? 'geo_toolbar_btn' : 'geo_toolbar_btn_bright');
    }
 
    /** @summary cleanup toolbar */
@@ -448,13 +448,13 @@ class TGeoPainter extends ObjectPainter {
    constructor(dom, obj) {
 
       let gm;
-      if (obj?._typename === "TGeoManager") {
+      if (obj?._typename === 'TGeoManager') {
          gm = obj;
          obj = obj.fMasterVolume;
       }
 
       if (obj?._typename && (obj._typename.indexOf('TGeoVolume') === 0))
-         obj = { _typename: "TGeoNode", fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
+         obj = { _typename: 'TGeoNode', fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
 
       super(dom, obj);
 
@@ -463,30 +463,32 @@ class TGeoPainter extends ObjectPainter {
       this.no_default_title = true; // do not set title to main DIV
       this.mode3d = true; // indication of 3D mode
       this.drawing_stage = stageInit; //
-      this.drawing_log = "Init";
+      this.drawing_log = 'Init';
       this.ctrl = {
          clipIntersect: true,
-         clip: [{ name:"x", enabled: false, value: 0, min: -100, max: 100}, { name:"y", enabled: false, value: 0, min: -100, max: 100}, { name:"z", enabled: false, value: 0, min: -100, max: 100}],
+         clip: [{ name: 'x', enabled: false, value: 0, min: -100, max: 100 },
+                { name: 'y', enabled: false, value: 0, min: -100, max: 100 },
+                { name: 'z', enabled: false, value: 0, min: -100, max: 100 }],
          ssao: { enabled: false, output: SSAOPass.OUTPUT.Default, kernelRadius: 0, minDistance: 0.001, maxDistance: 0.1 },
          bloom: { enabled: true, strength: 1.5 },
          info: { num_meshes: 0, num_faces: 0, num_shapes: 0 },
          highlight: false,
          highlight_scene: false,
          depthTest: true,
-         depthMethod: "dflt",
+         depthMethod: 'dflt',
          select_in_view: false,
          update_browser: true,
-         light: { kind: "points", top: false, bottom: false, left: false, right: false, front: false, specular: true, power: 1 },
+         light: { kind: 'points', top: false, bottom: false, left: false, right: false, front: false, specular: true, power: 1 },
          trans_radial: 0,
          trans_z: 0
       };
 
       this.ctrl.depthMethodItems = [
-         { name: 'Default', value: "dflt" },
-         { name: 'Raytraicing', value: "ray" },
-         { name: 'Boundary box', value: "box" },
-         { name: 'Mesh size', value: "size" },
-         { name: 'Central point', value: "pnt" }
+         { name: 'Default', value: 'dflt' },
+         { name: 'Raytraicing', value: 'ray' },
+         { name: 'Boundary box', value: 'box' },
+         { name: 'Mesh size', value: 'size' },
+         { name: 'Central point', value: 'pnt' }
        ];
 
       this.ctrl.ssao.outputItems = [
@@ -507,17 +509,17 @@ class TGeoPainter extends ObjectPainter {
       this.drawing_stage = value;
       if (!msg)
          switch(value) {
-            case stageInit: msg = "Building done"; break;
-            case stageCollect: msg = "collect visibles"; break;
-            case stageWorkerCollect: msg = "worker collect visibles"; break;
-            case stageAnalyze: msg = "Analyse visibles"; break;
-            case stageCollShapes: msg = "collect shapes for building"; break;
-            case stageStartBuild: msg = "Start build shapes"; break;
-            case stageWorkerBuild: msg = "Worker build shapes"; break;
-            case stageBuild: msg = "Build shapes"; break;
-            case stageBuildReady: msg = "Build ready"; break;
-            case stageWaitMain: msg = "Wait for main painter"; break;
-            case stageBuildProj: msg = "Build projection"; break;
+            case stageInit: msg = 'Building done'; break;
+            case stageCollect: msg = 'collect visibles'; break;
+            case stageWorkerCollect: msg = 'worker collect visibles'; break;
+            case stageAnalyze: msg = 'Analyse visibles'; break;
+            case stageCollShapes: msg = 'collect shapes for building'; break;
+            case stageStartBuild: msg = 'Start build shapes'; break;
+            case stageWorkerBuild: msg = 'Worker build shapes'; break;
+            case stageBuild: msg = 'Build shapes'; break;
+            case stageBuildReady: msg = 'Build ready'; break;
+            case stageWaitMain: msg = 'Wait for main painter'; break;
+            case stageBuildProj: msg = 'Build projection'; break;
             default: msg = `stage ${value}`;
          }
       this.drawing_log = msg;
@@ -532,17 +534,17 @@ class TGeoPainter extends ObjectPainter {
       let buttonList = [{
          name: 'toImage',
          title: 'Save as PNG',
-         icon: "camera",
+         icon: 'camera',
          click: () => this.createSnapshot()
       }, {
          name: 'control',
          title: 'Toggle control UI',
-         icon: "rect",
+         icon: 'rect',
          click: () => this.showControlOptions('toggle')
       }, {
          name: 'enlarge',
          title: 'Enlarge geometry drawing',
-         icon: "circle",
+         icon: 'circle',
          click: () => this.toggleEnlarge()
       }];
 
@@ -551,7 +553,7 @@ class TGeoPainter extends ObjectPainter {
          buttonList.push({
             name: 'entervr',
             title: 'Enter VR (It requires a VR Headset connected)',
-            icon: "vrgoggles",
+            icon: 'vrgoggles',
             click: () => this.toggleVRMode()
          });
          this.initVRMode();
@@ -561,7 +563,7 @@ class TGeoPainter extends ObjectPainter {
       buttonList.push({
          name: 'menu',
          title: 'Show context menu',
-         icon: "question",
+         icon: 'question',
          click: evnt => {
 
             evnt.preventDefault();
@@ -746,28 +748,28 @@ class TGeoPainter extends ObjectPainter {
       if (getNodeKind(this.getGeometry()) !== 0) return;
 
       if (!name)
-         return setGeoBit(this.getGeometry().fVolume, geoBITS.kVisThis, (sign === "+"));
+         return setGeoBit(this.getGeometry().fVolume, geoBITS.kVisThis, (sign === '+'));
 
       let regexp, exact = false;
 
       //arg.node.fVolume
-      if (name.indexOf("*") < 0) {
-         regexp = new RegExp("^"+name+"$");
+      if (name.indexOf('*') < 0) {
+         regexp = new RegExp('^'+name+'$');
          exact = true;
       } else {
-         regexp = new RegExp("^" + name.split("*").join(".*") + "$");
+         regexp = new RegExp('^' + name.split('*').join('.*') + '$');
          exact = false;
       }
 
       this.findNodeWithVolume(regexp, function(arg) {
-         setInvisibleAll(arg.node.fVolume, (sign !== "+"));
+         setInvisibleAll(arg.node.fVolume, (sign !== '+'));
          return exact ? arg : null; // continue search if not exact expression provided
       });
    }
 
    /** @summary Decode drawing options */
    decodeOptions(opt) {
-      if (typeof opt != "string") opt = "";
+      if (typeof opt != 'string') opt = '';
 
       let res = { _grid: false, _bound: false, _debug: false,
                   _full: false, _axis: 0,
@@ -779,66 +781,66 @@ class TGeoPainter extends ObjectPainter {
                    highlight: false, highlight_scene: false, no_screen: false,
                    project: '', is_main: false, tracks: false, showtop: false, can_rotate: true, ortho_camera: false,
                    clipx: false, clipy: false, clipz: false, usessao: false, usebloom: true, outline: false,
-                   script_name: "", transparency: 0, rotate: false, background: '#FFFFFF',
-                   depthMethod: "dflt", mouse_tmout: 50, trans_radial: 0, trans_z: 0 };
+                   script_name: '', transparency: 0, rotate: false, background: '#FFFFFF',
+                   depthMethod: 'dflt', mouse_tmout: 50, trans_radial: 0, trans_z: 0 };
 
       let dd = decodeUrl();
-      if (dd.get('_grid') == "true") res._grid = true;
+      if (dd.get('_grid') == 'true') res._grid = true;
       let _opt = dd.get('_debug');
-      if (_opt == "true") { res._debug = true; res._grid = true; }
-      if (_opt == "bound") { res._debug = true; res._grid = true; res._bound = true; }
-      if (_opt == "full") { res._debug = true; res._grid = true; res._full = true; res._bound = true; }
+      if (_opt == 'true') { res._debug = true; res._grid = true; }
+      if (_opt == 'bound') { res._debug = true; res._grid = true; res._bound = true; }
+      if (_opt == 'full') { res._debug = true; res._grid = true; res._full = true; res._bound = true; }
 
-      let macro = opt.indexOf("macro:");
+      let macro = opt.indexOf('macro:');
       if (macro >= 0) {
-         let separ = opt.indexOf(";", macro+6);
-         if (separ<0) separ = opt.length;
+         let separ = opt.indexOf(';', macro+6);
+         if (separ < 0) separ = opt.length;
          res.script_name = opt.slice(macro+6, separ);
          opt = opt.slice(0, macro) + opt.slice(separ+1);
-         console.log('script', res.script_name, 'rest', opt);
+         console.log(`script ${res.script_name} rest ${opt}`);
       }
 
       while (true) {
-         let pp = opt.indexOf("+"), pm = opt.indexOf("-");
-         if ((pp<0) && (pm<0)) break;
-         let p1 = pp, sign = "+";
-         if ((p1<0) || ((pm>=0) && (pm<pp))) { p1 = pm; sign = "-"; }
+         let pp = opt.indexOf('+'), pm = opt.indexOf('-');
+         if ((pp < 0) && (pm < 0)) break;
+         let p1 = pp, sign = '+';
+         if ((p1 < 0) || ((pm >= 0) && (pm < pp))) { p1 = pm; sign = '-'; }
 
          let p2 = p1+1, regexp = new RegExp('[,; .]');
-         while ((p2<opt.length) && !regexp.test(opt[p2]) && (opt[p2]!='+') && (opt[p2]!='-')) p2++;
+         while ((p2 < opt.length) && !regexp.test(opt[p2]) && (opt[p2]!='+') && (opt[p2]!='-')) p2++;
 
          let name = opt.substring(p1+1, p2);
          opt = opt.slice(0,p1) + opt.slice(p2);
-         // console.log("Modify visibility", sign,':',name);
+         // console.log(`Modify visibility ${sign} : ${name}`);
 
          this.modifyVisisbility(name, sign);
       }
 
       let d = new DrawOptions(opt);
 
-      if (d.check("MAIN")) res.is_main = true;
+      if (d.check('MAIN')) res.is_main = true;
 
-      if (d.check("TRACKS")) res.tracks = true; // only for TGeoManager
-      if (d.check("SHOWTOP")) res.showtop = true; // only for TGeoManager
-      if (d.check("NO_SCREEN")) res.no_screen = true; // ignore kVisOnScreen bits for visibility
+      if (d.check('TRACKS')) res.tracks = true; // only for TGeoManager
+      if (d.check('SHOWTOP')) res.showtop = true; // only for TGeoManager
+      if (d.check('NO_SCREEN')) res.no_screen = true; // ignore kVisOnScreen bits for visibility
 
-      if (d.check("ORTHO_CAMERA_ROTATE")) { res.ortho_camera = true; res.can_rotate = true; }
-      if (d.check("ORTHO_CAMERA")) { res.ortho_camera = true; res.can_rotate = false; }
-      if (d.check("MOUSE_CLICK")) res.mouse_click = true;
+      if (d.check('ORTHO_CAMERA_ROTATE')) { res.ortho_camera = true; res.can_rotate = true; }
+      if (d.check('ORTHO_CAMERA')) { res.ortho_camera = true; res.can_rotate = false; }
+      if (d.check('MOUSE_CLICK')) res.mouse_click = true;
 
-      if (d.check("DEPTHRAY") || d.check("DRAY")) res.depthMethod = "ray";
-      if (d.check("DEPTHBOX") || d.check("DBOX")) res.depthMethod = "box";
-      if (d.check("DEPTHPNT") || d.check("DPNT")) res.depthMethod = "pnt";
-      if (d.check("DEPTHSIZE") || d.check("DSIZE")) res.depthMethod = "size";
-      if (d.check("DEPTHDFLT") || d.check("DDFLT")) res.depthMethod = "dflt";
+      if (d.check('DEPTHRAY') || d.check('DRAY')) res.depthMethod = 'ray';
+      if (d.check('DEPTHBOX') || d.check('DBOX')) res.depthMethod = 'box';
+      if (d.check('DEPTHPNT') || d.check('DPNT')) res.depthMethod = 'pnt';
+      if (d.check('DEPTHSIZE') || d.check('DSIZE')) res.depthMethod = 'size';
+      if (d.check('DEPTHDFLT') || d.check('DDFLT')) res.depthMethod = 'dflt';
 
-      if (d.check("ZOOM", true)) res.zoom = d.partAsFloat(0, 100) / 100;
-      if (d.check("ROTY", true)) res.rotatey = d.partAsFloat();
-      if (d.check("ROTZ", true)) res.rotatez = d.partAsFloat();
-      if (d.check("VISLVL", true)) res.vislevel = d.partAsInt();
+      if (d.check('ZOOM', true)) res.zoom = d.partAsFloat(0, 100) / 100;
+      if (d.check('ROTY', true)) res.rotatey = d.partAsFloat();
+      if (d.check('ROTZ', true)) res.rotatez = d.partAsFloat();
+      if (d.check('VISLVL', true)) res.vislevel = d.partAsInt();
 
-      if (d.check('BLACK')) res.background = "#000000";
-      if (d.check('WHITE')) res.background = "#FFFFFF";
+      if (d.check('BLACK')) res.background = '#000000';
+      if (d.check('WHITE')) res.background = '#FFFFFF';
 
       if (d.check('BKGR_', true)) {
          let bckgr = null;
@@ -849,51 +851,51 @@ class TGeoPainter extends ObjectPainter {
                if (getColor(col).toUpperCase() === d.part)
                   bckgr = getColor(col);
          }
-         if (bckgr) res.background = "#" + new Color(bckgr).getHexString();
+         if (bckgr) res.background = '#' + new Color(bckgr).getHexString();
       }
 
       if (d.check('R3D_', true))
          res.Render3D = constants.Render3D.fromString(d.part.toLowerCase());
 
-      if (d.check("MORE3")) res.more = 3;
-      if (d.check("MORE")) res.more = 2;
-      if (d.check("ALL")) { res.more = 10; res.vislevel = 9; }
+      if (d.check('MORE3')) res.more = 3;
+      if (d.check('MORE')) res.more = 2;
+      if (d.check('ALL')) { res.more = 10; res.vislevel = 9; }
 
-      if (d.check("CONTROLS") || d.check("CTRL")) res.show_controls = true;
+      if (d.check('CONTROLS') || d.check('CTRL')) res.show_controls = true;
 
-      if (d.check("CLIPXYZ")) res.clipx = res.clipy = res.clipz = true;
-      if (d.check("CLIPX")) res.clipx = true;
-      if (d.check("CLIPY")) res.clipy = true;
-      if (d.check("CLIPZ")) res.clipz = true;
-      if (d.check("CLIP")) res.clipx = res.clipy = res.clipz = true;
+      if (d.check('CLIPXYZ')) res.clipx = res.clipy = res.clipz = true;
+      if (d.check('CLIPX')) res.clipx = true;
+      if (d.check('CLIPY')) res.clipy = true;
+      if (d.check('CLIPZ')) res.clipz = true;
+      if (d.check('CLIP')) res.clipx = res.clipy = res.clipz = true;
 
-      if (d.check("PROJX", true)) { res.project = 'x'; if (d.partAsInt(1)>0) res.projectPos = d.partAsInt(); res.can_rotate = false; }
-      if (d.check("PROJY", true)) { res.project = 'y'; if (d.partAsInt(1)>0) res.projectPos = d.partAsInt(); res.can_rotate = false; }
-      if (d.check("PROJZ", true)) { res.project = 'z'; if (d.partAsInt(1)>0) res.projectPos = d.partAsInt(); res.can_rotate = false; }
+      if (d.check('PROJX', true)) { res.project = 'x'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = false; }
+      if (d.check('PROJY', true)) { res.project = 'y'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = false; }
+      if (d.check('PROJZ', true)) { res.project = 'z'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = false; }
 
-      if (d.check("DFLT_COLORS") || d.check("DFLT")) res.dflt_colors = true;
-      if (d.check("SSAO")) res.usessao = true;
-      if (d.check("NOBLOOM")) res.usebloom = false;
-      if (d.check("BLOOM")) res.usebloom = true;
-      if (d.check("OUTLINE")) res.outline = true;
+      if (d.check('DFLT_COLORS') || d.check('DFLT')) res.dflt_colors = true;
+      if (d.check('SSAO')) res.usessao = true;
+      if (d.check('NOBLOOM')) res.usebloom = false;
+      if (d.check('BLOOM')) res.usebloom = true;
+      if (d.check('OUTLINE')) res.outline = true;
 
-      if (d.check("NOWORKER")) res.use_worker = -1;
-      if (d.check("WORKER")) res.use_worker = 1;
+      if (d.check('NOWORKER')) res.use_worker = -1;
+      if (d.check('WORKER')) res.use_worker = 1;
 
-      if (d.check("NOHIGHLIGHT") || d.check("NOHIGH")) res.highlight_scene = res.highlight = 0;
-      if (d.check("HIGHLIGHT")) res.highlight_scene = res.highlight = true;
-      if (d.check("HSCENEONLY")) { res.highlight_scene = true; res.highlight = 0; }
-      if (d.check("NOHSCENE")) res.highlight_scene = 0;
-      if (d.check("HSCENE")) res.highlight_scene = true;
+      if (d.check('NOHIGHLIGHT') || d.check('NOHIGH')) res.highlight_scene = res.highlight = 0;
+      if (d.check('HIGHLIGHT')) res.highlight_scene = res.highlight = true;
+      if (d.check('HSCENEONLY')) { res.highlight_scene = true; res.highlight = 0; }
+      if (d.check('NOHSCENE')) res.highlight_scene = 0;
+      if (d.check('HSCENE')) res.highlight_scene = true;
 
-      if (d.check("WIREFRAME") || d.check("WIRE")) res.wireframe = true;
-      if (d.check("ROTATE")) res.rotate = true;
+      if (d.check('WIREFRAME') || d.check('WIRE')) res.wireframe = true;
+      if (d.check('ROTATE')) res.rotate = true;
 
-      if (d.check("INVX") || d.check("INVERTX")) res.scale.x = -1;
-      if (d.check("INVY") || d.check("INVERTY")) res.scale.y = -1;
-      if (d.check("INVZ") || d.check("INVERTZ")) res.scale.z = -1;
+      if (d.check('INVX') || d.check('INVERTX')) res.scale.x = -1;
+      if (d.check('INVY') || d.check('INVERTY')) res.scale.y = -1;
+      if (d.check('INVZ') || d.check('INVERTZ')) res.scale.z = -1;
 
-      if (d.check("COUNT")) res._count = true;
+      if (d.check('COUNT')) res._count = true;
 
       if (d.check('TRANSP',true))
          res.transparency = d.partAsInt(0,100)/100;
@@ -901,20 +903,20 @@ class TGeoPainter extends ObjectPainter {
       if (d.check('OPACITY',true))
          res.transparency = 1 - d.partAsInt(0,100)/100;
 
-      if (d.check("AXISCENTER") || d.check("AC")) res._axis = 2;
+      if (d.check('AXISCENTER') || d.check('AC')) res._axis = 2;
 
       if (d.check('TRR',true)) res.trans_radial = d.partAsInt()/100;
       if (d.check('TRZ',true)) res.trans_z = d.partAsInt()/100;
 
-      if (d.check("AXIS") || d.check("A")) res._axis = true;
+      if (d.check('AXIS') || d.check('A')) res._axis = true;
 
-      if (d.check("D")) res._debug = true;
-      if (d.check("G")) res._grid = true;
-      if (d.check("B")) res._bound = true;
-      if (d.check("W")) res.wireframe = true;
-      if (d.check("F")) res._full = true;
-      if (d.check("Y")) res._yup = true;
-      if (d.check("Z")) res._yup = false;
+      if (d.check('D')) res._debug = true;
+      if (d.check('G')) res._grid = true;
+      if (d.check('B')) res._bound = true;
+      if (d.check('W')) res.wireframe = true;
+      if (d.check('F')) res._full = true;
+      if (d.check('Y')) res._yup = true;
+      if (d.check('Z')) res._yup = false;
 
       // when drawing geometry without TCanvas, yup = true by default
       if (res._yup === undefined)
@@ -961,7 +963,7 @@ class TGeoPainter extends ObjectPainter {
                let m1 = mesh.matrixWorld, flip;
 
                if (m1.equals(m2)) return true;
-               if ((m1.determinant()>0) && (m2.determinant()<-0.9)) {
+               if ((m1.determinant() > 0) && (m2.determinant()<-0.9)) {
                   flip = new Vector3(1,1,-1);
                   m2 = m2.clone().scale(flip);
                   if (m1.equals(m2)) return true;
@@ -975,7 +977,7 @@ class TGeoPainter extends ObjectPainter {
 
                if (max < 1e-4) return true;
 
-               console.log(this._clones.resolveStack(entry.stack).name, 'maxdiff', max, 'determ', m1.determinant(), m2.determinant());
+               console.log(`${this._clones.resolveStack(entry.stack).name} maxdiff ${max} determ ${m1.determinant()} ${m2.determinant()}`);
 
                errcnt++;
 
@@ -995,35 +997,35 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Fill context menu */
    fillContextMenu(menu) {
-      menu.add("header: Draw options");
+      menu.add('header: Draw options');
 
-      menu.addchk(this.ctrl.update_browser, "Browser update", () => {
+      menu.addchk(this.ctrl.update_browser, 'Browser update', () => {
          this.ctrl.update_browser = !this.ctrl.update_browser;
          if (!this.ctrl.update_browser) this.activateInBrowser([]);
       });
-      menu.addchk(this.ctrl.show_controls, "Show Controls", () => this.showControlOptions('toggle'));
+      menu.addchk(this.ctrl.show_controls, 'Show Controls', () => this.showControlOptions('toggle'));
 
-      menu.addchk(this.ctrl._axis, "Show axes", () => this.setAxesDraw('toggle'));
+      menu.addchk(this.ctrl._axis, 'Show axes', () => this.setAxesDraw('toggle'));
 
       if (this.geo_manager)
-         menu.addchk(this.ctrl.showtop, "Show top volume", () => this.setShowTop(!this.ctrl.showtop));
+         menu.addchk(this.ctrl.showtop, 'Show top volume', () => this.setShowTop(!this.ctrl.showtop));
 
-      menu.addchk(this.ctrl.wireframe, "Wire frame", () => this.toggleWireFrame());
+      menu.addchk(this.ctrl.wireframe, 'Wire frame', () => this.toggleWireFrame());
 
-      menu.addchk(this.ctrl.highlight, "Highlight volumes", () => {
+      menu.addchk(this.ctrl.highlight, 'Highlight volumes', () => {
          this.ctrl.highlight = !this.ctrl.highlight;
       });
-      menu.addchk(this.ctrl.highlight_scene, "Highlight scene", () => {
+      menu.addchk(this.ctrl.highlight_scene, 'Highlight scene', () => {
          this.ctrl.highlight_scene = !this.ctrl.highlight_scene;
       });
-      menu.add("Reset camera position", () => this.focusCamera());
+      menu.add('Reset camera position', () => this.focusCamera());
 
       if (!this._geom_viewer)
-         menu.add("Get camera position", () => menu.info("Position (as url)", "&opt=" + this.produceCameraUrl()));
+         menu.add('Get camera position', () => menu.info('Position (as url)', '&opt=' + this.produceCameraUrl()));
 
       if (!this.ctrl.project)
-         menu.addchk(this.ctrl.rotate, "Autorotate", () => this.setAutoRotate(!this.ctrl.rotate));
-      menu.addchk(this.ctrl.select_in_view, "Select in view", () => {
+         menu.addchk(this.ctrl.rotate, 'Autorotate', () => this.setAutoRotate(!this.ctrl.rotate));
+      menu.addchk(this.ctrl.select_in_view, 'Select in view', () => {
          this.ctrl.select_in_view = !this.ctrl.select_in_view;
          if (this.ctrl.select_in_view) this.startDrawGeometry();
       });
@@ -1051,7 +1053,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Reset transformation */
    resetTransformation() {
-      this.changedTransformation("reset");
+      this.changedTransformation('reset');
    }
 
    /** @summary Method should be called when transformation parameters were changed */
@@ -1062,7 +1064,7 @@ class TGeoPainter extends ObjectPainter {
           translation = new Matrix4(),
           vect2 = new Vector3();
 
-      if (arg == "reset")
+      if (arg == 'reset')
          ctrl.trans_z = ctrl.trans_radial = 0;
 
       this._toplevel.traverse(mesh => {
@@ -1070,7 +1072,7 @@ class TGeoPainter extends ObjectPainter {
 
          let node = mesh.parent;
 
-         if (arg == "reset") {
+         if (arg == 'reset') {
             if (node.matrix0) {
                node.matrix.copy(node.matrix0);
                node.matrix.decompose( node.position, node.quaternion, node.scale );
@@ -1105,7 +1107,7 @@ class TGeoPainter extends ObjectPainter {
       this._toplevel.updateMatrixWorld();
 
       // axes drawing always triggers rendering
-      if (arg != "norender")
+      if (arg != 'norender')
          this.drawSimpleAxis();
    }
 
@@ -1195,7 +1197,7 @@ class TGeoPainter extends ObjectPainter {
       this._datgui = new dat.GUI({ autoPlace: false, width: Math.min(650, this._renderer.domElement.width / 2) });
 
       let main = this.selectDom();
-      if (main.style('position')=='static') main.style('position','relative');
+      if (main.style('position') == 'static') main.style('position','relative');
 
       let dom = this._datgui.domElement;
       dom.style.position = 'absolute';
@@ -1232,12 +1234,12 @@ class TGeoPainter extends ObjectPainter {
                 .listen() // react if option changed outside
                 .onChange(clip_handler);
 
-            clipFolder.add(cc, "value", cc.min, cc.max)
+            clipFolder.add(cc, 'value', cc.min, cc.max)
                 .name(axisC + ' position')
                 .onChange(this.changedClipping.bind(this, naxis));
          }
 
-         clipFolder.add(this.ctrl, 'clipIntersect').name("Clip intersection")
+         clipFolder.add(this.ctrl, 'clipIntersect').name('Clip intersection')
                    .listen().onChange(clip_handler);
 
       }
@@ -1259,11 +1261,11 @@ class TGeoPainter extends ObjectPainter {
                      .listen().onChange(() => this.changedWireFrame());
 
       this.ctrl._axis_cfg = 0;
-      appearance.add(this.ctrl, '_axis', { "none": 0, "show": 1, "center": 2 }).name('Axes')
+      appearance.add(this.ctrl, '_axis', { 'none': 0, 'show': 1, 'center': 2 }).name('Axes')
                     .onChange(() => this.changedAxes());
 
       if (!this.ctrl.project)
-         appearance.add(this.ctrl, 'rotate').name("Autorotate")
+         appearance.add(this.ctrl, 'rotate').name('Autorotate')
                       .listen().onChange(() => this.changedAutoRotate());
 
       appearance.add(this, 'focusCamera').name('Reset camera position');
@@ -1274,14 +1276,14 @@ class TGeoPainter extends ObjectPainter {
          let advanced = this._datgui.addFolder('Advanced'), depthcfg = {};
          this.ctrl.depthMethodItems.forEach(i => { depthcfg[i.name] = i.value; });
 
-         advanced.add(this.ctrl, 'depthTest').name("Depth test")
+         advanced.add(this.ctrl, 'depthTest').name('Depth test')
             .listen().onChange(() => this.changedDepthTest());
 
          advanced.add( this.ctrl, 'depthMethod', depthcfg)
-             .name("Rendering order")
+             .name('Rendering order')
              .onChange(method => this.changedDepthMethod(method));
 
-         advanced.add(this.ctrl, 'ortho_camera').name("Orhographic camera")
+         advanced.add(this.ctrl, 'ortho_camera').name('Orhographic camera')
                  .listen().onChange(() => this.changeCamera());
 
         advanced.add(this, 'resetAdvanced').name('Reset');
@@ -1331,7 +1333,7 @@ class TGeoPainter extends ObjectPainter {
       blooming.add(this.ctrl.bloom, 'enabled').name('Enable Blooming')
               .listen().onChange(bloom_handler);
 
-      blooming.add( this.ctrl.bloom, 'strength', 0.0, 3.0).name("Strength")
+      blooming.add( this.ctrl.bloom, 'strength', 0.0, 3.0).name('Strength')
                .listen().onChange(bloom_handler);
    }
 
@@ -1441,7 +1443,7 @@ class TGeoPainter extends ObjectPainter {
          } else {
             let many = (numnodes + numitems) > 1;
 
-            if (many) menu.add("header:" + ((numitems > 0) ? "Items" : "Nodes"));
+            if (many) menu.add('header:' + ((numitems > 0) ? 'Items' : 'Nodes'));
 
             for (let n = 0; n < intersects.length; ++n) {
                let obj = intersects[n].object,
@@ -1449,41 +1451,41 @@ class TGeoPainter extends ObjectPainter {
 
                if (obj.geo_name) {
                   itemname = obj.geo_name;
-                  if (itemname.indexOf("<prnt>") == 0)
-                     itemname = (this.getItemName() || "top") + itemname.slice(6);
-                  name = itemname.slice(itemname.lastIndexOf("/")+1);
+                  if (itemname.indexOf('<prnt>') == 0)
+                     itemname = (this.getItemName() || 'top') + itemname.slice(6);
+                  name = itemname.slice(itemname.lastIndexOf('/')+1);
                   if (!name) name = itemname;
                   hdr = name;
                } else if (obj.stack) {
                   name = this._clones.resolveStack(obj.stack).name;
                   itemname = this.getStackFullName(obj.stack);
                   hdr = this.getItemName();
-                  if (name.indexOf("Nodes/") === 0)
+                  if (name.indexOf('Nodes/') === 0)
                      hdr = name.slice(6);
                   else if (name.length > 0)
                      hdr = name;
                   else if (!hdr)
-                     hdr = "header";
+                     hdr = 'header';
 
                } else
                   continue;
 
-               menu.add((many ? "sub:" : "header:") + hdr, itemname, arg => this.activateInBrowser([arg], true));
+               menu.add((many ? 'sub:' : 'header:') + hdr, itemname, arg => this.activateInBrowser([arg], true));
 
-               menu.add("Browse", itemname, arg => this.activateInBrowser([arg], true));
+               menu.add('Browse', itemname, arg => this.activateInBrowser([arg], true));
 
                if (this._hpainter)
-                  menu.add("Inspect", itemname, arg => this._hpainter.display(arg, "inspect"));
+                  menu.add('Inspect', itemname, arg => this._hpainter.display(arg, 'inspect'));
 
                if (obj.geo_name) {
-                  menu.add("Hide", n, indx => {
+                  menu.add('Hide', n, indx => {
                      let mesh = intersects[indx].object;
                      mesh.visible = false; // just disable mesh
                      if (mesh.geo_object) mesh.geo_object.$hidden_via_menu = true; // and hide object for further redraw
                      menu.painter.render3D();
                   });
 
-                  if (many) menu.add("endsub:");
+                  if (many) menu.add('endsub:');
 
                   continue;
                }
@@ -1491,14 +1493,14 @@ class TGeoPainter extends ObjectPainter {
                let wireframe = this.accessObjectWireFrame(obj);
 
                if (wireframe !== undefined)
-                  menu.addchk(wireframe, "Wireframe", n, function(indx) {
+                  menu.addchk(wireframe, 'Wireframe', n, function(indx) {
                      let m = intersects[indx].object.material;
                      m.wireframe = !m.wireframe;
                      this.render3D();
                   });
 
                if (++cnt > 1)
-                  menu.add("Manifest", n, function(indx) {
+                  menu.add('Manifest', n, function(indx) {
 
                      if (this._last_manifest)
                         this._last_manifest.wireframe = !this._last_manifest.wireframe;
@@ -1521,12 +1523,12 @@ class TGeoPainter extends ObjectPainter {
                   });
 
 
-               menu.add("Focus", n, function(indx) {
+               menu.add('Focus', n, function(indx) {
                   this.focusCamera(intersects[indx].object);
                });
 
                if (!this._geom_viewer)
-               menu.add("Hide", n, function(indx) {
+               menu.add('Hide', n, function(indx) {
                   let resolve = menu.painter._clones.resolveStack(intersects[indx].object.stack);
                   if (resolve.obj && (resolve.node.kind === kindGeo) && resolve.obj.fVolume) {
                      setGeoBit(resolve.obj.fVolume, geoBITS.kVisThis, false);
@@ -1539,7 +1541,7 @@ class TGeoPainter extends ObjectPainter {
                   this.testGeomChanges();// while many volumes may disappear, recheck all of them
                });
 
-               if (many) menu.add("endsub:");
+               if (many) menu.add('endsub:');
             }
          }
          menu.show();
@@ -1580,7 +1582,7 @@ class TGeoPainter extends ObjectPainter {
          let clippedIntersects = [];
 
          for (let i = 0; i < intersects.length; ++i) {
-            let point = intersects[i].point, special = (intersects[i].object.type == "Points"), clipped = true;
+            let point = intersects[i].point, special = (intersects[i].object.type == 'Points'), clipped = true;
 
             if (clip[0].enabled && ((this._clipPlanes[0].normal.dot(point) > this._clipPlanes[0].constant) ^ special)) clipped = false;
             if (clip[1].enabled && ((this._clipPlanes[1].normal.dot(point) > this._clipPlanes[1].constant) ^ special)) clipped = false;
@@ -1621,7 +1623,7 @@ class TGeoPainter extends ObjectPainter {
       let mainitemname = this.getItemName(),
           sub = this.resolveStack(stack);
       if (!sub || !sub.name) return mainitemname;
-      return mainitemname ? mainitemname + "/" + sub.name : sub.name;
+      return mainitemname ? mainitemname + '/' + sub.name : sub.name;
    }
 
    /** @summary Add handler which will be called when element is highlighted in geometry drawing
@@ -1640,7 +1642,7 @@ class TGeoPainter extends ObjectPainter {
          let extras = this.getExtrasContainer();
          if (extras)
             extras.traverse(obj3d => {
-               if ((obj3d.geo_object === geo_object) && (active_mesh.indexOf(obj3d)<0)) active_mesh.push(obj3d);
+               if ((obj3d.geo_object === geo_object) && (active_mesh.indexOf(obj3d) < 0)) active_mesh.push(obj3d);
             });
       } else if (geo_stack && this._toplevel) {
          active_mesh = [];
@@ -1719,7 +1721,7 @@ class TGeoPainter extends ObjectPainter {
 
       ctrl.evnt = evnt;
 
-      if (ctrl.setSelected("blue", click_indx))
+      if (ctrl.setSelected('blue', click_indx))
          this.render3D();
 
       ctrl.evnt = null;
@@ -1735,7 +1737,7 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Configure depth method, used for render order production.
-     * @param {string} method - Allowed values: "ray", "box","pnt", "size", "dflt" */
+     * @param {string} method - Allowed values: 'ray', 'box','pnt', 'size', 'dflt' */
    setDepthMethod(method) {
       if (this.ctrl)
          this.ctrl.depthMethod = method;
@@ -1773,7 +1775,7 @@ class TGeoPainter extends ObjectPainter {
                info = this.getStackFullName(obj.stack);
             if (!info) continue;
 
-            if (info.indexOf("<prnt>") == 0)
+            if (info.indexOf('<prnt>') == 0)
                info = this.getItemName() + info.slice(6);
 
             names.push(info);
@@ -1784,8 +1786,8 @@ class TGeoPainter extends ObjectPainter {
                geo_object = obj.geo_object;
                if (obj.get_ctrl) {
                   geo_index = obj.get_ctrl().extractIndex(intersects[k]);
-                  if ((geo_index !== undefined) && (typeof tooltip == "string"))
-                     tooltip += " indx:" + JSON.stringify(geo_index);
+                  if ((geo_index !== undefined) && (typeof tooltip == 'string'))
+                     tooltip += ' indx:' + JSON.stringify(geo_index);
                }
                if (active_mesh.stack) resolve = this.resolveStack(active_mesh.stack);
             }
@@ -1841,20 +1843,20 @@ class TGeoPainter extends ObjectPainter {
       window.addEventListener( 'keydown', event => {
          switch ( event.key ) {
          case 'q':
-            this._tcontrols.setSpace( this._tcontrols.space === "local" ? "world" : "local" );
+            this._tcontrols.setSpace( this._tcontrols.space === 'local' ? 'world' : 'local' );
             break;
          case 'Control':
             this._tcontrols.setTranslationSnap( Math.ceil( this._overall_size ) / 50 );
             this._tcontrols.setRotationSnap( MathUtils.degToRad( 15 ) );
             break;
          case 't': // Translate
-            this._tcontrols.setMode( "translate" );
+            this._tcontrols.setMode( 'translate' );
             break;
          case 'r': // Rotate
-            this._tcontrols.setMode( "rotate" );
+            this._tcontrols.setMode( 'rotate' );
             break;
          case 's': // Scale
-            this._tcontrols.setMode( "scale" );
+            this._tcontrols.setMode( 'scale' );
             break;
          case '+':
             this._tcontrols.setSize(this._tcontrols.size + 0.1);
@@ -1927,7 +1929,7 @@ class TGeoPainter extends ObjectPainter {
          let need_worker = !isBatchMode() && browser.isChrome && ((numvis > 10000) || (matrix && (this._clones.scanVisible() > 1e5)));
 
          // worker does not work when starting from file system
-         if (need_worker && source_dir.indexOf("file://")==0) {
+         if (need_worker && source_dir.indexOf('file://') == 0) {
             console.log('disable worker for jsroot from file system');
             need_worker = false;
          }
@@ -2103,7 +2105,7 @@ class TGeoPainter extends ObjectPainter {
          // wait for main painter to be ready
 
          if (!this._main_painter) {
-            this.changeStage(stageInit, "Lost main painter");
+            this.changeStage(stageInit, 'Lost main painter');
             return false;
          }
          if (!this._main_painter._drawing_ready) return 1;
@@ -2134,9 +2136,9 @@ class TGeoPainter extends ObjectPainter {
       // workaround for the TGeoOverlap, where two branches should get predefined color
       if (this._splitColors && entry.stack) {
          if (entry.stack[0] === 0)
-            entry.custom_color = "green";
+            entry.custom_color = 'green';
          else if (entry.stack[0] === 1)
-            entry.custom_color = "blue";
+            entry.custom_color = 'blue';
       }
 
       let prop = this._clones.getDrawEntryProperties(entry, getRootColors()),
@@ -2266,7 +2268,8 @@ class TGeoPainter extends ObjectPainter {
             getBoundingBox(mesh, box3);
       });
 
-      if (scalar !== undefined) box3.expandByVector(box3.getSize(new Vector3()).multiplyScalar(scalar));
+      if (scalar !== undefined)
+         box3.expandByVector(box3.getSize(new Vector3()).multiplyScalar(scalar));
 
       return box3;
    }
@@ -2331,8 +2334,8 @@ class TGeoPainter extends ObjectPainter {
          this._camera._lights = this.ctrl.light.kind;
 
          switch (this._camera._lights) {
-            case "ambient" : this._camera.add(new AmbientLight(0xefefef, p)); break;
-            case "hemisphere" : this._camera.add(new HemisphereLight(0xffffbb, 0x080820, p)); break;
+            case 'ambient' : this._camera.add(new AmbientLight(0xefefef, p)); break;
+            case 'hemisphere' : this._camera.add(new HemisphereLight(0xffffbb, 0x080820, p)); break;
             default: // 6 point lights
                for (let n = 0; n < 6; ++n)
                   this._camera.add(new PointLight(0xefefef, p));
@@ -2396,7 +2399,7 @@ class TGeoPainter extends ObjectPainter {
 
       if (this._webgl && (this.ctrl.ssao.enabled || this.ctrl.outline)) {
 
-         if (this.ctrl.outline && (typeof this.createOutline == "function")) {
+         if (this.ctrl.outline && (typeof this.createOutline == 'function')) {
             this._effectComposer = new EffectComposer( this._renderer );
             this._effectComposer.addPass(new RenderPass( this._scene, this._camera));
             this.createOutline(this._scene_width, this._scene_height);
@@ -2443,29 +2446,23 @@ class TGeoPainter extends ObjectPainter {
          this._renderer.setClearColor(this.ctrl.background, 1);
 
          if (this._fit_main_area && this._webgl) {
-            this._renderer.domElement.style.width = "100%";
-            this._renderer.domElement.style.height = "100%";
+            this._renderer.domElement.style.width = '100%';
+            this._renderer.domElement.style.height = '100%';
             let main = this.selectDom();
-            if (main.style('position')=='static') main.style('position','relative');
+            if (main.style('position') == 'static') main.style('position','relative');
          }
 
          this._animating = false;
 
-         // Clipping Planes
-
-         this.ctrl.bothSides = false; // which material kind should be used
-         this._clipPlanes = [ new Plane(new Vector3(1, 0, 0), 0),
-                              new Plane(new Vector3(0, this.ctrl._yup ? -1 : 1, 0), 0),
-                              new Plane(new Vector3(0, 0, this.ctrl._yup ? 1 : -1), 0) ];
-
+         this.ctrl.bothSides = false; // both sides need for clipping
          this.createSpecialEffects();
 
          if (this._fit_main_area && !this._webgl) {
             // create top-most SVG for geomtery drawings
             let doc = getDocument(),
-                svg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
-            svg.setAttribute("width", w);
-            svg.setAttribute("height", h);
+                svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', w);
+            svg.setAttribute('height', h);
             svg.appendChild(this._renderer.jsroot_dom);
             return svg;
          }
@@ -2522,9 +2519,9 @@ class TGeoPainter extends ObjectPainter {
 
       this.ctrl.depthTest = true;
       this.ctrl.clipIntersect = true;
-      this.ctrl.depthMethod = "ray";
+      this.ctrl.depthMethod = 'ray';
 
-      this.changedDepthMethod("norender");
+      this.changedDepthMethod('norender');
       this.changedDepthTest();
    }
 
@@ -2550,14 +2547,14 @@ class TGeoPainter extends ObjectPainter {
    createSnapshot(filename) {
       if (!this._renderer) return;
       this.render3D(0);
-      let dataUrl = this._renderer.domElement.toDataURL("image/png");
-      if (filename === "asis") return dataUrl;
-      dataUrl.replace("image/png", "image/octet-stream");
+      let dataUrl = this._renderer.domElement.toDataURL('image/png');
+      if (filename === 'asis') return dataUrl;
+      dataUrl.replace('image/png', 'image/octet-stream');
       let doc = getDocument(),
           link = doc.createElement('a');
       if (typeof link.download === 'string') {
          doc.body.appendChild(link); //Firefox requires the link to be in the body
-         link.download = filename || "geometry.png";
+         link.download = filename || 'geometry.png';
          link.href = dataUrl;
          link.click();
          doc.body.removeChild(link); //remove the link when done
@@ -2584,7 +2581,7 @@ class TGeoPainter extends ObjectPainter {
       let quat = new Quaternion(), euler = new Euler();
 
       quat.setFromUnitVectors(pos1, pos2);
-      euler.setFromQuaternion(quat, "YZX");
+      euler.setFromQuaternion(quat, 'YZX');
 
       let roty = euler.y / Math.PI * 180,
           rotz = euler.z / Math.PI * 180;
@@ -2592,7 +2589,7 @@ class TGeoPainter extends ObjectPainter {
       if (roty < 0) roty += 360;
       if (rotz < 0) rotz += 360;
 
-      return "roty" + roty.toFixed(prec || 0) + ",rotz" + rotz.toFixed(prec || 0) + ",zoom" + zoom.toFixed(prec || 0);
+      return 'roty' + roty.toFixed(prec || 0) + ',rotz' + rotz.toFixed(prec || 0) + ',zoom' + zoom.toFixed(prec || 0);
    }
 
    /** @summary Calculates current zoom factor */
@@ -2611,6 +2608,10 @@ class TGeoPainter extends ObjectPainter {
       if (!this._toplevel) return;
 
       let box = this.getGeomBoundingBox(this._toplevel);
+
+      // let box2 = new Box3().makeEmpty();
+      // box2.expandByObject(this._toplevel, true);
+      // console.log('min,max', box.min.x, box.max.x, box2.min.x, box2.max.x);
 
       // if detect of coordinates fails - ignore
       if (!Number.isFinite(box.min.x)) return;
@@ -2664,7 +2665,7 @@ class TGeoPainter extends ObjectPainter {
          let prev_zoom = this.calculateZoom();
          if (keep_zoom && prev_zoom) k = 2*prev_zoom;
 
-         let euler = new Euler( 0, this.ctrl.rotatey/180.*Math.PI, this.ctrl.rotatez/180.*Math.PI, 'YZX' );
+         let euler = new Euler(0, this.ctrl.rotatey/180.*Math.PI, this.ctrl.rotatez/180.*Math.PI, 'YZX');
 
          this._camera.position.set(-k*max_all, 0, 0);
          this._camera.position.applyEuler(euler);
@@ -2775,7 +2776,7 @@ class TGeoPainter extends ObjectPainter {
           frames = 50, step = 0,
           // Amount to change camera position at each step
           posIncrement = position.sub(this._camera.position).divideScalar(frames),
-          // Amount to change "lookAt" so it will end pointed at target
+          // Amount to change 'lookAt' so it will end pointed at target
           targetIncrement = target.sub(oldTarget).divideScalar(frames);
 
       autoClip = autoClip && this._webgl;
@@ -2819,7 +2820,7 @@ class TGeoPainter extends ObjectPainter {
             this.render3D(0);
          }
          let tm2 = new Date().getTime();
-         if ((step==0) && (tm2-tm1 > 200)) frames = 20;
+         if ((step == 0) && (tm2-tm1 > 200)) frames = 20;
          step++;
          this._animating = step < frames;
       };
@@ -2872,12 +2873,12 @@ class TGeoPainter extends ObjectPainter {
       }
    }
 
-   /** @summary Drawing with "count" option
+   /** @summary Drawing with 'count' option
      * @desc Scans hieararchy and check for unique nodes
      * @return {Promise} with object drawing ready */
    async drawCount(unqievis, clonetm) {
 
-      const makeTime = tm => (isBatchMode() ? "anytime" : tm.toString()) + " ms";
+      const makeTime = tm => (isBatchMode() ? 'anytime' : tm.toString()) + ' ms';
 
       let res = [ 'Unique nodes: ' + this._clones.nodes.length,
                   'Unique visible: ' + unqievis,
@@ -2911,14 +2912,14 @@ class TGeoPainter extends ObjectPainter {
             res.push('  lvl' + lvl + ': ' + arg.cnt[lvl]);
       }
 
-      res.push("Time to scan: " + makeTime(tm2-tm1), "", "Check timing for matrix calculations ...");
+      res.push('Time to scan: ' + makeTime(tm2-tm1), '', 'Check timing for matrix calculations ...');
 
       let elem = this.selectDom().style('overflow', 'auto');
 
       if (isBatchMode())
-         elem.property("_json_object_", res);
+         elem.property('_json_object_', res);
       else
-         res.forEach(str => elem.append("p").text(str));
+         res.forEach(str => elem.append('p').text(str));
 
       return new Promise(resolveFunc => {
          setTimeout(() => {
@@ -2927,11 +2928,11 @@ class TGeoPainter extends ObjectPainter {
             numvis = this._clones.scanVisible(arg);
             tm2 = new Date().getTime();
 
-            let last_str = "Time to scan with matrix: " + makeTime(tm2-tm1);
+            let last_str = 'Time to scan with matrix: ' + makeTime(tm2-tm1);
             if (isBatchMode())
                res.push(last_str);
             else
-               elem.append("p").text(last_str);
+               elem.append('p').text(last_str);
             resolveFunc(this);
          }, 100);
       });
@@ -2941,18 +2942,18 @@ class TGeoPainter extends ObjectPainter {
      * @desc opt parameter can include function name like opt$func_name
      * Such function should be possible to find via {@link findFunction}
      * Function has to return Promise with objects to draw on geometry
-     * By default function with name "extract_geo_tracks" is checked
+     * By default function with name 'extract_geo_tracks' is checked
      * @return {Promise} handling of drop operation */
    async performDrop(obj, itemname, hitem, opt) {
 
-      if (obj && (obj.$kind==='TTree')) {
+      if (obj && (obj.$kind === 'TTree')) {
          // drop tree means function call which must extract tracks from provided tree
 
-         let funcname = "extract_geo_tracks";
+         let funcname = 'extract_geo_tracks';
 
-         if (opt && opt.indexOf("$") > 0) {
-            funcname = opt.slice(0, opt.indexOf("$"));
-            opt = opt.slice(opt.indexOf("$")+1);
+         if (opt && opt.indexOf('$') > 0) {
+            funcname = opt.slice(0, opt.indexOf('$'));
+            opt = opt.slice(opt.indexOf('$')+1);
          }
 
          let func = findFunction(funcname);
@@ -2963,7 +2964,7 @@ class TGeoPainter extends ObjectPainter {
             if (!tracks) return this;
 
             // FIXME: probably tracks should be remembered?
-            return this.drawExtras(tracks, "", false).then(()=> {
+            return this.drawExtras(tracks, '', false).then(()=> {
                this.updateClipping(true);
 
                return this.render3D(100);
@@ -2986,17 +2987,17 @@ class TGeoPainter extends ObjectPainter {
 
       let obj = hitem._obj;
       if (this.ctrl._debug)
-         console.log('Mouse over', on, itemname, (obj ? obj._typename : "---"));
+         console.log(`Mouse over ${on} ${itemname} ${obj?._typename}`);
 
       // let's highlight tracks and hits only for the time being
-      if (!obj || (obj._typename !== "TEveTrack" && obj._typename !== "TEvePointSet" && obj._typename !== "TPolyMarker3D")) return;
+      if (!obj || (obj._typename !== 'TEveTrack' && obj._typename !== 'TEvePointSet' && obj._typename !== 'TPolyMarker3D')) return;
 
       this.highlightMesh(null, 0x00ff00, on ? obj : null);
    }
 
    /** @summary clear extra drawn objects like tracks or hits */
    clearExtras() {
-      this.getExtrasContainer("delete");
+      this.getExtrasContainer('delete');
       delete this._extraObjects; // workaround, later will be normal function
       this.render3D();
    }
@@ -3006,7 +3007,7 @@ class TGeoPainter extends ObjectPainter {
     * Check if object already exists to prevent duplication */
    addExtra(obj, itemname) {
       if (this._extraObjects === undefined)
-         this._extraObjects = create("TList");
+         this._extraObjects = create('TList');
 
       if (this._extraObjects.arr.indexOf(obj) >= 0) return false;
 
@@ -3028,7 +3029,7 @@ class TGeoPainter extends ObjectPainter {
       if ((indx < 0) && hitem._obj) {
          indx = this._extraObjects.arr.indexOf(hitem._obj);
          // workaround - if object found, replace its name
-         if (indx>=0) this._extraObjects.opt[indx] = itemname;
+         if (indx >= 0) this._extraObjects.opt[indx] = itemname;
       }
 
       if (indx < 0) return;
@@ -3047,7 +3048,7 @@ class TGeoPainter extends ObjectPainter {
             mesh.visible = res;
             this.render3D();
          } else if (res) {
-            this.drawExtras(obj, "", false).then(()=> {
+            this.drawExtras(obj, '', false).then(() => {
                this.updateClipping(true);
                this.render3D();
             });
@@ -3072,12 +3073,12 @@ class TGeoPainter extends ObjectPainter {
 
       let promise = false;
 
-      if ((obj._typename === "TList") || (obj._typename === "TObjArray")) {
+      if ((obj._typename === 'TList') || (obj._typename === 'TObjArray')) {
          if (!obj.arr) return false;
          let parr = [];
          for (let n = 0; n < obj.arr.length; ++n) {
-            let sobj = obj.arr[n], sname = obj.opt ? obj.opt[n] : "";
-            if (!sname) sname = (itemname || "<prnt>") + "/[" + n + "]";
+            let sobj = obj.arr[n], sname = obj.opt ? obj.opt[n] : '';
+            if (!sname) sname = (itemname || '<prnt>') + `/[${n}]`;
             parr.push(this.drawExtras(sobj, sname, add_objects));
          }
          promise = Promise.all(parr).then(ress => ress.indexOf(true) >= 0);
@@ -3094,10 +3095,10 @@ class TGeoPainter extends ObjectPainter {
       } else if ((obj._typename === 'TEveTrack') || (obj._typename === 'ROOT::Experimental::TEveTrack')) {
          if (!add_objects || this.addExtra(obj, itemname))
             promise = this.drawEveTrack(obj, itemname);
-      } else if ((obj._typename === 'TEvePointSet') || (obj._typename === "ROOT::Experimental::TEvePointSet") || (obj._typename === "TPolyMarker3D")) {
+      } else if ((obj._typename === 'TEvePointSet') || (obj._typename === 'ROOT::Experimental::TEvePointSet') || (obj._typename === 'TPolyMarker3D')) {
          if (!add_objects || this.addExtra(obj, itemname))
             promise = this.drawHit(obj, itemname);
-      } else if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::REveGeoShapeExtract")) {
+      } else if ((obj._typename === 'TEveGeoShapeExtract') || (obj._typename === 'ROOT::Experimental::REveGeoShapeExtract')) {
          if (!add_objects || this.addExtra(obj, itemname))
             promise = this.drawExtraShape(obj, itemname);
       }
@@ -3120,7 +3121,7 @@ class TGeoPainter extends ObjectPainter {
    getExtrasContainer(action, name) {
       if (!this._toplevel) return null;
 
-      if (!name) name = "tracks";
+      if (!name) name = 'tracks';
 
       let extras = null, lst = [];
       for (let n = 0; n < this._toplevel.children.length; ++n) {
@@ -3136,13 +3137,13 @@ class TGeoPainter extends ObjectPainter {
          return lst;
       }
 
-      if (action == "delete") {
+      if (action == 'delete') {
          if (extras) this._toplevel.remove(extras);
          disposeThreejsObject(extras);
          return null;
       }
 
-      if ((action !== "get") && !extras) {
+      if ((action !== 'get') && !extras) {
          extras = new Object3D();
          extras._extras = name;
          this._toplevel.add(extras);
@@ -3152,9 +3153,9 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary add object to extras container.
-     * @desc If fail, dispore object */
+     * @desc If fail, dispose object */
    addToExtrasContainer(obj, name) {
-      let container = this.getExtrasContainer("", name);
+      let container = this.getExtrasContainer('', name);
       if (container) {
          container.add(obj);
       } else {
@@ -3165,16 +3166,16 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary drawing TGeoTrack */
    drawGeoTrack(track, itemname) {
-      if (!track || !track.fNpoints) return false;
+      if (!track?.fNpoints) return false;
 
-      let linewidth = browser.isWin ? 1 : (track.fLineWidth || 1), // linew width not supported on windows
-          color = getColor(track.fLineColor) || "#ff00ff",
+      let linewidth = browser.isWin ? 1 : (track.fLineWidth || 1), // line width not supported on windows
+          color = getColor(track.fLineColor) || '#ff00ff',
           npoints = Math.round(track.fNpoints/4), // each track point has [x,y,z,t] coordinate
           buf = new Float32Array((npoints-1)*6),
           pos = 0, projv = this.ctrl.projectPos,
-          projx = (this.ctrl.project === "x"),
-          projy = (this.ctrl.project === "y"),
-          projz = (this.ctrl.project === "z");
+          projx = (this.ctrl.project === 'x'),
+          projy = (this.ctrl.project === 'y'),
+          projz = (this.ctrl.project === 'z');
 
       for (let k = 0; k < npoints-1; ++k) {
          buf[pos]   = projx ? projv : track.fPoints[k*4];
@@ -3194,7 +3195,7 @@ class TGeoPainter extends ObjectPainter {
       line.geo_object = track;
       line.hightlightWidthScale = 2;
 
-      if (itemname && itemname.indexOf("<prnt>/Tracks")==0)
+      if (itemname && itemname.indexOf('<prnt>/Tracks') == 0)
          line.main_track = true;
 
       this.addToExtrasContainer(line);
@@ -3207,14 +3208,14 @@ class TGeoPainter extends ObjectPainter {
       if (!line) return false;
 
       let linewidth = browser.isWin ? 1 : (line.fLineWidth || 1),
-          color = getColor(line.fLineColor) || "#ff00ff",
+          color = getColor(line.fLineColor) || '#ff00ff',
           npoints = line.fN,
           fP = line.fP,
           buf = new Float32Array((npoints-1)*6),
           pos = 0, projv = this.ctrl.projectPos,
-          projx = (this.ctrl.project === "x"),
-          projy = (this.ctrl.project === "y"),
-          projz = (this.ctrl.project === "z");
+          projx = (this.ctrl.project === 'x'),
+          projy = (this.ctrl.project === 'y'),
+          projz = (this.ctrl.project === 'z');
 
       for (let k = 0; k < npoints-1; ++k) {
          buf[pos]   = projx ? projv : fP[k*3];
@@ -3244,12 +3245,12 @@ class TGeoPainter extends ObjectPainter {
       if (!track || (track.fN <= 0)) return false;
 
       let linewidth = browser.isWin ? 1 : (track.fLineWidth || 1),
-          color = getColor(track.fLineColor) || "#ff00ff",
+          color = getColor(track.fLineColor) || '#ff00ff',
           buf = new Float32Array((track.fN-1)*6), pos = 0,
           projv = this.ctrl.projectPos,
-          projx = (this.ctrl.project === "x"),
-          projy = (this.ctrl.project === "y"),
-          projz = (this.ctrl.project === "z");
+          projx = (this.ctrl.project === 'x'),
+          projy = (this.ctrl.project === 'y'),
+          projz = (this.ctrl.project === 'z');
 
       for (let k = 0; k < track.fN-1; ++k) {
          buf[pos]   = projx ? projv : track.fP[k*3];
@@ -3284,9 +3285,9 @@ class TGeoPainter extends ObjectPainter {
       let hit_size = Math.max(hit.fMarkerSize * this.getOverallSize() * 0.005, 0.2),
           nhits = hit.fN,
           projv = this.ctrl.projectPos,
-          projx = (this.ctrl.project === "x"),
-          projy = (this.ctrl.project === "y"),
-          projz = (this.ctrl.project === "z"),
+          projx = (this.ctrl.project === 'x'),
+          projy = (this.ctrl.project === 'y'),
+          projz = (this.ctrl.project === 'z'),
           style = hit.fMarkerStyle;
 
       // FIXME: styles 2 and 4 does not work properly, see Misc/basic3d demo
@@ -3300,7 +3301,7 @@ class TGeoPainter extends ObjectPainter {
                        projy ? projv : hit.fP[i*3+1],
                        projz ? projv : hit.fP[i*3+2]);
 
-      return pnts.createPoints({ color: getColor(hit.fMarkerColor) || "#0000ff", style }).then(mesh => {
+      return pnts.createPoints({ color: getColor(hit.fMarkerColor) || '#0000ff', style }).then(mesh => {
          mesh.defaultOrder = mesh.renderOrder = 1000000; // to bring points to the front
          mesh.highlightScale = 2;
          mesh.geo_name = itemname;
@@ -3331,11 +3332,11 @@ class TGeoPainter extends ObjectPainter {
       if (!prnt) {
          prnt = this.getGeometry();
          if (!prnt && (getNodeKind(prnt) !== 0)) return null;
-         itemname = this.geo_manager ? prnt.fName : "";
+         itemname = this.geo_manager ? prnt.fName : '';
          first_level = true;
          volumes = [];
       } else {
-         if (itemname.length>0) itemname += "/";
+         if (itemname.length > 0) itemname += '/';
          itemname += prnt.fName;
       }
 
@@ -3365,7 +3366,7 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Process script option - load and execute some gGeoManager-related calls */
    async loadMacro(script_name) {
 
-      let result = { obj: this.getGeometry(), prefix: "" };
+      let result = { obj: this.getGeometry(), prefix: '' };
 
       if (this.geo_manager)
          result.prefix = result.obj.fName;
@@ -3375,10 +3376,10 @@ class TGeoPainter extends ObjectPainter {
 
       let mgr = {
             GetVolume: name => {
-               let regexp = new RegExp("^"+name+"$"),
+               let regexp = new RegExp('^'+name+'$'),
                    currnode = this.findNodeWithVolume(regexp, arg => arg);
 
-               if (!currnode) console.log('Did not found '+name + ' volume');
+               if (!currnode) console.log(`Did not found ${name} volume`);
 
                // return proxy object with several methods, typically used in ROOT geom scripts
                return {
@@ -3391,7 +3392,7 @@ class TGeoPainter extends ObjectPainter {
                       if (!this.found || !this.fVolume) return;
                       result.obj = this.found.node;
                       result.prefix = this.found.item;
-                      console.log('Select volume for drawing', this.fVolume.fName, result.prefix);
+                      console.log(`Select volume for drawing ${this.fVolume.fName} ${result.prefix}`);
                    },
                    SetTransparency(lvl) {
                      if (this.fVolume && this.fVolume.fMedium && this.fVolume.fMedium.fMaterial)
@@ -3420,13 +3421,13 @@ class TGeoPainter extends ObjectPainter {
 
       showProgress('Loading macro ' + script_name);
 
-      return httpRequest(script_name, "text").then(script => {
+      return httpRequest(script_name, 'text').then(script => {
          let lines = script.split('\n'), indx = 0;
 
          while (indx < lines.length) {
             let line = lines[indx++].trim();
 
-            if (line.indexOf('//')==0) continue;
+            if (line.indexOf('//') == 0) continue;
 
             if (line.indexOf('gGeoManager') < 0) continue;
             line = line.replace('->GetVolume','.GetVolume');
@@ -3443,13 +3444,13 @@ class TGeoPainter extends ObjectPainter {
                let func = new Function('gGeoManager', line);
                func(mgr);
             } catch(err) {
-               console.error('Problem by processing ' + line);
+               console.error(`Problem by processing ${line}`);
             }
          }
 
          return result;
       }).catch(() => {
-         console.error('Fail to load ' + script_name);
+         console.error(`Fail to load ${script_name}`);
          return result;
       });
    }
@@ -3469,11 +3470,11 @@ class TGeoPainter extends ObjectPainter {
       if (this.did_cleanup)
          return null;
 
-      if (name_prefix == "__geom_viewer_append__") {
+      if (name_prefix == '__geom_viewer_append__') {
          this._new_append_nodes = draw_obj;
          this.ctrl.use_worker = 0;
          this._geom_viewer = true; // indicate that working with geom viewer
-      } else if ((name_prefix == "__geom_viewer_selection__") && this._clones) {
+      } else if ((name_prefix == '__geom_viewer_selection__') && this._clones) {
          // these are selection done from geom viewer
          this._new_draw_nodes = draw_obj;
          this.ctrl.use_worker = 0;
@@ -3541,7 +3542,7 @@ class TGeoPainter extends ObjectPainter {
 
          if (this._on_pad) {
             let size, render3d, fp;
-            promise = ensureTCanvas(this,"3d").then(() => {
+            promise = ensureTCanvas(this,'3d').then(() => {
 
                fp = this.getFramePainter();
 
@@ -3589,7 +3590,7 @@ class TGeoPainter extends ObjectPainter {
 
          return new Promise(resolveFunc => {
             this._resolveFunc = resolveFunc;
-            this.showDrawInfo("Drawing geometry");
+            this.showDrawInfo('Drawing geometry');
             this.startDrawGeometry(true);
          });
       });
@@ -3600,16 +3601,16 @@ class TGeoPainter extends ObjectPainter {
       if (isBatchMode() || !this._first_drawing || !this._start_drawing_time) return;
 
       let main = this._renderer.domElement.parentNode,
-          info = main.querySelector(".geo_info");
+          info = main.querySelector('.geo_info');
 
       if (!msg) {
          info.remove();
       } else {
          let spent = (new Date().getTime() - this._start_drawing_time)*1e-3;
          if (!info) {
-            info = document.createElement("p");
-            info.setAttribute("class", "geo_info");
-            info.setAttribute("style",  "position: absolute; text-align: center; vertical-align: middle; top: 45%; left: 40%; color: red; font-size: 150%;");
+            info = document.createElement('p');
+            info.setAttribute('class', 'geo_info');
+            info.setAttribute('style',  'position: absolute; text-align: center; vertical-align: middle; top: 45%; left: 40%; color: red; font-size: 150%;');
             main.append(info);
          }
          info.innerHTML = `${msg}, ${spent.toFixed(1)}s`;
@@ -3636,7 +3637,7 @@ class TGeoPainter extends ObjectPainter {
 
          // stop creation after 100 sec, render as is
          if (now - this._startm > 1e5) {
-            this.changeStage(stageInit, "Abort build after 100s");
+            this.changeStage(stageInit, 'Abort build after 100s');
             break;
          }
 
@@ -3667,7 +3668,7 @@ class TGeoPainter extends ObjectPainter {
 
       if (take_time > 300) {
          showProgress('Rendering geometry');
-         this.showDrawInfo("Rendering");
+         this.showDrawInfo('Rendering');
          return setTimeout(() => this.completeDraw(true), 10);
       }
 
@@ -3697,7 +3698,7 @@ class TGeoPainter extends ObjectPainter {
      * @param [measure] - when true, for the first time printout rendering time
      * @return {Promise} when tmout bigger than 0 is specified
      * @desc Timeout used to avoid multiple rendering of the picture when several 3D drawings
-     * superimposed with each other. If tmeout<=0, rendering performed immediately
+     * superimposed with each other. If tmeout <= 0, rendering performed immediately
      * Several special values are used:
      *   -1    - force recheck of rendering order based on camera position */
    render3D(tmout, measure) {
@@ -3781,7 +3782,7 @@ class TGeoPainter extends ObjectPainter {
       this._worker_jobs = 0; // counter how many requests send to worker
 
       // TODO: modules not yet working, see https://www.codedread.com/blog/archives/2017/10/19/web-workers-can-be-es6-modules-too/
-      this._worker = new Worker(source_dir + "scripts/geoworker.js" /*, { type: "module" } */);
+      this._worker = new Worker(source_dir + 'scripts/geoworker.js' /*, { type: 'module' } */);
 
       this._worker.onmessage = e => {
 
@@ -3860,7 +3861,7 @@ class TGeoPainter extends ObjectPainter {
                if (item.buf_pos.length === 0) {
                   origin.geom = null;
                } else if (item.buf_pos.length !== item.buf_norm.length) {
-                  console.error('item.buf_pos',item.buf_pos.length, 'item.buf_norm', item.buf_norm.length);
+                  console.error(`item.buf_pos.length ${item.buf_pos.length} != item.buf_norm.length ${item.buf_norm.length}`);
                   origin.geom = null;
                } else {
                   origin.geom = new BufferGeometry();
@@ -3909,7 +3910,7 @@ class TGeoPainter extends ObjectPainter {
           center = [0,0,0],
           names = ['x','y','z'],
           labels = ['X','Y','Z'],
-          colors = ["red","green","blue"],
+          colors = ['red','green','blue'],
           ortho = this.ctrl.ortho_camera,
           yup = [this.ctrl._yup, this.ctrl._yup, this.ctrl._yup],
           numaxis = 3;
@@ -3917,7 +3918,7 @@ class TGeoPainter extends ObjectPainter {
       if (this.ctrl._axis == 2)
          for (let naxis = 0; naxis < 3; ++naxis) {
             let name = names[naxis];
-            if ((box.min[name]<=0) && (box.max[name]>=0)) continue;
+            if ((box.min[name] <= 0) && (box.max[name] >= 0)) continue;
             center[naxis] = (box.min[name] + box.max[name])/2;
          }
 
@@ -3953,9 +3954,9 @@ class TGeoPainter extends ObjectPainter {
          buf[5] = box.min.z;
 
          switch (naxis) {
-           case 0: buf[3] = box.max.x; if (yup[0] && !ortho) lbl = labels[0] + " " + lbl; else lbl += " " + labels[0]; break;
-           case 1: buf[4] = box.max.y; if (yup[1]) lbl += " " + labels[1]; else lbl = labels[1] + " " + lbl; break;
-           case 2: buf[5] = box.max.z; lbl += " " + labels[2]; break;
+           case 0: buf[3] = box.max.x; if (yup[0] && !ortho) lbl = labels[0] + ' ' + lbl; else lbl += ' ' + labels[0]; break;
+           case 1: buf[4] = box.max.y; if (yup[1]) lbl += ' ' + labels[1]; else lbl = labels[1] + ' ' + lbl; break;
+           case 2: buf[5] = box.max.z; lbl += ' ' + labels[2]; break;
          }
 
          if (this.ctrl._axis == 2)
@@ -3965,23 +3966,26 @@ class TGeoPainter extends ObjectPainter {
          let lineMaterial = new LineBasicMaterial({ color }),
              mesh = createLineSegments(buf, lineMaterial);
 
+         mesh._axis_draw = true; // skip from clipping
+
          container.add(mesh);
 
          let textMaterial = new MeshBasicMaterial({ color, vertexColors: false });
 
-         if ((center[naxis]===0) && (center[naxis] >= box.min[name]) && (center[naxis] <= box.max[name]))
-           if ((this.ctrl._axis != 2) || (naxis===0)) {
+         if ((center[naxis] === 0) && (center[naxis] >= box.min[name]) && (center[naxis] <= box.max[name]))
+           if ((this.ctrl._axis != 2) || (naxis === 0)) {
                let geom = ortho ? new CircleGeometry(text_size*0.25) :
                                   new SphereGeometry(text_size*0.25);
                mesh = new Mesh(geom, textMaterial);
-               mesh.translateX((naxis===0) ? center[0] : buf[0]);
-               mesh.translateY((naxis===1) ? center[1] : buf[1]);
-               mesh.translateZ((naxis===2) ? center[2] : buf[2]);
+               mesh.translateX(naxis === 0 ? center[0] : buf[0]);
+               mesh.translateY(naxis === 1 ? center[1] : buf[1]);
+               mesh.translateZ(naxis === 2 ? center[2] : buf[2]);
                container.add(mesh);
            }
 
          let text3d = new TextGeometry(lbl, { font: HelveticerRegularFont, size: text_size, height: 0, curveSegments: 5 });
          mesh = new Mesh(text3d, textMaterial);
+         mesh._axis_draw = true; // skip from clipping
          let textbox = new Box3().setFromObject(mesh);
 
          mesh.translateX(buf[3]);
@@ -4024,6 +4028,7 @@ class TGeoPainter extends ObjectPainter {
          text3d = new TextGeometry(Convert(box.min[name]), { font: HelveticerRegularFont, size: text_size, height: 0, curveSegments: 5 });
 
          mesh = new Mesh(text3d, textMaterial);
+         mesh._axis_draw = true; // skip from clipping
          textbox = new Box3().setFromObject(mesh);
 
          mesh.translateX(buf[0]);
@@ -4065,12 +4070,12 @@ class TGeoPainter extends ObjectPainter {
       }
 
       // after creating axes trigger rendering and recalculation of depth
-      return this.changedDepthMethod(norender ? "norender" : undefined);
+      return this.changedDepthMethod(norender ? 'norender' : undefined);
    }
 
    /** @summary Set axes visibility 0 - off, 1 - on, 2 - centered */
    setAxesDraw(on) {
-      if (on === "toggle")
+      if (on === 'toggle')
          this.ctrl._axis = this.ctrl._axis ? 0 : 1;
       else
          this.ctrl._axis = (typeof on == 'number') ? on : (on ? 1 : 0);
@@ -4135,7 +4140,7 @@ class TGeoPainter extends ObjectPainter {
    changedDepthMethod(arg) {
       // force recalculatiion of render order
       delete this._last_camera_position;
-      if (arg !== "norender")
+      if (arg !== 'norender')
          return this.render3D();
    }
 
@@ -4145,19 +4150,26 @@ class TGeoPainter extends ObjectPainter {
          this.highlightMesh(null);
    }
 
+
    /** @summary Assign clipping attributes to the meshes - supported only for webgl */
    updateClipping(without_render, force_traverse) {
       // do not try clipping with SVG renderer
-      if (this._renderer && this._renderer.jsroot_render3d === constants.Render3D.SVG) return;
+      if (this._renderer?.jsroot_render3d === constants.Render3D.SVG) return;
+
+      if (!this._clipPlanes)
+         this._clipPlanes = [ new Plane(new Vector3(1, 0, 0), 0),
+                              new Plane(new Vector3(0, this.ctrl._yup ? -1 : 1, 0), 0),
+                              new Plane(new Vector3(0, 0, this.ctrl._yup ? 1 : -1), 0) ];
 
       let clip = this.ctrl.clip, panels = [], changed = false,
-          clip_constants = [ clip[0].value, -1 * clip[1].value, (this.ctrl._yup ? -1 : 1) * clip[2].value ],
+          clip_constants = [ -1 * clip[0].value, clip[1].value, (this.ctrl._yup ? -1 : 1) * clip[2].value ],
           clip_cfg = this.ctrl.clipIntersect ? 16 : 0;
 
       for (let k = 0; k < 3; ++k) {
-         if (clip[k].enabled) clip_cfg += 2 << k;
-         if (this._clipPlanes[k].constant != clip_constants[k]) {
-            changed = true;
+         if (clip[k].enabled)
+            clip_cfg += 2 << k;
+         if (this._clipPlanes[k].constant !== clip_constants[k]) {
+            if (clip[k].enabled) changed = true;
             this._clipPlanes[k].constant = clip_constants[k];
          }
       }
@@ -4179,7 +4191,7 @@ class TGeoPainter extends ObjectPainter {
 
       if (force_traverse || changed)
          this._scene.traverse(node => {
-            if (node.hasOwnProperty("material") && node.material && (node.material.clippingPlanes !== undefined)) {
+            if (!node._axis_draw && node.hasOwnProperty('material') && (node.material?.clippingPlanes !== undefined)) {
 
                if (node.material.clippingPlanes !== panels) {
                   node.material.clipIntersection = ci;
@@ -4226,12 +4238,12 @@ class TGeoPainter extends ObjectPainter {
       if (!this._clones) {
          check_extras = false;
          // if extra object where append, redraw them at the end
-         this.getExtrasContainer("delete"); // delete old container
+         this.getExtrasContainer('delete'); // delete old container
          let extras = (this._main_painter ? this._main_painter._extraObjects : null) || this._extraObjects;
-         promise = this.drawExtras(extras, "", false);
+         promise = this.drawExtras(extras, '', false);
       } else if (this._first_drawing || this._full_redrawing) {
          if (this.ctrl.tracks && this.geo_manager)
-            promise = this.drawExtras(this.geo_manager.fTracks, "<prnt>/Tracks");
+            promise = this.drawExtras(this.geo_manager.fTracks, '<prnt>/Tracks');
       }
 
       return promise.then(() => {
@@ -4240,7 +4252,7 @@ class TGeoPainter extends ObjectPainter {
             this.adjustCameraPosition(true);
             this._full_redrawing = false;
             full_redraw = true;
-            this.changedDepthMethod("norender");
+            this.changedDepthMethod('norender');
          }
 
          if (this._first_drawing) {
@@ -4258,7 +4270,7 @@ class TGeoPainter extends ObjectPainter {
             this.completeScene();
 
          if (full_redraw && (this.ctrl.trans_radial || this.ctrl.trans_z))
-            this.changedTransformation("norender");
+            this.changedTransformation('norender');
 
          if (full_redraw && this.ctrl._axis)
             this.drawSimpleAxis(true);
@@ -4272,9 +4284,9 @@ class TGeoPainter extends ObjectPainter {
 
          if (check_extras) {
             // if extra object where append, redraw them at the end
-            this.getExtrasContainer("delete"); // delete old container
+            this.getExtrasContainer('delete'); // delete old container
             let extras = (this._main_painter ? this._main_painter._extraObjects : null) || this._extraObjects;
-            return this.drawExtras(extras, "", false);
+            return this.drawExtras(extras, '', false);
          }
       }).then(() => {
 
@@ -4418,7 +4430,7 @@ class TGeoPainter extends ObjectPainter {
 
          this.did_cleanup = true;
 
-         if (can3d < 0) this.selectDom().html("");
+         if (can3d < 0) this.selectDom().html('');
       }
 
       if (this._slave_painters)
@@ -4463,7 +4475,7 @@ class TGeoPainter extends ObjectPainter {
       this.first_render_tm = 0; // time needed for first rendering
       this.last_render_tm = 0;
 
-      this.changeStage(stageInit, "cleanup");
+      this.changeStage(stageInit, 'cleanup');
       delete this.drawing_log;
 
       delete this._datgui;
@@ -4490,7 +4502,7 @@ class TGeoPainter extends ObjectPainter {
       this._scene_height = height;
 
       if (this._camera && this._renderer) {
-         if (this._camera.type == "PerspectiveCamera")
+         if (this._camera.type == 'PerspectiveCamera')
             this._camera.aspect = this._scene_width / this._scene_height;
          this._camera.updateProjectionMatrix();
          this._renderer.setSize( this._scene_width, this._scene_height, !this._fit_main_area );
@@ -4538,7 +4550,7 @@ class TGeoPainter extends ObjectPainter {
      * @return undefined when wireframe cannot be accessed
      * @private */
    accessObjectWireFrame(obj, on) {
-      if (!obj.hasOwnProperty("material") || (obj instanceof GridHelper)) return;
+      if (!obj.hasOwnProperty('material') || (obj instanceof GridHelper)) return;
 
       if (this.ownedByTransformControls(obj)) return;
 
@@ -4562,13 +4574,13 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Update object in geo painter */
    updateObject(obj) {
-      if (obj === "same") return true;
+      if (obj === 'same') return true;
       if (!obj?._typename) return false;
       if (obj === this.getObject()) return true;
 
-      if (this.geo_manager && (obj._typename == "TGeoManager")) {
+      if (this.geo_manager && (obj._typename == 'TGeoManager')) {
          this.geo_manager = obj;
-         this.assignObject({ _typename:"TGeoNode", fVolume: obj.fMasterVolume, fName: obj.fMasterVolume.fName, $geoh: obj.fMasterVolume.$geoh, _proxy: true });
+         this.assignObject({ _typename: 'TGeoNode', fVolume: obj.fMasterVolume, fName: obj.fMasterVolume.fName, $geoh: obj.fMasterVolume.$geoh, _proxy: true });
          return true;
       }
 
@@ -4618,7 +4630,7 @@ class TGeoPainter extends ObjectPainter {
 
       this.clearDrawings();
 
-      let draw_obj = this.getGeometry(), name_prefix = "";
+      let draw_obj = this.getGeometry(), name_prefix = '';
       if (this.geo_manager) name_prefix = draw_obj.fName;
 
       return this.prepareObjectDraw(draw_obj, name_prefix);
@@ -4628,35 +4640,35 @@ class TGeoPainter extends ObjectPainter {
    static async draw(dom, obj, opt) {
       if (!obj) return null;
 
-      let shape = null, extras = null, extras_path = "", is_eve = false;
+      let shape = null, extras = null, extras_path = '', is_eve = false;
 
       if (('fShapeBits' in obj) && ('fShapeId' in obj)) {
          shape = obj; obj = null;
       } else if ((obj._typename === 'TGeoVolumeAssembly') || (obj._typename === 'TGeoVolume')) {
          shape = obj.fShape;
-      } else if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::REveGeoShapeExtract")) {
+      } else if ((obj._typename === 'TEveGeoShapeExtract') || (obj._typename === 'ROOT::Experimental::REveGeoShapeExtract')) {
          shape = obj.fShape; is_eve = true;
       } else if (obj._typename === 'TGeoManager') {
          shape = obj.fMasterVolume.fShape;
       } else if (obj._typename === 'TGeoOverlap') {
-         extras = obj.fMarker; extras_path = "<prnt>/Marker";
+         extras = obj.fMarker; extras_path = '<prnt>/Marker';
          obj = buildOverlapVolume(obj);
-         if (!opt) opt = "wire";
+         if (!opt) opt = 'wire';
       } else if ('fVolume' in obj) {
          if (obj.fVolume) shape = obj.fVolume.fShape;
       } else {
          obj = null;
       }
 
-      if ((typeof opt == "string") && opt.indexOf("comp")==0 && shape && (shape._typename == 'TGeoCompositeShape') && shape.fNode) {
+      if ((typeof opt == 'string') && opt.indexOf('comp') == 0 && shape && (shape._typename == 'TGeoCompositeShape') && shape.fNode) {
          let maxlvl = 1;
          opt = opt.slice(4);
-         if (opt[0] == "x") {  maxlvl = 999; opt = opt.slice(1) + "_vislvl999"; }
+         if (opt[0] == 'x') {  maxlvl = 999; opt = opt.slice(1) + '_vislvl999'; }
          obj = buildCompositeVolume(shape, maxlvl);
       }
 
       if (!obj && shape)
-         obj = Object.assign(create("TEveGeoShapeExtract"),
+         obj = Object.assign(create('TEveGeoShapeExtract'),
                    { fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 1], fElements: null, fRnrSelf: true });
 
       if (!obj) return null;
@@ -4694,46 +4706,46 @@ function injectGeoStyle() {
    if (!add_settings && typeof internals.addDrawFunc == 'function') {
       add_settings = true;
       // indication that draw and hierarchy is loaded, create css
-      internals.addDrawFunc({ name: "TEvePointSet", icon_get: getBrowserIcon, icon_click: browserIconClick });
-      internals.addDrawFunc({ name: "TEveTrack", icon_get: getBrowserIcon, icon_click: browserIconClick });
+      internals.addDrawFunc({ name: 'TEvePointSet', icon_get: getBrowserIcon, icon_click: browserIconClick });
+      internals.addDrawFunc({ name: 'TEveTrack', icon_get: getBrowserIcon, icon_click: browserIconClick });
    }
 
    function img(name,code) {
-      return `.jsroot .img_${name} { display: inline-block; height: 16px; width: 16px; background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQ${code}"); }`;
+      return `.jsroot .img_${name} { display: inline-block; height: 16px; width: 16px; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQ${code}'); }`;
    }
 
    injectStyle(`
-${img("geoarb8","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB1SURBVBjTdY6rEYAwEETTy6lzK8/Fo+Jj18dTAjUgaQGfGiggtRDE8RtY93Zu514If2nzk2ux9c5TZkwXbiWTUavzws69oBfpYBrMT4r0Jhsw+QfRgQSw+CaKRsKsnV+SaF8MN49RBSgPUxO85PMl5n4tfGUH2gghs2uPAeQAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==")}
-${img("geocombi","CAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAAlUlEQVQoz5VQMQ4CMQyzEUNnBqT7Bo+4nZUH8gj+welWJsQDkHoCEYakTXMHSFiq2jqu4xRAEl2A7w4myWzpzCSZRZ658ldKu1hPnFsequBIc/hcLli3l52MAIANtpWrDsv8waGTW6BPuFtsdZArXyFuj33TQpazGEQF38phipnLgItxRcAoOeNpzv4PTXnC42fb//AGI5YqfQAU8dkAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==")}
-${img("geocone","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACRSURBVBjTdY+xDcNACEVvEm/ggo6Olva37IB0C3iEzJABvAHFTXBDeJRwthMnUvylk44vPjxK+afeokX0flQhJO7L4pafSOMxzaxIKc/Tc7SIjNLyieyZSjBzc4DqMZI0HTMonWPBNlogOLeuewbg9c0hOiIqH7DKmTCuFykjHe4XOzQ58XVMGxzt575tKzd6AX9yMkcWyPlsAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=")}
-${img("geogtra","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACCSURBVBjTVc+hDQMxDAVQD1FyqCQk0MwsCwQEG3+eCW6B0FvheDboFMGepTlVitPP/Cz5y0S/mNkw8pySU9INJDDH4vM4Usm5OrQXasXtkA+tQF+zxfcDY8EVwgNeiwmA37TEccK5oLOwQtuCj7BM2Fq7iGrxVqJbSsH+GzXs+798AThwKMh3/6jDAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=")}
-${img("geomedium","BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAABVQTFRFAAAAAAAAMDAww8PDWKj/////gICAG0/C4AAAAAF0Uk5TAEDm2GYAAAABYktHRAX4b+nHAAAACXBIWXMAAABIAAAASABGyWs+AAAAXElEQVQI102MwRGAMAgEuQ6IDwvQCjQdhAl/H7ED038JHhkd3dcOLAgESFARaAqnEB3yrj6QSEym1RbbOKinN+8q2Esui1GaX7VXSi4RUbxHRbER8X6O5Pg/fLgBBzMN8HfXD3AAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==")}
-${img("geopara","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABtSURBVBjTY2DADq5MT7+CzD9kaKjp+QhJYIWqublhMbKAgpOnZxWSQJdsVJTndCSBKoWoAM/VSALpqlEBAYeQBKJAAsi2BGgCBZDdEWUYFZCOLFBlGOWJ7AyGFeaotjIccopageK3R12PGHABACTYHWd0tGw6AAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=")}
-${img("georotation","CAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAAiklEQVQoz2NgYGBgYGDg+A/BmIAFIvyDEbs0AwMTAwHACLPiB5QVBTdpGSOSCZjScDcgc4z+32BgYGBgEGIQw3QDLkdCTZD8/xJFeBfDVxQT/j9n/MeIrMCNIRBJwX8GRuzGM/yHKMAljeILNFOuMTyEisEUMKIqucrwB2oyIhyQpH8y/MZrLWkAAHFzIHIc0Q5yAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=")}
-${img("geotranslation","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABESURBVBjTY2DgYGAAYzjgAAIQgSLAgSwAAcrWUUCAJBAVhSpgBAQumALGCJPAAsriHIS0IAQ4UAU4cGphQBWwZSAOAADGJBKdZk/rHQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC")}
-${img("geotrd2","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABsSURBVBjTbY+xDcAwCARZx6UraiaAmpoRvIIb75PWI2QITxIiRQKk0CCO/xcA/NZ9LRs7RkJEYg3QxczUwoGsXiMAoe8lAelqRWFNKpiNXZLAalRDd0f3TMgeMckABKsCDmu+442RddeHz9cf9jUkW8smGn8AAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==")}
-${img("geovolume","BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAB5QTFRFAAAAMDAw///Ay8uc/7+Q/4BgmJh4gIDgAAD/////CZb2ugAAAAF0Uk5TAEDm2GYAAAABYktHRAnx2aXsAAAACXBIWXMAAABIAAAASABGyWs+AAAAR0lEQVQI12NggAEBIBAEQgYGQUYQAyIGIhgwAZMSGCgwMJuEKimFOhswsKWAGG4JDGxJIBk1EEO9o6NIDVkEpgauC24ODAAASQ8Pkj/retYAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==")}
-${img("geoassembly","BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAA9QTFRFAAAAMDAw/wAAAAD/////jEo0BQAAAAF0Uk5TAEDm2GYAAAABYktHRASPaNlRAAAACXBIWXMAAABIAAAASABGyWs+AAAAOklEQVQI12NggAFGRgEgEBRgEBSAMhgYGQQEgAR+oARGDIwCIAYjUL0A2DQQg9nY2ABVBKoGrgsDAADxzgNboMz8zQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC")}
-${img("geocomposite","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABuSURBVBjTY2AgF2hqgQCCr+0V4O7hFmgCF7CJyKysKkmxhfGNLaw9SppqAi2gfMuY5Agrl+ZaC6iAUXRJZX6Ic0klTMA5urapPFY5NRcmYKFqWl8S5RobBRNg0PbNT3a1dDGH8RlM3LysTRjIBwAG6xrzJt11BAAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC")}
-${img("geoctub","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACESURBVBjTdc+xDcMwDARA7cKKHTuWX37LHaw+vQbQAJomA7j2DB7FhCMFCZB8pxPwJEv5kQcZW+3HencRBekak4aaMQIi8YJdAQ1CMeE0UBkuaLMETklQ9Alhka0JzzXWqLVBuQYPpWcVuBbZjZafNRYcDk9o/b07bvhINz+/zxu1/M0FSRcmAk/HaIcAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==")}
-${img("geohype","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACKSURBVBjTbU+rFQQhDKQSDDISEYuMREfHx6eHKMpYuf5qoIQt5bgDblfcuJk3nySEhSvceDV3c/ejT66lspopE9pXyIlkCrHMBACpu1DClekQAREi/loviCnF/NhRwJLaQ6hVhPjB8bOCsjlnNnNl0FWJVWxAqGzHONRHpu5Ml+nQ+8GzNW9n+Is3eg80Nk0iiwoAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==")}
-${img("geomixture","BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAACFQTFRFAAAAAAAAKysrVVUA//8B//8AgICAqqpV398gv79A////VYJtlwAAAAF0Uk5TAEDm2GYAAAABYktHRApo0PRWAAAACXBIWXMAAABIAAAASABGyWs+AAAAXklEQVQI12NgwASCQsJCgoZAhoADq1tKIJAhEpDGxpYIZKgxsLElgBhibAkOCY4gKTaGkPRGIEPUIYEBrEaAIY0tDawmgYWNgREkkjCVjRWkWCUhLY0FJCIIBljsBgCZTAykgaRiRwAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC")}
-${img("geopcon","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACJSURBVBjTdc+hGcQwCIZhhjl/rkgWiECj8XgGyAbZoD5LdIRMkEnKkV575n75Pp8AgLU54dmh6mauelyAL2Qzxfe2sklioq6FacFAcRFXYhwJHdU5rDD2hEYB/CmoJVRMiIJqgtENuoqA8ltAlYAqRH4d1tGkwzTqN2gA7Nv+fUwkgZ/3mg34txM+szzATJS1HQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC")}
-${img("geosphere","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACFSURBVBjTdY+xEcQwCAQp5QNFjpQ5vZACFBFTADFFfKYCXINzlUAJruXll2ekxDAEt9zcANFbXb2mqm56dxsymAH0yccAJaeNi0h5QGyfxGJmivMPjj0nmLsbRmyFCss3rlbpcUjfS8wLUNRcJyCF6uqg2IvYCnoKC7f1kSbA6riTz7evfwj3Ml+H3KBqAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=")}
-${img("geotrap","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB5SURBVBjTbY+hFYAwDETZB1OJi4yNPp0JqjtAZ2AELL5DdABmIS2PtLxHXH7u7l2W5W+uHMHpGiCHLYR1yw4SCZMIXBOJWVSjK7QDDAu4g8OBmAKK4sAEDdR3rw8YmcUcrEijKKhl7lN1IQPn9ExlgU6/WEyc75+5AYK0KY5oHBDfAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=")}
-${img("geotubeseg","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACBSURBVBjTdc+hEcQwDARA12P6QFBQ9LDwcXEVkA7SQTr4BlJBakgpsWdsh/wfux3NSCrlV86Mlrxmz1pBWq3bAHwETohxABVmDZADQp1BE+wDNnGywzHgmHDOreJNTDH3Xn3CVX0dpu2MHcIFBkYp/gKsQ8SCQ72V+36/+2aWf3kAQfgshnpXF0wAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==")}
-${img("geoxtru","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABcSURBVBjTY2AgEmhpeZV56vmWwQW00QUYwAJlSAI6XmVqukh8PT1bT03PchhXX09Pr9wQIQDiJ+ZowgWAXD3bck+QQDlCQTkDQgCoxA/ERBKwhbDglgA1lDMQDwCc/Rvq8nYsWgAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC")}
-${img("geobbox","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB/SURBVBjTVc+hEYAwDAXQLlNRF1tVGxn9NRswQiSSCdgDyQBM0FlIIb2WuL77uf6E8E0N02wKYRwDciTKREVvB04GuZSyOMCABRB1WGzF3uDNQTvs/RcDtJXT4fSEXA5XoiQt0ttVSm8Co2psIOvoimjAOqBmFtH5wEP2373TPIvTK1nrpULXAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=")}
-${img("geoconeseg","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB4SURBVBjTdc6hEcAgDAXQbFNZXHQkFlkd/30myAIMwAws0gmYpVzvoFyv/S5P/B+izzQ387ZA2pkDnvsU1SQLVIFrOM4JFmEaYp2gCQbmPEGODhJ8jt7Am47hwgrzInGAifa/elUZnQLY00iU30BZAV+BWi2VfnIBv1osbHH8jX0AAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==")}
-${img("geoeltu","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACGSURBVBjTdY+hFYUwDEU7xq9CIXC4uNjY6KczQXeoYgVMR2ABRmCGjvIp/6dgiEruueedvBDuOR57LQnKyc8CJmKO+N8bieIUPtmBWjIIx8XDBHYCipsnql1g2D0UP2OoDqwBncf+RdZmzFMHizRjog7KZYzawd4Ay93lEAPWR7WAvNbwMl/XwSxBV8qCjgAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC")}
-${img("geomaterial","CAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAAbElEQVQoz62QMRbAIAhDP319Xon7j54qHSyCtaMZFCUkRjgDIdRU9yZUCfg8ut5aAHdcxtoNurmgA3ABNKIR9KimhSukPe2qxcCYC0pfFXx/aFWo7i42KKItOpopqvvnLzJmtlZTS7EfGAfwAM4EQbLIGV0sAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=")}
-${img("geoparab","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB/SURBVBjTbY+xDYAwDAQ9UAp3X7p0m9o9dUZgA9oMwAjpMwMzMAnYBAQSX9mn9+tN9KOtzsWsLOvYCziUGNX3nnCLJRzKPgeYrhPW7FJNLUB3YJazYKQKTnBaxgXRzNmJcrt7XCHQp9kEB1wfELEir/KGj4Foh8A+/zW1nf51AFabKZuWK+mNAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=")}
-${img("geopgon","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABwSURBVBjTY2AgDlwAAzh3sX1sPRDEeuwDc+8V2dsHgQQ8LCzq74HkLSzs7Yva2tLt7S3sN4MNiDUGKQmysCi6BzWkzcI+PdY+aDPCljZlj1iFOUjW1tvHLjYuQhJIt5/DcAFZYLH9YnSn7iPST9gAACbsJth21haFAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=")}
-${img("geotorus","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACGSURBVBjTjY+hFcMwDEQ9SkFggXGIoejhw+LiGkBDlHoAr+AhgjNL5byChuXeE7gvPelUyjOds/f5Zw0ggfj5KVCPMBWeyx+SbQ1XUriAC2XfpWWxjQQEZasRtRHiCUAj3qN4JaolUJppzh4q7dUTdHFXW/tH9OuswWm3nI7tc08+/eGLl758ey9KpKrNOQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC")}
-${img("geotrd1","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB/SURBVBjTbc6xDQMhDAVQ9qH6lUtal65/zQ5IDMAMmYAZrmKGm4FJzlEQQUo+bvwkG4fwm9lbodV7w40Y4WGfSxQiXiJlQfZOjWRb8Ioi3tKuBQMCo7+9N72BzPsfAuoTdUP9QN8wgOQwvsfWmHzpeT5BKydMNW0nhJGvGf7mAc5WKO9e5N2dAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=")}
-${img("geotube","CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACGSURBVBjTRc+tEcAwCAXgLFNbWeSzSDQazw5doWNUZIOM0BEyS/NHy10E30HyklKvWnJ+0le3sJoKn3X2z7GRuvG++YRyMMDt0IIKUXMzxbnugJi5m9K1gNnGBOUFElAWGMaKIKI4xoQggl00gT+A9hXWgDwnfqgsHRAx2m+8bfjfdyrx5AtsSjpwu+M2RgAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC")}
-${img("evepoints","BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAABJQTFRF////n4mJcEdKRDMzcEdH////lLE/CwAAAAF0Uk5TAEDm2GYAAAABYktHRACIBR1IAAAACXBIWXMAAABIAAAASABGyWs+AAAAI0lEQVQI12NgIAowIpgKEJIZLiAgAKWZGQzQ9UGlWIizBQgAN4IAvGtVrTcAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTYtMDktMDJUMTU6MDQ6MzgrMDI6MDDPyc7hAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE2LTA5LTAyVDE1OjA0OjM4KzAyOjAwvpR2XQAAAABJRU5ErkJggg==")}
-${img("evetrack", "CAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAAqElEQVQoz32RMQrCQBBFf4IgSMB0IpGkMpVHCFh7BbHIGTyVhU0K8QYewEKsbVJZaCUiPAsXV8Puzhaz7H8zs5+JUDjikLilQr5zpCRl5xMXZNScQE5gSMGaz70jjUAJcw5c3UBMTsUe+9Kzf065SbropeLXimWfDIgoab/tOyPGzOhz53+oSWcSGh7UdB2ZNKXBZdgAuUdEKJYmrEILyVgG6pE2tEHgDfe42rbjYzSHAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE2LTA5LTAyVDE1OjA0OjQ3KzAyOjAwM0S3EQAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNi0wOS0wMlQxNTowNDo0NyswMjowMEIZD60AAAAASUVORK5CYII=")}
+${img('geoarb8','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB1SURBVBjTdY6rEYAwEETTy6lzK8/Fo+Jj18dTAjUgaQGfGiggtRDE8RtY93Zu514If2nzk2ux9c5TZkwXbiWTUavzws69oBfpYBrMT4r0Jhsw+QfRgQSw+CaKRsKsnV+SaF8MN49RBSgPUxO85PMl5n4tfGUH2gghs2uPAeQAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geocombi','CAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAAlUlEQVQoz5VQMQ4CMQyzEUNnBqT7Bo+4nZUH8gj+welWJsQDkHoCEYakTXMHSFiq2jqu4xRAEl2A7w4myWzpzCSZRZ658ldKu1hPnFsequBIc/hcLli3l52MAIANtpWrDsv8waGTW6BPuFtsdZArXyFuj33TQpazGEQF38phipnLgItxRcAoOeNpzv4PTXnC42fb//AGI5YqfQAU8dkAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geocone','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACRSURBVBjTdY+xDcNACEVvEm/ggo6Olva37IB0C3iEzJABvAHFTXBDeJRwthMnUvylk44vPjxK+afeokX0flQhJO7L4pafSOMxzaxIKc/Tc7SIjNLyieyZSjBzc4DqMZI0HTMonWPBNlogOLeuewbg9c0hOiIqH7DKmTCuFykjHe4XOzQ58XVMGxzt575tKzd6AX9yMkcWyPlsAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geogtra','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACCSURBVBjTVc+hDQMxDAVQD1FyqCQk0MwsCwQEG3+eCW6B0FvheDboFMGepTlVitPP/Cz5y0S/mNkw8pySU9INJDDH4vM4Usm5OrQXasXtkA+tQF+zxfcDY8EVwgNeiwmA37TEccK5oLOwQtuCj7BM2Fq7iGrxVqJbSsH+GzXs+798AThwKMh3/6jDAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geomedium','BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAABVQTFRFAAAAAAAAMDAww8PDWKj/////gICAG0/C4AAAAAF0Uk5TAEDm2GYAAAABYktHRAX4b+nHAAAACXBIWXMAAABIAAAASABGyWs+AAAAXElEQVQI102MwRGAMAgEuQ6IDwvQCjQdhAl/H7ED038JHhkd3dcOLAgESFARaAqnEB3yrj6QSEym1RbbOKinN+8q2Esui1GaX7VXSi4RUbxHRbER8X6O5Pg/fLgBBzMN8HfXD3AAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geopara','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABtSURBVBjTY2DADq5MT7+CzD9kaKjp+QhJYIWqublhMbKAgpOnZxWSQJdsVJTndCSBKoWoAM/VSALpqlEBAYeQBKJAAsi2BGgCBZDdEWUYFZCOLFBlGOWJ7AyGFeaotjIccopageK3R12PGHABACTYHWd0tGw6AAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('georotation','CAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAAiklEQVQoz2NgYGBgYGDg+A/BmIAFIvyDEbs0AwMTAwHACLPiB5QVBTdpGSOSCZjScDcgc4z+32BgYGBgEGIQw3QDLkdCTZD8/xJFeBfDVxQT/j9n/MeIrMCNIRBJwX8GRuzGM/yHKMAljeILNFOuMTyEisEUMKIqucrwB2oyIhyQpH8y/MZrLWkAAHFzIHIc0Q5yAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geotranslation','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABESURBVBjTY2DgYGAAYzjgAAIQgSLAgSwAAcrWUUCAJBAVhSpgBAQumALGCJPAAsriHIS0IAQ4UAU4cGphQBWwZSAOAADGJBKdZk/rHQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('geotrd2','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABsSURBVBjTbY+xDcAwCARZx6UraiaAmpoRvIIb75PWI2QITxIiRQKk0CCO/xcA/NZ9LRs7RkJEYg3QxczUwoGsXiMAoe8lAelqRWFNKpiNXZLAalRDd0f3TMgeMckABKsCDmu+442RddeHz9cf9jUkW8smGn8AAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geovolume','BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAB5QTFRFAAAAMDAw///Ay8uc/7+Q/4BgmJh4gIDgAAD/////CZb2ugAAAAF0Uk5TAEDm2GYAAAABYktHRAnx2aXsAAAACXBIWXMAAABIAAAASABGyWs+AAAAR0lEQVQI12NggAEBIBAEQgYGQUYQAyIGIhgwAZMSGCgwMJuEKimFOhswsKWAGG4JDGxJIBk1EEO9o6NIDVkEpgauC24ODAAASQ8Pkj/retYAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geoassembly','BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAA9QTFRFAAAAMDAw/wAAAAD/////jEo0BQAAAAF0Uk5TAEDm2GYAAAABYktHRASPaNlRAAAACXBIWXMAAABIAAAASABGyWs+AAAAOklEQVQI12NggAFGRgEgEBRgEBSAMhgYGQQEgAR+oARGDIwCIAYjUL0A2DQQg9nY2ABVBKoGrgsDAADxzgNboMz8zQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('geocomposite','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABuSURBVBjTY2AgF2hqgQCCr+0V4O7hFmgCF7CJyKysKkmxhfGNLaw9SppqAi2gfMuY5Agrl+ZaC6iAUXRJZX6Ic0klTMA5urapPFY5NRcmYKFqWl8S5RobBRNg0PbNT3a1dDGH8RlM3LysTRjIBwAG6xrzJt11BAAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('geoctub','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACESURBVBjTdc+xDcMwDARA7cKKHTuWX37LHaw+vQbQAJomA7j2DB7FhCMFCZB8pxPwJEv5kQcZW+3HencRBekak4aaMQIi8YJdAQ1CMeE0UBkuaLMETklQ9Alhka0JzzXWqLVBuQYPpWcVuBbZjZafNRYcDk9o/b07bvhINz+/zxu1/M0FSRcmAk/HaIcAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geohype','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACKSURBVBjTbU+rFQQhDKQSDDISEYuMREfHx6eHKMpYuf5qoIQt5bgDblfcuJk3nySEhSvceDV3c/ejT66lspopE9pXyIlkCrHMBACpu1DClekQAREi/loviCnF/NhRwJLaQ6hVhPjB8bOCsjlnNnNl0FWJVWxAqGzHONRHpu5Ml+nQ+8GzNW9n+Is3eg80Nk0iiwoAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geomixture','BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAACFQTFRFAAAAAAAAKysrVVUA//8B//8AgICAqqpV398gv79A////VYJtlwAAAAF0Uk5TAEDm2GYAAAABYktHRApo0PRWAAAACXBIWXMAAABIAAAASABGyWs+AAAAXklEQVQI12NgwASCQsJCgoZAhoADq1tKIJAhEpDGxpYIZKgxsLElgBhibAkOCY4gKTaGkPRGIEPUIYEBrEaAIY0tDawmgYWNgREkkjCVjRWkWCUhLY0FJCIIBljsBgCZTAykgaRiRwAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('geopcon','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACJSURBVBjTdc+hGcQwCIZhhjl/rkgWiECj8XgGyAbZoD5LdIRMkEnKkV575n75Pp8AgLU54dmh6mauelyAL2Qzxfe2sklioq6FacFAcRFXYhwJHdU5rDD2hEYB/CmoJVRMiIJqgtENuoqA8ltAlYAqRH4d1tGkwzTqN2gA7Nv+fUwkgZ/3mg34txM+szzATJS1HQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('geosphere','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACFSURBVBjTdY+xEcQwCAQp5QNFjpQ5vZACFBFTADFFfKYCXINzlUAJruXll2ekxDAEt9zcANFbXb2mqm56dxsymAH0yccAJaeNi0h5QGyfxGJmivMPjj0nmLsbRmyFCss3rlbpcUjfS8wLUNRcJyCF6uqg2IvYCnoKC7f1kSbA6riTz7evfwj3Ml+H3KBqAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geotrap','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB5SURBVBjTbY+hFYAwDETZB1OJi4yNPp0JqjtAZ2AELL5DdABmIS2PtLxHXH7u7l2W5W+uHMHpGiCHLYR1yw4SCZMIXBOJWVSjK7QDDAu4g8OBmAKK4sAEDdR3rw8YmcUcrEijKKhl7lN1IQPn9ExlgU6/WEyc75+5AYK0KY5oHBDfAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geotubeseg','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACBSURBVBjTdc+hEcQwDARA12P6QFBQ9LDwcXEVkA7SQTr4BlJBakgpsWdsh/wfux3NSCrlV86Mlrxmz1pBWq3bAHwETohxABVmDZADQp1BE+wDNnGywzHgmHDOreJNTDH3Xn3CVX0dpu2MHcIFBkYp/gKsQ8SCQ72V+36/+2aWf3kAQfgshnpXF0wAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geoxtru','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABcSURBVBjTY2AgEmhpeZV56vmWwQW00QUYwAJlSAI6XmVqukh8PT1bT03PchhXX09Pr9wQIQDiJ+ZowgWAXD3bck+QQDlCQTkDQgCoxA/ERBKwhbDglgA1lDMQDwCc/Rvq8nYsWgAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('geobbox','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB/SURBVBjTVc+hEYAwDAXQLlNRF1tVGxn9NRswQiSSCdgDyQBM0FlIIb2WuL77uf6E8E0N02wKYRwDciTKREVvB04GuZSyOMCABRB1WGzF3uDNQTvs/RcDtJXT4fSEXA5XoiQt0ttVSm8Co2psIOvoimjAOqBmFtH5wEP2373TPIvTK1nrpULXAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geoconeseg','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB4SURBVBjTdc6hEcAgDAXQbFNZXHQkFlkd/30myAIMwAws0gmYpVzvoFyv/S5P/B+izzQ387ZA2pkDnvsU1SQLVIFrOM4JFmEaYp2gCQbmPEGODhJ8jt7Am47hwgrzInGAifa/elUZnQLY00iU30BZAV+BWi2VfnIBv1osbHH8jX0AAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geoeltu','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACGSURBVBjTdY+hFYUwDEU7xq9CIXC4uNjY6KczQXeoYgVMR2ABRmCGjvIp/6dgiEruueedvBDuOR57LQnKyc8CJmKO+N8bieIUPtmBWjIIx8XDBHYCipsnql1g2D0UP2OoDqwBncf+RdZmzFMHizRjog7KZYzawd4Ay93lEAPWR7WAvNbwMl/XwSxBV8qCjgAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('geomaterial','CAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAAbElEQVQoz62QMRbAIAhDP319Xon7j54qHSyCtaMZFCUkRjgDIdRU9yZUCfg8ut5aAHdcxtoNurmgA3ABNKIR9KimhSukPe2qxcCYC0pfFXx/aFWo7i42KKItOpopqvvnLzJmtlZTS7EfGAfwAM4EQbLIGV0sAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geoparab','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB/SURBVBjTbY+xDYAwDAQ9UAp3X7p0m9o9dUZgA9oMwAjpMwMzMAnYBAQSX9mn9+tN9KOtzsWsLOvYCziUGNX3nnCLJRzKPgeYrhPW7FJNLUB3YJazYKQKTnBaxgXRzNmJcrt7XCHQp9kEB1wfELEir/KGj4Foh8A+/zW1nf51AFabKZuWK+mNAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geopgon','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABwSURBVBjTY2AgDlwAAzh3sX1sPRDEeuwDc+8V2dsHgQQ8LCzq74HkLSzs7Yva2tLt7S3sN4MNiDUGKQmysCi6BzWkzcI+PdY+aDPCljZlj1iFOUjW1tvHLjYuQhJIt5/DcAFZYLH9YnSn7iPST9gAACbsJth21haFAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geotorus','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACGSURBVBjTjY+hFcMwDEQ9SkFggXGIoejhw+LiGkBDlHoAr+AhgjNL5byChuXeE7gvPelUyjOds/f5Zw0ggfj5KVCPMBWeyx+SbQ1XUriAC2XfpWWxjQQEZasRtRHiCUAj3qN4JaolUJppzh4q7dUTdHFXW/tH9OuswWm3nI7tc08+/eGLl758ey9KpKrNOQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('geotrd1','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB/SURBVBjTbc6xDQMhDAVQ9qH6lUtal65/zQ5IDMAMmYAZrmKGm4FJzlEQQUo+bvwkG4fwm9lbodV7w40Y4WGfSxQiXiJlQfZOjWRb8Ioi3tKuBQMCo7+9N72BzPsfAuoTdUP9QN8wgOQwvsfWmHzpeT5BKydMNW0nhJGvGf7mAc5WKO9e5N2dAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geotube','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACGSURBVBjTRc+tEcAwCAXgLFNbWeSzSDQazw5doWNUZIOM0BEyS/NHy10E30HyklKvWnJ+0le3sJoKn3X2z7GRuvG++YRyMMDt0IIKUXMzxbnugJi5m9K1gNnGBOUFElAWGMaKIKI4xoQggl00gT+A9hXWgDwnfqgsHRAx2m+8bfjfdyrx5AtsSjpwu+M2RgAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('evepoints','BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAABJQTFRF////n4mJcEdKRDMzcEdH////lLE/CwAAAAF0Uk5TAEDm2GYAAAABYktHRACIBR1IAAAACXBIWXMAAABIAAAASABGyWs+AAAAI0lEQVQI12NgIAowIpgKEJIZLiAgAKWZGQzQ9UGlWIizBQgAN4IAvGtVrTcAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTYtMDktMDJUMTU6MDQ6MzgrMDI6MDDPyc7hAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE2LTA5LTAyVDE1OjA0OjM4KzAyOjAwvpR2XQAAAABJRU5ErkJggg==')}
+${img('evetrack', 'CAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAAqElEQVQoz32RMQrCQBBFf4IgSMB0IpGkMpVHCFh7BbHIGTyVhU0K8QYewEKsbVJZaCUiPAsXV8Puzhaz7H8zs5+JUDjikLilQr5zpCRl5xMXZNScQE5gSMGaz70jjUAJcw5c3UBMTsUe+9Kzf065SbropeLXimWfDIgoab/tOyPGzOhz53+oSWcSGh7UdB2ZNKXBZdgAuUdEKJYmrEILyVgG6pE2tEHgDfe42rbjYzSHAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE2LTA5LTAyVDE1OjA0OjQ3KzAyOjAwM0S3EQAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNi0wOS0wMlQxNTowNDo0NyswMjowMEIZD60AAAAASUVORK5CYII=')}
 .jsroot .geovis_this { background-color: lightgreen; }
 .jsroot .geovis_daughters { background-color: lightblue; }
 .jsroot .geovis_all { background-color: yellow; }`);
@@ -4746,8 +4758,8 @@ function createGeoPainter(dom, obj, opt) {
 
    injectGeoStyle();
 
-   geoCfg("GradPerSegm", settings.GeoGradPerSegm);
-   geoCfg("CompressComp", settings.GeoCompressComp);
+   geoCfg('GradPerSegm', settings.GeoGradPerSegm);
+   geoCfg('CompressComp', settings.GeoCompressComp);
 
    let painter = new TGeoPainter(dom, obj);
 
@@ -4779,14 +4791,14 @@ function provideMenu(menu, item, hpainter) {
 
    if (!vol && !iseve) return false;
 
-   menu.add("separator");
+   menu.add('separator');
 
    const ScanEveVisible = (obj, arg, skip_this) => {
 
       if (!arg) arg = { visible: 0, hidden: 0 };
 
       if (!skip_this) {
-         if (arg.assign!==undefined)
+         if (arg.assign !== undefined)
             obj.fRnrSelf = arg.assign;
          else if (obj.fRnrSelf)
             arg.vis++;
@@ -4804,14 +4816,14 @@ function provideMenu(menu, item, hpainter) {
 
       if (arg === 'self') {
          obj.fRnrSelf = !obj.fRnrSelf;
-         item._icon = item._icon.split(" ")[0] + provideVisStyle(obj);
+         item._icon = item._icon.split(' ')[0] + provideVisStyle(obj);
          hpainter.updateTreeNode(item);
       } else {
-         ScanEveVisible(obj, { assign: (arg === "true") }, true);
+         ScanEveVisible(obj, { assign: (arg === 'true') }, true);
          hpainter.forEachItem(m => {
             // update all child items
             if (m._geoobj && m._icon) {
-               m._icon = item._icon.split(" ")[0] + provideVisStyle(m._geoobj);
+               m._icon = item._icon.split(' ')[0] + provideVisStyle(m._geoobj);
                hpainter.updateTreeNode(m);
             }
          }, item);
@@ -4820,7 +4832,7 @@ function provideMenu(menu, item, hpainter) {
       findItemWithPainter(item, 'testGeomChanges');
    }, ToggleMenuBit = arg => {
       toggleGeoBit(vol, arg);
-      let newname = item._icon.split(" ")[0] + provideVisStyle(vol);
+      let newname = item._icon.split(' ')[0] + provideVisStyle(vol);
       hpainter.forEachItem(m => {
          // update all items with that volume
          if (item._volume === m._volume) {
@@ -4833,8 +4845,8 @@ function provideMenu(menu, item, hpainter) {
       findItemWithPainter(item, 'testGeomChanges');
    };
 
-   if ((item._geoobj._typename.indexOf("TGeoNode")===0) && findItemWithPainter(item))
-      menu.add("Focus", function() {
+   if ((item._geoobj._typename.indexOf('TGeoNode') === 0) && findItemWithPainter(item))
+      menu.add('Focus', function() {
 
         let drawitem = findItemWithPainter(item);
 
@@ -4847,18 +4859,18 @@ function provideMenu(menu, item, hpainter) {
       });
 
    if (iseve) {
-      menu.addchk(obj.fRnrSelf, "Visible", "self", ToggleEveVisibility);
+      menu.addchk(obj.fRnrSelf, 'Visible', 'self', ToggleEveVisibility);
       let res = ScanEveVisible(obj, undefined, true);
 
       if (res.hidden + res.visible > 0)
-         menu.addchk((res.hidden==0), "Daughters", (res.hidden!=0) ? "true" : "false", ToggleEveVisibility);
+         menu.addchk((res.hidden == 0), 'Daughters', res.hidden !== 0 ? 'true' : 'false', ToggleEveVisibility);
 
    } else {
-      menu.addchk(testGeoBit(vol, geoBITS.kVisNone), "Invisible",
+      menu.addchk(testGeoBit(vol, geoBITS.kVisNone), 'Invisible',
             geoBITS.kVisNone, ToggleMenuBit);
-      menu.addchk(testGeoBit(vol, geoBITS.kVisThis), "Visible",
+      menu.addchk(testGeoBit(vol, geoBITS.kVisThis), 'Visible',
             geoBITS.kVisThis, ToggleMenuBit);
-      menu.addchk(testGeoBit(vol, geoBITS.kVisDaughters), "Daughters",
+      menu.addchk(testGeoBit(vol, geoBITS.kVisDaughters), 'Daughters',
             geoBITS.kVisDaughters, ToggleMenuBit);
    }
 
@@ -4880,7 +4892,7 @@ function browserIconClick(hitem, hpainter) {
       return false; // no need to update icon - we did it ourself
    }
 
-   if (hitem._geoobj && ((hitem._geoobj._typename == "TEveGeoShapeExtract") || (hitem._geoobj._typename == "ROOT::Experimental::REveGeoShapeExtract"))) {
+   if (hitem._geoobj && ((hitem._geoobj._typename == 'TEveGeoShapeExtract') || (hitem._geoobj._typename == 'ROOT::Experimental::REveGeoShapeExtract'))) {
       hitem._geoobj.fRnrSelf = !hitem._geoobj.fRnrSelf;
 
       updateBrowserIcons(hitem._geoobj, hpainter);
@@ -4896,14 +4908,14 @@ function browserIconClick(hitem, hpainter) {
    let newstate = drawitem._painter.extraObjectVisible(hpainter, hitem, true);
 
    // return true means browser should update icon for the item
-   return (newstate!==undefined) ? true : false;
+   return (newstate !== undefined) ? true : false;
 }
 
 
 /** @summary Get icon for the browser
   * @private */
 function getBrowserIcon(hitem, hpainter) {
-   let icon = "";
+   let icon = '';
    if (hitem._kind == 'ROOT.TEveTrack') icon = 'img_evetrack'; else
    if (hitem._kind == 'ROOT.TEvePointSet') icon = 'img_evepoints'; else
    if (hitem._kind == 'ROOT.TPolyMarker3D') icon = 'img_evepoints';
@@ -4911,7 +4923,7 @@ function getBrowserIcon(hitem, hpainter) {
       let drawitem = findItemWithPainter(hitem);
       if (drawitem)
          if (drawitem._painter.extraObjectVisible(hpainter, hitem))
-            icon += " geovis_this";
+            icon += ' geovis_this';
    }
    return icon;
 }
@@ -4921,7 +4933,7 @@ function getBrowserIcon(hitem, hpainter) {
   * @private */
 function createItem(node, obj, name) {
    let sub = {
-      _kind: "ROOT." + obj._typename,
+      _kind: 'ROOT.' + obj._typename,
       _name: name ? name : getObjectName(obj),
       _title: obj.fTitle,
       _parent: node,
@@ -4933,16 +4945,16 @@ function createItem(node, obj, name) {
       }
    }, volume, shape, subnodes, iseve = false;
 
-   if (obj._typename == "TGeoMaterial") sub._icon = "img_geomaterial"; else
-   if (obj._typename == "TGeoMedium") sub._icon = "img_geomedium"; else
-   if (obj._typename == "TGeoMixture") sub._icon = "img_geomixture"; else
-   if ((obj._typename.indexOf("TGeoNode")===0) && obj.fVolume) {
-      sub._title = "node:"  + obj._typename;
-      if (obj.fTitle.length > 0) sub._title += " " + obj.fTitle;
+   if (obj._typename == 'TGeoMaterial') sub._icon = 'img_geomaterial'; else
+   if (obj._typename == 'TGeoMedium') sub._icon = 'img_geomedium'; else
+   if (obj._typename == 'TGeoMixture') sub._icon = 'img_geomixture'; else
+   if ((obj._typename.indexOf('TGeoNode') === 0) && obj.fVolume) {
+      sub._title = 'node:'  + obj._typename;
+      if (obj.fTitle.length > 0) sub._title += ' ' + obj.fTitle;
       volume = obj.fVolume;
-   } else if (obj._typename.indexOf("TGeoVolume")===0) {
+   } else if (obj._typename.indexOf('TGeoVolume') === 0) {
       volume = obj;
-   } else if ((obj._typename == "TEveGeoShapeExtract") || (obj._typename == "ROOT::Experimental::REveGeoShapeExtract")) {
+   } else if ((obj._typename == 'TEveGeoShapeExtract') || (obj._typename == 'ROOT::Experimental::REveGeoShapeExtract')) {
       iseve = true;
       shape = obj.fShape;
       subnodes = obj.fElements ? obj.fElements.arr : null;
@@ -4962,7 +4974,7 @@ function createItem(node, obj, name) {
          sub._more = true;
          sub._expand = expandGeoObject;
       } else
-      if (shape && (shape._typename === "TGeoCompositeShape") && shape.fNode) {
+      if (shape && (shape._typename === 'TGeoCompositeShape') && shape.fNode) {
          sub._more = true;
          sub._shape = shape;
          sub._expand = function(node /*, obj */) {
@@ -4972,15 +4984,15 @@ function createItem(node, obj, name) {
          };
       }
 
-      if (!sub._title && (obj._typename != "TGeoVolume")) sub._title = obj._typename;
+      if (!sub._title && (obj._typename != 'TGeoVolume')) sub._title = obj._typename;
 
       if (shape) {
-         if (sub._title == "")
+         if (sub._title == '')
             sub._title = shape._typename;
 
          sub._icon = getShapeIcon(shape);
       } else {
-         sub._icon = sub._more ? "img_geocombi" : "img_geobbox";
+         sub._icon = sub._more ? 'img_geocombi' : 'img_geobbox';
       }
 
       if (volume)
@@ -4997,11 +5009,11 @@ function createItem(node, obj, name) {
    if (!sub._name)
       if (typeof node._name === 'string') {
          sub._name = node._name;
-         if (sub._name.lastIndexOf("s")===sub._name.length-1)
+         if (sub._name.lastIndexOf('s')===sub._name.length-1)
             sub._name = sub._name.slice(0, sub._name.length-1);
-         sub._name += "_" + node._childs.length;
+         sub._name += '_' + node._childs.length;
       } else {
-         sub._name = "item_" + node._childs.length;
+         sub._name = 'item_' + node._childs.length;
       }
 
    node._childs.push(sub);
@@ -5025,7 +5037,7 @@ async function drawDummy3DGeom(painter) {
 
 
    let shape = create('TNamed');
-   shape._typename = "TGeoBBox";
+   shape._typename = 'TGeoBBox';
    shape.fDX = max[0] - min[0];
    shape.fDY = max[1] - min[1];
    shape.fDZ = max[2] - min[2];
@@ -5033,15 +5045,15 @@ async function drawDummy3DGeom(painter) {
    shape.fShapeBits = 0;
    shape.fOrigin = [0,0,0];
 
-   let obj = create("TEveGeoShapeExtract");
+   let obj = create('TEveGeoShapeExtract');
 
    Object.assign(obj, { fTrans: [1,0,0,0, 0,1,0,0, 0,0,1,0, (min[0]+max[0])/2, (min[1]+max[1])/2, (min[2]+max[2])/2, 0],
                         fShape: shape, fRGBA: [0, 0, 0, 0], fElements: null, fRnrSelf: false });
 
-   let opt = "", pp = painter.getPadPainter();
+   let opt = '', pp = painter.getPadPainter();
 
    if (pp?.pad?.fFillColor && pp?.pad?.fFillStyle > 1000)
-      opt = "bkgr_" +  pp.pad.fFillColor;
+      opt = 'bkgr_' +  pp.pad.fFillColor;
 
    return TGeoPainter.draw(painter.getDom(), obj, opt)
                      .then(geop => geop.drawExtras(extra));
@@ -5123,7 +5135,7 @@ function build(obj, opt) {
          shape = obj; obj = null;
       } else if ((obj._typename === 'TGeoVolumeAssembly') || (obj._typename === 'TGeoVolume')) {
          shape = obj.fShape;
-      } else if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::REveGeoShapeExtract")) {
+      } else if ((obj._typename === 'TEveGeoShapeExtract') || (obj._typename === 'ROOT::Experimental::REveGeoShapeExtract')) {
          shape = obj.fShape;
       } else if (obj._typename === 'TGeoManager') {
          obj = obj.fMasterVolume;
@@ -5139,13 +5151,13 @@ function build(obj, opt) {
          obj = buildCompositeVolume(shape);
 
       if (!obj && shape)
-         obj = Object.assign(create("TEveGeoShapeExtract"),
+         obj = Object.assign(create('TEveGeoShapeExtract'),
                    { fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 1], fElements: null, fRnrSelf: true });
 
       if (!obj) return null;
 
       if (obj._typename.indexOf('TGeoVolume') === 0)
-         obj = { _typename: "TGeoNode", fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
+         obj = { _typename: 'TGeoNode', fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
 
       clones = new ClonedNodes(obj);
       clones.setVisLevel(opt.vislevel);

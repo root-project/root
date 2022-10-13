@@ -50,7 +50,7 @@ function getRGBfromTColor(col) {
    if (!col || (col._typename != 'TColor')) return null;
 
    let rgb = '#' + toHex(col.fRed) + toHex(col.fGreen) + toHex(col.fBlue);
-   if ((col.fAlpha !==undefined) && (col.fAlpha !== 1.))
+   if ((col.fAlpha !== undefined) && (col.fAlpha !== 1.))
       rgb += toHex(col.fAlpha);
 
    switch (rgb) {
