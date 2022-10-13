@@ -759,11 +759,8 @@ RGeomDescription::MakeShapeDescr(TGeoShape *shape)
 
    if (elem.nfaces == 0) {
 
-      // TGeoCompositeShape *comp = nullptr;
-
       int boundary = 3; //
       if (shape->IsComposite()) {
-         // comp = dynamic_cast<TGeoCompositeShape *>(shape);
          // composite is most complex for client, therefore by default build on server
          boundary = 1;
       } else if (!shape->IsCylType()) {
@@ -778,30 +775,69 @@ RGeomDescription::MakeShapeDescr(TGeoShape *shape)
 
          auto mesh = MakeGeoMesh(nullptr, shape);
 
+         Int_t num_vertices = mesh->NumberOfVertices();
 
-         /*
+         Int_t num_polynoms = 0;
 
-         auto poly = std::make_unique<REveGeoPolyShape>();
+         Int_t index_buffer_size = 2, vertex_buffer_size = 3 * num_vertices;
+         for (unsigned polyIndex = 0; polyIndex < mesh->NumberOfPolys(); ++polyIndex) {
 
-         if (comp) {
-            poly->BuildFromComposite(comp, GetNSegments());
-         } else {
-            poly->BuildFromShape(shape, GetNSegments());
+            auto size_of_polygon = mesh->SizeOfPoly(polyIndex);
+
+            if (size_of_polygon == 3) {
+               num_polynoms += 1;
+               index_buffer_size += 3;
+            } else if (size_of_polygon == 4) {
+               num_polynoms += 2;
+               index_buffer_size += 6;
+            } else {
+               R__LOG_ERROR(RGeomLog()) << "CSG polygon has unsupported number of vertices " << size_of_polygon;
+            }
          }
 
-         REveRenderData rd;
+         std::vector<float> vertices(vertex_buffer_size);
 
-         poly->FillRenderData(rd);
+         for (Int_t i = 0; i < num_vertices; ++i) {
+            auto v = mesh->GetVertex(i);
+            vertices[i*3] = v[0];
+            vertices[i*3+1] = v[1];
+            vertices[i*3+2] = v[2];
+         }
 
-         elem.nfaces = poly->GetNumFaces();
+         std::vector<int> indexes(index_buffer_size);
+         indexes[0] = 4; // REveRenderData::GL_TRIANGLES;
+         indexes[1] = num_polynoms;
+         int indx = 2;
 
-         elem.fRawInfo.raw.resize(rd.GetBinarySize());
-         rd.Write( reinterpret_cast<char *>(elem.fRawInfo.raw.data()), elem.fRawInfo.raw.size() );
-         elem.fRawInfo.sz[0] = rd.SizeV();
-         elem.fRawInfo.sz[1] = rd.SizeN();
-         elem.fRawInfo.sz[2] = rd.SizeI();
-*/
+         for (unsigned polyIndex = 0; polyIndex < mesh->NumberOfPolys(); ++polyIndex) {
+            auto size_of_polygon = mesh->SizeOfPoly(polyIndex);
 
+            if (size_of_polygon == 3) {
+               for (int i = 0; i < 3; ++i)
+                  indexes[indx++] = mesh->GetVertexIndex(polyIndex, i);
+            } else if (size_of_polygon == 4) {
+               for (int i = 0; i < 3; ++i)
+                  indexes[indx++] = mesh->GetVertexIndex(polyIndex, i);
+
+               indexes[indx++] = mesh->GetVertexIndex(polyIndex, 0);
+               indexes[indx++] = mesh->GetVertexIndex(polyIndex, 2);
+               indexes[indx++] = mesh->GetVertexIndex(polyIndex, 3);
+            }
+         }
+
+         elem.nfaces = num_polynoms;
+
+         elem.fRawInfo.sz[0] = vertex_buffer_size;
+         elem.fRawInfo.sz[1] = 0; // no normals
+         elem.fRawInfo.sz[2] = index_buffer_size;
+
+         auto vsize = vertex_buffer_size*sizeof(float),
+              isize = index_buffer_size * sizeof(int);
+
+         elem.fRawInfo.raw.resize(vsize + isize);
+         char *buf = reinterpret_cast<char *>(elem.fRawInfo.raw.data());
+         memcpy(buf, vertices.data(), vsize);
+         memcpy(buf+vsize, indexes.data(), isize);
       }
    }
 
