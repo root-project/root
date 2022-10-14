@@ -65,83 +65,86 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
         this._oSettingsModel = new JSONModel({
             SortMethods: [
-               { name: "name", value: "name" },
-               { name: "size", value: "size" },
-               { name: "none", value: "" }
+               { name: 'name', value: 'name' },
+               { name: 'size', value: 'size' },
+               { name: 'none', value: '' }
             ],
-            SortMethod: "name",
+            SortMethod: 'name',
             ReverseOrder: false,
             ShowHiddenFiles: false,
             AppendToCanvas: false,
             DBLCLKRun: false,
+            optTH1: 'hist',
             TH1: [
-               {name: "hist"},
-               {name: "P"},
-               {name: "P0"},
-               {name: "E"},
-               {name: "E1"},
-               {name: "E2"},
-               {name: "E3"},
-               {name: "E4"},
-               {name: "E1X0"},
-               {name: "L"},
-               {name: "LF2"},
-               {name: "B"},
-               {name: "B1"},
-               {name: "A"},
-               {name: "TEXT"},
-               {name: "LEGO"},
-               {name: "same"}
+               {name: 'hist'},
+               {name: 'p'},
+               {name: 'p0'},
+               {name: 'e'},
+               {name: 'e1'},
+               {name: 'e2'},
+               {name: 'e3'},
+               {name: 'e4'},
+               {name: 'e1x0'},
+               {name: 'l'},
+               {name: 'lf2'},
+               {name: 'b'},
+               {name: 'b1'},
+               {name: 'A'},
+               {name: 'text'},
+               {name: 'lego'},
+               {name: 'same'}
             ],
+            optTH2: 'col',
             TH2: [
-               {name: "COL"},
-               {name: "COLZ"},
-               {name: "COL0"},
-               {name: "COL1"},
-               {name: "COL0Z"},
-               {name: "COL1Z"},
-               {name: "COLA"},
-               {name: "BOX"},
-               {name: "BOX1"},
-               {name: "PROJ"},
-               {name: "PROJX1"},
-               {name: "PROJX2"},
-               {name: "PROJX3"},
-               {name: "PROJY1"},
-               {name: "PROJY2"},
-               {name: "PROJY3"},
-               {name: "SCAT"},
-               {name: "TEXT"},
-               {name: "TEXTE"},
-               {name: "TEXTE0"},
-               {name: "CONT"},
-               {name: "CONT1"},
-               {name: "CONT2"},
-               {name: "CONT3"},
-               {name: "CONT4"},
-               {name: "ARR"},
-               {name: "SURF"},
-               {name: "SURF1"},
-               {name: "SURF2"},
-               {name: "SURF4"},
-               {name: "SURF6"},
-               {name: "E"},
-               {name: "A"},
-               {name: "LEGO"},
-               {name: "LEGO0"},
-               {name: "LEGO1"},
-               {name: "LEGO2"},
-               {name: "LEGO3"},
-               {name: "LEGO4"},
-               {name: "same"}
+               {name: 'col'},
+               {name: 'colz'},
+               {name: 'col0'},
+               {name: 'col1'},
+               {name: 'col0z'},
+               {name: 'col1z'},
+               {name: 'colA'},
+               {name: 'box'},
+               {name: 'box1'},
+               {name: 'proj'},
+               {name: 'projx1'},
+               {name: 'projx2'},
+               {name: 'projx3'},
+               {name: 'projy1'},
+               {name: 'projy2'},
+               {name: 'projy3'},
+               {name: 'scat'},
+               {name: 'text'},
+               {name: 'texte'},
+               {name: 'texte0'},
+               {name: 'cont'},
+               {name: 'cont1'},
+               {name: 'cont2'},
+               {name: 'cont3'},
+               {name: 'cont4'},
+               {name: 'arr'},
+               {name: 'surf'},
+               {name: 'surf1'},
+               {name: 'surf2'},
+               {name: 'surf4'},
+               {name: 'surf6'},
+               {name: 'e'},
+               {name: 'A'},
+               {name: 'lego'},
+               {name: 'lego0'},
+               {name: 'lego1'},
+               {name: 'lego2'},
+               {name: 'lego3'},
+               {name: 'lego4'},
+               {name: 'same'}
             ],
+            optTProfile: 'e0',
             TProfile: [
-               {name: "E0"},
-               {name: "E1"},
-               {name: "E2"},
-               {name: "p"},
-               {name: "AH"},
-               {name: "hist"}
+               {name: 'e0'},
+               {name: 'e1'},
+               {name: 'e2'},
+               {name: 'p'},
+               {name: 'Ah'},
+               {name: 'hist'}
             ]
          });
 
@@ -156,7 +159,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.websocket.connect();
 
          // if true, most operations are performed locally without involving server
-         this.standalone = (this.websocket.kind == "file");
+         this.standalone = (this.websocket.kind == 'file');
 
          // create model only for browser - no need for anybody else
          this.model = new BrowserModel();
@@ -174,67 +177,67 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             node.title = elem.title;
          };
 
-         let t = this.getView().byId("treeTable");
+         let t = this.getView().byId('treeTable');
          t.setModel(this.model);
 
          this.model.assignTreeTable(t);
          t.addColumn(new tableColumn({
-            label: "Name",
+            label: 'Name',
             autoResizable: true,
             visible: true,
             template: new HorizontalLayout({
                content: [
-                         new CoreIcon({src:"{icon}", tooltip: "{className}" }),
-                         new mText({text:" {name}", tooltip: "{title}", renderWhitespace: true, wrapping: false })
+                         new CoreIcon({src:'{icon}', tooltip: '{className}' }),
+                         new mText({text:' {name}', tooltip: '{title}', renderWhitespace: true, wrapping: false })
                          ]
             })
          }));
          t.addColumn(new tableColumn({
-            label: "Size",
+            label: 'Size',
             autoResizable: true,
             visible: true,
             template: new HorizontalLayout({
-               content: [ new mText({text:"{fsize}", wrapping: false }) ]
+               content: [ new mText({text:'{fsize}', wrapping: false }) ]
             })
          }));
          t.addColumn(new tableColumn({
-            label: "Time",
+            label: 'Time',
             autoResizable: true,
             visible: false,
             template: new HorizontalLayout({
-               content: [ new mText({text:"{mtime}", wrapping: false }) ]
+               content: [ new mText({text:'{mtime}', wrapping: false }) ]
             })
          }));
          t.addColumn(new tableColumn({
-            label: "Type",
+            label: 'Type',
             autoResizable: true,
             visible: false,
             template: new HorizontalLayout({
-               content: [ new mText({text:"{ftype}", wrapping: false }) ]
+               content: [ new mText({text:'{ftype}', wrapping: false }) ]
             })
          }));
          t.addColumn(new tableColumn({
-            label: "UID",
+            label: 'UID',
             autoResizable: true,
             visible: false,
             template: new HorizontalLayout({
-               content: [ new mText({text:"{fuid}", wrapping: false }) ]
+               content: [ new mText({text:'{fuid}', wrapping: false }) ]
             })
          }));
          t.addColumn(new tableColumn({
-            label: "GID",
+            label: 'GID',
             autoResizable: true,
             visible: false,
             template: new HorizontalLayout({
-               content: [ new mText({text:"{fgid}", wrapping: false }) ]
+               content: [ new mText({text:'{fgid}', wrapping: false }) ]
             })
          }));
          t.addColumn(new tableColumn({
-            label: "ClassName",
+            label: 'ClassName',
             autoResizable: true,
             visible: false,
             template: new HorizontalLayout({
-               content: [ new mText({text:"{className}", wrapping: false }) ]
+               content: [ new mText({text:'{className}', wrapping: false }) ]
             })
          }));
 
@@ -242,8 +245,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          t.addEventDelegate({
             onAfterRendering: function() { this.assignRowHandlers(); }
          }, this);
-
-         this.drawingOptions = { TH1: 'hist', TH2: 'COL', TProfile: 'E0'};
       },
 
       createImageViewer: function (dummy_url, name, title, tooltip) {
@@ -564,6 +565,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this._oSettingsModel.setProperty("/SortMethod", this.model.getSortMethod());
          this._oSettingsModel.setProperty("/ReverseOrder", this.model.isReverseOrder());
 
+         console.log('show TH2 draw option = ', this._oSettingsModel.getProperty("/optTH2"));
+
          if (!this._oSettingsMenu)
             this._oSettingsMenu = Fragment.load({
                name: "rootui5.browser.view.settingsmenu",
@@ -575,11 +578,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             });
 
          this._oSettingsMenu.then(menu => menu.open());
-      },
-
-      handleSettingsChange: function (oEvent) {
-         let graphType = oEvent.getSource().sId.split("-")[1];
-         this.drawingOptions[graphType] = oEvent.getSource().mProperties.value;
       },
 
       handleSeetingsConfirm: function() {
@@ -613,8 +611,22 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.model.setSortMethod(sort);
          }
 
+         let optmsg = this.getOptionsMessage();
+         if (optmsg != this.lastOptMessage) {
+            this.lastOptMessage = optmsg;
+            this.websocket.send(optmsg);
+         }
+
          if (changed)
             this.doReload();
+      },
+
+      /** @summary Return message need to be send to server to change options */
+      getOptionsMessage: function() {
+         let arr = [this._oSettingsModel.getProperty('/optTH1') || '',
+                    this._oSettingsModel.getProperty('/optTH2') || '',
+                    this._oSettingsModel.getProperty('/optTProfile') || '' ];
+         return 'OPTIONS:' + JSON.stringify(arr);
       },
 
       /** @summary Add Tab event handler */
@@ -823,16 +835,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          if (!prop || !prop.path) return;
 
-         let className = this.getBaseClass(prop.className),
-             opt = className ? this.drawingOptions[className] : "",
-             append = this.model.isAppendToCanvas() ? "true" : "false",
-             exec = "";
+         let opt = "<dflt>", exec = "";
+
+         if (this.model.isAppendToCanvas())
+            opt = "<append>" + opt;
 
          if (this._oSettingsModel.getProperty("/DBLCLKRun"))
             exec = "exec";
 
          let args = prop.path.slice(); // make copy of array
-         args.push(opt || "", append, exec);
+         args.push(opt, exec);
 
          this.websocket.send("DBLCLK:" + JSON.stringify(args));
 
@@ -876,17 +888,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       },
 
-      getBaseClass: function(className) {
-         if (typeof className !== 'string')
-            className = "";
-         if (className.match(/^TH1/)) {
-            return "TH1";
-         } else if (className.match(/^TH2/)) {
-            return "TH2";
-         }
-         return className;
-      },
-
       onWebsocketOpened: function(/*handle*/) {
          this.isConnected = true;
 
@@ -896,7 +897,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       onWebsocketClosed: function() {
          // when connection closed, close panel as well
-         console.log('CLOSE WINDOW WHEN CONNECTION CLOSED');
+         console.log('Close RBrowser window when connection closed');
 
          if (window) window.close();
 
@@ -1092,10 +1093,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             } else if (kind == "logs") {
                arr[k].shift();
                this.updateLogs(arr[k]);
+            } else if (kind == "drawoptions") {
+               this._oSettingsModel.setProperty('/optTH1', arr[k][1]);
+               this._oSettingsModel.setProperty('/optTH2', arr[k][2]);
+               this._oSettingsModel.setProperty('/optTProfile', arr[k][3]);
             } else {
                this.createElement(kind, arr[k][1], arr[k][2], arr[k][3], arr[k][4]);
             }
          }
+
+         this.lastOptMessage = this.getOptionsMessage();
       },
 
       createElement: function(kind, par1, par2, par3, tooltip) {
