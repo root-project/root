@@ -143,12 +143,12 @@ void RProvider::RegisterNTupleFunc(BrowseNTupleFunc_t func)
    gNTupleFunc = func;
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////
 // Register class with supported libs (if any)
 
 void RProvider::RegisterClass(const std::string &clname, const std::string &iconname,
-                              const std::string &browselib, const std::string &draw6lib, const std::string &draw7lib)
+                              const std::string &browselib, const std::string &draw6lib,
+                              const std::string &draw7lib, const std::string &drawopt)
 {
    auto &bmap = GetClassMap();
 
@@ -159,12 +159,12 @@ void RProvider::RegisterClass(const std::string &clname, const std::string &icon
    bool can_have_childs = !browselib.empty();
    if ((blib == "dflt") || (blib == "TObject")) blib = ""; // just use as indicator that browsing is possible
 
-   bmap.emplace(clname, StructClass{this, can_have_childs, iconname, blib, draw6lib, draw7lib});
+   bmap.emplace(clname, StructClass{this, can_have_childs, iconname, blib, draw6lib, draw7lib, drawopt});
 }
 
 //////////////////////////////////////////////////////////////////////////////////
 // Returns entry for the requested class
-const RProvider::StructClass &RProvider::GetClassEntry(const ClassArg &cl)
+RProvider::StructClass &RProvider::GetClassEntry(const ClassArg &cl)
 {
    if (!cl.empty()) {
       auto &bmap = GetClassMap();
@@ -366,6 +366,28 @@ std::string RProvider::GetClassIcon(const ClassArg &arg, bool is_folder)
       return entry.iconname;
 
    return is_folder ? "sap-icon://folder-blank"s : "sap-icon://electronic-medical-record"s;
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Return configured draw option for the class
+
+std::string RProvider::GetClassDrawOption(const ClassArg &arg)
+{
+   return GetClassEntry(arg).drawopt;
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Set draw option for the class
+/// Return true if entry for the class exists
+
+bool RProvider::SetClassDrawOption(const ClassArg &arg, const std::string &opt)
+{
+   auto &entry = GetClassEntry(arg);
+   if (entry.dummy())
+      return false;
+
+   entry.drawopt = opt;
+   return true;
 }
 
 
