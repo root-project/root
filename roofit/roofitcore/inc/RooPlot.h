@@ -60,9 +60,6 @@ public:
   RooPlot* emptyClone(const char* name) ;
 
   // implement the TH1 interface
-  virtual Stat_t GetBinContent(Int_t) const;
-  virtual Stat_t GetBinContent(Int_t, Int_t) const;
-  virtual Stat_t GetBinContent(Int_t, Int_t, Int_t) const;
   void Draw(Option_t *options= nullptr) override;
 
   // forwarding of relevant TH1 interface
