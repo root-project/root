@@ -6,12 +6,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/m/MessageBox'
 ],function(Controller, JSONModel, Fragment, Filter, FilterOperator, MessageBox) {
 
-   "use strict";
+   'use strict';
 
    /** Tree viewer contoller
      * All TTree functionality is loaded after main ui5 rendering is performed */
 
-   return Controller.extend("rootui5.tree.controller.TreeViewer", {
+   return Controller.extend('rootui5.tree.controller.TreeViewer', {
       onInit: function () {
 
          let viewData = this.getView().getViewData();
@@ -29,19 +29,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.queue = []; // received draw messages
 
          // if true, most operations are performed locally without involving server
-         this.standalone = this.websocket.kind == "file";
+         this.standalone = this.websocket.kind == 'file';
 
          this.cfg = {
-            fTreeName: "",
-            fExprX: "", fExprY: "", fExprZ: "", fExprCut: "", fOption: "",
+            fTreeName: '',
+            fExprX: '', fExprY: '', fExprZ: '', fExprCut: '', fOption: '',
             fNumber: 0, fFirst: 0, fStep: 1, fLargerStep: 2, fTreeEntries: 100,
-            fBranches: [ { fName: "px", fTitle: "px branch" }, { fName: "py", fTitle: "py branch" }, { fName: "pz", fTitle: "pz branch" } ]
+            fBranches: []
          };
          this.cfg_model = new JSONModel(this.cfg);
          this.getView().setModel(this.cfg_model);
 
-         this.byId("treeViewerPage").setShowHeader(this._embeded);
-         this.byId("quitButton").setVisible(!this._embeded);
+         this.byId('treeViewerPage').setShowHeader(this._embeded);
+         this.byId('quitButton').setVisible(!this._embeded);
 
       },
 
@@ -61,10 +61,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          // binary data can be send only as addition to draw message
          // here data can be placed in the queue and processed when all other prerequicities are done
-         if (typeof msg != "string")
+         if (typeof msg != 'string')
             return console.error(`TreeViewer does not uses binary messages len = ${mgs.byteLength}`);
 
-         let p = msg.indexOf(":"), mhdr;
+         let p = msg.indexOf(':'), mhdr;
          if (p > 0) {
             mhdr = msg.slice(0, p);
             msg = msg.slice(p+1);
@@ -72,7 +72,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             mhdr = msg;
          }
 
-         // console.log(mhdr, msg.length, msg.substr(0,70), "...");
+         // console.log(mhdr, msg.length, msg.substr(0,70), '...');
 
          switch (mhdr) {
             case 'CFG':   // generic viewer configuration
@@ -143,10 +143,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       onBranchHelpClose: function (oEvent) {
          let oSelectedItem = oEvent.getParameter('selectedItem');
-         oEvent.getSource().getBinding("items").filter([]);
+         oEvent.getSource().getBinding('items').filter([]);
          if (oSelectedItem && this.branchInputId) {
             let old = this.byId(this.branchInputId).getValue();
-            if (old && old[old.length-1] != ' ') old += ' ';
+            if (old &&  /[a-zA-Z\[\]._]/g.test(old[old.length-1])) old += ' + ';
             this.byId(this.branchInputId).setValue(old + oSelectedItem.getTitle());
          }
          delete this.branchInputId;
@@ -154,25 +154,25 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       onPressClearBtn: function(oEvent) {
          let id = oEvent.getSource().getId();
-         if (id.indexOf("clear_x") >= 0) {
-            this.lastFocus = "input_x";
-            this.cfg.fExprX = "";
-         } else if (id.indexOf("clear_y") >= 0) {
-            this.cfg.fExprY = "";
-            this.lastFocus = "input_y";
-         } else if (id.indexOf("clear_z") >= 0) {
-            this.cfg.fExprZ = "";
-            this.lastFocus = "input_z";
-         } else if (id.indexOf("clear_cut") >= 0) {
-            this.cfg.fExprCut = "";
-            this.lastFocus = "input_cut";
+         if (id.indexOf('clear_x') >= 0) {
+            this.lastFocus = 'input_x';
+            this.cfg.fExprX = '';
+         } else if (id.indexOf('clear_y') >= 0) {
+            this.cfg.fExprY = '';
+            this.lastFocus = 'input_y';
+         } else if (id.indexOf('clear_z') >= 0) {
+            this.cfg.fExprZ = '';
+            this.lastFocus = 'input_z';
+         } else if (id.indexOf('clear_cut') >= 0) {
+            this.cfg.fExprCut = '';
+            this.lastFocus = 'input_cut';
          }
 
          this.cfg_model.refresh();
       },
 
       onPressClearWidget: function() {
-         this.cfg.fExprX = this.cfg.fExprY = this.cfg.fExprZ = this.cfg.fExprCut = "";
+         this.cfg.fExprX = this.cfg.fExprY = this.cfg.fExprZ = this.cfg.fExprCut = '';
          delete this.lastFocus;
          this.cfg_model.refresh();
       },
@@ -194,11 +194,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (!send.fFirst)
             send.fFirst = 0;
 
-         this.websocket.send("DRAW:"+JSON.stringify(send));
+         this.websocket.send('DRAW:'+JSON.stringify(send));
       },
 
       showProgess: function(val) {
-        let pr = this.byId("draw_progress");
+        let pr = this.byId('draw_progress');
         pr.setVisible(true);
         pr.setPercentValue(val);
 
@@ -206,10 +206,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            setTimeout(() => pr.setVisible(false), 2000);
       },
 
+      /** @summary Show suggested by server branch/leaf name */
       showSuggestedItem: function(name) {
-         let id = this.lastFocus || 'input_x';
-
-         let val = this.byId(id).getValue();
+         let id = this.lastFocus || 'input_x',
+             val = this.byId(id).getValue();
 
          this.byId(id).setValue(val ? val + ' + ' + name : name);
       },
@@ -221,13 +221,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       doReload: function() {
          if (!this.standalone)
-            this.websocket.send("GETCFG");
+            this.websocket.send('GETCFG');
       },
 
       /** Quit ROOT session */
       onQuitRootPress: function() {
          if (!this.standalone)
-            this.websocket.send("QUIT_ROOT");
+            this.websocket.send('QUIT_ROOT');
       }
 
    });
