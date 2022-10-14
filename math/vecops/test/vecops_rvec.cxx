@@ -683,6 +683,13 @@ TEST(VecOps, SimpleStatOps)
    CheckEqual(lv_mean, lv_mean_ref);
 }
 
+// #11569
+TEST(VecOps, SumOfBools)
+{
+   ROOT::RVecB v{true, true, false};
+   EXPECT_EQ(Sum(v), 2ul);
+}
+
 TEST(VecOps, Any)
 {
    RVec<int> vi {0, 1, 2};
