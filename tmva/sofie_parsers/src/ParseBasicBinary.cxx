@@ -13,14 +13,15 @@ std::unique_ptr<ROperator> ParseBasicBinary(RModelParser_ONNX &parser, const onn
 
    for (int i = 0; i < 2; ++i) {
       auto input_name = nodeproto.input(i);
-      // auto it = parser.FindTensorType(input_name);
       if (parser.IsRegisteredTensorType(input_name)) {
          // according to ONNX both inputs have same type
          if (i == 0)
             input_type = parser.GetTensorType(input_name);
-         // it->second;
          else
-            assert(it->second == input_type);
+            if (input_type != parser.GetTensorType(input_name)) {
+               throw
+                  std::runtime_error("TMVA::SOFIE ONNX parser Binary op has input tensors of different types");
+            }
       } else {
          throw std::runtime_error("TMVA::SOFIE ONNX Parser Binary op has input tensor " + input_name +
                                   " but its type is not yet registered");

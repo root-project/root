@@ -18,8 +18,6 @@ ParserFuncSignature ParseReshape = [](RModelParser_ONNX &parser, const onnx::Nod
    else if (nodeproto.op_type() == "Unsqueeze")
       opMode = Unsqueeze;
 
-   // bool hasShapeInput = (opMode == Reshape) ? true : false;
-
    // reshape has as extra input shape tensor (int64) but
    // it is not present for Flatten, Squeeze and Unsquueze
    auto input_name = nodeproto.input(0);
@@ -30,9 +28,6 @@ ParserFuncSignature ParseReshape = [](RModelParser_ONNX &parser, const onnx::Nod
    } else {
       throw std::runtime_error("TMVA::SOFIE ONNX Parser Reshape op has input tensor" + input_name +
                                " but its type is not yet registered");
-      // std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto.op_type() <<
-      // " op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
-      // input_type = ETensorType::FLOAT;
    }
 
    // Reshape is having one attribute: allowzero (int) (default = 0)

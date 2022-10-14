@@ -15,9 +15,6 @@ ParserFuncSignature ParseTranspose = [](RModelParser_ONNX &parser, const onnx::N
    } else {
       throw std::runtime_error("TMVA::SOFIE ONNX Parser tranpose op has input tensor" + input_name +
                                " but its type is not yet registered");
-      // std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto.op_type() <<
-      // " op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
-      // input_type = ETensorType::FLOAT;
    }
 
    std::unique_ptr<ROperator> op;

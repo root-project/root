@@ -62,11 +62,10 @@ ETensorType RModelParser_ONNX::GetTensorType(const std::string &name)
 
 // Declaration of operators
 // Unary operators
-/*extern ParserFuncSignature ParseSqrt;
+extern ParserFuncSignature ParseSqrt;
 extern ParserFuncSignature ParseReciprocal;
 extern ParserFuncSignature ParseNeg;
 extern ParserFuncSignature ParseExp;
-*/
 // Binary operators
 extern ParserFuncSignature ParseAdd;
 extern ParserFuncSignature ParseSub;
@@ -97,7 +96,6 @@ extern ParserFuncSignature ParseGRU;
 extern ParserFuncSignature ParseIdentity;
 extern ParserFuncSignature ParseSoftmax;
 extern ParserFuncSignature ParseMax;
-extern ParserFuncSignature ParseNeg;
 extern ParserFuncSignature ParseConcat;
 extern ParserFuncSignature ParseCast;
 extern ParserFuncSignature ParseShape;
@@ -121,13 +119,10 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
       throw std::runtime_error("TMVA::SOFIE Operator type " + op_type + " is not yet supported");
    }
 
-   // auto find = mapOptypeOperator.find(nodeproto.op_type());
-   // operator_type = nodeproto.op_type();
    if (op_type == "MatMul") {
       // Fuse MatMul and Add
       int idx2 = (nodes.size() > i + 1) ? nodes[i + 1] : (int)i + 1;
       if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Add") {
-         // std::cout << "\tcreating Gemm from MatMul+Add " << std::endl;
          return ParseFuseMatMulAdd(*this, graphproto.node(idx), graphproto.node(idx2));
       }
    } else if (nodeproto.op_type() == "Conv" || nodeproto.op_type() == "ConvTranspose") {
@@ -191,7 +186,9 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
    google::protobuf::ShutdownProtobufLibrary();
 
    // ONNX version is ir_version()  - model_version() returns 0
-   // std::cout << "ONNX Version " << model.ir_version() << std::endl;
+   if (fVerbose) {
+      std::cout << "ONNX Version " << model.ir_version() << std::endl;
+   }
 
    std::unordered_set<std::string> initializer_names;
    for (int i = 0; i < graph.initializer_size(); i++) {
@@ -282,7 +279,6 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
 
       switch (static_cast<ETensorType>(graph.initializer(i).data_type())) {
       case ETensorType::FLOAT: {
-         // void* data = malloc (fLength * sizeof(float));
          std::shared_ptr<void> data(malloc(fLength * sizeof(float)), free);
 
          if (tensorproto->raw_data().empty() == false) {
@@ -298,7 +294,6 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
          break;
       }
       case ETensorType::INT64: {
-         // void* data = malloc (fLength * sizeof(float));
          std::shared_ptr<void> data(malloc(fLength * sizeof(int64_t)), free);
 
          if (tensorproto->raw_data().empty() == false) {
@@ -314,7 +309,6 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
          break;
       }
       default:
-         // std::cout << "data type in " << graph.initializer(i).name() + " not supported!" << std::endl;
          throw std::runtime_error("Data type in weight tensor " + graph.initializer(i).name() + " not supported!\n");
       }
    }
@@ -353,27 +347,29 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
          // check if all input exists add to list
          bool existInputs = true;
          int input_size = graph.node(i).input_size();
-         // // special case for Reshape where shape is input and not a weight tensor
-         // if (graph.node(i).op_type() == "Reshape") input_size=1;
+         // special case for Reshape where shape is input and not a weight tensor
          for (int j = 0; j < input_size; j++) {
             std::string name = graph.node(i).input(j);
             // skip empty names
             if (!name.empty()) {
                existInputs &= (allInputs.find(name) != allInputs.end() ||
                                allInitializedTensors.find(name) != allInitializedTensors.end());
-               // std::cout << graph.node(i).op_type() << " input " << name << " "
-               //       << bool(allInputs.find(name) != allInputs.end()) << "  " <<
-               //       bool(allInitializedTensors.find(name) != allInitializedTensors.end()) <<
-               //       existInputs << std::endl;
+               if (fVerbose) {
+                  std::cout << graph.node(i).op_type() << " input " << name << " "
+                     << bool(allInputs.find(name) != allInputs.end()) << "  " <<
+                     bool(allInitializedTensors.find(name) != allInitializedTensors.end()) <<
+                     existInputs << std::endl;
+               }
             }
          }
          if (!existInputs) {
-            // std::cout << "skip op " << graph.node(i).op_type()
-            // << " inputs are ";
-            // for (int j = 0; j < input_size; j++) {
-            //    std::cout << graph.node(i).input(j) << " ";
-            // }
-            // std::cout << std::endl;
+            if (fVerbose) {
+               std::cout << "skip op " << graph.node(i).op_type() << " inputs are ";
+               for (int j = 0; j < input_size; j++) {
+                  std::cout << graph.node(i).input(j) << " ";
+               }
+               std::cout << std::endl;
+            }
             continue;
          }
          if (verbose)
@@ -409,6 +405,11 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
    }
 
    // Register operators
+   // Unary operators
+   RegisterOperator("Sqrt", ParseSqrt);
+   RegisterOperator("Reciprocal", ParseReciprocal);
+   RegisterOperator("Neg", ParseNeg);
+   RegisterOperator("Exp", ParseExp);
    // Binary operators
    RegisterOperator("Add", ParseAdd);
    RegisterOperator("Sub", ParseSub);
@@ -431,7 +432,6 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
    RegisterOperator("LeakyRelu", ParseLeakyRelu);
    RegisterOperator("LSTM", ParseLSTM);
    RegisterOperator("Max", ParseMax);
-   RegisterOperator("Neg", ParseNeg);
    RegisterOperator("AveragePool", ParsePool);
    RegisterOperator("GlobalAveragePool", ParsePool);
    RegisterOperator("MaxPool", ParsePool);
