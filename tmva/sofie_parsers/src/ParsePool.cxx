@@ -30,14 +30,6 @@ ParserFuncSignature ParsePool = [](RModelParser_ONNX &parser, const onnx::NodePr
    std::unique_ptr<ROperator> op;
 
    RAttributes_Pool attr;
-   // std::string attr_auto_pad = "NOTSET";
-   // int attr_ceil_mode = 0;
-   // int attr_count_include_pad = 0;
-   // int attr_storage_order = 0;          // not for AveragePool
-   // std::vector<size_t> attr_dilations;  // not for AveragePool
-   // std::vector<size_t> attr_kernel_shape;
-   // std::vector<size_t> attr_pads;
-   // std::vector<size_t> attr_strides;
 
    for (int_t i = 0; i < nodeproto.attribute_size(); i++) {
       std::string attribute_name = nodeproto.attribute(i).name();

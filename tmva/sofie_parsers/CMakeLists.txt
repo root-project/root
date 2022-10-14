@@ -23,6 +23,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
    TMVA/RModelParser_ONNX.hxx
   SOURCES
     src/RModelParser_ONNX.cxx
+    src/ParseBasicUnary.cxx
     src/ParseBasicBinary.cxx
     src/ParseBatchNormalization.cxx
     src/ParseCast.cxx
@@ -35,7 +36,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseLeakyRelu.cxx
     src/ParseLSTM.cxx
     src/ParseMax.cxx
-    src/ParseNeg.cxx
     src/ParsePool.cxx
     src/ParseReduce.cxx
     src/ParseRelu.cxx
