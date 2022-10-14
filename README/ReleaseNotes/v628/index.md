@@ -238,6 +238,9 @@ So, if we take the same example as above, and leave out the x-points, the diagra
 
 ## GUI Libraries
 
+- Provide web-based TTree viewer, integrated with RBrowser
+- Support Edge browser on Windows for all kinds of web widgets
+
 
 ## Montecarlo Libraries
 
@@ -249,6 +252,8 @@ So, if we take the same example as above, and leave out the x-points, the diagra
 
 
 ## JavaScript ROOT
+
+- Major JSROOT upgrade to version 7, using ES6 modules and classes
 
 
 ## Tutorials
