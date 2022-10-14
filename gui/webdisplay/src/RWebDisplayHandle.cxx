@@ -590,24 +590,27 @@ std::unique_ptr<RWebDisplayHandle> RWebDisplayHandle::Display(const RWebDisplayA
       return handle;
    }
 
+   bool handleAsNative = (args.GetBrowserKind() == RWebDisplayArgs::kNative) ||
+                         (args.IsHeadless() && (args.GetBrowserKind() == RWebDisplayArgs::kDefault));
+
 #ifdef _MSC_VER
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kNative) || (args.GetBrowserKind() == RWebDisplayArgs::kEdge)) {
+   if (handleAsNative || (args.GetBrowserKind() == RWebDisplayArgs::kEdge)) {
       if (try_creator(FindCreator("edge", "ChromeCreator")))
          return handle;
    }
 #endif
 
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kNative) || (args.GetBrowserKind() == RWebDisplayArgs::kChrome)) {
+   if (handleAsNative || (args.GetBrowserKind() == RWebDisplayArgs::kChrome)) {
       if (try_creator(FindCreator("chrome", "ChromeCreator")))
          return handle;
    }
 
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kNative) || (args.GetBrowserKind() == RWebDisplayArgs::kFirefox)) {
+   if (handleAsNative || (args.GetBrowserKind() == RWebDisplayArgs::kFirefox)) {
       if (try_creator(FindCreator("firefox", "FirefoxCreator")))
          return handle;
    }
 
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kChrome) || (args.GetBrowserKind() == RWebDisplayArgs::kFirefox)) {
+   if (handleAsNative || (args.GetBrowserKind() == RWebDisplayArgs::kChrome) || (args.GetBrowserKind() == RWebDisplayArgs::kFirefox) || (args.GetBrowserKind() == RWebDisplayArgs::kEdge)) {
       // R__LOG_ERROR(WebGUILog()) << "Neither Chrome nor Firefox browser cannot be started to provide display";
       return handle;
    }

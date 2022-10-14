@@ -41,7 +41,7 @@ public:
       kQt5,      ///< Qt5 QWebEngine libraries - Chromium code packed in qt5
       kQt6,      ///< Qt6 QWebEngine libraries - Chromium code packed in qt6
       kLocal,    ///< either CEF or Qt5 - both runs on local display without real http server
-      kStandard, ///< default system web browser, can not be used in batch mode
+      kDefault,  ///< default system web browser, can not be used in batch mode
       kServer,   ///< indicates that ROOT runs as server and just printouts window URL, browser should be started by the user
       kEmbedded, ///< window will be embedded into other, no extra browser need to be started
       kOff,      ///< disable web display, do not start any browser
@@ -99,7 +99,7 @@ public:
    bool IsInteractiveBrowser() const
    {
       return !IsHeadless() && ((GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) || (GetBrowserKind() == kEdge)
-                          || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kStandard) || (GetBrowserKind() == kCustom));
+                          || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kDefault) || (GetBrowserKind() == kCustom));
    }
 
    /// returns true if local display like CEF or Qt5 QWebEngine should be used
