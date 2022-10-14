@@ -89,10 +89,13 @@ const auto fullUsageText =
    " \n"
    "  -The 'Real Time' is significantly lower than your own analysis runtime.\n"
    "    This would imply your actual application code is dominating the runtime of your analysis,\n"
-   "    ie. your analysis logic is taking up the time.\n"
+   "    ie. your analysis logic or framework is taking up the time.\n"
    "    \n"
    "    The best way to decrease the runtime would be to optimize your code, attempt to parallelize\n"
    "    it onto multiple threads if possible, or use a machine with a more performant CPU.\n"
+   "    The best way to decrease the runtime would be to optimize your code (or the framework's),\n"
+   "    parallelize it onto multiple threads if possible (for example with\n"
+   "    RDataFrame and EnableImplicitMT) or switch to a machine with a more performant CPU.\n"
    "  \n"
    "  \n"
    "  -The 'Real Time' is significantly higher than 'CPU Time / number of threads'*.\n"
@@ -120,8 +123,8 @@ const auto fullUsageText =
    "    can provide it, and so decompression is the bottleneck.\n"
    "    \n"
    "    The best way to decrease your runtime would be to utilise a system with a faster CPU, or make use\n"
-   "    use of more threads when running, or use a compression algorithm with a higher decompression rate,\n"
-   "    possibly at the cost of some extra file size.\n"
+   "    use of more threads when running, or use a compression algorithm with a higher decompression rate\n"
+   "    such as LZ4, possibly at the cost of some extra file size.\n"
    "\n"
    "\n"
    "A note on caching:\n"
@@ -136,11 +139,13 @@ const auto fullUsageText =
    "\n"
    "Known overhead of TTreeReader, RDataFrame:\n"
    "`rootreadspeed` is designed to read all data present in the specified branches, trees and files at the highest\n"
-   "possible speed. When an analysis application is bound by I/O, higher-level interfaces built on top of TTree\n"
+   "possible speed. When the application bottleneck is not in the computations performed by analysis logic,\n"
+   "higher-level interfaces built on top of TTree\n"
    "such as TTreeReader and RDataFrame are known to add a significant runtime overhead with respect to the runtimes\n"
    "reported by `rootreadspeed` (up to a factor 2). In realistic analysis applications it has been observed that a\n"
    "large part of that overhead is compensated by the ability of TTreeReader and RDataFrame to read branch values\n"
-   "selectively, based on event cuts.\n";
+   "selectively, based on event cuts, and this overhead will be reduced significantly when using RDataFrame\n"
+   "in conjunction with RNTuple.\n";
 
 void ReadSpeed::PrintThroughput(const Result &r)
 {
