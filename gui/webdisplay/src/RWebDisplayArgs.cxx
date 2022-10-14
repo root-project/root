@@ -227,7 +227,7 @@ RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
    else if ((kind == "embed") || (kind == "embedded"))
       SetBrowserKind(kEmbedded);
    else if ((kind == "dflt") || (kind == "default") || (kind == "browser"))
-      SetBrowserKind(kStandard);
+      SetBrowserKind(kDefault);
    else if (kind == "server")
       SetBrowserKind(kServer);
    else if (kind == "off")
@@ -252,7 +252,7 @@ std::string RWebDisplayArgs::GetBrowserName() const
       case kQt5: return "qt5";
       case kQt6: return "qt6";
       case kLocal: return "local";
-      case kStandard: return "default";
+      case kDefault: return "default";
       case kServer: return "server";
       case kEmbedded: return "embed";
       case kOff: return "off";
