@@ -471,11 +471,14 @@ public:
    //////////////////////////////////////////////////////////////////////////////////
    // Register TObject-based class with standard browsing/drawing libs
 
-   void RegisterTObject(const std::string &clname, const std::string &iconname, bool can_browse = false, int can_draw = 3)
+   void RegisterTObject(const std::string &clname, const std::string &iconname, bool can_browse = false, int can_draw = 3, const std::string &drawopt = ""s)
    {
-      RegisterClass(clname, iconname, can_browse ? "dflt"s : ""s,
-                                      can_draw & 1 ? "libROOTObjectDraw6Provider"s : ""s,
-                                      can_draw & 2 ? "libROOTObjectDraw7Provider"s : ""s);
+      RegisterClass(clname,
+                    iconname,
+                    can_browse ? "dflt"s : ""s,
+                    can_draw & 1 ? "libROOTObjectDraw6Provider"s : ""s,
+                    can_draw & 2 ? "libROOTObjectDraw7Provider"s : ""s,
+                    drawopt);
    }
 
    RTObjectProvider()
@@ -490,10 +493,10 @@ public:
       RegisterClass("TStyle", "sap-icon://badge");
 
       RegisterTObject("TDirectory", "sap-icon://folder-blank", true, 0);
-      RegisterTObject("TH1", "sap-icon://bar-chart");
-      RegisterTObject("TH2", "sap-icon://pixelate");
+      RegisterTObject("TH1", "sap-icon://bar-chart", false, 3, "hist"s);
+      RegisterTObject("TH2", "sap-icon://pixelate", false, 3, "col"s);
       RegisterTObject("TH3", "sap-icon://product");
-      RegisterTObject("TProfile", "sap-icon://vertical-bar-chart");
+      RegisterTObject("TProfile", "sap-icon://vertical-bar-chart", false, 3, "e0"s);
       RegisterTObject("TGraph", "sap-icon://line-chart");
       RegisterTObject("TCanvas", "sap-icon://business-objects-experience", false, 1); // only can use TWebCanvas
       RegisterTObject("TASImage", "sap-icon://picture", false, 1); // only can use TWebCanvas
