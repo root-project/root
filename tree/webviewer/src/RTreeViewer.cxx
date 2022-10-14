@@ -85,6 +85,14 @@ void RTreeViewer::SetTree(TTree *tree)
 {
    fTree = tree;
 
+   // reset expression when new tree is assigned
+   fCfg.fExprX.clear();
+   fCfg.fExprY.clear();
+   fCfg.fExprZ.clear();
+   fCfg.fExprCut.clear();
+   fCfg.fNumber = 0;
+   fCfg.fFirst = 0;
+
    UpdateConfig();
 
    Update();
