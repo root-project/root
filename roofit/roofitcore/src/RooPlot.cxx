@@ -384,36 +384,6 @@ void RooPlot::updateNormVars(const RooArgSet &vars)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// A plot object is a frame without any bin contents of its own so this
-/// method always returns zero.
-
-Stat_t RooPlot::GetBinContent(Int_t /*i*/) const {
-  return 0;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// A plot object is a frame without any bin contents of its own so this
-/// method always returns zero.
-
-Stat_t RooPlot::GetBinContent(Int_t, Int_t) const
-{
-  return 0;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// A plot object is a frame without any bin contents of its own so this
-/// method always returns zero.
-
-Stat_t RooPlot::GetBinContent(Int_t, Int_t, Int_t) const
-{
-  return 0;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Add a generic object to this plot. The specified options will be
 /// used to Draw() this object later. The caller transfers ownership
 /// of the object with this call, and the object will be deleted
