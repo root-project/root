@@ -565,8 +565,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this._oSettingsModel.setProperty("/SortMethod", this.model.getSortMethod());
          this._oSettingsModel.setProperty("/ReverseOrder", this.model.isReverseOrder());
 
-         console.log('show TH2 draw option = ', this._oSettingsModel.getProperty("/optTH2"));
-
          if (!this._oSettingsMenu)
             this._oSettingsMenu = Fragment.load({
                name: "rootui5.browser.view.settingsmenu",
@@ -578,6 +576,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             });
 
          this._oSettingsMenu.then(menu => menu.open());
+      },
+
+      handleSettingsReset: function() {
+         this._oSettingsModel.setProperty('/optTH1', 'hist');
+         this._oSettingsModel.setProperty('/optTH2', 'col');
+         this._oSettingsModel.setProperty('/optTProfile', 'e0')
       },
 
       handleSeetingsConfirm: function() {
@@ -623,9 +627,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @summary Return message need to be send to server to change options */
       getOptionsMessage: function() {
-         let arr = [this._oSettingsModel.getProperty('/optTH1') || '',
-                    this._oSettingsModel.getProperty('/optTH2') || '',
-                    this._oSettingsModel.getProperty('/optTProfile') || '' ];
+         let arr = [ this._oSettingsModel.getProperty('/optTH1') || '',
+                     this._oSettingsModel.getProperty('/optTH2') || '',
+                     this._oSettingsModel.getProperty('/optTProfile') || '' ];
          return 'OPTIONS:' + JSON.stringify(arr);
       },
 
