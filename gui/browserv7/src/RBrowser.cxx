@@ -14,6 +14,7 @@
 
 #include <ROOT/Browsable/RSysFile.hxx>
 #include <ROOT/Browsable/RLevelIter.hxx>
+#include <ROOT/Browsable/RProvider.hxx>
 
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RFileDialog.hxx>
@@ -63,7 +64,7 @@ public:
 
    void Show(const std::string &) override {}
 
-   bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &, bool) override
+   bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string & = "") override
    {
       if (fIsEditor && elem->IsCapable(Browsable::RElement::kActEdit)) {
          auto code = elem->GetContent("text");
@@ -142,11 +143,7 @@ public:
 
 /** \class ROOT::Experimental::RBrowser
 \ingroup rbrowser
-\brief Web-based %ROOT file browser
-
-RBrowser requires one of the supported web browsers:
-  - Google Chrome (preferable)
-  - Mozilla Firefox
+\brief Web-based %ROOT files and objects browser
 
 \image html v7_rbrowser.png
 
@@ -275,11 +272,8 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
 {
    args.pop_back(); // remove exec string, not used now
 
-   std::string doAppend = args.back();
-   args.pop_back(); // remove append option
-
-   std::string drawingOptions = args.back();
-   args.pop_back(); // remove draw option
+   std::string opt = args.back();
+   args.pop_back(); // remove option
 
    auto path = fBrowsable.GetWorkingPath();
    path.insert(path.end(), args.begin(), args.end());
@@ -323,7 +317,7 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
    }
 
    auto widget = GetActiveWidget();
-   if (widget && widget->DrawElement(elem, drawingOptions, doAppend == "true"s)) {
+   if (widget && widget->DrawElement(elem, opt)) {
       widget->SetPath(path);
       return widget->SendWidgetContent();
    }
@@ -355,7 +349,7 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
       if (new_widget) {
          // draw object before client side is created - should not be a problem
          // after widget add in browser, connection will be established and data provided
-         if (new_widget->DrawElement(elem, drawingOptions, false))
+         if (new_widget->DrawElement(elem, opt))
             new_widget->SetPath(path);
          return NewWidgetMsg(new_widget);
       }
@@ -544,19 +538,26 @@ void RBrowser::SendInitMsg(unsigned connid)
    }
 
    if (!fActiveWidgetName.empty())
-      reply.emplace_back(std::vector<std::string>({ "active", fActiveWidgetName }));
+      reply.emplace_back(std::vector<std::string>({ "active"s, fActiveWidgetName }));
 
    auto history = GetRootHistory();
    if (history.size() > 0) {
-      history.insert(history.begin(), "history");
+      history.insert(history.begin(), "history"s);
       reply.emplace_back(history);
    }
 
    auto logs = GetRootLogs();
    if (logs.size() > 0) {
-      logs.insert(logs.begin(), "logs");
+      logs.insert(logs.begin(), "logs"s);
       reply.emplace_back(logs);
    }
+
+   reply.emplace_back(std::vector<std::string>({
+      "drawoptions"s,
+      Browsable::RProvider::GetClassDrawOption("TH1"),
+      Browsable::RProvider::GetClassDrawOption("TH2"),
+      Browsable::RProvider::GetClassDrawOption("TProfile")
+   }));
 
    std::string msg = "INMSG:";
    msg.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
@@ -703,6 +704,13 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
          fBrowsable.SetWorkingPath({});
       }
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
+   } else if (kind == "OPTIONS") {
+      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(msg);
+      if (arr && (arr->size() == 3)) {
+         Browsable::RProvider::SetClassDrawOption("TH1", (*arr)[0]);
+         Browsable::RProvider::SetClassDrawOption("TH2", (*arr)[1]);
+         Browsable::RProvider::SetClassDrawOption("TProfile", (*arr)[2]);
+      }
    }
 }
 

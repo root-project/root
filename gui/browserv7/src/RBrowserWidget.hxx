@@ -61,7 +61,7 @@ public:
    virtual std::string GetUrl() = 0;
    virtual std::string GetTitle() { return ""; }
 
-   virtual bool DrawElement(std::shared_ptr<Browsable::RElement> &, const std::string &, bool) { return false; }
+   virtual bool DrawElement(std::shared_ptr<Browsable::RElement> &, const std::string & = "") { return false; }
    virtual std::string SendWidgetContent() { return ""; }
    std::string SendWidgetTitle();
 

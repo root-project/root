@@ -47,7 +47,7 @@ public:
 
    void Show(const std::string &arg) override { fViewer.Show(arg); }
 
-   bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &, bool) override
+   bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string & = "") override
    {
       if (!elem->IsCapable(Browsable::RElement::kActTree))
          return false;

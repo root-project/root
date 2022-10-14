@@ -6,22 +6,19 @@
           <VBox>
              <HBox alignItems="Center">
                  <Label text="TH1" wrapping="true" labelFor="do-TH1" class="sapUiSmallMargin"/>
-                 <ComboBox id="do-TH1" items="{ path: '/TH1' }"
-                           selectedKey="hist" change="handleSettingsChange">
+                 <ComboBox id="do-TH1" items="{ path: '/TH1' }" selectedKey="{/optTH1}">
                      <core:Item text="{name}" key="{name}" />
                  </ComboBox>
               </HBox>
               <HBox alignItems="Center">
                  <Label text="TH2" wrapping="true" labelFor="do-TH2" class="sapUiSmallMargin"/>
-                 <ComboBox id="do-TH2" items="{ path: '/TH2' }"
-                           selectedKey="COL" change="handleSettingsChange">
+                 <ComboBox id="do-TH2" items="{ path: '/TH2' }" selectedKey="{/optTH2}">
                     <core:Item text="{name}" key="{name}" />
                  </ComboBox>
               </HBox>
               <HBox alignItems="Center">
                  <Label text="TProfile" wrapping="true" labelFor="do-TProfile" class="sapUiSmallMargin"/>
-                 <ComboBox id="do-TProfile" items="{ path: '/TProfile' }"
-                           selectedKey="E0" change="handleSettingsChange">
+                 <ComboBox id="do-TProfile" items="{ path: '/TProfile' }" selectedKey="{/optTProfile}">
                     <core:Item text="{name}" key="{name}"/>
                  </ComboBox>
               </HBox>
