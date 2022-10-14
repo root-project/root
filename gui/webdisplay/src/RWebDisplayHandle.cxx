@@ -72,7 +72,7 @@ std::unique_ptr<RWebDisplayHandle::Creator> &RWebDisplayHandle::FindCreator(cons
    if (search == m.end()) {
 
       if (libname == "ChromeCreator") {
-         m.emplace(name, std::make_unique<ChromeCreator>());
+         m.emplace(name, std::make_unique<ChromeCreator>(name == "edge"));
       } else if (libname == "FirefoxCreator") {
          m.emplace(name, std::make_unique<FirefoxCreator>());
       } else if (libname == "BrowserCreator") {
@@ -374,12 +374,19 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserCreator(true)
+RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(true)
 {
-   TestProg(gEnv->GetValue("WebGui.Chrome", ""));
+   fEdge = _edge;
+
+   fEnvPrefix = fEdge ? "WebGui.Edge" : "WebGui.Chrome";
+
+   TestProg(gEnv->GetValue(fEnvPrefix.c_str(), ""));
 
 #ifdef _MSC_VER
-   TestProg("\\Google\\Chrome\\Application\\chrome.exe", true);
+   if (fEdge)
+      TestProg("\\Microsoft\\Edge\\Application\\msedge.exe", true);
+   else
+      TestProg("\\Google\\Chrome\\Application\\chrome.exe", true);
 #endif
 #ifdef R__MACOSX
    TestProg("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
@@ -391,13 +398,13 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserCreator(true)
 #endif
 
 #ifdef _MSC_VER
-   fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "$prog --headless $geometry $url");
-   fHeadlessExec = gEnv->GetValue("WebGui.ChromeHeadless", "$prog --headless --disable-gpu $geometry $url &");
-   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --new-window --app=$url &"); // & in windows mean usage of spawn
+   fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless $geometry $url");
+   fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless --disable-gpu $geometry $url &");
+   fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=$url &"); // & in windows mean usage of spawn
 #else
-   fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
-   fHeadlessExec = gEnv->GetValue("WebGui.ChromeHeadless", "fork: --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
-   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --new-window --app=\'$url\' &");
+   fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
+   fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "fork: --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
+   fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=\'$url\' &");
 #endif
 }
 
@@ -439,7 +446,7 @@ std::string RWebDisplayHandle::ChromeCreator::MakeProfile(std::string &exec, boo
    if (exec.find("$profile") == std::string::npos)
       return rmdir;
 
-   const char *chrome_profile = gEnv->GetValue("WebGui.ChromeProfile", "");
+   const char *chrome_profile = gEnv->GetValue((fEnvPrefix + "Profile").c_str(), "");
    if (chrome_profile && *chrome_profile) {
       profile_arg = chrome_profile;
    } else {
@@ -582,6 +589,13 @@ std::unique_ptr<RWebDisplayHandle> RWebDisplayHandle::Display(const RWebDisplayA
       R__LOG_ERROR(WebGUILog()) << "Neither Qt5/6 nor CEF libraries were found to provide local display";
       return handle;
    }
+
+#ifdef _MSC_VER
+   if ((args.GetBrowserKind() == RWebDisplayArgs::kNative) || (args.GetBrowserKind() == RWebDisplayArgs::kEdge)) {
+      if (try_creator(FindCreator("edge", "ChromeCreator")))
+         return handle;
+   }
+#endif
 
    if ((args.GetBrowserKind() == RWebDisplayArgs::kNative) || (args.GetBrowserKind() == RWebDisplayArgs::kChrome)) {
       if (try_creator(FindCreator("chrome", "ChromeCreator")))

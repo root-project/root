@@ -59,8 +59,10 @@ protected:
    };
 
    class ChromeCreator : public BrowserCreator {
+      bool fEdge{false};
+      std::string fEnvPrefix; // rc parameters prefix
    public:
-      ChromeCreator();
+      ChromeCreator(bool is_edge = false);
       virtual ~ChromeCreator() = default;
       bool IsActive() const override { return !fProg.empty(); }
       void ProcessGeometry(std::string &, const RWebDisplayArgs &args) override;
