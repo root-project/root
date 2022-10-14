@@ -208,8 +208,10 @@ RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
 
    if (kind == "local")
       SetBrowserKind(kLocal);
-   else if (kind.empty() || (kind == "native"))
+   else if (kind == "native")
       SetBrowserKind(kNative);
+   else if (kind.empty() || (kind == "dflt") || (kind == "default") || (kind == "browser"))
+      SetBrowserKind(kDefault);
    else if (kind == "firefox")
       SetBrowserKind(kFirefox);
    else if ((kind == "chrome") || (kind == "chromium"))
@@ -226,8 +228,6 @@ RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
       SetBrowserKind(kQt6);
    else if ((kind == "embed") || (kind == "embedded"))
       SetBrowserKind(kEmbedded);
-   else if ((kind == "dflt") || (kind == "default") || (kind == "browser"))
-      SetBrowserKind(kDefault);
    else if (kind == "server")
       SetBrowserKind(kServer);
    else if (kind == "off")
