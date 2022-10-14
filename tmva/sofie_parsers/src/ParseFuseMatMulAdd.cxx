@@ -18,13 +18,10 @@ ParserFuseFuncSignature ParseFuseMatMulAdd = [](RModelParser_ONNX &parser, const
       throw std::runtime_error("TMVA::SOFIE ONNX Parser MatMul op has input tensor " + input_name +
                                " but its type is not yet registered");
    }
-   // std::cout << "TMVA::SOFIE ONNX Parser " << matmulnode.op_type() <<
-   // " op has input tensor " + input_name + "  but its type is not yet registered - use default float " << std::endl;
 
    // output of matmul should be input of Add
    if (matmulnode.output(0) != addnode.input(0))
       throw std::runtime_error("TMVA::SOFIE ONNX Parser : cannot fuse MatMul and Add since have different inputs");
-
    // we don't check input type of ADD since it is not be registered
 
    std::unique_ptr<ROperator> op;

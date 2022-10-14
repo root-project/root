@@ -29,10 +29,7 @@ ParserFuncSignature ParseSlice = [](RModelParser_ONNX &parser, const onnx::NodeP
       axisTensorNames.push_back(nodeproto.input(4));
 
    // not sure how to find here type of the integer inputs
-   // std::cout << "Slice input(1) " << nodeproto.input(1) << "  " << nodeproto.input(2) << std::endl;
    ETensorType axis_type = ETensorType::INT64;
-   //(tensor_type.find(starts_name) != tensor_type.end()) ? tensor_type.find(starts_name)->second
-   //                                                                             : ETensorType::UNDEFINED;
    // for version < 10
    std::vector<int64_t> attr_starts = {};
    std::vector<int64_t> attr_ends = {};
