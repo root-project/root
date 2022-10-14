@@ -1880,6 +1880,11 @@ T Sum(const RVec<T> &v, const T zero = T(0))
    return std::accumulate(v.begin(), v.end(), zero);
 }
 
+inline std::size_t Sum(const RVec<bool> &v, std::size_t zero = 0ul)
+{
+   return std::accumulate(v.begin(), v.end(), zero);
+}
+
 /// Return the product of the elements of the RVec.
 template <typename T>
 T Product(const RVec<T> &v, const T init = T(1)) // initialize with identity
