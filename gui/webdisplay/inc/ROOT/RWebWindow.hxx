@@ -70,7 +70,7 @@ private:
       unsigned fConnId{0};                 ///<! connection id (unique inside the window)
       bool fHeadlessMode{false};           ///<! indicate if connection represent batch job
       std::string fKey;                    ///<! key value supplied to the window (when exists)
-      bool fKeyUsed{false};                ///<! key value used to verify connection
+      int fKeyUsed{0};                     ///<! key value used to verify connection
       std::unique_ptr<RWebDisplayHandle> fDisplayHandle;  ///<! handle assigned with started web display (when exists)
       std::shared_ptr<THttpCallArg> fHold; ///<! request used to hold headless browser
       timestamp_t fSendStamp;              ///<! last server operation, always used from window thread
@@ -96,6 +96,18 @@ private:
       ~WebConn();
 
       void ResetStamps() { fSendStamp = fRecvStamp = std::chrono::system_clock::now(); }
+
+      void ResetData()
+      {
+         fActive = false;
+         fWSId = 0;
+         fReady = 0;
+         fDoingSend = false;
+         fSendCredits = 0;
+         fClientCredits = 0;
+         while (!fQueue.empty())
+            fQueue.pop();
+      }
    };
 
    enum EQueueEntryKind { kind_None, kind_Connect, kind_Data, kind_Disconnect };
@@ -179,6 +191,8 @@ private:
    void CheckDataToSend(bool only_once = false);
 
    bool HasKey(const std::string &key) const;
+
+   std::string GenerateKey() const;
 
    void CheckPendingConnections();
 

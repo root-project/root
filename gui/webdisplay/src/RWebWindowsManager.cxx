@@ -21,10 +21,10 @@
 #include "THttpServer.h"
 
 #include "TSystem.h"
-#include "TRandom3.h"
 #include "TString.h"
 #include "TApplication.h"
 #include "TTimer.h"
+#include "TRandom.h"
 #include "TROOT.h"
 #include "TEnv.h"
 #include "TExec.h"
@@ -546,15 +546,8 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
       return 0;
    }
 
-   std::string key;
-   int ntry = 100000;
-   TRandom3 rnd;
-   rnd.SetSeed();
-
-   do {
-      key = std::to_string(rnd.Integer(0x100000));
-   } while ((--ntry > 0) && win.HasKey(key));
-   if (ntry == 0) {
+   std::string key = win.GenerateKey();
+   if (key.empty()) {
       R__LOG_ERROR(WebGUILog()) << "Fail to create unique key for the window";
       return 0;
    }
