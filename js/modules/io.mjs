@@ -2456,7 +2456,7 @@ class TBuffer {
    readTKey(key) {
       if (!key) key = {};
       this.classStreamer(key, 'TKey');
-      let name = key.fName.replace(/['']/g, '');
+      let name = key.fName.replace(/['"]/g, '');
       if (name !== key.fName) {
          key.fRealName = key.fName;
          key.fName = name;
