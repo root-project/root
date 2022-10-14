@@ -34,6 +34,7 @@ friend class RWebWindow;
 public:
    enum EBrowserKind {
       kChrome,   ///< Google Chrome browser
+      kEdge,     ///< Microsoft Edge browser (Windows only)
       kFirefox,  ///< Mozilla Firefox browser
       kNative,   ///< either Chrome or Firefox - both support major functionality
       kCEF,      ///< Chromium Embedded Framework - local display with CEF libs
@@ -97,7 +98,8 @@ public:
    /// returns true if interactive browser window supposed to be started
    bool IsInteractiveBrowser() const
    {
-      return !IsHeadless() && ((GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kStandard) || (GetBrowserKind() == kCustom));
+      return !IsHeadless() && ((GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) || (GetBrowserKind() == kEdge)
+                          || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kStandard) || (GetBrowserKind() == kCustom));
    }
 
    /// returns true if local display like CEF or Qt5 QWebEngine should be used
@@ -109,7 +111,8 @@ public:
    /// returns true if browser supports headless mode
    bool IsSupportHeadless() const
    {
-      return (GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5) || (GetBrowserKind() == kQt6);
+      return (GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) || (GetBrowserKind() == kEdge)
+               || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5) || (GetBrowserKind() == kQt6);
    }
 
    /// set window url
