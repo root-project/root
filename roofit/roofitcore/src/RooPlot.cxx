@@ -1112,11 +1112,12 @@ double RooPlot::chiSquare(const char* curvename, const char* histname, int nFitP
 /// Otherwise, the curve is evaluated at the bin centres, which is not accurate for strongly curved distributions.
 RooHist* RooPlot::residHist(const char* histname, const char* curvename, bool normalize, bool useAverage) const
 {
-  // Find curve objects (there might be multiple in the case of multi-range fits)
+  // Find all curve objects with the name "curvename" or the name of the last
+  // plotted curve (there might be multiple in the case of multi-range fits).
   std::vector<RooCurve *> curves;
 
-  for(auto const& item : _items) {
-    TObject &obj = *item.first;
+  for(auto it = _items.rbegin(); it != _items.rend(); ++it) {
+    TObject &obj = *it->first;
     if(obj.IsA() == RooCurve::Class()) {
       // If no curvename was passed, we take by default the last curve and all
       // other curves that have the same name
@@ -1140,7 +1141,27 @@ RooHist* RooPlot::residHist(const char* histname, const char* curvename, bool no
   }
 
   auto residHist = hist->createEmptyResidHist(*curves.front(), normalize);
+
+  // We consider all curves with the same name as long as the ranges don't
+  // overlap, to create also the full residual plot in multi-range fits.
+  std::vector<std::pair<double, double>> coveredRanges;
   for(RooCurve * curve : curves) {
+    const double xmin = curve->GetPointX(0);
+    const double xmax = curve->GetPointX(curve->GetN() - 1);
+
+    for(auto const& prevRange : coveredRanges) {
+      const double pxmin = prevRange.first;
+      const double pxmax = prevRange.second;
+      // If either xmin or xmax is within any previous range, the ranges
+      // overloap and it makes to sense to also consider this curve for the
+      // residuals (i.e., they can't come from a multi-range fit).
+      if((pxmax > xmin && pxmin <= xmin) || (pxmax > xmax && pxmin <= xmax)) {
+        continue;
+      }
+    }
+
+    coveredRanges.emplace_back(xmin, xmax);
+
     hist->fillResidHist(*residHist, *curve, normalize, useAverage);
   }
   residHist->GetHistogram()->GetXaxis()->SetRangeUser(_hist->GetXaxis()->GetXmin(), _hist->GetXaxis()->GetXmax());
