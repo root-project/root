@@ -36,7 +36,7 @@ class RooMinimizer;
 class RooMinimizerFcn : public RooAbsMinimizerFcn, public ROOT::Math::IBaseFunctionMultiDim {
 
 public:
-   RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context, bool verbose = false);
+   RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context);
    RooMinimizerFcn(const RooMinimizerFcn &other);
    ~RooMinimizerFcn() override;
 

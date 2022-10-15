@@ -28,7 +28,7 @@
 
 class RooGradMinimizerFcn : public ROOT::Math::IMultiGradFunction, public RooAbsMinimizerFcn {
 public:
-   RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *context, bool verbose = false);
+   RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *context);
    RooGradMinimizerFcn(const RooGradMinimizerFcn &other);
    ROOT::Math::IMultiGradFunction *Clone() const override;
 
