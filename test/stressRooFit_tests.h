@@ -101,8 +101,8 @@ using namespace RooFit ;
 class TestBasic101 : public RooUnitTest
 {
 public:
-  TestBasic101(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Fitting,plotting & event generation of basic p.d.f",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic101(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Fitting,plotting & event generation of basic p.d.f",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
     // S e t u p   m o d e l
     // ---------------------
@@ -156,7 +156,7 @@ public:
     regPlot(xframe ,"rf101_plot1") ;
     regPlot(xframe2,"rf101_plot2") ;
 
-    return kTRUE ;
+    return true ;
   }
 } ;
 
@@ -177,7 +177,7 @@ public:
 class TestBasic102 : public RooUnitTest
 {
 public:
-  TestBasic102(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Data import methods",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic102(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Data import methods",refFile,writeRef,verbose,batchMode) {} ;
 
   std::unique_ptr<TH1> makeTH1()
   {
@@ -212,7 +212,7 @@ public:
     return tree ;
   }
 
-  Bool_t testCode() {
+  bool testCode() {
 
     ////////////////////////////////////////////////////////
     // I m p o r t i n g   R O O T   h i s t o g r a m s  //
@@ -303,7 +303,7 @@ public:
     regPlot(frame3,"rf102_plot3") ;
     regPlot(frame4,"rf102_plot4") ;
 
-    return kTRUE ;
+    return true ;
   }
 } ;
 
@@ -329,8 +329,8 @@ public:
 class TestBasic103 : public RooUnitTest
 {
 public:
-  TestBasic103(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Interpreted expression p.d.f.",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic103(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Interpreted expression p.d.f.",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
     /////////////////////////////////////////////////////////
     // G e n e r i c   i n t e r p r e t e d   p . d . f . //
@@ -409,7 +409,7 @@ public:
     regPlot(xframe2,"rf103_plot2") ;
     regResult(r,"rf103_fit1") ;
 
-    return kTRUE ;
+    return true ;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -427,8 +427,8 @@ public:
 class TestBasic105 : public RooUnitTest
 {
 public:
-  TestBasic105(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("C++ function binding operator p.d.f",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic105(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("C++ function binding operator p.d.f",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
     // B i n d   T M a t h : : E r f   C   f u n c t i o n
     // ---------------------------------------------------
@@ -485,7 +485,7 @@ public:
     regPlot(frame2,"rf105_plot2") ;
     regPlot(frame3,"rf105_plot3") ;
 
-    return kTRUE ;
+    return true ;
   }
 } ;
 /////////////////////////////////////////////////////////////////////////
@@ -503,8 +503,8 @@ public:
 class TestBasic108 : public RooUnitTest
 {
 public:
-  TestBasic108(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Non-standard binning in counting and asymmetry plots",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic108(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Non-standard binning in counting and asymmetry plots",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
     // S e t u p   m o d e l
     // ---------------------
@@ -599,7 +599,7 @@ public:
     regPlot(dtframe,"rf108_plot1") ;
     regPlot(aframe,"rf108_plot2") ;
 
-    return kTRUE ;
+    return true ;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -619,8 +619,8 @@ public:
 class TestBasic109 : public RooUnitTest
 {
 public:
-  TestBasic109(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Calculation of chi^2 and residuals in plots",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic109(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Calculation of chi^2 and residuals in plots",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
     // S e t u p   m o d e l
     // ---------------------
@@ -684,7 +684,7 @@ public:
     //delete hresid ;
     //delete hpull ;
 
-    return kTRUE ;
+    return true ;
   }
 } ;
 /////////////////////////////////////////////////////////////////////////
@@ -704,8 +704,8 @@ public:
 class TestBasic110 : public RooUnitTest
 {
 public:
-  TestBasic110(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Normalization of p.d.f.s in 1D",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic110(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Normalization of p.d.f.s in 1D",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
     // S e t u p   m o d e l
     // ---------------------
@@ -762,7 +762,7 @@ public:
 
     regPlot(frame,"rf110_plot1") ;
 
-    return kTRUE ;
+    return true ;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -782,8 +782,8 @@ public:
 class TestBasic111 : public RooUnitTest
 {
 public:
-  TestBasic111(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Numeric integration configuration",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic111(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Numeric integration configuration",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
     // A d j u s t   g l o b a l   1 D   i n t e g r a t i o n   p r e c i s i o n
     // ----------------------------------------------------------------------------
@@ -848,7 +848,7 @@ public:
     regValue(val3,"rf111_val3") ;
 
 
-    return kTRUE ;
+    return true ;
   }
 } ;
 /////////////////////////////////////////////////////////////////////////
@@ -868,8 +868,8 @@ public:
 class TestBasic201 : public RooUnitTest
 {
 public:
-  TestBasic201(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Addition operator p.d.f.",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic201(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Addition operator p.d.f.",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
     // S e t u p   c o m p o n e n t   p d f s
     // ---------------------------------------
@@ -941,7 +941,7 @@ public:
     //
     //   model2 = bkg + (sig1 + sig2)
     //
-    RooAddPdf  model2("model","g1+g2+a",RooArgList(bkg,sig1,sig2),RooArgList(bkgfrac,sig1frac),kTRUE) ;
+    RooAddPdf  model2("model","g1+g2+a",RooArgList(bkg,sig1,sig2),RooArgList(bkgfrac,sig1frac),true) ;
 
     // NB: Each coefficient is interpreted as the fraction of the
     // left-hand component of the i-th recursive sum, i.e.
@@ -959,7 +959,7 @@ public:
 
     regPlot(xframe,"rf201_plot1") ;
 
-    return kTRUE ;
+    return true ;
 
   }
 
@@ -981,8 +981,8 @@ public:
 class TestBasic202 : public RooUnitTest
 {
 public:
-  TestBasic202(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Extended ML fits to addition operator p.d.f.s",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic202(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Extended ML fits to addition operator p.d.f.s",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
     // S e t u p   c o m p o n e n t   p d f s
     // ---------------------------------------
@@ -1066,7 +1066,7 @@ public:
 
     regPlot(xframe,"rf202_plot1") ;
 
-    return kTRUE ;
+    return true ;
 
   }
 
@@ -1086,8 +1086,8 @@ public:
 class TestBasic203 : public RooUnitTest
 {
 public:
-  TestBasic203(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Basic fitting and plotting in ranges",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic203(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Basic fitting and plotting in ranges",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
     // S e t u p   m o d e l
     // ---------------------
@@ -1113,7 +1113,7 @@ public:
     // ---------------------------
 
     // Fit p.d.f to all data
-    RooFitResult* r_full = model.fitTo(*modelData,Save(kTRUE),BatchMode(_batchMode)) ;
+    RooFitResult* r_full = model.fitTo(*modelData,Save(true),BatchMode(_batchMode)) ;
 
 
     // F i t   p a r t i a l   r a n g e
@@ -1123,7 +1123,7 @@ public:
     x.setRange("signal",-3,3) ;
 
     // Fit p.d.f only to data in "signal" range
-    RooFitResult* r_sig = model.fitTo(*modelData,Save(kTRUE),Range("signal"),BatchMode(_batchMode)) ;
+    RooFitResult* r_sig = model.fitTo(*modelData,Save(true),Range("signal"),BatchMode(_batchMode)) ;
 
 
     // P l o t   /   p r i n t   r e s u l t s
@@ -1139,7 +1139,7 @@ public:
     regResult(r_full,"rf203_r_full") ;
     regResult(r_sig,"rf203_r_sig") ;
 
-    return kTRUE;
+    return true;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -1159,8 +1159,8 @@ public:
 class TestBasic204 : public RooUnitTest
 {
 public:
-  TestBasic204(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Extended ML fit in sub range",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic204(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Extended ML fit in sub range",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
     // S e t u p   c o m p o n e n t   p d f s
     // ---------------------------------------
@@ -1214,12 +1214,12 @@ public:
 
 
     // Perform unbinned extended ML fit to data
-    RooFitResult* r = model.fitTo(*data,Extended(kTRUE),Save(),BatchMode(_batchMode)) ;
+    RooFitResult* r = model.fitTo(*data,Extended(true),Save(),BatchMode(_batchMode)) ;
 
 
     regResult(r,"rf204_result") ;
 
-    return kTRUE ;
+    return true ;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -1238,8 +1238,8 @@ public:
 class TestBasic205 : public RooUnitTest
 {
 public:
-  TestBasic205(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Component plotting variations",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic205(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Component plotting variations",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
     // S e t u p   c o m p o s i t e    p d f
     // --------------------------------------
@@ -1327,7 +1327,7 @@ public:
     regPlot(xframe,"rf205_plot1") ;
     regPlot(xframe2,"rf205_plot2") ;
 
-    return kTRUE ;
+    return true ;
 
   }
 
@@ -1350,9 +1350,9 @@ public:
 class TestBasic208 : public RooUnitTest
 {
 public:
-  TestBasic208(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("FFT Convolution operator p.d.f.",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic208(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("FFT Convolution operator p.d.f.",refFile,writeRef,verbose,batchMode) {} ;
 
-  Bool_t isTestAvailable() {
+  bool isTestAvailable() {
      // only if ROOT was build with fftw3 enabled
      TString conffeatures = gROOT->GetConfigFeatures();
      if(conffeatures.Contains("fftw3")) {
@@ -1360,18 +1360,18 @@ public:
         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFFT"))) {
            if (h->LoadPlugin() == -1) {
               gROOT->ProcessLine("new TNamed ;") ;
-              return kFALSE;
+              return false;
            } else {
-              return kTRUE ;
+              return true ;
            }
         }
      }
-     return kFALSE ;
+     return false ;
   }
 
   Double_t ctol() { return 1e-2 ; } // Account for difficult shape of Landau distribution
 
-  Bool_t testCode() {
+  bool testCode() {
 
     // S e t u p   c o m p o n e n t   p d f s
     // ---------------------------------------
@@ -1421,7 +1421,7 @@ public:
 
     regPlot(frame,"rf208_plot1") ;
 
-    return kTRUE ;
+    return true ;
 
   }
 } ;
@@ -1449,8 +1449,8 @@ public:
 class TestBasic209 : public RooUnitTest
 {
 public:
-  TestBasic209(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Analytical convolution operator",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic209(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Analytical convolution operator",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
     // B - p h y s i c s   p d f   w i t h   t r u t h   r e s o l u t i o n
     // ---------------------------------------------------------------------
@@ -1505,7 +1505,7 @@ public:
 
     regPlot(frame,"rf209_plot1") ;
 
-    return kTRUE ;
+    return true ;
 
   }
 } ;
@@ -1527,8 +1527,8 @@ public:
 class TestBasic301 : public RooUnitTest
 {
 public:
-  TestBasic301(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Composition extension of basic p.d.f",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic301(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Composition extension of basic p.d.f",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // S e t u p   c o m p o s e d   m o d e l   g a u s s ( x , m ( y ) , s )
   // -----------------------------------------------------------------------
@@ -1572,7 +1572,7 @@ public:
   regPlot(yframe,"rf302_plot2") ;
   regTH(hh_model,"rf302_model2d") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 
@@ -1593,8 +1593,8 @@ public:
 class TestBasic302 : public RooUnitTest
 {
 public:
-  TestBasic302(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Sum and product utility functions",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic302(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Sum and product utility functions",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   o b s e r v a b l e s ,   p a r a m e t e r s
   // -----------------------------------------------------------
@@ -1671,7 +1671,7 @@ public:
   regTH(hh_model_3,"rf202_model2d_3") ;
   regTH(hh_model_4,"rf202_model2d_4") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 /////////////////////////////////////////////////////////////////////////
@@ -1716,8 +1716,8 @@ RooDataSet* makeFakeDataXY()
 
 
 
-  TestBasic303(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Conditional use of F(x|y)",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic303(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Conditional use of F(x|y)",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // S e t u p   c o m p o s e d   m o d e l   g a u s s ( x , m ( y ) , s )
   // -----------------------------------------------------------------------
@@ -1781,7 +1781,7 @@ RooDataSet* makeFakeDataXY()
 
   regPlot(xframe,"rf303_plot1") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 
@@ -1805,8 +1805,8 @@ RooDataSet* makeFakeDataXY()
 class TestBasic304 : public RooUnitTest
 {
 public:
-  TestBasic304(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Product operator p.d.f. with uncorrelated terms",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic304(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Product operator p.d.f. with uncorrelated terms",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   c o m p o n e n t   p d f s   i n   x   a n d   y
   // ----------------------------------------------------------------
@@ -1852,7 +1852,7 @@ public:
   regPlot(xframe,"rf304_plot1") ;
   regPlot(yframe,"rf304_plot2") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 
@@ -1875,8 +1875,8 @@ public:
 class TestBasic305 : public RooUnitTest
 {
 public:
-  TestBasic305(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Product operator p.d.f. with conditional term",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic305(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Product operator p.d.f. with conditional term",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   c o n d i t i o n a l   p d f   g x ( x | y )
   // -----------------------------------------------------------
@@ -1936,7 +1936,7 @@ public:
   regPlot(xframe,"rf305_plot1") ;
   regPlot(yframe,"rf305_plot2") ;
 
-  return kTRUE ;
+  return true ;
 
   }
 } ;
@@ -1959,8 +1959,8 @@ public:
 class TestBasic306 : public RooUnitTest
 {
 public:
-  TestBasic306(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Conditional use of per-event error p.d.f. F(t|dt)",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic306(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Conditional use of per-event error p.d.f. F(t|dt)",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // B - p h y s i c s   p d f   w i t h   p e r - e v e n t  G a u s s i a n   r e s o l u t i o n
   // ----------------------------------------------------------------------------------------------
@@ -2030,15 +2030,15 @@ public:
   //
   // Instead of integrating out dterr, make a weighted average of curves
   // at values dterr_i as given in the external dataset.
-  // (The kTRUE argument bins the data before projection to speed up the process)
-  decay_gm.plotOn(frame2,ProjWData(*expDataDterr,kTRUE)) ;
+  // (The true argument bins the data before projection to speed up the process)
+  decay_gm.plotOn(frame2,ProjWData(*expDataDterr,true)) ;
 
 
   regTH(hh_decay,"rf306_model2d") ;
   regPlot(frame,"rf306_plot1") ;
   regPlot(frame2,"rf306_plot2") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 
@@ -2058,8 +2058,8 @@ public:
 class TestBasic307 : public RooUnitTest
 {
 public:
-  TestBasic307(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Full per-event error p.d.f. F(t|dt)G(dt)",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic307(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Full per-event error p.d.f. F(t|dt)G(dt)",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // B - p h y s i c s   p d f   w i t h   p e r - e v e n t  G a u s s i a n   r e s o l u t i o n
   // ----------------------------------------------------------------------------------------------
@@ -2130,7 +2130,7 @@ public:
 
   regPlot(frame,"rf307_plot1") ;
 
-  return kTRUE ;
+  return true ;
 
   }
 } ;
@@ -2151,8 +2151,8 @@ public:
 class TestBasic308 : public RooUnitTest
 {
 public:
-  TestBasic308(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Normalization of p.d.f.s in 2D",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic308(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Normalization of p.d.f.s in 2D",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // S e t u p   m o d e l
   // ---------------------
@@ -2224,7 +2224,7 @@ public:
 
   regTH(hh_cdf,"rf308_cdf") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -2243,8 +2243,8 @@ public:
 class TestBasic310 : public RooUnitTest
 {
 public:
-  TestBasic310(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Data and p.d.f projection in category slice",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic310(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Data and p.d.f projection in category slice",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   B   d e c a y   p d f   w it h   m i x i n g
   // ----------------------------------------------------------
@@ -2313,7 +2313,7 @@ public:
   regPlot(frame2,"rf310_plot2") ;
   regPlot(frame3,"rf310_plot3") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -2332,8 +2332,8 @@ public:
 class TestBasic311 : public RooUnitTest
 {
 public:
-  TestBasic311(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Data and p.d.f projection in sub range",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic311(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Data and p.d.f projection in sub range",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   3 D   p d f   a n d   d a t a
   // -------------------------------------------
@@ -2395,7 +2395,7 @@ public:
   regPlot(frame,"rf311_plot1") ;
   regPlot(frame2,"rf312_plot2") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -2414,8 +2414,8 @@ public:
 class TestBasic312 : public RooUnitTest
 {
 public:
-  TestBasic312(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Fit in multiple rectangular ranges",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic312(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Fit in multiple rectangular ranges",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   2 D   p d f   a n d   d a t a
   // -------------------------------------------
@@ -2502,7 +2502,7 @@ public:
   regResult(r_sb2,"rf312_fit_sb2") ;
   regResult(r_sb12,"rf312_fit_sb12") ;
 
-  return kTRUE ;
+  return true ;
 
   }
 } ;
@@ -2523,8 +2523,8 @@ public:
 class TestBasic313 : public RooUnitTest
 {
 public:
-  TestBasic313(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Integration over non-rectangular regions",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic313(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Integration over non-rectangular regions",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   3 D   p d f
   // -------------------------
@@ -2581,7 +2581,7 @@ public:
     regPlot(frame,"rf313_plot1") ;
   }
 
-  return kTRUE;
+  return true;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -2603,8 +2603,8 @@ public:
 class TestBasic314 : public RooUnitTest
 {
 public:
-  TestBasic314(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Fit with non-rectangular observable boundaries",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic314(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Fit with non-rectangular observable boundaries",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // D e f i n e   o b s e r v a b l e s   a n d   d e c a y   p d f
   // ---------------------------------------------------------------
@@ -2656,7 +2656,7 @@ public:
   regResult(r,"rf314_fit") ;
   regPlot(frame,"rf314_plot1") ;
 
-  return kTRUE;
+  return true;
   }
 } ;
 
@@ -2678,8 +2678,8 @@ public:
 class TestBasic315 : public RooUnitTest
 {
 public:
-  TestBasic315(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("P.d.f. marginalization through integration",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic315(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("P.d.f. marginalization through integration",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
     // C r e a t e   p d f   m ( x , y )  =  g x ( x | y ) * g ( y )
     // --------------------------------------------------------------
@@ -2734,7 +2734,7 @@ public:
 
     regPlot(frame,"rf315_frame") ;
 
-    return kTRUE ;
+    return true ;
   }
 } ;
 
@@ -2759,8 +2759,8 @@ public:
 class TestBasic316 : public RooUnitTest
 {
 public:
-  TestBasic316(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Likelihood ratio projection plot",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic316(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Likelihood ratio projection plot",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   3 D   p d f   a n d   d a t a
   // -------------------------------------------
@@ -2848,7 +2848,7 @@ public:
   regPlot(frame,"rf316_plot1") ;
   regPlot(frame2,"rf316_plot2") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -2867,8 +2867,8 @@ public:
 class TestBasic402 : public RooUnitTest
 {
 public:
-  TestBasic402(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Basic operations on datasets",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic402(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Basic operations on datasets",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // Binned (RooDataHist) and unbinned datasets (RooDataSet) share
   // many properties and inherit from a common abstract base class
@@ -2956,7 +2956,7 @@ public:
 
   regPlot(yframe,"rf402_plot1") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -2975,8 +2975,8 @@ public:
 class TestBasic403 : public RooUnitTest
 {
 public:
-  TestBasic403(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Fits with weighted datasets",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic403(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Fits with weighted datasets",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   o b s e r v a b l e   a n d   u n w e i g h t e d   d a t a s e t
   // -------------------------------------------------------------------------------
@@ -3093,7 +3093,7 @@ public:
   regResult(r_chi2_wgt ,"rf403_ml_chi2") ;
   regPlot(frame,"rf403_plot1") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -3112,8 +3112,8 @@ public:
 class TestBasic404 : public RooUnitTest
 {
 public:
-  TestBasic404(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Categories basic functionality",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic404(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Categories basic functionality",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C o n s t r u c t    a   c a t e g o r y   w i t h   l a b e l s
   // ----------------------------------------------------------------
@@ -3189,7 +3189,7 @@ public:
   regTable(gtable,"rf404_gtable") ;
 
 
-  return kTRUE ;
+  return true ;
 
   }
 
@@ -3210,8 +3210,8 @@ public:
 class TestBasic405 : public RooUnitTest
 {
 public:
-  TestBasic405(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Real-to-category functions",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic405(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Real-to-category functions",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
 
   // D e f i n e   p d f   i n   x ,   s a m p l e   d a t a s e t   i n   x
@@ -3299,7 +3299,7 @@ public:
   regTable(xbtable,"rf405_xbtable") ;
   regPlot(xframe,"rf405_plot1") ;
 
-  return kTRUE ;
+  return true ;
 
   }
 
@@ -3320,8 +3320,8 @@ public:
 class TestBasic406 : public RooUnitTest
 {
 public:
-  TestBasic406(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Category-to-category functions",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic406(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Category-to-category functions",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C o n s t r u c t  t w o   c a t e g o r i e s
   // ----------------------------------------------
@@ -3391,7 +3391,7 @@ public:
   regTable(stable,"rf406_stable") ;
   regTable(xtable,"rf406_xtable") ;
 
-  return kTRUE ;
+  return true ;
   }
 
 } ;
@@ -3412,8 +3412,8 @@ public:
 class TestBasic501 : public RooUnitTest
 {
 public:
-  TestBasic501(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Simultaneous p.d.f. operator",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic501(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Simultaneous p.d.f. operator",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   m o d e l   f o r   p h y s i c s   s a m p l e
   // -------------------------------------------------------------
@@ -3524,7 +3524,7 @@ public:
   regPlot(frame1,"rf501_plot1") ;
   regPlot(frame2,"rf501_plot2") ;
 
-  return kTRUE ;
+  return true ;
 
   }
 
@@ -3546,8 +3546,8 @@ public:
 class TestBasic599 : public RooUnitTest
 {
 public:
-  TestBasic599(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Workspace and p.d.f. persistence",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic599(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Workspace and p.d.f. persistence",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
     if (_write) {
 
@@ -3670,7 +3670,7 @@ public:
     } else {
 
       RooWorkspace* w = getWS("Basic11_ws") ;
-      if (!w) return kFALSE ;
+      if (!w) return false ;
 
       // Retrieve p.d.f from workspace
       RooAbsPdf* gaussx = w->pdf("gaussx") ;
@@ -3742,7 +3742,7 @@ public:
     }
 
     // "Workspace persistence"
-    return kTRUE ;
+    return true ;
   }
 } ;
 /////////////////////////////////////////////////////////////////////////
@@ -3760,8 +3760,8 @@ public:
 class TestBasic601 : public RooUnitTest
 {
 public:
-  TestBasic601(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Interactive Minuit",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic601(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Interactive Minuit",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // S e t u p   p d f   a n d   l i k e l i h o o d
   // -----------------------------------------------
@@ -3826,7 +3826,7 @@ public:
   m.hesse() ;
 
   // Now fix sigma_g2
-  sigma_g2.setConstant(kTRUE) ;
+  sigma_g2.setConstant(true) ;
 
   // Rerun MIGRAD,HESSE
   m.migrad() ;
@@ -3837,7 +3837,7 @@ public:
   regResult(r,"rf601_r") ;
   regResult(r2,"rf601_r2") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -3856,8 +3856,8 @@ public:
 class TestBasic602 : public RooUnitTest
 {
 public:
-  TestBasic602(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Chi2 minimization",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic602(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Chi2 minimization",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // S e t u p   m o d e l
   // ---------------------
@@ -3908,7 +3908,7 @@ public:
 
   regResult(r,"rf602_r") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 /////////////////////////////////////////////////////////////////////////
@@ -3926,8 +3926,8 @@ public:
 class TestBasic604 : public RooUnitTest
 {
 public:
-  TestBasic604(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Auxiliary observable constraints",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic604(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Auxiliary observable constraints",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   m o d e l  a n d   d a t a s e t
   // ----------------------------------------------
@@ -3990,7 +3990,7 @@ public:
   regResult(r2,"rf604_r2") ;
   regResult(r3,"rf604_r3") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -4009,8 +4009,8 @@ public:
 class TestBasic605 : public RooUnitTest
 {
 public:
-  TestBasic605(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Profile Likelihood operator",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic605(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Profile Likelihood operator",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   m o d e l   a n d   d a t a s e t
   // -----------------------------------------------
@@ -4088,7 +4088,7 @@ public:
   regPlot(frame1,"rf605_plot1") ;
   regPlot(frame2,"rf605_plot2") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 
@@ -4108,8 +4108,8 @@ public:
 class TestBasic606 : public RooUnitTest
 {
 public:
-  TestBasic606(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("NLL error handling",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic606(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("NLL error handling",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   m o d e l  a n d   d a t a s e t
   // ----------------------------------------------
@@ -4141,9 +4141,9 @@ public:
   // F i t   m o d e l   t o   d a t a
   // ---------------------------------
 
-  argus.fitTo(*data,PrintEvalErrors(10),Warnings(kFALSE),BatchMode(_batchMode)) ;
+  argus.fitTo(*data,PrintEvalErrors(10),Warnings(false),BatchMode(_batchMode)) ;
   m0.setError(0.1) ;
-  argus.fitTo(*data,PrintEvalErrors(0),EvalErrorWall(kFALSE),Warnings(kFALSE),BatchMode(_batchMode)) ;
+  argus.fitTo(*data,PrintEvalErrors(0),EvalErrorWall(false),Warnings(false),BatchMode(_batchMode)) ;
 
 
 
@@ -4166,7 +4166,7 @@ public:
   regPlot(frame1,"rf606_plot1") ;
   regPlot(frame2,"rf606_plot3") ; // 3 is the reference of the plot
 
-  return kTRUE ;
+  return true ;
 
   }
 } ;
@@ -4186,8 +4186,8 @@ public:
 class TestBasic607 : public RooUnitTest
 {
 public:
-  TestBasic607(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Fit Result functionality",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic607(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Fit Result functionality",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   p d f ,   d a t a
   // --------------------------------
@@ -4250,7 +4250,7 @@ public:
   regTH(hcorr,"rf607_hcorr") ;
   regTH(hhrand,"rf607_hhand") ;
 
-  return kTRUE ;
+  return true ;
 
   }
 } ;
@@ -4273,8 +4273,8 @@ public:
 class TestBasic609 : public RooUnitTest
 {
 public:
-  TestBasic609(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Chi^2 fit to X-Y dataset",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic609(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Chi^2 fit to X-Y dataset",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   d a t a s e t   w i t h   X   a n d   Y   v a l u e s
   // -------------------------------------------------------------------
@@ -4326,14 +4326,14 @@ public:
 
   // Alternative: fit chi^2 integrating f(x) over ranges defined by X errors, rather
   // than taking point at center of bin
-  f.chi2FitTo(dxy,YVar(y),Integrate(kTRUE)) ;
+  f.chi2FitTo(dxy,YVar(y),Integrate(true)) ;
 
   // Overlay alternate fit result
   f.plotOn(frame,LineStyle(kDashed),LineColor(kRed),Name("alternate")) ;
 
   regPlot(frame,"rf609_frame") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 
@@ -4355,8 +4355,8 @@ public:
 class TestBasic701 : public RooUnitTest
 {
 public:
-  TestBasic701(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Efficiency operator p.d.f. 1D",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic701(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Efficiency operator p.d.f. 1D",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C o n s t r u c t   e f f i c i e n c y   f u n c t i o n   e ( x )
   // -------------------------------------------------------------------
@@ -4424,7 +4424,7 @@ public:
   regPlot(frame2,"rf701_plot2") ;
 
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -4442,10 +4442,10 @@ public:
 class TestBasic702 : public RooUnitTest
 {
 public:
-  TestBasic702(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Efficiency operator p.d.f. 2D",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic702(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Efficiency operator p.d.f. 2D",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
-  Bool_t flat=kFALSE ;
+  bool flat=false ;
 
   // C o n s t r u c t   e f f i c i e n c y   f u n c t i o n   e ( x , y )
   // -----------------------------------------------------------------------
@@ -4521,7 +4521,7 @@ public:
   regTH(hh_data_sel,"rf702_hh_data_sel") ;
   regTH(hh_eff,"rf702_hh_eff") ;
 
-  return kTRUE;
+  return true;
 
   }
 } ;
@@ -4541,8 +4541,8 @@ public:
 class TestBasic703 : public RooUnitTest
 {
 public:
-  TestBasic703(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Efficiency product operator p.d.f",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic703(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Efficiency product operator p.d.f",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // D e f i n e   o b s e r v a b l e s   a n d   d e c a y   p d f
   // ---------------------------------------------------------------
@@ -4606,7 +4606,7 @@ public:
   regPlot(frame3,"rf703_plot3") ;
 
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -4625,8 +4625,8 @@ public:
 class TestBasic704 : public RooUnitTest
 {
 public:
-  TestBasic704(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Amplitude sum operator p.d.f",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic704(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Amplitude sum operator p.d.f",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // S e t u p   2 D   a m p l i t u d e   f u n c t i o n s
   // -------------------------------------------------------
@@ -4704,7 +4704,7 @@ public:
   regTH(hh_cos,"rf704_hh_cos") ;
   regTH(hh_sin,"rf704_hh_sin") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -4726,8 +4726,8 @@ public:
 
   Double_t ctol() { return 5e-2 ; } // very conservative, this is a numerically difficult test
 
-  TestBasic705(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Linear morph operator p.d.f.",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic705(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Linear morph operator p.d.f.",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   e n d   p o i n t   p d f   s h a p e s
   // ------------------------------------------------------
@@ -4804,7 +4804,7 @@ public:
   std::unique_ptr<RooDataSet> data{lmorph.generate(x,1000)};
 
   // Fit pdf to toy data
-  lmorph.setCacheAlpha(kTRUE) ;
+  lmorph.setCacheAlpha(true) ;
   {
     // Get rid of the caching info prints
     RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::Caching, true};
@@ -4832,7 +4832,7 @@ public:
     nll->plotOn(frame3,ShiftToZero()) ;
   }
 
-  lmorph.setCacheAlpha(kFALSE) ;
+  lmorph.setCacheAlpha(false) ;
 
 
   regPlot(frame1,"rf705_plot1") ;
@@ -4840,7 +4840,7 @@ public:
   regPlot(frame3,"rf705_plot3") ;
   regTH(hh,"rf705_hh") ;
 
-  return kTRUE;
+  return true;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -4859,8 +4859,8 @@ public:
 class TestBasic706 : public RooUnitTest
 {
 public:
-  TestBasic706(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Histogram based p.d.f.s",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic706(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Histogram based p.d.f.s",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   p d f   f o r   s a m p l i n g
   // ---------------------------------------------
@@ -4911,7 +4911,7 @@ public:
   regPlot(frame1,"rf607_plot1") ;
   regPlot(frame2,"rf607_plot2") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -4930,8 +4930,8 @@ public:
 class TestBasic707 : public RooUnitTest
 {
 public:
-  TestBasic707(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Kernel estimation p.d.f.s",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic707(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Kernel estimation p.d.f.s",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   l o w   s t a t s   1 - D   d a t a s e t
   // -------------------------------------------------------
@@ -5012,7 +5012,7 @@ public:
   regTH(hh_pdf,"rf707_hhpdf") ;
   regTH(hh_pdf2,"rf707_hhpdf2") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 //////////////////////////////////////////////////////////////////////////
@@ -5031,8 +5031,8 @@ public:
 class TestBasic708 : public RooUnitTest
 {
 public:
-  TestBasic708(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("B Physics p.d.f.s",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic708(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("B Physics p.d.f.s",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   ////////////////////////////////////////////////////
   // B - D e c a y   w i t h   m i x i n g          //
@@ -5211,7 +5211,7 @@ public:
   regPlot(frame5,"rf708_plot5") ;
   regPlot(frame6,"rf708_plot6") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 /////////////////////////////////////////////////////////////////////////
@@ -5228,8 +5228,8 @@ public:
 class TestBasic801 : public RooUnitTest
 {
 public:
-  TestBasic801(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Automated MC studies",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic801(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Automated MC studies",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   m o d e l
   // -----------------------
@@ -5280,8 +5280,8 @@ public:
   // A Binned() option is added in this example to bin the data between generation and fitting
   // to speed up the study at the expemse of some precision
 
-  RooMCStudy mcstudy{model,x,Binned(kTRUE),Silence(),Extended(),
-                                       FitOptions(Save(kTRUE),PrintEvalErrors(0),BatchMode(_batchMode))};
+  RooMCStudy mcstudy{model,x,Binned(true),Silence(),Extended(),
+                                       FitOptions(Save(true),PrintEvalErrors(0),BatchMode(_batchMode))};
 
 
   // G e n e r a t e   a n d   f i t   e v e n t s
@@ -5298,7 +5298,7 @@ public:
   // Make plots of the distributions of mean, the error on mean and the pull of mean
   RooPlot* frame1 = mcstudy.plotParam(mean,Bins(40)) ;
   RooPlot* frame2 = mcstudy.plotError(mean,Bins(40)) ;
-  RooPlot* frame3 = mcstudy.plotPull(mean,Bins(40),FitGauss(kTRUE)) ;
+  RooPlot* frame3 = mcstudy.plotPull(mean,Bins(40),FitGauss(true)) ;
 
   // Plot distribution of minimized likelihood
   RooPlot* frame4 = mcstudy.plotNLL(Bins(40)) ;
@@ -5308,7 +5308,7 @@ public:
   regPlot(frame3,"rf801_plot3") ;
   regPlot(frame4,"rf801_plot4") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 /////////////////////////////////////////////////////////////////////////
@@ -5326,8 +5326,8 @@ public:
 class TestBasic802 : public RooUnitTest
 {
 public:
-  TestBasic802(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("MC Study with chi^2 calculator",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic802(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("MC Study with chi^2 calculator",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   m o d e l
   // -----------------------
@@ -5405,7 +5405,7 @@ public:
   regTH(h_prob,"rf802_hist_prob") ;
   regTH(h2_prob,"rf802_hist2_prob") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
 /////////////////////////////////////////////////////////////////////////
@@ -5423,8 +5423,8 @@ public:
 class TestBasic803 : public RooUnitTest
 {
 public:
-  TestBasic803(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("MC Study with param rand. and Z calc",refFile,writeRef,verbose,batchMode) {} ;
-  Bool_t testCode() {
+  TestBasic803(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("MC Study with param rand. and Z calc",refFile,writeRef,verbose,batchMode) {} ;
+  bool testCode() {
 
   // C r e a t e   m o d e l
   // -----------------------
@@ -5458,8 +5458,8 @@ public:
 
   // Configure manager to perform binned extended likelihood fits (Binned(),Extended()) on data generated
   // with a Poisson fluctuation on Nobs (Extended())
-  auto mcs = std::make_unique<RooMCStudy>(model,mjjj,Binned(),Silence(),Extended(kTRUE),
-                                   FitOptions(Extended(kTRUE),PrintEvalErrors(-1),BatchMode(_batchMode))) ;
+  auto mcs = std::make_unique<RooMCStudy>(model,mjjj,Binned(),Silence(),Extended(true),
+                                   FitOptions(Extended(true),PrintEvalErrors(-1),BatchMode(_batchMode))) ;
 
 
 
@@ -5516,7 +5516,7 @@ public:
   regTH(errnsig_vs_ngen,"rf803_errnsig_vs_ngen") ;
   regTH(errnsig_vs_nsig,"rf803_errnsig_vs_nsig") ;
 
-  return kTRUE ;
+  return true ;
 
   }
 } ;
@@ -5539,11 +5539,11 @@ public:
 class TestBasic804 : public RooUnitTest
 {
 public:
-  TestBasic804(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("MC Studies with aux. obs. constraints",refFile,writeRef,verbose,batchMode) {} ;
+  TestBasic804(TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("MC Studies with aux. obs. constraints",refFile,writeRef,verbose,batchMode) {} ;
 
   Double_t htol() { return 0.1 ; } // numerically very difficult test
 
-  Bool_t testCode() {
+  bool testCode() {
 
   // C r e a t e   m o d e l   w i t h   p a r a m e t e r   c o n s t r a i n t
   // ---------------------------------------------------------------------------
@@ -5600,6 +5600,6 @@ public:
   regPlot(frame1,"rf804_plot1") ;
   regPlot(frame2,"rf804_plot2") ;
 
-  return kTRUE ;
+  return true ;
   }
 } ;
