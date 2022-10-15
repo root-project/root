@@ -11,6 +11,48 @@ namespace SOFIE{
 
 namespace INTERNAL{
 
+std::unique_ptr<ROperator> make_ROperator_Transpose(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
+std::unique_ptr<ROperator> make_ROperator_Relu(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
+std::unique_ptr<ROperator> make_ROperator_Selu(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
+std::unique_ptr<ROperator> make_ROperator_Sigmoid(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
+std::unique_ptr<ROperator> make_ROperator_Gemm(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
+std::unique_ptr<ROperator> make_ROperator_Conv(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
+std::unique_ptr<ROperator> make_ROperator_RNN(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
+std::unique_ptr<ROperator> make_ROperator_LSTM(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
+std::unique_ptr<ROperator> make_ROperator_BatchNormalization(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
+std::unique_ptr<ROperator> make_ROperator_Pool(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
+std::unique_ptr<ROperator> make_ROperator_Add(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
+std::unique_ptr<ROperator> make_ROperator_Reshape(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
+std::unique_ptr<ROperator> make_ROperator_Slice(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
+std::unique_ptr<ROperator> make_ROperator_GRU(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
+
+
+using factoryMethodMap = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(const onnx::NodeProto&, const onnx::GraphProto&, std::unordered_map<std::string, ETensorType>&)>;
+const factoryMethodMap mapOptypeOperator = {
+   {"Gemm", &make_ROperator_Gemm},
+   {"Transpose", &make_ROperator_Transpose},
+   {"Relu", &make_ROperator_Relu},
+   {"Conv", &make_ROperator_Conv},
+   {"RNN", &make_ROperator_RNN},
+   {"Selu", &make_ROperator_Selu},
+   {"Sigmoid", &make_ROperator_Sigmoid},
+   {"LSTM", &make_ROperator_LSTM},
+   {"GRU", &make_ROperator_GRU},
+   {"BatchNormalization", &make_ROperator_BatchNormalization},
+   {"AveragePool", &make_ROperator_Pool},
+   {"GlobalAveragePool", &make_ROperator_Pool},
+   {"MaxPool", &make_ROperator_Pool},
+   {"Add", &make_ROperator_Add},
+   {"Reshape", &make_ROperator_Reshape},
+   {"Flatten", &make_ROperator_Reshape},
+   {"Slice", &make_ROperator_Slice},
+   {"Squeeze", &make_ROperator_Reshape},
+   {"Unsqueeze", &make_ROperator_Reshape},
+   {"Flatten", &make_ROperator_Reshape}
+};
+
+
+
 std::unique_ptr<ROperator> make_ROperator(size_t idx, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type){
    const auto& nodeproto = graphproto.node(idx);
    auto find = mapOptypeOperator.find(nodeproto.op_type());
@@ -436,7 +478,7 @@ std::unique_ptr<ROperator> make_ROperator_Pool(const onnx::NodeProto& nodeproto,
    RAttributes_Pool attr;
    // std::string attr_auto_pad = "NOTSET";
    // int attr_ceil_mode = 0;
-   // int attr_count_include_pad = 0;      
+   // int attr_count_include_pad = 0;
    // int attr_storage_order = 0;          // not for AveragePool
    // std::vector<size_t> attr_dilations;  // not for AveragePool
    // std::vector<size_t> attr_kernel_shape;
@@ -492,22 +534,22 @@ std::unique_ptr<ROperator> make_ROperator_Reshape(const onnx::NodeProto &nodepro
    // make Reshape operator
    ETensorType input_type = ETensorType::UNDEFINED;
 
-   
+
    ReshapeOpMode opMode = Reshape;
-   if (nodeproto.op_type() == "Flatten") 
+   if (nodeproto.op_type() == "Flatten")
       opMode = Flatten;
-   else if (nodeproto.op_type() == "Squeeze") 
+   else if (nodeproto.op_type() == "Squeeze")
       opMode = Squeeze;
    else if (nodeproto.op_type() == "Unsqueeze")
       opMode = Unsqueeze;
 
-  
+
    //bool hasShapeInput = (opMode == Reshape) ? true : false;
 
-   // reshape has as extra input shape tensor (int64) but 
+   // reshape has as extra input shape tensor (int64) but
    // it is not present for Flatten, Squeeze and Unsquueze
    auto input_name = nodeproto.input(0);
-   // for squeeze is optional ? 
+   // for squeeze is optional ?
    auto shape_name = (opMode == Reshape || opMode == Unsqueeze) ? nodeproto.input(1) : "";
    auto it = tensor_type.find(input_name);
    if (it != tensor_type.end()) {
@@ -521,7 +563,7 @@ std::unique_ptr<ROperator> make_ROperator_Reshape(const onnx::NodeProto &nodepro
    // Flatten is having one attribute: axis (int) (default=1)
    // old version of reshape and squeeze have axes as attributes
    std::unique_ptr<ROperator> op;
-   int attr_value = (opMode == Reshape) ? 0 : 1;     
+   int attr_value = (opMode == Reshape) ? 0 : 1;
    if (opMode == Reshape && nodeproto.attribute_size() > 0 )
       attr_value = nodeproto.attribute(0).i();
 
