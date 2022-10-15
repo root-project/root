@@ -55,7 +55,7 @@ void StatusPrint(const Int_t id, const TString &title, const Int_t status, const
 ////////////////////////////////////////////////////////////////////////////////
 /// width of lines when printing test results
 
-Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t allTests, Bool_t oneTest, Int_t testNumber, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore)
+Int_t stressRooStats(const char* refFile, bool writeRef, Int_t verbose, bool allTests, bool oneTest, Int_t testNumber, bool dryRun, bool doDump, bool doTreeStore)
 {
    const Int_t lineWidth = 120;
 
@@ -208,7 +208,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
          for (iter = testList.begin(), i = 1; iter != testList.end(); iter++, i++) {
             if (!oneTest || testNumber == i) {
                if (doDump) {
-                  (*iter)->setDebug(kTRUE);
+                  (*iter)->setDebug(true);
                }
                int status =  (*iter)->isTestAvailable() ? (*iter)->runTest() : -1;
                StatusPrint(i, (*iter)->GetName(), status , lineWidth);
@@ -227,7 +227,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
 
 
    //Print table with results
-   Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
+   bool UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
    cout << setw(lineWidth) << setfill('*') << "" << endl;
    if (UNIX) {
       TString sp = gSystem->GetFromPipe("uname -a");
@@ -287,14 +287,14 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
 
 int main(int argc, const char *argv[])
 {
-   Bool_t doWrite     = kFALSE;
+   bool doWrite     = false;
    Int_t  verbose     =      0;
-   Bool_t allTests    = kFALSE;
-   Bool_t oneTest     = kFALSE;
+   bool allTests    = false;
+   bool oneTest     = false;
    Int_t testNumber   =      0;
-   Bool_t dryRun      = kFALSE;
-   Bool_t doDump      = kFALSE;
-   Bool_t doTreeStore = kFALSE;
+   bool dryRun      = false;
+   bool doDump      = false;
+   bool doTreeStore = false;
 
    //string refFileName = "http://root.cern.ch/files/stressRooStats_v534_ref.root" ;
    string refFileName = "$ROOTSYS/test/stressRooStats_ref.root" ;
@@ -309,16 +309,16 @@ int main(int argc, const char *argv[])
          refFileName = argv[++i] ;
       } else if (arg == "-w") {
          cout << "stressRooStats: running in writing mode to update reference file" << endl ;
-         doWrite = kTRUE ;
+         doWrite = true ;
       } else if (arg == "-mc") {
          cout << "stressRooStats: running in memcheck mode, no regression tests are performed" << endl;
-         dryRun = kTRUE;
+         dryRun = true;
       } else if (arg == "-min" || arg == "-minim") {
          cout << "stressRooStats: running using minimizer " << argv[i +1]  << endl;
          minimizerName = argv[++i] ;
       } else if (arg == "-ts") {
          cout << "stressRooStats: setting tree-based storage for datasets" << endl;
-         doTreeStore = kTRUE;
+         doTreeStore = true;
       } else if (arg == "-v") {
          cout << "stressRooStats: running in verbose mode" << endl;
          verbose = 1;
@@ -330,17 +330,17 @@ int main(int argc, const char *argv[])
          verbose = 3;
       } else if (arg == "-a") {
          cout << "stressRooStats: deploying full suite of tests" << endl;
-         allTests = kTRUE;
+         allTests = true;
       } else if (arg == "-n") {
          cout << "stressRooStats: running single test" << endl;
-         oneTest = kTRUE;
+         oneTest = true;
          testNumber = atoi(argv[++i]);
       } else if (arg == "-d") {
          cout << "stressRooStats: setting gDebug to " << argv[i + 1] << endl;
          gDebug = atoi(argv[++i]);
       } else if (arg == "-c") {
          cout << "stressRooStats: dumping comparison file for failed tests " << endl;
-         doDump = kTRUE;
+         doDump = true;
       } else if (arg == "-h") {
          cout << "usage: stressRooStats [ options ] " << endl;
          cout << "" << endl;
@@ -395,14 +395,14 @@ int main(int argc, const char *argv[])
 
 Int_t stressRooStats()
 {
-   Bool_t doWrite     = kFALSE;
+   bool doWrite     = false;
    Int_t  verbose     =      0;
-   Bool_t allTests    = kFALSE;
-   Bool_t oneTest     = kFALSE;
+   bool allTests    = false;
+   bool oneTest     = false;
    Int_t testNumber   =      0;
-   Bool_t dryRun      = kFALSE;
-   Bool_t doDump      = kFALSE;
-   Bool_t doTreeStore = kFALSE;
+   bool dryRun      = false;
+   bool doDump      = false;
+   bool doTreeStore = false;
    string refFileName = "$ROOTSYS/test/stressRooStats_ref.root";
    return stressRooStats(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun, doDump, doTreeStore);
 }
