@@ -40,8 +40,8 @@
 
 using namespace std;
 
-RooAbsMinimizerFcn::RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *context, bool verbose)
-   : _context(context), _verbose(verbose)
+RooAbsMinimizerFcn::RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *context)
+   : _context(context)
 {
    // Examine parameter list
    _floatParamList.reset((RooArgList *)paramList.selectByAttrib("Constant", false));
@@ -85,7 +85,7 @@ RooAbsMinimizerFcn::RooAbsMinimizerFcn(const RooAbsMinimizerFcn &other)
      _floatParamList(new RooArgList(*other._floatParamList)), _constParamList(new RooArgList(*other._constParamList)),
      _initFloatParamList((RooArgList *)other._initFloatParamList->snapshot(false)),
      _initConstParamList((RooArgList *)other._initConstParamList->snapshot(false)),
-     _logfile(other._logfile), _doEvalErrorWall(other._doEvalErrorWall), _verbose(other._verbose)
+     _logfile(other._logfile), _doEvalErrorWall(other._doEvalErrorWall)
 {}
 
 
@@ -406,7 +406,7 @@ bool RooAbsMinimizerFcn::SetPdfParamVal(int index, double value) const
   auto par = static_cast<RooRealVar*>(&(*_floatParamList)[index]);
 
   if (par->getVal()!=value) {
-    if (_verbose) cout << par->GetName() << "=" << value << ", " ;
+    if (_context->getVerbose()) cout << par->GetName() << "=" << value << ", " ;
 
     par->setVal(value);
     return true;

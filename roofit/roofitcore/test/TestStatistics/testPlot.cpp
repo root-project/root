@@ -66,29 +66,23 @@ public:
       // --------------------------------------------------------------------------------
 
       // Creating a RooAbsL likelihood
-      std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood =
-         RooFit::TestStatistics::buildLikelihood(w.pdf("model"), &d);
+      RooAbsReal* likelihood = w.pdf("model")->createNLL(d, NewStyle(true));
 
       // Creating a minimizer and explicitly setting type of parallelization
       std::size_t nWorkers = 1;
       RooFit::MultiProcess::Config::setDefaultNWorkers(nWorkers);
-      RooMinimizer m(likelihood, RooFit::TestStatistics::LikelihoodMode::serial,
-                     RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
+      RooMinimizer::Config cfg;
+      cfg.parallelLikelihood = false;
+      cfg.parallelGradient = true;
+      RooMinimizer m(*likelihood, cfg);
 
       // Minimize
       m.migrad();
 
       // C o n v e r t  t o  R o o R e a l L  a n d  p l o t
       // ---------------------------------------------------
-
-      // Create a RooRealL which has plotting functionality
-      std::shared_ptr<RooFit::TestStatistics::RooRealL> likelihood_real(
-         new RooFit::TestStatistics::RooRealL("likelihood", "", likelihood));
       RooPlot *xframe = w.var("mu")->frame(-1, 10);
-      likelihood_real->plotOn(xframe, RooFit::Precision(1));
-
-      // Clean up the minimizer
-      m.cleanup();
+      likelihood->plotOn(xframe, RooFit::Precision(1));
 
       // --- Post processing for RooUnitTest ---
       regPlot(xframe, "TestRooRealLPlot_plot");

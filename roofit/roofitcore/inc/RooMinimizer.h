@@ -42,28 +42,49 @@ class RooDataSet;
 
 class RooMinimizer : public TObject {
 public:
-   enum class FcnMode { classic, gradient, generic_wrapper };
+   /// Config argument to RooMinimizer ctor
+   struct Config {
+      Config() {}
+      double recoverFromNaN = 10.; // RooAbsMinimizerFcn config
+      int printEvalErrors = 10;    // RooAbsMinimizerFcn config
+      int doEEWall = 1;            // RooAbsMinimizerFcn config
+      int offsetting = -1;         // RooAbsMinimizerFcn config
+      const char *logf = nullptr;  // RooAbsMinimizerFcn config
+      int nWorkers = getDefaultWorkers(); // RooAbsMinimizerFcn config that can only be set in ctor
+      bool parallelGradient = false;      // RooAbsMinimizerFcn config that can only be set in ctor
+      bool parallelLikelihood = false;    // RooAbsMinimizerFcn config that can only be set in ctor
+      int verbose = 0;                    // local config
+      bool profile = false;               // local config
+      std::string minimizerType = "";     // local config
+   private:
+      int getDefaultWorkers();
+   };
 
-   explicit RooMinimizer(RooAbsReal &function, FcnMode fcnMode = FcnMode::classic);
-   explicit RooMinimizer(
-      std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood,
-      RooFit::TestStatistics::LikelihoodMode likelihoodMode = RooFit::TestStatistics::LikelihoodMode::serial,
-      RooFit::TestStatistics::LikelihoodGradientMode likelihoodGradientMode =
-         RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
+   explicit RooMinimizer(RooAbsReal &function, Config const& cfg={});
 
    ~RooMinimizer() override;
 
    enum Strategy { Speed = 0, Balance = 1, Robustness = 2 };
    enum PrintLevel { None = -1, Reduced = 0, Normal = 1, ExtraForProblem = 2, Maximum = 3 };
-   void setStrategy(int strat);
-   void setErrorLevel(double level);
-   void setEps(double eps);
+
+   // Setters on _theFitter
+   static void setStrategy(int strat);
+   static void setErrorLevel(double level);
+   static void setEps(double eps); 
+   static void setMaxIterations(int n);
+   static void setMaxFunctionCalls(int n);
+   static void setPrintLevel(int newLevel);
+
+   // Setters on _fcn
    void optimizeConst(int flag);
    void setEvalErrorWall(bool flag);
    void setRecoverFromNaNStrength(double strength);
    void setOffsetting(bool flag);
-   void setMaxIterations(int n);
-   void setMaxFunctionCalls(int n);
+   void setPrintEvalErrors(int numEvalErrors);
+   void setVerbose(bool flag = true);
+   bool setLogFile(const char *logf = nullptr);
+
+   int getVerbose() const {return _cfg.verbose; };
 
    int migrad();
    int hesse();
@@ -79,12 +100,7 @@ public:
    RooPlot *contour(RooRealVar &var1, RooRealVar &var2, double n1 = 1.0, double n2 = 2.0, double n3 = 0.0,
                     double n4 = 0.0, double n5 = 0.0, double n6 = 0.0, unsigned int npoints = 50);
 
-   int setPrintLevel(int newLevel);
-   void setPrintEvalErrors(int numEvalErrors);
-   void setVerbose(bool flag = true);
-   void setProfile(bool flag = true) { _profile = flag; }
-   bool setLogFile(const char *logf = nullptr);
-
+   void setProfile(bool flag = true) { _cfg.profile = flag; }
    /// Enable or disable the logging of function evaluations to a RooDataSet.
    /// \see RooMinimizer::getLogDataSet().
    /// param[in] flag Boolean flag to disable or enable the functionality.
@@ -97,10 +113,10 @@ public:
    /// \see RooMinimizer::setLoggingToDataSet(bool).
    RooDataSet *getLogDataSet() const { return _logDataSet.get(); }
 
-   int getPrintLevel() const { return _printLevel; }
+   static int getPrintLevel();
 
    void setMinimizerType(std::string const &type);
-   std::string const &minimizerType() const { return _minimizerType; }
+   std::string const &minimizerType() const { return _cfg.minimizerType; }
 
    static void cleanup();
    static RooFitResult *lastMinuitFit();
@@ -114,8 +130,7 @@ public:
    int evalCounter() const;
    void zeroEvalCount();
 
-   ROOT::Fit::Fitter *fitter();
-   const ROOT::Fit::Fitter *fitter() const;
+   static ROOT::Fit::Fitter *fitter();
 
    ROOT::Math::IMultiGenFunction *getMultiGenFcn() const;
 
@@ -137,29 +152,26 @@ private:
    // constructor helper functions
    void initMinimizerFirstPart();
    void initMinimizerFcnDependentPart(double defaultErrorLevel);
+   void execSetters(); // Executes setters that set _fcn config as per given _cfg configuration
 
-   int _printLevel = 1;
    int _status = -99;
-   bool _profile = false;
-   bool _loggingToDataSet = false;
-   bool _verbose = false;
    bool _profileStart = false;
+   bool _loggingToDataSet = false;
 
    TStopwatch _timer;
    TStopwatch _cumulTimer;
 
    std::unique_ptr<TMatrixDSym> _extV;
 
-   RooAbsMinimizerFcn *_fcn;
-
-   std::string _minimizerType;
-   FcnMode _fcnMode;
+   std::unique_ptr<RooAbsMinimizerFcn> _fcn;
 
    static std::unique_ptr<ROOT::Fit::Fitter> _theFitter;
 
    std::vector<std::pair<std::string, int>> _statusHistory;
 
    std::unique_ptr<RooDataSet> _logDataSet;
+
+   RooMinimizer::Config _cfg; // local config object
 
    ClassDefOverride(RooMinimizer, 0) // RooFit interface to ROOT::Fit::Fitter
 };

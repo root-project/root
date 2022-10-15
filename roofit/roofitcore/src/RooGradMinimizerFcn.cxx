@@ -36,14 +36,14 @@
 #include <algorithm> // std::equal
 #include <iostream>
 
-RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *context, bool verbose)
-   : RooAbsMinimizerFcn(RooArgList( * std::unique_ptr<RooArgSet>(funct->getParameters(RooArgSet{})) ), context, verbose),
+RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *context)
+   : RooAbsMinimizerFcn(RooArgList( * std::unique_ptr<RooArgSet>(funct->getParameters(RooArgSet{})) ), context),
      _grad(getNDim()), _grad_params(getNDim()), _funct(funct),
      has_been_calculated(getNDim())
 {
    // TODO: added "parameters" after rewrite in april 2020, check if correct
    auto parameters = _context->fitter()->Config().ParamsSettings();
-   synchronizeParameterSettings(parameters, true, verbose);
+   synchronizeParameterSettings(parameters, true, _context->getVerbose());
    synchronizeGradientParameterSettings(parameters);
    setStrategy(ROOT::Math::MinimizerOptions::DefaultStrategy());
    setErrorLevel(ROOT::Math::MinimizerOptions::DefaultErrorDef());
@@ -127,7 +127,7 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
    }
 
    // Optional logging
-   if (_verbose) {
+   if (_context->getVerbose()) {
       std::cout << "\nprevFCN" << (_funct->isOffsetting() ? "-offset" : "") << " = " << std::setprecision(10) << fvalue
                 << std::setprecision(4) << "  ";
       std::cout.flush();

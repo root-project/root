@@ -50,9 +50,7 @@ RooArgSet getParameters(RooAbsReal const& funct) {
 } // namespace
 
 
-RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer* context,
-            bool verbose) :
-  RooAbsMinimizerFcn(getParameters(*funct), context, verbose), _funct(funct)
+RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer* context) : RooAbsMinimizerFcn(getParameters(*funct), context), _funct(funct)
 {}
 
 
@@ -113,7 +111,7 @@ double RooMinimizerFcn::DoEval(const double *x) const {
   // Optional logging
   if (_logfile)
     (*_logfile) << setprecision(15) << fvalue << setprecision(4) << endl;
-  if (_verbose) {
+  if (_context->getVerbose()) {
     cout << "\nprevFCN" << (_funct->isOffsetting()?"-offset":"") << " = " << setprecision(10)
          << fvalue << setprecision(4) << "  " ;
     cout.flush() ;
