@@ -52,7 +52,11 @@ public:
    RSampleInfo &operator=(RSampleInfo &&) = default;
    ~RSampleInfo() = default;
 
-   const ROOT::RDF::Experimental::RMetaData &GetMetaData() const { return fMetaData; }
+   int GetI(const std::string &cat) const { return fMetaData.GetI(cat); }
+
+   double GetD(const std::string &cat) const { return fMetaData.GetD(cat); }
+
+   std::string GetS(const std::string &cat) const { return fMetaData.GetS(cat); }
 
    /// Check whether the sample name contains the given substring.
    bool Contains(std::string_view substr) const
