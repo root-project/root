@@ -187,7 +187,7 @@ int main(int argc, const char *argv[])
    Int_t testNumber   =      0;
    bool dryRun      = false;
 
-   string refFileName = "$ROOTSYS/test/stressHistFactory_ref.root" ;
+   string refFileName = "stressHistFactory_ref.root" ;
 
 
    // Parse command line arguments
@@ -251,7 +251,7 @@ Int_t stressHistFactory()
    Int_t testNumber   =      0;
    bool dryRun      = false;
 
-   string refFileName = "$ROOTSYS/test/stressHistFactory_ref.root" ;
+   string refFileName = "stressHistFactory_ref.root" ;
    return stressHistFactory(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun);
 }
 
