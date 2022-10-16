@@ -297,7 +297,7 @@ int main(int argc, const char *argv[])
    bool doTreeStore = false;
 
    //string refFileName = "http://root.cern.ch/files/stressRooStats_v534_ref.root" ;
-   string refFileName = "$ROOTSYS/test/stressRooStats_ref.root" ;
+   string refFileName = "stressRooStats_ref.root" ;
    string minimizerName = "Minuit";
 
    // Parse command line arguments
@@ -403,7 +403,7 @@ Int_t stressRooStats()
    bool dryRun      = false;
    bool doDump      = false;
    bool doTreeStore = false;
-   string refFileName = "$ROOTSYS/test/stressRooStats_ref.root";
+   string refFileName = "stressRooStats_ref.root";
    return stressRooStats(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun, doDump, doTreeStore);
 }
 
