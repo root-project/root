@@ -468,6 +468,9 @@ namespace ROOT::Experimental {
    struct IsCollectionProxy<StructUsingCollectionProxy<float>> : std::true_type {};
    template <>
    struct IsCollectionProxy<StructUsingCollectionProxy<CustomStruct>> : std::true_type {};
+
+   template <>
+   struct IsCollectionProxy<StructUsingCollectionProxy<StructUsingCollectionProxy<float>>> : std::true_type {};
 }
 
 TEST(RNTuple, TVirtualCollectionProxy)
@@ -475,6 +478,7 @@ TEST(RNTuple, TVirtualCollectionProxy)
    SimpleCollectionProxy<StructUsingCollectionProxy<char>> proxyC;
    SimpleCollectionProxy<StructUsingCollectionProxy<float>> proxyF;
    SimpleCollectionProxy<StructUsingCollectionProxy<CustomStruct>> proxyS;
+   SimpleCollectionProxy<StructUsingCollectionProxy<StructUsingCollectionProxy<float>>> proxyNested;
 
    auto klassC = TClass::GetClass("StructUsingCollectionProxy<char>");
    klassC->CopyCollectionProxy(proxyC);
@@ -482,9 +486,16 @@ TEST(RNTuple, TVirtualCollectionProxy)
    klassF->CopyCollectionProxy(proxyF);
    auto klassS = TClass::GetClass("StructUsingCollectionProxy<CustomStruct>");
    klassS->CopyCollectionProxy(proxyS);
+   auto klassNested = TClass::GetClass("StructUsingCollectionProxy<StructUsingCollectionProxy<float>>");
+   klassNested->CopyCollectionProxy(proxyNested);
 
    auto field = RField<StructUsingCollectionProxy<float>>("c");
    EXPECT_EQ(sizeof(StructUsingCollectionProxy<float>), field.GetValueSize());
+
+   StructUsingCollectionProxy<float> proxiedVecF;
+   for (unsigned i = 0; i < 10; ++i) {
+      proxiedVecF.v.push_back(static_cast<float>(i));
+   }
 
    FileRaii fileGuard("test_ntuple_tvirtualcollectionproxy.ntuple");
    {
@@ -492,6 +503,8 @@ TEST(RNTuple, TVirtualCollectionProxy)
       model->AddField(RFieldBase::Create("C", "StructUsingCollectionProxy<char>").Unwrap());
       model->AddField(RFieldBase::Create("F", "StructUsingCollectionProxy<float>").Unwrap());
       model->AddField(RFieldBase::Create("S", "StructUsingCollectionProxy<CustomStruct>").Unwrap());
+      auto fieldVproxyF = model->MakeField<std::vector<StructUsingCollectionProxy<float>>>("VproxyF");
+      auto fieldNested = model->MakeField<StructUsingCollectionProxy<StructUsingCollectionProxy<float>>>("nested");
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       auto fieldC = ntuple->GetModel()->GetDefaultEntry()->Get<StructUsingCollectionProxy<char>>("C");
@@ -515,6 +528,9 @@ TEST(RNTuple, TVirtualCollectionProxy)
             /*v1=*/std::move(v1),
             /*v2=*/std::vector<std::vector<float>>{{static_cast<float>(i % 100)}, {static_cast<float>((i % 100) + 1)}},
             /*s=*/"hello" + std::to_string(i % 100)});
+
+         fieldVproxyF->push_back(proxiedVecF);
+         fieldNested->v.push_back(proxiedVecF);
          ntuple->Fill();
       }
    }
@@ -525,10 +541,14 @@ TEST(RNTuple, TVirtualCollectionProxy)
       auto viewC = ntuple->GetView<StructUsingCollectionProxy<char>>("C");
       auto viewF = ntuple->GetView<StructUsingCollectionProxy<float>>("F");
       auto viewS = ntuple->GetView<StructUsingCollectionProxy<CustomStruct>>("S");
+      auto viewVproxyF = ntuple->GetView<std::vector<StructUsingCollectionProxy<float>>>("VproxyF");
+      auto viewNested = ntuple->GetView<StructUsingCollectionProxy<StructUsingCollectionProxy<float>>>("nested");
       for (auto i : ntuple->GetEntryRange()) {
          auto &collC = viewC(i);
          auto &collF = viewF(i);
          auto &collS = viewS(i);
+         auto &collVproxyF = viewVproxyF(i);
+         auto &collNested = viewNested(i);
 
          EXPECT_EQ((i % 100) + 1, collC.v.size());
          for (unsigned j = 0; j < collC.v.size(); ++j) {
@@ -549,6 +569,15 @@ TEST(RNTuple, TVirtualCollectionProxy)
             EXPECT_EQ(static_cast<float>(j), item.v2[0][0]);
             EXPECT_EQ(static_cast<float>(j + 1), item.v2[1][0]);
             EXPECT_EQ("hello" + std::to_string(j), item.s);
+         }
+
+         EXPECT_EQ(i + 1, collVproxyF.size());
+         for (unsigned j = 0; j < collVproxyF.size(); ++j) {
+            EXPECT_EQ(proxiedVecF.v, collVproxyF[i].v);
+         }
+         EXPECT_EQ(i + 1, collNested.v.size());
+         for (unsigned j = 0; j < collNested.v.size(); ++j) {
+            EXPECT_EQ(proxiedVecF.v, collNested.v[i].v);
          }
       }
    }
