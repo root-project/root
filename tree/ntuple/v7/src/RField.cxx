@@ -808,6 +808,10 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
    if (fClass->Property() & kIsDefinedInStd) {
       throw RException(R__FAIL(std::string(className) + " is not supported"));
    }
+   if (fClass->GetCollectionProxy()) {
+      throw RException(
+         R__FAIL(std::string(className) + " has an associated collection proxy; use RCollectionClassField instead"));
+   }
 
    int i = 0;
    for (auto baseClass : ROOT::Detail::TRangeStaticCast<TBaseClass>(*fClass->GetListOfBases())) {
@@ -930,7 +934,7 @@ ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_vie
      fNWritten(0)
 {
    if (classp == nullptr)
-      throw RException(R__FAIL("RField: no I/O support for type " + std::string(className)));
+      throw RException(R__FAIL("RField: no I/O support for collection proxy type " + std::string(className)));
 
    fProxy = classp->GetCollectionProxy();
    if (!fProxy)
