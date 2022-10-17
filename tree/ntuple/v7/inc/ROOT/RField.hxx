@@ -602,10 +602,17 @@ public:
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final { return GenerateValue(where, T()); }
 };
 
-struct TagUseCollectionProxy {};
+template <typename T, typename = void>
+struct IsCollectionProxy : std::false_type {};
 /// Classes behaving as a collection of elements that can be queried via the `TVirtualCollectionProxy` interface
+/// The use of a collection proxy for a particular class can be enabled via:
+/// ```
+/// namespace ROOT::Experimental {
+///    template <> struct IsCollectionProxy<Classname> : std::true_type {};
+/// }
+/// ```
 template <typename T>
-class RField<T, ROOT::Experimental::TagUseCollectionProxy> : public RCollectionClassField {
+class RField<T, typename std::enable_if<IsCollectionProxy<T>::value>::type> : public RCollectionClassField {
 public:
    static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
    RField(std::string_view name) : RCollectionClassField(name, TypeName())
