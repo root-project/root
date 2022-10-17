@@ -23,5 +23,6 @@
 #pragma link C++ class StructUsingCollectionProxy<char> + ;
 #pragma link C++ class StructUsingCollectionProxy<float> + ;
 #pragma link C++ class StructUsingCollectionProxy<CustomStruct> + ;
+#pragma link C++ class StructUsingCollectionProxy<StructUsingCollectionProxy<float>> + ;
 
 #endif
