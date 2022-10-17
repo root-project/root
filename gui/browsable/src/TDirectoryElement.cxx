@@ -293,9 +293,10 @@ public:
       TObject *tobj = (TObject *) obj_class->DynamicCast(TObject::Class(), obj);
 
       if (tobj) {
-         bool owned_by_dir = (fDir->FindObject(tobj) == tobj) || (fKeyClass == "TGeoManager");
+         if (fDir->FindObject(tobj))
+            fDir->Remove(tobj);
 
-         return std::make_unique<TObjectHolder>(tobj, !owned_by_dir);
+         return std::make_unique<TObjectHolder>(tobj, fKeyClass != "TGeoManager"s);
       }
 
       return std::make_unique<RAnyObjectHolder>(obj_class, obj, true);
