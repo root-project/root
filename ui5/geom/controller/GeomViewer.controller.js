@@ -88,6 +88,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // if true, most operations are performed locally without involving server
          this.standalone = this.websocket.kind == "file";
 
+         if (!this.standalone && !this._embeded && this.websocket.addReloadKeyHandler)
+            this.websocket.addReloadKeyHandler();
+
          this.cfg = { standalone: this.websocket.kind == "file" };
          this.cfg_model = new JSONModel(this.cfg);
          this.getView().setModel(this.cfg_model);

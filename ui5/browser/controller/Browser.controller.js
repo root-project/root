@@ -562,7 +562,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== Settings menu =============== */
       /* ============================================= */
 
-      onSettingPress: function () {
+      onSettingsPress: function () {
          this._oSettingsModel.setProperty("/AppendToCanvas", this.model.isAppendToCanvas());
          this._oSettingsModel.setProperty("/OnlyLastCycle", (this.model.getOnlyLastCycle() > 0));
          this._oSettingsModel.setProperty("/ShowHiddenFiles", this.model.isShowHidden());
@@ -1064,6 +1064,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          setTimeout(() => { if (window) window.close(); }, 2000);
       },
 
+      /** @summary Start reload sequence with server */
+      onReloadPress: function() {
+         this.websocket?.askReload();
+      },
+
       onSearch: function(oEvt) {
          this.changeItemsFilter(oEvt.getSource().getValue());
       },
@@ -1154,7 +1159,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             href: this.websocket.getHRef(url),
             user_args: { nobrowser: true }
          }).then(handle => XMLView.create({
-            viewName: "rootui5.eve7.view.GeomViewer",
+            viewName: "rootui5.geom.view.GeomViewer",
             viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
          })).then(oView => item.addContent(oView));
 
