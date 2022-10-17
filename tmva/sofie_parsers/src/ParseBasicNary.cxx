@@ -1,12 +1,14 @@
 #include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_Max.hxx"
+#include "TMVA/ROperator_BasicNary.hxx"
 #include "onnx_proto3.pb.h"
+#include <memory>
 
 namespace TMVA {
 namespace Experimental {
 namespace SOFIE {
 
-ParserFuncSignature ParseMax = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+template<EBasicNaryOperator Op>
+std::unique_ptr<ROperator> ParseBasicNary(RModelParser_ONNX& parser, const onnx::NodeProto& nodeproto) {
    ETensorType input_type = ETensorType::UNDEFINED;
    std::vector<std::string> inputs;
    size_t size = nodeproto.input_size();
@@ -29,10 +31,9 @@ ParserFuncSignature ParseMax = [](RModelParser_ONNX &parser, const onnx::NodePro
    std::string output_name = nodeproto.output(0);
 
    switch (input_type) {
-   case ETensorType::FLOAT: op.reset(new ROperator_Max<float>(inputs, output_name)); break;
+   case ETensorType::FLOAT: op.reset(new ROperator_BasicNary<float, Op>(inputs, output_name)); break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Max does not yet support input type " +
-                               std::to_string(static_cast<int>(input_type)));
+      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Max does not yet support input type " + ConvertTypeToString(input_type));
    }
 
    if (!parser.IsRegisteredTensorType(output_name)) {
@@ -40,6 +41,23 @@ ParserFuncSignature ParseMax = [](RModelParser_ONNX &parser, const onnx::NodePro
    }
 
    return op;
+}
+
+
+ParserFuncSignature ParseMax = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+   return ParseBasicNary<EBasicNaryOperator::Max>(parser, nodeproto);
+};
+
+ParserFuncSignature ParseMin= [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+   return ParseBasicNary<EBasicNaryOperator::Min>(parser, nodeproto);
+};
+
+ParserFuncSignature ParseMean = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+   return ParseBasicNary<EBasicNaryOperator::Mean>(parser, nodeproto);
+};
+
+ParserFuncSignature ParseSum = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+   return ParseBasicNary<EBasicNaryOperator::Sum>(parser, nodeproto);
 };
 
 } // namespace SOFIE
