@@ -605,13 +605,30 @@ public:
 };
 
 template <typename T, typename = void>
-struct IsCollectionProxy : std::false_type {};
+struct HasCollectionProxyMemberType : std::false_type {
+};
+template <typename T>
+struct HasCollectionProxyMemberType<
+   T, typename std::enable_if<std::is_same<typename T::IsCollectionProxy, std::true_type>::value>::type>
+   : std::true_type {
+};
+
+template <typename T, typename = void>
+struct IsCollectionProxy : HasCollectionProxyMemberType<T> {
+};
 /// Classes behaving as a collection of elements that can be queried via the `TVirtualCollectionProxy` interface
 /// The use of a collection proxy for a particular class can be enabled via:
 /// ```
 /// namespace ROOT::Experimental {
 ///    template <> struct IsCollectionProxy<Classname> : std::true_type {};
 /// }
+/// ```
+/// Alternatively, this can be achieved by adding a member type to the class definition as follows:
+/// ```
+/// class Classname {
+/// public:
+///    using IsCollectionProxy = std::true_type;
+/// };
 /// ```
 template <typename T>
 class RField<T, typename std::enable_if<IsCollectionProxy<T>::value>::type> : public RCollectionClassField {
