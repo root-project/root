@@ -55,7 +55,7 @@
      }).then(handle => {
          sap.ui.require(["sap/ui/core/mvc/XMLView"], XMLView => {
              XMLView.create({
-                viewName: "rootui5.eve7.view.GeomViewer",
+                viewName: "rootui5.geom.view.GeomViewer",
                 viewData: { conn_handle: handle, jsroot: { parse, decodeUrl, toJSON, source_dir } }
              }).then(oView => oView.placeAt("GeomDiv"));
           });

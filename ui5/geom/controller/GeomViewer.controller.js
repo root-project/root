@@ -10,7 +10,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
    "use strict";
 
-   let geomColorBox = CoreControl.extend("rootui5.eve7.controller.ColorBox", { // call the new Control type "my.ColorBox" and let it inherit from sap.ui.core.Control
+   let geomColorBox = CoreControl.extend("rootui5.geom.controller.ColorBox", { // call the new Control type "my.ColorBox" and let it inherit from sap.ui.core.Control
 
       // the control API:
       metadata : {
@@ -59,8 +59,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
    });
 
-   /** Central geometry viewer contoller
-    * All TGeo functionality is loaded after main ui5 rendering is performed,
+   /** @summary Central geometry viewer contoller
+    * @desc All TGeo functionality is loaded after main ui5 rendering is performed,
     * To start drawing, following stages should be completed:
     *    - ui5 element is rendered (onAfterRendering is called)
     *    - TGeo-related JSROOT functionality is loaded
@@ -68,6 +68,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
     * Only after all this stages are completed, one could start to analyze  */
 
    return Controller.extend("rootui5.geom.controller.GeomViewer", {
+
       onInit: function () {
 
          let viewData = this.getView().getViewData();
@@ -87,9 +88,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // if true, most operations are performed locally without involving server
          this.standalone = this.websocket.kind == "file";
 
-         if (!this.standalone && !this._embeded && this.websocket.addReloadKeyHandler)
-            this.websocket.addReloadKeyHandler();
-
          this.cfg = { standalone: this.websocket.kind == "file" };
          this.cfg_model = new JSONModel(this.cfg);
          this.getView().setModel(this.cfg_model);
@@ -105,7 +103,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             app.removeMasterPage(this.byId("geomHierarchy"));
             this.byId("geomControl").setShowNavButton(false);
          } else {
-
             // create model only for browser - no need for anybody else
             this.model = new BrowserModel();
 
@@ -134,6 +131,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             t.addEventDelegate({
                onAfterRendering: function() { this.assignRowHandlers(); }
             }, this);
+
+            if (this.isConnected)
+               this.model.sendFirstRequest(this.websocket);
+
          }
 
          Promise.all([import(this.jsroot.source_dir + 'modules/geom/geobase.mjs'), import(this.jsroot.source_dir + 'modules/geom/TGeoPainter.mjs')]).then(arr => {
@@ -399,10 +400,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @summary function to accumulate and process all drawings messages
        * @desc if not all scripts are loaded, messages are quied and processed later */
       checkDrawMsg: function(kind, msg) {
-         console.log('Get message kind ', kind);
          if (kind) {
             if (!msg)
-               return console.error("No message is provided for " + kind);
+               return console.error(`No message is provided for ${kind}`);
 
             msg.kind = kind;
 
@@ -417,8 +417,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // only from here we can start to analyze messages and create TGeo painter, clones objects and so on
 
          msg = this.queue.shift();
-
-         console.log('Process message kind ', msg.kind);
 
          switch (msg.kind) {
             case "draw":
@@ -438,8 +436,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                   this.geo_painter.ctrl.show_config = true;
                   this.geom_model.refresh();
                }
-
-               console.log('start drawing');
 
                this.geo_painter.prepareObjectDraw(msg.visibles, "__geom_viewer_selection__");
 
@@ -493,10 +489,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (typeof msg != "string")
             return console.error("Geom viewer do not uses binary messages len = " + mgs.byteLength);
 
-         let mhdr = msg.substr(0,6);
-         msg = msg.substr(6);
+         let mhdr = msg.slice(0,6);
+         msg = msg.slice(6);
 
-         console.log(mhdr, msg.length, msg.substr(0,70), "...");
+         console.log(`RECV ${mhdr} len: ${msg.length} ${msg.slice(0,70)} ...`);
 
          switch (mhdr) {
          case "DESCR:":  // browser hierarchy

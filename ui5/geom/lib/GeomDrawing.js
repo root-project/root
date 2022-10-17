@@ -1,10 +1,10 @@
 sap.ui.define(['sap/ui/core/Control',
-               "sap/ui/core/ResizeHandler"
+               'sap/ui/core/ResizeHandler'
 ],function(CoreControl, ResizeHandler) {
 
    "use strict";
 
-   var GeomDrawing = CoreControl.extend("rootui5.eve7.lib.GeomDrawing", {
+   let GeomDrawing = CoreControl.extend("rootui5.geom.lib.GeomDrawing", {
 
       metadata : {
          properties : {           // setter and getter are created behind the scenes, incl. data binding and type validation
