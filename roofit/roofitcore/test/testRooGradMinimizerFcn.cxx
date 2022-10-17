@@ -84,7 +84,9 @@ TEST_P(GradMinimizerParSeed, Gaussian1D)
 
    *values = *savedValues;
 
-   RooMinimizer m1(*nll, RooMinimizer::FcnMode::gradient);
+   RooMinimizer::Config cfg;
+   cfg.fcnMode = RooMinimizer::FcnMode::gradient;
+   RooMinimizer m1(*nll, cfg);
 
    m1.setStrategy(0);
    m1.setPrintLevel(-1);
@@ -146,7 +148,10 @@ TEST(GradMinimizerDebugging, DISABLED_Gaussian1DGradMinimizer)
    // when c++17 support arrives, change to this:
    // auto [nll, _] = generate_1D_gaussian_pdf_nll(w, 10000);
 
-   RooMinimizer m1(*nll, RooMinimizer::FcnMode::gradient);
+
+   RooMinimizer::Config cfg;
+   cfg.fcnMode = RooMinimizer::FcnMode::gradient;
+   RooMinimizer m1(*nll, cfg);
 
    m1.setStrategy(0);
    m1.setPrintLevel(100);
@@ -215,7 +220,10 @@ TEST(GradMinimizer, GaussianND)
 
    // --------
 
-   RooMinimizer m1(*(nll.get()), RooMinimizer::FcnMode::gradient);
+
+   RooMinimizer::Config cfg;
+   cfg.fcnMode = RooMinimizer::FcnMode::gradient;
+   RooMinimizer m1(*(nll.get()), cfg);
 
    m1.setStrategy(0);
    m1.setPrintLevel(-1);
@@ -278,7 +286,10 @@ TEST(GradMinimizerReverse, GaussianND)
 
    // --------
 
-   RooMinimizer m0(*nll, RooMinimizer::FcnMode::gradient);
+
+   RooMinimizer::Config cfg;
+   cfg.fcnMode = RooMinimizer::FcnMode::gradient;
+   RooMinimizer m0(*nll, cfg);
 
    m0.setStrategy(0);
    m0.setPrintLevel(-1);
@@ -454,7 +465,10 @@ TEST(GradMinimizer, BranchingPDF)
 
    // --------
 
-   RooMinimizer m1(*nll, RooMinimizer::FcnMode::gradient);
+
+   RooMinimizer::Config cfg;
+   cfg.fcnMode = RooMinimizer::FcnMode::gradient;
+   RooMinimizer m1(*nll, cfg);
 
    m1.setStrategy(0);
    m1.setPrintLevel(-1);
@@ -570,7 +584,10 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspace)
 
    all_values.Print("v");
 
-   RooMinimizer m1(*nll, RooMinimizer::FcnMode::gradient);
+
+   RooMinimizer::Config cfg;
+   cfg.fcnMode = RooMinimizer::FcnMode::gradient;
+   RooMinimizer m1(*nll, cfg);
 
    m1.setStrategy(0);
    m1.setPrintLevel(-1);
@@ -639,7 +656,10 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspaceGradMinimizer
    RooDataSet *data = static_cast<RooDataSet *>(w.data(""));
    auto nll = sum.createNLL(*data);
 
-   RooMinimizer m0(*nll, RooMinimizer::FcnMode::gradient);
+
+   RooMinimizer::Config cfg;
+   cfg.fcnMode = RooMinimizer::FcnMode::gradient;
+   RooMinimizer m0(*nll, cfg);
    m0.setStrategy(0);
    m0.migrad();
 }

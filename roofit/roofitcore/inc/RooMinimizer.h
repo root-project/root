@@ -46,6 +46,7 @@ public:
 
    /// Config argument to RooMinimizer ctor
    struct Config {
+      Config() {}
       double recoverFromNaN = 10.; // RooAbsMinimizerFcn config
       int optConst = 0;            // RooAbsMinimizerFcn config
       int printEvalErrors = 10;    // RooAbsMinimizerFcn config
@@ -56,15 +57,14 @@ public:
       int parallelGradient = 0;          // RooAbsMinimizerFcn config that can only be set in ctor
       int parallelLikelihood = 0;        // RooAbsMinimizerFcn config that can only be set in ctor
       int verbose = 0;                    // local config
-      bool profile;                       // local config
+      bool profile = false;               // local config
       std::string minimizerType = "";     // local config
       FcnMode fcnMode = FcnMode::classic; // local config
    private:
       int getDefaultWorkers();
    };
 
-   explicit RooMinimizer(RooAbsReal &function, FcnMode fcnMode = FcnMode::classic);
-   explicit RooMinimizer(RooAbsReal &function, Config &cfg);
+   explicit RooMinimizer(RooAbsReal &function, Config const& cfg={});
 
    ~RooMinimizer() override;
 
@@ -153,7 +153,7 @@ private:
 
    // constructor helper functions
    void initSerial(RooAbsReal &function);
-   void initMultiProcess(std::shared_ptr<RooFit::TestStatistics::RooAbsL> &function);
+   void initMultiProcess(std::shared_ptr<RooFit::TestStatistics::RooAbsL> const& function);
    void initMinimizerFirstPart();
    void initMinimizerFcnDependentPart(double defaultErrorLevel);
    void execSetters(); // Executes setters that set _fcn config as per given _cfg configuration

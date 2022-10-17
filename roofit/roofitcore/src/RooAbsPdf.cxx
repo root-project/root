@@ -926,6 +926,9 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared) const
 ///                                                 - precision = 0: Activate bin integration only for continuous PDFs fit to a RooDataHist.
 ///                                                 - precision < 0: Deactivate.
 ///                                                 \see RooBinSamplingPdf
+/// <tr><td> `NewStyle(bool flag)`           <td>  Enable or disable new style likelihoods, which will become the default in a future release. 
+///                                                This does not change any user-facing code, but only enables a different likelihood class in the back-end. Note that this
+///                                                should be set to true for parallel minimization of likelihoods!
 /// </table>
 ///
 ///
@@ -982,7 +985,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("NewStyle", "NewStyle", 0, 0);
   pc.defineMutex(
     "NewStyle",
-    "NumCPU"); // New style likelihoods define parallelization through Parallel(...) on RooMinimizer or fitTo.
+    "NumCPU"); // New style likelihoods define parallelization through Parallel(...) on fitTo or attributes on RooMinimizer::Config.
 
 
   // Process and check varargs
@@ -1000,16 +1003,13 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
       RooArgSet extConsSet;
       RooArgSet glObsSet;
 
-      auto tmp = pc.getSet("cPars");
-      if (tmp)
+      if (auto tmp = pc.getSet("cPars"))
         cParsSet.add(*tmp);
 
-      tmp = pc.getSet("extCons");
-      if (tmp)
+      if (auto tmp = pc.getSet("extCons"))
         extConsSet.add(*tmp);
 
-      tmp = pc.getSet("glObs");
-      if (tmp)
+      if (auto tmp = pc.getSet("glObs"))
         glObsSet.add(*tmp);
 
       const std::string rangeName = pc.getString("globstag", "", false);
@@ -1018,14 +1018,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
       RooFit::TestStatistics::ExternalConstraints extCons(extConsSet);
       RooFit::TestStatistics::GlobalObservables glObs(glObsSet);
 
-      std::unique_ptr<RooFit::TestStatistics::RooAbsL> NewStyleL =
-        RooFit::TestStatistics::buildLikelihood(this, &data, ext, cPars, extCons, glObs, rangeName);
-
-      std::shared_ptr<RooFit::TestStatistics::RooAbsL> NewStyleL_shared = std::move(NewStyleL);
-      RooFit::TestStatistics::RooRealL *NewStyleL_real =
-        new RooFit::TestStatistics::RooRealL("likelihood", "", NewStyleL_shared);
-
-      return NewStyleL_real;
+      return new RooFit::TestStatistics::RooRealL("likelihood", "",
+          RooFit::TestStatistics::buildLikelihood(this, &data, ext, cPars, extCons, glObs, rangeName));
   }
 
   // Decode command line arguments
@@ -1417,6 +1411,14 @@ int RooAbsPdf::calcSumW2CorrectedCovariance(RooMinimizer &minimizer, RooAbsReal 
 /// <tr><td> `PrintEvalErrors(Int_t numErr)`   <td>  Control number of p.d.f evaluation errors printed per likelihood evaluation.
 ///                                                A negative value suppresses output completely, a zero value will only print the error count per p.d.f component,
 ///                                                a positive value will print details of each error up to `numErr` messages per p.d.f component.
+/// <tr><td> `NewStyle(bool flag)`           <td>  Enable or disable new style likelihoods, which will become the default in a future release. 
+///                                                This does not change any user-facing code, but only enables a different likelihood class in the back-end.
+///                                                Note that this option is forced to true in case parallelization is requested with the `Parallelize` named argument.
+/// <tr><td> `Parallelize(Int_t nWorkers, bool parallelGradient, bool parallelLikelihood)`   <td>  Control parallelization settings. The first argument controls the number of workers (parallel processes) to use.
+///                                                                                                The second argument controls whether the gradient is parallelized and the third argument controls whether 
+///                                                                                                likelihood evaluation is parallelized. Setting only `nWorkers` but neither of the other arguments does not enable
+///                                                                                                parallelization. Note also that parallelization requires new style likelihoods, so setting anything in `Parallelize`
+///                                                                                                will by default enable the `NewStyle` named argument.
 /// </table>
 ///
 
@@ -1479,11 +1481,11 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
   }
 
   // Instantiate RooMinimizer
-  RooMinimizer::Config minimizer_config;
-  minimizer_config.parallelGradient = cfg.parallelGradient;
-  minimizer_config.parallelLikelihood = cfg.parallelLikelihood;
-  minimizer_config.nWorkers = cfg.nWorkers;
-  RooMinimizer m(nll, minimizer_config);
+  RooMinimizer::Config minimizerConfig;
+  minimizerConfig.parallelGradient = cfg.parallelGradient;
+  minimizerConfig.parallelLikelihood = cfg.parallelLikelihood;
+  minimizerConfig.nWorkers = cfg.nWorkers;
+  RooMinimizer m(nll, minimizerConfig);
 
   m.setMinimizerType(cfg.minType.c_str());
   m.setEvalErrorWall(cfg.doEEWall);

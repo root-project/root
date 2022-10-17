@@ -98,33 +98,20 @@ void RooMinimizer::cleanup()
 /// value of the input function.
 
 /// Construcor that accepts all configuration in struct with RooAbsReal likelihood
-RooMinimizer::RooMinimizer(RooAbsReal &function, Config &cfg) : _cfg(cfg)
+RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
 {
    // Call init functions
    initMinimizerFirstPart();
    if (_cfg.parallelGradient || _cfg.parallelLikelihood) {
-      RooFit::TestStatistics::RooRealL *nll_real = dynamic_cast<RooFit::TestStatistics::RooRealL *>(&function);
+      auto nll_real = dynamic_cast<RooFit::TestStatistics::RooRealL *>(&function);
       if (nll_real == nullptr)
          throw std::logic_error("In RooMinimizer constructor: Selected parallel gradient or likelihood evaluation "
                                 "but an old-style likelihood was given. Please supply NewStyle(true) as an "
                                 "argument to createNLL for new-style likelihoods.");
-      std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood = nll_real->getRooAbsL();
-      initMultiProcess(likelihood);
+      initMultiProcess(nll_real->getRooAbsL());
    } else {
       initSerial(function);
    }
-   initMinimizerFcnDependentPart(function.defaultErrorLevel());
-};
-
-/// Constructor that only accepts fcnMode configuration, for backwards compatibility
-RooMinimizer::RooMinimizer(RooAbsReal &function, FcnMode fcnMode) : _cfg()
-{
-   // Config setting
-   _cfg.fcnMode = fcnMode;
-
-   // Call init functions
-   initMinimizerFirstPart();
-   initSerial(function);
    initMinimizerFcnDependentPart(function.defaultErrorLevel());
 };
 
@@ -151,7 +138,7 @@ void RooMinimizer::initSerial(RooAbsReal &function)
 }
 
 /// Initialize the minimizer with new style likelihoods
-void RooMinimizer::initMultiProcess(std::shared_ptr<RooFit::TestStatistics::RooAbsL> &function)
+void RooMinimizer::initMultiProcess(std::shared_ptr<RooFit::TestStatistics::RooAbsL> const& function)
 {
 #ifdef R__HAS_ROOFIT_MULTIPROCESS
    RooFit::MultiProcess::Config::setDefaultNWorkers(_cfg.nWorkers);
@@ -162,11 +149,12 @@ void RooMinimizer::initMultiProcess(std::shared_ptr<RooFit::TestStatistics::RooA
 
    _cfg.fcnMode = FcnMode::generic_wrapper;
    _fcn = std::make_unique<RooFit::TestStatistics::MinuitFcnGrad>(
-      RooFit::TestStatistics::MinuitFcnGrad(
-      function, this, _theFitter->Config().ParamsSettings(),
-      RooFit::TestStatistics::LikelihoodMode{
-         static_cast<RooFit::TestStatistics::LikelihoodMode>(int(_cfg.parallelLikelihood))},
-      RooFit::TestStatistics::LikelihoodGradientMode::multiprocess, _cfg.verbose));
+      function, 
+      this, 
+      _theFitter->Config().ParamsSettings(),
+      RooFit::TestStatistics::LikelihoodMode{static_cast<RooFit::TestStatistics::LikelihoodMode>(int(_cfg.parallelLikelihood))},
+      RooFit::TestStatistics::LikelihoodGradientMode::multiprocess,
+      _cfg.verbose);
 #else
    throw std::logic_error("In RooMinimizer initialization: Please recompile ROOT with -Droofit_multiprocess=ON "
                            "For parallel minimization.");
