@@ -722,7 +722,7 @@ async function connectWebWindow(arg) {
       handle.key = d.get('key');
       handle.token = d.get('token');
 
-      if (typeof sessionStorage !== undefined) {
+      if (typeof sessionStorage !== 'undefined') {
          let new_key = sessionStorage.getItem('RWebWindow_Key');
          sessionStorage.removeItem('RWebWindow_Key');
          if (new_key) {
