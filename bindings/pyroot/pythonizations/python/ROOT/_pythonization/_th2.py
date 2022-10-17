@@ -1,4 +1,4 @@
-# Author: Enric Tejedor CERN  02/2019
+# Author: Harshal Shende CERN  09/2022
 
 ################################################################################
 # Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.                      #
@@ -11,25 +11,13 @@
 from . import pythonization
 from ._th_utils import _numpy_getter, _numpy_content, _func_name_orig
 
-# Multiplication by constant
-
-
-def _imul(self, c):
-    # Parameters:
-    # - self: histogram
-    # - c: constant by which to multiply the histogram
-    # Returns:
-    # - A multiplied histogram (in place)
-    self.Scale(c)
-    return self
-
 
 _np_dtype_dict = {
-    "float64": "TH1D",
-    "float32": "TH1F",
-    "int32": "TH1I",
-    "int8": "TH1C",
-    "int16": "TH1S",
+    "float64": "TH2D",
+    "float32": "TH2F",
+    "int32": "TH2I",
+    "int8": "TH2C",
+    "int16": "TH2S",
 }
 
 
@@ -72,19 +60,34 @@ def GetErrors(self, firstbin=None, lastbin=None):
         return err[firstbin:lastbin]
 
 
-def GetBinEdges(self):
-    if self.GetXaxis().GetXbins().GetSize() > 0:
-        edges = _numpy_content(self.GetXaxis().GetXbins())
+def GetBinEdges(self, axis=None):
+    if axis > self.GetDimension():
+        raise ValueError("Unsupported value passed. Axis should be 1 for x axis, 2 for y axis")
 
-        return edges
-    else:
-        import numpy as np
+    if axis == 1:
+        if self.GetXaxis().GetXbins().GetSize() > 0:
+            edges = _numpy_content(self.GetXaxis().GetXbins())
+            return edges
+        else:
+            import numpy as np
 
-        nbins = self.GetXaxis().GetNbins()
-        xmin = self.GetXaxis().GetXmin()
-        xmax = self.GetXaxis().GetXmax()
-        edges = np.linspace(xmin, xmax, nbins + 1)
-        return edges
+            nbins = self.GetXaxis().GetNbins()
+            xmin = self.GetXaxis().GetXmin()
+            xmax = self.GetXaxis().GetXmax()
+            edges = np.linspace(xmin, xmax, nbins + 1)
+            return edges
+    elif axis == 2:
+        if self.GetYaxis().GetYbins().GetSize() > 0:
+            edges = _numpy_content(self.GetYaxis().GetYbins())
+            return edges
+        else:
+            import numpy as np
+
+            nbins = self.GetYaxis().GetNbins()
+            ymin = self.GetYaxis().GetXmin()
+            ymax = self.GetYaxis().GetXmax()
+            edges = np.linspace(ymin, ymax, nbins + 1)
+            return edges
 
 
 python_funcs = [FromNumpy, GetBinEdges, GetContent, GetErrors]
@@ -94,8 +97,5 @@ python_funcs = [FromNumpy, GetBinEdges, GetContent, GetErrors]
 def pythonize_th1(klass):
     # Parameters:
     # klass: class to be pythonized
-
-    # Support hist *= scalar
-    klass.__imul__ = _imul
     for func in python_funcs:
         setattr(klass, func.__name__, func)
