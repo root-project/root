@@ -31,6 +31,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // if true, most operations are performed locally without involving server
          this.standalone = this.websocket.kind == 'file';
 
+         if (!this.standalone && !this._embeded && this.websocket.addReloadKeyHandler)
+            this.websocket.addReloadKeyHandler();
+
          this.cfg = {
             fTreeName: '',
             fExprX: '', fExprY: '', fExprZ: '', fExprCut: '', fOption: '',
