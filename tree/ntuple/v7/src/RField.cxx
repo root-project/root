@@ -1015,10 +1015,13 @@ void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t glob
    fProxy->Clear();
 
    // Avoid heap fragmentation at the cost of temporarily allocating slightly more memory
-   auto buff = std::make_unique<unsigned char[]>(kReadChunkSize * fItemSize);
+   const size_t buffSize = std::max(kReadChunkSize, fItemSize);
+   const std::uint32_t nItemsPerChunk = buffSize / fItemSize;
+   auto buff = std::make_unique<unsigned char[]>(buffSize);
+
    auto nItemsLeft = static_cast<std::uint32_t>(nItems);
    while (nItemsLeft > 0) {
-      auto count = std::min(nItemsLeft, kReadChunkSize);
+      auto count = std::min(nItemsLeft, nItemsPerChunk);
       for (std::size_t i = 0; i < count; ++i) {
          auto itemValue = fSubFields[0]->GenerateValue(buff.get() + (i * fItemSize));
          fSubFields[0]->Read(collectionStart + i, &itemValue);
