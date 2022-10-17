@@ -95,6 +95,7 @@ target_include_directories(rootcling PRIVATE
         ${CMAKE_SOURCE_DIR}/core/metacling/res
         ${CMAKE_SOURCE_DIR}/core/dictgen/res
         ${CMAKE_SOURCE_DIR}/io/rootpcm/res)
+set_property(TARGET rootcling PROPERTY ENABLE_EXPORTS 1)
 if(WIN32)
   set_target_properties(rootcling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
 endif()
