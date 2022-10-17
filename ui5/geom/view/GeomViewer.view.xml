@@ -1,8 +1,8 @@
 <mvc:View height="100%" width="100%" class="sapUiSizeCompact"
-   controllerName="rootui5.eve7.controller.GeomViewer"
+   controllerName="rootui5.geom.controller.GeomViewer"
    xmlns="sap.m"
    xmlns:mvc="sap.ui.core.mvc"
-   xmlns:eve7="rootui5.eve7.lib"
+   xmlns:geom="rootui5.geom.lib"
    xmlns:core="sap.ui.core"
    xmlns:l="sap.ui.layout"
    xmlns:t="sap.ui.table">
@@ -246,7 +246,7 @@
          <Page id="geomDraw" title="GL drawing" showNavButton="false"
             showFooter="false" showSubHeader="false" showHeader="true" class="sapUiStdPage">
             <content>
-               <eve7:GeomDrawing id="geomDrawing" color="white"/>
+               <geom:GeomDrawing id="geomDrawing" color="white"/>
             </content>
          </Page>
          <Page id="geomInfo" title="Node information"
@@ -262,7 +262,7 @@
                      <Text text="Shape name: {/shape_name}"/>
                      <Text text="Type: {/shape_type}"/>
                    </VBox>
-                   <eve7:GeomDrawing id="nodeDrawing" color="white"/>
+                   <geom:GeomDrawing id="nodeDrawing" color="white"/>
                </l:Splitter>
             </content>
          </Page>
