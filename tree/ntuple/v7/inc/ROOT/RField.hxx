@@ -341,9 +341,9 @@ public:
 /// The collection proxy for a given class can be set via `TClass::CopyCollectionProxy()`.
 class RCollectionClassField : public Detail::RFieldBase {
 private:
-   /// Chunk size in number of items used in `ReadGlobalImp()`. Items in the same chunk will be inserted in
+   /// Chunk size in bytes used in `ReadGlobalImp()`. Items held in the same chunk will be inserted in
    /// a single `TVirtualCollectionProxy::Insert()` call.
-   static constexpr const std::uint32_t kReadChunkSize = 128;
+   static constexpr const std::size_t kReadChunkSize = 64 * 1024;
    TVirtualCollectionProxy *fProxy;
    std::size_t fItemSize;
    ClusterSize_t fNWritten;
