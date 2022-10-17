@@ -1191,13 +1191,7 @@ bool RooWorkspace::loadSnapshot(const char* name)
 
 const RooArgSet* RooWorkspace::getSnapshot(const char* name) const
 {
-  RooArgSet* snap = (RooArgSet*) _snapshots.find(name) ;
-  if (!snap) {
-    coutE(ObjectHandling) << "RooWorkspace::loadSnapshot(" << GetName() << ") no snapshot with name " << name << " is available" << endl ;
-    return nullptr;
-  }
-
-  return snap ;
+  return static_cast<RooArgSet*>(_snapshots.find(name));
 }
 
 
