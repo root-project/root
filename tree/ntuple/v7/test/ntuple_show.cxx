@@ -1,4 +1,5 @@
 #include "ntuple_test.hxx"
+#include "SimpleCollectionProxy.hxx"
 
 TEST(RNTupleShow, Empty)
 {
@@ -428,4 +429,37 @@ TEST(RNTupleShow, RVecTypeErased)
       "[[4], [5]], \"s\": \"foo\"}, {\"a\": 6, \"v1\": [7, 8], \"v2\": [[9], [10]], \"s\": \"bar\"}]\n" +
       "}\n"};
    EXPECT_EQ(fString1, os1.str());
+}
+
+TEST(RNTupleShow, CollectionProxy)
+{
+   SimpleCollectionProxy<StructUsingCollectionProxy<float>> proxy;
+   auto klass = TClass::GetClass("StructUsingCollectionProxy<float>");
+   klass->CopyCollectionProxy(proxy);
+
+   FileRaii fileGuard("test_ntuple_show_collectionproxy.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      auto proxyF = model->MakeField<StructUsingCollectionProxy<float>>("proxyF");
+      auto vecProxyF = model->MakeField<std::vector<StructUsingCollectionProxy<float>>>("vecProxyF");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      proxyF->v.push_back(42.0f);
+      proxyF->v.push_back(24.0f);
+      StructUsingCollectionProxy<float> floats;
+      floats.v.push_back(1.0f);
+      floats.v.push_back(2.0f);
+      vecProxyF->push_back(floats);
+      vecProxyF->push_back(floats);
+      ntuple->Fill();
+   }
+
+   {
+      auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+      EXPECT_EQ(1U, ntuple->GetNEntries());
+
+      std::ostringstream os;
+      ntuple->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, os);
+      std::string expected{"{\n  \"proxyF\": [42, 24],\n  \"vecProxyF\": [[1, 2], [1, 2]]\n}\n"};
+      EXPECT_EQ(os.str(), expected);
+   }
 }
