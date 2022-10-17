@@ -111,8 +111,9 @@ public:
    /// returns true if browser supports headless mode
    bool IsSupportHeadless() const
    {
-      return (GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) || (GetBrowserKind() == kEdge)
-               || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5) || (GetBrowserKind() == kQt6);
+      return (GetBrowserKind() == kNative) || (GetBrowserKind() == kDefault) ||
+             (GetBrowserKind() == kChrome) || (GetBrowserKind() == kEdge) || (GetBrowserKind() == kFirefox) ||
+             (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5) || (GetBrowserKind() == kQt6);
    }
 
    /// set window url
