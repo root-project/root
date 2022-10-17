@@ -345,18 +345,18 @@ sap.ui.define([
 
          let can_elem = this.getView().byId("MainPanel");
 
-         return XMLView.create({
-            viewName: viewName,
-            viewData: { handle: panel_handle, masterPanel: this },
-            layoutData: oLd,
-            height: (panel_name == "Panel") ? "100%" : undefined
-         }).then(oView => {
-            // workaround, while CanvasPanel.onBeforeRendering called too late
-            can_elem.getController().preserveCanvasContent();
-            split.insertContentArea(oView, 0);
-            return true;
-         });
-
+         import('./jsrootsys/modules/core.mjs')
+           .then(jsroot => XMLView.create({
+               viewName: viewName,
+               viewData: { handle: panel_handle, masterPanel: this, jsroot },
+               layoutData: oLd,
+               height: (panel_name == "Panel") ? "100%" : undefined
+           })).then(oView => {
+               // workaround, while CanvasPanel.onBeforeRendering called too late
+               can_elem.getController().preserveCanvasContent();
+               split.insertContentArea(oView, 0);
+               return true;
+           });
       },
 
       // TODO: sync with showPanelInLeftArea, it is more or less same
