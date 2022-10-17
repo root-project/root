@@ -243,7 +243,7 @@ sap.ui.define([
                p.sendWebsocket("INTERRUPT");
                break;
             case "Reload":
-               if (typeof p._websocket?.askReload)
+               if (typeof p._websocket?.askReload == 'function')
                   p._websocket.askReload();
                break;
             case "Quit ROOT":
