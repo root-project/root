@@ -36,12 +36,8 @@ class RSampleInfo {
    ROOT::RDF::Experimental::RMetaData fMetaData;
 
 public:
-   explicit RSampleInfo(std::string_view id, std::pair<ULong64_t, ULong64_t> entryRange)
-      : fID(id), fEntryRange(entryRange)
-   {
-   }
    explicit RSampleInfo(std::string_view id, std::pair<ULong64_t, ULong64_t> entryRange,
-                        const ROOT::RDF::Experimental::RMetaData &metaData)
+                        const ROOT::RDF::Experimental::RMetaData &metaData = {})
       : fID(id), fEntryRange(entryRange), fMetaData(metaData)
    {
    }

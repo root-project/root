@@ -378,12 +378,15 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
    std::vector<Long64_t> globSizes(groupInfo.size() ? groupInfo.size() : 1);
    auto currentGropIdx = 0u;
    auto currentGroupInitSize = groupInfo[currentGropIdx].fSize;
+   if (groupInfo.size() > 0)
+      fMetaDataVec.reserve(groupInfo.size());
    for (auto i = 0u; i < fileNameGlobs.size(); ++i) {
       // update the size of the groups with the expanded globs
       const auto fullpath = fileNameGlobs[i] + "/" + treeNames[i]; // TODO: use ?# once #11483 is solved
       globSizes[currentGropIdx] += chain->Add(fullpath.c_str());
       if (groupInfo.size() > 0) {
          if (--currentGroupInitSize == 0) {
+            fMetaDataVec.emplace_back(groupInfo[currentGropIdx].fMetaData);
             currentGroupInitSize = groupInfo[++currentGropIdx].fSize;
          }
       }
@@ -395,7 +398,7 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
 
       for (auto i = 0; i < expandedNames->GetEntries(); ++i) {
          const auto id = std::string(expandedNames->At(i)->GetTitle()) + "/" + expandedNames->At(i)->GetName();
-         fMetaDataMap[id] = groupInfo[groupIterator].fMetaData;
+         fMetaDataMap[id] = &fMetaDataVec[groupIterator];
          if (--globSizes[groupIterator] == 0)
             ++groupIterator;
       }
@@ -731,7 +734,7 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
       range.second = tree->GetEntries(); // convert '-1', i.e. 'until the end', to the actual entry number
    }
    const std::string &id = fname + "/" + treename;
-   fSampleInfos[slot] = fMetaDataMap.empty() ? RSampleInfo(id, range) : RSampleInfo(id, range, fMetaDataMap[id]);
+   fSampleInfos[slot] = fMetaDataMap.empty() ? RSampleInfo(id, range) : RSampleInfo(id, range, *fMetaDataMap[id]);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
