@@ -161,6 +161,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // if true, most operations are performed locally without involving server
          this.standalone = (this.websocket.kind == 'file');
 
+         // add reload handler
+         if (!this.standalone && this.websocket.addReloadKeyHandler)
+            this.websocket.addReloadKeyHandler();
+
          // create model only for browser - no need for anybody else
          this.model = new BrowserModel();
 

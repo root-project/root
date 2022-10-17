@@ -22,9 +22,6 @@ sap.ui.define([
       onInit : function() {
          this._Page = this.getView().byId("CanvasMainPage");
 
-         let id = this.getView().getId();
-         console.log("Initialization CANVAS id = " + id);
-
          this.bottomVisible = false;
 
          let model = new JSONModel({ MenuBarIcon: chk_icon(true),
@@ -36,8 +33,7 @@ sap.ui.define([
                                      Standalone: true, isRoot6: true });
          this.getView().setModel(model);
 
-         let vd = this.getView().getViewData();
-         let cp = vd ? vd.canvas_painter : null;
+         let cp = this.getView().getViewData()?.canvas_painter;
 
          if (!cp) cp = Component.getOwnerComponentFor(this.getView()).getComponentData().canvas_painter;
 
@@ -68,6 +64,10 @@ sap.ui.define([
             cp.showUI5Panel = this.showPanelInLeftArea.bind(this);
 
             if (cp.v7canvas) model.setProperty("/isRoot6", false);
+
+            let ws = cp._websocket || cp._window_handle;
+            if (!cp.embed_canvas && ws?.addReloadKeyHandler)
+               ws.addReloadKeyHandler();
          }
 
          // this.toggleGedEditor();
@@ -119,10 +119,9 @@ sap.ui.define([
          });
       },
 
+      /** @desc Provide canvas painter */
       getCanvasPainter : function(also_without_websocket) {
-         let elem = this.getView().byId("MainPanel");
-
-         let p = elem ? elem.getController().getPainter() : null;
+         let p = this.getView().byId("MainPanel")?.getController().getPainter();
 
          return (p && (p._websocket || also_without_websocket)) ? p : null;
       },
@@ -139,19 +138,17 @@ sap.ui.define([
             if (method.fArgs.length !== items.length)
                alert('Mismatch between method description' + method.fArgs.length + ' and args list in dialog ' + items.length);
 
-            // console.log('ITEMS', method.fArgs.length, items.length);
-
-            for (let k=0;k<method.fArgs.length;++k) {
+            for (let k = 0; k < method.fArgs.length; ++k) {
                let arg = method.fArgs[k];
                let value = items[k].getContent()[0].getValue();
 
-               if (value==="") value = arg.fDefault;
+               if (value === "") value = arg.fDefault;
 
                if ((arg.fTitle=="Option_t*") || (arg.fTitle=="const char*")) {
                   // check quotes,
                   // TODO: need to make more precise checking of escape characters
                   if (!value) value = '""';
-                  if (value[0]!='"') value = '"' + value;
+                  if (value[0] != '"') value = '"' + value;
                   if (value[value.length-1] != '"') value += '"';
                }
 
@@ -176,7 +173,7 @@ sap.ui.define([
             if (canvp?.v7canvas)
                canvp.submitExec(painter, exec, (p > 0) ? menu_obj_id.slice(p+1) : "");
             else if (canvp)
-               canvp.sendWebsocket('OBJEXEC:' + menu_obj_id + ":" + exec);
+               canvp.sendWebsocket('OBJEXEC:' + menu_obj_id + ':' + exec);
          }
       },
 
@@ -236,7 +233,7 @@ sap.ui.define([
          let p = this.getCanvasPainter();
          if (!p) return;
 
-         let name = oEvent.getParameter("item").getText();
+         let name = oEvent.getParameter('item').getText();
 
          switch (name) {
             case "Close canvas":
@@ -244,6 +241,10 @@ sap.ui.define([
                break;
             case "Interrupt":
                p.sendWebsocket("INTERRUPT");
+               break;
+            case "Reload":
+               if (typeof p._websocket?.askReload)
+                  p._websocket.askReload();
                break;
             case "Quit ROOT":
                p.sendWebsocket("QUIT");
