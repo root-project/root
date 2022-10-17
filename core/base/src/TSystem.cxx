@@ -1014,8 +1014,8 @@ const char *TSystem::DirName(const char *pathname)
 
    R__LOCKGUARD2(gSystemMutex);
 
-   static Ssiz_t len = 0;
-   static char *buf = nullptr;
+   thread_local Ssiz_t len = 0;
+   thread_local char *buf = nullptr;
    if (res.Length() >= len) {
       if (buf) delete [] buf;
       len = res.Length() + 50;
