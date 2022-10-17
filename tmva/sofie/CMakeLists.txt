@@ -18,6 +18,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator.hxx
    TMVA/ROperator_BasicUnary.hxx
    TMVA/ROperator_BasicBinary.hxx
+   TMVA/ROperator_BasicNary.hxx
    TMVA/ROperator_BatchNormalization.hxx
    TMVA/ROperator_Conv.hxx
    TMVA/ROperator_ConvTranspose.hxx
@@ -35,7 +36,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Identity.hxx
    TMVA/ROperator_Softmax.hxx
    TMVA/ROperator_Reduce.hxx
-   TMVA/ROperator_Max.hxx
    TMVA/ROperator_Shape.hxx
    TMVA/ROperator_Cast.hxx
    TMVA/ROperator_Custom.hxx

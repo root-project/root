@@ -26,6 +26,11 @@ extern ParserFuncSignature ParseSub;
 extern ParserFuncSignature ParseMul;
 extern ParserFuncSignature ParseDiv;
 extern ParserFuncSignature ParsePow;
+// Nary operators
+extern ParserFuncSignature ParseMax;
+extern ParserFuncSignature ParseMin;
+extern ParserFuncSignature ParseMean;
+extern ParserFuncSignature ParseSum;
 // Reduce operators
 extern ParserFuncSignature ParseReduceMean;
 extern ParserFuncSignature ParseReduceSumsquare;
@@ -49,7 +54,6 @@ extern ParserFuncSignature ParseSlice;
 extern ParserFuncSignature ParseGRU;
 extern ParserFuncSignature ParseIdentity;
 extern ParserFuncSignature ParseSoftmax;
-extern ParserFuncSignature ParseMax;
 extern ParserFuncSignature ParseConcat;
 extern ParserFuncSignature ParseCast;
 extern ParserFuncSignature ParseExpand;
@@ -81,6 +85,11 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Mul", ParseMul);
    RegisterOperator("Div", ParseDiv);
    RegisterOperator("Pow", ParsePow);
+   // Nary operators
+   RegisterOperator("Max", ParseMax);
+   RegisterOperator("Min", ParseMin);
+   RegisterOperator("Mean", ParseMean);
+   RegisterOperator("Sum", ParseSum);
    // Reduce operators
    RegisterOperator("ReduceMean", ParseReduceMean);
    RegisterOperator("ReduceSumsquare", ParseReduceSumsquare);
@@ -96,7 +105,6 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Identity", ParseIdentity);
    RegisterOperator("LeakyRelu", ParseLeakyRelu);
    RegisterOperator("LSTM", ParseLSTM);
-   RegisterOperator("Max", ParseMax);
    RegisterOperator("AveragePool", ParsePool);
    RegisterOperator("GlobalAveragePool", ParsePool);
    RegisterOperator("MaxPool", ParsePool);
