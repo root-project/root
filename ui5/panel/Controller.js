@@ -26,6 +26,11 @@ sap.ui.define([
          // TODO: use more specific API between Canvas and Panel
          this.masterPanel = data?.masterPanel;
 
+         // let correctly reload Panel
+         if (!this.masterPanel && this.websocket)
+            this.websocket.addReloadKeyHandler();
+
+
          if (typeof this.onPanelInit == "function")
             this.onPanelInit();
       },
