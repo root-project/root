@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '19/11/2021' */
-let version_date = '13/10/2022';
+let version_date = '17/10/2022';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -99637,6 +99637,12 @@ class WebWindowHandle {
                if (msg == 'CLOSE') {
                   this.close(true); // force closing of socket
                   this.invokeReceiver(true, 'onWebsocketClosed');
+               } else if (msg.indexOf('NEW_KEY=') == 0) {
+                  let newkey = msg.slice(8);
+                  this.close(true);
+                  if (typeof sessionStorage !== 'undefined')
+                     sessionStorage.setItem('RWebWindow_Key', newkey);
+                  location.reload(true);
                }
             } else if (msg == '$$binary$$') {
                this.next_binary = chid;
@@ -99674,6 +99680,33 @@ class WebWindowHandle {
       }; // retry_open
 
       retry_open(true); // call for the first time
+   }
+
+   /** @summary Send newkey request to application
+     * @desc If server creates newkey and response - webpage will be reaload
+     * After key generation done, connection will not be working any longer
+     * WARNING - only call when you know that you are doing
+     * @private */
+   askReload() {
+      this.send('GENERATE_KEY', 0);
+   }
+
+   /** @summary Instal Ctrl-R handler to realod web window
+     * @desc Instead of default window reload invokes {@link askReload} method
+     * WARNING - only call when you know that you are doing
+     * @private */
+   addReloadKeyHandler() {
+
+      if (this.kind == 'file') return;
+
+      window.addEventListener( 'keydown', evnt => {
+         if (((evnt.key == 'R') || (evnt.key == 'r')) && evnt.ctrlKey) {
+            evnt.stopPropagation();
+            evnt.preventDefault();
+            console.log('Prevent Ctrl-R propogation - ask reload web window!');
+            this.askReload();
+          }
+      });
    }
 
 } // class WebWindowHandle

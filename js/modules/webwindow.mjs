@@ -585,6 +585,12 @@ class WebWindowHandle {
                if (msg == 'CLOSE') {
                   this.close(true); // force closing of socket
                   this.invokeReceiver(true, 'onWebsocketClosed');
+               } else if (msg.indexOf('NEW_KEY=') == 0) {
+                  let newkey = msg.slice(8);
+                  this.close(true);
+                  if (typeof sessionStorage !== 'undefined')
+                     sessionStorage.setItem('RWebWindow_Key', newkey);
+                  location.reload(true);
                }
             } else if (msg == '$$binary$$') {
                this.next_binary = chid;
@@ -622,6 +628,33 @@ class WebWindowHandle {
       } // retry_open
 
       retry_open(true); // call for the first time
+   }
+
+   /** @summary Send newkey request to application
+     * @desc If server creates newkey and response - webpage will be reaload
+     * After key generation done, connection will not be working any longer
+     * WARNING - only call when you know that you are doing
+     * @private */
+   askReload() {
+      this.send('GENERATE_KEY', 0);
+   }
+
+   /** @summary Instal Ctrl-R handler to realod web window
+     * @desc Instead of default window reload invokes {@link askReload} method
+     * WARNING - only call when you know that you are doing
+     * @private */
+   addReloadKeyHandler() {
+
+      if (this.kind == 'file') return;
+
+      window.addEventListener( 'keydown', evnt => {
+         if (((evnt.key == 'R') || (evnt.key == 'r')) && evnt.ctrlKey) {
+            evnt.stopPropagation();
+            evnt.preventDefault();
+            console.log('Prevent Ctrl-R propogation - ask reload web window!');
+            this.askReload();
+          }
+      });
    }
 
 } // class WebWindowHandle
@@ -688,6 +721,15 @@ async function connectWebWindow(arg) {
 
       handle.key = d.get('key');
       handle.token = d.get('token');
+
+      if (typeof sessionStorage !== undefined) {
+         let new_key = sessionStorage.getItem('RWebWindow_Key');
+         sessionStorage.removeItem('RWebWindow_Key');
+         if (new_key) {
+            console.log(`Use key ${new_key} from session storage`);
+            handle.key = new_key;
+         }
+      }
 
       if (arg.receiver) {
          // when receiver exists, it handles itself callbacks
