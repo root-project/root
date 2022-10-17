@@ -75,6 +75,18 @@
 #include "Max_FromONNX.hxx"
 #include "input_models/references/Max.ref.hxx"
 
+#include "MaxMultidirectionalBroadcast_FromONNX.hxx"
+#include "input_models/references/MaxMultidirectionalBroadcast.ref.hxx"
+
+#include "MinMultidirectionalBroadcast_FromONNX.hxx"
+#include "input_models/references/MinMultidirectionalBroadcast.ref.hxx"
+
+#include "MeanMultidirectionalBroadcast_FromONNX.hxx"
+#include "input_models/references/MeanMultidirectionalBroadcast.ref.hxx"
+
+#include "SumMultidirectionalBroadcast_FromONNX.hxx"
+#include "input_models/references/SumMultidirectionalBroadcast.ref.hxx"
+
 #include "AvgPool_FromONNX.hxx"
 #include "input_models/references/AvgPool.ref.hxx"
 
@@ -922,6 +934,86 @@ TEST(ONNX, Max)
          EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
       }
    }
+
+TEST(ONNX, MaxMultidirectionalBroadcast) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> a({0.35974154, -2.20873388,  0.95746274});
+   std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754 ,  0.08269051, -0.70045695});
+   std::vector<float> c({-0.41468981, -0.46591926,  0.56172534,  0.05616931});
+
+   TMVA_SOFIE_MaxMultidirectionalBroadcast::Session s("MaxMultidirectionalBroadcast_FromONNX.dat");
+
+   std::vector<float> output = s.infer(a.data(), b.data(), c.data());
+
+   EXPECT_EQ(output.size(), sizeof(MaxMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = MaxMultidirectionalBroadcast_ExpectedOutput::output;
+
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, MinMultidirectionalBroadcast) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> a({0.35974154, -2.20873388,  0.95746274});
+   std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754 ,  0.08269051, -0.70045695});
+   std::vector<float> c({-0.41468981, -0.46591926,  0.56172534,  0.05616931});
+
+   TMVA_SOFIE_MinMultidirectionalBroadcast::Session s("MinMultidirectionalBroadcast_FromONNX.dat");
+
+   std::vector<float> output = s.infer(a.data(), b.data(), c.data());
+
+   EXPECT_EQ(output.size(), sizeof(MinMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = MinMultidirectionalBroadcast_ExpectedOutput::output;
+
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, MeanMultidirectionalBroadcast) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> a({0.35974154, -2.20873388,  0.95746274});
+   std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754 ,  0.08269051, -0.70045695});
+   std::vector<float> c({-0.41468981, -0.46591926,  0.56172534,  0.05616931});
+
+   TMVA_SOFIE_MeanMultidirectionalBroadcast::Session s("MeanMultidirectionalBroadcast_FromONNX.dat");
+
+   std::vector<float> output = s.infer(a.data(), b.data(), c.data());
+
+   EXPECT_EQ(output.size(), sizeof(MeanMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = MeanMultidirectionalBroadcast_ExpectedOutput::output;
+
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, SumMultidirectionalBroadcast) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   std::vector<float> a({0.35974154, -2.20873388,  0.95746274});
+   std::vector<float> b({0.75901985, -0.46544461, -0.34920575, -0.1460754 ,  0.08269051, -0.70045695});
+   std::vector<float> c({-0.41468981, -0.46591926,  0.56172534,  0.05616931});
+
+   TMVA_SOFIE_SumMultidirectionalBroadcast::Session s("SumMultidirectionalBroadcast_FromONNX.dat");
+
+   std::vector<float> output = s.infer(a.data(), b.data(), c.data());
+
+   EXPECT_EQ(output.size(), sizeof(SumMultidirectionalBroadcast_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = SumMultidirectionalBroadcast_ExpectedOutput::output;
+
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
 
 TEST(ONNX, Shape){
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
