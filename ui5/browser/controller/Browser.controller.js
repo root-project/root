@@ -1074,19 +1074,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary Submit node search query to server, ignore in offline case */
-      changeItemsFilter: function(query, from_handler) {
+      changeItemsFilter(query, from_handler) {
 
-         if (!from_handler) {
-            // do not submit immediately, but after very short timeout
+         if (from_handler) {
+            delete this.search_handler;
+            this.model.setItemsFilter(query);
+         } else {
+            // do not submit immediately, but after short timeout
             // if user types very fast - only last selection will be shown
             if (this.search_handler) clearTimeout(this.search_handler);
-            this.search_handler = setTimeout(this.changeItemsFilter.bind(this, query, true), 1000);
-            return;
+            this.search_handler = setTimeout(() => this.changeItemsFilter(query, true), 1000);
          }
-
-         delete this.search_handler;
-
-         this.model.changeItemsFilter(query);
       },
 
       /** @summary process initial message, now it is list of existing canvases */
