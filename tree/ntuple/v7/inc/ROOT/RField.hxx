@@ -341,6 +341,8 @@ public:
 /// The collection proxy for a given class can be set via `TClass::CopyCollectionProxy()`.
 class RCollectionClassField : public Detail::RFieldBase {
 private:
+   /// Chunk size in number of items used in `ReadGlobalImp()`. Items in the same chunk will be inserted in
+   /// a single `TVirtualCollectionProxy::Insert()` call.
    static constexpr const std::uint32_t kReadChunkSize = 128;
    TVirtualCollectionProxy *fProxy;
    std::size_t fItemSize;
@@ -617,7 +619,7 @@ public:
    static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
    RField(std::string_view name) : RCollectionClassField(name, TypeName())
    {
-      static_assert(std::is_class<T>::value, "no I/O support for this basic C++ type");
+      static_assert(std::is_class<T>::value, "collection proxy unsupported for fundamental types");
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
