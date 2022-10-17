@@ -20,6 +20,7 @@
 #include "TList.h"
 #include "TColor.h"
 #include "TDirectory.h"
+#include "TFile.h"
 #include "TBufferJSON.h"
 
 #include <sstream>
@@ -194,7 +195,9 @@ public:
       TObject *obj = *fIter;
       if (!obj) return nullptr;
 
-      auto item = std::make_unique<TObjectItem>(obj->GetName(), obj->IsFolder() ? -1 : 0);
+      bool is_folder = obj->IsFolder();
+
+      auto item = std::make_unique<TObjectItem>(obj->GetName(), is_folder ? -1 : 0);
 
       item->SetClassName(obj->ClassName());
 
@@ -205,6 +208,11 @@ public:
       if (obj->IsA() == TColor::Class()) {
          if (item->GetName().empty())
             item->SetName("Color"s + std::to_string(static_cast<TColor *>(obj)->GetNumber()));
+      }
+
+      if (is_folder && obj->InheritsFrom(TFile::Class())) {
+         auto f = dynamic_cast<TFile *>(obj);
+         if (f) item->SetSize(f->GetSize());
       }
 
       return item;
