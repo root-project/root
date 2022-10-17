@@ -210,6 +210,7 @@ public:
    void VisitArrayField(const RArrayField &field) final;
    void VisitClassField(const RClassField &field) final;
    void VisitRecordField(const RRecordField &field) final;
+   void VisitCollectionClassField(const RCollectionClassField &field) final;
    void VisitVectorField(const RVectorField &field) final;
    void VisitVectorBoolField(const RField<std::vector<bool>> &field) final;
    void VisitRVecField(const RRVecField &field) final;

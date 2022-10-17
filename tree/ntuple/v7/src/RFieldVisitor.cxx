@@ -320,6 +320,10 @@ void ROOT::Experimental::RPrintValueVisitor::VisitRecordField(const RRecordField
    fOutput << "}";
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitCollectionClassField(const RCollectionClassField &field)
+{
+   PrintCollection(field);
+}
 
 void ROOT::Experimental::RPrintValueVisitor::VisitVectorField(const RVectorField &field)
 {
