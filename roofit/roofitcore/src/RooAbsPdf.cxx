@@ -1567,7 +1567,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
   pc.defineInt("nWorkers", "Parallelize", 0, 0); // Three parallelize arguments
   pc.defineInt("parallelGradient", "Parallelize", 1, 0);
-  pc.defineInt("parallelLikelihood", "Parallelize", 2, 0);
+  pc.defineDouble("parallelLikelihood", "Parallelize", 2, 0);
   pc.defineString("mintype","Minimizer",0,minimizerDefaults.minType.c_str()) ;
   pc.defineString("minalg","Minimizer",1,minimizerDefaults.minAlg.c_str()) ;
   pc.defineSet("minosSet","Minos",0,minimizerDefaults.minosSet) ;
