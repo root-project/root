@@ -212,7 +212,10 @@ public:
 
       if (is_folder && obj->InheritsFrom(TFile::Class())) {
          auto f = dynamic_cast<TFile *>(obj);
-         if (f) item->SetSize(f->GetSize());
+         if (f) {
+            item->SetSize(f->GetSize());
+            item->SetMTime(f->GetModificationDate().AsSQLString());
+         }
       }
 
       return item;
