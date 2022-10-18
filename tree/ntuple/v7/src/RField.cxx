@@ -935,10 +935,10 @@ ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_vie
 {
    if (classp == nullptr)
       throw RException(R__FAIL("RField: no I/O support for collection proxy type " + std::string(className)));
-
-   fProxy = classp->GetCollectionProxy();
-   if (!fProxy)
+   if (!classp->GetCollectionProxy())
       throw RException(R__FAIL(std::string(className) + " has no associated collection proxy"));
+
+   fProxy.reset(classp->GetCollectionProxy()->Generate());
    if (fProxy->HasPointers())
       throw RException(R__FAIL("collection proxies whose value type is a pointer are not supported"));
    if (fProxy->GetProperties() & TVirtualCollectionProxy::kIsAssociative)
@@ -984,7 +984,7 @@ ROOT::Experimental::RCollectionClassField::CloneImpl(std::string_view newName) c
 
 std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const Detail::RFieldValue &value)
 {
-   TVirtualCollectionProxy::TPushPop RAII(fProxy, value.GetRawPtr());
+   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
    std::size_t nbytes = 0;
    auto count = fProxy->Size();
    for (unsigned i = 0; i < count; ++i) {
@@ -999,7 +999,7 @@ std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const Detail::
 
 void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
 {
-   TVirtualCollectionProxy::TPushPop RAII(fProxy, value->GetRawPtr());
+   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value->GetRawPtr());
 
    ClusterSize_t nItems;
    RClusterIndex collectionStart;
@@ -1056,7 +1056,7 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RCollectionClassFiel
 
 void ROOT::Experimental::RCollectionClassField::DestroyValue(const Detail::RFieldValue &value, bool dtorOnly)
 {
-   TVirtualCollectionProxy::TPushPop RAII(fProxy, value.GetRawPtr());
+   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
    if (fProxy->GetProperties() & TVirtualCollectionProxy::kNeedDelete) {
       auto nItems = fProxy->Size();
       for (unsigned i = 0; i < nItems; ++i) {
@@ -1077,7 +1077,7 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RCollectionClassFiel
 std::vector<ROOT::Experimental::Detail::RFieldValue>
 ROOT::Experimental::RCollectionClassField::SplitValue(const Detail::RFieldValue &value) const
 {
-   TVirtualCollectionProxy::TPushPop RAII(fProxy, value.GetRawPtr());
+   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
    auto nItems = fProxy->Size();
    std::vector<Detail::RFieldValue> result;
    for (unsigned i = 0; i < nItems; ++i) {
