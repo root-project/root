@@ -52,22 +52,53 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include <iostream>
 #include <memory>
 
-using namespace std;
-
 ClassImp(RooRealIntegral);
-
 
 namespace {
 
 struct ServerToAdd {
-   ServerToAdd(RooAbsArg * theArg, bool isShape) : arg{theArg}, isShapeServer{isShape} {}
-   RooAbsArg * arg = nullptr;
+   ServerToAdd(RooAbsArg *theArg, bool isShape) : arg{theArg}, isShapeServer{isShape} {}
+   RooAbsArg *arg = nullptr;
    bool isShapeServer = false;
 };
 
+void addObservableToServers(RooAbsReal const &function, RooAbsArg &leaf, std::vector<ServerToAdd> &serversToAdd,
+                            const char *rangeName)
+{
+   auto leaflv = dynamic_cast<RooAbsRealLValue *>(&leaf);
+   if (leaflv && leaflv->getBinning(rangeName).isParameterized()) {
+      oocxcoutD(&function, Integration)
+         << function.GetName() << " : Observable " << leaf.GetName()
+         << " has parameterized binning, add value dependence of boundary objects rather than shape of leaf"
+         << std::endl;
+      if (leaflv->getBinning(rangeName).lowBoundFunc()) {
+         serversToAdd.emplace_back(leaflv->getBinning(rangeName).lowBoundFunc(), false);
+      }
+      if (leaflv->getBinning(rangeName).highBoundFunc()) {
+         serversToAdd.emplace_back(leaflv->getBinning(rangeName).highBoundFunc(), false);
+      }
+   } else {
+      oocxcoutD(&function, Integration) << function.GetName() << ": Adding observable " << leaf.GetName()
+                                        << " as shape dependent" << std::endl;
+      serversToAdd.emplace_back(&leaf, true);
+   }
+}
+
+void addParameterToServers(RooAbsReal const &function, RooAbsArg &leaf, std::vector<ServerToAdd> &serversToAdd,
+                           bool isShapeServer)
+{
+   if (!isShapeServer) {
+      oocxcoutD(&function, Integration) << function.GetName() << ": Adding parameter " << leaf.GetName()
+                                        << " as value dependent" << std::endl;
+   } else {
+      oocxcoutD(&function, Integration) << function.GetName() << ": Adding parameter " << leaf.GetName()
+                                        << " as shape dependent" << std::endl;
+   }
+   serversToAdd.emplace_back(&leaf, isShapeServer);
+}
+
 std::vector<ServerToAdd> getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList,
-                                                 RooArgSet const &intDepList, const char *rangeName,
-                                                 RooArgSet &anIntOKDepList)
+                                                 RooArgSet const &intDepList, const char *rangeName)
 {
    std::vector<ServerToAdd> serversToAdd;
 
@@ -106,42 +137,31 @@ std::vector<ServerToAdd> getValueAndShapeServers(RooAbsReal const &function, Roo
 
          for (const auto leaf : argLeafServers) {
 
-            if (depList.find(leaf->GetName()) && argLeafValueServers.contains(*leaf)) {
+            const bool leafInDepList = depList.find(leaf->GetName());
 
-               auto *leaflv = dynamic_cast<RooAbsRealLValue *>(leaf);
-               if (leaflv && leaflv->getBinning(rangeName).isParameterized()) {
-                  oocxcoutD(&function, Integration)
-                     << function.GetName() << " : Observable " << leaf->GetName()
-                     << " has parameterized binning, add value dependence of boundary objects rather than shape of leaf"
-                     << endl;
-                  if (leaflv->getBinning(rangeName).lowBoundFunc()) {
-                     serversToAdd.emplace_back(leaflv->getBinning(rangeName).lowBoundFunc(), false);
-                  }
-                  if (leaflv->getBinning(rangeName).highBoundFunc()) {
-                     serversToAdd.emplace_back(leaflv->getBinning(rangeName).highBoundFunc(), false);
-                  }
-               } else {
-                  oocxcoutD(&function, Integration) << function.GetName() << ": Adding observable " << leaf->GetName()
-                                                    << " of server " << arg->GetName() << " as shape dependent" << endl;
-                  serversToAdd.emplace_back(leaf, true);
-               }
-            } else if (!depList.find(leaf->GetName())) {
-
-               if (argLeafValueServers.contains(*leaf)) {
-                  oocxcoutD(&function, Integration) << function.GetName() << ": Adding parameter " << leaf->GetName()
-                                                    << " of server " << arg->GetName() << " as value dependent" << endl;
-                  serversToAdd.emplace_back(leaf, false);
-               } else {
-                  oocxcoutD(&function, Integration) << function.GetName() << ": Adding parameter " << leaf->GetName()
-                                                    << " of server " << arg->GetName() << " as shape dependent" << endl;
-                  serversToAdd.emplace_back(leaf, true);
-               }
+            if (leafInDepList && argLeafValueServers.contains(*leaf)) {
+               addObservableToServers(function, *leaf, serversToAdd, rangeName);
+            } else if (!leafInDepList) {
+               addParameterToServers(function, *leaf, serversToAdd, !argLeafValueServers.contains(*leaf));
             }
          }
       }
+   }
 
-      // If this dependent arg is self-normalized, stop here
-      // if (function.selfNormalized()) continue ;
+   return serversToAdd;
+}
+
+void fillAnIntOKDepList(RooAbsReal const &function, RooArgSet const &intDepList, RooArgSet &anIntOKDepList)
+{
+   for (const auto arg : function.servers()) {
+
+      // Dependent or parameter?
+      if (!arg->dependsOnValue(intDepList)) {
+         continue;
+      } else if (!arg->isValueServer(function) && !arg->isShapeServer(function)) {
+         // Skip arg if it is neither value or shape server
+         continue;
+      }
 
       bool depOK(false);
       // Check for integratable AbsRealLValue
@@ -179,14 +199,16 @@ std::vector<ServerToAdd> getValueAndShapeServers(RooAbsReal const &function, Roo
       if (depOK) {
          anIntOKDepList.add(*arg, true);
          oocxcoutI(&function, Integration) << function.GetName() << ": Observable " << arg->GetName()
-                                           << " is suitable for analytical integration (if supported by p.d.f)" << endl;
+                                           << " is suitable for analytical integration (if supported by p.d.f)"
+                                           << std::endl;
       }
    }
-
-   return serversToAdd;
 }
 
 } // namespace
+
+
+using namespace std;
 
 
 Int_t RooRealIntegral::_cacheAllNDim(2) ;
@@ -408,7 +430,8 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   //      Add all parameters/dependents as value/shape servers     *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-  auto serversToAdd = getValueAndShapeServers(function, depList, intDepList, rangeName, anIntOKDepList);
+  auto serversToAdd = getValueAndShapeServers(function, depList, intDepList, rangeName);
+  fillAnIntOKDepList(function, intDepList, anIntOKDepList);
   // We will not add the servers just now, because it makes only sense to add
   // them once we have made sure that this integral is not operating in
   // pass-through mode. It will be done at the end of this constructor.
