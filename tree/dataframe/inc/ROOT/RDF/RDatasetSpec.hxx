@@ -86,17 +86,17 @@ class RSpecBuilder {
 
 public:
    RSpecBuilder &AddGroup(const std::string &groupName, const std::string &treeName, const std::string &fileNameGlob,
-                          const RMetaData &metaData);
+                          const RMetaData &metaData = {});
 
    RSpecBuilder &AddGroup(const std::string &groupName, const std::string &treeName,
-                          const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData);
+                          const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData = {});
 
    RSpecBuilder &AddGroup(const std::string &groupName,
                           const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-                          const RMetaData &metaData);
+                          const RMetaData &metaData = {});
 
    RSpecBuilder &AddGroup(const std::string &groupName, const std::vector<std::string> &trees,
-                          const std::vector<std::string> &files, const RMetaData &metaData);
+                          const std::vector<std::string> &files, const RMetaData &metaData = {});
 
    RSpecBuilder &
    WithFriends(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias = "");

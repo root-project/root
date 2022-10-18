@@ -10,6 +10,9 @@
 #include <ROOT/RDFHelpers.hxx>
 #include <ROOT/TestSupport.hxx>
 #include <ROOT/RDF/RDatasetSpec.hxx>
+#include <ROOT/RDF/RMetaData.hxx>
+#include <ROOT/RDF/RDFFromJSON.hxx>
+#include <nlohmann/json.hpp>
 #include <TSystem.h>
 
 #include <thread> // std::thread::hardware_concurrency
@@ -19,12 +22,83 @@ using namespace ROOT::RDF::Experimental;
 
 using namespace std::literals; // remove ambiguity of using std::vector<std::string>-s and std::string-s
 
-void EXPECT_VEC_EQ(const std::vector<ULong64_t> &vec1, const std::vector<ULong64_t> &vec2)
+namespace {
+void EXPECT_VEC_SEQ_EQ(const std::vector<ULong64_t> &vec, const ROOT::TSeq<ULong64_t> &seq)
 {
-   ASSERT_EQ(vec1.size(), vec2.size());
-   for (auto i = 0u; i < vec1.size(); ++i)
-      EXPECT_EQ(vec1[i], vec2[i]);
+   ASSERT_EQ(vec.size(), seq.size());
+   for (auto i = 0u; i < vec.size(); ++i)
+      EXPECT_EQ(vec[i], seq[i]);
 }
+
+/*
+void EXPECT_VEC_SEQS_EQ(const std::vector<ULong64_t> &vec, const std::vector<ROOT::TSeq<ULong64_t>> &seq)
+{
+   auto totalSeqSize = 0u;
+   for (const auto &s : seq)
+      totalSeqSize += s.size();
+   ASSERT_EQ(vec.size(), totalSeqSize);
+   auto vecIdx = 0u;
+   for (const auto &s : seq) {
+      for (const auto &elem : s) {
+         EXPECT_EQ(vec[vecIdx++], elem);
+      }
+   }
+}
+*/
+
+struct RTestGroup {
+   std::string name;
+   ULong64_t groupStart;
+   ULong64_t groupEnd;
+   std::vector<std::string> fileGlobs;
+
+   struct RTestTree {
+      std::string tree;
+      std::string file;
+      ULong64_t start;
+      ULong64_t end;
+      RTestTree(const std::string &t, const std::string &f, ULong64_t s, ULong64_t e)
+         : tree(t), file(f), start(s), end(e)
+      {
+      }
+   };
+   std::vector<std::vector<RTestTree>> trees; // single tree/files with their ranges per glob
+   RMetaData meta;
+
+   RTestGroup(const std::string &n, ULong64_t s, ULong64_t e, const std::vector<std::string> &f,
+              const std::vector<std::vector<RTestTree>> &t)
+      : name(n), groupStart(s), groupEnd(e), fileGlobs(f), trees(t)
+   {
+      meta.AddMetaData("group_name", name);
+      meta.AddMetaData("group_start", static_cast<int>(s));
+      meta.AddMetaData("group_end", static_cast<double>(e));
+   }
+};
+
+// the first group has a single file glob
+// the second group has two file globs, but always the same tree name
+// the last group has two file globs, corresponding to different tree names
+std::vector<RTestGroup> data{
+   {"simulated",
+    0u,
+    15u,
+    {"specTestFile0*.root"},
+    {{{"tree", "specTestFile0.root", 0u, 4u},
+      {"tree", "specTestFile00.root", 4u, 9u},
+      {"tree", "specTestFile000.root", 9u, 15u}}}},
+   {"real",
+    15u,
+    39u,
+    {"specTestFile1.root", "specTestFile11*.root"},
+    {{{"subTree", "specTestFile1.root", 15u, 22u}},
+     {{"subTree", "specTestFile11.root", 22u, 30u}, {"subTree", "specTestFile111.root", 30u, 39u}}}},
+   {"raw",
+    39u,
+    85u,
+    {"specTestFile2*.root", "specTestFile3*.root"},
+    {{{"subTreeA", "specTestFile2.root", 39u, 49u}, {"subTreeA", "specTestFile22.root", 49u, 60u}},
+     {{"subTreeB", "specTestFile3.root", 60u, 72u}, {"subTreeB", "specTestFile33.root", 72u, 85u}}}}};
+} // namespace
 
 // The helper class is also responsible for the creation and the deletion of the root specTestFiles
 class RDatasetSpecTest : public ::testing::TestWithParam<bool> {
@@ -46,64 +120,197 @@ protected:
 public:
    static void SetUpTestCase()
    {
-      auto dfWriter0 = RDataFrame(5).Define("z", [](ULong64_t e) { return e + 100; }, {"rdfentry_"});
-      dfWriter0.Snapshot<ULong64_t>("tree", "specTestFile0.root", {"z"});
-      dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree", "specTestFile1.root", {"z"});
-      dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree", "specTestFile2.root", {"z"});
-      dfWriter0.Range(4, 5).Snapshot<ULong64_t>("subTree", "specTestFile3.root", {"z"});
-      dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTreeA", "specTestFile4.root", {"z"});
-      dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTreeB", "specTestFile5.root", {"z"});
-
-      auto dfWriter1 = RDataFrame(10)
-                          .Define("x", [](ULong64_t e) { return double(e); }, {"rdfentry_"})
-                          .Define("w", [](ULong64_t e) { return e + 1.; }, {"rdfentry_"});
-      dfWriter1.Range(5).Snapshot<double>("subTree0", "specTestFile6.root", {"x"});
-      dfWriter1.Range(5, 10).Snapshot<double>("subTree1", "specTestFile7.root", {"x"});
-      dfWriter1.Range(5).Snapshot<double>("subTree2", "specTestFile8.root", {"w"});
-      dfWriter1.Range(5, 10).Snapshot<double>("subTree3", "specTestFile9.root", {"w"});
+      auto dfWriter = ROOT::RDataFrame(85).Define("x", [](ULong64_t e) { return e; }, {"rdfentry_"});
+      for (const auto &d : data)
+         for (const auto &trees : d.trees)
+            for (const auto &t : trees)
+               dfWriter.Range(t.start, t.end).Snapshot<ULong64_t>(t.tree, t.file, {"x"});
    }
 
    static void TearDownTestCase()
    {
-      for (auto i = 0u; i < 10; ++i)
-         gSystem->Unlink(("specTestFile" + std::to_string(i) + ".root").c_str());
+      for (const auto &d : data)
+         for (const auto &trees : d.trees)
+            for (const auto &t : trees)
+               gSystem->Unlink((t.file).c_str());
    }
 };
 
-// ensure that the chains are created as expected, no ranges, neither friends are passed
+// ensure that the chains are created as expected: no metadata, no ranges, neither friends are passed
 TEST_P(RDatasetSpecTest, SimpleChainsCreation)
 {
-   // first constructor: 1 tree, 1 file; both passed as string directly
-   // advanced note: internally a TChain is created named the same as the tree provided
-   const auto dfRDSc1 = *(RDataFrame(RDatasetSpec("tree", "specTestFile0.root")).Take<ULong64_t>("z"));
-   EXPECT_VEC_EQ(dfRDSc1, {100u, 101u, 102u, 103u, 104u});
+   // testing each single tree with hard-coded file names
+   for (const auto &d : data) {
+      for (const auto &trees : d.trees) {
+         for (const auto &t : trees) {
+            // first AddGroup overload: 1 tree, 1 file; both passed as string directly
+            const auto dfC1 = *(RDataFrame(RSpecBuilder().AddGroup("", t.tree, t.file).Build()).Take<ULong64_t>("x"));
+            EXPECT_VEC_SEQ_EQ(dfC1, ROOT::TSeq<ULong64_t>(t.start, t.end));
 
-   // second constructor: 1 tree, many files; files passed as a vector; testing with 1 specTestFile
-   // advanced note: internally a TChain is created named the same as the tree provided
-   const auto dfRDSc21 = *(RDataFrame(RDatasetSpec("tree", {"specTestFile0.root"s})).Take<ULong64_t>("z"));
-   EXPECT_VEC_EQ(dfRDSc21, {100u, 101u, 102u, 103u, 104u});
+            // second AddGroup overload: 1 tree, many files; files passed as a vector; testing with 1 specTestFile
+            const auto dfC2 = *(RDataFrame(RSpecBuilder().AddGroup("", t.tree, {t.file}).Build()).Take<ULong64_t>("x"));
+            EXPECT_VEC_SEQ_EQ(dfC2, ROOT::TSeq<ULong64_t>(t.start, t.end));
 
-   // second constructor: here with multiple files
-   auto dfRDSc2N =
-      *(RDataFrame(RDatasetSpec("subTree", {"specTestFile1.root"s, "specTestFile2.root"s, "specTestFile3.root"s}))
-           .Take<ULong64_t>("z"));
-   std::sort(dfRDSc2N.begin(), dfRDSc2N.end()); // the order is not necessary preserved by Take in MT
-   EXPECT_VEC_EQ(dfRDSc2N, {100u, 101u, 102u, 103u, 104u});
+            // third AddGroup overload: many trees, many files; trees and files passed in a vector of pairs
+            const auto dfC3 =
+               *(RDataFrame(RSpecBuilder().AddGroup("", {{t.tree, t.file}}).Build()).Take<ULong64_t>("x"));
+            EXPECT_VEC_SEQ_EQ(dfC3, ROOT::TSeq<ULong64_t>(t.start, t.end));
 
-   // third constructor: many trees, many files; trees and files passed in a vector of pairs; here 1 specTestFile
-   // advanced note: when using this constructor, the internal TChain will always have no name
-   const auto dfRDSc31 = *(RDataFrame(RDatasetSpec({{"tree"s, "specTestFile0.root"s}})).Take<ULong64_t>("z"));
-   EXPECT_VEC_EQ(dfRDSc31, {100u, 101u, 102u, 103u, 104u});
+            // fourth AddGroup overload: many trees, many files; trees and files passed in separate vectors
+            const auto dfC4 =
+               *(RDataFrame(RSpecBuilder().AddGroup("", {t.tree}, {t.file}).Build()).Take<ULong64_t>("x"));
+            EXPECT_VEC_SEQ_EQ(dfC4, ROOT::TSeq<ULong64_t>(t.start, t.end));
+         }
+      }
+   }
 
-   // third constructor: many trees and files
-   auto dfRDSc3N = *(RDataFrame(RDatasetSpec({{"subTreeA"s, "specTestFile4.root"s},
-                                              {"subTreeB"s, "specTestFile5.root"s},
-                                              {"subTree"s, "specTestFile3.root"s}}))
-                        .Take<ULong64_t>("z"));
-   std::sort(dfRDSc3N.begin(), dfRDSc3N.end());
-   EXPECT_VEC_EQ(dfRDSc3N, {100u, 101u, 102u, 103u, 104u});
+   // groups with hard-coded file names
+   std::vector<RSpecBuilder> builders(4);
+   for (const auto &d : data) {
+      for (const auto &trees : d.trees) {
+         for (const auto &t : trees) {
+            builders[0].AddGroup("", t.tree, t.file);
+            builders[1].AddGroup("", t.tree, {t.file});
+            builders[2].AddGroup("", {{t.tree, t.file}});
+            builders[3].AddGroup("", {t.tree}, {t.file});
+         }
+      }
+   }
+
+   for (auto &b : builders) {
+      auto df = *(RDataFrame(b.Build()).Take<ULong64_t>("x"));
+      std::sort(df.begin(), df.end());
+      EXPECT_VEC_SEQ_EQ(df, ROOT::TSeq<ULong64_t>(data[0].groupStart, data[data.size() - 1].groupEnd));
+   }
+
+   // the first builder takes each tree/file as a separate group
+   // the second builder takes tree/file glob as separate group
+   // the third build takes tree/expanded glob (similar to second)
+   // the fourth builder takes a vector of trees/vector of file globs as a separate group
+   std::vector<RSpecBuilder> buildersGranularity(4);
+   for (const auto &d : data) {
+      std::vector<std::string> treeNames{};
+      std::vector<std::string> fileGlobs{};
+      for (auto i = 0u; i < d.fileGlobs.size(); ++i) {
+         std::vector<std::string> treeNamesExpanded{};
+         std::vector<std::string> fileGlobsExpanded{};
+         for (const auto &t : d.trees[i]) {
+            buildersGranularity[0].AddGroup("", t.tree, t.file);
+            treeNamesExpanded.emplace_back(t.tree);
+            fileGlobsExpanded.emplace_back(t.file);
+         }
+         buildersGranularity[1].AddGroup("", d.trees[i][0].tree, d.fileGlobs[i]);
+         buildersGranularity[2].AddGroup("", treeNamesExpanded, fileGlobsExpanded);
+         treeNames.emplace_back(d.trees[i][0].tree);
+         fileGlobs.emplace_back(d.fileGlobs[i]);
+      }
+      buildersGranularity[3].AddGroup("", treeNames, fileGlobs);
+   }
+   for (auto &b : buildersGranularity) {
+      auto df = *(RDataFrame(b.Build()).Take<ULong64_t>("x"));
+      std::sort(df.begin(), df.end());
+      EXPECT_VEC_SEQ_EQ(df, ROOT::TSeq<ULong64_t>(data[0].groupStart, data[data.size() - 1].groupEnd));
+   }
 }
 
+TEST_P(RDatasetSpecTest, SimpleMetaDataHandling)
+{
+   std::vector<RSpecBuilder> builders(2);
+   for (const auto &d : data) {
+      std::vector<std::string> treeNames{};
+      std::vector<std::string> fileGlobs{};
+      std::vector<std::string> treeNamesExpanded{};
+      std::vector<std::string> fileGlobsExpanded{};
+      for (auto i = 0u; i < d.fileGlobs.size(); ++i) {
+         for (const auto &t : d.trees[i]) {
+            treeNamesExpanded.emplace_back(t.tree);
+            fileGlobsExpanded.emplace_back(t.file);
+         }
+         treeNames.emplace_back(d.trees[i][0].tree);
+         fileGlobs.emplace_back(d.fileGlobs[i]);
+      }
+      builders[0].AddGroup(d.name, treeNames, fileGlobs, d.meta);
+      builders[1].AddGroup(d.name, treeNames, fileGlobs, d.meta);
+   }
+   for (auto &b : builders) {
+      auto df =
+         RDataFrame(b.Build())
+            .DefinePerSample("group_name_col",
+                             [](unsigned int, const ROOT::RDF::RSampleInfo &id) { return id.GetS("group_name"); })
+            .DefinePerSample("group_start_col",
+                             [](unsigned int, const ROOT::RDF::RSampleInfo &id) { return id.GetI("group_start"); })
+            .DefinePerSample("group_end_col",
+                             [](unsigned int, const ROOT::RDF::RSampleInfo &id) { return id.GetD("group_end"); });
+      auto g1S = (df.Filter([](std::string m) { return m == "simulated"; }, {"group_name_col"}).Count());
+      auto g2S = (df.Filter([](std::string m) { return m == "real"; }, {"group_name_col"}).Count());
+      auto g3S = (df.Filter([](std::string m) { return m == "raw"; }, {"group_name_col"}).Count());
+      auto g1I = (df.Filter([](int m) { return m == 0; }, {"group_start_col"}).Count());
+      auto g2I = (df.Filter([](int m) { return m == 15; }, {"group_start_col"}).Count());
+      auto g3I = (df.Filter([](int m) { return m == 39; }, {"group_start_col"}).Count());
+      auto g1D = (df.Filter([](double m) { return m == 15.; }, {"group_end_col"}).Count());
+      auto g2D = (df.Filter([](double m) { return m == 39.; }, {"group_end_col"}).Count());
+      auto g3D = (df.Filter([](double m) { return m == 85.; }, {"group_end_col"}).Count());
+      EXPECT_EQ(*g1S, 15u);
+      EXPECT_EQ(*g2S, 24u);
+      EXPECT_EQ(*g3S, 46u);
+      EXPECT_EQ(*g1I, 15u);
+      EXPECT_EQ(*g2I, 24u);
+      EXPECT_EQ(*g3I, 46u);
+      EXPECT_EQ(*g1D, 15u);
+      EXPECT_EQ(*g2D, 24u);
+      EXPECT_EQ(*g3D, 46u);
+   }
+}
+
+TEST(RMetaData, SimpleOperations)
+{
+   ROOT::RDF::Experimental::RMetaData m;
+   m.AddMetaData("year", 2022);
+   m.AddMetaData("energy", 13.6);
+   m.AddMetaData("framework", "ROOT6");
+   EXPECT_EQ(m.GetI("year"), 2022);
+   EXPECT_DOUBLE_EQ(m.GetD("energy"), 13.6);
+   EXPECT_EQ(m.GetS("framework"), "ROOT6");
+   EXPECT_EQ(m.Dump("year"), "2022");
+   EXPECT_EQ(m.Dump("energy"), "13.6");
+   EXPECT_EQ(m.Dump("framework"), "\"ROOT6\"");
+
+   // adding to the same key currently overwrites
+   // overwriting with the same type is okay
+   m.AddMetaData("year", 2023);
+   m.AddMetaData("energy", 13.9);
+   m.AddMetaData("framework", "ROOT7");
+   EXPECT_EQ(m.GetI("year"), 2023);
+   EXPECT_DOUBLE_EQ(m.GetD("energy"), 13.9);
+   EXPECT_EQ(m.GetS("framework"), "ROOT7");
+   // overwriting with different types
+   m.AddMetaData("year", 20.23);
+   m.AddMetaData("energy", "14");
+   m.AddMetaData("framework", 7);
+   EXPECT_DOUBLE_EQ(m.GetD("year"), 20.23);
+   EXPECT_EQ(m.GetS("energy"), "14");
+   EXPECT_EQ(m.GetI("framework"), 7);
+}
+
+TEST(RMetaData, InvalidQueries)
+{
+   ROOT::RDF::Experimental::RMetaData m;
+   m.AddMetaData("year", 2022);
+   m.AddMetaData("energy", 13.6);
+   m.AddMetaData("framework", "ROOT6");
+
+   // asking for the wrong type, but valid column
+   EXPECT_THROW(m.GetD("year"), std::logic_error);
+   EXPECT_THROW(m.GetS("energy"), std::logic_error);
+   EXPECT_THROW(m.GetI("framework"), std::logic_error);
+
+   // asking for non-existent columns
+   EXPECT_THROW(m.GetD("alpha"), std::logic_error);
+   EXPECT_THROW(m.GetS("beta"), std::logic_error);
+   EXPECT_THROW(m.GetI("gamma"), std::logic_error);
+}
+
+/*
 // ensure that ranges are properly handled, even if the ranges are invalid
 // let: start = desired start, end = desired end, last = actually last entry
 // possible cases: default: 0 = start < last < end = max (already implicitly tested above)
@@ -490,7 +697,7 @@ TEST(RDatasetSpecTest, Clusters)
    }
 }
 #endif
-
+*/
 // instantiate single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDatasetSpecTest, ::testing::Values(false));
 
