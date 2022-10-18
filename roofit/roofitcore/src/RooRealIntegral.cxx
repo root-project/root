@@ -97,54 +97,74 @@ void addParameterToServers(RooAbsReal const &function, RooAbsArg &leaf, std::vec
    serversToAdd.emplace_back(&leaf, isShapeServer);
 }
 
-std::vector<ServerToAdd> getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList,
-                                                 RooArgSet const &intDepList, const char *rangeName)
+/// Unmark all args that recursively are value clients of "dep".
+/// Returns true if something was unmarked.
+bool unmarkDepValueClients(RooAbsArg const &dep, RooArgSet const &args, std::vector<bool> &marked)
+{
+   assert(args.size() == marked.size());
+   auto index = args.index(&dep);
+   if (index >= 0) {
+      marked[index] = false;
+      for (RooAbsArg *client : dep.valueClients()) {
+         unmarkDepValueClients(*client, args, marked);
+      }
+      return true;
+   }
+   return false;
+}
+
+std::vector<ServerToAdd>
+getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList, const char *rangeName)
 {
    std::vector<ServerToAdd> serversToAdd;
 
-   for (const auto arg : function.servers()) {
+   // Get the full computation graph and sort it topologically
+   RooArgList allArgsList;
+   function.treeNodeServerList(&allArgsList, nullptr, true, true, /*valueOnly=*/false, false);
+   RooArgSet allArgs{allArgsList};
+   allArgs.sortTopologically();
 
-      // Dependent or parameter?
-      if (!arg->dependsOnValue(intDepList)) {
+   // Figure out what are all the value servers only
+   RooArgList allValueArgsList;
+   function.treeNodeServerList(&allValueArgsList, nullptr, true, true, /*valueOnly=*/true, false);
+   RooArgSet allValueArgs{allValueArgsList};
 
-         if (function.dependsOnValue(*arg)) {
-            serversToAdd.emplace_back(arg, false);
-         }
+   // All "marked" args will be added as value servers to the integral
+   std::vector<bool> marked(allArgs.size(), true);
+   marked.back() = false; // We don't want to consider the function itself
 
-         continue;
+   // Unmark all args that are (indirect) value servers of the integration
+   // variable or the integration variable itself. If something was unmarked,
+   // it means the integration variable was in the compute graph and we will
+   // add it to the server list.
+   for (RooAbsArg *dep : depList) {
+      if (unmarkDepValueClients(*dep, allArgs, marked)) {
+         addObservableToServers(function, *dep, serversToAdd, rangeName);
+      }
+   }
 
-      } else {
-
-         // Add final dependents of arg as shape servers
-
-         // Skip arg if it is neither value or shape server
-         if (!arg->isValueServer(function) && !arg->isShapeServer(function)) {
-            continue;
-         }
-
-         // We keep track separately of all leaves and the leaves that are only
-         // value servers to `arg`, which in this code branch is always a value
-         // server of the original function. With the additional value-only server
-         // list, we can quicky check if a given leaf is also a value server to
-         // the top-level `function`, because if and only if `leaf` is a value
-         // server of `arg` is it also a value server of `function`. The expensive
-         // calls to `function.dependsOnValue(*leaf)` that were used before are
-         // avoided like this.
-         RooArgSet argLeafServers;
-         RooArgSet argLeafValueServers;
-         arg->treeNodeServerList(&argLeafServers, nullptr, false, true, /*valueOnly=*/false, false);
-         arg->treeNodeServerList(&argLeafValueServers, nullptr, false, true, /*valueOnly=*/true, false);
-
-         for (const auto leaf : argLeafServers) {
-
-            const bool leafInDepList = depList.find(leaf->GetName());
-
-            if (leafInDepList && argLeafValueServers.contains(*leaf)) {
-               addObservableToServers(function, *leaf, serversToAdd, rangeName);
-            } else if (!leafInDepList) {
-               addParameterToServers(function, *leaf, serversToAdd, !argLeafValueServers.contains(*leaf));
+   for (std::size_t i = 0; i < allArgs.size(); ++i) {
+      // Unmark if this is only an indirect value server (i.e., not a direct
+      // server of the function but the server of another marked arg)
+      if (marked[i]) {
+         RooAbsArg const &arg = *allArgs[i];
+         bool isDirectServer = false;
+         for (RooAbsArg *client : arg.valueClients()) {
+            auto index = allArgs.index(client);
+            if(index >= 0) {
+               marked[i] = !marked[index];
+               if(client == &function) {
+                  isDirectServer = true;
+                  break;
+               }
             }
          }
+         if(isDirectServer) marked[i] = true;
+      }
+      // Finally, it the arg is still marked, add it as a value server, or
+      // shape server if it is not in the list of recursive value servers.
+      if (marked[i]) {
+         addParameterToServers(function, *allArgs[i], serversToAdd, !allValueArgs.find(*allArgs[i]));
       }
    }
 
@@ -430,7 +450,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   //      Add all parameters/dependents as value/shape servers     *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-  auto serversToAdd = getValueAndShapeServers(function, depList, intDepList, rangeName);
+  auto serversToAdd = getValueAndShapeServers(function, depList, rangeName);
   fillAnIntOKDepList(function, intDepList, anIntOKDepList);
   // We will not add the servers just now, because it makes only sense to add
   // them once we have made sure that this integral is not operating in
