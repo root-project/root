@@ -1008,8 +1008,39 @@ Published on July 28, 2022
 * [[#10869](https://github.com/root-project/root/issues/10869)] - [RF] sPlot does not work with `RooAddPdf` in 6.26/04
 
 
+## Release 6.26/08
+
+Published on Oct 18, 2022
+
+### Bugs and Issues fixed in this release
+
+* [[#11080](https://github.com/root-project/root/issues/11080)] - Backport the fix on computation of the radiation and nuclear interaction lengths
+* [[#11128](https://github.com/root-project/root/issues/11128)] - Clang can't build ROOT anymore due to a new added diagnostic about undefined behavior
+* [[#11130](https://github.com/root-project/root/issues/11130)] - ROOT doesn't compile with new nlohmann-json version 3.11.0
+* [[#11239](https://github.com/root-project/root/issues/11239)] - Build failure on Ubuntu22.04, when ROOT builds FTGL itself
+* [[#11222](https://github.com/root-project/root/issues/11222)] - [DF] gtest-tree-dataframe-test-dataframe-snapshot fails with AddressSanitizer
+* [[#11207](https://github.com/root-project/root/issues/11207)] - [DF] Bad interaction between `Alias` and TTree sub-branches
+* [[#10645](https://github.com/root-project/root/issues/10645)] - [TTreeReader] Cannot read `Float16_t` branch
+* [[#11260](https://github.com/root-project/root/issues/11260)] - `TTreeReaderArray` does not support `Double32_t`
+* [[#11259](https://github.com/root-project/root/issues/11259)] - genreflex crash in `TMetaUtils::ReSubstTemplateArg` with gcc12 headers
+* [[#11312](https://github.com/root-project/root/issues/11312)] - Build failure with nlohmann/json 3.11
+* [[#10742](https://github.com/root-project/root/issues/10742)] - `READ_WITHOUT_GLOBALREGISTRATION` has no effect on remote files
+* [[#11383](https://github.com/root-project/root/issues/11383)] - Deadlock in ErrorHandler when invoked at library initialization time.
+* [[#11396](https://github.com/root-project/root/issues/11396)] - [RF] Buggy range overlap check in createNLL when SplitRange option is used
+* [[#11414](https://github.com/root-project/root/issues/11414)] - [RF] Renaming dataset fails when total number of dataset in workspace reached 10
+* [[#11330](https://github.com/root-project/root/issues/11330)] - [core] `kNotDeleted` mechanism is broken on some platforms
+* [[#10828](https://github.com/root-project/root/issues/10828)] - `TH1::Merge` does not extend axes properly for certain histograms with labels
+* [[#11333](https://github.com/root-project/root/issues/11333)] - `THnSparse::Add()` does not preserve weights
+* [[#10382](https://github.com/root-project/root/issues/10382)] - [TNDArrayT] Backward incompatibility: Error reading from ROOT Files created with earlier versions - Streamer bug
+* [[#11436](https://github.com/root-project/root/issues/11436)] - Missing StreamerInfo in file containing nested collection that is non-split but stored member wise
+* [[#11332](https://github.com/root-project/root/issues/11332)] - [RF] Batchmode ignores `depsAreCond` in Conditional when creating a `RooProdPdf`
+* [[#11508](https://github.com/root-project/root/issues/11508)] - [DF] Wrong entries processed with a `Range` with begin+stride
+* [[#11390](https://github.com/root-project/root/issues/11390)] - `Display` does not respect parameters if another operation is booked before printing
+* [[#8962](https://github.com/root-project/root/issues/8962)] - `SetClusterPrefetch(true)` breaks BulkIO with more than one basket
+* [[#11329](https://github.com/root-project/root/issues/11329)] - Dictionary generation of some classes fails on gcc12 (at least in part due to the use of modules)
+
 ## HEAD of the v6-26-00-patches branch
 
-These changes will be part of a future 6.26/06.
+These changes will be part of a future 6.26/10.
 
 - None so far.
