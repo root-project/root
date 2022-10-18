@@ -36,8 +36,7 @@ public:
    double getErrorDef() const;
    void setStrategy(int istrat);
 
-   bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings, bool optConst,
-                      bool verbose = false) override;
+   bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings, bool optConst) override;
 
    void synchronizeGradientParameterSettings(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) const;
 
@@ -51,8 +50,8 @@ public:
    inline std::string getFunctionTitle() const override { return _funct->GetTitle(); }
    inline void setOffsetting(bool flag) override { _funct->enableOffsetting(flag); }
 
-   bool fit(ROOT::Fit::Fitter& fitter) const override { return fitter.FitFCN(*this); };
-   ROOT::Math::IMultiGenFunction* getMultiGenFcn() override { return this; };
+   bool fit(ROOT::Fit::Fitter &fitter) const override { return fitter.FitFCN(*this); };
+   ROOT::Math::IMultiGenFunction *getMultiGenFcn() override { return this; };
 
 private:
    void runDerivator(unsigned int i_component) const;

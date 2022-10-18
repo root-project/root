@@ -31,7 +31,8 @@ using namespace RooFit;
 
 class Environment : public testing::Environment {
 public:
-   void SetUp() override {
+   void SetUp() override
+   {
       RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
       ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
    }
@@ -66,7 +67,7 @@ public:
       // --------------------------------------------------------------------------------
 
       // Creating a RooAbsL likelihood
-      RooAbsReal* likelihood = w.pdf("model")->createNLL(d, NewStyle(true));
+      RooAbsReal *likelihood = w.pdf("model")->createNLL(d, NewStyle(true));
 
       // Creating a minimizer and explicitly setting type of parallelization
       std::size_t nWorkers = 1;

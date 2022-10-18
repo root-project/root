@@ -29,7 +29,8 @@
                            //
 class Environment : public testing::Environment {
 public:
-   void SetUp() override {
+   void SetUp() override
+   {
       RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
       ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
    }
@@ -105,9 +106,7 @@ TEST_P(GradMinimizerParSeed, Gaussian1D)
    EXPECT_EQ(edm0, edm1);
 }
 
-INSTANTIATE_TEST_SUITE_P(Seeds,
-                         GradMinimizerParSeed,
-                         testing::Range<unsigned long>(1, 11));
+INSTANTIATE_TEST_SUITE_P(Seeds, GradMinimizerParSeed, testing::Range<unsigned long>(1, 11));
 
 TEST(GradMinimizerDebugging, DISABLED_Gaussian1DNominal)
 {
@@ -147,7 +146,6 @@ TEST(GradMinimizerDebugging, DISABLED_Gaussian1DGradMinimizer)
    std::tie(nll, pdf, data, _) = generate_1D_gaussian_pdf_nll(w, 10000);
    // when c++17 support arrives, change to this:
    // auto [nll, _] = generate_1D_gaussian_pdf_nll(w, 10000);
-
 
    RooMinimizer::Config cfg;
    cfg.parallelGradient = true;
@@ -220,7 +218,6 @@ TEST(GradMinimizer, GaussianND)
 
    // --------
 
-
    RooMinimizer::Config cfg;
    cfg.parallelGradient = true;
    RooMinimizer m1(*(nll.get()), cfg);
@@ -285,7 +282,6 @@ TEST(GradMinimizerReverse, GaussianND)
    }
 
    // --------
-
 
    RooMinimizer::Config cfg;
    cfg.parallelGradient = true;
@@ -421,7 +417,8 @@ TEST(GradMinimizer, BranchingPDF)
 
    // set parameter values randomly so that they actually need to do some fitting
    for (auto *val : dynamic_range_cast<RooRealVar *>(all_values)) {
-      if(!val) break;
+      if (!val)
+         break;
       val->setVal(RooRandom::randomGenerator()->Uniform(val->getMin(), val->getMax()));
    }
 
@@ -464,7 +461,6 @@ TEST(GradMinimizer, BranchingPDF)
    all_values = *savedValues;
 
    // --------
-
 
    RooMinimizer::Config cfg;
    cfg.parallelGradient = true;
@@ -584,7 +580,6 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspace)
 
    all_values.Print("v");
 
-
    RooMinimizer::Config cfg;
    cfg.parallelGradient = true;
    RooMinimizer m1(*nll, cfg);
@@ -655,7 +650,6 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspaceGradMinimizer
    RooAddPdf sum = *static_cast<RooAddPdf *>(w.pdf("sum"));
    RooDataSet *data = static_cast<RooDataSet *>(w.data(""));
    auto nll = sum.createNLL(*data);
-
 
    RooMinimizer::Config cfg;
    cfg.parallelGradient = true;

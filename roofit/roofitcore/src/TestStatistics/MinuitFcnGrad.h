@@ -34,13 +34,12 @@ class MinuitFcnGrad : public ROOT::Math::IMultiGradFunction, public RooAbsMinimi
 public:
    MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &_likelihood, RooMinimizer *context,
                  std::vector<ROOT::Fit::ParameterSettings> &parameters, LikelihoodMode likelihoodMode,
-                 LikelihoodGradientMode likelihoodGradientMode, bool verbose = false);
+                 LikelihoodGradientMode likelihoodGradientMode);
 
    inline ROOT::Math::IMultiGradFunction *Clone() const override { return new MinuitFcnGrad(*this); }
 
    /// Overridden from RooAbsMinimizerFcn to include gradient strategy synchronization.
-   bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings, bool optConst,
-                      bool verbose = false) override;
+   bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings, bool optConst) override;
 
    // used inside Minuit:
    inline bool returnsInMinuit2ParameterSpace() const override { return gradient->usesMinuitInternalValues(); }
@@ -50,8 +49,8 @@ public:
       likelihood->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
    }
 
-   bool fit(ROOT::Fit::Fitter& fitter) const override { return fitter.FitFCN(*this); };
-   ROOT::Math::IMultiGenFunction* getMultiGenFcn() override { return this; };
+   bool fit(ROOT::Fit::Fitter &fitter) const override { return fitter.FitFCN(*this); };
+   ROOT::Math::IMultiGenFunction *getMultiGenFcn() override { return this; };
 
 private:
    /// IMultiGradFunction override necessary for Minuit

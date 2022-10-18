@@ -37,21 +37,21 @@
 #include <iostream>
 
 RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooMinimizer *context)
-   : RooAbsMinimizerFcn(RooArgList( * std::unique_ptr<RooArgSet>(funct->getParameters(RooArgSet{})) ), context),
-     _grad(getNDim()), _grad_params(getNDim()), _funct(funct),
-     has_been_calculated(getNDim())
+   : RooAbsMinimizerFcn(RooArgList(*std::unique_ptr<RooArgSet>(funct->getParameters(RooArgSet{}))), context),
+     _grad(getNDim()), _grad_params(getNDim()), _funct(funct), has_been_calculated(getNDim())
 {
    // TODO: added "parameters" after rewrite in april 2020, check if correct
    auto parameters = _context->fitter()->Config().ParamsSettings();
-   synchronizeParameterSettings(parameters, true, _context->getVerbose());
+   synchronizeParameterSettings(parameters, true);
    synchronizeGradientParameterSettings(parameters);
    setStrategy(ROOT::Math::MinimizerOptions::DefaultStrategy());
    setErrorLevel(ROOT::Math::MinimizerOptions::DefaultErrorDef());
 }
 
 RooGradMinimizerFcn::RooGradMinimizerFcn(const RooGradMinimizerFcn &other)
-   : RooAbsMinimizerFcn(other), _grad(other._grad), _grad_params(other._grad_params), _gradf(other._gradf), _funct(other._funct),
-     has_been_calculated(other.has_been_calculated), none_have_been_calculated(other.none_have_been_calculated)
+   : RooAbsMinimizerFcn(other), _grad(other._grad), _grad_params(other._grad_params), _gradf(other._gradf),
+     _funct(other._funct), has_been_calculated(other.has_been_calculated),
+     none_have_been_calculated(other.none_have_been_calculated)
 {
 }
 
@@ -70,7 +70,7 @@ void RooGradMinimizerFcn::synchronizeGradientParameterSettings(
 
 double RooGradMinimizerFcn::DoEval(const double *x) const
 {
-      bool parameters_changed = false;
+   bool parameters_changed = false;
 
    // Set the parameter values for this iteration
    for (unsigned index = 0; index < NDim(); index++) {
@@ -92,18 +92,17 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
       if (_printEvalErrors >= 0) {
 
          if (_doEvalErrorWall) {
-            oocoutW(nullptr, Eval)
-               << "RooGradMinimizerFcn: Minimized function has error status." << std::endl
-               << "Returning maximum FCN so far (" << _maxFCN
-               << ") to force MIGRAD to back out of this region. Error log follows" << std::endl;
+            oocoutW(nullptr, Eval) << "RooGradMinimizerFcn: Minimized function has error status." << std::endl
+                                   << "Returning maximum FCN so far (" << _maxFCN
+                                   << ") to force MIGRAD to back out of this region. Error log follows" << std::endl;
          } else {
-            oocoutW(nullptr, Eval)
-               << "RooGradMinimizerFcn: Minimized function has error status but is ignored" << std::endl;
+            oocoutW(nullptr, Eval) << "RooGradMinimizerFcn: Minimized function has error status but is ignored"
+                                   << std::endl;
          }
 
          bool first(true);
          ooccoutW(nullptr, Eval) << "Parameter values: ";
-         for(auto * var : static_range_cast<RooRealVar*>(*_floatParamList)) {
+         for (auto *var : static_range_cast<RooRealVar *>(*_floatParamList)) {
             if (first) {
                first = false;
             } else
@@ -127,7 +126,7 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
    }
 
    // Optional logging
-   if (_context->getVerbose()) {
+   if (isVerbose()) {
       std::cout << "\nprevFCN" << (_funct->isOffsetting() ? "-offset" : "") << " = " << std::setprecision(10) << fvalue
                 << std::setprecision(4) << "  ";
       std::cout.flush();
@@ -207,9 +206,8 @@ double RooGradMinimizerFcn::DoDerivative(const double *x, unsigned int i_compone
    return _grad[i_component].derivative;
 }
 
-double RooGradMinimizerFcn::DoDerivativeWithPrevResult(const double *x, unsigned int i_component,
-                                                       double *previous_grad, double *previous_g2,
-                                                       double *previous_gstep) const
+double RooGradMinimizerFcn::DoDerivativeWithPrevResult(const double *x, unsigned int i_component, double *previous_grad,
+                                                       double *previous_g2, double *previous_gstep) const
 {
    syncParameters(x);
    _grad[i_component] = {previous_grad[i_component], previous_g2[i_component], previous_gstep[i_component]};
@@ -232,10 +230,9 @@ void RooGradMinimizerFcn::setStrategy(int istrat)
    setNcycles(strategy.GradientNCycles());
 }
 
-bool
-RooGradMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters, bool optConst, bool verbose)
+bool RooGradMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters, bool optConst)
 {
-   bool returnee = synchronizeParameterSettings(parameters, optConst, verbose);
+   bool returnee = synchronizeParameterSettings(parameters, optConst);
    synchronizeGradientParameterSettings(parameters);
    setStrategy(_context->fitter()->Config().MinimizerOptions().Strategy());
    setErrorLevel(_context->fitter()->Config().MinimizerOptions().ErrorDef());

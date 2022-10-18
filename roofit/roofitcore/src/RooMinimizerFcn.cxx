@@ -111,7 +111,7 @@ double RooMinimizerFcn::DoEval(const double *x) const {
   // Optional logging
   if (_logfile)
     (*_logfile) << setprecision(15) << fvalue << setprecision(4) << endl;
-  if (_context->getVerbose()) {
+  if (isVerbose()) {
     cout << "\nprevFCN" << (_funct->isOffsetting()?"-offset":"") << " = " << setprecision(10)
          << fvalue << setprecision(4) << "  " ;
     cout.flush() ;

@@ -45,11 +45,11 @@ public:
    /// Config argument to RooMinimizer ctor
    struct Config {
       Config() {}
-      double recoverFromNaN = 10.; // RooAbsMinimizerFcn config
-      int printEvalErrors = 10;    // RooAbsMinimizerFcn config
-      int doEEWall = 1;            // RooAbsMinimizerFcn config
-      int offsetting = -1;         // RooAbsMinimizerFcn config
-      const char *logf = nullptr;  // RooAbsMinimizerFcn config
+      double recoverFromNaN = 10.;        // RooAbsMinimizerFcn config
+      int printEvalErrors = 10;           // RooAbsMinimizerFcn config
+      int doEEWall = 1;                   // RooAbsMinimizerFcn config
+      int offsetting = -1;                // RooAbsMinimizerFcn config
+      const char *logf = nullptr;         // RooAbsMinimizerFcn config
       int nWorkers = getDefaultWorkers(); // RooAbsMinimizerFcn config that can only be set in ctor
       bool parallelGradient = false;      // RooAbsMinimizerFcn config that can only be set in ctor
       bool parallelLikelihood = false;    // RooAbsMinimizerFcn config that can only be set in ctor
@@ -60,7 +60,7 @@ public:
       int getDefaultWorkers();
    };
 
-   explicit RooMinimizer(RooAbsReal &function, Config const& cfg={});
+   explicit RooMinimizer(RooAbsReal &function, Config const &cfg = {});
 
    ~RooMinimizer() override;
 
@@ -68,12 +68,12 @@ public:
    enum PrintLevel { None = -1, Reduced = 0, Normal = 1, ExtraForProblem = 2, Maximum = 3 };
 
    // Setters on _theFitter
-   static void setStrategy(int strat);
-   static void setErrorLevel(double level);
-   static void setEps(double eps); 
-   static void setMaxIterations(int n);
-   static void setMaxFunctionCalls(int n);
-   static void setPrintLevel(int newLevel);
+   void setStrategy(int strat);
+   void setErrorLevel(double level);
+   void setEps(double eps);
+   void setMaxIterations(int n);
+   void setMaxFunctionCalls(int n);
+   void setPrintLevel(int newLevel);
 
    // Setters on _fcn
    void optimizeConst(int flag);
@@ -83,8 +83,6 @@ public:
    void setPrintEvalErrors(int numEvalErrors);
    void setVerbose(bool flag = true);
    bool setLogFile(const char *logf = nullptr);
-
-   int getVerbose() const {return _cfg.verbose; };
 
    int migrad();
    int hesse();
@@ -130,7 +128,8 @@ public:
    int evalCounter() const;
    void zeroEvalCount();
 
-   static ROOT::Fit::Fitter *fitter();
+   ROOT::Fit::Fitter *fitter();
+   const ROOT::Fit::Fitter *fitter() const;
 
    ROOT::Math::IMultiGenFunction *getMultiGenFcn() const;
 
