@@ -41,7 +41,7 @@ public:
    inline double getCarry() const { return eval_carry; }
    inline double defaultErrorLevel() const override { return 0.5; }
 
-   std::shared_ptr<RooAbsL> const& getRooAbsL() { return likelihood_; };
+   std::shared_ptr<RooAbsL> const &getRooAbsL() { return likelihood_; };
 
 protected:
    double evaluate() const override;

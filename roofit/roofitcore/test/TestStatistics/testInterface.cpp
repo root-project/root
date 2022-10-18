@@ -46,13 +46,14 @@ TEST(Interface, createNLLRooAbsL)
 
    EXPECT_TRUE(nll_real != nullptr);
 
-   RooFit::TestStatistics::RooAbsL *nll_absL = dynamic_cast<RooFit::TestStatistics::RooAbsL *>(nll_real->getRooAbsL().get());
+   RooFit::TestStatistics::RooAbsL *nll_absL =
+      dynamic_cast<RooFit::TestStatistics::RooAbsL *>(nll_real->getRooAbsL().get());
 
    EXPECT_TRUE(nll_absL != nullptr);
 }
 
 // Verifies that the fitTo parallelize interface creates a valid minimization
-TEST(Interface, fitTo)
+TEST(Interface, DISABLED_fitTo)
 {
    ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
 
@@ -72,14 +73,14 @@ TEST(Interface, fitTo)
       throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
    }
 
-   std::unique_ptr<RooFitResult> result1 {pdf->fitTo(*data, RooFit::Save())};
+   std::unique_ptr<RooFitResult> result1{pdf->fitTo(*data, RooFit::Save())};
 
    double minNll_nominal = result1->minNll();
    double edm_nominal = result1->edm();
 
    *values = *savedValues;
 
-   std::unique_ptr<RooFitResult> result2 {pdf->fitTo(*data, RooFit::Save(), RooFit::Parallelize(4, true, true))};
+   std::unique_ptr<RooFitResult> result2{pdf->fitTo(*data, RooFit::Save(), RooFit::Parallelize(4, true, true))};
 
    double minNll_GradientJob = result2->minNll();
    double edm_GradientJob = result2->edm();
