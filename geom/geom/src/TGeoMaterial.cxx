@@ -15,15 +15,15 @@
 Base class describing materials.
 
 ## Important note about units
-Since **v6-17-02** the geometry package adopted a system of units, upon the request to support 
-an in-memory material representation consistent with the one in Geant4. The adoption was done 
-gradually and starting with **v6-19-02** (backported to **v6-18-02**) the package supports changing 
-the default units to either ROOT (CGS) or Geant4 ones. In the same version the Geant4 units were 
-set to be the default ones, changing the previous behavior and making material properties such 
-as radiation and interaction lengths having in memory values an order of magnitude lower. This behavior 
+Since **v6-17-02** the geometry package adopted a system of units, upon the request to support
+an in-memory material representation consistent with the one in Geant4. The adoption was done
+gradually and starting with **v6-19-02** (back-ported to **v6-18-02**) the package supports changing
+the default units to either ROOT (CGS) or Geant4 ones. In the same version the Geant4 units were
+set to be the default ones, changing the previous behavior and making material properties such
+as radiation and interaction lengths having in memory values an order of magnitude lower. This behavior
 affected versions up to **v6-25-01**, after which the default units were restored to be the ROOT ones.
 
-For users needing to restore the CGS behavior for material properties, the following sequence needs 
+For users needing to restore the CGS behavior for material properties, the following sequence needs
 to be called before creating the TGeoManager instance:
  * From **v6-18-02** to **v6-22-06**:
 ```
@@ -55,7 +55,7 @@ to be called before creating the TGeoManager instance:
 ClassImp(TGeoMaterial);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
+/// Default constructor.
 
 TGeoMaterial::TGeoMaterial()
              :TNamed(), TAttFill(),
@@ -83,7 +83,9 @@ TGeoMaterial::TGeoMaterial()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor
+/// Constructor.
+///
+/// \param name   material name.
 
 TGeoMaterial::TGeoMaterial(const char *name)
              :TNamed(name, ""), TAttFill(),
@@ -117,7 +119,14 @@ TGeoMaterial::TGeoMaterial(const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor
+/// Constructor.
+///
+/// \param name   material name.
+/// \param a      atomic mass.
+/// \param z      atomic number.
+/// \param rho    material density in g/cm3.
+/// \param radlen
+/// \param intlen
 
 TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
                 Double_t rho, Double_t radlen, Double_t intlen)
@@ -159,6 +168,15 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with state, temperature and pressure.
+///
+/// \param name   material name.
+/// \param a      atomic mass.
+/// \param z      atomic number.
+/// \param rho    material density in g/cm3.
+/// \param state
+/// \param temperature
+/// \param pressure
+
 
 TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rho,
                 EGeoMaterialState state, Double_t temperature, Double_t pressure)
@@ -193,7 +211,11 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rh
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor
+/// Constructor.
+///
+/// \param name   material name.
+/// \param elem
+/// \param rho    material density in g/cm3.
 
 TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho)
              :TNamed(name, ""), TAttFill(),
@@ -466,25 +488,18 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
    }
    TGeoManager::EDefaultUnits typ = TGeoManager::GetDefaultUnits();
    // compute radlen systematically with G3 formula for a valid material
-   if ( typ == TGeoManager::kRootUnits && radlen>=0 ) {
+   if (radlen >= 0) {
       //taken grom Geant3 routine GSMATE
-      constexpr Double_t alr2av = 1.39621E-03*TGeoUnit::cm2;
+      constexpr Double_t alr2av = 1.39621E-03;
       constexpr Double_t al183  = 5.20948;
       fRadLen = fA/(alr2av*fDensity*fZ*(fZ +TGeoMaterial::ScreenFactor(fZ))*
                    (al183-TMath::Log(fZ)/3-TGeoMaterial::Coulomb(fZ)));
-      fRadLen *= TGeoUnit::cm;
-   }
-   else if ( typ == TGeoManager::kG4Units && radlen>=0 ) {
-      //taken grom Geant3 routine GSMATE
-      constexpr Double_t alr2av = 1.39621E-03*TGeant4Unit::cm2;
-      constexpr Double_t al183  = 5.20948;
-      fRadLen = fA/(alr2av*fDensity*fZ*(fZ +TGeoMaterial::ScreenFactor(fZ))*
-                   (al183-TMath::Log(fZ)/3-TGeoMaterial::Coulomb(fZ)));
-      fRadLen *= TGeant4Unit::cm;
+      // fRadLen is in TGeo units. Apply conversion factor in requested length-units
+      fRadLen *= (typ == TGeoManager::kRootUnits) ? TGeoUnit::cm : TGeant4Unit::cm;
    }
    // Compute interaction length using the same formula as in GEANT4
-   if ( typ == TGeoManager::kRootUnits && intlen>=0 ) {
-      constexpr Double_t lambda0 = 35.*TGeoUnit::g/TGeoUnit::cm2;  // [g/cm^2]
+   if (intlen >= 0) {
+      constexpr Double_t lambda0 = 35. * TGeoUnit::g / TGeoUnit::cm2; // [g/cm^2]
       Double_t nilinv = 0.0;
       TGeoElement *elem = GetElement();
       if (!elem) {
@@ -493,21 +508,10 @@ void TGeoMaterial::SetRadLen(Double_t radlen, Double_t intlen)
       }
       Double_t nbAtomsPerVolume = TGeoUnit::Avogadro*fDensity/elem->A();
       nilinv += nbAtomsPerVolume*TMath::Power(elem->Neff(), 0.6666667);
-      nilinv *= TGeoUnit::amu/lambda0;
-      fIntLen = (nilinv<=0) ? TGeoShape::Big() : (TGeoUnit::cm/nilinv);
-   }
-   else if ( typ == TGeoManager::kG4Units && intlen>=0 ) {
-      constexpr Double_t lambda0 = 35.*TGeant4Unit::g/TGeant4Unit::cm2;  // [g/cm^2]
-      Double_t nilinv = 0.0;
-      TGeoElement *elem = GetElement();
-      if (!elem) {
-         Fatal("SetRadLen", "Element not found for material %s", GetName());
-         return;
-      }
-      Double_t nbAtomsPerVolume = TGeant4Unit::Avogadro*fDensity/elem->A();
-      nilinv += nbAtomsPerVolume*TMath::Power(elem->Neff(), 0.6666667);
-      nilinv *= TGeant4Unit::amu/lambda0;
-      fIntLen = (nilinv<=0) ? TGeoShape::Big() : (TGeant4Unit::cm/nilinv);
+      nilinv *= TGeoUnit::amu / lambda0;
+      fIntLen = (nilinv <= 0) ? TGeoShape::Big() : (1.0 / nilinv);
+      // fIntLen is in TGeo units. Apply conversion factor in requested length-units
+      fIntLen *= (typ == TGeoManager::kRootUnits) ? TGeoUnit::cm : TGeant4Unit::cm;
    }
 }
 
@@ -676,7 +680,7 @@ TGeoMaterial *TGeoMaterial::DecayMaterial(Double_t time, Double_t precision)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fills a user array with all the elements deriving from the possible
 /// decay of the top element composing the mixture. Each element contained
-/// by <population> may be a radionuclide having a Bateman solution attached.
+/// by `<population>` may be a radionuclide having a Bateman solution attached.
 /// The precision represent the minimum cumulative branching ratio for
 /// which decay products are still taken into account.
 /// To visualize the time evolution of each decay product one can use:
@@ -778,15 +782,10 @@ TGeoMixture::~TGeoMixture()
 
 void TGeoMixture::AverageProperties()
 {
-   TGeoManager::EDefaultUnits typ = TGeoManager::GetDefaultUnits();
-   const Double_t cm   = (typ==TGeoManager::kRootUnits) ? TGeoUnit::cm   : TGeant4Unit::cm;
-   const Double_t cm2  = (typ==TGeoManager::kRootUnits) ? TGeoUnit::cm2  : TGeant4Unit::cm2;
-   const Double_t amu  = (typ==TGeoManager::kRootUnits) ? TGeoUnit::amu  : TGeant4Unit::amu; // [MeV/c^2]
-   const Double_t gram = (typ==TGeoManager::kRootUnits) ? TGeoUnit::gram : TGeant4Unit::gram;
-   const Double_t na   = (typ==TGeoManager::kRootUnits) ? TGeoUnit::Avogadro : TGeant4Unit::Avogadro;
-   const Double_t alr2av  = 1.39621E-03 * cm2;
-   const Double_t al183   = 5.20948;
-   const Double_t lambda0 = 35.*gram/cm2;  // [g/cm^2]
+   constexpr const Double_t na = TGeoUnit::Avogadro;
+   constexpr const Double_t alr2av = 1.39621E-03;
+   constexpr const Double_t al183 = 5.20948;
+   constexpr const Double_t lambda0 = 35. * TGeoUnit::g / TGeoUnit::cm2; // [g/cm^2]
    Double_t radinv = 0.0;
    Double_t nilinv = 0.0;
    Double_t nbAtomsPerVolume;
@@ -805,10 +804,15 @@ void TGeoMixture::AverageProperties()
       radinv += xinv*fWeights[j];
    }
    radinv *= alr2av*fDensity;
-   if (radinv > 0) fRadLen = cm/radinv;
+   fRadLen = (radinv <= 0) ? TGeoShape::Big() : 1.0 / radinv;
+   // fRadLen is in TGeo units. Apply conversion factor in requested length-units
+   fRadLen *= (TGeoManager::GetDefaultUnits() == TGeoManager::kRootUnits) ? TGeoUnit::cm : TGeant4Unit::cm;
+
    // Compute interaction length
-   nilinv *= amu/lambda0;
-   fIntLen = (nilinv<=0) ? TGeoShape::Big() : (cm/nilinv);
+   nilinv *= TGeoUnit::amu / lambda0;
+   fIntLen = (nilinv <= 0) ? TGeoShape::Big() : 1.0 / nilinv;
+   // fIntLen is in TGeo units. Apply conversion factor in requested length-units
+   fIntLen *= (TGeoManager::GetDefaultUnits() == TGeoManager::kRootUnits) ? TGeoUnit::cm : TGeant4Unit::cm;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -957,14 +961,21 @@ void TGeoMixture::AddElement(TGeoElement *elem, Double_t weight)
    for (Int_t i=0; i<fNelements; i++) {
       elemold = (TGeoElement*)fElements->At(i);
       if (!elemold)  {
-        fElements->AddAt(elemold = table->GetElement((Int_t)fZmixture[i]), i);
+         // Add element with corresponding Z in the list
+         fElements->AddAt(elemold = table->GetElement((Int_t)fZmixture[i]), i);
+         elemold->SetDefined();
       }
-      if (elemold == elem) exist = kTRUE;
+      if (elemold == elem) {
+         fWeights[i] += weight;
+         exist = kTRUE;
+      }
    }
    if (!exist)   {
-     fElements->AddAtAndExpand(elem, fNelements);
+      fElements->AddAtAndExpand(elem, fNelements);
+      AddElement(elem->A(), elem->Z(), weight);
+   } else {
+      AverageProperties();
    }
-   AddElement(elem->A(), elem->Z(), weight);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1117,7 +1128,8 @@ void TGeoMixture::Print(const Option_t * /*option*/) const
           fA,fZ,fDensity, fRadLen, fIntLen, fIndex);
    for (Int_t i=0; i<fNelements; i++) {
       if (fElements && fElements->At(i)) {
-         fElements->At(i)->Print();
+         printf("   Element #%i : %s  Z=%6.2f A=%6.2f w=%6.3f\n", i, GetElement(i)->GetName(), fZmixture[i],
+                fAmixture[i], fWeights[i]);
          continue;
       }
       if (fNatoms) printf("   Element #%i : %s  Z=%6.2f A=%6.2f w=%6.3f natoms=%d\n", i, GetElement(i)->GetName(),fZmixture[i],
@@ -1205,7 +1217,7 @@ TGeoMaterial *TGeoMixture::DecayMaterial(Double_t time, Double_t precision)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fills a user array with all the elements deriving from the possible
 /// decay of the top elements composing the mixture. Each element contained
-/// by <population> may be a radionuclide having a Bateman solution attached.
+/// by `<population>` may be a radionuclide having a Bateman solution attached.
 /// The precision represent the minimum cumulative branching ratio for
 /// which decay products are still taken into account.
 /// To visualize the time evolution of each decay product one can use:
@@ -1276,9 +1288,13 @@ void TGeoMixture::ComputeDerivedQuantities()
    fVecNbOfAtomsPerVolume = new Double_t[fNelements];
 
    // Formula taken from G4Material.cxx L312
+   double sumweights = 0;
    for (Int_t i=0; i<fNelements; ++i) {
+      sumweights += fWeights[i];
       fVecNbOfAtomsPerVolume[i] = Na*fDensity*fWeights[i]/((TGeoElement*)fElements->At(i))->A();
    }
+   if (TMath::Abs(sumweights - 1) > 0.001)
+      Warning("ComputeDerivedQuantities", "Mixture %s: sum of weights is: %g", GetName(), sumweights);
    ComputeRadiationLength();
    ComputeNuclearInterLength();
 }
@@ -1290,12 +1306,15 @@ void TGeoMixture::ComputeDerivedQuantities()
 void TGeoMixture::ComputeRadiationLength()
 {
    // Formula taken from G4Material.cxx L556
-   const Double_t cm = (TGeoManager::GetDefaultUnits()==TGeoManager::kRootUnits) ? TGeoUnit::cm : TGeant4Unit::cm;
    Double_t radinv = 0.0 ;
+   // GetfRadTsai is in units of cm2 due to <unit>::alpha_rcl2. Correction must be applied to end up in TGeo cm.
+   Double_t denom = (TGeoManager::GetDefaultUnits() == TGeoManager::kRootUnits) ? TGeoUnit::cm2 : TGeant4Unit::cm2;
    for (Int_t i=0;i<fNelements;++i) {
-     radinv += fVecNbOfAtomsPerVolume[i]*((TGeoElement*)fElements->At(i))->GetfRadTsai();
+      radinv += fVecNbOfAtomsPerVolume[i] * ((TGeoElement *)fElements->At(i))->GetfRadTsai() / denom;
    }
-   fRadLen = (radinv <= 0.0 ? DBL_MAX : cm/radinv);
+   fRadLen = (radinv <= 0.0 ? DBL_MAX : 1.0 / radinv);
+   // fRadLen is in TGeo units. Apply conversion factor in requested length-units
+   fRadLen *= (TGeoManager::GetDefaultUnits() == TGeoManager::kRootUnits) ? TGeoUnit::cm : TGeant4Unit::cm;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1303,22 +1322,20 @@ void TGeoMixture::ComputeRadiationLength()
 void TGeoMixture::ComputeNuclearInterLength()
 {
    // Formula taken from G4Material.cxx L567
-   TGeoManager::EDefaultUnits typ = TGeoManager::GetDefaultUnits();
-   const Double_t g   = (typ==TGeoManager::kRootUnits) ? TGeoUnit::g   : TGeant4Unit::g;
-   const Double_t cm  = (typ==TGeoManager::kRootUnits) ? TGeoUnit::cm  : TGeant4Unit::cm;
-   const Double_t amu = (typ==TGeoManager::kRootUnits) ? TGeoUnit::amu : TGeant4Unit::amu;
-   const Double_t lambda0  = 35*g/(cm*cm);
+   constexpr Double_t lambda0 = 35. * TGeoUnit::g / TGeoUnit::cm2; // [g/cm^2]
    const Double_t twothird = 2.0/3.0;
    Double_t NILinv = 0.0;
    for (Int_t i=0; i<fNelements; ++i) {
-      Int_t Z = static_cast<Int_t>(((TGeoElement*)fElements->At(i))->Z()+0.5);
+      Int_t Z = static_cast<Int_t>(((TGeoElement *)fElements->At(i))->Z() + 0.5);
       Double_t A = ((TGeoElement*)fElements->At(i))->Neff();
       if(1 == Z) {
-         NILinv += fVecNbOfAtomsPerVolume[i]*A;
+         NILinv += fVecNbOfAtomsPerVolume[i] * A;
       } else {
-         NILinv += fVecNbOfAtomsPerVolume[i]*TMath::Exp(twothird*TMath::Log(A));
+         NILinv += fVecNbOfAtomsPerVolume[i] * TMath::Exp(twothird * TMath::Log(A));
       }
    }
-   NILinv *= amu/lambda0;
-   fIntLen = (NILinv <= 0.0 ? DBL_MAX : cm/NILinv);
+   NILinv *= TGeoUnit::amu / lambda0;
+   fIntLen = (NILinv <= 0.0 ? DBL_MAX : 1.0 / NILinv);
+   // fIntLen is in TGeo units. Apply conversion factor in requested length-units
+   fIntLen *= (TGeoManager::GetDefaultUnits() == TGeoManager::kRootUnits) ? TGeoUnit::cm : TGeant4Unit::cm;
 }

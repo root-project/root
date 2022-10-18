@@ -93,11 +93,7 @@ public:
 // Iterator of view of linked list.      `1234                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-class TViewPubFunctionsIter : public TIterator,
-                              public std::iterator<std::bidirectional_iterator_tag,
-                                                   TObject*, std::ptrdiff_t,
-                                                    const TObject**, const TObject*&>
-{
+class TViewPubFunctionsIter : public TIterator {
 protected:
    const TList *fView;   //View we are iterating over.
    TIter        fClassIter;    //iterator over the classes
@@ -108,6 +104,13 @@ protected:
    TViewPubFunctionsIter() : fView(0), fClassIter((TCollection *)0), fFuncIter((TCollection *)0), fStarted(kFALSE), fDirection(kIterForward) { }
 
 public:
+   using iterator_category = std::bidirectional_iterator_tag;
+   using value_type = TObject *;
+   using difference_type = std::ptrdiff_t;
+   using pointer = TObject **;
+   using const_pointer = const TObject **;
+   using reference = const TObject *&;
+
    TViewPubFunctionsIter(const TViewPubFunctions *l, Bool_t dir = kIterForward);
    TViewPubFunctionsIter(const TViewPubFunctionsIter &iter);
    ~TViewPubFunctionsIter() { }

@@ -221,15 +221,19 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviation
    return std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode, colRegister);
 }
 
+using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<ROOT::RDF::RDisplay>>;
+
 // Display action
 template <typename... ColTypes, typename PrevNodeType>
-std::unique_ptr<RActionBase> BuildAction(const ColumnNames_t &bl, const std::shared_ptr<RDisplay> &d,
-                                         const unsigned int, std::shared_ptr<PrevNodeType> prevNode,
-                                         ActionTags::Display, const RDFInternal::RColumnRegister &colRegister)
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<displayHelperArgs_t> &helperArgs, const unsigned int,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Display,
+            const RDFInternal::RColumnRegister &colRegister)
 {
    using Helper_t = DisplayHelper<PrevNodeType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
-   return std::make_unique<Action_t>(Helper_t(d, prevNode), bl, prevNode, colRegister);
+   return std::make_unique<Action_t>(Helper_t(helperArgs->first, helperArgs->second, prevNode), bl, prevNode,
+                                     colRegister);
 }
 
 struct SnapshotHelperArgs {
@@ -598,7 +602,6 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const char *
 
    auto actionPtr = BuildAction<ColTypes...>(cols, std::move(*helperArgOnHeap), nSlots, std::move(prevNodePtr),
                                              ActionTag{}, *colRegister);
-   loopManager.AddSampleCallback(actionPtr->GetSampleCallback());
    jittedActionOnHeap->SetAction(std::move(actionPtr));
 
    doDeletes();
@@ -763,6 +766,8 @@ using InnerValueType_t = typename InnerValueType<T>::type;
 std::pair<std::vector<std::string>, std::vector<std::string>>
 AddSizeBranches(const std::vector<std::string> &branches, TTree *tree, std::vector<std::string> &&colsWithoutAliases,
                 std::vector<std::string> &&colsWithAliases);
+
+void RemoveDuplicates(ColumnNames_t &columnNames);
 
 } // namespace RDF
 } // namespace Internal

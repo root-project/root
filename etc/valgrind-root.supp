@@ -1013,6 +1013,14 @@
    fun:_ZN11TBufferFile13ReadStdStringERSs
 }
 
+######## ROOT use-after-delete detection attempts
+
+{
+   Checking if delete taints memory
+   Memcheck:Addr4
+   fun:_ZN4ROOT8Internal*DeleteChangesMemory*
+}
+
 ######## ROOT TObject on heap
 
 {

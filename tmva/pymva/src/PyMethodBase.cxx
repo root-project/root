@@ -19,6 +19,9 @@
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Results.h"
 #include "TMVA/Timer.h"
+#include "TMVA/Tools.h"
+
+#include "TSystem.h"
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
@@ -37,6 +40,23 @@ public:
    ~PyGILRAII() { PyGILState_Release(m_GILState); }
 };
 } // namespace Internal
+
+/// get current Python executable used by ROOT
+TString Python_Executable() {
+   TString python_version = gSystem->GetFromPipe("root-config --python-version");
+   if (python_version.IsNull()) {
+      TMVA::gTools().Log() << kFATAL << "Can't find a valid Python version used to build ROOT" << Endl;
+      return nullptr;
+   }
+   if(python_version[0] == '2')
+      return "python";
+   else if (python_version[0] == '3')
+      return "python3";
+
+   TMVA::gTools().Log() << kFATAL << "Invalid Python version used to build ROOT : " << python_version << Endl;
+   return nullptr;
+}
+
 } // namespace TMVA
 
 ClassImp(PyMethodBase);

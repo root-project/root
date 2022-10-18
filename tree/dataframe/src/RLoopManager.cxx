@@ -643,9 +643,8 @@ void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 {
    // data-block callbacks run before the rest of the graph
    if (fNewSampleNotifier.CheckFlag(slot)) {
-      for (auto &callback : fSampleCallbacks) {
-         callback(slot, fSampleInfos[slot]);
-      }
+      for (auto &callback : fSampleCallbacks)
+         callback.second(slot, fSampleInfos[slot]);
       fNewSampleNotifier.UnsetFlag(slot);
    }
 
@@ -850,12 +849,14 @@ TTree *RLoopManager::GetTree() const
 void RLoopManager::Book(RDFInternal::RActionBase *actionPtr)
 {
    fBookedActions.emplace_back(actionPtr);
+   AddSampleCallback(actionPtr, actionPtr->GetSampleCallback());
 }
 
 void RLoopManager::Deregister(RDFInternal::RActionBase *actionPtr)
 {
    RDFInternal::Erase(actionPtr, fRunActions);
    RDFInternal::Erase(actionPtr, fBookedActions);
+   fSampleCallbacks.erase(actionPtr);
 }
 
 void RLoopManager::Book(RFilterBase *filterPtr)
@@ -891,6 +892,7 @@ void RLoopManager::Book(RDefineBase *ptr)
 void RLoopManager::Deregister(RDefineBase *ptr)
 {
    RDFInternal::Erase(ptr, fBookedDefines);
+   fSampleCallbacks.erase(ptr);
 }
 
 void RLoopManager::Book(RDFInternal::RVariationBase *v)
@@ -994,8 +996,8 @@ void RLoopManager::AddDSValuePtrs(const std::string &col, const std::vector<void
    fDSValuePtrMap[col] = ptrs;
 }
 
-void RLoopManager::AddSampleCallback(SampleCallback_t &&callback)
+void RLoopManager::AddSampleCallback(void *nodePtr, SampleCallback_t &&callback)
 {
    if (callback)
-      fSampleCallbacks.emplace_back(std::move(callback));
+      fSampleCallbacks.insert({nodePtr, std::move(callback)});
 }

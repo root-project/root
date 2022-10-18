@@ -141,10 +141,7 @@ typedef TPair   TAssoc;     // for backward compatibility
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TMapIter : public TIterator,
-                 public std::iterator<std::bidirectional_iterator_tag,
-                                      TObject*, std::ptrdiff_t,
-                                      const TObject**, const TObject*&> {
+class TMapIter : public TIterator {
 
 private:
    const TMap       *fMap;         //map being iterated
@@ -154,6 +151,13 @@ private:
    TMapIter() : fMap(nullptr), fCursor(nullptr), fDirection(kIterForward) { }
 
 public:
+   using iterator_category = std::bidirectional_iterator_tag;
+   using value_type = TObject *;
+   using difference_type = std::ptrdiff_t;
+   using pointer = TObject **;
+   using const_pointer = const TObject **;
+   using reference = const TObject *&;
+
    TMapIter(const TMap *map, Bool_t dir = kIterForward);
    TMapIter(const TMapIter &iter);
    ~TMapIter();

@@ -449,53 +449,54 @@ void readValues(std::map<const std::string, T> &myMap, TH1 *h_pc)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Set up folder ownership over its children, and treat likewise any subfolders. 
-/// @param theFolder: folder to update. Assumed to be a valid pointer 
-void setOwnerRecursive(TFolder* theFolder){
+/// Set up folder ownership over its children, and treat likewise any subfolders.
+/// @param theFolder: folder to update. Assumed to be a valid pointer
+void setOwnerRecursive(TFolder *theFolder)
+{
    theFolder->SetOwner();
    // And also need to set up ownership for nested folders
-   auto subdirs = theFolder->GetListOfFolders(); 
-   for (auto* subdir : *subdirs){
-      auto thisfolder = dynamic_cast<TFolder*>(subdir);  
-      if (thisfolder){
+   auto subdirs = theFolder->GetListOfFolders();
+   for (auto *subdir : *subdirs) {
+      auto thisfolder = dynamic_cast<TFolder *>(subdir);
+      if (thisfolder) {
          // no explicit deletion here, will be handled by parent
-         setOwnerRecursive(thisfolder); 
-      } 
+         setOwnerRecursive(thisfolder);
+      }
    }
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////
-/// Load a TFolder from a file while ensuring it owns its content. 
+/// Load a TFolder from a file while ensuring it owns its content.
 /// This avoids memory leaks. Note that when fetching objects
-/// from this folder, you need to clone them to prevent deletion. 
+/// from this folder, you need to clone them to prevent deletion.
 /// Also recursively updates nested subfolders accordingly
-/// @param inFile: Input file to read - assumed to be a valid pointer 
-/// @param folderName: Name of the folder to read from the file 
-/// @return a unique_ptr to the folder. Nullptr if not found. 
-std::unique_ptr<TFolder> readOwningFolderFromFile(TDirectory* inFile, const std::string & folderName){
+/// @param inFile: Input file to read - assumed to be a valid pointer
+/// @param folderName: Name of the folder to read from the file
+/// @return a unique_ptr to the folder. Nullptr if not found.
+std::unique_ptr<TFolder> readOwningFolderFromFile(TDirectory *inFile, const std::string &folderName)
+{
    std::unique_ptr<TFolder> theFolder(inFile->Get<TFolder>(folderName.c_str()));
    if (!theFolder) {
-      std::cerr << "Error: unable to access data from folder '" << folderName << "' from file '"<<inFile->GetName()<<"'!" << std::endl;
-      return nullptr; 
+      std::cerr << "Error: unable to access data from folder '" << folderName << "' from file '" << inFile->GetName()
+                << "'!" << std::endl;
+      return nullptr;
    }
-   setOwnerRecursive(theFolder.get()); 
-   return theFolder; 
+   setOwnerRecursive(theFolder.get());
+   return theFolder;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Helper to load a single object from a file-resident TFolder, while 
-/// avoiding memory leaks. 
-/// @tparam AObjType Type of object to load. 
-/// @param inFile input file to load from. Expected to be a valid pointer 
-/// @param folderName Name of the TFolder to load from the file 
-/// @param objName Name of the object to load 
+/// Helper to load a single object from a file-resident TFolder, while
+/// avoiding memory leaks.
+/// @tparam AObjType Type of object to load.
+/// @param inFile input file to load from. Expected to be a valid pointer
+/// @param folderName Name of the TFolder to load from the file
+/// @param objName Name of the object to load
 /// @param notFoundError If set, print a detailed error if we didn't find something
-/// @return Returns a pointer to a clone of the loaded object. Ownership assigned to the caller. 
-template <class AObjType> AObjType* loadFromFileResidentFolder(TDirectory* inFile, 
-                                                            const std::string & folderName, 
-                                                            const std::string & objName,
-                                                            bool notFoundError = true)
+/// @return Returns a pointer to a clone of the loaded object. Ownership assigned to the caller.
+template <class AObjType>
+std::unique_ptr<AObjType> loadFromFileResidentFolder(TDirectory *inFile, const std::string &folderName,
+                                                     const std::string &objName, bool notFoundError = true)
 {
    auto folder = readOwningFolderFromFile(inFile, folderName);
    if (!folder) {
@@ -503,23 +504,23 @@ template <class AObjType> AObjType* loadFromFileResidentFolder(TDirectory* inFil
    }
    AObjType *loadedObject = dynamic_cast<AObjType *>(folder->FindObject(objName.c_str()));
    if (!loadedObject) {
-      if (notFoundError){
+      if (notFoundError) {
          std::stringstream errstr;
          errstr << "Error: unable to retrieve object '" << objName << "' from folder '" << folderName
-                  << "'. contents are:";
+                << "'. contents are:";
          TIter next(folder->GetListOfFolders()->begin());
          TFolder *f;
          while ((f = (TFolder *)next())) {
             errstr << " " << f->GetName();
          }
          std::cerr << errstr.str() << std::endl;
-      } 
-      return nullptr; 
+      }
+      return nullptr;
    }
-   // replace the loaded object by a clone, as the loaded folder will delete the original 
-   return static_cast<AObjType *>(loadedObject->Clone()); // can use a static_cast - confirmed validity by initial cast above. 
-}  
-
+   // replace the loaded object by a clone, as the loaded folder will delete the original
+   // can use a static_cast - confirmed validity by initial cast above.
+   return std::unique_ptr<AObjType>{static_cast<AObjType *>(loadedObject->Clone())};
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 /// retrieve a ParamSet from a certain subfolder 'name' of the file
@@ -528,8 +529,8 @@ template <class T>
 void readValues(std::map<const std::string, T> &myMap, TDirectory *file, const std::string &name,
                 const std::string &key = "param_card", bool notFoundError = true)
 {
-   TH1F *h_pc = loadFromFileResidentFolder<TH1F>(file, name, key, notFoundError);
-   readValues(myMap, h_pc);
+   auto h_pc = loadFromFileResidentFolder<TH1F>(file, name, key, notFoundError);
+   readValues(myMap, h_pc.get());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -766,8 +767,9 @@ void collectHistograms(const char *name, TDirectory *file, std::map<std::string,
    bool binningOK = false;
    for (auto sampleit : inputParameters) {
       const std::string sample(sampleit.first);
-      TH1* hist = loadFromFileResidentFolder<TH1>(file, sample, varname, true); 
-      if (!hist) return; 
+      auto hist = loadFromFileResidentFolder<TH1>(file, sample, varname, true);
+      if (!hist)
+         return;
 
       auto it = list_hf.find(sample);
       if (it != list_hf.end()) {
@@ -778,7 +780,7 @@ void collectHistograms(const char *name, TDirectory *file, std::map<std::string,
          // RooLagrangianMorphFunc::setDataHistogram(hist,&var,dh);
          // RooArgSet vars;
          // vars.add(var);
-         // dh->importTH1(vars,*hist,1.,kFALSE);
+         // dh->importTH1(vars,*hist,1.,false);
       } else {
          if (!binningOK) {
             int n = hist->GetNbinsX();
@@ -796,13 +798,15 @@ void collectHistograms(const char *name, TDirectory *file, std::map<std::string,
          RooArgSet vars;
          vars.add(var);
 
-         RooDataHist *dh = new RooDataHist(histname.View(), histname.View(), vars, hist);
+         // TODO: to fix the memory leak of this RooDataHist here, the best
+         // solution will be to follow up with a way for having the RooHistFunc
+         // own the underlying RooDataHist.
+         RooDataHist *dh = new RooDataHist(histname.View(), histname.View(), vars, hist.get());
          // add it to the list
-         RooHistFunc *hf = new RooHistFunc(funcname, funcname, var, *dh);
+         auto hf = std::make_unique<RooHistFunc>(funcname, funcname, var, *dh);
          int idx = physics.getSize();
          list_hf[sample] = idx;
-         physics.add(*hf);
-         assert(hf = static_cast<RooHistFunc *>(physics.at(idx)));
+         physics.addOwned(std::move(hf));
       }
       // std::cout << "found histogram " << hist->GetName() << " with integral "
       // << hist->Integral() << std::endl;
@@ -818,14 +822,14 @@ void collectRooAbsReal(const char * /*name*/, TDirectory *file, std::map<std::st
 {
    for (auto sampleit : inputParameters) {
       const std::string sample(sampleit.first);
-      RooAbsReal* obj = loadFromFileResidentFolder<RooAbsReal>(file,sample,varname,true); 
-      if (!obj) return; 
+      auto obj = loadFromFileResidentFolder<RooAbsReal>(file, sample, varname, true);
+      if (!obj)
+         return;
       auto it = list_hf.find(sample);
       if (it == list_hf.end()) {
          int idx = physics.getSize();
          list_hf[sample] = idx;
-         physics.add(*obj);
-         assert(obj == physics.at(idx));
+         physics.addOwned(std::move(obj));
       }
    }
 }
@@ -840,14 +844,14 @@ void collectCrosssections(const char *name, TDirectory *file, std::map<std::stri
 {
    for (auto sampleit : inputParameters) {
       const std::string sample(sampleit.first);
-      TObject* obj = loadFromFileResidentFolder<TObject>(file, sample, varname,false);
+      auto obj = loadFromFileResidentFolder<TObject>(file, sample, varname, false);
       TParameter<T> *xsection = nullptr;
       TParameter<T> *error = nullptr;
-      TParameter<T> *p = dynamic_cast<TParameter<T> *>(obj);
+      TParameter<T> *p = dynamic_cast<TParameter<T> *>(obj.get());
       if (p) {
          xsection = p;
       }
-      TPair *pair = dynamic_cast<TPair *>(obj);
+      TPair *pair = dynamic_cast<TPair *>(obj.get());
       if (pair) {
          xsection = dynamic_cast<TParameter<T> *>(pair->Key());
          error = dynamic_cast<TParameter<T> *>(pair->Value());
@@ -865,15 +869,17 @@ void collectCrosssections(const char *name, TDirectory *file, std::map<std::stri
          xs->setVal(xsection->GetVal());
       } else {
          std::string objname = Form("phys_%s_%s", name, sample.c_str());
-         xs = new RooRealVar(objname.c_str(), objname.c_str(), xsection->GetVal());
+         auto xsOwner = std::make_unique<RooRealVar>(objname.c_str(), objname.c_str(), xsection->GetVal());
+         xs = xsOwner.get();
          xs->setConstant(true);
          int idx = physics.getSize();
          list_xs[sample] = idx;
-         physics.add(*xs);
+         physics.addOwned(std::move(xsOwner));
          assert(physics.at(idx) == xs);
       }
-      if (error)
+      if (error) {
          xs->setError(error->GetVal());
+      }
    }
 }
 
@@ -885,20 +891,17 @@ void collectCrosssectionsTPair(const char *name, TDirectory *file, std::map<std:
                                RooArgList &physics, const std::string &varname, const std::string &basefolder,
                                const RooLagrangianMorphFunc::ParamMap &inputParameters)
 {
-   TPair* pair = loadFromFileResidentFolder<TPair>(file,basefolder,varname,false); 
-   if (!pair) return; 
-   TParameter<double> *xsec_double = dynamic_cast<TParameter<double> *>(pair->Key());
-   if (xsec_double) {
+   auto pair = loadFromFileResidentFolder<TPair>(file, basefolder, varname, false);
+   if (!pair)
+      return;
+   if (dynamic_cast<TParameter<double> *>(pair->Key())) {
       collectCrosssections<double>(name, file, list_xs, physics, varname, inputParameters);
+   } else if (dynamic_cast<TParameter<float> *>(pair->Key())) {
+      collectCrosssections<float>(name, file, list_xs, physics, varname, inputParameters);
    } else {
-      TParameter<float> *xsec_float = dynamic_cast<TParameter<float> *>(pair->Key());
-      if (xsec_float) {
-         collectCrosssections<float>(name, file, list_xs, physics, varname, inputParameters);
-      } else {
-         std::cerr << "cannot morph objects of class 'TPair' if parameter is not "
-                      "double or float!"
-                   << std::endl;
-      }
+      std::cerr << "cannot morph objects of class 'TPair' if parameter is not "
+                   "double or float!"
+                << std::endl;
    }
 }
 
@@ -1081,11 +1084,10 @@ inline void checkNameConflict(const RooLagrangianMorphFunc::ParamMap &inputParam
 /// build the formulas corresponding to the given set of input files and
 ///  the physics process
 
-template <class List>
-inline FormulaList
-buildFormulas(const char *mfname, const RooLagrangianMorphFunc::ParamMap &inputParameters,
-              const RooLagrangianMorphFunc::FlagMap &inputFlags, const MorphFuncPattern &morphfunc,
-              const RooArgList &couplings, const List &flags, const std::vector<List *> &nonInterfering)
+FormulaList buildFormulas(const char *mfname, const RooLagrangianMorphFunc::ParamMap &inputParameters,
+                          const RooLagrangianMorphFunc::FlagMap &inputFlags, const MorphFuncPattern &morphfunc,
+                          const RooArgList &couplings, const RooArgList &flags,
+                          const std::vector<RooArgList *> &nonInterfering)
 {
    // example vbf hww:
    //                        Operators kSM,  kHww, kAww, kHdwR,kHzz, kAzz
@@ -1221,11 +1223,10 @@ buildFormulas(const char *mfname, const RooLagrangianMorphFunc::ParamMap &inputP
 ////////////////////////////////////////////////////////////////////////////////
 /// create the weight formulas required for the morphing
 
-template <class T>
-inline FormulaList
-createFormulas(const char *name, const RooLagrangianMorphFunc::ParamMap &inputs,
-               const RooLagrangianMorphFunc::FlagMap &inputFlags, const std::vector<std::vector<T *>> &diagrams,
-               RooArgList &couplings, const T &flags, const std::vector<T *> &nonInterfering)
+FormulaList createFormulas(const char *name, const RooLagrangianMorphFunc::ParamMap &inputs,
+                           const RooLagrangianMorphFunc::FlagMap &inputFlags,
+                           const std::vector<std::vector<RooArgList *>> &diagrams, RooArgList &couplings,
+                           const RooArgList &flags, const std::vector<RooArgList *> &nonInterfering)
 {
    MorphFuncPattern morphfuncpattern;
 
@@ -1235,12 +1236,12 @@ createFormulas(const char *name, const RooLagrangianMorphFunc::ParamMap &inputs,
       ::collectPolynomials(morphfuncpattern, d);
    }
    FormulaList retval = buildFormulas(name, inputs, inputFlags, morphfuncpattern, couplings, flags, nonInterfering);
-   if (retval.size() == 0) {
+   if (retval.empty()) {
       std::stringstream errorMsgStream;
       errorMsgStream
          << "no formulas are non-zero, check if any if your couplings is floating and missing from your param_cards!"
          << std::endl;
-   const auto errorMsg = errorMsgStream.str();
+      const auto errorMsg = errorMsgStream.str();
       throw std::runtime_error(errorMsg);
    }
    checkMatrix(inputs, retval);
@@ -1268,13 +1269,13 @@ inline void buildSampleWeights(T1 &weights, const char *fname, const RooLagrangi
 
       int formulaidx = 0;
       // build the formula with the correct normalization
-      RooLinearCombination *sampleformula = new RooLinearCombination(name_full.Data());
+      auto sampleformula = std::make_unique<RooLinearCombination>(name_full.Data());
       for (auto const &formulait : formulas) {
          const RooFit::SuperFloat val(inverse(formulaidx, sampleidx));
          sampleformula->add(val, formulait.second.get());
          formulaidx++;
       }
-      weights.add(*sampleformula);
+      weights.addOwned(std::move(sampleformula));
       sampleidx++;
    }
 }
@@ -1323,12 +1324,12 @@ public:
    double _condition;
 
    CacheElem(){};
-   virtual void operModeHook(RooAbsArg::OperMode) override{};
+   void operModeHook(RooAbsArg::OperMode) override{};
 
    //////////////////////////////////////////////////////////////////////////////
    /// retrieve the list of contained args
 
-   virtual RooArgList containedArgs(Action) override
+   RooArgList containedArgs(Action) override
    {
       RooArgList args(*_sumFunc);
       args.add(_weights);
@@ -1342,21 +1343,23 @@ public:
    //////////////////////////////////////////////////////////////////////////////
    // default destructor
 
-   virtual ~CacheElem() {}
+   ~CacheElem() override {}
 
    //////////////////////////////////////////////////////////////////////////////
    /// create the basic objects required for the morphing
 
    inline void createComponents(const RooLagrangianMorphFunc::ParamMap &inputParameters,
                                 const RooLagrangianMorphFunc::FlagMap &inputFlags, const char *funcname,
-                                const std::vector<std::vector<RooListProxy *>> &diagrams,
-                                const std::vector<RooListProxy *> &nonInterfering, const RooListProxy &flags)
+                                const std::vector<std::vector<RooListProxy *>> &diagramProxyList,
+                                const std::vector<RooArgList *> &nonInterfering, const RooArgList &flags)
    {
       RooArgList operators;
-      // coutD(ObjectHandling) << "collecting couplings" << std::endl;
-      for (const auto &diagram : diagrams) {
-         for (const auto &vertex : diagram) {
-            extractCouplings(*vertex, this->_couplings);
+      std::vector<std::vector<RooArgList *>> diagrams;
+      for (const auto &diagram : diagramProxyList) {
+         diagrams.emplace_back();
+         for (RooArgList *vertex : diagram) {
+            extractCouplings(*vertex, _couplings);
+            diagrams.back().emplace_back(vertex);
          }
       }
       extractOperators(_couplings, operators);
@@ -1370,8 +1373,8 @@ public:
                            const RooLagrangianMorphFunc::FlagMap &inputFlags, const List &flags)
    {
       RooArgList operators;
-      extractOperators(this->_couplings, operators);
-      Matrix matrix(buildMatrixT<Matrix>(inputParameters, this->_formulas, operators, inputFlags, flags));
+      extractOperators(_couplings, operators);
+      Matrix matrix(buildMatrixT<Matrix>(inputParameters, _formulas, operators, inputFlags, flags));
       if (size(matrix) < 1) {
          std::cerr << "input matrix is empty, please provide suitable input samples!" << std::endl;
       }
@@ -1406,7 +1409,7 @@ public:
             bool first = true;
             RooAbsReal *obj;
 
-            for (auto itr : this->_couplings) {
+            for (auto itr : _couplings) {
                obj = dynamic_cast<RooAbsReal *>(itr);
                if (!first)
                   std::cerr << ", ";
@@ -1417,12 +1420,12 @@ public:
          }
       }
 #ifndef USE_UBLAS
-      this->_matrix.ResizeTo(matrix.GetNrows(), matrix.GetNrows());
-      this->_inverse.ResizeTo(matrix.GetNrows(), matrix.GetNrows());
+      _matrix.ResizeTo(matrix.GetNrows(), matrix.GetNrows());
+      _inverse.ResizeTo(matrix.GetNrows(), matrix.GetNrows());
 #endif
-      this->_matrix = matrix;
-      this->_inverse = inverse;
-      this->_condition = condition;
+      _matrix = matrix;
+      _inverse = inverse;
+      _condition = condition;
    }
 
    ////////////////////////////////////////////////////////////////////////////////
@@ -1442,10 +1445,10 @@ public:
       }
 
       RooArgList operators;
-      extractOperators(this->_couplings, operators);
+      extractOperators(_couplings, operators);
 
       // retrieve the weights
-      ::buildSampleWeights(this->_weights, name, inputParameters, this->_formulas, this->_inverse);
+      ::buildSampleWeights(_weights, name, inputParameters, _formulas, _inverse);
 
       // build the products of element and weight for each sample
       size_t i = 0;
@@ -1462,7 +1465,7 @@ public:
             return;
          }
 
-         RooAbsReal *weight = static_cast<RooAbsReal *>(this->_weights.at(i));
+         RooAbsReal *weight = static_cast<RooAbsReal *>(_weights.at(i));
 
          if (!weight) {
             std::cerr << "unable to access weight object for " << prodname << std::endl;
@@ -1473,38 +1476,38 @@ public:
          RooArgList prodElems(*weight, *obj);
 
          allowNegativeYields = true;
-         RooProduct *prod = new RooProduct(prodname, prodname, prodElems);
+         auto prod = std::make_unique<RooProduct>(prodname, prodname, prodElems);
          if (!allowNegativeYields) {
             auto maxname = std::string(prodname) + "_max0";
             RooArgSet prodset(*prod);
 
-            RooFormulaVar *max = new RooFormulaVar(maxname.c_str(), "max(0," + prodname + ")", prodset);
-            sumElements.add(*max);
+            auto max = std::make_unique<RooFormulaVar>(maxname.c_str(), "max(0," + prodname + ")", prodset);
+            max->addOwnedComponents(std::move(prod));
+            sumElements.addOwned(std::move(max));
          } else {
-            sumElements.add(*prod);
+            sumElements.addOwned(std::move(prod));
          }
          scaleElements.add(*(binWidth));
          i++;
       }
 
       // put everything together
-      this->_sumFunc = make_unique<RooRealSumFunc>(Form("%s_morphfunc", name), name, sumElements, scaleElements);
+      _sumFunc = make_unique<RooRealSumFunc>(Form("%s_morphfunc", name), name, sumElements, scaleElements);
 
       if (!observable)
          std::cerr << "unable to access observable" << std::endl;
-      this->_sumFunc.get()->addServer(*observable);
+      _sumFunc.get()->addServer(*observable);
       if (!binWidth)
          std::cerr << "unable to access bin width" << std::endl;
-      this->_sumFunc.get()->addServer(*binWidth);
+      _sumFunc.get()->addServer(*binWidth);
       if (operators.getSize() < 1)
          std::cerr << "no operators listed" << std::endl;
-      this->_sumFunc.get()->addServerList(operators);
-      if (this->_weights.getSize() < 1)
+      _sumFunc.get()->addServerList(operators);
+      if (_weights.getSize() < 1)
          std::cerr << "unable to access weight objects" << std::endl;
-      this->_sumFunc.get()->addOwnedComponents(this->_weights);
-      this->_sumFunc.get()->addOwnedComponents(sumElements);
-      this->_sumFunc.get()->addServerList(sumElements);
-      this->_sumFunc.get()->addServerList(scaleElements);
+      _sumFunc.get()->addOwnedComponents(std::move(sumElements));
+      _sumFunc.get()->addServerList(sumElements);
+      _sumFunc.get()->addServerList(scaleElements);
 
 #ifdef USE_UBLAS
       std::cout.precision(std::numeric_limits<double>::digits);
@@ -1519,11 +1522,12 @@ public:
       RooLagrangianMorphFunc::ParamSet values = getParams(func->_operators);
 
       RooLagrangianMorphFunc::CacheElem *cache = new RooLagrangianMorphFunc::CacheElem();
+
       cache->createComponents(func->_config.paramCards, func->_config.flagValues, func->GetName(), func->_diagrams,
-                              func->_nonInterfering, func->_flags);
+                              {func->_nonInterfering.begin(), func->_nonInterfering.end()}, func->_flags);
 
       cache->buildMatrix(func->_config.paramCards, func->_config.flagValues, func->_flags);
-      if (obsName.size() == 0) {
+      if (obsName.empty()) {
          std::cerr << "Matrix inversion succeeded, but no observable was "
                       "supplied. quitting..."
                    << std::endl;
@@ -1550,8 +1554,9 @@ public:
       RooLagrangianMorphFunc::ParamSet values = getParams(func->_operators);
 
       RooLagrangianMorphFunc::CacheElem *cache = new RooLagrangianMorphFunc::CacheElem();
+
       cache->createComponents(func->_config.paramCards, func->_config.flagValues, func->GetName(), func->_diagrams,
-                              func->_nonInterfering, func->_flags);
+                              {func->_nonInterfering.begin(), func->_nonInterfering.end()}, func->_flags);
 
 #ifndef USE_UBLAS
       cache->_inverse.ResizeTo(inverse.GetNrows(), inverse.GetNrows());
@@ -1611,20 +1616,20 @@ RooRealVar *RooLagrangianMorphFunc::setupObservable(const char *obsname, TClass 
 {
    // cxcoutP(ObjectHandling) << "setting up observable" << std::endl;
    RooRealVar *obs = nullptr;
-   Bool_t obsExists(false);
-   if (this->_observables.at(0) != 0) {
-      obs = (RooRealVar *)this->_observables.at(0);
+   bool obsExists(false);
+   if (_observables.at(0) != 0) {
+      obs = (RooRealVar *)_observables.at(0);
       obsExists = true;
    }
 
    if (mode && mode->InheritsFrom(RooHistFunc::Class())) {
       obs = (RooRealVar *)(dynamic_cast<RooHistFunc *>(inputExample)->getHistObsList().first());
       obsExists = true;
-      this->_observables.add(*obs);
+      _observables.add(*obs);
    } else if (mode && mode->InheritsFrom(RooParamHistFunc::Class())) {
       obs = (RooRealVar *)(dynamic_cast<RooParamHistFunc *>(inputExample)->paramList().first());
       obsExists = true;
-      this->_observables.add(*obs);
+      _observables.add(*obs);
    }
 
    //   Note: "found!" will be printed if s2 is a substring of s1, both s1 and s2
@@ -1633,26 +1638,31 @@ RooRealVar *RooLagrangianMorphFunc::setupObservable(const char *obsname, TClass 
    if (!obsExists) {
       if (mode && mode->InheritsFrom(TH1::Class())) {
          TH1 *hist = (TH1 *)(inputExample);
-         obs = new RooRealVar(obsname, obsname, hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax());
+         auto obsOwner =
+            std::make_unique<RooRealVar>(obsname, obsname, hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax());
+         obs = obsOwner.get();
+         addOwnedComponents(std::move(obsOwner));
          obs->setBins(hist->GetNbinsX());
       } else {
-         obs = new RooRealVar(obsname, obsname, 0, 1);
+         auto obsOwner = std::make_unique<RooRealVar>(obsname, obsname, 0, 1);
+         obs = obsOwner.get();
+         addOwnedComponents(std::move(obsOwner));
          obs->setBins(1);
       }
-      this->_observables.add(*obs);
+      _observables.add(*obs);
    } else {
       if (strcmp(obsname, obs->GetName()) != 0) {
-         coutW(ObjectHandling) << " name of existing observable " << this->_observables.at(0)->GetName()
-                               << " does not match expected name " << obsname << std::endl ;
+         coutW(ObjectHandling) << " name of existing observable " << _observables.at(0)->GetName()
+                               << " does not match expected name " << obsname << std::endl;
       }
    }
 
    TString sbw = Form("binWidth_%s", makeValidName(obs->GetName()).Data());
-   RooRealVar *binWidth = new RooRealVar(sbw.Data(), sbw.Data(), 1.);
+   auto binWidth = std::make_unique<RooRealVar>(sbw.Data(), sbw.Data(), 1.);
    double bw = obs->numBins() / (obs->getMax() - obs->getMin());
    binWidth->setVal(bw);
    binWidth->setConstant(true);
-   this->_binWidths.add(*binWidth);
+   _binWidths.addOwned(std::move(binWidth));
 
    return obs;
 }
@@ -1671,13 +1681,13 @@ inline void RooLagrangianMorphFunc::updateSampleWeights()
    int sampleidx = 0;
    auto cache = this->getCache();
    const size_t n(size(cache->_inverse));
-   for (auto sampleit : this->_config.paramCards) {
+   for (auto sampleit : _config.paramCards) {
       const std::string sample(sampleit.first);
       // build the formula with the correct normalization
       RooLinearCombination *sampleformula = dynamic_cast<RooLinearCombination *>(this->getSampleWeight(sample.c_str()));
       if (!sampleformula) {
-       coutE(ObjectHandling) << Form("unable to access formula for sample '%s'!",sample.c_str()) << std::endl;
-      return;
+         coutE(ObjectHandling) << Form("unable to access formula for sample '%s'!", sample.c_str()) << std::endl;
+         return;
       }
       cxcoutP(ObjectHandling) << "updating formula for sample '" << sample << "'" << std::endl;
       for (size_t formulaidx = 0; formulaidx < n; ++formulaidx) {
@@ -1710,8 +1720,8 @@ inline void RooLagrangianMorphFunc::updateSampleWeights()
 
 void RooLagrangianMorphFunc::readParameters(TDirectory *f)
 {
-   readValues<double>(this->_config.paramCards, f, this->_config.folderNames, "param_card", true);
-   readValues<int>(this->_config.flagValues, f, this->_config.folderNames, "flags", false);
+   readValues<double>(_config.paramCards, f, _config.folderNames, "param_card", true);
+   readValues<int>(_config.flagValues, f, _config.folderNames, "flags", false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1719,32 +1729,33 @@ void RooLagrangianMorphFunc::readParameters(TDirectory *f)
 
 void RooLagrangianMorphFunc::collectInputs(TDirectory *file)
 {
-   std::string obsName = this->_config.observableName;
+   std::string obsName = _config.observableName;
    cxcoutP(InputArguments) << "initializing physics inputs from file " << file->GetName() << " with object name(s) '"
                            << obsName << "'" << std::endl;
-   auto folderNames = this->_config.folderNames;
-   TObject* obj = loadFromFileResidentFolder<TObject>(file, folderNames.front(), obsName, true);
+   auto folderNames = _config.folderNames;
+   auto obj = loadFromFileResidentFolder<TObject>(file, folderNames.front(), obsName, true);
    if (!obj) {
-      std::cerr << "unable to locate object '" << obsName << "' in folder '" << folderNames.front() << "'!" << std::endl;
+      std::cerr << "unable to locate object '" << obsName << "' in folder '" << folderNames.front() << "'!"
+                << std::endl;
       return;
    }
    std::string classname = obj->ClassName();
    TClass *mode = TClass::GetClass(obj->ClassName());
 
-   RooRealVar *observable = this->setupObservable(obsName.c_str(), mode, obj);
+   RooRealVar *observable = this->setupObservable(obsName.c_str(), mode, obj.get());
    if (classname.find("TH1") != std::string::npos) {
       collectHistograms(this->GetName(), file, _sampleMap, _physics, *observable, obsName, _config.paramCards);
    } else if (classname.find("RooHistFunc") != std::string::npos ||
               classname.find("RooParamHistFunc") != std::string::npos ||
               classname.find("PiecewiseInterpolation") != std::string::npos) {
-      collectRooAbsReal(this->GetName(), file, this->_sampleMap, this->_physics, obsName, this->_config.paramCards);
+      collectRooAbsReal(this->GetName(), file, _sampleMap, _physics, obsName, _config.paramCards);
    } else if (classname.find("TParameter<double>") != std::string::npos) {
       collectCrosssections<double>(this->GetName(), file, _sampleMap, _physics, obsName, _config.paramCards);
    } else if (classname.find("TParameter<float>") != std::string::npos) {
       collectCrosssections<float>(this->GetName(), file, _sampleMap, _physics, obsName, _config.paramCards);
    } else if (classname.find("TPair") != std::string::npos) {
-      collectCrosssectionsTPair(this->GetName(), file, this->_sampleMap, this->_physics, obsName, folderNames[0],
-                                this->_config.paramCards);
+      collectCrosssectionsTPair(this->GetName(), file, _sampleMap, _physics, obsName, folderNames[0],
+                                _config.paramCards);
    } else {
       std::cerr << "cannot morph objects of class '" << mode->GetName() << "'!" << std::endl;
    }
@@ -1760,20 +1771,20 @@ void RooLagrangianMorphFunc::addFolders(const RooArgList &folders)
       const std::string sample(var ? var->getVal() : folder->GetName());
       if (sample.empty())
          continue;
-      this->_config.folderNames.push_back(sample);
+      _config.folderNames.push_back(sample);
    }
 
-   TDirectory *file = openFile(this->_config.fileName);
+   TDirectory *file = openFile(_config.fileName);
    TIter next(file->GetList());
    TObject *obj = nullptr;
    while ((obj = (TObject *)next())) {
-      auto f = readOwningFolderFromFile(file,obj->GetName()); 
+      auto f = readOwningFolderFromFile(file, obj->GetName());
       if (!f)
          continue;
-      std::string name(f->GetName()); 
+      std::string name(f->GetName());
       if (name.empty())
          continue;
-      this->_config.folderNames.push_back(name);
+      _config.folderNames.push_back(name);
    }
    closeFile(file);
 }
@@ -1783,7 +1794,7 @@ void RooLagrangianMorphFunc::addFolders(const RooArgList &folders)
 
 void RooLagrangianMorphFunc::printParameters(const char *samplename) const
 {
-   for (const auto &param : this->_config.paramCards.at(samplename)) {
+   for (const auto &param : _config.paramCards.at(samplename)) {
       if (this->hasParameter(param.first.c_str())) {
          std::cout << param.first << " = " << param.second;
          if (this->isParameterConstant(param.first.c_str()))
@@ -1799,7 +1810,7 @@ void RooLagrangianMorphFunc::printParameters(const char *samplename) const
 void RooLagrangianMorphFunc::printSamples() const
 {
    // print all the known samples to the console
-   for (auto folder : this->_config.folderNames) {
+   for (auto folder : _config.folderNames) {
       std::cout << folder << std::endl;
    }
 }
@@ -1809,8 +1820,8 @@ void RooLagrangianMorphFunc::printSamples() const
 
 void RooLagrangianMorphFunc::printPhysics() const
 {
-   for (const auto &sample : this->_sampleMap) {
-      RooAbsArg *phys = this->_physics.at(sample.second);
+   for (const auto &sample : _sampleMap) {
+      RooAbsArg *phys = _physics.at(sample.second);
       if (!phys)
          continue;
       phys->Print();
@@ -1821,10 +1832,9 @@ void RooLagrangianMorphFunc::printPhysics() const
 /// constructor with proper arguments
 
 RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *title, const Config &config)
-   : RooAbsReal(name, title), _cacheMgr(this, 10, kTRUE, kTRUE),
-     _operators("operators", "set of operators", this, kTRUE, kFALSE),
-     _observables("observables", "morphing observables", this, kTRUE, kFALSE),
-     _binWidths("binWidths", "set of binWidth objects", this, kTRUE, kFALSE), _config(config)
+   : RooAbsReal(name, title), _cacheMgr(this, 10, true, true), _physics("physics", "physics", this),
+     _operators("operators", "set of operators", this), _observables("observables", "morphing observables", this),
+     _binWidths("binWidths", "set of binWidth objects", this), _flags("flags", "flags", this), _config(config)
 {
    this->init();
    this->disableInterferences(_config.nonInterfering);
@@ -1838,14 +1848,13 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *tit
 RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *title, const char *filename,
                                                const char *observableName, const RooArgSet &couplings,
                                                const RooArgSet &folders)
-   : RooAbsReal(name, title), _cacheMgr(this, 10, kTRUE, kTRUE),
-     _operators("operators", "set of operators", this, kTRUE, kFALSE),
-     _observables("observables", "morphing observables", this, kTRUE, kFALSE),
-     _binWidths("binWidths", "set of binWidth objects", this, kTRUE, kFALSE)
+   : RooAbsReal(name, title), _cacheMgr(this, 10, true, true), _physics("physics", "physics", this),
+     _operators("operators", "set of operators", this), _observables("observables", "morphing observables", this),
+     _binWidths("binWidths", "set of binWidth objects", this), _flags("flags", "flags", this)
 {
-   this->_config.fileName = filename;
-   this->_config.observableName = observableName;
-   this->_config.couplings.add(couplings);
+   _config.fileName = filename;
+   _config.observableName = observableName;
+   _config.couplings.add(couplings);
    this->addFolders(folders);
    this->init();
    this->setup(false);
@@ -1855,45 +1864,45 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *tit
 
 ////////////////////////////////////////////////////////////////////////////////
 /// setup this instance with the given set of operators and vertices
-/// if own=true, the class will own the operatorsemplate <class Base>
+/// if own=true, the class will own the operators template `<class Base>`
 
 void RooLagrangianMorphFunc::setup(bool own)
 {
    if (_config.couplings.size() > 0) {
       RooArgList operators;
       std::vector<RooListProxy *> vertices;
-      extractOperators(this->_config.couplings, operators);
-      vertices.push_back(new RooListProxy("!couplings", "set of couplings in the vertex", this, kTRUE, kFALSE));
+      extractOperators(_config.couplings, operators);
+      vertices.push_back(new RooListProxy("!couplings", "set of couplings in the vertex", this, true, false));
       if (own) {
-         this->_operators.addOwned(operators);
-         vertices[0]->addOwned(this->_config.couplings);
+         _operators.addOwned(std::move(operators));
+         vertices[0]->addOwned(_config.couplings);
       } else {
-         this->_operators.add(operators);
-         vertices[0]->add(this->_config.couplings);
+         _operators.add(operators);
+         vertices[0]->add(_config.couplings);
       }
-      this->_diagrams.push_back(vertices);
+      _diagrams.push_back(vertices);
    }
 
-   else if (this->_config.prodCouplings.size() > 0 && this->_config.decCouplings.size() > 0) {
+   else if (_config.prodCouplings.size() > 0 && _config.decCouplings.size() > 0) {
       std::vector<RooListProxy *> vertices;
       RooArgList operators;
       cxcoutP(InputArguments) << "prod/dec couplings provided" << std::endl;
-      extractOperators(this->_config.prodCouplings, operators);
-      extractOperators(this->_config.decCouplings, operators);
+      extractOperators(_config.prodCouplings, operators);
+      extractOperators(_config.decCouplings, operators);
       vertices.push_back(
-         new RooListProxy("!production", "set of couplings in the production vertex", this, kTRUE, kFALSE));
-      vertices.push_back(new RooListProxy("!decay", "set of couplings in the decay vertex", this, kTRUE, kFALSE));
+         new RooListProxy("!production", "set of couplings in the production vertex", this, true, false));
+      vertices.push_back(new RooListProxy("!decay", "set of couplings in the decay vertex", this, true, false));
       if (own) {
-         this->_operators.addOwned(operators);
-         vertices[0]->addOwned(this->_config.prodCouplings);
-         vertices[1]->addOwned(this->_config.decCouplings);
+         _operators.addOwned(std::move(operators));
+         vertices[0]->addOwned(_config.prodCouplings);
+         vertices[1]->addOwned(_config.decCouplings);
       } else {
          cxcoutP(InputArguments) << "adding non-own operators" << std::endl;
-         this->_operators.add(operators);
-         vertices[0]->add(this->_config.prodCouplings);
-         vertices[1]->add(this->_config.decCouplings);
+         _operators.add(operators);
+         vertices[0]->add(_config.prodCouplings);
+         vertices[1]->add(_config.decCouplings);
       }
-      this->_diagrams.push_back(vertices);
+      _diagrams.push_back(vertices);
    }
 }
 
@@ -1908,10 +1917,10 @@ void RooLagrangianMorphFunc::disableInterference(const std::vector<const char *>
    for (auto c : nonInterfering) {
       name << c;
    }
-   RooListProxy *p = new RooListProxy(name.str().c_str(), name.str().c_str(), this, kTRUE, kFALSE);
+   auto *p = new RooListProxy(name.str().c_str(), name.str().c_str(), this, true, false);
    this->_nonInterfering.push_back(p);
    for (auto c : nonInterfering) {
-      p->addOwned(*(new RooStringVar(c, c, c)));
+      p->addOwned(std::make_unique<RooStringVar>(c, c, c));
    }
 }
 
@@ -1931,37 +1940,39 @@ void RooLagrangianMorphFunc::disableInterferences(const std::vector<std::vector<
 
 void RooLagrangianMorphFunc::init()
 {
-   std::string filename = this->_config.fileName;
+   std::string filename = _config.fileName;
    TDirectory *file = openFile(filename.c_str());
    if (!file) {
       coutE(InputArguments) << "unable to open file '" << filename << "'!" << std::endl;
       return;
    }
    this->readParameters(file);
-   checkNameConflict(this->_config.paramCards, this->_operators);
+   checkNameConflict(_config.paramCards, _operators);
    this->collectInputs(file);
    closeFile(file);
-   this->addServerList(this->_physics);
    RooRealVar *nNP0 = new RooRealVar("nNP0", "nNP0", 1., 0, 1.);
    nNP0->setStringAttribute("NewPhysics", "0");
    nNP0->setConstant(true);
-   this->_flags.add(*nNP0);
+   _flags.add(*nNP0);
    RooRealVar *nNP1 = new RooRealVar("nNP1", "nNP1", 1., 0, 1.);
    nNP1->setStringAttribute("NewPhysics", "1");
    nNP1->setConstant(true);
-   this->_flags.add(*nNP1);
+   _flags.add(*nNP1);
    RooRealVar *nNP2 = new RooRealVar("nNP2", "nNP2", 1., 0, 1.);
    nNP2->setStringAttribute("NewPhysics", "2");
    nNP2->setConstant(true);
-   this->_flags.add(*nNP2);
+   _flags.add(*nNP2);
    RooRealVar *nNP3 = new RooRealVar("nNP3", "nNP3", 1., 0, 1.);
    nNP3->setStringAttribute("NewPhysics", "3");
    nNP3->setConstant(true);
-   this->_flags.add(*nNP3);
+   _flags.add(*nNP3);
    RooRealVar *nNP4 = new RooRealVar("nNP4", "nNP4", 1., 0, 1.);
    nNP4->setStringAttribute("NewPhysics", "4");
    nNP4->setConstant(true);
-   this->_flags.add(*nNP4);
+   _flags.add(*nNP4);
+   // we can't use `addOwned` before, because the RooListProxy doesn't overload
+   // `addOwned` correctly (it might in the future, then this can be changed).
+   _flags.takeOwnership();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1972,7 +1983,7 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const RooLagrangianMorphFunc &oth
      _physics(other._physics.GetName(), this, other._physics),
      _operators(other._operators.GetName(), this, other._operators),
      _observables(other._observables.GetName(), this, other._observables),
-     _binWidths(other._binWidths.GetName(), this, other._binWidths), _flags(other._flags.GetName(), this, other._flags),
+     _binWidths(other._binWidths.GetName(), this, other._binWidths), _flags{other._flags.GetName(), this, other._flags},
      _config(other._config)
 {
    for (size_t j = 0; j < other._diagrams.size(); ++j) {
@@ -1981,7 +1992,7 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const RooLagrangianMorphFunc &oth
          RooListProxy *list = new RooListProxy(other._diagrams[j][i]->GetName(), this, *(other._diagrams[j][i]));
          diagram.push_back(list);
       }
-      this->_diagrams.push_back(diagram);
+      _diagrams.push_back(diagram);
    }
    TRACE_CREATE
 }
@@ -1991,7 +2002,7 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const RooLagrangianMorphFunc &oth
 
 void RooLagrangianMorphFunc::setScale(double val)
 {
-   this->_scale = val;
+   _scale = val;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1999,16 +2010,16 @@ void RooLagrangianMorphFunc::setScale(double val)
 
 double RooLagrangianMorphFunc::getScale()
 {
-   return this->_scale;
+   return _scale;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // default constructor
 
 RooLagrangianMorphFunc::RooLagrangianMorphFunc()
-   : _cacheMgr(this, 10, true, true), _operators("operators", "set of operators", this, kTRUE, kFALSE),
-     _observables("observable", "morphing observable", this, kTRUE, kFALSE),
-     _binWidths("binWidths", "set of bin width objects", this, kTRUE, kFALSE)
+   : _cacheMgr(this, 10, true, true), _operators("operators", "set of operators", this, true, false),
+     _observables("observable", "morphing observable", this, true, false),
+     _binWidths("binWidths", "set of bin width objects", this, true, false)
 {
    static int counter(0);
    counter++;
@@ -2018,7 +2029,18 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc()
 ////////////////////////////////////////////////////////////////////////////////
 /// default destructor
 
-RooLagrangianMorphFunc::~RooLagrangianMorphFunc(){TRACE_DESTROY}
+RooLagrangianMorphFunc::~RooLagrangianMorphFunc()
+{
+   for (auto const &diagram : _diagrams) {
+      for (RooListProxy *vertex : diagram) {
+         delete vertex;
+      }
+   }
+   for (RooListProxy *l : _nonInterfering) {
+      delete l;
+   }
+   TRACE_DESTROY
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// cloning method
@@ -2087,10 +2109,11 @@ RooLagrangianMorphFunc::createWeightStrings(const RooLagrangianMorphFunc::ParamM
       ownedVertices.emplace();
       auto &vertex = ownedVertices.top();
       for (const auto &c : vtx) {
-         RooRealVar *coupling = (RooRealVar *)(couplings.find(c.c_str()));
+         auto coupling = static_cast<RooRealVar *>(couplings.find(c.c_str()));
          if (!coupling) {
-            coupling = new RooRealVar(c.c_str(), c.c_str(), 1., 0., 10.);
-            couplings.add(*coupling);
+            auto couplingOwner = std::make_unique<RooRealVar>(c.c_str(), c.c_str(), 1., 0., 10.);
+            coupling = couplingOwner.get();
+            couplings.addOwned(std::move(couplingOwner));
          }
          vertex.add(*coupling);
       }
@@ -2199,7 +2222,7 @@ RooProduct *RooLagrangianMorphFunc::getSumElement(const char *name) const
 
 std::vector<std::string> RooLagrangianMorphFunc::getSamples() const
 {
-   return this->_config.folderNames;
+   return _config.folderNames;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2261,7 +2284,7 @@ bool RooLagrangianMorphFunc::updateCoefficients()
 {
    auto cache = this->getCache();
 
-   std::string filename = this->_config.fileName;
+   std::string filename = _config.fileName;
    TDirectory *file = openFile(filename.c_str());
    if (!file) {
       coutE(InputArguments) << "unable to open file '" << filename << "'!" << std::endl;
@@ -2270,10 +2293,10 @@ bool RooLagrangianMorphFunc::updateCoefficients()
 
    this->readParameters(file);
 
-   checkNameConflict(this->_config.paramCards, this->_operators);
+   checkNameConflict(_config.paramCards, _operators);
    this->collectInputs(file);
 
-   cache->buildMatrix(this->_config.paramCards, this->_config.flagValues, this->_flags);
+   cache->buildMatrix(_config.paramCards, _config.flagValues, _flags);
    this->updateSampleWeights();
 
    closeFile(file);
@@ -2289,7 +2312,7 @@ bool RooLagrangianMorphFunc::useCoefficients(const TMatrixD &inverse)
    auto cache = static_cast<RooLagrangianMorphFunc::CacheElem *>(_cacheMgr.getObj(0, (RooArgSet *)0));
    Matrix m = makeSuperMatrix(inverse);
    if (cache) {
-      std::string filename = this->_config.fileName;
+      std::string filename = _config.fileName;
       cache->_inverse = m;
       TDirectory *file = openFile(filename.c_str());
       if (!file) {
@@ -2298,7 +2321,7 @@ bool RooLagrangianMorphFunc::useCoefficients(const TMatrixD &inverse)
       }
 
       this->readParameters(file);
-      checkNameConflict(this->_config.paramCards, this->_operators);
+      checkNameConflict(_config.paramCards, _operators);
       this->collectInputs(file);
 
       // then, update the weights in the morphing function
@@ -2309,7 +2332,7 @@ bool RooLagrangianMorphFunc::useCoefficients(const TMatrixD &inverse)
       cache = RooLagrangianMorphFunc::CacheElem::createCache(this, m);
       if (!cache)
          coutE(Caching) << "unable to create cache!" << std::endl;
-      this->_cacheMgr.setObj(0, 0, cache, 0);
+      _cacheMgr.setObj(0, 0, cache, 0);
    }
    return true;
 }
@@ -2351,7 +2374,7 @@ typename RooLagrangianMorphFunc::CacheElem *RooLagrangianMorphFunc::getCache() c
    auto cache = static_cast<RooLagrangianMorphFunc::CacheElem *>(_cacheMgr.getObj(0, (RooArgSet *)0));
    if (!cache) {
       cxcoutP(Caching) << "creating cache from getCache function for " << this << std::endl;
-      cxcoutP(Caching) << "current storage has size " << this->_sampleMap.size() << std::endl;
+      cxcoutP(Caching) << "current storage has size " << _sampleMap.size() << std::endl;
       cache = RooLagrangianMorphFunc::CacheElem::createCache(this);
       if (cache)
          _cacheMgr.setObj(nullptr, nullptr, cache, nullptr);
@@ -2366,7 +2389,7 @@ typename RooLagrangianMorphFunc::CacheElem *RooLagrangianMorphFunc::getCache() c
 
 bool RooLagrangianMorphFunc::hasCache() const
 {
-   return (bool)(_cacheMgr.getObj(nullptr, static_cast<RooArgSet*>(nullptr)));
+   return (bool)(_cacheMgr.getObj(nullptr, static_cast<RooArgSet *>(nullptr)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2444,7 +2467,7 @@ bool RooLagrangianMorphFunc::isParameterConstant(const char *name) const
 RooRealVar *RooLagrangianMorphFunc::getParameter(const char *name) const
 {
 
-   return dynamic_cast<RooRealVar *>(this->_operators.find(name));
+   return dynamic_cast<RooRealVar *>(_operators.find(name));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2452,7 +2475,7 @@ RooRealVar *RooLagrangianMorphFunc::getParameter(const char *name) const
 
 RooRealVar *RooLagrangianMorphFunc::getFlag(const char *name) const
 {
-   return dynamic_cast<RooRealVar *>(this->_flags.find(name));
+   return dynamic_cast<RooRealVar *>(_flags.find(name));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2493,7 +2516,7 @@ double RooLagrangianMorphFunc::getParameterValue(const char *name) const
 
 void RooLagrangianMorphFunc::setParameters(TH1 *paramhist)
 {
-   setParams(paramhist, this->_operators, false);
+   setParams(paramhist, _operators, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2502,10 +2525,10 @@ void RooLagrangianMorphFunc::setParameters(TH1 *paramhist)
 
 void RooLagrangianMorphFunc::setParameters(const char *foldername)
 {
-   std::string filename = this->_config.fileName;
+   std::string filename = _config.fileName;
    TDirectory *file = openFile(filename.c_str());
-   TH1 *paramhist = loadFromFileResidentFolder<TH1>(file, foldername,"param_card");
-   setParams(paramhist, this->_operators, false);
+   auto paramhist = loadFromFileResidentFolder<TH1>(file, foldername, "param_card");
+   setParams(paramhist.get(), _operators, false);
    closeFile(file);
 }
 
@@ -2516,7 +2539,7 @@ void RooLagrangianMorphFunc::setParameters(const char *foldername)
 RooLagrangianMorphFunc::ParamSet RooLagrangianMorphFunc::getMorphParameters(const char *foldername) const
 {
    const std::string name(foldername);
-   return this->_config.paramCards.at(name);
+   return _config.paramCards.at(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2538,11 +2561,11 @@ void RooLagrangianMorphFunc::setParameters(const RooArgList *list)
 
 RooRealVar *RooLagrangianMorphFunc::getObservable() const
 {
-   if (this->_observables.getSize() < 1) {
+   if (_observables.getSize() < 1) {
       coutE(InputArguments) << "observable not available!" << std::endl;
       return nullptr;
    }
-   return static_cast<RooRealVar *>(this->_observables.at(0));
+   return static_cast<RooRealVar *>(_observables.at(0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2550,11 +2573,11 @@ RooRealVar *RooLagrangianMorphFunc::getObservable() const
 
 RooRealVar *RooLagrangianMorphFunc::getBinWidth() const
 {
-   if (this->_binWidths.getSize() < 1) {
+   if (_binWidths.getSize() < 1) {
       coutE(InputArguments) << "bin width not available!" << std::endl;
       return nullptr;
    }
-   return static_cast<RooRealVar *>(this->_binWidths.at(0));
+   return static_cast<RooRealVar *>(_binWidths.at(0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2635,7 +2658,7 @@ bool RooLagrangianMorphFunc::isParameterUsed(const char *paramname) const
    std::string pname(paramname);
    double val = 0;
    bool isUsed = false;
-   for (const auto &sample : this->_config.paramCards) {
+   for (const auto &sample : _config.paramCards) {
       double thisval = sample.second.at(pname);
       if (thisval != val) {
          if (val != 0)
@@ -2661,7 +2684,7 @@ bool RooLagrangianMorphFunc::isCouplingUsed(const char *couplname)
    RooLagrangianMorphFunc::ParamSet params = this->getMorphParameters();
    double val = 0;
    bool isUsed = false;
-   for (const auto &sample : this->_config.paramCards) {
+   for (const auto &sample : _config.paramCards) {
       this->setParameters(sample.second);
       double thisval = coupling->getVal();
       if (thisval != val) {
@@ -2725,7 +2748,7 @@ void RooLagrangianMorphFunc::printEvaluation() const
 
 const RooArgSet *RooLagrangianMorphFunc::getParameterSet() const
 {
-   return &(this->_operators);
+   return &(_operators);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2759,7 +2782,7 @@ RooLagrangianMorphFunc::ParamSet RooLagrangianMorphFunc::getCouplings() const
 
 RooLagrangianMorphFunc::ParamSet RooLagrangianMorphFunc::getMorphParameters() const
 {
-   return getParams(this->_operators);
+   return getParams(_operators);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2767,7 +2790,7 @@ RooLagrangianMorphFunc::ParamSet RooLagrangianMorphFunc::getMorphParameters() co
 
 void RooLagrangianMorphFunc::setParameters(const ParamSet &params)
 {
-   setParams(params, this->_operators, false);
+   setParams(params, _operators, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2803,7 +2826,7 @@ RooAbsPdf::ExtendMode RooLagrangianMorphFunc::extendMode() const
 /// return expected number of events for extended likelihood calculation,
 /// this is the sum of all coefficients
 
-Double_t RooLagrangianMorphFunc::expectedEvents(const RooArgSet *nset) const
+double RooLagrangianMorphFunc::expectedEvents(const RooArgSet *nset) const
 {
    return this->createPdf()->expectedEvents(nset);
 }
@@ -2811,7 +2834,7 @@ Double_t RooLagrangianMorphFunc::expectedEvents(const RooArgSet *nset) const
 ////////////////////////////////////////////////////////////////////////////////
 /// return the number of expected events for the current parameter set
 
-Double_t RooLagrangianMorphFunc::expectedEvents() const
+double RooLagrangianMorphFunc::expectedEvents() const
 {
    RooArgSet set;
    set.add(*this->getObservable());
@@ -2822,7 +2845,7 @@ Double_t RooLagrangianMorphFunc::expectedEvents() const
 /// return expected number of events for extended likelihood calculation,
 /// this is the sum of all coefficients
 
-Double_t RooLagrangianMorphFunc::expectedEvents(const RooArgSet &nset) const
+double RooLagrangianMorphFunc::expectedEvents(const RooArgSet &nset) const
 {
    return createPdf()->expectedEvents(&nset);
 }
@@ -2835,8 +2858,8 @@ double RooLagrangianMorphFunc::expectedUncertainty() const
    RooRealVar *observable = this->getObservable();
    auto cache = this->getCache();
    double unc2 = 0;
-   for (const auto &sample : this->_sampleMap) {
-      RooAbsArg *phys = this->_physics.at(sample.second);
+   for (const auto &sample : _sampleMap) {
+      RooAbsArg *phys = _physics.at(sample.second);
       auto weightName = std::string("w_") + sample.first + "_" + this->GetName();
       auto weight = static_cast<RooAbsReal *>(cache->_weights.find(weightName.c_str()));
       if (!weight) {
@@ -2870,7 +2893,7 @@ double RooLagrangianMorphFunc::expectedUncertainty() const
 void RooLagrangianMorphFunc::printParameters() const
 {
    // print the parameters and their current values
-   for (auto obj : this->_operators) {
+   for (auto obj : _operators) {
       RooRealVar *param = static_cast<RooRealVar *>(obj);
       if (!param)
          continue;
@@ -2883,7 +2906,7 @@ void RooLagrangianMorphFunc::printParameters() const
 
 void RooLagrangianMorphFunc::printFlags() const
 {
-   for (auto flag : this->_flags) {
+   for (auto flag : _flags) {
       RooRealVar *param = static_cast<RooRealVar *>(flag);
       if (!param)
          continue;
@@ -2905,7 +2928,7 @@ void RooLagrangianMorphFunc::printCouplings() const
 ////////////////////////////////////////////////////////////////////////////////
 /// retrieve the list of bin boundaries
 
-std::list<Double_t> *RooLagrangianMorphFunc::binBoundaries(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const
+std::list<double> *RooLagrangianMorphFunc::binBoundaries(RooAbsRealLValue &obs, double xlo, double xhi) const
 {
    return this->getFunc()->binBoundaries(obs, xlo, xhi);
 }
@@ -2913,7 +2936,7 @@ std::list<Double_t> *RooLagrangianMorphFunc::binBoundaries(RooAbsRealLValue &obs
 ////////////////////////////////////////////////////////////////////////////////
 /// retrieve the sample Hint
 
-std::list<Double_t> *RooLagrangianMorphFunc::plotSamplingHint(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const
+std::list<double> *RooLagrangianMorphFunc::plotSamplingHint(RooAbsRealLValue &obs, double xlo, double xhi) const
 {
    return this->getFunc()->plotSamplingHint(obs, xlo, xhi);
 }
@@ -2935,7 +2958,7 @@ double RooLagrangianMorphFunc::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// check if this PDF is a binned distribution in the given observable
 
-Bool_t RooLagrangianMorphFunc::isBinnedDistribution(const RooArgSet &obs) const
+bool RooLagrangianMorphFunc::isBinnedDistribution(const RooArgSet &obs) const
 {
    return this->getFunc()->isBinnedDistribution(obs);
 }
@@ -2943,7 +2966,7 @@ Bool_t RooLagrangianMorphFunc::isBinnedDistribution(const RooArgSet &obs) const
 ////////////////////////////////////////////////////////////////////////////////
 /// check if observable exists in the RooArgSet (-?-)
 
-Bool_t RooLagrangianMorphFunc::checkObservables(const RooArgSet *nset) const
+bool RooLagrangianMorphFunc::checkObservables(const RooArgSet *nset) const
 {
    return this->getFunc()->checkObservables(nset);
 }
@@ -2951,7 +2974,7 @@ Bool_t RooLagrangianMorphFunc::checkObservables(const RooArgSet *nset) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Force analytical integration for the given observable
 
-Bool_t RooLagrangianMorphFunc::forceAnalyticalInt(const RooAbsArg &arg) const
+bool RooLagrangianMorphFunc::forceAnalyticalInt(const RooAbsArg &arg) const
 {
    return this->getFunc()->forceAnalyticalInt(arg);
 }
@@ -2968,7 +2991,7 @@ Int_t RooLagrangianMorphFunc::getAnalyticalIntegralWN(RooArgSet &allVars, RooArg
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve the matrix of coefficients
 
-Double_t RooLagrangianMorphFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName) const
+double RooLagrangianMorphFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName) const
 {
    return this->getFunc()->analyticalIntegralWN(code, normSet, rangeName);
 }

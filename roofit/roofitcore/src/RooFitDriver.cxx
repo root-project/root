@@ -96,8 +96,6 @@ struct NodeInfo {
          RooBatchCompute::dispatchCUDA->deleteCudaEvent(eventStart);
       if (stream)
          RooBatchCompute::dispatchCUDA->deleteCudaStream(stream);
-
-      absArg->setDataToken(originalDataToken);
    }
 };
 
@@ -186,9 +184,23 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooArgSet const &normSet, 
 }
 
 void RooFitDriver::setData(RooAbsData const &data, std::string_view rangeName,
-                           RooAbsCategory const *indexCatForSplitting)
+                           RooAbsCategory const *indexCatForSplitting, bool skipZeroWeights,
+                           bool takeGlobalObservablesFromData)
 {
-   setData(RooFit::BatchModeDataHelpers::getDataSpans(data, rangeName, indexCatForSplitting, _vectorBuffers));
+
+   std::stack<std::vector<double>>{}.swap(_vectorBuffers);
+   DataSpansMap dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(data, rangeName, indexCatForSplitting,
+                                                                       _vectorBuffers, skipZeroWeights);
+   if (takeGlobalObservablesFromData && data.getGlobalObservables()) {
+      _vectorBuffers.emplace();
+      auto &buffer = _vectorBuffers.top();
+      buffer.reserve(data.getGlobalObservables()->size());
+      for (auto *arg : static_range_cast<RooRealVar const *>(*data.getGlobalObservables())) {
+         buffer.push_back(arg->getVal());
+         dataSpans[arg] = RooSpan<const double>{&buffer.back(), 1};
+      }
+   }
+   setData(dataSpans);
 }
 
 void RooFitDriver::setData(DataSpansMap const &dataSpans)
@@ -198,6 +210,10 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
    // map and set the node info accordingly.
    std::size_t totalSize = 0;
    for (auto &info : _nodes) {
+      if (info.buffer) {
+         delete info.buffer;
+         info.buffer = nullptr;
+      }
       auto found = dataSpans.find(info.absArg->namePtr());
       if (found != dataSpans.end()) {
          _dataMapCPU.at(info.absArg) = found->second;
@@ -205,6 +221,10 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
          info.fromDataset = true;
          info.isDirty = false;
          totalSize += info.outputSize;
+      } else {
+         info.outputSize = 1;
+         info.fromDataset = false;
+         info.isDirty = true;
       }
    }
 
@@ -245,6 +265,10 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
 
 RooFitDriver::~RooFitDriver()
 {
+   for (auto &info : _nodes) {
+      info.absArg->setDataToken(info.originalDataToken);
+   }
+
    if (_batchMode == RooFit::BatchModeOption::Cuda) {
       RooBatchCompute::dispatchCUDA->cudaFree(_cudaMemDataset);
    }

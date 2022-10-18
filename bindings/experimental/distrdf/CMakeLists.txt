@@ -14,15 +14,21 @@ file(COPY ${DistRDFDir} DESTINATION ${localruntimedir})
 set(py_sources
   DistRDF/__init__.py
   DistRDF/ComputationGraphGenerator.py
+  DistRDF/CppWorkflow.py
   DistRDF/DataFrame.py
+  DistRDF/HeadNode.py
   DistRDF/Node.py
   DistRDF/Operation.py
   DistRDF/Proxy.py
+  DistRDF/PythonMergeables.py
+  DistRDF/Ranges.py
   DistRDF/Backends/__init__.py
   DistRDF/Backends/Base.py
   DistRDF/Backends/Utils.py
   DistRDF/Backends/Spark/__init__.py
   DistRDF/Backends/Spark/Backend.py
+  DistRDF/Backends/Dask/__init__.py
+  DistRDF/Backends/Dask/Backend.py
 )
 
 # Compile .py files

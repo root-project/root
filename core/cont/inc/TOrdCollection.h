@@ -93,10 +93,7 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TOrdCollectionIter : public TIterator,
-                           public std::iterator<std::bidirectional_iterator_tag,
-                                                TObject*, std::ptrdiff_t,
-                                                const TObject**, const TObject*&> {
+class TOrdCollectionIter : public TIterator {
 
 private:
    const TOrdCollection  *fCol;       //collection being iterated
@@ -107,6 +104,13 @@ private:
    TOrdCollectionIter() : fCol(nullptr), fCurCursor(0), fCursor(0), fDirection(kIterForward) { }
 
 public:
+   using iterator_category = std::bidirectional_iterator_tag;
+   using value_type = TObject *;
+   using difference_type = std::ptrdiff_t;
+   using pointer = TObject **;
+   using const_pointer = const TObject **;
+   using reference = const TObject *&;
+
    TOrdCollectionIter(const TOrdCollection *col, Bool_t dir = kIterForward);
    TOrdCollectionIter(const TOrdCollectionIter &iter);
    ~TOrdCollectionIter() { }
@@ -122,7 +126,6 @@ public:
 
    ClassDef(TOrdCollectionIter,0)  //Ordered collection iterator
 };
-
 
 //---- inlines -----------------------------------------------------------------
 

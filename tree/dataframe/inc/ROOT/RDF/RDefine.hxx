@@ -108,10 +108,12 @@ public:
       : RDefineBase(name, type, colRegister, lm, columns, variationName), fExpression(std::move(expression)),
         fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<ret_type>()), fValues(lm.GetNSlots())
    {
+      fLoopManager->Book(this);
    }
 
    RDefine(const RDefine &) = delete;
    RDefine &operator=(const RDefine &) = delete;
+   ~RDefine() { fLoopManager->Deregister(this); }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {

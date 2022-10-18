@@ -295,7 +295,6 @@ public:
       using F_t = RDFDetail::RFilter<F, Proxied>;
 
       auto filterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, fProxiedPtr, fColRegister, name);
-      fLoopManager->Book(filterPtr.get());
       return RInterface<F_t, DS_t>(std::move(filterPtr), *fLoopManager, fColRegister, fDataSource);
    }
 
@@ -354,7 +353,6 @@ public:
          RDFInternal::BookFilterJit(upcastNodeOnHeap, name, expression, fLoopManager->GetBranchNames(), fColRegister,
                                     fLoopManager->GetTree(), fDataSource);
 
-      fLoopManager->Book(jittedFilter.get());
       return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), *fLoopManager, fColRegister,
                                                         fDataSource);
    }
@@ -477,7 +475,6 @@ public:
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       auto jittedDefine = RDFInternal::BookDefineJit(name, expression, *fLoopManager, fDataSource, fColRegister,
                                                      fLoopManager->GetBranchNames(), upcastNodeOnHeap);
-      fLoopManager->Book(jittedDefine.get());
 
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddColumn(jittedDefine);
@@ -568,7 +565,6 @@ public:
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       auto jittedDefine = RDFInternal::BookDefineJit(name, expression, *fLoopManager, fDataSource, fColRegister,
                                                      fLoopManager->GetBranchNames(), upcastNodeOnHeap);
-      fLoopManager->Book(jittedDefine.get());
 
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddColumn(jittedDefine);
@@ -622,11 +618,6 @@ public:
       auto newColumn =
          std::make_shared<RDFDetail::RDefinePerSample<F>>(name, retTypeName, std::move(expression), *fLoopManager);
 
-      auto updateDefinePerSample = [newColumn](unsigned int slot, const ROOT::RDF::RSampleInfo &id) {
-         newColumn->Update(slot, id);
-      };
-      fLoopManager->AddSampleCallback(std::move(updateDefinePerSample));
-
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddColumn(std::move(newColumn));
       RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
@@ -674,10 +665,6 @@ public:
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       auto jittedDefine =
          RDFInternal::BookDefinePerSampleJit(name, expression, *fLoopManager, fColRegister, upcastNodeOnHeap);
-      auto updateDefinePerSample = [jittedDefine](unsigned int slot, const ROOT::RDF::RSampleInfo &id) {
-         jittedDefine->Update(slot, id);
-      };
-      fLoopManager->AddSampleCallback(std::move(updateDefinePerSample));
 
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddColumn(jittedDefine);
@@ -845,7 +832,6 @@ public:
       auto variation = std::make_shared<RDFInternal::RVariation<F_t>>(
          colNames, variationName, std::forward<F>(expression), variationTags, retTypeName, fColRegister, *fLoopManager,
          validColumnNames);
-      fLoopManager->Book(variation.get());
 
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddVariation(variation);
@@ -990,7 +976,6 @@ public:
       auto jittedVariation =
          RDFInternal::BookVariationJit(colNames, variationName, variationTags, expression, *fLoopManager, fDataSource,
                                        fColRegister, fLoopManager->GetBranchNames(), upcastNodeOnHeap);
-      fLoopManager->Book(jittedVariation.get());
 
       RDFInternal::RColumnRegister newColRegister(fColRegister);
       newColRegister.AddVariation(std::move(jittedVariation));
@@ -1183,10 +1168,9 @@ public:
       columnNames.insert(columnNames.end(), treeBranchNames.begin(), treeBranchNames.end());
       columnNames.insert(columnNames.end(), dsColumnsWithoutSizeColumns.begin(), dsColumnsWithoutSizeColumns.end());
 
-      // De-duplicate column names. Currently the only way this can happen is if a column coming from a tree or
-      // data-source is Redefine'd.
-      std::set<std::string> uniqueCols(columnNames.begin(), columnNames.end());
-      columnNames.assign(uniqueCols.begin(), uniqueCols.end());
+      // The only way we can get duplicate entries is if a column coming from a tree or data-source is Redefine'd.
+      // RemoveDuplicates should preserve ordering of the columns: it might be meaningful.
+      RDFInternal::RemoveDuplicates(columnNames);
 
       const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Snapshot");
       return Snapshot(treename, filename, selectedColumns, options);
@@ -1369,7 +1353,6 @@ public:
 
       using Range_t = RDFDetail::RRange<Proxied>;
       auto rangePtr = std::make_shared<Range_t>(begin, end, stride, fProxiedPtr);
-      fLoopManager->Book(rangePtr.get());
       RInterface<RDFDetail::RRange<Proxied>, DS_t> tdf_r(std::move(rangePtr), *fLoopManager, fColRegister, fDataSource);
       return tdf_r;
    }
@@ -1444,7 +1427,6 @@ public:
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
 
       auto action = std::make_unique<Action_t>(Helper_t(std::move(f)), validColumnNames, fProxiedPtr, fColRegister);
-      fLoopManager->Book(action.get());
 
       fLoopManager->Run();
    }
@@ -1529,7 +1511,6 @@ public:
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
       auto action = std::make_unique<Action_t>(Helper_t(cSPtr, nSlots), ColumnNames_t({}), fProxiedPtr,
                                                RDFInternal::RColumnRegister(fColRegister));
-      fLoopManager->Book(action.get());
       return MakeResultPtr(cSPtr, *fLoopManager, std::move(action));
    }
 
@@ -1568,7 +1549,6 @@ public:
 
       auto action =
          std::make_unique<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, fProxiedPtr, fColRegister);
-      fLoopManager->Book(action.get());
       return MakeResultPtr(valuesPtr, *fLoopManager, std::move(action));
    }
 
@@ -2550,7 +2530,6 @@ public:
       auto action = std::make_unique<Action_t>(Helper_t(rep, fProxiedPtr, returnEmptyReport), ColumnNames_t({}),
                                                fProxiedPtr, RDFInternal::RColumnRegister(fColRegister));
 
-      fLoopManager->Book(action.get());
       return MakeResultPtr(rep, *fLoopManager, std::move(action));
    }
 
@@ -2899,7 +2878,6 @@ public:
       auto action = std::make_unique<Action_t>(
          Helper_t(std::move(aggregator), std::move(merger), accObjPtr, fLoopManager->GetNSlots()), validColumnNames,
          fProxiedPtr, fColRegister);
-      fLoopManager->Book(action.get());
       return MakeResultPtr(accObjPtr, *fLoopManager, std::move(action));
    }
 
@@ -3016,15 +2994,16 @@ public:
    /// d2->Print();
    /// ~~~
    template <typename... ColumnTypes>
-   RResultPtr<RDisplay>
-   Display(const ColumnNames_t &columnList, int nRows = 5, size_t nMaxCollectionElements = 10)
+   RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, size_t nRows = 5, size_t nMaxCollectionElements = 10)
    {
       CheckIMTDisabled("Display");  
       auto newCols = columnList;
       newCols.insert(newCols.begin(), "rdfentry_"); // Artificially insert first column
-      auto displayer = std::make_shared<RDFInternal::RDisplay>(newCols, GetColumnTypeNamesList(newCols), nRows, nMaxCollectionElements);
+      auto displayer = std::make_shared<RDisplay>(newCols, GetColumnTypeNamesList(newCols), nMaxCollectionElements);
+      using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<RDisplay>>;
       // Need to add ULong64_t type corresponding to the first column rdfentry_
-      return CreateAction<RDFInternal::ActionTags::Display, ULong64_t, ColumnTypes...>(newCols, displayer, displayer);
+      return CreateAction<RDFInternal::ActionTags::Display, ULong64_t, ColumnTypes...>(
+         std::move(newCols), displayer, std::make_shared<displayHelperArgs_t>(nRows, displayer));
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -3038,15 +3017,15 @@ public:
    /// See the previous overloads for further details.
    ///
    /// Invoked when no types are specified to Display
-   RResultPtr<RDisplay>
-   Display(const ColumnNames_t &columnList, int nRows = 5, size_t nMaxCollectionElements = 10)
+   RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, size_t nRows = 5, size_t nMaxCollectionElements = 10)
    {
       CheckIMTDisabled("Display");
       auto newCols = columnList;
       newCols.insert(newCols.begin(), "rdfentry_"); // Artificially insert first column
-      auto displayer = std::make_shared<RDFInternal::RDisplay>(newCols, GetColumnTypeNamesList(newCols), nRows, nMaxCollectionElements);
-      return CreateAction<RDFInternal::ActionTags::Display, RDFDetail::RInferredType>(newCols, displayer, displayer,
-                                                                                      newCols.size());
+      auto displayer = std::make_shared<RDisplay>(newCols, GetColumnTypeNamesList(newCols), nMaxCollectionElements);
+      using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<RDisplay>>;
+      return CreateAction<RDFInternal::ActionTags::Display, RDFDetail::RInferredType>(
+         std::move(newCols), displayer, std::make_shared<displayHelperArgs_t>(nRows, displayer), columnList.size() + 1);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -3060,7 +3039,7 @@ public:
    /// is empty, all columns are selected.
    /// See the previous overloads for further details.
    RResultPtr<RDisplay>
-   Display(std::string_view columnNameRegexp = "", int nRows = 5, size_t nMaxCollectionElements = 10)
+   Display(std::string_view columnNameRegexp = "", size_t nRows = 5, size_t nMaxCollectionElements = 10)
    {
       const auto columnNames = GetColumnNames();
       const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Display");
@@ -3074,8 +3053,8 @@ public:
    /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// See the previous overloads for further details.
-   RResultPtr<RDisplay> Display(std::initializer_list<std::string> columnList, int nRows = 5,
-                                size_t nMaxCollectionElements = 10)
+   RResultPtr<RDisplay>
+   Display(std::initializer_list<std::string> columnList, size_t nRows = 5, size_t nMaxCollectionElements = 10)
    {
       ColumnNames_t selectedColumns(columnList);
       return Display(selectedColumns, nRows, nMaxCollectionElements);
@@ -3148,8 +3127,6 @@ private:
 
       auto action = RDFInternal::BuildAction<ColTypes...>(validColumnNames, helperArg, nSlots, fProxiedPtr, ActionTag{},
                                                           fColRegister);
-      fLoopManager->Book(action.get());
-      fLoopManager->AddSampleCallback(action->GetSampleCallback());
       return MakeResultPtr(r, *fLoopManager, std::move(action));
    }
 
@@ -3182,7 +3159,6 @@ private:
       auto toJit = RDFInternal::JitBuildAction(
          validColumnNames, upcastNodeOnHeap, typeid(std::shared_ptr<HelperArgType>), typeid(ActionTag), helperArgOnHeap,
          tree, nSlots, fColRegister, fDataSource, jittedActionOnHeap);
-      fLoopManager->Book(jittedAction.get());
       fLoopManager->ToJitExec(toJit);
       return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));
    }
@@ -3224,7 +3200,6 @@ private:
       using NewCol_t = RDFDetail::RDefine<F, DefineType>;
       auto newColumn = std::make_shared<NewCol_t>(name, retTypeName, std::forward<F>(expression), validColumnNames,
                                                   fColRegister, *fLoopManager);
-      fLoopManager->Book(newColumn.get());
 
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddColumn(newColumn);

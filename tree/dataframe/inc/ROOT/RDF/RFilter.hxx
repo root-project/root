@@ -76,6 +76,7 @@ public:
         fFilter(std::move(f)), fValues(pd->GetLoopManagerUnchecked()->GetNSlots()), fPrevNodePtr(std::move(pd)),
         fPrevNode(*fPrevNodePtr)
    {
+      fLoopManager->Book(this);
    }
 
    RFilter(const RFilter &) = delete;
@@ -213,7 +214,6 @@ public:
       // TODO document this
       auto variedFilter = std::unique_ptr<RFilterBase>(
          new RFilter(fFilter, fColumnNames, std::move(prevNode), fColRegister, fName, variationName));
-      fLoopManager->Book(variedFilter.get());
       auto e = fVariedFilters.insert({variationName, std::move(variedFilter)});
       return e.first->second;
    }

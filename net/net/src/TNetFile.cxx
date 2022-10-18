@@ -76,9 +76,10 @@ ClassImp(TNetSystem);
 /// for a description of the options and other arguments see Create().
 /// Normally a TNetFile is created via TFile::Open().
 
-TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
-                   Int_t compress, Int_t netopt)
-   : TFile(url, "NET", ftitle, compress), fEndpointUrl(url)
+TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t compress, Int_t netopt)
+   : TFile(url, strstr(option, "_WITHOUT_GLOBALREGISTRATION") != nullptr ? "NET_WITHOUT_GLOBALREGISTRATION" : "NET",
+           ftitle, compress),
+     fEndpointUrl(url)
 {
    fSocket = 0;
    Create(url, option, netopt);

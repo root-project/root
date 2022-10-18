@@ -185,7 +185,9 @@ RooArgSet const* tryToGetConstraintSetFromWorkspace(
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the parameter constraint sum to add to the negative log-likelihood.
-/// Returns a `nullptr` if the parameters are unconstrained.
+/// \return If there are constraints, returns a pointer to the constraint NLL,
+///         where all the components are clones of the original PDF components.
+///         Returns a `nullptr` if the parameters are unconstrained.
 /// \param[in] name Name of the created RooConstraintSum object.
 /// \param[in] pdf The pdf model whose parameters should be constrained.
 ///            Constraint terms will be extracted from RooProdPdf instances
@@ -223,7 +225,6 @@ std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
         RooArgSet const* globalObservables,
         const char* globalObservablesTag,
         bool takeGlobalObservablesFromData,
-        bool cloneConstraints,
         RooWorkspace * workspace)
 {
   RooArgSet const& observables = *data.get();
@@ -308,40 +309,28 @@ std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
     }
 
     // The constraint terms need to be cloned, because the global observables
-    // might be changed to have the same values as stored in data.
-    if (cloneConstraints) {
-       RooConstraintSum constraintTerm{name.c_str(), "nllCons", allConstraints, glObs ? *glObs : cPars,
-                                       takeGlobalObservablesFromData};
-       std::unique_ptr<RooAbsReal> constraintTermClone{static_cast<RooAbsReal *>(constraintTerm.cloneTree())};
+    // might be changed to have the same values as stored in data, or because
+    // the compute graph is mutated completely like in the BatchMode.
+    RooConstraintSum constraintTerm{name.c_str(), "nllCons", allConstraints, glObs ? *glObs : cPars,
+                                    takeGlobalObservablesFromData};
+    std::unique_ptr<RooAbsReal> constraintTermClone{static_cast<RooAbsReal *>(constraintTerm.cloneTree())};
 
-       // The parameters that are not connected to global observables from data
-       // need to be redirected to the original args to get the changes made by
-       // the minimizer. This excludes the global observables, where we take the
-       // clones with the values set to the values from the dataset if available.
-       RooArgSet allOriginalParams;
-       constraintTerm.getParameters(nullptr, allOriginalParams);
-       constraintTermClone->recursiveRedirectServers(allOriginalParams);
+    // The parameters that are not connected to global observables from data
+    // need to be redirected to the original args to get the changes made by
+    // the minimizer. This excludes the global observables, where we take the
+    // clones with the values set to the values from the dataset if available.
+    RooArgSet allOriginalParams;
+    constraintTerm.getParameters(nullptr, allOriginalParams);
+    constraintTermClone->recursiveRedirectServers(allOriginalParams);
 
-       // Redirect the global observables to the ones from the dataset if applicable.
-       static_cast<RooConstraintSum *>(constraintTermClone.get())->setData(data, false);
+    // Redirect the global observables to the ones from the dataset if applicable.
+    static_cast<RooConstraintSum *>(constraintTermClone.get())->setData(data, false);
 
-       // The computation graph for the constraints is very small, no need to do
-       // the tracking of clean and dirty nodes here.
-       constraintTermClone->setOperMode(RooAbsArg::ADirty);
+    // The computation graph for the constraints is very small, no need to do
+    // the tracking of clean and dirty nodes here.
+    constraintTermClone->setOperMode(RooAbsArg::ADirty);
 
-       return constraintTermClone;
-    }
-    // case we do not clone constraints (e.g. when using new Driver)
-    else {
-       // when we don't clone we need that global observables are not from data
-       if (takeGlobalObservablesFromData) {
-          oocoutE(&pdf, InputArguments) << "RooAbsPdf::Fit: Batch mode does not support yet GlobalObservable from data, use model as GlobalObservableSource " << std::endl;
-          throw std::invalid_argument("Invalid arguments for GlobalObservables in batch mode");
-       }
-       std::unique_ptr<RooAbsReal> constraintTerm(
-          new RooConstraintSum(name.c_str(), "nllCons", allConstraints, glObs ? *glObs : cPars, false));
-       return constraintTerm;
-    }
+    return constraintTermClone;
   }
 
   // no constraints

@@ -736,17 +736,10 @@ void RooHist::printClassName(ostream& os) const
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Create and return RooHist containing  residuals w.r.t to given curve.
-/// If normalize is true, the residuals are normalized by the histogram
-/// errors creating a RooHist with pull values
-
-RooHist* RooHist::makeResidHist(const RooCurve& curve, bool normalize, bool useAverage) const
+std::unique_ptr<RooHist> RooHist::createEmptyResidHist(const RooCurve& curve, bool normalize) const
 {
-
   // Copy all non-content properties from hist1
-  RooHist* hist = new RooHist(_nominalBinWidth) ;
+  auto hist = std::make_unique<RooHist>(_nominalBinWidth) ;
   if (normalize) {
     hist->SetName(Form("pull_%s_%s",GetName(),curve.GetName())) ;
     hist->SetTitle(Form("Pull of %s and %s",GetTitle(),curve.GetTitle())) ;
@@ -755,6 +748,12 @@ RooHist* RooHist::makeResidHist(const RooCurve& curve, bool normalize, bool useA
     hist->SetTitle(Form("Residual of %s and %s",GetTitle(),curve.GetTitle())) ;
   }
 
+  return hist;
+}
+
+
+void RooHist::fillResidHist(RooHist & residHist, const RooCurve& curve,bool normalize, bool useAverage) const
+{
   // Determine range of curve
   Double_t xstart,xstop,y ;
   curve.GetPoint(0,xstart,y) ;
@@ -786,7 +785,7 @@ RooHist* RooHist::makeResidHist(const RooCurve& curve, bool normalize, bool useA
     if (normalize) {
         Double_t norm = (yy>0?dyl:dyh);
    if (norm==0.) {
-     coutW(Plotting) << "RooHist::makeResisHist(" << GetName() << ") WARNING: point " << i << " has zero error, setting residual to zero" << endl ;
+     coutW(Plotting) << "RooHist::makeResisHist(" << GetName() << ") WARNING: point " << i << " has zero error, setting residual to zero" << std::endl;
      yy=0 ;
      dyh=0 ;
      dyl=0 ;
@@ -796,7 +795,19 @@ RooHist* RooHist::makeResidHist(const RooCurve& curve, bool normalize, bool useA
      dyl /= norm;
    }
     }
-    hist->addBinWithError(x,yy,dyl,dyh);
+    residHist.addBinWithError(x,yy,dyl,dyh);
   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create and return RooHist containing  residuals w.r.t to given curve.
+/// If normalize is true, the residuals are normalized by the histogram
+/// errors creating a RooHist with pull values
+
+RooHist* RooHist::makeResidHist(const RooCurve& curve, bool normalize, bool useAverage) const
+{
+  RooHist* hist = createEmptyResidHist(curve, normalize).release();
+  fillResidHist(*hist, curve, normalize, useAverage);
   return hist ;
 }

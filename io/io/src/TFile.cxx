@@ -372,25 +372,25 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       }
    }
 
+   if (fOption.Contains("_WITHOUT_GLOBALREGISTRATION")) {
+      fOption = fOption.ReplaceAll("_WITHOUT_GLOBALREGISTRATION", "");
+      fGlobalRegistration = false;
+      if (fList) {
+         fList->UseRWLock(false);
+      }
+   }
+
    if (fOption == "NET")
       return;
 
    if (fOption == "WEB") {
-      fOption   = "READ";
+      fOption = "READ";
       fWritable = kFALSE;
       return;
    }
 
    if (fOption == "NEW")
       fOption = "CREATE";
-
-   if (fOption == "READ_WITHOUT_GLOBALREGISTRATION") {
-      fOption = "READ";
-      fGlobalRegistration = false;
-      if (fList) {
-         fList->UseRWLock(false);
-      }
-   }
 
    Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
    Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;

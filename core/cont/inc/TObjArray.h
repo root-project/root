@@ -26,12 +26,6 @@
 
 #include <iterator>
 
-#if (__GNUC__ >= 3) && !defined(__INTEL_COMPILER)
-// Prevent -Weffc++ from complaining about the inheritance
-// TObjArrayIter from std::iterator.
-#pragma GCC system_header
-#endif
-
 class TObjArrayIter;
 
 class TObjArray : public TSeqCollection {
@@ -120,10 +114,7 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TObjArrayIter : public TIterator,
-                      public std::iterator<std::bidirectional_iterator_tag, // TODO: ideally it should be a  randomaccess_iterator_tag
-                                           TObject*, std::ptrdiff_t,
-                                           const TObject**, const TObject*&> {
+class TObjArrayIter : public TIterator {
 
 private:
    const TObjArray  *fArray;     //array being iterated
@@ -134,6 +125,13 @@ private:
    TObjArrayIter() : fArray(0), fCurCursor(0), fCursor(0), fDirection(kIterForward) { }
 
 public:
+   using iterator_category = std::bidirectional_iterator_tag; // TODO: ideally it should be a randomaccess_iterator_tag
+   using value_type = TObject *;
+   using difference_type = std::ptrdiff_t;
+   using pointer = TObject **;
+   using const_pointer = const TObject **;
+   using reference = const TObject *&;
+
    TObjArrayIter(const TObjArray *arr, Bool_t dir = kIterForward);
    TObjArrayIter(const TObjArrayIter &iter);
    ~TObjArrayIter() { }

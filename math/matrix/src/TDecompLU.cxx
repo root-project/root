@@ -603,11 +603,11 @@ Bool_t TDecompLU::DecomposeLUCrout(TMatrixD &lu,Int_t *index,Double_t &sign,
    Double_t *pLU   = lu.GetMatrixArray();
 
    Double_t work[kWorkMax];
-   Bool_t isAllocated = kFALSE;
+   Double_t *allocated = nullptr;
    Double_t *scale = work;
    if (n > kWorkMax) {
-      isAllocated = kTRUE;
-      scale = new Double_t[n];
+      allocated = new Double_t[n];
+      scale = allocated;
    }
 
    sign    = 1.0;
@@ -685,13 +685,13 @@ Bool_t TDecompLU::DecomposeLUCrout(TMatrixD &lu,Int_t *index,Double_t &sign,
          }
       } else {
          ::Error("TDecompLU::DecomposeLUCrout","matrix is singular");
-         if (isAllocated)  delete [] scale;
+         if (allocated)  delete [] allocated;
          return kFALSE;
       }
    }
 
-   if (isAllocated)
-      delete [] scale;
+   if (allocated)
+      delete [] allocated;
 
    return kTRUE;
 }
@@ -786,18 +786,18 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
    Double_t *pLU = lu.GetMatrixArray();
 
    Int_t worki[kWorkMax];
-   Bool_t isAllocatedI = kFALSE;
+   Int_t *allocatedI = nullptr;
    Int_t *index = worki;
    if (n > kWorkMax) {
-      isAllocatedI = kTRUE;
-      index = new Int_t[n];
+      allocatedI = new Int_t[n];
+      index = allocatedI;
    }
 
    Double_t sign = 1.0;
    Int_t nrZeros = 0;
    if (!DecomposeLUCrout(lu,index,sign,tol,nrZeros) || nrZeros > 0) {
-      if (isAllocatedI)
-         delete [] index;
+      if (allocatedI)
+         delete [] allocatedI;
       ::Error("TDecompLU::InvertLU","matrix is singular, %d diag elements < tolerance of %.4e",nrZeros,tol);
       return kFALSE;
    }
@@ -845,11 +845,11 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
    // Solve the equation inv(A)*L = inv(U) for inv(A).
 
    Double_t workd[kWorkMax];
-   Bool_t isAllocatedD = kFALSE;
+   Double_t *allocatedD = nullptr;
    Double_t *pWorkd = workd;
    if (n > kWorkMax) {
-      isAllocatedD = kTRUE;
-      pWorkd = new Double_t[n];
+      allocatedD = new Double_t[n];
+      pWorkd = allocatedD;
    }
 
    for (j = n-1; j >= 0; j--) {
@@ -879,8 +879,8 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
       }
    }
 
-   if (isAllocatedD)
-      delete [] pWorkd;
+   if (allocatedD)
+      delete [] allocatedD;
 
    // Apply column interchanges.
    for (j = n-1; j >= 0; j--) {
@@ -895,8 +895,8 @@ Bool_t TDecompLU::InvertLU(TMatrixD &lu,Double_t tol,Double_t *det)
       }
    }
 
-   if (isAllocatedI)
-      delete [] index;
+   if (allocatedI)
+      delete [] allocatedI;
 
    return kTRUE;
 }

@@ -48,19 +48,6 @@ public:
   /// Returns the owner of this proxy.
   RooAbsArg* owner() const { return _owner; }
 
-protected:
-
-  friend class RooSimultaneous ;
-  RooAbsArg* _owner ;       // Pointer to owner of proxy
-  RooAbsArg* _arg ;         // Pointer to content of proxy
-
-  Bool_t _valueServer ;     // If true contents is value server of owner
-  Bool_t _shapeServer ;     // If true contents is shape server of owner
-  Bool_t _isFund ;          // If true proxy contains an lvalue
-  Bool_t _ownArg ;          // If true proxy owns contents
-
-  friend class RooAbsArg ;
-
   inline Bool_t isValueServer() const { 
     // Returns true of contents is value server of owner
     return _valueServer ; 
@@ -69,6 +56,19 @@ protected:
     // Returns true if contents is shape server of owner
     return _shapeServer ; 
   }
+
+protected:
+
+  friend class RooRealIntegral;
+
+  RooAbsArg* _owner ;       // Pointer to owner of proxy
+  RooAbsArg* _arg ;         // Pointer to content of proxy
+
+  Bool_t _valueServer ;     // If true contents is value server of owner
+  Bool_t _shapeServer ;     // If true contents is shape server of owner
+  Bool_t _isFund ;          // If true proxy contains an lvalue
+  Bool_t _ownArg ;          // If true proxy owns contents
+
   virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE, Bool_t factoryInitMode=kFALSE) ;
 
   virtual void changeDataSet(const RooArgSet* newNormSet) ;

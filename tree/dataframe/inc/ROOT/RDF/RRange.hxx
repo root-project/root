@@ -50,6 +50,7 @@ public:
                    pd->GetVariations()),
         fPrevNodePtr(std::move(pd)), fPrevNode(*fPrevNodePtr)
    {
+      fLoopManager->Book(this);
    }
 
    RRange(const RRange &) = delete;
@@ -69,12 +70,12 @@ public:
             fLastResult = false;
          } else {
             // apply range filter logic, cache the result
-            ++fNProcessedEntries;
-            if (fNProcessedEntries <= fStart || (fStop > 0 && fNProcessedEntries > fStop) ||
-                (fStride != 1 && fNProcessedEntries % fStride != 0))
+            if (fNProcessedEntries < fStart || (fStop > 0 && fNProcessedEntries >= fStop) ||
+                (fStride != 1 && (fNProcessedEntries - fStart) % fStride != 0))
                fLastResult = false;
             else
                fLastResult = true;
+            ++fNProcessedEntries;
             if (fNProcessedEntries == fStop) {
                fHasStopped = true;
                fPrevNode.StopProcessing();
@@ -153,7 +154,6 @@ public:
          prevNode = std::static_pointer_cast<PrevNode_t>(prevNode->GetVariedFilter(variationName));
 
       auto variedRange = std::unique_ptr<RRangeBase>(new RRange(fStart, fStop, fStride, std::move(prevNode)));
-      fLoopManager->Book(variedRange.get());
       auto e = fVariedRanges.insert({variationName, std::move(variedRange)});
       return e.first->second;
    }

@@ -47,7 +47,7 @@ void TMVA_SOFIE_PyTorch(){
     TMacro m;
     m.AddLine(pythonSrc);
     m.SaveSource("make_pytorch_model.py");
-    gSystem->Exec("python make_pytorch_model.py");
+    gSystem->Exec(TMVA::Python_Executable() + " make_pytorch_model.py");
 
     //Parsing a PyTorch model requires the shape and data-type of input tensor
     //Data-type of input tensor defaults to Float if not specified

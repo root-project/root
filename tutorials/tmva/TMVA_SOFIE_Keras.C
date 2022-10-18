@@ -45,7 +45,7 @@ void TMVA_SOFIE_Keras(){
     TMacro m;
     m.AddLine(pythonSrc);
     m.SaveSource("make_keras_model.py");
-    gSystem->Exec("python make_keras_model.py");
+    gSystem->Exec(TMVA::Python_Executable() + " make_keras_model.py");
 
     //Parsing the saved Keras .h5 file into RModel object
     SOFIE::RModel model = SOFIE::PyKeras::Parse("KerasModel.h5");

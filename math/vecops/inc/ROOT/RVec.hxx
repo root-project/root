@@ -38,6 +38,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <limits> // for numeric_limits
 #include <new>
 #include <numeric> // for inner_product
 #include <sstream>

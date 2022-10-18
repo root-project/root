@@ -382,7 +382,7 @@ void TObjectTable::UpdateInstCount() const
 
    for (int i = 0; i < fSize; i++)
       if ((op = fTable[i])) {                // attention: no ==
-         if (op->TestBit(TObject::kNotDeleted))
+         if (!ROOT::Detail::HasBeenDeleted(op))
             op->IsA()->AddInstance(op->IsOnHeap());
          else
             Error("UpdateInstCount", "oops 0x%zx\n", (size_t)op);

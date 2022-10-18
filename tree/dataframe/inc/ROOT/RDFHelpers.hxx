@@ -246,7 +246,6 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
       // Create the RVariedAction and inject it in the computation graph.
       // This recursively creates all the required varied column readers and upstream nodes of the computation graph.
       variedAction = nominalAction->MakeVariedAction(std::move(typeErasedResults));
-      resPtr.fLoopManager->Book(variedAction.get());
    }
 
    return RDFInternal::MakeResultMap<T>(resPtr.fObjPtr, std::move(variedResults), std::move(variations),

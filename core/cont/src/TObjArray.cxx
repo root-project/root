@@ -675,15 +675,15 @@ void TObjArray::RecursiveRemove(TObject *obj)
    R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    for (int i = 0; i < fSize; i++) {
-      if (fCont[i] && fCont[i]->TestBit(kNotDeleted) && fCont[i]->IsEqual(obj)) {
-         fCont[i] = 0;
+      if (fCont[i] && !ROOT::Detail::HasBeenDeleted(fCont[i]) && fCont[i]->IsEqual(obj)) {
+         fCont[i] = nullptr;
          // recalculate array size
          if (i == fLast)
             do {
                fLast--;
             } while (fLast >= 0 && fCont[fLast] == 0);
          Changed();
-      } else if (fCont[i] && fCont[i]->TestBit(kNotDeleted))
+      } else if (fCont[i] && !ROOT::Detail::HasBeenDeleted(fCont[i]))
          fCont[i]->RecursiveRemove(obj);
    }
 }

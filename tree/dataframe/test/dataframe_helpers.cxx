@@ -122,59 +122,59 @@ public:
    std::string GetRealRepresentationFromRoot()
    {
       return std::string("digraph {\n"
-                         "\t9 [label=\"Mean\", style=\"filled\", fillcolor=\"") +
+                         "\t8 [label=\"Count\", style=\"filled\", fillcolor=\"") +
              (hasLoopRun ? "#baf1e5" : "#9cbbe5") +
              "\", shape=\"box\"];\n"
-             "\t7 [label=\"Filter\", style=\"filled\", fillcolor=\"#c4cfd4\", shape=\"diamond\"];\n"
-             "\t8 [label=\"Define\n"
-             "Branch_1_1_def\", style=\"filled\", fillcolor=\"#60aef3\", shape=\"oval\"];\n"
              "\t4 [label=\"Filter\", style=\"filled\", fillcolor=\"#c4cfd4\", shape=\"diamond\"];\n"
              "\t5 [label=\"Define\n"
-             "Branch_1_def\", style=\"filled\", fillcolor=\"#60aef3\", shape=\"oval\"];\n"
+             "Branch_1_2_def\", style=\"filled\", fillcolor=\"#60aef3\", shape=\"oval\"];\n"
              "\t6 [label=\"Define\n"
+             "Branch_1_def\", style=\"filled\", fillcolor=\"#60aef3\", shape=\"oval\"];\n"
+             "\t7 [label=\"Define\n"
              "Root_def2\", style=\"filled\", fillcolor=\"#60aef3\", shape=\"oval\"];\n"
              "\t2 [label=\"Filter\", style=\"filled\", fillcolor=\"#c4cfd4\", shape=\"diamond\"];\n"
              "\t3 [label=\"Define\n"
              "Root_def1\", style=\"filled\", fillcolor=\"#60aef3\", shape=\"oval\"];\n"
              "\t0 [label=\"8\", style=\"filled\", fillcolor=\"#e8f8fc\", shape=\"oval\"];\n"
-             "\t13 [label=\"Count\", style=\"filled\", fillcolor=\"" +
+             "\t10 [label=\"Count\", style=\"filled\", fillcolor=\"" +
              (hasLoopRun ? "#baf1e5" : "#9cbbe5") +
              "\", shape=\"box\"];\n"
-             "\t11 [label=\"Filter\", style=\"filled\", fillcolor=\"#c4cfd4\", shape=\"diamond\"];\n"
-             "\t12 [label=\"Define\n"
-             "Branch_1_2_def\", style=\"filled\", fillcolor=\"#60aef3\", shape=\"oval\"];\n"
-             "\t20 [label=\"Max\", style=\"filled\", fillcolor=\"" +
-             (hasLoopRun ? "#baf1e5" : "#9cbbe5") +
-             "\", shape=\"box\"];\n"
-             "\t17 [label=\"Filter\", style=\"filled\", fillcolor=\"#c4cfd4\", shape=\"diamond\"];\n"
-             "\t18 [label=\"Define\n"
-             "Branch_2_2_def\", style=\"filled\", fillcolor=\"#60aef3\", shape=\"oval\"];\n"
-             "\t19 [label=\"Define\n"
-             "Branch_2_1_def\", style=\"filled\", fillcolor=\"#60aef3\", shape=\"oval\"];\n"
-             "\t15 [label=\"Filter\", style=\"filled\", fillcolor=\"#c4cfd4\", shape=\"diamond\"];\n"
-             "\t16 [label=\"Define\n"
+             "\t11 [label=\"Define\n"
              "Branch_2_def\", style=\"filled\", fillcolor=\"#60aef3\", shape=\"oval\"];\n"
-             "\t22 [label=\"Count\", style=\"filled\", fillcolor=\"" +
+             "\t16 [label=\"Mean\", style=\"filled\", fillcolor=\"" +
              (hasLoopRun ? "#baf1e5" : "#9cbbe5") +
              "\", shape=\"box\"];\n"
-             "\t7 -> 9;\n"
-             "\t8 -> 7;\n"
+             "\t14 [label=\"Filter\", style=\"filled\", fillcolor=\"#c4cfd4\", shape=\"diamond\"];\n"
+             "\t15 [label=\"Define\n"
+             "Branch_1_1_def\", style=\"filled\", fillcolor=\"#60aef3\", shape=\"oval\"];\n"
+             "\t13 [label=\"Filter\", style=\"filled\", fillcolor=\"#c4cfd4\", shape=\"diamond\"];\n"
+             "\t22 [label=\"Max\", style=\"filled\", fillcolor=\"" +
+             (hasLoopRun ? "#baf1e5" : "#9cbbe5") +
+             "\", shape=\"box\"];\n"
+             "\t19 [label=\"Filter\", style=\"filled\", fillcolor=\"#c4cfd4\", shape=\"diamond\"];\n"
+             "\t20 [label=\"Define\n"
+             "Branch_2_2_def\", style=\"filled\", fillcolor=\"#60aef3\", shape=\"oval\"];\n"
+             "\t21 [label=\"Define\n"
+             "Branch_2_1_def\", style=\"filled\", fillcolor=\"#60aef3\", shape=\"oval\"];\n"
+             "\t18 [label=\"Filter\", style=\"filled\", fillcolor=\"#c4cfd4\", shape=\"diamond\"];\n"
              "\t4 -> 8;\n"
              "\t5 -> 4;\n"
              "\t6 -> 5;\n"
-             "\t2 -> 6;\n"
+             "\t7 -> 6;\n"
+             "\t2 -> 7;\n"
              "\t3 -> 2;\n"
              "\t0 -> 3;\n"
-             "\t11 -> 13;\n"
-             "\t12 -> 11;\n"
-             "\t5 -> 12;\n"
-             "\t17 -> 20;\n"
-             "\t18 -> 17;\n"
-             "\t19 -> 18;\n"
-             "\t15 -> 19;\n"
-             "\t16 -> 15;\n"
-             "\t6 -> 16;\n"
-             "\t16 -> 22;\n"
+             "\t11 -> 10;\n"
+             "\t7 -> 11;\n"
+             "\t14 -> 16;\n"
+             "\t15 -> 14;\n"
+             "\t13 -> 15;\n"
+             "\t6 -> 13;\n"
+             "\t19 -> 22;\n"
+             "\t20 -> 19;\n"
+             "\t21 -> 20;\n"
+             "\t18 -> 21;\n"
+             "\t11 -> 18;\n"
              "}";
    }
 

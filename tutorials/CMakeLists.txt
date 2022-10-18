@@ -243,6 +243,10 @@ if(ROOT_CLASSIC_BUILD)
   set(classic_veto multicore/mp104_*.C multicore/mp105_*.C)
 endif()
 
+if(NOT gdml)
+  set(gdml_veto geom/gdml/testoptical.C)
+endif()
+
 #---These ones requires a display to run-----------------------------
 set(gui_veto fit/fitpanel_playback.C
              cocoa/*.C
@@ -280,8 +284,11 @@ else()
   endif()
   if (NOT tmva-sofie)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_ONNX.C)
+  else()
+    #copy ONNX file needed for the tutorial
+    configure_file(${CMAKE_SOURCE_DIR}/tmva/sofie/test/input_models/Linear_16.onnx ${CMAKE_BINARY_DIR}/tutorials/tmva/Linear_16.onnx COPYONLY)
   endif()
-  
+
 endif()
 
 if (NOT ROOT_pythia6_FOUND)
@@ -367,6 +374,7 @@ set(extra_veto
 set(all_veto hsimple.C
              geom/geometry.C
              ${extra_veto}
+             ${gdml_veto}
              ${gui_veto}
              ${minuit2_veto}
              ${roofit_veto}
@@ -494,6 +502,10 @@ set (tmva-tmva101_Training-depends tutorial-tmva-tmva100_DataPreparation-py)
 set (tmva-tmva102_Testing-depends tutorial-tmva-tmva101_Training-py)
 set (tmva-pytorch-ApplicationClassificationPyTorch-depends tutorial-tmva-pytorch-ClassificationPyTorch-py)
 set (tmva-pytorch-ApplicationRegressionPyTorch-depends tutorial-tmva-pytorch-RegressionPyTorch-py)
+if (PY_KERAS_FOUND)
+set (tmva-keras-ApplicationRegressionKeras-depends tutorial-tmva-keras-RegressionKeras-py)
+set (tmva-keras-ApplicationClassificationKeras-depends tutorial-tmva-keras-ClassificationKeras-py)
+endif()
 
 #--List long-running tutorials to label them as "longtest"
 set (long_running
@@ -666,6 +678,10 @@ if(ROOT_pyroot_FOUND)
   if(NOT PY_KERAS_FOUND)
     file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/keras/*.py)
     list(APPEND pyveto ${tmva_veto_py})
+  else()
+    #disable keras Regression tutorials, they are too slow because of the regression evaluation for each event
+   list(APPEND pyveto tmva/keras/RegressionKeras.py)
+   list(APPEND pyveto tmva/keras/ApplicationRegressionKeras.py)
   endif()
 
   find_python_module(torch QUIET)
