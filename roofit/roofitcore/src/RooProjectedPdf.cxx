@@ -35,10 +35,7 @@ is therefore identical to that of <pre>f->createProjection(RooArgSet(x,y))</pre>
 #include "RooRealVar.h"
 #include "RooNameReg.h"
 
-using namespace std;
-
- ClassImp(RooProjectedPdf);
-   ;
+ClassImp(RooProjectedPdf);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,9 +60,9 @@ RooProjectedPdf::RooProjectedPdf() : _cacheMgr(this,10)
    intobs.add(intObs) ;
 
    // Add all other dependens of projected p.d.f. directly
-   RooArgSet* tmpdeps = _intpdf.getParameters(intObs) ;
-   deps.add(*tmpdeps) ;
-   delete tmpdeps ;
+   RooArgSet tmpdeps;
+   _intpdf.getParameters(&intObs, tmpdeps);
+   deps.add(tmpdeps) ;
  }
 
 
@@ -91,9 +88,7 @@ double RooProjectedPdf::evaluate() const
 {
   // Calculate current unnormalized value of object
   int code ;
-  const RooAbsReal* proj = getProjection(&intobs, _normSet, 0, code);
-
-  return proj->getVal() ;
+  return getProjection(&intobs, _normSet, 0, code)->getVal() ;
 }
 
 
@@ -109,28 +104,27 @@ const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const Ro
 
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
-  CacheElem* cache = (CacheElem*) _cacheMgr.getObj(iset,nset,&sterileIdx,RooNameReg::ptr(rangeName)) ;
-  if (cache) {
+  if (auto cache = static_cast<CacheElem*>(_cacheMgr.getObj(iset,nset,&sterileIdx,RooNameReg::ptr(rangeName)))) {
     code = _cacheMgr.lastIndex() ;
-    return static_cast<const RooAbsReal*>(cache->_projection);
+    return static_cast<const RooAbsReal*>(cache->_projection.get());
   }
 
-  RooArgSet* nset2 =  intpdf.arg().getObservables(*nset) ;
+  RooArgSet nset2;
+  intpdf.arg().getObservables(nset, nset2);
 
   if (iset) {
-    nset2->add(*iset) ;
+    nset2.add(*iset) ;
   }
-  RooAbsReal* proj = intpdf.arg().createIntegral(iset?*iset:RooArgSet(),nset2,0,rangeName) ;
-  delete nset2 ;
 
-  cache = new CacheElem ;
-  cache->_projection = proj ;
+  auto cache = new CacheElem ;
+  cache->_projection = std::unique_ptr<RooAbsReal>{intpdf.arg().createIntegral(iset?*iset:RooArgSet(),&nset2,0,rangeName)};
 
-  code = _cacheMgr.setObj(iset,nset,(RooAbsCacheElement*)cache,RooNameReg::ptr(rangeName)) ;
+  code = _cacheMgr.setObj(iset, nset, cache, RooNameReg::ptr(rangeName)) ;
 
-  coutI(Integration) << "RooProjectedPdf::getProjection(" << GetName() << ") creating new projection " << proj->GetName() << " with code " << code << endl ;
+  coutI(Integration) << "RooProjectedPdf::getProjection(" << GetName() << ") creating new projection "
+                     << cache->_projection->GetName() << " with code " << code << std::endl;
 
-  return proj ;
+  return cache->_projection.get();
 }
 
 
@@ -183,16 +177,15 @@ Int_t RooProjectedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 
 double RooProjectedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* /*normSet*/, const char* rangeName) const
 {
-  CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1) ;
-
-  if (cache) {
+  if (auto cache = static_cast<CacheElem*>(_cacheMgr.getObjByIndex(code-1))) {
     return cache->_projection->getVal() ;
   } else {
 
-    std::unique_ptr<RooArgSet> vars{getParameters(RooArgSet())} ;
-    vars->add(intobs) ;
-    RooArgSet iset = _cacheMgr.selectFromSet1(*vars, code-1) ;
-    RooArgSet nset = _cacheMgr.selectFromSet2(*vars, code-1) ;
+    RooArgSet vars;
+    getParameters(nullptr, vars);
+    vars.add(intobs) ;
+    RooArgSet iset = _cacheMgr.selectFromSet1(vars, code-1) ;
+    RooArgSet nset = _cacheMgr.selectFromSet2(vars, code-1) ;
 
     int code2 = -1 ;
 
@@ -200,26 +193,6 @@ double RooProjectedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* /*norm
   }
 
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// No internal generator is implemented
-
-Int_t RooProjectedPdf::getGenerator(const RooArgSet& /*directVars*/, RooArgSet& /*generateVars*/, bool /*staticInitOK*/) const
- {
-   return 0 ;
- }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// No internal generator is implemented
-
-void RooProjectedPdf::generateEvent(Int_t /*code*/)
- {
-   return;
- }
 
 
 
@@ -232,8 +205,7 @@ bool RooProjectedPdf::redirectServersHook(const RooAbsCollection& newServerList,
                                           bool nameChange, bool isRecursive)
 {
   // Redetermine explicit list of dependents if intPdf is being replaced
-  RooAbsArg* newPdf = newServerList.find(intpdf.arg().GetName()) ;
-  if (newPdf) {
+  if (RooAbsArg* newPdf = newServerList.find(intpdf.arg().GetName())) {
 
     // Determine if set of dependens of new p.d.f is different from old p.d.f.
     RooArgSet olddeps(deps) ;
@@ -263,8 +235,7 @@ bool RooProjectedPdf::redirectServersHook(const RooAbsCollection& newServerList,
 
 RooArgList RooProjectedPdf::CacheElem::containedArgs(Action)
 {
-  RooArgList ret(*_projection) ;
-  return ret ;
+  return *_projection;
 }
 
 
@@ -273,14 +244,9 @@ RooArgList RooProjectedPdf::CacheElem::containedArgs(Action)
 /// Customized printing of arguments of a RooRealIntegral to more intuitively reflect the contents of the
 /// integration operation
 
-void RooProjectedPdf::printMetaArgs(ostream& os) const
+void RooProjectedPdf::printMetaArgs(std::ostream& os) const
 {
-  os << "Int " << intpdf.arg().GetName() ;
-
-  os << " d" ;
-  os << intobs ;
-  os << " " ;
-
+  os << "Int " << intpdf.arg().GetName() << " d"  << intobs << " ";
 }
 
 
@@ -289,10 +255,10 @@ void RooProjectedPdf::printMetaArgs(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print contents of cache when printing self as part of object tree
 
-void RooProjectedPdf::CacheElem::printCompactTreeHook(ostream& os, const char* indent, Int_t curElem, Int_t maxElem)
+void RooProjectedPdf::CacheElem::printCompactTreeHook(std::ostream& os, const char* indent, Int_t curElem, Int_t maxElem)
 {
   if (curElem==0) {
-    os << indent << "RooProjectedPdf begin projection cache" << endl ;
+    os << indent << "RooProjectedPdf begin projection cache" << std::endl ;
   }
 
   TString indent2(indent) ;
@@ -301,8 +267,6 @@ void RooProjectedPdf::CacheElem::printCompactTreeHook(ostream& os, const char* i
   _projection->printCompactTree(os,indent2) ;
 
   if(curElem==maxElem) {
-    os << indent << "RooProjectedPdf end projection cache" << endl ;
+    os << indent << "RooProjectedPdf end projection cache" << std::endl ;
   }
 }
-
-
