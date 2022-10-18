@@ -195,6 +195,8 @@
 #include "AddBroadcast7_FromONNX.hxx"
 #include "input_models/references/AddBroadcast7.ref.hxx"
 
+#include "Concat_0D_FromONNX.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -1954,6 +1956,26 @@ TEST(ONNX, AddBroadcast7) {
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Concat0D) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   std::vector<float> input({1.40519865e+00, -2.87660856e-01});
+   std::vector<float> expected_output({1.40519865e+00, -2.87660856e-01, 1.40519865e+00, -2.87660856e-01});
+   TMVA_SOFIE_Concat_0D::Session s("Concat_0D_FromONNX.dat");
+   std::vector<float> actual_output(s.infer(input.data()));
+
+   // Checking the output size
+   EXPECT_EQ(expected_output.size(), expected_output.size());
+
+   float* correct = expected_output.data();
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < actual_output.size(); i++) {
+      EXPECT_LE(std::abs(actual_output[i] - correct[i]), TOLERANCE);
    }
 }
 
