@@ -29,7 +29,7 @@ sap.ui.define([
                                      StatusIcon: chk_icon(false),
                                      ToolbarIcon: chk_icon(false),
                                      TooltipIcon: chk_icon(true),
-                                     StatusLbl1:"", StatusLbl2:"", StatusLbl3:"", StatusLbl4:"",
+                                     StatusLbl1: "", StatusLbl2: "", StatusLbl3: "", StatusLbl4: "",
                                      Standalone: true, isRoot6: true });
          this.getView().setModel(model);
 
@@ -360,7 +360,7 @@ sap.ui.define([
       },
 
       // TODO: sync with showPanelInLeftArea, it is more or less same
-      showLeftArea: function(panel_name) {
+      showLeftArea(panel_name) {
          let split = this.getView().byId("MainAreaSplitter");
          let curr = this.getView().getModel().getProperty("/LeftArea");
          if (!split || (curr === panel_name))
@@ -388,18 +388,17 @@ sap.ui.define([
          let viewName = "rootui5.canv.view." + panel_name;
          if (panel_name == "FitPanel") viewName = "rootui5.fitpanel.view.FitPanel";
 
+         let viewData = canvp.getUi5PanelData(panel_name) || {};
+         viewData.masterPanel = this;
+
          let can_elem = this.getView().byId("MainPanel");
 
-         let imp = [ import('./jsrootsys/modules/main.mjs') ];
-         if (panel_name == "Ged")
-            imp.push(import('./jsrootsys/modules/base/colors.mjs'), import('./jsrootsys/modules/gpad/TAxisPainter.mjs'), import('./jsrootsys/modules/d3.mjs'));
-
-         return Promise.all(imp).then(arr => XMLView.create({
-                     viewName: viewName,
-                     viewData: { masterPanel: this, jsroot: Object.assign({}, arr[0], arr[1], arr[2]), d3: arr[3] },
-                     layoutData: oLd,
-                     height: (panel_name == "Panel") ? "100%" : undefined
-         })).then(oView => {
+         return XMLView.create({
+             viewName,
+             viewData,
+             layoutData: oLd,
+             height: (panel_name == "Panel") ? "100%" : undefined
+         }).then(oView => {
 
             // workaround, while CanvasPanel.onBeforeRendering called too late
             can_elem.getController().preserveCanvasContent();
