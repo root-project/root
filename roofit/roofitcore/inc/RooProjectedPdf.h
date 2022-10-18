@@ -32,9 +32,7 @@ public:
   double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
   bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void initGenerator(Int_t /*code*/) override {} ; // optional pre-generation initialization
-  void generateEvent(Int_t code) override;
 
   bool selfNormalized() const override { return true ; }
 
@@ -52,9 +50,8 @@ protected:
 
   class CacheElem : public RooAbsCacheElement {
   public:
-    ~CacheElem() override { delete _projection ; } ;
     // Payload
-    RooAbsReal* _projection ;
+    std::unique_ptr<RooAbsReal> _projection;
     // Cache management functions
     RooArgList containedArgs(Action) override ;
     void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) override ;
