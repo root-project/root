@@ -53,16 +53,23 @@ RooProjectedPdf::RooProjectedPdf() : _cacheMgr(this,10)
  RooProjectedPdf::RooProjectedPdf(const char *name, const char *title, RooAbsReal& _intpdf, const RooArgSet& intObs) :
    RooAbsPdf(name,title),
    intpdf("!IntegratedPdf","intpdf",this,_intpdf,false,false),
-   intobs("!IntegrationObservables","intobs",this,false,false),
-   deps("!Dependents","deps",this,true,true),
+   intobs("!IntegrationObservables","intobs",this,false,true),
+   deps("!Dependents","deps",this,true,false),
    _cacheMgr(this,10)
  {
-   intobs.add(intObs) ;
-
-   // Add all other dependens of projected p.d.f. directly
-   RooArgSet tmpdeps;
-   _intpdf.getParameters(&intObs, tmpdeps);
-   deps.add(tmpdeps) ;
+   // Since a projected PDF is an integral, we can use the same logic from
+   // RooRealIntegral via the projection integral to figure out what the
+   // servers are. Integration observables will be shape servers, the other
+   // servers are value servers.
+   int code;
+   auto proj = getProjection(&intObs, nullptr, 0, code);
+   for(RooAbsArg* server : proj->servers()) {
+     if(server->isShapeServer(*proj)) {
+       intobs.add(*server);
+     } else if(server->isValueServer(*proj)) {
+       deps.add(*server);
+     }
+   }
  }
 
 
