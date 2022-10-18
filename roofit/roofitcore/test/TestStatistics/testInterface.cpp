@@ -56,8 +56,6 @@ TEST(Interface, fitTo)
 {
    ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
 
-   // Real-life test: calculate a NLL using event-based parallelization. This
-   // should replicate RooRealMPFE results.
    RooRandom::randomGenerator()->SetSeed(42);
    RooWorkspace w;
    w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
