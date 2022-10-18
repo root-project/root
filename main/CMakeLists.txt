@@ -23,6 +23,8 @@ if(MSVC)
       /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index
       /STACK:4000000 setargv.obj")
   set_property(TARGET root.exe APPEND_STRING PROPERTY LINK_FLAGS ${root_exports})
+  add_custom_command(TARGET root.exe POST_BUILD
+                     COMMAND mt -manifest ${ROOT_MANIFEST} -outputresource:${CMAKE_BINARY_DIR}/bin/root.exe)
 endif()
 ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore)
 if(MSVC)

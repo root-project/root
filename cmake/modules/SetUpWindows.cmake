@@ -64,6 +64,7 @@ elseif(MSVC)
 
   string(TIMESTAMP CURRENT_YEAR "%Y")
   set(ROOT_RC_SCRIPT ${CMAKE_BINARY_DIR}/etc/root.rc)
+  set(ROOT_MANIFEST ${CMAKE_BINARY_DIR}/etc/root-manifest.xml)
 
   foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
     string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
