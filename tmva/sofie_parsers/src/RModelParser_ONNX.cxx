@@ -100,6 +100,7 @@ extern ParserFuncSignature ParseMax;
 extern ParserFuncSignature ParseConcat;
 extern ParserFuncSignature ParseCast;
 extern ParserFuncSignature ParseShape;
+extern ParserFuncSignature ParseLayerNormalization;
 // Decalaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseConvTransposeAdd;
@@ -451,6 +452,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
    RegisterOperator("Softmax", ParseSoftmax);
    RegisterOperator("Tanh", ParseTanh);
    RegisterOperator("Transpose", ParseTranspose);
+   RegisterOperator("LayerNormalization", ParseLayerNormalization);
 
    // fill model with operators
    if (verbose) {
