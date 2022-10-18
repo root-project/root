@@ -52,6 +52,7 @@ extern ParserFuncSignature ParseSoftmax;
 extern ParserFuncSignature ParseMax;
 extern ParserFuncSignature ParseConcat;
 extern ParserFuncSignature ParseCast;
+extern ParserFuncSignature ParseExpand;
 extern ParserFuncSignature ParseShape;
 extern ParserFuncSignature ParseLayerNormalization;
 // Decalaration of fused operators
@@ -453,6 +454,51 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
          }
       }
    }
+
+   // Register operators
+   // Unary operators
+   RegisterOperator("Sqrt", ParseSqrt);
+   RegisterOperator("Reciprocal", ParseReciprocal);
+   RegisterOperator("Neg", ParseNeg);
+   RegisterOperator("Exp", ParseExp);
+   // Binary operators
+   RegisterOperator("Add", ParseAdd);
+   RegisterOperator("Sub", ParseSub);
+   RegisterOperator("Mul", ParseMul);
+   RegisterOperator("Div", ParseDiv);
+   RegisterOperator("Pow", ParsePow);
+   // Reduce operators
+   RegisterOperator("ReduceMean", ParseReduceMean);
+   RegisterOperator("ReduceSumsquare", ParseReduceSumsquare);
+   RegisterOperator("ReduceProd", ParseReduceProd);
+   // Others
+   RegisterOperator("BatchNormalization", ParseBatchNormalization);
+   RegisterOperator("Cast", ParseCast);
+   RegisterOperator("Concat", ParseConcat);
+   RegisterOperator("Conv", ParseConv);
+   RegisterOperator("ConvTranspose", ParseConvTranspose);
+   RegisterOperator("Gemm", ParseGemm);
+   RegisterOperator("GRU", ParseGRU);
+   RegisterOperator("Identity", ParseIdentity);
+   RegisterOperator("LeakyRelu", ParseLeakyRelu);
+   RegisterOperator("LSTM", ParseLSTM);
+   RegisterOperator("Max", ParseMax);
+   RegisterOperator("AveragePool", ParsePool);
+   RegisterOperator("GlobalAveragePool", ParsePool);
+   RegisterOperator("MaxPool", ParsePool);
+   RegisterOperator("Relu", ParseRelu);
+   RegisterOperator("Reshape", ParseReshape);
+   RegisterOperator("RNN", ParseRNN);
+   RegisterOperator("Selu", ParseSelu);
+   RegisterOperator("Shape", ParseShape);
+   RegisterOperator("Sigmoid", ParseSigmoid);
+   RegisterOperator("Slice", ParseSlice);
+   RegisterOperator("Softmax", ParseSoftmax);
+   RegisterOperator("Slice", ParseSlice);
+   RegisterOperator("Softmax", ParseSoftmax);
+   RegisterOperator("Tanh", ParseTanh);
+   RegisterOperator("Transpose", ParseTranspose);
+   RegisterOperator("Expand", ParseExpand);
 
    // fill model with operators
    if (verbose) {
