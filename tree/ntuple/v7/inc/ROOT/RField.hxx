@@ -344,7 +344,7 @@ private:
    /// Chunk size in bytes used in `ReadGlobalImp()`. Items held in the same chunk will be inserted in
    /// a single `TVirtualCollectionProxy::Insert()` call.
    static constexpr const std::size_t kReadChunkSize = 64 * 1024;
-   TVirtualCollectionProxy *fProxy;
+   std::unique_ptr<TVirtualCollectionProxy> fProxy;
    std::size_t fItemSize;
    ClusterSize_t fNWritten;
 
