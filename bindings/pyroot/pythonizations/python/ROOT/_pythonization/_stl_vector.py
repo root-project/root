@@ -34,6 +34,7 @@ def pythonize_stl_vector(klass, name):
     add_array_interface_property(klass, name)
 
     # Inject custom vector<char>::data()
-    if klass.value_type == 'char':
+    value_type = getattr(klass, 'value_type', None)
+    if value_type == 'char':
         klass._original_data = klass.data
         klass.data = _data_vec_char
