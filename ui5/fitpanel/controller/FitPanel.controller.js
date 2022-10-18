@@ -13,7 +13,7 @@ sap.ui.define([
       onPanelInit : function() {
 
          // WORKAROUND, need to be FIXED IN THE FUTURE
-         if (window && window.location && window.location.hostname && window.location.hostname.indexOf("github.io")>=0)
+         if ((typeof window !== 'undefined') && window?.location?.hostname && window.location.hostname.indexOf("github.io")>=0)
             this.jsroot.loadScript('../rootui5/fitpanel/style/style.css');
          else
             this.jsroot.loadScript('rootui5sys/fitpanel/style/style.css');
