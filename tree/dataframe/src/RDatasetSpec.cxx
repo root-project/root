@@ -181,7 +181,7 @@ RSpecBuilder &RSpecBuilder::WithFriends(const std::vector<std::string> &trees, c
 
 RDatasetSpec RSpecBuilder::Build()
 {
-   return std::move(RDatasetSpec(fTreeNames, fFileNameGlobs, fGroupInfos, fFriendInfo, fEntryRange));
+   return RDatasetSpec(fTreeNames, fFileNameGlobs, fGroupInfos, fFriendInfo, fEntryRange);
 }
 
 } // namespace Experimental
