@@ -51,7 +51,7 @@ ROOT_ADD_GTEST(testRooSTLRefCountList testRooSTLRefCountList.cxx LIBRARIES RooFi
 ROOT_ADD_GTEST(testLikelihoodSerial TestStatistics/testLikelihoodSerial.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooAbsL TestStatistics/testRooAbsL.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooRealL TestStatistics/RooRealL.cpp LIBRARIES RooFitCore RooFit)
-ROOT_ADD_GTEST(testInterface TestStatistics/TestInterface.cpp LIBRARIES RooFitCore RooFit)
+ROOT_ADD_GTEST(testInterface TestStatistics/testInterface.cpp LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testGlobalObservables testGlobalObservables.cxx LIBRARIES RooFit)
 ROOT_ADD_GTEST(testRooPolyFunc testRooPolyFunc.cxx LIBRARIES Gpad RooFit)
 ROOT_ADD_GTEST(testSumW2Error testSumW2Error.cxx LIBRARIES Gpad RooFitCore)

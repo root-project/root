@@ -97,69 +97,50 @@ void RooMinimizer::cleanup()
 /// for HESSE and MINOS error analysis is taken from the defaultErrorLevel()
 /// value of the input function.
 
-/// Construcor that accepts all configuration in struct with RooAbsReal likelihood
+/// Constructor that accepts all configuration in struct with RooAbsReal likelihood
 RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
 {
-   // Call init functions
    initMinimizerFirstPart();
-   if (_cfg.parallelGradient || _cfg.parallelLikelihood) {
-      auto nll_real = dynamic_cast<RooFit::TestStatistics::RooRealL *>(&function);
-      if (nll_real == nullptr)
-         throw std::logic_error("In RooMinimizer constructor: Selected parallel gradient or likelihood evaluation "
-                                "but an old-style likelihood was given. Please supply NewStyle(true) as an "
-                                "argument to createNLL for new-style likelihoods.");
-      initMultiProcess(nll_real->getRooAbsL());
+   auto nll_real = dynamic_cast<RooFit::TestStatistics::RooRealL *>(&function);
+   if (nll_real != nullptr) {
+      if (_cfg.parallelGradient || _cfg.parallelLikelihood) { // new test statistic with multiprocessing library with parallel likelihood or parallel gradient
+#ifdef R__HAS_ROOFIT_MULTIPROCESS 
+         if (!_cfg.parallelGradient)
+            coutI(InputArguments) << "New style likelihood detected and likelihood parallelization requested, "
+                                  << "also setting parallel gradient calculation mode."
+                                  << std::endl;
+
+         _fcn = std::make_unique<RooFit::TestStatistics::MinuitFcnGrad>( 
+            nll_real->getRooAbsL(), 
+            this, 
+            _theFitter->Config().ParamsSettings(),
+            RooFit::TestStatistics::LikelihoodMode{static_cast<RooFit::TestStatistics::LikelihoodMode>(int(_cfg.parallelLikelihood))},
+            RooFit::TestStatistics::LikelihoodGradientMode::multiprocess,
+            _cfg.verbose);
+#else
+         if (!_cfg.parallelGradient) // new test statistic without multiprocessing library with only parallel likelihood
+            throw std::logic_error("Parallel likelihood evaluation requested, but ROOT was not compiled with multiprocessing enabled, "
+                                   "please recompile with -Droofit_multiprocess=ON for parallel likelihood evaluation");
+         // new test statistic without multiprocessing library with parallel gradient
+         _fcn = std::make_unique<RooGradMinimizerFcn>(&function, this);
+#endif
+      }
+      else // new test statistic non parallel
+         _fcn = std::make_unique<RooMinimizerFcn>(&function, this);
    } else {
-      initSerial(function);
+      if (_cfg.parallelLikelihood) // Old test statistic with parallel likelihood
+         throw std::logic_error("In RooMinimizer constructor: Selected likelihood evaluation but an "
+                              "old-style likelihood was given. Please supply NewStyle(true) as an "
+                              "argument to createNLL for new-style likelihoods to use likelihood "
+                              "parallelization .");
+
+      if (_cfg.parallelGradient) // Old test statistic with parallel gradient
+         _fcn = std::make_unique<RooGradMinimizerFcn>(&function, this);
+      else // Old test statistic non parallel
+         _fcn = std::make_unique<RooMinimizerFcn>(&function, this);
    }
    initMinimizerFcnDependentPart(function.defaultErrorLevel());
 };
-
-/// Initialize the minimizer with old style likelihoods
-void RooMinimizer::initSerial(RooAbsReal &function)
-{
-   switch (_cfg.fcnMode) {
-   case FcnMode::classic: {
-      _fcn = std::make_unique<RooMinimizerFcn>(RooMinimizerFcn(&function, this, _cfg.verbose));
-      break;
-   }
-   case FcnMode::gradient: {
-      _fcn = std::make_unique<RooGradMinimizerFcn>(RooGradMinimizerFcn(&function, this, _cfg.verbose));
-      break;
-   }
-   case FcnMode::generic_wrapper: {
-      throw std::logic_error("In RooMinimizer constructor: fcnMode::generic_wrapper cannot be used on a RooAbsReal! "
-                             "Please use the TestStatistics::RooAbsL based constructor instead.");
-   }
-   default: {
-      throw std::logic_error("In RooMinimizer constructor: fcnMode has an unsupported value!");
-   }
-   }
-}
-
-/// Initialize the minimizer with new style likelihoods
-void RooMinimizer::initMultiProcess(std::shared_ptr<RooFit::TestStatistics::RooAbsL> const& function)
-{
-#ifdef R__HAS_ROOFIT_MULTIPROCESS
-   RooFit::MultiProcess::Config::setDefaultNWorkers(_cfg.nWorkers);
-   
-   if (!_cfg.parallelGradient)
-      coutI(InputArguments) << "New style likelihood detected, setting parallel gradient calculation mode."
-                            << std::endl;
-
-   _cfg.fcnMode = FcnMode::generic_wrapper;
-   _fcn = std::make_unique<RooFit::TestStatistics::MinuitFcnGrad>(
-      function, 
-      this, 
-      _theFitter->Config().ParamsSettings(),
-      RooFit::TestStatistics::LikelihoodMode{static_cast<RooFit::TestStatistics::LikelihoodMode>(int(_cfg.parallelLikelihood))},
-      RooFit::TestStatistics::LikelihoodGradientMode::multiprocess,
-      _cfg.verbose);
-#else
-   throw std::logic_error("In RooMinimizer initialization: Please recompile ROOT with -Droofit_multiprocess=ON "
-                           "For parallel minimization.");
-#endif
-}
 
 /// Initialize the part of the minimizer that is independent of the function to be minimized
 void RooMinimizer::initMinimizerFirstPart()
@@ -202,7 +183,6 @@ void RooMinimizer::initMinimizerFcnDependentPart(double defaultErrorLevel)
 /// Execute all setters on _fcn
 void RooMinimizer::execSetters()
 {
-   optimizeConst(_cfg.optConst);
    setEvalErrorWall(_cfg.doEEWall);
    setRecoverFromNaNStrength(_cfg.recoverFromNaN);
    setPrintEvalErrors(_cfg.printEvalErrors);
@@ -287,7 +267,7 @@ void RooMinimizer::setMinimizerType(std::string const &type)
 {
    _cfg.minimizerType = type.empty() ? ROOT::Math::MinimizerOptions::DefaultMinimizerType() : type;
 
-   if (_cfg.fcnMode != FcnMode::classic && _cfg.minimizerType != "Minuit2") {
+   if ((_cfg.parallelGradient || _cfg.parallelLikelihood) && _cfg.minimizerType != "Minuit2") {
       std::stringstream ss;
       ss << "In RooMinimizer::setMinimizerType: only Minuit2 is supported when not using classic function mode!";
       if (type.empty()) {
@@ -581,8 +561,7 @@ int RooMinimizer::getPrintLevel()
 
 void RooMinimizer::optimizeConst(int flag)
 {
-   _cfg.optConst = flag;
-   _fcn->setOptimizeConst(_cfg.optConst);
+   _fcn->setOptimizeConst(flag);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -924,7 +903,6 @@ void RooMinimizer::setPrintEvalErrors(Int_t numEvalErrors)
 void RooMinimizer::setVerbose(bool flag)
 {
    _cfg.verbose = flag;
-   _fcn->SetVerbose(_cfg.verbose);
 }
 bool RooMinimizer::setLogFile(const char *logf)
 {

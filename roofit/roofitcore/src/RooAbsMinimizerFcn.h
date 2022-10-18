@@ -38,7 +38,7 @@ class RooMinimizer;
 class RooAbsMinimizerFcn {
 
 public:
-   RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *context, bool verbose = false);
+   RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *context);
    RooAbsMinimizerFcn(const RooAbsMinimizerFcn &other);
    virtual ~RooAbsMinimizerFcn() = default;
 
@@ -68,7 +68,6 @@ public:
    void zeroEvalCount() { _evalCounter = 0; }
    /// Return a possible offset that's applied to the function to separate invalid function values from valid ones.
    double getOffset() const { return _funcOffset; }
-   void SetVerbose(bool flag = true) { _verbose = flag; }
 
    /// Put Minuit results back into RooFit objects.
    void BackProp(const ROOT::Fit::FitResult &results);
@@ -142,7 +141,6 @@ protected:
 
    std::ofstream *_logfile = nullptr;
    bool _doEvalErrorWall{true};
-   bool _verbose;
 };
 
 #endif

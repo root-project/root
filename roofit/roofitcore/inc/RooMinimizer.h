@@ -42,24 +42,20 @@ class RooDataSet;
 
 class RooMinimizer : public TObject {
 public:
-   enum class FcnMode { classic, gradient, generic_wrapper };
-
    /// Config argument to RooMinimizer ctor
    struct Config {
       Config() {}
       double recoverFromNaN = 10.; // RooAbsMinimizerFcn config
-      int optConst = 0;            // RooAbsMinimizerFcn config
       int printEvalErrors = 10;    // RooAbsMinimizerFcn config
       int doEEWall = 1;            // RooAbsMinimizerFcn config
       int offsetting = -1;         // RooAbsMinimizerFcn config
       const char *logf = nullptr;  // RooAbsMinimizerFcn config
       int nWorkers = getDefaultWorkers(); // RooAbsMinimizerFcn config that can only be set in ctor
-      int parallelGradient = 0;          // RooAbsMinimizerFcn config that can only be set in ctor
-      int parallelLikelihood = 0;        // RooAbsMinimizerFcn config that can only be set in ctor
+      bool parallelGradient = false;      // RooAbsMinimizerFcn config that can only be set in ctor
+      bool parallelLikelihood = false;    // RooAbsMinimizerFcn config that can only be set in ctor
       int verbose = 0;                    // local config
       bool profile = false;               // local config
       std::string minimizerType = "";     // local config
-      FcnMode fcnMode = FcnMode::classic; // local config
    private:
       int getDefaultWorkers();
    };
@@ -74,7 +70,7 @@ public:
    // Setters on _theFitter
    static void setStrategy(int strat);
    static void setErrorLevel(double level);
-   static void setEps(double eps);
+   static void setEps(double eps); 
    static void setMaxIterations(int n);
    static void setMaxFunctionCalls(int n);
    static void setPrintLevel(int newLevel);
@@ -87,6 +83,8 @@ public:
    void setPrintEvalErrors(int numEvalErrors);
    void setVerbose(bool flag = true);
    bool setLogFile(const char *logf = nullptr);
+
+   int getVerbose() const {return _cfg.verbose; };
 
    int migrad();
    int hesse();
@@ -152,8 +150,6 @@ private:
    bool fitFcn() const;
 
    // constructor helper functions
-   void initSerial(RooAbsReal &function);
-   void initMultiProcess(std::shared_ptr<RooFit::TestStatistics::RooAbsL> const& function);
    void initMinimizerFirstPart();
    void initMinimizerFcnDependentPart(double defaultErrorLevel);
    void execSetters(); // Executes setters that set _fcn config as per given _cfg configuration

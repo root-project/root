@@ -186,8 +186,8 @@ public:
       int doSumW2 = -1;
       int doAsymptotic = -1;
       int nWorkers = 1;
-      int parallelGradient = 0;
-      int parallelLikelihood = 0;
+      bool parallelGradient = false;
+      bool parallelLikelihood = false;
       const RooArgSet* minosSet = nullptr;
       std::string minType;
       std::string minAlg = "minuit";

@@ -48,7 +48,7 @@ namespace TestStatistics {
 MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &_likelihood, RooMinimizer *context,
                              std::vector<ROOT::Fit::ParameterSettings> &parameters, LikelihoodMode likelihoodMode,
                              LikelihoodGradientMode likelihoodGradientMode, bool verbose)
-   : RooAbsMinimizerFcn(RooArgList(*_likelihood->getParameters()), context, verbose), minuit_internal_x_(NDim(), 0),
+   : RooAbsMinimizerFcn(RooArgList(*_likelihood->getParameters()), context), minuit_internal_x_(NDim(), 0),
      minuit_external_x_(NDim(), 0)
 {
    synchronizeParameterSettings(parameters, true, verbose);
@@ -137,7 +137,7 @@ double MinuitFcnGrad::DoEval(const double *x) const
    }
 
    // Optional logging
-   if (_verbose) {
+   if (_context->getVerbose()) {
       std::cout << "\nprevFCN" << (likelihood_here->isOffsetting() ? "-offset" : "") << " = " << std::setprecision(10)
                 << fvalue << std::setprecision(4) << "  ";
       std::cout.flush();

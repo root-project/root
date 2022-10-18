@@ -85,7 +85,7 @@ TEST_P(GradMinimizerParSeed, Gaussian1D)
    *values = *savedValues;
 
    RooMinimizer::Config cfg;
-   cfg.fcnMode = RooMinimizer::FcnMode::gradient;
+   cfg.parallelGradient = true;
    RooMinimizer m1(*nll, cfg);
 
    m1.setStrategy(0);
@@ -150,7 +150,7 @@ TEST(GradMinimizerDebugging, DISABLED_Gaussian1DGradMinimizer)
 
 
    RooMinimizer::Config cfg;
-   cfg.fcnMode = RooMinimizer::FcnMode::gradient;
+   cfg.parallelGradient = true;
    RooMinimizer m1(*nll, cfg);
 
    m1.setStrategy(0);
@@ -222,7 +222,7 @@ TEST(GradMinimizer, GaussianND)
 
 
    RooMinimizer::Config cfg;
-   cfg.fcnMode = RooMinimizer::FcnMode::gradient;
+   cfg.parallelGradient = true;
    RooMinimizer m1(*(nll.get()), cfg);
 
    m1.setStrategy(0);
@@ -288,7 +288,7 @@ TEST(GradMinimizerReverse, GaussianND)
 
 
    RooMinimizer::Config cfg;
-   cfg.fcnMode = RooMinimizer::FcnMode::gradient;
+   cfg.parallelGradient = true;
    RooMinimizer m0(*nll, cfg);
 
    m0.setStrategy(0);
@@ -467,7 +467,7 @@ TEST(GradMinimizer, BranchingPDF)
 
 
    RooMinimizer::Config cfg;
-   cfg.fcnMode = RooMinimizer::FcnMode::gradient;
+   cfg.parallelGradient = true;
    RooMinimizer m1(*nll, cfg);
 
    m1.setStrategy(0);
@@ -586,7 +586,7 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspace)
 
 
    RooMinimizer::Config cfg;
-   cfg.fcnMode = RooMinimizer::FcnMode::gradient;
+   cfg.parallelGradient = true;
    RooMinimizer m1(*nll, cfg);
 
    m1.setStrategy(0);
@@ -658,7 +658,7 @@ TEST(GradMinimizerDebugging, DISABLED_BranchingPDFLoadFromWorkspaceGradMinimizer
 
 
    RooMinimizer::Config cfg;
-   cfg.fcnMode = RooMinimizer::FcnMode::gradient;
+   cfg.parallelGradient = true;
    RooMinimizer m0(*nll, cfg);
    m0.setStrategy(0);
    m0.migrad();

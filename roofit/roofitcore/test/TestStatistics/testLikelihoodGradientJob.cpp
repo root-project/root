@@ -86,7 +86,7 @@ TEST_P(LikelihoodGradientJob, Gaussian1D)
    // --------
 
    RooMinimizer::Config cfg0;
-   cfg0.fcnMode = RooMinimizer::FcnMode::gradient;
+   cfg0.parallelGradient = true;
    auto m0 = std::make_unique<RooMinimizer>(*nll, cfg0);
 
    RooMinimizer::setStrategy(0);
@@ -203,7 +203,7 @@ TEST_P(LikelihoodGradientJob, GaussianND)
 
 
    RooMinimizer::Config cfg0;
-   cfg0.fcnMode = RooMinimizer::FcnMode::gradient;
+   cfg0.parallelGradient = true;
    RooMinimizer m0(*nll, cfg0);
 
    RooMinimizer::setStrategy(0);
@@ -385,7 +385,7 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
    // --------
 
    RooMinimizer::Config cfg0;
-   cfg0.fcnMode = RooMinimizer::FcnMode::gradient;
+   cfg0.parallelGradient = true;
    RooMinimizer m0(*nll, cfg0);
 
    RooMinimizer::setStrategy(0);
@@ -407,14 +407,14 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
 
    RooFit::MultiProcess::Config::setDefaultNWorkers(NWorkers);
 
-   RooAbsReal* likelihood = pdf->createNLL(*data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
-                                          RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(true), 
-                                          RooFit::NewStyle(true));
+   std::unique_ptr<RooAbsReal> likelihoodAbsReal{pdf->createNLL(*data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
+                                             RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(true), 
+                                             RooFit::NewStyle(true))};
 
    RooMinimizer::Config cfg1;
    cfg1.parallelLikelihood = false;
    cfg1.parallelGradient = true;
-   RooMinimizer m1(*likelihood, cfg1);
+   RooMinimizer m1(*likelihoodAbsReal, cfg1);
 
    RooMinimizer::setStrategy(0);
    RooMinimizer::setPrintLevel(-1);
@@ -480,7 +480,7 @@ TEST_P(LikelihoodGradientJob, Gaussian1DAlsoWithLikelihoodJob)
    // --------
 
    RooMinimizer::Config cfg0;
-   cfg0.fcnMode = RooMinimizer::FcnMode::gradient;
+   cfg0.parallelGradient = true;
    auto m0 = std::make_unique<RooMinimizer>(*nll, cfg0);
 
    RooMinimizer::setStrategy(0);
