@@ -24,3 +24,4 @@
 #include "TMVA/ROperator_Shape.hxx"
 #include "TMVA/ROperator_ConvTranspose.hxx"
 #include "TMVA/ROperator_Custom.hxx"
+#include "TMVA/ROperator_LayerNormalization.hxx"

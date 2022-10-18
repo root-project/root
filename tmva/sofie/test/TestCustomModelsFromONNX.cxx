@@ -197,6 +197,12 @@
 
 #include "Concat_0D_FromONNX.hxx"
 
+#include "LayerNormalization2d_FromONNX.hxx"
+#include "input_models/references/LayerNormalization2d.hxx"
+
+#include "LayerNormalization4d_FromONNX.hxx"
+#include "input_models/references/LayerNormalization4d.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -1984,6 +1990,46 @@ TEST(ONNX, Concat0D) {
    // Checking every output value, one by one
    for (size_t i = 0; i < actual_output.size(); i++) {
       EXPECT_LE(std::abs(actual_output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, LayerNormalization2d) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   std::vector<float> x(12);
+   std::iota(x.begin(), x.end(), 0.);
+   TMVA_SOFIE_LayerNormalization2d::Session s("LayerNormalization2d_FromONNX.dat");
+   std::vector<float> output(s.infer(x.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(LayerNormalization2d_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = LayerNormalization2d_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, LayerNormalization4d) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   std::vector<float> x(120);
+   std::iota(x.begin(), x.end(), 0.);
+   TMVA_SOFIE_LayerNormalization4d::Session s("LayerNormalization4d_FromONNX.dat");
+   std::vector<float> output(s.infer(x.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(LayerNormalization4d_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = LayerNormalization4d_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
 
