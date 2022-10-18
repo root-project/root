@@ -182,7 +182,8 @@ public:
       item->SetClassName(fKey->GetClassName());
       item->SetIcon(RProvider::GetClassIcon(fKey->GetClassName()));
       item->SetTitle(fKey->GetTitle());
-      item->SetSize(std::to_string(fKey->GetNbytes()));
+      item->SetSize(fKey->GetNbytes());
+      item->SetMTime(fKey->GetDatime().AsSQLString());
       return item;
    }
 
