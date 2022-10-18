@@ -39,7 +39,8 @@ using RooFit::TestStatistics::LikelihoodWrapper;
 
 class Environment : public testing::Environment {
 public:
-   void SetUp() override {
+   void SetUp() override
+   {
       RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
       ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
    }
@@ -56,8 +57,7 @@ int main(int argc, char **argv)
    return RUN_ALL_TESTS();
 }
 
-class LikelihoodGradientJob : public ::testing::TestWithParam<std::tuple<std::size_t, std::size_t>> {
-};
+class LikelihoodGradientJob : public ::testing::TestWithParam<std::tuple<std::size_t, std::size_t>> {};
 
 TEST_P(LikelihoodGradientJob, Gaussian1D)
 {
@@ -89,8 +89,8 @@ TEST_P(LikelihoodGradientJob, Gaussian1D)
    cfg0.parallelGradient = true;
    auto m0 = std::make_unique<RooMinimizer>(*nll, cfg0);
 
-   RooMinimizer::setStrategy(0);
-   RooMinimizer::setPrintLevel(-1);
+   m0->setStrategy(0);
+   m0->setPrintLevel(-1);
 
    m0->migrad();
 
@@ -112,8 +112,8 @@ TEST_P(LikelihoodGradientJob, Gaussian1D)
    cfg1.parallelGradient = true;
    RooMinimizer m1(likelihood, cfg1);
 
-   RooMinimizer::setStrategy(0);
-   RooMinimizer::setPrintLevel(-1);
+   m1.setStrategy(0);
+   m1.setPrintLevel(-1);
 
    m1.migrad();
 
@@ -162,8 +162,8 @@ TEST(LikelihoodGradientJob, RepeatMigrad)
    cfg.parallelGradient = true;
    RooMinimizer m1(likelihood, cfg);
 
-   RooMinimizer::setStrategy(0);
-   RooMinimizer::setPrintLevel(-1);
+   m1.setStrategy(0);
+   m1.setPrintLevel(-1);
 
    std::cout << "... running migrad first time ..." << std::endl;
    m1.migrad();
@@ -201,13 +201,12 @@ TEST_P(LikelihoodGradientJob, GaussianND)
 
    // --------
 
-
    RooMinimizer::Config cfg0;
    cfg0.parallelGradient = true;
    RooMinimizer m0(*nll, cfg0);
 
-   RooMinimizer::setStrategy(0);
-   RooMinimizer::setPrintLevel(-1);
+   m0.setStrategy(0);
+   m0.setPrintLevel(-1);
 
    m0.migrad();
 
@@ -243,8 +242,8 @@ TEST_P(LikelihoodGradientJob, GaussianND)
    cfg1.parallelGradient = true;
    RooMinimizer m1(likelihood, cfg1);
 
-   RooMinimizer::setStrategy(0);
-   RooMinimizer::setPrintLevel(-1);
+   m1.setStrategy(0);
+   m1.setPrintLevel(-1);
 
    m1.migrad();
 
@@ -388,8 +387,8 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
    cfg0.parallelGradient = true;
    RooMinimizer m0(*nll, cfg0);
 
-   RooMinimizer::setStrategy(0);
-   RooMinimizer::setPrintLevel(-1);
+   m0.setStrategy(0);
+   m0.setPrintLevel(-1);
 
    m0.migrad();
 
@@ -407,17 +406,17 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
 
    RooFit::MultiProcess::Config::setDefaultNWorkers(NWorkers);
 
-   std::unique_ptr<RooAbsReal> likelihoodAbsReal{pdf->createNLL(*data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
-                                             RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(true), 
-                                             RooFit::NewStyle(true))};
+   std::unique_ptr<RooAbsReal> likelihoodAbsReal{pdf->createNLL(
+      *data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
+      RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(true), RooFit::NewStyle(true))};
 
    RooMinimizer::Config cfg1;
    cfg1.parallelLikelihood = false;
    cfg1.parallelGradient = true;
    RooMinimizer m1(*likelihoodAbsReal, cfg1);
 
-   RooMinimizer::setStrategy(0);
-   RooMinimizer::setPrintLevel(-1);
+   m1.setStrategy(0);
+   m1.setPrintLevel(-1);
 
    m1.setOffsetting(true);
    m1.optimizeConst(2);
@@ -442,7 +441,7 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
    // we cannot always expect exactly equal results for fits with likelihood
    // offsetting enabled. See also the LikelihoodSerialSimBinnedConstrainedTest.
    // ConstrainedAndOffset test case in testLikelihoodSerial.
-#define EXPECT_NEAR_REL(a,b,c) EXPECT_NEAR(a, b, std::abs(a * c))
+#define EXPECT_NEAR_REL(a, b, c) EXPECT_NEAR(a, b, std::abs(a *c))
    EXPECT_NEAR_REL(minNll_nominal, minNll_GradientJob, 1e-4);
    EXPECT_NEAR(edm_nominal, edm_GradientJob, 1e-5);
    EXPECT_NEAR_REL(alpha_bkg_A_nominal, alpha_bkg_A_GradientJob, 1e-4);
@@ -483,8 +482,8 @@ TEST_P(LikelihoodGradientJob, Gaussian1DAlsoWithLikelihoodJob)
    cfg0.parallelGradient = true;
    auto m0 = std::make_unique<RooMinimizer>(*nll, cfg0);
 
-   RooMinimizer::setStrategy(0);
-   RooMinimizer::setPrintLevel(-1);
+   m0->setStrategy(0);
+   m0->setPrintLevel(-1);
    m0->setVerbose(false);
 
    m0->migrad();
@@ -504,8 +503,8 @@ TEST_P(LikelihoodGradientJob, Gaussian1DAlsoWithLikelihoodJob)
    cfg.parallelLikelihood = true;
    cfg.parallelGradient = true;
    RooMinimizer m1(likelihood, cfg);
-   RooMinimizer::setStrategy(0);
-   RooMinimizer::setPrintLevel(-1);
+   m1.setStrategy(0);
+   m1.setPrintLevel(-1);
 
    m1.setVerbose(false);
 
