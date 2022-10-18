@@ -437,6 +437,9 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
    RegisterOperator("MaxPool", ParsePool);
    RegisterOperator("Relu", ParseRelu);
    RegisterOperator("Reshape", ParseReshape);
+   RegisterOperator("Flatten", ParseReshape);
+   RegisterOperator("Squeeze", ParseReshape);
+   RegisterOperator("Unsqueeze", ParseReshape);
    RegisterOperator("RNN", ParseRNN);
    RegisterOperator("Selu", ParseSelu);
    RegisterOperator("Shape", ParseShape);
