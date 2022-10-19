@@ -143,6 +143,9 @@ if(roofit)
   # RooDataHist pythonisations
   ROOT_ADD_PYUNITTEST(pyroot_roofit_roodatahist_ploton roofit/roodatahist_ploton.py)
 
+  # RooDataSet pythonisations
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset roofit/roodataset.py)
+
   # RooWorkspace pythonizations
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooworkspace roofit/rooworkspace.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabspdf_fitto roofit/rooabspdf_fitto.py)
