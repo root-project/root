@@ -163,7 +163,7 @@ void RooMinimizer::initMinimizerFcnDependentPart(double defaultErrorLevel)
    setErrorLevel(defaultErrorLevel);
 
    // Declare our parameters to MINUIT
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings(), _fcn->getOptConst());
+   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
 
    // Now set default verbosity
    if (RooMsgService::instance().silentMode()) {
@@ -173,15 +173,6 @@ void RooMinimizer::initMinimizerFcnDependentPart(double defaultErrorLevel)
    }
 
    // Set user defined and default _fcn config
-   execSetters();
-}
-
-/// Execute all setters on _fcn
-void RooMinimizer::execSetters()
-{
-   setEvalErrorWall(_cfg.doEEWall);
-   setRecoverFromNaNStrength(_cfg.recoverFromNaN);
-   setPrintEvalErrors(_cfg.printEvalErrors);
    setLogFile(_cfg.logf);
 
    // Likelihood holds information on offsetting in old style, so do not set here unless explicitly set by user
@@ -304,7 +295,7 @@ bool RooMinimizer::fitFcn() const
 /// \param[in] alg  Fit algorithm to use. (Optional)
 int RooMinimizer::minimize(const char *type, const char *alg)
 {
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings(), _fcn->getOptConst());
+   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
 
    setMinimizerType(type);
    _theFitter->Config().SetMinimizer(type, alg);
@@ -333,7 +324,7 @@ int RooMinimizer::minimize(const char *type, const char *alg)
 
 int RooMinimizer::migrad()
 {
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings(), _fcn->getOptConst());
+   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
    profileStart();
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
    RooAbsReal::clearEvalErrorLog();
@@ -364,7 +355,7 @@ int RooMinimizer::hesse()
       _status = -1;
    } else {
 
-      _fcn->Synchronize(_theFitter->Config().ParamsSettings(), _fcn->getOptConst());
+      _fcn->Synchronize(_theFitter->Config().ParamsSettings());
       profileStart();
       RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
       RooAbsReal::clearEvalErrorLog();
@@ -396,7 +387,7 @@ int RooMinimizer::minos()
       _status = -1;
    } else {
 
-      _fcn->Synchronize(_theFitter->Config().ParamsSettings(), _fcn->getOptConst());
+      _fcn->Synchronize(_theFitter->Config().ParamsSettings());
       profileStart();
       RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
       RooAbsReal::clearEvalErrorLog();
@@ -428,7 +419,7 @@ int RooMinimizer::minos(const RooArgSet &minosParamList)
       _status = -1;
    } else if (!minosParamList.empty()) {
 
-      _fcn->Synchronize(_theFitter->Config().ParamsSettings(), _fcn->getOptConst());
+      _fcn->Synchronize(_theFitter->Config().ParamsSettings());
       profileStart();
       RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
       RooAbsReal::clearEvalErrorLog();
@@ -472,7 +463,7 @@ int RooMinimizer::minos(const RooArgSet &minosParamList)
 
 int RooMinimizer::seek()
 {
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings(), _fcn->getOptConst());
+   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
    profileStart();
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
    RooAbsReal::clearEvalErrorLog();
@@ -498,7 +489,7 @@ int RooMinimizer::seek()
 
 int RooMinimizer::simplex()
 {
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings(), _fcn->getOptConst());
+   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
    profileStart();
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
    RooAbsReal::clearEvalErrorLog();
@@ -524,7 +515,7 @@ int RooMinimizer::simplex()
 
 int RooMinimizer::improve()
 {
-   _fcn->Synchronize(_theFitter->Config().ParamsSettings(), _fcn->getOptConst());
+   _fcn->Synchronize(_theFitter->Config().ParamsSettings());
    profileStart();
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
    RooAbsReal::clearEvalErrorLog();
@@ -886,27 +877,17 @@ RooFitResult *RooMinimizer::lastMinuitFit(const RooArgList &varList)
    return res;
 }
 
-void RooMinimizer::setEvalErrorWall(bool flag)
-{
-   _cfg.doEEWall = flag;
-   _fcn->SetEvalErrorWall(_cfg.doEEWall);
-}
-
-/// \copydoc RooMinimizerFcn::SetRecoverFromNaNStrength()
+/// Try to recover from invalid function values. When invalid function values
+/// are encountered, a penalty term is returned to the minimiser to make it
+/// back off. This sets the strength of this penalty. \note A strength of zero
+/// is equivalent to a constant penalty (= the gradient vanishes, ROOT < 6.24).
+/// Positive values lead to a gradient pointing away from the undefined
+/// regions. Use ~10 to force the minimiser away from invalid function values.
 void RooMinimizer::setRecoverFromNaNStrength(double strength)
 {
    _cfg.recoverFromNaN = strength;
-   _fcn->SetRecoverFromNaNStrength(_cfg.recoverFromNaN);
 }
-void RooMinimizer::setPrintEvalErrors(Int_t numEvalErrors)
-{
-   _cfg.printEvalErrors = numEvalErrors;
-   _fcn->SetPrintEvalErrors(_cfg.printEvalErrors);
-}
-void RooMinimizer::setVerbose(bool flag)
-{
-   _cfg.verbose = flag;
-}
+
 bool RooMinimizer::setLogFile(const char *logf)
 {
    _cfg.logf = logf;
