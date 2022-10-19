@@ -8,6 +8,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <functional>
+#include "TMVA/SOFIE_common.hxx"
 
 namespace TMVA {
 namespace Experimental {
@@ -47,17 +48,17 @@ std::vector<std::string> RModelParser_ONNX::GetRegisteredOperators()
 
 void RModelParser_ONNX::RegisterTensorType(const std::string &name, ETensorType type)
 {
-   fTensorTypeMap[name] = type;
+   fTensorTypeMap[UTILITY::Clean_name(name)] = type;
 }
 
 bool RModelParser_ONNX::IsRegisteredTensorType(const std::string &name)
 {
-   return fTensorTypeMap.find(name) != fTensorTypeMap.end();
+   return fTensorTypeMap.find(UTILITY::Clean_name(name)) != fTensorTypeMap.end();
 }
 
 ETensorType RModelParser_ONNX::GetTensorType(const std::string &name)
 {
-   return fTensorTypeMap[name];
+   return fTensorTypeMap[UTILITY::Clean_name(name)];
 }
 
 // Declaration of operators
@@ -114,10 +115,6 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
    if (fVerbose)
       std::cout << "Parsing an operator " << op_type << std::endl;
 
-   auto it = fOperatorsMapImpl->fOperatorsMap.find(op_type);
-   if (it == fOperatorsMapImpl->fOperatorsMap.end()) {
-      throw std::runtime_error("TMVA::SOFIE Operator type " + op_type + " is not yet supported");
-   }
 
    if (op_type == "MatMul") {
       // Fuse MatMul and Add
@@ -130,9 +127,9 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
       int j = (nodes.size() > i + 1) ? nodes[i + 1] : (int)i + 1;
       if (j < graphproto.node_size() && graphproto.node(j).op_type() == "Add") {
          if (nodeproto.op_type() == "Conv") {
-            ParseFuseConvAdd(*this, graphproto.node(idx), graphproto.node(j));
+            return ParseFuseConvAdd(*this, graphproto.node(idx), graphproto.node(j));
          } else {
-            ParseFuseConvTransposeAdd(*this, graphproto.node(idx), graphproto.node(j));
+            return ParseFuseConvTransposeAdd(*this, graphproto.node(idx), graphproto.node(j));
          }
       }
    }
@@ -146,6 +143,10 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
          return nullptr;
    }
 
+   auto it = fOperatorsMapImpl->fOperatorsMap.find(op_type);
+   if (it == fOperatorsMapImpl->fOperatorsMap.end()) {
+      throw std::runtime_error("TMVA::SOFIE Operator type " + op_type + " is not yet supported");
+   }
    if (fVerbose) {
       std::cout << "\tCreating operator " << op_type << std::endl;
    }
@@ -437,6 +438,9 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
    RegisterOperator("MaxPool", ParsePool);
    RegisterOperator("Relu", ParseRelu);
    RegisterOperator("Reshape", ParseReshape);
+   RegisterOperator("Flatten", ParseReshape);
+   RegisterOperator("Squeeze", ParseReshape);
+   RegisterOperator("Unsqueeze", ParseReshape);
    RegisterOperator("RNN", ParseRNN);
    RegisterOperator("Selu", ParseSelu);
    RegisterOperator("Shape", ParseShape);
