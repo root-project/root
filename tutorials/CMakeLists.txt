@@ -132,9 +132,9 @@ if(NOT ROOT_spectrum_FOUND)
 endif()
 
 if(NOT ROOT_roofit_FOUND)
-  set(roofit_veto  fit/RoofitDemo.C
-                   roofit/*.C roostats/*.C histfactory/*.C
-                   roofit/*.py)
+  set(roofit_veto roofit/*.C roofit/*.py
+                  roostats/*.C roostats/*.py
+                  histfactory/*.C histfactory/*.py)
 else()
   if(MSVC AND NOT win_broken_tests)
     set(roofit_veto roofit/rf401_importttreethx.py roofit/rf708_bphysics.py roofit/rf501_simultaneouspdf.py)
