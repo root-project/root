@@ -240,7 +240,19 @@ namespace RooFit {
   }
   RooCmdArg SplitRange(bool flag)                      { return RooCmdArg("SplitRange",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg SumCoefRange(const char* rangeName)          { return RooCmdArg("SumCoefRange",0,0,0,0,rangeName,0,0,0) ; }
-  RooCmdArg Constrain(const RooArgSet& params)           { return RooCmdArg("Constrain",0,0,0,0,0,0,0,0,0,0,&params) ; }
+  RooCmdArg Constrain(const RooArgSet& params) {
+    for(RooAbsArg * param : params) {
+      if(!dynamic_cast<RooRealVar*>(param)) {
+        std::stringstream errorMsg;
+        errorMsg << "RooFit::Constrain(): you passed the argument \"" << param->GetName()
+                 << "\", but it's not a RooRealVar!"
+                 << " You can only constrain parameters, which must be RooRealVars.";
+        oocoutE(nullptr, InputArguments) << errorMsg.str() << std::endl;
+        throw std::invalid_argument(errorMsg.str().c_str());
+      }
+    }
+    return RooCmdArg("Constrain",0,0,0,0,0,0,0,0,0,0,&params);
+  }
   RooCmdArg GlobalObservablesSource(const char* sourceName) { return {"GlobalObservablesSource",0,0,0,0,sourceName,0,0,0}; }
   RooCmdArg GlobalObservablesTag(const char* tagName)    { return RooCmdArg("GlobalObservablesTag",0,0,0,0,tagName,0,0,0) ; }
   RooCmdArg ExternalConstraints(const RooArgSet& cpdfs)  { return RooCmdArg("ExternalConstraints",0,0,0,0,0,0,nullptr,nullptr,0,0,&cpdfs) ; }
