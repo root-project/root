@@ -17,9 +17,9 @@
 #ifndef ROOFIT_ROOFITCORE_INC_ROOHELPERS_H_
 #define ROOFIT_ROOFITCORE_INC_ROOHELPERS_H_
 
-#include "RooMsgService.h"
-#include "RooAbsArg.h"
-#include "RooAbsReal.h"
+#include <RooMsgService.h>
+#include <RooAbsArg.h>
+#include <RooAbsReal.h>
 
 #include <sstream>
 #include <vector>
@@ -139,8 +139,17 @@ bool checkIfRangesOverlap(RooArgSet const& observables,
 std::string getColonSeparatedNameString(RooArgSet const& argSet);
 RooArgSet selectFromArgSet(RooArgSet const&, std::string const& names);
 
+
+/// Clone RooAbsArg object and reattach to original parameters.
+template<class T>
+std::unique_ptr<T> cloneTreeWithSameParameters(T const& arg, RooArgSet const* observables=nullptr) {
+  std::unique_ptr<T> clone{static_cast<T *>(arg.cloneTree())};
+  RooArgSet origParams;
+  arg.getParameters(observables, origParams);
+  clone->recursiveRedirectServers(origParams);
+  return clone;
 }
 
-
+}
 
 #endif /* ROOFIT_ROOFITCORE_INC_ROOHELPERS_H_ */
