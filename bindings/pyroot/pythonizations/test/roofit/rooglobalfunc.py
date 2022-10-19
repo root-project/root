@@ -47,6 +47,11 @@ class TestRooGlobalFunc(unittest.TestCase):
 
         self.assertEqual(data_2.numEntries(), n_events)
 
+    def test_minimizer(self):
+        """C++ object returned by RooFit::Minimizer should not be double deleted"""
+        # ROOT-9516
+        minimizer = ROOT.RooFit.Minimizer("Minuit2", "migrad")
+
 
 if __name__ == "__main__":
     unittest.main()
