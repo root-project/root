@@ -32,11 +32,10 @@ class RooFitDriver;
 namespace RooFit {
 namespace BatchModeHelpers {
 
-std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, std::unique_ptr<RooAbsReal> &&constraints,
-                                      std::string const &rangeName, std::string const &addCoefRangeName,
-                                      RooArgSet const &projDeps, bool isExtended, double integrateOverBinsPrecision,
-                                      RooFit::BatchModeOption batchMode, bool doOffset,
-                                      bool takeGlobalObservablesFromData);
+std::unique_ptr<RooAbsReal>
+createNLL(std::unique_ptr<RooAbsPdf> &&pdf, RooAbsData &data, std::unique_ptr<RooAbsReal> &&constraints,
+          std::string const &rangeName, RooArgSet const &projDeps, bool isExtended, double integrateOverBinsPrecision,
+          RooFit::BatchModeOption batchMode, bool doOffset, bool takeGlobalObservablesFromData);
 
 void logArchitectureInfo(RooFit::BatchModeOption batchMode);
 
