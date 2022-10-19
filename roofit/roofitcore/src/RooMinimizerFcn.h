@@ -27,7 +27,8 @@
 
 #include "RooAbsMinimizerFcn.h"
 
-template<typename T> class TMatrixTSym;
+template <typename T>
+class TMatrixTSym;
 using TMatrixDSym = TMatrixTSym<double>;
 
 // forward declaration
@@ -49,8 +50,8 @@ public:
    void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override;
 
    void setOffsetting(bool flag) override;
-   bool fit(ROOT::Fit::Fitter& fitter) const override { return fitter.FitFCN(*this); };
-   ROOT::Math::IMultiGenFunction* getMultiGenFcn() override { return this; };
+   bool fit(ROOT::Fit::Fitter &fitter) const override { return fitter.FitFCN(*this); };
+   ROOT::Math::IMultiGenFunction *getMultiGenFcn() override { return this; };
 
 private:
    double DoEval(const double *x) const override;
