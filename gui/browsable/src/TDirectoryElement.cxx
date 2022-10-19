@@ -11,9 +11,8 @@
 #include <ROOT/Browsable/RLevelIter.hxx>
 #include <ROOT/Browsable/RProvider.hxx>
 #include <ROOT/Browsable/TObjectHolder.hxx>
-#include <ROOT/Browsable/TKeyItem.hxx>
-#include <ROOT/Browsable/TObjectItem.hxx>
 #include <ROOT/Browsable/TObjectElement.hxx>
+#include <ROOT/Browsable/TObjectItem.hxx>
 #include <ROOT/Browsable/RHolder.hxx>
 
 #include <ROOT/RLogger.hxx>
@@ -167,7 +166,7 @@ public:
       return false;
    }
 
-   /** Create element for the browser */
+   /** Create item for the client */
    std::unique_ptr<RItem> CreateItem() override
    {
       if (!fKeysIter && fObj) {
@@ -178,17 +177,132 @@ public:
          return elem ? elem->CreateItem() : nullptr;
       }
 
-      auto item = std::make_unique<TKeyItem>(GetItemName(), CanItemHaveChilds() ? -1 : 0);
-      item->SetClassName(fKey->GetClassName());
-      item->SetIcon(RProvider::GetClassIcon(fKey->GetClassName()));
-      item->SetTitle(fKey->GetTitle());
-      item->SetSize(fKey->GetNbytes());
-      item->SetMTime(fKey->GetDatime().AsSQLString());
-      return item;
+      return GetElement()->CreateItem();
    }
 
    /** Returns full information for current element */
    std::shared_ptr<RElement> GetElement() override;
+};
+
+// ===============================================================================================================
+
+/** \class TDirectoryElement
+\ingroup rbrowser
+
+Element representing TDirectory
+*/
+
+class TDirectoryElement : public TObjectElement {
+   std::string fFileName;       ///<!   file name
+   bool fIsFile{false};         ///<!   is TFile instance registered in global list of files
+
+protected:
+
+   const TObject *CheckObject() const override
+   {
+      if (!TObjectElement::CheckObject())
+         return nullptr;
+
+      if (fIsFile && !gROOT->GetListOfFiles()->FindObject(fObj))
+         ForgetObject();
+      else if (!gROOT->GetListOfFiles()->FindObject(((TDirectory *) fObj)->GetFile()))
+         ForgetObject();
+
+      return fObj;
+   }
+
+   TDirectory *GetDir() const
+   {
+      if (!CheckObject() && fIsFile && fFileName.empty())
+         (const_cast<TDirectoryElement *>(this))->SetObject(TFile::Open(fFileName.c_str()));
+
+      return dynamic_cast<TDirectory *>(fObj);
+   }
+
+   TFile *GetFile() const
+   {
+      if (!fIsFile)
+         return nullptr;
+
+      return dynamic_cast<TFile *>(GetDir());
+   }
+
+
+public:
+
+   TDirectoryElement(const std::string &fname, TDirectory *dir = nullptr, bool isfile = false) : TObjectElement(dir)
+   {
+      fFileName = fname;
+      fIsFile = isfile;
+      if (fIsFile && fObj && !gROOT->GetListOfFiles()->FindObject(fObj)) {
+         fIsFile = false;
+         ForgetObject();
+      }
+   }
+
+   virtual ~TDirectoryElement() = default;
+
+   /** Name of TDirectoryElement */
+   std::string GetName() const override
+   {
+      if (CheckObject())
+         return fObj->GetName();
+
+      if (!fFileName.empty()) {
+         auto pos = fFileName.rfind("/");
+         return ((pos == std::string::npos) || (pos > fFileName.length() - 2)) ? fFileName : fFileName.substr(pos + 1);
+      }
+
+      return ""s;
+   }
+
+   /** Title of TDirectoryElement */
+   std::string GetTitle() const override
+   {
+      if (CheckObject())
+         return fObj->GetTitle();
+
+      return "ROOT file "s + fFileName;
+   }
+
+   bool IsFolder() const override { return true; }
+
+   /** Provide iterator over TDirectory */
+   std::unique_ptr<RLevelIter> GetChildsIter() override
+   {
+      auto dir = GetDir();
+
+      return dir ? std::make_unique<TDirectoryLevelIter>(dir) : nullptr;
+   }
+
+   /** Get default action - browsing for the TFile/TDirectory */
+   EActionKind GetDefaultAction() const override { return kActBrowse; }
+
+   /** Select directory as active */
+   bool cd() override
+   {
+      auto dir = GetDir();
+      if (dir) {
+         dir->cd();
+         return true;
+      }
+      return false;
+   }
+
+   /** Size of TDirectory */
+   Long64_t GetSize() const override
+   {
+      auto f = GetFile();
+      if (f) return f->GetSize();
+      return -1;
+   }
+
+   std::string GetMTime() const override
+   {
+      auto f = GetFile();
+      if (f) return f->GetModificationDate().AsSQLString();
+      return ""s;
+   }
 
 };
 
@@ -202,21 +316,25 @@ Element representing TKey from TDirectory
 */
 
 
-class TKeyElement : public RElement {
-   TDirectory *fDir{nullptr};
-   std::string fKeyName;
-   std::string fKeyTitle;
+class TKeyElement : public TDirectoryElement {
+   std::string fKeyName, fKeyTitle, fKeyClass, fKeyMTime;
    Short_t fKeyCycle{0};
-   std::string fKeyClass;
+   Long64_t fKeyObjSize{-1};
    std::shared_ptr<RElement> fElement; ///<! holder of read object
 
+   std::string GetMTime() const override { return fKeyMTime; }
+
+   Long64_t GetSize() const override  { return fKeyObjSize; }
+
 public:
-   TKeyElement(TDirectory *dir, TKey *key) : fDir(dir)
+   TKeyElement(TDirectory *dir, TKey *key) : TDirectoryElement("", dir, false)
    {
       fKeyName = key->GetName();
       fKeyTitle = key->GetTitle();
       fKeyCycle = key->GetCycle();
       fKeyClass = key->GetClassName();
+      fKeyMTime = key->GetDatime().AsSQLString();
+      fKeyObjSize = key->GetNbytes();
    }
 
    virtual ~TKeyElement() = default;
@@ -226,6 +344,7 @@ public:
    {
       if (fElement)
          return fElement->GetName();
+
       std::string name = fKeyName;
       name.append(";");
       name.append(std::to_string(fKeyCycle));
@@ -251,9 +370,12 @@ public:
          return fElement->GetChildsIter();
 
       if (fKeyClass.find("TDirectory") == 0) {
-         auto subdir = fDir->GetDirectory(fKeyName.c_str());
+         auto dir = GetDir();
+         if (!dir) return nullptr;
+
+         auto subdir = dir->GetDirectory(fKeyName.c_str());
          if (!subdir)
-            subdir = fDir->GetDirectory(GetName().c_str());
+            subdir = dir->GetDirectory(GetName().c_str());
          if (!subdir) return nullptr;
          return std::make_unique<TDirectoryLevelIter>(subdir);
       }
@@ -283,10 +405,13 @@ public:
          R__LOG_ERROR(ROOT::Experimental::BrowsableLog()) << "Class " << fKeyClass << " does not have dictionary, object " << fKeyName << " cannot be read";
          return nullptr;
       }
+      auto dir = GetDir();
+      if (!dir)
+         return nullptr;
 
       std::string namecycle = fKeyName + ";"s + std::to_string(fKeyCycle);
 
-      void *obj = fDir->GetObjectChecked(namecycle.c_str(), obj_class);
+      void *obj = dir->GetObjectChecked(namecycle.c_str(), obj_class);
 
       if (!obj)
          return nullptr;
@@ -294,23 +419,13 @@ public:
       TObject *tobj = (TObject *) obj_class->DynamicCast(TObject::Class(), obj);
 
       if (tobj) {
-         if (fDir->FindObject(tobj))
-            fDir->Remove(tobj);
+         if (dir->FindObject(tobj))
+            dir->Remove(tobj);
 
          return std::make_unique<TObjectHolder>(tobj, fKeyClass != "TGeoManager"s);
       }
 
       return std::make_unique<RAnyObjectHolder>(obj_class, obj, true);
-   }
-
-   bool IsObject(void *obj) override
-   {
-      return obj == fDir;
-   }
-
-   bool CheckValid() override
-   {
-      return fDir && !fDir->IsZombie();
    }
 
    EActionKind GetDefaultAction() const override
@@ -326,6 +441,21 @@ public:
       if (RProvider::CanDraw7(fKeyClass)) return kActDraw7;
       if (RProvider::CanHaveChilds(fKeyClass)) return kActBrowse;
       return kActNone;
+   }
+
+   bool IsFolder() const
+   {
+      if (fElement)
+         return fElement->IsFolder();
+
+      if (!fKeyClass.empty()) {
+         if (RProvider::CanHaveChilds(fKeyClass))
+            return true;
+         auto cl = TClass::GetClass(fKeyClass.c_str(), kFALSE, kTRUE);
+         return RProvider::CanHaveChilds(cl);
+      }
+
+      return false;
    }
 
    bool IsCapable(EActionKind action) const override
@@ -363,133 +493,22 @@ public:
       return false;
    }
 
-};
-
-// ==============================================================================================
-
-/** \class TDirectoryElement
-\ingroup rbrowser
-
-Element representing TDirectory
-*/
-
-
-class TDirectoryElement : public RElement {
-   std::string fFileName;       ///<!   file name
-   TDirectory *fDir{nullptr};   ///<!   sub-directory (if any)
-   bool fIsFile{false};         ///<!   is TFile instance registered in global list of files
-
-   ///////////////////////////////////////////////////////////////////
-   /// Get TDirectory. Checks if parent file is still there. If not, means it was closed outside ROOT
-
-   TDirectory *GetDir()
+   std::unique_ptr<RItem> CreateItem() const
    {
-      if (fDir) {
-         if (fIsFile && !gROOT->GetListOfFiles()->FindObject(fDir))
-            fDir = nullptr;
-         else if (fDir->IsZombie())
-            fDir = nullptr;
-         else if (!gROOT->GetListOfFiles()->FindObject(fDir->GetFile()))
-            fDir = nullptr;
-      } else if (!fFileName.empty()) {
-         fDir = TFile::Open(fFileName.c_str());
-      }
+      if (fElement)
+         return fElement->CreateItem();
 
-      return fDir;
-   }
+      bool is_folder = IsFolder();
 
-public:
-
-   TDirectoryElement(const std::string &fname, TDirectory *dir = nullptr, bool isfile = false)
-   {
-      fFileName = fname;
-      fDir = dir;
-      fIsFile = isfile;
-      if (fIsFile && !gROOT->GetListOfFiles()->FindObject(fDir))
-         fIsFile = false;
-   }
-
-   virtual ~TDirectoryElement() = default;
-
-   /** Name of TDirectoryElement */
-   std::string GetName() const override
-   {
-      if (fDir)
-         return fDir->GetName();
-
-      if (!fFileName.empty()) {
-         auto pos = fFileName.rfind("/");
-         return ((pos == std::string::npos) || (pos > fFileName.length() - 2)) ? fFileName : fFileName.substr(pos + 1);
-      }
-
-      return ""s;
-   }
-
-   /** Title of TDirectoryElement */
-   std::string GetTitle() const override
-   {
-      if (fDir)
-         return fDir->GetTitle();
-
-      return "ROOT file "s + fFileName;
-   }
-
-   /** Provide iterator over TDirectory */
-   std::unique_ptr<RLevelIter> GetChildsIter() override
-   {
-      auto dir = GetDir();
-
-      return dir ? std::make_unique<TDirectoryLevelIter>(dir) : nullptr;
-   }
-
-   bool IsObject(void *obj) override
-   {
-      return obj == fDir;
-   }
-
-   bool CheckValid() override
-   {
-      return GetDir() != nullptr;
-   }
-
-   /** Get default action - browsing for the TFile/TDirectory*/
-   EActionKind GetDefaultAction() const override { return kActBrowse; }
-
-   /** Select directory as active */
-   bool cd() override
-   {
-      if (fDir && !fDir->IsZombie()) {
-         fDir->cd();
-         return true;
-      }
-      return false;
-   }
-
-   /** Create item for the TDirectory */
-   std::unique_ptr<RItem> CreateItem() const override
-   {
-      if (!fDir)
-         return nullptr;
-
-      auto item = std::make_unique<TObjectItem>(fDir);
-
-      if (fIsFile) {
-         auto f = (TFile *) fDir;
-         item->SetSize(f->GetSize());
-         item->SetMTime(f->GetModificationDate().AsSQLString());
-      }
+      auto item = std::make_unique<TObjectItem>(GetName(), is_folder  ? -1 : 0);
+      item->SetTitle(fKeyTitle);
+      item->SetClassName(fKeyClass);
+      item->SetIcon(RProvider::GetClassIcon(fKeyClass, is_folder));
+      item->SetSize(fKeyObjSize);
+      item->SetMTime(fKeyMTime);
 
       return item;
    }
-
-   //std::string GetMTime() const override
-   //{
-   //   std::string mtime;
-   //   if (fIsFile && fDir)
-   //      mtime = ((TFile *) fDir)-> GetModificationDate().AsSQLString();
-   //
-   //   return mtime;
-   //}
 
 };
 
@@ -514,8 +533,6 @@ std::shared_ptr<RElement> TDirectoryLevelIter::GetElement()
 
    return std::make_shared<TKeyElement>(fDir, fKey);
 }
-
-
 
 // ==============================================================================================
 

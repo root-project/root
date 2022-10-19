@@ -74,8 +74,6 @@ public:
    /** Create iterator for childs elements if any */
    virtual std::unique_ptr<RLevelIter> GetChildsIter();
 
-   virtual int GetNumChilds();
-
    /** Returns element content, depends from kind. Can be "text" or "image64" or "json" */
    virtual std::string GetContent(const std::string & = "text");
 
@@ -84,6 +82,11 @@ public:
 
    /** Check if element contains provided pointer */
    virtual bool IsObject(void *) { return false; }
+
+   /** Check if element can have childs */
+   virtual bool IsFolder() const { return false; }
+
+   virtual int GetNumChilds();
 
    /** Check if element still contains valid content */
    virtual bool CheckValid() { return true; }

@@ -71,33 +71,6 @@ public:
    std::unique_ptr<RItem> CreateItem() override
    {
       return fElements[fCounter] ? fElements[fCounter]->CreateItem() : nullptr;
-
-/*
-
-      auto elem = std::dynamic_pointer_cast<TObjectElement>(fElements[fCounter]);
-      // should never happen
-      if (!elem) return nullptr;
-
-      auto cl = elem->GetClass();
-
-      auto nchilds = elem->GetNumChilds();
-
-      if ((nchilds == 0) && elem->IsFolder()) nchilds = -1; // indicate that TObject is container
-
-      auto item = std::make_unique<TObjectItem>(elem->GetName(), nchilds);
-
-      item->SetClassName(cl ? cl->GetName() : "");
-
-      item->SetIcon(RProvider::GetClassIcon(cl, item->IsFolder()));
-
-      item->SetTitle(elem->GetTitle());
-
-      auto sz = elem->GetSize();
-      if (sz >= 0)
-         item->SetSize(sz);
-
-      return item;
-*/
    }
 
    /** Returns full information for current element */
@@ -286,9 +259,10 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with plain TObject* as argument - ownership is not defined
 
-TObjectElement::TObjectElement(TObject *obj, const std::string &name) : fObj(obj), fName(name)
+TObjectElement::TObjectElement(TObject *obj, const std::string &name)
 {
-   fObject = std::make_unique<TObjectHolder>(fObj);
+   SetObject(obj);
+   fName = name;
    if (fName.empty())
       fName = fObj->GetName();
 }
@@ -309,6 +283,23 @@ TObjectElement::TObjectElement(std::unique_ptr<RHolder> &obj, const std::string 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor with std::unique_ptr<RHolder> as argument
+
+void TObjectElement::SetObject(TObject *obj)
+{
+   fObject = std::make_unique<TObjectHolder>(obj);
+   fObj = obj;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Forget object, use when it was deleted behind the scene
+
+void TObjectElement::ForgetObject() const
+{
+   const_cast<TObjectElement *>(this)->fObj = nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Check if object still exists
 
 const TObject *TObjectElement::CheckObject() const
@@ -316,13 +307,19 @@ const TObject *TObjectElement::CheckObject() const
    if (!fObj)
       return nullptr;
    if (fObj->IsZombie()) {
-      auto self = const_cast<TObjectElement *>(this);
-      self->fObj = nullptr;
+      ForgetObject();
       return nullptr;
    }
    return fObj;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if object can have child elements
+
+bool TObjectElement::IsFolder() const
+{
+   return CheckObject() ? fObj->IsFolder() : false;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns name of the TObject
@@ -344,19 +341,12 @@ std::string TObjectElement::GetTitle() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns IsFolder of contained TObject
-
-bool TObjectElement::IsFolder() const
-{
-   return CheckObject() ? fObj->IsFolder() : false;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Create iterator for childs elements if any
 
 std::unique_ptr<RLevelIter> TObjectElement::GetChildsIter()
 {
-   if (!IsFolder()) return nullptr;
+   if (!IsFolder())
+      return nullptr;
 
    auto iter = std::make_unique<TObjectLevelIter>();
 
@@ -397,7 +387,18 @@ std::unique_ptr<RHolder> TObjectElement::GetObject()
 
 bool TObjectElement::IsObject(void *obj)
 {
+   if (CheckObject() == obj)
+      return true;
+
    return fObject && (fObject->get_object<TObject>() == obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if object is still valid
+
+bool TObjectElement::CheckValid()
+{
+   return CheckObject() != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -434,10 +435,10 @@ std::unique_ptr<RItem> TObjectElement::CreateItem() const
    if (!obj)
       return RElement::CreateItem();
 
-   auto item = std::make_unique<TObjectItem>(obj);
-
-   if (item->GetName().empty())
-      item->SetName(GetName());
+   auto item = std::make_unique<TObjectItem>(obj->GetName(), obj->IsFolder() ? -1 : 0);
+   item->SetTitle(obj->GetTitle());
+   item->SetClassName(obj->ClassName());
+   item->SetIcon(RProvider::GetClassIcon(obj->IsA(), obj->IsFolder()));
 
    auto sz = GetSize();
    if (sz > 0)
