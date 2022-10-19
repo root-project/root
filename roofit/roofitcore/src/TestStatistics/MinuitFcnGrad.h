@@ -39,7 +39,7 @@ public:
    inline ROOT::Math::IMultiGradFunction *Clone() const override { return new MinuitFcnGrad(*this); }
 
    /// Overridden from RooAbsMinimizerFcn to include gradient strategy synchronization.
-   bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings, bool optConst) override;
+   bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) override;
 
    // used inside Minuit:
    inline bool returnsInMinuit2ParameterSpace() const override { return gradient->usesMinuitInternalValues(); }
