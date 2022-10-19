@@ -73,7 +73,8 @@ public:
   bool isDirectGenSafe(const RooAbsArg& arg) const override ;
 
   // Constraint management
-  RooArgSet* getConstraints(const RooArgSet& observables, RooArgSet& constrainedParams, bool stripDisconnected) const override ;
+  RooArgSet* getConstraints(const RooArgSet& observables, RooArgSet& constrainedParams,
+                            bool stripDisconnected, bool removeConstraintsFromPdf=false) const override ;
 
   std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
   std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
@@ -180,6 +181,8 @@ private:
   RooArgSet _defNormSet ; ///< Default normalization set
 
 private:
+
+  void removePdfs(RooArgSet const& pdfs);
 
   ClassDefOverride(RooProdPdf,6) // PDF representing a product of PDFs
 };

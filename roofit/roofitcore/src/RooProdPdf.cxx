@@ -1904,6 +1904,27 @@ RooArgSet* RooProdPdf::findPdfNSet(RooAbsPdf const& pdf) const
 }
 
 
+/// Remove some PDFs from the factors of this RooProdPdf.
+/// Private implementation detail.
+void RooProdPdf::removePdfs(RooArgSet const& pdfs)
+{
+  // Remember what the extended PDF is
+  RooAbsArg const* extPdf = _extendedIndex >= 0 ? &_pdfList[_extendedIndex] : nullptr;
+
+  // Actually remove the PDFs
+  _pdfList.remove(pdfs);
+
+  // Since we may have removed PDFs from the list, the index of the extended
+  // PDF in the list needs to be updated. The new index might also be -1 if the
+  // extended PDF got removed.
+  if(extPdf) {
+     _extendedIndex = _pdfList.index(*extPdf);
+  }
+
+  // Reset cache
+  _cacheMgr.reset() ;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return all parameter constraint p.d.f.s on parameters listed in constrainedParams.
@@ -1911,12 +1932,13 @@ RooArgSet* RooProdPdf::findPdfNSet(RooAbsPdf const& pdf) const
 /// of observables and parameters, which are not constraints, and p.d.fs in terms
 /// of parameters only, which can serve as constraints p.d.f.s
 
-RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& constrainedParams, bool stripDisconnected) const
+RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& constrainedParams,
+                                      bool stripDisconnected, bool removeConstraintsFromPdf) const
 {
   RooArgSet constraints ;
   RooArgSet pdfParams, conParams ;
 
-  // Loop over p.d.f. components
+  // Loop over PDF components
   for(auto * pdf : static_range_cast<RooAbsPdf*>(_pdfList)) {
     // A constraint term is a p.d.f that does not depend on any of the listed observables
     // but does depends on any of the parameters that should be constrained
@@ -1939,6 +1961,11 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
       tmp.remove(observables, /*silent=*/false, /*matchByNameOnly=*/true);
       pdfParams.add(tmp,true) ;
     }
+  }
+
+  // Remove the constraints now from the PDF if the caller requested it
+  if(removeConstraintsFromPdf) {
+    const_cast<RooProdPdf*>(this)->removePdfs(constraints);
   }
 
   // Strip any constraints that are completely decoupled from the other product terms

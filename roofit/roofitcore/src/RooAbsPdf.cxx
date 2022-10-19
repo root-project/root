@@ -1121,7 +1121,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   // Lambda function to create the correct constraint term for a PDF. In old
   // RooFit, we use this PDF itself as the argument, for the new BatchMode
   // we're passing a clone.
-  auto createConstr = [&](RooAbsPdf const& pdf) -> std::unique_ptr<RooAbsReal> {
+  auto createConstr = [&](RooAbsPdf const& pdf, bool removeConstraintsFromPdf=false) -> std::unique_ptr<RooAbsReal> {
     return RooConstraintSum::createConstraintTerm(
             baseName + "_constr", // name
             pdf, // pdf
@@ -1131,6 +1131,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
             pc.getSet("glObs"), // GlobalObservables RooCmdArg
             pc.getString("globstag",0,true), // GlobalObservablesTag RooCmdArg
             takeGlobalObservablesFromData, // From GlobalObservablesSource RooCmdArg
+            removeConstraintsFromPdf,
             pdf._myws // passing workspace to cache the set of constraints
     );
   };
@@ -1149,7 +1150,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 
     return RooFit::BatchModeHelpers::createNLL(std::move(pdfClone),
                                                data,
-                                               createConstr(*pdfClone),
+                                               createConstr(*pdfClone, /*removeConstraintsFromPdf=*/true),
                                                rangeName ? rangeName : "",
                                                projDeps,
                                                ext,
@@ -3390,7 +3391,8 @@ RooAbsReal* RooAbsPdf::createScanCdf(const RooArgSet& iset, const RooArgSet& nse
 /// This helper function finds and collects all constraints terms of all component p.d.f.s
 /// and returns a RooArgSet with all those terms.
 
-RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet& constrainedParams, bool stripDisconnected) const
+RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet& constrainedParams,
+                                        bool stripDisconnected, bool removeConstraintsFromPdf) const
 {
   RooArgSet* ret = new RooArgSet("AllConstraints") ;
 
@@ -3398,7 +3400,8 @@ RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet&
   for (const auto arg : *comps) {
     auto pdf = dynamic_cast<const RooAbsPdf*>(arg) ;
     if (pdf && !ret->find(pdf->GetName())) {
-      std::unique_ptr<RooArgSet> compRet(pdf->getConstraints(observables,constrainedParams,stripDisconnected));
+      std::unique_ptr<RooArgSet> compRet(
+              pdf->getConstraints(observables,constrainedParams,stripDisconnected,removeConstraintsFromPdf));
       if (compRet) {
         ret->add(*compRet,false) ;
       }
