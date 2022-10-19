@@ -92,8 +92,6 @@ class PickleWritingSimpleObjectsTestCase( MyTestCase ):
 
    def test6WriteCustomTypes( self ):
       """[ROOT-10810] Test writing a RooDataSet with weights"""
-      # Silence the RooFit banner
-      ROOT.gEnv.SetValue("RooFit.Banner", 0)
 
       var = ROOT.RooRealVar('var' ,'variable',0,10)
       w = ROOT.RooRealVar('w' ,'weight',0,10)
