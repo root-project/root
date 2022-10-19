@@ -13,10 +13,33 @@
 #include "TTree.h"
 #include "TNtuple.h"
 #include "TBranch.h"
+#include "TLeaf.h"
 #include "TBranchElement.h"
 #include "TBranchBrowsable.h"
 
 using namespace ROOT::Experimental::Browsable;
+
+////////////////////////////////////////////////////////////
+/// Representing TLeaf in browsables
+
+class TBrLeafElement : public TObjectElement {
+
+public:
+   TBrLeafElement(std::unique_ptr<RHolder> &leaf) : TObjectElement(leaf) {}
+
+   Long64_t GetSize() const override
+   {
+      auto leaf = fObject->Get<TLeaf>();
+      if (!leaf)
+         return -1;
+
+      if (!leaf->GetBranch())
+         return -1;
+
+      return leaf->GetBranch()->GetTotalSize();
+   }
+};
+
 
 
 ////////////////////////////////////////////////////////////
@@ -44,9 +67,10 @@ public:
 
    Long64_t GetSize() const override
    {
-      auto tr = fObject->Get<TTree>();
+      auto tr = dynamic_cast<const TTree *>(CheckObject());
       return tr ? tr->GetTotBytes() : -1;
    }
+
 };
 
 
@@ -84,6 +108,9 @@ class TBranchBrowseProvider : public RProvider {
 public:
    TBranchBrowseProvider()
    {
+      RegisterBrowse(TLeaf::Class(), [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
+         return std::make_shared<TBrLeafElement>(object);
+      });
       RegisterBrowse(TBranch::Class(), [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          return std::make_shared<TBrElement>(object);
       });

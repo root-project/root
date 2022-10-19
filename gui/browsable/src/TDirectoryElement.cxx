@@ -171,11 +171,11 @@ public:
    std::unique_ptr<RItem> CreateItem() override
    {
       if (!fKeysIter && fObj) {
-         auto item = std::make_unique<TObjectItem>(GetItemName(), CanItemHaveChilds() ? -1 : 0);
-         item->SetClassName(fObj->IsA()->GetName());
-         item->SetIcon(RProvider::GetClassIcon(fObj->IsA()->GetName()));
-         item->SetTitle(fObj->GetTitle());
-         return item;
+         std::unique_ptr<RHolder> holder = std::make_unique<TObjectHolder>(fObj, kFALSE);
+
+         auto elem = RProvider::Browse(holder);
+
+         return elem ? elem->CreateItem() : nullptr;
       }
 
       auto item = std::make_unique<TKeyItem>(GetItemName(), CanItemHaveChilds() ? -1 : 0);
@@ -465,6 +465,32 @@ public:
       return false;
    }
 
+   /** Create item for the TDirectory */
+   std::unique_ptr<RItem> CreateItem() const override
+   {
+      if (!fDir)
+         return nullptr;
+
+      auto item = std::make_unique<TObjectItem>(fDir);
+
+      if (fIsFile) {
+         auto f = (TFile *) fDir;
+         item->SetSize(f->GetSize());
+         item->SetMTime(f->GetModificationDate().AsSQLString());
+      }
+
+      return item;
+   }
+
+   //std::string GetMTime() const override
+   //{
+   //   std::string mtime;
+   //   if (fIsFile && fDir)
+   //      mtime = ((TFile *) fDir)-> GetModificationDate().AsSQLString();
+   //
+   //   return mtime;
+   //}
+
 };
 
 // ==============================================================================================
@@ -523,5 +549,3 @@ public:
    }
 
 } newRTFileProvider;
-
-

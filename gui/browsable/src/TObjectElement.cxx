@@ -29,6 +29,7 @@ using namespace std::string_literals;
 
 using namespace ROOT::Experimental::Browsable;
 
+
 /** \class TObjectLevelIter
 \ingroup rbrowser
 
@@ -69,28 +70,34 @@ public:
    /** Create element for the browser */
    std::unique_ptr<RItem> CreateItem() override
    {
-      std::shared_ptr<TObjectElement> elem = std::dynamic_pointer_cast<TObjectElement>(fElements[fCounter]);
+      return fElements[fCounter] ? fElements[fCounter]->CreateItem() : nullptr;
+
+/*
+
+      auto elem = std::dynamic_pointer_cast<TObjectElement>(fElements[fCounter]);
       // should never happen
       if (!elem) return nullptr;
 
       auto cl = elem->GetClass();
 
       auto nchilds = elem->GetNumChilds();
+
       if ((nchilds == 0) && elem->IsFolder()) nchilds = -1; // indicate that TObject is container
 
       auto item = std::make_unique<TObjectItem>(elem->GetName(), nchilds);
 
       item->SetClassName(cl ? cl->GetName() : "");
 
-      item->SetIcon(RProvider::GetClassIcon(cl, nchilds > 0));
+      item->SetIcon(RProvider::GetClassIcon(cl, item->IsFolder()));
 
       item->SetTitle(elem->GetTitle());
 
       auto sz = elem->GetSize();
       if (sz >= 0)
-         item->SetSize(std::to_string(sz));
+         item->SetSize(sz);
 
       return item;
+*/
    }
 
    /** Returns full information for current element */
@@ -195,30 +202,11 @@ public:
       TObject *obj = *fIter;
       if (!obj) return nullptr;
 
-      bool is_folder = obj->IsFolder();
+      std::unique_ptr<RHolder> holder = std::make_unique<TObjectHolder>(*fIter, kFALSE);
 
-      auto item = std::make_unique<TObjectItem>(obj->GetName(), is_folder ? -1 : 0);
+      auto elem = RProvider::Browse(holder);
 
-      item->SetClassName(obj->ClassName());
-
-      item->SetIcon(RProvider::GetClassIcon(obj->IsA(), obj->IsFolder()));
-
-      item->SetTitle(obj->GetTitle());
-
-      if (obj->IsA() == TColor::Class()) {
-         if (item->GetName().empty())
-            item->SetName("Color"s + std::to_string(static_cast<TColor *>(obj)->GetNumber()));
-      }
-
-      if (is_folder && obj->InheritsFrom(TFile::Class())) {
-         auto f = dynamic_cast<TFile *>(obj);
-         if (f) {
-            item->SetSize(f->GetSize());
-            item->SetMTime(f->GetModificationDate().AsSQLString());
-         }
-      }
-
-      return item;
+      return elem ? elem->CreateItem() : nullptr;
    }
 
    /** Returns full information for current element */
@@ -323,15 +311,16 @@ TObjectElement::TObjectElement(std::unique_ptr<RHolder> &obj, const std::string 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if object still exists
 
-bool TObjectElement::CheckObject() const
+const TObject *TObjectElement::CheckObject() const
 {
-   if (!fObj) return false;
+   if (!fObj)
+      return nullptr;
    if (fObj->IsZombie()) {
       auto self = const_cast<TObjectElement *>(this);
       self->fObj = nullptr;
-      return false;
+      return nullptr;
    }
-   return true;
+   return fObj;
 }
 
 
@@ -340,7 +329,9 @@ bool TObjectElement::CheckObject() const
 
 std::string TObjectElement::GetName() const
 {
-   if (!fName.empty()) return fName;
+   if (!fName.empty())
+      return fName;
+
    return CheckObject() ? fObj->GetName() : "";
 }
 
@@ -435,6 +426,31 @@ RElement::EActionKind TObjectElement::GetDefaultAction() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create item
+
+std::unique_ptr<RItem> TObjectElement::CreateItem() const
+{
+   auto obj = CheckObject();
+   if (!obj)
+      return RElement::CreateItem();
+
+   auto item = std::make_unique<TObjectItem>(obj);
+
+   if (item->GetName().empty())
+      item->SetName(GetName());
+
+   auto sz = GetSize();
+   if (sz > 0)
+      item->SetSize(sz);
+
+   auto tm = GetMTime();
+   if (!tm.empty())
+      item->SetMTime(tm);
+
+   return item;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Check object capability
 
 bool TObjectElement::IsCapable(RElement::EActionKind action) const
@@ -467,6 +483,21 @@ std::unique_ptr<RLevelIter> TObjectElement::GetCollectionIter(const TCollection 
 {
    return std::make_unique<TCollectionIter>(coll);
 }
+
+
+class TColorElement : public TObjectElement {
+
+public:
+   TColorElement(std::unique_ptr<RHolder> &obj) : TObjectElement(obj)
+   {
+      if (fName.empty()) {
+         auto col = fObject->Get<TColor>();
+         if (col)
+            fName = "Color"s + std::to_string(col->GetNumber());
+      }
+   }
+
+};
 
 // ==============================================================================================
 
@@ -528,11 +559,16 @@ public:
          return std::make_shared<TCollectionElement>(object);
       });
 
+      RegisterBrowse(TColor::Class(), [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
+         return std::make_shared<TColorElement>(object);
+      });
+
       RegisterBrowse(nullptr, [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          if (object->CanCastTo<TObject>())
             return std::make_shared<TObjectElement>(object);
          return nullptr;
       });
+
    }
 
 } newRTObjectProvider;
