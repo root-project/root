@@ -8,8 +8,8 @@ include(ExternalProject)
 
 find_package(OpenSSL REQUIRED)
 
-set(XROOTD_VERSION "5.5.0")
-set(XROOTD_VERSIONNUM 500050000 CACHE INTERNAL "" FORCE)
+set(XROOTD_VERSION "5.5.1")
+set(XROOTD_VERSIONNUM 500050001 CACHE INTERNAL "" FORCE)
 set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
 set(XROOTD_SRC_URI ${lcgpackages}/xrootd-${XROOTD_VERSION}.tar.gz)
 set(XROOTD_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/XROOTD-prefix)
@@ -34,7 +34,7 @@ endif()
 ExternalProject_Add(
     XROOTD
     URL ${XROOTD_SRC_URI}
-    URL_HASH SHA256=e01d83997e428580aadefd4b18cc6246e97a1941dfceff3726ffd0c40921de34
+    URL_HASH SHA256=3556d5afcae20ed9a12c89229d515492f6c6f94f829a3d537f5880fcd2fa77e4
     INSTALL_DIR ${XROOTD_PREFIX}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
