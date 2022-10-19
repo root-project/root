@@ -14,14 +14,9 @@
 
 #include <RooAbsCachedPdf.h>
 #include <RooAbsPdf.h>
-#include <RooAbsReal.h>
 #include <RooAddition.h>
-#include <RooConstraintSum.h>
-#include <RooProdPdf.h>
 
 #include "RooNormalizedPdf.h"
-
-#include <unordered_set>
 
 namespace {
 
@@ -32,25 +27,15 @@ class GraphChecker {
 public:
    GraphChecker(RooAbsArg const &topNode)
    {
-
-      // To track the RooProdPdfs to figure out which ones are responsible for constraints.
-      std::vector<RooAbsArg *> prodPdfs;
-
       // Get the list of servers for each node by data key.
       {
          RooArgList nodes;
          topNode.treeNodeServerList(&nodes, nullptr, true, true, false, true);
          RooArgSet nodesSet{nodes};
          for (RooAbsArg *node : nodesSet) {
-            if (dynamic_cast<RooProdPdf *>(node)) {
-               prodPdfs.push_back(node);
-            }
             _serverLists[node];
-            bool isConstraintSum = dynamic_cast<RooConstraintSum const *>(node);
             for (RooAbsArg *server : node->servers()) {
                _serverLists[node].push_back(server);
-               if (isConstraintSum)
-                  _constraints.insert(server);
             }
          }
       }
@@ -58,33 +43,6 @@ public:
          auto &l = item.second;
          std::sort(l.begin(), l.end());
          l.erase(std::unique(l.begin(), l.end()), l.end());
-      }
-
-      // Loop over the RooProdPdfs to figure out which ones are responsible for constraints.
-      for (auto *prodPdf : static_range_cast<RooProdPdf *>(prodPdfs)) {
-         std::size_t actualPdfIdx = 0;
-         std::size_t nNonConstraint = 0;
-         for (std::size_t i = 0; i < prodPdf->pdfList().size(); ++i) {
-            RooAbsArg &pdf = prodPdf->pdfList()[i];
-
-            // Heuristic for HistFactory models to find also the constraints
-            // that were not extracted for the RooConstraint sum, e.g. because
-            // they were constant. TODO: fix RooProdPdf such that is also
-            // extracts constraints for which the parameters is set constant.
-            bool isProbablyConstraint = std::string(pdf.GetName()).find("onstrain") != std::string::npos;
-
-            if (_constraints.find(&pdf) == _constraints.end() && !isProbablyConstraint) {
-               actualPdfIdx = i;
-               ++nNonConstraint;
-            }
-         }
-         if (nNonConstraint != prodPdf->pdfList().size()) {
-            if (nNonConstraint != 1) {
-               throw std::runtime_error("A RooProdPdf that multiplies a pdf with constraints should contain only one "
-                                        "pdf that is not a constraint!");
-            }
-            _prodPdfsWithConstraints[prodPdf] = actualPdfIdx;
-         }
       }
    }
 
@@ -122,20 +80,7 @@ public:
       return false;
    }
 
-   bool isConstraint(DataKey key) const
-   {
-      auto found = _constraints.find(key);
-      return found != _constraints.end();
-   }
-
-   std::unordered_map<RooAbsArg *, std::size_t> const &prodPdfsWithConstraints() const
-   {
-      return _prodPdfsWithConstraints;
-   }
-
 private:
-   std::unordered_set<DataKey> _constraints;
-   std::unordered_map<RooAbsArg *, std::size_t> _prodPdfsWithConstraints;
    ServerLists _serverLists;
    std::map<std::pair<DataKey, DataKey>, bool> _results;
 };
@@ -158,14 +103,6 @@ void treeNodeServerListAndNormSets(const RooAbsArg &arg, RooAbsCollection &list,
       for (const auto server : arg.servers()) {
 
          if (!server->isValueServer(arg)) {
-            continue;
-         }
-
-         // If this is a server that is also serving a RooConstraintSum, it
-         // should be skipped because it is not evaluated by this client (e.g.
-         // a RooProdPdf). It was only part of the servers to be extracted for
-         // the constraint sum.
-         if (!dynamic_cast<RooConstraintSum const *>(&arg) && checker.isConstraint(server)) {
             continue;
          }
 
@@ -262,16 +199,6 @@ std::vector<std::unique_ptr<RooAbsArg>> unfoldIntegrals(RooAbsArg const &topNode
       newArg.setAttribute(attrib.c_str(), false);
    };
 
-   // Replaces the RooProdPdfs that were used to wrap constraints with the actual pdf.
-   for (RooAbsArg *node : nodes) {
-      if (auto prodPdf = dynamic_cast<RooProdPdf *>(node)) {
-         auto found = checker.prodPdfsWithConstraints().find(prodPdf);
-         if (found != checker.prodPdfsWithConstraints().end()) {
-            replaceArg(prodPdf->pdfList()[found->second], *prodPdf);
-         }
-      }
-   }
-
    // Replace all pdfs that need to be normalized with a pdf wrapper that
    // applies the right normalization.
    for (RooAbsArg *node : nodes) {
@@ -326,12 +253,6 @@ void foldIntegrals(RooAbsArg &topNode, RooArgSet &replacedArgs, RooArgSet &newAr
 /// for the PDFs in that graph will be created, and placed into the computation
 /// graph itself, rewiring the existing RooAbsArgs. When the unfolder goes out
 /// of scope, all changes to the computation graph will be reverted.
-///
-/// It also performs some other optimizations of the computation graph that are
-/// reverted when the object goes out of scope:
-///
-///   1. Replacing RooProdPdfs that were used to bring constraints into the
-///      likelihood with the actual pdf that is not a constraint.
 ///
 /// Note that for evaluation, the original topNode should not be used anymore,
 /// because if it is a pdf there is now a new normalized pdf wrapping it,
