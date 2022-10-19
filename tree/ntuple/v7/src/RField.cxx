@@ -833,8 +833,9 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
       Attach(std::move(subField),
 	     RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
    }
-   for (const auto &f : fSubFields)
-      fTraits &= f->GetTraits();
+   // TODO(jblomer) ask TClass about traits
+   // for (const auto &f : fSubFields)
+   //   fTraits &= f->GetTraits();
 }
 
 void ROOT::Experimental::RClassField::Attach(std::unique_ptr<Detail::RFieldBase> child, RSubFieldInfo info)
@@ -1224,7 +1225,6 @@ ROOT::Experimental::RVectorField::RVectorField(
       fieldName, "std::vector<" + itemField->GetType() + ">", ENTupleStructure::kCollection, false /* isSimple */)
    , fItemSize(itemField->GetValueSize()), fNWritten(0)
 {
-   fTraits = 0;
    Attach(std::move(itemField));
 }
 
@@ -1342,7 +1342,6 @@ ROOT::Experimental::RRVecField::RRVecField(std::string_view fieldName, std::uniq
                                             ENTupleStructure::kCollection, false /* isSimple */),
      fItemSize(itemField->GetValueSize()), fNWritten(0)
 {
-   fTraits = 0;
    Attach(std::move(itemField));
    fValueSize = EvalValueSize(); // requires fSubFields to be populated
 }
@@ -1572,7 +1571,6 @@ ROOT::Experimental::RField<std::vector<bool>>::RField(std::string_view name)
    : ROOT::Experimental::Detail::RFieldBase(name, "std::vector<bool>", ENTupleStructure::kCollection,
                                             false /* isSimple */)
 {
-   fTraits = 0;
    Attach(std::make_unique<RField<bool>>("_0"));
 }
 
@@ -2018,7 +2016,6 @@ ROOT::Experimental::RCollectionField::RCollectionField(
    : RFieldBase(name, "", ENTupleStructure::kCollection, true /* isSimple */)
    , fCollectionNTuple(collectionNTuple)
 {
-   fTraits = 0;
    for (unsigned i = 0; i < collectionModel->GetFieldZero()->fSubFields.size(); ++i) {
       auto& subField = collectionModel->GetFieldZero()->fSubFields[i];
       Attach(std::move(subField));
