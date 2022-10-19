@@ -964,7 +964,7 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared) const
 ///                                                 - precision = 0: Activate bin integration only for continuous PDFs fit to a RooDataHist.
 ///                                                 - precision < 0: Deactivate.
 ///                                                 \see RooBinSamplingPdf
-/// <tr><td> `NewStyle(bool flag)`           <td>  Enable or disable new style likelihoods, which will become the default in a future release. 
+/// <tr><td> `NewStyle(bool flag)`           <td>  Enable or disable new style likelihoods, which will become the default in a future release.
 ///                                                This does not change any user-facing code, but only enables a different likelihood class in the back-end. Note that this
 ///                                                should be set to true for parallel minimization of likelihoods!
 /// </table>
@@ -1118,20 +1118,24 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   }
   const bool takeGlobalObservablesFromData = globalObservablesSource == "data";
 
-  auto batchMode = static_cast<RooFit::BatchModeOption>(pc.getInt("BatchMode"));
+  // Lambda function to create the correct constraint term for a PDF. In old
+  // RooFit, we use this PDF itself as the argument, for the new BatchMode
+  // we're passing a clone.
+  auto createConstr = [&](RooAbsPdf const& pdf) -> std::unique_ptr<RooAbsReal> {
+    return RooConstraintSum::createConstraintTerm(
+            baseName + "_constr", // name
+            pdf, // pdf
+            data, // data
+            pc.getSet("cPars"), // Constrain RooCmdArg
+            pc.getSet("extCons"), // ExternalConstraints RooCmdArg
+            pc.getSet("glObs"), // GlobalObservables RooCmdArg
+            pc.getString("globstag",0,true), // GlobalObservablesTag RooCmdArg
+            takeGlobalObservablesFromData, // From GlobalObservablesSource RooCmdArg
+            pdf._myws // passing workspace to cache the set of constraints
+    );
+  };
 
-  // Create the constraint term
-  auto constraintTerm = RooConstraintSum::createConstraintTerm(
-          baseName + "_constr", // name
-          *this, // pdf
-          data, // data
-          pc.getSet("cPars"), // Constrain RooCmdArg
-          pc.getSet("extCons"), // ExternalConstraints RooCmdArg
-          pc.getSet("glObs"), // GlobalObservables RooCmdArg
-          pc.getString("globstag",0,true), // GlobalObservablesTag RooCmdArg
-          takeGlobalObservablesFromData, // From GlobalObservablesSource RooCmdArg
-          _myws // passing workspace to cache the set of constraints
-  );
+  auto batchMode = static_cast<RooFit::BatchModeOption>(pc.getInt("BatchMode"));
 
   // Construct BatchModeNLL if requested
   if (batchMode != RooFit::BatchModeOption::Off && batchMode != RooFit::BatchModeOption::Old) {
@@ -1142,9 +1146,10 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
                         << addCoefRangeName << "\n";
        pdfClone->fixAddCoefRange(addCoefRangeName, false);
     }
+
     return RooFit::BatchModeHelpers::createNLL(std::move(pdfClone),
                                                data,
-                                               std::move(constraintTerm),
+                                               createConstr(*pdfClone),
                                                rangeName ? rangeName : "",
                                                projDeps,
                                                ext,
@@ -1173,7 +1178,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
   // Include constraints, if any, in likelihood
-  if (constraintTerm) {
+  if (std::unique_ptr<RooAbsReal> constraintTerm = createConstr(*this)) {
     auto orignll = std::move(nll) ;
     nll = std::make_unique<RooAddition>(Form("%s_with_constr",baseName.c_str()),"nllWithCons",RooArgSet(*orignll,*constraintTerm)) ;
     nll->addOwnedComponents(std::move(orignll),std::move(constraintTerm)) ;
@@ -1455,11 +1460,11 @@ int RooAbsPdf::calcSumW2CorrectedCovariance(RooMinimizer &minimizer, RooAbsReal 
 /// <tr><td> `PrintEvalErrors(Int_t numErr)`   <td>  Control number of p.d.f evaluation errors printed per likelihood evaluation.
 ///                                                A negative value suppresses output completely, a zero value will only print the error count per p.d.f component,
 ///                                                a positive value will print details of each error up to `numErr` messages per p.d.f component.
-/// <tr><td> `NewStyle(bool flag)`           <td>  Enable or disable new style likelihoods, which will become the default in a future release. 
+/// <tr><td> `NewStyle(bool flag)`           <td>  Enable or disable new style likelihoods, which will become the default in a future release.
 ///                                                This does not change any user-facing code, but only enables a different likelihood class in the back-end.
 ///                                                Note that this option is forced to true in case parallelization is requested with the `Parallelize` named argument.
 /// <tr><td> `Parallelize(Int_t nWorkers, bool parallelGradient, bool parallelLikelihood)`   <td>  Control parallelization settings. The first argument controls the number of workers (parallel processes) to use.
-///                                                                                                The second argument controls whether the gradient is parallelized and the third argument controls whether 
+///                                                                                                The second argument controls whether the gradient is parallelized and the third argument controls whether
 ///                                                                                                likelihood evaluation is parallelized. Setting only `nWorkers` but neither of the other arguments does not enable
 ///                                                                                                parallelization. Note also that parallelization requires new style likelihoods, so setting anything in `Parallelize`
 ///                                                                                                will by default enable the `NewStyle` named argument.
