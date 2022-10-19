@@ -35,17 +35,6 @@ public:
 
   const RooArgList& list() { return _set1 ; }
 
-  static std::unique_ptr<RooAbsReal> createConstraintTerm(
-        std::string const& name,
-        RooAbsPdf const& pdf,
-        RooAbsData const& data,
-        RooArgSet const* constrainedParameters,
-        RooArgSet const* externalConstraints,
-        RooArgSet const* globalObservables,
-        const char* globalObservablesTag,
-        bool takeGlobalObservablesFromData,
-        bool removeConstraintsFromPdf);
-
   bool setData(RooAbsData const& data, bool cloneData=true);
   /// \copydoc setData(RooAbsData const&, bool)
   bool setData(RooAbsData& data, bool cloneData=true) override {
