@@ -145,33 +145,6 @@ class TestClassROOT_PYTHONIZATIONS:
         assert h.GetBinErrorUp(1)  == 0.
         assert h.GetBinErrorLow(1) == 0.
 
-    def test04_roodataset(self):
-        """createHistogram overloads obtained with using decls"""
-
-        # ROOT-7983
-        import ROOT
-
-        x = ROOT.RooRealVar("x", "x", -10, 10)
-        mean = ROOT.RooRealVar("mean", "mean of gaussian", 1, -10, 10)
-        sigma = ROOT.RooRealVar("sigma", "width of gaussian", 1, 0.1, 10)
-        gauss = ROOT.RooGaussian("gauss", "gaussian PDF", x, mean, sigma)
-
-        data = gauss.generate(ROOT.RooArgSet(x), 10000)  # ROOT.RooDataSet
-        h1d = data.createHistogram("myname", x)
-
-    def test05_rooargset_iter(self):
-        """STL sequence iterator injected in RooAbsCollection, inherited by RooArgSet"""
-
-        if not self.legacy_pyroot:
-            # ROOT-10606
-            import ROOT
-
-            varA = ROOT.RooRealVar("a", "a", 0.)
-            varB = ROOT.RooRealVar("b", "b", 1.)
-            varSet = ROOT.RooArgSet(varA, varB)
-            for var in varSet:
-                var.Print()
-
 
 ## actual test run
 if __name__ == '__main__':

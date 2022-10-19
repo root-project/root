@@ -579,11 +579,6 @@ class Regression22ObjectCleanup(MyTestCase):
          c = ROOT.TCanvas()
          mg.Draw()
 
-   def test2RooFitMinimizer(self):
-      """C++ object returned by RooFit::Minimizer should not be double deleted"""
-      # ROOT-9516
-      minimizer = ROOT.RooFit.Minimizer("Minuit2", "migrad")
-
 
 class Regression23TFractionFitter(MyTestCase):
    def test1TFractionFitterDestruction(self):
