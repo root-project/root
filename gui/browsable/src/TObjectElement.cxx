@@ -161,7 +161,16 @@ public:
    // use default implementation for now
    // bool Find(const std::string &name) override { return FindDirEntry(name); }
 
-   std::string GetItemName() const override { return (*fIter)->GetName(); }
+   std::string GetItemName() const override
+   {
+      std::string name = (*fIter)->GetName();
+      if (name.empty()) {
+         std::unique_ptr<RHolder> holder = std::make_unique<TObjectHolder>(*fIter, kFALSE);
+         auto elem = RProvider::Browse(holder);
+         if (elem) name = elem->CreateItem()->GetName();
+      }
+      return name;
+   }
 
    bool CanItemHaveChilds() const override
    {
@@ -436,7 +445,14 @@ std::unique_ptr<RItem> TObjectElement::CreateItem() const
       return RElement::CreateItem();
 
    auto item = std::make_unique<TObjectItem>(obj->GetName(), obj->IsFolder() ? -1 : 0);
+
+   if (item->GetName().empty())
+      item->SetName(GetName());
+
    item->SetTitle(obj->GetTitle());
+   if (item->GetTitle().empty())
+      item->SetTitle(GetTitle());
+
    item->SetClassName(obj->ClassName());
    item->SetIcon(RProvider::GetClassIcon(obj->IsA(), obj->IsFolder()));
 
@@ -497,6 +513,8 @@ public:
             fName = "Color"s + std::to_string(col->GetNumber());
       }
    }
+
+   EActionKind GetDefaultAction() const override { return kActEdit; }
 
 };
 
