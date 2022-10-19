@@ -184,8 +184,7 @@ RooArgSet const* tryToGetConstraintSetFromWorkspace(
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the parameter constraint sum to add to the negative log-likelihood.
-/// \return If there are constraints, returns a pointer to the constraint NLL,
-///         where all the components are clones of the original PDF components.
+/// \return If there are constraints, returns a pointer to the constraint NLL.
 ///         Returns a `nullptr` if the parameters are unconstrained.
 /// \param[in] name Name of the created RooConstraintSum object.
 /// \param[in] pdf The pdf model whose parameters should be constrained.
@@ -307,11 +306,8 @@ std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
        takeGlobalObservablesFromData = false;
     }
 
-    // The constraint terms need to be cloned, because the global observables
-    // might be changed to have the same values as stored in data, or because
-    // the compute graph is mutated completely like in the BatchMode.
-    auto constraintTerm = RooHelpers::cloneTreeWithSameParameters(RooConstraintSum{
-            name.c_str(), "nllCons", allConstraints, glObs ? *glObs : cPars, takeGlobalObservablesFromData});
+    auto constraintTerm = std::make_unique<RooConstraintSum>(
+            name.c_str(), "nllCons", allConstraints, glObs ? *glObs : cPars, takeGlobalObservablesFromData);
 
     // Redirect the global observables to the ones from the dataset if applicable.
     constraintTerm->setData(data, false);
