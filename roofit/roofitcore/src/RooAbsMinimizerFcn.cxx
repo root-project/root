@@ -29,7 +29,6 @@
 #include "RooRealVar.h"
 #include "RooAbsRealLValue.h"
 #include "RooMsgService.h"
-#include "RooMinimizer.h"
 #include "RooNaNPacker.h"
 
 #include "TClass.h"
@@ -75,14 +74,11 @@ RooAbsMinimizerFcn::RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *conte
 }
 
 RooAbsMinimizerFcn::RooAbsMinimizerFcn(const RooAbsMinimizerFcn &other)
-   : _context(other._context), _maxFCN(other._maxFCN), _funcOffset(other._funcOffset),
-     _recoverFromNaNStrength(other._recoverFromNaNStrength), _numBadNLL(other._numBadNLL),
-     _printEvalErrors(other._printEvalErrors), _evalCounter(other._evalCounter), _nDim(other._nDim),
-     _optConst(other._optConst), _floatParamList(new RooArgList(*other._floatParamList)),
-     _constParamList(new RooArgList(*other._constParamList)),
+   : _context(other._context), _maxFCN(other._maxFCN), _funcOffset(other._funcOffset), _numBadNLL(other._numBadNLL),
+     _evalCounter(other._evalCounter), _nDim(other._nDim), _optConst(other._optConst),
+     _floatParamList(new RooArgList(*other._floatParamList)), _constParamList(new RooArgList(*other._constParamList)),
      _initFloatParamList((RooArgList *)other._initFloatParamList->snapshot(false)),
-     _initConstParamList((RooArgList *)other._initConstParamList->snapshot(false)), _logfile(other._logfile),
-     _doEvalErrorWall(other._doEvalErrorWall)
+     _initConstParamList((RooArgList *)other._initConstParamList->snapshot(false)), _logfile(other._logfile)
 {
 }
 
@@ -94,7 +90,7 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
    bool constValChange(false);
    bool constStatChange(false);
 
-   Int_t index(0);
+   int index(0);
 
    // Handle eventual migrations from constParamList -> floatParamList
    for (index = 0; index < _constParamList->getSize(); index++) {
@@ -118,7 +114,7 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
          constStatChange = true;
          _nDim++;
 
-         if (isVerbose()) {
+         if (cfg().verbose) {
             oocoutI(_context, Minimization)
                << "RooAbsMinimizerFcn::synchronize: parameter " << par->GetName() << " is now floating." << endl;
          }
@@ -127,7 +123,7 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
       // Test if value changed
       if (par->getVal() != oldpar->getVal()) {
          constValChange = true;
-         if (isVerbose()) {
+         if (cfg().verbose) {
             oocoutI(_context, Minimization)
                << "RooAbsMinimizerFcn::synchronize: value of constant parameter " << par->GetName() << " changed from "
                << oldpar->getVal() << " to " << par->getVal() << endl;
@@ -194,7 +190,7 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
             } else {
                pstep = 1;
             }
-            if (isVerbose()) {
+            if (cfg().verbose) {
                oocoutW(_context, Minimization)
                   << "RooAbsMinimizerFcn::synchronize: WARNING: no initial error estimate available for "
                   << par->GetName() << ": using " << pstep << endl;
@@ -206,7 +202,7 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
       }
 
       // new parameter
-      if (index >= Int_t(parameters.size())) {
+      if (index >= int(parameters.size())) {
 
          if (par->hasMin() && par->hasMax()) {
             parameters.emplace_back(par->GetName(), par->getVal(), pstep, pmin, pmax);
@@ -232,7 +228,7 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
          // Parameter changes floating -> constant : update only value if necessary
          if (oldVar != par->getVal()) {
             parameters[index].SetValue(par->getVal());
-            if (isVerbose()) {
+            if (cfg().verbose) {
                oocoutI(_context, Minimization)
                   << "RooAbsMinimizerFcn::synchronize: value of parameter " << par->GetName() << " changed from "
                   << oldVar << " to " << par->getVal() << endl;
@@ -240,7 +236,7 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
          }
          parameters[index].Fix();
          constStatChange = true;
-         if (isVerbose()) {
+         if (cfg().verbose) {
             oocoutI(_context, Minimization)
                << "RooAbsMinimizerFcn::synchronize: parameter " << par->GetName() << " is now fixed." << endl;
          }
@@ -252,7 +248,7 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
             parameters[index].SetValue(par->getVal());
             constValChange = true;
 
-            if (isVerbose()) {
+            if (cfg().verbose) {
                oocoutI(_context, Minimization)
                   << "RooAbsMinimizerFcn::synchronize: value of fixed parameter " << par->GetName() << " changed from "
                   << oldVar << " to " << par->getVal() << endl;
@@ -265,7 +261,7 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
             parameters[index].Release();
             constStatChange = true;
 
-            if (isVerbose()) {
+            if (cfg().verbose) {
                oocoutI(_context, Minimization)
                   << "RooAbsMinimizerFcn::synchronize: parameter " << par->GetName() << " is now floating." << endl;
             }
@@ -284,7 +280,7 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
          }
 
          // Inform user about changes in verbose mode
-         if (isVerbose()) {
+         if (cfg().verbose) {
             // if ierr<0, par was moved from the const list and a message was already printed
 
             if (oldVar != par->getVal()) {
@@ -315,25 +311,25 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
    return 0;
 }
 
-bool RooAbsMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters, bool optConst)
+bool RooAbsMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters)
 {
-   return synchronizeParameterSettings(parameters, optConst);
+   return synchronizeParameterSettings(parameters, _optConst);
 }
 
 /// Modify PDF parameter error by ordinal index (needed by MINUIT)
-void RooAbsMinimizerFcn::SetPdfParamErr(Int_t index, double value)
+void RooAbsMinimizerFcn::SetPdfParamErr(int index, double value)
 {
    static_cast<RooRealVar *>(_floatParamList->at(index))->setError(value);
 }
 
 /// Modify PDF parameter error by ordinal index (needed by MINUIT)
-void RooAbsMinimizerFcn::ClearPdfParamAsymErr(Int_t index)
+void RooAbsMinimizerFcn::ClearPdfParamAsymErr(int index)
 {
    static_cast<RooRealVar *>(_floatParamList->at(index))->removeAsymError();
 }
 
 /// Modify PDF parameter error by ordinal index (needed by MINUIT)
-void RooAbsMinimizerFcn::SetPdfParamErr(Int_t index, double loVal, double hiVal)
+void RooAbsMinimizerFcn::SetPdfParamErr(int index, double loVal, double hiVal)
 {
    static_cast<RooRealVar *>(_floatParamList->at(index))->setAsymError(loVal, hiVal);
 }
@@ -404,7 +400,7 @@ bool RooAbsMinimizerFcn::SetPdfParamVal(int index, double value) const
    auto par = static_cast<RooRealVar *>(&(*_floatParamList)[index]);
 
    if (par->getVal() != value) {
-      if (isVerbose())
+      if (cfg().verbose)
          cout << par->GetName() << "=" << value << ", ";
 
       par->setVal(value);
@@ -419,11 +415,11 @@ bool RooAbsMinimizerFcn::SetPdfParamVal(int index, double value) const
 /// Negative values disable printing.
 void RooAbsMinimizerFcn::printEvalErrors() const
 {
-   if (_printEvalErrors < 0)
+   if (cfg().printEvalErrors < 0)
       return;
 
    std::ostringstream msg;
-   if (_doEvalErrorWall) {
+   if (cfg().doEEWall) {
       msg << "RooAbsMinimizerFcn: Minimized function has error status." << endl
           << "Returning maximum FCN so far (" << _maxFCN
           << ") to force MIGRAD to back out of this region. Error log follows.\n";
@@ -438,7 +434,7 @@ void RooAbsMinimizerFcn::printEvalErrors() const
    }
    msg << std::endl;
 
-   RooAbsReal::printEvalErrors(msg, _printEvalErrors);
+   RooAbsReal::printEvalErrors(msg, cfg().printEvalErrors);
    ooccoutW(_context, Minimization) << msg.str() << endl;
 }
 
@@ -458,7 +454,7 @@ void RooAbsMinimizerFcn::finishDoEval() const
    _evalCounter++;
 }
 
-void RooAbsMinimizerFcn::setOptimizeConst(Int_t flag)
+void RooAbsMinimizerFcn::setOptimizeConst(int flag)
 {
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
 
@@ -519,9 +515,4 @@ std::vector<double> RooAbsMinimizerFcn::getParameterValues() const
    }
 
    return values;
-}
-
-bool RooAbsMinimizerFcn::isVerbose() const
-{
-   return _context->_cfg.verbose;
 }

@@ -92,9 +92,9 @@ double RooMinimizerFcn::DoEval(const double *x) const
       RooAbsReal::clearEvalErrorLog();
       _numBadNLL++;
 
-      if (_doEvalErrorWall) {
+      if (cfg().doEEWall) {
          const double badness = RooNaNPacker::unpackNaN(fvalue);
-         fvalue = (std::isfinite(_maxFCN) ? _maxFCN : 0.) + _recoverFromNaNStrength * badness;
+         fvalue = (std::isfinite(_maxFCN) ? _maxFCN : 0.) + cfg().recoverFromNaN * badness;
       }
    } else {
       if (_evalCounter > 0 && _evalCounter == _numBadNLL) {
@@ -110,7 +110,7 @@ double RooMinimizerFcn::DoEval(const double *x) const
    // Optional logging
    if (_logfile)
       (*_logfile) << setprecision(15) << fvalue << setprecision(4) << endl;
-   if (isVerbose()) {
+   if (cfg().verbose) {
       cout << "\nprevFCN" << (_funct->isOffsetting() ? "-offset" : "") << " = " << setprecision(10) << fvalue
            << setprecision(4) << "  ";
       cout.flush();

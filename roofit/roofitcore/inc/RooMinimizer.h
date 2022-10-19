@@ -53,7 +53,7 @@ public:
       int nWorkers = getDefaultWorkers(); // RooAbsMinimizerFcn config that can only be set in ctor
       bool parallelGradient = false;      // RooAbsMinimizerFcn config that can only be set in ctor
       bool parallelLikelihood = false;    // RooAbsMinimizerFcn config that can only be set in ctor
-      int verbose = 0;                    // local config
+      bool verbose = false;               // local config
       bool profile = false;               // local config
       std::string minimizerType = "";     // local config
    private:
@@ -77,11 +77,11 @@ public:
 
    // Setters on _fcn
    void optimizeConst(int flag);
-   void setEvalErrorWall(bool flag);
+   void setEvalErrorWall(bool flag) { _cfg.doEEWall = flag; }
    void setRecoverFromNaNStrength(double strength);
    void setOffsetting(bool flag);
-   void setPrintEvalErrors(int numEvalErrors);
-   void setVerbose(bool flag = true);
+   void setPrintEvalErrors(int numEvalErrors) { _cfg.printEvalErrors = numEvalErrors; }
+   void setVerbose(bool flag = true) { _cfg.verbose = flag; }
    bool setLogFile(const char *logf = nullptr);
 
    int migrad();
@@ -151,7 +151,6 @@ private:
    // constructor helper functions
    void initMinimizerFirstPart();
    void initMinimizerFcnDependentPart(double defaultErrorLevel);
-   void execSetters(); // Executes setters that set _fcn config as per given _cfg configuration
 
    int _status = -99;
    bool _profileStart = false;
