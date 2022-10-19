@@ -108,7 +108,7 @@ protected:
    /// The columns are connected either to a sink or to a source (not to both); they are owned by the field.
    std::vector<std::unique_ptr<RColumn>> fColumns;
    /// Properties of the type that allow for optimizations of collections of that type
-   int fTraits = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+   int fTraits = 0;
 
    /// Creates the backing columns corresponsing to the field type for writing
    virtual void GenerateColumnsImpl() = 0;
@@ -790,7 +790,10 @@ protected:
 public:
    static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -847,7 +850,10 @@ protected:
 public:
    static std::string TypeName() { return "bool"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -895,7 +901,10 @@ protected:
 public:
    static std::string TypeName() { return "float"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -944,7 +953,10 @@ protected:
 public:
    static std::string TypeName() { return "double"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -992,7 +1004,10 @@ protected:
 public:
    static std::string TypeName() { return "char"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -1040,7 +1055,10 @@ protected:
 public:
    static std::string TypeName() { return "std::int8_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -1088,7 +1106,10 @@ protected:
 public:
    static std::string TypeName() { return "std::uint8_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -1136,7 +1157,10 @@ protected:
 public:
    static std::string TypeName() { return "std::int16_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -1184,7 +1208,10 @@ protected:
 public:
    static std::string TypeName() { return "std::uint16_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -1232,7 +1259,10 @@ protected:
 public:
    static std::string TypeName() { return "std::int32_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -1280,7 +1310,10 @@ protected:
 public:
    static std::string TypeName() { return "std::uint32_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -1328,7 +1361,10 @@ protected:
 public:
    static std::string TypeName() { return "std::uint64_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -1376,7 +1412,10 @@ protected:
 public:
    static std::string TypeName() { return "std::int64_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -1433,7 +1472,6 @@ public:
       : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */), fIndex(0),
         fElemIndex(&fIndex)
    {
-      fTraits = 0;
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
