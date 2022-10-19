@@ -392,7 +392,7 @@ if (NOT builtin_cling)
   if (builtin_clang OR builtin_llvm)
     message(WARNING "No need to build internal llvm or clang. Consider turning builtin_clang=Off and builtin_llvm=Off")
   endif()
-endif(builtin_cling)
+endif(NOT builtin_cling)
 
 if(root7)
   if(NOT CMAKE_CXX_STANDARD)
