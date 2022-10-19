@@ -46,14 +46,12 @@ TEST(RooSimultaneous, SingleChannelCrossCheck)
    std::unique_ptr<RooDataSet> data{model.generate(x)};
    RooDataSet combData("combData", "combData", x, Index(cat), Import("physics", *data));
 
-   RooArgSet constraints{fconstraint};
+   using AbsRealPtr = std::unique_ptr<RooAbsReal>;
 
-   std::unique_ptr<RooAbsReal> nllDirect{modelConstrained.createNLL(combData, Constrain(constraints))};
-   std::unique_ptr<RooAbsReal> nllSimWrapped{modelSim.createNLL(combData, Constrain(constraints))};
-   std::unique_ptr<RooAbsReal> nllDirectBatch{
-      modelConstrained.createNLL(combData, Constrain(constraints), BatchMode("cpu"))};
-   std::unique_ptr<RooAbsReal> nllSimWrappedBatch{
-      modelSim.createNLL(combData, Constrain(constraints), BatchMode("cpu"))};
+   AbsRealPtr nllDirect{modelConstrained.createNLL(combData)};
+   AbsRealPtr nllSimWrapped{modelSim.createNLL(combData)};
+   AbsRealPtr nllDirectBatch{modelConstrained.createNLL(combData, BatchMode("cpu"))};
+   AbsRealPtr nllSimWrappedBatch{modelSim.createNLL(combData, BatchMode("cpu"))};
 
    EXPECT_FLOAT_EQ(nllDirect->getVal(), nllSimWrapped->getVal()) << "Inconsistency in old RooFit";
    EXPECT_FLOAT_EQ(nllDirect->getVal(), nllDirectBatch->getVal()) << "Old RooFit and BatchMode don't agree";
