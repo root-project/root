@@ -36,9 +36,15 @@ protected:
 
    bool IsSame(TObject *obj) const { return obj == fObj; }
 
-   const TObject *CheckObject() const;
+   void SetObject(TObject *obj);
+
+   void ForgetObject() const;
+
+   virtual const TObject *CheckObject() const;
 
    virtual std::string GetMTime() const { return ""; }
+
+   virtual Long64_t GetSize() const { return -1; }
 
 public:
    TObjectElement(TObject *obj, const std::string &name = "");
@@ -52,13 +58,10 @@ public:
 
    void SetName(const std::string &name) { fName = name; }
 
+   bool IsFolder() const override;
+
    /** Title of TObject */
    std::string GetTitle() const override;
-
-   /** Size of TObject */
-   virtual Long64_t GetSize() const { return -1; }
-
-   bool IsFolder() const;
 
    /** Create iterator for childs elements if any */
    std::unique_ptr<RLevelIter> GetChildsIter() override;
@@ -67,6 +70,8 @@ public:
    std::unique_ptr<RHolder> GetObject() override;
 
    bool IsObject(void *) override;
+
+   bool CheckValid() override;
 
    const TClass *GetClass() const;
 
