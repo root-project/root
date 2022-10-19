@@ -35,38 +35,35 @@
 
 using namespace std;
 
-
 namespace {
 
 // Helper function that wraps RooAbsArg::getParameters and directly returns the
 // output RooArgSet. To be used in the initializer list of the RooMinimizerFcn
 // constructor.
-RooArgSet getParameters(RooAbsReal const& funct) {
-    RooArgSet out;
-    funct.getParameters(nullptr, out);
-    return out;
+RooArgSet getParameters(RooAbsReal const &funct)
+{
+   RooArgSet out;
+   funct.getParameters(nullptr, out);
+   return out;
 }
 
 } // namespace
 
-
-RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer* context) : RooAbsMinimizerFcn(getParameters(*funct), context), _funct(funct)
-{}
-
-
-
-RooMinimizerFcn::RooMinimizerFcn(const RooMinimizerFcn& other) : RooAbsMinimizerFcn(other), ROOT::Math::IBaseFunctionMultiDim(other),
-  _funct(other._funct)
-{}
-
-
-RooMinimizerFcn::~RooMinimizerFcn()
-{}
-
-
-ROOT::Math::IBaseFunctionMultiDim* RooMinimizerFcn::Clone() const
+RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context)
+   : RooAbsMinimizerFcn(getParameters(*funct), context), _funct(funct)
 {
-  return new RooMinimizerFcn(*this) ;
+}
+
+RooMinimizerFcn::RooMinimizerFcn(const RooMinimizerFcn &other)
+   : RooAbsMinimizerFcn(other), ROOT::Math::IBaseFunctionMultiDim(other), _funct(other._funct)
+{
+}
+
+RooMinimizerFcn::~RooMinimizerFcn() {}
+
+ROOT::Math::IBaseFunctionMultiDim *RooMinimizerFcn::Clone() const
+{
+   return new RooMinimizerFcn(*this);
 }
 
 void RooMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)
@@ -75,51 +72,53 @@ void RooMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, 
 }
 
 /// Evaluate function given the parameters in `x`.
-double RooMinimizerFcn::DoEval(const double *x) const {
+double RooMinimizerFcn::DoEval(const double *x) const
+{
 
-  // Set the parameter values for this iteration
-  for (unsigned index = 0; index < _nDim; index++) {
-    if (_logfile) (*_logfile) << x[index] << " " ;
-    SetPdfParamVal(index,x[index]);
-  }
+   // Set the parameter values for this iteration
+   for (unsigned index = 0; index < _nDim; index++) {
+      if (_logfile)
+         (*_logfile) << x[index] << " ";
+      SetPdfParamVal(index, x[index]);
+   }
 
-  // Calculate the function for these parameters
-  RooAbsReal::setHideOffset(false) ;
-  double fvalue = _funct->getVal();
-  RooAbsReal::setHideOffset(true) ;
+   // Calculate the function for these parameters
+   RooAbsReal::setHideOffset(false);
+   double fvalue = _funct->getVal();
+   RooAbsReal::setHideOffset(true);
 
-  if (!std::isfinite(fvalue) || RooAbsReal::numEvalErrors() > 0 || fvalue > 1e30) {
-    printEvalErrors();
-    RooAbsReal::clearEvalErrorLog() ;
-    _numBadNLL++ ;
+   if (!std::isfinite(fvalue) || RooAbsReal::numEvalErrors() > 0 || fvalue > 1e30) {
+      printEvalErrors();
+      RooAbsReal::clearEvalErrorLog();
+      _numBadNLL++;
 
-    if (_doEvalErrorWall) {
-      const double badness = RooNaNPacker::unpackNaN(fvalue);
-      fvalue = (std::isfinite(_maxFCN) ? _maxFCN : 0.) + _recoverFromNaNStrength * badness;
-    }
-  } else {
-    if (_evalCounter > 0 && _evalCounter == _numBadNLL) {
-      // This is the first time we get a valid function value; while before, the
-      // function was always invalid. For invalid  cases, we returned values > 0.
-      // Now, we offset valid values such that they are < 0.
-      _funcOffset = -fvalue;
-    }
-    fvalue += _funcOffset;
-    _maxFCN = std::max(fvalue, _maxFCN);
-  }
+      if (_doEvalErrorWall) {
+         const double badness = RooNaNPacker::unpackNaN(fvalue);
+         fvalue = (std::isfinite(_maxFCN) ? _maxFCN : 0.) + _recoverFromNaNStrength * badness;
+      }
+   } else {
+      if (_evalCounter > 0 && _evalCounter == _numBadNLL) {
+         // This is the first time we get a valid function value; while before, the
+         // function was always invalid. For invalid  cases, we returned values > 0.
+         // Now, we offset valid values such that they are < 0.
+         _funcOffset = -fvalue;
+      }
+      fvalue += _funcOffset;
+      _maxFCN = std::max(fvalue, _maxFCN);
+   }
 
-  // Optional logging
-  if (_logfile)
-    (*_logfile) << setprecision(15) << fvalue << setprecision(4) << endl;
-  if (isVerbose()) {
-    cout << "\nprevFCN" << (_funct->isOffsetting()?"-offset":"") << " = " << setprecision(10)
-         << fvalue << setprecision(4) << "  " ;
-    cout.flush() ;
-  }
+   // Optional logging
+   if (_logfile)
+      (*_logfile) << setprecision(15) << fvalue << setprecision(4) << endl;
+   if (isVerbose()) {
+      cout << "\nprevFCN" << (_funct->isOffsetting() ? "-offset" : "") << " = " << setprecision(10) << fvalue
+           << setprecision(4) << "  ";
+      cout.flush();
+   }
 
-  finishDoEval();
+   finishDoEval();
 
-  return fvalue;
+   return fvalue;
 }
 
 std::string RooMinimizerFcn::getFunctionName() const
