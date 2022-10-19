@@ -62,6 +62,8 @@ doxygen: filter pyzdoc
 	$(call MkDir,$(DOXYGEN_NOTEBOOK_PATH))
 	./makehtmlfooter.sh > htmlfooter.html
 	./makeinput.sh
+	$(call MkDir,$(DOXYGEN_IMAGE_PATH))
+	bash ./touch_images.sh $(DOXYGEN_SOURCE_DIRECTORY) $(DOXYGEN_IMAGE_PATH)
 	doxygen
 	gzip $(DOXYGEN_IMAGE_PATH)/ROOT.tag
 	gzip $(DOXYGEN_IMAGE_PATH)/ROOT.qch
