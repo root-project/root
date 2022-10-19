@@ -441,10 +441,6 @@ void RooProdPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEven
   pdfs.reserve(_pdfList.size());
   for (const RooAbsArg* i:_pdfList) {
     auto span = dataMap.at(i);
-    // If the pdf doesn't depend on any observable (detected by it getting evaluated in scalar mode),
-    // it corresponds to a parameter constraint and should not be evaluated.
-    // These pdfs are evaluated in the RooConstraintSum that gets added to the likelihood in the end.
-    if(span.size() == 1) continue;
     pdfs.push_back(span);
   }
   RooBatchCompute::ArgVector special{ static_cast<double>(pdfs.size()) };
