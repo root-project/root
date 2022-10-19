@@ -93,6 +93,9 @@ class PickleWritingSimpleObjectsTestCase( MyTestCase ):
    def test6WriteCustomTypes( self ):
       """[ROOT-10810] Test writing a RooDataSet with weights"""
 
+      if os.environ.get('ROOFIT') == 'False':
+          self.skipTest("ROOT was built without RooFit")
+
       var = ROOT.RooRealVar('var' ,'variable',0,10)
       w = ROOT.RooRealVar('w' ,'weight',0,10)
       vs = ROOT.RooArgSet ( var , w )

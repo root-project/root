@@ -5,6 +5,12 @@ if(ROOT_pyroot_FOUND)
     set(legacy_pyroot False)
   endif()
 
+  if(ROOT_roofit_FOUND)
+    set(roofit True)
+  else()
+    set(roofit False)
+  endif(ROOT_roofit_FOUND)
+
   find_python_module(pytest REQUIRED)
 
   if (PY_PYTEST_FOUND)
