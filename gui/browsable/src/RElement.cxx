@@ -9,7 +9,9 @@
 #include <ROOT/Browsable/RElement.hxx>
 
 #include <ROOT/Browsable/RLevelIter.hxx>
+#include <ROOT/Browsable/RItem.hxx>
 #include <ROOT/RLogger.hxx>
+
 #include "TBufferJSON.h"
 
 using namespace ROOT::Experimental::Browsable;
@@ -93,6 +95,17 @@ std::string RElement::GetContent(const std::string &kind)
    }
 
    return ""s;
+}
+
+
+/////////////////////////////////////////////////////////////////////
+/// Returns item with element description
+
+std::unique_ptr<RItem> RElement::CreateItem() const
+{
+   auto item = std::make_unique<RItem>(GetName());
+   item->SetTitle(GetTitle());
+   return item;
 }
 
 /////////////////////////////////////////////////////////////////////

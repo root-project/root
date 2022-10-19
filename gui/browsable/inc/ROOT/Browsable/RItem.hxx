@@ -79,7 +79,6 @@ public:
    }
 };
 
-
 } // namespace Browsable
 } // namespace Experimental
 } // namespace ROOT

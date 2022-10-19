@@ -22,6 +22,8 @@ using RElementPath_t = std::vector<std::string>;
 
 class RLevelIter;
 
+class RItem;
+
 /** \class RElement
 \ingroup rbrowser
 \brief Basic element of browsable hierarchy. Provides access to data, creates iterator if any
@@ -97,6 +99,8 @@ public:
 
    /** Select element as active */
    virtual bool cd() { return false; }
+
+   virtual std::unique_ptr<RItem> CreateItem() const;
 
    static std::shared_ptr<RElement> GetSubElement(std::shared_ptr<RElement> &elem, const RElementPath_t &path);
 
