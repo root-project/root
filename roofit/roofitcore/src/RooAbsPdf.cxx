@@ -156,7 +156,6 @@ called for each data event.
 #include "RooNumIntConfig.h"
 #include "RooProjectedPdf.h"
 #include "RooCustomizer.h"
-#include "RooConstraintSum.h"
 #include "RooParamBinning.h"
 #include "RooNumCdf.h"
 #include "RooFitResult.h"
@@ -177,6 +176,7 @@ called for each data event.
 #include "RooFit/TestStatistics/RooRealL.h"
 #include "RooFit/TestStatistics/optional_parameter_types.h"
 #include "RunContext.h"
+#include "ConstraintHelpers.h"
 
 #include "ROOT/StringUtils.hxx"
 #include "TMath.h"
@@ -1122,7 +1122,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   // RooFit, we use this PDF itself as the argument, for the new BatchMode
   // we're passing a clone.
   auto createConstr = [&](RooAbsPdf const& pdf, bool removeConstraintsFromPdf=false) -> std::unique_ptr<RooAbsReal> {
-    return RooConstraintSum::createConstraintTerm(
+    return createConstraintTerm(
             baseName + "_constr", // name
             pdf, // pdf
             data, // data
