@@ -33,8 +33,6 @@ public:
 
    TObjectItem(const std::string &_name, int _nchilds) : RItem(_name, _nchilds) {}
 
-   TObjectItem(const TObject *obj);
-
    // should be here, one needs virtual table for correct streaming of RRootBrowserReply
    virtual ~TObjectItem() = default;
 
