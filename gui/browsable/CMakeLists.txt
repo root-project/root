@@ -35,6 +35,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
     src/TDirectoryElement.cxx
     src/TObjectElement.cxx
     src/TObjectHolder.cxx
+    src/TObjectItem.cxx
   DEPENDENCIES
     RIO
     Hist

@@ -36,7 +36,9 @@ protected:
 
    bool IsSame(TObject *obj) const { return obj == fObj; }
 
-   virtual bool CheckObject() const;
+   const TObject *CheckObject() const;
+
+   virtual std::string GetMTime() const { return ""; }
 
 public:
    TObjectElement(TObject *obj, const std::string &name = "");
@@ -71,6 +73,8 @@ public:
    EActionKind GetDefaultAction() const override;
 
    bool IsCapable(EActionKind) const override;
+
+   std::unique_ptr<RItem> CreateItem() const override;
 
    static std::unique_ptr<RLevelIter> GetCollectionIter(const TCollection *);
 
