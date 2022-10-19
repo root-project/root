@@ -63,7 +63,7 @@ public:
    template <class T>
    bool CanCastTo() const
    {
-      return const_cast<TClass *>(GetClass())->GetBaseClassOffset(TClass::GetClass<T>()) == 0;
+      return const_cast<TClass *>(GetClass())->GetBaseClassOffset(TClass::GetClass<T>()) >= 0;
    }
 
    /** Returns direct object pointer cast to provided class */
@@ -71,8 +71,9 @@ public:
    template<class T>
    const T *Get() const
    {
-      if (CanCastTo<T>())
-         return (const T *) GetObject();
+      auto offset = const_cast<TClass *>(GetClass())->GetBaseClassOffset(TClass::GetClass<T>());
+      if (offset >= 0)
+         return (const T *) ((char *) GetObject() + offset);
 
       return nullptr;
    }
@@ -80,18 +81,18 @@ public:
    /** Clone container. Trivial for shared_ptr and TObject holder, does not work for unique_ptr */
    auto Copy() const { return std::unique_ptr<RHolder>(DoCopy()); }
 
-
    /** Returns unique_ptr of contained object */
    template<class T>
    std::unique_ptr<T> get_unique()
    {
       // ensure that direct inheritance is used
-      if (!CanCastTo<T>())
+      auto offset = const_cast<TClass *>(GetClass())->GetBaseClassOffset(TClass::GetClass<T>());
+      if (offset < 0)
          return nullptr;
       auto pobj = TakeObject();
       if (pobj) {
          std::unique_ptr<T> unique;
-         unique.reset(static_cast<T *>(pobj));
+         unique.reset((T *)((char *) pobj + offset));
          return unique;
       }
       return nullptr;
@@ -116,10 +117,11 @@ public:
    template<class T>
    T *get_object()
    {
-      if (!CanCastTo<T>())
+      auto offset = const_cast<TClass *>(GetClass())->GetBaseClassOffset(TClass::GetClass<T>());
+      if (offset < 0)
          return nullptr;
 
-      return (T *) AccessObject();
+      return (T *) ((char *)AccessObject() + offset);
    }
 };
 
