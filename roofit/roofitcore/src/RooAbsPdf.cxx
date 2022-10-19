@@ -234,6 +234,44 @@ inline double getLog(double prob, RooAbsReal const *caller)
    return std::log(prob);
 }
 
+/// To set the fitrange attribute of the PDF and custom ranges for the
+/// observables so that RooPlot can automatically plot the fitting range.
+void resetFitrangeAttributes(RooAbsArg& pdf, RooAbsData const& data, std::string const& baseName,
+                             const char* rangeName, bool splitRange)
+{
+   // Clear possible range attributes from previous fits.
+   pdf.removeStringAttribute("fitrange");
+
+   // No fitrange was speficied, so we do nothing. Or "SplitRange" is used, and
+   // then there are no uniquely defined ranges for the observables (as they
+   // are different in each category).
+   if(!rangeName || splitRange) return;
+
+   RooArgSet observables;
+   pdf.getObservables(data.get(), observables) ;
+
+   std::string fitrangeValue;
+   auto subranges = ROOT::Split(rangeName, ",");
+   for (auto const &subrange : subranges) {
+      if (subrange.empty())
+         continue;
+      std::string fitrangeValueSubrange = std::string("fit_") + baseName;
+      if (subranges.size() > 1) {
+         fitrangeValueSubrange += "_" + subrange;
+      }
+      fitrangeValue += fitrangeValueSubrange + ",";
+      for (RooAbsArg *arg : observables) {
+
+         if(arg->isCategory()) continue;
+         auto& observable = static_cast<RooRealVar&>(*arg);
+
+         observable.setRange(fitrangeValueSubrange.c_str(), observable.getMin(subrange.c_str()),
+                             observable.getMax(subrange.c_str()));
+      }
+   }
+   pdf.setStringAttribute("fitrange", fitrangeValue.substr(0, fitrangeValue.size() - 1).c_str());
+}
+
 
 } // namespace
 
@@ -983,9 +1021,9 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineMutex("Range","RangeWithName") ;
   pc.defineMutex("GlobalObservables","GlobalObservablesTag") ;
   pc.defineInt("NewStyle", "NewStyle", 0, 0);
-  pc.defineMutex(
-    "NewStyle",
-    "NumCPU"); // New style likelihoods define parallelization through Parallel(...) on fitTo or attributes on RooMinimizer::Config.
+
+  // New style likelihoods define parallelization through Parallelize(...) on fitTo or attributes on RooMinimizer::Config.
+  pc.defineMutex("NewStyle", "NumCPU");
 
 
   // Process and check varargs
@@ -1036,7 +1074,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   }
   RooFit::MPSplit interl = (RooFit::MPSplit) numcpu_strategy;
 
-  Int_t splitr   = pc.getInt("splitRange") ;
+  Int_t splitRange   = pc.getInt("splitRange") ;
   bool verbose = pc.getInt("verbose") ;
   Int_t optConst = pc.getInt("optConst") ;
   Int_t cloneData = pc.getInt("cloneData") ;
@@ -1046,9 +1084,6 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   if (cloneData==2) {
     cloneData = optConst ;
   }
-
-  // Clear possible range attributes from previous fits.
-  removeStringAttribute("fitrange");
 
   if (pc.hasProcessed("Range")) {
     double rangeLo = pc.getDouble("rangeLo") ;
@@ -1066,6 +1101,9 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     rangeName = "fit" ;
   }
 
+  // Set the fitrange attribute of th PDF, add observables ranges for plotting
+  resetFitrangeAttributes(*this, data, baseName, rangeName, splitRange);
+
   RooArgSet projDeps ;
   auto tmp = pc.getSet("projDepSet");
   if (tmp) {
@@ -1080,7 +1118,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   }
   const bool takeGlobalObservablesFromData = globalObservablesSource == "data";
 
-  RooFit::BatchModeOption batchMode = static_cast<RooFit::BatchModeOption>(pc.getInt("BatchMode"));
+  auto batchMode = static_cast<RooFit::BatchModeOption>(pc.getInt("BatchMode"));
 
   // Create the constraint term
   auto constraintTerm = RooConstraintSum::createConstraintTerm(
@@ -1097,11 +1135,17 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 
   // Construct BatchModeNLL if requested
   if (batchMode != RooFit::BatchModeOption::Off && batchMode != RooFit::BatchModeOption::Old) {
-    return RooFit::BatchModeHelpers::createNLL(*this,
+    std::unique_ptr<RooAbsPdf> pdfClone = RooHelpers::cloneTreeWithSameParameters(*this, data.get());
+    if (addCoefRangeName) {
+       cxcoutI(Fitting) << "RooAbsPdf::fitTo(" << GetName()
+                        << ") fixing interpretation of coefficients of any component to range "
+                        << addCoefRangeName << "\n";
+       pdfClone->fixAddCoefRange(addCoefRangeName, false);
+    }
+    return RooFit::BatchModeHelpers::createNLL(std::move(pdfClone),
                                                data,
                                                std::move(constraintTerm),
                                                rangeName ? rangeName : "",
-                                               addCoefRangeName ? addCoefRangeName : "",
                                                projDeps,
                                                ext,
                                                pc.getDouble("IntegrateBins"),
@@ -1118,7 +1162,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   cfg.nCPU = numcpu;
   cfg.interleave = interl;
   cfg.verbose = verbose;
-  cfg.splitCutRange = static_cast<bool>(splitr);
+  cfg.splitCutRange = static_cast<bool>(splitRange);
   cfg.cloneInputData = static_cast<bool>(cloneData);
   cfg.integrateOverBinsPrecision = pc.getDouble("IntegrateBins");
   cfg.binnedL = false;

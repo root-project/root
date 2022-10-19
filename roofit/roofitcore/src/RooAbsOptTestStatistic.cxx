@@ -187,7 +187,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // ******************************************************************
 
   // Clone FUNC
-  _funcClone = static_cast<RooAbsReal*>(real.cloneTree());
+  _funcClone = RooHelpers::cloneTreeWithSameParameters(real, indata.get()).release();
   _funcCloneSet = 0 ;
 
   // Attach FUNC to data set
@@ -196,10 +196,6 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   if (_funcClone->getAttribute("BinnedLikelihood")) {
     _funcClone->setAttribute("BinnedLikelihoodActive") ;
   }
-
-  // Reattach FUNC to original parameters
-  RooArgSet* origParams = (RooArgSet*) real.getParameters(indata) ;
-  _funcClone->recursiveRedirectServers(*origParams) ;
 
   // Mark all projected dependents as such
   if (projDeps.getSize()>0) {
@@ -215,19 +211,14 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   RooProdPdf* pdfWithCons = dynamic_cast<RooProdPdf*>(_funcClone) ;
   if (pdfWithCons) {
 
-    RooArgSet* connPars = pdfWithCons->getConnectedParameters(*indata.get()) ;
+    std::unique_ptr<RooArgSet> connPars{pdfWithCons->getConnectedParameters(*indata.get())};
     // Add connected parameters as servers
-    _paramSet.removeAll() ;
     _paramSet.add(*connPars) ;
-    delete connPars ;
 
   } else {
     // Add parameters as servers
-    _paramSet.add(*origParams) ;
+    _funcClone->getParameters(indata.get(), _paramSet);
   }
-
-
-  delete origParams ;
 
   // Store normalization set
   _normSet = (RooArgSet*) indata.get()->snapshot(false) ;
@@ -299,7 +290,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
        pdfClone->setNormRange(rangeName);
     }
 
-    // Adjust FUNC normalization ranges to requested fitRange, store original ranges for RooAddPdf coefficient interpretation
+    // Print warnings if the requested ranges are not available for the observable
     for (const auto arg : *_funcObsSet) {
 
       if (auto realObs = dynamic_cast<RooRealVar*>(arg)) {
@@ -311,36 +302,6 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
              errMsg << "The observable \"" << realObs->GetName() << "\" doesn't define the requested range \""
                     << token << "\". Replacing it with the default range." << std::endl;
              coutW(Fitting) << errMsg.str() << std::endl;
-          }
-        }
-
-        auto transferRangeAndBinning = [&](RooRealVar & toVar, const char* toName, const char* fromName) {
-          toVar.setRange(toName, realObs->getMin(fromName),realObs->getMax(fromName));
-          // If the realObs also has a binning with a name matching the
-          // rangeName, it will be set as the default binning. If `fromName` is
-          // a nullptr to signify taking the default binning from `realObs`,
-          // don't check if it exists as there is always a default binning.
-          if(!fromName || realObs->hasBinning(fromName)) {
-            toVar.setBinning(realObs->getBinning(fromName), toName);
-          }
-        };
-
-        // Keep track of list of fit ranges in string attribute fit range of
-        // original PDF, but only do so if we don't do multi-range
-        // normalization. In this case, we could not define an equivalend
-        // single fit range.
-        if (!_splitRange && strchr(rangeName,',') == 0) {
-          const std::string fitRangeName = std::string("fit_") + GetName();
-          const char* origAttrib = real.getStringAttribute("fitrange") ;
-          std::string newAttr = origAttrib ? origAttrib : "";
-
-          if (newAttr.find(fitRangeName) == std::string::npos) {
-            newAttr += (newAttr.empty() ? "" : ",") + fitRangeName;
-          }
-          real.setStringAttribute("fitrange", newAttr.c_str());
-          RooRealVar* origObs = (RooRealVar*) origObsSet->find(arg->GetName()) ;
-          if (origObs) {
-            transferRangeAndBinning(*origObs, fitRangeName.c_str(), rangeName);
           }
         }
       }
