@@ -223,6 +223,7 @@ std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
         RooArgSet const* globalObservables,
         const char* globalObservablesTag,
         bool takeGlobalObservablesFromData,
+        bool removeConstraintsFromPdf,
         RooWorkspace * workspace)
 {
   RooArgSet const& observables = *data.get();
@@ -251,7 +252,7 @@ std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
   } else {
 
      if (!cPars.empty()) {
-        std::unique_ptr<RooArgSet> internalConstraints{pdf.getAllConstraints(observables, cPars, doStripDisconnected)};
+        std::unique_ptr<RooArgSet> internalConstraints{pdf.getAllConstraints(observables, cPars, doStripDisconnected, removeConstraintsFromPdf)};
         allConstraints.add(*internalConstraints);
      }
      if (externalConstraints) {
