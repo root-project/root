@@ -9,6 +9,7 @@
 6. Upgrade three.js to r145
 7. Improve geometry clipping
 8. 3-dimensional TTree::Draw now produces TPolyMarker3D by default
+9. Fix - multipart message handling (#250)
 
 
 ## Changes in 7.2.0

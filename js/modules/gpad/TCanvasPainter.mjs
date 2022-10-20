@@ -1,8 +1,8 @@
-import { BIT, settings, create, parse, toJSON, isBatchMode } from '../core.mjs';
+import { BIT, settings, create, parse, toJSON, loadScript, isBatchMode } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
-import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons } from '../gui/utils.mjs';
+import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
-import { cleanup, resize, selectActivePad } from '../base/ObjectPainter.mjs';
+import { cleanup, resize, selectActivePad, EAxisBits } from '../base/ObjectPainter.mjs';
 import { TAxisPainter } from './TAxisPainter.mjs';
 import { TFramePainter } from './TFramePainter.mjs';
 import { TPadPainter } from './TPadPainter.mjs';
@@ -406,6 +406,12 @@ class TCanvasPainter extends TPadPainter {
       this.processChanges('sbits', this);
    }
 
+   /** @summary Get view data for ui5 panel
+     * @private */
+   getUi5PanelData(/* panel_name */) {
+      return { jsroot: { parse, toJSON, loadScript, EAxisBits, getColorExec } };
+   }
+
    /** @summary Function used to activate GED
      * @return {Promise} when GED is there
      * @private */
@@ -452,7 +458,8 @@ class TCanvasPainter extends TPadPainter {
                let oModel = new JSONModel({ handle: null });
 
                XMLView.create({
-                  viewName: 'rootui5.canv.view.Ged'
+                  viewName: 'rootui5.canv.view.Ged',
+                  viewData: this.getUi5PanelData('Ged')
                }).then(oGed => {
 
                   oGed.setModel(oModel);
@@ -638,7 +645,7 @@ class TCanvasPainter extends TPadPainter {
 
          // fill list of primitives from painters
          this.forEachPainterInPad(p => {
-            if (p.$secondary) return; // ignore all secoandry painters
+            if (p.$secondary) return; // ignore all secondary painters
 
             let subobj = p.getObject();
             if (subobj && subobj._typename)

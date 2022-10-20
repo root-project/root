@@ -112,7 +112,6 @@ class LongPollSocket {
                this.handle.processRequest(res);
          }
       }, function(/*err,status*/) {
-         // console.log(`Get request error ${err} status ${status}`);
          this.handle.processRequest(null, 'error');
       }, true).then(req => {
          req.handle = this;
@@ -214,7 +213,6 @@ class FileDumpSocket {
       let fname = this.protocol[this.cnt];
       if (!fname) return;
       if (fname == 'send') return; // waiting for send
-      // console.log(`getting file ${fname} wait ${this.wait_for_file}`);
       this.wait_for_file = true;
       this.cnt++;
       httpRequest(fname, (fname.indexOf('.bin') > 0 ? 'buf' : 'text')).then(res => {
@@ -291,7 +289,6 @@ class WebWindowHandle {
     * @private */
    provideData(chid, _msg, _len) {
       if (this.wait_first_recv) {
-         console.log(`FIRST MESSAGE ${chid} ${msg}`);
          delete this.wait_first_recv;
          return this.invokeReceiver(false, 'onWebsocketOpened');
       }
@@ -551,14 +548,12 @@ class WebWindowHandle {
                delete this.next_binary;
 
                if (msg instanceof Blob) {
-                  // this is case of websocket
-                  // console.log('Get Blob object - convert to buffer array');
+                  // convert Blob object to BufferArray
                   let reader = new FileReader, qitem = this.reserveQueueItem();
                   // The file's text will be printed here
                   reader.onload = event => this.markQueueItemDone(qitem, event.target.result, 0);
                   reader.readAsArrayBuffer(msg, e.offset || 0);
                } else {
-                  // console.log(`got array ${typeof msg} len = ${msg.byteLength}`);
                   // this is from CEF or LongPoll handler
                   this.provideData(binchid, msg, e.offset || 0);
                }
@@ -566,7 +561,8 @@ class WebWindowHandle {
                return;
             }
 
-            if (typeof msg != 'string') return console.log(`unsupported message kind: ${typeof msg}`);
+            if (typeof msg != 'string')
+               return console.log(`unsupported message kind: ${typeof msg}`);
 
             let i1 = msg.indexOf(':'),
                credit = parseInt(msg.slice(0, i1)),
@@ -651,7 +647,7 @@ class WebWindowHandle {
          if (((evnt.key == 'R') || (evnt.key == 'r')) && evnt.ctrlKey) {
             evnt.stopPropagation();
             evnt.preventDefault();
-            console.log('Prevent Ctrl-R propogation - ask reload web window!');
+            console.log('Prevent Ctrl-R propogation - ask reload RWebWindow!');
             this.askReload();
           }
       });
