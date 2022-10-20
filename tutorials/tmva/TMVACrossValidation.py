@@ -178,7 +178,7 @@ splitType = "Random" if useRandomSplitting else "Deterministic"
 
 splitExpr = "int(fabs([eventID]))%int([NumFolds])" if not useRandomSplitting else ""
 
-analysisType = "Regression"
+
 cv = ROOT.TMVA.CrossValidation(
     "TMVACrossValidationRegression",
     dataloader,
