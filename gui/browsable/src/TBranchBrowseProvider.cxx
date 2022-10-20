@@ -43,10 +43,10 @@ public:
 
    std::string GetContent(const std::string &kind) override
    {
-      if (kind != "tree")
-         return TObjectElement::GetContent(kind);
+      if (kind == "tree"s)
+         return GetDrawExpr();
 
-      return GetDrawExpr();
+      return TObjectElement::GetContent(kind);
    }
 
 };
