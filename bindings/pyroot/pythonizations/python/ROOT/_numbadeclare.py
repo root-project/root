@@ -292,7 +292,7 @@ def pywrapper({SIGNATURE}):
         input_types_ref = []
         func_ptr_input_types = []
         for t in input_types:
-            m = re.match('\s*(const\s+)?(RVec[\w<>\s]+)', t)
+            m = re.match('\s*(const\s+)?(RVec\w+|RVec<[\w\s]+>)', t)
             if m:
                 const_mod = '' if m.group(1) is None else 'const '
                 rvect = m.group(2)
