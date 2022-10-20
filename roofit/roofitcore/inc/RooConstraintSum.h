@@ -44,8 +44,7 @@ public:
         RooArgSet const* globalObservables,
         const char* globalObservablesTag,
         bool takeGlobalObservablesFromData,
-        bool removeConstraintsFromPdf,
-        RooWorkspace * workspace);
+        bool removeConstraintsFromPdf);
 
   bool setData(RooAbsData const& data, bool cloneData=true);
   /// \copydoc setData(RooAbsData const&, bool)

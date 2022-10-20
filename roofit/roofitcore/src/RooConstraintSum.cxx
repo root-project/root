@@ -35,7 +35,6 @@ arguments.
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 #include "RooHelpers.h"
-#include "RooWorkspace.h"
 #include "RooAbsCategoryLValue.h"
 
 #include <memory>
@@ -163,22 +162,6 @@ std::unique_ptr<RooArgSet> getGlobalObservables(
 }
 
 
-RooArgSet const* tryToGetConstraintSetFromWorkspace(
-        RooAbsPdf const& pdf, RooWorkspace * workspace, std::string const& constraintSetCacheName) {
-  if(!workspace) return nullptr;
-
-  if(workspace->set(constraintSetCacheName.c_str())) {
-    // retrieve from cache
-    const RooArgSet *constr = workspace->set(constraintSetCacheName.c_str());
-    oocoutI(&pdf, Minimization)
-        << "createConstraintTerm picked up cached constraints from workspace with " << constr->size()
-        << " entries" << std::endl;
-    return constr;
-  }
-  return nullptr;
-}
-
-
 } // namespace
 
 
@@ -213,7 +196,6 @@ RooArgSet const* tryToGetConstraintSetFromWorkspace(
 ///            `globalObservables` or `globalObservablesTag` parameters, the
 ///            values of all global observables that are not stored in the
 ///            dataset are taken from the model.
-/// \param[in] workspace RooWorkspace to cache the set of constraints.
 std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
         std::string const& name,
         RooAbsPdf const& pdf,
@@ -223,8 +205,7 @@ std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
         RooArgSet const* globalObservables,
         const char* globalObservablesTag,
         bool takeGlobalObservablesFromData,
-        bool removeConstraintsFromPdf,
-        RooWorkspace * workspace)
+        bool removeConstraintsFromPdf)
 {
   RooArgSet const& observables = *data.get();
 
@@ -247,25 +228,12 @@ std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
   auto observableNames = RooHelpers::getColonSeparatedNameString(observables);
   auto constraintSetCacheName = std::string("CACHE_CONSTR_OF_PDF_") + pdf.GetName() + "_FOR_OBS_" +  observableNames;
 
-  if (RooArgSet const* constr = tryToGetConstraintSetFromWorkspace(pdf, workspace, constraintSetCacheName)) {
-    allConstraints.add(*constr);
-  } else {
-
-     if (!cPars.empty()) {
-        std::unique_ptr<RooArgSet> internalConstraints{pdf.getAllConstraints(observables, cPars, doStripDisconnected, removeConstraintsFromPdf)};
-        allConstraints.add(*internalConstraints);
-     }
-     if (externalConstraints) {
-        allConstraints.add(*externalConstraints);
-     }
-
-     // write to cache
-     if (workspace) {
-        oocoutI(&pdf, Minimization)
-            << "createConstraintTerm: caching constraint set under name "
-            << constraintSetCacheName << " with " << allConstraints.size() << " entries" << std::endl;
-        workspace->defineSetInternal(constraintSetCacheName.c_str(), allConstraints);
-     }
+  if (!cPars.empty()) {
+     std::unique_ptr<RooArgSet> internalConstraints{pdf.getAllConstraints(observables, cPars, doStripDisconnected, removeConstraintsFromPdf)};
+     allConstraints.add(*internalConstraints);
+  }
+  if (externalConstraints) {
+     allConstraints.add(*externalConstraints);
   }
 
   if (!allConstraints.empty()) {
