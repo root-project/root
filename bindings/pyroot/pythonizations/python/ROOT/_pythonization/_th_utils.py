@@ -9,10 +9,6 @@
 ################################################################################
 
 
-def _func_name_orig(name):
-    return name.replace("_", "")
-
-
 def _numpy_content(buffer, args):
     # Helper to create a numpy array from a raw array pointer.
     #

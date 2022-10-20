@@ -9,7 +9,7 @@
 ################################################################################
 
 from . import pythonization
-from ._th_utils import _numpy_getter, _numpy_content, _func_name_orig
+from ._th_utils import _numpy_getter, _numpy_content
 
 # Multiplication by constant
 
