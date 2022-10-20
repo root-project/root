@@ -57,7 +57,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
      * @desc All Browser functionality is loaded after main ui5 rendering is performed */
 
    return Controller.extend("rootui5.browser.controller.Browser", {
-      onInit: function () {
+      onInit() {
 
         uiDevice.orientation.attachHandler(mParams => this.handleChangeOrientation(mParams.landscape));
 
@@ -247,11 +247,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          // catch re-rendering of the table to assign handlers
          t.addEventDelegate({
-            onAfterRendering: function() { this.assignRowHandlers(); }
+            onAfterRendering() { this.assignRowHandlers(); }
          }, this);
       },
 
-      createImageViewer: function (dummy_url, name, title, tooltip) {
+      createImageViewer(dummy_url, name, title, tooltip) {
          let oTabContainer = this.getView().byId("tabContainer"),
              image = new Image({ src: "", densityAware: false });
 
@@ -285,7 +285,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== Tree Viewer =============== */
       /* =========================================== */
 
-      createTreeViewer: function(url, name, title, tooltip) {
+      createTreeViewer(url, name, title, tooltip) {
          const oTabContainer = this.getView().byId("tabContainer");
 
          let item = new TabContainerItem(name, {
@@ -314,7 +314,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== Code Editor =============== */
       /* =========================================== */
 
-      createCodeEditor: function(dummy_url, name, editor_title, tooltip) {
+      createCodeEditor(dummy_url, name, editor_title, tooltip) {
          const oTabContainer = this.getView().byId("tabContainer");
 
          let item = new TabContainerItem(name, {
@@ -370,7 +370,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             type: "c_cpp",
             value: "{/code}",
             height: "calc(100% - 40px)",
-            liveChange: function() {
+            liveChange() {
                const model = this.getModel();
                if (model.getProperty("/first_change")) {
                   model.setProperty("/first_change", false);
@@ -398,7 +398,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @brief Invoke dialog with server side code */
-      onSaveAsFile: function(tab) {
+      onSaveAsFile(tab) {
 
          const oModel = tab.getModel();
          FileDialogController.SaveAs({
@@ -423,7 +423,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary send editor content to server (if was changed) */
-      syncEditor: function(tab, cmd) {
+      syncEditor(tab, cmd) {
          const oModel = tab.getModel();
          let modified = oModel.getProperty("/modified");
          if ((modified === false) && !cmd) return;
@@ -439,21 +439,21 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @brief Handle the "Save" button press event */
-      onSaveFile: function (tab) {
+      onSaveFile(tab) {
          if (!tab.getModel().getProperty("/filename"))
             return this.onSaveAsFile(tab);
          this.syncEditor(tab, "SAVE");
       },
 
       /** @brief Handle the "Run" button press event */
-      onRunMacro: function (tab) {
+      onRunMacro(tab) {
          if (!tab.getModel().getProperty("/filename"))
             return this.onSaveAsFile(tab);
          this.syncEditor(tab, "RUN");
       },
 
       /** @summary Search TabContainerItem by key value */
-      findTab: function(name, set_active) {
+      findTab(name, set_active) {
          let oTabContainer = this.byId("tabContainer"),
              items = oTabContainer.getItems();
          for(let i = 0; i< items.length; i++)
@@ -464,7 +464,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary Retuns current selected tab, instance of TabContainerItem */
-      getSelectedTab: function() {
+      getSelectedTab() {
          let oTabContainer = this.byId("tabContainer");
          let items = oTabContainer.getItems();
          for(let i = 0; i< items.length; i++)
@@ -473,7 +473,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary Retuns code editor from the tab */
-      getCodeEditor: function(tab) {
+      getCodeEditor(tab) {
          let items = tab ? tab.getContent() : [];
          for (let n = 0; n < items.length; ++n)
             if (items[n].isA("sap.ui.codeeditor.CodeEditor"))
@@ -482,7 +482,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @summary Extract the file name and extension
         * @desc Used to set the editor's model properties and display the file name on the tab element */
-      setEditorFileKind: function (oTabElement, title) {
+      setEditorFileKind(oTabElement, title) {
          let oEditor = this.getCodeEditor(oTabElement);
          if (!oEditor) return;
          let oModel = oTabElement.getModel();
@@ -562,7 +562,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== Settings menu =============== */
       /* ============================================= */
 
-      onSettingsPress: function () {
+      onSettingsPress() {
          this._oSettingsModel.setProperty("/AppendToCanvas", this.model.isAppendToCanvas());
          this._oSettingsModel.setProperty("/OnlyLastCycle", (this.model.getOnlyLastCycle() > 0));
          this._oSettingsModel.setProperty("/ShowHiddenFiles", this.model.isShowHidden());
@@ -582,13 +582,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this._oSettingsMenu.then(menu => menu.open());
       },
 
-      handleSettingsReset: function() {
+      handleSettingsReset() {
          this._oSettingsModel.setProperty('/optTH1', 'hist');
          this._oSettingsModel.setProperty('/optTH2', 'col');
          this._oSettingsModel.setProperty('/optTProfile', 'e0')
       },
 
-      handleSeetingsConfirm: function() {
+      handleSeetingsConfirm() {
          let append = this._oSettingsModel.getProperty("/AppendToCanvas"),
              lastcycle = this._oSettingsModel.getProperty("/OnlyLastCycle"),
              hidden = this._oSettingsModel.getProperty("/ShowHiddenFiles"),
@@ -630,7 +630,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary Return message need to be send to server to change options */
-      getOptionsMessage: function() {
+      getOptionsMessage() {
          let arr = [ this._oSettingsModel.getProperty('/optTH1') || '',
                      this._oSettingsModel.getProperty('/optTH2') || '',
                      this._oSettingsModel.getProperty('/optTProfile') || '' ];
@@ -638,7 +638,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary Add Tab event handler */
-      handlePressAddTab: function (oEvent) {
+      handlePressAddTab(oEvent) {
          //TODO: Change to some UI5 function (unknown for now), not know how to get
          let oButton = oEvent.getSource().mAggregations._tabStrip.mAggregations.addButton;
 
@@ -656,7 +656,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary handle creation of new tab */
-      handleNewTab: function (oEvent) {
+      handleNewTab(oEvent) {
          let msg, txt = oEvent.getSource().getText();
 
          if (txt.indexOf('editor') >= 0)
@@ -678,7 +678,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== Breadcrumbs =============== */
       /* =========================================== */
 
-      updateBReadcrumbs: function(split) {
+      updateBReadcrumbs(split) {
          // already array with all items inside
          let oBreadcrumbs = this.getView().byId("breadcrumbs");
          oBreadcrumbs.removeAllLinks();
@@ -694,7 +694,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
-      onBreadcrumbsPress: function(oEvent) {
+      onBreadcrumbsPress(oEvent) {
          let sId = oEvent.getSource().getId();
          let oBreadcrumbs = oEvent.getSource().getParent();
          let oLinks = oBreadcrumbs.getLinks();
@@ -707,13 +707,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.websocket.send('CHPATH:' + JSON.stringify(path));
       },
 
-      tabSelectItem: function(oEvent) {
+      tabSelectItem(oEvent) {
          let item = oEvent.getParameter('item');
          if (item && item.getKey())
             this.websocket.send("WIDGET_SELECTED:" + item.getKey());
       },
 
-      doCloseTabItem: function(item) {
+      doCloseTabItem(item) {
          let oTabContainer = this.byId("tabContainer");
          if (item.getKey())
             this.websocket.send("CLOSE_TAB:" + item.getKey());
@@ -721,7 +721,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @brief Close Tab event handler */
-      handleTabClose: function(oEvent) {
+      handleTabClose(oEvent) {
          // prevent the tab being closed by default
          oEvent.preventDefault();
 
@@ -745,7 +745,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* =============== Terminal =============== */
       /* ======================================== */
 
-      onTerminalSubmit: function(oEvent) {
+      onTerminalSubmit(oEvent) {
          let command = oEvent.getSource().getValue();
          this.websocket.send("CMD:" + command);
          oEvent.getSource().setValue("");
@@ -753,21 +753,21 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.requestLogs();
       },
 
-      requestRootHist: function() {
+      requestRootHist() {
          return this.websocket.send("GETHISTORY:");
       },
 
-      updateRootHist: function(entries) {
+      updateRootHist(entries) {
          let json = { hist:[] };
          entries.forEach(entry => json.hist.push({ name: entry }));
          this.getView().byId("terminal-input").setModel(new JSONModel(json));
       },
 
-      requestLogs: function() {
+      requestLogs() {
          return this.websocket.send("GETLOGS:");
       },
 
-      formatLine: function(line) {
+      formatLine(line) {
          let res = "", p = line.indexOf("\u001b");
 
          while (p >= 0) {
@@ -786,13 +786,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          return res + line;
       },
 
-      updateLogs: function(logs) {
+      updateLogs(logs) {
          let str = "";
          logs.forEach(line => str += this.formatLine(line)+"\n");
          this.getView().byId("output_log").setValue(str);
       },
 
-      onFullScreen: function() {
+      onFullScreen() {
          let splitApp = this.getView().byId("SplitAppBrowser");
          if (uiDevice.orientation.landscape) {
             if(splitApp.getMode() === "ShowHideMode") {
@@ -809,14 +809,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
-      handleChangeOrientation: function(is_landscape) {
+      handleChangeOrientation(is_landscape) {
          let btn = this.getView().byId('expandMaster');
          btn.setVisible(is_landscape);
          btn.setIcon("sap-icon://open-command-field");
          this.getView().byId('masterPage').getParent().removeStyleClass('masterExpanded');
       },
 
-      onExpandMaster: function () {
+      onExpandMaster() {
          const master = this.getView().byId('masterPage').getParent();
          master.toggleStyleClass('masterExpanded');
          const expanded = master.hasStyleClass('masterExpanded');
@@ -829,7 +829,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /* ========================================== */
 
       /** @summary Assign the "double click" event handler to each row */
-      assignRowHandlers: function () {
+      assignRowHandlers() {
          let rows = this.byId("treeTable").getRows();
          for (let k = 0; k < rows.length; ++k) {
             rows[k].$().dblclick(this.onRowDblClick.bind(this, rows[k]));
@@ -837,7 +837,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary Double-click event handler */
-      onRowDblClick: function (row) {
+      onRowDblClick(row) {
          let ctxt = row.getBindingContext(),
              prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
 
@@ -859,7 +859,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.invokeWarning("Processing double click on: " + prop.name, 500);
       },
 
-      invokeWarning: function(msg, tmout) {
+      invokeWarning(msg, tmout) {
          this.cancelWarning();
 
          this.warn_timeout = setTimeout(() => {
@@ -884,7 +884,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       },
 
-      cancelWarning: function() {
+      cancelWarning() {
          if (this.warn_timeout) {
             clearTimeout(this.warn_timeout);
             delete this.warn_timeout;
@@ -896,14 +896,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       },
 
-      onWebsocketOpened: function(/*handle*/) {
+      onWebsocketOpened(/*handle*/) {
          this.isConnected = true;
 
          if (this.model)
             this.model.sendFirstRequest(this.websocket);
       },
 
-      onWebsocketClosed: function() {
+      onWebsocketClosed() {
          // when connection closed, close panel as well
          console.log('Close RBrowser window when connection closed');
 
@@ -913,7 +913,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
      /** @summary Entry point for all data from server */
-     onWebsocketMsg: function(handle, msg, offset) {
+     onWebsocketMsg(handle, msg, offset) {
 
          // any message from server clear all warnings
          this.cancelWarning();
@@ -1009,7 +1009,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary Show special message instead of nodes hierarchy */
-      showTextInBrowser: function(text) {
+      showTextInBrowser(text) {
          let br = this.byId("treeTable");
          br.collapseAll();
          if (!text || (text === "RESET")) {
@@ -1027,11 +1027,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
-      onBeforeRendering: function() {
+      onBeforeRendering() {
          this.renderingDone = false;
       },
 
-      onAfterRendering: function() {
+      onAfterRendering() {
          this.renderingDone = true;
 
          // this is how master width can be changed, may be extra control can be provided
@@ -1040,15 +1040,15 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary Reload (refresh) file tree browser */
-      onRealoadPress: function() {
+      onRealoadPress() {
          this.doReload(true); // force also update of items on server
       },
 
-      onWorkingDirPress: function() {
+      onWorkingDirPress() {
          this.websocket.send("CDWORKDIR");
       },
 
-      doReload: function(force_reload) {
+      doReload(force_reload) {
          if (this.standalone) {
             this.showTextInBrowser();
             this.paintFoundNodes(null);
@@ -1059,17 +1059,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary Quit ROOT session */
-      onQuitRootPress: function() {
+      onQuitRootPress() {
          this.websocket.send("QUIT_ROOT");
          setTimeout(() => { if (window) window.close(); }, 2000);
       },
 
       /** @summary Start reload sequence with server */
-      onReloadPress: function() {
+      onReloadPress() {
          this.websocket?.askReload();
       },
 
-      onSearch: function(oEvt) {
+      onSearch(oEvt) {
          this.changeItemsFilter(oEvt.getSource().getValue());
       },
 
@@ -1088,7 +1088,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary process initial message, now it is list of existing canvases */
-      processInitMsg: function(msg) {
+      processInitMsg(msg) {
          let arr = this.jsroot.parse(msg);
          if (!arr) return;
 
@@ -1116,7 +1116,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.lastOptMessage = this.getOptionsMessage();
       },
 
-      createElement: function(kind, par1, par2, par3, tooltip) {
+      createElement(kind, par1, par2, par3, tooltip) {
          let tabItem;
          switch(kind) {
             case "editor": tabItem = this.createCodeEditor(par1, par2, par3, tooltip); break;
@@ -1129,7 +1129,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          return tabItem;
       },
 
-      createCatchedWidget: function(url, name, catched_kind, tooltip) {
+      createCatchedWidget(url, name, catched_kind, tooltip) {
          switch(catched_kind) {
             case "rcanvas": return this.createCanvas("rcanvas", url, name, "Catched RCanvas", tooltip);
             case "tcanvas": return this.createCanvas("tcanvas", url, name, "Catched TCanvas", tooltip);
@@ -1139,7 +1139,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
-      createGeomViewer: function(url, name , _title, tooltip) {
+      createGeomViewer(url, name , _title, tooltip) {
          let oTabContainer = this.byId("tabContainer");
          let item = new TabContainerItem({
             name: "Geom viewer",
@@ -1164,7 +1164,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          return item;
       },
 
-      createCanvas: function(kind, url, name, title, tooltip) {
+      createCanvas(kind, url, name, title, tooltip) {
          if (!url || !name || (kind != "tcanvas" && kind != "rcanvas")) return;
 
          let item = new TabContainerItem({
