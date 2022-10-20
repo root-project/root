@@ -65,6 +65,8 @@ public:
 
    bool SuggestBranch(const TBranch *branch);
 
+   bool SuggestExpression(const std::string &expr);
+
    void SetCallback(PerformDrawCallback_t func) { fCallback = func; }
 
    /** Configures default hierarchy browser visibility, only has effect before showing web window */
