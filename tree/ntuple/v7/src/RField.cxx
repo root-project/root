@@ -813,29 +813,36 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
          R__FAIL(std::string(className) + " has an associated collection proxy; use RCollectionClassField instead"));
    }
 
+   if (!(fClass->ClassProperty() & kClassHasExplicitCtor))
+      fTraits |= kTraitTriviallyConstructible;
+   if (!(fClass->ClassProperty() & kClassHasExplicitDtor))
+      fTraits |= kTraitTriviallyDestructible;
+
    int i = 0;
    for (auto baseClass : ROOT::Detail::TRangeStaticCast<TBaseClass>(*fClass->GetListOfBases())) {
       TClass *c = baseClass->GetClassPointer();
       auto subField = Detail::RFieldBase::Create(std::string(kPrefixInherited) + "_" + std::to_string(i),
                                                  c->GetName()).Unwrap();
+      fTraits &= subField->GetTraits();
       Attach(std::move(subField),
 	     RSubFieldInfo{kBaseClass, static_cast<std::size_t>(baseClass->GetDelta())});
       i++;
    }
    for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*fClass->GetListOfDataMembers())) {
-      // Skip members explicitly marked as transient by user comment
-      if (!dataMember->IsPersistent())
-         continue;
       // Skip, for instance, unscoped enum constants defined in the class
       if (dataMember->Property() & kIsStatic)
          continue;
+      // Skip members explicitly marked as transient by user comment
+      if (!dataMember->IsPersistent()) {
+         // TODO(jblomer): we could do better
+         fTraits = 0;
+         continue;
+      }
       auto subField = Detail::RFieldBase::Create(dataMember->GetName(), dataMember->GetFullTypeName()).Unwrap();
+      fTraits &= subField->GetTraits();
       Attach(std::move(subField),
 	     RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
    }
-   // TODO(jblomer) ask TClass about traits
-   // for (const auto &f : fSubFields)
-   //   fTraits &= f->GetTraits();
 }
 
 void ROOT::Experimental::RClassField::Attach(std::unique_ptr<Detail::RFieldBase> child, RSubFieldInfo info)
@@ -1769,7 +1776,9 @@ ROOT::Experimental::RVariantField::RVariantField(
    : ROOT::Experimental::Detail::RFieldBase(fieldName,
       "std::variant<" + GetTypeList(itemFields) + ">", ENTupleStructure::kVariant, false /* isSimple */)
 {
+   // The variant needs to initialize its own tag member
    fTraits = kTraitTriviallyDestructible & ~kTraitTriviallyConstructible;
+
    auto nFields = itemFields.size();
    R__ASSERT(nFields > 0);
    fNWritten.resize(nFields, 0);
