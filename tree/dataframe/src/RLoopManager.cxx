@@ -50,10 +50,15 @@
 #include <set>
 #include <limits> // For MaxTreeSizeRAII. Revert when #6640 will be solved.
 
+#include <fstream>
+#include <iomanip>
+#include <sched.h>
+
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::Internal::RDF;
 
 namespace {
+
 /// A helper function that returns all RDF code that is currently scheduled for just-in-time compilation.
 /// This allows different RLoopManager instances to share these data.
 /// We want RLoopManagers to be able to add their code to a global "code to execute via cling",
@@ -504,6 +509,7 @@ void RLoopManager::RunTreeProcessorMT()
    std::atomic<ULong64_t> entryCount(0ull);
 
    tp->Process([this, &slotStack, &entryCount](TTreeReader &r) -> void {
+      TStopwatch s;
       ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
       auto slot = slotRAII.fSlot;
       RCallCleanUpTask cleanup(*this, slot, &r);
@@ -511,6 +517,10 @@ void RLoopManager::RunTreeProcessorMT()
       R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing(TreeDatasetLogInfo(r, slot));
       const auto entryRange = r.GetEntriesRange(); // we trust TTreeProcessorMT to call SetEntriesRange
       const auto nEntries = entryRange.second - entryRange.first;
+
+      std::stringstream startTime;
+      startTime << std::fixed << std::setprecision(10) << s.GetRealTime();
+
       auto count = entryCount.fetch_add(nEntries);
       try {
          // recursive call to check filters and conditionally execute actions
@@ -531,6 +541,18 @@ void RLoopManager::RunTreeProcessorMT()
          throw std::runtime_error("An error was encountered while processing the data. TTreeReader status code is: " +
                                   std::to_string(r.GetEntryStatus()));
       }
+
+      std::stringstream endTime;
+      endTime << std::fixed << std::setprecision(10) << s.GetRealTime();
+
+      std::ofstream logFile;
+
+      logFile.open("test.csv", std::ofstream::app);
+      logFile << "S" << TreeDatasetLogInfo(r, slot).fSlot << ",T" << std::this_thread::get_id() << ",C"
+              << sched_getcpu() << "," << startTime.str() << "," << endTime.str() << "," << std::fixed
+              << std::setprecision(10)
+              << (TreeDatasetLogInfo(r, slot).fRangeEnd - TreeDatasetLogInfo(r, slot).fRangeStart) << std::endl;
+      logFile.close();
    });
 #endif // no-op otherwise (will not be called)
 }
@@ -826,9 +848,20 @@ void RLoopManager::Run(bool jit)
    R__LOG_INFO(RDFLogChannel()) << "Starting event loop number " << fNRuns << '.';
 
    ThrowIfNSlotsChanged(GetNSlots());
-
-   if (jit)
+   std::ofstream logFile;
+   logFile.open("test.csv", std::ofstream::app); // currently always append
+   logFile << "Slot,ThreadID,CoreID,StartTime,EndTime,EntriesProcessed" << std::endl;
+   if (jit) {
+      TStopwatch s;
+      std::stringstream startTime, endTime;
+      startTime << std::fixed << std::setprecision(10) << s.GetRealTime();
       Jit();
+      endTime << std::fixed << std::setprecision(10) << s.GetRealTime();
+      logFile << "SNone"
+              << ",T" << std::this_thread::get_id() << ",C" << sched_getcpu() << "," << startTime.str() << ","
+              << endTime.str() << ",0." << std::endl;
+   }
+   logFile.close();
 
    InitNodes();
 
