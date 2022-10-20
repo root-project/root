@@ -533,3 +533,8 @@ TEST(RNTuple, Enums)
    EXPECT_EQ(42, viewKlass(0).a);
    EXPECT_EQ(137, viewKlass(0).b);
 }
+
+TEST(RNTuple, Traits)
+{
+   EXPECT_EQ(RFieldBase::kTraitTrivialType, RField<float>("f").GetTraits());
+}
