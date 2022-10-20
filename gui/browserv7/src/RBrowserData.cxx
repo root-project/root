@@ -229,7 +229,7 @@ bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowse
 
          if (request.sort != "unsorted")
             std::sort(fLastSortedItems.begin(), fLastSortedItems.end(),
-                      [request](const Browsable::RItem *a, const Browsable::RItem *b) { return a->Compare(b, request.sort); });
+                      [request](const Browsable::RItem *a, const Browsable::RItem *b) { return a ? a->Compare(b, request.sort) : !b; });
       }
 
       if (request.reverse)

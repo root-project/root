@@ -150,45 +150,51 @@ class TCollectionIter : public RLevelIter {
    TIter  fIter;
 
 public:
-   explicit TCollectionIter(const TFolder *f) : RLevelIter(), fIter(f->GetListOfFolders()) {};
+   explicit TCollectionIter(const TFolder *f) : RLevelIter(), fIter(f->GetListOfFolders()) {}
 
-   explicit TCollectionIter(const TCollection *coll) : RLevelIter(), fIter(coll) {};
+   explicit TCollectionIter(const TCollection *coll) : RLevelIter(), fIter(coll) {}
 
    virtual ~TCollectionIter() = default;
 
    bool Next() override { return fIter.Next() != nullptr; }
 
-   // use default implementation for now
-   // bool Find(const std::string &name) override { return FindDirEntry(name); }
-
    std::string GetItemName() const override
    {
-      std::string name = (*fIter)->GetName();
+      auto obj = *fIter;
+      if (!obj) return ""s;
+      std::string name = obj->GetName();
+
       if (name.empty()) {
-         std::unique_ptr<RHolder> holder = std::make_unique<TObjectHolder>(*fIter, kFALSE);
+         std::unique_ptr<RHolder> holder = std::make_unique<TObjectHolder>(obj, kFALSE);
          auto elem = RProvider::Browse(holder);
          if (elem) name = elem->CreateItem()->GetName();
       }
       return name;
    }
 
+   /** Check if item can be expanded */
    bool CanItemHaveChilds() const override
    {
-      TObject *obj = *fIter;
-      return obj ? obj->IsFolder() : false;
+      auto obj = *fIter;
+      if (!obj || !obj->IsFolder())
+         return false;
+      return !RProvider::NotShowChilds(obj->IsA());
    }
 
    /** Create item for current TObject */
    std::unique_ptr<RItem> CreateItem() override
    {
-      TObject *obj = *fIter;
-      if (!obj) return nullptr;
+      auto obj = *fIter;
+      if (!obj) return RLevelIter::CreateItem();
 
-      std::unique_ptr<RHolder> holder = std::make_unique<TObjectHolder>(*fIter, kFALSE);
+      std::unique_ptr<RHolder> holder = std::make_unique<TObjectHolder>(obj, kFALSE);
 
       auto elem = RProvider::Browse(holder);
 
-      return elem ? elem->CreateItem() : nullptr;
+      if (!elem)
+         elem = std::make_shared<TObjectElement>(holder);
+
+      return elem->CreateItem();
    }
 
    /** Returns full information for current element */
@@ -215,7 +221,7 @@ class TFolderElement : public TObjectElement {
 
 public:
 
-   TFolderElement(std::unique_ptr<RHolder> &obj) : TObjectElement(obj) {}
+   TFolderElement(std::unique_ptr<RHolder> &obj) : TObjectElement(obj) { }
 
    std::unique_ptr<RLevelIter> GetChildsIter() override
    {
@@ -268,18 +274,19 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with plain TObject* as argument - ownership is not defined
 
-TObjectElement::TObjectElement(TObject *obj, const std::string &name)
+TObjectElement::TObjectElement(TObject *obj, const std::string &name, bool _hide_childs)
 {
    SetObject(obj);
    fName = name;
    if (fName.empty())
       fName = fObj->GetName();
+   SetHideChilds(_hide_childs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with std::unique_ptr<RHolder> as argument
 
-TObjectElement::TObjectElement(std::unique_ptr<RHolder> &obj, const std::string &name)
+TObjectElement::TObjectElement(std::unique_ptr<RHolder> &obj, const std::string &name, bool _hide_childs)
 {
    fObject = std::move(obj); // take responsibility
    fObj = const_cast<TObject *>(fObject->Get<TObject>()); // try to cast into TObject
@@ -289,6 +296,8 @@ TObjectElement::TObjectElement(std::unique_ptr<RHolder> &obj, const std::string 
       fObject.reset();
    else if (fName.empty())
       fName = fObj->GetName();
+
+   SetHideChilds(_hide_childs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -327,6 +336,9 @@ const TObject *TObjectElement::CheckObject() const
 
 bool TObjectElement::IsFolder() const
 {
+   if (IsHideChilds())
+      return false;
+
    return CheckObject() ? fObj->IsFolder() : false;
 }
 
@@ -444,7 +456,9 @@ std::unique_ptr<RItem> TObjectElement::CreateItem() const
    if (!obj)
       return RElement::CreateItem();
 
-   auto item = std::make_unique<TObjectItem>(obj->GetName(), obj->IsFolder() ? -1 : 0);
+   auto isfolder = !IsHideChilds() && obj->IsFolder();
+
+   auto item = std::make_unique<TObjectItem>(obj->GetName(), isfolder ? -1 : 0);
 
    if (item->GetName().empty())
       item->SetName(GetName());
@@ -454,7 +468,7 @@ std::unique_ptr<RItem> TObjectElement::CreateItem() const
       item->SetTitle(GetTitle());
 
    item->SetClassName(obj->ClassName());
-   item->SetIcon(RProvider::GetClassIcon(obj->IsA(), obj->IsFolder()));
+   item->SetIcon(RProvider::GetClassIcon(obj->IsA(), isfolder));
 
    auto sz = GetSize();
    if (sz > 0)
@@ -501,6 +515,8 @@ std::unique_ptr<RLevelIter> TObjectElement::GetCollectionIter(const TCollection 
    return std::make_unique<TCollectionIter>(coll);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Element representing TColor
 
 class TColorElement : public TObjectElement {
 
@@ -554,6 +570,8 @@ public:
       RegisterClass("TStyle", "sap-icon://badge");
 
       RegisterTObject("TDirectory", "sap-icon://folder-blank", true, 0);
+      RegisterTObject("TClass", "sap-icon://tag-cloud-chart", false, 0);
+      RegisterTObject("TQClass", "sap-icon://tag-cloud-chart", false, 0);
       RegisterTObject("TH1", "sap-icon://bar-chart", false, 3, "hist"s);
       RegisterTObject("TH2", "sap-icon://pixelate", false, 3, "col"s);
       RegisterTObject("TH3", "sap-icon://product");
@@ -584,7 +602,7 @@ public:
 
       RegisterBrowse(nullptr, [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          if (object->CanCastTo<TObject>())
-            return std::make_shared<TObjectElement>(object);
+            return std::make_shared<TObjectElement>(object, "", NotShowChilds(object->GetClass()));
          return nullptr;
       });
 

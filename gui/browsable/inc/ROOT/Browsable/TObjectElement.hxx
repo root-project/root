@@ -33,6 +33,7 @@ protected:
    std::unique_ptr<RHolder> fObject;
    TObject *fObj{nullptr};
    std::string fName;
+   bool fHideChilds{false};
 
    bool IsSame(TObject *obj) const { return obj == fObj; }
 
@@ -47,9 +48,9 @@ protected:
    virtual Long64_t GetSize() const { return -1; }
 
 public:
-   TObjectElement(TObject *obj, const std::string &name = "");
+   TObjectElement(TObject *obj, const std::string &name = "", bool _hide_childs = false);
 
-   TObjectElement(std::unique_ptr<RHolder> &obj, const std::string &name = "");
+   TObjectElement(std::unique_ptr<RHolder> &obj, const std::string &name = "", bool _hide_childs = false);
 
    virtual ~TObjectElement() = default;
 
@@ -57,6 +58,12 @@ public:
    std::string GetName() const override;
 
    void SetName(const std::string &name) { fName = name; }
+
+   /** Is flag to hide all potential object childs set */
+   bool IsHideChilds() const { return fHideChilds; }
+
+   /** Set flag to hide all potential object childs */
+   void SetHideChilds(bool on) { fHideChilds = on; }
 
    bool IsFolder() const override;
 
