@@ -1769,6 +1769,7 @@ ROOT::Experimental::RVariantField::RVariantField(
    : ROOT::Experimental::Detail::RFieldBase(fieldName,
       "std::variant<" + GetTypeList(itemFields) + ">", ENTupleStructure::kVariant, false /* isSimple */)
 {
+   fTraits = kTraitTriviallyDestructible & ~kTraitTriviallyConstructible;
    auto nFields = itemFields.size();
    R__ASSERT(nFields > 0);
    fNWritten.resize(nFields, 0);
