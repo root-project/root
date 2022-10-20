@@ -1905,7 +1905,6 @@ ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
    : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), offsets,
                                       "std::pair<" + GetTypeList(itemFields) + ">")
 {
-   fTraits = itemFields[0]->GetTraits() & itemFields[1]->GetTraits();
 }
 
 ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
@@ -1913,7 +1912,6 @@ ROOT::Experimental::RPairField::RPairField(std::string_view fieldName,
    : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), {},
                                       "std::pair<" + GetTypeList(itemFields) + ">")
 {
-   fTraits = itemFields[0]->GetTraits() & itemFields[1]->GetTraits();
    // ISO C++ does not guarantee any specific layout for `std::pair`; query TClass for the member offsets
    fClass = TClass::GetClass(GetType().c_str());
    if (!fClass)
