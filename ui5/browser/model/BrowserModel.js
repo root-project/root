@@ -262,6 +262,11 @@ sap.ui.define([
 
            this.loadDataCounter++;
 
+           let regex = this.itemsFilter || '', specials = /[\*^\(\)\?]/;
+
+           if (regex && !specials.test(regex))
+              regex = `^(${regex}.*)$`;
+
            let request = {
               path: path || [],
               first: first || 0,
@@ -271,7 +276,7 @@ sap.ui.define([
               hidden: this.showHidden ? true : false,
               lastcycle: this.onlyLastCycle,
               reload: force_reload ? true : false,  // rescan items by server even when path was not changed
-              regex: this.itemsFilter ? `^(${this.itemsFilter}.*)$` : ''
+              regex
            };
            this._websocket.send('BRREQ:' + JSON.stringify(request));
         },
