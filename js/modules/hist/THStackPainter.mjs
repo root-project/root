@@ -1,9 +1,8 @@
 import { clone, create, createHistogram, gStyle } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
-import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from './TH1Painter.mjs';
 import { TH2Painter } from './TH2Painter.mjs';
-import { EAxisBits } from '../gpad/TAxisPainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 
 

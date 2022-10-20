@@ -1,5 +1,5 @@
 import { select as d3_select, pointer as d3_pointer } from '../d3.mjs';
-import { settings, constants, internals, isNodeJs, isPromise } from '../core.mjs';
+import { settings, constants, internals, isNodeJs, isPromise, BIT } from '../core.mjs';
 import { isPlainText, producePlainText, produceLatex, produceMathjax, typesetMathjax } from './latex.mjs';
 import { getElementRect, BasePainter } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
@@ -1604,6 +1604,26 @@ function cleanup(dom) {
    return lst;
 }
 
+const EAxisBits = {
+   kDecimals: BIT(7),
+   kTickPlus: BIT(9),
+   kTickMinus: BIT(10),
+   kAxisRange: BIT(11),
+   kCenterTitle: BIT(12),
+   kCenterLabels: BIT(14),
+   kRotateTitle: BIT(15),
+   kPalette: BIT(16),
+   kNoExponent: BIT(17),
+   kLabelsHori: BIT(18),
+   kLabelsVert: BIT(19),
+   kLabelsDown: BIT(20),
+   kLabelsUp: BIT(21),
+   kIsInteger: BIT(22),
+   kMoreLogLabels: BIT(23),
+   kOppositeTitle: BIT(32) // atrificial bit, not possible to set in ROOT
+};
+
+
 export { getElementCanvPainter, getElementMainPainter, drawingJSON,
          selectActivePad, getActivePad, cleanup, resize,
-         ObjectPainter, drawRawText  };
+         ObjectPainter, drawRawText, EAxisBits  };
