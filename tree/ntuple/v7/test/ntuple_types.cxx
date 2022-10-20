@@ -537,4 +537,19 @@ TEST(RNTuple, Enums)
 TEST(RNTuple, Traits)
 {
    EXPECT_EQ(RFieldBase::kTraitTrivialType, RField<float>("f").GetTraits());
+   EXPECT_EQ(RFieldBase::kTraitTrivialType, RField<bool>("f").GetTraits());
+   EXPECT_EQ(RFieldBase::kTraitTrivialType, RField<int>("f").GetTraits());
+   EXPECT_EQ(0, RField<std::string>("f").GetTraits());
+   EXPECT_EQ(0, RField<std::vector<float>>("f").GetTraits());
+   EXPECT_EQ(0, RField<std::vector<bool>>("f").GetTraits());
+   EXPECT_EQ(0, RField<ROOT::RVec<float>>("f").GetTraits());
+   EXPECT_EQ(0, RField<ROOT::RVec<bool>>("f").GetTraits());
+   auto f1 = RField<std::pair<float, std::string>>("f");
+   EXPECT_EQ(0, f1.GetTraits());
+   auto f2 = RField<std::pair<float, int>>("f");
+   EXPECT_EQ(RFieldBase::kTraitTrivialType, f2.GetTraits());
+   auto f3 = RField<std::variant<float, std::string>>("f");
+   EXPECT_EQ(0, f3.GetTraits());
+   auto f4 = RField<std::variant<float, int>>("f");
+   EXPECT_EQ(RFieldBase::kTraitTriviallyDestructible, f4.GetTraits());
 }

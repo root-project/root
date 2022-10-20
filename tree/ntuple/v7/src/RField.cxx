@@ -1108,6 +1108,7 @@ ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
    : ROOT::Experimental::Detail::RFieldBase(fieldName, typeName, ENTupleStructure::kRecord, false /* isSimple */),
      fOffsets(offsets)
 {
+   fTraits = kTraitTrivialType;
    for (auto &item : itemFields) {
       fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());
       fSize += GetItemPadding(fSize, item->GetAlignment()) + item->GetValueSize();
