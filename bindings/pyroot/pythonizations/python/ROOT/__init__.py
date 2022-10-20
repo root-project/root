@@ -19,6 +19,9 @@ environ['CPPYY_API_PATH'] = 'none'
 # Prevent cppyy from filtering ROOT libraries
 environ['CPPYY_NO_ROOT_FILTER'] = '1'
 
+# Do setup specific to AddressSanitizer environments
+from . import _asan
+
 import cppyy
 if not 'ROOTSYS' in environ:
     # Revert setting made by cppyy
