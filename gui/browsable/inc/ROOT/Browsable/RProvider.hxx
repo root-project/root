@@ -59,6 +59,7 @@ public:
    static bool SetClassDrawOption(const ClassArg &, const std::string &);
 
    static bool CanHaveChilds(const ClassArg &);
+   static bool NotShowChilds(const ClassArg &);
    static bool CanDraw6(const ClassArg &);
    static bool CanDraw7(const ClassArg &);
 

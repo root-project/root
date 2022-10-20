@@ -108,7 +108,6 @@ void RProvider::RegisterBrowse(const TClass *cl, BrowseFunc_t func)
     bmap.emplace(cl, StructBrowse{this,func});
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////
 // Register drawing function for v6 canvas
 
@@ -260,7 +259,6 @@ bool ScanProviderMap(Map_t &fmap, const RProvider::ClassArg &cl, bool test_all =
    return false;
 }
 
-
 /////////////////////////////////////////////////////////////////////////
 /// Create browsable element for the object
 /// Created element may take ownership over the object
@@ -390,13 +388,21 @@ bool RProvider::SetClassDrawOption(const ClassArg &arg, const std::string &opt)
    return true;
 }
 
-
 /////////////////////////////////////////////////////////////////////
 /// Return true if provided class can have childs
 
 bool RProvider::CanHaveChilds(const ClassArg &arg)
 {
    return GetClassEntry(arg).can_have_childs;
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Check if showing of sub-elements was disabled
+
+bool RProvider::NotShowChilds(const ClassArg &arg)
+{
+   auto &entry = GetClassEntry(arg);
+   return !entry.dummy() && !entry.can_have_childs;
 }
 
 /////////////////////////////////////////////////////////////////////

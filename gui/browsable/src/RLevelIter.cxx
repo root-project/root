@@ -29,7 +29,11 @@ bool RLevelIter::Find(const std::string &name, int indx)
          if (i < indx) continue;
       }
 
-      if (GetItemName() == name)
+      std::string iname = GetItemName();
+      if (iname.empty())
+         iname = "<empty>";
+
+      if (iname == name)
          return true;
    }
 
@@ -41,8 +45,12 @@ bool RLevelIter::Find(const std::string &name, int indx)
 
 std::unique_ptr<RItem> RLevelIter::CreateItem()
 {
-   auto have_childs = CanItemHaveChilds();
+   std::string name = GetItemName();
+   if (name.empty())
+      name = "<empty>";
 
-   return std::make_unique<RItem>(GetItemName(), have_childs ? -1 : 0, have_childs ? "sap-icon://folder-blank" : "sap-icon://document");
+   bool have_childs = CanItemHaveChilds();
+
+   return std::make_unique<RItem>(name, have_childs ? -1 : 0, have_childs ? "sap-icon://folder-blank" : "sap-icon://document");
 }
 
