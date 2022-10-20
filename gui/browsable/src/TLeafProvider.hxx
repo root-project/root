@@ -41,13 +41,20 @@ public:
       if (!htemp)
          return nullptr;
 
-      TString title = expr.c_str();
-      title.ReplaceAll("\\/", "/");
-      title.ReplaceAll("#","\\#");
-
       htemp->SetDirectory(nullptr);
       htemp->SetName(hname.c_str());
-      htemp->SetTitle(title.Data());
+
+      auto FixTitle = [](TNamed *obj) {
+         TString title = obj->GetTitle();
+         title.ReplaceAll("\\/", "/");
+         title.ReplaceAll("#","\\#");
+         obj->SetTitle(title.Data());
+      };
+
+      FixTitle(htemp);
+      FixTitle(htemp->GetXaxis());
+      FixTitle(htemp->GetYaxis());
+      FixTitle(htemp->GetZaxis());
 
       htemp->BufferEmpty();
 
@@ -56,6 +63,8 @@ public:
 
    void AdjustExpr(TString &expr, TString &name)
    {
+      expr.ReplaceAll("/", "\\/");
+
       auto pos = name.First('[');
       if (pos != kNPOS) {
          name.Remove(pos);
@@ -93,6 +102,10 @@ public:
 
       // there are many leaves, plain TTree::Draw does not work
       if (tbranch->GetNleaves() > 1)
+         return false;
+
+      // there are sub-branches, plain TTree::Draw does not work
+      if (const_cast<TBranch *>(tbranch)->GetListOfBranches()->GetEntriesFast() > 0)
          return false;
 
       name = tbranch->GetName();
@@ -159,8 +172,6 @@ public:
          return false;
 
       // just copy and paste code from TBranchElement::Browse
-      TString slash("/");
-      TString escapedSlash("\\/");
       expr = name = tbranch->GetName();
 
       Int_t pos = expr.First('[');
@@ -206,7 +217,8 @@ public:
             }
          }
       }
-      expr.ReplaceAll(slash, escapedSlash);
+
+      AdjustExpr(expr, name);
 
       return true;
    }

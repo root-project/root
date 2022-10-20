@@ -19,6 +19,9 @@
 #include "TBranchElement.h"
 #include "TStreamerInfo.h"
 #include "TLeaf.h"
+#include "TH1.h"
+#include "TAxis.h"
+
 
 #include "TTimer.h"
 #include "TBufferJSON.h"
@@ -341,8 +344,6 @@ void RTreeViewer::InvokeTreeDraw(const std::string &json)
       }
    }
 
-   // printf("Draw %s\n", expr.c_str());
-
    Long64_t nentries = (fCfg.fNumber > 0) ? fCfg.fNumber : TTree::kMaxEntries;
 
    if (!fProgrTimer)
@@ -366,8 +367,32 @@ void RTreeViewer::InvokeTreeDraw(const std::string &json)
    std::string canv_name;
 
    if (gPad) {
+      if ((expr.find("\\") != std::string::npos) || (expr.find("#") != std::string::npos)) {
+         auto FixTitle = [](TNamed *obj) {
+            if (!obj) return;
+            TString title = obj->GetTitle();
+            title.ReplaceAll("\\/", "/");
+            title.ReplaceAll("#","\\#");
+            obj->SetTitle(title.Data());
+         };
+         TIter iter(gPad->GetListOfPrimitives());
+         while (auto obj = iter()) {
+            if (expr == obj->GetTitle()) {
+               FixTitle(dynamic_cast<TNamed *> (obj));
+               TH1 *hist = dynamic_cast<TH1 *> (obj);
+               if (hist) {
+                  FixTitle(hist->GetXaxis());
+                  FixTitle(hist->GetYaxis());
+                  FixTitle(hist->GetZaxis());
+               }
+            }
+         }
+      }
+
       gPad->Update();
       canv_name = gPad->GetName();
+
+
    }
 
    // at the end invoke callback
