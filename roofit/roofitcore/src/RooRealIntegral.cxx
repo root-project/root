@@ -97,14 +97,16 @@ void addParameterToServers(RooAbsReal const &function, RooAbsArg &leaf, std::vec
    serversToAdd.emplace_back(&leaf, isShapeServer);
 }
 
-/// Unmark all args that recursively are value clients of "dep".
-/// Returns true if something was unmarked.
-bool unmarkDepValueClients(RooAbsArg const &dep, RooArgSet const &args, std::vector<bool> &marked)
+enum class MarkedState { Dependent, Independent, AlreadyAdded };
+
+/// Mark all args that recursively are value clients of "dep".
+/// Returns true if something was marked.
+bool unmarkDepValueClients(RooAbsArg const &dep, RooArgSet const &args, std::vector<MarkedState> &marked)
 {
    assert(args.size() == marked.size());
    auto index = args.index(&dep);
    if (index >= 0) {
-      marked[index] = false;
+      marked[index] = MarkedState::Dependent;
       for (RooAbsArg *client : dep.valueClients()) {
          unmarkDepValueClients(*client, args, marked);
       }
@@ -130,11 +132,11 @@ getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList, co
    RooArgSet allValueArgs{allValueArgsList};
 
    // All "marked" args will be added as value servers to the integral
-   std::vector<bool> marked(allArgs.size(), true);
-   marked.back() = false; // We don't want to consider the function itself
+   std::vector<MarkedState> marked(allArgs.size(), MarkedState::Independent);
+   marked.back() = MarkedState::Dependent; // We don't want to consider the function itself
 
-   // Unmark all args that are (indirect) value servers of the integration
-   // variable or the integration variable itself. If something was unmarked,
+   // Mark all args that are (indirect) value servers of the integration
+   // variable or the integration variable itself. If something was marked,
    // it means the integration variable was in the compute graph and we will
    // add it to the server list.
    for (RooAbsArg *dep : depList) {
@@ -143,28 +145,17 @@ getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList, co
       }
    }
 
+   // We are adding all independent direct servers of the args depending on the
+   // integration variables
    for (std::size_t i = 0; i < allArgs.size(); ++i) {
-      // Unmark if this is only an indirect value server (i.e., not a direct
-      // server of the function but the server of another marked arg)
-      if (marked[i]) {
-         RooAbsArg const &arg = *allArgs[i];
-         bool isDirectServer = false;
-         for (RooAbsArg *client : arg.valueClients()) {
-            auto index = allArgs.index(client);
-            if(index >= 0) {
-               marked[i] = !marked[index];
-               if(client == &function) {
-                  isDirectServer = true;
-                  break;
-               }
+      if(marked[i] == MarkedState::Dependent) {
+         for(RooAbsArg* server : allArgs[i]->servers()) {
+            int index = allArgs.index(server);
+            if(index >= 0 && marked[index] == MarkedState::Independent) {
+               addParameterToServers(function, *server, serversToAdd, !allValueArgs.find(*server));
+               marked[index] = MarkedState::AlreadyAdded;
             }
          }
-         if(isDirectServer) marked[i] = true;
-      }
-      // Finally, it the arg is still marked, add it as a value server, or
-      // shape server if it is not in the list of recursive value servers.
-      if (marked[i]) {
-         addParameterToServers(function, *allArgs[i], serversToAdd, !allValueArgs.find(*allArgs[i]));
       }
    }
 
