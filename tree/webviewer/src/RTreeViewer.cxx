@@ -28,8 +28,6 @@ namespace ROOT {
 namespace Experimental {
 
 
-
-
 class TProgressTimer : public TTimer {
    RTreeViewer &fViewer;
 public:
@@ -134,6 +132,20 @@ bool RTreeViewer::SuggestBranch(const TBranch *branch)
       return false;
 
    fWebWindow->Send(0, "SUGGEST:"s + FormatItemName(branch->GetFullName().Data()));
+
+   return true;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Suggest to use expression in the gui
+/// Normally just assign as last edited expression
+
+bool RTreeViewer::SuggestExpression(const std::string &expr)
+{
+   if (!fTree || expr.empty())
+      return false;
+
+   fWebWindow->Send(0, "SUGGEST:"s + expr);
 
    return true;
 }

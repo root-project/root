@@ -14,8 +14,10 @@
 
 #include "ROOT/RTreeViewer.hxx"
 #include "ROOT/RBrowser.hxx"
+#include "ROOT/Browsable/TObjectHolder.hxx"
 #include "TTree.h"
 #include "TBranch.h"
+#include "TBranchBrowsable.h"
 #include "TLeaf.h"
 
 using namespace ROOT::Experimental;
@@ -64,15 +66,39 @@ public:
          return true;
       }
 
+      tree = fObject ? fObject->Get<TTree>() : nullptr;
+
+      TTree *new_tree = nullptr;
+      std::string expr = elem->GetContent("tree");
+
       auto branch = obj->Get<TBranch>();
-      if (branch)
-         return fViewer.SuggestBranch(branch);
-
       auto leaf = obj->Get<TLeaf>();
-      if (leaf)
-         return fViewer.SuggestLeaf(leaf);
+      auto browsable = obj->Get<TVirtualBranchBrowsable>();
 
-      return false;
+      if (branch) {
+         new_tree = branch->GetTree();
+         if (expr.empty())
+            expr = branch->GetFullName().Data();
+      } else if (leaf) {
+         new_tree = leaf->GetBranch()->GetTree();
+         if (expr.empty())
+            expr = leaf->GetFullName().Data();
+      } else if (browsable) {
+         new_tree = browsable->GetBranch()->GetTree();
+         if (expr.empty())
+            expr = browsable->GetBranch()->GetFullName().Data();
+      }
+
+      if (!new_tree || expr.empty())
+         return false;
+
+      if (new_tree != tree) {
+         fObject = std::make_unique<Browsable::TObjectHolder>(new_tree);
+         fTitle = new_tree->GetName();
+         fViewer.SetTree(new_tree);
+      }
+
+      return fViewer.SuggestExpression(expr);
    }
 
    std::string SendWidgetContent() override { return SendWidgetTitle(); }
