@@ -30,6 +30,7 @@ list(APPEND PYROOT_EXTRA_HEADERS
 
 set(py2_py3_sources
   ROOT/_application.py
+  ROOT/_asan.py
   ROOT/_facade.py
   ROOT/__init__.py
   ROOT/_numbadeclare.py
