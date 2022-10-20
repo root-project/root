@@ -1,38 +1,10 @@
 import { loadScript, source_dir, settings, gStyle, internals } from '../core.mjs';
-import { rgb as d3_rgb, select as d3_select, color as d3_color } from '../d3.mjs';
-import { injectStyle, selectgStyle, saveSettings, readSettings, saveStyle } from './utils.mjs';
-import { getColor, getRootColors } from '../base/colors.mjs';
+import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
+import { injectStyle, selectgStyle, saveSettings, readSettings, saveStyle, getColorExec } from './utils.mjs';
+import { getColor } from '../base/colors.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { FontHandler } from '../base/FontHandler.mjs';
-
-
-/** @summary Produce exec string for WebCanas to set color value
-  * @desc Color can be id or string, but should belong to list of known colors
-  * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
-  * @private */
-function getColorExec(col, method) {
-   let id = -1, arr = getRootColors();
-   if (typeof col == 'string') {
-      if (!col || (col == 'none')) id = 0; else
-         for (let k = 1; k < arr.length; ++k)
-            if (arr[k] == col) { id = k; break; }
-      if ((id < 0) && (col.indexOf('rgb') == 0)) id = 9999;
-   } else if (Number.isInteger(col) && arr[col]) {
-      id = col;
-      col = arr[id];
-   }
-
-   if (id < 0) return '';
-
-   if (id >= 50) {
-      // for higher color numbers ensure that such color exists
-      let c = d3_color(col);
-      id = `TColor::GetColor(${c.r},${c.g},${c.b})`;
-   }
-
-   return `exec:${method}(${id})`;
-}
 
 /**
  * @summary Abstract class for creating context menu

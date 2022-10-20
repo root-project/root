@@ -1,7 +1,8 @@
 import { settings, gStyle, isBatchMode, isNodeJs, source_dir, atob_func, btoa_func } from '../core.mjs';
-import { select as d3_select, pointer as d3_pointer, drag as d3_drag } from '../d3.mjs';
+import { select as d3_select, pointer as d3_pointer, drag as d3_drag, color as d3_color } from '../d3.mjs';
 import { BasePainter } from '../base/BasePainter.mjs';
 import { resize } from '../base/ObjectPainter.mjs';
+import { getRootColors } from '../base/colors.mjs';
 
 
 /** @summary Display progress message in the left bottom corner.
@@ -504,7 +505,39 @@ function setSaveFile(func) {
    _saveFileFunc = func;
 }
 
+/** @summary Produce exec string for WebCanas to set color value
+  * @desc Color can be id or string, but should belong to list of known colors
+  * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
+  * @private */
+function getColorExec(col, method) {
+   let id = -1, arr = getRootColors();
+   if (typeof col == 'string') {
+      if (!col || (col == 'none')) {
+         id = 0;
+      } else {
+         for (let k = 1; k < arr.length; ++k)
+            if (arr[k] == col) { id = k; break; }
+      }
+      if ((id < 0) && (col.indexOf('rgb') == 0))
+         id = 9999;
+   } else if (Number.isInteger(col) && arr[col]) {
+      id = col;
+      col = arr[id];
+   }
+
+   if (id < 0) return '';
+
+   // for higher color numbers ensure that such color exists
+   if (id >= 50) {
+      let c = d3_color(col);
+      id = `TColor::GetColor(${c.r},${c.g},${c.b})`;
+    }
+
+   return `exec:${method}(${id})`;
+}
+
+
 export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize,
          detectRightButton, addMoveHandler, injectStyle,
          selectgStyle, saveSettings, readSettings, saveStyle, readStyle,
-         saveFile, setSaveFile, getBinFileContent };
+         saveFile, setSaveFile, getBinFileContent, getColorExec };

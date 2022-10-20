@@ -1,8 +1,8 @@
-import { settings, create, parse, registerMethods, isBatchMode } from '../core.mjs';
+import { settings, create, parse, toJSON, loadScript, registerMethods, isBatchMode } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
-import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons } from '../gui/utils.mjs';
+import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
-import { selectActivePad, cleanup, resize } from '../base/ObjectPainter.mjs';
+import { selectActivePad, cleanup, resize, EAxisBits } from '../base/ObjectPainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { RAxisPainter } from './RAxisPainter.mjs';
 import { RFramePainter } from './RFramePainter.mjs';
@@ -519,6 +519,12 @@ class RCanvasPainter extends RPadPainter {
       this.processChanges('sbits', this);
    }
 
+   /** @summary Get view data for ui5 panel
+     * @private */
+   getUi5PanelData(/* panel_name */) {
+      return { jsroot: { parse, toJSON, loadScript, EAxisBits, getColorExec } };
+   }
+
    /** @summary Function used to activate GED
      * @return {Promise} when GED is there
      * @private */
@@ -565,7 +571,8 @@ class RCanvasPainter extends RPadPainter {
                let oModel = new JSONModel({ handle: null });
 
                XMLView.create({
-                  viewName: 'rootui5.canv.view.Ged'
+                  viewName: 'rootui5.canv.view.Ged',
+                  viewData: this.getUi5PanelData('Ged')
                }).then(oGed => {
 
                   oGed.setModel(oModel);
