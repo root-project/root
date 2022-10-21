@@ -42,6 +42,8 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 
 #include "NormalizationHelpers.h"
 
+#include <TList.h>
+
 #include <iomanip>
 #include <numeric>
 #include <thread>
@@ -195,10 +197,33 @@ void RooFitDriver::setData(RooAbsData const &data, std::string_view rangeName,
                            RooAbsCategory const *indexCatForSplitting, bool skipZeroWeights,
                            bool takeGlobalObservablesFromData)
 {
+   std::vector<std::pair<std::string, RooAbsData const *>> datas;
+
+   if (indexCatForSplitting) {
+      _splittedDataSets.clear();
+      std::unique_ptr<TList> splits{data.split(*indexCatForSplitting, true)};
+      for (auto *d : static_range_cast<RooAbsData *>(*splits)) {
+         std::string prefix = std::string("_") + d->GetName() + "_";
+         datas.emplace_back(prefix, d);
+         // The dataset need to be kept alive because the datamap points to their content
+         _splittedDataSets.emplace_back(d);
+      }
+   } else {
+      datas.emplace_back("", &data);
+   }
+
+   DataSpansMap dataSpans;
 
    std::stack<std::vector<double>>{}.swap(_vectorBuffers);
-   DataSpansMap dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(data, rangeName, indexCatForSplitting,
-                                                                       _vectorBuffers, skipZeroWeights);
+
+   for (auto const &toAdd : datas) {
+      DataSpansMap spans = RooFit::BatchModeDataHelpers::getDataSpans(*toAdd.second, rangeName, toAdd.first,
+                                                                      _vectorBuffers, skipZeroWeights);
+      for (auto const &item : spans) {
+         dataSpans.insert(item);
+      }
+   }
+
    if (takeGlobalObservablesFromData && data.getGlobalObservables()) {
       _vectorBuffers.emplace();
       auto &buffer = _vectorBuffers.top();

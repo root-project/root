@@ -31,7 +31,7 @@ namespace RooFit {
 namespace BatchModeDataHelpers {
 
 std::map<RooFit::Detail::DataKey, RooSpan<const double>>
-getDataSpans(RooAbsData const &data, std::string_view rangeName, RooAbsCategory const *indexCat,
+getDataSpans(RooAbsData const &data, std::string_view rangeName, std::string const &prefix,
              std::stack<std::vector<double>> &buffers, bool skipZeroWeights);
 
 } // namespace BatchModeDataHelpers
