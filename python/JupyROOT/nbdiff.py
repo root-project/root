@@ -41,7 +41,8 @@ def customLineJunkFilter(line):
                 'FAILED TO establish the default connection to the WindowServer',
                 '"version": ',
                 '"pygments_lexer": "ipython',
-                '     "execution_count":']
+                '     "execution_count":',
+                'libclang_rt.asan-']
     for junkLine in junkLines:
         if junkLine in line: return False
     return True
