@@ -1121,11 +1121,13 @@ ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
                                                std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields)
    : ROOT::Experimental::Detail::RFieldBase(fieldName, "", ENTupleStructure::kRecord, false /* isSimple */)
 {
+   fTraits = kTraitTrivialType;
    for (auto &item : itemFields) {
       fSize += GetItemPadding(fSize, item->GetAlignment());
       fOffsets.push_back(fSize);
       fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());
       fSize += item->GetValueSize();
+      fTraits &= item->GetTraits();
       Attach(std::move(item));
    }
    // Trailing padding: although this is implementation-dependent, most add enough padding to comply with the

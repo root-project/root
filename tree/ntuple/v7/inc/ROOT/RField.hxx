@@ -417,10 +417,12 @@ protected:
                 const std::array<std::size_t, N> &offsets, std::string_view typeName = "")
       : ROOT::Experimental::Detail::RFieldBase(fieldName, typeName, ENTupleStructure::kRecord, false /* isSimple */)
    {
+      fTraits = kTraitTrivialType;
       for (unsigned i = 0; i < N; ++i) {
          fOffsets.push_back(offsets[i]);
          fMaxAlignment = std::max(fMaxAlignment, itemFields[i]->GetAlignment());
          fSize += GetItemPadding(fSize, itemFields[i]->GetAlignment()) + itemFields[i]->GetValueSize();
+         fTraits &= itemFields[i]->GetTraits();
          Attach(std::move(itemFields[i]));
       }
    }
