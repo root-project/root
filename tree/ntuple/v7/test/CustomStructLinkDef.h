@@ -26,4 +26,13 @@
 #pragma link C++ class StructUsingCollectionProxy<StructUsingCollectionProxy<float>> + ;
 #pragma link C++ class StructUsingCollectionProxy<int> + ;
 
+#pragma link C++ class TrivialTraitsBase + ;
+#pragma link C++ class TrivialTraits + ;
+#pragma link C++ class TransientTraits + ;
+#pragma link C++ class VariantTraitsBase + ;
+#pragma link C++ class VariantTraits + ;
+#pragma link C++ class StringTraits + ;
+#pragma link C++ class ConstructorTraits + ;
+#pragma link C++ class DestructorTraits + ;
+
 #endif
