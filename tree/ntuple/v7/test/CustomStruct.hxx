@@ -2,6 +2,7 @@
 #define ROOT7_RNTuple_Test_CustomStruct
 
 #include <string>
+#include <variant>
 #include <vector>
 
 /**
@@ -95,6 +96,37 @@ template <typename T>
 struct StructUsingCollectionProxy {
    using ValueType = T;
    std::vector<T> v; //! do not accidentally store via RClassField
+};
+
+/// Classes to exercise field traits
+struct TrivialTraitsBase {
+   int a;
+};
+
+struct TrivialTraits : TrivialTraitsBase {
+   float b;
+};
+
+struct TransientTraits : TrivialTraitsBase {
+   float b; //! transient member
+};
+
+struct VariantTraitsBase {
+   std::variant<int, float> a;
+};
+
+struct VariantTraits : VariantTraitsBase {};
+
+struct StringTraits : VariantTraitsBase {
+   std::string s;
+};
+
+struct ConstructorTraits : TrivialTraitsBase {
+   ConstructorTraits() {}
+};
+
+struct DestructorTraits : TrivialTraitsBase {
+   ~DestructorTraits() {}
 };
 
 #endif
