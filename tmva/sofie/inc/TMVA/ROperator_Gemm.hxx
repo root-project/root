@@ -206,6 +206,12 @@ namespace SOFIE{
                // case broadcasting was not needed or done outside of session
                assert(length == ConvertShapeToLength(fShapeC));
             out << SP << "std::copy(" << "tensor_" << fNC2 << ", " << "tensor_" << fNC2 << " + " << length << ", " << "tensor_" << fNY << ");\n";
+         } else {
+            //in this case fAttrBeta needs to be equal to zero otherwise second time we run we will use
+            // the previous result
+            if (fAttrBeta != 0) {
+               throw std::runtime_error("TMVA SOFIE Gemm Op : Bias tensor is not present but beta value in Gemm is not zero");
+            }
          }
          if (fType == "float"){
             out << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName

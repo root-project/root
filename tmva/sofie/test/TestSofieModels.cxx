@@ -256,7 +256,7 @@ void TestRecurrent(std::string type, int nbatches, int inputSize = 5, int seqSiz
    }
 }
 
-void TestConvTranspose( std::string type, int nbatches, bool useBN = false, int ngroups = 1, int nchannels = 2, int nd = 4, int nlayers = 2, int usePool = 0)
+void TestConvTranspose( std::string type, int nbatches, bool useBN = false, int ngroups = 1, int nchannels = 2, int nd = 4, int nlayers = 4, int usePool = 0)
 {
    std::string modelName = "ConvTrans" + type + "Model";
    if (useBN) modelName += "_BN";
@@ -313,6 +313,8 @@ void TestConvTranspose( std::string type, int nbatches, bool useBN = false, int 
    for (int ib = 0; ib < nbatches; ib++) {
       std::vector<float> x1(inputDim, float(ib + 1));
       std::vector<float> x2(inputDim, -float(ib + 1));
+      for (int i = 0; i < inputDim; i++) x1[i] = float(i)*float(ib+1);
+      for (int i = 0; i < inputDim; i++) x2[i] = -float(i)*float(ib+1);
       // x1 and x2 are the two channels, if more channels will be with zero
       std::copy(x1.begin(), x1.end(), xinput.begin() + ib * inputSize);
       if (nchannels > 1)
