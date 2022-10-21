@@ -1696,7 +1696,7 @@ void ROOT::Experimental::RArrayField::ReadGlobalImpl(NTupleSize_t globalIndex, D
 {
    auto arrayPtr = value->Get<unsigned char>();
    for (unsigned i = 0; i < fArrayLength; ++i) {
-      auto itemValue = fSubFields[0]->GenerateValue(arrayPtr + (i * fItemSize));
+      auto itemValue = fSubFields[0]->CaptureValue(arrayPtr + (i * fItemSize));
       fSubFields[0]->Read(globalIndex * fArrayLength + i, &itemValue);
    }
 }
@@ -1705,7 +1705,7 @@ void ROOT::Experimental::RArrayField::ReadInClusterImpl(const RClusterIndex &clu
 {
    auto arrayPtr = value->Get<unsigned char>();
    for (unsigned i = 0; i < fArrayLength; ++i) {
-      auto itemValue = fSubFields[0]->GenerateValue(arrayPtr + (i * fItemSize));
+      auto itemValue = fSubFields[0]->CaptureValue(arrayPtr + (i * fItemSize));
       fSubFields[0]->Read(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() * fArrayLength + i),
                           &itemValue);
    }
@@ -1721,6 +1721,9 @@ void ROOT::Experimental::RArrayField::GenerateColumnsImpl(const RNTupleDescripto
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RArrayField::GenerateValue(void *where)
 {
+   if (fSubFields[0]->GetTraits() & kTraitTriviallyConstructible)
+      return Detail::RFieldValue(true /* captureFlag */, this, where);
+
    auto arrayPtr = reinterpret_cast<unsigned char *>(where);
    for (unsigned i = 0; i < fArrayLength; ++i) {
       fSubFields[0]->GenerateValue(arrayPtr + (i * fItemSize));
@@ -1731,9 +1734,11 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RArrayField::Generat
 void ROOT::Experimental::RArrayField::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
 {
    auto arrayPtr = value.Get<unsigned char>();
-   for (unsigned i = 0; i < fArrayLength; ++i) {
-      auto itemValue = fSubFields[0]->CaptureValue(arrayPtr + (i * fItemSize));
-      fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
+      for (unsigned i = 0; i < fArrayLength; ++i) {
+         auto itemValue = fSubFields[0]->CaptureValue(arrayPtr + (i * fItemSize));
+         fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+      }
    }
    if (!dtorOnly)
       free(arrayPtr);
