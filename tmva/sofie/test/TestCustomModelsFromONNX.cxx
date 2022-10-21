@@ -153,8 +153,8 @@
 #include "ConvTranspose2d_FromONNX.hxx"
 #include "input_models/references/ConvTranspose2d.ref.hxx"
 
-#include "ConvTranspose3d_FromONNX.hxx"
-#include "input_models/references/ConvTranspose3d.ref.hxx"
+//#include "ConvTranspose3d_FromONNX.hxx"
+//#include "input_models/references/ConvTranspose3d.ref.hxx"
 
 #include "ConvTransposeBias2d_FromONNX.hxx"
 #include "input_models/references/ConvTransposeBias2d.ref.hxx"
@@ -781,12 +781,12 @@ TEST(ONNX, Pow){
    std::vector<float> input2({
       4, 5, 6
    });
-   
+
    TMVA_SOFIE_Pow::Session s("Pow_FromONNX.dat");
    std::vector<float> output = s.infer(input1.data(),input2.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Pow_ExpectedOutput::outputs) / sizeof(float));
-   
+
    float *correct = Pow_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
@@ -806,12 +806,12 @@ TEST(ONNX, Pow_broadcast){
    std::vector<float> input2({
       2, 3, 4, 2, 3, 4
    });
-   
+
    TMVA_SOFIE_Pow_broadcast::Session s("Pow_broadcast_FromONNX.dat");
    std::vector<float> output = s.infer(input1.data(),input2.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Pow_broadcast_ExpectedOutput::outputs) / sizeof(float));
-   
+
    float *correct = Pow_broadcast_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
@@ -829,12 +829,12 @@ TEST(ONNX, Pow_broadcast){
       5, 2, 3,
       5, 5, 4
    });
-   
+
    TMVA_SOFIE_ReduceMean::Session s("ReduceMean_FromONNX.dat");
    std::vector<float> output = s.infer(input.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ReduceMean_ExpectedOutput::output) / sizeof(float));
-   
+
    float *correct = ReduceMean_ExpectedOutput::output;
 
    // Checking every output value, one by one
@@ -852,12 +852,12 @@ TEST(ONNX, Pow_broadcast){
       5, 2, 3,
       5, 5, 4
    });
-   
+
    TMVA_SOFIE_ReduceProd::Session s("ReduceProd_FromONNX.dat");
    std::vector<float> output = s.infer(input.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(ReduceProd_ExpectedOutput::output) / sizeof(float));
-   
+
    float *correct = ReduceProd_ExpectedOutput::output;
 
    // Checking every output value, one by one
@@ -900,12 +900,12 @@ TEST(ONNX, Shape){
    std::vector<float> input({
       1, 2
    });
-   
+
    TMVA_SOFIE_Shape::Session s("Shape_FromONNX.dat");
    auto output = s.infer(input.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Shape_ExpectedOutput::outputs) / sizeof(float));
-   
+
    int *correct = Shape_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
@@ -1610,6 +1610,7 @@ TEST(ONNX, ConvTranspose2d)
    }
 }
 
+/*
 TEST(ONNX, ConvTranspose3d)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -1630,6 +1631,7 @@ TEST(ONNX, ConvTranspose3d)
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
+*/
 
 TEST(ONNX, ConvTransposeBias2d)
 {
