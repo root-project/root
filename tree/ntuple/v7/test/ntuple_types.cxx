@@ -552,4 +552,10 @@ TEST(RNTuple, Traits)
    EXPECT_EQ(0, f3.GetTraits());
    auto f4 = RField<std::variant<float, int>>("f");
    EXPECT_EQ(RFieldBase::kTraitTriviallyDestructible, f4.GetTraits());
+   auto f5 = RField<std::tuple<float, std::string>>("f");
+   EXPECT_EQ(0, f5.GetTraits());
+   auto f6 = RField<std::tuple<float, int>>("f");
+   EXPECT_EQ(RFieldBase::kTraitTrivialType, f6.GetTraits());
+   auto f7 = RField<std::tuple<float, std::variant<int, float>>>("f");
+   EXPECT_EQ(RFieldBase::kTraitTriviallyDestructible, f7.GetTraits());
 }
