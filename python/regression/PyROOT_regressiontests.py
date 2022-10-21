@@ -18,12 +18,16 @@ except ImportError:
    import subprocess as commands
    def WEXITSTATUS(arg): return arg
 
+original_preload = os.environ.get('LD_PRELOAD', None)
+
 import ROOT
 ROOT.PyConfig.IgnoreCommandLineOptions = False
 from ROOT import gROOT, gInterpreter
 from ROOT import TClass, TObject, TFile
 from ROOT import TH1I, TVector3, TGraph, TMatrixD
 import cppyy
+
+cleaned_preload = os.environ.get('LD_PRELOAD', None)
 
 from common import *
 
@@ -147,6 +151,10 @@ class Regression04Threading( MyTestCase ):
    def test1SpecialCasegROOT( self ):
       """Test the special role that gROOT plays vis-a-vis threading"""
 
+      # Restore original LD_PRELOAD when running under AddressSanitizer
+      if original_preload is not None:
+         os.environ['LD_PRELOAD'] = original_preload
+
       cmd = sys.executable + "  -c 'import sys, ROOT; ROOT.gROOT; %s "\
             "sys.exit( 5 + int(\"thread\" in ROOT.__dict__) )'"
       if self.hasThread == self.noThread:
@@ -168,8 +176,16 @@ class Regression04Threading( MyTestCase ):
       stat, out = commands.getstatusoutput( cmd % "ROOT.gDebug;" )
       self.assertEqual( WEXITSTATUS(stat), self.hasThread )
 
+      # Restore the cleaned LD_PRELOAD for other tests
+      if cleaned_preload is not None:
+         os.environ['LD_PRELOAD'] = cleaned_preload
+
    def test2ImportStyles( self ):
       """Test different import styles vis-a-vis threading"""
+
+      # Restore original LD_PRELOAD when running under AddressSanitizer
+      if original_preload is not None:
+         os.environ['LD_PRELOAD'] = original_preload
 
       cmd = sys.executable + " -c 'import sys; %s ;"\
             "import ROOT; sys.exit( 5 + int(\"thread\" in ROOT.__dict__) )'"
@@ -187,8 +203,16 @@ class Regression04Threading( MyTestCase ):
       stat, out = commands.getstatusoutput( cmd % "from ROOT import gDebug" )
       self.assertEqual( WEXITSTATUS(stat), self.hasThread )
 
+      # Restore the cleaned LD_PRELOAD for other tests
+      if cleaned_preload is not None:
+         os.environ['LD_PRELOAD'] = cleaned_preload
+
    def test3SettingOfBatchMode( self ):
       """Test various ways of preventing GUI thread startup"""
+
+      # Restore original LD_PRELOAD when running under AddressSanitizer
+      if original_preload is not None:
+         os.environ['LD_PRELOAD'] = original_preload
 
       cmd = sys.executable + " -c '%s import ROOT, sys; sys.exit( 5+int(\"thread\" in ROOT.__dict__ ) )'"
       if self.hasThread == self.noThread:
@@ -219,6 +243,10 @@ class Regression04Threading( MyTestCase ):
             stat, out = commands.getstatusoutput(
                cmd % 'from ROOT import gROOT; gROOT.SetBatch( 0 ); from ROOT import *;' )
             self.assertEqual( WEXITSTATUS(stat), self.hasThread )
+
+      # Restore the cleaned LD_PRELOAD for other tests
+      if cleaned_preload is not None:
+         os.environ['LD_PRELOAD'] = cleaned_preload
 
 
 ### Test the proper resolution of a template with namespaced parameter =======
