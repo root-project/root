@@ -1149,15 +1149,17 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
 
         // helpers for iteration
             const std::string& vtype = Cppyy::ResolveName(name+"::value_type");
-            size_t typesz = Cppyy::SizeOf(vtype);
+            if (vtype.rfind("value_type") == std::string::npos) {    // actually resolved?
+                PyObject* pyvalue_type = CPyCppyy_PyText_FromString(vtype.c_str());
+                PyObject_SetAttr(pyclass, PyStrings::gValueType, pyvalue_type);
+                Py_DECREF(pyvalue_type);
+            }
+
+            size_t typesz = Cppyy::SizeOf(name+"::value_type");
             if (typesz) {
                 PyObject* pyvalue_size = PyLong_FromSsize_t(typesz);
-                PyObject_SetAttrString(pyclass, "value_size", pyvalue_size);
+                PyObject_SetAttr(pyclass, PyStrings::gValueSize, pyvalue_size);
                 Py_DECREF(pyvalue_size);
-
-                PyObject* pyvalue_type = CPyCppyy_PyText_FromString(vtype.c_str());
-                PyObject_SetAttrString(pyclass, "value_type", pyvalue_type);
-                Py_DECREF(pyvalue_type);
             }
         }
     }

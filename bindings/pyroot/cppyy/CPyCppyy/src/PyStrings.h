@@ -49,6 +49,8 @@ namespace PyStrings {
     extern PyObject* gSize;
     extern PyObject* gTemplate;
     extern PyObject* gVectorAt;
+    extern PyObject* gValueType;
+    extern PyObject* gValueSize;
 
     extern PyObject* gCppReal;
     extern PyObject* gCppImag;
