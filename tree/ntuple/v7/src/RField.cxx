@@ -1268,14 +1268,25 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
    RClusterIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
-   auto oldNItems = typedValue->size() / fItemSize;
-   for (std::size_t i = nItems; i < oldNItems; ++i) {
-      auto itemValue = fSubFields[0]->CaptureValue(typedValue->data() + (i * fItemSize));
-      fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
-   }
-   typedValue->resize(nItems * fItemSize);
-   for (std::size_t i = oldNItems; i < nItems; ++i) {
-      fSubFields[0]->GenerateValue(typedValue->data() + (i * fItemSize));
+   if (fSubFields[0]->GetTraits() & kTraitTrivialType) {
+      typedValue->resize(nItems * fItemSize);
+   } else {
+      const auto oldNItems = typedValue->size() / fItemSize;
+      const bool canRealloc = oldNItems < nItems;
+      bool allDeallocated = false;
+      if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
+         allDeallocated = canRealloc;
+         for (std::size_t i = allDeallocated ? 0 : nItems; i < oldNItems; ++i) {
+            auto itemValue = fSubFields[0]->CaptureValue(typedValue->data() + (i * fItemSize));
+            fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+         }
+      }
+      typedValue->resize(nItems * fItemSize);
+      if (!(fSubFields[0]->GetTraits() & kTraitTriviallyConstructible)) {
+         for (std::size_t i = allDeallocated ? 0 : oldNItems; i < nItems; ++i) {
+            fSubFields[0]->GenerateValue(typedValue->data() + (i * fItemSize));
+         }
+      }
    }
 
    for (std::size_t i = 0; i < nItems; ++i) {
@@ -1306,10 +1317,12 @@ void ROOT::Experimental::RVectorField::DestroyValue(const Detail::RFieldValue& v
 {
    auto vec = static_cast<std::vector<char>*>(value.GetRawPtr());
    R__ASSERT((vec->size() % fItemSize) == 0);
-   auto nItems = vec->size() / fItemSize;
-   for (unsigned i = 0; i < nItems; ++i) {
-      auto itemValue = fSubFields[0]->CaptureValue(vec->data() + (i * fItemSize));
-      fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
+      auto nItems = vec->size() / fItemSize;
+      for (unsigned i = 0; i < nItems; ++i) {
+         auto itemValue = fSubFields[0]->CaptureValue(vec->data() + (i * fItemSize));
+         fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+      }
    }
    vec->~vector();
    if (!dtorOnly)
