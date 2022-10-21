@@ -33,7 +33,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
     src/X11Events.mm
     src/XLFDParser.mm
   DEPENDENCIES
-    Gui
+    ROOTGui
   LIBRARIES
     GQuartz
     "-framework Cocoa"

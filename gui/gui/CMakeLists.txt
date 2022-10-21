@@ -8,7 +8,8 @@
 # CMakeLists.txt file for building ROOT gui/gui package
 ############################################################################
 
-ROOT_STANDARD_LIBRARY_PACKAGE(Gui
+ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGui
+  BACKWARDS_COMPAT Gui
   HEADERS
     HelpText.h
     TG3DLine.h
@@ -206,4 +207,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gui
     MathCore
 )
 
-target_include_directories(Gui PRIVATE ${CMAKE_SOURCE_DIR}/gui/ged/inc)
+target_include_directories(ROOTGui PRIVATE ${CMAKE_SOURCE_DIR}/gui/ged/inc)

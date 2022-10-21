@@ -24,7 +24,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(FitPanel
   DEPENDENCIES
     Gpad
     Graf
-    Gui
+    ROOTGui
     Hist
     MathCore
     Tree

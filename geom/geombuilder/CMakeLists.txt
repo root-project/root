@@ -59,6 +59,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GeomBuilder
     Graf3d
     Gpad
     Graf
-    Gui
+    ROOTGui
     Ged
 )

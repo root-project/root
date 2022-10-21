@@ -210,7 +210,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     RGlew
   DEPENDENCIES
     Hist
-    Gui
+    ROOTGui
     Ged
     RCsg
   INSTALL_OPTIONS

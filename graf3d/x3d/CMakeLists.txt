@@ -20,7 +20,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(X3d
     ${X11_LIBRARIES}
   DEPENDENCIES
     Graf3d
-    Gui
+    ROOTGui
 )
 
 target_include_directories(X3d PRIVATE ${X11_INCLUDE_DIR})

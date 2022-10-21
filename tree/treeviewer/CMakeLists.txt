@@ -38,6 +38,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TreeViewer
     -writeEmptyRootPCM
   DEPENDENCIES
     Ged
-    Gui
+    ROOTGui
     TreePlayer
 )
