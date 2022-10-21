@@ -315,7 +315,6 @@ public:
 Element representing TKey from TDirectory
 */
 
-
 class TKeyElement : public TDirectoryElement {
    std::string fKeyName, fKeyTitle, fKeyClass, fKeyMTime;
    Short_t fKeyCycle{0};
@@ -443,7 +442,7 @@ public:
       return kActNone;
    }
 
-   bool IsFolder() const
+   bool IsFolder() const override
    {
       if (fElement)
          return fElement->IsFolder();
@@ -493,7 +492,7 @@ public:
       return false;
    }
 
-   std::unique_ptr<RItem> CreateItem() const
+   std::unique_ptr<RItem> CreateItem() const override
    {
       if (fElement)
          return fElement->CreateItem();
