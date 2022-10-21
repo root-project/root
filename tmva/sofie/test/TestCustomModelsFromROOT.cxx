@@ -3,11 +3,11 @@
 #include "Linear_16_FromROOT.hxx"
 #include "input_models/references/Linear_16.ref.hxx"
 
-#include "Linear_32_FromROOT.hxx"
-#include "input_models/references/Linear_32.ref.hxx"
+// #include "Linear_32_FromROOT.hxx"
+// #include "input_models/references/Linear_32.ref.hxx"
 
-#include "Linear_64_FromROOT.hxx"
-#include "input_models/references/Linear_64.ref.hxx"
+// #include "Linear_64_FromROOT.hxx"
+// #include "input_models/references/Linear_64.ref.hxx"
 
 #include "LinearWithSelu_FromROOT.hxx"
 #include "input_models/references/LinearWithSelu.ref.hxx"
@@ -109,7 +109,7 @@ TEST(ROOT, Linear16)
    }
 }
 
-
+/*
 TEST(ROOT, Linear32)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -152,7 +152,7 @@ TEST(ROOT, Linear64)
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
-
+*/
 
 TEST(ROOT, LinearWithSelu)
 {
@@ -185,7 +185,7 @@ TEST(ROOT, LinearWithSigmoid)
    std::fill_n(input.data(), input.size(), 1.0f);
    TMVA_SOFIE_LinearWithSigmoid::Session s;  // we don't use weight file in this case
    std::vector<float> output = s.infer(input.data());
-  
+
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(LinearWithSigmoid_ExpectedOutput::all_ones) / sizeof(float));

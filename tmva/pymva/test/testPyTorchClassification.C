@@ -21,7 +21,7 @@ int testPyTorchClassification(){
    // Build model from python file
    std::cout << "Generate PyTorch model..." << std::endl;
    UInt_t ret;
-   ret = gSystem->Exec("python generatePyTorchModelClassification.py");
+   ret = gSystem->Exec(TMVA::Python_Executable() + " generatePyTorchModelClassification.py");
    if(ret!=0){
        std::cout << "[ERROR] Failed to generate model using python" << std::endl;
        return 1;

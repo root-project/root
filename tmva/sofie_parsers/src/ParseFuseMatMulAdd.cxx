@@ -33,9 +33,10 @@ ParserFuseFuncSignature ParseFuseMatMulAdd = [](RModelParser_ONNX &parser, const
 
    switch (input_type) {
    case ETensorType::FLOAT:
-      if (matmulnode.input_size() == 2) {
-         op.reset(new ROperator_Gemm<float>(attr_alpha, attr_beta, attr_transA, attr_transB, matmulnode.input(0),
-                                            matmulnode.input(1), addnode.output(0)));
+      if (addnode.input_size() != 2) {
+         throw std::runtime_error("TMVA::SOFIE ONNX Parser : cannot fuse MatMul if Add does not have 2 inputs");
+         //op.reset(new ROperator_Gemm<float>(attr_alpha, attr_beta, attr_transA, attr_transB, matmulnode.input(0),
+         //                                   matmulnode.input(1), addnode.output(0)));
       } else {
          op.reset(new ROperator_Gemm<float>(attr_alpha, attr_beta, attr_transA, attr_transB, matmulnode.input(0),
                                             matmulnode.input(1), addnode.input(1), addnode.output(0)));

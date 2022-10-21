@@ -24,13 +24,13 @@ class Net(nn.Module):
         self.use_maxpool = use_maxpool
         self.use_avgpool = use_avgpool
 
-        self.conv0 = nn.ConvTranspose2d(in_channels=self.nc, out_channels=4, kernel_size=2, groups=1, stride=1, padding=1)
+        self.conv0 = nn.ConvTranspose2d(in_channels=self.nc, out_channels=3, kernel_size=2, groups=1, stride=1, padding=1)
         #if (self.use_bn): self.bn1 = nn.BatchNorm2d(4)
         #if (self.use_maxpool): self.pool1 = nn.MaxPool2d(2)
         #if (self.use_avgpool): self.pool1 = nn.AvgPool2d(2)
         if (self.nl > 1):
            # output is 4x4 with optionally using group convolution
-           self.conv1  = nn.ConvTranspose2d(in_channels=4,   out_channels=8, groups = self.ng,   kernel_size=3, stride=1, padding=1)
+           self.conv1  = nn.ConvTranspose2d(in_channels=3,   out_channels=8, groups = self.ng,   kernel_size=3, stride=1, padding=1)
            #output is same 4x4
            self.conv2  = nn.ConvTranspose2d(in_channels=8,   out_channels=4, kernel_size=3, stride=1, padding=1)
            #use stride last layer
@@ -94,7 +94,10 @@ def main():
     #sample = torch.zeros([2,1,5,5])
    input  = torch.zeros([])
    for ib in range(0,bsize):
-      xa = torch.ones([1, 1, d, d]) * (ib+1)
+      #fill input tensor with an increasing inputs
+      xa = torch.arange(d*d).reshape([1,1,d,d])*float(ib+1)
+      #fill with all ones
+      #xa = torch.ones([1, 1, d, d]) * (ib+1)
       if (nc > 1) :
          xb = xa.neg()
          xc = torch.cat((xa,xb),1)  # concatenate tensors
