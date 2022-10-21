@@ -24,9 +24,10 @@ class STL_vector(unittest.TestCase):
     def test_vec_const_char_p(self):
         '''
         Test that creating a std::vector<const char*> does not raise any
-        exception (#11581).
+        exception and that it has the right value_type (#11581).
         '''
-        ROOT.std.vector['const char*']()
+        v = ROOT.std.vector['const char*']()
+        self.assertEqual(v.value_type, 'const char*')
 
 
 if __name__ == '__main__':
