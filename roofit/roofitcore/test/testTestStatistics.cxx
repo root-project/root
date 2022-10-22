@@ -308,8 +308,10 @@ TEST(RooNLLVar, CopyRangedNLL)
 
    std::unique_ptr<RooDataSet> ds{model.generate(x, 20)};
 
-   std::unique_ptr<RooNLLVar> nll{static_cast<RooNLLVar *>(model.createNLL(*ds))};
-   std::unique_ptr<RooNLLVar> nllrange{static_cast<RooNLLVar *>(model.createNLL(*ds, RooFit::Range("fitrange")))};
+   // This bug is related to the implementation details of the old test statistics, so BatchMode is forced to be off
+   using namespace RooFit;
+   std::unique_ptr<RooNLLVar> nll{static_cast<RooNLLVar *>(model.createNLL(*ds, BatchMode("off")))};
+   std::unique_ptr<RooNLLVar> nllrange{static_cast<RooNLLVar *>(model.createNLL(*ds, Range("fitrange"), BatchMode("off")))};
 
    auto nllClone = std::make_unique<RooNLLVar>(*nll);
    auto nllrangeClone = std::make_unique<RooNLLVar>(*nllrange);
