@@ -34,6 +34,7 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooRealVar.h>
 #include <RooArgList.h>
 #include <RooBatchCompute.h>
+#include <RooHelpers.h>
 #include <RooMsgService.h>
 #include <RooBatchCompute/Initialisation.h>
 #include <RooFit/BatchModeDataHelpers.h>
@@ -193,8 +194,8 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooArgSet const &normSet, 
    }
 }
 
-void RooFitDriver::setData(RooAbsData const &data, std::string_view rangeName,
-                           RooAbsCategory const *indexCatForSplitting, bool skipZeroWeights,
+void RooFitDriver::setData(RooAbsData const &data, std::string const &rangeName,
+                           RooAbsCategory const *indexCatForSplitting, bool splitRange, bool skipZeroWeights,
                            bool takeGlobalObservablesFromData)
 {
    std::vector<std::pair<std::string, RooAbsData const *>> datas;
@@ -217,8 +218,9 @@ void RooFitDriver::setData(RooAbsData const &data, std::string_view rangeName,
    std::stack<std::vector<double>>{}.swap(_vectorBuffers);
 
    for (auto const &toAdd : datas) {
-      DataSpansMap spans = RooFit::BatchModeDataHelpers::getDataSpans(*toAdd.second, rangeName, toAdd.first,
-                                                                      _vectorBuffers, skipZeroWeights);
+      DataSpansMap spans = RooFit::BatchModeDataHelpers::getDataSpans(
+         *toAdd.second, RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, toAdd.second->GetName()),
+         toAdd.first, _vectorBuffers, skipZeroWeights);
       for (auto const &item : spans) {
          dataSpans.insert(item);
       }

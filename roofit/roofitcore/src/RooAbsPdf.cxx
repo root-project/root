@@ -1156,6 +1156,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
                                                pc.getDouble("IntegrateBins"),
                                                batchMode,
                                                doOffset,
+                                               static_cast<bool>(splitRange),
                                                takeGlobalObservablesFromData).release();
   }
 

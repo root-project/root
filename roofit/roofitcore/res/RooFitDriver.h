@@ -49,9 +49,9 @@ public:
    RooFitDriver(const RooAbsReal &absReal, RooArgSet const &normSet,
                 RooFit::BatchModeOption batchMode = RooFit::BatchModeOption::Cpu);
 
-   void setData(RooAbsData const &data, std::string_view rangeName = "",
-                RooAbsCategory const *indexCatForSplitting = nullptr, bool skipZeroWeights = false,
-                bool takeGlobalObservablesFromData = true);
+   void setData(RooAbsData const &data, std::string const &rangeName = "",
+                RooAbsCategory const *indexCatForSplitting = nullptr, bool splitRange = false,
+                bool skipZeroWeights = false, bool takeGlobalObservablesFromData = true);
    void setData(DataSpansMap const &dataSpans);
 
    ~RooFitDriver();
