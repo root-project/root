@@ -168,7 +168,9 @@ TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
 
    const char *cutRange1 = "SideBandLo_cat1,SideBandHi_cat1";
    const char *cutRange2 = "SideBandLo_cat2,SideBandHi_cat2";
-   std::unique_ptr<RooAbsReal> nllSim{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange())};
+   using RealPtr = std::unique_ptr<RooAbsReal>;
+   RealPtr nllSim{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange(), BatchMode("off"))};
+   RealPtr nllSimBatch{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange(), BatchMode("cpu"))};
 
    // In simultaneous PDFs, the probability is normalized over the categories,
    // so we have to do that as well when computing the reference value. Since
@@ -184,6 +186,8 @@ TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
 
    const double nllSimRefVal = nllSimRef.getVal();
    const double nllSimVal = nllSim->getVal();
+   const double nllSimBatchVal = nllSimBatch->getVal();
 
    EXPECT_FLOAT_EQ(nllSimVal, nllSimRefVal);
+   EXPECT_FLOAT_EQ(nllSimBatchVal, nllSimVal) << "BatchMode and old RooFit don't agree!";
 }
