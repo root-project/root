@@ -255,7 +255,7 @@ TEST(ONNX, Sub)
       });
       TMVA_SOFIE_Sub::Session s("Sub_FromONNX.dat");
 
-      std::vector<float> output = s.infer(input2.data(),input1.data());
+      std::vector<float> output = s.infer(input1.data(),input2.data());
 
       // Checking output size
       EXPECT_EQ(output.size(), sizeof(Sub_ExpectedOutput::outputs) / sizeof(float));
@@ -333,7 +333,7 @@ TEST(ONNX, Div)
       });
       TMVA_SOFIE_Div::Session s("Div_FromONNX.dat");
 
-      std::vector<float> output = s.infer(input2.data(),input1.data());
+      std::vector<float> output = s.infer(input1.data(),input2.data());
 
       // Checking output size
       EXPECT_EQ(output.size(), sizeof(Div_ExpectedOutput::outputs) / sizeof(float));
@@ -781,7 +781,7 @@ TEST(ONNX, Pow){
    });
    
    TMVA_SOFIE_Pow::Session s("Pow_FromONNX.dat");
-   std::vector<float> output = s.infer(input2.data(),input1.data());
+   std::vector<float> output = s.infer(input1.data(),input2.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Pow_ExpectedOutput::outputs) / sizeof(float));
    
@@ -806,7 +806,7 @@ TEST(ONNX, Pow_broadcast){
    });
    
    TMVA_SOFIE_Pow_broadcast::Session s("Pow_broadcast_FromONNX.dat");
-   std::vector<float> output = s.infer(input2.data(),input1.data());
+   std::vector<float> output = s.infer(input1.data(),input2.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Pow_broadcast_ExpectedOutput::outputs) / sizeof(float));
    
