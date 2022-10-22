@@ -114,9 +114,11 @@
             out<<"\n//--------- Concat\n";
             // special case when memory is contigous
             bool hasShapeOnes = true;
-            for(size_t i = 0; i<fInputShapes.size(); ++i){
-                  if(fInputShapes[i][0]!=1)
-                     hasShapeOnes = false;
+            for(int i = 0; i<fAxis; ++i){
+               if(fInputShapes[0][i]!=1){
+                  hasShapeOnes = false;
+                  break;
+               }
             }
             if (fAxis == 0 || hasShapeOnes) {
                size_t offset = 0;
