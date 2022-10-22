@@ -532,11 +532,10 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
           cfg.rangeName += token + "_" + catName + ",";
         }
         cfg.rangeName.pop_back(); // to remove the last comma
-        cfg.nCPU = _nCPU*(_mpinterl?-1:1);
       } else {
         cfg.rangeName = rangeName;
-        cfg.nCPU = _nCPU;
       }
+      cfg.nCPU = _nCPU;
       _gofArray[n] = create(catName.c_str(),catName.c_str(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,cfg);
       _gofArray[n]->setSimCount(_nGof);
       // *** END HERE
