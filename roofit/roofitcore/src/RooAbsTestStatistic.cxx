@@ -48,6 +48,7 @@ combined in the main thread.
 #include "RooProdPdf.h"
 #include "RooRealSumPdf.h"
 #include "RooAbsCategoryLValue.h"
+#include "RooHelpers.h"
 
 #include "ROOT/StringUtils.hxx"
 
@@ -526,15 +527,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       if(auto thisAsRooAbsOptTestStatistic = dynamic_cast<RooAbsOptTestStatistic const*>(this)) {
         cfg.integrateOverBinsPrecision = thisAsRooAbsOptTestStatistic->_integrateBinsPrecision;
       }
-      if (_splitRange && !rangeName.empty()) {
-        auto tokens = ROOT::Split(rangeName, ",");
-        for(std::string const& token : tokens) {
-          cfg.rangeName += token + "_" + catName + ",";
-        }
-        cfg.rangeName.pop_back(); // to remove the last comma
-      } else {
-        cfg.rangeName = rangeName;
-      }
+      cfg.rangeName = RooHelpers::getRangeNameForSimComponent(rangeName, _splitRange, catName);
       cfg.nCPU = _nCPU;
       _gofArray[n] = create(catName.c_str(),catName.c_str(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,cfg);
       _gofArray[n]->setSimCount(_nGof);
