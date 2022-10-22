@@ -34,7 +34,7 @@ public:
 
    RooNLLVarNew(){};
    RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables, bool isExtended,
-                bool doOffset);
+                bool doOffset, int simCount = 1);
    RooNLLVarNew(const RooNLLVarNew &other, const char *name = nullptr);
    TObject *clone(const char *newname) const override { return new RooNLLVarNew(*this, newname); }
 
@@ -65,6 +65,7 @@ private:
    bool _weightSquared = false;
    bool _binnedL = false;
    bool _doOffset = false;
+   int _simCount = 0;
    std::string _prefix;
    RooTemplateProxy<RooAbsReal> _weightVar;
    RooTemplateProxy<RooAbsReal> _weightSquaredVar;
