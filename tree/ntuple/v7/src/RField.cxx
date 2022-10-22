@@ -1407,19 +1407,26 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, De
    char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
    const std::size_t oldSize = *sizePtr;
 
+   const bool needsConstruct = !(fSubFields[0]->GetTraits() & kTraitTriviallyConstructible);
+   const bool needsDestruct = !(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible);
+
    // Destroy excess elements, if any
-   for (std::size_t i = nItems; i < oldSize; ++i) {
-      auto itemValue = fSubFields[0]->CaptureValue(begin + (i * fItemSize));
-      fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+   if (needsDestruct) {
+      for (std::size_t i = nItems; i < oldSize; ++i) {
+         auto itemValue = fSubFields[0]->CaptureValue(begin + (i * fItemSize));
+         fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+      }
    }
 
    // Resize RVec (capacity and size)
    if (std::int32_t(nItems) > *capacityPtr) { // must reallocate
       // Destroy old elements: useless work for trivial types, but in case the element type's constructor
       // allocates memory we need to release it here to avoid memleaks (e.g. if this is an RVec<RVec<int>>)
-      for (std::size_t i = 0u; i < oldSize; ++i) {
-         auto itemValue = fSubFields[0]->CaptureValue(begin + (i * fItemSize));
-         fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+      if (needsDestruct) {
+         for (std::size_t i = 0u; i < oldSize; ++i) {
+            auto itemValue = fSubFields[0]->CaptureValue(begin + (i * fItemSize));
+            fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+         }
       }
 
       // TODO Increment capacity by a factor rather than just enough to fit the elements.
@@ -1432,14 +1439,18 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, De
       *capacityPtr = nItems;
 
       // Placement new for elements that were already there before the resize
-      for (std::size_t i = 0u; i < oldSize; ++i)
-         fSubFields[0]->GenerateValue(begin + (i * fItemSize));
+      if (needsConstruct) {
+         for (std::size_t i = 0u; i < oldSize; ++i)
+            fSubFields[0]->GenerateValue(begin + (i * fItemSize));
+      }
    }
    *sizePtr = nItems;
 
    // Placement new for new elements, if any
-   for (std::size_t i = oldSize; i < nItems; ++i)
-      fSubFields[0]->GenerateValue(begin + (i * fItemSize));
+   if (needsConstruct) {
+      for (std::size_t i = oldSize; i < nItems; ++i)
+         fSubFields[0]->GenerateValue(begin + (i * fItemSize));
+   }
 
    // Read the new values into the collection elements
    for (std::size_t i = 0; i < nItems; ++i) {
@@ -1477,9 +1488,11 @@ void ROOT::Experimental::RRVecField::DestroyValue(const Detail::RFieldValue &val
    auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(value.GetRawPtr());
 
    char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
-   for (std::int32_t i = 0; i < *sizePtr; ++i) {
-      auto elementValue = fSubFields[0]->CaptureValue(begin + i * fItemSize);
-      fSubFields[0]->DestroyValue(elementValue, true /* dtorOnly */);
+   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
+      for (std::int32_t i = 0; i < *sizePtr; ++i) {
+         auto elementValue = fSubFields[0]->CaptureValue(begin + i * fItemSize);
+         fSubFields[0]->DestroyValue(elementValue, true /* dtorOnly */);
+      }
    }
 
    // figure out if we are in the small state, i.e. begin == &inlineBuffer
