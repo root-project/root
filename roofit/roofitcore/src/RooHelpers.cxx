@@ -281,4 +281,19 @@ RooArgSet selectFromArgSet(RooArgSet const& argSet, std::string const& names) {
 }
 
 
+std::string getRangeNameForSimComponent(std::string const& rangeName, bool splitRange, std::string const& catName)
+{
+   if (splitRange && !rangeName.empty()) {
+      std::string out;
+      auto tokens = ROOT::Split(rangeName, ",");
+      for(std::string const& token : tokens) {
+         out += token + "_" + catName + ",";
+      }
+      out.pop_back(); // to remove the last comma
+      return out;
+   }
+
+   return rangeName;
+}
+
 }

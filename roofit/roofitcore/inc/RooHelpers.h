@@ -150,6 +150,8 @@ std::unique_ptr<T> cloneTreeWithSameParameters(T const& arg, RooArgSet const* ob
   return clone;
 }
 
+std::string getRangeNameForSimComponent(std::string const& rangeName, bool splitRange, std::string const& catName);
+
 }
 
 #endif /* ROOFIT_ROOFITCORE_INC_ROOHELPERS_H_ */
