@@ -74,9 +74,9 @@ RooArgSet getObservablesInPdf(RooAbsPdf const &pdf, RooArgSet const &observables
 \param isExtended Set to true if this is an extended fit
 **/
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables,
-                           bool isExtended, bool doOffset)
+                           bool isExtended, bool doOffset, int simCount)
    : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{getObservablesInPdf(pdf, observables)},
-     _isExtended{isExtended}, _doOffset{doOffset},
+     _isExtended{isExtended}, _doOffset{doOffset}, _simCount{simCount},
      _weightVar{"weightVar", "weightVar", this, *new RooRealVar(weightVarName, weightVarName, 1.0), true, false, true},
      _weightSquaredVar{weightVarNameSumW2,
                        weightVarNameSumW2,
@@ -131,9 +131,9 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
 RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
    : RooAbsReal(other, name), _pdf{"pdf", this, other._pdf}, _observables{other._observables},
      _isExtended{other._isExtended}, _weightSquared{other._weightSquared}, _binnedL{other._binnedL},
-     _prefix{other._prefix}, _weightVar{"weightVar", this, other._weightVar}, _weightSquaredVar{"weightSquaredVar",
-                                                                                                this,
-                                                                                                other._weightSquaredVar}
+     _doOffset{other._doOffset}, _simCount{other._simCount}, _prefix{other._prefix},
+     _weightVar{"weightVar", this, other._weightVar}, _weightSquaredVar{"weightSquaredVar", this,
+                                                                        other._weightSquaredVar}
 {
 }
 
@@ -183,7 +183,11 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
          }
       }
 
-      result += sumWeightKahanSum.Sum();
+      // If part of simultaneous PDF normalize probability over
+      // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
+      if (_simCount > 1) {
+         result += sumWeightKahanSum.Sum() * std::log(static_cast<double>(_simCount));
+      }
 
       // Check if value offset flag is set.
       if (_doOffset) {
@@ -207,9 +211,8 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
    _logProbasBuffer.resize(nEvents);
    (*_pdf).getLogProbabilities(probas, _logProbasBuffer.data());
 
-   if (_isExtended && _sumWeight == 0.0) {
-      _sumWeight = weights.size() == 1 ? weights[0] * nEvents : kahanSum(weights);
-   }
+   _sumWeight = weights.size() == 1 ? weights[0] * nEvents : kahanSum(weights);
+
    if (_isExtended && _weightSquared && _sumWeight2 == 0.0) {
       _sumWeight2 = weights.size() == 1 ? weightsSumW2[0] * nEvents : kahanSum(weightsSumW2);
    }
@@ -238,6 +241,12 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
       assert(_sumWeight != 0.0);
       double expected = _pdf->expectedEvents(&_observables);
       kahanProb += _pdf->extendedTerm(_sumWeight, expected, _weightSquared ? _sumWeight2 : 0.0);
+   }
+
+   // If part of simultaneous PDF normalize probability over
+   // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
+   if (_simCount > 1) {
+      kahanProb += _sumWeight * std::log(static_cast<double>(_simCount));
    }
 
    // Check if value offset flag is set.

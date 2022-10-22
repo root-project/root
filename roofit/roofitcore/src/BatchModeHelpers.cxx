@@ -44,7 +44,8 @@ std::unique_ptr<RooAbsArg> createSimultaneousNLL(RooSimultaneous const &simPdf, 
          if (!rangeName.empty()) {
             pdf->setNormRange(RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, catName).c_str());
          }
-         auto nll = std::make_unique<RooNLLVarNew>(name.c_str(), name.c_str(), *pdf, observables, isExtended, doOffset);
+         auto nll = std::make_unique<RooNLLVarNew>(name.c_str(), name.c_str(), *pdf, observables, isExtended, doOffset,
+                                                   simPdf.indexCat().size());
          // Rename the observables and weights
          newObservables.add(nll->prefixObservableAndWeightNames(std::string("_") + catName + "_"));
          nllTerms.addOwned(std::move(nll));
