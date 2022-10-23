@@ -72,7 +72,7 @@ public:
          // master fills queue with tasks
          for (std::size_t task_id = 0; task_id < serial_->x_.size(); ++task_id) {
             RooFit::MultiProcess::JobTask job_task{id_, state_id_, task_id};
-            get_manager()->queue().add(job_task);
+            get_manager()->queue()->add(job_task);
             ++N_tasks_at_workers_;
          }
 

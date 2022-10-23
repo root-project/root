@@ -186,7 +186,7 @@ void LikelihoodJob::evaluate()
       // master fills queue with tasks
       auto N_tasks = getNEventTasks() * getNComponentTasks();
       for (std::size_t ix = 0; ix < N_tasks; ++ix) {
-         get_manager()->queue().add({id_, state_id_, ix});
+         get_manager()->queue()->add({id_, state_id_, ix});
       }
       n_tasks_at_workers_ = N_tasks;
 

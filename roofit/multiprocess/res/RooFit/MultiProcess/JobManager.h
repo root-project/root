@@ -40,7 +40,7 @@ public:
 
    ProcessManager &process_manager() const;
    Messenger &messenger() const;
-   Queue &queue() const;
+   Queue *queue() const;
 
    void retrieve(std::size_t requesting_job_id);
 

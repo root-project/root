@@ -190,7 +190,7 @@ void LikelihoodGradientJob::calculate_all()
       // master fills queue with tasks
       for (std::size_t ix = 0; ix < N_tasks_; ++ix) {
          MultiProcess::JobTask job_task{id_, state_id_, ix};
-         get_manager()->queue().add(job_task);
+         get_manager()->queue()->add(job_task);
       }
       N_tasks_at_workers_ = N_tasks_;
       // wait for task results back from workers to master (put into _grad)

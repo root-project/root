@@ -16,23 +16,30 @@
 #include "RooFit/MultiProcess/types.h"
 #include "RooFit/MultiProcess/Messenger.h"
 
-#include <queue>
-
 namespace RooFit {
 namespace MultiProcess {
 
 class Queue {
 public:
-   bool pop(JobTask &job_task);
-   void add(JobTask job_task);
+   virtual ~Queue() = default;
+
+   /// Have a worker ask for a task-message from the queue
+   ///
+   /// \param[out] job_task JobTask reference to put the Job ID and the task index into.
+   /// \return true if a task was popped from the queue successfully, false if the queue was empty.
+   virtual bool pop(JobTask &job_task) = 0;
+
+   /// Enqueue a task
+   ///
+   /// \param[in] job_task JobTask object that contains the Job ID and the task index.
+   virtual void add(JobTask job_task) = 0;
 
    void loop();
 
    void process_master_message(M2Q message);
    void process_worker_message(std::size_t this_worker_id, W2Q message);
 
-private:
-   std::queue<JobTask> queue_;
+protected:
    std::size_t N_tasks_ = 0; // total number of received tasks
    std::size_t N_tasks_at_workers_ = 0;
 };
