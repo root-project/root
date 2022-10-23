@@ -1302,7 +1302,9 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       // These modules should not be preloaded but they fix issues.
       // FIXME: Hist is not a core module but is very entangled to MathCore and
       // causes issues.
-      std::vector<std::string> FIXMEModules = {"Hist"};
+      // ROOTDataFrame is not a core module as well, but without it Clang reports
+      // some ODR related issues.
+      std::vector<std::string> FIXMEModules = {"Hist", "ROOTDataFrame"};
       clang::CompilerInstance &CI = *clingInterp.getCI();
       clang::Preprocessor &PP = CI.getPreprocessor();
       ModuleMap &MMap = PP.getHeaderSearchInfo().getModuleMap();
