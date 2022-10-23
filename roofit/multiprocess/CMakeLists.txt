@@ -9,6 +9,8 @@ ROOT_LINKER_LIBRARY(RooFitMultiProcess
         src/ProcessManager.cxx
         src/util.cxx
         src/Queue.cxx
+        src/FIFOQueue.cxx
+        src/PriorityQueue.cxx
         src/JobManager.cxx
         src/Job.cxx
         src/Config.cxx

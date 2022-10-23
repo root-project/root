@@ -13,6 +13,9 @@
 #ifndef ROOT_ROOFIT_MultiProcess_Config
 #define ROOT_ROOFIT_MultiProcess_Config
 
+#include "RooFit/MultiProcess/types.h"
+
+#include <vector>
 #include <cstddef>  // std::size_t
 
 namespace RooFit {
@@ -30,6 +33,16 @@ public:
 
       static std::size_t defaultNEventTasks;
       static std::size_t defaultNComponentTasks;
+   };
+
+   struct Queue {
+      enum class QueueType {FIFO, Priority};
+      static bool setQueueType(QueueType queueType);
+      static QueueType getQueueType();
+      static void setTaskPriorities(std::size_t job_id, const std::vector<std::size_t>& task_priorities);
+      static void suggestTaskOrder(std::size_t job_id, const std::vector<Task>& task_order);
+   private:
+      static QueueType queueType_;
    };
 private:
    static unsigned int defaultNWorkers_;
