@@ -59,6 +59,8 @@ public:
    double getVal();
    RooAbsReal &topNode() const;
 
+   void print(std::ostream &os) const;
+
 private:
    ///////////////////////////
    // Private member functions

@@ -796,5 +796,61 @@ RooAbsReal &RooFitDriver::topNode() const
    return static_cast<RooAbsReal &>(_integralUnfolder->arg());
 }
 
+void RooFitDriver::print(std::ostream &os) const
+{
+   std::cout << "--- RooFit BatchMode evaluation ---\n";
+
+   std::vector<int> widths{9, 37, 20, 9, 10, 20};
+
+   auto printElement = [&](int iCol, auto const &t) {
+      const char separator = ' ';
+      os << separator << std::left << std::setw(widths[iCol]) << std::setfill(separator) << t;
+      os << "|";
+   };
+
+   auto printHorizontalRow = [&]() {
+      int n = 0;
+      for (int w : widths) {
+         n += w + 2;
+      }
+      for (int i = 0; i < n; i++) {
+         os << '-';
+      }
+      os << "|\n";
+   };
+
+   printHorizontalRow();
+
+   os << "|";
+   printElement(0, "Index");
+   printElement(1, "Name");
+   printElement(2, "Class");
+   printElement(3, "Size");
+   printElement(4, "From Data");
+   printElement(5, "1st value");
+   std::cout << "\n";
+
+   printHorizontalRow();
+
+   for (std::size_t iNode = 0; iNode < _nodes.size(); ++iNode) {
+      auto &nodeInfo = _nodes[iNode];
+      RooAbsArg *node = nodeInfo.absArg;
+
+      auto span = _dataMapCPU.at(node);
+
+      os << "|";
+      printElement(0, iNode);
+      printElement(1, node->GetName());
+      printElement(2, node->ClassName());
+      printElement(3, nodeInfo.outputSize);
+      printElement(4, nodeInfo.fromDataset);
+      printElement(5, span[0]);
+
+      std::cout << "\n";
+   }
+
+   printHorizontalRow();
+}
+
 } // namespace Experimental
 } // namespace ROOT

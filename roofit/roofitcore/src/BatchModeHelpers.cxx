@@ -116,6 +116,12 @@ public:
       const_cast<RooAbsReal &>(_driver->topNode()).applyWeightSquared(flag);
    }
 
+   void printMultiline(std::ostream &os, Int_t /*contents*/, bool /*verbose*/ = false,
+                       TString /*indent*/ = "") const override
+   {
+      _driver->print(os);
+   }
+
 protected:
    double evaluate() const override { return _driver ? _driver->getVal() : 0.0; }
 
