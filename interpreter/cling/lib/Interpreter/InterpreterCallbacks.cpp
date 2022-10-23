@@ -215,15 +215,6 @@ namespace cling {
     }
   };
 
-  static bool IsInstantiatingTemplates(clang::Sema* S) {
-    if (!S)
-      return false;
-
-    const auto& CodeSynthesisContexts = S->CodeSynthesisContexts;
-    return !CodeSynthesisContexts.empty() &&
-           CodeSynthesisContexts.back().isInstantiationRecord();
-  }
-
   ///\brief Translates 'interesting' for the interpreter ExternalSemaSource
   /// events into interpreter callbacks.
   ///
@@ -283,11 +274,10 @@ namespace cling {
 
     bool FindExternalVisibleDeclsByName(const clang::DeclContext* DC,
                                         clang::DeclarationName Name) override {
-      if (!m_Callbacks)
-        return false;
-      if (IsInstantiatingTemplates(m_Sema))
-        return false;
-      return m_Callbacks->LookupObject(DC, Name);
+      if (m_Callbacks)
+        return m_Callbacks->LookupObject(DC, Name);
+
+      return false;
     }
 
     // Silence warning virtual function was hidden.

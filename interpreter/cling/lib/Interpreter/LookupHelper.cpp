@@ -1669,7 +1669,6 @@ namespace cling {
       //  Parse the prototype now.
       //
 
-      Interpreter::PushTransactionRAII clingRAII(Interp);
       StartParsingRAII ParseStarted(LH, funcProto,
                                     llvm::StringRef("func.prototype.file"),
                                     diagOnOff);
