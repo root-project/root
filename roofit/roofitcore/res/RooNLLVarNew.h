@@ -47,14 +47,14 @@ public:
    void computeBatch(cudaStream_t *, double *output, size_t nOut, RooFit::Detail::DataMap const &) const override;
    inline bool isReducerNode() const override { return true; }
 
-   RooArgSet prefixObservableAndWeightNames(std::string const &prefix);
+   RooArgSet prefixArgNames(std::string const &prefix);
 
    void applyWeightSquared(bool flag) override;
 
    std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const &normSet, RooAbsArg const &server) const override;
 
 private:
-   double evaluate() const override;
+   double evaluate() const override { return _value; }
    void resetWeightVarNames();
 
    RooTemplateProxy<RooAbsPdf> _pdf;

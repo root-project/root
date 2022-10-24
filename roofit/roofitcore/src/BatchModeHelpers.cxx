@@ -47,7 +47,7 @@ std::unique_ptr<RooAbsArg> createSimultaneousNLL(RooSimultaneous const &simPdf, 
          auto nll = std::make_unique<RooNLLVarNew>(name.c_str(), name.c_str(), *pdf, observables, isExtended, doOffset,
                                                    simPdf.indexCat().size());
          // Rename the observables and weights
-         newObservables.add(nll->prefixObservableAndWeightNames(std::string("_") + catName + "_"));
+         newObservables.add(nll->prefixArgNames(std::string("_") + catName + "_"));
          nllTerms.addOwned(std::move(nll));
       }
    }
@@ -103,7 +103,17 @@ public:
    bool setData(RooAbsData &data, bool /*cloneData*/) override
    {
       _data = &data;
-      _driver->topNode().getParameters(_data->get(), _parameters, true);
+
+      // Figure out what are the parameters for the current dataset
+      _parameters.clear();
+      RooArgSet params;
+      _driver->topNode().getParameters(_data->get(), params, true);
+      for (RooAbsArg *param : params) {
+         if (!param->getAttribute("__obs__")) {
+            _parameters.add(*param);
+         }
+      }
+
       _driver->setData(*_data, _rangeName, _indexCatForSplitting, _splitRange, /*skipZeroWeights=*/true,
                        _takeGlobalObservablesFromData);
       return true;
