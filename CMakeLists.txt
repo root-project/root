@@ -121,22 +121,34 @@ else()
 endif()
 
 #---Try to download a file to check internet connection-----------------------------------------
-message(STATUS "Checking internet connectivity...")
-file(DOWNLOAD https://root.cern/files/cmake_connectivity_test.txt ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt
-  TIMEOUT 10 STATUS DOWNLOAD_STATUS
-)
-# Get the status code from the download status
-list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
-# Check if download was successful.
-if(${STATUS_CODE} EQUAL 0)
-  # Succcess
-  message(STATUS "Yes")
-  # Now let's delete the file
-  file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt)
-  set(NO_CONNECTION FALSE)
+if(check_connectivity)
+  message(STATUS "Checking internet connectivity...")
+  file(DOWNLOAD https://root.cern/files/cmake_connectivity_test.txt ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt
+    TIMEOUT 10 STATUS DOWNLOAD_STATUS
+  )
+  # Get the status code from the download status
+  list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+  # Check if download was successful.
+  if(${STATUS_CODE} EQUAL 0)
+    # Succcess
+    set(CONNECTIVITY_HASH 6903d73c3bcc2c5f92d0bfab8df381972dbcdc0d2946b4e9314ce75124c84ba0)
+    file(SHA256 ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt CHECKSUM_VARIABLE)
+    if(${CHECKSUM_VARIABLE} STREQUAL ${CONNECTIVITY_HASH})
+      message(STATUS "Yes")
+      set(NO_CONNECTION FALSE)
+    else()
+      message(STATUS "No (checksum doesn't match): will not automatically download external dependencies")
+      set(NO_CONNECTION TRUE)
+    endif()
+    # Now let's delete the file
+    file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt)
+  else()
+    # Error
+    message(STATUS "No: will not automatically download external dependencies")
+    set(NO_CONNECTION TRUE)
+  endif()
 else()
-  # Error
-  message(STATUS "No: will not automatically download external dependencies")
+  message(STATUS "Not checking internet connectivity: will not automatically download external dependencies")
   set(NO_CONNECTION TRUE)
 endif()
 
