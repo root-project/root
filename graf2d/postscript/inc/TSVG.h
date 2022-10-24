@@ -55,6 +55,7 @@ public:
    void  Off();
    void  On();
    void  Open(const char *filename, Int_t type=-111);
+   void  PrintFast(Int_t nch, const char *string = "");
    void  Range(Float_t xrange, Float_t yrange);
    void  SetColorAlpha(Int_t color = 1);
    void  SetColor(Int_t color = 1);
