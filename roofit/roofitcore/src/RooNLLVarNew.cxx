@@ -57,11 +57,11 @@ double kahanSum(Input const &input)
    return ROOT::Math::KahanSum<double, 4u>::Accumulate(input.begin(), input.end()).Sum();
 }
 
-RooArgSet getObservablesInPdf(RooAbsPdf const &pdf, RooArgSet const &observables)
+RooArgSet getObs(RooAbsArg const &arg, RooArgSet const &observables)
 {
-   RooArgSet observablesInPdf;
-   pdf.getObservables(&observables, observablesInPdf);
-   return observablesInPdf;
+   RooArgSet out;
+   arg.getObservables(&observables, out);
+   return out;
 }
 
 } // namespace
@@ -75,7 +75,7 @@ RooArgSet getObservablesInPdf(RooAbsPdf const &pdf, RooArgSet const &observables
 **/
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables,
                            bool isExtended, bool doOffset, int simCount)
-   : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{getObservablesInPdf(pdf, observables)},
+   : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{getObs(pdf, observables)},
      _isExtended{isExtended}, _doOffset{doOffset}, _simCount{simCount},
      _weightVar{"weightVar", "weightVar", this, *new RooRealVar(weightVarName, weightVarName, 1.0), true, false, true},
      _weightSquaredVar{weightVarNameSumW2,
@@ -264,11 +264,6 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
    output[0] = kahanProb.Sum();
 }
 
-double RooNLLVarNew::evaluate() const
-{
-   return _value;
-}
-
 void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *params, bool /*stripDisconnected*/) const
 {
    // strip away the observables and weights
@@ -277,34 +272,42 @@ void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *para
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Replaces all observables and the weight variable of this NLL with clones
-/// that only differ by a prefix added to the names. Used for simultaneous fits.
+/// Clones the PDF recursively and prefixes the names of all nodes, except for
+/// parameter nodes. Used for simultaneous fits.
 /// \return A RooArgSet with the new observable args.
 /// \param[in] prefix The prefix to add to the observables and weight names.
-RooArgSet RooNLLVarNew::prefixObservableAndWeightNames(std::string const &prefix)
+RooArgSet RooNLLVarNew::prefixArgNames(std::string const &prefix)
 {
    _prefix = prefix;
 
-   RooArgSet obsSet{_observables};
-   RooArgSet obsClones;
-   obsSet.snapshot(obsClones);
-   for (auto *arg : static_range_cast<RooRealVar *>(obsClones)) {
-      arg->setAttribute((std::string("ORIGNAME:") + arg->GetName()).c_str());
-      arg->SetName((prefix + arg->GetName()).c_str());
-      arg->setConstant();
-   }
-   recursiveRedirectServers(obsClones, false, true);
+   std::unique_ptr<RooAbsReal> pdfClone = RooHelpers::cloneTreeWithSameParameters(*_pdf, &_observables);
 
-   RooArgSet newObservables{obsClones};
+   redirectServers(RooArgList{*pdfClone});
+
+   RooArgSet parameters;
+   pdfClone->getParameters(&_observables, parameters);
 
    _observables.clear();
-   _observables.add(obsClones);
 
-   addOwnedComponents(std::move(obsClones));
+   RooArgSet nodes;
+   pdfClone->treeNodeServerList(&nodes);
+   for (RooAbsArg *arg : nodes) {
+      if (!parameters.find(*arg)) {
+         arg->SetName((prefix + arg->GetName()).c_str());
+         if (dynamic_cast<RooRealVar *>(arg)) {
+            // It's an observable
+            static_cast<RooRealVar *>(arg)->setConstant();
+            _observables.add(*arg);
+            arg->setAttribute("__obs__");
+         }
+      }
+   }
+
+   addOwnedComponents(std::move(pdfClone));
 
    resetWeightVarNames();
 
-   return newObservables;
+   return _observables;
 }
 
 void RooNLLVarNew::resetWeightVarNames()
