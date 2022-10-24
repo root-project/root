@@ -115,7 +115,8 @@ struct VariantTraitsBase {
    std::variant<int, float> a;
 };
 
-struct VariantTraits : VariantTraitsBase {};
+struct VariantTraits : VariantTraitsBase {
+};
 
 struct StringTraits : VariantTraitsBase {
    std::string s;
