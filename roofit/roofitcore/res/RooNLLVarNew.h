@@ -56,6 +56,7 @@ public:
 private:
    double evaluate() const override { return _value; }
    void resetWeightVarNames();
+   double getFinalValAfterOffsetting(ROOT::Math::KahanSum<double> &&result) const;
 
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooArgSet _observables;
