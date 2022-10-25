@@ -27,8 +27,6 @@ functions from `RooBatchCompute` library to provide faster computation times.
 #include <RooAddition.h>
 #include <RooFormulaVar.h>
 #include <RooNaNPacker.h>
-#include <RooRealSumPdf.h>
-#include <RooProdPdf.h>
 #include <RooRealVar.h>
 #include <RooFit/Detail/Buffers.h>
 
@@ -74,9 +72,9 @@ RooArgSet getObs(RooAbsArg const &arg, RooArgSet const &observables)
 \param isExtended Set to true if this is an extended fit
 **/
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables,
-                           bool isExtended, bool doOffset, int simCount)
+                           bool isExtended, bool doOffset, int simCount, bool binnedL)
    : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{getObs(pdf, observables)},
-     _isExtended{isExtended}, _doOffset{doOffset}, _simCount{simCount},
+     _isExtended{isExtended}, _binnedL{binnedL}, _doOffset{doOffset}, _simCount{simCount},
      _weightVar{"weightVar", "weightVar", this, *new RooRealVar(weightVarName, weightVarName, 1.0), true, false, true},
      _weightSquaredVar{weightVarNameSumW2,
                        weightVarNameSumW2,
@@ -86,31 +84,12 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
                        false,
                        true}
 {
-   RooAbsPdf *actualPdf = &pdf;
-
-   if (pdf.getAttribute("BinnedLikelihood") && pdf.IsA()->InheritsFrom(RooRealSumPdf::Class())) {
-      // Simplest case: top-level of component is a RooRealSumPdf
-      _binnedL = true;
-   } else if (pdf.IsA()->InheritsFrom(RooProdPdf::Class())) {
-      // Default case: top-level pdf is a product of RooRealSumPdf and other pdfs
-      for (RooAbsArg *component : static_cast<RooProdPdf &>(pdf).pdfList()) {
-         if (component->getAttribute("BinnedLikelihood") && component->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
-            actualPdf = static_cast<RooAbsPdf *>(component);
-            _binnedL = true;
-         }
-      }
-   }
-
-   if (actualPdf != &pdf) {
-      _pdf.setArg(*actualPdf);
-   }
-
    if (_binnedL) {
       if (_observables.size() != 1) {
          throw std::runtime_error("BinnedPdf optimization only works with a 1D pdf.");
       } else {
          auto *var = static_cast<RooRealVar *>(_observables.first());
-         std::list<double> *boundaries = actualPdf->binBoundaries(*var, var->getMin(), var->getMax());
+         std::list<double> *boundaries = pdf.binBoundaries(*var, var->getMin(), var->getMax());
          std::list<double>::iterator biter = boundaries->begin();
          _binw.resize(boundaries->size() - 1);
          double lastBound = (*biter);
