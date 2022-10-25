@@ -40,6 +40,7 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooFit/BatchModeDataHelpers.h>
 #include <RooFit/BatchModeHelpers.h>
 #include <RooFit/CUDAHelpers.h>
+#include <RooSimultaneous.h>
 
 #include "NormalizationHelpers.h"
 
@@ -194,33 +195,40 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooArgSet const &normSet, 
    }
 }
 
-void RooFitDriver::setData(RooAbsData const &data, std::string const &rangeName,
-                           RooAbsCategory const *indexCatForSplitting, bool splitRange, bool skipZeroWeights,
-                           bool takeGlobalObservablesFromData)
+void RooFitDriver::setData(RooAbsData const &data, std::string const &rangeName, RooSimultaneous const *simPdf,
+                           bool splitRange, bool skipZeroWeights, bool takeGlobalObservablesFromData)
 {
    std::vector<std::pair<std::string, RooAbsData const *>> datas;
+   std::vector<bool> isBinnedL;
 
-   if (indexCatForSplitting) {
+   if (simPdf) {
       _splittedDataSets.clear();
-      std::unique_ptr<TList> splits{data.split(*indexCatForSplitting, true)};
+      std::unique_ptr<TList> splits{data.split(*simPdf, true)};
       for (auto *d : static_range_cast<RooAbsData *>(*splits)) {
-         std::string prefix = std::string("_") + d->GetName() + "_";
-         datas.emplace_back(prefix, d);
+         RooAbsPdf *simComponent = simPdf->getPdf(d->GetName());
+         // If there is no PDF for that component, we also don't need to fill the data
+         if (!simComponent) {
+            continue;
+         }
+         datas.emplace_back(std::string("_") + d->GetName() + "_", d);
+         isBinnedL.emplace_back(RooHelpers::getBinnedL(*simComponent).isBinnedL);
          // The dataset need to be kept alive because the datamap points to their content
          _splittedDataSets.emplace_back(d);
       }
    } else {
       datas.emplace_back("", &data);
+      isBinnedL.emplace_back(false);
    }
 
    DataSpansMap dataSpans;
 
    std::stack<std::vector<double>>{}.swap(_vectorBuffers);
 
-   for (auto const &toAdd : datas) {
+   for (std::size_t iData = 0; iData < datas.size(); ++iData) {
+      auto const &toAdd = datas[iData];
       DataSpansMap spans = RooFit::BatchModeDataHelpers::getDataSpans(
          *toAdd.second, RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, toAdd.second->GetName()),
-         toAdd.first, _vectorBuffers, skipZeroWeights);
+         toAdd.first, _vectorBuffers, skipZeroWeights && !isBinnedL[iData]);
       for (auto const &item : spans) {
          dataSpans.insert(item);
       }

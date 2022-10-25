@@ -30,6 +30,7 @@ class RooAbsData;
 namespace RooFit {
 class NormalizationIntegralUnfolder;
 }
+class RooSimultaneous;
 
 namespace ROOT {
 namespace Experimental {
@@ -49,9 +50,8 @@ public:
    RooFitDriver(const RooAbsReal &absReal, RooArgSet const &normSet,
                 RooFit::BatchModeOption batchMode = RooFit::BatchModeOption::Cpu);
 
-   void setData(RooAbsData const &data, std::string const &rangeName = "",
-                RooAbsCategory const *indexCatForSplitting = nullptr, bool splitRange = false,
-                bool skipZeroWeights = false, bool takeGlobalObservablesFromData = true);
+   void setData(RooAbsData const &data, std::string const &rangeName = "", RooSimultaneous const *simPdf = nullptr,
+                bool splitRange = false, bool skipZeroWeights = false, bool takeGlobalObservablesFromData = true);
    void setData(DataSpansMap const &dataSpans);
 
    ~RooFitDriver();
