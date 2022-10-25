@@ -613,9 +613,47 @@ struct HasCollectionProxyMemberType<
    : std::true_type {
 };
 
+/// The point here is that we can only tell at run time if a class has an associated collection proxy.
+/// For compile time, in the first iteration of this PR we had an extra template argument that acted as a "tag" to
+/// differentiate the RField specialization for classes with an associated collection proxy (inherits
+/// `RCollectionClassField`) from the RField primary template definition (`RClassField`-derived), as in:
+/// ```
+/// auto field = std::make_unique<RField<MyClass>>("klass");
+/// // vs
+/// auto otherField = std::make_unique<RField<MyClass, ROOT::Experimental::TagIsCollectionProxy>>("klass");
+/// ```
+///
+/// That is convenient only for non-nested types, i.e. it doesn't work with, e.g. `RField<std::vector<MyClass>,
+/// ROOT::Experimental::TagIsCollectionProxy>`, as the tag is not forwarded to the instantiation of the inner RField
+/// (that for the value type of the vector).  The following two possible solutions were considered:
+/// - A wrapper type (much like `ntuple/v7/inc/ROOT/RNTupleUtil.hxx:49`), that helps to differentiate both cases.
+/// There we would have:
+/// ```
+/// auto field = std::make_unique<RField<RProxiedCollection<MyClass>>>("klass"); // Using collection proxy
+/// ```
+/// - A helper `IsCollectionProxy<T>` type, that can be used in a similar way to those in the `<type_traits>` header.
+/// We found this more convenient and is the implemented thing below.  Here, classes can be marked as a
+/// collection proxy with either of the following two forms (whichever is more convenient for the user):
+/// ```
+/// template <>
+/// struct IsCollectionProxy<MyClass> : std::true_type {};
+/// ```
+/// or by adding a member type to the class as follows:
+/// ```
+/// class MyClass {
+/// public:
+///    using IsCollectionProxy = std::true_type;
+/// };
+/// ```
+///
+/// Of course, there is another possible solution which is to have a single `RClassField` that implements both
+/// the regular-class and the collection-proxy behaviors, and always chooses appropriately at run time.
+/// We found that less clean and probably has more overhead, as most probably it involves an additional branch + call
+/// in each of the member functions.
 template <typename T, typename = void>
 struct IsCollectionProxy : HasCollectionProxyMemberType<T> {
 };
+
 /// Classes behaving as a collection of elements that can be queried via the `TVirtualCollectionProxy` interface
 /// The use of a collection proxy for a particular class can be enabled via:
 /// ```
