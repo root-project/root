@@ -168,19 +168,7 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
          result += sumWeightKahanSum.Sum() * std::log(static_cast<double>(_simCount));
       }
 
-      // Check if value offset flag is set.
-      if (_doOffset) {
-
-         // If no offset is stored enable this feature now
-         if (_offset == 0 && result != 0) {
-            _offset = result;
-         }
-
-         // Subtract offset
-         result -= _offset;
-      }
-
-      output[0] = result.Sum();
+      output[0] = getFinalValAfterOffsetting(std::move(result));
 
       return;
    }
@@ -228,19 +216,7 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
       kahanProb += _sumWeight * std::log(static_cast<double>(_simCount));
    }
 
-   // Check if value offset flag is set.
-   if (_doOffset) {
-
-      // If no offset is stored enable this feature now
-      if (_offset == 0 && kahanProb != 0) {
-         _offset = kahanProb;
-      }
-
-      // Subtract offset
-      kahanProb -= _offset;
-   }
-
-   output[0] = kahanProb.Sum();
+   output[0] = getFinalValAfterOffsetting(std::move(kahanProb));
 }
 
 void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *params, bool /*stripDisconnected*/) const
@@ -309,4 +285,22 @@ RooNLLVarNew::fillNormSetForServer(RooArgSet const & /*normSet*/, RooAbsArg cons
       return std::make_unique<RooArgSet>();
    }
    return nullptr;
+}
+
+double RooNLLVarNew::getFinalValAfterOffsetting(ROOT::Math::KahanSum<double> &&result) const
+{
+   // Check if value offset flag is set.
+   if (_doOffset) {
+
+      // If no offset is stored enable this feature now
+      if (_offset == 0 && result != 0) {
+         _offset = result;
+      }
+
+      // Subtract offset
+      if (!RooAbsReal::hideOffset()) {
+         result -= _offset;
+      }
+   }
+   return result.Sum();
 }
