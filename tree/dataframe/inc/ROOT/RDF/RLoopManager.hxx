@@ -124,8 +124,10 @@ class RLoopManager : public RNodeBase {
    std::shared_ptr<TTree> fTree{nullptr};
    Long64_t fBeginEntry{0};
    Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
-   std::vector<ROOT::RDF::Experimental::RMetaData> fMetaDataVec;
-   std::unordered_map<std::string, ROOT::RDF::Experimental::RMetaData *> fMetaDataMap;
+
+   std::vector<ROOT::RDF::Experimental::RGroupMetaData> fGroupMetaDataVec;
+   std::unordered_map<std::string, ROOT::RDF::Experimental::RGroupMetaData *> fGroupMetaDataMap;
+
    std::vector<std::unique_ptr<TTree>> fFriends; ///< Friends of the fTree. Only used if we constructed fTree ourselves.
    const ColumnNames_t fDefaultColumns;
    const ULong64_t fNEmptyEntries{0};
