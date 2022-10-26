@@ -31,14 +31,15 @@ class RooAbsCategory ;
 class RooAbsArg ;
 class RooAbsPdf ;
 
-class RooCustomizer : public TNamed, public RooPrintable {
+// Editing tool for RooAbsArg composite object expressions
+class RooCustomizer {
 
 public:
 
   // Constructors, assignment etc
   RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafListOwned, RooArgSet* splitLeafListAll=nullptr) ;
   RooCustomizer(const RooAbsArg& pdf, const char* name) ;
-  ~RooCustomizer() override ;
+  ~RooCustomizer() ;
 
   /// If flag is true, make customizer own all created components
   void setOwning(bool flag) {
@@ -61,19 +62,13 @@ public:
   }
 
   // Printing interface
-  void printName(std::ostream& os) const override ;
-  void printTitle(std::ostream& os) const override ;
-  void printClassName(std::ostream& os) const override ;
-  void printArgs(std::ostream& os) const override ;
-  void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent= "") const override;
-
-  /// Printing interface
-  inline void Print(Option_t *options= nullptr) const override {
-    printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
-  }
+  void printArgs(std::ostream& os) const ;
+  void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent= "") const;
 
   /// Releases ownership of list of cloned branch nodes
   void setCloneBranchSet(RooArgSet& cloneBranchSet) ;
+
+  RooAbsPdf const& pdf() const;
 
 protected:
 
@@ -105,8 +100,6 @@ protected:
   // Cloned leafs are owned by the user supplied list in the ctor
   RooArgSet* _cloneNodeListAll ;        ///< List of all cloned nodes
   RooArgSet* _cloneNodeListOwned ;      ///< List of owned cloned nodes
-
-  ClassDefOverride(RooCustomizer,0) // Editing tool for RooAbsArg composite object expressions
 } ;
 
 #endif
