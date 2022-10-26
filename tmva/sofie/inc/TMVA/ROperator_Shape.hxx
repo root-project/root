@@ -39,7 +39,6 @@ public:
 
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
       std::vector<std::vector<size_t>>  ret;
-      ret[0].push_back(input.size());
       ret[0].push_back(input[0].size());
       return ret;
    }
