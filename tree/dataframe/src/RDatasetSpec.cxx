@@ -184,6 +184,42 @@ RDatasetSpec RSpecBuilder::Build()
    return RDatasetSpec(fTreeNames, fFileNameGlobs, fGroupInfos, fFriendInfo, fEntryRange);
 }
 
+RSampleSet::RSampleSet(const std::string &groupName, const std::string &treeName, const std::string &fileNameGlob,
+                       const RMetaData &metaData)
+   : fTreeNames({treeName}), fFileNameGlobs({fileNameGlob}),
+     fGroupInfo(RDatasetSpec::RGroupInfo(groupName, 1, metaData))
+{
+}
+
+RSampleSet::RSampleSet(const std::string &groupName, const std::string &treeName,
+                       const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData)
+   : fTreeNames({treeName}), fFileNameGlobs(fileNameGlobs),
+     fGroupInfo(RDatasetSpec::RGroupInfo(groupName, fileNameGlobs.size(), metaData))
+{
+}
+
+RSampleSet::RSampleSet(const std::string &groupName,
+                       const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
+                       const RMetaData &metaData)
+   : fGroupInfo(RDatasetSpec::RGroupInfo(groupName, treeAndFileNameGlobs.size(), metaData))
+{
+   const auto nNewGlobs = treeAndFileNameGlobs.size();
+   fTreeNames.reserve(nNewGlobs);
+   fFileNameGlobs.reserve(nNewGlobs);
+   for (auto &p : treeAndFileNameGlobs) {
+      fTreeNames.emplace_back(p.first);
+      fFileNameGlobs.emplace_back(p.second);
+   }
+}
+
+RSampleSet::RSampleSet(const std::string &groupName, const std::vector<std::string> &trees,
+                       const std::vector<std::string> &files, const RMetaData &metaData)
+   : fTreeNames(trees), fFileNameGlobs(files), fGroupInfo(RDatasetSpec::RGroupInfo(groupName, files.size(), metaData))
+{
+   if (trees.size() != 1 && trees.size() != files.size())
+      throw std::logic_error("Mismatch between number of trees and file globs.");
+}
+
 } // namespace Experimental
 } // namespace RDF
 } // namespace ROOT
