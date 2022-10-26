@@ -477,24 +477,6 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
          continue;
       }
       rmodel.AddOperator(std::move(op));
-
-      // Add required BLAS routines
-      if (op_type == "Gemm" || op_type == "MatMul") {
-         rmodel.AddBlasRoutines({"Gemm", "Gemv"});
-      } else if (op_type == "Conv" || op_type == "ConvTranspose") {
-         rmodel.AddBlasRoutines({"Gemm", "Axpy"});
-      } else if (op_type == "RNN") {
-         rmodel.AddBlasRoutines({"Gemm", "Axpy"});
-      } else if (op_type == "Selu" || op_type == "Sigmoid" || op_type == "Pow" || op_type == "Tanh" ||
-                 op_type == "Max") {
-         rmodel.AddNeededStdLib("cmath");
-      } else if (op_type == "LSTM") {
-         rmodel.AddBlasRoutines({"Gemm", "Axpy"});
-      } else if (op_type == "BatchNormalization") {
-         rmodel.AddBlasRoutines({"Copy", "Axpy"});
-      } else if (op_type == "GRU") {
-         rmodel.AddBlasRoutines({"Gemm", "Axpy"});
-      }
    }
 
    std::vector<std::string> outputnames;

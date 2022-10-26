@@ -217,6 +217,7 @@ public:
       return out.str();
    }
 
+   std::vector<std::string> GetBlasRoutines() { return {"Copy", "Axpy"};}
 };
 
 }//SOFIE

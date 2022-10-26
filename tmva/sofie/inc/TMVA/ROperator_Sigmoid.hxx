@@ -60,6 +60,7 @@ public:
       return out.str();
    }
 
+   std::vector<std::string> GetStdLibs() { return {"cmath"};}
 };
 
 }//SOFIE
