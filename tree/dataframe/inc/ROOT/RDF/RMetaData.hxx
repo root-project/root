@@ -34,7 +34,18 @@ public:
    int GetI(const std::string &cat) const;
    double GetD(const std::string &cat) const;
    std::string GetS(const std::string &cat) const;
+   int GetI(const std::string &cat, int defaultVal) const;
+   double GetD(const std::string &cat, double defaultVal) const;
+   std::string GetS(const std::string &cat, std::string defaultVal) const;
 };
+
+struct RGroupMetaData {
+   std::string fGroupName;
+   unsigned int fGroupId;
+   ROOT::RDF::Experimental::RMetaData fMetaData;
+   RGroupMetaData(const std::string &groupName = "", unsigned int groupId = 0u,
+                  const RMetaData &metaData = {});
+   };
 
 } // namespace Experimental
 } // namespace RDF

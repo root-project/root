@@ -69,6 +69,39 @@ std::string RMetaData::GetS(const std::string &cat) const
    return fJson[cat].get<std::string>();
 }
 
+int RMetaData::GetI(const std::string &cat, int defaultVal) const
+{
+   if (!fJson.contains(cat))
+      return defaultVal;
+   if (!fJson[cat].is_number_integer())
+      throw std::logic_error("Key " + cat + " is not of type int.");
+   return fJson[cat].get<int>();
+}
+
+double RMetaData::GetD(const std::string &cat, double defaultVal) const
+{
+   if (!fJson.contains(cat))
+      return defaultVal;
+   if (!fJson[cat].is_number_float())
+      throw std::logic_error("Key " + cat + " is not of type double.");
+   return fJson[cat].get<double>();
+}
+
+std::string RMetaData::GetS(const std::string &cat, std::string defaultVal) const
+{
+   if (!fJson.contains(cat))
+      return defaultVal;
+   if (!fJson[cat].is_string())
+      throw std::logic_error("Key " + cat + " is not of type string.");
+   return fJson[cat].get<std::string>();
+}
+
+RGroupMetaData::RGroupMetaData(const std::string &groupName, unsigned int groupId,
+                               const RMetaData &metaData)
+   : fGroupName(groupName), fGroupId(groupId), fMetaData(metaData)
+{
+}
+
 } // namespace Experimental
 } // namespace RDF
 } // namespace ROOT
