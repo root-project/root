@@ -33,12 +33,13 @@ namespace RDF {
 class RSampleInfo {
    std::string fID;
    std::pair<ULong64_t, ULong64_t> fEntryRange;
-   ROOT::RDF::Experimental::RMetaData fMetaData;
+
+   ROOT::RDF::Experimental::RGroupMetaData fGroupMetaData;
 
 public:
    explicit RSampleInfo(std::string_view id, std::pair<ULong64_t, ULong64_t> entryRange,
-                        const ROOT::RDF::Experimental::RMetaData &metaData = {})
-      : fID(id), fEntryRange(entryRange), fMetaData(metaData)
+                        const ROOT::RDF::Experimental::RGroupMetaData &groupMetaData = {})
+      : fID(id), fEntryRange(entryRange), fGroupMetaData(groupMetaData)
    {
    }
    RSampleInfo() = default;
@@ -48,11 +49,15 @@ public:
    RSampleInfo &operator=(RSampleInfo &&) = default;
    ~RSampleInfo() = default;
 
-   int GetI(const std::string &cat) const { return fMetaData.GetI(cat); }
+   std::string GetGroupName() const { return fGroupMetaData.fGroupName; }
 
-   double GetD(const std::string &cat) const { return fMetaData.GetD(cat); }
+   unsigned int GetGroupID() const { return fGroupMetaData.fGroupId; }
 
-   std::string GetS(const std::string &cat) const { return fMetaData.GetS(cat); }
+   int GetI(const std::string &cat) const { return fGroupMetaData.fMetaData.GetI(cat); }
+
+   double GetD(const std::string &cat) const { return fGroupMetaData.fMetaData.GetD(cat); }
+
+   std::string GetS(const std::string &cat) const { return fGroupMetaData.fMetaData.GetS(cat); }
 
    /// Check whether the sample name contains the given substring.
    bool Contains(std::string_view substr) const
