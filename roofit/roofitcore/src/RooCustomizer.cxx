@@ -176,8 +176,6 @@
 
 using namespace std;
 
-ClassImp(RooCustomizer);
-;
 
 namespace {
 
@@ -227,7 +225,6 @@ static Int_t init()
 
 RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat,
     RooArgSet& splitLeafs, RooArgSet* splitLeafsAll) :
-  TNamed(pdf.GetName(),pdf.GetTitle()),
   _sterile(false),
   _owning(true),
   _masterPdf((RooAbsArg*)&pdf),
@@ -251,7 +248,6 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& m
 /// suffix for any cloned branch nodes
 
 RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const char* name) :
-  TNamed(pdf.GetName(),pdf.GetTitle()),
   _sterile(true),
   _owning(false),
   _name(name),
@@ -304,7 +300,7 @@ RooCustomizer::~RooCustomizer()
 void RooCustomizer::splitArgs(const RooArgSet& set, const RooAbsCategory& splitCat)
 {
   if (_sterile) {
-    coutE(InputArguments) << "RooCustomizer::splitArgs(" << _name
+    oocoutE(nullptr, InputArguments) << "RooCustomizer::splitArgs(" << _name
            << ") ERROR cannot set spitting rules on this sterile customizer" << endl ;
     return ;
   }
@@ -327,13 +323,13 @@ void RooCustomizer::splitArgs(const RooArgSet& set, const RooAbsCategory& splitC
 void RooCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCat)
 {
   if (_splitArgList.FindObject(arg.GetName())) {
-    coutE(InputArguments) << "RooCustomizer(" << GetName() << ") ERROR: multiple splitting rules defined for "
+    oocoutE(nullptr, InputArguments) << "RooCustomizer(" << _masterPdf->GetName() << ") ERROR: multiple splitting rules defined for "
            << arg.GetName() << " only using first rule" << endl ;
     return ;
   }
 
   if (_sterile) {
-    coutE(InputArguments) << "RooCustomizer::splitArg(" << _name
+    oocoutE(nullptr, InputArguments) << "RooCustomizer::splitArg(" << _name
     << ") ERROR cannot set spitting rules on this sterile customizer" << endl ;
     return ;
   }
@@ -350,7 +346,7 @@ void RooCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCa
 void RooCustomizer::replaceArg(const RooAbsArg& orig, const RooAbsArg& subst)
 {
   if (_replaceArgList.FindObject(orig.GetName())) {
-    coutE(InputArguments) << "RooCustomizer(" << GetName() << ") ERROR: multiple replacement rules defined for "
+    oocoutE(nullptr, InputArguments) << "RooCustomizer(" << _masterPdf->GetName() << ") ERROR: multiple replacement rules defined for "
     << orig.GetName() << " only using first rule" << endl ;
     return ;
   }
@@ -406,14 +402,14 @@ RooAbsArg* RooCustomizer::build(bool verbose)
 RooAbsArg* RooCustomizer::build(const char* masterCatState, bool verbose)
 {
   if (_sterile) {
-    coutE(InputArguments) << "RooCustomizer::build(" << _name
+    oocoutE(nullptr, InputArguments) << "RooCustomizer::build(" << _name
            << ") ERROR cannot use leaf spitting build() on this sterile customizer" << endl ;
     return 0 ;
   }
 
   // Set masterCat to given state
   if (_masterCat->setLabel(masterCatState)) {
-    coutE(InputArguments) << "RooCustomizer::build(" << _masterPdf->GetName() << "): ERROR label '" << masterCatState
+    oocoutE(nullptr, InputArguments) << "RooCustomizer::build(" << _masterPdf->GetName() << "): ERROR label '" << masterCatState
            << "' not defined for master splitting category " << _masterCat->GetName() << endl ;
     return 0 ;
   }
@@ -444,7 +440,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
     if (theSplitArg) {
       RooAbsCategory* splitCat = (RooAbsCategory*) _splitCatList.At(_splitArgList.IndexOf(theSplitArg)) ;
       if (verbose) {
-   coutI(ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName()
+   oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName()
                << "): tree node " << node->GetName() << " is split by category " << splitCat->GetName() << endl ;
       }
 
@@ -461,7 +457,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
    // Copy instance to one-time use list for this build
    clonedMasterNodes.add(*specNode) ;
    if (verbose) {
-     coutI(ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName()
+     oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName()
             << ") Adding existing node specialization " << newName << " to clonedMasterNodes" << endl ;
    }
 
@@ -479,7 +475,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
       } else {
 
    if (node->isDerived()) {
-     coutW(ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName()
+     oocoutW(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName()
             << "): WARNING: branch node " << node->GetName() << " is split but has no pre-defined specializations" << endl ;
    }
 
@@ -520,7 +516,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
     if (ReplaceArg) {
       RooAbsArg* substArg = (RooAbsArg*) _replaceSubList.At(_replaceArgList.IndexOf(ReplaceArg)) ;
       if (verbose) {
-   coutI(ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName()
+   oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName()
                << "): tree node " << node->GetName() << " will be replaced by " << substArg->GetName() << endl ;
       }
 
@@ -542,26 +538,26 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
     // If branch is split itself, don't handle here
     if (masterNodesToBeSplit.find(branch->GetName())) {
       if (verbose) {
-   coutI(ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node " << branch->GetName() << " is already split" << endl ;
+   oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node " << branch->GetName() << " is already split" << endl ;
       }
       continue ;
     }
     if (masterNodesToBeReplaced.find(branch->GetName())) {
       if (verbose) {
-   coutI(ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node " << branch->GetName() << " is already replaced" << endl ;
+   oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node " << branch->GetName() << " is already replaced" << endl ;
       }
       continue ;
     }
 
     if (branch->dependsOn(masterNodesToBeSplit)) {
       if (verbose) {
-   coutI(ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node "
+   oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node "
                << branch->ClassName() << "::" << branch->GetName() << " cloned: depends on a split parameter" << endl ;
       }
       masterBranchesToBeCloned.add(*branch) ;
     } else if (branch->dependsOn(masterNodesToBeReplaced)) {
       if (verbose) {
-   coutI(ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node "
+   oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node "
                << branch->ClassName() << "::" << branch->GetName() << " cloned: depends on a replaced parameter" << endl ;
       }
       masterBranchesToBeCloned.add(*branch) ;
@@ -610,33 +606,6 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
   }
 
   return cloneTopPdf ? cloneTopPdf : _masterPdf ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print name of customizer
-
-void RooCustomizer::printName(ostream& os) const
-{
-  os << GetName() ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print title of customizer
-
-void RooCustomizer::printTitle(ostream& os) const
-{
-  os << GetTitle() ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print class name of customizer
-
-void RooCustomizer::printClassName(ostream& os) const
-{
-  os << ClassName() ;
 }
 
 
@@ -690,6 +659,11 @@ void RooCustomizer::setCloneBranchSet(RooArgSet& cloneBranchSet)
 {
   _cloneBranchList = &cloneBranchSet ;
   _cloneBranchList->useHashMapForFind(true);
+}
+
+
+RooAbsPdf const& RooCustomizer::pdf() const {
+  return static_cast<RooAbsPdf&>(*_masterPdf);
 }
 
 

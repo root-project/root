@@ -44,8 +44,6 @@ instantiate objects.
 
 using namespace std;
 
-ClassImp(RooClassFactory);
-
 namespace {
 
 class ClassFacIFace : public RooFactoryWSTool::IFace {
