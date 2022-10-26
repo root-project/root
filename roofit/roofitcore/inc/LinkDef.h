@@ -80,7 +80,6 @@
 #pragma link C++ class RooCategorySharedProperties+ ;
 #pragma link C++ class RooCatType+ ;
 #pragma link C++ class RooChi2Var+ ;
-#pragma link C++ class RooClassFactory+ ;
 #pragma link C++ class RooCmdArg+ ;
 #pragma link C++ class RooCmdConfig+ ;
 #pragma link C++ class RooConstVar+ ;
@@ -95,7 +94,6 @@
 #pragma link C++ class RooConvGenContext+ ;
 #pragma link C++ class RooConvIntegrandBinding+ ;
 #pragma link C++ class RooCurve+ ;
-#pragma link C++ class RooCustomizer+ ;
 #pragma link C++ class RooDataHist- ;
 #pragma link C++ class RooDataProjBinding+ ;
 #pragma link C++ class RooDataSet- ;
@@ -300,12 +298,6 @@
 #pragma link C++ class RooConstraintSum+ ;
 #pragma link C++ class RooRecursiveFraction+ ;
 #pragma link C++ class RooDataWeightedAverage+ ;
-#pragma link C++ class RooSimWSTool+ ;
-#pragma link C++ class RooSimWSTool::SplitRule+ ;
-#pragma link C++ class RooSimWSTool::BuildConfig+ ;
-#pragma link C++ class RooSimWSTool::MultiBuildConfig+ ;
-#pragma link C++ class RooSimWSTool::ObjSplitRule+ ;
-#pragma link C++ class RooSimWSTool::ObjBuildConfig+ ;
 #pragma link C++ class RooFracRemainder+ ;
 #pragma link C++ class RooAbsCachedReal+ ;
 #pragma link C++ class RooAbsSelfCachedReal+ ;

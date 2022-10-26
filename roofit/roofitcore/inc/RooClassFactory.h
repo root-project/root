@@ -27,13 +27,14 @@
 class RooAbsReal;
 class RooAbsPdf;
 
-class RooClassFactory : public TNamed, public RooPrintable {
+// RooFit class code and instance factory
+class RooClassFactory {
 
 public:
 
   // Constructors, assignment etc
   RooClassFactory() ;
-  ~RooClassFactory() override ;
+  ~RooClassFactory() ;
 
   static RooAbsReal* makeFunctionInstance(const char* className, const char* name, const char* expression, const RooArgList& vars, const char* intExpression=nullptr) ;
   static RooAbsReal* makeFunctionInstance(const char* name, const char* expression, const RooArgList& vars, const char* intExpression=nullptr) ;
@@ -56,8 +57,6 @@ protected:
 
 
   RooClassFactory(const RooClassFactory&) ;
-
-  ClassDefOverride(RooClassFactory,0) // RooFit class code and instance factory
 } ;
 
 #endif
