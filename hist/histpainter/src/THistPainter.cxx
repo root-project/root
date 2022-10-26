@@ -5893,6 +5893,8 @@ void THistPainter::PaintColorLevels(Option_t*)
             TCrown crown(0,0,ylow,yup,xlow*TMath::RadToDeg(),xup*TMath::RadToDeg());
             crown.SetFillColor(gStyle->GetColorPalette(theColor));
             crown.SetLineColor(fH->GetLineColor());
+            crown.SetLineWidth(fH->GetLineWidth());
+            crown.SetLineStyle(fH->GetLineStyle());
             crown.Paint();
          }
       }
