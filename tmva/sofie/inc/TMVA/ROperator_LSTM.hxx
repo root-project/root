@@ -141,6 +141,10 @@ template <typename T> class ROperator_LSTM final : public ROperator {
     * \param opName name of the operator
     */
    std::string GenerateSessionMembersCode(std::string opName);
+
+   /*! \brief Returns the blas routines needed to compile the generated code
+    */
+   std::vector<std::string> GetBlasRoutines() { return {"Gemm", "Axpy"};}
 };
 
 } // namespace SOFIE

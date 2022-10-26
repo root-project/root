@@ -116,6 +116,10 @@ public:
     * \param opName name of the operator
     */
    std::string Generate(std::string opName) override;
+
+   /*! \brief Returns the blas routines needed to compile the generated code
+    */
+   std::vector<std::string> GetBlasRoutines() { return {"Gemm", "Axpy"};}
 };
 
 } // namespace SOFIE

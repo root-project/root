@@ -535,6 +535,10 @@ public:
 
       return out.str();
       }
+
+   /*! \brief Returns the blas routines needed to compile the generated code
+    */
+   std::vector<std::string> GetBlasRoutines() { return {"Gemm", "Axpy"};}
 };
 
 } // namespace SOFIE

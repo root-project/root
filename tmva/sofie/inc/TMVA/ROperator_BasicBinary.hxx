@@ -171,6 +171,13 @@ public:
       return out.str();
    }
 
+   std::vector<std::string> GetStdLibs() {
+      if (Op == EBasicBinaryOperator::Pow) {
+         return {"cmath"};
+      } else {
+         return {};
+      }
+   }
 };
 
 }//SOFIE
