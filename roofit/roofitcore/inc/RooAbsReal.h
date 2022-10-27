@@ -365,7 +365,7 @@ public:
 
   virtual bool setData(RooAbsData& /*data*/, bool /*cloneData*/=true) { return true ; }
 
-  virtual void enableOffsetting(bool) {} ;
+  virtual void enableOffsetting(bool);
   virtual bool isOffsetting() const { return false ; }
   virtual double offset() const { return 0 ; }
 

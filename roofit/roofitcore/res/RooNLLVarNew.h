@@ -53,10 +53,12 @@ public:
 
    std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const &normSet, RooAbsArg const &server) const override;
 
+   void enableOffsetting(bool) override;
+
 private:
    double evaluate() const override { return _value; }
    void resetWeightVarNames();
-   double getFinalValAfterOffsetting(ROOT::Math::KahanSum<double> &&result) const;
+   double finalizeResult(ROOT::Math::KahanSum<double> &&result, double weightSum) const;
 
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooArgSet _observables;
