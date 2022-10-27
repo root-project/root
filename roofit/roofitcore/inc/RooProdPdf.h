@@ -161,6 +161,7 @@ private:
 
 
   friend class RooProdGenContext ;
+  friend class RooFixedProdPdf ;
   RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=nullptr,
                                   const RooArgSet *auxProto=nullptr, bool verbose= false) const override ;
 
