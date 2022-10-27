@@ -14,53 +14,6 @@ namespace TMVA {
 namespace Experimental {
 namespace SOFIE {
 
-// Definition of  RModelParser_ONNX::OperatorsMap
-struct RModelParser_ONNX::OperatorsMapImpl {
-   // Registered operators
-   std::unordered_map<std::string, ParserFuncSignature> fOperatorsMap;
-};
-
-// Constructor of the parser
-RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_unique<OperatorsMapImpl>()) {}
-
-// Destructor of the parser
-RModelParser_ONNX::~RModelParser_ONNX() = default;
-
-void RModelParser_ONNX::RegisterOperator(const std::string &name, ParserFuncSignature func)
-{
-   fOperatorsMapImpl->fOperatorsMap[name] = func;
-}
-
-bool RModelParser_ONNX::IsRegisteredOperator(const std::string &name)
-{
-   return fOperatorsMapImpl->fOperatorsMap.find(name) != fOperatorsMapImpl->fOperatorsMap.end();
-}
-
-std::vector<std::string> RModelParser_ONNX::GetRegisteredOperators()
-{
-   std::vector<std::string> ops;
-   ops.reserve(fOperatorsMapImpl->fOperatorsMap.size());
-   for (auto &it : fOperatorsMapImpl->fOperatorsMap) {
-      ops.emplace_back(it.first);
-   }
-   return ops;
-}
-
-void RModelParser_ONNX::RegisterTensorType(const std::string &name, ETensorType type)
-{
-   fTensorTypeMap[UTILITY::Clean_name(name)] = type;
-}
-
-bool RModelParser_ONNX::IsRegisteredTensorType(const std::string &name)
-{
-   return fTensorTypeMap.find(UTILITY::Clean_name(name)) != fTensorTypeMap.end();
-}
-
-ETensorType RModelParser_ONNX::GetTensorType(const std::string &name)
-{
-   return fTensorTypeMap[UTILITY::Clean_name(name)];
-}
-
 // Declaration of operators
 // Unary operators
 extern ParserFuncSignature ParseSqrt;
@@ -105,6 +58,101 @@ extern ParserFuncSignature ParseLayerNormalization;
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseConvTransposeAdd;
 extern ParserFuseFuncSignature ParseFuseMatMulAdd;
+
+// Definition of  RModelParser_ONNX::OperatorsMap
+struct RModelParser_ONNX::OperatorsMapImpl {
+   // Registered operators
+   std::unordered_map<std::string, ParserFuncSignature> fOperatorsMap;
+};
+
+// Constructor of the parser
+RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_unique<OperatorsMapImpl>()) {
+   // Register operators
+   // Unary operators
+   RegisterOperator("Sqrt", ParseSqrt);
+   RegisterOperator("Reciprocal", ParseReciprocal);
+   RegisterOperator("Neg", ParseNeg);
+   RegisterOperator("Exp", ParseExp);
+   // Binary operators
+   RegisterOperator("Add", ParseAdd);
+   RegisterOperator("Sub", ParseSub);
+   RegisterOperator("Mul", ParseMul);
+   RegisterOperator("Div", ParseDiv);
+   RegisterOperator("Pow", ParsePow);
+   // Reduce operators
+   RegisterOperator("ReduceMean", ParseReduceMean);
+   RegisterOperator("ReduceSumsquare", ParseReduceSumsquare);
+   RegisterOperator("ReduceProd", ParseReduceProd);
+   // Others
+   RegisterOperator("BatchNormalization", ParseBatchNormalization);
+   RegisterOperator("Cast", ParseCast);
+   RegisterOperator("Concat", ParseConcat);
+   RegisterOperator("Conv", ParseConv);
+   RegisterOperator("ConvTranspose", ParseConvTranspose);
+   RegisterOperator("Gemm", ParseGemm);
+   RegisterOperator("GRU", ParseGRU);
+   RegisterOperator("Identity", ParseIdentity);
+   RegisterOperator("LeakyRelu", ParseLeakyRelu);
+   RegisterOperator("LSTM", ParseLSTM);
+   RegisterOperator("Max", ParseMax);
+   RegisterOperator("AveragePool", ParsePool);
+   RegisterOperator("GlobalAveragePool", ParsePool);
+   RegisterOperator("MaxPool", ParsePool);
+   RegisterOperator("Relu", ParseRelu);
+   RegisterOperator("Reshape", ParseReshape);
+   RegisterOperator("Flatten", ParseReshape);
+   RegisterOperator("Squeeze", ParseReshape);
+   RegisterOperator("Unsqueeze", ParseReshape);
+   RegisterOperator("RNN", ParseRNN);
+   RegisterOperator("Selu", ParseSelu);
+   RegisterOperator("Shape", ParseShape);
+   RegisterOperator("Sigmoid", ParseSigmoid);
+   RegisterOperator("Slice", ParseSlice);
+   RegisterOperator("Softmax", ParseSoftmax);
+   RegisterOperator("Slice", ParseSlice);
+   RegisterOperator("Softmax", ParseSoftmax);
+   RegisterOperator("Tanh", ParseTanh);
+   RegisterOperator("Transpose", ParseTranspose);
+   RegisterOperator("LayerNormalization", ParseLayerNormalization);
+}
+
+// Destructor of the parser
+RModelParser_ONNX::~RModelParser_ONNX() = default;
+
+void RModelParser_ONNX::RegisterOperator(const std::string &name, ParserFuncSignature func)
+{
+   fOperatorsMapImpl->fOperatorsMap[name] = func;
+}
+
+bool RModelParser_ONNX::IsRegisteredOperator(const std::string &name)
+{
+   return fOperatorsMapImpl->fOperatorsMap.find(name) != fOperatorsMapImpl->fOperatorsMap.end();
+}
+
+std::vector<std::string> RModelParser_ONNX::GetRegisteredOperators()
+{
+   std::vector<std::string> ops;
+   ops.reserve(fOperatorsMapImpl->fOperatorsMap.size());
+   for (auto &it : fOperatorsMapImpl->fOperatorsMap) {
+      ops.emplace_back(it.first);
+   }
+   return ops;
+}
+
+void RModelParser_ONNX::RegisterTensorType(const std::string &name, ETensorType type)
+{
+   fTensorTypeMap[UTILITY::Clean_name(name)] = type;
+}
+
+bool RModelParser_ONNX::IsRegisteredTensorType(const std::string &name)
+{
+   return fTensorTypeMap.find(UTILITY::Clean_name(name)) != fTensorTypeMap.end();
+}
+
+ETensorType RModelParser_ONNX::GetTensorType(const std::string &name)
+{
+   return fTensorTypeMap[UTILITY::Clean_name(name)];
+}
 
 // Parse an operator
 std::unique_ptr<ROperator>
@@ -405,54 +453,6 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
          }
       }
    }
-
-   // Register operators
-   // Unary operators
-   RegisterOperator("Sqrt", ParseSqrt);
-   RegisterOperator("Reciprocal", ParseReciprocal);
-   RegisterOperator("Neg", ParseNeg);
-   RegisterOperator("Exp", ParseExp);
-   // Binary operators
-   RegisterOperator("Add", ParseAdd);
-   RegisterOperator("Sub", ParseSub);
-   RegisterOperator("Mul", ParseMul);
-   RegisterOperator("Div", ParseDiv);
-   RegisterOperator("Pow", ParsePow);
-   // Reduce operators
-   RegisterOperator("ReduceMean", ParseReduceMean);
-   RegisterOperator("ReduceSumsquare", ParseReduceSumsquare);
-   RegisterOperator("ReduceProd", ParseReduceProd);
-   // Others
-   RegisterOperator("BatchNormalization", ParseBatchNormalization);
-   RegisterOperator("Cast", ParseCast);
-   RegisterOperator("Concat", ParseConcat);
-   RegisterOperator("Conv", ParseConv);
-   RegisterOperator("ConvTranspose", ParseConvTranspose);
-   RegisterOperator("Gemm", ParseGemm);
-   RegisterOperator("GRU", ParseGRU);
-   RegisterOperator("Identity", ParseIdentity);
-   RegisterOperator("LeakyRelu", ParseLeakyRelu);
-   RegisterOperator("LSTM", ParseLSTM);
-   RegisterOperator("Max", ParseMax);
-   RegisterOperator("AveragePool", ParsePool);
-   RegisterOperator("GlobalAveragePool", ParsePool);
-   RegisterOperator("MaxPool", ParsePool);
-   RegisterOperator("Relu", ParseRelu);
-   RegisterOperator("Reshape", ParseReshape);
-   RegisterOperator("Flatten", ParseReshape);
-   RegisterOperator("Squeeze", ParseReshape);
-   RegisterOperator("Unsqueeze", ParseReshape);
-   RegisterOperator("RNN", ParseRNN);
-   RegisterOperator("Selu", ParseSelu);
-   RegisterOperator("Shape", ParseShape);
-   RegisterOperator("Sigmoid", ParseSigmoid);
-   RegisterOperator("Slice", ParseSlice);
-   RegisterOperator("Softmax", ParseSoftmax);
-   RegisterOperator("Slice", ParseSlice);
-   RegisterOperator("Softmax", ParseSoftmax);
-   RegisterOperator("Tanh", ParseTanh);
-   RegisterOperator("Transpose", ParseTranspose);
-   RegisterOperator("LayerNormalization", ParseLayerNormalization);
 
    // fill model with operators
    if (verbose) {
