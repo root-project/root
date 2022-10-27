@@ -134,7 +134,7 @@ if(MSVC)
       _Smtx_unlock_shared
     )
   endif()
-  if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(cling_exports ${cling_exports}
       ??2@YAPEAX_K@Z
       ??3@YAXPEAX@Z

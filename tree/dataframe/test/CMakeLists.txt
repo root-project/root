@@ -71,7 +71,7 @@ configure_file(RCsvDS_test_empty.csv . COPYONLY)
 configure_file(RCsvDS_test_win.csv . COPYONLY)
 configure_file(RCsvDS_test_NaNs.csv . COPYONLY)
 ROOT_ADD_GTEST(datasource_csv datasource_csv.cxx LIBRARIES ROOTDataFrame)
-if(MSVC AND "${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
   set_source_files_properties(dataframe_vary.cxx COMPILE_FLAGS "-bigobj")
 endif()
 
