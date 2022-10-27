@@ -16,14 +16,12 @@
  *
  */
 
-#include "Riostream.h"
+#include <RooHistConstraint.h>
 
-#include "RooHistConstraint.h"
-#include "RooAbsCategory.h"
-#include "RooParamHistFunc.h"
-#include "RooRealVar.h"
-#include <math.h>
-#include "TMath.h"
+#include <RooParamHistFunc.h>
+#include <RooRealVar.h>
+
+#include <Math/PdfFuncMathCore.h>
 
 using namespace std;
 
@@ -183,13 +181,18 @@ RooHistConstraint::RooHistConstraint(const char *name, const char *title,
    for (unsigned int i=0; i < _nominal.size(); ++i) {
      const auto& gamma = static_cast<const RooAbsReal&>(_gamma[i]);
      const auto& nominal = static_cast<const RooAbsReal&>(_nominal[i]);
-
      double gamVal = gamma.getVal();
-     if (_relParam)
-       gamVal *= nominal.getVal();
+     const int nomVal = static_cast<int>(nominal.getVal());
 
-     const double pois = TMath::Poisson(nominal.getVal(),gamVal);
-     prod *= pois;
+     if (_relParam)
+       gamVal *= nomVal;
+
+     if (gamVal>0) {
+       const double pois = ROOT::Math::poisson_pdf(nomVal, gamVal);
+       prod *= pois;
+     } else if (nomVal > 0) {
+       cerr << "ERROR in RooHistConstraint: gam=0 and nom>0" << endl ;
+     }
    }
 
    return prod;
@@ -203,16 +206,16 @@ double RooHistConstraint::getLogVal(const RooArgSet* /*set*/) const
    for (unsigned int i=0; i < _nominal.size(); ++i) {
      const auto& gamma = static_cast<const RooAbsReal&>(_gamma[i]);
      const auto& nominal = static_cast<const RooAbsReal&>(_nominal[i]);
-     double gam = gamma.getVal();
-     Int_t  nom = (Int_t) nominal.getVal();
+     double gamVal = gamma.getVal();
+     const int nomVal = static_cast<int>(nominal.getVal());
 
      if (_relParam)
-       gam *= nom;
+       gamVal *= nomVal;
 
-     if (gam>0) {
-       const double logPoisson = nom * log(gam) - gam - std::lgamma(nom+1);
+     if (gamVal>0) {
+       const double logPoisson = nomVal * log(gamVal) - gamVal - std::lgamma(nomVal + 1);
        sum += logPoisson ;
-     } else if (nom>0) {
+     } else if (nomVal > 0) {
        cerr << "ERROR in RooHistConstraint: gam=0 and nom>0" << endl ;
      }
    }

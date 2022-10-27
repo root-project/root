@@ -63,7 +63,6 @@
 #include "TMatrixD.h"
 
 class RooWorkspace;
-class RooParamHistFunc;
 class RooProduct;
 class RooRealVar;
 class TPair;

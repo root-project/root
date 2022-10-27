@@ -14,8 +14,6 @@
 #include "RooAbsCategory.h"
 #include "RooListProxy.h"
 
-class RooParamHistFunc ;
-
 class RooHistConstraint : public RooAbsPdf {
 public:
   RooHistConstraint() {} ;
@@ -25,6 +23,11 @@ public:
   inline ~RooHistConstraint() override { }
 
   double getLogVal(const RooArgSet* set=nullptr) const override ;
+
+  /// It makes only sense to use the RooHistConstraint when normalized over the
+  /// set of all gammas, in which case it is self-normalized because the used
+  /// TMath::Poisson funciton is normalized.
+  bool selfNormalized() const override { return true; }
 
 protected:
 
