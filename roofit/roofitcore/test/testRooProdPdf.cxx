@@ -12,6 +12,7 @@
 #include <RooProdPdf.h>
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
+#include <RooHelpers.h>
 
 #include <gtest/gtest.h>
 
@@ -19,46 +20,54 @@
 #include <sstream>
 #include <string>
 
-class TestProdPdf : public ::testing::Test {
-protected:
-   TestProdPdf() : Test()
+class TestProdPdf : public ::testing::TestWithParam<std::tuple<int, std::string>> {
+private:
+   void SetUp() override
    {
-      datap.reset(prod.generate(RooArgSet(x), 1000));
+      RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+
+      datap.reset(prod.generate(x, 1000));
       a.setConstant(true);
+
+      _optimize = std::get<0>(GetParam());
+      _batchMode = std::get<1>(GetParam());
    }
 
+protected:
    constexpr static double bTruth = -0.5;
 
    RooRealVar x{"x", "x", 2., 0., 5.};
    RooRealVar a{"a", "a", -0.2, -5., 0.};
    RooRealVar b{"b", "b", bTruth, -5., 0.};
 
-   RooGenericPdf c1{"c1", "exp(x[0]*x[1])", RooArgSet(x, a)};
-   RooGenericPdf c2{"c2", "exp(x[0]*x[1])", RooArgSet(x, b)};
-   RooProdPdf prod{"mypdf", "mypdf", RooArgList(c1, c2)};
-   std::unique_ptr<RooDataSet> datap{nullptr};
+   RooGenericPdf c1{"c1", "exp(x[0]*x[1])", {x, a}};
+   RooGenericPdf c2{"c2", "exp(x[0]*x[1])", {x, b}};
+   RooProdPdf prod{"mypdf", "mypdf", {c1, c2}};
+   std::unique_ptr<RooDataSet> datap;
+
+   int _optimize = 0;
+   std::string _batchMode;
 };
 
-TEST_F(TestProdPdf, CachingOpt2)
+TEST_P(TestProdPdf, CachingOpt)
 {
-   prod.fitTo(*datap, RooFit::Optimize(2), RooFit::PrintLevel(-1));
-   EXPECT_LT(fabs(b.getVal() - bTruth), b.getError() * 1.1)
-      << "b=" << b.getVal() << " +- " << b.getError() << " doesn't match truth value with O2.";
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+
+   using namespace RooFit;
+   prod.fitTo(*datap, Optimize(_optimize), PrintLevel(-1), BatchMode(_batchMode));
+   EXPECT_LT(fabs(b.getVal() - bTruth), b.getError() * 2.5) // 2.5-sigma compatibility check
+      << "b=" << b.getVal() << " +- " << b.getError() << " doesn't match truth value with O" << _optimize << ".";
 }
 
-TEST_F(TestProdPdf, CachingOpt1)
-{
-   prod.fitTo(*datap, RooFit::Optimize(1), RooFit::PrintLevel(-1));
-   EXPECT_LT(fabs(b.getVal() - bTruth), b.getError() * 1.1)
-      << "b=" << b.getVal() << " +- " << b.getError() << " doesn't match truth value with O1.";
-}
-
-TEST_F(TestProdPdf, CachingOpt0)
-{
-   prod.fitTo(*datap, RooFit::Optimize(0), RooFit::PrintLevel(-1));
-   EXPECT_LT(fabs(b.getVal() - bTruth), b.getError() * 1.1)
-      << "b=" << b.getVal() << " +- " << b.getError() << " doesn't match truth value with O0.";
-}
+INSTANTIATE_TEST_SUITE_P(RooProdPdf, TestProdPdf,
+                         testing::Values(TestProdPdf::ParamType{0, "off"}, TestProdPdf::ParamType{0, "cpu"},
+                                         TestProdPdf::ParamType{1, "off"}, TestProdPdf::ParamType{1, "cpu"},
+                                         TestProdPdf::ParamType{2, "off"}, TestProdPdf::ParamType{2, "cpu"}),
+                         [](testing::TestParamInfo<TestProdPdf::ParamType> const &paramInfo) {
+                            std::stringstream ss;
+                            ss << "opt" << std::get<0>(paramInfo.param) << std::get<1>(paramInfo.param);
+                            return ss.str();
+                         });
 
 std::vector<std::vector<RooAbsArg *>> allPossibleSubset(RooAbsCollection const &arr)
 {
@@ -134,6 +143,8 @@ TEST(RooProdPdf, TestGetPartIntList)
 
 TEST(RooProdPdf, TestDepsAreCond)
 {
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::Minimization, true};
+
    using namespace RooFit;
 
    RooWorkspace ws;
