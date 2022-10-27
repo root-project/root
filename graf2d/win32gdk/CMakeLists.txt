@@ -39,7 +39,7 @@ if(winrtdebug)
 else()
   set(nmcxxflags "${CMAKE_CXX_FLAGS_RELEASE}")
 endif()
-if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
   set(nmcxxflags "${nmcxxflags} -D_WIN64")
 endif()
 

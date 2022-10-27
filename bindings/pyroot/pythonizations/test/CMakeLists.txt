@@ -125,7 +125,7 @@ endif()
 
 # RTensor pythonizations
 if (dataframe AND tmva)
-    if(NOT MSVC OR "${CMAKE_GENERATOR_PLATFORM}" MATCHES "Win32" OR win_broken_tests)
+    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
         ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)
     endif()
 endif()
@@ -135,7 +135,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tf_pycallables tf_pycallables.py)
 
 if(roofit)
   # RooAbsCollection and subclasses pythonizations
-  if(NOT MSVC OR "${CMAKE_GENERATOR_PLATFORM}" MATCHES "Win32" OR win_broken_tests)
+  if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
     ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabscollection roofit/rooabscollection.py)
   endif()
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooarglist roofit/rooarglist.py)
