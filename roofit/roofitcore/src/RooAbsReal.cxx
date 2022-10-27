@@ -4886,3 +4886,15 @@ bool RooAbsReal::redirectServersHook(const RooAbsCollection & newServerList, boo
   _lastNSet = nullptr ;
   return RooAbsArg::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursiveStep);
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+void RooAbsReal::enableOffsetting(bool flag)
+{
+  for (RooAbsArg* arg : servers()) {
+    if(auto realArg = dynamic_cast<RooAbsReal*>(arg)) {
+      realArg->enableOffsetting(flag) ;
+    }
+  }
+}
