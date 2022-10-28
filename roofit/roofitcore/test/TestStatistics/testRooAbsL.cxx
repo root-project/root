@@ -17,7 +17,6 @@
 #include <RooWorkspace.h>
 #include <RooMinimizer.h>
 #include <RooFitResult.h>
-#include <RooNLLVar.h>
 #include "RooDataHist.h" // complete type in Binned test
 #include "RooCategory.h" // complete type in MultiBinnedConstraint test
 #include <RooFit/TestStatistics/RooUnbinnedL.h>
