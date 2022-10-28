@@ -33,8 +33,6 @@ from a set of recursive fractions: for a given set of input fractions
 #include "RooAbsPdf.h"
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"
-#include "RooNLLVar.h"
-#include "RooChi2Var.h"
 #include "RooMsgService.h"
 
 using namespace std;
