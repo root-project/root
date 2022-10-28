@@ -483,7 +483,7 @@ set(hist-hbars-depends  tutorial-tree-cernbuild)
 set(benchmarks-depends tutorial-hsimple
                        tutorial-fit-fit1
                        tutorial-fit-myfit
-					   tutorial-hist-h1ReadAndDraw
+                       tutorial-hist-h1ReadAndDraw
                        tutorial-hist-FirstContour
                        tutorial-geom-na49view
                        tutorial-tree-ntuple1
@@ -731,7 +731,7 @@ if(ROOT_pyroot_FOUND)
   set(pyroot-benchmarks-depends tutorial-pyroot-hsimple-py
                                 tutorial-pyroot-fit1-py
                                 tutorial-pyroot-na49view-py
-								tutorial-pyroot-h1ReadAndDraw-py
+                                tutorial-pyroot-h1ReadAndDraw-py
                                 tutorial-pyroot-ntuple1-py)
   set(pyroot-fit1-depends tutorial-pyroot-fillrandom-py)
   set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
@@ -739,6 +739,7 @@ if(ROOT_pyroot_FOUND)
 
   # Avoid a race condition: make sure Python tutorial is ran after C++ tutorial
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory)
+  set(roofit-rf512_wsfactory_oper-depends tutorial-roofit-rf512_wsfactory_oper)
 
   #----------------------------------------------------------------------
   # List requirements for python tutorials.
