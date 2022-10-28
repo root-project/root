@@ -41,16 +41,12 @@ combined in the main thread.
 #include "RooAbsData.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
-#include "RooNLLVar.h"
 #include "RooRealMPFE.h"
 #include "RooErrorHandler.h"
 #include "RooMsgService.h"
-#include "RooProdPdf.h"
-#include "RooRealSumPdf.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooHelpers.h"
-
-#include "ROOT/StringUtils.hxx"
+#include "RooAbsOptTestStatistic.h"
 
 #include "TTimeStamp.h"
 #include "TClass.h"
