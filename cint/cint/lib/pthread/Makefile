@@ -18,7 +18,7 @@
 RM	    = rm -f
 CP	    = cp
 AR	    = ar
-AROPT       = clq
+AROPT       = cq
 KRCC        = cc
 CC          = gcc
 CPP         = g++

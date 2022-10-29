@@ -14,7 +14,7 @@
 RM	    = rm -f
 CP	    = cp
 AR	    = ar
-AROPT       = clq
+AROPT       = cq
 KRCC        = gcc -traditional
 CC          = gcc -Wall
 CPP         = g++ -Wall -fguiding-decls

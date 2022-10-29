@@ -14,7 +14,7 @@
 RM	    = rm -f
 CP	    = cp
 AR	    = ar
-AROPT       = clq
+AROPT       = cq
 KRCC        = gcc -traditional
 CC          = gcc -fexceptions -Wall
 CPP         = g++ -Wall
