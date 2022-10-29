@@ -157,7 +157,7 @@ protected:
   mutable ROOT::Math::KahanSum<double> _offset = 0.0; ///<! Offset as KahanSum to avoid loss of precision
   mutable double _evalCarry = 0.0;                  ///<! carry of Kahan sum in evaluatePartition
 
-  ClassDefOverride(RooAbsTestStatistic,4) // Abstract base class for real-valued test statistics
+  ClassDefOverride(RooAbsTestStatistic,0) // Abstract base class for real-valued test statistics
 
 };
 

@@ -92,7 +92,7 @@ private:
   mutable RooRealSumPdf* _binnedPdf{nullptr}; ///<!
   mutable std::unique_ptr<RooBatchCompute::RunContext> _evalData; ///<! Struct to store function evaluation workspaces.
 
-  ClassDefOverride(RooNLLVar,3) // Function representing (extended) -log(L) of p.d.f and dataset
+  ClassDefOverride(RooNLLVar,0) // Function representing (extended) -log(L) of p.d.f and dataset
 };
 
 #endif
