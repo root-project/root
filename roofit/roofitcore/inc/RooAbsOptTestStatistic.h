@@ -91,7 +91,7 @@ protected:
   bool      _optimized ; ///<!
   double      _integrateBinsPrecision{-1.}; // Precision for finer sampling of bins.
 
-  ClassDefOverride(RooAbsOptTestStatistic,5) // Abstract base class for optimized test statistics
+  ClassDefOverride(RooAbsOptTestStatistic,0) // Abstract base class for optimized test statistics
 };
 
 #endif
