@@ -83,7 +83,7 @@ protected:
   RooAbsReal*       _funcInt = nullptr; ///<! Function integral
   std::list<RooAbsBinning*> _binList ; ///<! Bin ranges
 
-  ClassDefOverride(RooXYChi2Var,1) // Chi^2 function of p.d.f w.r.t a unbinned dataset with X and Y values
+  ClassDefOverride(RooXYChi2Var,0) // Chi^2 function of p.d.f w.r.t a unbinned dataset with X and Y values
 };
 
 
