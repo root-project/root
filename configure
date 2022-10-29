@@ -4066,7 +4066,7 @@ if test ! "x$enable_fitsio" = "xno"; then
 
     # At this time, libcfitsio.a should always be prefered over .so,
     # to avoid forcing users to install cfitsio.
-    check_library "libcfitsio cfitsio" "no" "$cfitsiolibdir" \
+    check_library "libcfitsio cfitsio" "$enable_shared" "$cfitsiolibdir" \
         $CFITSIO ${CFITSIO:+$CFITSIO/lib} ${CFITSIO:+$CFITSIO/.libs} \
         ${finkdir:+$finkdir/lib} \
         /usr/local/lib /usr/lib /opt/cfitsio/lib
