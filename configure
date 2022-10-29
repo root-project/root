@@ -3108,7 +3108,7 @@ if test "x$enable_builtin_lz4" = "xno" ; then
         enable_builtin_lz4=yes
     else
         lz4inc=$found_hdr
-        lz4incdir+=$lz4incdir:$xxhashincdir
+        lz4incdir=$lz4incdir:$xxhashincdir
     fi
 
     check_library "liblz4" "$enable_shared" "" \
