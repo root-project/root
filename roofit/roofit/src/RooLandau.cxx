@@ -83,14 +83,19 @@ Int_t RooLandau::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, 
    return 0;
 }
 
-Double_t RooLandau::analyticalIntegral(Int_t code, const char *rangeName) const
+Double_t RooLandau::analyticalIntegral(Int_t /*code*/, const char *rangeName) const
 {
-   assert(code == 1);
+   // Don't do anything with "code". It can only be "1" anyway (see
+   // implementation of getAnalyticalIntegral).
 
-   double max = x.max(rangeName);
-   double min = x.min(rangeName);
+   const double max = x.max(rangeName);
+   const double min = x.min(rangeName);
 
-   return ROOT::Math::landau_cdf(max, sigma, mean) - ROOT::Math::landau_cdf(min, sigma, mean);
+   const double meanVal = mean;
+   const double sigmaVal = sigma;
+
+   using ROOT::Math::landau_cdf;
+   return sigmaVal * (landau_cdf(max, sigmaVal, meanVal) - landau_cdf(min, sigmaVal, meanVal));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
