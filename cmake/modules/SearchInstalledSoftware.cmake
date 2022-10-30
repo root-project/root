@@ -302,7 +302,7 @@ if(python)
   #---First look for the python interpreter and fix the version of it for the libraries--
   find_package(PythonInterp)
   if(PYTHONINTERP_FOUND)
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;sys.stdout.write(sys.version[:3])"
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;sys.stdout.write(str(sys.version_info[0]) + '.' + str(sys.version_info[1]))"
                     OUTPUT_VARIABLE PYTHON_VERSION)
     message(STATUS "Found Python interpreter version ${PYTHON_VERSION}")
     execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;sys.stdout.write(sys.prefix)"

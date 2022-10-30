@@ -4765,9 +4765,9 @@ if test ! "x$enable_python" = "xno" ; then
     # Check for Python include and library
     mypython=`$cwhich python 2> /dev/null`
     if test ! "x$mypython" = "x" && test -x "$mypython" ; then
-       pythonvers=`python -c 'import sys; sys.stdout.write(sys.version[:3])'`
-       pythonsysincdir=`python -c 'import sys; sys.stdout.write(sys.prefix + "/include/python" + sys.version[:3])'`
-       #pythonsyslibdir=`python -c 'import sys; sys.stdout.write(sys.prefix + "/lib/python" + sys.version[:3])'`
+       pythonvers=`python -c 'import sys; sys.stdout.write(str(sys.version_info[0]) + "." + str(sys.version_info[1]))'`
+       pythonsysincdir=`python -c 'import sys; sys.stdout.write(sys.prefix + "/include/python" + str(sys.version_info[0]) + "." + str(sys.version_info[1]))'`
+       #pythonsyslibdir=`python -c 'import sys; sys.stdout.write(sys.prefix + "/lib/python" + str(sys.version_info[0]) + "." + str(sys.version_info[1]))'`
        pythonsyslibdir=`python -c 'import sys; sys.stdout.write(sys.prefix + "/lib")'`
        pythonsyslibdir2=
        if test "x$platform" = "xmacosx"; then
@@ -4782,7 +4782,7 @@ if test ! "x$enable_python" = "xno" ; then
     pysuffix=""
     if test "x$platform" = "xwin32"; then
        if test ! "x$mypython" = "x" && test -x "$mypython" ; then
-          pythonvers=`python -c 'import sys; sys.stdout.write(sys.version[:3].replace(".",""))' | tr -d '\r'`
+          pythonvers=`python -c 'import sys; sys.stdout.write(str(sys.version_info[0]) + str(sys.version_info[1]))' | tr -d '\r'`
           if test ! "x$pythonincdir" = "x" ; then
              pythonincdir=`cygpath -m $pythonincdir`
           fi
