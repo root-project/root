@@ -145,8 +145,13 @@ private:
 
   RooMinuit(const RooMinuit&) ;
 
-  ClassDefOverride(RooMinuit,0) // RooFit minimizer based on MINUIT
-} R__SUGGEST_ALTERNATIVE("Please use RooMinimizer instead of RooMinuit");
+// Undocumented preprocessor define such that the implementation in
+// RooMinuit.cxx can suppress the deprecation warning.
+#ifndef __ROOFIT_SUPPRESS_ROOMINIMIZER_DEPRECATION_WARNING
+} R__DEPRECATED(6, 30, "Please use RooMinimizer instead of RooMinuit");
+#else
+};
+#endif
 
 
 #endif
