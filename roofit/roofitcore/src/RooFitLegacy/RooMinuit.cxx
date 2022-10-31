@@ -37,7 +37,10 @@ Various methods are available to control verbosity, profiling,
 automatic PDF optimization.
 **/
 
+// At least for building the implementation we have to suppress the deprecation warning
+#define __ROOFIT_SUPPRESS_ROOMINIMIZER_DEPRECATION_WARNING
 #include "RooFitLegacy/RooMinuit.h"
+#undef __ROOFIT_SUPPRESS_ROOMINIMIZER_DEPRECATION_WARNING
 
 #include "TClass.h"
 
@@ -68,7 +71,6 @@ char* operator+( streampos&, char* );
 
 using namespace std;
 
-ClassImp(RooMinuit);
 
 TVirtualFitter *RooMinuit::_theFitter = nullptr;
 
