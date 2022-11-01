@@ -806,9 +806,11 @@ public:
     // N u m e r i c   i n t e g r a t i o n   o f   l a n d a u   p d f
     // ------------------------------------------------------------------
 
-    // Construct p.d.f without support for analytical integrator for demonstration purposes
     RooRealVar x("x","x",-10,10) ;
     RooLandau landau("landau","landau",x,RooConst(0),RooConst(0.1)) ;
+
+    // Disable analytic integration from demonstration purposes
+    landau.forceNumInt(true);
 
 
     // Calculate integral over landau with default choice of numeric integrator
