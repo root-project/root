@@ -127,26 +127,26 @@ protected:
 
    //functions not to be used for TH2Poly
 
-   Int_t        Fill(Double_t) override{return -1;}                              //MayNotUse
-   Int_t        Fill(Double_t , const char *, Double_t) override{return -1;}     //MayNotUse
-   Int_t        Fill(const char *, Double_t , Double_t ) override{return -1;}    //MayNotUse
-   Int_t        Fill(const char *, const char *, Double_t ) override{return -1;} //MayNotUse
-   void         FillN(Int_t, const Double_t*, const Double_t*, Int_t) override{return;}  //MayNotUse
+   Int_t        Fill(Double_t) override{return -1;}                              ///< NOT IMPLEMENTED for TH2Poly
+   Int_t        Fill(Double_t , const char *, Double_t) override{return -1;}     ///< NOT IMPLEMENTED for TH2Poly
+   Int_t        Fill(const char *, Double_t , Double_t ) override{return -1;}    ///< NOT IMPLEMENTED for TH2Poly
+   Int_t        Fill(const char *, const char *, Double_t ) override{return -1;} ///< NOT IMPLEMENTED for TH2Poly
+   void         FillN(Int_t, const Double_t*, const Double_t*, Int_t) override{return;}  ///< NOT IMPLEMENTED for TH2Poly
 
-   Double_t     Integral(Int_t, Int_t, const Option_t*) const override{return 0;}                             //MayNotUse
-   Double_t     Integral(Int_t, Int_t, Int_t, Int_t, const Option_t*) const override{return 0;}               //MayNotUse
-   Double_t     Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, const Option_t*) const override{return 0;} //MayNotUse
+   Double_t     Integral(Int_t, Int_t, const Option_t*) const override{return 0;}                             ///< NOT IMPLEMENTED for TH2Poly
+   Double_t     Integral(Int_t, Int_t, Int_t, Int_t, const Option_t*) const override{return 0;}               ///< NOT IMPLEMENTED for TH2Poly
+   Double_t     Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, const Option_t*) const override{return 0;} ///< NOT IMPLEMENTED for TH2Poly
 
-   Double_t     GetBinContent(Int_t, Int_t) const override {return 0;}           //MayNotUse
-   Double_t     GetBinContent(Int_t, Int_t, Int_t) const override {return 0;}    //MayNotUse
+   Double_t     GetBinContent(Int_t, Int_t) const override {return 0;}           ///< NOT IMPLEMENTED for TH2Poly
+   Double_t     GetBinContent(Int_t, Int_t, Int_t) const override {return 0;}    ///< NOT IMPLEMENTED for TH2Poly
 
-   Double_t GetBinError(Int_t , Int_t) const override {return 0;}            //MayNotUse
-   Double_t GetBinError(Int_t , Int_t , Int_t) const override {return 0;}    //MayNotUse
+   Double_t GetBinError(Int_t , Int_t) const override {return 0;}            ///< NOT IMPLEMENTED for TH2Poly
+   Double_t GetBinError(Int_t , Int_t , Int_t) const override {return 0;}    ///< NOT IMPLEMENTED for TH2Poly
 
-   void         SetBinContent(Int_t, Int_t, Double_t) override{}           //MayNotUse
-   void         SetBinContent(Int_t, Int_t, Int_t, Double_t) override{}    //MayNotUse
-   void         SetBinError(Int_t, Int_t, Double_t) override {}
-   void         SetBinError(Int_t, Int_t, Int_t, Double_t) override {}
+   void         SetBinContent(Int_t, Int_t, Double_t) override{}           ///< NOT IMPLEMENTED for TH2Poly
+   void         SetBinContent(Int_t, Int_t, Int_t, Double_t) override{}    ///< NOT IMPLEMENTED for TH2Poly
+   void         SetBinError(Int_t, Int_t, Double_t) override {}            ///< NOT IMPLEMENTED for TH2Poly
+   void         SetBinError(Int_t, Int_t, Int_t, Double_t) override {}     ///< NOT IMPLEMENTED for TH2Poly
 
 
 protected:
