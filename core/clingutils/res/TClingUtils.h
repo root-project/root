@@ -14,16 +14,16 @@
 
 #include "RConversionRuleParser.h"
 
+#include <cstdlib>
 #include <functional>
-#include <set>
-#include <string>
-#include <unordered_set>
-#include <vector>
 #include <list>
 #include <map>
+#include <set>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
-
-#include <cstdlib>
+#include <vector>
 
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
@@ -163,13 +163,76 @@ public:
    typedef bool (*AutoParse_t)(const char *name);
 
 private:
+   class Cache {
+      using Map_t = std::unordered_map<std::string, std::pair<int, std::string>>;
+      Map_t fMappingAndLRU;
+      int fLRUGeneration = 0;
+
+      int IncLRUGeneration() {
+         if (fLRUGeneration == std::numeric_limits<int>::max() - 1) {
+            // We'll have mru values of say 16556, 12, 765765, 354
+            // and need to bring them down to 2, 0, 3, 1.
+            // For that, fill the mru values into a vector, sort it,
+            // and find the values back, storing their index as mru value.
+            std::vector<int> mrus;
+            mrus.reserve(fMappingAndLRU.size());
+            for (auto &&m: fMappingAndLRU)
+               mrus.emplace_back(m.second.first);
+            std::sort(mrus.begin(), mrus.end());
+            for (auto &&m: fMappingAndLRU)
+               m.second.first = std::lower_bound(mrus.begin(), mrus.end(), m.second.first) - mrus.begin();
+            fLRUGeneration = mrus.size() - 1;
+         }
+         return ++fLRUGeneration;
+      }
+
+   public:
+      const std::string *Find(const std::string &k) {
+         auto i = fMappingAndLRU.find(k);
+         if (i != fMappingAndLRU.end()) {
+            if (i->second.first != fLRUGeneration) {
+               i->second.first = IncLRUGeneration();
+            }
+            return &i->second.second;
+         }
+         return nullptr;
+      }
+
+      void Insert(const std::string &k, const std::string &v) {
+         if (fMappingAndLRU.size() > 1024 * 16) {
+            // We'll have mru values of say 16556, 12, 765765, 354
+            // and want to find the smallest.
+            // For that, fill the mru values into a vector, sort it,
+            // and take the first element, and then remove the oldest
+            // 1024 elements.
+            std::vector<int> mrus;
+            mrus.reserve(fMappingAndLRU.size());
+            for (auto &&m: fMappingAndLRU)
+               mrus.emplace_back(m.second.first);
+            std::sort(mrus.begin(), mrus.end());
+            int oldestGenerationToKeep = mrus[1024];
+            // Instead of C++20 `erase_if`
+            for (auto I = fMappingAndLRU.begin(), E = fMappingAndLRU.end(); I != E; ) 
+               if (I->second.first < oldestGenerationToKeep)
+                  I = fMappingAndLRU.erase(I);
+               else
+                  ++I;
+         }
+         fMappingAndLRU[k] = std::make_pair(IncLRUGeneration(), v);
+      }
+   };
+
    cling::Interpreter *fInterpreter;
    TNormalizedCtxt    *fNormalizedCtxt;
    ExistingTypeCheck_t fExistingTypeCheck;
    AutoParse_t         fAutoParse;
+   Cache fKnownGetPartiallyDesugaredNameMappings;
+   Cache fKnownPartiallyDesugaredNameWithScopeHandlingMappings;
    bool               *fInterpreterIsShuttingDownPtr;
    const int          *fPDebug; // debug flag, might change at runtime thus *
    bool WantDiags() const { return fPDebug && *fPDebug > 5; }
+
+   bool GetIfCached(Cache& cache, const std::string &name, std::string &result);
 
 public:
    TClingLookupHelper(cling::Interpreter &interpreter, TNormalizedCtxt &normCtxt,
@@ -177,7 +240,7 @@ public:
                       AutoParse_t autoParse,
                       bool *shuttingDownPtr,
                       const int *pgDebug = 0);
-   virtual ~TClingLookupHelper() { /* we're not owner */ }
+   virtual ~TClingLookupHelper() = default;
 
    bool ExistingTypeCheck(const std::string &tname, std::string &result) override;
    void GetPartiallyDesugaredName(std::string &nameLong) override;

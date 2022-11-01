@@ -498,6 +498,19 @@ TClingLookupHelper::TClingLookupHelper(cling::Interpreter &interpreter,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Search for a known type mapping and if found, set it and return true.
+///
+
+bool TClingLookupHelper::GetIfCached(Cache& cache, const std::string &name, std::string &result)
+{
+   if (const std::string *value = cache.Find(name)) {
+      result = *value;
+      return true;
+   }
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Helper routine to ry hard to avoid looking up in the Cling database as
 /// this could enduce an unwanted autoparsing.
 
@@ -506,22 +519,39 @@ bool TClingLookupHelper::ExistingTypeCheck(const std::string &tname,
 {
    if (tname.empty()) return false;
 
-   if (fExistingTypeCheck) return fExistingTypeCheck(tname,result);
-   else return false;
+   if (GetIfCached(fKnownPartiallyDesugaredNameWithScopeHandlingMappings, tname, result))
+      return true;
+
+   if (GetIfCached(fKnownGetPartiallyDesugaredNameMappings, tname, result))
+      return true;
+
+   if (fExistingTypeCheck && fExistingTypeCheck(tname,result))
+      return true;
+
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void TClingLookupHelper::GetPartiallyDesugaredName(std::string &nameLong)
 {
+   std::string result;
+   if (GetIfCached(fKnownGetPartiallyDesugaredNameMappings,
+                   const_cast<const std::string&>(nameLong), result)) {
+      nameLong = result;
+      return;
+   }
+
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    clang::QualType t = lh.findType(nameLong, ToLHDS(WantDiags()));
+   std::string origName = nameLong;
    if (!t.isNull()) {
       clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(fInterpreter->getCI()->getASTContext(), t, fNormalizedCtxt->GetConfig(), true /* fully qualify */);
       if (!dest.isNull() && (dest != t)) {
          // getAsStringInternal() appends.
          nameLong.clear();
          dest.getAsStringInternal(nameLong, fInterpreter->getCI()->getASTContext().getPrintingPolicy());
+         fKnownGetPartiallyDesugaredNameMappings.Insert(origName, nameLong);
       }
    }
 }
@@ -531,15 +561,9 @@ void TClingLookupHelper::GetPartiallyDesugaredName(std::string &nameLong)
 bool TClingLookupHelper::IsAlreadyPartiallyDesugaredName(const std::string &nondef,
                                                          const std::string &nameLong)
 {
-   const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
-   clang::QualType t = lh.findType(nondef.c_str(), ToLHDS(WantDiags()));
-   if (!t.isNull()) {
-      clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(fInterpreter->getCI()->getASTContext(), t, fNormalizedCtxt->GetConfig(), true /* fully qualify */);
-      if (!dest.isNull() && (dest != t) &&
-          nameLong == t.getAsString(fInterpreter->getCI()->getASTContext().getPrintingPolicy()))
-         return true;
-   }
-   return false;
+   std::string nondefDesugared = nondef;
+   GetPartiallyDesugaredName(nondefDesugared);
+   return nondefDesugared == nameLong;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -569,14 +593,14 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
 {
    if (tname.empty()) return false;
 
+   if (GetIfCached(fKnownPartiallyDesugaredNameWithScopeHandlingMappings, tname, result))
+      return true;
+
    // Try hard to avoid looking up in the Cling database as this could enduce
    // an unwanted autoparsing.
    // Note: this is always done by the callers and thus is redundant.
-   // Maybe replace with
+   // Keep it as assert:
    assert(! (fExistingTypeCheck && fExistingTypeCheck(tname,result)) );
-   if (fExistingTypeCheck && fExistingTypeCheck(tname,result)) {
-      return ! result.empty();
-   }
 
    if (fAutoParse) fAutoParse(tname.c_str());
 
@@ -637,6 +661,7 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
 //         TMetaUtils::GetNormalizedName(alt, dest, *fInterpreter, *fNormalizedCtxt);
 //         if (alt != result) fprintf(stderr,"norm: %s vs result=%s\n",alt.c_str(),result.c_str());
 
+         fKnownPartiallyDesugaredNameWithScopeHandlingMappings.Insert(tname, result);
          return true;
       }
    }
