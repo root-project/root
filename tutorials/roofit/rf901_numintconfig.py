@@ -36,10 +36,11 @@ ROOT.RooAbsReal.defaultIntegratorConfig().setEpsRel(1e-6)
 # N u m e r i c   i n t e g r a t i o n   o f   l a n d a u   p d f
 # ------------------------------------------------------------------
 
-# Construct pdf without support for analytical integrator for
-# demonstration purposes
 x = ROOT.RooRealVar("x", "x", -10, 10)
 landau = ROOT.RooLandau("landau", "landau", x, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(0.1))
+
+# Disable analytic integration from demonstration purposes
+landau.forceNumInt(True)
 
 # Activate debug-level messages for topic integration to be able to follow
 # actions below

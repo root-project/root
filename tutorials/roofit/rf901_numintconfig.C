@@ -48,9 +48,11 @@ void rf901_numintconfig()
    // N u m e r i c   i n t e g r a t i o n   o f   l a n d a u   p d f
    // ------------------------------------------------------------------
 
-   // Construct pdf without support for analytical integrator for demonstration purposes
    RooRealVar x("x", "x", -10, 10);
    RooLandau landau("landau", "landau", x, RooConst(0), RooConst(0.1));
+
+   // Disable analytic integration from demonstration purposes
+   landau.forceNumInt(true);
 
    // Activate debug-level messages for topic integration to be able to follow actions below
    RooMsgService::instance().addStream(DEBUG, Topic(Integration));
