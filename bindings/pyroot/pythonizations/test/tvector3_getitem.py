@@ -28,7 +28,7 @@ class TVector3GetItem(unittest.TestCase):
     def test_iterable(self):
         v = ROOT.TVector3(1., 2., 3.)
 
-        self.assertEquals(list(v), [1., 2., 3.])
+        self.assertEqual(list(v), [1., 2., 3.])
 
 
 if __name__ == '__main__':
