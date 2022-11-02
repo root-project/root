@@ -5,6 +5,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/Device',
                'sap/ui/model/json/JSONModel',
                'sap/ui/table/Column',
+               'sap/ui/table/TreeTable',
                'sap/ui/layout/HorizontalLayout',
                'sap/m/TabContainerItem',
                'sap/m/MessageToast',
@@ -24,6 +25,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/tnt/ToolHeader',
                'sap/m/ToolbarSpacer',
                'sap/m/OverflowToolbarLayoutData',
+               'sap/m/ScrollContainer',
                'rootui5/browser/controller/FileDialog.controller'
 ],function(Controller,
            Link,
@@ -32,6 +34,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            uiDevice,
            JSONModel,
            tableColumn,
+           TreeTable,
            HorizontalLayout,
            TabContainerItem,
            MessageToast,
@@ -51,6 +54,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            ToolHeader,
            ToolbarSpacer,
            OverflowToolbarLayoutData,
+           ScrollContainer,
            FileDialogController) {
 
    "use strict";
@@ -253,6 +257,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }, this);
       },
 
+      /* =========================================== */
+      /* =============== Image Viewer ============== */
+      /* =========================================== */
+
       createImageViewer(dummy_url, name, title, tooltip) {
          let oTabContainer = this.getView().byId("tabContainer"),
              image = new Image({ src: "", densityAware: false });
@@ -327,6 +335,40 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             tooltip: tooltip || ''
          });
 
+         let table = new TreeTable({
+            width: "100%",
+            editable: false,
+            columnHeaderVisible : true,
+            visibleRowCountMode: 'Auto',
+            rows: "{path:'/items', parameters: {arrayNames:['sub']}}",
+            selectionMode: 'None',
+            enableSelectAll: false,
+            ariaLabelledBy: "title"
+         });
+
+         let column1 = new tableColumn({
+            label: 'Source',
+            width: '15rem',
+            autoResizable: true,
+            visible: true,
+            template: new HorizontalLayout({
+               content: [ new mText({ text:'{name}', wrapping: false }) ]
+            })
+         });
+
+         let column2 = new tableColumn({
+            label: 'Information',
+            autoResizable: true,
+            visible: true,
+            template: new HorizontalLayout({
+               content: [ new mText({ text:'{info}', wrapping: false }) ]
+            })
+         });
+
+         table.addColumn(column1);
+
+         table.addColumn(column2);
+
          item.addContent(new ToolHeader({
             height: "40px",
             content: [
@@ -337,6 +379,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                   })
                }),
                new Button({
+                  text: "Expand all",
+                  tooltip: "Get cling variables info again",
+                  type: "Transparent",
+                  press: () => table.expandToLevel(1)
+               }),
+               new Button({
+                  text: "Callapse all",
+                  tooltip: "Collapse all",
+                  type: "Transparent",
+                  press: () => table.collapseAll()
+               }),
+               new Button({
                   text: "Refresh",
                   tooltip: "Get cling variables info again",
                   type: "Transparent",
@@ -344,17 +398,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                })
             ]
          }));
-         item.addContent(new mTextArea({
-            // height: 'auto',
-            height: "calc(100% - 50px)",
-            width: "100%",
-            value: "{/info}",
-            editable: false
-         }));
+
+         let cont = new ScrollContainer({
+            height: 'calc(100% - 48px)'
+         });
+
+         cont.addContent(table);
+
+         item.addContent(cont);
 
          item.setModel(new JSONModel({
             title,
-            info: '---'
+            info: '---',
+            items: {}
          }));
 
          oTabContainer.addItem(item);
@@ -366,6 +422,41 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onRefreshInfo(tab) {
          this.websocket.send("GETINFO:" + tab.getKey());
       },
+
+      updateInfo(tab, content) {
+
+         let arr = content.split('\n');
+
+         let items = { sub: [] }, cache = {};
+
+         arr.forEach(line => {
+            let name = '', p = line.indexOf(' ');
+            if (p == 0)
+               name = '<default>';
+            else
+               name = line.slice(0, p).trim();
+
+            if (!name) return;
+
+            p = line.indexOf('(address: NA)');
+
+            if (p < 0) return;
+
+            let info = line.slice(p + 15),
+                item = cache[name];
+
+            if (!item) {
+               item = cache[name] = { name, sub: [] };
+               items.sub.push(item);
+            }
+            item.sub.push({ name: "", info });
+         });
+
+         items.sub.sort((a,b) => a.name > b.name);
+
+         tab.getModel().setProperty("/items", items);
+      },
+
 
       /* =========================================== */
       /* =============== Code Editor =============== */
@@ -1028,7 +1119,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             let arr = JSON.parse(msg),
                 tab = this.findTab(arr[0]);
             if (tab)
-               tab.getModel().setProperty("/info", arr[2]);
+               this.updateInfo(tab, arr[2]);
             break;
          }
          case "NEWWIDGET": {  // widget created by server, need to establish connection
