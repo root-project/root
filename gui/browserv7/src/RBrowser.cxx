@@ -122,6 +122,8 @@ public:
 class RBrowserInfoWidget : public RBrowserWidget {
 public:
 
+   enum { kMaxContentLen = 10000000 };
+
    std::string fTitle;
    std::string fContent;
    bool fFirstSend{false};  ///<! if editor content was send at least once
@@ -131,6 +133,7 @@ public:
       fTitle = "Cling info"s;
       Refresh();
    }
+
    virtual ~RBrowserInfoWidget() = default;
 
    void ResetConn() override { fFirstSend = false; }
@@ -162,19 +165,49 @@ public:
       std::ifstream infile(pathtmp.str());
       if (infile) {
          std::string line;
-         while (std::getline(infile, line) && (fContent.length() < 1000000)) {
+         while (std::getline(infile, line) && (fContent.length() < kMaxContentLen)) {
             fContent.append(line);
             fContent.append("\n");
          }
       }
 
       gSystem->Unlink(pathtmp.str().c_str());
-
    }
+
+   void RefreshFromLogs(const std::string &promt, const std::vector<std::string> &logs)
+   {
+      int indx = 0, last_prompt = -1;
+      for (auto &line : logs) {
+         if (line == promt)
+            last_prompt = indx;
+         indx++;
+      }
+
+      if (last_prompt < 0) {
+         Refresh();
+         return;
+      }
+
+      fFirstSend = false;
+      fContent = "";
+
+      indx = 0;
+      for (auto &line : logs) {
+         if ((indx++ > last_prompt) && (fContent.length() < kMaxContentLen)) {
+            fContent.append(line);
+            fContent.append("\n");
+         }
+      }
+   }
+
 
    std::string SendWidgetContent() override
    {
-      if (fFirstSend) return ""s;
+      if (fFirstSend)
+         return ""s;
+
+      if (fContent.empty())
+         Refresh();
 
       fFirstSend = true;
       std::vector<std::string> args = { GetName(), fTitle, fContent };
@@ -193,7 +226,7 @@ public:
 
    void Show(const std::string &) override {}
 
-   std::string GetKind() const override { return "catched"; }
+   std::string GetKind() const override { return "catched"s; }
 
    std::string GetUrl() override { return fUrl; }
 
@@ -221,6 +254,10 @@ public:
 
 RBrowser::RBrowser(bool use_rcanvas)
 {
+   std::ostringstream pathtmp;
+   pathtmp << gSystem->TempDirectory() << "/command." << gSystem->GetPid() << ".log";
+   fPromptFileOutput = pathtmp.str();
+
    SetUseRCanvas(use_rcanvas);
 
    fBrowsable.CreateDefaultElements();
@@ -522,12 +559,14 @@ void RBrowser::AddInitWidget(const std::string &kind)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Returns active geometry viewer (if any)
+/// Find widget by name or kind
 
-std::shared_ptr<RBrowserWidget> RBrowser::FindWidget(const std::string &name) const
+std::shared_ptr<RBrowserWidget> RBrowser::FindWidget(const std::string &name, const std::string &kind) const
 {
    auto iter = std::find_if(fWidgets.begin(), fWidgets.end(),
-         [name](const std::shared_ptr<RBrowserWidget> &widget) { return name == widget->GetName(); });
+         [name, kind](const std::shared_ptr<RBrowserWidget> &widget) {
+           return kind.empty() ? name == widget->GetName() : kind == widget->GetKind();
+   });
 
    if (iter != fWidgets.end())
       return *iter;
@@ -578,10 +617,7 @@ std::vector<std::string> RBrowser::GetRootLogs()
 {
    std::vector<std::string> arr;
 
-   std::ostringstream pathtmp;
-   pathtmp << gSystem->TempDirectory() << "/command." << gSystem->GetPid() << ".log";
-
-   std::ifstream infile(pathtmp.str());
+   std::ifstream infile(fPromptFileOutput);
    if (infile) {
       std::string line;
       while (std::getline(infile, line) && (arr.size() < 10000)) {
@@ -716,21 +752,35 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    } else if (kind == "CMD") {
       std::string sPrompt = "root []";
-      std::ostringstream pathtmp;
-      pathtmp << gSystem->TempDirectory() << "/command." << gSystem->GetPid() << ".log";
       TApplication *app = gROOT->GetApplication();
       if (app->InheritsFrom("TRint")) {
          sPrompt = ((TRint*)gROOT->GetApplication())->GetPrompt();
          Gl_histadd((char *)msg.c_str());
       }
 
-      std::ofstream ofs(pathtmp.str(), std::ofstream::out | std::ofstream::app);
+      std::ofstream ofs(fPromptFileOutput, std::ofstream::out | std::ofstream::app);
       ofs << sPrompt << msg << std::endl;
       ofs.close();
 
-      gSystem->RedirectOutput(pathtmp.str().c_str(), "a");
+      gSystem->RedirectOutput(fPromptFileOutput.c_str(), "a");
       gROOT->ProcessLine(msg.c_str());
       gSystem->RedirectOutput(nullptr);
+
+      if (msg == ".g"s) {
+         auto widget = std::dynamic_pointer_cast<RBrowserInfoWidget>(FindWidget(""s, "info"s));
+         if (!widget) {
+            auto new_widget = AddWidget("info"s);
+            fWebWindow->Send(connid, NewWidgetMsg(new_widget));
+            widget = std::dynamic_pointer_cast<RBrowserInfoWidget>(new_widget);
+         } else if (fActiveWidgetName != widget->GetName()) {
+            fWebWindow->Send(connid, "SELECT_WIDGET:"s + widget->GetName());
+            fActiveWidgetName = widget->GetName();
+         }
+
+         if (widget)
+            widget->RefreshFromLogs(sPrompt + msg, GetRootLogs());
+      }
+
       CheckWidgtesModified();
    } else if (kind == "GETHISTORY") {
 

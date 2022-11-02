@@ -329,7 +329,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          let item = new TabContainerItem(name, {
             icon: "sap-icon://hint",
-            name: "Info Viewer",
+            name: "Globals",
             key: name,
             additionalText: "{/title}",
             tooltip: tooltip || ''
@@ -437,12 +437,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                name = line.slice(0, p).trim();
 
             if (!name) return;
+            if (name == '<command')
+               name = '<command line>';
 
             p = line.indexOf('(address: NA)');
 
             if (p < 0) return;
 
-            let info = line.slice(p + 15),
+            if (name.indexOf('ROOT_cli') == 0)
+               name = 'ROOT_cli';
+
+            let info = line.slice(p + 14),
                 item = cache[name];
 
             if (!item) {
@@ -453,6 +458,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          });
 
          items.sub.sort((a,b) => a.name > b.name);
+
+         // single elements not create hierarchy
+         items.sub.forEach(item => {
+            if (item.sub.length == 1) {
+               item.info = item.sub[0].info;
+               delete item.sub;
+            }
+         });
 
          tab.getModel().setProperty("/items", items);
       },
