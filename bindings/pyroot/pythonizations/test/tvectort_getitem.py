@@ -34,7 +34,7 @@ class TVectorTGetItem(unittest.TestCase):
         for i in range(self.num_elems):
             v[i] = val
 
-        self.assertEquals(list(v), [ val for _ in range(self.num_elems) ])
+        self.assertEqual(list(v), [ val for _ in range(self.num_elems) ])
 
 
 if __name__ == '__main__':

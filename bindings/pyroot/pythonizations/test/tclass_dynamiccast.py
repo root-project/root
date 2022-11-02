@@ -19,11 +19,11 @@ class TClassDynamicCast(unittest.TestCase):
 
         # Upcast: TObject <- TObjString
         o_upcast = tobjstr_class.DynamicCast(tobj_class, o)
-        self.assertEquals(type(o_upcast), TObject)
+        self.assertEqual(type(o_upcast), TObject)
 
         # Downcast: TObject -> TObjString
         o_downcast = tobjstr_class.DynamicCast(tobj_class, o_upcast, False)
-        self.assertEquals(type(o_downcast), TObjString)
+        self.assertEqual(type(o_downcast), TObjString)
 
 
 if __name__ == '__main__':
