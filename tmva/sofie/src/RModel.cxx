@@ -391,6 +391,9 @@ namespace SOFIE{
             case  ETensorType::DOUBLE :{
                fGC += "double* tensor_" + fInputTensorNames[i] + ",";
                break;
+            }
+            default: {
+               throw std::runtime_error("TMVA-SOFIE: input tensor " + fInputTensorNames[i] + " is of a data type which is not yet supported.");
             }            
          }
       }
