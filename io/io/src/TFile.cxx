@@ -76,7 +76,8 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include <errno.h>
 #include <sys/stat.h>
 #ifndef WIN32
-#   include <unistd.h>
+#include <unistd.h>
+#include <sys/xattr.h>
 #else
 #   define ssize_t int
 #   include <io.h>
@@ -148,6 +149,11 @@ UInt_t   TFile::fgOpenTimeout = TFile::kEternalTimeout;
 Bool_t   TFile::fgOnlyStaged = kFALSE;
 #ifdef R__USE_IMT
 ROOT::Internal::RConcurrentHashColl TFile::fgTsSIHashes;
+#endif
+
+#ifdef R__MACOSX
+/* On macOS getxattr takes two extra arguments that should be set to 0 */
+#define getxattr(path, name, value, size) getxattr(path, name, value, size, 0u, 0)
 #endif
 
 const Int_t kBEGIN = 100;
@@ -4032,6 +4038,29 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 
    TString expandedUrl(url);
    gSystem->ExpandPathName(expandedUrl);
+
+#ifdef R__UNIX
+   // If URL is a file on an EOS FUSE mount, attempt redirection to XRootD protocol.
+   if (gEnv->GetValue("TFile.CrossProtocolRedirects", 1) == 1) {
+      TUrl fileurl(expandedUrl, /* default is file */ kTRUE);
+      if (strcmp(fileurl.GetProtocol(), "file") == 0) {
+         ssize_t len = getxattr(fileurl.GetFile(), "eos.url.xroot", nullptr, 0);
+         if (len > 0) {
+            std::string xurl(len, 0);
+            if (getxattr(fileurl.GetFile(), "eos.url.xroot", &xurl[0], len) == len) {
+               if ((f = TFile::Open(xurl.c_str(), options, ftitle, compress, netopt))) {
+                  if (!f->IsZombie()) {
+                     return f;
+                  } else {
+                     delete f;
+                     f = nullptr;
+                  }
+               }
+            }
+         }
+      }
+   }
+#endif
 
    // If a timeout has been specified extract the value and try to apply it (it requires
    // support for asynchronous open, though; the following is completely transparent if
