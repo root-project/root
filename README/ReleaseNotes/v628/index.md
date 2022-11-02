@@ -87,6 +87,17 @@ can be set to enable debugging and/or profiling.
 
 ## I/O Libraries
 
+### Faster reading from EOS
+
+A new cross-protocol redirection has been added to allow files on EOS mounts to be opened
+by `TFile::Open` via XRootD protocol rather than via FUSE when that is possible. The
+redirection uses the `eos.url.xroot` extended file attribute that is present on files in EOS.
+The attribute can be viewed with `getfattr -n eos.url.xroot [file]` on the command line.
+When the URL passed into `TFile::Open` is a for a file on an EOS mount, the extended
+attribute is used to attempt the redirection to XRootD protocol. If the redirection fails,
+the file is opened using the plain file path as before. This feature is controlled by the
+pre-existing configuration option `TFile.CrossProtocolRedirects` and is enabled by default.
+It can be disabled by setting `TFile.CrossProtocolRedirects` to `0` in `rootrc`.
 
 ## TTree Libraries
 
