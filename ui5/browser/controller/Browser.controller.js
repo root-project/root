@@ -10,6 +10,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/m/MessageToast',
                'sap/m/MessageBox',
                'sap/m/Text',
+               'sap/m/TextArea',
                'sap/m/Page',
                'sap/ui/core/mvc/XMLView',
                'sap/ui/core/Icon',
@@ -36,6 +37,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            MessageToast,
            MessageBox,
            mText,
+           mTextArea,
            mPage,
            XMLView,
            CoreIcon,
@@ -308,6 +310,61 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          })).then(oView => item.addContent(oView));
 
          return item;
+      },
+
+      /* =========================================== */
+      /* =============== Info Viewer =============== */
+      /* =========================================== */
+
+      createInfoViewer(dummy_url, name, title, tooltip) {
+         const oTabContainer = this.getView().byId("tabContainer");
+
+         let item = new TabContainerItem(name, {
+            icon: "sap-icon://hint",
+            name: "Info Viewer",
+            key: name,
+            additionalText: "{/title}",
+            tooltip: tooltip || ''
+         });
+
+         item.addContent(new ToolHeader({
+            height: "40px",
+            content: [
+               new ToolbarSpacer({
+                  layoutData: new OverflowToolbarLayoutData({
+                     priority:"NeverOverflow",
+                     minWidth: "16px"
+                  })
+               }),
+               new Button({
+                  text: "Refresh",
+                  tooltip: "Get cling variables info again",
+                  type: "Transparent",
+                  press: () => this.onRefreshInfo(item)
+               })
+            ]
+         }));
+         item.addContent(new mTextArea({
+            // height: 'auto',
+            height: "calc(100% - 50px)",
+            width: "100%",
+            value: "{/info}",
+            editable: false
+         }));
+
+         item.setModel(new JSONModel({
+            title,
+            info: '---'
+         }));
+
+         oTabContainer.addItem(item);
+
+         return item;
+      },
+
+      /** @brief Handle the "Refresh" button press event */
+      onRefreshInfo(tab) {
+         this.websocket.send("GETINFO:" + tab.getKey());
       },
 
       /* =========================================== */
@@ -661,6 +718,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          if (txt.indexOf('editor') >= 0)
             msg = "NEWWIDGET:editor";
+         if (txt.indexOf('info') >= 0)
+            msg = "NEWWIDGET:info";
          else if (txt.indexOf('Image') >= 0)
             msg = "NEWWIDGET:image";
          else if (txt.indexOf('Geometry') >= 0)
@@ -954,8 +1013,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          }
          case "IMAGE": { // update image viewer
-            let arr = JSON.parse(msg);
-            let tab = this.findTab(arr[0]);
+            let arr = JSON.parse(msg),
+                tab = this.findTab(arr[0]);
 
             if (tab) {
                tab.setAdditionalText(arr[1]);
@@ -963,6 +1022,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                let oViewer = tab.getContent()[0].getContent()[0];
                oViewer.setSrc(arr[3]);
             }
+            break;
+         }
+         case "INFO": {
+            let arr = JSON.parse(msg),
+                tab = this.findTab(arr[0]);
+            if (tab)
+               tab.getModel().setProperty("/info", arr[2]);
             break;
          }
          case "NEWWIDGET": {  // widget created by server, need to establish connection
@@ -1121,6 +1187,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          switch(kind) {
             case "editor": tabItem = this.createCodeEditor(par1, par2, par3, tooltip); break;
             case "image": tabItem = this.createImageViewer(par1, par2, par3, tooltip); break;
+            case "info": tabItem = this.createInfoViewer(par1, par2, par3, tooltip); break;
             case "tree": tabItem = this.createTreeViewer(par1, par2, par3, tooltip); break;
             case "geom": tabItem = this.createGeomViewer(par1, par2, par3, tooltip); break;
             case "catched": tabItem = this.createCatchedWidget(par1, par2, par3, tooltip); break;

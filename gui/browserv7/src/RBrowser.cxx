@@ -50,7 +50,7 @@ public:
    std::string fTitle;
    std::string fFileName;
    std::string fContent;
-   bool fFirstSend{false};  ///<! if editor content was send at least one
+   bool fFirstSend{false};  ///<! if editor content was send at least once
    std::string fItemPath;   ///<! item path in the browser
 
    RBrowserEditorWidget(const std::string &name, bool is_editor = true) : RBrowserWidget(name), fIsEditor(is_editor) {}
@@ -117,6 +117,73 @@ public:
    }
 
 };
+
+
+class RBrowserInfoWidget : public RBrowserWidget {
+public:
+
+   std::string fTitle;
+   std::string fContent;
+   bool fFirstSend{false};  ///<! if editor content was send at least once
+
+   RBrowserInfoWidget(const std::string &name) : RBrowserWidget(name)
+   {
+      fTitle = "Cling info"s;
+      Refresh();
+   }
+   virtual ~RBrowserInfoWidget() = default;
+
+   void ResetConn() override { fFirstSend = false; }
+
+   std::string GetKind() const override { return "info"s; }
+   std::string GetTitle() override { return fTitle; }
+   std::string GetUrl() override { return ""s; }
+
+   void Show(const std::string &) override {}
+
+   bool DrawElement(std::shared_ptr<Browsable::RElement> &, const std::string & = "") override { return false; }
+
+   void Refresh()
+   {
+      fFirstSend = false;
+      fContent = "";
+
+      std::ostringstream pathtmp;
+      pathtmp << gSystem->TempDirectory() << "/info." << gSystem->GetPid() << ".log";
+
+      std::ofstream ofs(pathtmp.str(), std::ofstream::out | std::ofstream::app);
+      ofs << "";
+      ofs.close();
+
+      gSystem->RedirectOutput(pathtmp.str().c_str(), "a");
+      gROOT->ProcessLine(".g");
+      gSystem->RedirectOutput(nullptr);
+
+      std::ifstream infile(pathtmp.str());
+      if (infile) {
+         std::string line;
+         while (std::getline(infile, line) && (fContent.length() < 1000000)) {
+            fContent.append(line);
+            fContent.append("\n");
+         }
+      }
+
+      gSystem->Unlink(pathtmp.str().c_str());
+
+   }
+
+   std::string SendWidgetContent() override
+   {
+      if (fFirstSend) return ""s;
+
+      fFirstSend = true;
+      std::vector<std::string> args = { GetName(), fTitle, fContent };
+
+      return "INFO:"s + TBufferJSON::ToJSON(&args).Data();
+   }
+
+};
+
 
 class RBrowserCatchedWidget : public RBrowserWidget {
 public:
@@ -402,10 +469,12 @@ std::shared_ptr<RBrowserWidget> RBrowser::AddWidget(const std::string &kind)
 
    std::shared_ptr<RBrowserWidget> widget;
 
-   if (kind == "editor")
+   if (kind == "editor"s)
       widget = std::make_shared<RBrowserEditorWidget>(name, true);
-   else if (kind == "image")
+   else if (kind == "image"s)
       widget = std::make_shared<RBrowserEditorWidget>(name, false);
+   else if (kind == "info"s)
+      widget = std::make_shared<RBrowserInfoWidget>(name);
    else
       widget = RBrowserWidgetProvider::CreateWidget(kind, name);
 
@@ -691,6 +760,12 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
                ProcessRunMacro(editor->fFileName);
             }
          }
+      }
+   } else if (kind == "GETINFO") {
+      auto info = std::dynamic_pointer_cast<RBrowserInfoWidget>(FindWidget(msg));
+      if (info) {
+         info->Refresh();
+         fWebWindow->Send(connid, info->SendWidgetContent());
       }
    } else if (kind == "NEWWIDGET") {
       auto widget = AddWidget(msg);
