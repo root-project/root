@@ -112,10 +112,19 @@
             }
             std::stringstream out;
             out<<"\n//--------- Concat\n";
-            // special case for 0 axis that memory is contigous
-            if (fAxis == 0) {
-               for(auto &it : fInputs){
-                  out<<SP<<"tensor_" << fOutput<<".insert("<<"tensor_" << fOutput<<".end(),tensor_" << it<<".begin(),tensor_"<<it<<".end());\n";
+            // special case when memory is contigous
+            bool hasShapeOnes = true;
+            for(int i = 0; i<fAxis; ++i){
+               if(fInputShapes[0][i]!=1){
+                  hasShapeOnes = false;
+                  break;
+               }
+            }
+            if (fAxis == 0 || hasShapeOnes) {
+               size_t offset = 0;
+               for(size_t i=0; i<fInputs.size(); ++i){
+                  out<<SP<<"std::copy(tensor_"<<fInputs[i]<<", tensor_"<<fInputs[i]<<"+"<<ConvertShapeToLength(fInputShapes[i])<<", tensor_"<<fOutput<<"+"<<offset<<");\n";
+                  offset+=ConvertShapeToLength(fInputShapes[i]);
                }
             }
             else {
