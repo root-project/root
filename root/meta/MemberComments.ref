@@ -327,6 +327,8 @@ OBJ: TList	TList	Doubly linked list : 0
       void TObject::Paint(Option_t* option = "")
  OBJ: TMethod	PaintArrow	 : 0
       void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Float_t arrowsize = 0.050000000000000003, Option_t* option = ">")
+ OBJ: TMethod	PaintArrowNDC	 : 0
+      void TArrow::PaintArrowNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2, Float_t arrowsize = 0.050000000000000003, Option_t* option = ">")
  OBJ: TMethod	PaintLine	 : 0
       void TLine::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
  OBJ: TMethod	PaintLineNDC	 : 0
