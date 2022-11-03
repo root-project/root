@@ -130,28 +130,33 @@ void ROperator_ConvTranspose<T>::Initialize(RModel &model)
    model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
    if (fNB != "") {
       if (!model.CheckIfTensorAlreadyExist(fNB)) {
-         throw std::runtime_error("TMVA SOFIE Conv op Input Tensor " + fNB + " is not found in model");
+         throw std::runtime_error("TMVA SOFIE ConvTrans op Input Tensor " + fNB + " is not found in model");
       }
       fShapeB = model.GetTensorShape(fNB);
-      bool broadcast_needed = (fShapeB.size() != fShapeY.size());
+      if (fShapeB.size() < 1)
+            throw std::runtime_error("TMVA SOFIE ConvTrans op: Bias Tensor has empty shape");
+
+      size_t bsize = ConvertShapeToLength(fShapeB);
+      size_t ysize = ConvertShapeToLength(fShapeY);
+      // broadcasting is needed if first stride of B is not same of Y
+      bool broadcast_needed = (bsize != ysize);
       // Broadcast the bias B
       if (broadcast_needed) {
-         auto original_data = model.GetInitializedTensorData(fNB);
-         // make bias shape equal to Y shape by adding 1
-         if (fShapeB.size() < 1)
-            throw std::runtime_error("TMVA SOFIE Conv op: Bias Tensor has empty shape");
-         // we assume bias tensor dimension is equal to number of filters that is the second dimension in
+         // we assume bias tensor size is equal to number of filters that is the second dimension in
          // the output tensor
-         if (fShapeB[0] != fShapeY[1])
-            throw std::runtime_error("TMVA SOFIE Conv op: Bias Tensor has wrong shape: " +
+         if (bsize != fShapeY[1] )
+            throw std::runtime_error("TMVA SOFIE ConvTrans op: Bias Tensor has wrong shape: " +
                                      ConvertShapeToString(fShapeB));
+
+         auto original_data = model.GetInitializedTensorData(fNB);
+
          if (fType != "float")
-            throw std::runtime_error("TMVA SOFIE Conv op: Broadcasting for non-float type tensors is not supported");
+            throw std::runtime_error("TMVA SOFIE ConvTrans op: Broadcasting for non-float type tensors is not supported");
          // here the acual broadcasting
          if (!fUseSession) {
             // Broadcast B from M to N x M x Od x Oh x Ow
             std::shared_ptr<void> new_data_ptr(
-               UTILITY::BroadcastConvBias<float>(static_cast<float *>(original_data.get()), fShapeB[0], fShapeY),
+               UTILITY::BroadcastConvBias<float>(static_cast<float *>(original_data.get()), bsize, fShapeY),
                std::default_delete<float[]>());
 
             model.UpdateInitializedTensor(fNB, model.GetTensorType(fNB), fShapeY, new_data_ptr);
@@ -164,6 +169,13 @@ void ROperator_ConvTranspose<T>::Initialize(RModel &model)
             model.AddIntermediateTensor(fNBroadcastedB, model.GetTensorType(fNB), fShapeY);
          }
       }
+      else {
+         // bias tensor is already correct shape, no need to broadcast
+         if (fShapeY != fShapeB)
+            throw std::runtime_error("TMVA SOFIE ConvTrans op: Broadcasting is not needed but bias has wrong shape" +
+               ConvertShapeToString(fShapeB));
+         fNBroadcastedB = fNB;
+      }
    }
 }
 
@@ -172,11 +184,13 @@ std::string ROperator_ConvTranspose<T>::GenerateInitCode()
 {
    std::stringstream out;
    // generate initialization code for broadcasting of bias tensor
-   if (fShapeB.size() != fShapeY.size() && !fNBroadcastedB.empty()) {
+   size_t bsize = ConvertShapeToLength(fShapeB);
+   size_t ysize = ConvertShapeToLength(fShapeY);
+   if (bsize != ysize && !fNBroadcastedB.empty()) {
          // include a separate scope to avoid defining unique operator temp variables
          out << SP << "{\n";
          out << SP << SP << "float * data = TMVA::Experimental::SOFIE::UTILITY::BroadcastConvBias<float>(tensor_"
-             << fNB << ", " << fShapeB[0] << ", " << ConvertShapeToString(fShapeY) << ");\n";
+             << fNB << ", " << bsize << ", " << ConvertShapeToString(fShapeY) << ");\n";
          out << SP << SP << "std::copy(data, data + " << ConvertShapeToLength(fShapeY) << ", tensor_" << fNBroadcastedB << ");\n";
          out << SP << SP << "delete[] data;\n";
          out << SP << "}\n";
