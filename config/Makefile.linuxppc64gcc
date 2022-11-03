@@ -1,17 +1,23 @@
 # -*- mode: makefile -*-
 #
-# Makefile of ROOT for linux ppc64 with glibc and gcc 3.x
+# Makefile of ROOT for linux ppc64 (64 bit mode) with glibc and gcc
 
 PLATFORM      = linux
 
 DEBUGFLAGS    = -g
-OPTFLAGS      = -O
+OPTFLAGS      = -O2
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
 NOOPT         =
 else
 OPT           = $(OPTFLAGS)
 NOOPT         =
+endif
+ifeq ($(CXX11),yes)
+CXX11FLAGS    = -std=c++11 -Wno-deprecated-declarations
+endif
+ifeq ($(CXX14),yes)
+CXX11FLAGS    = -std=c++1y -Wno-deprecated-declarations
 endif
 
 # Compiler:
@@ -29,6 +35,11 @@ CINTCFLAGS    = -pipe -Wall -m64 -fPIC -fsigned-char -DG__REGEXP -DG__UNIX \
                 -DG__64BIT $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
+ifeq ($(WERROR),yes)
+CXXFLAGS     += -Werror
+NOOPT        += -pedantic -Wno-long-long
+endif
+
 # Linker:
 LD            = g++
 LDFLAGS       = -m64 $(OPT) $(EXTRA_LDFLAGS)
@@ -43,12 +54,30 @@ CILIBS        = -lm -ldl
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
-F77           = g77
-F77FLAGS      = -fPIC
-ifneq ($(shell $(F77) -print-file-name=libg2c.so),libg2c.so)
-F77LIBS      := $(shell $(F77) -print-file-name=libg2c.so) -lnsl
+ifneq ($(findstring gfortran, $(F77)),)
+ifeq ($(F77),)
+# only needed to get default compiler in ./configure
+F77           = gfortran
+endif
+F77FLAGS      = -fPIC -m64 -std=legacy
+ifneq ($(shell $(F77) -m64 -print-file-name=libgfortran.$(SOEXT)),libgfortran.$(SOEXT))
+F77LIBS      := $(shell $(F77) -m64 -print-file-name=libgfortran.$(SOEXT))
 else
-F77LIBS      := $(shell $(F77) -print-file-name=libg2c.a)  -lnsl
+F77LIBS      := $(shell $(F77) -m64 -print-file-name=libgfortran.a)
+endif
+endif
+
+ifneq ($(findstring g77, $(F77)),)
+ifeq ($(F77),)
+# only needed to get default compiler in ./configure
+F77           = g77
+endif
+F77FLAGS      = -fPIC -m64
+ifneq ($(shell $(F77) -print-file-name=libg2c.so),libg2c.so)
+F77LIBS      := $(shell $(F77) -m64 -print-file-name=libg2c.so) -lnsl
+else
+F77LIBS      := $(shell $(F77) -m64 -print-file-name=libg2c.a) -lnsl
+endif
 endif
 
 # Extras
