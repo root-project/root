@@ -112,7 +112,10 @@ namespace SOFIE{
          }
          fShapeA = model.GetTensorShape(fNA);
          if (fShapeA.size() != 2){
-            throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNA +
+            if (fShapeA.size() == 1)
+               fShapeA = {1,fShapeA[0]};
+            else
+               throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNA +
                                      " is not of 2 dimensions: A " +  ConvertShapeToString(fShapeA));
          }
          fShapeB = model.GetTensorShape(fNB);
