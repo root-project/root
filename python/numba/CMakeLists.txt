@@ -3,5 +3,6 @@ if(ROOT_pyroot_FOUND)
     ROOTTEST_ADD_TEST(numba
                       MACRO PyROOT_numbatests.py
                       ENVIRONMENT LEGACY_PYROOT=${legacy_pyroot})
+    file(COPY vec_lv.root DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
   endif()
 endif()
