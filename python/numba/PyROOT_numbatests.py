@@ -54,6 +54,38 @@ class TestClasNumba:
         assert (go_fast(x) == go_slow(x)).all()
         assert self.compare(go_slow, go_fast, 300000, x)
 
+    def test02_member_function(self):
+        import ROOT.NumbaExt
+        import math
+
+        # Obtain a vector of ROOT::Math::LorentzVector from the sample
+        # .root file
+        myfile = ROOT.TFile.Open("vec_lv.root")
+        vec_lv = myfile.vecOfLV
+
+        def calc_pt(lv):
+            return math.sqrt(lv.Px() ** 2 + lv.Py() ** 2)
+
+        def calc_pt_vec(vec_lv):
+            pt = []
+            for i in range(vec_lv.size()):
+                pt.append((calc_pt(vec_lv[i]), vec_lv[i].Pt()))
+            return pt
+
+        @numba.njit
+        def numba_calc_pt(lv):
+            return math.sqrt(lv.Px() ** 2 + lv.Py() ** 2)
+
+        def numba_calc_pt_vec(vec_lv):
+            pt = []
+            for i in range(vec_lv.size()):
+                pt.append((numba_calc_pt(vec_lv[i]), vec_lv[i].Pt()))
+            return pt
+
+        assert (False not in
+                tuple(x == y for x, y in numba_calc_pt_vec(vec_lv)))
+        assert self.compare(calc_pt_vec, numba_calc_pt_vec, 1, vec_lv)
+
 
 if __name__ == "__main__":
     # The call to sys.exit is needed otherwise CTest would just ignore the
