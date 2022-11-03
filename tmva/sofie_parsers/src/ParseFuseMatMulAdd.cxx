@@ -19,11 +19,18 @@ ParserFuseFuncSignature ParseFuseMatMulAdd = [](RModelParser_ONNX &parser, const
                                " but its type is not yet registered");
    }
 
-   // output of matmul should be input of Add
-   if (matmulnode.output(0) != addnode.input(0))
+   if (addnode.input_size() != 2)
+      throw std::runtime_error("TMVA::SOFIE ONNX Parser : cannot fuse MatMul if Add does not have 2 inputs");
+   // output of matmul should be one of the input of Add
+   std::string nameBias;
+   if (matmulnode.output(0) == addnode.input(0))
+      nameBias = addnode.input(1);
+   else if (matmulnode.output(0) == addnode.input(1))
+      nameBias = addnode.input(0);
+   else
       throw std::runtime_error("TMVA::SOFIE ONNX Parser : cannot fuse MatMul and Add since have different inputs");
-   // we don't check input type of ADD since it is not be registered
 
+   // we don't check input type of ADD since it is not be registered
    std::unique_ptr<ROperator> op;
 
    float attr_alpha = 1.0;
@@ -33,14 +40,8 @@ ParserFuseFuncSignature ParseFuseMatMulAdd = [](RModelParser_ONNX &parser, const
 
    switch (input_type) {
    case ETensorType::FLOAT:
-      if (addnode.input_size() != 2) {
-         throw std::runtime_error("TMVA::SOFIE ONNX Parser : cannot fuse MatMul if Add does not have 2 inputs");
-         //op.reset(new ROperator_Gemm<float>(attr_alpha, attr_beta, attr_transA, attr_transB, matmulnode.input(0),
-         //                                   matmulnode.input(1), addnode.output(0)));
-      } else {
-         op.reset(new ROperator_Gemm<float>(attr_alpha, attr_beta, attr_transA, attr_transB, matmulnode.input(0),
-                                            matmulnode.input(1), addnode.input(1), addnode.output(0)));
-      }
+      op.reset(new ROperator_Gemm<float>(attr_alpha, attr_beta, attr_transA, attr_transB, matmulnode.input(0),
+                                          matmulnode.input(1), nameBias, addnode.output(0)));
       break;
    default:
       throw std::runtime_error(

@@ -61,8 +61,17 @@ ParserFuseFuncSignature ParseFuseConvTransposeAdd = [](RModelParser_ONNX &parser
                    << convnode.name() << " is not defined in ONNX IR and not applied!\n";
       }
    }
+   if (addnode.input_size() != 2) {
+      throw std::runtime_error("TMVA::SOFIE - Cannote fuse ConvTranspose - Add is input size of add is not 2");
+   }
+   std::string name_b;
+   if (convnode.output(0) == addnode.input(0) )
+      name_b = addnode.input(1);
+   else if (convnode.output(0) == addnode.input(1))
+      name_b = addnode.input(0);
+   else
+      throw std::runtime_error("TMVA::SOFIE - Cannote fuse ConvTranspose - Output of ConvTrans is not input to Add");
 
-   std::string name_b = addnode.input(1);
    switch (input_type) {
    case ETensorType::FLOAT:
       op.reset(new ROperator_ConvTranspose<float>(attr_auto_pad, attr_dilations, attr_group, attr_kernel_shape,
