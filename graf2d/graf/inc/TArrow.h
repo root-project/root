@@ -54,6 +54,8 @@ public:
    void            Paint(Option_t *option="") override;
    virtual void    PaintArrow(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2
                              ,Float_t arrowsize=0.05 ,Option_t *option=">");
+   virtual void    PaintArrowNDC(Double_t u1, Double_t v1,Double_t u2 ,Double_t v2
+                             ,Float_t arrowsize=0.05 ,Option_t *option=">");
    void            SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void    SetAngle(Float_t angle=60) {fAngle=angle;} // *MENU*
    virtual void    SetArrowSize(Float_t arrowsize=0.05) {fArrowSize=arrowsize;} // *MENU*
