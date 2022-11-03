@@ -22,6 +22,7 @@
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TLine.h"
+#include "TArrow.h"
 #include "TLatex.h"
 #include "TStyle.h"
 #include "TF1.h"
@@ -59,6 +60,7 @@ or an instance. For instance to draw an extra scale on a plot.
 - [Definition with a function](\ref GA01)
 - [Logarithmic axis](\ref GA02)
 - [Blank axis](\ref GA03)
+- [Arrow on axis](\ref GA03a)
 - [Tick marks' orientation](\ref GA04)
 - [Tick marks' size](\ref GA05)
 - [Labels' positioning](\ref GA06)
@@ -234,6 +236,40 @@ when in logarithmic scale and there is a small number of decades  (less than 3).
 ## Blank axis
 To draw only the axis tick marks without the axis body, it is enough to specify
 the option `"B"`. It useful to superpose axis.
+
+\anchor GA03a
+## Arrow on axis
+\since **ROOT version 6.27/01:**
+
+To draw and arrow at the end of the axis use the option `">"`. To draw it at the beginning
+of the axis use the option `"<"`. To draw it on both ends use `"<>"`.
+
+Begin_Macro(source)
+{
+   auto c = new TCanvas("c","c",0,0,500,500);
+   c->Range(-11,-11,11,11);
+
+   auto f2 = new TF1("x2","x*x",-10,10);
+   f2->SetLineColor(kRed);
+   f2->Draw("same");
+
+   auto f3 = new TF1("x3","x*x*x",-10,10);
+   f3->SetLineColor(kBlue);
+   f3->Draw("same");
+
+   // Draw the axis with arrows
+   auto ox = new TGaxis(-10,0,10,0,-10.,10.,510,"+-S>");
+   ox->SetTickSize(0.009);
+   ox->SetLabelFont(42);
+   ox->SetLabelSize(0.025);
+   ox->Draw();
+   auto oy = new TGaxis(0,-10,0,10,-10,10,510,"+-S>");
+   oy->SetTickSize(0.009);
+   oy->SetLabelFont(42);
+   oy->SetLabelSize(0.025);
+   oy->Draw();
+}
+End_Macro
 
 \anchor GA04
 ## Tick marks' orientation
@@ -1064,7 +1100,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Int_t optionLog,optionBlank,optionVert,optionPlus,optionMinus,optionUnlab,optionPara;
    Int_t optionDown,optionRight,optionLeft,optionCent,optionEqual,optionDecimals=0,optionDot;
    Int_t optionY,optionText,optionGrid,optionSize,optionNoopt,optionInt,optionM,optionUp,optionX;
-   Int_t optionTime;
+   Int_t optionTime, optionArrow;
    Int_t first=0,last=0,labelnumber;
    Int_t xalign, yalign;
    Int_t nn1, nn2, nn3, n1a, n2a, n3a, nb2, nb3;
@@ -1142,6 +1178,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if (TestBit(TAxis::kCenterLabels)) optionM     = 1;
    if (TestBit(TAxis::kDecimals))     optionDecimals = 1;
    if (!gStyle->GetStripDecimals())   optionDecimals = 1;
+   optionArrow= 0;
+   if(strchr(chopt,'>')) optionArrow = 1;
+   if(strchr(chopt,'<')) optionArrow = optionArrow+2;
    if (fAxis) {
       if (fAxis->GetLabels()) {
          optionM     = 1;
@@ -1480,7 +1519,19 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       xpl2 = x1;
       ypl1 = y0;
       ypl2 = y1;
-      PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+      if (optionArrow) {
+         TArrow a;
+         a.SetLineColor(GetLineColor());
+         a.SetFillColor(GetLineColor());
+         a.SetLineWidth(GetLineWidth());
+         a.SetAngle(30);
+         Double_t as = 0.04*axis_length;
+         if (optionArrow==1) a.PaintArrowNDC(xpl1, ypl1, xpl2, ypl2, as,"|>");
+         if (optionArrow==2) a.PaintArrowNDC(xpl1, ypl1, xpl2, ypl2, as,"<|");
+         if (optionArrow==3) a.PaintArrowNDC(xpl1, ypl1, xpl2, ypl2, as,"<|>");
+      } else {
+         PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+      }
    }
 
 // No bining
@@ -1680,7 +1731,33 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                   }
                }
             }
-            if (!drawGridOnly) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+            if (!drawGridOnly) {
+               if (!optionArrow) {
+                     PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+               } else {
+                  if (optionArrow==1) {
+                     if (x1!=x0) {
+                       if (xpl2<x1) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+                     } else {
+                       if (ypl2<y1) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+                     }
+                  }
+                  if (optionArrow==2) {
+                     if (x1!=x0) {
+                       if (xpl1>x0) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+                     } else {
+                       if (ypl1>y0) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+                     }
+                  }
+                  if (optionArrow==3) {
+                      if (x1!=x0) {
+                       if (xpl1>x0 && xpl2<x1) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+                     } else {
+                       if (ypl1>y0 && ypl2<y1) PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
+                     }
+                  }
+               }
+            }
 
             if (optionGrid) {
                if (ltick == 0) {
