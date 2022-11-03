@@ -125,7 +125,7 @@ namespace SOFIE{
    }
 
    void RModel::AddInputTensorName(std::string input_name) {
-       fInputTensorNames.push_back(input_name);
+       fInputTensorNames.push_back(UTILITY::Clean_name(input_name));
    }
 
    void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution){
@@ -374,18 +374,27 @@ namespace SOFIE{
       }
 
       fGC += "infer(";
-      for (auto& i: fReadyInputTensorInfos){
-         if (i.second.type == ETensorType::FLOAT){
-            fGC += "float* tensor_" + i.first + ",";
-         }
-         else if (i.second.type == ETensorType::INT32 ){
-            fGC += "int32_t* tensor_" + i.first + ",";
-         }
-         else if (i.second.type == ETensorType::INT64){
-            fGC += "int64_t* tensor_" + i.first + ",";
-         }
-         else if(i.second.type == ETensorType::DOUBLE){
-            fGC += "double* tensor_" + i.first + ",";
+      for(size_t i = 0; i<fInputTensorNames.size(); ++i){
+         switch((fReadyInputTensorInfos[fInputTensorNames[i]]).type){
+            case  ETensorType::FLOAT :{
+               fGC += "float* tensor_" + fInputTensorNames[i] + ",";
+               break;
+            }
+            case  ETensorType::INT32 :{
+               fGC += "int32_t* tensor_" + fInputTensorNames[i] + ",";
+               break;
+            } 
+            case  ETensorType::INT64 :{
+               fGC += "int64_t* tensor_" + fInputTensorNames[i] + ",";
+               break;
+            }
+            case  ETensorType::DOUBLE :{
+               fGC += "double* tensor_" + fInputTensorNames[i] + ",";
+               break;
+            }
+            default: {
+               throw std::runtime_error("TMVA-SOFIE: input tensor " + fInputTensorNames[i] + " is of a data type which is not yet supported.");
+            }            
          }
       }
       fGC.pop_back(); //remove last ","
