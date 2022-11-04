@@ -49,7 +49,7 @@ The main changes are:
 
 ## Basic concepts of MINUIT
 
-The [MINUIT](https://root.cern.ch/sites/d35c7d8c.web.cern.ch/files/minuit.pdf)
+The [MINUIT](https://root.cern.ch/download/minuit.pdf)
 package acts on a multiparameter Fortran function to which one
 must give the generic name <TT>FCN</TT>. In the ROOT implementation,
 the function <TT>FCN</TT> is defined via the MINUIT SetFCN member function
