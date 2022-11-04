@@ -295,7 +295,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
   // Save private copy of funcNormSet, if supplied, excluding factorizing terms
   if (funcNormSet) {
-    _funcNormSet = new RooArgSet ;
+    _funcNormSet = std::make_unique<RooArgSet>();
     for (const auto nArg : *funcNormSet) {
       if (function.dependsOn(*nArg)) {
         _funcNormSet->addClone(*nArg) ;
@@ -452,7 +452,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   RooArgSet anIntDepList ;
 
   RooArgSet anaSet{ _anaList, Form("UniqueCloneOf_%s",_anaList.GetName())};
-  _mode = function.getAnalyticalIntegralWN(anIntOKDepList,anaSet,_funcNormSet,RooNameReg::str(_rangeName)) ;
+  _mode = function.getAnalyticalIntegralWN(anIntOKDepList,anaSet,_funcNormSet.get(),RooNameReg::str(_rangeName)) ;
   _anaList.removeAll() ;
   _anaList.add(anaSet);
 
@@ -467,8 +467,8 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
   // WVE kludge: synchronize dset for use in analyticalIntegral
   // LM : I think this is needed only if  _funcNormSet is not an empty set
-  if (_funcNormSet && _funcNormSet->getSize() > 0) {
-    function.getVal(_funcNormSet) ;
+  if (_funcNormSet && !_funcNormSet->empty()) {
+    function.getVal(_funcNormSet.get()) ;
   }
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -695,10 +695,10 @@ bool RooRealIntegral::initNumIntegrator() const
   // Bind the appropriate analytic integral (specified by _mode) of our RooRealVar object to
   // those of its arguments that will be integrated out numerically.
   if(_mode != 0) {
-    _numIntegrand = std::make_unique<RooRealAnalytic>(*_function,_intList,_mode,_funcNormSet,_rangeName);
+    _numIntegrand = std::make_unique<RooRealAnalytic>(*_function,_intList,_mode,_funcNormSet.get(),_rangeName);
   }
   else {
-    _numIntegrand = std::make_unique<RooRealBinding>(*_function,_intList,_funcNormSet,false,_rangeName);
+    _numIntegrand = std::make_unique<RooRealBinding>(*_function,_intList,_funcNormSet.get(),false,_rangeName);
   }
   if(0 == _numIntegrand || !_numIntegrand->isValid()) {
     coutE(Integration) << ClassName() << "::" << GetName() << ": failed to create valid integrand." << std::endl;
@@ -748,7 +748,7 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _rangeName(other._rangeName),
   _cacheNum(false)
 {
- _funcNormSet = other._funcNormSet ? (RooArgSet*)other._funcNormSet->snapshot(false) : 0 ;
+ _funcNormSet.reset(other._funcNormSet ? static_cast<RooArgSet*>(other._funcNormSet->snapshot(false)) : nullptr);
 
  for (const auto arg : other._facList) {
    RooAbsArg* argClone = (RooAbsArg*) arg->Clone() ;
@@ -764,19 +764,12 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 RooRealIntegral::~RooRealIntegral()
-  // Destructor
 {
-  if (_funcNormSet) delete _funcNormSet ;
-
   TRACE_DESTROY
 }
-
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -800,7 +793,7 @@ RooAbsReal* RooRealIntegral::createIntegral(const RooArgSet& iset, const RooArgS
   if (nset && !_funcNormSet) {
     newNormSet = nset ;
   } else if (!nset && _funcNormSet) {
-    newNormSet = _funcNormSet ;
+    newNormSet = _funcNormSet.get();
   } else if (nset && _funcNormSet) {
     tmp = std::make_unique<RooArgSet>();
     tmp->add(*nset) ;
@@ -905,7 +898,7 @@ double RooRealIntegral::evaluate() const
     }
   case Analytic:
     {
-      retVal = _function->analyticalIntegralWN(_mode,_funcNormSet,RooNameReg::str(_rangeName)) / jacobianProduct() ;
+      retVal = _function->analyticalIntegralWN(_mode,_funcNormSet.get(),RooNameReg::str(_rangeName)) / jacobianProduct() ;
       cxcoutD(Tracing) << "RooRealIntegral::evaluate_analytic(" << GetName()
              << ")func = " << _function->ClassName() << "::" << _function->GetName()
              << " raw = " << retVal << " _funcNormSet = " << (_funcNormSet?*_funcNormSet:RooArgSet()) << std::endl ;
@@ -925,7 +918,7 @@ double RooRealIntegral::evaluate() const
       assert(servers().size() == _facList.size() + 1);
 
       //setDirtyInhibit(true) ;
-      retVal= _function->getVal(_funcNormSet) ;
+      retVal= _function->getVal(_funcNormSet.get()) ;
       //setDirtyInhibit(false) ;
       break ;
     }
@@ -1021,7 +1014,7 @@ double RooRealIntegral::integrate() const
 {
   if (!_numIntEngine) {
     // Trivial case, fully analytical integration
-    return _function->analyticalIntegralWN(_mode,_funcNormSet,RooNameReg::str(_rangeName)) ;
+    return _function->analyticalIntegralWN(_mode,_funcNormSet.get(),RooNameReg::str(_rangeName)) ;
   } else {
     return _numIntEngine->calculate()  ;
   }
