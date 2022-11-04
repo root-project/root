@@ -118,7 +118,7 @@ protected:
 
   mutable RooArgSet   _facListOwned ;  ///< Owned components in _facList
   RooRealProxy       _function ;     ///<Function being integration
-  RooArgSet*      _funcNormSet = nullptr;     ///< Optional normalization set passed to function
+  std::unique_ptr<RooArgSet> _funcNormSet; ///< Optional normalization set passed to function
 
   mutable RooArgSet       _saveInt ; ///<! do not persist
   mutable RooArgSet       _saveSum ; ///<! do not persist
@@ -141,7 +141,7 @@ protected:
   bool _cacheNum = false;           ///< Cache integral if numeric
   static Int_t _cacheAllNDim ; ///<! Cache all integrals with given numeric dimension
 
-  ClassDefOverride(RooRealIntegral,3) // Real-valued function representing an integral over a RooAbsReal object
+  ClassDefOverride(RooRealIntegral,4) // Real-valued function representing an integral over a RooAbsReal object
 };
 
 #endif
