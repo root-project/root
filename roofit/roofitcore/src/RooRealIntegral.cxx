@@ -104,7 +104,7 @@ enum class MarkedState { Dependent, Independent, AlreadyAdded };
 bool unmarkDepValueClients(RooAbsArg const &dep, RooArgSet const &args, std::vector<MarkedState> &marked)
 {
    assert(args.size() == marked.size());
-   auto index = args.index(&dep);
+   auto index = args.index(dep.GetName());
    if (index >= 0) {
       marked[index] = MarkedState::Dependent;
       for (RooAbsArg *client : dep.valueClients()) {
@@ -141,7 +141,7 @@ getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList, co
    // add it to the server list.
    for (RooAbsArg *dep : depList) {
       if (unmarkDepValueClients(*dep, allArgs, marked)) {
-         addObservableToServers(function, *dep, serversToAdd, rangeName);
+         addObservableToServers(function, *allArgs.find(*dep), serversToAdd, rangeName);
       }
    }
 
@@ -150,7 +150,7 @@ getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList, co
    for (std::size_t i = 0; i < allArgs.size(); ++i) {
       if(marked[i] == MarkedState::Dependent) {
          for(RooAbsArg* server : allArgs[i]->servers()) {
-            int index = allArgs.index(server);
+            int index = allArgs.index(server->GetName());
             if(index >= 0 && marked[index] == MarkedState::Independent) {
                addParameterToServers(function, *server, serversToAdd, !allValueArgs.find(*server));
                marked[index] = MarkedState::AlreadyAdded;
@@ -301,8 +301,6 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
         _funcNormSet->addClone(*nArg) ;
       }
     }
-  } else {
-    _funcNormSet = 0 ;
   }
 
   //_funcNormSet = funcNormSet ? (RooArgSet*)funcNormSet->snapshot(false) : 0 ;
