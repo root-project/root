@@ -80,6 +80,7 @@ Begin_Macro(source)
      y[i] = 10*sin(x[i]+0.2);
    }
    auto g = new TGraph(n,x,y);
+   g->SetTitle("Graph title;X title;Y title");
    g->Draw("AC*");
 }
 End_Macro
@@ -93,6 +94,7 @@ Begin_Macro(source)
 {
    double y[6] = {3, 8, 1, 10, 5, 7};
    auto g = new TGraph(6,y);
+   g->SetTitle("A Graph with default X points");
    g->Draw();
 }
 End_Macro
