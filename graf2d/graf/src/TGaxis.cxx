@@ -241,7 +241,7 @@ the option `"B"`. It useful to superpose axis.
 ## Arrow on axis
 \since **ROOT version 6.27/01:**
 
-To draw and arrow at the end of the axis use the option `">"`. To draw it at the beginning
+To draw an arrow at the end of the axis use the option `">"`. To draw it at the beginning
 of the axis use the option `"<"`. To draw it on both ends use `"<>"`.
 
 Begin_Macro(source)
