@@ -6,11 +6,23 @@
 #include <RooGenericPdf.h>
 #include <RooProduct.h>
 #include <RooProjectedPdf.h>
+#include <RooRealIntegral.h>
 #include <RooRealVar.h>
 
 #include <gtest/gtest.h>
 
 #include <memory>
+
+namespace {
+RooArgList getSortedServers(RooAbsArg const &arg)
+{
+   // Sort alphabetically in case the two integrals didn't add the servers in
+   // the same order:
+   RooArgList servers{arg.servers().begin(), arg.servers().end()};
+   servers.sort();
+   return servers;
+}
+} // namespace
 
 // Verify that the value servers of a RooRealIntegral are the direct
 // mathematical value servers of the integral, and not the leaves in the
@@ -36,13 +48,8 @@ TEST(RooRealIntegral, ClientServerInterface1)
    std::unique_ptr<RooAbsReal> integ1{gauss.createIntegral(x, *pdf.getIntegratorConfig(), nullptr)};
    std::unique_ptr<RooAbsReal> integ2{pdf.createIntegral(x, *pdf.getIntegratorConfig(), nullptr)};
 
-   RooArgList servers1{integ1->servers().begin(), integ1->servers().end()};
-   RooArgList servers2{integ2->servers().begin(), integ2->servers().end()};
-
-   // Sort alphabetically in case the two integrals didn't add the servers in
-   // the same order:
-   servers1.sort();
-   servers2.sort();
+   RooArgList servers1{getSortedServers(*integ1)};
+   RooArgList servers2{getSortedServers(*integ2)};
 
    // Check that the server structure of the Gaussian integral looks as
    // expected, which should be, if you use Print("v"):
@@ -132,4 +139,35 @@ TEST(RooRealIntegral, IntegrateFuncWithShapeServers)
    // mu, and sigma, and 1 more for the underlying PDF)
    EXPECT_EQ(gaussProj.servers().size(), 4);
    EXPECT_EQ(integ1->servers().size(), 4);
+}
+
+// Verify that using observable clones -- i.e., variables with the same names
+// as the ones in the computation graph -- does not change the client-server
+// structure of a RooRealIntegral. Covers GitHub issue #11637.
+TEST(RooRealIntegral, UseCloneAsIntegrationVariable)
+{
+   RooRealVar x1{"x", "x1", -10, 10};
+   RooRealVar x2{"x", "x2", -10, 10};
+
+   RooGenericPdf gauss{"gauss", "std::exp(-0.5 * (x*x))", x1};
+
+   RooRealIntegral integ1{"integ1", "", gauss, x1};
+   RooRealIntegral integ2{"integ2", "", gauss, x2};
+
+   // Check that client-server structure is as expected.
+   for (auto const &integ : {integ1, integ2}) {
+
+      RooArgList servers{getSortedServers(integ)};
+
+      EXPECT_EQ(std::string(servers[0].GetName()), "gauss");
+      EXPECT_EQ(std::string(servers[1].GetName()), "x");
+
+      EXPECT_FALSE(servers[0].isValueServer(integ));
+      EXPECT_FALSE(servers[1].isValueServer(integ));
+
+      EXPECT_FALSE(servers[0].isShapeServer(integ));
+      EXPECT_TRUE(servers[1].isShapeServer(integ));
+
+      EXPECT_EQ(servers.size(), 2);
+   }
 }
