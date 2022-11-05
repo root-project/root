@@ -238,13 +238,8 @@ void RooHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooFi
 
 Int_t RooHistFunc::getMaxVal(const RooArgSet& vars) const
 {
-  RooAbsCollection* common = _depList.selectCommon(vars) ;
-  if (common->size()==_depList.size()) {
-    delete common ;
-    return 1;
-  }
-  delete common ;
-  return 0 ;
+  std::unique_ptr<RooAbsCollection> common{_depList.selectCommon(vars)};
+  return common->size() == _depList.size() ? 1 : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
