@@ -193,16 +193,16 @@ public:
     TFile file(GetParam(), "READ");
     ASSERT_TRUE(file.IsOpen());
 
-    file.GetObject("dataHist", legacy);
+    legacy = std::unique_ptr<RooDataHist>{file.Get<RooDataHist>("dataHist")};
     ASSERT_NE(legacy, nullptr);
   }
 
   void TearDown() override {
-    delete legacy;
+    legacy.reset();
   }
 
 protected:
-  RooDataHist* legacy{nullptr};
+  std::unique_ptr<RooDataHist> legacy;
 };
 
 TEST_P(RooDataHistIO, ReadLegacy) {

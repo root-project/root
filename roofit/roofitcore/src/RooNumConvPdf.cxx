@@ -80,11 +80,7 @@ ClassImp(RooNumConvPdf);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooNumConvPdf::RooNumConvPdf() :
-  _init(false),
-  _conv(0)
-{
-}
+RooNumConvPdf::RooNumConvPdf() {}
 
 
 
@@ -92,8 +88,6 @@ RooNumConvPdf::RooNumConvPdf() :
 //_____________________________________________________________________________R
 RooNumConvPdf::RooNumConvPdf(const char *name, const char *title, RooRealVar& convVar, RooAbsPdf& inPdf, RooAbsPdf& resmodel) :
   RooAbsPdf(name,title),
-  _init(false),
-  _conv(0),
   _origVar("!origVar","Original Convolution variable",this,convVar),
   _origPdf("!origPdf","Original Input PDF",this,inPdf),
   _origModel("!origModel","Original Resolution model",this,resmodel)
@@ -115,7 +109,6 @@ RooNumConvPdf::RooNumConvPdf(const char *name, const char *title, RooRealVar& co
 
 RooNumConvPdf::RooNumConvPdf(const RooNumConvPdf& other, const char* name) :
   RooAbsPdf(other,name),
-  _init(false),
   _origVar("!origVar",this,other._origVar),
   _origPdf("!origPdf",this,other._origPdf),
   _origModel("!origModel",this,other._origModel)
@@ -124,9 +117,7 @@ RooNumConvPdf::RooNumConvPdf(const RooNumConvPdf& other, const char* name) :
   // This information will be propagated to a newly create convolution in a subsequent
   // call to initialize()
   if (other._conv) {
-    _conv = new RooNumConvolution(*other._conv,Form("%s_CONV",name?name:GetName())) ;
-  } else {
-    _conv = 0 ;
+    _conv = std::make_unique<RooNumConvolution>(*other._conv,Form("%s_CONV",name?name:GetName())) ;
   }
 }
 
@@ -135,12 +126,7 @@ RooNumConvPdf::RooNumConvPdf(const RooNumConvPdf& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooNumConvPdf::~RooNumConvPdf()
-{
-  if (_init) {
-    delete _conv ;
-  }
-}
+RooNumConvPdf::~RooNumConvPdf() {}
 
 
 
@@ -163,15 +149,10 @@ void RooNumConvPdf::initialize() const
 {
   // Save pointer to any prototype convolution object (only present if this object is made through
   // a copy constructor)
-  RooNumConvolution* protoConv = _conv ;
+  RooNumConvolution* protoConv = _conv.get();
 
   // Optionally pass along configuration data from prototype object
-  _conv = new RooNumConvolution(Form("%s_CONV",GetName()),GetTitle(),var(),pdf(),model(),protoConv) ;
-
-  // Delete prototype object now
-  if (protoConv) {
-    delete protoConv ;
-  }
+  _conv = std::make_unique<RooNumConvolution>(Form("%s_CONV",GetName()),GetTitle(),var(),pdf(),model(),protoConv) ;
 
   _init = true ;
 }
@@ -190,10 +171,10 @@ RooAbsGenContext* RooNumConvPdf::genContext(const RooArgSet &vars, const RooData
   if (!_init) initialize() ;
 
   // Check if physics PDF and resolution model can both directly generate the convolution variable
-  RooArgSet* modelDep = _conv->model().getObservables(&vars) ;
-  modelDep->remove(_conv->var(),true,true) ;
-  Int_t numAddDep = modelDep->getSize() ;
-  delete modelDep ;
+  RooArgSet modelDep;
+  _conv->model().getObservables(&vars, modelDep);
+  modelDep.remove(_conv->var(),true,true) ;
+  Int_t numAddDep = modelDep.getSize() ;
 
   RooArgSet dummy ;
   bool pdfCanDir = (((RooAbsPdf&)_conv->pdf()).getGenerator(_conv->var(),dummy) != 0 && \

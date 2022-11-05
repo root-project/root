@@ -120,13 +120,15 @@ TEST(RooDataSet, BinnedClone)
    RooRealVar mes("Mes", "Mes", 5.28, 5.24, 5.29);
    mes.setBin(40);
    RooRealVar weight("weight", "weight", 1, 0, 100);
-   RooDataSet *data = new RooDataSet("dataset", "dataset", &chain, RooArgSet(mes, weight), 0, weight.GetName());
-   RooDataHist *hist = data->binnedClone();
 
-   EXPECT_DOUBLE_EQ(hist->sumEntries(), sumW);
+   {
+      RooDataSet data{"dataset", "dataset", &chain, RooArgSet(mes, weight), 0, weight.GetName()};
+      std::unique_ptr<RooDataHist> hist{data.binnedClone()};
 
-   delete hist; // invalid read here
-   delete data; // and here too
+      EXPECT_DOUBLE_EQ(hist->sumEntries(), sumW);
+
+      // the original crash happened when "hist" and "data" got destructed
+   }
 
    gSystem->Unlink(filename[0]);
    gSystem->Unlink(filename[1]);

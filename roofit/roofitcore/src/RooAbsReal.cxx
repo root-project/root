@@ -1386,7 +1386,7 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   const RooArgSet* compSet = pc.getSet("compSet");
   bool haveCompSel = ( (compSpec && strlen(compSpec)>0) || compSet) ;
 
-  RooBinning* intBinning(0) ;
+  std::unique_ptr<RooBinning> intBinning;
   if (doIntBinning>0) {
     // Given RooAbsPdf* pdf and RooRealVar* obs
     std::unique_ptr<std::list<double>> bl{binBoundaries(const_cast<RooAbsRealLValue&>(xvar),xvar.getMin(),xvar.getMax())};
@@ -1404,7 +1404,7 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
       std::vector<double> ba(bl->size());
       int i=0 ;
       for (auto const& elem : *bl) { ba[i++] = elem ; }
-      intBinning = new RooBinning(bl->size()-1,ba.data()) ;
+      intBinning = std::make_unique<RooBinning>(bl->size()-1,ba.data()) ;
     }
   }
 
@@ -1416,7 +1416,6 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
     RooCmdArg tmp = RooFit::Binning(*intBinning) ;
     argListCreate.Add(&tmp) ;
     histo = xvar.createHistogram(name,argListCreate) ;
-    delete intBinning ;
   } else {
     histo = xvar.createHistogram(name,argListCreate) ;
   }

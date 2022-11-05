@@ -62,9 +62,9 @@ protected:
 
   RooNumConvolution& conv() const { if (!_init) initialize() ; return *_conv ; }
 
-  mutable bool _init ; ///<! do not persist
+  mutable bool _init = false; ///<! do not persist
   void initialize() const ;
-  mutable RooNumConvolution* _conv ; ///<! Actual convolution calculation
+  mutable std::unique_ptr<RooNumConvolution> _conv ; ///<! Actual convolution calculation
 
   RooRealProxy _origVar ;         ///< Original convolution variable
   RooRealProxy _origPdf ;         ///< Original input PDF
