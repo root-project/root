@@ -807,11 +807,11 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   }
 
   TString plotVarName(GetName()) ;
-  RooAddPdf *plotVar = new RooAddPdf(plotVarName,"weighted sum of RS components",pdfCompList,wgtCompList) ;
+  RooAddPdf plotVar{plotVarName,"weighted sum of RS components",pdfCompList,wgtCompList};
 
   // Fix appropriate coefficient normalization in plot function
-  if (_plotCoefNormSet.getSize()>0) {
-    plotVar->fixAddCoefNormalization(_plotCoefNormSet) ;
+  if (!_plotCoefNormSet.empty()) {
+    plotVar.fixAddCoefNormalization(_plotCoefNormSet) ;
   }
 
   std::unique_ptr<RooAbsData> projDataTmp;
@@ -835,11 +835,12 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
     // Make temporary projData without RooSim index category components
     RooArgSet projDataVars(*projData->get()) ;
-    RooArgSet* idxCatServers = _indexCat.arg().getObservables(frame->getNormVars()) ;
+    RooArgSet idxCatServers;
+    _indexCat.arg().getObservables(frame->getNormVars(), idxCatServers) ;
 
-    projDataVars.remove(*idxCatServers,true,true) ;
+    projDataVars.remove(idxCatServers,true,true) ;
 
-    if (idxCompSliceSet->getSize()>0) {
+    if (!idxCompSliceSet->empty()) {
       projDataTmp.reset( const_cast<RooAbsData*>(projData)->reduce(projDataVars,cutString) );
     } else {
       projDataTmp.reset( const_cast<RooAbsData*>(projData)->reduce(projDataVars) );
@@ -849,11 +850,8 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
     if (projSet) {
       projSetTmp.add(*projSet) ;
-      projSetTmp.remove(*idxCatServers,true,true);
+      projSetTmp.remove(idxCatServers,true,true);
     }
-
-
-    delete idxCatServers ;
   }
 
 
@@ -861,13 +859,13 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     coutI(Plotting) << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName()
           << " represents a slice in index category components " << *idxCompSliceSet << endl ;
 
-    RooArgSet* idxCompProjSet = _indexCat.arg().getObservables(frame->getNormVars()) ;
-    idxCompProjSet->remove(*idxCompSliceSet,true,true) ;
-    if (idxCompProjSet->getSize()>0) {
+    RooArgSet idxCompProjSet;
+    _indexCat.arg().getObservables(frame->getNormVars(), idxCompProjSet) ;
+    idxCompProjSet.remove(*idxCompSliceSet,true,true) ;
+    if (!idxCompProjSet.empty()) {
       coutI(Plotting) << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName()
-            << " averages with data index category components " << *idxCompProjSet << endl ;
+            << " averages with data index category components " << idxCompProjSet << endl ;
     }
-    delete idxCompProjSet ;
   } else {
     coutI(Plotting) << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName()
           << " averages with data index category (" << _indexCat.arg().GetName() << ")" << endl ;
@@ -890,14 +888,11 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     // Plot temporary function
     RooCmdArg tmp3 = RooFit::Project(projSetTmp) ;
     cmdList2.Add(&tmp3) ;
-    frame2 = plotVar->plotOn(frame,cmdList2) ;
+    frame2 = plotVar.plotOn(frame,cmdList2) ;
   } else {
     // Plot temporary function
-    frame2 = plotVar->plotOn(frame,cmdList2) ;
+    frame2 = plotVar.plotOn(frame,cmdList2) ;
   }
-
-  // Cleanup
-  delete plotVar ;
 
   return frame2 ;
 }

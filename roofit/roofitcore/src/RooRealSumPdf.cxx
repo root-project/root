@@ -384,12 +384,16 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooAbsReal const& caller, RooObjCac
 
   // Select subset of allVars that are actual dependents
   analVars.add(allVars) ;
-  RooArgSet* normSet = normSet2 ? caller.getObservables(normSet2) : 0 ;
+  std::unique_ptr<RooArgSet> normSet;
+  if(normSet2) {
+    normSet = std::make_unique<RooArgSet>();
+    caller.getObservables(normSet2, *normSet);
+  }
 
 
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
-  auto* cache = static_cast<CacheElem*>(normIntMgr.getObj(normSet,&analVars,&sterileIdx,RooNameReg::ptr(rangeName)));
+  auto* cache = static_cast<CacheElem*>(normIntMgr.getObj(normSet.get(),&analVars,&sterileIdx,RooNameReg::ptr(rangeName)));
   if (cache) {
     //cout << "RooRealSumPdf("<<this<<")::getAnalyticalIntegralWN:"<<GetName()<<"("<<allVars<<","<<analVars<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << " -> " << _normIntMgr.lastIndex()+1 << " (cached)" << endl;
     return normIntMgr.lastIndex()+1 ;
@@ -405,18 +409,14 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooAbsReal const& caller, RooObjCac
     RooAbsReal* funcInt = func->createIntegral(analVars,rangeName) ;
     if(funcInt->InheritsFrom(RooRealIntegral::Class())) ((RooRealIntegral*)funcInt)->setAllowComponentSelection(true);
     cache->_funcIntList.addOwned(*funcInt) ;
-    if (normSet && normSet->getSize()>0) {
+    if (normSet && !normSet->empty()) {
       RooAbsReal* funcNorm = func->createIntegral(*normSet) ;
       cache->_funcNormList.addOwned(*funcNorm) ;
     }
   }
 
   // Store cache element
-  Int_t code = normIntMgr.setObj(normSet,&analVars,(RooAbsCacheElement*)cache,RooNameReg::ptr(rangeName)) ;
-
-  if (normSet) {
-    delete normSet ;
-  }
+  Int_t code = normIntMgr.setObj(normSet.get(),&analVars,(RooAbsCacheElement*)cache,RooNameReg::ptr(rangeName)) ;
 
   //cout << "RooRealSumPdf("<<this<<")::getAnalyticalIntegralWN:"<<GetName()<<"("<<allVars<<","<<analVars<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << " -> " << code+1 << endl;
   return code+1 ;
