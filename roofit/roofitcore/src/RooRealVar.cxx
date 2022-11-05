@@ -727,9 +727,7 @@ void RooRealVar::writeToStream(ostream& os, bool compact) const
 
       os << " " ;
     } else {
-      TString* tmp = format(_printSigDigits,"EFA") ;
-      os << tmp->Data() << " " ;
-      delete tmp ;
+      os << std::unique_ptr<TString>{format(_printSigDigits,"EFA")}->Data() << " " ;
     }
 
     // Append limits if not constants

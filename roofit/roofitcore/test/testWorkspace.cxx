@@ -38,26 +38,23 @@ TEST(RooWorkspace, CloneModelConfig_ROOT_9777)
       TFile outfile(filename, "RECREATE");
 
       // now create the model config for this problem
-      RooWorkspace* w = new RooWorkspace("ws");
-      ModelConfig modelConfig("ModelConfig", w);
+      RooWorkspace ws{"ws"};
+      ModelConfig modelConfig("ModelConfig", &ws);
       modelConfig.SetPdf(pdf);
       modelConfig.SetParametersOfInterest(RooArgSet(sigma));
       modelConfig.SetGlobalObservables(RooArgSet(mu));
-      w->import(modelConfig);
+      ws.import(modelConfig);
 
-      outfile.WriteObject(w, "ws");
-      delete w;
+      outfile.WriteObject(&ws, "ws");
    }
 
    RooWorkspace *w2;
    {
       TFile infile(filename, "READ");
-      RooWorkspace *w;
-      infile.GetObject("ws", w);
-      ASSERT_TRUE(w) << "Workspace not read from file.";
+      std::unique_ptr<RooWorkspace> ws{infile.Get<RooWorkspace>("ws")};
+      ASSERT_TRUE(ws) << "Workspace not read from file.";
 
-      w2 = new RooWorkspace(*w);
-      delete w;
+      w2 = new RooWorkspace(*ws);
    }
 
    if(verbose) w2->Print();
