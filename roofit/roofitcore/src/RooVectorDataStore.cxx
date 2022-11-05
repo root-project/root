@@ -632,7 +632,7 @@ RooAbsArg* RooVectorDataStore::addColumn(RooAbsArg& newVar, bool /*adjustRange*/
   const std::size_t numEvt = size();
 
   // Clone variable and attach to cloned tree
-  RooAbsArg* newVarClone = newVar.cloneTree() ;
+  std::unique_ptr<RooAbsArg> newVarClone{newVar.cloneTree()};
   newVarClone->recursiveRedirectServers(_vars,false) ;
 
   // Attach value place holder to this tree
@@ -656,15 +656,13 @@ RooAbsArg* RooVectorDataStore::addColumn(RooAbsArg& newVar, bool /*adjustRange*/
     get(i) ;
 
     newVarClone->syncCache(&_vars) ;
-    valHolder->copyCache(newVarClone) ;
+    valHolder->copyCache(newVarClone.get()) ;
 
     if (rv) rv->write(i) ;
     if (cv) cv->write(i) ;
   }
 
-  delete newVarClone ;
   return valHolder ;
-
 }
 
 
@@ -891,16 +889,16 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
     // Activate change tracking mode, if requested
     if (!arg->getAttribute("ConstantExpression") && dynamic_cast<RooAbsReal*>(arg)) {
       RealVector* rv = newCache->addReal((RooAbsReal*)arg) ;
-      RooArgSet* deps = arg->getParameters(_vars) ;
-      rv->setDependents(*deps) ;
+      RooArgSet deps;
+      arg->getParameters(&_vars, deps);
+      rv->setDependents(deps) ;
 
       // WV lookup normalization set and associate with RealVector
       // find ordinal number of arg in original list
       Int_t idx = cloneSet.index(arg->GetName()) ;
 
-      coutI(Optimization) << "RooVectorDataStore::cacheArg() element " << arg->GetName() << " has change tracking enabled on parameters " << *deps << endl ;
+      coutI(Optimization) << "RooVectorDataStore::cacheArg() element " << arg->GetName() << " has change tracking enabled on parameters " << deps << endl ;
       rv->setNset(nsetList[idx]) ;
-      delete deps ;
     }
 
   }
@@ -948,13 +946,13 @@ void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs, Int_t
 
 
   // Refill caches of elements that require recalculation
-  RooArgSet* ownedNset = nullptr;
+  std::unique_ptr<RooArgSet> ownedNset;
   RooArgSet* usedNset = nullptr;
-  if (projectedArgs && projectedArgs->getSize()>0) {
-    ownedNset = new RooArgSet;
+  if (projectedArgs && !projectedArgs->empty()) {
+    ownedNset = std::make_unique<RooArgSet>();
     _vars.snapshot(*ownedNset, false) ;
     ownedNset->remove(*projectedArgs,false,true);
-    usedNset = ownedNset ;
+    usedNset = ownedNset.get();
   } else {
     usedNset = &_vars ;
   }
@@ -975,9 +973,6 @@ void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs, Int_t
   for (auto realVector : tv) {
      realVector->_nativeReal->setOperMode(RooAbsArg::AClean);
   }
-
-  delete ownedNset ;
-
 }
 
 
