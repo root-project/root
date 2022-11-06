@@ -113,7 +113,7 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
 {
   // coverity[UNINIT_CTOR]
   if(!(_valid= _grid.isValid())) return;
-  if(_verbose) _grid.Print();
+  if(_verbose) _grid.print(std::cout);
 }
 
 
@@ -136,7 +136,7 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConf
 
   // check that our grid initialized without errors
   if(!(_valid= _grid.isValid())) return;
-  if(_verbose) _grid.Print();
+  if(_verbose) _grid.print(std::cout);
 }
 
 
@@ -358,7 +358,7 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
                  << ")" << endl;
     // print the grid after the final iteration
     if (oodologD((TObject*)0,Integration)) {
-      if(it + 1 == iterations) _grid.Print("V");
+      if(it + 1 == iterations) _grid.print(std::cout, true);
     }
     _grid.refine(_alpha);
   }
