@@ -124,7 +124,6 @@
 #pragma link C++ class RooGenContext+ ;
 #pragma link C++ class RooGenericPdf+ ;
 #pragma link C++ class RooGenProdProj+ ;
-#pragma link C++ class RooGrid+ ;
 #pragma link C++ class RooHistError+ ;
 #pragma link C++ class RooHist+ ;
 #pragma link C++ class RooImproperIntegrator1D+ ;
