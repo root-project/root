@@ -9,6 +9,8 @@
 ################################################################################
 
 import cppyy
+from . import pythonization
+
 
 def set_size(self, buf):
     # Parameters:
@@ -18,6 +20,7 @@ def set_size(self, buf):
     # - buffer whose size has been set
     buf.reshape((self.GetN(),))
     return buf
+
 
 # Create a composite pythonizor.
 #
@@ -34,9 +37,67 @@ def set_size(self, buf):
 # The pythonization consists in setting the size of the array that the getter
 # method returns, so that it is known in Python and the array is fully usable
 # (its length can be obtained, it is iterable).
-comp = cppyy.py.compose_method('^TGraph(2D)?$|^TGraph.*Errors$', # class to match
-                               'GetE?[XYZ]$',                    # method to match
-                               set_size)                         # post-process function
+comp = cppyy.py.compose_method(
+    "^TGraph(2D)?$|^TGraph.*Errors$", "GetE?[XYZ]$", set_size  # class to match  # method to match
+)  # post-process function
 
 # Add the composite to the list of pythonizors
 cppyy.py.add_pythonization(comp)
+
+
+def _numpy_array(buffer, n):
+    # Helper to create a numpy array from a raw array pointer.
+    #
+    # Note: The data is copied.
+    #
+    # Args:
+    #     buffer (cppyy.LowLevelView):
+    #         The pointer to the beginning of the array data, usually
+    #         obtained from a C++ function that returns a `double *`.
+    #
+    # Returns:
+    #     numpy.ndarray
+    import numpy as np
+
+    if not buffer:
+        return None
+
+    a = np.copy(np.frombuffer(buffer, dtype=np.float64, count=n))
+    return a
+
+
+def _TGraphConstructor(self, *args):
+    import numpy as np
+
+    if isinstance(args[0], (np.ndarray, np.generic)):
+        args = (args[0].size,) + args
+
+    self._original__init__(*args)
+
+
+def Get(self):
+    return self.GetX(), self.GetY()
+
+
+def _GetX(self):
+    a = _numpy_array(self._Original_GetX(), self.GetN())
+    return a
+
+
+def _GetY(self):
+    a = _numpy_array(self._Original_GetY(), self.GetN())
+    return a
+
+
+@pythonization("TGraph")
+def pythonize_tgraph(klass):
+    # Parameters:
+    # klass: class to be pythonized
+    # Support hist *= scalar
+    klass._original__init__ = klass.__init__
+    klass.__init__ = _TGraphConstructor
+    klass.Get = Get
+    klass._Original_GetX = klass.GetX
+    klass.GetX = _GetX
+    klass._Original_GetY = klass.GetY
+    klass.GetY = _GetY
