@@ -84,6 +84,8 @@ struct IsCollectionProxy<StructUsingCollectionProxy<CustomStruct>> : std::true_t
 template <>
 struct IsCollectionProxy<StructUsingCollectionProxy<StructUsingCollectionProxy<float>>> : std::true_type {
 };
+
+// Intentionally omit `IsCollectionProxy<StructUsingCollectionProxy<int>>`
 } // namespace ROOT::Experimental
 
 #endif

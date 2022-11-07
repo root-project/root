@@ -402,6 +402,10 @@ TEST(RNTuple, TVirtualCollectionProxy)
    SimpleCollectionProxy<StructUsingCollectionProxy<CustomStruct>> proxyS;
    SimpleCollectionProxy<StructUsingCollectionProxy<StructUsingCollectionProxy<float>>> proxyNested;
 
+   // `RCollectionClassField` instantiated but no collection proxy set (yet)
+   EXPECT_THROW(RField<StructUsingCollectionProxy<float>>("hasTraitButNoCollectionProxySet"),
+                ROOT::Experimental::RException);
+
    auto klassC = TClass::GetClass("StructUsingCollectionProxy<char>");
    klassC->CopyCollectionProxy(proxyC);
    auto klassF = TClass::GetClass("StructUsingCollectionProxy<float>");
@@ -410,6 +414,13 @@ TEST(RNTuple, TVirtualCollectionProxy)
    klassS->CopyCollectionProxy(proxyS);
    auto klassNested = TClass::GetClass("StructUsingCollectionProxy<StructUsingCollectionProxy<float>>");
    klassNested->CopyCollectionProxy(proxyNested);
+
+   // `RClassField` instantiated (due to intentionally missing `IsCollectionProxy<T>` trait) but a collection proxy is
+   // set
+   auto klassI = TClass::GetClass("StructUsingCollectionProxy<int>");
+   klassI->CopyCollectionProxy(SimpleCollectionProxy<StructUsingCollectionProxy<int>>{});
+   EXPECT_THROW(RField<StructUsingCollectionProxy<int>>("noTraitButCollectionProxySet"),
+                ROOT::Experimental::RException);
 
    auto field = RField<StructUsingCollectionProxy<float>>("c");
    EXPECT_EQ(sizeof(StructUsingCollectionProxy<float>), field.GetValueSize());
