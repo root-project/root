@@ -331,6 +331,9 @@
 #   if __GNUC__ > 4 || ( __GNUC__ == 4 && __GNUC_MINOR__ > 1)
 #      define R__PRAGMA_DIAGNOSTIC
 #   endif
+#   if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#      define R__BYTESWAP
+#   endif
 #endif
 
 #if defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_12)
