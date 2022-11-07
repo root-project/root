@@ -327,6 +327,9 @@
 #   if defined(R__ppc64)
 #      define R__B64
 #   endif
+#   if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#      define R__BYTESWAP
+#   endif
 #endif
 
 #if defined(__MACH__) && defined(__i386__) && !defined(__APPLE__)
