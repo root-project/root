@@ -118,17 +118,6 @@ protected:
    RooAbsReal *sumFunc(const RooArgSet *nset);
    CacheElem *getCache(const RooArgSet *nset) const;
 
-   template <typename T>
-   struct Digits {
-      typename std::vector<T>::const_iterator begin;
-      typename std::vector<T>::const_iterator end;
-      typename std::vector<T>::const_iterator me;
-   };
-
-   template <typename T>
-   static void cartesian_product(std::vector<std::vector<T>> &out, std::vector<std::vector<T>> &in);
-   template <typename Iterator>
-   static bool next_combination(const Iterator first, Iterator k, const Iterator last);
    void findShape(const std::vector<double> &x) const;
 
    friend class CacheElem;
