@@ -31,7 +31,7 @@ ParserFuncSignature ParseExpand = [](RModelParser_ONNX &parser, const onnx::Node
 
    switch (input_type) {
    case ETensorType::FLOAT:
-      op.reset(new ROperator_Expand<float, Op>(nodeproto.input(0), nodeproto.input(1), output_name));
+      op.reset(new ROperator_Expand<float>(nodeproto.input(0), nodeproto.input(1), output_name));
       break;
    default:
       throw std::runtime_error("TMVA::SOFIE - Unsupported - Expand Operator does not yet support input type " +
