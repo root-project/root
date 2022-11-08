@@ -167,17 +167,8 @@ std::unique_ptr<RooAbsReal> createConstraintTerm(std::string const &name, RooAbs
          takeGlobalObservablesFromData = false;
       }
 
-      auto constraintTerm = std::make_unique<RooConstraintSum>(name.c_str(), "nllCons", allConstraints,
-                                                               glObs ? *glObs : cPars, takeGlobalObservablesFromData);
-
-      // Redirect the global observables to the ones from the dataset if applicable.
-      constraintTerm->setData(data, false);
-
-      // The computation graph for the constraints is very small, no need to do
-      // the tracking of clean and dirty nodes here.
-      constraintTerm->setOperMode(RooAbsArg::ADirty);
-
-      return constraintTerm;
+      return std::make_unique<RooConstraintSum>(name.c_str(), "nllCons", allConstraints, glObs ? *glObs : cPars,
+                                                takeGlobalObservablesFromData);
    }
 
    // no constraints
