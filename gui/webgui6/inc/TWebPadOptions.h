@@ -38,6 +38,7 @@ public:
    int gridx{0}, gridy{0};                    ///< pad grid properties
    int tickx{0}, ticky{0};                    ///< pad ticks properties
    float mleft{0}, mright{0}, mtop{0}, mbottom{0}; ///< frame margins
+   float xlow{0}, ylow{0}, xup{0}, yup{0};    ///< pad coordinate in ndex
    bool ranges{false};                        ///< if true, pad has ranges
    double px1{0}, py1{0}, px2{0}, py2{0};     ///< pad range
    double ux1{0}, uy1{0}, ux2{0}, uy2{0};     ///< pad axis range
