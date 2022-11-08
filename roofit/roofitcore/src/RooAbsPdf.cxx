@@ -1180,6 +1180,23 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 
   // Include constraints, if any, in likelihood
   if (std::unique_ptr<RooAbsReal> constraintTerm = createConstr(*this)) {
+
+    // Even though it is technically only required when the computation graph
+    // is changed because global observables are taken from data, it is safer
+    // to clone the constraint model in general to reset the normalization
+    // integral caches and avoid ASAN build failures (the PDF of the main
+    // measurement is cloned too anyway, so not much overhead). This can be
+    // reconsidered after the caching of normalization sets by pointer is changed
+    // to a more memory-safe solution.
+    constraintTerm = RooHelpers::cloneTreeWithSameParameters(*constraintTerm, data.get());
+
+    // Redirect the global observables to the ones from the dataset if applicable.
+    constraintTerm->setData(data, false);
+
+    // The computation graph for the constraints is very small, no need to do
+    // the tracking of clean and dirty nodes here.
+    constraintTerm->setOperMode(RooAbsArg::ADirty);
+
     auto orignll = std::move(nll) ;
     nll = std::make_unique<RooAddition>(Form("%s_with_constr",baseName.c_str()),"nllWithCons",RooArgSet(*orignll,*constraintTerm)) ;
     nll->addOwnedComponents(std::move(orignll),std::move(constraintTerm)) ;
