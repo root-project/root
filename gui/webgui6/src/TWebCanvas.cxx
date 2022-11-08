@@ -760,6 +760,14 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
       pad->SetTopMargin(r.mtop);
       pad->SetBottomMargin(r.mbottom);
 
+      auto change_pad_member = [pad](const char *member, double val) {
+         auto offset = TPad::Class()->GetDataMemberOffset(member);
+         if (offset > 0)
+            *((Double_t *)((char*) pad + offset)) = val;
+         else
+            printf("Fail to set pad member %s\n", member);
+      };
+
       if (r.ranges) {
 
          Double_t ux1_, ux2_, uy1_, uy2_, px1_, px2_, py1_, py2_;
@@ -771,16 +779,36 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
                            (r.px1 == px1_) && (r.px2 == px2_) && (r.py1 == py1_) && (r.py2 == py2_);
 
          if (!same_range) {
-            pad->RangeAxis(r.ux1, r.uy1, r.ux2, r.uy2);
 
-            pad->Range(r.px1, r.py1, r.px2, r.py2);
+            // avoid call of original methods, set members directly
+            // pad->Range(r.px1, r.py1, r.px2, r.py2);
+            // pad->RangeAxis(r.ux1, r.uy1, r.ux2, r.uy2);
+
+            change_pad_member("fX1", r.px1);
+            change_pad_member("fY1", r.py1);
+            change_pad_member("fX2", r.px2);
+            change_pad_member("fY2", r.py2);
+
+            change_pad_member("fUxmin", r.ux1);
+            change_pad_member("fUymin", r.uy1);
+            change_pad_member("fUxmax", r.ux2);
+            change_pad_member("fUymax", r.uy2);
 
             if (gDebug > 1)
                Info("DecodeAllRanges", "Change ranges for pad %s", pad->GetName());
          }
       }
 
-      pad->SetPad(r.mleft, r.mbottom, 1-r.mright, 1-r.mtop);
+      // pad->SetPad(r.mleft, r.mbottom, 1-r.mright, 1-r.mtop);
+
+      change_pad_member("fXlowNDC", r.mleft);
+      change_pad_member("fYlowNDC", r.mbottom);
+      change_pad_member("fXUpNDC", 1-r.mright);
+      change_pad_member("fYUpNDC", 1-r.mtop);
+      change_pad_member("fWNDC", 1-r.mright-r.mleft);
+      change_pad_member("fHNDC", 1-r.mtop-r.mbottom);
+
+      pad->SetFixedAspectRatio(kFALSE);
 
       TH1 *hist = static_cast<TH1 *>(FindPrimitive("histogram", pad));
 
@@ -839,6 +867,8 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 {
    if (arg.empty())
       return kTRUE;
+
+   printf("Process: %s\n", arg.c_str());
 
    // try to identify connection for given WS request
    unsigned indx = 0;
