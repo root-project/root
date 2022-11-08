@@ -603,6 +603,11 @@ The child fileds are named `_0`, `_1`, ...
 
 ### User-defined classes
 
+User-defined classes might behave either as a record or as a collection of elements of a given type.
+The behavior depends on whether the class has an associated collection proxy.
+
+#### Regular class / struct
+
 User defined C++ classes are supported with the following limitations
   - The class must have a dictionary
   - All persistent members and base classes must be themselves types with RNTuple I/O support
@@ -615,6 +620,16 @@ User classes are stored as a record mother field with no attached columns.
 Direct base classes and persistent members are stored as subfields with their respective types.
 The field name of member subfields is identical to the C++ field name.
 The field name of base class subfields are numbered and preceeded by a colon (`:`), i.e. `:_0`, `:_1`, ...
+
+#### Classes with an associated collection proxy
+
+User classes that specify a collection proxy behave as collections of a given value type.
+Associative collections are not currently supported.
+
+The on-disk representation is similar to a `std::vector<T>` where `T` is the value type; specifically, it is stored as two fields:
+  - Collection mother field of type SplitIndex32 or SplitIndex64
+  - Child field of type `T`, which must by a type with RNTuple I/O support.
+    The name of the child field is `_0`.
 
 ## Limits
 
