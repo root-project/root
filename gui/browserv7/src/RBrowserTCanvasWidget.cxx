@@ -92,7 +92,7 @@ public:
       fCanvas->SetBatch(kTRUE); // mark canvas as batch
       fCanvas->SetEditable(kTRUE); // ensure fPrimitives are created
 
-      Bool_t readonly = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 0) == 0;
+      Bool_t readonly = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 1) == 0;
 
       // create implementation
       fWebCanvas = new TWebCanvas(fCanvas.get(), "title", 0, 0, 800, 600, readonly);
@@ -111,7 +111,7 @@ public:
       fCanvas = std::move(canv);
       fCanvas->SetBatch(kTRUE); // mark canvas as batch
 
-      Bool_t readonly = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 0) == 0;
+      Bool_t readonly = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 1) == 0;
 
       // create implementation
       fWebCanvas = new TWebCanvas(fCanvas.get(), "title", 0, 0, 800, 600, readonly);

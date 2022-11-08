@@ -46,7 +46,7 @@ TApplicationImp *TWebGuiFactory::CreateApplicationImp(const char *classname, int
 
 TCanvasImp *TWebGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height)
 {
-   Bool_t readonly = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 0) == 0;
+   Bool_t readonly = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 1) == 0;
 
    return new TWebCanvas(c, title, 0, 0, width, height, readonly);
 }
@@ -55,7 +55,7 @@ TCanvasImp *TWebGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, UInt_
 
 TCanvasImp *TWebGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   Bool_t readonly = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 0) == 0;
+   Bool_t readonly = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 1) == 0;
 
    return new TWebCanvas(c, title, x, y, width, height, readonly);
 }
