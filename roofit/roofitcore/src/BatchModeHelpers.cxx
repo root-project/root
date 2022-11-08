@@ -157,6 +157,15 @@ std::unique_ptr<RooAbsReal> RooFit::BatchModeHelpers::createNLL(std::unique_ptr<
                                                                 RooFit::BatchModeOption batchMode, bool doOffset,
                                                                 bool splitRange, bool takeGlobalObservablesFromData)
 {
+   if (constraints) {
+      // Redirect the global observables to the ones from the dataset if applicable.
+      constraints->setData(data, false);
+
+      // The computation graph for the constraints is very small, no need to do
+      // the tracking of clean and dirty nodes here.
+      constraints->setOperMode(RooAbsArg::ADirty);
+   }
+
    RooArgSet observables;
    pdf->getObservables(data.get(), observables);
    observables.remove(projDeps, true, true);
