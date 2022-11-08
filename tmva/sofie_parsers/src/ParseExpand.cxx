@@ -15,6 +15,9 @@ ParserFuncSignature ParseExpand = [](RModelParser_ONNX &parser, const onnx::Node
          // according to ONNX both inputs have same type
          if (i == 0)
             input_type = parser.GetTensorType(input_name);
+         else if(i == 1){
+            input_type = ETensorType::INT64;
+         }
          else
             if (input_type != parser.GetTensorType(input_name)) {
                throw

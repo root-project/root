@@ -15,18 +15,18 @@ template<typename T>
 class ROperator_Expand final : public ROperator{
 private:
 
-   std::string fNX;
-   std::string fNBroadcastedX;
-   std::string fNY;
-
    std::vector<size_t> fShapeX;
-   std::vector<size_t> new_Shape;
+   std::vector<size_t> fShape;
    std::vector<size_t> fShapeY;
+
+   std::string fNX;
+   std::string fNY;
+   std::string fNShape;
 
 public:
    ROperator_Expand(){}
-   ROperator_Expand(std::string nameX, std::vector<size_t> new_Shape, std::string nameY):
-      fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){}
+   ROperator_Expand(std::string nameX, std::string nameShape, std::string nameY):
+      fNX(UTILITY::Clean_name(nameX)), fNShape(UTILITY::Clean_name(nameShape)), fNY(UTILITY::Clean_name(nameY)){}
 
    // type of output given input
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
@@ -35,7 +35,7 @@ public:
 
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
       std::vector<std::vector<size_t>> ret;
-      for(auto it:new_Shape)
+      for(auto it:fShape)
         ret[0].push_back(it);
       return ret;
    }
@@ -48,10 +48,19 @@ public:
 
       fShapeX = model.GetTensorShape(fNX);
 
-      bool broadcast = !UTILITY::AreSameShape(fShapeX, new_Shape);
+      if(model.IsInitializedTensor(fNShape)){
+            auto data = model.GetInitializedTensorData(fNShape);
+            auto output_shape = static_cast<int64_t *>(data.get());
+            auto vec = model.GetTensorShape(fNShape);
+            assert(vec.size() == 1);
+            size_t n = vec[0]; // size of shape input tensor
+            std::copy(output_shape, output_shape + n, fShape.begin());
+      }
+
+      bool broadcast = !UTILITY::AreSameShape(fShapeX, fShape);
       if (broadcast) {
          // Y is the common shape of A and B
-         fShapeY = new_Shape;
+         fShapeY = fShape;
          bool broadcastX = !UTILITY::AreSameShape(fShapeX, fShapeY);
          
          // Broadcast A to Y
@@ -64,16 +73,13 @@ public:
                // Update the data and the shape of X
                model.UpdateInitializedTensor(fNX, model.GetTensorType(fNX), fShapeY, broadcastedData);
                fShapeX = fShapeY;
-            } else {
-               // Add an intermediate tensor for broadcasting X
-               fNBroadcastedX = "Broadcasted" + fNX;
-               model.AddIntermediateTensor(fNBroadcastedX, model.GetTensorType(fNX), fShapeY);
-            }
+            } 
          }
       } 
       else {
          fShapeY = fShapeX;
       }
+
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
    }
 
@@ -92,16 +98,16 @@ public:
       out << SP << "\n//------ EXPAND" << "\n";
       size_t length = ConvertShapeToLength(fShapeY);
       // Broadcast A if it's uninitialized
-      if (!fNBroadcastedX.empty()) {
+      if (!fNY.empty()) {
          out << SP << "// Broadcasting uninitialized tensor " << fNX << "\n";
          out << SP << "{\n";
          out << SP << SP << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_" << fNX << ", " << ConvertShapeToString(fShapeX) << ", " << ConvertShapeToString(fShapeY) << ");\n";
-         out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNBroadcastedX << ");\n";
+         out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNY << ");\n";
          out << SP << SP << "delete[] data;\n";
          out << SP << "}\n";
       }
     
-      const std::string& nameX = fNBroadcastedX.empty()? fNX : fNBroadcastedX;
+      const std::string& nameX = fNY.empty()? fNX : fNY;
       
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
       out << SP << SP << "tensor_" << fNY << "[id] = tensor_" + fNX + "[id]" <<  " ;\n";
