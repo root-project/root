@@ -764,8 +764,6 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
          auto offset = TPad::Class()->GetDataMemberOffset(member);
          if (offset > 0)
             *((Double_t *)((char*) pad + offset)) = val;
-         else
-            printf("Fail to set pad member %s\n", member);
       };
 
       if (r.ranges) {
@@ -801,12 +799,12 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
 
       // pad->SetPad(r.mleft, r.mbottom, 1-r.mright, 1-r.mtop);
 
-      change_pad_member("fXlowNDC", r.mleft);
-      change_pad_member("fYlowNDC", r.mbottom);
-      change_pad_member("fXUpNDC", 1-r.mright);
-      change_pad_member("fYUpNDC", 1-r.mtop);
-      change_pad_member("fWNDC", 1-r.mright-r.mleft);
-      change_pad_member("fHNDC", 1-r.mtop-r.mbottom);
+      change_pad_member("fXlowNDC", r.xlow);
+      change_pad_member("fYlowNDC", r.ylow);
+      change_pad_member("fXUpNDC", r.xup);
+      change_pad_member("fYUpNDC", r.yup);
+      change_pad_member("fWNDC", r.xup - r.xlow);
+      change_pad_member("fHNDC", r.yup - r.xup);
 
       pad->SetFixedAspectRatio(kFALSE);
 
@@ -867,8 +865,6 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 {
    if (arg.empty())
       return kTRUE;
-
-   printf("Process: %s\n", arg.c_str());
 
    // try to identify connection for given WS request
    unsigned indx = 0;
