@@ -82,6 +82,10 @@ if [ -n "${old_rootsys}" ] ; then
       drop_from_path "$JUPYTER_PATH" "${old_rootsys}/etc/notebook"
       JUPYTER_PATH=$newpath
    fi
+   if [ -n "${JUPYTER_CONFIG_DIR}" ]; then
+      drop_from_path "$JUPYTER_CONFIG_DIR" "${old_rootsys}/etc/notebook"
+      JUPYTER_CONFIG_DIR=$newpath
+   fi
 fi
 
 if [ -z "${MANPATH}" ]; then
