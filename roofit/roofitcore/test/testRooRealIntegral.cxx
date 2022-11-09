@@ -2,12 +2,16 @@
 // Authors: Jonas Rembser, CERN 10/2022
 
 #include <RooConstVar.h>
+#include <RooDataSet.h>
 #include <RooGaussian.h>
 #include <RooGenericPdf.h>
+#include <RooHelpers.h>
+#include <RooPlot.h>
 #include <RooProduct.h>
 #include <RooProjectedPdf.h>
 #include <RooRealIntegral.h>
 #include <RooRealVar.h>
+#include <RooWorkspace.h>
 
 #include <gtest/gtest.h>
 
@@ -106,6 +110,8 @@ TEST(RooRealIntegral, IntegrateFuncWithShapeServers)
 {
    using namespace RooFit;
 
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+
    RooRealVar x("x", "", 0, 1);
 
    RooRealVar mu("mu", "", -0.005, -5, 5);
@@ -170,4 +176,43 @@ TEST(RooRealIntegral, UseCloneAsIntegrationVariable)
 
       EXPECT_EQ(servers.size(), 2);
    }
+}
+
+/// Make sure that the normalization set for a RooAddPdf is always defined when
+/// numerically integrating a RooProdPdf where the RooAddPdf is one of the
+/// factors. Covers GitHub #11476 and JIRA issue ROOT-9436.
+TEST(RooRealIntegral, Issue11476)
+{
+   // Silence the info about numeric integration because we don't care about it
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+
+   RooWorkspace ws{"ws"};
+   ws.factory("Gaussian::gs(x[0,10], mu[2, 0, 10], sg[2, 0.1, 10])");
+   ws.factory("Exponential::ex(x, lm[-0.1, -10, 0])");
+   ws.factory("SUM::gs_ex(f[0.5, 0, 1] * gs, ex)");
+   ws.factory("Gaussian::gs_1(x, mu_1[4, 0, 10], sg_1[2, 0.1, 10])");
+   ws.factory("PROD::pdf(gs_1, gs_ex)");
+
+   RooRealVar &x = *ws.var("x");
+   RooAbsPdf &pdf = *ws.pdf("pdf");
+
+   // Store the logged warnings for missing normalization sets
+   RooHelpers::HijackMessageStream hijack(RooFit::WARNING, RooFit::Eval);
+
+   std::unique_ptr<RooDataSet> data{pdf.generate(x, 10000)};
+
+   // Check that there were no warnings (covers GitHub issue #11476)
+   const std::string messages = hijack.str();
+   std::cout << messages;
+   EXPECT_TRUE(messages.empty()) << "Unexpected warnings were issued!";
+
+   // Verify that plot is correctly normalized
+   std::unique_ptr<RooPlot> frame{x.frame()};
+   data->plotOn(frame.get());
+   pdf.plotOn(frame.get());
+
+   // If the normalization of the PDF in the plot is correct, the chi-square
+   // will be low. Covers JIRA issue ROOT-9436.
+   EXPECT_LE(frame->chiSquare(), 1.0)
+      << "The chi-square of the plot is too high, the normalization of the PDF is probably wrong!";
 }

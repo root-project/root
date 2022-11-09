@@ -695,10 +695,10 @@ bool RooRealIntegral::initNumIntegrator() const
   // Bind the appropriate analytic integral (specified by _mode) of our RooRealVar object to
   // those of its arguments that will be integrated out numerically.
   if(_mode != 0) {
-    _numIntegrand = std::make_unique<RooRealAnalytic>(*_function,_intList,_mode,_funcNormSet.get(),_rangeName);
+    _numIntegrand = std::make_unique<RooRealAnalytic>(*_function,_intList,_mode,funcNormSet(),_rangeName);
   }
   else {
-    _numIntegrand = std::make_unique<RooRealBinding>(*_function,_intList,_funcNormSet.get(),false,_rangeName);
+    _numIntegrand = std::make_unique<RooRealBinding>(*_function,_intList,funcNormSet(),false,_rangeName);
   }
   if(0 == _numIntegrand || !_numIntegrand->isValid()) {
     coutE(Integration) << ClassName() << "::" << GetName() << ": failed to create valid integrand." << std::endl;
@@ -918,7 +918,7 @@ double RooRealIntegral::evaluate() const
       assert(servers().size() == _facList.size() + 1);
 
       //setDirtyInhibit(true) ;
-      retVal= _function->getVal(_funcNormSet.get()) ;
+      retVal= _function->getVal(funcNormSet());
       //setDirtyInhibit(false) ;
       break ;
     }
