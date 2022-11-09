@@ -415,6 +415,14 @@ void Minuit2Minimizer::SetFunction(const ROOT::Math::IMultiGradFunction &func)
    }
 }
 
+void Minuit2Minimizer::SetHessianFunction(std::function<bool(const std::vector<double> &, double *)> hfunc)
+{
+   auto fcn = static_cast<ROOT::Minuit2::FCNGradAdapter<ROOT::Math::IMultiGradFunction> *>(fMinuitFCN);
+   assert(fcn);
+   if (!fcn) return;
+   fcn->SetHessianFunction(hfunc);
+}
+
 bool Minuit2Minimizer::Minimize()
 {
    // perform the minimization

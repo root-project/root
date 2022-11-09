@@ -11,6 +11,7 @@
 #define ROOT_Minuit2_AnalyticalGradientCalculator
 
 #include "Minuit2/GradientCalculator.h"
+#include "Minuit2/MnMatrix.h"
 
 namespace ROOT {
 
@@ -23,7 +24,7 @@ class AnalyticalGradientCalculator : public GradientCalculator {
 
 public:
    AnalyticalGradientCalculator(const FCNGradientBase &fcn, const MnUserTransformation &state)
-      : fGradCalc(fcn), fTransformation(state)
+      : fGradFunc(fcn), fTransformation(state)
    {
    }
 
@@ -33,10 +34,16 @@ public:
 
    FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const override;
 
+   /// compute Hessian matrix
+   virtual bool Hessian(const MinimumParameters &, MnAlgebraicSymMatrix &) const;
+
+   /// compute second derivatives (diagonal of Hessian)
+   virtual bool G2(const MinimumParameters &, MnAlgebraicVector &) const;
+
    virtual bool CheckGradient() const;
 
 protected:
-   const FCNGradientBase &fGradCalc;
+   const FCNGradientBase &fGradFunc;
    const MnUserTransformation &fTransformation;
 };
 

@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <functional>
+#include <vector>
 
 namespace ROOT {
 
@@ -172,6 +173,14 @@ public:
       fGradFunc( gfun )
    {}
 
+   // constructor for multi-dimensional functions
+   FunctorGradHandler(unsigned int dim, const Func & fun, const GradFunc & gfun, std::function<void(const double *, double*)> gfunN) :
+      fDim(dim),
+      fFunc(fun),
+      fGradFunc( gfun ),
+      fGradFuncN( gfunN)
+   {}
+
    virtual ~FunctorGradHandler() {}
 
    // clone of the function handler (use copy-ctor)
@@ -191,6 +200,15 @@ public:
    // constructor for multi-dimensional functions
    unsigned int NDim() const {
       return fDim;
+   }
+
+   void Gradient(const double *x, double *g) const {
+      if (fGradFuncN) {
+         fGradFuncN(x,g);
+      } else {
+         for (unsigned int i = 0; i < fDim; i++)
+            g[i] = DoDerivative(x,i);
+      }
    }
 
 private :
@@ -215,6 +233,7 @@ private :
    unsigned int fDim;
    mutable Func fFunc;
    mutable GradFunc fGradFunc;
+   mutable std::function<void(const double *, double*)> fGradFuncN;
 
 };
 
@@ -592,9 +611,10 @@ private :
         double Derivative(const double *, int icoord) for the partial derivatives
     <li>from an object implementing any member function like Foo::XXX(const double *) for the function evaluation
         and any member function like Foo::XXX(const double *, int icoord) for the partial derivatives
-    <li>from an function object implementing
+    <li>from two function objects implementing
         double operator()( const double * ) for the function evaluation and another function object implementing
         double operator() (const double *, int icoord) for the partial derivatives
+    <li>from two function objects
    </ol>
    The function dimension is required when constructing the functor.
 
@@ -658,6 +678,20 @@ public:
                                      std::function<double(double const *, unsigned int)> >(dim, f, g))
    {}
 
+   GradFunctor(int dim, const std::function<double(double const *)> &f,
+           const std::function<void(double const *, double *)> &g)
+   {
+      // create function for derivatives. not efficient but it should not be used
+      auto derivFunc = [=](double const *x,unsigned int i){
+         std::vector<double> grad(dim);
+         g(x,grad.data());
+         return grad[i];
+      };
+      fImpl = std::unique_ptr<Impl>(new FunctorGradHandler<GradFunctor, std::function<double(double const *)>,
+                                     std::function<double(double const *, unsigned int)> >(dim, f, derivFunc, g));
+
+   }
+
    /**
       Destructor (no operations)
    */
@@ -689,6 +723,10 @@ public:
 
    // for multi-dimensional functions
    unsigned int NDim() const { return fImpl->NDim(); }
+
+   void Gradient(const double *x, double *g) const {
+      fImpl->Gradient(x,g);
+   }
 
 private :
 
