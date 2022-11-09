@@ -29,6 +29,7 @@
 #include "TArrayI.h"
 #include "TList.h"
 #include "TH1.h"
+#include "THStack.h"
 #include "TEnv.h"
 #include "TError.h"
 #include "TGraph.h"
@@ -304,7 +305,15 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    std::string need_title;
 
    while ((obj = iter()) != nullptr) {
-      if (obj->InheritsFrom(TFrame::Class())) {
+      if (obj->InheritsFrom(THStack::Class())) {
+         // workaround for THStack, create extra components before sending to client
+         auto hs = static_cast<THStack *>(obj);
+         auto save = gPad;
+         Bool_t change_gpad = (gPad != pad);
+         if (change_gpad) gPad = pad;
+         hs->BuildPrimitives(iter.GetOption());
+         if (change_gpad) gPad = save;
+      } if (obj->InheritsFrom(TFrame::Class())) {
          frame = static_cast<TFrame *>(obj);
       } else if (obj->InheritsFrom(TH1::Class())) {
          need_frame = true;
