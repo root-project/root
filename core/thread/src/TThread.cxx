@@ -9,16 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TThread                                                              //
-//                                                                      //
-// This class implements threads. A thread is an execution environment  //
-// much lighter than a process. A single process can have multiple      //
-// threads. The actual work is done via the TThreadImp class (either    //
-// TPosixThread or TWin32Thread).                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TThread
+
+\legacy{TThread}
+
+This class implements threads. A thread is an execution environment
+much lighter than a process. A single process can have multiple
+threads. The actual work is done via the TThreadImp class (either
+TPosixThread or TWin32Thread).
+
+**/
 
 #include "RConfigure.h"
 
@@ -562,7 +562,7 @@ Long_t TThread::SelfId()
 ////////////////////////////////////////////////////////////////////////////////
 /// Start the thread. This starts the static method TThread::Function()
 /// which calls the user function specified in the TThread ctor with
-/// the arg argument. 
+/// the arg argument.
 /// If affinity is specified (>=0), a CPU affinity will be associated
 /// with the current thread.
 /// Returns 0 on success, otherwise an error number will
