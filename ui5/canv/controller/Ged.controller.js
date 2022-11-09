@@ -101,18 +101,25 @@ sap.ui.define([
          }
 
          if (obj) {
-            if ((data._kind === "TAttLine") && (obj.fLineColor!==undefined) && (obj.fLineStyle!==undefined) && (obj.fLineWidth!==undefined)) {
-               if (item == "attline/width")
+            if ((data._kind === 'TAttLine') && (obj.fLineColor !== undefined) && (obj.fLineStyle !== undefined) && (obj.fLineWidth !== undefined)) {
+               if (item == 'attline/width')
                   exec = `exec:SetLineWidth(${pars.value})`;
-               else if (item == "attline/style")
+               else if (item == 'attline/style')
                   exec = `exec:SetLineStyle(${pars.value})`;
-               else if (item == "attline/color")
+               else if (item == 'attline/color')
                   exec = this.getColorExec(data._painter, pars.value, 'SetLineColor');
-            } else if ((data._kind === "TAttFill") && (obj.fFillColor!==undefined) && (obj.fFillStyle!==undefined))  {
-               if (item == "attfill/pattern")
+            } else if ((data._kind === 'TAttFill') && (obj.fFillColor !== undefined) && (obj.fFillStyle !== undefined)) {
+               if (item == 'attfill/pattern')
                   exec = `exec:SetFillStyle(${pars.value})`;
-               else if (item == "attfill/color")
+               else if (item == 'attfill/color')
                   exec = this.getColorExec(data._painter, pars.value, 'SetFillColor');
+            } else if ((data._kind === 'TAttMarker') && (obj.fMarkerColor !== undefined) && (obj.fMarkerStyle !== undefined) && (obj.fMarkerSize !== undefined)) {
+               if (item == 'attmark/size')
+                  exec = `exec:SetMarkerSize(${pars.value})`;
+               else if (item == 'attmark/style')
+                  exec = `exec:SetMarkerStyle(${pars.value})`;
+               else if (item == 'attmark/color')
+                  exec = this.getColorExec(data._painter, pars.value, 'SetMarkerColor');
             }
          }
 
