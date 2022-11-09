@@ -53,7 +53,7 @@ public:
    void           ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    Int_t          GetBorderSize() const { return fBorderSize;}
    Double_t       GetCornerRadius() const {return fCornerRadius;}
-   Option_t      *GetName() const override {return fName.Data();}
+   const char    *GetName() const override {return fName.Data();}
    Option_t      *GetOption() const override {return fOption.Data();}
    Int_t          GetShadowColor() const {return fShadowColor;}
    Double_t       GetX1NDC() const {return fX1NDC;}
