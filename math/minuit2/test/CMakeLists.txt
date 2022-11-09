@@ -13,6 +13,7 @@ endif()
 
 set(TestSource
       testMinimizer.cxx
+      testADMinim.cxx
 )
 
 set(TestSourceMnTutorial
@@ -66,6 +67,6 @@ set(RootLibraries Core RIO Net Hist Graf Graf3d Gpad Tree
 
 foreach(file ${TestSource})
   get_filename_component(testname ${file} NAME_WE)
-  ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${RootLibraries} )
+  ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${RootLibraries} Minuit2 )
   ROOT_ADD_TEST(minuit2_${testname} COMMAND ${testname})
 endforeach()

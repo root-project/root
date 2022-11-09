@@ -32,6 +32,11 @@ public:
    {
    }
 
+   explicit FunctionGradient(const MnAlgebraicVector &grd, const MnAlgebraicVector &g2)
+      : fPtr{new Data{grd, g2, MnAlgebraicVector(grd.size()), true, true}}
+   {
+   }
+
    FunctionGradient(const MnAlgebraicVector &grd, const MnAlgebraicVector &g2, const MnAlgebraicVector &gstep)
       : fPtr{new Data{grd, g2, gstep, true, false}}
    {

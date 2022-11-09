@@ -22,18 +22,13 @@ FunctionGradient AnalyticalGradientCalculator::operator()(const MinimumParameter
 {
    // evaluate analytical gradient. take care of parameter transformations
 
-   std::vector<double> grad = fGradCalc.Gradient(fTransformation(par.Vec()));
+   std::vector<double> grad = fGradFunc.Gradient(fTransformation(par.Vec()));
    assert(grad.size() == fTransformation.Parameters().size());
 
    MnAlgebraicVector v(par.Vec().size());
    for (unsigned int i = 0; i < par.Vec().size(); i++) {
       unsigned int ext = fTransformation.ExtOfInt(i);
       if (fTransformation.Parameter(ext).HasLimits()) {
-         // double dd = (fTransformation.Parameter(ext).Upper() -
-         // fTransformation.Parameter(ext).Lower())*0.5*cos(par.Vec()(i));
-         //       const ParameterTransformation * pt = fTransformation.transformation(ext);
-         //       double dd = pt->dInt2ext(par.Vec()(i), fTransformation.Parameter(ext).Lower(),
-         //       fTransformation.Parameter(ext).Upper() );
          double dd = fTransformation.DInt2Ext(i, par.Vec()(i));
          v(i) = dd * grad[ext];
       } else {
@@ -44,6 +39,7 @@ FunctionGradient AnalyticalGradientCalculator::operator()(const MinimumParameter
    MnPrint print("AnalyticalGradientCalculator");
    print.Debug("User given gradient in Minuit2", v);
 
+   // creating a function gradient passing only a vector set the analytical flag in FunctionGradient
    return FunctionGradient(v);
 }
 
@@ -56,7 +52,55 @@ FunctionGradient AnalyticalGradientCalculator::operator()(const MinimumParameter
 bool AnalyticalGradientCalculator::CheckGradient() const
 {
    // check to be sure FCN implements analytical gradient
-   return fGradCalc.CheckGradient();
+   return fGradFunc.CheckGradient();
+}
+
+bool AnalyticalGradientCalculator::Hessian(const MinimumParameters &par, MnAlgebraicSymMatrix & hmat) const
+{
+   // compute  Hessian using external gradient
+   unsigned int n = par.Vec().size();
+   assert(hmat.Size() == n *(n+1)/2);
+   // compute external Hessian and then transform
+   std::vector<double> extHessian = fGradFunc.Hessian(fTransformation(par.Vec()));
+   if (extHessian.empty()) return false;
+   unsigned int next = sqrt(extHessian.size());
+   // we need now to transform the matrix from external to internal coordinates
+   for (unsigned int i = 0; i < n; i++) {
+      unsigned int iext = fTransformation.ExtOfInt(i);
+      double dxdi = 1.;
+      if (fTransformation.Parameters()[iext].HasLimits()) {
+         dxdi = fTransformation.DInt2Ext(i, par.Vec()(i));
+      }
+      for (unsigned int j = i; j < n; j++) {
+         double dxdj = 1.;
+         unsigned int jext = fTransformation.ExtOfInt(j);
+         if (fTransformation.Parameters()[jext].HasLimits()) {
+            dxdj = fTransformation.DInt2Ext(j, par.Vec()(j));
+         }
+         hmat(i, j) = dxdi * extHessian[i*next+ j] * dxdj;
+      }
+   }
+   return true;
+}
+
+bool AnalyticalGradientCalculator::G2(const MinimumParameters &par, MnAlgebraicVector & g2) const {
+   // compute G2 using external calculator
+   unsigned int n = par.Vec().size();
+   assert(g2.Size() == n );
+   std::vector<double> extG2 = fGradFunc.G2(fTransformation(par.Vec()));
+   if (extG2.empty()) return false;
+   unsigned int next = extG2.size();
+   // we need now to transform the matrix from external to internal coordinates
+   for (unsigned int i = 0; i < n; i++) {
+      unsigned int iext = fTransformation.ExtOfInt(i);
+      if (fTransformation.Parameters()[iext].HasLimits()) {
+         double dxdi = fTransformation.DInt2Ext(i, par.Vec()(i));
+         g2(i) =  dxdi * dxdi * extG2[i];
+      } else {
+         g2(i) = extG2[i];
+      }
+   }
+   return true;
 }
 
 } // namespace Minuit2
