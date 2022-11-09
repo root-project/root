@@ -48,6 +48,8 @@ protected:
 
    void BuildStack();
 
+   void BuildAndPaint(Option_t *chopt, Bool_t paint);
+
 public:
 
    THStack() {}
@@ -60,6 +62,7 @@ public:
    THStack(const THStack &hstack);
    ~THStack() override;
    virtual void     Add(TH1 *h, Option_t *option="");
+   void             BuildPrimitives(Option_t *chopt = "") { BuildAndPaint(chopt, kFALSE); }
    void             Browse(TBrowser *b)  override;
    Int_t            DistancetoPrimitive(Int_t px, Int_t py) override;
    void             Draw(Option_t *chopt="")  override;
