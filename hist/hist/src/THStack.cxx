@@ -698,7 +698,15 @@ void THStack::Modified()
 ////////////////////////////////////////////////////////////////////////////////
 /// [Paint the list of histograms.](#HS00)
 
-void THStack::Paint(Option_t *choptin)
+void THStack::Paint(Option_t *chopt)
+{
+   BuildAndPaint(chopt, kTRUE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create all additional objects and stack (if specified)
+
+void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
 {
    if (!fHists) return;
    if (!fHists->GetSize()) return;
@@ -905,14 +913,17 @@ void THStack::Paint(Option_t *choptin)
       }
    }
 
-   // Set fHistogram attributes and pain it.
+   // Set fHistogram attributes and paint it.
    if (!lsame) {
       fHistogram->SetLineWidth(0);
-      fHistogram->Paint(loption.Data());
+      if (paint)
+         fHistogram->Paint(loption.Data());
    }
 
-   if (fHistogram->GetDimension() > 1) SetDrawOption(loption.Data());
-   if (loption.Index("lego")>=0) return;
+   if (fHistogram->GetDimension() > 1)
+      SetDrawOption(loption.Data());
+   if (loption.Index("lego")>=0)
+      return;
 
    char noption[32];
    strlcpy(noption,loption.Data(),32);
@@ -946,7 +957,8 @@ void THStack::Paint(Option_t *choptin)
             hAti->SetBarWidth(candleSpace);
             hAti->SetBarOffset(candleOffset);
          }
-         hAti->Paint(loption.Data());
+         if (paint)
+            hAti->Paint(loption.Data());
          lnk = (TObjOptLink*)lnk->Next();
       }
    } else {
@@ -973,18 +985,21 @@ void THStack::Paint(Option_t *choptin)
                h1->SetFillColor(frameFill->GetFillColor());
                h1->SetFillStyle(frameFill->GetFillStyle());
             }
-            h1->Paint(loption.Data());
+            if (paint)
+               h1->Paint(loption.Data());
             h1->SetFillColor(h1col);
             h1->SetFillStyle(h1fill);
          }
-         h1->Paint(loption.Data());
+         if (paint)
+            h1->Paint(loption.Data());
          lnk = (TObjOptLink*)lnk->Prev();
       }
    }
 
    opt.ReplaceAll("nostack","");
    opt.ReplaceAll("candle","");
-   if (!lsame && !opt.Contains("a")) fHistogram->Paint("axissame");
+   if (!lsame && !opt.Contains("a") && paint)
+      fHistogram->Paint("axissame");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
