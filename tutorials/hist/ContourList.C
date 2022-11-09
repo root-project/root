@@ -83,20 +83,18 @@ TCanvas *ContourList(){
 
    // Get Contours
    TObjArray *conts = (TObjArray*)gROOT->GetListOfSpecials()->FindObject("contours");
-   TList* contLevel = NULL;
-   TGraph* curv     = NULL;
-   TGraph* gc       = NULL;
+
+   if (!conts){
+      printf("*** No Contours Were Extracted!\n");
+      return nullptr;
+   }
+
+   TList* contLevel = nullptr;
+   TGraph* curv     = nullptr;
+   TGraph* gc       = nullptr;
 
    Int_t nGraphs    = 0;
-   Int_t TotalConts = 0;
-
-   if (conts == NULL){
-      printf("*** No Contours Were Extracted!\n");
-      TotalConts = 0;
-      return 0;
-   } else {
-      TotalConts = conts->GetSize();
-   }
+   Int_t TotalConts = conts->GetSize();
 
    printf("TotalConts = %d\n", TotalConts);
 
