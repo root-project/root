@@ -109,6 +109,13 @@ protected:
   bool redirectServersHook(const RooAbsCollection& newServerList,
                  bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
 
+  // Internal function to get the normalization set for the integrated
+  // function. By default, we will take the normalization set from the function
+  // proxy, but _funcNormSet will be used if it is set.
+  inline RooArgSet const* funcNormSet() const {
+    return _funcNormSet ? _funcNormSet.get() : _function.nset();
+  }
+
   // Function pointer and integrands list
   mutable RooSetProxy _sumList ; ///< Set of discrete observable over which is summed numerically
   mutable RooSetProxy _intList ; ///< Set of continuous observables over which is integrated numerically

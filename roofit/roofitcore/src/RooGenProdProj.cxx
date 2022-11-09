@@ -256,11 +256,13 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
 
 double RooGenProdProj::evaluate() const
 {
-  double nom = ((RooAbsReal*)_intList.at(0))->getVal() ;
+  RooArgSet const* nset = _intList.nset();
+
+  double nom = static_cast<RooAbsReal*>(_intList.at(0))->getVal(nset);
 
   if (!_haveD) return nom ;
 
-  double den = ((RooAbsReal*)_intList.at(1))->getVal() ;
+  double den = static_cast<RooAbsReal*>(_intList.at(1))->getVal(nset);
 
   //cout << "RooGenProdProj::eval(" << GetName() << ") nom = " << nom << " den = " << den << endl ;
 
