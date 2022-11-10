@@ -12,6 +12,8 @@
 /** \class TTask
 \ingroup Base
 
+\legacy{TTask}
+
 TTask is a base class that can be used to build a complex tree of Tasks.
 Each TTask derived class may contain other TTasks that can be executed
 recursively, such that a complex program can be dynamically built and executed
