@@ -250,7 +250,7 @@ def _convert_to_vector(args):
         raise TypeError(
             f"The list of columns of a Filter operation can only contain strings. Please check: {args[0]}")
 
-    return v, *args[1:]
+    return (v, *args[1:])
 
 def _handle_cpp_callables(func, original_template, *args):
     """
