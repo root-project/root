@@ -1716,6 +1716,11 @@ void TFormula::HandleExponentiation(TString &formula)
          TString pattern = TString::Format("%s^%s", left.Data(), right.Data());
          TString replacement = TString::Format("pow(%s,%s)", left.Data(), right.Data());
 
+         // special case for square function
+         if (right == "2"){
+            replacement = TString::Format("TMath::Sq(%s)",left.Data());
+         }
+
          // std::cout << "pattern : " << pattern << std::endl;
          // std::cout << "replacement : " << replacement << std::endl;
          formula.Replace(leftPos, pattern.Length(), replacement, replacement.Length());
