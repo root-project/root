@@ -30,13 +30,22 @@ template <typename T>
 class R__CLING_PTRCHECK(off) RTreeColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<TTreeReaderValue<T>> fTreeValue;
    T *fValuePtr = nullptr;
-   Long64_t fLastEntry = -1ll;
+   RMaskedEntryRange fMask{1ul};
 
-   void LoadImpl(Long64_t entry, bool mask) final
+   void LoadImpl(const Internal::RDF::RMaskedEntryRange &requestedMask) final
    {
-      if (entry != fLastEntry && mask) {
-         fValuePtr = fTreeValue->Get();
-         fLastEntry = entry;
+      if (requestedMask.FirstEntry() != fMask.FirstEntry()) { // new bulk
+         fMask.SetAll(false);
+         fMask.SetFirstEntry(requestedMask.FirstEntry());
+      }
+
+      const std::size_t bulkSize = 1; // for now we don't actually have bulks
+      for (std::size_t i = 0ul; i < bulkSize; ++i) {
+         if (requestedMask[i] && !fMask[i]) { // we don't have a value for this entry yet
+            // TODO change fValuePtr to an array of cached results per slot
+            fValuePtr = fTreeValue->Get();
+            fMask[i] = true;
+         }
       }
    }
 
@@ -76,15 +85,23 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
    /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
    /// in contiguous memory.
    EStorageType fStorageType = EStorageType::kUnknown;
-   Long64_t fLastEntry = -1;
+   RMaskedEntryRange fMask{1ul};
 
    /// Whether we already printed a warning about performing a copy of the TTreeReaderArray contents
    bool fCopyWarningPrinted = false;
 
-   void LoadImpl(Long64_t entry, bool mask) final
+   void LoadImpl(const Internal::RDF::RMaskedEntryRange &requestedMask) final
    {
-      if (entry == fLastEntry || !mask)
-         return; // nothing to do
+      if (requestedMask.FirstEntry() != fMask.FirstEntry()) { // new bulk
+         fMask.SetAll(false);
+         fMask.SetFirstEntry(requestedMask.FirstEntry());
+      }
+
+      // TODO the logic below assumes bulk size == 1 always, we'll have to lift this assumption.
+      if (!requestedMask[0])
+         return;
+      else
+         fMask[0] = true;
 
       auto &readerArray = *fTreeArray;
       // We only use TTreeReaderArrays to read columns that users flagged as type `RVec`, so we need to check
@@ -137,7 +154,6 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
             swap(fRVec, emptyVec);
          }
       }
-      fLastEntry = entry;
    }
 
    void *GetImpl(std::size_t) final

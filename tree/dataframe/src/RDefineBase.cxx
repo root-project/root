@@ -24,7 +24,8 @@ namespace RDFInternal = ROOT::Internal::RDF; // redundant (already present in th
 RDefineBase::RDefineBase(std::string_view name, std::string_view type, const RDFInternal::RColumnRegister &colRegister,
                          ROOT::Detail::RDF::RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columnNames,
                          const std::string &variationName)
-   : fName(name), fType(type), fLastCheckedEntry(lm.GetNSlots() * RDFInternal::CacheLineStep<Long64_t>(), -1),
+   : fName(name), fType(type),
+     fMask(lm.GetNSlots() * RDFInternal::CacheLineStep<RDFInternal::RMaskedEntryRange>(), {1ul}),
      fColRegister(colRegister), fLoopManager(&lm), fColumnNames(columnNames), fIsDefine(columnNames.size()),
      fVariationDeps(fColRegister.GetVariationDeps(fColumnNames)), fVariation(variationName)
 {

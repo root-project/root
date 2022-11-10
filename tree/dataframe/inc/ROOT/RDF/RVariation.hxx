@@ -200,7 +200,7 @@ public:
    {
       RColumnReadersInfo info{fInputColumns, fColumnRegister, fIsDefine.data(), *fLoopManager};
       fValues[slot] = GetColumnReaders(slot, r, ColumnTypes_t{}, info);
-      fLastCheckedEntry[slot * CacheLineStep<Long64_t>()] = -1;
+      fMask[slot].SetFirstEntry(-1ll);
    }
 
    /// Return the (type-erased) address of the value for the given processing slot.
@@ -218,14 +218,21 @@ public:
    }
 
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
-   void Update(unsigned int slot, Long64_t entry, bool mask) final
+   void Update(unsigned int slot, const RMaskedEntryRange &requestedMask) final
    {
-      if (entry != fLastCheckedEntry[slot * CacheLineStep<Long64_t>()]) {
-         // evaluate this filter, cache the result
-         std::for_each(fValues[slot].begin(), fValues[slot].end(), [entry, mask](auto *v) { v->Load(entry, mask); });
-         if (mask) {
-            UpdateHelper(slot, /*idx=*/0u, ColumnTypes_t{}, TypeInd_t{});
-            fLastCheckedEntry[slot * CacheLineStep<Long64_t>()] = entry;
+      auto &valueMask = fMask[slot * RDFInternal::CacheLineStep<RDFInternal::RMaskedEntryRange>()];
+      if (valueMask.FirstEntry() != requestedMask.FirstEntry()) { // new bulk
+         // if it turns out that we do these two operations together very often, maybe it's worth having a ad-hoc method
+         valueMask.SetAll(false);
+         valueMask.SetFirstEntry(requestedMask.FirstEntry());
+      }
+      // evaluate this filter, cache the result
+      std::for_each(fValues[slot].begin(), fValues[slot].end(), [&requestedMask](auto *v) { v->Load(requestedMask); });
+      const std::size_t bulkSize = 1; // for now we don't actually have bulks
+      for (std::size_t i = 0ul; i < bulkSize; ++i) {
+         if (requestedMask[i] && !valueMask[i]) { // we don't have a value for this entry yet
+            UpdateHelper(slot, i, ColumnTypes_t{}, TypeInd_t{});
+            valueMask[i] = true;
          }
       }
    }

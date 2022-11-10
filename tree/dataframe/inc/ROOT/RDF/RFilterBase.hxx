@@ -12,6 +12,7 @@
 #define ROOT_RFILTERBASE
 
 #include "ROOT/RDF/RColumnRegister.hxx"
+#include "ROOT/RDF/RMaskedEntryRange.hxx"
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "ROOT/RDF/Utils.hxx" // ColumnNames_t
 #include "ROOT/RVec.hxx"
@@ -37,8 +38,7 @@ class RLoopManager;
 
 class RFilterBase : public RNodeBase {
 protected:
-   std::vector<Long64_t> fLastCheckedEntry;
-   std::vector<int> fLastResult = {true}; // std::vector<bool> cannot be used in a MT context safely
+   std::vector<RDFInternal::RMaskedEntryRange> fMask; ///< Filter masks for the current bulk of entries, per slot.
    std::vector<ULong64_t> fAccepted = {0};
    std::vector<ULong64_t> fRejected = {0};
    const std::string fName;

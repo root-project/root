@@ -17,6 +17,7 @@
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
+#include "ROOT/RDF/RMaskedEntryRange.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "RtypesCore.h"
 
@@ -89,42 +90,43 @@ public:
       fLoopManager->Deregister(this);
    }
 
-   bool CheckFilters(unsigned int slot, Long64_t entry) final
+   const RDFInternal::RMaskedEntryRange &CheckFilters(unsigned int slot, Long64_t entry) final
    {
-      auto &newMask = fLastResult[slot * RDFInternal::CacheLineStep<int>()];
-      auto &lastEntry = fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()];
+      auto &mask = fMask[slot * RDFInternal::CacheLineStep<RDFInternal::RMaskedEntryRange>()];
 
-      if (entry != lastEntry) {
-         newMask = fPrevNode.CheckFilters(slot, entry);
+      if (entry != mask.FirstEntry()) {
+         mask = fPrevNode.CheckFilters(slot, entry);
+         std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
+         const std::size_t bulkSize = 1; // for now we don't actually have bulks
+         const std::size_t processed = mask.Count(bulkSize);
+         std::size_t accepted = 0u;
+         for (std::size_t i = 0ul; i < bulkSize; ++i) {
+            auto &flag = mask[i];
+            flag = flag && EvalFilter(slot, i, ColumnTypes_t{}, TypeInd_t{});
+            accepted += flag;
+         }
 
-         // evaluate this filter, cache the result
-         std::for_each(fValues[slot].begin(), fValues[slot].end(),
-                       [entry, newMask](auto *v) { v->Load(entry, newMask); });
-         CheckFilterHelper(slot, /*idx=*/0u, newMask, ColumnTypes_t{}, TypeInd_t{});
-
-         lastEntry = entry;
+         fAccepted[slot * RDFInternal::CacheLineStep<ULong64_t>()] += accepted;
+         fRejected[slot * RDFInternal::CacheLineStep<ULong64_t>()] += processed - accepted;
       }
 
-      return newMask;
+      return mask;
    }
 
    template <typename... ColTypes, std::size_t... S>
-   void CheckFilterHelper(unsigned int slot, std::size_t idx, int &entryMask, TypeList<ColTypes...>,
-                          std::index_sequence<S...>)
+   bool EvalFilter(unsigned int slot, std::size_t idx, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
-      if (entryMask) {
-         entryMask = fFilter(fValues[slot][S]->template Get<ColTypes>(idx)...);
-         entryMask ? ++fAccepted[slot * RDFInternal::CacheLineStep<ULong64_t>()]
-                   : ++fRejected[slot * RDFInternal::CacheLineStep<ULong64_t>()];
-      }
-      (void)idx; // avoid unused parameter warning (gcc 12.1)
+      return fFilter(fValues[slot][S]->template Get<ColTypes>(idx)...);
+      // avoid unused parameter warnings (gcc 12.1)
+      (void)slot;
+      (void)idx;
    }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
       RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), *fLoopManager};
       fValues[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
-      fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
+      fMask[slot].SetFirstEntry(-1ll);
    }
 
    // recursive chain of `Report`s

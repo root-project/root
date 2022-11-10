@@ -11,6 +11,7 @@
 #ifndef ROOT_RRANGEBASE
 #define ROOT_RRANGEBASE
 
+#include "ROOT/RDF/RMaskedEntryRange.hxx"
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "RtypesCore.h"
 
@@ -35,10 +36,8 @@ protected:
    unsigned int fStart;
    unsigned int fStop;
    unsigned int fStride;
-   Long64_t fLastCheckedEntry{-1};
-   bool fLastResult{true};
+   ROOT::Internal::RDF::RMaskedEntryRange fMask; ///< Filter mask for the current bulk of entries.
    ULong64_t fNProcessedEntries{0};
-   bool fHasStopped{false};    ///< True if the end of the range has been reached
    const unsigned int fNSlots; ///< Number of thread slots used by this node, inherited from parent node.
    std::unordered_map<std::string, std::shared_ptr<RRangeBase>> fVariedRanges;
 

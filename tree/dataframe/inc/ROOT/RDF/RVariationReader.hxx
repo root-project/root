@@ -11,6 +11,7 @@
 #ifndef ROOT_RDF_RVARIATIONREADER
 #define ROOT_RDF_RVARIATIONREADER
 
+#include "RMaskedEntryRange.hxx"
 #include "RColumnReaderBase.hxx"
 #include "RVariationBase.hxx"
 #include <Rtypes.h> // Long64_t, R__CLING_PTRCHECK
@@ -34,7 +35,7 @@ class R__CLING_PTRCHECK(off) RVariationReader final : public ROOT::Detail::RDF::
 
    void *GetImpl(std::size_t /*idx*/) final { return fValuePtr; }
 
-   void LoadImpl(Long64_t entry, bool mask) final { fVariation->Update(fSlot, entry, mask); }
+   void LoadImpl(const RDFInternal::RMaskedEntryRange &m) final { fVariation->Update(fSlot, m); }
 
 public:
    RVariationReader(unsigned int slot, const std::string &colName, const std::string &variationName,

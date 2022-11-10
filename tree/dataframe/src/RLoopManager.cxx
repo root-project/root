@@ -346,7 +346,7 @@ RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
      fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
-     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
+     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots), fAllTrueMasks(fNSlots, {1ll})
 {
 }
 
@@ -356,14 +356,16 @@ RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles),
      fNewSampleNotifier(fNSlots),
      fSampleInfos(fNSlots),
-     fDatasetColumnReaders(fNSlots)
+     fDatasetColumnReaders(fNSlots),
+     fAllTrueMasks(fNSlots, {1ll})
 {
 }
 
 RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches)
    : fDefaultColumns(defaultBranches), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
-     fDataSource(std::move(ds)), fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
+     fDataSource(std::move(ds)), fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots),
+     fAllTrueMasks(fNSlots, {1ll})
 {
    fDataSource->SetNSlots(fNSlots);
 }
@@ -376,7 +378,8 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
      fNewSampleNotifier(fNSlots),
      fSampleInfos(fNSlots),
-     fDatasetColumnReaders(fNSlots)
+     fDatasetColumnReaders(fNSlots),
+     fAllTrueMasks(fNSlots, {1ll})
 {
    auto chain = std::make_shared<TChain>("");
    for (auto &sample : fSamples) {
@@ -904,10 +907,12 @@ void RLoopManager::Deregister(RDFInternal::RVariationBase *v)
    RDFInternal::Erase(v, fBookedVariations);
 }
 
-// dummy call, end of recursive chain of calls
-bool RLoopManager::CheckFilters(unsigned int, Long64_t)
+// End of recursive chain of calls
+const RDFInternal::RMaskedEntryRange &RLoopManager::CheckFilters(unsigned int slot, Long64_t entry)
 {
-   return true;
+   auto &m = fAllTrueMasks[slot];
+   m.SetFirstEntry(entry);
+   return m;
 }
 
 /// Call `FillReport` on all booked filters

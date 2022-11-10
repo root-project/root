@@ -11,6 +11,7 @@
 #ifndef ROOT_RDFNODEBASE
 #define ROOT_RDFNODEBASE
 
+#include "ROOT/RDF/RMaskedEntryRange.hxx"
 #include "RtypesCore.h"
 #include "TError.h" // R__ASSERT
 
@@ -53,7 +54,7 @@ public:
    {
    }
    virtual ~RNodeBase() {}
-   virtual bool CheckFilters(unsigned int, Long64_t) = 0;
+   virtual const ROOT::Internal::RDF::RMaskedEntryRange &CheckFilters(unsigned int, Long64_t) = 0;
    virtual void Report(ROOT::RDF::RCutFlowReport &) const = 0;
    virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;
    virtual void IncrChildrenCount() = 0;

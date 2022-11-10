@@ -43,7 +43,7 @@ public:
    void InitSlot(TTreeReader *r, unsigned int slot) final;
    void *GetValuePtr(unsigned int slot, const std::string &column, const std::string &variation) final;
    const std::type_info &GetTypeId() const final;
-   void Update(unsigned int slot, Long64_t entry, bool mask) final;
+   void Update(unsigned int slot, const RMaskedEntryRange &m) final;
    void FinalizeSlot(unsigned int slot) final;
 };
 

@@ -61,30 +61,36 @@ public:
    ~RRange() { fLoopManager->Deregister(this); }
 
    /// Ranges act as filters when it comes to selecting entries that downstream nodes should process
-   bool CheckFilters(unsigned int slot, Long64_t entry) final
+   const RDFInternal::RMaskedEntryRange &CheckFilters(unsigned int slot, Long64_t entry) final
    {
-      if (entry != fLastCheckedEntry) {
-         if (fHasStopped)
-            return false;
-         if (!fPrevNode.CheckFilters(slot, entry)) {
-            // a filter upstream returned false, cache the result
-            fLastResult = false;
-         } else {
-            // apply range filter logic, cache the result
-            if (fNProcessedEntries < fStart || (fStop > 0 && fNProcessedEntries >= fStop) ||
-                (fStride != 1 && (fNProcessedEntries - fStart) % fStride != 0))
-               fLastResult = false;
-            else
-               fLastResult = true;
-            ++fNProcessedEntries;
-            if (fNProcessedEntries == fStop) {
-               fHasStopped = true;
-               fPrevNode.StopProcessing();
-            }
-         }
-         fLastCheckedEntry = entry;
+      if (entry == fMask.FirstEntry()) // fMask already correctly set
+         return fMask;
+
+      // TODO we only need this extra branch because even after a call to fPrevNode.StopProcessing() it's possible
+      // that this node will run (in case the event loop still needs to continue).
+      // In principle, however, RLoopManager could stop running all branches of the computation graph that depend
+      // on this node (if it knew which ones they were).
+      if (fStop > 0 && fNProcessedEntries >= fStop) {
+         fMask.SetFirstEntry(entry);
+         fMask.SetAll(false);
+         return fMask;
       }
-      return fLastResult;
+
+      // otherwise check the previous node
+      fMask = fPrevNode.CheckFilters(slot, entry);
+      const auto bulkSize = 1ul; // for now we don't really have bulks
+      for (std::size_t i = 0u; i < bulkSize; ++i) {
+         if (fMask[i]) {
+            fMask[i] = fNProcessedEntries >= fStart && (fStop == 0 || fNProcessedEntries < fStop) &&
+                       (fStride == 1 || (fNProcessedEntries - fStart) % fStride == 0);
+            ++fNProcessedEntries;
+         }
+      }
+
+      if (fStop > 0 && fNProcessedEntries >= fStop)
+         fPrevNode.StopProcessing();
+
+      return fMask;
    }
 
    // recursive chain of `Report`s
@@ -96,7 +102,8 @@ public:
    void StopProcessing() final
    {
       ++fNStopsReceived;
-      if (fNStopsReceived == fNChildren && !fHasStopped)
+      const bool hasStopped = fStop > 0 && fNProcessedEntries == fStop;
+      if (fNStopsReceived == fNChildren && !hasStopped)
          fPrevNode.StopProcessing();
    }
 

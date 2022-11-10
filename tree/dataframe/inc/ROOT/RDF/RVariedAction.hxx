@@ -123,12 +123,15 @@ public:
    void Run(unsigned int slot, Long64_t entry) final
    {
       for (auto varIdx = 0u; varIdx < GetVariations().size(); ++varIdx) {
-         const auto mask = fPrevNodes[varIdx]->CheckFilters(slot, entry);
+         const auto &mask = fPrevNodes[varIdx]->CheckFilters(slot, entry);
          std::for_each(fInputValues[slot][varIdx].begin(), fInputValues[slot][varIdx].end(),
-                       [entry, mask](auto *v) { v->Load(entry, mask); });
+                       [&mask](auto *v) { v->Load(mask); });
 
-         if (mask)
-            CallExec(slot, varIdx, /*idx=*/0u, ColumnTypes_t{}, TypeInd_t{});
+         const std::size_t bulkSize = 1; // for now we don't actually have bulks
+         for (std::size_t i = 0ul; i < bulkSize; ++i) {
+            if (mask[i])
+               CallExec(slot, varIdx, i, ColumnTypes_t{}, TypeInd_t{});
+         }
       }
    }
 

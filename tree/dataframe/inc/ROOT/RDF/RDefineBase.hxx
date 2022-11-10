@@ -13,6 +13,7 @@
 
 #include "ROOT/RDF/GraphNode.hxx"
 #include "ROOT/RDF/RColumnRegister.hxx"
+#include "ROOT/RDF/RMaskedEntryRange.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RVec.hxx"
@@ -40,7 +41,8 @@ class RDefineBase {
 protected:
    const std::string fName; ///< The name of the custom column
    const std::string fType; ///< The type of the custom column as a text string
-   std::vector<Long64_t> fLastCheckedEntry;
+   /// Entries for which we already computed values will be unmasked, per slot.
+   std::vector<RDFInternal::RMaskedEntryRange> fMask;
    RDFInternal::RColumnRegister fColRegister;
    RLoopManager *fLoopManager; // non-owning pointer to the RLoopManager
    const ROOT::RDF::ColumnNames_t fColumnNames;
@@ -63,7 +65,7 @@ public:
    std::string GetName() const;
    std::string GetTypeName() const;
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
-   virtual void Update(unsigned int slot, Long64_t entry, bool mask) = 0;
+   virtual void Update(unsigned int slot, const RDFInternal::RMaskedEntryRange &) = 0;
    /// Update function to be called once per sample, used if the derived type is a RDefinePerSample
    virtual void Update(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo &/*id*/) {}
    /// Clean-up operations to be performed at the end of a task.

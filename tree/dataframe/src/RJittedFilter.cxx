@@ -53,7 +53,7 @@ void RJittedFilter::InitSlot(TTreeReader *r, unsigned int slot)
    fConcreteFilter->InitSlot(r, slot);
 }
 
-bool RJittedFilter::CheckFilters(unsigned int slot, Long64_t entry)
+const RDFInternal::RMaskedEntryRange &RJittedFilter::CheckFilters(unsigned int slot, Long64_t entry)
 {
    assert(fConcreteFilter != nullptr);
    return fConcreteFilter->CheckFilters(slot, entry);

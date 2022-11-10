@@ -157,6 +157,9 @@ class RLoopManager : public RNodeBase {
 
    ROOT::Internal::TreeUtils::RNoCleanupNotifier fNoCleanupNotifier;
 
+   /// One masked entry range per processing slot. All elements are always true, while the range changes.
+   std::vector<RDFInternal::RMaskedEntryRange> fAllTrueMasks;
+
    void RunEmptySourceMT();
    void RunEmptySource();
    void RunTreeProcessorMT();
@@ -200,7 +203,7 @@ public:
    void Deregister(RDefineBase *definePtr);
    void Register(RDFInternal::RVariationBase *varPtr);
    void Deregister(RDFInternal::RVariationBase *varPtr);
-   bool CheckFilters(unsigned int, Long64_t) final;
+   const RDFInternal::RMaskedEntryRange &CheckFilters(unsigned int, Long64_t) final;
    unsigned int GetNSlots() const { return fNSlots; }
    void Report(ROOT::RDF::RCutFlowReport &rep) const final;
    /// End of recursive chain of calls, does nothing

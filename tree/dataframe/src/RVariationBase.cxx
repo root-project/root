@@ -28,7 +28,7 @@ RVariationBase::RVariationBase(const std::vector<std::string> &colNames, std::st
                                const std::vector<std::string> &variationTags, std::string_view type,
                                const RColumnRegister &colRegister, RLoopManager &lm, const ColumnNames_t &inputColNames)
    : fColNames(colNames), fVariationNames(variationTags), fType(type),
-     fLastCheckedEntry(lm.GetNSlots() * CacheLineStep<Long64_t>(), -1), fColumnRegister(colRegister), fLoopManager(&lm),
+     fMask(lm.GetNSlots() * CacheLineStep<RMaskedEntryRange>(), {1ll}), fColumnRegister(colRegister), fLoopManager(&lm),
      fInputColumns(inputColNames), fIsDefine(inputColNames.size())
 {
    // prepend the variation name to each tag

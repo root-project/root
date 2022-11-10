@@ -20,6 +20,8 @@ namespace ROOT {
 namespace Detail {
 namespace RDF {
 
+namespace RDFInternal = ROOT::Internal::RDF;
+
 /**
 \class ROOT::Internal::RDF::RColumnReaderBase
 \ingroup dataframe
@@ -29,22 +31,13 @@ This pure virtual class provides a common base class for the different column re
 RDSColumnReader.
 **/
 class R__CLING_PTRCHECK(off) RColumnReaderBase {
-   Long64_t fLoadedEntry = -1;
-
 public:
    virtual ~RColumnReaderBase() = default;
 
    /// Load the column value for the given entry.
    /// \param entry The entry number to load.
    /// \param mask The entry mask. Values will be loaded only for entries for which the mask equals true.
-   void Load(Long64_t entry, bool mask)
-   {
-      // For now, as `mask` is just a single boolean, as an optimization we can return early here if `mask == false`.
-      if (mask) {
-         fLoadedEntry = entry;
-         this->LoadImpl(entry, mask);
-      }
-   }
+   void Load(const RDFInternal::RMaskedEntryRange &mask) { this->LoadImpl(mask); }
 
    /// Return the column value for the given entry.
    /// \tparam T The column type
@@ -59,7 +52,7 @@ public:
 private:
    virtual void *GetImpl(std::size_t idx) = 0;
    // TODO remove the default implementation when all readers will be required to do something non-trivial at load time
-   virtual void LoadImpl(Long64_t /*entry*/, bool /*mask*/) {}
+   virtual void LoadImpl(const Internal::RDF::RMaskedEntryRange &) {}
 };
 
 } // namespace RDF

@@ -71,30 +71,32 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    std::unordered_map<std::string, std::unique_ptr<RDefineBase>> fVariedDefines;
 
    template <typename... ColTypes, std::size_t... S>
-   void UpdateHelper(unsigned int slot, std::size_t idx, Long64_t /*entry*/, TypeList<ColTypes...>,
-                     std::index_sequence<S...>, NoneTag)
+   auto EvalExpr(unsigned int slot, std::size_t idx, Long64_t /*entry*/, TypeList<ColTypes...>,
+                 std::index_sequence<S...>, NoneTag)
    {
-      fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
-         fExpression(fValues[slot][S]->template Get<ColTypes>(idx)...);
-      (void)idx; // avoid unused parameter warning (gcc 12.1)
+      // counting on copy elision
+      return fExpression(fValues[slot][S]->template Get<ColTypes>(idx)...);
+      // avoid unused variable warnings (gcc 12)
+      (void)slot;
+      (void)idx;
    }
 
    template <typename... ColTypes, std::size_t... S>
-   void UpdateHelper(unsigned int slot, std::size_t idx, Long64_t /*entry*/, TypeList<ColTypes...>,
-                     std::index_sequence<S...>, SlotTag)
+   auto EvalExpr(unsigned int slot, std::size_t idx, Long64_t /*entry*/, TypeList<ColTypes...>,
+                 std::index_sequence<S...>, SlotTag)
    {
-      fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
-         fExpression(slot, fValues[slot][S]->template Get<ColTypes>(idx)...);
-      (void)idx; // avoid unused parameter warning (gcc 12.1)
+      // counting on copy elision
+      return fExpression(slot, fValues[slot][S]->template Get<ColTypes>(idx)...);
+      (void)idx; // avoid unused variable warnings (gcc 12)
    }
 
    template <typename... ColTypes, std::size_t... S>
-   void UpdateHelper(unsigned int slot, std::size_t idx, Long64_t batchFirstEntry, TypeList<ColTypes...>,
-                     std::index_sequence<S...>, SlotAndEntryTag)
+   auto EvalExpr(unsigned int slot, std::size_t idx, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>,
+                 SlotAndEntryTag)
    {
-      fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
-         fExpression(slot, batchFirstEntry + idx, fValues[slot][S]->template Get<ColTypes>(idx)...);
-      (void)idx; // avoid unused parameter warning (gcc 12.1)
+      // counting on copy elision
+      return fExpression(slot, entry, fValues[slot][S]->template Get<ColTypes>(idx)...);
+      (void)idx; // avoid unused variable warnings (gcc 12)
    }
 
 public:
@@ -115,7 +117,7 @@ public:
    {
       RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), *fLoopManager};
       fValues[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
-      fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
+      fMask[slot * RDFInternal::CacheLineStep<RDFInternal::RMaskedEntryRange>()].SetFirstEntry(-1ll);
    }
 
    /// Return the (type-erased) address of the Define'd value for the given processing slot.
@@ -125,19 +127,29 @@ public:
    }
 
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
-   void Update(unsigned int slot, Long64_t entry, bool mask) final
+   void Update(unsigned int slot, const Internal::RDF::RMaskedEntryRange &requestedMask) final
    {
-      if (entry != fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()]) {
-         // evaluate this define expression, cache the result
-         std::for_each(fValues[slot].begin(), fValues[slot].end(), [entry, mask](auto *v) { v->Load(entry, mask); });
-         if (mask) {
-            UpdateHelper(slot, /*idx=*/0u, entry, ColumnTypes_t{}, TypeInd_t{}, ExtraArgsTag{});
-            fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = entry;
+      auto &valueMask = fMask[slot * RDFInternal::CacheLineStep<RDFInternal::RMaskedEntryRange>()];
+      if (valueMask.FirstEntry() != requestedMask.FirstEntry()) { // new bulk
+         // if it turns out that we do these two operations together very often, maybe it's worth having a ad-hoc method
+         valueMask.SetAll(false);
+         valueMask.SetFirstEntry(requestedMask.FirstEntry());
+      }
+
+      std::for_each(fValues[slot].begin(), fValues[slot].end(), [&requestedMask](auto *v) { v->Load(requestedMask); });
+
+      // TODO change fLastResults to an array of results per slot
+      auto &result = fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()];
+      const std::size_t bulkSize = 1; // for now we don't actually have bulks
+      for (std::size_t i = 0ul; i < bulkSize; ++i) {
+         if (requestedMask[i] && !valueMask[i]) { // we don't have a value for this entry yet
+            result = EvalExpr(slot, i, valueMask.FirstEntry() + i, ColumnTypes_t{}, TypeInd_t{}, ExtraArgsTag{});
+            valueMask[i] = true;
          }
       }
    }
 
-   void Update(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo &/*id*/) final {}
+   void Update(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo & /*id*/) final {}
 
    const std::type_info &GetTypeId() const final { return typeid(ret_type); }
 

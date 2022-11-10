@@ -108,11 +108,14 @@ public:
 
    void Run(unsigned int slot, Long64_t entry) final
    {
-      const auto mask = fPrevNode.CheckFilters(slot, entry);
-      std::for_each(fValues[slot].begin(), fValues[slot].end(), [entry, mask](auto *v) { v->Load(entry, mask); });
+      const auto &mask = fPrevNode.CheckFilters(slot, entry);
+      std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
 
-      if (mask)
-         CallExec(slot, /*idx=*/0u, ColumnTypes_t{}, TypeInd_t{});
+      const std::size_t bulkSize = 1; // for now we don't actually have bulks
+      for (std::size_t i = 0ul; i < bulkSize; ++i) {
+         if (mask[i])
+            CallExec(slot, i, ColumnTypes_t{}, TypeInd_t{});
+      }
    }
 
    void TriggerChildrenCount() final { fPrevNode.IncrChildrenCount(); }

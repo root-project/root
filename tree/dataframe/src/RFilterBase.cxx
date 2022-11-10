@@ -20,8 +20,7 @@ RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const uns
                          const RDFInternal::RColumnRegister &colRegister, const ColumnNames_t &columns,
                          const std::vector<std::string> &prevVariations, const std::string &variation)
    : RNodeBase(ROOT::Internal::RDF::Union(colRegister.GetVariationDeps(columns), prevVariations), implPtr),
-     fLastCheckedEntry(nSlots * RDFInternal::CacheLineStep<Long64_t>(), -1),
-     fLastResult(nSlots * RDFInternal::CacheLineStep<int>()),
+     fMask(nSlots * RDFInternal::CacheLineStep<RDFInternal::RMaskedEntryRange>(), {1ul}),
      fAccepted(nSlots * RDFInternal::CacheLineStep<ULong64_t>()),
      fRejected(nSlots * RDFInternal::CacheLineStep<ULong64_t>()), fName(name), fColumnNames(columns),
      fColRegister(colRegister), fIsDefine(columns.size()), fVariation(variation)
