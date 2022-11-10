@@ -26,11 +26,13 @@
 int gNCall = 0;
 int gNCall2 = 0;
 int gNmin = 1000;
-int gVerbose = 0;
-bool useGradient = false;
+int gVerbose = 1;
+
+bool useGradient = true;
 
 bool minos = true;
-
+bool hessian = true;
+int strategy = 1;
 double gAbsTolerance = 0.005;
 
 // Rosenbrok function to be minimize
@@ -427,7 +429,7 @@ void printMinimum(const std::vector<double> &x)
 }
 
 int DoADMinimization(const std::string & formula, const double *x0, const double *s0,
-                     double &minval, double &edm, std::vector<double> & xmin)
+                     double &minval, double &edm, std::vector<double> & xmin, std::vector<double> &covMat)
 {
 
    int iret = 0;
@@ -438,7 +440,7 @@ int DoADMinimization(const std::string & formula, const double *x0, const double
    min->SetPrintLevel(gVerbose);
    // create the function using the formula
 
-   TFormula func("func", formula.c_str());
+   TFormula func("f", formula.c_str());
    func.GenerateGradientPar();
    func.GenerateHessianPar();
 
@@ -461,8 +463,12 @@ int DoADMinimization(const std::string & formula, const double *x0, const double
       func.HessianPar(nullptr,h);
       return true;
    };
+
+   ROOT::Math::Functor wfunc( fcn, ndim);
    ROOT::Math::GradFunctor gradfunc( ndim, fcn, gradFcn);
-   min->SetFunction(gradfunc);
+
+   if (useGradient) {
+      min->SetFunction(gradfunc);
    // check if function provides gradient
    // const ROOT::Math::IMultiGradFunction *gfunc = dynamic_cast<const ROOT::Math::IMultiGradFunction *>(&gradfunc);
    // if (gfunc != 0 && useGradient)
@@ -470,7 +476,12 @@ int DoADMinimization(const std::string & formula, const double *x0, const double
    // else
 
 
-   min->SetHessianFunction(hessFcn);
+     min->SetHessianFunction(hessFcn);
+   }
+   else {
+
+      min->SetFunction(wfunc);
+   }
 
    min->SetMaxFunctionCalls(1000000);
    min->SetMaxIterations(100000);
@@ -479,7 +490,9 @@ int DoADMinimization(const std::string & formula, const double *x0, const double
       min->SetTolerance(0.01);
    }
 
-   for (unsigned int i = 0; i < ndim; ++i) {
+   min->SetStrategy(strategy);
+
+   for (int i = 0; i < ndim; ++i) {
       min->SetVariable(i, "x" + ROOT::Math::Util::ToString(i), x0[i], s0[i]);
    }
 
@@ -487,28 +500,30 @@ int DoADMinimization(const std::string & formula, const double *x0, const double
    minval = min->MinValue();
    edm = min->Edm();
 
+   int ncall_migrad = min->NCalls();
+
    if (!ret) {
       return -1;
    }
 
    xmin = std::vector<double>(min->X(), min->X()+ndim);
 
-   // bool ok = true;
-   // const double *trueMin = TrueMinimum(func);
-   // if (trueMin != 0) {
-   //    for (unsigned int i = 0; i < ndim; ++i)
-   //       ok &= (std::fabs(xmin[i] - trueMin[i]) < gAbsTolerance);
-   // }
-
-   // if (!ok)
-   //    iret = -2;
-   // int ncall_migrad = gNCall;
+   // test Hessian
+   if (hessian) {
+      ret |= min->Hesse();
+      if (!ret) {
+       return -1;
+      }
+      covMat.resize(ndim*ndim);
+      min->GetCovMatrix(covMat.data());
+   }
+   int ncall_hesse = min->NCalls()-ncall_migrad;
 
    // test Minos (use the default up of 1)
    if (minos) {
 
       double el, eu;
-      for (unsigned int i = 0; i < ndim; ++i) {
+      for (int i = 0; i < ndim; ++i) {
          ret = min->GetMinosError(i, el, eu);
          std::cout << "ncalls " << gNCall << "\t";
          if (ret)
@@ -518,9 +533,11 @@ int DoADMinimization(const std::string & formula, const double *x0, const double
       }
    }
 
-   // std::cout << "\nMigrad Ncalls:\t " << ncall_migrad << std::endl;
-   // std::cout << "Minos Ncalls :\t " << gNCall - ncall_migrad << std::endl;
-
+   std::cout << "\nMigrad Ncalls:\t " << ncall_migrad << std::endl;
+   std::cout << "Hesse Ncalls :\t " << ncall_hesse << std::endl;
+   std::cout << "Minos Ncalls :\t " << min->NCalls() - ncall_migrad - ncall_hesse << std::endl;
+   std::cout << "Total NCalls :\t " << min->NCalls() << std::endl;
+   gNCall = min->NCalls();
    //   std::cout << "function at the minimum " << func(xmin) << std::endl;
 
    min->Clear();
@@ -540,22 +557,27 @@ int testADMinimizer(std::string formula, const double *x0, const double *s0)
    int iret = 0;
    double minval = 0., edm = 0.;
    std::vector<double> xmin;
+   std::vector<double> covMat;
 
    TStopwatch w;
    w.Start();
 
    gNCall = 0; gNCall2 = 0;
-   iret |= DoADMinimization(formula, x0, s0, minval, edm, xmin);
+   iret |= DoADMinimization(formula, x0, s0, minval, edm, xmin, covMat);
 
 
    w.Stop();
    if (iret != 0)
       std::cout << "\n****** ERROR:   Minimization FAILED ! \n";
    int pr = std::cout.precision(18);
-   std::cout << "\nNCalls: \t" << gNCall << " , " << gNCall2 << "\tMinValue: \t" << minval << "\tEdm: \t" << edm;
+   std::cout << "\nNCalls: \t" << gNCall << "\tMinValue: \t" << minval << "\tEdm: \t" << edm;
    std::cout.precision(pr);
    std::cout << "\nTime:   \t" << w.RealTime() << " , " << w.CpuTime() << std::endl;
    printMinimum(xmin);
+   if (hessian) {
+      TMatrixD C(xmin.size(),xmin.size(),covMat.data());
+      C.Print();
+   }
    std::cout << "\n************************************************************\n";
 
    return iret;
@@ -569,8 +591,14 @@ int testRosenBrock()
 
    std::cout << "\n************************************************************\n";
    std::cout << "\tROSENBROCK function test\n\n";
+   if (useGradient) std::cout << "\t using AD\n";
+   else std::cout << "\t using Numerical Gradients\n";
 
-   std::string formula = "(1.-[A])^2 + 100. * ([B]-[A]^2)^2";
+   // need to use A and B since x and y are reserved for obs in TFormula
+   std::string formula = "(1.-[A])*(1.-[A]) + 100. * ([B]-[A]*[A])*([B]-[A]*[A])";
+   // need to define x and y as parameters for TFormula
+   //std::string formula = "(1.-[x])*(1.-[x]) + 100. * ([y]-[x]*[x])*([y]-[x]*[x])";
+   //"(1.-[A])^2 + 100. * ([B]-[A]^2)^2";
 
 
    double s0[2] = {0.01, 0.01};
@@ -748,11 +776,11 @@ int main()
 
    int iret = 0;
 
-#ifdef DEBUG
-   gVerbose = 4;
-   gNmin = 1;
-#endif
+   //gNmin = 1;
 
+   useGradient = false;
+   iret |= testRosenBrock();
+   useGradient = true;
    iret |= testRosenBrock();
 
    // iret |= testChebyQuad();
