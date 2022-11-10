@@ -21,7 +21,10 @@
 RooMinimizer is a wrapper class around ROOT::Fit:Fitter that
 provides a seamless interface between the minimizer functionality
 and the native RooFit interface.
-The Minimizer is MINUIT or MINUIT2 depending on configuration.
+By default the Minimizer is MINUIT for classic mode and MINUIT2
+for parallelized mode (activated with the `RooFit::NewStyle(true)`
+parameter or by passing a RooRealL function as the minimization
+target).
 RooMinimizer can minimize any RooAbsReal function with respect to
 its parameters. Usual choices for minimization are RooNLLVar
 and RooChi2Var
