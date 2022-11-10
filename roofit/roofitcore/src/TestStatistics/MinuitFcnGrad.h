@@ -47,6 +47,9 @@ public:
    inline void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override
    {
       likelihood->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
+      if (likelihood != likelihood_in_gradient) {
+         likelihood_in_gradient->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
+      }
    }
 
    bool fit(ROOT::Fit::Fitter &fitter) const override { return fitter.FitFCN(*this); };
@@ -69,7 +72,13 @@ public:
 
    inline std::string getFunctionTitle() const override { return likelihood->GetTitle(); }
 
-   inline void setOffsetting(bool flag) override { likelihood->enableOffsetting(flag); }
+   inline void setOffsetting(bool flag) override
+   {
+      likelihood->enableOffsetting(flag);
+      if (likelihood != likelihood_in_gradient) {
+         likelihood_in_gradient->enableOffsetting(flag);
+      }
+   }
 
 private:
    /// This override should not be used in this class, so it throws.
