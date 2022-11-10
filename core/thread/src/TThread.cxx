@@ -178,7 +178,7 @@ Int_t TJoinHelper::Join()
          // If we received the signal or timed out, let's check the value
          if (fJoined) break;
       } else {
-         // If any other error occured, there is no point in trying again
+         // If any other error occurred, there is no point in trying again
          break;
       }
 
