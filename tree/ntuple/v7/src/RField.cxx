@@ -1005,14 +1005,8 @@ void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t glob
    RClusterIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
-   auto oldNItems = fProxy->Size();
-   if (fProxy->GetProperties() & TVirtualCollectionProxy::kNeedDelete) {
-      for (std::size_t i = 0; i < oldNItems; ++i) {
-         auto itemValue = fSubFields[0]->CaptureValue(fProxy->At(i));
-         fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
-      }
-   }
-   fProxy->Clear();
+   // `TVirtualCollectionProxy::Clear()` is responsible for destroying the items in the collection
+   fProxy->Clear("force");
 
    // Avoid heap fragmentation at the cost of temporarily allocating slightly more memory
    const size_t buffSize = std::max(kReadChunkSize, fItemSize);
