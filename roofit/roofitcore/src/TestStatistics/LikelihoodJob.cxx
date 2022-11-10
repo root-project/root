@@ -275,7 +275,10 @@ void LikelihoodJob::evaluate_task(std::size_t task)
 void LikelihoodJob::enableOffsetting(bool flag)
 {
    LikelihoodWrapper::enableOffsetting(flag);
-   updateWorkersOffsetting();
+   if (RooFit::MultiProcess::JobManager::is_instantiated()) {
+      printf("WARNING: when calling MinuitFcnGrad::setOffsetting after the run has already been started the MinuitFcnGrad::likelihood_in_gradient object (a LikelihoodSerial) on the workers can no longer be updated! This function (LikelihoodJob::enableOffsetting) can in principle be used outside of MinuitFcnGrad, but be aware of this limitation. To do a minimization with a different offsetting setting, please delete all RooFit::MultiProcess based objects so that the forked processes are killed and then set up a new RooMinimizer.\n");
+      updateWorkersOffsetting();
+   }
 }
 
 #define PROCESS_VAL(p) \
