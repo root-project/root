@@ -36,6 +36,15 @@ if(DEFINED ARROW_FOUND)
   return()
 endif()
 
+find_package(Arrow CONFIG QUIET)
+if(${Arrow_FOUND} AND ${ARROW_VERSION} VERSION_GREATER_EQUAL 10.0.0)
+  set(ARROW_FOUND ${Arrow_FOUND})
+  set(ARROW_SHARED_LIB Arrow::arrow_shared)
+  set(ARROW_STATIC_LIB Arrow::arrow_static)
+  message(STATUS "Found Arrow version ${ARROW_VERSION}")
+  return()
+endif()
+
 include(FindPkgConfig)
 include(FindPackageHandleStandardArgs)
 
