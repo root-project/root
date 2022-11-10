@@ -196,11 +196,12 @@ typedef enum {
 } daos_iod_type_t;
 
 typedef struct {
-	daos_key_t		iod_name;
-	daos_iod_type_t		iod_type;
-	daos_size_t		iod_size;
-	unsigned int		iod_nr;
-	daos_recx_t		*iod_recxs;
+   daos_key_t iod_name;
+   daos_iod_type_t iod_type;
+   daos_size_t iod_size;
+   uint64_t iod_flags;
+   unsigned int iod_nr;
+   daos_recx_t *iod_recxs;
 } daos_iod_t;
 
 typedef struct {
