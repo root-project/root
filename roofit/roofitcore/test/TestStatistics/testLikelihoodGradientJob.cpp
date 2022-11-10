@@ -508,3 +508,80 @@ TEST_P(LikelihoodGradientJob, Gaussian1DAlsoWithLikelihoodJob)
    EXPECT_FLOAT_EQ(muerr0, muerr1);
    EXPECT_NEAR(edm0, edm1, 1e-5);
 }
+
+TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffsetAlsoWithLikelihoodJob)
+{
+   // do a minimization, but now using GradMinimizer and its MP version
+   nll.reset(pdf->createNLL(*data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
+                            RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(true)));
+
+   // parameters
+   std::size_t NWorkers = 2;
+
+   std::unique_ptr<RooArgSet> values(pdf->getParameters(data));
+
+   values->add(*pdf);
+   values->add(*nll);
+
+   RooArgSet savedValues;
+   values->snapshot(savedValues);
+
+   // --------
+
+   RooMinimizer m0(*nll);
+
+   m0.setStrategy(0);
+   m0.setPrintLevel(-1);
+
+   m0.migrad();
+
+   RooFitResult *m0result = m0.lastMinuitFit();
+   double minNll_nominal = m0result->minNll();
+   double alpha_bkg_A_nominal = w.var("alpha_bkg_A")->getVal();
+   double alpha_bkg_A_error_nominal = w.var("alpha_bkg_A")->getError();
+   double alpha_bkg_B_nominal = w.var("alpha_bkg_B")->getVal();
+   double alpha_bkg_B_error_nominal = w.var("alpha_bkg_B")->getError();
+   double mu_sig_nominal = w.var("mu_sig")->getVal();
+   double mu_sig_error_nominal = w.var("mu_sig")->getError();
+
+   values->assign(savedValues);
+
+   RooFit::MultiProcess::Config::setDefaultNWorkers(NWorkers);
+
+   std::unique_ptr<RooAbsReal> likelihoodAbsReal{pdf->createNLL(
+      *data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
+      RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(true), RooFit::NewStyle(true))};
+
+   RooMinimizer::Config cfg;
+   cfg.parallelLikelihood = true;
+   cfg.parallelGradient = true;
+   RooMinimizer m1(*likelihoodAbsReal, cfg);
+
+   m1.setOffsetting(true);
+
+   m1.setStrategy(0);
+   m1.setPrintLevel(-1);
+   m1.optimizeConst(2);
+
+   m1.migrad();
+
+   RooFitResult *m1result = m1.lastMinuitFit();
+   double minNll_GradientJob = m1result->minNll();
+   double alpha_bkg_A_GradientJob = w.var("alpha_bkg_A")->getVal();
+   double alpha_bkg_A_error_GradientJob = w.var("alpha_bkg_A")->getError();
+   double alpha_bkg_B_GradientJob = w.var("alpha_bkg_B")->getVal();
+   double alpha_bkg_B_error_GradientJob = w.var("alpha_bkg_B")->getError();
+   double mu_sig_GradientJob = w.var("mu_sig")->getVal();
+   double mu_sig_error_GradientJob = w.var("mu_sig")->getError();
+
+   // See the comment in LikelihoodSimBinnedConstrainedTest.ConstrainedAndOffset
+   EXPECT_NEAR_REL(minNll_nominal, minNll_GradientJob, 1e-6);
+   EXPECT_NEAR_REL(alpha_bkg_A_nominal, alpha_bkg_A_GradientJob, 1e-6);
+   EXPECT_NEAR_REL(alpha_bkg_A_error_nominal, alpha_bkg_A_error_GradientJob, 1e-6);
+   EXPECT_NEAR_REL(alpha_bkg_B_nominal, alpha_bkg_B_GradientJob, 1e-6);
+   EXPECT_NEAR_REL(alpha_bkg_B_error_nominal, alpha_bkg_B_error_GradientJob, 1e-6);
+   EXPECT_NEAR_REL(mu_sig_nominal, mu_sig_GradientJob, 1e-6);
+   EXPECT_NEAR_REL(mu_sig_error_nominal, mu_sig_error_GradientJob, 1e-6);
+}
+
+#undef EXPECT_NEAR_REL
