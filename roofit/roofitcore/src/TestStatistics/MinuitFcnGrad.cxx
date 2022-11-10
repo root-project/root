@@ -56,7 +56,7 @@ MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAb
    calculation_is_clean = std::make_shared<WrapperCalculationCleanFlags>();
 
    likelihood = LikelihoodWrapper::create(likelihoodMode, _likelihood, calculation_is_clean);
-   if (likelihoodGradientMode == LikelihoodGradientMode::multiprocess) {
+   if (likelihoodMode == LikelihoodMode::multiprocess && likelihoodGradientMode == LikelihoodGradientMode::multiprocess) {
       likelihood_in_gradient = LikelihoodWrapper::create(LikelihoodMode::serial, _likelihood, calculation_is_clean);
    } else {
       likelihood_in_gradient = likelihood;
