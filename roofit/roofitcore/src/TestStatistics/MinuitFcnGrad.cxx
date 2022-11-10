@@ -270,6 +270,7 @@ bool MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &param
    }
    gradient->synchronizeParameterSettings(parameters);
 
+   likelihood->synchronizeWithMinimizer(_context->fitter()->Config().MinimizerOptions());
    if (likelihood != likelihood_in_gradient) {
       likelihood_in_gradient->synchronizeWithMinimizer(_context->fitter()->Config().MinimizerOptions());
    }
