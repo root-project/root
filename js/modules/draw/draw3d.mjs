@@ -1,3 +1,4 @@
+import { isFunc } from '../core.mjs';
 import { createLineSegments, create3DLineMaterial } from '../base/base3d.mjs';
 import { drawDummy3DGeom } from '../geom/TGeoPainter.mjs';
 import { drawPolyMarker3D as drawPolyMarker3Dplain } from './TPolyMarker3D.mjs';
@@ -17,7 +18,7 @@ function before3DDraw(painter, obj) {
    let geop = painter.getMainPainter();
    if(!geop)
       return drawDummy3DGeom(painter);
-   if (typeof geop.drawExtras == 'function')
+   if (isFunc(geop.drawExtras))
       return geop.drawExtras(obj);
 
    return null;

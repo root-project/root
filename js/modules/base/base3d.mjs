@@ -5,7 +5,7 @@ import { HelveticerRegularJson, Font, WebGLRenderer, WebGLRenderTarget,
          Vector2, Vector3, Color, Points, PointsMaterial,
          LineSegments, LineDashedMaterial, LineBasicMaterial,
          OrbitControls, Raycaster, SVGRenderer } from '../three.mjs';
-import { browser, settings, constants, internals, isBatchMode, isNodeJs, getDocument } from '../core.mjs';
+import { browser, settings, constants, internals, isBatchMode, isNodeJs, isFunc, isStr, getDocument } from '../core.mjs';
 import { getElementRect, getAbsPosInCanvas } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from './TAttLineHandler.mjs';
@@ -421,16 +421,8 @@ async function createRender3D(width, height, render3d, args) {
          if (!gl) throw(Error('Fail to create headless-gl'));
          args.context = gl;
          gl.canvas = args.canvas;
-         let wk_rnd = false;
-         if (typeof navigator == 'undefined') {
-            // TODO: check if needed after r145
-            globalThis.navigator = { userAgent: 'node' };
-            wk_rnd = true;
-         }
 
          let r = new WebGLRenderer(args);
-
-         if (wk_rnd) delete globalThis.navigator;
 
          r.jsroot_output = new WebGLRenderTarget(width, height);
          r.setRenderTarget(r.jsroot_output);
@@ -482,15 +474,15 @@ function cleanupRender3D(renderer) {
    if (!renderer) return;
 
    if (isNodeJs()) {
-      let ctxt = (typeof renderer.getContext == 'function') ? renderer.getContext() : null,
+      let ctxt = isFunc(renderer.getContext) ? renderer.getContext() : null,
           ext = ctxt?.getExtension('STACKGL_destroy_context');
       if (ext) ext.destroy();
    } else {
       // suppress warnings in Chrome about lost webgl context, not required in firefox
-      if (browser.isChrome && (typeof renderer.forceContextLoss == 'function'))
+      if (browser.isChrome && isFunc(renderer.forceContextLoss))
          renderer.forceContextLoss();
 
-      if (typeof renderer.dispose == 'function')
+      if (isFunc(renderer.dispose))
          renderer.dispose();
    }
 }
@@ -702,7 +694,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
    let control = null,
        enable_zoom = settings.Zooming && settings.ZoomMouse,
-       enable_select = (typeof painter.processMouseClick == 'function');
+       enable_select = isFunc(painter.processMouseClick);
 
    function control_mousedown(evnt) {
       if (!control) return;
@@ -796,7 +788,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       evnt.stopPropagation();
       evnt.stopImmediatePropagation();
 
-      if (typeof control.painter?.analyzeMouseWheelEvent == 'function') {
+      if (isFunc(control.painter?.analyzeMouseWheelEvent)) {
          let kind = intersect.object.zoom,
              position = intersect.point[kind],
              item = { name: kind, ignore: false };
@@ -900,7 +892,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       this.raycaster.set(origin, direction);
       let intersects = this.raycaster.intersectObjects(this.scene.children, true);
       // painter may want to filter intersects
-      if (typeof this.painter.filterIntersects == 'function')
+      if (isFunc(this.painter.filterIntersects))
          intersects = this.painter.filterIntersects(intersects);
       return intersects;
    }
@@ -918,7 +910,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       let intersects = this.raycaster.intersectObjects(this.scene.children, true);
 
       // painter may want to filter intersects
-      if (typeof this.painter.filterIntersects == 'function')
+      if (isFunc(this.painter.filterIntersects))
          intersects = this.painter.filterIntersects(intersects);
 
       return intersects;
@@ -963,7 +955,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
       // then check if double-click handler assigned
       let fp = this.painter ? this.painter.getFramePainter() : null;
-      if (typeof fp?._dblclick_handler == 'function') {
+      if (isFunc(fp?._dblclick_handler)) {
          let info = this.getInfoAtMousePosition(this.getMousePos(evnt, {}));
          if (info) {
             fp._dblclick_handler(info);
@@ -1085,7 +1077,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       if (tip) {
          let name = '', title = '', coord = '', info = '';
          if (mouse) coord = mouse.x.toFixed(0) + ',' + mouse.y.toFixed(0);
-         if (typeof tip == 'string') {
+         if (isStr(tip)) {
             info = tip;
          } else {
             name = tip.name; title = tip.title;
@@ -1120,7 +1112,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
          delete this.tmout_handle;
       }
       this.tooltip.hide();
-      if (typeof this.processMouseLeave === 'function')
+      if (isFunc(this.processMouseLeave))
          this.processMouseLeave();
       if (this.cursor_changed) {
          document.body.style.cursor = 'auto';
@@ -1142,7 +1134,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
       if (kind == 1) {
          let fp = this.painter ? this.painter.getFramePainter() : null;
-         if (typeof fp?._click_handler == 'function') {
+         if (isFunc(fp?._click_handler)) {
             let info = this.getInfoAtMousePosition(mouse_pos);
             if (info) {
                fp._click_handler(info);
@@ -1152,7 +1144,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       }
 
       // method assigned in the Eve7 and used for object selection
-      if ((kind == 2) && (typeof this.processSingleClick == 'function')) {
+      if ((kind == 2) && isFunc(this.processSingleClick)) {
          let intersects = this.getMouseIntersects(mouse_pos);
          this.processSingleClick(intersects);
       }
@@ -1168,7 +1160,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       }
 
       let kind = 0, fp = this.painter?.getFramePainter();
-      if (typeof fp?._click_handler == 'function')
+      if (isFunc(fp?._click_handler))
          kind = 1; // user click handler
       else if (this.processSingleClick && this.painter?.options?.mouse_click)
          kind = 2;  // eve7 click handler
@@ -1509,7 +1501,7 @@ function create3DLineMaterial(painter, arg, is_v7 = false) {
    if (!painter || !arg) return null;
 
    let lcolor, lstyle, lwidth;
-   if ((typeof arg == 'string') || is_v7) {
+   if (isStr(arg) || is_v7) {
       lcolor = painter.v7EvalColor(arg+'color', 'black');
       lstyle = parseInt(painter.v7EvalAttr(arg+'style', 0));
       lwidth = parseInt(painter.v7EvalAttr(arg+'width', 1));

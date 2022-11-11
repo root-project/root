@@ -1,4 +1,4 @@
-import { gStyle, settings, constants, isBatchMode } from '../core.mjs';
+import { gStyle, settings, constants, isBatchMode, clTGaxis, clTAxis } from '../core.mjs';
 import { select as d3_select, drag as d3_drag, timeFormat as d3_timeFormat,
          scaleTime as d3_scaleTime, scaleSymlog as d3_scaleSymlog,
          scaleLog as d3_scaleLog, scaleLinear as d3_scaleLinear } from '../d3.mjs';
@@ -373,7 +373,7 @@ class TAxisPainter extends ObjectPainter {
    }
 
    /** @summary Use in GED to identify kind of axis */
-   getAxisType() { return 'TAxis'; }
+   getAxisType() { return clTAxis; }
 
    /** @summary Configure axis painter
      * @desc Axis can be drawn inside frame <g> group with offset to 0 point for the frame
@@ -447,7 +447,7 @@ class TAxisPainter extends ObjectPainter {
       else
          this.gr = this.func;
 
-      let is_gaxis = (axis?._typename === 'TGaxis');
+      let is_gaxis = (axis?._typename === clTGaxis);
 
       delete this.format;// remove formatting func
 
@@ -474,11 +474,11 @@ class TAxisPainter extends ObjectPainter {
              tf1 = (idF >= 0) ? axis.fTimeFormat.slice(0, idF) : axis.fTimeFormat,
              tf2 = chooseTimeFormat(scale_range / gr_range, false);
 
-         if ((tf1.length == 0) || (scale_range < 0.1 * (this.full_max - this.full_min)))
+         if (!tf1 || (scale_range < 0.1 * (this.full_max - this.full_min)))
             tf1 = chooseTimeFormat(scale_range / this.nticks, true);
 
          this.tfunc1 = this.tfunc2 = d3_timeFormat(tf1);
-         if (tf2!==tf1)
+         if (tf2 !== tf1)
             this.tfunc2 = d3_timeFormat(tf2);
 
          this.format = this.formatTime;
@@ -795,9 +795,8 @@ class TAxisPainter extends ObjectPainter {
                title_g.property('shift_x', new_x)
                       .property('shift_y', new_y);
 
-               let axis = this.getObject(), abits = EAxisBits;
-
-               const set_bit = (bit, on) => { if (axis.TestBit(bit) != on) axis.InvertBit(bit); };
+               const axis = this.getObject(), abits = EAxisBits,
+                     set_bit = (bit, on) => { if (axis.TestBit(bit) != on) axis.InvertBit(bit); };
 
                this.titleOffset = (vertical ? new_x : new_y) / offset_k;
                axis.fTitleOffset = this.titleOffset / this.titleSize;
@@ -813,11 +812,28 @@ class TAxisPainter extends ObjectPainter {
                   set_bit(abits.kOppositeTitle, false); this.titleOpposite = false;
                }
 
+               this.submitAxisExec(`SetTitleOffset(${axis.fTitleOffset});;SetBit(${abits.kCenterTitle},${this.titleCenter?1:0})`);
+
                drag_rect.remove();
                drag_rect = null;
             });
 
       title_g.style('cursor', 'move').call(drag_move);
+   }
+
+   /** @summary Configure hist painter which creates axis - to be able submit execs
+     * @private */
+   setHistPainter(hist_painter, axis_name) {
+      this.hist_painter = hist_painter;
+      this.hist_axis = axis_name;
+   }
+
+   /** @summary Submit exec for the axis - if possible
+     * @private */
+   submitAxisExec(exec) {
+      let snapid = this.hist_painter?.snapid;
+      if (snapid && this.hist_axis)
+         this.submitCanvExec(exec, snapid + '#' + this.hist_axis);
    }
 
    /** @summary Produce svg path for axis ticks */
@@ -998,7 +1014,7 @@ class TAxisPainter extends ObjectPainter {
      * @private  */
    extractDrawAttributes(scalingSize, w, h) {
       let axis = this.getObject(),
-          is_gaxis = axis?._typename === 'TGaxis',
+          is_gaxis = axis?._typename === clTGaxis,
           pp = this.getPadPainter(),
           pad_w = pp?.getPadWidth() || 10,
           pad_h = pp?.getPadHeight() || 10,
@@ -1071,7 +1087,7 @@ class TAxisPainter extends ObjectPainter {
    async drawAxis(layer, w, h, transform, secondShift, disable_axis_drawing, max_text_width, calculate_position) {
 
       let axis = this.getObject(),
-          is_gaxis = axis?._typename === 'TGaxis',
+          is_gaxis = axis?._typename === clTGaxis,
           axis_g = layer,
           draw_lines = true,
           pp = this.getPadPainter(),

@@ -1,4 +1,5 @@
-import { gStyle, BIT, settings, create, createHistogram, isBatchMode } from '../core.mjs';
+import { gStyle, BIT, settings, create, createHistogram, isBatchMode, isFunc, isStr,
+         clTPaveStats, clTCutG, clTF1, clTF2 } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { DrawOptions, buildSvgPath } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
@@ -8,7 +9,11 @@ import { TAttFillHandler } from '../base/TAttFillHandler.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
 
 
-const kNotEditable = BIT(18);   // bit set if graph is non editable
+const kNotEditable = BIT(18),   // bit set if graph is non editable
+      clTGraphErrors = 'TGraphErrors',
+      clTGraphAsymmErrors = 'TGraphAsymmErrors',
+      clTGraphBentErrors = 'TGraphBentErrors',
+      clTGraphMultiErrors = 'TGraphMultiErrors';
 
 /**
  * @summary Painter for TGraph object.
@@ -24,10 +29,10 @@ class TGraphPainter extends ObjectPainter {
       this.bins = null;
       this.xmin = this.ymin = this.xmax = this.ymax = 0;
       this.wheel_zoomy = true;
-      this.is_bent = (graph._typename == 'TGraphBentErrors');
-      this.has_errors = (graph._typename == 'TGraphErrors') ||
-                        (graph._typename == 'TGraphMultiErrors') ||
-                        (graph._typename == 'TGraphAsymmErrors') ||
+      this.is_bent = (graph._typename == clTGraphBentErrors);
+      this.has_errors = (graph._typename == clTGraphErrors) ||
+                        (graph._typename == clTGraphMultiErrors) ||
+                        (graph._typename == clTGraphAsymmErrors) ||
                          this.is_bent || graph._typename.match(/^RooHist/);
    }
 
@@ -57,13 +62,13 @@ class TGraphPainter extends ObjectPainter {
    /** @summary Returns object if this drawing TGraphMultiErrors object */
    get_gme() {
       let graph = this.getObject();
-      return graph?._typename == 'TGraphMultiErrors' ? graph : null;
+      return graph?._typename == clTGraphMultiErrors ? graph : null;
    }
 
    /** @summary Decode options */
    decodeOptions(opt, first_time) {
 
-      if ((typeof opt == 'string') && (opt.indexOf('same ') == 0))
+      if (isStr(opt) && (opt.indexOf('same ') == 0))
          opt = opt.slice(5);
 
       let graph = this.getObject(),
@@ -168,7 +173,7 @@ class TGraphPainter extends ObjectPainter {
          if (d.empty()) res.Line = 1;
       }
 
-      if (graph._typename == 'TGraphErrors') {
+      if (graph._typename == clTGraphErrors) {
          let len = graph.fEX.length, m = 0;
          for (let k = 0; k < len; ++k)
             m = Math.max(m, graph.fEX[k], graph.fEY[k]);
@@ -214,12 +219,14 @@ class TGraphPainter extends ObjectPainter {
       if (!gr) return;
 
       let kind = 0, npoints = gr.fNpoints;
-      if ((gr._typename === 'TCutG') && (npoints > 3)) npoints--;
+      if ((gr._typename === clTCutG) && (npoints > 3)) npoints--;
 
-      if (gr._typename == 'TGraphErrors') kind = 1; else
-      if (gr._typename == 'TGraphMultiErrors') kind = 2; else
-      if (gr._typename == 'TGraphAsymmErrors' || gr._typename == 'TGraphBentErrors'
-          || gr._typename.match(/^RooHist/)) kind = 3;
+      if (gr._typename == clTGraphErrors)
+         kind = 1;
+      else if (gr._typename == clTGraphMultiErrors)
+         kind = 2;
+      else if (gr._typename == clTGraphAsymmErrors || gr._typename == clTGraphBentErrors || gr._typename.match(/^RooHist/))
+         kind = 3;
 
       this.bins = new Array(npoints);
 
@@ -343,7 +350,7 @@ class TGraphPainter extends ObjectPainter {
       if ((this.bins.length < 30) && !filter_func) return this.bins;
 
       let selbins = null;
-      if (typeof filter_func == 'function') {
+      if (isFunc(filter_func)) {
          for (let n = 0; n < this.bins.length; ++n) {
             if (filter_func(this.bins[n],n)) {
                if (!selbins) selbins = (n == 0) ? [] : this.bins.slice(0, n);
@@ -494,7 +501,7 @@ class TGraphPainter extends ObjectPainter {
       if (options.Line || options.Fill) {
 
          let close_symbol = '';
-         if (graph._typename == 'TCutG') options.Fill = 1;
+         if (graph._typename == clTCutG) options.Fill = 1;
 
          if (options.Fill) {
             close_symbol = 'Z'; // always close area if we want to fill it
@@ -750,7 +757,7 @@ class TGraphPainter extends ObjectPainter {
             }
          }
 
-         if (path.length > 0) {
+         if (path) {
             draw_g.append('svg:path')
                   .attr('d', path)
                   .call(this.markeratt.func);
@@ -828,7 +835,7 @@ class TGraphPainter extends ObjectPainter {
 
       if (this.options._pfc || this.options._plc || this.options._pmc) {
          let mp = this.getMainPainter();
-         if (typeof mp?.createAutoColor == 'function') {
+         if (isFunc(mp?.createAutoColor)) {
             let icolor = mp.createAutoColor();
             if (this.options._pfc) { graph.fFillColor = icolor; delete this.fillatt; }
             if (this.options._plc) { graph.fLineColor = icolor; delete this.lineatt; }
@@ -1249,14 +1256,14 @@ class TGraphPainter extends ObjectPainter {
                bin.x = funcs.revertAxis('x', funcs.grx(bin.x) + this.pos_dx);
                bin.y = funcs.revertAxis('y', funcs.gry(bin.y) + this.pos_dy);
                exec += `SetPoint(${bin.indx},${bin.x},${bin.y});;`;
-               if ((bin.indx == 0) && this.matchObjectType('TCutG'))
+               if ((bin.indx == 0) && this.matchObjectType(clTCutG))
                   exec += `SetPoint(${this.getObject().fNpoints-1},${bin.x},${bin.y});;`;
             }
             this.drawGraph();
          }
       } else {
          exec = `SetPoint(${this.move_bin.indx},${this.move_bin.x},${this.move_bin.y});;`;
-         if ((this.move_bin.indx == 0) && this.matchObjectType('TCutG'))
+         if ((this.move_bin.indx == 0) && this.matchObjectType(clTCutG))
             exec += `SetPoint(${this.getObject().fNpoints-1},${this.move_bin.x},${this.move_bin.y});;`;
          delete this.move_binindx;
       }
@@ -1369,10 +1376,7 @@ class TGraphPainter extends ObjectPainter {
    findFunc() {
       let gr = this.getObject();
       if (gr?.fFunctions?.arr)
-         for (let i = 0; i < gr.fFunctions.arr.length; ++i) {
-            let func = gr.fFunctions.arr[i];
-            if ((func._typename == 'TF1') || (func._typename == 'TF2')) return func;
-         }
+         return gr?.fFunctions?.arr.find(func => (func._typename == clTF1) || (func._typename == clTF2));
       return null;
    }
 
@@ -1382,7 +1386,7 @@ class TGraphPainter extends ObjectPainter {
       if (gr?.fFunctions?.arr)
          for (let i = 0; i < gr.fFunctions.arr.length; ++i) {
             let func = gr.fFunctions.arr[i];
-            if ((func._typename == 'TPaveStats') && (func.fName == 'stats')) return func;
+            if ((func._typename == clTPaveStats) && (func.fName == 'stats')) return func;
          }
       return null;
    }
@@ -1402,7 +1406,7 @@ class TGraphPainter extends ObjectPainter {
 
       const st = gStyle;
 
-      stats = create('TPaveStats');
+      stats = create(clTPaveStats);
       Object.assign(stats, { fName : 'stats', fOptStat: 0, fOptFit: st.fOptFit || 111, fBorderSize: 1 });
 
       stats.fX1NDC = st.fStatX - st.fStatW;
@@ -1501,4 +1505,4 @@ class TGraphPainter extends ObjectPainter {
 
 } // class TGraphPainter
 
-export { TGraphPainter };
+export { clTGraphAsymmErrors, TGraphPainter };

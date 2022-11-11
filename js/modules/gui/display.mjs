@@ -1,5 +1,5 @@
 import { select as d3_select, drag as d3_drag } from '../d3.mjs';
-import { browser, internals, toJSON, settings } from '../core.mjs';
+import { browser, internals, toJSON, settings, isFunc, isStr } from '../core.mjs';
 import { compressSVG, BasePainter } from '../base/BasePainter.mjs';
 import { getElementCanvPainter, selectActivePad, cleanup, resize, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { createMenu } from './menu.mjs';
@@ -50,7 +50,7 @@ class MDIDisplay extends BasePainter {
    /** @summary method called after new frame is created
      * @private */
    afterCreateFrame(frame) {
-      if (typeof this.initFrame == 'function')
+      if (isFunc(this.initFrame))
          this.initFrame(frame);
       return frame;
    }
@@ -109,7 +109,7 @@ class MDIDisplay extends BasePainter {
 
          if (only_frame_id && (d3_select(frame).attr('id') != only_frame_id)) return;
 
-         if ((painter.getItemName() !== null) && (typeof painter.checkResize == 'function')) {
+         if ((painter.getItemName() !== null) && isFunc(painter.checkResize)) {
             // do not call resize for many painters on the same frame
             if (resized_frame === frame) return;
             painter.checkResize(size);
@@ -328,7 +328,7 @@ class GridDisplay extends MDIDisplay {
 
          if (group.drawid >= 0) {
             elem.classed('jsroot_newgrid', true);
-            if (typeof this.frameid === 'string')
+            if (isStr(this.frameid))
                elem.attr('id', `${this.frameid}_${group.drawid}`);
          } else {
             elem.style('display','flex').style('flex-direction', handle.vertical ? 'row' : 'column');
@@ -513,7 +513,6 @@ class GridDisplay extends MDIDisplay {
 } // class GridDisplay
 
 
-
 // ================================================
 
 /**
@@ -539,7 +538,7 @@ class TabsDisplay extends MDIDisplay {
 
    /** @summary call function for each frame */
    forEachFrame(userfunc,  only_visible) {
-      if (typeof userfunc != 'function') return;
+      if (!isFunc(userfunc)) return;
 
       if (only_visible) {
          let active = this.getActiveFrame();
@@ -635,7 +634,7 @@ class TabsDisplay extends MDIDisplay {
 
       let frame_id = this.cnt++, mdi = this, lbl = title;
 
-      if (!lbl || typeof lbl != 'string') lbl = `frame_${frame_id}`;
+      if (!lbl || !isStr(lbl)) lbl = `frame_${frame_id}`;
 
       if (lbl.length > 15) {
          let p = lbl.lastIndexOf('/');
@@ -703,7 +702,7 @@ class FlexibleDisplay extends MDIDisplay {
 
    /** @summary call function for each frame */
    forEachFrame(userfunc,  only_visible) {
-      if (typeof userfunc != 'function') return;
+      if (!isFunc(userfunc)) return;
 
       let mdi = this, top = this.selectDom().select('.jsroot_flex_top');
 
@@ -1214,9 +1213,9 @@ class BrowserLayout {
 
    /** @summary Check resize action */
    checkResize() {
-      if (typeof this.hpainter?.checkResize == 'function')
+      if (isFunc(this.hpainter?.checkResize))
          this.hpainter.checkResize();
-      else if (typeof this.objpainter?.checkResize == 'function') {
+      else if (isFunc(this.objpainter?.checkResize)) {
          this.objpainter.checkResize(true);
       }
    }
@@ -1241,7 +1240,7 @@ class BrowserLayout {
           .jsroot_browser_hierarchy { flex: 1; margin-top: 2px; }
           .jsroot_status_area { background-color: ${bkgr_color}; overflow: hidden; font-size: 12px; font-family: Verdana; pointer-events: all; }
           .jsroot_float_browser { border: solid 3px white; }
-          .jsroot_browser_resize { position: absolute; right: 3px; bottom: 3px; margin-bottom: 0px; margin-right: 0px; opacity: 0.5; cursor: se-resize; }
+          .jsroot_browser_resize { position: absolute; right: 3px; bottom: 3px; margin-bottom: 0px; margin-right: 0px; opacity: 0.5; cursor: se-resize; z-index: 1; }
           .jsroot_status_label { margin: 3px; margin-left: 5px; font-size: 14px; vertical-align: middle; white-space: nowrap; }
           .jsroot_separator { pointer-events: all; border: 0; margin: 0; padding: 0; }
           .jsroot_h_separator { cursor: ns-resize; background-color: azure; }
@@ -1297,15 +1296,23 @@ class BrowserLayout {
    }
 
    /** @summary Delete content */
-   deleteContent() {
+   deleteContent(keep_status) {
       let main = this.browser();
       if (main.empty()) return;
 
-      this.createStatusLine(0, 'delete');
+      if (!keep_status)
+         this.createStatusLine(0, 'delete');
 
       this.toggleBrowserVisisbility(true);
 
-      main.selectAll('*').remove();
+      if (keep_status) {
+         // try to delete only content, not status
+         main.select('.jsroot_browser_area').remove();
+         main.select('.jsroot_browser_btns').remove();
+         main.select('.jsroot_v_separator').remove();
+      } else {
+         main.selectAll('*').remove();
+      }
       delete this.browser_visible;
       delete this.browser_kind;
 
@@ -1315,9 +1322,7 @@ class BrowserLayout {
    /** @summary Returns true when status line exists */
    hasStatus() {
       let main = this.browser();
-      if (main.empty()) return false;
-
-      return !this.status().empty();
+      return main.empty() ? false : !this.status().empty();
    }
 
    /** @summary Set browser title text
@@ -1411,7 +1416,7 @@ class BrowserLayout {
       if (browser.touches && !main.on('touchmove'))
          main.on('touchmove', function() { });
 
-      if (!height || (typeof height === 'string')) height = this.last_hsepar_height || 20;
+      if (!height || isStr(height)) height = this.last_hsepar_height || 20;
 
       this.adjustSeparators(null, height, true);
 
@@ -1441,7 +1446,7 @@ class BrowserLayout {
       if ((hsepar === null) && first_time && !main.select('.jsroot_h_separator').empty()) {
          // if separator set for the first time, check if status line present
          hsepar = main.select('.jsroot_h_separator').style('bottom');
-         if ((typeof hsepar == 'string') && (hsepar.length > 2) && (hsepar.indexOf('px') == hsepar.length-2))
+         if (isStr(hsepar) && (hsepar.length > 2) && (hsepar.indexOf('px') == hsepar.length-2))
             hsepar = hsepar.slice(0,hsepar.length-2);
          else
             hsepar = null;
@@ -1486,14 +1491,14 @@ class BrowserLayout {
    }
 
    /** @summary Show status information inside special fields of browser layout */
-   showStatus(/*name, title, info, coordinates*/) {
+   showStatus(...msgs) {
       if (!this.status_layout) return;
 
       let maxh = 0;
       for (let n = 0; n < 4; ++n) {
          let lbl = this.status_layout.getGridFrame(n).querySelector('label');
          maxh = Math.max(maxh, lbl.clientHeight);
-         lbl.innerHTML = arguments[n] || '';
+         lbl.innerHTML = msgs[n] || '';
       }
 
       if (!this.status_layout.first_check) {
@@ -1505,7 +1510,7 @@ class BrowserLayout {
 
    /** @summary Toggle browser visibility */
    toggleBrowserVisisbility(fast_close) {
-      if (!this.gui_div || (typeof this.browser_visible === 'string')) return;
+      if (!this.gui_div || isStr(this.browser_visible)) return;
 
       let main = this.browser(), area = main.select('.jsroot_browser_area');
 
@@ -1671,7 +1676,6 @@ class BrowserLayout {
            this._float_height = area.node().clientHeight;
            this._max_width = main.node().clientWidth - area.node().offsetLeft - 1;
            this._max_height = main.node().clientHeight - area.node().offsetTop - 1;
-
         }).on('drag', evnt => {
            this._float_width += evnt.dx;
            this._float_height += evnt.dy;

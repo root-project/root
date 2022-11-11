@@ -1,5 +1,5 @@
 import { select as d3_select, pointer as d3_pointer } from '../d3.mjs';
-import { settings, constants, internals, isNodeJs, isPromise, BIT } from '../core.mjs';
+import { settings, constants, internals, isNodeJs, getPromise, BIT, clTObjString, clTAxis, isFunc, isStr } from '../core.mjs';
 import { isPlainText, producePlainText, produceLatex, produceMathjax, typesetMathjax } from './latex.mjs';
 import { getElementRect, BasePainter } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
@@ -26,7 +26,7 @@ class ObjectPainter extends BasePainter {
       // this._main_painter = undefined;  // main painter in the correspondent pad
       this.pad_name = dom ? this.selectCurrentPad() : ''; // name of pad where object is drawn
       this.assignObject(obj);
-      if (typeof opt == 'string')
+      if (isStr(opt))
          this.options = { original: opt };
    }
 
@@ -44,7 +44,7 @@ class ObjectPainter extends BasePainter {
      * @param {string} [pad_name] - on which subpad element should be draw, if not specified - use current
      * @protected */
    setPadName(pad_name) {
-      this.pad_name = (typeof pad_name == 'string') ? pad_name : this.selectCurrentPad();
+      this.pad_name = isStr(pad_name) ? pad_name : this.selectCurrentPad();
    }
 
    /** @summary Returns pad name where object is drawn */
@@ -105,8 +105,8 @@ class ObjectPainter extends BasePainter {
      * @protected */
    matchObjectType(arg) {
       if (!arg || !this.draw_object) return false;
-      if (typeof arg === 'string') return (this.draw_object._typename === arg);
-      if (arg._typename) return (this.draw_object._typename === arg._typename);
+      if (isStr(arg)) return this.draw_object._typename === arg;
+      if (arg._typename) return this.draw_object._typename === arg._typename;
       return this.draw_object._typename.match(arg);
    }
 
@@ -140,7 +140,7 @@ class ObjectPainter extends BasePainter {
    getDrawOpt() {
       if (!this.options) return '';
 
-      if (typeof this.options.asString == 'function') {
+      if (isFunc(this.options.asString)) {
          let changed = false, pp = this.getPadPainter();
          if (!this.options_store || pp?._interactively_changed) {
             changed  = true;
@@ -293,7 +293,7 @@ class ObjectPainter extends BasePainter {
             console.error('Not found frame to create g element inside');
             return frame;
          }
-         if (typeof frame_layer != 'string') frame_layer = 'main_layer';
+         if (!isStr(frame_layer)) frame_layer = 'main_layer';
          layer = frame.select('.' + frame_layer);
       } else {
          layer = this.getLayerSvg('primitives_layer');
@@ -392,7 +392,7 @@ class ObjectPainter extends BasePainter {
      * @param {string} [pad_name] pad name or use current pad by default
      * @protected */
    getPadPainter(pad_name) {
-      let elem = this.getPadSvg(typeof pad_name == 'string' ? pad_name : undefined);
+      let elem = this.getPadSvg(isStr(pad_name) ? pad_name : undefined);
       return elem.empty() ? null : elem.property('pad_painter');
    }
 
@@ -693,7 +693,7 @@ class ObjectPainter extends BasePainter {
    async interactiveRedraw(arg, info, subelem) {
 
       let reason, res;
-      if ((typeof info == 'string') && (info.indexOf('exec:') != 0))
+      if (isStr(info) && (info.indexOf('exec:') != 0))
          reason = info;
 
       if (arg == 'pad')
@@ -701,18 +701,15 @@ class ObjectPainter extends BasePainter {
       else if (arg !== false)
          res = this.redraw(reason);
 
-      if (!isPromise(res))
-         res = Promise.resolve(false);
-
-      return res.then(() => {
+      return getPromise(res).then(() => {
          // inform GED that something changes
          let canp = this.getCanvPainter();
 
-         if (typeof canp?.producePadEvent == 'function')
+         if (isFunc(canp?.producePadEvent))
             canp.producePadEvent('redraw', this.getPadPainter(), this, null, subelem);
 
          // inform server that drawopt changes
-         if (typeof canp?.processChanges == 'function')
+         if (isFunc(canp?.processChanges))
             canp.processChanges(info, this, subelem);
 
          return this;
@@ -746,10 +743,10 @@ class ObjectPainter extends BasePainter {
      * Many methods call can be chained with 'Print();;Update();;Clear()'
      * @private */
    submitCanvExec(exec, snapid) {
-      if (!exec || (typeof exec != 'string')) return;
+      if (!exec || !isStr(exec)) return;
 
       let canp = this.getCanvPainter();
-      if (typeof canp?.submitExec == 'function')
+      if (isFunc(canp?.submitExec))
          canp.submitExec(this, exec, snapid);
    }
 
@@ -791,9 +788,9 @@ class ObjectPainter extends BasePainter {
    showObjectStatus(name, title, info, info2) {
       let cp = this.getCanvPainter();
 
-      if (cp && (typeof cp.showCanvasStatus !== 'function')) cp = null;
+      if (cp && !isFunc(cp.showCanvasStatus)) cp = null;
 
-      if (!cp && (typeof internals.showStatus !== 'function')) return false;
+      if (!cp && !isFunc(internals.showStatus)) return false;
 
       if (this.enlargeMain('state') === 'on') return false;
 
@@ -872,7 +869,7 @@ class ObjectPainter extends BasePainter {
       all_args.forEach(arg => { if (!arg.ready) missing++; });
 
       if (missing > 0) {
-         if (typeof resolveFunc == 'function') {
+         if (isFunc(resolveFunc)) {
             draw_g.node().textResolveFunc = resolveFunc;
             draw_g.node().try_optimize = try_optimize;
          }
@@ -1056,7 +1053,7 @@ class ObjectPainter extends BasePainter {
       arg.result_width = arg.box.width;
       arg.result_height = arg.box.height;
 
-      if (typeof arg.post_process == 'function')
+      if (isFunc(arg.post_process))
          arg.post_process(this);
 
       return arg.box.width;
@@ -1098,7 +1095,7 @@ class ObjectPainter extends BasePainter {
 
       let align = ['start', 'middle'];
 
-      if (typeof arg.align == 'string') {
+      if (isStr(arg.align)) {
          align = arg.align.split(';');
          if (align.length == 1) align.push('middle');
       } else if (typeof arg.align == 'number') {
@@ -1222,7 +1219,7 @@ class ObjectPainter extends BasePainter {
      * @param {function} fillmenu_func - function to fill custom context menu for oabject */
    configureUserContextMenu(fillmenu_func) {
 
-      if (!fillmenu_func || (typeof fillmenu_func !== 'function'))
+      if (!fillmenu_func || !isFunc(fillmenu_func))
          delete this._userContextMenuFunc;
       else
          this._userContextMenuFunc = fillmenu_func;
@@ -1249,12 +1246,12 @@ class ObjectPainter extends BasePainter {
 
          // this is special entry, produced by TWebMenuItem, which recognizes editor entries itself
          if (item.fExec == 'Show:Editor') {
-            if (typeof cp?.activateGed == 'function')
+            if (isFunc(cp?.activateGed))
                cp.activateGed(execp);
             return;
          }
 
-         if (typeof cp?.executeObjectMethod == 'function')
+         if (isFunc(cp?.executeObjectMethod))
             if (cp.executeObjectMethod(execp, item, execp.args_menu_id)) return;
 
          if (execp.executeMenuCommand(item)) return;
@@ -1269,7 +1266,7 @@ class ObjectPainter extends BasePainter {
 
          item.fClassName = execp.getClassName();
          if ((execp.args_menu_id.indexOf('#x') > 0) || (execp.args_menu_id.indexOf('#y') > 0) || (execp.args_menu_id.indexOf('#z') > 0))
-            item.fClassName = 'TAxis';
+            item.fClassName = clTAxis;
 
           menu.showMethodArgsDialog(item).then(args => {
              if (!args) return;
@@ -1355,7 +1352,7 @@ class ObjectPainter extends BasePainter {
      * @param {function} handler - function called when tooltip is produced
      * @param {number} [tmout = 100] - delay in ms before tooltip delivered */
    configureUserTooltipHandler(handler, tmout) {
-      if (!handler || (typeof handler !== 'function')) {
+      if (!handler || !isFunc(handler)) {
          delete this._user_tooltip_handler;
          delete this._user_tooltip_timeout;
       } else {
@@ -1371,7 +1368,7 @@ class ObjectPainter extends BasePainter {
       * @param {function} handler - function called when mouse click is done */
    configureUserClickHandler(handler) {
       let fp = this.getFramePainter();
-      if (typeof fp?.configureUserClickHandler == 'function')
+      if (isFunc(fp?.configureUserClickHandler))
          fp.configureUserClickHandler(handler);
    }
 
@@ -1382,14 +1379,14 @@ class ObjectPainter extends BasePainter {
      * @param {function} handler - function called when mouse double click is done */
    configureUserDblclickHandler(handler) {
       let fp = this.getFramePainter();
-      if (typeof fp?.configureUserDblclickHandler == 'function')
+      if (isFunc(fp?.configureUserDblclickHandler))
          fp.configureUserDblclickHandler(handler);
    }
 
    /** @summary Check if user-defined tooltip function was configured
      * @return {boolean} flag is user tooltip handler was configured */
    hasUserTooltip() {
-      return typeof this._user_tooltip_handler == 'function';
+      return isFunc(this._user_tooltip_handler);
    }
 
    /** @summary Provide tooltips data to user-defined function
@@ -1437,7 +1434,7 @@ class ObjectPainter extends BasePainter {
      * @private */
    async drawInSpecialArea(obj, opt) {
       let canp = this.getCanvPainter();
-      if (this._special_draw_area && (typeof canp?.drawProjection == 'function'))
+      if (this._special_draw_area && isFunc(canp?.drawProjection))
          return canp.drawProjection(this._special_draw_area, obj, opt);
 
       return false;
@@ -1457,12 +1454,12 @@ class ObjectPainter extends BasePainter {
       let pos = d3_pointer(evnt, layer.node()),
           pnt = { touch: false, x: pos[0], y: pos[1] };
 
-      if (typeof this.extractToolTip == 'function')
+      if (isFunc(this.extractToolTip))
          return this.extractToolTip(pnt);
 
       pnt.disabled = true;
 
-      let res = (typeof this.processTooltipEvent == 'function') ? this.processTooltipEvent(pnt) : null;
+      let res = isFunc(this.processTooltipEvent) ? this.processTooltipEvent(pnt) : null;
 
       return res?.user_info || res;
    }
@@ -1484,8 +1481,8 @@ function drawRawText(dom, txt /*, opt*/) {
    }
 
    painter.drawText = async function() {
-      let txt = (this.txt._typename && (this.txt._typename == 'TObjString')) ? this.txt.fString : this.txt.value;
-      if (typeof txt != 'string') txt = '<undefined>';
+      let txt = (this.txt._typename && (this.txt._typename == clTObjString)) ? this.txt.fString : this.txt.value;
+      if (!isStr(txt)) txt = '<undefined>';
 
       let mathjax = this.txt.mathjax || (settings.Latex == constants.Latex.AlwaysMathJax);
 
@@ -1574,7 +1571,7 @@ function getActivePad() {
   * the element even after minimal resize
   * Or one just supply object with exact sizes like { width:300, height:200, force:true };
   * @example
-  * resize('drawing', { width: 500, height: 200 } );
+  * resize('drawing', { width: 500, height: 200 });
   * resize(document.querySelector('#drawing'), true); */
 function resize(dom, arg) {
    if (arg === true)
@@ -1583,7 +1580,7 @@ function resize(dom, arg) {
       arg = null;
    let done = false;
    new ObjectPainter(dom).forEachPainter(painter => {
-      if (!done && (typeof painter.checkResize == 'function'))
+      if (!done && isFunc(painter.checkResize))
          done = painter.checkResize(arg);
    });
    return done;

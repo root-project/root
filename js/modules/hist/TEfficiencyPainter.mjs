@@ -1,6 +1,6 @@
-import { BIT, create, createHistogram } from '../core.mjs';
+import { BIT, create, createHistogram, isStr, clTH1, clTH2 } from '../core.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
-import { TGraphPainter } from '../hist2d/TGraphPainter.mjs';
+import { TGraphPainter, clTGraphAsymmErrors } from '../hist2d/TGraphPainter.mjs';
 import { TF1Painter } from '../hist/TF1Painter.mjs';
 import { TH2Painter } from '../hist2d/TH2Painter.mjs';
 import { getTEfficiencyBoundaryFunc } from '../base/math.mjs';
@@ -103,7 +103,7 @@ class TEfficiencyPainter extends ObjectPainter {
 
    /** @summary Create graph for the drawing of 1-dim TEfficiency */
    createGraph(/*eff*/) {
-      let gr = create('TGraphAsymmErrors');
+      let gr = create(clTGraphAsymmErrors);
       gr.fName = 'eff_graph';
       return gr;
    }
@@ -179,13 +179,13 @@ class TEfficiencyPainter extends ObjectPainter {
       if (!eff || !eff.fTotalHistogram)
          return null;
 
-      if (!opt || (typeof opt != 'string')) opt = '';
+      if (!opt || !isStr(opt)) opt = '';
       opt = opt.toLowerCase();
 
       let ndim = 0;
-      if (eff.fTotalHistogram._typename.indexOf('TH1') == 0)
+      if (eff.fTotalHistogram._typename.indexOf(clTH1) == 0)
          ndim = 1;
-      else if (eff.fTotalHistogram._typename.indexOf('TH2') == 0)
+      else if (eff.fTotalHistogram._typename.indexOf(clTH2) == 0)
          ndim = 2;
       else
          return null;

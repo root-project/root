@@ -1,4 +1,5 @@
-import { gStyle, settings, constants, internals, addMethods, isPromise, isBatchMode, btoa_func } from '../core.mjs';
+import { gStyle, settings, constants, internals, addMethods,
+         isPromise, getPromise, isBatchMode, isFunc, isStr, btoa_func, clTPad } from '../core.mjs';
 import { pointer as d3_pointer } from '../d3.mjs';
 import { ColorPalette, addColor, getRootColors } from '../base/colors.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
@@ -143,7 +144,7 @@ class RPadPainter extends RObjectPainter {
    /** @summary Cleanup primitives from pad - selector lets define which painters to remove
     * @private */
    cleanPrimitives(selector) {
-      if (!selector || (typeof selector !== 'function')) return;
+      if (!isFunc(selector)) return;
 
       for (let k = this.painters.length-1; k >= 0; --k)
          if (selector(this.painters[k])) {
@@ -210,7 +211,7 @@ class RPadPainter extends RObjectPainter {
       if (kind != 'objects') userfunc(this);
       for (let k = 0; k < this.painters.length; ++k) {
          let sub = this.painters[k];
-         if (typeof sub.forEachPainterInPad === 'function') {
+         if (isFunc(sub.forEachPainterInPad)) {
             if (kind!='objects') sub.forEachPainterInPad(userfunc, kind);
          } else if (kind != 'pads') userfunc(sub);
       }
@@ -227,7 +228,7 @@ class RPadPainter extends RObjectPainter {
      * @desc in pad painter, while pad may be drawn without canvas
      * @private */
    producePadEvent(_what, _padpainter, _painter, _position, _place) {
-      if ((_what == 'select') && (typeof this.selectActivePad == 'function'))
+      if ((_what == 'select') && isFunc(this.selectActivePad))
          this.selectActivePad(_padpainter, _painter, _position);
 
       if (this.pad_events_receiver)
@@ -607,7 +608,7 @@ class RPadPainter extends RObjectPainter {
       // first count - how many processors are there
       if (this.painters !== null)
          this.painters.forEach(obj => {
-            if (typeof obj.processTooltipEvent == 'function') painters.push(obj);
+            if (isFunc(obj.processTooltipEvent)) painters.push(obj);
          });
 
       if (pnt) pnt.nproc = painters.length;
@@ -649,10 +650,10 @@ class RPadPainter extends RObjectPainter {
 
       menu.add('separator');
 
-      if (typeof this.hasMenuBar == 'function' && typeof this.actiavteMenuBar == 'function')
+      if (isFunc(this.hasMenuBar) && isFunc(this.actiavteMenuBar))
          menu.addchk(this.hasMenuBar(), 'Menu bar', flag => this.actiavteMenuBar(flag));
 
-      if (typeof this.hasEventStatus == 'function' && typeof this.activateStatusBar == 'function')
+      if (isFunc(this.hasEventStatus) && isFunc(this.activateStatusBar))
          menu.addchk(this.hasEventStatus(), 'Event status', () => this.activateStatusBar('toggle'));
 
       if (this.enlargeMain() || (this.has_canvas && this.hasObjectsToDraw()))
@@ -737,7 +738,7 @@ class RPadPainter extends RObjectPainter {
       if (!elem.empty() && elem.property('can3d') === constants.Embed3D.Overlay) return true;
 
       for (let i = 0; i < this.painters.length; ++i)
-         if (typeof this.painters[i].needRedrawByResize === 'function')
+         if (isFunc(this.painters[i].needRedrawByResize))
             if (this.painters[i].needRedrawByResize()) return true;
 
       return false;
@@ -764,9 +765,7 @@ class RPadPainter extends RObjectPainter {
                 return changed;
              }
 
-             let res = this.painters[indx].redraw(force ? 'redraw' : 'resize');
-             if (!isPromise(res)) res = Promise.resolve();
-             return res.then(() => redrawNext(indx+1));
+             return getPromise(this.painters[indx].redraw(force ? 'redraw' : 'resize')).then(() => redrawNext(indx+1));
           };
 
       return sync_promise.then(() => {
@@ -916,12 +915,10 @@ class RPadPainter extends RObjectPainter {
 
          let promise;
 
-         if (objpainter.updateObject(snap.fDrawable || snap.fObject || snap, snap.fOption || ''))
+         if (objpainter.updateObject(snap.fDrawable || snap.fObject || snap, snap.fOption || '', true))
             promise = objpainter.redraw();
 
-         if (!isPromise(promise)) promise = Promise.resolve(true);
-
-         return promise.then(() => this.drawNextSnap(lst, indx)); // call next
+         return getPromise(promise).then(() => this.drawNextSnap(lst, indx)); // call next
       }
 
       if (snap._typename == 'ROOT::Experimental::RPadDisplayItem') { // subpad
@@ -1002,7 +999,7 @@ class RPadPainter extends RObjectPainter {
    findSnap(snapid, onlyid) {
 
       function check(checkid) {
-         if (!checkid || (typeof checkid != 'string')) return false;
+         if (!checkid || !isStr(checkid)) return false;
          if (checkid == snapid) return true;
          return onlyid && (checkid.length > snapid.length) &&
                 (checkid.indexOf(snapid) == (checkid.length - snapid.length));
@@ -1015,7 +1012,7 @@ class RPadPainter extends RObjectPainter {
       for (let k=0;k<this.painters.length;++k) {
          let sub = this.painters[k];
 
-         if (!onlyid && (typeof sub.findSnap === 'function'))
+         if (!onlyid && isFunc(sub.findSnap))
             sub = sub.findSnap(snapid);
          else if (!check(sub.snapid))
             sub = null;
@@ -1057,7 +1054,7 @@ class RPadPainter extends RObjectPainter {
 
          let mainid = this.selectDom().attr('id');
 
-         if (!this.batch_mode && !this.use_openui && !this.brlayout && mainid && (typeof mainid == 'string')) {
+         if (!this.batch_mode && !this.use_openui && !this.brlayout && mainid && isStr(mainid)) {
             this.brlayout = new BrowserLayout(mainid, null, this);
             this.brlayout.create(mainid, true);
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas
@@ -1182,7 +1179,7 @@ class RPadPainter extends RObjectPainter {
           }
        }
 
-       if (typeof selp?.fillContextMenu !== 'function') return;
+       if (!isFunc(selp?.fillContextMenu)) return;
 
        createMenu(evnt, selp).then(menu => {
           if (selp.fillContextMenu(menu, selkind))
@@ -1232,7 +1229,7 @@ class RPadPainter extends RObjectPainter {
          }
 
          let main = pp.getFramePainter();
-         if (!main || (typeof main.render3D !== 'function') || (typeof main.access3dKind != 'function')) return;
+         if (!main || !isFunc(main.render3D) || !isFunc(main.access3dKind)) return;
 
          let can3d = main.access3dKind();
 
@@ -1378,7 +1375,7 @@ class RPadPainter extends RObjectPainter {
             if (main) {
                menu.add('X axis', 'xaxis', this.itemContextMenu);
                menu.add('Y axis', 'yaxis', this.itemContextMenu);
-               if ((typeof main.getDimension === 'function') && (main.getDimension() > 1))
+               if (isFunc(main.getDimension) && (main.getDimension() > 1))
                   menu.add('Z axis', 'zaxis', this.itemContextMenu);
             }
 
@@ -1409,10 +1406,10 @@ class RPadPainter extends RObjectPainter {
       for (let i = 0; i < this.painters.length; ++i) {
          let pp = this.painters[i];
 
-         if (typeof pp.clickPadButton == 'function')
+         if (isFunc(pp.clickPadButton))
             pp.clickPadButton(funcname);
 
-         if (!done && (typeof pp.clickButton == 'function'))
+         if (!done && isFunc(pp.clickButton))
             done = pp.clickButton(funcname);
       }
    }
@@ -1553,7 +1550,7 @@ class RPadPainter extends RObjectPainter {
 
       painter.createPadSvg();
 
-      if (painter.matchObjectType('TPad') && (!painter.has_canvas || painter.hasObjectsToDraw())) {
+      if (painter.matchObjectType(clTPad) && (!painter.has_canvas || painter.hasObjectsToDraw())) {
          painter.addPadButtons();
       }
 

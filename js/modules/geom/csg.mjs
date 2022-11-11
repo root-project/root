@@ -318,10 +318,10 @@ class Node {
 
       if (nodeid !== undefined) this.maxnodeid = nodeid;
 
-      if ( front.length > 0 )
+      if (front.length > 0)
          this.front = new Node( front );
 
-      if ( back.length > 0 )
+      if (back.length > 0)
          this.back = new Node( back );
    }
 
@@ -346,12 +346,12 @@ class Node {
       for (let i = first; i < polygon_count; ++i )
          this.divider.splitPolygon( polygons[i], this.polygons, this.polygons, front, back );
 
-      if ( front.length > 0 ) {
+      if (front.length > 0) {
          if ( !this.front ) this.front = new Node();
          this.front.build( front );
       }
 
-      if ( back.length > 0 ) {
+      if (back.length > 0) {
          if ( !this.back ) this.back = new Node();
          this.back.build( back );
       }

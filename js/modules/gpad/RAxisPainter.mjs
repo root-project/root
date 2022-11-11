@@ -1,4 +1,4 @@
-import { settings, isBatchMode } from '../core.mjs';
+import { settings, isBatchMode, isFunc } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer,
          drag as d3_drag, timeFormat as d3_timeFormat,
          scaleTime as d3_scaleTime, scaleSymlog as d3_scaleSymlog,
@@ -916,7 +916,7 @@ class RAxisPainter extends RObjectPainter {
 
          return this.drawTitle(this.axis_g, side, lgaps);
       }).then(() => {
-         if (typeof this._afterDrawAgain == 'function')
+         if (isFunc(this._afterDrawAgain))
             this._afterDrawAgain();
       });
    }

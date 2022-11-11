@@ -1,6 +1,7 @@
 import { FrontSide, Object3D, Box3, Mesh, Vector2, Vector3, Matrix4,
          MeshLambertMaterial, Color, PerspectiveCamera, Frustum, Raycaster,
          ShapeUtils, BufferGeometry, BufferAttribute } from '../three.mjs';
+import { isFunc } from '../core.mjs';
 import { createBufferGeometry, createNormal,
          Vertex as CsgVertex, Geometry as CsgGeometry, Polygon as CsgPolygon } from './csg.mjs';
 
@@ -40,6 +41,31 @@ const geoBITS = {
    kVisBranch     : JSROOT_BIT(14), // only a given branch visible
    kVisRaytrace   : JSROOT_BIT(15)  // raytracing flag
 };
+
+const clTGeoBBox = 'TGeoBBox',
+      clTGeoArb8 = 'TGeoArb8',
+      clTGeoCone = 'TGeoCone',
+      clTGeoConeSeg = 'TGeoConeSeg',
+      clTGeoTube = 'TGeoTube',
+      clTGeoTubeSeg = 'TGeoTubeSeg',
+      clTGeoCtub = 'TGeoCtub',
+      clTGeoTrd1 = 'TGeoTrd1',
+      clTGeoTrd2 = 'TGeoTrd2',
+      clTGeoPara = 'TGeoPara',
+      clTGeoParaboloid = 'TGeoParaboloid',
+      clTGeoPcon = 'TGeoPcon',
+      clTGeoPgon = 'TGeoPgon',
+      clTGeoShapeAssembly = 'TGeoShapeAssembly',
+      clTGeoSphere = 'TGeoSphere',
+      clTGeoTorus = 'TGeoTorus',
+      clTGeoXtru = 'TGeoXtru',
+      clTGeoTrap = 'TGeoTrap',
+      clTGeoGtra = 'TGeoGtra',
+      clTGeoEltu = 'TGeoEltu',
+      clTGeoHype = 'TGeoHype',
+      clTGeoCompositeShape = 'TGeoCompositeShape',
+      clTGeoHalfSpace = 'TGeoHalfSpace',
+      clTGeoScaledShape = 'TGeoScaledShape';
 
 /** @summary Test fGeoAtt bits
   * @private */
@@ -104,7 +130,7 @@ function getNodeKind(obj) {
   * @private */
 function countNumShapes(shape) {
    if (!shape) return 0;
-   if (shape._typename !== 'TGeoCompositeShape') return 1;
+   if (shape._typename !== clTGeoCompositeShape) return 1;
    return countNumShapes(shape.fNode.fLeft) + countNumShapes(shape.fNode.fRight);
 }
 
@@ -608,7 +634,7 @@ function createTrapezoidBuffer( shape, faces_limit ) {
    if (faces_limit < 0) return 12;
 
    let y1, y2;
-   if (shape._typename == 'TGeoTrd1') {
+   if (shape._typename == clTGeoTrd1) {
       y1 = y2 = shape.fDY;
    } else {
       y1 = shape.fDy1; y2 = shape.fDy2;
@@ -864,7 +890,7 @@ function createSphereBuffer( shape, faces_limit ) {
   * @private */
 function createTubeBuffer( shape, faces_limit) {
    let outerR, innerR; // inner/outer tube radius
-   if ((shape._typename == 'TGeoCone') || (shape._typename == 'TGeoConeSeg')) {
+   if ((shape._typename == clTGeoCone) || (shape._typename == clTGeoConeSeg)) {
       outerR = [ shape.fRmax2, shape.fRmax1 ];
       innerR = [ shape.fRmin2, shape.fRmin1 ];
    } else {
@@ -875,7 +901,7 @@ function createTubeBuffer( shape, faces_limit) {
    let hasrmin = (innerR[0] > 0) || (innerR[1] > 0),
        thetaStart = 0, thetaLength = 360;
 
-   if ((shape._typename == 'TGeoConeSeg') || (shape._typename == 'TGeoTubeSeg') || (shape._typename == 'TGeoCtub')) {
+   if ((shape._typename == clTGeoConeSeg) || (shape._typename == clTGeoTubeSeg) || (shape._typename == clTGeoCtub)) {
       thetaStart = shape.fPhi1;
       thetaLength = shape.fPhi2 - shape.fPhi1;
    }
@@ -911,7 +937,7 @@ function createTubeBuffer( shape, faces_limit) {
 
    let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
 
-   const calcZ = (shape._typename !== 'TGeoCtub') ? null : (x,y,z) => {
+   const calcZ = (shape._typename !== clTGeoCtub) ? null : (x,y,z) => {
       let arr = (z < 0) ? shape.fNlow : shape.fNhigh;
       return ((z < 0) ? -shape.fDz : shape.fDz) - (x*arr[0] + y*arr[1]) / arr[2];
    };
@@ -1147,7 +1173,7 @@ function createPolygonBuffer( shape, faces_limit ) {
        thetaLength = shape.fDphi,
        radiusSegments, factor;
 
-   if (shape._typename == 'TGeoPgon') {
+   if (shape._typename == clTGeoPgon) {
       radiusSegments = shape.fNedges;
       factor = 1. / Math.cos(Math.PI/180 * thetaLength / radiusSegments / 2);
    } else {
@@ -1845,7 +1871,7 @@ function createComposite( shape, faces_limit ) {
    if (matrix2 && (matrix2.determinant() < -0.9))
       geoWarn('Axis reflections in right composite shape - not supported');
 
-   if (shape.fNode.fLeft._typename == 'TGeoHalfSpace') {
+   if (shape.fNode.fLeft._typename == clTGeoHalfSpace) {
       geom1 = createHalfSpace(shape.fNode.fLeft);
    } else {
       geom1 = createGeometry(shape.fNode.fLeft, faces_limit);
@@ -1858,7 +1884,7 @@ function createComposite( shape, faces_limit ) {
 
    if (n1 < faces_limit) {
 
-      if (shape.fNode.fRight._typename == 'TGeoHalfSpace') {
+      if (shape.fNode.fRight._typename == clTGeoHalfSpace) {
          geom2 = createHalfSpace(shape.fNode.fRight, geom1);
       } else {
          geom2 = createGeometry(shape.fNode.fRight, faces_limit);
@@ -1950,39 +1976,39 @@ function createGeometry(shape, limit) {
 
    try {
       switch (shape._typename) {
-         case 'TGeoBBox': return createCubeBuffer( shape, limit );
-         case 'TGeoPara': return createParaBuffer( shape, limit );
-         case 'TGeoTrd1':
-         case 'TGeoTrd2': return createTrapezoidBuffer( shape, limit );
-         case 'TGeoArb8':
-         case 'TGeoTrap':
-         case 'TGeoGtra': return createArb8Buffer( shape, limit );
-         case 'TGeoSphere': return createSphereBuffer( shape , limit );
-         case 'TGeoCone':
-         case 'TGeoConeSeg':
-         case 'TGeoTube':
-         case 'TGeoTubeSeg':
-         case 'TGeoCtub': return createTubeBuffer( shape, limit );
-         case 'TGeoEltu': return createEltuBuffer( shape, limit );
-         case 'TGeoTorus': return createTorusBuffer( shape, limit );
-         case 'TGeoPcon':
-         case 'TGeoPgon': return createPolygonBuffer( shape, limit );
-         case 'TGeoXtru': return createXtruBuffer( shape, limit );
-         case 'TGeoParaboloid': return createParaboloidBuffer( shape, limit );
-         case 'TGeoHype': return createHypeBuffer( shape, limit );
+         case clTGeoBBox: return createCubeBuffer( shape, limit );
+         case clTGeoPara: return createParaBuffer( shape, limit );
+         case clTGeoTrd1:
+         case clTGeoTrd2: return createTrapezoidBuffer( shape, limit );
+         case clTGeoArb8:
+         case clTGeoTrap:
+         case clTGeoGtra: return createArb8Buffer( shape, limit );
+         case clTGeoSphere: return createSphereBuffer( shape , limit );
+         case clTGeoCone:
+         case clTGeoConeSeg:
+         case clTGeoTube:
+         case clTGeoTubeSeg:
+         case clTGeoCtub: return createTubeBuffer( shape, limit );
+         case clTGeoEltu: return createEltuBuffer( shape, limit );
+         case clTGeoTorus: return createTorusBuffer( shape, limit );
+         case clTGeoPcon:
+         case clTGeoPgon: return createPolygonBuffer( shape, limit );
+         case clTGeoXtru: return createXtruBuffer( shape, limit );
+         case clTGeoParaboloid: return createParaboloidBuffer( shape, limit );
+         case clTGeoHype: return createHypeBuffer( shape, limit );
          case 'TGeoTessellated': return createTessellatedBuffer( shape, limit );
-         case 'TGeoCompositeShape': return createComposite( shape, limit );
-         case 'TGeoShapeAssembly': break;
-         case 'TGeoScaledShape': {
+         case clTGeoCompositeShape: return createComposite( shape, limit );
+         case clTGeoShapeAssembly: break;
+         case clTGeoScaledShape: {
             let res = createGeometry(shape.fShape, limit);
-            if (shape.fScale && (limit >= 0) && (typeof res === 'object') && (typeof res.scale === 'function'))
+            if (shape.fScale && (limit >= 0) && isFunc(res?.scale))
                res.scale(shape.fScale.fScale[0], shape.fScale.fScale[1], shape.fScale.fScale[2]);
             return res;
          }
-         case 'TGeoHalfSpace':
+         case clTGeoHalfSpace:
             if (limit < 0) return 1; // half space if just plane used in composite
             // no break here - warning should appear
-         default: geoWarn('unsupported shape type ' + shape._typename);
+         default: geoWarn(`unsupported shape type ${shape._typename}`);
       }
    } catch(e) {
       let place = '';
@@ -2123,51 +2149,51 @@ function provideObjectInfo(obj) {
    info.push(`DX=${conv(shape.fDX)} DY=${conv(shape.fDY)} DZ=${conv(shape.fDZ)}`);
 
    switch (shape._typename) {
-      case 'TGeoBBox': break;
-      case 'TGeoPara': info.push(`Alpha=${shape.fAlpha} Phi=${shape.fPhi} Theta=${shape.fTheta}`); break;
-      case 'TGeoTrd2': info.push(`Dy1=${conv(shape.fDy1)} Dy2=${conv(shape.fDy1)}`); // no break
-      case 'TGeoTrd1': info.push(`Dx1=${conv(shape.fDx1)} Dx2=${conv(shape.fDx1)}`); break;
-      case 'TGeoArb8': break;
-      case 'TGeoTrap': break;
-      case 'TGeoGtra': break;
-      case 'TGeoSphere':
+      case clTGeoBBox: break;
+      case clTGeoPara: info.push(`Alpha=${shape.fAlpha} Phi=${shape.fPhi} Theta=${shape.fTheta}`); break;
+      case clTGeoTrd2: info.push(`Dy1=${conv(shape.fDy1)} Dy2=${conv(shape.fDy1)}`); // no break
+      case clTGeoTrd1: info.push(`Dx1=${conv(shape.fDx1)} Dx2=${conv(shape.fDx1)}`); break;
+      case clTGeoArb8: break;
+      case clTGeoTrap: break;
+      case clTGeoGtra: break;
+      case clTGeoSphere:
          info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`,
                    `Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`,
                    `Theta1=${shape.fTheta1} Theta2=${shape.fTheta2}`);
          break;
-      case 'TGeoConeSeg':
+      case clTGeoConeSeg:
          info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
          // no break;
-      case 'TGeoCone':
+      case clTGeoCone:
          info.push(`Rmin1=${conv(shape.fRmin1)} Rmax1=${conv(shape.fRmax1)}`,
                    `Rmin2=${conv(shape.fRmin2)} Rmax2=${conv(shape.fRmax2)}`);
          break;
-      case 'TGeoCtub':
-      case 'TGeoTubeSeg':
+      case clTGeoCtub:
+      case clTGeoTubeSeg:
          info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
          // no break
-      case 'TGeoEltu':
-      case 'TGeoTube':
+      case clTGeoEltu:
+      case clTGeoTube:
          info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`);
          break;
-      case 'TGeoTorus':
+      case clTGeoTorus:
          info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`,
                    `Phi1=${shape.fPhi1} Dphi=${shape.fDphi}`);
          break;
-      case 'TGeoPcon':
-      case 'TGeoPgon': break;
-      case 'TGeoXtru': break;
-      case 'TGeoParaboloid':
+      case clTGeoPcon:
+      case clTGeoPgon: break;
+      case clTGeoXtru: break;
+      case clTGeoParaboloid:
          info.push(`Rlo=${conv(shape.fRlo)} Rhi=${conv(shape.fRhi)}`,
                    `A=${conv(shape.fA)} B=${conv(shape.fB)}`);
          break;
-      case 'TGeoHype':
+      case clTGeoHype:
          info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`,
                    `StIn=${conv(shape.fStIn)} StOut=${conv(shape.fStOut)}`);
          break;
-      case 'TGeoCompositeShape': break;
-      case 'TGeoShapeAssembly': break;
-      case 'TGeoScaledShape':
+      case clTGeoCompositeShape: break;
+      case clTGeoShapeAssembly: break;
+      case clTGeoScaledShape:
          info = provideObjectInfo(shape.fShape);
          if (shape.fScale)
             info.unshift(`Scale X=${shape.fScale.fScale[0]} Y=${shape.fScale.fScale[1]} Z=${shape.fScale.fScale[2]}`);
@@ -2407,9 +2433,9 @@ class ClonedNodes {
       let sortarr = [];
 
       // first create nodes objects
-      for (let n = 0; n < this.origin.length; ++n) {
-         // let obj = this.origin[n];
-         let node = { id: n, kind: kind, vol: 0, nfaces: 0 };
+      for (let id = 0; id < this.origin.length; ++id) {
+         // let obj = this.origin[id];
+         let node = { id, kind, vol: 0, nfaces: 0 };
          this.nodes.push(node);
          sortarr.push(node); // array use to produce sortmap
       }
@@ -2857,10 +2883,10 @@ class ClonedNodes {
          let prop = { name: clone.name, nname: clone.name, shape: null, material: null, chlds: null },
             _opacity = entry.opacity || 1;
          prop.fillcolor = new Color( entry.color ? `rgb(${entry.color})` : 'blue' );
-         prop.material = new MeshLambertMaterial( { transparent: _opacity < 1,
+         prop.material = new MeshLambertMaterial({ transparent: _opacity < 1,
                           opacity: _opacity, wireframe: false, color: prop.fillcolor,
                           side: FrontSide, vertexColors: false,
-                          depthWrite: _opacity == 1 } );
+                          depthWrite: _opacity == 1 });
          prop.material.inherentOpacity = _opacity;
 
          return prop;
@@ -2881,13 +2907,12 @@ class ClonedNodes {
          if (node.fElements !== null) prop.chlds = node.fElements.arr;
 
          if (visible) {
-            let _opacity = Math.min(1, node.fRGBA[3]);
+            let opacity = Math.min(1, node.fRGBA[3]);
             prop.fillcolor = new Color( node.fRGBA[0], node.fRGBA[1], node.fRGBA[2] );
-            prop.material = new MeshLambertMaterial( { transparent: _opacity < 1,
-                             opacity: _opacity, wireframe: false, color: prop.fillcolor,
-                             side: FrontSide, vertexColors: false,
-                             depthWrite:  _opacity == 1 } );
-            prop.material.inherentOpacity = _opacity;
+            prop.material = new MeshLambertMaterial({ transparent: opacity < 1,
+                             opacity, wireframe: false, color: prop.fillcolor,
+                             side: FrontSide, vertexColors: false, depthWrite: opacity == 1 });
+            prop.material.inherentOpacity = opacity;
          }
 
          return prop;
@@ -3466,10 +3491,10 @@ function getBoundingBox(node, box3, local_coordinates) {
 function cleanupShape(shape) {
    if (!shape) return;
 
-   if (shape.geom && (typeof shape.geom.dispose == 'function'))
+   if (isFunc(shape.geom?.dispose))
       shape.geom.dispose();
 
-   if (shape.geomZ && (typeof shape.geomZ.dispose == 'function'))
+   if (isFunc(shape.geomZ?.dispose))
       shape.geomZ.dispose();
 
    delete shape.geom;
@@ -3668,8 +3693,39 @@ function produceRenderOrder(toplevel, origin, method, clones) {
       process(toplevel, 0, 1, 1000000);
 }
 
+/** @summary provide icon name for the shape
+  * @private */
+function getShapeIcon(shape) {
+   switch (shape._typename) {
+      case clTGeoArb8: return 'img_geoarb8';
+      case clTGeoCone: return 'img_geocone';
+      case clTGeoConeSeg: return 'img_geoconeseg';
+      case clTGeoCompositeShape: return 'img_geocomposite';
+      case clTGeoTube: return 'img_geotube';
+      case clTGeoTubeSeg: return 'img_geotubeseg';
+      case clTGeoPara: return 'img_geopara';
+      case clTGeoParaboloid: return 'img_geoparab';
+      case clTGeoPcon: return 'img_geopcon';
+      case clTGeoPgon: return 'img_geopgon';
+      case clTGeoShapeAssembly: return 'img_geoassembly';
+      case clTGeoSphere: return 'img_geosphere';
+      case clTGeoTorus: return 'img_geotorus';
+      case clTGeoTrd1: return 'img_geotrd1';
+      case clTGeoTrd2: return 'img_geotrd2';
+      case clTGeoXtru: return 'img_geoxtru';
+      case clTGeoTrap: return 'img_geotrap';
+      case clTGeoGtra: return 'img_geogtra';
+      case clTGeoEltu: return 'img_geoeltu';
+      case clTGeoHype: return 'img_geohype';
+      case clTGeoCtub: return 'img_geoctub';
+   }
+   return 'img_geotube';
+}
+
+
 export { kindGeo, kindEve, kindShape,
+         clTGeoBBox, clTGeoCompositeShape,
          geoCfg, geoBITS, ClonedNodes, isSameStack, checkDuplicates, getObjectName, testGeoBit, setGeoBit, toggleGeoBit,
          setInvisibleAll, countNumShapes, getNodeKind, produceRenderOrder, createFlippedMesh, cleanupShape,
          createGeometry, numGeometryFaces, numGeometryVertices, createServerGeometry,
-         projectGeometry, countGeometryFaces, createFrustum, createProjectionMatrix, getBoundingBox, provideObjectInfo };
+         projectGeometry, countGeometryFaces, createFrustum, createProjectionMatrix, getBoundingBox, provideObjectInfo, getShapeIcon };

@@ -1,4 +1,4 @@
-import { gStyle, settings, create, isBatchMode } from '../core.mjs';
+import { gStyle, settings, create, isBatchMode, isFunc, isStr, clTAxis } from '../core.mjs';
 import { pointer as d3_pointer } from '../d3.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { TAxisPainter } from './TAxisPainter.mjs';
@@ -167,7 +167,7 @@ class RFramePainter extends RObjectPainter {
             else
                grid += `M${this.x_handle.ticks[n]},0v${h}`;
 
-         if (grid.length > 0)
+         if (grid)
             layer.append('svg:path')
                  .attr('class', 'xgrid')
                  .attr('d', grid)
@@ -188,7 +188,7 @@ class RFramePainter extends RObjectPainter {
             else
                grid += `M0,${h+this.y_handle.ticks[n]}h${w}`;
 
-         if (grid.length > 0)
+         if (grid)
           layer.append('svg:path')
                .attr('class', 'ygrid')
                .attr('d', grid)
@@ -313,8 +313,8 @@ class RFramePainter extends RObjectPainter {
       }
 
       let xaxis = this.xaxis, yaxis = this.yaxis;
-      if (xaxis?._typename != 'TAxis') xaxis = create('TAxis');
-      if (yaxis?._typename != 'TAxis') yaxis = create('TAxis');
+      if (xaxis?._typename != clTAxis) xaxis = create(clTAxis);
+      if (yaxis?._typename != clTAxis) yaxis = create(clTAxis);
 
       this.x_handle = new TAxisPainter(this.getDom(), xaxis, true);
       this.x_handle.setPadName(this.getPadName());
@@ -610,7 +610,7 @@ class RFramePainter extends RObjectPainter {
      * @private */
    cleanFrameDrawings() {
       // cleanup all 3D drawings if any
-      if (typeof this.create3DScene === 'function')
+      if (isFunc(this.create3DScene))
          this.create3DScene(-1);
 
       this.cleanupAxes();
@@ -808,7 +808,7 @@ class RFramePainter extends RObjectPainter {
      * As argument, tooltip object with selected bins will be provided
      * If handler function returns true, default handling of click will be disabled */
    configureUserClickHandler(handler) {
-      this._click_handler = handler && (typeof handler == 'function') ? handler : null;
+      this._click_handler = isFunc(handler) ? handler : null;
    }
 
    /** @summary Configure user-defined dblclick handler
@@ -816,7 +816,7 @@ class RFramePainter extends RObjectPainter {
      * As argument, tooltip object with selected bins will be provided
      * If handler function returns true, default handling of dblclick (unzoom) will be disabled */
    configureUserDblclickHandler(handler) {
-      this._dblclick_handler = handler && (typeof handler == 'function') ? handler : null;
+      this._dblclick_handler = isFunc(handler) ? handler : null;
    }
 
    /** @summary function can be used for zooming into specified range
@@ -871,7 +871,7 @@ class RFramePainter extends RObjectPainter {
          };
 
       const checkZooming = (painter, force) => {
-         if (!force && (typeof painter.canZoomInside != 'function')) return;
+         if (!force && !isFunc(painter.canZoomInside)) return;
 
          is_any_check = true;
 
@@ -965,7 +965,7 @@ class RFramePainter extends RObjectPainter {
           };
 
       let checkZooming = (painter, force) => {
-         if (!force && (typeof painter?.canZoomInside != 'function')) return;
+         if (!force && !isFunc(painter?.canZoomInside)) return;
 
          is_any_check = true;
 
@@ -1019,7 +1019,7 @@ class RFramePainter extends RObjectPainter {
          });
 
       if (typeof dox === 'undefined') { dox = doy = doz = true; } else
-      if (typeof dox === 'string') { doz = dox.indexOf('z') >= 0; doy = dox.indexOf('y') >= 0; dox = dox.indexOf('x') >= 0; }
+      if (isStr(dox)) { doz = dox.indexOf('z') >= 0; doy = dox.indexOf('y') >= 0; dox = dox.indexOf('x') >= 0; }
 
       return this.zoom(dox ? 0 : undefined, dox ? 0 : undefined,
                        doy ? 0 : undefined, doy ? 0 : undefined,
