@@ -14,8 +14,7 @@
 #include <TProfile2D.h>
 #include <TCanvas.h>
 #include <TRandom.h>
-
-using namespace std;
+#include <TROOT.h>
 
 void tprofile2polyRealistic(Int_t numEvents=100000)
 {
@@ -44,17 +43,17 @@ void tprofile2polyRealistic(Int_t numEvents=100000)
 
    for (float i = minx; i < maxx; i += binsz) {
       for (float j = miny; j < maxy; j += binsz) {
-        tot_merge->AddBin(i, j, i + binsz, j + binsz);
-        for (int l=0; l<NUM_LS; ++l) {
-          tot_avg_ls[l].AddBin(i, j, i + binsz, j + binsz);
-        }
+         tot_merge->AddBin(i, j, i + binsz, j + binsz);
+         for (int l = 0; l < NUM_LS; ++l) {
+            tot_avg_ls[l].AddBin(i, j, i + binsz, j + binsz);
+         }
       }
    }
 
    // -------------------- Construct detector bins ------------------------
    auto h2p = new TH2Poly();
    auto tp2p = new TProfile2Poly();
-   ifstream infile;
+   std::ifstream infile;
    TString dir = gROOT->GetTutorialDir();
    dir.Append("/hist/data/tprofile2poly_tutorial.data");
    infile.open(dir.Data());
@@ -62,17 +61,15 @@ void tprofile2polyRealistic(Int_t numEvents=100000)
    if (!infile) // Verify that the file was open successfully
    {
       std::cerr << dir.Data() << std::endl; // Report error
-      std::cerr << "Error code: " << strerror(errno) << std::endl; // Get some info as to why
+      std::cerr << "Error code: " << std::strerror(errno) << std::endl; // Get some info as to why
       return;
    }
    std::cout << " WE ARE AFTER LOADING DATA " << std::endl;
 
-   vector<pair<Double_t, Double_t>> allCoords;
+   std::vector<std::pair<Double_t, Double_t>> allCoords;
    Double_t a, b;
-   while (infile >> a >> b) {
-      pair<Double_t, Double_t> coord(a, b);
-      allCoords.push_back(coord);
-   }
+   while (infile >> a >> b) 
+      allCoords.emplace_back(a, b);
 
    if (allCoords.size() % 3 != 0) {
       cout << "[ERROR] Bad file" << endl;
@@ -80,7 +77,7 @@ void tprofile2polyRealistic(Int_t numEvents=100000)
    }
 
    Double_t x[3], y[3];
-   for (Int_t i = 0; i < allCoords.size(); i += 3) {
+   for (int i = 0; i < allCoords.size(); i += 3) {
       x[0] = allCoords[i + 0].first;
       y[0] = allCoords[i + 0].second;
       x[1] = allCoords[i + 1].first;
@@ -91,7 +88,7 @@ void tprofile2polyRealistic(Int_t numEvents=100000)
       det_avg_merge->AddBin(3, x, y);
       det_err_merge->AddBin(3, x, y);
 
-      for (int l=0; l<NUM_LS; ++l) {
+      for (int l = 0; l < NUM_LS; ++l) {
         det_avg_ls[l].AddBin(3, x, y);
         det_err_ls[l].AddBin(3, x, y);
       }
@@ -109,7 +106,7 @@ void tprofile2polyRealistic(Int_t numEvents=100000)
    Double_t yoffset2 = 0;
 
    for (int i = 0; i <= NUM_LS-1; ++i) { // LumiSection
-     std::cout << "[In Progress] LumiSection " << i << std::endl;
+      std::cout << "[In Progress] LumiSection " << i << std::endl;
       for (int j = 0; j < numEvents; ++j) {   // Events
          Double_t r1 = ran.Gaus(0, 10);
          Double_t r2 = ran.Gaus(0, 8);
@@ -142,24 +139,22 @@ void tprofile2polyRealistic(Int_t numEvents=100000)
 
       std::string title;
 
-
       c1->cd(i+1);
-      title = "Global View: Avg in LS  " + to_string(i);
+      title = "Global View: Avg in LS  " + std::to_string(i);
       tot_avg_ls[i].SetTitle(title.c_str());
       tot_avg_ls[i].SetStats(false);
       tot_avg_ls[i].Draw("COLZ");
       c1->Update();
 
       c1->cd((i+1)+NUM_LS);
-      title = "Detector View: Avg in LS  " + to_string(i);
+      title = "Detector View: Avg in LS  " + std::to_string(i);
       det_avg_ls[i].SetTitle(title.c_str());
       det_avg_ls[i].SetStats(false);
       det_avg_ls[i].Draw("COLZ");
       c1->Update();
 
-
       c1->cd((i+1)+(NUM_LS*2));
-      title = "Detector View: Error in LS  " + to_string(i);
+      title = "Detector View: Error in LS  " + std::to_string(i);
       det_err_ls[i].SetTitle(title.c_str());
       det_err_ls[i].SetStats(false);
       det_err_ls[i].SetContentToError();
@@ -169,32 +164,27 @@ void tprofile2polyRealistic(Int_t numEvents=100000)
 
    std::vector<TProfile2Poly*> tot_avg_v;
    std::vector<TProfile2Poly*> det_avg_v;
-   for (Int_t t=0; t<NUM_LS; t++){
+   for (int t = 0; t < NUM_LS; t++){
      tot_avg_v.push_back(&tot_avg_ls[t]);
      det_avg_v.push_back(&det_avg_ls[t]);
    }
 
    std::cout << "[In Progress] Merging" << std::endl;
 
-   std::string title;
-
    tot_merge->Merge(tot_avg_v);
    c2->cd(1);
-   title = "Total average merge";
-   tot_merge->SetTitle(title.c_str());
+   tot_merge->SetTitle("Total average merge");
    tot_merge->Draw("COLZ");
 
    det_avg_merge->Merge(det_avg_v);
    c2->cd(2);
-   title = "Detector average merge";
-   det_avg_merge->SetTitle(title.c_str());
+   det_avg_merge->SetTitle("Detector average merge");
    det_avg_merge->SetContentToAverage(); // implicit
    det_avg_merge->Draw("COLZ");
 
    det_err_merge->Merge(det_avg_v);
    c2->cd(3);
-   title = "Detector error merge";
-   det_err_merge->SetTitle(title.c_str());
+   det_err_merge->SetTitle("Detector error merge");
    det_err_merge->SetContentToError();
    det_err_merge->Draw("COLZ");
 }
