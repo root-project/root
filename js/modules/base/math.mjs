@@ -2053,6 +2053,5 @@ export {
    ChebyshevN, Chebyshev1, Chebyshev2, Chebyshev3, Chebyshev4, Chebyshev5,
    Chebyshev6, Chebyshev7, Chebyshev8, Chebyshev9, Chebyshev10,
 
-
    getTEfficiencyBoundaryFunc
 };

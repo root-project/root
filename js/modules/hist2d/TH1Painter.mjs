@@ -1,4 +1,4 @@
-import { gStyle, settings, isBatchMode } from '../core.mjs';
+import { gStyle, settings, isBatchMode, clTF1 } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
 import { floatToString, buildSvgPath } from '../base/BasePainter.mjs';
 import { THistPainter } from './THistPainter.mjs';
@@ -128,15 +128,23 @@ class TH1Painter extends THistPainter {
          this.ymax = hmax;
       } else {
          if (hmin != -1111) {
-            if (hmin < this.ymin) this.ymin = hmin; else set_zoom = true;
+            if (hmin < this.ymin)
+               this.ymin = hmin;
+             set_zoom = true;
          }
          if (hmax != -1111) {
-            if (hmax > this.ymax) this.ymax = hmax; else set_zoom = true;
+            if (hmax > this.ymax)
+               this.ymax = hmax;
+            set_zoom = true;
          }
       }
 
+      // always set zoom when hmin/hmax is configured
+      // fMinimum/fMaximum values is a way how ROOT handles Y scale zooming for TH1
+
       if (!when_axis_changed) {
-         if (set_zoom && this.draw_content) {
+
+         if (set_zoom) {
             this.zoom_ymin = (hmin == -1111) ? this.ymin : hmin;
             this.zoom_ymax = (hmax == -1111) ? this.ymax : hmax;
          } else {
@@ -270,7 +278,7 @@ class TH1Painter extends THistPainter {
             stat.addText('Kurt = <not avail>');
       }
 
-      if (dofit) stat.fillFunctionStat(this.findFunction('TF1'), dofit);
+      if (dofit) stat.fillFunctionStat(this.findFunction(clTF1), dofit);
 
       return true;
    }
@@ -685,7 +693,7 @@ class TH1Painter extends THistPainter {
       let close_path = `L${currx},${h0}H${startx}Z`;
 
       if (draw_markers || show_line) {
-         if ((path_fill !== null) && (path_fill.length > 0))
+         if (path_fill)
             this.draw_g.append('svg:path')
                        .attr('d', path_fill)
                        .call(this.fillatt.func);
@@ -1133,6 +1141,7 @@ class TH1Painter extends THistPainter {
       return pr.then(() => this.drawAxes())
                .then(() => this.draw1DBins())
                .then(() => this.drawHistTitle())
+               .then(() => this.drawNextFunction(0, true))
                .then(() => {
                    this.updateStatWebCanvas();
                    return this.addInteractivity();

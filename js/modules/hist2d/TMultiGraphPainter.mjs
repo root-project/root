@@ -1,4 +1,4 @@
-import { create } from '../core.mjs';
+import { create, isFunc, clTObjString, clTHashList } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from './TH1Painter.mjs';
@@ -156,9 +156,9 @@ class TMultiGraphPainter extends ObjectPainter {
             xaxis.fXmin = 0;
             xaxis.fXmax = graphs.arr.length;
             xaxis.fNbins = graphs.arr.length;
-            xaxis.fLabels = create('THashList');
+            xaxis.fLabels = create(clTHashList);
             for (let i = 0; i < graphs.arr.length; i++) {
-               let lbl = create('TObjString');
+               let lbl = create(clTObjString);
                lbl.fString = graphs.arr[i].fTitle || `gr${i}`;
                lbl.fUniqueID = graphs.arr.length - i; // graphs drawn in reverse order
                xaxis.fLabels.Add(lbl, '');
@@ -234,7 +234,7 @@ class TMultiGraphPainter extends ObjectPainter {
       // if there is auto colors assignment, try to provide it
       if (this._pfc || this._plc || this._pmc) {
          let mp = this.getMainPainter();
-         if (typeof mp?.createAutoColor == 'function') {
+         if (isFunc(mp?.createAutoColor)) {
             let icolor = mp.createAutoColor(graphs.arr.length);
             if (this._pfc) graphs.arr[indx].fFillColor = icolor;
             if (this._plc) graphs.arr[indx].fLineColor = icolor;
@@ -271,9 +271,9 @@ class TMultiGraphPainter extends ObjectPainter {
               pp = painter.getPadPainter(),
               histo = painter.scanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, pp?.getRootPad(true));
 
-         promise = painter.drawAxisHist(histo, hopt).then(fp => {
-            painter.firstpainter = fp;
-            fp.$secondary = true; // mark histogram painter as secondary
+         promise = painter.drawAxisHist(histo, hopt).then(ap => {
+            painter.firstpainter = ap;
+            ap.$secondary = true; // mark histogram painter as secondary
          });
       }
 

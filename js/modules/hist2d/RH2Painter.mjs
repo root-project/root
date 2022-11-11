@@ -1,4 +1,4 @@
-import { gStyle, internals, createTPolyLine } from '../core.mjs';
+import { gStyle, internals, isFunc, isStr, createTPolyLine } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { floatToString, TRandom } from '../base/BasePainter.mjs';
@@ -35,7 +35,7 @@ class RH2Painter extends RHistPainter {
 
       if (kind == 'Projections') kind = '';
 
-      if ((typeof kind == 'string') && (kind.length>1)) {
+      if (isStr(kind) && (kind.length > 1)) {
           width = parseInt(kind.slice(1));
           kind = kind[0];
       }
@@ -724,68 +724,9 @@ class RH2Painter extends RHistPainter {
    }
 
    /** @summary Create polybin */
-   createPolyBin(pmain, bin, text_pos) {
-      let cmd = '', ngr, ngraphs = 1, gr = null,
-          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y);
-
-      if (bin.fPoly._typename == 'TMultiGraph')
-         ngraphs = bin.fPoly.fGraphs.arr.length;
-      else
-         gr = bin.fPoly;
-
-      if (text_pos)
-         bin._sumx = bin._sumy = bin._suml = 0;
-
-      function addPoint(x1,y1,x2,y2) {
-         let len = Math.sqrt((x1-x2)**2 + (y1-y2)**2);
-         bin._sumx += (x1+x2)*len/2;
-         bin._sumy += (y1+y2)*len/2;
-         bin._suml += len;
-      }
-
-      for (ngr = 0; ngr < ngraphs; ++ ngr) {
-         if (!gr || (ngr > 0)) gr = bin.fPoly.fGraphs.arr[ngr];
-
-         let npnts = gr.fNpoints, n,
-             x = gr.fX, y = gr.fY,
-             grx = Math.round(funcs.grx(x[0])),
-             gry = Math.round(funcs.gry(y[0])),
-             nextx, nexty;
-
-         if ((npnts>2) && (x[0]==x[npnts-1]) && (y[0]==y[npnts-1])) npnts--;
-
-         cmd += 'M'+grx+','+gry;
-
-         for (n=1;n<npnts;++n) {
-            nextx = Math.round(funcs.grx(x[n]));
-            nexty = Math.round(funcs.gry(y[n]));
-            if (text_pos) addPoint(grx,gry, nextx, nexty);
-            if ((grx!==nextx) || (gry!==nexty)) {
-               if (grx===nextx)
-                  cmd += 'v' + (nexty - gry);
-               else if (gry===nexty)
-                  cmd += 'h' + (nextx - grx);
-               else
-                  cmd += 'l' + (nextx - grx) + ',' + (nexty - gry);
-            }
-            grx = nextx; gry = nexty;
-         }
-
-         if (text_pos) addPoint(grx, gry, Math.round(funcs.grx(x[0])), Math.round(funcs.gry(y[0])));
-         cmd += 'z';
-      }
-
-      if (text_pos) {
-         if (bin._suml > 0) {
-            bin._midx = Math.round(bin._sumx / bin._suml);
-            bin._midy = Math.round(bin._sumy / bin._suml);
-         } else {
-            bin._midx = Math.round(funcs.grx((bin.fXmin + bin.fXmax)/2));
-            bin._midy = Math.round(funcs.gry((bin.fYmin + bin.fYmax)/2));
-         }
-      }
-
-      return cmd;
+   createPolyBin() {
+      // see how TH2Painter is implemented
+      return '';
    }
 
    /** @summary Draw RH2 bins as text */
@@ -799,8 +740,7 @@ class RH2Painter extends RHistPainter {
           text_offset = 0,
           text_g = this.draw_g.append('svg:g').attr('class','th2_text'),
           di = handle.stepi, dj = handle.stepj,
-          profile2d = (this.options.TextKind == 'E') &&
-                      this.matchObjectType('TProfile2D') && (typeof histo.getBinEntries == 'function');
+          profile2d = false;
 
       if (this.options.BarOffset) text_offset = this.options.BarOffset;
 
@@ -992,7 +932,7 @@ class RH2Painter extends RHistPainter {
          }
       }
 
-      if (res.length > 0) {
+      if (res) {
          let elem = this.draw_g
                         .append('svg:path')
                         .attr('d', res)
@@ -1001,19 +941,19 @@ class RH2Painter extends RHistPainter {
             elem.call(this.lineatt.func);
       }
 
-      if ((btn1.length > 0) && this.fillatt.hasColor())
+      if (btn1 && this.fillatt.hasColor())
          this.draw_g.append('svg:path')
                     .attr('d', btn1)
                     .call(this.fillatt.func)
                     .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatHex());
 
-      if (btn2.length > 0)
+      if (btn2)
          this.draw_g.append('svg:path')
                     .attr('d', btn2)
                     .call(this.fillatt.func)
                     .style('fill', !this.fillatt.hasColor() ? 'red' : d3_rgb(this.fillatt.color).darker(0.5).formatHex());
 
-      if (cross.length > 0) {
+      if (cross) {
          let elem = this.draw_g.append('svg:path')
                                .attr('d', cross)
                                .style('fill', 'none');
@@ -1113,7 +1053,7 @@ class RH2Painter extends RHistPainter {
 
       let cntr = handle.palette.getContour();
 
-      for (colindx=0;colindx<colPaths.length;++colindx)
+      for (colindx = 0; colindx < colPaths.length; ++colindx)
         if ((colPaths[colindx] !== undefined) && (colindx<cntr.length)) {
            let pattern_class = 'scatter_' + colindx,
                pattern = defs.select('.' + pattern_class);
@@ -1239,48 +1179,9 @@ class RH2Painter extends RHistPainter {
    }
 
    /** @summary Provide text information (tooltips) for poly bin */
-   getPolyBinTooltips(binindx, realx, realy) {
-
-      let histo = this.getHisto(),
-          bin = histo.fBins.arr[binindx],
-          pmain = this.getFramePainter(),
-          binname = bin.fPoly.fName,
-          lines = [], numpoints = 0;
-
-      if (binname === 'Graph') binname = '';
-      if (binname.length === 0) binname = bin.fNumber;
-
-      if ((realx === undefined) && (realy === undefined)) {
-         realx = realy = 0;
-         let gr = bin.fPoly, numgraphs = 1;
-         if (gr._typename === 'TMultiGraph') { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
-
-         for (let ngr=0;ngr<numgraphs;++ngr) {
-            if (!gr || (ngr > 0)) gr = bin.fPoly.fGraphs.arr[ngr];
-
-            for (let n=0;n<gr.fNpoints;++n) {
-               ++numpoints;
-               realx += gr.fX[n];
-               realy += gr.fY[n];
-            }
-         }
-
-         if (numpoints > 1) {
-            realx = realx / numpoints;
-            realy = realy / numpoints;
-         }
-      }
-
-      lines.push(this.getObjectHint() || 'histo');
-      lines.push('x = ' + pmain.axisAsText('x', realx),
-                 'y = ' + pmain.axisAsText('y', realy));
-      if (numpoints > 0) lines.push('npnts = ' + numpoints);
-      lines.push('bin = ' + binname);
-      if (bin.fContent === Math.round(bin.fContent))
-         lines.push('content = ' + bin.fContent);
-      else
-         lines.push('content = ' + floatToString(bin.fContent, gStyle.fStatFormat));
-      return lines;
+   getPolyBinTooltips() {
+      // see how TH2Painter is implemented
+      return [];
    }
 
    /** @summary Process tooltip event */
@@ -1296,76 +1197,8 @@ class RH2Painter extends RHistPainter {
           ttrect = this.draw_g.select('.tooltip_bin');
 
       if (h.poly) {
-         // process tooltips from TH2Poly
-
-         let pmain = this.getFramePainter(), foundindx = -1, bin;
-         const realx = pmain.revertAxis('x', pnt.x),
-               realy = pmain.revertAxis('y', pnt.y);
-
-         if ((realx !== undefined) && (realy !== undefined)) {
-            const len = histo.fBins.arr.length;
-
-            for (let i = 0; (i < len) && (foundindx < 0); ++ i) {
-               bin = histo.fBins.arr[i];
-
-               // found potential bins candidate
-               if ((realx < bin.fXmin) || (realx > bin.fXmax) ||
-                    (realy < bin.fYmin) || (realy > bin.fYmax)) continue;
-
-               // ignore empty bins with col0 option
-               if ((bin.fContent === 0) && !this.options.Zero) continue;
-
-               let gr = bin.fPoly, numgraphs = 1;
-               if (gr._typename === 'TMultiGraph') { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
-
-               for (let ngr=0;ngr<numgraphs;++ngr) {
-                  if (!gr || (ngr > 0)) gr = bin.fPoly.fGraphs.arr[ngr];
-                  if (gr.IsInside(realx,realy)) {
-                     foundindx = i;
-                     break;
-                  }
-               }
-            }
-         }
-
-         if (foundindx < 0) {
-            ttrect.remove();
-            return null;
-         }
-
-         let res = { name: 'histo', title: histo.fTitle || 'title',
-                     x: pnt.x, y: pnt.y,
-                     color1: this.lineatt ? this.lineatt.color : 'green',
-                     color2: this.fillatt ? this.fillatt.getFillColorAlt('blue') : 'blue',
-                     exact: true, menu: true,
-                     lines: this.getPolyBinTooltips(foundindx, realx, realy) };
-
-         if (pnt.disabled) {
-            ttrect.remove();
-            res.changed = true;
-         } else {
-
-            if (ttrect.empty())
-               ttrect = this.draw_g.append('svg:path')
-                            .attr('class','tooltip_bin h1bin')
-                            .style('pointer-events','none');
-
-            res.changed = ttrect.property('current_bin') !== foundindx;
-
-            if (res.changed)
-                  ttrect.attr('d', this.createPolyBin(pmain, bin))
-                        .style('opacity', '0.7')
-                        .property('current_bin', foundindx);
-         }
-
-         if (res.changed)
-            res.user_info = { obj: histo,  name: 'histo',
-                              bin: foundindx,
-                              cont: bin.fContent,
-                              grx: pnt.x, gry: pnt.y };
-
-         return res;
-
+         // process tooltips from TH2Poly - see TH2Painter
+         return null;
       }
 
       let i, j, binz = 0, colindx = null;

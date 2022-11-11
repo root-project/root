@@ -1,10 +1,14 @@
-/// I/O methods of JavaScript ROOT
-
 import { httpRequest, createHttpRequest, BIT, loadScript, internals, settings,
-         create, getMethods, addMethods, isNodeJs } from './core.mjs';
+         create, getMethods, addMethods, isNodeJs, isFunc, isStr,
+         clTObject, clTNamed, clTString, clTObjString, clTList, clTMap, clTObjArray, clTClonesArray,
+         clTAttLine, clTAttFill, clTAttMarker, clTStyle,
+         clTPad, clTCanvas, clTAttCanvas, clTPolyMarker3D, clTF1, clTF2 } from './core.mjs';
 
-const clTObject = 'TObject', clTNamed = 'TNamed', clTObjString = 'TObjString', clTString = 'TString',
-      clTList = 'TList', clTStreamerElement = 'TStreamerElement', clTStreamerObject = 'TStreamerObject',
+const clTStreamerElement = 'TStreamerElement', clTStreamerObject = 'TStreamerObject',
+      clTStreamerSTL = 'TStreamerSTL', clTStreamerInfoList = 'TStreamerInfoList',
+      clTDirectory = 'TDirectory', clTDirectoryFile = 'TDirectoryFile',
+      clTQObject = 'TQObject', clTBasket = 'TBasket',
+      nameStreamerInfo = 'StreamerInfo',
 
       kChar = 1, kShort = 2, kInt = 3, kLong = 4, kFloat = 5, kCounter = 6,
       kCharStar = 7, kDouble = 8, kDouble32 = 9, kLegacyChar = 10,
@@ -77,8 +81,8 @@ const CustomStreamers = {
    ],
 
    TClonesArray(buf, list) {
-      if (!list._typename) list._typename = 'TClonesArray';
-      list.$kind = 'TClonesArray';
+      if (!list._typename) list._typename = clTClonesArray;
+      list.$kind = clTClonesArray;
       list.name = '';
       const ver = buf.last_read_version;
       if (ver > 2) buf.classStreamer(list, clTObject);
@@ -116,7 +120,7 @@ const CustomStreamers = {
    },
 
    TMap(buf, map) {
-      if (!map._typename) map._typename = 'TMap';
+      if (!map._typename) map._typename = clTMap;
       map.name = '';
       map.arr = [];
       const ver = buf.last_read_version;
@@ -157,8 +161,8 @@ const CustomStreamers = {
    },
 
    TCanvas(buf, obj) {
-      obj._typename = 'TCanvas';
-      buf.classStreamer(obj, 'TPad');
+      obj._typename = clTCanvas;
+      buf.classStreamer(obj, clTPad);
       obj.fDISPLAY = buf.readTString();
       obj.fDoubleBuffer = buf.ntoi4();
       obj.fRetained = (buf.ntou1() !== 0);
@@ -172,7 +176,7 @@ const CustomStreamers = {
       obj.fWindowHeight = buf.ntoi4();
       obj.fCw = buf.ntou4();
       obj.fCh = buf.ntou4();
-      obj.fCatt = buf.classStreamer({}, 'TAttCanvas');
+      obj.fCatt = buf.classStreamer({}, clTAttCanvas);
       buf.ntou1(); // ignore b << TestBit(kMoveOpaque);
       buf.ntou1(); // ignore b << TestBit(kResizeOpaque);
       obj.fHighLightColor = buf.ntoi2();
@@ -183,8 +187,8 @@ const CustomStreamers = {
    },
 
    TObjArray(buf, list) {
-      if (!list._typename) list._typename = 'TObjArray';
-      list.$kind = 'TObjArray';
+      if (!list._typename) list._typename = clTObjArray;
+      list.$kind = clTObjArray;
       list.name = '';
       const ver = buf.last_read_version;
       if (ver > 2)
@@ -203,16 +207,16 @@ const CustomStreamers = {
    TPolyMarker3D(buf, marker) {
       const ver = buf.last_read_version;
       buf.classStreamer(marker, clTObject);
-      buf.classStreamer(marker, 'TAttMarker');
+      buf.classStreamer(marker, clTAttMarker);
       marker.fN = buf.ntoi4();
       marker.fP = buf.readFastArray(marker.fN * 3, kFloat);
       marker.fOption = buf.readTString();
-      marker.fName = (ver > 1) ? buf.readTString() : 'TPolyMarker3D';
+      marker.fName = (ver > 1) ? buf.readTString() : clTPolyMarker3D;
    },
 
    TPolyLine3D(buf, obj) {
       buf.classStreamer(obj, clTObject);
-      buf.classStreamer(obj, 'TAttLine');
+      buf.classStreamer(obj, clTAttLine);
       obj.fN = buf.ntoi4();
       obj.fP = buf.readFastArray(obj.fN * 3, kFloat);
       obj.fOption = buf.readTString();
@@ -309,7 +313,7 @@ const CustomStreamers = {
 
    TStreamerSTLstring(buf, elem) {
       if (buf.last_read_version > 0)
-         buf.classStreamer(elem, 'TStreamerSTL');
+         buf.classStreamer(elem, clTStreamerSTL);
    },
 
    TList(buf, obj) {
@@ -454,7 +458,7 @@ const CustomStreamers = {
       obj.fZ = buf.ntof();
       obj.fDensity = buf.ntof();
       if (v > 2) {
-         buf.classStreamer(obj, 'TAttFill');
+         buf.classStreamer(obj, clTAttFill);
          obj.fRadLength = buf.ntof();
          obj.fInterLength = buf.ntof();
       } else {
@@ -654,7 +658,7 @@ function getTypeId(typname, norecursion) {
 
    if (!norecursion) {
       let replace = CustomStreamers[typname];
-      if (typeof replace === 'string') return getTypeId(replace, true);
+      if (isStr(replace)) return getTypeId(replace, true);
    }
 
    return -1;
@@ -669,7 +673,7 @@ function createStreamerElement(name, typename, file) {
       fXmin: 0, fXmax: 0, fFactor: 0
    };
 
-   if (typeof typename === 'string') {
+   if (isStr(typename)) {
       elem.fType = getTypeId(typename);
       if ((elem.fType < 0) && file && file.fBasicTypes[typename])
          elem.fType = file.fBasicTypes[typename];
@@ -689,7 +693,7 @@ function createStreamerElement(name, typename, file) {
          }
 
    if (stltype !== kNotSTL) {
-      elem._typename = 'TStreamerSTL';
+      elem._typename = clTStreamerSTL;
       elem.fType = kStreamer;
       elem.fSTLtype = stltype;
       elem.fCtype = 0;
@@ -1059,23 +1063,19 @@ function createMemberStreamer(element, file) {
             }
 
             member.func = function(buf, obj) {
-               const ver = buf.readVersion();
-               let res = this.read_loop(buf, obj[this.cntname]);
-               if (!buf.checkByteCount(ver, this.typename)) res = null;
-               obj[this.name] = res;
+               const ver = buf.readVersion(),
+                     res = this.read_loop(buf, obj[this.cntname]);
+               obj[this.name] = buf.checkByteCount(ver, this.typename) ? res : null;
             }
             member.branch_func = function(buf, obj) {
                // this is special functions, used by branch in the STL container
-
-               const ver = buf.readVersion(), sz0 = obj[this.stl_size];
-               let res = new Array(sz0);
+               const ver = buf.readVersion(), sz0 = obj[this.stl_size], res = new Array(sz0);
 
                for (let loop0 = 0; loop0 < sz0; ++loop0) {
                   let cnt = obj[this.cntname][loop0];
                   res[loop0] = this.read_loop(buf, cnt);
                }
-               if (!buf.checkByteCount(ver, this.typename)) res = null;
-               obj[this.name] = res;
+               obj[this.name] = buf.checkByteCount(ver, this.typename) ? res : null;
             }
 
             member.objs_branch_func = function(buf, obj) {
@@ -1083,8 +1083,8 @@ function createMemberStreamer(element, file) {
                // objects already preallocated and only appropriate member must be set
                // see code in JSRoot.tree.js for reference
 
-               const ver = buf.readVersion();
-               let arr = obj[this.name0]; // objects array where reading is done
+               const ver = buf.readVersion(),
+                     arr = obj[this.name0]; // objects array where reading is done
 
                for (let loop0 = 0; loop0 < arr.length; ++loop0) {
                   let obj1 = this.get(arr, loop0), cnt = obj1[this.cntname];
@@ -1116,7 +1116,7 @@ function createMemberStreamer(element, file) {
          } else if ((stl === kSTLvector) || (stl === kSTLlist) ||
                     (stl === kSTLdeque) || (stl === kSTLset) || (stl === kSTLmultiset)) {
             let p1 = member.typename.indexOf('<'),
-               p2 = member.typename.lastIndexOf('>');
+                p2 = member.typename.lastIndexOf('>');
 
             member.conttype = member.typename.slice(p1 + 1, p2).trim();
 
@@ -1183,7 +1183,7 @@ function createMemberStreamer(element, file) {
          }
 
          if (!member.readelem) {
-            console.error(`'failed to create streamer for element ${member.typename} ${member.name} element ${element._typename} STL type ${element.fSTLtype}`);
+            console.error(`failed to create streamer for element ${member.typename} ${member.name} element ${element._typename} STL type ${element.fSTLtype}`);
             member.func = function(buf, obj) {
                const ver = buf.readVersion();
                buf.checkByteCount(ver);
@@ -1224,7 +1224,7 @@ function createMemberStreamer(element, file) {
                   for (let n = 0; n < cnt; ++n)
                      arr[n] = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
 
-                  if (ver) buf.checkByteCount(ver, 'branch ' + this.typename);
+                  if (ver) buf.checkByteCount(ver, `branch ${this.typename}`);
 
                   obj[this.name] = arr;
                }
@@ -1249,7 +1249,7 @@ function createMemberStreamer(element, file) {
                      obj1[this.name] = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
                   }
 
-                  if (ver) buf.checkByteCount(ver, 'branch ' + this.typename);
+                  if (ver) buf.checkByteCount(ver, `branch ${this.typename}`);
                }
             }
          break;
@@ -1295,7 +1295,7 @@ function addClassMethods(clname, streamer) {
 
    if (methods)
       for (let key in methods)
-         if ((typeof methods[key] === 'function') || (key.indexOf('_') == 0))
+         if (isFunc(methods[key]) || (key.indexOf('_') == 0))
             streamer.push({
                name: key,
                method: methods[key],
@@ -2606,7 +2606,7 @@ class TDirectory {
    /** @summary constructor */
    constructor(file, dirname, cycle) {
       this.fFile = file;
-      this._typename = 'TDirectory';
+      this._typename = clTDirectory;
       this.dir_name = dirname;
       this.dir_cycle = cycle;
       this.fKeys = [];
@@ -2633,14 +2633,14 @@ class TDirectory {
              subname = keyname.slice(pos+1),
              dirkey = this.getKey(dirname, undefined, true);
 
-         if (dirkey && !only_direct && (dirkey.fClassName.indexOf('TDirectory') == 0))
+         if (dirkey && !only_direct && (dirkey.fClassName.indexOf(clTDirectory) == 0))
             return this.fFile.readObject(this.dir_name + '/' + dirname, 1)
                              .then(newdir => newdir.getKey(subname, cycle));
 
          pos = keyname.lastIndexOf('/', pos-1);
       }
 
-      return only_direct ? null : Promise.reject(Error('Key not found ' + keyname));
+      return only_direct ? null : Promise.reject(Error(`Key not found ${keyname}`));
    }
 
    /** @summary Read object from the directory
@@ -2655,7 +2655,7 @@ class TDirectory {
      * @return {Promise} with TDirectory object */
    async readKeys(objbuf) {
 
-      objbuf.classStreamer(this, 'TDirectory');
+      objbuf.classStreamer(this, clTDirectory);
 
       if ((this.fSeekKeys <= 0) || (this.fNbytesKeys <= 0))
          return this;
@@ -2710,7 +2710,7 @@ class TFile {
       this.fStreamers = [];
       this.fBasicTypes = {}; // custom basic types, in most case enumerations
 
-      if (typeof this.fURL != 'string') return this;
+      if (!isStr(this.fURL)) return this;
 
       if (this.fURL[this.fURL.length - 1] === '+') {
          this.fURL = this.fURL.slice(0, this.fURL.length - 1);
@@ -2774,7 +2774,7 @@ class TFile {
           promise = new Promise((resolve,reject) => { resolveFunc = resolve; rejectFunc = reject; }),
           first = 0, last = 0, blobs = [], read_callback; // array of requested segments
 
-      if (filename && (typeof filename === 'string') && (filename.length > 0)) {
+      if (isStr(filename) && filename) {
          const pos = fileurl.lastIndexOf('/');
          fileurl = (pos < 0) ? filename : fileurl.slice(0, pos + 1) + filename;
       }
@@ -2805,7 +2805,7 @@ class TFile {
                xhr.expected_size = Math.max(Math.round(1.1 * totalsz), totalsz + 200); // 200 if offset for the potential gzip
             }
 
-            if (progress_callback && (typeof xhr.addEventListener === 'function')) {
+            if (progress_callback && isFunc(xhr.addEventListener)) {
                let sum1 = 0, sum2 = 0, sum_total = 0;
                for (let n = 1; n < place.length; n += 2) {
                   sum_total += place[n];
@@ -2836,7 +2836,7 @@ class TFile {
          if (res && (place[0] === 0) && (place.length === 2) && !file.fFileContent) {
             // special case - keep content of first request (could be complete file) in memory
 
-            file.fFileContent = new TBuffer((typeof res == 'string') ? res : new DataView(res));
+            file.fFileContent = new TBuffer(isStr(res) ? res : new DataView(res));
 
             if (!file.fAcceptRanges)
                file.fEND = file.fFileContent.length;
@@ -2876,7 +2876,7 @@ class TFile {
 
          // object to access response data
          let hdr = this.getResponseHeader('Content-Type'),
-            ismulti = (typeof hdr === 'string') && (hdr.indexOf('multipart') >= 0),
+            ismulti = isStr(hdr) && (hdr.indexOf('multipart') >= 0),
             view = new DataView(res);
 
          if (!ismulti) {
@@ -3000,7 +3000,7 @@ class TFile {
     * @private */
    getDir(dirname, cycle) {
 
-      if ((cycle === undefined) && (typeof dirname == 'string')) {
+      if ((cycle === undefined) && isStr(dirname)) {
          const pos = dirname.lastIndexOf(';');
          if (pos > 0) { cycle = parseInt(dirname.slice(pos + 1)); dirname = dirname.slice(0, pos); }
       }
@@ -3040,13 +3040,13 @@ class TFile {
          if (dir) return dir.getKey(subname, cycle, only_direct);
 
          let dirkey = this.getKey(dirname, undefined, true);
-         if (dirkey && !only_direct && (dirkey.fClassName.indexOf('TDirectory') == 0))
+         if (dirkey && !only_direct && (dirkey.fClassName.indexOf(clTDirectory) == 0))
             return this.readObject(dirname).then(newdir => newdir.getKey(subname, cycle));
 
          pos = keyname.lastIndexOf('/', pos - 1);
       }
 
-      return only_direct ? null : Promise.reject(Error('Key not found ' + keyname));
+      return only_direct ? null : Promise.reject(Error(`Key not found ${keyname}`));
    }
 
    /** @summary Read and inflate object buffer described by its key
@@ -3097,12 +3097,12 @@ class TFile {
       // in such situation calls are asynchrone
       return this.getKey(obj_name, cycle).then(key => {
 
-         if ((obj_name == 'StreamerInfo') && (key.fClassName == clTList))
+         if ((obj_name == nameStreamerInfo) && (key.fClassName == clTList))
             return this.fStreamerInfos;
 
          let isdir = false;
 
-         if ((key.fClassName == 'TDirectory' || key.fClassName == 'TDirectoryFile')) {
+         if ((key.fClassName == clTDirectory || key.fClassName == clTDirectoryFile)) {
             let dir = this.getDir(obj_name, cycle);
             if (dir) return dir;
             isdir = true;
@@ -3123,7 +3123,7 @@ class TFile {
             buf.mapObject(1, obj); // tag object itself with id == 1
             buf.classStreamer(obj, key.fClassName);
 
-            if ((key.fClassName === 'TF1') || (key.fClassName === 'TF2'))
+            if ((key.fClassName === clTF1) || (key.fClassName === clTF2))
                return this._readFormulas(obj);
 
             return obj;
@@ -3156,7 +3156,7 @@ class TFile {
       buf.mapObject(1, lst);
       buf.classStreamer(lst, clTList);
 
-      lst._typename = 'TStreamerInfoList';
+      lst._typename = clTStreamerInfoList;
 
       this.fStreamerInfos = lst;
 
@@ -3174,7 +3174,7 @@ class TFile {
             let typ = elem.fType, typname = elem.fTypeName;
 
             if (typ >= 60) {
-               if ((typ === kStreamer) && (elem._typename == 'TStreamerSTL') && elem.fSTLtype && elem.fCtype && (elem.fCtype < 20)) {
+               if ((typ === kStreamer) && (elem._typename == clTStreamerSTL) && elem.fSTLtype && elem.fCtype && (elem.fCtype < 20)) {
                   let prefix = (StlNames[elem.fSTLtype] || 'undef') + '<';
                   if ((typname.indexOf(prefix) === 0) && (typname[typname.length - 1] == '>')) {
                      typ = elem.fCtype;
@@ -3268,7 +3268,7 @@ class TFile {
          buf3.locate(this.fNbytesName);
 
          // we read TDirectory part of TFile
-         buf3.classStreamer(this, 'TDirectory');
+         buf3.classStreamer(this, clTDirectory);
 
          if (!this.fSeekKeys)
             return Promise.reject(Error(`Empty keys list in ${this.fURL}`));
@@ -3345,12 +3345,12 @@ class TFile {
    getStreamer(clname, ver, s_i) {
 
       // these are special cases, which are handled separately
-      if (clname == 'TQObject' || clname == 'TBasket') return null;
+      if (clname == clTQObject || clname == clTBasket) return null;
 
       let streamer, fullname = clname;
 
       if (ver) {
-         fullname += (ver.checksum ? ('$chksum' + ver.checksum) : ('$ver' + ver.val));
+         fullname += (ver.checksum ? `$chksum${ver.checksum}` : `$ver${ver.val}`);
          streamer = this.fStreamers[fullname];
          if (streamer !== undefined) return streamer;
       }
@@ -3358,11 +3358,11 @@ class TFile {
       let custom = CustomStreamers[clname];
 
       // one can define in the user streamers just aliases
-      if (typeof custom === 'string')
+      if (isStr(custom))
          return this.getStreamer(custom, ver, s_i);
 
       // streamer is just separate function
-      if (typeof custom === 'function') {
+      if (isFunc(custom)) {
          streamer = [{ typename: clname, func: custom }];
          return addClassMethods(clname, streamer);
       }
@@ -3385,7 +3385,7 @@ class TFile {
       }
 
       // special handling for TStyle which has duplicated member name fLineStyle
-      if ((s_i.fName == 'TStyle') && s_i.fElements)
+      if ((s_i.fName == clTStyle) && s_i.fElements)
          s_i.fElements.arr.forEach(elem => {
             if (elem.fName == 'fLineStyle') elem.fName = 'fLineStyles'; // like in ROOT JSON now
          });
@@ -3528,7 +3528,7 @@ function readVectorElement(buf) {
       for (i = 0; i < n; ++i)
          res[i] = { _typename: this.conttype }; // create objects
       if (!streamer) {
-         console.error('Fail to create split streamer for', this.conttype, 'need to read ', n, 'objects version', ver);
+         console.error(`Fail to create split streamer for ${this.conttype} need to read ${n} objects version ${ver}`);
       } else {
          for (k = 0; k < streamer.length; ++k) {
             member = streamer[k];
@@ -3782,7 +3782,7 @@ class TProxyFile extends TFile {
          if (!res) return false;
          this.fEND = this.proxy.getFileSize();
          this.fFullURL = this.fURL = this.fFileName = this.proxy.getFileName();
-         if (typeof this.fFileName == 'string') {
+         if (isStr(this.fFileName)) {
             let p = this.fFileName.lastIndexOf('/');
             if ((p > 0) && (p < this.fFileName.length - 4))
                this.fFileName = this.fFileName.slice(p+1);
@@ -3830,7 +3830,7 @@ function openFile(arg) {
 
    let file;
 
-   if (isNodeJs() && (typeof arg == 'string')) {
+   if (isNodeJs() && isStr(arg)) {
       if (arg.indexOf('file://') == 0)
          file = new TNodejsFile(arg.slice(7));
       else if (arg.indexOf('http') !== 0)
@@ -3865,6 +3865,7 @@ export {
    kLong64, kULong64, kBool, kFloat16,
    kBase, kOffsetL, kOffsetP, kObject, kAny, kObjectp, kObjectP, kTString,
    kAnyP, kStreamer, kStreamLoop, kSTLp, kSTL,
+   clTStreamerInfoList, clTDirectory, clTDirectoryFile, nameStreamerInfo, clTBasket,
    R__unzip, addUserStreamer, createStreamerElement, createMemberStreamer,
    openFile, reconstructObject, FileProxy,
    TBuffer /*, TDirectory, TFile, TLocalFile, TNodejsFile */

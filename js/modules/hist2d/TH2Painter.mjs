@@ -1,4 +1,5 @@
-import { gStyle, internals, createHistogram, createTPolyLine, isBatchMode } from '../core.mjs';
+import { gStyle, internals, createHistogram, createTPolyLine, isBatchMode, isFunc, isStr,
+         clTMultiGraph, clTF2, clTProfile2D } from '../core.mjs';
 import { rgb as d3_rgb, chord as d3_chord, arc as d3_arc, ribbon as d3_ribbon } from '../d3.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
@@ -34,7 +35,7 @@ class TH2Painter extends THistPainter {
 
       if ((kind == 'Projections') || (kind == 'Off')) kind = '';
 
-      if ((typeof kind == 'string') && (kind.length>1)) {
+      if (isStr(kind) && (kind.length > 1)) {
           width = parseInt(kind.slice(1));
           kind = kind[0];
       }
@@ -313,13 +314,15 @@ class TH2Painter extends THistPainter {
                else if (bin_content > this.gmaxbin)
                   this.gmaxbin = bin_content;
                if (bin_content > 0)
-                  if ((this.gminposbin === null) || (this.gminposbin > bin_content)) this.gminposbin = bin_content;
+                  if ((this.gminposbin === null) || (this.gminposbin > bin_content))
+                     this.gminposbin = bin_content;
             }
          }
       }
 
       // this value used for logz scale drawing
-      if (this.gminposbin === null) this.gminposbin = this.gmaxbin*1e-4;
+      if (this.gminposbin === null)
+         this.gminposbin = this.gmaxbin*1e-4;
 
       if (this.options.Axis > 0) {
          // Paint histogram axis only
@@ -360,7 +363,7 @@ class TH2Painter extends THistPainter {
 
             xx = yy = numpoints = 0;
             gr = bin.fPoly; numgraphs = 1;
-            if (gr._typename === 'TMultiGraph') { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
+            if (gr._typename === clTMultiGraph) { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
 
             for (ngr = 0; ngr < numgraphs; ++ngr) {
                if (!gr || (ngr > 0)) gr = bin.fPoly.fGraphs.arr[ngr];
@@ -503,14 +506,14 @@ class TH2Painter extends THistPainter {
          stat.addText('Kurt = <undef>');
 
       if ((print_under > 0) || (print_over > 0)) {
-         let m = data.matrix;
+         let get = i => data.matrix[i].toFixed(0);
 
-         stat.addText('' + m[6].toFixed(0) + ' | ' + m[7].toFixed(0) + ' | '  + m[7].toFixed(0));
-         stat.addText('' + m[3].toFixed(0) + ' | ' + m[4].toFixed(0) + ' | '  + m[5].toFixed(0));
-         stat.addText('' + m[0].toFixed(0) + ' | ' + m[1].toFixed(0) + ' | '  + m[2].toFixed(0));
+         stat.addText(`${get(6)} | ${get(7)} | ${get(7)}`);
+         stat.addText(`${get(3)} | ${get(4)} | ${get(5)}`);
+         stat.addText(`${get(0)} | ${get(1)} | ${get(2)}`);
       }
 
-      if (dofit) stat.fillFunctionStat(this.findFunction('TF2'), dofit);
+      if (dofit) stat.fillFunctionStat(this.findFunction(clTF2), dofit);
 
       return true;
    }
@@ -999,7 +1002,7 @@ class TH2Painter extends THistPainter {
    createPolyBin(funcs, bin, text_pos) {
       let cmd = '', grcmd = '', acc_x = 0, acc_y = 0, ngr, ngraphs = 1, gr = null;
 
-      if (bin.fPoly._typename == 'TMultiGraph')
+      if (bin.fPoly._typename == clTMultiGraph)
          ngraphs = bin.fPoly.fGraphs.arr.length;
       else
          gr = bin.fPoly;
@@ -1076,7 +1079,7 @@ class TH2Painter extends THistPainter {
    }
 
    /** @summary draw TH2Poly as color */
-   drawPolyBinsColor() {
+   async drawPolyBinsColor() {
       let histo = this.getObject(),
           pmain = this.getFramePainter(),
           funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
@@ -1163,14 +1166,14 @@ class TH2Painter extends THistPainter {
    }
 
    /** @summary Draw TH2 bins as text */
-   drawBinsText(handle) {
+   async drawBinsText(handle) {
       let histo = this.getObject(),
           x, y, width, height,
           color = this.getColor(histo.fMarkerColor),
           rotate = -1*this.options.TextAngle,
           draw_g = this.draw_g.append('svg:g').attr('class', 'th2_text'),
           text_size = 20, text_offset = 0,
-          profile2d = this.matchObjectType('TProfile2D') && (typeof histo.getBinEntries == 'function'),
+          profile2d = this.matchObjectType(clTProfile2D) && isFunc(histo.getBinEntries),
           show_err = (this.options.TextKind == 'E'),
           latex = (show_err && !this.options.TextLine) ? 1 : 0;
 
@@ -1376,7 +1379,7 @@ class TH2Painter extends THistPainter {
          }
       }
 
-      if (res.length > 0) {
+      if (res) {
          let elem = this.draw_g.append('svg:path')
                                .attr('d', res)
                                .call(this.fillatt.func);
@@ -1384,19 +1387,19 @@ class TH2Painter extends THistPainter {
             elem.call(this.lineatt.func);
       }
 
-      if ((btn1.length > 0) && this.fillatt.hasColor())
+      if (btn1 && this.fillatt.hasColor())
          this.draw_g.append('svg:path')
                     .attr('d', btn1)
                     .call(this.fillatt.func)
                     .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatHex());
 
-      if (btn2.length > 0)
+      if (btn2)
          this.draw_g.append('svg:path')
                     .attr('d', btn2)
                     .call(this.fillatt.func)
                     .style('fill', !this.fillatt.hasColor() ? 'red' : d3_rgb(this.fillatt.color).darker(0.5).formatHex());
 
-      if (cross.length > 0) {
+      if (cross) {
          let elem = this.draw_g.append('svg:path')
                                .attr('d', cross)
                                .style('fill', 'none');
@@ -1555,6 +1558,7 @@ class TH2Painter extends THistPainter {
                maxContent = Math.max(maxContent, histo.getBinContent(i + 1, j + 1));
 
       const make_path = (...a) => {
+         if (a[1] === 'array') a = a[0];
          let l = a.length, i = 2, xx = a[0], yy = a[1],
              res = swapXY ? `M${yy},${xx}` : `M${xx},${yy}`;
          while (i < l) {
@@ -1656,19 +1660,19 @@ class TH2Painter extends THistPainter {
              y02 = Math.round(funcs[fname](pnt.fMedian - fMedianErr));
 
          if (isOption(kHistoZeroIndicator))
-            hlines += make_path(center, Math.round(funcs[fname](xx[xindx1])),'V',Math.round(funcs[fname](xx[xindx2])));
+            hlines += make_path(center, Math.round(funcs[fname](xx[xindx1])), 'V', Math.round(funcs[fname](xx[xindx2])));
 
          if (isOption(kMedianLine))
-            lines += make_path(pnt.x1,pnt.y0,'H',pnt.x2);
+            lines += make_path(pnt.x1, pnt.y0, 'H', pnt.x2);
          else if (isOption(kMedianNotched))
-            lines += make_path(x1d,pnt.y0,'H',x2d);
+            lines += make_path(x1d, pnt.y0, 'H', x2d);
          else if (isOption(kMedianCircle))
             make_cmarker(center, pnt.y0);
 
          if (isOption(kMeanCircle))
             make_cmarker(center, y0m);
          else if (isOption(kMeanLine))
-            dashed_lines += make_path(pnt.x1,y0m,'H',pnt.x2);
+            dashed_lines += make_path(pnt.x1, y0m, 'H', pnt.x2);
 
          if (isOption(kBox))
             if (isOption(kMedianNotched))
@@ -1753,7 +1757,7 @@ class TH2Painter extends THistPainter {
 
             arr.push('H', center); // complete histogram
 
-            hists += make_path(...arr);
+            hists += make_path(arr, 'array');
 
             if (!this.fillatt.empty()) hists += 'Z';
          }
@@ -1807,7 +1811,7 @@ class TH2Painter extends THistPainter {
          }
       }
 
-      if ((hlines.length > 0) && (histo.fFillColor > 0))
+      if (hlines && (histo.fFillColor > 0))
          this.draw_g.append('svg:path')
              .attr('d', hlines)
              .style('stroke', this.getColor(histo.fFillColor));
@@ -2165,7 +2169,7 @@ class TH2Painter extends THistPainter {
           ndig = 0, tickStep = 1,
           formatValue = v => v.toString(),
           formatTicks = v => ndig > 3 ? v.toExponential(0) : v.toFixed(ndig),
-          d3_descending = (a,b) => { return b < a ? -1 : b > a ? 1 : b >= a ? 0 : NaN; };
+          d3_descending = (a,b) => { return b < a ? -1 : b > a ? 1 : b >= a ? 0 : Number.NaN; };
 
       if (!isint && fullsum < 10) {
          let lstep = Math.round(Math.log10(fullsum) - 2.3);
@@ -2285,7 +2289,7 @@ class TH2Painter extends THistPainter {
 
       lines.push('entries = ' + ((binz === Math.round(binz)) ? binz : floatToString(binz, gStyle.fStatFormat)));
 
-      if ((this.options.TextKind == 'E') || this.matchObjectType('TProfile2D')) {
+      if ((this.options.TextKind == 'E') || this.matchObjectType(clTProfile2D)) {
          let errz = histo.getBinError(histo.getBin(i+1,j+1));
          lines.push('error = ' + ((errz === Math.round(errz)) ? errz.toString() : floatToString(errz, gStyle.fPaintTextFormat)));
       }
@@ -2329,7 +2333,7 @@ class TH2Painter extends THistPainter {
       if ((realx === undefined) && (realy === undefined)) {
          realx = realy = 0;
          let gr = bin.fPoly, numgraphs = 1;
-         if (gr._typename === 'TMultiGraph') { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
+         if (gr._typename === clTMultiGraph) { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
 
          for (let ngr = 0; ngr < numgraphs; ++ngr) {
             if (!gr || (ngr > 0)) gr = bin.fPoly.fGraphs.arr[ngr];
@@ -2394,7 +2398,7 @@ class TH2Painter extends THistPainter {
                if ((bin.fContent === 0) && !this.options.Zero) continue;
 
                let gr = bin.fPoly, numgraphs = 1;
-               if (gr._typename === 'TMultiGraph') { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
+               if (gr._typename === clTMultiGraph) { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
 
                for (let ngr = 0; ngr < numgraphs; ++ngr) {
                   if (!gr || (ngr > 0)) gr = bin.fPoly.fGraphs.arr[ngr];
@@ -2660,9 +2664,11 @@ class TH2Painter extends THistPainter {
          }
 
          return pr.then(() => this.completePalette(pp));
-      }).then(() => this.drawHistTitle()).then(() => {
-         this.updateStatWebCanvas();
-         return this.addInteractivity();
+      }).then(() => this.drawHistTitle())
+        .then(() => this.drawNextFunction(0, true))
+        .then(() => {
+            this.updateStatWebCanvas();
+            return this.addInteractivity();
       });
    }
 
