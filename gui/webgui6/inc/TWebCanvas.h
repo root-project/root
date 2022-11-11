@@ -117,9 +117,11 @@ protected:
 
    virtual Bool_t CanCreateObject(const std::string &) { return !IsReadOnly() && fCanCreateObjects; }
 
-   TPad *ProcessObjectOptions(TWebObjectOptions &item, TPad *pad);
+   TPad *ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int idcnt = 1);
 
-   TObject *FindPrimitive(const std::string &id, TPad *pad = nullptr, TObjLink **padlnk = nullptr, TPad **objpad = nullptr);
+   TObject *FindPrimitive(const std::string &id, int idcnt = 1, TPad *pad = nullptr, TObjLink **padlnk = nullptr, TPad **objpad = nullptr);
+
+   Bool_t ProcessTExec(TList *primitves);
 
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly = kTRUE);
