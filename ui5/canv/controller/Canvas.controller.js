@@ -262,7 +262,23 @@ sap.ui.define([
                break;
          }
 
-         MessageToast.show("Action triggered on item: " + name);
+         MessageToast.show(`Action triggered on item: ${name}`);
+      },
+
+      onEditMenuAction : function(oEvent) {
+         let cp = this.getCanvasPainter();
+         if (!cp) return;
+
+         let name = oEvent.getParameter('item').getText();
+         switch (name) {
+            case "Clear pad":
+               cp.sendWebsocket("CLEAR:" + (cp.findActivePad() || cp).snapid);
+               break;
+            case "Clear canvas":
+               cp.sendWebsocket("CLEAR:" + cp.snapid);
+               break;
+         }
+
       },
 
       onCloseCanvasPress : function() {
