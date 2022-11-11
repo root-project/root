@@ -3522,11 +3522,27 @@ RooAbsPdf::GenSpec::GenSpec(RooAbsGenContext* context, const RooArgSet& whatVars
 namespace {
 
 void sterilizeClientCaches(RooAbsArg & arg) {
-  for(auto const& client : arg.clients()) {
+  auto const& clients = arg.clients();
+  for(std::size_t iClient = 0; iClient < clients.size(); ++iClient) {
+
+    const std::size_t oldClientsSize = clients.size();
+    RooAbsArg* client = clients[iClient];
+
     for(int iCache = 0; iCache < client->numCaches(); ++iCache) {
       if(auto cacheMgr = dynamic_cast<RooObjCacheManager*>(client->getCache(iCache))) {
         cacheMgr->sterilize();
       }
+    }
+
+    // It can happen that the objects cached by the client are also clients of
+    // the arg itself! In that case, the position of the client in the client
+    // list might have changed, and we need to find the new index.
+    if(clients.size() != oldClientsSize) {
+      auto clientIter = std::find(clients.begin(), clients.end(), client);
+      if(clientIter == clients.end()) {
+        throw std::runtime_error("After a clients caches were cleared, the client was gone! This should not happen.");
+      }
+      iClient = std::distance(clients.begin(), clientIter);
     }
   }
 }
