@@ -319,10 +319,12 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          frame = static_cast<TFrame *>(obj);
       } else if (obj->InheritsFrom(TH1::Class())) {
          need_frame = true;
-         if (!obj->TestBit(TH1::kNoTitle) && (strlen(obj->GetTitle())>0)) need_title = obj->GetTitle();
+         if (!obj->TestBit(TH1::kNoTitle) && (strlen(obj->GetTitle()) > 0))
+            need_title = obj->GetTitle();
       } else if (obj->InheritsFrom(TGraph::Class())) {
          need_frame = true;
-         if (strlen(obj->GetTitle())>0) need_title = obj->GetTitle();
+         if ((strlen(obj->GetTitle()) > 0))
+            need_title = obj->GetTitle();
       } else if (obj->InheritsFrom(TPaveText::Class())) {
          if (strcmp(obj->GetName(),"title") == 0)
             title = static_cast<TPaveText *>(obj);
@@ -334,7 +336,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       primitives->AddFirst(frame);
    }
 
-   if (!need_title.empty()) {
+   if (!need_title.empty() && gStyle->GetOptTitle()) {
       if (title) {
          auto line0 = title->GetLine(0);
          if (line0 && !IsReadOnly()) line0->SetTitle(need_title.c_str());
