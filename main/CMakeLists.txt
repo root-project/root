@@ -76,7 +76,7 @@ else()
   set_source_files_properties(src/rootcling.cxx PROPERTIES COMPILE_FLAGS "-DNOMINMAX -D_XKEYCHECK_H")
 endif()
 
-ROOT_EXECUTABLE(rootcling src/rootcling.cxx LIBRARIES RIO Cling Core)
+ROOT_EXECUTABLE(rootcling src/rootcling.cxx LIBRARIES RIO Cling Core Rint)
 
 # rootcling includes the ROOT complex header which would build the complex
 # dictionary with modules. To make sure that rootcling_stage1 builds this
