@@ -12,14 +12,15 @@ TEST(RPageStorageDaos, Basics)
    diags.requiredDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 1", false);
 
    std::string daosUri("daos://" R__DAOS_TEST_POOL "/container-test-1");
-
+   const std::string_view ntupleName("ntuple");
    auto model = RNTupleModel::Create();
    auto wrPt = model->MakeField<float>("pt", 42.0);
 
    {
       RNTupleWriteOptionsDaos options;
       options.SetMaxCageSize(0); // Disable caging mechanism.
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple-1", daosUri, options);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri, options);
+
       ntuple->Fill();
       ntuple->CommitCluster();
       *wrPt = 24.0;
@@ -28,7 +29,7 @@ TEST(RPageStorageDaos, Basics)
       ntuple->Fill();
    }
 
-   auto ntuple = RNTupleReader::Open("ntuple-1", daosUri);
+   auto ntuple = RNTupleReader::Open(ntupleName, daosUri);
    EXPECT_EQ(3U, ntuple->GetNEntries());
    auto rdPt = ntuple->GetModel()->GetDefaultEntry()->Get<float>("pt");
 
@@ -43,7 +44,7 @@ TEST(RPageStorageDaos, Basics)
 TEST(RPageStorageDaos, Extended)
 {
    std::string daosUri("daos://" R__DAOS_TEST_POOL "/container-test-2");
-
+   const std::string_view ntupleName("ntuple");
    auto model = RNTupleModel::Create();
    auto wrVector = model->MakeField<std::vector<double>>("vector");
 
@@ -52,7 +53,7 @@ TEST(RPageStorageDaos, Extended)
    {
       RNTupleWriteOptionsDaos options;
       options.SetMaxCageSize(0);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple-2", daosUri, options);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri, options);
       constexpr unsigned int nEvents = 32000;
       for (unsigned int i = 0; i < nEvents; ++i) {
          auto nVec = 1 + floor(rnd.Rndm() * 1000.);
@@ -70,7 +71,7 @@ TEST(RPageStorageDaos, Extended)
 
    RNTupleReadOptions options;
    options.SetClusterBunchSize(5);
-   auto ntuple = RNTupleReader::Open("ntuple-2", daosUri, options);
+   auto ntuple = RNTupleReader::Open(ntupleName, daosUri, options);
    auto rdVector = ntuple->GetModel()->GetDefaultEntry()->Get<std::vector<double>>("vector");
 
    double chksumRead = 0.0;
@@ -85,14 +86,14 @@ TEST(RPageStorageDaos, Extended)
 TEST(RPageStorageDaos, Options)
 {
    std::string daosUri("daos://" R__DAOS_TEST_POOL "/container-test-3");
-
+   const std::string_view ntupleName("ntuple");
    {
       auto model = RNTupleModel::Create();
 
       RNTupleWriteOptionsDaos options;
       options.SetObjectClass("UNKNOWN");
       try {
-         auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple-3", daosUri, options);
+         auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri, options);
          FAIL() << "unknown object class should throw";
       } catch (const RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("UNKNOWN"));
@@ -106,14 +107,14 @@ TEST(RPageStorageDaos, Options)
       RNTupleWriteOptionsDaos options;
       options.SetMaxCageSize(0);
       options.SetObjectClass("RP_XSF");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple-3", daosUri, options);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri, options);
       ntuple->Fill();
       ntuple->CommitCluster();
    }
 
    auto readOptions = RNTupleReadOptions();
    readOptions.SetClusterBunchSize(3);
-   ROOT::Experimental::Detail::RPageSourceDaos source("ntuple-3", daosUri, readOptions);
+   ROOT::Experimental::Detail::RPageSourceDaos source(ntupleName, daosUri, readOptions);
    source.Attach();
    EXPECT_STREQ("RP_XSF", source.GetObjectClass().c_str());
    EXPECT_EQ(3U, source.GetReadOptions().GetClusterBunchSize());
@@ -123,22 +124,23 @@ TEST(RPageStorageDaos, Options)
 TEST(RPageStorageDaos, MultipleNTuplesPerContainer)
 {
    std::string daosUri("daos://" R__DAOS_TEST_POOL "/container-test-4");
+   const std::string_view ntupleName1("ntuple1"), ntupleName2("ntuple2");
 
    RNTupleWriteOptionsDaos options;
    options.SetMaxCageSize(0);
 
    {
-      auto modelA = RNTupleModel::Create();
-      auto wrPt = modelA->MakeField<float>("pt", 34.0);
-      auto ntuple = RNTupleWriter::Recreate(std::move(modelA), "ntupleA", daosUri, options);
+      auto model1 = RNTupleModel::Create();
+      auto wrPt = model1->MakeField<float>("pt", 34.0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model1), ntupleName1, daosUri, options);
       ntuple->Fill();
       *wrPt = 160.0;
       ntuple->Fill();
    }
    {
-      auto modelB = RNTupleModel::Create();
-      auto wrPt = modelB->MakeField<float>("pt", 81.0);
-      auto ntuple = RNTupleWriter::Recreate(std::move(modelB), "ntupleB", daosUri, options);
+      auto model2 = RNTupleModel::Create();
+      auto wrPt = model2->MakeField<float>("pt", 81.0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model2), ntupleName2, daosUri, options);
       ntuple->Fill();
       *wrPt = 96.0;
       ntuple->Fill();
@@ -146,36 +148,37 @@ TEST(RPageStorageDaos, MultipleNTuplesPerContainer)
       ntuple->Fill();
    }
    {
-      auto ntupleA = RNTupleReader::Open("ntupleA", daosUri);
-      auto ntupleB = RNTupleReader::Open("ntupleB", daosUri);
-      EXPECT_EQ(2U, ntupleA->GetNEntries());
-      EXPECT_EQ(3U, ntupleB->GetNEntries());
+      auto ntuple1 = RNTupleReader::Open(ntupleName1, daosUri);
+      auto ntuple2 = RNTupleReader::Open(ntupleName2, daosUri);
+      EXPECT_EQ(2U, ntuple1->GetNEntries());
+      EXPECT_EQ(3U, ntuple2->GetNEntries());
 
       {
-         auto rdPt = ntupleA->GetModel()->GetDefaultEntry()->Get<float>("pt");
-         ntupleA->LoadEntry(0);
+         auto rdPt = ntuple1->GetModel()->GetDefaultEntry()->Get<float>("pt");
+         ntuple1->LoadEntry(0);
          EXPECT_EQ(34.0, *rdPt);
-         ntupleA->LoadEntry(1);
+         ntuple1->LoadEntry(1);
          EXPECT_EQ(160.0, *rdPt);
       }
       {
-         auto rdPt = ntupleB->GetModel()->GetDefaultEntry()->Get<float>("pt");
-         ntupleB->LoadEntry(0);
+         auto rdPt = ntuple2->GetModel()->GetDefaultEntry()->Get<float>("pt");
+         ntuple2->LoadEntry(0);
          EXPECT_EQ(81.0, *rdPt);
-         ntupleB->LoadEntry(1);
+         ntuple2->LoadEntry(1);
          EXPECT_EQ(96.0, *rdPt);
-         ntupleB->LoadEntry(2);
+         ntuple2->LoadEntry(2);
          EXPECT_EQ(54.0, *rdPt);
       }
    }
 
    // Nonexistent ntuple
-   EXPECT_THROW(RNTupleReader::Open("ntupleC", daosUri), ROOT::Experimental::RException);
+   EXPECT_THROW(RNTupleReader::Open("ntuple3", daosUri), ROOT::Experimental::RException);
 }
 
 TEST(RPageStorageDaos, CagedPages)
 {
    std::string daosUri("daos://" R__DAOS_TEST_POOL "/container-test-5");
+   const std::string_view ntupleName("ntuple");
    ROOT::EnableImplicitMT();
 
    auto model = RNTupleModel::Create();
@@ -187,7 +190,7 @@ TEST(RPageStorageDaos, CagedPages)
       RNTupleWriteOptionsDaos options;
       options.SetMaxCageSize(4 * 64 * 1024);
       options.SetUseBufferedWrite(true);
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", daosUri, options);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri, options);
       constexpr unsigned int nEvents = 180000;
       for (unsigned int i = 0; i < nEvents; ++i) {
          auto nVec = 1 + floor(rnd.Rndm() * 1000.);
@@ -206,7 +209,7 @@ TEST(RPageStorageDaos, CagedPages)
       RNTupleReadOptions options;
       options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOn);
       options.SetClusterBunchSize(5);
-      auto ntuple = RNTupleReader::Open("ntuple", daosUri, options);
+      auto ntuple = RNTupleReader::Open(ntupleName, daosUri, options);
       auto rdVector = ntuple->GetModel()->GetDefaultEntry()->Get<std::vector<double>>("vector");
 
       double chksumRead = 0.0;
@@ -222,7 +225,7 @@ TEST(RPageStorageDaos, CagedPages)
    {
       RNTupleReadOptions options;
       options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOff);
-      auto ntuple = RNTupleReader::Open("ntuple", daosUri, options);
+      auto ntuple = RNTupleReader::Open(ntupleName, daosUri, options);
       EXPECT_THROW(ntuple->LoadEntry(1), ROOT::Experimental::RException);
    }
 }
