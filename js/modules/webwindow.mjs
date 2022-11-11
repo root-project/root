@@ -1,4 +1,5 @@
-import { httpRequest, createHttpRequest, loadScript, decodeUrl, browser, setBatchMode, isBatchMode, btoa_func } from './core.mjs';
+import { httpRequest, createHttpRequest, loadScript, decodeUrl,
+         browser, setBatchMode, isBatchMode, isFunc, isStr, btoa_func } from './core.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5 } from './gui/utils.mjs';
 
 
@@ -100,7 +101,7 @@ class LongPollSocket {
             this.handle.processRequest(res, 0);
          } else {
             // text reply
-            if (res && typeof res !== 'string') {
+            if (res && !isStr(res)) {
                let str = '', u8Arr = new Uint8Array(res);
                for (let i = 0; i < u8Arr.length; ++i)
                   str += String.fromCharCode(u8Arr[i]);
@@ -124,9 +125,9 @@ class LongPollSocket {
    /** @summary Process request */
    processRequest(res, _offset) {
       if (res === null) {
-         if (typeof this.onerror === 'function')
+         if (isFunc(this.onerror))
             this.onerror('receive data with connid ' + (this.connid || '---'));
-         if ((_offset == 'error') && (typeof this.onclose === 'function'))
+         if ((_offset == 'error') && isFunc(this.onclose))
             this.onclose('force_close');
          this.connid = null;
          return;
@@ -139,7 +140,7 @@ class LongPollSocket {
       if (this.connid === 'connect') {
          if (!res) {
             this.connid = null;
-            if (typeof this.onerror === 'function')
+            if (isFunc(this.onerror))
                this.onerror('connection rejected');
             return;
          }
@@ -147,13 +148,14 @@ class LongPollSocket {
          this.connid = parseInt(res);
          dummy_tmout = 100; // when establishing connection, wait a bit longer to submit dummy package
          console.log(`Get new longpoll connection with id ${this.connid}`);
-         if (typeof this.onopen == 'function') this.onopen();
+         if (isFunc(this.onopen))
+            this.onopen();
       } else if (this.connid === 'close') {
-         if (typeof this.onclose == 'function')
+         if (isFunc(this.onclose))
             this.onclose();
          return;
       } else {
-         if ((typeof this.onmessage === 'function') && res)
+         if (isFunc(this.onmessage) && res)
             this.onmessage({ data: res, offset: _offset });
       }
 
@@ -191,7 +193,7 @@ class FileDumpSocket {
    getProtocol(res) {
       if (!res) return;
       this.protocol = JSON.parse(res);
-      if (typeof this.onopen == 'function') this.onopen();
+      if (isFunc(this.onopen)) this.onopen();
       this.nextOperation();
    }
 
@@ -248,7 +250,7 @@ class WebWindowHandle {
      * @param {string} [field] - if specified and user args is object, returns correspondent object member
      * @return user arguments object */
    getUserArgs(field) {
-      if (field && (typeof field == 'string'))
+      if (field && isStr(field))
          return (this.user_args && (typeof this.user_args == 'object')) ? this.user_args[field] : undefined;
 
       return this.user_args;
@@ -275,7 +277,7 @@ class WebWindowHandle {
    /** @summary Invoke method in the receiver.
     * @private */
    invokeReceiver(brdcst, method, arg, arg2) {
-      if (this.receiver && (typeof this.receiver[method] == 'function'))
+      if (this.receiver && isFunc(this.receiver[method]))
          this.receiver[method](this, arg, arg2);
 
       if (brdcst && this.channels) {
@@ -410,10 +412,10 @@ class WebWindowHandle {
 
       if (Array.isArray(msg)) {
          for (let k = 0; k < msg.length; ++k)
-            this.provideData(chid, (typeof msg[k] == 'string') ? msg[k] : JSON.stringify(msg[k]), -1);
+            this.provideData(chid, isStr(msg[k]) ? msg[k] : JSON.stringify(msg[k]), -1);
          this.processQueue();
       } else if (msg) {
-         this.provideData(chid, typeof msg == 'string' ? msg : JSON.stringify(msg));
+         this.provideData(chid, isStr(msg) ? msg : JSON.stringify(msg));
       }
    }
 
@@ -561,7 +563,7 @@ class WebWindowHandle {
                return;
             }
 
-            if (typeof msg != 'string')
+            if (!isStr(msg))
                return console.log(`unsupported message kind: ${typeof msg}`);
 
             let i1 = msg.indexOf(':'),
@@ -666,7 +668,7 @@ class WebWindowHandle {
   * @return {Promise} for ready-to-use {@link WebWindowHandle} instance  */
 async function connectWebWindow(arg) {
 
-   if (typeof arg == 'function')
+   if (isFunc(arg))
       arg = { callback: arg };
    else if (!arg || (typeof arg != 'object'))
       arg = {};

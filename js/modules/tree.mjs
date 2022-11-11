@@ -1,16 +1,13 @@
-/// TTree functionality
-
-import { BIT, isArrayProto, isRootCollection, getMethods,
-         create, createHistogram, createTGraph } from './core.mjs';
-
+import { BIT, isArrayProto, isRootCollection, isFunc, isStr, getMethods,
+         create, createHistogram, createTGraph,
+         clTObject, clTObjString, clTHashList, clTPolyMarker3D, clTH1, clTH2, clTH3 } from './core.mjs';
 import { kChar, kShort, kInt, kFloat,
          kCharStar, kDouble, kDouble32,
          kUChar, kUShort, kUInt,
          kLong64, kULong64, kBool, kFloat16,
          kOffsetL, kOffsetP, kObject, kAny, kObjectp, kTString,
-         kStreamer, kStreamLoop, kSTLp, kSTL,
+         kStreamer, kStreamLoop, kSTLp, kSTL, clTBasket,
          R__unzip, TBuffer, createStreamerElement, createMemberStreamer } from './io.mjs';
-
 import * as jsroot_math from './base/math.mjs';
 
 // branch types
@@ -22,7 +19,8 @@ const kLeafNode = 0, kBaseClassNode = 1, kObjectNode = 2, kClonesNode = 3,
       // kBranchObject = BIT(12), // branch is a TObject*
       // kBranchAny = BIT(17), // branch is an object*
       // kAutoDelete = BIT(15),
-      kDoNotUseBufferMap = BIT(22); // If set, at least one of the entry in the branch will use the buffer's map of classname and objects.
+      kDoNotUseBufferMap = BIT(22), // If set, at least one of the entry in the branch will use the buffer's map of classname and objects.
+      clTBranchElement = 'TBranchElement', clTBranchFunc = 'TBranchFunc';
 
 /**
  * @summary Class to read data from TTree
@@ -54,7 +52,7 @@ class TSelector {
     * @param {boolean} [direct] - if only branch without any children should be read */
    addBranch(branch, name, direct) {
       if (!name)
-         name = (typeof branch === 'string') ? branch : ('br' + this._branches.length);
+         name = isStr(branch) ? branch : `br${this._branches.length}`;
       this._branches.push(branch);
       this._names.push(name);
       this._directs.push(direct);
@@ -189,7 +187,7 @@ class ArrayIterator {
             return true;
          }
 
-         if ((typ == 'any') && (typeof this.select[cnt + 1] === 'string')) {
+         if ((typ == 'any') && isStr(this.select[cnt + 1])) {
             // this is extraction of the member from arbitrary class
             this.arr[++cnt] = obj;
             this.indx[cnt] = this.select[cnt]; // use member name as index
@@ -254,7 +252,7 @@ class ArrayIterator {
   * @private */
 function getBranchObjectClass(branch, tree, with_clones = false, with_leafs = false) {
 
-   if (!branch || (branch._typename !== 'TBranchElement')) return '';
+   if (!branch || (branch._typename !== clTBranchElement)) return '';
 
    if ((branch.fType === kLeafNode) && (branch.fID === -2) && (branch.fStreamerType === -1)) {
       // object where all sub-branches will be collected
@@ -272,7 +270,7 @@ function getBranchObjectClass(branch, tree, with_clones = false, with_leafs = fa
    if (branch.fType === kObjectNode) {
       if (s_elem && ((s_elem.fType === kObject) || (s_elem.fType === kAny)))
          return s_elem.fTypeName;
-      return 'TObject';
+      return clTObject;
    }
 
    if ((branch.fType === kLeafNode) && s_elem && with_leafs) {
@@ -373,7 +371,7 @@ function findBranchComplex(tree, name, lst = undefined, only_search = false) {
   * @private */
 function findBranch(tree, name) {
    let res = findBranchComplex(tree, name, tree.fBranches, true);
-   return (!res || (res.rest.length > 0)) ? null : res.branch;
+   return (!res || res.rest) ? null : res.branch;
 }
 
 
@@ -705,7 +703,7 @@ class TDrawSelector extends TSelector {
    /** @summary Parse parameters */
    parseParameters(tree, args, expr) {
 
-      if (!expr || (typeof expr !== 'string')) return '';
+      if (!expr || !isStr(expr)) return '';
 
       // parse parameters which defined at the end as expression;par1name:par1value;par2name:par2value
       let pos = expr.lastIndexOf(';');
@@ -946,9 +944,9 @@ class TDrawSelector extends TSelector {
    /** @summary Get bins for bits histogram */
    getBitsBins(nbits, res) {
       res.nbins = res.max = nbits;
-      res.fLabels = create('THashList');
+      res.fLabels = create(clTHashList);
       for (let k = 0; k < nbits; ++k) {
-         let s = create('TObjString');
+         let s = create(clTObjString);
          s.fString = k.toString();
          s.fUniqueID = k + 1;
          res.fLabels.Add(s);
@@ -1000,9 +998,9 @@ class TDrawSelector extends TSelector {
          res.lbls.sort();
          res.max = res.nbins = res.lbls.length;
 
-         res.fLabels = create('THashList');
+         res.fLabels = create(clTHashList);
          for (let k = 0; k < res.lbls.length; ++k) {
-            let s = create('TObjString');
+            let s = create(clTObjString);
             s.fString = res.lbls[k];
             s.fUniqueID = k + 1;
             if (s.fString === '') s.fString = '<empty>';
@@ -1069,9 +1067,9 @@ class TDrawSelector extends TSelector {
           hist = null;
 
       switch (this.ndim) {
-         case 1: hist = createHistogram('TH1' + this.htype, x.nbins); break;
-         case 2: hist = createHistogram('TH2' + this.htype, x.nbins, y.nbins); break;
-         case 3: hist = createHistogram('TH3' + this.htype, x.nbins, y.nbins, z.nbins); break;
+         case 1: hist = createHistogram(clTH1 + this.htype, x.nbins); break;
+         case 2: hist = createHistogram(clTH2 + this.htype, x.nbins, y.nbins); break;
+         case 3: hist = createHistogram(clTH3 + this.htype, x.nbins, y.nbins, z.nbins); break;
       }
 
       hist.fXaxis.fTitle = x.title;
@@ -1131,7 +1129,7 @@ class TDrawSelector extends TSelector {
             res.fTitle = this.hist_title;
             delete this.vars[1].buf;
          } else if (this.ndim == 3) {
-            res = create('TPolyMarker3D');
+            res = create(clTPolyMarker3D);
             res.fN = N;
             res.fLastPoint = N - 1;
             let arr = new Array(N*3);
@@ -1273,7 +1271,10 @@ class TDrawSelector extends TSelector {
       }
 
       if (this.cut.is_dummy()) {
-         if (this.ndim === 1) obj = v1; else delete obj.weight;
+         if (this.ndim === 1)
+            obj = v1;
+         else
+            delete obj.weight;
       }
 
       this.hist.push(obj);
@@ -1429,7 +1430,7 @@ class TDrawSelector extends TSelector {
 
       this.ShowProgress();
 
-      if (typeof this.result_callback == 'function')
+      if (isFunc(this.result_callback))
          this.result_callback(this.hist);
    }
 
@@ -1440,7 +1441,7 @@ class TDrawSelector extends TSelector {
   * @desc unfortunately, branch.fID is not number of element in streamer info
   * @private */
 function findBrachStreamerElement(branch, file) {
-   if (!branch || !file || (branch._typename !== 'TBranchElement') || (branch.fID < 0) || (branch.fStreamerType < 0)) return null;
+   if (!branch || !file || (branch._typename !== clTBranchElement) || (branch.fID < 0) || (branch.fStreamerType < 0)) return null;
 
    let s_i = file.findStreamerInfo(branch.fClassName, branch.fClassVersion, branch.fCheckSum),
       arr = (s_i && s_i.fElements) ? s_i.fElements.arr : null;
@@ -1596,7 +1597,7 @@ async function treeProcess(tree, selector, args) {
       // read_mode == '<any class name>' is sub-object from STL or clonesarray, happens when such new object need to be created
       // read_mode == '.member_name' select only reading of member_name instead of complete object
 
-      if (typeof branch === 'string')
+      if (isStr(branch))
          branch = findBranch(handle.tree, branch);
 
       if (!branch) { console.error('Did not found branch'); return null; }
@@ -1682,7 +1683,7 @@ async function treeProcess(tree, selector, args) {
          leaf = (nb_leaves > 0) ? branch.fLeaves.arr[0] : null,
          elem = null, // TStreamerElement used to create reader
          member = null, // member for actual reading of the branch
-         is_brelem = (branch._typename === 'TBranchElement'),
+         is_brelem = (branch._typename === clTBranchElement),
          child_scan = 0, // scan child branches after main branch is appended
          item_cnt = null, item_cnt2 = null, object_class = '';
 
@@ -1737,7 +1738,7 @@ async function treeProcess(tree, selector, args) {
 
          let match_prefix = branch.fName;
          if (match_prefix[match_prefix.length - 1] === '.') match_prefix = match_prefix.slice(0, match_prefix.length - 1);
-         if ((typeof read_mode === 'string') && (read_mode[0] == '.')) match_prefix += read_mode;
+         if (isStr(read_mode) && (read_mode[0] == '.')) match_prefix += read_mode;
          match_prefix += '.';
 
          for (let k = 0; k < lst.arr.length; ++k) {
@@ -1773,7 +1774,7 @@ async function treeProcess(tree, selector, args) {
             if (chld_kind > 0) {
                chld_direct = '$child$';
                let pp = subname.indexOf('.');
-               if (pp > 0) chld_direct = detectBranchMemberClass(lst, branch.fName + '.' + subname.slice(0, pp + 1), k) || 'TObject';
+               if (pp > 0) chld_direct = detectBranchMemberClass(lst, branch.fName + '.' + subname.slice(0, pp + 1), k) || clTObject;
             }
 
             if (!AddBranchForReading(br, master_target, subname, chld_direct)) return false;
@@ -1798,12 +1799,12 @@ async function treeProcess(tree, selector, args) {
 
          elem = createStreamerElement(target_name, kInt);
 
-         if (!read_mode || ((typeof read_mode === 'string') && (read_mode[0] === '.')) || (read_mode === 1)) {
+         if (!read_mode || (isStr(read_mode) && (read_mode[0] === '.')) || (read_mode === 1)) {
             handle.process_arrays = false;
 
             member = {
                name: target_name,
-               conttype: branch.fClonesName || 'TObject',
+               conttype: branch.fClonesName || clTObject,
                reallocate: args.reallocate_objects,
                func(buf, obj) {
                   let size = buf.ntoi4(), n = 0, arr = obj[this.name];
@@ -1818,7 +1819,7 @@ async function treeProcess(tree, selector, args) {
                }
             };
 
-            if ((typeof read_mode === 'string') && (read_mode[0] === '.')) {
+            if (isStr(read_mode) && (read_mode[0] === '.')) {
                member.conttype = detectBranchMemberClass(branch.fBranches, branch.fName + read_mode);
                if (!member.conttype) {
                   console.error(`Cannot select object ${read_mode} in the branch ${branch.fName}`);
@@ -1860,7 +1861,7 @@ async function treeProcess(tree, selector, args) {
                member = {
                   name: target_name,
                   typename: branch.fClassName,
-                  streamer: streamer,
+                  streamer,
                   func(buf, obj) {
                      let res = { _typename: this.typename };
                      for (let n = 0; n < this.streamer.length; ++n)
@@ -1927,7 +1928,7 @@ async function treeProcess(tree, selector, args) {
          }
       }
 
-      if (item_cnt && (typeof read_mode === 'string')) {
+      if (item_cnt && isStr(read_mode)) {
 
          member.name0 = item_cnt.name;
 
@@ -2182,7 +2183,7 @@ async function treeProcess(tree, selector, args) {
       if (max < handle.process_max) handle.process_max = max;
    }
 
-   if ((typeof selector.ProcessArrays === 'function') && handle.simple_read) {
+   if (isFunc(selector.ProcessArrays) && handle.simple_read) {
       // this is indication that selector can process arrays of values
       // only strictly-matched tree structure can be used for that
 
@@ -2271,7 +2272,7 @@ async function treeProcess(tree, selector, args) {
 
                let blob = blobs.shift(),
                   buf = new TBuffer(blob, 0, handle.file),
-                  basket = buf.classStreamer({}, 'TBasket');
+                  basket = buf.classStreamer({}, clTBasket);
 
                if (basket.fNbytes !== bitems[k].branch.fBasketBytes[bitems[k].basket])
                   console.error(`mismatch in read basket sizes ${basket.fNbytes} != ${bitems[k].branch.fBasketBytes[bitems[k].basket]}`);
@@ -2576,7 +2577,7 @@ async function treeProcess(tree, selector, args) {
   * @return {Promise} with object like { obj: draw_object, opt: draw_options } */
 async function treeDraw(tree, args) {
 
-   if (typeof args === 'string') args = { expr: args };
+   if (isStr(args)) args = { expr: args };
 
    if (!args.expr) args.expr = '';
 
@@ -2644,7 +2645,7 @@ function treeIOTest(tree, args) {
       }
 
       selector.Terminate = function(res) {
-         if (typeof res !== 'string')
+         if (!isStr(res))
             res = (!res || this.fails) ? 'FAIL' : 'ok';
 
          names[nbr] = res + ' ' + names[nbr];
@@ -2721,7 +2722,7 @@ function treeHierarchy(node, obj) {
 
       node._childs.push(subitem);
 
-      if (branch._typename === 'TBranchElement')
+      if (branch._typename === clTBranchElement)
          subitem._title += ` from ${branch.fClassName};${branch.fClassVersion}`;
 
       if (nb_branches > 0) {
@@ -2753,14 +2754,14 @@ function treeHierarchy(node, obj) {
 
             if (methods && (bobj.fBranches.arr.length > 0))
                for (let key in methods) {
-                  if (typeof methods[key] !== 'function') continue;
+                  if (!isFunc(methods[key])) continue;
                   let s = methods[key].toString();
                   if ((s.indexOf('return') > 0) && (s.indexOf('function ()') == 0))
                      bnode._childs.push({
                         _name: key+'()',
                         _title: `function ${key} of class ${object_class}`,
-                        _kind: 'ROOT.TBranchFunc', // fictional class, only for drawing
-                        _obj: { _typename: 'TBranchFunc', branch: bobj, func: key },
+                        _kind: 'ROOT.' + clTBranchFunc, // fictional class, only for drawing
+                        _obj: { _typename: clTBranchFunc, branch: bobj, func: key },
                         _more: false
                      });
 
@@ -2797,4 +2798,5 @@ function treeHierarchy(node, obj) {
    return true;
 }
 
-export { kClonesNode, kSTLNode, TSelector, TDrawVariable, TDrawSelector, treeHierarchy, treeProcess, treeDraw, treeIOTest };
+export { kClonesNode, kSTLNode, clTBranchFunc,
+         TSelector, TDrawVariable, TDrawSelector, treeHierarchy, treeProcess, treeDraw, treeIOTest };

@@ -1,4 +1,4 @@
-import { create, gStyle } from '../core.mjs';
+import { settings, create, gStyle, isStr, clTF2 } from '../core.mjs';
 import { DrawOptions, buildSvgPath } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from '../hist2d/TH1Painter.mjs';
@@ -11,7 +11,7 @@ function proivdeEvalPar(obj) {
 
    let _func = obj.fTitle, isformula = false, pprefix = '[';
    if (_func === 'gaus') _func = 'gaus(0)';
-   if (obj.fFormula && typeof obj.fFormula.fFormula == 'string') {
+   if (obj.fFormula && isStr(obj.fFormula.fFormula)) {
      if (obj.fFormula.fFormula.indexOf('[](double*x,double*p)') == 0) {
         isformula = true; pprefix = 'p[';
         _func = obj.fFormula.fFormula.slice(21);
@@ -19,13 +19,13 @@ function proivdeEvalPar(obj) {
         _func = obj.fFormula.fFormula;
         pprefix = '[p';
      }
+
      if (obj.fFormula.fClingParameters && obj.fFormula.fParams)
         obj.fFormula.fParams.forEach(pair => {
            let regex = new RegExp(`(\\[${pair.first}\\])`, 'g'),
                parvalue = obj.fFormula.fClingParameters[pair.second];
            _func = _func.replace(regex, (parvalue < 0) ? `(${parvalue})` : parvalue);
         });
-
   }
 
   if ('formulas' in obj)
@@ -60,13 +60,13 @@ function proivdeEvalPar(obj) {
 
   if (isformula) {
      _func = _func.replace(/x\[0\]/g,'x');
-     if (obj._typename === 'TF2') {
+     if (obj._typename === clTF2) {
         _func = _func.replace(/x\[1\]/g,'y');
         obj.evalPar = new Function('x', 'y', _func).bind(obj);
      } else {
         obj.evalPar = new Function('x', _func).bind(obj);
      }
-  } else if (obj._typename === 'TF2')
+  } else if (obj._typename === clTF2)
      obj.evalPar = new Function('x', 'y', 'return ' + _func).bind(obj);
   else
      obj.evalPar = new Function('x', 'return ' + _func).bind(obj);
@@ -108,9 +108,13 @@ class TF1Painter extends ObjectPainter {
       let np = Math.max(tf1.fNpx, 101),
           dx = (xmax - xmin) / (np - 1),
           res = [], iserror = false,
-          force_use_save = (tf1.fSave.length > 3) && ignore_zoom;
+          has_saved_points = tf1.fSave.length > 3,
+          force_use_save = has_saved_points && (ignore_zoom || settings.PreferSavedPoints);
 
-      if (!force_use_save)
+      if (!force_use_save) {
+         if (!tf1.evalPar)
+            proivdeEvalPar(tf1);
+
          for (let n = 0; n < np; n++) {
             let x = xmin + n*dx, y = 0;
             if (logx) x = Math.exp(x);
@@ -125,10 +129,11 @@ class TF1Painter extends ObjectPainter {
             if (Number.isFinite(y))
                res.push({ x, y });
          }
+      }
 
       // in the case there were points have saved and we cannot calculate function
       // if we don't have the user's function
-      if ((iserror || ignore_zoom || !res.length) && (tf1.fSave.length > 3)) {
+      if ((iserror || ignore_zoom || !res.length) && has_saved_points) {
 
          np = tf1.fSave.length - 2;
          xmin = tf1.fSave[np];
@@ -198,8 +203,9 @@ class TF1Painter extends ObjectPainter {
 
    updateObject(obj /*, opt */) {
       if (!this.matchObjectType(obj)) return false;
-      Object.assign(this.getObject(), obj);
-      proivdeEvalPar(this.getObject());
+      let tf1 = this.getObject();
+      Object.assign(tf1, obj);
+      delete tf1.evalPar;
       return true;
    }
 
@@ -353,8 +359,6 @@ class TF1Painter extends ObjectPainter {
       if (d.check('Y+')) { aopt += 'Y+'; painter.second_y = has_main; }
       if (d.check('RX')) aopt += 'RX';
       if (d.check('RY')) aopt += 'RY';
-
-      proivdeEvalPar(tf1);
 
       let pr = Promise.resolve(true);
 

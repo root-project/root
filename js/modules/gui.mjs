@@ -1,4 +1,4 @@
-import { decodeUrl, settings, constants, gStyle, internals, findFunction, parse } from './core.mjs';
+import { decodeUrl, settings, constants, gStyle, internals, findFunction, parse, isFunc, isStr } from './core.mjs';
 import { select as d3_select } from './d3.mjs';
 import { HierarchyPainter } from './gui/HierarchyPainter.mjs';
 import { readSettings, readStyle } from './gui/utils.mjs';
@@ -42,6 +42,9 @@ function readStyleFromURL(url) {
 
    if (d.has('wrong_http_response'))
       settings.HandleWrongHttpResponse = true;
+
+   if (d.has('prefer_saved_points'))
+      settings.PreferSavedPoints = true;
 
    let inter = d.get('interactive');
    if (inter === 'nomenu')
@@ -145,7 +148,7 @@ function readStyleFromURL(url) {
   * import { buildGUI } from '/path_to_jsroot/modules/gui.mjs';
   * buildGUI('guiDiv'); */
 async function buildGUI(gui_element, gui_kind = '') {
-   let myDiv = (typeof gui_element == 'string') ? d3_select('#' + gui_element) : d3_select(gui_element);
+   let myDiv = isStr(gui_element) ? d3_select('#' + gui_element) : d3_select(gui_element);
    if (myDiv.empty())
       return Promise.reject(Error('no div for gui found'));
 
@@ -192,7 +195,7 @@ async function buildGUI(gui_element, gui_kind = '') {
       if (!drawing)
          return;
       let obj = null, func = internals.getCachedObject || findFunction('GetCachedObject');
-      if (typeof func == 'function')
+      if (isFunc(func))
          obj = parse(func());
       if (obj) hpainter._cached_draw_object = obj;
       let opt = d.get('opt', '');

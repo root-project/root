@@ -249,18 +249,18 @@ class RH1Painter extends RHistPainter {
 
       if (this.fillatt.empty()) this.fillatt.setSolidColor('blue');
 
-      if (bars.length > 0)
+      if (bars)
          this.draw_g.append('svg:path')
                     .attr('d', bars)
                     .call(this.fillatt.func);
 
-      if (barsl.length > 0)
+      if (barsl)
          this.draw_g.append('svg:path')
                .attr('d', barsl)
                .call(this.fillatt.func)
                .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatHex());
 
-      if (barsr.length > 0)
+      if (barsr)
          this.draw_g.append('svg:path')
                .attr('d', barsr)
                .call(this.fillatt.func)
@@ -548,27 +548,27 @@ class RH1Painter extends RHistPainter {
                h0 = gry0;
          }
          close_path = `L${currx},${h0}H${startx}Z`;
-         if (res.length > 0) res += close_path;
+         if (res) res += close_path;
       }
 
       if (draw_markers || show_line) {
-         if ((path_fill !== null) && (path_fill.length > 0))
+         if (path_fill)
             this.draw_g.append('svg:path')
                        .attr('d', path_fill)
                        .call(this.fillatt.func);
 
-         if ((path_err !== null) && (path_err.length > 0))
+         if (path_err)
                this.draw_g.append('svg:path')
                    .attr('d', path_err)
                    .call(this.lineatt.func);
 
-         if ((hints_err !== null) && (hints_err.length > 0))
+         if (hints_err)
                this.draw_g.append('svg:path')
                    .attr('d', hints_err)
                    .style('fill', 'none')
                    .style('pointer-events', isBatchMode() ? null : 'visibleFill');
 
-         if ((path_line !== null) && (path_line.length > 0)) {
+         if (path_line) {
             if (!this.fillatt.empty())
                this.draw_g.append('svg:path')
                      .attr('d', options.Fill ? (path_line + close_path) : res)
@@ -580,7 +580,7 @@ class RH1Painter extends RHistPainter {
                    .call(this.lineatt.func);
          }
 
-         if ((path_marker !== null) && (path_marker.length > 0))
+         if (path_marker)
             this.draw_g.append('svg:path')
                 .attr('d', path_marker)
                 .call(this.markeratt.func);

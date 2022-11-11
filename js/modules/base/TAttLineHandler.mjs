@@ -1,5 +1,5 @@
 import { select as d3_select } from '../d3.mjs';
-import { gStyle } from '../core.mjs';
+import { gStyle, isStr } from '../core.mjs';
 import { getColor, findColor } from './colors.mjs';
 
 
@@ -36,7 +36,7 @@ class TAttLineHandler {
          args.color = args.color0 || (args.painter ? args.painter.getColor(this.color_index) : getColor(this.color_index));
          if (args.width === undefined) args.width = args.attr.fLineWidth;
          if (args.style === undefined) args.style = args.attr.fLineStyle;
-      } else if (typeof args.color == 'string') {
+      } else if (isStr(args.color)) {
          if ((args.color !== 'none') && !args.width) args.width = 1;
       } else if (typeof args.color == 'number') {
          this.color_index = args.color;

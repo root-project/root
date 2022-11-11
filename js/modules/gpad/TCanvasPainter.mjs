@@ -1,4 +1,4 @@
-import { BIT, settings, create, parse, toJSON, loadScript, isBatchMode } from '../core.mjs';
+import { BIT, settings, create, parse, toJSON, loadScript, isBatchMode, isFunc, isStr, clTCanvas } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
@@ -160,7 +160,7 @@ class TCanvasPainter extends TPadPainter {
 
       if (this.proj_painter === 1) {
 
-         let canv = create('TCanvas'),
+         let canv = create(clTCanvas),
              pad = this.pad,
              main = this.getFramePainter(), drawopt;
 
@@ -247,9 +247,9 @@ class TCanvasPainter extends TPadPainter {
       if (this._readonly || !painter) return;
 
       if (!snapid) snapid = painter.snapid;
-      if (!snapid || (typeof snapid != 'string')) return;
+      if (!snapid || !isStr(snapid)) return;
 
-      this.sendWebsocket('OBJEXEC:' + snapid + ':' + exec);
+      this.sendWebsocket(`OBJEXEC:${snapid}:${exec}`);
    }
 
    /** @summary Send text message with web socket
@@ -319,7 +319,7 @@ class TCanvasPainter extends TPadPainter {
       } else if (msg.slice(0,5) == 'MENU:') {
          // this is menu with exact identifier for object
          let lst = parse(msg.slice(5));
-         if (typeof this._getmenu_callback == 'function') {
+         if (isFunc(this._getmenu_callback)) {
             this._getmenu_callback(lst);
             delete this._getmenu_callback;
          }
@@ -375,12 +375,23 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Show/toggle event status bar
      * @private */
    activateStatusBar(state) {
-      if (this.testUI5()) return;
+      if (this.testUI5())
+         return;
       if (this.brlayout)
          this.brlayout.createStatusLine(23, state);
       else
          getHPainter()?.createStatusLine(23, state);
       this.processChanges('sbits', this);
+   }
+
+   /** @summary Show online canvas status
+     * @private */
+   showCanvasStatus(...msgs) {
+      if (this.testUI5()) return;
+
+      let br = this.brlayout || getHPainter()?.brlayout;
+
+      br?.showStatus(...msgs);
    }
 
    /** @summary Returns true if GED is present on the canvas */
@@ -401,7 +412,7 @@ class TCanvasPainter extends TPadPainter {
          this.ged_view.destroy();
          delete this.ged_view;
       }
-      this.brlayout?.deleteContent();
+      this.brlayout?.deleteContent(true);
 
       this.processChanges('sbits', this);
    }
@@ -487,8 +498,6 @@ class TCanvasPainter extends TPadPainter {
       if (this.testUI5())
          return false;
 
-      console.log(`Show section ${that} flag = ${on}`);
-
       switch(that) {
          case 'Menu': break;
          case 'StatusBar': this.activateStatusBar(on); break;
@@ -550,7 +559,7 @@ class TCanvasPainter extends TPadPainter {
      * @private */
    processChanges(kind, painter, subelem) {
       // check if we could send at least one message more - for some meaningful actions
-      if (!this._websocket || this._readonly || !this._websocket.canSend(2) || (typeof kind !== 'string')) return;
+      if (!this._websocket || this._readonly || !this._websocket.canSend(2) || !isStr(kind)) return;
 
       let msg = '';
       if (!painter) painter = this;
@@ -560,36 +569,45 @@ class TCanvasPainter extends TPadPainter {
             break;
          case 'frame': // when moving frame
          case 'zoom':  // when changing zoom inside frame
-            if (!painter.getWebPadOptions)
+            if (!isFunc(painter.getWebPadOptions))
                painter = painter.getPadPainter();
-            if (typeof painter.getWebPadOptions == 'function')
+            if (isFunc(painter.getWebPadOptions))
                msg = 'OPTIONS6:' + painter.getWebPadOptions('only_this');
             break;
          case 'pave_moved':
-            if (painter.fillWebObjectOptions) {
+            if (isFunc(painter.fillWebObjectOptions)) {
                let info = painter.fillWebObjectOptions();
                if (info) msg = 'PRIMIT6:' + toJSON(info);
             }
             break;
-         default:
-            if ((kind.slice(0,5) == 'exec:') && painter?.snapid) {
-               console.log(`Call exec for ${painter.snapid}`);
+         case 'logx':
+         case 'logy':
+         case 'logz': {
+            let pp = painter.getPadPainter();
 
-               msg = 'PRIMIT6:' + toJSON({
+            if (pp?.snapid && pp?.pad) {
+               let name = 'SetLog' + kind[3], value = pp.pad['fLog' + kind[3]];
+               painter = pp;
+               kind = `exec:${name}(${value})`;
+            }
+            break;
+         }
+      }
+
+      if (!msg && painter?.snapid && (kind.slice(0,5) == 'exec:'))
+         msg = 'PRIMIT6:' + toJSON({
                   _typename: 'TWebObjectOptions',
                   snapid: painter.snapid.toString() + (subelem ? '#'+subelem : ''),
                   opt: kind.slice(5),
                   fcust: 'exec',
                   fopt: []
                });
-            } else {
-               console.log(`UNPROCESSED CHANGES ${kind}`);
-            }
-      }
 
       if (msg) {
          console.log(`Sending ${msg.length} ${msg.slice(0,40)}`);
          this._websocket.send(msg);
+      } else {
+         console.log(`Unprocessed changes ${kind}`)
       }
    }
 
@@ -648,7 +666,7 @@ class TCanvasPainter extends TPadPainter {
             if (p.$secondary) return; // ignore all secondary painters
 
             let subobj = p.getObject();
-            if (subobj && subobj._typename)
+            if (subobj?._typename)
                canv.fPrimitives.Add(subobj, p.getDrawOpt());
          }, 'objects');
       }
@@ -666,7 +684,7 @@ class TCanvasPainter extends TPadPainter {
    /** @summary draw TCanvas */
    static async draw(dom, can, opt) {
       let nocanvas = !can;
-      if (nocanvas) can = create('TCanvas');
+      if (nocanvas) can = create(clTCanvas);
 
       let painter = new TCanvasPainter(dom, can);
       painter.checkSpecialsInPrimitives(can);
@@ -726,7 +744,7 @@ async function ensureTCanvas(painter, frame_kind) {
 /** @summary draw TPad snapshot from TWebCanvas
   * @private */
 async function drawTPadSnapshot(dom, snap /*, opt*/) {
-   let can = create('TCanvas'),
+   let can = create(clTCanvas),
        painter = new TCanvasPainter(dom, can);
    painter.normal_canvas = false;
    painter.addPadButtons();

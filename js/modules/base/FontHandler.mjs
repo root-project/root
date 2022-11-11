@@ -40,7 +40,7 @@ class FontHandler {
          let indx = Math.floor(fontIndex / 10),
              fontName = root_fonts[indx] || 'Arial';
 
-         while (fontName.length > 0) {
+         while (fontName) {
             if (fontName[0] === 'b')
                this.weight = 'bold';
             else if (fontName[0] === 'i')

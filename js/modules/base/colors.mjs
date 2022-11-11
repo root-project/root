@@ -1,3 +1,5 @@
+import { clTColor } from '../core.mjs';
+
 /** @summary Covert value between 0 and 1 into hex, used for colors coding
   * @private */
 function toHex(num,scale) {
@@ -47,7 +49,7 @@ function getRootColors() {
 /** @summary Produces rgb code for TColor object
   * @private */
 function getRGBfromTColor(col) {
-   if (!col || (col._typename != 'TColor')) return null;
+   if (col?._typename != clTColor) return null;
 
    let rgb = '#' + toHex(col.fRed) + toHex(col.fGreen) + toHex(col.fBlue);
    if ((col.fAlpha !== undefined) && (col.fAlpha !== 1.))
@@ -83,7 +85,7 @@ function extendRootColors(jsarr, objarr) {
       rgb_array = [];
       for (let n = 0; n < objarr.arr.length; ++n) {
          let col = objarr.arr[n];
-         if (!col || (col._typename != 'TColor')) continue;
+         if (col?._typename != clTColor) continue;
 
          if ((col.fNumber >= 0) && (col.fNumber <= 10000))
             rgb_array[col.fNumber] = getRGBfromTColor(col);
@@ -171,5 +173,3 @@ createRootColors();
 
 export { ColorPalette, getColor, findColor, addColor, adoptRootColors,
          getRootColors, extendRootColors, getRGBfromTColor, createRootColors, toHex };
-
-

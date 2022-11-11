@@ -1,7 +1,8 @@
-import { internals, httpRequest, isBatchMode, create, toJSON } from '../core.mjs';
+import { internals, httpRequest, isBatchMode, isFunc, isStr, create, toJSON, clTObjString,
+         clTGraph, clTPolyMarker3D, clTH1, clTH2, clTH3 } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { kTString, kObject, kAnyP } from '../io.mjs';
-import { kClonesNode, kSTLNode, treeDraw, treeIOTest, TDrawSelector } from '../tree.mjs';
+import { kClonesNode, kSTLNode, clTBranchFunc, treeDraw, treeIOTest, TDrawSelector } from '../tree.mjs';
 import { BasePainter } from '../base/BasePainter.mjs';
 import { cleanup, resize, drawRawText, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from '../hist/TH1Painter.mjs';
@@ -60,18 +61,18 @@ async function drawTreeDrawResult(dom, obj, opt) {
 
    let typ = obj?._typename;
 
-   if (!typ || (typeof typ !== 'string'))
+   if (!typ || !isStr(typ))
       return Promise.reject(Error(`Object without type cannot be draw with TTree`));
 
-   if (typ.indexOf('TH1') == 0)
+   if (typ.indexOf(clTH1) == 0)
       return TH1Painter.draw(dom, obj, opt);
-   if (typ.indexOf('TH2') == 0)
+   if (typ.indexOf(clTH2) == 0)
       return TH2Painter.draw(dom, obj, opt);
-   if (typ.indexOf('TH3') == 0)
+   if (typ.indexOf(clTH3) == 0)
       return TH3Painter.draw(dom, obj, opt);
-   if (typ.indexOf('TGraph') == 0)
+   if (typ.indexOf(clTGraph) == 0)
       return TGraphPainter.draw(dom, obj, opt);
-   if ((typ == 'TPolyMarker3D') && obj.$hist) {
+   if ((typ == clTPolyMarker3D) && obj.$hist) {
       return TH3Painter.draw(dom, obj.$hist, opt).then(() => {
          let p2 = new ObjectPainter(dom, obj, opt);
          p2.addToPadPrimitives();
@@ -99,9 +100,9 @@ async function treeDrawProgress(obj, final) {
          painter.selectDom().property('_json_object_', obj);
          return painter;
       }
-      if (typeof internals.drawInspector == 'function')
+      if (isFunc(internals.drawInspector))
          return internals.drawInspector(this.drawid, obj);
-      let str = create('TObjString');
+      let str = create(clTObjString);
       str.fString = toJSON(obj,2);
       return drawRawText(this.drawid, str);
    }
@@ -394,7 +395,7 @@ async function drawTree(dom, obj, opt) {
 
    let tree = obj, args = opt;
 
-   if (obj._typename == 'TBranchFunc') {
+   if (obj._typename == clTBranchFunc) {
       // fictional object, created only in browser
       args = { expr: `.${obj.func}()`, branch: obj.branch };
       if (opt && opt.indexOf('dump') == 0)
@@ -423,13 +424,13 @@ async function drawTree(dom, obj, opt) {
       tree = obj.$tree;
    } else {
       if (!args) args = 'player';
-      if (typeof args === 'string') args = { expr: args };
+      if (isStr(args)) args = { expr: args };
    }
 
    if (!tree)
       throw Error('No TTree object available for TTree::Draw');
 
-   if (typeof args.expr == 'string') {
+   if (isStr(args.expr)) {
       let p = args.expr.indexOf('player');
       if (p == 0) {
          args.player = true;

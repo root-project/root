@@ -1,4 +1,4 @@
-import { loadScript, source_dir, settings, gStyle, internals } from '../core.mjs';
+import { loadScript, source_dir, settings, gStyle, internals, isFunc, isStr, clTGaxis } from '../core.mjs';
 import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
 import { injectStyle, selectgStyle, saveSettings, readSettings, saveStyle, getColorExec } from './utils.mjs';
 import { getColor } from '../base/colors.mjs';
@@ -64,7 +64,7 @@ class JSRootMenu {
      * @param {function} func - func called when item is selected */
    addchk(flag, name, arg, func, title) {
       let handler = func;
-      if (typeof arg == 'function') {
+      if (isFunc(arg)) {
          title = func;
          func = arg;
          handler = res => func(res == '1');
@@ -95,10 +95,9 @@ class JSRootMenu {
       if (!without_sub) this.add('sub:' + top_name, opts[0], call_back);
 
       for (let i = 0; i < opts.length; ++i) {
-         let name = opts[i] || (this._use_plain_text ? '<dflt>' : '&lt;dflt&gt;');
-
-         let group = i+1;
-         if ((opts.length > 5) && (name.length > 0)) {
+         let name = opts[i] || (this._use_plain_text ? '<dflt>' : '&lt;dflt&gt;'),
+             group = i+1;
+         if ((opts.length > 5) && name) {
             // check if there are similar options, which can be grouped once again
             while ((group < opts.length) && (opts[group].indexOf(name) == 0)) group++;
          }
@@ -122,7 +121,7 @@ class JSRootMenu {
      * @protected */
    addColorMenu(name, value, set_func, fill_kind) {
       if (value === undefined) return;
-      let useid = (typeof value !== 'string');
+      let useid = !isStr(value);
       this.add('sub:' + name, () => {
          this.input('Enter color ' + (useid ? '(only id number)' : '(name or id)'), value, useid ? 'int' : 'text', useid ? 0 : undefined, useid ? 9999 : undefined).then(col => {
             let id = parseInt(col);
@@ -337,7 +336,7 @@ class JSRootMenu {
             bkgr = 'background-color:' + coltxt;
             fillcol = (coltxt == 'white') ? 'black' : 'white';
 
-            if ((typeof value === 'string') && value && (value != 'auto') && (value[0] != '['))
+            if (isStr(value) && value && (value != 'auto') && (value[0] != '['))
                match = (d3_rgb(value).toString() == d3_rgb(coltxt).toString());
          } else {
             match = !value;
@@ -562,9 +561,9 @@ class JSRootMenu {
       this.addColorMenu('Color', faxis.fLabelColor,
             arg => { faxis.fLabelColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetLabelColor'), kind); });
       this.addSizeMenu('Offset', 0, 0.1, 0.01, faxis.fLabelOffset,
-            arg => { faxis.fLabelOffset = arg; painter.interactiveRedraw('pad', `exec:SetLabelOffset(${arg})`, kind); } );
+            arg => { faxis.fLabelOffset = arg; painter.interactiveRedraw('pad', `exec:SetLabelOffset(${arg})`, kind); });
       this.addSizeMenu('Size', 0.02, 0.11, 0.01, faxis.fLabelSize,
-            arg => { faxis.fLabelSize = arg; painter.interactiveRedraw('pad', `exec:SetLabelSize(${arg})`, kind); } );
+            arg => { faxis.fLabelSize = arg; painter.interactiveRedraw('pad', `exec:SetLabelSize(${arg})`, kind); });
       this.add('endsub:');
       this.add('sub:Title');
       this.add('SetTitle', () => {
@@ -587,11 +586,11 @@ class JSRootMenu {
                       arg => { faxis.fTitleSize = arg; painter.interactiveRedraw('pad', `exec:SetTitleSize(${arg})`, kind); });
       this.add('endsub:');
       this.add('sub:Ticks');
-      if (faxis._typename == 'TGaxis') {
+      if (faxis._typename == clTGaxis) {
          this.addColorMenu('Color', faxis.fLineColor,
                   arg => { faxis.fLineColor = arg; painter.interactiveRedraw('pad'); });
          this.addSizeMenu('Size', -0.05, 0.055, 0.01, faxis.fTickSize,
-                  arg => { faxis.fTickSize = arg; painter.interactiveRedraw('pad'); } );
+                  arg => { faxis.fTickSize = arg; painter.interactiveRedraw('pad'); });
       } else {
          this.addColorMenu('Color', faxis.fAxisColor,
                   arg => { faxis.fAxisColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetAxisColor'), kind); });
@@ -972,7 +971,7 @@ class StandaloneMenu extends JSRootMenu {
       if ((name == 'endsub:') || (name == 'endcolumn:'))
          return this.stack.pop();
 
-      if (typeof arg == 'function') { title = func; func = arg; arg = name; }
+      if (isFunc(arg)) { title = func; func = arg; arg = name; }
 
       let elem = {};
       curr.push(elem);
@@ -1353,7 +1352,7 @@ class BootstrapMenu extends JSRootMenu {
       }
       if (name.indexOf('sub:') == 0) { name = name.slice(4); newlevel = true; }
 
-      if (typeof arg == 'function') { func = arg; arg = name; }
+      if (isFunc(arg)) { func = arg; arg = name; }
 
       if (name.indexOf('chk:') == 0) {
          checked = '\u2713';
@@ -1378,7 +1377,7 @@ class BootstrapMenu extends JSRootMenu {
          this.lvl++;
       }
 
-      if (typeof func == 'function') this.funcs[this.cnt] = func; // keep call-back function
+      if (isFunc(func)) this.funcs[this.cnt] = func; // keep call-back function
 
       this.cnt++;
    }
@@ -1421,7 +1420,7 @@ class BootstrapMenu extends JSRootMenu {
                    cnt = this.getAttribute('id').slice(menu.menuname.length),
                    func = cnt ? menu.funcs[cnt] : null;
                menu.remove();
-               if (typeof func == 'function') {
+               if (isFunc(func)) {
                   if (menu.painter)
                      func.bind(menu.painter)(arg); // if 'painter' field set, returned as this to callback
                   else

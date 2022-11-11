@@ -60,8 +60,8 @@ class TSplinePainter extends ObjectPainter {
          }
       } else {
          // Non equidistant knots, binary search
-         while(khig-klow>1) {
-            let khalf = Math.round((klow+khig)/2);
+         while(khig - klow > 1) {
+            let khalf = Math.round((klow + khig)/2);
             if(x > spline.fPoly[khalf].fX) klow = khalf;
                                       else khig = khalf;
          }
@@ -168,7 +168,7 @@ class TSplinePainter extends ObjectPainter {
              .property('current_xx', xx);
 
       let name = this.getObjectHint();
-      if (name.length > 0) res.lines.push(name);
+      if (name) res.lines.push(name);
       res.lines.push('x = ' + funcs.axisAsText('x', xx));
       res.lines.push('y = ' + funcs.axisAsText('y', yy));
       if (knot !== null) {
@@ -215,14 +215,14 @@ class TSplinePainter extends ObjectPainter {
          }
 
          for (let n = 0; n < npx; ++n) {
-            let xx = xmin + (xmax-xmin)/npx*(n-1);
-            if (pmain.logx) xx = Math.exp(xx);
+            let x = xmin + (xmax-xmin)/npx*(n-1);
+            if (pmain.logx) x = Math.exp(x);
 
-            while ((indx < spline.fNp-1) && (xx > spline.fPoly[indx+1].fX)) ++indx;
+            while ((indx < spline.fNp-1) && (x > spline.fPoly[indx+1].fX)) ++indx;
 
-            let yy = this.eval(spline.fPoly[indx], xx);
+            let y = this.eval(spline.fPoly[indx], x);
 
-            bins.push({ x: xx, y: yy, grx: funcs.grx(xx), gry: funcs.gry(yy) });
+            bins.push({ x, y, grx: funcs.grx(x), gry: funcs.gry(y) });
          }
 
          let h0 = h;  // use maximal frame height for filling
@@ -331,4 +331,4 @@ class TSplinePainter extends ObjectPainter {
 
 } // class TSplinePainter
 
-export { TSplinePainter }
+export { TSplinePainter };

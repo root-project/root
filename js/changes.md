@@ -2,14 +2,23 @@
 
 ## Changes in dev
 1. Force MathJax rendering when `\` symbol is found (#243)
-2. Fix - use alpha channel for TColor when intended
-3. Fix - show correct bin index in TH2 tooltips
-4. Mark methods returning `Promise` objects as **async**
-5. Fix several bugs in csg.mjs
-6. Upgrade three.js to r145
-7. Improve geometry clipping
-8. 3-dimensional TTree::Draw now produces TPolyMarker3D by default
-9. Fix - multipart message handling (#250)
+2. Fix - show correct bin index in TH2 tooltips
+3. Mark methods returning `Promise` objects as **async**
+4. Fix several bugs in csg.mjs
+5. Upgrade three.js to r146
+6. Improve geometry clipping
+7. 3-dimensional TTree::Draw now produces TPolyMarker3D by default
+8. Fix - interactive move/resize on touch devices
+9. Provide `settings.PreferSavedPoints` to exclude function evaluation when there are saved points
+10. Improve TWebCanvas support
+
+
+## Changes in 7.2.1
+1. Fix - prevent glitch when enabling projection via context menu
+2. Fix - `multi.json` request parsing
+3. Fix - decoding of multipart message (#250)
+4. Fix - use alpha channel for TColor when intended
+5. Backport `settings.PreferSavedPoints` only for `TF1`
 
 
 ## Changes in 7.2.0

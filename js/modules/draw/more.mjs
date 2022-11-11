@@ -1,4 +1,4 @@
-import { BIT, isBatchMode } from '../core.mjs';
+import { BIT, isBatchMode, clTLatex, clTMathText, clTPolyLine } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
 import { BasePainter } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
@@ -50,8 +50,8 @@ async function drawText() {
 
    if (text.fTextAngle) arg.rotate = -text.fTextAngle;
 
-   if (text._typename == 'TLatex') { arg.latex = 1; fact = 0.9; } else
-   if (text._typename == 'TMathText') { arg.latex = 2; fact = 0.8; }
+   if (text._typename == clTLatex) { arg.latex = 1; fact = 0.9; } else
+   if (text._typename == clTMathText) { arg.latex = 2; fact = 0.8; }
 
    this.startTextDrawing(text.fTextFont, Math.round((textsize > 1) ? textsize : textsize*Math.min(w,h)*fact));
 
@@ -127,7 +127,8 @@ function drawPolyLine() {
    for (let n = 0; n <= polyline.fLastPoint; ++n)
       cmd += `${n>0?'L':'M'}${func.x(polyline.fX[n])},${func.y(polyline.fY[n])}`;
 
-   if (polyline._typename != 'TPolyLine') fillatt.setSolidColor('none');
+   if (polyline._typename != clTPolyLine)
+      fillatt.setSolidColor('none');
 
    if (!fillatt.empty()) cmd += 'Z';
 

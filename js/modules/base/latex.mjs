@@ -1,4 +1,4 @@
-import { loadScript, settings, isNodeJs, source_dir } from '../core.mjs';
+import { loadScript, settings, isNodeJs, isStr, source_dir } from '../core.mjs';
 import { getElementRect, _loadJSDOM } from './BasePainter.mjs';
 import { FontHandler } from './FontHandler.mjs';
 
@@ -416,7 +416,7 @@ function parseLatex(node, arg, label, curr) {
          nelements++;
 
          let s = translateLaTeX(label.slice(0, best));
-         if ((s.length > 0) || alone) {
+         if (s || alone) {
             // if single text element created, place it directly in the node
             let g = curr.g || (alone ? node : currG()),
                 elem = g.append('svg:text');
@@ -557,15 +557,15 @@ function parseLatex(node, arg, label, curr) {
             res[name] = extractSubLabel();
             if (res[name] === -1) return false;
          }
-         while (label.length > 0) {
-            if (label.charAt(0) == '_') {
+         while (label) {
+            if (label[0] == '_') {
                label = label.slice(1);
                res.low = !res.low ? extractSubLabel(true) : -1;
                if (res.low === -1) {
                   console.log(`error with ${found.name} low limit`);
                   return false;
                }
-            } else if (label.charAt(0) == '^') {
+            } else if (label[0] == '^') {
                label = label.slice(1);
                res.up = !res.up ? extractSubLabel(true) : -1;
                if (res.up === -1) {
@@ -1201,7 +1201,7 @@ function translateMath(str, kind, color, painter) {
          str = str.replace(new RegExp(`\\\\\\b${x}\\b`, 'g'), `\\${mathjax_remap[x]}`);
    }
 
-   if (typeof color != 'string') return str;
+   if (!isStr(color)) return str;
 
    // MathJax SVG converter use colors in normal form
    //if (color.indexOf('rgb(') >= 0)
@@ -1215,7 +1215,7 @@ function translateMath(str, kind, color, painter) {
   * @private */
 function repairMathJaxSvgSize(painter, mj_node, svg, arg) {
    let transform = value => {
-      if (!value || (typeof value !== 'string') || (value.length < 3)) return null;
+      if (!value || !isStr(value) || (value.length < 3)) return null;
       let p = value.indexOf('ex');
       if ((p < 0) || (p !== value.length - 2)) return null;
       value = parseFloat(value.slice(0, p));

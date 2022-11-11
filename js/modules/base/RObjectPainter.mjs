@@ -1,3 +1,4 @@
+import { isStr, isFunc } from '../core.mjs';
 import { FontHandler } from './FontHandler.mjs';
 import { ObjectPainter } from './ObjectPainter.mjs';
 
@@ -79,7 +80,7 @@ class RObjectPainter extends ObjectPainter {
 
       let norm = 0, px = 0, val = value, operand = 0, pos = 0;
 
-      while (val.length > 0) {
+      while (val) {
          // skip empty spaces
          while ((pos < val.length) && ((val[pos] == ' ') || (val[pos] == '\t')))
             ++pos;
@@ -110,7 +111,7 @@ class RObjectPainter extends ObjectPainter {
          val = val.slice(pos);
          pos = 0;
          if (!operand) operand = 1;
-         if ((val.length > 0) && (val[0] == '%')) {
+         if (val && (val[0] == '%')) {
             val = val.slice(1);
             norm += operand*v*0.01;
          } else if ((val.length > 1) && (val[0] == 'p') && (val[1] == 'x')) {
@@ -129,7 +130,7 @@ class RObjectPainter extends ObjectPainter {
    /** @summary Evaluate RColor using attribute storage and configured RStyle */
    v7EvalColor(name, dflt) {
       let val = this.v7EvalAttr(name, '');
-      if (!val || (typeof val != 'string')) return dflt;
+      if (!val || !isStr(val)) return dflt;
 
       if (val == 'auto') {
          let pp = this.getPadPainter();
@@ -176,7 +177,7 @@ class RObjectPainter extends ObjectPainter {
           font_style  = this.v7EvalAttr(name + '_font_style', rfont.fStyle || ''),
           font_weight = this.v7EvalAttr(name + '_font_weight', rfont.fWeight || '');
 
-       if (typeof text_size == 'string') text_size = parseFloat(text_size);
+       if (isStr(text_size)) text_size = parseFloat(text_size);
        if (!Number.isFinite(text_size) || (text_size <= 0)) text_size = 12;
        if (!fontScale) fontScale = pp?.getPadHeight() || 100;
 
@@ -191,7 +192,7 @@ class RObjectPainter extends ObjectPainter {
 
    /** @summary Create this.fillatt object based on v7 fill attributes */
    createv7AttFill(prefix) {
-      if (!prefix || (typeof prefix != 'string')) prefix = 'fill_';
+      if (!prefix || !isStr(prefix)) prefix = 'fill_';
 
       let color = this.v7EvalColor(prefix + 'color', ''),
           pattern = this.v7EvalAttr(prefix + 'style', 0);
@@ -201,7 +202,7 @@ class RObjectPainter extends ObjectPainter {
 
    /** @summary Create this.lineatt object based on v7 line attributes */
    createv7AttLine(prefix) {
-      if (!prefix || (typeof prefix != 'string')) prefix = 'line_';
+      if (!prefix || !isStr(prefix)) prefix = 'line_';
 
       let color = this.v7EvalColor(prefix + 'color', 'black'),
           width = this.v7EvalAttr(prefix + 'width', 1),
@@ -216,7 +217,7 @@ class RObjectPainter extends ObjectPainter {
 
     /** @summary Create this.markeratt object based on v7 attributes */
    createv7AttMarker(prefix) {
-      if (!prefix || (typeof prefix != 'string')) prefix = 'marker_';
+      if (!prefix || !isStr(prefix)) prefix = 'marker_';
 
       let color = this.v7EvalColor(prefix + 'color', 'black'),
           size = this.v7EvalAttr(prefix + 'size', 0.01),
@@ -266,7 +267,7 @@ class RObjectPainter extends ObjectPainter {
          case 'boolean': obj._typename += 'BoolValue_t'; obj.v = value ? true : false; break;
          case 'int': obj._typename += 'IntValue_t'; obj.v = parseInt(value); break;
          case 'double': obj._typename += 'DoubleValue_t'; obj.v = parseFloat(value); break;
-         default: obj._typename += 'StringValue_t'; obj.v = (typeof value == 'string') ? value : JSON.stringify(value); break;
+         default: obj._typename += 'StringValue_t'; obj.v = isStr(value) ? value : JSON.stringify(value); break;
       }
 
       req.values.push(obj);
@@ -289,7 +290,7 @@ class RObjectPainter extends ObjectPainter {
     * @param method is method of painter object which will be called when getting reply */
    v7SubmitRequest(kind, req, method) {
       let canp = this.getCanvPainter();
-      if (typeof canp?.submitDrawableRequest != 'function') return null;
+      if (!isFunc(canp?.submitDrawableRequest)) return null;
 
       // special situation when snapid not yet assigned - just keep ref until snapid is there
       // maybe keep full list - for now not clear if really needed

@@ -1,4 +1,4 @@
-import { clone, create, createHistogram, gStyle } from '../core.mjs';
+import { clone, create, createHistogram, isFunc, gStyle, clTList, clTH2 } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from './TH1Painter.mjs';
@@ -38,7 +38,7 @@ class THStackPainter extends ObjectPainter {
       if (!stack.fHists) return false;
       let nhists = stack.fHists.arr.length;
       if (nhists <= 0) return false;
-      let lst = create('TList');
+      let lst = create(clTList);
       lst.Add(clone(stack.fHists.arr[0]), stack.fHists.opt[0]);
       for (let i = 1; i < nhists; ++i) {
          let hnext = clone(stack.fHists.arr[i]),
@@ -90,7 +90,7 @@ class THStackPainter extends ObjectPainter {
             i2 = hist.fXaxis.fLast;
          }
 
-         if (hist._typename.indexOf('TH2') === 0) {
+         if (hist._typename.indexOf(clTH2) === 0) {
             j2 = hist.fYaxis.fNbins;
             if (hist.fYaxis.TestBit(EAxisBits.kAxisRange)) {
                j1 = hist.fYaxis.fFirst;
@@ -163,7 +163,7 @@ class THStackPainter extends ObjectPainter {
 
       if (this.options._pfc || this.options._plc || this.options._pmc) {
          let mp = this.getMainPainter();
-         if (typeof mp?.createAutoColor == 'function') {
+         if (isFunc(mp?.createAutoColor)) {
             let icolor = mp.createAutoColor(nhists);
             if (this.options._pfc) hist.fFillColor = icolor;
             if (this.options._plc) hist.fLineColor = icolor;
@@ -212,9 +212,11 @@ class THStackPainter extends ObjectPainter {
          return false;
       };
 
-      if (hist && (hist._typename.indexOf('TH2') == 0)) this.options.ndim = 2;
+      if (hist && (hist._typename.indexOf(clTH2) == 0))
+         this.options.ndim = 2;
 
-      if ((this.options.ndim == 2) && !opt) opt = 'lego1';
+      if ((this.options.ndim == 2) && !opt)
+         opt = 'lego1';
 
       if (stack.fHists && !this.options.nostack)
          for (let k = 0; k < stack.fHists.arr.length; ++k)
@@ -395,4 +397,4 @@ class THStackPainter extends ObjectPainter {
 
 } // class THStackPainter
 
-export { THStackPainter }
+export { THStackPainter };
