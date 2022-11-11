@@ -315,7 +315,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          if (change_gpad) gPad = pad;
          hs->BuildPrimitives(iter.GetOption());
          if (change_gpad) gPad = save;
-      } if (obj->InheritsFrom(TFrame::Class())) {
+      } else if (obj->InheritsFrom(TFrame::Class())) {
          frame = static_cast<TFrame *>(obj);
       } else if (obj->InheritsFrom(TH1::Class())) {
          need_frame = true;
