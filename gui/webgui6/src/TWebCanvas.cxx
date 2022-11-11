@@ -1147,7 +1147,19 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          }
       }
 
-   }  else {
+   } else if (arg.compare(0, 6, "CLEAR:") == 0) {
+      std::string snapid = arg.substr(6);
+
+      TPad *pad = dynamic_cast<TPad *>(FindPrimitive(snapid));
+
+      if (pad) {
+         pad->Clear();
+         pad->Modified();
+         PerformUpdate();
+      }
+
+      return kTRUE;
+   } else {
 
       // unknown message, probably should be processed by other implementation
       return kFALSE;

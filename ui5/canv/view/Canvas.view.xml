@@ -36,7 +36,17 @@
                   </Menu>
                </menu>
             </MenuButton>
-            <Button text="Edit" type="Transparent"></Button>
+            <MenuButton text="Edit" type="Transparent">
+               <menu>
+                  <Menu itemSelected="onEditMenuAction">
+                     <items>
+                        <MenuItem text="Style" enabled="false"/>
+                        <MenuItem text="Clear pad" startsSection="true"/>
+                        <MenuItem text="Clear canvas"/>
+                     </items>
+                  </Menu>
+               </menu>
+            </MenuButton>
             <MenuButton text="View" type="Transparent">
                <menu>
                   <Menu itemSelected="onViewMenuAction">
