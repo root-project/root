@@ -37,6 +37,7 @@
 #include "TBase64.h"
 #include "TAtt3D.h"
 #include "TView.h"
+#include "TExec.h"
 
 #include <cstdio>
 #include <cstring>
@@ -44,6 +45,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <map>
 
 /** \class TWebCanvas
 \ingroup webgui6
@@ -730,6 +732,26 @@ void TWebCanvas::AssignStatusBits(UInt_t bits)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
+/// Process all TExec object from list of primitives
+
+Bool_t TWebCanvas::ProcessTExec(TList *primitves)
+{
+   Bool_t isany = kFALSE;
+
+   TIter iter(primitves);
+   while (auto obj = iter()) {
+      auto exec = dynamic_cast<TExec *>(obj);
+      if (exec) {
+         printf("Process exec %s\n", exec->GetTitle());
+         exec->Exec();
+         isany = true;
+      }
+   }
+
+   return isany;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
 /// Decode all pad options, which includes ranges plus objects options
 
 Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
@@ -817,7 +839,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
 
       pad->SetFixedAspectRatio(kFALSE);
 
-      TH1 *hist = static_cast<TH1 *>(FindPrimitive("histogram", pad));
+      TH1 *hist = static_cast<TH1 *>(FindPrimitive("histogram", 1, pad));
 
       if (hist) {
          double hmin = 0, hmax = 0;
@@ -849,11 +871,20 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
 
          if (hmin == hmax) { hist->SetMinimum(); hist->SetMaximum(); }
                       else { hist->SetMinimum(hmin); hist->SetMaximum(hmax); }
-
       }
 
-      for (auto &item : r.primitives)
-         ProcessObjectOptions(item, pad);
+      std::map<std::string, int> idmap;
+
+      for (auto &item : r.primitives) {
+         auto iter = idmap.find(item.snapid);
+         int idcnt = 1;
+         if (iter == idmap.end())
+            idmap[item.snapid] = 1;
+         else
+            idcnt = ++iter->second;
+
+         ProcessObjectOptions(item, pad, idcnt);
+      }
 
       // without special objects no need for explicit update of the pad
       if (fHasSpecials)
@@ -1304,11 +1335,11 @@ bool TWebCanvas::ProduceImage(TCanvas *c, const char *fileName, Int_t width, Int
 /// Process data for single primitive
 /// Returns object pad if object was modified
 
-TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad)
+TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int idcnt)
 {
    TObjLink *lnk = nullptr;
    TPad *objpad = nullptr;
-   TObject *obj = FindPrimitive(item.snapid, pad, &lnk, &objpad);
+   TObject *obj = FindPrimitive(item.snapid, idcnt, pad, &lnk, &objpad);
 
    if (item.fcust.compare("exec") == 0) {
       auto pos = item.opt.find("(");
@@ -1382,7 +1413,7 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad)
 /// Also if object is in list of primitives, one could ask for entry link for such object,
 /// This can allow to change draw option
 
-TObject *TWebCanvas::FindPrimitive(const std::string &sid, TPad *pad, TObjLink **padlnk, TPad **objpad)
+TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad, TObjLink **padlnk, TPad **objpad)
 {
 
    if (!pad)
@@ -1430,7 +1461,7 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, TPad *pad, TObjLink *
          continue;
       }
 
-      if (TString::Hash(&obj, sizeof(obj)) == id) {
+      if ((TString::Hash(&obj, sizeof(obj)) == id) && (--idcnt <= 0)) {
          if (objpad)
             *objpad = pad;
 
@@ -1469,6 +1500,7 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, TPad *pad, TObjLink *
             *padlnk = lnk;
          return obj;
       }
+
       if (h1 || gr) {
          TIter fiter(h1 ? h1->GetListOfFunctions() : gr->GetListOfFunctions());
          TObject *fobj = nullptr;
@@ -1479,7 +1511,7 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, TPad *pad, TObjLink *
                return fobj;
             }
       } else if (obj->InheritsFrom(TPad::Class())) {
-         obj = FindPrimitive(sid, (TPad *)obj, padlnk, objpad);
+         obj = FindPrimitive(sid, idcnt, (TPad *)obj, padlnk, objpad);
          if (objpad && !*objpad)
             *objpad = pad;
          if (obj)
