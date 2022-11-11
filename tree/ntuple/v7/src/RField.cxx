@@ -835,7 +835,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
       // Skip members explicitly marked as transient by user comment
       if (!dataMember->IsPersistent()) {
          // TODO(jblomer): we could do better
-         fTraits = 0;
+         fTraits &= ~(kTraitTriviallyConstructible | kTraitTriviallyDestructible);
          continue;
       }
       auto subField = Detail::RFieldBase::Create(dataMember->GetName(), dataMember->GetFullTypeName()).Unwrap();
