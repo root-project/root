@@ -427,32 +427,6 @@ double RooAbsPdf::getValV(const RooArgSet* nset) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute batch of values for given input data, and normalise by integrating over
-/// the observables in `normSet`. Store result in `evalData`, and return a span pointing to
-/// it.
-/// This uses evaluateSpan() to perform an (unnormalised) computation of data points. This computation
-/// is finalised by normalising the bare values, and by checking for computation errors.
-/// Derived classes should override evaluateSpan() to reach maximal performance.
-///
-/// \param[in,out] evalData Object holding data that should be used in computations. Results are also stored here.
-/// \param[in] normSet      If not nullptr, normalise results by integrating over
-/// the variables in this set. The normalisation is only computed once, and applied
-/// to the full batch.
-/// \return RooSpan with probabilities. The memory of this span is owned by `evalData`.
-/// \see RooAbsReal::getValues().
-RooSpan<const double> RooAbsPdf::getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  // To avoid side effects of this function, the pointer to the last norm
-  // sets and integral objects are remembered and reset at the end of this
-  // function.
-  auto * prevNorm = _norm;
-  auto * prevNormSet = _normSet;
-  auto out = RooAbsReal::getValues(evalData, normSet);
-  _norm = prevNorm;
-  _normSet = prevNormSet;
-  return out;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Analytical integral with normalization (see RooAbsReal::analyticalIntegralWN() for further information)
 ///
 /// This function applies the normalization specified by 'normSet' to the integral returned
