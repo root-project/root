@@ -384,18 +384,30 @@ double RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 
 std::list<double>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
+  return plotSamplingHint(*_dataHist, _pdfObsList, _histObsList, _intOrder, obs, xlo, xhi);
+}
+
+
+std::list<double>* RooHistPdf::plotSamplingHint(RooDataHist const& dataHist,
+                                                RooArgSet const& pdfObsList,
+                                                RooArgSet const& histObsList,
+                                                int intOrder,
+                                                RooAbsRealLValue& obs,
+                                                double xlo,
+                                                double xhi)
+{
   // No hints are required when interpolation is used
-  if (_intOrder>0) {
-    return 0 ;
+  if (intOrder>0) {
+    return nullptr;
   }
 
   // Check that observable is in dataset, if not no hint is generated
   RooAbsArg* dhObs = nullptr;
-  for (unsigned int i=0; i < _pdfObsList.size(); ++i) {
-    RooAbsArg* histObs = _histObsList[i];
-    RooAbsArg* pdfObs = _pdfObsList[i];
+  for (unsigned int i=0; i < pdfObsList.size(); ++i) {
+    RooAbsArg* histObs = histObsList[i];
+    RooAbsArg* pdfObs = pdfObsList[i];
     if (std::string(obs.GetName())==pdfObs->GetName()) {
-      dhObs = _dataHist->get()->find(histObs->GetName()) ;
+      dhObs = dataHist.get()->find(histObs->GetName()) ;
       break;
     }
   }
@@ -432,7 +444,6 @@ std::list<double>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, double xl
 
   return hint ;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
