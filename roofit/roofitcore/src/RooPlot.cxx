@@ -1440,3 +1440,17 @@ void RooPlot::fillItemsFromTList(RooPlot::Items & items, TList const& tlist) {
     items.emplace_back(obj, obj->GetOption());
   }
 }
+
+/// Replaces the pointer to the plot variable with a pointer to a clone of the
+/// plot variable that is owned by this RooPlot. The RooPlot references the
+/// plotted variable by non-owning pointer by default since ROOT 6.28, which
+/// resulted in a big speedup when plotting complicated pdfs that are expensive
+/// to clone. However, going back to an owned clone is useful in rare cases.
+/// For example in the RooUnitTest, where the registered plots need to live
+/// longer than the scope of the unit test.
+void RooPlot::createInternalPlotVarClone() {
+  // If the plot variable is already cloned, we don't need to do anything.
+  if(_plotVarSet) return;
+  _plotVarSet = static_cast<RooArgSet*>(RooArgSet(*_plotVar).snapshot());
+  _plotVar = static_cast<RooAbsRealLValue*>(_plotVarSet->find(_plotVar->GetName()));
+}
