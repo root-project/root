@@ -102,7 +102,8 @@ struct RDaosContainerNTupleLocator {
    RDaosContainerNTupleLocator() = default;
    explicit RDaosContainerNTupleLocator(const std::string &ntupleName) : fName(ntupleName), fIndex(Hash(ntupleName)){};
 
-   ntuple_index_t GetIndex() const { return fIndex; };
+   bool IsValid() { return fAnchor.has_value() && fAnchor->fNBytesHeader; }
+   [[nodiscard]] ntuple_index_t GetIndex() const { return fIndex; };
    static ntuple_index_t Hash(const std::string &ntupleName)
    {
       // Convert string to numeric representation via `std::hash`.
@@ -110,8 +111,7 @@ struct RDaosContainerNTupleLocator {
       // Fold `std::size_t` bits into 32-bit using `boost::hash_combine()` algorithm and magic number.
       auto seed = static_cast<uint32_t>(h >> 32);
       seed ^= static_cast<uint32_t>(h & 0xffffffff) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-      ntuple_index_t hash = static_cast<ntuple_index_t>(seed);
-
+      auto hash = static_cast<ntuple_index_t>(seed);
       return (hash == kReservedIndex) ? kReservedIndex + 1 : hash;
    }
 
