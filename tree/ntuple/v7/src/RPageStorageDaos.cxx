@@ -422,7 +422,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::RPageSourceDaos(std::string_view nt
 
    auto [locator, descBuilder] = RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName, *fDecompressor);
 
-   if (!locator.fAnchor.has_value() || !locator.fAnchor->fNBytesHeader)
+   if (!locator.IsValid())
       throw ROOT::Experimental::RException(
          R__FAIL("Requested ntuple '" + fNTupleName + "' is not present in DAOS container."));
 
