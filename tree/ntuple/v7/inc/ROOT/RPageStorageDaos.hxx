@@ -27,39 +27,9 @@
 #include <cstdio>
 #include <memory>
 #include <string>
-
-using ntuple_index_t = std::uint32_t;
-namespace ROOT::Experimental::Detail {
-struct RDaosNTupleAnchor;
-}
-
-struct RDaosContainerNTupleLocator {
-   std::string fName{};
-   std::uint32_t fHashedName{};
-   ntuple_index_t fIndex{};
-   std::unique_ptr<ROOT::Experimental::Detail::RDaosNTupleAnchor> fAnchor;
-   ROOT::Experimental::RNTupleDescriptorBuilder fDescBuilder{};
-   static const ntuple_index_t kReservedHash = 0;
-
-   RDaosContainerNTupleLocator() = default;
-   explicit RDaosContainerNTupleLocator(const std::string &ntupleName) : fName(ntupleName), fHashedName(Hash(ntupleName))
-   {
-      fIndex = fHashedName;
-      fAnchor = std::make_unique<ROOT::Experimental::Detail::RDaosNTupleAnchor>();
-   };
-
-   ntuple_index_t GetIndex() const { return fIndex; };
-   static ntuple_index_t Hash(const std::string &ntupleName)
-   {
-      // Use `std::hash` implementation followed by XOR to fit in `ntuple_index_t` (i.e., 32-bit)
-      std::size_t h = std::hash<std::string>{}(ntupleName);
-      ntuple_index_t hash = (h & 0xffffffff) ^ ((h >> 32));
-      return (hash == kReservedHash) ? kReservedHash + 1 : hash;
-   }
-};
+#include <optional>
 
 namespace ROOT {
-
 namespace Experimental {
 namespace Detail {
 
@@ -69,6 +39,8 @@ class RPageAllocatorHeap;
 class RPagePool;
 class RDaosPool;
 class RDaosContainer;
+
+using ntuple_index_t = std::uint32_t;
 
 // clang-format off
 /**
@@ -107,6 +79,58 @@ struct RDaosNTupleAnchor {
    RResult<std::uint32_t> Deserialize(const void *buffer, std::uint32_t bufSize);
 
    static std::uint32_t GetSize();
+};
+
+// clang-format off
+/**
+\class ROOT::Experimental::Detail::RDaosContainerNTupleLocator
+\ingroup NTuple
+\brief Helper structure concentrating the functionality required to locate an ntuple within a DAOS container.
+It includes a hashing function that converts the RNTuple's name into a 32-bit identifier; this value is used to index
+the subspace for the ntuple among all objects in the container. A zero-value hash value is reserved for storing any
+future metadata related to container-wide management; a zero-index ntuple is thus disallowed and remapped to "1".
+Once the index is computed, `InitNTupleDescriptorBuilder()` can be called to return a partially-filled builder with
+the ntuple's anchor, header and footer, lacking only pagelists. Upon that call, a copy of the anchor is stored in `fAnchor`.
+*/
+// clang-format on
+struct RDaosContainerNTupleLocator {
+   std::string fName{};
+   ntuple_index_t fIndex{};
+   std::optional<ROOT::Experimental::Detail::RDaosNTupleAnchor> fAnchor;
+   static const ntuple_index_t kReservedIndex = 0;
+
+   RDaosContainerNTupleLocator() = default;
+   explicit RDaosContainerNTupleLocator(const std::string &ntupleName) : fName(ntupleName), fIndex(Hash(ntupleName)){};
+
+   ntuple_index_t GetIndex() const { return fIndex; };
+   static ntuple_index_t Hash(const std::string &ntupleName)
+   {
+      // Use `std::hash` implementation followed by XOR to fit in `ntuple_index_t` (i.e., 32-bit)
+      std::size_t h = std::hash<std::string>{}(ntupleName);
+      ntuple_index_t hash = (h & 0xffffffff) ^ ((h >> 32));
+      return (hash == kReservedIndex) ? kReservedIndex + 1 : hash;
+   }
+
+   int InitNTupleDescriptorBuilder(RDaosContainer &cont, RNTupleDecompressor &decompressor,
+                                   RNTupleDescriptorBuilder &builder);
+
+   static std::pair<RDaosContainerNTupleLocator, RNTupleDescriptorBuilder>
+   LocateNTuple(RDaosContainer &cont, const std::string &ntupleName, RNTupleDecompressor &decompressor)
+   {
+      auto result = std::make_pair(RDaosContainerNTupleLocator(ntupleName), RNTupleDescriptorBuilder());
+
+      auto &loc = result.first;
+      auto &builder = result.second;
+
+      if (int err = loc.InitNTupleDescriptorBuilder(cont, decompressor, builder); !err) {
+         if (ntupleName.empty() || ntupleName != builder.GetDescriptor().GetName()) {
+            // Hash already taken by a differently-named ntuple.
+            throw ROOT::Experimental::RException(
+               R__FAIL("LocateNTuple: ntuple name '" + ntupleName + "' unavailable in this container."));
+         }
+      }
+      return result;
+   }
 };
 
 // clang-format off
@@ -160,7 +184,6 @@ public:
    void ReleasePage(RPage &page) final;
 };
 
-
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPageAllocatorDaos
@@ -171,9 +194,8 @@ public:
 class RPageAllocatorDaos {
 public:
    static RPage NewPage(ColumnId_t columnId, void *mem, std::size_t elementSize, std::size_t nElements);
-   static void DeletePage(const RPage& page);
+   static void DeletePage(const RPage &page);
 };
-
 
 // clang-format off
 /**
@@ -230,8 +252,7 @@ public:
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
    void ReleasePage(RPage &page) final;
 
-   void LoadSealedPage(DescriptorId_t columnId, const RClusterIndex &clusterIndex,
-                       RSealedPage &sealedPage) final;
+   void LoadSealedPage(DescriptorId_t columnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
 
