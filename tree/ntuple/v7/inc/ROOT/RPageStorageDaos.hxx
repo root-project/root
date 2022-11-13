@@ -28,6 +28,8 @@
 #include <memory>
 #include <string>
 
+using ntuple_index_t = std::uint32_t;
+
 namespace ROOT {
 
 namespace Experimental {
@@ -108,6 +110,7 @@ private:
    std::uint64_t fNBytesCurrentCluster{0};
 
    RDaosNTupleAnchor fNTupleAnchor;
+   ntuple_index_t fNTupleIndex{0};
 
 protected:
    void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) final;
@@ -162,6 +165,8 @@ private:
       /// The first element number of the page's column in the given cluster
       std::uint64_t fColumnOffset = 0;
    };
+
+   ntuple_index_t fNTupleIndex{0};
 
    /// Populated pages might be shared; the memory buffer is managed by the RPageAllocatorDaos
    std::unique_ptr<RPageAllocatorDaos> fPageAllocator;
