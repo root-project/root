@@ -1271,6 +1271,7 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
    if (fSubFields[0]->GetTraits() & kTraitTrivialType) {
       typedValue->resize(nItems * fItemSize);
    } else {
+      // See "semantics of reading non-trivial objects" in RNTuple's architecture.md
       const auto oldNItems = typedValue->size() / fItemSize;
       const bool canRealloc = oldNItems < nItems;
       bool allDeallocated = false;
@@ -1407,6 +1408,8 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, De
    char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
    const std::size_t oldSize = *sizePtr;
 
+   // See "semantics of reading non-trivial objects" in RNTuple's architecture.md for details
+   // on the element construction/destrution.
    const bool needsConstruct = !(fSubFields[0]->GetTraits() & kTraitTriviallyConstructible);
    const bool needsDestruct = !(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible);
 
