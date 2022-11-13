@@ -410,23 +410,23 @@ std::list<double>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, double xl
 
   // Retrieve position of all bin boundaries
 
-  const RooAbsBinning* binning = lval->getBinningPtr(0) ;
-  double* boundaries = binning->array() ;
+  const RooAbsBinning* binning = lval->getBinningPtr(nullptr);
+  std::span<double> boundaries{binning->array(), static_cast<std::size_t>(binning->numBoundaries())};
 
   auto hint = new std::list<double> ;
 
-  // Widen range slighty
-  xlo = xlo - 0.01*(xhi-xlo) ;
-  xhi = xhi + 0.01*(xhi-xlo) ;
+  const double delta = (xhi-xlo)*1e-8 ;
 
-  double delta = (xhi-xlo)*1e-8 ;
+  // Sample points right next to the plot limits
+  hint->push_back(xlo + delta);
+  hint->push_back(xhi - delta);
 
-  // Construct array with pairs of points positioned epsilon to the left and
-  // right of the bin boundaries
-  for (Int_t i=0 ; i<binning->numBoundaries() ; i++) {
-    if (boundaries[i]>=xlo && boundaries[i]<=xhi) {
-      hint->push_back(boundaries[i]-delta) ;
-      hint->push_back(boundaries[i]+delta) ;
+  // Sample points very close to the left and right of the bin boundaries that
+  // are strictly in between the plot limits.
+  for (const double x : boundaries) {
+    if (x - xlo > delta && xhi - x > delta) {
+      hint->push_back(x - delta);
+      hint->push_back(x + delta);
     }
   }
 
