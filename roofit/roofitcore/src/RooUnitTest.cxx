@@ -28,7 +28,7 @@ Object          | function
 ----------------|------------
    RooPlot      | regPlot()
    RooFitResult | regResult()
-   double     | regValue()
+   double       | regValue()
    RooTable     | regTable()
    TH1/2/3      | regTH()
    RooWorkspace | regWS()
@@ -79,7 +79,13 @@ void RooUnitTest::regPlot(RooPlot* frame, const char* refName)
   if (_refFile) {
     string refNameStr(refName) ;
     frame->SetName(refName) ;
-    _regPlots.push_back(make_pair(frame,refNameStr)) ;
+    // Since ROOT 6.28, the RooPlot doesn't clone the plot variable by default
+    // anymore. This is a problem for registering the RooPlots, because they
+    // need to survive without dangling pointers even after the RooUnitTest is
+    // done. For that reason, we ask the RooPlot to create an internal plot
+    // variable clone for itself.
+    frame->createInternalPlotVarClone();
+    _regPlots.emplace_back(frame,refNameStr);
   } else {
     delete frame ;
   }
