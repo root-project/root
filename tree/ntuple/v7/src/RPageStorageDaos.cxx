@@ -419,20 +419,6 @@ ROOT::Experimental::Detail::RPageSourceDaos::RPageSourceDaos(std::string_view nt
    auto args = ParseDaosURI(uri);
    auto pool = std::make_shared<RDaosPool>(args.fPoolLabel);
    fDaosContainer = std::make_unique<RDaosContainer>(pool, args.fContainerLabel);
-
-   auto [locator, descBuilder] = RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName, *fDecompressor);
-
-   if (!locator.IsValid())
-      throw ROOT::Experimental::RException(
-         R__FAIL("Requested ntuple '" + fNTupleName + "' is not present in DAOS container."));
-
-   fDescriptorBuilder = std::move(descBuilder);
-   fNTupleIndex = locator.GetIndex();
-
-   auto oclass = RDaosObject::ObjClassId(locator.fAnchor->fObjClass);
-   if (oclass.IsUnknown())
-      throw ROOT::Experimental::RException(R__FAIL("Unknown object class " + locator.fAnchor->fObjClass));
-   fDaosContainer->SetDefaultObjectClass(oclass);
 }
 
 ROOT::Experimental::Detail::RPageSourceDaos::~RPageSourceDaos() = default;
@@ -442,19 +428,20 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
    ROOT::Experimental::RNTupleDescriptor ntplDesc;
    std::unique_ptr<unsigned char[]> buffer, zipBuffer;
 
-   if (fNTupleName == fDescriptorBuilder.GetDescriptor().GetName()) {
-      ntplDesc = fDescriptorBuilder.MoveDescriptor();
-   } else {
-      RDaosContainerNTupleLocator locator(fNTupleName);
-      RNTupleDescriptorBuilder descBuilder;
+   auto [locator, descBuilder] =
+      RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName, *fDecompressor);
+   if (!locator.IsValid())
+      throw ROOT::Experimental::RException(
+         R__FAIL("Attach: requested ntuple '" + fNTupleName + "' is not present in DAOS container."));
 
-      if (int err = locator.InitNTupleDescriptorBuilder(*fDaosContainer, *fDecompressor, descBuilder))
-         throw ROOT::Experimental::RException(
-            R__FAIL("InitNTupleDescriptorBuilder: error" + std::string(d_errstr(err))));
-      ntplDesc = descBuilder.MoveDescriptor();
-      fNTupleIndex = locator.GetIndex();
-   }
+   auto oclass = RDaosObject::ObjClassId(locator.fAnchor->fObjClass);
+   if (oclass.IsUnknown())
+      throw ROOT::Experimental::RException(R__FAIL("Attach: unknown object class " + locator.fAnchor->fObjClass));
 
+   fDaosContainer->SetDefaultObjectClass(oclass);
+   fNTupleIndex = locator.GetIndex();
+
+   ntplDesc = descBuilder.MoveDescriptor();
    daos_obj_id_t oidPageList{kOidLowPageList, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)};
 
    for (const auto &cgDesc : ntplDesc.GetClusterGroupIterable()) {
