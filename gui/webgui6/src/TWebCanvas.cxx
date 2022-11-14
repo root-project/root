@@ -1168,10 +1168,9 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          pad->Modified();
          PerformUpdate();
       }
-
-      return kTRUE;
+   } else if (arg == "INTERRUPT"s) {
+      gROOT->SetInterrupt();
    } else {
-
       // unknown message, probably should be processed by other implementation
       return kFALSE;
    }
