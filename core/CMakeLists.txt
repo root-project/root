@@ -19,20 +19,6 @@ file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
 #endif"
 )
 
-set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
-  PROPERTIES GENERATED TRUE)
-
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RConfigure.h
-  COMMAND
-    ${CMAKE_COMMAND} -E copy_if_different
-    ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
-    ${CMAKE_BINARY_DIR}/include/RConfigure.h
-  DEPENDS
-    ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
-)
-
-add_custom_target(rconfigure ALL DEPENDS ${CMAKE_BINARY_DIR}/include/RConfigure.h)
-
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
   COMMAND
     ${CMAKE_COMMAND} -E copy_if_different
@@ -143,7 +129,7 @@ target_include_directories(BaseTROOT PRIVATE
    ${CMAKE_BINARY_DIR}/ginclude
 )
 
-add_dependencies(BaseTROOT gitcommit rconfigure)
+add_dependencies(BaseTROOT gitcommit)
 #----------------------------------------------------------------------------------------
 
 if(WIN32)
@@ -194,7 +180,6 @@ target_compile_definitions(Core PRIVATE
 #while basic libs do not depend on Core, we have to add includes directly
 
 target_include_directories(Core PUBLIC
-   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/foundation/inc>
    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/cont/inc>

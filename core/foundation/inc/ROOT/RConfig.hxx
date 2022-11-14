@@ -19,7 +19,7 @@
  *                                                                       *
  *************************************************************************/
 
-#include "../RVersion.h"
+#include "ROOT/config/RVersion.hxx"
 #include "RConfigure.h"
 
 

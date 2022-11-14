@@ -8,10 +8,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RVersion
-#define ROOT_RVersion
+#ifndef ROOT_RConfigure
+#define ROOT_RConfigure
 
 /* Forward to generated file */
-#include "ROOT/config/RVersion.hxx"
+#include "ROOT/config/RConfigure.hxx"
 
 #endif

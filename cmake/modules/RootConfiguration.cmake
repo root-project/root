@@ -679,8 +679,8 @@ if(PYTHON_VERSION_STRING_Development_Other)
 endif()
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
-configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in ginclude/RConfigure.h NEWLINE_STYLE UNIX)
-install(FILES ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in include/ROOT/config/RConfigure.hxx NEWLINE_STYLE UNIX)
+install(FILES ${CMAKE_BINARY_DIR}/include/ROOT/config/RConfigure.hxx DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ROOT/config/)
 
 #---Configure and install various files----------------------------------------------------------------------
 execute_Process(COMMAND hostname OUTPUT_VARIABLE BuildNodeInfo OUTPUT_STRIP_TRAILING_WHITESPACE )

@@ -16,22 +16,30 @@ if(WIN32)
   cmake_policy(SET CMP0091 OLD)
 endif()
 
-if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
-  message(FATAL_ERROR
-    " ROOT must be built out-of-source.\n"
-    " Please see README/INSTALL for more information.")
-endif()
-
-set(policy_new CMP0072 CMP0077)
+set(policy_new CMP0048 CMP0072 CMP0077)
 foreach(policy ${policy_new})
   if(POLICY ${policy})
     cmake_policy(SET ${policy} NEW)
   endif()
 endforeach()
 
-include(cmake/modules/CaptureCommandLine.cmake)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+  message(FATAL_ERROR
+    " ROOT must be built out-of-source.\n"
+    " Please see README/INSTALL for more information.")
+endif()
 
-project(ROOT)
+include(cmake/modules/CaptureCommandLine.cmake)
+include(cmake/modules/ROOTVersion.cmake)
+
+set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
+
+project(ROOT
+  VERSION ${ROOT_VERSION}
+  HOMEPAGE_URL "https://root.cern"
+)
+
+message(STATUS "Building ROOT version v${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}/${ROOT_PATCH_VERSION}")
 
 #---Set the locale to default C to prevent issued due to localization of commands---------------
 # This is necessary as we for example call `clang -v` and parse its output. But on a localized
@@ -64,61 +72,8 @@ set(ROOTSYS ${CMAKE_BINARY_DIR})
 set(HEADER_OUTPUT_PATH ${CMAKE_BINARY_DIR}/include)
 
 #---Set the ROOT version--------------------------------------------------------------------
-find_package(Git)
-if(Git_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/.git)
-  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --all
-                  OUTPUT_VARIABLE GIT_DESCRIBE_ALL
-                  RESULT_VARIABLE GIT_DESCRIBE_ERRCODE
-                  ERROR_QUIET
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-else()
-  set(GIT_DESCRIBE_ERRCODE "NoGit")
-endif()
-
-function(SET_VERSION_FROM_FILE)
-  file(READ ${CMAKE_SOURCE_DIR}/build/version_number versionstr)
-  string(STRIP ${versionstr} versionstr)
-  string(REGEX REPLACE "([0-9]+)[.][0-9]+[/][0-9]+" "\\1" ROOT_MAJOR_VERSION ${versionstr})
-  string(REGEX REPLACE "[0-9]+[.]([0-9]+)[/][0-9]+" "\\1" ROOT_MINOR_VERSION ${versionstr})
-  string(REGEX REPLACE "[0-9]+[.][0-9]+[/]([0-9]+)" "\\1" ROOT_PATCH_VERSION ${versionstr})
-  set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}" PARENT_SCOPE)
-  set(ROOT_MAJOR_VERSION "${ROOT_MAJOR_VERSION}" PARENT_SCOPE)
-  set(ROOT_MINOR_VERSION "${ROOT_MINOR_VERSION}" PARENT_SCOPE)
-  set(ROOT_PATCH_VERSION "${ROOT_PATCH_VERSION}" PARENT_SCOPE)
-endfunction()
-
-if(GIT_DESCRIBE_ERRCODE)
-  SET_VERSION_FROM_FILE()
-else()
-  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --always
-                  OUTPUT_VARIABLE GIT_DESCRIBE_ALWAYS
-                  ERROR_QUIET
-                  OUTPUT_STRIP_TRAILING_WHITESPACE)
-  string(TIMESTAMP GIT_TIMESTAMP "%b %d %Y, %H:%M:%S" UTC)
-  string(REGEX REPLACE "^v([0-9]+)-([0-9]+)-(.*)" "\\1.\\2.\\3" ROOT_FULL_VERSION ${GIT_DESCRIBE_ALWAYS})
-
-  if("${GIT_DESCRIBE_ALL}" MATCHES "^tags/v[0-9]+-[0-9]+-[0-9]+.*")
-    # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1
-    # GIT_DESCRIBE_ALL: tags/v6-16-00-rc1
-    # tag might end on "-rc1" or similar; parse version number in front.
-    string(REGEX REPLACE "^tags/v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALL})
-    string(REGEX REPLACE "^tags/v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALL})
-    string(REGEX REPLACE "^tags/v[0-9]+-[0-9]+-([0-9]+).*" "\\1" ROOT_PATCH_VERSION ${GIT_DESCRIBE_ALL})
-  elseif("${GIT_DESCRIBE_ALL}" MATCHES "/v[0-9]+-[0-9]+.*-patches$")
-    # GIT_DESCRIBE_ALWAYS: v6-16-00-rc1-47-g9ba56ef4a3
-    # GIT_DESCRIBE_ALL: heads/v6-16-00-patches
-    string(REGEX REPLACE "^.*/v([0-9]+)-.*" "\\1" ROOT_MAJOR_VERSION ${GIT_DESCRIBE_ALL})
-    string(REGEX REPLACE "^.*/v[0-9]+-([0-9]+).*" "\\1" ROOT_MINOR_VERSION ${GIT_DESCRIBE_ALL})
-    set(ROOT_PATCH_VERSION "99") # aka head of ...-patches
-  else()
-    # GIT_DESCRIBE_ALWAYS: v6-13-04-2163-g7e8d27ea66
-    # GIT_DESCRIBE_ALL: heads/master or remotes/origin/master
-    SET_VERSION_FROM_FILE()
-    set(ROOT_FULL_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
-  endif()
-  set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
-  message(STATUS "Detected ROOT_VERSION ${ROOT_VERSION}")
-endif()
+configure_file(config/RVersion.hxx.in include/ROOT/config/RVersion.hxx NEWLINE_STYLE UNIX)
+install(FILES ${CMAKE_BINARY_DIR}/include/ROOT/config/RVersion.hxx DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ROOT/config/)
 
 #---Try to download a file to check internet connection-----------------------------------------
 message(STATUS "Checking internet connectivity")
@@ -558,7 +513,10 @@ add_custom_target(version COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build
 endif()
 
 #---distribution commands------------------------------------------------------------------------
-add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh "${ROOT_FULL_VERSION}" "${GIT_DESCRIBE_ALWAYS}" "${CMAKE_SOURCE_DIR}")
+set(ROOT_GITTAG "${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION}")
+add_custom_target(distsrc
+  COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh "${ROOT_VERSION}" "${ROOT_GITTAG}" "${CMAKE_SOURCE_DIR}"
+)
 add_custom_target(dist COMMAND cpack --config CPackConfig.cmake)
 
 #---Configure and install various files neded later and for clients -----------------------------

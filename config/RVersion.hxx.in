@@ -1,0 +1,26 @@
+#ifndef ROOT_RVersion_hxx
+#define ROOT_RVersion_hxx
+
+/*
+ * These macros can be used in the following way:
+ *
+ *    #if ROOT_VERSION_CODE >= ROOT_VERSION(6,32,4)
+ *       #include <newheader.h>
+ *    #else
+ *       #include <oldheader.h>
+ *    #endif
+ *
+*/
+
+#define ROOT_MAJOR_VERSION ${ROOT_MAJOR_VERSION}
+#define ROOT_MINOR_VERSION ${ROOT_MINOR_VERSION}
+#define ROOT_PATCH_VERSION ${ROOT_PATCH_VERSION}
+#define ROOT_RELEASE_DATE "${ROOT_RELEASE_DATE}"
+
+#define ROOT_RELEASE "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}/${ROOT_PATCH_VERSION}"
+#define ROOT_RELEASE_TIME "00:00:00" /* for backward compatibility */
+
+#define ROOT_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
+#define ROOT_VERSION_CODE ROOT_VERSION(${ROOT_MAJOR_VERSION},${ROOT_MINOR_VERSION},${ROOT_PATCH_VERSION})
+
+#endif
