@@ -1,4 +1,4 @@
-/* @(#)root/base:$Id$ */
+/* @(#)root/foundation:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2014, Rene Brun and Fons Rademakers.               *
