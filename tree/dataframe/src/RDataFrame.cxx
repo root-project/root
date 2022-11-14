@@ -20,11 +20,16 @@
 #include "RtypesCore.h" // for ULong64_t
 #include "TTree.h"
 
+#include <fstream> // std::ifstream
+#include <nlohmann/json.hpp> // nlohmann::json::parse
 #include <memory>  // for make_shared, allocator, shared_ptr
 #include <ostream> // ostringstream
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+
+
 
 // clang-format off
 /**
@@ -1467,6 +1472,59 @@ RDataFrame::RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource> ds, const ColumnN
 RDataFrame::RDataFrame(ROOT::RDF::Experimental::RDatasetSpec spec)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(std::move(spec)))
 {
+}
+
+namespace RDF {
+namespace Experimental {
+
+ROOT::RDataFrame FromJSON(const std::string &jsonFile)
+{
+   const nlohmann::json fullData = nlohmann::json::parse(std::ifstream(jsonFile));
+   RSpecBuilder specBuilder;
+
+   for (const auto &groups : fullData["groups"]) {
+      std::string tag = groups["tag"];
+      // TODO: if requested in https://github.com/root-project/root/issues/11624
+      // allow union-like types for trees and files, see: https://github.com/nlohmann/json/discussions/3815
+      std::vector<std::string> trees = groups["trees"];
+      std::vector<std::string> files = groups["files"];
+      RMetaData m;
+      for (const auto &metadata : groups["metadata"].items()) {
+         const auto &val = metadata.value();
+         if (val.is_string())
+            m.Add(metadata.key(), val.get<std::string>());
+         else if (val.is_number_integer())
+            m.Add(metadata.key(), val.get<int>());
+         else if (val.is_number_float())
+            m.Add(metadata.key(), val.get<double>());
+         else
+            throw std::logic_error("The metadata keys can only be of type [string|int|double].");
+      }
+      specBuilder.AddGroup(RDatasetGroup{tag, trees, files, m});
+   }
+   if (fullData.contains("friends")) {
+      for (const auto &friends : fullData["friends"].items()) {
+         std::string alias = friends.key();
+         std::vector<std::string> trees = friends.value()["trees"];
+         std::vector<std::string> files = friends.value()["files"];
+         if (files.size() != trees.size() && trees.size() > 1)
+            throw std::runtime_error("Mismatch between trees and files in a friend.");
+         specBuilder.WithFriends(trees, files, alias);
+      }
+   }
+
+   if (fullData.contains("range")) {
+      std::vector<int> range = fullData["range"];
+
+      if (range.size() == 1)
+         specBuilder.WithRange({range[0]});
+      else if (range.size() == 2)
+         specBuilder.WithRange({range[0], range[1]});
+   }
+   return ROOT::RDataFrame(specBuilder.Build());
+}
+
+}
 }
 
 } // namespace ROOT

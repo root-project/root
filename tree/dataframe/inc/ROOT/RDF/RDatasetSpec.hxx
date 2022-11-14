@@ -24,11 +24,16 @@ namespace ROOT {
 namespace RDF {
 namespace Experimental {
 
-class RSpecBuilder;
+/**
+\class ROOT::RDF::Experimental::RDatasetSpec
+\ingroup dataframe
+\brief Class used to store semi-structured dataset specification
 
+ This class is responsible for the creation of dataframe with metadata information.
+*/
 class RDatasetSpec {
 
-   friend RSpecBuilder;
+   friend class RSpecBuilder;
 
 public:
    struct REntryRange {
@@ -39,73 +44,50 @@ public:
       REntryRange(Long64_t startEntry, Long64_t endEntry);
    };
 
-   // groups need to fulfill:
-   // 1. preserve the original order -> arrange them in a vector, store also number of fileglobs in this group
-   // 2. there is 1:1 correspondence between group and meta data => group and metadata can go together
-   // Current solution: create a simple struct to hold the triplet {groupName, groupSize, MetaData}
-   // This Group structure does not need an exposure to the user.
-   struct RGroupInfo {
-      std::string fName;   // name of the group
-      Long64_t fSize;      // the matching between fileGlobs and group sizes is relative!
-      RMetaData fMetaData; // behaves like a heterogenuous dictionary
-      RGroupInfo(const std::string &name, Long64_t size, const RMetaData &metaData);
-   };
-
 private:
-   /**
-    * A list of names of trees.
-    * This list should go in lockstep with fFileNameGlobs, only in case this dataset is a TChain where each file
-    * contains its own tree with a different name from the global name of the dataset.
-    * Otherwise, fTreeNames contains 1 treename, that is common for all file globs.
-    */
+   std::vector<std::string> fGroupNames;
    std::vector<std::string> fTreeNames;
-   /**
-    * A list of file names.
-    * They can contain the globbing characters supported by TChain. See TChain::Add for more information.
-    */
    std::vector<std::string> fFileNameGlobs;
-   REntryRange fEntryRange;                  ///< Start (inclusive) and end (exclusive) entry for the dataset processing
+   std::vector<RMetaData> fMetaDatas;
    ROOT::TreeUtils::RFriendInfo fFriendInfo; ///< List of friends
-   std::vector<RGroupInfo> fGroupInfos;      ///< List of groups
-   RDatasetSpec(const std::vector<std::string> &trees, const std::vector<std::string> &fileGlobs,
-                const std::vector<RGroupInfo> &groupInfos = {}, const ROOT::TreeUtils::RFriendInfo &friendInfo = {},
+   REntryRange fEntryRange;                  ///< Start (inclusive) and end (exclusive) entry for the dataset processing
+
+   std::vector<unsigned int> fSizesOfFileGlobsBeforeExpansion;
+
+   RDatasetSpec(const std::vector<std::string> &groupNames, const std::vector<std::string> &treeNames,
+                const std::vector<std::string> &fileNameGlobs,
+                const std::vector<unsigned int> &sizesOfFileGlobsBeforeExpansion,
+                const std::vector<RMetaData> &metaDatas = {}, const ROOT::TreeUtils::RFriendInfo &friendInfo = {},
                 const REntryRange &entryRange = {});
 
 public:
+   const std::vector<std::string> &GetGroupNames() const;
    const std::vector<std::string> &GetTreeNames() const;
    const std::vector<std::string> &GetFileNameGlobs() const;
+   const std::vector<RMetaData> &GetMetaDatas() const;
+   const ROOT::TreeUtils::RFriendInfo &GetFriendInfo() const;
    Long64_t GetEntryRangeBegin() const;
    Long64_t GetEntryRangeEnd() const;
-   const ROOT::TreeUtils::RFriendInfo &GetFriendInfo() const;
-   const std::vector<RGroupInfo> &GetGroupInfos() const;
+
+   /// \cond HIDDEN_SYMBOLS
+   const std::vector<unsigned int> &GetSizesOfFileGlobsBeforeExpansion() const;
+   /// \endcond
 };
 
-class RSampleSet;
-
 class RSpecBuilder {
-   friend RSampleSet;
-
+   std::vector<std::string> fGroupNames;
    std::vector<std::string> fTreeNames;
    std::vector<std::string> fFileNameGlobs;
-   RDatasetSpec::REntryRange fEntryRange;             // global! range
-   ROOT::TreeUtils::RFriendInfo fFriendInfo;          // global! friends
-   std::vector<RDatasetSpec::RGroupInfo> fGroupInfos; // groups have relative order!
+   std::vector<RMetaData> fMetaDatas;
+   ROOT::TreeUtils::RFriendInfo fFriendInfo; ///< List of friends
+   RDatasetSpec::REntryRange fEntryRange;    ///< Start (inclusive) and end (exclusive) entry for the dataset processing
+
+   /// \cond HIDDEN_SYMBOLS
+   std::vector<unsigned int> fSizesOfFileGlobsBeforeExpansion;
+   /// \endcond
 
 public:
-   RSpecBuilder &AddGroup(const std::string &groupName, const std::string &treeName, const std::string &fileNameGlob,
-                          const RMetaData &metaData = {});
-
-   RSpecBuilder &AddGroup(const std::string &groupName, const std::string &treeName,
-                          const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData = {});
-
-   RSpecBuilder &AddGroup(const std::string &groupName,
-                          const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-                          const RMetaData &metaData = {});
-
-   RSpecBuilder &AddGroup(const std::string &groupName, const std::vector<std::string> &trees,
-                          const std::vector<std::string> &files, const RMetaData &metaData = {});
-
-   RSpecBuilder &AddGroup(const RSampleSet &sampleSet);
+   RSpecBuilder &AddGroup(const RDatasetGroup &datasetGroup);
 
    RSpecBuilder &
    WithFriends(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias = "");
@@ -122,26 +104,6 @@ public:
    RSpecBuilder &WithRange(const RDatasetSpec::REntryRange &entryRange = {});
 
    RDatasetSpec Build();
-};
-
-class RSampleSet {
-   std::vector<std::string> fTreeNames;
-   std::vector<std::string> fFileNameGlobs;
-   RDatasetSpec::RGroupInfo fGroupInfo;
-
-public:
-   RSampleSet(const std::string &groupName, const std::string &treeName, const std::string &fileNameGlob,
-              const RMetaData &metaData = {});
-
-   RSampleSet(const std::string &groupName, const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
-              const RMetaData &metaData = {});
-
-   RSampleSet(const std::string &groupName,
-              const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-              const RMetaData &metaData = {});
-
-   RSampleSet(const std::string &groupName, const std::vector<std::string> &trees,
-              const std::vector<std::string> &files, const RMetaData &metaData = {});
 };
 
 } // namespace Experimental

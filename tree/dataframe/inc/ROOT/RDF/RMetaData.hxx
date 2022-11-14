@@ -19,32 +19,83 @@ namespace ROOT {
 namespace RDF {
 namespace Experimental {
 
+/**
+\class ROOT::RDF::Experimental::RMetaData
+\ingroup dataframe
+\brief Class behaving as a heterogenuous dictionary to store dataset metadata
+ 
+ This class should be passed to an RDatasetGroup object which represents a single dataset group.
+ Once a dataframe is built with RMetaData object, it could be accessed via DefinePerSample.
+*/
 class RMetaData {
    nlohmann::json fJson;
 
 public:
-   void AddMetaData(const std::string &cat, int val);
-   void AddMetaData(const std::string &cat, double val);
-   void AddMetaData(const std::string &cat, const std::string &val);
-   void AddJSONMetaData(const std::string &cat, const nlohmann::json &val);
+   void Add(const std::string &key, int val);
+   void Add(const std::string &key, double val);
+   void Add(const std::string &key, const std::string &val);
 
-   // getter always returning the string representation
-   std::string Dump(const std::string &cat) const;
-   // type-safe! getters
-   int GetI(const std::string &cat) const;
-   double GetD(const std::string &cat) const;
-   std::string GetS(const std::string &cat) const;
-   int GetI(const std::string &cat, int defaultVal) const;
-   double GetD(const std::string &cat, double defaultVal) const;
-   std::string GetS(const std::string &cat, std::string defaultVal) const;
+   const std::string Dump(const std::string &key) const; // always returns a string
+   int GetI(const std::string &key) const;
+   double GetD(const std::string &key) const;
+   const std::string GetS(const std::string &key) const;
+   int GetI(const std::string &key, int defaultVal) const;
+   double GetD(const std::string &key, double defaultVal) const;
+   const std::string GetS(const std::string &key, std::string defaultVal) const;
 };
 
-struct RGroupMetaData {
+/**
+\class ROOT::RDF::Experimental::RDatasetGroup
+\ingroup dataframe
+\brief Class representing a dataset group (mapping of trees (and their fileglobs) to metadata)
+ 
+ This class should be passed to RSpecBuilder in order to build a RDataFrame.
+*/
+class RDatasetGroup {
    std::string fGroupName;
-   unsigned int fGroupId;
-   ROOT::RDF::Experimental::RMetaData fMetaData;
-   RGroupMetaData(const std::string &groupName = "", unsigned int groupId = 0u,
-                  const RMetaData &metaData = {});
+   /**
+    * A list of names of trees.
+    * This list should go in lockstep with fFileNameGlobs, only in case this dataset is a TChain where each file
+    * contains its own tree with a different name from the global name of the dataset.
+    * Otherwise, fTreeNames contains 1 treename, that is common for all file globs.
+    */
+   std::vector<std::string> fTreeNames;
+   /**
+    * A list of file names.
+    * They can contain the globbing characters supported by TChain. See TChain::Add for more information.
+    */
+   std::vector<std::string> fFileNameGlobs;
+   RMetaData fMetaData;
+
+   unsigned int fGroupId{0}; // global group index, set inside of the RDatasetSpec
+
+public:
+   RDatasetGroup(const std::string &groupName, const std::string &treeName, const std::string &fileNameGlob,
+                 const RMetaData &metaData = {});
+
+   RDatasetGroup(const std::string &groupName, const std::string &treeName,
+                 const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData = {});
+
+   RDatasetGroup(const std::string &groupName,
+                 const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
+                 const RMetaData &metaData = {});
+
+   RDatasetGroup(const std::string &groupName, const std::vector<std::string> &treeNames,
+                 const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData = {});
+
+   /// \cond HIDDEN_SYMBOLS
+   RDatasetGroup() {} // empty constructor to make RSampleInfo happy
+   /// \endcond
+
+   const std::string &GetGroupName() const;
+   const std::vector<std::string> &GetTreeNames() const;
+   const std::vector<std::string> &GetFileNameGlobs() const;
+   const RMetaData &GetMetaData() const;
+
+   /// \cond HIDDEN_SYMBOLS
+   unsigned int GetGroupId() const; // intended to be used only after the RDataSpec is build, otherwise is 0
+   void SetGroupId(unsigned int id);
+   /// \endcond
    };
 
 } // namespace Experimental

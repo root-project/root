@@ -125,8 +125,10 @@ class RLoopManager : public RNodeBase {
    Long64_t fBeginEntry{0};
    Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
 
-   std::vector<ROOT::RDF::Experimental::RGroupMetaData> fGroupMetaDataVec;
-   std::unordered_map<std::string, ROOT::RDF::Experimental::RGroupMetaData *> fGroupMetaDataMap;
+
+   /// Keys are `fname + "/" + treename` as RSampleInfo::fID; Values are pointers to the corresponding group metadata
+   std::unordered_map<std::string, ROOT::RDF::Experimental::RDatasetGroup *> fDatasetGroupMap;
+   std::vector<ROOT::RDF::Experimental::RDatasetGroup> fReconstructedGroups; // values of the map above
 
    std::vector<std::unique_ptr<TTree>> fFriends; ///< Friends of the fTree. Only used if we constructed fTree ourselves.
    const ColumnNames_t fDefaultColumns;

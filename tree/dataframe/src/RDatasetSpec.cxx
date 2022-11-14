@@ -28,6 +28,16 @@ RDatasetSpec::REntryRange::REntryRange(Long64_t begin, Long64_t end) : fBegin(be
                              "creation of a dataset specification.");
 }
 
+const std::vector<unsigned int> &RDatasetSpec::GetSizesOfFileGlobsBeforeExpansion() const
+{
+   return fSizesOfFileGlobsBeforeExpansion;
+}
+
+const std::vector<std::string> &RDatasetSpec::GetGroupNames() const
+{
+   return fGroupNames;
+}
+
 const std::vector<std::string> &RDatasetSpec::GetTreeNames() const
 {
    return fTreeNames;
@@ -36,6 +46,16 @@ const std::vector<std::string> &RDatasetSpec::GetTreeNames() const
 const std::vector<std::string> &RDatasetSpec::GetFileNameGlobs() const
 {
    return fFileNameGlobs;
+}
+
+const std::vector<RMetaData> &RDatasetSpec::GetMetaDatas() const
+{
+   return fMetaDatas;
+}
+
+const ROOT::TreeUtils::RFriendInfo &RDatasetSpec::GetFriendInfo() const
+{
+   return fFriendInfo;
 }
 
 Long64_t RDatasetSpec::GetEntryRangeBegin() const
@@ -48,96 +68,36 @@ Long64_t RDatasetSpec::GetEntryRangeEnd() const
    return fEntryRange.fEnd;
 }
 
-const ROOT::TreeUtils::RFriendInfo &RDatasetSpec::GetFriendInfo() const
-{
-   return fFriendInfo;
-}
-
-const std::vector<RDatasetSpec::RGroupInfo> &RDatasetSpec::GetGroupInfos() const
-{
-   return fGroupInfos;
-}
-
-RDatasetSpec::RGroupInfo::RGroupInfo(const std::string &name, Long64_t size, const RMetaData &metaData)
-   : fName(name), fSize(size), fMetaData(metaData)
-{
-}
-
-RDatasetSpec::RDatasetSpec(const std::vector<std::string> &trees, const std::vector<std::string> &fileGlobs,
-                           const std::vector<RGroupInfo> &groupInfos, const ROOT::TreeUtils::RFriendInfo &friendInfo,
+RDatasetSpec::RDatasetSpec(const std::vector<std::string> &groupNames, const std::vector<std::string> &treeNames,
+                           const std::vector<std::string> &fileNameGlobs,
+                           const std::vector<unsigned int> &sizesOfFileGlobsBeforeExpansion,
+                           const std::vector<RMetaData> &metaDatas, const ROOT::TreeUtils::RFriendInfo &friendInfo,
                            const REntryRange &entryRange)
-   : fTreeNames(trees), fFileNameGlobs(fileGlobs), fEntryRange(entryRange), fFriendInfo(friendInfo),
-     fGroupInfos(groupInfos)
+   : fGroupNames(groupNames), fTreeNames(treeNames), fFileNameGlobs(fileNameGlobs), fMetaDatas(metaDatas),
+     fFriendInfo(friendInfo), fEntryRange(entryRange),
+     fSizesOfFileGlobsBeforeExpansion(sizesOfFileGlobsBeforeExpansion)
 {
 }
 
-RSpecBuilder &RSpecBuilder::AddGroup(const std::string &groupName, const std::string &treeName,
-                                     const std::string &fileNameGlob, const RMetaData &metaData)
+RSpecBuilder &RSpecBuilder::AddGroup(const RDatasetGroup &datasetGroup)
 {
-   // adding a single fileglob/tree, hence extend the vectors with 1 elem
-   fTreeNames.reserve(fTreeNames.size() + 1);
-   fTreeNames.emplace_back(treeName);
-   fFileNameGlobs.reserve(fFileNameGlobs.size() + 1);
-   fFileNameGlobs.emplace_back(fileNameGlob);
+   fGroupNames.reserve(fGroupNames.size() + 1);
+   fGroupNames.emplace_back(datasetGroup.GetGroupName());
 
-   // the group is of size 1, e.g. a single file glob
-   fGroupInfos.reserve(fGroupInfos.size() + 1);
-   fGroupInfos.emplace_back(RDatasetSpec::RGroupInfo(groupName, 1, metaData));
-   return *this;
-}
+   const auto &currentTreeNames = datasetGroup.GetTreeNames();
+   fTreeNames.reserve(fTreeNames.size() + currentTreeNames.size());
+   fTreeNames.insert(std::end(fTreeNames), std::begin(currentTreeNames), std::end(currentTreeNames));
 
-RSpecBuilder &RSpecBuilder::AddGroup(const std::string &groupName, const std::string &treeName,
-                                     const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData)
-{
-   // this constructor expects 1 tree name and multiple file names
-   // however, in order to align many groups in TChain, we here copy the tree names multiple times
-   // e.g. for N files, we store N (repeating) tree names to keep the alignment
-   const auto nNewGlobs = fileNameGlobs.size();
-   fTreeNames.reserve(fTreeNames.size() + nNewGlobs);
-   for (auto i = 0u; i < nNewGlobs; ++i) // TODO: there might be a better intruction to do that
-      fTreeNames.emplace_back(treeName);
-   fFileNameGlobs.reserve(fFileNameGlobs.size() + nNewGlobs);
-   fFileNameGlobs.insert(std::end(fFileNameGlobs), std::begin(fileNameGlobs), std::end(fileNameGlobs));
+   const auto &currentFileNameGlobs = datasetGroup.GetFileNameGlobs();
+   fFileNameGlobs.reserve(fFileNameGlobs.size() + currentFileNameGlobs.size());
+   fFileNameGlobs.insert(std::end(fFileNameGlobs), std::begin(currentFileNameGlobs), std::end(currentFileNameGlobs));
 
-   fGroupInfos.reserve(fGroupInfos.size() + 1);
-   fGroupInfos.emplace_back(RDatasetSpec::RGroupInfo(groupName, nNewGlobs, metaData));
-   return *this;
-}
+   fMetaDatas.reserve(fMetaDatas.size() + 1);
+   fMetaDatas.emplace_back(datasetGroup.GetMetaData());
+   
+   fSizesOfFileGlobsBeforeExpansion.reserve(fSizesOfFileGlobsBeforeExpansion.size() + 1);
+   fSizesOfFileGlobsBeforeExpansion.emplace_back(currentFileNameGlobs.size());
 
-RSpecBuilder &RSpecBuilder::AddGroup(const std::string &groupName,
-                                     const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-                                     const RMetaData &metaData)
-{
-   const auto nNewGlobs = treeAndFileNameGlobs.size();
-   fTreeNames.reserve(nNewGlobs);
-   fFileNameGlobs.reserve(nNewGlobs);
-   for (auto &p : treeAndFileNameGlobs) {
-      fTreeNames.emplace_back(p.first);
-      fFileNameGlobs.emplace_back(p.second);
-   }
-
-   fGroupInfos.reserve(fGroupInfos.size() + 1);
-   fGroupInfos.emplace_back(RDatasetSpec::RGroupInfo(groupName, nNewGlobs, metaData));
-   return *this;
-}
-
-RSpecBuilder &RSpecBuilder::AddGroup(const std::string &groupName, const std::vector<std::string> &trees,
-                                     const std::vector<std::string> &files, const RMetaData &metaData)
-{
-   const auto nNewGlobs = files.size();
-   if (trees.size() != 1 && trees.size() != nNewGlobs)
-      throw std::logic_error("Mismatch between number of trees and file globs.");
-   fTreeNames.reserve(fTreeNames.size() + nNewGlobs);
-   fFileNameGlobs.reserve(fFileNameGlobs.size() + nNewGlobs);
-   if (trees.size() == 1)
-      for (auto i = 0u; i < nNewGlobs; ++i)
-         fTreeNames.insert(std::end(fTreeNames), std::begin(trees), std::end(trees));
-   else
-      fTreeNames.insert(std::end(fTreeNames), std::begin(trees), std::end(trees));
-   fFileNameGlobs.insert(std::end(fFileNameGlobs), std::begin(files), std::end(files));
-
-   fGroupInfos.reserve(fGroupInfos.size() + 1);
-   fGroupInfos.emplace_back(RDatasetSpec::RGroupInfo(groupName, nNewGlobs, metaData));
    return *this;
 }
 
@@ -181,43 +141,8 @@ RSpecBuilder &RSpecBuilder::WithFriends(const std::vector<std::string> &trees, c
 
 RDatasetSpec RSpecBuilder::Build()
 {
-   return RDatasetSpec(fTreeNames, fFileNameGlobs, fGroupInfos, fFriendInfo, fEntryRange);
-}
-
-RSampleSet::RSampleSet(const std::string &groupName, const std::string &treeName, const std::string &fileNameGlob,
-                       const RMetaData &metaData)
-   : fTreeNames({treeName}), fFileNameGlobs({fileNameGlob}),
-     fGroupInfo(RDatasetSpec::RGroupInfo(groupName, 1, metaData))
-{
-}
-
-RSampleSet::RSampleSet(const std::string &groupName, const std::string &treeName,
-                       const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData)
-   : fTreeNames({treeName}), fFileNameGlobs(fileNameGlobs),
-     fGroupInfo(RDatasetSpec::RGroupInfo(groupName, fileNameGlobs.size(), metaData))
-{
-}
-
-RSampleSet::RSampleSet(const std::string &groupName,
-                       const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-                       const RMetaData &metaData)
-   : fGroupInfo(RDatasetSpec::RGroupInfo(groupName, treeAndFileNameGlobs.size(), metaData))
-{
-   const auto nNewGlobs = treeAndFileNameGlobs.size();
-   fTreeNames.reserve(nNewGlobs);
-   fFileNameGlobs.reserve(nNewGlobs);
-   for (auto &p : treeAndFileNameGlobs) {
-      fTreeNames.emplace_back(p.first);
-      fFileNameGlobs.emplace_back(p.second);
-   }
-}
-
-RSampleSet::RSampleSet(const std::string &groupName, const std::vector<std::string> &trees,
-                       const std::vector<std::string> &files, const RMetaData &metaData)
-   : fTreeNames(trees), fFileNameGlobs(files), fGroupInfo(RDatasetSpec::RGroupInfo(groupName, files.size(), metaData))
-{
-   if (trees.size() != 1 && trees.size() != files.size())
-      throw std::logic_error("Mismatch between number of trees and file globs.");
+   return RDatasetSpec(fGroupNames, fTreeNames, fFileNameGlobs, fSizesOfFileGlobsBeforeExpansion, fMetaDatas,
+                       fFriendInfo, fEntryRange);
 }
 
 } // namespace Experimental

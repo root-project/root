@@ -50,6 +50,18 @@ public:
    RDataFrame(ROOT::RDF::Experimental::RDatasetSpec spec);
 };
 
+namespace RDF {
+namespace Experimental {
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+/// \brief Factory method to create an RDataFrame from a JSON specification file.
+/// \param[in] jsonFile Path of the JSON file, which should follow the format described in
+///                     https://github.com/root-project/root/issues/11624
+ROOT::RDataFrame FromJSON(const std::string &jsonFile);
+
+}
+}
+
 } // ns ROOT
 
 /// Print a RDataFrame at the prompt
