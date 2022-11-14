@@ -187,6 +187,26 @@ int ROOT::Experimental::Detail::RDaosContainerNTupleLocator::InitNTupleDescripto
    return 0;
 }
 
+std::pair<ROOT::Experimental::Detail::RDaosContainerNTupleLocator, ROOT::Experimental::RNTupleDescriptorBuilder>
+ROOT::Experimental::Detail::RDaosContainerNTupleLocator::LocateNTuple(RDaosContainer &cont,
+                                                                      const std::string &ntupleName,
+                                                                      RNTupleDecompressor &decompressor)
+{
+   auto result = std::make_pair(RDaosContainerNTupleLocator(ntupleName), RNTupleDescriptorBuilder());
+
+   auto &loc = result.first;
+   auto &builder = result.second;
+
+   if (int err = loc.InitNTupleDescriptorBuilder(cont, decompressor, builder); !err) {
+      if (ntupleName.empty() || ntupleName != builder.GetDescriptor().GetName()) {
+         // Hash already taken by a differently-named ntuple.
+         throw ROOT::Experimental::RException(
+            R__FAIL("LocateNTuple: ntuple name '" + ntupleName + "' unavailable in this container."));
+      }
+   }
+   return result;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos(std::string_view ntupleName, std::string_view uri,
