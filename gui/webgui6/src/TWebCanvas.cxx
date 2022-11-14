@@ -98,8 +98,8 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
       return kTRUE;
 
    static const struct {
-      const char *name;
-      bool with_derived;
+      const char *name{nullptr};
+      bool with_derived{false};
    } supported_classes[] = {{"TH1", true},
                             {"TF1", true},
                             {"TGraph", true},
@@ -111,7 +111,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
                             {"TGaxis", false},
                             {"TPave", true},
                             {"TArrow", false},
-                            {"TBox", false},  // in principle, can be handled via TWebPainter
+                            {"TBox", false},  // can be handled via TWebPainter, greyscale.C tutorial works only with disabled
                             {"TWbox", false}, // some extra calls which cannot be handled via TWebPainter
                             {"TLine", false}, // also can be handler via TWebPainter
                             {"TText", false},
@@ -333,7 +333,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
    if (need_frame && !frame && primitives && CanCreateObject("TFrame")) {
       frame = pad->GetFrame();
-      primitives->AddFirst(frame);
+      if(frame)
+         primitives->AddFirst(frame);
    }
 
    if (!need_title.empty() && gStyle->GetOptTitle()) {
@@ -449,8 +450,9 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          flush_master();
 
          TGraph *gr = (TGraph *)obj;
+         auto funcs = gr->GetListOfFunctions();
 
-         TIter fiter(gr->GetListOfFunctions());
+         TIter fiter(funcs);
          TObject *fobj = nullptr;
          TPaveStats *stats = nullptr;
 
@@ -473,7 +475,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          while ((fobj = fiter()) != nullptr)
             CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
 
-         fPrimitivesLists.Add(gr->GetListOfFunctions());
+         if (funcs)
+            fPrimitivesLists.Add(funcs);
          first_obj = false;
       } else if (IsJSSupportedClass(obj)) {
          flush_master();
@@ -844,7 +847,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
       TH1 *hist = static_cast<TH1 *>(FindPrimitive("histogram", 1, pad));
 
       if (hist) {
-         double hmin = 0, hmax = 0;
+         Double_t hmin = 0., hmax = 0.;
 
          if (r.zx1 == r.zx2)
             hist->GetXaxis()->SetRange(0,0);
@@ -854,8 +857,13 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
          if (hist->GetDimension() == 1) {
             hmin = r.zy1;
             hmax = r.zy2;
+            if ((hmin == hmax) && (hist->GetEntries() == 0.) && (hist->GetMinimumStored() != -1111.) && (hist->GetMaximumStored() != -1111.)) {
+               // special case when Y range must be set for histogram without content
+               hmin = r.uy1;
+               hmax = r.uy2;
+            }
          } else if (r.zy1 == r.zy2) {
-            hist->GetYaxis()->SetRange(0,0);
+            hist->GetYaxis()->SetRange(0., 0.);
          } else {
             hist->GetYaxis()->SetRangeUser(r.zy1, r.zy2);
          }
@@ -865,7 +873,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
             hmax = r.zz2;
          } else if (hist->GetDimension() == 3) {
             if (r.zz1 == r.zz2) {
-               hist->GetZaxis()->SetRange(0,0);
+               hist->GetZaxis()->SetRange(0., 0.);
             } else {
               hist->GetZaxis()->SetRangeUser(r.zz1, r.zz2);
             }
