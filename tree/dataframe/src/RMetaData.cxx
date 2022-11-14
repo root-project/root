@@ -17,89 +17,141 @@ namespace ROOT {
 namespace RDF {
 namespace Experimental {
 
-void RMetaData::AddMetaData(const std::string &cat, int val)
+void RMetaData::Add(const std::string &key, int val)
 {
-   fJson[cat] = val;
+   fJson[key] = val;
 }
 
-void RMetaData::AddMetaData(const std::string &cat, double val)
+void RMetaData::Add(const std::string &key, double val)
 {
-   fJson[cat] = val;
+   fJson[key] = val;
 }
 
-void RMetaData::AddMetaData(const std::string &cat, const std::string &val)
+void RMetaData::Add(const std::string &key, const std::string &val)
 {
-   fJson[cat] = val;
+   fJson[key] = val;
 }
 
-void RMetaData::AddJSONMetaData(const std::string &cat, const nlohmann::json &val)
+const std::string RMetaData::Dump(const std::string &key) const
 {
-   fJson[cat] = val;
+   return fJson[key].dump();
 }
 
-std::string RMetaData::Dump(const std::string &cat) const
+int RMetaData::GetI(const std::string &key) const
 {
-   return fJson[cat].dump();
+   if (!fJson.contains(key))
+      throw std::logic_error("No key with name " + key + " in the metadata object.");
+   if (!fJson[key].is_number_integer())
+      throw std::logic_error("Key " + key + " is not of type int.");
+   return fJson[key].get<int>();
 }
 
-int RMetaData::GetI(const std::string &cat) const
+double RMetaData::GetD(const std::string &key) const
 {
-   if (!fJson.contains(cat))
-      throw std::logic_error("No key with name " + cat + " in the metadata object.");
-   if (!fJson[cat].is_number_integer())
-      throw std::logic_error("Key " + cat + " is not of type int.");
-   return fJson[cat].get<int>();
+   if (!fJson.contains(key))
+      throw std::logic_error("No key with name " + key + " in the metadata object.");
+   if (!fJson[key].is_number_float())
+      throw std::logic_error("Key " + key + " is not of type double.");
+   return fJson[key].get<double>();
 }
 
-double RMetaData::GetD(const std::string &cat) const
+const std::string RMetaData::GetS(const std::string &key) const
 {
-   if (!fJson.contains(cat))
-      throw std::logic_error("No key with name " + cat + " in the metadata object.");
-   if (!fJson[cat].is_number_float())
-      throw std::logic_error("Key " + cat + " is not of type double.");
-   return fJson[cat].get<double>();
+   if (!fJson.contains(key))
+      throw std::logic_error("No key with name " + key + " in the metadata object.");
+   if (!fJson[key].is_string())
+      throw std::logic_error("Key " + key + " is not of type string.");
+   return fJson[key].get<std::string>();
 }
 
-std::string RMetaData::GetS(const std::string &cat) const
+int RMetaData::GetI(const std::string &key, int defaultVal) const
 {
-   if (!fJson.contains(cat))
-      throw std::logic_error("No key with name " + cat + " in the metadata object.");
-   if (!fJson[cat].is_string())
-      throw std::logic_error("Key " + cat + " is not of type string.");
-   return fJson[cat].get<std::string>();
-}
-
-int RMetaData::GetI(const std::string &cat, int defaultVal) const
-{
-   if (!fJson.contains(cat))
+   if (!fJson.contains(key))
       return defaultVal;
-   if (!fJson[cat].is_number_integer())
-      throw std::logic_error("Key " + cat + " is not of type int.");
-   return fJson[cat].get<int>();
+   if (!fJson[key].is_number_integer())
+      throw std::logic_error("Key " + key + " is not of type int.");
+   return fJson[key].get<int>();
 }
 
-double RMetaData::GetD(const std::string &cat, double defaultVal) const
+double RMetaData::GetD(const std::string &key, double defaultVal) const
 {
-   if (!fJson.contains(cat))
+   if (!fJson.contains(key))
       return defaultVal;
-   if (!fJson[cat].is_number_float())
-      throw std::logic_error("Key " + cat + " is not of type double.");
-   return fJson[cat].get<double>();
+   if (!fJson[key].is_number_float())
+      throw std::logic_error("Key " + key + " is not of type double.");
+   return fJson[key].get<double>();
 }
 
-std::string RMetaData::GetS(const std::string &cat, std::string defaultVal) const
+const std::string RMetaData::GetS(const std::string &key, std::string defaultVal) const
 {
-   if (!fJson.contains(cat))
+   if (!fJson.contains(key))
       return defaultVal;
-   if (!fJson[cat].is_string())
-      throw std::logic_error("Key " + cat + " is not of type string.");
-   return fJson[cat].get<std::string>();
+   if (!fJson[key].is_string())
+      throw std::logic_error("Key " + key + " is not of type string.");
+   return fJson[key].get<std::string>();
 }
 
-RGroupMetaData::RGroupMetaData(const std::string &groupName, unsigned int groupId,
-                               const RMetaData &metaData)
-   : fGroupName(groupName), fGroupId(groupId), fMetaData(metaData)
+RDatasetGroup::RDatasetGroup(const std::string &groupName, const std::string &treeName, const std::string &fileNameGlob,
+                             const RMetaData &metaData)
+: fGroupName(groupName), fTreeNames({treeName}), fFileNameGlobs({fileNameGlob}), fMetaData(metaData)
 {
+}
+
+RDatasetGroup::RDatasetGroup(const std::string &groupName, const std::string &treeName,
+                             const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData)
+: fGroupName(groupName), fTreeNames(std::vector<std::string>(fileNameGlobs.size(), treeName)), fFileNameGlobs(fileNameGlobs), fMetaData(metaData)
+{
+}
+
+RDatasetGroup::RDatasetGroup(const std::string &groupName,
+                             const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
+                             const RMetaData &metaData)
+: fGroupName(groupName), fMetaData(metaData)
+{
+   fTreeNames.reserve(treeAndFileNameGlobs.size());
+   fFileNameGlobs.reserve(treeAndFileNameGlobs.size());
+   for (auto &p : treeAndFileNameGlobs) {
+      fTreeNames.emplace_back(p.first);
+      fFileNameGlobs.emplace_back(p.second);
+   }
+}
+
+RDatasetGroup::RDatasetGroup(const std::string &groupName, const std::vector<std::string> &treeNames,
+                             const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData)
+: fGroupName(groupName), fTreeNames(treeNames), fFileNameGlobs(fileNameGlobs), fMetaData(metaData)
+{
+   if (treeNames.size() != 1 && treeNames.size() != fileNameGlobs.size())
+      throw std::logic_error("Mismatch between number of trees and file globs.");
+}
+
+const std::string &RDatasetGroup::GetGroupName() const
+{
+   return fGroupName;
+}
+
+const std::vector<std::string> &RDatasetGroup::GetTreeNames() const
+{
+   return fTreeNames;
+}
+
+const std::vector<std::string> &RDatasetGroup::GetFileNameGlobs() const
+{
+   return fFileNameGlobs;
+}
+
+const RMetaData &RDatasetGroup::GetMetaData() const
+{
+   return fMetaData;
+}
+
+unsigned int RDatasetGroup::GetGroupId() const
+{
+   return fGroupId;
+}
+
+void RDatasetGroup::SetGroupId(unsigned int id)
+{
+   fGroupId = id;
 }
 
 } // namespace Experimental
