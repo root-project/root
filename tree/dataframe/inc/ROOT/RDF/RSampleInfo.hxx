@@ -19,6 +19,8 @@
 #include <stdexcept>
 #include <string>
 
+#include <tuple>
+
 namespace ROOT {
 namespace RDF {
 
@@ -34,12 +36,12 @@ class RSampleInfo {
    std::string fID;
    std::pair<ULong64_t, ULong64_t> fEntryRange;
 
-   ROOT::RDF::Experimental::RGroupMetaData fGroupMetaData;
+   ROOT::RDF::Experimental::RDatasetGroup fDatasetGroup;
 
 public:
-   explicit RSampleInfo(std::string_view id, std::pair<ULong64_t, ULong64_t> entryRange,
-                        const ROOT::RDF::Experimental::RGroupMetaData &groupMetaData = {})
-      : fID(id), fEntryRange(entryRange), fGroupMetaData(groupMetaData)
+   RSampleInfo(std::string_view id, std::pair<ULong64_t, ULong64_t> entryRange,
+               const ROOT::RDF::Experimental::RDatasetGroup &datasetGroup = {})
+      : fID(id), fEntryRange(entryRange), fDatasetGroup(datasetGroup)
    {
    }
    RSampleInfo() = default;
@@ -49,15 +51,15 @@ public:
    RSampleInfo &operator=(RSampleInfo &&) = default;
    ~RSampleInfo() = default;
 
-   std::string GetGroupName() const { return fGroupMetaData.fGroupName; }
+   const std::string GetGroupName() const { return fDatasetGroup.GetGroupName(); }
 
-   unsigned int GetGroupID() const { return fGroupMetaData.fGroupId; }
+   unsigned int GetGroupId() const { return fDatasetGroup.GetGroupId(); }
 
-   int GetI(const std::string &cat) const { return fGroupMetaData.fMetaData.GetI(cat); }
+   int GetI(const std::string &key) const { return fDatasetGroup.GetMetaData().GetI(key); }
 
-   double GetD(const std::string &cat) const { return fGroupMetaData.fMetaData.GetD(cat); }
+   double GetD(const std::string &key) const { return fDatasetGroup.GetMetaData().GetD(key); }
 
-   std::string GetS(const std::string &cat) const { return fGroupMetaData.fMetaData.GetS(cat); }
+   const std::string GetS(const std::string &key) const { return fDatasetGroup.GetMetaData().GetS(key); }
 
    /// Check whether the sample name contains the given substring.
    bool Contains(std::string_view substr) const
