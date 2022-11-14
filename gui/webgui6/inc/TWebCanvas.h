@@ -103,7 +103,7 @@ protected:
 
    Bool_t WaitWhenCanvasPainted(Long64_t ver);
 
-   virtual Bool_t IsJSSupportedClass(TObject *obj);
+   virtual Bool_t IsJSSupportedClass(TObject *obj, Bool_t many_primitives = kFALSE);
 
    Bool_t IsFirstConn(unsigned connid) const { return (connid!=0) && (fWebConn.size()>0) && (fWebConn[0].fConnId == connid) ;}
 

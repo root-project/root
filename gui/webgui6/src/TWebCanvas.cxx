@@ -92,7 +92,7 @@ TVirtualPadPainter *TWebCanvas::CreatePadPainter()
 /// Returns kTRUE when object is fully supported on JSROOT side
 /// In ROOT7 Paint function will just return appropriate flag that object can be displayed on JSROOT side
 
-Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
+Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
 {
    if (!obj)
       return kTRUE;
@@ -100,6 +100,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
    static const struct {
       const char *name{nullptr};
       bool with_derived{false};
+      bool reduse_by_many{false};
    } supported_classes[] = {{"TH1", true},
                             {"TF1", true},
                             {"TGraph", true},
@@ -111,9 +112,9 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
                             {"TGaxis", false},
                             {"TPave", true},
                             {"TArrow", false},
-                            {"TBox", false},  // can be handled via TWebPainter, greyscale.C tutorial works only with disabled
+                            {"TBox", false, true},  // can be handled via TWebPainter, disable for large number of primitives (like in greyscale.C)
                             {"TWbox", false}, // some extra calls which cannot be handled via TWebPainter
-                            {"TLine", false}, // also can be handler via TWebPainter
+                            {"TLine", false, true}, // can be handler via TWebPainter, disable for large number of primitives (like in greyscale.C)
                             {"TText", false},
                             {"TLatex", false},
                             {"TMathText", false},
@@ -135,12 +136,12 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
 
    // fast check of class name
    for (int i = 0; supported_classes[i].name != nullptr; ++i)
-      if (strcmp(supported_classes[i].name, obj->ClassName()) == 0)
+      if ((!many_primitives || !supported_classes[i].reduse_by_many) && (strcmp(supported_classes[i].name, obj->ClassName()) == 0))
          return kTRUE;
 
    // now check inheritance only for configured classes
    for (int i = 0; supported_classes[i].name != nullptr; ++i)
-      if (supported_classes[i].with_derived)
+      if (supported_classes[i].with_derived && (!many_primitives || !supported_classes[i].reduse_by_many))
          if (obj->InheritsFrom(supported_classes[i].name))
             return kTRUE;
 
@@ -190,7 +191,7 @@ bool TWebCanvas::IsCustomClass(const TClass *cl) const
 
 void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps)
 {
-   if (IsJSSupportedClass(obj)) {
+   if (IsJSSupportedClass(obj, masterps != nullptr)) {
       master.NewPrimitive(obj, opt).SetSnapshot(TWebSnapshot::kObject, obj);
       return;
    }
@@ -478,7 +479,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          if (funcs)
             fPrimitivesLists.Add(funcs);
          first_obj = false;
-      } else if (IsJSSupportedClass(obj)) {
+      } else if (IsJSSupportedClass(obj, usemaster)) {
          flush_master();
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
       } else {
