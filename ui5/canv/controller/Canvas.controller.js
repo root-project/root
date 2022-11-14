@@ -265,22 +265,6 @@ sap.ui.define([
          MessageToast.show(`Action triggered on item: ${name}`);
       },
 
-      onEditMenuAction : function(oEvent) {
-         let cp = this.getCanvasPainter();
-         if (!cp) return;
-
-         let name = oEvent.getParameter('item').getText();
-         switch (name) {
-            case "Clear pad":
-               cp.sendWebsocket("CLEAR:" + (cp.findActivePad() || cp).snapid);
-               break;
-            case "Clear canvas":
-               cp.sendWebsocket("CLEAR:" + cp.snapid);
-               break;
-         }
-
-      },
-
       onCloseCanvasPress : function() {
          let p = this.getCanvasPainter();
          if (p) {
@@ -571,8 +555,22 @@ sap.ui.define([
          this._Page.setShowHeader(new_state);
       },
 
-      onViewMenuAction: function (oEvent) {
+      onEditMenuAction : function(oEvent) {
+         let cp = this.getCanvasPainter();
+         if (!cp) return;
 
+         let name = oEvent.getParameter('item').getText();
+         switch (name) {
+            case "Clear pad":
+               cp.sendWebsocket("CLEAR:" + (cp.findActivePad() || cp).snapid);
+               break;
+            case "Clear canvas":
+               cp.sendWebsocket("CLEAR:" + cp.snapid);
+               break;
+         }
+      },
+
+      onViewMenuAction: function (oEvent) {
          let item = oEvent.getParameter("item");
 
          switch (item.getText()) {
@@ -584,7 +582,16 @@ sap.ui.define([
          }
       },
 
-      onToolsMenuAction : function(oEvent) {
+      onOptionsMenuAction: function(oEvent) {
+         let cp = this.getCanvasPainter();
+         if (!cp) return;
+
+         let item = oEvent.getParameter('item');
+         if (item.getText() == 'Interrupt')
+            cp.sendWebsocket('INTERRUPT');
+      },
+
+      onToolsMenuAction: function(oEvent) {
          let item = oEvent.getParameter("item"),
              name = item.getText();
 
