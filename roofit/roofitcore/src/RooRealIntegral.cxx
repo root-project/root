@@ -100,19 +100,16 @@ void addParameterToServers(RooAbsReal const &function, RooAbsArg &leaf, std::vec
 enum class MarkedState { Dependent, Independent, AlreadyAdded };
 
 /// Mark all args that recursively are value clients of "dep".
-/// Returns true if something was marked.
-bool unmarkDepValueClients(RooAbsArg const &dep, RooArgSet const &args, std::vector<MarkedState> &marked)
+void unmarkDepValueClients(RooAbsArg const &dep, RooArgSet const &args, std::vector<MarkedState> &marked)
 {
    assert(args.size() == marked.size());
-   auto index = args.index(dep.GetName());
+   auto index = args.index(dep);
    if (index >= 0) {
       marked[index] = MarkedState::Dependent;
       for (RooAbsArg *client : dep.valueClients()) {
          unmarkDepValueClients(*client, args, marked);
       }
-      return true;
    }
-   return false;
 }
 
 std::vector<ServerToAdd>
@@ -140,8 +137,9 @@ getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList, co
    // it means the integration variable was in the compute graph and we will
    // add it to the server list.
    for (RooAbsArg *dep : depList) {
-      if (unmarkDepValueClients(*dep, allArgs, marked)) {
-         addObservableToServers(function, *allArgs.find(*dep), serversToAdd, rangeName);
+      if (RooAbsArg * depInArgs = allArgs.find(dep->GetName())) {
+         unmarkDepValueClients(*depInArgs, allArgs, marked);
+         addObservableToServers(function, *depInArgs, serversToAdd, rangeName);
       }
    }
 
