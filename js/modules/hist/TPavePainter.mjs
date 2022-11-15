@@ -862,10 +862,6 @@ class TPavePainter extends ObjectPainter {
 
    /** @summary Fill context menu for the TPave object */
    fillContextMenu(menu) {
-
-      console.log('fill context menu', this.snapid);
-      console.trace();
-
       let pave = this.getObject();
 
       menu.add('header: ' + pave._typename + '::' + pave.fName);
@@ -1168,10 +1164,12 @@ class TPavePainter extends ObjectPainter {
                let st = gStyle, fp = painter.getFramePainter();
                if (st && fp) {
                   let midx = st.fTitleX, y2 = st.fTitleY, w = st.fTitleW, h = st.fTitleH;
+
                   if (!h) h = (y2-fp.fY2NDC)*0.7;
                   if (!w) w = fp.fX2NDC - fp.fX1NDC;
                   if (!Number.isFinite(h) || (h <= 0)) h = 0.06;
                   if (!Number.isFinite(w) || (w <= 0)) w = 0.44;
+
                   pave.fX1NDC = midx - w/2;
                   pave.fY1NDC = y2 - h;
                   pave.fX2NDC = midx + w/2;

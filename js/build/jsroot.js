@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '19/11/2021' */
-let version_date = '11/11/2022';
+let version_date = '15/11/2022';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -8866,19 +8866,34 @@ function parseLatex(node, arg, label, curr) {
    };
 
    const extractSubLabel = (check_first, lbrace, rbrace) => {
-      let pos = 0, n = 1, err = false;
+      let pos = 0, n = 1, err = false, extra_braces = false;
       if (!lbrace) lbrace = '{';
       if (!rbrace) rbrace = '}';
 
       const match = br => (pos + br.length <= label.length) && (label.slice(pos, pos+br.length) == br);
 
       if (check_first) {
-         if(!match(lbrace)) err = true; else label = label.slice(lbrace.length);
+         if(!match(lbrace))
+            err = true;
+         else
+            label = label.slice(lbrace.length);
       }
 
       while (!err && (n != 0) && (pos < label.length)) {
-         if (match(lbrace)) { n++; pos += lbrace.length; } else
-         if (match(rbrace)) { n--; pos += rbrace.length; } else pos++;
+         if (match(lbrace)) {
+            n++;
+            pos += lbrace.length;
+         } else if (match(rbrace)) {
+            n--;
+            pos += rbrace.length;
+            if ((n == 0) && (typeof check_first == 'string') && match(check_first+lbrace)) {
+               // handle special case like a^{b}^{2} should mean a^{b^{2}}
+               n++;
+               pos += lbrace.length + check_first.length;
+               check_first = true;
+               extra_braces = true;
+            }
+         } else pos++;
       }
       if ((n != 0) || err) {
          console.log(`mismatch with open ${lbrace} and closing ${rbrace} in ${label}`);
@@ -8886,6 +8901,8 @@ function parseLatex(node, arg, label, curr) {
       }
 
       let sublabel = label.slice(0, pos - rbrace.length);
+
+      if (extra_braces) sublabel = lbrace + sublabel + rbrace;
 
       label = label.slice(pos);
 
@@ -9060,19 +9077,20 @@ function parseLatex(node, arg, label, curr) {
             res[name] = extractSubLabel();
             if (res[name] === -1) return false;
          }
+
          while (label) {
             if (label[0] == '_') {
                label = label.slice(1);
-               res.low = !res.low ? extractSubLabel(true) : -1;
+               res.low = !res.low ? extractSubLabel('_') : -1;
                if (res.low === -1) {
                   console.log(`error with ${found.name} low limit`);
                   return false;
                }
             } else if (label[0] == '^') {
                label = label.slice(1);
-               res.up = !res.up ? extractSubLabel(true) : -1;
+               res.up = !res.up ? extractSubLabel('^') : -1;
                if (res.up === -1) {
-                  console.log(`error with ${found.name} upper limit`);
+                  console.log(`error with ${found.name} upper limit ` + label);
                   return false;
                }
             } else break;
@@ -10266,7 +10284,7 @@ class TAttMarkerHandler {
    }
 
    /** @summary Method used when color or pattern were changed with OpenUi5 widgets.
-    * @private */
+     * @private */
    verifyDirectChange(/* painter */) {
       this.change(this.color, parseInt(this.style), parseFloat(this.size));
    }
@@ -10754,6 +10772,12 @@ class TAttLineHandler {
          this.pattern = root_line_styles[this.style] || null;
       }
       this.changed = true;
+   }
+
+   /** @summary Method used when color or pattern were changed with OpenUi5 widgets.
+     * @private */
+   verifyDirectChange(/* painter */) {
+      this.change(this.color, parseInt(this.width), parseInt(this.style));
    }
 
    /** @summary Create sample element inside primitive SVG - used in context menu */
@@ -44715,8 +44739,9 @@ class TAxisPainter extends ObjectPainter {
       let axis = this.getObject(),
           is_gaxis = axis?._typename === clTGaxis,
           pp = this.getPadPainter(),
-          pad_w = pp?.getPadWidth() || 10,
-          pad_h = pp?.getPadHeight() || 10,
+          frect = pp?.getFrameRect(),
+          pad_w = Math.round((frect?.width || 8)/0.8), // use factor 0.8 as ratio between frame and pad size, frame size is visible and more obvios
+          pad_h = Math.round((frect?.height || 8)/0.8),
           tickSize = 0, tickScalingSize = 0, titleColor;
 
       this.scalingSize = scalingSize || Math.max(Math.min(pad_w, pad_h), 10);
@@ -55425,7 +55450,7 @@ class TPadPainter extends ObjectPainter {
 
        createMenu$1(evnt, selp).then(menu => {
           if (selp.fillContextMenu(menu, selkind))
-             setTimeout(() => menu.show(), 50);
+             selp.fillObjectExecMenu(menu, selkind).then(() => setTimeout(() => menu.show(), 50));
        });
    }
 
@@ -55443,6 +55468,17 @@ class TPadPainter extends ObjectPainter {
       });
    }
 
+   /** @summary Search active pad
+     * @return {Object} pad painter for active pad */
+   findActivePad() {
+      let active_pp;
+      painter.forEachPainterInPad(pp => {
+         if (pp.is_active_pad && !active_pp)
+            active_pp = pp;
+      }, 'pads');
+      return active_pp;
+   }
+
    /** @summary Prodce image for the pad
      * @return {Promise} with created image */
    async produceImage(full_canvas, file_format) {
@@ -55458,10 +55494,10 @@ class TPadPainter extends ObjectPainter {
 
       painter.forEachPainterInPad(pp => {
 
-          if (pp.is_active_pad && !active_pp) {
-             active_pp = pp;
-             active_pp.drawActiveBorder(null, false);
-          }
+         if (pp.is_active_pad && !active_pp) {
+            active_pp = pp;
+            active_pp.drawActiveBorder(null, false);
+         }
 
          if (use_frame) return; // do not make transformations for the frame
 
@@ -57432,10 +57468,6 @@ class TPavePainter extends ObjectPainter {
 
    /** @summary Fill context menu for the TPave object */
    fillContextMenu(menu) {
-
-      console.log('fill context menu', this.snapid);
-      console.trace();
-
       let pave = this.getObject();
 
       menu.add('header: ' + pave._typename + '::' + pave.fName);
@@ -57738,10 +57770,12 @@ class TPavePainter extends ObjectPainter {
                let st = gStyle, fp = painter.getFramePainter();
                if (st && fp) {
                   let midx = st.fTitleX, y2 = st.fTitleY, w = st.fTitleW, h = st.fTitleH;
+
                   if (!h) h = (y2-fp.fY2NDC)*0.7;
                   if (!w) w = fp.fX2NDC - fp.fX1NDC;
                   if (!Number.isFinite(h) || (h <= 0)) h = 0.06;
                   if (!Number.isFinite(w) || (w <= 0)) w = 0.44;
+
                   pave.fX1NDC = midx - w/2;
                   pave.fY1NDC = y2 - h;
                   pave.fX2NDC = midx + w/2;
@@ -59113,7 +59147,7 @@ class THistPainter extends ObjectPainter {
       } else if (draw_title && !tpainter && histo.fTitle && !this.options.PadTitle) {
          pt = create$1(clTPaveText);
          Object.assign(pt, { fName: 'title', fFillColor: st.fTitleColor, fFillStyle: st.fTitleStyle, fBorderSize: st.fTitleBorderSize,
-                             fTextFont: st.fTitleFont, fTextSize: st.fTitleFontSize, fTextColor: st.fTitleTextColor, fTextAlign: st.fTitleAlign});
+                             fTextFont: st.fTitleFont, fTextSize: st.fTitleFontSize, fTextColor: st.fTitleTextColor, fTextAlign: st.fTitleAlign });
          pt.AddText(histo.fTitle);
          return TPavePainter.draw(this.getDom(), pt, 'postitle').then(tp => {
             if (tp) tp.$secondary = true;
@@ -59336,7 +59370,7 @@ class THistPainter extends ObjectPainter {
 
       // no need to do something if painter for object was already done
       // object will be redraw automatically
-      if (!func_painter && func)
+      if (!func_painter)
          do_draw = this.needDrawFunc(histo, func);
 
       if (!do_draw)
@@ -88272,8 +88306,8 @@ class TGraphPainter$1 extends ObjectPainter {
 
    /** @summary Returns tooltip for specified bin */
    getTooltips(d) {
-      let pmain = this.getFramePainter(), lines = [],
-          funcs = pmain?.getGrFuncs(this.options.second_x, this.options.second_y),
+      let pmain = this.get_main(), lines = [],
+          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
           gme = this.get_gme();
 
       lines.push(this.getObjectHint());
@@ -88320,14 +88354,21 @@ class TGraphPainter$1 extends ObjectPainter {
                 value = (value > 0) ? Math.log10(value) : this.pad.fUxmin;
              else
                 value = (value - this.pad.fX1) / (this.pad.fX2 - this.pad.fX1);
-             return value*this.pw;
+             return value * this.pw;
           },
           gry(value) {
              if (this.pad.fLogy)
                 value = (value > 0) ? Math.log10(value) : this.pad.fUymin;
              else
                 value = (value - this.pad.fY1) / (this.pad.fY2 - this.pad.fY1);
-             return (1-value)*this.ph;
+             return (1 - value) * this.ph;
+          },
+          revertAxis(name, v) {
+            if (name == 'x')
+               return v / this.pw * (this.pad.fX2 - this.pad.fX1) + this.pad.fX1;
+            if (name == 'y')
+               return (1 - v / this.ph) * (this.pad.fY2 - this.pad.fY1) + this.pad.fY1;
+            return v;
           },
           getGrFuncs() { return this; }
       };
@@ -88783,7 +88824,7 @@ class TGraphPainter$1 extends ObjectPainter {
 
       if (this.draw_kind != 'nodes') return null;
 
-      let pmain = this.getFramePainter(),
+      let pmain = this.get_main(),
           height = pmain.getFrameHeight(),
           esz = this.error_size,
           isbar1 = (this.options.Bar === 1),
@@ -88895,8 +88936,7 @@ class TGraphPainter$1 extends ObjectPainter {
           bestindx = -1,
           bestbin = null,
           bestdist = 1e10,
-          pmain = this.getFramePainter(),
-          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+          funcs = this.get_main().getGrFuncs(this.options.second_x, this.options.second_y),
           dist, grx, gry, n, bin;
 
       for (n = 0; n < this.bins.length; ++n) {
@@ -88996,7 +89036,7 @@ class TGraphPainter$1 extends ObjectPainter {
 
       let islines = (this.draw_kind == 'lines'),
           ismark = (this.draw_kind == 'mark'),
-          pmain = this.getFramePainter(),
+          pmain = this.get_main(),
           funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
           gr = this.getObject(),
           res = { name: gr.fName, title: gr.fTitle,
@@ -89107,14 +89147,13 @@ class TGraphPainter$1 extends ObjectPainter {
    /** @summary Start moving of TGraph */
    moveStart(x,y) {
       this.pos_dx = this.pos_dy = 0;
+      this.move_funcs = this.get_main().getGrFuncs(this.options.second_x, this.options.second_y);
       let hint = this.extractTooltip({x, y});
       if (hint && hint.exact && (hint.binindx !== undefined)) {
          this.move_binindx = hint.binindx;
          this.move_bin = hint.bin;
-         let pmain = this.getFramePainter(),
-             funcs = pmain?.getGrFuncs(this.options.second_x, this.options.second_y);
-         this.move_x0 = funcs ? funcs.grx(this.move_bin.x) : x;
-         this.move_y0 = funcs ? funcs.gry(this.move_bin.y) : y;
+         this.move_x0 = this.move_funcs.grx(this.move_bin.x);
+         this.move_y0 = this.move_funcs.gry(this.move_bin.y);
       } else {
          delete this.move_binindx;
       }
@@ -89127,14 +89166,10 @@ class TGraphPainter$1 extends ObjectPainter {
 
       if (this.move_binindx === undefined) {
          this.draw_g.attr('transform', `translate(${this.pos_dx},${this.pos_dy})`);
-      } else {
-         let pmain = this.getFramePainter(),
-             funcs = pmain?.getGrFuncs(this.options.second_x, this.options.second_y);
-         if (funcs && this.move_bin) {
-            this.move_bin.x = funcs.revertAxis('x', this.move_x0 + this.pos_dx);
-            this.move_bin.y = funcs.revertAxis('y', this.move_y0 + this.pos_dy);
-            this.drawGraph();
-         }
+      } else if (this.move_funcs && this.move_bin) {
+         this.move_bin.x = this.move_funcs.revertAxis('x', this.move_x0 + this.pos_dx);
+         this.move_bin.y = this.move_funcs.revertAxis('y', this.move_y0 + this.pos_dy);
+         this.drawGraph();
       }
    }
 
@@ -89145,13 +89180,11 @@ class TGraphPainter$1 extends ObjectPainter {
       if (this.move_binindx === undefined) {
          this.draw_g.attr('transform', null);
 
-         let pmain = this.getFramePainter(),
-             funcs = pmain?.getGrFuncs(this.options.second_x, this.options.second_y);
-         if (funcs && this.bins && !not_changed) {
+         if (this.move_funcs && this.bins && !not_changed) {
             for (let k = 0; k < this.bins.length; ++k) {
                let bin = this.bins[k];
-               bin.x = funcs.revertAxis('x', funcs.grx(bin.x) + this.pos_dx);
-               bin.y = funcs.revertAxis('y', funcs.gry(bin.y) + this.pos_dy);
+               bin.x = this.move_funcs.revertAxis('x', this.move_funcs.grx(bin.x) + this.pos_dx);
+               bin.y = this.move_funcs.revertAxis('y', this.move_funcs.gry(bin.y) + this.pos_dy);
                exec += `SetPoint(${bin.indx},${bin.x},${bin.y});;`;
                if ((bin.indx == 0) && this.matchObjectType(clTCutG))
                   exec += `SetPoint(${this.getObject().fNpoints-1},${bin.x},${bin.y});;`;
@@ -89164,6 +89197,8 @@ class TGraphPainter$1 extends ObjectPainter {
             exec += `SetPoint(${this.getObject().fNpoints-1},${this.move_bin.x},${this.move_bin.y});;`;
          delete this.move_binindx;
       }
+
+      delete this.move_funcs;
 
       if (exec && !not_changed)
          this.submitCanvExec(exec);
@@ -89184,20 +89219,21 @@ class TGraphPainter$1 extends ObjectPainter {
    executeMenuCommand(method, args) {
       if (super.executeMenuCommand(method,args)) return true;
 
-      let canp = this.getCanvPainter(), pmain = this.getFramePainter();
+      let canp = this.getCanvPainter(), pmain = this.get_main();
 
       if ((method.fName == 'RemovePoint') || (method.fName == 'InsertPoint')) {
-         let pnt = pmain?.getLastEventPos();
-
-         if (!canp || canp._readonly || !pnt) return true; // ignore function
+         if (!canp || canp._readonly) return true; // ignore function
 
          let hint = this.extractTooltip(pnt);
 
          if (method.fName == 'InsertPoint') {
-            let funcs = pmain?.getGrFuncs(this.options.second_x, this.options.second_y),
-                userx = funcs?.revertAxis('x', pnt.x) ?? 0,
-                usery = funcs?.revertAxis('y', pnt.y) ?? 0;
-            this.submitCanvExec(`AddPoint(${userx.toFixed(3)}, ${usery.toFixed(3)})`, this.args_menu_id);
+            let pnt = isFunc(pmain.getLastEventPos) ? pmain.getLastEventPos() : null;
+            if (pnt) {
+               let funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+                   userx = funcs.revertAxis('x', pnt.x) ?? 0,
+                   usery = funcs.revertAxis('y', pnt.y) ?? 0;
+               this.submitCanvExec(`AddPoint(${userx.toFixed(3)}, ${usery.toFixed(3)})`, this.args_menu_id);
+            }
          } else if (this.args_menu_id && (hint?.binindx !== undefined)) {
             this.submitCanvExec(`RemovePoint(${hint.binindx})`, this.args_menu_id);
          }
@@ -95919,7 +95955,7 @@ class RPadPainter extends RObjectPainter {
 
        createMenu$1(evnt, selp).then(menu => {
           if (selp.fillContextMenu(menu, selkind))
-             setTimeout(() => menu.show(), 50);
+             selp.fillObjectExecMenu(menu, selkind).then(() => setTimeout(() => menu.show(), 50));
        });
    }
 
@@ -95935,6 +95971,12 @@ class RPadPainter extends RObjectPainter {
 
          saveFile(filename, (kind != 'svg') ? imgdata : 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(imgdata));
       });
+   }
+
+   /** @summary Search active pad
+     * @return {Object} pad painter for active pad */
+   findActivePad() {
+      return null;
    }
 
    /** @summary Prodce image for the pad

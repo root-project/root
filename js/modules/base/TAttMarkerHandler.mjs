@@ -267,7 +267,7 @@ class TAttMarkerHandler {
    }
 
    /** @summary Method used when color or pattern were changed with OpenUi5 widgets.
-    * @private */
+     * @private */
    verifyDirectChange(/* painter */) {
       this.change(this.color, parseInt(this.style), parseFloat(this.size));
    }
