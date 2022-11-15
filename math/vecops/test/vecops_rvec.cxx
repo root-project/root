@@ -128,6 +128,21 @@ TEST(VecOps, MoveCtor)
    EXPECT_EQ(v2.size(), 3u);
 }
 
+// regression test: this used to fail to compile
+TEST(VecOps, MoveOnlyValue)
+{
+   struct MoveOnly {
+      MoveOnly() = default;
+      MoveOnly(const MoveOnly &) = delete;
+      MoveOnly &operator=(const MoveOnly &) = delete;
+      MoveOnly(MoveOnly &&) = default;
+      MoveOnly &operator=(MoveOnly &&) = default;
+   };
+   ROOT::RVec<MoveOnly> v(10);
+   v.resize(20);
+   v[19] = MoveOnly();
+}
+
 TEST(VecOps, Conversion)
 {
    RVec<float> fvec{1.0f, 2.0f, 3.0f};

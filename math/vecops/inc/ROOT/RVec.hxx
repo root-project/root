@@ -39,6 +39,7 @@
 #include <cmath>
 #include <cstring>
 #include <limits> // for numeric_limits
+#include <memory> // uninitialized_value_construct
 #include <new>
 #include <numeric> // for inner_product
 #include <sstream>
@@ -523,6 +524,18 @@ public:
    static constexpr unsigned value =
       elementsPerCacheLine >= 8 ? elementsPerCacheLine : (sizeof(T) * 8 > maxInlineByteSize ? 0 : 8);
 };
+
+// A C++14-compatible implementation of std::uninitialized_value_construct
+template <typename ForwardIt>
+void UninitializedValueConstruct(ForwardIt first, ForwardIt last)
+{
+#if __cplusplus < 201703L
+   for (; first != last; ++first)
+      new (static_cast<void *>(std::addressof(*first))) typename std::iterator_traits<ForwardIt>::value_type();
+#else
+   std::uninitialized_value_construct(first, last);
+#endif
+}
 
 } // namespace VecOps
 } // namespace Internal
@@ -1142,7 +1155,7 @@ public:
       if (Size > N)
          this->grow(Size);
       this->fSize = Size;
-      std::uninitialized_fill(this->begin(), this->end(), T{});
+      ROOT::Internal::VecOps::UninitializedValueConstruct(this->begin(), this->end());
    }
 
    template <typename ItTy,
