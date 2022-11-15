@@ -2,10 +2,13 @@
 // Authors: Jonas Rembser, CERN 10/2022
 
 #include <RooConstVar.h>
+#include <RooDataHist.h>
 #include <RooDataSet.h>
+#include <RooFormulaVar.h>
 #include <RooGaussian.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
+#include <RooHistPdf.h>
 #include <RooPlot.h>
 #include <RooProduct.h>
 #include <RooProjectedPdf.h>
@@ -150,7 +153,7 @@ TEST(RooRealIntegral, IntegrateFuncWithShapeServers)
 // Verify that using observable clones -- i.e., variables with the same names
 // as the ones in the computation graph -- does not change the client-server
 // structure of a RooRealIntegral. Covers GitHub issue #11637.
-TEST(RooRealIntegral, UseCloneAsIntegrationVariable)
+TEST(RooRealIntegral, UseCloneAsIntegrationVariable1)
 {
    RooRealVar x1{"x", "x1", -10, 10};
    RooRealVar x2{"x", "x2", -10, 10};
@@ -175,6 +178,44 @@ TEST(RooRealIntegral, UseCloneAsIntegrationVariable)
       EXPECT_TRUE(servers[1].isShapeServer(integ));
 
       EXPECT_EQ(servers.size(), 2);
+   }
+}
+
+// More testing of observable clones as integration variables. This time
+// hitting the more general case where the algorithm also needs to find clients
+// of the original variable correctly ("xShifted" in this test).
+TEST(RooRealIntegral, UseCloneAsIntegrationVariable2)
+{
+   RooRealVar x1{"x", "x1", 0.0, 10};
+   RooRealVar x2{"x", "x2", 0.0, 10};
+
+   RooRealVar shift("shift", "", 0, -10, 10);
+   RooFormulaVar xShifted("x_shifted", "x + shift", {x1, shift});
+
+   RooDataHist dataHist("dataHist", "", x1);
+   RooHistPdf func("func", "", xShifted, x1, dataHist);
+
+   RooRealIntegral integ1{"integ1", "", func, x1};
+   RooRealIntegral integ2{"integ2", "", func, x2};
+
+   // Check that client-server structure is as expected.
+   for (auto const &integ : {integ1, integ2}) {
+
+      RooArgList servers{getSortedServers(integ)};
+
+      EXPECT_EQ(std::string(servers[0].GetName()), "func");
+      EXPECT_EQ(std::string(servers[1].GetName()), "shift");
+      EXPECT_EQ(std::string(servers[2].GetName()), "x");
+
+      EXPECT_FALSE(servers[0].isValueServer(integ));
+      EXPECT_TRUE(servers[1].isValueServer(integ));
+      EXPECT_FALSE(servers[2].isValueServer(integ));
+
+      EXPECT_FALSE(servers[0].isShapeServer(integ));
+      EXPECT_FALSE(servers[1].isShapeServer(integ));
+      EXPECT_TRUE(servers[2].isShapeServer(integ));
+
+      EXPECT_EQ(servers.size(), 3);
    }
 }
 
