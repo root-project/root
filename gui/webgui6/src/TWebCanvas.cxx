@@ -120,6 +120,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
                             {"TMathText", false},
                             {"TMarker", false},
                             {"TPolyMarker", false},
+                            // {"TPolyLine", false, true}, // can be handled via TWebPainter, simplify colors handling
                             {"TPolyMarker3D", false},
                             {"TPolyLine3D", false},
                             {"TGraph2D", false},
@@ -130,8 +131,6 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
                             {"TSpline3", false},
                             {"TSpline5", false},
                             {"TGeoManager", false},
-                            {"TPolyLine3D", false},
-                            {"TPolyMarker3D", false},
                             {nullptr, false}};
 
    // fast check of class name
@@ -304,7 +303,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    TObject *obj = nullptr;
    TFrame *frame = nullptr;
    TPaveText *title = nullptr;
-   bool need_frame = false;
+   bool need_frame = false, has_histo = false;
    std::string need_title;
 
    while ((obj = iter()) != nullptr) {
@@ -320,14 +319,19 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          frame = static_cast<TFrame *>(obj);
       } else if (obj->InheritsFrom(TH1::Class())) {
          need_frame = true;
+         has_histo = true;
          if (!obj->TestBit(TH1::kNoTitle) && (strlen(obj->GetTitle()) > 0))
             need_title = obj->GetTitle();
       } else if (obj->InheritsFrom(TGraph::Class())) {
-         need_frame = true;
-         if ((strlen(obj->GetTitle()) > 0))
-            need_title = obj->GetTitle();
+         TString opt = iter.GetOption();
+         opt.ToUpper();
+         if (opt.Contains("A")) {
+            need_frame = true;
+            if (!has_histo && (strlen(obj->GetTitle()) > 0))
+               need_title = obj->GetTitle();
+         }
       } else if (obj->InheritsFrom(TPaveText::Class())) {
-         if (strcmp(obj->GetName(),"title") == 0)
+         if (strcmp(obj->GetName(), "title") == 0)
             title = static_cast<TPaveText *>(obj);
       }
    }
