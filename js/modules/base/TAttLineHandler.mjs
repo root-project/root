@@ -133,6 +133,12 @@ class TAttLineHandler {
       this.changed = true;
    }
 
+   /** @summary Method used when color or pattern were changed with OpenUi5 widgets.
+     * @private */
+   verifyDirectChange(/* painter */) {
+      this.change(this.color, parseInt(this.width), parseInt(this.style));
+   }
+
    /** @summary Create sample element inside primitive SVG - used in context menu */
    createSample(svg, width, height, plain) {
       if (plain) svg = d3_select(svg);

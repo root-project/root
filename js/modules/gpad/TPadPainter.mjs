@@ -1708,7 +1708,7 @@ class TPadPainter extends ObjectPainter {
 
        createMenu(evnt, selp).then(menu => {
           if (selp.fillContextMenu(menu, selkind))
-             setTimeout(() => menu.show(), 50);
+             selp.fillObjectExecMenu(menu, selkind).then(() => setTimeout(() => menu.show(), 50));
        });
    }
 
@@ -1726,6 +1726,17 @@ class TPadPainter extends ObjectPainter {
       });
    }
 
+   /** @summary Search active pad
+     * @return {Object} pad painter for active pad */
+   findActivePad() {
+      let active_pp;
+      painter.forEachPainterInPad(pp => {
+         if (pp.is_active_pad && !active_pp)
+            active_pp = pp;
+      }, 'pads');
+      return active_pp;
+   }
+
    /** @summary Prodce image for the pad
      * @return {Promise} with created image */
    async produceImage(full_canvas, file_format) {
@@ -1741,10 +1752,10 @@ class TPadPainter extends ObjectPainter {
 
       painter.forEachPainterInPad(pp => {
 
-          if (pp.is_active_pad && !active_pp) {
-             active_pp = pp;
-             active_pp.drawActiveBorder(null, false);
-          }
+         if (pp.is_active_pad && !active_pp) {
+            active_pp = pp;
+            active_pp.drawActiveBorder(null, false);
+         }
 
          if (use_frame) return; // do not make transformations for the frame
 
