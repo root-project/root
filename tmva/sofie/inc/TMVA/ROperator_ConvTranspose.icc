@@ -268,7 +268,9 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
    size_t iw = fDim - 1;
    size_t wstrideDil = fAttrDilations[iw];
    size_t hstride = kWidth;
-   size_t hstrideDil = fAttrKernelShape[iw] * fAttrDilations[ih];
+   size_t hstrideDil = fAttrKernelShape[iw];
+   if (fDim > 1)
+      hstrideDil *= fAttrDilations[ih];
    // stride dilated in the height
    size_t dstride = kHeight * kWidth;
    size_t dstrideDil = fAttrKernelShape[iw];
@@ -349,8 +351,6 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
                    << std::endl;
          fAttrPads[0] = (fAttrPads[0] + fAttrPads[1]) / 2;
       }
-      fAttrPads[1] = 0;
-      fAttrStrides[1] = 1;
    }
    if (fDim == 2) {
       if (fAttrPads[0] != fAttrPads[2] || fAttrPads[1] != fAttrPads[3]) {
