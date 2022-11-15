@@ -1270,7 +1270,7 @@ class THistPainter extends ObjectPainter {
       } else if (draw_title && !tpainter && histo.fTitle && !this.options.PadTitle) {
          pt = create(clTPaveText);
          Object.assign(pt, { fName: 'title', fFillColor: st.fTitleColor, fFillStyle: st.fTitleStyle, fBorderSize: st.fTitleBorderSize,
-                             fTextFont: st.fTitleFont, fTextSize: st.fTitleFontSize, fTextColor: st.fTitleTextColor, fTextAlign: st.fTitleAlign});
+                             fTextFont: st.fTitleFont, fTextSize: st.fTitleFontSize, fTextColor: st.fTitleTextColor, fTextAlign: st.fTitleAlign });
          pt.AddText(histo.fTitle);
          return TPavePainter.draw(this.getDom(), pt, 'postitle').then(tp => {
             if (tp) tp.$secondary = true;
@@ -1493,7 +1493,7 @@ class THistPainter extends ObjectPainter {
 
       // no need to do something if painter for object was already done
       // object will be redraw automatically
-      if (!func_painter && func)
+      if (!func_painter)
          do_draw = this.needDrawFunc(histo, func);
 
       if (!do_draw)

@@ -1183,7 +1183,7 @@ class RPadPainter extends RObjectPainter {
 
        createMenu(evnt, selp).then(menu => {
           if (selp.fillContextMenu(menu, selkind))
-             setTimeout(() => menu.show(), 50);
+             selp.fillObjectExecMenu(menu, selkind).then(() => setTimeout(() => menu.show(), 50));
        });
    }
 
@@ -1199,6 +1199,12 @@ class RPadPainter extends RObjectPainter {
 
          saveFile(filename, (kind != 'svg') ? imgdata : 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(imgdata));
       });
+   }
+
+   /** @summary Search active pad
+     * @return {Object} pad painter for active pad */
+   findActivePad() {
+      return null;
    }
 
    /** @summary Prodce image for the pad
