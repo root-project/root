@@ -139,7 +139,7 @@ public:
 
       std::for_each(fValues[slot].begin(), fValues[slot].end(), [&requestedMask](auto *v) { v->Load(requestedMask); });
 
-      auto *results = fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()].data();
+      auto &results = fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()];
       const std::size_t bulkSize = 1; // for now we don't actually have bulks
       for (std::size_t i = 0ul; i < bulkSize; ++i) {
          if (requestedMask[i] && !valueMask[i]) { // we don't have a value for this entry yet

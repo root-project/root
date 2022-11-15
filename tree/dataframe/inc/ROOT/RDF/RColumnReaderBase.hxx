@@ -13,7 +13,6 @@
 
 #include <ROOT/RDF/RMaskedEntryRange.hxx>
 
-#include <cassert> // FIXME delete me
 #include <Rtypes.h>
 
 namespace ROOT {
@@ -45,12 +44,13 @@ public:
    template <typename T>
    T &Get(std::size_t idx)
    {
-      assert(idx == 0); // FIXME delete me
-      return *static_cast<T *>(GetImpl(idx));
+      return *static_cast<T *>(GetImpl(idx * sizeof(T)));
    }
 
 private:
-   virtual void *GetImpl(std::size_t idx) = 0;
+   /// Return the type-erased column value for the given entry.
+   /// \param offset Offset, in bytes, of the address of the element to retrieve w.r.t. the first element in the bulk.
+   virtual void *GetImpl(std::size_t offset) = 0;
    // TODO remove the default implementation when all readers will be required to do something non-trivial at load time
    virtual void LoadImpl(const Internal::RDF::RMaskedEntryRange &) {}
 };
