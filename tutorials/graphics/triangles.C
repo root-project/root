@@ -16,14 +16,13 @@
 ///
 /// \author Rene Brun
 
-void triangles(Int_t ntriangles=50) {
+void triangles(Int_t ntriangles=50)
+{
    TCanvas *c1 = new TCanvas("c1","triangles",10,10,700,700);
    TRandom r;
    Double_t dx = 0.2; Double_t dy = 0.2;
    Int_t ncolors = gStyle->GetNumberOfColors();
    Double_t x[4],y[4];
-   TColor *c;
-   Int_t ci;
    for (Int_t i=0;i<ntriangles;i++) {
       x[0] = r.Uniform(.05,.95); y[0] = r.Uniform(.05,.95);
       x[1] = x[0] + dx*r.Rndm(); y[1] = y[0] + dy*r.Rndm();
@@ -31,8 +30,8 @@ void triangles(Int_t ntriangles=50) {
       x[3] = x[0];               y[3] = y[0];
       TPolyLine *pl = new TPolyLine(4,x,y);
       pl->SetUniqueID(i);
-      ci = ncolors*r.Rndm();
-      c  = gROOT->GetColor(TColor::GetColorPalette(ci));
+      Int_t ci = ncolors*r.Rndm();
+      TColor *c = gROOT->GetColor(TColor::GetColorPalette(ci));
       c->SetAlpha(r.Rndm());
       pl->SetFillColor(ci);
       pl->Draw("f");
@@ -40,7 +39,8 @@ void triangles(Int_t ntriangles=50) {
    c1->AddExec("ex","TriangleClicked()");
 }
 
-void TriangleClicked() {
+void TriangleClicked()
+{
    //this action function is called whenever you move the mouse
    //it just prints the id of the picked triangle
    //you can add graphics actions instead

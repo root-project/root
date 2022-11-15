@@ -7,12 +7,15 @@
 ///
 /// \author  Olivier Couet
 
-void gtime() {
-   TCanvas *c1 = new TCanvas("c1");
+void gtime()
+{
+   auto c1 = (TCanvas*) gROOT->FindObject("c1");
+   if (c1) delete c1;
+
+   c1 = new TCanvas("c1");
    const Int_t ng = 100;
    const Int_t kNMAX = 10000;
-   Double_t *X = new Double_t[kNMAX];
-   Double_t *Y = new Double_t[kNMAX];
+   std::vector<Double_t> X(kNMAX), Y(kNMAX);
    Int_t cursor = kNMAX;
    TGraph *g = new TGraph(ng);
    g->SetMarkerStyle(21);
@@ -22,23 +25,22 @@ void gtime() {
    while (1) {
       c1->Clear();
       if (cursor > kNMAX-ng) {
-         for (Int_t i=0;i<ng;i++) {
+         for (Int_t i = 0; i < ng; i++) {
             X[i] = x;
             Y[i] = sin(x);
-            x   += 0.1;
+            x += 0.1;
          }
          g->Draw("alp");
          cursor = 0;
       } else {
          x += 0.1;
          X[cursor+ng] = x;
-         Y[cursor+ng] = sin(x);
+         Y[cursor+ng] = TMath::Sin(x);
          cursor++;
-         g->DrawGraph(ng,&X[cursor],&Y[cursor],"alp");
+         g->DrawGraph(ng, X.data()+cursor, Y.data()+cursor, "alp");
       }
       c1->Update();
-      gSystem->ProcessEvents();
+      if (gSystem->ProcessEvents()) break;
       gSystem->Sleep(10);
    }
 }
-
