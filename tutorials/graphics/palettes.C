@@ -16,9 +16,10 @@
 ///
 /// \author Olivier Couet
 
-TCanvas *c;
+TCanvas *c = nullptr;
 
-void draw_palette(int p, TString n){
+void draw_palette(int p, TString n)
+{
    delete c;
    c  = new TCanvas("c","Contours",0,0,500,500);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
@@ -34,20 +35,25 @@ void draw_palette(int p, TString n){
    pt->Draw();
    TString num = n;
    num.ReplaceAll(" ","");
-   TLatex *l = new TLatex(-0.8704441,0.9779387,Form("Palette #%d: %s #scale[0.7]{(#font[82]{k%s})}",p,n.Data(),num.Data()));
+   TLatex *l = new TLatex(-0.8704441,0.9779387,TString::Format("Palette #%d: %s #scale[0.7]{(#font[82]{k%s})}",p,n.Data(),num.Data()));
    l->SetTextFont(42);
    l->SetTextSize(0.035);
    l->Draw();
    c->Update();
-   c->Print(Form("palette_%d.png",p));
-   if (p==51)  {c->Print("palettes.pdf(", Form("Title:%s",n.Data())); return;}
-   if (p==111) {c->Print("palettes.pdf)", Form("Title:%s",n.Data())); return;}
-   c->Print("palettes.pdf", Form("Title:%s",n.Data()));
+   c->Print(TString::Format("palette_%d.png", p));
+
+   TString opt = TString("Title:") + n;
+   if (p == kDeepSea)
+      c->Print("palettes.pdf(", opt.Data());
+   else if (p == kCividis)
+      c->Print("palettes.pdf)", opt.Data());
+   else
+      c->Print("palettes.pdf", opt.Data());
 }
 
-void palettes() {
+void palettes()
+{
    gROOT->SetBatch(1);
-   c  = new TCanvas("c","Contours",0,0,500,500);
    draw_palette(kDeepSea, "Deap Sea");
    draw_palette(kGreyScale, "Grey Scale");
    draw_palette(kDarkBodyRadiator, "Dark Body Radiator");
