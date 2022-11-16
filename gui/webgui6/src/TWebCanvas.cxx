@@ -45,7 +45,6 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
-#include <map>
 
 /** \class TWebCanvas
 \ingroup webgui6
@@ -285,9 +284,13 @@ void TWebCanvas::AddColorsPalette(TPadWebSnapshot &master)
 
 void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t version, PadPaintingReady_t resfunc)
 {
+   // send primitives if version 0 or actual pad version grater than already send version
+   bool process_primitives = (version == 0) || (fPadModified[pad].fVersion > version);
+
    paddata.SetActive(pad == gPad);
    paddata.SetObjectIDAsPtr(pad);
    paddata.SetSnapshot(TWebSnapshot::kSubPad, pad); // add ref to the pad
+   paddata.SetWithoutPrimitives(!process_primitives);
 
    if (resfunc && (GetStyleDelivery() > (version > 0 ? 1 : 0)))
       paddata.NewPrimitive().SetSnapshot(TWebSnapshot::kStyle, gStyle);
@@ -306,7 +309,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    bool need_frame = false, has_histo = false;
    std::string need_title;
 
-   while ((obj = iter()) != nullptr) {
+   while (process_primitives && ((obj = iter()) != nullptr)) {
       if (obj->InheritsFrom(THStack::Class())) {
          // workaround for THStack, create extra components before sending to client
          auto hs = static_cast<THStack *>(obj);
@@ -377,6 +380,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       if (obj->InheritsFrom(TPad::Class())) {
          flush_master();
          CreatePadSnapshot(paddata.NewSubPad(), (TPad *)obj, version, nullptr);
+      } else if (!process_primitives) {
+         continue;
       } else if (obj->InheritsFrom(TH1::Class())) {
          flush_master();
 
@@ -500,7 +505,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       provide_colors = !!resfunc;
 
    // add specials after painting is performed - new colors may be generated only during painting
-   if (provide_colors)
+   if (provide_colors && process_primitives)
       AddColorsPalette(paddata);
 
    if (!resfunc)
@@ -1020,7 +1025,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          int argy = std::stoi(arr->at(3));
          if (pad && obj) {
             Canvas()->Highlighted(pad, obj, argx, argy);
-            CheckPadModified(Canvas());
+            CheckCanvasModified();
          }
       }
 
@@ -1096,7 +1101,10 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
         auto sid = buf.substr(0, pos);
         buf.erase(0, pos + 1);
 
-        TObject *obj = FindPrimitive(sid);
+        TObjLink *lnk = nullptr;
+        TPad *objpad = nullptr;
+
+        TObject *obj = FindPrimitive(sid, 1, nullptr, &lnk, &objpad);
         if (obj && !buf.empty()) {
 
            while (!buf.empty()) {
@@ -1117,7 +1125,12 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
               gROOT->ProcessLine(exec.str().c_str());
            }
 
-           CheckPadModified(Canvas(), 2); // in any case increase version
+           if (objpad)
+              objpad->Modified();
+           else
+              Canvas()->Modified();
+
+           CheckCanvasModified();
         }
      }
 
@@ -1186,27 +1199,58 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 /// Returns true if any pad in the canvas were modified
 /// Reset modified flags, increment canvas version (if inc_version is true)
 
-Bool_t TWebCanvas::CheckPadModified(TPad *pad, Int_t inc_version)
+void TWebCanvas::CheckPadModified(TPad *pad)
 {
-   Bool_t modified = kFALSE;
+   if (fPadModified.find(pad) == fPadModified.end())
+      fPadModified[pad] = PadModified{0, true, true};
 
+   auto &entry = fPadModified[pad];
+   entry._detected = true;
    if (pad->IsModified()) {
       pad->Modified(kFALSE);
-      modified = kTRUE;
+      entry._modified = true;
    }
 
    TIter iter(pad->GetListOfPrimitives());
-   TObject *obj = nullptr;
-   while ((obj = iter()) != nullptr) {
-      if (obj->InheritsFrom(TPad::Class()) && CheckPadModified(static_cast<TPad *>(obj), 0))
-         modified = kTRUE;
+   while (auto obj = iter()) {
+      if (obj->InheritsFrom(TPad::Class()))
+         CheckPadModified(static_cast<TPad *>(obj));
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Check if any pad on the canvas was modified
+/// If yes, increment version of correspondent pad
+
+void TWebCanvas::CheckCanvasModified()
+{
+   // clear temporary flags
+   for (auto &entry : fPadModified)
+      entry.second._detected = entry.second._modified = false;
+
+   // scan sub-pads
+   CheckPadModified(Canvas());
+
+   // remove no-longer existing pads
+   bool is_any_modified = false;
+   for(auto iter = fPadModified.begin(); iter != fPadModified.end(); ) {
+      if (iter->second._modified)
+         is_any_modified = true;
+      if (!iter->second._detected)
+         fPadModified.erase(iter++);
+      else
+         iter++;
    }
 
-   if ((inc_version > 1) || ((inc_version > 0) && modified))
+   // if any pad modified, increment canvas version
+   if (is_any_modified) {
       fCanvVersion++;
-
-   return modified;
+      for(auto &entry : fPadModified)
+         if (entry.second._modified)
+            entry.second.fVersion = fCanvVersion;
+   }
 }
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns window geometry including borders and menus
@@ -1227,7 +1271,7 @@ UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 
 Bool_t TWebCanvas::PerformUpdate()
 {
-   CheckPadModified(Canvas());
+   CheckCanvasModified();
 
    CheckDataToSend();
 
