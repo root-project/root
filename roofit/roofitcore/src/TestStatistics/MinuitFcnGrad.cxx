@@ -70,7 +70,7 @@ MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAb
    }
    gradient->synchronizeParameterSettings(this, parameters);
 
-   // Note: can be different than RooGradMinimizerFcn, where default options are passed
+   // Note: can be different than RooGradMinimizerFcn/LikelihoodGradientSerial, where default options are passed
    // (ROOT::Math::MinimizerOptions::DefaultStrategy() and ROOT::Math::MinimizerOptions::DefaultErrorDef())
    likelihood->synchronizeWithMinimizer(ROOT::Math::MinimizerOptions());
    if (likelihood != likelihood_in_gradient) {
@@ -100,11 +100,11 @@ double MinuitFcnGrad::DoEval(const double *x) const
       if (_printEvalErrors >= 0) {
 
          if (_doEvalErrorWall) {
-            oocoutW(nullptr, Eval) << "RooGradMinimizerFcn: Minimized function has error status." << std::endl
+            oocoutW(nullptr, Eval) << "MinuitFcnGrad: Minimized function has error status." << std::endl
                                    << "Returning maximum FCN so far (" << _maxFCN
                                    << ") to force MIGRAD to back out of this region. Error log follows" << std::endl;
          } else {
-            oocoutW(nullptr, Eval) << "RooGradMinimizerFcn: Minimized function has error status but is ignored"
+            oocoutW(nullptr, Eval) << "MinuitFcnGrad: Minimized function has error status but is ignored"
                                    << std::endl;
          }
 
