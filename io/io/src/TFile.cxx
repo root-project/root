@@ -318,6 +318,16 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
 
+   auto zombify = [this] {
+      // error in file opening occurred, make this object a zombie
+      if (fGlobalRegistration) {
+         R__LOCKGUARD(gROOTMutex);
+         gROOT->GetListOfClosedObjects()->Add(this);
+      }
+      MakeZombie();
+      gDirectory = gROOT;
+   };
+
    // store name without the options as name and title
    TString sfname1 = fname1;
    if (sfname1.Index("?") != kNPOS) {
@@ -403,7 +413,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    if (!fname1 || !fname1[0]) {
       Error("TFile", "file name is not specified");
-      goto zombie;
+      zombify();
+      return;
    }
 
    // support dumping to /dev/null on UNIX
@@ -429,7 +440,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       fname = fRealName.Data();
    } else {
       Error("TFile", "error expanding path %s", fname1);
-      goto zombie;
+      zombify();
+      return;
    }
 
    // If the user supplied a value to the option take it as the name to set for
@@ -445,7 +457,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
          if (gSystem->Unlink(fname) != 0) {
             SysError("TFile", "could not delete %s (errno: %d)",
                      fname, gSystem->GetErrno());
-            goto zombie;
+            zombify();
+            return;
          }
       }
       recreate = kFALSE;
@@ -454,7 +467,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    }
    if (create && !devnull && !gSystem->AccessPathName(fname, kFileExists)) {
       Error("TFile", "file %s already exists", fname);
-      goto zombie;
+      zombify();
+      return;
    }
    if (update) {
       if (gSystem->AccessPathName(fname, kFileExists)) {
@@ -463,17 +477,20 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       }
       if (update && gSystem->AccessPathName(fname, kWritePermission)) {
          Error("TFile", "no write permission, could not open file %s", fname);
-         goto zombie;
+         zombify();
+         return;
       }
    }
    if (read) {
       if (gSystem->AccessPathName(fname, kFileExists)) {
          Error("TFile", "file %s does not exist", fname);
-         goto zombie;
+         zombify();
+         return;
       }
       if (gSystem->AccessPathName(fname, kReadPermission)) {
          Error("TFile", "no read permission, could not open file %s", fname);
-         goto zombie;
+         zombify();
+         return;
       }
    }
 
@@ -486,7 +503,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 #endif
       if (fD == -1) {
          SysError("TFile", "file %s can not be opened", fname);
-         goto zombie;
+         zombify();
+         return;
       }
       fWritable = kTRUE;
    } else {
@@ -497,7 +515,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 #endif
       if (fD == -1) {
          SysError("TFile", "file %s can not be opened for reading", fname);
-         goto zombie;
+         zombify();
+         return;
       }
       fWritable = kFALSE;
    }
@@ -506,15 +525,6 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    TFile::Init(create);                        // NOLINT: silence clang-tidy warnings
 
    return;
-
-zombie:
-   // error in file opening occurred, make this object a zombie
-   if (fGlobalRegistration) {
-      R__LOCKGUARD(gROOTMutex);
-      gROOT->GetListOfClosedObjects()->Add(this);
-   }
-   MakeZombie();
-   gDirectory = gROOT;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
