@@ -1020,6 +1020,22 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
    FlagGuard guard(fProcessingData);
 
+   auto change_canvas_member = [this](const char *member, int val) {
+      auto offset = TCanvas::Class()->GetDataMemberOffset(member);
+      if (offset > 0)
+         *((Int_t *)((char*) Canvas() + offset)) = val;
+      else
+         printf("Not found canvas member %s\n", member);
+   };
+
+   auto change_canvas_ptr = [this](const char *member, void *val) {
+      auto offset = TCanvas::Class()->GetDataMemberOffset(member);
+      if (offset > 0)
+         *((void **)((char*) Canvas() + offset)) = val;
+      else
+         printf("Not found canvas member %s\n", member);
+   };
+
    const char *cdata = arg.c_str();
 
    if (arg == "KEEPALIVE") {
@@ -1126,20 +1142,6 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          auto selobj = FindPrimitive(arr->at(4));
 
          if ((event >= 0) && pad && (pad == gPad)) {
-            auto change_canvas_member = [this](const char *member, int val) {
-               auto offset = TCanvas::Class()->GetDataMemberOffset(member);
-               if (offset > 0)
-                  *((Int_t *)((char*) Canvas() + offset)) = val;
-               else
-                  printf("Not found canvas member %s\n", member);
-            };
-            auto change_canvas_ptr = [this](const char *member, void *val) {
-               auto offset = TCanvas::Class()->GetDataMemberOffset(member);
-               if (offset > 0)
-                  *((void **)((char*) Canvas() + offset)) = val;
-               else
-                  printf("Not found canvas member %s\n", member);
-            };
             change_canvas_member("fEvent", event);
             change_canvas_member("fEventX", argx);
             change_canvas_member("fEventY", argy);
@@ -1194,18 +1196,24 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          }
 
          if (!click->objid.empty()) {
-            TObject *selobj = FindPrimitive(click->objid);
+            auto selobj = FindPrimitive(click->objid);
             Canvas()->SetClickSelected(selobj);
+            change_canvas_ptr("fSelected", selobj);
             if (pad && selobj && fObjSelectSignal)
                fObjSelectSignal(pad, selobj);
          }
 
          if ((click->x >= 0) && (click->y >= 0)) {
+            change_canvas_member("fEvent", click->dbl ? kButton1Double : kButton1Up);
+            change_canvas_member("fEventX", click->x);
+            change_canvas_member("fEventY", click->y);
             if (click->dbl && fPadDblClickedSignal)
                fPadDblClickedSignal(pad, click->x, click->y);
-            else if (fPadClickedSignal)
+            else if (!click->dbl && fPadClickedSignal)
                fPadClickedSignal(pad, click->x, click->y);
          }
+
+         ProcessPadExecs(pad);
       }
 
    } else if (arg.compare(0, 8, "OBJEXEC:") == 0) {
