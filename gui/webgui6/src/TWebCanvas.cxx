@@ -843,17 +843,29 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
 
       // pad->SetPad(r.mleft, r.mbottom, 1-r.mright, 1-r.mtop);
 
-      change_pad_member("fXlowNDC", r.xlow);
-      change_pad_member("fYlowNDC", r.ylow);
-      change_pad_member("fXUpNDC", r.xup);
-      change_pad_member("fYUpNDC", r.yup);
-      change_pad_member("fWNDC", r.xup - r.xlow);
-      change_pad_member("fHNDC", r.yup - r.ylow);
-
       change_pad_member("fAbsXlowNDC", r.xlow);
       change_pad_member("fAbsYlowNDC", r.ylow);
       change_pad_member("fAbsWNDC", r.xup - r.xlow);
       change_pad_member("fAbsHNDC", r.yup - r.ylow);
+
+      if (pad == Canvas()) {
+         change_pad_member("fXlowNDC", r.xlow);
+         change_pad_member("fYlowNDC", r.ylow);
+         change_pad_member("fXUpNDC", r.xup);
+         change_pad_member("fYUpNDC", r.yup);
+         change_pad_member("fWNDC", r.xup - r.xlow);
+         change_pad_member("fHNDC", r.yup - r.ylow);
+      } else {
+         auto mother = pad->GetMother();
+         if (mother->GetAbsWNDC() > 0. && mother->GetAbsHNDC() > 0.) {
+            change_pad_member("fXlowNDC", (r.xlow - mother->GetAbsXlowNDC()) / mother->GetAbsWNDC());
+            change_pad_member("fYlowNDC", (r.ylow - mother->GetAbsYlowNDC()) / mother->GetAbsHNDC());
+            change_pad_member("fXUpNDC", (r.xup - mother->GetAbsXlowNDC()) / mother->GetAbsWNDC() );
+            change_pad_member("fYUpNDC", (r.yup - mother->GetAbsYlowNDC()) / mother->GetAbsHNDC());
+            change_pad_member("fWNDC", (r.xup - r.xlow) / mother->GetAbsWNDC());
+            change_pad_member("fHNDC", (r.yup - r.ylow) / mother->GetAbsHNDC() );
+         }
+      }
 
       // copy of code from TPad::ResizePad()
 
