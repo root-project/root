@@ -29,6 +29,7 @@ class TPad;
 class TPadWebSnapshot;
 class TWebPS;
 class TObjLink;
+class TExec;
 
 class TWebCanvas : public TCanvasImp {
 
@@ -132,7 +133,7 @@ protected:
 
    TObject *FindPrimitive(const std::string &id, int idcnt = 1, TPad *pad = nullptr, TObjLink **padlnk = nullptr, TPad **objpad = nullptr);
 
-   void ProcessPadExecs(TPad *pad);
+   void ProcessExecs(TPad *pad, TExec *extra = nullptr);
 
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly = kTRUE);
