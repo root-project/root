@@ -19,6 +19,7 @@ from .. import pythonization
 from ._factory import Factory
 from ._dataloader import DataLoader
 from ._crossvalidation import CrossValidation
+from ._envelope import Envelope
 
 from ._rbdt import Compute, pythonize_rbdt
 
@@ -32,7 +33,7 @@ from ._tree_inference import SaveXGBoost, pythonize_tree_inference
 
 
 # list of python classes that are used to pythonize TMVA classes
-python_classes = [Factory, DataLoader, CrossValidation]
+python_classes = [Factory, DataLoader, CrossValidation, Envelope]
 
 # create a dictionary for convenient access to python classes
 python_classes_dict = dict()
@@ -123,7 +124,7 @@ def make_func_name_orig(func_name):
     return "_" + func_name
 
 
-@pythonization(class_name=["Factory", "DataLoader", "CrossValidation"], ns="TMVA")
+@pythonization(class_name=["Factory", "DataLoader", "CrossValidation", "Envelope"], ns="TMVA")
 def pythonize_tmva(klass, name):
     # Parameters:
     # klass: class to pythonize
