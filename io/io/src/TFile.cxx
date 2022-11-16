@@ -328,6 +328,16 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       gDirectory = gROOT;
    };
 
+   fOption = option;
+   if (strlen(fUrl.GetProtocol()) != 0 && strcmp(fUrl.GetProtocol(), "file") != 0 && !fOption.BeginsWith("NET") &&
+       !fOption.BeginsWith("WEB")) {
+      Error("TFile",
+            "please use TFile::Open to access remote files:\n\tauto f = std::unique_ptr<TFile>{TFile::Open(\"%s\")};",
+            fname1);
+      zombify();
+      return;
+   }
+
    // store name without the options as name and title
    TString sfname1 = fname1;
    if (sfname1.Index("?") != kNPOS) {
@@ -360,7 +370,6 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    fVersion      = gROOT->GetVersionInt();  //ROOT version in integer format
    fUnits        = 4;
-   fOption       = option;
    fCacheReadMap = new TMap();
    SetBit(kBinaryFile, kTRUE);
 
