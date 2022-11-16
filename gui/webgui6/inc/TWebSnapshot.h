@@ -60,6 +60,7 @@ class TPadWebSnapshot : public TWebSnapshot {
 protected:
    bool fActive{false};                                    ///< true when pad is active
    bool fReadOnly{true};                                   ///< when canvas or pad are in readonly mode
+   bool fWithoutPrimitives{false};                         ///< true when primitives not send while there are no modifications
    std::vector<std::unique_ptr<TWebSnapshot>> fPrimitives; ///< list of all primitives, drawn in the pad
 
 public:
@@ -71,6 +72,8 @@ public:
 
    void SetActive(bool on = true) { fActive = on; }
 
+   void SetWithoutPrimitives(bool on = true) { fWithoutPrimitives = on; }
+
    bool IsReadOnly() const { return fReadOnly; }
 
    TWebSnapshot &NewPrimitive(TObject *obj = nullptr, const std::string &opt = "");
@@ -79,7 +82,7 @@ public:
 
    TWebSnapshot &NewSpecials();
 
-   ClassDef(TPadWebSnapshot, 1) // Pad painting snapshot, used for JSROOT
+   ClassDef(TPadWebSnapshot, 2) // Pad painting snapshot, used for JSROOT
 };
 
 // =================================================================================

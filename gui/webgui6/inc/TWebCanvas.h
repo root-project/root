@@ -23,6 +23,7 @@
 #include <string>
 #include <queue>
 #include <functional>
+#include <map>
 
 class TPad;
 class TPadWebSnapshot;
@@ -57,7 +58,15 @@ protected:
       WebConn(unsigned id) : fConnId(id) {}
    };
 
+   struct PadModified {
+      Long64_t fVersion{0};    ///<! last pad version
+      bool _detected{false};   ///<! if pad was detected during last scan
+      bool _modified{false};   ///<! if pad was modified during last scan
+   };
+
    std::vector<WebConn> fWebConn;  ///<! connections
+
+   std::map<TPad*, PadModified> fPadModified; ///<! map of pads in canvas and their modified flags
 
    std::shared_ptr<ROOT::Experimental::RWebWindow> fWindow; ///!< configured display
 
@@ -95,7 +104,9 @@ protected:
    void CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
    void CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t version, PadPaintingReady_t func);
 
-   Bool_t CheckPadModified(TPad *pad, Int_t inc_version = 1);
+   void CheckPadModified(TPad *pad);
+
+   void CheckCanvasModified();
 
    Bool_t AddToSendQueue(unsigned connid, const std::string &msg);
 
