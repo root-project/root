@@ -3762,11 +3762,17 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    // ======= Build the library
    if (result) {
-      if (verboseLevel>3 && withInfo) {
+      TString cmdAllowUnresolved = cmd;
+#ifdef R__MACOSX
+      // Allow linking to succeed despite the missing symbols.
+      cmdAllowUnresolved.ReplaceAll("-dynamiclib", "-dynamiclib -Wl,-flat_namespace -Wl,-undefined,suppress");
+#endif
+      if (verboseLevel > 3 && withInfo) {
          ::Info("ACLiC","compiling the dictionary and script files");
-         if (verboseLevel>4)  ::Info("ACLiC", "%s", cmd.Data());
+         if (verboseLevel>4)
+            ::Info("ACLiC", "%s", cmdAllowUnresolved.Data());
       }
-      Int_t success = ExecAndReport(cmd);
+      Int_t success = ExecAndReport(cmdAllowUnresolved);
       if (!success) {
          if (produceRootmap) {
             gSystem->Unlink(libmapfilename);
@@ -3795,6 +3801,11 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
          TString relink_cmd = cmd.Strip(TString::kTrailing, ';');
          relink_cmd += depLibsFullPaths;
+         if (verboseLevel > 3 && withInfo) {
+            ::Info("ACLiC", "relinking against all dependencies");
+            if (verboseLevel > 4)
+               ::Info("ACLiC", "%s", relink_cmd.Data());
+         }
          result = ExecAndReport(relink_cmd);
       }
 
