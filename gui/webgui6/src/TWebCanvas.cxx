@@ -764,6 +764,11 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
    if (!arr)
       return kFALSE;
 
+   Bool_t need_update = kFALSE;
+
+   TPad *pad_with_execs = nullptr;
+   TExec *hist_exec = nullptr;
+
    for (unsigned n = 0; n < arr->size(); ++n) {
       auto &r = arr->at(n);
       TPad *pad = dynamic_cast<TPad *>(FindPrimitive(r.snapid));
@@ -937,6 +942,13 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
 
          if (hmin == hmax) { hist->SetMinimum(); hist->SetMaximum(); }
                       else { hist->SetMinimum(hmin); hist->SetMaximum(hmax); }
+
+         TIter next(hist->GetListOfFunctions());
+         while (auto fobj = next())
+            if (!hist_exec && fobj->InheritsFrom(TExec::Class())) {
+               hist_exec = (TExec *) fobj;
+               need_update = kTRUE;
+            }
       }
 
       std::map<std::string, int> idmap;
@@ -953,26 +965,30 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
       }
 
       // without special objects no need for explicit update of the pad
-      if (fPadsStatus[pad]._has_specials)
+      if (fPadsStatus[pad]._has_specials) {
          pad->Modified(kTRUE);
+         need_update = kTRUE;
+      }
 
-      if (process_execs)
-         ProcessPadExecs(pad);
+      if (process_execs && (gPad == pad))
+         pad_with_execs = pad;
    }
+
+   ProcessExecs(pad_with_execs, hist_exec);
 
    if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
 
-   return kTRUE;
+   return need_update;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Process TExec objects in the pad
 
-void TWebCanvas::ProcessPadExecs(TPad *pad)
+void TWebCanvas::ProcessExecs(TPad *pad, TExec *extra)
 {
-   auto execs = pad->GetListOfExecs();
+   auto execs = pad ? pad->GetListOfExecs() : nullptr;
 
-   if (!execs || !execs->GetSize())
+   if ((!execs || !execs->GetSize()) && !extra)
       return;
 
    auto saveps = gVirtualPS;
@@ -989,6 +1005,9 @@ void TWebCanvas::ProcessPadExecs(TPad *pad)
       if (exec)
          exec->Exec();
    }
+
+   if (extra)
+      extra->Exec();
 
    gVirtualPS = saveps;
    gVirtualX = savex;
@@ -1059,7 +1078,8 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       } else {
          fWebConn[indx].fDrawVersion = std::stoll(std::string(cdata, separ - cdata));
          if ((indx == 0) && !IsReadOnly())
-            DecodePadOptions(separ+1, false);
+            if (DecodePadOptions(separ+1, false))
+               CheckCanvasModified();
       }
 
    } else if (arg == "RELOAD") {
@@ -1099,7 +1119,8 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
    } else if (arg.compare(0, 9, "OPTIONS6:") == 0) {
 
       if ((indx == 0) && !IsReadOnly())
-         DecodePadOptions(arg.substr(9), true);
+         if (DecodePadOptions(arg.substr(9), true))
+            CheckCanvasModified();
 
    } else if (arg.compare(0, 11, "STATUSBITS:") == 0) {
 
@@ -1148,7 +1169,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
             change_canvas_ptr("fSelected", selobj);
 
-            ProcessPadExecs(pad);
+            ProcessExecs(pad);
          }
       }
 
@@ -1213,7 +1234,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
                fPadClickedSignal(pad, click->x, click->y);
          }
 
-         ProcessPadExecs(pad);
+         ProcessExecs(pad);
       }
 
    } else if (arg.compare(0, 8, "OBJEXEC:") == 0) {
