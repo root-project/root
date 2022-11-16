@@ -157,6 +157,8 @@ class RLoopManager : public RNodeBase {
 
    ROOT::Internal::TreeUtils::RNoCleanupNotifier fNoCleanupNotifier;
 
+   /// All of the computation graph must be able to process these many events per bulk.
+   std::size_t fMaxEventsPerBulk = 1u; // bulk size is always 1 for now
    /// One masked entry range per processing slot. All elements are always true, while the range changes.
    std::vector<RDFInternal::RMaskedEntryRange> fAllTrueMasks;
 
@@ -205,6 +207,7 @@ public:
    void Deregister(RDFInternal::RVariationBase *varPtr);
    const RDFInternal::RMaskedEntryRange &CheckFilters(unsigned int, Long64_t) final;
    unsigned int GetNSlots() const { return fNSlots; }
+   std::size_t GetMaxEventsPerBulk() const { return fMaxEventsPerBulk; }
    void Report(ROOT::RDF::RCutFlowReport &rep) const final;
    /// End of recursive chain of calls, does nothing
    void PartialReport(ROOT::RDF::RCutFlowReport &) const final {}

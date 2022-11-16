@@ -106,7 +106,7 @@ public:
         fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<ret_type>()), fValues(lm.GetNSlots())
    {
       for (auto &r : fLastResults)
-         r.resize(1u); // for now we don't really have bulks
+         r.resize(fLoopManager->GetMaxEventsPerBulk());
       fLoopManager->Register(this);
    }
 

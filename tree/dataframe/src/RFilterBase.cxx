@@ -11,16 +11,17 @@
 #include "ROOT/RDF/RCutFlowReport.hxx"
 #include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RDF/RFilterBase.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include <numeric> // std::accumulate
 
 using namespace ROOT::Detail::RDF;
 
-RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const unsigned int nSlots,
+RFilterBase::RFilterBase(RLoopManager *lm, std::string_view name, const unsigned int nSlots,
                          const RDFInternal::RColumnRegister &colRegister, const ColumnNames_t &columns,
                          const std::vector<std::string> &prevVariations, const std::string &variation)
-   : RNodeBase(ROOT::Internal::RDF::Union(colRegister.GetVariationDeps(columns), prevVariations), implPtr),
-     fMask(nSlots * RDFInternal::CacheLineStep<RDFInternal::RMaskedEntryRange>(), {1ul}),
+   : RNodeBase(ROOT::Internal::RDF::Union(colRegister.GetVariationDeps(columns), prevVariations), lm),
+     fMask(nSlots * RDFInternal::CacheLineStep<RDFInternal::RMaskedEntryRange>(), {lm->GetMaxEventsPerBulk()}),
      fAccepted(nSlots * RDFInternal::CacheLineStep<ULong64_t>()),
      fRejected(nSlots * RDFInternal::CacheLineStep<ULong64_t>()), fName(name), fColumnNames(columns),
      fColRegister(colRegister), fIsDefine(columns.size()), fVariation(variation)

@@ -28,8 +28,8 @@ RVariationBase::RVariationBase(const std::vector<std::string> &colNames, std::st
                                const std::vector<std::string> &variationTags, std::string_view type,
                                const RColumnRegister &colRegister, RLoopManager &lm, const ColumnNames_t &inputColNames)
    : fColNames(colNames), fVariationNames(variationTags), fType(type),
-     fMask(lm.GetNSlots() * CacheLineStep<RMaskedEntryRange>(), {1ll}), fColumnRegister(colRegister), fLoopManager(&lm),
-     fInputColumns(inputColNames), fIsDefine(inputColNames.size())
+     fMask(lm.GetNSlots() * CacheLineStep<RMaskedEntryRange>(), {lm.GetMaxEventsPerBulk()}),
+     fColumnRegister(colRegister), fLoopManager(&lm), fInputColumns(inputColNames), fIsDefine(inputColNames.size())
 {
    // prepend the variation name to each tag
    for (auto &tag : fVariationNames)
