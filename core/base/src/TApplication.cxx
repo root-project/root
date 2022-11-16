@@ -298,7 +298,8 @@ void TApplication::InitializeGraphics()
       UInt_t w, h;
       if (gVirtualX) {
          gVirtualX->GetGeometry(-1, x, y, w, h);
-         if (h > 0 && h < 1000) gStyle->SetScreenFactor(0.0011*h);
+         if (h > 0)
+            gStyle->SetScreenFactor(0.001 * h);
       }
    }
 }
