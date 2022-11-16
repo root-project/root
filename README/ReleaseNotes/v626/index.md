@@ -1039,8 +1039,22 @@ Published on Oct 18, 2022
 * [[#8962](https://github.com/root-project/root/issues/8962)] - `SetClusterPrefetch(true)` breaks BulkIO with more than one basket
 * [[#11329](https://github.com/root-project/root/issues/11329)] - Dictionary generation of some classes fails on gcc12 (at least in part due to the use of modules)
 
+## Release 6.26/10
+
+Published on November 16, 2022
+
+### Bugs and Issues fixed in this release
+
+* [[#11191](https://github.com/root-project/root/issues/11191)] - `TBrowser` does not show `TGeo` volume names
+* [[#11686](https://github.com/root-project/root/issues/11686)] - Missing Rint dependency for rootcling
+* [[#11515](https://github.com/root-project/root/issues/11515)] - Error in `TInterpreter::Calc` with no output stack in seemingly random distributed rdf test execution
+* [[#11713](https://github.com/root-project/root/issues/11713)] - Add support for Python 3.11
+* [[#11714](https://github.com/root-project/root/issues/11714)] - ACLiC broken on macOS 13 Ventura
+
+
+
 ## HEAD of the v6-26-00-patches branch
 
-These changes will be part of a future 6.26/10.
+These changes will be part of a future 6.26/12.
 
 - None so far.
