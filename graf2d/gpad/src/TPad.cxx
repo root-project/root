@@ -456,7 +456,8 @@ void TPad::AutoExec()
 {
    if (GetCrosshair()) DrawCrosshair();
 
-   if (!fExecs) fExecs = new TList;
+   if (!fExecs)
+      return;
    TIter next(fExecs);
    while (auto exec = (TExec*)next())
       exec->Exec();
