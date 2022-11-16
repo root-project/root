@@ -53,10 +53,11 @@ void RJittedFilter::InitSlot(TTreeReader *r, unsigned int slot)
    fConcreteFilter->InitSlot(r, slot);
 }
 
-const RDFInternal::RMaskedEntryRange &RJittedFilter::CheckFilters(unsigned int slot, Long64_t entry)
+const RDFInternal::RMaskedEntryRange &
+RJittedFilter::CheckFilters(unsigned int slot, Long64_t entry, std::size_t bulkSize)
 {
    assert(fConcreteFilter != nullptr);
-   return fConcreteFilter->CheckFilters(slot, entry);
+   return fConcreteFilter->CheckFilters(slot, entry, bulkSize);
 }
 
 void RJittedFilter::Report(ROOT::RDF::RCutFlowReport &cr) const

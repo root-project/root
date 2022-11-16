@@ -63,7 +63,7 @@ public:
    RColumnRegister &GetColRegister() { return fColRegister; }
    RLoopManager *GetLoopManager() { return fLoopManager; }
    unsigned int GetNSlots() const { return fNSlots; }
-   virtual void Run(unsigned int slot, Long64_t entry) = 0;
+   virtual void Run(unsigned int slot, Long64_t entry, std::size_t bulkSize) = 0;
    virtual void Initialize() = 0;
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void TriggerChildrenCount() = 0;

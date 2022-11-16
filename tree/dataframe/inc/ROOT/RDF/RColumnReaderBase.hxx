@@ -36,7 +36,7 @@ public:
    /// Load the column value for the given entry.
    /// \param entry The entry number to load.
    /// \param mask The entry mask. Values will be loaded only for entries for which the mask equals true.
-   void Load(const RDFInternal::RMaskedEntryRange &mask) { this->LoadImpl(mask); }
+   void Load(const RDFInternal::RMaskedEntryRange &mask, std::size_t bulkSize) { this->LoadImpl(mask, bulkSize); }
 
    /// Return the column value for the given entry.
    /// \tparam T The column type
@@ -52,7 +52,7 @@ private:
    /// \param offset Offset, in bytes, of the address of the element to retrieve w.r.t. the first element in the bulk.
    virtual void *GetImpl(std::size_t offset) = 0;
    // TODO remove the default implementation when all readers will be required to do something non-trivial at load time
-   virtual void LoadImpl(const Internal::RDF::RMaskedEntryRange &) {}
+   virtual void LoadImpl(const Internal::RDF::RMaskedEntryRange &, std::size_t /*bulkSize*/) {}
 };
 
 } // namespace RDF

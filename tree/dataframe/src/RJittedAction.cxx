@@ -67,10 +67,10 @@ RJittedAction::RJittedAction(RLoopManager &lm, const ROOT::RDF::ColumnNames_t &c
 
 RJittedAction::~RJittedAction() {}
 
-void RJittedAction::Run(unsigned int slot, Long64_t entry)
+void RJittedAction::Run(unsigned int slot, Long64_t entry, std::size_t bulkSize)
 {
    assert(fConcreteAction != nullptr);
-   fConcreteAction->Run(slot, entry);
+   fConcreteAction->Run(slot, entry, bulkSize);
 }
 
 void RJittedAction::Initialize()

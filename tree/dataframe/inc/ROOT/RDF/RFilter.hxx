@@ -90,14 +90,14 @@ public:
       fLoopManager->Deregister(this);
    }
 
-   const RDFInternal::RMaskedEntryRange &CheckFilters(unsigned int slot, Long64_t entry) final
+   const RDFInternal::RMaskedEntryRange &CheckFilters(unsigned int slot, Long64_t entry, std::size_t bulkSize) final
    {
       auto &mask = fMask[slot * RDFInternal::CacheLineStep<RDFInternal::RMaskedEntryRange>()];
 
       if (entry != mask.FirstEntry()) {
-         mask = fPrevNode.CheckFilters(slot, entry);
-         std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
-         const std::size_t bulkSize = 1; // for now we don't actually have bulks
+         mask = fPrevNode.CheckFilters(slot, entry, bulkSize);
+         std::for_each(fValues[slot].begin(), fValues[slot].end(),
+                       [&mask, bulkSize](auto *v) { v->Load(mask, bulkSize); });
          const std::size_t processed = mask.Count(bulkSize);
          std::size_t accepted = 0u;
          for (std::size_t i = 0ul; i < bulkSize; ++i) {

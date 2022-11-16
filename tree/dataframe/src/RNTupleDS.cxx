@@ -150,7 +150,7 @@ public:
 
    void *GetImpl(std::size_t /*idx*/) final { return fValue.GetRawPtr(); }
 
-   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask) final
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask, std::size_t /*bulkSize*/) final
    {
       // TODO remove assumption that bulk has size 1
       const auto firstEntry = mask.FirstEntry();

@@ -32,14 +32,13 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader final : public ROOT::Detail::RDF:
    T *fValuePtr = nullptr;
    RMaskedEntryRange fMask{1ul};
 
-   void LoadImpl(const Internal::RDF::RMaskedEntryRange &requestedMask) final
+   void LoadImpl(const Internal::RDF::RMaskedEntryRange &requestedMask, std::size_t bulkSize) final
    {
       if (requestedMask.FirstEntry() != fMask.FirstEntry()) { // new bulk
          fMask.SetAll(false);
          fMask.SetFirstEntry(requestedMask.FirstEntry());
       }
 
-      const std::size_t bulkSize = 1; // for now we don't actually have bulks
       for (std::size_t i = 0ul; i < bulkSize; ++i) {
          if (requestedMask[i] && !fMask[i]) { // we don't have a value for this entry yet
             // TODO change fValuePtr to an array of cached results per slot
@@ -90,7 +89,7 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
    /// Whether we already printed a warning about performing a copy of the TTreeReaderArray contents
    bool fCopyWarningPrinted = false;
 
-   void LoadImpl(const Internal::RDF::RMaskedEntryRange &requestedMask) final
+   void LoadImpl(const Internal::RDF::RMaskedEntryRange &requestedMask, std::size_t /*bulkSize*/) final
    {
       if (requestedMask.FirstEntry() != fMask.FirstEntry()) { // new bulk
          fMask.SetAll(false);

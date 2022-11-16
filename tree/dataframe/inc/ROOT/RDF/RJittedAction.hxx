@@ -47,7 +47,7 @@ public:
 
    void SetAction(std::unique_ptr<RActionBase> a) { fConcreteAction = std::move(a); }
 
-   void Run(unsigned int slot, Long64_t entry) final;
+   void Run(unsigned int slot, Long64_t entry, std::size_t bulkSize) final;
    void Initialize() final;
    void InitSlot(TTreeReader *r, unsigned int slot) final;
    void TriggerChildrenCount() final;

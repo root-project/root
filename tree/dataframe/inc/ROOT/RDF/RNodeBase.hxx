@@ -54,7 +54,7 @@ public:
    {
    }
    virtual ~RNodeBase() {}
-   virtual const ROOT::Internal::RDF::RMaskedEntryRange &CheckFilters(unsigned int, Long64_t) = 0;
+   virtual const ROOT::Internal::RDF::RMaskedEntryRange &CheckFilters(unsigned int, Long64_t, std::size_t) = 0;
    virtual void Report(ROOT::RDF::RCutFlowReport &) const = 0;
    virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;
    virtual void IncrChildrenCount() = 0;

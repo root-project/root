@@ -218,7 +218,7 @@ public:
    }
 
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
-   void Update(unsigned int slot, const RMaskedEntryRange &requestedMask) final
+   void Update(unsigned int slot, const RMaskedEntryRange &requestedMask, std::size_t bulkSize) final
    {
       auto &valueMask = fMask[slot * RDFInternal::CacheLineStep<RDFInternal::RMaskedEntryRange>()];
       if (valueMask.FirstEntry() != requestedMask.FirstEntry()) { // new bulk
@@ -227,8 +227,8 @@ public:
          valueMask.SetFirstEntry(requestedMask.FirstEntry());
       }
       // evaluate this filter, cache the result
-      std::for_each(fValues[slot].begin(), fValues[slot].end(), [&requestedMask](auto *v) { v->Load(requestedMask); });
-      const std::size_t bulkSize = 1; // for now we don't actually have bulks
+      std::for_each(fValues[slot].begin(), fValues[slot].end(),
+                    [&requestedMask, bulkSize](auto *v) { v->Load(requestedMask, bulkSize); });
       for (std::size_t i = 0ul; i < bulkSize; ++i) {
          if (requestedMask[i] && !valueMask[i]) { // we don't have a value for this entry yet
             UpdateHelper(slot, i, ColumnTypes_t{}, TypeInd_t{});

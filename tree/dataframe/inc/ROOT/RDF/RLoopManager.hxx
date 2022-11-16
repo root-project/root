@@ -168,7 +168,7 @@ class RLoopManager : public RNodeBase {
    void RunTreeReader();
    void RunDataSourceMT();
    void RunDataSource();
-   void RunAndCheckFilters(unsigned int slot, Long64_t entry);
+   void RunAndCheckFilters(unsigned int slot, Long64_t entry, std::size_t bulkSize);
    void InitNodeSlots(TTreeReader *r, unsigned int slot);
    void InitNodes();
    void CleanUpNodes();
@@ -205,7 +205,7 @@ public:
    void Deregister(RDefineBase *definePtr);
    void Register(RDFInternal::RVariationBase *varPtr);
    void Deregister(RDFInternal::RVariationBase *varPtr);
-   const RDFInternal::RMaskedEntryRange &CheckFilters(unsigned int, Long64_t) final;
+   const RDFInternal::RMaskedEntryRange &CheckFilters(unsigned int, Long64_t, std::size_t) final;
    unsigned int GetNSlots() const { return fNSlots; }
    std::size_t GetMaxEventsPerBulk() const { return fMaxEventsPerBulk; }
    void Report(ROOT::RDF::RCutFlowReport &rep) const final;

@@ -37,7 +37,7 @@ class R__CLING_PTRCHECK(off) RDefineReader final : public ROOT::Detail::RDF::RCo
 
    void *GetImpl(std::size_t offset) final { return static_cast<char *>(fValuePtr) + offset; }
 
-   void LoadImpl(const RMaskedEntryRange &mask) final { fDefine.Update(fSlot, mask); }
+   void LoadImpl(const RMaskedEntryRange &mask, std::size_t bulkSize) final { fDefine.Update(fSlot, mask, bulkSize); }
 
 public:
    RDefineReader(unsigned int slot, RDFDetail::RDefineBase &define)

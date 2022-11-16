@@ -106,12 +106,12 @@ public:
       (void)idx; // avoid unused parameter warning (gcc 12.1)
    }
 
-   void Run(unsigned int slot, Long64_t entry) final
+   void Run(unsigned int slot, Long64_t entry, std::size_t bulkSize) final
    {
-      const auto &mask = fPrevNode.CheckFilters(slot, entry);
-      std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
+      const auto &mask = fPrevNode.CheckFilters(slot, entry, bulkSize);
+      std::for_each(fValues[slot].begin(), fValues[slot].end(),
+                    [&mask, bulkSize](auto *v) { v->Load(mask, bulkSize); });
 
-      const std::size_t bulkSize = 1; // for now we don't actually have bulks
       for (std::size_t i = 0ul; i < bulkSize; ++i) {
          if (mask[i])
             CallExec(slot, i, ColumnTypes_t{}, TypeInd_t{});

@@ -35,7 +35,10 @@ class R__CLING_PTRCHECK(off) RVariationReader final : public ROOT::Detail::RDF::
 
    void *GetImpl(std::size_t /*idx*/) final { return fValuePtr; }
 
-   void LoadImpl(const RDFInternal::RMaskedEntryRange &m) final { fVariation->Update(fSlot, m); }
+   void LoadImpl(const RDFInternal::RMaskedEntryRange &m, std::size_t bulkSize) final
+   {
+      fVariation->Update(fSlot, m, bulkSize);
+   }
 
 public:
    RVariationReader(unsigned int slot, const std::string &colName, const std::string &variationName,

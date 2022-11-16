@@ -58,7 +58,7 @@ public:
       return static_cast<void *>(&fLastResults[slot * RDFInternal::CacheLineStep<RetType_t>()]);
    }
 
-   void Update(unsigned int, const RDFInternal::RMaskedEntryRange &) final
+   void Update(unsigned int, const RDFInternal::RMaskedEntryRange &, std::size_t) final
    {
       // no-op
    }

@@ -39,10 +39,10 @@ const std::type_info &RJittedDefine::GetTypeId() const
                                "retrieved. This should never happen, please report this as a bug.");
 }
 
-void RJittedDefine::Update(unsigned int slot, const RDFInternal::RMaskedEntryRange &m)
+void RJittedDefine::Update(unsigned int slot, const RDFInternal::RMaskedEntryRange &m, std::size_t bulkSize)
 {
    assert(fConcreteDefine != nullptr);
-   fConcreteDefine->Update(slot, m);
+   fConcreteDefine->Update(slot, m, bulkSize);
 }
 
 void RJittedDefine::Update(unsigned int slot, const ROOT::RDF::RSampleInfo &id)
