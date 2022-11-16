@@ -91,9 +91,7 @@ TEST_P(LikelihoodGradientJob, Gaussian1D)
 
    // --------
 
-   RooMinimizer::Config cfg0;
-   cfg0.parallelGradient = true;
-   auto m0 = std::make_unique<RooMinimizer>(*nll, cfg0);
+   auto m0 = std::make_unique<RooMinimizer>(*nll);
 
    m0->setStrategy(0);
    m0->setPrintLevel(-1);
@@ -114,7 +112,6 @@ TEST_P(LikelihoodGradientJob, Gaussian1D)
 
    // Convert to RooRealL to enter into minimizer
    RooMinimizer::Config cfg1;
-   cfg1.parallelLikelihood = false;
    cfg1.parallelGradient = true;
    RooMinimizer m1(likelihood, cfg1);
 
@@ -164,7 +161,6 @@ TEST(LikelihoodGradientJob, RepeatMigrad)
    auto unbinned_l = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
    RooFit::TestStatistics::RooRealL likelihood("likelihood", "likelihood", unbinned_l);
    RooMinimizer::Config cfg;
-   cfg.parallelLikelihood = false;
    cfg.parallelGradient = true;
    RooMinimizer m1(likelihood, cfg);
 
@@ -207,9 +203,7 @@ TEST_P(LikelihoodGradientJob, GaussianND)
 
    // --------
 
-   RooMinimizer::Config cfg0;
-   cfg0.parallelGradient = true;
-   RooMinimizer m0(*nll, cfg0);
+   RooMinimizer m0(*nll);
 
    m0.setStrategy(0);
    m0.setPrintLevel(-1);
@@ -244,7 +238,6 @@ TEST_P(LikelihoodGradientJob, GaussianND)
    auto unbinned_l = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
    RooFit::TestStatistics::RooRealL likelihood("likelihood", "likelihood", unbinned_l);
    RooMinimizer::Config cfg1;
-   cfg1.parallelLikelihood = false;
    cfg1.parallelGradient = true;
    RooMinimizer m1(likelihood, cfg1);
 
@@ -389,9 +382,7 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
 
    // --------
 
-   RooMinimizer::Config cfg0;
-   cfg0.parallelGradient = true;
-   RooMinimizer m0(*nll, cfg0);
+   RooMinimizer m0(*nll);
 
    m0.setStrategy(0);
    m0.setPrintLevel(-1);
@@ -417,7 +408,6 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
       RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(true), RooFit::NewStyle(true))};
 
    RooMinimizer::Config cfg1;
-   cfg1.parallelLikelihood = false;
    cfg1.parallelGradient = true;
    RooMinimizer m1(*likelihoodAbsReal, cfg1);
 
@@ -484,9 +474,7 @@ TEST_P(LikelihoodGradientJob, Gaussian1DAlsoWithLikelihoodJob)
 
    // --------
 
-   RooMinimizer::Config cfg0;
-   cfg0.parallelGradient = true;
-   auto m0 = std::make_unique<RooMinimizer>(*nll, cfg0);
+   auto m0 = std::make_unique<RooMinimizer>(*nll);
 
    m0->setStrategy(0);
    m0->setPrintLevel(-1);
