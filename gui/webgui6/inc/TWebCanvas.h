@@ -58,20 +58,20 @@ protected:
       WebConn(unsigned id) : fConnId(id) {}
    };
 
-   struct PadModified {
+   struct PadStatus {
       Long64_t fVersion{0};    ///<! last pad version
       bool _detected{false};   ///<! if pad was detected during last scan
       bool _modified{false};   ///<! if pad was modified during last scan
+      bool _has_specials{false}; ///<! are there any special objects with painting
    };
 
    std::vector<WebConn> fWebConn;  ///<! connections
 
-   std::map<TPad*, PadModified> fPadModified; ///<! map of pads in canvas and their modified flags
+   std::map<TPad*, PadStatus> fPadsStatus; ///<! map of pads in canvas and their status flags
 
    std::shared_ptr<ROOT::Experimental::RWebWindow> fWindow; ///!< configured display
 
    Bool_t fReadOnly{true};         ///<! in read-only mode canvas cannot be changed from client side
-   Bool_t fHasSpecials{false};     ///<! has special objects which may require pad ranges
    Long64_t fCanvVersion{1};       ///<! actual canvas version, changed with every new Modified() call
    UInt_t fClientBits{0};          ///<! latest status bits from client like editor visible or not
    TList fPrimitivesLists;         ///<! list of lists of primitives, temporary collected during painting
@@ -124,7 +124,7 @@ protected:
 
    virtual Bool_t ProcessData(unsigned connid, const std::string &arg);
 
-   virtual Bool_t DecodePadOptions(const std::string &);
+   virtual Bool_t DecodePadOptions(const std::string &, bool process_execs = false);
 
    virtual Bool_t CanCreateObject(const std::string &) { return !IsReadOnly() && fCanCreateObjects; }
 
@@ -132,7 +132,7 @@ protected:
 
    TObject *FindPrimitive(const std::string &id, int idcnt = 1, TPad *pad = nullptr, TObjLink **padlnk = nullptr, TPad **objpad = nullptr);
 
-   Bool_t ProcessTExec(TList *primitves);
+   void ProcessPadExecs(TPad *pad);
 
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly = kTRUE);

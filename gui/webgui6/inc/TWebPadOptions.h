@@ -34,6 +34,7 @@ class TWebPadOptions {
 public:
    std::string snapid;                        ///< id of pad
    bool active{false};                        ///< if pad selected as active
+   int cw{0}, ch{0};                          ///< canvas width and height in pixels
    int logx{0}, logy{0}, logz{0};             ///< pad log properties
    int gridx{0}, gridy{0};                    ///< pad grid properties
    int tickx{0}, ticky{0};                    ///< pad ticks properties

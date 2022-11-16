@@ -38,6 +38,7 @@
 #include "TAtt3D.h"
 #include "TView.h"
 #include "TExec.h"
+#include "TVirtualX.h"
 
 #include <cstdio>
 #include <cstring>
@@ -197,8 +198,6 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
    // painter is not necessary for batch canvas, but keep configuring it for a while
    auto *painter = dynamic_cast<TWebPadPainter *>(Canvas()->GetCanvasPainter());
 
-   fHasSpecials = kTRUE;
-
    TView *view = nullptr;
    TVirtualPad *savepad = gPad;
 
@@ -284,8 +283,10 @@ void TWebCanvas::AddColorsPalette(TPadWebSnapshot &master)
 
 void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t version, PadPaintingReady_t resfunc)
 {
+   auto &pad_status = fPadsStatus[pad];
+
    // send primitives if version 0 or actual pad version grater than already send version
-   bool process_primitives = (version == 0) || (fPadModified[pad].fVersion > version);
+   bool process_primitives = (version == 0) || (pad_status.fVersion > version);
 
    paddata.SetActive(pad == gPad);
    paddata.SetObjectIDAsPtr(pad);
@@ -375,6 +376,9 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    iter.Reset();
 
    bool first_obj = true;
+
+   if (process_primitives)
+      pad_status._has_specials = false;
 
    while ((obj = iter()) != nullptr) {
       if (obj->InheritsFrom(TPad::Class())) {
@@ -493,6 +497,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
       } else {
          CreateObjectSnapshot(paddata, pad, obj, iter.GetOption(), usemaster ? &masterps : nullptr);
+         pad_status._has_specials = true;
       }
    }
 
@@ -747,29 +752,9 @@ void TWebCanvas::AssignStatusBits(UInt_t bits)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-/// Process all TExec object from list of primitives
-
-Bool_t TWebCanvas::ProcessTExec(TList *primitves)
-{
-   Bool_t isany = kFALSE;
-
-   TIter iter(primitves);
-   while (auto obj = iter()) {
-      auto exec = dynamic_cast<TExec *>(obj);
-      if (exec) {
-         printf("Process exec %s\n", exec->GetTitle());
-         exec->Exec();
-         isany = true;
-      }
-   }
-
-   return isany;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////
 /// Decode all pad options, which includes ranges plus objects options
 
-Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
+Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
 {
    if (IsReadOnly() || msg.empty())
       return kFALSE;
@@ -786,7 +771,18 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
       if (!pad)
          continue;
 
-      if (pad == Canvas()) AssignStatusBits(r.bits);
+      auto change_canvas_uint = [this](const char *member, UInt_t val) {
+         auto offset = TCanvas::Class()->GetDataMemberOffset(member);
+         if (offset > 0)
+            *((UInt_t *)((char*) Canvas() + offset)) = val;
+      };
+
+
+      if (pad == Canvas()) {
+         AssignStatusBits(r.bits);
+         change_canvas_uint("fCw", r.cw);
+         change_canvas_uint("fCh", r.ch);
+      }
 
       if (r.active && (pad != gPad)) gPad = pad;
 
@@ -810,6 +806,8 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
          auto offset = TPad::Class()->GetDataMemberOffset(member);
          if (offset > 0)
             *((Double_t *)((char*) pad + offset)) = val;
+         else
+            printf("Fail to find pad member %s\n", member);
       };
 
       if (r.ranges) {
@@ -850,7 +848,43 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
       change_pad_member("fXUpNDC", r.xup);
       change_pad_member("fYUpNDC", r.yup);
       change_pad_member("fWNDC", r.xup - r.xlow);
-      change_pad_member("fHNDC", r.yup - r.xup);
+      change_pad_member("fHNDC", r.yup - r.ylow);
+
+      change_pad_member("fAbsXlowNDC", r.xlow);
+      change_pad_member("fAbsYlowNDC", r.ylow);
+      change_pad_member("fAbsWNDC", r.xup - r.xlow);
+      change_pad_member("fAbsHNDC", r.yup - r.ylow);
+
+      // copy of code from TPad::ResizePad()
+
+      Double_t pxlow   = r.xlow * r.cw;
+      Double_t pylow   = (1-r.ylow) * r.ch;
+      Double_t pxrange = (r.xup - r.xlow) * r.cw;
+      Double_t pyrange = -1*(r.yup - r.ylow) * r.ch;
+
+      Double_t rounding = 0.00005;
+      Double_t xrange  = r.px2 - r.px1;
+      Double_t yrange  = r.py2 - r.py1;
+
+      if ((xrange != 0.) && (pxrange != 0)) {
+         // Linear X axis
+         change_pad_member("fXtoAbsPixelk", rounding + pxlow - pxrange*r.px1/xrange);      //origin at left
+         change_pad_member("fXtoPixelk", rounding +  -pxrange*r.px1/xrange);
+         change_pad_member("fXtoPixel", pxrange/xrange);
+         change_pad_member("fAbsPixeltoXk", r.px1 - pxlow*xrange/pxrange);
+         change_pad_member("fPixeltoXk", r.px1);
+         change_pad_member("fPixeltoX", xrange/pxrange);
+      }
+
+      if ((yrange != 0.) && (pyrange != 0.)) {
+         // Linear Y axis
+         change_pad_member("fYtoAbsPixelk", rounding + pylow - pyrange*r.py1/yrange);      //origin at top
+         change_pad_member("fYtoPixelk", rounding +  -pyrange - pyrange*r.py1/yrange);
+         change_pad_member("fYtoPixel", pyrange/yrange);
+         change_pad_member("fAbsPixeltoYk", r.py1 - pylow*yrange/pyrange);
+         change_pad_member("fPixeltoYk", r.py1);
+         change_pad_member("fPixeltoY", yrange/pyrange);
+      }
 
       pad->SetFixedAspectRatio(kFALSE);
 
@@ -907,14 +941,45 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
       }
 
       // without special objects no need for explicit update of the pad
-      if (fHasSpecials)
+      if (fPadsStatus[pad]._has_specials)
          pad->Modified(kTRUE);
 
+      if (process_execs)
+         ProcessPadExecs(pad);
    }
 
    if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
 
    return kTRUE;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Process TExec objects in the pad
+
+void TWebCanvas::ProcessPadExecs(TPad *pad)
+{
+   auto execs = pad->GetListOfExecs();
+
+   if (!execs || !execs->GetSize())
+      return;
+
+   auto saveps = gVirtualPS;
+   TWebPS ps;
+   gVirtualPS = &ps;
+
+   auto savex = gVirtualX;
+   TVirtualX x;
+   gVirtualX = &x;
+
+   TIter next(execs);
+   while (auto obj = next()) {
+      auto exec = dynamic_cast<TExec *>(obj);
+      if (exec)
+         exec->Exec();
+   }
+
+   gVirtualPS = saveps;
+   gVirtualX = savex;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -966,7 +1031,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       } else {
          fWebConn[indx].fDrawVersion = std::stoll(std::string(cdata, separ - cdata));
          if ((indx == 0) && !IsReadOnly())
-            DecodePadOptions(separ+1);
+            DecodePadOptions(separ+1, false);
       }
 
    } else if (arg == "RELOAD") {
@@ -1006,7 +1071,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
    } else if (arg.compare(0, 9, "OPTIONS6:") == 0) {
 
       if ((indx == 0) && !IsReadOnly())
-         DecodePadOptions(arg.substr(9));
+         DecodePadOptions(arg.substr(9), true);
 
    } else if (arg.compare(0, 11, "STATUSBITS:") == 0) {
 
@@ -1015,24 +1080,63 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
       }
    } else if (arg.compare(0, 10, "HIGHLIGHT:") == 0) {
-      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(10));
-      if (!arr || (arr->size() != 4)) {
-         Error("ProcessData", "Wrong arguments count %d in highlight message", (int) (arr ? arr->size() : -1));
-      } else {
-         auto pad = dynamic_cast<TVirtualPad*> (FindPrimitive(arr->at(0)));
-         auto obj = FindPrimitive(arr->at(1));
-         int argx = std::stoi(arr->at(2));
-         int argy = std::stoi(arr->at(3));
-         if (pad && obj) {
-            Canvas()->Highlighted(pad, obj, argx, argy);
-            CheckCanvasModified();
+      if (indx == 0) {
+         auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(10));
+         if (!arr || (arr->size() != 4)) {
+            Error("ProcessData", "Wrong arguments count %d in highlight message", (int)(arr ? arr->size() : -1));
+         } else {
+            auto pad = dynamic_cast<TVirtualPad *>(FindPrimitive(arr->at(0)));
+            auto obj = FindPrimitive(arr->at(1));
+            int argx = std::stoi(arr->at(2));
+            int argy = std::stoi(arr->at(3));
+            if (pad && obj) {
+              Canvas()->Highlighted(pad, obj, argx, argy);
+              CheckCanvasModified();
+            }
          }
       }
-
    } else if (IsReadOnly()) {
 
       // all following messages are not allowed in readonly mode
       return kFALSE;
+
+   } else if (arg.compare(0, 6, "EVENT:") == 0) {
+      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(6));
+      if (!arr || (arr->size() != 5)) {
+         Error("ProcessData", "Wrong arguments count %d in event message", (int)(arr ? arr->size() : -1));
+      } else {
+         auto pad = dynamic_cast<TPad *>(FindPrimitive(arr->at(0)));
+         std::string kind = arr->at(1);
+         int event = -1;
+         if (kind == "move"s) event = kMouseMotion;
+         int argx = std::stoi(arr->at(2));
+         int argy = std::stoi(arr->at(3));
+         auto selobj = FindPrimitive(arr->at(4));
+
+         if ((event >= 0) && pad && (pad == gPad)) {
+            auto change_canvas_member = [this](const char *member, int val) {
+               auto offset = TCanvas::Class()->GetDataMemberOffset(member);
+               if (offset > 0)
+                  *((Int_t *)((char*) Canvas() + offset)) = val;
+               else
+                  printf("Not found canvas member %s\n", member);
+            };
+            auto change_canvas_ptr = [this](const char *member, void *val) {
+               auto offset = TCanvas::Class()->GetDataMemberOffset(member);
+               if (offset > 0)
+                  *((void **)((char*) Canvas() + offset)) = val;
+               else
+                  printf("Not found canvas member %s\n", member);
+            };
+            change_canvas_member("fEvent", event);
+            change_canvas_member("fEventX", argx);
+            change_canvas_member("fEventY", argy);
+
+            change_canvas_ptr("fSelected", selobj);
+
+            ProcessPadExecs(pad);
+         }
+      }
 
    } else if (arg.compare(0, 8, "GETMENU:") == 0) {
 
@@ -1201,10 +1305,10 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
 void TWebCanvas::CheckPadModified(TPad *pad)
 {
-   if (fPadModified.find(pad) == fPadModified.end())
-      fPadModified[pad] = PadModified{0, true, true};
+   if (fPadsStatus.find(pad) == fPadsStatus.end())
+      fPadsStatus[pad] = PadStatus{0, true, true};
 
-   auto &entry = fPadModified[pad];
+   auto &entry = fPadsStatus[pad];
    entry._detected = true;
    if (pad->IsModified()) {
       pad->Modified(kFALSE);
@@ -1225,7 +1329,7 @@ void TWebCanvas::CheckPadModified(TPad *pad)
 void TWebCanvas::CheckCanvasModified()
 {
    // clear temporary flags
-   for (auto &entry : fPadModified)
+   for (auto &entry : fPadsStatus)
       entry.second._detected = entry.second._modified = false;
 
    // scan sub-pads
@@ -1233,19 +1337,19 @@ void TWebCanvas::CheckCanvasModified()
 
    // remove no-longer existing pads
    bool is_any_modified = false;
-   for(auto iter = fPadModified.begin(); iter != fPadModified.end(); ) {
+   for(auto iter = fPadsStatus.begin(); iter != fPadsStatus.end(); ) {
       if (iter->second._modified)
          is_any_modified = true;
       if (!iter->second._detected)
-         fPadModified.erase(iter++);
+         fPadsStatus.erase(iter++);
       else
          iter++;
    }
 
-   // if any pad modified, increment canvas version
+   // if any pad modified, increment canvas version and set version of modified pads
    if (is_any_modified) {
       fCanvVersion++;
-      for(auto &entry : fPadModified)
+      for(auto &entry : fPadsStatus)
          if (entry.second._modified)
             entry.second.fVersion = fCanvVersion;
    }
@@ -1485,6 +1589,8 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
 
 TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad, TObjLink **padlnk, TPad **objpad)
 {
+   if (sid.empty() || (sid == "0"s))
+      return nullptr;
 
    if (!pad)
       pad = Canvas();
