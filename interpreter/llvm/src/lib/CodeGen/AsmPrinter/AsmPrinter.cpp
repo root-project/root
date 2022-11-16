@@ -1643,8 +1643,8 @@ void AsmPrinter::emitGlobalIndirectSymbol(Module &M,
     OutStreamer->emitSymbolAttribute(Name, MCSA_Global);
   else if (GIS.hasWeakLinkage() || GIS.hasLinkOnceLinkage())
     OutStreamer->emitSymbolAttribute(Name, MCSA_WeakReference);
-  else
-    assert(GIS.hasLocalLinkage() && "Invalid alias or ifunc linkage");
+  // else
+  //   assert(GIS.hasLocalLinkage() && "Invalid alias or ifunc linkage");
 
   // Set the symbol type to function if the alias has a function type.
   // This affects codegen when the aliasee is not a function.

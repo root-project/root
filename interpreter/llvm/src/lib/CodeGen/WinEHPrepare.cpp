@@ -1065,10 +1065,10 @@ bool WinEHPrepare::prepareExplicitEH(Function &F) {
                                 DemoteCatchSwitchPHIOnlyOpt);
 
   if (!DisableCleanups) {
-    assert(!verifyFunction(F, &dbgs()));
+    //assert(!verifyFunction(F, &dbgs()));
     removeImplausibleInstructions(F);
 
-    assert(!verifyFunction(F, &dbgs()));
+    //assert(!verifyFunction(F, &dbgs()));
     cleanupPreparedFunclets(F);
   }
 
