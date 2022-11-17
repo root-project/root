@@ -288,7 +288,8 @@ const TooltipHandler = {
 
    /** @summary central function which let show selected hints for the object */
    processFrameTooltipEvent(pnt, evnt) {
-      if (pnt && pnt.handler) {
+
+      if (pnt?.handler) {
          // special use of interactive handler in the frame painter
          let rect = this.draw_g ? this.draw_g.select('.main_layer') : null;
          if (!rect || rect.empty()) {
@@ -316,7 +317,10 @@ const TooltipHandler = {
       // collect tooltips from pad painter - it has list of all drawn objects
       if (pp) hints = pp.processPadTooltipEvent(pnt);
 
-      if (pnt && pnt.touch) textheight = 15;
+      if (pp?._deliver_webcanvas_events && pp?.is_active_pad && pnt && isFunc(pp?.deliverWebCanvasEvent))
+         pp.deliverWebCanvasEvent('move', frame_rect.x + pnt.x, frame_rect.y + pnt.y, hints);
+
+      if (pnt?.touch) textheight = 15;
 
       for (let n = 0; n < hints.length; ++n) {
          let hint = hints[n];
@@ -326,7 +330,8 @@ const TooltipHandler = {
             hint.painter.provideUserTooltip(hint.user_info);
 
          if (!hint.lines || (hint.lines.length === 0)) {
-            hints[n] = null; continue;
+            hints[n] = null;
+            continue;
          }
 
          // check if fully duplicated hint already exists
@@ -383,7 +388,6 @@ const TooltipHandler = {
       }
 
       this.showObjectStatus(name, title, info, coordinates);
-
 
       // end of closing tooltips
       if (!pnt || disable_tootlips || (hints.length === 0) || (maxlen === 0) || (show_only_best && !best_hint)) {

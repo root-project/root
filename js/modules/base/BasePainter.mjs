@@ -47,7 +47,7 @@ function getElementRect(elem, sizearg) {
 /** @summary Calculate absolute position of provided element in canvas
   * @private */
 function getAbsPosInCanvas(sel, pos) {
-   while (!sel.empty() && !sel.classed('root_canvas') && pos) {
+   while (pos && !sel.empty() && !sel.classed('root_canvas')) {
       let cl = sel.attr('class');
       if (cl && ((cl.indexOf('root_frame') >= 0) || (cl.indexOf('__root_pad_') >= 0))) {
          pos.x += sel.property('draw_x') || 0;

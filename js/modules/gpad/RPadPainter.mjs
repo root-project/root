@@ -227,28 +227,28 @@ class RPadPainter extends RObjectPainter {
    /** @summary Generate pad events, normally handled by GED
      * @desc in pad painter, while pad may be drawn without canvas
      * @private */
-   producePadEvent(_what, _padpainter, _painter, _position, _place) {
-      if ((_what == 'select') && isFunc(this.selectActivePad))
-         this.selectActivePad(_padpainter, _painter, _position);
+   producePadEvent(what, padpainter, painter, position, place) {
+      if ((what == 'select') && isFunc(this.selectActivePad))
+         this.selectActivePad(padpainter, painter, position);
 
       if (this.pad_events_receiver)
-         this.pad_events_receiver({ what: _what, padpainter:  _padpainter, painter: _painter, position: _position, place: _place });
+         this.pad_events_receiver({ what, padpainter, painter, position, place });
    }
 
    /** @summary method redirect call to pad events receiver */
-   selectObjectPainter(_painter, pos, _place) {
+   selectObjectPainter(painter, pos, place) {
 
       let istoppad = (this.iscan || !this.has_canvas),
           canp = istoppad ? this : this.getCanvPainter();
 
-      if (_painter === undefined) _painter = this;
+      if (painter === undefined) painter = this;
 
       if (pos && !istoppad)
          pos = getAbsPosInCanvas(this.svg_this_pad(), pos);
 
       selectActivePad({ pp: this, active: true });
 
-      canp.producePadEvent('select', this, _painter, pos, _place);
+      canp.producePadEvent('select', this, painter, pos, place);
    }
 
    /** @summary Create SVG element for the canvas */

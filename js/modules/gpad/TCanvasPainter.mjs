@@ -306,14 +306,15 @@ class TCanvasPainter extends TPadPainter {
          this.closeWebsocket(true);
       } else if (msg.slice(0,6) == 'SNAP6:') {
          // This is snapshot, produced with ROOT6
-
-         let snap = parse(msg.slice(6));
+         let p1 = msg.indexOf(':', 6),
+             version = msg.slice(6, p1),
+             snap = parse(msg.slice(p1+1));
 
          this.syncDraw(true).then(() => this.redrawPadSnap(snap)).then(() => {
             this.completeCanvasSnapDrawing();
             let ranges = this.getWebPadOptions(); // all data, including subpads
             if (ranges) ranges = ':' + ranges;
-            handle.send('READY6:' + snap.fVersion + ranges); // send ready message back when drawing completed
+            handle.send('READY6:' + version + ranges); // send ready message back when drawing completed
             this.confirmDraw();
          });
       } else if (msg.slice(0,5) == 'MENU:') {
@@ -550,7 +551,7 @@ class TCanvasPainter extends TPadPainter {
 
       if (this._last_highlight_msg != msg) {
          this._last_highlight_msg = msg;
-         this.sendWebsocket('HIGHLIGHT:' + msg);
+         this.sendWebsocket(`HIGHLIGHT:${msg}`);
       }
    }
 

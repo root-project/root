@@ -354,18 +354,18 @@ class TPadPainter extends ObjectPainter {
    }
 
    /** @summary method redirect call to pad events receiver */
-   selectObjectPainter(_painter, pos, _place) {
+   selectObjectPainter(painter, pos, place) {
       let istoppad = this.iscan || !this.has_canvas,
           canp = istoppad ? this : this.getCanvPainter();
 
-      if (_painter === undefined) _painter = this;
+      if (painter === undefined) painter = this;
 
       if (pos && !istoppad)
          pos = getAbsPosInCanvas(this.svg_this_pad(), pos);
 
       selectActivePad({ pp: this, active: true });
 
-      if (canp) canp.producePadEvent('select', this, _painter, pos, _place);
+      canp?.producePadEvent('select', this, painter, pos, place);
    }
 
    /** @summary Draw pad active border
@@ -617,7 +617,7 @@ class TPadPainter extends ObjectPainter {
             btns = this.getLayerSvg('btns_layer', this.this_pad_name);
       } else {
          svg_pad = svg_can.select('.primitives_layer')
-             .append('svg:svg') // here was g before, svg used to blend all drawin outside
+             .append('svg:svg') // svg used to blend all drawings outside
              .classed('__root_pad_' + this.this_pad_name, true)
              .attr('pad', this.this_pad_name) // set extra attribute  to mark pad name
              .property('pad_painter', this); // this is custom property
@@ -1398,6 +1398,9 @@ class TPadPainter extends ObjectPainter {
       let first = snap.fSnapshot;
       first.fPrimitives = null; // primitives are not interesting, they are disabled in IO
 
+      // if there are execs in the pad, deliver events to the server
+      this._deliver_webcanvas_events = first.fExecs?.arr?.length ? true : false;
+
       if (this.snapid === undefined) {
          // first time getting snap, create all gui elements first
 
@@ -1405,6 +1408,7 @@ class TPadPainter extends ObjectPainter {
 
          this.draw_object = first;
          this.pad = first;
+
          // this._fixed_size = true;
 
          // if canvas size not specified in batch mode, temporary use 900x700 size
@@ -1478,12 +1482,15 @@ class TPadPainter extends ObjectPainter {
 
       // check if frame or title was recreated, we could reassign handlers for them directly
       // while this is temporary objects, which can be recreated very often, try to catch such situation ourselfs
-      MatchPrimitive(this.painters, snap.fPrimitives, 'TFrame');
-      MatchPrimitive(this.painters, snap.fPrimitives, clTPaveText, 'title');
+      if (!snap.fWithoutPrimitives) {
+         MatchPrimitive(this.painters, snap.fPrimitives, 'TFrame');
+         MatchPrimitive(this.painters, snap.fPrimitives, clTPaveText, 'title');
+      }
 
       let isanyfound = false, isanyremove = false;
 
       // find and remove painters which no longer exists in the list
+      if (!snap.fWithoutPrimitives)
       for (let k = 0; k < this.painters.length; ++k) {
          let sub = this.painters[k];
 
@@ -1508,7 +1515,7 @@ class TPadPainter extends ObjectPainter {
       if (isanyremove)
          delete this.pads_cache;
 
-      if (!isanyfound) {
+      if (!isanyfound && !snap.fWithoutPrimitives) {
          // TODO: maybe just remove frame painter?
          let fp = this.getFramePainter();
          this.painters.forEach(objp => {
@@ -1530,10 +1537,11 @@ class TPadPainter extends ObjectPainter {
       return this.drawNextSnap(snap.fPrimitives).then(() => {
          // redraw secondaries like stat box
          let promises = [];
-         this.painters.forEach(sub => {
-            if ((sub.snapid === undefined) || sub.$secondary)
-               promises.push(sub.redraw());
-         });
+         if (!snap.fWithoutPrimitives)
+            this.painters.forEach(sub => {
+               if ((sub.snapid === undefined) || sub.$secondary)
+                  promises.push(sub.redraw());
+            });
          return Promise.all(promises);
       }).then(() => {
          this.selectCurrentPad(prev_name);
@@ -1541,6 +1549,22 @@ class TPadPainter extends ObjectPainter {
             this.getCanvPainter()?.producePadEvent('padredraw', this);
          return this;
       });
+   }
+
+   /** @summary Deliver mouse move or click event to the web canvas
+     * @private */
+   deliverWebCanvasEvent(kind, x, y, hints) {
+      if (!this._deliver_webcanvas_events || !this.is_active_pad || this.doingDraw() || x === undefined || y === undefined) return;
+      let cp = this.getCanvPainter();
+      if (!cp || !cp._websocket || !cp._websocket.canSend(2) || cp._readonly) return;
+
+      let selobj_snapid = '';
+      if (hints && hints[0] && hints[0].painter?.snapid)
+         selobj_snapid = hints[0].painter.snapid.toString();
+
+      let msg = JSON.stringify([this.snapid, kind, x.toString(), y.toString(), selobj_snapid]);
+
+      cp.sendWebsocket(`EVENT:${msg}`);
    }
 
    /** @summary Create image for the pad
@@ -1576,6 +1600,7 @@ class TPadPainter extends ObjectPainter {
       if (this.snapid) {
          elem = { _typename: 'TWebPadOptions', snapid: this.snapid.toString(),
                   active: !!this.is_active_pad,
+                  cw: 0, ch: 0,
                   bits: 0, primitives: [],
                   logx: this.pad.fLogx, logy: this.pad.fLogy, logz: this.pad.fLogz,
                   gridx: this.pad.fGridx, gridy: this.pad.fGridy,
@@ -1587,12 +1612,16 @@ class TPadPainter extends ObjectPainter {
 
          if (this.iscan) {
             elem.bits = this.getStatusBits();
+            elem.cw = this.getPadWidth();
+            elem.ch = this.getPadHeight();
          } else if (cp) {
             let cw = cp.getPadWidth(), ch = cp.getPadHeight(), rect = this.getPadRect();
+            elem.cw = cw;
+            elem.ch = ch;
             elem.xlow = rect.x / cw;
-            elem.ylow = rect.y / ch;
-            elem.xup = (rect.x + rect.width) / cw;
-            elem.yup = (rect.y + rect.height) / ch;
+            elem.ylow = 1 - (rect.y + rect.height) / ch;
+            elem.xup = elem.xlow + rect.width / cw;
+            elem.yup = elem.ylow + rect.height / ch;
          }
 
          if (this.getPadRanges(elem))

@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '19/11/2021' */
-let version_date = '15/11/2022';
+let version_date = '17/11/2022';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -7746,7 +7746,7 @@ function getElementRect(elem, sizearg) {
 /** @summary Calculate absolute position of provided element in canvas
   * @private */
 function getAbsPosInCanvas(sel, pos) {
-   while (!sel.empty() && !sel.classed('root_canvas') && pos) {
+   while (pos && !sel.empty() && !sel.classed('root_canvas')) {
       let cl = sel.attr('class');
       if (cl && ((cl.indexOf('root_frame') >= 0) || (cl.indexOf('__root_pad_') >= 0))) {
          pos.x += sel.property('draw_x') || 0;
@@ -49525,7 +49525,8 @@ const TooltipHandler = {
 
    /** @summary central function which let show selected hints for the object */
    processFrameTooltipEvent(pnt, evnt) {
-      if (pnt && pnt.handler) {
+
+      if (pnt?.handler) {
          // special use of interactive handler in the frame painter
          let rect = this.draw_g ? this.draw_g.select('.main_layer') : null;
          if (!rect || rect.empty()) {
@@ -49553,7 +49554,10 @@ const TooltipHandler = {
       // collect tooltips from pad painter - it has list of all drawn objects
       if (pp) hints = pp.processPadTooltipEvent(pnt);
 
-      if (pnt && pnt.touch) textheight = 15;
+      if (pp?._deliver_webcanvas_events && pp?.is_active_pad && pnt && isFunc(pp?.deliverWebCanvasEvent))
+         pp.deliverWebCanvasEvent('move', frame_rect.x + pnt.x, frame_rect.y + pnt.y, hints);
+
+      if (pnt?.touch) textheight = 15;
 
       for (let n = 0; n < hints.length; ++n) {
          let hint = hints[n];
@@ -49563,7 +49567,8 @@ const TooltipHandler = {
             hint.painter.provideUserTooltip(hint.user_info);
 
          if (!hint.lines || (hint.lines.length === 0)) {
-            hints[n] = null; continue;
+            hints[n] = null;
+            continue;
          }
 
          // check if fully duplicated hint already exists
@@ -49620,7 +49625,6 @@ const TooltipHandler = {
       }
 
       this.showObjectStatus(name, title, info, coordinates);
-
 
       // end of closing tooltips
       if (!pnt || disable_tootlips || (hints.length === 0) || (maxlen === 0) || (show_only_best && !best_hint)) {
@@ -54096,18 +54100,18 @@ class TPadPainter extends ObjectPainter {
    }
 
    /** @summary method redirect call to pad events receiver */
-   selectObjectPainter(_painter, pos, _place) {
+   selectObjectPainter(painter, pos, place) {
       let istoppad = this.iscan || !this.has_canvas,
           canp = istoppad ? this : this.getCanvPainter();
 
-      if (_painter === undefined) _painter = this;
+      if (painter === undefined) painter = this;
 
       if (pos && !istoppad)
          pos = getAbsPosInCanvas(this.svg_this_pad(), pos);
 
       selectActivePad({ pp: this, active: true });
 
-      if (canp) canp.producePadEvent('select', this, _painter, pos, _place);
+      canp?.producePadEvent('select', this, painter, pos, place);
    }
 
    /** @summary Draw pad active border
@@ -54359,7 +54363,7 @@ class TPadPainter extends ObjectPainter {
             btns = this.getLayerSvg('btns_layer', this.this_pad_name);
       } else {
          svg_pad = svg_can.select('.primitives_layer')
-             .append('svg:svg') // here was g before, svg used to blend all drawin outside
+             .append('svg:svg') // svg used to blend all drawings outside
              .classed('__root_pad_' + this.this_pad_name, true)
              .attr('pad', this.this_pad_name) // set extra attribute  to mark pad name
              .property('pad_painter', this); // this is custom property
@@ -55140,6 +55144,9 @@ class TPadPainter extends ObjectPainter {
       let first = snap.fSnapshot;
       first.fPrimitives = null; // primitives are not interesting, they are disabled in IO
 
+      // if there are execs in the pad, deliver events to the server
+      this._deliver_webcanvas_events = first.fExecs?.arr?.length ? true : false;
+
       if (this.snapid === undefined) {
          // first time getting snap, create all gui elements first
 
@@ -55147,6 +55154,7 @@ class TPadPainter extends ObjectPainter {
 
          this.draw_object = first;
          this.pad = first;
+
          // this._fixed_size = true;
 
          // if canvas size not specified in batch mode, temporary use 900x700 size
@@ -55220,12 +55228,15 @@ class TPadPainter extends ObjectPainter {
 
       // check if frame or title was recreated, we could reassign handlers for them directly
       // while this is temporary objects, which can be recreated very often, try to catch such situation ourselfs
-      MatchPrimitive(this.painters, snap.fPrimitives, 'TFrame');
-      MatchPrimitive(this.painters, snap.fPrimitives, clTPaveText, 'title');
+      if (!snap.fWithoutPrimitives) {
+         MatchPrimitive(this.painters, snap.fPrimitives, 'TFrame');
+         MatchPrimitive(this.painters, snap.fPrimitives, clTPaveText, 'title');
+      }
 
       let isanyfound = false, isanyremove = false;
 
       // find and remove painters which no longer exists in the list
+      if (!snap.fWithoutPrimitives)
       for (let k = 0; k < this.painters.length; ++k) {
          let sub = this.painters[k];
 
@@ -55250,7 +55261,7 @@ class TPadPainter extends ObjectPainter {
       if (isanyremove)
          delete this.pads_cache;
 
-      if (!isanyfound) {
+      if (!isanyfound && !snap.fWithoutPrimitives) {
          // TODO: maybe just remove frame painter?
          let fp = this.getFramePainter();
          this.painters.forEach(objp => {
@@ -55272,10 +55283,11 @@ class TPadPainter extends ObjectPainter {
       return this.drawNextSnap(snap.fPrimitives).then(() => {
          // redraw secondaries like stat box
          let promises = [];
-         this.painters.forEach(sub => {
-            if ((sub.snapid === undefined) || sub.$secondary)
-               promises.push(sub.redraw());
-         });
+         if (!snap.fWithoutPrimitives)
+            this.painters.forEach(sub => {
+               if ((sub.snapid === undefined) || sub.$secondary)
+                  promises.push(sub.redraw());
+            });
          return Promise.all(promises);
       }).then(() => {
          this.selectCurrentPad(prev_name);
@@ -55283,6 +55295,22 @@ class TPadPainter extends ObjectPainter {
             this.getCanvPainter()?.producePadEvent('padredraw', this);
          return this;
       });
+   }
+
+   /** @summary Deliver mouse move or click event to the web canvas
+     * @private */
+   deliverWebCanvasEvent(kind, x, y, hints) {
+      if (!this._deliver_webcanvas_events || !this.is_active_pad || this.doingDraw() || x === undefined || y === undefined) return;
+      let cp = this.getCanvPainter();
+      if (!cp || !cp._websocket || !cp._websocket.canSend(2) || cp._readonly) return;
+
+      let selobj_snapid = '';
+      if (hints && hints[0] && hints[0].painter?.snapid)
+         selobj_snapid = hints[0].painter.snapid.toString();
+
+      let msg = JSON.stringify([this.snapid, kind, x.toString(), y.toString(), selobj_snapid]);
+
+      cp.sendWebsocket(`EVENT:${msg}`);
    }
 
    /** @summary Create image for the pad
@@ -55318,6 +55346,7 @@ class TPadPainter extends ObjectPainter {
       if (this.snapid) {
          elem = { _typename: 'TWebPadOptions', snapid: this.snapid.toString(),
                   active: !!this.is_active_pad,
+                  cw: 0, ch: 0,
                   bits: 0, primitives: [],
                   logx: this.pad.fLogx, logy: this.pad.fLogy, logz: this.pad.fLogz,
                   gridx: this.pad.fGridx, gridy: this.pad.fGridy,
@@ -55329,12 +55358,16 @@ class TPadPainter extends ObjectPainter {
 
          if (this.iscan) {
             elem.bits = this.getStatusBits();
+            elem.cw = this.getPadWidth();
+            elem.ch = this.getPadHeight();
          } else if (cp) {
             let cw = cp.getPadWidth(), ch = cp.getPadHeight(), rect = this.getPadRect();
+            elem.cw = cw;
+            elem.ch = ch;
             elem.xlow = rect.x / cw;
-            elem.ylow = rect.y / ch;
-            elem.xup = (rect.x + rect.width) / cw;
-            elem.yup = (rect.y + rect.height) / ch;
+            elem.ylow = 1 - (rect.y + rect.height) / ch;
+            elem.xup = elem.xlow + rect.width / cw;
+            elem.yup = elem.ylow + rect.height / ch;
          }
 
          if (this.getPadRanges(elem))
@@ -56137,14 +56170,15 @@ class TCanvasPainter extends TPadPainter {
          this.closeWebsocket(true);
       } else if (msg.slice(0,6) == 'SNAP6:') {
          // This is snapshot, produced with ROOT6
-
-         let snap = parse(msg.slice(6));
+         let p1 = msg.indexOf(':', 6),
+             version = msg.slice(6, p1),
+             snap = parse(msg.slice(p1+1));
 
          this.syncDraw(true).then(() => this.redrawPadSnap(snap)).then(() => {
             this.completeCanvasSnapDrawing();
             let ranges = this.getWebPadOptions(); // all data, including subpads
             if (ranges) ranges = ':' + ranges;
-            handle.send('READY6:' + snap.fVersion + ranges); // send ready message back when drawing completed
+            handle.send('READY6:' + version + ranges); // send ready message back when drawing completed
             this.confirmDraw();
          });
       } else if (msg.slice(0,5) == 'MENU:') {
@@ -56381,7 +56415,7 @@ class TCanvasPainter extends TPadPainter {
 
       if (this._last_highlight_msg != msg) {
          this._last_highlight_msg = msg;
-         this.sendWebsocket('HIGHLIGHT:' + msg);
+         this.sendWebsocket(`HIGHLIGHT:${msg}`);
       }
    }
 
@@ -94999,28 +95033,28 @@ class RPadPainter extends RObjectPainter {
    /** @summary Generate pad events, normally handled by GED
      * @desc in pad painter, while pad may be drawn without canvas
      * @private */
-   producePadEvent(_what, _padpainter, _painter, _position, _place) {
-      if ((_what == 'select') && isFunc(this.selectActivePad))
-         this.selectActivePad(_padpainter, _painter, _position);
+   producePadEvent(what, padpainter, painter, position, place) {
+      if ((what == 'select') && isFunc(this.selectActivePad))
+         this.selectActivePad(padpainter, painter, position);
 
       if (this.pad_events_receiver)
-         this.pad_events_receiver({ what: _what, padpainter:  _padpainter, painter: _painter, position: _position, place: _place });
+         this.pad_events_receiver({ what, padpainter, painter, position, place });
    }
 
    /** @summary method redirect call to pad events receiver */
-   selectObjectPainter(_painter, pos, _place) {
+   selectObjectPainter(painter, pos, place) {
 
       let istoppad = (this.iscan || !this.has_canvas),
           canp = istoppad ? this : this.getCanvPainter();
 
-      if (_painter === undefined) _painter = this;
+      if (painter === undefined) painter = this;
 
       if (pos && !istoppad)
          pos = getAbsPosInCanvas(this.svg_this_pad(), pos);
 
       selectActivePad({ pp: this, active: true });
 
-      canp.producePadEvent('select', this, _painter, pos, _place);
+      canp.producePadEvent('select', this, painter, pos, place);
    }
 
    /** @summary Create SVG element for the canvas */
