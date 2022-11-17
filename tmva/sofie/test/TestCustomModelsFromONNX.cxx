@@ -203,6 +203,12 @@
 #include "LayerNormalization4d_FromONNX.hxx"
 #include "input_models/references/LayerNormalization4d.hxx"
 
+#include "ExpandSameSize_FromONNX.hxx"
+#include "input_models/references/ExpandSameSize.ref.hxx"
+
+#include "ExpandDiffSize_FromONNX.hxx"
+#include "input_models/references/ExpandDiffSize.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -2033,3 +2039,40 @@ TEST(ONNX, LayerNormalization4d) {
    }
 }
 
+TEST(ONNX, ExpandSameSize) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   std::vector<float> input({0., 1., 2.});
+   TMVA_SOFIE_ExpandSameSize::Session s("ExpandSameSize_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(ExpandSameSize_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = ExpandSameSize_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, ExpandDiffSize) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   std::vector<float> input({0., 1., 2.});
+   TMVA_SOFIE_ExpandDiffSize::Session s("ExpandDiffSize_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(ExpandDiffSize_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = ExpandDiffSize_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}

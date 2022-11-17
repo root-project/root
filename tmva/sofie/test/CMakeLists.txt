@@ -39,7 +39,9 @@ add_dependencies(SofieCompileModels_ONNX emitFromONNX)
 
 # Finding .onnx files to be compiled and creating the appropriate command
 file(GLOB ONNX_FILES "${ONNX_MODELS_DIR}/*.onnx")
-foreach(onnx_file ${ONNX_FILES})
+# Finding .onnx files to be compiled only from ONNX
+file(GLOB ONNX_ONLY_FILES "${ONNX_MODELS_DIR}/onnx/*.onnx")
+foreach(onnx_file ${ONNX_FILES} ${ONNX_ONLY_FILES})
 	get_filename_component(fname ${onnx_file} NAME_WE)
 	get_filename_component(fdir ${onnx_file} DIRECTORY)
 	add_custom_command(TARGET SofieCompileModels_ONNX POST_BUILD

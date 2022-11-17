@@ -49,6 +49,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseTanh.cxx
     src/ParseTranspose.cxx
     src/ParseLayerNormalization.cxx
+    src/ParseExpand.cxx
     src/ParseFuseConvAdd.cxx
     src/ParseFuseConvTransposeAdd.cxx
     src/ParseFuseMatMulAdd.cxx
