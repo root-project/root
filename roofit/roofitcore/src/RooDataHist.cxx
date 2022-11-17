@@ -1130,7 +1130,7 @@ void RooDataHist::interpolateQuadratic(double* output, RooSpan<const double> xVa
   std::vector<double> weightsExt(nBins+3);
   // Fill weights for bins that are inside histogram boundaries
   for (std::size_t binIdx = 0; binIdx < nBins; ++binIdx) {
-    weightsExt[binIdx+2] = correctForBinSize ? _wgt[binIdx] / _binv[binIdx] : _wgt[binIdx];
+    weightsExt[binIdx+2] = correctForBinSize ? get_wgt(binIdx) / _binv[binIdx] : get_wgt(binIdx);
   }
 
   if (cdfBoundaries) {
@@ -1237,7 +1237,7 @@ void RooDataHist::interpolateLinear(double* output, RooSpan<const double> xVals,
   std::vector<double> weightsExt(nBins+2);
   // Fill weights for bins that are inside histogram boundaries
   for (std::size_t binIdx = 0; binIdx < nBins; ++binIdx) {
-    weightsExt[binIdx+1] = correctForBinSize ? _wgt[binIdx] / _binv[binIdx] : _wgt[binIdx];
+    weightsExt[binIdx+1] = correctForBinSize ? get_wgt(binIdx) / _binv[binIdx] : get_wgt(binIdx);
   }
 
   // Fill weights for bins that are outside histogram boundaries
@@ -1307,7 +1307,7 @@ void RooDataHist::weights(double* output, RooSpan<double const> xVals, int intOr
 
     for (std::size_t i=0; i < nEvents; ++i) {
       auto binIdx = binIndices[i];
-      output[i] = correctForBinSize ? _wgt[binIdx] / _binv[binIdx] : _wgt[binIdx];
+      output[i] = correctForBinSize ? get_wgt(binIdx) / _binv[binIdx] : get_wgt(binIdx);
     }
   }
   else if (intOrder == 1) {
@@ -1354,7 +1354,7 @@ double RooDataHist::weightFast(const RooArgSet& bin, Int_t intOrder, bool correc
   // Handle no-interpolation case
   if (intOrder==0) {
     const auto idx = calcTreeIndex(bin, true);
-    return correctForBinSize ? _wgt[idx] / _binv[idx] : _wgt[idx];
+    return correctForBinSize ? get_wgt(idx) / _binv[idx] : get_wgt(idx);
   }
 
   // Handle all interpolation cases
@@ -1389,7 +1389,7 @@ double RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, bool correctFor
   // Handle no-interpolation case
   if (intOrder==0) {
     const auto idx = calcTreeIndex(bin, false);
-    return correctForBinSize ? _wgt[idx] / _binv[idx] : _wgt[idx];
+    return correctForBinSize ? get_wgt(idx) / _binv[idx] : get_wgt(idx);
   }
 
   // Handle all interpolation cases
@@ -1602,7 +1602,7 @@ double RooDataHist::interpolateDim(int iDim, double xval, size_t centralIdx, int
       ibin = i ;
       xarr[i-fbinLo] = binning.binCenter(ibin) ;
       auto idx = offsetIdx + idxMult * ibin;
-      yarr[i - fbinLo] = _wgt[idx];
+      yarr[i - fbinLo] = get_wgt(idx);
       if (correctForBinSize) yarr[i-fbinLo] /=  _binv[idx] ;
     } else if (i>=fbinM) {
       // Overflow: mirror
@@ -1613,7 +1613,7 @@ double RooDataHist::interpolateDim(int iDim, double xval, size_t centralIdx, int
       } else {
         auto idx = offsetIdx + idxMult * ibin;
         xarr[i-fbinLo] = 2*binning.highBound()-binning.binCenter(ibin) ;
-        yarr[i - fbinLo] = _wgt[idx];
+        yarr[i - fbinLo] = get_wgt(idx);
         if (correctForBinSize)
           yarr[i - fbinLo] /= _binv[idx];
       }
@@ -1626,7 +1626,7 @@ double RooDataHist::interpolateDim(int iDim, double xval, size_t centralIdx, int
       } else {
         auto idx = offsetIdx + idxMult * ibin;
         xarr[i-fbinLo] = 2*binning.lowBound()-binning.binCenter(ibin) ;
-        yarr[i - fbinLo] = _wgt[idx];
+        yarr[i - fbinLo] = get_wgt(idx);
         if (correctForBinSize)
           yarr[i - fbinLo] /= _binv[idx];
       }
@@ -1807,7 +1807,7 @@ double RooDataHist::sum(bool correctForBinSize, bool inverseBinCor) const
   ROOT::Math::KahanSum<double> kahanSum;
   for (Int_t i=0; i < _arrSize; i++) {
     const double theBinVolume = correctForBinSize ? (inverseBinCor ? 1/_binv[i] : _binv[i]) : 1.0 ;
-    kahanSum += _wgt[i] * theBinVolume;
+    kahanSum += get_wgt(i) * theBinVolume;
   }
 
   // Store result in cache
@@ -1882,7 +1882,7 @@ double RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, bool
 
     if (!skip) {
       const double theBinVolume = correctForBinSize ? (inverseBinCor ? 1/(*pbinv)[ibin] : (*pbinv)[ibin] ) : 1.0 ;
-      total += _wgt[ibin] * theBinVolume;
+      total += get_wgt(ibin) * theBinVolume;
     }
   }
 
@@ -1992,7 +1992,7 @@ double RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
     const double corrPartial = binVolumeSumSetInRange / binVolumeSumSetFull;
     if (0. == corrPartial) continue;
     const double corr = correctForBinSize ? (inverseBinCor ? binVolumeSumSetFull / _binv[ibin] : binVolumeSumSetFull ) : 1.0;
-    total += getBinScale(ibin)*(_wgt[ibin] * corr * corrPartial);
+    total += getBinScale(ibin)*(get_wgt(ibin) * corr * corrPartial);
   }
 
   _vars.assign(varSave);

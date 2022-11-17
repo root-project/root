@@ -101,13 +101,13 @@ public:
 
   void weights(double* output, RooSpan<double const> xVals, int intOrder, bool correctForBinSize, bool cdfBoundaries);
   /// Return weight of i-th bin. \see getIndex()
-  double weight(std::size_t i) const { return _wgt[i]; }
+  double weight(std::size_t i) const { return get_wgt(i); }
   double weightFast(const RooArgSet& bin, int intOrder, bool correctForBinSize, bool cdfBoundaries);
   double weight(const RooArgSet& bin, Int_t intOrder=1, bool correctForBinSize=false, bool cdfBoundaries=false, bool oneSafe=false);
   /// Return squared weight sum of i-th bin. \see getIndex(). If sumw2 is not
   /// being tracked, assume that all previous fill operations had a
   /// weight of 1, i.e., return the bare weight of the bin.
-  double weightSquared(std::size_t i) const { return _sumw2 ? _sumw2[i] : _wgt[i]; }
+  double weightSquared(std::size_t i) const { return _sumw2 ? _sumw2[i] : get_wgt(i); }
   /// Return bin volume of i-th bin. \see getIndex()
   double binVolume(std::size_t i) const { return _binv[i]; }
   double binVolume(const RooArgSet& bin) const;
@@ -177,7 +177,7 @@ public:
   /// \deprecated Use the safer weight(std::size_t) const.
   double weight() const override
   R__SUGGEST_ALTERNATIVE("Use the safer weight(std::size_t) const.")
-  { return  _wgt[_curIndex]; }
+  { return get_wgt(_curIndex); }
   /// Return squared weight of last bin that was requested with get().
   /// \deprecated Use the safer weightSquared(std::size_t) const.
   double weightSquared() const override
@@ -230,6 +230,9 @@ protected:
   void importTH1(const RooArgList& vars, const TH1& histo, double initWgt, bool doDensityCorrection) ;
   void importTH1Set(const RooArgList& vars, RooCategory& indexCat, std::map<std::string,TH1*> hmap, double initWgt, bool doDensityCorrection) ;
   void importDHistSet(const RooArgList& vars, RooCategory& indexCat, std::map<std::string,RooDataHist*> dmap, double initWgt) ;
+
+  // get_wgt is necessary because it is overridden in RooFitExtensions' RooExpandedDataHist
+  virtual double get_wgt(std::size_t idx) const { return _wgt[idx]; }
 
   Int_t _arrSize{0}; // Size of member arrays.
   std::vector<Int_t> _idxMult ; // Multiplier jump table for index calculation
