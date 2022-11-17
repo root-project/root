@@ -20,8 +20,11 @@ private:
    std::vector<size_t> fShapeY;
 
    std::string fNX;
-   std::string fNY;
    std::string fNShape;
+   std::string fNY;
+   std::string fType;
+
+   bool fInitialized = false;
 
 public:
    ROperator_Expand(){}
@@ -33,54 +36,45 @@ public:
       return input;
    }
 
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
-      std::vector<std::vector<size_t>> ret;
-      for(auto it:fShape)
-        ret[0].push_back(it);
-      return ret;
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
+      return input;
    }
 
    void Initialize(RModel& model) override {
       // input must be a graph input, or already initialized intermediate tensor
-      if (model.CheckIfTensorAlreadyExist(fNX) == false){
-        throw std::runtime_error("TMVA SOFIE Expand Op Input Tensor is not found in model");
+      if (!model.CheckIfTensorAlreadyExist(fNX)) {
+        throw std::runtime_error("TMVA SOFIE Expand Op Input Tensor " + fNX + " is not found in model");
       }
-
       fShapeX = model.GetTensorShape(fNX);
-
-      if(model.IsInitializedTensor(fNShape)){
-            auto data = model.GetInitializedTensorData(fNShape);
-            auto output_shape = static_cast<int64_t *>(data.get());
-            auto vec = model.GetTensorShape(fNShape);
-            assert(vec.size() == 1);
-            size_t n = vec[0]; // size of shape input tensor
-            std::copy(output_shape, output_shape + n, fShape.begin());
+      if (!model.IsInitializedTensor(fNShape)) {
+         throw std::runtime_error("TMVA::SOFIE - Tensor " + fNShape + " is not initialized.");
       }
-
-      bool broadcast = !UTILITY::AreSameShape(fShapeX, fShape);
-      if (broadcast) {
-         // Y is the common shape of A and B
-         fShapeY = fShape;
-         bool broadcastX = !UTILITY::AreSameShape(fShapeX, fShapeY);
-         
-         // Broadcast A to Y
-         if (broadcastX) {
-            if (model.IsInitializedTensor(fNX)) {
-               auto data = model.GetInitializedTensorData(fNX);
-               std::shared_ptr<void> broadcastedData(
-                  UTILITY::UnidirectionalBroadcast<float>(static_cast<float *>(data.get()), fShapeX, fShapeY),
-                  std::default_delete<float[]>());
-               // Update the data and the shape of X
-               model.UpdateInitializedTensor(fNX, model.GetTensorType(fNX), fShapeY, broadcastedData);
-               fShapeX = fShapeY;
-            } 
-         }
-      } 
-      else {
-         fShapeY = fShapeX;
+      int64_t *shapeData =
+           static_cast<int64_t *>(model.GetInitializedTensorData(fNShape).get());
+      fShape = model.GetTensorShape(fNShape);
+      if (fShape.size() != 1) {
+         throw std::runtime_error("TMVA::SOFIE - Expand operator shape must be a 1d tensor.");
       }
-
+      size_t N = fShape[0];
+      std::vector<size_t> shape(shapeData, shapeData + N);
+      // Y is the common shape of fShapeX and shape
+      fShapeY = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcastShape(
+        fShapeX, shape);
+      fInitialized = model.IsInitializedTensor(fNX);
+      // Broadcast X to the common shape fShapeY
+      bool broadcast = !UTILITY::AreSameShape(fShapeX, fShapeY);
+      if (broadcast && model.IsInitializedTensor(fNX)) {
+         // If X is an initialized tensor (constant)
+         auto data = model.GetInitializedTensorData(fNX);
+         std::shared_ptr<void> broadcastedData(
+               UTILITY::UnidirectionalBroadcast<float>(static_cast<float *>(data.get()), fShapeX, fShapeY),
+               std::default_delete<float[]>());
+         // Update the data and the shape of X
+         model.UpdateInitializedTensor(fNX, model.GetTensorType(fNX), fShapeY, broadcastedData);
+         fShapeX = fShapeY;
+      }
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
+      fType = ConvertTypeToString(model.GetTensorType(fNX));
    }
 
    std::string GenerateInitCode() override {
@@ -95,10 +89,13 @@ public:
          throw std::runtime_error("TMVA SOFIE Expand Op called to Generate without being initialized first");
       }
       std::stringstream out;
-      out << SP << "\n//------ EXPAND" << "\n";
+      out << SP << "\n//------ Expand Op" << "\n";
       size_t length = ConvertShapeToLength(fShapeY);
-      // Broadcast A if it's uninitialized
-      if (!fNY.empty()) {
+      // No need to broadcast A if it's an initialized tensor
+      if (fInitialized) {
+         out << "// Copying initialized tensor " << fNX << " to " << fNY << "\n";
+         out << SP << "std::copy(tensor_" << fNX << ", " << "tensor_" << fNX << " + " << length << ", tensor_" << fNY << ");\n";
+      } else {
          out << SP << "// Broadcasting uninitialized tensor " << fNX << "\n";
          out << SP << "{\n";
          out << SP << SP << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_" << fNX << ", " << ConvertShapeToString(fShapeX) << ", " << ConvertShapeToString(fShapeY) << ");\n";
@@ -106,12 +103,6 @@ public:
          out << SP << SP << "delete[] data;\n";
          out << SP << "}\n";
       }
-    
-      const std::string& nameX = fNY.empty()? fNX : fNY;
-      
-      out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
-      out << SP << SP << "tensor_" << fNY << "[id] = tensor_" + fNX + "[id]" <<  " ;\n";
-      out << SP << "}\n";
       return out.str();
    }
 
@@ -122,4 +113,4 @@ public:
 }//TMVA
 
 
-#endif //TMVA_SOFIE_ROperator_BasicBinary
+#endif //TMVA_SOFIE_ROperator_Expand
