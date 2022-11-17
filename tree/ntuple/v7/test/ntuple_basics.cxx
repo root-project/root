@@ -639,3 +639,35 @@ TEST(RNTuple, BareEntry)
    ntuple->LoadEntry(1);
    EXPECT_EQ(2.0, *ntuple->GetModel()->GetDefaultEntry()->Get<float>("pt"));
 }
+
+namespace {
+static unsigned gNCallReadCallback = 0;
+}
+
+TEST(RNTuple, ReadCallback)
+{
+   FileRaii fileGuard("test_ntuple_readcb.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      auto field = model->MakeField<std::int32_t>("field", 0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      ntuple->Fill();
+      *field = 1;
+      ntuple->Fill();
+   }
+
+   auto model = RNTupleModel::Create();
+   auto field = std::make_unique<RField<std::int32_t>>("field");
+   field->SetReadCallback([](RFieldValue &value) {
+      static std::int32_t expected = 0;
+      EXPECT_EQ(*value.Get<std::int32_t>(), expected++);
+      gNCallReadCallback++;
+   });
+   model->AddField(std::move(field));
+
+   auto ntuple = RNTupleReader::Open(std::move(model), "f", fileGuard.GetPath());
+   EXPECT_EQ(2U, ntuple->GetNEntries());
+   ntuple->LoadEntry(0);
+   ntuple->LoadEntry(1);
+   EXPECT_EQ(2U, gNCallReadCallback);
+}
