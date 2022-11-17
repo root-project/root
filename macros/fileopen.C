@@ -15,5 +15,7 @@ void fileopen()
    // new TBrowser(_file0);
 
    // Quit ROOT when the browser gets closed:
-   b->GetBrowserImp()->GetMainFrame()->Connect("CloseWindow()", 0, 0, "onBrowserClose()");
+   TBrowserImp *bi = b->GetBrowserImp();
+   if (dynamic_cast<TRootBrowser *>(bi) || dynamic_cast<TRootBrowserLite *>(bi))
+      bi->GetMainFrame()->Connect("CloseWindow()", 0, 0, "onBrowserClose()");
 }
