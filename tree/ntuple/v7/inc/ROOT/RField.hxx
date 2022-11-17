@@ -71,6 +71,7 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 // clang-format on
 class RFieldBase {
    friend class ROOT::Experimental::RCollectionField; // to move the fields from the collection model
+   using ReadCallback_t = void (*)(RFieldValue &);
 
 public:
    /// No constructor needs to be called, i.e. any bit pattern in the allocated memory represents a valid type
@@ -112,6 +113,8 @@ protected:
    std::vector<std::unique_ptr<RColumn>> fColumns;
    /// Properties of the type that allow for optimizations of collections of that type
    int fTraits = 0;
+   /// A user-specified function to be optionally called after reading a value
+   ReadCallback_t fReadCallback = nullptr;
 
    /// Creates the backing columns corresponsing to the field type for writing
    virtual void GenerateColumnsImpl() = 0;
@@ -223,17 +226,21 @@ public:
    void Read(NTupleSize_t globalIndex, RFieldValue *value) {
       if (!fIsSimple) {
          ReadGlobalImpl(globalIndex, value);
-         return;
+      } else {
+         fPrincipalColumn->Read(globalIndex, &value->fMappedElement);
       }
-      fPrincipalColumn->Read(globalIndex, &value->fMappedElement);
+      if (fReadCallback)
+         fReadCallback(*value);
    }
 
    void Read(const RClusterIndex &clusterIndex, RFieldValue *value) {
       if (!fIsSimple) {
          ReadInClusterImpl(clusterIndex, value);
-         return;
+      } else {
+         fPrincipalColumn->Read(clusterIndex, &value->fMappedElement);
       }
-      fPrincipalColumn->Read(clusterIndex, &value->fMappedElement);
+      if (fReadCallback)
+         fReadCallback(*value);
    }
 
    /// Ensure that all received items are written from page buffers to the storage.
@@ -255,6 +262,10 @@ public:
    /// Get the field's description
    std::string GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description) { fDescription = std::string(description); }
+
+   /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
+   /// value object.
+   void SetReadCallback(ReadCallback_t func) { fReadCallback = func; }
 
    DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
    void SetOnDiskId(DescriptorId_t id) { fOnDiskId = id; }
