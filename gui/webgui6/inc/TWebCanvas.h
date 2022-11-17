@@ -53,10 +53,17 @@ protected:
 
    struct WebConn {
       unsigned fConnId{0};             ///<! connection id
+      Long64_t fCheckedVersion{0};     ///<! canvas version checked before sending
       Long64_t fSendVersion{0};        ///<! canvas version send to the client
       Long64_t fDrawVersion{0};        ///<! canvas version drawn (confirmed) by client
+      UInt_t fLastSendHash{0};         ///<! hash of last send draw message, avoid looping
       std::queue<std::string> fSend;   ///<! send queue, processed after sending draw data
       WebConn(unsigned id) : fConnId(id) {}
+      void reset()
+      {
+         fCheckedVersion = fSendVersion = fDrawVersion = 0;
+         fLastSendHash = 0;
+      }
    };
 
    struct PadStatus {

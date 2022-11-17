@@ -89,14 +89,11 @@ public:
 
 class TCanvasWebSnapshot : public TPadWebSnapshot {
 protected:
-   Long64_t fVersion{0};           ///< actual canvas version
    std::string fScripts;           ///< custom scripts to load
    bool fHighlightConnect{false};  ///< does HighlightConnect has connection
 public:
    TCanvasWebSnapshot() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
-   TCanvasWebSnapshot(bool readonly, Long64_t v) : TPadWebSnapshot(readonly), fVersion(v) {}
-
-   Long64_t GetVersion() const { return fVersion; }
+   TCanvasWebSnapshot(bool readonly) : TPadWebSnapshot(readonly) {}
 
    void SetScripts(const std::string &src) { fScripts = src; }
    const std::string &GetScripts() const { return fScripts; }
@@ -104,7 +101,7 @@ public:
    void SetHighlightConnect(bool on = true) { fHighlightConnect = on; }
    bool GetHighlightConnect() const { return fHighlightConnect; }
 
-   ClassDef(TCanvasWebSnapshot, 2) // Canvas painting snapshot, used for JSROOT
+   ClassDef(TCanvasWebSnapshot, 3) // Canvas painting snapshot, used for JSROOT
 };
 
 
