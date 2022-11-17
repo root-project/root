@@ -12,14 +12,14 @@
 void loopdir11() {
    TFile *f1 = TFile::Open("hsimple.root");
    TCanvas c1;
-   c1.Print("hsimple.ps[");
+   c1.Print("hsimple11.ps[");
    for(auto k : *f1->GetListOfKeys()) {
       TKey *key = static_cast<TKey*>(k);
       TClass *cl = gROOT->GetClass(key->GetClassName());
       if (!cl->InheritsFrom("TH1")) continue;
       TH1 *h = key->ReadObject<TH1>();
       h->Draw();
-      c1.Print("hsimple.ps");
+      c1.Print("hsimple11.ps");
    }
-   c1.Print("hsimple.ps]");
+   c1.Print("hsimple11.ps]");
 }
