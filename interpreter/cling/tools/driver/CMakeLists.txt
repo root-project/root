@@ -9,7 +9,7 @@
 # Keep symbols for JIT resolution
 set(LLVM_NO_DEAD_STRIP 1)
 
-set(LLVM_LINK_COMPONENTS support)
+set(LLVM_LINK_COMPONENTS Support)
 if(BUILD_SHARED_LIBS)
   set(LIBS
 
