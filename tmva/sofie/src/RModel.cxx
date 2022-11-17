@@ -216,6 +216,18 @@ namespace SOFIE{
             AddInputTensorInfo(input.first, input.second.type, shape);
          }
       }
+      // check if there are initialized tensors to write in a weight file
+      // support for the time being only wheight of FLOAT type
+      if (fUseWeightFile) {
+         bool modelHasWeights = false;
+         for (auto& i: fInitializedTensors){
+            if (i.second.fType == ETensorType::FLOAT) {
+               modelHasWeights = true;
+               break;
+            }
+         }
+         if (!modelHasWeights) fUseWeightFile = false;
+      }
 
 
       for (auto& i : fOperators){
@@ -244,7 +256,7 @@ namespace SOFIE{
       fGC += "#define " + hgname + "\n\n";
       for (auto& i: fNeededStdLib) {
          fGC += "#include<" + i + ">\n";
-      }      
+      }
       for (auto& i: fCustomOpHeaders) {
          fGC += "#include \"" + i + "\"\n";
       }
@@ -332,7 +344,8 @@ namespace SOFIE{
             //fUseWeightFile = fUseWeightFile;
          } else {
             // no need to pass weight file since it is not used
-            fGC += "Session() {\n";
+            // keep passing a string for compatibility
+            fGC += "Session(std::string = \"\") {\n";
          }
          // add here initialization code
          for (size_t id = 0; id < fOperators.size() ; id++){
@@ -383,7 +396,7 @@ namespace SOFIE{
             case  ETensorType::INT32 :{
                fGC += "int32_t* tensor_" + fInputTensorNames[i] + ",";
                break;
-            } 
+            }
             case  ETensorType::INT64 :{
                fGC += "int64_t* tensor_" + fInputTensorNames[i] + ",";
                break;
@@ -394,7 +407,7 @@ namespace SOFIE{
             }
             default: {
                throw std::runtime_error("TMVA-SOFIE: input tensor " + fInputTensorNames[i] + " is of a data type which is not yet supported.");
-            }            
+            }
          }
       }
       fGC.pop_back(); //remove last ","
@@ -573,7 +586,7 @@ namespace SOFIE{
    void RModel::HeadInitializedTensors(std::string name, int n_print){
       auto it = fInitializedTensors.find(name);
       if (it == fInitializedTensors.end()){
-         std::cout << "Tensor " << name << " not found in model's intiialized tensor list" << std::endl;
+         std::cout << "Tensor " << name << " not found in model's intialized tensor list" << std::endl;
          return;
       }
 

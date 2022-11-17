@@ -328,9 +328,9 @@ TEST(RModelParser_Keras, BINARY_OP)
     float input_BinaryOp_1[]={1,1};
     float input_BinaryOp_2[]={1,1};
 
-    TMVA_SOFIE_KerasModelBinaryOp::Session s("KerasBinaryOpModel.dat");
+    TMVA_SOFIE_KerasModelBinaryOp::Session s; //("KerasBinaryOpModel.dat");
     std::vector<float> outputBinaryOp = s.infer(input_BinaryOp_1,input_BinaryOp_2);
-    
+
     Py_Initialize();
     PyObject* main = PyImport_AddModule("__main__");
     PyObject* fGlobalNS = PyModule_GetDict(main);
@@ -404,13 +404,13 @@ TEST(RModelParser_Keras, ACTIVATIONS)
 }
 
 TEST(RModel, CUSTOM_OP)
-{   
+{
     constexpr float TOLERANCE = DEFAULT_TOLERANCE;
     float input_custom[]={1,1,1,1,1,1,1,1};
 
     TMVA_SOFIE_KerasModelForCustomOp::Session s("KerasModelWithCustomOp.dat");
     std::vector<float> outputCustomOp = s.infer(input_custom);
-    
+
 
     Py_Initialize();
     PyObject* main = PyImport_AddModule("__main__");
