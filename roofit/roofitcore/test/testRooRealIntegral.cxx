@@ -5,7 +5,6 @@
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooFormulaVar.h>
-#include <RooGaussian.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
 #include <RooHistPdf.h>
@@ -38,18 +37,16 @@ RooArgList getSortedServers(RooAbsArg const &arg)
 // GitHub issue #11578.
 TEST(RooRealIntegral, ClientServerInterface1)
 {
-   using namespace RooFit;
-
-   RooRealVar x{"x", "", 0, 1};
-
-   RooRealVar mu{"mu", "", -0.005, -5, 5};
+   RooWorkspace ws;
 
    // This is the key in this test: the mathematically direct value server of
-   // the integral is the derived "muMod", and not the leaf of the computation
-   // graph "mu"
-   RooProduct muMod{"mu_mod", "", {mu, RooConst(10)}};
+   // the integral is the derived "mu_mod", and not the leaf of the computation
+   // graph "mu".
+   ws.factory("Product::mu_mod({mu[-0.005, -5.0, 5.0], 10.0})");
+   ws.factory("Gaussian::gauss(x[0, 1], mu_mod, 2.0)");
 
-   RooGaussian gauss{"gauss", "", x, muMod, RooConst(2.0)};
+   RooRealVar& x = *ws.var("x");
+   RooAbsPdf& gauss = *ws.pdf("gauss");
    RooGenericPdf pdf{"gaussWrapped", "gauss", gauss};
 
    std::unique_ptr<RooAbsReal> integ1{gauss.createIntegral(x, *pdf.getIntegratorConfig(), nullptr)};
@@ -115,13 +112,14 @@ TEST(RooRealIntegral, IntegrateFuncWithShapeServers)
 
    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
 
-   RooRealVar x("x", "", 0, 1);
+   RooWorkspace ws;
+   ws.factory("Product::mu_mod({mu[-0.005, -5.0, 5.0], 10.0})");
+   ws.factory("Gaussian::gauss(x[0, 1], mu_mod, sigma[1, 0.5, 2.0])");
 
-   RooRealVar mu("mu", "", -0.005, -5, 5);
-   RooProduct muMod("mu_mod", "", RooArgSet(mu, RooConst(10)));
-   RooRealVar sigma("sigma", "", 1, 0.5, 2);
-
-   RooGaussian gauss("gauss", "", x, muMod, sigma);
+   RooRealVar &x = *ws.var("x");
+   RooAbsReal& muMod = *ws.function("mu_mod");
+   RooRealVar& sigma = *ws.var("sigma");
+   RooAbsPdf& gauss = *ws.pdf("gauss");
    RooGenericPdf pdf("pdf", "gauss", gauss);
 
    // Project over sigma, meaning sigma should now become a shape server
