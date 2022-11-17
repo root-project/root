@@ -118,13 +118,12 @@ void TGHtml::AppendBlock(TGHtmlElement *pToken, TGHtmlBlock *pBlock)
 ///
 /// Revert to decimal for indices greater than 52.
 
-static void GetLetterIndex(char *zBuf, int index, int isUpper)
+static void GetLetterIndex(char (&zBuf)[30], int index, int isUpper)
 {
    int seed;
 
    if (index < 1 || index > 52) {
-      // coverity[secure_coding]: zBuf is large enough for an integer
-      sprintf(zBuf, "%d", index);
+      snprintf(zBuf, 30, "%d", index);
       return;
    }
 
@@ -154,7 +153,7 @@ static void GetLetterIndex(char *zBuf, int index, int isUpper)
 /// numerals.  For indices greater than a few thousand, revert to
 /// decimal.
 
-static void GetRomanIndex(char *zBuf, int index, int isUpper)
+static void GetRomanIndex(char (&zBuf)[30], int index, int isUpper)
 {
    int i = 0;
    UInt_t j;
@@ -185,8 +184,7 @@ static void GetRomanIndex(char *zBuf, int index, int isUpper)
    };
 
    if (index < 1 || index >= 5000) {
-      // coverity[secure_coding]: zBuf is large enough for an integer
-      sprintf(zBuf, "%d", index);
+      snprintf(zBuf, 30, "%d", index);
       return;
    }
    for (j = 0; index > 0 && j < sizeof(values)/sizeof(values[0]); j++) {
