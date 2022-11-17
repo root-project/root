@@ -124,7 +124,7 @@ static void GetLetterIndex(char *zBuf, int index, int isUpper)
 
    if (index < 1 || index > 52) {
       // coverity[secure_coding]: zBuf is large enough for an integer
-      sprintf(zBuf, "%d", index);
+      snprintf(zBuf, 12, "%d", index);
       return;
    }
 
@@ -186,7 +186,7 @@ static void GetRomanIndex(char *zBuf, int index, int isUpper)
 
    if (index < 1 || index >= 5000) {
       // coverity[secure_coding]: zBuf is large enough for an integer
-      sprintf(zBuf, "%d", index);
+      snprintf(zBuf, 12, "%d", index);
       return;
    }
    for (j = 0; index > 0 && j < sizeof(values)/sizeof(values[0]); j++) {
