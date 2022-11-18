@@ -79,6 +79,8 @@ public:
 
    void Update();
 
+   static RTreeViewer *NewViewer(TTree *);
+
 private:
 
    TTree *fTree{nullptr};                  ///<! TTree to show
