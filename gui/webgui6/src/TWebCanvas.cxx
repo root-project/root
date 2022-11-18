@@ -104,34 +104,36 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
    } supported_classes[] = {{"TH1", true},
                             {"TF1", true},
                             {"TGraph", true},
-                            {"TFrame", false},
-                            {"THStack", false},
-                            {"TMultiGraph", false},
+                            {"TFrame"},
+                            {"THStack"},
+                            {"TMultiGraph"},
                             {"TGraphPolargram", true},
                             {"TPave", true},
-                            {"TGaxis", false},
+                            {"TGaxis"},
                             {"TPave", true},
-                            {"TArrow", false},
+                            {"TArrow"},
                             {"TBox", false, true},  // can be handled via TWebPainter, disable for large number of primitives (like in greyscale.C)
-                            {"TWbox", false}, // some extra calls which cannot be handled via TWebPainter
+                            {"TWbox"}, // some extra calls which cannot be handled via TWebPainter
                             {"TLine", false, true}, // can be handler via TWebPainter, disable for large number of primitives (like in greyscale.C)
-                            {"TText", false},
-                            {"TLatex", false},
-                            {"TMathText", false},
-                            {"TMarker", false},
-                            {"TPolyMarker", false},
+                            {"TText"},
+                            {"TLatex"},
+                            {"TMathText"},
+                            {"TMarker"},
+                            {"TPolyMarker"},
                             // {"TPolyLine", false, true}, // can be handled via TWebPainter, simplify colors handling
-                            {"TPolyMarker3D", false},
-                            {"TPolyLine3D", false},
-                            {"TGraph2D", false},
-                            {"TGraph2DErrors", false},
-                            {"TASImage", false},
-                            {"TRatioPlot", false},
-                            {"TSpline", false},
-                            {"TSpline3", false},
-                            {"TSpline5", false},
-                            {"TGeoManager", false},
-                            {nullptr, false}};
+                            {"TPolyMarker3D"},
+                            {"TPolyLine3D"},
+                            {"TGraphTime"},
+                            {"TGraph2D"},
+                            {"TGraph2DErrors"},
+                            {"TGraphTime"},
+                            {"TASImage"},
+                            {"TRatioPlot"},
+                            {"TSpline"},
+                            {"TSpline3"},
+                            {"TSpline5"},
+                            {"TGeoManager"},
+                            {}};
 
    // fast check of class name
    for (int i = 0; supported_classes[i].name != nullptr; ++i)
