@@ -410,6 +410,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          } else if (gSystem->Load("libROOTWebDisplay") >= 0) {
             gROOT->SetWebDisplay(argw.Data());
             gEnv->SetValue("Gui.Factory", "web");
+            gEnv->SetValue("TreeViewer.Name", "RTreeViewer");
          } else {
             Error("GetOptions", "--web option not supported, ROOT should be built with at least c++14 enabled");
          }
