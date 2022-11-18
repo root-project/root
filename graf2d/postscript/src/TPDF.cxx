@@ -2000,6 +2000,21 @@ void TPDF::SetFillPatterns(Int_t ipat, Int_t color)
       WriteReal(colGreen);
       WriteReal(colBlue);
    }
+
+   if (fPageOrientation == 2) {
+      switch (ipat) {
+         case 4:  ipat = 5;  break;
+         case 5:  ipat = 4;  break;
+         case 6:  ipat = 7;  break;
+         case 7:  ipat = 6;  break;
+         case 17: ipat = 18; break;
+         case 18: ipat = 17; break;
+         case 20: ipat = 16; break;
+         case 16: ipat = 20; break;
+         case 21: ipat = 22; break;
+         case 22: ipat = 21; break;
+      }
+   }
    snprintf(cpat,10," /P%2.2d scn", ipat);
    PrintStr(cpat);
 }
