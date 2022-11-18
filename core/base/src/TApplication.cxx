@@ -1857,7 +1857,7 @@ TApplication *TApplication::Open(const char *url,
    // If new session on a known machine pass the number as option
    if (nnew > 0) {
       nnew++;
-      nu.SetOptions(Form("%d", nnew));
+      nu.SetOptions(TString::Format("%d", nnew).Data());
    }
 
    // Instantiate the TApplication object to be run
