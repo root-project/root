@@ -23,8 +23,11 @@ class TBox;
 class TLegend;
 class TArrow;
 class TPoint;
+class TWebCanvas;
 
 class TPad : public TVirtualPad, public TAttBBox2D {
+
+friend class TWebCanvas;
 
 private:
    TObject      *fTip;              ///<! tool tip associated with box
