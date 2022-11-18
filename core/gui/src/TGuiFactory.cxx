@@ -133,10 +133,9 @@ TControlBarImp *TGuiFactory::CreateControlBarImp(TControlBar *c, const char *tit
 
 TInspectorImp *TGuiFactory::CreateInspectorImp(const TObject *obj, UInt_t width, UInt_t height)
 {
-   if (gROOT->IsBatch()) {
+   if (gROOT->IsBatch())
       return new TInspectorImp(obj, width, height);
-   }
 
-   gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject*)0x%zx);", (size_t)obj));
+   gROOT->ProcessLine(TString::Format("TInspectCanvas::Inspector((TObject*)0x%zx);", (size_t)obj).Data());
    return nullptr;
 }
