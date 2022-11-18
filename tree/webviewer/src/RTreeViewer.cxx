@@ -429,3 +429,16 @@ void RTreeViewer::SendProgress(bool completed)
    fWebWindow->Send(0, "PROGRESS:"s + progress);
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Create new viewer
+/// Method used for plugin
+
+RTreeViewer *RTreeViewer::NewViewer(TTree *t)
+{
+   auto viewer = new RTreeViewer(t);
+
+   viewer->Show();
+
+   return viewer;
+}
+
