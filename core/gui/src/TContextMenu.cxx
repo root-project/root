@@ -152,24 +152,26 @@ void TContextMenu::Action(TClassMenuItem *menuitem)
                Execute(object, method, "");
 #else
                // It is a workaround of the "Dead lock under Windows
-               char *cmd = Form("((TContextMenu *)0x%zx)->Execute((TObject *)0x%zx,"
-                                "(TMethod *)0x%zx,\"\");",
-                                (size_t)this,(size_t)object,(size_t)method);
-               //Printf("%s", cmd);
-               gROOT->ProcessLine(cmd);
+               TString cmd;
+               cmd.Form("((TContextMenu *)0x%zx)->Execute((TObject *)0x%zx,"
+                        "(TMethod *)0x%zx,\"\");",
+                        (size_t)this,(size_t)object,(size_t)method);
+               //Printf("%s", cmd.Data());
+               gROOT->ProcessLine(cmd.Data());
                //Execute( object, method, (TObjArray *)NULL );
 #endif
             } else {
 #ifndef WIN32
-               Execute(object, method, Form("(TObject*)0x%zx",(size_t)fSelectedObject));
+               Execute(object, method, TString::Format("(TObject*)0x%zx",(size_t)fSelectedObject).Data());
 #else
                // It is a workaround of the "Dead lock under Windows
-               char *cmd = Form("((TContextMenu *)0x%zx)->Execute((TObject *)0x%zx,"
-                                "(TMethod *)0x%zx,(TObject*)0x%zx);",
-                                (size_t)this,(size_t)object,(size_t)method,
-                                (size_t)fSelectedObject);
-               //Printf("%s", cmd);
-               gROOT->ProcessLine(cmd);
+               TString cmd;
+               cmd.Form("((TContextMenu *)0x%zx)->Execute((TObject *)0x%zx,"
+                        "(TMethod *)0x%zx,(TObject*)0x%zx);",
+                        (size_t)this,(size_t)object,(size_t)method,
+                        (size_t)fSelectedObject);
+               //Printf("%s", cmd.Data());
+               gROOT->ProcessLine(cmd.Data());
                //Execute( object, method, (TObjArray *)NULL );
 #endif
             }
@@ -188,14 +190,14 @@ void TContextMenu::Action(TClassMenuItem *menuitem)
                function->GetNargs() > 1) {
             fContextMenuImp->Dialog(nullptr, function);
          } else {
-            char* cmd;
+            TString cmd;
             if (menuitem->GetSelfObjectPos() < 0) {
-               cmd = Form("%s();", menuitem->GetFunctionName());
+               cmd.Form("%s();", menuitem->GetFunctionName());
             } else {
-              cmd = Form("%s((TObject*)0x%zx);",
+              cmd.Form("%s((TObject*)0x%zx);",
                      menuitem->GetFunctionName(), (size_t)fSelectedObject);
             }
-            gROOT->ProcessLine(cmd);
+            gROOT->ProcessLine(cmd.Data());
          }
       }
    }
@@ -332,10 +334,9 @@ void TContextMenu::Execute(TObject *object, TFunction *method, const char *param
 
       gROOT->SetFromPopUp(kTRUE);
       if (object) {
-         object->Execute((char *) method->GetName(), params);
+         object->Execute(method->GetName(), params);
       } else {
-         char *cmd = Form("%s(%s);", method->GetName(),params);
-         gROOT->ProcessLine(cmd);
+         gROOT->ProcessLine(TString::Format("%s(%s);", method->GetName(),params).Data());
       }
       if (fSelectedCanvas && fSelectedCanvas->GetPadSave())
          fSelectedCanvas->GetPadSave()->Modified();
@@ -383,8 +384,7 @@ void TContextMenu::Execute(TObject *object, TFunction *method, TObjArray *params
             if (!args.IsNull()) args += ",";
             args += s->String();
          }
-         char *cmd = Form("%s(%s);", method->GetName(), args.Data());
-         gROOT->ProcessLine(cmd);
+         gROOT->ProcessLine(TString::Format("%s(%s);", method->GetName(), args.Data()).Data());
       }
       if (fSelectedCanvas && fSelectedCanvas->GetPadSave())
          fSelectedCanvas->GetPadSave()->Modified();
