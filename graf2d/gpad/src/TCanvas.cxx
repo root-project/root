@@ -63,6 +63,21 @@ const Size_t kDefaultCanvasSize   = 20;
 ClassImpQ(TCanvas)
 
 
+auto GetNewCanvasName()
+{
+   const char *defcanvas = gROOT->GetDefCanvasName();
+   TString cdef = defcanvas;
+
+   auto lc = (TList*)gROOT->GetListOfCanvases();
+   Int_t n = lc->GetSize() + 1;
+
+   while(lc->FindObject(cdef.Data()))
+      cdef.Form("%s_n%d", defcanvas, n++);
+
+   return cdef;
+}
+
+
 /** \class TCanvas
 \ingroup gpad
 
@@ -159,18 +174,8 @@ TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
    if (!build || TClass::IsCallingNew() != TClass::kRealNew) {
       Constructor();
    } else {
-      const char *defcanvas = gROOT->GetDefCanvasName();
-      TString cdef;
+      TString cdef = GetNewCanvasName();
 
-      auto lc = (TList*)gROOT->GetListOfCanvases();
-      if (lc->FindObject(defcanvas)) {
-         Int_t n = lc->GetSize() + 1;
-         do {
-            cdef.Form("%s_n%d",defcanvas,n++);
-         }  while (lc->FindObject(cdef.Data()));
-      } else {
-         cdef = defcanvas;
-      }
       Constructor(cdef.Data(), cdef.Data(), 1);
    }
 }
@@ -1502,21 +1507,11 @@ void TCanvas::ls(Option_t *option) const
 
 TCanvas *TCanvas::MakeDefCanvas()
 {
-   const char *defcanvas = gROOT->GetDefCanvasName();
-   TString cdef;
-
-   auto lc = (TList*)gROOT->GetListOfCanvases();
-   if (lc->FindObject(defcanvas)) {
-      Int_t n = lc->GetSize() + 1;
-      do {
-         cdef.Form("%s_n%d", defcanvas, n++);
-      } while (lc->FindObject(cdef.Data()));
-   } else
-      cdef = defcanvas;
+   TString cdef = GetNewCanvasName();
 
    TCanvas *c = new TCanvas(cdef.Data(), cdef.Data(), 1);
 
-   ::Info("TCanvas::MakeDefCanvas"," created default TCanvas with name %s",cdef.Data());
+   ::Info("TCanvas::MakeDefCanvas"," created default TCanvas with name %s", cdef.Data());
    return c;
 }
 
@@ -1770,7 +1765,6 @@ void TCanvas::RunAutoExec()
    if (!gPad) return;
    ((TPad*)gPad)->AutoExec();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitives in this canvas in C++ macro file with GUI.
@@ -2053,20 +2047,13 @@ void TCanvas::SetFolder(Bool_t isfolder)
 
 void TCanvas::SetName(const char *name)
 {
-   if (!name || !name[0]) {
-      const char *defcanvas = gROOT->GetDefCanvasName();
-      char *cdef;
-      auto lc = (TList*)gROOT->GetListOfCanvases();
-      if (lc->FindObject(defcanvas)) {
-         cdef = Form("%s_n%d",defcanvas,lc->GetSize()+1);
-      } else {
-         cdef = Form("%s",defcanvas);
-      }
-      fName = cdef;
-   } else {
+   if (name && *name)
       fName = name;
-   }
-   if (gPad && TestBit(kMustCleanup)) gPad->Modified();
+   else
+      fName = GetNewCanvasName();
+
+   if (gPad && TestBit(kMustCleanup))
+      gPad->Modified();
 }
 
 
