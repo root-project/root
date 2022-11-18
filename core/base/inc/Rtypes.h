@@ -288,7 +288,7 @@ private:                                                                        
    } /** \endcond */                                                                                            \
                                                                                                                 \
 public:                                                                                                         \
-   /** \return Version of this class */ static Version_t Class_Version() { return id; }                         \
+   /** \return Version of this class */ static constexpr Version_t Class_Version() { return id; }               \
    /** \return TClass describing current object */ virtual_keyword TClass *IsA() const overrd                   \
    { return name::Class(); }                                                                                    \
    /** \cond HIDDEN_SYMBOLS */ virtual_keyword void ShowMembers(TMemberInspector &insp) const overrd            \
