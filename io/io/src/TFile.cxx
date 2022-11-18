@@ -1081,7 +1081,16 @@ void TFile::Draw(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw map of objects in this file.
+/// Draw map of objects in this file. The map drawing is handled by TFileDrawMap.
+/// Once the map is drawn, turn on the TCanvas option "View->Event Statusbar". Then, when
+/// moving the mouse in the canvas, the "Event Status" panels shows the object corresponding
+/// to the mouse position.
+///
+/// Example:
+/// ~~~{.cpp}
+///   auto f = new TFile("myfile.root");
+///   f->DrawMap();
+/// ~~~
 
 void TFile::DrawMap(const char *keys, Option_t *option)
 {
@@ -1499,7 +1508,7 @@ void TFile::MakeFree(Long64_t first, Long64_t last)
 ///     20010404/150443  At:407678    N=86        FreeSegments
 ///     20010404/150443  At:407764    N=1         END
 ///
-/// If the parameter opt contains "forComp", the Date/Time is ommitted
+/// If the parameter opt contains "forComp", the Date/Time is omitted
 /// and the decompressed size is also printed.
 ///
 ///    Record_Adress Logical_Record_Length  Key_Length Object_Record_Length ClassName  CompressionFactor
@@ -4096,7 +4105,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
          // Remove from the options field
          sto.Insert(0, "TIMEOUT=");
          opts.ReplaceAll(sto, "");
-         // Asynchrounous open
+         // Asynchronous open
          TFileOpenHandle *fh = TFile::AsyncOpen(expandedUrl, opts, ftitle, compress, netopt);
          // Check the result in steps of 1 millisec
          TFile::EAsyncOpenStatus aos = TFile::kAOSNotAsync;
