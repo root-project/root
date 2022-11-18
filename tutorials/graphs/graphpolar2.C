@@ -35,5 +35,7 @@ void graphpolar2()
    grP1->Draw("PE");
 
    CPol->Update();
-   grP1->GetPolargram()->SetToRadian();
+
+   if (grP1->GetPolargram())
+      grP1->GetPolargram()->SetToRadian();
 }

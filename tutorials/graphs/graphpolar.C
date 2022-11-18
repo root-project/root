@@ -52,10 +52,12 @@ void graphpolar()
 
    // Update, otherwise GetPolargram returns 0
    CPol->Update();
-   grP1->GetPolargram()->SetTextColor(8);
-   grP1->GetPolargram()->SetRangePolar(-TMath::Pi(),TMath::Pi());
-   grP1->GetPolargram()->SetNdivPolar(703);
-   grP1->GetPolargram()->SetToRadian();
+   if (grP1->GetPolargram()) {
+      grP1->GetPolargram()->SetTextColor(8);
+      grP1->GetPolargram()->SetRangePolar(-TMath::Pi(),TMath::Pi());
+      grP1->GetPolargram()->SetNdivPolar(703);
+      grP1->GetPolargram()->SetToRadian();
+   }
 
    CPol->cd(2);
    Double_t x2[30];
@@ -76,8 +78,12 @@ void graphpolar()
    grPE->SetLineColor(6);
    grPE->SetLineWidth(2);
    grPE->Draw("EP");
+   // Update, otherwise GetPolargram returns 0
    CPol->Update();
-   grPE->GetPolargram()->SetTextSize(0.03);
-   grPE->GetPolargram()->SetTwoPi();
-   grPE->GetPolargram()->SetToRadian();
+
+   if (grPE->GetPolargram()) {
+      grPE->GetPolargram()->SetTextSize(0.03);
+      grPE->GetPolargram()->SetTwoPi();
+      grPE->GetPolargram()->SetToRadian();
+   }
 }
