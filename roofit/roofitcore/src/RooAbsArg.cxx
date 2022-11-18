@@ -1153,50 +1153,64 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, bool nameCha
 }
 
 
+namespace {
+
+bool recursiveRedirectServersImpl(RooAbsArg *arg, RooAbsCollection const &newSet, bool mustReplaceAll, bool nameChange,
+                                  bool recurseInNewSet, std::set<RooAbsArg const *> &callStack)
+{
+   // Cyclic recursion protection
+   {
+      auto it = callStack.lower_bound(arg);
+      if (it != callStack.end() && arg == *it) {
+         return false;
+      }
+      callStack.insert(it, arg);
+   }
+
+   // Do not recurse into newset if not so specified
+   // if (!recurseInNewSet && newSet.contains(*arg)) {
+   //    return false;
+   // }
+
+   // Apply the redirectServers function recursively on all branch nodes in this argument tree.
+   bool ret(false);
+
+   oocxcoutD(arg, LinkStateMgmt) << "RooAbsArg::recursiveRedirectServers(" << arg << "," << arg->GetName()
+                                 << ") newSet = " << newSet << " mustReplaceAll = " << (mustReplaceAll ? "T" : "F")
+                                 << " nameChange = " << (nameChange ? "T" : "F")
+                                 << " recurseInNewSet = " << (recurseInNewSet ? "T" : "F") << endl;
+
+   // Do redirect on self (identify operation as recursion step)
+   ret |= arg->redirectServers(newSet, mustReplaceAll, nameChange, true);
+
+   // Do redirect on servers
+   for (const auto server : arg->servers()) {
+      ret |= recursiveRedirectServersImpl(server, newSet, mustReplaceAll, nameChange, recurseInNewSet, callStack);
+   }
+
+   callStack.erase(arg);
+   return ret;
+}
+
+} // namespace
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Recursively replace all servers with the new servers in `newSet`.
-/// This substitutes objects that we receive values from (also indirectly through other objects) with new objects that have the same name.
+/// This substitutes objects that we receive values from (also indirectly
+/// through other objects) with new objects that have the same name.
 ///
 /// *Copied from redirectServers:*
 ///
 /// \copydetails RooAbsArg::redirectServers
 /// \param newSet Roo collection
 /// \param recurseInNewSet be recursive
-bool RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, bool mustReplaceAll, bool nameChange, bool recurseInNewSet)
+bool RooAbsArg::recursiveRedirectServers(RooAbsCollection const &newSet, bool mustReplaceAll, bool nameChange,
+                                         bool recurseInNewSet)
 {
-  // Cyclic recursion protection
-  static std::set<const RooAbsArg*> callStack;
-  {
-    std::set<const RooAbsArg*>::iterator it = callStack.lower_bound(this);
-    if (it != callStack.end() && this == *it) {
-      return false;
-    } else {
-      callStack.insert(it, this);
-    }
-  }
+   // For cyclic recursion protection
+   std::set<const RooAbsArg *> callStack;
 
-  // Do not recurse into newset if not so specified
-//   if (!recurseInNewSet && newSet.contains(*this)) {
-//     return false ;
-//   }
-
-
-  // Apply the redirectServers function recursively on all branch nodes in this argument tree.
-  bool ret(false) ;
-
-  cxcoutD(LinkStateMgmt) << "RooAbsArg::recursiveRedirectServers(" << this << "," << GetName() << ") newSet = " << newSet << " mustReplaceAll = "
-          << (mustReplaceAll?"T":"F") << " nameChange = " << (nameChange?"T":"F") << " recurseInNewSet = " << (recurseInNewSet?"T":"F") << endl ;
-
-  // Do redirect on self (identify operation as recursion step)
-  ret |= redirectServers(newSet,mustReplaceAll,nameChange,true) ;
-
-  // Do redirect on servers
-  for (const auto server : _serverList){
-    ret |= server->recursiveRedirectServers(newSet,mustReplaceAll,nameChange,recurseInNewSet) ;
-  }
-
-  callStack.erase(this);
-  return ret ;
+   return recursiveRedirectServersImpl(this, newSet, mustReplaceAll, nameChange, recurseInNewSet, callStack);
 }
 
 
