@@ -1,5 +1,5 @@
 import { select as d3_select } from './d3.mjs';
-import { loadScript, findFunction, internals, getPromise, isNodeJs, isFunc, isStr, _ensureJSROOT,
+import { loadScript, findFunction, internals, getPromise, isNodeJs, isObject, isFunc, isStr, _ensureJSROOT,
          clTObjString, clTList, clTHashList, clTMap, clTObjArray, clTClonesArray,
          clTPave, clTPaveText, clTPaveStats, clTLegend, clTPaletteAxis,
          clTText, clTLine, clTBox, clTLatex, clTMathText, clTMultiGraph, clTH2, clTF1, clTF2, clTProfile, clTProfile2D,
@@ -237,7 +237,7 @@ function getDrawHandle(kind, selector) {
 function canDrawHandle(h) {
    if (isStr(h))
       h = getDrawHandle(h);
-   if (!h || (typeof h !== 'object')) return false;
+   if (!isObject(h)) return false;
    return h.func || h.class || h.draw || h.draw_field ? true : false;
 }
 
@@ -306,7 +306,7 @@ function setDefaultDrawOpt(classname, opt) {
   * await draw('drawing', obj, 'colz;logx;gridx;gridy'); */
 async function draw(dom, obj, opt) {
 
-   if (!obj || (typeof obj !== 'object'))
+   if (!isObject(obj))
       return Promise.reject(Error('not an object in draw call'));
 
    if (opt == 'inspect')
@@ -366,7 +366,7 @@ async function draw(dom, obj, opt) {
          if (!painter) painter = p;
          if (!painter)
              throw Error(`Fail to draw object ${type_info}`);
-         if ((typeof painter == 'object') && !painter.options)
+         if (isObject(painter) && !painter.options)
             painter.options = { original: opt || '' }; // keep original draw options
          return painter;
       });
@@ -421,7 +421,7 @@ async function draw(dom, obj, opt) {
   * @public */
 async function redraw(dom, obj, opt) {
 
-   if (!obj || (typeof obj !== 'object'))
+   if (!isObject(obj))
       return Promise.reject(Error('not an object in redraw'));
 
    let can_painter = getElementCanvPainter(dom), handle, res_painter = null, redraw_res;

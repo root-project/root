@@ -1,4 +1,4 @@
-import { gStyle, browser, settings, clone, create, isBatchMode, isFunc, isStr,
+import { gStyle, browser, settings, clone, create, isBatchMode, isObject, isFunc, isStr,
          clTPave, clTPaveText, clTPaveStats, clTLegend, clTPaletteAxis,
          clTText, clTLatex, clTLine, clTBox } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb, pointer as d3_pointer } from '../d3.mjs';
@@ -561,7 +561,7 @@ class TPavePainter extends ObjectPainter {
                draw_error = lopt.indexOf('e') != -1,
                draw_marker = lopt.indexOf('p') != -1;
 
-         if ((mo !== null) && (typeof mo == 'object')) {
+         if (isObject(mo)) {
             if ('fLineColor' in mo) o_line = mo;
             if ('fFillColor' in mo) o_fill = mo;
             if ('fMarkerColor' in mo) o_marker = mo;

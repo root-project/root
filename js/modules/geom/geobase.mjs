@@ -1,7 +1,7 @@
 import { FrontSide, Object3D, Box3, Mesh, Vector2, Vector3, Matrix4,
          MeshLambertMaterial, Color, PerspectiveCamera, Frustum, Raycaster,
          ShapeUtils, BufferGeometry, BufferAttribute } from '../three.mjs';
-import { isFunc } from '../core.mjs';
+import { isObject, isFunc } from '../core.mjs';
 import { createBufferGeometry, createNormal,
          Vertex as CsgVertex, Geometry as CsgGeometry, Polygon as CsgPolygon } from './csg.mjs';
 
@@ -121,7 +121,7 @@ function geoWarn(msg) {
  * @return detected node kind
  * @private */
 function getNodeKind(obj) {
-   if ((obj === undefined) || (obj === null) || (typeof obj !== 'object')) return -1;
+   if (!isObject(obj)) return -1;
    return ('fShape' in obj) && ('fTrans' in obj) ? kindEve : kindGeo;
 }
 
@@ -2975,9 +2975,9 @@ class ClonedNodes {
    createObject3D(stack, toplevel, options) {
 
       let node = this.nodes[0], three_prnt = toplevel, draw_depth = 0,
-          force = (typeof options == 'object') || (options === 'force');
+          force = isObject(options) || (options === 'force');
 
-      for(let lvl=0; lvl<=stack.length; ++lvl) {
+      for(let lvl = 0; lvl <= stack.length; ++lvl) {
          let nchld = (lvl > 0) ? stack[lvl-1] : 0;
          // extract current node
          if (lvl > 0)  node = this.nodes[node.chlds[nchld]];
@@ -3017,7 +3017,7 @@ class ClonedNodes {
          three_prnt.add(obj3d);
 
          // this is only for debugging - test inversion of whole geometry
-         if ((lvl == 0) && (typeof options == 'object') && options.scale) {
+         if ((lvl == 0) && isObject(options) && options.scale) {
             if ((options.scale.x < 0) || (options.scale.y < 0) || (options.scale.z < 0)) {
                obj3d.scale.copy(options.scale);
                obj3d.updateMatrix();
