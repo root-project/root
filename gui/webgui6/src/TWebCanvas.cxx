@@ -789,17 +789,10 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
       if (!pad)
          continue;
 
-      auto change_canvas_uint = [this](const char *member, UInt_t val) {
-         auto offset = TCanvas::Class()->GetDataMemberOffset(member);
-         if (offset > 0)
-            *((UInt_t *)((char*) Canvas() + offset)) = val;
-      };
-
-
       if (pad == Canvas()) {
          AssignStatusBits(r.bits);
-         change_canvas_uint("fCw", r.cw);
-         change_canvas_uint("fCh", r.ch);
+         Canvas()->fCw = r.cw;
+         Canvas()->fCh = r.ch;
       }
 
       if (r.active && (pad != gPad)) gPad = pad;
@@ -820,14 +813,6 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
       pad->SetTopMargin(r.mtop);
       pad->SetBottomMargin(r.mbottom);
 
-      auto change_pad_member = [pad](const char *member, double val) {
-         auto offset = TPad::Class()->GetDataMemberOffset(member);
-         if (offset > 0)
-            *((Double_t *)((char*) pad + offset)) = val;
-         else
-            printf("Fail to find pad member %s\n", member);
-      };
-
       if (r.ranges) {
 
          Double_t ux1_, ux2_, uy1_, uy2_, px1_, px2_, py1_, py2_;
@@ -844,15 +829,15 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
             // pad->Range(r.px1, r.py1, r.px2, r.py2);
             // pad->RangeAxis(r.ux1, r.uy1, r.ux2, r.uy2);
 
-            change_pad_member("fX1", r.px1);
-            change_pad_member("fY1", r.py1);
-            change_pad_member("fX2", r.px2);
-            change_pad_member("fY2", r.py2);
+            pad->fX1 = r.px1;
+            pad->fY1 = r.py1;
+            pad->fX2 = r.px2;
+            pad->fY2 = r.py2;
 
-            change_pad_member("fUxmin", r.ux1);
-            change_pad_member("fUymin", r.uy1);
-            change_pad_member("fUxmax", r.ux2);
-            change_pad_member("fUymax", r.uy2);
+            pad->fUxmin = r.ux1;
+            pad->fUymin = r.uy1;
+            pad->fUxmax = r.ux2;
+            pad->fUymax = r.uy2;
 
             if (gDebug > 1)
                Info("DecodeAllRanges", "Change ranges for pad %s", pad->GetName());
@@ -861,27 +846,27 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
 
       // pad->SetPad(r.mleft, r.mbottom, 1-r.mright, 1-r.mtop);
 
-      change_pad_member("fAbsXlowNDC", r.xlow);
-      change_pad_member("fAbsYlowNDC", r.ylow);
-      change_pad_member("fAbsWNDC", r.xup - r.xlow);
-      change_pad_member("fAbsHNDC", r.yup - r.ylow);
+      pad->fAbsXlowNDC = r.xlow;
+      pad->fAbsYlowNDC = r.ylow;
+      pad->fAbsWNDC = r.xup - r.xlow;
+      pad->fAbsHNDC = r.yup - r.ylow;
 
       if (pad == Canvas()) {
-         change_pad_member("fXlowNDC", r.xlow);
-         change_pad_member("fYlowNDC", r.ylow);
-         change_pad_member("fXUpNDC", r.xup);
-         change_pad_member("fYUpNDC", r.yup);
-         change_pad_member("fWNDC", r.xup - r.xlow);
-         change_pad_member("fHNDC", r.yup - r.ylow);
+         pad->fXlowNDC = r.xlow;
+         pad->fYlowNDC = r.ylow;
+         pad->fXUpNDC = r.xup;
+         pad->fYUpNDC = r.yup;
+         pad->fWNDC = r.xup - r.xlow;
+         pad->fHNDC = r.yup - r.ylow;
       } else {
          auto mother = pad->GetMother();
          if (mother->GetAbsWNDC() > 0. && mother->GetAbsHNDC() > 0.) {
-            change_pad_member("fXlowNDC", (r.xlow - mother->GetAbsXlowNDC()) / mother->GetAbsWNDC());
-            change_pad_member("fYlowNDC", (r.ylow - mother->GetAbsYlowNDC()) / mother->GetAbsHNDC());
-            change_pad_member("fXUpNDC", (r.xup - mother->GetAbsXlowNDC()) / mother->GetAbsWNDC() );
-            change_pad_member("fYUpNDC", (r.yup - mother->GetAbsYlowNDC()) / mother->GetAbsHNDC());
-            change_pad_member("fWNDC", (r.xup - r.xlow) / mother->GetAbsWNDC());
-            change_pad_member("fHNDC", (r.yup - r.ylow) / mother->GetAbsHNDC() );
+            pad->fXlowNDC = (r.xlow - mother->GetAbsXlowNDC()) / mother->GetAbsWNDC();
+            pad->fYlowNDC = (r.ylow - mother->GetAbsYlowNDC()) / mother->GetAbsHNDC();
+            pad->fXUpNDC = (r.xup - mother->GetAbsXlowNDC()) / mother->GetAbsWNDC();
+            pad->fYUpNDC = (r.yup - mother->GetAbsYlowNDC()) / mother->GetAbsHNDC();
+            pad->fWNDC = (r.xup - r.xlow) / mother->GetAbsWNDC();
+            pad->fHNDC = (r.yup - r.ylow) / mother->GetAbsHNDC();
          }
       }
 
@@ -898,22 +883,22 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
 
       if ((xrange != 0.) && (pxrange != 0)) {
          // Linear X axis
-         change_pad_member("fXtoAbsPixelk", rounding + pxlow - pxrange*r.px1/xrange);      //origin at left
-         change_pad_member("fXtoPixelk", rounding +  -pxrange*r.px1/xrange);
-         change_pad_member("fXtoPixel", pxrange/xrange);
-         change_pad_member("fAbsPixeltoXk", r.px1 - pxlow*xrange/pxrange);
-         change_pad_member("fPixeltoXk", r.px1);
-         change_pad_member("fPixeltoX", xrange/pxrange);
+         pad->fXtoAbsPixelk = rounding + pxlow - pxrange*r.px1/xrange;      //origin at left
+         pad->fXtoPixelk = rounding +  -pxrange*r.px1/xrange;
+         pad->fXtoPixel = pxrange/xrange;
+         pad->fAbsPixeltoXk = r.px1 - pxlow*xrange/pxrange;
+         pad->fPixeltoXk = r.px1;
+         pad->fPixeltoX = xrange/pxrange;
       }
 
       if ((yrange != 0.) && (pyrange != 0.)) {
          // Linear Y axis
-         change_pad_member("fYtoAbsPixelk", rounding + pylow - pyrange*r.py1/yrange);      //origin at top
-         change_pad_member("fYtoPixelk", rounding +  -pyrange - pyrange*r.py1/yrange);
-         change_pad_member("fYtoPixel", pyrange/yrange);
-         change_pad_member("fAbsPixeltoYk", r.py1 - pylow*yrange/pyrange);
-         change_pad_member("fPixeltoYk", r.py1);
-         change_pad_member("fPixeltoY", yrange/pyrange);
+         pad->fYtoAbsPixelk = rounding + pylow - pyrange*r.py1/yrange;      //origin at top
+         pad->fYtoPixelk = rounding +  -pyrange - pyrange*r.py1/yrange;
+         pad->fYtoPixel = pyrange/yrange;
+         pad->fAbsPixeltoYk = r.py1 - pylow*yrange/pyrange;
+         pad->fPixeltoYk = r.py1;
+         pad->fPixeltoY = yrange/pyrange;
       }
 
       pad->SetFixedAspectRatio(kFALSE);
@@ -1052,22 +1037,6 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
    FlagGuard guard(fProcessingData);
 
-   auto change_canvas_member = [this](const char *member, int val) {
-      auto offset = TCanvas::Class()->GetDataMemberOffset(member);
-      if (offset > 0)
-         *((Int_t *)((char*) Canvas() + offset)) = val;
-      else
-         printf("Not found canvas member %s\n", member);
-   };
-
-   auto change_canvas_ptr = [this](const char *member, void *val) {
-      auto offset = TCanvas::Class()->GetDataMemberOffset(member);
-      if (offset > 0)
-         *((void **)((char*) Canvas() + offset)) = val;
-      else
-         printf("Not found canvas member %s\n", member);
-   };
-
    const char *cdata = arg.c_str();
 
    if (arg == "KEEPALIVE") {
@@ -1181,11 +1150,11 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          auto selobj = FindPrimitive(arr->at(4));
 
          if ((event >= 0) && pad && (pad == gPad)) {
-            change_canvas_member("fEvent", event);
-            change_canvas_member("fEventX", argx);
-            change_canvas_member("fEventY", argy);
+            Canvas()->fEvent = event;
+            Canvas()->fEventX = argx;
+            Canvas()->fEventY = argy;
 
-            change_canvas_ptr("fSelected", selobj);
+            Canvas()->fSelected = selobj;
 
             ProcessExecs(pad);
          }
@@ -1237,15 +1206,15 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          if (!click->objid.empty()) {
             auto selobj = FindPrimitive(click->objid);
             Canvas()->SetClickSelected(selobj);
-            change_canvas_ptr("fSelected", selobj);
+            Canvas()->fSelected = selobj;
             if (pad && selobj && fObjSelectSignal)
                fObjSelectSignal(pad, selobj);
          }
 
          if ((click->x >= 0) && (click->y >= 0)) {
-            change_canvas_member("fEvent", click->dbl ? kButton1Double : kButton1Up);
-            change_canvas_member("fEventX", click->x);
-            change_canvas_member("fEventY", click->y);
+            Canvas()->fEvent = click->dbl ? kButton1Double : kButton1Up;
+            Canvas()->fEventX = click->x;
+            Canvas()->fEventY = click->y;
             if (click->dbl && fPadDblClickedSignal)
                fPadDblClickedSignal(pad, click->x, click->y);
             else if (!click->dbl && fPadClickedSignal)
