@@ -1656,7 +1656,7 @@ void TPad::DrawColorTable()
          box.DrawBox(xlow, ylow, xup, yup);
          if (color == 1) text.SetTextColor(0);
          else            text.SetTextColor(1);
-         text.DrawText(0.5*(xlow+xup), 0.5*(ylow+yup), Form("%d",color));
+         text.DrawText(0.5*(xlow+xup), 0.5*(ylow+yup), TString::Format("%d",color).Data());
       }
    }
 }
@@ -5146,10 +5146,11 @@ void TPad::Print(const char *filename, Option_t *option)
       }
    }
 
-   if (strstr(opt,"Preview")) gSystem->Exec(Form("epstool --quiet -t6p %s %s",psname.Data(),psname.Data()));
+   if (strstr(opt,"Preview"))
+      gSystem->Exec(TString::Format("epstool --quiet -t6p %s %s", psname.Data(), psname.Data()).Data());
    if (strstr(opt,"EmbedFonts")) {
-      gSystem->Exec(Form("gs -quiet -dSAFER -dNOPLATFONTS -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dUseCIEColor -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dCompatibilityLevel=1.4 -dMaxSubsetPct=100 -dSubsetFonts=true -dEmbedAllFonts=true -sOutputFile=pdf_temp.pdf -f %s",
-                          psname.Data()));
+      gSystem->Exec(TString::Format("gs -quiet -dSAFER -dNOPLATFONTS -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dUseCIEColor -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dCompatibilityLevel=1.4 -dMaxSubsetPct=100 -dSubsetFonts=true -dEmbedAllFonts=true -sOutputFile=pdf_temp.pdf -f %s",
+                          psname.Data()).Data());
       gSystem->Rename("pdf_temp.pdf", psname.Data());
    }
 
@@ -5834,12 +5835,12 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    }
 
    TIter next(GetListOfPrimitives());
-   TObject *obj;
    Int_t grnum = 0;
 
-   while ((obj = next())) {
+   while (auto obj = next()) {
       if (obj->InheritsFrom(TGraph::Class()))
-         if (!strcmp(obj->GetName(),"Graph")) ((TGraph*)obj)->SetName(Form("Graph%d",grnum++));
+         if (!strcmp(obj->GetName(),"Graph"))
+            ((TGraph*)obj)->SetName(TString::Format("Graph%d",grnum++).Data());
       obj->SavePrimitive(out, (Option_t *)next.GetOption());
    }
    out<<"   "<<cname<<"->Modified();"<<std::endl;
@@ -6909,8 +6910,8 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
 TObject *TPad::CreateToolTip(const TBox *box, const char *text, Long_t delayms)
 {
    if (gPad->IsBatch()) return nullptr;
-   return (TObject*)gROOT->ProcessLineFast(Form("new TGToolTip((TBox*)0x%zx,\"%s\",%d)",
-                                           (size_t)box,text,(Int_t)delayms));
+   return (TObject*)gROOT->ProcessLineFast(TString::Format("new TGToolTip((TBox*)0x%zx,\"%s\",%d)",
+                                           (size_t)box,text,(Int_t)delayms).Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6920,7 +6921,7 @@ void TPad::DeleteToolTip(TObject *tip)
 {
    // delete tip;
    if (!tip) return;
-   gROOT->ProcessLineFast(Form("delete (TGToolTip*)0x%zx", (size_t)tip));
+   gROOT->ProcessLineFast(TString::Format("delete (TGToolTip*)0x%zx", (size_t)tip).Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6931,8 +6932,8 @@ void TPad::ResetToolTip(TObject *tip)
 {
    if (!tip) return;
    // tip->Reset(this);
-   gROOT->ProcessLineFast(Form("((TGToolTip*)0x%zx)->Reset((TPad*)0x%zx)",
-                          (size_t)tip,(size_t)this));
+   gROOT->ProcessLineFast(TString::Format("((TGToolTip*)0x%zx)->Reset((TPad*)0x%zx)",
+                          (size_t)tip,(size_t)this).Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6942,7 +6943,7 @@ void TPad::CloseToolTip(TObject *tip)
 {
    if (!tip) return;
    // tip->Hide();
-   gROOT->ProcessLineFast(Form("((TGToolTip*)0x%zx)->Hide()",(size_t)tip));
+   gROOT->ProcessLineFast(TString::Format("((TGToolTip*)0x%zx)->Hide()", (size_t)tip).Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
