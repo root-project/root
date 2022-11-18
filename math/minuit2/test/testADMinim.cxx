@@ -465,7 +465,7 @@ int DoADMinimization(const std::string & formula, const double *x0, const double
    };
 
    ROOT::Math::Functor wfunc( fcn, ndim);
-   ROOT::Math::GradFunctor gradfunc( ndim, fcn, gradFcn);
+   ROOT::Math::GradFunctor gradfunc( fcn, ndim, gradFcn);
 
    if (useGradient) {
       min->SetFunction(gradfunc);
