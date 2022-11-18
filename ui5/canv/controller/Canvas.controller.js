@@ -19,7 +19,8 @@ sap.ui.define([
    }
 
    let CController = Controller.extend("rootui5.canv.controller.Canvas", {
-      onInit : function() {
+
+      onInit() {
          this._Page = this.getView().byId("CanvasMainPage");
 
          this.bottomVisible = false;
@@ -46,7 +47,7 @@ sap.ui.define([
             cp.executeObjectMethod = this.executeObjectMethod.bind(this);
 
             // overwriting method of canvas with standalone handling of GED
-            cp.activateGed = this.openuiActivateGed.bind(this);
+            cp.activateGed = this.activateGed.bind(this);
             cp.removeGed = this.cleanupIfGed.bind(this);
             cp.hasGed = this.isGedEditor.bind(this);
 
@@ -61,7 +62,7 @@ sap.ui.define([
             cp.showUI5ProjectionArea = this.showProjectionArea.bind(this);
             cp.drawInUI5ProjectionArea = this.drawInProjectionArea.bind(this);
 
-            cp.showUI5Panel = this.showPanelInLeftArea.bind(this);
+            cp.showUI5Panel = this.showLeftArea.bind(this);
 
             if (cp.v7canvas) model.setProperty("/isRoot6", false);
 
@@ -69,16 +70,14 @@ sap.ui.define([
             if (!cp.embed_canvas && ws?.addReloadKeyHandler)
                ws.addReloadKeyHandler();
          }
-
-         // this.toggleGedEditor();
       },
 
-      isv7: function() {
+      isv7() {
          let cp = this.getCanvasPainter();
-         return cp && cp.v7canvas;
+         return cp?.v7canvas;
       },
 
-      executeObjectMethod: function(painter, method, menu_obj_id) {
+      executeObjectMethod(painter, method, menu_obj_id) {
 
          if (method.fArgs!==undefined) {
             this.showMethodsDialog(painter, method, menu_obj_id);
@@ -96,7 +95,7 @@ sap.ui.define([
          }
 
          if (method.fName == "Editor") {
-            this.openuiActivateGed(painter);
+            this.activateGed(painter);
             return true;
          }
 
@@ -105,11 +104,11 @@ sap.ui.define([
       },
 
       /** @summary function used to activate GED in full canvas */
-      openuiActivateGed: function(painter, kind, mode) {
+      activateGed(painter, kind, mode) {
 
          let canvp = this.getCanvasPainter();
 
-         return this.showGeEditor(true).then(() => {
+         return this.showGed(true).then(() => {
             canvp.selectObjectPainter(painter);
 
             if (typeof canvp.processChanges == 'function')
@@ -120,13 +119,13 @@ sap.ui.define([
       },
 
       /** @desc Provide canvas painter */
-      getCanvasPainter : function(also_without_websocket) {
+      getCanvasPainter(also_without_websocket) {
          let p = this.getView().byId("MainPanel")?.getController().getPainter();
 
          return (p && (p._websocket || also_without_websocket)) ? p : null;
       },
 
-      closeMethodDialog : function(painter, method, menu_obj_id) {
+      closeMethodDialog(painter, method, menu_obj_id) {
 
          let args = "";
 
@@ -136,11 +135,11 @@ sap.ui.define([
             let items = cont[0].getItems();
 
             if (method.fArgs.length !== items.length)
-               alert('Mismatch between method description' + method.fArgs.length + ' and args list in dialog ' + items.length);
+               alert(`Length mismatch between method description ${method.fArgs.length} and args list ${items.length} in dialog`);
 
             for (let k = 0; k < method.fArgs.length; ++k) {
-               let arg = method.fArgs[k];
-               let value = items[k].getContent()[0].getValue();
+               let arg = method.fArgs[k],
+                   value = items[k].getContent()[0].getValue();
 
                if (value === "") value = arg.fDefault;
 
@@ -165,19 +164,19 @@ sap.ui.define([
             let exec = method.fExec;
             if (args) exec = exec.substr(0,exec.length-1) + args + ')';
             // invoked only when user press Ok button
-            console.log('execute method for object ' + menu_obj_id + ' exec= ' + exec);
+            console.log(`execute method for object ${menu_obj_id} exec ${exec}`);
 
             let canvp = this.getCanvasPainter(),
                 p = menu_obj_id.indexOf("#");
 
             if (canvp?.v7canvas)
-               canvp.submitExec(painter, exec, (p > 0) ? menu_obj_id.slice(p+1) : "");
+               canvp.submitExec(painter, exec, (p > 0) ? menu_obj_id.slice(p+1) : '');
             else if (canvp)
-               canvp.sendWebsocket('OBJEXEC:' + menu_obj_id + ':' + exec);
+               canvp.sendWebsocket(`OBJEXEC:${menu_obj_id}:${exec}`);
          }
       },
 
-      showMethodsDialog : function(painter, method, menu_obj_id) {
+      showMethodsDialog(painter, method, menu_obj_id) {
 
          // TODO: deliver class name together with menu items
          method.fClassName = painter.getClassName();
@@ -221,7 +220,7 @@ sap.ui.define([
          this.methodDialog.open();
       },
 
-      onFileMenuAction : function (oEvent) {
+      onFileMenuAction(oEvent) {
          //let oItem = oEvent.getParameter("item"),
          //    sItemPath = "";
          //while (oItem instanceof sap.m.MenuItem) {
@@ -265,7 +264,7 @@ sap.ui.define([
          MessageToast.show(`Action triggered on item: ${name}`);
       },
 
-      onCloseCanvasPress : function() {
+      onCloseCanvasPress() {
          let p = this.getCanvasPainter();
          if (p) {
             p.onWebsocketClosed();
@@ -273,131 +272,97 @@ sap.ui.define([
          }
       },
 
-      onInterruptPress : function() {
+      onInterruptPress() {
          let p = this.getCanvasPainter();
          if (p) p.sendWebsocket("INTERRUPT");
       },
 
-      onQuitRootPress : function() {
+      onQuitRootPress() {
          let p = this.getCanvasPainter();
          if (p) p.sendWebsocket("QUIT");
       },
 
-      onReloadPress : function() {
+      onReloadPress() {
          let p = this.getCanvasPainter();
          if (p) p.sendWebsocket("RELOAD");
       },
 
-      isGedEditor : function() {
+      isGedEditor() {
          return this.getView().getModel().getProperty("/LeftArea") == "Ged";
       },
 
-      showGeEditor : function(new_state) {
+      showGed(new_state) {
          return this.showLeftArea(new_state ? "Ged" : "");
       },
 
-      cleanupIfGed: function() {
+      cleanupIfGed() {
          let ged = this.getLeftController("Ged"),
              p = this.getCanvasPainter();
          if (p) p.registerForPadEvents(null);
          if (ged) ged.cleanupGed();
-         if (p && p.processChanges)
-            p.processChanges("sbits", p);
+         if (typeof p?.processChanges == 'function')
+            p.processChanges('sbits', p);
       },
 
-      getLeftController: function(name) {
+      getLeftController(name) {
          if (this.getView().getModel().getProperty("/LeftArea") != name) return null;
          let split = this.getView().byId("MainAreaSplitter");
          return split ? split.getContentAreas()[0].getController() : null;
       },
 
-      toggleGedEditor : function() {
-         return this.showGeEditor(!this.isGedEditor());
+      toggleGedEditor() {
+         if (this.isGedEditor())
+            this.showLeftArea("");
+         else
+            this.activateGed(this.getCanvasPainter());
       },
 
-      showPanelInLeftArea: function(panel_name, panel_handle) {
+      /** @summary Load custom panel in canvas lef area */
+      showLeftArea(panel_name, panel_handle) {
+         let split = this.getView().byId('MainAreaSplitter'),
+             model = this.getView().getModel(),
+             curr = model.getProperty('/LeftArea');
 
-         let split = this.getView().byId("MainAreaSplitter");
-         let curr = this.getView().getModel().getProperty("/LeftArea");
-         if (!split || (curr === panel_name))
-            return Promise.resolve(false);
-
-         // first need to remove existing
-         if (curr) {
-            console.log('REMOVE CURRENT AREA', curr);
-            this.cleanupIfGed();
-            split.removeContentArea(split.getContentAreas()[0]);
-         }
-
-         this.getView().getModel().setProperty("/LeftArea", panel_name);
-         this.getView().getModel().setProperty("/GedIcon", chk_icon(panel_name=="Ged"));
-
-         if (!panel_handle || !panel_name)
-            return Promise.resolve(false);
-
-         let oLd = new SplitterLayoutData({
-            resizable : true,
-            size      : "250px"
-         });
-
-         let viewName = panel_name;
-         if (viewName.indexOf(".") < 0) viewName = "rootui5.canv.view." + panel_name;
-
-         let can_elem = this.getView().byId("MainPanel");
-
-         import('./jsrootsys/modules/core.mjs')
-           .then(jsroot => XMLView.create({
-               viewName: viewName,
-               viewData: { handle: panel_handle, masterPanel: this, jsroot },
-               layoutData: oLd,
-               height: (panel_name == "Panel") ? "100%" : undefined
-           })).then(oView => {
-               // workaround, while CanvasPanel.onBeforeRendering called too late
-               can_elem.getController().preserveCanvasContent();
-               split.insertContentArea(oView, 0);
-               return true;
-           });
-      },
-
-      // TODO: sync with showPanelInLeftArea, it is more or less same
-      showLeftArea(panel_name) {
-         let split = this.getView().byId("MainAreaSplitter");
-         let curr = this.getView().getModel().getProperty("/LeftArea");
          if (!split || (curr === panel_name))
             return Promise.resolve(null);
 
+         model.setProperty("/LeftArea", panel_name);
+         model.setProperty("/GedIcon", chk_icon(panel_name == 'Ged'));
+
          // first need to remove existing
          if (curr) {
             this.cleanupIfGed();
             split.removeContentArea(split.getContentAreas()[0]);
          }
-
-         this.getView().getModel().setProperty("/LeftArea", panel_name);
-         this.getView().getModel().setProperty("/GedIcon", chk_icon(panel_name=="Ged"));
 
          if (!panel_name)
             return Promise.resolve(null);
 
          let oLd = new SplitterLayoutData({
             resizable: true,
-            size: "250px"
+            size: '250px'
          });
 
          let canvp = this.getCanvasPainter();
 
-         let viewName = "rootui5.canv.view." + panel_name;
-         if (panel_name == "FitPanel") viewName = "rootui5.fitpanel.view.FitPanel";
+         let viewName = panel_name;
 
-         let viewData = canvp.getUi5PanelData(panel_name) || {};
+         if (panel_name == "FitPanel")
+            viewName = "rootui5.fitpanel.view.FitPanel";
+         else if (panel_name.indexOf(".") < 0)
+            viewName = "rootui5.canv.view." + panel_name;
+
+         let viewData = canvp.getUi5PanelData(panel_name);
          viewData.masterPanel = this;
+         viewData.handle = panel_handle;
 
-         let can_elem = this.getView().byId("MainPanel");
+         let can_elem = this.getView().byId('MainPanel');
 
          return XMLView.create({
              viewName,
              viewData,
              layoutData: oLd,
-             height: (panel_name == "Panel") ? "100%" : undefined
+             height: (panel_name == 'Panel') ? '100%' : undefined
          }).then(oView => {
 
             // workaround, while CanvasPanel.onBeforeRendering called too late
@@ -407,7 +372,7 @@ sap.ui.define([
 
             if (panel_name === "Ged") {
                let ged = oView.getController();
-               if (canvp && ged && (typeof canvp.registerForPadEvents == "function")) {
+               if (ged && (typeof canvp?.registerForPadEvents == 'function')) {
                   canvp.registerForPadEvents(ged.padEventsReceiver.bind(ged));
                   canvp.selectObjectPainter(canvp);
                }
@@ -417,7 +382,7 @@ sap.ui.define([
          });
       },
 
-      getBottomController : function() {
+      getBottomController() {
          if (!this.bottomVisible) return null;
          let split = this.getView().byId("MainAreaSplitter"),
              cont = split.getContentAreas(),
@@ -427,17 +392,17 @@ sap.ui.define([
          return bottom ? bottom.getController() : null;
       },
 
-      drawInProjectionArea : function(can, opt) {
+      drawInProjectionArea(can, opt) {
          let ctrl = this.getBottomController();
-         if (!ctrl) ctrl = this.getLeftController("Panel");
+         if (!ctrl) ctrl = this.getLeftController('Panel');
 
-         if (ctrl && ctrl.drawObject)
+         if (typeof ctrl?.drawObject == 'function')
             return ctrl.drawObject(can, opt);
 
          return Promise.resolve(null);
       },
 
-      showProjectionArea : function(kind) {
+      showProjectionArea(kind) {
          let bottom = null;
          return this.showBottomArea(kind == "X")
              .then(area => { bottom = area; return this.showLeftArea(kind == "Y" ? "Panel" : ""); })
@@ -452,7 +417,7 @@ sap.ui.define([
             });
       },
 
-      showBottomArea : function(is_on) {
+      showBottomArea(is_on) {
 
          if (this.bottomVisible == is_on)
             return Promise.resolve(this.getBottomController());
@@ -502,7 +467,7 @@ sap.ui.define([
 
       },
 
-      showCanvasStatus : function (text1,text2,text3,text4) {
+      showCanvasStatus(text1, text2, text3, text4) {
          let model = this.getView().getModel();
          model.setProperty("/StatusLbl1", text1);
          model.setProperty("/StatusLbl2", text2);
@@ -510,11 +475,11 @@ sap.ui.define([
          model.setProperty("/StatusLbl4", text4);
       },
 
-      isStatusShown : function() {
+      isStatusShown() {
          return this._Page.getShowFooter();
       },
 
-      toggleShowStatus : function(new_state) {
+      toggleShowStatus(new_state) {
          if ((new_state === undefined) || (new_state == "toggle"))
             new_state = !this.isStatusShown();
 
@@ -525,7 +490,7 @@ sap.ui.define([
          if (canvp) canvp.processChanges("sbits", canvp);
       },
 
-      toggleToolBar : function(new_state) {
+      toggleToolBar(new_state) {
          if (new_state === undefined) new_state = !this.getView().getModel().getProperty("/ToolbarIcon");
 
          this._Page.setShowSubHeader(new_state);
@@ -533,7 +498,7 @@ sap.ui.define([
          this.getView().getModel().setProperty("/ToolbarIcon", chk_icon(new_state));
       },
 
-      toggleToolTip : function(new_state) {
+      toggleToolTip(new_state) {
          let p = this.getCanvasPainter(true);
 
          if (new_state === undefined)
@@ -544,18 +509,18 @@ sap.ui.define([
          if (p) p.setTooltipAllowed(new_state);
       },
 
-      isMenuBarShow: function() {
+      isMenuBarShow() {
          return this._Page.getShowHeader();
       },
 
-      toggleMenuBar: function(new_state) {
+      toggleMenuBar(new_state) {
          if ((new_state === undefined) || (new_state == "toggle"))
             new_state = !this._Page.getShowHeader();
          this.getView().getModel().setProperty("/MenuBarIcon", chk_icon(new_state));
          this._Page.setShowHeader(new_state);
       },
 
-      onEditMenuAction : function(oEvent) {
+      onEditMenuAction(oEvent) {
          let cp = this.getCanvasPainter();
          if (!cp) return;
 
@@ -570,7 +535,7 @@ sap.ui.define([
          }
       },
 
-      onViewMenuAction: function (oEvent) {
+      onViewMenuAction(oEvent) {
          let item = oEvent.getParameter("item");
 
          switch (item.getText()) {
@@ -582,7 +547,7 @@ sap.ui.define([
          }
       },
 
-      onOptionsMenuAction: function(oEvent) {
+      onOptionsMenuAction(oEvent) {
          let cp = this.getCanvasPainter();
          if (!cp) return;
 
@@ -591,7 +556,7 @@ sap.ui.define([
             cp.sendWebsocket('INTERRUPT');
       },
 
-      onToolsMenuAction: function(oEvent) {
+      onToolsMenuAction(oEvent) {
          let item = oEvent.getParameter("item"),
              name = item.getText();
 
@@ -602,16 +567,16 @@ sap.ui.define([
          this.showLeftArea(curr == "FitPanel" ? "" : "FitPanel");
       },
 
-      showMessage : function(msg) {
+      showMessage(msg) {
          MessageToast.show(msg);
       },
 
-      showSection : function(that, on) {
-         // this function call when section state changed from server side
+      /** @summary this function call when section state changed from server side */
+      showSection(that, on) {
          switch(that) {
             case "Menu": this.toggleMenuBar(on); break;
             case "StatusBar": this.toggleShowStatus(on); break;
-            case "Editor": return this.showGeEditor(on);
+            case "Editor": return this.showGed(on);
             case "ToolBar": this.toggleToolBar(on); break;
             case "ToolTips": this.toggleToolTip(on); break;
          }
