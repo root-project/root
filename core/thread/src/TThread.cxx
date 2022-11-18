@@ -1093,7 +1093,7 @@ void TThread::XAction()
    enum { kPRTF = 0, kCUPD = 5, kCANV = 10, kCDEL = 15,
           kPDCD = 20, kMETH = 25, kERRO = 30 };
    int iact = strstr(acts, fgXAct) - acts;
-   char *cmd = 0;
+   TString cmd;
 
    switch (iact) {
 
@@ -1131,8 +1131,8 @@ void TThread::XAction()
 
             case 2:
                //((TCanvas*)fgXArr[1])->Constructor();
-               cmd = Form("((TCanvas *)0x%zx)->Constructor();",(size_t)fgXArr[1]);
-               gROOT->ProcessLine(cmd);
+               cmd.Form("((TCanvas *)0x%zx)->Constructor();",(size_t)fgXArr[1]);
+               gROOT->ProcessLine(cmd.Data());
                break;
 
             case 5:
@@ -1140,8 +1140,8 @@ void TThread::XAction()
                //                 (char*)fgXArr[2],
                //                 (char*)fgXArr[3],
                //                *((Int_t*)(fgXArr[4])));
-               cmd = Form("((TCanvas *)0x%zx)->Constructor((char*)0x%zx,(char*)0x%zx,*((Int_t*)(0x%zx)));",(size_t)fgXArr[1],(size_t)fgXArr[2],(size_t)fgXArr[3],(size_t)fgXArr[4]);
-               gROOT->ProcessLine(cmd);
+               cmd.Form("((TCanvas *)0x%zx)->Constructor((char*)0x%zx,(char*)0x%zx,*((Int_t*)(0x%zx)));",(size_t)fgXArr[1],(size_t)fgXArr[2],(size_t)fgXArr[3],(size_t)fgXArr[4]);
+               gROOT->ProcessLine(cmd.Data());
                break;
             case 6:
                //((TCanvas*)fgXArr[1])->Constructor(
@@ -1149,8 +1149,8 @@ void TThread::XAction()
                //                 (char*)fgXArr[3],
                //                *((Int_t*)(fgXArr[4])),
                //                *((Int_t*)(fgXArr[5])));
-               cmd = Form("((TCanvas *)0x%zx)->Constructor((char*)0x%zx,(char*)0x%zx,*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)));",(size_t)fgXArr[1],(size_t)fgXArr[2],(size_t)fgXArr[3],(size_t)fgXArr[4],(size_t)fgXArr[5]);
-               gROOT->ProcessLine(cmd);
+               cmd.Form("((TCanvas *)0x%zx)->Constructor((char*)0x%zx,(char*)0x%zx,*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)));",(size_t)fgXArr[1],(size_t)fgXArr[2],(size_t)fgXArr[3],(size_t)fgXArr[4],(size_t)fgXArr[5]);
+               gROOT->ProcessLine(cmd.Data());
                break;
 
             case 8:
@@ -1161,8 +1161,8 @@ void TThread::XAction()
                //               *((Int_t*)(fgXArr[5])),
                //               *((Int_t*)(fgXArr[6])),
                //               *((Int_t*)(fgXArr[7])));
-               cmd = Form("((TCanvas *)0x%zx)->Constructor((char*)0x%zx,(char*)0x%zx,*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)));",(size_t)fgXArr[1],(size_t)fgXArr[2],(size_t)fgXArr[3],(size_t)fgXArr[4],(size_t)fgXArr[5],(size_t)fgXArr[6],(size_t)fgXArr[7]);
-               gROOT->ProcessLine(cmd);
+               cmd.Form("((TCanvas *)0x%zx)->Constructor((char*)0x%zx,(char*)0x%zx,*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)));",(size_t)fgXArr[1],(size_t)fgXArr[2],(size_t)fgXArr[3],(size_t)fgXArr[4],(size_t)fgXArr[5],(size_t)fgXArr[6],(size_t)fgXArr[7]);
+               gROOT->ProcessLine(cmd.Data());
                break;
 
          }
@@ -1170,8 +1170,8 @@ void TThread::XAction()
 
       case kCDEL:
          //((TCanvas*)fgXArr[1])->Destructor();
-         cmd = Form("((TCanvas *)0x%zx)->Destructor();",(size_t)fgXArr[1]);
-         gROOT->ProcessLine(cmd);
+         cmd.Form("((TCanvas *)0x%zx)->Destructor();",(size_t)fgXArr[1]);
+         gROOT->ProcessLine(cmd.Data());
          break;
 
       case kPDCD:
