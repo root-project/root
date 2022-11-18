@@ -1,6 +1,6 @@
 import { version, gStyle, httpRequest, createHttpRequest, loadScript, decodeUrl,
          source_dir, settings, internals, findFunction,
-         isArrayProto, isRootCollection, isBatchMode, isNodeJs, isFunc, isStr, _ensureJSROOT,
+         isArrayProto, isRootCollection, isBatchMode, isNodeJs, isObject, isFunc, isStr, _ensureJSROOT,
          clTList, clTMap, clTObjString, clTText, clTLatex, clTColor, clTStyle } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { openFile, clTStreamerInfoList, clTDirectory, clTDirectoryFile, nameStreamerInfo } from '../io.mjs';
@@ -435,7 +435,7 @@ function objectHierarchy(top, obj, args = undefined) {
 
       let simple = false;
 
-      if (typeof fld == 'object') {
+      if (isObject(fld)) {
 
          proto = Object.prototype.toString.apply(fld);
 
@@ -494,7 +494,7 @@ function objectHierarchy(top, obj, args = undefined) {
                   case clTLatex: item._value = fld.fTitle; break;
                   case clTObjString: item._value = fld.fString; break;
                   default:
-                     if (isRootCollection(fld) && (typeof fld.arr === 'object')) {
+                     if (isRootCollection(fld) && isObject(fld.arr)) {
                         item._value = fld.arr.length ? '[...]' : '[]';
                         item._title += ', size:'  + fld.arr.length;
                         if (fld.arr.length > 0) item._more = true;
@@ -933,10 +933,9 @@ class HierarchyPainter extends BasePainter {
 
       let top = this.h, itemname = '';
 
-      if (arg === null) return null; else
       if (isStr(arg)) {
          itemname = arg; arg = {};
-      } else if (typeof arg == 'object') {
+      } else if (isObject(arg)) {
          itemname = arg.name; if ('top' in arg) top = arg.top;
       } else
          return null;
@@ -1045,7 +1044,7 @@ class HierarchyPainter extends BasePainter {
 
       if (isStr(arg)) {
          itemname = arg;
-      } else if (typeof arg === 'object') {
+      } else if (isObject(arg)) {
          if ((arg._parent !== undefined) && (arg._name !== undefined) && (arg._kind !== undefined)) item = arg; else
          if (arg.name !== undefined) itemname = arg.name; else
          if (arg.arg !== undefined) itemname = arg.arg; else
@@ -1072,7 +1071,7 @@ class HierarchyPainter extends BasePainter {
          let parentname = this.itemFullName(d.last);
 
          // this is indication that expand does not give us better path to searched item
-         if ((typeof arg == 'object') && ('rest' in arg))
+         if (isObject(arg) && ('rest' in arg))
             if ((arg.rest == d.rest) || (arg.rest.length <= d.rest.length))
                return result;
 
@@ -1086,7 +1085,7 @@ class HierarchyPainter extends BasePainter {
 
       result.item = item;
 
-      if ((item !== null) && (typeof item._obj == 'object')) {
+      if ((item !== null) && isObject(item._obj)) {
          result.obj = item._obj;
          return result;
       }
@@ -2066,8 +2065,9 @@ class HierarchyPainter extends BasePainter {
 
       if (isStr(arg))
          arg = [ arg ];
-      else if (typeof arg != 'object') {
-         if (arg === undefined) arg = !this.isMonitoring();
+      else if (!isObject(arg)) {
+         if (arg === undefined)
+           arg = !this.isMonitoring();
          want_update_all = true;
          only_auto_items = !!arg;
       }
@@ -2726,7 +2726,7 @@ class HierarchyPainter extends BasePainter {
             let handleAfterRequest = func => {
                if (isFunc(func)) {
                   let res = func(this, item, obj, option, itemreq);
-                  if (res && (typeof res == 'object')) obj = res;
+                  if (isObject(res)) obj = res;
                }
                resolveFunc(obj);
             };
@@ -2804,7 +2804,7 @@ class HierarchyPainter extends BasePainter {
 
       if (!server_address) server_address = '';
 
-      if (typeof server_address == 'object') {
+      if (isObject(server_address)) {
          let h = server_address;
          server_address = '';
          return AdoptHierarchy(h);
@@ -2944,7 +2944,7 @@ class HierarchyPainter extends BasePainter {
      * @param {string} layout - layout like 'simple' or 'grid2x2'
      * @param {string} frameid - DOM element id where object drawing will be performed */
    setDisplay(layout, frameid) {
-      if (!frameid && (typeof layout == 'object')) {
+      if (!frameid && isObject(layout)) {
          this.disp = layout;
          this.disp_kind = 'custom';
          this.disp_frameid = null;
@@ -3325,7 +3325,8 @@ class HierarchyPainter extends BasePainter {
          let func = internals.getCachedHierarchy || findFunction('GetCachedHierarchy');
          if (isFunc(func))
             h0 = func();
-         if (typeof h0 !== 'object') h0 = '';
+         if (!isObject(h0))
+            h0 = '';
 
          if ((this.is_online == 'draw') && !itemsarr.length)
             itemsarr.push('');

@@ -493,7 +493,6 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    if (('zoom_ymin' in this) && ('zoom_ymax' in this) && (this.zoom_ymin !== this.zoom_ymax)) {
       ymin = this.zoom_ymin; ymax = this.zoom_ymax; y_zoomed = true;
    }
-
    if (('zoom_zmin' in this) && ('zoom_zmax' in this) && (this.zoom_zmin !== this.zoom_zmax)) {
       zmin = this.zoom_zmin; zmax = this.zoom_zmax; z_zoomed = true;
    }

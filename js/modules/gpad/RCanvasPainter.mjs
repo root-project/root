@@ -1,4 +1,4 @@
-import { settings, create, parse, toJSON, loadScript, registerMethods, isBatchMode, isStr } from '../core.mjs';
+import { settings, create, parse, toJSON, loadScript, registerMethods, isBatchMode, isFunc, isStr } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
@@ -254,7 +254,7 @@ class RCanvasPainter extends RPadPainter {
                 .then(res => handle.send(reply + res));
          } else if (cmd.indexOf('ADDPANEL:') == 0) {
             let relative_path = cmd.slice(9);
-            if (!this.showUI5Panel) {
+            if (!isFunc(this.showUI5Panel)) {
                handle.send(reply + 'false');
             } else {
 
@@ -531,7 +531,7 @@ class RCanvasPainter extends RPadPainter {
    /** @summary Get view data for ui5 panel
      * @private */
    getUi5PanelData(/* panel_name */) {
-      return { jsroot: { parse, toJSON, loadScript, EAxisBits, getColorExec } };
+      return { jsroot: { settings, create, parse, toJSON, loadScript, EAxisBits, getColorExec } };
    }
 
    /** @summary Function used to activate GED

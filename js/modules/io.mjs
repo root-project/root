@@ -1,5 +1,5 @@
 import { httpRequest, createHttpRequest, BIT, loadScript, internals, settings,
-         create, getMethods, addMethods, isNodeJs, isFunc, isStr,
+         create, getMethods, addMethods, isNodeJs, isObject, isFunc, isStr,
          clTObject, clTNamed, clTString, clTObjString, clTList, clTMap, clTObjArray, clTClonesArray,
          clTAttLine, clTAttFill, clTAttMarker, clTStyle,
          clTPad, clTCanvas, clTAttCanvas, clTPolyMarker3D, clTF1, clTF2 } from './core.mjs';
@@ -3369,7 +3369,7 @@ class TFile {
 
       streamer = [];
 
-      if (typeof custom === 'object') {
+      if (isObject(custom)) {
          if (!custom.name && !custom.func) return custom;
          streamer.push(custom); // special read entry, add in the beginning of streamer
       }
@@ -3837,15 +3837,15 @@ function openFile(arg) {
          file = new TNodejsFile(arg);
    }
 
-   if (!file && (typeof arg === 'object') && (arg instanceof FileProxy))
+   if (!file && isObject(arg) && (arg instanceof FileProxy))
       file = new TProxyFile(arg);
 
-   if (!file && (typeof arg === 'object') && (arg instanceof ArrayBuffer)) {
+   if (!file && isObject(arg) && (arg instanceof ArrayBuffer)) {
       file = new TFile('localfile.root');
       file.assignFileContent(arg);
    }
 
-   if (!file && (typeof arg === 'object') && arg.size && arg.name)
+   if (!file && isObject(arg) && arg.size && arg.name)
       file = new TLocalFile(arg);
 
    if (!file)

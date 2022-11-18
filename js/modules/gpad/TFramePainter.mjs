@@ -1570,7 +1570,7 @@ class TFramePainter extends ObjectPainter {
    }
 
    /** @summary Configure frame axes ranges */
-   setAxesRanges(xaxis, xmin, xmax, yaxis, ymin, ymax, zaxis, zmin, zmax) {
+   setAxesRanges(xaxis, xmin, xmax, yaxis, ymin, ymax, zaxis, zmin, zmax, hpainter) {
       this.ranges_set = true;
 
       this.xaxis = xaxis;
@@ -1584,6 +1584,16 @@ class TFramePainter extends ObjectPainter {
       this.zaxis = zaxis;
       this.zmin = zmin;
       this.zmax = zmax;
+
+      if (hpainter?.check_pad_range) {
+         delete hpainter.check_pad_range;
+         let ndim = hpainter.getDimension();
+         this.applyAxisZoom('x');
+         if (ndim > 1)
+            this.applyAxisZoom('y');
+         if (ndim > 2)
+            this.applyAxisZoom('z');
+      }
    }
 
    /** @summary Configure secondary frame axes ranges */
@@ -1656,6 +1666,24 @@ class TFramePainter extends ObjectPainter {
       }
    }
 
+   /** @summary Apply zooming from TAxis attributes */
+   applyAxisZoom(name) {
+      if (this.zoomChangedInteractive(name)) return;
+      this[`zoom_${name}min`] = this[`zoom_${name}max`] = 0;
+
+      const axis = this.getAxis(name);
+
+      if (axis?.TestBit(EAxisBits.kAxisRange)) {
+         if ((axis.fFirst !== axis.fLast) && ((axis.fFirst > 1) || (axis.fLast < axis.fNbins))) {
+            this[`zoom_${name}min`] = axis.fFirst > 1 ? axis.GetBinLowEdge(axis.fFirst) : axis.fXmin;
+            this[`zoom_${name}max`] = axis.fLast < axis.fNbins ? axis.GetBinLowEdge(axis.fLast + 1) : axis.fXmax;
+            // reset user range for main painter
+            axis.InvertBit(EAxisBits.kAxisRange);
+            axis.fFirst = 1; axis.fLast = axis.fNbins;
+         }
+      }
+   }
+
    /** @summary Create x,y objects which maps user coordinates into pixels
      * @desc While only first painter really need such object, all others just reuse it
      * following functions are introduced
@@ -1694,27 +1722,9 @@ class TFramePainter extends ObjectPainter {
 
       if (opts.check_pad_range) {
          // take zooming out of pad or axis attributes
-
-         const applyAxisZoom = name => {
-            if (this.zoomChangedInteractive(name)) return;
-            this[`zoom_${name}min`] = this[`zoom_${name}max`] = 0;
-
-            const axis = this.getAxis(name);
-
-            if (axis && axis.TestBit(EAxisBits.kAxisRange)) {
-               if ((axis.fFirst !== axis.fLast) && ((axis.fFirst > 1) || (axis.fLast < axis.fNbins))) {
-                  this[`zoom_${name}min`] = axis.fFirst > 1 ? axis.GetBinLowEdge(axis.fFirst) : axis.fXmin;
-                  this[`zoom_${name}max`] = axis.fLast < axis.fNbins ? axis.GetBinLowEdge(axis.fLast + 1) : axis.fXmax;
-                  // reset user range for main painter
-                  axis.InvertBit(EAxisBits.kAxisRange);
-                  axis.fFirst = 1; axis.fLast = axis.fNbins;
-               }
-            }
-         };
-
-         applyAxisZoom('x');
-         if (opts.ndim > 1) applyAxisZoom('y');
-         if (opts.ndim > 2) applyAxisZoom('z');
+         this.applyAxisZoom('x');
+         if (opts.ndim > 1) this.applyAxisZoom('y');
+         if (opts.ndim > 2) this.applyAxisZoom('z');
 
          if (opts.check_pad_range === 'pad_range') {
             let canp = this.getCanvPainter();

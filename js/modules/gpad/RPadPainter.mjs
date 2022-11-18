@@ -1,5 +1,5 @@
 import { gStyle, settings, constants, internals, addMethods,
-         isPromise, getPromise, isBatchMode, isFunc, isStr, btoa_func, clTPad } from '../core.mjs';
+         isPromise, getPromise, isBatchMode, isObject, isFunc, isStr, btoa_func, clTPad } from '../core.mjs';
 import { pointer as d3_pointer } from '../d3.mjs';
 import { ColorPalette, addColor, getRootColors } from '../base/colors.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
@@ -593,7 +593,7 @@ class RPadPainter extends RObjectPainter {
       // handle used to invoke callback only when necessary
       return this.drawObject(this.getDom(), this.pad.fPrimitives[indx], '').then(ppainter => {
          // mark painter as belonging to primitives
-         if (ppainter && (typeof ppainter == 'object'))
+         if (isObject(ppainter))
             ppainter._primitive = true;
 
          return this.drawPrimitives(indx+1);
@@ -754,7 +754,7 @@ class RPadPainter extends RObjectPainter {
 
       if ((size === true) || (size === false)) { force = size; size = null; }
 
-      if (size && (typeof size === 'object') && size.force) force = true;
+      if (isObject(size) && size.force) force = true;
 
       if (!force) force = this.needRedrawByResize();
 

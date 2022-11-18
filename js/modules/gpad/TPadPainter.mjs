@@ -1,5 +1,5 @@
 import { gStyle, settings, constants, internals, btoa_func,
-         create, toJSON, isBatchMode, loadScript, injectCode, isPromise, getPromise, isFunc, isStr,
+         create, toJSON, isBatchMode, loadScript, injectCode, isPromise, getPromise, isObject, isFunc, isStr,
          clTObjArray, clTPaveText, clTColor, clTPad, clTStyle } from '../core.mjs';
 import { color as d3_color, pointer as d3_pointer, select as d3_select } from '../d3.mjs';
 import { ColorPalette, adoptRootColors, extendRootColors, getRGBfromTColor } from '../base/colors.mjs';
@@ -869,7 +869,7 @@ class TPadPainter extends ObjectPainter {
 
       // use of Promise should avoid large call-stack depth when many primitives are drawn
       return this.drawObject(this.getDom(), this.pad.fPrimitives.arr[indx], this.pad.fPrimitives.opt[indx]).then(op => {
-         if (op && (typeof op == 'object'))
+         if (isObject(op))
             op._primitive = true; // mark painter as belonging to primitives
 
          return this.drawPrimitives(indx+1);
@@ -1126,7 +1126,7 @@ class TPadPainter extends ObjectPainter {
 
       if ((size === true) || (size === false)) { force = size; size = null; }
 
-      if (size && (typeof size === 'object') && size.force) force = true;
+      if (isObject(size) && size.force) force = true;
 
       if (!force) force = this.needRedrawByResize();
 

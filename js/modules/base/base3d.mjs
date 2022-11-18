@@ -5,7 +5,7 @@ import { HelveticerRegularJson, Font, WebGLRenderer, WebGLRenderTarget,
          Vector2, Vector3, Color, Points, PointsMaterial,
          LineSegments, LineDashedMaterial, LineBasicMaterial,
          OrbitControls, Raycaster, SVGRenderer } from '../three.mjs';
-import { browser, settings, constants, internals, isBatchMode, isNodeJs, isFunc, isStr, getDocument } from '../core.mjs';
+import { browser, settings, constants, internals, isBatchMode, isNodeJs, isObject, isFunc, isStr, getDocument } from '../core.mjs';
 import { getElementRect, getAbsPosInCanvas } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from './TAttLineHandler.mjs';
@@ -589,7 +589,7 @@ class TooltipFor3D {
    /** @summary extract position from event
      * @desc can be used to process it later when event is gone */
    extract_pos(e) {
-      if (typeof e == 'object' && (e.u !== undefined) && (e.l !== undefined)) return e;
+      if (isObject(e) && (e.u !== undefined) && (e.l !== undefined)) return e;
       let res = { u: 0, l: 0 };
       if (this.abspos) {
          res.l = e.pageX;
@@ -649,7 +649,7 @@ class TooltipFor3D {
    show(v /*, mouse_pos, status_func*/) {
       if (!v) return this.hide();
 
-      if ((typeof v == 'object') && (v.lines || v.line)) {
+      if (isObject(v) && (v.lines || v.line)) {
          if (v.only_status) return this.hide();
 
          if (v.line) {
@@ -1429,7 +1429,7 @@ class PointsCreator {
    /** @summary Create points */
    createPoints(args) {
 
-      if (typeof args !== 'object')
+      if (!isObject(args))
          args = { color: args };
       if (!args.color)
          args.color = 'black';
