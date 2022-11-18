@@ -14,7 +14,9 @@
 
 #include "RooFit/MultiProcess/JobManager.h"
 #include "RooFit/MultiProcess/Messenger.h"
+#include "RooFit/MultiProcess/ProcessTimer.h"
 #include "RooFit/MultiProcess/Queue.h"
+#include "RooFit/MultiProcess/Config.h"
 #include "RooMsgService.h"
 #include "RooMinimizer.h"
 
@@ -225,7 +227,9 @@ void LikelihoodGradientJob::fillGradientWithPrevResult(double *grad, double *pre
       }
 
       if (!calculation_is_clean_->gradient) {
+         if (RooFit::MultiProcess::Config::getLogTimings()) ProcessTimer::start_timer("master:gradient");
          calculate_all();
+         if (RooFit::MultiProcess::Config::getLogTimings()) ProcessTimer::end_timer("master:gradient");
       }
 
       // put the results from _grad into *grad

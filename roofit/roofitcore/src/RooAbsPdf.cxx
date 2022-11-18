@@ -1614,6 +1614,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("parallelize", "Parallelize", 0, 0); // Three parallelize arguments
   pc.defineInt("enableParallelGradient", "ParallelGradientOptions", 0, 0);
   pc.defineInt("enableParallelDescent", "ParallelDescentOptions", 0, 0);
+  pc.defineInt("timingAnalysis", "TimingAnalysis", 0, 0);
   pc.defineString("mintype","Minimizer",0,minimizerDefaults.minType.c_str()) ;
   pc.defineString("minalg","Minimizer",1,minimizerDefaults.minAlg.c_str()) ;
   pc.defineSet("minosSet","Minos",0,minimizerDefaults.minosSet) ;
@@ -1709,7 +1710,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   cfg.parallelize = pc.getInt("parallelize");
   cfg.enableParallelGradient = pc.getInt("enableParallelGradient");
   cfg.enableParallelDescent = pc.getInt("enableParallelDescent");
-
+  cfg.timingAnalysis = pc.getInt("timingAnalysis");
   return minimizeNLL(*nll, data, cfg).release();
 }
 
