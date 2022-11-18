@@ -1,4 +1,4 @@
-import { BIT, isArrayProto, isRootCollection, isFunc, isStr, getMethods,
+import { BIT, isArrayProto, isRootCollection, isObject, isFunc, isStr, getMethods,
          create, createHistogram, createTGraph,
          clTObject, clTObjString, clTHashList, clTPolyMarker3D, clTH1, clTH2, clTH3 } from './core.mjs';
 import { kChar, kShort, kInt, kFloat,
@@ -106,7 +106,7 @@ class TSelector {
   * 2 - when plain (1-dim) array with same-type content
   * @private */
 function checkArrayPrototype(arr, check_content) {
-   if (typeof arr !== 'object') return 0;
+   if (!isObject(arr)) return 0;
 
    let arr_kind = isArrayProto(Object.prototype.toString.apply(arr));
 
@@ -117,7 +117,7 @@ function checkArrayPrototype(arr, check_content) {
       let sub = typeof arr[k];
       if (!typ) typ = sub;
       if (sub !== typ) { plain = false; break; }
-      if ((sub == 'object') && checkArrayPrototype(arr[k])) { plain = false; break; }
+      if (isObject(sub) && checkArrayPrototype(arr[k])) { plain = false; break; }
    }
 
    return plain ? 2 : 1;
@@ -140,7 +140,7 @@ class ArrayIterator {
       this.cnt = -1; // current index counter
       this.tgtobj = tgtobj;
 
-      if (typeof select === 'object')
+      if (isObject(select))
          this.select = select; // remember indexes for selection
       else
          this.select = []; // empty array, undefined for each dimension means iterate over all indexes

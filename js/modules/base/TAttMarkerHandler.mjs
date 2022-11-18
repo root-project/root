@@ -1,3 +1,4 @@
+import { isObject } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { getColor } from './colors.mjs';
 
@@ -49,7 +50,7 @@ class TAttMarkerHandler {
      * @param {number} args.size - marker size
      * @param {number} [args.refsize] - when specified and marker size < 1, marker size will be calculated relative to that size */
    setArgs(args) {
-      if ((typeof args == 'object') && (typeof args.fMarkerStyle == 'number')) args = { attr: args };
+      if (isObject(args) && (typeof args.fMarkerStyle == 'number')) args = { attr: args };
 
       if (args.attr) {
          if (args.color === undefined)

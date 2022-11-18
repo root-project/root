@@ -5,7 +5,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '19/11/2021' */
-let version_date = '17/11/2022';
+let version_date = '18/11/2022';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -16,7 +16,7 @@ let version = version_id + ' ' + version_date;
   * @desc Automatically detected and used to load other scripts or modules */
 let source_dir = '';
 
-let nodejs = !!((typeof process == 'object') && process.version && (typeof process.versions == 'object') && process.versions.node && process.versions.v8);
+let nodejs = !!((typeof process == 'object') && isObject(process.versions) && process.versions.node && process.versions.v8);
 
 /** @summary internal data
   * @private */
@@ -50,7 +50,7 @@ function setBatchMode(on) { batch_mode = !!on; }
 function isNodeJs() { return nodejs; }
 
 /** @summary atob function in all environments */
-const atob_func = isNodeJs() ? str => Buffer.from(str, 'base64').toString('latin1') : globalThis?.atob;
+const atob_func = isNodeJs() ? str => Buffer.from(str,'base64').toString('latin1') : globalThis?.atob;
 
 /** @summary btoa function in all environments */
 const btoa_func = isNodeJs() ? str => Buffer.from(str,'latin1').toString('base64') : globalThis?.btoa;
@@ -518,7 +518,7 @@ function clone(src, map, nofunc) {
       map.obj.push(src);
       map.clones.push(tgt);
       for (let i = 0; i < src.length; ++i)
-         if (typeof src[i] === 'object')
+         if (isObject(src[i]))
             tgt.push(clone(src[i], map));
          else
             tgt.push(src[i]);
@@ -542,7 +542,7 @@ function clone(src, map, nofunc) {
    map.clones.push(tgt);
 
    for (let k in src) {
-      if (typeof src[k] === 'object')
+      if (isObject(src[k]))
          tgt[k] = clone(src[k], map);
       else if (!map.nofunc || !isFunc(src[k]))
          tgt[k] = src[k];
@@ -713,14 +713,14 @@ function parseMulti(json) {
   * @param {number} [spacing] - optional line spacing in JSON
   * @return {string} produced JSON code */
 function toJSON(obj, spacing) {
-   if (!obj || typeof obj !== 'object') return '';
+   if (!isObject(obj)) return '';
 
    let map = []; // map of stored objects
 
    const copy_value = value => {
       if (isFunc(value)) return undefined;
 
-      if ((value === undefined) || (value === null) || (typeof value !== 'object')) return value;
+      if ((value === undefined) || (value === null) || !isObject(value)) return value;
 
       // typed array need to be converted into normal array, otherwise looks strange
       if (isArrayProto(Object.prototype.toString.apply(value)) > 0) {
@@ -1339,8 +1339,8 @@ function createTGraph(npoints, xpts, ypts) {
    if (npoints > 0) {
       graph.fMaxSize = graph.fNpoints = npoints;
 
-      const usex = (typeof xpts == 'object') && (xpts.length === npoints);
-      const usey = (typeof ypts == 'object') && (ypts.length === npoints);
+      const usex = isObject(xpts) && (xpts.length === npoints);
+      const usey = isObject(ypts) && (ypts.length === npoints);
 
       for (let i = 0; i < npoints; ++i) {
          graph.fX.push(usex ? xpts[i] : i/npoints);
@@ -1674,7 +1674,7 @@ function registerMethods(typename, m) {
   * @param {string} [typename] - or just typename to check
   * @private */
 function isRootCollection(lst, typename) {
-   if (lst && (typeof lst === 'object')) {
+   if (isObject(lst)) {
       if ((lst.$kind === clTList) || (lst.$kind === clTObjArray)) return true;
       if (!typename) typename = lst._typename;
    }
@@ -1682,6 +1682,10 @@ function isRootCollection(lst, typename) {
    return (typename === clTList) || (typename === clTHashList) || (typename === clTMap) ||
           (typename === clTObjArray) || (typename === clTClonesArray);
 }
+
+/** @summary Check if argument is a not-null Object
+  * @private */
+function isObject(arg) { return arg && typeof arg === 'object'; }
 
 /** @summary Check if argument is a Function
   * @private */
@@ -1693,7 +1697,7 @@ function isStr(arg) { return typeof arg === 'string'; }
 
 /** @summary Check if object is a Promise
   * @private */
-function isPromise(obj) { return obj && (typeof obj == 'object') && isFunc(obj.then); }
+function isPromise(obj) { return isObject(obj) && isFunc(obj.then); }
 
 /** @summary Provide promise in any case
   * @private */
@@ -1721,4 +1725,4 @@ export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, s
          isArrayProto, getDocument, BIT, clone, addMethods, parse, parseMulti, toJSON,
          decodeUrl, findFunction, createHttpRequest, httpRequest, loadScript, injectCode,
          create, createHistogram, createTPolyLine, createTGraph, createTHStack, createTMultiGraph,
-         getMethods, registerMethods, isRootCollection, isFunc, isStr, isPromise, getPromise, _ensureJSROOT };
+         getMethods, registerMethods, isRootCollection, isObject, isFunc, isStr, isPromise, getPromise, _ensureJSROOT };

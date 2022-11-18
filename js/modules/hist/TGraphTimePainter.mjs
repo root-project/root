@@ -49,9 +49,12 @@ class TGraphTimePainter extends ObjectPainter {
          return;
       }
 
-      return draw(this.getDom(), lst.arr[indx], lst.opt[indx]).then(ppainter => {
+      return draw(this.getDom(), lst.arr[indx], lst.opt[indx]).then(p => {
 
-         if (ppainter) ppainter.$grtimeid = this.selfid; // indicator that painter created by ourself
+         if (p) {
+            p.$grtimeid = this.selfid; // indicator that painter created by ourself
+            p.$grstep = this.step; // remember step
+         }
          return this.drawPrimitives(indx+1);
 
       });
@@ -80,11 +83,13 @@ class TGraphTimePainter extends ObjectPainter {
             return;
          }
 
-         // clear primitives produced by the TGraphTime
-         pp.cleanPrimitives(p => (p.$grtimeid === this.selfid));
-
          // draw ptrimitives again
-         this.drawPrimitives().then(() => this.continueDrawing());
+         this.drawPrimitives().then(() => {
+            // clear primitives produced by previous drawing to avoid flicking
+            pp.cleanPrimitives(p => { return (p.$grtimeid === this.selfid) && (p.$grstep !== this.step); });
+
+            this.continueDrawing();
+         });
       } else if (this.running_timeout) {
          clearTimeout(this.running_timeout);
          delete this.running_timeout;
@@ -94,8 +99,7 @@ class TGraphTimePainter extends ObjectPainter {
          requestAnimationFrame(() => this.continueDrawing());
       } else {
 
-         let sleeptime = gr.fSleepTime;
-         if (!sleeptime || (sleeptime<100)) sleeptime = 10;
+         let sleeptime = Math.max(gr.fSleepTime, 10);
 
          if (++this.step > gr.fSteps.arr.length) {
             if (this.options.repeat) {
@@ -137,10 +141,14 @@ class TGraphTimePainter extends ObjectPainter {
 
       painter.decodeOptions(opt);
 
-      if (!gr.fFrame.fTitle && gr.fTitle)
-         gr.fFrame.fTitle = gr.fTitle;
+      if (!gr.fFrame.fTitle && gr.fTitle) {
+         let arr = gr.fTitle.split(";");
+         gr.fFrame.fTitle = arr[0];
+         if (arr[1]) gr.fFrame.fXaxis.fTitle = arr[1];
+         if (arr[2]) gr.fFrame.fYaxis.fTitle = arr[2];
+      }
 
-      painter.selfid = 'grtime' + internals.id_counter++; // use to identify primitives which should be clean
+      painter.selfid = 'grtime_' + internals.id_counter++; // use to identify primitives which should be clean
 
       return TH1Painter.draw(dom, gr.fFrame, 'AXIS').then(() => {
          painter.addToPadPrimitives();

@@ -1,5 +1,5 @@
 import { httpRequest, createHttpRequest, loadScript, decodeUrl,
-         browser, setBatchMode, isBatchMode, isFunc, isStr, btoa_func } from './core.mjs';
+         browser, setBatchMode, isBatchMode, isObject, isFunc, isStr, btoa_func } from './core.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5 } from './gui/utils.mjs';
 
 
@@ -251,7 +251,7 @@ class WebWindowHandle {
      * @return user arguments object */
    getUserArgs(field) {
       if (field && isStr(field))
-         return (this.user_args && (typeof this.user_args == 'object')) ? this.user_args[field] : undefined;
+         return isObject(this.user_args) ? this.user_args[field] : undefined;
 
       return this.user_args;
    }
@@ -670,7 +670,7 @@ async function connectWebWindow(arg) {
 
    if (isFunc(arg))
       arg = { callback: arg };
-   else if (!arg || (typeof arg != 'object'))
+   else if (!isObject(arg))
       arg = {};
 
    let d = decodeUrl();

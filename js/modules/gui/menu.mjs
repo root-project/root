@@ -1,4 +1,4 @@
-import { loadScript, source_dir, settings, gStyle, internals, isFunc, isStr, clTGaxis } from '../core.mjs';
+import { loadScript, source_dir, settings, gStyle, internals, isObject, isFunc, isStr, clTGaxis } from '../core.mjs';
 import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
 import { injectStyle, selectgStyle, saveSettings, readSettings, saveStyle, getColorExec } from './utils.mjs';
 import { getColor } from '../base/colors.mjs';
@@ -17,8 +17,7 @@ class JSRootMenu {
    constructor(painter, menuname, show_event) {
       this.painter = painter;
       this.menuname = menuname;
-      if (show_event && (typeof show_event == 'object') &&
-          (show_event.clientX !== undefined) && (show_event.clientY !== undefined))
+      if (isObject(show_event) && (show_event.clientX !== undefined) && (show_event.clientY !== undefined))
          this.show_evnt = { clientX: show_event.clientX, clientY: show_event.clientY };
 
       this.remove_handler = () => this.remove();
@@ -166,7 +165,7 @@ class JSRootMenu {
       if (size_value === undefined) return;
 
       let values = [], miss_current = false;
-      if (typeof step == 'object') {
+      if (isObject(step)) {
          values = step; step = 1;
       } else for (let sz = min; sz <= max; sz += step)
          values.push(sz);

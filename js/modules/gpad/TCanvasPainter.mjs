@@ -421,7 +421,7 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Get view data for ui5 panel
      * @private */
    getUi5PanelData(/* panel_name */) {
-      return { jsroot: { parse, toJSON, loadScript, EAxisBits, getColorExec } };
+      return { jsroot: { settings, create, parse, toJSON, loadScript, EAxisBits, getColorExec } };
    }
 
    /** @summary Function used to activate GED
@@ -485,6 +485,7 @@ class TCanvasPainter extends TPadPainter {
 
                   objpainter?.getPadPainter()?.selectObjectPainter(objpainter);
 
+                  console.log('activate GED');
                   this.processChanges('sbits', this);
 
                   resolveFunc(true);

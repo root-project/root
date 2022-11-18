@@ -1,4 +1,4 @@
-import { gStyle, isStr } from '../core.mjs';
+import { gStyle, isObject, isStr } from '../core.mjs';
 import { color as d3_color, rgb as d3_rgb, select as d3_select } from '../d3.mjs';
 import { getColor, findColor } from './colors.mjs';
 
@@ -33,7 +33,7 @@ class TAttFillHandler {
      * @param {object} [args.svg] - SVG element to store newly created patterns
      * @param {string} [args.color_as_svg] - color in SVG format */
    setArgs(args) {
-      if (args.attr && (typeof args.attr == 'object')) {
+      if (isObject(args.attr)) {
          if ((args.pattern === undefined) && (args.attr.fFillStyle !== undefined)) args.pattern = args.attr.fFillStyle;
          if ((args.color === undefined) && (args.attr.fFillColor !== undefined)) args.color = args.attr.fFillColor;
       }

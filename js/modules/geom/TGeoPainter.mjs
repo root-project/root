@@ -1,6 +1,6 @@
 import { httpRequest, decodeUrl, browser, source_dir,
          settings, internals, constants, create, clone,
-         findFunction, isBatchMode, isNodeJs, getDocument, isFunc, isStr, getPromise,
+         findFunction, isBatchMode, isNodeJs, getDocument, isObject, isFunc, isStr, getPromise,
          clTNamed, clTList, clTObjArray, clTPolyMarker3D, clTPolyLine3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix } from '../core.mjs';
 import { REVISION, DoubleSide, FrontSide,
          Color, Vector2, Vector3, Matrix4, Object3D, Box3, Group, Plane,
@@ -3758,7 +3758,7 @@ class TGeoPainter extends ObjectPainter {
 
       this._worker.onmessage = e => {
 
-         if (typeof e.data !== 'object') return;
+         if (!isObject(e.data)) return;
 
          if ('log' in e.data)
             return console.log(`geo: ${e.data.log}`);

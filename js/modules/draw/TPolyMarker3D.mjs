@@ -1,5 +1,5 @@
 import { REVISION } from '../three.mjs';
-import { settings } from '../core.mjs';
+import { settings, isObject } from '../core.mjs';
 import { PointsCreator } from '../base/base3d.mjs';
 
 /** @summary direct draw function for TPolyMarker3D object
@@ -10,7 +10,7 @@ async function drawPolyMarker3D() {
 
    delete this.$fp;
 
-   if (!fp || (typeof fp !== 'object') || !fp.grx || !fp.gry || !fp.grz)
+   if (!isObject(fp) || !fp.grx || !fp.gry || !fp.grz)
       return this;
 
    let poly = this.getObject(), step = 1, sizelimit = 50000, numselect = 0, fP = poly.fP;

@@ -1,4 +1,4 @@
-import { gStyle, BIT, settings, constants, internals, create, isFunc, getPromise,
+import { gStyle, BIT, settings, constants, internals, create, isObject, isFunc, getPromise,
          clTList, clTPave, clTPaveText, clTPaveStats, clTPaletteAxis, clTGaxis, clTF1, clTProfile } from '../core.mjs';
 import { ColorPalette, toHex, getColor } from '../base/colors.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
@@ -1321,7 +1321,7 @@ class THistPainter extends ObjectPainter {
       return this.findFunction(clTPaveStats, 'stats');
    }
 
-   /** @summary Toggle stat box drawing
+   /** @summary Toggle statbox drawing
      * @private */
    toggleStat(arg) {
 
@@ -1505,7 +1505,7 @@ class THistPainter extends ObjectPainter {
                                                : pp.drawObject(this.getDom(), func, opt);
 
       return promise.then(painter => {
-         if (painter && (typeof painter == 'object'))
+         if (isObject(painter))
             painter.child_painter_id = this.hist_painter_id;
 
          return this.drawNextFunction(indx+1, only_extra);
@@ -1633,7 +1633,7 @@ class THistPainter extends ObjectPainter {
       menu.input('Enter min/max hist values or empty string to reset', curr).then(res => {
          res = res ? JSON.parse(res) : [];
 
-         if (!res || (typeof res != 'object') || (res.length!=2) || !Number.isFinite(res[0]) || !Number.isFinite(res[1])) {
+         if (!isObject(res) || (res.length != 2) || !Number.isFinite(res[0]) || !Number.isFinite(res[1])) {
             this.options.minimum = this.options.maximum = -1111;
          } else {
             this.options.minimum = res[0];
@@ -2286,7 +2286,7 @@ class THistPainter extends ObjectPainter {
                painter.options.Color = true; // default is color
          }
 
-         painter.checkPadRange(!painter.options.Mode3D && (painter.options.Contour != 14));
+         painter.checkPadRange(/*!painter.options.Mode3D && */ (painter.options.Contour != 14));
 
          painter.scanContent();
 

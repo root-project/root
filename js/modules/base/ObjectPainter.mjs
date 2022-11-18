@@ -1,5 +1,5 @@
 import { select as d3_select, pointer as d3_pointer } from '../d3.mjs';
-import { settings, constants, internals, isNodeJs, getPromise, BIT, clTObjString, clTAxis, isFunc, isStr } from '../core.mjs';
+import { settings, constants, internals, isNodeJs, getPromise, BIT, clTObjString, clTAxis, isObject, isFunc, isStr } from '../core.mjs';
 import { isPlainText, producePlainText, produceLatex, produceMathjax, typesetMathjax } from './latex.mjs';
 import { getElementRect, BasePainter } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
@@ -33,7 +33,7 @@ class ObjectPainter extends BasePainter {
    /** @summary Assign object to the painter
      * @protected */
    assignObject(obj) {
-      if (obj && (typeof obj == 'object'))
+      if (isObject(obj))
          this.draw_object = obj;
       else
          delete this.draw_object;
@@ -591,7 +591,7 @@ class ObjectPainter extends BasePainter {
      * @return {object} created handler
      * @protected */
    createAttMarker(args) {
-      if (!args || (typeof args !== 'object'))
+      if (!isObject(args))
          args = { std: true };
       else if (args.fMarkerColor !== undefined && args.fMarkerStyle !== undefined && args.fMarkerSize !== undefined)
          args = { attr: args, std: false };
@@ -617,7 +617,7 @@ class ObjectPainter extends BasePainter {
      * @param {object} args - either TAttLine or see constructor arguments of {@link TAttLineHandler}
      * @protected */
    createAttLine(args) {
-      if (!args || (typeof args !== 'object'))
+      if (!isObject(args))
          args = { std: true };
       else if (args.fLineColor !== undefined && args.fLineStyle !== undefined && args.fLineWidth !== undefined)
          args = { attr: args, std: false };
@@ -651,7 +651,7 @@ class ObjectPainter extends BasePainter {
      * @return created handle
      * @protected */
    createAttFill(args) {
-      if (!args || (typeof args !== 'object'))
+      if (!isObject(args))
          args = { std: true };
       else if (args._typename && args.fFillColor !== undefined && args.fFillStyle !== undefined)
          args = { attr: args, std: false };
@@ -1109,7 +1109,7 @@ class ObjectPainter extends BasePainter {
             align[1] = 'bottom-base';
          else if ((arg.align % 10) == 3)
             align[1] = 'top';
-      } else if (arg.align && (typeof arg.align == 'object') && (arg.align.length == 2)) {
+      } else if (isObject(arg.align) && (arg.align.length == 2)) {
          align = arg.align;
       }
 
@@ -1576,7 +1576,7 @@ function getActivePad() {
 function resize(dom, arg) {
    if (arg === true)
       arg = { force: true };
-   else if (typeof arg !== 'object')
+   else if (!isObject(arg))
       arg = null;
    let done = false;
    new ObjectPainter(dom).forEachPainter(painter => {
