@@ -2860,6 +2860,10 @@ TFrame *TPad::GetFrame()
       fFrame->SetLineWidth(GetFrameLineWidth());
       fFrame->SetBorderSize(GetFrameBorderSize());
       fFrame->SetBorderMode(GetFrameBorderMode());
+   } else {
+      // Preexisting and now assigned to fFrame, let's make sure it is not
+      // deleted twice (the bit might have been set in TPad::Streamer)
+      fFrame->ResetBit(kCanDelete);
    }
    return fFrame;
 }
