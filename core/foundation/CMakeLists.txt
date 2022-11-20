@@ -13,6 +13,7 @@ set(Foundation_dict_headers
   RStringView.h
   TClassEdit.h
   TError.h
+  ThreadLocalStorage.h
   ROOT/RLogger.hxx
   ROOT/RNotFn.hxx
   ROOT/RRangeCast.hxx
