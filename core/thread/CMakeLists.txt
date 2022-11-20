@@ -33,7 +33,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
     TAtomicCount.h
     TCondition.h
     TConditionImp.h
-    ThreadLocalStorage.h
     TMutex.h
     TMutexImp.h
     TRWLock.h
