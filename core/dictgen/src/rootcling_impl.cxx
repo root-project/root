@@ -3891,17 +3891,42 @@ static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resour
 
    // Check if the loaded module covers all headers that were specified
    // by the user on the command line. This is an integrity check to
-   // ensure that our used module map is
+   // ensure that our used module map is not containing extraneous headers.
    std::vector<std::string> missingHeaders;
    if (!ModuleContainsHeaders(modGen, module, missingHeaders)) {
       // FIXME: Upgrade this to an error once modules are stable.
       std::stringstream msgStream;
-      msgStream << "warning: Couldn't find in "
-                << module->PresumedModuleMapFile
-                << " the following specified headers in "
-                << "the module " << module->Name << ":\n";
+      msgStream << "after creating module \"" << module->Name << "\" ";
+      if (!module->PresumedModuleMapFile.empty())
+         msgStream << "using modulemap \"" << module->PresumedModuleMapFile << "\" ";
+      msgStream << "the following headers are not part of that module:\n";
       for (auto &H : missingHeaders) {
-         msgStream << "  " << H << "\n";
+         msgStream << "  " << H;
+         clang::ModuleMap::KnownHeader SuggestedModule;
+         const clang::DirectoryLookup *CurDir = nullptr;
+         if (auto FE = headerSearch.LookupFile(
+                H, clang::SourceLocation(),
+                /*isAngled*/ false,
+                /*FromDir*/ 0, CurDir,
+                clang::ArrayRef<std::pair<const clang::FileEntry *, const clang::DirectoryEntry *>>(),
+                /*SearchPath*/ 0,
+                /*RelativePath*/ 0,
+                /*RequestingModule*/ 0, &SuggestedModule,
+                /*IsMapped*/ 0,
+                /*IsFrameworkFound*/ nullptr,
+                /*SkipCache*/ false,
+                /*BuildSystemModule*/ false,
+                /*OpenFile*/ false,
+                /*CacheFail*/ false)) {
+            if (auto OtherModule = SuggestedModule.getModule()) {
+               auto TLM = OtherModule->getTopLevelModuleName();
+               if (!TLM.empty())
+                  msgStream << " (already part of top-level module \"" << TLM.str() << "\")";
+               else
+                  msgStream << " (already part of module \"" << OtherModule->Name << "\")";
+            }
+         }
+         msgStream << "\n";
       }
       std::string warningMessage = msgStream.str();
 
