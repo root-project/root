@@ -66,13 +66,13 @@ for usage examples.
 #include "RooFormulaVar.h"
 #include "RooArgList.h"
 #include "RooPlot.h"
-#include "RooGenericPdf.h"
 #include "RooRandom.h"
 #include "RooCmdConfig.h"
 #include "RooGlobalFunc.h"
 #include "RooPullVar.h"
 #include "RooMsgService.h"
 #include "RooProdPdf.h"
+#include "RooWorkspace.h"
 
 using namespace std ;
 
@@ -1054,12 +1054,19 @@ namespace {
 // parameters on the canvas. Implementation detail of RooMCStudy::plotPull().
 void fitGaussToPulls(RooPlot& frame, RooDataSet& fitParData)
 {
-   // Build the Gaussian fit mode for the pulls, then fit it and plot it.
-   RooRealVar pullMean("pullMean","Mean of pull",0,-10,10) ;
-   RooRealVar pullSigma("pullSigma","Width of pull",1,0.1,5) ;
-   RooGenericPdf pullGauss("pullGauss","Gaussian of pull",
-            "exp(-0.5*(@0-@1)*(@0-@1)/(@2*@2))",
-            {*frame.getPlotVar(),pullMean,pullSigma}) ;
+   // Build the Gaussian fit mode for the pulls, then fit it and plot it. We
+   // have to use the RooWorkspace factory here, because different from the
+   // RooMCStudy class, the RooGaussian is not in RooFitCore.
+   RooWorkspace ws;
+   auto plotVar = frame.getPlotVar();
+   const std::string plotVarName = plotVar->GetName();
+   ws.import(*plotVar);
+   ws.factory("Gaussian::pullGauss(" + plotVarName  + ", pullMean[0.0, -10.0, 10.0], pullSigma[1.0, 0.1, 5.0])");
+
+   RooRealVar& pullMean = *ws.var("pullMean");
+   RooRealVar& pullSigma = *ws.var("pullSigma");
+   RooAbsPdf& pullGauss = *ws.pdf("pullGauss");
+
    pullGauss.fitTo(fitParData, RooFit::Minos(0), RooFit::PrintLevel(-1)) ;
    pullGauss.plotOn(&frame) ;
 
