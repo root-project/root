@@ -330,26 +330,22 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    std::string need_title;
 
    while (process_primitives && ((obj = iter()) != nullptr)) {
+      TString opt = iter.GetOption();
+      opt.ToUpper();
+
       if (obj->InheritsFrom(THStack::Class())) {
          // workaround for THStack, create extra components before sending to client
          auto hs = static_cast<THStack *>(obj);
-         auto save = gPad;
-         Bool_t change_gpad = (gPad != pad);
-         if (change_gpad) gPad = pad;
+         PadContext ctxt(pad);
          hs->BuildPrimitives(iter.GetOption());
-         if (change_gpad) gPad = save;
          has_histo = true;
       } else if (obj->InheritsFrom(TMultiGraph::Class())) {
-         // workaround for THStack, create extra components before sending to client
-         TString opt = iter.GetOption();
-         opt.ToUpper();
+         // workaround for TMultiGraph
          if (opt.Contains("A")) {
             auto mg = static_cast<TMultiGraph *>(obj);
-            auto save = gPad;
-            gPad = nullptr;
+            PadContext ctxt;
             mg->GetHistogram(); // force creation of histogram without any drawings
             has_histo = true;
-            if (save) gPad = save;
          }
       } else if (obj->InheritsFrom(TFrame::Class())) {
          frame = static_cast<TFrame *>(obj);
@@ -359,8 +355,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          if (!obj->TestBit(TH1::kNoTitle) && (strlen(obj->GetTitle()) > 0))
             need_title = obj->GetTitle();
       } else if (obj->InheritsFrom(TGraph::Class())) {
-         TString opt = iter.GetOption();
-         opt.ToUpper();
          if (opt.Contains("A")) {
             need_frame = true;
             if (!has_histo && (strlen(obj->GetTitle()) > 0))
@@ -1618,8 +1612,7 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
       if (obj && obj->InheritsFrom(TPave::Class())) {
          TPave *pave = static_cast<TPave *>(obj);
          if ((item.fopt.size() >= 4) && objpad) {
-            auto save = gPad;
-            gPad = objpad;
+            PadContext ctxt(objpad);
 
             // first time need to overcome init problem
             pave->ConvertNDCtoPad();
@@ -1631,7 +1624,6 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
             modified = true;
 
             pave->ConvertNDCtoPad();
-            gPad = save;
          }
       }
    }
@@ -1670,6 +1662,14 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
    if (!search_hist && TString::Hash(&pad, sizeof(pad)) == id)
       return pad;
 
+   auto getHistogram = [](TObject *obj) -> TH1* {
+      auto offset = obj->IsA()->GetDataMemberOffset("fHistogram");
+      if (offset > 0)
+         return *((TH1 **)((char*) obj + offset));
+      ::Error("getHistogram", "Cannot access fHistogram data member in %s", obj->ClassName());
+      return nullptr;
+   };
+
    for (auto lnk = pad->GetListOfPrimitives()->FirstLink(); lnk != nullptr; lnk = lnk->Next()) {
       TObject *obj = lnk->GetObject();
       if (!obj) continue;
@@ -1685,28 +1685,12 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
       if (search_hist) {
          if (h1)
             return h1;
-         if (gr) {
-            auto offset = TGraph::Class()->GetDataMemberOffset("fHistogram");
-            if (offset > 0) {
-               return *((TH1 **)((char*) gr + offset));
-            } else {
-               printf("ERROR: Cannot access fHistogram data member in TGraph\n");
-               return nullptr;
-            }
-         }
-         if (mg && opt.Contains("A")) {
-            auto offset = TMultiGraph::Class()->GetDataMemberOffset("fHistogram");
-            if (offset > 0) {
-               return *((TH1 **)((char *) mg + offset));
-            } else {
-               printf("ERROR: Cannot access fHistogram data member in TMultiGraph\n");
-               return nullptr;
-            }
-         }
-         if (hs) {
-            PadContext ctxt; // ensure gPad is nullptr
-            return hs->GetHistogram();
-         }
+         if (gr)
+            return getHistogram(gr);
+         if (mg && opt.Contains("A"))
+            return getHistogram(mg);
+         if (hs)
+            return getHistogram(hs);
 
          continue;
       }
@@ -1715,21 +1699,14 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
          if (objpad)
             *objpad = pad;
 
-         if (gr && (kind.find("hist") == 0)) {
-            // access to graph histogram
-            obj = h1 = gr->GetHistogram();
-            kind.erase(0,4);
-            if (!kind.empty() && (kind[0]=='#')) kind.erase(0,1);
-            padlnk = nullptr;
-         } else if (mg && (kind.find("hist") == 0)) {
-            // access to multigraph histogram
-            obj = h1 = mg->GetHistogram();
-            kind.erase(0,4);
-            if (!kind.empty() && (kind[0]=='#')) kind.erase(0,1);
-            padlnk = nullptr;
-         } else if (hs && (kind.find("hist") == 0)) {
-            PadContext ctxt; // ensure gPad is nullptr
-            obj = h1 = hs->GetHistogram();
+         if (kind.find("hist") == 0) {
+            if (gr)
+               obj = h1 = getHistogram(gr);
+            else if (mg)
+               obj = h1 = getHistogram(mg);
+            else if (hs)
+               obj = h1 = getHistogram(hs);
+
             kind.erase(0,4);
             if (!kind.empty() && (kind[0]=='#')) kind.erase(0,1);
             padlnk = nullptr;
