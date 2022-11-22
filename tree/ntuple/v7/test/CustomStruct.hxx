@@ -35,6 +35,11 @@ struct DerivedC : public DerivedA, public DerivedA2 {
    DerivedA2 c_a2;
 };
 
+struct StructWithArrays {
+   unsigned char c[4];
+   float f[2];
+};
+
 struct EmptyBase {
 };
 struct alignas(std::uint64_t) TestEBO : public EmptyBase {

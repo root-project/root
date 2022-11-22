@@ -38,6 +38,51 @@ TEST(RNTuple, CreateField)
    EXPECT_EQ(sizeof(std::uint32_t) + alignof(std::uint32_t), record.GetValueSize());
 }
 
+TEST(RNTuple, ArrayField)
+{
+   auto field = RFieldBase::Create("test", "int32_t[10]").Unwrap();
+   EXPECT_EQ((10 * sizeof(int32_t)), field->GetValueSize());
+   EXPECT_EQ(alignof(int32_t[10]), field->GetAlignment());
+
+   // Multi-dimensional arrays are not currently supported
+   EXPECT_THROW(RFieldBase::Create("test", "int32_t[10][11]").Unwrap(), ROOT::Experimental::RException);
+
+   unsigned char charArray[] = {0x00, 0x01, 0x02, 0x03};
+
+   FileRaii fileGuard("test_ntuple_rfield_array.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto struct_field = model->MakeField<StructWithArrays>("struct");
+      model->AddField(std::make_unique<RField<float[2]>>("array1"));
+      model->AddField(RFieldBase::Create("array2", "unsigned char[4]").Unwrap());
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      auto array1_field = ntuple->GetModel()->GetDefaultEntry()->Get<float[2]>("array1");
+      auto array2_field = ntuple->GetModel()->GetDefaultEntry()->Get<unsigned char[4]>("array2");
+      for (int i = 0; i < 2; i++) {
+         new (struct_field.get()) StructWithArrays({{'n', 't', 'p', 'l'}, {1.0, 42.0}});
+         new (array1_field) float[2]{0.0f, static_cast<float>(i)};
+         memcpy(array2_field, charArray, sizeof(charArray));
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(2, ntuple->GetNEntries());
+   auto viewStruct = ntuple->GetView<StructWithArrays>("struct");
+   auto viewArray1 = ntuple->GetView<float[2]>("array1");
+   auto viewArray2 = ntuple->GetView<unsigned char[4]>("array2");
+   for (auto i : ntuple->GetEntryRange()) {
+      EXPECT_EQ(0, memcmp(viewStruct(i).c, "ntpl", 4));
+      EXPECT_EQ(1.0f, viewStruct(i).f[0]);
+      EXPECT_EQ(42.0f, viewStruct(i).f[1]);
+
+      float fs[] = {0.0f, static_cast<float>(i)};
+      EXPECT_EQ(0, memcmp(viewArray1(i), fs, sizeof(fs)));
+      EXPECT_EQ(0, memcmp(viewArray2(i), charArray, sizeof(charArray)));
+   }
+}
+
 TEST(RNTuple, StdPair)
 {
    auto field = RField<std::pair<int64_t, float>>("pairField");
