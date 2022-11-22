@@ -26,24 +26,18 @@ namespace Minuit2 {
 FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters &par) const
 {
 
-   // Calculate gradient for Fumili using the gradient and Hessian provided by the FCN Fumili function
-   // applying the external to int trasformation.
+   // Calculate gradient and Hessian for Fumili using the gradient and Hessian provided
+   // by the FCN Fumili function
+   // Need to apply internal to external for parameters and the external to int trasformation
+   // for the return gradient and Hessian
 
    int nvar = par.Vec().size();
    std::vector<double> extParam = fTransformation(par.Vec());
-   //   std::vector<double> deriv;
-   //   deriv.reserve( nvar );
-   //   for (int i = 0; i < nvar; ++i) {
-   //     unsigned int ext = fTransformation.ExtOfInt(i);
-   //     if ( fTransformation.Parameter(ext).HasLimits())
-   //       deriv.push_back( fTransformation.DInt2Ext( i, par.Vec()(i) ) );
-   //     else
-   //       deriv.push_back(1.0);
-   //   }
 
    // eval Gradient
    FumiliFCNBase &fcn = const_cast<FumiliFCNBase &>(fFcn);
 
+   // evaluate gradient and Hessian
    fcn.EvaluateAll(extParam);
 
    MnAlgebraicVector v(nvar);
@@ -52,29 +46,7 @@ FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters &p
    const std::vector<double> &fcn_gradient = fFcn.Gradient();
    assert(fcn_gradient.size() == extParam.size());
 
-   //   for (int i = 0; i < nvar; ++i) {
-   //     unsigned int iext = fTransformation.ExtOfInt(i);
-   //     double ideriv = 1.0;
-   //     if ( fTransformation.Parameter(iext).HasLimits())
-   //       ideriv =  fTransformation.DInt2Ext( i, par.Vec()(i) ) ;
-
-   //     //     v(i) = fcn_gradient[iext]*deriv;
-   //     v(i) = ideriv*fcn_gradient[iext];
-
-   //     for (int j = i; j < nvar; ++j) {
-   //       unsigned int jext = fTransformation.ExtOfInt(j);
-   //       double jderiv = 1.0;
-   //       if ( fTransformation.Parameter(jext).HasLimits())
-   // jderiv =  fTransformation.DInt2Ext( j, par.Vec()(j) ) ;
-
-   // //       h(i,j) = deriv[i]*deriv[j]*fFcn.Hessian(iext,jext);
-   //       h(i,j) = ideriv*jderiv*fFcn.Hessian(iext,jext);
-   //     }
-   //   }
-
-   // cache deriv and Index values .
-   // in large Parameter limit then need to re-optimize and see if better not caching
-
+   // transform gradient and Hessian from external to internal
    std::vector<double> deriv(nvar);
    std::vector<unsigned int> extIndex(nvar);
    for (int i = 0; i < nvar; ++i) {

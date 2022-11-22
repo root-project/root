@@ -81,6 +81,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/MnLineSearch.h
       Minuit2/MnMachinePrecision.h
       Minuit2/MnMatrix.h
+      Minuit2/MnMatrixfwd.h
       Minuit2/MnMigrad.h
       Minuit2/MnMinimize.h
       Minuit2/MnMinos.h

@@ -14,6 +14,7 @@
 #include "Minuit2/MinimumParameters.h"
 #include "Minuit2/MnMatrix.h"
 #include "Minuit2/MnPrint.h"
+#include <cassert>
 
 namespace ROOT {
 namespace Minuit2 {
@@ -39,8 +40,17 @@ FunctionGradient AnalyticalGradientCalculator::operator()(const MinimumParameter
    MnPrint print("AnalyticalGradientCalculator");
    print.Debug("User given gradient in Minuit2", v);
 
-   // creating a function gradient passing only a vector set the analytical flag in FunctionGradient
-   return FunctionGradient(v);
+   // in case we can compute Hessian do not waste re-computing G2 here
+   if (!CanComputeG2() || CanComputeHessian())
+      return FunctionGradient(v);
+
+   // compute G2 if possible
+   MnAlgebraicVector g2(par.Vec().size());
+   if (!this->G2(par, g2)) {
+      print.Error("Error computing G2");
+      return FunctionGradient(v);
+   }
+   return FunctionGradient(v,g2);
 }
 
 FunctionGradient AnalyticalGradientCalculator::operator()(const MinimumParameters &par, const FunctionGradient &) const
@@ -54,6 +64,16 @@ bool AnalyticalGradientCalculator::CheckGradient() const
    // check to be sure FCN implements analytical gradient
    return fGradFunc.CheckGradient();
 }
+
+// G2 can be computed directly without Hessian or via the Hessian
+bool AnalyticalGradientCalculator::CanComputeG2() const {
+   return fGradFunc.HasG2() || fGradFunc.HasHessian();
+}
+
+bool AnalyticalGradientCalculator::CanComputeHessian() const {
+   return fGradFunc.HasHessian();
+}
+
 
 bool AnalyticalGradientCalculator::Hessian(const MinimumParameters &par, MnAlgebraicSymMatrix & hmat) const
 {
@@ -85,19 +105,19 @@ bool AnalyticalGradientCalculator::Hessian(const MinimumParameters &par, MnAlgeb
 
 bool AnalyticalGradientCalculator::G2(const MinimumParameters &par, MnAlgebraicVector & g2) const {
    // compute G2 using external calculator
-   unsigned int n = par.Vec().size();
+   unsigned int n = par.Vec().size();  // n is size of internal parameters
    assert(g2.Size() == n );
    std::vector<double> extG2 = fGradFunc.G2(fTransformation(par.Vec()));
    if (extG2.empty()) return false;
-   unsigned int next = extG2.size();
+   assert(extG2.size() == fTransformation.Parameters().size());
    // we need now to transform the matrix from external to internal coordinates
    for (unsigned int i = 0; i < n; i++) {
       unsigned int iext = fTransformation.ExtOfInt(i);
       if (fTransformation.Parameters()[iext].HasLimits()) {
          double dxdi = fTransformation.DInt2Ext(i, par.Vec()(i));
-         g2(i) =  dxdi * dxdi * extG2[i];
+         g2(i) =  dxdi * dxdi * extG2[iext];
       } else {
-         g2(i) = extG2[i];
+         g2(i) = extG2[iext];
       }
    }
    return true;

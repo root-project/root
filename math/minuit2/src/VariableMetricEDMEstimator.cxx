@@ -20,7 +20,9 @@ double similarity(const LAVector &, const LASymMatrix &);
 double VariableMetricEDMEstimator::Estimate(const FunctionGradient &g, const MinimumError &e) const
 {
    // estimate the edm (expected distance to the minimum) =  0.5 * g^T V g  (where V is the error matrix, inverse of
-   // Hessian) assuminigfirst derivatives if F are zero at the mminimum,
+   // Hessian)
+   // edm = 0.5 * dx^T H dx   where V = H^-1 and dx is x distance from minimum
+   // now since dx = - V g  -> edm = 0.5 g^T V g
 
    if (e.InvHessian().size() == 1)
       return 0.5 * g.Grad()(0) * g.Grad()(0) * e.InvHessian()(0, 0);

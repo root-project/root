@@ -100,7 +100,7 @@ void FumiliFCNAdapter<Function>::EvaluateAll(const std::vector<double> &v)
 
    // loop on the data points
 
-   // assume for now least-square
+   // if FCN is of type least-square
    if (fFunc.Type() == Function::kLeastSquare) {
 
       for (unsigned int i = 0; i < ndata; ++i) {

@@ -45,22 +45,32 @@ public:
 
    MinimumError(const MnAlgebraicSymMatrix &mat, Status status) : fPtr{new Data{mat, 1.0, status}} {}
 
-   MnAlgebraicSymMatrix Matrix() const { return 2. * fPtr->fMatrix; }
+   MnAlgebraicSymMatrix Matrix() const { return 2. * fPtr->fMatrix; } // why *2 ?
 
    const MnAlgebraicSymMatrix &InvHessian() const { return fPtr->fMatrix; }
 
+   // calculate invert of matrix. Used to compute Hessian  by inverting matrix
    MnAlgebraicSymMatrix Hessian() const
    {
-      // calculate Heassian: inverse of error matrix
-      MnAlgebraicSymMatrix tmp(fPtr->fMatrix);
-      if (Invert(tmp) != 0) {
-         MnPrint print("MinimumError::Hessian");
+      return InvertMatrix(fPtr->fMatrix);
+   }
+
+   static MnAlgebraicSymMatrix InvertMatrix(const MnAlgebraicSymMatrix & matrix, int & ifail) {
+       // calculate inverse of given matrix
+      MnAlgebraicSymMatrix tmp(matrix);
+      ifail = ROOT::Minuit2::Invert(tmp);
+      if (ifail != 0) {
+         MnPrint print("MinimumError::Invert");
          print.Warn("Inversion fails; return diagonal matrix");
-         for (unsigned int i = 0; i < fPtr->fMatrix.Nrow(); ++i)
+         for (unsigned int i = 0; i < matrix.Nrow(); ++i)
             for (unsigned int j = 0; j <= i; j++)
-               tmp(i, j) = i == j ? 1. / fPtr->fMatrix(i, i) : 0;
+               tmp(i, j) = i == j ? 1. / matrix(i, i) : 0;
       }
       return tmp;
+   }
+   static MnAlgebraicSymMatrix InvertMatrix(const MnAlgebraicSymMatrix & matrix) {
+      int ifail = 0;
+      return InvertMatrix(matrix, ifail);
    }
 
    double Dcovar() const { return fPtr->fDCovar; }

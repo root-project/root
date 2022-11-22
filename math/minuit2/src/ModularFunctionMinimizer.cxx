@@ -149,26 +149,22 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNGradientBase &fcn, c
    // Create the minuit FCN wrapper (MnUserFcn) containing the trasformation (int<->ext)
 
    MnUserFcn mfcn(fcn, st.Trafo());
-   AnalyticalGradientCalculator *gc;
+   std::unique_ptr<AnalyticalGradientCalculator> gc;
    if (fcn.gradParameterSpace() == GradientParameterSpace::Internal) {
         //        std::cout << "-- ModularFunctionMinimizer::Minimize: Internal parameter space" << std::endl;
-        gc = new ExternalInternalGradientCalculator(fcn, st.Trafo());
+        gc = std::unique_ptr<AnalyticalGradientCalculator>(new ExternalInternalGradientCalculator(fcn, st.Trafo()));
    } else {
         //        std::cout << "-- ModularFunctionMinimizer::Minimize: External parameter space" << std::endl;
-        gc = new AnalyticalGradientCalculator(fcn, st.Trafo());
+        gc = std::make_unique<AnalyticalGradientCalculator>(fcn, st.Trafo());
    }
 
    unsigned int npar = st.VariableParameters();
    if (maxfcn == 0)
       maxfcn = 200 + 100 * npar + 5 * npar * npar;
 
-   // use numerical gradient to compute initial derivatives for SeedGenerator
-   Numerical2PGradientCalculator numgc(mfcn, st.Trafo(), strategy);
-   MinimumSeed mnseeds = SeedGenerator()(mfcn, numgc, st, strategy);
-
+   // compute seed (will use internally numerical gradient in case calculator does not implement g2 computations)
+   MinimumSeed mnseeds = SeedGenerator()(mfcn, *gc, st, strategy);
    auto minimum = Minimize(mfcn, *gc, mnseeds, strategy, maxfcn, toler);
-
-   delete gc;
 
    return minimum;
 }

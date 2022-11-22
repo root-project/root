@@ -30,7 +30,7 @@ int gVerbose = 1;
 
 bool useGradient = true;
 
-bool minos = true;
+bool minos = false;
 bool hessian = true;
 int strategy = 1;
 double gAbsTolerance = 0.005;
@@ -771,8 +771,36 @@ int testQuadFunc()
 }
 #endif
 
-int main()
+int main(int argc, char** argv)
 {
+   // Parse command line arguments
+   for (Int_t i = 1 ;  i < argc ; i++) {
+      std::string arg = argv[i] ;
+      if (arg == "-q") {
+         std::cout << " running in quite mode" << std::endl;
+         gVerbose = 0;
+      }
+      else if (arg == "-v" ) {
+         std::cout << " running in info verbose mode" << std::endl;
+         gVerbose = 2;
+      }
+      else if (arg == "-vv") {
+         std::cout << "running in very verbose  mode" << std::endl;
+         gVerbose = 3;
+      }
+      else if (arg == "-vv") {
+         std::cout << "running in very very verbose  mode (debug)" << std::endl;
+         gVerbose = 4;
+      }
+      if (arg == "-minos" ) {
+         std::cout << " running with minos" << std::endl;
+         minos = true;
+      }
+      if (arg == "-strategy" && i < argc+1) {
+         strategy = atoi(argv[i+1]);
+         std::cout << " running with strategy " << strategy << std::endl;
+      }
+   }
 
    int iret = 0;
 
