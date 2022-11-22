@@ -209,6 +209,24 @@
 #include "ExpandDiffSize_FromONNX.hxx"
 #include "input_models/references/ExpandDiffSize.ref.hxx"
 
+#include "GatherAxis0_FromONNX.hxx"
+#include "input_models/references/GatherAxis0.ref.hxx"
+
+#include "GatherAxis1_FromONNX.hxx"
+#include "input_models/references/GatherAxis1.ref.hxx"
+
+#include "GatherAxis2_FromONNX.hxx"
+#include "input_models/references/GatherAxis2.ref.hxx"
+
+#include "GatherAxis3_FromONNX.hxx"
+#include "input_models/references/GatherAxis3.ref.hxx"
+
+#include "Gather2d_FromONNX.hxx"
+#include "input_models/references/Gather2d.ref.hxx"
+
+#include "GatherNegativeIndices_FromONNX.hxx"
+#include "input_models/references/GatherNegativeIndices.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -2070,6 +2088,126 @@ TEST(ONNX, ExpandDiffSize) {
    EXPECT_EQ(output.size(), sizeof(ExpandDiffSize_ExpectedOutput::output) / sizeof(float));
 
    float* correct = ExpandDiffSize_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, GatherAxis0) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   std::vector<float> input(120);
+   std::iota(input.begin(), input.end(), 0.);
+   TMVA_SOFIE_GatherAxis0::Session s("GatherAxis0_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(GatherAxis0_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = GatherAxis0_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, GatherAxis1) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   std::vector<float> input(120);
+   std::iota(input.begin(), input.end(), 0.);
+   TMVA_SOFIE_GatherAxis1::Session s("GatherAxis1_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(GatherAxis1_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = GatherAxis1_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, GatherAxis2) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   std::vector<float> input(120);
+   std::iota(input.begin(), input.end(), 0.);
+   TMVA_SOFIE_GatherAxis2::Session s("GatherAxis2_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(GatherAxis2_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = GatherAxis2_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, GatherAxis3) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   std::vector<float> input(120);
+   std::iota(input.begin(), input.end(), 0.);
+   TMVA_SOFIE_GatherAxis3::Session s("GatherAxis3_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(GatherAxis3_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = GatherAxis3_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Gather2d) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   std::vector<float> input(9);
+   std::iota(input.begin(), input.end(), 0.);
+   TMVA_SOFIE_Gather2d::Session s("Gather2d_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(Gather2d_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = Gather2d_ExpectedOutput::output;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, GatherNegativeIndices) {
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // input
+   std::vector<float> input(10);
+   std::iota(input.begin(), input.end(), 0.);
+   TMVA_SOFIE_GatherNegativeIndices::Session s("GatherNegativeIndices_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), sizeof(GatherNegativeIndices_ExpectedOutput::output) / sizeof(float));
+
+   float* correct = GatherNegativeIndices_ExpectedOutput::output;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {

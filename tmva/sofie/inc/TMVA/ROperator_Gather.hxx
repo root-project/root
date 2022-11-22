@@ -113,7 +113,7 @@ public:
       // [0 ... axis) [axis ... axis + q) [axis + q ... q + r - 1)
       // iterate in [0 ... axis) [0 ... q) [axis ... r - 1)
       // for j_0, j_1, ..., j_{axis-1}
-      for (size_t j = 0; j < fAttrAxis; j++) {
+      for (size_t j = 0; j < size_t(fAttrAxis); j++) {
          std::string index = "j_" + std::to_string(j);
          out << SP << "for (size_t " << index << " = 0; " << index << " < " << fShapeY[j] << "; " << index << "++) {\n";
       }
@@ -129,7 +129,7 @@ public:
       }
 
       out << SP << SP << SP << "size_t y_index = 0;\n";
-      for (size_t j = 0; j < fAttrAxis; j++) {
+      for (size_t j = 0; j < size_t(fAttrAxis); j++) {
          out << SP << SP << SP << "y_index += j_" + std::to_string(j) + " * " << stridesY[j] << ";\n";
       }
       for (size_t i = 0; i < q; i++) {
@@ -147,7 +147,7 @@ public:
       out << SP << SP << SP << "size_t k = static_cast<size_t>(" << OpName << "_indices[i_index]" << ");\n";
       // Input
       out << SP << SP << SP << "size_t x_index = k * " << stridesX[fAttrAxis] << ";\n";
-      for (size_t j = 0; j < fAttrAxis; j++) {
+      for (size_t j = 0; j < size_t(fAttrAxis); j++) {
          out << SP << SP << SP << "x_index += j_" + std::to_string(j) + " * " << stridesX[j] << ";\n";
       }
       for (size_t j = fAttrAxis + 1; j < r; j++) {
@@ -164,7 +164,7 @@ public:
          out << SP << SP << "}\n";
       }
       // end loops j_0, j_1, ..., j_{axis - 1}
-      for (size_t j = 0; j < fAttrAxis; j++) {
+      for (size_t j = 0; j < size_t(fAttrAxis); j++) {
          out << SP << "}\n";
       }
 
