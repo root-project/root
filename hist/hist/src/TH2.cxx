@@ -482,7 +482,7 @@ Int_t TH2::Fill(const char *namex, const char *namey, Double_t w)
       fTsumwx2 += z * x * x;
       fTsumwy += z * y;
       fTsumwy2 += z * y * y;
-      fTsumwx2 += z * x * x;
+      fTsumwxy += z * x * y;
    }
    return bin;
 }
@@ -523,6 +523,7 @@ Int_t TH2::Fill(const char *namex, Double_t y, Double_t w)
    fTsumw2  += z*z;
    fTsumwy  += z*y;
    fTsumwy2 += z*y*y;
+   // skip statistics along x axis, for only one axis no need to use bit mask from GetAxisLabelStatus
    if (!fXaxis.CanExtend() || !fXaxis.IsAlphanumeric()) {
       Double_t x = fXaxis.GetBinCenter(binx);
       fTsumwx += z * x;
@@ -569,6 +570,7 @@ Int_t TH2::Fill(Double_t x, const char *namey, Double_t w)
    fTsumw2  += z*z;
    fTsumwx  += z*x;
    fTsumwx2 += z*x*x;
+   // skip statistics along y axis
    if (!fYaxis.CanExtend() || !fYaxis.IsAlphanumeric()) {
       Double_t y = fYaxis.GetBinCenter(biny);
       fTsumwy += z * y;
