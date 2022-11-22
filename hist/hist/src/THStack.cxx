@@ -972,7 +972,7 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
             loption.Form("%ssame%s",noption,lnk->GetOption());
          }
          h1 = (TH1*)fStack->At(nhists-i-1);
-         if (i>0 && lclear) {
+         if ((i > 0) && lclear && paint) {
             // Erase before drawing the histogram
             h1col  = h1->GetFillColor();
             h1fill = h1->GetFillStyle();
@@ -985,8 +985,7 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
                h1->SetFillColor(frameFill->GetFillColor());
                h1->SetFillStyle(frameFill->GetFillStyle());
             }
-            if (paint)
-               h1->Paint(loption.Data());
+            h1->Paint(loption.Data());
             h1->SetFillColor(h1col);
             h1->SetFillStyle(h1fill);
          }
