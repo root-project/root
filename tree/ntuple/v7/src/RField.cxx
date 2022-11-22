@@ -872,7 +872,14 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
          fTraits &= ~(kTraitTriviallyConstructible | kTraitTriviallyDestructible);
          continue;
       }
-      auto subField = Detail::RFieldBase::Create(dataMember->GetName(), dataMember->GetFullTypeName()).Unwrap();
+
+      std::string typeName{dataMember->GetFullTypeName()};
+      // For C-style arrays, complete the type name with the size for each dimension, e.g. `int[4][2]`
+      if (dataMember->Property() & kIsArray) {
+         for (int dim = 0, n = dataMember->GetArrayDim(); dim < n; ++dim)
+            typeName += "[" + std::to_string(dataMember->GetMaxIndex(dim)) + "]";
+      }
+      auto subField = Detail::RFieldBase::Create(dataMember->GetName(), typeName).Unwrap();
       fTraits &= subField->GetTraits();
       Attach(std::move(subField),
 	     RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
