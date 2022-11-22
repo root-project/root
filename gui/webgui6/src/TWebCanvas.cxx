@@ -30,6 +30,7 @@
 #include "TList.h"
 #include "TH1.h"
 #include "THStack.h"
+#include "TMultiGraph.h"
 #include "TEnv.h"
 #include "TError.h"
 #include "TGraph.h"
@@ -321,6 +322,18 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          if (change_gpad) gPad = pad;
          hs->BuildPrimitives(iter.GetOption());
          if (change_gpad) gPad = save;
+      } else if (obj->InheritsFrom(TMultiGraph::Class())) {
+         // workaround for THStack, create extra components before sending to client
+         TString opt = iter.GetOption();
+         opt.ToUpper();
+         if (opt.Contains("A")) {
+            auto mg = static_cast<TMultiGraph *>(obj);
+            auto save = gPad;
+            gPad = nullptr;
+            mg->GetHistogram(); // force creation of histogram without any drawings
+            has_histo = true;
+            if (save) gPad = save;
+         }
       } else if (obj->InheritsFrom(TFrame::Class())) {
          frame = static_cast<TFrame *>(obj);
       } else if (obj->InheritsFrom(TH1::Class())) {
@@ -1640,15 +1653,16 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
    if (!search_hist && TString::Hash(&pad, sizeof(pad)) == id)
       return pad;
 
-   TObjLink *lnk = pad->GetListOfPrimitives()->FirstLink();
-   while (lnk) {
+   for (auto lnk = pad->GetListOfPrimitives()->FirstLink(); lnk != nullptr; lnk = lnk->Next()) {
       TObject *obj = lnk->GetObject();
-      if (!obj) {
-         lnk = lnk->Next();
-         continue;
-      }
+      if (!obj) continue;
+
+      TString opt = lnk->GetOption();
+      opt.ToUpper();
+
       TH1 *h1 = obj->InheritsFrom(TH1::Class()) ? static_cast<TH1 *>(obj) : nullptr;
       TGraph *gr = obj->InheritsFrom(TGraph::Class()) ? static_cast<TGraph *>(obj) : nullptr;
+      TMultiGraph *mg = obj->InheritsFrom(TMultiGraph::Class()) ? static_cast<TMultiGraph *>(obj) : nullptr;
 
       if (search_hist) {
          if (h1) return h1;
@@ -1661,7 +1675,16 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
                return nullptr;
             }
          }
-         lnk = lnk->Next();
+         if (mg && opt.Contains("A")) {
+            auto offset = TMultiGraph::Class()->GetDataMemberOffset("fHistogram");
+            if (offset > 0) {
+               return *((TH1 **)((char *) mg + offset));
+            } else {
+               printf("ERROR: Cannot access fHistogram data member in TMultiGraph\n");
+               return nullptr;
+            }
+         }
+
          continue;
       }
 
@@ -1669,9 +1692,15 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
          if (objpad)
             *objpad = pad;
 
-         if (gr && (kind.find("hist")==0)) {
+         if (gr && (kind.find("hist") == 0)) {
             // access to graph histogram
             obj = h1 = gr->GetHistogram();
+            kind.erase(0,4);
+            if (!kind.empty() && (kind[0]=='#')) kind.erase(0,1);
+            padlnk = nullptr;
+         } else if (mg && (kind.find("hist") == 0)) {
+            // access to multigraph histogram
+            obj = h1 = mg->GetHistogram();
             kind.erase(0,4);
             if (!kind.empty() && (kind[0]=='#')) kind.erase(0,1);
             padlnk = nullptr;
@@ -1721,7 +1750,6 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
          if (obj)
             return obj;
       }
-      lnk = lnk->Next();
    }
 
    return nullptr;
