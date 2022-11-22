@@ -1533,6 +1533,14 @@ public:
    }
 };
 
+template <typename ItemT, std::size_t N>
+class RField<ItemT[N]> : public RField<std::array<ItemT, N>> {
+public:
+   explicit RField(std::string_view name) : RField<std::array<ItemT, N>>(name) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+};
 
 template <typename... ItemTs>
 class RField<std::variant<ItemTs...>> : public RVariantField {
