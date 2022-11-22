@@ -4,4 +4,7 @@
 # define a CTest test that calls 'make' in ${CMAKE_CURRENT_SOURCE_DIR}
 #
 #-------------------------------------------------------------------------------
-ROOTTEST_ADD_OLDTEST()
+
+ROOTTEST_ADD_TEST(multiTree
+   MACRO runCanvases.C
+   OUTREF Canvases.ref)
