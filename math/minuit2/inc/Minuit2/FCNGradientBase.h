@@ -53,7 +53,7 @@ public:
       return GradientParameterSpace::External;
    };
 
-   /// return second derivatives (diagonal of teh Hessian matrix)
+   /// return second derivatives (diagonal of the Hessian matrix)
    virtual std::vector<double> G2(const std::vector<double> &) const { return std::vector<double>();}
 
    /// return Hessian
