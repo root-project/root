@@ -73,13 +73,20 @@ MnHesse::operator()(const FCNBase &fcn, const MnUserParameterState &state, unsig
    for (unsigned int i = 0; i < n; i++)
       x(i) = state.IntParameters()[i];
    double amin = mfcn(x);
-   Numerical2PGradientCalculator gc(mfcn, state.Trafo(), fStrategy);
    MinimumParameters par(x, amin);
+   // check if we can use analytical gradient
+   auto * gradFCN = dynamic_cast<const FCNGradientBase *>(&(fcn));
+   if (gradFCN) {
+      // no need to compute gradient here
+      MinimumState tmp = ComputeAnalytical(*gradFCN, MinimumState(par, MinimumError(MnAlgebraicSymMatrix(n), 1.), FunctionGradient(n),
+        state.Edm(), state.NFcn()), state.Trafo());
+      return MnUserParameterState(tmp, fcn.Up(), state.Trafo());
+   }
+   // case of numerical gradient
+   Numerical2PGradientCalculator gc(mfcn, state.Trafo(), fStrategy);
    FunctionGradient gra = gc(par);
-   MinimumState tmp =
-      (*this)(mfcn, MinimumState(par, MinimumError(MnAlgebraicSymMatrix(n), 1.), gra, state.Edm(), state.NFcn()),
+   MinimumState tmp = ComputeNumerical(mfcn, MinimumState(par, MinimumError(MnAlgebraicSymMatrix(n), 1.), gra, state.Edm(), state.NFcn()),
               state.Trafo(), maxcalls);
-
    return MnUserParameterState(tmp, fcn.Up(), state.Trafo());
 }
 
@@ -133,6 +140,9 @@ MinimumState MnHesse::ComputeAnalytical(const FCNGradientBase & fcn, const Minim
    for (unsigned int i = 0; i < n; i++)
       g2(i) = vhmat(i,i);
 
+   // update Function gradient with new G2 found
+   FunctionGradient gr(st.Gradient().Grad(), g2);
+
    // verify if matrix pos-def (still 2nd derivative)
    print.Debug("Original error matrix", vhmat);
 
@@ -151,10 +161,9 @@ MinimumState MnHesse::ComputeAnalytical(const FCNGradientBase & fcn, const Minim
          tmpsym(j,j) = 1. / g2(j);
       }
 
-      return MinimumState(st.Parameters(), MinimumError(tmpsym, MinimumError::MnInvertFailed), st.Gradient(), st.Edm(), st.NFcn());
+      return MinimumState(st.Parameters(), MinimumError(tmpsym, MinimumError::MnInvertFailed), gr, st.Edm(), st.NFcn());
    }
 
-   FunctionGradient gr(st.Gradient().Grad(), g2);
    VariableMetricEDMEstimator estim;
 
    // if matrix is made pos def returns anyway edm

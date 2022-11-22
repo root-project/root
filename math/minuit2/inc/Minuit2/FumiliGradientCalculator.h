@@ -36,7 +36,7 @@ public:
 
    const MnUserTransformation &Trafo() const { return fTransformation; }
 
-   const MnAlgebraicSymMatrix &Hessian() const { return fHessian; }
+   const MnAlgebraicSymMatrix &GetHessian() const { return fHessian; }
 
 private:
    const FumiliFCNBase &fFcn;
