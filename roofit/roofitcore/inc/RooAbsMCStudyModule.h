@@ -93,17 +93,17 @@ protected:
 
    // Accessor for generator context, generator parameters, prototype data and projected dependents.
    RooAbsGenContext* genContext() {
-     return _mcs ? _mcs->_genContext : nullptr ;
+     return _mcs ? _mcs->_genContext.get() : nullptr ;
    }
 
    /// Return initial value of generator model parameters
    RooArgSet* genInitParams() {
-     return _mcs ? _mcs->_genInitParams : nullptr ;
+     return _mcs ? &_mcs->_genInitParams : nullptr ;
    }
 
    /// Return current value of generator model parameters
    RooArgSet* genParams() {
-     return _mcs ? _mcs->_genParams : nullptr ;
+     return _mcs ? &_mcs->_genParams : nullptr ;
    }
 
    /// Return generator prototype data provided by user
@@ -135,17 +135,17 @@ protected:
 
    /// Return initial value of parameters of fit model
    RooArgSet* fitInitParams() {
-     return _mcs ? _mcs->_fitInitParams : nullptr ;
+     return _mcs ? &_mcs->_fitInitParams : nullptr ;
    }
 
    /// Return current value of parameters of fit model
    RooArgSet* fitParams() {
-     return _mcs ? _mcs-> _fitParams : nullptr ;
+     return _mcs ? &_mcs-> _fitParams : nullptr ;
    }
 
    /// Return pointer to RooRealVar holding minimized -log(L) value
    RooRealVar* nllVar() {
-     return _mcs ? _mcs->_nllVar : nullptr ;
+     return _mcs ? _mcs->_nllVar.get() : nullptr ;
    }
 
    // Accessors for fit options, generator and MCstudy configuration flags
