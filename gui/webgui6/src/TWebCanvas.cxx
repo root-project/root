@@ -53,9 +53,25 @@
 
 Basic TCanvasImp ABI implementation for Web-based GUI
 Provides painting of main ROOT6 classes in web browsers
-Major interactive features implemented in TWebCanvasFull class.
 
 */
+
+class PadContext {
+   TVirtualPad *savedPad{nullptr};
+public:
+   PadContext(TVirtualPad *setPad = nullptr)
+   {
+      savedPad = gPad;
+      if (gPad != setPad)
+         gPad = setPad;
+   }
+   ~PadContext()
+   {
+      if (gPad != savedPad)
+         gPad = savedPad;
+   }
+};
+
 
 using namespace std::string_literals;
 
@@ -322,6 +338,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          if (change_gpad) gPad = pad;
          hs->BuildPrimitives(iter.GetOption());
          if (change_gpad) gPad = save;
+         has_histo = true;
       } else if (obj->InheritsFrom(TMultiGraph::Class())) {
          // workaround for THStack, create extra components before sending to client
          TString opt = iter.GetOption();
@@ -1663,9 +1680,11 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
       TH1 *h1 = obj->InheritsFrom(TH1::Class()) ? static_cast<TH1 *>(obj) : nullptr;
       TGraph *gr = obj->InheritsFrom(TGraph::Class()) ? static_cast<TGraph *>(obj) : nullptr;
       TMultiGraph *mg = obj->InheritsFrom(TMultiGraph::Class()) ? static_cast<TMultiGraph *>(obj) : nullptr;
+      THStack *hs = obj->InheritsFrom(THStack::Class()) ? static_cast<THStack *>(obj) : nullptr;
 
       if (search_hist) {
-         if (h1) return h1;
+         if (h1)
+            return h1;
          if (gr) {
             auto offset = TGraph::Class()->GetDataMemberOffset("fHistogram");
             if (offset > 0) {
@@ -1684,6 +1703,10 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
                return nullptr;
             }
          }
+         if (hs) {
+            PadContext ctxt; // ensure gPad is nullptr
+            return hs->GetHistogram();
+         }
 
          continue;
       }
@@ -1701,6 +1724,12 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
          } else if (mg && (kind.find("hist") == 0)) {
             // access to multigraph histogram
             obj = h1 = mg->GetHistogram();
+            kind.erase(0,4);
+            if (!kind.empty() && (kind[0]=='#')) kind.erase(0,1);
+            padlnk = nullptr;
+         } else if (hs && (kind.find("hist") == 0)) {
+            PadContext ctxt; // ensure gPad is nullptr
+            obj = h1 = hs->GetHistogram();
             kind.erase(0,4);
             if (!kind.empty() && (kind[0]=='#')) kind.erase(0,1);
             padlnk = nullptr;
