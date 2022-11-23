@@ -23,20 +23,34 @@ function (the default CERNlib C335 algorithm, and a faster, look-up-table
 based method). By default, RooVoigtian employs the default (CERNlib)
 algorithm. Select the faster algorithm either in the constructor, or with
 the selectFastAlgorithm() method.
+
+\Note The "width" parameter that determines the Breit-Wigner shape
+      represents the **full width at half maximum (FWHM)** of the
+      Breit-Wigner (often referred to as \f$\Gamma\f$ or \f$2\gamma\f$).
 **/
 
-#include "RooVoigtian.h"
-#include "RooRealVar.h"
-#include "RooMath.h"
-#include "RooBatchCompute.h"
+#include <RooVoigtian.h>
+
+#include <RooMath.h>
+#include <RooBatchCompute.h>
 
 #include <cmath>
 #include <complex>
-using namespace std;
 
 ClassImp(RooVoigtian);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Construct a RooVoigtian PDF, which represents the convolution of a
+/// Breit-Wigner with a Gaussian.
+/// \param name Name that identifies the PDF in computations.
+/// \param title Title for plotting.
+/// \param _x The observable for the PDF.
+/// \param _mean The mean of the distribution.
+/// \param _width The **full width at half maximum (FWHM)** of the Breit-Wigner
+///               (often referred to as \f$\Gamma\f$ or \f$2\gamma\f$).
+/// \param _sigma The width of the Gaussian distribution.
+/// \param doFast Use the faster look-up-table-based method for the evaluation
+///               of the complex error function.
 
 RooVoigtian::RooVoigtian(const char *name, const char *title,
           RooAbsReal& _x, RooAbsReal& _mean,
@@ -79,7 +93,7 @@ double RooVoigtian::evaluate() const
   if (s==0.) return (1./(arg*arg+0.25*w*w));
 
   // Gauss for zero width
-  if (w==0.) return exp(coef*arg*arg);
+  if (w==0.) return std::exp(coef*arg*arg);
 
   // actual Voigtian for non-trivial width and sigma
   double c = 1./(sqrt(2.)*s);
