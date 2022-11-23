@@ -163,6 +163,33 @@ RooPolyFunc::RooPolyFunc(const RooPolyFunc &other, const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return to RooPolyFunc as a string
+
+std::string RooPolyFunc::asString() const
+{
+   std::stringstream ss;
+   bool first = true;
+   for (const auto &term : _terms) {
+      size_t n_vars = term->size() - 1;
+      auto coef = dynamic_cast<RooRealVar *>(term->at(n_vars));
+      if (coef->getVal() > 0 && !first)
+         ss << "+";
+      ss << coef->getVal() << " * (";
+      first = true;
+      for (size_t i_var = 0; i_var < n_vars; ++i_var) {
+         auto var = dynamic_cast<RooRealVar *>(_vars.at(i_var));
+         auto exp = dynamic_cast<RooRealVar *>(term->at(i_var));
+         if (!first)
+            ss << "+";
+         ss << "pow(" << var->GetName() << "," << exp->getVal() << ")";
+         first = false;
+      }
+      ss << ")";
+   }
+   return ss.str();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Evaluate value of Polynomial.
 double RooPolyFunc::evaluate() const
 {
@@ -206,7 +233,7 @@ void fixObservables(const RooAbsCollection &observables)
 ///// \param[in] order order of the expansion (0,1,2 supported).
 ///// \param[in] eps1 precision for first derivative and second derivative.
 ///// \param[in] eps2 precision for second partial derivative of cross-derivative.
-std::unique_ptr<RooAbsReal>
+std::unique_ptr<RooPolyFunc>
 RooPolyFunc::taylorExpand(const char *name, const char *title, RooAbsReal &func, const RooAbsCollection &observables,
                           std::vector<double> const &observableValues, int order, double eps1, double eps2)
 {
@@ -283,9 +310,9 @@ RooPolyFunc::taylorExpand(const char *name, const char *title, RooAbsReal &func,
 ////////////////////////////////////////////////////////////////////////////////
 /// Taylor expanding given function in terms of observables around
 /// defaultValue for all observables.
-std::unique_ptr<RooAbsReal> RooPolyFunc::taylorExpand(const char *name, const char *title, RooAbsReal &func,
-                                                      const RooAbsCollection &observables, double observablesValue,
-                                                      int order, double eps1, double eps2)
+std::unique_ptr<RooPolyFunc> RooPolyFunc::taylorExpand(const char *name, const char *title, RooAbsReal &func,
+                                                       const RooAbsCollection &observables, double observablesValue,
+                                                       int order, double eps1, double eps2)
 {
    return RooPolyFunc::taylorExpand(name, title, func, observables,
                                     std::vector<double>(observables.size(), observablesValue), order, eps1, eps2);
