@@ -35,17 +35,19 @@ public:
    RooPolyFunc &operator=(RooPolyFunc &&other) = delete;
    TObject *clone(const char *newname) const override { return new RooPolyFunc(*this, newname); }
 
+   std::string asString() const;
+
    void addTerm(double coefficient);
    void addTerm(double coefficient, const RooAbsCollection &exponents);
    void addTerm(double coefficient, const RooAbsReal &var1, int exp1);
    void addTerm(double coefficient, const RooAbsReal &var1, int exp1, const RooAbsReal &var2, int exp2);
 
-   static std::unique_ptr<RooAbsReal>
+   static std::unique_ptr<RooPolyFunc>
    taylorExpand(const char *name, const char *title, RooAbsReal &func, const RooAbsCollection &observables,
                 std::vector<double> const &observableValues, int order = 1, double eps1 = 1e-6, double eps2 = 1e-3);
-   static std::unique_ptr<RooAbsReal> taylorExpand(const char *name, const char *title, RooAbsReal &func,
-                                                   const RooAbsCollection &observables, double observablesValue = 0.0,
-                                                   int order = 1, double eps = 1e-6, double eps2 = 1e-3);
+   static std::unique_ptr<RooPolyFunc> taylorExpand(const char *name, const char *title, RooAbsReal &func,
+                                                    const RooAbsCollection &observables, double observablesValue = 0.0,
+                                                    int order = 1, double eps = 1e-6, double eps2 = 1e-3);
 
 protected:
    void setCoordinate(const RooAbsCollection &observables, std::vector<double> const &observableValues);
