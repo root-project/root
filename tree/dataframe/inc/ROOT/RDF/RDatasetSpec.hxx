@@ -16,7 +16,7 @@
 #include <utility> // std::pair
 #include <vector>
 
-#include <ROOT/RDF/RMetaData.hxx>
+#include <ROOT/RDF/RDatasetGroup.hxx>
 #include <ROOT/RFriendInfo.hxx>
 #include <RtypesCore.h> // Long64_t
 
@@ -45,49 +45,35 @@ public:
    };
 
 private:
-   std::vector<std::string> fGroupNames;
-   std::vector<std::string> fTreeNames;
-   std::vector<std::string> fFileNameGlobs;
-   std::vector<RMetaData> fMetaDatas;
-   ROOT::TreeUtils::RFriendInfo fFriendInfo; ///< List of friends
-   REntryRange fEntryRange;                  ///< Start (inclusive) and end (exclusive) entry for the dataset processing
+   std::vector<RDatasetGroup> fDatasetGroups; ///< List of groups
+   ROOT::TreeUtils::RFriendInfo fFriendInfo;  ///< List of friends
+   REntryRange fEntryRange;                   ///< Start (inclusive) and end (exclusive) entry for the dataset processing
 
-   std::vector<unsigned int> fSizesOfFileGlobsBeforeExpansion;
-
-   RDatasetSpec(const std::vector<std::string> &groupNames, const std::vector<std::string> &treeNames,
-                const std::vector<std::string> &fileNameGlobs,
-                const std::vector<unsigned int> &sizesOfFileGlobsBeforeExpansion,
-                const std::vector<RMetaData> &metaDatas = {}, const ROOT::TreeUtils::RFriendInfo &friendInfo = {},
+   RDatasetSpec(const std::vector<RDatasetGroup> &datasetGroups,
+                const ROOT::TreeUtils::RFriendInfo &friendInfo = {},
                 const REntryRange &entryRange = {});
 
 public:
-   const std::vector<std::string> &GetGroupNames() const;
-   const std::vector<std::string> &GetTreeNames() const;
-   const std::vector<std::string> &GetFileNameGlobs() const;
-   const std::vector<RMetaData> &GetMetaDatas() const;
+   const std::vector<std::string> GetGroupNames() const;
+   const std::vector<std::string> GetTreeNames() const;
+   const std::vector<std::string> GetFileNameGlobs() const;
+   const std::vector<RMetaData> GetMetaDatas() const;
    const ROOT::TreeUtils::RFriendInfo &GetFriendInfo() const;
    Long64_t GetEntryRangeBegin() const;
    Long64_t GetEntryRangeEnd() const;
 
    /// \cond HIDDEN_SYMBOLS
-   const std::vector<unsigned int> &GetSizesOfFileGlobsBeforeExpansion() const;
+   const std::vector<RDatasetGroup> &GetDatasetGroups() const;
    /// \endcond
 };
 
 class RSpecBuilder {
-   std::vector<std::string> fGroupNames;
-   std::vector<std::string> fTreeNames;
-   std::vector<std::string> fFileNameGlobs;
-   std::vector<RMetaData> fMetaDatas;
-   ROOT::TreeUtils::RFriendInfo fFriendInfo; ///< List of friends
-   RDatasetSpec::REntryRange fEntryRange;    ///< Start (inclusive) and end (exclusive) entry for the dataset processing
-
-   /// \cond HIDDEN_SYMBOLS
-   std::vector<unsigned int> fSizesOfFileGlobsBeforeExpansion;
-   /// \endcond
+   std::vector<RDatasetGroup> fDatasetGroups; ///< List of groups
+   ROOT::TreeUtils::RFriendInfo fFriendInfo;  ///< List of friends
+   RDatasetSpec::REntryRange fEntryRange;     ///< Start (inclusive) and end (exclusive) entry for the dataset processing
 
 public:
-   RSpecBuilder &AddGroup(const RDatasetGroup &datasetGroup);
+   RSpecBuilder &AddGroup(RDatasetGroup datasetGroup);
 
    RSpecBuilder &
    WithFriends(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias = "");
@@ -98,7 +84,7 @@ public:
    RSpecBuilder &WithFriends(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
                              const std::string &alias = "");
 
-   RSpecBuilder &WithFriends(const std::vector<std::string> &trees, const std::vector<std::string> &files,
+   RSpecBuilder &WithFriends(const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNameGlobs,
                              const std::string &alias = "");
 
    RSpecBuilder &WithRange(const RDatasetSpec::REntryRange &entryRange = {});

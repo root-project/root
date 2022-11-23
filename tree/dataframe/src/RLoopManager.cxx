@@ -366,47 +366,19 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
 }
 
 RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
-   : fBeginEntry(spec.GetEntryRangeBegin()), fEndEntry(spec.GetEntryRangeEnd()), fNSlots(RDFInternal::GetNSlots()),
-     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
+   : fBeginEntry(spec.GetEntryRangeBegin()), fEndEntry(spec.GetEntryRangeEnd()), fDatasetGroups(spec.GetDatasetGroups()),
+     fNSlots(RDFInternal::GetNSlots()), fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
      fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
 {
-   const auto &treeNames = spec.GetTreeNames();
-   const auto &fileNameGlobs = spec.GetFileNameGlobs();
-
-   auto &groupSizesBeforeExpansion = spec.GetSizesOfFileGlobsBeforeExpansion();
-   std::vector<Long64_t> groupSizesAfterExpansion(groupSizesBeforeExpansion.size());
-
-   // FIXME: Now for each tree, I will be reconstructing the groups and metadata!
-   // A much better alternative is to not expand the groups in the spec builder.
-   // It is easy to provide the user with getters, which would do the expansion.
-   // But the RLoopManager can benefit from unepxanded dataset.
-   // In addition, this would remove the need of GetSizesOfFileGlobsBeforeExpansion.
-   const auto &groupNames = spec.GetGroupNames();
-   const auto &metadatas = spec.GetMetaDatas();
-   for (auto i = 0u; i < groupNames.size(); ++i) {
-      fReconstructedGroups.emplace_back(ROOT::RDF::Experimental::RDatasetGroup{groupNames[i], "", "", metadatas[i]});
-      fReconstructedGroups[i].SetGroupId(i);
-   }
-
-   auto chain = std::make_shared<TChain>("");   
-   auto currentGropIdx = 0u;
-   auto currentGroupInitSize = groupSizesBeforeExpansion[currentGropIdx];
-   for (auto i = 0u; i < fileNameGlobs.size(); ++i) {
-      // update the size of the groups with the expanded globs
-      const auto fullpath = fileNameGlobs[i] + "/" + treeNames[i]; // TODO: use ?# once #11483 is solved
-      groupSizesAfterExpansion[currentGropIdx] += chain->Add(fullpath.c_str());
-      if (--currentGroupInitSize == 0)
-         currentGroupInitSize = groupSizesBeforeExpansion[++currentGropIdx];
-   }
-
-   const auto &expandedNames = chain->GetListOfFiles();
-   auto groupIterator = 0u;
-
-   for (auto i = 0; i < expandedNames->GetEntries(); ++i) {
-      const auto id = std::string(expandedNames->At(i)->GetTitle()) + "/" + expandedNames->At(i)->GetName();
-      fDatasetGroupMap[id] = &fReconstructedGroups[groupIterator];
-      if (--groupSizesAfterExpansion[groupIterator] == 0)
-         ++groupIterator;
+   auto chain = std::make_shared<TChain>("");
+   for (auto &group : fDatasetGroups) {
+      const auto &trees = group.GetTreeNames();
+      const auto &files = group.GetFileNameGlobs();
+      for (auto i = 0u; i < files.size(); ++i) {
+         const auto fullpath = files[i] + "/" + trees[i]; // TODO: use ?# once #11483 is solved
+         chain->Add(fullpath.c_str());
+         fDatasetGroupMap[fullpath] = &group;
+      }
    }
 
    SetTree(std::move(chain));

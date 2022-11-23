@@ -61,6 +61,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RDSColumnReader.hxx
     ROOT/RDF/RColumnReaderBase.hxx
     ROOT/RDF/RCutFlowReport.hxx
+    ROOT/RDF/RDatasetGroup.hxx
     ROOT/RDF/RDatasetSpec.hxx
     ROOT/RDF/RDisplay.hxx
     ROOT/RDF/RFilterBase.hxx
@@ -95,6 +96,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDefineBase.cxx
     src/RCutFlowReport.cxx
     src/RDataFrame.cxx
+    src/RDatasetGroup.cxx
     src/RDatasetSpec.cxx
     src/RDFActionHelpers.cxx
     src/RDFColumnRegister.cxx
