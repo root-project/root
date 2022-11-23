@@ -1,4 +1,4 @@
-import { gStyle, internals, isStr, createTPolyLine } from '../core.mjs';
+import { gStyle, internals, isStr, createTPolyLine, kNoZoom } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { floatToString, TRandom } from '../base/BasePainter.mjs';
@@ -1345,7 +1345,7 @@ class RH2Painter extends RHistPainter {
                              Text: true, TextAngle: 0, TextKind: '',
                              BaseLine: false, Mode3D: false, AutoColor: 0,
                              Color: false, Scat: false, ScatCoef: 1, Box: false, BoxStyle: 0, Arrow: false, Contour: 0, Proj: 0,
-                             BarOffset: 0., BarWidth: 1., minimum: -1111, maximum: -1111 };
+                             BarOffset: 0., BarWidth: 1., minimum: kNoZoom, maximum: kNoZoom };
 
          let kind = painter.v7EvalAttr('kind', ''),
              sub = painter.v7EvalAttr('sub', 0),

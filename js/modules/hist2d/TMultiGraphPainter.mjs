@@ -1,4 +1,4 @@
-import { create, isFunc, clTObjString, clTHashList } from '../core.mjs';
+import { create, isFunc, clTObjString, clTHashList, kNoZoom } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from './TH1Painter.mjs';
@@ -44,7 +44,8 @@ class TMultiGraphPainter extends ObjectPainter {
          if (this.autorange && !histo)
             histo = this.scanGraphsRange(graphs);
 
-         if (this.firstpainter.updateObject(histo)) isany = true;
+         if (this.firstpainter.updateObject(histo))
+            isany = true;
       }
 
       for (let i = 0; i < graphs.arr.length; ++i)
@@ -63,7 +64,7 @@ class TMultiGraphPainter extends ObjectPainter {
      * @return {object} histogram for axes drawing */
    scanGraphsRange(graphs, histo, pad) {
       let mgraph = this.getObject(),
-          maximum, minimum, dx, dy, uxmin = 0, uxmax = 0, logx = false, logy = false,
+          maximum, minimum, logx = false, logy = false,
           time_display = false, time_format = '',
           rw = {  xmin: 0, xmax: 0, ymin: 0, ymax: 0, first: true };
 
@@ -77,73 +78,76 @@ class TMultiGraphPainter extends ObjectPainter {
          rw.first = false;
       }
 
-      if (this._3d && histo && !histo.fXaxis.fLabels) histo = null;
+      // ignore existing histo in 3d case
+      if (this._3d && histo && !histo.fXaxis.fLabels)
+         histo = null;
 
-      if (histo) {
-         minimum = histo.fYaxis.fXmin;
-         maximum = histo.fYaxis.fXmax;
-         if (pad) {
-            const padtoX = x => (pad.fLogx && (x < 50)) ? Math.exp(2.302585092994 * x) : x;
-            uxmin = padtoX(rw.xmin);
-            uxmax = padtoX(rw.xmax);
-         }
-      } else {
+      if (!histo) {
          this.autorange = true;
 
-         graphs.arr.forEach(gr => {
-            if (gr.fNpoints == 0) return;
-            if (rw.first) {
-               rw.xmin = rw.xmax = gr.fX[0];
-               rw.ymin = rw.ymax = gr.fY[0];
-               rw.first = false;
-            }
-            for (let i = 0; i < gr.fNpoints; ++i) {
-               rw.xmin = Math.min(rw.xmin, gr.fX[i]);
-               rw.xmax = Math.max(rw.xmax, gr.fX[i]);
-               rw.ymin = Math.min(rw.ymin, gr.fY[i]);
-               rw.ymax = Math.max(rw.ymax, gr.fY[i]);
-            }
-         });
-
-         if (graphs.arr[0] && graphs.arr[0].fHistogram && graphs.arr[0].fHistogram.fXaxis.fTimeDisplay) {
+         if (graphs.arr[0]?.fHistogram?.fXaxis?.fTimeDisplay) {
             time_display = true;
             time_format = graphs.arr[0].fHistogram.fXaxis.fTimeFormat;
          }
-
-         if (rw.xmin == rw.xmax) rw.xmax += 1.;
-         if (rw.ymin == rw.ymax) rw.ymax += 1.;
-         dx = 0.05 * (rw.xmax - rw.xmin);
-         dy = 0.05 * (rw.ymax - rw.ymin);
-         uxmin = rw.xmin - dx;
-         uxmax = rw.xmax + dx;
-         if (logy) {
-            if (rw.ymin <= 0) rw.ymin = 0.001 * rw.ymax;
-            minimum = rw.ymin / (1 + 0.5 * Math.log10(rw.ymax / rw.ymin));
-            maximum = rw.ymax * (1 + 0.2 * Math.log10(rw.ymax / rw.ymin));
-         } else {
-            minimum = rw.ymin - dy;
-            maximum = rw.ymax + dy;
-         }
-         if (minimum < 0 && rw.ymin >= 0)
-            minimum = 0;
-         if (maximum > 0 && rw.ymax <= 0)
-            maximum = 0;
       }
+
+      graphs.arr.forEach(gr => {
+         if (gr.fNpoints == 0) return;
+         if (rw.first) {
+            rw.xmin = rw.xmax = gr.fX[0];
+            rw.ymin = rw.ymax = gr.fY[0];
+            rw.first = false;
+         }
+         for (let i = 0; i < gr.fNpoints; ++i) {
+            rw.xmin = Math.min(rw.xmin, gr.fX[i]);
+            rw.xmax = Math.max(rw.xmax, gr.fX[i]);
+            rw.ymin = Math.min(rw.ymin, gr.fY[i]);
+            rw.ymax = Math.max(rw.ymax, gr.fY[i]);
+         }
+      });
+
+      if (rw.xmin == rw.xmax)
+         rw.xmax += 1.;
+      if (rw.ymin == rw.ymax)
+         rw.ymax += 1.;
+      let dx = 0.05 * (rw.xmax - rw.xmin),
+          dy = 0.05 * (rw.ymax - rw.ymin),
+          uxmin = rw.xmin - dx,
+          uxmax = rw.xmax + dx;
+      if (logy) {
+         if (rw.ymin <= 0)
+            rw.ymin = 0.001 * rw.ymax;
+         minimum = rw.ymin / (1 + 0.5 * Math.log10(rw.ymax / rw.ymin));
+         maximum = rw.ymax * (1 + 0.2 * Math.log10(rw.ymax / rw.ymin));
+      } else {
+         minimum = rw.ymin - dy;
+         maximum = rw.ymax + dy;
+      }
+      if (minimum < 0 && rw.ymin >= 0)
+         minimum = 0;
+      if (maximum > 0 && rw.ymax <= 0)
+         maximum = 0;
+
+       let glob_minimum = minimum, glob_maximum = maximum;
 
       if (uxmin < 0 && rw.xmin >= 0)
          uxmin = logx ? 0.9 * rw.xmin : 0;
       if (uxmax > 0 && rw.xmax <= 0)
          uxmax = logx? 1.1 * rw.xmax : 0;
 
-      if (mgraph.fMinimum != -1111)
+      if (mgraph.fMinimum != kNoZoom)
          rw.ymin = minimum = mgraph.fMinimum;
-      if (mgraph.fMaximum != -1111)
+      if (mgraph.fMaximum != kNoZoom)
          rw.ymax = maximum = mgraph.fMaximum;
 
-      if (minimum < 0 && rw.ymin >= 0 && logy) minimum = 0.9 * rw.ymin;
-      if (maximum > 0 && rw.ymax <= 0 && logy) maximum = 1.1 * rw.ymax;
-      if (minimum <= 0 && logy) minimum = 0.001 * maximum;
-      if (!logy && minimum > 0 && minimum < 0.05*maximum) minimum = 0;
+      if (minimum < 0 && rw.ymin >= 0 && logy)
+         minimum = 0.9 * rw.ymin;
+      if (maximum > 0 && rw.ymax <= 0 && logy)
+         maximum = 1.1 * rw.ymax;
+      if (minimum <= 0 && logy)
+         minimum = 0.001 * maximum;
+      if (!logy && minimum > 0 && minimum < 0.05*maximum)
+         minimum = 0;
       if (uxmin <= 0 && logx)
          uxmin = (uxmax > 1000) ? 1 : 0.001 * uxmax;
 
@@ -184,13 +188,11 @@ class TMultiGraphPainter extends ObjectPainter {
          if (time_display) xaxis.fTimeFormat = time_format;
       }
 
-      if (this._3d) {
-         histo.fMinimum = minimum;
-         histo.fMaximum = maximum;
-      } else {
-         histo.fYaxis.fXmin = minimum;
-         histo.fYaxis.fXmax = maximum;
-      }
+      let axis = this._3d ? histo.fZaxis : histo.fYaxis;
+      axis.fXmin = Math.min(minimum, glob_minimum);
+      axis.fXmax = Math.max(maximum, glob_maximum);
+      histo.fMinimum = minimum;
+      histo.fMaximum = maximum;
 
       return histo;
    }
@@ -273,7 +275,8 @@ class TMultiGraphPainter extends ObjectPainter {
 
          promise = painter.drawAxisHist(histo, hopt).then(ap => {
             painter.firstpainter = ap;
-            ap.$secondary = true; // mark histogram painter as secondary
+            ap.$secondary = 'hist'; // mark histogram painter as secondary
+            if (mgraph.fHistogram) painter.$primary = true; // mark mg painter as primary
          });
       }
 

@@ -1,4 +1,4 @@
-import { settings, gStyle } from '../core.mjs';
+import { settings, gStyle, kNoZoom } from '../core.mjs';
 import { RH2Painter as RH2Painter2D } from '../hist2d/RH2Painter.mjs';
 import { RAxisPainter } from '../gpad/RAxisPainter.mjs';
 import { assignFrame3DMethods, drawBinsLego, drawBinsError3D, drawBinsContour3D, drawBinsSurf3D } from './hist3d.mjs';
@@ -42,8 +42,8 @@ class RH2Painter extends RH2Painter2D {
 
       this.zmin = main.logz ? this.gminposbin * 0.3 : this.gminbin;
       this.zmax = this.gmaxbin;
-      if (this.options.minimum !== -1111) this.zmin = this.options.minimum;
-      if (this.options.maximum !== -1111) { this.zmax = this.options.maximum; zmult = 1; }
+      if (this.options.minimum !== kNoZoom) this.zmin = this.options.minimum;
+      if (this.options.maximum !== kNoZoom) { this.zmax = this.options.maximum; zmult = 1; }
       if (main.logz && (this.zmin <= 0)) this.zmin = this.zmax * 1e-5;
 
       this.deleteAttr();

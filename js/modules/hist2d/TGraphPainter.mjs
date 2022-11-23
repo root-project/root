@@ -1,5 +1,5 @@
 import { gStyle, BIT, settings, create, createHistogram, isBatchMode, isFunc, isStr,
-         clTPaveStats, clTCutG, clTF1, clTF2 } from '../core.mjs';
+         clTPaveStats, clTCutG, clTF1, clTF2, kNoZoom } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { DrawOptions, buildSvgPath } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
@@ -272,10 +272,12 @@ class TGraphPainter extends ObjectPainter {
 
    /** @summary Create histogram for graph
      * @desc graph bins should be created when calling this function
-     * @param {object} histo - existing histogram instance
      * @param {boolean} [set_x] - set X axis range
      * @param {boolean} [set_y] - set Y axis range */
-   createHistogram(histo, set_x, set_y) {
+   createHistogram(set_x, set_y) {
+      if (!set_x && !set_y)
+         set_x = set_y = true;
+
       let xmin = this.xmin, xmax = this.xmax, ymin = this.ymin, ymax = this.ymax;
 
       if (xmin >= xmax) xmax = xmin+1;
@@ -287,23 +289,24 @@ class TGraphPainter extends ObjectPainter {
       if ((uxmin < 0) && (xmin >= 0)) uxmin = xmin*0.9;
       if ((uxmax > 0) && (xmax <= 0)) uxmax = 0;
 
-      let graph = this.getObject();
-
-      if (graph.fMinimum != -1111) minimum = ymin = graph.fMinimum;
-      if (graph.fMaximum != -1111) maximum = graph.fMaximum;
-      if ((minimum < 0) && (ymin >= 0)) minimum = 0.9*ymin;
-
-      histo = graph.fHistogram;
-
-      if (!set_x && !set_y) set_x = set_y = true;
+      let graph = this.getObject(),
+          histo = graph.fHistogram,
+          minimum0 = minimum, maximum0 = maximum;
 
       if (!histo) {
          histo = graph.fHistogram = createHistogram('TH1F', 100);
          histo.fName = graph.fName + '_h';
-         let kNoStats = BIT(9);
+         const kNoStats = BIT(9);
          histo.fBits = histo.fBits | kNoStats;
          this._own_histogram = true;
+      } else if ((histo.fMaximum != kNoZoom) && (histo.fMinimum != kNoZoom)) {
+         minimum = histo.fMinimum;
+         maximum = histo.fMaximum;
       }
+
+      if (graph.fMinimum != kNoZoom) minimum = ymin = graph.fMinimum;
+      if (graph.fMaximum != kNoZoom) maximum = graph.fMaximum;
+      if ((minimum < 0) && (ymin >= 0)) minimum = 0.9*ymin;
 
       histo.fTitle = graph.fTitle;
 
@@ -313,8 +316,8 @@ class TGraphPainter extends ObjectPainter {
       }
 
       if (set_y) {
-         histo.fYaxis.fXmin = minimum;
-         histo.fYaxis.fXmax = maximum;
+         histo.fYaxis.fXmin = Math.min(minimum0, minimum);
+         histo.fYaxis.fXmax = Math.max(maximum0, maximum);
          histo.fMinimum = minimum;
          histo.fMaximum = maximum;
       }
@@ -334,7 +337,7 @@ class TGraphPainter extends ObjectPainter {
       doy = doy && histo && ((histo.fYaxis.fXmin > this.ymin) || (histo.fYaxis.fXmax < this.ymax));
       if (!dox && !doy) return false;
 
-      this.createHistogram(null, dox, doy);
+      this.createHistogram(dox, doy);
       this.getMainPainter()?.extractAxesProperties(1); // just to enforce ranges extraction
 
       return true;
@@ -1335,7 +1338,7 @@ class TGraphPainter extends ObjectPainter {
 
       // if our own histogram was used as axis drawing, we need update histogram as well
       if (this.axes_draw) {
-         let histo = this.createHistogram(obj.fHistogram);
+         let histo = this.createHistogram();
          histo.fTitle = graph.fTitle; // copy title
 
          let hist_painter = this.getMainPainter();
@@ -1491,7 +1494,7 @@ class TGraphPainter extends ObjectPainter {
             if (hist_painter) {
                painter.axes_draw = true;
                if (!painter._own_histogram) painter.$primary = true;
-               hist_painter.$secondary = true;
+               hist_painter.$secondary = 'hist';
             }
          });
 

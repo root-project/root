@@ -1,4 +1,4 @@
-import { gStyle, settings } from '../core.mjs';
+import { gStyle, settings, kNoZoom } from '../core.mjs';
 import { REVISION, Matrix4, Mesh, MeshBasicMaterial, MeshLambertMaterial, SphereGeometry,
          LineBasicMaterial, BufferAttribute, BufferGeometry } from '../three.mjs';
 import { floatToString, TRandom } from '../base/BasePainter.mjs';
@@ -740,7 +740,7 @@ class RH3Painter extends RHistPainter {
 
          painter.setAsMainPainter();
 
-         painter.options = { Box: 0, Scatter: false, Sphere: 0, Color: false, minimum: -1111, maximum: -1111 };
+         painter.options = { Box: 0, Scatter: false, Sphere: 0, Color: false, minimum: kNoZoom, maximum: kNoZoom };
 
          let kind = painter.v7EvalAttr('kind', ''),
              sub = painter.v7EvalAttr('sub', 0),

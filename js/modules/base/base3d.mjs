@@ -1380,7 +1380,7 @@ class PointsControl extends InteractiveControl {
 
       if (!m.js_special) {
          let geom = new BufferGeometry();
-         geom.setAttribute( 'position', m.geometry.getAttribute('position'));
+         geom.setAttribute('position', m.geometry.getAttribute('position'));
          let material = new PointsMaterial({ size: m.material.size*2, color });
          material.sizeAttenuation = m.material.sizeAttenuation;
 
