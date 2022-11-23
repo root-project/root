@@ -517,9 +517,9 @@ void ExecuteMacro()
 void ExecuteCommand(string command)
 {
    int o = dup(fileno(stdout));
-   if (freopen(gOutputName.c_str(),"a",stdout) != nullptr) {
+   if (freopen(gOutputName.c_str(), "a", stdout) != nullptr) {
       int i = system(command.c_str());
-      dup2(o,fileno(stdout));
+      dup2(o, fileno(stdout));
       close(o);
    }
 }
@@ -532,7 +532,8 @@ int NumberOfImages()
    int ImageNum;
    FILE *f = fopen("NumberOfImages.dat", "r");
    if (!f) return 0;
-   if (fscanf(f, "%d", &ImageNum) != 1) ImageNum = 0;
+   if (fscanf(f, "%d", &ImageNum) != 1)
+      ImageNum = 0;
    fclose(f);
    remove("NumberOfImages.dat");
    return ImageNum;
@@ -585,12 +586,12 @@ string ImagesList(string& name) {
 
    // evaluate the size of the output string
    char evalstring[300];
-   snprintf(&evalstring[0], 300, " \n/// \\image html pict%d_%s width=%d",N,name.c_str(),10000);
+   snprintf(&evalstring[0], 300, " \n/// \\image html pict%d_%s width=%d", N, name.c_str(), 10000);
    int evallen = (int)strlen(evalstring);
 
    // allocate the output string
-   int vallen = sizeof(char)*evallen*N;
-   char *val = (char *) malloc(vallen);
+   int vallen = sizeof(char) * evallen * N;
+   char *val = (char *)malloc(vallen);
    int len = 0;
 
    int ImageSize = 300;
@@ -600,8 +601,8 @@ string ImagesList(string& name) {
    for (int i = 1; i <= N; i++){
       if (fscanf(f, "%d", &ImageSize) == 1) {
          if (i>1) {
-            if (gPython) snprintf(&val[len], vallen, " \n## \\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
-            else         snprintf(&val[len], vallen, " \n/// \\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
+            if (gPython) snprintf(&val[len], vallen, " \n## \\image html pict%d_%s width=%d", i, name.c_str(), ImageSize);
+            else         snprintf(&val[len], vallen, " \n/// \\image html pict%d_%s width=%d", i, name.c_str(), ImageSize);
          } else {
             snprintf(&val[len], vallen, "\\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
          }
