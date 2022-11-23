@@ -4,8 +4,8 @@
 let version_id = 'dev';
 
 /** @summary version date
-  * @desc Release date in format day/month/year like '19/11/2021' */
-let version_date = '18/11/2022';
+  * @desc Release date in format day/month/year like '14/04/2022' */
+let version_date = '23/11/2022';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -982,7 +982,9 @@ const clTObject = 'TObject', clTNamed = 'TNamed',
       clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTAttCanvas = 'TAttCanvas',
       clTGaxis = 'TGaxis', clTAttAxis = 'TAttAxis', clTAxis = 'TAxis', clTStyle = 'TStyle',
       clTH1 = 'TH1', clTH2 = 'TH2', clTH3 = 'TH3', clTF1 = 'TF1', clTF2 = 'TF2', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D',
-      clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix';
+      clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
+      kNoZoom = -1111;
+
 
 /** @summary Create some ROOT classes
   * @desc Supported classes: `TObject`, `TNamed`, `TList`, `TAxis`, `TLine`, `TText`, `TLatex`, `TPad`, `TCanvas`
@@ -1097,7 +1099,7 @@ function create(typename, target) {
                        fLineColor: gStyle.fHistLineColor, fLineStyle: gStyle.fHistLineStyle, fLineWidth: gStyle.fHistLineWidth,
                        fBarOffset: 0, fBarWidth: 1000, fEntries: 0.,
                        fTsumw: 0., fTsumw2: 0., fTsumwx: 0., fTsumwx2: 0.,
-                       fMaximum: -1111., fMinimum: -1111, fNormFactor: 0., fContour: [],
+                       fMaximum: kNoZoom, fMinimum: kNoZoom, fNormFactor: 0., fContour: [],
                        fSumw2: [], fOption: '', fFunctions: create(clTList),
                        fBufferSize: 0, fBuffer: [], fBinStatErrOpt: 0, fStatOverflows: 2 });
          break;
@@ -1138,7 +1140,7 @@ function create(typename, target) {
          break;
       case clTHStack:
          create(clTNamed, obj);
-         extend(obj, { fHists: create(clTList), fHistogram: null, fMaximum: -1111, fMinimum: -1111 });
+         extend(obj, { fHists: create(clTList), fHistogram: null, fMaximum: kNoZoom, fMinimum: kNoZoom });
          break;
       case clTGraph:
          create(clTNamed, obj);
@@ -1146,7 +1148,7 @@ function create(typename, target) {
          create(clTAttFill, obj);
          create(clTAttMarker, obj);
          extend(obj, { fFunctions: create(clTList), fHistogram: null,
-                       fMaxSize: 0, fMaximum: -1111, fMinimum: -1111, fNpoints: 0, fX: [], fY: [] });
+                       fMaxSize: 0, fMaximum: kNoZoom, fMinimum: kNoZoom, fNpoints: 0, fX: [], fY: [] });
          break;
       case 'TGraphAsymmErrors':
          create(clTGraph, obj);
@@ -1155,7 +1157,7 @@ function create(typename, target) {
       case clTMultiGraph:
          create(clTNamed, obj);
          extend(obj, { fFunctions: create(clTList), fGraphs: create(clTList),
-                       fHistogram: null, fMaximum: -1111, fMinimum: -1111 });
+                       fHistogram: null, fMaximum: kNoZoom, fMinimum: kNoZoom });
          break;
       case clTGraphPolargram:
          create(clTNamed, obj);
@@ -1721,7 +1723,7 @@ export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, s
          clTPave, clTPaveText, clTPaveStats, clTLegend, clTPaletteAxis, clTText, clTLatex, clTMathText, clTMultiGraph,
          clTColor, clTLine, clTBox, clTPolyLine, clTPad, clTCanvas, clTAttCanvas, clTGaxis,
          clTAxis, clTStyle, clTH1, clTH2, clTH3, clTF1, clTF2, clTProfile, clTProfile2D,
-         clTGraph, clTGraphPolargram, clTGraphTime, clTCutG, clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix,
+         clTGraph, clTGraphPolargram, clTGraphTime, clTCutG, clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, kNoZoom,
          isArrayProto, getDocument, BIT, clone, addMethods, parse, parseMulti, toJSON,
          decodeUrl, findFunction, createHttpRequest, httpRequest, loadScript, injectCode,
          create, createHistogram, createTPolyLine, createTGraph, createTHStack, createTMultiGraph,

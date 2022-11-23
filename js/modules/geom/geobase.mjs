@@ -1,12 +1,10 @@
 import { FrontSide, Object3D, Box3, Mesh, Vector2, Vector3, Matrix4,
          MeshLambertMaterial, Color, PerspectiveCamera, Frustum, Raycaster,
          ShapeUtils, BufferGeometry, BufferAttribute } from '../three.mjs';
-import { isObject, isFunc } from '../core.mjs';
+import { isObject, isFunc, BIT } from '../core.mjs';
 import { createBufferGeometry, createNormal,
          Vertex as CsgVertex, Geometry as CsgGeometry, Polygon as CsgPolygon } from './csg.mjs';
 
-
-function JSROOT_BIT(n) { return 1 << n; }
 
 let cfg = {
    GradPerSegm: 6,       // grad per segment in cylinder/spherical symmetry shapes
@@ -28,18 +26,18 @@ const kindGeo = 0,    // TGeoNode / TGeoShape
 /** @summary TGeo-related bits
   * @private */
 const geoBITS = {
-   kVisOverride   : JSROOT_BIT(0),  // volume's vis. attributes are overwritten
-   kVisNone       : JSROOT_BIT(1),  // the volume/node is invisible, as well as daughters
-   kVisThis       : JSROOT_BIT(2),  // this volume/node is visible
-   kVisDaughters  : JSROOT_BIT(3),  // all leaves are visible
-   kVisOneLevel   : JSROOT_BIT(4),  // first level daughters are visible (not used)
-   kVisStreamed   : JSROOT_BIT(5),  // true if attributes have been streamed
-   kVisTouched    : JSROOT_BIT(6),  // true if attributes are changed after closing geom
-   kVisOnScreen   : JSROOT_BIT(7),  // true if volume is visible on screen
-   kVisContainers : JSROOT_BIT(12), // all containers visible
-   kVisOnly       : JSROOT_BIT(13), // just this visible
-   kVisBranch     : JSROOT_BIT(14), // only a given branch visible
-   kVisRaytrace   : JSROOT_BIT(15)  // raytracing flag
+   kVisOverride   : BIT(0),  // volume's vis. attributes are overwritten
+   kVisNone       : BIT(1),  // the volume/node is invisible, as well as daughters
+   kVisThis       : BIT(2),  // this volume/node is visible
+   kVisDaughters  : BIT(3),  // all leaves are visible
+   kVisOneLevel   : BIT(4),  // first level daughters are visible (not used)
+   kVisStreamed   : BIT(5),  // true if attributes have been streamed
+   kVisTouched    : BIT(6),  // true if attributes are changed after closing geom
+   kVisOnScreen   : BIT(7),  // true if volume is visible on screen
+   kVisContainers : BIT(12), // all containers visible
+   kVisOnly       : BIT(13), // just this visible
+   kVisBranch     : BIT(14), // only a given branch visible
+   kVisRaytrace   : BIT(15)  // raytracing flag
 };
 
 const clTGeoBBox = 'TGeoBBox',
@@ -1671,7 +1669,7 @@ function getNodeMatrix(kind, node) {
    } else if (node.fMatrix) {
       matrix = createMatrix(node.fMatrix);
    } else if ((node._typename == 'TGeoNodeOffset') && node.fFinder) {
-      let kPatternReflected = JSROOT_BIT(14);
+      const kPatternReflected = BIT(14);
       if ((node.fFinder.fBits & kPatternReflected) !== 0)
          geoWarn('Unsupported reflected pattern ' + node.fFinder._typename);
 
