@@ -927,9 +927,16 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
 
       pad->SetFixedAspectRatio(kFALSE);
 
-      TH1 *hist = static_cast<TH1 *>(FindPrimitive("histogram", 1, pad));
+      TObjLink *objlnk = nullptr;
+
+      TH1 *hist = static_cast<TH1 *>(FindPrimitive("histogram", 1, pad, &objlnk));
 
       if (hist) {
+
+         TObject *hist_holder = objlnk ? objlnk->GetObject() : nullptr;
+         if (hist_holder == hist)
+            hist_holder = nullptr;
+
          Double_t hmin = 0., hmax = 0.;
 
          if (r.zx1 == r.zx2)
@@ -940,11 +947,6 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          if (hist->GetDimension() == 1) {
             hmin = r.zy1;
             hmax = r.zy2;
-            if ((hmin == hmax) && (hist->GetEntries() == 0.) && (hist->GetMinimumStored() != -1111.) && (hist->GetMaximumStored() != -1111.)) {
-               // special case when Y range must be set for histogram without content
-               hmin = r.uy1;
-               hmax = r.uy2;
-            }
          } else if (r.zy1 == r.zy2) {
             hist->GetYaxis()->SetRange(0., 0.);
          } else {
@@ -962,8 +964,25 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
             }
          }
 
-         if (hmin == hmax) { hist->SetMinimum(); hist->SetMaximum(); }
-                      else { hist->SetMinimum(hmin); hist->SetMaximum(hmax); }
+         if (hmin == hmax)
+            hmin = hmax = -1111;
+
+         if (!hist_holder) {
+            hist->SetMinimum(hmin);
+            hist->SetMaximum(hmax);
+         } else {
+            auto SetMember = [hist_holder](const char *name, Double_t value) {
+               auto offset = hist_holder->IsA()->GetDataMemberOffset(name);
+               if (offset > 0)
+                  *((Double_t *)((char*) hist_holder + offset)) = value;
+               else
+                  ::Error("SetMember", "Cannot find %s data member in %s", name, hist_holder->ClassName());
+            };
+
+            // directly set min/max in classes like THStack, TGraph, TMultiGraph
+            SetMember("fMinimum", hmin);
+            SetMember("fMaximum", hmax);
+         }
 
          TIter next(hist->GetListOfFunctions());
          while (auto fobj = next())
@@ -1637,7 +1656,7 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
 /// Also if object is in list of primitives, one could ask for entry link for such object,
 /// This can allow to change draw option
 
-TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad, TObjLink **padlnk, TPad **objpad)
+TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad, TObjLink **objlnk, TPad **objpad)
 {
    if (sid.empty() || (sid == "0"s))
       return nullptr;
@@ -1683,6 +1702,9 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
       THStack *hs = obj->InheritsFrom(THStack::Class()) ? static_cast<THStack *>(obj) : nullptr;
 
       if (search_hist) {
+         if (objlnk)
+            *objlnk = lnk;
+
          if (h1)
             return h1;
          if (gr)
@@ -1691,6 +1713,9 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
             return getHistogram(mg);
          if (hs)
             return getHistogram(hs);
+
+         if (objlnk)
+            *objlnk = nullptr;
 
          continue;
       }
@@ -1709,7 +1734,7 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
 
             kind.erase(0,4);
             if (!kind.empty() && (kind[0]=='#')) kind.erase(0,1);
-            padlnk = nullptr;
+            objlnk = nullptr;
          }
 
          if (h1 && (kind == "x"))
@@ -1735,8 +1760,8 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
             return nullptr;
          }
 
-         if (padlnk)
-            *padlnk = lnk;
+         if (objlnk)
+            *objlnk = lnk;
          return obj;
       }
 
@@ -1750,7 +1775,7 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
                return fobj;
             }
       } else if (obj->InheritsFrom(TPad::Class())) {
-         obj = FindPrimitive(sid, idcnt, (TPad *)obj, padlnk, objpad);
+         obj = FindPrimitive(sid, idcnt, (TPad *)obj, objlnk, objpad);
          if (objpad && !*objpad)
             *objpad = pad;
          if (obj)
