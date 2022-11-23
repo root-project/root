@@ -11,7 +11,7 @@
 #ifndef ROOT_RDF_RSAMPLEINFO
 #define ROOT_RDF_RSAMPLEINFO
 
-#include <ROOT/RDF/RMetaData.hxx>
+#include <ROOT/RDF/RDatasetGroup.hxx>
 #include <ROOT/RStringView.hxx>
 #include <Rtypes.h>
 
@@ -36,11 +36,11 @@ class RSampleInfo {
    std::string fID;
    std::pair<ULong64_t, ULong64_t> fEntryRange;
 
-   ROOT::RDF::Experimental::RDatasetGroup fDatasetGroup;
+   ROOT::RDF::Experimental::RDatasetGroup fDatasetGroup{"", "", ""};
 
 public:
    RSampleInfo(std::string_view id, std::pair<ULong64_t, ULong64_t> entryRange,
-               const ROOT::RDF::Experimental::RDatasetGroup &datasetGroup = {})
+               const ROOT::RDF::Experimental::RDatasetGroup &datasetGroup = {"", "", ""})
       : fID(id), fEntryRange(entryRange), fDatasetGroup(datasetGroup)
    {
    }

@@ -9,6 +9,7 @@
 #include <ROOT/RVec.hxx>
 #include <ROOT/RDFHelpers.hxx>
 #include <ROOT/TestSupport.hxx>
+#include <ROOT/RDF/RDatasetGroup.hxx>
 #include <ROOT/RDF/RDatasetSpec.hxx>
 #include <ROOT/RDF/RMetaData.hxx>
 #include <nlohmann/json.hpp>
@@ -127,21 +128,21 @@ TEST_P(RDatasetSpecTest, SimpleChainsCreation)
       for (const auto &trees : d.trees) {
          for (const auto &t : trees) {
             // first AddGroup overload: 1 tree, 1 file; both passed as string directly
-            const auto dfC1 = *(RDataFrame(RSpecBuilder().AddGroup(RDatasetGroup{"", t.tree, t.file}).Build()).Take<ULong64_t>("x"));
+            const auto dfC1 = *(RDataFrame(RSpecBuilder().AddGroup({"", t.tree, t.file}).Build()).Take<ULong64_t>("x"));
             EXPECT_VEC_SEQ_EQ(dfC1, ROOT::TSeq<ULong64_t>(t.start, t.end));
 
             // second AddGroup overload: 1 tree, many files; files passed as a vector; testing with 1 specTestFile
-            const auto dfC2 = *(RDataFrame(RSpecBuilder().AddGroup(RDatasetGroup{"", t.tree, {t.file}}).Build()).Take<ULong64_t>("x"));
+            const auto dfC2 = *(RDataFrame(RSpecBuilder().AddGroup({"", t.tree, {t.file}}).Build()).Take<ULong64_t>("x"));
             EXPECT_VEC_SEQ_EQ(dfC2, ROOT::TSeq<ULong64_t>(t.start, t.end));
 
             // third AddGroup overload: many trees, many files; trees and files passed in a vector of pairs
             const auto dfC3 =
-               *(RDataFrame(RSpecBuilder().AddGroup(RDatasetGroup{"", {{t.tree, t.file}}}).Build()).Take<ULong64_t>("x"));
+               *(RDataFrame(RSpecBuilder().AddGroup({"", {{t.tree, t.file}}}).Build()).Take<ULong64_t>("x"));
             EXPECT_VEC_SEQ_EQ(dfC3, ROOT::TSeq<ULong64_t>(t.start, t.end));
 
             // fourth AddGroup overload: many trees, many files; trees and files passed in separate vectors
             const auto dfC4 =
-               *(RDataFrame(RSpecBuilder().AddGroup(RDatasetGroup{"", {t.tree}, {t.file}}).Build()).Take<ULong64_t>("x"));
+               *(RDataFrame(RSpecBuilder().AddGroup({"", {t.tree}, {t.file}}).Build()).Take<ULong64_t>("x"));
             EXPECT_VEC_SEQ_EQ(dfC4, ROOT::TSeq<ULong64_t>(t.start, t.end));
          }
       }
@@ -152,10 +153,10 @@ TEST_P(RDatasetSpecTest, SimpleChainsCreation)
    for (const auto &d : data) {
       for (const auto &trees : d.trees) {
          for (const auto &t : trees) {
-            builders[0].AddGroup(RDatasetGroup{"", t.tree, t.file});
-            builders[1].AddGroup(RDatasetGroup{"", t.tree, {t.file}});
-            builders[2].AddGroup(RDatasetGroup{"", {{t.tree, t.file}}});
-            builders[3].AddGroup(RDatasetGroup{"", {t.tree}, {t.file}});
+            builders[0].AddGroup({"", t.tree, t.file});
+            builders[1].AddGroup({"", t.tree, {t.file}});
+            builders[2].AddGroup({"", {{t.tree, t.file}}});
+            builders[3].AddGroup({"", {t.tree}, {t.file}});
          }
       }
    }
@@ -178,16 +179,16 @@ TEST_P(RDatasetSpecTest, SimpleChainsCreation)
          std::vector<std::string> treeNamesExpanded{};
          std::vector<std::string> fileGlobsExpanded{};
          for (const auto &t : d.trees[i]) {
-            buildersGranularity[0].AddGroup(RDatasetGroup{"", t.tree, t.file});
+            buildersGranularity[0].AddGroup({"", t.tree, t.file});
             treeNamesExpanded.emplace_back(t.tree);
             fileGlobsExpanded.emplace_back(t.file);
          }
-         buildersGranularity[1].AddGroup(RDatasetGroup{"", d.trees[i][0].tree, d.fileGlobs[i]});
-         buildersGranularity[2].AddGroup(RDatasetGroup{"", treeNamesExpanded, fileGlobsExpanded});
+         buildersGranularity[1].AddGroup({"", d.trees[i][0].tree, d.fileGlobs[i]});
+         buildersGranularity[2].AddGroup({"", treeNamesExpanded, fileGlobsExpanded});
          treeNames.emplace_back(d.trees[i][0].tree);
          fileGlobs.emplace_back(d.fileGlobs[i]);
       }
-      buildersGranularity[3].AddGroup(RDatasetGroup{"", treeNames, fileGlobs});
+      buildersGranularity[3].AddGroup({"", treeNames, fileGlobs});
    }
    for (auto &b : buildersGranularity) {
       auto df = *(RDataFrame(b.Build()).Take<ULong64_t>("x"));
@@ -212,8 +213,8 @@ TEST_P(RDatasetSpecTest, SimpleMetaDataHandling)
          treeNames.emplace_back(d.trees[i][0].tree);
          fileGlobs.emplace_back(d.fileGlobs[i]);
       }
-      builders[0].AddGroup(RDatasetGroup{d.name, treeNames, fileGlobs, d.meta});
-      builders[1].AddGroup(RDatasetGroup{d.name, treeNames, fileGlobs, d.meta});
+      builders[0].AddGroup({d.name, treeNames, fileGlobs, d.meta});
+      builders[1].AddGroup({d.name, treeNames, fileGlobs, d.meta});
    }
    for (auto &b : builders) {
       auto df =
