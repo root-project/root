@@ -118,15 +118,16 @@ std::vector<std::string> TokenizeTypeList(std::string templateType) {
 
 /// Parse a type name of the form `T[n][m]...` and return the base type `T` and a vector that contains,
 /// in order, the declared size for each dimension, e.g. for `unsigned char[1][2][3]` it returns the tuple
-/// `{"unsigned char", {1, 2, 3}}`.
+/// `{"unsigned char", {1, 2, 3}}`. Extra whitespace in `typeName` should be removed before calling this function.
 ///
 /// If `typeName` is not an array type, it returns a tuple `{T, {}}`. On error, it returns a default-constructed tuple.
 std::tuple<std::string, std::vector<size_t>> ParseArrayType(std::string_view typeName)
 {
    std::vector<size_t> sizeVec;
 
-   size_t posRBrace;
-   while ((posRBrace = typeName.find_last_of("]")) != std::string_view::npos) {
+   /// Only parse outer array definition, i.e. the right `]` should be at the end of the type name
+   while (typeName.back() == ']') {
+      auto posRBrace = typeName.size() - 1;
       auto posLBrace = typeName.find_last_of("[", posRBrace);
       if (posLBrace == std::string_view::npos)
          return {};
