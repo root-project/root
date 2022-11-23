@@ -129,8 +129,9 @@ TTask& TTask::operator=(const TTask& tt)
       else
          fTasks = new TList;
       TIter next(tt.fTasks);
-      while (auto task = (TTask *)next())
-         fTasks->Add(new TTask(*task));
+      while (auto element = next())
+         if (auto task = dynamic_cast<TTask *>(element))
+            fTasks->Add(new TTask(*task));
       fOption = tt.fOption;
       fBreakin = tt.fBreakin;
       fBreakout = tt.fBreakout;
@@ -147,8 +148,9 @@ TTask::TTask(const TTask &other) : TNamed(other)
 {
    fTasks = new TList();
    TIter next(other.fTasks);
-   while (auto task = (TTask *)next())
-      fTasks->Add(new TTask(*task));
+   while (auto element = next())
+      if (auto task = dynamic_cast<TTask *>(element))
+         fTasks->Add(new TTask(*task));
    fOption = other.fOption;
    fBreakin = other.fBreakin;
    fBreakout = other.fBreakout;
@@ -221,8 +223,9 @@ void TTask::CleanTasks()
    fHasExecuted = kFALSE;
    Clear();
    TIter next(fTasks);
-   while (auto task = (TTask *)next())
-      task->CleanTasks();
+   while (auto element = next())
+      if (auto task = dynamic_cast<TTask *>(element))
+         task->CleanTasks();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -309,9 +312,14 @@ void TTask::ExecuteTask(Option_t *option)
 void TTask::ExecuteTasks(Option_t *option)
 {
    TIter next(fTasks);
-   while(auto task = (TTask *)next()) {
-      if (fgBreakPoint) return;
-      if (!task->IsActive()) continue;
+   while (auto element = next()) {
+      if (fgBreakPoint)
+         return;
+      auto task = dynamic_cast<TTask *>(element);
+      if (!task)
+         continue;
+      if (!task->IsActive())
+         continue;
       if (task->fHasExecuted) {
          task->ExecuteTasks(option);
          continue;
@@ -357,7 +365,7 @@ void TTask::ls(Option_t *option) const
    TRegexp re(opt, kTRUE);
 
    TIter nextobj(fTasks);
-   while (auto obj = (TObject *) nextobj()) {
+   while (auto obj = nextobj()) {
       TString s = obj->GetName();
       if (s.Index(re) == kNPOS) continue;
       obj->ls(option);
