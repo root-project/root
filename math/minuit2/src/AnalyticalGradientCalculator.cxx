@@ -79,7 +79,7 @@ bool AnalyticalGradientCalculator::Hessian(const MinimumParameters &par, MnAlgeb
 {
    // compute  Hessian using external gradient
    unsigned int n = par.Vec().size();
-   assert(hmat.Size() == n *(n+1)/2);
+   assert(hmat.size() == n *(n+1)/2);
    // compute external Hessian and then transform
    std::vector<double> extHessian = fGradFunc.Hessian(fTransformation(par.Vec()));
    if (extHessian.empty()) return false;

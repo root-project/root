@@ -91,7 +91,6 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState &s0, const MinimumPar
    // are not yet near the Minimum)
    double dcov = 0.5 * (s0.Error().Dcovar() + sum_of_elements(h - v0) / sum_of_elements(h));
 
-   //LM note: store Hessian or inverse ???
    return MinimumError(h, dcov);
 }
 

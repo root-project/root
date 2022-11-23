@@ -14,6 +14,7 @@
 #include "Minuit2/MnPrint.h"
 
 #include <vector>
+#include <functional>
 
 namespace ROOT {
 
