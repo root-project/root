@@ -138,7 +138,7 @@ protected:
 
    TPad *ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int idcnt = 1);
 
-   TObject *FindPrimitive(const std::string &id, int idcnt = 1, TPad *pad = nullptr, TObjLink **padlnk = nullptr, TPad **objpad = nullptr);
+   TObject *FindPrimitive(const std::string &id, int idcnt = 1, TPad *pad = nullptr, TObjLink **objlnk = nullptr, TPad **objpad = nullptr);
 
    void ProcessExecs(TPad *pad, TExec *extra = nullptr);
 
