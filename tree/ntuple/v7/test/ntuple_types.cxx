@@ -43,6 +43,13 @@ TEST(RNTuple, ArrayField)
    auto field = RFieldBase::Create("test", "int32_t[10]").Unwrap();
    EXPECT_EQ((10 * sizeof(int32_t)), field->GetValueSize());
    EXPECT_EQ(alignof(int32_t[10]), field->GetAlignment());
+   auto otherField = RFieldBase::Create("test", "std::vector<float[3]>[10]").Unwrap();
+   EXPECT_EQ((10 * sizeof(std::vector<float[3]>)), otherField->GetValueSize());
+
+   // Malformed type names
+   EXPECT_THROW(RFieldBase::Create("test", "unsigned int[]").Unwrap(), ROOT::Experimental::RException);
+   EXPECT_THROW(RFieldBase::Create("test", "unsigned int [[2").Unwrap(), ROOT::Experimental::RException);
+   EXPECT_THROW(RFieldBase::Create("test", "unsigned[2] int[10]").Unwrap(), ROOT::Experimental::RException);
 
    // Multi-dimensional arrays are not currently supported
    EXPECT_THROW(RFieldBase::Create("test", "int32_t[10][11]").Unwrap(), ROOT::Experimental::RException);
