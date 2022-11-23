@@ -762,7 +762,7 @@ inline RooLagrangianMorphFunc::ParamSet getParams(const T &parameters)
 
 void collectHistograms(const char *name, TDirectory *file, std::map<std::string, int> &list_hf, RooArgList &physics,
                        RooRealVar &var, const std::string &varname,
-                       const RooLagrangianMorphFunc::ParamMap &inputParameters)
+                       const RooLagrangianMorphFunc::ParamMap &inputParameters, bool normalize)
 {
    bool binningOK = false;
    for (auto sampleit : inputParameters) {
@@ -770,6 +770,10 @@ void collectHistograms(const char *name, TDirectory *file, std::map<std::string,
       auto hist = loadFromFileResidentFolder<TH1>(file, sample, varname, true);
       if (!hist)
          return;
+
+      if (normalize) {
+         hist.get()->Scale(1. / hist.get()->Integral());
+      }
 
       auto it = list_hf.find(sample);
       if (it != list_hf.end()) {
@@ -1726,7 +1730,18 @@ void RooLagrangianMorphFunc::readParameters(TDirectory *f)
 
 void RooLagrangianMorphFunc::collectInputs(TDirectory *file)
 {
-   std::string obsName = _config.observableName;
+   std::string obsName;
+   if (_config.observable) {
+      _observables.add(*_config.observable);
+      if (_config.observableName.empty()) {
+         obsName = _observables.at(0)->GetName();
+      } else {
+         obsName = _config.observableName;
+      }
+   } else {
+      obsName = _config.observableName;
+   }
+
    cxcoutP(InputArguments) << "initializing physics inputs from file " << file->GetName() << " with object name(s) '"
                            << obsName << "'" << std::endl;
    auto folderNames = _config.folderNames;
@@ -1738,10 +1753,11 @@ void RooLagrangianMorphFunc::collectInputs(TDirectory *file)
    }
    std::string classname = obj->ClassName();
    TClass *mode = TClass::GetClass(obj->ClassName());
+   this->setupObservable(obsName.c_str(), mode, obj.get());
 
-   RooRealVar *observable = this->setupObservable(obsName.c_str(), mode, obj.get());
    if (classname.find("TH1") != std::string::npos) {
-      collectHistograms(this->GetName(), file, _sampleMap, _physics, *observable, obsName, _config.paramCards);
+      collectHistograms(this->GetName(), file, _sampleMap, _physics, *static_cast<RooRealVar *>(_observables.at(0)),
+                        obsName, _config.paramCards, _config.normalize);
    } else if (classname.find("RooHistFunc") != std::string::npos ||
               classname.find("RooParamHistFunc") != std::string::npos ||
               classname.find("PiecewiseInterpolation") != std::string::npos) {
@@ -2934,9 +2950,13 @@ std::list<double> *RooLagrangianMorphFunc::plotSamplingHint(RooAbsRealLValue &ob
 double RooLagrangianMorphFunc::evaluate() const
 {
    // call getVal on the internal function
-   RooRealSumFunc *pdf = this->getFunc();
+   const RooRealSumFunc *pdf = this->getFunc();
+   RooArgSet nSet;
+   for (auto &obs : _observables) {
+      nSet.add(*obs);
+   }
    if (pdf)
-      return _scale * pdf->getVal(_lastNSet);
+      return _scale * pdf->getVal(&nSet);
    else
       std::cerr << "unable to acquire in-built function!" << std::endl;
    return 0.;

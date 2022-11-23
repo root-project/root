@@ -85,6 +85,7 @@ public:
    struct Config {
 
       std::string observableName;
+      RooRealVar *observable = nullptr;
       std::string fileName;
       ParamMap paramCards;
       FlagMap flagValues;
@@ -96,6 +97,7 @@ public:
       std::vector<RooArgList *> vertices;
       std::vector<std::vector<const char *>> nonInterfering;
       bool allowNegativeYields = true;
+      bool normalize = false;
    };
 
    RooLagrangianMorphFunc();
