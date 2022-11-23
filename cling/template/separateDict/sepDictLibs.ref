@@ -9,7 +9,7 @@ filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: MyClass();
 (compiled)     (NA):(NA) 0 public: void Print(Option_t *) const;
 (compiled)     (NA):(NA) 0 private: virtual Bool_t CheckTObjectHashConsistency() const;
-(compiled)     (NA):(NA) 0 public: static Version_t Class_Version();
+(compiled)     (NA):(NA) 0 public: static constexpr Version_t Class_Version();
 (compiled)     (NA):(NA) 0 public: virtual class TClass *IsA() const;
 (compiled)     (NA):(NA) 0 public: virtual void ShowMembers(class TMemberInspector &insp) const;
 (compiled)     (NA):(NA) 0 public: void StreamerNVirtual(class TBuffer &ClassDef_StreamerNVirtual_b);
@@ -31,7 +31,7 @@ filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: MyClass();
 (compiled)     (NA):(NA) 0 public: void Print(Option_t *) const;
 (compiled)     (NA):(NA) 0 private: virtual Bool_t CheckTObjectHashConsistency() const;
-(compiled)     (NA):(NA) 0 public: static Version_t Class_Version();
+(compiled)     (NA):(NA) 0 public: static constexpr Version_t Class_Version();
 (compiled)     (NA):(NA) 0 public: virtual class TClass *IsA() const;
 (compiled)     (NA):(NA) 0 public: virtual void ShowMembers(class TMemberInspector &insp) const;
 (compiled)     (NA):(NA) 0 public: void StreamerNVirtual(class TBuffer &ClassDef_StreamerNVirtual_b);
@@ -53,7 +53,7 @@ filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: MyClass();
 (compiled)     (NA):(NA) 0 public: void Print(Option_t *) const;
 (compiled)     (NA):(NA) 0 private: virtual Bool_t CheckTObjectHashConsistency() const;
-(compiled)     (NA):(NA) 0 public: static Version_t Class_Version();
+(compiled)     (NA):(NA) 0 public: static constexpr Version_t Class_Version();
 (compiled)     (NA):(NA) 0 public: virtual class TClass *IsA() const;
 (compiled)     (NA):(NA) 0 public: virtual void ShowMembers(class TMemberInspector &insp) const;
 (compiled)     (NA):(NA) 0 public: void StreamerNVirtual(class TBuffer &ClassDef_StreamerNVirtual_b);
