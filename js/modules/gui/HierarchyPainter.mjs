@@ -522,7 +522,7 @@ function objectHierarchy(top, obj, args = undefined) {
          item._vclass = 'h_value_num';
       } else {
          simple = true;
-         alert('miss ' + key + '  ' + typeof fld);
+         alert(`miss ${key} type ${typeof fld}`);
       }
 
       if (!simple || !nosimple)
@@ -573,10 +573,13 @@ function createStreamerInfoContent(lst) {
          else
             for (let dim = 0; dim < elem.fArrayDim; ++dim)
                info += '[' + elem.fMaxIndex[dim] + ']';
-         if (elem.fBaseVersion === 4294967295) info += ':-1'; else
-         if (elem.fBaseVersion !== undefined) info += ':' + elem.fBaseVersion;
+         if (elem.fBaseVersion === 4294967295)
+            info += ':-1';
+         else if (elem.fBaseVersion !== undefined)
+            info += ':' + elem.fBaseVersion;
          info += ';';
-         if (elem.fTitle) info += ' // ' + elem.fTitle;
+         if (elem.fTitle)
+            info += ' // ' + elem.fTitle;
 
          item._childs.push({ _name: info, _title: title, _kind: elem.fTypeName, _icon: (elem.fTypeName == 'BASE') ? 'img_class' : 'img_member' });
       }
@@ -2145,7 +2148,7 @@ class HierarchyPainter extends BasePainter {
 
          if (item && item.indexOf('img:') == 0) { images[i] = true; continue; }
 
-         if (item && (item.length > 1) && (item[0] == '\'') && (item[item.length - 1] == '\'')) {
+         if (item && (item.length > 1) && (item[0] == "'") && (item[item.length - 1] == "'")) {
             items[i] = item.slice(1, item.length-1);
             can_split = false;
          }
@@ -2182,7 +2185,8 @@ class HierarchyPainter extends BasePainter {
                dropopts[i] = [];
             }
 
-            while (dropopts[i].length < dropitems[i].length) dropopts[i].push('');
+            while (dropopts[i].length < dropitems[i].length)
+               dropopts[i].push('');
          }
 
          // also check if subsequent items has _same_, than use name from first item
@@ -2231,9 +2235,11 @@ class HierarchyPainter extends BasePainter {
          if (items_wait[n] !== 0) continue;
          let found_main = n;
          for (let k = 0; k < items.length; ++k)
-            if ((items[n]===items[k]) && (options[k].indexOf('main') >= 0)) found_main = k;
+            if ((items[n]===items[k]) && (options[k].indexOf('main') >= 0))
+               found_main = k;
          for (let k = 0; k < items.length; ++k)
-            if (items[n]===items[k]) items_wait[k] = (found_main != k);
+            if (items[n]===items[k])
+               items_wait[k] = (found_main != k);
       }
 
       return this.createDisplay().then(mdi => {
@@ -2255,7 +2261,7 @@ class HierarchyPainter extends BasePainter {
 
             for (let cnt = 0; cnt < items.length; ++cnt) {
                if (items[cnt] === null) continue; // ignore completed item
-               if (items_wait[cnt] && items.indexOf(items[cnt])===cnt) {
+               if (items_wait[cnt] && items.indexOf(items[cnt]) === cnt) {
                   items_wait[cnt] = false;
                   return h.display(items[cnt], options[cnt]).then(painter => DropNextItem(cnt, painter));
                }

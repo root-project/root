@@ -1,4 +1,4 @@
-import { BIT, settings, createHistogram } from '../core.mjs';
+import { BIT, settings, createHistogram, kNoZoom } from '../core.mjs';
 import { REVISION, Color, LineBasicMaterial } from '../three.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
@@ -87,8 +87,8 @@ class TGraph2DPainter extends ObjectPainter {
 
       let graph = this.getObject();
 
-      if (graph.fMinimum != -1111) uzmin = graph.fMinimum;
-      if (graph.fMaximum != -1111) uzmax = graph.fMaximum;
+      if (graph.fMinimum != kNoZoom) uzmin = graph.fMinimum;
+      if (graph.fMaximum != kNoZoom) uzmax = graph.fMaximum;
 
       let histo = createHistogram('TH2I', 10, 10);
       histo.fName = graph.fName + '_h';

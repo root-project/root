@@ -1,5 +1,5 @@
 import { gStyle, BIT, settings, constants, internals, create, isObject, isFunc, getPromise,
-         clTList, clTPave, clTPaveText, clTPaveStats, clTPaletteAxis, clTGaxis, clTF1, clTProfile } from '../core.mjs';
+         clTList, clTPave, clTPaveText, clTPaveStats, clTPaletteAxis, clTGaxis, clTF1, clTProfile, kNoZoom } from '../core.mjs';
 import { ColorPalette, toHex, getColor } from '../base/colors.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
@@ -227,7 +227,7 @@ class THistDrawOptions {
               Render3D: constants.Render3D.Default,
               FrontBox: true, BackBox: true,
               _pmc: false, _plc: false, _pfc: false, need_fillcol: false,
-              minimum: -1111, maximum: -1111, ymin: 0, ymax: 0 });
+              minimum: kNoZoom, maximum: kNoZoom, ymin: 0, ymax: 0 });
    }
 
    /** @summary Decode histogram draw options */
@@ -252,6 +252,10 @@ class THistDrawOptions {
                                 else { this.ominimum = false; this.minimum = histo.fMinimum; }
       if (d.check('MAXIMUM:', true)) { this.omaximum = true; this.maximum = parseFloat(d.part); }
                                 else { this.omaximum = false; this.maximum = histo.fMaximum; }
+      if (d.check('HMIN:', true)) { this.ohmin = true; this.hmin = parseFloat(d.part); }
+                             else { this.ohmin = false; delete this.hmin; }
+      if (d.check('HMAX:', true)) { this.ohmax = true; this.hmax = parseFloat(d.part); }
+                             else { this.ohmax = false; delete this.hmax; }
 
       // let configure histogram titles - only for debug purposes
       if (d.check('HTITLE:', true)) histo.fTitle = decodeURIComponent(d.part.toLowerCase());
@@ -1142,15 +1146,26 @@ class THistPainter extends ObjectPainter {
       this.ymin = histo.fYaxis.fXmin;
       this.ymax = histo.fYaxis.fXmax;
 
+      if ((ndim == 1) && this.options.ohmin && this.options.ohmax) {
+         this.ymin = this.options.hmin;
+         this.ymax = this.options.hmax;
+      }
+
       if (ndim > 1) {
          this.nbinsy = histo.fYaxis.fNbins;
          assignTAxisFuncs(histo.fYaxis);
+
+         this.zmin = histo.fZaxis.fXmin;
+         this.zmax = histo.fZaxis.fXmax;
+
+         if ((ndim == 2) && this.options.ohmin && this.options.ohmax) {
+            this.zmin = this.options.hmin;
+            this.zmax = this.options.hmax;
+         }
       }
 
       if (ndim > 2) {
          this.nbinsz = histo.fZaxis.fNbins;
-         this.zmin = histo.fZaxis.fXmin;
-         this.zmax = histo.fZaxis.fXmax;
          assignTAxisFuncs(histo.fZaxis);
        }
    }
@@ -1569,9 +1584,9 @@ class THistPainter extends ObjectPainter {
 
       let uzoomMinMax = ndim => {
          if (this.getDimension() !== ndim) return false;
-         if ((this.options.minimum===-1111) && (this.options.maximum===-1111)) return false;
+         if ((this.options.minimum === kNoZoom) && (this.options.maximum === kNoZoom)) return false;
          if (!this.draw_content) return false; // if not drawing content, not change min/max
-         this.options.minimum = this.options.maximum = -1111;
+         this.options.minimum = this.options.maximum = kNoZoom;
          this.scanContent(true); // to reset ymin/ymax
          return true;
       };
@@ -1625,7 +1640,7 @@ class THistPainter extends ObjectPainter {
    /** @summary Start dialog to modify range of axis where histogram values are displayed */
    changeValuesRange(menu) {
       let curr;
-      if ((this.options.minimum != -1111) && (this.options.maximum != -1111))
+      if ((this.options.minimum != kNoZoom) && (this.options.maximum != kNoZoom))
          curr = `[${this.options.minimum},${this.options.maximum}]`;
       else
          curr = `[${this.gminbin},${this.gmaxbin}]`;
@@ -1634,7 +1649,7 @@ class THistPainter extends ObjectPainter {
          res = res ? JSON.parse(res) : [];
 
          if (!isObject(res) || (res.length != 2) || !Number.isFinite(res[0]) || !Number.isFinite(res[1])) {
-            this.options.minimum = this.options.maximum = -1111;
+            this.options.minimum = this.options.maximum = kNoZoom;
          } else {
             this.options.minimum = res[0];
             this.options.maximum = res[1];
@@ -1854,8 +1869,8 @@ class THistPainter extends ObjectPainter {
           custom_levels;
       if (zmin === zmax) { zmin = this.gminbin; zmax = this.gmaxbin; zminpos = this.gminposbin; }
       let gzmin = zmin, gzmax = zmax;
-      if (this.options.minimum !== -1111) { zmin = this.options.minimum; gzmin = Math.min(gzmin,zmin); apply_min = true; }
-      if (this.options.maximum !== -1111) { zmax = this.options.maximum; gzmax = Math.max(gzmax, zmax); apply_min = false; }
+      if (this.options.minimum !== kNoZoom) { zmin = this.options.minimum; gzmin = Math.min(gzmin,zmin); apply_min = true; }
+      if (this.options.maximum !== kNoZoom) { zmax = this.options.maximum; gzmax = Math.max(gzmax, zmax); apply_min = false; }
       if (zmin >= zmax) {
          if (apply_min) zmax = zmin + 1; else zmin = zmax - 1;
       }
@@ -2297,7 +2312,7 @@ class THistPainter extends ObjectPainter {
          if (!painter.Mode3D && painter.options.AutoZoom)
             return painter.autoZoom();
       }).then(() => {
-         if (painter.options.Project && !painter.mode3d && painter.toggleProjection)
+         if (painter.options.Project && !painter.mode3d && isFunc(painter.toggleProjection))
              return painter.toggleProjection(painter.options.Project);
       }).then(() => {
           painter.fillToolbar();
@@ -2307,4 +2322,4 @@ class THistPainter extends ObjectPainter {
 
 } // class THistPainter
 
-export { THistPainter };
+export { THistPainter, kNoZoom };

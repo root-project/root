@@ -457,8 +457,8 @@ function createBufferGeometry(polygons) {
    }
 
    let geometry = new BufferGeometry();
-   geometry.setAttribute( 'position', new BufferAttribute( positions_buf, 3 ) );
-   geometry.setAttribute( 'normal', new BufferAttribute( normals_buf, 3 ) );
+   geometry.setAttribute('position', new BufferAttribute(positions_buf, 3));
+   geometry.setAttribute('normal', new BufferAttribute(normals_buf, 3));
 
    // geometry.computeVertexNormals();
    return geometry;

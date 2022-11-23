@@ -1233,8 +1233,8 @@ class StandaloneMenu extends JSRootMenu {
    async runModal(title, main_content, args) {
       if (!args) args = {};
       let dlg_id = this.menuname + '_dialog';
-      d3_select('#' + dlg_id).remove();
-      d3_select('#' + dlg_id+'_block').remove();
+      d3_select(`#${dlg_id}`).remove();
+      d3_select(`#${dlg_id}_block`).remove();
 
       let block = d3_select('body').append('div').attr('id', dlg_id+'_block').attr('class', 'jsroot_dialog_block');
 

@@ -1214,18 +1214,21 @@ class TPadPainter extends ObjectPainter {
    addObjectPainter(objpainter, lst, indx) {
       if (objpainter && lst && lst[indx] && (objpainter.snapid === undefined)) {
          // keep snap id in painter, will be used for the
-         let pi = this.painters.indexOf(objpainter);
-         if (pi < 0) this.painters.push(objpainter);
+         if (this.painters.indexOf(objpainter) < 0)
+            this.painters.push(objpainter);
 
          if (isFunc(objpainter.setSnapId))
             objpainter.setSnapId(lst[indx].fObjectID);
          else
             objpainter.snapid = lst[indx].fObjectID;
 
-         if (objpainter.$primary && (pi > 0) && this.painters[pi-1].$secondary) {
-            this.painters[pi-1].snapid = objpainter.snapid + '#hist';
-            console.log(`ASSIGN SECONDARY HIST ID ${this.painters[pi-1].snapid}`);
-         }
+         if (objpainter.$primary)
+            this.painters.forEach(sub => {
+               if ((sub !== objpainter) && (sub.$secondary === 'hist')) {
+                  sub.snapid = objpainter.snapid + '#hist';
+                  console.log(`ASSIGN SECONDARY HIST ID ${sub.snapid}`);
+               }
+            });
       }
    }
 
@@ -1659,6 +1662,8 @@ class TPadPainter extends ObjectPainter {
       r.uy1 = r.py1 = r.ranges ? main.scale_ymin : 0;
       r.ux2 = r.px2 = r.ranges ? main.scale_xmax : 0;
       r.uy2 = r.py2 = r.ranges ? main.scale_ymax : 0;
+      r.uz1 = r.ranges ? (main.scale_zmin ?? 0) : 0;
+      r.uz2 = r.ranges ? (main.scale_zmax ?? 0) : 0;
 
       if (main) {
          if (main.zoom_xmin !== main.zoom_xmax) {
