@@ -16,27 +16,25 @@
 #ifndef ROO_VOIGTIAN
 #define ROO_VOIGTIAN
 
-#include "RooAbsPdf.h"
-#include "RooRealProxy.h"
-
-class RooRealVar;
+#include <RooAbsPdf.h>
+#include <RooRealProxy.h>
 
 class RooVoigtian : public RooAbsPdf {
 public:
-  RooVoigtian() {} ;
+  RooVoigtian() {}
   RooVoigtian(const char *name, const char *title,
          RooAbsReal& _x, RooAbsReal& _mean,
               RooAbsReal& _width, RooAbsReal& _sigma,
               bool doFast = false);
   RooVoigtian(const RooVoigtian& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooVoigtian(*this,newname); }
-  inline ~RooVoigtian() override { }
 
-// These methods allow the user to select the fast evaluation
-// of the complex error function using look-up tables
-// (default is the "slow" CERNlib algorithm)
-
+  /// Enable the fast evaluation of the complex error function using look-up
+  /// tables (default is the "slow" CERNlib algorithm).
   inline void selectFastAlgorithm()    { _doFast = true;  }
+
+  /// Disable the fast evaluation of the complex error function using look-up
+  /// tables (default is the "slow" CERNlib algorithm).
   inline void selectDefaultAlgorithm() { _doFast = false; }
 
 protected:
@@ -52,7 +50,7 @@ protected:
 
 private:
 
-  bool _doFast;
+  bool _doFast = false;
   ClassDefOverride(RooVoigtian,2) // Voigtian PDF (Gauss (x) BreitWigner)
 };
 
