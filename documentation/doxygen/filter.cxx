@@ -207,11 +207,14 @@ void FilterClass()
             int ImageSize = 300;
             FILE *f = fopen("ImagesSizes.dat", "r");
             if (!f) return;
-            fscanf(f, "%d", &ImageSize);
+            if (fscanf(f, "%d", &ImageSize) == 1) {
+               ReplaceAll(gImageWidth, "IMAGESIZE", StringFormat("%d", ImageSize));
+               ReplaceAll(gLineString, "End_Macro",
+                          StringFormat("\\image html pict1_%s_%3.3d.%s %s", gClassName.c_str(), gImageID,
+                                       gImageType.c_str(), gImageWidth.c_str()));
+            }
             fclose(f);
             remove("ImagesSizes.dat");
-            ReplaceAll(gImageWidth,"IMAGESIZE",StringFormat("%d",ImageSize));
-            ReplaceAll(gLineString,"End_Macro", StringFormat("\\image html pict1_%s_%3.3d.%s %s", gClassName.c_str(), gImageID, gImageType.c_str(), gImageWidth.c_str()));
          }
 
          if (gInMacro) {
@@ -516,10 +519,11 @@ void ExecuteMacro()
 void ExecuteCommand(string command)
 {
    int o = dup(fileno(stdout));
-   freopen(gOutputName.c_str(),"a",stdout);
-   system(command.c_str());
-   dup2(o,fileno(stdout));
-   close(o);
+   if (freopen(gOutputName.c_str(), "a", stdout) != nullptr) {
+      int i = system(command.c_str());
+      dup2(o, fileno(stdout));
+      close(o);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -530,7 +534,8 @@ int NumberOfImages()
    int ImageNum;
    FILE *f = fopen("NumberOfImages.dat", "r");
    if (!f) return 0;
-   fscanf(f, "%d", &ImageNum);
+   if (fscanf(f, "%d", &ImageNum) != 1)
+      ImageNum = 0;
    fclose(f);
    remove("NumberOfImages.dat");
    return ImageNum;
@@ -583,12 +588,12 @@ string ImagesList(string& name) {
 
    // evaluate the size of the output string
    char evalstring[300];
-   sprintf(&evalstring[0]," \n/// \\image html pict%d_%s width=%d",N,name.c_str(),10000);
+   snprintf(&evalstring[0], 300, " \n/// \\image html pict%d_%s width=%d", N, name.c_str(), 10000);
    int evallen = (int)strlen(evalstring);
 
    // allocate the output string
-   char *val = (char *) malloc(sizeof(char)*evallen*N);
-
+   int vallen = sizeof(char) * evallen * N;
+   char *val = (char *)malloc(vallen);
    int len = 0;
 
    int ImageSize = 300;
@@ -596,14 +601,17 @@ string ImagesList(string& name) {
    if (!f) return "";
 
    for (int i = 1; i <= N; i++){
-      fscanf(f, "%d", &ImageSize);
-      if (i>1) {
-         if (gPython) sprintf(&val[len]," \n## \\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
-         else         sprintf(&val[len]," \n/// \\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
-      } else {
-         sprintf(&val[len],"\\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
+      if (fscanf(f, "%d", &ImageSize) == 1) {
+         if (i > 1) {
+            if (gPython)
+               snprintf(&val[len], vallen, " \n## \\image html pict%d_%s width=%d", i, name.c_str(), ImageSize);
+            else
+               snprintf(&val[len], vallen, " \n/// \\image html pict%d_%s width=%d", i, name.c_str(), ImageSize);
+         } else {
+            snprintf(&val[len], vallen, "\\image html pict%d_%s width=%d", i, name.c_str(), ImageSize);
+         }
+         len = (int)strlen(val);
       }
-      len = (int)strlen(val);
    }
 
    fclose(f);
