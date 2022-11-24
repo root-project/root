@@ -227,9 +227,9 @@ void LikelihoodGradientJob::fillGradientWithPrevResult(double *grad, double *pre
       }
 
       if (!calculation_is_clean_->gradient) {
-         if (RooFit::MultiProcess::Config::getLogTimings()) ProcessTimer::start_timer("master:gradient");
+         if (RooFit::MultiProcess::Config::getLogTimings()) RooFit::MultiProcess::ProcessTimer::start_timer("master:gradient");
          calculate_all();
-         if (RooFit::MultiProcess::Config::getLogTimings()) ProcessTimer::end_timer("master:gradient");
+         if (RooFit::MultiProcess::Config::getLogTimings()) RooFit::MultiProcess::ProcessTimer::end_timer("master:gradient");
       }
 
       // put the results from _grad into *grad

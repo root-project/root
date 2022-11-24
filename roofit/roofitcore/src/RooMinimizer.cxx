@@ -58,6 +58,7 @@ automatic PDF optimization.
 #include "RooFit/TestStatistics/RooRealL.h"
 #ifdef R__HAS_ROOFIT_MULTIPROCESS
 #include "RooFit/MultiProcess/Config.h"
+#include "RooFit/MultiProcess/ProcessTimer.h"
 #endif
 
 #include "TClass.h"
@@ -309,6 +310,8 @@ bool RooMinimizer::fitFcn() const
 /// \param[in] alg  Fit algorithm to use. (Optional)
 int RooMinimizer::minimize(const char *type, const char *alg)
 {
+   if (_cfg.logTimings) addParamsToProcessTimer();
+
    _fcn->Synchronize(_theFitter->Config().ParamsSettings());
 
    setMinimizerType(type);
@@ -740,6 +743,22 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
    params->assign(*paramSave);
 
    return frame;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add parameters in metadata field to process timer
+
+void RooMinimizer::addParamsToProcessTimer()
+{
+  // parameter indices for use in timing heat matrix
+  std::vector<std::string> parameter_names;
+  for (auto && parameter : *_fcn->GetFloatParamList()) {
+    parameter_names.push_back(parameter->GetName());
+    if (_cfg.verbose) {
+      coutI(Minimization) << "parameter name: " << parameter_names.back() << std::endl;
+    }
+  }
+  RooFit::MultiProcess::ProcessTimer::add_metadata(parameter_names);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

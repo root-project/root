@@ -13,7 +13,7 @@
 #include <RooFit/TestStatistics/RooSumL.h>
 #include <RooAbsData.h>
 #include <RooFit/TestStatistics/RooSubsidiaryL.h>
-#include <RooFit/multiprocess/ProcessTimer.h>
+#include "RooFit/MultiProcess/ProcessTimer.h"
 #include "RooFit/MultiProcess/Config.h"
 
 #include <algorithm> // min, max
@@ -94,9 +94,9 @@ RooSumL::evaluatePartition(Section events, std::size_t components_begin, std::si
 
    // from RooAbsOptTestStatistic::combinedValue (which is virtual, so could be different for non-RooNLLVar!):
    for (std::size_t ix = components_begin; ix < components_end; ++ix) {
-      if (RooFit::MultiProcess::Config::getLogTimings()) ProcessTimer::start_timer("worker:eval_partition:" + components_[ix]->GetClassName() + ":" + components_[ix]->GetName());
+      if (RooFit::MultiProcess::Config::getLogTimings()) RooFit::MultiProcess::ProcessTimer::start_timer("worker:eval_partition:" + components_[ix]->GetClassName() + ":" + components_[ix]->GetName());
       ret += components_[ix]->evaluatePartition(events, 0, 0);
-      if (RooFit::MultiProcess::Config::getLogTimings()) ProcessTimer::end_timer("worker:eval_partition:" + components_[ix]->GetClassName() + ":" + components_[ix]->GetName());
+      if (RooFit::MultiProcess::Config::getLogTimings()) RooFit::MultiProcess::ProcessTimer::end_timer("worker:eval_partition:" + components_[ix]->GetClassName() + ":" + components_[ix]->GetName());
    }
 
    return ret;

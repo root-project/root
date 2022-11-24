@@ -152,6 +152,8 @@ public:
 private:
    friend class RooAbsMinimizerFcn;
 
+   void addParamsToProcessTimer();
+
    void profileStart();
    void profileStop();
 

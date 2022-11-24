@@ -1,10 +1,49 @@
+/*
+ * Project: RooFit
+ * Authors:
+ *   ZW, Zef Wolffs, Nikhef, zefwolffs@gmail.com
+ *   PB, Patrick Bos, Netherlands eScience Center, p.bos@esciencecenter.nl
+ *
+ * Copyright (c) 2022, CERN
+ *
+ * Redistribution and use in source and binary forms,
+ * with or without modification, are permitted according to the terms
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
+ */
+
 #include "RooFit/MultiProcess/ProcessTimer.h"
 
-#include <thread>
 #include <iostream>
-#include <thread>
 #include <fstream>
 #include <iomanip> // setw
+
+namespace RooFit {
+namespace MultiProcess {
+
+/** \class ProcessTimer
+ *
+ * \brief Can be used to generate timings of multiple processes simultaneously and output logs
+ *
+ * This static class records timings of multiple processes simultaneously and allows for these 
+ * timings to be written out in json format, one file for each process. Multiple overlapping
+ * sections can be timed independently on the same process. It also allows for the timings 
+ * to be written out to json logfiles in a specified interval, for example every half hour.
+ */
+
+list<chrono::time_point<chrono::steady_clock>> ProcessTimer::get_durations(string to_return)
+{
+   ProcessTimer::duration_map_t::key_type sec_name;
+   ProcessTimer::duration_map_t::mapped_type duration_list;
+   for (auto const &durations_element : ProcessTimer::durations) {
+      std::tie(sec_name, duration_list) = std::move(durations_element);
+      if (sec_name != to_return)
+         continue;
+      else
+         return duration_list;
+   }
+   throw ::invalid_argument("section name " + to_return + " not found in timer map, so it cannot"
+                          " be retrieved");
+}
 
 void ProcessTimer::start_timer(string section_name)
 {
@@ -60,7 +99,7 @@ void ProcessTimer::print_durations(string to_print)
       long total_duration = 0;
       cout << "Section name " << sec_name << ":" << endl;
       for (auto it = duration_list.begin(); it != duration_list.end(); ++it) {
-         long duration = chrono::duration_cast<chrono::milliseconds>(*++it - *it).count();
+         long duration = chrono::duration_cast<chrono::milliseconds>(*std::next(it) - *it).count();
          cout << "Duration " << i << ": " << duration << "ms +" << endl;
          total_duration += duration;
          i++;
@@ -83,7 +122,7 @@ void ProcessTimer::print_timestamps()
             chrono::duration_cast<chrono::milliseconds>(*it - ProcessTimer::begin).count();
 
          long duration_since_begin_end =
-            chrono::duration_cast<chrono::milliseconds>(*++it - ProcessTimer::begin).count();
+            chrono::duration_cast<chrono::milliseconds>(*std::next(it) - ProcessTimer::begin).count();
 
          cout << "Duration " << i << ": " << duration_since_begin_start << "ms-->" << duration_since_begin_end << "ms"
               << endl;
@@ -94,7 +133,7 @@ void ProcessTimer::print_timestamps()
 
 void ProcessTimer::write_file()
 {
-   nlohmann::json j;
+   json j;
    j["metadata"] = metadata;
    std::ofstream file("p_" + to_string((long)ProcessTimer::get_process()) + ".json." + to_string(times_written),
                       ios::app);
@@ -115,10 +154,10 @@ void ProcessTimer::write_file()
    file.close();
 }
 
-void ProcessTimer::add_metadata(nlohmann::json data)
+void ProcessTimer::add_metadata(json data)
 {
    if (write_interval) {
-      nlohmann::json j, meta;
+      json j, meta;
       meta.push_back(std::move(data));
       j["metadata"] = meta;
       std::ofstream file("p_" + to_string((long)ProcessTimer::get_process()) + ".json", ios::app);
@@ -132,7 +171,7 @@ void ProcessTimer::set_write_interval(int write_int)
 {
    write_interval = write_int;
    if (write_interval) {
-      nlohmann::json j, meta;
+      json j, meta;
       meta["write_interval"] = true;
       j["metadata"] = meta;
       std::ofstream file("p_" + to_string((long)ProcessTimer::get_process()) + ".json", ios::app);
@@ -145,6 +184,9 @@ ProcessTimer::duration_map_t ProcessTimer::durations;
 chrono::time_point<chrono::steady_clock> ProcessTimer::begin = chrono::steady_clock::now();
 chrono::time_point<chrono::steady_clock> ProcessTimer::previous_write = chrono::steady_clock::now();
 pid_t ProcessTimer::process = 0;
-nlohmann::json ProcessTimer::metadata;
+json ProcessTimer::metadata;
 int ProcessTimer::write_interval = 0;
 int ProcessTimer::times_written = 0;
+
+} // namespace MultiProcess
+} // namespace RooFit

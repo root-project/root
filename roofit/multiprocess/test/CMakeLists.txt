@@ -12,3 +12,4 @@ ROOT_ADD_GTEST(test_RooFit_MultiProcess_ProcessManager test_ProcessManager.cxx L
 ROOT_ADD_GTEST(test_RooFit_MultiProcess_Messenger test_Messenger.cxx LIBRARIES RooFitMultiProcess)
 
 ROOT_ADD_GTEST(test_RooFit_MultiProcess_Queue test_Queue.cxx LIBRARIES RooFitMultiProcess)
+ROOT_ADD_GTEST(test_RooFit_MultiProcess_ProcessTimer test_ProcessTimer.cxx LIBRARIES RooFitMultiProcess)
