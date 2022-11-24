@@ -72,7 +72,7 @@ if (typeof requirejs !== 'undefined') {{
 
     // We are in jupyter notebooks, use require.js which should be configured already
     requirejs.config({{
-       paths: {{ 'JSRootCore' : [ 'scripts/JSRoot.core', 'https://root.cern/js/6.3.4/scripts/JSRoot.core.min', 'https://jsroot.gsi.de/6.3.4/scripts/JSRoot.core.min' ] }}
+       paths: {{ 'JSRootCore' : [ 'build/jsroot', 'https://root.cern/js/7.2.1/build/jsroot', 'https://jsroot.gsi.de/7.2.1/build/jsroot' ] }}
     }})(['JSRootCore'],  function(Core) {{
        display_{jsDivId}(Core);
     }});
@@ -93,9 +93,9 @@ if (typeof requirejs !== 'undefined') {{
     }}
 
     // Try loading a local version of requirejs and fallback to cdn if not possible.
-    script_load_{jsDivId}(base_url + 'static/scripts/JSRoot.core.js', function(){{
+    script_load_{jsDivId}(base_url + 'static/build/jsroot.js', function(){{
         console.error('Fail to load JSROOT locally, please check your jupyter_notebook_config.py file');
-        script_load_{jsDivId}('https://root.cern/js/6.3.4/scripts/JSRoot.core.min.js', function(){{
+        script_load_{jsDivId}('https://root.cern/js/7.2.1/build/jsroot.js', function(){{
             document.getElementById("{jsDivId}").innerHTML = "Failed to load JSROOT";
         }});
     }});
