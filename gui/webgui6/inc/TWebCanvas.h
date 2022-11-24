@@ -93,6 +93,10 @@ protected:
    Bool_t fLongerPolling{kFALSE};  ///<! when true, make longer polling in blocking operations
    Bool_t fProcessingData{kFALSE}; ///<! flag used to prevent blocking methods when process data is invoked
    Bool_t fAsyncMode{kFALSE};      ///<! when true, methods like TCanvas::Update will never block
+   Long64_t fStyleVersion{0};      ///<! current gStyle object version, checked every time when new snapshot created
+   UInt_t fStyleHash{0};           ///<! last hash of gStyle
+   Long64_t fColorsVersion{0};     ///<! current colors/palette version, checked every time when new snapshot created
+   UInt_t fColorsHash{0};          ///<! last hash of colors/palette
 
    UpdatedSignal_t fUpdatedSignal; ///<! signal emitted when canvas updated or state is changed
    PadSignal_t fActivePadChangedSignal; ///<! signal emitted when active pad changed in the canvas
@@ -108,7 +112,9 @@ protected:
    Bool_t PerformUpdate() override;
    TVirtualPadPainter *CreatePadPainter() override;
 
+   UInt_t CalculateColorsHash();
    void AddColorsPalette(TPadWebSnapshot &master);
+
    void CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
    void CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t version, PadPaintingReady_t func);
 
