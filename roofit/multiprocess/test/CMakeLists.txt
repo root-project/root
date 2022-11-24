@@ -13,3 +13,7 @@ ROOT_ADD_GTEST(test_RooFit_MultiProcess_Messenger test_Messenger.cxx LIBRARIES R
 
 ROOT_ADD_GTEST(test_RooFit_MultiProcess_Queue test_Queue.cxx LIBRARIES RooFitMultiProcess)
 ROOT_ADD_GTEST(test_RooFit_MultiProcess_ProcessTimer test_ProcessTimer.cxx LIBRARIES RooFitMultiProcess)
+ROOT_ADD_GTEST(test_RooFit_MultiProcess_HeatmapAnalyzer test_HeatmapAnalyzer.cxx LIBRARIES RooFitMultiProcess
+  COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/test_logs/p_0.json
+  COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/test_logs/p_1.json
+  COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/test_logs/p_999.json)

@@ -15,13 +15,14 @@ ROOT_LINKER_LIBRARY(RooFitMultiProcess
         src/Job.cxx
         src/Config.cxx
         src/ProcessTimer.cxx
+        src/HeatmapAnalyzer.cxx
     LIBRARIES
         RooFitCommon
     DEPENDENCIES
         RooFitZMQ
 )
 
-target_link_libraries(RooFitMultiProcess PUBLIC RooFitZMQ)
+target_link_libraries(RooFitMultiProcess PUBLIC Hist RooFitZMQ)
 set(RooFitMultiProcess_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/res")
 target_include_directories(RooFitMultiProcess
         PRIVATE ${RooFitMultiProcess_INCLUDE_DIR}
