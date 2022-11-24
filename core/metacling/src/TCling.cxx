@@ -7114,6 +7114,10 @@ static std::string GetSharedLibImmediateDepsSlow(std::string lib,
       // Skip defined symbols: we have them.
       if (!(Flags & llvm::object::SymbolRef::SF_Undefined))
          continue;
+      // Skip undefined weak symbols: if we don't have them we won't need them.
+      // `__gmon_start__` being a typical example.
+      if (Flags & llvm::object::SymbolRef::SF_Weak)
+         continue;
       llvm::Expected<StringRef> SymNameErr = S.getName();
       if (!SymNameErr) {
          Warning("GetSharedLibDepsForModule", "Failed to read symbol");
@@ -7127,8 +7131,8 @@ static std::string GetSharedLibImmediateDepsSlow(std::string lib,
          // Skip the symbols which are part of the C/C++ runtime and have a
          // fixed library version. See binutils ld VERSION. Those reside in
          // 'system' libraries, which we avoid in FindLibraryForSymbol.
-         if (SymName.contains("@@GLIBCXX") || SymName.contains("@@CXXABI") ||
-            SymName.contains("@@GLIBC") || SymName.contains("@@GCC"))
+         if (SymName.contains("@GLIBCXX") || SymName.contains("@CXXABI") ||
+            SymName.contains("@GLIBC") || SymName.contains("@GCC"))
             continue;
 
          // Those are 'weak undefined' symbols produced by gcc. We can
