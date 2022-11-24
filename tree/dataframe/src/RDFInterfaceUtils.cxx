@@ -908,13 +908,12 @@ ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColu
                                                   ds ? ds->GetColumnNames() : ColumnNames_t{});
 
    if (!unknownColumns.empty()) {
-      std::stringstream unknowns;
-      std::string delim = unknownColumns.size() > 1 ? "s: " : ": "; // singular/plural
-      for (auto &unknownColumn : unknownColumns) {
-         unknowns << delim << unknownColumn;
-         delim = ',';
-      }
-      throw std::runtime_error("Unknown column" + unknowns.str());
+      using namespace std::string_literals;
+      std::string errMsg = "Unknown column"s + (unknownColumns.size() > 1 ? "s: " : ": ");
+      for (auto &unknownColumn : unknownColumns)
+         errMsg += '"' + unknownColumn + "\", ";
+      errMsg.resize(errMsg.size() - 2); // remove last ", "
+      throw std::runtime_error(std::move(errMsg));
    }
 
    return selectedColumns;
