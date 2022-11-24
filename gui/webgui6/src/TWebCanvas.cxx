@@ -261,6 +261,29 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
+/// Calculate hash function for all colors and palette
+
+UInt_t TWebCanvas::CalculateColorsHash()
+{
+   UInt_t hash = 0;
+
+   TObjArray *colors = (TObjArray *)gROOT->GetListOfColors();
+
+   if (colors) {
+      for (Int_t n = 0; n <= colors->GetLast(); ++n)
+         if (colors->At(n))
+            hash += TString::Hash(colors->At(n), TColor::Class()->Size());
+   }
+
+   TArrayI pal = TColor::GetPalette();
+
+   hash += TString::Hash(pal.GetArray(), pal.GetSize() * sizeof(Int_t));
+
+   return hash;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
 /// Add special canvas objects like colors list at selected palette
 
 void TWebCanvas::AddColorsPalette(TPadWebSnapshot &master)
@@ -270,13 +293,12 @@ void TWebCanvas::AddColorsPalette(TPadWebSnapshot &master)
    if (!colors)
       return;
 
-   Int_t cnt = 0;
-   for (Int_t n = 0; n <= colors->GetLast(); ++n)
-      if (colors->At(n))
-         cnt++;
-
-   if (cnt <= 598)
-      return; // normally there are 598 colors defined
+   //Int_t cnt = 0;
+   //for (Int_t n = 0; n <= colors->GetLast(); ++n)
+   //   if (colors->At(n))
+   //      cnt++;
+   //if (cnt <= 598)
+   //   return; // normally there are 598 colors defined
 
    TArrayI pal = TColor::GetPalette();
 
@@ -312,8 +334,20 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    paddata.SetSnapshot(TWebSnapshot::kSubPad, pad); // add ref to the pad
    paddata.SetWithoutPrimitives(!process_primitives);
 
-   if (resfunc && (GetStyleDelivery() > (version > 0 ? 1 : 0)))
-      paddata.NewPrimitive().SetSnapshot(TWebSnapshot::kStyle, gStyle);
+   // check style changes every time when creating canvas snapshot
+   if (resfunc && (GetStyleDelivery() > 0)) {
+
+      if (fStyleVersion != fCanvVersion) {
+         auto hash = TString::Hash(gStyle, TStyle::Class()->Size());
+         if ((hash != fStyleHash) || (fStyleVersion == 0)) {
+            fStyleHash = hash;
+            fStyleVersion = fCanvVersion;
+         }
+      }
+
+      if (fStyleVersion > version)
+         paddata.NewPrimitive().SetSnapshot(TWebSnapshot::kStyle, gStyle);
+   }
 
    TList *primitives = pad->GetListOfPrimitives();
 
@@ -529,14 +563,27 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
    flush_master();
 
-   bool provide_colors = GetPaletteDelivery() > 0;
-   if (GetPaletteDelivery() == 1)
-      provide_colors = !!resfunc && (version <= 0);
-   else if (GetPaletteDelivery() == 2)
-      provide_colors = !!resfunc;
+   bool provide_colors = false;
 
-   // add specials after painting is performed - new colors may be generated only during painting
-   if (provide_colors && process_primitives)
+   if ((GetPaletteDelivery() > 2) || ((GetPaletteDelivery() == 2) && resfunc)) {
+      // provide colors: either for each subpad (> 2) or only for canvas (== 2)
+      provide_colors = process_primitives;
+   } else if ((GetPaletteDelivery() == 1) && resfunc) {
+      // check that colors really changing, using hash
+
+      if (fColorsVersion != fCanvVersion) {
+         auto hash = CalculateColorsHash();
+         if ((hash != fColorsHash) || (fColorsVersion == 0)) {
+            fColorsHash = hash;
+            fColorsVersion = fCanvVersion;
+         }
+      }
+
+      provide_colors = fColorsVersion > version;
+   }
+
+   // add colors after painting is performed - new colors may be generated only during painting
+   if (provide_colors)
       AddColorsPalette(paddata);
 
    if (!resfunc)
