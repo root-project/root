@@ -7111,65 +7111,66 @@ static std::string GetSharedLibImmediateDepsSlow(std::string lib,
    std::string Result = lib + ' ';
    for (const auto &S : BinObjFile->symbols()) {
       uint32_t Flags = llvm::cantFail(S.getFlags());
-      if (Flags & llvm::object::SymbolRef::SF_Undefined) {
-         llvm::Expected<StringRef> SymNameErr = S.getName();
-         if (!SymNameErr) {
-            Warning("GetSharedLibDepsForModule", "Failed to read symbol");
-            continue;
-         }
-         llvm::StringRef SymName = SymNameErr.get();
-         if (SymName.empty())
+      // Skip defined symbols: we have them.
+      if (!(Flags & llvm::object::SymbolRef::SF_Undefined))
+         continue;
+      llvm::Expected<StringRef> SymNameErr = S.getName();
+      if (!SymNameErr) {
+         Warning("GetSharedLibDepsForModule", "Failed to read symbol");
+         continue;
+      }
+      llvm::StringRef SymName = SymNameErr.get();
+      if (SymName.empty())
+         continue;
+
+      if (BinObjFile->isELF()) {
+         // Skip the symbols which are part of the C/C++ runtime and have a
+         // fixed library version. See binutils ld VERSION. Those reside in
+         // 'system' libraries, which we avoid in FindLibraryForSymbol.
+         if (SymName.contains("@@GLIBCXX") || SymName.contains("@@CXXABI") ||
+            SymName.contains("@@GLIBC") || SymName.contains("@@GCC"))
             continue;
 
-         if (BinObjFile->isELF()) {
-            // Skip the symbols which are part of the C/C++ runtime and have a
-            // fixed library version. See binutils ld VERSION. Those reside in
-            // 'system' libraries, which we avoid in FindLibraryForSymbol.
-            if (SymName.contains("@@GLIBCXX") || SymName.contains("@@CXXABI") ||
-               SymName.contains("@@GLIBC") || SymName.contains("@@GCC"))
-               continue;
-
-            // Those are 'weak undefined' symbols produced by gcc. We can
-            // ignore them.
-            // FIXME: It is unclear whether we can ignore all weak undefined
-            // symbols:
-            // http://lists.llvm.org/pipermail/llvm-dev/2017-October/118177.html
-            static constexpr llvm::StringRef RegisterClasses("_Jv_RegisterClasses");
-            static constexpr llvm::StringRef RegisterCloneTable("_ITM_registerTMCloneTable");
-            static constexpr llvm::StringRef DeregisterCloneTable("_ITM_deregisterTMCloneTable");
-            if (SymName == RegisterClasses ||
-               SymName == RegisterCloneTable ||
-               SymName == DeregisterCloneTable)
-               continue;
-         }
+         // Those are 'weak undefined' symbols produced by gcc. We can
+         // ignore them.
+         // FIXME: It is unclear whether we can ignore all weak undefined
+         // symbols:
+         // http://lists.llvm.org/pipermail/llvm-dev/2017-October/118177.html
+         static constexpr llvm::StringRef RegisterClasses("_Jv_RegisterClasses");
+         static constexpr llvm::StringRef RegisterCloneTable("_ITM_registerTMCloneTable");
+         static constexpr llvm::StringRef DeregisterCloneTable("_ITM_deregisterTMCloneTable");
+         if (SymName == RegisterClasses ||
+            SymName == RegisterCloneTable ||
+            SymName == DeregisterCloneTable)
+            continue;
+      }
 
 // FIXME: this might really depend on MachO library format instead of R__MACOSX.
 #ifdef R__MACOSX
-         // MacOS symbols sometimes have an extra "_", see
-         // https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/dlsym.3.html
-         if (skipLoadedLibs && SymName[0] == '_'
-             && llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(SymName.drop_front().str()))
-            continue;
+      // MacOS symbols sometimes have an extra "_", see
+      // https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/dlsym.3.html
+      if (skipLoadedLibs && SymName[0] == '_'
+            && llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(SymName.drop_front().str()))
+         continue;
 #endif
 
-         // If we can find the address of the symbol, we have loaded it. Skip.
-         if (skipLoadedLibs && llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(SymName.str()))
+      // If we can find the address of the symbol, we have loaded it. Skip.
+      if (skipLoadedLibs && llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(SymName.str()))
+         continue;
+
+      R__LOCKGUARD(gInterpreterMutex);
+      std::string found = interp->getDynamicLibraryManager()->searchLibrariesForSymbol(SymName, /*searchSystem*/false);
+      // The expected output is just filename without the full path, which
+      // is not very accurate, because our Dyld implementation might find
+      // a match in location a/b/c.so and if we return just c.so ROOT might
+      // resolve it to y/z/c.so and there we might not be ABI compatible.
+      // FIXME: Teach the users of GetSharedLibDeps to work with full paths.
+      if (!found.empty()) {
+         std::string cand = llvm::sys::path::filename(found).str();
+         if (!DedupSet.insert(cand).second)
             continue;
 
-         R__LOCKGUARD(gInterpreterMutex);
-         std::string found = interp->getDynamicLibraryManager()->searchLibrariesForSymbol(SymName, /*searchSystem*/false);
-         // The expected output is just filename without the full path, which
-         // is not very accurate, because our Dyld implementation might find
-         // a match in location a/b/c.so and if we return just c.so ROOT might
-         // resolve it to y/z/c.so and there we might not be ABI compatible.
-         // FIXME: Teach the users of GetSharedLibDeps to work with full paths.
-         if (!found.empty()) {
-            std::string cand = llvm::sys::path::filename(found).str();
-            if (!DedupSet.insert(cand).second)
-               continue;
-
-            Result += cand + ' ';
-         }
+         Result += cand + ' ';
       }
    }
 
