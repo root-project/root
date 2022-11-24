@@ -18,12 +18,12 @@
 
 TEST(TestMPHeatmapAnalyzer, Analyze)
 {
-    RooFit::MultiProcess::HeatmapAnalyzer hm_analyzer(".");
-    TH2I hm = hm_analyzer.analyze(2); // analyze second gradient
+   RooFit::MultiProcess::HeatmapAnalyzer hm_analyzer(".");
+   TH2I hm = hm_analyzer.analyze(2); // analyze second gradient
 
-    // indexing starts from 1 in heatmap because of under/overflow bins
-    GTEST_ASSERT_EQ(hm.GetBinContent(1, 1), 5);
-    GTEST_ASSERT_EQ(hm.GetBinContent(2, 1), 15);
-    GTEST_ASSERT_EQ(hm.GetBinContent(1, 2), 10);
-    GTEST_ASSERT_EQ(hm.GetBinContent(2, 2), 20);
+   // indexing starts from 1 in heatmap because of under/overflow bins
+   GTEST_ASSERT_EQ(hm.GetBinContent(1, 1), 5);
+   GTEST_ASSERT_EQ(hm.GetBinContent(2, 1), 15);
+   GTEST_ASSERT_EQ(hm.GetBinContent(1, 2), 10);
+   GTEST_ASSERT_EQ(hm.GetBinContent(2, 2), 20);
 }

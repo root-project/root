@@ -24,9 +24,9 @@ namespace MultiProcess {
  *
  * \brief Can be used to generate timings of multiple processes simultaneously and output logs
  *
- * This static class records timings of multiple processes simultaneously and allows for these 
+ * This static class records timings of multiple processes simultaneously and allows for these
  * timings to be written out in json format, one file for each process. Multiple overlapping
- * sections can be timed independently on the same process. It also allows for the timings 
+ * sections can be timed independently on the same process. It also allows for the timings
  * to be written out to json logfiles in a specified interval, for example every half hour.
  */
 
@@ -41,8 +41,9 @@ list<chrono::time_point<chrono::steady_clock>> ProcessTimer::get_durations(strin
       else
          return duration_list;
    }
-   throw ::invalid_argument("section name " + to_return + " not found in timer map, so it cannot"
-                          " be retrieved");
+   throw ::invalid_argument("section name " + to_return +
+                            " not found in timer map, so it cannot"
+                            " be retrieved");
 }
 
 void ProcessTimer::start_timer(string section_name)
