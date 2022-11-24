@@ -4017,9 +4017,13 @@ ASTReader::ReadModuleMapFileBlock(RecordData &Record, ModuleFile &F,
 
     assert(M && M->Name == F.ModuleName && "found module with different name");
 
+    // Check any additional module map files (e.g. module.private.modulemap)
+    // that are not in the pcm.
+    bool DisableValidation = PP.getPreprocessorOpts().DisablePCHOrModuleValidation !=
+                                  DisableValidationForModuleKind::None;
     // Check the primary module map file.
     auto StoredModMap = FileMgr.getFile(F.ModuleMapPath);
-    if (!StoredModMap || *StoredModMap != ModMap) {
+    if (!DisableValidation && (!StoredModMap || *StoredModMap != ModMap)) {
       assert(ModMap && "found module is missing module map file");
       assert((ImportedBy || F.Kind == MK_ImplicitModule) &&
              "top-level import should be verified");
@@ -4044,11 +4048,7 @@ ASTReader::ReadModuleMapFileBlock(RecordData &Record, ModuleFile &F,
       AdditionalStoredMaps.insert(*SF);
     }
 
-    // Check any additional module map files (e.g. module.private.modulemap)
-    // that are not in the pcm.
-    bool DisableValidation = bool(PP.getPreprocessorOpts().DisablePCHOrModuleValidation &
-                                  DisableValidationForModuleKind::All);
-    if (DisableValidation) {
+    if (!DisableValidation) {
     if (auto *AdditionalModuleMaps = Map.getAdditionalModuleMapFiles(M)) {
       for (const FileEntry *ModMap : *AdditionalModuleMaps) {
         // Remove files that match
