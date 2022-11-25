@@ -10,7 +10,8 @@
 ///
 /// \author Rene Brun
 
-void hsum() {
+void hsum()
+{
    TCanvas *c1 = new TCanvas("c1","The HSUM example",200,10,600,400);
    c1->SetGrid();
 
