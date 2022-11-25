@@ -580,8 +580,6 @@ public:
    FillTGraphHelper(FillTGraphHelper &&) = default;
    FillTGraphHelper(const FillTGraphHelper &) = delete;
 
-   // The last parameter is always false, as at the moment there is no way to propagate the parameter from the user to
-   // this method
    FillTGraphHelper(const std::shared_ptr<::TGraph> &g, const unsigned int nSlots) : fGraphs(nSlots, nullptr)
    {
       fGraphs[0] = g.get();
