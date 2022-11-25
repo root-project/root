@@ -224,7 +224,7 @@ class TH2Painter extends THistPainter {
 
       this.copyOptionsToOthers();
 
-      this.redrawPad();
+      this.interactiveRedraw('pad', 'drawopt');
    }
 
    /** @summary Perform automatic zoom inside non-zero region of histogram */
