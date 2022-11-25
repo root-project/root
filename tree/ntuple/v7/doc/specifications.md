@@ -580,10 +580,11 @@ They are stored as two fields:
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
-#### std::array<T, N>
+#### std::array<T, N> and array type of the form T[N]
 
 Fixed-sized arrays are stored as single repetitive fields of type `T`.
 The array size `N` is stored in the field meta-data.
+Multi-dimensional arrays of the form `T[N][M]...` are currently not supported.
 
 #### std::variant<T1, T2, ..., Tn>
 
