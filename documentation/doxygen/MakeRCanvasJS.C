@@ -1,6 +1,10 @@
 /// Generates the json file output of the macro MacroName
 
 #include "ROOT/RCanvas.hxx"
+#include "TString.h"
+#include "TSystem.h"
+#include "TROOT.h"
+#include <fstream>
 
 void MakeRCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bool cp, bool py)
 {
