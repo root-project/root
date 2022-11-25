@@ -54,7 +54,7 @@ public:
     RSofieReader(const std::string &path, int verbose = 0)
    {
 
-      enum EModelType {kONNX, kKeras, kPt, kNotDef}; // type of model
+      enum EModelType {kONNX, kKeras, kPt, kROOT, kNotDef}; // type of model
       EModelType type = kNotDef;
 
       auto pos1 = path.rfind("/");
@@ -69,6 +69,12 @@ public:
             pos2 = path.find(".pt");
             if (pos2 != std::string::npos) {
                type = kPt;
+            }
+            else {
+               pos2 = path.find(".root");
+               if (pos2 != std::string::npos) {
+                  type = kROOT;
+               }
             }
          }
       }
@@ -115,8 +121,16 @@ public:
          }
          parserCode += "TMVA::Experimental::SOFIE::RModel model = SOFIE::PyTorch::Parse(\"" + path + "\"); \n";
       }
-      else
-         return;
+      else if (type == kROOT) {
+         // use  parser from ROOT
+         parserCode += "auto fileRead = TFile::Open(\"" + path + "\",\"READ\");\n";
+         parserCode += "TMVA::Experimental::SOFIE::RModel * modelPtr;\n";
+         parserCode += "auto keyList = fileRead->GetListOfKeys(); TString name;\n";
+         parserCode += "for (const auto&& k : *keyList)  { \n";
+         parserCode += "   TString cname =  ((TKey*)k)->GetClassName();  if (cname==\"TMVA::Experimental::SOFIE::RModel\") name = k->GetName(); }\n";
+         parserCode += "fileRead->GetObject(name,modelPtr); fileRead->Close(); delete fileRead;\n";
+         parserCode += "TMVA::Experimental::SOFIE::RModel & model = *modelPtr;\n";
+      }
 
       if (verbose) std::cout << parserCode << std::endl;
       gROOT->ProcessLine(parserCode.c_str());
