@@ -1554,6 +1554,11 @@ public:
 
    SnapshotHelper(const SnapshotHelper &) = delete;
    SnapshotHelper(SnapshotHelper &&) = default;
+   ~SnapshotHelper()
+   {
+      if (!fTreeName.empty() /*not moved from*/ && !fOutputFile /* did not run */ && fOptions.fLazy)
+         Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+   }
 
    void InitTask(TTreeReader *r, unsigned int /* slot */)
    {
@@ -1685,6 +1690,12 @@ public:
    }
    SnapshotHelperMT(const SnapshotHelperMT &) = delete;
    SnapshotHelperMT(SnapshotHelperMT &&) = default;
+   ~SnapshotHelperMT()
+   {
+      if (!fTreeName.empty() /*not moved from*/ && fOptions.fLazy &&
+          std::all_of(fOutputFiles.begin(), fOutputFiles.end(), [](const auto &f) { return !f; }) /* never run */)
+         Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+   }
 
    void InitTask(TTreeReader *r, unsigned int slot)
    {

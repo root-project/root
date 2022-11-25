@@ -41,21 +41,6 @@ class RInterface;
 namespace Internal {
 namespace RDF {
 class GraphCreatorHelper;
-
-// no-op overload
-template <typename T>
-inline void WarnOnLazySnapshotNotTriggered(const ROOT::RDF::RResultPtr<T> &)
-{
-}
-
-template <typename DS>
-void WarnOnLazySnapshotNotTriggered(
-   const ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager, DS>> &r)
-{
-   if (!r.IsReady()) {
-      Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
-   }
-}
 }
 } // namespace Internal
 
@@ -192,12 +177,6 @@ public:
    RResultPtr &operator=(const RResultPtr &) = default;
    RResultPtr &operator=(RResultPtr &&) = default;
    explicit operator bool() const { return bool(fObjPtr); }
-   ~RResultPtr()
-   {
-      if (fObjPtr.use_count() == 1) {
-         ROOT::Internal::RDF::WarnOnLazySnapshotNotTriggered(*this);
-      }
-   }
 
    /// Convert a RResultPtr<T2> to a RResultPtr<T>.
    ///
