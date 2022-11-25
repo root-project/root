@@ -445,7 +445,7 @@ class TreeHeadNode(HeadNode):
         """
 
         def attach_friend_info_if_present(current_range: Ranges.TreeRange,
-                                          ds: ROOT.RDF.Experimental.RDatasetSpec) -> None:
+                                          ds: ROOT.RDF.Experimental.RSpecBuilder) -> None:
             """
             Adds info about friend trees to the input chain. Also aligns the
             starting and ending entry of the friend chain cache to those of the
@@ -484,14 +484,14 @@ class TreeHeadNode(HeadNode):
             if clustered_range is None:
                 return TaskObjects(None, entries_in_trees)
 
-            ds = ROOT.RDF.Experimental.RDatasetSpec(
-                zip(clustered_range.treenames, clustered_range.filenames),
-                (clustered_range.globalstart, clustered_range.globalend)
-            )
+            ds = ROOT.RDF.Experimental.RSpecBuilder()
+            # add a group with no name to represent the whole dataset
+            ds.AddGroup(("", clustered_range.treenames, clustered_range.filenames))
+            ds.WithRange((clustered_range.globalstart, clustered_range.globalend))
 
             attach_friend_info_if_present(clustered_range, ds)
 
-            return TaskObjects(ROOT.RDataFrame(ds), entries_in_trees)
+            return TaskObjects(ROOT.RDataFrame(ds.Build()), entries_in_trees)
 
         return build_rdf_from_range
 
