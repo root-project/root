@@ -2068,12 +2068,14 @@ void TSystem::ListSymbols(const char *, const char *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// List all loaded shared libraries. Regexp is a wildcard expression,
-/// see TRegexp::MakeWildcard.
+/// List all loaded shared libraries. `regexp` is a wildcard expression,
+/// (see TRegexp::MakeWildcard) if `wildcard` is true (default) otherwise (if it is false)
+/// it is consider as a simple character string and only the libraries containing this
+/// character string  will be listed.
 
-void TSystem::ListLibraries(const char *regexp)
+void TSystem::ListLibraries(const char *regexp, Bool_t wildcard)
 {
-   TString libs = GetLibraries(regexp);
+   TString libs = GetLibraries(regexp,"", wildcard);
    TRegexp separator("[^ \\t\\s]+");
    TString s;
    Ssiz_t start = 0, index = 0, end = 0;

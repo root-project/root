@@ -117,7 +117,7 @@ public:
    int               ClosePipe(FILE *pipe) override;
    int               GetPid() override;
    void              StackTrace() override;
-   
+
    [[ noreturn ]] void Exit (int code, Bool_t mode = kTRUE) override;
    [[ noreturn ]] void Abort (int code = 0) override;
 
@@ -186,7 +186,7 @@ public:
    int               Load(const char *module, const char *entry = "", Bool_t system = kFALSE) override;
    void              Unload(const char *module) override;
    void              ListSymbols(const char *module, const char *re = "") override;
-   void              ListLibraries(const char *regexp = "") override;
+   void              ListLibraries(const char *regexp = "", Bool_t wildcard = kTRUE) override;
 
    //---- RPC --------------------------------------------------
    TInetAddress      GetHostByName(const char *server) override;

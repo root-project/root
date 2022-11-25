@@ -403,7 +403,7 @@ public:
    virtual TString         GetFromPipe(const char *command);
    virtual int             GetPid();
    virtual void            StackTrace();
-   
+
    [[ noreturn ]] virtual void Exit(int code, Bool_t mode = kTRUE);
    [[ noreturn ]] virtual void Abort(int code = 0);
 
@@ -488,7 +488,7 @@ public:
    virtual void            Unload(const char *module);
    virtual UInt_t          LoadAllLibraries();
    virtual void            ListSymbols(const char *module, const char *re = "");
-   virtual void            ListLibraries(const char *regexp = "");
+   virtual void            ListLibraries(const char *regexp = "", Bool_t wildcard = kTRUE);
    virtual const char     *GetLibraries(const char *regexp = "",
                                         const char *option = "",
                                         Bool_t isRegexp = kTRUE);
