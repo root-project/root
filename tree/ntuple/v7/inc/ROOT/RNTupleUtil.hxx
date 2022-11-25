@@ -19,6 +19,7 @@
 #include <cstdint>
 
 #include <string>
+#include <variant>
 
 #include <ROOT/RLogger.hxx>
 
@@ -109,16 +110,23 @@ public:
 };
 
 /// Generic information about the physical location of data. Values depend on the concrete storage type.  E.g.,
-/// for a local file fUrl might be unsused and fPosition might be a file offset. Objects on storage can be compressed
+/// for a local file `fPosition` might be a 64bit file offset. Referenced objects on storage can be compressed
 /// and therefore we need to store their actual size.
-/// TODO(jblomer): should move the RNTUpleDescriptor and should be an std::variant
+/// TODO(jblomer): consider moving this to `RNTupleDescriptor`
 struct RNTupleLocator {
-   std::int64_t fPosition = 0;
+   /// Simple on-disk locators consisting of a 64-bit offset use variant type `uint64_t`; extended locators have
+   /// `fPosition.index()` > 0
+   std::variant<std::uint64_t, std::string> fPosition;
    std::uint32_t fBytesOnStorage = 0;
-   std::string fUrl;
 
    bool operator==(const RNTupleLocator &other) const {
-      return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage && fUrl == other.fUrl;
+      return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage;
+   }
+   bool IsSimple() const { return fPosition.index() == 0; }
+   template <typename T>
+   const T &Get() const
+   {
+      return std::get<T>(fPosition);
    }
 };
 

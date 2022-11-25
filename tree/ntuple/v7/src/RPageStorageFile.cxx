@@ -276,7 +276,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
       auto buffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLength());
       auto zipBuffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLocator().fBytesOnStorage);
       fReader.ReadBuffer(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage,
-                         cgDesc.GetPageListLocator().fPosition);
+                         cgDesc.GetPageListLocator().Get<std::uint64_t>());
       fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
                            buffer.get());
 
@@ -307,7 +307,8 @@ void ROOT::Experimental::Detail::RPageSourceFile::LoadSealedPage(
    sealedPage.fSize = bytesOnStorage;
    sealedPage.fNElements = pageInfo.fNElements;
    if (sealedPage.fBuffer)
-      fReader.ReadBuffer(const_cast<void *>(sealedPage.fBuffer), bytesOnStorage, pageInfo.fLocator.fPosition);
+      fReader.ReadBuffer(const_cast<void *>(sealedPage.fBuffer), bytesOnStorage,
+                         pageInfo.fLocator.Get<std::uint64_t>());
 }
 
 ROOT::Experimental::Detail::RPage
@@ -328,7 +329,7 @@ ROOT::Experimental::Detail::RPageSourceFile::PopulatePageFromCluster(ColumnHandl
 
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
       directReadBuffer = std::make_unique<unsigned char[]>(bytesOnStorage);
-      fReader.ReadBuffer(directReadBuffer.get(), bytesOnStorage, pageInfo.fLocator.fPosition);
+      fReader.ReadBuffer(directReadBuffer.get(), bytesOnStorage, pageInfo.fLocator.Get<std::uint64_t>());
       fCounters->fNPageLoaded.Inc();
       fCounters->fNRead.Inc();
       fCounters->fSzReadPayload.Add(bytesOnStorage);
@@ -456,8 +457,7 @@ ROOT::Experimental::Detail::RPageSourceFile::PrepareSingleCluster(
          for (const auto &pageInfo : pageRange.fPageInfos) {
             const auto &pageLocator = pageInfo.fLocator;
             activeSize += pageLocator.fBytesOnStorage;
-            onDiskPages.push_back(
-               {columnId, pageNo, std::uint64_t(pageLocator.fPosition), pageLocator.fBytesOnStorage, 0});
+            onDiskPages.push_back({columnId, pageNo, pageLocator.Get<std::uint64_t>(), pageLocator.fBytesOnStorage, 0});
             ++pageNo;
          }
       }
