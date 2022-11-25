@@ -1,4 +1,4 @@
-import { settings, gStyle, clTMultiGraph, kNoZoom } from '../core.mjs';
+import { settings, gStyle, clTMultiGraph } from '../core.mjs';
 import { Vector2, BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, ShapeUtils } from '../three.mjs';
 import { assignFrame3DMethods, drawBinsLego, drawBinsError3D, drawBinsContour3D, drawBinsSurf3D } from './hist3d.mjs';
 import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
@@ -229,7 +229,7 @@ class TH2Painter extends TH2Painter2D {
             zmult = 1;
          }
 
-         if (pad?.fLogz && (this.zmin <= 0)) 
+         if (pad?.fLogz && (this.zmin <= 0))
             this.zmin = this.zmax * 1e-5;
 
          this.deleteAttr();
