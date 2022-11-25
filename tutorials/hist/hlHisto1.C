@@ -50,5 +50,3 @@ void hlHisto1()
    // call after update to apply changes in the histogram painter
    h2->SetHighlight();
 }
-
-

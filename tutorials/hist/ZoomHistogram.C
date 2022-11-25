@@ -13,8 +13,8 @@
 ///
 /// \author Advait Dhingra
 
-void ZoomHistogram() {
-
+void ZoomHistogram()
+{
    TH1F *orig = new TH1F("Normal Histogram", "Normal Histogram", 100, 0, 100);
 
    for (int i = 0; i < 100; ++i) {
