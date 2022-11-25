@@ -1407,6 +1407,15 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          pad->Modified();
          PerformUpdate();
       }
+   } else if (arg.compare(0, 8, "DRAWOPT:") == 0) {
+      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(8));
+      if (arr && arr->size() == 2) {
+         TObjLink *objlnk = nullptr;
+         FindPrimitive(arr->at(0), 1, nullptr, &objlnk);
+         if (objlnk)
+            objlnk->SetOption(arr->at(1).c_str());
+      }
+
    } else if (arg == "INTERRUPT"s) {
       gROOT->SetInterrupt();
    } else {
