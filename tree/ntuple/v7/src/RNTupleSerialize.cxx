@@ -739,23 +739,25 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(
    const RNTupleLocator &locator, void *buffer)
 {
    std::uint32_t size = 0;
-   if (!locator.fUrl.empty()) {
-      if (locator.fUrl.length() >= (1 << 24))
+   if (std::holds_alternative<std::string>(locator.fPosition)) {
+      const auto &url = locator.Get<std::string>();
+      if (url.length() >= (1 << 24))
          throw RException(R__FAIL("locator too large"));
-      std::int32_t head = locator.fUrl.length();
+      std::int32_t head = url.length();
       head |= 0x02 << 24;
       head = -head;
       size += SerializeInt32(head, buffer);
       if (buffer)
-         memcpy(reinterpret_cast<unsigned char *>(buffer) + size, locator.fUrl.data(), locator.fUrl.length());
-      size += locator.fUrl.length();
+         memcpy(reinterpret_cast<unsigned char *>(buffer) + size, url.data(), url.length());
+      size += url.length();
       return size;
    }
 
    if (static_cast<std::int32_t>(locator.fBytesOnStorage) < 0)
       throw RException(R__FAIL("locator too large"));
    size += SerializeUInt32(locator.fBytesOnStorage, buffer);
-   size += SerializeUInt64(locator.fPosition, buffer ? reinterpret_cast<unsigned char *>(buffer) + size : nullptr);
+   size += SerializeUInt64(locator.Get<std::uint64_t>(),
+                           buffer ? reinterpret_cast<unsigned char *>(buffer) + size : nullptr);
    return size;
 }
 
@@ -779,18 +781,16 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
       if (bufSize < locatorSize)
          return R__FAIL("too short locator");
       locator.fBytesOnStorage = 0;
-      locator.fPosition = 0;
-      locator.fUrl.resize(locatorSize);
-      memcpy(&locator.fUrl[0], bytes, locatorSize);
+      auto &url = locator.fPosition.emplace<std::string>();
+      url.resize(locatorSize);
+      memcpy(url.data(), bytes, locatorSize);
       bytes += locatorSize;
    } else {
       if (bufSize < sizeof(std::uint64_t))
          return R__FAIL("too short locator");
-      std::uint64_t offset;
+      auto &offset = locator.fPosition.emplace<std::uint64_t>();
       bytes += DeserializeUInt64(bytes, offset);
-      locator.fUrl.clear();
       locator.fBytesOnStorage = head;
-      locator.fPosition = offset;
    }
 
    return bytes - reinterpret_cast<const unsigned char *>(buffer);

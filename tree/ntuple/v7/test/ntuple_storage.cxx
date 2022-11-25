@@ -344,7 +344,7 @@ TEST(RPageSinkBuf, Basics)
    for (std::size_t i = 0; i < num_columns; i++) {
       const auto &columnPages = cluster0.GetPageRange(i);
       for (const auto &page: columnPages.fPageInfos) {
-         pagePositions.push_back(std::make_pair(i, page.fLocator.fPosition));
+         pagePositions.push_back(std::make_pair(i, page.fLocator.Get<std::uint64_t>()));
       }
    }
 
