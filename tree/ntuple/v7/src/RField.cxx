@@ -200,7 +200,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
 
    std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> result;
 
-   if (auto [arrayBaseType, arraySize] = ParseArrayType(typeName); !arraySize.empty()) {
+   if (auto [arrayBaseType, arraySize] = ParseArrayType(normalizedType); !arraySize.empty()) {
       // TODO(jalopezg): support multi-dimensional row-major (C order) arrays in RArrayField
       if (arraySize.size() > 1)
          return R__FAIL("multi-dimensional array type not supported " + normalizedType);
