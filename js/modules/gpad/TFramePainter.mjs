@@ -2416,8 +2416,10 @@ class TFramePainter extends ObjectPainter {
 
       // do not allow log scale for labels
       if (!pad[name]) {
-         if (this.swap_xy && axis === 'x') axis = 'y'; else
-         if (this.swap_xy && axis === 'y') axis = 'x';
+         if (this.swap_xy && axis === 'x')
+            axis = 'y';
+         else if (this.swap_xy && axis === 'y')
+            axis = 'x';
          let handle = this[axis + '_handle'];
          if (handle?.kind === 'labels') return;
       }
@@ -2455,9 +2457,21 @@ class TFramePainter extends ObjectPainter {
             menu.add('endsub:');
          }
          menu.addchk(faxis.TestBit(EAxisBits.kMoreLogLabels), 'More log',
-               () => { faxis.InvertBit(EAxisBits.kMoreLogLabels); this.redrawPad(); });
+               flag => {
+                  faxis.InvertBit(EAxisBits.kMoreLogLabels);
+                  if (main?.snapid && (kind.length == 1))
+                     main.interactiveRedraw('pad', `exec:SetMoreLogLabels(${flag})`, kind);
+                  else
+                     this.interactiveRedraw('pad');
+               });
          menu.addchk(faxis.TestBit(EAxisBits.kNoExponent), 'No exponent',
-               () => { faxis.InvertBit(EAxisBits.kNoExponent); this.redrawPad(); });
+               flag => {
+                  faxis.InvertBit(EAxisBits.kNoExponent);
+                  if (main?.snapid && (kind.length == 1))
+                     main.interactiveRedraw('pad', `exec:SetNoExponent(${flag})`, kind);
+                  else
+                     this.interactiveRedraw('pad');
+               });
 
          if ((kind === 'z') && main?.options?.Zscale && isFunc(main?.fillPaletteMenu))
             main.fillPaletteMenu(menu);
