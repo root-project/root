@@ -191,6 +191,7 @@ ROOT_BUILD_OPTION(vdt ON "Enable support for VDT (fast and vectorisable mathemat
 ROOT_BUILD_OPTION(veccore OFF "Enable support for VecCore SIMD abstraction library")
 ROOT_BUILD_OPTION(vecgeom OFF "Enable support for VecGeom vectorized geometry library")
 ROOT_BUILD_OPTION(win_broken_tests OFF "Enable broken tests on Windows")
+ROOT_BUILD_OPTION(llvm13_broken_tests OFF "Enable broken tests with LLVM 13 on Windows")
 ROOT_BUILD_OPTION(winrtdebug OFF "Link against the Windows debug runtime library")
 ROOT_BUILD_OPTION(x11 ON "Enable support for X11/Xft")
 ROOT_BUILD_OPTION(xml ON "Enable support for XML (requires libxml2)")
