@@ -8,8 +8,9 @@
 ///
 /// \author Rene Brun
 
-TCanvas *hbars() {
-     // Try to open first the file cernstaff.root in tutorials/tree directory
+TCanvas *hbars()
+{
+   // Try to open first the file cernstaff.root in tutorials/tree directory
    TString filedir = gROOT->GetTutorialDir();
    filedir += TString("/tree/");
    TString filename = "cernstaff.root";
@@ -23,13 +24,13 @@ TCanvas *hbars() {
    }
    TFile * f = TFile::Open(filename);
    if (!f) {
-      Error("hbars","file cernstaff.root not found");
-      return 0;
+      Error("hbars", "file cernstaff.root not found");
+      return nullptr;
    }
    TTree *T = (TTree*)f->Get("T");
    if (!T) {
-      Error("hbars","Tree T is not present in file %s",f->GetName() );
-      return 0;
+      Error("hbars", "Tree T is not present in file %s", f->GetName());
+      return nullptr;
    }
    T->SetFillColor(45);
    TCanvas *c1 = new TCanvas("c1","histograms with bars",700,800);
@@ -37,13 +38,18 @@ TCanvas *hbars() {
    c1->Divide(1,2);
 
    // Horizontal bar chart
-   c1->cd(1); gPad->SetGrid(); gPad->SetLogx(); gPad->SetFrameFillColor(33);
+   c1->cd(1);
+   gPad->SetGrid();
+   gPad->SetLogx();
+   gPad->SetFrameFillColor(33);
    T->Draw("Nation","","hbar2");
 
    // Vertical bar chart
-   c1->cd(2); gPad->SetGrid(); gPad->SetFrameFillColor(33);
+   c1->cd(2);
+   gPad->SetGrid();
+   gPad->SetFrameFillColor(33);
    T->Draw("Division>>hDiv","","goff");
-   TH1F *hDiv   = (TH1F*)gDirectory->Get("hDiv");
+   TH1F *hDiv = (TH1F*)gDirectory->Get("hDiv");
    hDiv->SetStats(0);
    TH1F *hDivFR = (TH1F*)hDiv->Clone("hDivFR");
    T->Draw("Division>>hDivFR","Nation==\"FR\"","goff");

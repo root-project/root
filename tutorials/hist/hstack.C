@@ -8,7 +8,8 @@
 ///
 /// \author Rene Brun
 
-TCanvas *hstack() {
+TCanvas *hstack()
+{
    THStack *hs = new THStack("hs","Stacked 1D histograms");
    //create three 1-d histograms
    TH1F *h1st = new TH1F("h1st","test hstack",100,-4,4);

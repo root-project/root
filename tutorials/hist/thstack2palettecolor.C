@@ -16,13 +16,14 @@
 ///
 /// \author Olivier Couet
 
-void thstack2palettecolor () {
+void thstack2palettecolor() 
+{
    gStyle->SetPalette(1);
    auto h1 = new TH2F("h1","h1",20,0,6,20,-4,4);
-   auto h2 = new TH2F("h2","h1",20,0,6,20,-4,4);
-   auto h3 = new TH2F("h3","h1",20,0,6,20,-4,4);
-   auto h4 = new TH2F("h4","h1",20,0,6,20,-4,4);
-   auto h5 = new TH2F("h5","h1",20,0,6,20,-4,4);
+   auto h2 = new TH2F("h2","h2",20,0,6,20,-4,4);
+   auto h3 = new TH2F("h3","h3",20,0,6,20,-4,4);
+   auto h4 = new TH2F("h4","h4",20,0,6,20,-4,4);
+   auto h5 = new TH2F("h5","h5",20,0,6,20,-4,4);
    h2->Fill(2.,0.,5);
    h3->Fill(3.,0.,10);
    h4->Fill(4.,0.,15);

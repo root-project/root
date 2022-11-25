@@ -9,7 +9,8 @@
 ///
 /// \author Rene Brun
 
-void transpad() {
+void transpad()
+{
    TCanvas *c1 = new TCanvas("c1","transparent pad",200,10,700,500);
    TPad *pad1 = new TPad("pad1","",0,0,1,1);
    TPad *pad2 = new TPad("pad2","",0,0,1,1);
