@@ -1526,15 +1526,15 @@ void ValidateSnapshotOutput(const RSnapshotOptions &opts, const std::string &tre
 /// Helper object for a single-thread Snapshot action
 template <typename... ColTypes>
 class R__CLING_PTRCHECK(off) SnapshotHelper : public RActionImpl<SnapshotHelper<ColTypes...>> {
-   const std::string fFileName;
-   const std::string fDirName;
-   const std::string fTreeName;
-   const RSnapshotOptions fOptions;
+   std::string fFileName;
+   std::string fDirName;
+   std::string fTreeName;
+   RSnapshotOptions fOptions;
    std::unique_ptr<TFile> fOutputFile;
    std::unique_ptr<TTree> fOutputTree; // must be a ptr because TTrees are not copy/move constructible
    bool fBranchAddressesNeedReset{true};
-   const ColumnNames_t fInputBranchNames; // This contains the resolved aliases
-   const ColumnNames_t fOutputBranchNames;
+   ColumnNames_t fInputBranchNames; // This contains the resolved aliases
+   ColumnNames_t fOutputBranchNames;
    TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitTask`)
    // TODO we might be able to unify fBranches, fBranchAddresses and fOutputBranches
    std::vector<TBranch *> fBranches; // Addresses of branches in output, non-null only for the ones holding C arrays
@@ -1652,17 +1652,17 @@ public:
 /// Helper object for a multi-thread Snapshot action
 template <typename... ColTypes>
 class R__CLING_PTRCHECK(off) SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<ColTypes...>> {
-   const unsigned int fNSlots;
+   unsigned int fNSlots;
    std::unique_ptr<ROOT::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
    std::vector<std::shared_ptr<ROOT::TBufferMergerFile>> fOutputFiles;
    std::vector<std::unique_ptr<TTree>> fOutputTrees;
    std::vector<int> fBranchAddressesNeedReset; // vector<bool> does not allow concurrent writing of different elements
-   const std::string fFileName;           // name of the output file name
-   const std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
-   const std::string fTreeName;           // name of output tree
-   const RSnapshotOptions fOptions;       // struct holding options to pass down to TFile and TTree in this action
-   const ColumnNames_t fInputBranchNames; // This contains the resolved aliases
-   const ColumnNames_t fOutputBranchNames;
+   std::string fFileName;           // name of the output file name
+   std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
+   std::string fTreeName;           // name of output tree
+   RSnapshotOptions fOptions;       // struct holding options to pass down to TFile and TTree in this action
+   ColumnNames_t fInputBranchNames; // This contains the resolved aliases
+   ColumnNames_t fOutputBranchNames;
    std::vector<TTree *> fInputTrees; // Current input trees. Set at initialization time (`InitTask`)
    // Addresses of branches in output per slot, non-null only for the ones holding C arrays
    std::vector<std::vector<TBranch *>> fBranches;
