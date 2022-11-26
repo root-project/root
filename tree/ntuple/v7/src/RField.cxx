@@ -133,7 +133,7 @@ std::tuple<std::string, std::vector<size_t>> ParseArrayType(std::string_view typ
          return {};
 
       size_t size;
-      if (std::from_chars(&(*std::begin(typeName)) + posLBrace + 1, &(*std::begin(typeName)) + posRBrace, size).ec !=
+      if (std::from_chars(typeName.data() + posLBrace + 1, typeName.data() + posRBrace, size).ec !=
           std::errc{})
          return {};
       sizeVec.insert(sizeVec.begin(), size);
