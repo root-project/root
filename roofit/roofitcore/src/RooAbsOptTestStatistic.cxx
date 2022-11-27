@@ -301,7 +301,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
              std::stringstream errMsg;
              errMsg << "The observable \"" << realObs->GetName() << "\" doesn't define the requested range \""
                     << token << "\". Replacing it with the default range." << std::endl;
-             coutW(Fitting) << errMsg.str() << std::endl;
+             coutI(Fitting) << errMsg.str() << std::endl;
           }
         }
       }
