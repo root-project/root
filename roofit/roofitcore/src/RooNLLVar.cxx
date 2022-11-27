@@ -208,8 +208,8 @@ void RooNLLVar::applyWeightSquared(bool flag)
     for (int i=0 ; i<_nCPU ; i++)
       _mpfeArray[i]->applyNLLWeightSquared(flag);
   } else if ( _gofOpMode==SimMaster) {
-    for (int i=0 ; i<_nGof ; i++)
-      static_cast<RooNLLVar*>(_gofArray[i])->applyWeightSquared(flag);
+    for(auto& gof : _gofArray)
+      static_cast<RooNLLVar&>(*gof).applyWeightSquared(flag);
   }
 }
 
