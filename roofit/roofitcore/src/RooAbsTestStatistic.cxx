@@ -582,13 +582,10 @@ bool RooAbsTestStatistic::setData(RooAbsData& indata, bool cloneData)
         _gofArray[i]->setDataSlave(indata, cloneData);
       }
     } else {
-      const RooAbsCategoryLValue& indexCat = static_cast<RooSimultaneous*>(_func)->indexCat();
-      std::unique_ptr<TList> dlist{indata.split(indexCat, true)};
+      std::unique_ptr<TList> dlist{indata.split(*static_cast<RooSimultaneous*>(_func), processEmptyDataSets())};
       if (!dlist) {
-        coutF(DataHandling) << "Tried to split '" << indata.GetName() << "' into categories of '" << indexCat.GetName()
-            << "', but splitting failed. Input data:" << std::endl;
-        indata.Print("V");
-        throw std::runtime_error("Error when setting up test statistic: dataset couldn't be split into categories.");
+        coutE(Fitting) << "RooAbsTestStatistic::initSimMode(" << GetName() << ") ERROR: index category of simultaneous pdf is missing in dataset, aborting" << endl;
+        throw std::runtime_error("RooAbsTestStatistic::initSimMode() ERROR, index category of simultaneous pdf is missing in dataset, aborting");
       }
 
       for (int i = 0; i < _nGof; ++i) {
