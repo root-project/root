@@ -72,9 +72,9 @@ RooArgSet getObs(RooAbsArg const &arg, RooArgSet const &observables)
 \param isExtended Set to true if this is an extended fit
 **/
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables,
-                           bool isExtended, bool doOffset, int simCount, bool binnedL)
+                           bool isExtended, bool doOffset, bool binnedL)
    : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{getObs(pdf, observables)},
-     _isExtended{isExtended}, _binnedL{binnedL}, _simCount{simCount},
+     _isExtended{isExtended}, _binnedL{binnedL},
      _weightVar{"weightVar", "weightVar", this, *new RooRealVar(weightVarName, weightVarName, 1.0), true, false, true},
      _weightSquaredVar{weightVarNameSumW2,
                        weightVarNameSumW2,
@@ -275,7 +275,8 @@ RooNLLVarNew::fillNormSetForServer(RooArgSet const & /*normSet*/, RooAbsArg cons
    return nullptr;
 }
 
-void RooNLLVarNew::enableOffsetting(bool flag) {
+void RooNLLVarNew::enableOffsetting(bool flag)
+{
    _doOffset = flag;
    _offset = {};
 }

@@ -6,6 +6,7 @@
 #include <RooConstVar.h>
 #include <RooCategory.h>
 #include <RooDataSet.h>
+#include <RooFitResult.h>
 #include <RooGenericPdf.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
@@ -190,4 +191,77 @@ TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
 
    EXPECT_FLOAT_EQ(nllSimVal, nllSimRefVal);
    EXPECT_FLOAT_EQ(nllSimBatchVal, nllSimVal) << "BatchMode and old RooFit don't agree!";
+}
+
+/// Checks that the Range() command argument for fitTo can be used to select
+/// specific components from a RooSimultaneous. Covers GitHub issue #8231.
+TEST(RooSimultaneous, RangedCategory)
+{
+   using namespace RooFit;
+
+   // Create the model with the RooWorkspace to not explicitely depend on
+   // non-RooFitCore classes like RooGaussian
+   RooWorkspace ws;
+   ws.factory("Gaussian::pdfA(x[-10, 10], mu[0, -10, 10], sigma[2.0, 0.1, 10.0])");
+   ws.factory("Gaussian::pdfB(x,          mu[0, -10, 10], sigma[2.0, 0.1, 10.0])");
+   ws.factory("SIMUL::simPdf( cat[A=0,B=1], A=pdfA, B=pdfB)");
+
+   // Get the objects from the workspace
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &mu = *ws.var("mu");
+   RooRealVar &sigma = *ws.var("sigma");
+   RooAbsPdf &pdfA = *ws.pdf("pdfA");
+   RooAbsPdf &pdfB = *ws.pdf("pdfB");
+   RooAbsPdf &simPdf = *ws.pdf("simPdf");
+   RooCategory &cat = *ws.cat("cat");
+
+   // Generate combined toy dataset. The toy dataset is designed such that we
+   // can easily check in the fit result which category states were used in
+   // the fit:
+   //   * Only state A: mu has to be compatible with -1.0
+   //   * Only state B: mu has to be compatible with +1.0
+   //   * Both states: mu has to be compatible with 0.0, as merging both
+   //                  states results roughly in a Gaussian with mean 0.0.
+   mu.setVal(-1.0);
+   std::unique_ptr<RooDataSet> dataA{pdfA.generate(x, 5000)};
+   mu.setVal(+1.0);
+   std::unique_ptr<RooDataSet> dataB{pdfB.generate(x, 5000)};
+   mu.setVal(0.0);
+   RooDataSet data{"data", "data", x, Index(cat), Import({{"A", dataA.get()}, {"B", dataB.get()}})};
+
+   // Define the category ranges
+   cat.setRange("rA", "A");
+   cat.setRange("rB", "B");
+   cat.setRange("rAB", "A,B");
+
+   // Function to reset parameters after fitting
+   auto resetParameters = [&]() {
+      mu.setVal(0.0);
+      mu.setError(0.0);
+      sigma.setVal(2.0);
+      sigma.setError(0.0);
+   };
+
+   constexpr auto batchMode = "off";
+
+   // Funciton to do the fit
+   auto doFit = [&](RooAbsPdf &pdf, RooAbsData &dataset, const char *range = nullptr) {
+      resetParameters();
+      std::unique_ptr<RooFitResult> res{pdf.fitTo(dataset, Range(range), Save(), PrintLevel(-1), BatchMode(batchMode))};
+      resetParameters();
+      return res;
+   };
+
+   // Do fits in different configurations
+   auto res = doFit(simPdf, data);
+   auto resA = doFit(simPdf, data, "rA");
+   auto resB = doFit(simPdf, data, "rB");
+   auto resAB = doFit(simPdf, data, "rAB");
+   auto resAref = doFit(pdfA, *dataA);
+   auto resBref = doFit(pdfB, *dataB);
+
+   // Validate the results
+   EXPECT_TRUE(resA->isIdentical(*resAref)) << "Selecting only state A didn't work!";
+   EXPECT_TRUE(resB->isIdentical(*resBref)) << "Selecting only state B didn't work!";
+   EXPECT_TRUE(resAB->isIdentical(*res)) << "Result when selecting all states inconsistent with default fit!";
 }

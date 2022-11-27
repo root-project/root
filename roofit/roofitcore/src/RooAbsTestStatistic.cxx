@@ -47,6 +47,7 @@ combined in the main thread.
 #include "RooAbsCategoryLValue.h"
 #include "RooHelpers.h"
 #include "RooAbsOptTestStatistic.h"
+#include "RooCategory.h"
 
 #include "TTimeStamp.h"
 #include "TClass.h"
@@ -447,6 +448,19 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   // Create array of regular fit contexts, containing subset of data and single fitCat PDF
   for (const auto& catState : simCat) {
     const std::string& catName = catState.first;
+    RooAbsCategory::value_type catIndex = catState.second;
+
+    // If the channel is not in the selected range of the category variable, we
+    // won't create a slave calculator for this channel.
+    if(!rangeName.empty()) {
+      // Only the RooCategory supports ranges, not the other
+      // RooAbsCategoryLValue-derived classes.
+      auto simCatAsRooCategory = dynamic_cast<RooCategory*>(&simCat);
+      if(simCatAsRooCategory && !simCatAsRooCategory->isStateInRange(rangeName.c_str(), catIndex)) {
+        continue;
+      }
+    }
+
     // Retrieve the PDF for this simCat state
     RooAbsPdf* pdf = simpdf->getPdf(catName.c_str());
     RooAbsData* dset = (RooAbsData*) dsetList->FindObject(catName.c_str());
@@ -494,13 +508,6 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 
       delete selTargetParams;
       delete actualParams;
-    } else {
-      if ((!dset || (0. != dset->sumEntries() && !processEmptyDataSets())) && pdf) {
-        if (_verbose) {
-          ccoutD(Fitting) << "RooAbsTestStatistic::initSimMode: state " << catName
-              << " has no data entries, no slave calculator created" << endl;
-        }
-      }
     }
   }
   for(auto& gof : _gofArray) {
