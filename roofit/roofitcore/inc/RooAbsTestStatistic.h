@@ -32,7 +32,6 @@ class RooSimultaneous ;
 class RooRealMPFE ;
 
 class RooAbsTestStatistic ;
-typedef RooAbsTestStatistic* pRooAbsTestStatistic ;
 typedef RooAbsData* pRooAbsData ;
 typedef RooRealMPFE* pRooRealMPFE ;
 
@@ -146,9 +145,7 @@ protected:
   Int_t       _extSet = 0;        ///<! Number of designated set to calculated extended term
 
   // Simultaneous mode data
-  Int_t          _nGof = 0    ;   ///< Number of sub-contexts
-  pRooAbsTestStatistic* _gofArray = nullptr;   ///<! Array of sub-contexts representing part of the combined test statistic
-  std::vector<RooFit::MPSplit> _gofSplitMode ; ///<! GOF MP Split mode specified by component (when Auto is active)
+  std::vector<std::unique_ptr<RooAbsTestStatistic>> _gofArray; ///<! Array of sub-contexts representing part of the combined test statistic
 
   // Parallel mode data
   Int_t          _nCPU = 1;            ///<  Number of processors to use in parallel calculation mode
@@ -160,7 +157,7 @@ protected:
   mutable ROOT::Math::KahanSum<double> _offset = 0.0; ///<! Offset as KahanSum to avoid loss of precision
   mutable double _evalCarry = 0.0;                  ///<! carry of Kahan sum in evaluatePartition
 
-  ClassDefOverride(RooAbsTestStatistic,3) // Abstract base class for real-valued test statistics
+  ClassDefOverride(RooAbsTestStatistic,4) // Abstract base class for real-valued test statistics
 
 };
 
