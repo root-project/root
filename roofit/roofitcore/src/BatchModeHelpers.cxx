@@ -17,6 +17,7 @@
 #include <RooAddition.h>
 #include <RooBatchCompute.h>
 #include <RooBinSamplingPdf.h>
+#include <RooCategory.h>
 #include <RooConstraintSum.h>
 #include <RooDataSet.h>
 #include <RooFitDriver.h>
@@ -34,11 +35,26 @@ namespace {
 std::unique_ptr<RooAbsArg> createSimultaneousNLL(RooSimultaneous const &simPdf, RooArgSet &observables, bool isExtended,
                                                  std::string const &rangeName, bool doOffset, bool splitRange)
 {
+   RooAbsCategoryLValue const &simCat = simPdf.indexCat();
+
    // Prepare the NLL terms for each component
    RooArgList nllTerms;
    RooArgSet newObservables;
-   for (auto const &catItem : simPdf.indexCat()) {
-      std::string const &catName = catItem.first;
+   for (auto const &catState : simCat) {
+      std::string const &catName = catState.first;
+      RooAbsCategory::value_type catIndex = catState.second;
+
+      // If the channel is not in the selected range of the category variable, we
+      // won't create an NLL this channel.
+      if (!rangeName.empty()) {
+         // Only the RooCategory supports ranges, not the other
+         // RooAbsCategoryLValue-derived classes.
+         auto simCatAsRooCategory = dynamic_cast<RooCategory const *>(&simCat);
+         if (simCatAsRooCategory && !simCatAsRooCategory->isStateInRange(rangeName.c_str(), catIndex)) {
+            continue;
+         }
+      }
+
       if (RooAbsPdf *pdf = simPdf.getPdf(catName.c_str())) {
          auto binnedInfo = RooHelpers::getBinnedL(*pdf);
          if (binnedInfo.binnedPdf) {
@@ -49,11 +65,15 @@ std::unique_ptr<RooAbsArg> createSimultaneousNLL(RooSimultaneous const &simPdf, 
             pdf->setNormRange(RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, catName).c_str());
          }
          auto nll = std::make_unique<RooNLLVarNew>(name.c_str(), name.c_str(), *pdf, observables, isExtended, doOffset,
-                                                   simPdf.indexCat().size(), binnedInfo.isBinnedL);
+                                                   binnedInfo.isBinnedL);
          // Rename the observables and weights
          newObservables.add(nll->prefixArgNames(std::string("_") + catName + "_"));
          nllTerms.addOwned(std::move(nll));
       }
+   }
+
+   for (auto *nll : static_range_cast<RooNLLVarNew *>(nllTerms)) {
+      nll->setSimCount(nllTerms.size());
    }
 
    observables.clear();
