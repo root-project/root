@@ -40,6 +40,7 @@
                   <Menu itemSelected="onEditMenuAction">
                      <items>
                         <MenuItem text="Style" enabled="false"/>
+                        <MenuItem text="Divide" enabled="{/isRoot6}"/>
                         <MenuItem text="Clear pad" startsSection="true"/>
                         <MenuItem text="Clear canvas"/>
                      </items>

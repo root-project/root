@@ -1406,7 +1406,39 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          pad->Clear();
          pad->Modified();
          PerformUpdate();
+      } else {
+         printf("Not found pad with id %s\n", snapid.c_str());
       }
+   } else if (arg.compare(0, 7, "DIVIDE:") == 0) {
+      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
+      if (arr && arr->size() == 2) {
+         TPad *pad = dynamic_cast<TPad *>(FindPrimitive(arr->at(0)));
+         int nn = 0, n1 = 0, n2 = 0;
+
+         std::string divide = arr->at(1);
+         auto p = divide.find('x');
+         if (p == std::string::npos)
+            p = divide.find('X');
+
+         if (p != std::string::npos) {
+            n1 = std::stoi(divide.substr(0,p));
+            n2 = std::stoi(divide.substr(p+1));
+         } else {
+            nn = std::stoi(divide);
+         }
+
+         if (pad && ((nn > 1) || (n1*n2 > 1))) {
+            pad->Clear();
+            pad->Modified();
+            if (nn > 1)
+               pad->DivideSquare(nn);
+            else
+               pad->Divide(n1, n2);
+            pad->cd(1);
+            PerformUpdate();
+         }
+      }
+
    } else if (arg.compare(0, 8, "DRAWOPT:") == 0) {
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(8));
       if (arr && arr->size() == 2) {
