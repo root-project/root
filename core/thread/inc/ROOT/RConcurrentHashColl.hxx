@@ -47,9 +47,6 @@ public:
    bool Find(const HashValue &hash) const;
 
    /// If the hash is there, return false. Otherwise, insert the hash and return true;
-   bool Insert(char *buf, int len) const;
-
-   /// If the hash is there, return false. Otherwise, insert the hash and return true;
    bool Insert(const HashValue &hash) const;
 
    /// Return the hash object corresponding to the buffer.
