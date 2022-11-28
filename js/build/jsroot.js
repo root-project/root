@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '25/11/2022';
+let version_date = '28/11/2022';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -55554,7 +55554,7 @@ class TPadPainter extends ObjectPainter {
      * @return {Object} pad painter for active pad */
    findActivePad() {
       let active_pp;
-      painter.forEachPainterInPad(pp => {
+      this.forEachPainterInPad(pp => {
          if (pp.is_active_pad && !active_pp)
             active_pp = pp;
       }, 'pads');
