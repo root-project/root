@@ -120,7 +120,7 @@ protected:
 
    void CheckPadModified(TPad *pad);
 
-   void CheckCanvasModified();
+   void CheckCanvasModified(bool force_modified = false);
 
    Bool_t AddToSendQueue(unsigned connid, const std::string &msg);
 
