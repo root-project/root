@@ -1453,11 +1453,13 @@ void TWebCanvas::CheckPadModified(TPad *pad)
 /// Check if any pad on the canvas was modified
 /// If yes, increment version of correspondent pad
 
-void TWebCanvas::CheckCanvasModified()
+void TWebCanvas::CheckCanvasModified(bool force_modified)
 {
    // clear temporary flags
-   for (auto &entry : fPadsStatus)
-      entry.second._detected = entry.second._modified = false;
+   for (auto &entry : fPadsStatus) {
+      entry.second._detected = false;
+      entry.second._modified = force_modified;
+   }
 
    // scan sub-pads
    CheckPadModified(Canvas());
@@ -1517,7 +1519,7 @@ Bool_t TWebCanvas::PerformUpdate()
 
 void TWebCanvas::ForceUpdate()
 {
-   fCanvVersion++;
+   CheckCanvasModified(true);
 
    CheckDataToSend();
 }
