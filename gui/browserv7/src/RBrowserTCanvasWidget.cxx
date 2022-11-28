@@ -172,20 +172,25 @@ public:
 
       std::string drawopt = opt;
 
+      TVirtualPad *pad = fCanvas.get();
+      if (gPad && (gPad->GetCanvas() == fCanvas.get()))
+         pad = gPad;
+
       if (drawopt.compare(0,8,"<append>") == 0) {
          drawopt.erase(0,8);
       } else {
-         fCanvas->GetListOfPrimitives()->Clear();
+         pad->GetListOfPrimitives()->Clear();
          fObjects.clear();
-         fCanvas->Range(0,0,1,1);  // set default range
+         pad->Range(0,0,1,1);  // set default range
       }
 
       if (drawopt == "<dflt>")
          drawopt = Browsable::RProvider::GetClassDrawOption(obj->GetClass());
 
-      if (Browsable::RProvider::Draw6(fCanvas.get(), obj, drawopt)) {
+      if (Browsable::RProvider::Draw6(pad, obj, drawopt)) {
          fObjects.emplace_back(std::move(obj));
-         fCanvas->ForceUpdate();
+         pad->Modified();
+         fCanvas->Update();
          return true;
       }
 

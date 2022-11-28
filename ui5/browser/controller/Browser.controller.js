@@ -177,7 +177,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // copy extra attributes from element to node in the browser
          // later can be done automatically
          this.model.addNodeAttributes = function(node, elem) {
-            node.icon = elem.icon;
+            node.icon = elem.icon || 'sap-icon://document';
             node.fsize = elem.fsize;
             node.mtime = elem.mtime;
             node.ftype = elem.ftype;
