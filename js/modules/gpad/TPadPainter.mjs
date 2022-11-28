@@ -1764,7 +1764,7 @@ class TPadPainter extends ObjectPainter {
      * @return {Object} pad painter for active pad */
    findActivePad() {
       let active_pp;
-      painter.forEachPainterInPad(pp => {
+      this.forEachPainterInPad(pp => {
          if (pp.is_active_pad && !active_pp)
             active_pp = pp;
       }, 'pads');
