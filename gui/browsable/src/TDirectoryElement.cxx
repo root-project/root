@@ -177,11 +177,15 @@ public:
          return elem ? elem->CreateItem() : nullptr;
       }
 
-      return GetElement()->CreateItem();
+      auto item = GetDirElement(false)->CreateItem();
+      item->SetName(fCurrentName);
+      return item;
    }
 
+   std::shared_ptr<RElement> GetDirElement(bool read_dir);
+
    /** Returns full information for current element */
-   std::shared_ptr<RElement> GetElement() override;
+   std::shared_ptr<RElement> GetElement() override { return GetDirElement(true); }
 };
 
 // ===============================================================================================================
@@ -516,7 +520,7 @@ public:
 /////////////////////////////////////////////////////////////////////////////////
 /// Return element for current TKey object in TDirectory
 
-std::shared_ptr<RElement> TDirectoryLevelIter::GetElement()
+std::shared_ptr<RElement> TDirectoryLevelIter::GetDirElement(bool read_dir)
 {
    if (!fKeysIter && fObj)
       return std::make_shared<TObjectElement>(fObj);
@@ -525,7 +529,7 @@ std::shared_ptr<RElement> TDirectoryLevelIter::GetElement()
       return RProvider::BrowseNTuple(fKey->GetName(), fDir->GetFile()->GetName());
 
    std::string key_class = fKey->GetClassName();
-   if (key_class.find("TDirectory") == 0) {
+   if (read_dir && (key_class.find("TDirectory") == 0)) {
       auto subdir = fDir->GetDirectory(fKey->GetName());
       if (subdir) return std::make_shared<TDirectoryElement>("", subdir);
    }

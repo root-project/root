@@ -131,6 +131,13 @@ public:
 
    const TClass *GetClass() const { return TClass::GetClass<ROOT::Experimental::RNTuple>(); }
 
+   std::unique_ptr<RItem> CreateItem() const override
+   {
+      auto item = std::make_unique<RItem>(GetName(), -1, "sap-icon://table-chart");
+      item->SetTitle(GetTitle());
+      return item;
+   }
+
    //EActionKind GetDefaultAction() const override;
 
    //bool IsCapable(EActionKind) const override;
