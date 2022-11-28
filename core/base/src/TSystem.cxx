@@ -382,7 +382,7 @@ loop_entry:
    }
    // handle every exception
    catch (...) {
-      Warning("Run", "handle uncaugth exception, terminating");
+      Warning("Run", "handle uncaught exception, terminating");
    }
 
 loop_end:
@@ -2072,12 +2072,12 @@ void TSystem::ListSymbols(const char *, const char *)
 ///
 /// Examples:
 ///
-/// The following line lists all the librabries currently loaded:
+/// The following line lists all the libraries currently loaded:
 /// ~~~ {.cpp}
 ///  gSystem->ListLibraries()
 /// ~~~
 ///
-/// The following line lists all the librabries currently loaded have "RIO" in their names:
+/// The following line lists all the libraries currently loaded have "RIO" in their names:
 /// ~~~ {.cpp}
 ///  gSystem->ListLibraries(".*RIO.*")
 /// ~~~
