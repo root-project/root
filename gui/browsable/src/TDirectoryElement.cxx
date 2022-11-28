@@ -42,8 +42,8 @@ Iterator over keys in TDirectory
 class TDirectoryLevelIter : public RLevelIter {
    TDirectory *fDir{nullptr};         ///<! current directory handle
    std::unique_ptr<TIterator> fIter;  ///<! created iterator
-   Bool_t fKeysIter{kTRUE};           ///<! iterating over keys list (default)
-   Bool_t fOnlyLastCycle{kFALSE};     ///<! show only last cycle in list of keys
+   bool fKeysIter{true};              ///<! iterating over keys list (default)
+   bool fOnlyLastCycle{false};        ///<! show only last cycle in list of keys
    TKey *fKey{nullptr};               ///<! currently selected key
    TObject *fObj{nullptr};            ///<! currently selected object
    std::string fCurrentName;          ///<! current key name
@@ -86,6 +86,17 @@ class TDirectoryLevelIter : public RLevelIter {
          }
       }
       if (!fKeysIter) {
+         // exclude object with duplicated name as keys
+         while (fObj) {
+            if (!fDir->GetListOfKeys()->FindObject(fObj->GetName()))
+               break;
+            fObj = fIter->Next();
+         }
+         if (!fObj) {
+            fIter.reset();
+            return false;
+         }
+
          fCurrentName = fObj->GetName();
          return true;
       }
@@ -132,9 +143,9 @@ public:
          std::string svalue = value;
          if (svalue != undef) {
             if (svalue == "yes")
-               fOnlyLastCycle = kTRUE;
+               fOnlyLastCycle = true;
             else if (svalue == "no")
-               fOnlyLastCycle = kFALSE;
+               fOnlyLastCycle = false;
             else
                R__LOG_ERROR(ROOT::Experimental::BrowsableLog()) << "WebGui.LastCycle must be yes or no";
          }
