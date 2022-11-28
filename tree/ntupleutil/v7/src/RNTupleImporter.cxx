@@ -130,7 +130,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
 ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
 {
    if (fDestFile->FindKey(fNTupleName.c_str()) != nullptr)
-      return R__FAIL("Key " + fNTupleName + " already exists in file " + fDestFileName);
+      return R__FAIL("Key '" + fNTupleName + "' already exists in file " + fDestFileName);
 
    PrepareSchema();
 
