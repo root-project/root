@@ -41,6 +41,22 @@
 
 #include "../test_lib.h" // generate_1D_gaussian_pdf_nll
 
+namespace {
+
+struct ValAndError {
+   ValAndError(double inVal, double inError) : val{inVal}, error{inError} {}
+   const double val;
+   const double error;
+};
+
+ValAndError getValAndError(RooArgSet const &parsFinal, const char *name)
+{
+   auto &var = static_cast<RooRealVar const &>(parsFinal[name]);
+   return {var.getVal(), var.getError()};
+};
+
+} // namespace
+
 using RooFit::TestStatistics::LikelihoodWrapper;
 
 class Environment : public testing::Environment {
@@ -63,9 +79,9 @@ int main(int argc, char **argv)
    return RUN_ALL_TESTS();
 }
 
-class LikelihoodGradientJob : public ::testing::TestWithParam<std::tuple<std::size_t, std::size_t>> {};
+class LikelihoodGradientJobTest : public ::testing::TestWithParam<std::tuple<std::size_t, std::size_t>> {};
 
-TEST_P(LikelihoodGradientJob, Gaussian1D)
+TEST_P(LikelihoodGradientJobTest, Gaussian1D)
 {
    // do a minimization, but now using GradMinimizer and its MP version
 
@@ -89,14 +105,14 @@ TEST_P(LikelihoodGradientJob, Gaussian1D)
 
    // --------
 
-   auto m0 = std::make_unique<RooMinimizer>(*nll);
+   RooMinimizer m0{*nll};
 
-   m0->setStrategy(0);
-   m0->setPrintLevel(-1);
+   m0.setStrategy(0);
+   m0.setPrintLevel(-1);
 
-   m0->migrad();
+   m0.minimize("Minuit2", "migrad");
 
-   RooFitResult *m0result = m0->lastMinuitFit();
+   std::unique_ptr<RooFitResult> m0result{m0.save()};
    double minNll0 = m0result->minNll();
    double edm0 = m0result->edm();
    double mu0 = mu->getVal();
@@ -116,9 +132,9 @@ TEST_P(LikelihoodGradientJob, Gaussian1D)
    m1.setStrategy(0);
    m1.setPrintLevel(-1);
 
-   m1.migrad();
+   m1.minimize("Minuit2", "migrad");
 
-   RooFitResult *m1result = m1.lastMinuitFit();
+   std::unique_ptr<RooFitResult> m1result{m1.save()};
    double minNll1 = m1result->minNll();
    double edm1 = m1result->edm();
    double mu1 = mu->getVal();
@@ -137,6 +153,7 @@ TEST(LikelihoodGradientJob, RepeatMigrad)
    // parameters
    std::size_t NWorkers = 2;
    std::size_t seed = 5;
+   constexpr bool verbose = false;
 
    RooRandom::randomGenerator()->SetSeed(seed);
 
@@ -163,16 +180,18 @@ TEST(LikelihoodGradientJob, RepeatMigrad)
    m1.setStrategy(0);
    m1.setPrintLevel(-1);
 
-   std::cout << "... running migrad first time ..." << std::endl;
-   m1.migrad();
+   if (verbose)
+      std::cout << "... running migrad first time ..." << std::endl;
+   m1.minimize("Minuit2", "migrad");
 
    values->assign(savedValues);
 
-   std::cout << "... running migrad second time ..." << std::endl;
-   m1.migrad();
+   if (verbose)
+      std::cout << "... running migrad second time ..." << std::endl;
+   m1.minimize("Minuit2", "migrad");
 }
 
-TEST_P(LikelihoodGradientJob, GaussianND)
+TEST_P(LikelihoodGradientJobTest, GaussianND)
 {
    // do a minimization, but now using GradMinimizer and its MP version
 
@@ -202,9 +221,9 @@ TEST_P(LikelihoodGradientJob, GaussianND)
    m0.setStrategy(0);
    m0.setPrintLevel(-1);
 
-   m0.migrad();
+   m0.minimize("Minuit2", "migrad");
 
-   RooFitResult *m0result = m0.lastMinuitFit();
+   std::unique_ptr<RooFitResult> m0result{m0.save()};
    double minNll0 = m0result->minNll();
    double edm0 = m0result->edm();
    double mean0[N];
@@ -238,9 +257,9 @@ TEST_P(LikelihoodGradientJob, GaussianND)
    m1.setStrategy(0);
    m1.setPrintLevel(-1);
 
-   m1.migrad();
+   m1.minimize("Minuit2", "migrad");
 
-   RooFitResult *m1result = m1.lastMinuitFit();
+   std::unique_ptr<RooFitResult> m1result{m1.save()};
    double minNll1 = m1result->minNll();
    double edm1 = m1result->edm();
    double mean1[N];
@@ -249,12 +268,12 @@ TEST_P(LikelihoodGradientJob, GaussianND)
       {
          std::ostringstream os;
          os << "m" << ix;
-         mean1[ix] = dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->getVal();
+         mean1[ix] = static_cast<RooRealVar *>(w.arg(os.str().c_str()))->getVal();
       }
       {
          std::ostringstream os;
          os << "s" << ix;
-         std1[ix] = dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->getVal();
+         std1[ix] = static_cast<RooRealVar *>(w.arg(os.str().c_str()))->getVal();
       }
    }
 
@@ -267,86 +286,81 @@ TEST_P(LikelihoodGradientJob, GaussianND)
    }
 }
 
-INSTANTIATE_TEST_SUITE_P(NworkersSeed, LikelihoodGradientJob,
+INSTANTIATE_TEST_SUITE_P(NworkersSeed, LikelihoodGradientJobTest,
                          ::testing::Combine(::testing::Values(1, 2, 3), // number of workers
                                             ::testing::Values(2, 3)));  // random seed
 
-class BasicTest : public ::testing::Test {
-protected:
-   void SetUp() override
-   {
-      RooRandom::randomGenerator()->SetSeed(seed);
-      clean_flags = std::make_shared<RooFit::TestStatistics::WrapperCalculationCleanFlags>();
-   }
-
-   std::size_t seed = 23;
-   RooWorkspace w;
-   std::unique_ptr<RooAbsReal> nll;
-   RooAbsPdf *pdf;
-   RooAbsData *data;
-   std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood;
-   std::shared_ptr<RooFit::TestStatistics::WrapperCalculationCleanFlags> clean_flags;
-};
-
-class LikelihoodSimBinnedConstrainedTest : public BasicTest {
-protected:
-   void SetUp() override
-   {
-      BasicTest::SetUp();
-      // Unbinned pdfs that define template histograms
-
-      w.factory("Gaussian::gA(x[-10,10],-2,3)");
-      w.factory("Gaussian::gB(x[-10,10],2,1)");
-      w.factory("Uniform::u(x)");
-
-      // Generate template histograms
-
-      RooDataHist *h_sigA = w.pdf("gA")->generateBinned(*w.var("x"), 1000);
-      RooDataHist *h_sigB = w.pdf("gB")->generateBinned(*w.var("x"), 1000);
-      RooDataHist *h_bkg = w.pdf("u")->generateBinned(*w.var("x"), 1000);
-
-      w.import(*h_sigA, RooFit::Rename("h_sigA"));
-      w.import(*h_sigB, RooFit::Rename("h_sigB"));
-      w.import(*h_bkg, RooFit::Rename("h_bkg"));
-
-      // Construct binned pdf as sum of amplitudes
-      w.factory("HistFunc::hf_sigA(x,h_sigA)");
-      w.factory("HistFunc::hf_sigB(x,h_sigB)");
-      w.factory("HistFunc::hf_bkg(x,h_bkg)");
-
-      w.factory(
-         "ASUM::model_phys_A(mu_sig[1,-1,10]*hf_sigA,expr::mu_bkg_A('1+0.02*alpha_bkg_A',alpha_bkg_A[-5,5])*hf_bkg)");
-      w.factory("ASUM::model_phys_B(mu_sig*hf_sigB,expr::mu_bkg_B('1+0.05*alpha_bkg_B',alpha_bkg_B[-5,5])*hf_bkg)");
-
-      // Construct L_subs: Gaussian subsidiary measurement that constrains alpha_bkg
-      w.factory("Gaussian:model_subs_A(alpha_bkg_obs_A[0],alpha_bkg_A,1)");
-      w.factory("Gaussian:model_subs_B(alpha_bkg_obs_B[0],alpha_bkg_B,1)");
-
-      // Construct full pdfs for each component (A,B)
-      w.factory("PROD::model_A(model_phys_A,model_subs_A)");
-      w.factory("PROD::model_B(model_phys_B,model_subs_B)");
-
-      // Construct simulatenous pdf
-      w.factory("SIMUL::model(index[A,B],A=model_A,B=model_B)");
-
-      pdf = w.pdf("model");
-      // Construct dataset from physics pdf
-      data = pdf->generate(RooArgSet(*w.var("x"), *w.cat("index")), RooFit::AllBinned());
-   }
-};
-
-TEST_F(LikelihoodSimBinnedConstrainedTest, BasicParameters)
+std::unique_ptr<RooWorkspace> makeSimBinnedConstrainedWorkspace()
 {
+   std::size_t seed = 23;
+   RooRandom::randomGenerator()->SetSeed(seed);
+
+   auto wPtr = std::make_unique<RooWorkspace>();
+   auto &w = *wPtr;
+
+   // Unbinned pdfs that define template histograms
+
+   w.factory("Gaussian::gA(x[-10,10],-2,3)");
+   w.factory("Gaussian::gB(x[-10,10],2,1)");
+   w.factory("Uniform::u(x)");
+
+   // Generate template histograms
+
+   std::unique_ptr<RooDataHist> h_sigA{w.pdf("gA")->generateBinned(*w.var("x"), 1000)};
+   std::unique_ptr<RooDataHist> h_sigB{w.pdf("gB")->generateBinned(*w.var("x"), 1000)};
+   std::unique_ptr<RooDataHist> h_bkg{w.pdf("u")->generateBinned(*w.var("x"), 1000)};
+
+   w.import(*h_sigA, RooFit::Rename("h_sigA"));
+   w.import(*h_sigB, RooFit::Rename("h_sigB"));
+   w.import(*h_bkg, RooFit::Rename("h_bkg"));
+
+   // Construct binned pdf as sum of amplitudes
+   w.factory("HistFunc::hf_sigA(x,h_sigA)");
+   w.factory("HistFunc::hf_sigB(x,h_sigB)");
+   w.factory("HistFunc::hf_bkg(x,h_bkg)");
+
+   w.factory(
+      "ASUM::model_phys_A(mu_sig[1,-1,10]*hf_sigA,expr::mu_bkg_A('1+0.02*alpha_bkg_A',alpha_bkg_A[-5,5])*hf_bkg)");
+   w.factory("ASUM::model_phys_B(mu_sig*hf_sigB,expr::mu_bkg_B('1+0.05*alpha_bkg_B',alpha_bkg_B[-5,5])*hf_bkg)");
+
+   // Construct L_subs: Gaussian subsidiary measurement that constrains alpha_bkg
+   w.factory("Gaussian:model_subs_A(alpha_bkg_obs_A[0],alpha_bkg_A,1)");
+   w.factory("Gaussian:model_subs_B(alpha_bkg_obs_B[0],alpha_bkg_B,1)");
+
+   // Construct full pdfs for each component (A,B)
+   w.factory("PROD::model_A(model_phys_A,model_subs_A)");
+   w.factory("PROD::model_B(model_phys_B,model_subs_B)");
+
+   // Construct simulatenous pdf
+   w.factory("SIMUL::model(index[A,B],A=model_A,B=model_B)");
+
+   // Construct dataset from physics pdf
+   std::unique_ptr<RooAbsData> data{w.pdf("model")->generate({*w.var("x"), *w.cat("index")}, RooFit::AllBinned())};
+
+   w.import(*data, RooFit::Rename("data"));
+
+   return wPtr;
+}
+
+TEST(SimBinnedConstrainedTestBasic, BasicParameters)
+{
+   std::unique_ptr<RooWorkspace> wPtr = makeSimBinnedConstrainedWorkspace();
+   auto &w = *wPtr;
+
+   RooAbsPdf *pdf = w.pdf("model");
+   RooAbsData *data = w.data("data");
+
    // original test:
-   nll.reset(pdf->createNLL(
-      *data, RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")))));
+   std::unique_ptr<RooAbsReal> nll{
+      pdf->createNLL(*data, RooFit::GlobalObservables(*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")))};
 
    // --------
 
-   auto nll0 = nll->getVal();
+   const double nll0 = nll->getVal();
 
-   likelihood = RooFit::TestStatistics::buildLikelihood(
+   std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood = RooFit::TestStatistics::buildLikelihood(
       pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
+   auto clean_flags = std::make_shared<RooFit::TestStatistics::WrapperCalculationCleanFlags>();
    auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
 
    nll_ts->evaluate();
@@ -355,19 +369,29 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, BasicParameters)
    EXPECT_DOUBLE_EQ(nll0, nll1);
 }
 
-TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
+class SimBinnedConstrainedTest : public ::testing::TestWithParam<std::tuple<bool>> {};
+
+TEST_P(SimBinnedConstrainedTest, ConstrainedAndOffset)
 {
+   using namespace RooFit;
+
+   // parameters
+   const bool parallelLikelihood = std::get<0>(GetParam());
+
+   std::unique_ptr<RooWorkspace> wPtr = makeSimBinnedConstrainedWorkspace();
+   auto &w = *wPtr;
+
+   RooAbsPdf *pdf = w.pdf("model");
+   RooAbsData *data = w.data("data");
+
    // do a minimization, but now using GradMinimizer and its MP version
-   nll.reset(pdf->createNLL(*data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
-                            RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(true)));
+   std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data, Constrain(*w.var("alpha_bkg_obs_A")),
+                                                  GlobalObservables(*w.var("alpha_bkg_obs_B")), Offset(true))};
 
    // parameters
    std::size_t NWorkers = 2;
 
    std::unique_ptr<RooArgSet> values(pdf->getParameters(data));
-
-   values->add(*pdf);
-   values->add(*nll);
 
    RooArgSet savedValues;
    values->snapshot(savedValues);
@@ -379,27 +403,27 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
    m0.setStrategy(0);
    m0.setPrintLevel(-1);
 
-   m0.migrad();
+   m0.minimize("Minuit2", "migrad");
 
-   RooFitResult *m0result = m0.lastMinuitFit();
-   double minNll_nominal = m0result->minNll();
-   double alpha_bkg_A_nominal = w.var("alpha_bkg_A")->getVal();
-   double alpha_bkg_A_error_nominal = w.var("alpha_bkg_A")->getError();
-   double alpha_bkg_B_nominal = w.var("alpha_bkg_B")->getVal();
-   double alpha_bkg_B_error_nominal = w.var("alpha_bkg_B")->getError();
-   double mu_sig_nominal = w.var("mu_sig")->getVal();
-   double mu_sig_error_nominal = w.var("mu_sig")->getError();
+   std::unique_ptr<RooFitResult> m0result{m0.save()};
+   RooArgSet parsFinal_nominal{m0result->floatParsFinal()};
+
+   const double minNll_nominal = m0result->minNll();
+   ValAndError alpha_bkg_A_nominal = getValAndError(parsFinal_nominal, "alpha_bkg_A");
+   ValAndError alpha_bkg_B_nominal = getValAndError(parsFinal_nominal, "alpha_bkg_B");
+   ValAndError mu_sig_nominal = getValAndError(parsFinal_nominal, "mu_sig");
 
    values->assign(savedValues);
 
    RooFit::MultiProcess::Config::setDefaultNWorkers(NWorkers);
 
-   std::unique_ptr<RooAbsReal> likelihoodAbsReal{pdf->createNLL(
-      *data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
-      RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(true), RooFit::NewStyle(true))};
+   std::unique_ptr<RooAbsReal> likelihoodAbsReal{pdf->createNLL(*data, Constrain(*w.var("alpha_bkg_obs_A")),
+                                                                GlobalObservables(*w.var("alpha_bkg_obs_B")),
+                                                                Offset(true), NewStyle(true))};
 
    RooMinimizer::Config cfg1;
    cfg1.parallelGradient = true;
+   cfg1.parallelLikelihood = parallelLikelihood;
    RooMinimizer m1(*likelihoodAbsReal, cfg1);
 
    m1.setStrategy(0);
@@ -408,16 +432,15 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
    m1.setOffsetting(true);
    m1.optimizeConst(2);
 
-   m1.migrad();
+   m1.minimize("Minuit2", "migrad");
 
-   RooFitResult *m1result = m1.lastMinuitFit();
-   double minNll_GradientJob = m1result->minNll();
-   double alpha_bkg_A_GradientJob = w.var("alpha_bkg_A")->getVal();
-   double alpha_bkg_A_error_GradientJob = w.var("alpha_bkg_A")->getError();
-   double alpha_bkg_B_GradientJob = w.var("alpha_bkg_B")->getVal();
-   double alpha_bkg_B_error_GradientJob = w.var("alpha_bkg_B")->getError();
-   double mu_sig_GradientJob = w.var("mu_sig")->getVal();
-   double mu_sig_error_GradientJob = w.var("mu_sig")->getError();
+   std::unique_ptr<RooFitResult> m1result{m1.save()};
+   RooArgSet parsFinal_GradientJob{m1result->floatParsFinal()};
+
+   const double minNll_GradientJob = m1result->minNll();
+   ValAndError alpha_bkg_A_GradientJob = getValAndError(parsFinal_GradientJob, "alpha_bkg_A");
+   ValAndError alpha_bkg_B_GradientJob = getValAndError(parsFinal_GradientJob, "alpha_bkg_B");
+   ValAndError mu_sig_GradientJob = getValAndError(parsFinal_GradientJob, "mu_sig");
 
    // Because offsetting is handled differently in the TestStatistics classes
    // compared to the way it was done in the object returned from
@@ -434,16 +457,25 @@ TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffset)
    // so it tests nothing specific about the likelihood classes, it's just a
    // postcondition of the Minuit fit.
 #define EXPECT_NEAR_REL(a, b, c) EXPECT_NEAR(a, b, std::abs(a *c))
+#define EXPECT_NEAR_REL_INCL_ERROR(a, b, c)       \
+   EXPECT_NEAR(a.val, b.val, std::abs(a.val *c)); \
+   EXPECT_NEAR(a.error, b.error, std::abs(a.error *c))
    EXPECT_NEAR_REL(minNll_nominal, minNll_GradientJob, 1e-6);
-   EXPECT_NEAR_REL(alpha_bkg_A_nominal, alpha_bkg_A_GradientJob, 1e-6);
-   EXPECT_NEAR_REL(alpha_bkg_A_error_nominal, alpha_bkg_A_error_GradientJob, 1e-6);
-   EXPECT_NEAR_REL(alpha_bkg_B_nominal, alpha_bkg_B_GradientJob, 1e-6);
-   EXPECT_NEAR_REL(alpha_bkg_B_error_nominal, alpha_bkg_B_error_GradientJob, 1e-6);
-   EXPECT_NEAR_REL(mu_sig_nominal, mu_sig_GradientJob, 1e-6);
-   EXPECT_NEAR_REL(mu_sig_error_nominal, mu_sig_error_GradientJob, 1e-6);
+   EXPECT_NEAR_REL_INCL_ERROR(alpha_bkg_A_nominal, alpha_bkg_A_GradientJob, 1e-6);
+   EXPECT_NEAR_REL_INCL_ERROR(alpha_bkg_B_nominal, alpha_bkg_B_GradientJob, 1e-6);
+   EXPECT_NEAR_REL_INCL_ERROR(mu_sig_nominal, mu_sig_GradientJob, 1e-6);
+#undef EXPECT_NEAR_REL
+#undef EXPECT_NEAR_REL_INCL_ERROR
 }
 
-TEST_P(LikelihoodGradientJob, Gaussian1DAlsoWithLikelihoodJob)
+INSTANTIATE_TEST_SUITE_P(LikelihoodGradientJob, SimBinnedConstrainedTest, testing::Values(false, true),
+                         [](testing::TestParamInfo<SimBinnedConstrainedTest::ParamType> const &paramInfo) {
+                            std::stringstream ss;
+                            ss << (std::get<0>(paramInfo.param) ? "AlsoWithLikelihoodJob" : "NoLikelihoodJob");
+                            return ss.str();
+                         });
+
+TEST_P(LikelihoodGradientJobTest, Gaussian1DAlsoWithLikelihoodJob)
 {
    // do a minimization, but now using GradMinimizer and its MP version
 
@@ -467,15 +499,15 @@ TEST_P(LikelihoodGradientJob, Gaussian1DAlsoWithLikelihoodJob)
 
    // --------
 
-   auto m0 = std::make_unique<RooMinimizer>(*nll);
+   RooMinimizer m0{*nll};
 
-   m0->setStrategy(0);
-   m0->setPrintLevel(-1);
-   m0->setVerbose(false);
+   m0.setStrategy(0);
+   m0.setPrintLevel(-1);
+   m0.setVerbose(false);
 
-   m0->migrad();
+   m0.minimize("Minuit2", "migrad");
 
-   RooFitResult *m0result = m0->lastMinuitFit();
+   std::unique_ptr<RooFitResult> m0result{m0.save()};
    double minNll0 = m0result->minNll();
    double edm0 = m0result->edm();
    double mu0 = mu->getVal();
@@ -495,9 +527,9 @@ TEST_P(LikelihoodGradientJob, Gaussian1DAlsoWithLikelihoodJob)
 
    m1.setVerbose(false);
 
-   m1.migrad();
+   m1.minimize("Minuit2", "migrad");
 
-   RooFitResult *m1result = m1.lastMinuitFit();
+   std::unique_ptr<RooFitResult> m1result{m1.save()};
    double minNll1 = m1result->minNll();
    double edm1 = m1result->edm();
    double mu1 = mu->getVal();
@@ -508,80 +540,3 @@ TEST_P(LikelihoodGradientJob, Gaussian1DAlsoWithLikelihoodJob)
    EXPECT_FLOAT_EQ(muerr0, muerr1);
    EXPECT_NEAR(edm0, edm1, 1e-5);
 }
-
-TEST_F(LikelihoodSimBinnedConstrainedTest, ConstrainedAndOffsetAlsoWithLikelihoodJob)
-{
-   // do a minimization, but now using GradMinimizer and its MP version
-   nll.reset(pdf->createNLL(*data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
-                            RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(true)));
-
-   // parameters
-   std::size_t NWorkers = 2;
-
-   std::unique_ptr<RooArgSet> values(pdf->getParameters(data));
-
-   values->add(*pdf);
-   values->add(*nll);
-
-   RooArgSet savedValues;
-   values->snapshot(savedValues);
-
-   // --------
-
-   RooMinimizer m0(*nll);
-
-   m0.setStrategy(0);
-   m0.setPrintLevel(-1);
-
-   m0.migrad();
-
-   RooFitResult *m0result = m0.lastMinuitFit();
-   double minNll_nominal = m0result->minNll();
-   double alpha_bkg_A_nominal = w.var("alpha_bkg_A")->getVal();
-   double alpha_bkg_A_error_nominal = w.var("alpha_bkg_A")->getError();
-   double alpha_bkg_B_nominal = w.var("alpha_bkg_B")->getVal();
-   double alpha_bkg_B_error_nominal = w.var("alpha_bkg_B")->getError();
-   double mu_sig_nominal = w.var("mu_sig")->getVal();
-   double mu_sig_error_nominal = w.var("mu_sig")->getError();
-
-   values->assign(savedValues);
-
-   RooFit::MultiProcess::Config::setDefaultNWorkers(NWorkers);
-
-   std::unique_ptr<RooAbsReal> likelihoodAbsReal{pdf->createNLL(
-      *data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
-      RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(true), RooFit::NewStyle(true))};
-
-   RooMinimizer::Config cfg;
-   cfg.parallelLikelihood = true;
-   cfg.parallelGradient = true;
-   RooMinimizer m1(*likelihoodAbsReal, cfg);
-
-   m1.setOffsetting(true);
-
-   m1.setStrategy(0);
-   m1.setPrintLevel(-1);
-   m1.optimizeConst(2);
-
-   m1.migrad();
-
-   RooFitResult *m1result = m1.lastMinuitFit();
-   double minNll_GradientJob = m1result->minNll();
-   double alpha_bkg_A_GradientJob = w.var("alpha_bkg_A")->getVal();
-   double alpha_bkg_A_error_GradientJob = w.var("alpha_bkg_A")->getError();
-   double alpha_bkg_B_GradientJob = w.var("alpha_bkg_B")->getVal();
-   double alpha_bkg_B_error_GradientJob = w.var("alpha_bkg_B")->getError();
-   double mu_sig_GradientJob = w.var("mu_sig")->getVal();
-   double mu_sig_error_GradientJob = w.var("mu_sig")->getError();
-
-   // See the comment in LikelihoodSimBinnedConstrainedTest.ConstrainedAndOffset
-   EXPECT_NEAR_REL(minNll_nominal, minNll_GradientJob, 1e-6);
-   EXPECT_NEAR_REL(alpha_bkg_A_nominal, alpha_bkg_A_GradientJob, 1e-6);
-   EXPECT_NEAR_REL(alpha_bkg_A_error_nominal, alpha_bkg_A_error_GradientJob, 1e-6);
-   EXPECT_NEAR_REL(alpha_bkg_B_nominal, alpha_bkg_B_GradientJob, 1e-6);
-   EXPECT_NEAR_REL(alpha_bkg_B_error_nominal, alpha_bkg_B_error_GradientJob, 1e-6);
-   EXPECT_NEAR_REL(mu_sig_nominal, mu_sig_GradientJob, 1e-6);
-   EXPECT_NEAR_REL(mu_sig_error_nominal, mu_sig_error_GradientJob, 1e-6);
-}
-
-#undef EXPECT_NEAR_REL
