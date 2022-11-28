@@ -9,9 +9,10 @@ sap.ui.define([
    'sap/m/InputListItem',
    'sap/m/Input',
    'sap/m/Button',
+   'sap/m/ButtonType',
    'sap/ui/layout/Splitter',
    'sap/ui/layout/SplitterLayoutData'
-], function (Controller, Component, JSONModel, XMLView, MessageToast, Dialog, List, InputListItem, Input, Button, Splitter, SplitterLayoutData) {
+], function (Controller, Component, JSONModel, XMLView, MessageToast, Dialog, List, InputListItem, Input, Button, ButtonType, Splitter, SplitterLayoutData) {
    "use strict";
 
    function chk_icon(flag) {
@@ -188,9 +189,9 @@ sap.ui.define([
          for (let n = 0; n < method.fArgs.length; ++n) {
             let arg = method.fArgs[n];
             arg.fValue = arg.fDefault;
-            if (arg.fValue == '\"\"') arg.fValue = "";
+            if (arg.fValue == '""') arg.fValue = "";
             let item = new InputListItem({
-               label: arg.fName + " (" +arg.fTitle + ")",
+               label: arg.fName + ' (' +arg.fTitle + ')',
                content: new Input({ placeholder: arg.fName, value: arg.fValue })
             });
             items.push(item);
@@ -198,9 +199,7 @@ sap.ui.define([
 
          this.methodDialog = new Dialog({
             title: method.fClassName + '::' + method.fName,
-            content: new List({
-                items: items
-             }),
+            content: new List({ items }),
              beginButton: new Button({
                text: 'Cancel',
                press: this.closeMethodDialog.bind(this)
@@ -520,17 +519,51 @@ sap.ui.define([
          this._Page.setShowHeader(new_state);
       },
 
+      onDivideDialog() {
+         if (!this.oDivideDialog) {
+            this.oDivideDialog = new Dialog({
+               title: "Divide canvas",
+               content: new Input({ placeholder: 'input N or NxM', value: '{/divideArg}' }),
+               beginButton: new Button({
+                  type: ButtonType.Emphasized,
+                  text: "OK",
+                  press: () => {
+                     let arg = this.getView().getModel().getProperty('/divideArg');
+                     this.oDivideDialog.close();
+                     let cp = this.getCanvasPainter();
+                     if (arg && cp)
+                        cp.sendWebsocket('DIVIDE:' + JSON.stringify([(cp.findActivePad() || cp).snapid, arg]));
+                  }
+               }),
+               endButton: new Button({
+                  text: "Close",
+                  press: () => {
+                     this.oDivideDialog.close();
+                  }
+               })
+            });
+
+            // to get access to the controller's model
+            this.getView().addDependent(this.oDivideDialog);
+         }
+
+         this.oDivideDialog.open();
+      },
+
       onEditMenuAction(oEvent) {
          let cp = this.getCanvasPainter();
          if (!cp) return;
 
          let name = oEvent.getParameter('item').getText();
          switch (name) {
-            case "Clear pad":
-               cp.sendWebsocket("CLEAR:" + (cp.findActivePad() || cp).snapid);
+            case 'Divide':
+               this.onDivideDialog();
                break;
-            case "Clear canvas":
-               cp.sendWebsocket("CLEAR:" + cp.snapid);
+            case 'Clear pad':
+               cp.sendWebsocket('CLEAR:' + (cp.findActivePad() || cp).snapid);
+               break;
+            case 'Clear canvas':
+               cp.sendWebsocket('CLEAR:' + cp.snapid);
                break;
          }
       },
