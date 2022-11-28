@@ -2792,9 +2792,9 @@ void TUnixSystem::ListSymbols(const char * /*module*/, const char * /*regexp*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// List all loaded shared libraries.
 
-void TUnixSystem::ListLibraries(const char *regexp, Bool_t wildcard)
+void TUnixSystem::ListLibraries(const char *regexp)
 {
-   TSystem::ListLibraries(regexp, wildcard);
+   TSystem::ListLibraries(regexp);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

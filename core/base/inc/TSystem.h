@@ -488,7 +488,7 @@ public:
    virtual void            Unload(const char *module);
    virtual UInt_t          LoadAllLibraries();
    virtual void            ListSymbols(const char *module, const char *re = "");
-   virtual void            ListLibraries(const char *regexp = "", Bool_t wildcard = kTRUE);
+   virtual void            ListLibraries(const char *regexp = "");
    virtual const char     *GetLibraries(const char *regexp = "",
                                         const char *option = "",
                                         Bool_t isRegexp = kTRUE);

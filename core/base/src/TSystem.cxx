@@ -2068,43 +2068,31 @@ void TSystem::ListSymbols(const char *, const char *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// List all loaded shared libraries. `regexp` is a wildcard expression,
-/// (see TRegexp::MakeWildcard) if `wildcard` is true (default) otherwise (if it is false)
-/// it is consider as a simple character string and only the libraries containing this
-/// character string  will be listed.
+/// List all loaded shared libraries. `regexp` is a regular expression.
+///
+/// Examples:
+///
+/// The following line lists all the librabries currently loaded:
+/// ~~~ {.cpp}
+///  gSystem->ListLibraries()
+/// ~~~
+///
+/// The following line lists all the librabries currently loaded have "RIO" in their names:
+/// ~~~ {.cpp}
+///  gSystem->ListLibraries(".*RIO.*")
+/// ~~~
 
-void TSystem::ListLibraries(const char *regexp, Bool_t wildcard)
-{
-   TString libs = GetLibraries(regexp,"", wildcard);
-   TRegexp separator("[^ \\t\\s]+");
-   TString s;
-   Ssiz_t start = 0, index = 0, end = 0;
-   int i = 0;
-
-   Printf(" ");
-   Printf("Loaded shared libraries");
-   Printf("=======================");
-
-   while ((start < libs.Length()) && (index != kNPOS)) {
-      index = libs.Index(separator, &end, start);
-      if (index >= 0) {
-         s = libs(index, end);
-         if (s.BeginsWith("-")) {
-            if (s.BeginsWith("-l")) {
-               Printf("%s", s.Data());
-               i++;
-            }
-         } else {
-            Printf("%s", s.Data());
-            i++;
-         }
-      }
-      start += end+1;
+void TSystem::ListLibraries(const char *regexp) {
+   if (!gSystem) return;
+   if (!(regexp && regexp[0])) regexp = ".*";
+   TRegexp pat(regexp, kFALSE);
+   TString libs(gSystem->GetLibraries());
+   TString tok;
+   Ssiz_t from = 0, ext;
+   while (libs.Tokenize(tok, from, " ")) {
+      if ((tok.Index(pat, &ext) != 0) || (ext != tok.Length())) continue;
+      std::cout << tok << "\n";
    }
-
-   Printf("-----------------------");
-   Printf("%d libraries loaded", i);
-   Printf("=======================");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

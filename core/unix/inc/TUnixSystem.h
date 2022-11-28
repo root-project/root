@@ -186,7 +186,7 @@ public:
    int               Load(const char *module, const char *entry = "", Bool_t system = kFALSE) override;
    void              Unload(const char *module) override;
    void              ListSymbols(const char *module, const char *re = "") override;
-   void              ListLibraries(const char *regexp = "", Bool_t wildcard = kTRUE) override;
+   void              ListLibraries(const char *regexp = "") override;
 
    //---- RPC --------------------------------------------------
    TInetAddress      GetHostByName(const char *server) override;
