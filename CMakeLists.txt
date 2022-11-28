@@ -34,6 +34,15 @@ if(MSVC)
   set(grep_cmd "findstr")
 
   option(win_broken_tests "Enable broken tests on Windows" FALSE)
+  option(llvm13_broken_tests "Enable broken tests with LLVM 13 on Windows" FALSE)
+  include(${ROOT_USE_FILE})
+  foreach(_opt ${_root_all_options})
+    set(ROOT_${_opt} TRUE)
+  endforeach()
+  # _llvm13_broken_tests only exists with LLVM 13
+  if(NOT ROOT_llvm13_broken_tests OR ROOT_llvm13_broken_tests_FOUND)
+    set(llvm13_broken_tests TRUE)
+  endif()
 
   if(NOT win_broken_tests)
     set(WILLFAIL_ON_WIN32 WILLFAIL)

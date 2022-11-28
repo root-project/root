@@ -185,13 +185,15 @@ ROOTTEST_ADD_TEST(tprofile
                   EXEC ${CMAKE_CURRENT_BINARY_DIR}/tprofile
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-# Re-Enabled Disable test: see ROOT-7158
-ROOTTEST_GENERATE_REFLEX_DICTIONARY(tsenums tsenums.h  SELECTION tsenums_selection.xml)
+if(NOT MSVC OR llvm13_broken_tests)
+  # Re-Enabled Disable test: see ROOT-7158
+  ROOTTEST_GENERATE_REFLEX_DICTIONARY(tsenums tsenums.h  SELECTION tsenums_selection.xml)
 
-ROOTTEST_ADD_TEST(tsenums
-                  MACRO  exectsenums.C
-                  OUTREF exectsenums.ref
-                  DEPENDS ${GENERATE_REFLEX_TEST})
+  ROOTTEST_ADD_TEST(tsenums
+                    MACRO  exectsenums.C
+                    OUTREF exectsenums.ref
+                    DEPENDS ${GENERATE_REFLEX_TEST})
+endif()
 
 if(NOT MSVC OR win_broken_tests)
   ROOTTEST_GENERATE_EXECUTABLE(fork fork.cpp LIBRARIES Core)
