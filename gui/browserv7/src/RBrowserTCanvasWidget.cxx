@@ -20,7 +20,7 @@
 #include "TEnv.h"
 #include "TWebCanvas.h"
 
-#include <vector>
+#include <map>
 
 using namespace ROOT::Experimental;
 
@@ -32,7 +32,7 @@ class RBrowserTCanvasWidget : public RBrowserWidget {
    std::unique_ptr<TCanvas> fCanvas; ///<! drawn canvas
    TWebCanvas *fWebCanvas{nullptr};  ///<! web implementation, owned by TCanvas
 
-   std::vector<std::unique_ptr<Browsable::RHolder>> fObjects; ///<! objects holder
+   std::multimap<TVirtualPad *, std::unique_ptr<Browsable::RHolder>> fObjects; ///<! objects holder, associated with pads
 
    void SetPrivateCanvasFields(bool on_init)
    {
@@ -172,15 +172,30 @@ public:
 
       std::string drawopt = opt;
 
+      // first remove all objects which may belong to removed pads
+      bool find_removed_pad;
+      do {
+         find_removed_pad = false;
+         for (auto &entry : fObjects)
+            if ((entry.first != fCanvas.get()) && !fCanvas->FindObject(entry.first)) {
+               fObjects.erase(entry.first);
+               find_removed_pad = true;
+               break;
+            }
+      } while (find_removed_pad);
+
       TVirtualPad *pad = fCanvas.get();
-      if (gPad && (gPad->GetCanvas() == fCanvas.get()))
+      if (gPad && fCanvas.get()->FindObject(gPad))
          pad = gPad;
 
       if (drawopt.compare(0,8,"<append>") == 0) {
          drawopt.erase(0,8);
       } else {
          pad->GetListOfPrimitives()->Clear();
-         fObjects.clear();
+         if (pad == fCanvas.get())
+            fObjects.clear();
+         else
+            fObjects.erase(pad);
          pad->Range(0,0,1,1);  // set default range
       }
 
@@ -188,7 +203,7 @@ public:
          drawopt = Browsable::RProvider::GetClassDrawOption(obj->GetClass());
 
       if (Browsable::RProvider::Draw6(pad, obj, drawopt)) {
-         fObjects.emplace_back(std::move(obj));
+         fObjects.emplace(pad, std::move(obj));
          pad->Modified();
          fCanvas->Update();
          return true;
