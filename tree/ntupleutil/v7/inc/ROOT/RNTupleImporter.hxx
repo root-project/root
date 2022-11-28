@@ -16,18 +16,19 @@
 #ifndef ROOT7_RNTuplerImporter
 #define ROOT7_RNTuplerImporter
 
+#include <ROOT/RError.hxx>
+#include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RStringView.hxx>
 
-#include <memory>
+#include <TFile.h>
+#include <TTree.h>
 
-class TTree;
+#include <memory>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
-
-namespace Detail {
-class RPageSink;
-}
 
 // clang-format off
 /**
@@ -39,8 +40,42 @@ The class steers the conversion of a TTree into an RNTuple.
 */
 // clang-format on
 class RNTupleImporter {
+public:
+   class RProgressCallback {
+   public:
+      void operator()(std::uint64_t nbytesWritten, std::uint64_t neventsWritten)
+      {
+         Call(nbytesWritten, neventsWritten);
+      }
+      virtual void Call(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) = 0;
+      virtual void Finish(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) = 0;
+   };
+
 private:
+   struct RImportFeature {
+      std::string fLeafName;
+      std::string fFieldName;
+      std::string fTypeName;
+   };
+
    RNTupleImporter() = default;
+
+   std::string fNTupleName;
+   std::unique_ptr<TFile> fSourceFile;
+   std::unique_ptr<TTree> fSourceTree;
+
+   std::string fDestFileName;
+   std::unique_ptr<TFile> fDestFile;
+   RNTupleWriteOptions fWriteOptions;
+
+   /// No standard output, conversly if set to false, schema information and progress is printed
+   bool fIsQuiet = false;
+   std::unique_ptr<RProgressCallback> fProgressCallback;
+   std::vector<RImportFeature> fImportFeatures;
+   std::unique_ptr<RNTupleModel> fModel;
+
+   RResult<void> PrepareSchema();
+   void ReportSchema();
 
 public:
    RNTupleImporter(const RNTupleImporter &other) = delete;
@@ -49,8 +84,16 @@ public:
    RNTupleImporter &operator=(RNTupleImporter &&other) = delete;
    ~RNTupleImporter() = default;
 
-   static std::unique_ptr<RNTupleImporter>
+   static RResult<std::unique_ptr<RNTupleImporter>>
    Create(std::string_view sourceFile, std::string_view treeName, std::string_view destFile);
+
+   RNTupleWriteOptions GetWriteOptions() const { return fWriteOptions; }
+   void SetWriteOptions(RNTupleWriteOptions options) { fWriteOptions = options; }
+   void SetNTupleName(const std::string &name) { fNTupleName = name; }
+
+   void SetIsQuiet(bool value) { fIsQuiet = value; }
+
+   RResult<void> Import();
 }; // class RNTupleImporter
 
 } // namespace Experimental
