@@ -13,16 +13,146 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <ROOT/RError.hxx>
+#include <ROOT/RField.hxx>
+#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleImporter.hxx>
+#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RPageStorage.hxx>
+#include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RStringView.hxx>
 
-#include <memory>
+#include <TBranch.h>
+#include <TLeaf.h>
 
-std::unique_ptr<ROOT::Experimental::RNTupleImporter>
-ROOT::Experimental::RNTupleImporter::Create(std::string_view /* sourceFile */, std::string_view /* treeName */,
-                                            std::string_view /* destFile */)
+#include <cassert>
+#include <cstdint>
+#include <iostream>
+#include <utility>
+
+namespace {
+
+class RDefaultProgressCallback : public ROOT::Experimental::RNTupleImporter::RProgressCallback {
+private:
+   std::uint64_t fNbytesLast = 0;
+
+public:
+   void Call(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) final
+   {
+      if (nbytesWritten < (fNbytesLast + 50 * 1000 * 1000))
+         return;
+      std::cout << "Wrote " << nbytesWritten / 1000 / 1000 << "MB, " << neventsWritten << " entries" << std::endl;
+      fNbytesLast = nbytesWritten;
+   }
+
+   void Finish(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) final
+   {
+      std::cout << "Done, wrote " << nbytesWritten / 1000 / 1000 << "MB, " << neventsWritten << " entries" << std::endl;
+   }
+};
+
+} // anonymous namespace
+
+ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RNTupleImporter>>
+ROOT::Experimental::RNTupleImporter::Create(std::string_view sourceFile, std::string_view treeName,
+                                            std::string_view destFile)
 {
-   R__LOG_WARNING(NTupleLog()) << "not yet implemented";
-   return nullptr;
+   auto importer = std::unique_ptr<RNTupleImporter>(new RNTupleImporter());
+   importer->fNTupleName = treeName;
+   importer->fSourceFile = std::unique_ptr<TFile>(TFile::Open(std::string(sourceFile).c_str()));
+   if (!importer->fSourceFile || importer->fSourceFile->IsZombie()) {
+      return R__FAIL("cannot open source file " + std::string(sourceFile));
+   }
+   importer->fSourceTree = std::unique_ptr<TTree>(importer->fSourceFile->Get<TTree>(std::string(treeName).c_str()));
+   if (!importer->fSourceTree) {
+      return R__FAIL("cannot read TTree " + std::string(treeName) + " from " + std::string(sourceFile));
+   }
+   // If we have IMT enabled, its best use is for parallel page compression
+   importer->fSourceTree->SetImplicitMT(false);
+
+   importer->fDestFileName = destFile;
+   importer->fWriteOptions.SetCompression(importer->fSourceFile->GetCompressionSettings());
+   importer->fDestFile = std::unique_ptr<TFile>(TFile::Open(importer->fDestFileName.c_str(), "UPDATE"));
+   if (!importer->fDestFile || importer->fDestFile->IsZombie()) {
+      return R__FAIL("cannot open dest file " + std::string(importer->fDestFileName));
+   }
+
+   return importer;
+}
+
+void ROOT::Experimental::RNTupleImporter::ReportSchema()
+{
+   for (const auto &f : fImportFeatures) {
+      std::cout << "Importing '" << f.fLeafName << "'    -->    to field '" << f.fFieldName << "' [" << f.fTypeName
+                << ']' << std::endl;
+   }
+}
+
+ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSchema()
+{
+   fImportFeatures.clear();
+   fSourceTree->SetBranchStatus("*", 0);
+
+   for (auto b : TRangeDynCast<TBranch>(*fSourceTree->GetListOfBranches())) {
+      assert(b);
+
+      for (auto l : TRangeDynCast<TLeaf>(b->GetListOfLeaves())) {
+         fImportFeatures.emplace_back(RImportFeature{l->GetName(), l->GetName(), l->GetTypeName()});
+      }
+   }
+
+   fModel = RNTupleModel::Create();
+   fModel->SetDescription(fSourceTree->GetTitle());
+   for (const auto &f : fImportFeatures) {
+      auto field = Detail::RFieldBase::Create(f.fFieldName, f.fTypeName);
+      if (!field)
+         return R__FORWARD_ERROR(field);
+      fModel->AddField(std::move(field.Unwrap()));
+   }
+
+   fModel->Freeze();
+
+   for (const auto &f : fImportFeatures) {
+      // We connect the model's default entry's memory location for the new field to the branch, so that we can
+      // fill the ntuple with the data read from the TTree
+      fSourceTree->SetBranchStatus(f.fLeafName.c_str(), 1);
+      void *fieldDataPtr = fModel->GetDefaultEntry()->GetValue(f.fFieldName).GetRawPtr();
+      fSourceTree->SetBranchAddress(f.fLeafName.c_str(), fieldDataPtr);
+   }
+
+   if (!fIsQuiet)
+      ReportSchema();
+
+   return RResult<void>::Success();
+}
+
+ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
+{
+   if (fDestFile->FindKey(fNTupleName.c_str()) != nullptr)
+      return R__FAIL("Key " + fNTupleName + " already exists in file " + fDestFileName);
+
+   PrepareSchema();
+
+   auto sink = std::make_unique<Detail::RPageSinkFile>(fNTupleName, *fDestFile, fWriteOptions);
+   sink->GetMetrics().Enable();
+   auto ctrZippedBytes = sink->GetMetrics().GetCounter("RPageSinkFile.szWritePayload");
+
+   auto ntplWriter = std::make_unique<RNTupleWriter>(std::move(fModel), std::move(sink));
+   fModel = nullptr;
+
+   fProgressCallback = fIsQuiet ? nullptr : std::make_unique<RDefaultProgressCallback>();
+   auto nEntries = fSourceTree->GetEntries();
+   for (decltype(nEntries) i = 0; i < nEntries; ++i) {
+      fSourceTree->GetEntry(i);
+
+      ntplWriter->Fill();
+
+      if (fProgressCallback)
+         fProgressCallback->Call(ctrZippedBytes->GetValueAsInt(), i);
+   }
+   if (fProgressCallback)
+      fProgressCallback->Finish(ctrZippedBytes->GetValueAsInt(), nEntries);
+
+   return RResult<void>::Success();
 }
