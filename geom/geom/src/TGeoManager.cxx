@@ -301,7 +301,7 @@ Int_t  TGeoManager::fgNumThreads      = 0;
 UInt_t TGeoManager::fgExportPrecision = 17;
 TGeoManager::EDefaultUnits TGeoManager::fgDefaultUnits = TGeoManager::kRootUnits;
 TGeoManager::ThreadsMap_t *TGeoManager::fgThreadId = 0;
-static Bool_t gGeometryLocked = kTRUE;
+static Bool_t gGeometryLocked = kFALSE;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -4034,6 +4034,7 @@ TGeoManager::EDefaultUnits TGeoManager::GetDefaultUnits()
 void TGeoManager::SetDefaultUnits(EDefaultUnits new_value)
 {
    if ( fgDefaultUnits == new_value )   {
+      gGeometryLocked = true;
       return;
    }
    else if ( gGeometryLocked )    {
