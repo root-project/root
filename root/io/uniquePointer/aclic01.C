@@ -28,7 +28,7 @@ int checkDict(const char* name){
       std::cout << "Class " << c->GetName() << " has "<< (hasDict ? "a":"*no*") << " dictionary\n";
       ret += hasDict ? 0 : 1;
    } else {
-      std::cerr << "Class " << c->GetName() << " not found!\n";
+      std::cerr << "Class " << name << " not found!\n";
       ret += 1;
    }
    return ret;
