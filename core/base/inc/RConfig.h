@@ -58,6 +58,13 @@
 #   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #endif
 
+#if defined(__linux__) && defined(__GNUC__) && defined(__STRICT_ANSI__)
+    /* sometimes GCC does not define __linux for non-GNU -std dialects */
+#   ifndef __linux
+#      define __linux
+#   endif
+#endif
+
 #ifdef __linux
 #   ifndef linux
 #      define linux
@@ -324,7 +331,10 @@
 #   define R__LINUX
 #   define R__UNIX
 #   define NEED_SIGJMP
-#   if defined(R__ppc64)
+#   if defined(R__ppc64) || defined(__powerpc64__) || defined(__ppc64__)
+#      ifndef R__ppc64
+#         define R__ppc64
+#      endif
 #      define R__B64
 #   endif
 #   if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__

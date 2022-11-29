@@ -365,6 +365,13 @@
 #endif
 #endif
 
+#if defined(__linux__) && defined(__GNUC__) && defined(__STRICT_ANSI__)
+    /* sometimes GCC does not define __linux for non-GNU -std dialects */
+#   ifndef __linux
+#      define __linux
+#   endif
+#endif
+
 /* added by Fons Radamakers in 2000 Oct 2 */
 #if (defined(__linux) || defined(__linux__) || defined(linux)) && ! defined(__CINT__)
 #   include <features.h>

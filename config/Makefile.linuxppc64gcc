@@ -5,7 +5,10 @@
 PLATFORM      = linux
 
 DEBUGFLAGS    = -g
+#DEBUGFLAGS    = -gstabs
 OPTFLAGS      = -O2
+# Optional compiler options for gcc >= 3.4.0
+#OPTFLAGS      = -O3 -march=opteron
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
 NOOPT         =
@@ -20,19 +23,22 @@ ifeq ($(CXX14),yes)
 CXX11FLAGS    = -std=c++1y -Wno-deprecated-declarations
 endif
 
+
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -pipe -Wall -m64 -fPIC -fsigned-char -DR__ppc64 \
-                -I/usr/X11/include $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
-CFLAGS        = -pipe -Wall -m64 -fPIC -fsigned-char -DR__ppc64 \
-                -I/usr/X11/include $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
-CINTCXXFLAGS  = -pipe -Wall -m64 -fPIC -fsigned-char -DG__REGEXP -DG__UNIX \
-                -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                -DG__64BIT $(EXTRA_CXXFLAGS) $(USERCONF_CXXFLAGS)
-CINTCFLAGS    = -pipe -Wall -m64 -fPIC -fsigned-char -DG__REGEXP -DG__UNIX \
-                -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                -DG__64BIT $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
+CXXFLAGS      = -pipe -m64 -fsigned-char -Wshadow -Wall -W -Woverloaded-virtual \
+                -fPIC $(EXTRA_CXXFLAGS) $(CXX11FLAGS) $(USERCONF_CXXFLAGS)
+CFLAGS        = -pipe -m64 -fsigned-char -Wshadow -Wall -W -fPIC $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
+CINTCXXFLAGS  = -pipe -m64 -fsigned-char -Wall -W -Woverloaded-virtual \
+                -fPIC $(EXTRA_CXXFLAGS) $(CXX11FLAGS) \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
+                -DG__STD_EXCEPTION -DG__64BIT $(USERCONF_CXXFLAGS)
+CINTCFLAGS    = -pipe -m64 -fsigned-char -Wall -W -fPIC $(EXTRA_CFLAGS) \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
+                -DG__STD_EXCEPTION -DG__64BIT $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
 ifeq ($(WERROR),yes)
@@ -42,15 +48,15 @@ endif
 
 # Linker:
 LD            = g++
-LDFLAGS       = -m64 $(OPT) $(EXTRA_LDFLAGS)
+LDFLAGS       = -m64 $(OPT) $(EXTRA_LDFLAGS) -Wl,--no-undefined -Wl,--as-needed
 SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB) \
-                $(ALLOCLIBDIR) $(ALLOCLIB)
+                $(ALLOCLIBDIR) $(ALLOCLIB) -rdynamic
 XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
-CILIBS        = -lm -ldl
+CILIBS        = -lm -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
@@ -81,4 +87,4 @@ endif
 endif
 
 # Extras
-
+GLIBC_MALLOC_DEPRECATED = yes
