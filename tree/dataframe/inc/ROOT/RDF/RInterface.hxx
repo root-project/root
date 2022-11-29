@@ -2435,7 +2435,7 @@ public:
       using Helper_t = RDFInternal::ReportHelper<Proxied>;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
 
-      auto action = std::make_unique<Action_t>(Helper_t(rep, fProxiedPtr, returnEmptyReport), ColumnNames_t({}),
+      auto action = std::make_unique<Action_t>(Helper_t(rep, fProxiedPtr.get(), returnEmptyReport), ColumnNames_t({}),
                                                fProxiedPtr, RDFInternal::RColumnRegister(fColRegister));
 
       return MakeResultPtr(rep, *fLoopManager, std::move(action));

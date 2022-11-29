@@ -201,20 +201,18 @@ public:
    }
 };
 
-template <typename ProxiedVal_t>
-class R__CLING_PTRCHECK(off) ReportHelper : public RActionImpl<ReportHelper<ProxiedVal_t>> {
+template <typename RNode_t>
+class R__CLING_PTRCHECK(off) ReportHelper : public RActionImpl<ReportHelper<RNode_t>> {
    std::shared_ptr<RCutFlowReport> fReport;
-   // Here we have a weak pointer since we need to keep track of the validity
-   // of the proxied node. It can happen that the user does not trigger the
-   // event loop by looking into the RResultPtr and the chain goes out of scope
-   // before the Finalize method is invoked.
-   std::weak_ptr<ProxiedVal_t> fProxiedWPtr;
+   /// Non-owning pointer, never null. As usual, the node is owned by its children nodes (and therefore indirectly by
+   /// the RAction corresponding to this action helper).
+   RNode_t *fNode;
    bool fReturnEmptyReport;
 
 public:
    using ColumnTypes_t = TypeList<>;
-   ReportHelper(const std::shared_ptr<RCutFlowReport> &report, const std::shared_ptr<ProxiedVal_t> &pp, bool emptyRep)
-      : fReport(report), fProxiedWPtr(pp), fReturnEmptyReport(emptyRep){};
+   ReportHelper(const std::shared_ptr<RCutFlowReport> &report, RNode_t *node, bool emptyRep)
+      : fReport(report), fNode(node), fReturnEmptyReport(emptyRep){};
    ReportHelper(ReportHelper &&) = default;
    ReportHelper(const ReportHelper &) = delete;
    void InitTask(TTreeReader *, unsigned int) {}
@@ -222,9 +220,8 @@ public:
    void Initialize() { /* noop */}
    void Finalize()
    {
-      // We need the weak_ptr in order to avoid crashes at tear down
-      if (!fReturnEmptyReport && !fProxiedWPtr.expired())
-         fProxiedWPtr.lock()->Report(*fReport);
+      if (!fReturnEmptyReport)
+         fNode->Report(*fReport);
    }
 
    std::string GetActionName() { return "Report"; }
