@@ -118,7 +118,7 @@ TH2I HeatmapAnalyzer::analyze(int analyzed_gradient)
 
          // for this partition, loops over all durations, i.e. start and end times for partition evaluations, and for
          // each tries to find the corresponding task
-         for (int idx = 0; idx < durations_json[eval_partition_name].size(); idx += 2) {
+         for (size_t idx = 0; idx < durations_json[eval_partition_name].size(); idx += 2) {
             if (durations_json[eval_partition_name][idx + 1] > gradient_end_t ||
                 durations_json[eval_partition_name][idx] < gradient_start_t)
                continue;
@@ -182,7 +182,7 @@ std::string HeatmapAnalyzer::findTaskForDuration(json durations, int start_t, in
       if (el.key().find("eval_partition") != std::string::npos)
          continue;
 
-      for (int idx = 0; idx < durations[el.key()].size(); idx += 2) {
+      for (size_t idx = 0; idx < durations[el.key()].size(); idx += 2) {
          if (durations[el.key()][idx] <= start_t && durations[el.key()][idx + 1] >= end_t) {
             return el.key();
          }
@@ -203,7 +203,7 @@ void HeatmapAnalyzer::sortTaskNames(std::vector<std::string> &task_names)
 
    std::sort(pair_vec.begin(), pair_vec.end());
 
-   for (int i = 0; i < task_names.size(); i++) {
+   for (size_t i = 0; i < task_names.size(); i++) {
       task_names[i] = pair_vec[i].second;
    }
 }
