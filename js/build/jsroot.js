@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '28/11/2022';
+let version_date = '29/11/2022';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -56045,7 +56045,7 @@ class TCanvasPainter extends TPadPainter {
 
       if (kind) this.proj_painter = 1; // just indicator that drawing can be preformed
 
-      if (this.showUI5ProjectionArea)
+      if (isFunc(this.showUI5ProjectionArea))
          return this.showUI5ProjectionArea(kind);
 
       let layout = 'simple', mainid;
@@ -56100,7 +56100,7 @@ class TCanvasPainter extends TPadPainter {
                        : this.drawInSidePanel(canv, drawopt);
 
          return promise.then(painter => { this.proj_painter = painter; return painter; });
-      } else
+      }
 
       this.proj_painter.getMainPainter()?.updateObject(hist, hopt);
       return this.proj_painter.redrawPad();
@@ -56160,20 +56160,20 @@ class TCanvasPainter extends TPadPainter {
       if (this._readonly || !painter) return;
 
       if (!snapid) snapid = painter.snapid;
-      if (!snapid || !isStr(snapid)) return;
-
-      this.sendWebsocket(`OBJEXEC:${snapid}:${exec}`);
+      if (snapid && isStr(snapid))
+         return this.sendWebsocket(`OBJEXEC:${snapid}:${exec}`);
    }
 
    /** @summary Send text message with web socket
      * @desc used for communication with server-side of web canvas
      * @private */
    sendWebsocket(msg) {
-      if (!this._websocket) return;
-      if (this._websocket.canSend())
+      if (this._websocket?.canSend()) {
          this._websocket.send(msg);
-      else
-         console.warn(`DROP SEND: ${msg}`);
+         return true;
+      }
+      console.warn(`DROP SEND: ${msg}`);
+      return false;
    }
 
    /** @summary Close websocket connection to canvas
@@ -61585,10 +61585,8 @@ class TH2Painter$2 extends THistPainter {
 
    /** @summary Redraw projection */
    async redrawProjection(ii1, ii2, jj1, jj2) {
-      if (!this.is_projection || this.doing_projection)
+      if (!this.is_projection)
          return false;
-
-      this.doing_projection = true;
 
       if (jj2 === undefined) {
          if (!this.tt_handle) return;
@@ -61596,7 +61594,7 @@ class TH2Painter$2 extends THistPainter {
          jj1 = Math.round((this.tt_handle.j1 + this.tt_handle.j2)/2); jj2 = jj1+1;
       }
 
-      let canp = this.getCanvPainter(), histo = this.getHisto();
+      let canp = this.getCanvPainter();
 
       if (canp && !canp._readonly && (this.snapid !== undefined)) {
          // this is when projection should be created on the server side
@@ -61606,8 +61604,15 @@ class TH2Painter$2 extends THistPainter {
          else
             exec += `ProjectionY("_projy",${ii1+1},${ii2},"")`;
          canp.sendWebsocket(exec);
-         return;
+         return true;
       }
+
+      if (this.doing_projection)
+         return false;
+
+      this.doing_projection = true;
+
+      let histo = this.getHisto();
 
       if (!this.proj_hist) {
          if (this.is_projection == 'X') {
@@ -61664,7 +61669,8 @@ class TH2Painter$2 extends THistPainter {
    /** @summary Execute TH2 menu command
      * @desc Used to catch standard menu items and provide local implementation */
    executeMenuCommand(method, args) {
-      if (super.executeMenuCommand(method, args)) return true;
+      if (super.executeMenuCommand(method, args))
+         return true;
 
       if ((method.fName == 'SetShowProjectionX') || (method.fName == 'SetShowProjectionY')) {
          this.toggleProjection(method.fName[17], args && parseInt(args) ? parseInt(args) : 1);
@@ -97268,7 +97274,7 @@ class RCanvasPainter extends RPadPainter {
 
       if (kind) this.proj_painter = 1; // just indicator that drawing can be preformed
 
-      if (this.showUI5ProjectionArea)
+      if (isFunc(this.showUI5ProjectionArea))
          return this.showUI5ProjectionArea(kind);
 
       let layout = 'simple', mainid;
@@ -97332,9 +97338,13 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Send message via web socket
      * @private */
-   sendWebsocket(msg, chid) {
-      if (this._websocket)
-         this._websocket.send(msg, chid);
+   sendWebsocket(msg) {
+      if (this._websocket?.canSend()) {
+         this._websocket.send(msg);
+         return true;
+      }
+
+      return false;
    }
 
    /** @summary Close websocket connection to canvas
