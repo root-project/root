@@ -14,7 +14,7 @@ ROOTTEST_ADD_TEST(split-fail
                   PASSREGEX "For 2 outputs at least 4 should be allocated instead of 1")
 
 ROOTTEST_ADD_TEST(libjetevent-build 
-                  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target JetEvent${fast} -- ${always-make})
+                  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} ${build_config} --target JetEvent${fast} -- ${always-make})
 
 ROOTTEST_ADD_TEST(sync-rate
                   COPY_TO_BUILDDIR sync_rate.C

@@ -33,6 +33,8 @@ if(MSVC)
   set(CMAKE_CXX_FLAGS "/nologo /Zc:__cplusplus /MD /GR /EHsc- /W3 /D_WIN32")
   set(grep_cmd "findstr")
 
+  set(build_config "--config $<CONFIG>")
+
   option(win_broken_tests "Enable broken tests on Windows" FALSE)
   option(llvm13_broken_tests "Enable broken tests with LLVM 13 on Windows" FALSE)
   include(${ROOT_USE_FILE})

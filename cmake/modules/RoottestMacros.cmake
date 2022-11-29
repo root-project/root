@@ -236,7 +236,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
 
   add_test(NAME ${COMPILE_MACRO_TEST}
            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
-                                    --config $<CONFIG>
+                                    ${build_config}
                                     --target ${compile_target}${fast}
                                     -- ${always-make})
   if(NOT MSVC OR win_broken_tests)
@@ -328,7 +328,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
 
   add_test(NAME ${GENERATE_DICTIONARY_TEST}
            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
-                                    --config $<CONFIG>
+                                    ${build_config}
                                     --target  ${targetname_libgen}${fast}
                                     -- ${always-make})
 
@@ -418,7 +418,7 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
 
   add_test(NAME ${GENERATE_REFLEX_TEST}
            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
-                                    --config $<CONFIG>
+                                    ${build_config}
                                     --target ${targetname_libgen}${fast}
                                     -- ${always-make})
 
@@ -499,7 +499,7 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
 
   add_test(NAME ${GENERATE_EXECUTABLE_TEST}
            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
-                                    --config $<CONFIG>
+                                    ${build_config}
                                     --target ${executable}${fast}
                                     -- ${always-make})
   set_property(TEST ${GENERATE_EXECUTABLE_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
