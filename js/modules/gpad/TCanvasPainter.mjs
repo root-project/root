@@ -132,7 +132,7 @@ class TCanvasPainter extends TPadPainter {
 
       if (kind) this.proj_painter = 1; // just indicator that drawing can be preformed
 
-      if (this.showUI5ProjectionArea)
+      if (isFunc(this.showUI5ProjectionArea))
          return this.showUI5ProjectionArea(kind);
 
       let layout = 'simple', mainid;
@@ -187,7 +187,7 @@ class TCanvasPainter extends TPadPainter {
                        : this.drawInSidePanel(canv, drawopt);
 
          return promise.then(painter => { this.proj_painter = painter; return painter; });
-      } else
+      }
 
       this.proj_painter.getMainPainter()?.updateObject(hist, hopt);
       return this.proj_painter.redrawPad();
@@ -247,20 +247,20 @@ class TCanvasPainter extends TPadPainter {
       if (this._readonly || !painter) return;
 
       if (!snapid) snapid = painter.snapid;
-      if (!snapid || !isStr(snapid)) return;
-
-      this.sendWebsocket(`OBJEXEC:${snapid}:${exec}`);
+      if (snapid && isStr(snapid))
+         return this.sendWebsocket(`OBJEXEC:${snapid}:${exec}`);
    }
 
    /** @summary Send text message with web socket
      * @desc used for communication with server-side of web canvas
      * @private */
    sendWebsocket(msg) {
-      if (!this._websocket) return;
-      if (this._websocket.canSend())
+      if (this._websocket?.canSend()) {
          this._websocket.send(msg);
-      else
-         console.warn(`DROP SEND: ${msg}`);
+         return true;
+      }
+      console.warn(`DROP SEND: ${msg}`);
+      return false;
    }
 
    /** @summary Close websocket connection to canvas
