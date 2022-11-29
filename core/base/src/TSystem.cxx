@@ -2084,10 +2084,9 @@ void TSystem::ListSymbols(const char *, const char *)
 /// ~~~
 
 void TSystem::ListLibraries(const char *regexp) {
-   if (!gSystem) return;
    if (!(regexp && regexp[0])) regexp = ".*";
    TRegexp pat(regexp, kFALSE);
-   TString libs(gSystem->GetLibraries());
+   TString libs(GetLibraries());
    TString tok;
    Ssiz_t from = 0, ext;
    while (libs.Tokenize(tok, from, " ")) {
