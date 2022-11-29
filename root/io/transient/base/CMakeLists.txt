@@ -12,7 +12,7 @@ set(RootExeOptions -e "gSystem->Load(\"libbase\")")   # Adding a ; to avoid the 
 
 ROOTTEST_ADD_TEST(WriteFile
                   COPY_TO_BUILDDIR testobject.h testobjectderived.h
-                  PRECMD ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target base${fast}
+                  PRECMD ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} ${build_config} --target base${fast}
                   MACRO execWriteFile.cxx+
                   OUTREF execWriteFile${ref_suffix}
                   TIMEOUT 600)
