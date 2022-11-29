@@ -10,8 +10,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooFit/BatchModeHelpers.h>
-
+#include "RooFit/BatchModeHelpers.h"
 #include <RooAbsData.h>
 #include <RooAbsPdf.h>
 #include <RooAddition.h>
@@ -20,8 +19,8 @@
 #include <RooCategory.h>
 #include <RooConstraintSum.h>
 #include <RooDataSet.h>
-#include <RooFitDriver.h>
-#include <RooNLLVarNew.h>
+#include "RooFitDriver.h"
+#include "RooNLLVarNew.h"
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 

@@ -10,10 +10,9 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooFit/BatchModeDataHelpers.h>
-
+#include "RooFit/BatchModeDataHelpers.h"
 #include <RooAbsData.h>
-#include <RooNLLVarNew.h>
+#include "RooNLLVarNew.h"
 
 #include <ROOT/StringUtils.hxx>
 
