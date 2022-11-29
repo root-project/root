@@ -53,9 +53,17 @@ public:
 
 private:
    struct RImportFeature {
+      RImportFeature() = default;
+      RImportFeature(const RImportFeature &other) = delete;
+      RImportFeature(RImportFeature &&other) = default;
+      RImportFeature &operator=(const RImportFeature &other) = delete;
+      RImportFeature &operator=(RImportFeature &&other) = default;
+      std::string fBranchName;
       std::string fLeafName;
       std::string fFieldName;
       std::string fTypeName;
+      std::unique_ptr<unsigned char[]> fTreeBuffer;
+      void *fFieldDataPtr = nullptr;
    };
 
    RNTupleImporter() = default;
@@ -72,6 +80,7 @@ private:
    bool fIsQuiet = false;
    std::unique_ptr<RProgressCallback> fProgressCallback;
    std::vector<RImportFeature> fImportFeatures;
+   std::vector<std::size_t> fFeatureCStringIndexes;
    std::unique_ptr<RNTupleModel> fModel;
 
    RResult<void> PrepareSchema();
