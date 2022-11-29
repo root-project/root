@@ -91,7 +91,7 @@ TEST(PriorityQueue, TaskOrder)
    auto const& received = job.received_task_order.at(job.get_job_id());
    auto expected_order = expected_priority_queue_order(suggested_order, received, n_tasks - 1);
    EXPECT_TRUE(std::equal(received.cbegin(), received.cend(), expected_order.cbegin()));
-   printf("%lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu\n", received[0], received[1], received[2], received[3], received[4], received[5], received[6], received[7], received[8], received[9]);
+   printf("%zu, %zu, %zu, %zu, %zu, %zu, %zu, %zu, %zu, %zu\n", received[0], received[1], received[2], received[3], received[4], received[5], received[6], received[7], received[8], received[9]);
 }
 
 TEST(PriorityQueue, TaskPriority)
@@ -115,7 +115,7 @@ TEST(PriorityQueue, TaskPriority)
    auto const& received = job.received_task_order.at(job.get_job_id());
    auto expected_order = expected_priority_queue_order(suggested_order, received, n_tasks - 1);
    EXPECT_TRUE(std::equal(received.cbegin(), received.cend(), expected_order.cbegin()));
-   printf("%lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu\n", received[0], received[1], received[2], received[3], received[4], received[5], received[6], received[7], received[8], received[9]);
+   printf("%zu, %zu, %zu, %zu, %zu, %zu, %zu, %zu, %zu, %zu\n", received[0], received[1], received[2], received[3], received[4], received[5], received[6], received[7], received[8], received[9]);
 }
 
 /// This test makes sure the program doesn't break when the user
