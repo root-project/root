@@ -25,6 +25,7 @@
 
 #include <TBranch.h>
 #include <TLeaf.h>
+#include <TLeafC.h>
 
 #include <cassert>
 #include <cstdint>
@@ -98,7 +99,18 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       assert(b);
 
       for (auto l : TRangeDynCast<TLeaf>(b->GetListOfLeaves())) {
-         fImportFeatures.emplace_back(RImportFeature{l->GetName(), l->GetName(), l->GetTypeName()});
+         RImportFeature f;
+         f.fBranchName = b->GetName();
+         f.fLeafName = l->GetName();
+         f.fFieldName = l->GetName();
+         if (l->IsA() == TLeafC::Class()) {
+            f.fTypeName = "std::string";
+            f.fTreeBuffer = std::make_unique<unsigned char[]>(l->GetMaximum());
+            fFeatureCStringIndexes.emplace_back(fImportFeatures.size());
+         } else {
+            f.fTypeName = l->GetTypeName();
+         }
+         fImportFeatures.emplace_back(std::move(f));
       }
    }
 
@@ -113,12 +125,16 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
 
    fModel->Freeze();
 
-   for (const auto &f : fImportFeatures) {
+   for (auto &f : fImportFeatures) {
       // We connect the model's default entry's memory location for the new field to the branch, so that we can
       // fill the ntuple with the data read from the TTree
-      fSourceTree->SetBranchStatus(f.fLeafName.c_str(), 1);
-      void *fieldDataPtr = fModel->GetDefaultEntry()->GetValue(f.fFieldName).GetRawPtr();
-      fSourceTree->SetBranchAddress(f.fLeafName.c_str(), fieldDataPtr);
+      fSourceTree->SetBranchStatus(f.fBranchName.c_str(), 1);
+      f.fFieldDataPtr = fModel->GetDefaultEntry()->GetValue(f.fFieldName).GetRawPtr();
+      if (f.fTreeBuffer) {
+         fSourceTree->SetBranchAddress(f.fLeafName.c_str(), reinterpret_cast<void *>(f.fTreeBuffer.get()));
+      } else {
+         fSourceTree->SetBranchAddress(f.fLeafName.c_str(), f.fFieldDataPtr);
+      }
    }
 
    if (!fIsQuiet)
@@ -145,6 +161,11 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
    auto nEntries = fSourceTree->GetEntries();
    for (decltype(nEntries) i = 0; i < nEntries; ++i) {
       fSourceTree->GetEntry(i);
+
+      for (auto idx : fFeatureCStringIndexes) {
+         *reinterpret_cast<std::string *>(fImportFeatures[idx].fFieldDataPtr) =
+            reinterpret_cast<char *>(fImportFeatures[idx].fTreeBuffer.get());
+      }
 
       ntplWriter->Fill();
 

@@ -65,7 +65,6 @@ TEST(RNTupleImporter, SimpleBranches)
       Float_t myFloat = 32.0;
       Double_t myDouble = 64.0;
       // TODO(jblomer): Float16_t, Double32_t
-      // const char *myString = "ROOT RNTuple";
       tree->Branch("myBool", &myBool);
       tree->Branch("myInt8", &myInt8);
       tree->Branch("myUInt8", &myUInt8);
@@ -77,7 +76,6 @@ TEST(RNTupleImporter, SimpleBranches)
       tree->Branch("myUInt64", &myUInt64);
       tree->Branch("myFloat", &myFloat);
       tree->Branch("myDouble", &myDouble);
-      // tree->Branch("myString", const_cast<char *>(myString), "myString/C");
       tree->Fill();
       tree->Write();
    }
@@ -100,5 +98,36 @@ TEST(RNTupleImporter, SimpleBranches)
    EXPECT_EQ(64U, *reader->GetModel()->Get<std::uint64_t>("myUInt64"));
    EXPECT_FLOAT_EQ(32.0, *reader->GetModel()->Get<float>("myFloat"));
    EXPECT_FLOAT_EQ(64.0, *reader->GetModel()->Get<double>("myDouble"));
-   // EXPECT_STREQ("RNTuple", reader->GetModel()->Get<std::string>("myString")->c_str());
+}
+
+TEST(RNTupleImporter, CString)
+{
+   FileRaii fileGuard("test_ntuple_importer_cstring.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "");
+      const char *myString = "R";
+      tree->Branch("myString", const_cast<char *>(myString), "myString/C");
+      tree->Fill();
+      myString = "";
+      tree->SetBranchAddress("myString", const_cast<char *>(myString));
+      tree->Fill();
+      myString = "ROOT RNTuple";
+      tree->SetBranchAddress("myString", const_cast<char *>(myString));
+      tree->Fill();
+      tree->Write();
+   }
+
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+   importer->SetIsQuiet(true);
+   importer->SetNTupleName("ntuple");
+   importer->Import();
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(3U, reader->GetNEntries());
+   reader->LoadEntry(0);
+   EXPECT_EQ(std::string("R"), *reader->GetModel()->Get<std::string>("myString"));
+   reader->LoadEntry(1);
+   EXPECT_EQ(std::string(""), *reader->GetModel()->Get<std::string>("myString"));
+   reader->LoadEntry(2);
+   EXPECT_EQ(std::string("ROOT RNTuple"), *reader->GetModel()->Get<std::string>("myString"));
 }
