@@ -2,7 +2,6 @@
 // Authors: Jonas Rembser, CERN  06/2021
 
 #include <RooAddition.h>
-#include <RooAddPdf.h>
 #include <RooConstVar.h>
 #include <RooCategory.h>
 #include <RooDataSet.h>
@@ -28,16 +27,15 @@ TEST(RooSimultaneous, SingleChannelCrossCheck)
    // silence log output
    RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
 
-   RooRealVar x("x", "x", 0, 10);
-   RooRealVar mean("mean", "mean", 1., 0, 10);
-   RooRealVar width("width", "width", 1, 0.1, 10);
-   RooRealVar nsig("nsig", "nsig", 500, 100, 1000);
+   RooWorkspace ws;
+   ws.factory("Gaussian::gauss1(x[0, 10], mean[1., 0., 10.], width[1, 0.1, 10])");
+   ws.factory("AddPdf::model({gauss1}, {nsig[500, 100, 1000]})");
+   ws.factory("Gaussian::fconstraint(2.0, mean, 0.2)");
+   ws.factory("ProdPdf::modelConstrained({model, fconstraint})");
 
-   RooGenericPdf gauss1("guass1", "gauss1", "std::exp(-0.5*(x - mean)^2/width^2)", {x, mean, width});
-   RooGenericPdf fconstraint("fconstraint", "fconstraint", "std::exp(-0.5*(mean - 2.0)^2/0.2^2)", {mean});
-
-   RooAddPdf model("model", "model", RooArgList(gauss1), RooArgList(nsig));
-   RooProdPdf modelConstrained("modelConstrained", "modelConstrained", RooArgSet(model, fconstraint));
+   RooRealVar &x = *ws.var("x");
+   RooAbsPdf &model = *ws.pdf("model");
+   RooAbsPdf &modelConstrained = *ws.pdf("modelConstrained");
 
    RooCategory cat("cat", "cat");
    cat.defineType("physics");
