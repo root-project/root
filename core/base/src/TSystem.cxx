@@ -2068,7 +2068,8 @@ void TSystem::ListSymbols(const char *, const char *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// List all loaded shared libraries. `regexp` is a regular expression.
+/// List the loaded shared libraries.
+/// `regexp` is a regular expression allowing to filter the list.
 ///
 /// Examples:
 ///
@@ -2077,7 +2078,7 @@ void TSystem::ListSymbols(const char *, const char *)
 ///  gSystem->ListLibraries()
 /// ~~~
 ///
-/// The following line lists all the libraries currently loaded have "RIO" in their names:
+/// The following line lists all the libraries currently loaded having "RIO" in their names:
 /// ~~~ {.cpp}
 ///  gSystem->ListLibraries(".*RIO.*")
 /// ~~~
