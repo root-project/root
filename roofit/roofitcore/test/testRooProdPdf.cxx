@@ -7,10 +7,7 @@
 #include <RooArgSet.h>
 #include <RooConstVar.h>
 #include <RooDataSet.h>
-#include <RooDecay.h>
 #include <RooFitResult.h>
-#include <RooGamma.h>
-#include <RooGaussModel.h>
 #include <RooGenericPdf.h>
 #include <RooProdPdf.h>
 #include <RooRealVar.h>
@@ -139,23 +136,25 @@ TEST(RooProdPdf, TestDepsAreCond)
 {
    using namespace RooFit;
 
-   RooRealVar x("x", "", 0, 1);
-   RooRealVar xErr("xErr", "", 0.0001, 0.1);
+   RooWorkspace ws;
 
-   RooGaussModel gm("gm", "", x, RooConst(0), xErr);
+   ws.factory("GaussModel::gm(x[0, 1], 0.0, xErr[0.0001, 0.1])");
+   ws.factory("Decay::decayPdf(x, tau[0.4, 0, 1], gm, RooDecay::SingleSided)");
+   ws.factory("Gamma::errPdf(xErr, 4.0, 0.005, 0.0)");
 
-   RooRealVar tau("tau", "", 0.4, 0, 1);
-   RooDecay decayPdf("decayPdf", "", x, tau, gm, RooDecay::SingleSided);
-
-   RooGamma errPdf("errPdf", "", xErr, RooConst(4), RooConst(0.005), RooConst(0));
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &xErr = *ws.var("xErr");
+   RooRealVar &tau = *ws.var("tau");
+   RooAbsPdf &decayPdf = *ws.pdf("decayPdf");
+   RooAbsPdf &errPdf = *ws.pdf("errPdf");
 
    // What we want: decayPdf(x|xErr)*errPdf(xErr):
-   RooProdPdf pdf1("pdf1", "", RooArgSet(errPdf), Conditional(decayPdf, x, false));
+   RooProdPdf pdf1("pdf1", "", {errPdf}, Conditional(decayPdf, x, false));
 
    // Should be the same as pdf1:
-   RooProdPdf pdf2("pdf2", "", RooArgSet(errPdf), Conditional(decayPdf, xErr, true));
+   RooProdPdf pdf2("pdf2", "", {errPdf}, Conditional(decayPdf, xErr, true));
 
-   std::unique_ptr<RooDataSet> data{pdf1.generate(RooArgSet(x, xErr), NumEvents(10000))};
+   std::unique_ptr<RooDataSet> data{pdf1.generate({x, xErr}, NumEvents(10000))};
 
    auto resetParameters = [&]() {
       tau.setVal(0.4);

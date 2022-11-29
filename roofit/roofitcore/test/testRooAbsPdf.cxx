@@ -14,12 +14,12 @@
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
 #include <RooPoisson.h>
-#include <RooPolynomial.h>
 #include <RooProdPdf.h>
 #include <RooProduct.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooUniform.h>
+#include <RooWorkspace.h>
 
 #include <TClass.h>
 #include <TRandom.h>
@@ -31,6 +31,8 @@
 // ROOT-10668: Asympt. correct errors don't work when title and name differ
 TEST(RooAbsPdf, AsymptoticallyCorrectErrors)
 {
+   using namespace RooFit;
+
    auto &msg = RooMsgService::instance();
    msg.setGlobalKillBelow(RooFit::WARNING);
 
@@ -43,17 +45,17 @@ TEST(RooAbsPdf, AsymptoticallyCorrectErrors)
    std::unique_ptr<RooDataSet> data(pdf.generate(x, 5000));
    data->addColumn(formula);
    RooRealVar w("w", "weight", 1, 0, 20);
-   RooDataSet weightedData("weightedData", "weightedData", RooArgSet(x, w), RooFit::Import(*data),
-                           RooFit::WeightVar(w));
+   RooDataSet weightedData("weightedData", "weightedData", {x, w}, Import(*data),
+                           WeightVar(w));
 
    ASSERT_TRUE(weightedData.isWeighted());
    weightedData.get(0);
    ASSERT_NE(weightedData.weight(), 1);
 
    a = 1.2;
-   auto result = pdf.fitTo(weightedData, RooFit::Save(), RooFit::AsymptoticError(true), RooFit::PrintLevel(-1));
+   auto result = pdf.fitTo(weightedData, Save(), AsymptoticError(true), PrintLevel(-1));
    a = 1.2;
-   auto result2 = pdf.fitTo(weightedData, RooFit::Save(), RooFit::SumW2Error(false), RooFit::PrintLevel(-1));
+   auto result2 = pdf.fitTo(weightedData, Save(), SumW2Error(false), PrintLevel(-1));
 
    // Set relative tolerance for errors to large value to only check for values
    EXPECT_TRUE(result->isIdenticalNoCov(*result2, 1e-6, 10.0)) << "Fit results should be very similar.";
@@ -205,28 +207,28 @@ TEST(RooAbsPdf, MultiRangeFit2D)
    msg.setGlobalKillBelow(RooFit::WARNING);
 
    // model taken from the rf312_multirangefit.C tutorial
-
-   // Define observables x,y
-   RooRealVar x("x", "x", -10, 10);
-   RooRealVar y("y", "y", -10, 10);
+   RooWorkspace ws;
 
    // Construct the signal pdf gauss(x)*gauss(y)
-   RooRealVar mx("mx", "mx", 1, -10, 10);
-   RooRealVar my("my", "my", 1, -10, 10);
-
-   RooGaussian gx("gx", "gx", x, mx, RooConst(1));
-   RooGaussian gy("gy", "gy", y, my, RooConst(1));
-
-   RooProdPdf sig("sig", "sig", gx, gy);
+   ws.factory("Gaussian::gx(x[-10, 10], mx[1, -10, 10], 1.0)");
+   ws.factory("Gaussian::gy(y[-10, 10], my[1, -10, 10], 1.0)");
+   ws.factory("ProdPdf::sig(gx, gy)");
 
    // Construct the background pdf (flat in x,y)
-   RooPolynomial px("px", "px", x);
-   RooPolynomial py("py", "py", y);
-   RooProdPdf bkg("bkg", "bkg", px, py);
+   ws.factory("Polynomial::px(x)");
+   ws.factory("Polynomial::py(y)");
+   ws.factory("ProdPdf::bkg(px, py)");
 
    // Construct the composite model sig+bkg
-   RooRealVar f("f", "f", 0.5, 0., 1.);
-   RooAddPdf model("model", "model", RooArgList(sig, bkg), f);
+   ws.factory("AddPdf::model({sig, bkg}, f[0.5, 0., 1.])");
+
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &y = *ws.var("y");
+   RooRealVar &mx = *ws.var("mx");
+   RooRealVar &my = *ws.var("my");
+   RooRealVar &f = *ws.var("f");
+
+   RooAbsPdf &model = *ws.pdf("model");
 
    x.setRange("SB1", -10, +10);
    y.setRange("SB1", -10, 0);

@@ -23,7 +23,7 @@ ROOT_ADD_GTEST(testRooAbsPdf testRooAbsPdf.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooAbsCollection testRooAbsCollection.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooDataSet testRooDataSet.cxx LIBRARIES Tree RooFitCore)
 ROOT_ADD_GTEST(testRooFormula testRooFormula.cxx LIBRARIES RooFitCore)
-ROOT_ADD_GTEST(testRooProdPdf testRooProdPdf.cxx LIBRARIES RooFitCore RooFit)
+ROOT_ADD_GTEST(testRooProdPdf testRooProdPdf.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testProxiesAndCategories testProxiesAndCategories.cxx
   LIBRARIES RooFitCore
   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/testProxiesAndCategories_1.root
@@ -55,7 +55,7 @@ ROOT_ADD_GTEST(testLikelihoodSerial TestStatistics/testLikelihoodSerial.cxx LIBR
 ROOT_ADD_GTEST(testRooAbsL TestStatistics/testRooAbsL.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooRealL TestStatistics/RooRealL.cpp LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testInterface TestStatistics/testInterface.cpp LIBRARIES RooFitCore)
-ROOT_ADD_GTEST(testGlobalObservables testGlobalObservables.cxx LIBRARIES RooFit)
+ROOT_ADD_GTEST(testGlobalObservables testGlobalObservables.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooPolyFunc testRooPolyFunc.cxx LIBRARIES Gpad RooFitCore)
 ROOT_ADD_GTEST(testSumW2Error testSumW2Error.cxx LIBRARIES Gpad RooFitCore)
 if (roofit_multiprocess)
