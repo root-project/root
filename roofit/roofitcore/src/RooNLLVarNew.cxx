@@ -281,6 +281,38 @@ void RooNLLVarNew::enableOffsetting(bool flag)
    _offset = {};
 }
 
+std::string RooNLLVarNew::buildLoopBegin(std::string &globalScope)
+{
+   _adIdx = GetName();
+   _adIdx += "_i";
+   for (auto *it : _observables) {
+      if (auto *absReal = dynamic_cast<RooAbsReal *>(it))
+         absReal->setIdxVar(_adIdx);
+   }
+   // Here numEntries is a 'key' word defined by the upper level code squasher.
+   std::string code = "for(int " + _adIdx + " = 0; " + _adIdx + " < numEntries; " + _adIdx + "++) {\n";
+   return code;
+}
+
+std::string RooNLLVarNew::buildLoopEnd(std::string &globalScope)
+{
+   return "}\n";
+}
+
+std::string RooNLLVarNew::translate(std::string &globalScope, std::vector<std::string> &preFuncDecls)
+{
+   std::string className = GetName();
+   std::string resName = className + "_result";
+   _adResult = resName;
+   std::string nllDecl = "double " + resName + " = 0;\n";
+   globalScope += nllDecl;
+   std::string tmpName = className + "_temp";
+   std::string code = "double " + tmpName + ";\n";
+   code += tmpName + " = std::log(" + _pdf->getResult() + ");\n";
+   code += resName + " -= -" + weightVarName + "[" + _adIdx + "] * " + tmpName + ";\n";
+   return code;
+}
+
 double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> &&result, double weightSum) const
 {
    // If part of simultaneous PDF normalize probability over

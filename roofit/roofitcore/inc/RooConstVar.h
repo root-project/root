@@ -54,13 +54,13 @@ public:
     _value = value;
   }
 
-protected:
+  std::string translate(std::string &globalScope, std::vector<std::string> &preFuncDecls) override;
 
+  protected:
   double evaluate() const override {
     return _value;
   }
 
   ClassDefOverride(RooConstVar,2) // Constant RooAbsReal value object
 };
-
 #endif

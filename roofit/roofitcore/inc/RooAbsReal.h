@@ -463,7 +463,39 @@ protected:
 
   //--------------------------------------------------------------------
 
- protected:
+  // Experimental AD feature functions
+  protected:
+  /// the variable that stores the result expression for the object.
+  std::string _adResult = "";
+
+  public:
+  virtual std::string translate(std::string &globalScope, std::vector<std::string> &preFuncDecls);
+  /// This function returns the variable/expression (as a std::string) that
+  /// the class stores its result in during code squashing. Allows for result
+  /// propagation up the compute graph.
+  virtual std::string getResult() { return _adResult; }
+  /// This function can be used to update the string that this class stores
+  /// its result into. Is beneficial for inputs or non-scalar variables that
+  /// might have varying index expressions.
+  virtual void updateResults(std::string newRes) { _adResult = newRes; }
+  /// A function to return if this class produces a loop. Loop producing
+  /// classes generally want to build the beginning of their loop before
+  /// visiting the subgraph.
+  virtual bool isLoopProducing() { return false; }
+  /// A function to build the beginnings of a loop (i.e. "for(int i = 0; i <
+  /// n; i++) {" ), this function is called before the subgraph of this node
+  /// is visited.
+  virtual std::string buildLoopBegin(std::string &globalScope) { return ""; };
+  /// A function to build the ending of a loop (usually just "}"), this
+  /// function is called after the subgraph of this node is visited.
+  virtual std::string buildLoopEnd(std::string &globalScope) { return ""; };
+  /// Shorthand to set the index of the current result (you can also achieve
+  /// the same results through x->updateResults(x->getResult() + "[" + idx +
+  /// "]"));
+  virtual void setIdxVar(std::string idx) { _adResult += "[" + idx + "]"; }
+  // End of Experimental AD feature functions
+
+  protected:
   // Hooks for RooDataSet interface
   friend class RooVectorDataStore ;
   void syncCache(const RooArgSet* set=nullptr) override { getVal(set) ; }
@@ -606,6 +638,4 @@ void RooAbsReal::setCachedValue(double value, bool notifyClients) {
     _valueDirty = false;
   }
 }
-
-
 #endif

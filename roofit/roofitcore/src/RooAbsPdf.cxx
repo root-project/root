@@ -170,6 +170,7 @@ called for each data event.
 #include "RooHelpers.h"
 #include "RooFormulaVar.h"
 #include "RooDerivative.h"
+#include "RooFit/ADModeHelpers.h"
 #include "RooFit/BatchModeHelpers.h"
 #include "RooVDTHeaders.h"
 #include "RooFit/TestStatistics/buildLikelihood.h"
@@ -1023,6 +1024,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineMutex("Range","RangeWithName") ;
   pc.defineMutex("GlobalObservables","GlobalObservablesTag") ;
   pc.defineInt("NewStyle", "NewStyle", 0, 0);
+  pc.defineInt("CodeSquashing", "CodeSquashing", 0, 0);
+  pc.defineInt("CodePrinting", "CodeSquashing", 1, 0);
 
   // New style likelihoods define parallelization through Parallelize(...) on fitTo or attributes on RooMinimizer::Config.
   pc.defineMutex("NewStyle", "NumCPU");
@@ -1162,6 +1165,22 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
                                                doOffset,
                                                static_cast<bool>(splitRange),
                                                takeGlobalObservablesFromData).release();
+  }
+
+  if (pc.getInt("CodeSquashing")) {
+     std::unique_ptr<RooAbsPdf> pdfClone = RooHelpers::cloneTreeWithSameParameters(*this, data.get());
+     if (addCoefRangeName) {
+        cxcoutI(Fitting) << "RooAbsPdf::fitTo(" << GetName()
+                         << ") fixing interpretation of coefficients of any component to range " << addCoefRangeName
+                         << "\n";
+        pdfClone->fixAddCoefRange(addCoefRangeName, false);
+     }
+
+     return RooFit::ADModeHelpers::translateNLL(
+               std::move(pdfClone), data, createConstr(*pdfClone, /*removeConstraintsFromPdf=*/true),
+               rangeName ? rangeName : "", projDeps, ext, pc.getDouble("IntegrateBins"), doOffset,
+               static_cast<bool>(splitRange), takeGlobalObservablesFromData, pc.getInt("CodePrinting"))
+        .release();
   }
 
   // Construct NLL

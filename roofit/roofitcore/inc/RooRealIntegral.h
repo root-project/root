@@ -83,8 +83,10 @@ public:
 
   std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server) const override;
 
-protected:
+  std::string translate(std::string &globalScope, std::vector<std::string> &preFuncDecls) override;
+  std::string getResult() override;
 
+  protected:
   mutable bool _valid = false;
   bool _respectCompSelect = true;
 

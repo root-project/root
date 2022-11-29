@@ -58,6 +58,9 @@ public:
       return static_cast<RooAbsPdf &>(*_pdf).expectedEvents(nset);
    }
 
+   std::string translate(std::string &globalScope, std::vector<std::string> &preFuncDecls) override;
+   std::string getResult() override;
+
 protected:
    void computeBatch(cudaStream_t *, double *output, size_t size, RooFit::Detail::DataMap const &) const override;
    double evaluate() const override

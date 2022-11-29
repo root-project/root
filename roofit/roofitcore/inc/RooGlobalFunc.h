@@ -213,6 +213,11 @@ inline RooCmdArg BatchMode(bool batchModeOn) { return BatchMode(batchModeOn ? "c
 
 RooCmdArg IntegrateBins(double precision);
 
+/// Generate and display code equivalent of models.
+/// \param genCode If true, generates the code for the underlying model.
+/// \param printCode If true, prints the code for the underlying model.
+RooCmdArg CodeSquashing(bool genCode, bool printCode = false);
+
 // RooAbsPdf::fitTo arguments
 RooCmdArg PrefitDataFraction(double data_ratio = 0.0) ;
 RooCmdArg Optimize(Int_t flag=2) ;

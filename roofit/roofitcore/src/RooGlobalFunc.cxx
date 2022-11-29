@@ -195,6 +195,11 @@ namespace RooFit {
   /// Integrate the PDF over bins. Improves accuracy for binned fits. Switch off using `0.` as argument. \see RooAbsPdf::fitTo().
   RooCmdArg IntegrateBins(double precision) { return RooCmdArg("IntegrateBins", 0, 0, precision); }
 
+  RooCmdArg CodeSquashing(bool flag, bool printCode)
+  {
+     return RooCmdArg("CodeSquashing", flag, printCode, 0, 0, 0, 0, 0, 0);
+  }
+
   // RooAbsCollection::printLatex arguments
   RooCmdArg Columns(Int_t ncol)                           { return RooCmdArg("Columns",ncol,0,0,0,0,0,0,0) ; }
   RooCmdArg OutputFile(const char* fileName)              { return RooCmdArg("OutputFile",0,0,0,0,fileName,0,0,0) ; }

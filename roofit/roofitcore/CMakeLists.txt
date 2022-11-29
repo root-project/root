@@ -245,6 +245,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFit/TestStatistics/buildLikelihood.h
     RunContext.h
   SOURCES
+    src/ADModeHelpers.cxx
     src/ConstraintHelpers.cxx
     src/BatchModeHelpers.cxx
     src/BatchModeDataHelpers.cxx

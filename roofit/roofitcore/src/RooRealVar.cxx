@@ -107,6 +107,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 {
   _value = value ;
   _fast = true ;
+  _adResult = name;
   removeRange();
   setConstant(true) ;
   TRACE_CREATE
@@ -123,6 +124,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   _binning(new RooUniformBinning(minValue,maxValue,100))
 {
   _fast = true ;
+  _adResult = name;
 
   if (RooNumber::isInfinite(minValue)) {
     if (RooNumber::isInfinite(maxValue)) {
@@ -158,6 +160,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   _binning(new RooUniformBinning(minValue,maxValue,100))
 {
     _fast = true ;
+    _adResult = name;
     setRange(minValue,maxValue) ;
 
     double clipValue ;
@@ -183,6 +186,7 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
      _binning->insertHook(*this) ;
   }
   _fast = true ;
+  _adResult = GetName();
 
   for (const auto& item : other._altNonSharedBinning) {
     std::unique_ptr<RooAbsBinning> abc( item.second->clone() );

@@ -4604,6 +4604,27 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
   setStringAttribute("CACHEPARAMINT",plist.c_str()) ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// This function defines a translation for each RooAbsReal based object that can be used
+/// to express the class as simple C++ code. The function returns the code represnted by
+/// each class as an std::string that is later concatenated with other translate calls to form
+/// the C++ code that AD tools can understand. Any class that wants to support AD, has to
+/// implement this function.
+///
+/// \param[out] globalScope Any declarations made in the code go here. This string is prefixed
+/// to the generated code, allowing it to function as a place to keep variable declarations or other
+/// code that needs to be executed before the rest of the function is.
+/// \param[out] preFuncDecls This string allows each function to define other free functions. Once defined
+/// these functions can be called as any other normal function.
+///
+/// \returns The representative code string for the given object.
+std::string RooAbsReal::translate(std::string &globalScope, std::vector<std::string> &preFuncDecls)
+{
+   std::stringstream errorMsg;
+   errorMsg << "Translate function for class " << GetName() << " has not yet been implemented.";
+   coutE(Minimization) << errorMsg.str() << std::endl;
+   throw std::runtime_error(errorMsg.str().c_str());
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate this object for a batch/span of data points.

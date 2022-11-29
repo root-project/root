@@ -36,3 +36,15 @@ void RooNormalizedPdf::computeBatch(cudaStream_t * /*stream*/, double *output, s
       }
    }
 }
+
+// for now, just return an empty string.
+std::string RooNormalizedPdf::translate(std::string &globalScope, std::vector<std::string> &preFuncDecls)
+{
+   return "";
+}
+
+// Return the result from the underlying pdf.
+std::string RooNormalizedPdf::getResult()
+{
+   return _pdf->getResult();
+}

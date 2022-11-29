@@ -71,3 +71,16 @@ void RooConstVar::writeToStream(ostream& os, bool /*compact*/) const
   os << _value ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+std::string RooConstVar::translate(std::string &globalScope, std::vector<std::string> &preFuncDecls)
+{
+   // Just return a stringy-fied version of the const value.
+   // Formats to the maximum precision.
+   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
+   std::stringstream ss;
+   ss.precision(max_precision);
+   ss << std::fixed << _value;
+   _adResult = ss.str();
+   return "";
+}

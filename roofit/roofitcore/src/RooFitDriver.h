@@ -14,6 +14,7 @@
 #ifndef RooFit_RooFitDriver_h
 #define RooFit_RooFitDriver_h
 
+#include "RooFit/ADModeHelpers.h"
 #include "RooFit/Detail/DataMap.h"
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>

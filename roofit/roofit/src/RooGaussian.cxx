@@ -154,3 +154,24 @@ void RooGaussian::generateEvent(Int_t code)
 
   return;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string RooGaussian::translate(std::string &globalScope, std::vector<std::string> &preFuncDecls)
+{
+   // Build a call to the stateless gaussian defined later.
+   _adResult =
+      "RooGaussian::gaussEvaluate(" + x->getResult() + ", " + mean->getResult() + ", " + sigma->getResult() + ")";
+   return "";
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/// A stateless function to evaluate a gaussian normalized over x.
+double RooGaussian::gaussEvaluate(double x, double mean, double sigma)
+{
+   const double arg = x - mean;
+   const double sig = sigma;
+   double out = std::exp(-0.5 * arg * arg / (sig * sig));
+   return 1. / (std::sqrt(TMath::TwoPi()) * sigma) * out;
+}

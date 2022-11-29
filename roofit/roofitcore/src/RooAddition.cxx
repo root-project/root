@@ -155,6 +155,42 @@ double RooAddition::evaluate() const
   return sum ;
 }
 
+std::string RooAddition::translate(std::string &globalScope, std::vector<std::string> &preFuncDecls)
+{
+   // If the number of elements to sum is less than 3, just build a sum expression.
+   // else build a loop to sum over the values.
+   unsigned int eleSize = _set.getSize();
+   if (eleSize > 3) {
+      std::string className = GetName();
+      std::string varName = "elements" + className;
+      std::string sumName = "sum" + className;
+      std::string code = "";
+      std::string decl = "double " + varName + "[" + std::to_string(eleSize) + "]{";
+      int idx = 0;
+      for (auto *it : static_range_cast<RooAbsReal *>(_set)) {
+         decl += it->getResult() + ",";
+         it->updateResults(varName + "[" + std::to_string(idx) + "]");
+         idx++;
+      }
+      decl.back() = '}';
+      code += decl + ";\n";
+
+      globalScope += "double " + sumName + " = 0;";
+      std::string iterator = "i_" + className;
+      code += "for(int " + iterator + " = 0; " + iterator + " < " + std::to_string(eleSize) + "; " + iterator +
+              "++) {\n" + sumName + " += " + varName + "[i];\n}\n";
+      _adResult = sumName;
+      return code;
+   }
+
+   _adResult = "(";
+   for (auto *it : static_range_cast<RooAbsReal *>(_set)) {
+      _adResult += it->getResult() + '+';
+   }
+   _adResult.back() = ')';
+
+   return "";
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute addition of PDFs in batches.

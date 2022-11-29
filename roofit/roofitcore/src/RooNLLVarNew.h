@@ -57,6 +57,11 @@ public:
 
    void setSimCount(int simCount) { _simCount = simCount; }
 
+   std::string translate(std::string &globalScope, std::vector<std::string> &preFuncDecls) override;
+   bool isLoopProducing() { return true; }
+   std::string buildLoopBegin(std::string &globalScope) override;
+   std::string buildLoopEnd(std::string &globalScope) override;
+
 private:
    double evaluate() const override { return _value; }
    void resetWeightVarNames();
@@ -78,6 +83,7 @@ private:
    mutable std::vector<double> _logProbasBuffer;       ///<!
    mutable ROOT::Math::KahanSum<double> _offset = 0.0; ///<! Offset as KahanSum to avoid loss of precision
 
+   std::string _adIdx;
 }; // end class RooNLLVar
 
 } // end namespace Experimental

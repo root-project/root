@@ -1165,3 +1165,15 @@ std::unique_ptr<RooArgSet> RooRealIntegral::fillNormSetForServer(RooArgSet const
                                                                  RooAbsArg const& /*server*/) const {
   return _funcNormSet ? std::make_unique<RooArgSet>(*_funcNormSet) : nullptr;
 }
+
+// For now return an empty string.
+std::string RooRealIntegral::translate(std::string &globalScope, std::vector<std::string> &preFuncDecls)
+{
+   return "";
+}
+
+// All pdfs are assumed to be normalized, so just return 1 here.
+std::string RooRealIntegral::getResult()
+{
+   return "1";
+}
