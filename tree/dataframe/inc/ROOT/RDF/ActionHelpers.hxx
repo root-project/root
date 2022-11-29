@@ -171,7 +171,7 @@ public:
 };
 
 class R__CLING_PTRCHECK(off) CountHelper : public RActionImpl<CountHelper> {
-   const std::shared_ptr<ULong64_t> fResultCount;
+   std::shared_ptr<ULong64_t> fResultCount;
    Results<ULong64_t> fCounts;
 
 public:
@@ -203,7 +203,7 @@ public:
 
 template <typename ProxiedVal_t>
 class R__CLING_PTRCHECK(off) ReportHelper : public RActionImpl<ReportHelper<ProxiedVal_t>> {
-   const std::shared_ptr<RCutFlowReport> fReport;
+   std::shared_ptr<RCutFlowReport> fReport;
    // Here we have a weak pointer since we need to keep track of the validity
    // of the proxied node. It can happen that the user does not trigger the
    // event loop by looking into the RResultPtr and the chain goes out of scope
@@ -247,7 +247,7 @@ class R__CLING_PTRCHECK(off) BufferedFillHelper : public RActionImpl<BufferedFil
 
    std::vector<Buf_t> fBuffers;
    std::vector<Buf_t> fWBuffers;
-   const std::shared_ptr<Hist_t> fResultHist;
+   std::shared_ptr<Hist_t> fResultHist;
    unsigned int fNSlots;
    unsigned int fBufSize;
    /// Histograms containing "snapshots" of partial results. Non-null only if a registered callback requires it.
@@ -1005,7 +1005,7 @@ extern template class TakeHelper<double, double, std::vector<double>>;
 
 template <typename ResultType>
 class R__CLING_PTRCHECK(off) MinHelper : public RActionImpl<MinHelper<ResultType>> {
-   const std::shared_ptr<ResultType> fResultMin;
+   std::shared_ptr<ResultType> fResultMin;
    Results<ResultType> fMins;
 
 public:
@@ -1061,7 +1061,7 @@ public:
 
 template <typename ResultType>
 class R__CLING_PTRCHECK(off) MaxHelper : public RActionImpl<MaxHelper<ResultType>> {
-   const std::shared_ptr<ResultType> fResultMax;
+   std::shared_ptr<ResultType> fResultMax;
    Results<ResultType> fMaxs;
 
 public:
@@ -1118,7 +1118,7 @@ public:
 
 template <typename ResultType>
 class R__CLING_PTRCHECK(off) SumHelper : public RActionImpl<SumHelper<ResultType>> {
-   const std::shared_ptr<ResultType> fResultSum;
+   std::shared_ptr<ResultType> fResultSum;
    Results<ResultType> fSums;
    Results<ResultType> fCompensations;
 
@@ -1201,7 +1201,7 @@ public:
 };
 
 class R__CLING_PTRCHECK(off) MeanHelper : public RActionImpl<MeanHelper> {
-   const std::shared_ptr<double> fResultMean;
+   std::shared_ptr<double> fResultMean;
    std::vector<ULong64_t> fCounts;
    std::vector<double> fSums;
    std::vector<double> fPartialMeans;
@@ -1258,8 +1258,8 @@ extern template void MeanHelper::Exec(unsigned int, const std::vector<unsigned i
 
 class R__CLING_PTRCHECK(off) StdDevHelper : public RActionImpl<StdDevHelper> {
    // Number of subsets of data
-   const unsigned int fNSlots;
-   const std::shared_ptr<double> fResultStdDev;
+   unsigned int fNSlots;
+   std::shared_ptr<double> fResultStdDev;
    // Number of element for each slot
    std::vector<ULong64_t> fCounts;
    // Mean of each slot
@@ -1314,8 +1314,8 @@ template <typename PrevNodeType>
 class R__CLING_PTRCHECK(off) DisplayHelper : public RActionImpl<DisplayHelper<PrevNodeType>> {
 private:
    using Display_t = ROOT::RDF::RDisplay;
-   const std::shared_ptr<Display_t> fDisplayerHelper;
-   const std::shared_ptr<PrevNodeType> fPrevNode;
+   std::shared_ptr<Display_t> fDisplayerHelper;
+   std::shared_ptr<PrevNodeType> fPrevNode;
    size_t fEntriesToProcess;
 
 public:
@@ -1825,7 +1825,7 @@ class R__CLING_PTRCHECK(off) AggregateHelper
    : public RActionImpl<AggregateHelper<Acc, Merge, R, T, U, MustCopyAssign>> {
    Acc fAggregate;
    Merge fMerge;
-   const std::shared_ptr<U> fResult;
+   std::shared_ptr<U> fResult;
    Results<U> fAggregators;
 
 public:
