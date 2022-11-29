@@ -337,11 +337,6 @@ sap.ui.define([
          if (!panel_name)
             return Promise.resolve(null);
 
-         let oLd = new SplitterLayoutData({
-            resizable: true,
-            size: '250px'
-         });
-
          let canvp = this.getCanvasPainter();
 
          let viewName = panel_name;
@@ -360,7 +355,7 @@ sap.ui.define([
          return XMLView.create({
              viewName,
              viewData,
-             layoutData: oLd,
+             layoutData: new SplitterLayoutData({ resizable: true, size: '250px' }),
              height: (panel_name == 'Panel') ? '100%' : undefined
          }).then(oView => {
 
@@ -391,14 +386,21 @@ sap.ui.define([
          return bottom ? bottom.getController() : null;
       },
 
-      drawInProjectionArea(can, opt) {
+      drawInProjectionArea(obj, opt) {
+         let cp = this.getCanvasPainter();
+         if (typeof cp?.drawObject != 'function')
+            return Promise.resolve(null);
+
          let ctrl = this.getBottomController();
          if (!ctrl) ctrl = this.getLeftController('Panel');
 
-         if (typeof ctrl?.drawObject == 'function')
-            return ctrl.drawObject(can, opt);
-
-         return Promise.resolve(null);
+         return ctrl.getRenderPromise().then(dom => {
+            dom.style.overflow = "hidden";
+            return cp.drawObject(dom, obj, opt);
+         }).then(painter => {
+            ctrl.setObjectPainter(painter);
+            return painter;
+         });
       },
 
       showProjectionArea(kind) {
@@ -430,7 +432,6 @@ sap.ui.define([
 
          if (!this.bottomVisible) {
             // vertical splitter exists - toggle it
-
             let vsplit = cont[cont.length-1],
                 main = vsplit.removeContentArea(0);
 
@@ -442,28 +443,21 @@ sap.ui.define([
 
          // remove panel with normal drawing
          split.removeContentArea(cont[cont.length-1]);
-         let vsplit = new Splitter({orientation: "Vertical"});
+
+         let vsplit = new Splitter({ orientation: "Vertical" });
 
          split.addContentArea(vsplit);
 
          vsplit.addContentArea(cont[cont.length-1]);
 
-         let oLd = new SplitterLayoutData({
-            resizable : true,
-            size      : "200px"
-         });
-
-         return import('./jsrootsys/modules/main.mjs').then(imp_main =>
-         XMLView.create({
-            viewName : "rootui5.canv.view.Panel",
-            viewData: { jsroot: imp_main },
-            layoutData: oLd,
+         return XMLView.create({
+            viewName: 'rootui5.canv.view.Panel',
+            layoutData: new SplitterLayoutData({ resizable: true, size: "200px" }),
             height: "100%"
-         })).then(oView => {
+         }).then(oView => {
             vsplit.addContentArea(oView);
             return oView.getController();
          });
-
       },
 
       showCanvasStatus(text1, text2, text3, text4) {
