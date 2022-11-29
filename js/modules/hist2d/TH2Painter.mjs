@@ -62,10 +62,8 @@ class TH2Painter extends THistPainter {
 
    /** @summary Redraw projection */
    async redrawProjection(ii1, ii2, jj1, jj2) {
-      if (!this.is_projection || this.doing_projection)
+      if (!this.is_projection)
          return false;
-
-      this.doing_projection = true;
 
       if (jj2 === undefined) {
          if (!this.tt_handle) return;
@@ -73,7 +71,7 @@ class TH2Painter extends THistPainter {
          jj1 = Math.round((this.tt_handle.j1 + this.tt_handle.j2)/2); jj2 = jj1+1;
       }
 
-      let canp = this.getCanvPainter(), histo = this.getHisto();
+      let canp = this.getCanvPainter();
 
       if (canp && !canp._readonly && (this.snapid !== undefined)) {
          // this is when projection should be created on the server side
@@ -83,8 +81,15 @@ class TH2Painter extends THistPainter {
          else
             exec += `ProjectionY("_projy",${ii1+1},${ii2},"")`;
          canp.sendWebsocket(exec);
-         return;
+         return true;
       }
+
+      if (this.doing_projection)
+         return false;
+
+      this.doing_projection = true;
+
+      let histo = this.getHisto();
 
       if (!this.proj_hist) {
          if (this.is_projection == 'X') {
@@ -141,7 +146,8 @@ class TH2Painter extends THistPainter {
    /** @summary Execute TH2 menu command
      * @desc Used to catch standard menu items and provide local implementation */
    executeMenuCommand(method, args) {
-      if (super.executeMenuCommand(method, args)) return true;
+      if (super.executeMenuCommand(method, args))
+         return true;
 
       if ((method.fName == 'SetShowProjectionX') || (method.fName == 'SetShowProjectionY')) {
          this.toggleProjection(method.fName[17], args && parseInt(args) ? parseInt(args) : 1);

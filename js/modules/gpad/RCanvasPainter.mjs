@@ -117,7 +117,7 @@ class RCanvasPainter extends RPadPainter {
 
       if (kind) this.proj_painter = 1; // just indicator that drawing can be preformed
 
-      if (this.showUI5ProjectionArea)
+      if (isFunc(this.showUI5ProjectionArea))
          return this.showUI5ProjectionArea(kind);
 
       let layout = 'simple', mainid;
@@ -181,9 +181,13 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Send message via web socket
      * @private */
-   sendWebsocket(msg, chid) {
-      if (this._websocket)
-         this._websocket.send(msg, chid);
+   sendWebsocket(msg) {
+      if (this._websocket?.canSend()) {
+         this._websocket.send(msg);
+         return true;
+      }
+
+      return false;
    }
 
    /** @summary Close websocket connection to canvas
