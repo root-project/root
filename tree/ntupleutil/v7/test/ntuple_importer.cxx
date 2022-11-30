@@ -131,3 +131,19 @@ TEST(RNTupleImporter, CString)
    reader->LoadEntry(2);
    EXPECT_EQ(std::string("ROOT RNTuple"), *reader->GetModel()->Get<std::string>("myString"));
 }
+
+TEST(RNTupleImporter, Leaflist)
+{
+   FileRaii fileGuard("test_ntuple_importer_leaflist.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "");
+      struct {
+         Int_t a = 1;
+         Int_t b = 2;
+      } leafList;
+      tree->Branch("branch", &leafList, "a/I:b/I");
+      tree->Fill();
+      tree->Write();
+   }
+}
