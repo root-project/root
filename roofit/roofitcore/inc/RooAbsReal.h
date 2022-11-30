@@ -466,7 +466,7 @@ protected:
   // Experimental AD feature functions
   protected:
   /// the variable that stores the result expression for the object.
-  std::string _adResult = "";
+  std::string _adResult = ""; ///<!
 
   public:
   virtual std::string translate(std::string &globalScope, std::vector<std::string> &preFuncDecls);
