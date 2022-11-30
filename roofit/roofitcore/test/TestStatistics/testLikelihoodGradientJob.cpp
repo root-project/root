@@ -419,7 +419,7 @@ TEST_P(SimBinnedConstrainedTest, ConstrainedAndOffset)
 
    std::unique_ptr<RooAbsReal> likelihoodAbsReal{pdf->createNLL(*data, Constrain(*w.var("alpha_bkg_obs_A")),
                                                                 GlobalObservables(*w.var("alpha_bkg_obs_B")),
-                                                                Offset(true), NewStyle(true))};
+                                                                NewStyle(true))};
 
    RooMinimizer::Config cfg1;
    cfg1.parallelGradient = true;
