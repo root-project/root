@@ -16,7 +16,9 @@
 #ifndef ROOT7_RNTuplerImporter
 #define ROOT7_RNTuplerImporter
 
+#include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
+#include <ROOT/RField.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RStringView.hxx>
@@ -24,6 +26,7 @@
 #include <TFile.h>
 #include <TTree.h>
 
+#include <cstdlib>
 #include <memory>
 #include <vector>
 
@@ -52,18 +55,60 @@ public:
    };
 
 private:
-   struct RImportFeature {
-      RImportFeature() = default;
-      RImportFeature(const RImportFeature &other) = delete;
-      RImportFeature(RImportFeature &&other) = default;
-      RImportFeature &operator=(const RImportFeature &other) = delete;
-      RImportFeature &operator=(RImportFeature &&other) = default;
+   struct RImportBranch {
+      RImportBranch() = default;
+      RImportBranch(const RImportBranch &other) = delete;
+      RImportBranch(RImportBranch &&other) = default;
+      RImportBranch &operator=(const RImportBranch &other) = delete;
+      RImportBranch &operator=(RImportBranch &&other) = default;
       std::string fBranchName;
-      std::string fLeafName;
-      std::string fFieldName;
-      std::string fTypeName;
-      std::unique_ptr<unsigned char[]> fTreeBuffer;
-      void *fFieldDataPtr = nullptr;
+      std::unique_ptr<unsigned char[]> fBranchBuffer;
+   };
+
+   struct RImportField {
+      explicit RImportField(Detail::RFieldBase *f) : fField(f) {}
+      ~RImportField()
+      {
+         if (fOwnsFieldBuffer)
+            free(fFieldBuffer);
+      }
+      RImportField(const RImportField &other) = delete;
+      RImportField(RImportField &&other)
+         : fField(other.fField), fFieldBuffer(other.fFieldBuffer), fOwnsFieldBuffer(other.fOwnsFieldBuffer)
+      {
+         other.fOwnsFieldBuffer = false;
+      }
+      RImportField &operator=(const RImportField &other) = delete;
+      RImportField &operator=(RImportField &&other)
+      {
+         fField = other.fField;
+         fFieldBuffer = other.fFieldBuffer;
+         fOwnsFieldBuffer = other.fOwnsFieldBuffer;
+         other.fOwnsFieldBuffer = false;
+         return *this;
+      }
+
+      Detail::RFieldBase *fField = nullptr;
+      void *fFieldBuffer = nullptr;
+      bool fOwnsFieldBuffer = false;
+   };
+
+   struct RImportTransformation {
+      std::size_t fImportBranchIdx = 0;
+      std::size_t fImportFieldIdx = 0;
+
+      RImportTransformation(std::size_t branchIdx, std::size_t fieldIdx)
+         : fImportBranchIdx(branchIdx), fImportFieldIdx(fieldIdx)
+      {
+      }
+      virtual ~RImportTransformation() = default;
+      virtual RResult<void> Transform(const RImportBranch &branch, RImportField &field) = 0;
+   };
+
+   struct RCStringTransformation : public RImportTransformation {
+      RCStringTransformation(std::size_t b, std::size_t f) : RImportTransformation(b, f) {}
+      virtual ~RCStringTransformation() = default;
+      RResult<void> Transform(const RImportBranch &branch, RImportField &field) final;
    };
 
    RNTupleImporter() = default;
@@ -79,10 +124,14 @@ private:
    /// No standard output, conversly if set to false, schema information and progress is printed
    bool fIsQuiet = false;
    std::unique_ptr<RProgressCallback> fProgressCallback;
-   std::vector<RImportFeature> fImportFeatures;
-   std::vector<std::size_t> fFeatureCStringIndexes;
-   std::unique_ptr<RNTupleModel> fModel;
 
+   std::vector<RImportBranch> fImportBranches;
+   std::vector<RImportField> fImportFields;
+   std::vector<std::unique_ptr<RImportTransformation>> fImportTransformations;
+   std::unique_ptr<RNTupleModel> fModel;
+   std::unique_ptr<REntry> fEntry;
+
+   void ResetSchema();
    RResult<void> PrepareSchema();
    void ReportSchema();
 
