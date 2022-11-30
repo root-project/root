@@ -383,14 +383,22 @@ Bool_t THttpServer::CreateEngine(const char *engine)
    if (!arg)
       return kFALSE;
 
-   TString clname;
+   TString clname, sarg;
    if (arg != engine)
       clname.Append(engine, arg - engine);
+   arg++; // skip first :
 
    THttpEngine *eng = nullptr;
 
    if ((clname.Length() == 0) || (clname == "http") || (clname == "civetweb")) {
       eng = new TCivetweb(kFALSE);
+#ifndef R__WIN32
+   } else if (clname == "socket") {
+      eng = new TCivetweb(kFALSE);
+      sarg = "x"; // civetweb require x before socket name
+      sarg.Append(arg);
+      arg = sarg.Data();
+#endif
    } else if (clname == "https") {
       eng = new TCivetweb(kTRUE);
    } else if (clname == "fastcgi") {
@@ -410,7 +418,7 @@ Bool_t THttpServer::CreateEngine(const char *engine)
 
    eng->SetServer(this);
 
-   if (!eng->Create(arg + 1)) {
+   if (!eng->Create(arg)) {
       delete eng;
       return kFALSE;
    }
