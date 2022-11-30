@@ -117,7 +117,7 @@ public:
    int               ClosePipe(FILE *pipe) override;
    int               GetPid() override;
    void              StackTrace() override;
-   
+
    [[ noreturn ]] void Exit (int code, Bool_t mode = kTRUE) override;
    [[ noreturn ]] void Abort (int code = 0) override;
 
