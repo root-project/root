@@ -6,4 +6,4 @@
 
 # @author Jakob Blomer CERN
 
-ROOT_ADD_GTEST(ntuple_importer ntuple_importer.cxx LIBRARIES ROOTNTupleUtil)
+ROOT_ADD_GTEST(ntuple_importer ntuple_importer.cxx LIBRARIES ROOTDataFrame ROOTNTupleUtil)
