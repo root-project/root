@@ -525,9 +525,13 @@ Bool_t TCivetweb::Create(const char *args)
 
       // first extract port number
       sport = "";
-      while ((*args != 0) && (*args != '?') && (*args != '/'))
+
+      bool is_socket = *args == 'x';
+
+      while ((*args != 0) && (*args != '?') && (is_socket || (*args != '/')))
          sport.Append(*args++);
-      if (IsSecured() && (sport.Index("s")==kNPOS)) sport.Append("s");
+      if (IsSecured() && (sport.Index("s") == kNPOS) && !is_socket)
+         sport.Append("s");
 
       // than search for extra parameters
       while ((*args != 0) && (*args != '?'))
