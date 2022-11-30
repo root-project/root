@@ -28,6 +28,7 @@
 #include "TROOT.h"
 #include "TEnv.h"
 #include "TExec.h"
+#include "TSocket.h"
 
 #include <thread>
 #include <chrono>
@@ -153,6 +154,41 @@ void RWebWindowsManager::AssignWindowThreadId(RWebWindow &win)
       win.fCallbacksThrdId = gWebWinMainThrd;
    }
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// If LC_ROOT_LISTENERSOCKET variable is configured,
+/// message will be send to that unix socket
+
+bool RWebWindowsManager::InformListener(const std::string &msg)
+{
+#ifdef R__WIN32
+   (void) msg;
+   return false;
+
+#else
+
+   const char *fname = gSystem->Getenv("ROOT_LISTENERSOCKET");
+   if (!fname || !*fname)
+      return false;
+
+   TSocket s(fname);
+   if (!s.IsValid())
+      return false;
+
+   int res = s.SendRaw(msg.c_str(), msg.length());
+
+   s.Close();
+
+   if (res > 0) {
+      // workaround to let listener configure port forwarding
+      gSystem->ProcessEvents();
+      gSystem->Sleep(10);
+   }
+
+   return res > 0;
+#endif
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Creates http server, if required - with real http engine (civetweb)
@@ -379,6 +415,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
             fAddr = url.Data();
             fAddr.append(":");
             fAddr.append(std::to_string(http_port));
+            InformListener(std::string("http:") + std::to_string(http_port) + "\n");
             return true;
          }
          http_port = 0;
@@ -582,6 +619,14 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    if (args.IsHeadless()) args.AppendUrlOpt("headless"); // used to create holder request
    if (!token.empty())
       args.AppendUrlOpt(std::string("token=") + token);
+
+   if (!args.IsHeadless()) {
+      TUrl parse_url(args.GetUrl().c_str());
+      const char *path = parse_url.GetFileAndOptions();
+      printf("Window path is %s\n", path);
+      if (path && *path)
+         InformListener(std::string("win:") + path);
+   }
 
    if (!args.IsHeadless() && (args.GetBrowserKind() == RWebDisplayArgs::kServer) && (RWebWindowWSHandler::GetBoolEnv("WebGui.OnetimeKey") != 1)) {
       std::cout << "New web window: " << args.GetUrl() << std::endl;
