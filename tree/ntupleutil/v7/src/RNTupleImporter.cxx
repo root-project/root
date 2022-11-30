@@ -122,34 +122,32 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
 
       std::size_t branchBufferSize = 0;
 
-      if (isCString) {
-         branchBufferSize = firstLeaf->GetMaximum();
-         auto field = Detail::RFieldBase::Create(firstLeaf->GetName(), "std::string").Unwrap();
-         field->SetDescription(firstLeaf->GetTitle());
-         RImportField f(field.get());
-         f.fFieldBuffer = field->GenerateValue().GetRawPtr();
-         f.fOwnsFieldBuffer = true;
-         fImportTransformations.emplace_back(
-            std::make_unique<RCStringTransformation>(fImportBranches.size(), fImportFields.size()));
+      for (auto l : TRangeDynCast<TLeaf>(b->GetListOfLeaves())) {
+         if (l->IsA() == TLeafObject::Class()) {
+            return R__FAIL(std::string("importing TObject branches not supported: ") +
+                           std::string(l->GetFullName().View()));
+         }
+
+         RImportField f;
+         std::unique_ptr<Detail::RFieldBase> field;
+         if (isCString) {
+            branchBufferSize = l->GetMaximum();
+            field = Detail::RFieldBase::Create(firstLeaf->GetName(), "std::string").Unwrap();
+            f.fFieldBuffer = field->GenerateValue().GetRawPtr();
+            f.fOwnsFieldBuffer = true;
+            fImportTransformations.emplace_back(
+               std::make_unique<RCStringTransformation>(fImportBranches.size(), fImportFields.size()));
+         } else {
+            auto result = Detail::RFieldBase::Create(l->GetName(), l->GetTypeName());
+            if (!result)
+               return R__FORWARD_ERROR(result);
+            field = result.Unwrap();
+            branchBufferSize = l->GetOffset() + field->GetValueSize();
+         }
+         field->SetDescription(l->GetTitle());
+         f.fField = field.get();
          fImportFields.emplace_back(std::move(f));
          fModel->AddField(std::move(field));
-      } else {
-         for (auto l : TRangeDynCast<TLeaf>(b->GetListOfLeaves())) {
-            if (l->IsA() == TLeafObject::Class()) {
-               return R__FAIL(std::string("importing TObject branches not supported: ") +
-                              std::string(l->GetFullName().View()));
-            }
-
-            auto tryField = Detail::RFieldBase::Create(l->GetName(), l->GetTypeName());
-            if (!tryField)
-               return R__FORWARD_ERROR(tryField);
-            auto field = tryField.Unwrap();
-            field->SetDescription(l->GetTitle());
-            branchBufferSize = l->GetOffset() + field->GetValueSize();
-
-            fImportFields.emplace_back(RImportField(field.get()));
-            fModel->AddField(std::move(field));
-         }
       }
 
       RImportBranch ib;
@@ -158,12 +156,12 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       fSourceTree->SetBranchStatus(b->GetName(), 1);
       fSourceTree->SetBranchAddress(b->GetName(), reinterpret_cast<void *>(ib.fBranchBuffer.get()));
 
-      if (!isCString) {
-         auto fieldIdx = fImportFields.size() - b->GetNleaves();
-         for (auto l : TRangeDynCast<TLeaf>(b->GetListOfLeaves())) {
-            fImportFields[fieldIdx].fFieldBuffer = ib.fBranchBuffer.get() + l->GetOffset();
-            fieldIdx++;
-         }
+      auto fieldIdx = fImportFields.size() - b->GetNleaves();
+      for (auto l : TRangeDynCast<TLeaf>(b->GetListOfLeaves())) {
+         if (fImportFields[fieldIdx].fFieldBuffer)
+            continue;
+         fImportFields[fieldIdx].fFieldBuffer = ib.fBranchBuffer.get() + l->GetOffset();
+         fieldIdx++;
       }
 
       fImportBranches.emplace_back(std::move(ib));
