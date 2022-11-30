@@ -26,6 +26,7 @@
 #include <TBranch.h>
 #include <TLeaf.h>
 #include <TLeafC.h>
+#include <TLeafObject.h>
 
 #include <cassert>
 #include <cstdint>
@@ -54,6 +55,13 @@ public:
 };
 
 } // anonymous namespace
+
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleImporter::RCStringTransformation::Transform(const RImportBranch &branch, RImportField &field)
+{
+   *reinterpret_cast<std::string *>(field.fFieldBuffer) = reinterpret_cast<const char *>(branch.fBranchBuffer.get());
+   return RResult<void>::Success();
+}
 
 ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RNTupleImporter>>
 ROOT::Experimental::RNTupleImporter::Create(std::string_view sourceFile, std::string_view treeName,
@@ -84,57 +92,87 @@ ROOT::Experimental::RNTupleImporter::Create(std::string_view sourceFile, std::st
 
 void ROOT::Experimental::RNTupleImporter::ReportSchema()
 {
-   for (const auto &f : fImportFeatures) {
-      std::cout << "Importing '" << f.fLeafName << "'    -->    to field '" << f.fFieldName << "' [" << f.fTypeName
-                << ']' << std::endl;
+   for (const auto &f : fImportFields) {
+      std::cout << "Importing '" << f.fField->GetName() << "' [" << f.fField->GetType() << ']' << std::endl;
    }
+}
+
+void ROOT::Experimental::RNTupleImporter::ResetSchema()
+{
+   fImportBranches.clear();
+   fImportFields.clear();
+   fImportTransformations.clear();
+   fSourceTree->SetBranchStatus("*", 0);
+   fModel = RNTupleModel::CreateBare();
+   fModel->SetDescription(fSourceTree->GetTitle());
+   fEntry = nullptr;
 }
 
 ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSchema()
 {
-   fImportFeatures.clear();
-   fSourceTree->SetBranchStatus("*", 0);
+   ResetSchema();
 
    for (auto b : TRangeDynCast<TBranch>(*fSourceTree->GetListOfBranches())) {
       assert(b);
+      const auto firstLeaf = static_cast<TLeaf *>(b->GetListOfLeaves()->First());
+      assert(firstLeaf);
 
-      for (auto l : TRangeDynCast<TLeaf>(b->GetListOfLeaves())) {
-         RImportFeature f;
-         f.fBranchName = b->GetName();
-         f.fLeafName = l->GetName();
-         f.fFieldName = l->GetName();
-         if (l->IsA() == TLeafC::Class()) {
-            f.fTypeName = "std::string";
-            f.fTreeBuffer = std::make_unique<unsigned char[]>(l->GetMaximum());
-            fFeatureCStringIndexes.emplace_back(fImportFeatures.size());
-         } else {
-            f.fTypeName = l->GetTypeName();
+      const bool isLeafList = b->GetNleaves() > 1;
+      const bool isCString = !isLeafList && (firstLeaf->IsA() == TLeafC::Class());
+
+      std::size_t branchBufferSize = 0;
+
+      if (isCString) {
+         branchBufferSize = firstLeaf->GetMaximum();
+         auto field = Detail::RFieldBase::Create(firstLeaf->GetName(), "std::string").Unwrap();
+         field->SetDescription(firstLeaf->GetTitle());
+         RImportField f(field.get());
+         f.fFieldBuffer = field->GenerateValue().GetRawPtr();
+         f.fOwnsFieldBuffer = true;
+         fImportTransformations.emplace_back(
+            std::make_unique<RCStringTransformation>(fImportBranches.size(), fImportFields.size()));
+         fImportFields.emplace_back(std::move(f));
+         fModel->AddField(std::move(field));
+      } else {
+         for (auto l : TRangeDynCast<TLeaf>(b->GetListOfLeaves())) {
+            if (l->IsA() == TLeafObject::Class()) {
+               return R__FAIL(std::string("importing TObject branches not supported: ") +
+                              std::string(l->GetFullName().View()));
+            }
+
+            auto tryField = Detail::RFieldBase::Create(l->GetName(), l->GetTypeName());
+            if (!tryField)
+               return R__FORWARD_ERROR(tryField);
+            auto field = tryField.Unwrap();
+            field->SetDescription(l->GetTitle());
+            branchBufferSize = l->GetOffset() + field->GetValueSize();
+
+            fImportFields.emplace_back(RImportField(field.get()));
+            fModel->AddField(std::move(field));
          }
-         fImportFeatures.emplace_back(std::move(f));
       }
-   }
 
-   fModel = RNTupleModel::Create();
-   fModel->SetDescription(fSourceTree->GetTitle());
-   for (const auto &f : fImportFeatures) {
-      auto field = Detail::RFieldBase::Create(f.fFieldName, f.fTypeName);
-      if (!field)
-         return R__FORWARD_ERROR(field);
-      fModel->AddField(std::move(field.Unwrap()));
+      RImportBranch ib;
+      ib.fBranchName = b->GetName();
+      ib.fBranchBuffer = std::make_unique<unsigned char[]>(branchBufferSize);
+      fSourceTree->SetBranchStatus(b->GetName(), 1);
+      fSourceTree->SetBranchAddress(b->GetName(), reinterpret_cast<void *>(ib.fBranchBuffer.get()));
+
+      if (!isCString) {
+         auto fieldIdx = fImportFields.size() - b->GetNleaves();
+         for (auto l : TRangeDynCast<TLeaf>(b->GetListOfLeaves())) {
+            fImportFields[fieldIdx].fFieldBuffer = ib.fBranchBuffer.get() + l->GetOffset();
+            fieldIdx++;
+         }
+      }
+
+      fImportBranches.emplace_back(std::move(ib));
    }
 
    fModel->Freeze();
-
-   for (auto &f : fImportFeatures) {
-      // We connect the model's default entry's memory location for the new field to the branch, so that we can
-      // fill the ntuple with the data read from the TTree
-      fSourceTree->SetBranchStatus(f.fBranchName.c_str(), 1);
-      f.fFieldDataPtr = fModel->GetDefaultEntry()->GetValue(f.fFieldName).GetRawPtr();
-      if (f.fTreeBuffer) {
-         fSourceTree->SetBranchAddress(f.fLeafName.c_str(), reinterpret_cast<void *>(f.fTreeBuffer.get()));
-      } else {
-         fSourceTree->SetBranchAddress(f.fLeafName.c_str(), f.fFieldDataPtr);
-      }
+   fEntry = fModel->CreateBareEntry();
+   for (const auto &f : fImportFields) {
+      fEntry->CaptureValueUnsafe(f.fField->GetName(), f.fFieldBuffer);
    }
 
    if (!fIsQuiet)
@@ -162,12 +200,13 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
    for (decltype(nEntries) i = 0; i < nEntries; ++i) {
       fSourceTree->GetEntry(i);
 
-      for (auto idx : fFeatureCStringIndexes) {
-         *reinterpret_cast<std::string *>(fImportFeatures[idx].fFieldDataPtr) =
-            reinterpret_cast<char *>(fImportFeatures[idx].fTreeBuffer.get());
+      for (auto &t : fImportTransformations) {
+         auto result = t->Transform(fImportBranches[t->fImportBranchIdx], fImportFields[t->fImportFieldIdx]);
+         if (!result)
+            return R__FORWARD_ERROR(result);
       }
 
-      ntplWriter->Fill();
+      ntplWriter->Fill(*fEntry);
 
       if (fProgressCallback)
          fProgressCallback->Call(ctrZippedBytes->GetValueAsInt(), i);
