@@ -62,7 +62,11 @@ if(FASTCGI_FOUND)
   target_include_directories(RHTTP PRIVATE ${FASTCGI_INCLUDE_DIR})
 endif()
 
-target_compile_definitions(RHTTP PUBLIC -DUSE_WEBSOCKET)
+target_compile_definitions(RHTTP PRIVATE -DUSE_WEBSOCKET)
+
+if(NOT MSVC)
+   target_compile_definitions(RHTTP PRIVATE -DUSE_X_DOM_SOCKET)
+endif()
 
 if(ssl)
   if(OPENSSL_VERSION)
@@ -70,7 +74,6 @@ if(ssl)
      list(GET lst 0 ssl_major)
      list(GET lst 1 ssl_minor)
    endif()
-
 
   if((${ssl_major} EQUAL "1") AND (${ssl_minor} EQUAL "1"))
     MESSAGE(STATUS "Use SSL API VERSION 1.1 for civetweb")
