@@ -124,6 +124,14 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
             "please recompile with -Droofit_multiprocess=ON for parallel evaluation");
 #endif
       } else { // new test statistic non parallel
+         coutW(InputArguments) << "Requested new-style likelihood without gradient parallelization, some features such as offsetting "
+                               << "may not work yet. Old-style likelihoods are more reliable without parallelization." 
+                               << std::endl;
+         // The RooRealL that is used in the case where the new style likelihood is being passed to a RooMinimizerFcn does not have
+         // offsetting implemented. Therefore, offsetting will not work in this case. Other features might also not work since the 
+         // RooRealL was not intended for minimization. Further development is required to make the MinuitFcnGrad also handle serial gradient
+         // minimization. The MinuitFcnGrad accepts a RooAbsL and has offsetting implemented, thus omitting the need for RooRealL
+         // minimization altogether.
          _fcn = std::make_unique<RooMinimizerFcn>(&function, this);
       }
    } else {

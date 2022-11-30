@@ -52,6 +52,22 @@ TEST(Interface, createNLLRooAbsL)
    EXPECT_TRUE(nll_absL != nullptr);
 }
 
+// New Style likelihoods cannot be initialized with offsetting
+TEST(Interface, createNLLNewStyleAndOffset)
+{
+   using namespace RooFit;
+
+   RooRandom::randomGenerator()->SetSeed(42);
+   RooWorkspace w;
+   w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
+   auto x = w.var("x");
+   RooAbsPdf *pdf = w.pdf("g");
+   std::unique_ptr<RooDataSet> data{pdf->generate(RooArgSet(*x), 10000)};
+   RooAbsReal *nll = pdf->createNLL(*data, RooFit::Offset(true), RooFit::NewStyle(true));
+
+   EXPECT_TRUE(nll == nullptr);
+}
+
 // Verifies that the fitTo parallelize interface creates a valid minimization
 TEST(Interface, DISABLED_fitTo)
 {
