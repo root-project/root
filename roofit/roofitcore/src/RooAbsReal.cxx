@@ -4700,7 +4700,6 @@ RooSpan<double> RooAbsReal::evaluateSpan(RooBatchCompute::RunContext& evalData, 
 \param dataMap A std::map containing the input data for the computations
 **/
 void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
-
   // Find all servers that are serving real numbers to us, retrieve their batch data,
   // and switch them into "always clean" operating mode, so they return always the last-set value.
   struct ServerData {
@@ -4708,6 +4707,8 @@ void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, Roo
     RooSpan<const double> batch;
     double oldValue;
     RooAbsArg::OperMode oldOperMode;
+    bool oldValueDirty;
+    bool oldShapeDirty;
   };
   std::vector<ServerData> ourServers;
   ourServers.reserve(servers().size());
@@ -4725,7 +4726,9 @@ void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, Roo
     ourServers.push_back({server,
         serverValues,
         server->isCategory() ? static_cast<RooAbsCategory const*>(server)->getCurrentIndex() : static_cast<RooAbsReal const*>(server)->_value,
-        oldOperMode});
+        oldOperMode,
+        server->_valueDirty,
+        server->_shapeDirty});
     // Prevent the server from evaluating; just return cached result, which we will side load:
   }
 
@@ -4739,6 +4742,8 @@ void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, Roo
       for (auto& serverData : _servers) {
         serverData.server->setCachedValue(serverData.oldValue, true);
         serverData.server->setOperMode(serverData.oldOperMode);
+        serverData.server->_valueDirty = serverData.oldValueDirty;
+        serverData.server->_shapeDirty = serverData.oldShapeDirty;
       }
     }
 

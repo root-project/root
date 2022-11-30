@@ -622,6 +622,7 @@ private:
 
 
  protected:
+  friend class RooAbsReal;
 
   // Client-Server relation and Proxy management
   friend class RooAbsCollection ;
