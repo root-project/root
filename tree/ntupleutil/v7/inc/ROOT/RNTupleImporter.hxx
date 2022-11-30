@@ -66,7 +66,7 @@ private:
    };
 
    struct RImportField {
-      explicit RImportField(Detail::RFieldBase *f) : fField(f) {}
+      RImportField() = default;
       ~RImportField()
       {
          if (fOwnsFieldBuffer)
