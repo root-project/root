@@ -121,24 +121,25 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       const bool isCString = !isLeafList && (firstLeaf->IsA() == TLeafC::Class());
 
       std::size_t branchBufferSize = 0;
-
+      std::vector<std::unique_ptr<Detail::RFieldBase>> recordItems;
       for (auto l : TRangeDynCast<TLeaf>(b->GetListOfLeaves())) {
          if (l->IsA() == TLeafObject::Class()) {
             return R__FAIL(std::string("importing TObject branches not supported: ") +
                            std::string(l->GetFullName().View()));
          }
+         std::string fieldName = isLeafList ? l->GetName() : b->GetName();
 
          RImportField f;
          std::unique_ptr<Detail::RFieldBase> field;
          if (isCString) {
             branchBufferSize = l->GetMaximum();
-            field = Detail::RFieldBase::Create(firstLeaf->GetName(), "std::string").Unwrap();
+            field = Detail::RFieldBase::Create(fieldName, "std::string").Unwrap();
             f.fFieldBuffer = field->GenerateValue().GetRawPtr();
             f.fOwnsFieldBuffer = true;
             fImportTransformations.emplace_back(
                std::make_unique<RCStringTransformation>(fImportBranches.size(), fImportFields.size()));
          } else {
-            auto result = Detail::RFieldBase::Create(l->GetName(), l->GetTypeName());
+            auto result = Detail::RFieldBase::Create(fieldName, l->GetTypeName());
             if (!result)
                return R__FORWARD_ERROR(result);
             field = result.Unwrap();
@@ -146,8 +147,21 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
          }
          field->SetDescription(l->GetTitle());
          f.fField = field.get();
+
+         if (isLeafList) {
+            recordItems.emplace_back(std::move(field));
+         } else {
+            fImportFields.emplace_back(std::move(f));
+            fModel->AddField(std::move(field));
+         }
+      }
+      if (!recordItems.empty()) {
+         auto recordField = std::make_unique<RRecordField>(b->GetName(), std::move(recordItems));
+         recordField->SetDescription(b->GetTitle());
+         RImportField f;
+         f.fField = recordField.get();
          fImportFields.emplace_back(std::move(f));
-         fModel->AddField(std::move(field));
+         fModel->AddField(std::move(recordField));
       }
 
       RImportBranch ib;
@@ -156,13 +170,8 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       fSourceTree->SetBranchStatus(b->GetName(), 1);
       fSourceTree->SetBranchAddress(b->GetName(), reinterpret_cast<void *>(ib.fBranchBuffer.get()));
 
-      auto fieldIdx = fImportFields.size() - b->GetNleaves();
-      for (auto l : TRangeDynCast<TLeaf>(b->GetListOfLeaves())) {
-         if (fImportFields[fieldIdx].fFieldBuffer)
-            continue;
-         fImportFields[fieldIdx].fFieldBuffer = ib.fBranchBuffer.get() + l->GetOffset();
-         fieldIdx++;
-      }
+      if (!fImportFields.back().fFieldBuffer)
+         fImportFields.back().fFieldBuffer = ib.fBranchBuffer.get();
 
       fImportBranches.emplace_back(std::move(ib));
    }
