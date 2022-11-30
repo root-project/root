@@ -2084,13 +2084,15 @@ void TSystem::ListSymbols(const char *, const char *)
 /// ~~~
 
 void TSystem::ListLibraries(const char *regexp) {
-   if (!(regexp && regexp[0])) regexp = ".*";
+   if (!(regexp && regexp[0]))
+      regexp = ".*";
    TRegexp pat(regexp, kFALSE);
    TString libs(GetLibraries());
    TString tok;
    Ssiz_t from = 0, ext;
    while (libs.Tokenize(tok, from, " ")) {
-      if ((tok.Index(pat, &ext) != 0) || (ext != tok.Length())) continue;
+      if ((tok.Index(pat, &ext) != 0) || (ext != tok.Length()))
+         continue;
       std::cout << tok << "\n";
    }
 }
