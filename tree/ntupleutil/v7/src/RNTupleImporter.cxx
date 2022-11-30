@@ -104,7 +104,6 @@ void ROOT::Experimental::RNTupleImporter::ResetSchema()
    fImportTransformations.clear();
    fSourceTree->SetBranchStatus("*", 0);
    fModel = RNTupleModel::CreateBare();
-   fModel->SetDescription(fSourceTree->GetTitle());
    fEntry = nullptr;
 }
 
@@ -118,7 +117,9 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       assert(firstLeaf);
 
       const bool isLeafList = b->GetNleaves() > 1;
-      const bool isCString = !isLeafList && (firstLeaf->IsA() == TLeafC::Class());
+      Int_t firstLeafCountval;
+      const bool isCString = !isLeafList && (firstLeaf->IsA() == TLeafC::Class()) &&
+                             (!firstLeaf->GetLeafCounter(firstLeafCountval)) && (firstLeafCountval == 1);
 
       std::size_t branchBufferSize = 0;
       std::vector<std::unique_ptr<Detail::RFieldBase>> recordItems;
@@ -127,25 +128,32 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
             return R__FAIL(std::string("importing TObject branches not supported: ") +
                            std::string(l->GetFullName().View()));
          }
+
+         Int_t countval = 0;
+         auto *countleaf = l->GetLeafCounter(countval);
+         const bool isFixedSizeArray = (countleaf == nullptr) && (countval > 1);
+
          std::string fieldName = isLeafList ? l->GetName() : b->GetName();
+         std::string fieldType = isCString ? "std::string" : l->GetTypeName();
+         if (isFixedSizeArray)
+            fieldType = "std::array<" + fieldType + "," + std::to_string(countval) + ">";
 
          RImportField f;
          std::unique_ptr<Detail::RFieldBase> field;
          if (isCString) {
             branchBufferSize = l->GetMaximum();
-            field = Detail::RFieldBase::Create(fieldName, "std::string").Unwrap();
+            field = Detail::RFieldBase::Create(fieldName, fieldType).Unwrap();
             f.fFieldBuffer = field->GenerateValue().GetRawPtr();
             f.fOwnsFieldBuffer = true;
             fImportTransformations.emplace_back(
                std::make_unique<RCStringTransformation>(fImportBranches.size(), fImportFields.size()));
          } else {
-            auto result = Detail::RFieldBase::Create(fieldName, l->GetTypeName());
+            auto result = Detail::RFieldBase::Create(fieldName, fieldType);
             if (!result)
                return R__FORWARD_ERROR(result);
             field = result.Unwrap();
             branchBufferSize = l->GetOffset() + field->GetValueSize();
          }
-         field->SetDescription(l->GetTitle());
          f.fField = field.get();
 
          if (isLeafList) {
@@ -157,7 +165,6 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       }
       if (!recordItems.empty()) {
          auto recordField = std::make_unique<RRecordField>(b->GetName(), std::move(recordItems));
-         recordField->SetDescription(b->GetTitle());
          RImportField f;
          f.fField = recordField.get();
          fImportFields.emplace_back(std::move(f));

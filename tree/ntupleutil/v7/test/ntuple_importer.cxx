@@ -47,9 +47,9 @@ TEST(RNTupleImporter, Empty)
    EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
 }
 
-TEST(RNTupleImporter, SimpleBranches)
+TEST(RNTupleImporter, Simple)
 {
-   FileRaii fileGuard("test_ntuple_importer_simple_branches.root");
+   FileRaii fileGuard("test_ntuple_importer_simple.root");
    {
       std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
       auto tree = std::make_unique<TTree>("tree", "");
@@ -159,4 +159,41 @@ TEST(RNTupleImporter, Leaflist)
    auto viewB = reader->GetView<std::int32_t>("branch.b");
    EXPECT_EQ(1, viewA(0));
    EXPECT_EQ(2, viewB(0));
+}
+
+TEST(RNTupleImporter, FixedSizeArray)
+{
+   FileRaii fileGuard("test_ntuple_importer_fixed_size_array.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "");
+      Int_t a[1] = {42};
+      Int_t b[2] = {1, 2};
+      char c[4] = {'R', 'O', 'O', 'T'};
+      tree->Branch("a", a, "a[1]/I");
+      tree->Branch("b", b, "b[2]/I");
+      tree->Branch("c", c, "c[4]/C");
+      tree->Fill();
+      tree->Write();
+   }
+
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+   importer->SetIsQuiet(true);
+   importer->SetNTupleName("ntuple");
+   importer->Import();
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(1U, reader->GetNEntries());
+   auto viewA = reader->GetView<std::int32_t>("a");
+   auto viewB = reader->GetView<std::array<std::int32_t, 2>>("b");
+   auto viewC = reader->GetView<std::array<char, 4>>("c");
+   EXPECT_EQ(42, viewA(0));
+   EXPECT_EQ(2U, viewB(0).size());
+   EXPECT_EQ(1, viewB(0)[0]);
+   EXPECT_EQ(2, viewB(0)[1]);
+   EXPECT_EQ(4U, viewC(0).size());
+   EXPECT_EQ('R', viewC(0)[0]);
+   EXPECT_EQ('O', viewC(0)[1]);
+   EXPECT_EQ('O', viewC(0)[2]);
+   EXPECT_EQ('T', viewC(0)[3]);
 }
