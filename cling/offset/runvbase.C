@@ -31,14 +31,25 @@ struct Bottom : public Mid1, Mid2
    int fBottom;
 };
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4584)
+#endif
+#ifdef __CLING__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winaccessible-base"
+#endif
 
 struct Basement: public Fill, public Mid2, public Bottom {
    char FillMore[17];
 };
 
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+#ifdef __CLING__
 #pragma clang diagnostic pop
+#endif
 
 extern "C" int printf(const char*,...);
 
