@@ -37,7 +37,6 @@ if(MSVC)
 
   option(win_broken_tests "Enable broken tests on Windows" FALSE)
   option(llvm13_broken_tests "Enable broken tests with LLVM 13 on Windows" FALSE)
-  include(${ROOT_USE_FILE})
   foreach(_opt ${_root_all_options})
     set(ROOT_${_opt} TRUE)
   endforeach()
