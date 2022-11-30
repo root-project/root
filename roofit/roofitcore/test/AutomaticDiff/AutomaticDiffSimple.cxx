@@ -28,5 +28,8 @@ TEST(Interface, createNLLRooAbsGradFuncWrapper)
 
    std::unique_ptr<RooDataSet> data{gauss.generate(x, 10)};
 
-   auto nll = gauss.createNLL(*data, CodeSquashing(true));
+   std::unique_ptr<RooAbsReal> nll{gauss.createNLL(*data, CodeSquashing(true))};
+   std::unique_ptr<RooAbsReal> nllRef{gauss.createNLL(*data)};
+
+   EXPECT_FLOAT_EQ(nll->getVal(), nllRef->getVal());
 }

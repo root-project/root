@@ -13,7 +13,7 @@
 #include "RooFit/ADModeHelpers.h"
 #include "RooFit/BatchModeHelpers.h"
 
-#include <RooFitDriver.h>
+#include "RooFitDriver.h"
 #include <TROOT.h>
 #include <TSystem.h>
 #include <RooAbsData.h>
@@ -24,9 +24,7 @@
 #include <RooBinSamplingPdf.h>
 #include <RooConstraintSum.h>
 #include <RooDataSet.h>
-#include <RooNLLVarNew.h>
-#include <RooFitDriver.h>
-#include <RooNLLVarNew.h>
+#include "RooNLLVarNew.h"
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 
@@ -50,7 +48,7 @@ void RooFit::ADModeHelpers::BuildCodeRecur(RooAbsReal &head, std::string &code, 
       }
    }
    // then go ahead and build the final code.
-   bool ILP = head.isLoopProducing();
+   bool ILP = head.isReducerNode();
    if (ILP)
       code += head.buildLoopBegin(global);
    for (auto pcurr : head.servers()) {
@@ -92,21 +90,13 @@ void expandDecl(const std::string &name, std::vector<double> &values, std::strin
 }
 
 std::unique_ptr<RooAbsReal>
-RooFit::ADModeHelpers::translateNLL(std::unique_ptr<RooAbsPdf> &&pdf, RooAbsData &data,
-                                    std::unique_ptr<RooAbsReal> &&constraints, std::string const &rangeName,
-                                    RooArgSet const &projDeps, bool isExtended, double integrateOverBinsPrecision,
-                                    bool doOffset, bool splitRange, bool takeGlobalObservablesFromData, bool printCode)
+RooFit::ADModeHelpers::translateNLL(std::unique_ptr<RooAbsReal> &&obj, RooAbsData &data, bool printCode)
 {
-   // Let the created RooFit driver resolve and order the compute graph for us.
-   auto obj = RooFit::BatchModeHelpers::createNLL(std::move(pdf), data, std::move(constraints), rangeName, projDeps,
-                                                  isExtended, integrateOverBinsPrecision, RooFit::BatchModeOption::Off,
-                                                  doOffset, splitRange, takeGlobalObservablesFromData);
-
    std::unique_ptr<RooAbsRealWrapper> rooRealObj(static_cast<RooAbsRealWrapper *>(obj.release()));
    auto &topNode = rooRealObj->getRooFitDriverObj()->topNode();
 
    std::string globalConsts = "";
-   auto nEvents = data.numEntries();
+   unsigned int nEvents = data.numEntries();
    // Fixme: Hardcoded here right now.
    globalConsts += "unsigned int numEntries = " + std::to_string(nEvents) + ";\n";
 
@@ -146,7 +136,13 @@ RooFit::ADModeHelpers::translateNLL(std::unique_ptr<RooAbsPdf> &&pdf, RooAbsData
    std::string code = BuildCode(topNode, paramNames, globalConsts);
 
    std::string suffix = printCode ? "" : ";";
-   gCling->Declare(code.c_str());
+   bool comp = gCling->Declare(code.c_str());
+   if (!comp) {
+      std::stringstream errorMsg;
+      errorMsg << "Translated code for AD could not be compiled. See above for details.";
+      oocoutE(nullptr, Minimization) << errorMsg.str() << std::endl;
+      throw std::runtime_error(errorMsg.str().c_str());
+   }
    auto funcObj = (double (*)(double *))gInterpreter->ProcessLine(("func" + suffix).c_str());
 
    // Return an instance of our wrapper class.

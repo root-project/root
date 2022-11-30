@@ -1143,31 +1143,16 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   };
 
   auto batchMode = static_cast<RooFit::BatchModeOption>(pc.getInt("BatchMode"));
+  bool useNewBatchMode = batchMode != RooFit::BatchModeOption::Off && batchMode != RooFit::BatchModeOption::Old;
+  bool doCodeSquashing = pc.getInt("CodeSquashing");
 
-  // Construct BatchModeNLL if requested
-  if (batchMode != RooFit::BatchModeOption::Off && batchMode != RooFit::BatchModeOption::Old) {
-    std::unique_ptr<RooAbsPdf> pdfClone = RooHelpers::cloneTreeWithSameParameters(*this, data.get());
-    if (addCoefRangeName) {
-       cxcoutI(Fitting) << "RooAbsPdf::fitTo(" << GetName()
-                        << ") fixing interpretation of coefficients of any component to range "
-                        << addCoefRangeName << "\n";
-       pdfClone->fixAddCoefRange(addCoefRangeName, false);
-    }
-
-    return RooFit::BatchModeHelpers::createNLL(std::move(pdfClone),
-                                               data,
-                                               createConstr(*pdfClone, /*removeConstraintsFromPdf=*/true),
-                                               rangeName ? rangeName : "",
-                                               projDeps,
-                                               ext,
-                                               pc.getDouble("IntegrateBins"),
-                                               batchMode,
-                                               doOffset,
-                                               static_cast<bool>(splitRange),
-                                               takeGlobalObservablesFromData).release();
+  // Code squashing implies new BatchMode
+  if (doCodeSquashing) {
+     useNewBatchMode = true;
   }
 
-  if (pc.getInt("CodeSquashing")) {
+  // Construct BatchModeNLL if requested
+  if (useNewBatchMode) {
      std::unique_ptr<RooAbsPdf> pdfClone = RooHelpers::cloneTreeWithSameParameters(*this, data.get());
      if (addCoefRangeName) {
         cxcoutI(Fitting) << "RooAbsPdf::fitTo(" << GetName()
@@ -1176,11 +1161,17 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
         pdfClone->fixAddCoefRange(addCoefRangeName, false);
      }
 
-     return RooFit::ADModeHelpers::translateNLL(
-               std::move(pdfClone), data, createConstr(*pdfClone, /*removeConstraintsFromPdf=*/true),
-               rangeName ? rangeName : "", projDeps, ext, pc.getDouble("IntegrateBins"), doOffset,
-               static_cast<bool>(splitRange), takeGlobalObservablesFromData, pc.getInt("CodePrinting"))
-        .release();
+     std::unique_ptr<RooAbsReal> nll = RooFit::BatchModeHelpers::createNLL(
+        std::move(pdfClone), data, createConstr(*pdfClone, /*removeConstraintsFromPdf=*/true),
+        rangeName ? rangeName : "", projDeps, ext, pc.getDouble("IntegrateBins"), batchMode, doOffset,
+        static_cast<bool>(splitRange), takeGlobalObservablesFromData);
+
+     // replace with an NLL object that wraps the squashed code
+     if (doCodeSquashing) {
+        nll = RooFit::ADModeHelpers::translateNLL(std::move(nll), data, pc.getInt("CodePrinting"));
+     }
+
+     return nll.release();
   }
 
   // Construct NLL

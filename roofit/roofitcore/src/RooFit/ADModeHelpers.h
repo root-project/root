@@ -15,6 +15,7 @@
 
 #include <RooGlobalFunc.h>
 #include <RooAbsReal.h>
+#include <RooRealVar.h>
 #include <RooListProxy.h>
 
 #include <memory>
@@ -22,7 +23,6 @@
 
 class RooAbsData;
 class RooAbsPdf;
-class RooAbsReal;
 class RooArgSet;
 
 /// @brief  A wrapper class to store the generated function of a given RooFit workspace.
@@ -53,7 +53,8 @@ public:
 protected:
    double evaluate() const override
    {
-      std::vector<double> paramVals(_paramProxies.size());
+      std::vector<double> paramVals;
+      paramVals.reserve(_paramProxies.size());
       std::transform(_params.begin(), _params.end(), std::back_inserter(paramVals),
                      [](RooAbsReal *obj) { return obj->getValV(); });
 
@@ -63,8 +64,8 @@ protected:
 private:
    RooListProxy _paramProxies;
    std::vector<RooRealVar *> _params;
-   Func _func;
    std::string _funcName;
+   Func _func;
 };
 
 namespace RooFit {
@@ -77,11 +78,7 @@ void BuildCodeRecur(RooAbsReal &arg, std::string &code, std::string &global,
                     std::unordered_map<const TNamed *, unsigned int> &paramVars,
                     std::vector<std::string> &preFuncDecls);
 
-std::unique_ptr<RooAbsReal> translateNLL(std::unique_ptr<RooAbsPdf> &&pdf, RooAbsData &data,
-                                         std::unique_ptr<RooAbsReal> &&constraints, std::string const &rangeName,
-                                         RooArgSet const &projDeps, bool isExtended, double integrateOverBinsPrecision,
-                                         bool doOffset, bool splitRange, bool takeGlobalObservablesFromData,
-                                         bool printCode);
+std::unique_ptr<RooAbsReal> translateNLL(std::unique_ptr<RooAbsReal> &&obj, RooAbsData &data, bool printCode);
 
 } // namespace ADModeHelpers
 } // namespace RooFit

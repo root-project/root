@@ -478,10 +478,6 @@ protected:
   /// its result into. Is beneficial for inputs or non-scalar variables that
   /// might have varying index expressions.
   virtual void updateResults(std::string newRes) { _adResult = newRes; }
-  /// A function to return if this class produces a loop. Loop producing
-  /// classes generally want to build the beginning of their loop before
-  /// visiting the subgraph.
-  virtual bool isLoopProducing() { return false; }
   /// A function to build the beginnings of a loop (i.e. "for(int i = 0; i <
   /// n; i++) {" ), this function is called before the subgraph of this node
   /// is visited.

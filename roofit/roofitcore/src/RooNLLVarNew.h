@@ -58,7 +58,6 @@ public:
    void setSimCount(int simCount) { _simCount = simCount; }
 
    std::string translate(std::string &globalScope, std::vector<std::string> &preFuncDecls) override;
-   bool isLoopProducing() { return true; }
    std::string buildLoopBegin(std::string &globalScope) override;
    std::string buildLoopEnd(std::string &globalScope) override;
 

@@ -309,7 +309,7 @@ std::string RooNLLVarNew::translate(std::string &globalScope, std::vector<std::s
    std::string tmpName = className + "_temp";
    std::string code = "double " + tmpName + ";\n";
    code += tmpName + " = std::log(" + _pdf->getResult() + ");\n";
-   code += resName + " -= -" + weightVarName + "[" + _adIdx + "] * " + tmpName + ";\n";
+   code += resName + " -= " + weightVarName + "[" + _adIdx + "] * " + tmpName + ";\n";
    return code;
 }
 
