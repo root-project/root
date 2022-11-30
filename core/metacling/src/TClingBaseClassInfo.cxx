@@ -214,7 +214,7 @@ TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo * fromDerivedCla
                                                   QTtoBase, *fInterp);
       //  Write the wrapper code.
       llvm::raw_string_ostream buf(code);
-      buf << "extern \"C\" intptr_t " + wrapper_name + "(void* address, bool isDerivedObject) {\n"
+      buf << "extern \"C\" ptrdiff_t " + wrapper_name + "(void* address, bool isDerivedObject) {\n"
       // If the object is not derived, will downcast to toBase first.
           << "  " << fromDerivedClassName << " *fromDerived;"
           << "  if (isDerivedObject) {"
@@ -286,9 +286,9 @@ int TClingBaseClassInfo::InternalNext(int onlyDirect)
          const clang::RecordDecl *RD = llvm::dyn_cast<clang::RecordDecl>(fDecl);
          const clang::ASTRecordLayout &Layout = Context.getASTRecordLayout(RD);
          int64_t offset = Layout.getBaseClassOffset(Base).getQuantity();
-         fOffset += static_cast<intptr_t>(offset);
+         fOffset += static_cast<ptrdiff_t>(offset);
          fIterStack.push_back(std::make_pair(std::make_pair(fDecl, fIter),
-                                             static_cast<intptr_t>(offset)));
+                                             static_cast<ptrdiff_t>(offset)));
          fDecl = Base;
          fIter = Base->bases_begin();
       }
