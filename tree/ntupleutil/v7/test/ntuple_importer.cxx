@@ -146,4 +146,17 @@ TEST(RNTupleImporter, Leaflist)
       tree->Fill();
       tree->Write();
    }
+
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+   importer->SetIsQuiet(true);
+   importer->SetNTupleName("ntuple");
+   importer->Import();
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(1U, reader->GetNEntries());
+   // Field "branch" is an anonymous record, we cannot go through the default model here
+   auto viewA = reader->GetView<std::int32_t>("branch.a");
+   auto viewB = reader->GetView<std::int32_t>("branch.b");
+   EXPECT_EQ(1, viewA(0));
+   EXPECT_EQ(2, viewB(0));
 }
