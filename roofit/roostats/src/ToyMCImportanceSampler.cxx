@@ -358,7 +358,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       allVars->assign(*fNullSnapshots[i]);
       if( !fNullNLLs[i] ) {
          std::unique_ptr<RooArgSet> allParams{fNullDensities[i]->getParameters(*data)};
-         fNullNLLs[i] = std::unique_ptr<RooAbsReal>{fNullDensities[i]->createNLL(*data, RooFit::CloneData(false), RooFit::Constrain(*allParams),
+         fNullNLLs[i] = std::unique_ptr<RooAbsReal>{fNullDensities[i]->createNLL(*data, RooFit::CloneData(false),
                                                      RooFit::ConditionalObservables(fConditionalObs))};
       }else{
          fNullNLLs[i]->setData( *data, false );
@@ -383,7 +383,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       }
       if( !fImpNLLs[i] ) {
          std::unique_ptr<RooArgSet> allParams{fImportanceDensities[i]->getParameters(*data)};
-         fImpNLLs[i] = std::unique_ptr<RooAbsReal>{fImportanceDensities[i]->createNLL(*data, RooFit::CloneData(false), RooFit::Constrain(*allParams),
+         fImpNLLs[i] = std::unique_ptr<RooAbsReal>{fImportanceDensities[i]->createNLL(*data, RooFit::CloneData(false),
                                                           RooFit::ConditionalObservables(fConditionalObs))};
       }else{
          fImpNLLs[i]->setData( *data, false );

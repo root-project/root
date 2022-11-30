@@ -94,7 +94,7 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
       if (fNullModel->GetGlobalObservables()) globalObs.add(*fNullModel->GetGlobalObservables());
 
       auto& config = GetGlobalRooStatsConfig();
-      std::unique_ptr<RooAbsReal> nll{fNullModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(false), RooFit::Constrain(*allParams),
+      std::unique_ptr<RooAbsReal> nll{fNullModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(false),
                                                         RooFit::GlobalObservables(globalObs),
                                                         RooFit::ConditionalObservables(conditionalObs),
                                                         RooFit::Offset(config.useLikelihoodOffset))};
@@ -200,7 +200,7 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
       if (fAltModel->GetGlobalObservables()) globalObs.add(*fAltModel->GetGlobalObservables());
 
       const auto& config = GetGlobalRooStatsConfig();
-      std::unique_ptr<RooAbsReal> nll{fAltModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(false), RooFit::Constrain(*allParams),
+      std::unique_ptr<RooAbsReal> nll{fAltModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(false),
                                                        RooFit::GlobalObservables(globalObs),
                                                        RooFit::ConditionalObservables(conditionalObs),
                                                        RooFit::Offset(config.useLikelihoodOffset))};

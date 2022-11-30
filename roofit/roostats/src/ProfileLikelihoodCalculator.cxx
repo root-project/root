@@ -133,7 +133,7 @@ RooFit::OwningPtr<RooAbsReal>  ProfileLikelihoodCalculator::DoGlobalFit() const 
    RemoveConstantParameters(&*constrainedParams);
 
    const auto& config = GetGlobalRooStatsConfig();
-   auto nll = pdf->createNLL(*data, CloneData(true), Constrain(*constrainedParams),ConditionalObservables(fConditionalObs), GlobalObservables(fGlobalObs),
+   auto nll = pdf->createNLL(*data, CloneData(true), ConditionalObservables(fConditionalObs), GlobalObservables(fGlobalObs),
        RooFit::Offset(config.useLikelihoodOffset) );
 
    // check if global fit has been already done

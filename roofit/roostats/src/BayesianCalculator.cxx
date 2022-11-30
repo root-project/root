@@ -800,7 +800,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    //constrainedParams->Print("V");
 
    // use RooFit::Constrain() to be sure constraints terms are taken into account
-   fLogLike = std::unique_ptr<RooAbsReal>{fPdf->createNLL(*fData, RooFit::Constrain(*constrainedParams), RooFit::ConditionalObservables(fConditionalObs), RooFit::GlobalObservables(fGlobalObs) )};
+   fLogLike = std::unique_ptr<RooAbsReal>{fPdf->createNLL(*fData, RooFit::ConditionalObservables(fConditionalObs), RooFit::GlobalObservables(fGlobalObs) )};
 
 
 
@@ -893,7 +893,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
       std::unique_ptr<RooArgSet> constrParams{fPdf->getParameters(*fData)};
       // remove the constant parameters
       RemoveConstantParameters(&*constrParams);
-      fLogLike = std::unique_ptr<RooAbsReal>{pdfAndPrior->createNLL(*fData, RooFit::Constrain(*constrParams),RooFit::ConditionalObservables(fConditionalObs),RooFit::GlobalObservables(fGlobalObs) )};
+      fLogLike = std::unique_ptr<RooAbsReal>{pdfAndPrior->createNLL(*fData, RooFit::ConditionalObservables(fConditionalObs),RooFit::GlobalObservables(fGlobalObs) )};
 
       TString likeName = TString("likelihood_times_prior_") + TString(pdfAndPrior->GetName());
       TString formula;
