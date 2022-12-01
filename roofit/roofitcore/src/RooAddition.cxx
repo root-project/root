@@ -155,7 +155,7 @@ double RooAddition::evaluate() const
   return sum ;
 }
 
-std::string RooAddition::translate(std::string &globalScope, std::vector<std::string> &preFuncDecls)
+std::string RooAddition::translate(std::string &globalScope, std::vector<std::string> & /* preFuncDecls */)
 {
    // If the number of elements to sum is less than 3, just build a sum expression.
    // else build a loop to sum over the values.

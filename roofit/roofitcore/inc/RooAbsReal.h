@@ -469,7 +469,7 @@ protected:
   std::string _adResult = ""; ///<!
 
   public:
-  virtual std::string translate(std::string &globalScope, std::vector<std::string> &preFuncDecls);
+  virtual std::string translate(std::string & /* globalScope */, std::vector<std::string> & /* preFuncDecls */);
   /// This function returns the variable/expression (as a std::string) that
   /// the class stores its result in during code squashing. Allows for result
   /// propagation up the compute graph.
@@ -481,10 +481,10 @@ protected:
   /// A function to build the beginnings of a loop (i.e. "for(int i = 0; i <
   /// n; i++) {" ), this function is called before the subgraph of this node
   /// is visited.
-  virtual std::string buildLoopBegin(std::string &globalScope) { return ""; };
+  virtual std::string buildLoopBegin(std::string & /* globalScope */) { return ""; };
   /// A function to build the ending of a loop (usually just "}"), this
   /// function is called after the subgraph of this node is visited.
-  virtual std::string buildLoopEnd(std::string &globalScope) { return ""; };
+  virtual std::string buildLoopEnd(std::string & /* globalScope */) { return ""; };
   /// Shorthand to set the index of the current result (you can also achieve
   /// the same results through x->updateResults(x->getResult() + "[" + idx +
   /// "]"));

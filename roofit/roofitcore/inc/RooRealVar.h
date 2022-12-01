@@ -136,7 +136,10 @@ public:
 
   static void cleanup() ;
 
-  std::string translate(std::string &globalScope, std::vector<std::string> &preFuncDecls) override { return ""; };
+  std::string translate(std::string & /* globalScope */, std::vector<std::string> & /* preFuncDecls */) override
+  {
+     return "";
+  };
 
   protected:
 

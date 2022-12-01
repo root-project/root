@@ -54,7 +54,7 @@ public:
     _value = value;
   }
 
-  std::string translate(std::string &globalScope, std::vector<std::string> &preFuncDecls) override;
+  std::string translate(std::string & /* globalScope */, std::vector<std::string> & /* preFuncDecls */) override;
 
   protected:
   double evaluate() const override {

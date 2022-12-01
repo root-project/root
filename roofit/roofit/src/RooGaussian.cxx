@@ -157,7 +157,7 @@ void RooGaussian::generateEvent(Int_t code)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string RooGaussian::translate(std::string &globalScope, std::vector<std::string> &preFuncDecls)
+std::string RooGaussian::translate(std::string & /* globalScope */, std::vector<std::string> & /* preFuncDecls */)
 {
    // Build a call to the stateless gaussian defined later.
    _adResult =

@@ -73,7 +73,7 @@ void RooConstVar::writeToStream(ostream& os, bool /*compact*/) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string RooConstVar::translate(std::string &globalScope, std::vector<std::string> &preFuncDecls)
+std::string RooConstVar::translate(std::string & /* globalScope */, std::vector<std::string> & /* preFuncDecls */)
 {
    // Just return a stringy-fied version of the const value.
    // Formats to the maximum precision.

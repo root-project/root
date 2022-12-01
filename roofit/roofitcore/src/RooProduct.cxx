@@ -580,12 +580,11 @@ void dump_map(ostream& os, RPPMIter i, RPPMIter end)
 
 }
 
-std::string RooProduct::translate(std::string &globalScope, std::vector<std::string> &preFuncDecls)
+std::string RooProduct::translate(std::string & /* globalScope */, std::vector<std::string> & /* preFuncDecls */)
 {
    if (_adResult == "") {
       // Build a (node1 * node2 * node3 * ...) like expression.
       _adResult = '(';
-      const RooArgSet *nset = _compRSet.nset();
       for (const auto item : _compRSet) {
          auto rcomp = static_cast<RooAbsReal *>(item);
          _adResult += rcomp->getResult() + "*";

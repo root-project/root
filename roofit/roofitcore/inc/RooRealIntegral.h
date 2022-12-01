@@ -83,7 +83,7 @@ public:
 
   std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server) const override;
 
-  std::string translate(std::string &globalScope, std::vector<std::string> &preFuncDecls) override;
+  std::string translate(std::string & /* globalScope */, std::vector<std::string> & /* preFuncDecls */) override;
   std::string getResult() override;
 
   protected:

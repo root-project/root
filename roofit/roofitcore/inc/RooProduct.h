@@ -60,7 +60,7 @@ public:
   CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; } ;
   void setCacheAndTrackHints(RooArgSet&) override ;
 
-  std::string translate(std::string &globalScope, std::vector<std::string> &preFuncDecls) override;
+  std::string translate(std::string & /* globalScope */, std::vector<std::string> & /* preFuncDecls */) override;
 
   protected:
   void ioStreamerPass2() override ;

@@ -57,7 +57,7 @@ public:
 
    void setSimCount(int simCount) { _simCount = simCount; }
 
-   std::string translate(std::string &globalScope, std::vector<std::string> &preFuncDecls) override;
+   std::string translate(std::string &globalScope, std::vector<std::string> & /* preFuncDecls */) override;
    std::string buildLoopBegin(std::string &globalScope) override;
    std::string buildLoopEnd(std::string &globalScope) override;
 

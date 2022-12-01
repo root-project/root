@@ -4618,7 +4618,7 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
 /// these functions can be called as any other normal function.
 ///
 /// \returns The representative code string for the given object.
-std::string RooAbsReal::translate(std::string &globalScope, std::vector<std::string> &preFuncDecls)
+std::string RooAbsReal::translate(std::string & /* globalScope */, std::vector<std::string> & /* preFuncDecls */)
 {
    std::stringstream errorMsg;
    errorMsg << "Translate function for class " << GetName() << " has not yet been implemented.";

@@ -281,7 +281,7 @@ void RooNLLVarNew::enableOffsetting(bool flag)
    _offset = {};
 }
 
-std::string RooNLLVarNew::buildLoopBegin(std::string &globalScope)
+std::string RooNLLVarNew::buildLoopBegin(std::string & /* globalScope */)
 {
    _adIdx = GetName();
    _adIdx += "_i";
@@ -294,12 +294,12 @@ std::string RooNLLVarNew::buildLoopBegin(std::string &globalScope)
    return code;
 }
 
-std::string RooNLLVarNew::buildLoopEnd(std::string &globalScope)
+std::string RooNLLVarNew::buildLoopEnd(std::string & /* globalScope */)
 {
    return "}\n";
 }
 
-std::string RooNLLVarNew::translate(std::string &globalScope, std::vector<std::string> &preFuncDecls)
+std::string RooNLLVarNew::translate(std::string &globalScope, std::vector<std::string> & /* preFuncDecls */)
 {
    std::string className = GetName();
    std::string resName = className + "_result";

@@ -58,7 +58,7 @@ public:
       return static_cast<RooAbsPdf &>(*_pdf).expectedEvents(nset);
    }
 
-   std::string translate(std::string &globalScope, std::vector<std::string> &preFuncDecls) override;
+   std::string translate(std::string & /* globalScope */, std::vector<std::string> & /* preFuncDecls */) override;
    std::string getResult() override;
 
 protected:

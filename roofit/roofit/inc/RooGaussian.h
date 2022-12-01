@@ -47,7 +47,7 @@ public:
   /// Get the sigma parameter.
   RooAbsReal const& getSigma() const { return sigma.arg(); }
 
-  std::string translate(std::string &globalScope, std::vector<std::string> &preFuncDecls) override;
+  std::string translate(std::string & /* globalScope */, std::vector<std::string> & /* preFuncDecls */) override;
   static double gaussEvaluate(double x, double mean, double sigma);
 
   protected:

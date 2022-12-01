@@ -71,7 +71,7 @@ protected:
 
   double evaluate() const override;
 
-  std::string translate(std::string &globalScope, std::vector<std::string> &preFuncDecls) override;
+  std::string translate(std::string &globalScope, std::vector<std::string> & /* preFuncDecls */) override;
 
   ClassDefOverride(RooAddition,3) // Sum of RooAbsReal objects
 };

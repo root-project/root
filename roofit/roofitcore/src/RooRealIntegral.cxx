@@ -1167,7 +1167,7 @@ std::unique_ptr<RooArgSet> RooRealIntegral::fillNormSetForServer(RooArgSet const
 }
 
 // For now return an empty string.
-std::string RooRealIntegral::translate(std::string &globalScope, std::vector<std::string> &preFuncDecls)
+std::string RooRealIntegral::translate(std::string & /* globalScope */, std::vector<std::string> & /* preFuncDecls */)
 {
    return "";
 }
