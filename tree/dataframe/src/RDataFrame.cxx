@@ -653,6 +653,7 @@ parts of the RDataFrame API currently work with this package. The subset that is
 - Redefine
 - Snapshot
 - Stats
+- StdDev
 - Sum
 - Systematic variations: Vary and [VariationsFor](\ref ROOT::RDF::Experimental::VariationsFor).
 - Parallel submission of distributed graphs: [RunGraphs](\ref ROOT::RDF::RunGraphs).
