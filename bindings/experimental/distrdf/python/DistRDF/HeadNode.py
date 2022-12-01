@@ -72,7 +72,7 @@ class HeadNode(Node, ABC):
             this head node, starting from zero.
     """
 
-    def __init__(self, backend: BaseBackend, npartitions: Optional[int]):
+    def __init__(self, backend: BaseBackend, npartitions: Optional[int], localdf: ROOT.RDataFrame):
         super().__init__(lambda: self)
 
         self.backend = backend
@@ -94,6 +94,10 @@ class HeadNode(Node, ABC):
         # If so, this attribute will not be updated when triggering.
         self._npartitions = npartitions
         self._user_specified_npartitions = True if npartitions is not None else False
+
+        # Internal RDataFrame object, useful to expose information such as
+        # column names.
+        self._localdf = localdf
 
     @property
     def npartitions(self) -> Optional[int]:
@@ -210,6 +214,9 @@ class HeadNode(Node, ABC):
         for node, value in zip(local_nodes, final_values):
             Utils.set_value_on_node(value, node, self.backend)
 
+    def GetColumnNames(self) -> Iterable[str]:
+        return self._localdf.GetColumnNames()
+
 
 def get_headnode(backend: BaseBackend, npartitions: int, *args) -> HeadNode:
     """
@@ -221,7 +228,7 @@ def get_headnode(backend: BaseBackend, npartitions: int, *args) -> HeadNode:
 
     # Early check that arguments are accepted by RDataFrame
     try:
-        ROOT.RDataFrame(*args)
+        localdf = ROOT.RDataFrame(*args)
     except TypeError:
         raise TypeError(("The arguments provided are not accepted by any RDataFrame constructor. "
                          "See the RDataFrame documentation for the accepted constructor argument types."))
@@ -229,13 +236,13 @@ def get_headnode(backend: BaseBackend, npartitions: int, *args) -> HeadNode:
     firstarg = args[0]
     if isinstance(firstarg, int):
         # RDataFrame(ULong64_t numEntries)
-        return EmptySourceHeadNode(backend, npartitions, firstarg)
+        return EmptySourceHeadNode(backend, npartitions, localdf, firstarg)
     elif isinstance(firstarg, (ROOT.TTree, str)):
         # RDataFrame(std::string_view treeName, filenameglob, defaultBranches = {})
         # RDataFrame(std::string_view treename, filenames, defaultBranches = {})
         # RDataFrame(std::string_view treeName, dirPtr, defaultBranches = {})
         # RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {})
-        return TreeHeadNode(backend, npartitions, *args)
+        return TreeHeadNode(backend, npartitions, localdf, *args)
     else:
         raise RuntimeError(
             ("First argument {} of type {} is not recognised as a supported "
@@ -259,7 +266,7 @@ class EmptySourceHeadNode(HeadNode):
             for distributed execution.
     """
 
-    def __init__(self, backend: BaseBackend, npartitions: Optional[int], nentries: int):
+    def __init__(self, backend: BaseBackend, npartitions: Optional[int], localdf: ROOT.RDataFrame, nentries: int):
         """
         Creates a new RDataFrame instance for the given arguments.
 
@@ -269,7 +276,7 @@ class EmptySourceHeadNode(HeadNode):
             npartitions (int): The number of partitions the dataset will be
                 split in for distributed execution.
         """
-        super().__init__(backend, npartitions)
+        super().__init__(backend, npartitions, localdf)
 
         self.nentries = nentries
 
@@ -350,7 +357,7 @@ class TreeHeadNode(HeadNode):
 
     """
 
-    def __init__(self, backend: BaseBackend, npartitions: Optional[int], *args):
+    def __init__(self, backend: BaseBackend, npartitions: Optional[int], localdf: ROOT.RDataFrame, *args):
         """
         Creates a new RDataFrame instance for the given arguments.
 
@@ -360,7 +367,7 @@ class TreeHeadNode(HeadNode):
             npartitions (int): The number of partitions the dataset will be
                 split in for distributed execution.
         """
-        super().__init__(backend, npartitions)
+        super().__init__(backend, npartitions, localdf)
 
         self.defaultbranches = None
         # Information about friend trees, if they are present.
