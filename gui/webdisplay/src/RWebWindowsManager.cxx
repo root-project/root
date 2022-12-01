@@ -218,6 +218,14 @@ bool RWebWindowsManager::InformListener(const std::string &msg)
 ///      WebGui.UseHttps: yes
 ///      WebGui.ServerCert: sertificate_filename.pem
 ///
+/// Alternatively, one can specify unix socket to handle requests:
+///
+///      WebGui.UnixSocket: /path/to/unix/socket
+///      WebGui.UnixSocketMode: 0700
+///
+/// Typically one used unix sockets together with server mode like `root --web=server:/tmp/root.socket` and
+/// then redirect it via ssh tunel to client node
+///
 /// All incoming requests processed in THttpServer in timer handler with 10 ms timeout.
 /// One may decrease value to improve latency or increase value to minimize CPU load
 ///
@@ -342,9 +350,15 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    bool use_secure = RWebWindowWSHandler::GetBoolEnv("WebGui.UseHttps", 0) == 1;
    const char *ssl_cert = gEnv->GetValue("WebGui.ServerCert", "rootserver.pem");
 
+   const char *unix_socket = gEnv->GetValue("WebGui.UnixSocket", "");
+   const char *unix_socket_mode = gEnv->GetValue("WebGui.UnixSocketMode", "0700");
+   bool use_unix_socket = unix_socket && *unix_socket;
+   if (use_unix_socket)
+      fcgi_port = http_port = -1;
+
    int ntry = 100;
 
-   if ((http_port < 0) && (fcgi_port <= 0)) {
+   if ((http_port < 0) && (fcgi_port <= 0) && !use_unix_socket) {
       R__LOG_ERROR(WebGUILog()) << "Not allowed to create HTTP server, check WebGui.HttpPort variable";
       return false;
    }
@@ -366,8 +380,11 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    if (fcgi_port > 0)
       ntry++;
 
+   if (use_unix_socket)
+      ntry++;
+
    while (ntry-- >= 0) {
-      if ((http_port == 0) && (fcgi_port <= 0)) {
+      if ((http_port == 0) && (fcgi_port <= 0) && !use_unix_socket) {
          if ((http_min <= 0) || (http_max <= http_min)) {
             R__LOG_ERROR(WebGUILog()) << "Wrong HTTP range configuration, check WebGui.HttpPortMin/Max variables";
             return false;
@@ -377,26 +394,33 @@ bool RWebWindowsManager::CreateServer(bool with_http)
       }
 
       TString engine, url;
-
       if (fcgi_port > 0) {
          engine.Form("fastcgi:%d?thrds=%d", fcgi_port, fcgi_thrds);
-         if (!fServer->CreateEngine(engine)) return false;
-         if (fcgi_serv && (strlen(fcgi_serv) > 0)) fAddr = fcgi_serv;
-         if (http_port < 0) return true;
+         if (!fServer->CreateEngine(engine))
+            return false;
+         if (fcgi_serv && (strlen(fcgi_serv) > 0))
+            fAddr = fcgi_serv;
+         if (http_port < 0)
+            return true;
          fcgi_port = 0;
-      } else if (http_port > 0) {
-         url = use_secure ? "https://" : "http://";
-         engine.Form("%s:%d?thrds=%d&websocket_timeout=%d", (use_secure ? "https" : "http"), http_port, http_thrds, http_wstmout);
-         if (assign_loopback) {
-            engine.Append("&loopback");
-            url.Append("localhost");
-         } else if (http_bind && (strlen(http_bind) > 0)) {
-            engine.Append("&bind=");
-            engine.Append(http_bind);
-            url.Append(http_bind);
+      } else {
+         if (use_unix_socket) {
+            engine.Form("socket:%s?socket_mode=%s&", unix_socket, unix_socket_mode);
          } else {
-            url.Append("localhost");
+            url = use_secure ? "https://" : "http://";
+            engine.Form("%s:%d?", (use_secure ? "https" : "http"), http_port);
+            if (assign_loopback) {
+               engine.Append("loopback&");
+               url.Append("localhost");
+            } else if (http_bind && (strlen(http_bind) > 0)) {
+               engine.Append(TString::Format("bind=%s&", http_bind));
+               url.Append(http_bind);
+            } else {
+               url.Append("localhost");
+            }
          }
+
+         engine.Append(TString::Format("thrds=%d&websocket_timeout=%d", http_thrds, http_wstmout));
 
          if (http_maxage >= 0)
             engine.Append(TString::Format("&max_age=%d", http_maxage));
@@ -412,12 +436,19 @@ bool RWebWindowsManager::CreateServer(bool with_http)
          }
 
          if (fServer->CreateEngine(engine)) {
-            fAddr = url.Data();
-            fAddr.append(":");
-            fAddr.append(std::to_string(http_port));
-            InformListener(std::string("http:") + std::to_string(http_port) + "\n");
+            if (use_unix_socket) {
+               fAddr = "socket://"; // fictional socket URL
+               fAddr.append(unix_socket);
+               InformListener(std::string("socket:") + unix_socket + "\n");
+            } else if (http_port > 0) {
+               fAddr = url.Data();
+               fAddr.append(":");
+               fAddr.append(std::to_string(http_port));
+               InformListener(std::string("http:") + std::to_string(http_port) + "\n");
+            }
             return true;
          }
+         use_unix_socket = false;
          http_port = 0;
       }
    }
@@ -623,7 +654,6 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    if (!args.IsHeadless()) {
       TUrl parse_url(args.GetUrl().c_str());
       const char *path = parse_url.GetFileAndOptions();
-      printf("Window path is %s\n", path);
       if (path && *path)
          InformListener(std::string("win:") + path);
    }
@@ -632,6 +662,9 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
       std::cout << "New web window: " << args.GetUrl() << std::endl;
       return 0;
    }
+
+   if (fAddr.compare(0,9,"socket://") == 0)
+      return 0;
 
 #if not(defined(R__MACOSX)) and not(defined(R__WIN32))
    if (args.IsInteractiveBrowser()) {
