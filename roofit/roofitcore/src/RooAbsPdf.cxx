@@ -997,6 +997,9 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 {
   auto baseName = std::string("nll_") + GetName() + "_" + data.GetName();
 
+  // Figure out the integer that corresponds to the default BatchMode option.
+  const int defaultBatchModeInt = RooFit::BatchMode(RooFit::Experimental::defaultBatchMode()).getInt(0);
+
   // Select the pdf-specific commands
   RooCmdConfig pc(Form("RooAbsPdf::createNLL(%s)",GetName())) ;
 
@@ -1018,7 +1021,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineSet("glObs","GlobalObservables",0,0) ;
   pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
-  pc.defineInt("BatchMode", "BatchMode", 0, 0);
+  pc.defineInt("BatchMode", "BatchMode", 0, defaultBatchModeInt);
   pc.defineDouble("IntegrateBins", "IntegrateBins", 0, -1.);
   pc.defineMutex("Range","RangeWithName") ;
   pc.defineMutex("GlobalObservables","GlobalObservablesTag") ;

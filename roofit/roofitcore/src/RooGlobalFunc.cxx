@@ -66,6 +66,14 @@ namespace RooFit {
 
   } // namespace
 
+  namespace Experimental {
+
+  std::string& defaultBatchMode() {
+    static std::string batchMode = "off";
+    return batchMode;
+  }
+
+  }
 
   // RooAbsReal::plotOn arguments
   RooCmdArg DrawOption(const char* opt)            { return RooCmdArg("DrawOption",0,0,0,0,opt,0,0,0) ; }
