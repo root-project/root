@@ -85,7 +85,7 @@ public:
    virtual Int_t  CellFill(Int_t, TFoamCell*);  // Allocates new empty cell and return its index
    virtual void Explore(TFoamCell *Cell);       // Exploration of the new cell, determine <wt>, wtMax etc.
    virtual void Carver(Int_t&,Double_t&,Double_t&);// Determines the best edge, wt_max reduction
-   virtual void Varedu(Double_t [], Int_t&, Double_t&,Double_t&); // Determines the best edge, variance reduction
+   virtual void Varedu(Double_t [5], Int_t&, Double_t&,Double_t&); // Determines the best edge, variance reduction
    virtual void MakeAlpha();                 // Provides random point inside hyper-rectangle
    virtual void Grow();                      // Adds new cells to FOAM object until buffer is full
    virtual Long_t PeekMax();                 // Choose one active cell, used by Grow and also in MC generation
