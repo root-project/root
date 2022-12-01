@@ -234,15 +234,15 @@ ROOT_ADD_TEST(test-stressmathcore COMMAND stressMathCore FAILREGEX "FAILED|Error
 ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressMathCore.cxx
               FAILREGEX "FAILED|Error in" DEPENDS test-stressmathcore)
 
-#--stressRooFit----------------------------------------------------------------------------------
 if(ROOT_roofit_FOUND)
+  #--stressRooFit----------------------------------------------------------------------------------
   if(ROOT_mathmore_FOUND)
     ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit RooFitMore)
   else()
     ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit )
   endif()  
   configure_file(stressRooFit_ref.root stressRooFit_ref.root COPYONLY)
-  ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit FAILREGEX "FAILED|Error in")
+  ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit -b off FAILREGEX "FAILED|Error in")
   ROOT_ADD_TEST(test-stressroofit-batchmode-cpu COMMAND stressRooFit -b cpu FAILREGEX "FAILED|Error in")
   if(CUDA_FOUND)
     ROOT_ADD_TEST(test-stressroofit-batchmode-cuda COMMAND stressRooFit -b cuda FAILREGEX "FAILED|Error in")
@@ -257,13 +257,15 @@ if(ROOT_roofit_FOUND)
   ROOT_ADD_TEST(test-roofit-includingRooMath COMMAND ${ROOT_root_CMD} -b -q -l -e "#include\ <RooMath.h>")
 
   add_subdirectory(fit)
-endif()
 
-#--stressRooStats----------------------------------------------------------------------------------
-if(ROOT_roofit_FOUND)
+  #--stressRooStats----------------------------------------------------------------------------------
   ROOT_EXECUTABLE(stressRooStats stressRooStats.cxx LIBRARIES RooStats)
   configure_file(stressRooStats_ref.root stressRooStats_ref.root COPYONLY)
   ROOT_ADD_TEST(test-stressroostats COMMAND stressRooStats FAILREGEX "FAILED|Error in" LABELS longtest)
+  ROOT_ADD_TEST(test-stressroostats-batchmode-cpu COMMAND stressRooStats -b cpu FAILREGEX "FAILED|Error in" LABELS longtest)
+  if(CUDA_FOUND)
+    ROOT_ADD_TEST(test-stressroostats-batchmode-cuda COMMAND stressRooStats -b cuda FAILREGEX "FAILED|Error in" LABELS longtest)
+  endif()
   ROOT_ADD_TEST(test-stressroostats-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooStats.cxx
                 FAILREGEX "FAILED|Error in" DEPENDS test-stressroostats )
   if (ROOT_minuit2_FOUND)
