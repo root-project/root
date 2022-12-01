@@ -132,7 +132,7 @@ namespace TMVA {
       void InitCells();                   // Initialisation of all foam cells
       Int_t CellFill(Int_t, PDEFoamCell*);// Allocates new empty cell and return its index
       virtual void Explore(PDEFoamCell *Cell); // Exploration of the new cell, determine <wt>, wtMax etc.
-      void Varedu(Double_t [], Int_t&, Double_t&,Double_t&); // Determines the best edge, variance reduction
+      void Varedu(Double_t [5], Int_t&, Double_t&,Double_t&); // Determines the best edge, variance reduction
       void MakeAlpha();             // Provides random point inside hyperrectangle
       void Grow();                  // build up foam
       Long_t PeekMax();             // peek cell with max. driver integral
