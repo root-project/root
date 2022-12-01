@@ -156,8 +156,8 @@ void RWebWindowsManager::AssignWindowThreadId(RWebWindow &win)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// If LC_ROOT_LISTENER_SOCKET variable is configured,
-/// message will be send to that unix socket
+/// If ROOT_LISTENER_SOCKET variable is configured,
+/// message will be sent to that unix socket
 
 bool RWebWindowsManager::InformListener(const std::string &msg)
 {
@@ -172,15 +172,17 @@ bool RWebWindowsManager::InformListener(const std::string &msg)
       return false;
 
    TSocket s(fname);
-   if (!s.IsValid())
+   if (!s.IsValid()) {
+      R__LOG_ERROR(WebGUILog()) << "Problem with open listener socket " << fname << ", check ROOT_LISTENER_SOCKET environment variable";
       return false;
+   }
 
    int res = s.SendRaw(msg.c_str(), msg.length());
 
    s.Close();
 
    if (res > 0) {
-      // workaround to let listener configure port forwarding
+      // workaround to let handle socket by system outside ROOT process
       gSystem->ProcessEvents();
       gSystem->Sleep(10);
    }
@@ -224,7 +226,7 @@ bool RWebWindowsManager::InformListener(const std::string &msg)
 ///      WebGui.UnixSocketMode: 0700
 ///
 /// Typically one used unix sockets together with server mode like `root --web=server:/tmp/root.socket` and
-/// then redirect it via ssh tunel to client node
+/// then redirect it via ssh tunnel (e.g. using `rootssh`) to client node
 ///
 /// All incoming requests processed in THttpServer in timer handler with 10 ms timeout.
 /// One may decrease value to improve latency or increase value to minimize CPU load
