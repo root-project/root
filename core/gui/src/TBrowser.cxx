@@ -114,11 +114,11 @@ Bool_t TBrowser::InitGraphics()
    TApplication::NeedGraphicsLibs();
    if (gApplication)
       gApplication->InitializeGraphics();
-   if (!gROOT->IsBatch())
+
+   if (gROOT->IsWebDisplay() && !gROOT->IsWebDisplayBatch())
       return kTRUE;
 
-   TString imp = gEnv->GetValue("Browser.Name", "---");
-   if ((imp == "ROOT::Experimental::RWebBrowserImp") && (gROOT->GetWebDisplay() == "server"))
+   if (!gROOT->IsBatch())
       return kTRUE;
 
    Warning("TBrowser", "The ROOT browser cannot run in batch mode");
