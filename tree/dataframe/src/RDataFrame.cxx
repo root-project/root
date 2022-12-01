@@ -642,7 +642,6 @@ parts of the RDataFrame API currently work with this package. The subset that is
 - Count
 - Define
 - DefinePerSample
-- Fill
 - Filter
 - Graph
 - Histo[1,2,3]D
