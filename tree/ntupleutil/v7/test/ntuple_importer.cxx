@@ -173,6 +173,12 @@ TEST(RNTupleImporter, FixedSizeArray)
       tree->Branch("a", a, "a[1]/I");
       tree->Branch("b", b, "b[2]/I");
       tree->Branch("c", c, "c[4]/C");
+      struct {
+         Int_t a = 1;
+         Int_t b[2] = {2, 3};
+         Int_t c = 4;
+      } leafList;
+      tree->Branch("branch", &leafList, "a/I:b[2]/I:c/I");
       tree->Fill();
       tree->Write();
    }
@@ -196,4 +202,12 @@ TEST(RNTupleImporter, FixedSizeArray)
    EXPECT_EQ('O', viewC(0)[1]);
    EXPECT_EQ('O', viewC(0)[2]);
    EXPECT_EQ('T', viewC(0)[3]);
+   auto viewBranchA = reader->GetView<std::int32_t>("branch.a");
+   auto viewBranchB = reader->GetView<std::array<std::int32_t, 2>>("branch.b");
+   auto viewBranchC = reader->GetView<std::int32_t>("branch.c");
+   EXPECT_EQ(1, viewBranchA(0));
+   EXPECT_EQ(2U, viewBranchB(0).size());
+   EXPECT_EQ(2, viewBranchB(0)[0]);
+   EXPECT_EQ(3, viewBranchB(0)[1]);
+   EXPECT_EQ(4, viewBranchC(0));
 }
