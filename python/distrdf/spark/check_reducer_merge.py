@@ -359,6 +359,51 @@ class TestReducerMerge:
 
         os.remove(filename)
 
+    def test_distributed_stats(self, connection):
+        """Test support for the Stats action."""
+        # Create dataset with fixed series of entries
+        treename = "tree"
+        filename = "test_distributed_stats_spark.root"
+        ROOT.RDataFrame(100).Define("v", "static_cast<double>(rdfentry_)").Snapshot(treename, filename)
+
+        df = (
+            Spark.RDataFrame(treename, filename, daskclient=connection)
+                 .Define("vec_v", "std::vector<double>({v, v+1, v+2})")
+                 .Define("w", "1./(v+1)")
+                 .Define("vec_w", "std::vector<double>({w, w+1, w+2})")
+                 .Define("one", "1")
+                 .Define("ones", "std::vector<double>({1., 1., 1.})")
+        )
+
+        s0 = df.Stats("v")
+        m0 = df.Mean("v")
+        v0 = df.StdDev("v")
+        s0prime = df.Stats("v", "one")
+        s0w = df.Stats("v", "w")
+
+        s1 = df.Stats("vec_v")
+        m1 = df.Mean("vec_v")
+        v1 = df.StdDev("vec_v")
+        s1w = df.Stats("vec_v", "vec_w")
+        s1prime0 = df.Stats("vec_v", "one")
+        s1prime1 = df.Stats("vec_v", "ones")
+
+        rel = 0.01
+
+        assert s0.GetMean() == pytest.approx(49.5, rel), f"{s0.GetMean()}!=49.5"
+        assert s0.GetMean() == pytest.approx(m0.GetValue(), rel), f"{s0.GetMean()}!={m0.GetValue()}"
+        assert s0.GetMean() == pytest.approx(s0prime.GetMean(), rel), f"{s0.GetMean()}!={s0prime.GetMean()}"
+        assert s0.GetRMS() == pytest.approx(v0.GetValue(), rel), f"{s0.GetRMS()}!={v0.GetValue()}"
+        assert s0w.GetMean() == pytest.approx(18.2775, rel), f"{s0w.GetMean()}!=18.2775"
+
+        assert s1.GetMean() == pytest.approx(50.5, rel), f"{s1.GetMean()}!=50.5"
+        assert s1.GetMean() == pytest.approx(m1.GetValue(), rel), f"{s1.GetMean()}!={m1.GetValue()}"
+        assert s1.GetRMS() == pytest.approx(v1.GetValue(), rel), f"{s1.GetRMS()}!={v1.GetValue()}"
+        assert s1.GetMean() == pytest.approx(s1prime0.GetMean(), rel), f"{s1.GetMean()}!={s1prime0.GetMean()}"
+        assert s1.GetMean() == pytest.approx(s1prime1.GetMean(), rel), f"{s1.GetMean()}!={s1prime1.GetMean()}"
+        assert s1w.GetMean() == pytest.approx(49.5940, rel), f"{s1w.GetMean()}!=49.5940"
+
+        os.remove(filename)
 
 if __name__ == "__main__":
     pytest.main(args=[__file__])
