@@ -257,12 +257,22 @@ So, if we take the same example as above, and leave out the x-points, the diagra
 - upgrade civetweb code to version 1.15, supports SSL version 3.0
 - resolve problem with symbolic links usage on Windows
 - let disable/enable directory files listing via THttpServer (default is off)
+- enable usage of unix sockets, used by `rootssh` script for tunnel to remote session
 
 
 ## GUI Libraries
 
 - Provide web-based TTree viewer, integrated with RBrowser
 - Support Edge browser on Windows for all kinds of web widgets
+- Provide `rootssh` shell script to simplify use of web-based widgets on remote nodes:
+```
+   [localnode] rootssh user@remotenode
+   [remotenode] root --web -e 'new TBrowser'
+```
+Script automatically configures ssh tunnel between local and remote nodes, one the remote node
+unix socket with strict 0700 mode is used. When ROOT running on remote node wants to display
+new web widget, script will automatically start web browser on local node with appropriate URL,
+accessing widget via configured ssh tunnel.
 
 
 ## Montecarlo Libraries
