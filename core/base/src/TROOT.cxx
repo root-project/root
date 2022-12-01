@@ -2778,11 +2778,15 @@ void TROOT::SetWebDisplay(const char *webdisplay)
       fIsWebDisplayBatch = kFALSE;
       fWebDisplay = "server";
       if (wd[6] == ':') {
-         auto port = TString(wd+7).Atoi();
-         if (port > 0)
-            gEnv->SetValue("WebGui.HttpPort", port);
-         else
-            Error("SetWebDisplay","Wrong port parameter %s for server", wd+7);
+         if ((wd[7] >= '0') && (wd[7] <= '9')) {
+            auto port = TString(wd+7).Atoi();
+            if (port > 0)
+               gEnv->SetValue("WebGui.HttpPort", port);
+            else
+               Error("SetWebDisplay", "Wrong port parameter %s for server", wd+7);
+         } else if (wd[7]) {
+            gEnv->SetValue("WebGui.UnixSocket", wd+7);
+         }
       }
    } else {
       fIsWebDisplay = kTRUE;
