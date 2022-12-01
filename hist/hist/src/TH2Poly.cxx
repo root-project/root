@@ -75,7 +75,7 @@ many times.
 The following very simple macro shows how to build and fill a `TH2Poly`:
 ~~~ {.cpp}
 {
-    TH2Poly *h2p = new TH2Poly();
+    auto h2p = new TH2Poly();
 
     Double_t x1[] = {0, 5, 6};
     Double_t y1[] = {0, 0, 5};

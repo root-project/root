@@ -39,7 +39,7 @@ The following types of functions can be created:
 
 Begin_Macro (source)
 {
-    TF2 *f2 = new TF2("f2","sin(x)*sin(y)/(x*y)",0,5,0,5);
+    auto f2 = new TF2("f2","sin(x)*sin(y)/(x*y)",0,5,0,5);
     f2->Draw();
 }
 End_Macro
@@ -58,7 +58,7 @@ Double_t func(Double_t *val, Double_t *par)
 
 void fplot()
 {
-   TF2 *f = new TF2("f",func,-1,1,-1,1);
+   auto f = new TF2("f",func,-1,1,-1,1);
    f->Draw("surf1");
 }
 ~~~~

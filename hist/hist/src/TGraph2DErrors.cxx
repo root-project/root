@@ -59,7 +59,7 @@ Begin_Macro(source)
       ez[N] = 10*r->Rndm(N);
    }
 
-   TGraph2DErrors *g = new TGraph2DErrors(np, rx, ry, rz, ex, ey, ez);
+   auto g = new TGraph2DErrors(np, rx, ry, rz, ex, ey, ez);
    g->SetTitle("TGraph2D with error bars: option \"ERR\"");
    g->SetFillColor(29);
    g->SetMarkerSize(0.8);
