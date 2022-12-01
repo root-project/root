@@ -588,9 +588,9 @@ TEST(RNTuple, Enums)
 
 TEST(RNTuple, Traits)
 {
-   EXPECT_EQ(RFieldBase::kTraitTrivialType, RField<float>("f").GetTraits());
-   EXPECT_EQ(RFieldBase::kTraitTrivialType, RField<bool>("f").GetTraits());
-   EXPECT_EQ(RFieldBase::kTraitTrivialType, RField<int>("f").GetTraits());
+   EXPECT_EQ(RFieldBase::kTraitTrivialType | RFieldBase::kTraitMappable, RField<float>("f").GetTraits());
+   EXPECT_EQ(RFieldBase::kTraitTrivialType | RFieldBase::kTraitMappable, RField<bool>("f").GetTraits());
+   EXPECT_EQ(RFieldBase::kTraitTrivialType | RFieldBase::kTraitMappable, RField<int>("f").GetTraits());
    EXPECT_EQ(0, RField<std::string>("f").GetTraits());
    EXPECT_EQ(0, RField<std::vector<float>>("f").GetTraits());
    EXPECT_EQ(0, RField<std::vector<bool>>("f").GetTraits());

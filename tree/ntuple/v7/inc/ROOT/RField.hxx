@@ -79,7 +79,10 @@ public:
    static constexpr int kTraitTriviallyConstructible = 0x01;
    /// The type is cleaned up just by freeing its memory. I.e. DestroyValue() is a no-op.
    static constexpr int kTraitTriviallyDestructible = 0x02;
-   /// Shorthand combining all other shortcut traits
+   /// A field of a fundamental type that can be directly mapped via `RField<T>::Map()`, i.e. maps as-is to a single
+   /// column
+   static constexpr int kTraitMappable = 0x04;
+   /// Shorthand for types that are both trivially constructible and destructible
    static constexpr int kTraitTrivialType = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
 
 private:
@@ -91,7 +94,7 @@ private:
    ENTupleStructure fStructure;
    /// For fixed sized arrays, the array length
    std::size_t fNRepetitions;
-   /// A field on a trivial type that maps as-is to a single column
+   /// A field qualifies as simple if it is both mappable and has no post-read callback
    bool fIsSimple;
    /// When the columns are connected to a page source or page sink, the field represents a field id in the
    /// corresponding RNTuple descriptor. This on-disk ID is set in RPageSink::Create() for writing and by
@@ -175,6 +178,8 @@ public:
    };
 
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
+   /// If `isSimple` is `true`, the trait `kTraitMappable` is automatically set on construction. However, the
+   /// field might be demoted to non-simple if a post-read callback is set.
    RFieldBase(std::string_view name, std::string_view type, ENTupleStructure structure, bool isSimple,
               std::size_t nRepetitions = 0);
    RFieldBase(const RFieldBase&) = delete;
@@ -214,7 +219,7 @@ public:
    /// Write the given value into columns. The value object has to be of the same type as the field.
    /// Returns the number of uncompressed bytes written.
    std::size_t Append(const RFieldValue& value) {
-      if (!fIsSimple)
+      if (~fTraits & kTraitMappable)
          return AppendImpl(value);
 
       fPrincipalColumn->Append(value.fMappedElement);
@@ -223,21 +228,29 @@ public:
 
    /// Populate a single value with data from the tree, which needs to be of the fitting type.
    /// Reading copies data into the memory wrapped by the ntuple value.
+   /// The fast path is conditioned by the field qualifying as simple, i.e. maps as-is to a single column and has no
+   /// read callback.
    void Read(NTupleSize_t globalIndex, RFieldValue *value) {
-      if (!fIsSimple) {
-         ReadGlobalImpl(globalIndex, value);
-      } else {
+      if (fIsSimple)
+         return (void)fPrincipalColumn->Read(globalIndex, &value->fMappedElement);
+
+      if (fTraits & kTraitMappable) {
          fPrincipalColumn->Read(globalIndex, &value->fMappedElement);
+      } else {
+         ReadGlobalImpl(globalIndex, value);
       }
       if (fReadCallback)
          fReadCallback(*value);
    }
 
    void Read(const RClusterIndex &clusterIndex, RFieldValue *value) {
-      if (!fIsSimple) {
-         ReadInClusterImpl(clusterIndex, value);
-      } else {
+      if (fIsSimple)
+         return (void)fPrincipalColumn->Read(clusterIndex, &value->fMappedElement);
+
+      if (fTraits & kTraitMappable) {
          fPrincipalColumn->Read(clusterIndex, &value->fMappedElement);
+      } else {
+         ReadInClusterImpl(clusterIndex, value);
       }
       if (fReadCallback)
          fReadCallback(*value);
@@ -265,7 +278,10 @@ public:
 
    /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
    /// value object.
-   void SetReadCallback(ReadCallback_t func) { fReadCallback = func; }
+   void SetReadCallback(ReadCallback_t func) {
+      fReadCallback = func;
+      fIsSimple = (fTraits & kTraitMappable) && !func;
+   }
 
    DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
    void SetOnDiskId(DescriptorId_t id) { fOnDiskId = id; }
@@ -428,7 +444,7 @@ protected:
                 const std::array<std::size_t, N> &offsets, std::string_view typeName = "")
       : ROOT::Experimental::Detail::RFieldBase(fieldName, typeName, ENTupleStructure::kRecord, false /* isSimple */)
    {
-      fTraits = kTraitTrivialType;
+      fTraits |= kTraitTrivialType;
       for (unsigned i = 0; i < N; ++i) {
          fOffsets.push_back(offsets[i]);
          fMaxAlignment = std::max(fMaxAlignment, itemFields[i]->GetAlignment());
@@ -808,7 +824,7 @@ public:
    explicit RField(std::string_view name)
       : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
    {
-      fTraits = kTraitTrivialType;
+      fTraits |= kTraitTrivialType;
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -868,7 +884,7 @@ public:
    explicit RField(std::string_view name)
       : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
    {
-      fTraits = kTraitTrivialType;
+      fTraits |= kTraitTrivialType;
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -919,7 +935,7 @@ public:
    explicit RField(std::string_view name)
       : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
    {
-      fTraits = kTraitTrivialType;
+      fTraits |= kTraitTrivialType;
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -971,7 +987,7 @@ public:
    explicit RField(std::string_view name)
       : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
    {
-      fTraits = kTraitTrivialType;
+      fTraits |= kTraitTrivialType;
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -1022,7 +1038,7 @@ public:
    explicit RField(std::string_view name)
       : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
    {
-      fTraits = kTraitTrivialType;
+      fTraits |= kTraitTrivialType;
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -1073,7 +1089,7 @@ public:
    explicit RField(std::string_view name)
       : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
    {
-      fTraits = kTraitTrivialType;
+      fTraits |= kTraitTrivialType;
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -1124,7 +1140,7 @@ public:
    explicit RField(std::string_view name)
       : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
    {
-      fTraits = kTraitTrivialType;
+      fTraits |= kTraitTrivialType;
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -1175,7 +1191,7 @@ public:
    explicit RField(std::string_view name)
       : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
    {
-      fTraits = kTraitTrivialType;
+      fTraits |= kTraitTrivialType;
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -1226,7 +1242,7 @@ public:
    explicit RField(std::string_view name)
       : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
    {
-      fTraits = kTraitTrivialType;
+      fTraits |= kTraitTrivialType;
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -1277,7 +1293,7 @@ public:
    explicit RField(std::string_view name)
       : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
    {
-      fTraits = kTraitTrivialType;
+      fTraits |= kTraitTrivialType;
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -1328,7 +1344,7 @@ public:
    explicit RField(std::string_view name)
       : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
    {
-      fTraits = kTraitTrivialType;
+      fTraits |= kTraitTrivialType;
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -1379,7 +1395,7 @@ public:
    explicit RField(std::string_view name)
       : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
    {
-      fTraits = kTraitTrivialType;
+      fTraits |= kTraitTrivialType;
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -1430,7 +1446,7 @@ public:
    explicit RField(std::string_view name)
       : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
    {
-      fTraits = kTraitTrivialType;
+      fTraits |= kTraitTrivialType;
    }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;

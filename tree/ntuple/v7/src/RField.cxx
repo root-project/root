@@ -178,11 +178,10 @@ std::tuple<void **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rve
 
 //------------------------------------------------------------------------------
 
-
-ROOT::Experimental::Detail::RFieldBase::RFieldBase(
-   std::string_view name, std::string_view type, ENTupleStructure structure, bool isSimple, std::size_t nRepetitions)
+ROOT::Experimental::Detail::RFieldBase::RFieldBase(std::string_view name, std::string_view type,
+                                                   ENTupleStructure structure, bool isSimple, std::size_t nRepetitions)
    : fName(name), fType(type), fStructure(structure), fNRepetitions(nRepetitions), fIsSimple(isSimple),
-     fParent(nullptr), fPrincipalColumn(nullptr)
+     fParent(nullptr), fPrincipalColumn(nullptr), fTraits(isSimple ? kTraitMappable : 0)
 {
 }
 
@@ -1149,7 +1148,7 @@ ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
    : ROOT::Experimental::Detail::RFieldBase(fieldName, typeName, ENTupleStructure::kRecord, false /* isSimple */),
      fOffsets(offsets)
 {
-   fTraits = kTraitTrivialType;
+   fTraits |= kTraitTrivialType;
    for (auto &item : itemFields) {
       fMaxAlignment = std::max(fMaxAlignment, item->GetAlignment());
       fSize += GetItemPadding(fSize, item->GetAlignment()) + item->GetValueSize();
@@ -1162,7 +1161,7 @@ ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
                                                std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields)
    : ROOT::Experimental::Detail::RFieldBase(fieldName, "", ENTupleStructure::kRecord, false /* isSimple */)
 {
-   fTraits = kTraitTrivialType;
+   fTraits |= kTraitTrivialType;
    for (auto &item : itemFields) {
       fSize += GetItemPadding(fSize, item->GetAlignment());
       fOffsets.push_back(fSize);
@@ -1741,7 +1740,7 @@ ROOT::Experimental::RArrayField::RArrayField(
       ENTupleStructure::kLeaf, false /* isSimple */, arrayLength)
    , fItemSize(itemField->GetValueSize()), fArrayLength(arrayLength)
 {
-   fTraits = itemField->GetTraits();
+   fTraits |= itemField->GetTraits() & ~kTraitMappable;
    Attach(std::move(itemField));
 }
 
@@ -1855,7 +1854,7 @@ ROOT::Experimental::RVariantField::RVariantField(
       "std::variant<" + GetTypeList(itemFields) + ">", ENTupleStructure::kVariant, false /* isSimple */)
 {
    // The variant needs to initialize its own tag member
-   fTraits = kTraitTriviallyDestructible & ~kTraitTriviallyConstructible;
+   fTraits |= kTraitTriviallyDestructible & ~kTraitTriviallyConstructible;
 
    auto nFields = itemFields.size();
    R__ASSERT(nFields > 0);
