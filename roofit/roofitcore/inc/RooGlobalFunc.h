@@ -67,6 +67,14 @@ enum MPSplit { BulkPartition=0, Interleave=1, SimComponents=2, Hybrid=3 } ;
 /// RooAbsPdf::fitTo();
 enum class BatchModeOption { Off, Cpu, Cuda, Old };
 
+namespace Experimental {
+
+/// Get a handle on the default BatchMode option that is used when creating
+/// likelihoods. \note Experimental, the interface might change in the future.
+std::string& defaultBatchMode();
+
+} // Experimental
+
 /**
  * \defgroup CmdArgs RooFit command arguments
  * These arguments can be passed to functions of RooFit objects.
