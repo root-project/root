@@ -10,7 +10,7 @@
 
 void graphpolar2()
 {
-   TCanvas * CPol = new TCanvas("CPol","TGraphPolar Example",500,500);
+   auto CPol = new TCanvas("CPol","TGraphPolar Example",500,500);
 
    Double_t theta[8];
    Double_t radius[8];
@@ -24,7 +24,7 @@ void graphpolar2()
       eradius[i] = 0.05;
    }
 
-   TGraphPolar * grP1 = new TGraphPolar(8, theta, radius, etheta, eradius);
+   auto grP1 = new TGraphPolar(8, theta, radius, etheta, eradius);
    grP1->SetTitle("");
 
    grP1->SetMarkerStyle(20);

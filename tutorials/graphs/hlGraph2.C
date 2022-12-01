@@ -78,12 +78,12 @@ void hlGraph2()
    file->GetObject("ntuple", ntuple);
    if (!ntuple) return;
 
-   TCanvas *Canvas1 = new TCanvas("Canvas1", "Canvas1", 0, 0, 500, 500);
+   auto Canvas1 = new TCanvas("Canvas1", "Canvas1", 0, 0, 500, 500);
    Canvas1->HighlightConnect("HighlightBinId(TVirtualPad*,TObject*,Int_t,Int_t)");
 
    const char *cut = "pz > 3.0";
    ntuple->Draw("px:py", cut);
-   TGraph *graph = (TGraph *)gPad->FindObject("Graph");
+   auto graph = (TGraph *)gPad->FindObject("Graph");
 
    auto info = new TText(0.0, 4.5, "please move the mouse over the graph");
    info->SetTextAlign(22);

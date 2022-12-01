@@ -20,8 +20,8 @@ void splines_test(Int_t np=23, Double_t a=-0.5, Double_t b=31)
    const Double_t power=0.75;
 
    // Define the original function
-   TF1 *f=new TF1("f","sin(x)*sin(x/10)",
-                  a-0.05*(b-a),b+0.05*(b-a));
+   auto f = new TF1("f","sin(x)*sin(x/10)",
+                    a-0.05*(b-a),b+0.05*(b-a));
    // Draw function
    f->Draw("lc");
 
@@ -58,7 +58,7 @@ void splines_test(Int_t np=23, Double_t a=-0.5, Double_t b=31)
    line3->Draw();
    text3->Draw();
 
-   for(Int_t nnp=2; nnp<=np; ++nnp) {
+   for (Int_t nnp=2; nnp<=np; ++nnp) {
 
       // Calculate the knots
       if(xx) delete[] xx;

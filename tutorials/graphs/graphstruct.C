@@ -10,10 +10,10 @@
 /// \note For this to work, ROOT has to be compiled with gviz ON
 /// \author Olivier Couet
 
-TCanvas* graphstruct()
+void graphstruct()
 {
    #if __has_include("TGraphStruct.h") // handy check on whether gviz was installed
-   TGraphStruct *gs = new TGraphStruct();
+   auto gs = new TGraphStruct();
 
    // create some nodes and put them in the graph in one go ...
    TGraphNode *n0 = gs->AddNode("n0","Node 0");
@@ -58,11 +58,10 @@ TCanvas* graphstruct()
    gs->AddEdge(n3,n6);
    gs->AddEdge(n4,n5);
 
-   TCanvas *c = new TCanvas("c","c",800,600);
+   auto c = new TCanvas("c","c",800,600);
    c->SetFillColor(38);
    gs->Draw();
-   return c;
    #else
-   return new TCanvas("c","c",800,600);
+   new TCanvas("c","c",800,600);
    #endif
 }

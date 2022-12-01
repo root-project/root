@@ -9,9 +9,9 @@
 /// \author Simon Spies
 
 void gmultierrors() {
-   TCanvas *c1 = new TCanvas("c1", "A Simple Graph with multiple y-errors", 200, 10, 700, 500);
-   c1->SetGrid();
-   c1->GetFrame()->SetBorderSize(12);
+   auto c = new TCanvas("c", "A Simple Graph with multiple y-errors", 200, 10, 700, 500);
+   c->SetGrid();
+   c->GetFrame()->SetBorderSize(12);
 
    const Int_t np = 5;
    Double_t x[np]       = {0, 1, 2, 3, 4};
@@ -23,7 +23,7 @@ void gmultierrors() {
    Double_t eylsys[np]  = {0.5, 0.4, 0.8, 0.3, 1.2};
    Double_t eyhsys[np]  = {0.6, 0.7, 0.6, 0.4, 0.8};
 
-   TGraphMultiErrors* gme = new TGraphMultiErrors("gme", "TGraphMultiErrors Example", np, x, y, exl, exh, eylstat, eyhstat);
+   auto gme = new TGraphMultiErrors("gme", "TGraphMultiErrors Example", np, x, y, exl, exh, eylstat, eyhstat);
    gme->AddYError(np, eylsys, eyhsys);
    gme->SetMarkerStyle(20);
    gme->SetLineColor(kRed);
@@ -36,5 +36,5 @@ void gmultierrors() {
    // Sys Errors drawn with "5 s=0.5"
    gme->Draw("APS ; Z ; 5 s=0.5");
 
-   c1->Update();
+   c->Update();
 }

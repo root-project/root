@@ -47,12 +47,12 @@ void zdemo()
    Float_t delp;
 
    // Create a new canvas.
-   TCanvas *c1 = new TCanvas("zdemo",
+   auto c = new TCanvas("zdemo",
       "Monte Carlo Study of Z scaling",10,40,800,600);
-   c1->Range(0,0,25,18);
-   c1->SetFillColor(40);
+   c->Range(0,0,25,18);
+   c->SetFillColor(40);
 
-   TPaveLabel *pl = new TPaveLabel(1,16.3,24,17.5,"Z-scaling of \
+   auto pl = new TPaveLabel(1,16.3,24,17.5,"Z-scaling of \
       Direct Photon Productions in pp Collisions at RHIC Energies","br");
    pl->SetFillColor(18);
    pl->SetTextFont(32);
@@ -67,8 +67,8 @@ void zdemo()
    t0.DrawLatex(3.1,15.5,"M.Tokarev, E.Potrebenikova ");
    t0.DrawLatex(14.,15.5,"JINR preprint E2-98-64, Dubna, 1998 ");
 
-   TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.02,0.48,0.83,33);
-   TPad *pad2 = new TPad("pad2","This is pad2",0.52,0.02,0.98,0.83,33);
+   auto pad1 = new TPad("pad1","This is pad1",0.02,0.02,0.48,0.83,33);
+   auto pad2 = new TPad("pad2","This is pad2",0.52,0.02,0.98,0.83,33);
 
    pad1->Draw();
    pad2->Draw();
@@ -120,7 +120,7 @@ void zdemo()
    t1.SetTextColor(1);
    t1.DrawLatex(0.6,0.06,"q_{T} (Gev/c)");
 
-   TGraph *gr1 = new TGraph(NLOOP,PT,INVSIG);
+   auto gr1 = new TGraph(NLOOP,PT,INVSIG);
 
    gr1->SetLineColor(38);
    gr1->SetMarkerColor(kBlue);
@@ -141,7 +141,7 @@ void zdemo()
    delp  = 6.;
    hz_calc(energ, dens, tgrad, ptmin, ptmax, delp);
 
-   TGraph *gr2 = new TGraph(NLOOP,PT,INVSIG);
+   auto gr2 = new TGraph(NLOOP,PT,INVSIG);
    gr2->SetLineColor(38);
    gr2->SetMarkerColor(kRed);
    gr2->SetMarkerStyle(29);
@@ -160,7 +160,7 @@ void zdemo()
    delp  = 10.;
    hz_calc(energ, dens, tgrad, ptmin, ptmax, delp);
 
-   TGraph *gr3 = new TGraph(NLOOP,PT,INVSIG);
+   auto gr3 = new TGraph(NLOOP,PT,INVSIG);
 
    gr3->SetLineColor(38);
    gr3->SetMarkerColor(6);
@@ -169,7 +169,7 @@ void zdemo()
    gr3->Draw("LP");
 
    Float_t *dum = 0;
-   TGraph *graph = new TGraph(1,dum,dum);
+   auto graph = new TGraph(1,dum,dum);
    graph->SetMarkerColor(kBlue);
    graph->SetMarkerStyle(21);
    graph->SetMarkerSize(1.1);
@@ -198,7 +198,7 @@ void zdemo()
    pad2->DrawFrame(1,1e-22,3100,1e-8);
    pad2->GetFrame()->SetFillColor(19);
 
-   TGraph *gr = new TGraph(NLOOP,Z,HZ);
+   auto gr = new TGraph(NLOOP,Z,HZ);
    gr->SetTitle("HZ vs Z");
    gr->SetFillColor(19);
    gr->SetLineColor(9);
@@ -233,8 +233,8 @@ void zdemo()
    t2.SetTextColor(1);
    t2.DrawLatex(0.88,0.06,"z");
 
-   c1->Modified();
-   c1->Update();
+   c->Modified();
+   c->Update();
 }
 
 void hz_calc(Float_t ENERG, Float_t DENS, Float_t TGRAD, Float_t PTMIN,

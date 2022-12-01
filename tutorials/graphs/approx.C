@@ -50,7 +50,7 @@ void approx()
 // Initialize graph with data
    grin = new TGraph(n,x,y);
 // Interpolate at equidistant points (use mean for tied x-values)
-   TGraphSmooth *gs = new TGraphSmooth("normal");
+   auto gs = new TGraphSmooth("normal");
    grout = gs->Approx(grin,"linear");
    DrawSmooth(1,"Approx: ties = mean","X-axis","Y-axis");
 
@@ -73,7 +73,7 @@ void approx()
 // Re-initialize graph with data
    grin = new TGraph(n,x,y);
 // Interpolate at equidistant points (use min for tied x-values)
-//   _grout = gs->Approx(grin,"linear", 50, 0, 0, 0, 1, 0, "min");_ 
+//   _grout = gs->Approx(grin,"linear", 50, 0, 0, 0, 1, 0, "min");_
    grout = gs->Approx(grin,"constant", 50, 0, 0, 0, 1, 0.5, "min");
    DrawSmooth(3,"Approx: ties = min","","");
 

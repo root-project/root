@@ -70,7 +70,7 @@ void motorcycle()
 
 // Kernel Smoother
 // create new kernel smoother and smooth data with bandwidth = 2.0
-   TGraphSmooth *gs = new TGraphSmooth("normal");
+   auto gs = new TGraphSmooth("normal");
    grout = gs->SmoothKern(grin,"normal",2.0);
    DrawSmooth(1,"Kernel Smoother: bandwidth = 2.0","times","accel");
 

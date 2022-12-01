@@ -53,9 +53,9 @@ Double_t result( Double_t *x, Double_t *par)
 //_____________________________________________________________
 void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
 {
-   TCanvas *c1 = new TCanvas("waves", "A double slit experiment", 300, 40, 1004, 759);
-   c1->Range(0, -10,  30, 10);
-   c1->SetFillColor(0);
+   auto c = new TCanvas("waves", "A double slit experiment", 300, 40, 1004, 759);
+   c->Range(0, -10,  30, 10);
+   c->SetFillColor(0);
    TPad *pad = new TPad("pr","pr",  0.5, 0 , 1., 1);
    pad->Range(0, -10,  15, 10);
    pad->Draw();
@@ -69,9 +69,9 @@ void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
    }
    gStyle->SetPalette(colNum, palette);
 
-   c1->cd();
+   c->cd();
 
-   TF2 *f0 = new TF2("ray_source",interference, 0.02, 15, -8, 8, 4);
+   auto f0 = new TF2("ray_source",interference, 0.02, 15, -8, 8, 4);
    f0->SetParameters(amp, lambda, 0, 0);
    f0->SetNpx(200);
    f0->SetNpy(200);
@@ -81,7 +81,7 @@ void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
    TLatex title;
    title.DrawLatex(1.6, 8.5, "A double slit experiment");
 
-   TGraph *graph = new TGraph(4);
+   auto graph = new TGraph(4);
    graph->SetFillColor(0);
    graph->SetFillStyle(1001);
    graph->SetLineWidth(0);
@@ -101,7 +101,7 @@ void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
    graph->SetPoint(3, 0, -0.1);
    graph->Draw("F");
 
-   TLine * line = new TLine(15,-10, 15, 0 - 0.5*d -0.2);
+   auto line = new TLine(15,-10, 15, 0 - 0.5*d -0.2);
    line->SetLineWidth(10);
    line->Draw();
 
@@ -115,7 +115,7 @@ void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
 
    pad ->cd();
 
-   TF2 *finter = new TF2("interference",interference, 0.01, 14, -10, 10, 4);
+   auto finter = new TF2("interference",interference, 0.01, 14, -10, 10, 4);
    finter->SetParameters(amp, lambda, d, 1);
    finter->SetNpx(200);
    finter->SetNpy(200);
@@ -135,7 +135,7 @@ void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
 
    pad ->cd();
 
-   TF2 *fresult = new TF2("result",result, 14, 15, -10, 10, 4);
+   auto fresult = new TF2("result",result, 14, 15, -10, 10, 4);
    fresult->SetParameters(amp, lambda, d, 1);
    fresult->SetNpx(300);
    fresult->SetNpy(300);
@@ -144,7 +144,7 @@ void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
 
    line = new TLine(13.8,-10, 14, 10);
    line->SetLineWidth(10); line->SetLineColor(0); line->Draw();
-   c1->Modified(kTRUE);
-   c1->Update();
-   c1->SetEditable(kTRUE);
+   c->Modified(kTRUE);
+   c->Update();
+   c->SetEditable(kTRUE);
 }

@@ -9,14 +9,14 @@
 /// \author Rene Brun
 
 void gerrors2() {
-   TCanvas *c1 = new TCanvas("c1","gerrors2",200,10,700,500);
-   c1->SetGrid();
+   auto c = new TCanvas("c","gerrors2",200,10,700,500);
+   c->SetGrid();
 
    // draw a frame to define the range
-   TH1F *hr = c1->DrawFrame(-0.4,0,1.2,12);
+   auto hr = c->DrawFrame(-0.4,0,1.2,12);
    hr->SetXTitle("X title");
    hr->SetYTitle("Y title");
-   c1->GetFrame()->SetBorderSize(12);
+   c->GetFrame()->SetBorderSize(12);
 
    // create first graph
    const Int_t n1 = 10;
@@ -24,7 +24,7 @@ void gerrors2() {
    Double_t yval1[]  = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
    Double_t ex1[] = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
    Double_t ey1[] = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
-   TGraphErrors *gr1 = new TGraphErrors(n1,xval1,yval1,ex1,ey1);
+   auto gr1 = new TGraphErrors(n1,xval1,yval1,ex1,ey1);
    gr1->SetMarkerColor(kBlue);
    gr1->SetMarkerStyle(21);
    gr1->Draw("LP");
@@ -35,7 +35,7 @@ void gerrors2() {
    Float_t yval2[]  = {0.82,3.86,7,9,10,10.55,9.64,7.26,5.42,2};
    Float_t ex2[] = {.04,.12,.08,.06,.05,.04,.07,.06,.08,.04};
    Float_t ey2[] = {.6,.8,.7,.4,.3,.3,.4,.5,.6,.7};
-   TGraphErrors *gr2 = new TGraphErrors(n2,xval2,yval2,ex2,ey2);
+   auto gr2 = new TGraphErrors(n2,xval2,yval2,ex2,ey2);
    gr2->SetMarkerColor(kRed);
    gr2->SetMarkerStyle(20);
    gr2->Draw("LP");

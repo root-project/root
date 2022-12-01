@@ -23,7 +23,7 @@
 
 #include <time.h>
 
-TCanvas *timeonaxis()
+void timeonaxis()
 {
 
    time_t script_time;
@@ -34,17 +34,17 @@ TCanvas *timeonaxis()
 // If one changes it, it will be changed even on the graphs already defined
    gStyle->SetTimeOffset(script_time);
 
-   TCanvas *ct = new TCanvas("ct","Time on axis",10,10,700,900);
-   ct->Divide(1,3);
+   auto c = new TCanvas("c","Time on axis",10,10,700,900);
+   c->Divide(1,3);
 
    int i;
 
-//### Build a signal : noisy damped sine 
+//### Build a signal : noisy damped sine
 //        Time interval : 30 minutes
 
    gStyle->SetTitleH(0.08);
    float noise;
-   TH1F *ht = new TH1F("ht","Love at first sight",3000,0.,2000.);
+   auto ht = new TH1F("ht","Love at first sight",3000,0.,2000.);
    for (i=1;i<3000;i++) {
       noise = gRandom->Gaus(0,120);
       if (i>700) {
@@ -52,7 +52,7 @@ TCanvas *timeonaxis()
       }
       ht->SetBinContent(i,noise);
    }
-   ct->cd(1);
+   c->cd(1);
    ht->SetLineColor(2);
    ht->GetXaxis()->SetLabelSize(0.05);
    ht->Draw();
@@ -62,7 +62,7 @@ TCanvas *timeonaxis()
 // a reasonable tick interval value is chosen.
    ht->GetXaxis()->SetTimeDisplay(1);
 
-//### Build a simple graph beginning at a different time 
+//### Build a simple graph beginning at a different time
 //        Time interval : 5 seconds
 
    float x[100], t[100];
@@ -70,9 +70,9 @@ TCanvas *timeonaxis()
       x[i] = sin(i*4*3.1415926/50)*exp(-(double)i/20);
       t[i] = 6000+(double)i/20;
    }
-   TGraph *gt = new TGraph(100,t,x);
+   auto gt = new TGraph(100,t,x);
    gt->SetTitle("Politics");
-   ct->cd(2);
+   c->cd(2);
    gt->SetLineColor(5);
    gt->SetLineWidth(2);
    gt->Draw("AL");
@@ -81,7 +81,7 @@ TCanvas *timeonaxis()
    gt->GetXaxis()->SetTimeDisplay(1);
    gPad->Modified();
 
-//### Build a second simple graph for a very long time interval 
+//### Build a second simple graph for a very long time interval
 //        Time interval : a few years
 
    float x2[10], t2[10];
@@ -89,9 +89,9 @@ TCanvas *timeonaxis()
       x2[i] = gRandom->Gaus(500,100)*i;
       t2[i] = i*365*86400;
    }
-   TGraph *gt2 = new TGraph(10,t2,x2);
+   auto gt2 = new TGraph(10,t2,x2);
    gt2->SetTitle("Number of monkeys on the moon");
-   ct->cd(3);
+   c->cd(3);
    gt2->SetMarkerColor(4);
    gt2->SetMarkerStyle(29);
    gt2->SetMarkerSize(1.3);
@@ -123,5 +123,4 @@ TCanvas *timeonaxis()
 
    gt2->GetXaxis()->SetTimeFormat("y. %Y %F2000-01-01 00:00:00");
    gPad->Modified();
-   return ct;
 }

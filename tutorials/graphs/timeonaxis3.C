@@ -31,10 +31,10 @@ TString stime(time_t* t, bool utc = false, bool display_time_zone = true) {
 }
 
 
-TCanvas *timeonaxis3() {
+void timeonaxis3() {
    double f = 1.8;
 
-   TCanvas* c = new TCanvas;
+   auto c = new TCanvas;
 
    TLatex tex1;
    tex1.SetNDC();
@@ -70,7 +70,7 @@ TCanvas *timeonaxis3() {
          p->SetLeftMargin(0); p->SetRightMargin(0);
          p->SetFillStyle(4000);
 
-         TGaxis* ga = new TGaxis (.4, .25, 5., .25, t[i], t[i] + 1,  1, "t");
+         auto ga = new TGaxis (.4, .25, 5., .25, t[i], t[i] + 1,  1, "t");
          ga->SetTimeFormat("TGaxis label: #color[2]{%Y-%m-%d %H:%M:%S}");
          ga->SetLabelFont(102);
          ga->SetLabelColor(kBlue+2);
@@ -107,5 +107,4 @@ TCanvas *timeonaxis3() {
          if(i > 0) l.DrawLine(0, 0.95, 1, 0.95);
       }
    }
-   return c;
 }
