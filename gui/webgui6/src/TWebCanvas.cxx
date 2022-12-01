@@ -1876,4 +1876,14 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
    return nullptr;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Static method to create TWebCanvas instance
+/// Used by plugin manager
+
+TCanvasImp *TWebCanvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height)
+{
+   Bool_t readonly = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 1) == 0;
+
+   return new TWebCanvas(c, name, x, y, width, height, readonly);
+}
 
