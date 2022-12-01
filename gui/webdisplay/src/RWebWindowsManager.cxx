@@ -681,7 +681,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
                "ROOT web-based widget started in the session where DISPLAY set to " << displ << "\n" <<
                "Means web browser will be displayed on remote X11 server which is usually very inefficient\n"
                "One can start ROOT session in server mode like \"root -b --web=server:8877\" and forward http port to display node\n"
-               "Or one can use rootssh.sh script to configure pore forwarding and display web widgets automatically\n"
+               "Or one can use rootssh script to configure pore forwarding and display web widgets automatically\n"
                "Find more info on https://root.cern/for_developers/root7/#rbrowser\n"
                "This message can be disabled by setting \"" << varname << ": no\" in .rootrc file\n";
          }
