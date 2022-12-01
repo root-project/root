@@ -111,7 +111,7 @@ std::vector<std::vector<std::string>> GetPerFileBranchNames(const Data &d)
       if (d.fTreeNames.size() > 1)
          ++treeIdx;
    }
-   
+
    return fileBranchNames;
 }
 
@@ -200,7 +200,6 @@ Result ReadSpeed::EvalThroughputST(const Data &d)
 // d.fFileNames.
 std::vector<std::vector<EntryRange>> ReadSpeed::GetClusters(const Data &d)
 {
-   auto treeIdx = 0;
    const auto nFiles = d.fFileNames.size();
    std::vector<std::vector<EntryRange>> ranges(nFiles);
    for (auto fileIdx = 0u; fileIdx < nFiles; ++fileIdx) {
@@ -221,8 +220,6 @@ std::vector<std::vector<EntryRange>> ReadSpeed::GetClusters(const Data &d)
       while ((start = it.Next()) < nEntries)
          rangesInFile.emplace_back(EntryRange{start, it.GetNextEntry()});
       ranges[fileIdx] = std::move(rangesInFile);
-      if (d.fTreeNames.size() > 1)
-         ++treeIdx;
    }
    return ranges;
 }
