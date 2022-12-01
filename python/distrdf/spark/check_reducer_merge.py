@@ -341,6 +341,24 @@ class TestReducerMerge:
         assert sum_before.GetValue() == 10.0
         assert sum_after.GetValue() == 20.0
 
+    def test_distributed_stddev(self, connection):
+        """Test support for the StdDev action."""
+
+        # Create dataset with fixed series of entries
+        treename = "tree"
+        filename = "test_distributed_stddev_spark.root"
+        ROOT.RDataFrame(100).Define("v", "rdfentry_").Snapshot(treename, filename)
+
+        df = Spark.RDataFrame(treename, filename, daskclient=connection)
+
+        std = df.StdDev("v")
+        expected = 29.0114
+        rel = 0.01
+
+        assert std.GetValue() == pytest.approx(expected, rel), f"{std.GetValue()}!={expected}"
+
+        os.remove(filename)
+
 
 if __name__ == "__main__":
     pytest.main(args=[__file__])
