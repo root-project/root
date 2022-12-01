@@ -91,12 +91,17 @@ protected:
   std::unique_ptr<RooHist> createEmptyResidHist(const RooCurve& curve, bool normalize=false) const;
 
 private:
+
+  void addPoint(Axis_t binCenter, double y, double yscale, double exlow, double exhigh, double eylow, double eyhigh);
+
   double _nominalBinWidth ; ///< Average bin width
   double _nSigma ;          ///< Number of 'sigmas' error bars represent
   double _entries ;         ///< Number of entries in histogram
   double _rawEntries;       ///< Number of entries in source dataset
 
-  ClassDefOverride(RooHist,1) // 1-dimensional histogram with error bars
+  std::vector<double> _originalWeights; ///< The original bin weights that were passed to the `RooHist::addBin` functions before scaling and bin width correction
+
+  ClassDefOverride(RooHist,2) // 1-dimensional histogram with error bars
 };
 
 #endif
