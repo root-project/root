@@ -3,7 +3,7 @@
 # Invoke ssh and automatically configures tunel for remote ROOT session
 # To start, just call:
 #
-#    [localhost] rootssh.sh  user@remotehost
+#    [localhost] rootssh  user@remotehost
 #
 # And then in the ssh shell do:
 #
