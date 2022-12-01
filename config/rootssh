@@ -12,12 +12,22 @@
 #
 # ROOT automatically recognizes that it runs in special session (because of ROOT_LISTENER_SOCKET variable)
 # and provides to this socket information to configure port forwarding and to start web windows automatically
+#
+# Following arguments can be specified:
+#
+#    --port number - port number on local node used for ssh tunnel to remote
+#    --browser <name> - name of web browser executable like "firefox" or "chromium"
+#
+# Thus one can call:
+#
+#     [localhost] rootssh --port 9753 --browser chromium user@remotehost
+
 
 if [[ "$1" == "--as-listener--" ]] ; then
 
    listener_socket=$2
-
    local_port=$3
+   used_browser=$4
 
    flag=1
 
@@ -35,7 +45,7 @@ if [[ "$1" == "--as-listener--" ]] ; then
       elif [[ "${line:0:4}" == "win:" ]] ; then
          winurl=${line:4}
 #         echo "Want to show window http://localhost:$local_port/$winurl"
-         xdg-open "http://localhost:$local_port/$winurl"
+         $used_browser "http://localhost:$local_port/$winurl"
       elif [[ "$line" == "stop" ]] ; then
          flag=0
       else
@@ -55,25 +65,46 @@ root_socket="$(mktemp /tmp/root.XXXXXXXXX)"
 
 rm -f $listener_local $listener_remote
 
-probe="probing"
-localport=7777
-while [[ "x$probe" != "x" ]] ; do
-   localport=$((7000 + $RANDOM%1000))
-   probe=$(netcat -zv localhost $localport 2>/dev/null)
+# analyze arguments
+
+sshargs=""
+localport=""
+browser="xdg-open"
+
+while [ $# -gt 0 ] ; do
+   if [[ "$1" == "--port"  ]] ; then
+      localport=$2
+      shift 2
+   elif [[ "$1" == "--browser" ]] ; then
+      browser=$2
+      shift 2
+   else
+      sshargs+=" $1"
+      shift
+   fi
 done
+
+if [[ "x$localport" == "x" ]] ; then
+   probe="probing"
+   localport=7777
+   while [[ "x$probe" != "x" ]] ; do
+      localport=$((7000 + $RANDOM%1000))
+      probe=$(netcat -zv localhost $localport 2>/dev/null)
+   done
+fi
 
 echo "Use local port $localport for root_socket $root_socket redirection"
 
 # start listener process
 
-$0 --as-listener-- $listener_local $localport &
+$0 --as-listener-- $listener_local $localport $browser &
 
 listener_id=$!
 
 # start ssh
 
-ssh -t -R $listener_remote:$listener_local -L $localport:$root_socket $1 $2 $3 $4 $5 \
-"ROOT_LISTENER_SOCKET=$listener_remote ROOT_WEBGUI_SOCKET=$root_socket \$SHELL; rm -f $listener_remote $root_socket"
+ssh -t -R $listener_remote:$listener_local -L $localport:$root_socket $sshargs \
+"chmod 0700 $listener_remote; ROOT_LISTENER_SOCKET=$listener_remote ROOT_WEBGUI_SOCKET=$root_socket \$SHELL; rm -f $listener_remote $root_socket"
 
 
 # try to stop listener with "stop" message
