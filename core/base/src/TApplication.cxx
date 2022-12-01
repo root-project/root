@@ -1167,9 +1167,26 @@ void TApplication::Help(const char *line)
 
 void TApplication::LoadGraphicsLibs()
 {
-   if (gROOT->IsBatch()) return;
+   TString guiFactory = gEnv->GetValue("Gui.Factory", "native");
+   guiFactory.ToLower();
+   if (guiFactory == "native")
+      guiFactory = "root";
+
+   if (gROOT->IsBatch()) {
+
+      if ((gGuiFactory == gBatchGuiFactory) && (guiFactory == "web") && (gROOT->GetWebDisplay() == "server")) {
+         if (auto h = gROOT->GetPluginManager()->FindHandler("TGuiFactory", guiFactory)) {
+            if (h->LoadPlugin() != -1) {
+               gGuiFactory = (TGuiFactory *) h->ExecPlugin(0);
+            }
+         }
+      }
+
+      return;
+   }
 
    TPluginHandler *h;
+
    if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPad")))
       if (h->LoadPlugin() == -1)
          return;
@@ -1177,7 +1194,6 @@ void TApplication::LoadGraphicsLibs()
    TString name;
    TString title1 = "ROOT interface to ";
    TString nativex, title;
-   TString nativeg = "root";
 
 #ifdef R__WIN32
    nativex = "win32gdk";
@@ -1201,10 +1217,6 @@ void TApplication::LoadGraphicsLibs()
       name  = guiBackend;
       title = title1 + guiBackend;
    }
-   TString guiFactory(gEnv->GetValue("Gui.Factory", "native"));
-   guiFactory.ToLower();
-   if (guiFactory == "native")
-      guiFactory = nativeg;
 
    if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", guiBackend))) {
       if (h->LoadPlugin() == -1) {
@@ -1214,6 +1226,7 @@ void TApplication::LoadGraphicsLibs()
       gVirtualX = (TVirtualX *) h->ExecPlugin(2, name.Data(), title.Data());
       fgGraphInit = kTRUE;
    }
+
    if ((h = gROOT->GetPluginManager()->FindHandler("TGuiFactory", guiFactory))) {
       if (h->LoadPlugin() == -1) {
          gROOT->SetBatch(kTRUE);
