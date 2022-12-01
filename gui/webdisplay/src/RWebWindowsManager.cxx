@@ -156,7 +156,7 @@ void RWebWindowsManager::AssignWindowThreadId(RWebWindow &win)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// If LC_ROOT_LISTENERSOCKET variable is configured,
+/// If LC_ROOT_LISTENER_SOCKET variable is configured,
 /// message will be send to that unix socket
 
 bool RWebWindowsManager::InformListener(const std::string &msg)
@@ -167,7 +167,7 @@ bool RWebWindowsManager::InformListener(const std::string &msg)
 
 #else
 
-   const char *fname = gSystem->Getenv("ROOT_LISTENERSOCKET");
+   const char *fname = gSystem->Getenv("ROOT_LISTENER_SOCKET");
    if (!fname || !*fname)
       return false;
 
@@ -350,9 +350,12 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    bool use_secure = RWebWindowWSHandler::GetBoolEnv("WebGui.UseHttps", 0) == 1;
    const char *ssl_cert = gEnv->GetValue("WebGui.ServerCert", "rootserver.pem");
 
-   const char *unix_socket = gEnv->GetValue("WebGui.UnixSocket", "");
+   const char *unix_socket = gSystem->Getenv("ROOT_WEBGUI_SOCKET");
+   if (!unix_socket || !*unix_socket)
+      unix_socket = gEnv->GetValue("WebGui.UnixSocket", "");
    const char *unix_socket_mode = gEnv->GetValue("WebGui.UnixSocketMode", "0700");
    bool use_unix_socket = unix_socket && *unix_socket;
+
    if (use_unix_socket)
       fcgi_port = http_port = -1;
 
@@ -439,12 +442,12 @@ bool RWebWindowsManager::CreateServer(bool with_http)
             if (use_unix_socket) {
                fAddr = "socket://"; // fictional socket URL
                fAddr.append(unix_socket);
-               InformListener(std::string("socket:") + unix_socket + "\n");
+               // InformListener(std::string("socket:") + unix_socket + "\n");
             } else if (http_port > 0) {
                fAddr = url.Data();
                fAddr.append(":");
                fAddr.append(std::to_string(http_port));
-               InformListener(std::string("http:") + std::to_string(http_port) + "\n");
+               // InformListener(std::string("http:") + std::to_string(http_port) + "\n");
             }
             return true;
          }
@@ -651,11 +654,10 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    if (!token.empty())
       args.AppendUrlOpt(std::string("token=") + token);
 
-   if (!args.IsHeadless()) {
-      TUrl parse_url(args.GetUrl().c_str());
-      const char *path = parse_url.GetFileAndOptions();
-      if (path && *path)
-         InformListener(std::string("win:") + path);
+   if (!args.IsHeadless() && normal_http) {
+      auto winurl = args.GetUrl();
+      winurl.erase(0, fAddr.length());
+      InformListener(std::string("win:") + winurl);
    }
 
    if (!args.IsHeadless() && (args.GetBrowserKind() == RWebDisplayArgs::kServer) && (RWebWindowWSHandler::GetBoolEnv("WebGui.OnetimeKey") != 1)) {
@@ -677,6 +679,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
                "ROOT web-based widget started in the session where DISPLAY set to " << displ << "\n" <<
                "Means web browser will be displayed on remote X11 server which is usually very inefficient\n"
                "One can start ROOT session in server mode like \"root -b --web=server:8877\" and forward http port to display node\n"
+               "Or one can use rootssh.sh script to configure pore forwarding and display web widgets automatically\n"
                "Find more info on https://root.cern/for_developers/root7/#rbrowser\n"
                "This message can be disabled by setting \"" << varname << ": no\" in .rootrc file\n";
          }
