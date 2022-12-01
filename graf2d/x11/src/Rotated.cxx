@@ -1028,8 +1028,8 @@ static RotatedTextItem_t *XRotCreateTextItem(Display *dpy, XFontStruct *font, fl
    dj=0.5-(float)item->fRowsOut/2;
 
    /* where abouts does text actually lie in rotated image? */
-   if(angle==0 || angle==M_PI/2 ||
-      angle==M_PI || angle==3*M_PI/2) {
+   if(angle==0 || angle==float(M_PI/2) ||
+      angle==float(M_PI) || angle==float(3*M_PI/2)) {
       xl=0;
       xr=(float)item->fColsOut;
       xinc=0;
