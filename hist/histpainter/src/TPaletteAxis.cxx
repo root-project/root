@@ -54,8 +54,7 @@ macro gives an example.
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
-   TH2F *h2 = new TH2F("h2","Example of a resized palette ",40,-4,4,40,-20,20);
+   auto h2 = new TH2F("h2","Example of a resized palette ",40,-4,4,40,-20,20);
    Float_t px, py;
    for (Int_t i = 0; i < 25000; i++) {
       gRandom->Rannor(px,py);
@@ -64,9 +63,8 @@ Begin_Macro(source)
    gStyle->SetPalette(1);
    h2->Draw("COLZ");
    gPad->Update();
-   TPaletteAxis *palette = (TPaletteAxis*)h2->GetListOfFunctions()->FindObject("palette");
+   auto palette = (TPaletteAxis*)h2->GetListOfFunctions()->FindObject("palette");
    palette->SetY2NDC(0.7);
-   return c1;
 }
 End_Macro
 
@@ -93,8 +91,8 @@ An example is shown here:
 Begin_Macro(source)
 {
    gStyle->SetOptStat(0);
-   TCanvas *c1 = new TCanvas("c1","exa_CJUST",300,10,400,400);
-   TH2F *hpxpy = new TH2F("hpxpy","py vs px",40,-4,4,40,-4,4);
+   auto c = new TCanvas("c","exa_CJUST",300,10,400,400);
+   auto hpxpy = new TH2F("hpxpy","py vs px",40,-4,4,40,-4,4);
    // Fill histograms randomly
    TRandom3 randomNum;
    Float_t px, py;
