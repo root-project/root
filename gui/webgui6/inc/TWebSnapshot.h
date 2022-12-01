@@ -51,7 +51,7 @@ public:
    Int_t GetKind() const { return fKind; }
    TObject *GetSnapshot() const { return fSnapshot; }
 
-   ClassDef(TWebSnapshot,1)  // Object painting snapshot, used for JSROOT
+   ClassDefOverride(TWebSnapshot,1)  // Object painting snapshot, used for JSROOT
 };
 
 // =================================================================================
@@ -82,7 +82,7 @@ public:
 
    TWebSnapshot &NewSpecials();
 
-   ClassDef(TPadWebSnapshot, 2) // Pad painting snapshot, used for JSROOT
+   ClassDefOverride(TPadWebSnapshot, 2) // Pad painting snapshot, used for JSROOT
 };
 
 // =================================================================================
@@ -101,7 +101,7 @@ public:
    void SetHighlightConnect(bool on = true) { fHighlightConnect = on; }
    bool GetHighlightConnect() const { return fHighlightConnect; }
 
-   ClassDef(TCanvasWebSnapshot, 3) // Canvas painting snapshot, used for JSROOT
+   ClassDefOverride(TCanvasWebSnapshot, 3) // Canvas painting snapshot, used for JSROOT
 };
 
 
