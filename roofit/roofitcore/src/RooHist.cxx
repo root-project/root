@@ -371,7 +371,12 @@ double RooHist::getFitRangeNEvt(double xlo, double xhi) const
     GetPoint(i,x,y) ;
 
     if (x>=xlo && x<=xhi) {
-      sum += y ;
+      // We have to use the original weights of the histogram, because the
+      // scaled points have nothing to do anymore with event weights in the
+      // case of non-uniform binning. For backwards compatibility with the
+      // RooHist version 1, we first need to check if the `_originalWeights`
+      // member is filled.
+      sum += _originalWeights.empty() ? y : _originalWeights[i];
     }
   }
 
@@ -418,6 +423,19 @@ Int_t RooHist::roundBin(double y)
 }
 
 
+void RooHist::addPoint(Axis_t binCenter, double y, double yscale, double exlow, double exhigh, double eylow, double eyhigh)
+{
+  const int index = GetN();
+  SetPoint(index, binCenter, y*yscale);
+  SetPointError(index, exlow, exhigh, yscale * eylow, yscale * eyhigh);
+
+  // We also track the original weights of the histogram, because if we only
+  // have info on the scaled points it's not possible anymore to compute the
+  // number of events in a subrange of the RooHist.
+  _originalWeights.resize(index + 1);
+  _originalWeights[index] = y;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a bin to this histogram with the specified integer bin contents
@@ -435,7 +453,6 @@ void RooHist::addBin(Axis_t binCenter, double n, double binWidth, double xErrorF
     scale= _nominalBinWidth/binWidth;
   }
   _entries+= n;
-  Int_t index= GetN();
 
   // calculate Poisson errors for this bin
   double ym,yp,dx(0.5*binWidth);
@@ -461,8 +478,7 @@ void RooHist::addBin(Axis_t binCenter, double n, double binWidth, double xErrorF
     }
   }
 
-  SetPoint(index,binCenter,n*scale*scaleFactor);
-  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,scale*(n-ym)*scaleFactor,scale*(yp-n)*scaleFactor);
+  addPoint(binCenter,n, scale*scaleFactor,dx*xErrorFrac,dx*xErrorFrac, n-ym, yp-n);
   updateYAxisLimits(scale*yp);
   updateYAxisLimits(scale*ym);
 }
@@ -482,11 +498,9 @@ void RooHist::addBinWithError(Axis_t binCenter, double n, double elow, double eh
     scale= _nominalBinWidth/binWidth;
   }
   _entries+= n;
-  Int_t index= GetN();
 
   double dx(0.5*binWidth) ;
-  SetPoint(index,binCenter,n*scale*scaleFactor);
-  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,elow*scale*scaleFactor,ehigh*scale*scaleFactor);
+  addPoint(binCenter,n, scale*scaleFactor,dx*xErrorFrac,dx*xErrorFrac, elow, ehigh);
   updateYAxisLimits(scale*(n-elow));
   updateYAxisLimits(scale*(n+ehigh));
 }
@@ -503,10 +517,8 @@ void RooHist::addBinWithXYError(Axis_t binCenter, double n, double exlow, double
             double scaleFactor)
 {
   _entries+= n;
-  Int_t index= GetN();
 
-  SetPoint(index,binCenter,n*scaleFactor);
-  SetPointError(index,exlow,exhigh,eylow*scaleFactor,eyhigh*scaleFactor);
+  addPoint(binCenter, n, scaleFactor,exlow,exhigh, eylow, eyhigh);
   updateYAxisLimits(scaleFactor*(n-eylow));
   updateYAxisLimits(scaleFactor*(n+eyhigh));
 }
@@ -523,7 +535,6 @@ void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, double binWi
 {
   double scale= 1;
   if(binWidth > 0) scale= _nominalBinWidth/binWidth;
-  Int_t index= GetN();
 
   // calculate Binomial errors for this bin
   double ym,yp,dx(0.5*binWidth);
@@ -533,8 +544,7 @@ void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, double binWi
   }
 
   double a= (double)(n1-n2)/(n1+n2);
-  SetPoint(index,binCenter,a*scaleFactor);
-  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,(a-ym)*scaleFactor,(yp-a)*scaleFactor);
+  addPoint(binCenter, a, scaleFactor,dx*xErrorFrac,dx*xErrorFrac, a-ym, yp-a);
   updateYAxisLimits(scale*yp);
   updateYAxisLimits(scale*ym);
 }
@@ -549,7 +559,6 @@ void RooHist::addAsymmetryBinWithError(Axis_t binCenter, double n1, double n2, d
 {
   double scale= 1;
   if(binWidth > 0) scale= _nominalBinWidth/binWidth;
-  Int_t index= GetN();
 
   // calculate Binomial errors for this bin
   double ym,yp,dx(0.5*binWidth);
@@ -559,8 +568,7 @@ void RooHist::addAsymmetryBinWithError(Axis_t binCenter, double n1, double n2, d
   ym=a-error ;
   yp=a+error ;
 
-  SetPoint(index,binCenter,a*scaleFactor);
-  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,(a-ym)*scaleFactor,(yp-a)*scaleFactor);
+  addPoint(binCenter,a, scaleFactor, dx*xErrorFrac,dx*xErrorFrac, a-ym, yp-a);
   updateYAxisLimits(scale*yp);
   updateYAxisLimits(scale*ym);
 }
@@ -575,7 +583,6 @@ void RooHist::addEfficiencyBin(Axis_t binCenter, Int_t n1, Int_t n2, double binW
 {
   double scale= 1;
   if(binWidth > 0) scale= _nominalBinWidth/binWidth;
-  Int_t index= GetN();
 
   double a= (double)(n1)/(n1+n2);
 
@@ -586,8 +593,7 @@ void RooHist::addEfficiencyBin(Axis_t binCenter, Int_t n1, Int_t n2, double binW
     return;
   }
 
-  SetPoint(index,binCenter,a*scaleFactor);
-  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,(a-ym)*scaleFactor,(yp-a)*scaleFactor);
+  addPoint(binCenter,a, scaleFactor,dx*xErrorFrac,dx*xErrorFrac, a-ym, yp-a);
   updateYAxisLimits(scale*yp);
   updateYAxisLimits(scale*ym);
 }
@@ -602,7 +608,6 @@ void RooHist::addEfficiencyBinWithError(Axis_t binCenter, double n1, double n2, 
 {
   double scale= 1;
   if(binWidth > 0) scale= _nominalBinWidth/binWidth;
-  Int_t index= GetN();
 
   double a= (double)(n1)/(n1+n2);
 
@@ -614,8 +619,7 @@ void RooHist::addEfficiencyBinWithError(Axis_t binCenter, double n1, double n2, 
   yp=a+error ;
 
 
-  SetPoint(index,binCenter,a*scaleFactor);
-  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,(a-ym)*scaleFactor,(yp-a)*scaleFactor);
+  addPoint(binCenter,a, scaleFactor,dx*xErrorFrac,dx*xErrorFrac, a-ym, yp-a);
   updateYAxisLimits(scale*yp);
   updateYAxisLimits(scale*ym);
 }
