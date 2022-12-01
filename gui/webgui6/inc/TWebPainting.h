@@ -56,7 +56,7 @@ class TWebPainting : public TObject {
       static std::string MakeTextOper(const char *str);
 
 
-   ClassDef(TWebPainting, 1) // store for all paint operation of TVirtualPadPainter
+   ClassDefOverride(TWebPainting, 1) // store for all paint operation of TVirtualPadPainter
 };
 
 #endif
