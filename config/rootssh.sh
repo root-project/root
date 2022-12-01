@@ -44,7 +44,7 @@ if [[ "$1" == "--as-listener--" ]] ; then
       fi
    done
 
-   echo "Stop listener"
+#  "Exit listener"
 
    exit 0
 fi
@@ -70,18 +70,20 @@ $0 --as-listener-- $listener_local $localport &
 
 listener_id=$!
 
-cmd="ROOT_LISTENER_SOCKET=$listener_remote ROOT_WEBGUI_SOCKET=$root_socket"
-cmd+=" $"
-cmd+="SHELL; rm -f $listener_remote $root_socket"
-
 # start ssh
 
-ssh -t -R $listener_remote:$listener_local -L $localport:$root_socket $1 $2 $3 $4 $5 "$cmd"
+ssh -t -R $listener_remote:$listener_local -L $localport:$root_socket $1 $2 $3 $4 $5 \
+"ROOT_LISTENER_SOCKET=$listener_remote ROOT_WEBGUI_SOCKET=$root_socket \$SHELL; rm -f $listener_remote $root_socket"
+
+
+# try to stop listener with "stop" message
 
 echo "stop" | netcat -U $listener_local -q 1
 
-echo "Kill listener process $listener_id"
+# Kill listener process $listener_id
+
 kill -9 $listener_id > /dev/null 2>&1
 
-echo "Remove temporary files"
+# Remove temporary files
+
 rm -f $listener_local $listener_remote
