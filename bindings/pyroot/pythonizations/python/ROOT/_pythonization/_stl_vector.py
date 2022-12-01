@@ -38,3 +38,6 @@ def pythonize_stl_vector(klass, name):
     if value_type == 'char':
         klass._original_data = klass.data
         klass.data = _data_vec_char
+
+    # Pretty printing at the Python prompt
+    klass.__repr__ = lambda self: "{}{}".format(self.__class__.__name__, self)
