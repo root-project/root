@@ -295,6 +295,7 @@ int main(int argc, const char *argv[])
    bool dryRun      = false;
    bool doDump      = false;
    bool doTreeStore = false;
+   std::string batchMode = "off";
 
    //string refFileName = "http://root.cern.ch/files/stressRooStats_v534_ref.root" ;
    string refFileName = "stressRooStats_ref.root" ;
@@ -304,7 +305,11 @@ int main(int argc, const char *argv[])
    for (Int_t i = 1 ;  i < argc ; i++) {
       string arg = argv[i] ;
 
-      if (arg == "-f") {
+      if (arg=="-b") {
+         std::string mode = argv[i+1];
+         batchMode = mode;
+         std::cout << "stressRooStats: BatchMode set to " << mode << std::endl;
+      } else if (arg == "-f") {
          cout << "stressRooStats: using reference file " << argv[i + 1] << endl ;
          refFileName = argv[++i] ;
       } else if (arg == "-w") {
@@ -376,16 +381,17 @@ int main(int argc, const char *argv[])
 
    // set minimizer
     // use Minut2 if available
-   std::string minimizerType = minimizerName;
    // check in case of Minuit2 and set Minuit in case we cannot use it
-   if (minimizerType == "Minuit2") {
+   if (minimizerName == "Minuit2") {
       int prec = gErrorIgnoreLevel;
       gErrorIgnoreLevel = kFatal;
-      if (gSystem->Load("libMinuit2") < 0) minimizerType = "Minuit";
+      if (gSystem->Load("libMinuit2") < 0) minimizerName = "Minuit";
       gErrorIgnoreLevel=prec;
    }
-   ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizerType.c_str());
+   ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizerName.c_str());
 
+   // set default BatchMode backend
+   RooFit::Experimental::defaultBatchMode() = batchMode;
 
    gBenchmark = new TBenchmark();
    return stressRooStats(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun, doDump, doTreeStore);
@@ -404,6 +410,7 @@ Int_t stressRooStats()
    bool doDump      = false;
    bool doTreeStore = false;
    string refFileName = "stressRooStats_ref.root";
+
    return stressRooStats(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun, doDump, doTreeStore);
 }
 
