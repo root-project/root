@@ -239,7 +239,7 @@ public:
       } else {
          ReadGlobalImpl(globalIndex, value);
       }
-      if (fReadCallback)
+      if (R__unlikely(fReadCallback))
          fReadCallback(*value);
    }
 
@@ -252,7 +252,7 @@ public:
       } else {
          ReadInClusterImpl(clusterIndex, value);
       }
-      if (fReadCallback)
+      if (R__unlikely(fReadCallback))
          fReadCallback(*value);
    }
 
