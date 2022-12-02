@@ -100,6 +100,29 @@ TEST(RNTupleImporter, Simple)
    EXPECT_FLOAT_EQ(64.0, *reader->GetModel()->Get<double>("myDouble"));
 }
 
+TEST(RNTupleImporter, FieldName)
+{
+   FileRaii fileGuard("test_ntuple_importer_field_name.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "");
+      Int_t a = 42;
+      // For single-leaf branches, use branch name, not leaf name
+      tree->Branch("a", &a, "b/I");
+      tree->Fill();
+      tree->Write();
+   }
+
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+   importer->SetIsQuiet(true);
+   importer->SetNTupleName("ntuple");
+   importer->Import();
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(1U, reader->GetNEntries());
+   reader->LoadEntry(0);
+   EXPECT_EQ(42, *reader->GetModel()->Get<std::int32_t>("a"));
+}
+
 TEST(RNTupleImporter, CString)
 {
    FileRaii fileGuard("test_ntuple_importer_cstring.root");
@@ -210,4 +233,64 @@ TEST(RNTupleImporter, FixedSizeArray)
    EXPECT_EQ(2, viewBranchB(0)[0]);
    EXPECT_EQ(3, viewBranchB(0)[1]);
    EXPECT_EQ(4, viewBranchC(0));
+}
+
+TEST(RNTupleImporter, LeafCountArray)
+{
+   FileRaii fileGuard("test_ntuple_importer_leaf_count_array.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "");
+      Int_t begin = 1;
+      Int_t njets;
+      float jet_pt[2];
+      Int_t middle = 2;
+      float jet_eta[2];
+      Int_t end = 3;
+      tree->Branch("begin", &begin);
+      tree->Branch("njets", &njets);
+      tree->Branch("jet_pt", jet_pt, "jet_pt[njets]");
+      tree->Branch("middle", &middle);
+      tree->Branch("jet_eta", jet_eta, "jet_eta[njets]");
+      tree->Branch("end", &end);
+      njets = 1;
+      jet_pt[0] = 1.0;
+      jet_eta[0] = 2.0;
+      tree->Fill();
+      njets = 0;
+      tree->Fill();
+      njets = 2;
+      jet_pt[0] = 3.0;
+      jet_eta[0] = 4.0;
+      jet_pt[1] = 5.0;
+      jet_eta[1] = 6.0;
+      tree->Fill();
+      tree->Write();
+   }
+
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+   importer->SetIsQuiet(true);
+   importer->SetNTupleName("ntuple");
+   importer->Import();
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(3U, reader->GetNEntries());
+   auto viewBegin = reader->GetView<std::int32_t>("begin");
+   auto viewMiddle = reader->GetView<std::int32_t>("middle");
+   auto viewEnd = reader->GetView<std::int32_t>("end");
+   EXPECT_EQ(1, viewBegin(0));
+   EXPECT_EQ(2, viewMiddle(0));
+   EXPECT_EQ(3, viewEnd(0));
+   auto viewJets = reader->GetViewCollection("_collection0");
+   auto viewJetPt = viewJets.GetView<float>("jet_pt");
+   auto viewJetEta = viewJets.GetView<float>("jet_eta");
+   EXPECT_EQ(1, viewJets(0));
+   EXPECT_FLOAT_EQ(1.0, viewJetPt(0));
+   EXPECT_FLOAT_EQ(2.0, viewJetEta(0));
+   EXPECT_EQ(0, viewJets(1));
+   EXPECT_EQ(2, viewJets(2));
+   EXPECT_FLOAT_EQ(3.0, viewJetPt(1));
+   EXPECT_FLOAT_EQ(4.0, viewJetEta(1));
+   EXPECT_FLOAT_EQ(5.0, viewJetPt(2));
+   EXPECT_FLOAT_EQ(6.0, viewJetEta(2));
 }
