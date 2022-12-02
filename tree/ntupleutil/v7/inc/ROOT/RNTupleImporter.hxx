@@ -50,6 +50,7 @@ class RNTupleImporter {
 public:
    class RProgressCallback {
    public:
+      virtual ~RProgressCallback() = default;
       void operator()(std::uint64_t nbytesWritten, std::uint64_t neventsWritten)
       {
          Call(nbytesWritten, neventsWritten);
