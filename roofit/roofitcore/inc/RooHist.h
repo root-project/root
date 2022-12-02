@@ -68,7 +68,8 @@ public:
 
   double getFitRangeNEvt() const override;
   double getFitRangeNEvt(double xlo, double xhi) const override ;
-  double getFitRangeBinW() const override;
+  /// Return (average) bin width of this RooHist.
+  double getFitRangeBinW() const override { return _nominalBinWidth ; }
   inline double getNominalBinWidth() const { return _nominalBinWidth; }
   inline void setRawEntries(double n) { _rawEntries = n ; }
 
