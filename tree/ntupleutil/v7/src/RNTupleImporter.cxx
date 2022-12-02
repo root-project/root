@@ -41,6 +41,7 @@ private:
    std::uint64_t fNbytesLast = 0;
 
 public:
+   virtual ~RDefaultProgressCallback() {}
    void Call(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) final
    {
       if (nbytesWritten < (fNbytesLast + 50 * 1000 * 1000))
