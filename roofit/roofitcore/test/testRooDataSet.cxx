@@ -318,3 +318,38 @@ TEST(RooDataSet, ReduceWithCompositeDataStore)
    EXPECT_EQ(dataSetWeighted.weight(), dataSetComposite.weight());
    EXPECT_EQ(dataSetComposite.weight(), dataSetReduced.weight());
 }
+
+// Make sure that CutRange() also considers the variables not selected by
+// SelectVars() in RooAbsData::reduce().
+//
+// Covers JIRA issue ROOT-8040.
+TEST(RooDataSet, ReduceWithSelectVarsAndCutRange)
+{
+   using namespace RooFit;
+
+   RooWorkspace ws;
+   ws.factory("a[5,0,100]");
+   ws.factory("b[10,0,100]");
+   ws.defineSet("obs", "a,b");
+
+   RooDataSet d("data", "data", *ws.set("obs"));
+   ws.var("a")->setVal(5);
+   ws.var("b")->setVal(5);
+   d.add(*ws.set("obs"));
+   ws.var("a")->setVal(15);
+   ws.var("b")->setVal(15);
+   d.add(*ws.set("obs"));
+   ws.var("a")->setVal(5);
+   ws.var("b")->setVal(15);
+   d.add(*ws.set("obs"));
+   ws.var("a")->setVal(15);
+   ws.var("b")->setVal(5);
+   d.add(*ws.set("obs"));
+
+   ws.var("a")->setRange("myRange", 0, 10);
+   ws.var("b")->setRange("myRange", 0, 10);
+
+   std::unique_ptr<RooAbsData> reduced{d.reduce(SelectVars(*ws.var("a")), CutRange("myRange"))};
+
+   EXPECT_EQ(reduced->numEntries(), 1);
+}
