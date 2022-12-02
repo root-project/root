@@ -30,6 +30,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <utility>
 
@@ -57,9 +58,25 @@ public:
 } // anonymous namespace
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleImporter::RCStringTransformation::Transform(const RImportBranch &branch, RImportField &field)
+ROOT::Experimental::RNTupleImporter::RCStringTransformation::Transform(std::int64_t /* entry */,
+                                                                       const RImportBranch &branch, RImportField &field)
 {
    *reinterpret_cast<std::string *>(field.fFieldBuffer) = reinterpret_cast<const char *>(branch.fBranchBuffer.get());
+   return RResult<void>::Success();
+}
+
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleImporter::RLeafArrayTransformation::Transform(std::int64_t entry,
+                                                                         const RImportBranch &branch,
+                                                                         RImportField &field)
+{
+   if (entry != fEntry) {
+      fEntry = entry;
+      fNum = 0;
+   }
+   auto valueSize = field.fField->GetValueSize();
+   memcpy(field.fFieldBuffer, branch.fBranchBuffer.get() + (fNum * valueSize), valueSize);
+   fNum++;
    return RResult<void>::Success();
 }
 
@@ -81,7 +98,7 @@ ROOT::Experimental::RNTupleImporter::Create(std::string_view sourceFile, std::st
    importer->fSourceTree->SetImplicitMT(false);
 
    importer->fDestFileName = destFile;
-   importer->fWriteOptions.SetCompression(importer->fSourceFile->GetCompressionSettings());
+   importer->fWriteOptions.SetCompression(kDefaultCompressionSettings);
    importer->fDestFile = std::unique_ptr<TFile>(TFile::Open(importer->fDestFileName.c_str(), "UPDATE"));
    if (!importer->fDestFile || importer->fDestFile->IsZombie()) {
       return R__FAIL("cannot open dest file " + std::string(importer->fDestFileName));
@@ -101,6 +118,7 @@ void ROOT::Experimental::RNTupleImporter::ResetSchema()
 {
    fImportBranches.clear();
    fImportFields.clear();
+   fLeafCountCollections.clear();
    fImportTransformations.clear();
    fSourceTree->SetBranchStatus("*", 0);
    fModel = RNTupleModel::CreateBare();
@@ -116,12 +134,30 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       const auto firstLeaf = static_cast<TLeaf *>(b->GetListOfLeaves()->First());
       assert(firstLeaf);
 
+      if (firstLeaf->IsRange()) {
+         // This is a count leaf.  We expect that this is not part of a leave list. We also expect that the
+         // leaf count comes before any array leaves that use it.
+         // Count leaf branches do not end up as fields but they trigger the creation of an anonymous collection,
+         // together the collection mode.
+         RImportLeafCountCollection c;
+         c.fCollectionModel = RNTupleModel::CreateBare();
+         c.fMaxLength = firstLeaf->GetMaximum();
+         c.fCountVal = std::make_unique<Int_t>(); // count leafs are integers
+         fSourceTree->SetBranchStatus(b->GetName(), 1);
+         fSourceTree->SetBranchAddress(b->GetName(), c.fCountVal.get());
+         // We use the leaf pointer as a map key.  The array leafs return that leaf pointer from GetLeafCount(),
+         // so that they will be able to find the information to attach their fields to the collection model.
+         fLeafCountCollections.emplace(firstLeaf, std::move(c));
+         continue;
+      }
+
       const bool isLeafList = b->GetNleaves() > 1;
       Int_t firstLeafCountval;
       const bool isCString = !isLeafList && (firstLeaf->IsA() == TLeafC::Class()) &&
                              (!firstLeaf->GetLeafCounter(firstLeafCountval)) && (firstLeafCountval == 1);
 
-      std::size_t branchBufferSize = 0;
+      std::size_t branchBufferSize = 0; // Size of the memory location into which TTree reads the events' branch data
+      // For leaf lists, every leaf translates into a sub field of an anonymous RNTuple record
       std::vector<std::unique_ptr<Detail::RFieldBase>> recordItems;
       for (auto l : TRangeDynCast<TLeaf>(b->GetListOfLeaves())) {
          if (l->IsA() == TLeafObject::Class()) {
@@ -131,6 +167,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
 
          Int_t countval = 0;
          auto *countleaf = l->GetLeafCounter(countval);
+         const bool isLeafCountArray = (countleaf != nullptr);
          const bool isFixedSizeArray = (countleaf == nullptr) && (countval > 1);
 
          std::string fieldName = isLeafList ? l->GetName() : b->GetName();
@@ -142,7 +179,10 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
          std::unique_ptr<Detail::RFieldBase> field;
          if (isCString) {
             branchBufferSize = l->GetMaximum();
-            field = Detail::RFieldBase::Create(fieldName, fieldType).Unwrap();
+            auto result = Detail::RFieldBase::Create(fieldName, fieldType);
+            if (!result)
+               return R__FORWARD_ERROR(result);
+            field = result.Unwrap();
             f.fFieldBuffer = field->GenerateValue().GetRawPtr();
             f.fOwnsFieldBuffer = true;
             fImportTransformations.emplace_back(
@@ -152,15 +192,28 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
             if (!result)
                return R__FORWARD_ERROR(result);
             field = result.Unwrap();
-            branchBufferSize = l->GetOffset() + field->GetValueSize();
+            if (isLeafCountArray) {
+               branchBufferSize = fLeafCountCollections[countleaf].fMaxLength * field->GetValueSize();
+            } else {
+               branchBufferSize = l->GetOffset() + field->GetValueSize();
+            }
          }
          f.fField = field.get();
 
          if (isLeafList) {
             recordItems.emplace_back(std::move(field));
-         } else {
+         } else if (isLeafCountArray) {
+            f.fFieldBuffer = field->GenerateValue().GetRawPtr();
+            f.fOwnsFieldBuffer = true;
+            f.fIsInUntypedCollection = true;
+            fLeafCountCollections[countleaf].fCollectionModel->AddField(std::move(field));
+            fLeafCountCollections[countleaf].fImportFieldIndexes.emplace_back(fImportFields.size());
+            fImportTransformations.emplace_back(
+               std::make_unique<RLeafArrayTransformation>(fImportBranches.size(), fImportFields.size()));
             fImportFields.emplace_back(std::move(f));
+         } else {
             fModel->AddField(std::move(field));
+            fImportFields.emplace_back(std::move(f));
          }
       }
       if (!recordItems.empty()) {
@@ -183,10 +236,29 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       fImportBranches.emplace_back(std::move(ib));
    }
 
+   int iLeafCountCollection = 0;
+   for (auto &[_, c] : fLeafCountCollections) {
+      c.fCollectionModel->Freeze();
+      c.fCollectionEntry = c.fCollectionModel->CreateBareEntry();
+      for (auto idx : c.fImportFieldIndexes) {
+         const auto name = fImportFields[idx].fField->GetName();
+         const auto buffer = fImportFields[idx].fFieldBuffer;
+         c.fCollectionEntry->CaptureValueUnsafe(name, buffer);
+      }
+      c.fFieldName = "_collection" + std::to_string(iLeafCountCollection);
+      c.fCollectionWriter = fModel->MakeCollection(c.fFieldName, std::move(c.fCollectionModel));
+      iLeafCountCollection++;
+   }
+
    fModel->Freeze();
    fEntry = fModel->CreateBareEntry();
    for (const auto &f : fImportFields) {
+      if (f.fIsInUntypedCollection)
+         continue;
       fEntry->CaptureValueUnsafe(f.fField->GetName(), f.fFieldBuffer);
+   }
+   for (const auto &[_, c] : fLeafCountCollections) {
+      fEntry->CaptureValueUnsafe(c.fFieldName, c.fCollectionWriter->GetOffsetPtr());
    }
 
    if (!fIsQuiet)
@@ -214,8 +286,23 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
    for (decltype(nEntries) i = 0; i < nEntries; ++i) {
       fSourceTree->GetEntry(i);
 
+      for (const auto &[_, c] : fLeafCountCollections) {
+         for (Int_t l = 0; l < *c.fCountVal; ++l) {
+            for (auto &t : fImportTransformations) {
+               if (!fImportFields[t->fImportFieldIdx].fIsInUntypedCollection)
+                  continue;
+               auto result = t->Transform(i, fImportBranches[t->fImportBranchIdx], fImportFields[t->fImportFieldIdx]);
+               if (!result)
+                  return R__FORWARD_ERROR(result);
+            }
+            c.fCollectionWriter->Fill(c.fCollectionEntry.get());
+         }
+      }
+
       for (auto &t : fImportTransformations) {
-         auto result = t->Transform(fImportBranches[t->fImportBranchIdx], fImportFields[t->fImportFieldIdx]);
+         if (fImportFields[t->fImportFieldIdx].fIsInUntypedCollection)
+            continue;
+         auto result = t->Transform(i, fImportBranches[t->fImportBranchIdx], fImportFields[t->fImportFieldIdx]);
          if (!result)
             return R__FORWARD_ERROR(result);
       }

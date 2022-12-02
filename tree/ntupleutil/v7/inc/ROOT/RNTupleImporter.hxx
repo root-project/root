@@ -19,6 +19,7 @@
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RStringView.hxx>
@@ -27,8 +28,11 @@
 #include <TTree.h>
 
 #include <cstdlib>
+#include <map>
 #include <memory>
 #include <vector>
+
+class TLeaf;
 
 namespace ROOT {
 namespace Experimental {
@@ -55,6 +59,8 @@ public:
    };
 
 private:
+   static constexpr int kDefaultCompressionSettings = 505;
+
    struct RImportBranch {
       RImportBranch() = default;
       RImportBranch(const RImportBranch &other) = delete;
@@ -74,7 +80,8 @@ private:
       }
       RImportField(const RImportField &other) = delete;
       RImportField(RImportField &&other)
-         : fField(other.fField), fFieldBuffer(other.fFieldBuffer), fOwnsFieldBuffer(other.fOwnsFieldBuffer)
+         : fField(other.fField), fFieldBuffer(other.fFieldBuffer), fOwnsFieldBuffer(other.fOwnsFieldBuffer),
+           fIsInUntypedCollection(other.fIsInUntypedCollection)
       {
          other.fOwnsFieldBuffer = false;
       }
@@ -84,6 +91,7 @@ private:
          fField = other.fField;
          fFieldBuffer = other.fFieldBuffer;
          fOwnsFieldBuffer = other.fOwnsFieldBuffer;
+         fIsInUntypedCollection = other.fIsInUntypedCollection;
          other.fOwnsFieldBuffer = false;
          return *this;
       }
@@ -91,6 +99,22 @@ private:
       Detail::RFieldBase *fField = nullptr;
       void *fFieldBuffer = nullptr;
       bool fOwnsFieldBuffer = false;
+      bool fIsInUntypedCollection = false;
+   };
+
+   struct RImportLeafCountCollection {
+      RImportLeafCountCollection() = default;
+      RImportLeafCountCollection(const RImportLeafCountCollection &other) = delete;
+      RImportLeafCountCollection(RImportLeafCountCollection &&other) = default;
+      RImportLeafCountCollection &operator=(const RImportLeafCountCollection &other) = delete;
+      RImportLeafCountCollection &operator=(RImportLeafCountCollection &&other) = default;
+      std::unique_ptr<RNTupleModel> fCollectionModel;
+      std::shared_ptr<RCollectionNTupleWriter> fCollectionWriter;
+      std::unique_ptr<REntry> fCollectionEntry;
+      std::unique_ptr<Int_t> fCountVal;
+      std::vector<size_t> fImportFieldIndexes;
+      Int_t fMaxLength = 0;
+      std::string fFieldName;
    };
 
    struct RImportTransformation {
@@ -102,13 +126,21 @@ private:
       {
       }
       virtual ~RImportTransformation() = default;
-      virtual RResult<void> Transform(const RImportBranch &branch, RImportField &field) = 0;
+      virtual RResult<void> Transform(std::int64_t entry, const RImportBranch &branch, RImportField &field) = 0;
    };
 
    struct RCStringTransformation : public RImportTransformation {
       RCStringTransformation(std::size_t b, std::size_t f) : RImportTransformation(b, f) {}
       virtual ~RCStringTransformation() = default;
-      RResult<void> Transform(const RImportBranch &branch, RImportField &field) final;
+      RResult<void> Transform(std::int64_t entry, const RImportBranch &branch, RImportField &field) final;
+   };
+
+   struct RLeafArrayTransformation : public RImportTransformation {
+      std::int64_t fEntry = -1;
+      std::int64_t fNum = 0;
+      RLeafArrayTransformation(std::size_t b, std::size_t f) : RImportTransformation(b, f) {}
+      virtual ~RLeafArrayTransformation() = default;
+      RResult<void> Transform(std::int64_t entry, const RImportBranch &branch, RImportField &field) final;
    };
 
    RNTupleImporter() = default;
@@ -127,6 +159,7 @@ private:
 
    std::vector<RImportBranch> fImportBranches;
    std::vector<RImportField> fImportFields;
+   std::map<TLeaf *, RImportLeafCountCollection> fLeafCountCollections;
    std::vector<std::unique_ptr<RImportTransformation>> fImportTransformations;
    std::unique_ptr<RNTupleModel> fModel;
    std::unique_ptr<REntry> fEntry;
