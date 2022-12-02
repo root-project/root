@@ -275,9 +275,9 @@ RooVectorDataStore::RooVectorDataStore(RooStringView name, RooStringView title, 
   setAllBuffersNative() ;
 
   // Deep clone cutVar and attach clone to this dataset
-  RooFormulaVar* cloneVar = 0;
+  std::unique_ptr<RooFormulaVar> cloneVar;
   if (cutVar) {
-    cloneVar = (RooFormulaVar*) cutVar->cloneTree() ;
+    cloneVar.reset(static_cast<RooFormulaVar*>(cutVar->cloneTree()));
     cloneVar->attachDataStore(tds) ;
   }
 
@@ -286,9 +286,8 @@ RooVectorDataStore::RooVectorDataStore(RooStringView name, RooStringView title, 
     _cache = new RooVectorDataStore(*vds->_cache) ;
   }
 
-  loadValues(&tds,cloneVar,cutRange,nStart,nStop);
+  loadValues(&tds,cloneVar.get(),cutRange,nStart,nStop);
 
-  delete cloneVar ;
   TRACE_CREATE
 }
 
@@ -510,20 +509,20 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
   const auto numEntr = static_cast<std::size_t>(ads->numEntries());
   const std::size_t nevent = nStop < numEntr ? nStop : numEntr;
 
-  auto TDS = dynamic_cast<const RooTreeDataStore*>(ads);
-  auto VDS = dynamic_cast<const RooVectorDataStore*>(ads);
+  auto treeDS = dynamic_cast<const RooTreeDataStore*>(ads);
+  auto vectorDS = dynamic_cast<const RooVectorDataStore*>(ads);
 
   // Check if weight is being renamed - if so set flag to enable special handling in copy loop
   bool weightRename(false) ;
-  bool newWeightVar = _wgtVar ? _wgtVar->getAttribute("NewWeight") : false ;
+  const bool newWeightVar = _wgtVar ? _wgtVar->getAttribute("NewWeight") : false ;
 
-  if (_wgtVar && VDS && ((RooVectorDataStore*)(ads))->_wgtVar) {
-    if (string(_wgtVar->GetName())!=((RooVectorDataStore*)(ads))->_wgtVar->GetName() && !newWeightVar) {
+  if (_wgtVar && vectorDS && vectorDS->_wgtVar) {
+    if (std::string(_wgtVar->GetName()) != vectorDS->_wgtVar->GetName() && !newWeightVar) {
       weightRename=true ;
     }
   }
-  if (_wgtVar && TDS && ((RooTreeDataStore*)(ads))->_wgtVar) {
-    if (string(_wgtVar->GetName())!=((RooTreeDataStore*)(ads))->_wgtVar->GetName() && !newWeightVar) {
+  if (_wgtVar && treeDS && treeDS->_wgtVar) {
+    if (std::string(_wgtVar->GetName()) != treeDS->_wgtVar->GetName() && !newWeightVar) {
       weightRename=true ;
     }
   }
@@ -542,23 +541,25 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
       continue ;
     }
 
-    if (TDS) {
-      _varsww.assignValueOnly(TDS->_varsww) ;
+    RooArgSet const* otherVarsww = nullptr;
+
+    if (treeDS) {
+      otherVarsww = &treeDS->_varsww;
       if (weightRename) {
-        _wgtVar->setVal(TDS->_wgtVar->getVal()) ;
+        _wgtVar->setVal(treeDS->_wgtVar->getVal()) ;
       }
-    } else if (VDS) {
-      _varsww.assignValueOnly(VDS->_varsww) ;
+    } else if (vectorDS) {
+      otherVarsww = &vectorDS->_varsww;
       if (weightRename) {
-        _wgtVar->setVal(VDS->_wgtVar->getVal()) ;
+        _wgtVar->setVal(vectorDS->_wgtVar->getVal()) ;
       }
     } else {
-      _varsww.assignValueOnly(*ads->get()) ;
+      otherVarsww = ads->get();
     }
 
     // Check that all copied values are valid and in range
     bool allValid = true;
-    for (const auto arg : _varsww) {
+    for (const auto arg : *otherVarsww) {
       allValid &= arg->isValid();
       if (allValid && !ranges.empty()) {
         // If we have one or multiple ranges to be selected, the value
@@ -573,6 +574,8 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
     if (!allValid) {
       continue ;
     }
+
+    _varsww.assignValueOnly(*otherVarsww) ;
 
     fill() ;
   }
