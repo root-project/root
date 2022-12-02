@@ -20,16 +20,17 @@ if [[ $# -eq 0 ]] ; then
   echo "ROOT automatically recognizes that it runs in special session (because of ROOT_LISTENER_SOCKET variable)"
   echo "and provides to this socket information to configure port forwarding and to start web windows automatically"
   echo ""
-  echo "Following arguments can be specified:"
+  echo "One can provide all supported by ssh arguments also to rootssh like '-E config.file' or '-Y'"
+  echo "In addition, special rootssh arguments can be specified:"
   echo ""
   echo "    --port number - port number on local node used for ssh tunnel to remote"
   echo "    --browser <name> - name of web browser executable like firefox or chromium"
   echo ""
   echo " Thus one can call:"
   echo ""
-  echo "     [localhost] rootssh --port 9753 --browser chromium user@remotehost"
+  echo "     [localhost] rootssh --port 9753 --browser chromium -E config.file user@remotehost \"root --web 'new TBrowser'\""
   echo ""
-  echo "Author: Sergey Linev, 1.12.2022"
+  echo "Author: Sergey Linev, 2.12.2022"
 
 elif [[ "$1" == "--as-listener--" ]] ; then
 
@@ -80,6 +81,9 @@ else
    browser="xdg-open"
    ssh_destination=""
    ssh_command=""
+   ssh_args=""
+
+   ssh_array2=("-B -b -c -D -E -e -F -I -i -J -L -l -m -O -o -p -Q -R -S -W -w")
 
    while [ $# -gt 0 ] ; do
       if [[ "$1" == "--port"  ]] ; then
@@ -88,6 +92,14 @@ else
       elif [[ "$1" == "--browser" ]] ; then
          browser=$2
          shift 2
+      elif [[ " ${ssh_array2[*]} " =~ " $1 " ]]; then
+         # arguments with extra option
+         ssh_args+=" $1 $2"
+         shift 2
+      elif [[ "${1:0:1}" == "-" && "x$ssh_destination" == "x" ]]; then
+         # any other arguments starting with "-"
+         ssh_args+=" $1"
+         shift
       elif [[ "x$ssh_destination" == "x" ]] ; then
          ssh_destination=$1
          shift
@@ -106,7 +118,7 @@ else
       done
    fi
 
-   echo "Use local port $localport for root_socket $root_socket redirection"
+   echo "Use local port $localport for root_socket $root_socket redirection from $ssh_destination"
 
    # start listener process
 
@@ -120,7 +132,7 @@ else
       ssh_command="\$SHELL"
    fi
 
-   ssh -t -R $listener_remote:$listener_local -L $localport:$root_socket $ssh_destination \
+   ssh -t -R $listener_remote:$listener_local -L $localport:$root_socket $ssh_destination $ssh_args \
    "chmod 0700 $listener_remote; export ROOT_LISTENER_SOCKET=$listener_remote; export ROOT_WEBGUI_SOCKET=$root_socket; $ssh_command; rm -f $listener_remote $root_socket"
 
    # try to stop listener with "stop" message
