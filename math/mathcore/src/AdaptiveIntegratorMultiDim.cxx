@@ -320,10 +320,6 @@ L160: //to divide or not
    relerr = abserr;
    if (aresult != 0)  relerr = abserr/aresult;
 
-
-   if (relerr < 1e-1 && aresult < 1e-20) fStatus = 0;
-   if (relerr < 1e-3 && aresult < 1e-10) fStatus = 0;
-   if (relerr < 1e-5 && aresult < 1e-5)  fStatus = 0;
    if (isbrgs+irgnst > iwk) fStatus = 2;
    if (ifncls+2*irlcls > maxpts) {
       if (sum1==0 && sum2==0 && sum3==0 && sum4==0 && sum5==0){
