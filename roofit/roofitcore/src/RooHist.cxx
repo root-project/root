@@ -407,6 +407,9 @@ void RooHist::addPoint(Axis_t binCenter, double y, double yscale, double exlow, 
   SetPoint(index, binCenter, y*yscale);
   SetPointError(index, exlow, exhigh, yscale * eylow, yscale * eyhigh);
 
+  updateYAxisLimits(yscale * (y - eylow));
+  updateYAxisLimits(yscale * (y + eyhigh));
+
   // We also track the original weights of the histogram, because if we only
   // have info on the scaled points it's not possible anymore to compute the
   // number of events in a subrange of the RooHist.
@@ -457,8 +460,6 @@ void RooHist::addBin(Axis_t binCenter, double n, double binWidth, double xErrorF
   }
 
   addPoint(binCenter,n, scale*scaleFactor,dx*xErrorFrac,dx*xErrorFrac, n-ym, yp-n);
-  updateYAxisLimits(scale*yp);
-  updateYAxisLimits(scale*ym);
 }
 
 
@@ -479,8 +480,6 @@ void RooHist::addBinWithError(Axis_t binCenter, double n, double elow, double eh
 
   double dx(0.5*binWidth) ;
   addPoint(binCenter,n, scale*scaleFactor,dx*xErrorFrac,dx*xErrorFrac, elow, ehigh);
-  updateYAxisLimits(scale*(n-elow));
-  updateYAxisLimits(scale*(n+ehigh));
 }
 
 
@@ -497,8 +496,6 @@ void RooHist::addBinWithXYError(Axis_t binCenter, double n, double exlow, double
   _entries+= n;
 
   addPoint(binCenter, n, scaleFactor,exlow,exhigh, eylow, eyhigh);
-  updateYAxisLimits(scaleFactor*(n-eylow));
-  updateYAxisLimits(scaleFactor*(n+eyhigh));
 }
 
 
@@ -511,9 +508,6 @@ void RooHist::addBinWithXYError(Axis_t binCenter, double n, double exlow, double
 
 void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, double binWidth, double xErrorFrac, double scaleFactor)
 {
-  double scale= 1;
-  if(binWidth > 0) scale= _nominalBinWidth/binWidth;
-
   // calculate Binomial errors for this bin
   double ym,yp,dx(0.5*binWidth);
   if(!RooHistError::instance().getBinomialIntervalAsym(n1,n2,ym,yp,_nSigma)) {
@@ -523,8 +517,6 @@ void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, double binWi
 
   double a= (double)(n1-n2)/(n1+n2);
   addPoint(binCenter, a, scaleFactor,dx*xErrorFrac,dx*xErrorFrac, a-ym, yp-a);
-  updateYAxisLimits(scale*yp);
-  updateYAxisLimits(scale*ym);
 }
 
 
@@ -535,9 +527,6 @@ void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, double binWi
 
 void RooHist::addAsymmetryBinWithError(Axis_t binCenter, double n1, double n2, double en1, double en2, double binWidth, double xErrorFrac, double scaleFactor)
 {
-  double scale= 1;
-  if(binWidth > 0) scale= _nominalBinWidth/binWidth;
-
   // calculate Binomial errors for this bin
   double ym,yp,dx(0.5*binWidth);
   double a= (double)(n1-n2)/(n1+n2);
@@ -547,8 +536,6 @@ void RooHist::addAsymmetryBinWithError(Axis_t binCenter, double n1, double n2, d
   yp=a+error ;
 
   addPoint(binCenter,a, scaleFactor, dx*xErrorFrac,dx*xErrorFrac, a-ym, yp-a);
-  updateYAxisLimits(scale*yp);
-  updateYAxisLimits(scale*ym);
 }
 
 
@@ -559,9 +546,6 @@ void RooHist::addAsymmetryBinWithError(Axis_t binCenter, double n1, double n2, d
 
 void RooHist::addEfficiencyBin(Axis_t binCenter, Int_t n1, Int_t n2, double binWidth, double xErrorFrac, double scaleFactor)
 {
-  double scale= 1;
-  if(binWidth > 0) scale= _nominalBinWidth/binWidth;
-
   double a= (double)(n1)/(n1+n2);
 
   // calculate Binomial errors for this bin
@@ -572,8 +556,6 @@ void RooHist::addEfficiencyBin(Axis_t binCenter, Int_t n1, Int_t n2, double binW
   }
 
   addPoint(binCenter,a, scaleFactor,dx*xErrorFrac,dx*xErrorFrac, a-ym, yp-a);
-  updateYAxisLimits(scale*yp);
-  updateYAxisLimits(scale*ym);
 }
 
 
@@ -584,9 +566,6 @@ void RooHist::addEfficiencyBin(Axis_t binCenter, Int_t n1, Int_t n2, double binW
 
 void RooHist::addEfficiencyBinWithError(Axis_t binCenter, double n1, double n2, double en1, double en2, double binWidth, double xErrorFrac, double scaleFactor)
 {
-  double scale= 1;
-  if(binWidth > 0) scale= _nominalBinWidth/binWidth;
-
   double a= (double)(n1)/(n1+n2);
 
   double error = sqrt( pow(en1,2)*pow(n2,2) + pow(en2,2)*pow(n1,2) ) / pow(n1+n2,2) ;
@@ -598,8 +577,6 @@ void RooHist::addEfficiencyBinWithError(Axis_t binCenter, double n1, double n2, 
 
 
   addPoint(binCenter,a, scaleFactor,dx*xErrorFrac,dx*xErrorFrac, a-ym, yp-a);
-  updateYAxisLimits(scale*yp);
-  updateYAxisLimits(scale*ym);
 }
 
 
