@@ -437,10 +437,11 @@ void RooAbsData::setDirtyProp(bool flag)
 /// The following optional named arguments are accepted
 /// <table>
 /// <tr><td> `SelectVars(const RooArgSet& vars)`   <td> Only retain the listed observables in the output dataset
-/// <tr><td> `Cut(const char* expression)`   <td> Only retain event surviving the given cut expression
-/// <tr><td> `Cut(const RooFormulaVar& expr)`   <td> Only retain event surviving the given cut formula
+/// <tr><td> `Cut(const char* expression)`   <td> Only retain event surviving the given cut expression.
+/// <tr><td> `Cut(const RooFormulaVar& expr)`   <td> Only retain event surviving the given cut formula.
 /// <tr><td> `CutRange(const char* name)`   <td> Only retain events inside range with given name. Multiple CutRange
-///     arguments may be given to select multiple ranges
+///     arguments may be given to select multiple ranges.
+///     Note that this will also consider the variables that are not selected by SelectVars().
 /// <tr><td> `EventRange(int lo, int hi)`   <td> Only retain events with given sequential event numbers
 /// <tr><td> `Name(const char* name)`   <td> Give specified name to output dataset
 /// <tr><td> `Title(const char* name)`   <td> Give specified title to output dataset
