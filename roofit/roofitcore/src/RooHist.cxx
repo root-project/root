@@ -405,7 +405,13 @@ void RooHist::addPoint(Axis_t binCenter, double y, double yscale, double exlow, 
 {
   const int index = GetN();
   SetPoint(index, binCenter, y*yscale);
-  SetPointError(index, exlow, exhigh, yscale * eylow, yscale * eyhigh);
+
+  // If the scale is negative, the low and high errors must be swapped
+  if(std::abs(yscale) < 0) {
+    std::swap(eylow, eyhigh);
+  }
+
+  SetPointError(index, exlow, exhigh, std::abs(yscale) * eylow, std::abs(yscale) * eyhigh);
 
   updateYAxisLimits(yscale * (y - eylow));
   updateYAxisLimits(yscale * (y + eyhigh));
