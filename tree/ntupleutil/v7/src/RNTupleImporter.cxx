@@ -24,8 +24,11 @@
 #include <ROOT/RStringView.hxx>
 
 #include <TBranch.h>
+#include <TClass.h>
+#include <TDataType.h>
 #include <TLeaf.h>
 #include <TLeafC.h>
+#include <TLeafElement.h>
 #include <TLeafObject.h>
 
 #include <cassert>
@@ -135,7 +138,19 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       const auto firstLeaf = static_cast<TLeaf *>(b->GetListOfLeaves()->First());
       assert(firstLeaf);
 
-      if (firstLeaf->IsRange()) {
+      const bool isLeafList = b->GetNleaves() > 1;
+      const bool isCountLeaf = firstLeaf->IsRange();
+      const bool isClass = (firstLeaf->IsA() == TLeafElement::Class());
+      if (isLeafList && isClass)
+         return R__FAIL("unsupported: classes in leaf list, branch " + std::string(b->GetName()));
+      if (isLeafList && isCountLeaf)
+         return R__FAIL("unsupported: count leaf arrays in leaf list, branch " + std::string(b->GetName()));
+
+      Int_t firstLeafCountval;
+      const bool isCString = !isLeafList && (firstLeaf->IsA() == TLeafC::Class()) &&
+                             (!firstLeaf->GetLeafCounter(firstLeafCountval)) && (firstLeafCountval == 1);
+
+      if (isCountLeaf) {
          // This is a count leaf.  We expect that this is not part of a leave list. We also expect that the
          // leaf count comes before any array leaves that use it.
          // Count leaf branches do not end up as fields but they trigger the creation of an anonymous collection,
@@ -145,25 +160,19 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
          c.fMaxLength = firstLeaf->GetMaximum();
          c.fCountVal = std::make_unique<Int_t>(); // count leafs are integers
          fSourceTree->SetBranchStatus(b->GetName(), 1);
-         fSourceTree->SetBranchAddress(b->GetName(), c.fCountVal.get());
+         fSourceTree->SetBranchAddress(b->GetName(), static_cast<void *>(c.fCountVal.get()));
          // We use the leaf pointer as a map key.  The array leafs return that leaf pointer from GetLeafCount(),
          // so that they will be able to find the information to attach their fields to the collection model.
          fLeafCountCollections.emplace(firstLeaf, std::move(c));
          continue;
       }
 
-      const bool isLeafList = b->GetNleaves() > 1;
-      Int_t firstLeafCountval;
-      const bool isCString = !isLeafList && (firstLeaf->IsA() == TLeafC::Class()) &&
-                             (!firstLeaf->GetLeafCounter(firstLeafCountval)) && (firstLeafCountval == 1);
-
       std::size_t branchBufferSize = 0; // Size of the memory location into which TTree reads the events' branch data
       // For leaf lists, every leaf translates into a sub field of an anonymous RNTuple record
       std::vector<std::unique_ptr<Detail::RFieldBase>> recordItems;
       for (auto l : TRangeDynCast<TLeaf>(b->GetListOfLeaves())) {
          if (l->IsA() == TLeafObject::Class()) {
-            return R__FAIL(std::string("importing TObject branches not supported: ") +
-                           std::string(l->GetFullName().View()));
+            return R__FAIL("unsupported: TObject branches, branch: " + std::string(b->GetName()));
          }
 
          Int_t countval = 0;
@@ -177,6 +186,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
             fieldType = "std::array<" + fieldType + "," + std::to_string(countval) + ">";
 
          RImportField f;
+         f.fIsClass = isClass;
          std::unique_ptr<Detail::RFieldBase> field;
          if (isCString) {
             branchBufferSize = l->GetMaximum();
@@ -193,7 +203,9 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
             if (!result)
                return R__FORWARD_ERROR(result);
             field = result.Unwrap();
-            if (isLeafCountArray) {
+            if (isClass) {
+               branchBufferSize = sizeof(void *) * countval;
+            } else if (isLeafCountArray) {
                branchBufferSize = fLeafCountCollections[countleaf].fMaxLength * field->GetValueSize();
             } else {
                branchBufferSize = l->GetOffset() + field->GetValueSize();
@@ -229,7 +241,15 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       ib.fBranchName = b->GetName();
       ib.fBranchBuffer = std::make_unique<unsigned char[]>(branchBufferSize);
       fSourceTree->SetBranchStatus(b->GetName(), 1);
-      fSourceTree->SetBranchAddress(b->GetName(), reinterpret_cast<void *>(ib.fBranchBuffer.get()));
+      if (isClass) {
+         auto klass = TClass::GetClass(firstLeaf->GetTypeName());
+         if (!klass)
+            return R__FAIL("unable to load class" + std::string(firstLeaf->GetTypeName()));
+         auto ptrBuf = reinterpret_cast<void *>(ib.fBranchBuffer.get());
+         fSourceTree->SetBranchAddress(b->GetName(), ptrBuf, klass, EDataType::kOther_t, true /* isptr*/);
+      } else {
+         fSourceTree->SetBranchAddress(b->GetName(), reinterpret_cast<void *>(ib.fBranchBuffer.get()));
+      }
 
       if (!fImportFields.back().fFieldBuffer)
          fImportFields.back().fFieldBuffer = ib.fBranchBuffer.get();
@@ -256,7 +276,11 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
    for (const auto &f : fImportFields) {
       if (f.fIsInUntypedCollection)
          continue;
-      fEntry->CaptureValueUnsafe(f.fField->GetName(), f.fFieldBuffer);
+      if (f.fIsClass) {
+         fEntry->CaptureValueUnsafe(f.fField->GetName(), *reinterpret_cast<void **>(f.fFieldBuffer));
+      } else {
+         fEntry->CaptureValueUnsafe(f.fField->GetName(), f.fFieldBuffer);
+      }
    }
    for (const auto &[_, c] : fLeafCountCollections) {
       fEntry->CaptureValueUnsafe(c.fFieldName, c.fCollectionWriter->GetOffsetPtr());

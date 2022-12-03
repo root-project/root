@@ -9,6 +9,8 @@
 #include <cstdio>
 #include <string>
 
+#include "CustomStructUtil.hxx"
+
 using ROOT::Experimental::RNTupleImporter;
 using ROOT::Experimental::RNTupleReader;
 
@@ -293,4 +295,61 @@ TEST(RNTupleImporter, LeafCountArray)
    EXPECT_FLOAT_EQ(4.0, viewJetEta(1));
    EXPECT_FLOAT_EQ(5.0, viewJetPt(2));
    EXPECT_FLOAT_EQ(6.0, viewJetEta(2));
+}
+
+TEST(RNTupleImporter, STL)
+{
+   FileRaii fileGuard("test_ntuple_importer_stl.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "");
+      auto vec = new std::vector<float>{1.0, 2.0};
+      tree->Branch("vec", &vec);
+      tree->Fill();
+      tree->Write();
+      delete vec;
+   }
+
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+   importer->SetIsQuiet(true);
+   importer->SetNTupleName("ntuple");
+   importer->Import();
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(1U, reader->GetNEntries());
+   reader->LoadEntry(0);
+   auto vec = reader->GetModel()->Get<std::vector<float>>("vec");
+   EXPECT_EQ(2U, vec->size());
+   EXPECT_FLOAT_EQ(1.0, vec->at(0));
+   EXPECT_FLOAT_EQ(2.0, vec->at(1));
+}
+
+TEST(RNTupleImporter, CustomClass)
+{
+   FileRaii fileGuard("test_ntuple_importer_custom_class.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "");
+      CustomStructUtil klass;
+      klass.a = 1.0;
+      klass.v1.emplace_back(2.0);
+      klass.v1.emplace_back(2.0);
+      klass.s = "ROOT";
+      tree->Branch("klass", &klass);
+      tree->Fill();
+      tree->Write();
+   }
+
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+   importer->SetIsQuiet(true);
+   importer->SetNTupleName("ntuple");
+   importer->Import();
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(1U, reader->GetNEntries());
+   // reader->LoadEntry(0);
+   // auto klass = reader->GetModel()->Get<CustomStructUtil>("klass");
+   // EXPECT_FLOAT_EQ(1.0, klass->a);
+   // EXPECT_EQ(2U, klass->v1.size());
+   // EXPECT_FLOAT_EQ(2.0, klass->v1[0]);
+   // EXPECT_FLOAT_EQ(2.0, klass->v1[1]);
+   // EXPECT_EQ(std::string("ROOT"), klass->s);
 }

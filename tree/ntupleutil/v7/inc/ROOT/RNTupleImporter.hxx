@@ -82,7 +82,7 @@ private:
       RImportField(const RImportField &other) = delete;
       RImportField(RImportField &&other)
          : fField(other.fField), fFieldBuffer(other.fFieldBuffer), fOwnsFieldBuffer(other.fOwnsFieldBuffer),
-           fIsInUntypedCollection(other.fIsInUntypedCollection)
+           fIsInUntypedCollection(other.fIsInUntypedCollection), fIsClass(other.fIsClass)
       {
          other.fOwnsFieldBuffer = false;
       }
@@ -93,6 +93,7 @@ private:
          fFieldBuffer = other.fFieldBuffer;
          fOwnsFieldBuffer = other.fOwnsFieldBuffer;
          fIsInUntypedCollection = other.fIsInUntypedCollection;
+         fIsClass = other.fIsClass;
          other.fOwnsFieldBuffer = false;
          return *this;
       }
@@ -101,6 +102,7 @@ private:
       void *fFieldBuffer = nullptr;
       bool fOwnsFieldBuffer = false;
       bool fIsInUntypedCollection = false;
+      bool fIsClass = false;
    };
 
    struct RImportLeafCountCollection {

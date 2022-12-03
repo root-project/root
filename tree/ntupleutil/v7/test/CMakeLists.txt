@@ -6,4 +6,17 @@
 
 # @author Jakob Blomer CERN
 
-ROOT_ADD_GTEST(ntuple_importer ntuple_importer.cxx LIBRARIES ROOTDataFrame ROOTNTupleUtil)
+ROOT_STANDARD_LIBRARY_PACKAGE(CustomStructUtil
+                              NO_INSTALL_HEADERS
+                              HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/CustomStructUtil.hxx
+                              SOURCES CustomStructUtil.cxx
+                              LINKDEF CustomStructUtilLinkDef.h
+                              DEPENDENCIES RIO)
+configure_file(CustomStructUtil.hxx . COPYONLY)
+if(MSVC)
+  add_custom_command(TARGET CustomStructUtil POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libCustomStructUtil.dll
+                                     ${CMAKE_CURRENT_BINARY_DIR}/libCustomStructUtil.dll)
+endif()
+
+ROOT_ADD_GTEST(ntuple_importer ntuple_importer.cxx LIBRARIES ROOTNTupleUtil)
