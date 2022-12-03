@@ -116,8 +116,8 @@ protected:
    std::vector<std::unique_ptr<RColumn>> fColumns;
    /// Properties of the type that allow for optimizations of collections of that type
    int fTraits = 0;
-   /// A user-specified function to be optionally called after reading a value
-   ReadCallback_t fReadCallback = nullptr;
+   /// List of functions to be called after reading a value
+   std::vector<ReadCallback_t> fReadCallbacks;
 
    /// Creates the backing columns corresponsing to the field type for writing
    virtual void GenerateColumnsImpl() = 0;
@@ -141,6 +141,16 @@ protected:
    /// is not of one of the requested types.
    ROOT::Experimental::EColumnType EnsureColumnType(const std::vector<EColumnType> &requestedTypes,
                                                     unsigned int columnIndex, const RNTupleDescriptor &desc);
+
+private:
+   void InvokeReadCallbacks(RFieldValue &value)
+   {
+      if (R__likely(fReadCallbacks.empty()))
+         return;
+      for (const auto func : fReadCallbacks) {
+         func(value);
+      }
+   }
 
 public:
    /// Iterates over the sub tree of fields in depth-first search order
@@ -234,26 +244,22 @@ public:
       if (fIsSimple)
          return (void)fPrincipalColumn->Read(globalIndex, &value->fMappedElement);
 
-      if (fTraits & kTraitMappable) {
+      if (fTraits & kTraitMappable)
          fPrincipalColumn->Read(globalIndex, &value->fMappedElement);
-      } else {
+      else
          ReadGlobalImpl(globalIndex, value);
-      }
-      if (R__unlikely(fReadCallback))
-         fReadCallback(*value);
+      InvokeReadCallbacks(*value);
    }
 
    void Read(const RClusterIndex &clusterIndex, RFieldValue *value) {
       if (fIsSimple)
          return (void)fPrincipalColumn->Read(clusterIndex, &value->fMappedElement);
 
-      if (fTraits & kTraitMappable) {
+      if (fTraits & kTraitMappable)
          fPrincipalColumn->Read(clusterIndex, &value->fMappedElement);
-      } else {
+      else
          ReadInClusterImpl(clusterIndex, value);
-      }
-      if (R__unlikely(fReadCallback))
-         fReadCallback(*value);
+      InvokeReadCallbacks(*value);
    }
 
    /// Ensure that all received items are written from page buffers to the storage.
@@ -278,10 +284,9 @@ public:
 
    /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
    /// value object.
-   void SetReadCallback(ReadCallback_t func) {
-      fReadCallback = func;
-      fIsSimple = (fTraits & kTraitMappable) && !func;
-   }
+   /// Returns an index that can be used to remove the callback.
+   size_t AddReadCallback(ReadCallback_t func);
+   void RemoveReadCallback(size_t idx);
 
    DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
    void SetOnDiskId(DescriptorId_t id) { fOnDiskId = id; }
