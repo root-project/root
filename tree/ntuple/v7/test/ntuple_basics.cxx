@@ -658,16 +658,17 @@ TEST(RNTuple, ReadCallback)
 
    auto model = RNTupleModel::Create();
    auto field = std::make_unique<RField<std::int32_t>>("field");
-   field->SetReadCallback([](RFieldValue &value) {
+   field->AddReadCallback([](RFieldValue &value) {
       static std::int32_t expected = 0;
       EXPECT_EQ(*value.Get<std::int32_t>(), expected++);
       gNCallReadCallback++;
    });
+   field->AddReadCallback([](RFieldValue &) { gNCallReadCallback++; });
    model->AddField(std::move(field));
 
    auto ntuple = RNTupleReader::Open(std::move(model), "f", fileGuard.GetPath());
    EXPECT_EQ(2U, ntuple->GetNEntries());
    ntuple->LoadEntry(0);
    ntuple->LoadEntry(1);
-   EXPECT_EQ(2U, gNCallReadCallback);
+   EXPECT_EQ(4U, gNCallReadCallback);
 }

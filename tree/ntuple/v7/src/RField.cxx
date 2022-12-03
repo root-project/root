@@ -404,6 +404,18 @@ ROOT::Experimental::EColumnType ROOT::Experimental::Detail::RFieldBase::EnsureCo
    return columnDesc.GetModel().GetType();
 }
 
+size_t ROOT::Experimental::Detail::RFieldBase::AddReadCallback(ReadCallback_t func)
+{
+   fReadCallbacks.push_back(func);
+   fIsSimple = false;
+   return fReadCallbacks.size() - 1;
+}
+
+void ROOT::Experimental::Detail::RFieldBase::RemoveReadCallback(size_t idx)
+{
+   fReadCallbacks.erase(fReadCallbacks.begin() + idx);
+   fIsSimple = (fTraits & kTraitMappable) && fReadCallbacks.empty();
+}
 
 void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink)
 {
