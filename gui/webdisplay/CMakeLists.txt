@@ -22,6 +22,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTWebDisplay
     DEPENDENCIES
        Core
        RHTTP
+       Net
        MathCore
 )
 
