@@ -124,7 +124,6 @@ void ROOT::Experimental::RNTupleImporter::ResetSchema()
    fImportFields.clear();
    fLeafCountCollections.clear();
    fImportTransformations.clear();
-   fSourceTree->SetBranchStatus("*", 0);
    fModel = RNTupleModel::CreateBare();
    fEntry = nullptr;
 }
@@ -159,7 +158,6 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
          c.fCollectionModel = RNTupleModel::CreateBare();
          c.fMaxLength = firstLeaf->GetMaximum();
          c.fCountVal = std::make_unique<Int_t>(); // count leafs are integers
-         fSourceTree->SetBranchStatus(b->GetName(), 1);
          fSourceTree->SetBranchAddress(b->GetName(), static_cast<void *>(c.fCountVal.get()));
          // We use the leaf pointer as a map key.  The array leafs return that leaf pointer from GetLeafCount(),
          // so that they will be able to find the information to attach their fields to the collection model.
@@ -240,19 +238,20 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       RImportBranch ib;
       ib.fBranchName = b->GetName();
       ib.fBranchBuffer = std::make_unique<unsigned char[]>(branchBufferSize);
-      fSourceTree->SetBranchStatus(b->GetName(), 1);
       if (isClass) {
          auto klass = TClass::GetClass(firstLeaf->GetTypeName());
          if (!klass)
             return R__FAIL("unable to load class" + std::string(firstLeaf->GetTypeName()));
-         auto ptrBuf = reinterpret_cast<void *>(ib.fBranchBuffer.get());
+         auto ptrBuf = reinterpret_cast<void **>(ib.fBranchBuffer.get());
          fSourceTree->SetBranchAddress(b->GetName(), ptrBuf, klass, EDataType::kOther_t, true /* isptr*/);
       } else {
          fSourceTree->SetBranchAddress(b->GetName(), reinterpret_cast<void *>(ib.fBranchBuffer.get()));
       }
 
-      if (!fImportFields.back().fFieldBuffer)
-         fImportFields.back().fFieldBuffer = ib.fBranchBuffer.get();
+      if (!fImportFields.back().fFieldBuffer) {
+         fImportFields.back().fFieldBuffer =
+            isClass ? *reinterpret_cast<void **>(ib.fBranchBuffer.get()) : ib.fBranchBuffer.get();
+      }
 
       fImportBranches.emplace_back(std::move(ib));
    }
@@ -276,11 +275,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
    for (const auto &f : fImportFields) {
       if (f.fIsInUntypedCollection)
          continue;
-      if (f.fIsClass) {
-         fEntry->CaptureValueUnsafe(f.fField->GetName(), *reinterpret_cast<void **>(f.fFieldBuffer));
-      } else {
-         fEntry->CaptureValueUnsafe(f.fField->GetName(), f.fFieldBuffer);
-      }
+      fEntry->CaptureValueUnsafe(f.fField->GetName(), f.fFieldBuffer);
    }
    for (const auto &[_, c] : fLeafCountCollections) {
       fEntry->CaptureValueUnsafe(c.fFieldName, c.fCollectionWriter->GetOffsetPtr());

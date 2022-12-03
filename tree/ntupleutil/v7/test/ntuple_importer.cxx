@@ -317,6 +317,7 @@ TEST(RNTupleImporter, STL)
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(1U, reader->GetNEntries());
    reader->LoadEntry(0);
+
    auto vec = reader->GetModel()->Get<std::vector<float>>("vec");
    EXPECT_EQ(2U, vec->size());
    EXPECT_FLOAT_EQ(1.0, vec->at(0));
@@ -329,12 +330,12 @@ TEST(RNTupleImporter, CustomClass)
    {
       std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
       auto tree = std::make_unique<TTree>("tree", "");
-      CustomStructUtil klass;
-      klass.a = 1.0;
-      klass.v1.emplace_back(2.0);
-      klass.v1.emplace_back(2.0);
-      klass.s = "ROOT";
+      CustomStructUtil *klass = nullptr;
       tree->Branch("klass", &klass);
+      klass->a = 1.0;
+      klass->v1.emplace_back(2.0);
+      klass->v1.emplace_back(3.0);
+      klass->s = "ROOT";
       tree->Fill();
       tree->Write();
    }
@@ -343,13 +344,14 @@ TEST(RNTupleImporter, CustomClass)
    importer->SetIsQuiet(true);
    importer->SetNTupleName("ntuple");
    importer->Import();
+
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(1U, reader->GetNEntries());
-   // reader->LoadEntry(0);
-   // auto klass = reader->GetModel()->Get<CustomStructUtil>("klass");
-   // EXPECT_FLOAT_EQ(1.0, klass->a);
-   // EXPECT_EQ(2U, klass->v1.size());
-   // EXPECT_FLOAT_EQ(2.0, klass->v1[0]);
-   // EXPECT_FLOAT_EQ(2.0, klass->v1[1]);
-   // EXPECT_EQ(std::string("ROOT"), klass->s);
+   reader->LoadEntry(0);
+   auto klass = reader->GetModel()->Get<CustomStructUtil>("klass");
+   EXPECT_FLOAT_EQ(1.0, klass->a);
+   EXPECT_EQ(2U, klass->v1.size());
+   EXPECT_FLOAT_EQ(2.0, klass->v1[0]);
+   EXPECT_FLOAT_EQ(3.0, klass->v1[1]);
+   EXPECT_EQ(std::string("ROOT"), klass->s);
 }
