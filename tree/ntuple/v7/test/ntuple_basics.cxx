@@ -649,26 +649,31 @@ TEST(RNTuple, ReadCallback)
    FileRaii fileGuard("test_ntuple_readcb.ntuple");
    {
       auto model = RNTupleModel::Create();
-      auto field = model->MakeField<std::int32_t>("field", 0);
+      auto fieldI32 = model->MakeField<std::int32_t>("i32", 0);
+      auto fieldKlass = model->MakeField<CustomStruct>("klass");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       ntuple->Fill();
-      *field = 1;
+      *fieldI32 = 1;
+      fieldKlass->s = "abc";
       ntuple->Fill();
    }
 
    auto model = RNTupleModel::Create();
-   auto field = std::make_unique<RField<std::int32_t>>("field");
-   field->AddReadCallback([](RFieldValue &value) {
+   auto fieldI32 = std::make_unique<RField<std::int32_t>>("i32");
+   auto fieldKlass = std::make_unique<RField<CustomStruct>>("klass");
+   fieldI32->AddReadCallback([](RFieldValue &value) {
       static std::int32_t expected = 0;
       EXPECT_EQ(*value.Get<std::int32_t>(), expected++);
       gNCallReadCallback++;
    });
-   field->AddReadCallback([](RFieldValue &) { gNCallReadCallback++; });
-   model->AddField(std::move(field));
+   fieldI32->AddReadCallback([](RFieldValue &) { gNCallReadCallback++; });
+   fieldKlass->AddReadCallback([](RFieldValue &) { gNCallReadCallback++; });
+   model->AddField(std::move(fieldI32));
+   model->AddField(std::move(fieldKlass));
 
    auto ntuple = RNTupleReader::Open(std::move(model), "f", fileGuard.GetPath());
    EXPECT_EQ(2U, ntuple->GetNEntries());
    ntuple->LoadEntry(0);
    ntuple->LoadEntry(1);
-   EXPECT_EQ(4U, gNCallReadCallback);
+   EXPECT_EQ(6U, gNCallReadCallback);
 }
