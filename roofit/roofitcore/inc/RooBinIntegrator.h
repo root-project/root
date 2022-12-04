@@ -31,8 +31,8 @@ public:
   // Constructors, assignment etc
   RooBinIntegrator() ;
 
-  RooBinIntegrator(const RooAbsFunc& function) ; 
-  RooBinIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) ; 
+  RooBinIntegrator(const RooAbsFunc& function, int numBins=100) ;
+  RooBinIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) ;
 
   virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const ;
   virtual ~RooBinIntegrator();
