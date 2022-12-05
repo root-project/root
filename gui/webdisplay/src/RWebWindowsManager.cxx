@@ -670,7 +670,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    if (fAddr.compare(0,9,"socket://") == 0)
       return 0;
 
-#if not(defined(R__MACOSX)) and not(defined(R__WIN32))
+#if !defined(R__MACOSX) && !defined(R__WIN32)
    if (args.IsInteractiveBrowser()) {
       const char *varname = "WebGui.CheckRemoteDisplay";
       if (RWebWindowWSHandler::GetBoolEnv(varname, 1) == 1) {
