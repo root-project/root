@@ -92,14 +92,14 @@ without breaking the deserialization of older readers.
 
 A locator is a generalized way to specify a certain byte range on the storage medium.
 For disk-based storage, the locator is just byte offset and byte size.
-For object stores, the locator can specify a certain object ID.
-The locator as the following format
+For other storage systems, the locator contains enough information to retrieve the referenced block, e.g. in object stores, the locator can specify a certain object ID.
+The locator has the following format
 
 ```
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                             Size              |     Type    |T|
+|                             Size                            |T|
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                                                               |
 +                             Offset                            +
@@ -107,13 +107,29 @@ The locator as the following format
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
-_Size_: If type is zero, the number of bytes to read, i.e. the compressed size of the referenced block.
-Otherwise the size of the locator itself.
+_Size_: If `T` is zero, the number of bytes to read, i.e. the compressed size of the referenced block.
+Otherwise the 16 least-significant bits, i.e bits 0:15, specify the size of the locator itself (see below).
 
-_T(ype)_: Zero for an on-disk or in-file locator, 1 otherwise.
+_T(ype)_: Zero for a simple on-disk or in-file locator, 1 otherwise.
 Can be interpreted as the sign bit of the size, i.e. negative sizes indicate non-disk locators.
 In this case, the locator should be interpreted like a frame, i.e. size indicates the _size of the locator itself_.
-Only for non-disk locators, the last 8 bits of the size should be interpreted as a locator type.
+
+_Offset_:
+For on-disk / in-file locators, the 64bit byte offset of the referenced byte range counted from the start of the file.
+
+For non-disk locators, i.e. `T` == 1, the format is more accurately described as
+
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|              Size             |   Reserved    |     Type    |T|
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                        LOCATOR PAYLOAD                        |
+|                              ...                              |
+```
+
+In this case, the last 8 bits of the size should be interpreted as a locator type.
 To determine the locator type, the absolute value of the 8bit integer should be taken.
 The type can take one of the following values
 
@@ -122,10 +138,10 @@ The type can take one of the following values
 | 0x01 | 64bit object ID |
 | 0x02 | URI string      |
 
-_Offset_:
-For on-disk / in-file locators, the 64bit byte offset of the referenced byte range counted from the start of the file.
 For object ID locators, specifies the 64bit object ID.
 For URI locators, the locator contains the ASCII characters of the URI following the size and the type.
+
+_Reserved_ is an 8bit field that can be used by concrete storage backends to store additional information about the locator.
 
 An envelope link consists of a 32bit unsigned integer that specifies the uncompressed size of the envelope
 followed by a locator.

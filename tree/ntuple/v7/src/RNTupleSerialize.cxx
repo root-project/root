@@ -254,7 +254,7 @@ RResult<std::uint32_t> DeserializeColumnV1(
 std::uint32_t SerializeLocatorPayloadURI(const ROOT::Experimental::RNTupleLocator &locator, unsigned char *buffer)
 {
    const auto &uri = locator.Get<std::string>();
-   if (uri.length() >= (1 << 24))
+   if (uri.length() >= (1 << 16))
       throw ROOT::Experimental::RException(R__FAIL("locator too large"));
    if (buffer)
       memcpy(buffer, uri.data(), uri.length());
@@ -769,6 +769,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(
    default: throw RException(R__FAIL("locator has unknown type"));
    }
    std::int32_t head = size;
+   head |= locator.fReserved << 16;
    head |= static_cast<int>(locator.fType) << 24;
    head = -head;
    size += RNTupleSerializer::SerializeInt32(head, buffer);
@@ -789,10 +790,11 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    if (head < 0) {
       head = -head;
       const int type = head >> 24;
-      const std::uint32_t locatorSize = static_cast<std::uint32_t>(head) & 0x00FFFFFF;
+      const std::uint32_t locatorSize = static_cast<std::uint32_t>(head) & 0x0000FFFF;
       if (bufSize < locatorSize)
          return R__FAIL("too short locator");
       locator.fType = static_cast<RNTupleLocator::ELocatorType>(type);
+      locator.fReserved = static_cast<std::uint32_t>(head >> 16) & 0xFF;
       switch (type) {
       case RNTupleLocator::kTypeURI: DeserializeLocatorPayloadURI(bytes, locatorSize, locator); break;
       default: return R__FAIL("unsupported locator type: " + std::to_string(type));
