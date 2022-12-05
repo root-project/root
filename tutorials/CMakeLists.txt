@@ -440,7 +440,7 @@ if(mpi)
 endif()
 
 #---Special return code------------------------------------------------
-set(returncode_1 fit/fit2a.C fit/graph2dfit.C
+set(returncode_1 fit/fit2a.C
                  graphics/arrow.C
                  graphics/crown.C graphics/diamond.C
                  graphics/earth.C graphics/ellipse.C
@@ -452,7 +452,6 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  graphs/exclusiongraph.C
                  graphs/graphstruct.C
                  hist/ContourList.C
-                 hist/hstack.C
                  hist/hbars.C
                  hist/th2polyBoxes.C
                  hist/statsEditing.C
