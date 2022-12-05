@@ -54,7 +54,7 @@ data = ROOT.RooDataSet("exampleData", "exampleData", {obs})
 data.add(obs)
 
 # not necessary
-modelWithConstraints.fitTo(data, Constrain=constrainedParams)
+modelWithConstraints.fitTo(data, Constrain=constrainedParams, PrintLevel=-1)
 
 # Now let's make some confidence intervals for s, our parameter of interest
 modelConfig = ROOT.RooStats.ModelConfig(wspace)
@@ -72,7 +72,7 @@ wspace.writeToFile("rs101_ws.root")
 # First, let's use a Calculator based on the Profile Likelihood Ratio
 plc = ROOT.RooStats.ProfileLikelihoodCalculator(data, modelConfig)
 plc.SetTestSize(0.05)
-lrinterval = plc.GetInterval()  # that was easy.
+lrinterval = plc.GetInterval()
 
 # Let's make a plot
 dataCanvas = ROOT.TCanvas("dataCanvas")
@@ -90,9 +90,9 @@ fc.FluctuateNumDataEntries(False)  # number counting analysis: dataset always ha
 fc.SetNBins(100)  # number of points to test per parameter
 fc.SetTestSize(0.05)
 # fc.SaveBeltToFile(True) # optional
-fcint = fc.GetInterval()  # that was easy
+fcint = fc.GetInterval()
 
-fit = modelWithConstraints.fitTo(data, Save=True)
+fit = modelWithConstraints.fitTo(data, Save=True, PrintLevel=-1)
 
 # Third, use a Calculator based on Markov Chain monte carlo
 # Before configuring the calculator, let's make a ProposalFunction
@@ -102,7 +102,7 @@ ph.SetVariables(fit.floatParsFinal())
 ph.SetCovMatrix(fit.covarianceMatrix())
 ph.SetUpdateProposalParameters(True)
 ph.SetCacheSize(100)
-pdfProp = ph.GetProposalFunction()  # that was easy
+pdfProp = ph.GetProposalFunction()
 
 mc = ROOT.RooStats.MCMCCalculator(data, modelConfig)
 mc.SetNumIters(20000)  # steps to propose in the chain
@@ -110,7 +110,7 @@ mc.SetTestSize(0.05)  # 95% CL
 mc.SetNumBurnInSteps(40)  # ignore first N steps in chain as "burn in"
 mc.SetProposalFunction(pdfProp)
 mc.SetLeftSideTailFraction(0.5)  # find a "central" interval
-mcInt = mc.GetInterval()  # that was easy
+mcInt = mc.GetInterval()
 
 # Get Lower and Upper limits from Profile Calculator
 print("Profile lower limit on s = ", lrinterval.LowerLimit(s))

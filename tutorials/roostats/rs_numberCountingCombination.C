@@ -132,7 +132,7 @@ void rs_numberCountingCombination_expected()
    // We need to specify what are our parameters of interest
    RooArgSet *paramsOfInterest = nullParams; // they are the same as before in this case
    plc.SetParameters(*paramsOfInterest);
-   LikelihoodInterval *lrint = (LikelihoodInterval *)plc.GetInterval(); // that was easy.
+   LikelihoodInterval *lrint = (LikelihoodInterval *)plc.GetInterval();
    lrint->SetConfidenceLevel(0.95);
 
    // Step 9, make a plot of the likelihood ratio and the interval obtained
@@ -294,7 +294,7 @@ void rs_numberCountingCombination_observed()
    // We need to specify what are our parameters of interest
    RooArgSet *paramsOfInterest = nullParams; // they are the same as before in this case
    plc.SetParameters(*paramsOfInterest);
-   LikelihoodInterval *lrint = (LikelihoodInterval *)plc.GetInterval(); // that was easy.
+   LikelihoodInterval *lrint = (LikelihoodInterval *)plc.GetInterval();
    lrint->SetConfidenceLevel(0.95);
 
    // Step 9c. Get upper and lower limits
@@ -383,7 +383,7 @@ void rs_numberCountingCombination_observedWithTau()
    // We need to specify what are our parameters of interest
    RooArgSet *paramsOfInterest = nullParams; // they are the same as before in this case
    plc.SetParameters(*paramsOfInterest);
-   LikelihoodInterval *lrint = (LikelihoodInterval *)plc.GetInterval(); // that was easy.
+   LikelihoodInterval *lrint = (LikelihoodInterval *)plc.GetInterval();
    lrint->SetConfidenceLevel(0.95);
 
    // Step 9c. Get upper and lower limits
