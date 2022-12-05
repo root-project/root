@@ -10,7 +10,7 @@ void writedata(TFile &file)
    auto h = new TH1F("h", "", 100, 0, 10);
    h->FillRandom("gaus");
 
-   auto c = new TCanvas("c1");
+   auto c = new TCanvas("canvHistDrawUpdate");
    c->cd();
    h->Draw();
    c->Draw();
@@ -18,24 +18,16 @@ void writedata(TFile &file)
    file.WriteTObject(c);
    delete c;
 
-   c = new TCanvas("c2");
+   c = new TCanvas("canvHistDrawOnly");
    c->cd();
    h->Draw();
    file.WriteTObject(c);
    delete c;
 
-   c = new TCanvas("c3");
+   c = new TCanvas("emptyCanvas");
    c->cd();
    file.WriteTObject(c);
    delete c;
-
-#if 0
-   c = new TCanvas("c4");
-   c->cd();
-   h->Draw();
-   c->Draw();
-   file.WriteTObject(c);
-#endif
 
    delete h;
 }
@@ -88,6 +80,10 @@ int readdata(TFile &file, const char *name, bool draw)
       c->Update();
    }
    gROOT->GetListOfCanvases()->Remove(c.get());
+   if (gROOT->GetListOfCanvases()->FindObject(c.get())) {
+      Error("readdata", "Failed to remove the canvas '%s' from the list of canvases", name);
+      return 5;
+   }
 
    auto f = (TFrame*)c->GetListOfPrimitives()->FindObject("TFrame");
    if (!f) {
@@ -114,9 +110,8 @@ int restoreCanvas()
 {
    TMemFile f("withcanvas.root", "NEW");
    writedata(f);
-   //TFile f("hsimplecanvas.root");
-   //return readdata(f, "c1", true);
-   return readdata(f, "c1", true) + readdata(f, "c1", false) +
-      readdata(f, "c2", true) + readdata(f, "c2", false) +
-      readdata(f, "c3", true) + readdata(f, "c3", false);
+
+   return readdata(f, "canvHistDrawUpdate", true) + readdata(f, "canvHistDrawUpdate", false) +
+      readdata(f, "canvHistDrawOnly", true) + readdata(f, "canvHistDrawOnly", false) +
+      readdata(f, "emptyCanvas", true) + readdata(f, "emptyCanvas", false);
 }
