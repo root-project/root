@@ -764,9 +764,11 @@ void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
 
 void TWebCanvas::Show()
 {
-   ROOT::Experimental::RWebDisplayArgs args;
-   args.SetWidgetKind("TCanvas");
-   ShowWebWindow(args);
+   if (!Canvas()->IsBatch()) {
+      ROOT::Experimental::RWebDisplayArgs args;
+      args.SetWidgetKind("TCanvas");
+      ShowWebWindow(args);
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1536,6 +1538,9 @@ UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 
 Bool_t TWebCanvas::PerformUpdate()
 {
+   if (Canvas()->IsBatch())
+      return kFALSE;
+
    CheckCanvasModified();
 
    CheckDataToSend();
@@ -1551,6 +1556,9 @@ Bool_t TWebCanvas::PerformUpdate()
 
 void TWebCanvas::ForceUpdate()
 {
+   if (Canvas()->IsBatch())
+      return;
+
    CheckCanvasModified(true);
 
    CheckDataToSend();
