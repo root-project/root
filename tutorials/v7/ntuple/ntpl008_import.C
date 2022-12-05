@@ -29,7 +29,7 @@ using RNTuple = ROOT::Experimental::RNTuple;
 using RNTupleImporter = ROOT::Experimental::RNTupleImporter;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 
-// Where to store the ntuple of this example
+// Input and output
 constexpr char const *kTreeFileName = "http://root.cern.ch/files/HiggsTauTauReduced/GluGluToHToTauTau.root";
 constexpr char const *kTreeName = "Events";
 constexpr char const *kNTupleFileName = "ntpl008_import.root";

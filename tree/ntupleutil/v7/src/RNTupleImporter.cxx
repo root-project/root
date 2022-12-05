@@ -47,6 +47,7 @@ public:
    virtual ~RDefaultProgressCallback() {}
    void Call(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) final
    {
+      // Report if more than 50MB (compressed) where written since the last status update
       if (nbytesWritten < (fNbytesLast + 50 * 1000 * 1000))
          return;
       std::cout << "Wrote " << nbytesWritten / 1000 / 1000 << "MB, " << neventsWritten << " entries" << std::endl;
@@ -132,32 +133,37 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
 {
    ResetSchema();
 
+   // Browse through all branches and their leaves, create corresponding fields and prepare the memory buffers for
+   // reading and writing. Usually, reading and writing share the same memory buffer, i.e. the object is read from TTree
+   // and written as-is to the RNTuple. There are exceptions, e.g. for leaf count arrays and C strings.
    for (auto b : TRangeDynCast<TBranch>(*fSourceTree->GetListOfBranches())) {
       assert(b);
       const auto firstLeaf = static_cast<TLeaf *>(b->GetListOfLeaves()->First());
       assert(firstLeaf);
 
       const bool isLeafList = b->GetNleaves() > 1;
-      const bool isCountLeaf = firstLeaf->IsRange();
-      const bool isClass = (firstLeaf->IsA() == TLeafElement::Class());
+      const bool isCountLeaf = firstLeaf->IsRange(); // A leaf storing the number of elements of a leaf count array
+      const bool isClass = (firstLeaf->IsA() == TLeafElement::Class()); // STL or user-defined class
       if (isLeafList && isClass)
          return R__FAIL("unsupported: classes in leaf list, branch " + std::string(b->GetName()));
       if (isLeafList && isCountLeaf)
          return R__FAIL("unsupported: count leaf arrays in leaf list, branch " + std::string(b->GetName()));
 
+      // Only plain leafs with type identifies 'C' are C strings. Otherwise, they are char arrays.
       Int_t firstLeafCountval;
       const bool isCString = !isLeafList && (firstLeaf->IsA() == TLeafC::Class()) &&
                              (!firstLeaf->GetLeafCounter(firstLeafCountval)) && (firstLeafCountval == 1);
 
       if (isCountLeaf) {
-         // This is a count leaf.  We expect that this is not part of a leave list. We also expect that the
+         // This is a count leaf.  We expect that this is not part of a leaf list. We also expect that the
          // leaf count comes before any array leaves that use it.
-         // Count leaf branches do not end up as fields but they trigger the creation of an anonymous collection,
-         // together the collection mode.
+         // Count leaf branches do not end up as (physical) fields but they trigger the creation of an untyped
+         // collection, together the collection mode.
          RImportLeafCountCollection c;
          c.fCollectionModel = RNTupleModel::CreateBare();
          c.fMaxLength = firstLeaf->GetMaximum();
          c.fCountVal = std::make_unique<Int_t>(); // count leafs are integers
+         // Casting to void * makes it work for both Int_t and UInt_t
          fSourceTree->SetBranchAddress(b->GetName(), static_cast<void *>(c.fCountVal.get()));
          // We use the leaf pointer as a map key.  The array leafs return that leaf pointer from GetLeafCount(),
          // so that they will be able to find the information to attach their fields to the collection model.
@@ -166,7 +172,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       }
 
       std::size_t branchBufferSize = 0; // Size of the memory location into which TTree reads the events' branch data
-      // For leaf lists, every leaf translates into a sub field of an anonymous RNTuple record
+      // For leaf lists, every leaf translates into a sub field of an untyped RNTuple record
       std::vector<std::unique_ptr<Detail::RFieldBase>> recordItems;
       for (auto l : TRangeDynCast<TLeaf>(b->GetListOfLeaves())) {
          if (l->IsA() == TLeafObject::Class()) {
@@ -202,6 +208,8 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
                return R__FORWARD_ERROR(result);
             field = result.Unwrap();
             if (isClass) {
+               // For classes, the branch buffer contains a pointer to object, which gets instantiated by TTree upon
+               // calling SetBranchAddress()
                branchBufferSize = sizeof(void *) * countval;
             } else if (isLeafCountArray) {
                branchBufferSize = fLeafCountCollections[countleaf].fMaxLength * field->GetValueSize();
@@ -248,6 +256,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
          fSourceTree->SetBranchAddress(b->GetName(), reinterpret_cast<void *>(ib.fBranchBuffer.get()));
       }
 
+      // If the TTree branch type and the RNTuple field type match, use the branch read buffer as RNTuple write buffer
       if (!fImportFields.back().fFieldBuffer) {
          fImportFields.back().fFieldBuffer =
             isClass ? *reinterpret_cast<void **>(ib.fBranchBuffer.get()) : ib.fBranchBuffer.get();
