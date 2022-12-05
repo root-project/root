@@ -532,7 +532,27 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
          return;
       }
 
-      if (fDict != branchActualType) {
+      auto matchingDataType = [](TDictionary *left, TDictionary *right) -> bool {
+         if (left == right)
+            return true;
+         if (!left || !right)
+            return false;
+         auto left_datatype = dynamic_cast<TDataType *>(left);
+         auto right_datatype = dynamic_cast<TDataType *>(right);
+         if (!left_datatype || !right_datatype)
+            return false;
+         auto l = left_datatype->GetType();
+         auto r = right_datatype->GetType();
+         if ( l > 0 && l == r)
+            return true;
+         else
+            return (  (l == kDouble32_t && r == kDouble_t)
+                   || (l == kDouble_t && r == kDouble32_t)
+                   || (l == kFloat16_t && r == kFloat_t)
+                   || (l == kFloat_t && r == kFloat16_t));
+      };
+
+      if (! matchingDataType(fDict, branchActualType)) {
          Error("TTreeReaderArrayBase::CreateContentProxy()", "The branch %s contains data of type %s. It cannot be accessed by a TTreeReaderArray<%s>",
                fBranchName.Data(), branchActualType->GetName(), fDict->GetName());
          if (fSetupStatus == kSetupInternalError || fSetupStatus >= 0)
