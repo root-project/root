@@ -15,7 +15,7 @@ libname=$(root -l -b -q "libs.C+g(\"$1\")" | grep 'mainlib=')
 
 # The class was not found. Remove the collaboration graph
 if [ -z "${libname}" ]; then
-   echo "WARNING modifyClassWebpage.sh: libs.C could not get library of class $1 from ROOT interpreter. Removing its collaboration diagram."
+   echo "modifyClassWebpage.sh: libs.C could not get library of class $1 from ROOT interpreter. Removing its collaboration diagram."
    sed -i'.back' -e 's/^Collaboration diagram for.*$/<\/div>/g'  $WORKFILE
    sed -i'.back' '/__coll__graph.svg/I,+2 d'  $WORKFILE
    sed -i'.back' -e 's/<hr\/>The documentation for/<\/div><hr\/>The documentation for/g'  $WORKFILE

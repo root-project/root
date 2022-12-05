@@ -106,14 +106,13 @@ TF1 *langaufit(TH1F *his, double *fitrange, double *startvalues, double *parlimi
    //   NDF             returns ndf
 
    int i;
-   char FunName[100];
 
-   sprintf(FunName,"Fitfcn_%s",his->GetName());
+   TString FunName = Form("Fitfcn_%s",his->GetName());
 
-   TF1 *ffitold = (TF1*)gROOT->GetListOfFunctions()->FindObject(FunName);
+   TF1 *ffitold = (TF1*)gROOT->GetListOfFunctions()->FindObject(FunName.Data());
    if (ffitold) delete ffitold;
 
-   TF1 *ffit = new TF1(FunName,langaufun,fitrange[0],fitrange[1],4);
+   TF1 *ffit = new TF1(FunName.Data(),langaufun,fitrange[0],fitrange[1],4);
    ffit->SetParameters(startvalues);
    ffit->SetParNames("Width","MP","Area","GSigma");
 
@@ -121,7 +120,7 @@ TF1 *langaufit(TH1F *his, double *fitrange, double *startvalues, double *parlimi
       ffit->SetParLimits(i, parlimitslo[i], parlimitshi[i]);
    }
 
-   his->Fit(FunName,"RB0");   // fit within specified range, use ParLimits, do not plot
+   his->Fit(FunName.Data(),"RB0");   // fit within specified range, use ParLimits, do not plot
 
    ffit->GetParameters(fitparams);    // obtain fit parameters
    for (i=0; i<4; i++) {

@@ -137,7 +137,6 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot = false, bool debu
      hM2D->Add(hM2N);
 
      // construct the "efficiency" histogram
-     hM2N->Sumw2();
      hM2E->Divide(hM2N, hM2D, 1, 1, "b");
 
      // Fit twice, using the same fit function.
@@ -220,7 +219,7 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot = false, bool debu
           if (plot) {
              fM2Fit2->SetLineColor(kRed);
              fM2Fit2->DrawCopy("SAME");
-          
+
              bool confint = (status == 0);
              if (confint) {
                 // compute confidence interval on fitted function

@@ -52,16 +52,14 @@ void tornado() {
       pm3d->Draw();
    }
 
-   char timeStr[60];
    gBenchmark->Show("tornado");
 
    Float_t ct = gBenchmark->GetCpuTime("tornado");
-   sprintf( timeStr, "Execution time: %g sec.", ct);
 
    TPaveText *text = new TPaveText( 0.1, 0.81, 0.9, 0.97 );
    text->SetFillColor( 42 );
    text->AddText("ROOT example: tornado.C");
-   text->AddText(timeStr);
+   text->AddText(Form("Execution time: %g sec.", ct));
    text->Draw();
    sky->Update();
 }

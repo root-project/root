@@ -32,7 +32,7 @@ void graph2dfit()
 
    TRandom r;
    double fl = 6;
-   auto f2 = new TF2("f2","1000*(([0]*sin(x)/x)*([1]*sin(y)/y))+200",
+   auto f2 = new TF2("f2","abs(1000*(([0]*sin(x)/x)*([1]*sin(y)/y))+200)",
       -fl,fl,-fl,fl);
    f2->SetParameters(1,1);
    auto dt = new TGraph2D();

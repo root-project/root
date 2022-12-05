@@ -93,6 +93,7 @@ void pstable()
    c3->Update();
    c3->Print("pstable3.ps");
 }
+
 void table(Float_t x1, Float_t x2, Float_t yrange, TText &t,
    const char **symbol, Bool_t octal)
 {
@@ -131,23 +132,23 @@ void table(Float_t x1, Float_t x2, Float_t yrange, TText &t,
    tit.DrawText(xc2,y2-0.6,"Greek");
    tit.DrawText(xc3,y2-0.6,"Special");
    tit.DrawText(xc4,y2-0.6,"Zapf");
-   char text[12];
+   TString text;
    for (i=0;i<n;i++) {
       if (octal) {
          unsigned char value = *symbol[i];
-         sprintf(text,"@\\ %3o",value);
+         text = Form("@\\ %3o",value);
       } else {
-         strcpy(text,symbol[i]);
+         text = Form("%s",symbol[i]);
       }
-      t.DrawText(xc0,y,text);
-      sprintf(text,"%s",symbol[i]);
-      t.DrawText(xc1,y,text);
-      sprintf(text,"`%s",symbol[i]);
-      t.DrawText(xc2,y,text);
-      sprintf(text,"'%s",symbol[i]);
-      t.DrawText(xc3,y,text);
-      sprintf(text,"~%s",symbol[i]);
-      t.DrawText(xc4,y,text);
+      t.DrawText(xc0,y,text.Data());
+      text = Form("%s",symbol[i]);
+      t.DrawText(xc1,y,text.Data());
+      text = Form("`%s",symbol[i]);
+      t.DrawText(xc2,y,text.Data());
+      text = Form("'%s",symbol[i]);
+      t.DrawText(xc3,y,text.Data());
+      text = Form("~%s",symbol[i]);
+      t.DrawText(xc4,y,text.Data());
       y -= dy;
    }
 }
