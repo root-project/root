@@ -22,7 +22,7 @@ void gtime(Int_t nsteps = 500, Int_t np=100) {
    Double_t rr[1000], phi[1000], dr[1000], size[1000];
    TRandom3 r;
    Double_t xmin = -10, xmax = 10, ymin = -10, ymax = 10;
-   TGraphTime *g = new TGraphTime(nsteps,xmin,ymin,xmax,ymax);
+   auto g = new TGraphTime(nsteps,xmin,ymin,xmax,ymax);
    g->SetTitle("TGraphTime demo;X domain;Y domain");
    Int_t i,s;
    for (i=0;i<np;i++) { //calculate some object parameters
@@ -42,7 +42,7 @@ void gtime(Int_t nsteps = 500, Int_t np=100) {
          Double_t newphi = phi[i] + 0.01*s;
          Double_t xx = newr*TMath::Cos(newphi);
          Double_t yy = newr*TMath::Sin(newphi);
-         TMarker *m = new TMarker(xx,yy,20);
+         auto m = new TMarker(xx,yy,20);
          m->SetMarkerColor(color[i]);
          m->SetMarkerSize(newsize);
          g->Add(m,s);

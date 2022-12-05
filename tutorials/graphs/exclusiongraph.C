@@ -8,9 +8,9 @@
 ///
 /// \author Olivier Couet
 
-TCanvas *exclusiongraph() {
-   TCanvas *c1 = new TCanvas("c1","Exclusion graphs examples",200,10,600,400);
-   c1->SetGrid();
+void exclusiongraph() {
+   auto c = new TCanvas("c","Exclusion graphs examples",200,10,600,400);
+   c->SetGrid();
 
    TMultiGraph *mg = new TMultiGraph();
    mg->SetTitle("Exclusion graphs");
@@ -26,18 +26,18 @@ TCanvas *exclusiongraph() {
      yvalues3[i] = 10*sin(xvalues1[i])-2;
    }
 
-   TGraph *gr1 = new TGraph(n,xvalues1,yvalues1);
+   auto gr1 = new TGraph(n,xvalues1,yvalues1);
    gr1->SetLineColor(2);
    gr1->SetLineWidth(1504);
    gr1->SetFillStyle(3005);
 
-   TGraph *gr2 = new TGraph(n,xvalues2,yvalues2);
+   auto gr2 = new TGraph(n,xvalues2,yvalues2);
    gr2->SetLineColor(4);
    gr2->SetLineWidth(-2002);
    gr2->SetFillStyle(3004);
    gr2->SetFillColor(9);
 
-   TGraph *gr3 = new TGraph(n,xvalues3,yvalues3);
+   auto gr3 = new TGraph(n,xvalues3,yvalues3);
    gr3->SetLineColor(5);
    gr3->SetLineWidth(-802);
    gr3->SetFillStyle(3002);
@@ -47,6 +47,4 @@ TCanvas *exclusiongraph() {
    mg->Add(gr2);
    mg->Add(gr3);
    mg->Draw("AC");
-
-   return c1;
 }

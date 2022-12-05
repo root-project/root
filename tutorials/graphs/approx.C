@@ -40,8 +40,7 @@ void approx()
 
 // X values, for which y values should be interpolated
    Int_t nout = 14;
-   Double_t xout[] =
-      {1.2,1.7,2.5,3.2,4.4,5.2,5.7,6.5,7.6,8.3,9.7,10.4,11.3,13};
+   Double_t xout[] = {1.2,1.7,2.5,3.2,4.4,5.2,5.7,6.5,7.6,8.3,9.7,10.4,11.3,13};
 
 // Create Canvas
    vC1 = new TCanvas("vC1","square",200,10,700,700);
@@ -50,7 +49,7 @@ void approx()
 // Initialize graph with data
    grin = new TGraph(n,x,y);
 // Interpolate at equidistant points (use mean for tied x-values)
-   TGraphSmooth *gs = new TGraphSmooth("normal");
+   auto gs = new TGraphSmooth("normal");
    grout = gs->Approx(grin,"linear");
    DrawSmooth(1,"Approx: ties = mean","X-axis","Y-axis");
 
@@ -73,7 +72,7 @@ void approx()
 // Re-initialize graph with data
    grin = new TGraph(n,x,y);
 // Interpolate at equidistant points (use min for tied x-values)
-//   _grout = gs->Approx(grin,"linear", 50, 0, 0, 0, 1, 0, "min");_ 
+//   _grout = gs->Approx(grin,"linear", 50, 0, 0, 0, 1, 0, "min");_
    grout = gs->Approx(grin,"constant", 50, 0, 0, 0, 1, 0.5, "min");
    DrawSmooth(3,"Approx: ties = min","","");
 

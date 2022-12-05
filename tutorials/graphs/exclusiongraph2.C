@@ -10,14 +10,13 @@
 
 void exclusiongraph2()
 {
-   TCanvas *c = new TCanvas("c",
-      "Charged Higgs L300 Contour",0,0,700,700);
+   auto c = new TCanvas("c","Charged Higgs L300 Contour",0,0,700,700);
    c->SetTickx();
    c->SetTicky();
    c->SetGridx();
    c->SetGridy();
 
-   TH1 *frame = new TH1F("frame","",1000,50,500);
+   auto frame = new TH1F("frame","",1000,50,500);
    frame->SetMinimum(1);
    frame->SetMaximum(50);
    frame->SetDirectory(0);
@@ -31,7 +30,7 @@ void exclusiongraph2()
    frame->Draw(" ");
    c->SetLogy();
 
-   TGraph *gr1 = new TGraph(10);
+   auto gr1 = new TGraph(10);
    gr1->SetFillColor(6);
    gr1->SetFillStyle(3005);
    gr1->SetLineColor(6);
@@ -52,7 +51,7 @@ void exclusiongraph2()
    tex->SetTextColor(6);
    tex->Draw();
 
-   TGraph *gr2 = new TGraph(15);
+   auto gr2 = new TGraph(15);
    gr2->SetName("Graph");
    gr2->SetTitle("Graph");
    gr2->SetFillColor(1);
@@ -90,7 +89,7 @@ void exclusiongraph2()
    tex->SetLineWidth(2);
    tex->Draw();
 
-   TGraph *gr3 = new TGraph(10);
+   auto gr3 = new TGraph(10);
    gr3->SetName("Graph");
    gr3->SetTitle("Graph");
    gr3->SetFillColor(2);
@@ -113,7 +112,7 @@ void exclusiongraph2()
    tex->SetTextColor(2);
    tex->Draw();
 
-   TGraph *gr4 = new TGraph(10);
+   auto gr4 = new TGraph(10);
    gr4->SetName("Graph");
    gr4->SetTitle("Graph");
    gr4->SetFillColor(4);
@@ -136,7 +135,7 @@ void exclusiongraph2()
    tex->SetTextColor(4);
    tex->Draw();
 
-   TGraph *gr5 = new TGraph(10);
+   auto gr5 = new TGraph(10);
    gr5->SetName("Graph");
    gr5->SetTitle("Graph");
    gr5->SetFillColor(4);

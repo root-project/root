@@ -20,12 +20,12 @@ void labels2()
       "Sebastien","Fons","Rene","Nicolas","Xavier","Greg",
       "Bjarne","Anton","Otto","Eddy","Peter","Pasha",
       "Philippe","Suzanne","Jeff","Valery"};
-   TCanvas *c1 = new TCanvas("c1","demo bin labels",
+   auto c = new TCanvas("c","demo bin labels",
       10,10,800,800);
-   c1->SetGrid();
-   c1->SetLeftMargin(0.15);
-   c1->SetBottomMargin(0.15);
-   TH2F *h = new TH2F("h","test",nx,0,nx,ny,0,ny);
+   c->SetGrid();
+   c->SetLeftMargin(0.15);
+   c->SetBottomMargin(0.15);
+   auto h = new TH2F("h","test",nx,0,nx,ny,0,ny);
    for (i=0;i<5000;i++) {
       h->Fill(gRandom->Gaus(0.5*nx,0.2*nx),
          gRandom->Gaus(0.5*ny,0.2*ny));
@@ -35,7 +35,7 @@ void labels2()
    for (i=1;i<=ny;i++) h->GetYaxis()->SetBinLabel(i,people[i-1]);
    h->Draw("text");
 
-   TPaveText *pt = new TPaveText(0.6,0.85,0.98,0.98,"brNDC");
+   auto pt = new TPaveText(0.6,0.85,0.98,0.98,"brNDC");
    pt->SetFillColor(18);
    pt->SetTextAlign(12);
    pt->AddText("Use the axis Context Menu LabelsOption");

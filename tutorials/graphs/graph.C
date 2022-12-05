@@ -9,9 +9,9 @@
 /// \author Rene Brun
 
 void graph() {
-   TCanvas *c1 = new TCanvas("c1","A Simple Graph Example",200,10,700,500);
+   auto c = new TCanvas("c","A Simple Graph Example",200,10,700,500);
 
-   c1->SetGrid();
+   c->SetGrid();
 
    const Int_t n = 20;
    Double_t x[n], y[n];
@@ -20,7 +20,7 @@ void graph() {
      y[i] = 10*sin(x[i]+0.2);
      printf(" i %i %f %f \n",i,x[i],y[i]);
    }
-   TGraph *gr = new TGraph(n,x,y);
+   auto gr = new TGraph(n,x,y);
    gr->SetLineColor(2);
    gr->SetLineWidth(4);
    gr->SetMarkerColor(4);
@@ -31,7 +31,7 @@ void graph() {
    gr->Draw("ACP");
 
    // TCanvas::Update() draws the frame, after which one can change it
-   c1->Update();
-   c1->GetFrame()->SetBorderSize(12);
-   c1->Modified();
+   c->Update();
+   c->GetFrame()->SetBorderSize(12);
+   c->Modified();
 }

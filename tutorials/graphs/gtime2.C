@@ -22,7 +22,7 @@ void gtime2(Int_t nsteps = 200, Int_t np=5000) {
    Double_t cosphi[5000], sinphi[5000], speed[5000];
    TRandom3 r;
    Double_t xmin = 0, xmax = 10, ymin = -10, ymax = 10;
-   TGraphTime *g = new TGraphTime(nsteps,xmin,ymin,xmax,ymax);
+   auto g = new TGraphTime(nsteps,xmin,ymin,xmax,ymax);
    g->SetTitle("TGraphTime demo 2;X;Y");
    Int_t i,s;
    Double_t phi,fact = xmax/Double_t(nsteps);
@@ -41,7 +41,7 @@ void gtime2(Int_t nsteps = 200, Int_t np=5000) {
          Double_t xx = s*cosphi[i];
          if (xx < xmin) continue;
          Double_t yy = s*sinphi[i];
-         TMarker *m = new TMarker(xx,yy,25);
+         auto m = new TMarker(xx,yy,25);
          m->SetMarkerColor(color[i]);
          m->SetMarkerSize(1.5 -s/(speed[i]*nsteps));
          g->Add(m,s);

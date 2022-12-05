@@ -31,7 +31,7 @@ TGraph *grin, *grout;
 void DrawSmooth(Int_t pad, const char *title, const char *xt, const char *yt)
 {
    vC1->cd(pad);
-   TH1F *vFrame = gPad->DrawFrame(0,-130,60,70);
+   auto vFrame = gPad->DrawFrame(0,-130,60,70);
    vFrame->SetTitle(title);
    vFrame->SetTitleSize(0.2);
    vFrame->SetXTitle(xt);
@@ -70,7 +70,7 @@ void motorcycle()
 
 // Kernel Smoother
 // create new kernel smoother and smooth data with bandwidth = 2.0
-   TGraphSmooth *gs = new TGraphSmooth("normal");
+   auto gs = new TGraphSmooth("normal");
    grout = gs->SmoothKern(grin,"normal",2.0);
    DrawSmooth(1,"Kernel Smoother: bandwidth = 2.0","times","accel");
 

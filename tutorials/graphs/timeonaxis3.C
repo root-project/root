@@ -31,10 +31,10 @@ TString stime(time_t* t, bool utc = false, bool display_time_zone = true) {
 }
 
 
-TCanvas *timeonaxis3() {
+void timeonaxis3() {
    double f = 1.8;
 
-   TCanvas* c = new TCanvas;
+   auto c = new TCanvas;
 
    TLatex tex1;
    tex1.SetNDC();
@@ -70,7 +70,7 @@ TCanvas *timeonaxis3() {
          p->SetLeftMargin(0); p->SetRightMargin(0);
          p->SetFillStyle(4000);
 
-         TGaxis* ga = new TGaxis (.4, .25, 5., .25, t[i], t[i] + 1,  1, "t");
+         auto ga = new TGaxis (.4, .25, 5., .25, t[i], t[i] + 1,  1, "t");
          ga->SetTimeFormat("TGaxis label: #color[2]{%Y-%m-%d %H:%M:%S}");
          ga->SetLabelFont(102);
          ga->SetLabelColor(kBlue+2);
@@ -88,24 +88,24 @@ TCanvas *timeonaxis3() {
          a.SetTimeOffset(offset[i], opt);
          const char* offsettimeformat = a.GetTimeFormat();
 
-         char buf[256];
+         TString buf;
+
          if (offset[i] < t[i]) {
-            sprintf(buf, "#splitline{%s, %s}{offset: %ld, option %s}",
-                    stime(t+i).Data(), stime(t+i, true).Data(), offset[i], opt);
+            buf = Form("#splitline{%s, %s}{offset: %ld, option %s}",
+                       stime(t+i).Data(), stime(t+i, true).Data(), offset[i], opt);
          } else {
             int h = t[i] / 3600;
             int m = (t[i] - 3600 * h) / 60 ;
             int s = (t[i] - h * 3600 - m * 60);
-            sprintf(buf, "#splitline{%d h %d m %d s}{offset: %s, option %s}",
-                    h, m, s, stime(offset + i, gmt).Data(), opt);
+            buf = Form("#splitline{%d h %d m %d s}{offset: %s, option %s}",
+                       h, m, s, stime(offset + i, gmt).Data(), opt);
          }
-         tex1.DrawLatex(.01, .75, buf);
+         tex1.DrawLatex(.01, .75, buf.Data());
          tex2.DrawLatex(.01, .50, offsettimeformat);
          time_t t_ = t[i] + offset[i];
-         sprintf(buf, "Expecting:    #color[2]{%s}", stime(&t_, gmt, false).Data());
-         tex3.DrawLatex(.01, .24, buf);
+         buf = Form("Expecting:    #color[2]{%s}", stime(&t_, gmt, false).Data());
+         tex3.DrawLatex(.01, .24, buf.Data());
          if(i > 0) l.DrawLine(0, 0.95, 1, 0.95);
       }
    }
-   return c;
 }

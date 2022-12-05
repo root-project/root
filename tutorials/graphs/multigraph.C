@@ -12,8 +12,8 @@
 void multigraph()
 {
    gStyle->SetOptFit();
-   auto c1 = new TCanvas("c1","multigraph",700,500);
-   c1->SetGrid();
+   auto c = new TCanvas("c","multigraph",700,500);
+   c->SetGrid();
 
    // draw a frame to define the range
    auto mg = new TMultiGraph();
@@ -46,7 +46,7 @@ void multigraph()
    mg->Draw("ap");
 
    //force drawing of canvas to generate the fit TPaveStats
-   c1->Update();
+   c->Update();
    auto stats1 = (TPaveStats*)gr1->GetListOfFunctions()->FindObject("stats");
    auto stats2 = (TPaveStats*)gr2->GetListOfFunctions()->FindObject("stats");
 
@@ -55,6 +55,6 @@ void multigraph()
       stats2->SetTextColor(kRed);
       stats1->SetX1NDC(0.12); stats1->SetX2NDC(0.32); stats1->SetY1NDC(0.75);
       stats2->SetX1NDC(0.72); stats2->SetX2NDC(0.92); stats2->SetY1NDC(0.78);
-      c1->Modified();
+      c->Modified();
    }
 }

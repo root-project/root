@@ -12,7 +12,7 @@
 /// \author Olivier Couet
 
 void graphtext() {
-   TCanvas *c = new TCanvas("c","A Simple Graph Example with Text",700,500);
+   auto c = new TCanvas("c","A Simple Graph Example with Text",700,500);
    c->SetGrid();
 
    const Int_t n = 10;

@@ -83,7 +83,7 @@ void hlGraph2()
 
    const char *cut = "pz > 3.0";
    ntuple->Draw("px:py", cut);
-   TGraph *graph = (TGraph *)gPad->FindObject("Graph");
+   auto graph = (TGraph *)gPad->FindObject("Graph");
 
    auto info = new TText(0.0, 4.5, "please move the mouse over the graph");
    info->SetTextAlign(22);

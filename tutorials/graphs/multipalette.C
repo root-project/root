@@ -66,21 +66,21 @@ void Pal2()
 }
 
 void multipalette() {
-   TCanvas *c3  = new TCanvas("c3","C3",0,0,600,400);
-   c3->Divide(2,1);
-   TF2 *f3 = new TF2("f3","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",1,3,1,3);
+   auto c = new TCanvas("c","c",0,0,600,400);
+   c->Divide(2,1);
+   auto f3 = new TF2("f3","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",1,3,1,3);
    f3->SetLineWidth(1);
    f3->SetLineColor(kBlack);
 
-   c3->cd(1);
+   c->cd(1);
    f3->Draw("surf1");
-   TExec *ex1 = new TExec("ex1","Pal1();");
+   auto ex1 = new TExec("ex1","Pal1();");
    ex1->Draw();
    f3->Draw("surf1 same");
 
-   c3->cd(2);
+   c->cd(2);
    f3->Draw("surf1");
-   TExec *ex2 = new TExec("ex2","Pal2();");
+   auto ex2 = new TExec("ex2","Pal2();");
    ex2->Draw();
    f3->Draw("surf1 same");
 }

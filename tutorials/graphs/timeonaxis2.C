@@ -8,8 +8,8 @@
 ///
 /// \author Olivier Couet
 
-TCanvas *timeonaxis2() {
-   TCanvas *ct2 = new TCanvas("ct2","ct2",10,10,700,500);
+void timeonaxis2() {
+   auto ct2 = new TCanvas("ct2","ct2",10,10,700,500);
 
    TDatime T0(2003, 1, 1, 0, 0, 0);
    int X0 = T0.Convert();
@@ -35,5 +35,4 @@ TCanvas *timeonaxis2() {
    h1->GetXaxis()->SetLabelSize(0.03);
    h1->GetXaxis()->SetTimeFormat("%Y/%m/%d");
    h1->Draw();
-   return ct2;
 }

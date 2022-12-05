@@ -9,11 +9,10 @@
 /// \author Rene Brun
 
 void graphShade() {
-   TCanvas *c1 = new TCanvas("c1",
-      "A Simple Graph Example",200,10,700,500);
+   auto c = new TCanvas("c","A Simple Graph Example",200,10,700,500);
 
-   c1->SetGrid();
-   c1->DrawFrame(0,0,2.2,12);
+   c->SetGrid();
+   c->DrawFrame(0,0,2.2,12);
 
    const Int_t n = 20;
    Double_t x[n], y[n],ymin[n], ymax[n];
@@ -24,10 +23,10 @@ void graphShade() {
      ymin[i] = 8*sin(x[i]+0.1);
      y[i] = 9*sin(x[i]+0.15);
    }
-   TGraph *grmin = new TGraph(n,x,ymin);
-   TGraph *grmax = new TGraph(n,x,ymax);
-   TGraph *gr    = new TGraph(n,x,y);
-   TGraph *grshade = new TGraph(2*n);
+   auto grmin = new TGraph(n,x,ymin);
+   auto grmax = new TGraph(n,x,ymax);
+   auto gr    = new TGraph(n,x,y);
+   auto grshade = new TGraph(2*n);
    for (i=0;i<n;i++) {
       grshade->SetPoint(i,x[i],ymax[i]);
       grshade->SetPoint(n+i,x[n-i-1],ymin[n-i-1]);

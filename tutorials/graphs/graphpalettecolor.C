@@ -30,11 +30,11 @@ void graphpalettecolor () {
    double y4[5] = {1.3,2.3,1.3,2.8,3.3};
    double y5[5] = {1.4,2.4,1.4,2.9,3.4};
 
-   TGraph *g1 = new TGraph(5,x,y1); g1->SetTitle("Graph with a red star");
-   TGraph *g2 = new TGraph(5,x,y2); g2->SetTitle("Graph with a circular marker");
-   TGraph *g3 = new TGraph(5,x,y3); g3->SetTitle("Graph with an open square marker");
-   TGraph *g4 = new TGraph(5,x,y4); g4->SetTitle("Graph with a blue star");
-   TGraph *g5 = new TGraph(5,x,y5); g5->SetTitle("Graph with a full square marker");
+   auto g1 = new TGraph(5,x,y1); g1->SetTitle("Graph with a red star");
+   auto g2 = new TGraph(5,x,y2); g2->SetTitle("Graph with a circular marker");
+   auto g3 = new TGraph(5,x,y3); g3->SetTitle("Graph with an open square marker");
+   auto g4 = new TGraph(5,x,y4); g4->SetTitle("Graph with a blue star");
+   auto g5 = new TGraph(5,x,y5); g5->SetTitle("Graph with a full square marker");
 
    g1->SetLineWidth(3); g1->SetMarkerColor(kRed);
    g2->SetLineWidth(3); g2->SetMarkerStyle(kCircle);
