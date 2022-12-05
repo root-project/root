@@ -304,7 +304,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       Warning("Constructor","Deleting canvas with same name: %s",name);
       delete old;
    }
-   if (gROOT->IsBatch() && (!gROOT->IsWebDisplay() || gROOT->IsWebDisplayBatch())) {   //We are in Batch mode
+   if (gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX = fWindowTopY = 0;
       if (form == 1) {
          fWindowWidth  = gStyle->GetCanvasDefW();
