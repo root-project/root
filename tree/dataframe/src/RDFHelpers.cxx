@@ -52,10 +52,18 @@ void ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
    TStopwatch sw;
    sw.Start();
    {
-      // silence logs from RLoopManager::Jit: RunGraphs does its own logging
-      auto silenceRDFLogs = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(),
-                                                                    ROOT::Experimental::ELogLevel::kError);
-      uniqueLoops[0].fLoopManager->Jit();
+      const auto effectiveVerbosity =
+         ROOT::Experimental::Internal::GetChannelOrManager(ROOT::Detail::RDF::RDFLogChannel())
+            .GetEffectiveVerbosity(ROOT::Experimental::RLogManager::Get());
+      if (effectiveVerbosity >= ROOT::Experimental::ELogLevel::kDebug + 10) {
+         // a very high verbosity was requested, let's not silence anything
+         uniqueLoops[0].fLoopManager->Jit();
+      } else {
+         // silence logs from RLoopManager::Jit: RunGraphs does its own logging
+         auto silenceRDFLogs = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(),
+                                                                       ROOT::Experimental::ELogLevel::kError);
+         uniqueLoops[0].fLoopManager->Jit();
+      }
    }
    sw.Stop();
    R__LOG_INFO(ROOT::Detail::RDF::RDFLogChannel())
