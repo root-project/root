@@ -8,7 +8,7 @@
 ///
 /// \author Rene Brun
 
-void hstack()
+TCanvas *hstack()
 {
    auto hs = new THStack("hs","Stacked 1D histograms");
    //create three 1-d histograms
@@ -69,4 +69,6 @@ void hstack()
    a->Add(h2sta);
    a->Add(h2stb);
    a->Draw();
+
+   return cst;
 }
