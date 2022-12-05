@@ -113,6 +113,8 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
             coutI(InputArguments) << "New style likelihood detected and likelihood parallelization requested, "
                                   << "also setting parallel gradient calculation mode." << std::endl;
          }
+         RooFit::MultiProcess::Config::setDefaultNWorkers(_cfg.nWorkers);
+
          _fcn = std::make_unique<RooFit::TestStatistics::MinuitFcnGrad>(
             nll_real->getRooAbsL(), this, _theFitter->Config().ParamsSettings(),
             RooFit::TestStatistics::LikelihoodMode{
