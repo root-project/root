@@ -2753,15 +2753,16 @@ void TROOT::SetMacroPath(const char *newpath)
 /// The input parameter `webdisplay` defines where web graphics is rendered.
 /// `webdisplay` parameter may contain:
 ///
+///  - "firefox": select Mozilla Firefox browser for interactive web display
+///  - "chrome": select Google Chrome browser for interactive web display
+///  - "edge": select Microsoft Edge browser for interactive web display
 ///  - "off": turns off the web display and comes back to normal graphics in
 ///    interactive mode.
-///  - "batch": turns the web display in batch mode. It can be prepended with
-///    another string which is considered as the new current web display.
-///  - "nobatch": turns the web display in interactive mode. It can be
-///    prepended with another string which is considered as the new current web display.
-///
-/// If the option "off" is not set, this method turns the normal graphics to
-/// "Batch" to avoid the loading of local graphics libraries.
+///  - "batch": turns the web display in batch mode. TCanvas images will be produced with web graphics.
+///    One could append browser kind like "batch:firefox"
+///  - "batch7": turns the web display only of ROOT7 classes in batch mode, TCanvas will be handled with old graphics.
+///  - "server:port": turns the web display into server mode as specified port. Web widgets will not be displayed,
+///    only text message with window URL will be printed on standard output
 
 void TROOT::SetWebDisplay(const char *webdisplay)
 {
@@ -2773,9 +2774,27 @@ void TROOT::SetWebDisplay(const char *webdisplay)
       fIsWebDisplay = kFALSE;
       fIsWebDisplayBatch = kFALSE;
       fWebDisplay = "";
-   } else if (!strncmp(wd, "server", 6)) {
+      return;
+   }
+
+   // handle batch combinations
+   if (!strncmp(wd, "batch7", 6)) {
+      fIsWebDisplay = kFALSE;
+      fIsWebDisplayBatch = kTRUE;
+      wd += 6;
+      wd = (*wd == ':') ? wd+1 : "";
+   } else if (!strncmp(wd, "batch", 5)) {
+      fIsWebDisplay = kTRUE;
+      fIsWebDisplayBatch = kTRUE;
+      wd += 5;
+      wd = (*wd == ':') ? wd+1 : "";
+   } else {
       fIsWebDisplay = kTRUE;
       fIsWebDisplayBatch = kFALSE;
+   }
+
+   // handle server mode
+   if (!strncmp(wd, "server", 6)) {
       fWebDisplay = "server";
       if (wd[6] == ':') {
          if ((wd[7] >= '0') && (wd[7] <= '9')) {
@@ -2788,17 +2807,9 @@ void TROOT::SetWebDisplay(const char *webdisplay)
             gEnv->SetValue("WebGui.UnixSocket", wd+7);
          }
       }
+   } else if (!strcmp(wd, "on")) {
+      fWebDisplay = "";
    } else {
-      fIsWebDisplay = kTRUE;
-      if (!strncmp(wd, "batch", 5)) {
-         fIsWebDisplayBatch = kTRUE;
-         wd += 5;
-      } else if (!strncmp(wd, "nobatch", 7)) {
-         fIsWebDisplayBatch = kFALSE;
-         wd += 7;
-      } else {
-         fIsWebDisplayBatch = kFALSE;
-      }
       fWebDisplay = wd;
    }
 }
