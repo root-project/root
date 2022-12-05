@@ -127,6 +127,8 @@ struct RNTupleLocator {
    /// For non-disk locators, the value for the _Type_ field. This makes it possible to have different type values even
    /// if the payload structure is identical.
    ELocatorType fType = kTypeFile;
+   /// Reserved for use by concrete storage backends
+   std::uint8_t fReserved = 0;
 
    bool operator==(const RNTupleLocator &other) const {
       return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage;
