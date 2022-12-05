@@ -36,24 +36,24 @@ constexpr char const *kNTupleFileName = "ntpl008_import.root";
 
 void ntpl008_import()
 {
-    // Use multiple threads to compress RNTuple data
-    ROOT::EnableImplicitMT();
+   // Use multiple threads to compress RNTuple data
+   ROOT::EnableImplicitMT();
 
-    // RNTupleImporter::Create() returns a wrapper for an RNTupleImporter. If the creation fails,
-    // the result will contain an exception. Calling Unwrap() returns the actual RNTupleImporter
-    // class or throws the exception in case of errors.
-    auto importer = RNTupleImporter::Create(kTreeFileName, kTreeName, kNTupleFileName).Unwrap();
+   // RNTupleImporter::Create() returns a wrapper for an RNTupleImporter. If the creation fails,
+   // the result will contain an exception. Calling Unwrap() returns the actual RNTupleImporter
+   // class or throws the exception in case of errors.
+   auto importer = RNTupleImporter::Create(kTreeFileName, kTreeName, kNTupleFileName).Unwrap();
 
-    // Using `ThrowOnError()` makes sure that the macro abort if the import fails.
-    importer->Import().ThrowOnError();
+   // Using `ThrowOnError()` makes sure that the macro abort if the import fails.
+   importer->Import().ThrowOnError();
 
-    // Inspect the schema of the written RNTuple
-    auto file = std::unique_ptr<TFile>(TFile::Open(kNTupleFileName));
-    if (!file || file->IsZombie()) {
-        std::cerr << "cannot open " << kNTupleFileName << std::endl;
-        return;
-    }
-    auto ntpl = file->Get<RNTuple>("Events");
-    auto reader = RNTupleReader::Open(ntpl);
-    reader->PrintInfo();
+   // Inspect the schema of the written RNTuple
+   auto file = std::unique_ptr<TFile>(TFile::Open(kNTupleFileName));
+   if (!file || file->IsZombie()) {
+      std::cerr << "cannot open " << kNTupleFileName << std::endl;
+      return;
+   }
+   auto ntpl = file->Get<RNTuple>("Events");
+   auto reader = RNTupleReader::Open(ntpl);
+   reader->PrintInfo();
 }
