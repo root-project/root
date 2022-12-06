@@ -106,10 +106,6 @@ and py = 0
 
 TSlider::TSlider(): TPad()
 {
-   fObject  = 0;
-   fMethod  = "";
-   fMinimum = 0;
-   fMaximum = 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -136,10 +132,6 @@ TSlider::TSlider(const char *name, const char *title, Double_t x1, Double_t y1,D
    SetBit(kCanDelete);
    Modified(kTRUE);
 
-   fMinimum = 0;
-   fMaximum = 1;
-   fObject  = 0;
-   fMethod  = "";
    Double_t dx = PixeltoX(bordersize);
    Double_t dy = PixeltoY(-bordersize);
    TSliderBox *sbox = new TSliderBox(dx,dy,1-dx,1-dy,color,bordersize,-bordermode);

@@ -30,7 +30,7 @@ class TPad : public TVirtualPad, public TAttBBox2D {
 friend class TWebCanvas;
 
 private:
-   TObject      *fTip;              ///<! tool tip associated with box
+   TObject      *fTip{nullptr};     ///<! tool tip associated with box
 
 protected:
    Double_t      fX1;               ///<  X of lower X coordinate
@@ -102,16 +102,16 @@ protected:
    Bool_t        fAbsCoord;         ///<  Use absolute coordinates
    Bool_t        fEditable;         ///<  True if canvas is editable
    Bool_t        fFixedAspectRatio; ///<  True if fixed aspect ratio
-   TPad         *fMother;           ///<! pointer to mother of the list
-   TCanvas      *fCanvas;           ///<! Pointer to mother canvas
-   TList        *fPrimitives;       ///<->List of primitives (subpads)
-   TList        *fExecs;            ///<  List of commands to be executed when a pad event occurs
+   TPad         *fMother{nullptr};  ///<! pointer to mother of the list
+   TCanvas      *fCanvas{nullptr};  ///<! Pointer to mother canvas
+   TList        *fPrimitives{nullptr};///<->List of primitives (subpads)
+   TList        *fExecs{nullptr};   ///<  List of commands to be executed when a pad event occurs
    TString       fName;             ///<  Pad name
    TString       fTitle;            ///<  Pad title
-   TFrame       *fFrame;            ///<! Pointer to 2-D frame (if one exists)
-   TView        *fView;             ///<! Pointer to 3-D view (if one exists)
-   TObject      *fPadPointer;       ///<! free pointer
-   TObject      *fPadView3D;        ///<! 3D View of this TPad
+   TFrame       *fFrame{nullptr};   ///<! Pointer to 2-D frame (if one exists)
+   TView        *fView{nullptr};    ///<! Pointer to 3-D view (if one exists)
+   TObject      *fPadPointer{nullptr};///<! free pointer
+   TObject      *fPadView3D{nullptr};///<! 3D View of this TPad
    static Int_t  fgMaxPickDistance; ///<  Maximum Pick Distance
    Int_t         fNumPaletteColor;  ///<  Number of objects with an automatic color
    Int_t         fNextPaletteColor; ///<  Next automatic color
@@ -120,7 +120,7 @@ protected:
    Int_t         fCGny;             ///<! Size of the collide grid along y
 
    // 3D Viewer support
-   TVirtualViewer3D *fViewer3D;     ///<! Current 3D viewer
+   TVirtualViewer3D *fViewer3D{nullptr};///<! Current 3D viewer
 
    void          DestroyExternalViewer3D();
    Int_t         DistancetoPrimitive(Int_t px, Int_t py) override;

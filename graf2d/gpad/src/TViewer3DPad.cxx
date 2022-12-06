@@ -45,7 +45,7 @@ void TViewer3DPad::BeginScene()
    // Create a 3D view if none exists
    TView *view = fPad.GetView();
    if (!view) {
-      view = TView::CreateView(1,0,0); // Cartesian view by default
+      view = TView::CreateView(1, nullptr, nullptr); // Cartesian view by default
       if (!view) {
          assert(kFALSE);
          return;

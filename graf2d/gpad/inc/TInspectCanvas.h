@@ -22,19 +22,19 @@ class TInspectCanvas : public TCanvas, public TAttText {
 
 protected:
 
-   TButton     *fBackward;      ///< Pointer to the Backward button
-   TButton     *fForward;       ///< Pointer to the Forward button
-   TList       *fObjects;       ///< List of objects inspected
-   TObject     *fCurObject;     ///< Pointer to object being inspected
+   TButton     *fBackward{nullptr};      ///< Pointer to the Backward button
+   TButton     *fForward{nullptr};       ///< Pointer to the Forward button
+   TList       *fObjects{nullptr};       ///< List of objects inspected
+   TObject     *fCurObject{nullptr};     ///< Pointer to object being inspected
 
 public:
    TInspectCanvas();
    TInspectCanvas(UInt_t ww, UInt_t wh);
    virtual        ~TInspectCanvas();
-   TButton       *GetBackward() const  {return fBackward;}
-   TButton       *GetForward() const    {return fForward;}
-   TObject       *GetCurObject() const  {return fCurObject;}
-   TList         *GetObjects() const    {return fObjects;}
+   TButton       *GetBackward() const  { return fBackward; }
+   TButton       *GetForward() const   { return fForward; }
+   TObject       *GetCurObject() const { return fCurObject; }
+   TList         *GetObjects() const   { return fObjects; }
    static  void   GoBackward();
    static  void   GoForward();
    static  void   Inspector(TObject *obj);
@@ -68,4 +68,3 @@ inline void TInspectCanvas::SetTicky(Int_t) { }
 inline void TInspectCanvas::x3d(Option_t *) { }
 
 #endif
-

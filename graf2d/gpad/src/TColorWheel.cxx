@@ -64,11 +64,6 @@ End_Macro
 
 TColorWheel::TColorWheel() :TNamed("wheel","ROOT Color Wheel")
 {
-   fCanvas = 0;
-   fArc    = 0;
-   fLine   = 0;
-   fText   = 0;
-   fGraph  = 0;
    fRmin   = 2.1;
    fRmax   = 9.5;
    fR0     = 4;
