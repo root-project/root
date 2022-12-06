@@ -311,7 +311,9 @@ class EmptySourceHeadNode(HeadNode):
             """
             Builds an RDataFrame instance for a distributed mapper.
             """
-            return TaskObjects(ROOT.RDataFrame(nentries).Range(current_range.start, current_range.end), None)
+            rdf = ROOT.RDataFrame(nentries)
+            ROOT.Internal.RDF.ChangeEmptyEntryRange(ROOT.RDF.AsRNode(rdf), (current_range.start, current_range.end))
+            return TaskObjects(rdf, None)
 
         return build_rdf_from_range
 
