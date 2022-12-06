@@ -86,6 +86,15 @@ template <typename Proxied, typename DataSource>
 class RInterface;
 
 using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
+} // namespace RDF
+
+namespace Internal {
+namespace RDF {
+void ChangeEmptyEntryRange(const ROOT::RDF::RNode &node, std::pair<ULong64_t, ULong64_t> &&newRange);
+} // namespace RDF
+} // namespace Internal
+
+namespace RDF {
 
 // clang-format off
 /**
@@ -112,6 +121,7 @@ class RInterface : public RInterfaceBase {
    friend class RInterface;
 
    friend void RDFInternal::TriggerRun(RNode &node);
+   friend void RDFInternal::ChangeEmptyEntryRange(const RNode &node, std::pair<ULong64_t, ULong64_t> &&newRange);
 
    std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this RInterface.
 
