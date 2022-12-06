@@ -592,7 +592,7 @@ bool RooHist::hasIdenticalBinning(const RooHist& other) const
     GetPoint(i,x1,y1) ;
     other.GetPoint(i,x2,y2) ;
 
-    if (std::abs(x1-x2)>1e-10) {
+    if (std::abs(x1-x2) > 1e-10 * _nominalBinWidth) {
       return false ;
     }
 
