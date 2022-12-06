@@ -19,8 +19,7 @@ if(WIN32)
   else()
     set(pcre_config "Release")
   endif()
-else()
-  set(pcre_config $<CONFIG>)
+  set(pcre_build_config "--config ${pcre_config}")
 endif()
 
 set(PCRE_VERSION "8.43" CACHE INTERNAL "" FORCE)
@@ -53,7 +52,7 @@ ExternalProject_Add(PCRE
     -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=TRUE
 
   BUILD_COMMAND
-    ${CMAKE_COMMAND} --build <BINARY_DIR> --config ${pcre_config} --target pcre
+    ${CMAKE_COMMAND} --build <BINARY_DIR> ${pcre_build_config} --target pcre
 
   BUILD_BYPRODUCTS
     ${PCRE_BYPRODUCTS}

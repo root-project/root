@@ -201,7 +201,7 @@ void RooHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooFi
     _dataHist->weights(output, xVals, _intOrder, false, _cdfBoundaries);
     return;
   }
-  
+
   std::vector<RooSpan<const double>> inputValues;
   for (const auto& obs : _depList) {
     auto realObs = dynamic_cast<const RooAbsReal*>(obs);
@@ -320,53 +320,7 @@ double RooHistFunc::analyticalIntegral(Int_t code, const char* rangeName) const
 
 std::list<double>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
-  // No hints are required when interpolation is used
-  if (_intOrder>1) {
-    return 0 ;
-  }
-
-
-  // Find histogram observable corresponding to pdf observable
-  RooAbsArg* hobs = nullptr;
-  for (auto i = 0u; i < _histObsList.size(); ++i) {
-    const auto harg = _histObsList[i];
-    const auto parg = _depList[i];
-    if (std::string(parg->GetName())==obs.GetName()) {
-      hobs=harg ;
-    }
-  }
-  if (!hobs) {
-    return 0 ;
-  }
-
-  // Check that observable is in dataset, if not no hint is generated
-  RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dataHist->get()->find(hobs->GetName())) ;
-  if (!lvarg) {
-    return 0 ;
-  }
-
-  // Retrieve position of all bin boundaries
-  const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
-  double* boundaries = binning->array() ;
-
-  auto hint = new std::list<double> ;
-
-  // Widen range slighty
-  xlo = xlo - 0.01*(xhi-xlo) ;
-  xhi = xhi + 0.01*(xhi-xlo) ;
-
-  double delta = (xhi-xlo)*1e-8 ;
-
-  // Construct array with pairs of points positioned epsilon to the left and
-  // right of the bin boundaries
-  for (Int_t i=0 ; i<binning->numBoundaries() ; i++) {
-    if (boundaries[i]>=xlo && boundaries[i]<=xhi) {
-      hint->push_back(boundaries[i]-delta) ;
-      hint->push_back(boundaries[i]+delta) ;
-    }
-  }
-
-  return hint ;
+  return RooHistPdf::plotSamplingHint(*_dataHist, _depList, _histObsList, _intOrder, obs, xlo, xhi);
 }
 
 
