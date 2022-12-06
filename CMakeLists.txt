@@ -22,12 +22,16 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
     " Please see README/INSTALL for more information.")
 endif()
 
-set(policy_new CMP0072 CMP0077 CMP0135)
+set(policy_new CMP0072 CMP0077)
 foreach(policy ${policy_new})
   if(POLICY ${policy})
     cmake_policy(SET ${policy} NEW)
   endif()
 endforeach()
+
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
+  cmake_policy(SET CMP0135 OLD)
+endif()
 
 include(cmake/modules/CaptureCommandLine.cmake)
 
