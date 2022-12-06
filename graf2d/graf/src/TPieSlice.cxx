@@ -27,7 +27,7 @@ This class describe the property of single
 
 TPieSlice::TPieSlice() : TNamed(), TAttFill(), TAttLine()
 {
-   fPie = 0;
+   fPie = nullptr;
    fValue = 1;
    fRadiusOffset = 0;
    fIsActive = kFALSE;

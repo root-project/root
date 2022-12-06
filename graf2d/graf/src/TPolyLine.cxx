@@ -44,12 +44,8 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// PolyLine default constructor.
 
-TPolyLine::TPolyLine(): TObject()
+TPolyLine::TPolyLine()
 {
-   fN = 0;
-   fX = nullptr;
-   fY = nullptr;
-   fLastPoint = -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -85,14 +81,17 @@ TPolyLine::TPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
    if (n <= 0) {
       fN = 0;
       fLastPoint = -1;
-      fX = fY = 0;
+      fX = fY = nullptr;
       return;
    }
    fN = n;
    fX = new Double_t[fN];
    fY = new Double_t[fN];
    if (!x || !y) return;
-   for (Int_t i=0; i<fN;i++) { fX[i] = x[i]; fY[i] = y[i];}
+   for (Int_t i = 0; i < fN; i++) {
+      fX[i] = x[i];
+      fY[i] = y[i];
+   }
    fLastPoint = fN-1;
 }
 

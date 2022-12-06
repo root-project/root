@@ -91,14 +91,6 @@ http://www.itl.nist.gov/div898/handbook/eda/section3/probplot.htm
 
 TGraphQQ::TGraphQQ()
 {
-   fF   = 0;
-   fY0  = 0;
-   fNy0 = 0;
-   fXq1 = 0.;
-   fXq2 = 0.;
-   fYq1 = 0.;
-   fYq2 = 0.;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -108,18 +100,10 @@ TGraphQQ::TGraphQQ()
 TGraphQQ::TGraphQQ(Int_t n, Double_t *x)
    : TGraph(n)
 {
-   fNy0 = 0;
-   fXq1 = 0.;
-   fXq2 = 0.;
-   fYq1 = 0.;
-   fYq2 = 0.;
-
    Int_t *index = new Int_t[n];
    TMath::Sort(n, x, index, kFALSE);
    for (Int_t i=0; i<fNpoints; i++)
       fY[i] = x[index[i]];
-   fF = nullptr;
-   fY0 = nullptr;
    delete [] index;
 }
 
@@ -137,7 +121,6 @@ TGraphQQ::TGraphQQ(Int_t n, Double_t *x, TF1 *f)
       fY[i] = x[index[i]];
    delete [] index;
    fF = f;
-   fY0 = nullptr;
    MakeFunctionQuantiles();
 }
 
@@ -147,14 +130,6 @@ TGraphQQ::TGraphQQ(Int_t n, Double_t *x, TF1 *f)
 
 TGraphQQ::TGraphQQ(Int_t nx, Double_t *x, Int_t ny, Double_t *y)
 {
-   fNy0 = 0;
-   fXq1 = 0.;
-   fXq2 = 0.;
-   fYq1 = 0.;
-   fYq2 = 0.;
-   fF   = nullptr;
-   fY0  = nullptr;
-
    fNpoints = (nx <= ny) ? nx : ny;
 
    if (!CtorAllocate()) return;
@@ -239,8 +214,6 @@ void TGraphQQ::MakeFunctionQuantiles()
 
 void TGraphQQ::MakeQuantiles()
 {
-
-
    if (!fY0) return;
 
    Double_t pi, pfrac;

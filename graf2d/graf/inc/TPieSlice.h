@@ -17,17 +17,19 @@ class TPie;
 
 class TPieSlice : public TNamed, public TAttFill, public TAttLine {
 
+   friend class TPie;
+
 private:
    Bool_t   fIsActive;     ///<! True if is the slice under the mouse pointer
 
 protected:
-   TPie *fPie;             ///< The TPie object that contain this slice
+   TPie *fPie{nullptr};    ///< The TPie object that contain this slice
    Double_t fValue;        ///< value value of this slice
    Double_t fRadiusOffset; ///< offset from the center of the pie
 
 public:
    TPieSlice();
-   TPieSlice(const char *, const char *, TPie*, Double_t val=0);
+   TPieSlice(const char *, const char *, TPie *, Double_t val = 0);
    virtual ~TPieSlice() {}
 
    void           Copy(TObject &slice) const override;
@@ -38,9 +40,6 @@ public:
    void           SetIsActive(Bool_t is) { fIsActive = is; }
    void           SetRadiusOffset(Double_t);  // *MENU*
    void           SetValue(Double_t);         // *MENU*
-
-
-   friend class TPie;
 
    ClassDefOverride(TPieSlice,1)            // Slice of a pie chart graphics class
 };
