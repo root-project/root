@@ -26,8 +26,8 @@ private:
    void DrawGhost();
 
    Float_t  fSum;             ///<!Sum for the slice values
-   Float_t *fSlices;          ///<!Subdivisions of the slices
-   TLegend *fLegend;          ///<!Legend for this piechart
+   Float_t *fSlices{nullptr}; ///<!Subdivisions of the slices
+   TLegend *fLegend{nullptr}; ///<!Legend for this piechart
 
 protected:
    Double_t    fX;              ///< X coordinate of the pie centre
@@ -40,7 +40,7 @@ protected:
    TString     fFractionFormat; ///< Rform numeric format for the fraction of a slice
    TString     fPercentFormat;  ///< Pfrom numeric format for the percent of a slice
    Int_t       fNvals;          ///< Number of elements
-   TPieSlice **fPieSlices;      ///<[fNvals] Slice array of this pie-chart
+   TPieSlice **fPieSlices{nullptr}; ///<[fNvals] Slice array of this pie-chart
    Bool_t      fIs3D;           ///<! true if the pseudo-3d is enabled
    Double_t    fHeight;         ///< Height of the slice in pixel
    Float_t     fAngle3D;        ///< The angle of the pseudo-3d view

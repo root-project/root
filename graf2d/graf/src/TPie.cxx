@@ -728,8 +728,8 @@ void TPie::Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r)
    fRadius        = r;
    fNvals         = np;
    fSum           = 0.;
-   fSlices        = 0;
-   fLegend        = 0;
+   fSlices        = nullptr;
+   fLegend        = nullptr;
    fHeight        = 0.08;
    fAngle3D       = 30;
    fIs3D          = kFALSE;

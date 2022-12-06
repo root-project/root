@@ -341,7 +341,7 @@ TLegendEntry *TLegend::AddEntry(const char *name, const char *label, Option_t *o
 {
    if (!gPad) {
       Error("AddEntry", "need to create a canvas first");
-      return 0;
+      return nullptr;
    }
 
    TObject *obj = gPad->FindObject(name);
@@ -476,11 +476,12 @@ TLegendEntry *TLegend::GetEntry() const
 {
    if (!gPad) {
       Error("GetEntry", "need to create a canvas first");
-      return 0;
+      return nullptr;
    }
 
    Int_t nRows = GetNRows();
-   if ( nRows == 0 ) return 0;
+   if ( nRows == 0 )
+      return nullptr;
 
    Double_t ymouse = gPad->AbsPixeltoY(gPad->GetEventY())-fY1;
    Double_t yspace = (fY2 - fY1)/nRows;
@@ -502,9 +503,10 @@ TLegendEntry *TLegend::GetEntry() const
    Int_t nloops = TMath::Min(ix+(nColumns*(iy-1)), fPrimitives->GetSize());
 
    TIter next(fPrimitives);
-   TLegendEntry *entry = 0;
+   TLegendEntry *entry = nullptr;
 
-   for (Int_t i=1; i<= nloops; i++) entry = (TLegendEntry *)next();
+   for (Int_t i=1; i<= nloops; i++)
+      entry = (TLegendEntry *)next();
 
    return entry;
 }
@@ -1105,7 +1107,7 @@ void TLegend::SetHeader( const char *header, Option_t* option )
          return;
       }
    }
-   first = new TLegendEntry( 0, header, "h" );
+   first = new TLegendEntry( nullptr, header, "h" );
    opt = option;
    opt.ToLower();
    if ( opt.Contains("c") ) first->SetTextAlign(22);

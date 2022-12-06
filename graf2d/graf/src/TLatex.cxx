@@ -1442,7 +1442,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
                // tilde must be drawn separately on screen and on PostScript
                // because an adjustment is required along Y for PostScript.
                TVirtualPS *saveps = gVirtualPS;
-               if (gVirtualPS) gVirtualPS = 0;
+               if (gVirtualPS) gVirtualPS = nullptr;
                Double_t y22 = y2;
                if (gVirtualX->InheritsFrom("TGCocoa")) y2 -= 4.7*sub;
                Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
@@ -2135,7 +2135,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
          }
          gPad->SetBatch(saveb);
       }
-      gVirtualPS = 0;
+      gVirtualPS = nullptr;
    }
 
    if (!gPad->IsBatch()) PaintLatex1( x, y, angle, size, text1);
