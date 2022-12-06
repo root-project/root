@@ -7,20 +7,15 @@
 #ifndef ROOHISTCONSTRAINT
 #define ROOHISTCONSTRAINT
 
-#include "RooAbsPdf.h"
-#include "RooRealProxy.h"
-#include "RooCategoryProxy.h"
-#include "RooAbsReal.h"
-#include "RooAbsCategory.h"
-#include "RooListProxy.h"
+#include <RooAbsPdf.h>
+#include <RooListProxy.h>
 
 class RooHistConstraint : public RooAbsPdf {
 public:
   RooHistConstraint() {} ;
-  RooHistConstraint(const char *name, const char *title, const RooArgSet& phfSet, Int_t threshold=1000000);
+  RooHistConstraint(const char *name, const char *title, const RooArgSet& phfSet, int threshold=1000000);
   RooHistConstraint(const RooHistConstraint& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooHistConstraint(*this,newname); }
-  inline ~RooHistConstraint() override { }
 
   double getLogVal(const RooArgSet* set=nullptr) const override ;
 
