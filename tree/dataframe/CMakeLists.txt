@@ -108,6 +108,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDFHelpers.cxx
     src/RFilterBase.cxx
     src/RInterfaceBase.cxx
+    src/RInterface.cxx
     src/RJittedAction.cxx
     src/RJittedDefine.cxx
     src/RJittedFilter.cxx

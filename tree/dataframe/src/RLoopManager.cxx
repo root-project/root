@@ -351,9 +351,12 @@ RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
 }
 
 RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
-   : fNEmptyEntries(nEmptyEntries), fNSlots(RDFInternal::GetNSlots()),
-     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles), fNewSampleNotifier(fNSlots),
-     fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
+   : fEmptyEntryRange(0, nEmptyEntries),
+     fNSlots(RDFInternal::GetNSlots()),
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles),
+     fNewSampleNotifier(fNSlots),
+     fSampleInfos(fNSlots),
+     fDatasetColumnReaders(fNSlots)
 {
 }
 
@@ -428,18 +431,19 @@ void RLoopManager::RunEmptySourceMT()
    ROOT::Internal::RSlotStack slotStack(fNSlots);
    // Working with an empty tree.
    // Evenly partition the entries according to fNSlots. Produce around 2 tasks per slot.
-   const auto nEntriesPerSlot = fNEmptyEntries / (fNSlots * 2);
-   auto remainder = fNEmptyEntries % (fNSlots * 2);
+   const auto nEmptyEntries = GetNEmptyEntries();
+   const auto nEntriesPerSlot = nEmptyEntries / (fNSlots * 2);
+   auto remainder = nEmptyEntries % (fNSlots * 2);
    std::vector<std::pair<ULong64_t, ULong64_t>> entryRanges;
-   ULong64_t start = 0;
-   while (start < fNEmptyEntries) {
-      ULong64_t end = start + nEntriesPerSlot;
+   ULong64_t begin = fEmptyEntryRange.first;
+   while (begin < fEmptyEntryRange.second) {
+      ULong64_t end = begin + nEntriesPerSlot;
       if (remainder > 0) {
          ++end;
          --remainder;
       }
-      entryRanges.emplace_back(start, end);
-      start = end;
+      entryRanges.emplace_back(begin, end);
+      begin = end;
    }
 
    // Each task will generate a subrange of entries
@@ -471,11 +475,13 @@ void RLoopManager::RunEmptySourceMT()
 void RLoopManager::RunEmptySource()
 {
    InitNodeSlots(nullptr, 0);
-   R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({"an empty source", 0, fNEmptyEntries, 0u});
+   R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing(
+      {"an empty source", fEmptyEntryRange.first, fEmptyEntryRange.second, 0u});
    RCallCleanUpTask cleanup(*this);
    try {
-      UpdateSampleInfo(/*slot*/0, {0, fNEmptyEntries});
-      for (ULong64_t currEntry = 0; currEntry < fNEmptyEntries && fNStopsReceived < fNChildren; ++currEntry) {
+      UpdateSampleInfo(/*slot*/ 0, fEmptyEntryRange);
+      for (ULong64_t currEntry = fEmptyEntryRange.first;
+           currEntry < fEmptyEntryRange.second && fNStopsReceived < fNChildren; ++currEntry) {
          RunAndCheckFilters(0, currEntry);
       }
    } catch (...) {
@@ -993,7 +999,7 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetG
    } else if (fTree) {
       name = fTree->GetName();
    } else {
-      name = "Empty source\\nEntries: " + std::to_string(fNEmptyEntries);
+      name = "Empty source\\nEntries: " + std::to_string(GetNEmptyEntries());
    }
    auto thisNode = std::make_shared<ROOT::Internal::RDF::GraphDrawing::GraphNode>(
       name, visitedMap.size(), ROOT::Internal::RDF::GraphDrawing::ENodeType::kRoot);
@@ -1066,4 +1072,9 @@ void RLoopManager::AddSampleCallback(void *nodePtr, SampleCallback_t &&callback)
 {
    if (callback)
       fSampleCallbacks.insert({nodePtr, std::move(callback)});
+}
+
+void RLoopManager::SetEmptyEntryRange(std::pair<ULong64_t, ULong64_t> &&newRange)
+{
+   fEmptyEntryRange = std::move(newRange);
 }
