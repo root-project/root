@@ -8,8 +8,8 @@
 ///
 /// \author Yue Shi Lai
 
-{
-   TCanvas *c1 = new TCanvas("c1");
+void tmathtext() {
+   TCanvas *c = new TCanvas("c");
 
    TMathText l;
    l.SetTextAlign(23);
@@ -23,8 +23,6 @@
    l.DrawMathText(0.27, 0.110, "\\mathbb{N} \\subset \\mathbb{R}");
    l.DrawMathText(0.63, 0.100, "\\hbox{RHIC スピン物理 Нью-Йорк}");
 
-   c1->Print("c1.png");
-   c1->Print("c1.ps");
-
-   return c1;
+   c->Print("tmathtext.png");
+   c->Print("tmathtext.ps");
 }
