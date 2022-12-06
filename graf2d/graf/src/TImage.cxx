@@ -34,14 +34,14 @@ methods are documented in that class.
 
 TImage *TImage::Create()
 {
-   static TPluginHandler *h = 0;
+   static TPluginHandler *h = nullptr;
 
    if (!h) {
       h = gROOT->GetPluginManager()->FindHandler("TImage");
-      if (!h) return 0;
+      if (!h) return nullptr;
       if (h->LoadPlugin() == -1) {
-         h = 0;   // try to reload plugin next time
-         return 0;
+         h = nullptr;   // try to reload plugin next time
+         return nullptr;
       }
    }
    TImage *img = (TImage *) h->ExecPlugin(0);

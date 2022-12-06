@@ -358,21 +358,21 @@ void TPaveStats::Paint(Option_t *option)
             Int_t nchs = strlen(latex->GetTitle());
             sl = new char[nchs+1];
             strlcpy(sl, latex->GetTitle(),nchs+1);
-            if (strpbrk(sl, "=") !=0 && print_name == 0) {
+            if (strpbrk(sl, "=") && print_name == 0) {
                st = strtok(sl, "=");
                Int_t itok = 0;
-               while (( st != 0 ) && (itok < 2)) {
-                  TLatex latex_tok(0.,0.,st);
+               while (st && (itok < 2)) {
+                  TLatex latex_tok(0., 0., st);
                   Style_t tfont = latex->GetTextFont();
                   if (tfont == 0) tfont = GetTextFont();
                   latex_tok.SetTextFont(tfont);
                   latex_tok.SetTextSize(textsize);
                   w = latex_tok.GetXsize();
                   if (w > wtok[itok]) wtok[itok] = w;
-                  st = strtok(0, "=");
+                  st = strtok(nullptr, "=");
                   ++itok;
                }
-            } else if (strpbrk(sl, "|") !=0) {
+            } else if (strpbrk(sl, "|")) {
             } else {
                print_name = 0;
                Style_t tfont = latex->GetTextFont();
@@ -414,12 +414,12 @@ void TPaveStats::Paint(Option_t *option)
 
          Int_t nchs = strlen(latex->GetTitle());
          sl = new char[nchs+1];
-         strlcpy(sl, latex->GetTitle(),nchs+1);
+         strlcpy(sl, latex->GetTitle(), nchs+1);
          // Draw all the histogram stats except the 2D under/overflow
-         if (strpbrk(sl, "=") !=0 && print_name == 0) {
+         if (strpbrk(sl, "=") && print_name == 0) {
             st = strtok(sl, "=");
             Int_t halign = 12;
-            while ( st !=0 ) {
+            while ( st ) {
                typolabel = st;
                latex->SetTextAlign(halign);
                if (halign == 12) xtext = x1ref + margin;
@@ -431,11 +431,11 @@ void TPaveStats::Paint(Option_t *option)
                latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
                                              latex->GetTextSize(),
                                              typolabel.Data());
-               st = strtok(0, "=");
+               st = strtok(nullptr, "=");
                halign = 32;
             }
          // Draw the 2D under/overflow
-         } else if (strpbrk(sl, "|") !=0) {
+         } else if (strpbrk(sl, "|")) {
             Double_t yline1 = ytext+yspace/2.;
             Double_t yline2 = ytext-yspace/2.;
             Double_t xline1 = dx/3+x1ref;
@@ -445,7 +445,7 @@ void TPaveStats::Paint(Option_t *option)
             gPad->PaintLine(xline2,yline1,xline2,yline2);
             st = strtok(sl, "|");
             Int_t theIndex = 0;
-            while ( st !=0 ) {
+            while ( st ) {
                latex->SetTextAlign(22);
                if (theIndex == 0) xtext = 0.5*(x1ref+xline1);
                if (theIndex == 1) xtext = 0.5*(x1ref+x2ref);
@@ -456,7 +456,7 @@ void TPaveStats::Paint(Option_t *option)
                                              latex->GetTextSize(),
                                              typolabel.Data());
                theIndex++;
-               st = strtok(0, "|");
+               st = strtok(nullptr, "|");
             }
          // Draw the histogram identifier
          } else {

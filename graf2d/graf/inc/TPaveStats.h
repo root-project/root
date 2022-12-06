@@ -22,7 +22,7 @@ protected:
    Int_t         fOptStat;           ///< option Stat
    TString       fFitFormat;         ///< Printing format for fit parameters
    TString       fStatFormat;        ///< Printing format for stats
-   TObject      *fParent;            ///< owner of this TPaveStats
+   TObject      *fParent{nullptr};  ///< owner of this TPaveStats
 
 public:
    TPaveStats();

@@ -62,7 +62,7 @@ protected:
    Double_t                    fFactorSize;      ///<! Relative size of subscripts and superscripts
    Double_t                    fFactorPos;       ///<! Relative position of subscripts and superscripts
    Int_t                       fLimitFactorSize; ///< lower bound for subscripts/superscripts size
-   const Char_t               *fError;           ///<! error code
+   const Char_t               *fError{nullptr};  ///<! error code
    Bool_t                      fShow;            ///<! is true during the second pass (Painting)
    std::vector<TLatexFormSize> fTabSize;         ///<! array of values for the different zones
    Double_t                    fOriginSize;      ///< Font size of the starting font

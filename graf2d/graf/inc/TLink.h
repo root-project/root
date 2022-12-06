@@ -18,7 +18,7 @@ class TLink : public TText {
 
 protected:
 
-   void   *fLink;           ///< pointer to object
+   void   *fLink{nullptr};     ///< pointer to object
 
 public:
    enum EStatusBits { kIsStarStar = BIT(2) };

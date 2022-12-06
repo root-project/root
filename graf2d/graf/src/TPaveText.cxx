@@ -72,7 +72,7 @@ End_Macro
 
 TPaveText::TPaveText(): TPave(), TAttText()
 {
-   fLines   = 0;
+   fLines   = nullptr;
    fMargin  = 0.05;
    fLongest = 0;
 }
@@ -160,7 +160,8 @@ TPaveText& TPaveText::operator=(const TPaveText& pt)
 
 TBox *TPaveText::AddBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   if (!gPad->IsEditable()) return 0;
+   if (!gPad->IsEditable())
+      return nullptr;
    TBox *newbox = new TBox(x1,y1,x2,y2);
 
    if (!fLines) fLines = new TList;
@@ -173,7 +174,8 @@ TBox *TPaveText::AddBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 TLine *TPaveText::AddLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   if (!gPad->IsEditable()) return 0;
+   if (!gPad->IsEditable())
+      return nullptr;
    TLine *newline = new TLine(x1,y1,x2,y2);
 
    if (!fLines) fLines = new TList;
