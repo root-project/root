@@ -19,10 +19,6 @@ macro(find_package)
   endif()
 endmacro()
 
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-  set(DOWNLOAD_EXTRACT_TIMESTAMP_ARG DOWNLOAD_EXTRACT_TIMESTAMP false)
-endif()
-
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
 set(CMAKE_FIND_FRAMEWORK LAST)
 
@@ -182,7 +178,6 @@ if(builtin_freetype)
       FREETYPE
       URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
       URL_HASH SHA256=efe71fd4b8246f1b0b1b9bfca13cfff1c9ad85930340c27df469733bbb620938
-      ${DOWNLOAD_EXTRACT_TIMESTAMP_ARG}
       CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic
                          --disable-shared --with-png=no --with-bzip2=no
                          --with-harfbuzz=no ${_freetype_brotli} ${_freetype_zlib}
@@ -280,7 +275,6 @@ if(builtin_lzma)
       LZMA
       URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
       URL_HASH SHA256=b512f3b726d3b37b6dc4c8570e137b9311e7552e8ccbab4d39d47ce5f4177145
-      ${DOWNLOAD_EXTRACT_TIMESTAMP_ARG}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --libdir <INSTALL_DIR>/lib
                         --with-pic --disable-shared --quiet
@@ -502,7 +496,6 @@ if(builtin_afterimage)
     ExternalProject_Add(
       AFTERIMAGE
       DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
-      ${DOWNLOAD_EXTRACT_TIMESTAMP_ARG}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR>
                         --libdir=<INSTALL_DIR>/lib
@@ -564,7 +557,6 @@ if(mathmore OR builtin_gsl)
       URL ${lcgpackages}/gsl-${gsl_version}.tar.gz
       URL_HASH SHA256=0460ad7c2542caaddc6729762952d345374784100223995eb14d614861f2258d
       SOURCE_DIR GSL-src # prevent "<gsl/...>" vs GSL/ macOS warning
-      ${DOWNLOAD_EXTRACT_TIMESTAMP_ARG}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
                         --libdir=<INSTALL_DIR>/lib
@@ -874,7 +866,6 @@ if(builtin_fftw3)
     FFTW3
     URL ${lcgpackages}/fftw-${FFTW_VERSION}.tar.gz
     URL_HASH SHA256=6113262f6e92c5bd474f2875fa1b01054c4ad5040f6b0da7c03c98821d9ae303
-    ${DOWNLOAD_EXTRACT_TIMESTAMP_ARG}
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
     BUILD_COMMAND make CFLAGS=-fPIC
@@ -930,7 +921,6 @@ if(fitsio OR builtin_cfitsio)
         # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
         URL ${lcgpackages}/cfitsio${cfitsio_version_no_dots}.tar.gz
         URL_HASH SHA256=bf6012dbe668ecb22c399c4b7b2814557ee282c74a7d5dc704eb17c30d9fb92e
-        ${DOWNLOAD_EXTRACT_TIMESTAMP_ARG}
         INSTALL_DIR ${CMAKE_BINARY_DIR}
         CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
@@ -1395,7 +1385,6 @@ if(builtin_tbb)
       TBB
       URL ${lcgpackages}/tbb-${tbb_builtin_version}.tar.gz
       URL_HASH SHA256=${tbb_sha256}
-      ${DOWNLOAD_EXTRACT_TIMESTAMP_ARG}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       PATCH_COMMAND sed -i -e "/clang -v/s@-v@--version@" build/macos.inc
       COMMAND ${tbb_command}
