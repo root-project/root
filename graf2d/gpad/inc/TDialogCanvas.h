@@ -23,8 +23,8 @@ private:
    TDialogCanvas& operator=(const TDialogCanvas &) = delete;
 
 protected:
-   TObject     *fRefObject;   ///< Pointer to object to set attributes
-   TPad        *fRefPad;      ///< Pad containing object
+   TObject     *fRefObject{nullptr};   ///< Pointer to object to set attributes
+   TPad        *fRefPad{nullptr};      ///< Pad containing object
 
 public:
    TDialogCanvas();

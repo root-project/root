@@ -91,10 +91,6 @@ ClassImp(TControlBar);
 
 TControlBar::TControlBar() : TControlBarButton()
 {
-   fControlBarImp = 0;
-   fOrientation   = 0;
-   fButtons       = 0;
-   fNoroc         = 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,8 +125,8 @@ TControlBar::~TControlBar()
    if( fButtons )
       fButtons->Delete();
 
-   fButtons       = 0;
-   fControlBarImp = 0;
+   fButtons       = nullptr;
+   fControlBarImp = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
