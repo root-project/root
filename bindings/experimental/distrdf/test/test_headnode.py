@@ -168,9 +168,8 @@ class NumEntriesTest(unittest.TestCase):
     """'get_num_entries' returns the number of entries in the input dataset"""
 
     def fill_tree(self, size):
-        """Stores an RDataFrame object of a given size in 'data.root'."""
-        tdf = ROOT.ROOT.RDataFrame(size)
-        tdf.Define("b1", "(double) tdfentry_").Snapshot("tree", "data.root")
+        """Writes a TTree with one column of type 'double' with the given size to 'data.root'."""
+        ROOT.RDataFrame(size).Define("b1", "static_cast<double>(rdfentry_)").Snapshot("tree", "data.root")
 
     def test_num_entries_two_args_case(self):
         """
