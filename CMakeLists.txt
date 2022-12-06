@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -605,6 +605,9 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
     cmake/modules/RootMacros.cmake
     cmake/modules/RootTestDriver.cmake
     DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
+  install(FILES
+    "cmake/modules/FindVdt.cmake"
+    DESTINATION "${CMAKE_INSTALL_CMAKEDIR}/modules")
 endif()
 
 #---Add configuration files for kernel and jupyter----------------------------------------------

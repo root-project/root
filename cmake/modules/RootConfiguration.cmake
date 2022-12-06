@@ -756,6 +756,10 @@ set(ROOT_BINARY_DIR_SETUP "
 # Deprecated value, please don't use it and use ROOT_BINDIR instead.
 set(ROOT_BINARY_DIR ${ROOT_BINDIR})
 ")
+set(ROOT_CMAKE_DIR_SETUP "
+# ROOT configured for use from the build tree - absolute paths are used.
+set(ROOT_CMAKE_DIR ${CMAKE_SOURCE_DIR}/cmake)
+")
 
 get_property(exported_targets GLOBAL PROPERTY ROOT_EXPORTED_TARGETS)
 export(TARGETS ${exported_targets} NAMESPACE ROOT:: FILE ${PROJECT_BINARY_DIR}/ROOTConfig-targets.cmake)
@@ -794,6 +798,10 @@ get_filename_component(ROOT_BINDIR \"\${_ROOT_BINDIR}\" REALPATH)
 set(ROOT_BINARY_DIR_SETUP "
 # Deprecated value, please don't use it and use ROOT_BINDIR instead.
 get_filename_component(ROOT_BINARY_DIR \"\${ROOT_BINDIR}\" REALPATH)
+")
+set(ROOT_CMAKE_DIR_SETUP "
+## ROOT configured for the install with relative paths, so use these
+get_filename_component(ROOT_CMAKE_DIR \"\${_thisdir}\" REALPATH)
 ")
 
 # used by ROOTConfig.cmake from the build directory

@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -1678,6 +1678,12 @@ if(vdt OR builtin_vdt)
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
     set(vdt ON CACHE BOOL "Enabled because builtin_vdt enabled (${vdt_description})" FORCE)
     set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS VDT)
+    add_library(VDT::VDT STATIC IMPORTED GLOBAL)
+    set_target_properties(VDT::VDT
+      PROPERTIES
+        IMPORTED_LOCATION "${VDT_LIBRARIES}"
+        INTERFACE_INCLUDE_DIRECTORIES "${VDT_INCLUDE_DIRS}"
+    )
   endif()
 endif()
 

@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -7,10 +7,6 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT math/vecops package
 ############################################################################
-
-if(builtin_vdt)
-  link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
   HEADERS
@@ -24,13 +20,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
 )
 
 if(builtin_vdt OR vdt)
-   target_include_directories(ROOTVecOps PRIVATE ${VDT_INCLUDE_DIRS} INTERFACE $<BUILD_INTERFACE:${VDT_INCLUDE_DIRS}>)
+  target_link_libraries(ROOTVecOps PUBLIC VDT::VDT)
 endif()
-
 if(builtin_vdt)
-  target_link_libraries(ROOTVecOps PRIVATE ${VDT_LIBRARIES})
-elseif(vdt)
-  target_link_libraries(ROOTVecOps PUBLIC ${VDT_LIBRARIES})
+  add_dependencies(ROOTVecOps VDT)
 endif()
 
 if(MSVC)
