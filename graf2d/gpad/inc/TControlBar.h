@@ -33,10 +33,10 @@ private:
 
 protected:
 
-   TControlBarImp *fControlBarImp;  ///< system specific implementation
-   Int_t           fOrientation;    ///< orientation
-   TList          *fButtons;        ///< list of buttons
-   Int_t           fNoroc;          ///< number of rows or columns
+   TControlBarImp *fControlBarImp{nullptr};  ///< system specific implementation
+   Int_t           fOrientation{0};          ///< orientation
+   TList          *fButtons{nullptr};        ///< list of buttons
+   Int_t           fNoroc{1};                ///< number of rows or columns
 
 public:
    enum { kVertical = 1, kHorizontal = 2 };

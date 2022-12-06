@@ -17,10 +17,10 @@
 class TSlider : public TPad {
 
 protected:
-   Double_t      fMinimum;      ///< Slider minimum value in [0,1]
-   Double_t      fMaximum;      ///< Slider maximum value in [0,1]
-   TObject      *fObject;       ///<!Pointer to associated object
-   TString       fMethod;       ///< command to be executed when slider is changed
+   Double_t      fMinimum{0};      ///< Slider minimum value in [0,1]
+   Double_t      fMaximum{1};      ///< Slider maximum value in [0,1]
+   TObject      *fObject{nullptr}; ///<!Pointer to associated object
+   TString       fMethod;          ///< command to be executed when slider is changed
 
 private:
    TSlider(const TSlider &) = delete;

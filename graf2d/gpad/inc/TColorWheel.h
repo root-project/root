@@ -23,18 +23,18 @@ class TGraph;
 class TColorWheel : public TNamed {
 
 private:
-   Double_t  fRmin;     ///<Minimum radius for rectangles
-   Double_t  fRmax;     ///<Maximum radius for rectangles
-   Double_t  fR0;       ///<Minimum radius for circles
-   Double_t  fDr;       ///<Circles radius
-   Double_t  fRgray;    ///<Maximum radius of gray circle
-   Double_t  fX[15];    ///<X coordinates of the center of circles
-   Double_t  fY[15];    ///<Y coordinates of the center of circles
-   TCanvas  *fCanvas;   ///<! Canvas used to draw the Color Wheel
-   TArc     *fArc;      ///<! pointer to utility arc
-   TLine    *fLine;     ///<! pointer to utility line
-   TText    *fText;     ///<! pointer to utility text
-   TGraph   *fGraph;    ///<! pointer to utility graph
+   Double_t  fRmin{0.};          ///<Minimum radius for rectangles
+   Double_t  fRmax{0.};          ///<Maximum radius for rectangles
+   Double_t  fR0{0.};            ///<Minimum radius for circles
+   Double_t  fDr{0.};            ///<Circles radius
+   Double_t  fRgray{0.};         ///<Maximum radius of gray circle
+   Double_t  fX[15];             ///<X coordinates of the center of circles
+   Double_t  fY[15];             ///<Y coordinates of the center of circles
+   TCanvas  *fCanvas{nullptr};   ///<! Canvas used to draw the Color Wheel
+   TArc     *fArc{nullptr};      ///<! pointer to utility arc
+   TLine    *fLine{nullptr};     ///<! pointer to utility line
+   TText    *fText{nullptr};     ///<! pointer to utility text
+   TGraph   *fGraph{nullptr};    ///<! pointer to utility graph
 
    TColorWheel(const TColorWheel &) = delete;
    TColorWheel &operator=(const TColorWheel &) = delete;

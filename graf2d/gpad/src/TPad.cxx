@@ -1017,14 +1017,15 @@ void TPad::Close(Option_t *)
          if (fCanvas->GetPadSave() == this)
             fCanvas->ClearPadSave();
          if (fCanvas->GetSelectedPad() == this)
-            fCanvas->SetSelectedPad(0);
+            fCanvas->SetSelectedPad(nullptr);
          if (fCanvas->GetClickSelectedPad() == this)
-            fCanvas->SetClickSelectedPad(0);
+            fCanvas->SetClickSelectedPad(nullptr);
       }
    }
 
    fMother = nullptr;
-   if (gROOT->GetSelectedPad() == this) gROOT->SetSelectedPad(nullptr);
+   if (gROOT->GetSelectedPad() == this)
+      gROOT->SetSelectedPad(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1158,7 +1159,7 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
       void *arr[7];
       arr[1] = this; arr[2] = (void*)&nx;arr[3] = (void*)& ny;
       arr[4] = (void*)&xmargin; arr[5] = (void *)& ymargin; arr[6] = (void *)&color;
-      if ((*gThreadXAR)("PDCD", 7, arr, 0)) return;
+      if ((*gThreadXAR)("PDCD", 7, arr, nullptr)) return;
    }
 
    TPad *padsav = (TPad*)gPad;
@@ -1306,7 +1307,7 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
    const Int_t kMAXLEVELS = 10;
    TClass *clevel[kMAXLEVELS], *cl, *cll;
    TBaseClass *base, *cinherit;
-   TText *ptext = 0;
+   TText *ptext = nullptr;
    TString opt=option;
    Double_t x,y,dy,y1,v1,v2,dv;
    Int_t nd,nf,nc,nkd,nkf,i,j;
@@ -1332,7 +1333,7 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
    while(lbase) {
       base = (TBaseClass*)lbase->First();
       if (!base) break;
-      if ( base->GetClassPointer() == 0) break;
+      if (!base->GetClassPointer()) break;
       nlevel++;
       clevel[nlevel] = base->GetClassPointer();
       lbase = clevel[nlevel]->GetListOfBases();
@@ -1372,7 +1373,7 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
       x2    = x1 + nc*dx;
       v2    = ypad - 0.5;
       lbase = cl->GetListOfBases();
-      cinherit = 0;
+      cinherit = nullptr;
       if (lbase) cinherit = (TBaseClass*)lbase->First();
 
       do {
@@ -1472,7 +1473,7 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
          }
 
          // Draw second inheritance classes for this class
-         cll = 0;
+         cll = nullptr;
          if (cinherit) {
             cinherit = (TBaseClass*)lbase->After(cinherit);
             if (cinherit) {
@@ -1608,7 +1609,7 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
    hframe->SetMinimum(ymin);
    hframe->SetMaximum(ymax);
    hframe->GetYaxis()->SetLimits(ymin,ymax);
-   hframe->SetDirectory(0);
+   hframe->SetDirectory(nullptr);
    hframe->Draw(" ");
    Update();
    if (padsav) padsav->cd();
@@ -2278,7 +2279,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    opt.ToLower();
    Bool_t kCont4 = kFALSE;
    if (strstr(opt,"cont4")) {
-      view = 0;
+      view = nullptr;
       kCont4 = kTRUE;
    }
 
@@ -2472,7 +2473,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
                axis->SetRange(bin1, bin2);
             }
             delete view;
-            SetView(0);
+            SetView(nullptr);
             Modified(kTRUE);
          }
       } else {
@@ -4978,7 +4979,7 @@ void TPad::Print(const char *filename, Option_t *option)
       if (!gSystem->AccessPathName(psname)) Info("Print", "SVG file %s has been created", psname.Data());
 
       delete gVirtualPS;
-      gVirtualPS = 0;
+      gVirtualPS = nullptr;
       padsav->cd();
 
       return;
@@ -5118,7 +5119,7 @@ void TPad::Print(const char *filename, Option_t *option)
          gVirtualPS = psave;
       } else {
          gROOT->GetListOfSpecials()->Add(gVirtualPS);
-         gVirtualPS = 0;
+         gVirtualPS = nullptr;
       }
 
       if (!gSystem->AccessPathName(psname)) {
@@ -5227,8 +5228,8 @@ void TPad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
 void TPad::RecursiveRemove(TObject *obj)
 {
    if (fCanvas) {
-     if (obj == fCanvas->GetSelected()) fCanvas->SetSelected(0);
-     if (obj == fCanvas->GetClickSelected()) fCanvas->SetClickSelected(0);
+     if (obj == fCanvas->GetSelected()) fCanvas->SetSelected(nullptr);
+     if (obj == fCanvas->GetClickSelected()) fCanvas->SetClickSelected(nullptr);
    }
    if (obj == fView) fView = nullptr;
    if (!fPrimitives) return;
