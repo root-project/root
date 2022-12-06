@@ -16,7 +16,10 @@ ROOT_LINKER_LIBRARY(RooBatchCompute
 target_include_directories(RooBatchCompute INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 
 if(vdt OR builtin_vdt)
-  target_include_directories(RooBatchCompute PRIVATE ${VDT_INCLUDE_DIRS} INTERFACE $<BUILD_INTERFACE:${VDT_INCLUDE_DIRS}>)
+  target_link_libraries(RooBatchCompute PUBLIC VDT::VDT)
+endif()
+if(builtin_vdt)
+  add_dependencies(RooBatchCompute VDT)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

@@ -61,6 +61,7 @@ get_filename_component(_thisdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
 @ROOT_LIBRARY_DIR_SETUP@
 @ROOT_BINDIR_SETUP@
 @ROOT_BINARY_DIR_SETUP@
+@ROOT_CMAKE_DIR_SETUP@
 
 # Python version used to build ROOT
 set(ROOT_PYTHON_VERSION @PYTHON_VERSION_STRING_Development_Main@)
@@ -85,6 +86,10 @@ foreach(_opt ${_root_enabled_options})
 endforeach()
 
 #----------------------------------------------------------------------------
+# Make any modules bundled with ROOT visible to CMake
+list(APPEND CMAKE_MODULE_PATH "${ROOT_CMAKE_DIR}/modules")
+
+#----------------------------------------------------------------------------
 # Find external packages which were used in ROOT
 include(CMakeFindDependencyMacro)
 if (NOT ROOT_builtin_nlohmannjson_FOUND)
@@ -96,6 +101,9 @@ endif()
 if(ROOT_minuit2_omp_FOUND)
   find_dependency(OpenMP)
   find_dependency(Threads)
+endif()
+if(ROOT_vdt_FOUND AND NOT TARGET VDT::VDT)
+  find_dependency(Vdt)
 endif()
 
 #----------------------------------------------------------------------------
