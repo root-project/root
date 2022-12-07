@@ -116,6 +116,7 @@ It is strongly recommended to persistify those as objects rather than lists of l
   int value;
   tree->Branch(branchname, &value);
 ~~~
+The `myvar` column, which holds the variable size, **MUST** be an `Int_t` (/I).
 - If the address points to more than one numerical variable, we strongly recommend
   that the variable be sorted in decreasing order of size.  Any other order will
   result in a non-portable TTree (i.e. you will not be able to read it back on a
