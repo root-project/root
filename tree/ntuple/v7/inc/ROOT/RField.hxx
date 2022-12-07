@@ -288,6 +288,7 @@ public:
    /// Returns an index that can be used to remove the callback.
    size_t AddReadCallback(ReadCallback_t func);
    void RemoveReadCallback(size_t idx);
+   bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
 
    DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
    void SetOnDiskId(DescriptorId_t id) { fOnDiskId = id; }
