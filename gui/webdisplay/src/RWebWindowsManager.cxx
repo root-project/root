@@ -632,8 +632,10 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
       return 0;
    }
 
-   if (args.GetWidth() <= 0) args.SetWidth(win.GetWidth());
-   if (args.GetHeight() <= 0) args.SetHeight(win.GetHeight());
+   if (args.GetWidth() <= 0)
+      args.SetWidth(win.GetWidth());
+   if (args.GetHeight() <= 0)
+      args.SetHeight(win.GetHeight());
 
    bool normal_http = !args.IsLocalDisplay();
    if (!normal_http && (gEnv->GetValue("WebGui.ForceHttp", 0) == 1))
@@ -652,7 +654,8 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    args.SetUrl(url);
 
    args.AppendUrlOpt(std::string("key=") + key);
-   if (args.IsHeadless()) args.AppendUrlOpt("headless"); // used to create holder request
+   if (args.IsHeadless())
+      args.AppendUrlOpt("headless"); // used to create holder request
    if (!token.empty())
       args.AppendUrlOpt(std::string("token=") + token);
 
@@ -662,7 +665,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
       InformListener(std::string("win:") + winurl);
    }
 
-   if (!args.IsHeadless() && (args.GetBrowserKind() == RWebDisplayArgs::kServer) && (RWebWindowWSHandler::GetBoolEnv("WebGui.OnetimeKey") != 1)) {
+   if (!args.IsHeadless() && ((args.GetBrowserKind() == RWebDisplayArgs::kServer) || gROOT->IsWebDisplayBatch()) /*&& (RWebWindowWSHandler::GetBoolEnv("WebGui.OnetimeKey") != 1)*/) {
       std::cout << "New web window: " << args.GetUrl() << std::endl;
       return 0;
    }

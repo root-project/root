@@ -36,7 +36,7 @@ parser.add_argument("-b", action="store_true", default=False, help="Use ROOT bat
 parser.add_argument("-t", action="store_true", default=False, help="Use implicit multi threading (for the full dataset only possible with --lumi-scale 1.0)")
 args = parser.parse_args()
 
-if args.b: ROOT.gROOT.SetWebDisplay("batch")
+if args.b: ROOT.gROOT.SetBatch(True)
 if args.t: ROOT.EnableImplicitMT()
 
 if not args.full_dataset: lumi_scale = 0.001 # The preskimmed dataset contains only 0.01 fb^-1
