@@ -314,7 +314,7 @@ public:
    void              Reset(Option_t *option="");
    void              SaveContext();
    void              SetApplication(TApplication *app) { fApplication = app; }
-   void              SetBatch(Bool_t batch = kTRUE) { fBatch = batch; }
+   void              SetBatch(Bool_t batch = kTRUE) { fIsWebDisplayBatch = fBatch = batch; }
    void              SetWebDisplay(const char *webdisplay);
    void              SetCutClassName(const char *name = "TCutG");
    void              SetDefCanvasName(const char *name = "c1") { fDefCanvasName = name; }
