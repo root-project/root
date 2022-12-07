@@ -125,8 +125,8 @@ It is strongly recommended to persistify those as objects rather than lists of l
 - In case of the truncated floating point types (Float16_t and Double32_t) you can
   furthermore specify the range in the style [xmin,xmax] or [xmin,xmax,nbits] after
   the type character. For example, for storing a variable size array `myArr` of
-  `Double32_t` with values within a range of `[0, 2*pi]` and the size of which is
-  stored in a branch called `myArrSize`, the syntax for the `leaflist` string would
+  `Double32_t` with values within a range of `[0, 2*pi]` and the size of which is stored
+  in an `Int_t` (/I) branch called `myArrSize`, the syntax for the `leaflist` string would
   be: `myArr[myArrSize]/d[0,twopi]`. Of course the number of bits could be specified,
   the standard rules of opaque typedefs annotation are valid. For example, if only
   18 bits were sufficient, the syntax would become: `myArr[myArrSize]/d[0,twopi,18]`
