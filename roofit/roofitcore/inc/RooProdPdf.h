@@ -55,8 +55,6 @@ public:
   TObject* clone(const char* newname) const override { return new RooProdPdf(*this,newname) ; }
   ~RooProdPdf() override ;
 
-  bool checkObservables(const RooArgSet* nset) const override ;
-
   bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
   double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
