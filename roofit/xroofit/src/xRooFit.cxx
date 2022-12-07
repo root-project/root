@@ -111,7 +111,7 @@ std::pair<std::shared_ptr<RooAbsData>,std::shared_ptr<const RooAbsCollection>> x
     std::function<std::pair<std::shared_ptr<RooAbsData>,std::shared_ptr<const RooArgSet>>(RooAbsPdf*)> genSubPdf;
 
     genSubPdf = [&](RooAbsPdf* _pdf) {
-        std::pair<std::shared_ptr<RooAbsData>,std::shared_ptr<const RooArgSet>> out;
+        std::pair<std::shared_ptr<RooAbsData>,std::shared_ptr<const RooArgSet>> _out;
         //std::unique_ptr<RooArgSet> _obs(_pdf->getParameters(*pars)); // using this "trick" to get observables can produce 'error' msg because of RooProdPdf trying to setup partial integrals
         std::unique_ptr<RooArgSet> _obs(_pdf->getVariables());_obs->remove(fr->constPars(),true,true);_obs->remove(fr->floatParsFinal(),true,true); // use this instead
 
@@ -128,45 +128,45 @@ std::pair<std::shared_ptr<RooAbsData>,std::shared_ptr<const RooAbsCollection>> x
                     // loop over pdfs in top-level prod-pdf,
                     auto pp = dynamic_cast<RooProdPdf*>(_pdf);
                     if (pp) {
-                        for(auto pdf : pp->pdfList()) {
-                            auto gob = std::unique_ptr<RooArgSet>( pdf->getObservables(*globs) );
+                        for(auto thePdf : pp->pdfList()) {
+                            auto gob = std::unique_ptr<RooArgSet>(thePdf->getObservables(*globs) );
                             if (gob->empty()) continue;
                             if (gob->size()>1) {
-                                Warning("generate","%s contains multiple global obs: %s",pdf->GetName(),gob->contentsString().c_str());
+                                Warning("generate", "%s contains multiple global obs: %s", thePdf->GetName(), gob->contentsString().c_str());
                                 continue;
                             }
                             RooRealVar &rrv = dynamic_cast<RooRealVar &>(*gob->first());
-                            std::unique_ptr<RooArgSet> cpars(pdf->getParameters(*globs));
+                            std::unique_ptr<RooArgSet> cpars(thePdf->getParameters(*globs));
 
                             bool foundServer = false;
                             // note : this will work only for this type of constraints
                             // expressed as RooPoisson, RooGaussian, RooLognormal, RooGamma
-                            TClass * cClass = pdf->IsA();
+                            TClass * cClass = thePdf->IsA();
                             if ( cClass != RooGaussian::Class() && cClass != RooPoisson::Class() &&
                                  cClass != RooGamma::Class() && cClass != RooLognormal::Class() &&
                                  cClass != RooBifurGauss::Class()  ) {
                                 TString className =  (cClass) ?  cClass->GetName() : "undefined";
                                 oocoutW((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term "
-                                                                << pdf->GetName() << " of type " << className
+                                                                << thePdf->GetName() << " of type " << className
                                                                 << " is a non-supported type - result might be not correct " << std::endl;
                             }
 
                             // in case of a Poisson constraint make sure the rounding is not set
                             if (cClass == RooPoisson::Class() ) {
-                                RooPoisson * pois = dynamic_cast<RooPoisson*>(pdf);
+                                RooPoisson * pois = dynamic_cast<RooPoisson*>(thePdf);
                                 assert(pois);
                                 pois->setNoRounding(true);
                             }
 
                             // look at server of the constraint term and check if the global observable is part of the server
-                            RooAbsArg * arg = pdf->findServer(rrv);
+                            RooAbsArg * arg = thePdf->findServer(rrv);
                             if (!arg) {
                                 // special case is for the Gamma where one might define the global observable n and you have a Gamma(b, n+1, ...._
                                 // in this case n+1 is the server and we don;t have a direct dependency, but we want to set n to the b value
                                 // so in case of the Gamma ignore this test
                                 if ( cClass != RooGamma::Class() ) {
                                     oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term "
-                                                                    << pdf->GetName() << " has no direct dependence on global observable- cannot generate it " << std::endl;
+                                                                    << thePdf->GetName() << " has no direct dependence on global observable- cannot generate it " << std::endl;
                                     continue;
                                 }
                             }
@@ -177,7 +177,7 @@ std::pair<std::shared_ptr<RooAbsData>,std::shared_ptr<const RooAbsCollection>> x
                             // we assume that the global observable is defined as ngobs = k-1 and the theta parameter has the name theta otherwise we use other procedure which might be wrong
                             RooAbsReal * thetaGamma = 0;
                             if ( cClass == RooGamma::Class() ) {
-                                RooFIter itc(pdf->serverMIterator() );
+                                RooFIter itc(thePdf->serverMIterator() );
                                 for (RooAbsArg *a2 = itc.next(); a2 != 0; a2 = itc.next()) {
                                     if (TString(a2->GetName()).Contains("theta") ) {
                                         thetaGamma = dynamic_cast<RooAbsReal*>(a2);
@@ -186,11 +186,11 @@ std::pair<std::shared_ptr<RooAbsData>,std::shared_ptr<const RooAbsCollection>> x
                                 }
                                 if (thetaGamma == 0) {
                                     oocoutI((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term "
-                                                                    << pdf->GetName() << " is a Gamma distribution and no server named theta is found. Assume that the Gamma scale is  1 " << std::endl;
+                                                                    << thePdf->GetName() << " is a Gamma distribution and no server named theta is found. Assume that the Gamma scale is  1 " << std::endl;
                                 }
 
                             }
-                            RooFIter iter2(pdf->serverMIterator() );
+                            RooFIter iter2(thePdf->serverMIterator() );
                             for (RooAbsArg *a2 = iter2.next(); a2 != 0; a2 = iter2.next()) {
                                 RooAbsReal * rrv2 = dynamic_cast<RooAbsReal *>(a2);
                                 if (rrv2 && !rrv2->dependsOn(*gob) && (!rrv2->isConstant() || !rrv2->InheritsFrom("RooConstVar")) ) {
@@ -199,7 +199,7 @@ std::pair<std::shared_ptr<RooAbsData>,std::shared_ptr<const RooAbsCollection>> x
                                     // found server not depending on the gob
                                     if (foundServer) {
                                         oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term "
-                                                                        << pdf->GetName() << " constraint term has more server depending on nuisance- cannot generate it " <<
+                                                                        << thePdf->GetName() << " constraint term has more server depending on nuisance- cannot generate it " <<
                                                                         std::endl;
                                         foundServer = false;
                                         break;
@@ -214,7 +214,7 @@ std::pair<std::shared_ptr<RooAbsData>,std::shared_ptr<const RooAbsCollection>> x
                             }
 
                             if (!foundServer) {
-                                oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData - can't find nuisance for constraint term - global observables will not be set to Asimov value " << pdf->GetName() << std::endl;
+                                oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData - can't find nuisance for constraint term - global observables will not be set to Asimov value " << thePdf->GetName() << std::endl;
                                 std::cerr << "Parameters: " << std::endl;
                                 cpars->Print("V");
                                 std::cerr << "Observables: " << std::endl;
@@ -229,16 +229,16 @@ std::pair<std::shared_ptr<RooAbsData>,std::shared_ptr<const RooAbsCollection>> x
                 }
 
             }
-            out.second.reset(toy_gobs);
+            _out.second.reset(toy_gobs);
         } // end of globs generation
 
         RooRealVar w("weightVar","weightVar",1);
         if (auto s = dynamic_cast<RooSimultaneous*>(_pdf)) {
             // do subpdf's individually
             _obs->add(w);
-            out.first.reset(new RooDataSet(uuid,
-                                           TString::Format("%s %s", _pdf->GetTitle(), (expected) ? "Expected" : "Toy"),
-                                           *_obs, "weightVar"));
+            _out.first.reset(new RooDataSet(uuid,
+                                            TString::Format("%s %s", _pdf->GetTitle(), (expected) ? "Expected" : "Toy"),
+                                            *_obs, "weightVar"));
 
             for(auto& c : s->indexCat()) {
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,00)
@@ -249,14 +249,14 @@ std::pair<std::shared_ptr<RooAbsData>,std::shared_ptr<const RooAbsCollection>> x
                 auto p = s->getPdf(cLabel.c_str());
                 if (!p) continue;
                 auto toy = genSubPdf( p );
-                if (toy.second && out.second) *const_cast<RooArgSet*>(out.second.get()) = *toy.second;
+                if (toy.second && _out.second) *const_cast<RooArgSet*>(_out.second.get()) = *toy.second;
                 _obs->setCatLabel(s->indexCat().GetName(),cLabel.c_str());
                 for(int i = 0; i < toy.first->numEntries();i++) {
                     *_obs = *toy.first->get(i);
-                    out.first->add(*_obs, toy.first->weight());
+                    _out.first->add(*_obs, toy.first->weight());
                 }
             }
-            return out;
+            return _out;
         }
 
         std::map<RooRealVar *, std::shared_ptr<RooAbsBinning>> binnings;
@@ -284,22 +284,22 @@ std::pair<std::shared_ptr<RooAbsData>,std::shared_ptr<const RooAbsCollection>> x
             // no observables, create a single dataset with 1 entry ... why 1 entry??
             _obs->add(w);
             RooArgSet _tmp; _tmp.add(w);
-            out.first.reset( new RooDataSet("","Toy",_tmp,"weightVar"));
-            out.first->add(_tmp);
+            _out.first.reset(new RooDataSet("", "Toy", _tmp, "weightVar"));
+            _out.first->add(_tmp);
         } else {
             if (_pdf->canBeExtended()) {
-                out.first.reset(_pdf->generate(*_obs, RooFit::Extended(), RooFit::ExpectedData(expected)));
+                _out.first.reset(_pdf->generate(*_obs, RooFit::Extended(), RooFit::ExpectedData(expected)));
             } else {
                 if (expected) {
                     // use AsymptoticCalculator because generate expected not working correctly on unextended pdf?
                     // TODO: Can the above code for expected globs be used instead, or what about replace above code with ObsToExpected?
-                    out.first.reset(RooStats::AsymptoticCalculator::GenerateAsimovData(*_pdf, *_obs));
+                    _out.first.reset(RooStats::AsymptoticCalculator::GenerateAsimovData(*_pdf, *_obs));
                 } else {
-                    out.first.reset(_pdf->generate(*_obs, RooFit::ExpectedData(expected)));
+                    _out.first.reset(_pdf->generate(*_obs, RooFit::ExpectedData(expected)));
                 }
             }
         }
-        out.first->SetName(TUUID().AsString());
+        _out.first->SetName(TUUID().AsString());
 
         for (auto& b : binnings) {
             auto v = b.first;
@@ -307,12 +307,12 @@ std::pair<std::shared_ptr<RooAbsData>,std::shared_ptr<const RooAbsCollection>> x
             v->setBinning(*binning);
             // range of variable in dataset may be less than in the workspace
             // if e.g. generate for a specific channel. So need to expand ranges to match
-            auto x = dynamic_cast<RooRealVar *>(out.first->get()->find(v->GetName()));
+            auto x = dynamic_cast<RooRealVar *>(_out.first->get()->find(v->GetName()));
             auto r = x->getRange();
             if (r.first > binning->lowBound()) x->setMin(binning->lowBound());
             if (r.second < binning->highBound()) x->setMax(binning->highBound());
         }
-        return out;
+        return _out;
     };
 
     out = genSubPdf(&pdf);
@@ -692,8 +692,8 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal& nll, const std
             // interesting note: error on pars before hesse can be significantly
             // smaller than after hesse ... what is the pre-hesse error corresponding to?
             auto parSettings = _minimizer.fitter()->Config().ParamsSettings();
-            for(auto& s :_minimizer.fitter()->Config().ParamsSettings()) {
-                s.RemoveLimits();
+            for(auto& ss :_minimizer.fitter()->Config().ParamsSettings()) {
+                ss.RemoveLimits();
             }
 
             //_nll->getVal(); // for reasons I dont understand, if nll evaluated before hesse call the edm is smaller? - and also becomes WRONG :-S
@@ -727,7 +727,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal& nll, const std
         if (save) {
             //modify the statusHistory to use the algnames instead ..
             int i = 0;
-            for (auto &s : algNames) { out->_statusHistory[i++].first = s; }
+            for (auto &ss : algNames) { out->_statusHistory[i++].first = ss; }
         }
 
         out->_constPars->addClone(fUserPars, true);
@@ -1151,18 +1151,18 @@ TCanvas* xRooFit::hypoTest(RooWorkspace& w, int nToysNull, int /*nToysAlt*/, con
 
 
         auto getLimit = [CL](TGraphErrors& pValues) {
-            double out = std::numeric_limits<double>::quiet_NaN();
+            double _out = std::numeric_limits<double>::quiet_NaN();
             bool lastAbove=false;
             for(int i=0;i<pValues.GetN();i++) {
                 bool thisAbove = pValues.GetPointY(i) >= (1.-CL);
                 if (i!=0 && thisAbove!=lastAbove) {
                     // crossed over ... find limit by interpolation
                     // using linear interpolation so far
-                    out = pValues.GetPointX(i-1) + (pValues.GetPointX(i)-pValues.GetPointX(i-1))*((1.-CL)-pValues.GetPointY(i-1))/(pValues.GetPointY(i) - pValues.GetPointY(i-1));
+                    _out = pValues.GetPointX(i - 1) + (pValues.GetPointX(i) - pValues.GetPointX(i - 1)) * ((1. - CL) - pValues.GetPointY(i - 1)) / (pValues.GetPointY(i) - pValues.GetPointY(i - 1));
                 }
                 lastAbove = thisAbove;
             }
-            return out;
+            return _out;
         };
 
         auto testPoint = [&](double testVal) {

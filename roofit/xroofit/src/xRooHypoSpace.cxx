@@ -419,9 +419,9 @@ void xRooNLLVar::xRooHypoSpace::LoadFits(const char* apath) {
 
     int nFits = 0;
     std::function<void(TDirectory*)> processDir;
-    processDir = [&](TDirectory* dir) {
-        std::cout << "Processing " << dir->GetName() << std::endl;
-        if (auto keys = dir->GetListOfKeys(); keys) {
+    processDir = [&](TDirectory* _dir) {
+        std::cout << "Processing " << _dir->GetName() << std::endl;
+        if (auto keys = _dir->GetListOfKeys(); keys) {
             // first check if dir doesn't contain any RooLinkedList ... this identifies it as not an nll dir
             // so treat any sub-dirs as new nll
             bool isNllDir = false;
@@ -433,7 +433,7 @@ void xRooNLLVar::xRooHypoSpace::LoadFits(const char* apath) {
             }
 
             for (auto &&k: *keys) {
-                if(auto subdir = dir->GetDirectory(k->GetName()); subdir) {
+                if(auto subdir = _dir->GetDirectory(k->GetName()); subdir) {
                     if(!isNllDir) {
                         LoadFits(subdir->GetPath());
                     } else {
@@ -443,7 +443,7 @@ void xRooNLLVar::xRooHypoSpace::LoadFits(const char* apath) {
                 }
                 auto cl = TClass::GetClass(((TKey *) k)->GetClassName());
                 if (cl->InheritsFrom("RooFitResult")) {
-                    if (auto cachedFit = dir->Get<RooFitResult>(k->GetName());cachedFit) {
+                    if (auto cachedFit = _dir->Get<RooFitResult>(k->GetName());cachedFit) {
                         nFits++;
                         if(nFits==1) {
                             // for first fit add any missing float pars
@@ -659,14 +659,14 @@ std::shared_ptr<TGraphErrors> xRooNLLVar::xRooHypoSpace::BuildGraph(const char* 
 
 
     auto badPoints = [&]() {
-        auto badPoints = dynamic_cast<TGraph*>( out->GetListOfFunctions()->FindObject("badPoints") );
-        if (!badPoints) {
-            badPoints = new TGraph;
-            badPoints->SetBit(kCanDelete); badPoints->SetName("badPoints");
-            badPoints->SetMarkerStyle(5); badPoints->SetMarkerColor(kRed); badPoints->SetMarkerSize(out->GetMarkerSize());
-            out->GetListOfFunctions()->Add( badPoints, "P" );
+        auto badPoints2 = dynamic_cast<TGraph*>( out->GetListOfFunctions()->FindObject("badPoints") );
+        if (!badPoints2) {
+            badPoints2 = new TGraph;
+            badPoints2->SetBit(kCanDelete); badPoints2->SetName("badPoints");
+            badPoints2->SetMarkerStyle(5); badPoints2->SetMarkerColor(kRed); badPoints2->SetMarkerSize(out->GetMarkerSize());
+            out->GetListOfFunctions()->Add(badPoints2, "P" );
         }
-        return badPoints;
+        return badPoints2;
     };
     int nPointsDown = 0;
     bool above = true;
@@ -753,14 +753,14 @@ std::pair<double,double> xRooNLLVar::xRooHypoSpace::GetLimit(const TGraph& pValu
     double alpha = log(target);
 
     bool above = gr->GetPointY(0) > alpha;
-    for(int i=1;i<gr->GetN();i++) {
-        if( (above && (gr->GetPointY(i) <= alpha)) || (!above && (gr->GetPointY(i)>=alpha)) ) {
+    for(int ii=1; ii < gr->GetN(); ii++) {
+        if((above && (gr->GetPointY(ii) <= alpha)) || (!above && (gr->GetPointY(ii) >= alpha)) ) {
             // found the limit ... return linearly extrapolated point
-            double lim = gr->GetPointX(i-1) + (gr->GetPointX(i)-gr->GetPointX(i-1))*(alpha - gr->GetPointY(i-1))/(gr->GetPointY(i) - gr->GetPointY(i-1));
+            double lim = gr->GetPointX(ii - 1) + (gr->GetPointX(ii) - gr->GetPointX(ii - 1)) * (alpha - gr->GetPointY(ii - 1)) / (gr->GetPointY(ii) - gr->GetPointY(ii - 1));
             // use points either side as error
-            double err = std::max( lim - gr->GetPointX(i-1), gr->GetPointX(i) - lim );
+            double err = std::max( lim - gr->GetPointX(ii - 1), gr->GetPointX(ii) - lim );
             // give err negative sign to indicate if error due to negative side
-            if ((lim - gr->GetPointX(i-1)) > (gr->GetPointX(i) - lim)) err *= -1;
+            if ((lim - gr->GetPointX(ii - 1)) > (gr->GetPointX(ii) - lim)) err *= -1;
             return std::pair(lim,err);
         }
     }
