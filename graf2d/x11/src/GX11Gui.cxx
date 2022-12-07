@@ -1809,6 +1809,9 @@ void TGX11::WMDeleteNotify(Window_t id)
 
 void TGX11::SetKeyAutoRepeat(Bool_t on)
 {
+   if (!fDisplay)
+      return;
+
    if (on)
       XAutoRepeatOn((Display*)fDisplay);
    else
