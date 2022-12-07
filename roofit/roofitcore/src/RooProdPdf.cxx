@@ -1697,15 +1697,6 @@ double RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, co
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Obsolete
-
-bool RooProdPdf::checkObservables(const RooArgSet* /*nset*/) const
-{ return false ; }
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// If this product contains exactly one extendable p.d.f return the extension abilities of
 /// that p.d.f, otherwise return CanNotBeExtended
 
