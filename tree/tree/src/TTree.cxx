@@ -89,8 +89,8 @@ It is strongly recommended to persistify those as objects rather than lists of l
   assumed of type F by default. The list of currently supported
   types is given below:
    - `C` : a character string terminated by the 0 character
-   - `B` : an 8 bit signed integer (`Char_t`)
-   - `b` : an 8 bit unsigned integer (`UChar_t`)
+   - `B` : an 8 bit signed character (`Char_t`)
+   - `b` : an 8 bit unsigned character (`UChar_t`)
    - `S` : a 16 bit signed integer (`Short_t`)
    - `s` : a 16 bit unsigned integer (`UShort_t`)
    - `I` : a 32 bit signed integer (`Int_t`)
@@ -1938,8 +1938,8 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
 ///      variable. If the first variable does not have a type, it is assumed
 ///      of type F by default. The list of currently supported types is given below:
 ///         - `C` : a character string terminated by the 0 character
-///         - `B` : an 8 bit signed integer (`Char_t`)
-///         - `b` : an 8 bit unsigned integer (`UChar_t`)
+///         - `B` : an 8 bit signed character (`Char_t`)
+///         - `b` : an 8 bit unsigned character (`UChar_t`)
 ///         - `S` : a 16 bit signed integer (`Short_t`)
 ///         - `s` : a 16 bit unsigned integer (`UShort_t`)
 ///         - `I` : a 32 bit signed integer (`Int_t`)
@@ -1958,6 +1958,7 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
 ///         - If leaf name has the form var[nelem], where nelem is alphanumeric, then
 ///           if nelem is a leaf name, it is used as the variable size of the array,
 ///           otherwise return 0.
+///           The leaf referred to by nelem **MUST** be an int (/I),
 ///         - If leaf name has the form var[nelem], where nelem is a non-negative integer, then
 ///           it is used as the fixed size of the array.
 ///         - If leaf name has the form of a multi-dimensional array (e.g. var[nelem][nelem2])
