@@ -648,7 +648,7 @@ Bool_t TWebCanvas::AddToSendQueue(unsigned connid, const std::string &msg)
 
 void TWebCanvas::CheckDataToSend(unsigned connid)
 {
-   if (!Canvas())
+   if (!Canvas() || !fWindow)
       return;
 
    for (auto &conn : fWebConn) {
@@ -764,11 +764,12 @@ void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
 
 void TWebCanvas::Show()
 {
-   if (!Canvas()->IsBatch()) {
-      ROOT::Experimental::RWebDisplayArgs args;
-      args.SetWidgetKind("TCanvas");
-      ShowWebWindow(args);
-   }
+   if (gROOT->IsWebDisplayBatch())
+      return;
+
+   ROOT::Experimental::RWebDisplayArgs args;
+   args.SetWidgetKind("TCanvas");
+   ShowWebWindow(args);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1538,8 +1539,8 @@ UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 
 Bool_t TWebCanvas::PerformUpdate()
 {
-   if (Canvas()->IsBatch())
-      return kFALSE;
+   if (!fWindow)
+      return kTRUE;
 
    CheckCanvasModified();
 
@@ -1556,7 +1557,7 @@ Bool_t TWebCanvas::PerformUpdate()
 
 void TWebCanvas::ForceUpdate()
 {
-   if (Canvas()->IsBatch())
+   if (!fWindow)
       return;
 
    CheckCanvasModified(true);
@@ -1569,6 +1570,9 @@ void TWebCanvas::ForceUpdate()
 
 Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
 {
+   if (!fWindow)
+      return kTRUE;
+
    // simple polling loop until specified version delivered to the clients
    // first 500 loops done without sleep, then with 1ms sleep and last 500 with 100 ms sleep
 
@@ -1613,9 +1617,6 @@ TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression)
    if (!c)
       return res;
 
-   Bool_t isbatch = c->IsBatch();
-   c->SetBatch(kTRUE);
-
    {
       auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
 
@@ -1626,7 +1627,6 @@ TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression)
       });
    }
 
-   c->SetBatch(isbatch);
    return res;
 }
 
@@ -1636,13 +1636,10 @@ TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression)
 
 Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *option)
 {
-   Int_t res{0};
+   Int_t res = 0;
 
    if (!c)
       return res;
-
-   Bool_t isbatch = c->IsBatch();
-   c->SetBatch(kTRUE);
 
    {
       auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
@@ -1654,7 +1651,6 @@ Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *
       });
    }
 
-   c->SetBatch(isbatch);
    return res;
 }
 
