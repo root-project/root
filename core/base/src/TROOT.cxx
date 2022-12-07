@@ -2758,10 +2758,7 @@ void TROOT::SetMacroPath(const char *newpath)
 ///  - "edge": select Microsoft Edge browser for interactive web display
 ///  - "off": turns off the web display and comes back to normal graphics in
 ///    interactive mode.
-///  - "batch": turns the web display in batch mode. TCanvas images will be produced with web graphics.
-///    One could append browser kind like "batch:firefox"
-///  - "batch7": turns the web display only of ROOT7 classes in batch mode, TCanvas will be handled with old graphics.
-///  - "server:port": turns the web display into server mode as specified port. Web widgets will not be displayed,
+///  - "server:port": turns the web display into server mode with specified port. Web widgets will not be displayed,
 ///    only text message with window URL will be printed on standard output
 
 void TROOT::SetWebDisplay(const char *webdisplay)
@@ -2772,26 +2769,11 @@ void TROOT::SetWebDisplay(const char *webdisplay)
 
    if (!strcmp(wd, "off")) {
       fIsWebDisplay = kFALSE;
-      fIsWebDisplayBatch = kFALSE;
-      fWebDisplay = "";
+      fWebDisplay = "off";
       return;
    }
 
-   // handle batch combinations
-   if (!strncmp(wd, "batch7", 6)) {
-      fIsWebDisplay = kFALSE;
-      fIsWebDisplayBatch = kTRUE;
-      wd += 6;
-      wd = (*wd == ':') ? wd+1 : "";
-   } else if (!strncmp(wd, "batch", 5)) {
-      fIsWebDisplay = kTRUE;
-      fIsWebDisplayBatch = kTRUE;
-      wd += 5;
-      wd = (*wd == ':') ? wd+1 : "";
-   } else {
-      fIsWebDisplay = kTRUE;
-      fIsWebDisplayBatch = kFALSE;
-   }
+   fIsWebDisplay = kTRUE;
 
    // handle server mode
    if (!strncmp(wd, "server", 6)) {

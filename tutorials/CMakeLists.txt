@@ -46,7 +46,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BIN
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogon.C "{
   // Needed by ACLiC to use the current directory for scratch area
   gSystem->SetBuildDir(\".\", kTRUE);
-  gROOT->SetWebDisplay(\"batch7\");
 }")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootalias.C "")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogoff.C "{}")
