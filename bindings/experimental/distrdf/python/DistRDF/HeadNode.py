@@ -469,7 +469,7 @@ class TreeHeadNode(HeadNode):
                 )
                 for (friend_name, friend_alias), friend_filenames, friend_chainsubnames in zipped_friendinfo:
                     friends = list(zip_longest(friend_chainsubnames, friend_filenames, fillvalue=friend_name))
-                    ds.AddFriend(friends, friend_alias)
+                    ds.WithFriends(friends, friend_alias)
 
         def build_rdf_from_range(current_range: Ranges.TreeRangePerc) -> TaskObjects:
             """
