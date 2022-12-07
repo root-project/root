@@ -110,13 +110,13 @@ It is strongly recommended to persistify those as objects rather than lists of l
    - A float array with fixed size: "myArrfloat[42]/F"
    - An double array with variable size, held by the `myvar` column: "myArrdouble[myvar]/D"
    - An Double32_t array with variable size, held by the `myvar` column , with values between 0 and 16: "myArr[myvar]/d[0,10]"
+   - The `myvar` column, which holds the variable size, **MUST** be an `Int_t` (/I).
 
 - If the address points to a single numerical variable, the leaflist is optional:
 ~~~ {.cpp}
   int value;
   tree->Branch(branchname, &value);
 ~~~
-The `myvar` column, which holds the variable size, **MUST** be an `Int_t` (/I).
 - If the address points to more than one numerical variable, we strongly recommend
   that the variable be sorted in decreasing order of size.  Any other order will
   result in a non-portable TTree (i.e. you will not be able to read it back on a
