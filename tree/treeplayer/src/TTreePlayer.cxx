@@ -2963,7 +2963,7 @@ void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
    TString hname = gEnv->GetValue("TreeViewer.Name", "TTreeViewer");
 
    if (gROOT->IsBatch()) {
-      if ((hname != "RTreeViewer") || (gROOT->GetWebDisplay() != "server")) {
+      if ((hname != "RTreeViewer") || gROOT->IsWebDisplayBatch()) {
          Warning("StartViewer", "The tree viewer cannot run in batch mode");
          return;
       }

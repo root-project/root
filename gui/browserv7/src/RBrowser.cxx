@@ -24,6 +24,7 @@
 
 #include "TString.h"
 #include "TSystem.h"
+#include "TError.h"
 #include "TROOT.h"
 #include "TBufferJSON.h"
 #include "TApplication.h"
@@ -254,6 +255,11 @@ public:
 
 RBrowser::RBrowser(bool use_rcanvas)
 {
+   if (gROOT->IsWebDisplayBatch()) {
+      ::Warning("RBrowser::RBrowser", "The RBrowser cannot run in web batch mode");
+      return;
+   }
+
    std::ostringstream pathtmp;
    pathtmp << gSystem->TempDirectory() << "/command." << gSystem->GetPid() << ".log";
    fPromptFileOutput = pathtmp.str();
@@ -316,9 +322,9 @@ RBrowser::RBrowser(bool use_rcanvas)
 
 RBrowser::~RBrowser()
 {
-   fWebWindow->GetManager()->SetShowCallback(nullptr);
+   if (fWebWindow)
+      fWebWindow->GetManager()->SetShowCallback(nullptr);
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Process browser request
@@ -490,10 +496,8 @@ void RBrowser::Show(const RWebDisplayArgs &args, bool always_start_new_browser)
 
 void RBrowser::Hide()
 {
-   if (!fWebWindow)
-      return;
-
-   fWebWindow->CloseConnections();
+   if (fWebWindow)
+      fWebWindow->CloseConnections();
 }
 
 
