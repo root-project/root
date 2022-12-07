@@ -100,8 +100,6 @@ public:
 private:
 
   double evaluate() const override ;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
-  inline bool canComputeBatchWithCuda() const override { return true; }
 
   std::unique_ptr<RooAbsReal> makeCondPdfRatioCorr(RooAbsReal& term, const RooArgSet& termNset, const RooArgSet& termImpSet, const char* normRange, const char* refRange) const ;
 
@@ -159,6 +157,7 @@ private:
   RooAbsReal* specializeIntegral(RooAbsReal& orig, const char* targetRangeName) const ;
   RooAbsReal* specializeRatio(RooFormulaVar& input, const char* targetRangeName) const ;
   double calculate(const RooProdPdf::CacheElem& cache, bool verbose=false) const ;
+  void calculateBatch(const RooProdPdf::CacheElem& cache, cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const;
 
 
   friend class RooProdGenContext ;
