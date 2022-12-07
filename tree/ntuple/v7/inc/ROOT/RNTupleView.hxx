@@ -165,6 +165,8 @@ public:
       : fField(pageSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fieldId).GetFieldName()),
         fValue(fField.GenerateValue())
    {
+      if ((fField.GetTraits() & Detail::RFieldBase::kTraitMappable) && fField.HasReadCallbacks())
+         throw RException(R__FAIL("view disallowed on field with mappable type and read callback"));
       fField.SetOnDiskId(fieldId);
       fField.ConnectPageSource(*pageSource);
       for (auto &f : fField) {
