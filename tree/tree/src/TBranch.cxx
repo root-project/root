@@ -146,8 +146,8 @@ TBranch::TBranch()
 ///     assumed of type F by default. The list of currently supported
 ///     types is given below:
 ///        - `C` : a character string terminated by the 0 character
-///        - `B` : an 8 bit signed integer (`Char_t`)
-///        - `b` : an 8 bit unsigned integer (`UChar_t`)
+///        - `B` : an 8 bit signed character (`Char_t`)
+///        - `b` : an 8 bit unsigned character (`UChar_t`)
 ///        - `S` : a 16 bit signed integer (`Short_t`)
 ///        - `s` : a 16 bit unsigned integer (`UShort_t`)
 ///        - `I` : a 32 bit signed integer (`Int_t`)
@@ -1897,7 +1897,7 @@ TBasket *TBranch::GetFreshCluster(TBuffer* user_buffer)
       if (fExtraBasket) {
          newbasket = fExtraBasket;
          fExtraBasket = nullptr;
-      } else { 
+      } else {
          newbasket = fTree->CreateBasket(this);
       }
       if (user_buffer)
