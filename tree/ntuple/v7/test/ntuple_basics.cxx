@@ -640,12 +640,23 @@ TEST(RNTuple, BareEntry)
    EXPECT_EQ(2.0, *ntuple->GetModel()->GetDefaultEntry()->Get<float>("pt"));
 }
 
+namespace ROOT::Experimental::Internal {
+struct RFieldCallbackInjector {
+   template <typename FieldT>
+   static void Inject(FieldT &field, ROOT::Experimental::Detail::RFieldBase::ReadCallback_t func)
+   {
+      field.AddReadCallback(func);
+   }
+};
+} // namespace ROOT::Experimental::Internal
 namespace {
 static unsigned gNCallReadCallback = 0;
 }
 
 TEST(RNTuple, ReadCallback)
 {
+   using RFieldCallbackInjector = ROOT::Experimental::Internal::RFieldCallbackInjector;
+
    FileRaii fileGuard("test_ntuple_readcb.ntuple");
    {
       auto model = RNTupleModel::Create();
@@ -661,13 +672,13 @@ TEST(RNTuple, ReadCallback)
    auto model = RNTupleModel::Create();
    auto fieldI32 = std::make_unique<RField<std::int32_t>>("i32");
    auto fieldKlass = std::make_unique<RField<CustomStruct>>("klass");
-   fieldI32->AddReadCallback([](RFieldValue &value) {
+   RFieldCallbackInjector::Inject(*fieldI32, [](RFieldValue &value) {
       static std::int32_t expected = 0;
       EXPECT_EQ(*value.Get<std::int32_t>(), expected++);
       gNCallReadCallback++;
    });
-   fieldI32->AddReadCallback([](RFieldValue &) { gNCallReadCallback++; });
-   fieldKlass->AddReadCallback([](RFieldValue &) { gNCallReadCallback++; });
+   RFieldCallbackInjector::Inject(*fieldI32, [](RFieldValue &) { gNCallReadCallback++; });
+   RFieldCallbackInjector::Inject(*fieldKlass, [](RFieldValue &) { gNCallReadCallback++; });
    model->AddField(std::move(fieldI32));
    model->AddField(std::move(fieldKlass));
 
