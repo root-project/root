@@ -32,6 +32,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <functional>
 #include <iostream>
 #include <iterator>
 #include <memory>
@@ -71,7 +72,7 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 // clang-format on
 class RFieldBase {
    friend class ROOT::Experimental::RCollectionField; // to move the fields from the collection model
-   using ReadCallback_t = void (*)(RFieldValue &);
+   using ReadCallback_t = std::function<void(RFieldValue &)>;
 
 public:
    /// No constructor needs to be called, i.e. any bit pattern in the allocated memory represents a valid type
@@ -147,7 +148,7 @@ private:
    {
       if (R__likely(fReadCallbacks.empty()))
          return;
-      for (const auto func : fReadCallbacks) {
+      for (const auto &func : fReadCallbacks) {
          func(value);
       }
    }
