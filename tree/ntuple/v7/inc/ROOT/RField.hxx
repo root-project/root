@@ -53,6 +53,10 @@ class RCollectionNTupleWriter;
 class REntry;
 class RNTupleModel;
 
+namespace Internal {
+class RFieldCallbackInjector;
+} // namespace Internal
+
 namespace Detail {
 
 class RFieldVisitor;
@@ -72,6 +76,7 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 // clang-format on
 class RFieldBase {
    friend class ROOT::Experimental::RCollectionField; // to move the fields from the collection model
+   friend class ROOT::Experimental::Internal::RFieldCallbackInjector;
    using ReadCallback_t = std::function<void(RFieldValue &)>;
 
 public:
@@ -142,6 +147,12 @@ protected:
    /// is not of one of the requested types.
    ROOT::Experimental::EColumnType EnsureColumnType(const std::vector<EColumnType> &requestedTypes,
                                                     unsigned int columnIndex, const RNTupleDescriptor &desc);
+
+   /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
+   /// value object.
+   /// Returns an index that can be used to remove the callback.
+   size_t AddReadCallback(ReadCallback_t func);
+   void RemoveReadCallback(size_t idx);
 
 private:
    void InvokeReadCallbacks(RFieldValue &value)
@@ -226,6 +237,7 @@ public:
    /// For many types, the alignment requirement is equal to the size; otherwise override.
    virtual size_t GetAlignment() const { return GetValueSize(); }
    int GetTraits() const { return fTraits; }
+   bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
 
    /// Write the given value into columns. The value object has to be of the same type as the field.
    /// Returns the number of uncompressed bytes written.
@@ -282,13 +294,6 @@ public:
    /// Get the field's description
    std::string GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description) { fDescription = std::string(description); }
-
-   /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
-   /// value object.
-   /// Returns an index that can be used to remove the callback.
-   size_t AddReadCallback(ReadCallback_t func);
-   void RemoveReadCallback(size_t idx);
-   bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
 
    DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
    void SetOnDiskId(DescriptorId_t id) { fOnDiskId = id; }
