@@ -399,14 +399,10 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          // the web mode is requested
          const char *opt = argv[i] + 5;
          argv[i] = null;
-         TString argw;
-         if (*opt == '=')
-            argw.Append(opt+1);
-         if (argw == "off") {
-            gROOT->SetWebDisplay(argw.Data());
+         gROOT->SetWebDisplay((*opt == '=') ? opt + 1 : "");
+         if (!gROOT->IsWebDisplay()) {
             gEnv->SetValue("Browser.Name", "TRootBrowser"); // force usage of TBrowser back
          } else if (gSystem->Load("libROOTWebDisplay") >= 0) {
-            gROOT->SetWebDisplay(argw.Data());
             gEnv->SetValue("Gui.Factory", "web");
             gEnv->SetValue("TreeViewer.Name", "RTreeViewer");
          } else {
