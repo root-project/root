@@ -188,7 +188,7 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    // Initialize the graphics environment
    if (gClassTable->GetDict("TPad")) {
       fgGraphNeeded = kTRUE;
-      InitializeGraphics();
+      InitializeGraphics(gROOT->IsWebDisplay());
    }
 
    // Save current interpreter context
@@ -239,49 +239,56 @@ void TApplication::NeedGraphicsLibs()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the graphics environment.
+/// If @param only_web is specified, only web-related part of graphics is loaded
 
-void TApplication::InitializeGraphics()
+void TApplication::InitializeGraphics(Bool_t only_web)
 {
    if (fgGraphInit || !fgGraphNeeded) return;
 
-   // Load the graphics related libraries
-   LoadGraphicsLibs();
+   if (!only_web) {
 
-   // Try to load TrueType font renderer. Only try to load if not in batch
-   // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
-   // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
-   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-                                       TROOT::GetTTFFontDir());
-   char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
-   // Check for use of DFSG - fonts
-   if (!ttfont)
-      ttfont = gSystem->Which(ttpath, "FreeSansBold.ttf", kReadPermission);
+      // Load the graphics related libraries
+      LoadGraphicsLibs();
 
-#if !defined(R__WIN32)
-   if (!gROOT->IsBatch() && !strcmp(gVirtualX->GetName(), "X11") &&
-       ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
-      if (gClassTable->GetDict("TGX11TTF")) {
-         // in principle we should not have linked anything against libGX11TTF
-         // but with ACLiC this can happen, initialize TGX11TTF by hand
-         // (normally this is done by the static library initializer)
-         ProcessLine("TGX11TTF::Activate();");
-      } else {
-         TPluginHandler *h;
-         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", "x11ttf")))
-            if (h->LoadPlugin() == -1)
-               Info("InitializeGraphics", "no TTF support");
+      // Try to load TrueType font renderer. Only try to load if not in batch
+      // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
+      // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
+      const char *ttpath = gEnv->GetValue("Root.TTFontPath",
+                                          TROOT::GetTTFFontDir());
+      char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
+      // Check for use of DFSG - fonts
+      if (!ttfont)
+         ttfont = gSystem->Which(ttpath, "FreeSansBold.ttf", kReadPermission);
+
+   #if !defined(R__WIN32)
+      if (!gROOT->IsBatch() && !strcmp(gVirtualX->GetName(), "X11") &&
+          ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
+         if (gClassTable->GetDict("TGX11TTF")) {
+            // in principle we should not have linked anything against libGX11TTF
+            // but with ACLiC this can happen, initialize TGX11TTF by hand
+            // (normally this is done by the static library initializer)
+            ProcessLine("TGX11TTF::Activate();");
+         } else {
+            TPluginHandler *h;
+            if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", "x11ttf")))
+               if (h->LoadPlugin() == -1)
+                  Info("InitializeGraphics", "no TTF support");
+         }
       }
-   }
-#endif
-   delete [] ttfont;
+   #endif
+      delete [] ttfont;
 
-   // Create WM dependent application environment
-   if (fAppImp)
-      delete fAppImp;
-   fAppImp = gGuiFactory->CreateApplicationImp(gROOT->GetName(), &fArgc, fArgv);
-   if (!fAppImp) {
-      MakeBatch();
+   }
+
+   if (!only_web || !fAppImp) {
+      // Create WM dependent application environment
+      if (fAppImp)
+         delete fAppImp;
       fAppImp = gGuiFactory->CreateApplicationImp(gROOT->GetName(), &fArgc, fArgv);
+      if (!fAppImp) {
+         MakeBatch();
+         fAppImp = gGuiFactory->CreateApplicationImp(gROOT->GetName(), &fArgc, fArgv);
+      }
    }
 
    // Create the canvas colors early so they are allocated before
@@ -293,7 +300,7 @@ void TApplication::InitializeGraphics()
    Init();
 
    // Set default screen factor (if not disabled in rc file)
-   if (gEnv->GetValue("Canvas.UseScreenFactor", 1)) {
+   if (!only_web && gEnv->GetValue("Canvas.UseScreenFactor", 1)) {
       Int_t  x, y;
       UInt_t w, h;
       if (gVirtualX) {
@@ -1513,7 +1520,7 @@ Longptr_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
 
       delete [] mac;
 
-      InitializeGraphics();
+      InitializeGraphics(gROOT->IsWebDisplay());
 
       return retval;
    }
