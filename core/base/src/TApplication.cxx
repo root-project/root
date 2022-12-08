@@ -243,10 +243,10 @@ void TApplication::NeedGraphicsLibs()
 
 void TApplication::InitializeGraphics(Bool_t only_web)
 {
-   if (fgGraphInit || !fgGraphNeeded) return;
+   if (fgGraphInit || !fgGraphNeeded)
+      return;
 
    if (!only_web) {
-
       // Load the graphics related libraries
       LoadGraphicsLibs();
 
@@ -277,7 +277,6 @@ void TApplication::InitializeGraphics(Bool_t only_web)
       }
    #endif
       delete [] ttfont;
-
    }
 
    if (!only_web || !fAppImp) {
@@ -407,14 +406,6 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          const char *opt = argv[i] + 5;
          argv[i] = null;
          gROOT->SetWebDisplay((*opt == '=') ? opt + 1 : "");
-         if (!gROOT->IsWebDisplay()) {
-            gEnv->SetValue("Browser.Name", "TRootBrowser"); // force usage of TBrowser back
-         } else if (gSystem->Load("libROOTWebDisplay") >= 0) {
-            gEnv->SetValue("Gui.Factory", "web");
-            gEnv->SetValue("TreeViewer.Name", "RTreeViewer");
-         } else {
-            Error("GetOptions", "--web option not supported, ROOT should be built with -Dwebgui=ON which requires c++17");
-         }
       } else if (!strcmp(argv[i], "-e")) {
          argv[i] = null;
          ++i;
@@ -1216,17 +1207,12 @@ void TApplication::LoadGraphicsLibs()
    if (guiFactory == "native")
       guiFactory = "root";
 
-   if (guiFactory == "web") {
-      // web display allows to use batch gui factory
-      gGuiFactory = gBatchGuiFactory;
-   } else {
-      if (auto h = gROOT->GetPluginManager()->FindHandler("TGuiFactory", guiFactory)) {
-         if (h->LoadPlugin() == -1) {
-            gROOT->SetBatch(kTRUE);
-            return;
-         }
-         gGuiFactory = (TGuiFactory *) h->ExecPlugin(0);
+   if (auto h = gROOT->GetPluginManager()->FindHandler("TGuiFactory", guiFactory)) {
+      if (h->LoadPlugin() == -1) {
+         gROOT->SetBatch(kTRUE);
+         return;
       }
+      gGuiFactory = (TGuiFactory *) h->ExecPlugin(0);
    }
 }
 
@@ -1487,38 +1473,29 @@ Longptr_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
    }
 
    if (!strncmp(line, ".L", 2) || !strncmp(line, ".U", 2)) {
-      TString aclicMode;
-      TString arguments;
-      TString io;
+      TString aclicMode, arguments, io;
       TString fname = gSystem->SplitAclicMode(line+3, aclicMode, arguments, io);
 
       char *mac = gSystem->Which(TROOT::GetMacroPath(), fname, kReadPermission);
-      if (arguments.Length()) {
-         Warning("ProcessLine", "argument(s) \"%s\" ignored with .%c", arguments.Data(),
-                 line[1]);
-      }
+      if (arguments.Length())
+         Warning("ProcessLine", "argument(s) \"%s\" ignored with .%c", arguments.Data(), line[1]);
       Longptr_t retval = 0;
-      if (!mac)
-         Error("ProcessLine", "macro %s not found in path %s", fname.Data(),
-               TROOT::GetMacroPath());
-      else {
-         TString cmd(line+1);
+      if (!mac) {
+         Error("ProcessLine", "macro %s not found in path %s", fname.Data(), TROOT::GetMacroPath());
+      } else {
+         TString cmd(line + 1);
          Ssiz_t posSpace = cmd.Index(' ');
-         if (posSpace == -1) cmd.Remove(1);
-         else cmd.Remove(posSpace);
-         TString tempbuf;
-         if (sync) {
-            tempbuf.Form(".%s %s%s%s", cmd.Data(), mac, aclicMode.Data(),io.Data());
-            retval = gInterpreter->ProcessLineSynch(tempbuf,
-                                                   (TInterpreter::EErrorCode*)err);
-         } else {
-            tempbuf.Form(".%s %s%s%s", cmd.Data(), mac, aclicMode.Data(),io.Data());
-            retval = gInterpreter->ProcessLine(tempbuf,
-                                              (TInterpreter::EErrorCode*)err);
-         }
+         if (posSpace == kNPOS)
+            cmd.Remove(1);
+         else
+            cmd.Remove(posSpace);
+         auto tempbuf = TString::Format(".%s %s%s%s", cmd.Data(), mac, aclicMode.Data(), io.Data());
+         delete[] mac;
+         if (sync)
+            retval = gInterpreter->ProcessLineSynch(tempbuf.Data(), (TInterpreter::EErrorCode *)err);
+         else
+            retval = gInterpreter->ProcessLine(tempbuf.Data(), (TInterpreter::EErrorCode *)err);
       }
-
-      delete [] mac;
 
       InitializeGraphics(gROOT->IsWebDisplay());
 
