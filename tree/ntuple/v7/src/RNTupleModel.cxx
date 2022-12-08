@@ -22,6 +22,7 @@
 #include <atomic>
 #include <cstdlib>
 #include <memory>
+#include <typeinfo>
 #include <utility>
 
 
@@ -47,6 +48,16 @@ void ROOT::Experimental::RNTupleModel::EnsureNotBare() const
 {
    if (!fDefaultEntry)
       throw RException(R__FAIL("invalid attempt to use default entry of bare model"));
+}
+
+void ROOT::Experimental::RNTupleModel::EnsureValidFieldMapping(const Detail::RFieldBase &fieldTarget,
+                                                               const std::string &source) const
+{
+   auto fieldSource = GetField(source);
+   if (!fieldSource)
+      throw RException(R__FAIL("unknown source field for mapping: " + source));
+   if (typeid(fieldTarget) != typeid(*fieldSource))
+      throw RException(R__FAIL("field mapping type mismatch: " + source + " --> " + fieldTarget.GetName()));
 }
 
 ROOT::Experimental::RNTupleModel::RNTupleModel()
@@ -90,6 +101,23 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBa
    fFieldZero->Attach(std::move(field));
 }
 
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<Detail::RFieldBase> field, FieldMapper_t mapping)
+{
+   EnsureNotFrozen();
+   if (!field)
+      throw RException(R__FAIL("null field"));
+
+   printf("MAPPING %s\n", field->GetName().c_str());
+   mapping(*field);
+   for (const auto &subField : *field) {
+      printf("MAPPING %s\n", subField.GetName().c_str());
+      auto mappedField = mapping(subField);
+   }
+
+   EnsureValidFieldName(field->GetName());
+   return RResult<void>::Success();
+}
 
 std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental::RNTupleModel::MakeCollection(
    std::string_view fieldName, std::unique_ptr<RNTupleModel> collectionModel)
