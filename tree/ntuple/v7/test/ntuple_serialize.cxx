@@ -301,10 +301,12 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(2u, locator.fBytesOnStorage);
 
    locator.fPosition.emplace<std::string>("X");
+   locator.fType = RNTupleLocator::kTypeURI;
    EXPECT_EQ(5u, RNTupleSerializer::SerializeLocator(locator, nullptr));
    EXPECT_EQ(5u, RNTupleSerializer::SerializeLocator(locator, buffer));
    locator.fPosition = 42U;
    locator.fBytesOnStorage = 42;
+   locator.fType = RNTupleLocator::kTypeFile;
    try {
       RNTupleSerializer::DeserializeLocator(buffer, 4, locator).Unwrap();
       FAIL() << "too short locator buffer should throw";
@@ -313,6 +315,7 @@ TEST(RNTuple, SerializeLocator)
    }
    EXPECT_EQ(5u, RNTupleSerializer::DeserializeLocator(buffer, 5, locator).Unwrap());
    EXPECT_EQ(0u, locator.fBytesOnStorage);
+   EXPECT_EQ(RNTupleLocator::kTypeURI, locator.fType);
    EXPECT_EQ("X", locator.Get<std::string>());
 
    locator.fPosition.emplace<std::string>("abcdefghijkl");
