@@ -100,17 +100,13 @@ std::unique_ptr<RooAbsReal> createConstraintTerm(std::string const &name, RooAbs
 {
    RooArgSet const &observables = *data.get();
 
-   bool doStripDisconnected = false;
-
    // If no explicit list of parameters to be constrained is specified apply default algorithm
-   // All terms of RooProdPdfs that do not contain observables and share a parameters with one or more
-   // terms that do contain observables are added as constrainedParameters.
+   // All terms of RooProdPdfs that do not contain observables are added as constrainedParameters.
    RooArgSet cPars;
    if (constrainedParameters) {
       cPars.add(*constrainedParameters);
    } else {
       pdf.getParameters(&observables, cPars, false);
-      doStripDisconnected = true;
    }
 
    // Collect internal and external constraint specifications
@@ -120,8 +116,17 @@ std::unique_ptr<RooAbsReal> createConstraintTerm(std::string const &name, RooAbs
    auto constraintSetCacheName = std::string("CACHE_CONSTR_OF_PDF_") + pdf.GetName() + "_FOR_OBS_" + observableNames;
 
    if (!cPars.empty()) {
+      // Note: we don't attempt to strip out constraint PDFs that don't contain
+      // parameters in the main model. It's true that irrelevant components
+      // would stripped away from the final lieklihood, resulting in a slightly
+      // cheaper evaluation. But this happens only in rare cases, because
+      // usually one doesn't put completely disconnected auxiliary measurements
+      // in a combined PDF. And the dependency checking that happens if
+      // stripDisconnected is enabled is very expensive. Therefore, for the
+      // overall reduction of computation time for typical usecases, it is
+      // better do not strip the disconnected constraint PDFs.
       std::unique_ptr<RooArgSet> internalConstraints{
-         pdf.getAllConstraints(observables, cPars, doStripDisconnected, removeConstraintsFromPdf)};
+         pdf.getAllConstraints(observables, cPars, /*doStripDisconnected*/ false, removeConstraintsFromPdf)};
       allConstraints.add(*internalConstraints);
    }
    if (externalConstraints) {
