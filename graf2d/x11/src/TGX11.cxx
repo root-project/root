@@ -173,16 +173,16 @@ ClassImp(TGX11);
 TGX11::TGX11()
 {
    int i;
-   fDisplay            = 0;
+   fDisplay            = nullptr;
    fScreenNumber       = 0;
-   fVisual             = 0;
+   fVisual             = nullptr;
    fRootWin            = 0;
    fVisRootWin         = 0;
    fColormap           = 0;
    fBlackPixel         = 0;
    fWhitePixel         = 0;
-   fWindows            = 0;
-   fColors             = 0;
+   fWindows            = nullptr;
+   fColors             = nullptr;
    fXEvent             = new XEvent;
    fRedDiv             = -1;
    fGreenDiv           = -1;
@@ -209,9 +209,9 @@ TGX11::TGX11()
 TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
 {
    int i;
-   fDisplay            = 0;
+   fDisplay            = nullptr;
    fScreenNumber       = 0;
-   fVisual             = 0;
+   fVisual             = nullptr;
    fRootWin            = 0;
    fVisRootWin         = 0;
    fColormap           = 0;
@@ -473,7 +473,7 @@ void TGX11::CloseWindow1()
       if (fRedDiv == -1)
          XFreeColors((Display*)fDisplay, fColormap, gCws->fNewColors, gCws->fNcolors, 0);
       delete [] gCws->fNewColors;
-      gCws->fNewColors = 0;
+      gCws->fNewColors = nullptr;
    }
 
    XFlush((Display*)fDisplay);
@@ -487,7 +487,7 @@ void TGX11::CloseWindow1()
          return;
       }
 
-   gCws = 0;
+   gCws = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -788,27 +788,27 @@ void TGX11::FindBestVisual()
       // try to find better visual
       static XVisualInfo templates[] = {
          // Visual, visualid, screen, depth, class      , red_mask, green_mask, blue_mask, colormap_size, bits_per_rgb
-         { 0     , 0       , 0     , 24   , TrueColor  , 0       , 0         , 0        , 0            , 0 },
-         { 0     , 0       , 0     , 32   , TrueColor  , 0       , 0         , 0        , 0            , 0 },
-         { 0     , 0       , 0     , 16   , TrueColor  , 0       , 0         , 0        , 0            , 0 },
-         { 0     , 0       , 0     , 15   , TrueColor  , 0       , 0         , 0        , 0            , 0 },
+         { nullptr, 0       , 0     , 24   , TrueColor  , 0       , 0         , 0        , 0            , 0 },
+         { nullptr, 0       , 0     , 32   , TrueColor  , 0       , 0         , 0        , 0            , 0 },
+         { nullptr, 0       , 0     , 16   , TrueColor  , 0       , 0         , 0        , 0            , 0 },
+         { nullptr, 0       , 0     , 15   , TrueColor  , 0       , 0         , 0        , 0            , 0 },
          // no suitable TrueColorMode found - now do the same thing to DirectColor
-         { 0     , 0       , 0     , 24   , DirectColor, 0       , 0         , 0        , 0            , 0 },
-         { 0     , 0       , 0     , 32   , DirectColor, 0       , 0         , 0        , 0            , 0 },
-         { 0     , 0       , 0     , 16   , DirectColor, 0       , 0         , 0        , 0            , 0 },
-         { 0     , 0       , 0     , 15   , DirectColor, 0       , 0         , 0        , 0            , 0 },
-         { 0     , 0       , 0     , 0    , 0          , 0       , 0         , 0        , 0            , 0 },
+         { nullptr, 0       , 0     , 24   , DirectColor, 0       , 0         , 0        , 0            , 0 },
+         { nullptr, 0       , 0     , 32   , DirectColor, 0       , 0         , 0        , 0            , 0 },
+         { nullptr, 0       , 0     , 16   , DirectColor, 0       , 0         , 0        , 0            , 0 },
+         { nullptr, 0       , 0     , 15   , DirectColor, 0       , 0         , 0        , 0            , 0 },
+         { nullptr, 0       , 0     , 0    , 0          , 0       , 0         , 0        , 0            , 0 },
       };
 
       Int_t nitems = 0;
-      XVisualInfo *vlist = 0;
+      XVisualInfo *vlist = nullptr;
       for (Int_t i = 0; templates[i].depth != 0; i++) {
          Int_t mask = VisualScreenMask|VisualDepthMask|VisualClassMask;
          templates[i].screen = fScreenNumber;
          if ((vlist = XGetVisualInfo((Display*)fDisplay, mask, &(templates[i]), &nitems))) {
             FindUsableVisual((RXVisualInfo*)vlist, nitems);
             XFree(vlist);
-            vlist = 0;
+            vlist = nullptr;
             if (fVisual)
                break;
          }
@@ -932,7 +932,7 @@ void *TGX11::GetGC(Int_t which) const
 {
    if (which >= kMAXGC || which < 0) {
       Error("GetGC", "trying to get illegal GC (which = %d)", which);
-      return 0;
+      return nullptr;
    }
    return &gGClist[which];
 }
@@ -1114,7 +1114,7 @@ Int_t TGX11::OpenDisplay(void *disp)
 
    // Create primitives graphic contexts
    for (i = 0; i < kMAXGC; i++)
-      gGClist[i] = XCreateGC((Display*)fDisplay, fVisRootWin, 0, 0);
+      gGClist[i] = XCreateGC((Display*)fDisplay, fVisRootWin, 0, nullptr);
 
    XGCValues values;
    if (XGetGCValues((Display*)fDisplay, *gGCtext, GCForeground|GCBackground, &values)) {
@@ -1146,7 +1146,7 @@ Int_t TGX11::OpenDisplay(void *disp)
    static int isdisp = 0;
    if (!isdisp) {
       for (i = 0; i < kMAXFONT; i++) {
-         gFont[i].id = 0;
+         gFont[i].id = nullptr;
          strcpy(gFont[i].name, " ");
       }
       fontlist = XListFonts((Display*)fDisplay, "*courier*", 1, &fontcount);
@@ -1287,7 +1287,7 @@ again:
    gCws->fClip          = 0;
    gCws->fWidth         = wval;
    gCws->fHeight        = hval;
-   gCws->fNewColors     = 0;
+   gCws->fNewColors     = nullptr;
    gCws->fShared        = kFALSE;
 
    return wid;
@@ -1366,7 +1366,7 @@ again:
    gCws->fClip         = 0;
    gCws->fWidth        = wval;
    gCws->fHeight       = hval;
-   gCws->fNewColors    = 0;
+   gCws->fNewColors    = nullptr;
    gCws->fShared       = kFALSE;
 
    return wid;
@@ -1410,7 +1410,7 @@ again:
    gCws->fClip          = 0;
    gCws->fWidth         = w;
    gCws->fHeight        = h;
-   gCws->fNewColors     = 0;
+   gCws->fNewColors     = nullptr;
    gCws->fShared        = kTRUE;
 
    return wid;
@@ -1429,7 +1429,7 @@ void TGX11::RemoveWindow(ULong_t qwid)
       if (fRedDiv == -1)
          XFreeColors((Display*)fDisplay, fColormap, gCws->fNewColors, gCws->fNcolors, 0);
       delete [] gCws->fNewColors;
-      gCws->fNewColors = 0;
+      gCws->fNewColors = nullptr;
    }
 
    gCws->fOpen = 0;
@@ -1441,7 +1441,7 @@ void TGX11::RemoveWindow(ULong_t qwid)
          return;
       }
 
-   gCws = 0;
+   gCws = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1728,7 +1728,7 @@ Int_t TGX11::RequestString(int x, int y, char *text)
             break;
          case KeyPress:
             nbytes = XLookupString(&event.xkey, keybuf, sizeof(keybuf),
-                                   &keysym, 0);
+                                   &keysym, nullptr);
             switch (keysym) {      // map cursor keys
                case XK_Left:
                   keybuf[0] = '\002';  // Control-B
@@ -2329,13 +2329,13 @@ void TGX11::SetLineStyle(Style_t lstyle)
    if (fLineStyle != lstyle) { //set style index only if different
       fLineStyle = lstyle;
       if (lstyle <= 1 ) {
-         SetLineType(0,0);
+         SetLineType(0, nullptr);
       } else if (lstyle == 2 ) {
-         SetLineType(2,dashed);
+         SetLineType(2, dashed);
       } else if (lstyle == 3 ) {
-         SetLineType(2,dotted);
+         SetLineType(2, dotted);
       } else if (lstyle == 4 ) {
-         SetLineType(4,dasheddotted);
+         SetLineType(4, dasheddotted);
       } else {
          TString st = (TString)gStyle->GetLineStyleString(lstyle);
          TObjArray *tokens = st.Tokenize(" ");
@@ -2347,7 +2347,7 @@ void TGX11::SetLineStyle(Style_t lstyle)
             sscanf(((TObjString*)tokens->At(j))->GetName(), "%d", &it);
             linestyle[j] = (Int_t)(it/4);
          }
-         SetLineType(nt,linestyle);
+         SetLineType(nt, linestyle);
          delete [] linestyle;
          delete tokens;
       }
@@ -2887,7 +2887,7 @@ void TGX11::SetOpacity(Int_t percent)
    if (percent == 0) return;
    // if 100 percent then just make white
 
-   ULong_t *orgcolors = 0, *tmpc = 0;
+   ULong_t *orgcolors = nullptr, *tmpc = nullptr;
    Int_t    maxcolors = 0, ncolors = 0, ntmpc = 0;
 
    // save previous allocated colors, delete at end when not used anymore
@@ -3291,7 +3291,7 @@ void TGX11::WritePixmap(int wid, unsigned int w, unsigned int h, char *pxname)
 //
 
 static FILE *gOut;                      // output unit used WriteGIF and PutByte
-static XImage *gXimage = 0;             // image used in WriteGIF and GetPixel
+static XImage *gXimage = nullptr;       // image used in WriteGIF and GetPixel
 
 extern "C" {
    int GIFquantize(UInt_t width, UInt_t height, Int_t *ncol, Byte_t *red, Byte_t *green,
@@ -3330,7 +3330,7 @@ static void PutByte(Byte_t b)
 
 void TGX11::ImgPickPalette(RXImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int_t *&B)
 {
-   ULong_t *orgcolors = 0;
+   ULong_t *orgcolors = nullptr;
    Int_t    maxcolors = 0, ncolors = 0;
 
    // collect different image colors
@@ -3392,7 +3392,7 @@ Int_t TGX11::WriteGIF(char *name)
 
    if (gXimage) {
       XDestroyImage(gXimage);
-      gXimage = 0;
+      gXimage = nullptr;
    }
 
    gXimage = XGetImage((Display*)fDisplay, gCws->fDrawing, 0, 0,
@@ -3618,7 +3618,7 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
 unsigned char *TGX11::GetColorBits(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/,
                                        UInt_t /*w*/, UInt_t /*h*/)
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3674,7 +3674,7 @@ Int_t TGX11::AddPixmap(ULong_t pixid, UInt_t w, UInt_t h)
    gCws->fClip = 0;
    gCws->fWidth = w;
    gCws->fHeight = h;
-   gCws->fNewColors = 0;
+   gCws->fNewColors = nullptr;
    gCws->fShared = kFALSE;
 
    return wid;
