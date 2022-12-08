@@ -1496,7 +1496,7 @@ ULong_t TColor::GetPixel() const
    if (gVirtualX && !gROOT->IsBatch()) {
       if (gApplication) {
          TApplication::NeedGraphicsLibs();
-         gApplication->InitializeGraphics();
+         gApplication->InitializeGraphics(gROOT->IsWebDisplay());
       }
       return gVirtualX->GetPixel(fNumber);
    }

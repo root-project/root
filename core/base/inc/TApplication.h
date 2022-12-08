@@ -100,7 +100,7 @@ public:
                 void *options = nullptr, Int_t numOptions = 0);
    virtual ~TApplication();
 
-   void            InitializeGraphics();
+   void            InitializeGraphics(Bool_t only_web = kFALSE);
    virtual void    GetOptions(Int_t *argc, char **argv);
    TSignalHandler *GetSignalHandler() const { return fSigHandler; }
    virtual void    SetEchoMode(Bool_t mode);
