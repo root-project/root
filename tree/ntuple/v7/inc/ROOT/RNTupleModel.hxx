@@ -17,13 +17,16 @@
 #define ROOT7_RNTupleModel
 
 #include <ROOT/REntry.hxx>
+#include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RFieldValue.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <cstdint>
+#include <functional>
 #include <memory>
+#include <string>
 #include <unordered_set>
 #include <utility>
 
@@ -66,9 +69,13 @@ class RNTupleModel {
    /// Throws an RException if fDefaultEntry is nullptr
    void EnsureNotBare() const;
 
+   void EnsureValidFieldMapping(const Detail::RFieldBase &target, const std::string &source) const;
+
    RNTupleModel();
 
 public:
+   using FieldMapper_t = std::function<std::string(const Detail::RFieldBase &)>;
+
    RNTupleModel(const RNTupleModel&) = delete;
    RNTupleModel& operator =(const RNTupleModel&) = delete;
    ~RNTupleModel() = default;
@@ -169,6 +176,8 @@ public:
       fDefaultEntry->CaptureValue(field->CaptureValue(fromWhere));
       fFieldZero->Attach(std::move(field));
    }
+
+   RResult<void> AddProjectedField(std::unique_ptr<Detail::RFieldBase> field, FieldMapper_t mapping);
 
    template <typename T>
    T *Get(std::string_view fieldName) const
