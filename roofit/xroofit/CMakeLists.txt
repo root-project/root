@@ -25,4 +25,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitxRooFit
         LINKDEF
         inc/LinkDef.h
         )
-target_compile_definitions(RooFitxRooFit PUBLIC XROOFIT_NAMESPACE=RooFit::xRooFit)
+target_compile_definitions(RooFitxRooFit PUBLIC XROOFIT_NAMESPACE=RooFit::XRooFit)

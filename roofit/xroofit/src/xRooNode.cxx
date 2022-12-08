@@ -4567,7 +4567,7 @@ xRooNLLVar xRooNode::nll(const xRooNode& _data, const RooLinkedList& opts) const
     if(!get<RooAbsPdf>()) throw std::runtime_error(TString::Format("%s is not a pdf",GetName()));
 
     // if simultaneous and any channels deselected then reduce and return
-    if(auto s = get<RooSimultaneous>()) {
+    if(get<RooSimultaneous>()) {
         std::string selected;
         bool hasDeselected=false;
         for(auto c : variations()) {
@@ -5152,9 +5152,9 @@ TH1* xRooNode::BuildHistogram(RooAbsLValue* v, bool empty, bool errors, int binS
                 }
             }
             int i = 0;
-            for(auto& p : fr->floatParsFinal()) {
+            for(auto& p2 : fr->floatParsFinal()) {
                 if (!prevCov || i>=prevCov->GetNcols()) {
-                    cov(i, i) = pow(dynamic_cast<RooRealVar *>(p)->getError(), 2);
+                    cov(i, i) = pow(dynamic_cast<RooRealVar *>(p2)->getError(), 2);
                 }
                 i++;
             }
@@ -5733,15 +5733,15 @@ void xRooNode::Draw(Option_t* opt) {
         browse();
         int _size = 0;
         //int _size = _channels.size(); // size(); if (find("!.vars")) _size--;
-        for(auto& v : *this) {
-            if (v->IsHidden()) continue;
+        for(auto& _v : *this) {
+            if (_v->IsHidden()) continue;
             if (strcmp(GetName(),".vars")==0) {
                 // auto hide obs and "1" and const var
-                if(v->get<RooAbsArg>()->getAttribute("obs")) continue;
-                if(strcmp(v->get()->GetName(),"1")==0 || strcmp(v->get()->GetName(),"ONE")==0 || TString(v->get()->GetName()).BeginsWith("binWidth_")) continue;
-                if(v->get()->InheritsFrom("RooConstVar")) continue;
+                if(_v->get<RooAbsArg>()->getAttribute("obs")) continue;
+                if(strcmp(_v->get()->GetName(), "1") == 0 || strcmp(_v->get()->GetName(), "ONE") == 0 || TString(_v->get()->GetName()).BeginsWith("binWidth_")) continue;
+                if(_v->get()->InheritsFrom("RooConstVar")) continue;
             }
-            TString s(v->GetName());
+            TString s(_v->GetName());
             if (s.BeginsWith(".") || s.BeginsWith("!")) continue;
             _size++;
         }
