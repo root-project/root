@@ -243,29 +243,36 @@ TEST(RNTupleImporter, LeafCountArray)
    {
       std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
       auto tree = std::make_unique<TTree>("tree", "");
+      Int_t nmuons = 1;
       Int_t begin = 1;
       Int_t njets;
       float jet_pt[2];
       Int_t middle = 2;
       float jet_eta[2];
       Int_t end = 3;
+      float muon_pt[1];
+      tree->Branch("nmuons", &nmuons);
       tree->Branch("begin", &begin);
       tree->Branch("njets", &njets);
       tree->Branch("jet_pt", jet_pt, "jet_pt[njets]");
       tree->Branch("middle", &middle);
       tree->Branch("jet_eta", jet_eta, "jet_eta[njets]");
       tree->Branch("end", &end);
+      tree->Branch("muon_pt", muon_pt, "muon_pt[nmuons]");
       njets = 1;
       jet_pt[0] = 1.0;
       jet_eta[0] = 2.0;
+      muon_pt[0] = 10.0;
       tree->Fill();
       njets = 0;
+      muon_pt[0] = 11.0;
       tree->Fill();
       njets = 2;
       jet_pt[0] = 3.0;
       jet_eta[0] = 4.0;
       jet_pt[1] = 5.0;
       jet_eta[1] = 6.0;
+      muon_pt[0] = 12.0;
       tree->Fill();
       tree->Write();
    }
@@ -286,6 +293,8 @@ TEST(RNTupleImporter, LeafCountArray)
    auto viewJets = reader->GetViewCollection("_collection0");
    auto viewJetPt = viewJets.GetView<float>("jet_pt");
    auto viewJetEta = viewJets.GetView<float>("jet_eta");
+   auto viewMuons = reader->GetViewCollection("_collection1");
+   auto viewMuonPt = viewMuons.GetView<float>("muon_pt");
    EXPECT_EQ(1, viewJets(0));
    EXPECT_FLOAT_EQ(1.0, viewJetPt(0));
    EXPECT_FLOAT_EQ(2.0, viewJetEta(0));
@@ -295,6 +304,12 @@ TEST(RNTupleImporter, LeafCountArray)
    EXPECT_FLOAT_EQ(4.0, viewJetEta(1));
    EXPECT_FLOAT_EQ(5.0, viewJetPt(2));
    EXPECT_FLOAT_EQ(6.0, viewJetEta(2));
+   EXPECT_EQ(1, viewMuons(0));
+   EXPECT_EQ(1, viewMuons(1));
+   EXPECT_EQ(1, viewMuons(2));
+   EXPECT_FLOAT_EQ(10.0, viewMuonPt(0));
+   EXPECT_FLOAT_EQ(11.0, viewMuonPt(1));
+   EXPECT_FLOAT_EQ(12.0, viewMuonPt(2));
 }
 
 TEST(RNTupleImporter, STL)

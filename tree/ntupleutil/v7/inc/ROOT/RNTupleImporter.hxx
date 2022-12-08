@@ -143,6 +143,19 @@ private:
       bool fIsClass = false; ///< Field imported from a branch with stramer info (e.g., STL, user-defined class)
    };
 
+   /// Base class to perform data transformations from TTree branches to RNTuple fields if necessary
+   struct RImportTransformation {
+      std::size_t fImportBranchIdx = 0;
+      std::size_t fImportFieldIdx = 0;
+
+      RImportTransformation(std::size_t branchIdx, std::size_t fieldIdx)
+         : fImportBranchIdx(branchIdx), fImportFieldIdx(fieldIdx)
+      {
+      }
+      virtual ~RImportTransformation() = default;
+      virtual RResult<void> Transform(std::int64_t entry, const RImportBranch &branch, RImportField &field) = 0;
+   };
+
    /// Leaf count arrays require special treatment. They are translated into RNTuple untyped collections.
    /// This class does the bookkeeping of the sub-schema for these collections.
    struct RImportLeafCountCollection {
@@ -158,21 +171,10 @@ private:
       /// of the count leaf
       std::unique_ptr<Int_t> fCountVal;
       std::vector<size_t> fImportFieldIndexes; ///< Points to the correspondings fields in fImportFields
+      /// One transformation for every field, to copy the content of the array one by one
+      std::vector<std::unique_ptr<RImportTransformation>> fTransformations;
       Int_t fMaxLength = 0;   ///< Stores count leaf GetMaximum() to create large enough buffers for the array leafs
       std::string fFieldName; ///< name of the untyped collection, e.g. _collection0, _collection1, etc.
-   };
-
-   /// Base class to perform data transformations from TTree branches to RNTuple fields if necessary
-   struct RImportTransformation {
-      std::size_t fImportBranchIdx = 0;
-      std::size_t fImportFieldIdx = 0;
-
-      RImportTransformation(std::size_t branchIdx, std::size_t fieldIdx)
-         : fImportBranchIdx(branchIdx), fImportFieldIdx(fieldIdx)
-      {
-      }
-      virtual ~RImportTransformation() = default;
-      virtual RResult<void> Transform(std::int64_t entry, const RImportBranch &branch, RImportField &field) = 0;
    };
 
    /// Transform a NULL terminated C string branch into an std::string field
@@ -210,7 +212,7 @@ private:
    std::vector<RImportBranch> fImportBranches;
    std::vector<RImportField> fImportFields;
    /// Maps the count leaf to the information about the corresponding untyped collection
-   std::map<TLeaf *, RImportLeafCountCollection> fLeafCountCollections;
+   std::map<std::string, RImportLeafCountCollection> fLeafCountCollections;
    /// The list of transformations to be performed for every entry
    std::vector<std::unique_ptr<RImportTransformation>> fImportTransformations;
    std::unique_ptr<RNTupleModel> fModel;
