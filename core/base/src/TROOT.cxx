@@ -2763,36 +2763,45 @@ void TROOT::SetMacroPath(const char *newpath)
 
 void TROOT::SetWebDisplay(const char *webdisplay)
 {
-   const char *wd = webdisplay;
-   if (!wd)
-      wd = "";
+   const char *wd = webdisplay ? webdisplay : "";
+
+   // store default values to set them back when needed
+   static TString brName = gEnv->GetValue("Browser.Name", "");
+   static TString trName = gEnv->GetValue("TreeViewer.Name", "");
 
    if (!strcmp(wd, "off")) {
       fIsWebDisplay = kFALSE;
       fWebDisplay = "off";
-      return;
+   } else {
+      fIsWebDisplay = kTRUE;
+
+      // handle server mode
+      if (!strncmp(wd, "server", 6)) {
+         fWebDisplay = "server";
+         if (wd[6] == ':') {
+            if ((wd[7] >= '0') && (wd[7] <= '9')) {
+               auto port = TString(wd+7).Atoi();
+               if (port > 0)
+                  gEnv->SetValue("WebGui.HttpPort", port);
+               else
+                  Error("SetWebDisplay", "Wrong port parameter %s for server", wd+7);
+            } else if (wd[7]) {
+               gEnv->SetValue("WebGui.UnixSocket", wd+7);
+            }
+         }
+      } else if (!strcmp(wd, "on")) {
+         fWebDisplay = "";
+      } else {
+         fWebDisplay = wd;
+      }
    }
 
-   fIsWebDisplay = kTRUE;
-
-   // handle server mode
-   if (!strncmp(wd, "server", 6)) {
-      fWebDisplay = "server";
-      if (wd[6] == ':') {
-         if ((wd[7] >= '0') && (wd[7] <= '9')) {
-            auto port = TString(wd+7).Atoi();
-            if (port > 0)
-               gEnv->SetValue("WebGui.HttpPort", port);
-            else
-               Error("SetWebDisplay", "Wrong port parameter %s for server", wd+7);
-         } else if (wd[7]) {
-            gEnv->SetValue("WebGui.UnixSocket", wd+7);
-         }
-      }
-   } else if (!strcmp(wd, "on")) {
-      fWebDisplay = "";
+   if (fIsWebDisplay) {
+      gEnv->SetValue("Browser.Name", brName);
+      gEnv->SetValue("TreeViewer.Name", "RTreeViewer");
    } else {
-      fWebDisplay = wd;
+      gEnv->SetValue("Browser.Name", "TRootBrowser");
+      gEnv->SetValue("TreeViewer.Name", trName);
    }
 }
 
