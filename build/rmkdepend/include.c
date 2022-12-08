@@ -303,7 +303,7 @@ struct inclist *inc_path(char *file, char *include, boolean dot) {
             warning1("\t%s/%s too long\n", *pp, include);
             continue;
          }
-         sprintf(path, "%s/%s", *pp, include);
+         snprintf(path, BUFSIZ, "%s/%s", *pp, include);
          remove_dotdot(path);
 #ifdef _WIN32
          if (stat(path, &st) == 0 && (st.st_mode & S_IFREG)) {
