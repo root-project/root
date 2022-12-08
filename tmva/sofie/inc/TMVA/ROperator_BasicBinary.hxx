@@ -171,7 +171,7 @@ public:
       return out.str();
    }
 
-   std::vector<std::string> GetStdLibs() {
+   std::vector<std::string> GetStdLibs() override {
       if (Op == EBasicBinaryOperator::Pow) {
          return {"cmath"};
       } else {
