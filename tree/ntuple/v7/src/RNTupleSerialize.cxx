@@ -270,6 +270,24 @@ void DeserializeLocatorPayloadURI(const unsigned char *buffer, std::uint32_t pay
    memcpy(uri.data(), buffer, payloadSize);
 }
 
+std::uint32_t SerializeLocatorPayloadObject64(const ROOT::Experimental::RNTupleLocator &locator, unsigned char *buffer)
+{
+   const auto &data = locator.Get<ROOT::Experimental::RNTupleLocatorObject64>();
+   if (buffer) {
+      RNTupleSerializer::SerializeUInt32(locator.fBytesOnStorage, buffer);
+      RNTupleSerializer::SerializeUInt64(data.fLocation, buffer + sizeof(std::uint32_t));
+   }
+   return sizeof(std::uint32_t) + sizeof(std::uint64_t);
+}
+
+void DeserializeLocatorPayloadObject64(const unsigned char *buffer, std::uint32_t /*payloadSize*/,
+                                       ROOT::Experimental::RNTupleLocator &locator)
+{
+   auto &data = locator.fPosition.emplace<ROOT::Experimental::RNTupleLocatorObject64>();
+   RNTupleSerializer::DeserializeUInt32(buffer, locator.fBytesOnStorage);
+   RNTupleSerializer::DeserializeUInt64(buffer + sizeof(std::uint32_t), data.fLocation);
+}
+
 } // anonymous namespace
 
 
@@ -766,6 +784,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(
    auto payloadp = buffer ? reinterpret_cast<unsigned char *>(buffer) + sizeof(std::int32_t) : nullptr;
    switch (locator.fType) {
    case RNTupleLocator::kTypeURI: size += SerializeLocatorPayloadURI(locator, payloadp); break;
+   case RNTupleLocator::kTypeDAOS: size += SerializeLocatorPayloadObject64(locator, payloadp); break;
    default: throw RException(R__FAIL("locator has unknown type"));
    }
    std::int32_t head = size;
@@ -797,6 +816,7 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
       locator.fReserved = static_cast<std::uint32_t>(head >> 16) & 0xFF;
       switch (type) {
       case RNTupleLocator::kTypeURI: DeserializeLocatorPayloadURI(bytes, locatorSize, locator); break;
+      case RNTupleLocator::kTypeDAOS: DeserializeLocatorPayloadObject64(bytes, locatorSize, locator); break;
       default: return R__FAIL("unsupported locator type: " + std::to_string(type));
       }
       bytes += locatorSize;

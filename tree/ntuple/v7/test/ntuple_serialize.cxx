@@ -324,6 +324,18 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(16u, RNTupleSerializer::DeserializeLocator(buffer, 16, locator).Unwrap());
    EXPECT_EQ("abcdefghijkl", locator.Get<std::string>());
 
+   locator.fType = RNTupleLocator::kTypeDAOS;
+   locator.fPosition.emplace<RNTupleLocatorObject64>(RNTupleLocatorObject64{1337U});
+   locator.fBytesOnStorage = 420420U;
+   locator.fReserved = 0x5a;
+   EXPECT_EQ(16u, RNTupleSerializer::SerializeLocator(locator, buffer));
+   locator = RNTupleLocator{};
+   EXPECT_EQ(16u, RNTupleSerializer::DeserializeLocator(buffer, 16, locator).Unwrap());
+   EXPECT_EQ(locator.fType, RNTupleLocator::kTypeDAOS);
+   EXPECT_EQ(locator.fBytesOnStorage, 420420U);
+   EXPECT_EQ(locator.fReserved, 0x5a);
+   EXPECT_EQ(1337U, locator.Get<RNTupleLocatorObject64>().fLocation);
+
    std::int32_t *head = reinterpret_cast<std::int32_t *>(buffer);
    *head = (0x3 << 24) | *head;
    try {
