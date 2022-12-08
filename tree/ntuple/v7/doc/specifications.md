@@ -133,10 +133,10 @@ In this case, the last 8 bits of the size should be interpreted as a locator typ
 To determine the locator type, the absolute value of the 8bit integer should be taken.
 The type can take one of the following values
 
-| Type | Meaning         |
-|------|-----------------|
-| 0x01 | URI string      |
-| 0x02 | 64bit object ID |
+| Type | Meaning                |
+|------|------------------------|
+| 0x01 | URI string             |
+| 0x02 | DAOS (64bit object ID) |
 
 For object ID locators, specifies the 64bit object ID.
 For URI locators, the locator contains the ASCII characters of the URI following the size and the type.
