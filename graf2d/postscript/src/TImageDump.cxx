@@ -658,12 +658,9 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
    Short_t px1, py1, px2, py2;
    static const UInt_t gCachePtSize = 200;
    static TPoint gPointCache[gCachePtSize];
-   Bool_t del = kTRUE;
-
 
    // SetLineStyle
    Int_t ndashes = 0;
-   char *dash = nullptr;
    static char dashList[10];
    Int_t dashSize = 0;
 
@@ -674,7 +671,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
          TString st = gStyle->GetLineStyleString(fLineStyle);
          TObjArray *tokens = st.Tokenize(" ");
          ndashes = tokens->GetEntries();
-         dash = new char[ndashes];
+         char *dash = new char[ndashes];
 
          for (int j = 0; j < ndashes; j++) {
             Int_t it;
@@ -736,6 +733,8 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
    }
 
    TPoint *pt = nullptr;
+   Bool_t del = kTRUE;
+
    if (n+1 < gCachePtSize) {
       pt = (TPoint*)&gPointCache;
       del = kFALSE;
@@ -767,7 +766,10 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
 
    // filled polygon
    if (!line && fFillStyle && (fFillStyle != 4000)) {
-      if (!fcol) return;
+      if (!fcol) {
+         if (del) delete [] pt;
+         return;
+      }
 
       if (n < 5) {   // convex
          fImage->FillPolygon(n, pt, fcol->AsHexString(), stipple);
@@ -778,7 +780,11 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
 
    // hollow polygon or polyline is drawn
    if (line || !fFillStyle || (fFillStyle == 4000)) {
-      if (!lcol) return;
+      if (!lcol) {
+         if (del)
+            delete [] pt;
+         return;
+      }
       if (!line) {
          fImage->DrawPolyLine(n+1, pt, fcol->AsHexString(), 1);
       } else {
@@ -790,7 +796,8 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
          }
       }
    }
-   if (del) delete [] pt;
+   if (del)
+      delete [] pt;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
