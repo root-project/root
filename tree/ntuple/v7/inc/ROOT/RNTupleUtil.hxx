@@ -114,15 +114,23 @@ public:
 /// and therefore we need to store their actual size.
 /// TODO(jblomer): consider moving this to `RNTupleDescriptor`
 struct RNTupleLocator {
+   /// Values for the _Type_ field in non-disk locators; see `doc/specifications.md` for details
+   enum ELocatorType : std::uint8_t {
+      kTypeFile = 0x00,
+      kTypeURI = 0x02,
+   };
+
    /// Simple on-disk locators consisting of a 64-bit offset use variant type `uint64_t`; extended locators have
    /// `fPosition.index()` > 0
    std::variant<std::uint64_t, std::string> fPosition;
    std::uint32_t fBytesOnStorage = 0;
+   /// For non-disk locators, the value for the _Type_ field. This makes it possible to have different type values even
+   /// if the payload structure is identical.
+   ELocatorType fType = kTypeFile;
 
    bool operator==(const RNTupleLocator &other) const {
       return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage;
    }
-   bool IsSimple() const { return fPosition.index() == 0; }
    template <typename T>
    const T &Get() const
    {
