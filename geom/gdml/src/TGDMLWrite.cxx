@@ -527,12 +527,14 @@ XMLNodePointer_t TGDMLWrite::ExtractMaterials(TList* materialsLst)
    //go through materials  - iterator and object declaration
    TIter next(materialsLst);
    TGeoMaterial *lmaterial;
+   TGeoMedium   *dummy_med = TGeoVolume::DummyMedium();
+   TGeoMaterial *dummy_mat = dummy_med ? dummy_med->GetMaterial() : nullptr;
 
    while ((lmaterial = (TGeoMaterial *)next())) {
       //generate uniq name
       TString mname = lmaterial->GetName();
-      if ( fIgnoreDummyMaterial && mname == "dummy" )   {
-        Info("ExtractMaterials", "Skip dummy material!");
+      if ( fIgnoreDummyMaterial && dummy_mat && dummy_mat->GetName() == mname )   {
+        Info("ExtractMaterials", "Skip dummy material: %s", dummy_mat->GetName());
         continue;
       }
       TString lname = GenName(mname, TString::Format("%p", lmaterial));
