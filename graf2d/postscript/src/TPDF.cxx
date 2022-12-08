@@ -119,9 +119,6 @@ TPDF::TPDF() : TVirtualPS()
    fPageOrientation = 0;
    fStartStream     = 0;
    fLineScale       = 0.;
-   fObjPosSize      = 0;
-   fObjPos          = 0;
-   fNbObj           = 0;
    fNbPage          = 0;
    fRange           = kFALSE;
    SetTitle("PDF");
@@ -152,8 +149,6 @@ TPDF::TPDF(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
    fPageOrientation = 0;
    fStartStream     = 0;
    fLineScale       = 0.;
-   fObjPosSize      = 0;
-   fNbObj           = 0;
    fNbPage          = 0;
    fRange           = kFALSE;
    SetTitle("PDF");
@@ -1722,7 +1717,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    // Set a default range
    Range(fXsize, fYsize);
 
-   fObjPos = 0;
+   fObjPos = nullptr;
    fObjPosSize = 0;
    fNbObj = 0;
    fNbPage = 0;

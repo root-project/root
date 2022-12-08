@@ -38,46 +38,46 @@ public:
    TTeXDump(const char *filename, Int_t type=-113);
    virtual ~TTeXDump();
 
-   void    CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2);
-   void    CellArrayFill(Int_t r, Int_t g, Int_t b);
-   void    CellArrayEnd();
-   void    Close(Option_t *opt="");
-   Int_t   CMtoTeX(Double_t u) {return Int_t(0.5 + 72*u/2.54);}
+   void    CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) override;
+   void    CellArrayFill(Int_t r, Int_t g, Int_t b) override;
+   void    CellArrayEnd() override;
+   void    Close(Option_t *opt="") override;
+   Int_t   CMtoTeX(Double_t u) { return Int_t(0.5 + 72*u/2.54); }
    void    DefineMarkers();
-   void    DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2);
+   void    DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2) override;
    void    DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
-                     Int_t mode, Int_t border, Int_t dark, Int_t light);
+                     Int_t mode, Int_t border, Int_t dark, Int_t light) override;
    void    DrawPolyLine(Int_t n, TPoints *xy);
    void    DrawPolyLineNDC(Int_t n, TPoints *uv);
-   void    DrawPolyMarker(Int_t n, Float_t *x, Float_t *y);
-   void    DrawPolyMarker(Int_t n, Double_t *x, Double_t *y);
-   void    DrawPS(Int_t n, Float_t *xw, Float_t *yw);
-   void    DrawPS(Int_t n, Double_t *xw, Double_t *yw);
-   void    NewPage();
+   void    DrawPolyMarker(Int_t n, Float_t *x, Float_t *y) override;
+   void    DrawPolyMarker(Int_t n, Double_t *x, Double_t *y) override;
+   void    DrawPS(Int_t n, Float_t *xw, Float_t *yw) override;
+   void    DrawPS(Int_t n, Double_t *xw, Double_t *yw) override;
+   void    NewPage() override;
    void    Off();
    void    On();
-   void    Open(const char *filename, Int_t type=-111);
+   void    Open(const char *filename, Int_t type=-111) override;
    void    Range(Float_t xrange, Float_t yrange);
    void    SetColor(Int_t color = 1);
-   void    SetColor(Float_t r, Float_t g, Float_t b);
-   void    SetFillColor( Color_t cindex=1);
-   void    SetLineColor( Color_t cindex=1);
-   void    SetLineStyle(Style_t linestyle = 1);
-   void    SetLineWidth(Width_t linewidth = 1);
-   void    SetLineScale(Float_t scale=1) {fLineScale = scale;}
-   void    SetMarkerSize( Size_t msize=1);
-   void    SetMarkerColor( Color_t cindex=1);
-   void    SetTextColor( Color_t cindex=1);
-   void    Text(Double_t x, Double_t y, const char *string);
-   void    Text(Double_t, Double_t, const wchar_t *){}
+   void    SetColor(Float_t r, Float_t g, Float_t b) override;
+   void    SetFillColor(Color_t cindex=1) override;
+   void    SetLineColor(Color_t cindex=1) override;
+   void    SetLineStyle(Style_t linestyle = 1) override;
+   void    SetLineWidth(Width_t linewidth = 1) override;
+   void    SetLineScale(Float_t scale=1) { fLineScale = scale; }
+   void    SetMarkerSize(Size_t msize=1) override;
+   void    SetMarkerColor(Color_t cindex=1) override;
+   void    SetTextColor(Color_t cindex=1) override;
+   void    Text(Double_t x, Double_t y, const char *string) override;
+   void    Text(Double_t, Double_t, const wchar_t *) override {}
    void    TextNDC(Double_t u, Double_t v, const char *string);
-   void    TextNDC(Double_t, Double_t, const wchar_t *){}
+   void    TextNDC(Double_t, Double_t, const wchar_t *) {}
    Float_t UtoTeX(Double_t u);
    Float_t VtoTeX(Double_t v);
    Float_t XtoTeX(Double_t x);
    Float_t YtoTeX(Double_t y);
 
-   ClassDef(TTeXDump, 0);  //Tex driver
+   ClassDefOverride(TTeXDump, 0);  //Tex driver
 };
 
 #endif

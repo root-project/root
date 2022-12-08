@@ -53,7 +53,7 @@ ClassImp(TImageDump);
 TImageDump::TImageDump() : TVirtualPS()
 {
    fStream    = 0;
-   fImage     = 0;
+   fImage     = nullptr;
    gVirtualPS = this;
    fType      = 0;
    SetTitle("IMG");
@@ -95,9 +95,9 @@ TImageDump::~TImageDump()
    Close();
 
    delete fImage;
-   fImage = 0;
+   fImage = nullptr;
 
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
