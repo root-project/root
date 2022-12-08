@@ -754,7 +754,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(
    const RNTupleLocator &locator, void *buffer)
 {
    std::uint32_t size = 0;
-   if (locator.IsSimple()) {
+   if (locator.fType == RNTupleLocator::kTypeFile) {
       if (static_cast<std::int32_t>(locator.fBytesOnStorage) < 0)
          throw RException(R__FAIL("locator too large"));
       size += SerializeUInt32(locator.fBytesOnStorage, buffer);
@@ -764,9 +764,12 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(
    }
 
    auto payloadp = buffer ? reinterpret_cast<unsigned char *>(buffer) + sizeof(std::int32_t) : nullptr;
-   size += SerializeLocatorPayloadURI(locator, payloadp);
+   switch (locator.fType) {
+   case RNTupleLocator::kTypeURI: size += SerializeLocatorPayloadURI(locator, payloadp); break;
+   default: throw RException(R__FAIL("locator has unknown type"));
+   }
    std::int32_t head = size;
-   head |= 0x02 << 24;
+   head |= static_cast<int>(locator.fType) << 24;
    head = -head;
    size += RNTupleSerializer::SerializeInt32(head, buffer);
    return size;
@@ -789,10 +792,9 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
       const std::uint32_t locatorSize = static_cast<std::uint32_t>(head) & 0x00FFFFFF;
       if (bufSize < locatorSize)
          return R__FAIL("too short locator");
+      locator.fType = static_cast<RNTupleLocator::ELocatorType>(type);
       switch (type) {
-      case 0x02: /* URI string */
-         DeserializeLocatorPayloadURI(bytes, locatorSize, locator);
-         break;
+      case RNTupleLocator::kTypeURI: DeserializeLocatorPayloadURI(bytes, locatorSize, locator); break;
       default: return R__FAIL("unsupported locator type: " + std::to_string(type));
       }
       bytes += locatorSize;
@@ -800,6 +802,7 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
       if (bufSize < sizeof(std::uint64_t))
          return R__FAIL("too short locator");
       auto &offset = locator.fPosition.emplace<std::uint64_t>();
+      locator.fType = RNTupleLocator::kTypeFile;
       bytes += DeserializeUInt64(bytes, offset);
       locator.fBytesOnStorage = head;
    }
