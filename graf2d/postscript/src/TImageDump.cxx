@@ -52,7 +52,7 @@ ClassImp(TImageDump);
 
 TImageDump::TImageDump() : TVirtualPS()
 {
-   fStream    = 0;
+   fStream    = nullptr;
    fImage     = nullptr;
    gVirtualPS = this;
    fType      = 0;
@@ -81,7 +81,7 @@ TImageDump::TImageDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype
 
 void TImageDump::Open(const char *fname, Int_t type)
 {
-   fStream = 0;
+   fStream = nullptr;
    fImage  = TImage::Create();
    fType   = type;
    SetName(fname);
@@ -647,7 +647,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
 
    fImage->BeginPaint();
 
-   TColor *col = 0;
+   TColor *col = nullptr;
    Int_t  fais = 0 , fasi = 0;
    Bool_t line = nn > 1;
    UInt_t n = TMath::Abs(nn);
@@ -663,7 +663,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
 
    // SetLineStyle
    Int_t ndashes = 0;
-   char *dash = 0;
+   char *dash = nullptr;
    static char dashList[10];
    Int_t dashSize = 0;
 
@@ -735,7 +735,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
       return;
    }
 
-   TPoint *pt = 0;
+   TPoint *pt = nullptr;
    if (n+1 < gCachePtSize) {
       pt = (TPoint*)&gPointCache;
       del = kFALSE;
@@ -763,7 +763,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
    pt[n].fX = pt[0].fX;
    pt[n].fY = pt[0].fY;
 
-   const char *stipple = (fais == 3) && (fasi > 0) && (fasi < 26) ? (const char*)gStipples[fasi] : 0;
+   const char *stipple = (fais == 3) && (fasi > 0) && (fasi < 26) ? (const char*)gStipples[fasi] : nullptr;
 
    // filled polygon
    if (!line && fFillStyle && (fFillStyle != 4000)) {
@@ -886,7 +886,7 @@ void TImageDump::Text(Double_t x, Double_t y, const wchar_t *chars)
 
 
 ////////////////////////// CellArray code ////////////////////////////////////
-static UInt_t *gCellArrayColors = 0;
+static UInt_t *gCellArrayColors = nullptr;
 static Int_t   gCellArrayN = 0;
 static Int_t   gCellArrayW = 0;
 static Int_t   gCellArrayH = 0;
@@ -953,7 +953,7 @@ void TImageDump::CellArrayEnd()
                          gCellArrayW, gCellArrayH, gCellArrayColors);
 
    delete [] gCellArrayColors;
-   gCellArrayColors = 0;
+   gCellArrayColors = nullptr;
    gCellArrayN = 0;
    gCellArrayW = 0;
    gCellArrayH = 0;
