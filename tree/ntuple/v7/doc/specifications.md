@@ -135,8 +135,8 @@ The type can take one of the following values
 
 | Type | Meaning         |
 |------|-----------------|
-| 0x01 | 64bit object ID |
-| 0x02 | URI string      |
+| 0x01 | URI string      |
+| 0x02 | 64bit object ID |
 
 For object ID locators, specifies the 64bit object ID.
 For URI locators, the locator contains the ASCII characters of the URI following the size and the type.
