@@ -117,7 +117,7 @@ struct RNTupleLocator {
    /// Values for the _Type_ field in non-disk locators; see `doc/specifications.md` for details
    enum ELocatorType : std::uint8_t {
       kTypeFile = 0x00,
-      kTypeURI = 0x02,
+      kTypeURI = 0x01,
    };
 
    /// Simple on-disk locators consisting of a 64-bit offset use variant type `uint64_t`; extended locators have
