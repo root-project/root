@@ -268,7 +268,7 @@ ClassImp(TPostScript);
 
 TPostScript::TPostScript() : TVirtualPS()
 {
-   fStream          = 0;
+   fStream          = nullptr;
    fType            = 0;
    gVirtualPS       = this;
    fBlue            = 0.;
@@ -346,7 +346,7 @@ TPostScript::TPostScript() : TVirtualPS()
 TPostScript::TPostScript(const char *fname, Int_t wtype)
 :TVirtualPS(fname, wtype)
 {
-   fStream = 0;
+   fStream = nullptr;
    SetTitle("PS");
    Open(fname, wtype);
 }
@@ -402,7 +402,7 @@ void TPostScript::Open(const char *fname, Int_t wtype)
    // Open OS file
    fFileName = fname;
    fStream = new std::ofstream(fFileName.Data(),std::ios::out);
-   if (fStream == 0 || gSystem->AccessPathName(fFileName.Data(),kWritePermission)) {
+   if (!fStream || gSystem->AccessPathName(fFileName.Data(),kWritePermission)) {
       printf("ERROR in TPostScript::Open: Cannot open file:%s\n",fFileName.Data());
       return;
    }
@@ -467,7 +467,7 @@ void TPostScript::Close(Option_t *)
       // Close the file fFileName
       if (fStream) {
          PrintStr("@");
-         fStream->close(); delete fStream; fStream = 0;
+         fStream->close(); delete fStream; fStream = nullptr;
       }
 
       // Rename the file fFileName
@@ -479,14 +479,14 @@ void TPostScript::Close(Option_t *)
 
       // Reopen the file fFileName
       fStream = new std::ofstream(fFileName.Data(),std::ios::out);
-      if (fStream == 0 || gSystem->AccessPathName(fFileName.Data(),kWritePermission)) {
+      if (!fStream || gSystem->AccessPathName(fFileName.Data(),kWritePermission)) {
          Error("Text", "Cannot open file: %s\n", fFileName.Data());
          return;
       }
 
       // Embed the fonts at the right place
       FILE *sg = fopen(tmpname.Data(),"r");
-      if (sg == 0) {
+      if (!sg) {
          Error("Text", "Cannot open file: %s\n", tmpname.Data());
          return;
       }
@@ -507,9 +507,9 @@ void TPostScript::Close(Option_t *)
 
    // Close file stream
 
-   if (fStream) { fStream->close(); delete fStream; fStream = 0;}
+   if (fStream) { fStream->close(); delete fStream; fStream = nullptr;}
 
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -530,7 +530,7 @@ void TPostScript::On()
 
 void TPostScript::Off()
 {
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2711,7 +2711,7 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    TText saveAttText;
    saveAttText.TAttText::operator=(*this);
    const Int_t len=strlen(chars);
-   Int_t *charWidthsCumul = 0;
+   Int_t *charWidthsCumul = nullptr;
    TText t;
    t.SetTextSize(fTextSize * scale);
    t.SetTextFont(fTextFont);
