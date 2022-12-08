@@ -76,7 +76,7 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 // clang-format on
 class RFieldBase {
    friend class ROOT::Experimental::RCollectionField; // to move the fields from the collection model
-   friend class ROOT::Experimental::Internal::RFieldCallbackInjector;
+   friend class ROOT::Experimental::Internal::RFieldCallbackInjector; // used for unit tests
    using ReadCallback_t = std::function<void(RFieldValue &)>;
 
 public:
