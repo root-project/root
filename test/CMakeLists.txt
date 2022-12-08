@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -433,6 +433,7 @@ if (NOT cxxmodules)
     ROOT_ADD_TEST(test-periodic-build
       COMMAND ${CMAKE_CTEST_COMMAND} ${build_generator_args}
         --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
+        --build-options -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
     )
   else()
     ROOT_ADD_TEST(test-periodic-build
@@ -440,6 +441,7 @@ if (NOT cxxmodules)
         env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
         ${CMAKE_CTEST_COMMAND} --build-generator ${CMAKE_GENERATOR}
         --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
+        --build-options -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
     )
   endif()
 endif()
