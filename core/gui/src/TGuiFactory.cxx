@@ -91,8 +91,15 @@ TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, Int_t x,
 
 TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height, Option_t *opt)
 {
-   if (gROOT->IsWebDisplay()) {
-      auto ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp", "ROOT::Experimental::RWebBrowserImp");
+   const char *browserName = nullptr;
+
+   if (gROOT->IsWebDisplay() && !gROOT->IsWebDisplayBatch())
+      browserName = "ROOT::Experimental::RWebBrowserImp";
+   else if (!gROOT->IsBatch())
+      browserName = gEnv->GetValue("Browser.Name", "");
+
+   if (browserName && *browserName) {
+      auto ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp", browserName);
 
       if (ph && ph->LoadPlugin() != -1) {
          TBrowserImp *imp = (TBrowserImp *)ph->ExecPlugin(5, b, title, width, height, opt);
@@ -108,8 +115,15 @@ TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, UInt_
 
 TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt)
 {
-   if (gROOT->IsWebDisplay()) {
-      auto ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp", "ROOT::Experimental::RWebBrowserImp");
+   const char *browserName = nullptr;
+
+   if (gROOT->IsWebDisplay() && !gROOT->IsWebDisplayBatch())
+      browserName = "ROOT::Experimental::RWebBrowserImp";
+   else if (!gROOT->IsBatch())
+      browserName = gEnv->GetValue("Browser.Name", "");
+
+   if (browserName && *browserName) {
+      auto ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp", browserName);
 
       if (ph && ph->LoadPlugin() != -1) {
          TBrowserImp *imp = (TBrowserImp *)ph->ExecPlugin(7, b, title, x, y, width, height, opt);
