@@ -361,8 +361,8 @@ private:
       = IsAFunction ? getFunctionLinkage(GD) :
       getLLVMLinkageVarDefinition(VD, isTypeConstant(VD->getType(),
                                                      ExcludeCtor));
-    if (llvm::GlobalValue::isLinkOnceLinkage(L)
-        || llvm::GlobalValue::isWeakLinkage(L)) {
+    if (llvm::GlobalValue::isWeakForLinker(L)
+        || llvm::GlobalValue::isInternalLinkage(L)) {
       if (MangledName.empty())
         MangledName = getMangledName(GD);
       EmittedDeferredDecls[MangledName] = GD;
