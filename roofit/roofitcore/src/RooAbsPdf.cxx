@@ -994,6 +994,12 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
   pc.defineMutex("GlobalObservables","GlobalObservablesTag") ;
   pc.defineInt("ModularL", "ModularL", 0, 0);
 
+  if(pc.getSet("cPars") && pc.getSet("extCons")) {
+    std::string errMsg = "Specifying Constrain() when GlobalObservables() is passed is dangerous!";
+    coutE(InputArguments) << errMsg << std::endl;
+    throw std::invalid_argument(errMsg);
+  }
+
   // New style likelihoods define parallelization through Parallelize(...) on fitTo or attributes on RooMinimizer::Config.
   pc.defineMutex("ModularL", "NumCPU");
 
