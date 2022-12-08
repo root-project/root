@@ -48,7 +48,7 @@ public:
    std::string Generate(std::string OpName){
       OpName = "op_" + OpName;
       if (fShape.empty()) {
-         throw std::runtime_error("TMVA SOFIE Transpose Identity called to Generate without being initialized first");
+         throw std::runtime_error("TMVA SOFIE Operator Identity called to Generate without being initialized first");
       }
       std::stringstream out;
       out << "\n//------ IDENTITY\n";
