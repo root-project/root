@@ -190,6 +190,7 @@ TGDMLWrite::TGDMLWrite()
      fRejShape(0),
      fNameList(0),
      fgNamingSpeed(0),
+     fIgnoreDummyMaterial(0),
      fgG4Compatibility(0),
      fGdmlFile(0),
      fTopVolumeName(0),
@@ -228,6 +229,13 @@ TGDMLWrite::~TGDMLWrite()
 void TGDMLWrite::SetNamingSpeed(ENamingType naming)
 {
    fgNamingSpeed = naming;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Ignore dummy material instance, which causes trouble reading GDML in Geant4
+
+void TGDMLWrite::SetIgnoreDummyMaterial(bool value)    {
+  fIgnoreDummyMaterial = (value ? 1 : 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -522,7 +530,12 @@ XMLNodePointer_t TGDMLWrite::ExtractMaterials(TList* materialsLst)
 
    while ((lmaterial = (TGeoMaterial *)next())) {
       //generate uniq name
-      TString lname = GenName(lmaterial->GetName(), TString::Format("%p", lmaterial));
+      TString mname = lmaterial->GetName();
+      if ( fIgnoreDummyMaterial && mname == "dummy" )   {
+        Info("ExtractMaterials", "Skip dummy material!");
+        continue;
+      }
+      TString lname = GenName(mname, TString::Format("%p", lmaterial));
 
       if (lmaterial->IsMixture()) {
          TGeoMixture  *lmixture = (TGeoMixture *)lmaterial;
@@ -1873,9 +1886,13 @@ XMLNodePointer_t TGDMLWrite::CreateBorderSurfaceN(TGeoBorderSurface * geoSurf)
    XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "bordersurface", nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "name", geoSurf->GetName());
    fGdmlE->NewAttr(mainN, nullptr, "surfaceproperty", geoSurf->GetTitle());
-   // Cretate the logical volume reference node
+
+   // Cretate the logical volume reference nodes
    auto childN = fGdmlE->NewChild(nullptr, nullptr, "physvolref", nullptr);
    fGdmlE->NewAttr(childN, nullptr, "ref", geoSurf->GetNode1()->GetName());
+   fGdmlE->AddChild(mainN, childN);
+
+   childN = fGdmlE->NewChild(nullptr, nullptr, "physvolref", nullptr);
    fGdmlE->NewAttr(childN, nullptr, "ref", geoSurf->GetNode2()->GetName());
    fGdmlE->AddChild(mainN, childN);
    return mainN;
@@ -1938,10 +1955,11 @@ XMLNodePointer_t TGDMLWrite::CreateMatrixN(TGDMLMatrix const *matrix)
 
 XMLNodePointer_t TGDMLWrite::CreateConstantN(const char *name, Double_t value)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "constant", nullptr);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "matrix", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    fGdmlE->NewAttr(mainN, nullptr, "name", name);
-   fGdmlE->NewAttr(mainN, nullptr, "value", TString::Format(fltPrecision.Data(), value));
+   fGdmlE->NewAttr(mainN, nullptr, "coldim", "1");
+   fGdmlE->NewAttr(mainN, nullptr, "values", TString::Format(fltPrecision.Data(), value));
    return mainN;
 }
 

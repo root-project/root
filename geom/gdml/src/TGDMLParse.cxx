@@ -594,15 +594,20 @@ XMLNodePointer_t TGDMLParse::MatrixProcess(TXMLEngine *gdml, XMLNodePointer_t no
          continue;
       valueList.push_back(Value(matrixValue.c_str()));
    }
-
-   TGDMLMatrix *matrix = new TGDMLMatrix(name, valueList.size() / coldim, coldim);
-   matrix->SetMatrixAsString(values.c_str());
-   for (size_t i = 0; i < valueList.size(); ++i)
-      matrix->Set(i / coldim, i % coldim, valueList[i]);
-
-   gGeoManager->AddGDMLMatrix(matrix);
-   fmatrices[name.Data()] = matrix;
-
+   // Const Properties in GDML are matrices with size 1 not constants
+   // This gives some ambiguity, but what can one do?
+   if ( coldim == 1 && valueList.size() == 1 )    {
+      gGeoManager->AddProperty(name, valueList[0]);
+   }
+   else  {
+     TGDMLMatrix *matrix = new TGDMLMatrix(name, valueList.size() / coldim, coldim);
+     matrix->SetMatrixAsString(values.c_str());
+     for (size_t i = 0; i < valueList.size(); ++i)
+       matrix->Set(i / coldim, i % coldim, valueList[i]);
+     
+     gGeoManager->AddGDMLMatrix(matrix);
+     fmatrices[name.Data()] = matrix;
+   }
    return node;
 }
 
