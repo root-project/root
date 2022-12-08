@@ -1619,6 +1619,12 @@ Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *
       }
    }
 
+   if (fCurrentBasket == nullptr) {
+      R__ASSERT(fExtraBasket == nullptr && "fExtraBasket should have been set to nullptr by GetFreshBasket");
+      fExtraBasket = basket;
+      basket->DisownBuffer();
+   }
+
    return N;
 }
 
@@ -1897,7 +1903,7 @@ TBasket *TBranch::GetFreshCluster(TBuffer* user_buffer)
       if (fExtraBasket) {
          newbasket = fExtraBasket;
          fExtraBasket = nullptr;
-      } else { 
+      } else {
          newbasket = fTree->CreateBasket(this);
       }
       if (user_buffer)
