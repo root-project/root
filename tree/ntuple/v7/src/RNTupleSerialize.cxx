@@ -32,11 +32,11 @@ using RResult = ROOT::Experimental::RResult<T>;
 
 
 namespace {
+using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
 
 std::uint32_t SerializeFieldV1(
    const ROOT::Experimental::RFieldDescriptor &fieldDesc, ROOT::Experimental::DescriptorId_t physParentId, void *buffer)
 {
-   using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
@@ -97,7 +97,6 @@ RResult<std::uint32_t> DeserializeFieldV1(
    std::uint32_t bufSize,
    ROOT::Experimental::RFieldDescriptorBuilder &fieldDesc)
 {
-   using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
    using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
 
    auto base = reinterpret_cast<const unsigned char *>(buffer);
@@ -169,7 +168,6 @@ std::uint32_t SerializeColumnListV1(
    ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
    void *buffer)
 {
-   using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
    using RColumnElementBase = ROOT::Experimental::Detail::RColumnElementBase;
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
@@ -216,7 +214,6 @@ RResult<std::uint32_t> DeserializeColumnV1(
    std::uint32_t bufSize,
    ROOT::Experimental::RColumnDescriptorBuilder &columnDesc)
 {
-   using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
    using EColumnType = ROOT::Experimental::EColumnType;
 
    auto base = reinterpret_cast<const unsigned char *>(buffer);
