@@ -32,6 +32,9 @@ in this Software without prior written authorization from the X Consortium.
 #define _POSIX_SOURCE
 #endif
 #endif
+#if defined(__APPLE__) && !defined(_DARWIN_C_SOURCE)
+#define _DARWIN_C_SOURCE
+#endif
 #include <stdio.h>
 #ifndef X_NOT_STDC_ENV
 #include <string.h>
