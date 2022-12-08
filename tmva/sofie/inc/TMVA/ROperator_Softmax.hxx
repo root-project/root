@@ -53,7 +53,7 @@ public:
    {
       OpName = "op_" + OpName;
       if (fShape.empty()) {
-         throw std::runtime_error("TMVA SOFIE Transpose Softmax called to Generate without being initialized first");
+         throw std::runtime_error("TMVA SOFIE Operator Softmax called to Generate without being initialized first");
       }
       std::stringstream out;
       size_t size = fShape.size();
