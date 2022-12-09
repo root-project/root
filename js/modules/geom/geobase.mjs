@@ -3474,7 +3474,7 @@ function getBoundingBox(node, box3, local_coordinates) {
    let v1 = new Vector3(), attribute = node.geometry.attributes?.position;
 
    if ( attribute !== undefined )
-      for (let i = 0, l = attribute.count; i < l; i ++ ) {
+      for (let i = 0, l = attribute.count; i < l; i++) {
          // v1.fromAttribute( attribute, i ).applyMatrix4( node.matrixWorld );
          v1.fromBufferAttribute( attribute, i );
          if (!local_coordinates) v1.applyMatrix4( node.matrixWorld );

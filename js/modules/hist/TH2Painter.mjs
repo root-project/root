@@ -23,7 +23,7 @@ function drawTH2PolyLego(painter) {
 
    let cntr = painter.getContour(true), palette = painter.getHistPalette();
 
-   for (i = 0; i < len; ++ i) {
+   for (i = 0; i < len; ++i) {
       bin = histo.fBins.arr[i];
       if (bin.fContent < axis_zmin) continue;
 

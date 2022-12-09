@@ -1,5 +1,5 @@
 import { gStyle, browser, settings, clone, create, isBatchMode, isObject, isFunc, isStr,
-         clTPave, clTPaveText, clTPaveStats, clTLegend, clTPaletteAxis,
+         clTPave, clTPaveText, clTPaveStats, clTLegend, clTLegendEntry, clTPaletteAxis,
          clTText, clTLatex, clTLine, clTBox } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb, pointer as d3_pointer } from '../d3.mjs';
 import { Prob } from '../base/math.mjs';
@@ -1243,16 +1243,20 @@ async function produceLegend(dom, opt) {
 
       if (!obj) continue;
 
-      let entry = create('TLegendEntry');
+      let entry = create(clTLegendEntry);
       entry.fObject = obj;
       entry.fLabel = (opt == 'all') ? obj.fName : painter.getItemName();
       entry.fOption = '';
       if (!entry.fLabel) continue;
 
-      if (painter.lineatt?.used) entry.fOption += 'l';
-      if (painter.fillatt?.used) entry.fOption += 'f';
-      if (painter.markeratt?.used) entry.fOption += 'm';
-      if (!entry.fOption) entry.fOption = 'l';
+      if (painter.lineatt?.used)
+         entry.fOption += 'l';
+      if (painter.fillatt?.used)
+         entry.fOption += 'f';
+      if (painter.markeratt?.used)
+         entry.fOption += 'm';
+      if (!entry.fOption)
+         entry.fOption = 'l';
 
       leg.fPrimitives.Add(entry);
    }

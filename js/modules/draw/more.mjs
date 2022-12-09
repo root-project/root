@@ -50,8 +50,13 @@ async function drawText() {
 
    if (text.fTextAngle) arg.rotate = -text.fTextAngle;
 
-   if (text._typename == clTLatex) { arg.latex = 1; fact = 0.9; } else
-   if (text._typename == clTMathText) { arg.latex = 2; fact = 0.8; }
+   if (text._typename == clTLatex) {
+      arg.latex = 1;
+      fact = 0.9;
+   } else if (text._typename == clTMathText) {
+      arg.latex = 2;
+      fact = 0.8;
+   }
 
    this.startTextDrawing(text.fTextFont, Math.round((textsize > 1) ? textsize : textsize*Math.min(w,h)*fact));
 
@@ -127,7 +132,8 @@ function drawPolyLine() {
    if (polyline._typename != clTPolyLine)
       fillatt.setSolidColor('none');
 
-   if (!fillatt.empty()) cmd += 'Z';
+   if (!fillatt.empty())
+      cmd += 'Z';
 
    this.draw_g
        .append('svg:path')
