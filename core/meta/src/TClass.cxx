@@ -2488,11 +2488,11 @@ void TClass::Draw(Option_t *option)
 {
    if (!HasInterpreterInfo()) return;
 
-   TVirtualPad *padsav = gPad;
+   TVirtualPad::TContext ctxt(kTRUE);
 
    // Should we create a new canvas?
-   TString opt=option;
-   if (!padsav || !opt.Contains("same")) {
+   TString opt = option;
+   if (!ctxt.GetSaved() || !opt.Contains("same")) {
       TVirtualPad *padclass = (TVirtualPad*)(gROOT->GetListOfCanvases())->FindObject("R__class");
       if (!padclass) {
          gROOT->ProcessLine("new TCanvas(\"R__class\",\"class\",20,20,1000,750);");
@@ -2501,9 +2501,8 @@ void TClass::Draw(Option_t *option)
       }
    }
 
-   if (gPad) gPad->DrawClassObject(this,option);
-
-   if (padsav) padsav->cd();
+   if (gPad)
+      gPad->DrawClassObject(this,option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
