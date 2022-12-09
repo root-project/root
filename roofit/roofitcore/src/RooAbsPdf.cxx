@@ -1440,6 +1440,7 @@ int RooAbsPdf::calcSumW2CorrectedCovariance(RooMinimizer &minimizer, RooAbsReal 
 /// <tr><td> `Minos(const RooArgSet& set)`     <td>  Only run MINOS on given subset of arguments
 /// <tr><td> `Save(bool flag)`               <td>  Flag controls if RooFitResult object is produced and returned, off by default
 /// <tr><td> `Strategy(Int_t flag)`            <td>  Set Minuit strategy (0 to 2, default is 1)
+/// <tr><td> `MaxCalls(int n)`              <td> Change maximum number of likelihood function calss from MINUIT (if `n <= 0`, the default of 500 * #%parameters is used)
 /// <tr><td> `EvalErrorWall(bool flag=true)`    <td>  When parameters are in disallowed regions (e.g. PDF is negative), return very high value to fitter
 ///                                                  to force it out of that region. This can, however, mean that the fitter gets lost in this region. If
 ///                                                  this happens, try switching it off.
@@ -1567,6 +1568,7 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
   m.setEvalErrorWall(cfg.doEEWall);
   m.setRecoverFromNaNStrength(cfg.recoverFromNaN);
   m.setPrintEvalErrors(cfg.numee);
+  if (cfg.maxCalls > 0) m.setMaxFunctionCalls(cfg.maxCalls);
   if (cfg.printLevel!=1) m.setPrintLevel(cfg.printLevel);
   if (cfg.optConst) m.optimizeConst(cfg.optConst); // Activate constant term optimization
   if (cfg.verbose) m.setVerbose(1); // Activate verbose options
@@ -1640,6 +1642,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("doWarn","Warnings",0,minimizerDefaults.doWarn) ;
   pc.defineInt("doSumW2","SumW2Error",0,minimizerDefaults.doSumW2) ;
   pc.defineInt("doAsymptoticError","AsymptoticError",0,minimizerDefaults.doAsymptotic) ;
+  pc.defineInt("maxCalls","MaxCalls",0,minimizerDefaults.maxCalls);
   pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
   pc.defineInt("nWorkers", "Parallelize", 0, 0); // Three parallelize arguments
   pc.defineInt("parallelGradient", "Parallelize", 1, 0);
@@ -1732,6 +1735,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   cfg.doWarn = pc.getInt("doWarn");
   cfg.doSumW2 = pc.getInt("doSumW2");
   cfg.doAsymptotic = pc.getInt("doAsymptoticError");
+  cfg.maxCalls = pc.getInt("maxCalls");
   cfg.minosSet = pc.getSet("minosSet");
   cfg.minType = pc.getString("mintype","");
   cfg.minAlg = pc.getString("minalg","minuit");

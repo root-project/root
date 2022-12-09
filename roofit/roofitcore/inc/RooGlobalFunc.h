@@ -255,6 +255,7 @@ RooCmdArg Minos(const RooArgSet& minosArgs) ;
 RooCmdArg SplitRange(bool flag=true) ;
 RooCmdArg SumCoefRange(const char* rangeName) ;
 RooCmdArg Constrain(const RooArgSet& params) ;
+RooCmdArg MaxCalls(int n) ;
 
 template<class... Args_t>
 RooCmdArg GlobalObservables(Args_t &&... argsOrArgSet) {
