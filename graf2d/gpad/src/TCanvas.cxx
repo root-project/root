@@ -977,9 +977,7 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
 
    if (!fCanvasImp) return; //this may happen when closing a TAttCanvas
 
-   TVirtualPad* savepad;
-   savepad = gPad;
-   gPad = GetSelectedPad();
+   TContext ctxt(GetSelectedPad(), kFALSE);
 
    fCanvasImp->SetStatusText(selected->GetTitle(),0);
    fCanvasImp->SetStatusText(selected->GetName(),1);
@@ -1021,14 +1019,11 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
          snprintf(atext, kTMAX, "%s, y=%g",
             dt.AsSQLString(),gPad->AbsPixeltoY(py));
          fCanvasImp->SetStatusText(atext,3);
-         gPad = savepad;
          return;
       }
    }
    // default
    fCanvasImp->SetStatusText(selected->GetObjectInfo(px,py),3);
-
-   gPad = savepad;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1073,7 +1068,7 @@ void TCanvas::EnterLeave(TPad *prevSelPad, TObject *prevSelObj)
 {
    if (prevSelObj == fSelected) return;
 
-   TPad *padsav = (TPad *)gPad;
+   TContext ctxt(kFALSE);
    Int_t sevent = fEvent;
 
    if (prevSelObj) {
@@ -1094,7 +1089,6 @@ void TCanvas::EnterLeave(TPad *prevSelPad, TObject *prevSelObj)
    }
 
    fEvent = sevent;
-   gPad   = padsav;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1142,12 +1136,11 @@ void TCanvas::Flush()
 {
    if ((fCanvasID == -1) || IsWeb()) return;
 
-   TPad *padsav = (TPad*)gPad;
-   cd();
+   TContext ctxt(this, kTRUE);
    if (!IsBatch()) {
       if (!UseGL() || fGLDevice == -1) {
          gVirtualX->SelectWindow(fCanvasID);
-         gPad = padsav; //don't do cd() because than also the pixmap is changed
+         gPad = ctxt.GetSaved(); //don't do cd() because than also the pixmap is changed
          CopyPixmaps();
          gVirtualX->UpdateWindow(1);
       } else {
@@ -1156,9 +1149,9 @@ void TCanvas::Flush()
          gGLManager->MakeCurrent(fGLDevice);
          fPainter->InitPainter();
          Paint();
-         if (padsav && padsav->GetCanvas() == this) {
-            padsav->cd();
-            padsav->HighLight(padsav->GetHighLightColor());
+         if (ctxt.GetSaved() && ctxt.GetSaved()->GetCanvas() == this) {
+            ctxt.GetSaved()->cd();
+            ctxt.GetSaved()->HighLight(ctxt.GetSaved()->GetHighLightColor());
             //cd();
          }
          fPainter->LockPainter();
@@ -1166,7 +1159,6 @@ void TCanvas::Flush()
          gVirtualPS = tvps;
       }
    }
-   if (padsav) padsav->cd();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1673,8 +1665,7 @@ void TCanvas::Resize(Option_t *)
 
    R__LOCKGUARD(gROOTMutex);
 
-   TPad *padsav  = (TPad*)gPad;
-   cd();
+   TContext ctxt(this, kTRUE);
 
    if (!IsBatch()) {
       gVirtualX->SelectWindow(fCanvasID);      //select current canvas
@@ -1733,8 +1724,6 @@ void TCanvas::Resize(Option_t *)
 
 //*-*- Loop on all pads to recompute conversion coefficients
    TPad::ResizePad();
-
-   if (padsav) padsav->cd();
 }
 
 
@@ -1766,9 +1755,10 @@ void TCanvas::ResizeOpaque(Int_t set)
 
 void TCanvas::RunAutoExec()
 {
-   if (!TestBit(kAutoExec)) return;
-   if (!gPad) return;
-   ((TPad*)gPad)->AutoExec();
+   if (!TestBit(kAutoExec))
+      return;
+   if (gPad)
+      ((TPad*)gPad)->AutoExec();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1984,10 +1974,8 @@ void TCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
       fCanvasImp->SetCanvasSize(ww, wh);
       fCw = ww;
       fCh = wh;
-      TPad *padsav = (TPad*)gPad;
-      cd();
+      TContext ctxt(this, kTRUE);
       ResizePad();
-      if (padsav) padsav->cd();
    }
 }
 
