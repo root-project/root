@@ -141,11 +141,9 @@ namespace TStreamerInfoActions {
    // a sub-object
    struct TNestedIDs {
       TNestedIDs() = default;
-      TNestedIDs(TStreamerInfo *info, Int_t offset) : fInfo(info), fOffset(offset) {}
-      ~TNestedIDs() {
-         if (fOwnOnfileObject)
-            delete fOnfileObject;
-      }
+      TNestedIDs(TStreamerInfo *info, Int_t offset);
+      ~TNestedIDs();
+
       TStreamerInfo *fInfo = nullptr; ///< Not owned.
       TVirtualArray *fOnfileObject = nullptr;
       Bool_t         fOwnOnfileObject = kFALSE;
@@ -167,6 +165,13 @@ namespace TStreamerInfoActions {
       TStreamerInfo *fInfo = nullptr;
       std::unique_ptr<TNestedIDs> fNestedIDs;
    };
+
+   inline TNestedIDs::TNestedIDs(TStreamerInfo *info, Int_t offset) : fInfo(info), fOffset(offset) {}
+   inline TNestedIDs::~TNestedIDs() {
+         if (fOwnOnfileObject)
+            delete fOnfileObject;
+      }
+
 
    typedef std::vector<TConfiguredAction> ActionContainer_t;
    class TActionSequence : public TObject {
