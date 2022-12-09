@@ -17,7 +17,7 @@
 
 void df029_SQlitePlatformDistribution() {
 
-   auto rdf = ROOT::RDF::MakeSqliteDataFrame( "http://root.cern/files/root_download_stats.sqlite", "SELECT * FROM accesslog;" );
+   auto rdf = ROOT::RDF::FromSqlite("http://root.cern/files/root_download_stats.sqlite", "SELECT * FROM accesslog;");
 
    TH1F hRootPlatform("hrootPlatform", "Platform Distribution", 7, 0, -1);
    TH1F hShortRootPlatform("hShortRootPlatform", "Short Platform Distribution", 7, 0, -1);

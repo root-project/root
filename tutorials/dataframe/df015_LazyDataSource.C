@@ -30,7 +30,7 @@ int df015_LazyDataSource()
    if(gSystem->AccessPathName(fileName))
       TFile::Cp(fileNameUrl, fileName);
 
-   auto csv_rdf = MakeCsvDataFrame(fileName);
+   auto csv_rdf = FromCSV(fileName);
 
    // Now we take out two columns: px and py of the first muon in the muon pair
    std::string px1Name = "px1";

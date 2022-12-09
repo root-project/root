@@ -17,7 +17,8 @@
 
 void df030_SQliteVersionsOfROOT() {
 
-   auto rdf = ROOT::RDF::MakeSqliteDataFrame("http://root.cern/files/root_download_stats.sqlite", "SELECT Version FROM accesslog;");
+   auto rdf =
+      ROOT::RDF::FromSqlite("http://root.cern/files/root_download_stats.sqlite", "SELECT Version FROM accesslog;");
 
    TH1F hVersionOfRoot("hVersionOfRoot", "Development Versions of ROOT", 8, 0, -1);
 

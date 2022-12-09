@@ -21,7 +21,7 @@
 
 void df028_SQliteIPLocation() {
 
-   auto rdf = ROOT::RDF::MakeSqliteDataFrame( "http://root.cern/files/root_download_stats.sqlite", "SELECT * FROM accesslog;" );
+   auto rdf = ROOT::RDF::FromSqlite("http://root.cern/files/root_download_stats.sqlite", "SELECT * FROM accesslog;");
 
    auto f = TFile::Open("http://root.cern.ch/files/WM.root");
    auto worldMap = f->Get<TH2Poly>("WMUSA");
