@@ -87,6 +87,8 @@ public:
    void SetG4Compatibility(Bool_t G4Compatible) {
       fgG4Compatibility = G4Compatible;
    };
+   UInt_t GetFltPrecision() const { return fFltPrecision; }
+   void SetFltPrecision(UInt_t prec) { fFltPrecision = prec; }
 
 private:
    struct Xyz {
@@ -217,7 +219,7 @@ private:
    //II. Utility methods
    Xyz GetXYZangles(const Double_t * rotationMatrix);
    //nodes to create position, rotation and similar types first-position/rotation...
-   XMLNodePointer_t CreatePositionN(const char * name, Xyz position, const char * type = "position", const char * unit = "cm");
+   XMLNodePointer_t CreatePositionN(const char * name, Xyz position, const char * type, const char * unit);
    XMLNodePointer_t CreateRotationN(const char * name, Xyz rotation, const char * type = "rotation", const char * unit = "deg");
    XMLNodePointer_t CreateMatrixN(TGDMLMatrix const *matrix);
    XMLNodePointer_t CreateConstantN(const char *name, Double_t value);
@@ -231,8 +233,6 @@ private:
    TString GetPattAxis(Int_t divAxis, const char * pattName, TString& unit);
    Bool_t IsNullParam(Double_t parValue, TString parName, TString objName);
    void UnsetTemporaryBits(TGeoManager * geoMng);
-   UInt_t GetFltPrecision() const { return fFltPrecision; }
-   void SetFltPrecision(UInt_t prec) { fFltPrecision = prec; }
 
    ////////////////////////////////////////////////////////////////////////////////
    //
