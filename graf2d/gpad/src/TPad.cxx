@@ -3932,38 +3932,29 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
    static Double_t ang1[10] = {  0., 10., 20., 30., 45.,5., 60., 70., 80., 89.99};
    static Double_t ang2[10] = {180.,170.,160.,150.,135.,5.,120.,110.,100., 89.99};
 
-   Int_t fasi  = FillStyle%1000;
-   Int_t idSPA = (Int_t)(fasi/100);
-   Int_t iAng2 = (Int_t)((fasi-100*idSPA)/10);
-   Int_t iAng1 = fasi%10;
-   Double_t dy = 0.003*(Double_t)(idSPA)*gStyle->GetHatchesSpacing();
-   Int_t lw = gStyle->GetHatchesLineWidth();
-   Short_t lws = 0;
-   Int_t   lss = 0;
-   Int_t   lcs = 0;
+   Int_t fasi  = FillStyle % 1000;
+   Int_t idSPA = fasi / 100;
+   Int_t iAng2 = (fasi - 100 * idSPA) / 10;
+   Int_t iAng1 = fasi % 10;
+   Double_t dy = 0.003 * idSPA * gStyle->GetHatchesSpacing();
+   Short_t lws = 0, lws2 = 0, lw = gStyle->GetHatchesLineWidth();
+   Int_t   lss = 0, lss2 = 0, lcs = 0, lcs2 = 0;
 
-   // Save the current line attributes
+   // Save the current line attributes and change to draw hatches
    if (!gPad->IsBatch() && GetPainter()) {
       lws = GetPainter()->GetLineWidth();
       lss = GetPainter()->GetLineStyle();
       lcs = GetPainter()->GetLineColor();
-   } else {
-      if (gVirtualPS) {
-         lws = gVirtualPS->GetLineWidth();
-         lss = gVirtualPS->GetLineStyle();
-         lcs = gVirtualPS->GetLineColor();
-      }
-   }
-
-   // Change the current line attributes to draw the hatches
-   if (!gPad->IsBatch() && GetPainter()) {
       GetPainter()->SetLineStyle(1);
-      GetPainter()->SetLineWidth(Short_t(lw));
+      GetPainter()->SetLineWidth(lw);
       GetPainter()->SetLineColor(GetPainter()->GetFillColor());
    }
    if (gVirtualPS) {
+      lws2 = gVirtualPS->GetLineWidth();
+      lss2 = gVirtualPS->GetLineStyle();
+      lcs2 = gVirtualPS->GetLineColor();
       gVirtualPS->SetLineStyle(1);
-      gVirtualPS->SetLineWidth(Short_t(lw));
+      gVirtualPS->SetLineWidth(lw);
       gVirtualPS->SetLineColor(gVirtualPS->GetFillColor());
    }
 
@@ -3978,9 +3969,9 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
       GetPainter()->SetLineColor(lcs);
    }
    if (gVirtualPS) {
-      gVirtualPS->SetLineStyle(lss);
-      gVirtualPS->SetLineWidth(lws);
-      gVirtualPS->SetLineColor(lcs);
+      gVirtualPS->SetLineStyle(lss2);
+      gVirtualPS->SetLineWidth(lws2);
+      gVirtualPS->SetLineColor(lcs2);
    }
 }
 
@@ -4143,8 +4134,7 @@ L50:
 
 void TPad::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   Double_t x[2], y[2];
-   x[0] = x1;   x[1] = x2;   y[0] = y1;   y[1] = y2;
+   Double_t x[2] = {x1, x2}, y[2] = {y1, y2};
 
    //If line is totally clipped, return
    if (TestBit(TGraph::kClipFrame)) {
@@ -4156,9 +4146,8 @@ void TPad::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    if (!gPad->IsBatch() && GetPainter())
       GetPainter()->DrawLine(x[0], y[0], x[1], y[1]);
 
-   if (gVirtualPS) {
+   if (gVirtualPS)
       gVirtualPS->DrawPS(2, x, y);
-   }
 
    Modified();
 }
