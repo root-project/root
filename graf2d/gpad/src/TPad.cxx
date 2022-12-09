@@ -4857,9 +4857,6 @@ void TPad::Print(const char *filename, Option_t *option)
       psname.Prepend(gEnv->GetValue("Canvas.PrintDirectory","."));
    }
 
-   if (!GetCanvas()->IsBatch() && GetPainter())
-      GetPainter()->SelectDrawable(GetCanvasID());
-
    // Save pad/canvas in alternative formats
    TImage::EImageFileTypes gtype = TImage::kUnknown;
    if (strstr(opt, "gif+")) {
@@ -4884,6 +4881,16 @@ void TPad::Print(const char *filename, Option_t *option)
       gtype = TImage::kBmp;
       image = kTRUE;
    }
+
+   if (GetCanvas()->IsWeb() && GetPainter() &&
+       (strstr(opt,"svg") || strstr(opt,"pdf") || (gtype == TImage::kJpeg) || (gtype == TImage::kPng))) {
+      GetPainter()->SaveImage(this, psname.Data(), gtype);
+      return;
+   }
+
+   if (!GetCanvas()->IsBatch() && GetPainter())
+      GetPainter()->SelectDrawable(GetCanvasID());
+
 
    if (!gROOT->IsBatch() && image) {
       if ((gtype == TImage::kGif) && !ContainsTImage(fPrimitives)) {
