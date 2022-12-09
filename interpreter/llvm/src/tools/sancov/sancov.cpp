@@ -21,6 +21,7 @@
 #include "llvm/MC/MCObjectFileInfo.h"
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCSubtargetInfo.h"
+#include "llvm/MC/MCTargetOptions.h"
 #include "llvm/Object/Archive.h"
 #include "llvm/Object/Binary.h"
 #include "llvm/Object/COFF.h"
@@ -31,18 +32,18 @@
 #include "llvm/Support/Errc.h"
 #include "llvm/Support/ErrorOr.h"
 #include "llvm/Support/FileSystem.h"
+#include "llvm/Support/InitLLVM.h"
+#include "llvm/Support/JSON.h"
 #include "llvm/Support/MD5.h"
-#include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
-#include "llvm/Support/PrettyStackTrace.h"
 #include "llvm/Support/Regex.h"
 #include "llvm/Support/SHA1.h"
-#include "llvm/Support/Signals.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/SpecialCaseList.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/TargetSelect.h"
+#include "llvm/Support/VirtualFileSystem.h"
 #include "llvm/Support/YAMLParser.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -123,8 +124,8 @@ static const uint32_t BinCoverageMagic = 0xC0BFFFFF;
 static const uint32_t Bitness32 = 0xFFFFFF32;
 static const uint32_t Bitness64 = 0xFFFFFF64;
 
-static Regex SancovFileRegex("(.*)\\.[0-9]+\\.sancov");
-static Regex SymcovFileRegex(".*\\.symcov");
+static const Regex SancovFileRegex("(.*)\\.[0-9]+\\.sancov");
+static const Regex SymcovFileRegex(".*\\.symcov");
 
 // --------- MAIN DATASTRUCTURES ----------
 
@@ -243,7 +244,7 @@ RawCoverage::read(const std::string &FileName) {
     return make_error_code(errc::illegal_byte_sequence);
   }
 
-  auto Addrs = llvm::make_unique<std::set<uint64_t>>();
+  auto Addrs = std::make_unique<std::set<uint64_t>>();
 
   switch (Header->Bitness) {
   case Bitness64:
@@ -284,87 +285,6 @@ static raw_ostream &operator<<(raw_ostream &OS, const CoverageStats &Stats) {
   return OS;
 }
 
-// Helper for writing out JSON. Handles indents and commas using
-// scope variables for objects and arrays.
-class JSONWriter {
-public:
-  JSONWriter(raw_ostream &Out) : OS(Out) {}
-  JSONWriter(const JSONWriter &) = delete;
-  ~JSONWriter() { OS << "\n"; }
-
-  void operator<<(StringRef S) { printJSONStringLiteral(S, OS); }
-
-  // Helper RAII class to output JSON objects.
-  class Object {
-  public:
-    Object(JSONWriter *W, raw_ostream &OS) : W(W), OS(OS) {
-      OS << "{";
-      W->Indent++;
-    }
-    ~Object() {
-      W->Indent--;
-      OS << "\n";
-      W->indent();
-      OS << "}";
-    }
-
-    void key(StringRef Key) {
-      Index++;
-      if (Index > 0)
-        OS << ",";
-      OS << "\n";
-      W->indent();
-      printJSONStringLiteral(Key, OS);
-      OS << " : ";
-    }
-
-  private:
-    JSONWriter *W;
-    raw_ostream &OS;
-    int Index = -1;
-  };
-
-  Object object() { return {this, OS}; }
-
-  // Helper RAII class to output JSON arrays.
-  class Array {
-  public:
-    Array(raw_ostream &OS) : OS(OS) { OS << "["; }
-    ~Array() { OS << "]"; }
-    void next() {
-      Index++;
-      if (Index > 0)
-        OS << ", ";
-    }
-
-  private:
-    raw_ostream &OS;
-    int Index = -1;
-  };
-
-  Array array() { return {OS}; }
-
-private:
-  void indent() { OS.indent(Indent * 2); }
-
-  static void printJSONStringLiteral(StringRef S, raw_ostream &OS) {
-    if (S.find('"') == std::string::npos) {
-      OS << "\"" << S << "\"";
-      return;
-    }
-    OS << "\"";
-    for (char Ch : S.bytes()) {
-      if (Ch == '"')
-        OS << "\\";
-      OS << Ch;
-    }
-    OS << "\"";
-  }
-
-  raw_ostream &OS;
-  int Indent = 0;
-};
-
 // Output symbolized information for coverage points in JSON.
 // Format:
 // {
@@ -375,10 +295,9 @@ private:
 //       }
 //    }
 // }
-static void operator<<(JSONWriter &W,
+static void operator<<(json::OStream &W,
                        const std::vector<CoveragePoint> &Points) {
   // Group points by file.
-  auto ByFile(W.object());
   std::map<std::string, std::vector<const CoveragePoint *>> PointsByFile;
   for (const auto &Point : Points) {
     for (const DILineInfo &Loc : Point.Locs) {
@@ -388,10 +307,6 @@ static void operator<<(JSONWriter &W,
 
   for (const auto &P : PointsByFile) {
     std::string FileName = P.first;
-    ByFile.key(FileName);
-
-    // Group points by function.
-    auto ByFn(W.object());
     std::map<std::string, std::vector<const CoveragePoint *>> PointsByFn;
     for (auto PointPtr : P.second) {
       for (const DILineInfo &Loc : PointPtr->Locs) {
@@ -399,66 +314,54 @@ static void operator<<(JSONWriter &W,
       }
     }
 
-    for (const auto &P : PointsByFn) {
-      std::string FunctionName = P.first;
-      std::set<std::string> WrittenIds;
+    W.attributeObject(P.first, [&] {
+      // Group points by function.
+      for (const auto &P : PointsByFn) {
+        std::string FunctionName = P.first;
+        std::set<std::string> WrittenIds;
 
-      ByFn.key(FunctionName);
+        W.attributeObject(FunctionName, [&] {
+          for (const CoveragePoint *Point : P.second) {
+            for (const auto &Loc : Point->Locs) {
+              if (Loc.FileName != FileName || Loc.FunctionName != FunctionName)
+                continue;
+              if (WrittenIds.find(Point->Id) != WrittenIds.end())
+                continue;
 
-      // Output <point_id> : "<line>:<col>".
-      auto ById(W.object());
-      for (const CoveragePoint *Point : P.second) {
-        for (const auto &Loc : Point->Locs) {
-          if (Loc.FileName != FileName || Loc.FunctionName != FunctionName)
-            continue;
-          if (WrittenIds.find(Point->Id) != WrittenIds.end())
-            continue;
-
-          WrittenIds.insert(Point->Id);
-          ById.key(Point->Id);
-          W << (utostr(Loc.Line) + ":" + utostr(Loc.Column));
-        }
+              // Output <point_id> : "<line>:<col>".
+              WrittenIds.insert(Point->Id);
+              W.attribute(Point->Id,
+                          (utostr(Loc.Line) + ":" + utostr(Loc.Column)));
+            }
+          }
+        });
       }
-    }
+    });
   }
 }
 
-static void operator<<(JSONWriter &W, const SymbolizedCoverage &C) {
-  auto O(W.object());
-
-  {
-    O.key("covered-points");
-    auto PointsArray(W.array());
-
-    for (const std::string &P : C.CoveredIds) {
-      PointsArray.next();
-      W << P;
-    }
-  }
-
-  {
-    if (!C.BinaryHash.empty()) {
-      O.key("binary-hash");
-      W << C.BinaryHash;
-    }
-  }
-
-  {
-    O.key("point-symbol-info");
-    W << C.Points;
-  }
+static void operator<<(json::OStream &W, const SymbolizedCoverage &C) {
+  W.object([&] {
+    W.attributeArray("covered-points", [&] {
+      for (const std::string &P : C.CoveredIds) {
+        W.value(P);
+      }
+    });
+    W.attribute("binary-hash", C.BinaryHash);
+    W.attributeObject("point-symbol-info", [&] { W << C.Points; });
+  });
 }
 
 static std::string parseScalarString(yaml::Node *N) {
   SmallString<64> StringStorage;
   yaml::ScalarNode *S = dyn_cast<yaml::ScalarNode>(N);
   failIf(!S, "expected string");
-  return S->getValue(StringStorage);
+  return std::string(S->getValue(StringStorage));
 }
 
 std::unique_ptr<SymbolizedCoverage>
 SymbolizedCoverage::read(const std::string &InputFile) {
-  auto Coverage(make_unique<SymbolizedCoverage>());
+  auto Coverage(std::make_unique<SymbolizedCoverage>());
 
   std::map<std::string, CoveragePoint> Points;
   ErrorOr<std::unique_ptr<MemoryBuffer>> BufOrErr =
@@ -566,7 +469,7 @@ static std::unique_ptr<symbolize::LLVMSymbolizer> createSymbolizer() {
 static std::string normalizeFilename(const std::string &FileName) {
   SmallString<256> S(FileName);
   sys::path::remove_dots(S, /* remove_dot_dot */ true);
-  return stripPathPrefix(S.str().str());
+  return stripPathPrefix(sys::path::convert_to_slash(std::string(S)));
 }
 
 class Blacklists {
@@ -606,7 +509,8 @@ private:
     if (ClBlacklist.empty())
       return std::unique_ptr<SpecialCaseList>();
 
-    return SpecialCaseList::createOrDie({{ClBlacklist}});
+    return SpecialCaseList::createOrDie({{ClBlacklist}},
+                                        *vfs::getRealFileSystem());
   }
   std::unique_ptr<SpecialCaseList> DefaultBlacklist;
   std::unique_ptr<SpecialCaseList> UserBlacklist;
@@ -751,7 +655,12 @@ findSanitizerCovFunctions(const object::ObjectFile &O) {
     failIfError(NameOrErr);
     StringRef Name = NameOrErr.get();
 
-    if (!(Symbol.getFlags() & object::BasicSymbolRef::SF_Undefined) &&
+    Expected<uint32_t> FlagsOrErr = Symbol.getFlags();
+    // TODO: Test this error.
+    failIfError(FlagsOrErr);
+    uint32_t Flags = FlagsOrErr.get();
+
+    if (!(Flags & object::BasicSymbolRef::SF_Undefined) &&
         isCoveragePointSymbol(Name)) {
       Result.insert(Address);
     }
@@ -761,12 +670,10 @@ findSanitizerCovFunctions(const object::ObjectFile &O) {
     for (const object::ExportDirectoryEntryRef &Export :
          CO->export_directories()) {
       uint32_t RVA;
-      std::error_code EC = Export.getExportRVA(RVA);
-      failIfError(EC);
+      failIfError(Export.getExportRVA(RVA));
 
       StringRef Name;
-      EC = Export.getSymbolName(Name);
-      failIfError(EC);
+      failIfError(Export.getSymbolName(Name));
 
       if (isCoveragePointSymbol(Name))
         Result.insert(CO->getImageBase() + RVA);
@@ -814,12 +721,12 @@ static void getObjectCoveragePoints(const object::ObjectFile &O,
       TheTarget->createMCRegInfo(TripleName));
   failIfEmpty(MRI, "no register info for target " + TripleName);
 
+  MCTargetOptions MCOptions;
   std::unique_ptr<const MCAsmInfo> AsmInfo(
-      TheTarget->createMCAsmInfo(*MRI, TripleName));
+      TheTarget->createMCAsmInfo(*MRI, TripleName, MCOptions));
   failIfEmpty(AsmInfo, "no asm info for target " + TripleName);
 
-  std::unique_ptr<const MCObjectFileInfo> MOFI(new MCObjectFileInfo);
-  MCContext Ctx(AsmInfo.get(), MRI.get(), MOFI.get());
+  MCContext Ctx(TheTriple, AsmInfo.get(), MRI.get(), STI.get());
   std::unique_ptr<MCDisassembler> DisAsm(
       TheTarget->createMCDisassembler(*STI, Ctx));
   failIfEmpty(DisAsm, "no disassembler info for target " + TripleName);
@@ -851,7 +758,7 @@ static void getObjectCoveragePoints(const object::ObjectFile &O,
          Index += Size) {
       MCInst Inst;
       if (!DisAsm->getInstruction(Inst, Size, Bytes.slice(Index),
-                                  SectionAddr + Index, nulls(), nulls())) {
+                                  SectionAddr + Index, nulls())) {
         if (Size == 0)
           Size = 1;
         continue;
@@ -958,7 +865,7 @@ static bool isSymbolizedCoverageFile(const std::string &FileName) {
 
 static std::unique_ptr<SymbolizedCoverage>
 symbolize(const RawCoverage &Data, const std::string ObjectFile) {
-  auto Coverage = make_unique<SymbolizedCoverage>();
+  auto Coverage = std::make_unique<SymbolizedCoverage>();
 
   ErrorOr<std::unique_ptr<MemoryBuffer>> BufOrErr =
       MemoryBuffer::getFile(ObjectFile);
@@ -1112,7 +1019,7 @@ merge(const std::vector<std::unique_ptr<SymbolizedCoverage>> &Coverages) {
   if (Coverages.empty())
     return nullptr;
 
-  auto Result = make_unique<SymbolizedCoverage>();
+  auto Result = std::make_unique<SymbolizedCoverage>();
 
   for (size_t I = 0; I < Coverages.size(); ++I) {
     const SymbolizedCoverage &Coverage = *Coverages[I];
@@ -1163,11 +1070,11 @@ readSymbolizeAndMergeCmdArguments(std::vector<std::string> FileNames) {
         CovFiles.insert(FileName);
       } else {
         auto ShortFileName = llvm::sys::path::filename(FileName);
-        if (ObjFiles.find(ShortFileName) != ObjFiles.end()) {
+        if (ObjFiles.find(std::string(ShortFileName)) != ObjFiles.end()) {
           fail("Duplicate binary file with a short name: " + ShortFileName);
         }
 
-        ObjFiles[ShortFileName] = FileName;
+        ObjFiles[std::string(ShortFileName)] = FileName;
         if (FirstObjFile.empty())
           FirstObjFile = FileName;
       }
@@ -1186,7 +1093,7 @@ readSymbolizeAndMergeCmdArguments(std::vector<std::string> FileNames) {
              FileName);
       }
 
-      auto Iter = ObjFiles.find(Components[1]);
+      auto Iter = ObjFiles.find(std::string(Components[1]));
       if (Iter == ObjFiles.end()) {
         fail("Object file for coverage not found: " + FileName);
       }
@@ -1224,10 +1131,7 @@ readSymbolizeAndMergeCmdArguments(std::vector<std::string> FileNames) {
 } // namespace
 
 int main(int Argc, char **Argv) {
-  // Print stack trace if we signal out.
-  sys::PrintStackTraceOnErrorSignal(Argv[0]);
-  PrettyStackTraceProgram X(Argc, Argv);
-  llvm_shutdown_obj Y; // Call llvm_shutdown() on exit.
+  llvm::InitLLVM X(Argc, Argv);
 
   llvm::InitializeAllTargetInfos();
   llvm::InitializeAllTargetMCs();
@@ -1275,7 +1179,7 @@ int main(int Argc, char **Argv) {
   }
   case MergeAction:
   case SymbolizeAction: { // merge & symbolize are synonims.
-    JSONWriter W(outs());
+    json::OStream W(outs(), 2);
     W << *Coverage;
     return 0;
   }

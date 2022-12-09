@@ -31,9 +31,9 @@
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Basic/SourceManager.h"
 
-#include <cstdlib>
-#include <cctype>
 #include <algorithm>
+#include <cctype>
+#include <cstdlib>
 
 namespace {
   ///\brief Make a valid C++ identifier, replacing illegal characters in `S'
@@ -75,7 +75,7 @@ namespace cling {
 
     std::string pathname(m_Interpreter.lookupFileOrLibrary(file));
     if (pathname.empty())
-      pathname = file;
+      pathname = file.str();
     if (m_Interpreter.loadFile(pathname, /*allowSharedLib=*/true, transaction)
         == Interpreter::kSuccess) {
       registerUnloadPoint(unloadPoint, pathname);
@@ -113,7 +113,7 @@ namespace cling {
 
   void MetaSema::actOnComment(llvm::StringRef comment) const {
     // Some of the comments are meaningful for the cling::Interpreter
-    m_Interpreter.declare(comment);
+    m_Interpreter.declare(comment.str());
   }
 
   MetaSema::ActionResult MetaSema::actOnxCommand(llvm::StringRef file,
@@ -148,7 +148,7 @@ namespace cling {
 
     // First, try function named after `file`; add any alternatives below.
     const std::string tryCallThese[] = {
-      makeValidCXXIdentifier(llvm::sys::path::stem(file)),
+      makeValidCXXIdentifier(llvm::sys::path::stem(file).str()),
       // FIXME: this provides an entry point that is independent from the macro
       // filename (and still works if file is renamed); should we enable this?
       //"__main__",
@@ -203,8 +203,11 @@ namespace cling {
     std::string pathname(m_Interpreter.lookupFileOrLibrary(file));
     const auto FE = FM.getFile(pathname, /*OpenFile=*/false,
                                /*CacheFailure=*/false);
-    auto TI = m_FEToTransaction.find(FE);
-    if (!FE || TI == m_FEToTransaction.end())
+    if (!FE)
+      return AR_Failure;
+
+    auto TI = m_FEToTransaction.find(*FE);
+    if (TI == m_FEToTransaction.end())
       return AR_Success;
 
     const Transaction* unloadPoint = (*TI).second;
@@ -288,11 +291,11 @@ namespace cling {
   }
 
   void MetaSema::actOnstoreStateCommand(llvm::StringRef name) const {
-    m_Interpreter.storeInterpreterState(name);
+    m_Interpreter.storeInterpreterState(name.str());
   }
 
   void MetaSema::actOncompareStateCommand(llvm::StringRef name) const {
-    m_Interpreter.compareInterpreterState(name);
+    m_Interpreter.compareInterpreterState(name.str());
   }
 
   void MetaSema::actOnstatsCommand(llvm::StringRef name,
@@ -408,11 +411,11 @@ namespace cling {
     }
 #if 0
     // Only available in clang's trunk:
-    clang::ASTReader* Reader = m_Interpreter.getCI()->getModuleManager();
-    const clang::serialization::ModuleManager& ModMan
-      = Reader->getModuleManager();
-    for (clang::serialization::ModuleManager::ModuleConstIterator I
-           = ModMan.begin(), E = ModMan.end(); I != E; ++I) {
+    clang::ASTReader* Reader = m_Interpreter.getCI()->getASTReader();
+    const clang::serialization::ASTReader& ASTRead
+      = Reader->getASTReader();
+    for (clang::serialization::ASTReader::ModuleConstIterator I
+           = ASTRead.begin(), E = ASTRead.end(); I != E; ++I) {
       typedef
         std::vector<llvm::PointerIntPair<const clang::FileEntry*, 1, bool> >
         InputFiles_t;
@@ -479,14 +482,16 @@ namespace cling {
                                      llvm::StringRef filename) {
     std::string pathname(m_Interpreter.lookupFileOrLibrary(filename));
     if (pathname.empty())
-      pathname = filename;
+      pathname = filename.str();
 
     clang::FileManager& FM = m_Interpreter.getSema().getSourceManager().getFileManager();
-    const clang::FileEntry* FE = FM.getFile(pathname, /*OpenFile=*/false,
-                                            /*CacheFailure=*/false);
-    if (FE && !m_FEToTransaction[FE]) {
-      m_FEToTransaction[FE] = unloadPoint;
-      m_TransactionToFE[unloadPoint] = FE;
+    auto FE = FM.getFile(pathname, /*OpenFile=*/false, /*CacheFailure=*/false);
+    if (!FE)
+      return;
+
+    if (*FE && !m_FEToTransaction[*FE]) {
+      m_FEToTransaction[*FE] = unloadPoint;
+      m_TransactionToFE[unloadPoint] = *FE;
     }
   }
 } // end namespace cling

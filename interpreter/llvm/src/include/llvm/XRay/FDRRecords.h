@@ -10,8 +10,8 @@
 // of records we encounter in XRay flight data recorder mode traces.
 //
 //===----------------------------------------------------------------------===//
-#ifndef LLVM_LIB_XRAY_FDRRECORDS_H_
-#define LLVM_LIB_XRAY_FDRRECORDS_H_
+#ifndef LLVM_XRAY_FDRRECORDS_H
+#define LLVM_XRAY_FDRRECORDS_H
 
 #include <cstdint>
 #include <string>
@@ -289,7 +289,7 @@ public:
 };
 
 class CallArgRecord : public MetadataRecord {
-  uint64_t Arg;
+  uint64_t Arg = 0;
   friend class RecordInitializer;
 
 public:
@@ -371,8 +371,8 @@ public:
 
 class FunctionRecord : public Record {
   RecordTypes Kind;
-  int32_t FuncId;
-  uint32_t Delta;
+  int32_t FuncId = 0;
+  uint32_t Delta = 0;
   friend class RecordInitializer;
 
   static constexpr unsigned kFunctionRecordSize = 8;
@@ -417,16 +417,16 @@ public:
 
 class RecordInitializer : public RecordVisitor {
   DataExtractor &E;
-  uint32_t &OffsetPtr;
+  uint64_t &OffsetPtr;
   uint16_t Version;
 
 public:
   static constexpr uint16_t DefaultVersion = 5u;
 
-  explicit RecordInitializer(DataExtractor &DE, uint32_t &OP, uint16_t V)
+  explicit RecordInitializer(DataExtractor &DE, uint64_t &OP, uint16_t V)
       : RecordVisitor(), E(DE), OffsetPtr(OP), Version(V) {}
 
-  explicit RecordInitializer(DataExtractor &DE, uint32_t &OP)
+  explicit RecordInitializer(DataExtractor &DE, uint64_t &OP)
       : RecordInitializer(DE, OP, DefaultVersion) {}
 
   Error visit(BufferExtents &) override;
@@ -446,4 +446,4 @@ public:
 } // namespace xray
 } // namespace llvm
 
-#endif // LLVM_LIB_XRAY_FDRRECORDS_H_
+#endif // LLVM_XRAY_FDRRECORDS_H

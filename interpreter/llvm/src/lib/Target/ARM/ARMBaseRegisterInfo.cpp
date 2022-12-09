@@ -55,10 +55,8 @@
 using namespace llvm;
 
 ARMBaseRegisterInfo::ARMBaseRegisterInfo()
-    : ARMGenRegisterInfo(ARM::LR, 0, 0, ARM::PC) {}
-
-static unsigned getFramePointerReg(const ARMSubtarget &STI) {
-  return STI.useR7AsFramePointer() ? ARM::R7 : ARM::R11;
+    : ARMGenRegisterInfo(ARM::LR, 0, 0, ARM::PC) {
+  ARM_MC::initLLVMToCVRegMapping(this);
 }
 
 const MCPhysReg*
@@ -75,6 +73,13 @@ ARMBaseRegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
     // GHC set of callee saved regs is empty as all those regs are
     // used for passing STG regs around
     return CSR_NoRegs_SaveList;
+  } else if (F.getCallingConv() == CallingConv::CFGuard_Check) {
+    return CSR_Win_AAPCS_CFGuard_Check_SaveList;
+  } else if (F.getCallingConv() == CallingConv::SwiftTail) {
+    return STI.isTargetDarwin()
+               ? CSR_iOS_SwiftTail_SaveList
+               : (UseSplitPush ? CSR_AAPCS_SplitPush_SwiftTail_SaveList
+                               : CSR_AAPCS_SwiftTail_SaveList);
   } else if (F.hasFnAttribute("interrupt")) {
     if (STI.isMClass()) {
       // M-class CPUs have hardware which saves the registers needed to allow a
@@ -123,7 +128,12 @@ ARMBaseRegisterInfo::getCallPreservedMask(const MachineFunction &MF,
   if (CC == CallingConv::GHC)
     // This is academic because all GHC calls are (supposed to be) tail calls
     return CSR_NoRegs_RegMask;
-
+  if (CC == CallingConv::CFGuard_Check)
+    return CSR_Win_AAPCS_CFGuard_Check_RegMask;
+  if (CC == CallingConv::SwiftTail) {
+    return STI.isTargetDarwin() ? CSR_iOS_SwiftTail_RegMask
+                                : CSR_AAPCS_SwiftTail_RegMask;
+  }
   if (STI.getTargetLowering()->supportSwiftError() &&
       MF.getFunction().getAttributes().hasAttrSomewhere(Attribute::SwiftError))
     return STI.isTargetDarwin() ? CSR_iOS_SwiftError_RegMask
@@ -174,6 +184,12 @@ ARMBaseRegisterInfo::getThisReturnPreservedMask(const MachineFunction &MF,
                               : CSR_AAPCS_ThisReturn_RegMask;
 }
 
+ArrayRef<MCPhysReg> ARMBaseRegisterInfo::getIntraCallClobberedRegs(
+    const MachineFunction *MF) const {
+  static const MCPhysReg IntraCallClobberedRegs[] = {ARM::R12};
+  return ArrayRef<MCPhysReg>(IntraCallClobberedRegs);
+}
+
 BitVector ARMBaseRegisterInfo::
 getReservedRegs(const MachineFunction &MF) const {
   const ARMSubtarget &STI = MF.getSubtarget<ARMSubtarget>();
@@ -186,7 +202,7 @@ getReservedRegs(const MachineFunction &MF) const {
   markSuperRegs(Reserved, ARM::FPSCR);
   markSuperRegs(Reserved, ARM::APSR_NZCV);
   if (TFI->hasFP(MF))
-    markSuperRegs(Reserved, getFramePointerReg(STI));
+    markSuperRegs(Reserved, STI.getFramePointerReg());
   if (hasBasePointer(MF))
     markSuperRegs(Reserved, BasePtr);
   // Some targets reserve R9.
@@ -211,13 +227,28 @@ getReservedRegs(const MachineFunction &MF) const {
 }
 
 bool ARMBaseRegisterInfo::
-isAsmClobberable(const MachineFunction &MF, unsigned PhysReg) const {
+isAsmClobberable(const MachineFunction &MF, MCRegister PhysReg) const {
   return !getReservedRegs(MF).test(PhysReg);
+}
+
+bool ARMBaseRegisterInfo::isInlineAsmReadOnlyReg(const MachineFunction &MF,
+                                                 unsigned PhysReg) const {
+  const ARMSubtarget &STI = MF.getSubtarget<ARMSubtarget>();
+  const ARMFrameLowering *TFI = getFrameLowering(MF);
+
+  BitVector Reserved(getNumRegs());
+  markSuperRegs(Reserved, ARM::PC);
+  if (TFI->hasFP(MF))
+    markSuperRegs(Reserved, STI.getFramePointerReg());
+  if (hasBasePointer(MF))
+    markSuperRegs(Reserved, BasePtr);
+  assert(checkAllSuperRegsMarked(Reserved));
+  return Reserved.test(PhysReg);
 }
 
 const TargetRegisterClass *
 ARMBaseRegisterInfo::getLargestLegalSuperClass(const TargetRegisterClass *RC,
-                                               const MachineFunction &) const {
+                                               const MachineFunction &MF) const {
   const TargetRegisterClass *Super = RC;
   TargetRegisterClass::sc_iterator I = RC->getSuperClasses();
   do {
@@ -225,11 +256,13 @@ ARMBaseRegisterInfo::getLargestLegalSuperClass(const TargetRegisterClass *RC,
     case ARM::GPRRegClassID:
     case ARM::SPRRegClassID:
     case ARM::DPRRegClassID:
+    case ARM::GPRPairRegClassID:
+      return Super;
     case ARM::QPRRegClassID:
     case ARM::QQPRRegClassID:
     case ARM::QQQQPRRegClassID:
-    case ARM::GPRPairRegClassID:
-      return Super;
+      if (MF.getSubtarget<ARMSubtarget>().hasNEON())
+        return Super;
     }
     Super = *I++;
   } while (Super);
@@ -278,7 +311,8 @@ ARMBaseRegisterInfo::getRegPressureLimit(const TargetRegisterClass *RC,
 }
 
 // Get the other register in a GPRPair.
-static unsigned getPairedGPR(unsigned Reg, bool Odd, const MCRegisterInfo *RI) {
+static MCPhysReg getPairedGPR(MCPhysReg Reg, bool Odd,
+                              const MCRegisterInfo *RI) {
   for (MCSuperRegIterator Supers(Reg, RI); Supers.isValid(); ++Supers)
     if (ARM::GPRPairRegClass.contains(*Supers))
       return RI->getSubReg(*Supers, Odd ? ARM::gsub_1 : ARM::gsub_0);
@@ -286,15 +320,12 @@ static unsigned getPairedGPR(unsigned Reg, bool Odd, const MCRegisterInfo *RI) {
 }
 
 // Resolve the RegPairEven / RegPairOdd register allocator hints.
-bool
-ARMBaseRegisterInfo::getRegAllocationHints(unsigned VirtReg,
-                                           ArrayRef<MCPhysReg> Order,
-                                           SmallVectorImpl<MCPhysReg> &Hints,
-                                           const MachineFunction &MF,
-                                           const VirtRegMap *VRM,
-                                           const LiveRegMatrix *Matrix) const {
+bool ARMBaseRegisterInfo::getRegAllocationHints(
+    Register VirtReg, ArrayRef<MCPhysReg> Order,
+    SmallVectorImpl<MCPhysReg> &Hints, const MachineFunction &MF,
+    const VirtRegMap *VRM, const LiveRegMatrix *Matrix) const {
   const MachineRegisterInfo &MRI = MF.getRegInfo();
-  std::pair<unsigned, unsigned> Hint = MRI.getRegAllocationHint(VirtReg);
+  std::pair<Register, Register> Hint = MRI.getRegAllocationHint(VirtReg);
 
   unsigned Odd;
   switch (Hint.first) {
@@ -304,20 +335,24 @@ ARMBaseRegisterInfo::getRegAllocationHints(unsigned VirtReg,
   case ARMRI::RegPairOdd:
     Odd = 1;
     break;
-  default:
+  case ARMRI::RegLR:
     TargetRegisterInfo::getRegAllocationHints(VirtReg, Order, Hints, MF, VRM);
+    if (MRI.getRegClass(VirtReg)->contains(ARM::LR))
+      Hints.push_back(ARM::LR);
     return false;
+  default:
+    return TargetRegisterInfo::getRegAllocationHints(VirtReg, Order, Hints, MF, VRM);
   }
 
   // This register should preferably be even (Odd == 0) or odd (Odd == 1).
   // Check if the other part of the pair has already been assigned, and provide
   // the paired register as the first hint.
-  unsigned Paired = Hint.second;
-  if (Paired == 0)
+  Register Paired = Hint.second;
+  if (!Paired)
     return false;
 
-  unsigned PairedPhys = 0;
-  if (TargetRegisterInfo::isPhysicalRegister(Paired)) {
+  Register PairedPhys;
+  if (Paired.isPhysical()) {
     PairedPhys = Paired;
   } else if (VRM && VRM->hasPhys(Paired)) {
     PairedPhys = getPairedGPR(VRM->getPhys(Paired), Odd, this);
@@ -328,11 +363,11 @@ ARMBaseRegisterInfo::getRegAllocationHints(unsigned VirtReg,
     Hints.push_back(PairedPhys);
 
   // Then prefer even or odd registers.
-  for (unsigned Reg : Order) {
+  for (MCPhysReg Reg : Order) {
     if (Reg == PairedPhys || (getEncodingValue(Reg) & 1) != Odd)
       continue;
     // Don't provide hints that are paired to a reserved register.
-    unsigned Paired = getPairedGPR(Reg, !Odd, this);
+    MCPhysReg Paired = getPairedGPR(Reg, !Odd, this);
     if (!Paired || MRI.isReserved(Paired))
       continue;
     Hints.push_back(Reg);
@@ -340,27 +375,27 @@ ARMBaseRegisterInfo::getRegAllocationHints(unsigned VirtReg,
   return false;
 }
 
-void
-ARMBaseRegisterInfo::updateRegAllocHint(unsigned Reg, unsigned NewReg,
-                                        MachineFunction &MF) const {
+void ARMBaseRegisterInfo::updateRegAllocHint(Register Reg, Register NewReg,
+                                             MachineFunction &MF) const {
   MachineRegisterInfo *MRI = &MF.getRegInfo();
-  std::pair<unsigned, unsigned> Hint = MRI->getRegAllocationHint(Reg);
-  if ((Hint.first == (unsigned)ARMRI::RegPairOdd ||
-       Hint.first == (unsigned)ARMRI::RegPairEven) &&
-      TargetRegisterInfo::isVirtualRegister(Hint.second)) {
+  std::pair<Register, Register> Hint = MRI->getRegAllocationHint(Reg);
+  if ((Hint.first == ARMRI::RegPairOdd || Hint.first == ARMRI::RegPairEven) &&
+      Hint.second.isVirtual()) {
     // If 'Reg' is one of the even / odd register pair and it's now changed
     // (e.g. coalesced) into a different register. The other register of the
     // pair allocation hint must be updated to reflect the relationship
     // change.
-    unsigned OtherReg = Hint.second;
+    Register OtherReg = Hint.second;
     Hint = MRI->getRegAllocationHint(OtherReg);
     // Make sure the pair has not already divorced.
     if (Hint.second == Reg) {
       MRI->setRegAllocationHint(OtherReg, Hint.first, NewReg);
-      if (TargetRegisterInfo::isVirtualRegister(NewReg))
+      if (Register::isVirtualRegister(NewReg))
         MRI->setRegAllocationHint(NewReg,
-            Hint.first == (unsigned)ARMRI::RegPairOdd ? ARMRI::RegPairEven
-            : ARMRI::RegPairOdd, OtherReg);
+                                  Hint.first == ARMRI::RegPairOdd
+                                      ? ARMRI::RegPairEven
+                                      : ARMRI::RegPairOdd,
+                                  OtherReg);
     }
   }
 }
@@ -373,11 +408,11 @@ bool ARMBaseRegisterInfo::hasBasePointer(const MachineFunction &MF) const {
   // If we have stack realignment and VLAs, we have no pointer to use to
   // access the stack. If we have stack realignment, and a large call frame,
   // we have no place to allocate the emergency spill slot.
-  if (needsStackRealignment(MF) && !TFI->hasReservedCallFrame(MF))
+  if (hasStackRealignment(MF) && !TFI->hasReservedCallFrame(MF))
     return true;
 
   // Thumb has trouble with negative offsets from the FP. Thumb2 has a limited
-  // negative range for ldr/str (255), and thumb1 is positive offsets only.
+  // negative range for ldr/str (255), and Thumb1 is positive offsets only.
   //
   // It's going to be better to use the SP or Base Pointer instead. When there
   // are variable sized objects, we can't reference off of the SP, so we
@@ -405,6 +440,7 @@ bool ARMBaseRegisterInfo::hasBasePointer(const MachineFunction &MF) const {
 bool ARMBaseRegisterInfo::canRealignStack(const MachineFunction &MF) const {
   const MachineRegisterInfo *MRI = &MF.getRegInfo();
   const ARMFrameLowering *TFI = getFrameLowering(MF);
+  const ARMSubtarget &STI = MF.getSubtarget<ARMSubtarget>();
   // We can't realign the stack if:
   // 1. Dynamic stack realignment is explicitly disabled,
   // 2. There are VLAs in the function and the base pointer is disabled.
@@ -412,7 +448,7 @@ bool ARMBaseRegisterInfo::canRealignStack(const MachineFunction &MF) const {
     return false;
   // Stack realignment requires a frame pointer.  If we already started
   // register allocation with frame pointer elimination, it is too late now.
-  if (!MRI->canReserveReg(getFramePointerReg(MF.getSubtarget<ARMSubtarget>())))
+  if (!MRI->canReserveReg(STI.getFramePointerReg()))
     return false;
   // We may also need a base pointer if there are dynamic allocas or stack
   // pointer adjustments around calls.
@@ -428,8 +464,8 @@ cannotEliminateFrame(const MachineFunction &MF) const {
   const MachineFrameInfo &MFI = MF.getFrameInfo();
   if (MF.getTarget().Options.DisableFramePointerElim(MF) && MFI.adjustsStack())
     return true;
-  return MFI.hasVarSizedObjects() || MFI.isFrameAddressTaken()
-    || needsStackRealignment(MF);
+  return MFI.hasVarSizedObjects() || MFI.isFrameAddressTaken() ||
+         hasStackRealignment(MF);
 }
 
 Register
@@ -438,7 +474,7 @@ ARMBaseRegisterInfo::getFrameRegister(const MachineFunction &MF) const {
   const ARMFrameLowering *TFI = getFrameLowering(MF);
 
   if (TFI->hasFP(MF))
-    return getFramePointerReg(STI);
+    return STI.getFramePointerReg();
   return ARM::SP;
 }
 
@@ -446,14 +482,14 @@ ARMBaseRegisterInfo::getFrameRegister(const MachineFunction &MF) const {
 /// specified immediate.
 void ARMBaseRegisterInfo::emitLoadConstPool(
     MachineBasicBlock &MBB, MachineBasicBlock::iterator &MBBI,
-    const DebugLoc &dl, unsigned DestReg, unsigned SubIdx, int Val,
-    ARMCC::CondCodes Pred, unsigned PredReg, unsigned MIFlags) const {
+    const DebugLoc &dl, Register DestReg, unsigned SubIdx, int Val,
+    ARMCC::CondCodes Pred, Register PredReg, unsigned MIFlags) const {
   MachineFunction &MF = *MBB.getParent();
   const TargetInstrInfo &TII = *MF.getSubtarget().getInstrInfo();
   MachineConstantPool *ConstantPool = MF.getConstantPool();
   const Constant *C =
         ConstantInt::get(Type::getInt32Ty(MF.getFunction().getContext()), Val);
-  unsigned Idx = ConstantPool->getConstantPoolIndex(C, 4);
+  unsigned Idx = ConstantPool->getConstantPoolIndex(C, Align(4));
 
   BuildMI(MBB, MBBI, dl, TII.get(ARM::LDRcp))
       .addReg(DestReg, getDefRegState(true), SubIdx)
@@ -465,11 +501,6 @@ void ARMBaseRegisterInfo::emitLoadConstPool(
 
 bool ARMBaseRegisterInfo::
 requiresRegisterScavenging(const MachineFunction &MF) const {
-  return true;
-}
-
-bool ARMBaseRegisterInfo::
-trackLivenessAfterRegAlloc(const MachineFunction &MF) const {
   return true;
 }
 
@@ -595,9 +626,9 @@ needsFrameBaseReg(MachineInstr *MI, int64_t Offset) const {
   // The FP is only available if there is no dynamic realignment. We
   // don't know for sure yet whether we'll need that, so we guess based
   // on whether there are any local variables that would trigger it.
-  unsigned StackAlign = TFI->getStackAlignment();
   if (TFI->hasFP(MF) &&
-      !((MFI.getLocalFrameMaxAlign() > StackAlign) && canRealignStack(MF))) {
+      !((MFI.getLocalFrameMaxAlign() > TFI->getStackAlign()) &&
+        canRealignStack(MF))) {
     if (isFrameOffsetLegal(MI, getFrameRegister(MF), FPOffset))
       return false;
   }
@@ -615,10 +646,10 @@ needsFrameBaseReg(MachineInstr *MI, int64_t Offset) const {
 
 /// materializeFrameBaseRegister - Insert defining instruction(s) for BaseReg to
 /// be a pointer to FrameIdx at the beginning of the basic block.
-void ARMBaseRegisterInfo::
-materializeFrameBaseRegister(MachineBasicBlock *MBB,
-                             unsigned BaseReg, int FrameIdx,
-                             int64_t Offset) const {
+Register
+ARMBaseRegisterInfo::materializeFrameBaseRegister(MachineBasicBlock *MBB,
+                                                  int FrameIdx,
+                                                  int64_t Offset) const {
   ARMFunctionInfo *AFI = MBB->getParent()->getInfo<ARMFunctionInfo>();
   unsigned ADDriOpc = !AFI->isThumbFunction() ? ARM::ADDri :
     (AFI->isThumb1OnlyFunction() ? ARM::tADDframe : ARM::t2ADDri);
@@ -632,6 +663,7 @@ materializeFrameBaseRegister(MachineBasicBlock *MBB,
   MachineRegisterInfo &MRI = MBB->getParent()->getRegInfo();
   const TargetInstrInfo &TII = *MF.getSubtarget().getInstrInfo();
   const MCInstrDesc &MCID = TII.get(ADDriOpc);
+  Register BaseReg = MRI.createVirtualRegister(&ARM::GPRRegClass);
   MRI.constrainRegClass(BaseReg, TII.getRegClass(MCID, 0, this, MF));
 
   MachineInstrBuilder MIB = BuildMI(*MBB, Ins, DL, MCID, BaseReg)
@@ -639,9 +671,11 @@ materializeFrameBaseRegister(MachineBasicBlock *MBB,
 
   if (!AFI->isThumb1OnlyFunction())
     MIB.add(predOps(ARMCC::AL)).add(condCodeOp());
+
+  return BaseReg;
 }
 
-void ARMBaseRegisterInfo::resolveFrameIndex(MachineInstr &MI, unsigned BaseReg,
+void ARMBaseRegisterInfo::resolveFrameIndex(MachineInstr &MI, Register BaseReg,
                                             int64_t Offset) const {
   MachineBasicBlock &MBB = *MI.getParent();
   MachineFunction &MF = *MBB.getParent();
@@ -663,13 +697,14 @@ void ARMBaseRegisterInfo::resolveFrameIndex(MachineInstr &MI, unsigned BaseReg,
     Done = rewriteARMFrameIndex(MI, i, BaseReg, Off, TII);
   else {
     assert(AFI->isThumb2Function());
-    Done = rewriteT2FrameIndex(MI, i, BaseReg, Off, TII);
+    Done = rewriteT2FrameIndex(MI, i, BaseReg, Off, TII, this);
   }
   assert(Done && "Unable to resolve frame index!");
   (void)Done;
 }
 
-bool ARMBaseRegisterInfo::isFrameOffsetLegal(const MachineInstr *MI, unsigned BaseReg,
+bool ARMBaseRegisterInfo::isFrameOffsetLegal(const MachineInstr *MI,
+                                             Register BaseReg,
                                              int64_t Offset) const {
   const MCInstrDesc &Desc = MI->getDesc();
   unsigned AddrMode = (Desc.TSFlags & ARMII::AddrModeMask);
@@ -748,7 +783,7 @@ ARMBaseRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   assert(!AFI->isThumb1OnlyFunction() &&
          "This eliminateFrameIndex does not support Thumb1!");
   int FrameIndex = MI.getOperand(FIOperandNum).getIndex();
-  unsigned FrameReg;
+  Register FrameReg;
 
   int Offset = TFI->ResolveFrameIndexReference(MF, FrameIndex, FrameReg, SPAdj);
 
@@ -775,7 +810,7 @@ ARMBaseRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
     Done = rewriteARMFrameIndex(MI, FIOperandNum, FrameReg, Offset, TII);
   else {
     assert(AFI->isThumb2Function());
-    Done = rewriteT2FrameIndex(MI, FIOperandNum, FrameReg, Offset, TII);
+    Done = rewriteT2FrameIndex(MI, FIOperandNum, FrameReg, Offset, TII, this);
   }
   if (Done)
     return;
@@ -783,21 +818,32 @@ ARMBaseRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   // If we get here, the immediate doesn't fit into the instruction.  We folded
   // as much as possible above, handle the rest, providing a register that is
   // SP+LargeImm.
-  assert((Offset ||
-          (MI.getDesc().TSFlags & ARMII::AddrModeMask) == ARMII::AddrMode4 ||
-          (MI.getDesc().TSFlags & ARMII::AddrModeMask) == ARMII::AddrMode6) &&
-         "This code isn't needed if offset already handled!");
+  assert(
+      (Offset ||
+       (MI.getDesc().TSFlags & ARMII::AddrModeMask) == ARMII::AddrMode4 ||
+       (MI.getDesc().TSFlags & ARMII::AddrModeMask) == ARMII::AddrMode6 ||
+       (MI.getDesc().TSFlags & ARMII::AddrModeMask) == ARMII::AddrModeT2_i7 ||
+       (MI.getDesc().TSFlags & ARMII::AddrModeMask) == ARMII::AddrModeT2_i7s2 ||
+       (MI.getDesc().TSFlags & ARMII::AddrModeMask) ==
+           ARMII::AddrModeT2_i7s4) &&
+      "This code isn't needed if offset already handled!");
 
   unsigned ScratchReg = 0;
   int PIdx = MI.findFirstPredOperandIdx();
   ARMCC::CondCodes Pred = (PIdx == -1)
     ? ARMCC::AL : (ARMCC::CondCodes)MI.getOperand(PIdx).getImm();
   Register PredReg = (PIdx == -1) ? Register() : MI.getOperand(PIdx+1).getReg();
-  if (Offset == 0)
+
+  const MCInstrDesc &MCID = MI.getDesc();
+  const TargetRegisterClass *RegClass =
+      TII.getRegClass(MCID, FIOperandNum, this, *MI.getParent()->getParent());
+
+  if (Offset == 0 &&
+      (Register::isVirtualRegister(FrameReg) || RegClass->contains(FrameReg)))
     // Must be addrmode4/6.
     MI.getOperand(FIOperandNum).ChangeToRegister(FrameReg, false, false, false);
   else {
-    ScratchReg = MF.getRegInfo().createVirtualRegister(&ARM::GPRRegClass);
+    ScratchReg = MF.getRegInfo().createVirtualRegister(RegClass);
     if (!AFI->isThumbFunction())
       emitARMRegPlusImmediate(MBB, II, MI.getDebugLoc(), ScratchReg, FrameReg,
                               Offset, Pred, PredReg, TII);
@@ -868,4 +914,18 @@ bool ARMBaseRegisterInfo::shouldCoalesce(MachineInstr *MI,
     return true;
   }
   return false;
+}
+
+bool ARMBaseRegisterInfo::shouldRewriteCopySrc(const TargetRegisterClass *DefRC,
+                                               unsigned DefSubReg,
+                                               const TargetRegisterClass *SrcRC,
+                                               unsigned SrcSubReg) const {
+  // We can't extract an SPR from an arbitary DPR (as opposed to a DPR_VFP2).
+  if (DefRC == &ARM::SPRRegClass && DefSubReg == 0 &&
+      SrcRC == &ARM::DPRRegClass &&
+      (SrcSubReg == ARM::ssub_0 || SrcSubReg == ARM::ssub_1))
+    return false;
+
+  return TargetRegisterInfo::shouldRewriteCopySrc(DefRC, DefSubReg,
+                                                  SrcRC, SrcSubReg);
 }

@@ -11,16 +11,18 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Attr.h"
 #include "clang/AST/ParentMap.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Analysis/Analyses/LiveVariables.h"
+#include "clang/Lex/Lexer.h"
+#include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugReporter.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/AnalysisManager.h"
 #include "llvm/ADT/BitVector.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/Support/SaveAndRestore.h"
 
@@ -119,11 +121,20 @@ LookThroughTransitiveAssignmentsAndCommaOperators(const Expr *Ex) {
 }
 
 namespace {
+class DeadStoresChecker : public Checker<check::ASTCodeBody> {
+public:
+  bool ShowFixIts = false;
+  bool WarnForDeadNestedAssignments = true;
+
+  void checkASTCodeBody(const Decl *D, AnalysisManager &Mgr,
+                        BugReporter &BR) const;
+};
+
 class DeadStoreObs : public LiveVariables::Observer {
   const CFG &cfg;
   ASTContext &Ctx;
   BugReporter& BR;
-  const CheckerBase *Checker;
+  const DeadStoresChecker *Checker;
   AnalysisDeclContext* AC;
   ParentMap& Parents;
   llvm::SmallPtrSet<const VarDecl*, 20> Escaped;
@@ -135,9 +146,10 @@ class DeadStoreObs : public LiveVariables::Observer {
 
 public:
   DeadStoreObs(const CFG &cfg, ASTContext &ctx, BugReporter &br,
-               const CheckerBase *checker, AnalysisDeclContext *ac,
+               const DeadStoresChecker *checker, AnalysisDeclContext *ac,
                ParentMap &parents,
-               llvm::SmallPtrSet<const VarDecl *, 20> &escaped)
+               llvm::SmallPtrSet<const VarDecl *, 20> &escaped,
+               bool warnForDeadNestedAssignments)
       : cfg(cfg), Ctx(ctx), BR(br), Checker(checker), AC(ac), Parents(parents),
         Escaped(escaped), currentBlock(nullptr) {}
 
@@ -202,12 +214,32 @@ public:
     llvm::raw_svector_ostream os(buf);
     const char *BugType = nullptr;
 
+    SmallVector<FixItHint, 1> Fixits;
+
     switch (dsk) {
-      case DeadInit:
+      case DeadInit: {
         BugType = "Dead initialization";
         os << "Value stored to '" << *V
            << "' during its initialization is never read";
+
+        ASTContext &ACtx = V->getASTContext();
+        if (Checker->ShowFixIts) {
+          if (V->getInit()->HasSideEffects(ACtx,
+                                           /*IncludePossibleEffects=*/true)) {
+            break;
+          }
+          SourceManager &SM = ACtx.getSourceManager();
+          const LangOptions &LO = ACtx.getLangOpts();
+          SourceLocation L1 =
+              Lexer::findNextToken(
+                  V->getTypeSourceInfo()->getTypeLoc().getEndLoc(),
+                  SM, LO)->getEndLoc();
+          SourceLocation L2 =
+              Lexer::getLocForEndOfToken(V->getInit()->getEndLoc(), 1, SM, LO);
+          Fixits.push_back(FixItHint::CreateRemoval({L1, L2}));
+        }
         break;
+      }
 
       case DeadIncrement:
         BugType = "Dead increment";
@@ -217,15 +249,20 @@ public:
         os << "Value stored to '" << *V << "' is never read";
         break;
 
+      // eg.: f((x = foo()))
       case Enclosing:
-        // Don't report issues in this case, e.g.: "if (x = foo())",
-        // where 'x' is unused later.  We have yet to see a case where
-        // this is a real bug.
-        return;
+        if (!Checker->WarnForDeadNestedAssignments)
+          return;
+        BugType = "Dead nested assignment";
+        os << "Although the value stored to '" << *V
+           << "' is used in the enclosing expression, the value is never "
+              "actually read from '"
+           << *V << "'";
+        break;
     }
 
-    BR.EmitBasicReport(AC->getDecl(), Checker, BugType, "Dead store", os.str(),
-                       L, R);
+    BR.EmitBasicReport(AC->getDecl(), Checker, BugType, categories::UnusedCode,
+                       os.str(), L, R, Fixits);
   }
 
   void CheckVarDecl(const VarDecl *VD, const Expr *Ex, const Expr *Val,
@@ -372,15 +409,17 @@ public:
               // Special case: check for initializations with constants.
               //
               //  e.g. : int x = 0;
+              //         struct A = {0, 1};
+              //         struct B = {{0}, {1, 2}};
               //
               // If x is EVER assigned a new value later, don't issue
               // a warning.  This is because such initialization can be
               // due to defensive programming.
-              if (E->isEvaluatable(Ctx))
+              if (isConstant(E))
                 return;
 
               if (const DeclRefExpr *DRE =
-                  dyn_cast<DeclRefExpr>(E->IgnoreParenCasts()))
+                      dyn_cast<DeclRefExpr>(E->IgnoreParenCasts()))
                 if (const VarDecl *VD = dyn_cast<VarDecl>(DRE->getDecl())) {
                   // Special case: check for initialization from constant
                   //  variables.
@@ -407,6 +446,29 @@ public:
           }
         }
       }
+  }
+
+private:
+  /// Return true if the given init list can be interpreted as constant
+  bool isConstant(const InitListExpr *Candidate) const {
+    // We consider init list to be constant if each member of the list can be
+    // interpreted as constant.
+    return llvm::all_of(Candidate->inits(),
+                        [this](const Expr *Init) { return isConstant(Init); });
+  }
+
+  /// Return true if the given expression can be interpreted as constant
+  bool isConstant(const Expr *E) const {
+    // It looks like E itself is a constant
+    if (E->isEvaluatable(Ctx))
+      return true;
+
+    // We should also allow defensive initialization of structs, i.e. { 0 }
+    if (const auto *ILE = dyn_cast<InitListExpr>(E->IgnoreParenCasts())) {
+      return isConstant(ILE);
+    }
+
+    return false;
   }
 };
 
@@ -471,37 +533,39 @@ public:
 // DeadStoresChecker
 //===----------------------------------------------------------------------===//
 
-namespace {
-class DeadStoresChecker : public Checker<check::ASTCodeBody> {
-public:
-  void checkASTCodeBody(const Decl *D, AnalysisManager& mgr,
-                        BugReporter &BR) const {
+void DeadStoresChecker::checkASTCodeBody(const Decl *D, AnalysisManager &mgr,
+                                         BugReporter &BR) const {
 
-    // Don't do anything for template instantiations.
-    // Proving that code in a template instantiation is "dead"
-    // means proving that it is dead in all instantiations.
-    // This same problem exists with -Wunreachable-code.
-    if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D))
-      if (FD->isTemplateInstantiation())
-        return;
+  // Don't do anything for template instantiations.
+  // Proving that code in a template instantiation is "dead"
+  // means proving that it is dead in all instantiations.
+  // This same problem exists with -Wunreachable-code.
+  if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D))
+    if (FD->isTemplateInstantiation())
+      return;
 
-    if (LiveVariables *L = mgr.getAnalysis<LiveVariables>(D)) {
-      CFG &cfg = *mgr.getCFG(D);
-      AnalysisDeclContext *AC = mgr.getAnalysisDeclContext(D);
-      ParentMap &pmap = mgr.getParentMap(D);
-      FindEscaped FS;
-      cfg.VisitBlockStmts(FS);
-      DeadStoreObs A(cfg, BR.getContext(), BR, this, AC, pmap, FS.Escaped);
-      L->runOnAllBlocks(A);
-    }
+  if (LiveVariables *L = mgr.getAnalysis<LiveVariables>(D)) {
+    CFG &cfg = *mgr.getCFG(D);
+    AnalysisDeclContext *AC = mgr.getAnalysisDeclContext(D);
+    ParentMap &pmap = mgr.getParentMap(D);
+    FindEscaped FS;
+    cfg.VisitBlockStmts(FS);
+    DeadStoreObs A(cfg, BR.getContext(), BR, this, AC, pmap, FS.Escaped,
+                   WarnForDeadNestedAssignments);
+    L->runOnAllBlocks(A);
   }
-};
 }
 
-void ento::registerDeadStoresChecker(CheckerManager &mgr) {
-  mgr.registerChecker<DeadStoresChecker>();
+void ento::registerDeadStoresChecker(CheckerManager &Mgr) {
+  auto *Chk = Mgr.registerChecker<DeadStoresChecker>();
+
+  const AnalyzerOptions &AnOpts = Mgr.getAnalyzerOptions();
+  Chk->WarnForDeadNestedAssignments =
+      AnOpts.getCheckerBooleanOption(Chk, "WarnForDeadNestedAssignments");
+  Chk->ShowFixIts =
+      AnOpts.getCheckerBooleanOption(Chk, "ShowFixIts");
 }
 
-bool ento::shouldRegisterDeadStoresChecker(const LangOptions &LO) {
+bool ento::shouldRegisterDeadStoresChecker(const CheckerManager &mgr) {
   return true;
 }

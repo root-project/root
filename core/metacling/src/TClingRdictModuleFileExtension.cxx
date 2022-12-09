@@ -24,7 +24,6 @@
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Serialization/ASTReader.h"
-#include "clang/Serialization/Module.h"
 
 #include "llvm/ADT/Hashing.h"
 #include "llvm/Bitstream/BitstreamWriter.h"
@@ -86,7 +85,7 @@ void TClingRdictModuleFileExtension::Writer::writeExtensionContents(clang::Sema 
          Stream.EmitRecordWithBlob(Abbrev, Record, FileName);
 
          uint64_t Record1[] = {FIRST_EXTENSION_RECORD_ID + 1};
-         std::ifstream fp(FilePath, std::ios::binary);
+         std::ifstream fp(FilePath.str(), std::ios::binary);
          std::ostringstream os;
          os << fp.rdbuf();
          Stream.EmitRecordWithBlob(Abbrev1, Record1, StringRef(os.str()));
@@ -134,7 +133,7 @@ TClingRdictModuleFileExtension::Reader::Reader(clang::ModuleFileExtension *Ext, 
          llvm::StringRef ModDir = llvm::sys::path::parent_path(ResolvedFileName);
          llvm::SmallString<255> FullRdictName = ModDir;
          llvm::sys::path::append(FullRdictName, CurrentRdictName);
-         TCling__RegisterRdictForLoadPCM(FullRdictName.str(), &Blob);
+         TCling__RegisterRdictForLoadPCM(FullRdictName.str().str(), &Blob);
          break;
       }
       }

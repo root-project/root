@@ -1,7 +1,6 @@
-#!/usr/bin/env python
-import sys
+#!/usr/bin/env python3
 
 from lit.main import main
 
-if __name__=='__main__':
+if __name__ == '__main__':
     main()

@@ -11,7 +11,6 @@
 
 #include "ASTTransformer.h"
 #include "AutoSynthesizer.h"
-#include "BackendPasses.h"
 #include "CheckEmptyTransactionTransformer.h"
 #include "ClingPragmas.h"
 #include "DeclCollector.h"
@@ -274,7 +273,7 @@ static void HandlePlugins(CompilerInstance& CI,
     PluginASTAction::ActionType PluginActionType = P->getActionType();
     assert(PluginActionType != clang::PluginASTAction::ReplaceAction);
 
-    if (P->ParseArgs(CI, CI.getFrontendOpts().PluginArgs[it->getName()])) {
+    if (P->ParseArgs(CI, CI.getFrontendOpts().PluginArgs[it->getName().str()])) {
       std::unique_ptr<ASTConsumer> PluginConsumer
         = P->CreateASTConsumer(CI, /*InputFile*/ "");
       if (PluginActionType == clang::PluginASTAction::AddBeforeMainAction)
@@ -359,7 +358,7 @@ namespace cling {
       Transaction* PchT = beginTransaction(CO);
       DiagnosticErrorTrap Trap(Diags);
       m_CI->createPCHExternalASTSource(PCHFileName,
-                                       true /*DisablePCHValidation*/,
+                                       DisableValidationForModuleKind::All,
                                        true /*AllowPCHWithCompilerErrors*/,
                                        0 /*DeserializationListener*/,
                                        true /*OwnsDeserializationListener*/);
@@ -642,6 +641,8 @@ namespace cling {
       Transaction* prevConsumerT = m_Consumer->getTransaction();
       m_Consumer->setTransaction(T);
       Transaction* nestedT = beginTransaction(T->getCompilationOpts());
+      // Process used vtables and generate implicit bodies.
+      getCI()->getSema().DefineUsedVTables();
       // Pull all template instantiations in that came from the consumers.
       getCI()->getSema().PerformPendingInstantiations();
 #ifdef _WIN32
@@ -917,7 +918,12 @@ namespace cling {
     FilteringDiagConsumer::RAAI RAAITmp(*m_DiagConsumer, CO.IgnorePromptDiags);
 
     DiagnosticErrorTrap Trap(Diags);
+    // FIXME: SavePendingInstantiationsRAII should be obsolvete as
+    // GlobalEagerInstantiationScope and LocalEagerInstantiationScope do the
+    // same thing.
     Sema::SavePendingInstantiationsRAII SavedPendingInstantiations(S);
+    Sema::GlobalEagerInstantiationScope GlobalInstantiations(S, /*Enabled=*/true);
+    Sema::LocalEagerInstantiationScope LocalInstantiations(S);
 
     Parser::DeclGroupPtrTy ADecl;
     while (!m_Parser->ParseTopLevelDecl(ADecl)) {
@@ -945,7 +951,8 @@ namespace cling {
 
       return kSuccess;
     }
-
+    LocalInstantiations.perform();
+    GlobalInstantiations.perform();
 #ifdef _WIN32
     // Microsoft-specific:
     // Late parsed templates can leave unswallowed "macro"-like tokens.

@@ -20,14 +20,15 @@
 
 using namespace llvm;
 
-MCSection::MCSection(SectionVariant V, SectionKind K, MCSymbol *Begin)
+MCSection::MCSection(SectionVariant V, StringRef Name, SectionKind K,
+                     MCSymbol *Begin)
     : Begin(Begin), BundleGroupBeforeFirstInst(false), HasInstructions(false),
-      HasData(false), IsRegistered(false), DummyFragment(this), Variant(V),
+      IsRegistered(false), DummyFragment(this), Name(Name), Variant(V),
       Kind(K) {}
 
 MCSymbol *MCSection::getEndSymbol(MCContext &Ctx) {
   if (!End)
-    End = Ctx.createTempSymbol("sec_end", true);
+    End = Ctx.createTempSymbol("sec_end");
   return End;
 }
 
@@ -59,10 +60,8 @@ MCSection::getSubsectionInsertionPoint(unsigned Subsection) {
   if (Subsection == 0 && SubsectionFragmentMap.empty())
     return end();
 
-  SmallVectorImpl<std::pair<unsigned, MCFragment *>>::iterator MI =
-      std::lower_bound(SubsectionFragmentMap.begin(),
-                       SubsectionFragmentMap.end(),
-                       std::make_pair(Subsection, (MCFragment *)nullptr));
+  SmallVectorImpl<std::pair<unsigned, MCFragment *>>::iterator MI = lower_bound(
+      SubsectionFragmentMap, std::make_pair(Subsection, (MCFragment *)nullptr));
   bool ExactMatch = false;
   if (MI != SubsectionFragmentMap.end()) {
     ExactMatch = MI->first == Subsection;
@@ -81,9 +80,47 @@ MCSection::getSubsectionInsertionPoint(unsigned Subsection) {
     SubsectionFragmentMap.insert(MI, std::make_pair(Subsection, F));
     getFragmentList().insert(IP, F);
     F->setParent(this);
+    F->setSubsectionNumber(Subsection);
   }
 
   return IP;
+}
+
+StringRef MCSection::getVirtualSectionKind() const { return "virtual"; }
+
+void MCSection::addPendingLabel(MCSymbol *label, unsigned Subsection) {
+  PendingLabels.push_back(PendingLabel(label, Subsection));
+}
+
+void MCSection::flushPendingLabels(MCFragment *F, uint64_t FOffset,
+				   unsigned Subsection) {
+  if (PendingLabels.empty())
+    return;
+
+  // Set the fragment and fragment offset for all pending symbols in the
+  // specified Subsection, and remove those symbols from the pending list.
+  for (auto It = PendingLabels.begin(); It != PendingLabels.end(); ++It) {
+    PendingLabel& Label = *It;
+    if (Label.Subsection == Subsection) {
+      Label.Sym->setFragment(F);
+      Label.Sym->setOffset(FOffset);
+      PendingLabels.erase(It--);
+    }
+  }
+}
+
+void MCSection::flushPendingLabels() {
+  // Make sure all remaining pending labels point to data fragments, by
+  // creating new empty data fragments for each Subsection with labels pending.
+  while (!PendingLabels.empty()) {
+    PendingLabel& Label = PendingLabels[0];
+    iterator CurInsertionPoint =
+      this->getSubsectionInsertionPoint(Label.Subsection);
+    MCFragment *F = new MCDataFragment();
+    getFragmentList().insert(CurInsertionPoint, F);
+    F->setParent(this);
+    flushPendingLabels(F, 0, Label.Subsection);
+  }
 }
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)

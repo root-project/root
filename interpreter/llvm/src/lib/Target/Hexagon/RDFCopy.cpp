@@ -11,13 +11,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "RDFCopy.h"
-#include "RDFGraph.h"
-#include "RDFLiveness.h"
-#include "RDFRegisters.h"
 #include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/MachineInstr.h"
 #include "llvm/CodeGen/MachineOperand.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGen/RDFGraph.h"
+#include "llvm/CodeGen/RDFLiveness.h"
+#include "llvm/CodeGen/RDFRegisters.h"
 #include "llvm/CodeGen/TargetOpcodes.h"
 #include "llvm/CodeGen/TargetRegisterInfo.h"
 #include "llvm/MC/MCRegisterInfo.h"
@@ -45,8 +45,8 @@ bool CopyPropagation::interpretAsCopy(const MachineInstr *MI, EqualityMap &EM) {
       const MachineOperand &Src = MI->getOperand(1);
       RegisterRef DstR = DFG.makeRegRef(Dst.getReg(), Dst.getSubReg());
       RegisterRef SrcR = DFG.makeRegRef(Src.getReg(), Src.getSubReg());
-      assert(TargetRegisterInfo::isPhysicalRegister(DstR.Reg));
-      assert(TargetRegisterInfo::isPhysicalRegister(SrcR.Reg));
+      assert(Register::isPhysicalRegister(DstR.Reg));
+      assert(Register::isPhysicalRegister(SrcR.Reg));
       const TargetRegisterInfo &TRI = DFG.getTRI();
       if (TRI.getMinimalPhysRegClass(DstR.Reg) !=
           TRI.getMinimalPhysRegClass(SrcR.Reg))

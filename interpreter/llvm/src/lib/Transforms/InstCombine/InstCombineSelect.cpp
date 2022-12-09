@@ -18,6 +18,7 @@
 #include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/CmpInstAnalysis.h"
 #include "llvm/Analysis/InstructionSimplify.h"
+#include "llvm/Analysis/OverflowInstAnalysis.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Constant.h"
@@ -38,6 +39,7 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/KnownBits.h"
 #include "llvm/Transforms/InstCombine/InstCombineWorklist.h"
+#include "llvm/Transforms/InstCombine/InstCombiner.h"
 #include <cassert>
 #include <utility>
 
@@ -56,7 +58,8 @@ static Value *createMinMax(InstCombiner::BuilderTy &Builder,
 /// Replace a select operand based on an equality comparison with the identity
 /// constant of a binop.
 static Instruction *foldSelectBinOpIdentity(SelectInst &Sel,
-                                            const TargetLibraryInfo &TLI) {
+                                            const TargetLibraryInfo &TLI,
+                                            InstCombinerImpl &IC) {
   // The select condition must be an equality compare with a constant operand.
   Value *X;
   Constant *C;
@@ -107,8 +110,7 @@ static Instruction *foldSelectBinOpIdentity(SelectInst &Sel,
   // S = { select (cmp eq X, C), BO, ? } or { select (cmp ne X, C), ?, BO }
   // =>
   // S = { select (cmp eq X, C),  Y, ? } or { select (cmp ne X, C), ?,  Y }
-  Sel.setOperand(IsEq ? 1 : 2, Y);
-  return &Sel;
+  return IC.replaceOperand(Sel, IsEq ? 1 : 2, Y);
 }
 
 /// This folds:
@@ -258,29 +260,9 @@ static unsigned getSelectFoldableOperands(BinaryOperator *I) {
   }
 }
 
-/// For the same transformation as the previous function, return the identity
-/// constant that goes into the select.
-static APInt getSelectFoldableConstant(BinaryOperator *I) {
-  switch (I->getOpcode()) {
-  default: llvm_unreachable("This cannot happen!");
-  case Instruction::Add:
-  case Instruction::Sub:
-  case Instruction::Or:
-  case Instruction::Xor:
-  case Instruction::Shl:
-  case Instruction::LShr:
-  case Instruction::AShr:
-    return APInt::getNullValue(I->getType()->getScalarSizeInBits());
-  case Instruction::And:
-    return APInt::getAllOnesValue(I->getType()->getScalarSizeInBits());
-  case Instruction::Mul:
-    return APInt(I->getType()->getScalarSizeInBits(), 1);
-  }
-}
-
 /// We have (select c, TI, FI), and we know that TI and FI have the same opcode.
-Instruction *InstCombiner::foldSelectOpOp(SelectInst &SI, Instruction *TI,
-                                          Instruction *FI) {
+Instruction *InstCombinerImpl::foldSelectOpOp(SelectInst &SI, Instruction *TI,
+                                              Instruction *FI) {
   // Don't break up min/max patterns. The hasOneUse checks below prevent that
   // for most cases, but vector min/max with bitcasts can be transformed. If the
   // one-use restrictions are eased for other patterns, we still don't want to
@@ -301,10 +283,10 @@ Instruction *InstCombiner::foldSelectOpOp(SelectInst &SI, Instruction *TI,
 
     // The select condition may be a vector. We may only change the operand
     // type if the vector width remains the same (and matches the condition).
-    if (CondTy->isVectorTy()) {
-      if (!FIOpndTy->isVectorTy())
-        return nullptr;
-      if (CondTy->getVectorNumElements() != FIOpndTy->getVectorNumElements())
+    if (auto *CondVTy = dyn_cast<VectorType>(CondTy)) {
+      if (!FIOpndTy->isVectorTy() ||
+          CondVTy->getElementCount() !=
+              cast<VectorType>(FIOpndTy)->getElementCount())
         return nullptr;
 
       // TODO: If the backend knew how to deal with casts better, we could
@@ -338,11 +320,36 @@ Instruction *InstCombiner::foldSelectOpOp(SelectInst &SI, Instruction *TI,
   if (match(TI, m_FNeg(m_Value(X))) && match(FI, m_FNeg(m_Value(Y))) &&
       (TI->hasOneUse() || FI->hasOneUse())) {
     Value *NewSel = Builder.CreateSelect(Cond, X, Y, SI.getName() + ".v", &SI);
-    // TODO: Remove the hack for the binop form when the unary op is optimized
-    //       properly with all IR passes.
-    if (TI->getOpcode() != Instruction::FNeg)
-      return BinaryOperator::CreateFNegFMF(NewSel, cast<BinaryOperator>(TI));
-    return UnaryOperator::CreateFNeg(NewSel);
+    return UnaryOperator::CreateFNegFMF(NewSel, TI);
+  }
+
+  // Min/max intrinsic with a common operand can have the common operand pulled
+  // after the select. This is the same transform as below for binops, but
+  // specialized for intrinsic matching and without the restrictive uses clause.
+  auto *TII = dyn_cast<IntrinsicInst>(TI);
+  auto *FII = dyn_cast<IntrinsicInst>(FI);
+  if (TII && FII && TII->getIntrinsicID() == FII->getIntrinsicID() &&
+      (TII->hasOneUse() || FII->hasOneUse())) {
+    Value *T0, *T1, *F0, *F1;
+    if (match(TII, m_MaxOrMin(m_Value(T0), m_Value(T1))) &&
+        match(FII, m_MaxOrMin(m_Value(F0), m_Value(F1)))) {
+      if (T0 == F0) {
+        Value *NewSel = Builder.CreateSelect(Cond, T1, F1, "minmaxop", &SI);
+        return CallInst::Create(TII->getCalledFunction(), {NewSel, T0});
+      }
+      if (T0 == F1) {
+        Value *NewSel = Builder.CreateSelect(Cond, T1, F0, "minmaxop", &SI);
+        return CallInst::Create(TII->getCalledFunction(), {NewSel, T0});
+      }
+      if (T1 == F0) {
+        Value *NewSel = Builder.CreateSelect(Cond, T0, F1, "minmaxop", &SI);
+        return CallInst::Create(TII->getCalledFunction(), {NewSel, T1});
+      }
+      if (T1 == F1) {
+        Value *NewSel = Builder.CreateSelect(Cond, T0, F0, "minmaxop", &SI);
+        return CallInst::Create(TII->getCalledFunction(), {NewSel, T1});
+      }
+    }
   }
 
   // Only handle binary operators (including two-operand getelementptr) with
@@ -421,8 +428,8 @@ static bool isSelect01(const APInt &C1I, const APInt &C2I) {
 
 /// Try to fold the select into one of the operands to allow further
 /// optimization.
-Instruction *InstCombiner::foldSelectIntoOp(SelectInst &SI, Value *TrueVal,
-                                            Value *FalseVal) {
+Instruction *InstCombinerImpl::foldSelectIntoOp(SelectInst &SI, Value *TrueVal,
+                                                Value *FalseVal) {
   // See the comment above GetSelectFoldableOperands for a description of the
   // transformation we are doing here.
   if (auto *TVI = dyn_cast<BinaryOperator>(TrueVal)) {
@@ -436,14 +443,15 @@ Instruction *InstCombiner::foldSelectIntoOp(SelectInst &SI, Value *TrueVal,
         }
 
         if (OpToFold) {
-          APInt CI = getSelectFoldableConstant(TVI);
+          Constant *C = ConstantExpr::getBinOpIdentity(TVI->getOpcode(),
+                                                       TVI->getType(), true);
           Value *OOp = TVI->getOperand(2-OpToFold);
           // Avoid creating select between 2 constants unless it's selecting
           // between 0, 1 and -1.
           const APInt *OOpC;
           bool OOpIsAPInt = match(OOp, m_APInt(OOpC));
-          if (!isa<Constant>(OOp) || (OOpIsAPInt && isSelect01(CI, *OOpC))) {
-            Value *C = ConstantInt::get(OOp->getType(), CI);
+          if (!isa<Constant>(OOp) ||
+              (OOpIsAPInt && isSelect01(C->getUniqueInteger(), *OOpC))) {
             Value *NewSel = Builder.CreateSelect(SI.getCondition(), OOp, C);
             NewSel->takeName(TVI);
             BinaryOperator *BO = BinaryOperator::Create(TVI->getOpcode(),
@@ -467,14 +475,15 @@ Instruction *InstCombiner::foldSelectIntoOp(SelectInst &SI, Value *TrueVal,
         }
 
         if (OpToFold) {
-          APInt CI = getSelectFoldableConstant(FVI);
+          Constant *C = ConstantExpr::getBinOpIdentity(FVI->getOpcode(),
+                                                       FVI->getType(), true);
           Value *OOp = FVI->getOperand(2-OpToFold);
           // Avoid creating select between 2 constants unless it's selecting
           // between 0, 1 and -1.
           const APInt *OOpC;
           bool OOpIsAPInt = match(OOp, m_APInt(OOpC));
-          if (!isa<Constant>(OOp) || (OOpIsAPInt && isSelect01(CI, *OOpC))) {
-            Value *C = ConstantInt::get(OOp->getType(), CI);
+          if (!isa<Constant>(OOp) ||
+              (OOpIsAPInt && isSelect01(C->getUniqueInteger(), *OOpC))) {
             Value *NewSel = Builder.CreateSelect(SI.getCondition(), C, OOp);
             NewSel->takeName(FVI);
             BinaryOperator *BO = BinaryOperator::Create(FVI->getOpcode(),
@@ -674,6 +683,38 @@ static Value *foldSelectICmpAndOr(const ICmpInst *IC, Value *TrueVal,
   return Builder.CreateOr(V, Y);
 }
 
+/// Canonicalize a set or clear of a masked set of constant bits to
+/// select-of-constants form.
+static Instruction *foldSetClearBits(SelectInst &Sel,
+                                     InstCombiner::BuilderTy &Builder) {
+  Value *Cond = Sel.getCondition();
+  Value *T = Sel.getTrueValue();
+  Value *F = Sel.getFalseValue();
+  Type *Ty = Sel.getType();
+  Value *X;
+  const APInt *NotC, *C;
+
+  // Cond ? (X & ~C) : (X | C) --> (X & ~C) | (Cond ? 0 : C)
+  if (match(T, m_And(m_Value(X), m_APInt(NotC))) &&
+      match(F, m_OneUse(m_Or(m_Specific(X), m_APInt(C)))) && *NotC == ~(*C)) {
+    Constant *Zero = ConstantInt::getNullValue(Ty);
+    Constant *OrC = ConstantInt::get(Ty, *C);
+    Value *NewSel = Builder.CreateSelect(Cond, Zero, OrC, "masksel", &Sel);
+    return BinaryOperator::CreateOr(T, NewSel);
+  }
+
+  // Cond ? (X | C) : (X & ~C) --> (X & ~C) | (Cond ? C : 0)
+  if (match(F, m_And(m_Value(X), m_APInt(NotC))) &&
+      match(T, m_OneUse(m_Or(m_Specific(X), m_APInt(C)))) && *NotC == ~(*C)) {
+    Constant *Zero = ConstantInt::getNullValue(Ty);
+    Constant *OrC = ConstantInt::get(Ty, *C);
+    Value *NewSel = Builder.CreateSelect(Cond, OrC, Zero, "masksel", &Sel);
+    return BinaryOperator::CreateOr(F, NewSel);
+  }
+
+  return nullptr;
+}
+
 /// Transform patterns such as (a > b) ? a - b : 0 into usub.sat(a, b).
 /// There are 8 commuted/swapped variants of this pattern.
 /// TODO: Also support a - UMIN(a,b) patterns.
@@ -704,16 +745,24 @@ static Value *canonicalizeSaturatedSubtract(const ICmpInst *ICI,
   assert((Pred == ICmpInst::ICMP_UGE || Pred == ICmpInst::ICMP_UGT) &&
          "Unexpected isUnsigned predicate!");
 
-  // Account for swapped form of subtraction: ((a > b) ? b - a : 0).
+  // Ensure the sub is of the form:
+  //  (a > b) ? a - b : 0 -> usub.sat(a, b)
+  //  (a > b) ? b - a : 0 -> -usub.sat(a, b)
+  // Checking for both a-b and a+(-b) as a constant.
   bool IsNegative = false;
-  if (match(TrueVal, m_Sub(m_Specific(B), m_Specific(A))))
+  const APInt *C;
+  if (match(TrueVal, m_Sub(m_Specific(B), m_Specific(A))) ||
+      (match(A, m_APInt(C)) &&
+       match(TrueVal, m_Add(m_Specific(B), m_SpecificInt(-*C)))))
     IsNegative = true;
-  else if (!match(TrueVal, m_Sub(m_Specific(A), m_Specific(B))))
+  else if (!match(TrueVal, m_Sub(m_Specific(A), m_Specific(B))) &&
+           !(match(B, m_APInt(C)) &&
+             match(TrueVal, m_Add(m_Specific(A), m_SpecificInt(-*C)))))
     return nullptr;
 
-  // If sub is used anywhere else, we wouldn't be able to eliminate it
-  // afterwards.
-  if (!TrueVal->hasOneUse())
+  // If we are adding a negate and the sub and icmp are used anywhere else, we
+  // would end up with more instructions.
+  if (IsNegative && !TrueVal->hasOneUse() && !ICI->hasOneUse())
     return nullptr;
 
   // (a > b) ? a - b : 0 -> usub.sat(a, b)
@@ -745,25 +794,24 @@ static Value *canonicalizeSaturatedAdd(ICmpInst *Cmp, Value *TVal, Value *FVal,
 
   // Match unsigned saturated add of 2 variables with an unnecessary 'not'.
   // There are 8 commuted variants.
-  // Canonicalize -1 (saturated result) to true value of the select. Just
-  // swapping the compare operands is legal, because the selected value is the
-  // same in case of equality, so we can interchange u< and u<=.
+  // Canonicalize -1 (saturated result) to true value of the select.
   if (match(FVal, m_AllOnes())) {
     std::swap(TVal, FVal);
-    std::swap(Cmp0, Cmp1);
+    Pred = CmpInst::getInversePredicate(Pred);
   }
   if (!match(TVal, m_AllOnes()))
     return nullptr;
 
-  // Canonicalize predicate to 'ULT'.
-  if (Pred == ICmpInst::ICMP_UGT) {
-    Pred = ICmpInst::ICMP_ULT;
+  // Canonicalize predicate to less-than or less-or-equal-than.
+  if (Pred == ICmpInst::ICMP_UGT || Pred == ICmpInst::ICMP_UGE) {
     std::swap(Cmp0, Cmp1);
+    Pred = CmpInst::getSwappedPredicate(Pred);
   }
-  if (Pred != ICmpInst::ICMP_ULT)
+  if (Pred != ICmpInst::ICMP_ULT && Pred != ICmpInst::ICMP_ULE)
     return nullptr;
 
   // Match unsigned saturated add of 2 variables with an unnecessary 'not'.
+  // Strictness of the comparison is irrelevant.
   Value *Y;
   if (match(Cmp0, m_Not(m_Value(X))) &&
       match(FVal, m_c_Add(m_Specific(X), m_Value(Y))) && Y == Cmp1) {
@@ -772,6 +820,7 @@ static Value *canonicalizeSaturatedAdd(ICmpInst *Cmp, Value *TVal, Value *FVal,
     return Builder.CreateBinaryIntrinsic(Intrinsic::uadd_sat, X, Y);
   }
   // The 'not' op may be included in the sum but not the compare.
+  // Strictness of the comparison is irrelevant.
   X = Cmp0;
   Y = Cmp1;
   if (match(FVal, m_c_Add(m_Not(m_Specific(X)), m_Specific(Y)))) {
@@ -781,8 +830,52 @@ static Value *canonicalizeSaturatedAdd(ICmpInst *Cmp, Value *TVal, Value *FVal,
     return Builder.CreateBinaryIntrinsic(
         Intrinsic::uadd_sat, BO->getOperand(0), BO->getOperand(1));
   }
+  // The overflow may be detected via the add wrapping round.
+  // This is only valid for strict comparison!
+  if (Pred == ICmpInst::ICMP_ULT &&
+      match(Cmp0, m_c_Add(m_Specific(Cmp1), m_Value(Y))) &&
+      match(FVal, m_c_Add(m_Specific(Cmp1), m_Specific(Y)))) {
+    // ((X + Y) u< X) ? -1 : (X + Y) --> uadd.sat(X, Y)
+    // ((X + Y) u< Y) ? -1 : (X + Y) --> uadd.sat(X, Y)
+    return Builder.CreateBinaryIntrinsic(Intrinsic::uadd_sat, Cmp1, Y);
+  }
 
   return nullptr;
+}
+
+/// Fold the following code sequence:
+/// \code
+///   int a = ctlz(x & -x);
+//    x ? 31 - a : a;
+/// \code
+///
+/// into:
+///   cttz(x)
+static Instruction *foldSelectCtlzToCttz(ICmpInst *ICI, Value *TrueVal,
+                                         Value *FalseVal,
+                                         InstCombiner::BuilderTy &Builder) {
+  unsigned BitWidth = TrueVal->getType()->getScalarSizeInBits();
+  if (!ICI->isEquality() || !match(ICI->getOperand(1), m_Zero()))
+    return nullptr;
+
+  if (ICI->getPredicate() == ICmpInst::ICMP_NE)
+    std::swap(TrueVal, FalseVal);
+
+  if (!match(FalseVal,
+             m_Xor(m_Deferred(TrueVal), m_SpecificInt(BitWidth - 1))))
+    return nullptr;
+
+  if (!match(TrueVal, m_Intrinsic<Intrinsic::ctlz>()))
+    return nullptr;
+
+  Value *X = ICI->getOperand(0);
+  auto *II = cast<IntrinsicInst>(TrueVal);
+  if (!match(II->getOperand(0), m_c_And(m_Specific(X), m_Neg(m_Specific(X)))))
+    return nullptr;
+
+  Function *F = Intrinsic::getDeclaration(II->getModule(), Intrinsic::cttz,
+                                          II->getType());
+  return CallInst::Create(F, {X, II->getArgOperand(1)});
 }
 
 /// Attempt to fold a cttz/ctlz followed by a icmp plus select into a single
@@ -807,16 +900,16 @@ static Value *foldSelectCttzCtlz(ICmpInst *ICI, Value *TrueVal, Value *FalseVal,
   if (!ICI->isEquality() || !match(CmpRHS, m_Zero()))
     return nullptr;
 
-  Value *Count = FalseVal;
+  Value *SelectArg = FalseVal;
   Value *ValueOnZero = TrueVal;
   if (Pred == ICmpInst::ICMP_NE)
-    std::swap(Count, ValueOnZero);
+    std::swap(SelectArg, ValueOnZero);
 
   // Skip zero extend/truncate.
-  Value *V = nullptr;
-  if (match(Count, m_ZExt(m_Value(V))) ||
-      match(Count, m_Trunc(m_Value(V))))
-    Count = V;
+  Value *Count = nullptr;
+  if (!match(SelectArg, m_ZExt(m_Value(Count))) &&
+      !match(SelectArg, m_Trunc(m_Value(Count))))
+    Count = SelectArg;
 
   // Check that 'Count' is a call to intrinsic cttz/ctlz. Also check that the
   // input to the cttz/ctlz is used as LHS for the compare instruction.
@@ -830,17 +923,17 @@ static Value *foldSelectCttzCtlz(ICmpInst *ICI, Value *TrueVal, Value *FalseVal,
   // sizeof in bits of 'Count'.
   unsigned SizeOfInBits = Count->getType()->getScalarSizeInBits();
   if (match(ValueOnZero, m_SpecificInt(SizeOfInBits))) {
-    // Explicitly clear the 'undef_on_zero' flag.
-    IntrinsicInst *NewI = cast<IntrinsicInst>(II->clone());
-    NewI->setArgOperand(1, ConstantInt::getFalse(NewI->getContext()));
-    Builder.Insert(NewI);
-    return Builder.CreateZExtOrTrunc(NewI, ValueOnZero->getType());
+    // Explicitly clear the 'undef_on_zero' flag. It's always valid to go from
+    // true to false on this flag, so we can replace it for all users.
+    II->setArgOperand(1, ConstantInt::getFalse(II->getContext()));
+    return SelectArg;
   }
 
-  // If the ValueOnZero is not the bitwidth, we can at least make use of the
-  // fact that the cttz/ctlz result will not be used if the input is zero, so
-  // it's okay to relax it to undef for that case.
-  if (II->hasOneUse() && !match(II->getArgOperand(1), m_One()))
+  // The ValueOnZero is not the bitwidth. But if the cttz/ctlz (and optional
+  // zext/trunc) have one use (ending at the select), the cttz/ctlz result will
+  // not be used if the input is zero. Relax to 'undef_on_zero' for that case.
+  if (II->hasOneUse() && SelectArg->hasOneUse() &&
+      !match(II->getArgOperand(1), m_One()))
     II->setArgOperand(1, ConstantInt::getTrue(II->getContext()));
 
   return nullptr;
@@ -945,9 +1038,9 @@ static bool adjustMinMax(SelectInst &Sel, ICmpInst &Cmp) {
 /// select (icmp Pred X, C1), C2, X --> select (icmp Pred' X, C2), X, C2
 /// Note: if C1 != C2, this will change the icmp constant to the existing
 /// constant operand of the select.
-static Instruction *
-canonicalizeMinMaxWithConstant(SelectInst &Sel, ICmpInst &Cmp,
-                               InstCombiner::BuilderTy &Builder) {
+static Instruction *canonicalizeMinMaxWithConstant(SelectInst &Sel,
+                                                   ICmpInst &Cmp,
+                                                   InstCombinerImpl &IC) {
   if (!Cmp.hasOneUse() || !isa<Constant>(Cmp.getOperand(1)))
     return nullptr;
 
@@ -963,8 +1056,14 @@ canonicalizeMinMaxWithConstant(SelectInst &Sel, ICmpInst &Cmp,
       Cmp.getPredicate() == CanonicalPred)
     return nullptr;
 
+  // Bail out on unsimplified X-0 operand (due to some worklist management bug),
+  // as this may cause an infinite combine loop. Let the sub be folded first.
+  if (match(LHS, m_Sub(m_Value(), m_Zero())) ||
+      match(RHS, m_Sub(m_Value(), m_Zero())))
+    return nullptr;
+
   // Create the canonical compare and plug it into the select.
-  Sel.setCondition(Builder.CreateICmp(CanonicalPred, LHS, RHS));
+  IC.replaceOperand(Sel, 0, IC.Builder.CreateICmp(CanonicalPred, LHS, RHS));
 
   // If the select operands did not change, we're done.
   if (Sel.getTrueValue() == LHS && Sel.getFalseValue() == RHS)
@@ -973,106 +1072,386 @@ canonicalizeMinMaxWithConstant(SelectInst &Sel, ICmpInst &Cmp,
   // If we are swapping the select operands, swap the metadata too.
   assert(Sel.getTrueValue() == RHS && Sel.getFalseValue() == LHS &&
          "Unexpected results from matchSelectPattern");
-  Sel.setTrueValue(LHS);
-  Sel.setFalseValue(RHS);
+  Sel.swapValues();
   Sel.swapProfMetadata();
   return &Sel;
 }
 
-/// There are many select variants for each of ABS/NABS.
-/// In matchSelectPattern(), there are different compare constants, compare
-/// predicates/operands and select operands.
-/// In isKnownNegation(), there are different formats of negated operands.
-/// Canonicalize all these variants to 1 pattern.
-/// This makes CSE more likely.
 static Instruction *canonicalizeAbsNabs(SelectInst &Sel, ICmpInst &Cmp,
-                                        InstCombiner::BuilderTy &Builder) {
+                                        InstCombinerImpl &IC) {
   if (!Cmp.hasOneUse() || !isa<Constant>(Cmp.getOperand(1)))
     return nullptr;
 
-  // Choose a sign-bit check for the compare (likely simpler for codegen).
-  // ABS:  (X <s 0) ? -X : X
-  // NABS: (X <s 0) ? X : -X
   Value *LHS, *RHS;
   SelectPatternFlavor SPF = matchSelectPattern(&Sel, LHS, RHS).Flavor;
   if (SPF != SelectPatternFlavor::SPF_ABS &&
       SPF != SelectPatternFlavor::SPF_NABS)
     return nullptr;
 
-  Value *TVal = Sel.getTrueValue();
-  Value *FVal = Sel.getFalseValue();
-  assert(isKnownNegation(TVal, FVal) &&
-         "Unexpected result from matchSelectPattern");
+  // Note that NSW flag can only be propagated for normal, non-negated abs!
+  bool IntMinIsPoison = SPF == SelectPatternFlavor::SPF_ABS &&
+                        match(RHS, m_NSWNeg(m_Specific(LHS)));
+  Constant *IntMinIsPoisonC =
+      ConstantInt::get(Type::getInt1Ty(Sel.getContext()), IntMinIsPoison);
+  Instruction *Abs =
+      IC.Builder.CreateBinaryIntrinsic(Intrinsic::abs, LHS, IntMinIsPoisonC);
 
-  // The compare may use the negated abs()/nabs() operand, or it may use
-  // negation in non-canonical form such as: sub A, B.
-  bool CmpUsesNegatedOp = match(Cmp.getOperand(0), m_Neg(m_Specific(TVal))) ||
-                          match(Cmp.getOperand(0), m_Neg(m_Specific(FVal)));
+  if (SPF == SelectPatternFlavor::SPF_NABS)
+    return BinaryOperator::CreateNeg(Abs); // Always without NSW flag!
 
-  bool CmpCanonicalized = !CmpUsesNegatedOp &&
-                          match(Cmp.getOperand(1), m_ZeroInt()) &&
-                          Cmp.getPredicate() == ICmpInst::ICMP_SLT;
-  bool RHSCanonicalized = match(RHS, m_Neg(m_Specific(LHS)));
+  return IC.replaceInstUsesWith(Sel, Abs);
+}
 
-  // Is this already canonical?
-  if (CmpCanonicalized && RHSCanonicalized)
+/// If we have a select with an equality comparison, then we know the value in
+/// one of the arms of the select. See if substituting this value into an arm
+/// and simplifying the result yields the same value as the other arm.
+///
+/// To make this transform safe, we must drop poison-generating flags
+/// (nsw, etc) if we simplified to a binop because the select may be guarding
+/// that poison from propagating. If the existing binop already had no
+/// poison-generating flags, then this transform can be done by instsimplify.
+///
+/// Consider:
+///   %cmp = icmp eq i32 %x, 2147483647
+///   %add = add nsw i32 %x, 1
+///   %sel = select i1 %cmp, i32 -2147483648, i32 %add
+///
+/// We can't replace %sel with %add unless we strip away the flags.
+/// TODO: Wrapping flags could be preserved in some cases with better analysis.
+Instruction *InstCombinerImpl::foldSelectValueEquivalence(SelectInst &Sel,
+                                                          ICmpInst &Cmp) {
+  // Value equivalence substitution requires an all-or-nothing replacement.
+  // It does not make sense for a vector compare where each lane is chosen
+  // independently.
+  if (!Cmp.isEquality() || Cmp.getType()->isVectorTy())
     return nullptr;
 
-  // If RHS is used by other instructions except compare and select, don't
-  // canonicalize it to not increase the instruction count.
-  if (!(RHS->hasOneUse() || (RHS->hasNUses(2) && CmpUsesNegatedOp)))
+  // Canonicalize the pattern to ICMP_EQ by swapping the select operands.
+  Value *TrueVal = Sel.getTrueValue(), *FalseVal = Sel.getFalseValue();
+  bool Swapped = false;
+  if (Cmp.getPredicate() == ICmpInst::ICMP_NE) {
+    std::swap(TrueVal, FalseVal);
+    Swapped = true;
+  }
+
+  // In X == Y ? f(X) : Z, try to evaluate f(Y) and replace the operand.
+  // Make sure Y cannot be undef though, as we might pick different values for
+  // undef in the icmp and in f(Y). Additionally, take care to avoid replacing
+  // X == Y ? X : Z with X == Y ? Y : Z, as that would lead to an infinite
+  // replacement cycle.
+  Value *CmpLHS = Cmp.getOperand(0), *CmpRHS = Cmp.getOperand(1);
+  if (TrueVal != CmpLHS &&
+      isGuaranteedNotToBeUndefOrPoison(CmpRHS, SQ.AC, &Sel, &DT)) {
+    if (Value *V = simplifyWithOpReplaced(TrueVal, CmpLHS, CmpRHS, SQ,
+                                          /* AllowRefinement */ true))
+      return replaceOperand(Sel, Swapped ? 2 : 1, V);
+
+    // Even if TrueVal does not simplify, we can directly replace a use of
+    // CmpLHS with CmpRHS, as long as the instruction is not used anywhere
+    // else and is safe to speculatively execute (we may end up executing it
+    // with different operands, which should not cause side-effects or trigger
+    // undefined behavior). Only do this if CmpRHS is a constant, as
+    // profitability is not clear for other cases.
+    // FIXME: The replacement could be performed recursively.
+    if (match(CmpRHS, m_ImmConstant()) && !match(CmpLHS, m_ImmConstant()))
+      if (auto *I = dyn_cast<Instruction>(TrueVal))
+        if (I->hasOneUse() && isSafeToSpeculativelyExecute(I))
+          for (Use &U : I->operands())
+            if (U == CmpLHS) {
+              replaceUse(U, CmpRHS);
+              return &Sel;
+            }
+  }
+  if (TrueVal != CmpRHS &&
+      isGuaranteedNotToBeUndefOrPoison(CmpLHS, SQ.AC, &Sel, &DT))
+    if (Value *V = simplifyWithOpReplaced(TrueVal, CmpRHS, CmpLHS, SQ,
+                                          /* AllowRefinement */ true))
+      return replaceOperand(Sel, Swapped ? 2 : 1, V);
+
+  auto *FalseInst = dyn_cast<Instruction>(FalseVal);
+  if (!FalseInst)
     return nullptr;
 
-  // Create the canonical compare: icmp slt LHS 0.
-  if (!CmpCanonicalized) {
-    Cmp.setPredicate(ICmpInst::ICMP_SLT);
-    Cmp.setOperand(1, ConstantInt::getNullValue(Cmp.getOperand(0)->getType()));
-    if (CmpUsesNegatedOp)
-      Cmp.setOperand(0, LHS);
+  // InstSimplify already performed this fold if it was possible subject to
+  // current poison-generating flags. Try the transform again with
+  // poison-generating flags temporarily dropped.
+  bool WasNUW = false, WasNSW = false, WasExact = false, WasInBounds = false;
+  if (auto *OBO = dyn_cast<OverflowingBinaryOperator>(FalseVal)) {
+    WasNUW = OBO->hasNoUnsignedWrap();
+    WasNSW = OBO->hasNoSignedWrap();
+    FalseInst->setHasNoUnsignedWrap(false);
+    FalseInst->setHasNoSignedWrap(false);
+  }
+  if (auto *PEO = dyn_cast<PossiblyExactOperator>(FalseVal)) {
+    WasExact = PEO->isExact();
+    FalseInst->setIsExact(false);
+  }
+  if (auto *GEP = dyn_cast<GetElementPtrInst>(FalseVal)) {
+    WasInBounds = GEP->isInBounds();
+    GEP->setIsInBounds(false);
   }
 
-  // Create the canonical RHS: RHS = sub (0, LHS).
-  if (!RHSCanonicalized) {
-    assert(RHS->hasOneUse() && "RHS use number is not right");
-    RHS = Builder.CreateNeg(LHS);
-    if (TVal == LHS) {
-      Sel.setFalseValue(RHS);
-      FVal = RHS;
-    } else {
-      Sel.setTrueValue(RHS);
-      TVal = RHS;
-    }
+  // Try each equivalence substitution possibility.
+  // We have an 'EQ' comparison, so the select's false value will propagate.
+  // Example:
+  // (X == 42) ? 43 : (X + 1) --> (X == 42) ? (X + 1) : (X + 1) --> X + 1
+  if (simplifyWithOpReplaced(FalseVal, CmpLHS, CmpRHS, SQ,
+                             /* AllowRefinement */ false) == TrueVal ||
+      simplifyWithOpReplaced(FalseVal, CmpRHS, CmpLHS, SQ,
+                             /* AllowRefinement */ false) == TrueVal) {
+    return replaceInstUsesWith(Sel, FalseVal);
   }
 
-  // If the select operands do not change, we're done.
-  if (SPF == SelectPatternFlavor::SPF_NABS) {
-    if (TVal == LHS)
-      return &Sel;
-    assert(FVal == LHS && "Unexpected results from matchSelectPattern");
-  } else {
-    if (FVal == LHS)
-      return &Sel;
-    assert(TVal == LHS && "Unexpected results from matchSelectPattern");
+  // Restore poison-generating flags if the transform did not apply.
+  if (WasNUW)
+    FalseInst->setHasNoUnsignedWrap();
+  if (WasNSW)
+    FalseInst->setHasNoSignedWrap();
+  if (WasExact)
+    FalseInst->setIsExact();
+  if (WasInBounds)
+    cast<GetElementPtrInst>(FalseInst)->setIsInBounds();
+
+  return nullptr;
+}
+
+// See if this is a pattern like:
+//   %old_cmp1 = icmp slt i32 %x, C2
+//   %old_replacement = select i1 %old_cmp1, i32 %target_low, i32 %target_high
+//   %old_x_offseted = add i32 %x, C1
+//   %old_cmp0 = icmp ult i32 %old_x_offseted, C0
+//   %r = select i1 %old_cmp0, i32 %x, i32 %old_replacement
+// This can be rewritten as more canonical pattern:
+//   %new_cmp1 = icmp slt i32 %x, -C1
+//   %new_cmp2 = icmp sge i32 %x, C0-C1
+//   %new_clamped_low = select i1 %new_cmp1, i32 %target_low, i32 %x
+//   %r = select i1 %new_cmp2, i32 %target_high, i32 %new_clamped_low
+// Iff -C1 s<= C2 s<= C0-C1
+// Also ULT predicate can also be UGT iff C0 != -1 (+invert result)
+//      SLT predicate can also be SGT iff C2 != INT_MAX (+invert res.)
+static Instruction *canonicalizeClampLike(SelectInst &Sel0, ICmpInst &Cmp0,
+                                          InstCombiner::BuilderTy &Builder) {
+  Value *X = Sel0.getTrueValue();
+  Value *Sel1 = Sel0.getFalseValue();
+
+  // First match the condition of the outermost select.
+  // Said condition must be one-use.
+  if (!Cmp0.hasOneUse())
+    return nullptr;
+  Value *Cmp00 = Cmp0.getOperand(0);
+  Constant *C0;
+  if (!match(Cmp0.getOperand(1),
+             m_CombineAnd(m_AnyIntegralConstant(), m_Constant(C0))))
+    return nullptr;
+  // Canonicalize Cmp0 into the form we expect.
+  // FIXME: we shouldn't care about lanes that are 'undef' in the end?
+  switch (Cmp0.getPredicate()) {
+  case ICmpInst::Predicate::ICMP_ULT:
+    break; // Great!
+  case ICmpInst::Predicate::ICMP_ULE:
+    // We'd have to increment C0 by one, and for that it must not have all-ones
+    // element, but then it would have been canonicalized to 'ult' before
+    // we get here. So we can't do anything useful with 'ule'.
+    return nullptr;
+  case ICmpInst::Predicate::ICMP_UGT:
+    // We want to canonicalize it to 'ult', so we'll need to increment C0,
+    // which again means it must not have any all-ones elements.
+    if (!match(C0,
+               m_SpecificInt_ICMP(ICmpInst::Predicate::ICMP_NE,
+                                  APInt::getAllOnesValue(
+                                      C0->getType()->getScalarSizeInBits()))))
+      return nullptr; // Can't do, have all-ones element[s].
+    C0 = InstCombiner::AddOne(C0);
+    std::swap(X, Sel1);
+    break;
+  case ICmpInst::Predicate::ICMP_UGE:
+    // The only way we'd get this predicate if this `icmp` has extra uses,
+    // but then we won't be able to do this fold.
+    return nullptr;
+  default:
+    return nullptr; // Unknown predicate.
   }
 
-  // We are swapping the select operands, so swap the metadata too.
-  Sel.setTrueValue(FVal);
-  Sel.setFalseValue(TVal);
+  // Now that we've canonicalized the ICmp, we know the X we expect;
+  // the select in other hand should be one-use.
+  if (!Sel1->hasOneUse())
+    return nullptr;
+
+  // We now can finish matching the condition of the outermost select:
+  // it should either be the X itself, or an addition of some constant to X.
+  Constant *C1;
+  if (Cmp00 == X)
+    C1 = ConstantInt::getNullValue(Sel0.getType());
+  else if (!match(Cmp00,
+                  m_Add(m_Specific(X),
+                        m_CombineAnd(m_AnyIntegralConstant(), m_Constant(C1)))))
+    return nullptr;
+
+  Value *Cmp1;
+  ICmpInst::Predicate Pred1;
+  Constant *C2;
+  Value *ReplacementLow, *ReplacementHigh;
+  if (!match(Sel1, m_Select(m_Value(Cmp1), m_Value(ReplacementLow),
+                            m_Value(ReplacementHigh))) ||
+      !match(Cmp1,
+             m_ICmp(Pred1, m_Specific(X),
+                    m_CombineAnd(m_AnyIntegralConstant(), m_Constant(C2)))))
+    return nullptr;
+
+  if (!Cmp1->hasOneUse() && (Cmp00 == X || !Cmp00->hasOneUse()))
+    return nullptr; // Not enough one-use instructions for the fold.
+  // FIXME: this restriction could be relaxed if Cmp1 can be reused as one of
+  //        two comparisons we'll need to build.
+
+  // Canonicalize Cmp1 into the form we expect.
+  // FIXME: we shouldn't care about lanes that are 'undef' in the end?
+  switch (Pred1) {
+  case ICmpInst::Predicate::ICMP_SLT:
+    break;
+  case ICmpInst::Predicate::ICMP_SLE:
+    // We'd have to increment C2 by one, and for that it must not have signed
+    // max element, but then it would have been canonicalized to 'slt' before
+    // we get here. So we can't do anything useful with 'sle'.
+    return nullptr;
+  case ICmpInst::Predicate::ICMP_SGT:
+    // We want to canonicalize it to 'slt', so we'll need to increment C2,
+    // which again means it must not have any signed max elements.
+    if (!match(C2,
+               m_SpecificInt_ICMP(ICmpInst::Predicate::ICMP_NE,
+                                  APInt::getSignedMaxValue(
+                                      C2->getType()->getScalarSizeInBits()))))
+      return nullptr; // Can't do, have signed max element[s].
+    C2 = InstCombiner::AddOne(C2);
+    LLVM_FALLTHROUGH;
+  case ICmpInst::Predicate::ICMP_SGE:
+    // Also non-canonical, but here we don't need to change C2,
+    // so we don't have any restrictions on C2, so we can just handle it.
+    std::swap(ReplacementLow, ReplacementHigh);
+    break;
+  default:
+    return nullptr; // Unknown predicate.
+  }
+
+  // The thresholds of this clamp-like pattern.
+  auto *ThresholdLowIncl = ConstantExpr::getNeg(C1);
+  auto *ThresholdHighExcl = ConstantExpr::getSub(C0, C1);
+
+  // The fold has a precondition 1: C2 s>= ThresholdLow
+  auto *Precond1 = ConstantExpr::getICmp(ICmpInst::Predicate::ICMP_SGE, C2,
+                                         ThresholdLowIncl);
+  if (!match(Precond1, m_One()))
+    return nullptr;
+  // The fold has a precondition 2: C2 s<= ThresholdHigh
+  auto *Precond2 = ConstantExpr::getICmp(ICmpInst::Predicate::ICMP_SLE, C2,
+                                         ThresholdHighExcl);
+  if (!match(Precond2, m_One()))
+    return nullptr;
+
+  // All good, finally emit the new pattern.
+  Value *ShouldReplaceLow = Builder.CreateICmpSLT(X, ThresholdLowIncl);
+  Value *ShouldReplaceHigh = Builder.CreateICmpSGE(X, ThresholdHighExcl);
+  Value *MaybeReplacedLow =
+      Builder.CreateSelect(ShouldReplaceLow, ReplacementLow, X);
+  Instruction *MaybeReplacedHigh =
+      SelectInst::Create(ShouldReplaceHigh, ReplacementHigh, MaybeReplacedLow);
+
+  return MaybeReplacedHigh;
+}
+
+// If we have
+//  %cmp = icmp [canonical predicate] i32 %x, C0
+//  %r = select i1 %cmp, i32 %y, i32 C1
+// Where C0 != C1 and %x may be different from %y, see if the constant that we
+// will have if we flip the strictness of the predicate (i.e. without changing
+// the result) is identical to the C1 in select. If it matches we can change
+// original comparison to one with swapped predicate, reuse the constant,
+// and swap the hands of select.
+static Instruction *
+tryToReuseConstantFromSelectInComparison(SelectInst &Sel, ICmpInst &Cmp,
+                                         InstCombinerImpl &IC) {
+  ICmpInst::Predicate Pred;
+  Value *X;
+  Constant *C0;
+  if (!match(&Cmp, m_OneUse(m_ICmp(
+                       Pred, m_Value(X),
+                       m_CombineAnd(m_AnyIntegralConstant(), m_Constant(C0))))))
+    return nullptr;
+
+  // If comparison predicate is non-relational, we won't be able to do anything.
+  if (ICmpInst::isEquality(Pred))
+    return nullptr;
+
+  // If comparison predicate is non-canonical, then we certainly won't be able
+  // to make it canonical; canonicalizeCmpWithConstant() already tried.
+  if (!InstCombiner::isCanonicalPredicate(Pred))
+    return nullptr;
+
+  // If the [input] type of comparison and select type are different, lets abort
+  // for now. We could try to compare constants with trunc/[zs]ext though.
+  if (C0->getType() != Sel.getType())
+    return nullptr;
+
+  // FIXME: are there any magic icmp predicate+constant pairs we must not touch?
+
+  Value *SelVal0, *SelVal1; // We do not care which one is from where.
+  match(&Sel, m_Select(m_Value(), m_Value(SelVal0), m_Value(SelVal1)));
+  // At least one of these values we are selecting between must be a constant
+  // else we'll never succeed.
+  if (!match(SelVal0, m_AnyIntegralConstant()) &&
+      !match(SelVal1, m_AnyIntegralConstant()))
+    return nullptr;
+
+  // Does this constant C match any of the `select` values?
+  auto MatchesSelectValue = [SelVal0, SelVal1](Constant *C) {
+    return C->isElementWiseEqual(SelVal0) || C->isElementWiseEqual(SelVal1);
+  };
+
+  // If C0 *already* matches true/false value of select, we are done.
+  if (MatchesSelectValue(C0))
+    return nullptr;
+
+  // Check the constant we'd have with flipped-strictness predicate.
+  auto FlippedStrictness =
+      InstCombiner::getFlippedStrictnessPredicateAndConstant(Pred, C0);
+  if (!FlippedStrictness)
+    return nullptr;
+
+  // If said constant doesn't match either, then there is no hope,
+  if (!MatchesSelectValue(FlippedStrictness->second))
+    return nullptr;
+
+  // It matched! Lets insert the new comparison just before select.
+  InstCombiner::BuilderTy::InsertPointGuard Guard(IC.Builder);
+  IC.Builder.SetInsertPoint(&Sel);
+
+  Pred = ICmpInst::getSwappedPredicate(Pred); // Yes, swapped.
+  Value *NewCmp = IC.Builder.CreateICmp(Pred, X, FlippedStrictness->second,
+                                        Cmp.getName() + ".inv");
+  IC.replaceOperand(Sel, 0, NewCmp);
+  Sel.swapValues();
   Sel.swapProfMetadata();
+
   return &Sel;
 }
 
 /// Visit a SelectInst that has an ICmpInst as its first operand.
-Instruction *InstCombiner::foldSelectInstWithICmp(SelectInst &SI,
-                                                  ICmpInst *ICI) {
-  Value *TrueVal = SI.getTrueValue();
-  Value *FalseVal = SI.getFalseValue();
-
-  if (Instruction *NewSel = canonicalizeMinMaxWithConstant(SI, *ICI, Builder))
+Instruction *InstCombinerImpl::foldSelectInstWithICmp(SelectInst &SI,
+                                                      ICmpInst *ICI) {
+  if (Instruction *NewSel = foldSelectValueEquivalence(SI, *ICI))
     return NewSel;
 
-  if (Instruction *NewAbs = canonicalizeAbsNabs(SI, *ICI, Builder))
+  if (Instruction *NewSel = canonicalizeMinMaxWithConstant(SI, *ICI, *this))
+    return NewSel;
+
+  if (Instruction *NewAbs = canonicalizeAbsNabs(SI, *ICI, *this))
     return NewAbs;
+
+  if (Instruction *NewAbs = canonicalizeClampLike(SI, *ICI, Builder))
+    return NewAbs;
+
+  if (Instruction *NewSel =
+          tryToReuseConstantFromSelectInComparison(SI, *ICI, *this))
+    return NewSel;
 
   bool Changed = adjustMinMax(SI, *ICI);
 
@@ -1080,6 +1459,8 @@ Instruction *InstCombiner::foldSelectInstWithICmp(SelectInst &SI,
     return replaceInstUsesWith(SI, V);
 
   // NOTE: if we wanted to, this is where to detect integer MIN/MAX
+  Value *TrueVal = SI.getTrueValue();
+  Value *FalseVal = SI.getFalseValue();
   ICmpInst::Predicate Pred = ICI->getPredicate();
   Value *CmpLHS = ICI->getOperand(0);
   Value *CmpRHS = ICI->getOperand(1);
@@ -1149,6 +1530,9 @@ Instruction *InstCombiner::foldSelectInstWithICmp(SelectInst &SI,
           foldSelectICmpAndAnd(SI.getType(), ICI, TrueVal, FalseVal, Builder))
     return V;
 
+  if (Instruction *V = foldSelectCtlzToCttz(ICI, TrueVal, FalseVal, Builder))
+    return V;
+
   if (Value *V = foldSelectICmpAndOr(ICI, TrueVal, FalseVal, Builder))
     return replaceInstUsesWith(SI, V);
 
@@ -1204,11 +1588,11 @@ static bool canSelectOperandBeMappingIntoPredBlock(const Value *V,
 
 /// We have an SPF (e.g. a min or max) of an SPF of the form:
 ///   SPF2(SPF1(A, B), C)
-Instruction *InstCombiner::foldSPFofSPF(Instruction *Inner,
-                                        SelectPatternFlavor SPF1,
-                                        Value *A, Value *B,
-                                        Instruction &Outer,
-                                        SelectPatternFlavor SPF2, Value *C) {
+Instruction *InstCombinerImpl::foldSPFofSPF(Instruction *Inner,
+                                            SelectPatternFlavor SPF1, Value *A,
+                                            Value *B, Instruction &Outer,
+                                            SelectPatternFlavor SPF2,
+                                            Value *C) {
   if (Outer.getType() != Inner->getType())
     return nullptr;
 
@@ -1253,6 +1637,16 @@ Instruction *InstCombiner::foldSPFofSPF(Instruction *Inner,
     }
   }
 
+  // max(max(A, B), min(A, B)) --> max(A, B)
+  // min(min(A, B), max(A, B)) --> min(A, B)
+  // TODO: This could be done in instsimplify.
+  if (SPF1 == SPF2 &&
+      ((SPF1 == SPF_UMIN && match(C, m_c_UMax(m_Specific(A), m_Specific(B)))) ||
+       (SPF1 == SPF_SMIN && match(C, m_c_SMax(m_Specific(A), m_Specific(B)))) ||
+       (SPF1 == SPF_UMAX && match(C, m_c_UMin(m_Specific(A), m_Specific(B)))) ||
+       (SPF1 == SPF_SMAX && match(C, m_c_SMin(m_Specific(A), m_Specific(B))))))
+    return replaceInstUsesWith(Outer, Inner);
+
   // ABS(ABS(X)) -> ABS(X)
   // NABS(NABS(X)) -> NABS(X)
   // TODO: This could be done in instsimplify.
@@ -1280,7 +1674,7 @@ Instruction *InstCombiner::foldSPFofSPF(Instruction *Inner,
       return true;
     }
 
-    if (IsFreeToInvert(V, !V->hasNUsesOrMore(3))) {
+    if (isFreeToInvert(V, !V->hasNUsesOrMore(3))) {
       NotV = nullptr;
       return true;
     }
@@ -1393,7 +1787,129 @@ static Instruction *foldAddSubSelect(SelectInst &SI,
   return nullptr;
 }
 
-Instruction *InstCombiner::foldSelectExtConst(SelectInst &Sel) {
+/// Turn X + Y overflows ? -1 : X + Y -> uadd_sat X, Y
+/// And X - Y overflows ? 0 : X - Y -> usub_sat X, Y
+/// Along with a number of patterns similar to:
+/// X + Y overflows ? (X < 0 ? INTMIN : INTMAX) : X + Y --> sadd_sat X, Y
+/// X - Y overflows ? (X > 0 ? INTMAX : INTMIN) : X - Y --> ssub_sat X, Y
+static Instruction *
+foldOverflowingAddSubSelect(SelectInst &SI, InstCombiner::BuilderTy &Builder) {
+  Value *CondVal = SI.getCondition();
+  Value *TrueVal = SI.getTrueValue();
+  Value *FalseVal = SI.getFalseValue();
+
+  WithOverflowInst *II;
+  if (!match(CondVal, m_ExtractValue<1>(m_WithOverflowInst(II))) ||
+      !match(FalseVal, m_ExtractValue<0>(m_Specific(II))))
+    return nullptr;
+
+  Value *X = II->getLHS();
+  Value *Y = II->getRHS();
+
+  auto IsSignedSaturateLimit = [&](Value *Limit, bool IsAdd) {
+    Type *Ty = Limit->getType();
+
+    ICmpInst::Predicate Pred;
+    Value *TrueVal, *FalseVal, *Op;
+    const APInt *C;
+    if (!match(Limit, m_Select(m_ICmp(Pred, m_Value(Op), m_APInt(C)),
+                               m_Value(TrueVal), m_Value(FalseVal))))
+      return false;
+
+    auto IsZeroOrOne = [](const APInt &C) {
+      return C.isNullValue() || C.isOneValue();
+    };
+    auto IsMinMax = [&](Value *Min, Value *Max) {
+      APInt MinVal = APInt::getSignedMinValue(Ty->getScalarSizeInBits());
+      APInt MaxVal = APInt::getSignedMaxValue(Ty->getScalarSizeInBits());
+      return match(Min, m_SpecificInt(MinVal)) &&
+             match(Max, m_SpecificInt(MaxVal));
+    };
+
+    if (Op != X && Op != Y)
+      return false;
+
+    if (IsAdd) {
+      // X + Y overflows ? (X <s 0 ? INTMIN : INTMAX) : X + Y --> sadd_sat X, Y
+      // X + Y overflows ? (X <s 1 ? INTMIN : INTMAX) : X + Y --> sadd_sat X, Y
+      // X + Y overflows ? (Y <s 0 ? INTMIN : INTMAX) : X + Y --> sadd_sat X, Y
+      // X + Y overflows ? (Y <s 1 ? INTMIN : INTMAX) : X + Y --> sadd_sat X, Y
+      if (Pred == ICmpInst::ICMP_SLT && IsZeroOrOne(*C) &&
+          IsMinMax(TrueVal, FalseVal))
+        return true;
+      // X + Y overflows ? (X >s 0 ? INTMAX : INTMIN) : X + Y --> sadd_sat X, Y
+      // X + Y overflows ? (X >s -1 ? INTMAX : INTMIN) : X + Y --> sadd_sat X, Y
+      // X + Y overflows ? (Y >s 0 ? INTMAX : INTMIN) : X + Y --> sadd_sat X, Y
+      // X + Y overflows ? (Y >s -1 ? INTMAX : INTMIN) : X + Y --> sadd_sat X, Y
+      if (Pred == ICmpInst::ICMP_SGT && IsZeroOrOne(*C + 1) &&
+          IsMinMax(FalseVal, TrueVal))
+        return true;
+    } else {
+      // X - Y overflows ? (X <s 0 ? INTMIN : INTMAX) : X - Y --> ssub_sat X, Y
+      // X - Y overflows ? (X <s -1 ? INTMIN : INTMAX) : X - Y --> ssub_sat X, Y
+      if (Op == X && Pred == ICmpInst::ICMP_SLT && IsZeroOrOne(*C + 1) &&
+          IsMinMax(TrueVal, FalseVal))
+        return true;
+      // X - Y overflows ? (X >s -1 ? INTMAX : INTMIN) : X - Y --> ssub_sat X, Y
+      // X - Y overflows ? (X >s -2 ? INTMAX : INTMIN) : X - Y --> ssub_sat X, Y
+      if (Op == X && Pred == ICmpInst::ICMP_SGT && IsZeroOrOne(*C + 2) &&
+          IsMinMax(FalseVal, TrueVal))
+        return true;
+      // X - Y overflows ? (Y <s 0 ? INTMAX : INTMIN) : X - Y --> ssub_sat X, Y
+      // X - Y overflows ? (Y <s 1 ? INTMAX : INTMIN) : X - Y --> ssub_sat X, Y
+      if (Op == Y && Pred == ICmpInst::ICMP_SLT && IsZeroOrOne(*C) &&
+          IsMinMax(FalseVal, TrueVal))
+        return true;
+      // X - Y overflows ? (Y >s 0 ? INTMIN : INTMAX) : X - Y --> ssub_sat X, Y
+      // X - Y overflows ? (Y >s -1 ? INTMIN : INTMAX) : X - Y --> ssub_sat X, Y
+      if (Op == Y && Pred == ICmpInst::ICMP_SGT && IsZeroOrOne(*C + 1) &&
+          IsMinMax(TrueVal, FalseVal))
+        return true;
+    }
+
+    return false;
+  };
+
+  Intrinsic::ID NewIntrinsicID;
+  if (II->getIntrinsicID() == Intrinsic::uadd_with_overflow &&
+      match(TrueVal, m_AllOnes()))
+    // X + Y overflows ? -1 : X + Y -> uadd_sat X, Y
+    NewIntrinsicID = Intrinsic::uadd_sat;
+  else if (II->getIntrinsicID() == Intrinsic::usub_with_overflow &&
+           match(TrueVal, m_Zero()))
+    // X - Y overflows ? 0 : X - Y -> usub_sat X, Y
+    NewIntrinsicID = Intrinsic::usub_sat;
+  else if (II->getIntrinsicID() == Intrinsic::sadd_with_overflow &&
+           IsSignedSaturateLimit(TrueVal, /*IsAdd=*/true))
+    // X + Y overflows ? (X <s 0 ? INTMIN : INTMAX) : X + Y --> sadd_sat X, Y
+    // X + Y overflows ? (X <s 1 ? INTMIN : INTMAX) : X + Y --> sadd_sat X, Y
+    // X + Y overflows ? (X >s 0 ? INTMAX : INTMIN) : X + Y --> sadd_sat X, Y
+    // X + Y overflows ? (X >s -1 ? INTMAX : INTMIN) : X + Y --> sadd_sat X, Y
+    // X + Y overflows ? (Y <s 0 ? INTMIN : INTMAX) : X + Y --> sadd_sat X, Y
+    // X + Y overflows ? (Y <s 1 ? INTMIN : INTMAX) : X + Y --> sadd_sat X, Y
+    // X + Y overflows ? (Y >s 0 ? INTMAX : INTMIN) : X + Y --> sadd_sat X, Y
+    // X + Y overflows ? (Y >s -1 ? INTMAX : INTMIN) : X + Y --> sadd_sat X, Y
+    NewIntrinsicID = Intrinsic::sadd_sat;
+  else if (II->getIntrinsicID() == Intrinsic::ssub_with_overflow &&
+           IsSignedSaturateLimit(TrueVal, /*IsAdd=*/false))
+    // X - Y overflows ? (X <s 0 ? INTMIN : INTMAX) : X - Y --> ssub_sat X, Y
+    // X - Y overflows ? (X <s -1 ? INTMIN : INTMAX) : X - Y --> ssub_sat X, Y
+    // X - Y overflows ? (X >s -1 ? INTMAX : INTMIN) : X - Y --> ssub_sat X, Y
+    // X - Y overflows ? (X >s -2 ? INTMAX : INTMIN) : X - Y --> ssub_sat X, Y
+    // X - Y overflows ? (Y <s 0 ? INTMAX : INTMIN) : X - Y --> ssub_sat X, Y
+    // X - Y overflows ? (Y <s 1 ? INTMAX : INTMIN) : X - Y --> ssub_sat X, Y
+    // X - Y overflows ? (Y >s 0 ? INTMIN : INTMAX) : X - Y --> ssub_sat X, Y
+    // X - Y overflows ? (Y >s -1 ? INTMIN : INTMAX) : X - Y --> ssub_sat X, Y
+    NewIntrinsicID = Intrinsic::ssub_sat;
+  else
+    return nullptr;
+
+  Function *F =
+      Intrinsic::getDeclaration(SI.getModule(), NewIntrinsicID, SI.getType());
+  return CallInst::Create(F, {X, Y});
+}
+
+Instruction *InstCombinerImpl::foldSelectExtConst(SelectInst &Sel) {
   Constant *C;
   if (!match(Sel.getTrueValue(), m_Constant(C)) &&
       !match(Sel.getFalseValue(), m_Constant(C)))
@@ -1423,7 +1939,7 @@ Instruction *InstCombiner::foldSelectExtConst(SelectInst &Sel) {
   Type *SelType = Sel.getType();
   Constant *TruncC = ConstantExpr::getTrunc(C, SmallType);
   Constant *ExtC = ConstantExpr::getCast(ExtOpcode, TruncC, SelType);
-  if (ExtC == C) {
+  if (ExtC == C && ExtInst->hasOneUse()) {
     Value *TruncCVal = cast<Value>(TruncC);
     if (ExtInst == Sel.getFalseValue())
       std::swap(X, TruncCVal);
@@ -1459,13 +1975,13 @@ Instruction *InstCombiner::foldSelectExtConst(SelectInst &Sel) {
 static Instruction *canonicalizeSelectToShuffle(SelectInst &SI) {
   Value *CondVal = SI.getCondition();
   Constant *CondC;
-  if (!CondVal->getType()->isVectorTy() || !match(CondVal, m_Constant(CondC)))
+  auto *CondValTy = dyn_cast<FixedVectorType>(CondVal->getType());
+  if (!CondValTy || !match(CondVal, m_Constant(CondC)))
     return nullptr;
 
-  unsigned NumElts = CondVal->getType()->getVectorNumElements();
-  SmallVector<Constant *, 16> Mask;
+  unsigned NumElts = CondValTy->getNumElements();
+  SmallVector<int, 16> Mask;
   Mask.reserve(NumElts);
-  Type *Int32Ty = Type::getInt32Ty(CondVal->getContext());
   for (unsigned i = 0; i != NumElts; ++i) {
     Constant *Elt = CondC->getAggregateElement(i);
     if (!Elt)
@@ -1473,10 +1989,10 @@ static Instruction *canonicalizeSelectToShuffle(SelectInst &SI) {
 
     if (Elt->isOneValue()) {
       // If the select condition element is true, choose from the 1st vector.
-      Mask.push_back(ConstantInt::get(Int32Ty, i));
+      Mask.push_back(i);
     } else if (Elt->isNullValue()) {
       // If the select condition element is false, choose from the 2nd vector.
-      Mask.push_back(ConstantInt::get(Int32Ty, i + NumElts));
+      Mask.push_back(i + NumElts);
     } else if (isa<UndefValue>(Elt)) {
       // Undef in a select condition (choose one of the operands) does not mean
       // the same thing as undef in a shuffle mask (any value is acceptable), so
@@ -1488,8 +2004,29 @@ static Instruction *canonicalizeSelectToShuffle(SelectInst &SI) {
     }
   }
 
-  return new ShuffleVectorInst(SI.getTrueValue(), SI.getFalseValue(),
-                               ConstantVector::get(Mask));
+  return new ShuffleVectorInst(SI.getTrueValue(), SI.getFalseValue(), Mask);
+}
+
+/// If we have a select of vectors with a scalar condition, try to convert that
+/// to a vector select by splatting the condition. A splat may get folded with
+/// other operations in IR and having all operands of a select be vector types
+/// is likely better for vector codegen.
+static Instruction *canonicalizeScalarSelectOfVecs(SelectInst &Sel,
+                                                   InstCombinerImpl &IC) {
+  auto *Ty = dyn_cast<VectorType>(Sel.getType());
+  if (!Ty)
+    return nullptr;
+
+  // We can replace a single-use extract with constant index.
+  Value *Cond = Sel.getCondition();
+  if (!match(Cond, m_OneUse(m_ExtractElt(m_Value(), m_ConstantInt()))))
+    return nullptr;
+
+  // select (extelt V, Index), T, F --> select (splat V, Index), T, F
+  // Splatting the extracted condition reduces code (we could directly create a
+  // splat shuffle of the source vector to eliminate the intermediate step).
+  return IC.replaceOperand(
+      Sel, 0, IC.Builder.CreateVectorSplat(Ty->getElementCount(), Cond));
 }
 
 /// Reuse bitcasted operands between a compare and select:
@@ -1562,7 +2099,7 @@ static Instruction *foldSelectCmpBitcasts(SelectInst &Sel,
 ///   %1 = extractvalue { i64, i1 } %0, 0
 ///   ret i64 %1
 ///
-static Instruction *foldSelectCmpXchg(SelectInst &SI) {
+static Value *foldSelectCmpXchg(SelectInst &SI) {
   // A helper that determines if V is an extractvalue instruction whose
   // aggregate operand is a cmpxchg instruction and whose single index is equal
   // to I. If such conditions are true, the helper returns the cmpxchg
@@ -1594,19 +2131,15 @@ static Instruction *foldSelectCmpXchg(SelectInst &SI) {
   // value of the same cmpxchg used by the condition, and the false value is the
   // cmpxchg instruction's compare operand.
   if (auto *X = isExtractFromCmpXchg(SI.getTrueValue(), 0))
-    if (X == CmpXchg && X->getCompareOperand() == SI.getFalseValue()) {
-      SI.setTrueValue(SI.getFalseValue());
-      return &SI;
-    }
+    if (X == CmpXchg && X->getCompareOperand() == SI.getFalseValue())
+      return SI.getFalseValue();
 
   // Check the false value case: The false value of the select is the returned
   // value of the same cmpxchg used by the condition, and the true value is the
   // cmpxchg instruction's compare operand.
   if (auto *X = isExtractFromCmpXchg(SI.getFalseValue(), 0))
-    if (X == CmpXchg && X->getCompareOperand() == SI.getTrueValue()) {
-      SI.setTrueValue(SI.getFalseValue());
-      return &SI;
-    }
+    if (X == CmpXchg && X->getCompareOperand() == SI.getTrueValue())
+      return SI.getFalseValue();
 
   return nullptr;
 }
@@ -1646,6 +2179,71 @@ static Instruction *moveAddAfterMinMax(SelectPatternFlavor SPF, Value *X,
   }
 
   return nullptr;
+}
+
+/// Match a sadd_sat or ssub_sat which is using min/max to clamp the value.
+Instruction *InstCombinerImpl::matchSAddSubSat(SelectInst &MinMax1) {
+  Type *Ty = MinMax1.getType();
+
+  // We are looking for a tree of:
+  // max(INT_MIN, min(INT_MAX, add(sext(A), sext(B))))
+  // Where the min and max could be reversed
+  Instruction *MinMax2;
+  BinaryOperator *AddSub;
+  const APInt *MinValue, *MaxValue;
+  if (match(&MinMax1, m_SMin(m_Instruction(MinMax2), m_APInt(MaxValue)))) {
+    if (!match(MinMax2, m_SMax(m_BinOp(AddSub), m_APInt(MinValue))))
+      return nullptr;
+  } else if (match(&MinMax1,
+                   m_SMax(m_Instruction(MinMax2), m_APInt(MinValue)))) {
+    if (!match(MinMax2, m_SMin(m_BinOp(AddSub), m_APInt(MaxValue))))
+      return nullptr;
+  } else
+    return nullptr;
+
+  // Check that the constants clamp a saturate, and that the new type would be
+  // sensible to convert to.
+  if (!(*MaxValue + 1).isPowerOf2() || -*MinValue != *MaxValue + 1)
+    return nullptr;
+  // In what bitwidth can this be treated as saturating arithmetics?
+  unsigned NewBitWidth = (*MaxValue + 1).logBase2() + 1;
+  // FIXME: This isn't quite right for vectors, but using the scalar type is a
+  // good first approximation for what should be done there.
+  if (!shouldChangeType(Ty->getScalarType()->getIntegerBitWidth(), NewBitWidth))
+    return nullptr;
+
+  // Also make sure that the number of uses is as expected. The "3"s are for the
+  // the two items of min/max (the compare and the select).
+  if (MinMax2->hasNUsesOrMore(3) || AddSub->hasNUsesOrMore(3))
+    return nullptr;
+
+  // Create the new type (which can be a vector type)
+  Type *NewTy = Ty->getWithNewBitWidth(NewBitWidth);
+  // Match the two extends from the add/sub
+  Value *A, *B;
+  if(!match(AddSub, m_BinOp(m_SExt(m_Value(A)), m_SExt(m_Value(B)))))
+    return nullptr;
+  // And check the incoming values are of a type smaller than or equal to the
+  // size of the saturation. Otherwise the higher bits can cause different
+  // results.
+  if (A->getType()->getScalarSizeInBits() > NewBitWidth ||
+      B->getType()->getScalarSizeInBits() > NewBitWidth)
+    return nullptr;
+
+  Intrinsic::ID IntrinsicID;
+  if (AddSub->getOpcode() == Instruction::Add)
+    IntrinsicID = Intrinsic::sadd_sat;
+  else if (AddSub->getOpcode() == Instruction::Sub)
+    IntrinsicID = Intrinsic::ssub_sat;
+  else
+    return nullptr;
+
+  // Finally create and return the sat intrinsic, truncated to the new type
+  Function *F = Intrinsic::getDeclaration(MinMax1.getModule(), IntrinsicID, NewTy);
+  Value *AT = Builder.CreateSExt(A, NewTy);
+  Value *BT = Builder.CreateSExt(B, NewTy);
+  Value *Sat = Builder.CreateCall(F, {AT, BT});
+  return CastInst::Create(Instruction::SExt, Sat, Ty);
 }
 
 /// Reduce a sequence of min/max with a common operand.
@@ -1705,34 +2303,42 @@ static Instruction *factorizeMinMaxTree(SelectPatternFlavor SPF, Value *LHS,
   return SelectInst::Create(CmpABC, MinMaxOp, ThirdOp);
 }
 
-/// Try to reduce a rotate pattern that includes a compare and select into a
-/// funnel shift intrinsic. Example:
+/// Try to reduce a funnel/rotate pattern that includes a compare and select
+/// into a funnel shift intrinsic. Example:
 /// rotl32(a, b) --> (b == 0 ? a : ((a >> (32 - b)) | (a << b)))
 ///              --> call llvm.fshl.i32(a, a, b)
-static Instruction *foldSelectRotate(SelectInst &Sel) {
-  // The false value of the select must be a rotate of the true value.
-  Value *Or0, *Or1;
-  if (!match(Sel.getFalseValue(), m_OneUse(m_Or(m_Value(Or0), m_Value(Or1)))))
-    return nullptr;
-
-  Value *TVal = Sel.getTrueValue();
-  Value *SA0, *SA1;
-  if (!match(Or0, m_OneUse(m_LogicalShift(m_Specific(TVal), m_Value(SA0)))) ||
-      !match(Or1, m_OneUse(m_LogicalShift(m_Specific(TVal), m_Value(SA1)))))
-    return nullptr;
-
-  auto ShiftOpcode0 = cast<BinaryOperator>(Or0)->getOpcode();
-  auto ShiftOpcode1 = cast<BinaryOperator>(Or1)->getOpcode();
-  if (ShiftOpcode0 == ShiftOpcode1)
-    return nullptr;
-
-  // We have one of these patterns so far:
-  // select ?, TVal, (or (lshr TVal, SA0), (shl TVal, SA1))
-  // select ?, TVal, (or (shl TVal, SA0), (lshr TVal, SA1))
-  // This must be a power-of-2 rotate for a bitmasking transform to be valid.
+/// fshl32(a, b, c) --> (c == 0 ? a : ((b >> (32 - c)) | (a << c)))
+///                 --> call llvm.fshl.i32(a, b, c)
+/// fshr32(a, b, c) --> (c == 0 ? b : ((a >> (32 - c)) | (b << c)))
+///                 --> call llvm.fshr.i32(a, b, c)
+static Instruction *foldSelectFunnelShift(SelectInst &Sel,
+                                          InstCombiner::BuilderTy &Builder) {
+  // This must be a power-of-2 type for a bitmasking transform to be valid.
   unsigned Width = Sel.getType()->getScalarSizeInBits();
   if (!isPowerOf2_32(Width))
     return nullptr;
+
+  BinaryOperator *Or0, *Or1;
+  if (!match(Sel.getFalseValue(), m_OneUse(m_Or(m_BinOp(Or0), m_BinOp(Or1)))))
+    return nullptr;
+
+  Value *SV0, *SV1, *SA0, *SA1;
+  if (!match(Or0, m_OneUse(m_LogicalShift(m_Value(SV0),
+                                          m_ZExtOrSelf(m_Value(SA0))))) ||
+      !match(Or1, m_OneUse(m_LogicalShift(m_Value(SV1),
+                                          m_ZExtOrSelf(m_Value(SA1))))) ||
+      Or0->getOpcode() == Or1->getOpcode())
+    return nullptr;
+
+  // Canonicalize to or(shl(SV0, SA0), lshr(SV1, SA1)).
+  if (Or0->getOpcode() == BinaryOperator::LShr) {
+    std::swap(Or0, Or1);
+    std::swap(SV0, SV1);
+    std::swap(SA0, SA1);
+  }
+  assert(Or0->getOpcode() == BinaryOperator::Shl &&
+         Or1->getOpcode() == BinaryOperator::LShr &&
+         "Illegal or(shift,shift) pair");
 
   // Check the shift amounts to see if they are an opposite pair.
   Value *ShAmt;
@@ -1743,6 +2349,15 @@ static Instruction *foldSelectRotate(SelectInst &Sel) {
   else
     return nullptr;
 
+  // We should now have this pattern:
+  // select ?, TVal, (or (shl SV0, SA0), (lshr SV1, SA1))
+  // The false value of the select must be a funnel-shift of the true value:
+  // IsFShl -> TVal must be SV0 else TVal must be SV1.
+  bool IsFshl = (ShAmt == SA0);
+  Value *TVal = Sel.getTrueValue();
+  if ((IsFshl && TVal != SV0) || (!IsFshl && TVal != SV1))
+    return nullptr;
+
   // Finally, see if the select is filtering out a shift-by-zero.
   Value *Cond = Sel.getCondition();
   ICmpInst::Predicate Pred;
@@ -1750,16 +2365,265 @@ static Instruction *foldSelectRotate(SelectInst &Sel) {
       Pred != ICmpInst::ICMP_EQ)
     return nullptr;
 
-  // This is a rotate that avoids shift-by-bitwidth UB in a suboptimal way.
+  // If this is not a rotate then the select was blocking poison from the
+  // 'shift-by-zero' non-TVal, but a funnel shift won't - so freeze it.
+  if (SV0 != SV1) {
+    if (IsFshl && !llvm::isGuaranteedNotToBePoison(SV1))
+      SV1 = Builder.CreateFreeze(SV1);
+    else if (!IsFshl && !llvm::isGuaranteedNotToBePoison(SV0))
+      SV0 = Builder.CreateFreeze(SV0);
+  }
+
+  // This is a funnel/rotate that avoids shift-by-bitwidth UB in a suboptimal way.
   // Convert to funnel shift intrinsic.
-  bool IsFshl = (ShAmt == SA0 && ShiftOpcode0 == BinaryOperator::Shl) ||
-                (ShAmt == SA1 && ShiftOpcode1 == BinaryOperator::Shl);
   Intrinsic::ID IID = IsFshl ? Intrinsic::fshl : Intrinsic::fshr;
   Function *F = Intrinsic::getDeclaration(Sel.getModule(), IID, Sel.getType());
-  return IntrinsicInst::Create(F, { TVal, TVal, ShAmt });
+  ShAmt = Builder.CreateZExt(ShAmt, Sel.getType());
+  return CallInst::Create(F, { SV0, SV1, ShAmt });
 }
 
-Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
+static Instruction *foldSelectToCopysign(SelectInst &Sel,
+                                         InstCombiner::BuilderTy &Builder) {
+  Value *Cond = Sel.getCondition();
+  Value *TVal = Sel.getTrueValue();
+  Value *FVal = Sel.getFalseValue();
+  Type *SelType = Sel.getType();
+
+  // Match select ?, TC, FC where the constants are equal but negated.
+  // TODO: Generalize to handle a negated variable operand?
+  const APFloat *TC, *FC;
+  if (!match(TVal, m_APFloat(TC)) || !match(FVal, m_APFloat(FC)) ||
+      !abs(*TC).bitwiseIsEqual(abs(*FC)))
+    return nullptr;
+
+  assert(TC != FC && "Expected equal select arms to simplify");
+
+  Value *X;
+  const APInt *C;
+  bool IsTrueIfSignSet;
+  ICmpInst::Predicate Pred;
+  if (!match(Cond, m_OneUse(m_ICmp(Pred, m_BitCast(m_Value(X)), m_APInt(C)))) ||
+      !InstCombiner::isSignBitCheck(Pred, *C, IsTrueIfSignSet) ||
+      X->getType() != SelType)
+    return nullptr;
+
+  // If needed, negate the value that will be the sign argument of the copysign:
+  // (bitcast X) <  0 ? -TC :  TC --> copysign(TC,  X)
+  // (bitcast X) <  0 ?  TC : -TC --> copysign(TC, -X)
+  // (bitcast X) >= 0 ? -TC :  TC --> copysign(TC, -X)
+  // (bitcast X) >= 0 ?  TC : -TC --> copysign(TC,  X)
+  if (IsTrueIfSignSet ^ TC->isNegative())
+    X = Builder.CreateFNegFMF(X, &Sel);
+
+  // Canonicalize the magnitude argument as the positive constant since we do
+  // not care about its sign.
+  Value *MagArg = TC->isNegative() ? FVal : TVal;
+  Function *F = Intrinsic::getDeclaration(Sel.getModule(), Intrinsic::copysign,
+                                          Sel.getType());
+  Instruction *CopySign = CallInst::Create(F, { MagArg, X });
+  CopySign->setFastMathFlags(Sel.getFastMathFlags());
+  return CopySign;
+}
+
+Instruction *InstCombinerImpl::foldVectorSelect(SelectInst &Sel) {
+  auto *VecTy = dyn_cast<FixedVectorType>(Sel.getType());
+  if (!VecTy)
+    return nullptr;
+
+  unsigned NumElts = VecTy->getNumElements();
+  APInt UndefElts(NumElts, 0);
+  APInt AllOnesEltMask(APInt::getAllOnesValue(NumElts));
+  if (Value *V = SimplifyDemandedVectorElts(&Sel, AllOnesEltMask, UndefElts)) {
+    if (V != &Sel)
+      return replaceInstUsesWith(Sel, V);
+    return &Sel;
+  }
+
+  // A select of a "select shuffle" with a common operand can be rearranged
+  // to select followed by "select shuffle". Because of poison, this only works
+  // in the case of a shuffle with no undefined mask elements.
+  Value *Cond = Sel.getCondition();
+  Value *TVal = Sel.getTrueValue();
+  Value *FVal = Sel.getFalseValue();
+  Value *X, *Y;
+  ArrayRef<int> Mask;
+  if (match(TVal, m_OneUse(m_Shuffle(m_Value(X), m_Value(Y), m_Mask(Mask)))) &&
+      !is_contained(Mask, UndefMaskElem) &&
+      cast<ShuffleVectorInst>(TVal)->isSelect()) {
+    if (X == FVal) {
+      // select Cond, (shuf_sel X, Y), X --> shuf_sel X, (select Cond, Y, X)
+      Value *NewSel = Builder.CreateSelect(Cond, Y, X, "sel", &Sel);
+      return new ShuffleVectorInst(X, NewSel, Mask);
+    }
+    if (Y == FVal) {
+      // select Cond, (shuf_sel X, Y), Y --> shuf_sel (select Cond, X, Y), Y
+      Value *NewSel = Builder.CreateSelect(Cond, X, Y, "sel", &Sel);
+      return new ShuffleVectorInst(NewSel, Y, Mask);
+    }
+  }
+  if (match(FVal, m_OneUse(m_Shuffle(m_Value(X), m_Value(Y), m_Mask(Mask)))) &&
+      !is_contained(Mask, UndefMaskElem) &&
+      cast<ShuffleVectorInst>(FVal)->isSelect()) {
+    if (X == TVal) {
+      // select Cond, X, (shuf_sel X, Y) --> shuf_sel X, (select Cond, X, Y)
+      Value *NewSel = Builder.CreateSelect(Cond, X, Y, "sel", &Sel);
+      return new ShuffleVectorInst(X, NewSel, Mask);
+    }
+    if (Y == TVal) {
+      // select Cond, Y, (shuf_sel X, Y) --> shuf_sel (select Cond, Y, X), Y
+      Value *NewSel = Builder.CreateSelect(Cond, Y, X, "sel", &Sel);
+      return new ShuffleVectorInst(NewSel, Y, Mask);
+    }
+  }
+
+  return nullptr;
+}
+
+static Instruction *foldSelectToPhiImpl(SelectInst &Sel, BasicBlock *BB,
+                                        const DominatorTree &DT,
+                                        InstCombiner::BuilderTy &Builder) {
+  // Find the block's immediate dominator that ends with a conditional branch
+  // that matches select's condition (maybe inverted).
+  auto *IDomNode = DT[BB]->getIDom();
+  if (!IDomNode)
+    return nullptr;
+  BasicBlock *IDom = IDomNode->getBlock();
+
+  Value *Cond = Sel.getCondition();
+  Value *IfTrue, *IfFalse;
+  BasicBlock *TrueSucc, *FalseSucc;
+  if (match(IDom->getTerminator(),
+            m_Br(m_Specific(Cond), m_BasicBlock(TrueSucc),
+                 m_BasicBlock(FalseSucc)))) {
+    IfTrue = Sel.getTrueValue();
+    IfFalse = Sel.getFalseValue();
+  } else if (match(IDom->getTerminator(),
+                   m_Br(m_Not(m_Specific(Cond)), m_BasicBlock(TrueSucc),
+                        m_BasicBlock(FalseSucc)))) {
+    IfTrue = Sel.getFalseValue();
+    IfFalse = Sel.getTrueValue();
+  } else
+    return nullptr;
+
+  // Make sure the branches are actually different.
+  if (TrueSucc == FalseSucc)
+    return nullptr;
+
+  // We want to replace select %cond, %a, %b with a phi that takes value %a
+  // for all incoming edges that are dominated by condition `%cond == true`,
+  // and value %b for edges dominated by condition `%cond == false`. If %a
+  // or %b are also phis from the same basic block, we can go further and take
+  // their incoming values from the corresponding blocks.
+  BasicBlockEdge TrueEdge(IDom, TrueSucc);
+  BasicBlockEdge FalseEdge(IDom, FalseSucc);
+  DenseMap<BasicBlock *, Value *> Inputs;
+  for (auto *Pred : predecessors(BB)) {
+    // Check implication.
+    BasicBlockEdge Incoming(Pred, BB);
+    if (DT.dominates(TrueEdge, Incoming))
+      Inputs[Pred] = IfTrue->DoPHITranslation(BB, Pred);
+    else if (DT.dominates(FalseEdge, Incoming))
+      Inputs[Pred] = IfFalse->DoPHITranslation(BB, Pred);
+    else
+      return nullptr;
+    // Check availability.
+    if (auto *Insn = dyn_cast<Instruction>(Inputs[Pred]))
+      if (!DT.dominates(Insn, Pred->getTerminator()))
+        return nullptr;
+  }
+
+  Builder.SetInsertPoint(&*BB->begin());
+  auto *PN = Builder.CreatePHI(Sel.getType(), Inputs.size());
+  for (auto *Pred : predecessors(BB))
+    PN->addIncoming(Inputs[Pred], Pred);
+  PN->takeName(&Sel);
+  return PN;
+}
+
+static Instruction *foldSelectToPhi(SelectInst &Sel, const DominatorTree &DT,
+                                    InstCombiner::BuilderTy &Builder) {
+  // Try to replace this select with Phi in one of these blocks.
+  SmallSetVector<BasicBlock *, 4> CandidateBlocks;
+  CandidateBlocks.insert(Sel.getParent());
+  for (Value *V : Sel.operands())
+    if (auto *I = dyn_cast<Instruction>(V))
+      CandidateBlocks.insert(I->getParent());
+
+  for (BasicBlock *BB : CandidateBlocks)
+    if (auto *PN = foldSelectToPhiImpl(Sel, BB, DT, Builder))
+      return PN;
+  return nullptr;
+}
+
+static Value *foldSelectWithFrozenICmp(SelectInst &Sel, InstCombiner::BuilderTy &Builder) {
+  FreezeInst *FI = dyn_cast<FreezeInst>(Sel.getCondition());
+  if (!FI)
+    return nullptr;
+
+  Value *Cond = FI->getOperand(0);
+  Value *TrueVal = Sel.getTrueValue(), *FalseVal = Sel.getFalseValue();
+
+  //   select (freeze(x == y)), x, y --> y
+  //   select (freeze(x != y)), x, y --> x
+  // The freeze should be only used by this select. Otherwise, remaining uses of
+  // the freeze can observe a contradictory value.
+  //   c = freeze(x == y)   ; Let's assume that y = poison & x = 42; c is 0 or 1
+  //   a = select c, x, y   ;
+  //   f(a, c)              ; f(poison, 1) cannot happen, but if a is folded
+  //                        ; to y, this can happen.
+  CmpInst::Predicate Pred;
+  if (FI->hasOneUse() &&
+      match(Cond, m_c_ICmp(Pred, m_Specific(TrueVal), m_Specific(FalseVal))) &&
+      (Pred == ICmpInst::ICMP_EQ || Pred == ICmpInst::ICMP_NE)) {
+    return Pred == ICmpInst::ICMP_EQ ? FalseVal : TrueVal;
+  }
+
+  return nullptr;
+}
+
+Instruction *InstCombinerImpl::foldAndOrOfSelectUsingImpliedCond(Value *Op,
+                                                                 SelectInst &SI,
+                                                                 bool IsAnd) {
+  Value *CondVal = SI.getCondition();
+  Value *A = SI.getTrueValue();
+  Value *B = SI.getFalseValue();
+
+  assert(Op->getType()->isIntOrIntVectorTy(1) &&
+         "Op must be either i1 or vector of i1.");
+
+  Optional<bool> Res = isImpliedCondition(Op, CondVal, DL, IsAnd);
+  if (!Res)
+    return nullptr;
+
+  Value *Zero = Constant::getNullValue(A->getType());
+  Value *One = Constant::getAllOnesValue(A->getType());
+
+  if (*Res == true) {
+    if (IsAnd)
+      // select op, (select cond, A, B), false => select op, A, false
+      // and    op, (select cond, A, B)        => select op, A, false
+      //   if op = true implies condval = true.
+      return SelectInst::Create(Op, A, Zero);
+    else
+      // select op, true, (select cond, A, B) => select op, true, A
+      // or     op, (select cond, A, B)       => select op, true, A
+      //   if op = false implies condval = true.
+      return SelectInst::Create(Op, One, A);
+  } else {
+    if (IsAnd)
+      // select op, (select cond, A, B), false => select op, B, false
+      // and    op, (select cond, A, B)        => select op, B, false
+      //   if op = true implies condval = false.
+      return SelectInst::Create(Op, B, Zero);
+    else
+      // select op, true, (select cond, A, B) => select op, true, B
+      // or     op, (select cond, A, B)       => select op, true, B
+      //   if op = false implies condval = false.
+      return SelectInst::Create(Op, One, B);
+  }
+}
+
+Instruction *InstCombinerImpl::visitSelectInst(SelectInst &SI) {
   Value *CondVal = SI.getCondition();
   Value *TrueVal = SI.getTrueValue();
   Value *FalseVal = SI.getFalseValue();
@@ -1770,7 +2634,7 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
   // don't simplify it so loop unswitch can know the equality comparison
   // may have an undef operand. This is a workaround for PR31652 caused by
   // descrepancy about branch on undef between LoopUnswitch and GVN.
-  if (isa<UndefValue>(TrueVal) || isa<UndefValue>(FalseVal)) {
+  if (match(TrueVal, m_Undef()) || match(FalseVal, m_Undef())) {
     if (llvm::any_of(SI.users(), [&](User *U) {
           ICmpInst *CI = dyn_cast<ICmpInst>(U);
           if (CI && CI->isEquality())
@@ -1788,57 +2652,157 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
   if (Instruction *I = canonicalizeSelectToShuffle(SI))
     return I;
 
-  // Canonicalize a one-use integer compare with a non-canonical predicate by
-  // inverting the predicate and swapping the select operands. This matches a
-  // compare canonicalization for conditional branches.
-  // TODO: Should we do the same for FP compares?
-  CmpInst::Predicate Pred;
-  if (match(CondVal, m_OneUse(m_ICmp(Pred, m_Value(), m_Value()))) &&
-      !isCanonicalPredicate(Pred)) {
-    // Swap true/false values and condition.
-    CmpInst *Cond = cast<CmpInst>(CondVal);
-    Cond->setPredicate(CmpInst::getInversePredicate(Pred));
-    SI.setOperand(1, FalseVal);
-    SI.setOperand(2, TrueVal);
-    SI.swapProfMetadata();
-    Worklist.Add(Cond);
-    return &SI;
-  }
+  if (Instruction *I = canonicalizeScalarSelectOfVecs(SI, *this))
+    return I;
 
-  if (SelType->isIntOrIntVectorTy(1) &&
+  CmpInst::Predicate Pred;
+
+  // Avoid potential infinite loops by checking for non-constant condition.
+  // TODO: Can we assert instead by improving canonicalizeSelectToShuffle()?
+  //       Scalar select must have simplified?
+  if (SelType->isIntOrIntVectorTy(1) && !isa<Constant>(CondVal) &&
       TrueVal->getType() == CondVal->getType()) {
-    if (match(TrueVal, m_One())) {
+    // Folding select to and/or i1 isn't poison safe in general. impliesPoison
+    // checks whether folding it does not convert a well-defined value into
+    // poison.
+    if (match(TrueVal, m_One()) && impliesPoison(FalseVal, CondVal)) {
       // Change: A = select B, true, C --> A = or B, C
       return BinaryOperator::CreateOr(CondVal, FalseVal);
     }
-    if (match(TrueVal, m_Zero())) {
-      // Change: A = select B, false, C --> A = and !B, C
-      Value *NotCond = Builder.CreateNot(CondVal, "not." + CondVal->getName());
-      return BinaryOperator::CreateAnd(NotCond, FalseVal);
-    }
-    if (match(FalseVal, m_Zero())) {
+    if (match(FalseVal, m_Zero()) && impliesPoison(TrueVal, CondVal)) {
       // Change: A = select B, C, false --> A = and B, C
       return BinaryOperator::CreateAnd(CondVal, TrueVal);
     }
-    if (match(FalseVal, m_One())) {
-      // Change: A = select B, C, true --> A = or !B, C
+
+    auto *One = ConstantInt::getTrue(SelType);
+    auto *Zero = ConstantInt::getFalse(SelType);
+
+    // We match the "full" 0 or 1 constant here to avoid a potential infinite
+    // loop with vectors that may have undefined/poison elements.
+    // select a, false, b -> select !a, b, false
+    if (match(TrueVal, m_Specific(Zero))) {
       Value *NotCond = Builder.CreateNot(CondVal, "not." + CondVal->getName());
-      return BinaryOperator::CreateOr(NotCond, TrueVal);
+      return SelectInst::Create(NotCond, FalseVal, Zero);
+    }
+    // select a, b, true -> select !a, true, b
+    if (match(FalseVal, m_Specific(One))) {
+      Value *NotCond = Builder.CreateNot(CondVal, "not." + CondVal->getName());
+      return SelectInst::Create(NotCond, One, TrueVal);
     }
 
-    // select a, a, b  -> a | b
-    // select a, b, a  -> a & b
+    // select a, a, b -> select a, true, b
     if (CondVal == TrueVal)
-      return BinaryOperator::CreateOr(CondVal, FalseVal);
+      return replaceOperand(SI, 1, One);
+    // select a, b, a -> select a, b, false
     if (CondVal == FalseVal)
-      return BinaryOperator::CreateAnd(CondVal, TrueVal);
+      return replaceOperand(SI, 2, Zero);
 
-    // select a, ~a, b -> (~a) & b
-    // select a, b, ~a -> (~a) | b
+    // select a, !a, b -> select !a, b, false
     if (match(TrueVal, m_Not(m_Specific(CondVal))))
-      return BinaryOperator::CreateAnd(TrueVal, FalseVal);
+      return SelectInst::Create(TrueVal, FalseVal, Zero);
+    // select a, b, !a -> select !a, true, b
     if (match(FalseVal, m_Not(m_Specific(CondVal))))
-      return BinaryOperator::CreateOr(TrueVal, FalseVal);
+      return SelectInst::Create(FalseVal, One, TrueVal);
+
+    Value *A, *B;
+
+    // DeMorgan in select form: !a && !b --> !(a || b)
+    // select !a, !b, false --> not (select a, true, b)
+    if (match(&SI, m_LogicalAnd(m_Not(m_Value(A)), m_Not(m_Value(B)))) &&
+        (CondVal->hasOneUse() || TrueVal->hasOneUse()) &&
+        !match(A, m_ConstantExpr()) && !match(B, m_ConstantExpr()))
+      return BinaryOperator::CreateNot(Builder.CreateSelect(A, One, B));
+
+    // DeMorgan in select form: !a || !b --> !(a && b)
+    // select !a, true, !b --> not (select a, b, false)
+    if (match(&SI, m_LogicalOr(m_Not(m_Value(A)), m_Not(m_Value(B)))) &&
+        (CondVal->hasOneUse() || FalseVal->hasOneUse()) &&
+        !match(A, m_ConstantExpr()) && !match(B, m_ConstantExpr()))
+      return BinaryOperator::CreateNot(Builder.CreateSelect(A, B, Zero));
+
+    // select (select a, true, b), true, b -> select a, true, b
+    if (match(CondVal, m_Select(m_Value(A), m_One(), m_Value(B))) &&
+        match(TrueVal, m_One()) && match(FalseVal, m_Specific(B)))
+      return replaceOperand(SI, 0, A);
+    // select (select a, b, false), b, false -> select a, b, false
+    if (match(CondVal, m_Select(m_Value(A), m_Value(B), m_Zero())) &&
+        match(TrueVal, m_Specific(B)) && match(FalseVal, m_Zero()))
+      return replaceOperand(SI, 0, A);
+
+    if (!SelType->isVectorTy()) {
+      if (Value *S = simplifyWithOpReplaced(TrueVal, CondVal, One, SQ,
+                                            /* AllowRefinement */ true))
+        return replaceOperand(SI, 1, S);
+      if (Value *S = simplifyWithOpReplaced(FalseVal, CondVal, Zero, SQ,
+                                            /* AllowRefinement */ true))
+        return replaceOperand(SI, 2, S);
+    }
+
+    if (match(FalseVal, m_Zero()) || match(TrueVal, m_One())) {
+      Use *Y = nullptr;
+      bool IsAnd = match(FalseVal, m_Zero()) ? true : false;
+      Value *Op1 = IsAnd ? TrueVal : FalseVal;
+      if (isCheckForZeroAndMulWithOverflow(CondVal, Op1, IsAnd, Y)) {
+        auto *FI = new FreezeInst(*Y, (*Y)->getName() + ".fr");
+        InsertNewInstBefore(FI, *cast<Instruction>(Y->getUser()));
+        replaceUse(*Y, FI);
+        return replaceInstUsesWith(SI, Op1);
+      }
+
+      if (auto *Op1SI = dyn_cast<SelectInst>(Op1))
+        if (auto *I = foldAndOrOfSelectUsingImpliedCond(CondVal, *Op1SI,
+                                                        /* IsAnd */ IsAnd))
+          return I;
+
+      if (auto *ICmp0 = dyn_cast<ICmpInst>(CondVal))
+        if (auto *ICmp1 = dyn_cast<ICmpInst>(Op1))
+          if (auto *V = foldAndOrOfICmpsOfAndWithPow2(ICmp0, ICmp1, &SI, IsAnd,
+                                                      /* IsLogical */ true))
+            return replaceInstUsesWith(SI, V);
+    }
+
+    // select (select a, true, b), c, false -> select a, c, false
+    // select c, (select a, true, b), false -> select c, a, false
+    //   if c implies that b is false.
+    if (match(CondVal, m_Select(m_Value(A), m_One(), m_Value(B))) &&
+        match(FalseVal, m_Zero())) {
+      Optional<bool> Res = isImpliedCondition(TrueVal, B, DL);
+      if (Res && *Res == false)
+        return replaceOperand(SI, 0, A);
+    }
+    if (match(TrueVal, m_Select(m_Value(A), m_One(), m_Value(B))) &&
+        match(FalseVal, m_Zero())) {
+      Optional<bool> Res = isImpliedCondition(CondVal, B, DL);
+      if (Res && *Res == false)
+        return replaceOperand(SI, 1, A);
+    }
+    // select c, true, (select a, b, false)  -> select c, true, a
+    // select (select a, b, false), true, c  -> select a, true, c
+    //   if c = false implies that b = true
+    if (match(TrueVal, m_One()) &&
+        match(FalseVal, m_Select(m_Value(A), m_Value(B), m_Zero()))) {
+      Optional<bool> Res = isImpliedCondition(CondVal, B, DL, false);
+      if (Res && *Res == true)
+        return replaceOperand(SI, 2, A);
+    }
+    if (match(CondVal, m_Select(m_Value(A), m_Value(B), m_Zero())) &&
+        match(TrueVal, m_One())) {
+      Optional<bool> Res = isImpliedCondition(FalseVal, B, DL, false);
+      if (Res && *Res == true)
+        return replaceOperand(SI, 0, A);
+    }
+
+    // sel (sel c, a, false), true, (sel !c, b, false) -> sel c, a, b
+    // sel (sel !c, a, false), true, (sel c, b, false) -> sel c, b, a
+    Value *C1, *C2;
+    if (match(CondVal, m_Select(m_Value(C1), m_Value(A), m_Zero())) &&
+        match(TrueVal, m_One()) &&
+        match(FalseVal, m_Select(m_Value(C2), m_Value(B), m_Zero()))) {
+      if (match(C2, m_Not(m_Specific(C1)))) // first case
+        return SelectInst::Create(C1, A, B);
+      else if (match(C1, m_Not(m_Specific(C2)))) // second case
+        return SelectInst::Create(C2, B, A);
+    }
   }
 
   // Selecting between two integer or vector splat integer constants?
@@ -1847,7 +2811,10 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
   // select i1 %c, <2 x i8> <1, 1>, <2 x i8> <0, 0>
   // because that may need 3 instructions to splat the condition value:
   // extend, insertelement, shufflevector.
-  if (SelType->isIntOrIntVectorTy() &&
+  //
+  // Do not handle i1 TrueVal and FalseVal otherwise would result in
+  // zext/sext i1 to i1.
+  if (SelType->isIntOrIntVectorTy() && !SelType->isIntOrIntVectorTy(1) &&
       CondVal->getType()->isVectorTy() == SelType->isVectorTy()) {
     // select C, 1, 0 -> zext C to int
     if (match(TrueVal, m_One()) && match(FalseVal, m_Zero()))
@@ -1870,41 +2837,25 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
     }
   }
 
-  // See if we are selecting two values based on a comparison of the two values.
-  if (FCmpInst *FCI = dyn_cast<FCmpInst>(CondVal)) {
-    if (FCI->getOperand(0) == TrueVal && FCI->getOperand(1) == FalseVal) {
+  if (auto *FCmp = dyn_cast<FCmpInst>(CondVal)) {
+    Value *Cmp0 = FCmp->getOperand(0), *Cmp1 = FCmp->getOperand(1);
+    // Are we selecting a value based on a comparison of the two values?
+    if ((Cmp0 == TrueVal && Cmp1 == FalseVal) ||
+        (Cmp0 == FalseVal && Cmp1 == TrueVal)) {
       // Canonicalize to use ordered comparisons by swapping the select
       // operands.
       //
       // e.g.
       // (X ugt Y) ? X : Y -> (X ole Y) ? Y : X
-      if (FCI->hasOneUse() && FCmpInst::isUnordered(FCI->getPredicate())) {
-        FCmpInst::Predicate InvPred = FCI->getInversePredicate();
+      if (FCmp->hasOneUse() && FCmpInst::isUnordered(FCmp->getPredicate())) {
+        FCmpInst::Predicate InvPred = FCmp->getInversePredicate();
         IRBuilder<>::FastMathFlagGuard FMFG(Builder);
-        Builder.setFastMathFlags(FCI->getFastMathFlags());
-        Value *NewCond = Builder.CreateFCmp(InvPred, TrueVal, FalseVal,
-                                            FCI->getName() + ".inv");
-
-        return SelectInst::Create(NewCond, FalseVal, TrueVal,
-                                  SI.getName() + ".p");
-      }
-
-      // NOTE: if we wanted to, this is where to detect MIN/MAX
-    } else if (FCI->getOperand(0) == FalseVal && FCI->getOperand(1) == TrueVal){
-      // Canonicalize to use ordered comparisons by swapping the select
-      // operands.
-      //
-      // e.g.
-      // (X ugt Y) ? X : Y -> (X ole Y) ? X : Y
-      if (FCI->hasOneUse() && FCmpInst::isUnordered(FCI->getPredicate())) {
-        FCmpInst::Predicate InvPred = FCI->getInversePredicate();
-        IRBuilder<>::FastMathFlagGuard FMFG(Builder);
-        Builder.setFastMathFlags(FCI->getFastMathFlags());
-        Value *NewCond = Builder.CreateFCmp(InvPred, FalseVal, TrueVal,
-                                            FCI->getName() + ".inv");
-
-        return SelectInst::Create(NewCond, FalseVal, TrueVal,
-                                  SI.getName() + ".p");
+        // FIXME: The FMF should propagate from the select, not the fcmp.
+        Builder.setFastMathFlags(FCmp->getFastMathFlags());
+        Value *NewCond = Builder.CreateFCmp(InvPred, Cmp0, Cmp1,
+                                            FCmp->getName() + ".inv");
+        Value *NewSel = Builder.CreateSelect(NewCond, FalseVal, TrueVal);
+        return replaceInstUsesWith(SI, NewSel);
       }
 
       // NOTE: if we wanted to, this is where to detect MIN/MAX
@@ -1915,15 +2866,13 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
   // fast-math-flags (nsz) or fsub with +0.0 (not fneg) for this to work. We
   // also require nnan because we do not want to unintentionally change the
   // sign of a NaN value.
-  // FIXME: These folds should test/propagate FMF from the select, not the
-  //        fsub or fneg.
   // (X <= +/-0.0) ? (0.0 - X) : X --> fabs(X)
   Instruction *FSub;
   if (match(CondVal, m_FCmp(Pred, m_Specific(FalseVal), m_AnyZeroFP())) &&
       match(TrueVal, m_FSub(m_PosZeroFP(), m_Specific(FalseVal))) &&
       match(TrueVal, m_Instruction(FSub)) && FSub->hasNoNaNs() &&
       (Pred == FCmpInst::FCMP_OLE || Pred == FCmpInst::FCMP_ULE)) {
-    Value *Fabs = Builder.CreateUnaryIntrinsic(Intrinsic::fabs, FalseVal, FSub);
+    Value *Fabs = Builder.CreateUnaryIntrinsic(Intrinsic::fabs, FalseVal, &SI);
     return replaceInstUsesWith(SI, Fabs);
   }
   // (X >  +/-0.0) ? X : (0.0 - X) --> fabs(X)
@@ -1931,7 +2880,7 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
       match(FalseVal, m_FSub(m_PosZeroFP(), m_Specific(TrueVal))) &&
       match(FalseVal, m_Instruction(FSub)) && FSub->hasNoNaNs() &&
       (Pred == FCmpInst::FCMP_OGT || Pred == FCmpInst::FCMP_UGT)) {
-    Value *Fabs = Builder.CreateUnaryIntrinsic(Intrinsic::fabs, TrueVal, FSub);
+    Value *Fabs = Builder.CreateUnaryIntrinsic(Intrinsic::fabs, TrueVal, &SI);
     return replaceInstUsesWith(SI, Fabs);
   }
   // With nnan and nsz:
@@ -1940,11 +2889,11 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
   Instruction *FNeg;
   if (match(CondVal, m_FCmp(Pred, m_Specific(FalseVal), m_AnyZeroFP())) &&
       match(TrueVal, m_FNeg(m_Specific(FalseVal))) &&
-      match(TrueVal, m_Instruction(FNeg)) &&
-      FNeg->hasNoNaNs() && FNeg->hasNoSignedZeros() &&
+      match(TrueVal, m_Instruction(FNeg)) && FNeg->hasNoNaNs() &&
+      FNeg->hasNoSignedZeros() && SI.hasNoSignedZeros() &&
       (Pred == FCmpInst::FCMP_OLT || Pred == FCmpInst::FCMP_OLE ||
        Pred == FCmpInst::FCMP_ULT || Pred == FCmpInst::FCMP_ULE)) {
-    Value *Fabs = Builder.CreateUnaryIntrinsic(Intrinsic::fabs, FalseVal, FNeg);
+    Value *Fabs = Builder.CreateUnaryIntrinsic(Intrinsic::fabs, FalseVal, &SI);
     return replaceInstUsesWith(SI, Fabs);
   }
   // With nnan and nsz:
@@ -1952,11 +2901,11 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
   // (X >= +/-0.0) ? X : -X --> fabs(X)
   if (match(CondVal, m_FCmp(Pred, m_Specific(TrueVal), m_AnyZeroFP())) &&
       match(FalseVal, m_FNeg(m_Specific(TrueVal))) &&
-      match(FalseVal, m_Instruction(FNeg)) &&
-      FNeg->hasNoNaNs() && FNeg->hasNoSignedZeros() &&
+      match(FalseVal, m_Instruction(FNeg)) && FNeg->hasNoNaNs() &&
+      FNeg->hasNoSignedZeros() && SI.hasNoSignedZeros() &&
       (Pred == FCmpInst::FCMP_OGT || Pred == FCmpInst::FCMP_OGE ||
        Pred == FCmpInst::FCMP_UGT || Pred == FCmpInst::FCMP_UGE)) {
-    Value *Fabs = Builder.CreateUnaryIntrinsic(Intrinsic::fabs, TrueVal, FNeg);
+    Value *Fabs = Builder.CreateUnaryIntrinsic(Intrinsic::fabs, TrueVal, &SI);
     return replaceInstUsesWith(SI, Fabs);
   }
 
@@ -1967,6 +2916,10 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
 
   if (Instruction *Add = foldAddSubSelect(SI, Builder))
     return Add;
+  if (Instruction *Add = foldOverflowingAddSubSelect(SI, Builder))
+    return Add;
+  if (Instruction *Or = foldSetClearBits(SI, Builder))
+    return Or;
 
   // Turn (select C, (op X, Y), (op X, Z)) -> (op X, (select C, Y, Z))
   auto *TI = dyn_cast<Instruction>(TrueVal);
@@ -1977,6 +2930,31 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
 
   if (Instruction *I = foldSelectExtConst(SI))
     return I;
+
+  // Fold (select C, (gep Ptr, Idx), Ptr) -> (gep Ptr, (select C, Idx, 0))
+  // Fold (select C, Ptr, (gep Ptr, Idx)) -> (gep Ptr, (select C, 0, Idx))
+  auto SelectGepWithBase = [&](GetElementPtrInst *Gep, Value *Base,
+                               bool Swap) -> GetElementPtrInst * {
+    Value *Ptr = Gep->getPointerOperand();
+    if (Gep->getNumOperands() != 2 || Gep->getPointerOperand() != Base ||
+        !Gep->hasOneUse())
+      return nullptr;
+    Type *ElementType = Gep->getResultElementType();
+    Value *Idx = Gep->getOperand(1);
+    Value *NewT = Idx;
+    Value *NewF = Constant::getNullValue(Idx->getType());
+    if (Swap)
+      std::swap(NewT, NewF);
+    Value *NewSI =
+        Builder.CreateSelect(CondVal, NewT, NewF, SI.getName() + ".idx", &SI);
+    return GetElementPtrInst::Create(ElementType, Ptr, {NewSI});
+  };
+  if (auto *TrueGep = dyn_cast<GetElementPtrInst>(TrueVal))
+    if (auto *NewGep = SelectGepWithBase(TrueGep, FalseVal, false))
+      return NewGep;
+  if (auto *FalseGep = dyn_cast<GetElementPtrInst>(FalseVal))
+    if (auto *NewGep = SelectGepWithBase(FalseGep, TrueVal, true))
+      return NewGep;
 
   // See if we can fold the select into one of our operands.
   if (SelType->isIntOrIntVectorTy() || SelType->isFPOrFPVectorTy()) {
@@ -2013,16 +2991,17 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
           (LHS->getType()->isFPOrFPVectorTy() &&
            ((CmpLHS != LHS && CmpLHS != RHS) ||
             (CmpRHS != LHS && CmpRHS != RHS)))) {
-        CmpInst::Predicate Pred = getMinMaxPred(SPF, SPR.Ordered);
+        CmpInst::Predicate MinMaxPred = getMinMaxPred(SPF, SPR.Ordered);
 
         Value *Cmp;
-        if (CmpInst::isIntPredicate(Pred)) {
-          Cmp = Builder.CreateICmp(Pred, LHS, RHS);
+        if (CmpInst::isIntPredicate(MinMaxPred)) {
+          Cmp = Builder.CreateICmp(MinMaxPred, LHS, RHS);
         } else {
           IRBuilder<>::FastMathFlagGuard FMFG(Builder);
-          auto FMF = cast<FPMathOperator>(SI.getCondition())->getFastMathFlags();
+          auto FMF =
+              cast<FPMathOperator>(SI.getCondition())->getFastMathFlags();
           Builder.setFastMathFlags(FMF);
-          Cmp = Builder.CreateFCmp(Pred, LHS, RHS);
+          Cmp = Builder.CreateFCmp(MinMaxPred, LHS, RHS);
         }
 
         Value *NewSI = Builder.CreateSelect(Cmp, LHS, RHS, SI.getName(), &SI);
@@ -2040,9 +3019,9 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
       auto moveNotAfterMinMax = [&](Value *X, Value *Y) -> Instruction * {
         Value *A;
         if (match(X, m_Not(m_Value(A))) && !X->hasNUsesOrMore(3) &&
-            !IsFreeToInvert(A, A->hasOneUse()) &&
+            !isFreeToInvert(A, A->hasOneUse()) &&
             // Passing false to only consider m_Not and constants.
-            IsFreeToInvert(Y, false)) {
+            isFreeToInvert(Y, false)) {
           Value *B = Builder.CreateNot(Y);
           Value *NewMinMax = createMinMax(Builder, getInverseMinMaxFlavor(SPF),
                                           A, B);
@@ -2069,6 +3048,8 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
         return I;
 
       if (Instruction *I = factorizeMinMaxTree(SPF, LHS, RHS, Builder))
+        return I;
+      if (Instruction *I = matchSAddSubSat(SI))
         return I;
     }
   }
@@ -2100,16 +3081,16 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
       if (TrueSI->getCondition() == CondVal) {
         if (SI.getTrueValue() == TrueSI->getTrueValue())
           return nullptr;
-        SI.setOperand(1, TrueSI->getTrueValue());
-        return &SI;
+        return replaceOperand(SI, 1, TrueSI->getTrueValue());
       }
       // select(C0, select(C1, a, b), b) -> select(C0&C1, a, b)
-      // We choose this as normal form to enable folding on the And and shortening
-      // paths for the values (this helps GetUnderlyingObjects() for example).
+      // We choose this as normal form to enable folding on the And and
+      // shortening paths for the values (this helps getUnderlyingObjects() for
+      // example).
       if (TrueSI->getFalseValue() == FalseVal && TrueSI->hasOneUse()) {
-        Value *And = Builder.CreateAnd(CondVal, TrueSI->getCondition());
-        SI.setOperand(0, And);
-        SI.setOperand(1, TrueSI->getTrueValue());
+        Value *And = Builder.CreateLogicalAnd(CondVal, TrueSI->getCondition());
+        replaceOperand(SI, 0, And);
+        replaceOperand(SI, 1, TrueSI->getTrueValue());
         return &SI;
       }
     }
@@ -2120,14 +3101,13 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
       if (FalseSI->getCondition() == CondVal) {
         if (SI.getFalseValue() == FalseSI->getFalseValue())
           return nullptr;
-        SI.setOperand(2, FalseSI->getFalseValue());
-        return &SI;
+        return replaceOperand(SI, 2, FalseSI->getFalseValue());
       }
       // select(C0, a, select(C1, a, b)) -> select(C0|C1, a, b)
       if (FalseSI->getTrueValue() == TrueVal && FalseSI->hasOneUse()) {
-        Value *Or = Builder.CreateOr(CondVal, FalseSI->getCondition());
-        SI.setOperand(0, Or);
-        SI.setOperand(2, FalseSI->getFalseValue());
+        Value *Or = Builder.CreateLogicalOr(CondVal, FalseSI->getCondition());
+        replaceOperand(SI, 0, Or);
+        replaceOperand(SI, 2, FalseSI->getFalseValue());
         return &SI;
       }
     }
@@ -2154,15 +3134,15 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
       canMergeSelectThroughBinop(TrueBO)) {
     if (auto *TrueBOSI = dyn_cast<SelectInst>(TrueBO->getOperand(0))) {
       if (TrueBOSI->getCondition() == CondVal) {
-        TrueBO->setOperand(0, TrueBOSI->getTrueValue());
-        Worklist.Add(TrueBO);
+        replaceOperand(*TrueBO, 0, TrueBOSI->getTrueValue());
+        Worklist.push(TrueBO);
         return &SI;
       }
     }
     if (auto *TrueBOSI = dyn_cast<SelectInst>(TrueBO->getOperand(1))) {
       if (TrueBOSI->getCondition() == CondVal) {
-        TrueBO->setOperand(1, TrueBOSI->getTrueValue());
-        Worklist.Add(TrueBO);
+        replaceOperand(*TrueBO, 1, TrueBOSI->getTrueValue());
+        Worklist.push(TrueBO);
         return &SI;
       }
     }
@@ -2174,39 +3154,31 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
       canMergeSelectThroughBinop(FalseBO)) {
     if (auto *FalseBOSI = dyn_cast<SelectInst>(FalseBO->getOperand(0))) {
       if (FalseBOSI->getCondition() == CondVal) {
-        FalseBO->setOperand(0, FalseBOSI->getFalseValue());
-        Worklist.Add(FalseBO);
+        replaceOperand(*FalseBO, 0, FalseBOSI->getFalseValue());
+        Worklist.push(FalseBO);
         return &SI;
       }
     }
     if (auto *FalseBOSI = dyn_cast<SelectInst>(FalseBO->getOperand(1))) {
       if (FalseBOSI->getCondition() == CondVal) {
-        FalseBO->setOperand(1, FalseBOSI->getFalseValue());
-        Worklist.Add(FalseBO);
+        replaceOperand(*FalseBO, 1, FalseBOSI->getFalseValue());
+        Worklist.push(FalseBO);
         return &SI;
       }
     }
   }
 
   Value *NotCond;
-  if (match(CondVal, m_Not(m_Value(NotCond)))) {
-    SI.setOperand(0, NotCond);
-    SI.setOperand(1, FalseVal);
-    SI.setOperand(2, TrueVal);
+  if (match(CondVal, m_Not(m_Value(NotCond))) &&
+      !InstCombiner::shouldAvoidAbsorbingNotIntoSelect(SI)) {
+    replaceOperand(SI, 0, NotCond);
+    SI.swapValues();
     SI.swapProfMetadata();
     return &SI;
   }
 
-  if (VectorType *VecTy = dyn_cast<VectorType>(SelType)) {
-    unsigned VWidth = VecTy->getNumElements();
-    APInt UndefElts(VWidth, 0);
-    APInt AllOnesEltMask(APInt::getAllOnesValue(VWidth));
-    if (Value *V = SimplifyDemandedVectorElts(&SI, AllOnesEltMask, UndefElts)) {
-      if (V != &SI)
-        return replaceInstUsesWith(SI, V);
-      return &SI;
-    }
-  }
+  if (Instruction *I = foldVectorSelect(SI))
+    return I;
 
   // If we can compute the condition, there's no need for a select.
   // Like the above fold, we are attempting to reduce compile-time cost by
@@ -2226,14 +3198,55 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
     return BitCastSel;
 
   // Simplify selects that test the returned flag of cmpxchg instructions.
-  if (Instruction *Select = foldSelectCmpXchg(SI))
+  if (Value *V = foldSelectCmpXchg(SI))
+    return replaceInstUsesWith(SI, V);
+
+  if (Instruction *Select = foldSelectBinOpIdentity(SI, TLI, *this))
     return Select;
 
-  if (Instruction *Select = foldSelectBinOpIdentity(SI, TLI))
-    return Select;
+  if (Instruction *Funnel = foldSelectFunnelShift(SI, Builder))
+    return Funnel;
 
-  if (Instruction *Rot = foldSelectRotate(SI))
-    return Rot;
+  if (Instruction *Copysign = foldSelectToCopysign(SI, Builder))
+    return Copysign;
+
+  if (Instruction *PN = foldSelectToPhi(SI, DT, Builder))
+    return replaceInstUsesWith(SI, PN);
+
+  if (Value *Fr = foldSelectWithFrozenICmp(SI, Builder))
+    return replaceInstUsesWith(SI, Fr);
+
+  // select(mask, mload(,,mask,0), 0) -> mload(,,mask,0)
+  // Load inst is intentionally not checked for hasOneUse()
+  if (match(FalseVal, m_Zero()) &&
+      match(TrueVal, m_MaskedLoad(m_Value(), m_Value(), m_Specific(CondVal),
+                                  m_CombineOr(m_Undef(), m_Zero())))) {
+    auto *MaskedLoad = cast<IntrinsicInst>(TrueVal);
+    if (isa<UndefValue>(MaskedLoad->getArgOperand(3)))
+      MaskedLoad->setArgOperand(3, FalseVal /* Zero */);
+    return replaceInstUsesWith(SI, MaskedLoad);
+  }
+
+  Value *Mask;
+  if (match(TrueVal, m_Zero()) &&
+      match(FalseVal, m_MaskedLoad(m_Value(), m_Value(), m_Value(Mask),
+                                   m_CombineOr(m_Undef(), m_Zero()))) &&
+      (CondVal->getType() == Mask->getType())) {
+    // We can remove the select by ensuring the load zeros all lanes the
+    // select would have.  We determine this by proving there is no overlap
+    // between the load and select masks.
+    // (i.e (load_mask & select_mask) == 0 == no overlap)
+    bool CanMergeSelectIntoLoad = false;
+    if (Value *V = SimplifyAndInst(CondVal, Mask, SQ.getWithInstruction(&SI)))
+      CanMergeSelectIntoLoad = match(V, m_Zero());
+
+    if (CanMergeSelectIntoLoad) {
+      auto *MaskedLoad = cast<IntrinsicInst>(FalseVal);
+      if (isa<UndefValue>(MaskedLoad->getArgOperand(3)))
+        MaskedLoad->setArgOperand(3, TrueVal /* Zero */);
+      return replaceInstUsesWith(SI, MaskedLoad);
+    }
+  }
 
   return nullptr;
 }

@@ -15,14 +15,18 @@
 #include "clang/AST/ExternalASTSource.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclarationName.h"
+#include "clang/Basic/FileManager.h"
 #include "clang/Basic/IdentifierTable.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Module.h"
+#include "clang/Basic/SourceManager.h"
 #include "llvm/ADT/None.h"
 #include "llvm/Support/ErrorHandling.h"
 #include <cstdint>
 
 using namespace clang;
+
+char ExternalASTSource::ID;
 
 ExternalASTSource::~ExternalASTSource() = default;
 
@@ -30,7 +34,7 @@ uint32_t ExternalASTSource::getGeneration(const ASTContext &C) const {
   return C.getGeneration();
 }
 
-llvm::Optional<ExternalASTSource::ASTSourceDescriptor>
+llvm::Optional<ASTSourceDescriptor>
 ExternalASTSource::getSourceDescriptor(unsigned ID) {
   return None;
 }
@@ -38,21 +42,6 @@ ExternalASTSource::getSourceDescriptor(unsigned ID) {
 ExternalASTSource::ExtKind
 ExternalASTSource::hasExternalDefinitions(const Decl *D) {
   return EK_ReplyHazy;
-}
-
-ExternalASTSource::ASTSourceDescriptor::ASTSourceDescriptor(const Module &M)
-  : Signature(M.Signature), ClangModule(&M) {
-  if (M.Directory)
-    Path = M.Directory->getName();
-  if (auto *File = M.getASTFile())
-    ASTFile = File->getName();
-}
-
-std::string ExternalASTSource::ASTSourceDescriptor::getModuleName() const {
-  if (ClangModule)
-    return ClangModule->Name;
-  else
-    return PCHModuleName;
 }
 
 void ExternalASTSource::FindFileRegionDecls(FileID File, unsigned Offset,

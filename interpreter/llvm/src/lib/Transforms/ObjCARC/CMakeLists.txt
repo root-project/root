@@ -1,4 +1,4 @@
-add_llvm_library(LLVMObjCARCOpts
+add_llvm_component_library(LLVMObjCARCOpts
   ObjCARC.cpp
   ObjCARCOpts.cpp
   ObjCARCExpand.cpp
@@ -14,4 +14,13 @@ add_llvm_library(LLVMObjCARCOpts
 
   DEPENDS
   intrinsics_gen
+
+  COMPONENT_NAME
+  ObjCARC
+
+  LINK_COMPONENTS
+  Analysis
+  Core
+  Support
+  TransformUtils
   )

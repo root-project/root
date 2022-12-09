@@ -32,7 +32,6 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/Mutex.h"
-#include "llvm/Support/UniqueLock.h"
 #include "llvm/Support/raw_ostream.h"
 #include <cassert>
 #include <cmath>
@@ -41,6 +40,7 @@
 #include <cstdio>
 #include <cstring>
 #include <map>
+#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -130,6 +130,7 @@ static ffi_type *ffiTypeFor(Type *Ty) {
         case 32: return &ffi_type_sint32;
         case 64: return &ffi_type_sint64;
       }
+      llvm_unreachable("Unhandled integer type bitwidth");
     case Type::FloatTyID:   return &ffi_type_float;
     case Type::DoubleTyID:  return &ffi_type_double;
     case Type::PointerTyID: return &ffi_type_pointer;
@@ -166,6 +167,7 @@ static void *ffiValueFor(Type *Ty, const GenericValue &AV,
           return ArgDataPtr;
         }
       }
+      llvm_unreachable("Unhandled integer type bitwidth");
     case Type::FloatTyID: {
       float *FloatPtr = (float *) ArgDataPtr;
       *FloatPtr = AV.FloatVal;
@@ -258,7 +260,7 @@ GenericValue Interpreter::callExternalFunction(Function *F,
                                                ArrayRef<GenericValue> ArgVals) {
   TheInterpreter = this;
 
-  unique_lock<sys::Mutex> Guard(*FunctionsLock);
+  std::unique_lock<sys::Mutex> Guard(*FunctionsLock);
 
   // Do a lookup to see if the function is in our cache... this should just be a
   // deferred annotation!
@@ -274,7 +276,7 @@ GenericValue Interpreter::callExternalFunction(Function *F,
   RawFunc RawFn;
   if (RF == RawFunctions->end()) {
     RawFn = (RawFunc)(intptr_t)
-      sys::DynamicLibrary::SearchForAddressOfSymbol(F->getName());
+      sys::DynamicLibrary::SearchForAddressOfSymbol(std::string(F->getName()));
     if (!RawFn)
       RawFn = (RawFunc)(intptr_t)getPointerToGlobalIfAvailable(F);
     if (RawFn != 0)
@@ -419,7 +421,7 @@ static GenericValue lle_X_printf(FunctionType *FT,
   char Buffer[10000];
   std::vector<GenericValue> NewArgs;
   NewArgs.push_back(PTOGV((void*)&Buffer[0]));
-  NewArgs.insert(NewArgs.end(), Args.begin(), Args.end());
+  llvm::append_range(NewArgs, Args);
   GenericValue GV = lle_X_sprintf(FT, NewArgs);
   outs() << Buffer;
   return GV;

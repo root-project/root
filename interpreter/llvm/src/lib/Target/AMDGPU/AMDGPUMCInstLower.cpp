@@ -13,12 +13,10 @@
 //
 
 #include "AMDGPUAsmPrinter.h"
-#include "AMDGPUSubtarget.h"
 #include "AMDGPUTargetMachine.h"
 #include "MCTargetDesc/AMDGPUInstPrinter.h"
 #include "MCTargetDesc/AMDGPUMCTargetDesc.h"
 #include "R600AsmPrinter.h"
-#include "SIInstrInfo.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineInstr.h"
 #include "llvm/IR/Constants.h"
@@ -42,9 +40,6 @@ class AMDGPUMCInstLower {
   MCContext &Ctx;
   const TargetSubtargetInfo &ST;
   const AsmPrinter &AP;
-
-  const MCExpr *getLongBranchBlockExpr(const MachineBasicBlock &SrcBB,
-                                       const MachineOperand &MO) const;
 
 public:
   AMDGPUMCInstLower(MCContext &ctx, const TargetSubtargetInfo &ST,
@@ -97,54 +92,21 @@ static MCSymbolRefExpr::VariantKind getVariantKind(unsigned MOFlags) {
   }
 }
 
-const MCExpr *AMDGPUMCInstLower::getLongBranchBlockExpr(
-  const MachineBasicBlock &SrcBB,
-  const MachineOperand &MO) const {
-  const MCExpr *DestBBSym
-    = MCSymbolRefExpr::create(MO.getMBB()->getSymbol(), Ctx);
-  const MCExpr *SrcBBSym = MCSymbolRefExpr::create(SrcBB.getSymbol(), Ctx);
-
-  // FIXME: The first half of this assert should be removed. This should
-  // probably be PC relative instead of using the source block symbol, and
-  // therefore the indirect branch expansion should use a bundle.
-  assert(
-      skipDebugInstructionsForward(SrcBB.begin(), SrcBB.end())->getOpcode() ==
-          AMDGPU::S_GETPC_B64 &&
-      ST.getInstrInfo()->get(AMDGPU::S_GETPC_B64).Size == 4);
-
-  // s_getpc_b64 returns the address of next instruction.
-  const MCConstantExpr *One = MCConstantExpr::create(4, Ctx);
-  SrcBBSym = MCBinaryExpr::createAdd(SrcBBSym, One, Ctx);
-
-  if (MO.getTargetFlags() == SIInstrInfo::MO_LONG_BRANCH_FORWARD)
-    return MCBinaryExpr::createSub(DestBBSym, SrcBBSym, Ctx);
-
-  assert(MO.getTargetFlags() == SIInstrInfo::MO_LONG_BRANCH_BACKWARD);
-  return MCBinaryExpr::createSub(SrcBBSym, DestBBSym, Ctx);
-}
-
 bool AMDGPUMCInstLower::lowerOperand(const MachineOperand &MO,
                                      MCOperand &MCOp) const {
   switch (MO.getType()) {
   default:
-    llvm_unreachable("unknown operand type");
+    break;
   case MachineOperand::MO_Immediate:
     MCOp = MCOperand::createImm(MO.getImm());
     return true;
   case MachineOperand::MO_Register:
     MCOp = MCOperand::createReg(AMDGPU::getMCReg(MO.getReg(), ST));
     return true;
-  case MachineOperand::MO_MachineBasicBlock: {
-    if (MO.getTargetFlags() != 0) {
-      MCOp = MCOperand::createExpr(
-        getLongBranchBlockExpr(*MO.getParent()->getParent(), MO));
-    } else {
-      MCOp = MCOperand::createExpr(
+  case MachineOperand::MO_MachineBasicBlock:
+    MCOp = MCOperand::createExpr(
         MCSymbolRefExpr::create(MO.getMBB()->getSymbol(), Ctx));
-    }
-
     return true;
-  }
   case MachineOperand::MO_GlobalAddress: {
     const GlobalValue *GV = MO.getGlobal();
     SmallString<128> SymbolName;
@@ -170,7 +132,15 @@ bool AMDGPUMCInstLower::lowerOperand(const MachineOperand &MO,
   case MachineOperand::MO_RegisterMask:
     // Regmasks are like implicit defs.
     return false;
+  case MachineOperand::MO_MCSymbol:
+    if (MO.getTargetFlags() == SIInstrInfo::MO_FAR_BRANCH_OFFSET) {
+      MCSymbol *Sym = MO.getMCSymbol();
+      MCOp = MCOperand::createExpr(Sym->getVariableValue());
+      return true;
+    }
+    break;
   }
+  llvm_unreachable("unknown operand type");
 }
 
 void AMDGPUMCInstLower::lower(const MachineInstr *MI, MCInst &OutMI) const {
@@ -211,6 +181,10 @@ void AMDGPUMCInstLower::lower(const MachineInstr *MI, MCInst &OutMI) const {
     lowerOperand(MO, MCOp);
     OutMI.addOperand(MCOp);
   }
+
+  int FIIdx = AMDGPU::getNamedOperandIdx(MCOpcode, AMDGPU::OpName::fi);
+  if (FIIdx >= (int)OutMI.getNumOperands())
+    OutMI.addOperand(MCOperand::createImm(0));
 }
 
 bool AMDGPUAsmPrinter::lowerOperand(const MachineOperand &MO,
@@ -250,7 +224,7 @@ const MCExpr *AMDGPUAsmPrinter::lowerConstant(const Constant *CV) {
   return AsmPrinter::lowerConstant(CV);
 }
 
-void AMDGPUAsmPrinter::EmitInstruction(const MachineInstr *MI) {
+void AMDGPUAsmPrinter::emitInstruction(const MachineInstr *MI) {
   if (emitPseudoExpansionLowering(*OutStreamer, MI))
     return;
 
@@ -268,28 +242,13 @@ void AMDGPUAsmPrinter::EmitInstruction(const MachineInstr *MI) {
     const MachineBasicBlock *MBB = MI->getParent();
     MachineBasicBlock::const_instr_iterator I = ++MI->getIterator();
     while (I != MBB->instr_end() && I->isInsideBundle()) {
-      EmitInstruction(&*I);
+      emitInstruction(&*I);
       ++I;
     }
   } else {
-    // We don't want SI_MASK_BRANCH/SI_RETURN_TO_EPILOG encoded. They are
+    // We don't want these pseudo instructions encoded. They are
     // placeholder terminator instructions and should only be printed as
     // comments.
-    if (MI->getOpcode() == AMDGPU::SI_MASK_BRANCH) {
-      if (isVerbose()) {
-        SmallVector<char, 16> BBStr;
-        raw_svector_ostream Str(BBStr);
-
-        const MachineBasicBlock *MBB = MI->getOperand(0).getMBB();
-        const MCSymbolRefExpr *Expr
-          = MCSymbolRefExpr::create(MBB->getSymbol(), OutContext);
-        Expr->print(Str, MAI);
-        OutStreamer->emitRawComment(Twine(" mask branch ") + BBStr);
-      }
-
-      return;
-    }
-
     if (MI->getOpcode() == AMDGPU::SI_RETURN_TO_EPILOG) {
       if (isVerbose())
         OutStreamer->emitRawComment(" return to shader part epilog");
@@ -319,7 +278,10 @@ void AMDGPUAsmPrinter::EmitInstruction(const MachineInstr *MI) {
     // The isPseudo check really shouldn't be here, but unfortunately there are
     // some negative lit tests that depend on being able to continue through
     // here even when pseudo instructions haven't been lowered.
-    if (!MI->isPseudo() && STI.isCPUStringValid(STI.getCPU())) {
+    //
+    // We also overestimate branch sizes with the offset bug.
+    if (!MI->isPseudo() && STI.isCPUStringValid(STI.getCPU()) &&
+        (!STI.hasOffset3fBug() || !MI->isBranch())) {
       SmallVector<MCFixup, 4> Fixups;
       SmallVector<char, 16> CodeBytes;
       raw_svector_ostream CodeStream(CodeBytes);
@@ -340,7 +302,7 @@ void AMDGPUAsmPrinter::EmitInstruction(const MachineInstr *MI) {
 
       AMDGPUInstPrinter InstPrinter(*TM.getMCAsmInfo(), *STI.getInstrInfo(),
                                     *STI.getRegisterInfo());
-      InstPrinter.printInst(&TmpInst, DisasmStream, StringRef(), STI);
+      InstPrinter.printInst(&TmpInst, 0, StringRef(), STI, DisasmStream);
 
       // Disassemble instruction/operands to hex representation.
       SmallVector<MCFixup, 4> Fixups;
@@ -377,7 +339,7 @@ void R600MCInstLower::lower(const MachineInstr *MI, MCInst &OutMI) const {
   }
 }
 
-void R600AsmPrinter::EmitInstruction(const MachineInstr *MI) {
+void R600AsmPrinter::emitInstruction(const MachineInstr *MI) {
   const R600Subtarget &STI = MF->getSubtarget<R600Subtarget>();
   R600MCInstLower MCInstLowering(OutContext, STI, *this);
 
@@ -392,7 +354,7 @@ void R600AsmPrinter::EmitInstruction(const MachineInstr *MI) {
     const MachineBasicBlock *MBB = MI->getParent();
     MachineBasicBlock::const_instr_iterator I = ++MI->getIterator();
     while (I != MBB->instr_end() && I->isInsideBundle()) {
-      EmitInstruction(&*I);
+      emitInstruction(&*I);
       ++I;
     }
   } else {

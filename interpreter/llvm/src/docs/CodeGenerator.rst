@@ -579,15 +579,18 @@ inside bundles. The top level BUNDLE instruction must have the correct set of
 register MachineOperand's that represent the cumulative inputs and outputs of
 the bundled MIs.
 
-Packing / bundling of MachineInstr's should be done as part of the register
-allocation super-pass. More specifically, the pass which determines what MIs
-should be bundled together must be done after code generator exits SSA form
-(i.e. after two-address pass, PHI elimination, and copy coalescing).  Bundles
-should only be finalized (i.e. adding BUNDLE MIs and input and output register
-MachineOperands) after virtual registers have been rewritten into physical
-registers. This requirement eliminates the need to add virtual register operands
-to BUNDLE instructions which would effectively double the virtual register def
-and use lists.
+Packing / bundling of MachineInstrs for VLIW architectures should
+generally be done as part of the register allocation super-pass. More
+specifically, the pass which determines what MIs should be bundled
+together should be done after code generator exits SSA form
+(i.e. after two-address pass, PHI elimination, and copy coalescing).
+Such bundles should be finalized (i.e. adding BUNDLE MIs and input and
+output register MachineOperands) after virtual registers have been
+rewritten into physical registers. This eliminates the need to add
+virtual register operands to BUNDLE instructions which would
+effectively double the virtual register def and use lists. Bundles may
+use virtual registers and be formed in SSA form, but may not be
+appropriate for all use cases.
 
 .. _MC Layer:
 
@@ -724,6 +727,9 @@ Portions of the DAG instruction selector are generated from the target
 description (``*.td``) files.  Our goal is for the entire instruction selector
 to be generated from these ``.td`` files, though currently there are still
 things that require custom C++ code.
+
+`GlobalISel <https://llvm.org/docs/GlobalISel/index.html>`_ is another
+instruction selection framework.
 
 .. _SelectionDAG:
 
@@ -1269,7 +1275,7 @@ compatible with a given physical, this code can be used:
 
 Sometimes, mostly for debugging purposes, it is useful to change the number of
 physical registers available in the target architecture. This must be done
-statically, inside the ``TargetRegsterInfo.td`` file. Just ``grep`` for
+statically, inside the ``TargetRegisterInfo.td`` file. Just ``grep`` for
 ``RegisterClass``, the last parameter of which is a list of registers. Just
 commenting some out is one simple way to avoid them being used. A more polite
 way is to explicitly exclude some registers from the *allocation order*. See the
@@ -1866,9 +1872,9 @@ Here is the table:
 :raw-html:`<td class="no"></td> <!-- ARM -->`
 :raw-html:`<td class="no"></td> <!-- Hexagon -->`
 :raw-html:`<td class="no"></td> <!-- MSP430 -->`
-:raw-html:`<td class="no"></td> <!-- Mips -->`
+:raw-html:`<td class="yes"></td> <!-- Mips -->`
 :raw-html:`<td class="no"></td> <!-- NVPTX -->`
-:raw-html:`<td class="no"></td> <!-- PowerPC -->`
+:raw-html:`<td class="yes"></td> <!-- PowerPC -->`
 :raw-html:`<td class="no"></td> <!-- Sparc -->`
 :raw-html:`<td class="yes"></td> <!-- SystemZ -->`
 :raw-html:`<td class="yes"></td> <!-- X86 -->`
@@ -1881,11 +1887,11 @@ Here is the table:
 :raw-html:`<td class="yes"></td> <!-- ARM -->`
 :raw-html:`<td class="no"></td> <!-- Hexagon -->`
 :raw-html:`<td class="no"></td> <!-- MSP430 -->`
-:raw-html:`<td class="no"></td> <!-- Mips -->`
+:raw-html:`<td class="yes"></td> <!-- Mips -->`
 :raw-html:`<td class="na"></td> <!-- NVPTX -->`
-:raw-html:`<td class="no"></td> <!-- PowerPC -->`
+:raw-html:`<td class="yes"></td> <!-- PowerPC -->`
+:raw-html:`<td class="yes"></td> <!-- Sparc -->`
 :raw-html:`<td class="yes"></td> <!-- SystemZ -->`
-:raw-html:`<td class="no"></td> <!-- Sparc -->`
 :raw-html:`<td class="yes"></td> <!-- X86 -->`
 :raw-html:`<td class="yes"></td> <!-- XCore -->`
 :raw-html:`<td class="yes"></td> <!-- eBPF -->`
@@ -1896,7 +1902,7 @@ Here is the table:
 :raw-html:`<td class="yes"></td> <!-- ARM -->`
 :raw-html:`<td class="yes"></td> <!-- Hexagon -->`
 :raw-html:`<td class="unknown"></td> <!-- MSP430 -->`
-:raw-html:`<td class="no"></td> <!-- Mips -->`
+:raw-html:`<td class="yes"></td> <!-- Mips -->`
 :raw-html:`<td class="yes"></td> <!-- NVPTX -->`
 :raw-html:`<td class="yes"></td> <!-- PowerPC -->`
 :raw-html:`<td class="unknown"></td> <!-- Sparc -->`
@@ -1926,9 +1932,9 @@ Here is the table:
 :raw-html:`<td class="no"></td> <!-- ARM -->`
 :raw-html:`<td class="no"></td> <!-- Hexagon -->`
 :raw-html:`<td class="no"></td> <!-- MSP430 -->`
-:raw-html:`<td class="no"></td> <!-- Mips -->`
+:raw-html:`<td class="yes"></td> <!-- Mips -->`
 :raw-html:`<td class="na"></td> <!-- NVPTX -->`
-:raw-html:`<td class="no"></td> <!-- PowerPC -->`
+:raw-html:`<td class="yes"></td> <!-- PowerPC -->`
 :raw-html:`<td class="no"></td> <!-- Sparc -->`
 :raw-html:`<td class="yes"></td> <!-- SystemZ -->`
 :raw-html:`<td class="yes"></td> <!-- X86 -->`
@@ -1941,7 +1947,7 @@ Here is the table:
 :raw-html:`<td class="yes"></td> <!-- ARM -->`
 :raw-html:`<td class="yes"></td> <!-- Hexagon -->`
 :raw-html:`<td class="unknown"></td> <!-- MSP430 -->`
-:raw-html:`<td class="no"></td> <!-- Mips -->`
+:raw-html:`<td class="yes"></td> <!-- Mips -->`
 :raw-html:`<td class="no"></td> <!-- NVPTX -->`
 :raw-html:`<td class="yes"></td> <!-- PowerPC -->`
 :raw-html:`<td class="unknown"></td> <!-- Sparc -->`
@@ -2061,16 +2067,17 @@ Tail call optimization
 ----------------------
 
 Tail call optimization, callee reusing the stack of the caller, is currently
-supported on x86/x86-64, PowerPC, and WebAssembly. It is performed on x86/x86-64
-and PowerPC if:
+supported on x86/x86-64, PowerPC, AArch64, and WebAssembly. It is performed on
+x86/x86-64, PowerPC, and AArch64 if:
 
 * Caller and callee have the calling convention ``fastcc``, ``cc 10`` (GHC
-  calling convention) or ``cc 11`` (HiPE calling convention).
+  calling convention), ``cc 11`` (HiPE calling convention), ``tailcc``, or
+  ``swifttailcc``.
 
 * The call is a tail call - in tail position (ret immediately follows call and
   ret uses value of call or is void).
 
-* Option ``-tailcallopt`` is enabled.
+* Option ``-tailcallopt`` is enabled or the calling convention is ``tailcc``.
 
 * Platform-specific constraints are met.
 
@@ -2090,9 +2097,18 @@ PowerPC constraints:
 * On ppc32/64 GOT/PIC only module-local calls (visibility = hidden or protected)
   are supported.
 
-On WebAssembly, tail calls are lowered to ``return_call`` and
-``return_call_indirect`` instructions whenever the 'tail-call' target attribute
-is enabled.
+WebAssembly constraints:
+
+* No variable argument lists are used
+
+* The 'tail-call' target attribute is enabled.
+
+* The caller and callee's return types must match. The caller cannot
+  be void unless the callee is, too.
+
+AArch64 constraints:
+
+* No variable argument lists are used.
 
 Example:
 
@@ -2104,7 +2120,7 @@ Call as ``llc -tailcallopt test.ll``.
 
   define fastcc i32 @tailcaller(i32 %in1, i32 %in2) {
     %l1 = add i32 %in1, %in2
-    %tmp = tail call fastcc i32 @tailcallee(i32 %in1 inreg, i32 %in2 inreg, i32 %in1, i32 %l1)
+    %tmp = tail call fastcc i32 @tailcallee(i32 inreg %in1, i32 inreg %in2, i32 %in1, i32 %l1)
     ret i32 %tmp
   }
 
@@ -2410,7 +2426,7 @@ to spill registers r3-r10.  This allows callees blind to the call signature,
 such as thunks and vararg functions, enough space to cache the argument
 registers.  Therefore, the parameter area is minimally 32 bytes (64 bytes in 64
 bit mode.)  Also note that since the parameter area is a fixed offset from the
-top of the frame, that a callee can access its spilt arguments using fixed
+top of the frame, that a callee can access its split arguments using fixed
 offsets from the stack pointer (or base pointer.)
 
 Combining the information about the linkage, parameter areas and alignment. A

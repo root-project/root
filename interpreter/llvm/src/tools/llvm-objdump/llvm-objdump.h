@@ -1,3 +1,4 @@
+//===--- llvm-objdump.h -----------------------------------------*- C++ -*-===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -8,29 +9,65 @@
 #ifndef LLVM_TOOLS_LLVM_OBJDUMP_LLVM_OBJDUMP_H
 #define LLVM_TOOLS_LLVM_OBJDUMP_LLVM_OBJDUMP_H
 
+#include "llvm/ADT/StringSet.h"
 #include "llvm/DebugInfo/DIContext.h"
-#include "llvm/Support/CommandLine.h"
+#include "llvm/MC/MCDisassembler/MCDisassembler.h"
+#include "llvm/Object/Archive.h"
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/DataTypes.h"
-#include "llvm/Object/Archive.h"
 
 namespace llvm {
 class StringRef;
+class Twine;
 
 namespace object {
-class COFFObjectFile;
-class COFFImportFile;
 class ELFObjectFileBase;
 class ELFSectionRef;
 class MachOObjectFile;
 class MachOUniversalBinary;
 class RelocationRef;
-}
+} // namespace object
 
-extern cl::opt<bool> Demangle;
+namespace objdump {
+
+enum DebugVarsFormat {
+  DVDisabled,
+  DVUnicode,
+  DVASCII,
+};
+
+extern bool ArchiveHeaders;
+extern int DbgIndent;
+extern DebugVarsFormat DbgVariables;
+extern bool Demangle;
+extern bool Disassemble;
+extern bool DisassembleAll;
+extern DIDumpType DwarfDumpType;
+extern std::vector<std::string> FilterSections;
+extern bool LeadingAddr;
+extern std::vector<std::string> MAttrs;
+extern std::string MCPU;
+extern std::string Prefix;
+extern uint32_t PrefixStrip;
+extern bool PrintImmHex;
+extern bool PrintLines;
+extern bool PrintSource;
+extern bool PrivateHeaders;
+extern bool Relocations;
+extern bool SectionHeaders;
+extern bool SectionContents;
+extern bool ShowRawInsn;
+extern bool SymbolDescription;
+extern bool SymbolTable;
+extern std::string TripleName;
+extern bool UnwindInfo;
+
+extern StringSet<> FoundSectionSet;
 
 typedef std::function<bool(llvm::object::SectionRef const &)> FilterPredicate;
 
+/// A filtered iterator for SectionRefs that skips sections based on some given
+/// predicate.
 class SectionFilterIterator {
 public:
   SectionFilterIterator(FilterPredicate P,
@@ -60,6 +97,8 @@ private:
   llvm::object::section_iterator End;
 };
 
+/// Creates an iterator range of SectionFilterIterators for a given Object and
+/// predicate.
 class SectionFilter {
 public:
   SectionFilter(FilterPredicate P, llvm::object::ObjectFile const &O)
@@ -79,74 +118,46 @@ private:
 };
 
 // Various helper functions.
-SectionFilter ToolSectionFilter(llvm::object::ObjectFile const &O);
 
-Error getELFRelocationValueString(const object::ELFObjectFileBase *Obj,
-                                  const object::RelocationRef &Rel,
-                                  llvm::SmallVectorImpl<char> &Result);
-Error getCOFFRelocationValueString(const object::COFFObjectFile *Obj,
-                                   const object::RelocationRef &Rel,
-                                   llvm::SmallVectorImpl<char> &Result);
-Error getWasmRelocationValueString(const object::WasmObjectFile *Obj,
-                                   const object::RelocationRef &RelRef,
-                                   llvm::SmallVectorImpl<char> &Result);
-Error getMachORelocationValueString(const object::MachOObjectFile *Obj,
-                                    const object::RelocationRef &RelRef,
-                                    llvm::SmallVectorImpl<char> &Result);
+/// Creates a SectionFilter with a standard predicate that conditionally skips
+/// sections when the --section objdump flag is provided.
+///
+/// Idx is an optional output parameter that keeps track of which section index
+/// this is. This may be different than the actual section number, as some
+/// sections may be filtered (e.g. symbol tables).
+SectionFilter ToolSectionFilter(llvm::object::ObjectFile const &O,
+                                uint64_t *Idx = nullptr);
 
-uint64_t getELFSectionLMA(const object::ELFSectionRef& Sec);
-
-void error(std::error_code ec);
-void error(Error E);
 bool isRelocAddressLess(object::RelocationRef A, object::RelocationRef B);
-void parseInputMachO(StringRef Filename);
-void parseInputMachO(object::MachOUniversalBinary *UB);
-void printCOFFUnwindInfo(const object::COFFObjectFile *O);
-void printMachOUnwindInfo(const object::MachOObjectFile *O);
-void printMachOExportsTrie(const object::MachOObjectFile *O);
-void printMachORebaseTable(object::MachOObjectFile *O);
-void printMachOBindTable(object::MachOObjectFile *O);
-void printMachOLazyBindTable(object::MachOObjectFile *O);
-void printMachOWeakBindTable(object::MachOObjectFile *O);
-void printELFFileHeader(const object::ObjectFile *O);
-void printELFDynamicSection(const object::ObjectFile *Obj);
-void printELFSymbolVersionInfo(const object::ObjectFile *Obj);
-void printCOFFFileHeader(const object::ObjectFile *O);
-void printCOFFSymbolTable(const object::COFFImportFile *I);
-void printCOFFSymbolTable(const object::COFFObjectFile *O);
-void printMachOFileHeader(const object::ObjectFile *O);
-void printMachOLoadCommands(const object::ObjectFile *O);
-void printWasmFileHeader(const object::ObjectFile *O);
-void printExportsTrie(const object::ObjectFile *O);
-void printRebaseTable(object::ObjectFile *O);
-void printBindTable(object::ObjectFile *O);
-void printLazyBindTable(object::ObjectFile *O);
-void printWeakBindTable(object::ObjectFile *O);
-void printRawClangAST(const object::ObjectFile *O);
 void printRelocations(const object::ObjectFile *O);
 void printDynamicRelocations(const object::ObjectFile *O);
 void printSectionHeaders(const object::ObjectFile *O);
 void printSectionContents(const object::ObjectFile *O);
 void printSymbolTable(const object::ObjectFile *O, StringRef ArchiveName,
-                      StringRef ArchitectureName = StringRef());
-void warn(StringRef Message);
-LLVM_ATTRIBUTE_NORETURN void error(Twine Message);
-LLVM_ATTRIBUTE_NORETURN void report_error(StringRef File, Twine Message);
-LLVM_ATTRIBUTE_NORETURN void report_error(Error E, StringRef File);
-LLVM_ATTRIBUTE_NORETURN void
-report_error(Error E, StringRef FileName, StringRef ArchiveName,
-             StringRef ArchitectureName = StringRef());
-LLVM_ATTRIBUTE_NORETURN void
-report_error(Error E, StringRef ArchiveName, const object::Archive::Child &C,
-             StringRef ArchitectureName = StringRef());
+                      StringRef ArchitectureName = StringRef(),
+                      bool DumpDynamic = false);
+void printSymbol(const object::ObjectFile *O, const object::SymbolRef &Symbol,
+                 StringRef FileName, StringRef ArchiveName,
+                 StringRef ArchitectureName, bool DumpDynamic);
+LLVM_ATTRIBUTE_NORETURN void reportError(StringRef File, const Twine &Message);
+LLVM_ATTRIBUTE_NORETURN void reportError(Error E, StringRef FileName,
+                                         StringRef ArchiveName = "",
+                                         StringRef ArchitectureName = "");
+void reportWarning(const Twine &Message, StringRef File);
 
 template <typename T, typename... Ts>
 T unwrapOrError(Expected<T> EO, Ts &&... Args) {
   if (EO)
     return std::move(*EO);
-  report_error(EO.takeError(), std::forward<Ts>(Args)...);
+  reportError(EO.takeError(), std::forward<Ts>(Args)...);
 }
 
+std::string getFileNameForError(const object::Archive::Child &C,
+                                unsigned Index);
+SymbolInfoTy createSymbolInfo(const object::ObjectFile *Obj,
+                              const object::SymbolRef &Symbol);
+
+} // namespace objdump
 } // end namespace llvm
 
 #endif

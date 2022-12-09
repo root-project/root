@@ -193,6 +193,11 @@ public:
     CharUnits PaddingSum;
     CharUnits Offset = ASTContext.toCharUnitsFromBits(RL.getFieldOffset(0));
     for (const FieldDecl *FD : RD->fields()) {
+      // Skip field that is a subobject of zero size, marked with
+      // [[no_unique_address]] or an empty bitfield, because its address can be
+      // set the same as the other fields addresses.
+      if (FD->isZeroSize(ASTContext))
+        continue;
       // This checker only cares about the padded size of the
       // field, and not the data size. If the field is a record
       // with tail padding, then we won't put that number in our
@@ -248,8 +253,9 @@ public:
       FieldInfo RetVal;
       RetVal.Field = FD;
       auto &Ctx = FD->getASTContext();
-      std::tie(RetVal.Size, RetVal.Align) =
-          Ctx.getTypeInfoInChars(FD->getType());
+      auto Info = Ctx.getTypeInfoInChars(FD->getType());
+      RetVal.Size = FD->isZeroSize(Ctx) ? CharUnits::Zero() : Info.Width;
+      RetVal.Align = Info.Align;
       assert(llvm::isPowerOf2_64(RetVal.Align.getQuantity()));
       if (auto Max = FD->getMaxAlignment())
         RetVal.Align = std::max(Ctx.toCharUnitsFromBits(Max), RetVal.Align);
@@ -306,7 +312,7 @@ public:
       const SmallVector<const FieldDecl *, 20> &OptimalFieldsOrder) const {
     if (!PaddingBug)
       PaddingBug =
-          llvm::make_unique<BugType>(this, "Excessive Padding", "Performance");
+          std::make_unique<BugType>(this, "Excessive Padding", "Performance");
 
     SmallString<100> Buf;
     llvm::raw_svector_ostream Os(Buf);
@@ -335,7 +341,8 @@ public:
 
     PathDiagnosticLocation CELoc =
         PathDiagnosticLocation::create(RD, BR->getSourceManager());
-    auto Report = llvm::make_unique<BugReport>(*PaddingBug, Os.str(), CELoc);
+    auto Report =
+        std::make_unique<BasicBugReport>(*PaddingBug, Os.str(), CELoc);
     Report->setDeclWithIssue(RD);
     Report->addRange(RD->getSourceRange());
     BR->emitReport(std::move(Report));
@@ -352,6 +359,6 @@ void ento::registerPaddingChecker(CheckerManager &Mgr) {
         Checker, "AllowedPad", "a non-negative value");
 }
 
-bool ento::shouldRegisterPaddingChecker(const LangOptions &LO) {
+bool ento::shouldRegisterPaddingChecker(const CheckerManager &mgr) {
   return true;
 }

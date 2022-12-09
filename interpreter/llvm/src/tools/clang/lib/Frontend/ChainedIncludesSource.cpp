@@ -11,6 +11,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "clang/Basic/Builtins.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Frontend/ASTUnit.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -82,10 +83,10 @@ createASTReader(CompilerInstance &CI, StringRef pchFile,
                 ASTDeserializationListener *deserialListener = nullptr) {
   Preprocessor &PP = CI.getPreprocessor();
   std::unique_ptr<ASTReader> Reader;
-  Reader.reset(new ASTReader(PP, CI.getModuleCache(), &CI.getASTContext(),
-                             CI.getPCHContainerReader(),
-                             /*Extensions=*/{},
-                             /*isysroot=*/"", /*DisableValidation=*/true));
+  Reader.reset(new ASTReader(
+      PP, CI.getModuleCache(), &CI.getASTContext(), CI.getPCHContainerReader(),
+      /*Extensions=*/{},
+      /*isysroot=*/"", DisableValidationForModuleKind::PCH));
   for (unsigned ti = 0; ti < bufNames.size(); ++ti) {
     StringRef sr(bufNames[ti]);
     Reader->addInMemoryBuffer(sr, std::move(MemBufs[ti]));
@@ -128,7 +129,8 @@ IntrusiveRefCntPtr<ExternalSemaSource> clang::createChainedIncludesSource(
 
     CInvok->getPreprocessorOpts().ChainedIncludes.clear();
     CInvok->getPreprocessorOpts().ImplicitPCHInclude.clear();
-    CInvok->getPreprocessorOpts().DisablePCHValidation = true;
+    CInvok->getPreprocessorOpts().DisablePCHOrModuleValidation =
+        DisableValidationForModuleKind::PCH;
     CInvok->getPreprocessorOpts().Includes.clear();
     CInvok->getPreprocessorOpts().MacroIncludes.clear();
     CInvok->getPreprocessorOpts().Macros.clear();
@@ -158,7 +160,7 @@ IntrusiveRefCntPtr<ExternalSemaSource> clang::createChainedIncludesSource(
 
     auto Buffer = std::make_shared<PCHBuffer>();
     ArrayRef<std::shared_ptr<ModuleFileExtension>> Extensions;
-    auto consumer = llvm::make_unique<PCHGenerator>(
+    auto consumer = std::make_unique<PCHGenerator>(
         Clang->getPreprocessor(), Clang->getModuleCache(), "-", /*isysroot=*/"",
         Buffer, Extensions, /*AllowASTWithErrors=*/true);
     Clang->getASTContext().setASTMutationListener(
@@ -188,7 +190,7 @@ IntrusiveRefCntPtr<ExternalSemaSource> clang::createChainedIncludesSource(
           Clang->getASTConsumer().GetASTDeserializationListener());
       if (!Reader)
         return nullptr;
-      Clang->setModuleManager(Reader);
+      Clang->setASTReader(Reader);
       Clang->getASTContext().setExternalSource(Reader);
     }
 

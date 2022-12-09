@@ -10,19 +10,25 @@
 #define LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_AMDGPU_H
 
 #include "Gnu.h"
+#include "ROCm.h"
+#include "clang/Basic/TargetID.h"
 #include "clang/Driver/Options.h"
 #include "clang/Driver/Tool.h"
 #include "clang/Driver/ToolChain.h"
+#include "llvm/ADT/SmallString.h"
+#include "llvm/Support/TargetParser.h"
+
 #include <map>
 
 namespace clang {
 namespace driver {
+
 namespace tools {
 namespace amdgpu {
 
-class LLVM_LIBRARY_VISIBILITY Linker : public GnuTool {
+class LLVM_LIBRARY_VISIBILITY Linker : public Tool {
 public:
-  Linker(const ToolChain &TC) : GnuTool("amdgpu::Linker", "ld.lld", TC) {}
+  Linker(const ToolChain &TC) : Tool("amdgpu::Linker", "ld.lld", TC) {}
   bool isLinkJob() const override { return true; }
   bool hasIntegratedCPP() const override { return false; }
   void ConstructJob(Compilation &C, const JobAction &JA,
@@ -31,7 +37,8 @@ public:
                     const char *LinkingOutput) const override;
 };
 
-void getAMDGPUTargetFeatures(const Driver &D, const llvm::opt::ArgList &Args,
+void getAMDGPUTargetFeatures(const Driver &D, const llvm::Triple &Triple,
+                             const llvm::opt::ArgList &Args,
                              std::vector<StringRef> &Features);
 
 } // end namespace amdgpu
@@ -40,11 +47,9 @@ void getAMDGPUTargetFeatures(const Driver &D, const llvm::opt::ArgList &Args,
 namespace toolchains {
 
 class LLVM_LIBRARY_VISIBILITY AMDGPUToolChain : public Generic_ELF {
-
-private:
+protected:
   const std::map<options::ID, const StringRef> OptionsDefault;
 
-protected:
   Tool *buildLinker() const override;
   const StringRef getOptionDefault(options::ID OptID) const {
     auto opt = OptionsDefault.find(OptID);
@@ -55,9 +60,16 @@ protected:
 public:
   AMDGPUToolChain(const Driver &D, const llvm::Triple &Triple,
                   const llvm::opt::ArgList &Args);
-  unsigned GetDefaultDwarfVersion() const override { return 5; }
+  unsigned GetDefaultDwarfVersion() const override { return 4; }
   bool IsIntegratedAssemblerDefault() const override { return true; }
   bool IsMathErrnoDefault() const override { return false; }
+
+  bool useIntegratedAs() const override { return true; }
+  bool isCrossCompiling() const override { return true; }
+  bool isPICDefault() const override { return false; }
+  bool isPIEDefault() const override { return false; }
+  bool isPICDefaultForced() const override { return false; }
+  bool SupportsProfiling() const override { return false; }
 
   llvm::opt::DerivedArgList *
   TranslateArgs(const llvm::opt::DerivedArgList &Args, StringRef BoundArch,
@@ -66,6 +78,69 @@ public:
   void addClangTargetOptions(const llvm::opt::ArgList &DriverArgs,
                              llvm::opt::ArgStringList &CC1Args,
                              Action::OffloadKind DeviceOffloadKind) const override;
+
+  /// Return whether denormals should be flushed, and treated as 0 by default
+  /// for the subtarget.
+  static bool getDefaultDenormsAreZeroForTarget(llvm::AMDGPU::GPUKind GPUKind);
+
+  llvm::DenormalMode getDefaultDenormalModeForType(
+      const llvm::opt::ArgList &DriverArgs, const JobAction &JA,
+      const llvm::fltSemantics *FPType = nullptr) const override;
+
+  static bool isWave64(const llvm::opt::ArgList &DriverArgs,
+                       llvm::AMDGPU::GPUKind Kind);
+  /// Needed for using lto.
+  bool HasNativeLLVMSupport() const override {
+    return true;
+  }
+
+  /// Needed for translating LTO options.
+  const char *getDefaultLinker() const override { return "ld.lld"; }
+
+  /// Should skip argument.
+  bool shouldSkipArgument(const llvm::opt::Arg *Arg) const;
+
+  /// Uses amdgpu_arch tool to get arch of the system GPU. Will return error
+  /// if unable to find one.
+  llvm::Error getSystemGPUArch(const llvm::opt::ArgList &Args,
+                               std::string &GPUArch) const;
+
+protected:
+  /// Check and diagnose invalid target ID specified by -mcpu.
+  virtual void checkTargetID(const llvm::opt::ArgList &DriverArgs) const;
+
+  /// The struct type returned by getParsedTargetID.
+  struct ParsedTargetIDType {
+    Optional<std::string> OptionalTargetID;
+    Optional<std::string> OptionalGPUArch;
+    Optional<llvm::StringMap<bool>> OptionalFeatures;
+  };
+
+  /// Get target ID, GPU arch, and target ID features if the target ID is
+  /// specified and valid.
+  ParsedTargetIDType
+  getParsedTargetID(const llvm::opt::ArgList &DriverArgs) const;
+
+  /// Get GPU arch from -mcpu without checking.
+  StringRef getGPUArch(const llvm::opt::ArgList &DriverArgs) const;
+
+  llvm::Error detectSystemGPUs(const llvm::opt::ArgList &Args,
+                               SmallVector<std::string, 1> &GPUArchs) const;
+};
+
+class LLVM_LIBRARY_VISIBILITY ROCMToolChain : public AMDGPUToolChain {
+public:
+  ROCMToolChain(const Driver &D, const llvm::Triple &Triple,
+                const llvm::opt::ArgList &Args);
+  void
+  addClangTargetOptions(const llvm::opt::ArgList &DriverArgs,
+                        llvm::opt::ArgStringList &CC1Args,
+                        Action::OffloadKind DeviceOffloadKind) const override;
+
+  // Returns a list of device library names shared by different languages
+  llvm::SmallVector<std::string, 12>
+  getCommonDeviceLibNames(const llvm::opt::ArgList &DriverArgs,
+                          const std::string &GPUArch) const;
 };
 
 } // end namespace toolchains

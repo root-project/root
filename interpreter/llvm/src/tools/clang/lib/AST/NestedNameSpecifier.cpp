@@ -16,6 +16,7 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclTemplate.h"
+#include "clang/AST/DependenceFlags.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/TemplateName.h"
 #include "clang/AST/Type.h"
@@ -197,75 +198,53 @@ CXXRecordDecl *NestedNameSpecifier::getAsRecordDecl() const {
   llvm_unreachable("Invalid NNS Kind!");
 }
 
-/// Whether this nested name specifier refers to a dependent
-/// type or not.
-bool NestedNameSpecifier::isDependent() const {
+NestedNameSpecifierDependence NestedNameSpecifier::getDependence() const {
   switch (getKind()) {
-  case Identifier:
+  case Identifier: {
     // Identifier specifiers always represent dependent types
-    return true;
+    auto F = NestedNameSpecifierDependence::Dependent |
+             NestedNameSpecifierDependence::Instantiation;
+    // Prefix can contain unexpanded template parameters.
+    if (getPrefix())
+      return F | getPrefix()->getDependence();
+    return F;
+  }
 
   case Namespace:
   case NamespaceAlias:
   case Global:
-    return false;
+    return NestedNameSpecifierDependence::None;
 
   case Super: {
     CXXRecordDecl *RD = static_cast<CXXRecordDecl *>(Specifier);
     for (const auto &Base : RD->bases())
       if (Base.getType()->isDependentType())
-        return true;
-
-    return false;
+        // FIXME: must also be instantiation-dependent.
+        return NestedNameSpecifierDependence::Dependent;
+    return NestedNameSpecifierDependence::None;
   }
 
   case TypeSpec:
   case TypeSpecWithTemplate:
-    return getAsType()->isDependentType();
+    return toNestedNameSpecifierDependendence(getAsType()->getDependence());
   }
-
   llvm_unreachable("Invalid NNS Kind!");
 }
 
-/// Whether this nested name specifier refers to a dependent
-/// type or not.
+bool NestedNameSpecifier::isDependent() const {
+  return getDependence() & NestedNameSpecifierDependence::Dependent;
+}
+
 bool NestedNameSpecifier::isInstantiationDependent() const {
-  switch (getKind()) {
-  case Identifier:
-    // Identifier specifiers always represent dependent types
-    return true;
-
-  case Namespace:
-  case NamespaceAlias:
-  case Global:
-  case Super:
-    return false;
-
-  case TypeSpec:
-  case TypeSpecWithTemplate:
-    return getAsType()->isInstantiationDependentType();
-  }
-
-  llvm_unreachable("Invalid NNS Kind!");
+  return getDependence() & NestedNameSpecifierDependence::Instantiation;
 }
 
 bool NestedNameSpecifier::containsUnexpandedParameterPack() const {
-  switch (getKind()) {
-  case Identifier:
-    return getPrefix() && getPrefix()->containsUnexpandedParameterPack();
+  return getDependence() & NestedNameSpecifierDependence::UnexpandedPack;
+}
 
-  case Namespace:
-  case NamespaceAlias:
-  case Global:
-  case Super:
-    return false;
-
-  case TypeSpec:
-  case TypeSpecWithTemplate:
-    return getAsType()->containsUnexpandedParameterPack();
-  }
-
-  llvm_unreachable("Invalid NNS Kind!");
+bool NestedNameSpecifier::containsErrors() const {
+  return getDependence() & NestedNameSpecifierDependence::Error;
 }
 
 /// Print this nested name specifier to the given output
@@ -309,8 +288,9 @@ void NestedNameSpecifier::print(raw_ostream &OS, const PrintingPolicy &Policy,
     if (ResolveTemplateArguments && Record) {
         // Print the type trait with resolved template parameters.
         Record->printName(OS);
-        printTemplateArgumentList(OS, Record->getTemplateArgs().asArray(),
-                                  Policy);
+        printTemplateArgumentList(
+            OS, Record->getTemplateArgs().asArray(), Policy,
+            Record->getSpecializedTemplate()->getTemplateParameters());
         break;
     }
     const Type *T = getAsType();
@@ -335,6 +315,14 @@ void NestedNameSpecifier::print(raw_ostream &OS, const PrintingPolicy &Policy,
 
       // Print the template argument list.
       printTemplateArgumentList(OS, SpecType->template_arguments(),
+                                InnerPolicy);
+    } else if (const auto *DepSpecType =
+                   dyn_cast<DependentTemplateSpecializationType>(T)) {
+      // Print the template name without its corresponding
+      // nested-name-specifier.
+      OS << DepSpecType->getIdentifier()->getName();
+      // Print the template argument list.
+      printTemplateArgumentList(OS, DepSpecType->template_arguments(),
                                 InnerPolicy);
     } else {
       // Print the type normally
@@ -368,7 +356,7 @@ NestedNameSpecifierLoc::getLocalDataLength(NestedNameSpecifier *Qualifier) {
   assert(Qualifier && "Expected a non-NULL qualifier");
 
   // Location of the trailing '::'.
-  unsigned Length = sizeof(unsigned);
+  unsigned Length = sizeof(SourceLocation::UIntTy);
 
   switch (Qualifier->getKind()) {
   case NestedNameSpecifier::Global:
@@ -380,7 +368,7 @@ NestedNameSpecifierLoc::getLocalDataLength(NestedNameSpecifier *Qualifier) {
   case NestedNameSpecifier::NamespaceAlias:
   case NestedNameSpecifier::Super:
     // The location of the identifier or namespace name.
-    Length += sizeof(unsigned);
+    Length += sizeof(SourceLocation::UIntTy);
     break;
 
   case NestedNameSpecifier::TypeSpecWithTemplate:
@@ -405,8 +393,8 @@ NestedNameSpecifierLoc::getDataLength(NestedNameSpecifier *Qualifier) {
 /// Load a (possibly unaligned) source location from a given address
 /// and offset.
 static SourceLocation LoadSourceLocation(void *Data, unsigned Offset) {
-  unsigned Raw;
-  memcpy(&Raw, static_cast<char *>(Data) + Offset, sizeof(unsigned));
+  SourceLocation::UIntTy Raw;
+  memcpy(&Raw, static_cast<char *>(Data) + Offset, sizeof(Raw));
   return SourceLocation::getFromRawEncoding(Raw);
 }
 
@@ -443,8 +431,9 @@ SourceRange NestedNameSpecifierLoc::getLocalSourceRange() const {
   case NestedNameSpecifier::Namespace:
   case NestedNameSpecifier::NamespaceAlias:
   case NestedNameSpecifier::Super:
-    return SourceRange(LoadSourceLocation(Data, Offset),
-                       LoadSourceLocation(Data, Offset + sizeof(unsigned)));
+    return SourceRange(
+        LoadSourceLocation(Data, Offset),
+        LoadSourceLocation(Data, Offset + sizeof(SourceLocation::UIntTy)));
 
   case NestedNameSpecifier::TypeSpecWithTemplate:
   case NestedNameSpecifier::TypeSpec: {
@@ -472,7 +461,7 @@ TypeLoc NestedNameSpecifierLoc::getTypeLoc() const {
 }
 
 static void Append(char *Start, char *End, char *&Buffer, unsigned &BufferSize,
-              unsigned &BufferCapacity) {
+                   unsigned &BufferCapacity) {
   if (Start == End)
     return;
 
@@ -481,26 +470,28 @@ static void Append(char *Start, char *End, char *&Buffer, unsigned &BufferSize,
     unsigned NewCapacity = std::max(
         (unsigned)(BufferCapacity ? BufferCapacity * 2 : sizeof(void *) * 2),
         (unsigned)(BufferSize + (End - Start)));
-    char *NewBuffer = static_cast<char *>(llvm::safe_malloc(NewCapacity));
-    if (BufferCapacity) {
-      memcpy(NewBuffer, Buffer, BufferSize);
-      free(Buffer);
+    if (!BufferCapacity) {
+      char *NewBuffer = static_cast<char *>(llvm::safe_malloc(NewCapacity));
+      if (Buffer)
+        memcpy(NewBuffer, Buffer, BufferSize);
+      Buffer = NewBuffer;
+    } else {
+      Buffer = static_cast<char *>(llvm::safe_realloc(Buffer, NewCapacity));
     }
-    Buffer = NewBuffer;
     BufferCapacity = NewCapacity;
   }
-
+  assert(Buffer && Start && End && End > Start && "Illegal memory buffer copy");
   memcpy(Buffer + BufferSize, Start, End - Start);
-  BufferSize += End-Start;
+  BufferSize += End - Start;
 }
 
 /// Save a source location to the given buffer.
 static void SaveSourceLocation(SourceLocation Loc, char *&Buffer,
                                unsigned &BufferSize, unsigned &BufferCapacity) {
-  unsigned Raw = Loc.getRawEncoding();
+  SourceLocation::UIntTy Raw = Loc.getRawEncoding();
   Append(reinterpret_cast<char *>(&Raw),
-         reinterpret_cast<char *>(&Raw) + sizeof(unsigned),
-         Buffer, BufferSize, BufferCapacity);
+         reinterpret_cast<char *>(&Raw) + sizeof(Raw), Buffer, BufferSize,
+         BufferCapacity);
 }
 
 /// Save a pointer to the given buffer.

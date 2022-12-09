@@ -79,8 +79,6 @@ namespace cling {
     //
     P.getActions().getDiagnostics().setSuppressAllDiagnostics(
                                       diagOnOff == LookupHelper::NoDiagnostics);
-    PP.getDiagnostics().setSuppressAllDiagnostics(
-                                      diagOnOff == LookupHelper::NoDiagnostics);
     //
     //  Tell Sema we are not in the process of doing an instantiation.
     //  fSFINAETrap will reset any SFINAE error count of a SFINAE context from "above".
@@ -116,7 +114,7 @@ namespace cling {
       FID = SM.getFileID(FileStartLoc);
 
       bool Invalid = true;
-      llvm::StringRef FIDContents = SM.getBuffer(FID, &Invalid)->getBuffer();
+      llvm::StringRef FIDContents = SM.getBufferData(FID, &Invalid);
 
       // A FileID is a (cached via ContentCache) SourceManager view of a
       // FileManager::FileEntry (which is a wrapper on the file system file).
@@ -501,7 +499,7 @@ namespace cling {
     //
     clang::ParsedAttributes Attrs(P.getAttrFactory());
     // FIXME: All arguments to ParseTypeName are the default arguments. Remove.
-    TypeResult Res(P.ParseTypeName(0, DeclaratorContext::TypeNameContext,
+    TypeResult Res(P.ParseTypeName(0, DeclaratorContext::TypeName,
                                    clang::AS_none, 0, &Attrs));
     if (Res.isUsable()) {
       // Accept it only if the whole name was parsed.
@@ -777,12 +775,13 @@ namespace cling {
       return 0;
     }
     if (P.getCurToken().getKind() == tok::annot_typename) {
-      ParsedType T = P.getTypeAnnotation(const_cast<Token&>(P.getCurToken()));
+      TypeResult T = P.getTypeAnnotation(const_cast<Token&>(P.getCurToken()));
       // Only accept the parse if we consumed all of the name.
       if (P.NextToken().getKind() == clang::tok::eof)
-        if (!T.get().isNull()) {
+        if (!T.get().get().isNull()) {
           TypeSourceInfo *TSI = 0;
-          clang::QualType QT = clang::Sema::GetTypeFromParser(T, &TSI);
+          clang::QualType QT =
+            clang::Sema::GetTypeFromParser(T.get(), &TSI);
           if (const TagType* TT = QT->getAs<TagType>()) {
             TheDecl = TT->getDecl()->getDefinition();
             *setResultType = QT.getTypePtr();
@@ -1124,7 +1123,7 @@ namespace cling {
       Sema& _S;
       ResetDiagSuppression(Sema &S, bool Old): _Old(Old), _S(S) {}
       ~ResetDiagSuppression() {
-        _S.getDiagnostics().setSuppressAllDiagnostics();
+        _S.getDiagnostics().setSuppressAllDiagnostics(_Old);
       }
     } DiagSuppressionRAII(S, OldSuppressAllDiagnostics);
 
@@ -1393,11 +1392,13 @@ namespace cling {
       Decl *decl = llvm::dyn_cast<Decl>(foundDC);
       getContextAndSpec(SS,decl,Context,S);
     }
-    if (P.ParseUnqualifiedId(SS, /*EnteringContext*/false,
+    if (P.ParseUnqualifiedId(SS, ParsedType(),
+                             /*ObjectHadErrors=*/false,
+                             /*EnteringContext*/false,
                              /*AllowDestructorName*/true,
                              /*AllowConstructorName*/true,
                              /*AllowDeductionGuide*/ false,
-                             ParsedType(), &TemplateKWLoc,
+                             &TemplateKWLoc,
                              FuncId)) {
       // Failed parse, cleanup.
       return false;
@@ -1629,7 +1630,7 @@ namespace cling {
       for(size_t i = 0, e = GivenTypes.size(); i < e; ++i) {
         const clang::QualType QT = GivenTypes[i].getCanonicalType();
         {
-          ExprValueKind VK = VK_RValue;
+          ExprValueKind VK = VK_PRValue;
           if (QT->getAs<LValueReferenceType>()) {
             VK = VK_LValue;
           }
@@ -1684,7 +1685,7 @@ namespace cling {
         clang::QualType QT = clang::Sema::GetTypeFromParser(Res.get(), &TSI);
         QT = QT.getCanonicalType();
         {
-          ExprValueKind VK = VK_RValue;
+          ExprValueKind VK = VK_PRValue;
           if (QT->getAs<LValueReferenceType>()) {
             VK = VK_LValue;
           }

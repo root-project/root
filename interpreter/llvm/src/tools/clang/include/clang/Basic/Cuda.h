@@ -11,6 +11,7 @@
 
 namespace llvm {
 class StringRef;
+class Twine;
 class VersionTuple;
 } // namespace llvm
 
@@ -26,13 +27,19 @@ enum class CudaVersion {
   CUDA_92,
   CUDA_100,
   CUDA_101,
-  LATEST = CUDA_101,
+  CUDA_102,
+  CUDA_110,
+  CUDA_111,
+  CUDA_112,
+  LATEST = CUDA_112,
+  LATEST_SUPPORTED = CUDA_101,
 };
 const char *CudaVersionToString(CudaVersion V);
 // Input is "Major.Minor"
-CudaVersion CudaStringToVersion(llvm::StringRef S);
+CudaVersion CudaStringToVersion(const llvm::Twine &S);
 
 enum class CudaArch {
+  UNUSED,
   UNKNOWN,
   SM_20,
   SM_21,
@@ -49,16 +56,21 @@ enum class CudaArch {
   SM_70,
   SM_72,
   SM_75,
+  SM_80,
+  SM_86,
   GFX600,
   GFX601,
+  GFX602,
   GFX700,
   GFX701,
   GFX702,
   GFX703,
   GFX704,
+  GFX705,
   GFX801,
   GFX802,
   GFX803,
+  GFX805,
   GFX810,
   GFX900,
   GFX902,
@@ -66,41 +78,34 @@ enum class CudaArch {
   GFX906,
   GFX908,
   GFX909,
+  GFX90a,
+  GFX90c,
   GFX1010,
   GFX1011,
   GFX1012,
+  GFX1013,
+  GFX1030,
+  GFX1031,
+  GFX1032,
+  GFX1033,
+  GFX1034,
+  GFX1035,
   LAST,
 };
+
+static inline bool IsNVIDIAGpuArch(CudaArch A) {
+  return A >= CudaArch::SM_20 && A < CudaArch::GFX600;
+}
+
+static inline bool IsAMDGpuArch(CudaArch A) {
+  return A >= CudaArch::GFX600 && A < CudaArch::LAST;
+}
+
 const char *CudaArchToString(CudaArch A);
+const char *CudaArchToVirtualArchString(CudaArch A);
 
 // The input should have the form "sm_20".
 CudaArch StringToCudaArch(llvm::StringRef S);
-
-enum class CudaVirtualArch {
-  UNKNOWN,
-  COMPUTE_20,
-  COMPUTE_30,
-  COMPUTE_32,
-  COMPUTE_35,
-  COMPUTE_37,
-  COMPUTE_50,
-  COMPUTE_52,
-  COMPUTE_53,
-  COMPUTE_60,
-  COMPUTE_61,
-  COMPUTE_62,
-  COMPUTE_70,
-  COMPUTE_72,
-  COMPUTE_75,
-  COMPUTE_AMDGCN,
-};
-const char *CudaVirtualArchToString(CudaVirtualArch A);
-
-// The input should have the form "compute_20".
-CudaVirtualArch StringToCudaVirtualArch(llvm::StringRef S);
-
-/// Get the compute_xx corresponding to an sm_yy.
-CudaVirtualArch VirtualArchForCudaArch(CudaArch A);
 
 /// Get the earliest CudaVersion that supports the given CudaArch.
 CudaVersion MinVersionForCudaArch(CudaArch A);
@@ -116,6 +121,7 @@ enum class CudaFeature {
   CUDA_USES_FATBIN_REGISTER_END,
 };
 
+CudaVersion ToCudaVersion(llvm::VersionTuple);
 bool CudaFeatureEnabled(llvm::VersionTuple, CudaFeature);
 bool CudaFeatureEnabled(CudaVersion, CudaFeature);
 

@@ -12,10 +12,11 @@
 
 // We might split this into multiple files if it gets too unwieldy
 
-#include "CodeGenModule.h"
 #include "CGCXXABI.h"
 #include "CodeGenFunction.h"
+#include "CodeGenModule.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/Attr.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclObjC.h"
@@ -80,7 +81,7 @@ bool CodeGenModule::TryEmitBaseDestructorAsAlias(const CXXDestructorDecl *D) {
 
     // Skip base classes with trivial destructors.
     const auto *Base =
-        cast<CXXRecordDecl>(I.getType()->getAs<RecordType>()->getDecl());
+        cast<CXXRecordDecl>(I.getType()->castAs<RecordType>()->getDecl());
     if (Base->hasTrivialDestructor()) continue;
 
     // If we've already found a base class with a non-trivial
@@ -104,8 +105,8 @@ bool CodeGenModule::TryEmitBaseDestructorAsAlias(const CXXDestructorDecl *D) {
   // Give up if the calling conventions don't match. We could update the call,
   // but it is probably not worth it.
   const CXXDestructorDecl *BaseD = UniqueBase->getDestructor();
-  if (BaseD->getType()->getAs<FunctionType>()->getCallConv() !=
-      D->getType()->getAs<FunctionType>()->getCallConv())
+  if (BaseD->getType()->castAs<FunctionType>()->getCallConv() !=
+      D->getType()->castAs<FunctionType>()->getCallConv())
     return true;
 
   GlobalDecl AliasDecl(D, Dtor_Base);
@@ -251,8 +252,8 @@ static CGCallee BuildAppleKextVirtualCall(CodeGenFunction &CGF,
          "No kext in Microsoft ABI");
   CodeGenModule &CGM = CGF.CGM;
   llvm::Value *VTable = CGM.getCXXABI().getAddrOfVTable(RD, CharUnits());
-  Ty = Ty->getPointerTo()->getPointerTo();
-  VTable = CGF.Builder.CreateBitCast(VTable, Ty);
+  Ty = Ty->getPointerTo();
+  VTable = CGF.Builder.CreateBitCast(VTable, Ty->getPointerTo());
   assert(VTable && "BuildVirtualCall = kext vtbl pointer is null");
   uint64_t VTableIndex = CGM.getItaniumVTableContext().getMethodVTableIndex(GD);
   const VTableLayout &VTLayout = CGM.getItaniumVTableContext().getVTableLayout(RD);
@@ -261,9 +262,9 @@ static CGCallee BuildAppleKextVirtualCall(CodeGenFunction &CGF,
   VTableIndex += VTLayout.getVTableOffset(AddressPoint.VTableIndex) +
                  AddressPoint.AddressPointIndex;
   llvm::Value *VFuncPtr =
-    CGF.Builder.CreateConstInBoundsGEP1_64(VTable, VTableIndex, "vfnkxt");
-  llvm::Value *VFunc =
-    CGF.Builder.CreateAlignedLoad(VFuncPtr, CGF.PointerAlignInBytes);
+    CGF.Builder.CreateConstInBoundsGEP1_64(Ty, VTable, VTableIndex, "vfnkxt");
+  llvm::Value *VFunc = CGF.Builder.CreateAlignedLoad(
+      Ty, VFuncPtr, llvm::Align(CGF.PointerAlignInBytes));
   CGCallee Callee(GD, VFunc);
   return Callee;
 }

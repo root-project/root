@@ -203,7 +203,7 @@ static void InsertSPConstInst(MachineBasicBlock::iterator II,
 }
 
 bool XCoreRegisterInfo::needsFrameMoves(const MachineFunction &MF) {
-  return MF.getMMI().hasDebugInfo() || MF.getFunction().needsUnwindTableEntry();
+  return MF.needsFrameMoves();
 }
 
 const MCPhysReg *
@@ -242,11 +242,6 @@ BitVector XCoreRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
 
 bool
 XCoreRegisterInfo::requiresRegisterScavenging(const MachineFunction &MF) const {
-  return true;
-}
-
-bool
-XCoreRegisterInfo::trackLivenessAfterRegAlloc(const MachineFunction &MF) const {
   return true;
 }
 
@@ -301,7 +296,7 @@ XCoreRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
                     << "<--------->\n");
   Offset/=4;
 
-  unsigned Reg = MI.getOperand(0).getReg();
+  Register Reg = MI.getOperand(0).getReg();
   assert(XCore::GRRegsRegClass.contains(Reg) && "Unexpected register operand");
 
   if (TFI->hasFP(MF)) {

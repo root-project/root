@@ -22,14 +22,14 @@ class T_RP_pat <InstHexagon MI, Intrinsic IntID>
 
 def: Pat<(int_hexagon_A2_add IntRegs:$Rs, IntRegs:$Rt),
          (A2_add IntRegs:$Rs, IntRegs:$Rt)>;
-def: Pat<(int_hexagon_A2_addi IntRegs:$Rs, imm:$s16),
+def: Pat<(int_hexagon_A2_addi IntRegs:$Rs, timm:$s16),
          (A2_addi IntRegs:$Rs, imm:$s16)>;
 def: Pat<(int_hexagon_A2_addp DoubleRegs:$Rs, DoubleRegs:$Rt),
          (A2_addp DoubleRegs:$Rs, DoubleRegs:$Rt)>;
 
 def: Pat<(int_hexagon_A2_sub IntRegs:$Rs, IntRegs:$Rt),
          (A2_sub IntRegs:$Rs, IntRegs:$Rt)>;
-def: Pat<(int_hexagon_A2_subri imm:$s10, IntRegs:$Rs),
+def: Pat<(int_hexagon_A2_subri timm:$s10, IntRegs:$Rs),
          (A2_subri imm:$s10, IntRegs:$Rs)>;
 def: Pat<(int_hexagon_A2_subp DoubleRegs:$Rs, DoubleRegs:$Rt),
          (A2_subp DoubleRegs:$Rs, DoubleRegs:$Rt)>;
@@ -45,26 +45,26 @@ def: Pat<(int_hexagon_M2_dpmpyss_s0 IntRegs:$Rs, IntRegs:$Rt),
 def: Pat<(int_hexagon_M2_dpmpyuu_s0 IntRegs:$Rs, IntRegs:$Rt),
          (M2_dpmpyuu_s0 IntRegs:$Rs, IntRegs:$Rt)>;
 
-def: Pat<(int_hexagon_S2_asl_i_r IntRegs:$Rs, imm:$u5),
+def: Pat<(int_hexagon_S2_asl_i_r IntRegs:$Rs, timm:$u5),
          (S2_asl_i_r IntRegs:$Rs, imm:$u5)>;
-def: Pat<(int_hexagon_S2_lsr_i_r IntRegs:$Rs, imm:$u5),
+def: Pat<(int_hexagon_S2_lsr_i_r IntRegs:$Rs, timm:$u5),
          (S2_lsr_i_r IntRegs:$Rs, imm:$u5)>;
-def: Pat<(int_hexagon_S2_asr_i_r IntRegs:$Rs, imm:$u5),
+def: Pat<(int_hexagon_S2_asr_i_r IntRegs:$Rs, timm:$u5),
          (S2_asr_i_r IntRegs:$Rs, imm:$u5)>;
-def: Pat<(int_hexagon_S2_asl_i_p DoubleRegs:$Rs, imm:$u6),
+def: Pat<(int_hexagon_S2_asl_i_p DoubleRegs:$Rs, timm:$u6),
          (S2_asl_i_p DoubleRegs:$Rs, imm:$u6)>;
-def: Pat<(int_hexagon_S2_lsr_i_p DoubleRegs:$Rs, imm:$u6),
+def: Pat<(int_hexagon_S2_lsr_i_p DoubleRegs:$Rs, timm:$u6),
          (S2_lsr_i_p DoubleRegs:$Rs, imm:$u6)>;
-def: Pat<(int_hexagon_S2_asr_i_p DoubleRegs:$Rs, imm:$u6),
+def: Pat<(int_hexagon_S2_asr_i_p DoubleRegs:$Rs, timm:$u6),
          (S2_asr_i_p DoubleRegs:$Rs, imm:$u6)>;
 
 def: Pat<(int_hexagon_A2_and IntRegs:$Rs, IntRegs:$Rt),
          (A2_and IntRegs:$Rs, IntRegs:$Rt)>;
-def: Pat<(int_hexagon_A2_andir IntRegs:$Rs, imm:$s10),
+def: Pat<(int_hexagon_A2_andir IntRegs:$Rs, timm:$s10),
          (A2_andir IntRegs:$Rs, imm:$s10)>;
 def: Pat<(int_hexagon_A2_or IntRegs:$Rs, IntRegs:$Rt),
          (A2_or IntRegs:$Rs, IntRegs:$Rt)>;
-def: Pat<(int_hexagon_A2_orir IntRegs:$Rs, imm:$s10),
+def: Pat<(int_hexagon_A2_orir IntRegs:$Rs, timm:$s10),
          (A2_orir IntRegs:$Rs, imm:$s10)>;
 def: Pat<(int_hexagon_A2_xor IntRegs:$Rs, IntRegs:$Rt),
          (A2_xor IntRegs:$Rs, IntRegs:$Rt)>;
@@ -99,13 +99,13 @@ def : Pat <(int_hexagon_S5_asrhub_rnd_sat_goodsyntax I64:$Rs, (i32 0)),
            (S2_vsathub I64:$Rs)>;
 }
 
-def : Pat <(int_hexagon_S2_asr_i_r_rnd_goodsyntax I32:$Rs, u5_0ImmPred:$imm),
+def : Pat <(int_hexagon_S2_asr_i_r_rnd_goodsyntax I32:$Rs, u5_0ImmPred_timm:$imm),
            (S2_asr_i_r_rnd I32:$Rs, (UDEC1 u5_0ImmPred:$imm))>;
-def : Pat <(int_hexagon_S2_asr_i_p_rnd_goodsyntax I64:$Rs, u6_0ImmPred:$imm),
+def : Pat <(int_hexagon_S2_asr_i_p_rnd_goodsyntax I64:$Rs, u6_0ImmPred_timm:$imm),
            (S2_asr_i_p_rnd I64:$Rs, (UDEC1 u6_0ImmPred:$imm))>;
-def : Pat <(int_hexagon_S5_vasrhrnd_goodsyntax I64:$Rs, u4_0ImmPred:$imm),
+def : Pat <(int_hexagon_S5_vasrhrnd_goodsyntax I64:$Rs, u4_0ImmPred_timm:$imm),
            (S5_vasrhrnd I64:$Rs, (UDEC1 u4_0ImmPred:$imm))>;
-def : Pat <(int_hexagon_S5_asrhub_rnd_sat_goodsyntax I64:$Rs, u4_0ImmPred:$imm),
+def : Pat <(int_hexagon_S5_asrhub_rnd_sat_goodsyntax I64:$Rs, u4_0ImmPred_timm:$imm),
            (S5_asrhub_rnd_sat I64:$Rs, (UDEC1 u4_0ImmPred:$imm))>;
 
 def ImmExt64: SDNodeXForm<imm, [{
@@ -121,13 +121,13 @@ def ImmExt64: SDNodeXForm<imm, [{
 // To connect the builtin with the instruction, the builtin's operand
 // needs to be extended to the right type.
 
-def : Pat<(int_hexagon_A2_tfrpi imm:$Is),
+def : Pat<(int_hexagon_A2_tfrpi timm:$Is),
           (A2_tfrpi (ImmExt64 $Is))>;
 
-def : Pat <(int_hexagon_C2_cmpgei I32:$src1, s32_0ImmPred:$src2),
+def : Pat <(int_hexagon_C2_cmpgei I32:$src1, s32_0ImmPred_timm:$src2),
            (C2_tfrpr (C2_cmpgti I32:$src1, (SDEC1 s32_0ImmPred:$src2)))>;
 
-def : Pat <(int_hexagon_C2_cmpgeui I32:$src1, u32_0ImmPred:$src2),
+def : Pat <(int_hexagon_C2_cmpgeui I32:$src1, u32_0ImmPred_timm:$src2),
            (C2_tfrpr (C2_cmpgtui I32:$src1, (UDEC1 u32_0ImmPred:$src2)))>;
 
 def : Pat <(int_hexagon_C2_cmpgeui I32:$src, 0),
@@ -142,7 +142,7 @@ def : Pat <(int_hexagon_C2_cmpltu I32:$src1, I32:$src2),
 //===----------------------------------------------------------------------===//
 class S2op_tableidx_pat <Intrinsic IntID, InstHexagon OutputInst,
                          SDNodeXForm XformImm>
-  : Pat <(IntID I32:$src1, I32:$src2, u4_0ImmPred:$src3, u5_0ImmPred:$src4),
+  : Pat <(IntID I32:$src1, I32:$src2, u4_0ImmPred_timm:$src3, u5_0ImmPred_timm:$src4),
          (OutputInst I32:$src1, I32:$src2, u4_0ImmPred:$src3,
                      (XformImm u5_0ImmPred:$src4))>;
 
@@ -197,20 +197,20 @@ class T_stc_pat <InstHexagon MI, Intrinsic IntID, PatLeaf Imm, PatLeaf Val>
   : Pat<(IntID I32:$Rs, Val:$Rt, I32:$Ru, Imm:$s),
         (MI I32:$Rs, Imm:$s, I32:$Ru, Val:$Rt)>;
 
-def: T_stc_pat<S2_storerb_pci, int_hexagon_circ_stb,   s4_0ImmPred, I32>;
-def: T_stc_pat<S2_storerh_pci, int_hexagon_circ_sth,   s4_1ImmPred, I32>;
-def: T_stc_pat<S2_storeri_pci, int_hexagon_circ_stw,   s4_2ImmPred, I32>;
-def: T_stc_pat<S2_storerd_pci, int_hexagon_circ_std,   s4_3ImmPred, I64>;
-def: T_stc_pat<S2_storerf_pci, int_hexagon_circ_sthhi, s4_1ImmPred, I32>;
+def: T_stc_pat<S2_storerb_pci, int_hexagon_circ_stb,   s4_0ImmPred_timm, I32>;
+def: T_stc_pat<S2_storerh_pci, int_hexagon_circ_sth,   s4_1ImmPred_timm, I32>;
+def: T_stc_pat<S2_storeri_pci, int_hexagon_circ_stw,   s4_2ImmPred_timm, I32>;
+def: T_stc_pat<S2_storerd_pci, int_hexagon_circ_std,   s4_3ImmPred_timm, I64>;
+def: T_stc_pat<S2_storerf_pci, int_hexagon_circ_sthhi, s4_1ImmPred_timm, I32>;
 
 multiclass MaskedStore <InstHexagon MI, Intrinsic IntID> {
   def : Pat<(IntID HvxQR:$src1, IntRegs:$src2, HvxVR:$src3),
-            (MI HvxQR:$src1, IntRegs:$src2, #0, HvxVR:$src3)>,
+            (MI HvxQR:$src1, IntRegs:$src2, 0, HvxVR:$src3)>,
         Requires<[UseHVX]>;
 
   def : Pat<(!cast<Intrinsic>(IntID#"_128B") HvxQR:$src1, IntRegs:$src2,
                                              HvxVR:$src3),
-            (MI HvxQR:$src1, IntRegs:$src2, #0, HvxVR:$src3)>,
+            (MI HvxQR:$src1, IntRegs:$src2, 0, HvxVR:$src3)>,
         Requires<[UseHVX]>;
 }
 
@@ -235,6 +235,8 @@ def: T_R_pat<Y2_dczeroa,     int_hexagon_Y2_dczeroa>;
 
 def: T_RR_pat<Y4_l2fetch,    int_hexagon_Y4_l2fetch>;
 def: T_RP_pat<Y5_l2fetch,    int_hexagon_Y5_l2fetch>;
+
+def: Pat<(int_hexagon_Y2_dcfetch I32:$Rt), (Y2_dcfetchbo I32:$Rt, 0)>;
 
 //
 // Patterns for optimizing code generations for HVX.
@@ -277,84 +279,11 @@ def : Pat <(v32i32 (int_hexagon_V6_hi_128B (v64i32 HvxWR:$src1))),
            Requires<[UseHVX]>;
 }
 
-def : Pat <(v512i1 (bitconvert (v16i32 HvxVR:$src1))),
-           (v512i1 (V6_vandvrt (v16i32 HvxVR:$src1), (A2_tfrsi 0x01010101)))>,
-           Requires<[UseHVX]>;
-
-def : Pat <(v512i1 (bitconvert (v32i16 HvxVR:$src1))),
-           (v512i1 (V6_vandvrt (v32i16 HvxVR:$src1), (A2_tfrsi 0x01010101)))>,
-           Requires<[UseHVX]>;
-
-def : Pat <(v512i1 (bitconvert (v64i8  HvxVR:$src1))),
-           (v512i1 (V6_vandvrt (v64i8  HvxVR:$src1), (A2_tfrsi 0x01010101)))>,
-           Requires<[UseHVX]>;
-
-def : Pat <(v16i32 (bitconvert (v512i1 HvxQR:$src1))),
-           (v16i32 (V6_vandqrt (v512i1 HvxQR:$src1), (A2_tfrsi 0x01010101)))>,
-           Requires<[UseHVX]>;
-
-def : Pat <(v32i16 (bitconvert (v512i1 HvxQR:$src1))),
-           (v32i16 (V6_vandqrt (v512i1 HvxQR:$src1), (A2_tfrsi 0x01010101)))>,
-           Requires<[UseHVX]>;
-
-def : Pat <(v64i8  (bitconvert (v512i1 HvxQR:$src1))),
-           (v64i8  (V6_vandqrt (v512i1 HvxQR:$src1), (A2_tfrsi 0x01010101)))>,
-           Requires<[UseHVX]>;
-
-def : Pat <(v1024i1 (bitconvert (v32i32 HvxVR:$src1))),
-           (v1024i1 (V6_vandvrt (v32i32 HvxVR:$src1), (A2_tfrsi 0x01010101)))>,
-           Requires<[UseHVX]>;
-
-def : Pat <(v1024i1 (bitconvert (v64i16 HvxVR:$src1))),
-           (v1024i1 (V6_vandvrt (v64i16 HvxVR:$src1), (A2_tfrsi 0x01010101)))>,
-           Requires<[UseHVX]>;
-
-def : Pat <(v1024i1 (bitconvert (v128i8 HvxVR:$src1))),
-           (v1024i1 (V6_vandvrt (v128i8 HvxVR:$src1), (A2_tfrsi 0x01010101)))>,
-           Requires<[UseHVX]>;
-
-def : Pat <(v32i32 (bitconvert (v1024i1 HvxQR:$src1))),
-           (v32i32 (V6_vandqrt (v1024i1 HvxQR:$src1), (A2_tfrsi 0x01010101)))>,
-           Requires<[UseHVX]>;
-
-def : Pat <(v64i16 (bitconvert (v1024i1 HvxQR:$src1))),
-           (v64i16 (V6_vandqrt (v1024i1 HvxQR:$src1), (A2_tfrsi 0x01010101)))>,
-           Requires<[UseHVX]>;
-
-def : Pat <(v128i8 (bitconvert (v1024i1 HvxQR:$src1))),
-           (v128i8 (V6_vandqrt (v1024i1 HvxQR:$src1), (A2_tfrsi 0x01010101)))>,
-           Requires<[UseHVX]>;
-
-let AddedComplexity = 140 in {
-def : Pat <(store (v512i1 HvxQR:$src1), (i32 IntRegs:$addr)),
-           (V6_vS32b_ai IntRegs:$addr, 0,
-           (v16i32 (V6_vandqrt (v512i1 HvxQR:$src1), (A2_tfrsi 0x01010101))))>,
-           Requires<[UseHVX]>;
-
-def : Pat <(v512i1 (load (i32 IntRegs:$addr))),
-           (v512i1 (V6_vandvrt
-           (v16i32 (V6_vL32b_ai IntRegs:$addr, 0)), (A2_tfrsi 0x01010101)))>,
-           Requires<[UseHVX]>;
-
-def : Pat <(store (v1024i1 HvxQR:$src1), (i32 IntRegs:$addr)),
-           (V6_vS32b_ai IntRegs:$addr, 0,
-           (v32i32 (V6_vandqrt (v1024i1 HvxQR:$src1), (A2_tfrsi 0x01010101))))>,
-           Requires<[UseHVX]>;
-
-def : Pat <(v1024i1 (load (i32 IntRegs:$addr))),
-           (v1024i1 (V6_vandvrt
-           (v32i32 (V6_vL32b_ai IntRegs:$addr, 0)), (A2_tfrsi 0x01010101)))>,
-           Requires<[UseHVX]>;
-}
-
 def: Pat<(v64i16 (trunc v64i32:$Vdd)),
          (v64i16 (V6_vpackwh_sat
                  (v32i32 (V6_hi HvxWR:$Vdd)),
                  (v32i32 (V6_lo HvxWR:$Vdd))))>,
      Requires<[UseHVX]>;
-
-def: Pat<(int_hexagon_S2_asr_i_vh DoubleRegs:$src1, IntRegs:$src2),
-         (S2_asr_r_vh DoubleRegs:$src1, IntRegs:$src2)>, Requires<[HasV55]>;
 
 multiclass T_VI_pat <InstHexagon MI, Intrinsic IntID> {
   def: Pat<(IntID HvxVR:$src1, u3_0ImmPred:$src2),
@@ -436,41 +365,101 @@ def: Pat<(int_hexagon_V6_vdd0),
 def: Pat<(int_hexagon_V6_vdd0_128B),
          (V6_vdd0)>, Requires<[HasV65, UseHVX128B]>;
 
-def: Pat<(int_hexagon_V6_vscattermw IntRegs:$src1, ModRegs:$src2, HvxVR:$src3, HvxVR:$src4),
-         (V6_vscattermw IntRegs:$src1, ModRegs:$src2, HvxVR:$src3, HvxVR:$src4)>, Requires<[HasV65, UseHVX]>;
-def: Pat<(int_hexagon_V6_vscattermh IntRegs:$src1, ModRegs:$src2, HvxVR:$src3, HvxVR:$src4),
-         (V6_vscattermh IntRegs:$src1, ModRegs:$src2, HvxVR:$src3, HvxVR:$src4)>, Requires<[HasV65, UseHVX]>;
-def: Pat<(int_hexagon_V6_vscattermw_add IntRegs:$src1, ModRegs:$src2, HvxVR:$src3, HvxVR:$src4),
-         (V6_vscattermw_add IntRegs:$src1, ModRegs:$src2, HvxVR:$src3, HvxVR:$src4)>, Requires<[HasV65, UseHVX]>;
-def: Pat<(int_hexagon_V6_vscattermh_add IntRegs:$src1, ModRegs:$src2, HvxVR:$src3, HvxVR:$src4),
-         (V6_vscattermh_add IntRegs:$src1, ModRegs:$src2, HvxVR:$src3, HvxVR:$src4)>, Requires<[HasV65, UseHVX]>;
-def: Pat<(int_hexagon_V6_vscattermwq HvxQR:$src1, IntRegs:$src2, ModRegs:$src3, HvxVR:$src4, HvxVR:$src5),
-         (V6_vscattermwq HvxQR:$src1, IntRegs:$src2, ModRegs:$src3, HvxVR:$src4, HvxVR:$src5)>, Requires<[HasV65, UseHVX]>;
-def: Pat<(int_hexagon_V6_vscattermhq HvxQR:$src1, IntRegs:$src2, ModRegs:$src3, HvxVR:$src4, HvxVR:$src5),
-         (V6_vscattermhq HvxQR:$src1, IntRegs:$src2, ModRegs:$src3, HvxVR:$src4, HvxVR:$src5)>, Requires<[HasV65, UseHVX]>;
-def: Pat<(int_hexagon_V6_vscattermhw IntRegs:$src1, ModRegs:$src2, HvxWR:$src3, HvxVR:$src4),
-         (V6_vscattermhw IntRegs:$src1, ModRegs:$src2, HvxWR:$src3, HvxVR:$src4)>, Requires<[HasV65, UseHVX]>;
-def: Pat<(int_hexagon_V6_vscattermhw_add IntRegs:$src1, ModRegs:$src2, HvxWR:$src3, HvxVR:$src4),
-         (V6_vscattermhw_add IntRegs:$src1, ModRegs:$src2, HvxWR:$src3, HvxVR:$src4)>, Requires<[HasV65, UseHVX]>;
-def: Pat<(int_hexagon_V6_vscattermhwq HvxQR:$src1, IntRegs:$src2, ModRegs:$src3, HvxWR:$src4, HvxVR:$src5),
-         (V6_vscattermhwq HvxQR:$src1, IntRegs:$src2, ModRegs:$src3, HvxWR:$src4, HvxVR:$src5)>, Requires<[HasV65, UseHVX]>;
-def: Pat<(int_hexagon_V6_vscattermw_128B IntRegs:$src1, ModRegs:$src2, HvxVR:$src3, HvxVR:$src4),
-         (V6_vscattermw IntRegs:$src1, ModRegs:$src2, HvxVR:$src3, HvxVR:$src4)>, Requires<[HasV65, UseHVX]>;
-def: Pat<(int_hexagon_V6_vscattermh_128B IntRegs:$src1, ModRegs:$src2, HvxVR:$src3, HvxVR:$src4),
-         (V6_vscattermh IntRegs:$src1, ModRegs:$src2, HvxVR:$src3, HvxVR:$src4)>, Requires<[HasV65, UseHVX]>;
-def: Pat<(int_hexagon_V6_vscattermw_add_128B IntRegs:$src1, ModRegs:$src2, HvxVR:$src3, HvxVR:$src4),
-         (V6_vscattermw_add IntRegs:$src1, ModRegs:$src2, HvxVR:$src3, HvxVR:$src4)>, Requires<[HasV65, UseHVX]>;
-def: Pat<(int_hexagon_V6_vscattermh_add_128B IntRegs:$src1, ModRegs:$src2, HvxVR:$src3, HvxVR:$src4),
-         (V6_vscattermh_add IntRegs:$src1, ModRegs:$src2, HvxVR:$src3, HvxVR:$src4)>, Requires<[HasV65, UseHVX]>;
-def: Pat<(int_hexagon_V6_vscattermwq_128B HvxQR:$src1, IntRegs:$src2, ModRegs:$src3, HvxVR:$src4, HvxVR:$src5),
-         (V6_vscattermwq HvxQR:$src1, IntRegs:$src2, ModRegs:$src3, HvxVR:$src4, HvxVR:$src5)>, Requires<[HasV65, UseHVX]>;
-def: Pat<(int_hexagon_V6_vscattermhq_128B HvxQR:$src1, IntRegs:$src2, ModRegs:$src3, HvxVR:$src4, HvxVR:$src5),
-         (V6_vscattermhq HvxQR:$src1, IntRegs:$src2, ModRegs:$src3, HvxVR:$src4, HvxVR:$src5)>, Requires<[HasV65, UseHVX]>;
-def: Pat<(int_hexagon_V6_vscattermhw_128B IntRegs:$src1, ModRegs:$src2, HvxWR:$src3, HvxVR:$src4),
-         (V6_vscattermhw IntRegs:$src1, ModRegs:$src2, HvxWR:$src3, HvxVR:$src4)>, Requires<[HasV65, UseHVX]>;
-def: Pat<(int_hexagon_V6_vscattermhw_add_128B IntRegs:$src1, ModRegs:$src2, HvxWR:$src3, HvxVR:$src4),
-         (V6_vscattermhw_add IntRegs:$src1, ModRegs:$src2, HvxWR:$src3, HvxVR:$src4)>, Requires<[HasV65, UseHVX]>;
-def: Pat<(int_hexagon_V6_vscattermhwq_128B HvxQR:$src1, IntRegs:$src2, ModRegs:$src3, HvxWR:$src4, HvxVR:$src5),
-         (V6_vscattermhwq HvxQR:$src1, IntRegs:$src2, ModRegs:$src3, HvxWR:$src4, HvxVR:$src5)>, Requires<[HasV65, UseHVX]>;
+
+multiclass T_VP_pat<InstHexagon MI, Intrinsic IntID> {
+  def: Pat<(IntID HvxVR:$Vu, DoubleRegs:$Rt),
+           (MI    HvxVR:$Vu, DoubleRegs:$Rt)>;
+  def: Pat<(!cast<Intrinsic>(IntID#"_128B")
+                  HvxVR:$Vu, DoubleRegs:$Rt),
+           (MI    HvxVR:$Vu, DoubleRegs:$Rt)>;
+}
+
+multiclass T_WVP_pat<InstHexagon MI, Intrinsic IntID> {
+  def: Pat<(IntID HvxWR:$Vx, HvxVR:$Vu, DoubleRegs:$Rt),
+           (MI    HvxWR:$Vx, HvxVR:$Vu, DoubleRegs:$Rt)>;
+  def: Pat<(!cast<Intrinsic>(IntID#"_128B")
+                  HvxWR:$Vx, HvxVR:$Vu, DoubleRegs:$Rt),
+           (MI    HvxWR:$Vx, HvxVR:$Vu, DoubleRegs:$Rt)>;
+}
+
+// These are actually only in V65.
+let Predicates = [HasV65, UseHVX] in {
+  defm: T_VP_pat<V6_vrmpyub_rtt,        int_hexagon_V6_vrmpyub_rtt>;
+  defm: T_VP_pat<V6_vrmpybub_rtt,       int_hexagon_V6_vrmpybub_rtt>;
+
+  defm: T_WVP_pat<V6_vrmpyub_rtt_acc,   int_hexagon_V6_vrmpyub_rtt_acc>;
+  defm: T_WVP_pat<V6_vrmpybub_rtt_acc,  int_hexagon_V6_vrmpybub_rtt_acc>;
+}
+
+
+multiclass T_pRI_pat<InstHexagon MI, Intrinsic IntID> {
+  def: Pat<(IntID PredRegs:$P, IntRegs:$R, timm:$s),
+           (MI    PredRegs:$P, IntRegs:$R, imm:$s)>;
+  def: Pat<(!cast<Intrinsic>(IntID#"_128B")
+                  PredRegs:$P, IntRegs:$R, timm:$s),
+           (MI    PredRegs:$P, IntRegs:$R, imm:$s)>;
+}
+
+multiclass T_pRM_pat<InstHexagon MI, Intrinsic IntID> {
+  def: Pat<(IntID PredRegs:$P, IntRegs:$R, ModRegs:$M),
+           (MI    PredRegs:$P, IntRegs:$R, ModRegs:$M)>;
+  def: Pat<(!cast<Intrinsic>(IntID#"_128B")
+                  PredRegs:$P, IntRegs:$R, ModRegs:$M),
+           (MI    PredRegs:$P, IntRegs:$R, ModRegs:$M)>;
+}
+
+let Predicates = [HasV62, UseHVX] in {
+  defm: T_pRI_pat<V6_vL32b_pred_ai,       int_hexagon_V6_vL32b_pred_ai>;
+  defm: T_pRI_pat<V6_vL32b_npred_ai,      int_hexagon_V6_vL32b_npred_ai>;
+  defm: T_pRI_pat<V6_vL32b_pred_pi,       int_hexagon_V6_vL32b_pred_pi>;
+  defm: T_pRI_pat<V6_vL32b_npred_pi,      int_hexagon_V6_vL32b_npred_pi>;
+  defm: T_pRI_pat<V6_vL32b_nt_pred_ai,    int_hexagon_V6_vL32b_nt_pred_ai>;
+  defm: T_pRI_pat<V6_vL32b_nt_npred_ai,   int_hexagon_V6_vL32b_nt_npred_ai>;
+  defm: T_pRI_pat<V6_vL32b_nt_pred_pi,    int_hexagon_V6_vL32b_nt_pred_pi>;
+  defm: T_pRI_pat<V6_vL32b_nt_npred_pi,   int_hexagon_V6_vL32b_nt_npred_pi>;
+
+  defm: T_pRM_pat<V6_vL32b_pred_ppu,      int_hexagon_V6_vL32b_pred_ppu>;
+  defm: T_pRM_pat<V6_vL32b_npred_ppu,     int_hexagon_V6_vL32b_npred_ppu>;
+  defm: T_pRM_pat<V6_vL32b_nt_pred_ppu,   int_hexagon_V6_vL32b_nt_pred_ppu>;
+  defm: T_pRM_pat<V6_vL32b_nt_npred_ppu,  int_hexagon_V6_vL32b_nt_npred_ppu>;
+}
+
+multiclass T_pRIV_pat<InstHexagon MI, Intrinsic IntID> {
+  def: Pat<(IntID PredRegs:$P, IntRegs:$R, timm:$s, HvxVR:$V),
+           (MI    PredRegs:$P, IntRegs:$R, imm:$s, HvxVR:$V)>;
+  def: Pat<(!cast<Intrinsic>(IntID#"_128B")
+                  PredRegs:$P, IntRegs:$R, timm:$s, HvxVR:$V),
+           (MI    PredRegs:$P, IntRegs:$R, imm:$s, HvxVR:$V)>;
+}
+
+multiclass T_pRMV_pat<InstHexagon MI, Intrinsic IntID> {
+  def: Pat<(IntID PredRegs:$P, IntRegs:$R, ModRegs:$M, HvxVR:$V),
+           (MI    PredRegs:$P, IntRegs:$R, ModRegs:$M, HvxVR:$V)>;
+  def: Pat<(!cast<Intrinsic>(IntID#"_128B")
+                  PredRegs:$P, IntRegs:$R, ModRegs:$M, HvxVR:$V),
+           (MI    PredRegs:$P, IntRegs:$R, ModRegs:$M, HvxVR:$V)>;
+}
+
+let Predicates = [HasV60, UseHVX] in {
+  defm: T_pRIV_pat<V6_vS32b_pred_ai,      int_hexagon_V6_vS32b_pred_ai>;
+  defm: T_pRIV_pat<V6_vS32b_npred_ai,     int_hexagon_V6_vS32b_npred_ai>;
+  defm: T_pRIV_pat<V6_vS32b_pred_pi,      int_hexagon_V6_vS32b_pred_pi>;
+  defm: T_pRIV_pat<V6_vS32b_npred_pi,     int_hexagon_V6_vS32b_npred_pi>;
+  defm: T_pRIV_pat<V6_vS32Ub_pred_ai,     int_hexagon_V6_vS32Ub_pred_ai>;
+  defm: T_pRIV_pat<V6_vS32Ub_npred_ai,    int_hexagon_V6_vS32Ub_npred_ai>;
+  defm: T_pRIV_pat<V6_vS32Ub_pred_pi,     int_hexagon_V6_vS32Ub_pred_pi>;
+  defm: T_pRIV_pat<V6_vS32Ub_npred_pi,    int_hexagon_V6_vS32Ub_npred_pi>;
+  defm: T_pRIV_pat<V6_vS32b_nt_pred_ai,   int_hexagon_V6_vS32b_nt_pred_ai>;
+  defm: T_pRIV_pat<V6_vS32b_nt_npred_ai,  int_hexagon_V6_vS32b_nt_npred_ai>;
+  defm: T_pRIV_pat<V6_vS32b_nt_pred_pi,   int_hexagon_V6_vS32b_nt_pred_pi>;
+  defm: T_pRIV_pat<V6_vS32b_nt_npred_pi,  int_hexagon_V6_vS32b_nt_npred_pi>;
+
+  defm: T_pRMV_pat<V6_vS32b_pred_ppu,     int_hexagon_V6_vS32b_pred_ppu>;
+  defm: T_pRMV_pat<V6_vS32b_npred_ppu,    int_hexagon_V6_vS32b_npred_ppu>;
+  defm: T_pRMV_pat<V6_vS32Ub_pred_ppu,    int_hexagon_V6_vS32Ub_pred_ppu>;
+  defm: T_pRMV_pat<V6_vS32Ub_npred_ppu,   int_hexagon_V6_vS32Ub_npred_ppu>;
+  defm: T_pRMV_pat<V6_vS32b_nt_pred_ppu,  int_hexagon_V6_vS32b_nt_pred_ppu>;
+  defm: T_pRMV_pat<V6_vS32b_nt_npred_ppu, int_hexagon_V6_vS32b_nt_npred_ppu>;
+}
 
 include "HexagonDepMapAsm2Intrin.td"

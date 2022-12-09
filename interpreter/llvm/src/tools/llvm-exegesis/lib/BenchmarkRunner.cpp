@@ -7,16 +7,21 @@
 //===----------------------------------------------------------------------===//
 
 #include <array>
+#include <memory>
 #include <string>
 
 #include "Assembler.h"
 #include "BenchmarkRunner.h"
+#include "Error.h"
 #include "MCInstrDescView.h"
 #include "PerfHelper.h"
+#include "Target.h"
+#include "llvm/ADT/ScopeExit.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/Support/CrashRecoveryContext.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Program.h"
@@ -24,164 +29,250 @@
 namespace llvm {
 namespace exegesis {
 
-BenchmarkFailure::BenchmarkFailure(const llvm::Twine &S)
-    : llvm::StringError(S, llvm::inconvertibleErrorCode()) {}
-
 BenchmarkRunner::BenchmarkRunner(const LLVMState &State,
                                  InstructionBenchmark::ModeE Mode)
-    : State(State), Mode(Mode), Scratch(llvm::make_unique<ScratchSpace>()) {}
+    : State(State), Mode(Mode), Scratch(std::make_unique<ScratchSpace>()) {}
 
 BenchmarkRunner::~BenchmarkRunner() = default;
-
-// Repeat the snippet until there are at least MinInstructions in the resulting
-// code.
-static std::vector<llvm::MCInst>
-GenerateInstructions(const BenchmarkCode &BC, const size_t MinInstructions) {
-  if (BC.Instructions.empty())
-    return {};
-  std::vector<llvm::MCInst> Code = BC.Instructions;
-  for (int I = 0; Code.size() < MinInstructions; ++I)
-    Code.push_back(BC.Instructions[I % BC.Instructions.size()]);
-  return Code;
-}
 
 namespace {
 class FunctionExecutorImpl : public BenchmarkRunner::FunctionExecutor {
 public:
   FunctionExecutorImpl(const LLVMState &State,
-                       llvm::object::OwningBinary<llvm::object::ObjectFile> Obj,
+                       object::OwningBinary<object::ObjectFile> Obj,
                        BenchmarkRunner::ScratchSpace *Scratch)
-      : Function(State.createTargetMachine(), std::move(Obj)),
+      : State(State), Function(State.createTargetMachine(), std::move(Obj)),
         Scratch(Scratch) {}
 
 private:
-  llvm::Expected<int64_t> runAndMeasure(const char *Counters) const override {
-    // We sum counts when there are several counters for a single ProcRes
-    // (e.g. P23 on SandyBridge).
-    int64_t CounterValue = 0;
-    llvm::SmallVector<llvm::StringRef, 2> CounterNames;
-    llvm::StringRef(Counters).split(CounterNames, '+');
-    char *const ScratchPtr = Scratch->ptr();
-    for (auto &CounterName : CounterNames) {
-      CounterName = CounterName.trim();
-      pfm::PerfEvent PerfEvent(CounterName);
-      if (!PerfEvent.valid())
-        llvm::report_fatal_error(llvm::Twine("invalid perf event '")
-                                     .concat(CounterName)
-                                     .concat("'"));
-      pfm::Counter Counter(PerfEvent);
-      Scratch->clear();
-      {
-        llvm::CrashRecoveryContext CRC;
-        llvm::CrashRecoveryContext::Enable();
-        const bool Crashed = !CRC.RunSafely([this, &Counter, ScratchPtr]() {
-          Counter.start();
-          this->Function(ScratchPtr);
-          Counter.stop();
-        });
-        llvm::CrashRecoveryContext::Disable();
-        // FIXME: Better diagnosis.
-        if (Crashed)
-          return llvm::make_error<BenchmarkFailure>(
-              "snippet crashed while running");
-      }
-      CounterValue += Counter.read();
-    }
-    return CounterValue;
+  Expected<int64_t> runAndMeasure(const char *Counters) const override {
+    auto ResultOrError = runAndSample(Counters);
+    if (ResultOrError)
+      return ResultOrError.get()[0];
+    return ResultOrError.takeError();
   }
 
+  static void
+  accumulateCounterValues(const llvm::SmallVector<int64_t, 4> &NewValues,
+                          llvm::SmallVector<int64_t, 4> *Result) {
+    const size_t NumValues = std::max(NewValues.size(), Result->size());
+    if (NumValues > Result->size())
+      Result->resize(NumValues, 0);
+    for (size_t I = 0, End = NewValues.size(); I < End; ++I)
+      (*Result)[I] += NewValues[I];
+  }
+
+  Expected<llvm::SmallVector<int64_t, 4>>
+  runAndSample(const char *Counters) const override {
+    // We sum counts when there are several counters for a single ProcRes
+    // (e.g. P23 on SandyBridge).
+    llvm::SmallVector<int64_t, 4> CounterValues;
+    int Reserved = 0;
+    SmallVector<StringRef, 2> CounterNames;
+    StringRef(Counters).split(CounterNames, '+');
+    char *const ScratchPtr = Scratch->ptr();
+    const ExegesisTarget &ET = State.getExegesisTarget();
+    for (auto &CounterName : CounterNames) {
+      CounterName = CounterName.trim();
+      auto CounterOrError = ET.createCounter(CounterName, State);
+
+      if (!CounterOrError)
+        return CounterOrError.takeError();
+
+      pfm::Counter *Counter = CounterOrError.get().get();
+      if (Reserved == 0) {
+        Reserved = Counter->numValues();
+        CounterValues.reserve(Reserved);
+      } else if (Reserved != Counter->numValues())
+        // It'd be wrong to accumulate vectors of different sizes.
+        return make_error<Failure>(
+            llvm::Twine("Inconsistent number of values for counter ")
+                .concat(CounterName)
+                .concat(std::to_string(Counter->numValues()))
+                .concat(" vs expected of ")
+                .concat(std::to_string(Reserved)));
+      Scratch->clear();
+      {
+        auto PS = ET.withSavedState();
+        CrashRecoveryContext CRC;
+        CrashRecoveryContext::Enable();
+        const bool Crashed = !CRC.RunSafely([this, Counter, ScratchPtr]() {
+          Counter->start();
+          this->Function(ScratchPtr);
+          Counter->stop();
+        });
+        CrashRecoveryContext::Disable();
+        PS.reset();
+        if (Crashed) {
+          std::string Msg = "snippet crashed while running";
+#ifdef LLVM_ON_UNIX
+          // See "Exit Status for Commands":
+          // https://pubs.opengroup.org/onlinepubs/9699919799/xrat/V4_xcu_chap02.html
+          constexpr const int kSigOffset = 128;
+          if (const char *const SigName = strsignal(CRC.RetCode - kSigOffset)) {
+            Msg += ": ";
+            Msg += SigName;
+          }
+#endif
+          return make_error<SnippetCrash>(std::move(Msg));
+        }
+      }
+
+      auto ValueOrError = Counter->readOrError(Function.getFunctionBytes());
+      if (!ValueOrError)
+        return ValueOrError.takeError();
+      accumulateCounterValues(ValueOrError.get(), &CounterValues);
+    }
+    return CounterValues;
+  }
+
+  const LLVMState &State;
   const ExecutableFunction Function;
   BenchmarkRunner::ScratchSpace *const Scratch;
 };
 } // namespace
 
-InstructionBenchmark
-BenchmarkRunner::runConfiguration(const BenchmarkCode &BC,
-                                  unsigned NumRepetitions,
-                                  bool DumpObjectToDisk) const {
+Expected<InstructionBenchmark> BenchmarkRunner::runConfiguration(
+    const BenchmarkCode &BC, unsigned NumRepetitions, unsigned LoopBodySize,
+    ArrayRef<std::unique_ptr<const SnippetRepetitor>> Repetitors,
+    bool DumpObjectToDisk) const {
   InstructionBenchmark InstrBenchmark;
   InstrBenchmark.Mode = Mode;
-  InstrBenchmark.CpuName = State.getTargetMachine().getTargetCPU();
+  InstrBenchmark.CpuName = std::string(State.getTargetMachine().getTargetCPU());
   InstrBenchmark.LLVMTriple =
       State.getTargetMachine().getTargetTriple().normalize();
   InstrBenchmark.NumRepetitions = NumRepetitions;
   InstrBenchmark.Info = BC.Info;
 
-  const std::vector<llvm::MCInst> &Instructions = BC.Instructions;
+  const std::vector<MCInst> &Instructions = BC.Key.Instructions;
 
-  InstrBenchmark.Key.Instructions = Instructions;
-  InstrBenchmark.Key.RegisterInitialValues = BC.RegisterInitialValues;
+  InstrBenchmark.Key = BC.Key;
 
-  // Assemble at least kMinInstructionsForSnippet instructions by repeating the
-  // snippet for debug/analysis. This is so that the user clearly understands
-  // that the inside instructions are repeated.
-  constexpr const int kMinInstructionsForSnippet = 16;
-  {
-    llvm::SmallString<0> Buffer;
-    llvm::raw_svector_ostream OS(Buffer);
-    assembleToStream(State.getExegesisTarget(), State.createTargetMachine(),
-                     BC.LiveIns, BC.RegisterInitialValues,
-                     GenerateInstructions(BC, kMinInstructionsForSnippet), OS);
-    const ExecutableFunction EF(State.createTargetMachine(),
-                                getObjectFromBuffer(OS.str()));
-    const auto FnBytes = EF.getFunctionBytes();
-    InstrBenchmark.AssembledSnippet.assign(FnBytes.begin(), FnBytes.end());
-  }
+  // If we end up having an error, and we've previously succeeded with
+  // some other Repetitor, we want to discard the previous measurements.
+  struct ClearBenchmarkOnReturn {
+    ClearBenchmarkOnReturn(InstructionBenchmark *IB) : IB(IB) {}
+    ~ClearBenchmarkOnReturn() {
+      if (Clear)
+        IB->Measurements.clear();
+    }
+    void disarm() { Clear = false; }
 
-  // Assemble NumRepetitions instructions repetitions of the snippet for
-  // measurements.
-  const auto Code = GenerateInstructions(BC, InstrBenchmark.NumRepetitions);
+  private:
+    InstructionBenchmark *const IB;
+    bool Clear = true;
+  };
+  ClearBenchmarkOnReturn CBOR(&InstrBenchmark);
 
-  llvm::object::OwningBinary<llvm::object::ObjectFile> ObjectFile;
-  if (DumpObjectToDisk) {
-    auto ObjectFilePath = writeObjectFile(BC, Code);
-    if (llvm::Error E = ObjectFilePath.takeError()) {
-      InstrBenchmark.Error = llvm::toString(std::move(E));
+  for (const std::unique_ptr<const SnippetRepetitor> &Repetitor : Repetitors) {
+    // Assemble at least kMinInstructionsForSnippet instructions by repeating
+    // the snippet for debug/analysis. This is so that the user clearly
+    // understands that the inside instructions are repeated.
+    const int MinInstructionsForSnippet = 4 * Instructions.size();
+    const int LoopBodySizeForSnippet = 2 * Instructions.size();
+    {
+      SmallString<0> Buffer;
+      raw_svector_ostream OS(Buffer);
+      if (Error E = assembleToStream(
+              State.getExegesisTarget(), State.createTargetMachine(),
+              BC.LiveIns, BC.Key.RegisterInitialValues,
+              Repetitor->Repeat(Instructions, MinInstructionsForSnippet,
+                                LoopBodySizeForSnippet),
+              OS)) {
+        return std::move(E);
+      }
+      const ExecutableFunction EF(State.createTargetMachine(),
+                                  getObjectFromBuffer(OS.str()));
+      const auto FnBytes = EF.getFunctionBytes();
+      llvm::append_range(InstrBenchmark.AssembledSnippet, FnBytes);
+    }
+
+    // Assemble NumRepetitions instructions repetitions of the snippet for
+    // measurements.
+    const auto Filler = Repetitor->Repeat(
+        Instructions, InstrBenchmark.NumRepetitions, LoopBodySize);
+
+    object::OwningBinary<object::ObjectFile> ObjectFile;
+    if (DumpObjectToDisk) {
+      auto ObjectFilePath = writeObjectFile(BC, Filler);
+      if (Error E = ObjectFilePath.takeError()) {
+        InstrBenchmark.Error = toString(std::move(E));
+        return InstrBenchmark;
+      }
+      outs() << "Check generated assembly with: /usr/bin/objdump -d "
+             << *ObjectFilePath << "\n";
+      ObjectFile = getObjectFromFile(*ObjectFilePath);
+    } else {
+      SmallString<0> Buffer;
+      raw_svector_ostream OS(Buffer);
+      if (Error E = assembleToStream(
+              State.getExegesisTarget(), State.createTargetMachine(),
+              BC.LiveIns, BC.Key.RegisterInitialValues, Filler, OS)) {
+        return std::move(E);
+      }
+      ObjectFile = getObjectFromBuffer(OS.str());
+    }
+
+    const FunctionExecutorImpl Executor(State, std::move(ObjectFile),
+                                        Scratch.get());
+    auto NewMeasurements = runMeasurements(Executor);
+    if (Error E = NewMeasurements.takeError()) {
+      if (!E.isA<SnippetCrash>())
+        return std::move(E);
+      InstrBenchmark.Error = toString(std::move(E));
       return InstrBenchmark;
     }
-    llvm::outs() << "Check generated assembly with: /usr/bin/objdump -d "
-                 << *ObjectFilePath << "\n";
-    ObjectFile = getObjectFromFile(*ObjectFilePath);
-  } else {
-    llvm::SmallString<0> Buffer;
-    llvm::raw_svector_ostream OS(Buffer);
-    assembleToStream(State.getExegesisTarget(), State.createTargetMachine(),
-                     BC.LiveIns, BC.RegisterInitialValues, Code, OS);
-    ObjectFile = getObjectFromBuffer(OS.str());
+    assert(InstrBenchmark.NumRepetitions > 0 && "invalid NumRepetitions");
+    for (BenchmarkMeasure &BM : *NewMeasurements) {
+      // Scale the measurements by instruction.
+      BM.PerInstructionValue /= InstrBenchmark.NumRepetitions;
+      // Scale the measurements by snippet.
+      BM.PerSnippetValue *= static_cast<double>(Instructions.size()) /
+                            InstrBenchmark.NumRepetitions;
+    }
+    if (InstrBenchmark.Measurements.empty()) {
+      InstrBenchmark.Measurements = std::move(*NewMeasurements);
+      continue;
+    }
+
+    assert(Repetitors.size() > 1 && !InstrBenchmark.Measurements.empty() &&
+           "We're in an 'min' repetition mode, and need to aggregate new "
+           "result to the existing result.");
+    assert(InstrBenchmark.Measurements.size() == NewMeasurements->size() &&
+           "Expected to have identical number of measurements.");
+    for (auto I : zip(InstrBenchmark.Measurements, *NewMeasurements)) {
+      BenchmarkMeasure &Measurement = std::get<0>(I);
+      BenchmarkMeasure &NewMeasurement = std::get<1>(I);
+      assert(Measurement.Key == NewMeasurement.Key &&
+             "Expected measurements to be symmetric");
+
+      Measurement.PerInstructionValue = std::min(
+          Measurement.PerInstructionValue, NewMeasurement.PerInstructionValue);
+      Measurement.PerSnippetValue =
+          std::min(Measurement.PerSnippetValue, NewMeasurement.PerSnippetValue);
+    }
   }
 
-  const FunctionExecutorImpl Executor(State, std::move(ObjectFile),
-                                      Scratch.get());
-  auto Measurements = runMeasurements(Executor);
-  if (llvm::Error E = Measurements.takeError()) {
-    InstrBenchmark.Error = llvm::toString(std::move(E));
-    return InstrBenchmark;
-  }
-  InstrBenchmark.Measurements = std::move(*Measurements);
-  assert(InstrBenchmark.NumRepetitions > 0 && "invalid NumRepetitions");
-  for (BenchmarkMeasure &BM : InstrBenchmark.Measurements) {
-    // Scale the measurements by instruction.
-    BM.PerInstructionValue /= InstrBenchmark.NumRepetitions;
-    // Scale the measurements by snippet.
-    BM.PerSnippetValue *= static_cast<double>(BC.Instructions.size()) /
-                          InstrBenchmark.NumRepetitions;
-  }
-
+  // We successfully measured everything, so don't discard the results.
+  CBOR.disarm();
   return InstrBenchmark;
 }
 
-llvm::Expected<std::string>
+Expected<std::string>
 BenchmarkRunner::writeObjectFile(const BenchmarkCode &BC,
-                                 llvm::ArrayRef<llvm::MCInst> Code) const {
+                                 const FillFunction &FillFunction) const {
   int ResultFD = 0;
-  llvm::SmallString<256> ResultPath;
-  if (llvm::Error E = llvm::errorCodeToError(llvm::sys::fs::createTemporaryFile(
-          "snippet", "o", ResultFD, ResultPath)))
+  SmallString<256> ResultPath;
+  if (Error E = errorCodeToError(
+          sys::fs::createTemporaryFile("snippet", "o", ResultFD, ResultPath)))
     return std::move(E);
-  llvm::raw_fd_ostream OFS(ResultFD, true /*ShouldClose*/);
-  assembleToStream(State.getExegesisTarget(), State.createTargetMachine(),
-                   BC.LiveIns, BC.RegisterInitialValues, Code, OFS);
-  return ResultPath.str();
+  raw_fd_ostream OFS(ResultFD, true /*ShouldClose*/);
+  if (Error E = assembleToStream(
+          State.getExegesisTarget(), State.createTargetMachine(), BC.LiveIns,
+          BC.Key.RegisterInitialValues, FillFunction, OFS)) {
+    return std::move(E);
+  }
+  return std::string(ResultPath.str());
 }
 
 BenchmarkRunner::FunctionExecutor::~FunctionExecutor() {}

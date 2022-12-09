@@ -12,6 +12,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "Views/InstructionInfoView.h"
+#include "llvm/Support/FormattedStream.h"
+#include "llvm/Support/JSON.h"
 
 namespace llvm {
 namespace mca {
@@ -19,49 +21,41 @@ namespace mca {
 void InstructionInfoView::printView(raw_ostream &OS) const {
   std::string Buffer;
   raw_string_ostream TempStream(Buffer);
-  const MCSchedModel &SM = STI.getSchedModel();
 
-  std::string Instruction;
-  raw_string_ostream InstrStream(Instruction);
+  ArrayRef<llvm::MCInst> Source = getSource();
+  if (!Source.size())
+    return;
+
+  IIVDVec IIVD(Source.size());
+  collectData(IIVD);
 
   TempStream << "\n\nInstruction Info:\n";
   TempStream << "[1]: #uOps\n[2]: Latency\n[3]: RThroughput\n"
-             << "[4]: MayLoad\n[5]: MayStore\n[6]: HasSideEffects (U)\n\n";
+             << "[4]: MayLoad\n[5]: MayStore\n[6]: HasSideEffects (U)\n";
+  if (PrintEncodings) {
+    TempStream << "[7]: Encoding Size\n";
+    TempStream << "\n[1]    [2]    [3]    [4]    [5]    [6]    [7]    "
+               << "Encodings:                    Instructions:\n";
+  } else {
+    TempStream << "\n[1]    [2]    [3]    [4]    [5]    [6]    Instructions:\n";
+  }
 
-  TempStream << "[1]    [2]    [3]    [4]    [5]    [6]    Instructions:\n";
-  for (const MCInst &Inst : Source) {
-    const MCInstrDesc &MCDesc = MCII.get(Inst.getOpcode());
+  for (const auto &I : enumerate(zip(IIVD, Source))) {
+    const InstructionInfoViewData &IIVDEntry = std::get<0>(I.value());
 
-    // Obtain the scheduling class information from the instruction.
-    unsigned SchedClassID = MCDesc.getSchedClass();
-    unsigned CPUID = SM.getProcessorID();
-
-    // Try to solve variant scheduling classes.
-    while (SchedClassID && SM.getSchedClassDesc(SchedClassID)->isVariant())
-      SchedClassID = STI.resolveVariantSchedClass(SchedClassID, &Inst, CPUID);
-
-    const MCSchedClassDesc &SCDesc = *SM.getSchedClassDesc(SchedClassID);
-    unsigned NumMicroOpcodes = SCDesc.NumMicroOps;
-    unsigned Latency = MCSchedModel::computeInstrLatency(STI, SCDesc);
-    // Add extra latency due to delays in the forwarding data paths.
-    Latency += MCSchedModel::getForwardingDelayCycles(
-        STI.getReadAdvanceEntries(SCDesc));
-    Optional<double> RThroughput =
-        MCSchedModel::getReciprocalThroughput(STI, SCDesc);
-
-    TempStream << ' ' << NumMicroOpcodes << "    ";
-    if (NumMicroOpcodes < 10)
+    TempStream << ' ' << IIVDEntry.NumMicroOpcodes << "    ";
+    if (IIVDEntry.NumMicroOpcodes < 10)
       TempStream << "  ";
-    else if (NumMicroOpcodes < 100)
+    else if (IIVDEntry.NumMicroOpcodes < 100)
       TempStream << ' ';
-    TempStream << Latency << "   ";
-    if (Latency < 10)
+    TempStream << IIVDEntry.Latency << "   ";
+    if (IIVDEntry.Latency < 10)
       TempStream << "  ";
-    else if (Latency < 100)
+    else if (IIVDEntry.Latency < 100)
       TempStream << ' ';
 
-    if (RThroughput.hasValue()) {
-      double RT = RThroughput.getValue();
+    if (IIVDEntry.RThroughput.hasValue()) {
+      double RT = IIVDEntry.RThroughput.getValue();
       TempStream << format("%.2f", RT) << ' ';
       if (RT < 10.0)
         TempStream << "  ";
@@ -70,22 +64,90 @@ void InstructionInfoView::printView(raw_ostream &OS) const {
     } else {
       TempStream << " -     ";
     }
-    TempStream << (MCDesc.mayLoad() ? " *     " : "       ");
-    TempStream << (MCDesc.mayStore() ? " *     " : "       ");
-    TempStream << (MCDesc.hasUnmodeledSideEffects() ? " U " : "   ");
+    TempStream << (IIVDEntry.mayLoad ? " *     " : "       ");
+    TempStream << (IIVDEntry.mayStore ? " *     " : "       ");
+    TempStream << (IIVDEntry.hasUnmodeledSideEffects ? " U     " : "       ");
 
-    MCIP.printInst(&Inst, InstrStream, "", STI);
-    InstrStream.flush();
+    if (PrintEncodings) {
+      StringRef Encoding(CE.getEncoding(I.index()));
+      unsigned EncodingSize = Encoding.size();
+      TempStream << " " << EncodingSize
+                 << (EncodingSize < 10 ? "     " : "    ");
+      TempStream.flush();
+      formatted_raw_ostream FOS(TempStream);
+      for (unsigned i = 0, e = Encoding.size(); i != e; ++i)
+        FOS << format("%02x ", (uint8_t)Encoding[i]);
+      FOS.PadToColumn(30);
+      FOS.flush();
+    }
 
-    // Consume any tabs or spaces at the beginning of the string.
-    StringRef Str(Instruction);
-    Str = Str.ltrim();
-    TempStream << "    " << Str << '\n';
-    Instruction = "";
+    const MCInst &Inst = std::get<1>(I.value());
+    TempStream << printInstructionString(Inst) << '\n';
   }
 
   TempStream.flush();
   OS << Buffer;
+}
+
+void InstructionInfoView::collectData(
+    MutableArrayRef<InstructionInfoViewData> IIVD) const {
+  const llvm::MCSubtargetInfo &STI = getSubTargetInfo();
+  const MCSchedModel &SM = STI.getSchedModel();
+  for (const auto I : zip(getSource(), IIVD)) {
+    const MCInst &Inst = std::get<0>(I);
+    InstructionInfoViewData &IIVDEntry = std::get<1>(I);
+    const MCInstrDesc &MCDesc = MCII.get(Inst.getOpcode());
+
+    // Obtain the scheduling class information from the instruction.
+    unsigned SchedClassID = MCDesc.getSchedClass();
+    unsigned CPUID = SM.getProcessorID();
+
+    // Try to solve variant scheduling classes.
+    while (SchedClassID && SM.getSchedClassDesc(SchedClassID)->isVariant())
+      SchedClassID =
+          STI.resolveVariantSchedClass(SchedClassID, &Inst, &MCII, CPUID);
+
+    const MCSchedClassDesc &SCDesc = *SM.getSchedClassDesc(SchedClassID);
+    IIVDEntry.NumMicroOpcodes = SCDesc.NumMicroOps;
+    IIVDEntry.Latency = MCSchedModel::computeInstrLatency(STI, SCDesc);
+    // Add extra latency due to delays in the forwarding data paths.
+    IIVDEntry.Latency += MCSchedModel::getForwardingDelayCycles(
+        STI.getReadAdvanceEntries(SCDesc));
+    IIVDEntry.RThroughput = MCSchedModel::getReciprocalThroughput(STI, SCDesc);
+    IIVDEntry.mayLoad = MCDesc.mayLoad();
+    IIVDEntry.mayStore = MCDesc.mayStore();
+    IIVDEntry.hasUnmodeledSideEffects = MCDesc.hasUnmodeledSideEffects();
+  }
+}
+
+// Construct a JSON object from a single InstructionInfoViewData object.
+json::Object
+InstructionInfoView::toJSON(const InstructionInfoViewData &IIVD) const {
+  json::Object JO({{"NumMicroOpcodes", IIVD.NumMicroOpcodes},
+                   {"Latency", IIVD.Latency},
+                   {"mayLoad", IIVD.mayLoad},
+                   {"mayStore", IIVD.mayStore},
+                   {"hasUnmodeledSideEffects", IIVD.hasUnmodeledSideEffects}});
+  JO.try_emplace("RThroughput", IIVD.RThroughput.getValueOr(0.0));
+  return JO;
+}
+
+json::Value InstructionInfoView::toJSON() const {
+  ArrayRef<llvm::MCInst> Source = getSource();
+  if (!Source.size())
+    return json::Value(0);
+
+  IIVDVec IIVD(Source.size());
+  collectData(IIVD);
+
+  json::Array InstInfo;
+  for (const auto &I : enumerate(IIVD)) {
+    const InstructionInfoViewData &IIVDEntry = I.value();
+    json::Object JO = toJSON(IIVDEntry);
+    JO.try_emplace("Instruction", (unsigned)I.index());
+    InstInfo.push_back(std::move(JO));
+  }
+  return json::Object({{"InstructionList", json::Value(std::move(InstInfo))}});
 }
 } // namespace mca.
 } // namespace llvm

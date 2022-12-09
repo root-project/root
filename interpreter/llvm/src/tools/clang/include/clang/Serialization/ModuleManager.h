@@ -17,7 +17,7 @@
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/Module.h"
 #include "clang/Basic/SourceLocation.h"
-#include "clang/Serialization/Module.h"
+#include "clang/Serialization/ModuleFile.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/IntrusiveRefCntPtr.h"
 #include "llvm/ADT/STLExtras.h"
@@ -255,9 +255,7 @@ public:
                             std::string &ErrorStr);
 
   /// Remove the modules starting from First (to the end).
-  void removeModules(ModuleIterator First,
-                     llvm::SmallPtrSetImpl<ModuleFile *> &LoadedSuccessfully,
-                     ModuleMap *modMap);
+  void removeModules(ModuleIterator First, ModuleMap *modMap);
 
   /// Add an in-memory buffer the list of known buffers
   void addInMemoryBuffer(StringRef FileName,
@@ -309,10 +307,8 @@ public:
   /// \returns True if a file exists but does not meet the size/
   /// modification time criteria, false if the file is either available and
   /// suitable, or is missing.
-  bool lookupModuleFile(StringRef FileName,
-                        off_t ExpectedSize,
-                        time_t ExpectedModTime,
-                        const FileEntry *&File);
+  bool lookupModuleFile(StringRef FileName, off_t ExpectedSize,
+                        time_t ExpectedModTime, Optional<FileEntryRef> &File);
 
   /// View the graphviz representation of the module graph.
   void viewGraph();

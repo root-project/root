@@ -52,18 +52,16 @@ public:
                         BugReporter &BR) const;
 };
 
-auto callsName(const char *FunctionName)
-    -> decltype(callee(functionDecl())) {
+decltype(auto) callsName(const char *FunctionName) {
   return callee(functionDecl(hasName(FunctionName)));
 }
 
-auto equalsBoundArgDecl(int ArgIdx, const char *DeclName)
-    -> decltype(hasArgument(0, expr())) {
+decltype(auto) equalsBoundArgDecl(int ArgIdx, const char *DeclName) {
   return hasArgument(ArgIdx, ignoringParenCasts(declRefExpr(
                                  to(varDecl(equalsBoundNode(DeclName))))));
 }
 
-auto bindAssignmentToDecl(const char *DeclName) -> decltype(hasLHS(expr())) {
+decltype(auto) bindAssignmentToDecl(const char *DeclName) {
   return hasLHS(ignoringParenImpCasts(
                          declRefExpr(to(varDecl().bind(DeclName)))));
 }
@@ -82,7 +80,7 @@ static bool isTest(const Decl *D) {
     if (const auto *CD = dyn_cast<ObjCContainerDecl>(OD->getParent())) {
       std::string ContainerName = CD->getNameAsString();
       StringRef CN(ContainerName);
-      if (CN.contains_lower("test") || CN.contains_lower("mock"))
+      if (CN.contains_insensitive("test") || CN.contains_insensitive("mock"))
         return true;
     }
   }
@@ -227,6 +225,6 @@ void ento::registerGCDAntipattern(CheckerManager &Mgr) {
   Mgr.registerChecker<GCDAntipatternChecker>();
 }
 
-bool ento::shouldRegisterGCDAntipattern(const LangOptions &LO) {
+bool ento::shouldRegisterGCDAntipattern(const CheckerManager &mgr) {
   return true;
 }

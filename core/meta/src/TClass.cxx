@@ -2976,6 +2976,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
    if (!name || !name[0]) return nullptr;
 
    if (strstr(name, "(anonymous)")) return nullptr;
+   if (strstr(name, "(unnamed)")) return nullptr;
    if (strncmp(name,"class ",6)==0) name += 6;
    if (strncmp(name,"struct ",7)==0) name += 7;
 

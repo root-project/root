@@ -15,6 +15,7 @@
 #include "X86InstrInfo.h"
 #include "X86RegisterInfo.h"
 #include "X86Subtarget.h"
+#include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/SelectionDAG.h"
 #include "llvm/CodeGen/TargetLowering.h"
 #include "llvm/IR/DerivedTypes.h"
@@ -22,6 +23,10 @@
 using namespace llvm;
 
 #define DEBUG_TYPE "x86-selectiondag-info"
+
+static cl::opt<bool>
+    UseFSRMForMemcpy("x86-use-fsrm-for-memcpy", cl::Hidden, cl::init(false),
+                     cl::desc("Use fast short rep mov in memcpy lowering"));
 
 bool X86SelectionDAGInfo::isBaseRegConflictPossible(
     SelectionDAG &DAG, ArrayRef<MCPhysReg> ClobberSet) const {
@@ -36,16 +41,12 @@ bool X86SelectionDAGInfo::isBaseRegConflictPossible(
 
   const X86RegisterInfo *TRI = static_cast<const X86RegisterInfo *>(
       DAG.getSubtarget().getRegisterInfo());
-  unsigned BaseReg = TRI->getBaseRegister();
-  for (unsigned R : ClobberSet)
-    if (BaseReg == R)
-      return true;
-  return false;
+  return llvm::is_contained(ClobberSet, TRI->getBaseRegister());
 }
 
 SDValue X86SelectionDAGInfo::EmitTargetCodeForMemset(
     SelectionDAG &DAG, const SDLoc &dl, SDValue Chain, SDValue Dst, SDValue Val,
-    SDValue Size, unsigned Align, bool isVolatile,
+    SDValue Size, Align Alignment, bool isVolatile,
     MachinePointerInfo DstPtrInfo) const {
   ConstantSDNode *ConstantSize = dyn_cast<ConstantSDNode>(Size);
   const X86Subtarget &Subtarget =
@@ -65,7 +66,7 @@ SDValue X86SelectionDAGInfo::EmitTargetCodeForMemset(
   // If not DWORD aligned or size is more than the threshold, call the library.
   // The libc version is likely to be faster for these cases. It can use the
   // address value and run time information about the CPU.
-  if ((Align & 3) != 0 || !ConstantSize ||
+  if (Alignment < Align(4) || !ConstantSize ||
       ConstantSize->getZExtValue() > Subtarget.getMaxInlineSizeThreshold()) {
     // Check to see if there is a specialized entry-point for memory zeroing.
     ConstantSDNode *ValC = dyn_cast<ConstantSDNode>(Val);
@@ -111,28 +112,27 @@ SDValue X86SelectionDAGInfo::EmitTargetCodeForMemset(
     uint64_t Val = ValC->getZExtValue() & 255;
 
     // If the value is a constant, then we can potentially use larger sets.
-    switch (Align & 3) {
-    case 2:   // WORD aligned
-      AVT = MVT::i16;
-      ValReg = X86::AX;
-      Val = (Val << 8) | Val;
-      break;
-    case 0:  // DWORD aligned
+    if (Alignment > Align(2)) {
+      // DWORD aligned
       AVT = MVT::i32;
       ValReg = X86::EAX;
       Val = (Val << 8)  | Val;
       Val = (Val << 16) | Val;
-      if (Subtarget.is64Bit() && ((Align & 0x7) == 0)) {  // QWORD aligned
+      if (Subtarget.is64Bit() && Alignment > Align(8)) { // QWORD aligned
         AVT = MVT::i64;
         ValReg = X86::RAX;
         Val = (Val << 32) | Val;
       }
-      break;
-    default:  // Byte aligned
+    } else if (Alignment == Align(2)) {
+      // WORD aligned
+      AVT = MVT::i16;
+      ValReg = X86::AX;
+      Val = (Val << 8) | Val;
+    } else {
+      // Byte aligned
       AVT = MVT::i8;
       ValReg = X86::AL;
       Count = DAG.getIntPtrConstant(SizeVal, dl);
-      break;
     }
 
     if (AVT.bitsGT(MVT::i8)) {
@@ -169,13 +169,12 @@ SDValue X86SelectionDAGInfo::EmitTargetCodeForMemset(
     EVT AddrVT = Dst.getValueType();
     EVT SizeVT = Size.getValueType();
 
-    Chain = DAG.getMemset(Chain, dl,
-                          DAG.getNode(ISD::ADD, dl, AddrVT, Dst,
-                                      DAG.getConstant(Offset, dl, AddrVT)),
-                          Val,
-                          DAG.getConstant(BytesLeft, dl, SizeVT),
-                          Align, isVolatile, false,
-                          DstPtrInfo.getWithOffset(Offset));
+    Chain =
+        DAG.getMemset(Chain, dl,
+                      DAG.getNode(ISD::ADD, dl, AddrVT, Dst,
+                                  DAG.getConstant(Offset, dl, AddrVT)),
+                      Val, DAG.getConstant(BytesLeft, dl, SizeVT), Alignment,
+                      isVolatile, false, DstPtrInfo.getWithOffset(Offset));
   }
 
   // TODO: Use a Tokenfactor, as in memcpy, instead of a single chain.
@@ -283,7 +282,7 @@ static SDValue emitConstantSizeRepmov(
       Chain, dl,
       DAG.getNode(ISD::ADD, dl, DstVT, Dst, DAG.getConstant(Offset, dl, DstVT)),
       DAG.getNode(ISD::ADD, dl, SrcVT, Src, DAG.getConstant(Offset, dl, SrcVT)),
-      DAG.getConstant(BytesLeft, dl, SizeVT), Align, isVolatile,
+      DAG.getConstant(BytesLeft, dl, SizeVT), llvm::Align(Align), isVolatile,
       /*AlwaysInline*/ true, /*isTailCall*/ false,
       DstPtrInfo.getWithOffset(Offset), SrcPtrInfo.getWithOffset(Offset)));
   return DAG.getNode(ISD::TokenFactor, dl, MVT::Other, Results);
@@ -291,7 +290,7 @@ static SDValue emitConstantSizeRepmov(
 
 SDValue X86SelectionDAGInfo::EmitTargetCodeForMemcpy(
     SelectionDAG &DAG, const SDLoc &dl, SDValue Chain, SDValue Dst, SDValue Src,
-    SDValue Size, unsigned Align, bool isVolatile, bool AlwaysInline,
+    SDValue Size, Align Alignment, bool isVolatile, bool AlwaysInline,
     MachinePointerInfo DstPtrInfo, MachinePointerInfo SrcPtrInfo) const {
   // If to a segment-relative address space, use the default lowering.
   if (DstPtrInfo.getAddrSpace() >= 256 || SrcPtrInfo.getAddrSpace() >= 256)
@@ -307,12 +306,16 @@ SDValue X86SelectionDAGInfo::EmitTargetCodeForMemcpy(
   const X86Subtarget &Subtarget =
       DAG.getMachineFunction().getSubtarget<X86Subtarget>();
 
+  // If enabled and available, use fast short rep mov.
+  if (UseFSRMForMemcpy && Subtarget.hasFSRM())
+    return emitRepmovs(Subtarget, DAG, dl, Chain, Dst, Src, Size, MVT::i8);
+
   /// Handle constant sizes,
   if (ConstantSDNode *ConstantSize = dyn_cast<ConstantSDNode>(Size))
-    return emitConstantSizeRepmov(DAG, Subtarget, dl, Chain, Dst, Src,
-                                  ConstantSize->getZExtValue(),
-                                  Size.getValueType(), Align, isVolatile,
-                                  AlwaysInline, DstPtrInfo, SrcPtrInfo);
+    return emitConstantSizeRepmov(
+        DAG, Subtarget, dl, Chain, Dst, Src, ConstantSize->getZExtValue(),
+        Size.getValueType(), Alignment.value(), isVolatile, AlwaysInline,
+        DstPtrInfo, SrcPtrInfo);
 
   return SDValue();
 }

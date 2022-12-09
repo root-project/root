@@ -36,6 +36,7 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Type.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 using namespace llvm;
@@ -80,7 +81,7 @@ namespace {
   class UnreachableMachineBlockElim : public MachineFunctionPass {
     bool runOnMachineFunction(MachineFunction &F) override;
     void getAnalysisUsage(AnalysisUsage &AU) const override;
-    MachineModuleInfo *MMI;
+
   public:
     static char ID; // Pass identification, replacement for typeid
     UnreachableMachineBlockElim() : MachineFunctionPass(ID) {}
@@ -103,7 +104,6 @@ bool UnreachableMachineBlockElim::runOnMachineFunction(MachineFunction &F) {
   df_iterator_default_set<MachineBasicBlock*> Reachable;
   bool ModifiedPHI = false;
 
-  MMI = getAnalysisIfAvailable<MachineModuleInfo>();
   MachineDominatorTree *MDT = getAnalysisIfAvailable<MachineDominatorTree>();
   MachineLoopInfo *MLI = getAnalysisIfAvailable<MachineLoopInfo>();
 
@@ -114,25 +114,23 @@ bool UnreachableMachineBlockElim::runOnMachineFunction(MachineFunction &F) {
   // Loop over all dead blocks, remembering them and deleting all instructions
   // in them.
   std::vector<MachineBasicBlock*> DeadBlocks;
-  for (MachineFunction::iterator I = F.begin(), E = F.end(); I != E; ++I) {
-    MachineBasicBlock *BB = &*I;
-
+  for (MachineBasicBlock &BB : F) {
     // Test for deadness.
-    if (!Reachable.count(BB)) {
-      DeadBlocks.push_back(BB);
+    if (!Reachable.count(&BB)) {
+      DeadBlocks.push_back(&BB);
 
       // Update dominator and loop info.
-      if (MLI) MLI->removeBlock(BB);
-      if (MDT && MDT->getNode(BB)) MDT->eraseNode(BB);
+      if (MLI) MLI->removeBlock(&BB);
+      if (MDT && MDT->getNode(&BB)) MDT->eraseNode(&BB);
 
-      while (BB->succ_begin() != BB->succ_end()) {
-        MachineBasicBlock* succ = *BB->succ_begin();
+      while (BB.succ_begin() != BB.succ_end()) {
+        MachineBasicBlock* succ = *BB.succ_begin();
 
         MachineBasicBlock::iterator start = succ->begin();
         while (start != succ->end() && start->isPHI()) {
           for (unsigned i = start->getNumOperands() - 1; i >= 2; i-=2)
             if (start->getOperand(i).isMBB() &&
-                start->getOperand(i).getMBB() == BB) {
+                start->getOperand(i).getMBB() == &BB) {
               start->RemoveOperand(i);
               start->RemoveOperand(i-1);
             }
@@ -140,14 +138,20 @@ bool UnreachableMachineBlockElim::runOnMachineFunction(MachineFunction &F) {
           start++;
         }
 
-        BB->removeSuccessor(BB->succ_begin());
+        BB.removeSuccessor(BB.succ_begin());
       }
     }
   }
 
   // Actually remove the blocks now.
-  for (unsigned i = 0, e = DeadBlocks.size(); i != e; ++i)
+  for (unsigned i = 0, e = DeadBlocks.size(); i != e; ++i) {
+    // Remove any call site information for calls in the block.
+    for (auto &I : DeadBlocks[i]->instrs())
+      if (I.shouldUpdateCallSiteInfo())
+        DeadBlocks[i]->getParent()->eraseCallSiteInfo(&I);
+
     DeadBlocks[i]->eraseFromParent();
+  }
 
   // Cleanup PHI nodes.
   for (MachineFunction::iterator I = F.begin(), E = F.end(); I != E; ++I) {
@@ -167,8 +171,8 @@ bool UnreachableMachineBlockElim::runOnMachineFunction(MachineFunction &F) {
       if (phi->getNumOperands() == 3) {
         const MachineOperand &Input = phi->getOperand(1);
         const MachineOperand &Output = phi->getOperand(0);
-        unsigned InputReg = Input.getReg();
-        unsigned OutputReg = Output.getReg();
+        Register InputReg = Input.getReg();
+        Register OutputReg = Output.getReg();
         assert(Output.getSubReg() == 0 && "Cannot have output subregister");
         ModifiedPHI = true;
 

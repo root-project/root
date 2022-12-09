@@ -40,6 +40,14 @@ class LangOptions;
 class MultiKeywordSelector;
 class SourceLocation;
 
+enum class ReservedIdentifierStatus {
+  NotReserved = 0,
+  StartsWithUnderscoreAtGlobalScope,
+  StartsWithDoubleUnderscore,
+  StartsWithUnderscoreFollowedByCapitalLetter,
+  ContainsDoubleUnderscore,
+};
+
 /// A simple pair of identifier info and location.
 using IdentifierLocPair = std::pair<IdentifierInfo *, SourceLocation>;
 
@@ -47,6 +55,8 @@ using IdentifierLocPair = std::pair<IdentifierInfo *, SourceLocation>;
 /// 8 bytes so that DeclarationName can use the lower 3 bits
 /// of a pointer to one of these classes.
 enum { IdentifierInfoAlignment = 8 };
+
+static constexpr int ObjCOrBuiltinIDBits = 16;
 
 /// One of these records is kept for each identifier that
 /// is lexed.  This contains information about whether the token was \#define'd,
@@ -63,7 +73,7 @@ class alignas(IdentifierInfoAlignment) IdentifierInfo {
   // ObjC keyword ('protocol' in '@protocol') or builtin (__builtin_inf).
   // First NUM_OBJC_KEYWORDS values are for Objective-C,
   // the remaining values are for builtins.
-  unsigned ObjCOrBuiltinID : 13;
+  unsigned ObjCOrBuiltinID : ObjCOrBuiltinIDBits;
 
   // True if there is a #define for this.
   unsigned HasMacro : 1;
@@ -108,7 +118,10 @@ class alignas(IdentifierInfoAlignment) IdentifierInfo {
   // True if this is the 'import' contextual keyword.
   unsigned IsModulesImport : 1;
 
-  // 29 bits left in a 64-bit word.
+  // True if this is a mangled OpenMP variant name.
+  unsigned IsMangledOpenMPVariantName : 1;
+
+  // 28 bits left in a 64-bit word.
 
   // Managed by the language front-end.
   void *FETokenInfo = nullptr;
@@ -121,7 +134,7 @@ class alignas(IdentifierInfoAlignment) IdentifierInfo {
         IsPoisoned(false), IsCPPOperatorKeyword(false),
         NeedsHandleIdentifier(false), IsFromAST(false), ChangedAfterLoad(false),
         FEChangedAfterLoad(false), RevertedTokenID(false), OutOfDate(false),
-        IsModulesImport(false) {}
+        IsModulesImport(false), IsMangledOpenMPVariantName(false) {}
 
 public:
   IdentifierInfo(const IdentifierInfo &) = delete;
@@ -219,18 +232,6 @@ public:
       return tok::objc_not_keyword;
   }
   void setObjCKeywordID(tok::ObjCKeywordKind ID) { ObjCOrBuiltinID = ID; }
-
-  /// True if setNotBuiltin() was called.
-  bool hasRevertedBuiltin() const {
-    return ObjCOrBuiltinID == tok::NUM_OBJC_KEYWORDS;
-  }
-
-  /// Revert the identifier to a non-builtin identifier. We do this if
-  /// the name of a known builtin library function is used to declare that
-  /// function, but an unexpected type is specified.
-  void revertBuiltin() {
-    setBuiltinID(0);
-  }
 
   /// Return a value indicating whether this is a builtin function.
   ///
@@ -371,6 +372,12 @@ public:
       RecomputeNeedsHandleIdentifier();
   }
 
+  /// Determine whether this is the mangled name of an OpenMP variant.
+  bool isMangledOpenMPVariantName() const { return IsMangledOpenMPVariantName; }
+
+  /// Set whether this is the mangled name of an OpenMP variant.
+  void setMangledOpenMPVariantName(bool I) { IsMangledOpenMPVariantName = I; }
+
   /// Return true if this identifier is an editor placeholder.
   ///
   /// Editor placeholders are produced by the code-completion engine and are
@@ -383,6 +390,10 @@ public:
   bool isEditorPlaceholder() const {
     return getName().startswith("<#") && getName().endswith("#>");
   }
+
+  /// Determine whether \p this is a name reserved for the implementation (C99
+  /// 7.1.3, C++ [lib.global.names]).
+  ReservedIdentifierStatus isReserved(const LangOptions &LangOpts) const;
 
   /// Provide less than operator for lexicographical sorting.
   bool operator<(const IdentifierInfo &RHS) const {
@@ -581,6 +592,8 @@ public:
   iterator end() const   { return HashTable.end(); }
   unsigned size() const  { return HashTable.size(); }
 
+  iterator find(StringRef Name) const { return HashTable.find(Name); }
+
   /// Print some statistics to stderr that indicate how well the
   /// hashing is doing.
   void PrintStats() const;
@@ -749,6 +762,12 @@ public:
   bool isUnarySelector() const {
     return getIdentifierInfoFlag() == ZeroArg;
   }
+
+  /// If this selector is the specific keyword selector described by Names.
+  bool isKeywordSelector(ArrayRef<StringRef> Names) const;
+
+  /// If this selector is the specific unary selector described by Name.
+  bool isUnarySelector(StringRef Name) const;
 
   unsigned getNumArgs() const;
 
@@ -948,7 +967,7 @@ struct PointerLikeTypeTraits<clang::Selector> {
     return clang::Selector(reinterpret_cast<uintptr_t>(P));
   }
 
-  enum { NumLowBitsAvailable = 0 };
+  static constexpr int NumLowBitsAvailable = 0;
 };
 
 // Provide PointerLikeTypeTraits for IdentifierInfo pointers, which
@@ -963,7 +982,7 @@ struct PointerLikeTypeTraits<clang::IdentifierInfo*> {
     return static_cast<clang::IdentifierInfo*>(P);
   }
 
-  enum { NumLowBitsAvailable = 1 };
+  static constexpr int NumLowBitsAvailable = 1;
 };
 
 template<>
@@ -976,7 +995,7 @@ struct PointerLikeTypeTraits<const clang::IdentifierInfo*> {
     return static_cast<const clang::IdentifierInfo*>(P);
   }
 
-  enum { NumLowBitsAvailable = 1 };
+  static constexpr int NumLowBitsAvailable = 1;
 };
 
 } // namespace llvm

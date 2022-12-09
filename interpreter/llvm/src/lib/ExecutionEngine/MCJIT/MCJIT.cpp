@@ -11,6 +11,7 @@
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/ExecutionEngine/JITEventListener.h"
 #include "llvm/ExecutionEngine/MCJIT.h"
+#include "llvm/ExecutionEngine/ObjectCache.h"
 #include "llvm/ExecutionEngine/SectionMemoryManager.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
@@ -23,7 +24,8 @@
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MemoryBuffer.h"
-#include "llvm/Support/MutexGuard.h"
+#include "llvm/Support/SmallVectorMemoryBuffer.h"
+#include <mutex>
 
 using namespace llvm;
 
@@ -88,7 +90,7 @@ MCJIT::MCJIT(std::unique_ptr<Module> M, std::unique_ptr<TargetMachine> TM,
 }
 
 MCJIT::~MCJIT() {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
 
   Dyld.deregisterEHFrames();
 
@@ -100,7 +102,7 @@ MCJIT::~MCJIT() {
 }
 
 void MCJIT::addModule(std::unique_ptr<Module> M) {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
 
   if (M->getDataLayout().isDefault())
     M->setDataLayout(getDataLayout());
@@ -109,7 +111,7 @@ void MCJIT::addModule(std::unique_ptr<Module> M) {
 }
 
 bool MCJIT::removeModule(Module *M) {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
   return OwnedModules.removeModule(M);
 }
 
@@ -136,14 +138,14 @@ void MCJIT::addArchive(object::OwningBinary<object::Archive> A) {
 }
 
 void MCJIT::setObjectCache(ObjectCache* NewCache) {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
   ObjCache = NewCache;
 }
 
 std::unique_ptr<MemoryBuffer> MCJIT::emitObject(Module *M) {
   assert(M && "Can not emit a null module");
 
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
 
   // Materialize all globals in the module if they have not been
   // materialized already.
@@ -185,7 +187,7 @@ std::unique_ptr<MemoryBuffer> MCJIT::emitObject(Module *M) {
 
 void MCJIT::generateCodeForModule(Module *M) {
   // Get a thread lock to make sure we aren't trying to load multiple times
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
 
   // This must be a module which has already been added to this MCJIT instance.
   assert(OwnedModules.ownsModule(M) &&
@@ -234,10 +236,14 @@ void MCJIT::generateCodeForModule(Module *M) {
 }
 
 void MCJIT::finalizeLoadedModules() {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
 
   // Resolve any outstanding relocations.
   Dyld.resolveRelocations();
+
+  // Check for Dyld error.
+  if (Dyld.hasError())
+    ErrMsg = Dyld.getErrorString().str();
 
   OwnedModules.markAllLoadedModulesAsFinalized();
 
@@ -250,7 +256,7 @@ void MCJIT::finalizeLoadedModules() {
 
 // FIXME: Rename this.
 void MCJIT::finalizeObject() {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
 
   // Generate code for module is going to move objects out of the 'added' list,
   // so we need to copy that out before using it:
@@ -265,7 +271,7 @@ void MCJIT::finalizeObject() {
 }
 
 void MCJIT::finalizeModule(Module *M) {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
 
   // This must be a module which has already been added to this MCJIT instance.
   assert(OwnedModules.ownsModule(M) && "MCJIT::finalizeModule: Unknown module.");
@@ -292,7 +298,7 @@ Module *MCJIT::findModuleForSymbol(const std::string &Name,
   if (DemangledName[0] == getDataLayout().getGlobalPrefix())
     DemangledName = DemangledName.substr(1);
 
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
 
   // If it hasn't already been generated, see if it's in one of our modules.
   for (ModulePtrSet::iterator I = OwnedModules.begin_added(),
@@ -332,7 +338,7 @@ uint64_t MCJIT::getSymbolAddress(const std::string &Name,
 
 JITSymbol MCJIT::findSymbol(const std::string &Name,
                             bool CheckFunctionsOnly) {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
 
   // First, check to see if we already have this symbol.
   if (auto Sym = findExistingSymbol(Name))
@@ -388,7 +394,7 @@ JITSymbol MCJIT::findSymbol(const std::string &Name,
 }
 
 uint64_t MCJIT::getGlobalValueAddress(const std::string &Name) {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
   uint64_t Result = getSymbolAddress(Name, false);
   if (Result != 0)
     finalizeLoadedModules();
@@ -396,7 +402,7 @@ uint64_t MCJIT::getGlobalValueAddress(const std::string &Name) {
 }
 
 uint64_t MCJIT::getFunctionAddress(const std::string &Name) {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
   uint64_t Result = getSymbolAddress(Name, true);
   if (Result != 0)
     finalizeLoadedModules();
@@ -405,7 +411,7 @@ uint64_t MCJIT::getFunctionAddress(const std::string &Name) {
 
 // Deprecated.  Use getFunctionAddress instead.
 void *MCJIT::getPointerToFunction(Function *F) {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
 
   Mangler Mang;
   SmallString<128> Name;
@@ -609,7 +615,7 @@ GenericValue MCJIT::runFunction(Function *F, ArrayRef<GenericValue> ArgValues) {
 
 void *MCJIT::getPointerToNamedFunction(StringRef Name, bool AbortOnFailure) {
   if (!isSymbolSearchingDisabled()) {
-    if (auto Sym = Resolver.findSymbol(Name)) {
+    if (auto Sym = Resolver.findSymbol(std::string(Name))) {
       if (auto AddrOrErr = Sym.getAddress())
         return reinterpret_cast<void*>(
                  static_cast<uintptr_t>(*AddrOrErr));
@@ -619,7 +625,7 @@ void *MCJIT::getPointerToNamedFunction(StringRef Name, bool AbortOnFailure) {
 
   /// If a LazyFunctionCreator is installed, use it to get/create the function.
   if (LazyFunctionCreator)
-    if (void *RP = LazyFunctionCreator(Name))
+    if (void *RP = LazyFunctionCreator(std::string(Name)))
       return RP;
 
   if (AbortOnFailure) {
@@ -632,14 +638,14 @@ void *MCJIT::getPointerToNamedFunction(StringRef Name, bool AbortOnFailure) {
 void MCJIT::RegisterJITEventListener(JITEventListener *L) {
   if (!L)
     return;
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
   EventListeners.push_back(L);
 }
 
 void MCJIT::UnregisterJITEventListener(JITEventListener *L) {
   if (!L)
     return;
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
   auto I = find(reverse(EventListeners), L);
   if (I != EventListeners.rend()) {
     std::swap(*I, EventListeners.back());
@@ -651,7 +657,7 @@ void MCJIT::notifyObjectLoaded(const object::ObjectFile &Obj,
                                const RuntimeDyld::LoadedObjectInfo &L) {
   uint64_t Key =
       static_cast<uint64_t>(reinterpret_cast<uintptr_t>(Obj.getData().data()));
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
   MemMgr->notifyObjectLoaded(this, Obj);
   for (unsigned I = 0, S = EventListeners.size(); I < S; ++I) {
     EventListeners[I]->notifyObjectLoaded(Key, Obj, L);
@@ -661,7 +667,7 @@ void MCJIT::notifyObjectLoaded(const object::ObjectFile &Obj,
 void MCJIT::notifyFreeingObject(const object::ObjectFile &Obj) {
   uint64_t Key =
       static_cast<uint64_t>(reinterpret_cast<uintptr_t>(Obj.getData().data()));
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
   for (JITEventListener *L : EventListeners)
     L->notifyFreeingObject(Key);
 }

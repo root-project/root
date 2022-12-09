@@ -8,6 +8,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "TableGenBackends.h"
 #include "llvm/TableGen/Error.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
@@ -21,8 +22,6 @@
 
 using namespace llvm;
 
-namespace clang {
-namespace docs {
 namespace {
 struct DocumentedOption {
   Record *Option;
@@ -49,7 +48,7 @@ Documentation extractDocumentation(RecordKeeper &Records) {
 
   std::map<std::string, Record*> OptionsByName;
   for (Record *R : Records.getAllDerivedDefinitions("Option"))
-    OptionsByName[R->getValueAsString("Name")] = R;
+    OptionsByName[std::string(R->getValueAsString("Name"))] = R;
 
   auto Flatten = [](Record *R) {
     return R->getValue("DocFlatten") && R->getValueAsBit("DocFlatten");
@@ -82,7 +81,7 @@ Documentation extractDocumentation(RecordKeeper &Records) {
     }
 
     // Pretend no-X and Xno-Y options are aliases of X and XY.
-    std::string Name = R->getValueAsString("Name");
+    std::string Name = std::string(R->getValueAsString("Name"));
     if (Name.size() >= 4) {
       if (Name.substr(0, 3) == "no-" && OptionsByName[Name.substr(3)]) {
         Aliases[OptionsByName[Name.substr(3)]].push_back(R);
@@ -218,13 +217,11 @@ std::string getRSTStringWithTextFallback(const Record *R, StringRef Primary,
       StringRef Value;
       if (auto *SV = dyn_cast_or_null<StringInit>(V->getValue()))
         Value = SV->getValue();
-      else if (auto *CV = dyn_cast_or_null<CodeInit>(V->getValue()))
-        Value = CV->getValue();
       if (!Value.empty())
         return Field == Primary ? Value.str() : escapeRST(Value);
     }
   }
-  return StringRef();
+  return std::string(StringRef());
 }
 
 void emitOptionWithArgs(StringRef Prefix, const Record *Option,
@@ -248,7 +245,7 @@ void emitOptionName(StringRef Prefix, const Record *Option, raw_ostream &OS) {
 
   std::vector<std::string> Args;
   if (HasMetaVarName)
-    Args.push_back(Option->getValueAsString("MetaVarName"));
+    Args.push_back(std::string(Option->getValueAsString("MetaVarName")));
   else if (NumArgs == 1)
     Args.push_back("<arg>");
 
@@ -317,8 +314,8 @@ void emitOption(const DocumentedOption &Option, const Record *DocInfo,
   std::vector<std::string> SphinxOptionIDs;
   forEachOptionName(Option, DocInfo, [&](const Record *Option) {
     for (auto &Prefix : Option->getValueAsListOfStrings("Prefixes"))
-      SphinxOptionIDs.push_back(
-          getSphinxOptionID((Prefix + Option->getValueAsString("Name")).str()));
+      SphinxOptionIDs.push_back(std::string(getSphinxOptionID(
+          (Prefix + Option->getValueAsString("Name")).str())));
   });
   assert(!SphinxOptionIDs.empty() && "no flags for option");
   static std::map<std::string, int> NextSuffix;
@@ -380,11 +377,8 @@ void emitDocumentation(int Depth, const Documentation &Doc,
 }
 
 }  // namespace
-}  // namespace docs
 
-void EmitClangOptDocs(RecordKeeper &Records, raw_ostream &OS) {
-  using namespace docs;
-
+void clang::EmitClangOptDocs(RecordKeeper &Records, raw_ostream &OS) {
   const Record *DocInfo = Records.getDef("GlobalDocumentation");
   if (!DocInfo) {
     PrintFatalError("The GlobalDocumentation top-level definition is missing, "
@@ -396,4 +390,3 @@ void EmitClangOptDocs(RecordKeeper &Records, raw_ostream &OS) {
 
   emitDocumentation(0, extractDocumentation(Records), DocInfo, OS);
 }
-} // end namespace clang

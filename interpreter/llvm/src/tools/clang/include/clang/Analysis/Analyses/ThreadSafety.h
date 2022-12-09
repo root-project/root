@@ -108,8 +108,10 @@ public:
   /// \param LockName -- A StringRef name for the lock expression, to be printed
   /// in the error message.
   /// \param Loc -- The SourceLocation of the Unlock
+  /// \param LocPreviousUnlock -- If valid, the location of a previous Unlock.
   virtual void handleUnmatchedUnlock(StringRef Kind, Name LockName,
-                                     SourceLocation Loc) {}
+                                     SourceLocation Loc,
+                                     SourceLocation LocPreviousUnlock) {}
 
   /// Warn about an unlock function call that attempts to unlock a lock with
   /// the incorrect lock kind. For instance, a shared lock being unlocked
@@ -198,6 +200,14 @@ public:
   /// diagnostic.
   /// \param Loc -- The location of the protected operation.
   virtual void handleNegativeNotHeld(StringRef Kind, Name LockName, Name Neg,
+                                     SourceLocation Loc) {}
+
+  /// Warn when calling a function that a negative capability is not held.
+  /// \param D -- The decl for the function requiring the negative capability.
+  /// \param LockName -- The name for the lock expression, to be printed in the
+  /// diagnostic.
+  /// \param Loc -- The location of the protected operation.
+  virtual void handleNegativeNotHeld(const NamedDecl *D, Name LockName,
                                      SourceLocation Loc) {}
 
   /// Warn when a function is called while an excluded mutex is locked. For

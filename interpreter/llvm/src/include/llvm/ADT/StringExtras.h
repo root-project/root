@@ -13,6 +13,7 @@
 #ifndef LLVM_ADT_STRINGEXTRAS_H
 #define LLVM_ADT_STRINGEXTRAS_H
 
+#include "llvm/ADT/APSInt.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
@@ -66,17 +67,29 @@ inline ArrayRef<uint8_t> arrayRefFromStringRef(StringRef Input) {
 ///
 /// If \p C is not a valid hex digit, -1U is returned.
 inline unsigned hexDigitValue(char C) {
-  if (C >= '0' && C <= '9') return C-'0';
-  if (C >= 'a' && C <= 'f') return C-'a'+10U;
-  if (C >= 'A' && C <= 'F') return C-'A'+10U;
-  return -1U;
+  struct HexTable {
+    unsigned LUT[255] = {};
+    constexpr HexTable() {
+      // Default initialize everything to invalid.
+      for (int i = 0; i < 255; ++i)
+        LUT[i] = ~0U;
+      // Initialize `0`-`9`.
+      for (int i = 0; i < 10; ++i)
+        LUT['0' + i] = i;
+      // Initialize `A`-`F` and `a`-`f`.
+      for (int i = 0; i < 6; ++i)
+        LUT['A' + i] = LUT['a' + i] = 10 + i;
+    }
+  };
+  constexpr HexTable Table;
+  return Table.LUT[static_cast<unsigned char>(C)];
 }
 
 /// Checks if character \p C is one of the 10 decimal digits.
 inline bool isDigit(char C) { return C >= '0' && C <= '9'; }
 
 /// Checks if character \p C is a hexadecimal numeric character.
-inline bool isHexDigit(char C) { return hexDigitValue(C) != -1U; }
+inline bool isHexDigit(char C) { return hexDigitValue(C) != ~0U; }
 
 /// Checks if character \p C is a valid letter as classified by "C" locale.
 inline bool isAlpha(char C) {
@@ -105,6 +118,14 @@ inline bool isASCII(llvm::StringRef S) {
 inline bool isPrint(char C) {
   unsigned char UC = static_cast<unsigned char>(C);
   return (0x20 <= UC) && (UC <= 0x7E);
+}
+
+/// Checks whether character \p C is whitespace in the "C" locale.
+///
+/// Locale-independent version of the C standard library isspace.
+inline bool isSpace(char C) {
+  return C == ' ' || C == '\f' || C == '\n' || C == '\r' || C == '\t' ||
+         C == '\v';
 }
 
 /// Returns the corresponding lowercase character if \p x is uppercase.
@@ -157,34 +178,68 @@ inline std::string toHex(ArrayRef<uint8_t> Input, bool LowerCase = false) {
   return toHex(toStringRef(Input), LowerCase);
 }
 
-inline uint8_t hexFromNibbles(char MSB, char LSB) {
+/// Store the binary representation of the two provided values, \p MSB and
+/// \p LSB, that make up the nibbles of a hexadecimal digit. If \p MSB or \p LSB
+/// do not correspond to proper nibbles of a hexadecimal digit, this method
+/// returns false. Otherwise, returns true.
+inline bool tryGetHexFromNibbles(char MSB, char LSB, uint8_t &Hex) {
   unsigned U1 = hexDigitValue(MSB);
   unsigned U2 = hexDigitValue(LSB);
-  assert(U1 != -1U && U2 != -1U);
+  if (U1 == ~0U || U2 == ~0U)
+    return false;
 
-  return static_cast<uint8_t>((U1 << 4) | U2);
+  Hex = static_cast<uint8_t>((U1 << 4) | U2);
+  return true;
 }
 
-/// Convert hexadecimal string \p Input to its binary representation.
-/// The return string is half the size of \p Input.
-inline std::string fromHex(StringRef Input) {
-  if (Input.empty())
-    return std::string();
+/// Return the binary representation of the two provided values, \p MSB and
+/// \p LSB, that make up the nibbles of a hexadecimal digit.
+inline uint8_t hexFromNibbles(char MSB, char LSB) {
+  uint8_t Hex = 0;
+  bool GotHex = tryGetHexFromNibbles(MSB, LSB, Hex);
+  (void)GotHex;
+  assert(GotHex && "MSB and/or LSB do not correspond to hex digits");
+  return Hex;
+}
 
-  std::string Output;
+/// Convert hexadecimal string \p Input to its binary representation and store
+/// the result in \p Output. Returns true if the binary representation could be
+/// converted from the hexadecimal string. Returns false if \p Input contains
+/// non-hexadecimal digits. The output string is half the size of \p Input.
+inline bool tryGetFromHex(StringRef Input, std::string &Output) {
+  if (Input.empty())
+    return true;
+
   Output.reserve((Input.size() + 1) / 2);
   if (Input.size() % 2 == 1) {
-    Output.push_back(hexFromNibbles('0', Input.front()));
+    uint8_t Hex = 0;
+    if (!tryGetHexFromNibbles('0', Input.front(), Hex))
+      return false;
+
+    Output.push_back(Hex);
     Input = Input.drop_front();
   }
 
   assert(Input.size() % 2 == 0);
   while (!Input.empty()) {
-    uint8_t Hex = hexFromNibbles(Input[0], Input[1]);
+    uint8_t Hex = 0;
+    if (!tryGetHexFromNibbles(Input[0], Input[1], Hex))
+      return false;
+
     Output.push_back(Hex);
     Input = Input.drop_front(2);
   }
-  return Output;
+  return true;
+}
+
+/// Convert hexadecimal string \p Input to its binary representation.
+/// The return string is half the size of \p Input.
+inline std::string fromHex(StringRef Input) {
+  std::string Hex;
+  bool GotHex = tryGetFromHex(Input, Hex);
+  (void)GotHex;
+  assert(GotHex && "Input contains non hex digits");
+  return Hex;
 }
 
 /// Convert the string \p S to an integer of the specified type using
@@ -237,9 +292,20 @@ inline std::string utostr(uint64_t X, bool isNeg = false) {
 
 inline std::string itostr(int64_t X) {
   if (X < 0)
-    return utostr(static_cast<uint64_t>(-X), true);
+    return utostr(static_cast<uint64_t>(1) + ~static_cast<uint64_t>(X), true);
   else
     return utostr(static_cast<uint64_t>(X));
+}
+
+inline std::string toString(const APInt &I, unsigned Radix, bool Signed,
+                            bool formatAsCLiteral = false) {
+  SmallString<40> S;
+  I.toString(S, Radix, Signed, formatAsCLiteral);
+  return std::string(S.str());
+}
+
+inline std::string toString(const APSInt &I, unsigned Radix) {
+  return toString(I, Radix, I.isSigned());
 }
 
 /// StrInStrNoCase - Portable version of strcasestr.  Locates the first
@@ -292,6 +358,18 @@ void printHTMLEscaped(StringRef String, raw_ostream &Out);
 /// printLowerCase - Print each character as lowercase if it is uppercase.
 void printLowerCase(StringRef String, raw_ostream &Out);
 
+/// Converts a string from camel-case to snake-case by replacing all uppercase
+/// letters with '_' followed by the letter in lowercase, except if the
+/// uppercase letter is the first character of the string.
+std::string convertToSnakeFromCamelCase(StringRef input);
+
+/// Converts a string from snake-case to camel-case by replacing all occurrences
+/// of '_' followed by a lowercase letter with the letter in uppercase.
+/// Optionally allow capitalization of the first letter (if it is a lowercase
+/// letter)
+std::string convertToCamelFromSnakeCase(StringRef input,
+                                        bool capitalizeFirst = false);
+
 namespace detail {
 
 template <typename IteratorT>
@@ -318,13 +396,16 @@ inline std::string join_impl(IteratorT Begin, IteratorT End,
 
   size_t Len = (std::distance(Begin, End) - 1) * Separator.size();
   for (IteratorT I = Begin; I != End; ++I)
-    Len += (*Begin).size();
+    Len += (*I).size();
   S.reserve(Len);
+  size_t PrevCapacity = S.capacity();
+  (void)PrevCapacity;
   S += (*Begin);
   while (++Begin != End) {
     S += Separator;
     S += (*Begin);
   }
+  assert(PrevCapacity == S.capacity() && "String grew during building");
   return S;
 }
 
@@ -345,7 +426,7 @@ inline void join_items_impl(std::string &Result, Sep Separator, const Arg1 &A1,
   join_items_impl(Result, Separator, std::forward<Args>(Items)...);
 }
 
-inline size_t join_one_item_size(char C) { return 1; }
+inline size_t join_one_item_size(char) { return 1; }
 inline size_t join_one_item_size(const char *S) { return S ? ::strlen(S) : 0; }
 
 template <typename T> inline size_t join_one_item_size(const T &Str) {
@@ -395,6 +476,30 @@ inline std::string join_items(Sep Separator, Args &&... Items) {
   detail::join_items_impl(Result, Separator, std::forward<Args>(Items)...);
   return Result;
 }
+
+/// A helper class to return the specified delimiter string after the first
+/// invocation of operator StringRef().  Used to generate a comma-separated
+/// list from a loop like so:
+///
+/// \code
+///   ListSeparator LS;
+///   for (auto &I : C)
+///     OS << LS << I.getName();
+/// \end
+class ListSeparator {
+  bool First = true;
+  StringRef Separator;
+
+public:
+  ListSeparator(StringRef Separator = ", ") : Separator(Separator) {}
+  operator StringRef() {
+    if (First) {
+      First = false;
+      return {};
+    }
+    return Separator;
+  }
+};
 
 } // end namespace llvm
 

@@ -14,9 +14,11 @@
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGen/Register.h"
+#include "llvm/InitializePasses.h"
+#include "llvm/Pass.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Pass.h"
 #include <map>
 #include <set>
 #include <utility>
@@ -235,24 +237,21 @@ namespace {
           Reg = Op.getReg();
           Sub = Op.getSubReg();
         } else if (Op.isFI()) {
-          Reg = TargetRegisterInfo::index2StackSlot(Op.getIndex());
+          Reg = llvm::Register::index2StackSlot(Op.getIndex());
         }
         return *this;
       }
       bool isVReg() const {
-        return Reg != 0 && !TargetRegisterInfo::isStackSlot(Reg) &&
-               TargetRegisterInfo::isVirtualRegister(Reg);
+        return Reg != 0 && !Reg.isStack() && Reg.isVirtual();
       }
-      bool isSlot() const {
-        return Reg != 0 && TargetRegisterInfo::isStackSlot(Reg);
-      }
+      bool isSlot() const { return Reg != 0 && Reg.isStack(); }
       operator MachineOperand() const {
         if (isVReg())
           return MachineOperand::CreateReg(Reg, /*Def*/false, /*Imp*/false,
                           /*Kill*/false, /*Dead*/false, /*Undef*/false,
                           /*EarlyClobber*/false, Sub);
-        if (TargetRegisterInfo::isStackSlot(Reg)) {
-          int FI = TargetRegisterInfo::stackSlot2Index(Reg);
+        if (Reg.isStack()) {
+          int FI = llvm::Register::stackSlot2Index(Reg);
           return MachineOperand::CreateFI(FI);
         }
         llvm_unreachable("Cannot create MachineOperand");
@@ -263,7 +262,8 @@ namespace {
         // For std::map.
         return Reg < R.Reg || (Reg == R.Reg && Sub < R.Sub);
       }
-      unsigned Reg = 0, Sub = 0;
+      llvm::Register Reg;
+      unsigned Sub = 0;
     };
 
     struct ExtExpr {
@@ -377,6 +377,7 @@ namespace {
     using AssignmentMap = std::map<ExtenderInit, IndexList>;
     using LocDefList = std::vector<std::pair<Loc, IndexList>>;
 
+    const HexagonSubtarget *HST = nullptr;
     const HexagonInstrInfo *HII = nullptr;
     const HexagonRegisterInfo *HRI = nullptr;
     MachineDominatorTree *MDT = nullptr;
@@ -553,7 +554,7 @@ namespace {
   LLVM_ATTRIBUTE_UNUSED
   raw_ostream &operator<< (raw_ostream &OS, const PrintIMap &P) {
     OS << "{\n";
-    for (const std::pair<HCE::ExtenderInit,HCE::IndexList> &Q : P.IMap) {
+    for (const std::pair<const HCE::ExtenderInit, HCE::IndexList> &Q : P.IMap) {
       OS << "  " << PrintInit(Q.first, P.HRI) << " -> {";
       for (unsigned I : Q.second)
         OS << ' ' << I;
@@ -1524,7 +1525,7 @@ void HCE::calculatePlacement(const ExtenderInit &ExtI, const IndexList &Refs,
 }
 
 HCE::Register HCE::insertInitializer(Loc DefL, const ExtenderInit &ExtI) {
-  unsigned DefR = MRI->createVirtualRegister(&Hexagon::IntRegsRegClass);
+  llvm::Register DefR = MRI->createVirtualRegister(&Hexagon::IntRegsRegClass);
   MachineBasicBlock &MBB = *DefL.Block;
   MachineBasicBlock::iterator At = DefL.At;
   DebugLoc dl = DefL.Block->findDebugLoc(DefL.At);
@@ -1560,13 +1561,31 @@ HCE::Register HCE::insertInitializer(Loc DefL, const ExtenderInit &ExtI) {
                   .add(ExtOp);
       }
     } else {
-      unsigned NewOpc = Ex.Neg ? Hexagon::S4_subi_asl_ri
-                               : Hexagon::S4_addi_asl_ri;
-      // DefR = add(##EV,asl(Rb,S))
-      InitI = BuildMI(MBB, At, dl, HII->get(NewOpc), DefR)
-                .add(ExtOp)
-                .add(MachineOperand(Ex.Rs))
-                .addImm(Ex.S);
+      if (HST->useCompound()) {
+        unsigned NewOpc = Ex.Neg ? Hexagon::S4_subi_asl_ri
+                                 : Hexagon::S4_addi_asl_ri;
+        // DefR = add(##EV,asl(Rb,S))
+        InitI = BuildMI(MBB, At, dl, HII->get(NewOpc), DefR)
+                  .add(ExtOp)
+                  .add(MachineOperand(Ex.Rs))
+                  .addImm(Ex.S);
+      } else {
+        // No compounds are available. It is not clear whether we should
+        // even process such extenders where the initializer cannot be
+        // a single instruction, but do it for now.
+        unsigned TmpR = MRI->createVirtualRegister(&Hexagon::IntRegsRegClass);
+        BuildMI(MBB, At, dl, HII->get(Hexagon::S2_asl_i_r), TmpR)
+          .add(MachineOperand(Ex.Rs))
+          .addImm(Ex.S);
+        if (Ex.Neg)
+          InitI = BuildMI(MBB, At, dl, HII->get(Hexagon::A2_subri), DefR)
+                    .add(ExtOp)
+                    .add(MachineOperand(Register(TmpR, 0)));
+        else
+          InitI = BuildMI(MBB, At, dl, HII->get(Hexagon::A2_addi), DefR)
+                    .add(MachineOperand(Register(TmpR, 0)))
+                    .add(ExtOp);
+      }
     }
   }
 
@@ -1637,7 +1656,7 @@ bool HCE::replaceInstrExact(const ExtDesc &ED, Register ExtR) {
     return true;
   }
 
-  if ((MI.mayLoad() || MI.mayStore()) && !isStoreImmediate(ExtOpc)) {
+  if (MI.mayLoadOrStore() && !isStoreImmediate(ExtOpc)) {
     // For memory instructions, there is an asymmetry in the addressing
     // modes. Addressing modes allowing extenders can be replaced with
     // addressing modes that use registers, but the order of operands
@@ -1792,7 +1811,7 @@ bool HCE::replaceInstrExpr(const ExtDesc &ED, const ExtenderInit &ExtI,
     return true;
   }
 
-  if (MI.mayLoad() || MI.mayStore()) {
+  if (MI.mayLoadOrStore()) {
     unsigned IdxOpc = getRegOffOpcode(ExtOpc);
     assert(IdxOpc && "Expecting indexed opcode");
     MachineInstrBuilder MIB = BuildMI(MBB, At, dl, HII->get(IdxOpc));
@@ -1842,7 +1861,7 @@ bool HCE::replaceInstr(unsigned Idx, Register ExtR, const ExtenderInit &ExtI) {
   // These two addressing modes must be converted into indexed forms
   // regardless of what the initializer looks like.
   bool IsAbs = false, IsAbsSet = false;
-  if (MI.mayLoad() || MI.mayStore()) {
+  if (MI.mayLoadOrStore()) {
     unsigned AM = HII->getAddrMode(MI);
     IsAbs = AM == HexagonII::Absolute;
     IsAbsSet = AM == HexagonII::AbsoluteSet;
@@ -1893,7 +1912,7 @@ bool HCE::replaceExtenders(const AssignmentMap &IMap) {
   LocDefList Defs;
   bool Changed = false;
 
-  for (const std::pair<ExtenderInit,IndexList> &P : IMap) {
+  for (const std::pair<const ExtenderInit, IndexList> &P : IMap) {
     const IndexList &Idxs = P.second;
     if (Idxs.size() < CountThreshold)
       continue;
@@ -1950,8 +1969,9 @@ bool HCE::runOnMachineFunction(MachineFunction &MF) {
   }
   LLVM_DEBUG(MF.print(dbgs() << "Before " << getPassName() << '\n', nullptr));
 
-  HII = MF.getSubtarget<HexagonSubtarget>().getInstrInfo();
-  HRI = MF.getSubtarget<HexagonSubtarget>().getRegisterInfo();
+  HST = &MF.getSubtarget<HexagonSubtarget>();
+  HII = HST->getInstrInfo();
+  HRI = HST->getRegisterInfo();
   MDT = &getAnalysis<MachineDominatorTree>();
   MRI = &MF.getRegInfo();
   AssignmentMap IMap;

@@ -44,8 +44,8 @@ ProgramStateRef SimpleConstraintManager::assume(ProgramStateRef State,
 ProgramStateRef SimpleConstraintManager::assume(ProgramStateRef State,
                                                 NonLoc Cond, bool Assumption) {
   State = assumeAux(State, Cond, Assumption);
-  if (NotifyAssumeClients && SU)
-    return SU->processAssume(State, Cond, Assumption);
+  if (NotifyAssumeClients && EE)
+    return EE->processAssume(State, Cond, Assumption);
   return State;
 }
 
@@ -57,7 +57,7 @@ ProgramStateRef SimpleConstraintManager::assumeAux(ProgramStateRef State,
   // SymIntExprs.
   if (!canReasonAbout(Cond)) {
     // Just add the constraint to the expression without trying to simplify.
-    SymbolRef Sym = Cond.getAsSymExpr();
+    SymbolRef Sym = Cond.getAsSymbol();
     assert(Sym);
     return assumeSymUnsupported(State, Sym, Assumption);
   }
@@ -101,7 +101,7 @@ ProgramStateRef SimpleConstraintManager::assumeInclusiveRange(
 
   if (!canReasonAbout(Value)) {
     // Just add the constraint to the expression without trying to simplify.
-    SymbolRef Sym = Value.getAsSymExpr();
+    SymbolRef Sym = Value.getAsSymbol();
     assert(Sym);
     return assumeSymInclusiveRange(State, Sym, From, To, InRange);
   }

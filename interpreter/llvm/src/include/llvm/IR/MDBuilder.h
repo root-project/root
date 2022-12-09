@@ -16,6 +16,7 @@
 
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/IR/Constants.h"
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/Support/DataTypes.h"
 #include <utility>
@@ -74,6 +75,9 @@ public:
 
   /// Return metadata containing the section prefix for a function.
   MDNode *createFunctionSectionPrefix(StringRef Prefix);
+
+  /// Return metadata containing the pseudo probe descriptor for a function.
+  MDNode *createPseudoProbeDesc(uint64_t GUID, uint64_t Hash, Function *F);
 
   //===------------------------------------------------------------------===//
   // Range metadata.

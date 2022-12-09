@@ -34,6 +34,7 @@
 #include "clang/Basic/TokenKinds.h"
 #include "clang/Lex/Token.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Compiler.h"
@@ -77,6 +78,10 @@ struct FileRange {
 
   /// Gets the substring that this FileRange refers to.
   llvm::StringRef text(const SourceManager &SM) const;
+
+  /// Convert to the clang range. The returned range is always a char range,
+  /// never a token range.
+  CharSourceRange toCharRange(const SourceManager &SM) const;
 
   friend bool operator==(const FileRange &L, const FileRange &R) {
     return std::tie(L.File, L.Begin, L.End) == std::tie(R.File, R.Begin, R.End);
@@ -167,14 +172,20 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &OS, const Token &T);
 /// To build a token buffer use the TokenCollector class. You can also compute
 /// the spelled tokens of a file using the tokenize() helper.
 ///
-/// FIXME: allow to map from spelled to expanded tokens when use-case shows up.
 /// FIXME: allow mappings into macro arguments.
 class TokenBuffer {
 public:
   TokenBuffer(const SourceManager &SourceMgr) : SourceMgr(&SourceMgr) {}
+
+  TokenBuffer(TokenBuffer &&) = default;
+  TokenBuffer(const TokenBuffer &) = delete;
+  TokenBuffer &operator=(TokenBuffer &&) = default;
+  TokenBuffer &operator=(const TokenBuffer &) = delete;
+
   /// All tokens produced by the preprocessor after all macro replacements,
   /// directives, etc. Source locations found in the clang AST will always
   /// point to one of these tokens.
+  /// Tokens are in TU order (per SourceManager::isBeforeInTranslationUnit()).
   /// FIXME: figure out how to handle token splitting, e.g. '>>' can be split
   ///        into two '>' tokens by the parser. However, TokenBuffer currently
   ///        keeps it as a single '>>' token.
@@ -182,18 +193,29 @@ public:
     return ExpandedTokens;
   }
 
-  /// Find the subrange of spelled tokens that produced the corresponding \p
-  /// Expanded tokens.
+  /// Builds a cache to make future calls to expandedToken(SourceRange) faster.
+  /// Creates an index only once. Further calls to it will be no-op.
+  void indexExpandedTokens();
+
+  /// Returns the subrange of expandedTokens() corresponding to the closed
+  /// token range R.
+  /// Consider calling indexExpandedTokens() before for faster lookups.
+  llvm::ArrayRef<syntax::Token> expandedTokens(SourceRange R) const;
+
+  /// Returns the subrange of spelled tokens corresponding to AST node spanning
+  /// \p Expanded. This is the text that should be replaced if a refactoring
+  /// were to rewrite the node. If \p Expanded is empty, the returned value is
+  /// llvm::None.
   ///
-  /// EXPECTS: \p Expanded is a subrange of expandedTokens().
-  ///
-  /// Will fail if the expanded tokens do not correspond to a
-  /// sequence of spelled tokens. E.g. for the following example:
+  /// Will fail if the expanded tokens do not correspond to a sequence of
+  /// spelled tokens. E.g. for the following example:
   ///
   ///   #define FIRST f1 f2 f3
   ///   #define SECOND s1 s2 s3
+  ///   #define ID2(X, Y) X Y
   ///
   ///   a FIRST b SECOND c // expanded tokens are: a f1 f2 f3 b s1 s2 s3 c
+  ///   d ID2(e f g, h) i  // expanded tokens are: d e f g h i
   ///
   /// the results would be:
   ///   expanded   => spelled
@@ -203,11 +225,43 @@ public:
   ///   a f1 f2 f3 => a FIRST
   ///         a f1 => can't map
   ///        s1 s2 => can't map
+  ///         e f  => e f
+  ///         g h  => can't map
   ///
-  /// If \p Expanded is empty, the returned value is llvm::None.
+  /// EXPECTS: \p Expanded is a subrange of expandedTokens().
   /// Complexity is logarithmic.
   llvm::Optional<llvm::ArrayRef<syntax::Token>>
   spelledForExpanded(llvm::ArrayRef<syntax::Token> Expanded) const;
+
+  /// Find the subranges of expanded tokens, corresponding to \p Spelled.
+  ///
+  /// Some spelled tokens may not be present in the expanded token stream, so
+  /// this function can return an empty vector, e.g. for tokens of macro
+  /// directives or disabled preprocessor branches.
+  ///
+  /// Some spelled tokens can be duplicated in the expanded token stream
+  /// multiple times and this function will return multiple results in those
+  /// cases. This happens when \p Spelled is inside a macro argument.
+  ///
+  /// FIXME: return correct results on macro arguments. For now, we return an
+  ///        empty list.
+  ///
+  /// (!) will return empty vector on tokens from #define body:
+  /// E.g. for the following example:
+  ///
+  ///   #define FIRST(A) f1 A = A f2
+  ///   #define SECOND s
+  ///
+  ///   a FIRST(arg) b SECOND c // expanded tokens are: a f1 arg = arg f2 b s
+  /// The results would be
+  ///   spelled           => expanded
+  ///   ------------------------
+  ///   #define FIRST     => {}
+  ///   a FIRST(arg)      => {a f1 arg = arg f2}
+  ///   arg               => {arg, arg} // arg #1 is before `=` and arg #2 is
+  ///                                   // after `=` in the expanded tokens.
+  llvm::SmallVector<llvm::ArrayRef<syntax::Token>, 1>
+  expandedForSpelled(llvm::ArrayRef<syntax::Token> Spelled) const;
 
   /// An expansion produced by the preprocessor, includes macro expansions and
   /// preprocessor directives. Preprocessor always maps a non-empty range of
@@ -227,14 +281,32 @@ public:
   /// macro expands to.
   llvm::Optional<Expansion>
   expansionStartingAt(const syntax::Token *Spelled) const;
+  /// Returns all expansions (partially) expanded from the specified tokens.
+  /// This is the expansions whose Spelled range intersects \p Spelled.
+  std::vector<Expansion>
+  expansionsOverlapping(llvm::ArrayRef<syntax::Token> Spelled) const;
 
   /// Lexed tokens of a file before preprocessing. E.g. for the following input
   ///     #define DECL(name) int name = 10
   ///     DECL(a);
-  /// spelledTokens() returns {"#", "define", "DECL", "(", "name", ")", "eof"}.
-  /// FIXME: we do not yet store tokens of directives, like #include, #define,
-  ///        #pragma, etc.
+  /// spelledTokens() returns
+  ///    {"#", "define", "DECL", "(", "name", ")", "int", "name", "=", "10",
+  ///     "DECL", "(", "a", ")", ";"}
   llvm::ArrayRef<syntax::Token> spelledTokens(FileID FID) const;
+
+  /// Returns the spelled Token starting at Loc, if there are no such tokens
+  /// returns nullptr.
+  const syntax::Token *spelledTokenAt(SourceLocation Loc) const;
+
+  /// Get all tokens that expand a macro in \p FID. For the following input
+  ///     #define FOO B
+  ///     #define FOO2(X) int X
+  ///     FOO2(XY)
+  ///     int B;
+  ///     FOO;
+  /// macroExpansions() returns {"FOO2", "FOO"} (from line 3 and 5
+  /// respecitvely).
+  std::vector<const syntax::Token *> macroExpansions(FileID FID) const;
 
   const SourceManager &sourceManager() const { return *SourceMgr; }
 
@@ -284,15 +356,45 @@ private:
   std::pair<const syntax::Token *, const Mapping *>
   spelledForExpandedToken(const syntax::Token *Expanded) const;
 
+  /// Returns a mapping starting before \p Spelled token, or nullptr if no
+  /// such mapping exists.
+  static const Mapping *
+  mappingStartingBeforeSpelled(const MarkedFile &F,
+                               const syntax::Token *Spelled);
+
+  /// Convert a private Mapping to a public Expansion.
+  Expansion makeExpansion(const MarkedFile &, const Mapping &) const;
+  /// Returns the file that the Spelled tokens are taken from.
+  /// Asserts that they are non-empty, from a tracked file, and in-bounds.
+  const MarkedFile &fileForSpelled(llvm::ArrayRef<syntax::Token> Spelled) const;
+
   /// Token stream produced after preprocessing, conceputally this captures the
   /// same stream as 'clang -E' (excluding the preprocessor directives like
   /// #file, etc.).
   std::vector<syntax::Token> ExpandedTokens;
+  // Index of ExpandedTokens for faster lookups by SourceLocation.
+  llvm::DenseMap<SourceLocation, unsigned> ExpandedTokIndex;
   llvm::DenseMap<FileID, MarkedFile> Files;
   // The value is never null, pointer instead of reference to avoid disabling
   // implicit assignment operator.
   const SourceManager *SourceMgr;
 };
+
+/// The spelled tokens that overlap or touch a spelling location Loc.
+/// This always returns 0-2 tokens.
+llvm::ArrayRef<syntax::Token>
+spelledTokensTouching(SourceLocation Loc, const syntax::TokenBuffer &Tokens);
+llvm::ArrayRef<syntax::Token>
+spelledTokensTouching(SourceLocation Loc, llvm::ArrayRef<syntax::Token> Tokens);
+
+/// The identifier token that overlaps or touches a spelling location Loc.
+/// If there is none, returns nullptr.
+const syntax::Token *
+spelledIdentifierTouching(SourceLocation Loc,
+                          llvm::ArrayRef<syntax::Token> Tokens);
+const syntax::Token *
+spelledIdentifierTouching(SourceLocation Loc,
+                          const syntax::TokenBuffer &Tokens);
 
 /// Lex the text buffer, corresponding to \p FID, in raw mode and record the
 /// resulting spelled tokens. Does minimal post-processing on raw identifiers,
@@ -304,6 +406,12 @@ private:
 /// The result will *not* have a 'eof' token at the end.
 std::vector<syntax::Token> tokenize(FileID FID, const SourceManager &SM,
                                     const LangOptions &LO);
+/// Similar to one above, instead of whole file tokenizes a part of it. Note
+/// that, the first token might be incomplete if FR.startOffset is not at the
+/// beginning of a token, and the last token returned will start before the
+/// FR.endOffset but might end after it.
+std::vector<syntax::Token>
+tokenize(const FileRange &FR, const SourceManager &SM, const LangOptions &LO);
 
 /// Collects tokens for the main file while running the frontend action. An
 /// instance of this object should be created on
@@ -338,7 +446,7 @@ private:
   /// the stack) and not when they end (when we pop a macro from the stack).
   /// To workaround this limitation, we rely on source location information
   /// stored in this map.
-  using PPExpansions = llvm::DenseMap</*SourceLocation*/ int, SourceLocation>;
+  using PPExpansions = llvm::DenseMap<SourceLocation, SourceLocation>;
   class Builder;
   class CollectPPExpansions;
 

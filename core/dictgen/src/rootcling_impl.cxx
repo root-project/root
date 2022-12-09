@@ -240,7 +240,6 @@ static void AnnotateFieldDecl(clang::FieldDecl &decl,
    if (fieldSelRules.empty()) return;
 
    clang::ASTContext &C = decl.getASTContext();
-   clang::SourceRange commentRange; // Empty: this is a fake comment
 
    const std::string declName(decl.getNameAsString());
    std::string varName;
@@ -277,7 +276,7 @@ static void AnnotateFieldDecl(clang::FieldDecl &decl,
             // before persisting the ProtoClasses in the root pcms.
             // BEGIN ROOT PCMS
             if (name == propNames::comment) {
-               decl.addAttr(new(C) clang::AnnotateAttr(commentRange, C, value, 0));
+               decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, value));
             }
             // END ROOT PCMS
 
@@ -287,7 +286,7 @@ static void AnnotateFieldDecl(clang::FieldDecl &decl,
                // This next line is here to use the root pcms. Indeed we need to annotate the AST
                // before persisting the ProtoClasses in the root pcms.
                // BEGIN ROOT PCMS
-               decl.addAttr(new(C) clang::AnnotateAttr(commentRange, C, "!", 0));
+               decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, "!"));
                // END ROOT PCMS
                // The rest of the lines are not changed to leave in place the system which
                // works with bulk header parsing on library load.
@@ -295,7 +294,7 @@ static void AnnotateFieldDecl(clang::FieldDecl &decl,
                userDefinedProperty = name + propNames::separator + value;
             }
             ROOT::TMetaUtils::Info(nullptr, "%s %s\n", varName.c_str(), userDefinedProperty.c_str());
-            decl.addAttr(new(C) clang::AnnotateAttr(commentRange, C, userDefinedProperty, 0));
+            decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, userDefinedProperty));
 
          }
       }
@@ -320,8 +319,6 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
 
    ASTContext &C = CXXRD.getASTContext();
 
-   SourceRange commentRange;
-
    // Fetch the selection rule associated to this class
    clang::Decl *declBaseClassPtr = static_cast<clang::Decl *>(&CXXRD);
    auto declSelRulePair = declSelRulesMap.find(declBaseClassPtr->getCanonicalDecl());
@@ -343,7 +340,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
          const std::string &value = attr.second;
          userDefinedProperty = name + ROOT::TMetaUtils::propNames::separator + value;
          if (genreflex::verbose) std::cout << " * " << userDefinedProperty << std::endl;
-         CXXRD.addAttr(new(C) AnnotateAttr(commentRange, C, userDefinedProperty, 0));
+         CXXRD.addAttr(AnnotateAttr::CreateImplicit(C, userDefinedProperty));
       }
    }
 
@@ -368,19 +365,16 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
 
          comment = ROOT::TMetaUtils::GetComment(**I, &commentSLoc);
          if (comment.size()) {
-            // Keep info for the source range of the comment in case we want to issue
-            // nice warnings, eg. empty comment and so on.
-            commentRange = SourceRange(commentSLoc, commentSLoc.getLocWithOffset(comment.size()));
             // The ClassDef annotation is for the class itself
             if (isClassDefMacro) {
-               CXXRD.addAttr(new(C) AnnotateAttr(commentRange, C, comment.str(), 0));
+               CXXRD.addAttr(AnnotateAttr::CreateImplicit(C, comment.str()));
             } else if (!isGenreflex) {
                // Here we check if we are in presence of a selection file so that
                // the comment does not ends up as a decoration in the AST,
                // Nevertheless, w/o PCMS this has no effect, since the headers
                // are parsed at runtime and the information in the AST dumped by
                // rootcling is not relevant.
-               (*I)->addAttr(new(C) AnnotateAttr(commentRange, C, comment.str(), 0));
+               (*I)->addAttr(AnnotateAttr::CreateImplicit(C, comment.str()));
             }
          }
          // Match decls with sel rules if we are in presence of a selection file
@@ -1993,8 +1987,8 @@ static bool WriteAST(llvm::StringRef fileName, clang::CompilerInstance *compiler
    clang::ASTWriter writer(stream, buffer, compilerInstance->getModuleCache(), /*Extensions=*/{});
    std::unique_ptr<llvm::raw_ostream> out =
       compilerInstance->createOutputFile(fileName, /*Binary=*/true,
-                                         /*RemoveFileOnSignal=*/false, /*InFile*/ "",
-                                         /*Extension=*/"", /*useTemporary=*/false,
+                                         /*RemoveFileOnSignal=*/false,
+                                         /*useTemporary=*/false,
                                          /*CreateMissingDirectories*/ false);
    if (!out) {
       ROOT::TMetaUtils::Error("WriteAST", "Couldn't open output stream to '%s'!\n", fileName.data());
@@ -2003,7 +1997,7 @@ static bool WriteAST(llvm::StringRef fileName, clang::CompilerInstance *compiler
 
    compilerInstance->getFrontendOpts().RelocatablePCH = true;
 
-   writer.WriteAST(compilerInstance->getSema(), fileName, module, iSysRoot);
+   writer.WriteAST(compilerInstance->getSema(), fileName.str(), module, iSysRoot);
 
    // Write the generated bitstream to "Out".
    out->write(&buffer.front(), buffer.size());
@@ -2128,7 +2122,7 @@ void AddPlatformDefines(std::vector<std::string> &clingArgs)
 
 std::string ExtractFileName(const std::string &path)
 {
-   return llvm::sys::path::filename(path);
+   return llvm::sys::path::filename(path).str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3897,17 +3891,42 @@ static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resour
 
    // Check if the loaded module covers all headers that were specified
    // by the user on the command line. This is an integrity check to
-   // ensure that our used module map is
+   // ensure that our used module map is not containing extraneous headers.
    std::vector<std::string> missingHeaders;
    if (!ModuleContainsHeaders(modGen, module, missingHeaders)) {
       // FIXME: Upgrade this to an error once modules are stable.
       std::stringstream msgStream;
-      msgStream << "warning: Couldn't find in "
-                << module->PresumedModuleMapFile
-                << " the following specified headers in "
-                << "the module " << module->Name << ":\n";
+      msgStream << "after creating module \"" << module->Name << "\" ";
+      if (!module->PresumedModuleMapFile.empty())
+         msgStream << "using modulemap \"" << module->PresumedModuleMapFile << "\" ";
+      msgStream << "the following headers are not part of that module:\n";
       for (auto &H : missingHeaders) {
-         msgStream << "  " << H << "\n";
+         msgStream << "  " << H;
+         clang::ModuleMap::KnownHeader SuggestedModule;
+         const clang::DirectoryLookup *CurDir = nullptr;
+         if (auto FE = headerSearch.LookupFile(
+                H, clang::SourceLocation(),
+                /*isAngled*/ false,
+                /*FromDir*/ 0, CurDir,
+                clang::ArrayRef<std::pair<const clang::FileEntry *, const clang::DirectoryEntry *>>(),
+                /*SearchPath*/ 0,
+                /*RelativePath*/ 0,
+                /*RequestingModule*/ 0, &SuggestedModule,
+                /*IsMapped*/ 0,
+                /*IsFrameworkFound*/ nullptr,
+                /*SkipCache*/ false,
+                /*BuildSystemModule*/ false,
+                /*OpenFile*/ false,
+                /*CacheFail*/ false)) {
+            if (auto OtherModule = SuggestedModule.getModule()) {
+               auto TLM = OtherModule->getTopLevelModuleName();
+               if (!TLM.empty())
+                  msgStream << " (already part of top-level module \"" << TLM.str() << "\")";
+               else
+                  msgStream << " (already part of module \"" << OtherModule->Name << "\")";
+            }
+         }
+         msgStream << "\n";
       }
       std::string warningMessage = msgStream.str();
 
@@ -3955,16 +3974,6 @@ int RootClingMain(int argc,
               char **argv,
               bool isGenreflex = false)
 {
-   // Define Options aliasses
-   auto &opts = llvm::cl::getRegisteredOptions();
-   auto &optHelp = *opts["help"];
-   llvm::cl::alias optHelpAlias1("h",
-                      llvm::cl::desc("Alias for -help"),
-                      llvm::cl::aliasopt(optHelp));
-   llvm::cl::alias optHelpAlias2("?",
-                      llvm::cl::desc("Alias for -help"),
-                      llvm::cl::aliasopt(optHelp));
-
    // Set number of required arguments. We cannot do this globally since it
    // would interfere with LLVM's option parsing.
    gOptDictionaryFileName.setNumOccurrencesFlag(llvm::cl::Required);
@@ -4000,6 +4009,16 @@ int RootClingMain(int argc,
    // Hide options from llvm which we got from static initialization of libCling.
    llvm::cl::HideUnrelatedOptions(/*keep*/gRootclingOptions);
 
+   // Define Options aliasses
+   auto &opts = llvm::cl::getRegisteredOptions();
+   llvm::cl::Option* optHelp = opts["help"];
+   llvm::cl::alias optHelpAlias1("h",
+                      llvm::cl::desc("Alias for -help"),
+                      llvm::cl::aliasopt(*optHelp));
+   llvm::cl::alias optHelpAlias2("?",
+                      llvm::cl::desc("Alias for -help"),
+                      llvm::cl::aliasopt(*optHelp));
+
    llvm::cl::ParseCommandLineOptions(argc, argv, "rootcling");
 
    std::string llvmResourceDir = std::string(gDriverConfig->fTROOT__GetEtcDir()) + "/cling";
@@ -4016,9 +4035,9 @@ int RootClingMain(int argc,
       for (const std::string& Opt : gOptBareClingSink)
          clingArgsC.push_back(Opt.c_str());
 
-      auto interp = llvm::make_unique<cling::Interpreter>(clingArgsC.size(),
-                                                          &clingArgsC[0],
-                                                          llvmResourceDir.c_str());
+      auto interp = std::make_unique<cling::Interpreter>(clingArgsC.size(),
+                                                         &clingArgsC[0],
+                                                         llvmResourceDir.c_str());
       // FIXME: Diagnose when we have misspelled a flag. Currently we show no
       // diagnostic and report exit as success.
       return interp->getDiagnostics().hasFatalErrorOccurred();
@@ -4077,7 +4096,7 @@ int RootClingMain(int argc,
          return 1;
       }
 
-      dictname = llvm::sys::path::filename(gOptDictionaryFileName);
+      dictname = llvm::sys::path::filename(gOptDictionaryFileName).str();
    }
 
    if (gOptForce && dictname.empty()) {
@@ -4110,8 +4129,8 @@ int RootClingMain(int argc,
         ROOT::TMetaUtils::Error("", "isysroot specified without a value.\n");
         return 1;
       }
-      clingArgs.push_back(gOptISysRoot.ArgStr);
-      clingArgs.push_back(gOptISysRoot.ValueStr);
+      clingArgs.push_back(gOptISysRoot.ArgStr.str());
+      clingArgs.push_back(gOptISysRoot.ValueStr.str());
    }
 
    // Check if we have a multi dict request but no target library
@@ -4241,8 +4260,7 @@ int RootClingMain(int argc,
       // Try to get the module name in the modulemap based on the filepath.
       moduleName = GetModuleNameFromRdictName(outputFile);
 
-      clingArgsInterpreter.push_back("-fmodule-name");
-      clingArgsInterpreter.push_back(moduleName.str());
+      clingArgsInterpreter.push_back("-fmodule-name=" + moduleName.str());
 
       std::string moduleCachePath = llvm::sys::path::parent_path(gOptSharedLibFileName).str();
       // FIXME: This is a horrible workaround to fix the incremental builds.
@@ -4384,7 +4402,7 @@ int RootClingMain(int argc,
          DepMod = GetModuleNameFromRdictName(DepMod);
          // We might deserialize.
          cling::Interpreter::PushTransactionRAII RAII(&interp);
-         if (!interp.loadModule(DepMod, /*complain*/false)) {
+         if (!interp.loadModule(DepMod.str(), /*complain*/false)) {
             ROOT::TMetaUtils::Error(nullptr, "Module '%s' failed to load.\n",
                                     DepMod.data());
          }

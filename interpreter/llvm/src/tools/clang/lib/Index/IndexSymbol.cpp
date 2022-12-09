@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Index/IndexSymbol.h"
+#include "clang/AST/Attr.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/DeclTemplate.h"
@@ -328,6 +329,11 @@ SymbolInfo index::getSymbolInfo(const Decl *D) {
       Info.Kind = SymbolKind::Using;
       Info.Lang = SymbolLanguage::CXX;
       break;
+    case Decl::UsingEnum:
+      Info.Kind = SymbolKind::Using;
+      Info.Lang = SymbolLanguage::CXX;
+      Info.SubKind = SymbolSubKind::UsingEnum;
+      break;
     case Decl::Binding:
       Info.Kind = SymbolKind::Variable;
       Info.Lang = SymbolLanguage::CXX;
@@ -355,6 +361,15 @@ SymbolInfo index::getSymbolInfo(const Decl *D) {
     case Decl::Var:
     case Decl::VarTemplate:
       llvm_unreachable("variables handled before");
+      break;
+    case Decl::TemplateTypeParm:
+      Info.Kind = SymbolKind::TemplateTypeParm;
+      break;
+    case Decl::TemplateTemplateParm:
+      Info.Kind = SymbolKind::TemplateTemplateParm;
+      break;
+    case Decl::NonTypeTemplateParm:
+      Info.Kind = SymbolKind::NonTypeTemplateParm;
       break;
     // Other decls get the 'unknown' kind.
     default:
@@ -513,9 +528,12 @@ StringRef index::getSymbolKindString(SymbolKind K) {
   case SymbolKind::StaticProperty: return "static-property";
   case SymbolKind::Constructor: return "constructor";
   case SymbolKind::Destructor: return "destructor";
-  case SymbolKind::ConversionFunction: return "coversion-func";
+  case SymbolKind::ConversionFunction: return "conversion-func";
   case SymbolKind::Parameter: return "param";
   case SymbolKind::Using: return "using";
+  case SymbolKind::TemplateTypeParm: return "template-type-param";
+  case SymbolKind::TemplateTemplateParm: return "template-template-param";
+  case SymbolKind::NonTypeTemplateParm: return "non-type-template-param";
   }
   llvm_unreachable("invalid symbol kind");
 }
@@ -529,6 +547,8 @@ StringRef index::getSymbolSubKindString(SymbolSubKind K) {
   case SymbolSubKind::AccessorSetter: return "acc-set";
   case SymbolSubKind::UsingTypename: return "using-typename";
   case SymbolSubKind::UsingValue: return "using-value";
+  case SymbolSubKind::UsingEnum:
+    return "using-enum";
   }
   llvm_unreachable("invalid symbol subkind");
 }

@@ -10,28 +10,26 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "clang/Frontend/Utils.h"
 #include "clang/Basic/DiagnosticOptions.h"
+#include "clang/Driver/Action.h"
 #include "clang/Driver/Compilation.h"
 #include "clang/Driver/Driver.h"
-#include "clang/Driver/Action.h"
 #include "clang/Driver/Options.h"
 #include "clang/Driver/Tool.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendDiagnostic.h"
+#include "clang/Frontend/Utils.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Option/ArgList.h"
 #include "llvm/Support/Host.h"
 using namespace clang;
 using namespace llvm::opt;
 
-/// createInvocationFromCommandLine - Construct a compiler invocation object for
-/// a command line argument vector.
-///
-/// \return A CompilerInvocation, or 0 if none was built for the given
-/// argument vector.
 std::unique_ptr<CompilerInvocation> clang::createInvocationFromCommandLine(
     ArrayRef<const char *> ArgList, IntrusiveRefCntPtr<DiagnosticsEngine> Diags,
-    IntrusiveRefCntPtr<llvm::vfs::FileSystem> VFS) {
+    IntrusiveRefCntPtr<llvm::vfs::FileSystem> VFS, bool ShouldRecoverOnErorrs,
+    std::vector<std::string> *CC1Args) {
   if (!Diags.get()) {
     // No diagnostics engine was provided, so create our own diagnostics object
     // with the default options.
@@ -41,11 +39,14 @@ std::unique_ptr<CompilerInvocation> clang::createInvocationFromCommandLine(
   SmallVector<const char *, 16> Args(ArgList.begin(), ArgList.end());
 
   // FIXME: Find a cleaner way to force the driver into restricted modes.
-  Args.push_back("-fsyntax-only");
+  Args.insert(
+      llvm::find_if(
+          Args, [](const char *Elem) { return llvm::StringRef(Elem) == "--"; }),
+      "-fsyntax-only");
 
   // FIXME: We shouldn't have to pass in the path info.
-  driver::Driver TheDriver(Args[0], llvm::sys::getDefaultTargetTriple(),
-                           *Diags, VFS);
+  driver::Driver TheDriver(Args[0], llvm::sys::getDefaultTargetTriple(), *Diags,
+                           "clang LLVM compiler", VFS);
 
   // Don't check that inputs exist, they may have been remapped.
   TheDriver.setCheckInputsExist(false);
@@ -94,12 +95,11 @@ std::unique_ptr<CompilerInvocation> clang::createInvocationFromCommandLine(
   }
 
   const ArgStringList &CCArgs = Cmd.getArguments();
-  auto CI = llvm::make_unique<CompilerInvocation>();
-  if (!CompilerInvocation::CreateFromArgs(*CI,
-                                     const_cast<const char **>(CCArgs.data()),
-                                     const_cast<const char **>(CCArgs.data()) +
-                                     CCArgs.size(),
-                                     *Diags))
+  if (CC1Args)
+    *CC1Args = {CCArgs.begin(), CCArgs.end()};
+  auto CI = std::make_unique<CompilerInvocation>();
+  if (!CompilerInvocation::CreateFromArgs(*CI, CCArgs, *Diags, Args[0]) &&
+      !ShouldRecoverOnErorrs)
     return nullptr;
   return CI;
 }

@@ -39,6 +39,13 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
 # Support gcc 4.8 and higher.
 set(LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN ON CACHE BOOL "")
 
+# Prevent Clang from finding CUDA just to determine the architecture for OpenMP
+# offloading, which we are not interested in. If the CUDA package was already
+# found before (because the user turned on cuda or tmva-gpu), this will not have
+# an effect, which is fine.
+# (Note that the option is very counter-intuitive: We turn *on* disabling it...)
+set(CMAKE_DISABLE_FIND_PACKAGE_CUDA ON)
+
 # will be set again in case NOT builtin_llvm
 set(LLVM_DIR "${CMAKE_BINARY_DIR}/interpreter/llvm/src")
 if (clad)
@@ -351,10 +358,10 @@ else()
   include(VersionFromVCS)
 
   set(PACKAGE_VERSION "${LLVM_PACKAGE_VERSION}")
-  if (${PACKAGE_VERSION} MATCHES "9\\.0(|\\.[0-9]+)")
+  if (${PACKAGE_VERSION} MATCHES "13\\.0(|\\.[0-9]+)")
     message(STATUS "Using LLVM external library - ${PACKAGE_VERSION}")
   else()
-    message(FATAL_ERROR "LLVM version different from ROOT supported, please try 9.0.x")
+    message(FATAL_ERROR "LLVM version different from ROOT supported, please try 13.0.x")
   endif()
 
   if (NOT DEFINED LLVM_INCLUDE_TESTS)
@@ -532,6 +539,7 @@ if (builtin_cling)
 else()
   set(Cling_DIR ${LLVM_BINARY_DIR}/lib/cmake/cling/)
   find_package(Cling REQUIRED CONFIG PATHS ${Cling_DIR} "${Cling_DIR}/lib/cmake/cling" "${Cling_DIR}/cmake" NO_DEFAULT_PATH)
+  find_package(Clang REQUIRED CONFIG PATHS ${Cling_DIR} "${Cling_DIR}/lib/cmake/clang" "${Cling_DIR}/cmake" NO_DEFAULT_PATH)
 
   # We need to consider not just the direct link dependencies, but also the
   # transitive link dependencies. Do this by starting with the set of direct

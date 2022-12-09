@@ -34,7 +34,7 @@ a, A
 
 b, B
 
- Unitialized data (bss) object.
+ Uninitialized data (bss) object.
 
 C
 
@@ -90,7 +90,7 @@ V
 
  ELF: Defined weak object symbol. This definition will only be used if no
  regular definitions exist in a link. If multiple weak definitions and no
- regular definitons exist, one of the weak definitions will be used.
+ regular definitions exist, one of the weak definitions will be used.
 
 w
 
@@ -101,7 +101,7 @@ W
 
  Defined weak symbol other than an ELF object symbol. This definition will only
  be used if no regular definitions exist in a link. If multiple weak definitions
- and no regular definitons exist, one of the weak definitions will be used.
+ and no regular definitions exist, one of the weak definitions will be used.
 
 \-
 
@@ -130,7 +130,7 @@ OPTIONS
 
  Show all symbols, even those usually suppressed.
 
-.. option:: --defined-only, -U
+.. option:: --defined-only
 
  Print only symbols defined in this file.
 
@@ -149,20 +149,17 @@ OPTIONS
 
 .. option:: --format=<format>, -f
 
- Select an output format; *format* may be *sysv*, *posix*, *darwin*, or *bsd*.
+ Select an output format; *format* may be *sysv*, *posix*, *darwin*, *bsd* or
+ *just-symbols*.
  The default is *bsd*.
 
 .. option:: --help, -h
 
  Print a summary of command-line options and their meanings.
 
-.. option:: --help-list
+.. option:: -j
 
- Print an uncategorized summary of command-line options and their meanings.
-
-.. option:: --just-symbol-name, -j
-
- Print just the symbol names.
+ Print just the symbol names. Alias for `--format=just-symbols``.
 
 .. option:: -m
 
@@ -180,7 +177,7 @@ OPTIONS
 
  Show symbols in the order encountered.
 
-.. option:: --no-weak, -W
+.. option:: --no-weak
 
  Don't print weak symbols.
 
@@ -192,7 +189,7 @@ OPTIONS
 
  Use POSIX.2 output format.  Alias for ``--format=posix``.
 
-.. option:: --print-armap, -M
+.. option:: --print-armap
 
  Print the archive symbol table, in addition to the symbols.
 
@@ -203,6 +200,10 @@ OPTIONS
 .. option:: --print-size, -S
 
  Show symbol size as well as address (not applicable for Mach-O).
+
+.. option:: --quiet
+
+ Suppress 'no symbols' diagnostic.
 
 .. option:: --radix=<RADIX>, -t
 
@@ -219,19 +220,16 @@ OPTIONS
 
 .. option:: --special-syms
 
- Ignored. For GNU compatibility only.
+ Do not filter special symbols from the output.
 
 .. option:: --undefined-only, -u
 
  Print only undefined symbols.
 
-.. option:: --version
+.. option:: --version, -V
 
- Display the version of this program. Does not stack with other commands.
-
-.. option:: --without-aliases
-
- Exclude aliases from the output.
+ Display the version of the :program:`llvm-nm` executable, then exit. Does not
+ stack with other commands.
 
 .. option:: @<FILE>
 
@@ -245,6 +243,10 @@ MACH-O SPECIFIC OPTIONS
  Add symbols from the dyldinfo, if they are not already in the symbol table.
  This is the default.
 
+.. option:: --add-inlinedinfo
+
+ Add symbols from the inlined libraries, TBD file inputs only.
+
 .. option:: --arch=<arch1[,arch2,...]>
 
  Dump the symbols from the specified architecture(s).
@@ -257,7 +259,7 @@ MACH-O SPECIFIC OPTIONS
 
  Do not add any symbols from the dyldinfo.
 
-.. option:: -s=<segment section>
+.. option:: -s <segment> <section>
 
  Dump only symbols from this segment and section name.
 

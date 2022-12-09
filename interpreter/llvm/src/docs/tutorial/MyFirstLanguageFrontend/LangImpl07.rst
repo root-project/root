@@ -1,5 +1,3 @@
-:orphan:
-
 =======================================================
 Kaleidoscope: Extending the Language: Mutable Variables
 =======================================================
@@ -65,11 +63,11 @@ two values. The LLVM IR that we want for this example looks like this:
       br i1 %Condition, label %cond_true, label %cond_false
 
     cond_true:
-      %X.0 = load i32* @G
+      %X.0 = load i32, i32* @G
       br label %cond_next
 
     cond_false:
-      %X.1 = load i32* @H
+      %X.1 = load i32, i32* @H
       br label %cond_next
 
     cond_next:
@@ -105,7 +103,7 @@ direct accesses to G and H: they are not renamed or versioned. This
 differs from some other compiler systems, which do try to version memory
 objects. In LLVM, instead of encoding dataflow analysis of memory into
 the LLVM IR, it is handled with `Analysis
-Passes <../WritingAnLLVMPass.html>`_ which are computed on demand.
+Passes <../../WritingAnLLVMPass.html>`_ which are computed on demand.
 
 With this in mind, the high-level idea is that we want to make a stack
 variable (which lives in memory, because it is on the stack) for each
@@ -120,7 +118,7 @@ that @G defines *space* for an i32 in the global data area, but its
 *name* actually refers to the address for that space. Stack variables
 work the same way, except that instead of being declared with global
 variable definitions, they are declared with the `LLVM alloca
-instruction <../LangRef.html#alloca-instruction>`_:
+instruction <../../LangRef.html#alloca-instruction>`_:
 
 .. code-block:: llvm
 
@@ -128,7 +126,7 @@ instruction <../LangRef.html#alloca-instruction>`_:
     entry:
       %X = alloca i32           ; type of %X is i32*.
       ...
-      %tmp = load i32* %X       ; load the stack value %X from the stack.
+      %tmp = load i32, i32* %X  ; load the stack value %X from the stack.
       %tmp2 = add i32 %tmp, 1   ; increment it
       store i32 %tmp2, i32* %X  ; store it back
       ...
@@ -151,17 +149,17 @@ using a PHI node:
       br i1 %Condition, label %cond_true, label %cond_false
 
     cond_true:
-      %X.0 = load i32* @G
+      %X.0 = load i32, i32* @G
       store i32 %X.0, i32* %X   ; Update X
       br label %cond_next
 
     cond_false:
-      %X.1 = load i32* @H
+      %X.1 = load i32, i32* @H
       store i32 %X.1, i32* %X   ; Update X
       br label %cond_next
 
     cond_next:
-      %X.2 = load i32* %X       ; Read X
+      %X.2 = load i32, i32* %X  ; Read X
       ret i32 %X.2
     }
 
@@ -193,11 +191,11 @@ example through the pass, for example, you'll get:
       br i1 %Condition, label %cond_true, label %cond_false
 
     cond_true:
-      %X.0 = load i32* @G
+      %X.0 = load i32, i32* @G
       br label %cond_next
 
     cond_false:
-      %X.1 = load i32* @H
+      %X.1 = load i32, i32* @H
       br label %cond_next
 
     cond_next:
@@ -223,7 +221,7 @@ variables in certain circumstances:
    funny pointer arithmetic is involved, the alloca will not be
    promoted.
 #. mem2reg only works on allocas of `first
-   class <../LangRef.html#first-class-types>`_ values (such as pointers,
+   class <../../LangRef.html#first-class-types>`_ values (such as pointers,
    scalars and vectors), and only if the array size of the allocation is
    1 (or missing in the .ll file). mem2reg is not capable of promoting
    structs or arrays to registers. Note that the "sroa" pass is
@@ -249,7 +247,7 @@ is:
    variables that only have one assignment point, good heuristics to
    avoid insertion of unneeded phi nodes, etc.
 -  Needed for debug info generation: `Debug information in
-   LLVM <../SourceLevelDebugging.html>`_ relies on having the address of
+   LLVM <../../SourceLevelDebugging.html>`_ relies on having the address of
    the variable exposed so that debug info can be attached to it. This
    technique dovetails very naturally with this style of debug info.
 
@@ -401,7 +399,7 @@ the unabridged code):
       ...
 
 This code is virtually identical to the code `before we allowed mutable
-variables <LangImpl5.html#code-generation-for-the-for-loop>`_. The big difference is that we
+variables <LangImpl05.html#code-generation-for-the-for-loop>`_. The big difference is that we
 no longer have to construct a PHI node, and we use load/store to access
 the variable as needed.
 
@@ -520,7 +518,7 @@ Here is the code after the mem2reg pass runs:
 
 This is a trivial case for mem2reg, since there are no redefinitions of
 the variable. The point of showing this is to calm your tension about
-inserting such blatent inefficiencies :).
+inserting such blatant inefficiencies :).
 
 After the rest of the optimizers run, we get:
 
@@ -780,7 +778,7 @@ AST node:
       if (!Body)
         return nullptr;
 
-      return llvm::make_unique<VarExprAST>(std::move(VarNames),
+      return std::make_unique<VarExprAST>(std::move(VarNames),
                                            std::move(Body));
     }
 
@@ -872,7 +870,7 @@ mutable variables and var/in support. To build this example, use:
 .. code-block:: bash
 
     # Compile
-    clang++ -g toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core mcjit native` -O3 -o toy
+    clang++ -g toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core orcjit native` -O3 -o toy
     # Run
     ./toy
 

@@ -86,6 +86,7 @@ namespace llvm {
 
     CodeGenSubRegIndex(Record *R, unsigned Enum);
     CodeGenSubRegIndex(StringRef N, StringRef Nspace, unsigned Enum);
+    CodeGenSubRegIndex(CodeGenSubRegIndex&) = delete;
 
     const std::string &getName() const { return Name; }
     const std::string &getNamespace() const { return Namespace; }
@@ -93,7 +94,8 @@ namespace llvm {
 
     // Map of composite subreg indices.
     typedef std::map<CodeGenSubRegIndex *, CodeGenSubRegIndex *,
-                     deref<llvm::less>> CompMap;
+                     deref<std::less<>>>
+        CompMap;
 
     // Returns the subreg index that results from composing this with Idx.
     // Returns NULL if this and Idx don't compose.
@@ -137,31 +139,31 @@ namespace llvm {
     /// list of subregisters they are composed of (if any). Do this recursively.
     void computeConcatTransitiveClosure();
 
+    bool operator<(const CodeGenSubRegIndex &RHS) const {
+      return this->EnumValue < RHS.EnumValue;
+    }
+
   private:
     CompMap Composed;
   };
-
-  inline bool operator<(const CodeGenSubRegIndex &A,
-                        const CodeGenSubRegIndex &B) {
-    return A.EnumValue < B.EnumValue;
-  }
 
   /// CodeGenRegister - Represents a register definition.
   struct CodeGenRegister {
     Record *TheDef;
     unsigned EnumValue;
-    unsigned CostPerUse;
+    std::vector<int64_t> CostPerUse;
     bool CoveredBySubRegs;
     bool HasDisjunctSubRegs;
     bool Artificial;
 
     // Map SubRegIndex -> Register.
-    typedef std::map<CodeGenSubRegIndex *, CodeGenRegister *, deref<llvm::less>>
+    typedef std::map<CodeGenSubRegIndex *, CodeGenRegister *,
+                     deref<std::less<>>>
         SubRegMap;
 
     CodeGenRegister(Record *R, unsigned Enum);
 
-    const StringRef getName() const;
+    StringRef getName() const;
 
     // Extract more information from TheDef. This is used to build an object
     // graph after all CodeGenRegister objects have been created.
@@ -337,6 +339,9 @@ namespace llvm {
     bool CoveredBySubRegs;
     /// A register class is artificial if all its members are artificial.
     bool Artificial;
+    /// Generate register pressure set for this register class and any class
+    /// synthesized from it.
+    bool GeneratePressureSet;
 
     // Return the Record that defined this class, or NULL if the class was
     // created by TableGen.
@@ -346,6 +351,10 @@ namespace llvm {
     std::string getQualifiedName() const;
     ArrayRef<ValueTypeByHwMode> getValueTypes() const { return VTs; }
     unsigned getNumValueTypes() const { return VTs.size(); }
+
+    bool hasType(const ValueTypeByHwMode &VT) const {
+      return llvm::is_contained(VTs, VT);
+    }
 
     const ValueTypeByHwMode &getValueTypeNum(unsigned VTNum) const {
       if (VTNum < VTs.size())
@@ -432,11 +441,15 @@ namespace llvm {
     // Get a bit vector of TopoSigs present in this register class.
     const BitVector &getTopoSigs() const { return TopoSigs; }
 
+    // Get a weight of this register class.
+    unsigned getWeight(const CodeGenRegBank&) const;
+
     // Populate a unique sorted list of units from a register set.
     void buildRegUnitSet(const CodeGenRegBank &RegBank,
                          std::vector<unsigned> &RegUnits) const;
 
     CodeGenRegisterClass(CodeGenRegBank&, Record *R);
+    CodeGenRegisterClass(CodeGenRegisterClass&) = delete;
 
     // A key representing the parts of a register class used for forming
     // sub-classes.  Note the ordering provided by this key is not the same as
@@ -606,6 +619,7 @@ namespace llvm {
 
   public:
     CodeGenRegBank(RecordKeeper&, const CodeGenHwModes&);
+    CodeGenRegBank(CodeGenRegBank&) = delete;
 
     SetTheory &getSets() { return Sets; }
 
@@ -618,8 +632,12 @@ namespace llvm {
       return SubRegIndices;
     }
 
-    // Find a SubRegIndex form its Record def.
+    // Find a SubRegIndex from its Record def or add to the list if it does
+    // not exist there yet.
     CodeGenSubRegIndex *getSubRegIdx(Record*);
+
+    // Find a SubRegIndex from its Record def.
+    const CodeGenSubRegIndex *findSubRegIdx(const Record* Def) const;
 
     // Find or create a sub-register index representing the A+B composition.
     CodeGenSubRegIndex *getCompositeSubRegIndex(CodeGenSubRegIndex *A,
@@ -630,9 +648,11 @@ namespace llvm {
     CodeGenSubRegIndex *
       getConcatSubRegIndex(const SmallVector<CodeGenSubRegIndex *, 8>&);
 
-    const std::deque<CodeGenRegister> &getRegisters() { return Registers; }
+    const std::deque<CodeGenRegister> &getRegisters() const {
+      return Registers;
+    }
 
-    const StringMap<CodeGenRegister*> &getRegistersByName() {
+    const StringMap<CodeGenRegister *> &getRegistersByName() const {
       return RegistersByName;
     }
 
@@ -681,7 +701,7 @@ namespace llvm {
     // Native units are the singular unit of a leaf register. Register aliasing
     // is completely characterized by native units. Adopted units exist to give
     // register additional weight but don't affect aliasing.
-    bool isNativeUnit(unsigned RUID) {
+    bool isNativeUnit(unsigned RUID) const {
       return RUID < NumNativeRegUnits;
     }
 
@@ -699,7 +719,7 @@ namespace llvm {
     }
 
     // Find a register class from its def.
-    CodeGenRegisterClass *getRegClass(Record*);
+    CodeGenRegisterClass *getRegClass(const Record *) const;
 
     /// getRegisterClassForRegister - Find the register class that contains the
     /// specified physical register.  If the register is not in a register
@@ -708,12 +728,18 @@ namespace llvm {
     /// return the superclass.  Otherwise return null.
     const CodeGenRegisterClass* getRegClassForRegister(Record *R);
 
+    // Analog of TargetRegisterInfo::getMinimalPhysRegClass. Unlike
+    // getRegClassForRegister, this tries to find the smallest class containing
+    // the physical register. If \p VT is specified, it will only find classes
+    // with a matching type
+    const CodeGenRegisterClass *
+    getMinimalPhysRegClass(Record *RegRecord, ValueTypeByHwMode *VT = nullptr);
+
     // Get the sum of unit weights.
     unsigned getRegUnitSetWeight(const std::vector<unsigned> &Units) const {
       unsigned Weight = 0;
-      for (std::vector<unsigned>::const_iterator
-             I = Units.begin(), E = Units.end(); I != E; ++I)
-        Weight += getRegUnit(*I).Weight;
+      for (unsigned Unit : Units)
+        Weight += getRegUnit(Unit).Weight;
       return Weight;
     }
 

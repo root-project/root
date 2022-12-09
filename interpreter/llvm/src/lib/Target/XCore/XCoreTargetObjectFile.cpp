@@ -46,13 +46,13 @@ void XCoreTargetObjectFile::Initialize(MCContext &Ctx, const TargetMachine &TM){
                         ELF::SHF_ALLOC | ELF::XCORE_SHF_CP_SECTION);
   MergeableConst4Section = Ctx.getELFSection(
       ".cp.rodata.cst4", ELF::SHT_PROGBITS,
-      ELF::SHF_ALLOC | ELF::SHF_MERGE | ELF::XCORE_SHF_CP_SECTION, 4, "");
+      ELF::SHF_ALLOC | ELF::SHF_MERGE | ELF::XCORE_SHF_CP_SECTION, 4);
   MergeableConst8Section = Ctx.getELFSection(
       ".cp.rodata.cst8", ELF::SHT_PROGBITS,
-      ELF::SHF_ALLOC | ELF::SHF_MERGE | ELF::XCORE_SHF_CP_SECTION, 8, "");
+      ELF::SHF_ALLOC | ELF::SHF_MERGE | ELF::XCORE_SHF_CP_SECTION, 8);
   MergeableConst16Section = Ctx.getELFSection(
       ".cp.rodata.cst16", ELF::SHT_PROGBITS,
-      ELF::SHF_ALLOC | ELF::SHF_MERGE | ELF::XCORE_SHF_CP_SECTION, 16, "");
+      ELF::SHF_ALLOC | ELF::SHF_MERGE | ELF::XCORE_SHF_CP_SECTION, 16);
   CStringSection =
       Ctx.getELFSection(".cp.rodata.string", ELF::SHT_PROGBITS,
                         ELF::SHF_ALLOC | ELF::SHF_MERGE | ELF::SHF_STRINGS |
@@ -140,10 +140,9 @@ MCSection *XCoreTargetObjectFile::SelectSectionForGlobal(
   report_fatal_error("Target does not support TLS or Common sections");
 }
 
-MCSection *XCoreTargetObjectFile::getSectionForConstant(const DataLayout &DL,
-                                                        SectionKind Kind,
-                                                        const Constant *C,
-                                                        unsigned &Align) const {
+MCSection *XCoreTargetObjectFile::getSectionForConstant(
+    const DataLayout &DL, SectionKind Kind, const Constant *C,
+    Align &Alignment) const {
   if (Kind.isMergeableConst4())           return MergeableConst4Section;
   if (Kind.isMergeableConst8())           return MergeableConst8Section;
   if (Kind.isMergeableConst16())          return MergeableConst16Section;

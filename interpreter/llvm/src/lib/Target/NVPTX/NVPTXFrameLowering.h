@@ -14,9 +14,10 @@
 #define LLVM_LIB_TARGET_NVPTX_NVPTXFRAMELOWERING_H
 
 #include "llvm/CodeGen/TargetFrameLowering.h"
+#include "llvm/Support/TypeSize.h"
 
 namespace llvm {
-class NVPTXSubtarget;
+
 class NVPTXFrameLowering : public TargetFrameLowering {
 public:
   explicit NVPTXFrameLowering();
@@ -24,12 +25,13 @@ public:
   bool hasFP(const MachineFunction &MF) const override;
   void emitPrologue(MachineFunction &MF, MachineBasicBlock &MBB) const override;
   void emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const override;
-  int getFrameIndexReference(const MachineFunction &MF, int FI,
-                             unsigned &FrameReg) const override;
+  StackOffset getFrameIndexReference(const MachineFunction &MF, int FI,
+                                     Register &FrameReg) const override;
 
   MachineBasicBlock::iterator
   eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
                                 MachineBasicBlock::iterator I) const override;
+  DwarfFrameBase getDwarfFrameBase(const MachineFunction &MF) const override;
 };
 
 } // End llvm namespace

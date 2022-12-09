@@ -15,8 +15,6 @@
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/Format.h"
-#include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
 
@@ -28,11 +26,9 @@ const char *FaultMaps::WFMP = "Fault Maps: ";
 FaultMaps::FaultMaps(AsmPrinter &AP) : AP(AP) {}
 
 void FaultMaps::recordFaultingOp(FaultKind FaultTy,
+                                 const MCSymbol *FaultingLabel,
                                  const MCSymbol *HandlerLabel) {
   MCContext &OutContext = AP.OutStreamer->getContext();
-  MCSymbol *FaultingLabel = OutContext.createTempSymbol();
-
-  AP.OutStreamer->EmitLabel(FaultingLabel);
 
   const MCExpr *FaultingOffset = MCBinaryExpr::createSub(
       MCSymbolRefExpr::create(FaultingLabel, OutContext),
@@ -59,17 +55,17 @@ void FaultMaps::serializeToFaultMapSection() {
   OS.SwitchSection(FaultMapSection);
 
   // Emit a dummy symbol to force section inclusion.
-  OS.EmitLabel(OutContext.getOrCreateSymbol(Twine("__LLVM_FaultMaps")));
+  OS.emitLabel(OutContext.getOrCreateSymbol(Twine("__LLVM_FaultMaps")));
 
   LLVM_DEBUG(dbgs() << "********** Fault Map Output **********\n");
 
   // Header
-  OS.EmitIntValue(FaultMapVersion, 1); // Version.
-  OS.EmitIntValue(0, 1);               // Reserved.
-  OS.EmitIntValue(0, 2);               // Reserved.
+  OS.emitIntValue(FaultMapVersion, 1); // Version.
+  OS.emitIntValue(0, 1);               // Reserved.
+  OS.emitInt16(0);                     // Reserved.
 
   LLVM_DEBUG(dbgs() << WFMP << "#functions = " << FunctionInfos.size() << "\n");
-  OS.EmitIntValue(FunctionInfos.size(), 4);
+  OS.emitInt32(FunctionInfos.size());
 
   LLVM_DEBUG(dbgs() << WFMP << "functions:\n");
 
@@ -82,25 +78,25 @@ void FaultMaps::emitFunctionInfo(const MCSymbol *FnLabel,
   MCStreamer &OS = *AP.OutStreamer;
 
   LLVM_DEBUG(dbgs() << WFMP << "  function addr: " << *FnLabel << "\n");
-  OS.EmitSymbolValue(FnLabel, 8);
+  OS.emitSymbolValue(FnLabel, 8);
 
   LLVM_DEBUG(dbgs() << WFMP << "  #faulting PCs: " << FFI.size() << "\n");
-  OS.EmitIntValue(FFI.size(), 4);
+  OS.emitInt32(FFI.size());
 
-  OS.EmitIntValue(0, 4); // Reserved
+  OS.emitInt32(0); // Reserved
 
   for (auto &Fault : FFI) {
     LLVM_DEBUG(dbgs() << WFMP << "    fault type: "
                       << faultTypeToString(Fault.Kind) << "\n");
-    OS.EmitIntValue(Fault.Kind, 4);
+    OS.emitInt32(Fault.Kind);
 
     LLVM_DEBUG(dbgs() << WFMP << "    faulting PC offset: "
                       << *Fault.FaultingOffsetExpr << "\n");
-    OS.EmitValue(Fault.FaultingOffsetExpr, 4);
+    OS.emitValue(Fault.FaultingOffsetExpr, 4);
 
     LLVM_DEBUG(dbgs() << WFMP << "    fault handler PC offset: "
                       << *Fault.HandlerOffsetExpr << "\n");
-    OS.EmitValue(Fault.HandlerOffsetExpr, 4);
+    OS.emitValue(Fault.HandlerOffsetExpr, 4);
   }
 }
 
@@ -115,40 +111,4 @@ const char *FaultMaps::faultTypeToString(FaultMaps::FaultKind FT) {
   case FaultMaps::FaultingStore:
     return "FaultingStore";
   }
-}
-
-raw_ostream &llvm::
-operator<<(raw_ostream &OS,
-           const FaultMapParser::FunctionFaultInfoAccessor &FFI) {
-  OS << "Fault kind: "
-     << FaultMaps::faultTypeToString((FaultMaps::FaultKind)FFI.getFaultKind())
-     << ", faulting PC offset: " << FFI.getFaultingPCOffset()
-     << ", handling PC offset: " << FFI.getHandlerPCOffset();
-  return OS;
-}
-
-raw_ostream &llvm::
-operator<<(raw_ostream &OS, const FaultMapParser::FunctionInfoAccessor &FI) {
-  OS << "FunctionAddress: " << format_hex(FI.getFunctionAddr(), 8)
-     << ", NumFaultingPCs: " << FI.getNumFaultingPCs() << "\n";
-  for (unsigned i = 0, e = FI.getNumFaultingPCs(); i != e; ++i)
-    OS << FI.getFunctionFaultInfoAt(i) << "\n";
-  return OS;
-}
-
-raw_ostream &llvm::operator<<(raw_ostream &OS, const FaultMapParser &FMP) {
-  OS << "Version: " << format_hex(FMP.getFaultMapVersion(), 2) << "\n";
-  OS << "NumFunctions: " << FMP.getNumFunctions() << "\n";
-
-  if (FMP.getNumFunctions() == 0)
-    return OS;
-
-  FaultMapParser::FunctionInfoAccessor FI;
-
-  for (unsigned i = 0, e = FMP.getNumFunctions(); i != e; ++i) {
-    FI = (i == 0) ? FMP.getFirstFunctionInfo() : FI.getNextFunctionInfo();
-    OS << FI;
-  }
-
-  return OS;
 }

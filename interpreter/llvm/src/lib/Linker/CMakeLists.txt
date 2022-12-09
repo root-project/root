@@ -1,4 +1,4 @@
-add_llvm_library(LLVMLinker
+add_llvm_component_library(LLVMLinker
   IRMover.cpp
   LinkModules.cpp
 
@@ -7,4 +7,10 @@ add_llvm_library(LLVMLinker
 
   DEPENDS
   intrinsics_gen
+
+  LINK_COMPONENTS
+  Core
+  Object
+  Support
+  TransformUtils
   )

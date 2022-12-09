@@ -11,7 +11,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/AST/TypeLoc.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/Attr.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/NestedNameSpecifier.h"
 #include "clang/AST/TemplateBase.h"
@@ -293,6 +295,12 @@ bool TypeSpecTypeLoc::isKind(const TypeLoc &TL) {
   return TSTChecker().Visit(TL);
 }
 
+bool TagTypeLoc::isDefinition() const {
+  TagDecl *D = getDecl();
+  return D->isCompleteDefinition() &&
+         (D->getIdentifier() == nullptr || D->getLocation() == getNameLoc());
+}
+
 // Reimplemented to account for GNU/C++ extension
 //     typeof unary-expression
 // where there are no parentheses.
@@ -367,6 +375,7 @@ TypeSpecifierType BuiltinTypeLoc::getWrittenTypeSpec() const {
   case BuiltinType::SatUShortFract:
   case BuiltinType::SatUFract:
   case BuiltinType::SatULongFract:
+  case BuiltinType::BFloat16:
     llvm_unreachable("Builtin type needs extra local data!");
     // Fall through, if the impossible happens.
 
@@ -391,8 +400,19 @@ TypeSpecifierType BuiltinTypeLoc::getWrittenTypeSpec() const {
   case BuiltinType::OCLClkEvent:
   case BuiltinType::OCLQueue:
   case BuiltinType::OCLReserveID:
+#define SVE_TYPE(Name, Id, SingletonId) \
+  case BuiltinType::Id:
+#include "clang/Basic/AArch64SVEACLETypes.def"
+#define PPC_VECTOR_TYPE(Name, Id, Size) \
+  case BuiltinType::Id:
+#include "clang/Basic/PPCTypes.def"
+#define RVV_TYPE(Name, Id, SingletonId) case BuiltinType::Id:
+#include "clang/Basic/RISCVVTypes.def"
   case BuiltinType::BuiltinFn:
+  case BuiltinType::IncompleteMatrixIdx:
   case BuiltinType::OMPArraySection:
+  case BuiltinType::OMPArrayShaping:
+  case BuiltinType::OMPIterator:
     return TST_unspecified;
   }
 
@@ -462,6 +482,19 @@ void ObjCObjectTypeLoc::initializeLocal(ASTContext &Context,
   setProtocolRAngleLoc(Loc);
   for (unsigned i = 0, e = getNumProtocols(); i != e; ++i)
     setProtocolLoc(i, Loc);
+}
+
+SourceRange AttributedTypeLoc::getLocalSourceRange() const {
+  // Note that this does *not* include the range of the attribute
+  // enclosure, e.g.:
+  //    __attribute__((foo(bar)))
+  //    ^~~~~~~~~~~~~~~        ~~
+  // or
+  //    [[foo(bar)]]
+  //    ^~        ~~
+  // That enclosure doesn't necessarily belong to a single attribute
+  // anyway.
+  return getAttr() ? getAttr()->getRange() : SourceRange();
 }
 
 void TypeOfTypeLoc::initializeLocal(ASTContext &Context,
@@ -554,7 +587,7 @@ void TemplateSpecializationTypeLoc::initializeArgLocs(ASTContext &Context,
         Builder.MakeTrivial(Context, QTN->getQualifier(), Loc);
 
       ArgInfos[i] = TemplateArgumentLocInfo(
-          Builder.getWithLocInContext(Context), Loc,
+          Context, Builder.getWithLocInContext(Context), Loc,
           Args[i].getKind() == TemplateArgument::Template ? SourceLocation()
                                                           : Loc);
       break;
@@ -565,4 +598,98 @@ void TemplateSpecializationTypeLoc::initializeArgLocs(ASTContext &Context,
       break;
     }
   }
+}
+
+DeclarationNameInfo AutoTypeLoc::getConceptNameInfo() const {
+  return DeclarationNameInfo(getNamedConcept()->getDeclName(),
+                             getLocalData()->ConceptNameLoc);
+}
+
+void AutoTypeLoc::initializeLocal(ASTContext &Context, SourceLocation Loc) {
+  setNestedNameSpecifierLoc(NestedNameSpecifierLoc());
+  setTemplateKWLoc(Loc);
+  setConceptNameLoc(Loc);
+  setFoundDecl(nullptr);
+  setRAngleLoc(Loc);
+  setLAngleLoc(Loc);
+  TemplateSpecializationTypeLoc::initializeArgLocs(Context, getNumArgs(),
+                                                   getTypePtr()->getArgs(),
+                                                   getArgInfos(), Loc);
+  setNameLoc(Loc);
+}
+
+
+namespace {
+
+  class GetContainedAutoTypeLocVisitor :
+    public TypeLocVisitor<GetContainedAutoTypeLocVisitor, TypeLoc> {
+  public:
+    using TypeLocVisitor<GetContainedAutoTypeLocVisitor, TypeLoc>::Visit;
+
+    TypeLoc VisitAutoTypeLoc(AutoTypeLoc TL) {
+      return TL;
+    }
+
+    // Only these types can contain the desired 'auto' type.
+
+    TypeLoc VisitElaboratedTypeLoc(ElaboratedTypeLoc T) {
+      return Visit(T.getNamedTypeLoc());
+    }
+
+    TypeLoc VisitQualifiedTypeLoc(QualifiedTypeLoc T) {
+      return Visit(T.getUnqualifiedLoc());
+    }
+
+    TypeLoc VisitPointerTypeLoc(PointerTypeLoc T) {
+      return Visit(T.getPointeeLoc());
+    }
+
+    TypeLoc VisitBlockPointerTypeLoc(BlockPointerTypeLoc T) {
+      return Visit(T.getPointeeLoc());
+    }
+
+    TypeLoc VisitReferenceTypeLoc(ReferenceTypeLoc T) {
+      return Visit(T.getPointeeLoc());
+    }
+
+    TypeLoc VisitMemberPointerTypeLoc(MemberPointerTypeLoc T) {
+      return Visit(T.getPointeeLoc());
+    }
+
+    TypeLoc VisitArrayTypeLoc(ArrayTypeLoc T) {
+      return Visit(T.getElementLoc());
+    }
+
+    TypeLoc VisitFunctionTypeLoc(FunctionTypeLoc T) {
+      return Visit(T.getReturnLoc());
+    }
+
+    TypeLoc VisitParenTypeLoc(ParenTypeLoc T) {
+      return Visit(T.getInnerLoc());
+    }
+
+    TypeLoc VisitAttributedTypeLoc(AttributedTypeLoc T) {
+      return Visit(T.getModifiedLoc());
+    }
+
+    TypeLoc VisitMacroQualifiedTypeLoc(MacroQualifiedTypeLoc T) {
+      return Visit(T.getInnerLoc());
+    }
+
+    TypeLoc VisitAdjustedTypeLoc(AdjustedTypeLoc T) {
+      return Visit(T.getOriginalLoc());
+    }
+
+    TypeLoc VisitPackExpansionTypeLoc(PackExpansionTypeLoc T) {
+      return Visit(T.getPatternLoc());
+    }
+  };
+
+} // namespace
+
+AutoTypeLoc TypeLoc::getContainedAutoTypeLoc() const {
+  TypeLoc Res = GetContainedAutoTypeLocVisitor().Visit(*this);
+  if (Res.isNull())
+    return AutoTypeLoc();
+  return Res.getAs<AutoTypeLoc>();
 }
