@@ -56,23 +56,6 @@ Provides painting of main ROOT6 classes in web browsers
 
 */
 
-class PadContext {
-   TVirtualPad *savedPad{nullptr};
-public:
-   PadContext(TVirtualPad *setPad = nullptr)
-   {
-      savedPad = gPad;
-      if (gPad != setPad)
-         gPad = setPad;
-   }
-   ~PadContext()
-   {
-      if (gPad != savedPad)
-         gPad = savedPad;
-   }
-};
-
-
 using namespace std::string_literals;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -372,14 +355,14 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       if (obj->InheritsFrom(THStack::Class())) {
          // workaround for THStack, create extra components before sending to client
          auto hs = static_cast<THStack *>(obj);
-         PadContext ctxt(pad);
+         TVirtualPad::TContext ctxt(pad, kFALSE);
          hs->BuildPrimitives(iter.GetOption());
          has_histo = true;
       } else if (obj->InheritsFrom(TMultiGraph::Class())) {
          // workaround for TMultiGraph
          if (opt.Contains("A")) {
             auto mg = static_cast<TMultiGraph *>(obj);
-            PadContext ctxt;
+            TVirtualPad::TContext ctxt(kFALSE);
             mg->GetHistogram(); // force creation of histogram without any drawings
             has_histo = true;
          }
@@ -1750,7 +1733,7 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
       if (obj && obj->InheritsFrom(TPave::Class())) {
          TPave *pave = static_cast<TPave *>(obj);
          if ((item.fopt.size() >= 4) && objpad) {
-            PadContext ctxt(objpad);
+            TVirtualPad::TContext ctxt(objpad, kFALSE);
 
             // first time need to overcome init problem
             pave->ConvertNDCtoPad();
