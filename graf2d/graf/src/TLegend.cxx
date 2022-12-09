@@ -559,9 +559,9 @@ void TLegend::Paint( Option_t* option )
 {
    // The legend need to be placed automatically in some empty space
    if (fX1 == fX2 && fY1 == fY2) {
-      if (gPad->PlaceBox(this, fX1, fY1, fX1, fY1)) {
-         fY2 = fY2+fY1;
-         fX2 = fX2+fX1;
+      if (gPad && gPad->PlaceBox(this, fX1, fY1, fX1, fY1)) {
+         fY2 = fY2 + fY1;
+         fX2 = fX2 + fX1;
       } else {
          Warning("Paint", "Legend too large to be automatically placed; a default position is used");
          fX1 = 0.5;
