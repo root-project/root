@@ -303,7 +303,7 @@ d.Foreach([] { static int i = 0; std::cout << i++ << std::endl; }); // silly exa
 ~~~
 This is useful to generate simple datasets on the fly: the contents of each event can be specified with Define() (explained below). For example, we have used this method to generate [Pythia](https://pythia.org/) events and write them to disk in parallel (with the Snapshot action).
 
-For data sources other than TTrees and TChains, RDataFrame objects are constructed using ad-hoc factory functions (see e.g. MakeCsvDataFrame(), MakeSqliteDataFrame(), MakeArrowDataFrame()):
+For data sources other than TTrees and TChains, RDataFrame objects are constructed using ad-hoc factory functions (see e.g. FromCSV(), FromSqlite(), FromArrow()):
 
 ~~~{.cpp}
 auto df = ROOT::RDF::MakeCsvDataFrame("input.csv");
@@ -1268,7 +1268,7 @@ auto h = filteredEvents.Histo1D("m");
 h->Draw();
 ~~~
 
-See also MakeNumpyDataFrame (Python-only), MakeNTupleDataFrame(), MakeArrowDataFrame(), MakeSqliteDataFrame().
+See also FromNumpy (Python-only), FromRNTuple(), FromArrow(), FromSqlite().
 
 \anchor callgraphs
 ### Computation graphs (storing and reusing sets of transformations)
