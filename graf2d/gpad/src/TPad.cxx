@@ -394,7 +394,8 @@ TPad::~TPad()
 
    // Required since we overload TObject::Hash.
    ROOT::CallRecursiveRemoveIfNeeded(*this);
-   if (this == gPad) gPad=nullptr;
+   if (this == gPad)
+      gPad = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -452,7 +453,8 @@ void TPad::AddExec(const char *name, const char *command)
 
 void TPad::AutoExec()
 {
-   if (GetCrosshair()) DrawCrosshair();
+   if (GetCrosshair())
+      DrawCrosshair();
 
    if (!fExecs)
       return;
@@ -556,12 +558,10 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
       opt = "";
    }
    if (leg) {
-      TVirtualPad *gpadsave = gPad;
-      cd();
+      TContext ctxt(this, kTRUE);
       leg->Draw();
-      gpadsave->cd();
    } else {
-      Info("BuildLegend(void)","No object to build a TLegend.");
+      Info("BuildLegend", "No object(s) to build a TLegend.");
    }
    return leg;
 }
@@ -4943,8 +4943,7 @@ void TPad::Print(const char *filename, Option_t *option)
          GetCanvas()->SetBatch(kTRUE);
       }
 
-      auto padsav = gPad;
-      cd();
+      TContext ctxt(this, kTRUE);
 
       if (!gVirtualPS) {
          // Plugin Postscript/SVG driver
@@ -4971,10 +4970,6 @@ void TPad::Print(const char *filename, Option_t *option)
 
       delete gVirtualPS;
       gVirtualPS = nullptr;
-      if (padsav)
-         padsav->cd();
-      else
-         gPad = nullptr;
 
       return;
    }
@@ -4989,8 +4984,7 @@ void TPad::Print(const char *filename, Option_t *option)
          GetCanvas()->SetBatch(kTRUE);
       }
 
-      auto padsav = gPad;
-      cd();
+      TContext ctxt(this, kTRUE);
 
       if (!gVirtualPS) {
          // Plugin Postscript/SVG driver
@@ -5025,10 +5019,6 @@ void TPad::Print(const char *filename, Option_t *option)
 
       delete gVirtualPS;
       gVirtualPS = nullptr;
-      if (padsav)
-         padsav->cd();
-      else
-         gPad = nullptr;
 
       return;
    }
@@ -5066,8 +5056,8 @@ void TPad::Print(const char *filename, Option_t *option)
    if (strstr(opt,"Landscape")) pstype = 112;
    if (strstr(opt,"eps"))       pstype = 113;
    if (strstr(opt,"Preview"))   pstype = 113;
-   auto padsav = gPad;
-   cd();
+
+   TContext ctxt(this, kTRUE);
    TVirtualPS *psave = gVirtualPS;
 
    if (!gVirtualPS || mustOpen) {
@@ -5150,11 +5140,6 @@ void TPad::Print(const char *filename, Option_t *option)
                           psname.Data()).Data());
       gSystem->Rename("pdf_temp.pdf", psname.Data());
    }
-
-   if (padsav)
-      padsav->cd();
-   else
-      gPad = nullptr;
 
 }
 
@@ -6191,10 +6176,11 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
    if (mode != 'i') resize = true;
 
    TPad *is_pad = dynamic_cast<TPad *>( object );
-   TVirtualPad *padSave = nullptr;
-   padSave = gPad;
-   if (is_pad)
-     if (is_pad->GetMother()) is_pad->GetMother()->cd();
+
+   TContext ctxt(kTRUE);
+
+   if (is_pad && is_pad->GetMother())
+      is_pad->GetMother()->cd();
 
    static TPad *tmpGuideLinePad = nullptr;
 
@@ -6453,7 +6439,6 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
    }
 
    gPad->Modified(kTRUE);
-   padSave->cd();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
