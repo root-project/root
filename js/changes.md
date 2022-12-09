@@ -12,6 +12,7 @@
 9. Provide `settings.PreferSavedPoints` to exclude function evaluation when there are saved points
 10. Improve TWebCanvas support
 11. Correctly handle axis zooming on lego plots
+12. Fix hist stats calculation with negative bins
 
 
 ## Changes in 7.2.1

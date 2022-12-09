@@ -279,7 +279,7 @@ class RH2Painter extends RHistPainter {
          }
       }
 
-      if (stat_sum0 > 0) {
+      if (Math.abs(stat_sum0) > 1e-300) {
          res.meanx = stat_sumx1 / stat_sum0;
          res.meany = stat_sumy1 / stat_sum0;
          res.rmsx = Math.sqrt(Math.abs(stat_sumx2 / stat_sum0 - res.meanx**2));
