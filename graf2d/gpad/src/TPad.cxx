@@ -4817,6 +4817,9 @@ static Bool_t ContainsTImage(TList *li)
 
 void TPad::Print(const char *filename, Option_t *option)
 {
+   if (!GetCanvas())
+      return;
+
    TString psname, fs1 = filename;
 
    // "[" and "]" are special characters for ExpandPathName. When they are at the end
@@ -4853,7 +4856,8 @@ void TPad::Print(const char *filename, Option_t *option)
       psname.Prepend("/");
       psname.Prepend(gEnv->GetValue("Canvas.PrintDirectory","."));
    }
-   if (!gPad->IsBatch() && fCanvas && GetPainter())
+
+   if (!GetCanvas()->IsBatch() && GetPainter())
       GetPainter()->SelectDrawable(GetCanvasID());
 
    // Save pad/canvas in alternative formats
@@ -4881,7 +4885,6 @@ void TPad::Print(const char *filename, Option_t *option)
       image = kTRUE;
    }
 
-   if (!GetCanvas()) return;
    if (!gROOT->IsBatch() && image) {
       if ((gtype == TImage::kGif) && !ContainsTImage(fPrimitives)) {
          Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
