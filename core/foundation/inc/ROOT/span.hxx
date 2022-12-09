@@ -14,6 +14,14 @@
 #ifndef ROOT_RHYSD_SPAN_H
 #define ROOT_RHYSD_SPAN_H
 
+#if __cplusplus >= 202002
+# if __has_include(<span>)
+#  include <span>
+# endif
+#endif
+
+#if !defined(__cpp_lib_span)
+
 // Necessary to compile in c++11 mode
 #if __cplusplus >= 201402L
 #define R__CONSTEXPR_IF_CXX14 constexpr
@@ -737,4 +745,5 @@ public:
 
 }
 #endif // too complex!
+#endif // !defined(__cpp_lib_span)
 #endif

@@ -14,10 +14,6 @@
 #ifndef ROOT_RSpan
 #define ROOT_RSpan
 
-#ifdef __cpp_lib_span
-# include <span>
-#else
-# include "ROOT/span.hxx"
-#endif
+#include "ROOT/span.hxx"
 
 #endif
