@@ -56,7 +56,8 @@ TWebSnapshot &TPadWebSnapshot::NewPrimitive(TObject *obj, const std::string &opt
 {
    fPrimitives.emplace_back(std::make_unique<TWebSnapshot>());
    if (obj) {
-      fPrimitives.back()->SetObjectIDAsPtr(obj);
+      if (IsSetObjectIds())
+         fPrimitives.back()->SetObjectIDAsPtr(obj);
       fPrimitives.back()->SetOption(opt);
    }
    return *(fPrimitives.back());
@@ -67,7 +68,7 @@ TWebSnapshot &TPadWebSnapshot::NewPrimitive(TObject *obj, const std::string &opt
 
 TPadWebSnapshot &TPadWebSnapshot::NewSubPad()
 {
-   auto res = new TPadWebSnapshot(IsReadOnly());
+   auto res = new TPadWebSnapshot(IsReadOnly(), IsSetObjectIds());
    fPrimitives.emplace_back(res);
    return *res;
 }

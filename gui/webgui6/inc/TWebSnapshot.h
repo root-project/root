@@ -60,14 +60,16 @@ class TPadWebSnapshot : public TWebSnapshot {
 protected:
    bool fActive{false};                                    ///< true when pad is active
    bool fReadOnly{true};                                   ///< when canvas or pad are in readonly mode
+   bool fSetObjectIds{true};                               ///<! set objects ids
    bool fWithoutPrimitives{false};                         ///< true when primitives not send while there are no modifications
    std::vector<std::unique_ptr<TWebSnapshot>> fPrimitives; ///< list of all primitives, drawn in the pad
 
 public:
-   TPadWebSnapshot(bool readonly = true)
+   TPadWebSnapshot(bool readonly = true, bool setids = true)
    {
       SetKind(kSubPad);
       fReadOnly = readonly;
+      fSetObjectIds = setids;
    }
 
    void SetActive(bool on = true) { fActive = on; }
@@ -75,6 +77,8 @@ public:
    void SetWithoutPrimitives(bool on = true) { fWithoutPrimitives = on; }
 
    bool IsReadOnly() const { return fReadOnly; }
+
+   bool IsSetObjectIds() const { return fSetObjectIds; }
 
    TWebSnapshot &NewPrimitive(TObject *obj = nullptr, const std::string &opt = "");
 
@@ -92,8 +96,7 @@ protected:
    std::string fScripts;           ///< custom scripts to load
    bool fHighlightConnect{false};  ///< does HighlightConnect has connection
 public:
-   TCanvasWebSnapshot() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
-   TCanvasWebSnapshot(bool readonly) : TPadWebSnapshot(readonly) {}
+   TCanvasWebSnapshot(bool readonly = true, bool setids = true) : TPadWebSnapshot(readonly, setids) {}
 
    void SetScripts(const std::string &src) { fScripts = src; }
    const std::string &GetScripts() const { return fScripts; }

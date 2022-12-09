@@ -329,8 +329,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    // send primitives if version 0 or actual pad version grater than already send version
    bool process_primitives = (version == 0) || (pad_status.fVersion > version);
 
-   paddata.SetActive(pad == gPad);
-   paddata.SetObjectIDAsPtr(pad);
+   if (paddata.IsSetObjectIds()) {
+      paddata.SetActive(pad == gPad);
+      paddata.SetObjectIDAsPtr(pad);
+   }
    paddata.SetSnapshot(TWebSnapshot::kSubPad, pad); // add ref to the pad
    paddata.SetWithoutPrimitives(!process_primitives);
 
@@ -1620,7 +1622,7 @@ TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression)
    {
       auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
 
-      TCanvasWebSnapshot holder(true); // always readonly
+      TCanvasWebSnapshot holder(true, false); // readonly, no ids
 
       imp->CreatePadSnapshot(holder, c, 0, [&res, json_compression](TPadWebSnapshot *snap) {
          res = TBufferJSON::ToJSON(snap, json_compression);
@@ -1644,7 +1646,7 @@ Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *
    {
       auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
 
-      TCanvasWebSnapshot holder(true); // always readonly
+      TCanvasWebSnapshot holder(true, false); // readonly, no ids
 
       imp->CreatePadSnapshot(holder, c, 0, [&res, filename, option](TPadWebSnapshot *snap) {
          res = TBufferJSON::ExportToFile(filename, snap, option);
