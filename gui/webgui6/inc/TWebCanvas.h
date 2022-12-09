@@ -170,7 +170,6 @@ public:
    void ShowToolBar(Bool_t show = kTRUE) override { ShowCmd("ToolBar", show); }
    void ShowToolTips(Bool_t show = kTRUE) override { ShowCmd("ToolTips", show); }
 
-
    // web-canvas specific methods
 
    void ActivateInEditor(TPad *pad, TObject *obj);
@@ -224,10 +223,11 @@ public:
    void SetAsyncMode(Bool_t on = kTRUE) { fAsyncMode = on; }
    Bool_t IsAsyncMode() const { return fAsyncMode; }
 
+   static TString CreatePadJSON(TPad *pad, Int_t json_compression = 0);
    static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0);
    static Int_t StoreCanvasJSON(TCanvas *c, const char *filename, const char *option = "");
 
-   static bool ProduceImage(TCanvas *c, const char *filename, Int_t width = 0, Int_t height = 0);
+   static bool ProduceImage(TPad *pad, const char *filename, Int_t width = 0, Int_t height = 0);
 
    static TCanvasImp *NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
 
