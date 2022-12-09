@@ -27,7 +27,7 @@ int df014_CSVDataSource()
    auto fileName = "df014_CsvDataSource_MuRun2010B_cpp.csv";
    if(gSystem->AccessPathName(fileName))
       TFile::Cp(fileNameUrl, fileName);
-   auto df = ROOT::RDF::MakeCsvDataFrame(fileName);
+   auto df = ROOT::RDF::FromCSV(fileName);
 
    // Now we will apply a first filter based on two columns of the CSV,
    // and we will define a new column that will contain the invariant mass.

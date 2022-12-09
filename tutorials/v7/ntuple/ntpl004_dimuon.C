@@ -52,7 +52,7 @@ void ntpl004_dimuon() {
    // Use all available CPU cores
    ROOT::EnableImplicitMT();
 
-   auto df = ROOT::Experimental::MakeNTupleDataFrame("Events", kNTupleFileName);
+   auto df = ROOT::RDF::Experimental::FromRNTuple("Events", kNTupleFileName);
 
    // The tutorial is identical to df102_NanoAODDimuonAnalysis except the use of
    // InvariantMassStdVector instead of InvariantMass (to be fixed in a later version of RNTuple)
