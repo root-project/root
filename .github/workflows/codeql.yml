@@ -2,11 +2,8 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ "master", "latest-stable", "v5-34-00-patches", "v6-06-00-patches", "v6-08-00-patches", "v6-10-00-patches", "v6-12-00-patches", "v6-14-00-patches", "v6-16-00-patches", "v6-18-00-patches", "v6-20-00-patches", "v6-22-00-patches", "v6-24-00-patches", "v6-26-00-patches" ]
   pull_request:
     branches: [ "master" ]
-  schedule:
-    - cron: "1 9 * * 2"
 
 jobs:
   analyze:
@@ -20,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ javascript, python, go ]
+        language: [ javascript, python, C++ ]
 
     steps:
       - name: Checkout
