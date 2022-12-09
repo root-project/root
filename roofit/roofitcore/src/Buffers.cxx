@@ -14,6 +14,7 @@
 
 #include <RooBatchCompute.h>
 
+#include <stdexcept>
 #include <functional>
 #include <queue>
 #include <map>
