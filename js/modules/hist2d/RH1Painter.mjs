@@ -125,16 +125,9 @@ class RH1Painter extends RHistPainter {
          stat_sumwx2 += w * xx**2;
       }
 
-      // when no range selection done, use original statistic from histogram
-      if (!fp.isAxisZoomed('x') && histo.fTsumw) {
-         stat_sumw = histo.fTsumw;
-         stat_sumwx = histo.fTsumwx;
-         stat_sumwx2 = histo.fTsumwx2;
-      }
-
       res.integral = stat_sumw;
 
-      if (stat_sumw > 0) {
+      if (Math.abs(stat_sumw) > 1e-300) {
          res.meanx = stat_sumwx / stat_sumw;
          res.meany = stat_sumwy / stat_sumw;
          res.rmsx = Math.sqrt(Math.abs(stat_sumwx2 / stat_sumw - res.meanx**2));
@@ -711,9 +704,10 @@ class RH1Painter extends RHistPainter {
          grx2 = grx1 + Math.round(this.options.BarWidth*w);
       }
 
-      if (grx1 > grx2) { let d = grx1; grx1 = grx2; grx2 = d; }
+      if (grx1 > grx2)
+         [grx1, grx2] = [grx2, grx1];
 
-      midx = Math.round((grx1+grx2)/2);
+      midx = Math.round((grx1 + grx2)/2);
 
       midy = gry1 = gry2 = GetBinGrY(findbin);
 
@@ -724,10 +718,11 @@ class RH1Painter extends RHistPainter {
 
          gry1 = Math.round(funcs.gry(((this.options.BaseLine!==false) && (this.options.BaseLine > funcs.scale_ymin)) ? this.options.BaseLine : funcs.scale_ymin));
 
-         if (gry1 > gry2) { let d = gry1; gry1 = gry2; gry2 = d; }
+         if (gry1 > gry2)
+            [gry1, gry2] = [gry2, gry1];
 
          if (!pnt.touch && (pnt.nproc === 1))
-            if ((pnt_y<gry1) || (pnt_y>gry2)) findbin = null;
+            if ((pnt_y < gry1) || (pnt_y > gry2)) findbin = null;
 
       } else if (this.options.Error || this.options.Mark) {
 
@@ -771,9 +766,9 @@ class RH1Painter extends RHistPainter {
             gry2 = height;
 
             if (!this.fillatt.empty()) {
-               gry2 = Math.round(funcs.gry(0));
-               if (gry2 < 0) gry2 = 0; else if (gry2 > height) gry2 = height;
-               if (gry2 < gry1) { let d = gry1; gry1 = gry2; gry2 = d; }
+               gry2 = Math.min(height, Math.max(0, Math.round(funcs.gry(0))));
+               if (gry2 < gry1)
+                  [gry1, gry2] = [gry2, gry1];
             }
 
             // for mouse events pointer should be between y1 and y2

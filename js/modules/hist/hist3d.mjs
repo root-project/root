@@ -1112,7 +1112,8 @@ function drawBinsLego(painter, is_v7 = false) {
          binz1 = painter.options.BaseLine;
       else
          binz1 = painter.options.Zero ? axis_zmin : 0;
-      if (binz2 < binz1) { let d = binz1; binz1 = binz2; binz2 = d; }
+      if (binz2 < binz1)
+         [binz1, binz2] = [binz2, binz1];
 
       if ((binz1 >= zmax) || (binz2 < zmin)) return false;
 

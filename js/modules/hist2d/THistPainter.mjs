@@ -1020,7 +1020,7 @@ class THistPainter extends ObjectPainter {
             histo.fBinEntries = obj.fBinEntries;
          } else if (this.isTH1K()) {
             histo.fNIn = obj.fNIn;
-            histo.fReady = false;
+            histo.fReady = 0;
          } else if (this.isTH2Poly()) {
             histo.fBins = obj.fBins;
          }

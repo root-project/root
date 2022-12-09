@@ -2337,7 +2337,7 @@ class TFramePainter extends ObjectPainter {
 
       if (rotate) {
          trans = `rotate(-90,${lm},${tm}) translate(${lm-h},${tm})`;
-         let d = w; w = h; h = d;
+         [w, h] = [h, w];
       } else {
          trans = `translate(${lm},${tm})`;
       }

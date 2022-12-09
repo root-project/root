@@ -12,7 +12,7 @@ function before3DDraw(painter, obj) {
    if (!fp?.mode3d || !obj)
       return null;
 
-   if (fp.toplevel)
+   if (fp?.toplevel)
       return fp;
 
    let geop = painter.getMainPainter();
@@ -37,9 +37,7 @@ async function drawPolyMarker3D() {
 
    this.$fp = fp;
 
-   this.plain_redraw = drawPolyMarker3Dplain;
-
-   return this.plain_redraw();
+   return drawPolyMarker3Dplain.bind(this)();
 }
 
 /** @summary Direct draw function for TPolyLine3D object

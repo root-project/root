@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '29/11/2022';
+let version_date = '9/12/2022';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -980,7 +980,8 @@ const clTObject = 'TObject', clTNamed = 'TNamed',
       clTAttLine = 'TAttLine', clTAttFill = 'TAttFill', clTAttMarker = 'TAttMarker', clTAttText = 'TAttText',
       clTHStack = 'THStack', clTGraph = 'TGraph', clTMultiGraph = 'TMultiGraph', clTCutG = 'TCutG',
       clTGraphPolargram = 'TGraphPolargram', clTGraphTime = 'TGraphTime',
-      clTPave = 'TPave', clTPaveText = 'TPaveText', clTPaveStats = 'TPaveStats', clTLegend = 'TLegend', clTPaletteAxis = 'TPaletteAxis',
+      clTPave = 'TPave', clTPaveText = 'TPaveText', clTPaveStats = 'TPaveStats',
+      clTLegend = 'TLegend', clTLegendEntry = 'TLegendEntry', clTPaletteAxis = 'TPaletteAxis',
       clTText = 'TText', clTLatex = 'TLatex', clTMathText = 'TMathText',
       clTColor = 'TColor', clTLine = 'TLine', clTBox = 'TBox', clTPolyLine = 'TPolyLine',
       clTPolyLine3D = 'TPolyLine3D', clTPolyMarker3D = 'TPolyMarker3D',
@@ -1071,7 +1072,11 @@ function create$1(typename, target) {
          extend$1(obj, { fColumnSeparation: 0, fEntrySeparation: 0.1, fMargin: 0.25, fNColumns: 1, fPrimitives: create$1(clTList),
                        fBorderSize: gStyle.fLegendBorderSize, fTextFont: gStyle.fLegendFont, fTextSize: gStyle.fLegendTextSize, fFillColor: gStyle.fLegendFillColor });
          break;
-      case 'TLegendEntry':
+      case clTPaletteAxis:
+         create$1(clTPave, obj);
+         extend$1(obj, { fAxis: create$1(clTGaxis), fH: null, fName: clTPave });
+         break;
+      case clTLegendEntry:
          create$1(clTObject, obj);
          create$1(clTAttText, obj);
          create$1(clTAttLine, obj);
@@ -1754,6 +1759,7 @@ clTPave: clTPave,
 clTPaveText: clTPaveText,
 clTPaveStats: clTPaveStats,
 clTLegend: clTLegend,
+clTLegendEntry: clTLegendEntry,
 clTPaletteAxis: clTPaletteAxis,
 clTText: clTText,
 clTLatex: clTLatex,
@@ -42860,7 +42866,8 @@ function drawBinsLego(painter, is_v7 = false) {
          binz1 = painter.options.BaseLine;
       else
          binz1 = painter.options.Zero ? axis_zmin : 0;
-      if (binz2 < binz1) { let d = binz1; binz1 = binz2; binz2 = d; }
+      if (binz2 < binz1)
+         [binz1, binz2] = [binz2, binz1];
 
       if ((binz1 >= zmax) || (binz2 < zmin)) return false;
 
@@ -51580,7 +51587,7 @@ class TFramePainter extends ObjectPainter {
 
       if (rotate) {
          trans = `rotate(-90,${lm},${tm}) translate(${lm-h},${tm})`;
-         let d = w; w = h; h = d;
+         [w, h] = [h, w];
       } else {
          trans = `translate(${lm},${tm})`;
       }
@@ -56532,11 +56539,11 @@ class TCanvasPainter extends TPadPainter {
 
    /** @summary Select active pad on the canvas */
    selectActivePad(pad_painter, obj_painter, click_pos) {
-      if ((this.snapid === undefined) || !pad_painter) return; // only interactive canvas
+      if (!this.snapid || !pad_painter) return; // only interactive canvas
 
       let arg = null, ischanged = false;
 
-      if ((pad_painter.snapid !== undefined) && this._websocket)
+      if (pad_painter.snapid && this._websocket)
          arg = { _typename: 'TWebPadClick', padid: pad_painter.snapid.toString(), objid: '', x: -1, y: -1, dbl: false };
 
       if (!pad_painter.is_active_pad) {
@@ -57937,16 +57944,20 @@ async function produceLegend(dom, opt) {
 
       if (!obj) continue;
 
-      let entry = create$1('TLegendEntry');
+      let entry = create$1(clTLegendEntry);
       entry.fObject = obj;
       entry.fLabel = (opt == 'all') ? obj.fName : painter.getItemName();
       entry.fOption = '';
       if (!entry.fLabel) continue;
 
-      if (painter.lineatt?.used) entry.fOption += 'l';
-      if (painter.fillatt?.used) entry.fOption += 'f';
-      if (painter.markeratt?.used) entry.fOption += 'm';
-      if (!entry.fOption) entry.fOption = 'l';
+      if (painter.lineatt?.used)
+         entry.fOption += 'l';
+      if (painter.fillatt?.used)
+         entry.fOption += 'f';
+      if (painter.markeratt?.used)
+         entry.fOption += 'm';
+      if (!entry.fOption)
+         entry.fOption = 'l';
 
       leg.fPrimitives.Add(entry);
    }
@@ -58985,7 +58996,7 @@ class THistPainter extends ObjectPainter {
             histo.fBinEntries = obj.fBinEntries;
          } else if (this.isTH1K()) {
             histo.fNIn = obj.fNIn;
-            histo.fReady = false;
+            histo.fReady = 0;
          } else if (this.isTH2Poly()) {
             histo.fBins = obj.fBins;
          }
@@ -60317,7 +60328,7 @@ class TH1Painter$2 extends THistPainter {
       histo.fArray = new Float64Array(histo.fNcells).fill(0);
       for (let n = 0; n < histo.fNIn; ++n)
          histo.Fill(arr[n]);
-      histo.fReady = true;
+      histo.fReady = 1;
       histo.fEntries = entries;
    }
 
@@ -60465,7 +60476,8 @@ class TH1Painter$2 extends THistPainter {
           stat_sumw = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
           i, xx = 0, w = 0, xmax = null, wmax = null,
           fp = this.getFramePainter(),
-          res = { name: histo.fName, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0, entries: this.stat_entries, xmax: 0, wmax: 0 };
+          res = { name: histo.fName, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0, entries: this.stat_entries, xmax: 0, wmax: 0 },
+          has_counted_stat = !fp.isAxisZoomed('x') && (Math.abs(histo.fTsumw) > 1e-300);
 
       for (i = left; i < right; ++i) {
          xx = xaxis.GetBinCoord(i + 0.5);
@@ -60480,15 +60492,20 @@ class TH1Painter$2 extends THistPainter {
             w = histo.getBinContent(i + 1);
          }
 
-         if ((xmax === null) || (w > wmax)) { xmax = xx; wmax = w; }
+         if ((xmax === null) || (w > wmax)) {
+            xmax = xx;
+            wmax = w;
+         }
 
-         stat_sumw += w;
-         stat_sumwx += w * xx;
-         stat_sumwx2 += w * xx**2;
+         if (!has_counted_stat) {
+            stat_sumw += w;
+            stat_sumwx += w * xx;
+            stat_sumwx2 += w * xx**2;
+         }
       }
 
       // when no range selection done, use original statistic from histogram
-      if (!fp.isAxisZoomed('x') && (histo.fTsumw > 0)) {
+      if (has_counted_stat) {
          stat_sumw = histo.fTsumw;
          stat_sumwx = histo.fTsumwx;
          stat_sumwx2 = histo.fTsumwx2;
@@ -60496,7 +60513,7 @@ class TH1Painter$2 extends THistPainter {
 
       res.integral = stat_sumw;
 
-      if (stat_sumw > 0) {
+      if (Math.abs(stat_sumw) > 1e-300) {
          res.meanx = stat_sumwx / stat_sumw;
          res.meany = stat_sumwy / stat_sumw;
          res.rmsx = Math.sqrt(Math.abs(stat_sumwx2 / stat_sumw - res.meanx**2));
@@ -60686,8 +60703,7 @@ class TH1Painter$2 extends THistPainter {
       let left = this.getSelectIndex('x', 'left', -1),
           right = this.getSelectIndex('x', 'right', 1),
           histo = this.getHisto(), xaxis = histo.fXaxis,
-          i, x, grx, y, yerr, gry1, gry2,
-          bins1 = [], bins2 = [];
+          i, x, grx, y, yerr, bins1 = [], bins2 = [];
 
       for (i = left; i < right; ++i) {
          x = xaxis.GetBinCoord(i+0.5);
@@ -60698,11 +60714,8 @@ class TH1Painter$2 extends THistPainter {
          yerr = histo.getBinError(i+1);
          if (funcs.logy && (y-yerr < funcs.scale_ymin)) continue;
 
-         gry1 = Math.round(funcs.gry(y + yerr));
-         gry2 = Math.round(funcs.gry(y - yerr));
-
-         bins1.push({ grx, gry: gry1 });
-         bins2.unshift({ grx, gry: gry2 });
+         bins1.push({ grx, gry:  Math.round(funcs.gry(y + yerr)) });
+         bins2.unshift({ grx, gry: Math.round(funcs.gry(y - yerr)) });
       }
 
       let kind = (this.options.ErrorKind === 4) ? 'bezier' : 'line',
@@ -60928,8 +60941,10 @@ class TH1Painter$2 extends THistPainter {
             res = `M${currx},${curry}`;
          } else if (use_minmax) {
             if ((grx === currx) && !lastbin) {
-               if (gry < curry_min) bestimax = i; else
-               if (gry > curry_max) bestimin = i;
+               if (gry < curry_min)
+                  bestimax = i;
+               else if (gry > curry_max)
+                  bestimin = i;
 
                curry_min = Math.min(curry_min, gry);
                curry_max = Math.max(curry_max, gry);
@@ -60937,8 +60952,11 @@ class TH1Painter$2 extends THistPainter {
             } else {
 
                if (draw_any_but_hist) {
-                  if (bestimin === bestimax) { draw_bin(bestimin); } else
-                  if (bestimin < bestimax) { draw_bin(bestimin); draw_bin(bestimax); } else {
+                  if (bestimin === bestimax)
+                     draw_bin(bestimin);
+                  else if (bestimin < bestimax) {
+                     draw_bin(bestimin); draw_bin(bestimax);
+                  } else {
                      draw_bin(bestimax); draw_bin(bestimin);
                   }
                }
@@ -60987,7 +61005,10 @@ class TH1Painter$2 extends THistPainter {
           h0 = height + 3;
       if (!fill_for_interactive) {
          let gry0 = Math.round(funcs.gry(0));
-         if (gry0 <= 0) h0 = -3; else if (gry0 < height) h0 = gry0;
+         if (gry0 <= 0)
+            h0 = -3;
+         else if (gry0 < height)
+            h0 = gry0;
       }
       let close_path = `L${currx},${h0}H${startx}Z`;
 
@@ -61064,8 +61085,8 @@ class TH1Painter$2 extends THistPainter {
             tips.push('error y = ' + histo.getBinError(bin + 1).toPrecision(4));
          }
       } else {
-         tips.push(`bin = ${bin+1}`, 'x = ' + xlbl);
-         if (histo['$baseh']) cont -= histo['$baseh'].getBinContent(bin+1);
+         tips.push(`bin = ${bin+1}`, `x = ${xlbl}`);
+         if (histo.$baseh) cont -= histo.$baseh.getBinContent(bin+1);
          if (cont === Math.round(cont))
             tips.push('entries = ' + cont);
          else
@@ -61104,10 +61125,8 @@ class TH1Painter$2 extends THistPainter {
          return Math.round(funcs.gry(yy));
       };
 
-      if (funcs.swap_xy) {
-         let d = pnt.x; pnt_x = pnt_y; pnt_y = d;
-         d = height; height = width; width = d;
-      }
+      if (funcs.swap_xy)
+         [pnt_x, pnt_y, width, height] = [pnt_y, pnt_x, height, width];
 
       while (l < r-1) {
          let m = Math.round((l+r)*0.5), xx = GetBinGrX(m);
@@ -61154,9 +61173,10 @@ class TH1Painter$2 extends THistPainter {
          grx2 = grx1 + Math.round(histo.fBarWidth/1000*w);
       }
 
-      if (grx1 > grx2) { let d = grx1; grx1 = grx2; grx2 = d; }
+      if (grx1 > grx2)
+         [grx1, grx2] = [grx2, grx1];
 
-      midx = Math.round((grx1+grx2)/2);
+      midx = Math.round((grx1 + grx2)/2);
 
       midy = gry1 = gry2 = GetBinGrY(findbin);
 
@@ -61167,7 +61187,8 @@ class TH1Painter$2 extends THistPainter {
 
          gry1 = Math.round(funcs.gry(((this.options.BaseLine !== false) && (this.options.BaseLine > funcs.scale_ymin)) ? this.options.BaseLine : funcs.scale_ymin));
 
-         if (gry1 > gry2) { let d = gry1; gry1 = gry2; gry2 = d; }
+         if (gry1 > gry2)
+            [gry1, gry2] = [gry2, gry1];
 
          if (!pnt.touch && (pnt.nproc === 1))
             if ((pnt_y < gry1) || (pnt_y > gry2)) findbin = null;
@@ -61200,7 +61221,7 @@ class TH1Painter$2 extends THistPainter {
          gry2 = Math.max(gry2, midy + msize);
 
          if (!pnt.touch && (pnt.nproc === 1))
-            if ((pnt_y<gry1) || (pnt_y>gry2)) findbin = null;
+            if ((pnt_y < gry1) || (pnt_y > gry2)) findbin = null;
 
       } else {
 
@@ -61212,9 +61233,9 @@ class TH1Painter$2 extends THistPainter {
             gry2 = height;
 
             if (!this.fillatt.empty()) {
-               gry2 = Math.round(funcs.gry(0));
-               if (gry2 < 0) gry2 = 0; else if (gry2 > height) gry2 = height;
-               if (gry2 < gry1) { let d = gry1; gry1 = gry2; gry2 = d; }
+               gry2 = Math.min(height, Math.max(0, Math.round(funcs.gry(0))));
+               if (gry2 < gry1)
+                 [gry1, gry2] = [gry2, gry1];
             }
 
             // for mouse events pointer should be between y1 and y2
@@ -61874,7 +61895,8 @@ class TH2Painter$2 extends THistPainter {
           xside, yside, xx, yy, zz,
           fp = this.getFramePainter(),
           funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
-          res = { name: histo.fName, entries: 0, integral: 0, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0,0,0,0,0,0,0,0,0], xmax: 0, ymax:0, wmax: null };
+          res = { name: histo.fName, entries: 0, integral: 0, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0,0,0,0,0,0,0,0,0], xmax: 0, ymax:0, wmax: null },
+          has_counted_stat = !fp.isAxisZoomed('x') && !fp.isAxisZoomed('y') && (Math.abs(histo.fTsumw) > 1e-300) && !cond;
 
       if (this.isTH2Poly()) {
 
@@ -61915,17 +61937,21 @@ class TH2Painter$2 extends THistPainter {
 
             res.matrix[yside * 3 + xside] += zz;
 
-            if ((xside != 1) || (yside != 1)) continue;
+            if ((xside != 1) || (yside != 1) || (cond && !cond(xx,yy))) continue;
 
-            if (cond && !cond(xx,yy)) continue;
+            if ((res.wmax === null) || (zz > res.wmax)) {
+               res.wmax = zz;
+               res.xmax = xx;
+               res.ymax = yy;
+            }
 
-            if ((res.wmax === null) || (zz > res.wmax)) { res.wmax = zz; res.xmax = xx; res.ymax = yy; }
-
-            stat_sum0 += zz;
-            stat_sumx1 += xx * zz;
-            stat_sumy1 += yy * zz;
-            stat_sumx2 += xx * xx * zz;
-            stat_sumy2 += yy * yy * zz;
+            if (!has_counted_stat) {
+               stat_sum0 += zz;
+               stat_sumx1 += xx * zz;
+               stat_sumy1 += yy * zz;
+               stat_sumx2 += xx * xx * zz;
+               stat_sumy2 += yy * yy * zz;
+            }
          }
       } else {
          let xleft = this.getSelectIndex('x', 'left'),
@@ -61948,23 +61974,27 @@ class TH2Painter$2 extends THistPainter {
 
                res.matrix[yside * 3 + xside] += zz;
 
-               if ((xside != 1) || (yside != 1)) continue;
+               if ((xside != 1) || (yside != 1) || (cond && !cond(xx,yy))) continue;
 
-               if (cond && !cond(xx,yy)) continue;
+               if ((res.wmax === null) || (zz > res.wmax)) {
+                  res.wmax = zz;
+                  res.xmax = xx;
+                  res.ymax = yy;
+               }
 
-               if ((res.wmax === null) || (zz > res.wmax)) { res.wmax = zz; res.xmax = xx; res.ymax = yy; }
-
-               stat_sum0 += zz;
-               stat_sumx1 += xx * zz;
-               stat_sumy1 += yy * zz;
-               stat_sumx2 += xx**2 * zz;
-               stat_sumy2 += yy**2 * zz;
-               // stat_sumxy += xx * yy * zz;
+               if (!has_counted_stat) {
+                  stat_sum0 += zz;
+                  stat_sumx1 += xx * zz;
+                  stat_sumy1 += yy * zz;
+                  stat_sumx2 += xx**2 * zz;
+                  stat_sumy2 += yy**2 * zz;
+                  // stat_sumxy += xx * yy * zz;
+               }
             }
          }
       }
 
-      if (!fp.isAxisZoomed('x') && !fp.isAxisZoomed('y') && (histo.fTsumw > 0)) {
+      if (has_counted_stat) {
          stat_sum0 = histo.fTsumw;
          stat_sumx1 = histo.fTsumwx;
          stat_sumx2 = histo.fTsumwx2;
@@ -61973,17 +62003,19 @@ class TH2Painter$2 extends THistPainter {
          // stat_sumxy = histo.fTsumwxy;
       }
 
-      if (stat_sum0 > 0) {
+      if (Math.abs(stat_sum0) > 1e-300) {
          res.meanx = stat_sumx1 / stat_sum0;
          res.meany = stat_sumy1 / stat_sum0;
          res.rmsx = Math.sqrt(Math.abs(stat_sumx2 / stat_sum0 - res.meanx**2));
          res.rmsy = Math.sqrt(Math.abs(stat_sumy2 / stat_sum0 - res.meany**2));
       }
 
-      if (res.wmax === null) res.wmax = 0;
+      if (res.wmax === null)
+         res.wmax = 0;
       res.integral = stat_sum0;
 
-      if (histo.fEntries > 1) res.entries = histo.fEntries;
+      if (histo.fEntries > 1)
+         res.entries = histo.fEntries;
 
       return res;
    }
@@ -62245,7 +62277,7 @@ class TH2Painter$2 extends THistPainter {
                //     Re-order endpoints
 
                count = 0;
-               for (ix=1; ix<=lj-5; ix +=2) {
+               for (ix = 1; ix <= lj - 5; ix += 2) {
                   //count = 0;
                   while (itarr[ix-1] != itarr[ix]) {
                      xsave = xarr[ix];
@@ -62266,7 +62298,7 @@ class TH2Painter$2 extends THistPainter {
 
                if (count > kMAXCOUNT) continue;
 
-               for (ix=1; ix<=lj-2; ix +=2) {
+               for (ix = 1; ix <= lj - 2; ix += 2) {
 
                   ipoly = itarr[ix-1];
 
@@ -62344,7 +62376,7 @@ class TH2Painter$2 extends THistPainter {
                contour_func(colindx, xp, yp, iminus, iplus, ipoly);
 
             istart = 0;
-            for (i=2;i<np;i+=2) {
+            for (i = 2; i < np; i += 2) {
                if (xx[i] !== xmin && yy[i] !== ymin) {
                   istart = i;
                   break;
@@ -62437,7 +62469,7 @@ class TH2Painter$2 extends THistPainter {
 
          const points = [{x: 0, y: 0}, {x: frame_w, y: 0}, {x: frame_w, y: frame_h}, {x: 0, y: frame_h}];
 
-         const get_intersect = (i,di) => {
+         const get_intersect = (i, di) => {
             let segm = { x1: xp[i], y1: yp[i], x2: 2*xp[i] - xp[i+di], y2: 2*yp[i] - yp[i+di] };
             for (let i = 0; i < 4; ++i) {
                let res = get_segm_intersection(segm, { x1: points[i].x, y1: points[i].y, x2: points[(i+1)%4].x, y2: points[(i+1)%4].y });
@@ -62548,7 +62580,7 @@ class TH2Painter$2 extends THistPainter {
          if (acc_y) { grcmd += 'v' + acc_y; acc_y = 0; }
       };
 
-      for (ngr = 0; ngr < ngraphs; ++ ngr) {
+      for (ngr = 0; ngr < ngraphs; ++ngr) {
          if (!gr || (ngr > 0)) gr = bin.fPoly.fGraphs.arr[ngr];
 
          const x = gr.fX, y = gr.fY;
@@ -62622,7 +62654,7 @@ class TH2Painter$2 extends THistPainter {
 
       let cntr = this.getContour(true), palette = this.getHistPalette();
 
-      for (i = 0; i < len; ++ i) {
+      for (i = 0; i < len; ++i) {
          bin = histo.fBins.arr[i];
          colindx = cntr.getPaletteIndex(palette, bin.fContent);
          if (colindx === null) continue;
@@ -62658,31 +62690,27 @@ class TH2Painter$2 extends THistPainter {
       let pr = Promise.resolve(true);
 
       if (textbins.length > 0) {
-         let text_col = this.getColor(histo.fMarkerColor),
-             text_angle = -1*this.options.TextAngle,
+         let color = this.getColor(histo.fMarkerColor),
+             rotate = -1*this.options.TextAngle,
              text_g = this.draw_g.append('svg:g').attr('class', 'th2poly_text'),
-             text_size = 12;
-
-         if ((histo.fMarkerSize !== 1) && text_angle)
-             text_size = Math.round(0.02*h*histo.fMarkerSize);
+             text_size = ((histo.fMarkerSize !== 1) && rotate) ? Math.round(0.02*h*histo.fMarkerSize) : 12,
+             text;
 
          this.startTextDrawing(42, text_size, text_g, text_size);
 
-         for (i = 0; i < textbins.length; ++ i) {
+         for (i = 0; i < textbins.length; ++i) {
             bin = textbins[i];
 
-            let lbl = '';
-
             if (!this.options.TextKind) {
-               lbl = (Math.round(bin.fContent) === bin.fContent) ? bin.fContent.toString() :
+               text = (Math.round(bin.fContent) === bin.fContent) ? bin.fContent.toString() :
                           floatToString(bin.fContent, gStyle.fPaintTextFormat);
             } else {
-               if (bin.fPoly) lbl = bin.fPoly.fName;
-               if (lbl === 'Graph') lbl = '';
-               if (!lbl) lbl = bin.fNumber;
+               text = bin.fPoly?.fName;
+               if (!text || (text == 'Graph'))
+                  text = bin.fNumber.toString();
             }
 
-            this.drawText({ align: 22, x: bin._midx, y: bin._midy, rotate: text_angle, text: lbl, color: text_col, latex: 0, draw_g: text_g });
+            this.drawText({ align: 22, x: bin._midx, y: bin._midy, rotate, text, color, latex: 0, draw_g: text_g });
          }
 
          pr = this.finishTextDrawing(text_g, true);
@@ -62803,14 +62831,14 @@ class TH2Painter$2 extends THistPainter {
                   dy = Math.round(y2-y1);
 
                   if (dx || dy) {
-                     cmd += 'M'+Math.round(x1)+','+Math.round(y1) + makeLine(dx,dy);
+                     cmd += `M${Math.round(x1)},${Math.round(y1)}${makeLine(dx,dy)}`;
 
                      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
                         anr = Math.sqrt(9/(dx**2 + dy**2));
                         si  = Math.round(anr*(dx + dy));
                         co  = Math.round(anr*(dx - dy));
                         if (si || co)
-                           cmd += `m${-si},${co}` + makeLine(si,-co) + makeLine(-co,-si);
+                           cmd += `m${-si},${co}${makeLine(si,-co)}${makeLine(-co,-si)}`;
                      }
                   }
                }
@@ -62932,7 +62960,7 @@ class TH2Painter$2 extends THistPainter {
          if (!this.lineatt.empty())
             elem.call(this.lineatt.func);
          else
-            elem.style('stroke','black');
+            elem.style('stroke', 'black');
       }
 
       return handle;
@@ -63041,7 +63069,7 @@ class TH2Painter$2 extends THistPainter {
             nextv = sum / integral;
             while ((prob[cnt] >= v) && (prob[cnt] < nextv)) {
                res.indx[cnt] = j;
-               res.quantiles[cnt] = x + ((prob[cnt] - v)/(nextv-v))*(xx[j+1]-x);
+               res.quantiles[cnt] = x + ((prob[cnt] - v) / (nextv - v)) * (xx[j + 1] - x);
                if (cnt++ == prob.length) return res;
                x = xx[j];
             }
@@ -63173,20 +63201,20 @@ class TH2Painter$2 extends THistPainter {
 
          let x1d = Math.round(center - candleWidth/3),
              x2d = Math.round(center + candleWidth/3),
-             fname = swapXY ? 'grx' : 'gry';
+             ff = swapXY ? funcs.grx : funcs.gry;
 
-         pnt.yy1 = Math.round(funcs[fname](fWhiskerUp));
-         pnt.y1 = Math.round(funcs[fname](pnt.fBoxUp));
-         pnt.y0 = Math.round(funcs[fname](pnt.fMedian));
-         pnt.y2 = Math.round(funcs[fname](pnt.fBoxDown));
-         pnt.yy2 = Math.round(funcs[fname](fWhiskerDown));
+         pnt.yy1 = Math.round(ff(fWhiskerUp));
+         pnt.y1 = Math.round(ff(pnt.fBoxUp));
+         pnt.y0 = Math.round(ff(pnt.fMedian));
+         pnt.y2 = Math.round(ff(pnt.fBoxDown));
+         pnt.yy2 = Math.round(ff(fWhiskerDown));
 
-         let y0m = Math.round(funcs[fname](fMean)),
-             y01 = Math.round(funcs[fname](pnt.fMedian + fMedianErr)),
-             y02 = Math.round(funcs[fname](pnt.fMedian - fMedianErr));
+         let y0m = Math.round(ff(fMean)),
+             y01 = Math.round(ff(pnt.fMedian + fMedianErr)),
+             y02 = Math.round(ff(pnt.fMedian - fMedianErr));
 
          if (isOption(kHistoZeroIndicator))
-            hlines += make_path(center, Math.round(funcs[fname](xx[xindx1])), 'V', Math.round(funcs[fname](xx[xindx2])));
+            hlines += make_path(center, Math.round(ff(xx[xindx1])), 'V', Math.round(ff(xx[xindx2])));
 
          if (isOption(kMedianLine))
             lines += make_path(pnt.x1, pnt.y0, 'H', pnt.x2);
@@ -63233,9 +63261,9 @@ class TH2Painter$2 extends THistPainter {
                      marker_x = center + Math.round(((rnd.random() - 0.5) * candleWidth));
 
                   if ((bin_content == 1) && !show_scat)
-                     marker_y = Math.round(funcs[fname](binx));
+                     marker_y = Math.round(ff(binx));
                   else
-                     marker_y = Math.round(funcs[fname](xx[ii] + rnd.random()*(xx[ii+1]-xx[ii])));
+                     marker_y = Math.round(ff(xx[ii] + rnd.random()*(xx[ii+1]-xx[ii])));
 
                   make_marker(marker_x, marker_y);
                }
@@ -63249,11 +63277,11 @@ class TH2Painter$2 extends THistPainter {
             xindx2 = Math.min(xindx2-1, res.last);
 
             if (isOption(kHistoRight) || isOption(kHistoViolin)) {
-               let prev_x = center, prev_y = Math.round(funcs[fname](xx[xindx1]));
+               let prev_x = center, prev_y = Math.round(ff(xx[xindx1]));
                arr.push(prev_x, prev_y);
                for (let ii = xindx1; ii <= xindx2; ii++) {
                   let curr_x = Math.round(center + scale*proj[ii]),
-                      curr_y = Math.round(funcs[fname](xx[ii+1]));
+                      curr_y = Math.round(ff(xx[ii+1]));
                   if (curr_x != prev_x) {
                      if (ii != xindx1) arr.push('V', prev_y);
                      arr.push('H', curr_x);
@@ -63265,12 +63293,12 @@ class TH2Painter$2 extends THistPainter {
             }
 
             if (isOption(kHistoLeft) || isOption(kHistoViolin)) {
-               let prev_x = center, prev_y = Math.round(funcs[fname](xx[xindx2+1]));
+               let prev_x = center, prev_y = Math.round(ff(xx[xindx2+1]));
                if (arr.length == 0)
                   arr.push(prev_x, prev_y);
                for (let ii = xindx2; ii >= xindx1; ii--) {
                   let curr_x = Math.round(center - scale*proj[ii]),
-                      curr_y = Math.round(funcs[fname](xx[ii]));
+                      curr_y = Math.round(ff(xx[ii]));
                   if (curr_x != prev_x) {
                      if (ii != xindx2) arr.push('V', prev_y);
                      arr.push('H', curr_x);
@@ -63302,13 +63330,13 @@ class TH2Painter$2 extends THistPainter {
             for (let j = 0; j < this.nbinsy; ++j) {
                let sum = 0;
                for (let i = 0; i < this.nbinsx; ++i)
-                  sum += histo.getBinContent(i+1,j+1);
+                  sum += histo.getBinContent(i+1, j+1);
                maxIntegral = Math.max(maxIntegral, sum);
             }
 
          for (let j = handle.j1; j < handle.j2; ++j) {
             for (let i = 0; i < this.nbinsx; ++i)
-               proj[i] = histo.getBinContent(i+1,j+1);
+               proj[i] = histo.getBinContent(i+1, j+1);
 
             produceCandlePoint(j, handle.gry[j+1], handle.gry[j], handle.i1, handle.i2);
          }
@@ -63324,14 +63352,14 @@ class TH2Painter$2 extends THistPainter {
             for (let i = 0; i < this.nbinsx; ++i) {
                let sum = 0;
                for (let j = 0; j < this.nbinsy; ++j)
-                  sum += histo.getBinContent(i+1,j+1);
+                  sum += histo.getBinContent(i+1, j+1);
                maxIntegral = Math.max(maxIntegral, sum);
             }
 
          // loop over visible x-bins
          for (let i = handle.i1; i < handle.i2; ++i) {
             for (let j = 0; j < this.nbinsy; ++j)
-               proj[j] = histo.getBinContent(i+1,j+1);
+               proj[j] = histo.getBinContent(i+1, j+1);
 
             produceCandlePoint(i, handle.grx[i], handle.grx[i+1], handle.j1, handle.j2);
          }
@@ -63800,20 +63828,17 @@ class TH2Painter$2 extends THistPainter {
 
    /** @summary Provide text information (tooltips) for histogram bin */
    getBinTooltips(i, j) {
-      let lines = [],
-          histo = this.getHisto(),
+      let histo = this.getHisto(),
           binz = histo.getBinContent(i+1, j+1);
 
-      lines.push(this.getObjectHint());
+      if (histo.$baseh)
+         binz -= histo.$baseh.getBinContent(i+1, j+1);
 
-      lines.push('x = ' + this.getAxisBinTip('x', histo.fXaxis, i));
-      lines.push('y = ' + this.getAxisBinTip('y', histo.fYaxis, j));
-
-      lines.push(`bin = ${histo.getBin(i+1,j+1)}  x: ${i+1}  y: ${j+1}`);
-
-      if (histo.$baseh) binz -= histo.$baseh.getBinContent(i+1, j+1);
-
-      lines.push('entries = ' + ((binz === Math.round(binz)) ? binz : floatToString(binz, gStyle.fStatFormat)));
+      let lines = [this.getObjectHint(),
+                   'x = ' + this.getAxisBinTip('x', histo.fXaxis, i),
+                   'y = ' + this.getAxisBinTip('y', histo.fYaxis, j),
+                   `bin = ${histo.getBin(i+1,j+1)}  x: ${i+1}  y: ${j+1}`,
+                   'entries = ' + ((binz === Math.round(binz)) ? binz : floatToString(binz, gStyle.fStatFormat))];
 
       if ((this.options.TextKind == 'E') || this.matchObjectType(clTProfile2D)) {
          let errz = histo.getBinError(histo.getBin(i+1,j+1));
@@ -63825,22 +63850,16 @@ class TH2Painter$2 extends THistPainter {
 
    /** @summary Provide text information (tooltips) for candle bin */
    getCandleTooltips(p) {
-      let lines = [], pmain = this.getFramePainter(),
+      let pmain = this.getFramePainter(),
           funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
           histo = this.getHisto();
 
-      lines.push(this.getObjectHint());
-
-      if (p.swapXY)
-         lines.push('y = ' + funcs.axisAsText('y', histo.fYaxis.GetBinLowEdge(p.bin+1)));
-      else
-         lines.push('x = ' + funcs.axisAsText('x', histo.fXaxis.GetBinLowEdge(p.bin+1)));
-
-      lines.push('m-25%  = ' + floatToString(p.fBoxDown, gStyle.fStatFormat));
-      lines.push('median = ' + floatToString(p.fMedian, gStyle.fStatFormat));
-      lines.push('m+25%  = ' + floatToString(p.fBoxUp, gStyle.fStatFormat));
-
-      return lines;
+      return [this.getObjectHint(),
+              p.swapXY ? 'y = ' + funcs.axisAsText('y', histo.fYaxis.GetBinLowEdge(p.bin+1))
+                       : 'x = ' + funcs.axisAsText('x', histo.fXaxis.GetBinLowEdge(p.bin+1)),
+              'm-25%  = ' + floatToString(p.fBoxDown, gStyle.fStatFormat),
+              'median = ' + floatToString(p.fMedian, gStyle.fStatFormat),
+              'm+25%  = ' + floatToString(p.fBoxUp, gStyle.fStatFormat)];
    }
 
    /** @summary Provide text information (tooltips) for poly bin */
@@ -63880,7 +63899,8 @@ class TH2Painter$2 extends THistPainter {
       lines.push(this.getObjectHint(),
                  'x = ' + funcs.axisAsText('x', realx),
                  'y = ' + funcs.axisAsText('y', realy));
-      if (numpoints > 0) lines.push('npnts = ' + numpoints);
+      if (numpoints > 0)
+         lines.push('npnts = ' + numpoints);
       lines.push('bin = ' + binname);
       if (bin.fContent === Math.round(bin.fContent))
          lines.push('content = ' + bin.fContent);
@@ -64246,7 +64266,7 @@ function drawTH2PolyLego(painter) {
 
    let cntr = painter.getContour(true), palette = painter.getHistPalette();
 
-   for (i = 0; i < len; ++ i) {
+   for (i = 0; i < len; ++i) {
       bin = histo.fBins.arr[i];
       if (bin.fContent < axis_zmin) continue;
 
@@ -64530,8 +64550,10 @@ class TH3Painter extends THistPainter {
          for (let j = 0; j < this.nbinsy; ++j)
             for (let k = 0; k < this.nbinsz; ++k) {
                let bin_content = histo.getBinContent(i+1, j+1, k+1);
-               if (bin_content < this.gminbin) this.gminbin = bin_content; else
-               if (bin_content > this.gmaxbin) this.gmaxbin = bin_content;
+               if (bin_content < this.gminbin)
+                  this.gminbin = bin_content;
+               else if (bin_content > this.gmaxbin)
+                  this.gmaxbin = bin_content;
             }
 
       this.draw_content = this.gmaxbin > 0;
@@ -64550,7 +64572,8 @@ class TH3Painter extends THistPainter {
           k2 = this.getSelectIndex('z', 'right'),
           fp = this.getFramePainter(),
           res = { name: histo.fName, entries: 0, integral: 0, meanx: 0, meany: 0, meanz: 0, rmsx: 0, rmsy: 0, rmsz: 0 },
-          xi, yi, zi, xx, xside, yy, yside, zz, zside, cont;
+          xi, yi, zi, xx, xside, yy, yside, zz, zside, cont,
+          has_counted_stat = (Math.abs(histo.fTsumw) > 1e-300) && !fp.isAxisZoomed('x') && !fp.isAxisZoomed('y') && !fp.isAxisZoomed('z');
 
       for (xi = 0; xi < this.nbinsx+2; ++xi) {
 
@@ -64570,7 +64593,7 @@ class TH3Painter extends THistPainter {
                cont = histo.getBinContent(xi, yi, zi);
                res.entries += cont;
 
-               if ((xside == 1) && (yside == 1) && (zside == 1)) {
+               if (!has_counted_stat && (xside == 1) && (yside == 1) && (zside == 1)) {
                   stat_sum0 += cont;
                   stat_sumx1 += xx * cont;
                   stat_sumy1 += yy * cont;
@@ -64583,7 +64606,7 @@ class TH3Painter extends THistPainter {
          }
       }
 
-      if ((histo.fTsumw > 0) && !fp.isAxisZoomed('x') && !fp.isAxisZoomed('y') && !fp.isAxisZoomed('z')) {
+      if (has_counted_stat) {
          stat_sum0  = histo.fTsumw;
          stat_sumx1 = histo.fTsumwx;
          stat_sumx2 = histo.fTsumwx2;
@@ -64593,7 +64616,7 @@ class TH3Painter extends THistPainter {
          stat_sumz2 = histo.fTsumwz2;
       }
 
-      if (stat_sum0 > 0) {
+      if (Math.abs(stat_sum0) > 1e-300) {
          res.meanx = stat_sumx1 / stat_sum0;
          res.meany = stat_sumy1 / stat_sum0;
          res.meanz = stat_sumz1 / stat_sum0;
@@ -64604,7 +64627,8 @@ class TH3Painter extends THistPainter {
 
       res.integral = stat_sum0;
 
-      if (histo.fEntries > 1) res.entries = histo.fEntries;
+      if (histo.fEntries > 1)
+         res.entries = histo.fEntries;
 
       return res;
    }
@@ -64613,7 +64637,8 @@ class TH3Painter extends THistPainter {
    fillStatistic(stat, dostat, dofit) {
 
       // no need to refill statistic if histogram is dummy
-      if (this.isIgnoreStatsFill()) return false;
+      if (this.isIgnoreStatsFill())
+         return false;
 
       let data = this.countStat(),
           print_name = dostat % 10,
@@ -76418,8 +76443,13 @@ async function drawText$1() {
 
    if (text.fTextAngle) arg.rotate = -text.fTextAngle;
 
-   if (text._typename == clTLatex) { arg.latex = 1; fact = 0.9; } else
-   if (text._typename == clTMathText) { arg.latex = 2; fact = 0.8; }
+   if (text._typename == clTLatex) {
+      arg.latex = 1;
+      fact = 0.9;
+   } else if (text._typename == clTMathText) {
+      arg.latex = 2;
+      fact = 0.8;
+   }
 
    this.startTextDrawing(text.fTextFont, Math.round((textsize > 1) ? textsize : textsize*Math.min(w,h)*fact));
 
@@ -76495,7 +76525,8 @@ function drawPolyLine() {
    if (polyline._typename != clTPolyLine)
       fillatt.setSolidColor('none');
 
-   if (!fillatt.empty()) cmd += 'Z';
+   if (!fillatt.empty())
+      cmd += 'Z';
 
    this.draw_g
        .append('svg:path')
@@ -80999,7 +81030,7 @@ function getBoundingBox(node, box3, local_coordinates) {
    let v1 = new Vector3(), attribute = node.geometry.attributes?.position;
 
    if ( attribute !== undefined )
-      for (let i = 0, l = attribute.count; i < l; i ++ ) {
+      for (let i = 0, l = attribute.count; i < l; i++) {
          // v1.fromAttribute( attribute, i ).applyMatrix4( node.matrixWorld );
          v1.fromBufferAttribute( attribute, i );
          if (!local_coordinates) v1.applyMatrix4( node.matrixWorld );
@@ -83581,7 +83612,7 @@ class TGeoPainter extends ObjectPainter {
       // Light - add default point light, adjust later
       let light = new PointLight(0xefefef, 1);
       light.position.set(10, 10, 10);
-      this._camera.add( light );
+      this._camera.add(light);
 
       this._scene.add(this._camera);
    }
@@ -83594,8 +83625,8 @@ class TGeoPainter extends ObjectPainter {
       if (this._webgl && (this.ctrl.ssao.enabled || this.ctrl.outline)) {
 
          if (this.ctrl.outline && isFunc(this.createOutline)) {
-            this._effectComposer = new EffectComposer( this._renderer );
-            this._effectComposer.addPass(new RenderPass( this._scene, this._camera));
+            this._effectComposer = new EffectComposer(this._renderer);
+            this._effectComposer.addPass(new RenderPass(this._scene, this._camera));
             this.createOutline(this._scene_width, this._scene_height);
          } else if (this.ctrl.ssao.enabled) {
             this.createSSAO();
@@ -83643,7 +83674,8 @@ class TGeoPainter extends ObjectPainter {
             this._renderer.domElement.style.width = '100%';
             this._renderer.domElement.style.height = '100%';
             let main = this.selectDom();
-            if (main.style('position') == 'static') main.style('position','relative');
+            if (main.style('position') == 'static')
+               main.style('position', 'relative');
          }
 
          this._animating = false;
@@ -83727,11 +83759,7 @@ class TGeoPainter extends ObjectPainter {
          // if detect of coordinates fails - ignore
          if (!Number.isFinite(box.min.x)) return 1000;
 
-         let sizex = box.max.x - box.min.x,
-             sizey = box.max.y - box.min.y,
-             sizez = box.max.z - box.min.z;
-
-         this._overall_size = 2 * Math.max(sizex, sizey, sizez);
+         this._overall_size = 2 * Math.max(box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z);
       }
 
       return this._overall_size;
@@ -83764,10 +83792,7 @@ class TGeoPainter extends ObjectPainter {
 
       let pos1 = new Vector3().add(this._camera0pos).sub(this._lookat),
           pos2 = new Vector3().add(this._camera.position).sub(this._lookat),
-          len1 = pos1.length(), len2 = pos2.length(),
-          zoom = this.ctrl.zoom * len2 / len1 * 100;
-
-      if (zoom < 1) zoom = 1; else if (zoom>10000) zoom = 10000;
+          zoom = Math.min(10000, Math.max(1, this.ctrl.zoom * pos2.length() / pos1.length() * 100));
 
       pos1.normalize();
       pos2.normalize();
@@ -83782,8 +83807,9 @@ class TGeoPainter extends ObjectPainter {
 
       if (roty < 0) roty += 360;
       if (rotz < 0) rotz += 360;
+      prec = prec || 0;
 
-      return 'roty' + roty.toFixed(prec || 0) + ',rotz' + rotz.toFixed(prec || 0) + ',zoom' + zoom.toFixed(prec || 0);
+      return `roty${roty.toFixed(prec)},rotz${rotz.toFixed(prec)},zoom${zoom.toFixed(prec)}`;
    }
 
    /** @summary Calculates current zoom factor */
@@ -83925,11 +83951,8 @@ class TGeoPainter extends ObjectPainter {
 
       let stack = this._clones.findStackByName(itemname);
 
-      if (!stack) return;
-
-      let info = this._clones.resolveStack(stack, true);
-
-      this.focusCamera( info, false );
+      if (stack)
+         this.focusCamera(this._clones.resolveStack(stack, true), false);
    }
 
    /** @summary focus camera on speicifed position */
@@ -83946,7 +83969,7 @@ class TGeoPainter extends ObjectPainter {
       } else {
          let center = new Vector3().setFromMatrixPosition(focus.matrix),
              node = focus.node,
-             halfDelta = new Vector3( node.fDX, node.fDY, node.fDZ ).multiplyScalar(0.5);
+             halfDelta = new Vector3(node.fDX, node.fDY, node.fDZ).multiplyScalar(0.5);
          box.min = center.clone().sub(halfDelta);
          box.max = center.clone().add(halfDelta);
       }
@@ -83989,20 +84012,20 @@ class TGeoPainter extends ObjectPainter {
 
       // Interpolate //
 
-      let animate = () => {
+      const animate = () => {
          if (this._animating === undefined) return;
 
          if (this._animating) {
-            requestAnimationFrame( animate );
+            requestAnimationFrame(animate);
          } else {
             if (!this._geom_viewer)
                this.startDrawGeometry();
          }
-         let smoothFactor = -Math.cos( ( 2.0 * Math.PI * step ) / frames ) + 1.0;
-         this._camera.position.add( posIncrement.clone().multiplyScalar( smoothFactor ) );
-         oldTarget.add( targetIncrement.clone().multiplyScalar( smoothFactor ) );
+         let smoothFactor = -Math.cos((2.0*Math.PI*step)/frames) + 1.0;
+         this._camera.position.add(posIncrement.clone().multiplyScalar(smoothFactor));
+         oldTarget.add(targetIncrement.clone().multiplyScalar(smoothFactor));
          this._lookat = oldTarget;
-         this._camera.lookAt( this._lookat );
+         this._camera.lookAt(this._lookat);
          this._camera.updateProjectionMatrix();
 
          let tm1 = new Date().getTime();
@@ -84035,7 +84058,8 @@ class TGeoPainter extends ObjectPainter {
 
          let current = new Date();
 
-         if ( this.ctrl.rotate ) requestAnimationFrame( animate );
+         if (this.ctrl.rotate)
+            requestAnimationFrame(animate);
 
          if (this._controls) {
             this._controls.autoRotate = this.ctrl.rotate;
@@ -84057,13 +84081,13 @@ class TGeoPainter extends ObjectPainter {
             let boxHelper = new BoxHelper(this._toplevel);
             this._scene.add( boxHelper );
          }
-         this._scene.add( new AxesHelper( 2 * this._overall_size ) );
-         this._scene.add( new GridHelper( Math.ceil( this._overall_size), Math.ceil( this._overall_size ) / 50 ) );
+         this._scene.add(new AxesHelper(2 * this._overall_size));
+         this._scene.add(new GridHelper(Math.ceil(this._overall_size), Math.ceil(this._overall_size)/50));
          this.helpText("<font face='verdana' size='1' color='red'><center>Transform Controls<br>" +
                "'T' translate | 'R' rotate | 'S' scale<br>" +
                "'+' increase size | '-' decrease size<br>" +
                "'W' toggle wireframe/solid display<br>"+
-         "keep 'Ctrl' down to snap to grid</center></font>");
+               "keep 'Ctrl' down to snap to grid</center></font>");
       }
    }
 
@@ -84099,14 +84123,14 @@ class TGeoPainter extends ObjectPainter {
           numvis = this._clones.scanVisible(arg),
           tm2 = new Date().getTime();
 
-      res.push('Total visible nodes: ' + numvis, 'Total shapes: ' + nshapes);
+      res.push(`Total visible nodes: ${numvis}`, `Total shapes: ${nshapes}`);
 
       for (let lvl = 0; lvl < arg.cnt.length; ++lvl) {
          if (arg.cnt[lvl] !== undefined)
-            res.push('  lvl' + lvl + ': ' + arg.cnt[lvl]);
+            res.push(`  lvl${lvl}: ${arg.cnt[lvl]}`);
       }
 
-      res.push('Time to scan: ' + makeTime(tm2-tm1), '', 'Check timing for matrix calculations ...');
+      res.push(`Time to scan: ${makeTime(tm2-tm1)}`, '', 'Check timing for matrix calculations ...');
 
       let elem = this.selectDom().style('overflow', 'auto');
 
@@ -84122,7 +84146,7 @@ class TGeoPainter extends ObjectPainter {
             numvis = this._clones.scanVisible(arg);
             tm2 = new Date().getTime();
 
-            let last_str = 'Time to scan with matrix: ' + makeTime(tm2-tm1);
+            let last_str = `Time to scan with matrix: ${makeTime(tm2-tm1)}`;
             if (isBatchMode())
                res.push(last_str);
             else
@@ -84140,7 +84164,7 @@ class TGeoPainter extends ObjectPainter {
      * @return {Promise} handling of drop operation */
    async performDrop(obj, itemname, hitem, opt) {
 
-      if (obj && (obj.$kind === 'TTree')) {
+      if (obj?.$kind === 'TTree') {
          // drop tree means function call which must extract tracks from provided tree
 
          let funcname = 'extract_geo_tracks';
@@ -84160,7 +84184,6 @@ class TGeoPainter extends ObjectPainter {
             // FIXME: probably tracks should be remembered?
             return this.drawExtras(tracks, '', false).then(()=> {
                this.updateClipping(true);
-
                return this.render3D(100);
             });
          });
@@ -84212,7 +84235,7 @@ class TGeoPainter extends ObjectPainter {
       return true;
    }
 
-   /** @summary manipulate visisbility of extra objects, used for HierarhcyPainter
+   /** @summary manipulate visisbility of extra objects, used for HierarchyPainter
      * @private */
    extraObjectVisible(hpainter, hitem, toggle) {
       if (!this._extraObjects) return;
@@ -84572,7 +84595,7 @@ class TGeoPainter extends ObjectPainter {
                // return proxy object with several methods, typically used in ROOT geom scripts
                return {
                    found: currnode,
-                   fVolume: currnode ? currnode.node.fVolume : null,
+                   fVolume: currnode?.node?.fVolume,
                    InvisibleAll(flag) {
                       setInvisibleAll(this.fVolume, flag);
                    },
@@ -84583,8 +84606,8 @@ class TGeoPainter extends ObjectPainter {
                       console.log(`Select volume for drawing ${this.fVolume.fName} ${result.prefix}`);
                    },
                    SetTransparency(lvl) {
-                     if (this.fVolume && this.fVolume.fMedium && this.fVolume.fMedium.fMaterial)
-                        this.fVolume.fMedium.fMaterial.fFillStyle = 3000+lvl;
+                     if (this.fVolume?.fMedium?.fMaterial)
+                        this.fVolume.fMedium.fMaterial.fFillStyle = 3000 + lvl;
                    },
                    SetLineColor(col) {
                       if (this.fVolume) this.fVolume.fLineColor = col;
@@ -84668,27 +84691,16 @@ class TGeoPainter extends ObjectPainter {
          this.ctrl.use_worker = 0;
          this._geom_viewer = true; // indicate that working with geom viewer
       } else if (this._main_painter) {
-
          this._clones_owner = false;
-
          this._clones = this._main_painter._clones;
-
          console.log(`Reuse clones ${this._clones.nodes.length} from main painter`);
-
       } else if (!draw_obj) {
-
          this._clones_owner = false;
-
          this._clones = null;
-
       } else {
-
          this._start_drawing_time = new Date().getTime();
-
          this._clones_owner = true;
-
          this._clones = new ClonedNodes(draw_obj);
-
          let lvl = this.ctrl.vislevel, maxnodes = this.ctrl.maxnodes;
          if (this.geo_manager) {
             if (!lvl && this.geo_manager.fVisLevel)
@@ -84696,7 +84708,6 @@ class TGeoPainter extends ObjectPainter {
             if (!maxnodes)
                maxnodes = this.geo_manager.fMaxVisNodes;
          }
-
          this._clones.setVisLevel(lvl);
          this._clones.setMaxVisNodes(maxnodes);
 
@@ -84748,7 +84759,8 @@ class TGeoPainter extends ObjectPainter {
 
          } else {
             // activate worker
-            if (this.ctrl.use_worker > 0) this.startWorker();
+            if (this.ctrl.use_worker > 0)
+               this.startWorker();
 
             assign3DHandler(this);
 
@@ -84798,7 +84810,7 @@ class TGeoPainter extends ObjectPainter {
          if (!info) {
             info = document.createElement('p');
             info.setAttribute('class', 'geo_info');
-            info.setAttribute('style',  'position: absolute; text-align: center; vertical-align: middle; top: 45%; left: 40%; color: red; font-size: 150%;');
+            info.setAttribute('style', 'position: absolute; text-align: center; vertical-align: middle; top: 45%; left: 40%; color: red; font-size: 150%;');
             main.append(info);
          }
          info.innerHTML = `${msg}, ${spent.toFixed(1)}s`;
@@ -84818,7 +84830,6 @@ class TGeoPainter extends ObjectPainter {
       while(true) {
 
          let res = this.nextDrawAction();
-
          if (!res) break;
 
          now = new Date().getTime();
@@ -85018,9 +85029,7 @@ class TGeoPainter extends ObjectPainter {
       if (!this._worker) return false;
 
       this._worker_jobs++;
-
       job.tm0 = new Date().getTime();
-
       this._worker.postMessage(job);
    }
 
@@ -85337,7 +85346,6 @@ class TGeoPainter extends ObjectPainter {
       if (!this.ctrl.highlight)
          this.highlightMesh(null);
    }
-
 
    /** @summary Assign clipping attributes to the meshes - supported only for webgl */
    updateClipping(without_render, force_traverse) {
@@ -85731,7 +85739,7 @@ class TGeoPainter extends ObjectPainter {
       let obj = child.parent;
       while (obj && !(obj instanceof TransformControls) )
          obj = obj.parent;
-      return (obj && (obj instanceof TransformControls));
+      return obj && (obj instanceof TransformControls);
    }
 
    /** @summary either change mesh wireframe or return current value
@@ -85805,9 +85813,7 @@ class TGeoPainter extends ObjectPainter {
       if (!main) return;
 
       let sz = main.getSizeFor3d(main.access3dKind());
-
       main.apply3dSize(sz);
-
       return this.performResize(sz.width, sz.height);
    }
 
@@ -86049,10 +86055,8 @@ function provideMenu(menu, item, hpainter) {
    if (iseve) {
       menu.addchk(obj.fRnrSelf, 'Visible', 'self', ToggleEveVisibility);
       let res = ScanEveVisible(obj, undefined, true);
-
       if (res.hidden + res.visible > 0)
          menu.addchk((res.hidden == 0), 'Daughters', res.hidden !== 0 ? 'true' : 'false', ToggleEveVisibility);
-
    } else {
       menu.addchk(testGeoBit(vol, geoBITS.kVisNone), 'Invisible',
             geoBITS.kVisNone, ToggleMenuBit);
@@ -86165,8 +86169,7 @@ function createItem(node, obj, name) {
       if (subnodes) {
          sub._more = true;
          sub._expand = expandGeoObject;
-      } else
-      if (shape && (shape._typename === clTGeoCompositeShape) && shape.fNode) {
+      } else if (shape && (shape._typename === clTGeoCompositeShape) && shape.fNode) {
          sub._more = true;
          sub._shape = shape;
          sub._expand = function(node /*, obj */) {
@@ -86176,7 +86179,8 @@ function createItem(node, obj, name) {
          };
       }
 
-      if (!sub._title && (obj._typename != clTGeoVolume)) sub._title = obj._typename;
+      if (!sub._title && (obj._typename != clTGeoVolume))
+         sub._title = obj._typename;
 
       if (shape) {
          if (sub._title == '')
@@ -86220,7 +86224,7 @@ async function drawDummy3DGeom(painter) {
    let extra = painter.getObject(),
        min = [-1, -1, -1], max = [1, 1, 1];
 
-   if (extra.fP && extra.fP.length)
+   if (extra.fP?.length)
       for(let k = 0; k < extra.fP.length; k += 3)
          for (let i = 0; i < 3; ++i) {
             min[i] = Math.min(min[i], extra.fP[k+i]);
@@ -86244,7 +86248,7 @@ async function drawDummy3DGeom(painter) {
 
    let opt = '', pp = painter.getPadPainter();
 
-   if (pp?.pad?.fFillColor && pp?.pad?.fFillStyle > 1000)
+   if (pp?.pad?.fFillColor && (pp?.pad?.fFillStyle > 1000))
       opt = 'bkgr_' +  pp.pad.fFillColor;
 
    return TGeoPainter.draw(painter.getDom(), obj, opt)
@@ -86978,7 +86982,7 @@ function before3DDraw(painter, obj) {
    if (!fp?.mode3d || !obj)
       return null;
 
-   if (fp.toplevel)
+   if (fp?.toplevel)
       return fp;
 
    let geop = painter.getMainPainter();
@@ -87003,9 +87007,7 @@ async function drawPolyMarker3D() {
 
    this.$fp = fp;
 
-   this.plain_redraw = drawPolyMarker3D$1;
-
-   return this.plain_redraw();
+   return drawPolyMarker3D$1.bind(this)();
 }
 
 /** @summary Direct draw function for TPolyLine3D object
@@ -91746,13 +91748,9 @@ class TASImagePainter extends ObjectPainter {
          return null;
 
       if (!this.draw_palette) {
-         let pal = create$1(clTPave);
-
-         Object.assign(pal, { _typename: clTPaletteAxis, fName: clTPave, fH: null, fAxis: create$1(clTGaxis),
-                               fX1NDC: 0.91, fX2NDC: 0.95, fY1NDC: 0.1, fY2NDC: 0.9, fInit: 1 });
-
+         let pal = create$1(clTPaletteAxis);
+         Object.assign(pal, { fX1NDC: 0.91, fX2NDC: 0.95, fY1NDC: 0.1, fY2NDC: 0.9, fInit: 1 });
          pal.fAxis.fChopt = '+';
-
          this.draw_palette = pal;
          this.fPalette = true; // to emulate behaviour of hist painter
       }
@@ -94447,7 +94445,7 @@ class RFramePainter extends RObjectPainter {
 
       if (rotate) {
          trans = `rotate(-90,${lm},${tm}) translate(${lm-h},${tm})`;
-         let d = w; w = h; h = d;
+         [w, h] = [h, w];
       } else {
          trans = `translate(${lm},${tm})`;
       }
@@ -99884,9 +99882,9 @@ class RH1Painter$2 extends RHistPainter {
           left = this.getSelectIndex('x', 'left'),
           right = this.getSelectIndex('x', 'right'),
           stat_sumw = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
-          i, xx = 0, w = 0, xmax = null, wmax = null,
-          fp = this.getFramePainter(),
-          res = { name: 'histo', meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0, entries: this.stat_entries, xmax: 0, wmax: 0 };
+          i, xx = 0, w = 0, xmax = null, wmax = null;
+          this.getFramePainter();
+          let res = { name: 'histo', meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0, entries: this.stat_entries, xmax: 0, wmax: 0 };
 
       for (i = left; i < right; ++i) {
          xx = xaxis.GetBinCoord(i+0.5);
@@ -99902,16 +99900,9 @@ class RH1Painter$2 extends RHistPainter {
          stat_sumwx2 += w * xx**2;
       }
 
-      // when no range selection done, use original statistic from histogram
-      if (!fp.isAxisZoomed('x') && histo.fTsumw) {
-         stat_sumw = histo.fTsumw;
-         stat_sumwx = histo.fTsumwx;
-         stat_sumwx2 = histo.fTsumwx2;
-      }
-
       res.integral = stat_sumw;
 
-      if (stat_sumw > 0) {
+      if (Math.abs(stat_sumw) > 1e-300) {
          res.meanx = stat_sumwx / stat_sumw;
          res.meany = stat_sumwy / stat_sumw;
          res.rmsx = Math.sqrt(Math.abs(stat_sumwx2 / stat_sumw - res.meanx**2));
@@ -100488,9 +100479,10 @@ class RH1Painter$2 extends RHistPainter {
          grx2 = grx1 + Math.round(this.options.BarWidth*w);
       }
 
-      if (grx1 > grx2) { let d = grx1; grx1 = grx2; grx2 = d; }
+      if (grx1 > grx2)
+         [grx1, grx2] = [grx2, grx1];
 
-      midx = Math.round((grx1+grx2)/2);
+      midx = Math.round((grx1 + grx2)/2);
 
       midy = gry1 = gry2 = GetBinGrY(findbin);
 
@@ -100501,10 +100493,11 @@ class RH1Painter$2 extends RHistPainter {
 
          gry1 = Math.round(funcs.gry(((this.options.BaseLine!==false) && (this.options.BaseLine > funcs.scale_ymin)) ? this.options.BaseLine : funcs.scale_ymin));
 
-         if (gry1 > gry2) { let d = gry1; gry1 = gry2; gry2 = d; }
+         if (gry1 > gry2)
+            [gry1, gry2] = [gry2, gry1];
 
          if (!pnt.touch && (pnt.nproc === 1))
-            if ((pnt_y<gry1) || (pnt_y>gry2)) findbin = null;
+            if ((pnt_y < gry1) || (pnt_y > gry2)) findbin = null;
 
       } else if (this.options.Error || this.options.Mark) {
 
@@ -100548,9 +100541,9 @@ class RH1Painter$2 extends RHistPainter {
             gry2 = height;
 
             if (!this.fillatt.empty()) {
-               gry2 = Math.round(funcs.gry(0));
-               if (gry2 < 0) gry2 = 0; else if (gry2 > height) gry2 = height;
-               if (gry2 < gry1) { let d = gry1; gry1 = gry2; gry2 = d; }
+               gry2 = Math.min(height, Math.max(0, Math.round(funcs.gry(0))));
+               if (gry2 < gry1)
+                  [gry1, gry2] = [gry2, gry1];
             }
 
             // for mouse events pointer should be between y1 and y2
@@ -101113,7 +101106,7 @@ class RH2Painter$2 extends RHistPainter {
          }
       }
 
-      if (stat_sum0 > 0) {
+      if (Math.abs(stat_sum0) > 1e-300) {
          res.meanx = stat_sumx1 / stat_sum0;
          res.meany = stat_sumy1 / stat_sum0;
          res.rmsx = Math.sqrt(Math.abs(stat_sumx2 / stat_sum0 - res.meanx**2));
@@ -102343,9 +102336,9 @@ class RH3Painter extends RHistPainter {
           j1 = this.getSelectIndex('y', 'left'),
           j2 = this.getSelectIndex('y', 'right'),
           k1 = this.getSelectIndex('z', 'left'),
-          k2 = this.getSelectIndex('z', 'right'),
-          fp = this.getFramePainter(),
-          res = { name: histo.fName, entries: 0, integral: 0, meanx: 0, meany: 0, meanz: 0, rmsx: 0, rmsy: 0, rmsz: 0 },
+          k2 = this.getSelectIndex('z', 'right');
+          this.getFramePainter();
+          let res = { name: histo.fName, entries: 0, integral: 0, meanx: 0, meany: 0, meanz: 0, rmsx: 0, rmsy: 0, rmsz: 0 },
           xi, yi, zi, xx, xside, yy, yside, zz, zside, cont;
 
       for (xi = 1; xi <= this.nbinsx; ++xi) {
@@ -102379,17 +102372,7 @@ class RH3Painter extends RHistPainter {
          }
       }
 
-      if ((histo.fTsumw > 0) && !fp.isAxisZoomed('x') && !fp.isAxisZoomed('y') && !fp.isAxisZoomed('z')) {
-         stat_sum0  = histo.fTsumw;
-         stat_sumx1 = histo.fTsumwx;
-         stat_sumx2 = histo.fTsumwx2;
-         stat_sumy1 = histo.fTsumwy;
-         stat_sumy2 = histo.fTsumwy2;
-         stat_sumz1 = histo.fTsumwz;
-         stat_sumz2 = histo.fTsumwz2;
-      }
-
-      if (stat_sum0 > 0) {
+      if (Math.abs(stat_sum0) > 1e-300) {
          res.meanx = stat_sumx1 / stat_sum0;
          res.meany = stat_sumy1 / stat_sum0;
          res.meanz = stat_sumz1 / stat_sum0;
@@ -102400,7 +102383,8 @@ class RH3Painter extends RHistPainter {
 
       res.integral = stat_sum0;
 
-      if (histo.fEntries > 1) res.entries = histo.fEntries;
+      if (histo.fEntries > 1)
+         res.entries = histo.fEntries;
 
       return res;
    }
@@ -105647,6 +105631,7 @@ exports.clTH3 = clTH3;
 exports.clTHashList = clTHashList;
 exports.clTLatex = clTLatex;
 exports.clTLegend = clTLegend;
+exports.clTLegendEntry = clTLegendEntry;
 exports.clTLine = clTLine;
 exports.clTList = clTList;
 exports.clTMap = clTMap;
