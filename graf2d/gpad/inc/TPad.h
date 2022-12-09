@@ -170,6 +170,8 @@ public:
           else
              save_gpad->cd();
        }
+
+       TVirtualPad *GetSaved() const { return save_gpad; }
    };
 
    // TPad status bits
