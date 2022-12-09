@@ -14,6 +14,7 @@
 #include "llvm/Transforms/Scalar/LowerAtomic.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include "llvm/Transforms/Scalar.h"
 using namespace llvm;
@@ -39,7 +40,7 @@ static bool LowerAtomicCmpXchgInst(AtomicCmpXchgInst *CXI) {
   return true;
 }
 
-static bool LowerAtomicRMWInst(AtomicRMWInst *RMWI) {
+bool llvm::lowerAtomicRMWInst(AtomicRMWInst *RMWI) {
   IRBuilder<> Builder(RMWI);
   Value *Ptr = RMWI->getPointerOperand();
   Value *Val = RMWI->getValOperand();
@@ -116,18 +117,17 @@ static bool LowerStoreInst(StoreInst *SI) {
 
 static bool runOnBasicBlock(BasicBlock &BB) {
   bool Changed = false;
-  for (BasicBlock::iterator DI = BB.begin(), DE = BB.end(); DI != DE;) {
-    Instruction *Inst = &*DI++;
-    if (FenceInst *FI = dyn_cast<FenceInst>(Inst))
+  for (Instruction &Inst : make_early_inc_range(BB)) {
+    if (FenceInst *FI = dyn_cast<FenceInst>(&Inst))
       Changed |= LowerFenceInst(FI);
-    else if (AtomicCmpXchgInst *CXI = dyn_cast<AtomicCmpXchgInst>(Inst))
+    else if (AtomicCmpXchgInst *CXI = dyn_cast<AtomicCmpXchgInst>(&Inst))
       Changed |= LowerAtomicCmpXchgInst(CXI);
-    else if (AtomicRMWInst *RMWI = dyn_cast<AtomicRMWInst>(Inst))
-      Changed |= LowerAtomicRMWInst(RMWI);
-    else if (LoadInst *LI = dyn_cast<LoadInst>(Inst)) {
+    else if (AtomicRMWInst *RMWI = dyn_cast<AtomicRMWInst>(&Inst))
+      Changed |= lowerAtomicRMWInst(RMWI);
+    else if (LoadInst *LI = dyn_cast<LoadInst>(&Inst)) {
       if (LI->isAtomic())
         LowerLoadInst(LI);
-    } else if (StoreInst *SI = dyn_cast<StoreInst>(Inst)) {
+    } else if (StoreInst *SI = dyn_cast<StoreInst>(&Inst)) {
       if (SI->isAtomic())
         LowerStoreInst(SI);
     }

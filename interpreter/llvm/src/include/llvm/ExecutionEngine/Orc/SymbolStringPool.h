@@ -48,11 +48,13 @@ private:
 
 /// Pointer to a pooled string representing a symbol name.
 class SymbolStringPtr {
+  friend class OrcV2CAPIHelper;
   friend class SymbolStringPool;
   friend struct DenseMapInfo<SymbolStringPtr>;
 
 public:
   SymbolStringPtr() = default;
+  SymbolStringPtr(std::nullptr_t) {}
   SymbolStringPtr(const SymbolStringPtr &Other)
     : S(Other.S) {
     if (isRealPoolEntry(S))
@@ -60,8 +62,10 @@ public:
   }
 
   SymbolStringPtr& operator=(const SymbolStringPtr &Other) {
-    if (isRealPoolEntry(S))
+    if (isRealPoolEntry(S)) {
+      assert(S->getValue() && "Releasing SymbolStringPtr with zero ref count");
       --S->getValue();
+    }
     S = Other.S;
     if (isRealPoolEntry(S))
       ++S->getValue();
@@ -73,17 +77,23 @@ public:
   }
 
   SymbolStringPtr& operator=(SymbolStringPtr &&Other) {
-    if (isRealPoolEntry(S))
+    if (isRealPoolEntry(S)) {
+      assert(S->getValue() && "Releasing SymbolStringPtr with zero ref count");
       --S->getValue();
+    }
     S = nullptr;
     std::swap(S, Other.S);
     return *this;
   }
 
   ~SymbolStringPtr() {
-    if (isRealPoolEntry(S))
+    if (isRealPoolEntry(S)) {
+      assert(S->getValue() && "Releasing SymbolStringPtr with zero ref count");
       --S->getValue();
+    }
   }
+
+  explicit operator bool() const { return S; }
 
   StringRef operator*() const { return S->first(); }
 
@@ -103,7 +113,8 @@ public:
   }
 
 private:
-  using PoolEntryPtr = SymbolStringPool::PoolMapEntry *;
+  using PoolEntry = SymbolStringPool::PoolMapEntry;
+  using PoolEntryPtr = PoolEntry *;
 
   SymbolStringPtr(SymbolStringPool::PoolMapEntry *S)
       : S(S) {

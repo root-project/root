@@ -14,54 +14,43 @@
 #ifndef LLVM_LIB_TARGET_AMDGPU_AMDGPUASMPRINTER_H
 #define LLVM_LIB_TARGET_AMDGPU_AMDGPUASMPRINTER_H
 
-#include "AMDGPU.h"
-#include "AMDKernelCodeT.h"
-#include "AMDGPUHSAMetadataStreamer.h"
 #include "SIProgramInfo.h"
-#include "llvm/ADT/StringRef.h"
 #include "llvm/CodeGen/AsmPrinter.h"
-#include "llvm/Support/AMDHSAKernelDescriptor.h"
-#include <cstddef>
-#include <cstdint>
-#include <limits>
-#include <memory>
-#include <string>
-#include <vector>
+
+struct amd_kernel_code_t;
 
 namespace llvm {
 
 class AMDGPUMachineFunction;
+struct AMDGPUResourceUsageAnalysis;
 class AMDGPUTargetStreamer;
 class MCCodeEmitter;
 class MCOperand;
 class GCNSubtarget;
 
+namespace AMDGPU {
+namespace HSAMD {
+class MetadataStreamer;
+}
+} // namespace AMDGPU
+
+namespace amdhsa {
+struct kernel_descriptor_t;
+}
+
 class AMDGPUAsmPrinter final : public AsmPrinter {
 private:
-  // Track resource usage for callee functions.
-  struct SIFunctionResourceInfo {
-    // Track the number of explicitly used VGPRs. Special registers reserved at
-    // the end are tracked separately.
-    int32_t NumVGPR = 0;
-    int32_t NumExplicitSGPR = 0;
-    uint64_t PrivateSegmentSize = 0;
-    bool UsesVCC = false;
-    bool UsesFlatScratch = false;
-    bool HasDynamicallySizedStack = false;
-    bool HasRecursion = false;
+  void initializeTargetID(const Module &M);
 
-    int32_t getTotalNumSGPRs(const GCNSubtarget &ST) const;
-  };
+  AMDGPUResourceUsageAnalysis *ResourceUsage;
 
   SIProgramInfo CurrentProgramInfo;
-  DenseMap<const Function *, SIFunctionResourceInfo> CallGraphResourceInfo;
 
   std::unique_ptr<AMDGPU::HSAMD::MetadataStreamer> HSAMetadataStream;
 
   MCCodeEmitter *DumpCodeInstEmitter = nullptr;
 
   uint64_t getFunctionCodeSize(const MachineFunction &MF) const;
-  SIFunctionResourceInfo analyzeResourceUsage(const MachineFunction &MF) const;
 
   void getSIProgramInfo(SIProgramInfo &Out, const MachineFunction &MF);
   void getAmdKernelCode(amd_kernel_code_t &Out, const SIProgramInfo &KernelInfo,
@@ -76,7 +65,10 @@ private:
                          const SIProgramInfo &KernelInfo);
   void EmitPALMetadata(const MachineFunction &MF,
                        const SIProgramInfo &KernelInfo);
+  void emitPALFunctionMetadata(const MachineFunction &MF);
   void emitCommonFunctionComments(uint32_t NumVGPR,
+                                  Optional<uint32_t> NumAGPR,
+                                  uint32_t TotalNumVGPR,
                                   uint32_t NumSGPR,
                                   uint64_t ScratchSize,
                                   uint64_t CodeSize,
@@ -117,21 +109,21 @@ public:
                                    const MachineInstr *MI);
 
   /// Implemented in AMDGPUMCInstLower.cpp
-  void EmitInstruction(const MachineInstr *MI) override;
+  void emitInstruction(const MachineInstr *MI) override;
 
-  void EmitFunctionBodyStart() override;
+  void emitFunctionBodyStart() override;
 
-  void EmitFunctionBodyEnd() override;
+  void emitFunctionBodyEnd() override;
 
-  void EmitFunctionEntryLabel() override;
+  void emitFunctionEntryLabel() override;
 
-  void EmitBasicBlockStart(const MachineBasicBlock &MBB) const override;
+  void emitBasicBlockStart(const MachineBasicBlock &MBB) override;
 
-  void EmitGlobalVariable(const GlobalVariable *GV) override;
+  void emitGlobalVariable(const GlobalVariable *GV) override;
 
-  void EmitStartOfAsmFile(Module &M) override;
+  void emitStartOfAsmFile(Module &M) override;
 
-  void EmitEndOfAsmFile(Module &M) override;
+  void emitEndOfAsmFile(Module &M) override;
 
   bool isBlockOnlyReachableByFallthrough(
     const MachineBasicBlock *MBB) const override;
@@ -140,8 +132,10 @@ public:
                        const char *ExtraCode, raw_ostream &O) override;
 
 protected:
-  mutable std::vector<std::string> DisasmLines, HexLines;
-  mutable size_t DisasmLineMaxLen;
+  void getAnalysisUsage(AnalysisUsage &AU) const override;
+
+  std::vector<std::string> DisasmLines, HexLines;
+  size_t DisasmLineMaxLen;
 };
 
 } // end namespace llvm

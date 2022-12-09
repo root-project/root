@@ -30,7 +30,7 @@ using a 'dot' format viewer (such as Graphviz on macOS) instead.
 - debug.DumpLiveVars: Show the results of live variable analysis for each
   top-level function being analyzed.
 
-- debug.DumpLiveStmts: Show the results of live statement analysis for each
+- debug.DumpLiveExprs: Show the results of live expression analysis for each
   top-level function being analyzed.
 
 - debug.ViewExplodedGraph: Show the Exploded Graphs generated for the
@@ -274,6 +274,41 @@ ExprInspection checks
 - ``void clang_analyzer_express(int);``
 
   See clang_analyzer_denote().
+
+- ``void clang_analyzer_isTainted(a single argument of any type);``
+
+  Queries the analyzer whether the expression used as argument is tainted or not.
+  This is useful in tests, where we don't want to issue warning for all tainted
+  expressions but only check for certain expressions.
+  This would help to reduce the *noise* that the `TaintTest` debug checker would
+  introduce and let you focus on the `expected-warning`'s that you really care
+  about.
+
+  Example usage::
+
+    int read_integer() {
+      int n;
+      clang_analyzer_isTainted(n);     // expected-warning{{NO}}
+      scanf("%d", &n);
+      clang_analyzer_isTainted(n);     // expected-warning{{YES}}
+      clang_analyzer_isTainted(n + 2); // expected-warning{{YES}}
+      clang_analyzer_isTainted(n > 0); // expected-warning{{YES}}
+      int next_tainted_value = n; // no-warning
+      return n;
+    }
+
+- ``clang_analyzer_dumpExtent(a single argument of any type)``
+- ``clang_analyzer_dumpElementCount(a single argument of any type)``
+
+  Dumps out the extent and the element count of the argument.
+
+  Example usage::
+
+    void array() {
+      int a[] = {1, 3};
+      clang_analyzer_dumpExtent(a);       // expected-warning {{8 S64b}}
+      clang_analyzer_dumpElementCount(a); // expected-warning {{2 S64b}}
+    }
 
 Statistics
 ==========

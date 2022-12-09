@@ -126,7 +126,7 @@ namespace cling {
           for (auto & item : m_SearchPaths)
             if (dir.equals(item.Path)) return;
           auto pos = prepend ? m_SearchPaths.begin() : m_SearchPaths.end();
-          m_SearchPaths.insert(pos, SearchPathInfo{dir, isUser});
+          m_SearchPaths.insert(pos, SearchPathInfo{dir.str(), isUser});
        }
     }
 
@@ -198,14 +198,6 @@ namespace cling {
       static_assert(std::is_pointer<T>::value, "Must be a function pointer!");
       return getSymbolLocation(reinterpret_cast<void*>(func));
     }
-
-
-    ///\brief Explicitly tell the execution engine to use symbols from
-    ///       a shared library that would otherwise not be used for symbol
-    ///       resolution, e.g. because it was dlopened with RTLD_LOCAL.
-    ///\param [in] handle - the system specific shared library handle.
-    ///
-    static void ExposeHiddenSharedLibrarySymbols(void* handle);
 
     static std::string normalizePath(llvm::StringRef path);
 

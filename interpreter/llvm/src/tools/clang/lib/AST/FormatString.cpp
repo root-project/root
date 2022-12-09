@@ -359,6 +359,7 @@ ArgType::matchesType(ASTContext &C, QualType argTy) const {
           case BuiltinType::SChar:
           case BuiltinType::UChar:
           case BuiltinType::Char_U:
+          case BuiltinType::Bool:
             return Match;
         }
       return NoMatch;
@@ -386,6 +387,9 @@ ArgType::matchesType(ASTContext &C, QualType argTy) const {
           case BuiltinType::SChar:
           case BuiltinType::Char_U:
           case BuiltinType::UChar:
+          case BuiltinType::Bool:
+            if (T == C.UnsignedShortTy || T == C.ShortTy)
+              return NoMatchTypeConfusion;
             return T == C.UnsignedCharTy || T == C.SignedCharTy ? Match
                                                                 : NoMatch;
           case BuiltinType::Short:
@@ -415,7 +419,6 @@ ArgType::matchesType(ASTContext &C, QualType argTy) const {
       QualType pointeeTy = PT->getPointeeType();
       if (const BuiltinType *BT = pointeeTy->getAs<BuiltinType>())
         switch (BT->getKind()) {
-          case BuiltinType::Void:
           case BuiltinType::Char_U:
           case BuiltinType::UChar:
           case BuiltinType::Char_S:
@@ -535,7 +538,7 @@ QualType ArgType::getRepresentativeType(ASTContext &C) const {
 }
 
 std::string ArgType::getRepresentativeTypeName(ASTContext &C) const {
-  std::string S = getRepresentativeType(C).getAsString();
+  std::string S = getRepresentativeType(C).getAsString(C.getPrintingPolicy());
 
   std::string Alias;
   if (Name) {

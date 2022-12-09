@@ -28,6 +28,7 @@
 #include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Transforms/IPO.h"
@@ -48,7 +49,7 @@ static void FindUsedValues(GlobalVariable *LLVMUsed,
   ConstantArray *Inits = cast<ConstantArray>(LLVMUsed->getInitializer());
 
   for (unsigned i = 0, e = Inits->getNumOperands(); i != e; ++i) {
-    Value *Operand = Inits->getOperand(i)->stripPointerCastsNoFollowAliases();
+    Value *Operand = Inits->getOperand(i)->stripPointerCasts();
     GlobalValue *GV = cast<GlobalValue>(Operand);
     UsedValues.insert(GV);
   }
@@ -83,11 +84,9 @@ static void copyDebugLocMetadata(const GlobalVariable *From,
     To->addDebugInfo(MD);
 }
 
-static unsigned getAlignment(GlobalVariable *GV) {
-  unsigned Align = GV->getAlignment();
-  if (Align)
-    return Align;
-  return GV->getParent()->getDataLayout().getPreferredAlignment(GV);
+static Align getAlign(GlobalVariable *GV) {
+  return GV->getAlign().getValueOr(
+      GV->getParent()->getDataLayout().getPreferredAlign(GV));
 }
 
 static bool
@@ -96,6 +95,8 @@ isUnmergeableGlobal(GlobalVariable *GV,
   // Only process constants with initializers in the default address space.
   return !GV->isConstant() || !GV->hasDefinitiveInitializer() ||
          GV->getType()->getAddressSpace() != 0 || GV->hasSection() ||
+         // Don't touch thread-local variables.
+         GV->isThreadLocal() ||
          // Don't touch values marked with attribute(used).
          UsedGlobals.count(GV);
 }
@@ -119,8 +120,8 @@ static void replace(Module &M, GlobalVariable *Old, GlobalVariable *New) {
                     << New->getName() << "\n");
 
   // Bump the alignment if necessary.
-  if (Old->getAlignment() || New->getAlignment())
-    New->setAlignment(std::max(getAlignment(Old), getAlignment(New)));
+  if (Old->getAlign() || New->getAlign())
+    New->setAlignment(std::max(getAlign(Old), getAlign(New)));
 
   copyDebugLocMetadata(Old, New);
   Old->replaceAllUsesWith(NewConstant);

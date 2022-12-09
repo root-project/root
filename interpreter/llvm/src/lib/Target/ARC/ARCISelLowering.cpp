@@ -22,7 +22,6 @@
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineJumpTableInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
-#include "llvm/CodeGen/SelectionDAGISel.h"
 #include "llvm/CodeGen/ValueTypes.h"
 #include "llvm/IR/CallingConv.h"
 #include "llvm/IR/Intrinsics.h"
@@ -119,7 +118,7 @@ ARCTargetLowering::ARCTargetLowering(const TargetMachine &TM,
   setOperationAction(ISD::BR_JT, MVT::Other, Expand);
   setOperationAction(ISD::JumpTable, MVT::i32, Custom);
 
-  // Have psuedo instruction for frame addresses.
+  // Have pseudo instruction for frame addresses.
   setOperationAction(ISD::FRAMEADDR, MVT::i32, Legal);
   // Custom lower global addresses.
   setOperationAction(ISD::GlobalAddress, MVT::i32, Custom);
@@ -245,7 +244,7 @@ SDValue ARCTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
   // Analyze return values to determine the number of bytes of stack required.
   CCState RetCCInfo(CallConv, IsVarArg, DAG.getMachineFunction(), RVLocs,
                     *DAG.getContext());
-  RetCCInfo.AllocateStack(CCInfo.getNextStackOffset(), 4);
+  RetCCInfo.AllocateStack(CCInfo.getNextStackOffset(), Align(4));
   RetCCInfo.AnalyzeCallResult(Ins, RetCC_ARC);
 
   // Get a count of how many bytes are to be pushed on the stack.
@@ -563,14 +562,16 @@ SDValue ARCTargetLowering::LowerCallArguments(
   for (const auto &ArgDI : ArgData) {
     if (ArgDI.Flags.isByVal() && ArgDI.Flags.getByValSize()) {
       unsigned Size = ArgDI.Flags.getByValSize();
-      unsigned Align = std::max(StackSlotSize, ArgDI.Flags.getByValAlign());
+      Align Alignment =
+          std::max(Align(StackSlotSize), ArgDI.Flags.getNonZeroByValAlign());
       // Create a new object on the stack and copy the pointee into it.
-      int FI = MFI.CreateStackObject(Size, Align, false);
+      int FI = MFI.CreateStackObject(Size, Alignment, false);
       SDValue FIN = DAG.getFrameIndex(FI, MVT::i32);
       InVals.push_back(FIN);
       MemOps.push_back(DAG.getMemcpy(
-          Chain, dl, FIN, ArgDI.SDV, DAG.getConstant(Size, dl, MVT::i32), Align,
-          false, false, false, MachinePointerInfo(), MachinePointerInfo()));
+          Chain, dl, FIN, ArgDI.SDV, DAG.getConstant(Size, dl, MVT::i32),
+          Alignment, false, false, false, MachinePointerInfo(),
+          MachinePointerInfo()));
     } else {
       InVals.push_back(ArgDI.SDV);
     }
@@ -620,7 +621,7 @@ ARCTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv,
 
   // Analyze return values.
   if (!IsVarArg)
-    CCInfo.AllocateStack(AFI->getReturnStackOffset(), 4);
+    CCInfo.AllocateStack(AFI->getReturnStackOffset(), Align(4));
 
   CCInfo.AnalyzeReturn(Outs, RetCC_ARC);
 
@@ -716,7 +717,7 @@ SDValue ARCTargetLowering::LowerFRAMEADDR(SDValue Op, SelectionDAG &DAG) const {
   SDLoc dl(Op);
   assert(cast<ConstantSDNode>(Op.getOperand(0))->getZExtValue() == 0 &&
          "Only support lowering frame addr of current frame.");
-  unsigned FrameReg = ARI.getFrameRegister(MF);
+  Register FrameReg = ARI.getFrameRegister(MF);
   return DAG.getCopyFromReg(DAG.getEntryNode(), dl, FrameReg, VT);
 }
 

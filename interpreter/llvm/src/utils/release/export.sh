@@ -13,14 +13,13 @@
 
 set -e
 
-projects="llvm cfe test-suite compiler-rt libcxx libcxxabi clang-tools-extra polly lldb lld openmp libunwind"
-base_url="https://llvm.org/svn/llvm-project"
+projects="llvm clang compiler-rt libcxx libcxxabi libclc clang-tools-extra polly lldb lld openmp libunwind flang"
 
 release=""
 rc=""
 
 usage() {
-    echo "Export the SVN sources and build tarballs from them"
+    echo "Export the Git sources and build tarballs from them"
     echo "usage: `basename $0`"
     echo " "
     echo "  -release <num> The version number of the release"
@@ -30,20 +29,42 @@ usage() {
 
 export_sources() {
     release_no_dot=`echo $release | sed -e 's,\.,,g'`
-    tag_dir="tags/RELEASE_$release_no_dot/$rc"
+    tag="llvmorg-$release"
 
     if [ "$rc" = "final" ]; then
         rc=""
+    else
+        tag="$tag-$rc"
     fi
 
-    for proj in $projects; do
-        echo "Exporting $proj ..."
-        svn export \
-            $base_url/$proj/$tag_dir \
-            $proj-$release$rc.src
+    llvm_src_dir=$(readlink -f $(dirname "$(readlink -f "$0")")/../../..)
+    [ -d $llvm_src_dir/.git ] || ( echo "No git repository at $llvm_src_dir" ; exit 1 )
 
-        echo "Creating tarball ..."
-        tar cfJ $proj-$release$rc.src.tar.xz $proj-$release$rc.src
+    echo $tag
+    target_dir=$(pwd)
+
+    echo "Creating tarball for llvm-project ..."
+    pushd $llvm_src_dir/
+    git archive --prefix=llvm-project-$release$rc.src/ $tag . | xz >$target_dir/llvm-project-$release$rc.src.tar.xz
+    popd
+
+    if [ ! -d test-suite-$release$rc.src ]
+    then
+      echo "Fetching LLVM test-suite source ..."
+      mkdir -p test-suite-$release$rc.src
+      curl -L https://github.com/llvm/test-suite/archive/$tag.tar.gz | \
+          tar -C test-suite-$release$rc.src --strip-components=1 -xzf -
+    fi
+    echo "Creating tarball for test-suite ..."
+    tar --sort=name --owner=0 --group=0 \
+        --pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime \
+        -cJf test-suite-$release$rc.src.tar.xz test-suite-$release$rc.src
+
+    for proj in $projects; do
+        echo "Creating tarball for $proj ..."
+        pushd $llvm_src_dir/$proj
+        git archive --prefix=$proj-$release$rc.src/ $tag . | xz >$target_dir/$proj-$release$rc.src.tar.xz
+        popd
     done
 }
 

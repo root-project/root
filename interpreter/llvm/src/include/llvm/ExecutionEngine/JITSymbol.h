@@ -23,12 +23,14 @@
 #include <string>
 
 #include "llvm/ADT/BitmaskEnum.h"
+#include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
 
 namespace llvm {
 
 class GlobalValue;
+class GlobalValueSummary;
 
 namespace object {
 
@@ -40,6 +42,11 @@ class SymbolRef;
 using JITTargetAddress = uint64_t;
 
 /// Convert a JITTargetAddress to a pointer.
+///
+/// Note: This is a raw cast of the address bit pattern to the given pointer
+/// type. When casting to a function pointer in order to execute JIT'd code
+/// jitTargetAddressToFunction should be preferred, as it will also perform
+/// pointer signing on targets that require it.
 template <typename T> T jitTargetAddressToPointer(JITTargetAddress Addr) {
   static_assert(std::is_pointer<T>::value, "T must be a pointer type");
   uintptr_t IntPtr = static_cast<uintptr_t>(Addr);
@@ -47,6 +54,18 @@ template <typename T> T jitTargetAddressToPointer(JITTargetAddress Addr) {
   return reinterpret_cast<T>(IntPtr);
 }
 
+/// Convert a JITTargetAddress to a callable function pointer.
+///
+/// Casts the given address to a callable function pointer. This operation
+/// will perform pointer signing for platforms that require it (e.g. arm64e).
+template <typename T> T jitTargetAddressToFunction(JITTargetAddress Addr) {
+  static_assert(std::is_pointer<T>::value &&
+                    std::is_function<std::remove_pointer_t<T>>::value,
+                "T must be a function pointer type");
+  return jitTargetAddressToPointer<T>(Addr);
+}
+
+/// Convert a pointer to a JITTargetAddress.
 template <typename T> JITTargetAddress pointerToJITTargetAddress(T *Ptr) {
   return static_cast<JITTargetAddress>(reinterpret_cast<uintptr_t>(Ptr));
 }
@@ -65,7 +84,9 @@ public:
     Absolute = 1U << 3,
     Exported = 1U << 4,
     Callable = 1U << 5,
-    LLVM_MARK_AS_BITMASK_ENUM(/* LargestValue = */ Callable)
+    MaterializationSideEffectsOnly = 1U << 6,
+    LLVM_MARK_AS_BITMASK_ENUM( // LargestValue =
+        MaterializationSideEffectsOnly)
   };
 
   /// Default-construct a JITSymbolFlags instance.
@@ -127,6 +148,21 @@ public:
   /// Returns true if the given symbol is known to be callable.
   bool isCallable() const { return (Flags & Callable) == Callable; }
 
+  /// Returns true if this symbol is a materialization-side-effects-only
+  /// symbol. Such symbols do not have a real address. They exist to trigger
+  /// and support synchronization of materialization side effects, e.g. for
+  /// collecting initialization information. These symbols will vanish from
+  /// the symbol table immediately upon reaching the ready state, and will
+  /// appear to queries as if they were never defined (except that query
+  /// callback execution will be delayed until they reach the ready state).
+  /// MaterializationSideEffectOnly symbols should only be queried using the
+  /// SymbolLookupFlags::WeaklyReferencedSymbol flag (see
+  /// llvm/include/llvm/ExecutionEngine/Orc/Core.h).
+  bool hasMaterializationSideEffectsOnly() const {
+    return (Flags & MaterializationSideEffectsOnly) ==
+           MaterializationSideEffectsOnly;
+  }
+
   /// Get the underlying flags value as an integer.
   UnderlyingType getRawFlagsValue() const {
     return static_cast<UnderlyingType>(Flags);
@@ -141,6 +177,10 @@ public:
   /// Construct a JITSymbolFlags value based on the flags of the given global
   /// value.
   static JITSymbolFlags fromGlobalValue(const GlobalValue &GV);
+
+  /// Construct a JITSymbolFlags value based on the flags of the given global
+  /// value summary.
+  static JITSymbolFlags fromSummary(GlobalValueSummary *S);
 
   /// Construct a JITSymbolFlags value based on the flags of the given libobject
   /// symbol.
@@ -197,6 +237,13 @@ public:
   JITEvaluatedSymbol(JITTargetAddress Address, JITSymbolFlags Flags)
       : Address(Address), Flags(Flags) {}
 
+  /// Create a symbol from the given pointer with the given flags.
+  template <typename T>
+  static JITEvaluatedSymbol
+  fromPointer(T *P, JITSymbolFlags Flags = JITSymbolFlags::Exported) {
+    return JITEvaluatedSymbol(pointerToJITTargetAddress(P), Flags);
+  }
+
   /// An evaluated symbol converts to 'true' if its address is non-zero.
   explicit operator bool() const { return Address != 0; }
 
@@ -217,7 +264,7 @@ private:
 /// Represents a symbol in the JIT.
 class JITSymbol {
 public:
-  using GetAddressFtor = std::function<Expected<JITTargetAddress>()>;
+  using GetAddressFtor = unique_function<Expected<JITTargetAddress>()>;
 
   /// Create a 'null' symbol, used to represent a "symbol not found"
   ///        result from a successful (non-erroneous) lookup.
@@ -325,7 +372,7 @@ class JITSymbolResolver {
 public:
   using LookupSet = std::set<StringRef>;
   using LookupResult = std::map<StringRef, JITEvaluatedSymbol>;
-  using OnResolvedFunction = std::function<void(Expected<LookupResult>)>;
+  using OnResolvedFunction = unique_function<void(Expected<LookupResult>)>;
 
   virtual ~JITSymbolResolver() = default;
 
@@ -342,6 +389,9 @@ public:
   /// definitions are implicitly always part of the caller's responsibility.
   virtual Expected<LookupSet>
   getResponsibilitySet(const LookupSet &Symbols) = 0;
+
+  /// Specify if this resolver can return valid symbols with zero value.
+  virtual bool allowsZeroSymbols() { return false; }
 
 private:
   virtual void anchor();
@@ -382,7 +432,7 @@ public:
   virtual JITSymbol findSymbol(const std::string &Name) = 0;
 
 private:
-  virtual void anchor();
+  void anchor() override;
 };
 
 } // end namespace llvm

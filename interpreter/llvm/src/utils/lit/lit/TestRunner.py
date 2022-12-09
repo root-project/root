@@ -1,7 +1,5 @@
 from __future__ import absolute_import
-import difflib
 import errno
-import functools
 import io
 import itertools
 import getopt
@@ -19,7 +17,7 @@ try:
 except ImportError:
     from io import StringIO
 
-from lit.ShCommands import GlobItem
+from lit.ShCommands import GlobItem, Command
 import lit.ShUtil as ShUtil
 import lit.Test as Test
 import lit.util
@@ -149,7 +147,7 @@ class ShellCommandResult(object):
         self.exitCode = exitCode
         self.timeoutReached = timeoutReached
         self.outputFiles = list(outputFiles)
-               
+
 def executeShCmd(cmd, shenv, results, timeout=0):
     """
         Wrapper around _executeShCmd that handles
@@ -193,7 +191,13 @@ def quote_windows_command(seq):
 
     We use the same algorithm from MSDN as CPython
     (http://msdn.microsoft.com/en-us/library/17w5ykft.aspx), but we treat more
-    characters as needing quoting, such as double quotes themselves.
+    characters as needing quoting, such as double quotes themselves, and square
+    brackets.
+
+    For MSys based tools, this is very brittle though, because quoting an
+    argument makes the MSys based tool unescape backslashes where it shouldn't
+    (e.g. "a\b\\c\\\\d" becomes "a\b\c\\d" where it should stay as it was,
+    according to regular win32 command line parsing rules).
     """
     result = []
     needquote = False
@@ -205,7 +209,7 @@ def quote_windows_command(seq):
             result.append(' ')
 
         # This logic differs from upstream list2cmdline.
-        needquote = (" " in arg) or ("\t" in arg) or ("\"" in arg) or not arg
+        needquote = (" " in arg) or ("\t" in arg) or ("\"" in arg) or ("[" in arg) or (";" in arg) or not arg
         if needquote:
             result.append('"')
 
@@ -235,11 +239,14 @@ def quote_windows_command(seq):
 
     return ''.join(result)
 
-# cmd is export or env
-def updateEnv(env, cmd):
-    arg_idx = 1
+# args are from 'export' or 'env' command.
+# Skips the command, and parses its arguments.
+# Modifies env accordingly.
+# Returns copy of args without the command or its arguments.
+def updateEnv(env, args):
+    arg_idx_next = len(args)
     unset_next_env_var = False
-    for arg_idx, arg in enumerate(cmd.args[1:]):
+    for arg_idx, arg in enumerate(args[1:]):
         # Support for the -u flag (unsetting) for env command
         # e.g., env -u FOO -u BAR will remove both FOO and BAR
         # from the environment.
@@ -256,9 +263,31 @@ def updateEnv(env, cmd):
         key, eq, val = arg.partition('=')
         # Stop if there was no equals.
         if eq == '':
+            arg_idx_next = arg_idx + 1
             break
         env.env[key] = val
-    cmd.args = cmd.args[arg_idx+1:]
+    return args[arg_idx_next:]
+
+def executeBuiltinCd(cmd, shenv):
+    """executeBuiltinCd - Change the current directory."""
+    if len(cmd.args) != 2:
+        raise InternalShellError("'cd' supports only one argument")
+    newdir = cmd.args[1]
+    # Update the cwd in the parent environment.
+    if os.path.isabs(newdir):
+        shenv.cwd = newdir
+    else:
+        shenv.cwd = os.path.realpath(os.path.join(shenv.cwd, newdir))
+    # The cd builtin always succeeds. If the directory does not exist, the
+    # following Popen calls will fail instead.
+    return ShellCommandResult(cmd, "", "", 0, False)
+
+def executeBuiltinExport(cmd, shenv):
+    """executeBuiltinExport - Set an environment variable."""
+    if len(cmd.args) != 2:
+        raise InternalShellError("'export' supports only one argument")
+    updateEnv(shenv, cmd.args)
+    return ShellCommandResult(cmd, "", "", 0, False)
 
 def executeBuiltinEcho(cmd, shenv):
     """Interpret a redirected echo command"""
@@ -319,9 +348,8 @@ def executeBuiltinEcho(cmd, shenv):
     for (name, mode, f, path) in opened_files:
         f.close()
 
-    if not is_redirected:
-        return stdout.getvalue()
-    return ""
+    output = "" if is_redirected else stdout.getvalue()
+    return ShellCommandResult(cmd, output, "", 0, False)
 
 def executeBuiltinMkdir(cmd, cmd_shenv):
     """executeBuiltinMkdir - Create new directories."""
@@ -358,218 +386,6 @@ def executeBuiltinMkdir(cmd, cmd_shenv):
                 stderr.write("Error: 'mkdir' command failed, %s\n" % str(err))
                 exitCode = 1
     return ShellCommandResult(cmd, "", stderr.getvalue(), exitCode, False)
-
-def executeBuiltinDiff(cmd, cmd_shenv):
-    """executeBuiltinDiff - Compare files line by line."""
-    args = expand_glob_expressions(cmd.args, cmd_shenv.cwd)[1:]
-    try:
-        opts, args = getopt.gnu_getopt(args, "wbur", ["strip-trailing-cr"])
-    except getopt.GetoptError as err:
-        raise InternalShellError(cmd, "Unsupported: 'diff':  %s" % str(err))
-
-    filelines, filepaths, dir_trees = ([] for i in range(3))
-    ignore_all_space = False
-    ignore_space_change = False
-    unified_diff = False
-    recursive_diff = False
-    strip_trailing_cr = False
-    for o, a in opts:
-        if o == "-w":
-            ignore_all_space = True
-        elif o == "-b":
-            ignore_space_change = True
-        elif o == "-u":
-            unified_diff = True
-        elif o == "-r":
-            recursive_diff = True
-        elif o == "--strip-trailing-cr":
-            strip_trailing_cr = True
-        else:
-            assert False, "unhandled option"
-
-    if len(args) != 2:
-        raise InternalShellError(cmd, "Error:  missing or extra operand")
-
-    def getDirTree(path, basedir=""):
-        # Tree is a tuple of form (dirname, child_trees).
-        # An empty dir has child_trees = [], a file has child_trees = None.
-        child_trees = []
-        for dirname, child_dirs, files in os.walk(os.path.join(basedir, path)):
-            for child_dir in child_dirs:
-                child_trees.append(getDirTree(child_dir, dirname))
-            for filename in files:
-                child_trees.append((filename, None))
-            return path, sorted(child_trees)
-
-    def compareTwoFiles(filepaths):
-        compare_bytes = False
-        encoding = None
-        filelines = []
-        for file in filepaths:
-            try:
-                with open(file, 'r') as f:
-                    filelines.append(f.readlines())
-            except UnicodeDecodeError:
-                try:
-                    with io.open(file, 'r', encoding="utf-8") as f:
-                        filelines.append(f.readlines())
-                    encoding = "utf-8"
-                except:
-                    compare_bytes = True
-
-        if compare_bytes:
-            return compareTwoBinaryFiles(filepaths)
-        else:
-            return compareTwoTextFiles(filepaths, encoding)
-
-    def compareTwoBinaryFiles(filepaths):
-        filelines = []
-        for file in filepaths:
-            with open(file, 'rb') as f:
-                filelines.append(f.readlines())
-
-        exitCode = 0
-        if hasattr(difflib, 'diff_bytes'):
-            # python 3.5 or newer
-            diffs = difflib.diff_bytes(difflib.unified_diff, filelines[0], filelines[1], filepaths[0].encode(), filepaths[1].encode())
-            diffs = [diff.decode() for diff in diffs]
-        else:
-            # python 2.7
-            func = difflib.unified_diff if unified_diff else difflib.context_diff
-            diffs = func(filelines[0], filelines[1], filepaths[0], filepaths[1])
-
-        for diff in diffs:
-            stdout.write(diff)
-            exitCode = 1
-        return exitCode
-
-    def compareTwoTextFiles(filepaths, encoding):
-        filelines = []
-        for file in filepaths:
-            if encoding is None:
-                with open(file, 'r') as f:
-                    filelines.append(f.readlines())
-            else:
-                with io.open(file, 'r', encoding=encoding) as f:
-                    filelines.append(f.readlines())
-
-        exitCode = 0
-        def compose2(f, g):
-            return lambda x: f(g(x))
-
-        f = lambda x: x
-        if strip_trailing_cr:
-            f = compose2(lambda line: line.rstrip('\r'), f)
-        if ignore_all_space or ignore_space_change:
-            ignoreSpace = lambda line, separator: separator.join(line.split())
-            ignoreAllSpaceOrSpaceChange = functools.partial(ignoreSpace, separator='' if ignore_all_space else ' ')
-            f = compose2(ignoreAllSpaceOrSpaceChange, f)
-
-        for idx, lines in enumerate(filelines):
-            filelines[idx]= [f(line) for line in lines]
-
-        func = difflib.unified_diff if unified_diff else difflib.context_diff
-        for diff in func(filelines[0], filelines[1], filepaths[0], filepaths[1]):
-            stdout.write(diff)
-            exitCode = 1
-        return exitCode
-
-    def printDirVsFile(dir_path, file_path):
-        if os.path.getsize(file_path):
-            msg = "File %s is a directory while file %s is a regular file"
-        else:
-            msg = "File %s is a directory while file %s is a regular empty file"
-        stdout.write(msg % (dir_path, file_path) + "\n")
-
-    def printFileVsDir(file_path, dir_path):
-        if os.path.getsize(file_path):
-            msg = "File %s is a regular file while file %s is a directory"
-        else:
-            msg = "File %s is a regular empty file while file %s is a directory"
-        stdout.write(msg % (file_path, dir_path) + "\n")
-
-    def printOnlyIn(basedir, path, name):
-        stdout.write("Only in %s: %s\n" % (os.path.join(basedir, path), name))
-
-    def compareDirTrees(dir_trees, base_paths=["", ""]):
-        # Dirnames of the trees are not checked, it's caller's responsibility,
-        # as top-level dirnames are always different. Base paths are important
-        # for doing os.walk, but we don't put it into tree's dirname in order
-        # to speed up string comparison below and while sorting in getDirTree.
-        left_tree, right_tree = dir_trees[0], dir_trees[1]
-        left_base, right_base = base_paths[0], base_paths[1]
-
-        # Compare two files or report file vs. directory mismatch.
-        if left_tree[1] is None and right_tree[1] is None:
-            return compareTwoFiles([os.path.join(left_base, left_tree[0]),
-                                    os.path.join(right_base, right_tree[0])])
-
-        if left_tree[1] is None and right_tree[1] is not None:
-            printFileVsDir(os.path.join(left_base, left_tree[0]),
-                           os.path.join(right_base, right_tree[0]))
-            return 1
-
-        if left_tree[1] is not None and right_tree[1] is None:
-            printDirVsFile(os.path.join(left_base, left_tree[0]),
-                           os.path.join(right_base, right_tree[0]))
-            return 1
-
-        # Compare two directories via recursive use of compareDirTrees.
-        exitCode = 0
-        left_names = [node[0] for node in left_tree[1]]
-        right_names = [node[0] for node in right_tree[1]]
-        l, r = 0, 0
-        while l < len(left_names) and r < len(right_names):
-            # Names are sorted in getDirTree, rely on that order.
-            if left_names[l] < right_names[r]:
-                exitCode = 1
-                printOnlyIn(left_base, left_tree[0], left_names[l])
-                l += 1
-            elif left_names[l] > right_names[r]:
-                exitCode = 1
-                printOnlyIn(right_base, right_tree[0], right_names[r])
-                r += 1
-            else:
-                exitCode |= compareDirTrees([left_tree[1][l], right_tree[1][r]],
-                                            [os.path.join(left_base, left_tree[0]),
-                                            os.path.join(right_base, right_tree[0])])
-                l += 1
-                r += 1
-
-        # At least one of the trees has ended. Report names from the other tree.
-        while l < len(left_names):
-            exitCode = 1
-            printOnlyIn(left_base, left_tree[0], left_names[l])
-            l += 1
-        while r < len(right_names):
-            exitCode = 1
-            printOnlyIn(right_base, right_tree[0], right_names[r])
-            r += 1
-        return exitCode
-
-    stderr = StringIO()
-    stdout = StringIO()
-    exitCode = 0
-    try:
-        for file in args:
-            if not os.path.isabs(file):
-                file = os.path.realpath(os.path.join(cmd_shenv.cwd, file))
-    
-            if recursive_diff:
-                dir_trees.append(getDirTree(file))
-            else:
-                filepaths.append(file)
-
-        if not recursive_diff:
-            exitCode = compareTwoFiles(filepaths)
-        else:
-            exitCode = compareDirTrees(dir_trees)
-
-    except IOError as err:
-        stderr.write("Error: 'diff' command failed, %s\n" % str(err))
-        exitCode = 1
-
-    return ShellCommandResult(cmd, stdout.getvalue(), stderr.getvalue(), exitCode, False)
 
 def executeBuiltinRm(cmd, cmd_shenv):
     """executeBuiltinRm - Removes (deletes) files or directories."""
@@ -667,6 +483,10 @@ def executeBuiltinRm(cmd, cmd_shenv):
             stderr.write("Error: 'rm' command failed, %s" % str(err))
             exitCode = 1
     return ShellCommandResult(cmd, "", stderr.getvalue(), exitCode, False)
+
+def executeBuiltinColon(cmd, cmd_shenv):
+    """executeBuiltinColon - Discard arguments and exit with status 0."""
+    return ShellCommandResult(cmd, "", "", 0, False)
 
 def processRedirects(cmd, stdin_source, cmd_shenv, opened_files):
     """Return the standard fds for cmd after applying redirects
@@ -793,91 +613,114 @@ def _executeShCmd(cmd, shenv, results, timeoutHelper):
         raise ValueError('Unknown shell command: %r' % cmd.op)
     assert isinstance(cmd, ShUtil.Pipeline)
 
-    # Handle shell builtins first.
-    if cmd.commands[0].args[0] == 'cd':
-        if len(cmd.commands) != 1:
-            raise ValueError("'cd' cannot be part of a pipeline")
-        if len(cmd.commands[0].args) != 2:
-            raise ValueError("'cd' supports only one argument")
-        newdir = cmd.commands[0].args[1]
-        # Update the cwd in the parent environment.
-        if os.path.isabs(newdir):
-            shenv.cwd = newdir
-        else:
-            shenv.cwd = os.path.realpath(os.path.join(shenv.cwd, newdir))
-        # The cd builtin always succeeds. If the directory does not exist, the
-        # following Popen calls will fail instead.
-        return 0
-
-    # Handle "echo" as a builtin if it is not part of a pipeline. This greatly
-    # speeds up tests that construct input files by repeatedly echo-appending to
-    # a file.
-    # FIXME: Standardize on the builtin echo implementation. We can use a
-    # temporary file to sidestep blocking pipe write issues.
-    if cmd.commands[0].args[0] == 'echo' and len(cmd.commands) == 1:
-        output = executeBuiltinEcho(cmd.commands[0], shenv)
-        results.append(ShellCommandResult(cmd.commands[0], output, "", 0,
-                                          False))
-        return 0
-
-    if cmd.commands[0].args[0] == 'export':
-        if len(cmd.commands) != 1:
-            raise ValueError("'export' cannot be part of a pipeline")
-        if len(cmd.commands[0].args) != 2:
-            raise ValueError("'export' supports only one argument")
-        updateEnv(shenv, cmd.commands[0])
-        return 0
-
-    if cmd.commands[0].args[0] == 'mkdir':
-        if len(cmd.commands) != 1:
-            raise InternalShellError(cmd.commands[0], "Unsupported: 'mkdir' "
-                                     "cannot be part of a pipeline")
-        cmdResult = executeBuiltinMkdir(cmd.commands[0], shenv)
-        results.append(cmdResult)
-        return cmdResult.exitCode
-
-    if cmd.commands[0].args[0] == 'diff':
-        if len(cmd.commands) != 1:
-            raise InternalShellError(cmd.commands[0], "Unsupported: 'diff' "
-                                     "cannot be part of a pipeline")
-        cmdResult = executeBuiltinDiff(cmd.commands[0], shenv)
-        results.append(cmdResult)
-        return cmdResult.exitCode
-
-    if cmd.commands[0].args[0] == 'rm':
-        if len(cmd.commands) != 1:
-            raise InternalShellError(cmd.commands[0], "Unsupported: 'rm' "
-                                     "cannot be part of a pipeline")
-        cmdResult = executeBuiltinRm(cmd.commands[0], shenv)
-        results.append(cmdResult)
-        return cmdResult.exitCode
-
-    if cmd.commands[0].args[0] == ':':
-        if len(cmd.commands) != 1:
-            raise InternalShellError(cmd.commands[0], "Unsupported: ':' "
-                                     "cannot be part of a pipeline")
-        results.append(ShellCommandResult(cmd.commands[0], '', '', 0, False))
-        return 0;
-
     procs = []
+    proc_not_counts = []
     default_stdin = subprocess.PIPE
     stderrTempFiles = []
     opened_files = []
     named_temp_files = []
-    builtin_commands = set(['cat'])
+    builtin_commands = set(['cat', 'diff'])
     builtin_commands_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "builtin_commands")
+    inproc_builtins = {'cd': executeBuiltinCd,
+                       'export': executeBuiltinExport,
+                       'echo': executeBuiltinEcho,
+                       'mkdir': executeBuiltinMkdir,
+                       'rm': executeBuiltinRm,
+                       ':': executeBuiltinColon}
     # To avoid deadlock, we use a single stderr stream for piped
     # output. This is null until we have seen some output using
     # stderr.
     for i,j in enumerate(cmd.commands):
         # Reference the global environment by default.
         cmd_shenv = shenv
-        if j.args[0] == 'env':
-            # Create a copy of the global environment and modify it for this one
-            # command. There might be multiple envs in a pipeline:
-            #   env FOO=1 llc < %s | env BAR=2 llvm-mc | FileCheck %s
-            cmd_shenv = ShellEnvironment(shenv.cwd, shenv.env)
-            updateEnv(cmd_shenv, j)
+        args = list(j.args)
+        not_args = []
+        not_count = 0
+        not_crash = False
+        while True:
+            if args[0] == 'env':
+                # Create a copy of the global environment and modify it for
+                # this one command. There might be multiple envs in a pipeline,
+                # and there might be multiple envs in a command (usually when
+                # one comes from a substitution):
+                #   env FOO=1 llc < %s | env BAR=2 llvm-mc | FileCheck %s
+                #   env FOO=1 %{another_env_plus_cmd} | FileCheck %s
+                if cmd_shenv is shenv:
+                    cmd_shenv = ShellEnvironment(shenv.cwd, shenv.env)
+                args = updateEnv(cmd_shenv, args)
+                if not args:
+                    raise InternalShellError(j, "Error: 'env' requires a"
+                                                " subcommand")
+            elif args[0] == 'not':
+                not_args.append(args.pop(0))
+                not_count += 1
+                if args and args[0] == '--crash':
+                    not_args.append(args.pop(0))
+                    not_crash = True
+                if not args:
+                    raise InternalShellError(j, "Error: 'not' requires a"
+                                                " subcommand")
+            elif args[0] == '!':
+                not_args.append(args.pop(0))
+                not_count += 1
+                if not args:
+                    raise InternalShellError(j, "Error: '!' requires a"
+                                                " subcommand")
+            else:
+                break
+
+        # Handle in-process builtins.
+        #
+        # Handle "echo" as a builtin if it is not part of a pipeline. This
+        # greatly speeds up tests that construct input files by repeatedly
+        # echo-appending to a file.
+        # FIXME: Standardize on the builtin echo implementation. We can use a
+        # temporary file to sidestep blocking pipe write issues.
+        inproc_builtin = inproc_builtins.get(args[0], None)
+        if inproc_builtin and (args[0] != 'echo' or len(cmd.commands) == 1):
+            # env calling an in-process builtin is useless, so we take the safe
+            # approach of complaining.
+            if not cmd_shenv is shenv:
+                raise InternalShellError(j, "Error: 'env' cannot call '{}'"
+                                            .format(args[0]))
+            if not_crash:
+                raise InternalShellError(j, "Error: 'not --crash' cannot call"
+                                            " '{}'".format(args[0]))
+            if len(cmd.commands) != 1:
+                raise InternalShellError(j, "Unsupported: '{}' cannot be part"
+                                            " of a pipeline".format(args[0]))
+            result = inproc_builtin(Command(args, j.redirects), cmd_shenv)
+            if not_count % 2:
+                result.exitCode = int(not result.exitCode)
+            result.command.args = j.args;
+            results.append(result)
+            return result.exitCode
+
+        # Resolve any out-of-process builtin command before adding back 'not'
+        # commands.
+        if args[0] in builtin_commands:
+            args.insert(0, sys.executable)
+            cmd_shenv.env['PYTHONPATH'] = \
+                os.path.dirname(os.path.abspath(__file__))
+            args[1] = os.path.join(builtin_commands_dir, args[1] + ".py")
+
+        # We had to search through the 'not' commands to find all the 'env'
+        # commands and any other in-process builtin command.  We don't want to
+        # reimplement 'not' and its '--crash' here, so just push all 'not'
+        # commands back to be called as external commands.  Because this
+        # approach effectively moves all 'env' commands up front, it relies on
+        # the assumptions that (1) environment variables are not intended to be
+        # relevant to 'not' commands and (2) the 'env' command should always
+        # blindly pass along the status it receives from any command it calls.
+
+        # For plain negations, either 'not' without '--crash', or the shell
+        # operator '!', leave them out from the command to execute and
+        # invert the result code afterwards.
+        if not_crash:
+            args = not_args + args
+            not_count = 0
+        else:
+            not_args = []
 
         stdin, stdout, stderr = processRedirects(j, default_stdin, cmd_shenv,
                                                  opened_files)
@@ -899,19 +742,16 @@ def _executeShCmd(cmd, shenv, results, timeoutHelper):
                 stderrTempFiles.append((i, stderr))
 
         # Resolve the executable path ourselves.
-        args = list(j.args)
         executable = None
-        is_builtin_cmd = args[0] in builtin_commands;
-        if not is_builtin_cmd:
-            # For paths relative to cwd, use the cwd of the shell environment.
-            if args[0].startswith('.'):
-                exe_in_cwd = os.path.join(cmd_shenv.cwd, args[0])
-                if os.path.isfile(exe_in_cwd):
-                    executable = exe_in_cwd
-            if not executable:
-                executable = lit.util.which(args[0], cmd_shenv.env['PATH'])
-            if not executable:
-                raise InternalShellError(j, '%r: command not found' % j.args[0])
+        # For paths relative to cwd, use the cwd of the shell environment.
+        if args[0].startswith('.'):
+            exe_in_cwd = os.path.join(cmd_shenv.cwd, args[0])
+            if os.path.isfile(exe_in_cwd):
+                executable = exe_in_cwd
+        if not executable:
+            executable = lit.util.which(args[0], cmd_shenv.env['PATH'])
+        if not executable:
+            raise InternalShellError(j, '%r: command not found' % args[0])
 
         # Replace uses of /dev/null with temporary files.
         if kAvoidDevNull:
@@ -930,9 +770,6 @@ def _executeShCmd(cmd, shenv, results, timeoutHelper):
 
         # Expand all glob expressions
         args = expand_glob_expressions(args, cmd_shenv.cwd)
-        if is_builtin_cmd:
-            args.insert(0, sys.executable)
-            args[1] = os.path.join(builtin_commands_dir ,args[1] + ".py")
 
         # On Windows, do our own command line quoting for better compatibility
         # with some core utility distributions.
@@ -947,6 +784,7 @@ def _executeShCmd(cmd, shenv, results, timeoutHelper):
                                           stderr = stderr,
                                           env = cmd_shenv.env,
                                           close_fds = kUseCloseFDs))
+            proc_not_counts.append(not_count)
             # Let the helper know about this process
             timeoutHelper.addProcess(procs[-1])
         except OSError as e:
@@ -999,6 +837,10 @@ def _executeShCmd(cmd, shenv, results, timeoutHelper):
         # Detect Ctrl-C in subprocess.
         if res == -signal.SIGINT:
             raise KeyboardInterrupt
+        if proc_not_counts[i] % 2:
+            res = not res
+        elif proc_not_counts[i] > 1:
+            res = 1 if res != 0 else 0
 
         # Ensure the resulting output is always of string type.
         try:
@@ -1028,7 +870,7 @@ def _executeShCmd(cmd, shenv, results, timeoutHelper):
                         data = None
                     if data is not None:
                         output_files.append((name, path, data))
-            
+
         results.append(ShellCommandResult(
             cmd.commands[i], out, err, res, timeoutHelper.timeoutReached(),
             output_files))
@@ -1101,7 +943,7 @@ def executeScriptInternal(test, litConfig, tmpBase, commands, cwd):
                 else:
                     out += data
                 out += "\n"
-                    
+
         if result.stdout.strip():
             out += '# command output:\n%s\n' % (result.stdout,)
         if result.stderr.strip():
@@ -1265,9 +1107,7 @@ def getDefaultSubstitutions(test, tmpDir, tmpBase, normalize_slashes=False):
         tmpDir = tmpDir.replace('\\', '/')
         tmpBase = tmpBase.replace('\\', '/')
 
-    # We use #_MARKER_# to hide %% while we do the other substitutions.
     substitutions = []
-    substitutions.extend([('%%', '#_MARKER_#')])
     substitutions.extend(test.config.substitutions)
     tmpName = tmpBase + '.tmp'
     baseName = os.path.basename(tmpBase)
@@ -1277,8 +1117,7 @@ def getDefaultSubstitutions(test, tmpDir, tmpBase, normalize_slashes=False):
                           ('%{pathsep}', os.pathsep),
                           ('%t', tmpName),
                           ('%basename_t', baseName),
-                          ('%T', tmpDir),
-                          ('#_MARKER_#', '%')])
+                          ('%T', tmpDir)])
 
     # "%/[STpst]" should be normalized.
     substitutions.extend([
@@ -1287,6 +1126,25 @@ def getDefaultSubstitutions(test, tmpDir, tmpBase, normalize_slashes=False):
             ('%/p', sourcedir.replace('\\', '/')),
             ('%/t', tmpBase.replace('\\', '/') + '.tmp'),
             ('%/T', tmpDir.replace('\\', '/')),
+            ])
+
+    # "%{/[STpst]:regex_replacement}" should be normalized like "%/[STpst]" but we're
+    # also in a regex replacement context of a s@@@ regex.
+    def regex_escape(s):
+        s = s.replace('@', r'\@')
+        s = s.replace('&', r'\&')
+        return s
+    substitutions.extend([
+            ('%{/s:regex_replacement}',
+             regex_escape(sourcepath.replace('\\', '/'))),
+            ('%{/S:regex_replacement}',
+             regex_escape(sourcedir.replace('\\', '/'))),
+            ('%{/p:regex_replacement}',
+             regex_escape(sourcedir.replace('\\', '/'))),
+            ('%{/t:regex_replacement}',
+             regex_escape(tmpBase.replace('\\', '/')) + '.tmp'),
+            ('%{/T:regex_replacement}',
+             regex_escape(tmpDir.replace('\\', '/'))),
             ])
 
     # "%:[STpst]" are normalized paths without colons and without a leading
@@ -1300,22 +1158,75 @@ def getDefaultSubstitutions(test, tmpDir, tmpBase, normalize_slashes=False):
             ])
     return substitutions
 
-def applySubstitutions(script, substitutions):
-    """Apply substitutions to the script.  Allow full regular expression syntax.
+def _memoize(f):
+    cache = {}  # Intentionally unbounded, see applySubstitutions()
+    def memoized(x):
+        if x not in cache:
+            cache[x] = f(x)
+        return cache[x]
+    return memoized
+
+@_memoize
+def _caching_re_compile(r):
+    return re.compile(r)
+
+def applySubstitutions(script, substitutions, recursion_limit=None):
+    """
+    Apply substitutions to the script.  Allow full regular expression syntax.
     Replace each matching occurrence of regular expression pattern a with
-    substitution b in line ln."""
+    substitution b in line ln.
+
+    If a substitution expands into another substitution, it is expanded
+    recursively until the line has no more expandable substitutions. If
+    the line can still can be substituted after being substituted
+    `recursion_limit` times, it is an error. If the `recursion_limit` is
+    `None` (the default), no recursive substitution is performed at all.
+    """
+
+    # We use #_MARKER_# to hide %% while we do the other substitutions.
+    def escape(ln):
+        return _caching_re_compile('%%').sub('#_MARKER_#', ln)
+
+    def unescape(ln):
+        return _caching_re_compile('#_MARKER_#').sub('%', ln)
+
     def processLine(ln):
         # Apply substitutions
         for a,b in substitutions:
             if kIsWindows:
                 b = b.replace("\\","\\\\")
-            ln = re.sub(a, b, ln)
+            # re.compile() has a built-in LRU cache with 512 entries. In some
+            # test suites lit ends up thrashing that cache, which made e.g.
+            # check-llvm run 50% slower.  Use an explicit, unbounded cache
+            # to prevent that from happening.  Since lit is fairly
+            # short-lived, since the set of substitutions is fairly small, and
+            # since thrashing has such bad consequences, not bounding the cache
+            # seems reasonable.
+            ln = _caching_re_compile(a).sub(str(b), escape(ln))
 
         # Strip the trailing newline and any extra whitespace.
         return ln.strip()
-    # Note Python 3 map() gives an iterator rather than a list so explicitly
-    # convert to list before returning.
-    return list(map(processLine, script))
+
+    def processLineToFixedPoint(ln):
+        assert isinstance(recursion_limit, int) and recursion_limit >= 0
+        origLine = ln
+        steps = 0
+        processed = processLine(ln)
+        while processed != ln and steps < recursion_limit:
+            ln = processed
+            processed = processLine(ln)
+            steps += 1
+
+        if processed != ln:
+            raise ValueError("Recursive substitution of '%s' did not complete "
+                             "in the provided recursion limit (%s)" % \
+                             (origLine, recursion_limit))
+
+        return processed
+
+    process = processLine if recursion_limit is None else processLineToFixedPoint
+    
+    return [unescape(process(ln)) for ln in script]
 
 
 class ParserKind(object):
@@ -1326,15 +1237,17 @@ class ParserKind(object):
     TAG: A keyword taking no value. Ex 'END.'
     COMMAND: A keyword taking a list of shell commands. Ex 'RUN:'
     LIST: A keyword taking a comma-separated list of values.
-    BOOLEAN_EXPR: A keyword taking a comma-separated list of 
+    BOOLEAN_EXPR: A keyword taking a comma-separated list of
         boolean expressions. Ex 'XFAIL:'
+    INTEGER: A keyword taking a single integer. Ex 'ALLOW_RETRIES:'
     CUSTOM: A keyword with custom parsing semantics.
     """
     TAG = 0
     COMMAND = 1
     LIST = 2
     BOOLEAN_EXPR = 3
-    CUSTOM = 4
+    INTEGER = 4
+    CUSTOM = 5
 
     @staticmethod
     def allowedKeywordSuffixes(value):
@@ -1342,6 +1255,7 @@ class ParserKind(object):
                  ParserKind.COMMAND:      [':'],
                  ParserKind.LIST:         [':'],
                  ParserKind.BOOLEAN_EXPR: [':'],
+                 ParserKind.INTEGER:      [':'],
                  ParserKind.CUSTOM:       [':', '.']
                } [value]
 
@@ -1351,6 +1265,7 @@ class ParserKind(object):
                  ParserKind.COMMAND:      'COMMAND',
                  ParserKind.LIST:         'LIST',
                  ParserKind.BOOLEAN_EXPR: 'BOOLEAN_EXPR',
+                 ParserKind.INTEGER:      'INTEGER',
                  ParserKind.CUSTOM:       'CUSTOM'
                } [value]
 
@@ -1393,6 +1308,8 @@ class IntegratedTestKeywordParser(object):
             self.parser = self._handleList
         elif kind == ParserKind.BOOLEAN_EXPR:
             self.parser = self._handleBooleanExpr
+        elif kind == ParserKind.INTEGER:
+            self.parser = self._handleSingleInteger
         elif kind == ParserKind.TAG:
             self.parser = self._handleTag
         elif kind == ParserKind.CUSTOM:
@@ -1458,6 +1375,18 @@ class IntegratedTestKeywordParser(object):
         return output
 
     @staticmethod
+    def _handleSingleInteger(line_number, line, output):
+        """A parser for INTEGER type keywords"""
+        if output is None:
+            output = []
+        try:
+            n = int(line)
+        except ValueError:
+            raise ValueError("INTEGER parser requires the input to be an integer (got {})".format(line))
+        output.append(n)
+        return output
+
+    @staticmethod
     def _handleBooleanExpr(line_number, line, output):
         """A parser for BOOLEAN_EXPR type keywords"""
         parts = [s.strip() for s in line.split(',') if s.strip() != '']
@@ -1474,64 +1403,42 @@ class IntegratedTestKeywordParser(object):
                 BooleanExpression.evaluate(s, [])
         return output
 
-    @staticmethod
-    def _handleRequiresAny(line_number, line, output):
-        """A custom parser to transform REQUIRES-ANY: into REQUIRES:"""
 
-        # Extract the conditions specified in REQUIRES-ANY: as written.
-        conditions = []
-        IntegratedTestKeywordParser._handleList(line_number, line, conditions)
+def _parseKeywords(sourcepath, additional_parsers=[],
+                   require_script=True):
+    """_parseKeywords
 
-        # Output a `REQUIRES: a || b || c` expression in its place.
-        expression = ' || '.join(conditions)
-        IntegratedTestKeywordParser._handleBooleanExpr(line_number,
-                                                       expression, output)
-        return output
+    Scan an LLVM/Clang style integrated test script and extract all the lines
+    pertaining to a special parser. This includes 'RUN', 'XFAIL', 'REQUIRES',
+    'UNSUPPORTED' and 'ALLOW_RETRIES', as well as other specified custom
+    parsers.
 
-def parseIntegratedTestScript(test, additional_parsers=[],
-                              require_script=True):
-    """parseIntegratedTestScript - Scan an LLVM/Clang style integrated test
-    script and extract the lines to 'RUN' as well as 'XFAIL' and 'REQUIRES'
-    and 'UNSUPPORTED' information.
-
-    If additional parsers are specified then the test is also scanned for the
-    keywords they specify and all matches are passed to the custom parser.
-
-    If 'require_script' is False an empty script
-    may be returned. This can be used for test formats where the actual script
-    is optional or ignored.
+    Returns a dictionary mapping each custom parser to its value after
+    parsing the test.
     """
-
     # Install the built-in keyword parsers.
     script = []
     builtin_parsers = [
-        IntegratedTestKeywordParser('RUN:', ParserKind.COMMAND,
-                                    initial_value=script),
-        IntegratedTestKeywordParser('XFAIL:', ParserKind.BOOLEAN_EXPR,
-                                    initial_value=test.xfails),
-        IntegratedTestKeywordParser('REQUIRES:', ParserKind.BOOLEAN_EXPR,
-                                    initial_value=test.requires),
-        IntegratedTestKeywordParser('REQUIRES-ANY:', ParserKind.CUSTOM,
-                                    IntegratedTestKeywordParser._handleRequiresAny, 
-                                    initial_value=test.requires), 
-        IntegratedTestKeywordParser('UNSUPPORTED:', ParserKind.BOOLEAN_EXPR,
-                                    initial_value=test.unsupported),
+        IntegratedTestKeywordParser('RUN:', ParserKind.COMMAND, initial_value=script),
+        IntegratedTestKeywordParser('XFAIL:', ParserKind.BOOLEAN_EXPR),
+        IntegratedTestKeywordParser('REQUIRES:', ParserKind.BOOLEAN_EXPR),
+        IntegratedTestKeywordParser('UNSUPPORTED:', ParserKind.BOOLEAN_EXPR),
+        IntegratedTestKeywordParser('ALLOW_RETRIES:', ParserKind.INTEGER),
         IntegratedTestKeywordParser('END.', ParserKind.TAG)
     ]
     keyword_parsers = {p.keyword: p for p in builtin_parsers}
-    
+
     # Install user-defined additional parsers.
     for parser in additional_parsers:
         if not isinstance(parser, IntegratedTestKeywordParser):
-            raise ValueError('additional parser must be an instance of '
+            raise ValueError('Additional parser must be an instance of '
                              'IntegratedTestKeywordParser')
         if parser.keyword in keyword_parsers:
             raise ValueError("Parser for keyword '%s' already exists"
                              % parser.keyword)
         keyword_parsers[parser.keyword] = parser
-        
+
     # Collect the test lines from the script.
-    sourcepath = test.getSourcePath()
     for line_number, command_type, ln in \
             parseIntegratedTestScriptCommands(sourcepath,
                                               keyword_parsers.keys()):
@@ -1542,12 +1449,11 @@ def parseIntegratedTestScript(test, additional_parsers=[],
 
     # Verify the script contains a run line.
     if require_script and not script:
-        return lit.Test.Result(Test.UNRESOLVED, "Test has no run line!")
+        raise ValueError("Test has no 'RUN:' line")
 
     # Check for unterminated run lines.
     if script and script[-1][-1] == '\\':
-        return lit.Test.Result(Test.UNRESOLVED,
-                               "Test has unterminated run lines (with '\\')")
+        raise ValueError("Test has unterminated 'RUN:' lines (with '\\')")
 
     # Check boolean expressions for unterminated lines.
     for key in keyword_parsers:
@@ -1556,7 +1462,42 @@ def parseIntegratedTestScript(test, additional_parsers=[],
             continue
         value = kp.getValue()
         if value and value[-1][-1] == '\\':
-            raise ValueError("Test has unterminated %s lines (with '\\')" % key)
+            raise ValueError("Test has unterminated '{key}' lines (with '\\')"
+                             .format(key=key))
+
+    # Make sure there's at most one ALLOW_RETRIES: line
+    allowed_retries = keyword_parsers['ALLOW_RETRIES:'].getValue()
+    if allowed_retries and len(allowed_retries) > 1:
+        raise ValueError("Test has more than one ALLOW_RETRIES lines")
+
+    return {p.keyword: p.getValue() for p in keyword_parsers.values()}
+
+
+def parseIntegratedTestScript(test, additional_parsers=[],
+                              require_script=True):
+    """parseIntegratedTestScript - Scan an LLVM/Clang style integrated test
+    script and extract the lines to 'RUN' as well as 'XFAIL', 'REQUIRES',
+    'UNSUPPORTED' and 'ALLOW_RETRIES' information into the given test.
+
+    If additional parsers are specified then the test is also scanned for the
+    keywords they specify and all matches are passed to the custom parser.
+
+    If 'require_script' is False an empty script
+    may be returned. This can be used for test formats where the actual script
+    is optional or ignored.
+    """
+    # Parse the test sources and extract test properties
+    try:
+        parsed = _parseKeywords(test.getSourcePath(), additional_parsers,
+                                require_script)
+    except ValueError as e:
+        return lit.Test.Result(Test.UNRESOLVED, str(e))
+    script = parsed['RUN:'] or []
+    test.xfails += parsed['XFAIL:'] or []
+    test.requires += parsed['REQUIRES:'] or []
+    test.unsupported += parsed['UNSUPPORTED:'] or []
+    if parsed['ALLOW_RETRIES:']:
+        test.allowed_retries = parsed['ALLOW_RETRIES:'][0]
 
     # Enforce REQUIRES:
     missing_required_features = test.getMissingRequiredFeatures()
@@ -1586,25 +1527,43 @@ def parseIntegratedTestScript(test, additional_parsers=[],
 
 
 def _runShTest(test, litConfig, useExternalSh, script, tmpBase):
+    def runOnce(execdir):
+        if useExternalSh:
+            res = executeScript(test, litConfig, tmpBase, script, execdir)
+        else:
+            res = executeScriptInternal(test, litConfig, tmpBase, script, execdir)
+        if isinstance(res, lit.Test.Result):
+            return res
+
+        out,err,exitCode,timeoutInfo = res
+        if exitCode == 0:
+            status = Test.PASS
+        else:
+            if timeoutInfo is None:
+                status = Test.FAIL
+            else:
+                status = Test.TIMEOUT
+        return out,err,exitCode,timeoutInfo,status
+
     # Create the output directory if it does not already exist.
     lit.util.mkdir_p(os.path.dirname(tmpBase))
 
+    # Re-run failed tests up to test.allowed_retries times.
     execdir = os.path.dirname(test.getExecPath())
-    if useExternalSh:
-        res = executeScript(test, litConfig, tmpBase, script, execdir)
-    else:
-        res = executeScriptInternal(test, litConfig, tmpBase, script, execdir)
-    if isinstance(res, lit.Test.Result):
-        return res
+    attempts = test.allowed_retries + 1
+    for i in range(attempts):
+        res = runOnce(execdir)
+        if isinstance(res, lit.Test.Result):
+            return res
 
-    out,err,exitCode,timeoutInfo = res
-    if exitCode == 0:
-        status = Test.PASS
-    else:
-        if timeoutInfo is None:
-            status = Test.FAIL
-        else:
-            status = Test.TIMEOUT
+        out,err,exitCode,timeoutInfo,status = res
+        if status != Test.FAIL:
+            break
+
+    # If we had to run the test more than once, count it as a flaky pass. These
+    # will be printed separately in the test summary.
+    if i > 0 and status == Test.PASS:
+        status = Test.FLAKYPASS
 
     # Form the output log.
     output = """Script:\n--\n%s\n--\nExit Code: %d\n""" % (
@@ -1624,13 +1583,17 @@ def _runShTest(test, litConfig, useExternalSh, script, tmpBase):
 
 
 def executeShTest(test, litConfig, useExternalSh,
-                  extra_substitutions=[]):
+                  extra_substitutions=[],
+                  preamble_commands=[]):
     if test.config.unsupported:
         return lit.Test.Result(Test.UNSUPPORTED, 'Test is unsupported')
 
-    script = parseIntegratedTestScript(test)
-    if isinstance(script, lit.Test.Result):
-        return script
+    script = list(preamble_commands)
+    parsed = parseIntegratedTestScript(test, require_script=not script)
+    if isinstance(parsed, lit.Test.Result):
+        return parsed
+    script += parsed
+
     if litConfig.noExecute:
         return lit.Test.Result(Test.PASS)
 
@@ -1638,18 +1601,7 @@ def executeShTest(test, litConfig, useExternalSh,
     substitutions = list(extra_substitutions)
     substitutions += getDefaultSubstitutions(test, tmpDir, tmpBase,
                                              normalize_slashes=useExternalSh)
-    script = applySubstitutions(script, substitutions)
+    script = applySubstitutions(script, substitutions,
+                                recursion_limit=test.config.recursiveExpansionLimit)
 
-    # Re-run failed tests up to test_retry_attempts times.
-    attempts = 1
-    if hasattr(test.config, 'test_retry_attempts'):
-        attempts += test.config.test_retry_attempts
-    for i in range(attempts):
-        res = _runShTest(test, litConfig, useExternalSh, script, tmpBase)
-        if res.code != Test.FAIL:
-            break
-    # If we had to run the test more than once, count it as a flaky pass. These
-    # will be printed separately in the test summary.
-    if i > 0 and res.code == Test.PASS:
-        res.code = Test.FLAKYPASS
-    return res
+    return _runShTest(test, litConfig, useExternalSh, script, tmpBase)

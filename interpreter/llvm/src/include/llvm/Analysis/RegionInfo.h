@@ -59,7 +59,6 @@
 namespace llvm {
 
 class DominanceFrontier;
-class DominatorTree;
 class Loop;
 class LoopInfo;
 class PostDominatorTree;
@@ -574,10 +573,9 @@ public:
   template <bool IsConst>
   class block_iterator_wrapper
       : public df_iterator<
-            typename std::conditional<IsConst, const BlockT, BlockT>::type *> {
+            std::conditional_t<IsConst, const BlockT, BlockT> *> {
     using super =
-        df_iterator<
-            typename std::conditional<IsConst, const BlockT, BlockT>::type *>;
+        df_iterator<std::conditional_t<IsConst, const BlockT, BlockT> *>;
 
   public:
     using Self = block_iterator_wrapper<IsConst>;
@@ -877,8 +875,6 @@ public:
 
   void verifyAnalysis() const;
 };
-
-class Region;
 
 class RegionNode : public RegionNodeBase<RegionTraits<Function>> {
 public:

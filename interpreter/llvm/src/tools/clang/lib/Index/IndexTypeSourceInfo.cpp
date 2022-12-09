@@ -8,6 +8,7 @@
 
 #include "IndexingContext.h"
 #include "clang/AST/RecursiveASTVisitor.h"
+#include "llvm/ADT/ScopeExit.h"
 
 using namespace clang;
 using namespace index;
@@ -160,6 +161,26 @@ public:
     return true;
   }
 
+  bool TraverseTemplateSpecializationTypeLoc(TemplateSpecializationTypeLoc TL) {
+    if (!WalkUpFromTemplateSpecializationTypeLoc(TL))
+      return false;
+    if (!TraverseTemplateName(TL.getTypePtr()->getTemplateName()))
+      return false;
+
+    // The relations we have to `Parent` do not apply to our template arguments,
+    // so clear them while visiting the args.
+    SmallVector<SymbolRelation, 3> SavedRelations = Relations;
+    Relations.clear();
+    auto ResetSavedRelations =
+        llvm::make_scope_exit([&] { this->Relations = SavedRelations; });
+    for (unsigned I = 0, E = TL.getNumArgs(); I != E; ++I) {
+      if (!TraverseTemplateArgumentLoc(TL.getArgLoc(I)))
+        return false;
+    }
+
+    return true;
+  }
+
   bool VisitDeducedTemplateSpecializationTypeLoc(DeducedTemplateSpecializationTypeLoc TL) {
     auto *T = TL.getTypePtr();
     if (!T)
@@ -168,6 +189,11 @@ public:
         T->getTemplateName(), TL.getTemplateNameLoc(), T->getAsCXXRecordDecl(),
         /*IsTypeAlias=*/false);
     return true;
+  }
+
+  bool VisitInjectedClassNameTypeLoc(InjectedClassNameTypeLoc TL) {
+    return IndexCtx.handleReference(TL.getDecl(), TL.getNameLoc(), Parent,
+                                    ParentDC, SymbolRoleSet(), Relations);
   }
 
   bool VisitDependentNameTypeLoc(DependentNameTypeLoc TL) {

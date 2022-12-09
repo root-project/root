@@ -23,6 +23,7 @@ class MachineInstr;
 
 class WebAssemblyDebugValueManager {
   SmallVector<MachineInstr *, 2> DbgValues;
+  unsigned CurrentReg;
 
 public:
   WebAssemblyDebugValueManager(MachineInstr *Instr);
@@ -30,6 +31,7 @@ public:
   void move(MachineInstr *Insert);
   void updateReg(unsigned Reg);
   void clone(MachineInstr *Insert, unsigned NewReg);
+  void replaceWithLocal(unsigned LocalId);
 };
 
 } // end namespace llvm

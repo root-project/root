@@ -78,7 +78,7 @@ void AArch64CondBrTuning::getAnalysisUsage(AnalysisUsage &AU) const {
 }
 
 MachineInstr *AArch64CondBrTuning::getOperandDef(const MachineOperand &MO) {
-  if (!TargetRegisterInfo::isVirtualRegister(MO.getReg()))
+  if (!Register::isVirtualRegister(MO.getReg()))
     return nullptr;
   return MRI->getUniqueVRegDef(MO.getReg());
 }
@@ -98,7 +98,7 @@ MachineInstr *AArch64CondBrTuning::convertToFlagSetting(MachineInstr &MI,
   }
   bool Is64Bit;
   unsigned NewOpc = TII->convertToFlagSettingOpc(MI.getOpcode(), Is64Bit);
-  unsigned NewDestReg = MI.getOperand(0).getReg();
+  Register NewDestReg = MI.getOperand(0).getReg();
   if (MRI->hasOneNonDBGUse(MI.getOperand(0).getReg()))
     NewDestReg = Is64Bit ? AArch64::XZR : AArch64::WZR;
 
@@ -194,12 +194,8 @@ bool AArch64CondBrTuning::tryToTuneBranch(MachineInstr &MI,
 
       // There must not be any instruction between DefMI and MI that clobbers or
       // reads NZCV.
-      MachineBasicBlock::iterator I(DefMI), E(MI);
-      for (I = std::next(I); I != E; ++I) {
-        if (I->modifiesRegister(AArch64::NZCV, TRI) ||
-            I->readsRegister(AArch64::NZCV, TRI))
-          return false;
-      }
+      if (isNZCVTouchedInInstructionRange(DefMI, MI, TRI))
+        return false;
       LLVM_DEBUG(dbgs() << "  Replacing instructions:\n    ");
       LLVM_DEBUG(DefMI.print(dbgs()));
       LLVM_DEBUG(dbgs() << "    ");
@@ -253,12 +249,8 @@ bool AArch64CondBrTuning::tryToTuneBranch(MachineInstr &MI,
         return false;
       // There must not be any instruction between DefMI and MI that clobbers or
       // reads NZCV.
-      MachineBasicBlock::iterator I(DefMI), E(MI);
-      for (I = std::next(I); I != E; ++I) {
-        if (I->modifiesRegister(AArch64::NZCV, TRI) ||
-            I->readsRegister(AArch64::NZCV, TRI))
-          return false;
-      }
+      if (isNZCVTouchedInInstructionRange(DefMI, MI, TRI))
+        return false;
       LLVM_DEBUG(dbgs() << "  Replacing instructions:\n    ");
       LLVM_DEBUG(DefMI.print(dbgs()));
       LLVM_DEBUG(dbgs() << "    ");

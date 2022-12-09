@@ -1,6 +1,7 @@
 set(LLVM_LINK_COMPONENTS
   BinaryFormat
   Option
+  ProfileData
   Support
   )
 
@@ -12,26 +13,30 @@ endif()
 add_clang_library(clangDriver
   Action.cpp
   Compilation.cpp
-  DarwinSDKInfo.cpp
   Distro.cpp
   Driver.cpp
   DriverOptions.cpp
   Job.cpp
   Multilib.cpp
+  OptionUtils.cpp
   Phases.cpp
   SanitizerArgs.cpp
   Tool.cpp
   ToolChain.cpp
   ToolChains/Arch/AArch64.cpp
   ToolChains/Arch/ARM.cpp
+  ToolChains/Arch/M68k.cpp
   ToolChains/Arch/Mips.cpp
   ToolChains/Arch/PPC.cpp
   ToolChains/Arch/RISCV.cpp
   ToolChains/Arch/Sparc.cpp
   ToolChains/Arch/SystemZ.cpp
+  ToolChains/Arch/VE.cpp
   ToolChains/Arch/X86.cpp
+  ToolChains/AIX.cpp
   ToolChains/Ananas.cpp
   ToolChains/AMDGPU.cpp
+  ToolChains/AMDGPUOpenMP.cpp
   ToolChains/AVR.cpp
   ToolChains/BareMetal.cpp
   ToolChains/Clang.cpp
@@ -42,6 +47,7 @@ add_clang_library(clangDriver
   ToolChains/Cuda.cpp
   ToolChains/Darwin.cpp
   ToolChains/DragonFly.cpp
+  ToolChains/Flang.cpp
   ToolChains/FreeBSD.cpp
   ToolChains/Fuchsia.cpp
   ToolChains/Gnu.cpp
@@ -63,9 +69,12 @@ add_clang_library(clangDriver
   ToolChains/RISCVToolchain.cpp
   ToolChains/Solaris.cpp
   ToolChains/TCE.cpp
+  ToolChains/VEToolchain.cpp
   ToolChains/WebAssembly.cpp
   ToolChains/XCore.cpp
   ToolChains/PPCLinux.cpp
+  ToolChains/InterfaceStubs.cpp
+  ToolChains/ZOS.cpp
   Types.cpp
   XRayArgs.cpp
 

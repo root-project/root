@@ -12,13 +12,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "R600MachineScheduler.h"
-#include "AMDGPUSubtarget.h"
-#include "R600InstrInfo.h"
 #include "MCTargetDesc/AMDGPUMCTargetDesc.h"
-#include "llvm/CodeGen/MachineRegisterInfo.h"
-#include "llvm/IR/LegacyPassManager.h"
-#include "llvm/Pass.h"
-#include "llvm/Support/raw_ostream.h"
+#include "R600Subtarget.h"
 
 using namespace llvm;
 
@@ -45,7 +40,7 @@ void R600SchedStrategy::initialize(ScheduleDAGMI *dag) {
 void R600SchedStrategy::MoveUnits(std::vector<SUnit *> &QSrc,
                                   std::vector<SUnit *> &QDst)
 {
-  QDst.insert(QDst.end(), QSrc.begin(), QSrc.end());
+  llvm::append_range(QDst, QSrc);
   QSrc.clear();
 }
 
@@ -183,7 +178,7 @@ isPhysicalRegCopy(MachineInstr *MI) {
   if (MI->getOpcode() != R600::COPY)
     return false;
 
-  return !TargetRegisterInfo::isVirtualRegister(MI->getOperand(1).getReg());
+  return !MI->getOperand(1).getReg().isVirtual();
 }
 
 void R600SchedStrategy::releaseTopNode(SUnit *SU) {
@@ -207,9 +202,9 @@ void R600SchedStrategy::releaseBottomNode(SUnit *SU) {
 
 }
 
-bool R600SchedStrategy::regBelongsToClass(unsigned Reg,
+bool R600SchedStrategy::regBelongsToClass(Register Reg,
                                           const TargetRegisterClass *RC) const {
-  if (!TargetRegisterInfo::isVirtualRegister(Reg)) {
+  if (!Reg.isVirtual()) {
     return RC->contains(Reg);
   } else {
     return MRI->getRegClass(Reg) == RC;
@@ -270,7 +265,7 @@ R600SchedStrategy::AluKind R600SchedStrategy::getAluKind(SUnit *SU) const {
   }
 
   // Is the result already member of a X/Y/Z/W class ?
-  unsigned DestReg = MI->getOperand(0).getReg();
+  Register DestReg = MI->getOperand(0).getReg();
   if (regBelongsToClass(DestReg, &R600::R600_TReg32_XRegClass) ||
       regBelongsToClass(DestReg, &R600::R600_AddrRegClass))
     return AluT_X;
@@ -357,7 +352,7 @@ void R600SchedStrategy::AssignSlot(MachineInstr* MI, unsigned Slot) {
   if (DstIndex == -1) {
     return;
   }
-  unsigned DestReg = MI->getOperand(DstIndex).getReg();
+  Register DestReg = MI->getOperand(DstIndex).getReg();
   // PressureRegister crashes if an operand is def and used in the same inst
   // and we try to constraint its regclass
   for (MachineInstr::mop_iterator It = MI->operands_begin(),

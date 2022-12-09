@@ -36,8 +36,9 @@ static void EmitUnknownDiagWarning(DiagnosticsEngine &Diags,
                                    StringRef Opt) {
   StringRef Suggestion = DiagnosticIDs::getNearestOption(Flavor, Opt);
   Diags.Report(diag::warn_unknown_diag_option)
-    << (Flavor == diag::Flavor::WarningOrError ? 0 : 1) << (Prefix.str() += Opt)
-    << !Suggestion.empty() << (Prefix.str() += Suggestion);
+      << (Flavor == diag::Flavor::WarningOrError ? 0 : 1)
+      << (Prefix.str() += std::string(Opt)) << !Suggestion.empty()
+      << (Prefix.str() += std::string(Suggestion));
 }
 
 void clang::ProcessWarningOptions(DiagnosticsEngine &Diags,
@@ -129,11 +130,14 @@ void clang::ProcessWarningOptions(DiagnosticsEngine &Diags,
       }
 
       // -Werror/-Wno-error is a special case, not controlled by the option
-      // table. It also has the "specifier" form of -Werror=foo and -Werror-foo.
+      // table. It also has the "specifier" form of -Werror=foo. GCC supports
+      // the deprecated -Werror-implicit-function-declaration which is used by
+      // a few projects.
       if (Opt.startswith("error")) {
         StringRef Specifier;
         if (Opt.size() > 5) {  // Specifier must be present.
-          if ((Opt[5] != '=' && Opt[5] != '-') || Opt.size() == 6) {
+          if (Opt[5] != '=' &&
+              Opt.substr(5) != "-implicit-function-declaration") {
             if (Report)
               Diags.Report(diag::warn_unknown_warning_specifier)
                 << "-Werror" << ("-W" + OrigOpt.str());

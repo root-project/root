@@ -14,7 +14,6 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/DebugInfo/CodeView/TypeCollection.h"
 #include "llvm/DebugInfo/CodeView/TypeIndex.h"
-#include "llvm/DebugInfo/CodeView/TypeRecord.h"
 #include "llvm/Support/Allocator.h"
 #include "llvm/Support/BinaryStreamArray.h"
 #include "llvm/Support/Error.h"
@@ -79,6 +78,7 @@ public:
   uint32_t capacity() override;
   Optional<TypeIndex> getFirst() override;
   Optional<TypeIndex> getNext(TypeIndex Prev) override;
+  bool replaceType(TypeIndex &Index, CVType Data, bool Stabilize) override;
 
 private:
   Error ensureTypeExists(TypeIndex Index);

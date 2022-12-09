@@ -10,6 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "TableGenBackends.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/TableGen/Error.h"
 #include "llvm/TableGen/Record.h"
@@ -52,7 +53,7 @@ static std::string getCheckerFullName(const Record *R) {
 
 static std::string getStringValue(const Record &R, StringRef field) {
   if (StringInit *SI = dyn_cast<StringInit>(R.getValueInit(field)))
-    return SI->getValue();
+    return std::string(SI->getValue());
   return std::string();
 }
 
@@ -174,8 +175,7 @@ static void printOption(llvm::raw_ostream &OS, StringRef FullName,
     OS << "true";
 }
 
-namespace clang {
-void EmitClangSACheckers(RecordKeeper &Records, raw_ostream &OS) {
+void clang::EmitClangSACheckers(RecordKeeper &Records, raw_ostream &OS) {
   std::vector<Record*> checkers = Records.getAllDerivedDefinitions("Checker");
   std::vector<Record*> packages = Records.getAllDerivedDefinitions("Package");
 
@@ -282,6 +282,31 @@ void EmitClangSACheckers(RecordKeeper &Records, raw_ostream &OS) {
   OS << "\n"
         "#endif // GET_CHECKER_DEPENDENCIES\n";
 
+  // Emit weak dependencies.
+  //
+  // CHECKER_DEPENDENCY(FULLNAME, DEPENDENCY)
+  //   - FULLNAME: The full name of the checker that is supposed to be
+  //     registered first.
+  //   - DEPENDENCY: The full name of the checker FULLNAME weak depends on.
+  OS << "\n"
+        "#ifdef GET_CHECKER_WEAK_DEPENDENCIES\n";
+  for (const Record *Checker : checkers) {
+    if (Checker->isValueUnset("WeakDependencies"))
+      continue;
+
+    for (const Record *Dependency :
+         Checker->getValueAsListOfDefs("WeakDependencies")) {
+      OS << "CHECKER_WEAK_DEPENDENCY(";
+      OS << '\"';
+      OS.write_escaped(getCheckerFullName(Checker)) << "\", ";
+      OS << '\"';
+      OS.write_escaped(getCheckerFullName(Dependency)) << '\"';
+      OS << ")\n";
+    }
+  }
+  OS << "\n"
+        "#endif // GET_CHECKER_WEAK_DEPENDENCIES\n";
+
   // Emit a package option.
   //
   // CHECKER_OPTION(OPTIONTYPE, CHECKERNAME, OPTIONNAME, DESCRIPTION, DEFAULT)
@@ -315,4 +340,3 @@ void EmitClangSACheckers(RecordKeeper &Records, raw_ostream &OS) {
   OS << "#endif // GET_CHECKER_OPTIONS\n"
         "\n";
 }
-} // end namespace clang

@@ -51,7 +51,7 @@ class CallExpr {
         // Print all template arguments into ArgString
         llvm::raw_string_ostream OS(ArgString);
         for (unsigned i = 0; i < Args->size(); ++i) {
-          Args->get(i).print(Context.getLangOpts(), OS);
+          Args->get(i).print(Context.getLangOpts(), OS, /*IncludeType*/ true);
           // Add a padding character so that 'foo<X, XX>()' != 'foo<XX, X>()'.
           OS << '\n';
         }
@@ -189,7 +189,7 @@ class CXXFoldExpr {
 }
 class GenericSelectionExpr {
   code Code = [{
-    for (const GenericSelectionExpr::ConstAssociation &Assoc : S->associations()) {
+    for (const GenericSelectionExpr::ConstAssociation Assoc : S->associations()) {
       addData(Assoc.getType());
     }
   }];

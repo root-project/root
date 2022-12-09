@@ -22,7 +22,6 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/BinaryFormat/Dwarf.h"
 #include "llvm/CodeGen/DbgEntityHistoryCalculator.h"
-#include "llvm/CodeGen/DIE.h"
 #include "llvm/CodeGen/LexicalScopes.h"
 #include "llvm/IR/DebugInfoMetadata.h"
 #include "llvm/Support/Casting.h"
@@ -34,26 +33,31 @@
 namespace llvm {
 
 class AsmPrinter;
+class DIE;
+class DIELoc;
+class DIEValueList;
 class DwarfFile;
 class GlobalVariable;
 class MCExpr;
 class MCSymbol;
 class MDNode;
 
+enum class UnitKind { Skeleton, Full };
+
 class DwarfCompileUnit final : public DwarfUnit {
   /// A numeric ID unique among all CUs in the module
   unsigned UniqueID;
   bool HasRangeLists = false;
 
-  /// The attribute index of DW_AT_stmt_list in the compile unit DIE, avoiding
-  /// the need to search for it in applyStmtList.
-  DIE::value_iterator StmtListValue;
+  /// The start of the unit line section, this is also
+  /// reused in appyStmtList.
+  MCSymbol *LineTableStartSym;
 
   /// Skeleton unit associated with this unit.
   DwarfCompileUnit *Skeleton = nullptr;
 
   /// The start of the unit within its section.
-  MCSymbol *LabelBegin;
+  MCSymbol *LabelBegin = nullptr;
 
   /// The start of the unit macro info within macro section.
   MCSymbol *MacroLabelBegin;
@@ -104,7 +108,8 @@ class DwarfCompileUnit final : public DwarfUnit {
 
 public:
   DwarfCompileUnit(unsigned UID, const DICompileUnit *Node, AsmPrinter *A,
-                   DwarfDebug *DW, DwarfFile *DWU);
+                   DwarfDebug *DW, DwarfFile *DWU,
+                   UnitKind Kind = UnitKind::Full);
 
   bool hasRangeLists() const { return HasRangeLists; }
   unsigned getUniqueID() const { return UniqueID; }
@@ -119,6 +124,9 @@ public:
 
   /// Apply the DW_AT_stmt_list from this compile unit to the specified DIE.
   void applyStmtList(DIE &D);
+
+  /// Get line table start symbol for this unit.
+  MCSymbol *getLineTableStartSym() const { return LineTableStartSym; }
 
   /// A pair of GlobalVariable and DIExpression.
   struct GlobalExpr {
@@ -227,12 +235,35 @@ public:
 
   void constructAbstractSubprogramScopeDIE(LexicalScope *Scope);
 
+  /// Whether to use the GNU analog for a DWARF5 tag, attribute, or location
+  /// atom. Only applicable when emitting otherwise DWARF4-compliant debug info.
+  bool useGNUAnalogForDwarf5Feature() const;
+
+  /// This takes a DWARF 5 tag and returns it or a GNU analog.
+  dwarf::Tag getDwarf5OrGNUTag(dwarf::Tag Tag) const;
+
+  /// This takes a DWARF 5 attribute and returns it or a GNU analog.
+  dwarf::Attribute getDwarf5OrGNUAttr(dwarf::Attribute Attr) const;
+
+  /// This takes a DWARF 5 location atom and either returns it or a GNU analog.
+  dwarf::LocationAtom getDwarf5OrGNULocationAtom(dwarf::LocationAtom Loc) const;
+
   /// Construct a call site entry DIE describing a call within \p Scope to a
-  /// callee described by \p CalleeSP. \p IsTail specifies whether the call is
-  /// a tail call. \p PCOffset must be non-zero for non-tail calls or be the
-  /// function-local offset to PC value after the call instruction.
-  DIE &constructCallSiteEntryDIE(DIE &ScopeDIE, const DISubprogram &CalleeSP,
-                                 bool IsTail, const MCExpr *PCOffset);
+  /// callee described by \p CalleeSP.
+  /// \p IsTail specifies whether the call is a tail call.
+  /// \p PCAddr points to the PC value after the call instruction.
+  /// \p CallAddr points to the PC value at the call instruction (or is null).
+  /// \p CallReg is a register location for an indirect call. For direct calls
+  /// the \p CallReg is set to 0.
+  DIE &constructCallSiteEntryDIE(DIE &ScopeDIE, const DISubprogram *CalleeSP,
+                                 bool IsTail, const MCSymbol *PCAddr,
+                                 const MCSymbol *CallAddr, unsigned CallReg);
+  /// Construct call site parameter DIEs for the \p CallSiteDIE. The \p Params
+  /// were collected by the \ref collectCallSiteParameters.
+  /// Note: The order of parameters does not matter, since debuggers recognize
+  ///       call site parameters by the DW_AT_location attribute.
+  void constructCallSiteParmEntryDIEs(DIE &CallSiteDIE,
+                                      SmallVector<DbgCallSiteParam, 4> &Params);
 
   /// Construct import_module DIE.
   DIE *constructImportedEntityDIE(const DIImportedEntity *Module);
@@ -256,8 +287,8 @@ public:
     return DwarfUnit::getHeaderSize() + DWOIdSize;
   }
   unsigned getLength() {
-    return sizeof(uint32_t) + // Length field
-        getHeaderSize() + getUnitDie().getSize();
+    return Asm->getUnitLengthFieldByteSize() + // Length field
+           getHeaderSize() + getUnitDie().getSize();
   }
 
   void emitHeader(bool UseOffsets) override;
@@ -266,7 +297,7 @@ public:
   void addAddrTableBase();
 
   MCSymbol *getLabelBegin() const {
-    assert(getSection());
+    assert(LabelBegin && "LabelBegin is not initialized");
     return LabelBegin;
   }
 
@@ -313,9 +344,6 @@ public:
 
   /// Add a Dwarf expression attribute data and value.
   void addExpr(DIELoc &Die, dwarf::Form Form, const MCExpr *Expr);
-
-  /// Add an attribute containing an address expression to \p Die.
-  void addAddressExpr(DIE &Die, dwarf::Attribute Attribute, const MCExpr *Expr);
 
   void applySubprogramAttributesToDefinition(const DISubprogram *SP,
                                              DIE &SPDie);

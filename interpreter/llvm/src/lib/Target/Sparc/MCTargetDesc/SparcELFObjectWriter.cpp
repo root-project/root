@@ -49,7 +49,7 @@ unsigned SparcELFObjectWriter::getRelocType(MCContext &Ctx,
   }
 
   if (IsPCRel) {
-    switch((unsigned)Fixup.getKind()) {
+    switch(Fixup.getTargetKind()) {
     default:
       llvm_unreachable("Unimplemented fixup -> relocation");
     case FK_Data_1:                  return ELF::R_SPARC_DISP8;
@@ -65,7 +65,7 @@ unsigned SparcELFObjectWriter::getRelocType(MCContext &Ctx,
     }
   }
 
-  switch((unsigned)Fixup.getKind()) {
+  switch(Fixup.getTargetKind()) {
   default:
     llvm_unreachable("Unimplemented fixup -> relocation");
   case FK_Data_1:                return ELF::R_SPARC_8;
@@ -86,6 +86,7 @@ unsigned SparcELFObjectWriter::getRelocType(MCContext &Ctx,
   case Sparc::fixup_sparc_l44:   return ELF::R_SPARC_L44;
   case Sparc::fixup_sparc_hh:    return ELF::R_SPARC_HH22;
   case Sparc::fixup_sparc_hm:    return ELF::R_SPARC_HM10;
+  case Sparc::fixup_sparc_lm:    return ELF::R_SPARC_LM22;
   case Sparc::fixup_sparc_got22: return ELF::R_SPARC_GOT22;
   case Sparc::fixup_sparc_got10: return ELF::R_SPARC_GOT10;
   case Sparc::fixup_sparc_got13: return ELF::R_SPARC_GOT13;
@@ -135,5 +136,5 @@ bool SparcELFObjectWriter::needsRelocateWithSymbol(const MCSymbol &Sym,
 
 std::unique_ptr<MCObjectTargetWriter>
 llvm::createSparcELFObjectWriter(bool Is64Bit, uint8_t OSABI) {
-  return llvm::make_unique<SparcELFObjectWriter>(Is64Bit, OSABI);
+  return std::make_unique<SparcELFObjectWriter>(Is64Bit, OSABI);
 }

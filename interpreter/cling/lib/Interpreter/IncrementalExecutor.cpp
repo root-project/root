@@ -23,6 +23,7 @@
 #include "clang/Basic/TargetOptions.h"
 #include "clang/Frontend/CompilerInstance.h"
 
+#include "llvm/ExecutionEngine/Orc/ExecutorProcessControl.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/LLVMContext.h"
@@ -107,7 +108,8 @@ CreateHostTargetMachine(const clang::CompilerInstance& CI) {
 } // anonymous namespace
 
 IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& /*diags*/,
-                                         const clang::CompilerInstance& CI):
+                                         const clang::CompilerInstance& CI,
+                                         void *ExtraLibHandle, bool Verbose):
   m_Callbacks(nullptr), m_externalIncrementalExecutor(nullptr)
 #if 0
   : m_Diags(diags)
@@ -120,22 +122,18 @@ IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& /*diags*/,
 
   std::unique_ptr<TargetMachine> TM(CreateHostTargetMachine(CI));
   auto &TMRef = *TM;
-  auto RetainOwnership =
-    [this](llvm::orc::VModuleKey K, std::unique_ptr<Module> M) -> void {
-    assert (m_PendingModules.count(K) && "Unable to find the module");
-    m_PendingModules[K]->setModule(std::move(M));
-    m_PendingModules.erase(K);
-  };
-  m_JIT.reset(new IncrementalJIT(*this, std::move(TM), RetainOwnership));
+  llvm::Error Err = llvm::Error::success();
+  auto EPC = llvm::cantFail(llvm::orc::SelfExecutorProcessControl::Create());
+  m_JIT.reset(new IncrementalJIT(*this, std::move(TM), std::move(EPC), Err,
+    ExtraLibHandle, Verbose));
+  if (Err) {
+    llvm::logAllUnhandledErrors(std::move(Err), llvm::errs(), "Fatal: ");
+    llvm_unreachable("Propagate this error and exit gracefully");
+  }
 
-  m_BackendPasses.reset(new BackendPasses(CI.getCodeGenOpts(),
-                                          CI.getTargetOpts(),
-                                          CI.getLangOpts(),
-                                          TMRef,
-                                          *m_JIT));
+  m_BackendPasses.reset(new BackendPasses(CI.getCodeGenOpts(), TMRef));
 }
 
-// Keep in source: ~unique_ptr<ClingJIT> needs ClingJIT
 IncrementalExecutor::~IncrementalExecutor() {}
 
 void IncrementalExecutor::runAtExitFuncs() {
@@ -188,21 +186,6 @@ IncrementalExecutor::HandleMissingFunction(const std::string& mangled_name) cons
   return utils::FunctionToVoidPtr(&unresolvedSymbol);
 }
 
-void*
-IncrementalExecutor::NotifyLazyFunctionCreators(const std::string& mangled_name) const {
-  for (auto it = m_lazyFuncCreator.begin(), et = m_lazyFuncCreator.end();
-       it != et; ++it) {
-    void* ret = (void*)((LazyFunctionCreatorFunc_t)*it)(mangled_name);
-    if (ret)
-      return ret;
-  }
-  void *address = nullptr;
-  if (m_externalIncrementalExecutor)
-   address = m_externalIncrementalExecutor->getAddressOfGlobal(mangled_name);
-
-  return (address ? address : HandleMissingFunction(mangled_name));
-}
-
 #if 0
 // FIXME: employ to empty module dependencies *within* the *current* module.
 static void
@@ -248,10 +231,7 @@ IncrementalExecutor::runStaticInitializersOnce(Transaction& T) {
   if (isPracticallyEmptyModule(m))
     return kExeSuccess;
 
-  llvm::orc::VModuleKey K =
-    emitModule(T.takeModule(), T.getCompilationOpts().OptLevel);
-  m_PendingModules[K] = &T;
-
+  emitModule(T);
 
   // We don't care whether something was unresolved before.
   m_unresolvedSymbols.clear();
@@ -260,79 +240,10 @@ IncrementalExecutor::runStaticInitializersOnce(Transaction& T) {
   if (diagnoseUnresolvedSymbols("static initializers"))
     return kExeUnresolvedSymbols;
 
-  llvm::GlobalVariable* GV
-     = m->getGlobalVariable("llvm.global_ctors", true);
-  // Nothing to do is good, too.
-  if (!GV) return kExeSuccess;
-
-  // Close similarity to
-  // m_engine->runStaticConstructorsDestructors(false) aka
-  // llvm::ExecutionEngine::runStaticConstructorsDestructors()
-  // is intentional; we do an extra pass to check whether the JIT
-  // managed to collect all the symbols needed by the niitializers.
-  // Should be an array of '{ i32, void ()* }' structs.  The first value is
-  // the init priority, which we ignore.
-  llvm::ConstantArray *InitList
-    = llvm::dyn_cast<llvm::ConstantArray>(GV->getInitializer());
-
-  if (InitList == 0)
-    return kExeSuccess;
-
-  //SmallVector<Function*, 2> initFuncs;
-
-  for (unsigned i = 0, e = InitList->getNumOperands(); i != e; ++i) {
-    llvm::ConstantStruct *CS
-      = llvm::dyn_cast<llvm::ConstantStruct>(InitList->getOperand(i));
-    if (CS == 0) continue;
-
-    llvm::Constant *FP = CS->getOperand(1);
-    if (FP->isNullValue())
-      continue;  // Found a sentinal value, ignore.
-
-    // Strip off constant expression casts.
-    if (llvm::ConstantExpr *CE = llvm::dyn_cast<llvm::ConstantExpr>(FP))
-      if (CE->isCast())
-        FP = CE->getOperand(0);
-
-    // Execute the ctor/dtor function!
-    if (llvm::Function *F = llvm::dyn_cast<llvm::Function>(FP)) {
-      const llvm::StringRef fName = F->getName();
-      executeInit(fName);
-/*
-      initFuncs.push_back(F);
-      if (fName.startswith("_GLOBAL__sub_I_")) {
-        BasicBlock& BB = F->getEntryBlock();
-        for (BasicBlock::iterator I = BB.begin(), E = BB.end(); I != E; ++I)
-          if (CallInst* call = dyn_cast<CallInst>(I))
-            initFuncs.push_back(call->getCalledFunction());
-      }
-*/
-    }
+  if (llvm::Error Err = m_JIT->runCtors()) {
+    llvm::logAllUnhandledErrors(std::move(Err), llvm::errs(),
+                                "[runStaticInitializersOnce]: ");
   }
-
-/*
-  for (SmallVector<Function*,2>::iterator I = initFuncs.begin(),
-         E = initFuncs.end(); I != E; ++I) {
-    // Cleanup also the dangling init functions. They are in the form:
-    // define internal void @_GLOBAL__I_aN() section "..."{
-    // entry:
-    //   call void @__cxx_global_var_init(N-1)()
-    //   call void @__cxx_global_var_initM()
-    //   ret void
-    // }
-    //
-    // define internal void @__cxx_global_var_init(N-1)() section "..." {
-    // entry:
-    //   call void @_ZN7MyClassC1Ev(%struct.MyClass* @n)
-    //   ret void
-    // }
-
-    // Erase __cxx_global_var_init(N-1)() first.
-    (*I)->removeDeadConstantUsers();
-    (*I)->eraseFromParent();
-  }
-*/
-
   return kExeSuccess;
 }
 
@@ -385,29 +296,49 @@ void IncrementalExecutor::setCallbacks(InterpreterCallbacks* callbacks) {
   m_DyLibManager.setCallbacks(callbacks);
 }
 
-void
-IncrementalExecutor::installLazyFunctionCreator(LazyFunctionCreatorFunc_t fp)
-{
-  m_lazyFuncCreator.push_back(fp);
+void IncrementalExecutor::addGenerator(
+    std::unique_ptr<llvm::orc::DefinitionGenerator> G) {
+  m_JIT->addGenerator(std::move(G));
 }
 
-bool
-IncrementalExecutor::addSymbol(const char* Name,  void* Addr,
-                               bool Jit) const {
-  return m_JIT->lookupSymbol(Name, Addr, Jit).second;
+void IncrementalExecutor::replaceSymbol(const char* Name, void* Addr) const {
+  assert(Addr);
+  // FIXME: Look at the registration of at_quick_exit and uncomment.
+  // assert(m_JIT->getSymbolAddress(Name, /*IncludeHostSymbols*/true) &&
+  //        "The symbol must exist");
+  m_JIT->addOrReplaceDefinition(Name, llvm::pointerToJITTargetAddress(Addr));
 }
 
 void* IncrementalExecutor::getAddressOfGlobal(llvm::StringRef symbolName,
                                               bool* fromJIT /*=0*/) const {
-  // Return a symbol's address, and whether it was jitted.
-  void* address = m_JIT->lookupSymbol(symbolName).first;
+  constexpr bool includeHostSymbols = true;
 
-  // It's not from the JIT if it's in a dylib.
-  if (fromJIT)
-    *fromJIT = !address;
+  void* address = m_JIT->getSymbolAddress(symbolName, includeHostSymbols);
 
-  if (!address)
-    return (void*)m_JIT->getSymbolAddress(symbolName, false /*no dlsym*/);
+  // FIXME: If we split the loaded libraries into a separate JITDylib we should
+  // be able to delete this code and use something like:
+  //   if (IncludeHostSymbols) {
+  //   if (auto Sym = lookup(<HostSymbolsJD>, Name)) {
+  //     fromJIT = false;
+  //     return Sym;
+  //   }
+  // }
+  // if (auto Sym = lookup(<REPLJD>, Name)) {
+  //   fromJIT = true;
+  //   return Sym;
+  // }
+  // fromJIT = false;
+  // return nullptr;
+  if (fromJIT) {
+    // FIXME: See comments on DLSym below.
+    // We use dlsym to just tell if somethings was from the jit or not.
+#if !defined(_WIN32)
+    void* Addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(symbolName.str());
+#else
+    void* Addr = const_cast<void*>(platform::DLSym(symbolName.str()));
+#endif
+    *fromJIT = !Addr;
+  }
 
   return address;
 }
@@ -419,7 +350,7 @@ IncrementalExecutor::getPointerToGlobalFromJIT(llvm::StringRef name) const {
   // We don't care whether something was unresolved before.
   m_unresolvedSymbols.clear();
 
-  void* addr = (void*)m_JIT->getSymbolAddress(name, false /*no dlsym*/);
+  void* addr = m_JIT->getSymbolAddress(name, false /*no dlsym*/);
 
   if (diagnoseUnresolvedSymbols(name, "symbol"))
     return 0;
@@ -429,6 +360,8 @@ IncrementalExecutor::getPointerToGlobalFromJIT(llvm::StringRef name) const {
 bool IncrementalExecutor::diagnoseUnresolvedSymbols(llvm::StringRef trigger,
                                                   llvm::StringRef title) const {
   if (m_unresolvedSymbols.empty())
+    return false;
+  if (m_unresolvedSymbols.size() == 1 && *m_unresolvedSymbols.begin() == trigger)
     return false;
 
   // Issue callback to TCling!!
@@ -472,17 +405,8 @@ bool IncrementalExecutor::diagnoseUnresolvedSymbols(llvm::StringRef trigger,
           << "Maybe you need to load the corresponding shared library?\n";
     }
 
-#ifdef __APPLE__
-    // The JIT gives us a mangled name which has only one leading underscore on
-    // all platforms, for instance _ZN8TRandom34RndmEv. However, on OSX the
-    // linker stores this symbol as __ZN8TRandom34RndmEv (adding an extra _).
-    assert(!llvm::StringRef(sym).startswith("__") && "Already added!");
-    std::string libName = m_DyLibManager.searchLibrariesForSymbol('_' + sym,
-                                                        /*searchSystem=*/ true);
-#else
     std::string libName = m_DyLibManager.searchLibrariesForSymbol(sym,
                                                         /*searchSystem=*/ true);
-#endif //__APPLE__
     if (!libName.empty())
       cling::errs() << "Symbol found in '" << libName << "';"
                     << " did you mean to load it with '.L "

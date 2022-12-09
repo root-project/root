@@ -74,7 +74,7 @@ std::string NativeTypeUDT::getName() const {
   if (UnmodifiedType)
     return UnmodifiedType->getName();
 
-  return Tag->getName();
+  return std::string(Tag->getName());
 }
 
 SymIndexId NativeTypeUDT::getLexicalParentId() const { return 0; }
@@ -120,7 +120,7 @@ PDB_UdtType NativeTypeUDT::getUdtKind() const {
   case TypeRecordKind::Interface:
     return PDB_UdtType::Interface;
   default:
-    llvm_unreachable("Unexected udt kind");
+    llvm_unreachable("Unexpected udt kind");
   }
 }
 

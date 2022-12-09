@@ -1,3 +1,5 @@
+include(LLVMDistributionSupport)
+
 function(clang_tablegen)
   # Syntax:
   # clang_tablegen output-file [tablegen-arg ...] SOURCE source-file
@@ -17,8 +19,9 @@ function(clang_tablegen)
     message(FATAL_ERROR "SOURCE source-file required by clang_tablegen")
   endif()
 
+  set( CLANG_TABLEGEN_ARGUMENTS "" )
   set( LLVM_TARGET_DEFINITIONS ${CTG_SOURCE} )
-  tablegen(CLANG ${CTG_UNPARSED_ARGUMENTS})
+  tablegen(CLANG ${CTG_UNPARSED_ARGUMENTS} ${CLANG_TABLEGEN_ARGUMENTS})
 
   if(CTG_TARGET)
     add_public_tablegen_target(${CTG_TARGET})
@@ -44,7 +47,7 @@ endmacro()
 
 macro(add_clang_library name)
   cmake_parse_arguments(ARG
-    "SHARED;INSTALL_WITH_TOOLCHAIN"
+    "SHARED;STATIC;INSTALL_WITH_TOOLCHAIN"
     ""
     "ADDITIONAL_HEADERS"
     ${ARGN})
@@ -80,52 +83,59 @@ macro(add_clang_library name)
       ${ARG_ADDITIONAL_HEADERS} # It may contain unparsed unknown args.
       )
   endif()
-  if(ARG_SHARED)
+
+  if(ARG_SHARED AND ARG_STATIC)
+    set(LIBTYPE SHARED STATIC)
+  elseif(ARG_SHARED)
     set(LIBTYPE SHARED)
   else()
     # llvm_add_library ignores BUILD_SHARED_LIBS if STATIC is explicitly set,
     # so we need to handle it here.
     if(BUILD_SHARED_LIBS)
-      set(LIBTYPE SHARED OBJECT)
+      set(LIBTYPE SHARED)
     else()
-      set(LIBTYPE STATIC OBJECT)
+      set(LIBTYPE STATIC)
+    endif()
+    if(NOT XCODE)
+      # The Xcode generator doesn't handle object libraries correctly.
+      list(APPEND LIBTYPE OBJECT)
     endif()
     set_property(GLOBAL APPEND PROPERTY CLANG_STATIC_LIBS ${name})
   endif()
   llvm_add_library(${name} ${LIBTYPE} ${ARG_UNPARSED_ARGUMENTS} ${srcs})
 
-  if(TARGET ${name})
-    target_link_libraries(${name} INTERFACE ${LLVM_COMMON_LIBS})
-
-    if (NOT LLVM_INSTALL_TOOLCHAIN_ONLY OR ARG_INSTALL_WITH_TOOLCHAIN)
-      set(export_to_clangtargets)
-      if(${name} IN_LIST LLVM_DISTRIBUTION_COMPONENTS OR
-          "clang-libraries" IN_LIST LLVM_DISTRIBUTION_COMPONENTS OR
-          NOT LLVM_DISTRIBUTION_COMPONENTS)
-        set(export_to_clangtargets EXPORT ClangTargets)
-        set_property(GLOBAL PROPERTY CLANG_HAS_EXPORTS True)
-      endif()
-
-      install(TARGETS ${name}
-        COMPONENT ${name}
-        ${export_to_clangtargets}
-        LIBRARY DESTINATION lib${LLVM_LIBDIR_SUFFIX}
-        ARCHIVE DESTINATION lib${LLVM_LIBDIR_SUFFIX}
-        RUNTIME DESTINATION bin)
-
-      if (NOT LLVM_ENABLE_IDE)
-        add_llvm_install_targets(install-${name}
-                                 DEPENDS ${name}
-                                 COMPONENT ${name})
-      endif()
-
-      set_property(GLOBAL APPEND PROPERTY CLANG_LIBS ${name})
-    endif()
-    set_property(GLOBAL APPEND PROPERTY CLANG_EXPORTS ${name})
-  else()
-    # Add empty "phony" target
-    add_custom_target(${name})
+  set(libs ${name})
+  if(ARG_SHARED AND ARG_STATIC)
+    list(APPEND libs ${name}_static)
   endif()
+
+  foreach(lib ${libs})
+    if(TARGET ${lib})
+      target_link_libraries(${lib} INTERFACE ${LLVM_COMMON_LIBS})
+
+      if (NOT LLVM_INSTALL_TOOLCHAIN_ONLY OR ARG_INSTALL_WITH_TOOLCHAIN)
+        get_target_export_arg(${name} Clang export_to_clangtargets UMBRELLA clang-libraries)
+        install(TARGETS ${lib}
+          COMPONENT ${lib}
+          ${export_to_clangtargets}
+          LIBRARY DESTINATION lib${LLVM_LIBDIR_SUFFIX}
+          ARCHIVE DESTINATION lib${LLVM_LIBDIR_SUFFIX}
+          RUNTIME DESTINATION bin)
+
+        if (NOT LLVM_ENABLE_IDE)
+          add_llvm_install_targets(install-${lib}
+                                   DEPENDS ${lib}
+                                   COMPONENT ${lib})
+        endif()
+
+        set_property(GLOBAL APPEND PROPERTY CLANG_LIBS ${lib})
+      endif()
+      set_property(GLOBAL APPEND PROPERTY CLANG_EXPORTS ${lib})
+    else()
+      # Add empty "phony" target
+      add_custom_target(${lib})
+    endif()
+  endforeach()
 
   set_target_properties(${name} PROPERTIES FOLDER "Clang libraries")
   set_clang_windows_version_resource_properties(${name})
@@ -146,13 +156,7 @@ macro(add_clang_tool name)
   add_dependencies(${name} clang-resource-headers)
 
   if (CLANG_BUILD_TOOLS)
-    set(export_to_clangtargets)
-    if(${name} IN_LIST LLVM_DISTRIBUTION_COMPONENTS OR
-        NOT LLVM_DISTRIBUTION_COMPONENTS)
-      set(export_to_clangtargets EXPORT ClangTargets)
-      set_property(GLOBAL PROPERTY CLANG_HAS_EXPORTS True)
-    endif()
-
+    get_target_export_arg(${name} Clang export_to_clangtargets)
     install(TARGETS ${name}
       ${export_to_clangtargets}
       RUNTIME DESTINATION bin

@@ -16,10 +16,11 @@
 #include "llvm/Support/Format.h"
 #include "llvm/Support/raw_ostream.h"
 #include <cassert>
+#include <cmath>
 
 using namespace llvm;
 
-const uint32_t BranchProbability::D;
+constexpr uint32_t BranchProbability::D;
 
 raw_ostream &BranchProbability::print(raw_ostream &OS) const {
   if (isUnknown())

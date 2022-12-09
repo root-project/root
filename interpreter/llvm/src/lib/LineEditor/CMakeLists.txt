@@ -2,7 +2,7 @@ if(HAVE_LIBEDIT)
   set(link_libs edit)
 endif()
 
-add_llvm_library(LLVMLineEditor
+add_llvm_component_library(LLVMLineEditor
   LineEditor.cpp
 
   ADDITIONAL_HEADER_DIRS
@@ -10,4 +10,7 @@ add_llvm_library(LLVMLineEditor
 
   LINK_LIBS
   ${link_libs}
+
+  LINK_COMPONENTS
+  Support
   )

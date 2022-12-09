@@ -143,7 +143,7 @@
                      *Builder) const override;                                 \
                                                                                \
   private:                                                                     \
-    ParamType const Param;                                                     \
+    ParamType Param;                                                           \
   };                                                                           \
   }                                                                            \
   inline ::clang::ast_matchers::internal::Matcher<Type> DefineMatcher(         \
@@ -151,7 +151,7 @@
     return ::clang::ast_matchers::internal::makeMatcher(                       \
         new internal::matcher_##DefineMatcher##OverloadId##Matcher(Param));    \
   }                                                                            \
-  typedef ::clang::ast_matchers::internal::Matcher<Type>(                      \
+  typedef ::clang::ast_matchers::internal::Matcher<Type> (                     \
       &DefineMatcher##_Type##OverloadId)(ParamType const &Param);              \
   inline bool internal::matcher_##DefineMatcher##OverloadId##Matcher::matches( \
       const Type &Node,                                                        \
@@ -192,8 +192,8 @@
                      *Builder) const override;                                 \
                                                                                \
   private:                                                                     \
-    ParamType1 const Param1;                                                   \
-    ParamType2 const Param2;                                                   \
+    ParamType1 Param1;                                                         \
+    ParamType2 Param2;                                                         \
   };                                                                           \
   }                                                                            \
   inline ::clang::ast_matchers::internal::Matcher<Type> DefineMatcher(         \
@@ -202,7 +202,7 @@
         new internal::matcher_##DefineMatcher##OverloadId##Matcher(Param1,     \
                                                                    Param2));   \
   }                                                                            \
-  typedef ::clang::ast_matchers::internal::Matcher<Type>(                      \
+  typedef ::clang::ast_matchers::internal::Matcher<Type> (                     \
       &DefineMatcher##_Type##OverloadId)(ParamType1 const &Param1,             \
                                          ParamType2 const &Param2);            \
   inline bool internal::matcher_##DefineMatcher##OverloadId##Matcher::matches( \
@@ -239,10 +239,10 @@
                      *Builder) const override;                                 \
   };                                                                           \
   }                                                                            \
-  inline ::clang::ast_matchers::internal::PolymorphicMatcherWithParam0<        \
+  inline ::clang::ast_matchers::internal::PolymorphicMatcher<                  \
       internal::matcher_##DefineMatcher##Matcher, ReturnTypesF>                \
   DefineMatcher() {                                                            \
-    return ::clang::ast_matchers::internal::PolymorphicMatcherWithParam0<      \
+    return ::clang::ast_matchers::internal::PolymorphicMatcher<                \
         internal::matcher_##DefineMatcher##Matcher, ReturnTypesF>();           \
   }                                                                            \
   template <typename NodeType>                                                 \
@@ -281,21 +281,20 @@
                      *Builder) const override;                                 \
                                                                                \
   private:                                                                     \
-    ParamType const Param;                                                     \
+    ParamType Param;                                                           \
   };                                                                           \
   }                                                                            \
-  inline ::clang::ast_matchers::internal::PolymorphicMatcherWithParam1<        \
-      internal::matcher_##DefineMatcher##OverloadId##Matcher, ParamType,       \
-      ReturnTypesF>                                                            \
+  inline ::clang::ast_matchers::internal::PolymorphicMatcher<                  \
+      internal::matcher_##DefineMatcher##OverloadId##Matcher, ReturnTypesF,    \
+      ParamType>                                                               \
   DefineMatcher(ParamType const &Param) {                                      \
-    return ::clang::ast_matchers::internal::PolymorphicMatcherWithParam1<      \
-        internal::matcher_##DefineMatcher##OverloadId##Matcher, ParamType,     \
-        ReturnTypesF>(Param);                                                  \
+    return ::clang::ast_matchers::internal::PolymorphicMatcher<                \
+        internal::matcher_##DefineMatcher##OverloadId##Matcher, ReturnTypesF,  \
+        ParamType>(Param);                                                     \
   }                                                                            \
-  typedef ::clang::ast_matchers::internal::PolymorphicMatcherWithParam1<       \
-      internal::matcher_##DefineMatcher##OverloadId##Matcher, ParamType,       \
-      ReturnTypesF>(&DefineMatcher##_Type##OverloadId)(                        \
-      ParamType const &Param);                                                 \
+  typedef ::clang::ast_matchers::internal::PolymorphicMatcher<                 \
+      internal::matcher_##DefineMatcher##OverloadId##Matcher, ReturnTypesF,    \
+      ParamType> (&DefineMatcher##_Type##OverloadId)(ParamType const &Param);  \
   template <typename NodeType, typename ParamT>                                \
   bool internal::                                                              \
       matcher_##DefineMatcher##OverloadId##Matcher<NodeType, ParamT>::matches( \
@@ -334,21 +333,21 @@
                      *Builder) const override;                                 \
                                                                                \
   private:                                                                     \
-    ParamType1 const Param1;                                                   \
-    ParamType2 const Param2;                                                   \
+    ParamType1 Param1;                                                         \
+    ParamType2 Param2;                                                         \
   };                                                                           \
   }                                                                            \
-  inline ::clang::ast_matchers::internal::PolymorphicMatcherWithParam2<        \
-      internal::matcher_##DefineMatcher##OverloadId##Matcher, ParamType1,      \
-      ParamType2, ReturnTypesF>                                                \
+  inline ::clang::ast_matchers::internal::PolymorphicMatcher<                  \
+      internal::matcher_##DefineMatcher##OverloadId##Matcher, ReturnTypesF,    \
+      ParamType1, ParamType2>                                                  \
   DefineMatcher(ParamType1 const &Param1, ParamType2 const &Param2) {          \
-    return ::clang::ast_matchers::internal::PolymorphicMatcherWithParam2<      \
-        internal::matcher_##DefineMatcher##OverloadId##Matcher, ParamType1,    \
-        ParamType2, ReturnTypesF>(Param1, Param2);                             \
+    return ::clang::ast_matchers::internal::PolymorphicMatcher<                \
+        internal::matcher_##DefineMatcher##OverloadId##Matcher, ReturnTypesF,  \
+        ParamType1, ParamType2>(Param1, Param2);                               \
   }                                                                            \
-  typedef ::clang::ast_matchers::internal::PolymorphicMatcherWithParam2<       \
-      internal::matcher_##DefineMatcher##OverloadId##Matcher, ParamType1,      \
-      ParamType2, ReturnTypesF>(&DefineMatcher##_Type##OverloadId)(            \
+  typedef ::clang::ast_matchers::internal::PolymorphicMatcher<                 \
+      internal::matcher_##DefineMatcher##OverloadId##Matcher, ReturnTypesF,    \
+      ParamType1, ParamType2> (&DefineMatcher##_Type##OverloadId)(             \
       ParamType1 const &Param1, ParamType2 const &Param2);                     \
   template <typename NodeType, typename ParamT1, typename ParamT2>             \
   bool internal::matcher_##DefineMatcher##OverloadId##Matcher<                 \
@@ -439,5 +438,123 @@
       ::clang::ast_matchers::internal::TypeLocTraverseMatcher,                 \
       ReturnTypesF>::Func MatcherName##Loc;                                    \
   AST_TYPE_TRAVERSE_MATCHER(MatcherName, FunctionName##Type, ReturnTypesF)
+
+/// AST_MATCHER_REGEX(Type, DefineMatcher, Param) { ... }
+/// defines a function named DefineMatcher() that takes a regular expression
+/// string paramater and an optional RegexFlags parameter and returns a
+/// Matcher<Type> object.
+///
+/// The code between the curly braces has access to the following variables:
+///
+///   Node:                  the AST node being matched; its type is Type.
+///   Param:                 a pointer to an \ref llvm::Regex object
+///   Finder:                an ASTMatchFinder*.
+///   Builder:               a BoundNodesTreeBuilder*.
+///
+/// The code should return true if 'Node' matches.
+#define AST_MATCHER_REGEX(Type, DefineMatcher, Param)                          \
+  AST_MATCHER_REGEX_OVERLOAD(Type, DefineMatcher, Param, 0)
+
+#define AST_MATCHER_REGEX_OVERLOAD(Type, DefineMatcher, Param, OverloadId)     \
+  namespace internal {                                                         \
+  class matcher_##DefineMatcher##OverloadId##Matcher                           \
+      : public ::clang::ast_matchers::internal::MatcherInterface<Type> {       \
+  public:                                                                      \
+    explicit matcher_##DefineMatcher##OverloadId##Matcher(                     \
+        std::shared_ptr<llvm::Regex> RE)                                       \
+        : Param(std::move(RE)) {}                                              \
+    bool matches(const Type &Node,                                             \
+                 ::clang::ast_matchers::internal::ASTMatchFinder *Finder,      \
+                 ::clang::ast_matchers::internal::BoundNodesTreeBuilder        \
+                     *Builder) const override;                                 \
+                                                                               \
+  private:                                                                     \
+    std::shared_ptr<llvm::Regex> Param;                                        \
+  };                                                                           \
+  }                                                                            \
+  inline ::clang::ast_matchers::internal::Matcher<Type> DefineMatcher(         \
+      llvm::StringRef Param, llvm::Regex::RegexFlags RegexFlags) {             \
+    return ::clang::ast_matchers::internal::makeMatcher(                       \
+        new internal::matcher_##DefineMatcher##OverloadId##Matcher(            \
+            ::clang::ast_matchers::internal::createAndVerifyRegex(             \
+                Param, RegexFlags, #DefineMatcher)));                          \
+  }                                                                            \
+  inline ::clang::ast_matchers::internal::Matcher<Type> DefineMatcher(         \
+      llvm::StringRef Param) {                                                 \
+    return DefineMatcher(Param, llvm::Regex::NoFlags);                         \
+  }                                                                            \
+                                                                               \
+  typedef ::clang::ast_matchers::internal::Matcher<Type> (                     \
+      &DefineMatcher##_Type##OverloadId##Flags)(llvm::StringRef,               \
+                                                llvm::Regex::RegexFlags);      \
+  typedef ::clang::ast_matchers::internal::Matcher<Type> (                     \
+      &DefineMatcher##_Type##OverloadId)(llvm::StringRef);                     \
+  inline bool internal::matcher_##DefineMatcher##OverloadId##Matcher::matches( \
+      const Type &Node,                                                        \
+      ::clang::ast_matchers::internal::ASTMatchFinder *Finder,                 \
+      ::clang::ast_matchers::internal::BoundNodesTreeBuilder *Builder) const
+
+/// AST_POLYMORPHIC_MATCHER_REGEX(DefineMatcher, ReturnTypesF, Param) { ... }
+/// defines a function named DefineMatcher() that takes a regular expression
+/// string paramater and an optional RegexFlags parameter that is polymorphic in
+/// the return type.
+///
+/// The variables are the same as for
+/// AST_MATCHER_REGEX, with the addition of NodeType, which specifies the node
+/// type of the matcher Matcher<NodeType> returned by the function matcher().
+#define AST_POLYMORPHIC_MATCHER_REGEX(DefineMatcher, ReturnTypesF, Param)      \
+  AST_POLYMORPHIC_MATCHER_REGEX_OVERLOAD(DefineMatcher, ReturnTypesF, Param, 0)
+
+#define AST_POLYMORPHIC_MATCHER_REGEX_OVERLOAD(DefineMatcher, ReturnTypesF,    \
+                                               Param, OverloadId)              \
+  namespace internal {                                                         \
+  template <typename NodeType, typename ParamT>                                \
+  class matcher_##DefineMatcher##OverloadId##Matcher                           \
+      : public ::clang::ast_matchers::internal::MatcherInterface<NodeType> {   \
+  public:                                                                      \
+    explicit matcher_##DefineMatcher##OverloadId##Matcher(                     \
+        std::shared_ptr<llvm::Regex> RE)                                       \
+        : Param(std::move(RE)) {}                                              \
+    bool matches(const NodeType &Node,                                         \
+                 ::clang::ast_matchers::internal::ASTMatchFinder *Finder,      \
+                 ::clang::ast_matchers::internal::BoundNodesTreeBuilder        \
+                     *Builder) const override;                                 \
+                                                                               \
+  private:                                                                     \
+    std::shared_ptr<llvm::Regex> Param;                                        \
+  };                                                                           \
+  }                                                                            \
+  inline ::clang::ast_matchers::internal::PolymorphicMatcher<                  \
+      internal::matcher_##DefineMatcher##OverloadId##Matcher, ReturnTypesF,    \
+      std::shared_ptr<llvm::Regex>>                                            \
+  DefineMatcher(llvm::StringRef Param, llvm::Regex::RegexFlags RegexFlags) {   \
+    return ::clang::ast_matchers::internal::PolymorphicMatcher<                \
+        internal::matcher_##DefineMatcher##OverloadId##Matcher, ReturnTypesF,  \
+        std::shared_ptr<llvm::Regex>>(                                         \
+        ::clang::ast_matchers::internal::createAndVerifyRegex(                 \
+            Param, RegexFlags, #DefineMatcher));                               \
+  }                                                                            \
+  inline ::clang::ast_matchers::internal::PolymorphicMatcher<                  \
+      internal::matcher_##DefineMatcher##OverloadId##Matcher, ReturnTypesF,    \
+      std::shared_ptr<llvm::Regex>>                                            \
+  DefineMatcher(llvm::StringRef Param) {                                       \
+    return DefineMatcher(Param, llvm::Regex::NoFlags);                         \
+  }                                                                            \
+  typedef ::clang::ast_matchers::internal::PolymorphicMatcher<                 \
+      internal::matcher_##DefineMatcher##OverloadId##Matcher, ReturnTypesF,    \
+      std::shared_ptr<llvm::Regex>> (                                          \
+      &DefineMatcher##_Type##OverloadId##Flags)(                               \
+      llvm::StringRef Param, llvm::Regex::RegexFlags RegexFlags);              \
+  typedef ::clang::ast_matchers::internal::PolymorphicMatcher<                 \
+      internal::matcher_##DefineMatcher##OverloadId##Matcher, ReturnTypesF,    \
+      std::shared_ptr<llvm::Regex>> (&DefineMatcher##_Type##OverloadId)(       \
+      llvm::StringRef Param);                                                  \
+  template <typename NodeType, typename ParamT>                                \
+  bool internal::                                                              \
+      matcher_##DefineMatcher##OverloadId##Matcher<NodeType, ParamT>::matches( \
+          const NodeType &Node,                                                \
+          ::clang::ast_matchers::internal::ASTMatchFinder *Finder,             \
+          ::clang::ast_matchers::internal::BoundNodesTreeBuilder *Builder)     \
+          const
 
 #endif // LLVM_CLANG_ASTMATCHERS_ASTMATCHERSMACROS_H

@@ -34,19 +34,21 @@ Specifies an immediate unsigned 8-bit offset, in bytes. The default value is 0.
 
 Used with DS instructions which have 2 addresses.
 
-    =================== =====================================================
+    =================== ====================================================================
     Syntax              Description
-    =================== =====================================================
+    =================== ====================================================================
     offset:{0..0xFF}    Specifies an unsigned 8-bit offset as a positive
-                        :ref:`integer number <amdgpu_synid_integer_number>`.
-    =================== =====================================================
+                        :ref:`integer number <amdgpu_synid_integer_number>`
+                        or an :ref:`absolute expression<amdgpu_synid_absolute_expression>`.
+    =================== ====================================================================
 
 Examples:
 
 .. parsed-literal::
 
-  offset:255
   offset:0xff
+  offset:2-x
+  offset:-x-y
 
 .. _amdgpu_synid_ds_offset16:
 
@@ -57,12 +59,13 @@ Specifies an immediate unsigned 16-bit offset, in bytes. The default value is 0.
 
 Used with DS instructions which have 1 address.
 
-    ==================== ======================================================
+    ==================== ====================================================================
     Syntax               Description
-    ==================== ======================================================
+    ==================== ====================================================================
     offset:{0..0xFFFF}   Specifies an unsigned 16-bit offset as a positive
-                         :ref:`integer number <amdgpu_synid_integer_number>`.
-    ==================== ======================================================
+                         :ref:`integer number <amdgpu_synid_integer_number>`
+                         or an :ref:`absolute expression<amdgpu_synid_absolute_expression>`.
+    ==================== ====================================================================
 
 Examples:
 
@@ -70,6 +73,7 @@ Examples:
 
   offset:65535
   offset:0xffff
+  offset:-x-y
 
 .. _amdgpu_synid_sw_offset16:
 
@@ -95,7 +99,7 @@ See AMD documentation for more information.
 
                                                             *mask* is a 5 character sequence which
                                                             specifies how to transform the bits of the
-                                                            lane *id*. 
+                                                            lane *id*.
 
                                                             The following characters are allowed:
 
@@ -116,7 +120,7 @@ See AMD documentation for more information.
                                                             size and must be equal to 2, 4, 8, 16 or 32.
 
                                                             The second numeric parameter is an index of the
-                                                            lane being broadcasted. 
+                                                            lane being broadcasted.
 
                                                             The index must not exceed group size.
     offset:swizzle(SWAP,{1..16})                            Specifies a swap mode.
@@ -128,7 +132,7 @@ See AMD documentation for more information.
                                                             Reverses the lanes for groups of 2, 4, 8, 16 or 32 lanes.
     ======================================================= ===========================================================
 
-Numeric parameters may be specified as either :ref:`integer numbers<amdgpu_synid_integer_number>` or
+Note: numeric values may be specified as either :ref:`integer numbers<amdgpu_synid_integer_number>` or
 :ref:`absolute expressions<amdgpu_synid_absolute_expression>`.
 
 Examples:
@@ -137,7 +141,7 @@ Examples:
 
   offset:255
   offset:0xffff
-  offset:swizzle(QUAD_PERM, 0, 1, 2 ,3)
+  offset:swizzle(QUAD_PERM, 0, 1, 2, 3)
   offset:swizzle(BITMASK_PERM, "01pi0")
   offset:swizzle(BROADCAST, 2, 0)
   offset:swizzle(SWAP, 8)
@@ -212,19 +216,20 @@ Specifies an immediate unsigned 12-bit offset, in bytes. The default value is 0.
 
 Cannot be used with *global/scratch* opcodes. GFX9 only.
 
-    ================= ======================================================
+    ================= ====================================================================
     Syntax            Description
-    ================= ======================================================
+    ================= ====================================================================
     offset:{0..4095}  Specifies a 12-bit unsigned offset as a positive
-                      :ref:`integer number <amdgpu_synid_integer_number>`.
-    ================= ======================================================
+                      :ref:`integer number <amdgpu_synid_integer_number>`
+                      or an :ref:`absolute expression<amdgpu_synid_absolute_expression>`.
+    ================= ====================================================================
 
 Examples:
 
 .. parsed-literal::
 
   offset:4095
-  offset:0xff
+  offset:x-0xff
 
 .. _amdgpu_synid_flat_offset13s:
 
@@ -235,12 +240,13 @@ Specifies an immediate signed 13-bit offset, in bytes. The default value is 0.
 
 Can be used with *global/scratch* opcodes only. GFX9 only.
 
-    ============================ =======================================================
-    Syntax                       Description
-    ============================ =======================================================
-    offset:{-4096..4095}         Specifies a 13-bit signed offset as an
-                                 :ref:`integer number <amdgpu_synid_integer_number>`.
-    ============================ =======================================================
+    ===================== ====================================================================
+    Syntax                Description
+    ===================== ====================================================================
+    offset:{-4096..4095}  Specifies a 13-bit signed offset as an
+                          :ref:`integer number <amdgpu_synid_integer_number>`
+                          or an :ref:`absolute expression<amdgpu_synid_absolute_expression>`.
+    ===================== ====================================================================
 
 Examples:
 
@@ -248,6 +254,7 @@ Examples:
 
   offset:-4000
   offset:0x10
+  offset:-x
 
 .. _amdgpu_synid_flat_offset12s:
 
@@ -260,12 +267,13 @@ Can be used with *global/scratch* opcodes only.
 
 GFX10 only.
 
-    ============================ =======================================================
-    Syntax                       Description
-    ============================ =======================================================
-    offset:{-2048..2047}         Specifies a 12-bit signed offset as an
-                                 :ref:`integer number <amdgpu_synid_integer_number>`.
-    ============================ =======================================================
+    ===================== ====================================================================
+    Syntax                Description
+    ===================== ====================================================================
+    offset:{-2048..2047}  Specifies a 12-bit signed offset as an
+                          :ref:`integer number <amdgpu_synid_integer_number>`
+                          or an :ref:`absolute expression<amdgpu_synid_absolute_expression>`.
+    ===================== ====================================================================
 
 Examples:
 
@@ -273,6 +281,7 @@ Examples:
 
   offset:-2000
   offset:0x10
+  offset:-x+y
 
 .. _amdgpu_synid_flat_offset11:
 
@@ -285,19 +294,20 @@ Cannot be used with *global/scratch* opcodes.
 
 GFX10 only.
 
-    ================= ======================================================
+    ================= ====================================================================
     Syntax            Description
-    ================= ======================================================
+    ================= ====================================================================
     offset:{0..2047}  Specifies an 11-bit unsigned offset as a positive
-                      :ref:`integer number <amdgpu_synid_integer_number>`.
-    ================= ======================================================
+                      :ref:`integer number <amdgpu_synid_integer_number>`
+                      or an :ref:`absolute expression<amdgpu_synid_absolute_expression>`.
+    ================= ====================================================================
 
 Examples:
 
 .. parsed-literal::
 
   offset:2047
-  offset:0xff
+  offset:x+0xff
 
 dlc
 ~~~
@@ -340,19 +350,18 @@ dmask
 Specifies which channels (image components) are used by the operation. By default, no channels
 are used.
 
-    =============== =====================================================
+    =============== ====================================================================
     Syntax          Description
-    =============== =====================================================
+    =============== ====================================================================
     dmask:{0..15}   Specifies image channels as a positive
-                    :ref:`integer number <amdgpu_synid_integer_number>`.
+                    :ref:`integer number <amdgpu_synid_integer_number>`
+                    or an :ref:`absolute expression<amdgpu_synid_absolute_expression>`.
 
-                    Each bit corresponds to one of 4 image
-                    components (RGBA).
+                    Each bit corresponds to one of 4 image components (RGBA).
 
-                    If the specified bit value
-                    is 0, the component is not used, value 1 means
-                    that the component is used.
-    =============== =====================================================
+                    If the specified bit value is 0, the component is not used,
+                    value 1 means that the component is used.
+    =============== ====================================================================
 
 This modifier has some limitations depending on instruction kind:
 
@@ -373,7 +382,7 @@ Examples:
 
   dmask:0xf
   dmask:0b1111
-  dmask:3
+  dmask:x|y|z
 
 .. _amdgpu_synid_unorm:
 
@@ -413,7 +422,7 @@ GFX7, GFX8 and GFX10 only.
     r128                Specifies 128 bits texture resource size.
     =================== ================================================
 
-.. WARNING:: Using this modifier should descrease *rsrc* operand size from 8 to 4 dwords, but assembler does not currently support this feature.
+.. WARNING:: Using this modifier should decrease *rsrc* operand size from 8 to 4 dwords, but assembler does not currently support this feature.
 
 tfe
 ~~~
@@ -468,7 +477,7 @@ Specifies data size: 16 or 32 bits (32 bits by default). Not supported by GFX7.
                                              Each 16-bit data element occupies 1 VGPR.
 
                                              GFX8.1, GFX9 and GFX10 support data packing.
-                                             Each pair of 16-bit data elements 
+                                             Each pair of 16-bit data elements
                                              occupies 1 VGPR.
     ======================================== ================================================
 
@@ -684,18 +693,19 @@ offset12
 
 Specifies an immediate unsigned 12-bit offset, in bytes. The default value is 0.
 
-    =============================== ======================================================
-    Syntax                          Description
-    =============================== ======================================================
-    offset:{0..0xFFF}               Specifies a 12-bit unsigned offset as a positive
-                                    :ref:`integer number <amdgpu_synid_integer_number>`.
-    =============================== ======================================================
+    ================== ====================================================================
+    Syntax             Description
+    ================== ====================================================================
+    offset:{0..0xFFF}  Specifies a 12-bit unsigned offset as a positive
+                       :ref:`integer number <amdgpu_synid_integer_number>`
+                       or an :ref:`absolute expression<amdgpu_synid_absolute_expression>`.
+    ================== ====================================================================
 
 Examples:
 
 .. parsed-literal::
 
-  offset:0
+  offset:x+y
   offset:0x10
 
 glc
@@ -723,19 +733,212 @@ tfe
 
 See a description :ref:`here<amdgpu_synid_tfe>`.
 
-.. _amdgpu_synid_dfmt:
+.. _amdgpu_synid_fmt:
 
-dfmt
+fmt
+~~~
+
+Specifies data and numeric formats used by the operation.
+The default numeric format is BUF_NUM_FORMAT_UNORM.
+The default data format is BUF_DATA_FORMAT_8.
+
+    ========================================= ===============================================================
+    Syntax                                    Description
+    ========================================= ===============================================================
+    format:{0..127}                           Use format specified as either an
+                                              :ref:`integer number<amdgpu_synid_integer_number>` or an
+                                              :ref:`absolute expression<amdgpu_synid_absolute_expression>`.
+    format:[<data format>]                    Use the specified data format and
+                                              default numeric format.
+    format:[<numeric format>]                 Use the specified numeric format and
+                                              default data format.
+    format:[<data format>, <numeric format>]  Use the specified data and numeric formats.
+    format:[<numeric format>, <data format>]  Use the specified data and numeric formats.
+    ========================================= ===============================================================
+
+.. _amdgpu_synid_format_data:
+
+Supported data formats are defined in the following table:
+
+    ========================================= ===============================
+    Syntax                                    Note
+    ========================================= ===============================
+    BUF_DATA_FORMAT_INVALID
+    BUF_DATA_FORMAT_8                         Default value.
+    BUF_DATA_FORMAT_16
+    BUF_DATA_FORMAT_8_8
+    BUF_DATA_FORMAT_32
+    BUF_DATA_FORMAT_16_16
+    BUF_DATA_FORMAT_10_11_11
+    BUF_DATA_FORMAT_11_11_10
+    BUF_DATA_FORMAT_10_10_10_2
+    BUF_DATA_FORMAT_2_10_10_10
+    BUF_DATA_FORMAT_8_8_8_8
+    BUF_DATA_FORMAT_32_32
+    BUF_DATA_FORMAT_16_16_16_16
+    BUF_DATA_FORMAT_32_32_32
+    BUF_DATA_FORMAT_32_32_32_32
+    BUF_DATA_FORMAT_RESERVED_15
+    ========================================= ===============================
+
+.. _amdgpu_synid_format_num:
+
+Supported numeric formats are defined below:
+
+    ========================================= ===============================
+    Syntax                                    Note
+    ========================================= ===============================
+    BUF_NUM_FORMAT_UNORM                      Default value.
+    BUF_NUM_FORMAT_SNORM
+    BUF_NUM_FORMAT_USCALED
+    BUF_NUM_FORMAT_SSCALED
+    BUF_NUM_FORMAT_UINT
+    BUF_NUM_FORMAT_SINT
+    BUF_NUM_FORMAT_SNORM_OGL                  GFX7 only.
+    BUF_NUM_FORMAT_RESERVED_6                 GFX8 and GFX9 only.
+    BUF_NUM_FORMAT_FLOAT
+    ========================================= ===============================
+
+Examples:
+
+.. parsed-literal::
+
+  format:0
+  format:127
+  format:[BUF_DATA_FORMAT_16]
+  format:[BUF_DATA_FORMAT_16,BUF_NUM_FORMAT_SSCALED]
+  format:[BUF_NUM_FORMAT_FLOAT]
+
+.. _amdgpu_synid_ufmt:
+
+ufmt
 ~~~~
 
-TBD
+Specifies a unified format used by the operation.
+The default format is BUF_FMT_8_UNORM.
+GFX10 only.
 
-.. _amdgpu_synid_nfmt:
+    ========================================= ===============================================================
+    Syntax                                    Description
+    ========================================= ===============================================================
+    format:{0..127}                           Use unified format specified as either an
+                                              :ref:`integer number<amdgpu_synid_integer_number>` or an
+                                              :ref:`absolute expression<amdgpu_synid_absolute_expression>`.
+                                              Note that unified format numbers are not compatible with
+                                              format numbers used for pre-GFX10 ISA.
+    format:[<unified format>]                 Use the specified unified format.
+    ========================================= ===============================================================
 
-nfmt
-~~~~
+Unified format is a replacement for :ref:`data<amdgpu_synid_format_data>`
+and :ref:`numeric<amdgpu_synid_format_num>` formats. For compatibility with older ISA,
+:ref:`syntax with data and numeric formats<amdgpu_synid_fmt>` is still accepted
+provided that the combination of formats can be mapped to a unified format.
 
-TBD
+Supported unified formats and equivalent combinations of data and numeric formats
+are defined below:
+
+    ============================== ============================== =============================
+    Syntax                         Equivalent Data Format         Equivalent Numeric Format
+    ============================== ============================== =============================
+    BUF_FMT_INVALID                BUF_DATA_FORMAT_INVALID        BUF_NUM_FORMAT_UNORM
+
+    BUF_FMT_8_UNORM                BUF_DATA_FORMAT_8              BUF_NUM_FORMAT_UNORM
+    BUF_FMT_8_SNORM                BUF_DATA_FORMAT_8              BUF_NUM_FORMAT_SNORM
+    BUF_FMT_8_USCALED              BUF_DATA_FORMAT_8              BUF_NUM_FORMAT_USCALED
+    BUF_FMT_8_SSCALED              BUF_DATA_FORMAT_8              BUF_NUM_FORMAT_SSCALED
+    BUF_FMT_8_UINT                 BUF_DATA_FORMAT_8              BUF_NUM_FORMAT_UINT
+    BUF_FMT_8_SINT                 BUF_DATA_FORMAT_8              BUF_NUM_FORMAT_SINT
+
+    BUF_FMT_16_UNORM               BUF_DATA_FORMAT_16             BUF_NUM_FORMAT_UNORM
+    BUF_FMT_16_SNORM               BUF_DATA_FORMAT_16             BUF_NUM_FORMAT_SNORM
+    BUF_FMT_16_USCALED             BUF_DATA_FORMAT_16             BUF_NUM_FORMAT_USCALED
+    BUF_FMT_16_SSCALED             BUF_DATA_FORMAT_16             BUF_NUM_FORMAT_SSCALED
+    BUF_FMT_16_UINT                BUF_DATA_FORMAT_16             BUF_NUM_FORMAT_UINT
+    BUF_FMT_16_SINT                BUF_DATA_FORMAT_16             BUF_NUM_FORMAT_SINT
+    BUF_FMT_16_FLOAT               BUF_DATA_FORMAT_16             BUF_NUM_FORMAT_FLOAT
+
+    BUF_FMT_8_8_UNORM              BUF_DATA_FORMAT_8_8            BUF_NUM_FORMAT_UNORM
+    BUF_FMT_8_8_SNORM              BUF_DATA_FORMAT_8_8            BUF_NUM_FORMAT_SNORM
+    BUF_FMT_8_8_USCALED            BUF_DATA_FORMAT_8_8            BUF_NUM_FORMAT_USCALED
+    BUF_FMT_8_8_SSCALED            BUF_DATA_FORMAT_8_8            BUF_NUM_FORMAT_SSCALED
+    BUF_FMT_8_8_UINT               BUF_DATA_FORMAT_8_8            BUF_NUM_FORMAT_UINT
+    BUF_FMT_8_8_SINT               BUF_DATA_FORMAT_8_8            BUF_NUM_FORMAT_SINT
+
+    BUF_FMT_32_UINT                BUF_DATA_FORMAT_32             BUF_NUM_FORMAT_UINT
+    BUF_FMT_32_SINT                BUF_DATA_FORMAT_32             BUF_NUM_FORMAT_SINT
+    BUF_FMT_32_FLOAT               BUF_DATA_FORMAT_32             BUF_NUM_FORMAT_FLOAT
+
+    BUF_FMT_16_16_UNORM            BUF_DATA_FORMAT_16_16          BUF_NUM_FORMAT_UNORM
+    BUF_FMT_16_16_SNORM            BUF_DATA_FORMAT_16_16          BUF_NUM_FORMAT_SNORM
+    BUF_FMT_16_16_USCALED          BUF_DATA_FORMAT_16_16          BUF_NUM_FORMAT_USCALED
+    BUF_FMT_16_16_SSCALED          BUF_DATA_FORMAT_16_16          BUF_NUM_FORMAT_SSCALED
+    BUF_FMT_16_16_UINT             BUF_DATA_FORMAT_16_16          BUF_NUM_FORMAT_UINT
+    BUF_FMT_16_16_SINT             BUF_DATA_FORMAT_16_16          BUF_NUM_FORMAT_SINT
+    BUF_FMT_16_16_FLOAT            BUF_DATA_FORMAT_16_16          BUF_NUM_FORMAT_FLOAT
+
+    BUF_FMT_10_11_11_UNORM         BUF_DATA_FORMAT_10_11_11       BUF_NUM_FORMAT_UNORM
+    BUF_FMT_10_11_11_SNORM         BUF_DATA_FORMAT_10_11_11       BUF_NUM_FORMAT_SNORM
+    BUF_FMT_10_11_11_USCALED       BUF_DATA_FORMAT_10_11_11       BUF_NUM_FORMAT_USCALED
+    BUF_FMT_10_11_11_SSCALED       BUF_DATA_FORMAT_10_11_11       BUF_NUM_FORMAT_SSCALED
+    BUF_FMT_10_11_11_UINT          BUF_DATA_FORMAT_10_11_11       BUF_NUM_FORMAT_UINT
+    BUF_FMT_10_11_11_SINT          BUF_DATA_FORMAT_10_11_11       BUF_NUM_FORMAT_SINT
+    BUF_FMT_10_11_11_FLOAT         BUF_DATA_FORMAT_10_11_11       BUF_NUM_FORMAT_FLOAT
+
+    BUF_FMT_11_11_10_UNORM         BUF_DATA_FORMAT_11_11_10       BUF_NUM_FORMAT_UNORM
+    BUF_FMT_11_11_10_SNORM         BUF_DATA_FORMAT_11_11_10       BUF_NUM_FORMAT_SNORM
+    BUF_FMT_11_11_10_USCALED       BUF_DATA_FORMAT_11_11_10       BUF_NUM_FORMAT_USCALED
+    BUF_FMT_11_11_10_SSCALED       BUF_DATA_FORMAT_11_11_10       BUF_NUM_FORMAT_SSCALED
+    BUF_FMT_11_11_10_UINT          BUF_DATA_FORMAT_11_11_10       BUF_NUM_FORMAT_UINT
+    BUF_FMT_11_11_10_SINT          BUF_DATA_FORMAT_11_11_10       BUF_NUM_FORMAT_SINT
+    BUF_FMT_11_11_10_FLOAT         BUF_DATA_FORMAT_11_11_10       BUF_NUM_FORMAT_FLOAT
+
+    BUF_FMT_10_10_10_2_UNORM       BUF_DATA_FORMAT_10_10_10_2     BUF_NUM_FORMAT_UNORM
+    BUF_FMT_10_10_10_2_SNORM       BUF_DATA_FORMAT_10_10_10_2     BUF_NUM_FORMAT_SNORM
+    BUF_FMT_10_10_10_2_USCALED     BUF_DATA_FORMAT_10_10_10_2     BUF_NUM_FORMAT_USCALED
+    BUF_FMT_10_10_10_2_SSCALED     BUF_DATA_FORMAT_10_10_10_2     BUF_NUM_FORMAT_SSCALED
+    BUF_FMT_10_10_10_2_UINT        BUF_DATA_FORMAT_10_10_10_2     BUF_NUM_FORMAT_UINT
+    BUF_FMT_10_10_10_2_SINT        BUF_DATA_FORMAT_10_10_10_2     BUF_NUM_FORMAT_SINT
+
+    BUF_FMT_2_10_10_10_UNORM       BUF_DATA_FORMAT_2_10_10_10     BUF_NUM_FORMAT_UNORM
+    BUF_FMT_2_10_10_10_SNORM       BUF_DATA_FORMAT_2_10_10_10     BUF_NUM_FORMAT_SNORM
+    BUF_FMT_2_10_10_10_USCALED     BUF_DATA_FORMAT_2_10_10_10     BUF_NUM_FORMAT_USCALED
+    BUF_FMT_2_10_10_10_SSCALED     BUF_DATA_FORMAT_2_10_10_10     BUF_NUM_FORMAT_SSCALED
+    BUF_FMT_2_10_10_10_UINT        BUF_DATA_FORMAT_2_10_10_10     BUF_NUM_FORMAT_UINT
+    BUF_FMT_2_10_10_10_SINT        BUF_DATA_FORMAT_2_10_10_10     BUF_NUM_FORMAT_SINT
+
+    BUF_FMT_8_8_8_8_UNORM          BUF_DATA_FORMAT_8_8_8_8        BUF_NUM_FORMAT_UNORM
+    BUF_FMT_8_8_8_8_SNORM          BUF_DATA_FORMAT_8_8_8_8        BUF_NUM_FORMAT_SNORM
+    BUF_FMT_8_8_8_8_USCALED        BUF_DATA_FORMAT_8_8_8_8        BUF_NUM_FORMAT_USCALED
+    BUF_FMT_8_8_8_8_SSCALED        BUF_DATA_FORMAT_8_8_8_8        BUF_NUM_FORMAT_SSCALED
+    BUF_FMT_8_8_8_8_UINT           BUF_DATA_FORMAT_8_8_8_8        BUF_NUM_FORMAT_UINT
+    BUF_FMT_8_8_8_8_SINT           BUF_DATA_FORMAT_8_8_8_8        BUF_NUM_FORMAT_SINT
+
+    BUF_FMT_32_32_UINT             BUF_DATA_FORMAT_32_32          BUF_NUM_FORMAT_UINT
+    BUF_FMT_32_32_SINT             BUF_DATA_FORMAT_32_32          BUF_NUM_FORMAT_SINT
+    BUF_FMT_32_32_FLOAT            BUF_DATA_FORMAT_32_32          BUF_NUM_FORMAT_FLOAT
+
+    BUF_FMT_16_16_16_16_UNORM      BUF_DATA_FORMAT_16_16_16_16    BUF_NUM_FORMAT_UNORM
+    BUF_FMT_16_16_16_16_SNORM      BUF_DATA_FORMAT_16_16_16_16    BUF_NUM_FORMAT_SNORM
+    BUF_FMT_16_16_16_16_USCALED    BUF_DATA_FORMAT_16_16_16_16    BUF_NUM_FORMAT_USCALED
+    BUF_FMT_16_16_16_16_SSCALED    BUF_DATA_FORMAT_16_16_16_16    BUF_NUM_FORMAT_SSCALED
+    BUF_FMT_16_16_16_16_UINT       BUF_DATA_FORMAT_16_16_16_16    BUF_NUM_FORMAT_UINT
+    BUF_FMT_16_16_16_16_SINT       BUF_DATA_FORMAT_16_16_16_16    BUF_NUM_FORMAT_SINT
+    BUF_FMT_16_16_16_16_FLOAT      BUF_DATA_FORMAT_16_16_16_16    BUF_NUM_FORMAT_FLOAT
+
+    BUF_FMT_32_32_32_UINT          BUF_DATA_FORMAT_32_32_32       BUF_NUM_FORMAT_UINT
+    BUF_FMT_32_32_32_SINT          BUF_DATA_FORMAT_32_32_32       BUF_NUM_FORMAT_SINT
+    BUF_FMT_32_32_32_FLOAT         BUF_DATA_FORMAT_32_32_32       BUF_NUM_FORMAT_FLOAT
+    BUF_FMT_32_32_32_32_UINT       BUF_DATA_FORMAT_32_32_32_32    BUF_NUM_FORMAT_UINT
+    BUF_FMT_32_32_32_32_SINT       BUF_DATA_FORMAT_32_32_32_32    BUF_NUM_FORMAT_SINT
+    BUF_FMT_32_32_32_32_FLOAT      BUF_DATA_FORMAT_32_32_32_32    BUF_NUM_FORMAT_FLOAT
+    ============================== ============================== =============================
+
+Examples:
+
+.. parsed-literal::
+
+  format:0
+  format:[BUF_FMT_32_UINT]
 
 SMRD/SMEM Modifiers
 -------------------
@@ -782,14 +985,18 @@ GFX10 only.
 dpp8_sel
 ~~~~~~~~
 
-Selects which lane to pull data from, within a group of 8 lanes. This is a mandatory modifier.
+Selects which lanes to pull data from, within a group of 8 lanes. This is a mandatory modifier.
 There is no default value.
 
 GFX10 only.
 
-The *dpp8_sel* modifier must specify exactly 8 values, each ranging from 0 to 7.
+The *dpp8_sel* modifier must specify exactly 8 values.
 First value selects which lane to read from to supply data into lane 0.
-Second value controls value for lane 1 and so on.
+Second value controls lane 1 and so on.
+
+Each value may be specified as either
+an :ref:`integer number<amdgpu_synid_integer_number>` or
+an :ref:`absolute expression<amdgpu_synid_absolute_expression>`.
 
     =============================================================== ===========================
     Syntax                                                          Description
@@ -811,7 +1018,7 @@ fi
 
 Controls interaction with inactive lanes for *dpp8* instructions. The default value is zero.
 
-Note. *Inactive* lanes are those whose :ref:`exec<amdgpu_synid_exec>` mask bit is zero.
+Note: *inactive* lanes are those whose :ref:`exec<amdgpu_synid_exec>` mask bit is zero.
 
 GFX10 only.
 
@@ -822,8 +1029,11 @@ GFX10 only.
     fi:1                                 Fetch pre-exist values from inactive lanes.
     ==================================== =====================================================
 
-DPP/DPP16 Modifiers
--------------------
+Note: numeric values may be specified as either :ref:`integer numbers<amdgpu_synid_integer_number>` or
+:ref:`absolute expressions<amdgpu_synid_absolute_expression>`.
+
+DPP Modifiers
+-------------
 
 GFX8, GFX9 and GFX10 only.
 
@@ -837,7 +1047,7 @@ There is no default value.
 
 GFX8 and GFX9 only. Use :ref:`dpp16_ctrl<amdgpu_synid_dpp16_ctrl>` for GFX10.
 
-Note. The lanes of a wavefront are organized in four *rows* and four *banks*.
+Note: the lanes of a wavefront are organized in four *rows* and four *banks*.
 
     ======================================== ================================================
     Syntax                                   Description
@@ -856,7 +1066,7 @@ Note. The lanes of a wavefront are organized in four *rows* and four *banks*.
     row_ror:{1..15}                          Row rotate right by 1-15 threads.
     ======================================== ================================================
 
-Note: Numeric parameters may be specified as either
+Note: numeric values may be specified as either
 :ref:`integer numbers<amdgpu_synid_integer_number>` or
 :ref:`absolute expressions<amdgpu_synid_absolute_expression>`.
 
@@ -877,7 +1087,7 @@ There is no default value.
 
 GFX10 only. Use :ref:`dpp_ctrl<amdgpu_synid_dpp_ctrl>` for GFX8 and GFX9.
 
-Note. The lanes of a wavefront are organized in four *rows* and four *banks*.
+Note: the lanes of a wavefront are organized in four *rows* and four *banks*.
 (There are only two rows in *wave32* mode.)
 
     ======================================== ====================================================
@@ -894,7 +1104,7 @@ Note. The lanes of a wavefront are organized in four *rows* and four *banks*.
     row_ror:{1..15}                          Row rotate right by 1-15 threads.
     ======================================== ====================================================
 
-Note: Numeric parameters may be specified as either
+Note: numeric values may be specified as either
 :ref:`integer numbers<amdgpu_synid_integer_number>` or
 :ref:`absolute expressions<amdgpu_synid_absolute_expression>`.
 
@@ -905,6 +1115,77 @@ Examples:
   quad_perm:[0, 1, 2, 3]
   row_shl:3
 
+.. _amdgpu_synid_dpp32_ctrl:
+
+dpp32_ctrl
+~~~~~~~~~~
+
+Specifies how data are shared between threads. This is a mandatory modifier.
+There is no default value.
+
+May be used only with GFX90A 32-bit instructions.
+
+Note: the lanes of a wavefront are organized in four *rows* and four *banks*.
+
+    ======================================== ==================================================
+    Syntax                                   Description
+    ======================================== ==================================================
+    quad_perm:[{0..3},{0..3},{0..3},{0..3}]  Full permute of 4 threads.
+    row_mirror                               Mirror threads within row.
+    row_half_mirror                          Mirror threads within 1/2 row (8 threads).
+    row_bcast:15                             Broadcast 15th thread of each row to next row.
+    row_bcast:31                             Broadcast thread 31 to rows 2 and 3.
+    wave_shl:1                               Wavefront left shift by 1 thread.
+    wave_rol:1                               Wavefront left rotate by 1 thread.
+    wave_shr:1                               Wavefront right shift by 1 thread.
+    wave_ror:1                               Wavefront right rotate by 1 thread.
+    row_shl:{1..15}                          Row shift left by 1-15 threads.
+    row_shr:{1..15}                          Row shift right by 1-15 threads.
+    row_ror:{1..15}                          Row rotate right by 1-15 threads.
+    row_newbcast:{1..15}                     Broadcast a thread within a row to the whole row.
+    ======================================== ==================================================
+
+Note: numeric values may be specified as either
+:ref:`integer numbers<amdgpu_synid_integer_number>` or
+:ref:`absolute expressions<amdgpu_synid_absolute_expression>`.
+
+Examples:
+
+.. parsed-literal::
+
+  quad_perm:[0, 1, 2, 3]
+  row_shl:3
+
+
+.. _amdgpu_synid_dpp64_ctrl:
+
+dpp64_ctrl
+~~~~~~~~~~
+
+Specifies how data are shared between threads. This is a mandatory modifier.
+There is no default value.
+
+May be used only with GFX90A 64-bit instructions.
+
+Note: the lanes of a wavefront are organized in four *rows* and four *banks*.
+
+    ======================================== ==================================================
+    Syntax                                   Description
+    ======================================== ==================================================
+    row_newbcast:{1..15}                     Broadcast a thread within a row to the whole row.
+    ======================================== ==================================================
+
+Note: numeric values may be specified as either
+:ref:`integer numbers<amdgpu_synid_integer_number>` or
+:ref:`absolute expressions<amdgpu_synid_absolute_expression>`.
+
+Examples:
+
+.. parsed-literal::
+
+  row_newbcast:3
+
+
 .. _amdgpu_synid_row_mask:
 
 row_mask
@@ -912,21 +1193,21 @@ row_mask
 
 Controls which rows are enabled for data sharing. By default, all rows are enabled.
 
-Note. The lanes of a wavefront are organized in four *rows* and four *banks*.
+Note: the lanes of a wavefront are organized in four *rows* and four *banks*.
 (There are only two rows in *wave32* mode.)
 
-    ======================================== =====================================================
-    Syntax                                   Description
-    ======================================== =====================================================
-    row_mask:{0..15}                         Specifies a *row mask* as a positive
-                                             :ref:`integer number <amdgpu_synid_integer_number>`.
+    ================= ====================================================================
+    Syntax            Description
+    ================= ====================================================================
+    row_mask:{0..15}  Specifies a *row mask* as a positive
+                      :ref:`integer number <amdgpu_synid_integer_number>`
+                      or an :ref:`absolute expression<amdgpu_synid_absolute_expression>`.
 
-                                             Each of 4 bits in the mask controls one
-                                             row (0 - disabled, 1 - enabled).
+                      Each of 4 bits in the mask controls one row
+                      (0 - disabled, 1 - enabled).
 
-                                             In *wave32* mode the values should be limited to
-                                             {0..7}.
-    ======================================== =====================================================
+                      In *wave32* mode the values should be limited to 0..7.
+    ================= ====================================================================
 
 Examples:
 
@@ -934,7 +1215,7 @@ Examples:
 
   row_mask:0xf
   row_mask:0b1010
-  row_mask:0b1111
+  row_mask:x|y
 
 .. _amdgpu_synid_bank_mask:
 
@@ -943,18 +1224,19 @@ bank_mask
 
 Controls which banks are enabled for data sharing. By default, all banks are enabled.
 
-Note. The lanes of a wavefront are organized in four *rows* and four *banks*.
+Note: the lanes of a wavefront are organized in four *rows* and four *banks*.
 (There are only two rows in *wave32* mode.)
 
-    ======================================== =======================================================
-    Syntax                                   Description
-    ======================================== =======================================================
-    bank_mask:{0..15}                        Specifies a *bank mask* as a positive
-                                             :ref:`integer number <amdgpu_synid_integer_number>`.
+    ================== ====================================================================
+    Syntax             Description
+    ================== ====================================================================
+    bank_mask:{0..15}  Specifies a *bank mask* as a positive
+                       :ref:`integer number <amdgpu_synid_integer_number>`
+                       or an :ref:`absolute expression<amdgpu_synid_absolute_expression>`.
 
-                                             Each of 4 bits in the mask controls one
-                                             bank (0 - disabled, 1 - enabled).
-    ======================================== =======================================================
+                       Each of 4 bits in the mask controls one bank
+                       (0 - disabled, 1 - enabled).
+    ================== ====================================================================
 
 Examples:
 
@@ -962,7 +1244,7 @@ Examples:
 
   bank_mask:0x3
   bank_mask:0b0011
-  bank_mask:0b1111
+  bank_mask:x&y
 
 .. _amdgpu_synid_bound_ctrl:
 
@@ -975,7 +1257,7 @@ invalid lanes is disabled.
     ======================================== ================================================
     Syntax                                   Description
     ======================================== ================================================
-    bound_ctrl:0                             Enables data sharing with invalid lanes.
+    bound_ctrl:1                             Enables data sharing with invalid lanes.
 
                                              Accessing data from an invalid lane will
                                              return zero.
@@ -988,7 +1270,7 @@ fi
 
 Controls interaction with *inactive* lanes for *dpp16* instructions. The default value is zero.
 
-Note. *Inactive* lanes are those whose :ref:`exec<amdgpu_synid_exec>` mask bit is zero.
+Note: *inactive* lanes are those whose :ref:`exec<amdgpu_synid_exec>` mask bit is zero.
 
 GFX10 only.
 
@@ -1000,6 +1282,9 @@ GFX10 only.
 
     fi:1                                     Fetch pre-exist values from inactive lanes.
     ======================================== ==================================================
+
+Note: numeric values may be specified as either :ref:`integer numbers<amdgpu_synid_integer_number>` or
+:ref:`absolute expressions<amdgpu_synid_absolute_expression>`.
 
 SDWA Modifiers
 --------------
@@ -1036,7 +1321,6 @@ Selects which bits in the destination are affected. By default, all bits are aff
     dst_sel:WORD_0                           Use bits 15:0.
     dst_sel:WORD_1                           Use bits 31:16.
     ======================================== ================================================
-
 
 .. _amdgpu_synid_dst_unused:
 
@@ -1151,7 +1435,7 @@ operands (both source and destination). First value controls src0, second value 
 and so on, except that the last value controls destination.
 The value 0 selects the low bits, while 1 selects the high bits.
 
-Note. op_sel modifier affects 16-bit operands only. For 32-bit operands the value specified
+Note: op_sel modifier affects 16-bit operands only. For 32-bit operands the value specified
 by op_sel must be 0.
 
 GFX9 and GFX10 only.
@@ -1163,6 +1447,10 @@ GFX9 and GFX10 only.
     op_sel:[{0..1},{0..1},{0..1}]            Select operand bits for instructions with 2 source operands.
     op_sel:[{0..1},{0..1},{0..1},{0..1}]     Select operand bits for instructions with 3 source operands.
     ======================================== ============================================================
+
+Note: numeric values may be specified as either
+:ref:`integer numbers<amdgpu_synid_integer_number>` or
+:ref:`absolute expressions<amdgpu_synid_absolute_expression>`.
 
 Examples:
 
@@ -1189,7 +1477,7 @@ Integer clamping is not supported by GFX7.
 For floating point operations, clamp modifier indicates that the result must be clamped
 to the range [0.0, 1.0]. By default, there is no clamping.
 
-Note. Clamp modifier is applied after :ref:`output modifiers<amdgpu_synid_omod>` (if any).
+Note: clamp modifier is applied after :ref:`output modifiers<amdgpu_synid_omod>` (if any).
 
     ======================================== ================================================
     Syntax                                   Description
@@ -1205,12 +1493,12 @@ omod
 Specifies if an output modifier must be applied to the result.
 By default, no output modifiers are applied.
 
-Note. Output modifiers are applied before :ref:`clamping<amdgpu_synid_clamp>` (if any).
+Note: output modifiers are applied before :ref:`clamping<amdgpu_synid_clamp>` (if any).
 
 Output modifiers are valid for f32 and f64 floating point results only.
 They must not be used with f16.
 
-Note. *v_cvt_f16_f32* is an exception. This instruction produces f16 result
+Note: *v_cvt_f16_f32* is an exception. This instruction produces f16 result
 but accepts output modifiers.
 
     ======================================== ================================================
@@ -1220,6 +1508,16 @@ but accepts output modifiers.
     mul:4                                    Multiply the result by 4.
     div:2                                    Multiply the result by 0.5.
     ======================================== ================================================
+
+Note: numeric values may be specified as either :ref:`integer numbers<amdgpu_synid_integer_number>` or
+:ref:`absolute expressions<amdgpu_synid_absolute_expression>`.
+
+Examples:
+
+.. parsed-literal::
+
+  mul:2
+  mul:x      // x must be equal to 2 or 4
 
 .. _amdgpu_synid_vop3_operand_modifiers:
 
@@ -1233,15 +1531,19 @@ Operand modifiers are not used separately. They are applied to source operands.
 abs
 ~~~
 
-Computes absolute value of its operand. Applied before :ref:`neg<amdgpu_synid_neg>` (if any).
-Valid for floating point operands only.
+Computes the absolute value of its operand. Must be applied before :ref:`neg<amdgpu_synid_neg>`
+(if any). Valid for floating point operands only.
 
-    ======================================== ================================================
+    ======================================== ====================================================
     Syntax                                   Description
-    ======================================== ================================================
-    abs(<operand>)                           Get absolute value of operand.
-    \|<operand>|                             The same as above.
-    ======================================== ================================================
+    ======================================== ====================================================
+    abs(<operand>)                           Get the absolute value of a floating-point operand.
+    \|<operand>|                             The same as above (an SP3 syntax).
+    ======================================== ====================================================
+
+Note: avoid using SP3 syntax with operands specified as expressions because the trailing '|'
+may be misinterpreted. Such operands should be enclosed into additional parentheses as shown
+in examples below.
 
 Examples:
 
@@ -1249,35 +1551,57 @@ Examples:
 
   abs(v36)
   \|v36|
+  abs(x|y)     // ok
+  \|(x|y)|      // additional parentheses are required
 
 .. _amdgpu_synid_neg:
 
 neg
 ~~~
 
-Computes negative value of its operand. Applied after :ref:`abs<amdgpu_synid_abs>` (if any).
-Valid for floating point operands only.
+Computes the negative value of its operand. Must be applied after :ref:`abs<amdgpu_synid_abs>`
+(if any). Valid for floating point operands only.
 
-    ======================================== ================================================
-    Syntax                                   Description
-    ======================================== ================================================
-    neg(<operand>)                           Get negative value of operand.
-    -<operand>                               The same as above.
-    ======================================== ================================================
+    ================== ====================================================
+    Syntax             Description
+    ================== ====================================================
+    neg(<operand>)     Get the negative value of a floating-point operand.
+                       The operand may include an optional
+                       :ref:`abs<amdgpu_synid_abs>` modifier.
+    -<operand>         The same as above (an SP3 syntax).
+    ================== ====================================================
+
+Note: SP3 syntax is supported with limitations because of a potential ambiguity.
+Currently it is allowed in the following cases:
+
+* Before a register.
+* Before an :ref:`abs<amdgpu_synid_abs>` modifier.
+* Before an SP3 :ref:`abs<amdgpu_synid_abs>` modifier.
+
+In all other cases "-" is handled as a part of an expression that follows the sign.
 
 Examples:
 
 .. parsed-literal::
 
+  // Operands with negate modifiers
   neg(v[0])
-  -v4
+  neg(1.0)
+  neg(abs(v0))
+  -v5
+  -abs(v5)
+  -\|v5|
+
+  // Operands without negate modifiers
+  -1
+  -x+y
 
 VOP3P Modifiers
 ---------------
 
 This section describes modifiers of *regular* VOP3P instructions.
 
-*v_mad_mix_f32*, *v_mad_mixhi_f16* and *v_mad_mixlo_f16*
+*v_mad_mix\** and *v_fma_mix\**
 instructions use these modifiers :ref:`in a special manner<amdgpu_synid_mad_mix>`.
 
 GFX9 and GFX10 only.
@@ -1303,6 +1627,10 @@ The value 0 selects the low bits, while 1 selects the high bits.
     op_sel:[{0..1},{0..1}]            Select operand bits for instructions with 2 source operands.
     op_sel:[{0..1},{0..1},{0..1}]     Select operand bits for instructions with 3 source operands.
     ================================= =============================================================
+
+Note: numeric values may be specified as either
+:ref:`integer numbers<amdgpu_synid_integer_number>` or
+:ref:`absolute expressions<amdgpu_synid_absolute_expression>`.
 
 Examples:
 
@@ -1332,6 +1660,10 @@ The value 0 selects the low bits, while 1 selects the high bits.
     op_sel_hi:[{0..1},{0..1}]           Select operand bits for instructions with 2 source operands.
     op_sel_hi:[{0..1},{0..1},{0..1}]    Select operand bits for instructions with 3 source operands.
     =================================== =============================================================
+
+Note: numeric values may be specified as either
+:ref:`integer numbers<amdgpu_synid_integer_number>` or
+:ref:`absolute expressions<amdgpu_synid_absolute_expression>`.
 
 Examples:
 
@@ -1367,6 +1699,10 @@ This modifier is valid for floating point operands only.
     neg_lo:[{0..1},{0..1},{0..1}]    Select affected operands for instructions with 3 source operands.
     ================================ ==================================================================
 
+Note: numeric values may be specified as either
+:ref:`integer numbers<amdgpu_synid_integer_number>` or
+:ref:`absolute expressions<amdgpu_synid_absolute_expression>`.
+
 Examples:
 
 .. parsed-literal::
@@ -1401,6 +1737,10 @@ This modifier is valid for floating point operands only.
     neg_hi:[{0..1},{0..1},{0..1}]   Select affected operands for instructions with 3 source operands.
     =============================== ==================================================================
 
+Note: numeric values may be specified as either
+:ref:`integer numbers<amdgpu_synid_integer_number>` or
+:ref:`absolute expressions<amdgpu_synid_absolute_expression>`.
+
 Examples:
 
 .. parsed-literal::
@@ -1415,11 +1755,11 @@ See a description :ref:`here<amdgpu_synid_clamp>`.
 
 .. _amdgpu_synid_mad_mix:
 
-VOP3P V_MAD_MIX Modifiers
--------------------------
+VOP3P MAD_MIX/FMA_MIX Modifiers
+-------------------------------
 
-*v_mad_mix_f32*, *v_mad_mixhi_f16* and *v_mad_mixlo_f16* instructions
-use *op_sel* and *op_sel_hi* modifiers 
+*v_mad_mix\** and *v_fma_mix\**
+instructions use *op_sel* and *op_sel_hi* modifiers
 in a manner different from *regular* VOP3P instructions.
 
 See a description below.
@@ -1449,6 +1789,10 @@ By default, low bits are used for all operands.
     op_sel:[{0..1},{0..1},{0..1}]   Select location of each 16-bit source operand.
     =============================== ================================================
 
+Note: numeric values may be specified as either
+:ref:`integer numbers<amdgpu_synid_integer_number>` or
+:ref:`absolute expressions<amdgpu_synid_absolute_expression>`.
+
 Examples:
 
 .. parsed-literal::
@@ -1477,6 +1821,10 @@ The location of 16 bits in the operand may be specified by
     op_sel_hi:[{0..1},{0..1},{0..1}]         Select size of each source operand.
     ======================================== ====================================
 
+Note: numeric values may be specified as either
+:ref:`integer numbers<amdgpu_synid_integer_number>` or
+:ref:`absolute expressions<amdgpu_synid_absolute_expression>`.
+
 Examples:
 
 .. parsed-literal::
@@ -1497,3 +1845,60 @@ clamp
 ~~~~~
 
 See a description :ref:`here<amdgpu_synid_clamp>`.
+
+VOP3P MFMA Modifiers
+--------------------
+
+These modifiers may only be used with GFX908 and GFX90A.
+
+.. _amdgpu_synid_cbsz:
+
+cbsz
+~~~~
+
+Specifies a broadcast mode.
+
+    =============================== ==================================================================
+    Syntax                          Description
+    =============================== ==================================================================
+    cbsz:[{0..7}]                   A broadcast mode.
+    =============================== ==================================================================
+
+Note: numeric value may be specified as either
+an :ref:`integer number<amdgpu_synid_integer_number>` or
+an :ref:`absolute expression<amdgpu_synid_absolute_expression>`.
+
+.. _amdgpu_synid_abid:
+
+abid
+~~~~
+
+Specifies matrix A group select.
+
+    =============================== ==================================================================
+    Syntax                          Description
+    =============================== ==================================================================
+    abid:[{0..15}]                  Matrix A group select id.
+    =============================== ==================================================================
+
+Note: numeric value may be specified as either
+an :ref:`integer number<amdgpu_synid_integer_number>` or
+an :ref:`absolute expression<amdgpu_synid_absolute_expression>`.
+
+.. _amdgpu_synid_blgp:
+
+blgp
+~~~~
+
+Specifies matrix B lane group pattern.
+
+    =============================== ==================================================================
+    Syntax                          Description
+    =============================== ==================================================================
+    blgp:[{0..7}]                   Matrix B lane group pattern.
+    =============================== ==================================================================
+
+Note: numeric value may be specified as either
+an :ref:`integer number<amdgpu_synid_integer_number>` or
+an :ref:`absolute expression<amdgpu_synid_absolute_expression>`.
+

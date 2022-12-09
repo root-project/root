@@ -27,6 +27,18 @@
 
 using namespace llvm;
 
+namespace llvm {
+cl::OptionCategory GICombinerOptionCategory(
+    "GlobalISel Combiner",
+    "Control the rules which are enabled. These options all take a comma "
+    "separated list of rules to disable and may be specified by number "
+    "or number range (e.g. 1-10)."
+#ifndef NDEBUG
+    " They may also be specified by name."
+#endif
+);
+} // end namespace llvm
+
 namespace {
 /// This class acts as the glue the joins the CombinerHelper to the overall
 /// Combine algorithm. The CombinerHelper is intended to report the
@@ -92,7 +104,7 @@ bool Combiner::combineMachineInstrs(MachineFunction &MF,
     return false;
 
   Builder =
-      CSEInfo ? make_unique<CSEMIRBuilder>() : make_unique<MachineIRBuilder>();
+      CSEInfo ? std::make_unique<CSEMIRBuilder>() : std::make_unique<MachineIRBuilder>();
   MRI = &MF.getRegInfo();
   Builder->setMF(MF);
   if (CSEInfo)
@@ -118,8 +130,6 @@ bool Combiner::combineMachineInstrs(MachineFunction &MF,
       WrapperObserver.addObserver(CSEInfo);
     RAIIDelegateInstaller DelInstall(MF, &WrapperObserver);
     for (MachineBasicBlock *MBB : post_order(&MF)) {
-      if (MBB->empty())
-        continue;
       for (auto MII = MBB->rbegin(), MIE = MBB->rend(); MII != MIE;) {
         MachineInstr *CurMI = &*MII;
         ++MII;
@@ -143,5 +153,14 @@ bool Combiner::combineMachineInstrs(MachineFunction &MF,
     MFChanged |= Changed;
   } while (Changed);
 
+#ifndef NDEBUG
+  if (CSEInfo) {
+    if (auto E = CSEInfo->verify()) {
+      errs() << E << '\n';
+      assert(false && "CSEInfo is not consistent. Likely missing calls to "
+                      "observer on mutations.");
+    }
+  }
+#endif
   return MFChanged;
 }

@@ -46,6 +46,7 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Value.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
@@ -60,10 +61,11 @@ using namespace llvm::cflaa;
 
 #define DEBUG_TYPE "cfl-steens-aa"
 
-CFLSteensAAResult::CFLSteensAAResult(const TargetLibraryInfo &TLI)
-    : AAResultBase(), TLI(TLI) {}
+CFLSteensAAResult::CFLSteensAAResult(
+    std::function<const TargetLibraryInfo &(Function &F)> GetTLI)
+    : AAResultBase(), GetTLI(std::move(GetTLI)) {}
 CFLSteensAAResult::CFLSteensAAResult(CFLSteensAAResult &&Arg)
-    : AAResultBase(std::move(Arg)), TLI(Arg.TLI) {}
+    : AAResultBase(std::move(Arg)), GetTLI(std::move(Arg.GetTLI)) {}
 CFLSteensAAResult::~CFLSteensAAResult() = default;
 
 /// Information we have about a function and would like to keep around.
@@ -181,7 +183,7 @@ CFLSteensAAResult::FunctionInfo::FunctionInfo(
 
 // Builds the graph + StratifiedSets for a function.
 CFLSteensAAResult::FunctionInfo CFLSteensAAResult::buildSetsFrom(Function *Fn) {
-  CFLGraphBuilder<CFLSteensAAResult> GraphBuilder(*this, TLI, *Fn);
+  CFLGraphBuilder<CFLSteensAAResult> GraphBuilder(*this, GetTLI(*Fn), *Fn);
   StratifiedSetsBuilder<InstantiatedValue> SetBuilder;
 
   // Add all CFLGraph nodes and all Dereference edges to StratifiedSets
@@ -267,7 +269,7 @@ AliasResult CFLSteensAAResult::query(const MemoryLocation &LocA,
   auto *ValB = const_cast<Value *>(LocB.Ptr);
 
   if (!ValA->getType()->isPointerTy() || !ValB->getType()->isPointerTy())
-    return NoAlias;
+    return AliasResult::NoAlias;
 
   Function *Fn = nullptr;
   Function *MaybeFnA = const_cast<Function *>(parentFunctionOfValue(ValA));
@@ -278,7 +280,7 @@ AliasResult CFLSteensAAResult::query(const MemoryLocation &LocA,
     LLVM_DEBUG(
         dbgs()
         << "CFLSteensAA: could not extract parent function information.\n");
-    return MayAlias;
+    return AliasResult::MayAlias;
   }
 
   if (MaybeFnA) {
@@ -296,11 +298,11 @@ AliasResult CFLSteensAAResult::query(const MemoryLocation &LocA,
   auto &Sets = MaybeInfo->getStratifiedSets();
   auto MaybeA = Sets.find(InstantiatedValue{ValA, 0});
   if (!MaybeA.hasValue())
-    return MayAlias;
+    return AliasResult::MayAlias;
 
   auto MaybeB = Sets.find(InstantiatedValue{ValB, 0});
   if (!MaybeB.hasValue())
-    return MayAlias;
+    return AliasResult::MayAlias;
 
   auto SetA = *MaybeA;
   auto SetB = *MaybeB;
@@ -318,20 +320,23 @@ AliasResult CFLSteensAAResult::query(const MemoryLocation &LocA,
   // - AttrEscaped do not alias globals/arguments, but they may alias
   // AttrUnknown values
   if (SetA.Index == SetB.Index)
-    return MayAlias;
+    return AliasResult::MayAlias;
   if (AttrsA.none() || AttrsB.none())
-    return NoAlias;
+    return AliasResult::NoAlias;
   if (hasUnknownOrCallerAttr(AttrsA) || hasUnknownOrCallerAttr(AttrsB))
-    return MayAlias;
+    return AliasResult::MayAlias;
   if (isGlobalOrArgAttr(AttrsA) && isGlobalOrArgAttr(AttrsB))
-    return MayAlias;
-  return NoAlias;
+    return AliasResult::MayAlias;
+  return AliasResult::NoAlias;
 }
 
 AnalysisKey CFLSteensAA::Key;
 
 CFLSteensAAResult CFLSteensAA::run(Function &F, FunctionAnalysisManager &AM) {
-  return CFLSteensAAResult(AM.getResult<TargetLibraryAnalysis>(F));
+  auto GetTLI = [&AM](Function &F) -> const TargetLibraryInfo & {
+    return AM.getResult<TargetLibraryAnalysis>(F);
+  };
+  return CFLSteensAAResult(GetTLI);
 }
 
 char CFLSteensAAWrapperPass::ID = 0;
@@ -347,8 +352,10 @@ CFLSteensAAWrapperPass::CFLSteensAAWrapperPass() : ImmutablePass(ID) {
 }
 
 void CFLSteensAAWrapperPass::initializePass() {
-  auto &TLIWP = getAnalysis<TargetLibraryInfoWrapperPass>();
-  Result.reset(new CFLSteensAAResult(TLIWP.getTLI()));
+  auto GetTLI = [this](Function &F) -> const TargetLibraryInfo & {
+    return this->getAnalysis<TargetLibraryInfoWrapperPass>().getTLI(F);
+  };
+  Result.reset(new CFLSteensAAResult(GetTLI));
 }
 
 void CFLSteensAAWrapperPass::getAnalysisUsage(AnalysisUsage &AU) const {

@@ -49,7 +49,6 @@ namespace llvm {
 
 class AsmPrinter;
 class ByteStreamer;
-class DebugLocEntry;
 class DIE;
 class DwarfCompileUnit;
 class DwarfExpression;
@@ -59,7 +58,6 @@ class LexicalScope;
 class MachineFunction;
 class MCSection;
 class MCSymbol;
-class MDNode;
 class Module;
 
 //===----------------------------------------------------------------------===//
@@ -116,8 +114,11 @@ public:
 ///
 /// Variables that have been optimized out use none of these fields.
 class DbgVariable : public DbgEntity {
-  /// Offset in DebugLocs.
+  /// Index of the entry list in DebugLocs.
   unsigned DebugLocListIndex = ~0u;
+  /// DW_OP_LLVM_tag_offset value from DebugLocs.
+  Optional<uint8_t> DebugLocListTagOffset;
+
   /// Single value location description.
   std::unique_ptr<DbgValueLoc> ValueLoc = nullptr;
 
@@ -153,7 +154,7 @@ public:
     assert(!ValueLoc && "Already initialized?");
     assert(!Value.getExpression()->isFragment() && "Fragments not supported.");
 
-    ValueLoc = llvm::make_unique<DbgValueLoc>(Value);
+    ValueLoc = std::make_unique<DbgValueLoc>(Value);
     if (auto *E = ValueLoc->getExpression())
       if (E->getNumElements())
         FrameIndexExprs.push_back({0, E});
@@ -174,6 +175,8 @@ public:
 
   void setDebugLocListIndex(unsigned O) { DebugLocListIndex = O; }
   unsigned getDebugLocListIndex() const { return DebugLocListIndex; }
+  void setDebugLocListTagOffset(uint8_t O) { DebugLocListTagOffset = O; }
+  Optional<uint8_t> getDebugLocListTagOffset() const { return DebugLocListTagOffset; }
   StringRef getName() const { return getVariable()->getName(); }
   const DbgValueLoc *getValueLoc() const { return ValueLoc.get(); }
   /// Get the FI entries, sorted by fragment offset.
@@ -216,7 +219,6 @@ public:
     return !FrameIndexExprs.empty();
   }
 
-  bool isBlockByrefVariable() const;
   const DIType *getType() const;
 
   static bool classof(const DbgEntity *N) {
@@ -253,6 +255,25 @@ public:
     return N->getDbgEntityID() == DbgLabelKind;
   }
 };
+
+/// Used for tracking debug info about call site parameters.
+class DbgCallSiteParam {
+private:
+  unsigned Register; ///< Parameter register at the callee entry point.
+  DbgValueLoc Value; ///< Corresponding location for the parameter value at
+                     ///< the call site.
+public:
+  DbgCallSiteParam(unsigned Reg, DbgValueLoc Val)
+      : Register(Reg), Value(Val) {
+    assert(Reg && "Parameter register cannot be undef");
+  }
+
+  unsigned getRegister() const { return Register; }
+  DbgValueLoc getValue() const { return Value; }
+};
+
+/// Collection used for storing debug call site parameters.
+using ParamSet = SmallVector<DbgCallSiteParam, 4>;
 
 /// Helper used to pair up a symbol and its DWARF compile unit.
 struct SymbolCU {
@@ -304,7 +325,7 @@ class DwarfDebug : public DebugHandlerBase {
   const MachineFunction *CurFn = nullptr;
 
   /// If nonnull, stores the CU in which the previous subprogram was contained.
-  const DwarfCompileUnit *PrevCU;
+  const DwarfCompileUnit *PrevCU = nullptr;
 
   /// As an optimization, there is no need to emit an entry in the directory
   /// table for the same directory as DW_AT_comp_dir.
@@ -351,6 +372,25 @@ class DwarfDebug : public DebugHandlerBase {
   /// Generate DWARF v4 type units.
   bool GenerateTypeUnits;
 
+  /// Emit a .debug_macro section instead of .debug_macinfo.
+  bool UseDebugMacroSection;
+
+  /// Avoid using DW_OP_convert due to consumer incompatibilities.
+  bool EnableOpConvert;
+
+public:
+  enum class MinimizeAddrInV5 {
+    Default,
+    Disabled,
+    Ranges,
+    Expressions,
+    Form,
+  };
+
+private:
+  /// Force the use of DW_AT_ranges even for single-entry range lists.
+  MinimizeAddrInV5 MinimizeAddr = MinimizeAddrInV5::Disabled;
+
   /// DWARF5 Experimental Options
   /// @{
   AccelTableKind TheAccelTableKind;
@@ -362,6 +402,11 @@ class DwarfDebug : public DebugHandlerBase {
   /// The pre-DWARF v5 string offsets table for split dwarf is, in contrast,
   /// a monolithic sequence of string offsets.
   bool UseSegmentedStringOffsetsTable;
+
+  /// Enable production of call site parameters needed to print the debug entry
+  /// values. Useful for testing purposes when a debugger does not support the
+  /// feature yet.
+  bool EmitDebugEntryValues;
 
   /// Separated Dwarf Variables
   /// In general these will all be for bits that are left in the
@@ -383,6 +428,9 @@ class DwarfDebug : public DebugHandlerBase {
   bool SingleCU;
   bool IsDarwin;
 
+  /// Map for tracking Fortran deferred CHARACTER lengths.
+  DenseMap<const DIStringType *, unsigned> StringTypeLocMap;
+
   AddressPool AddrPool;
 
   /// Accelerator tables.
@@ -392,7 +440,11 @@ class DwarfDebug : public DebugHandlerBase {
   AccelTable<AppleAccelTableOffsetData> AccelNamespace;
   AccelTable<AppleAccelTableTypeData> AccelTypes;
 
-  // Identify a debugger for "tuning" the debug info.
+  /// Identify a debugger for "tuning" the debug info.
+  ///
+  /// The "tuning" should be used to set defaults for individual feature flags
+  /// in DwarfDebug; if a given feature has a more specific command-line option,
+  /// that option should take precedence over the tuning.
   DebuggerKind DebuggerTuning = DebuggerKind::Default;
 
   MCDwarfDwoLineTable *getDwoLineTable(const DwarfCompileUnit &);
@@ -480,17 +532,26 @@ class DwarfDebug : public DebugHandlerBase {
   /// Emit variable locations into a debug loc dwo section.
   void emitDebugLocDWO();
 
+  void emitDebugLocImpl(MCSection *Sec);
+
   /// Emit address ranges into a debug aranges section.
   void emitDebugARanges();
 
   /// Emit address ranges into a debug ranges section.
   void emitDebugRanges();
   void emitDebugRangesDWO();
+  void emitDebugRangesImpl(const DwarfFile &Holder, MCSection *Section);
 
   /// Emit macros into a debug macinfo section.
   void emitDebugMacinfo();
+  /// Emit macros into a debug macinfo.dwo section.
+  void emitDebugMacinfoDWO();
+  void emitDebugMacinfoImpl(MCSection *Section);
   void emitMacro(DIMacro &M);
   void emitMacroFile(DIMacroFile &F, DwarfCompileUnit &U);
+  void emitMacroFileImpl(DIMacroFile &F, DwarfCompileUnit &U,
+                         unsigned StartFile, unsigned EndFile,
+                         StringRef (*MacroFormToString)(unsigned Form));
   void handleMacroNodes(DIMacroNodeArray Nodes, DwarfCompileUnit &U);
 
   /// DWARF 5 Experimental Split Dwarf Emitters
@@ -577,13 +638,13 @@ public:
   //===--------------------------------------------------------------------===//
   // Main entry points.
   //
-  DwarfDebug(AsmPrinter *A, Module *M);
+  DwarfDebug(AsmPrinter *A);
 
   ~DwarfDebug() override;
 
   /// Emit all Dwarf sections that should come prior to the
   /// content.
-  void beginModule();
+  void beginModule(Module *M) override;
 
   /// Emit all Dwarf sections that should come after the content.
   void endModule() override;
@@ -602,10 +663,10 @@ public:
   void addDwarfTypeUnitType(DwarfCompileUnit &CU, StringRef Identifier,
                             DIE &Die, const DICompositeType *CTy);
 
-  friend class NonTypeUnitContext;
   class NonTypeUnitContext {
     DwarfDebug *DD;
     decltype(DwarfDebug::TypeUnitsUnderConstruction) TypeUnitsUnderConstruction;
+    bool AddrPoolUsed;
     friend class DwarfDebug;
     NonTypeUnitContext(DwarfDebug *DD);
   public:
@@ -642,6 +703,24 @@ public:
   /// Returns whether ranges section should be emitted.
   bool useRangesSection() const { return UseRangesSection; }
 
+  /// Returns whether range encodings should be used for single entry range
+  /// lists.
+  bool alwaysUseRanges() const {
+    return MinimizeAddr == MinimizeAddrInV5::Ranges;
+  }
+
+  // Returns whether novel exprloc addrx+offset encodings should be used to
+  // reduce debug_addr size.
+  bool useAddrOffsetExpressions() const {
+    return MinimizeAddr == MinimizeAddrInV5::Expressions;
+  }
+
+  // Returns whether addrx+offset LLVM extension form should be used to reduce
+  // debug_addr size.
+  bool useAddrOffsetForm() const {
+    return MinimizeAddr == MinimizeAddrInV5::Form;
+  }
+
   /// Returns whether to use sections as labels rather than temp symbols.
   bool useSectionsAsReferences() const {
     return UseSectionsAsReferences;
@@ -676,10 +755,24 @@ public:
     return UseSegmentedStringOffsetsTable;
   }
 
+  bool emitDebugEntryValues() const {
+    return EmitDebugEntryValues;
+  }
+
+  bool useOpConvert() const {
+    return EnableOpConvert;
+  }
+
   bool shareAcrossDWOCUs() const;
 
   /// Returns the Dwarf Version.
   uint16_t getDwarfVersion() const;
+
+  /// Returns a suitable DWARF form to represent a section offset, i.e.
+  /// * DW_FORM_sec_offset for DWARF version >= 4;
+  /// * DW_FORM_data8 for 64-bit DWARFv3;
+  /// * DW_FORM_data4 for 32-bit DWARFv3 and DWARFv2.
+  dwarf::Form getDwarfSectionOffsetForm() const;
 
   /// Returns the previous CU that was being updated
   const DwarfCompileUnit *getPrevCU() const { return PrevCU; }
@@ -725,6 +818,16 @@ public:
     return CUDieMap.lookup(Die);
   }
 
+  unsigned getStringTypeLoc(const DIStringType *ST) const {
+    return StringTypeLocMap.lookup(ST);
+  }
+
+  void addStringTypeLoc(const DIStringType *ST, unsigned Loc) {
+    assert(ST);
+    if (Loc)
+      StringTypeLocMap[ST] = Loc;
+  }
+
   /// \defgroup DebuggerTuning Predicates to tune DWARF for a given debugger.
   ///
   /// Returns whether we are "tuning" for a given debugger.
@@ -732,14 +835,19 @@ public:
   bool tuneForGDB() const { return DebuggerTuning == DebuggerKind::GDB; }
   bool tuneForLLDB() const { return DebuggerTuning == DebuggerKind::LLDB; }
   bool tuneForSCE() const { return DebuggerTuning == DebuggerKind::SCE; }
+  bool tuneForDBX() const { return DebuggerTuning == DebuggerKind::DBX; }
   /// @}
 
-  void addSectionLabel(const MCSymbol *Sym);
   const MCSymbol *getSectionLabel(const MCSection *S);
+  void insertSectionLabel(const MCSymbol *S);
 
   static void emitDebugLocValue(const AsmPrinter &AP, const DIBasicType *BT,
                                 const DbgValueLoc &Value,
                                 DwarfExpression &DwarfExpr);
+
+  /// If the \p File has an MD5 checksum, return it as an MD5Result
+  /// allocated in the MCContext.
+  Optional<MD5::MD5Result> getMD5AsBytes(const DIFile *File) const;
 };
 
 } // end namespace llvm

@@ -13,6 +13,7 @@
 
 #include "CGCXXABI.h"
 #include "CGCleanup.h"
+#include "clang/AST/Attr.h"
 
 using namespace clang;
 using namespace CodeGen;
@@ -46,8 +47,8 @@ CGCallee CGCXXABI::EmitLoadOfMemberFunctionPointer(
   ThisPtrForCall = This.getPointer();
   const FunctionProtoType *FPT =
     MPT->getPointeeType()->getAs<FunctionProtoType>();
-  const CXXRecordDecl *RD =
-    cast<CXXRecordDecl>(MPT->getClass()->getAs<RecordType>()->getDecl());
+  const auto *RD =
+      cast<CXXRecordDecl>(MPT->getClass()->castAs<RecordType>()->getDecl());
   llvm::FunctionType *FTy = CGM.getTypes().GetFunctionType(
       CGM.getTypes().arrangeCXXMethodType(RD, FPT, /*FD=*/nullptr));
   llvm::Constant *FnPtr = llvm::Constant::getNullValue(FTy->getPointerTo());
@@ -134,8 +135,8 @@ void CGCXXABI::buildThisParam(CodeGenFunction &CGF, FunctionArgList &params) {
   // down to whether we know it's a complete object or not.
   auto &Layout = CGF.getContext().getASTRecordLayout(MD->getParent());
   if (MD->getParent()->getNumVBases() == 0 || // avoid vcall in common case
-      MD->getParent()->hasAttr<FinalAttr>() ||
-      !isThisCompleteObject(CGF.CurGD)) {
+      MD->getParent()->isEffectivelyFinal() ||
+      isThisCompleteObject(CGF.CurGD)) {
     CGF.CXXABIThisAlignment = Layout.getAlignment();
   } else {
     CGF.CXXABIThisAlignment = Layout.getNonVirtualAlignment();
@@ -155,6 +156,8 @@ void CGCXXABI::setCXXABIThisValue(CodeGenFunction &CGF, llvm::Value *ThisPtr) {
 
 void CGCXXABI::EmitReturnFromThunk(CodeGenFunction &CGF,
                                    RValue RV, QualType ResultType) {
+  assert(!CGF.hasAggregateEvaluationKind(ResultType) &&
+         "cannot handle aggregates");
   CGF.EmitReturnOfRValue(RV, ResultType);
 }
 
@@ -248,28 +251,6 @@ llvm::Constant *CGCXXABI::getMemberPointerAdjustment(const CastExpr *E) {
                                           E->path_end());
 }
 
-CharUnits CGCXXABI::getMemberPointerPathAdjustment(const APValue &MP) {
-  // TODO: Store base specifiers in APValue member pointer paths so we can
-  // easily reuse CGM.GetNonVirtualBaseClassOffset().
-  const ValueDecl *MPD = MP.getMemberPointerDecl();
-  CharUnits ThisAdjustment = CharUnits::Zero();
-  ArrayRef<const CXXRecordDecl*> Path = MP.getMemberPointerPath();
-  bool DerivedMember = MP.isMemberPointerToDerivedMember();
-  const CXXRecordDecl *RD = cast<CXXRecordDecl>(MPD->getDeclContext());
-  for (unsigned I = 0, N = Path.size(); I != N; ++I) {
-    const CXXRecordDecl *Base = RD;
-    const CXXRecordDecl *Derived = Path[I];
-    if (DerivedMember)
-      std::swap(Base, Derived);
-    ThisAdjustment +=
-      getContext().getASTRecordLayout(Derived).getBaseClassOffset(Base);
-    RD = Path[I];
-  }
-  if (DerivedMember)
-    ThisAdjustment = -ThisAdjustment;
-  return ThisAdjustment;
-}
-
 llvm::BasicBlock *
 CGCXXABI::EmitCtorCompleteObjectHandler(CodeGenFunction &CGF,
                                         const CXXRecordDecl *RD) {
@@ -311,4 +292,21 @@ CatchTypeInfo CGCXXABI::getCatchAllTypeInfo() {
 
 std::vector<CharUnits> CGCXXABI::getVBPtrOffsets(const CXXRecordDecl *RD) {
   return std::vector<CharUnits>();
+}
+
+CGCXXABI::AddedStructorArgCounts CGCXXABI::addImplicitConstructorArgs(
+    CodeGenFunction &CGF, const CXXConstructorDecl *D, CXXCtorType Type,
+    bool ForVirtualBase, bool Delegating, CallArgList &Args) {
+  AddedStructorArgs AddedArgs =
+      getImplicitConstructorArgs(CGF, D, Type, ForVirtualBase, Delegating);
+  for (size_t i = 0; i < AddedArgs.Prefix.size(); ++i) {
+    Args.insert(Args.begin() + 1 + i,
+                CallArg(RValue::get(AddedArgs.Prefix[i].Value),
+                        AddedArgs.Prefix[i].Type));
+  }
+  for (const auto &arg : AddedArgs.Suffix) {
+    Args.add(RValue::get(arg.Value), arg.Type);
+  }
+  return AddedStructorArgCounts(AddedArgs.Prefix.size(),
+                                AddedArgs.Suffix.size());
 }

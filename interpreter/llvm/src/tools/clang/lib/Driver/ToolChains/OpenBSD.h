@@ -10,6 +10,7 @@
 #define LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_OPENBSD_H
 
 #include "Gnu.h"
+#include "clang/Basic/LangOptions.h"
 #include "clang/Driver/Tool.h"
 #include "clang/Driver/ToolChain.h"
 
@@ -19,10 +20,10 @@ namespace tools {
 
 /// openbsd -- Directly call GNU Binutils assembler and linker
 namespace openbsd {
-class LLVM_LIBRARY_VISIBILITY Assembler : public GnuTool {
+class LLVM_LIBRARY_VISIBILITY Assembler : public Tool {
 public:
   Assembler(const ToolChain &TC)
-      : GnuTool("openbsd::Assembler", "assembler", TC) {}
+      : Tool("openbsd::Assembler", "assembler", TC) {}
 
   bool hasIntegratedCPP() const override { return false; }
 
@@ -32,9 +33,9 @@ public:
                     const char *LinkingOutput) const override;
 };
 
-class LLVM_LIBRARY_VISIBILITY Linker : public GnuTool {
+class LLVM_LIBRARY_VISIBILITY Linker : public Tool {
 public:
-  Linker(const ToolChain &TC) : GnuTool("openbsd::Linker", "linker", TC) {}
+  Linker(const ToolChain &TC) : Tool("openbsd::Linker", "linker", TC) {}
 
   bool hasIntegratedCPP() const override { return false; }
   bool isLinkJob() const override { return true; }
@@ -54,6 +55,8 @@ public:
   OpenBSD(const Driver &D, const llvm::Triple &Triple,
           const llvm::opt::ArgList &Args);
 
+  bool HasNativeLLVMSupport() const override;
+
   bool IsMathErrnoDefault() const override { return false; }
   bool IsObjCNonFragileABIDefault() const override { return true; }
   bool isPIEDefault() const override { return true; }
@@ -65,11 +68,21 @@ public:
     return ToolChain::CST_Libcxx;
   }
 
+  void
+  AddClangSystemIncludeArgs(const llvm::opt::ArgList &DriverArgs,
+                            llvm::opt::ArgStringList &CC1Args) const override;
+
+  void addLibCxxIncludePaths(const llvm::opt::ArgList &DriverArgs,
+                             llvm::opt::ArgStringList &CC1Args) const override;
   void AddCXXStdlibLibArgs(const llvm::opt::ArgList &Args,
                            llvm::opt::ArgStringList &CmdArgs) const override;
 
-  unsigned GetDefaultStackProtectorLevel(bool KernelOrKext) const override {
-    return 2;
+  std::string getCompilerRT(const llvm::opt::ArgList &Args, StringRef Component,
+                            FileType Type = ToolChain::FT_Static) const override;
+
+  LangOptions::StackProtectorMode
+  GetDefaultStackProtectorLevel(bool KernelOrKext) const override {
+    return LangOptions::SSPStrong;
   }
   unsigned GetDefaultDwarfVersion() const override { return 2; }
 

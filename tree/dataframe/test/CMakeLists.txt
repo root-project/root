@@ -25,7 +25,7 @@ endif()
 
 ROOT_ADD_GTEST(dataframe_splitcoll_arrayview dataframe_splitcoll_arrayview.cxx LIBRARIES ROOTDataFrame)
 target_include_directories(dataframe_splitcoll_arrayview PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-ROOT_GENERATE_DICTIONARY(TwoFloatsDict TwoFloats.h MODULE dataframe_splitcoll_arrayview LINKDEF TwoFloatsLinkDef.h OPTIONS -inlineInputHeader)
+ROOT_GENERATE_DICTIONARY(TwoFloatsDict ${CMAKE_CURRENT_SOURCE_DIR}/TwoFloats.h MODULE dataframe_splitcoll_arrayview LINKDEF TwoFloatsLinkDef.h OPTIONS -inlineInputHeader)
 
 ROOT_ADD_GTEST(dataframe_redefine dataframe_redefine.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_definepersample dataframe_definepersample.cxx LIBRARIES ROOTDataFrame)
@@ -33,7 +33,7 @@ ROOT_ADD_GTEST(dataframe_definepersample dataframe_definepersample.cxx LIBRARIES
 if(NOT MSVC OR win_broken_tests)
   ROOT_ADD_GTEST(dataframe_simple dataframe_simple.cxx LIBRARIES ROOTDataFrame)
   target_include_directories(dataframe_simple PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-  ROOT_GENERATE_DICTIONARY(DataFrameSimpleDict MaxSlotHelper.h SimpleFiller.h MODULE dataframe_simple
+  ROOT_GENERATE_DICTIONARY(DataFrameSimpleDict ${CMAKE_CURRENT_SOURCE_DIR}/MaxSlotHelper.h ${CMAKE_CURRENT_SOURCE_DIR}/SimpleFiller.h MODULE dataframe_simple
                            LINKDEF DataFrameSimpleLinkDef.h OPTIONS -inlineInputHeader DEPENDENCIES ROOTDataFrame Hist)
 endif()
 ROOT_ADD_GTEST(dataframe_vecops dataframe_vecops.cxx LIBRARIES ROOTDataFrame)

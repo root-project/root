@@ -14,6 +14,7 @@
 #include "llvm/BinaryFormat/MachO.h"
 #include "llvm/MC/StringTableBuilder.h"
 #include "llvm/ObjectYAML/DWARFYAML.h"
+#include "llvm/Support/StringSaver.h"
 #include "llvm/Support/YAMLTraits.h"
 #include <cstdint>
 #include <string>
@@ -36,21 +37,34 @@ struct MachHeader {
 
 struct RelocationInfo;
 struct Section {
-  std::string Sectname;
+  uint32_t Index;
   std::string Segname;
-  uint64_t Addr;
-  uint64_t Size;
-  uint32_t Offset;
-  uint32_t Align;
-  uint32_t RelOff;
-  uint32_t NReloc;
-  uint32_t Flags;
-  uint32_t Reserved1;
-  uint32_t Reserved2;
-  uint32_t Reserved3;
-
+  std::string Sectname;
+  // CanonicalName is a string formatted as “<Segname>,<Sectname>".
+  std::string CanonicalName;
+  uint64_t Addr = 0;
+  uint64_t Size = 0;
+  // Offset in the input file.
+  Optional<uint32_t> OriginalOffset;
+  uint32_t Offset = 0;
+  uint32_t Align = 0;
+  uint32_t RelOff = 0;
+  uint32_t NReloc = 0;
+  uint32_t Flags = 0;
+  uint32_t Reserved1 = 0;
+  uint32_t Reserved2 = 0;
+  uint32_t Reserved3 = 0;
   StringRef Content;
   std::vector<RelocationInfo> Relocations;
+
+  Section(StringRef SegName, StringRef SectName)
+      : Segname(std::string(SegName)), Sectname(std::string(SectName)),
+        CanonicalName((Twine(SegName) + Twine(',') + SectName).str()) {}
+
+  Section(StringRef SegName, StringRef SectName, StringRef Content)
+      : Segname(std::string(SegName)), Sectname(std::string(SectName)),
+        CanonicalName((Twine(SegName) + Twine(',') + SectName).str()),
+        Content(Content) {}
 
   MachO::SectionType getType() const {
     return static_cast<MachO::SectionType>(Flags & MachO::SECTION_TYPE);
@@ -60,6 +74,10 @@ struct Section {
     return (getType() == MachO::S_ZEROFILL ||
             getType() == MachO::S_GB_ZEROFILL ||
             getType() == MachO::S_THREAD_LOCAL_ZEROFILL);
+  }
+
+  bool hasValidOffset() const {
+    return !(isVirtualSection() || (OriginalOffset && *OriginalOffset == 0));
   }
 };
 
@@ -72,24 +90,48 @@ struct LoadCommand {
   // The raw content of the payload of the load command (located right after the
   // corresponding struct). In some cases it is either empty or can be
   // copied-over without digging into its structure.
-  ArrayRef<uint8_t> Payload;
+  std::vector<uint8_t> Payload;
 
   // Some load commands can contain (inside the payload) an array of sections,
   // though the contents of the sections are stored separately. The struct
   // Section describes only sections' metadata and where to find the
   // corresponding content inside the binary.
-  std::vector<Section> Sections;
+  std::vector<std::unique_ptr<Section>> Sections;
+
+  // Returns the segment name if the load command is a segment command.
+  Optional<StringRef> getSegmentName() const;
+
+  // Returns the segment vm address if the load command is a segment command.
+  Optional<uint64_t> getSegmentVMAddr() const;
 };
 
 // A symbol information. Fields which starts with "n_" are same as them in the
 // nlist.
 struct SymbolEntry {
   std::string Name;
+  bool Referenced = false;
   uint32_t Index;
   uint8_t n_type;
   uint8_t n_sect;
   uint16_t n_desc;
   uint64_t n_value;
+
+  bool isExternalSymbol() const { return n_type & MachO::N_EXT; }
+
+  bool isLocalSymbol() const { return !isExternalSymbol(); }
+
+  bool isUndefinedSymbol() const {
+    return (n_type & MachO::N_TYPE) == MachO::N_UNDF;
+  }
+
+  bool isSwiftSymbol() const {
+    return StringRef(Name).startswith("_$s") ||
+           StringRef(Name).startswith("_$S");
+  }
+
+  Optional<uint32_t> section() const {
+    return n_sect == MachO::NO_SECT ? None : Optional<uint32_t>(n_sect);
+  }
 };
 
 /// The location of the symbol table inside the binary is described by LC_SYMTAB
@@ -97,7 +139,32 @@ struct SymbolEntry {
 struct SymbolTable {
   std::vector<std::unique_ptr<SymbolEntry>> Symbols;
 
+  using iterator = pointee_iterator<
+      std::vector<std::unique_ptr<SymbolEntry>>::const_iterator>;
+
+  iterator begin() const { return iterator(Symbols.begin()); }
+  iterator end() const { return iterator(Symbols.end()); }
+
   const SymbolEntry *getSymbolByIndex(uint32_t Index) const;
+  SymbolEntry *getSymbolByIndex(uint32_t Index);
+  void removeSymbols(
+      function_ref<bool(const std::unique_ptr<SymbolEntry> &)> ToRemove);
+};
+
+struct IndirectSymbolEntry {
+  // The original value in an indirect symbol table. Higher bits encode extra
+  // information (INDIRECT_SYMBOL_LOCAL and INDIRECT_SYMBOL_ABS).
+  uint32_t OriginalIndex;
+  /// The Symbol referenced by this entry. It's None if the index is
+  /// INDIRECT_SYMBOL_LOCAL or INDIRECT_SYMBOL_ABS.
+  Optional<SymbolEntry *> Symbol;
+
+  IndirectSymbolEntry(uint32_t OriginalIndex, Optional<SymbolEntry *> Symbol)
+      : OriginalIndex(OriginalIndex), Symbol(Symbol) {}
+};
+
+struct IndirectSymbolTable {
+  std::vector<IndirectSymbolEntry> Symbols;
 };
 
 /// The location of the string table inside the binary is described by LC_SYMTAB
@@ -107,10 +174,32 @@ struct StringTable {
 };
 
 struct RelocationInfo {
-  const SymbolEntry *Symbol;
+  // The referenced symbol entry. Set if !Scattered && Extern.
+  Optional<const SymbolEntry *> Symbol;
+  // The referenced section. Set if !Scattered && !Extern.
+  Optional<const Section *> Sec;
   // True if Info is a scattered_relocation_info.
   bool Scattered;
+  // True if the type is an ADDEND. r_symbolnum holds the addend instead of a
+  // symbol index.
+  bool IsAddend;
+  // True if the r_symbolnum points to a section number (i.e. r_extern=0).
+  bool Extern;
   MachO::any_relocation_info Info;
+
+  unsigned getPlainRelocationSymbolNum(bool IsLittleEndian) {
+    if (IsLittleEndian)
+      return Info.r_word1 & 0xffffff;
+    return Info.r_word1 >> 8;
+  }
+
+  void setPlainRelocationSymbolNum(unsigned SymbolNum, bool IsLittleEndian) {
+    assert(SymbolNum < (1 << 24) && "SymbolNum out of range");
+    if (IsLittleEndian)
+      Info.r_word1 = (Info.r_word1 & ~0x00ffffff) | SymbolNum;
+    else
+      Info.r_word1 = (Info.r_word1 & ~0xffffff00) | (SymbolNum << 8);
+  }
 };
 
 /// The location of the rebase info inside the binary is described by
@@ -206,6 +295,10 @@ struct ExportInfo {
   ArrayRef<uint8_t> Trie;
 };
 
+struct LinkData {
+  ArrayRef<uint8_t> Data;
+};
+
 struct Object {
   MachHeader Header;
   std::vector<LoadCommand> LoadCommands;
@@ -218,11 +311,52 @@ struct Object {
   WeakBindInfo WeakBinds;
   LazyBindInfo LazyBinds;
   ExportInfo Exports;
+  IndirectSymbolTable IndirectSymTable;
+  LinkData DataInCode;
+  LinkData LinkerOptimizationHint;
+  LinkData FunctionStarts;
+  LinkData CodeSignature;
 
+  Optional<uint32_t> SwiftVersion;
+
+  /// The index of LC_CODE_SIGNATURE load command if present.
+  Optional<size_t> CodeSignatureCommandIndex;
   /// The index of LC_SYMTAB load command if present.
   Optional<size_t> SymTabCommandIndex;
   /// The index of LC_DYLD_INFO or LC_DYLD_INFO_ONLY load command if present.
   Optional<size_t> DyLdInfoCommandIndex;
+  /// The index LC_DYSYMTAB load comamnd if present.
+  Optional<size_t> DySymTabCommandIndex;
+  /// The index LC_DATA_IN_CODE load comamnd if present.
+  Optional<size_t> DataInCodeCommandIndex;
+  /// The index of LC_LINKER_OPTIMIZATIN_HINT load comamnd if present.
+  Optional<size_t> LinkerOptimizationHintCommandIndex;
+  /// The index LC_FUNCTION_STARTS load comamnd if present.
+  Optional<size_t> FunctionStartsCommandIndex;
+
+  BumpPtrAllocator Alloc;
+  StringSaver NewSectionsContents;
+
+  Object() : NewSectionsContents(Alloc) {}
+
+  Error
+  removeSections(function_ref<bool(const std::unique_ptr<Section> &)> ToRemove);
+
+  Error removeLoadCommands(function_ref<bool(const LoadCommand &)> ToRemove);
+
+  void updateLoadCommandIndexes();
+
+  /// Creates a new segment load command in the object and returns a reference
+  /// to the newly created load command. The caller should verify that SegName
+  /// is not too long (SegName.size() should be less than or equal to 16).
+  LoadCommand &addSegment(StringRef SegName, uint64_t SegVMSize);
+
+  bool is64Bit() const {
+    return Header.Magic == MachO::MH_MAGIC_64 ||
+           Header.Magic == MachO::MH_CIGAM_64;
+  }
+
+  uint64_t nextAvailableSegmentAddress() const;
 };
 
 } // end namespace macho

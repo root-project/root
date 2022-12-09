@@ -29,9 +29,10 @@ class ByteStreamer {
 
  public:
   // For now we're just handling the calls we need for dwarf emission/hashing.
-  virtual void EmitInt8(uint8_t Byte, const Twine &Comment = "") = 0;
-  virtual void EmitSLEB128(uint64_t DWord, const Twine &Comment = "") = 0;
-  virtual void EmitULEB128(uint64_t DWord, const Twine &Comment = "", unsigned PadTo = 0) = 0;
+  virtual void emitInt8(uint8_t Byte, const Twine &Comment = "") = 0;
+  virtual void emitSLEB128(uint64_t DWord, const Twine &Comment = "") = 0;
+  virtual void emitULEB128(uint64_t DWord, const Twine &Comment = "",
+                           unsigned PadTo = 0) = 0;
 };
 
 class APByteStreamer final : public ByteStreamer {
@@ -40,17 +41,18 @@ private:
 
 public:
   APByteStreamer(AsmPrinter &Asm) : AP(Asm) {}
-  void EmitInt8(uint8_t Byte, const Twine &Comment) override {
+  void emitInt8(uint8_t Byte, const Twine &Comment) override {
     AP.OutStreamer->AddComment(Comment);
     AP.emitInt8(Byte);
   }
-  void EmitSLEB128(uint64_t DWord, const Twine &Comment) override {
+  void emitSLEB128(uint64_t DWord, const Twine &Comment) override {
     AP.OutStreamer->AddComment(Comment);
-    AP.EmitSLEB128(DWord);
+    AP.emitSLEB128(DWord);
   }
-  void EmitULEB128(uint64_t DWord, const Twine &Comment, unsigned PadTo) override {
+  void emitULEB128(uint64_t DWord, const Twine &Comment,
+                   unsigned PadTo) override {
     AP.OutStreamer->AddComment(Comment);
-    AP.EmitULEB128(DWord);
+    AP.emitULEB128(DWord, nullptr, PadTo);
   }
 };
 
@@ -59,13 +61,14 @@ class HashingByteStreamer final : public ByteStreamer {
   DIEHash &Hash;
  public:
  HashingByteStreamer(DIEHash &H) : Hash(H) {}
-  void EmitInt8(uint8_t Byte, const Twine &Comment) override {
+  void emitInt8(uint8_t Byte, const Twine &Comment) override {
     Hash.update(Byte);
   }
-  void EmitSLEB128(uint64_t DWord, const Twine &Comment) override {
+  void emitSLEB128(uint64_t DWord, const Twine &Comment) override {
     Hash.addSLEB128(DWord);
   }
-  void EmitULEB128(uint64_t DWord, const Twine &Comment, unsigned PadTo) override {
+  void emitULEB128(uint64_t DWord, const Twine &Comment,
+                   unsigned PadTo) override {
     Hash.addULEB128(DWord);
   }
 };
@@ -73,24 +76,24 @@ class HashingByteStreamer final : public ByteStreamer {
 class BufferByteStreamer final : public ByteStreamer {
 private:
   SmallVectorImpl<char> &Buffer;
-  SmallVectorImpl<std::string> &Comments;
+  std::vector<std::string> &Comments;
 
+public:
   /// Only verbose textual output needs comments.  This will be set to
   /// true for that case, and false otherwise.  If false, comments passed in to
   /// the emit methods will be ignored.
-  bool GenerateComments;
+  const bool GenerateComments;
 
-public:
   BufferByteStreamer(SmallVectorImpl<char> &Buffer,
-                     SmallVectorImpl<std::string> &Comments,
-                     bool GenerateComments)
-  : Buffer(Buffer), Comments(Comments), GenerateComments(GenerateComments) {}
-  void EmitInt8(uint8_t Byte, const Twine &Comment) override {
+                     std::vector<std::string> &Comments, bool GenerateComments)
+      : Buffer(Buffer), Comments(Comments), GenerateComments(GenerateComments) {
+  }
+  void emitInt8(uint8_t Byte, const Twine &Comment) override {
     Buffer.push_back(Byte);
     if (GenerateComments)
       Comments.push_back(Comment.str());
   }
-  void EmitSLEB128(uint64_t DWord, const Twine &Comment) override {
+  void emitSLEB128(uint64_t DWord, const Twine &Comment) override {
     raw_svector_ostream OSE(Buffer);
     unsigned Length = encodeSLEB128(DWord, OSE);
     if (GenerateComments) {
@@ -102,7 +105,8 @@ public:
 
     }
   }
-  void EmitULEB128(uint64_t DWord, const Twine &Comment, unsigned PadTo) override {
+  void emitULEB128(uint64_t DWord, const Twine &Comment,
+                   unsigned PadTo) override {
     raw_svector_ostream OSE(Buffer);
     unsigned Length = encodeULEB128(DWord, OSE, PadTo);
     if (GenerateComments) {

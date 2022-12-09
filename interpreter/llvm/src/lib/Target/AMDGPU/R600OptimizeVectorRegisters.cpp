@@ -27,38 +27,18 @@
 //===----------------------------------------------------------------------===//
 
 #include "AMDGPU.h"
-#include "AMDGPUSubtarget.h"
-#include "R600Defines.h"
-#include "R600InstrInfo.h"
 #include "MCTargetDesc/AMDGPUMCTargetDesc.h"
-#include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/STLExtras.h"
-#include "llvm/ADT/StringRef.h"
-#include "llvm/CodeGen/MachineBasicBlock.h"
+#include "R600Defines.h"
+#include "R600Subtarget.h"
 #include "llvm/CodeGen/MachineDominators.h"
-#include "llvm/CodeGen/MachineFunction.h"
-#include "llvm/CodeGen/MachineFunctionPass.h"
-#include "llvm/CodeGen/MachineInstr.h"
-#include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineLoopInfo.h"
-#include "llvm/CodeGen/MachineOperand.h"
-#include "llvm/CodeGen/MachineRegisterInfo.h"
-#include "llvm/IR/DebugLoc.h"
-#include "llvm/Pass.h"
-#include "llvm/Support/Debug.h"
-#include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/raw_ostream.h"
-#include <cassert>
-#include <utility>
-#include <vector>
 
 using namespace llvm;
 
 #define DEBUG_TYPE "vec-merger"
 
-static bool isImplicitlyDef(MachineRegisterInfo &MRI, unsigned Reg) {
-  assert(MRI.isSSA());
-  if (TargetRegisterInfo::isPhysicalRegister(Reg))
+static bool isImplicitlyDef(MachineRegisterInfo &MRI, Register Reg) {
+  if (Reg.isPhysical())
     return false;
   const MachineInstr *MI = MRI.getUniqueVRegDef(Reg);
   return MI && MI->isImplicitDef();
@@ -69,8 +49,8 @@ namespace {
 class RegSeqInfo {
 public:
   MachineInstr *Instr;
-  DenseMap<unsigned, unsigned> RegToChan;
-  std::vector<unsigned> UndefReg;
+  DenseMap<Register, unsigned> RegToChan;
+  std::vector<Register> UndefReg;
 
   RegSeqInfo(MachineRegisterInfo &MRI, MachineInstr *MI) : Instr(MI) {
     assert(MI->getOpcode() == R600::REG_SEQUENCE);
@@ -102,7 +82,7 @@ private:
   InstructionSetMap PreviousRegSeqByUndefCount;
 
   bool canSwizzle(const MachineInstr &MI) const;
-  bool areAllUsesSwizzeable(unsigned Reg) const;
+  bool areAllUsesSwizzeable(Register Reg) const;
   void SwizzleInput(MachineInstr &,
       const std::vector<std::pair<unsigned, unsigned>> &RemapChan) const;
   bool tryMergeVector(const RegSeqInfo *Untouched, RegSeqInfo *ToMerge,
@@ -128,6 +108,11 @@ public:
     AU.addRequired<MachineLoopInfo>();
     AU.addPreserved<MachineLoopInfo>();
     MachineFunctionPass::getAnalysisUsage(AU);
+  }
+
+  MachineFunctionProperties getRequiredProperties() const override {
+    return MachineFunctionProperties()
+      .set(MachineFunctionProperties::Property::IsSSA);
   }
 
   StringRef getPassName() const override {
@@ -165,9 +150,9 @@ bool R600VectorRegMerger::tryMergeVector(const RegSeqInfo *Untouched,
     RegSeqInfo *ToMerge, std::vector< std::pair<unsigned, unsigned>> &Remap)
     const {
   unsigned CurrentUndexIdx = 0;
-  for (DenseMap<unsigned, unsigned>::iterator It = ToMerge->RegToChan.begin(),
+  for (DenseMap<Register, unsigned>::iterator It = ToMerge->RegToChan.begin(),
       E = ToMerge->RegToChan.end(); It != E; ++It) {
-    DenseMap<unsigned, unsigned>::const_iterator PosInUntouched =
+    DenseMap<Register, unsigned>::const_iterator PosInUntouched =
         Untouched->RegToChan.find((*It).first);
     if (PosInUntouched != Untouched->RegToChan.end()) {
       Remap.push_back(std::pair<unsigned, unsigned>
@@ -197,17 +182,17 @@ unsigned getReassignedChan(
 MachineInstr *R600VectorRegMerger::RebuildVector(
     RegSeqInfo *RSI, const RegSeqInfo *BaseRSI,
     const std::vector<std::pair<unsigned, unsigned>> &RemapChan) const {
-  unsigned Reg = RSI->Instr->getOperand(0).getReg();
+  Register Reg = RSI->Instr->getOperand(0).getReg();
   MachineBasicBlock::iterator Pos = RSI->Instr;
   MachineBasicBlock &MBB = *Pos->getParent();
   DebugLoc DL = Pos->getDebugLoc();
 
-  unsigned SrcVec = BaseRSI->Instr->getOperand(0).getReg();
-  DenseMap<unsigned, unsigned> UpdatedRegToChan = BaseRSI->RegToChan;
-  std::vector<unsigned> UpdatedUndef = BaseRSI->UndefReg;
-  for (DenseMap<unsigned, unsigned>::iterator It = RSI->RegToChan.begin(),
+  Register SrcVec = BaseRSI->Instr->getOperand(0).getReg();
+  DenseMap<Register, unsigned> UpdatedRegToChan = BaseRSI->RegToChan;
+  std::vector<Register> UpdatedUndef = BaseRSI->UndefReg;
+  for (DenseMap<Register, unsigned>::iterator It = RSI->RegToChan.begin(),
       E = RSI->RegToChan.end(); It != E; ++It) {
-    unsigned DstReg = MRI->createVirtualRegister(&R600::R600_Reg128RegClass);
+    Register DstReg = MRI->createVirtualRegister(&R600::R600_Reg128RegClass);
     unsigned SubReg = (*It).first;
     unsigned Swizzle = (*It).second;
     unsigned Chan = getReassignedChan(RemapChan, Swizzle);
@@ -218,7 +203,7 @@ MachineInstr *R600VectorRegMerger::RebuildVector(
         .addReg(SubReg)
         .addImm(Chan);
     UpdatedRegToChan[SubReg] = Chan;
-    std::vector<unsigned>::iterator ChanPos = llvm::find(UpdatedUndef, Chan);
+    std::vector<Register>::iterator ChanPos = llvm::find(UpdatedUndef, Chan);
     if (ChanPos != UpdatedUndef.end())
       UpdatedUndef.erase(ChanPos);
     assert(!is_contained(UpdatedUndef, Chan) &&
@@ -279,7 +264,7 @@ void R600VectorRegMerger::SwizzleInput(MachineInstr &MI,
   }
 }
 
-bool R600VectorRegMerger::areAllUsesSwizzeable(unsigned Reg) const {
+bool R600VectorRegMerger::areAllUsesSwizzeable(Register Reg) const {
   for (MachineRegisterInfo::use_instr_iterator It = MRI->use_instr_begin(Reg),
       E = MRI->use_instr_end(); It != E; ++It) {
     if (!canSwizzle(*It))
@@ -322,7 +307,7 @@ bool R600VectorRegMerger::tryMergeUsingFreeSlot(RegSeqInfo &RSI,
 }
 
 void R600VectorRegMerger::trackRSI(const RegSeqInfo &RSI) {
-  for (DenseMap<unsigned, unsigned>::const_iterator
+  for (DenseMap<Register, unsigned>::const_iterator
   It = RSI.RegToChan.begin(), E = RSI.RegToChan.end(); It != E; ++It) {
     PreviousRegSeqByReg[(*It).first].push_back(RSI.Instr);
   }
@@ -350,7 +335,7 @@ bool R600VectorRegMerger::runOnMachineFunction(MachineFunction &Fn) {
       MachineInstr &MI = *MII;
       if (MI.getOpcode() != R600::REG_SEQUENCE) {
         if (TII->get(MI.getOpcode()).TSFlags & R600_InstFlag::TEX_INST) {
-          unsigned Reg = MI.getOperand(1).getReg();
+          Register Reg = MI.getOperand(1).getReg();
           for (MachineRegisterInfo::def_instr_iterator
                It = MRI->def_instr_begin(Reg), E = MRI->def_instr_end();
                It != E; ++It) {
@@ -363,7 +348,7 @@ bool R600VectorRegMerger::runOnMachineFunction(MachineFunction &Fn) {
       RegSeqInfo RSI(*MRI, &MI);
 
       // All uses of MI are swizzeable ?
-      unsigned Reg = MI.getOperand(0).getReg();
+      Register Reg = MI.getOperand(0).getReg();
       if (!areAllUsesSwizzeable(Reg))
         continue;
 

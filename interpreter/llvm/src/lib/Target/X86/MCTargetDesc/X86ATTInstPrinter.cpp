@@ -16,6 +16,7 @@
 #include "X86InstComments.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInst.h"
+#include "llvm/MC/MCInstrAnalysis.h"
 #include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/Support/Casting.h"
@@ -38,8 +39,9 @@ void X86ATTInstPrinter::printRegName(raw_ostream &OS, unsigned RegNo) const {
   OS << markup("<reg:") << '%' << getRegisterName(RegNo) << markup(">");
 }
 
-void X86ATTInstPrinter::printInst(const MCInst *MI, raw_ostream &OS,
-                                  StringRef Annot, const MCSubtargetInfo &STI) {
+void X86ATTInstPrinter::printInst(const MCInst *MI, uint64_t Address,
+                                  StringRef Annot, const MCSubtargetInfo &STI,
+                                  raw_ostream &OS) {
   // If verbose assembly is enabled, we can print some informative comments.
   if (CommentStream)
     HasCustomInstComment = EmitAnyX86InstComments(MI, *CommentStream, MII);
@@ -55,7 +57,7 @@ void X86ATTInstPrinter::printInst(const MCInst *MI, raw_ostream &OS,
   if (MI->getOpcode() == X86::CALLpcrel32 &&
       (STI.getFeatureBits()[X86::Mode64Bit])) {
     OS << "\tcallq\t";
-    printPCRelImm(MI, 0, OS);
+    printPCRelImm(MI, Address, 0, OS);
   }
   // data16 and data32 both have the same encoding of 0x66. While data32 is
   // valid only in 16 bit systems, data16 is valid in the rest.
@@ -67,9 +69,8 @@ void X86ATTInstPrinter::printInst(const MCInst *MI, raw_ostream &OS,
    OS << "\tdata32";
   }
   // Try to print any aliases first.
-  else if (!printAliasInstr(MI, OS) &&
-           !printVecCompareInstr(MI, OS))
-    printInstruction(MI, OS);
+  else if (!printAliasInstr(MI, Address, OS) && !printVecCompareInstr(MI, OS))
+    printInstruction(MI, Address, OS);
 
   // Next always print the annotation.
   printAnnotation(OS, Annot);
@@ -384,6 +385,16 @@ void X86ATTInstPrinter::printOperand(const MCInst *MI, unsigned OpNo,
 
 void X86ATTInstPrinter::printMemReference(const MCInst *MI, unsigned Op,
                                           raw_ostream &O) {
+  // Do not print the exact form of the memory operand if it references a known
+  // binary object.
+  if (SymbolizeOperands && MIA) {
+    uint64_t Target;
+    if (MIA->evaluateBranch(*MI, 0, 0, Target))
+      return;
+    if (MIA->evaluateMemoryOperandAddress(*MI, 0, 0))
+      return;
+  }
+
   const MCOperand &BaseReg = MI->getOperand(Op + X86::AddrBaseReg);
   const MCOperand &IndexReg = MI->getOperand(Op + X86::AddrIndexReg);
   const MCOperand &DispSpec = MI->getOperand(Op + X86::AddrDisp);

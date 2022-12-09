@@ -12,6 +12,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/AST/ComparisonCategories.h"
+#include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/Type.h"
@@ -19,9 +20,29 @@
 
 using namespace clang;
 
+Optional<ComparisonCategoryType>
+clang::getComparisonCategoryForBuiltinCmp(QualType T) {
+  using CCT = ComparisonCategoryType;
+
+  if (T->isIntegralOrEnumerationType())
+    return CCT::StrongOrdering;
+
+  if (T->isRealFloatingType())
+    return CCT::PartialOrdering;
+
+  // C++2a [expr.spaceship]p8: If the composite pointer type is an object
+  // pointer type, p <=> q is of type std::strong_ordering.
+  // Note: this assumes neither operand is a null pointer constant.
+  if (T->isObjectPointerType())
+    return CCT::StrongOrdering;
+
+  // TODO: Extend support for operator<=> to ObjC types.
+  return llvm::None;
+}
+
 bool ComparisonCategoryInfo::ValueInfo::hasValidIntValue() const {
   assert(VD && "must have var decl");
-  if (!VD->checkInitIsICE())
+  if (!VD->isUsableInConstantExpressions(VD->getASTContext()))
     return false;
 
   // Before we attempt to get the value of the first field, ensure that we
@@ -59,7 +80,7 @@ ComparisonCategoryInfo::ValueInfo *ComparisonCategoryInfo::lookupValueInfo(
   // a new entry representing it.
   DeclContextLookupResult Lookup = Record->getCanonicalDecl()->lookup(
       &Ctx.Idents.get(ComparisonCategories::getResultString(ValueKind)));
-  if (Lookup.size() != 1 || !isa<VarDecl>(Lookup.front()))
+  if (Lookup.empty() || !isa<VarDecl>(Lookup.front()))
     return nullptr;
   Objects.emplace_back(ValueKind, cast<VarDecl>(Lookup.front()));
   return &Objects.back();
@@ -70,7 +91,7 @@ static const NamespaceDecl *lookupStdNamespace(const ASTContext &Ctx,
   if (!StdNS) {
     DeclContextLookupResult Lookup =
         Ctx.getTranslationUnitDecl()->lookup(&Ctx.Idents.get("std"));
-    if (Lookup.size() == 1)
+    if (!Lookup.empty())
       StdNS = dyn_cast<NamespaceDecl>(Lookup.front());
   }
   return StdNS;
@@ -81,7 +102,7 @@ static CXXRecordDecl *lookupCXXRecordDecl(const ASTContext &Ctx,
                                           ComparisonCategoryType Kind) {
   StringRef Name = ComparisonCategories::getCategoryString(Kind);
   DeclContextLookupResult Lookup = StdNS->lookup(&Ctx.Idents.get(Name));
-  if (Lookup.size() == 1)
+  if (!Lookup.empty())
     if (CXXRecordDecl *RD = dyn_cast<CXXRecordDecl>(Lookup.front()))
       return RD;
   return nullptr;
@@ -150,10 +171,6 @@ QualType ComparisonCategoryInfo::getType() const {
 StringRef ComparisonCategories::getCategoryString(ComparisonCategoryType Kind) {
   using CCKT = ComparisonCategoryType;
   switch (Kind) {
-  case CCKT::WeakEquality:
-    return "weak_equality";
-  case CCKT::StrongEquality:
-    return "strong_equality";
   case CCKT::PartialOrdering:
     return "partial_ordering";
   case CCKT::WeakOrdering:
@@ -169,12 +186,8 @@ StringRef ComparisonCategories::getResultString(ComparisonCategoryResult Kind) {
   switch (Kind) {
   case CCVT::Equal:
     return "equal";
-  case CCVT::Nonequal:
-    return "nonequal";
   case CCVT::Equivalent:
     return "equivalent";
-  case CCVT::Nonequivalent:
-    return "nonequivalent";
   case CCVT::Less:
     return "less";
   case CCVT::Greater:
@@ -190,20 +203,11 @@ ComparisonCategories::getPossibleResultsForType(ComparisonCategoryType Type) {
   using CCT = ComparisonCategoryType;
   using CCR = ComparisonCategoryResult;
   std::vector<CCR> Values;
-  Values.reserve(6);
-  Values.push_back(CCR::Equivalent);
-  bool IsStrong = (Type == CCT::StrongEquality || Type == CCT::StrongOrdering);
-  if (IsStrong)
-    Values.push_back(CCR::Equal);
-  if (Type == CCT::StrongOrdering || Type == CCT::WeakOrdering ||
-      Type == CCT::PartialOrdering) {
-    Values.push_back(CCR::Less);
-    Values.push_back(CCR::Greater);
-  } else {
-    Values.push_back(CCR::Nonequivalent);
-    if (IsStrong)
-      Values.push_back(CCR::Nonequal);
-  }
+  Values.reserve(4);
+  bool IsStrong = Type == CCT::StrongOrdering;
+  Values.push_back(IsStrong ? CCR::Equal : CCR::Equivalent);
+  Values.push_back(CCR::Less);
+  Values.push_back(CCR::Greater);
   if (Type == CCT::PartialOrdering)
     Values.push_back(CCR::Unordered);
   return Values;

@@ -13,6 +13,7 @@
 #include "xray-color-helper.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/raw_ostream.h"
+#include <cmath>
 
 using namespace llvm;
 using namespace xray;
@@ -208,8 +209,8 @@ ColorHelper::getColorTuple(double Point) const {
 // string.
 std::string
 ColorHelper::getColorString(std::tuple<uint8_t, uint8_t, uint8_t> t) {
-  return llvm::formatv("#{0:X-2}{1:X-2}{2:X-2}", std::get<0>(t), std::get<1>(t),
-                       std::get<2>(t));
+  return std::string(llvm::formatv("#{0:X-2}{1:X-2}{2:X-2}", std::get<0>(t),
+                                   std::get<1>(t), std::get<2>(t)));
 }
 
 // Gets a color in a gradient given a number in the interval [0,1], it does this

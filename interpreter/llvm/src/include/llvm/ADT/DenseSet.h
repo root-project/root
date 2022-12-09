@@ -66,6 +66,12 @@ public:
 
   explicit DenseSetImpl(unsigned InitialReserve = 0) : TheMap(InitialReserve) {}
 
+  template <typename InputIt>
+  DenseSetImpl(const InputIt &I, const InputIt &E)
+      : DenseSetImpl(PowerOf2Ceil(std::distance(I, E))) {
+    insert(I, E);
+  }
+
   DenseSetImpl(std::initializer_list<ValueT> Elems)
       : DenseSetImpl(PowerOf2Ceil(Elems.size())) {
     insert(Elems.begin(), Elems.end());
@@ -173,6 +179,11 @@ public:
   iterator find(const_arg_type_t<ValueT> V) { return Iterator(TheMap.find(V)); }
   const_iterator find(const_arg_type_t<ValueT> V) const {
     return ConstIterator(TheMap.find(V));
+  }
+
+  /// Check if the set contains the given element.
+  bool contains(const_arg_type_t<ValueT> V) const {
+    return TheMap.find(V) != TheMap.end();
   }
 
   /// Alternative version of find() which allows a different, and possibly less

@@ -33,13 +33,25 @@
 
 #include <dirent.h>
 #include <pwd.h>
+#include <sys/file.h>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
 #include <sys/attr.h>
 #include <copyfile.h>
+#elif defined(__FreeBSD__)
+#include <osreldate.h>
+#if __FreeBSD_version >= 1300057
+#include <sys/auxv.h>
+#else
+#include <machine/elf.h>
+extern char **environ;
+#endif
 #elif defined(__DragonFly__)
 #include <sys/mount.h>
+#elif defined(__MVS__)
+#include "llvm/Support/AutoConvert.h"
+#include <sys/ps.h>
 #endif
 
 // Both stdio.h and cstdio are included via different paths and
@@ -48,10 +60,13 @@
 #undef ferror
 #undef feof
 
+#if !defined(PATH_MAX)
 // For GNU Hurd
-#if defined(__GNU__) && !defined(PATH_MAX)
-# define PATH_MAX 4096
-# define MAXPATHLEN 4096
+#if defined(__GNU__)
+#define PATH_MAX 4096
+#elif defined(__MVS__)
+#define PATH_MAX _XOPEN_PATH_MAX
+#endif
 #endif
 
 #include <sys/types.h>
@@ -93,7 +108,8 @@ typedef uint_t uint;
 #define STATVFS_F_FRSIZE(vfs) static_cast<uint64_t>(vfs.f_bsize)
 #endif
 
-#if defined(__NetBSD__) || defined(__DragonFly__) || defined(__GNU__)
+#if defined(__NetBSD__) || defined(__DragonFly__) || defined(__GNU__) || \
+    defined(__MVS__)
 #define STATVFS_F_FLAG(vfs) (vfs).f_flag
 #else
 #define STATVFS_F_FLAG(vfs) (vfs).f_flags
@@ -132,6 +148,9 @@ test_dir(char ret[PATH_MAX], const char *dir, const char *bin)
 static char *
 getprogpath(char ret[PATH_MAX], const char *bin)
 {
+  if (bin == nullptr)
+    return nullptr;
+
   /* First approach: absolute path. */
   if (bin[0] == '/') {
     if (test_dir(ret, "/", bin) == 0)
@@ -176,22 +195,50 @@ std::string getMainExecutable(const char *argv0, void *MainAddr) {
   // On OS X the executable path is saved to the stack by dyld. Reading it
   // from there is much faster than calling dladdr, especially for large
   // binaries with symbols.
-  char exe_path[MAXPATHLEN];
+  char exe_path[PATH_MAX];
   uint32_t size = sizeof(exe_path);
   if (_NSGetExecutablePath(exe_path, &size) == 0) {
-    char link_path[MAXPATHLEN];
+    char link_path[PATH_MAX];
     if (realpath(exe_path, link_path))
       return link_path;
   }
-#elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) ||   \
-    defined(__minix) || defined(__DragonFly__) ||                              \
-    defined(__FreeBSD_kernel__) || defined(_AIX)
-  StringRef curproc("/proc/curproc/file");
+#elif defined(__FreeBSD__)
+  // On FreeBSD if the exec path specified in ELF auxiliary vectors is
+  // preferred, if available.  /proc/curproc/file and the KERN_PROC_PATHNAME
+  // sysctl may not return the desired path if there are multiple hardlinks
+  // to the file.
   char exe_path[PATH_MAX];
-  // /proc is not mounted by default under FreeBSD, but gives more accurate
-  // information than argv[0] when it is.
+#if __FreeBSD_version >= 1300057
+  if (elf_aux_info(AT_EXECPATH, exe_path, sizeof(exe_path)) == 0) {
+    char link_path[PATH_MAX];
+    if (realpath(exe_path, link_path))
+      return link_path;
+  }
+#else
+  // elf_aux_info(AT_EXECPATH, ... is not available in all supported versions,
+  // fall back to finding the ELF auxiliary vectors after the process's
+  // environment.
+  char **p = ::environ;
+  while (*p++ != 0)
+    ;
+  // Iterate through auxiliary vectors for AT_EXECPATH.
+  for (Elf_Auxinfo *aux = (Elf_Auxinfo *)p; aux->a_type != AT_NULL; aux++) {
+    if (aux->a_type == AT_EXECPATH) {
+      char link_path[PATH_MAX];
+      if (realpath((char *)aux->a_un.a_ptr, link_path))
+        return link_path;
+    }
+  }
+#endif
+  // Fall back to argv[0] if auxiliary vectors are not available.
+  if (getprogpath(exe_path, argv0) != NULL)
+    return exe_path;
+#elif defined(__NetBSD__) || defined(__OpenBSD__) || defined(__minix) ||       \
+    defined(__DragonFly__) || defined(__FreeBSD_kernel__) || defined(_AIX)
+  const char *curproc = "/proc/curproc/file";
+  char exe_path[PATH_MAX];
   if (sys::fs::exists(curproc)) {
-    ssize_t len = readlink(curproc.str().c_str(), exe_path, sizeof(exe_path));
+    ssize_t len = readlink(curproc, exe_path, sizeof(exe_path));
     if (len > 0) {
       // Null terminate the string for realpath. readlink never null
       // terminates its output.
@@ -203,12 +250,12 @@ std::string getMainExecutable(const char *argv0, void *MainAddr) {
   // If we don't have procfs mounted, fall back to argv[0]
   if (getprogpath(exe_path, argv0) != NULL)
     return exe_path;
-#elif defined(__linux__) || defined(__CYGWIN__)
-  char exe_path[MAXPATHLEN];
-  StringRef aPath("/proc/self/exe");
+#elif defined(__linux__) || defined(__CYGWIN__) || defined(__gnu_hurd__)
+  char exe_path[PATH_MAX];
+  const char *aPath = "/proc/self/exe";
   if (sys::fs::exists(aPath)) {
     // /proc is not always mounted under Linux (chroot for example).
-    ssize_t len = readlink(aPath.str().c_str(), exe_path, sizeof(exe_path));
+    ssize_t len = readlink(aPath, exe_path, sizeof(exe_path));
     if (len < 0)
       return "";
 
@@ -228,7 +275,7 @@ std::string getMainExecutable(const char *argv0, void *MainAddr) {
       return ret;
     }
 #else
-    char real_path[MAXPATHLEN];
+    char real_path[PATH_MAX];
     if (realpath(exe_path, real_path))
       return std::string(real_path);
 #endif
@@ -236,6 +283,26 @@ std::string getMainExecutable(const char *argv0, void *MainAddr) {
   // Fall back to the classical detection.
   if (getprogpath(exe_path, argv0))
     return exe_path;
+#elif defined(__MVS__)
+  int token = 0;
+  W_PSPROC buf;
+  char exe_path[PS_PATHBLEN];
+  pid_t pid = getpid();
+
+  memset(&buf, 0, sizeof(buf));
+  buf.ps_pathptr = exe_path;
+  buf.ps_pathlen = sizeof(exe_path);
+
+  while (true) {
+    if ((token = w_getpsent(token, &buf, sizeof(buf))) <= 0)
+      break;
+    if (buf.ps_pid != pid)
+      continue;
+    char real_path[PATH_MAX];
+    if (realpath(exe_path, real_path))
+      return std::string(real_path);
+    break;  // Found entry, but realpath failed.
+  }
 #elif defined(HAVE_DLFCN_H) && defined(HAVE_DLADDR)
   // Use dladdr to get executable path if available.
   Dl_info DLInfo;
@@ -245,7 +312,7 @@ std::string getMainExecutable(const char *argv0, void *MainAddr) {
 
   // If the filename is a symlink, we need to resolve and return the location of
   // the actual executable.
-  char link_path[MAXPATHLEN];
+  char link_path[PATH_MAX];
   if (realpath(DLInfo.dli_fname, link_path))
     return link_path;
 #else
@@ -295,12 +362,7 @@ std::error_code current_path(SmallVectorImpl<char> &result) {
     return std::error_code();
   }
 
-#ifdef MAXPATHLEN
-  result.reserve(MAXPATHLEN);
-#else
-// For GNU Hurd
-  result.reserve(1024);
-#endif
+  result.reserve(PATH_MAX);
 
   while (true) {
     if (::getcwd(result.data(), result.capacity()) == nullptr) {
@@ -443,7 +505,7 @@ static bool is_local_impl(struct STATVFS &Vfs) {
   std::unique_ptr<char[]> Buf;
   int Tries = 3;
   while (Tries--) {
-    Buf = llvm::make_unique<char[]>(BufSize);
+    Buf = std::make_unique<char[]>(BufSize);
     Ret = mntctl(MCTL_QUERY, BufSize, Buf.get());
     if (Ret != 0)
       break;
@@ -468,6 +530,10 @@ static bool is_local_impl(struct STATVFS &Vfs) {
   }
 
   // vmount entry not found; "remote" is the conservative answer.
+  return false;
+#elif defined(__MVS__)
+  // The file system can have an arbitrary structure on z/OS; must go with the
+  // conservative answer.
   return false;
 #else
   return !!(STATVFS_F_FLAG(Vfs) & MNT_LOCAL);
@@ -626,8 +692,6 @@ void expand_tilde(const Twine &path, SmallVectorImpl<char> &dest) {
 
   path.toVector(dest);
   expandTildeExpr(dest);
-
-  return;
 }
 
 static file_type typeForMode(mode_t Mode) {
@@ -736,6 +800,16 @@ std::error_code setLastAccessAndModificationTime(int FD, TimePoint<> AccessTime,
   if (::futimes(FD, Times))
     return std::error_code(errno, std::generic_category());
   return std::error_code();
+#elif defined(__MVS__)
+  attrib_t Attr;
+  memset(&Attr, 0, sizeof(Attr));
+  Attr.att_atimechg = 1;
+  Attr.att_atime = sys::toTimeT(AccessTime);
+  Attr.att_mtimechg = 1;
+  Attr.att_mtime = sys::toTimeT(ModificationTime);
+  if (::__fchattr(FD, &Attr, sizeof(Attr)) != 0)
+    return std::error_code(errno, std::generic_category());
+  return std::error_code();
 #else
 #warning Missing futimes() and futimens()
   return make_error_code(errc::function_not_supported);
@@ -748,6 +822,9 @@ std::error_code mapped_file_region::init(int FD, uint64_t Offset,
 
   int flags = (Mode == readwrite) ? MAP_SHARED : MAP_PRIVATE;
   int prot = (Mode == readonly) ? PROT_READ : (PROT_READ | PROT_WRITE);
+#if defined(MAP_NORESERVE)
+  flags |= MAP_NORESERVE;
+#endif
 #if defined(__APPLE__)
   //----------------------------------------------------------------------
   // Newer versions of MacOSX have a flag that will allow us to read from
@@ -776,31 +853,16 @@ std::error_code mapped_file_region::init(int FD, uint64_t Offset,
 
 mapped_file_region::mapped_file_region(int fd, mapmode mode, size_t length,
                                        uint64_t offset, std::error_code &ec)
-    : Size(length), Mapping(), Mode(mode) {
+    : Size(length), Mode(mode) {
   (void)Mode;
   ec = init(fd, offset, mode);
   if (ec)
-    Mapping = nullptr;
+    copyFrom(mapped_file_region());
 }
 
-mapped_file_region::~mapped_file_region() {
+void mapped_file_region::unmapImpl() {
   if (Mapping)
     ::munmap(Mapping, Size);
-}
-
-size_t mapped_file_region::size() const {
-  assert(Mapping && "Mapping failed but used anyway!");
-  return Size;
-}
-
-char *mapped_file_region::data() const {
-  assert(Mapping && "Mapping failed but used anyway!");
-  return reinterpret_cast<char*>(Mapping);
-}
-
-const char *mapped_file_region::const_data() const {
-  assert(Mapping && "Mapping failed but used anyway!");
-  return reinterpret_cast<const char*>(Mapping);
 }
 
 int mapped_file_region::alignment() {
@@ -833,7 +895,10 @@ std::error_code detail::directory_iterator_destruct(detail::DirIterState &it) {
 static file_type direntType(dirent* Entry) {
   // Most platforms provide the file type in the dirent: Linux/BSD/Mac.
   // The DTTOIF macro lets us reuse our status -> type conversion.
-#if defined(_DIRENT_HAVE_D_TYPE) && defined(DTTOIF)
+  // Note that while glibc provides a macro to see if this is supported,
+  // _DIRENT_HAVE_D_TYPE, it's not defined on BSD/Mac, so we test for the
+  // d_type-to-mode_t conversion macro instead.
+#if defined(DTTOIF)
   return typeForMode(DTTOIF(Entry->d_type));
 #else
   // Other platforms such as Solaris require a stat() to get the type.
@@ -884,9 +949,9 @@ static int nativeOpenFlags(CreationDisposition Disp, OpenFlags Flags,
   else if (Access == (FA_Read | FA_Write))
     Result |= O_RDWR;
 
-  // This is for compatibility with old code that assumed F_Append implied
+  // This is for compatibility with old code that assumed OF_Append implied
   // would open an existing file.  See Windows/Path.inc for a longer comment.
-  if (Flags & F_Append)
+  if (Flags & OF_Append)
     Disp = CD_OpenAlways;
 
   if (Disp == CD_CreateNew) {
@@ -901,8 +966,13 @@ static int nativeOpenFlags(CreationDisposition Disp, OpenFlags Flags,
     // Nothing special, just don't add O_CREAT and we get these semantics.
   }
 
-  if (Flags & F_Append)
+// Using append mode with z/OS UTF-8 auto-conversion results in EINVAL when
+// calling write(). Instead we need to use lseek() to set offset to EOF after
+// open().
+#ifndef __MVS__
+  if (Flags & OF_Append)
     Result |= O_APPEND;
+#endif
 
 #ifdef O_CLOEXEC
   if (!(Flags & OF_ChildInherit))
@@ -931,6 +1001,88 @@ std::error_code openFile(const Twine &Name, int &ResultFD,
     assert(r == 0 && "fcntl(F_SETFD, FD_CLOEXEC) failed");
   }
 #endif
+
+#ifdef __MVS__
+  /* Reason about auto-conversion and file tags. Setting the file tag only
+   * applies if file is opened in write mode:
+   *
+   * Text file:
+   *                  File exists       File created
+   * CD_CreateNew     n/a               conv: on
+   *                                    tag: set 1047
+   * CD_CreateAlways  conv: auto        conv: on
+   *                  tag: auto 1047    tag: set 1047
+   * CD_OpenAlways    conv: auto        conv: on
+   *                  tag: auto 1047    tag: set 1047
+   * CD_OpenExisting  conv: auto        n/a
+   *                  tag: unchanged
+   *
+   * Binary file:
+   *                  File exists       File created
+   * CD_CreateNew     n/a               conv: off
+   *                                    tag: set binary
+   * CD_CreateAlways  conv: off         conv: off
+   *                  tag: auto binary  tag: set binary
+   * CD_OpenAlways    conv: off         conv: off
+   *                  tag: auto binary  tag: set binary
+   * CD_OpenExisting  conv: off         n/a
+   *                  tag: unchanged
+   *
+   * Actions:
+   *   conv: off        -> auto-conversion is turned off
+   *   conv: on         -> auto-conversion is turned on
+   *   conv: auto       -> auto-conversion is turned on if the file is untagged
+   *   tag: set 1047    -> set the file tag to text encoded in 1047
+   *   tag: set binary  -> set the file tag to binary
+   *   tag: auto 1047   -> set file tag to 1047 if not set
+   *   tag: auto binary -> set file tag to binary if not set
+   *   tag: unchanged   -> do not care about the file tag
+   *
+   * It is not possible to distinguish between the cases "file exists" and
+   * "file created". In the latter case, the file tag is not set and the file
+   * size is zero. The decision table boils down to:
+   *
+   * the file tag is set if
+   *   - the file is opened for writing
+   *   - the create disposition is not equal to CD_OpenExisting
+   *   - the file tag is not set
+   *   - the file size is zero
+   *
+   * This only applies if the file is a regular file. E.g. enabling
+   * auto-conversion for reading from /dev/null results in error EINVAL when
+   * calling read().
+   *
+   * Using append mode with z/OS UTF-8 auto-conversion results in EINVAL when
+   * calling write(). Instead we need to use lseek() to set offset to EOF after
+   * open().
+   */
+  if ((Flags & OF_Append) && lseek(ResultFD, 0, SEEK_END) == -1)
+    return std::error_code(errno, std::generic_category());
+  struct stat Stat;
+  if (fstat(ResultFD, &Stat) == -1)
+    return std::error_code(errno, std::generic_category());
+  if (S_ISREG(Stat.st_mode)) {
+    bool DoSetTag = (Access & FA_Write) && (Disp != CD_OpenExisting) &&
+                    !Stat.st_tag.ft_txtflag && !Stat.st_tag.ft_ccsid &&
+                    Stat.st_size == 0;
+    if (Flags & OF_Text) {
+      if (auto EC = llvm::enableAutoConversion(ResultFD))
+        return EC;
+      if (DoSetTag) {
+        if (auto EC = llvm::setFileTag(ResultFD, CCSID_IBM_1047, true))
+          return EC;
+      }
+    } else {
+      if (auto EC = llvm::disableAutoConversion(ResultFD))
+        return EC;
+      if (DoSetTag) {
+        if (auto EC = llvm::setFileTag(ResultFD, FT_BINARY, false))
+          return EC;
+      }
+    }
+  }
+#endif
+
   return std::error_code();
 }
 
@@ -960,7 +1112,7 @@ std::error_code openFileForRead(const Twine &Name, int &ResultFD,
 #if defined(F_GETPATH)
   // When F_GETPATH is availble, it is the quickest way to get
   // the real path name.
-  char Buffer[MAXPATHLEN];
+  char Buffer[PATH_MAX];
   if (::fcntl(ResultFD, F_GETPATH, Buffer) != -1)
     RealPath->append(Buffer, Buffer + strlen(Buffer));
 #else
@@ -996,44 +1148,82 @@ file_t getStdinHandle() { return 0; }
 file_t getStdoutHandle() { return 1; }
 file_t getStderrHandle() { return 2; }
 
-std::error_code readNativeFile(file_t FD, MutableArrayRef<char> Buf,
-                               size_t *BytesRead) {
-  *BytesRead = sys::RetryAfterSignal(-1, ::read, FD, Buf.data(), Buf.size());
-  if (ssize_t(*BytesRead) == -1)
-    return std::error_code(errno, std::generic_category());
-  return std::error_code();
+Expected<size_t> readNativeFile(file_t FD, MutableArrayRef<char> Buf) {
+#if defined(__APPLE__)
+  size_t Size = std::min<size_t>(Buf.size(), INT32_MAX);
+#else
+  size_t Size = Buf.size();
+#endif
+  ssize_t NumRead =
+      sys::RetryAfterSignal(-1, ::read, FD, Buf.data(), Size);
+  if (ssize_t(NumRead) == -1)
+    return errorCodeToError(std::error_code(errno, std::generic_category()));
+  return NumRead;
 }
 
-std::error_code readNativeFileSlice(file_t FD, MutableArrayRef<char> Buf,
-                                    size_t Offset) {
-  char *BufPtr = Buf.data();
-  size_t BytesLeft = Buf.size();
-
-#ifndef HAVE_PREAD
-  // If we don't have pread, seek to Offset.
-  if (lseek(FD, Offset, SEEK_SET) == -1)
-    return std::error_code(errno, std::generic_category());
-#endif
-
-  while (BytesLeft) {
-#ifdef HAVE_PREAD
-    ssize_t NumRead = sys::RetryAfterSignal(-1, ::pread, FD, BufPtr, BytesLeft,
-                                            Buf.size() - BytesLeft + Offset);
+Expected<size_t> readNativeFileSlice(file_t FD, MutableArrayRef<char> Buf,
+                                     uint64_t Offset) {
+#if defined(__APPLE__)
+  size_t Size = std::min<size_t>(Buf.size(), INT32_MAX);
 #else
-    ssize_t NumRead = sys::RetryAfterSignal(-1, ::read, FD, BufPtr, BytesLeft);
+  size_t Size = Buf.size();
 #endif
-    if (NumRead == -1) {
-      // Error while reading.
-      return std::error_code(errno, std::generic_category());
-    }
-    if (NumRead == 0) {
-      memset(BufPtr, 0, BytesLeft); // zero-initialize rest of the buffer.
-      break;
-    }
-    BytesLeft -= NumRead;
-    BufPtr += NumRead;
-  }
-  return std::error_code();
+#ifdef HAVE_PREAD
+  ssize_t NumRead =
+      sys::RetryAfterSignal(-1, ::pread, FD, Buf.data(), Size, Offset);
+#else
+  if (lseek(FD, Offset, SEEK_SET) == -1)
+    return errorCodeToError(std::error_code(errno, std::generic_category()));
+  ssize_t NumRead =
+      sys::RetryAfterSignal(-1, ::read, FD, Buf.data(), Size);
+#endif
+  if (NumRead == -1)
+    return errorCodeToError(std::error_code(errno, std::generic_category()));
+  return NumRead;
+}
+
+std::error_code tryLockFile(int FD, std::chrono::milliseconds Timeout) {
+  auto Start = std::chrono::steady_clock::now();
+  auto End = Start + Timeout;
+  do {
+    struct flock Lock;
+    memset(&Lock, 0, sizeof(Lock));
+    Lock.l_type = F_WRLCK;
+    Lock.l_whence = SEEK_SET;
+    Lock.l_start = 0;
+    Lock.l_len = 0;
+    if (::fcntl(FD, F_SETLK, &Lock) != -1)
+      return std::error_code();
+    int Error = errno;
+    if (Error != EACCES && Error != EAGAIN)
+      return std::error_code(Error, std::generic_category());
+    usleep(1000);
+  } while (std::chrono::steady_clock::now() < End);
+  return make_error_code(errc::no_lock_available);
+}
+
+std::error_code lockFile(int FD) {
+  struct flock Lock;
+  memset(&Lock, 0, sizeof(Lock));
+  Lock.l_type = F_WRLCK;
+  Lock.l_whence = SEEK_SET;
+  Lock.l_start = 0;
+  Lock.l_len = 0;
+  if (::fcntl(FD, F_SETLKW, &Lock) != -1)
+    return std::error_code();
+  int Error = errno;
+  return std::error_code(Error, std::generic_category());
+}
+
+std::error_code unlockFile(int FD) {
+  struct flock Lock;
+  Lock.l_type = F_UNLCK;
+  Lock.l_whence = SEEK_SET;
+  Lock.l_start = 0;
+  Lock.l_len = 0;
+  if (::fcntl(FD, F_SETLK, &Lock) != -1)
+    return std::error_code();
+  return std::error_code(errno, std::generic_category());
 }
 
 std::error_code closeFile(file_t &F) {
@@ -1103,6 +1293,14 @@ std::error_code real_path(const Twine &path, SmallVectorImpl<char> &dest,
   return std::error_code();
 }
 
+std::error_code changeFileOwnership(int FD, uint32_t Owner, uint32_t Group) {
+  auto FChown = [&]() { return ::fchown(FD, Owner, Group); };
+  // Retry if fchown call fails due to interruption.
+  if ((sys::RetryAfterSignal(-1, FChown)) < 0)
+    return std::error_code(errno, std::generic_category());
+  return std::error_code();
+}
+
 } // end namespace fs
 
 namespace path {
@@ -1145,6 +1343,51 @@ static bool getDarwinConfDir(bool TempDir, SmallVectorImpl<char> &Result) {
   }
   #endif
   return false;
+}
+
+bool user_config_directory(SmallVectorImpl<char> &result) {
+#ifdef __APPLE__
+  // Mac: ~/Library/Preferences/
+  if (home_directory(result)) {
+    append(result, "Library", "Preferences");
+    return true;
+  }
+#else
+  // XDG_CONFIG_HOME as defined in the XDG Base Directory Specification:
+  // http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
+  if (const char *RequestedDir = getenv("XDG_CONFIG_HOME")) {
+    result.clear();
+    result.append(RequestedDir, RequestedDir + strlen(RequestedDir));
+    return true;
+  }
+#endif
+  // Fallback: ~/.config
+  if (!home_directory(result)) {
+    return false;
+  }
+  append(result, ".config");
+  return true;
+}
+
+bool cache_directory(SmallVectorImpl<char> &result) {
+#ifdef __APPLE__
+  if (getDarwinConfDir(false/*tempDir*/, result)) {
+    return true;
+  }
+#else
+  // XDG_CACHE_HOME as defined in the XDG Base Directory Specification:
+  // http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html
+  if (const char *RequestedDir = getenv("XDG_CACHE_HOME")) {
+    result.clear();
+    result.append(RequestedDir, RequestedDir + strlen(RequestedDir));
+    return true;
+  }
+#endif
+  if (!home_directory(result)) {
+    return false;
+  }
+  append(result, ".cache");
+  return true;
 }
 
 static const char *getEnvTempDir() {

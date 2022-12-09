@@ -11,13 +11,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "float2int"
-
+#include "llvm/InitializePasses.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Transforms/Scalar/Float2Int.h"
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/APSInt.h"
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/GlobalsModRef.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/IRBuilder.h"
@@ -30,6 +29,9 @@
 #include "llvm/Transforms/Scalar.h"
 #include <deque>
 #include <functional> // For std::function
+
+#define DEBUG_TYPE "float2int"
+
 using namespace llvm;
 
 // The algorithm is simple. Start at instructions that convert from the
@@ -60,11 +62,13 @@ namespace {
       if (skipFunction(F))
         return false;
 
-      return Impl.runImpl(F);
+      const DominatorTree &DT = getAnalysis<DominatorTreeWrapperPass>().getDomTree();
+      return Impl.runImpl(F, DT);
     }
 
     void getAnalysisUsage(AnalysisUsage &AU) const override {
       AU.setPreservesCFG();
+      AU.addRequired<DominatorTreeWrapperPass>();
       AU.addPreserved<GlobalsAAWrapperPass>();
     }
 
@@ -116,21 +120,28 @@ static Instruction::BinaryOps mapBinOpcode(unsigned Opcode) {
 
 // Find the roots - instructions that convert from the FP domain to
 // integer domain.
-void Float2IntPass::findRoots(Function &F, SmallPtrSet<Instruction*,8> &Roots) {
-  for (auto &I : instructions(F)) {
-    if (isa<VectorType>(I.getType()))
+void Float2IntPass::findRoots(Function &F, const DominatorTree &DT) {
+  for (BasicBlock &BB : F) {
+    // Unreachable code can take on strange forms that we are not prepared to
+    // handle. For example, an instruction may have itself as an operand.
+    if (!DT.isReachableFromEntry(&BB))
       continue;
-    switch (I.getOpcode()) {
-    default: break;
-    case Instruction::FPToUI:
-    case Instruction::FPToSI:
-      Roots.insert(&I);
-      break;
-    case Instruction::FCmp:
-      if (mapFCmpPred(cast<CmpInst>(&I)->getPredicate()) !=
-          CmpInst::BAD_ICMP_PREDICATE)
+
+    for (Instruction &I : BB) {
+      if (isa<VectorType>(I.getType()))
+        continue;
+      switch (I.getOpcode()) {
+      default: break;
+      case Instruction::FPToUI:
+      case Instruction::FPToSI:
         Roots.insert(&I);
-      break;
+        break;
+      case Instruction::FCmp:
+        if (mapFCmpPred(cast<CmpInst>(&I)->getPredicate()) !=
+            CmpInst::BAD_ICMP_PREDICATE)
+          Roots.insert(&I);
+        break;
+      }
     }
   }
 }
@@ -172,7 +183,7 @@ ConstantRange Float2IntPass::validateRange(ConstantRange R) {
 
 // Breadth-first walk of the use-def graph; determine the set of nodes
 // we care about and eagerly determine if some of them are poisonous.
-void Float2IntPass::walkBackwards(const SmallPtrSetImpl<Instruction*> &Roots) {
+void Float2IntPass::walkBackwards() {
   std::deque<Instruction*> Worklist(Roots.begin(), Roots.end());
   while (!Worklist.empty()) {
     Instruction *I = Worklist.back();
@@ -315,7 +326,7 @@ void Float2IntPass::walkForwards() {
 
         APFloat NewF = F;
         auto Res = NewF.roundToIntegral(APFloat::rmNearestTiesToEven);
-        if (Res != APFloat::opOK || NewF.compare(F) != APFloat::cmpEqual) {
+        if (Res != APFloat::opOK || NewF != F) {
           seen(I, badRange());
           Abort = true;
           break;
@@ -503,7 +514,7 @@ void Float2IntPass::cleanup() {
     I.first->eraseFromParent();
 }
 
-bool Float2IntPass::runImpl(Function &F) {
+bool Float2IntPass::runImpl(Function &F, const DominatorTree &DT) {
   LLVM_DEBUG(dbgs() << "F2I: Looking at function " << F.getName() << "\n");
   // Clear out all state.
   ECs = EquivalenceClasses<Instruction*>();
@@ -513,9 +524,9 @@ bool Float2IntPass::runImpl(Function &F) {
 
   Ctx = &F.getParent()->getContext();
 
-  findRoots(F, Roots);
+  findRoots(F, DT);
 
-  walkBackwards(Roots);
+  walkBackwards();
   walkForwards();
 
   bool Modified = validateAndTransform();
@@ -527,13 +538,13 @@ bool Float2IntPass::runImpl(Function &F) {
 namespace llvm {
 FunctionPass *createFloat2IntPass() { return new Float2IntLegacyPass(); }
 
-PreservedAnalyses Float2IntPass::run(Function &F, FunctionAnalysisManager &) {
-  if (!runImpl(F))
+PreservedAnalyses Float2IntPass::run(Function &F, FunctionAnalysisManager &AM) {
+  const DominatorTree &DT = AM.getResult<DominatorTreeAnalysis>(F);
+  if (!runImpl(F, DT))
     return PreservedAnalyses::all();
 
   PreservedAnalyses PA;
   PA.preserveSet<CFGAnalyses>();
-  PA.preserve<GlobalsAA>();
   return PA;
 }
 } // End namespace llvm

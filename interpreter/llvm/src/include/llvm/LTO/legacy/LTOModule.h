@@ -10,8 +10,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_LTO_LTOMODULE_H
-#define LLVM_LTO_LTOMODULE_H
+#ifndef LLVM_LTO_LEGACY_LTOMODULE_H
+#define LLVM_LTO_LEGACY_LTOMODULE_H
 
 #include "llvm-c/lto.h"
 #include "llvm/ADT/StringMap.h"
@@ -47,8 +47,6 @@ private:
   std::unique_ptr<LLVMContext> OwnedContext;
 
   std::string LinkerOpts;
-
-  std::string DependentLibraries;
 
   std::unique_ptr<Module> Mod;
   MemoryBufferRef MBRef;
@@ -164,6 +162,10 @@ public:
   static size_t getDependentLibraryCount(lto::InputFile *input);
 
   static const char *getDependentLibrary(lto::InputFile *input, size_t index, size_t *size);
+
+  Expected<uint32_t> getMachOCPUType() const;
+
+  Expected<uint32_t> getMachOCPUSubType() const;
 
 private:
   /// Parse metadata from the module

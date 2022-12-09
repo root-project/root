@@ -186,6 +186,13 @@ public:
   unsigned fixOneOperandFPComparison(const MCInst &MI, unsigned EncodedValue,
                                      const MCSubtargetInfo &STI) const;
 
+  uint32_t EncodeMatrixTileListRegisterClass(const MCInst &MI, unsigned OpIdx,
+                                             SmallVectorImpl<MCFixup> &Fixups,
+                                             const MCSubtargetInfo &STI) const;
+  uint32_t encodeMatrixIndexGPR32(const MCInst &MI, unsigned OpIdx,
+                                  SmallVectorImpl<MCFixup> &Fixups,
+                                  const MCSubtargetInfo &STI) const;
+
 private:
   FeatureBitset computeAvailableFeatures(const FeatureBitset &FB) const;
   void
@@ -516,6 +523,24 @@ AArch64MCCodeEmitter::getVecShiftL8OpValue(const MCInst &MI, unsigned OpIdx,
   return MO.getImm() - 8;
 }
 
+uint32_t AArch64MCCodeEmitter::EncodeMatrixTileListRegisterClass(
+    const MCInst &MI, unsigned OpIdx, SmallVectorImpl<MCFixup> &Fixups,
+    const MCSubtargetInfo &STI) const {
+  unsigned RegMask = MI.getOperand(OpIdx).getImm();
+  assert(RegMask <= 0xFF && "Invalid register mask!");
+  return RegMask;
+}
+
+uint32_t
+AArch64MCCodeEmitter::encodeMatrixIndexGPR32(const MCInst &MI, unsigned OpIdx,
+                                             SmallVectorImpl<MCFixup> &Fixups,
+                                             const MCSubtargetInfo &STI) const {
+  auto RegOpnd = MI.getOperand(OpIdx).getReg();
+  assert(RegOpnd >= AArch64::W12 && RegOpnd <= AArch64::W15 &&
+         "Expected register in the range w12-w15!");
+  return RegOpnd - AArch64::W12;
+}
+
 uint32_t
 AArch64MCCodeEmitter::getImm8OptLsl(const MCInst &MI, unsigned OpIdx,
                                     SmallVectorImpl<MCFixup> &Fixups,
@@ -569,23 +594,24 @@ unsigned AArch64MCCodeEmitter::fixMOVZ(const MCInst &MI, unsigned EncodedValue,
   if (UImm16MO.isImm())
     return EncodedValue;
 
-  const AArch64MCExpr *A64E = cast<AArch64MCExpr>(UImm16MO.getExpr());
-  switch (A64E->getKind()) {
-  case AArch64MCExpr::VK_DTPREL_G2:
-  case AArch64MCExpr::VK_DTPREL_G1:
-  case AArch64MCExpr::VK_DTPREL_G0:
-  case AArch64MCExpr::VK_GOTTPREL_G1:
-  case AArch64MCExpr::VK_TPREL_G2:
-  case AArch64MCExpr::VK_TPREL_G1:
-  case AArch64MCExpr::VK_TPREL_G0:
-    return EncodedValue & ~(1u << 30);
-  default:
-    // Nothing to do for an unsigned fixup.
-    return EncodedValue;
+  const MCExpr *E = UImm16MO.getExpr();
+  if (const AArch64MCExpr *A64E = dyn_cast<AArch64MCExpr>(E)) {
+    switch (A64E->getKind()) {
+    case AArch64MCExpr::VK_DTPREL_G2:
+    case AArch64MCExpr::VK_DTPREL_G1:
+    case AArch64MCExpr::VK_DTPREL_G0:
+    case AArch64MCExpr::VK_GOTTPREL_G1:
+    case AArch64MCExpr::VK_TPREL_G2:
+    case AArch64MCExpr::VK_TPREL_G1:
+    case AArch64MCExpr::VK_TPREL_G0:
+      return EncodedValue & ~(1u << 30);
+    default:
+      // Nothing to do for an unsigned fixup.
+      return EncodedValue;
+    }
   }
 
-
-  return EncodedValue & ~(1u << 30);
+  return EncodedValue;
 }
 
 void AArch64MCCodeEmitter::encodeInstruction(const MCInst &MI, raw_ostream &OS,
@@ -598,11 +624,19 @@ void AArch64MCCodeEmitter::encodeInstruction(const MCInst &MI, raw_ostream &OS,
     // This is a directive which applies an R_AARCH64_TLSDESC_CALL to the
     // following (BLR) instruction. It doesn't emit any code itself so it
     // doesn't go through the normal TableGenerated channels.
-    MCFixupKind Fixup = MCFixupKind(AArch64::fixup_aarch64_tlsdesc_call);
-    Fixups.push_back(MCFixup::create(0, MI.getOperand(0).getExpr(), Fixup));
+    auto Reloc = STI.getTargetTriple().getEnvironment() == Triple::GNUILP32
+                     ? ELF::R_AARCH64_P32_TLSDESC_CALL
+                     : ELF::R_AARCH64_TLSDESC_CALL;
+    Fixups.push_back(
+        MCFixup::create(0, MI.getOperand(0).getExpr(),
+                        MCFixupKind(FirstLiteralRelocationKind + Reloc)));
     return;
-  } else if (MI.getOpcode() == AArch64::CompilerBarrier) {
-    // This just prevents the compiler from reordering accesses, no actual code.
+  }
+
+  if (MI.getOpcode() == AArch64::CompilerBarrier ||
+      MI.getOpcode() == AArch64::SPACE) {
+    // CompilerBarrier just prevents the compiler from reordering accesses, and
+    // SPACE just increases basic block size, in both cases no actual code.
     return;
   }
 

@@ -16,14 +16,14 @@
 #include "llvm/MC/MCAsmInfo.h"
 
 namespace llvm {
-class Target;
 class Triple;
 
 class NVPTXMCAsmInfo : public MCAsmInfo {
   virtual void anchor();
 
 public:
-  explicit NVPTXMCAsmInfo(const Triple &TheTriple);
+  explicit NVPTXMCAsmInfo(const Triple &TheTriple,
+                          const MCTargetOptions &Options);
 
   /// Return true if the .section directive should be omitted when
   /// emitting \p SectionName.  For example:

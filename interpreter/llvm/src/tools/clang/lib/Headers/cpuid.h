@@ -7,6 +7,9 @@
  *===-----------------------------------------------------------------------===
  */
 
+#ifndef __CPUID_H
+#define __CPUID_H
+
 #if !(__x86_64__ || __i386__)
 #error this header is for x86 only
 #endif
@@ -24,6 +27,10 @@
 #define signature_CYRIX_ebx 0x69727943
 #define signature_CYRIX_edx 0x736e4978
 #define signature_CYRIX_ecx 0x64616574
+/* HYGON:   "HygonGenuine" */
+#define signature_HYGON_ebx 0x6f677948
+#define signature_HYGON_edx 0x6e65476e
+#define signature_HYGON_ecx 0x656e6975
 /* INTEL:   "GenuineIntel" */
 #define signature_INTEL_ebx 0x756e6547
 #define signature_INTEL_edx 0x49656e69
@@ -38,8 +45,8 @@
 #define signature_TM2_ecx 0x3638784d
 /* NSC:     "Geode by NSC" */
 #define signature_NSC_ebx 0x646f6547
-#define signature_NSC_edx 0x43534e20
-#define signature_NSC_ecx 0x79622065
+#define signature_NSC_edx 0x79622065
+#define signature_NSC_ecx 0x43534e20
 /* NEXGEN:  "NexGenDriven" */
 #define signature_NEXGEN_ebx 0x4778654e
 #define signature_NEXGEN_edx 0x72446e65
@@ -182,11 +189,19 @@
 /* Features in %edx for leaf 7 sub-leaf 0 */
 #define bit_AVX5124VNNIW  0x00000004
 #define bit_AVX5124FMAPS  0x00000008
+#define bit_UINTR         0x00000020
+#define bit_SERIALIZE     0x00004000
+#define bit_TSXLDTRK      0x00010000
 #define bit_PCONFIG       0x00040000
 #define bit_IBT           0x00100000
+#define bit_AMXBF16       0x00400000
+#define bit_AMXTILE       0x01000000
+#define bit_AMXINT8       0x02000000
 
 /* Features in %eax for leaf 7 sub-leaf 1 */
+#define bit_AVXVNNI       0x00000008
 #define bit_AVX512BF16    0x00000020
+#define bit_HRESET        0x00400000
 
 /* Features in %eax for leaf 13 sub-leaf 1 */
 #define bit_XSAVEOPT    0x00000001
@@ -300,3 +315,5 @@ static __inline int __get_cpuid_count (unsigned int __leaf,
     __cpuid_count(__leaf, __subleaf, *__eax, *__ebx, *__ecx, *__edx);
     return 1;
 }
+
+#endif /* __CPUID_H */

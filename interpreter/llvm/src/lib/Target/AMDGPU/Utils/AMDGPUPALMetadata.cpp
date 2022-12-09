@@ -15,12 +15,12 @@
 //
 
 #include "AMDGPUPALMetadata.h"
-#include "AMDGPU.h"
-#include "AMDGPUAsmPrinter.h"
-#include "MCTargetDesc/AMDGPUTargetStreamer.h"
+#include "AMDGPUPTNote.h"
 #include "SIDefines.h"
 #include "llvm/BinaryFormat/ELF.h"
-#include "llvm/IR/CallingConv.h"
+#include "llvm/CodeGen/MachineFunction.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/Module.h"
 #include "llvm/Support/AMDGPUMetadata.h"
 #include "llvm/Support/EndianStream.h"
 
@@ -41,10 +41,13 @@ void AMDGPUPALMetadata::readFromIR(Module &M) {
     }
     return;
   }
-  BlobType = ELF::NT_AMD_AMDGPU_PAL_METADATA;
+  BlobType = ELF::NT_AMD_PAL_METADATA;
   NamedMD = M.getNamedMetadata("amdgpu.pal.metadata");
-  if (!NamedMD || !NamedMD->getNumOperands())
+  if (!NamedMD || !NamedMD->getNumOperands()) {
+    // Emit msgpack metadata by default
+    BlobType = ELF::NT_AMDGPU_METADATA;
     return;
+  }
   // This is the old reg=value pair format for metadata. It is a NamedMD
   // containing an MDTuple containing a number of MDNodes each of which is an
   // integer value, and each two integer values forms a key=value pair that we
@@ -66,7 +69,7 @@ void AMDGPUPALMetadata::readFromIR(Module &M) {
 // Metadata.
 bool AMDGPUPALMetadata::setFromBlob(unsigned Type, StringRef Blob) {
   BlobType = Type;
-  if (Type == ELF::NT_AMD_AMDGPU_PAL_METADATA)
+  if (Type == ELF::NT_AMD_PAL_METADATA)
     return setFromLegacyBlob(Blob);
   return setFromMsgPackBlob(Blob);
 }
@@ -233,6 +236,34 @@ void AMDGPUPALMetadata::setScratchSize(CallingConv::ID CC, unsigned Val) {
   getHwStage(CC)[".scratch_memory_size"] = MsgPackDoc.getNode(Val);
 }
 
+// Set the stack frame size of a function in the metadata.
+void AMDGPUPALMetadata::setFunctionScratchSize(const MachineFunction &MF,
+                                               unsigned Val) {
+  auto Node = getShaderFunction(MF.getFunction().getName());
+  Node[".stack_frame_size_in_bytes"] = MsgPackDoc.getNode(Val);
+}
+
+// Set the amount of LDS used in bytes in the metadata.
+void AMDGPUPALMetadata::setFunctionLdsSize(const MachineFunction &MF,
+                                           unsigned Val) {
+  auto Node = getShaderFunction(MF.getFunction().getName());
+  Node[".lds_size"] = MsgPackDoc.getNode(Val);
+}
+
+// Set the number of used vgprs in the metadata.
+void AMDGPUPALMetadata::setFunctionNumUsedVgprs(const MachineFunction &MF,
+                                                unsigned Val) {
+  auto Node = getShaderFunction(MF.getFunction().getName());
+  Node[".vgpr_count"] = MsgPackDoc.getNode(Val);
+}
+
+// Set the number of used vgprs in the metadata.
+void AMDGPUPALMetadata::setFunctionNumUsedSgprs(const MachineFunction &MF,
+                                                unsigned Val) {
+  auto Node = getShaderFunction(MF.getFunction().getName());
+  Node[".sgpr_count"] = MsgPackDoc.getNode(Val);
+}
+
 // Set the hardware register bit in PAL metadata to enable wave32 on the
 // shader of the given calling convention.
 void AMDGPUPALMetadata::setWave32(unsigned CC) {
@@ -395,6 +426,39 @@ static const char *getRegisterName(unsigned RegNum) {
       {0x2c6a, "SPI_SHADER_USER_DATA_VS_30"},
       {0x2c6b, "SPI_SHADER_USER_DATA_VS_31"},
 
+      {0x2c8c, "SPI_SHADER_USER_DATA_GS_0"},
+      {0x2c8d, "SPI_SHADER_USER_DATA_GS_1"},
+      {0x2c8e, "SPI_SHADER_USER_DATA_GS_2"},
+      {0x2c8f, "SPI_SHADER_USER_DATA_GS_3"},
+      {0x2c90, "SPI_SHADER_USER_DATA_GS_4"},
+      {0x2c91, "SPI_SHADER_USER_DATA_GS_5"},
+      {0x2c92, "SPI_SHADER_USER_DATA_GS_6"},
+      {0x2c93, "SPI_SHADER_USER_DATA_GS_7"},
+      {0x2c94, "SPI_SHADER_USER_DATA_GS_8"},
+      {0x2c95, "SPI_SHADER_USER_DATA_GS_9"},
+      {0x2c96, "SPI_SHADER_USER_DATA_GS_10"},
+      {0x2c97, "SPI_SHADER_USER_DATA_GS_11"},
+      {0x2c98, "SPI_SHADER_USER_DATA_GS_12"},
+      {0x2c99, "SPI_SHADER_USER_DATA_GS_13"},
+      {0x2c9a, "SPI_SHADER_USER_DATA_GS_14"},
+      {0x2c9b, "SPI_SHADER_USER_DATA_GS_15"},
+      {0x2c9c, "SPI_SHADER_USER_DATA_GS_16"},
+      {0x2c9d, "SPI_SHADER_USER_DATA_GS_17"},
+      {0x2c9e, "SPI_SHADER_USER_DATA_GS_18"},
+      {0x2c9f, "SPI_SHADER_USER_DATA_GS_19"},
+      {0x2ca0, "SPI_SHADER_USER_DATA_GS_20"},
+      {0x2ca1, "SPI_SHADER_USER_DATA_GS_21"},
+      {0x2ca2, "SPI_SHADER_USER_DATA_GS_22"},
+      {0x2ca3, "SPI_SHADER_USER_DATA_GS_23"},
+      {0x2ca4, "SPI_SHADER_USER_DATA_GS_24"},
+      {0x2ca5, "SPI_SHADER_USER_DATA_GS_25"},
+      {0x2ca6, "SPI_SHADER_USER_DATA_GS_26"},
+      {0x2ca7, "SPI_SHADER_USER_DATA_GS_27"},
+      {0x2ca8, "SPI_SHADER_USER_DATA_GS_28"},
+      {0x2ca9, "SPI_SHADER_USER_DATA_GS_29"},
+      {0x2caa, "SPI_SHADER_USER_DATA_GS_30"},
+      {0x2cab, "SPI_SHADER_USER_DATA_GS_31"},
+
       {0x2ccc, "SPI_SHADER_USER_DATA_ES_0"},
       {0x2ccd, "SPI_SHADER_USER_DATA_ES_1"},
       {0x2cce, "SPI_SHADER_USER_DATA_ES_2"},
@@ -489,38 +553,55 @@ static const char *getRegisterName(unsigned RegNum) {
       {0xa310, "PA_SC_SHADER_CONTROL"},
       {0xa313, "PA_SC_CONSERVATIVE_RASTERIZATION_CNTL"},
 
-      {0x2d0c, "SPI_SHADER_USER_DATA_LS_0"},
-      {0x2d0d, "SPI_SHADER_USER_DATA_LS_1"},
-      {0x2d0e, "SPI_SHADER_USER_DATA_LS_2"},
-      {0x2d0f, "SPI_SHADER_USER_DATA_LS_3"},
-      {0x2d10, "SPI_SHADER_USER_DATA_LS_4"},
-      {0x2d11, "SPI_SHADER_USER_DATA_LS_5"},
-      {0x2d12, "SPI_SHADER_USER_DATA_LS_6"},
-      {0x2d13, "SPI_SHADER_USER_DATA_LS_7"},
-      {0x2d14, "SPI_SHADER_USER_DATA_LS_8"},
-      {0x2d15, "SPI_SHADER_USER_DATA_LS_9"},
-      {0x2d16, "SPI_SHADER_USER_DATA_LS_10"},
-      {0x2d17, "SPI_SHADER_USER_DATA_LS_11"},
-      {0x2d18, "SPI_SHADER_USER_DATA_LS_12"},
-      {0x2d19, "SPI_SHADER_USER_DATA_LS_13"},
-      {0x2d1a, "SPI_SHADER_USER_DATA_LS_14"},
-      {0x2d1b, "SPI_SHADER_USER_DATA_LS_15"},
-      {0x2d1c, "SPI_SHADER_USER_DATA_LS_16"},
-      {0x2d1d, "SPI_SHADER_USER_DATA_LS_17"},
-      {0x2d1e, "SPI_SHADER_USER_DATA_LS_18"},
-      {0x2d1f, "SPI_SHADER_USER_DATA_LS_19"},
-      {0x2d20, "SPI_SHADER_USER_DATA_LS_20"},
-      {0x2d21, "SPI_SHADER_USER_DATA_LS_21"},
-      {0x2d22, "SPI_SHADER_USER_DATA_LS_22"},
-      {0x2d23, "SPI_SHADER_USER_DATA_LS_23"},
-      {0x2d24, "SPI_SHADER_USER_DATA_LS_24"},
-      {0x2d25, "SPI_SHADER_USER_DATA_LS_25"},
-      {0x2d26, "SPI_SHADER_USER_DATA_LS_26"},
-      {0x2d27, "SPI_SHADER_USER_DATA_LS_27"},
-      {0x2d28, "SPI_SHADER_USER_DATA_LS_28"},
-      {0x2d29, "SPI_SHADER_USER_DATA_LS_29"},
-      {0x2d2a, "SPI_SHADER_USER_DATA_LS_30"},
-      {0x2d2b, "SPI_SHADER_USER_DATA_LS_31"},
+      {0x2d0c, "SPI_SHADER_USER_DATA_HS_0"},
+      {0x2d0d, "SPI_SHADER_USER_DATA_HS_1"},
+      {0x2d0e, "SPI_SHADER_USER_DATA_HS_2"},
+      {0x2d0f, "SPI_SHADER_USER_DATA_HS_3"},
+      {0x2d10, "SPI_SHADER_USER_DATA_HS_4"},
+      {0x2d11, "SPI_SHADER_USER_DATA_HS_5"},
+      {0x2d12, "SPI_SHADER_USER_DATA_HS_6"},
+      {0x2d13, "SPI_SHADER_USER_DATA_HS_7"},
+      {0x2d14, "SPI_SHADER_USER_DATA_HS_8"},
+      {0x2d15, "SPI_SHADER_USER_DATA_HS_9"},
+      {0x2d16, "SPI_SHADER_USER_DATA_HS_10"},
+      {0x2d17, "SPI_SHADER_USER_DATA_HS_11"},
+      {0x2d18, "SPI_SHADER_USER_DATA_HS_12"},
+      {0x2d19, "SPI_SHADER_USER_DATA_HS_13"},
+      {0x2d1a, "SPI_SHADER_USER_DATA_HS_14"},
+      {0x2d1b, "SPI_SHADER_USER_DATA_HS_15"},
+      {0x2d1c, "SPI_SHADER_USER_DATA_HS_16"},
+      {0x2d1d, "SPI_SHADER_USER_DATA_HS_17"},
+      {0x2d1e, "SPI_SHADER_USER_DATA_HS_18"},
+      {0x2d1f, "SPI_SHADER_USER_DATA_HS_19"},
+      {0x2d20, "SPI_SHADER_USER_DATA_HS_20"},
+      {0x2d21, "SPI_SHADER_USER_DATA_HS_21"},
+      {0x2d22, "SPI_SHADER_USER_DATA_HS_22"},
+      {0x2d23, "SPI_SHADER_USER_DATA_HS_23"},
+      {0x2d24, "SPI_SHADER_USER_DATA_HS_24"},
+      {0x2d25, "SPI_SHADER_USER_DATA_HS_25"},
+      {0x2d26, "SPI_SHADER_USER_DATA_HS_26"},
+      {0x2d27, "SPI_SHADER_USER_DATA_HS_27"},
+      {0x2d28, "SPI_SHADER_USER_DATA_HS_28"},
+      {0x2d29, "SPI_SHADER_USER_DATA_HS_29"},
+      {0x2d2a, "SPI_SHADER_USER_DATA_HS_30"},
+      {0x2d2b, "SPI_SHADER_USER_DATA_HS_31"},
+
+      {0x2d4c, "SPI_SHADER_USER_DATA_LS_0"},
+      {0x2d4d, "SPI_SHADER_USER_DATA_LS_1"},
+      {0x2d4e, "SPI_SHADER_USER_DATA_LS_2"},
+      {0x2d4f, "SPI_SHADER_USER_DATA_LS_3"},
+      {0x2d50, "SPI_SHADER_USER_DATA_LS_4"},
+      {0x2d51, "SPI_SHADER_USER_DATA_LS_5"},
+      {0x2d52, "SPI_SHADER_USER_DATA_LS_6"},
+      {0x2d53, "SPI_SHADER_USER_DATA_LS_7"},
+      {0x2d54, "SPI_SHADER_USER_DATA_LS_8"},
+      {0x2d55, "SPI_SHADER_USER_DATA_LS_9"},
+      {0x2d56, "SPI_SHADER_USER_DATA_LS_10"},
+      {0x2d57, "SPI_SHADER_USER_DATA_LS_11"},
+      {0x2d58, "SPI_SHADER_USER_DATA_LS_12"},
+      {0x2d59, "SPI_SHADER_USER_DATA_LS_13"},
+      {0x2d5a, "SPI_SHADER_USER_DATA_LS_14"},
+      {0x2d5b, "SPI_SHADER_USER_DATA_LS_15"},
 
       {0xa2aa, "IA_MULTI_VGT_PARAM"},
       {0xa2a5, "VGT_GS_MAX_PRIMS_PER_SUBGROUP"},
@@ -531,6 +612,41 @@ static const char *getRegisterName(unsigned RegNum) {
       {0xa2bd, "VGT_STRMOUT_VTX_STRIDE_2"},
       {0xa2c1, "VGT_STRMOUT_VTX_STRIDE_3"},
       {0xa316, "VGT_VERTEX_REUSE_BLOCK_CNTL"},
+
+      {0x2e28, "COMPUTE_PGM_RSRC3"},
+      {0x2e2a, "COMPUTE_SHADER_CHKSUM"},
+      {0x2e24, "COMPUTE_USER_ACCUM_0"},
+      {0x2e25, "COMPUTE_USER_ACCUM_1"},
+      {0x2e26, "COMPUTE_USER_ACCUM_2"},
+      {0x2e27, "COMPUTE_USER_ACCUM_3"},
+      {0xa1ff, "GE_MAX_OUTPUT_PER_SUBGROUP"},
+      {0xa2d3, "GE_NGG_SUBGRP_CNTL"},
+      {0xc25f, "GE_STEREO_CNTL"},
+      {0xc262, "GE_USER_VGPR_EN"},
+      {0xc258, "IA_MULTI_VGT_PARAM_PIPED"},
+      {0xa210, "PA_STEREO_CNTL"},
+      {0xa1c2, "SPI_SHADER_IDX_FORMAT"},
+      {0x2c80, "SPI_SHADER_PGM_CHKSUM_GS"},
+      {0x2d00, "SPI_SHADER_PGM_CHKSUM_HS"},
+      {0x2c06, "SPI_SHADER_PGM_CHKSUM_PS"},
+      {0x2c45, "SPI_SHADER_PGM_CHKSUM_VS"},
+      {0x2c88, "SPI_SHADER_PGM_LO_GS"},
+      {0x2cb2, "SPI_SHADER_USER_ACCUM_ESGS_0"},
+      {0x2cb3, "SPI_SHADER_USER_ACCUM_ESGS_1"},
+      {0x2cb4, "SPI_SHADER_USER_ACCUM_ESGS_2"},
+      {0x2cb5, "SPI_SHADER_USER_ACCUM_ESGS_3"},
+      {0x2d32, "SPI_SHADER_USER_ACCUM_LSHS_0"},
+      {0x2d33, "SPI_SHADER_USER_ACCUM_LSHS_1"},
+      {0x2d34, "SPI_SHADER_USER_ACCUM_LSHS_2"},
+      {0x2d35, "SPI_SHADER_USER_ACCUM_LSHS_3"},
+      {0x2c32, "SPI_SHADER_USER_ACCUM_PS_0"},
+      {0x2c33, "SPI_SHADER_USER_ACCUM_PS_1"},
+      {0x2c34, "SPI_SHADER_USER_ACCUM_PS_2"},
+      {0x2c35, "SPI_SHADER_USER_ACCUM_PS_3"},
+      {0x2c72, "SPI_SHADER_USER_ACCUM_VS_0"},
+      {0x2c73, "SPI_SHADER_USER_ACCUM_VS_1"},
+      {0x2c74, "SPI_SHADER_USER_ACCUM_VS_2"},
+      {0x2c75, "SPI_SHADER_USER_ACCUM_VS_3"},
 
       {0, nullptr}};
   auto Entry = RegInfoTable;
@@ -593,7 +709,7 @@ void AMDGPUPALMetadata::toString(std::string &String) {
 // a .note record of the specified AMD type. Returns an empty blob if
 // there is no PAL metadata,
 void AMDGPUPALMetadata::toBlob(unsigned Type, std::string &Blob) {
-  if (Type == ELF::NT_AMD_AMDGPU_PAL_METADATA)
+  if (Type == ELF::NT_AMD_PAL_METADATA)
     toLegacyBlob(Blob);
   else if (Type)
     toMsgPackBlob(Blob);
@@ -666,6 +782,30 @@ msgpack::MapDocNode AMDGPUPALMetadata::getRegisters() {
   return Registers.getMap();
 }
 
+// Reference (create if necessary) the node for the shader functions map.
+msgpack::DocNode &AMDGPUPALMetadata::refShaderFunctions() {
+  auto &N =
+      MsgPackDoc.getRoot()
+          .getMap(/*Convert=*/true)[MsgPackDoc.getNode("amdpal.pipelines")]
+          .getArray(/*Convert=*/true)[0]
+          .getMap(/*Convert=*/true)[MsgPackDoc.getNode(".shader_functions")];
+  N.getMap(/*Convert=*/true);
+  return N;
+}
+
+// Get (create if necessary) the shader functions map.
+msgpack::MapDocNode AMDGPUPALMetadata::getShaderFunctions() {
+  if (ShaderFunctions.isEmpty())
+    ShaderFunctions = refShaderFunctions();
+  return ShaderFunctions.getMap();
+}
+
+// Get (create if necessary) a function in the shader functions map.
+msgpack::MapDocNode AMDGPUPALMetadata::getShaderFunction(StringRef Name) {
+  auto Functions = getShaderFunctions();
+  return Functions[Name].getMap(/*Convert=*/true);
+}
+
 // Return the PAL metadata hardware shader stage name.
 static const char *getStageName(CallingConv::ID CC) {
   switch (CC) {
@@ -681,6 +821,8 @@ static const char *getStageName(CallingConv::ID CC) {
     return ".hs";
   case CallingConv::AMDGPU_LS:
     return ".ls";
+  case CallingConv::AMDGPU_Gfx:
+    llvm_unreachable("Callable shader has no hardware stage");
   default:
     return ".cs";
   }
@@ -704,7 +846,7 @@ const char *AMDGPUPALMetadata::getVendor() const {
 }
 
 // Get .note record type of metadata blob to be emitted:
-// ELF::NT_AMD_AMDGPU_PAL_METADATA (legacy key=val format), or
+// ELF::NT_AMD_PAL_METADATA (legacy key=val format), or
 // ELF::NT_AMDGPU_METADATA (MsgPack format), or
 // 0 (no PAL metadata).
 unsigned AMDGPUPALMetadata::getType() const {
@@ -713,11 +855,17 @@ unsigned AMDGPUPALMetadata::getType() const {
 
 // Return whether the blob type is legacy PAL metadata.
 bool AMDGPUPALMetadata::isLegacy() const {
-  return BlobType == ELF::NT_AMD_AMDGPU_PAL_METADATA;
+  return BlobType == ELF::NT_AMD_PAL_METADATA;
 }
 
 // Set legacy PAL metadata format.
 void AMDGPUPALMetadata::setLegacy() {
-  BlobType = ELF::NT_AMD_AMDGPU_PAL_METADATA;
+  BlobType = ELF::NT_AMD_PAL_METADATA;
 }
 
+// Erase all PAL metadata.
+void AMDGPUPALMetadata::reset() {
+  MsgPackDoc.clear();
+  Registers = MsgPackDoc.getEmptyNode();
+  HwStages = MsgPackDoc.getEmptyNode();
+}

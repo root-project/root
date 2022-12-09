@@ -112,6 +112,12 @@ ANALYZER_OPTION(
     bool, ShouldIncludeScopesInCFG, "cfg-scopes",
     "Whether or not scope information should be included in the CFG.", false)
 
+ANALYZER_OPTION(bool, ShouldIncludeDefaultInitForAggregates,
+                "cfg-expand-default-aggr-inits",
+                "Whether or not inline CXXDefaultInitializers for aggregate "
+                "initialization in the CFG.",
+                false)
+
 ANALYZER_OPTION(
     bool, MayInlineTemplateFunctions, "c++-template-inlining",
     "Whether or not templated functions may be considered for inlining.", true)
@@ -294,23 +300,38 @@ ANALYZER_OPTION(bool, DisplayCTUProgress, "display-ctu-progress",
 ANALYZER_OPTION(bool, ShouldTrackConditions, "track-conditions",
                 "Whether to track conditions that are a control dependency of "
                 "an already tracked variable.",
-                false)
+                true)
 
 ANALYZER_OPTION(bool, ShouldTrackConditionsDebug, "track-conditions-debug",
                 "Whether to place an event at each tracked condition.",
                 false)
 
+ANALYZER_OPTION(bool, ShouldApplyFixIts, "apply-fixits",
+                "Apply the fix-it hints to the files",
+                false)
+
+ANALYZER_OPTION(bool, ShouldDisplayCheckerNameForText, "display-checker-name",
+                "Display the checker name for textual outputs",
+                true)
+
+//===----------------------------------------------------------------------===//
+// Unsigned analyzer options.
+//===----------------------------------------------------------------------===//
+
 ANALYZER_OPTION(unsigned, CTUImportThreshold, "ctu-import-threshold",
                 "The maximal amount of translation units that is considered "
                 "for import when inlining functions during CTU analysis. "
-                "Lowering this threshold can alleviate the memory burder of "
+                "Lowering this threshold can alleviate the memory burden of "
                 "analysis with many interdependent definitions located in "
-                "various translation units.",
-                100u)
+                "various translation units. This is valid only for non C++ "
+                "source files.",
+                24u)
 
-//===----------------------------------------------------------------------===//
-// Unsinged analyzer options.
-//===----------------------------------------------------------------------===//
+ANALYZER_OPTION(unsigned, CTUImportCppThreshold, "ctu-import-cpp-threshold",
+                "The maximal amount of translation units that is considered "
+                "for import when inlining functions during CTU analysis of C++ "
+                "source files.",
+                8u)
 
 ANALYZER_OPTION(
     unsigned, AlwaysInlineSize, "ipa-always-inline-size",
@@ -364,8 +385,23 @@ ANALYZER_OPTION(StringRef, CTUDir, "ctu-dir",
                 "The directory containing the CTU related files.", "")
 
 ANALYZER_OPTION(StringRef, CTUIndexName, "ctu-index-name",
-                "the name of the file containing the CTU index of definitions.",
+                "The name of the file containing the CTU index of definitions. "
+                "The index file maps USR-names to identifiers. An identifier "
+                "can end with an '.ast' suffix, indicating the indentifier is "
+                "a path to a pch-dump. Otherwise the identifier is regarded as "
+                "path to a source file which is parsed on-demand. Relative "
+                "paths are prefixed with ctu-dir, absolute paths are used "
+                "unmodified during lookup.",
                 "externalDefMap.txt")
+
+ANALYZER_OPTION(
+    StringRef, CTUInvocationList, "ctu-invocation-list",
+    "The path to the YAML format file containing a mapping from source file "
+    "paths to command-line invocations represented as a list of arguments. "
+    "This invocation is used produce the source-file's AST in case on-demand "
+    "loading is performed. Example file-content: "
+    "{/main.cpp: [clang++, /main.cpp], other.cpp: [clang++, /other.cpp]}",
+    "invocations.yaml")
 
 ANALYZER_OPTION(
     StringRef, ModelPath, "model-path",
@@ -380,18 +416,24 @@ ANALYZER_OPTION(
     "Value: \"constructors\", \"destructors\", \"methods\".",
     "destructors")
 
-ANALYZER_OPTION_DEPENDS_ON_USER_MODE(
-    StringRef, IPAMode, "ipa",
-    "Controls the mode of inter-procedural analysis. Value: \"none\", "
-    "\"basic-inlining\", \"inlining\", \"dynamic\", \"dynamic-bifurcate\".",
-    /* SHALLOW_VAL */ "inlining", /* DEEP_VAL */ "dynamic-bifurcate")
-
 ANALYZER_OPTION(
     StringRef, ExplorationStrategy, "exploration_strategy",
     "Value: \"dfs\", \"bfs\", \"unexplored_first\", "
     "\"unexplored_first_queue\", \"unexplored_first_location_queue\", "
     "\"bfs_block_dfs_contents\".",
     "unexplored_first_queue")
+
+ANALYZER_OPTION(
+    StringRef, RawSilencedCheckersAndPackages, "silence-checkers",
+    "A semicolon separated list of checker and package names to silence. "
+    "Silenced checkers will not emit reports, but the modeling remain enabled.",
+    "")
+
+ANALYZER_OPTION_DEPENDS_ON_USER_MODE(
+    StringRef, IPAMode, "ipa",
+    "Controls the mode of inter-procedural analysis. Value: \"none\", "
+    "\"basic-inlining\", \"inlining\", \"dynamic\", \"dynamic-bifurcate\".",
+    /* SHALLOW_VAL */ "inlining", /* DEEP_VAL */ "dynamic-bifurcate")
 
 #undef ANALYZER_OPTION_DEPENDS_ON_USER_MODE
 #undef ANALYZER_OPTION

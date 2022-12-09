@@ -84,6 +84,7 @@
 /// 3.	 2	1.5	0.5	1.0	vaddss  %xmm1, %xmm0, %xmm3
 /// 4.	 2	3.5	0.0	0.0	vaddss  %xmm3, %xmm2, %xmm4
 /// 5.	 2	6.5	0.0	0.0	vaddss  %xmm4, %xmm5, %xmm6
+///      2	2.4	0.6	1.6     <total>
 ///
 /// By comparing column [2] with column [1], we get an idea about how many
 /// cycles were spent in the scheduler's queue due to data dependencies.
@@ -99,12 +100,13 @@
 #ifndef LLVM_TOOLS_LLVM_MCA_TIMELINEVIEW_H
 #define LLVM_TOOLS_LLVM_MCA_TIMELINEVIEW_H
 
-#include "Views/View.h"
+#include "Views/InstructionView.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCInstPrinter.h"
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/Support/FormattedStream.h"
+#include "llvm/Support/JSON.h"
 #include "llvm/Support/raw_ostream.h"
 
 namespace llvm {
@@ -117,17 +119,13 @@ namespace mca {
 /// a TimelineViewEntry object. TimelineViewEntry objects are then used
 /// to print the timeline information, as well as the "average wait times"
 /// for every instruction in the input assembly sequence.
-class TimelineView : public View {
-  const llvm::MCSubtargetInfo &STI;
-  llvm::MCInstPrinter &MCIP;
-  llvm::ArrayRef<llvm::MCInst> Source;
-
+class TimelineView : public InstructionView {
   unsigned CurrentCycle;
   unsigned MaxCycle;
   unsigned LastCycle;
 
   struct TimelineViewEntry {
-    int CycleDispatched;  // A negative value is an "invalid cycle".
+    int CycleDispatched; // A negative value is an "invalid cycle".
     unsigned CycleReady;
     unsigned CycleIssued;
     unsigned CycleExecuted;
@@ -181,6 +179,8 @@ public:
     printTimeline(OS);
     printAverageWaitTimes(OS);
   }
+  StringRef getNameAsString() const override { return "TimelineView"; }
+  json::Value toJSON() const override;
 };
 } // namespace mca
 } // namespace llvm

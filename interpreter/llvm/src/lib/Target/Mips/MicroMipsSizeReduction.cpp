@@ -361,7 +361,7 @@ static bool CheckXWPInstr(MachineInstr *MI, bool ReduceToLwp,
         MI->getOpcode() == Mips::SW16_MM))
     return false;
 
-  unsigned reg = MI->getOperand(0).getReg();
+  Register reg = MI->getOperand(0).getReg();
   if (reg == Mips::RA)
     return false;
 
@@ -376,12 +376,12 @@ static bool CheckXWPInstr(MachineInstr *MI, bool ReduceToLwp,
 
 // Returns true if the registers Reg1 and Reg2 are consecutive
 static bool ConsecutiveRegisters(unsigned Reg1, unsigned Reg2) {
-  static SmallVector<unsigned, 31> Registers = {
-      Mips::AT, Mips::V0, Mips::V1, Mips::A0, Mips::A1, Mips::A2, Mips::A3,
-      Mips::T0, Mips::T1, Mips::T2, Mips::T3, Mips::T4, Mips::T5, Mips::T6,
-      Mips::T7, Mips::S0, Mips::S1, Mips::S2, Mips::S3, Mips::S4, Mips::S5,
-      Mips::S6, Mips::S7, Mips::T8, Mips::T9, Mips::K0, Mips::K1, Mips::GP,
-      Mips::SP, Mips::FP, Mips::RA};
+  constexpr std::array<unsigned, 31> Registers = {
+      {Mips::AT, Mips::V0, Mips::V1, Mips::A0, Mips::A1, Mips::A2, Mips::A3,
+       Mips::T0, Mips::T1, Mips::T2, Mips::T3, Mips::T4, Mips::T5, Mips::T6,
+       Mips::T7, Mips::S0, Mips::S1, Mips::S2, Mips::S3, Mips::S4, Mips::S5,
+       Mips::S6, Mips::S7, Mips::T8, Mips::T9, Mips::K0, Mips::K1, Mips::GP,
+       Mips::SP, Mips::FP, Mips::RA}};
 
   for (uint8_t i = 0; i < Registers.size() - 1; i++) {
     if (Registers[i] == Reg1) {
@@ -403,8 +403,8 @@ static bool ConsecutiveInstr(MachineInstr *MI1, MachineInstr *MI2) {
   if (!GetImm(MI2, 2, Offset2))
     return false;
 
-  unsigned Reg1 = MI1->getOperand(0).getReg();
-  unsigned Reg2 = MI2->getOperand(0).getReg();
+  Register Reg1 = MI1->getOperand(0).getReg();
+  Register Reg2 = MI2->getOperand(0).getReg();
 
   return ((Offset1 == (Offset2 - 4)) && (ConsecutiveRegisters(Reg1, Reg2)));
 }
@@ -475,8 +475,8 @@ bool MicroMipsSizeReduce::ReduceXWtoXWP(ReduceEntryFunArgs *Arguments) {
   if (!CheckXWPInstr(MI2, ReduceToLwp, Entry))
     return false;
 
-  unsigned Reg1 = MI1->getOperand(1).getReg();
-  unsigned Reg2 = MI2->getOperand(1).getReg();
+  Register Reg1 = MI1->getOperand(1).getReg();
+  Register Reg2 = MI2->getOperand(1).getReg();
 
   if (Reg1 != Reg2)
     return false;
@@ -621,8 +621,8 @@ bool MicroMipsSizeReduce::ReduceMoveToMovep(ReduceEntryFunArgs *Arguments) {
   MachineInstr *MI1 = Arguments->MI;
   MachineInstr *MI2 = &*NextMII;
 
-  unsigned RegDstMI1 = MI1->getOperand(0).getReg();
-  unsigned RegSrcMI1 = MI1->getOperand(1).getReg();
+  Register RegDstMI1 = MI1->getOperand(0).getReg();
+  Register RegSrcMI1 = MI1->getOperand(1).getReg();
 
   if (!IsMovepSrcRegister(RegSrcMI1))
     return false;
@@ -633,8 +633,8 @@ bool MicroMipsSizeReduce::ReduceMoveToMovep(ReduceEntryFunArgs *Arguments) {
   if (MI2->getOpcode() != Entry.WideOpc())
     return false;
 
-  unsigned RegDstMI2 = MI2->getOperand(0).getReg();
-  unsigned RegSrcMI2 = MI2->getOperand(1).getReg();
+  Register RegDstMI2 = MI2->getOperand(0).getReg();
+  Register RegSrcMI2 = MI2->getOperand(1).getReg();
 
   if (!IsMovepSrcRegister(RegSrcMI2))
     return false;

@@ -106,6 +106,25 @@ inline static unsigned getXRegFromWReg(unsigned Reg) {
   return Reg;
 }
 
+inline static unsigned getXRegFromXRegTuple(unsigned RegTuple) {
+  switch (RegTuple) {
+  case AArch64::X0_X1_X2_X3_X4_X5_X6_X7: return AArch64::X0;
+  case AArch64::X2_X3_X4_X5_X6_X7_X8_X9: return AArch64::X2;
+  case AArch64::X4_X5_X6_X7_X8_X9_X10_X11: return AArch64::X4;
+  case AArch64::X6_X7_X8_X9_X10_X11_X12_X13: return AArch64::X6;
+  case AArch64::X8_X9_X10_X11_X12_X13_X14_X15: return AArch64::X8;
+  case AArch64::X10_X11_X12_X13_X14_X15_X16_X17: return AArch64::X10;
+  case AArch64::X12_X13_X14_X15_X16_X17_X18_X19: return AArch64::X12;
+  case AArch64::X14_X15_X16_X17_X18_X19_X20_X21: return AArch64::X14;
+  case AArch64::X16_X17_X18_X19_X20_X21_X22_X23: return AArch64::X16;
+  case AArch64::X18_X19_X20_X21_X22_X23_X24_X25: return AArch64::X18;
+  case AArch64::X20_X21_X22_X23_X24_X25_X26_X27: return AArch64::X20;
+  case AArch64::X22_X23_X24_X25_X26_X27_X28_FP: return AArch64::X22;
+  }
+  // For anything else, return it unchanged.
+  return RegTuple;
+}
+
 static inline unsigned getBRegFromDReg(unsigned Reg) {
   switch (Reg) {
   case AArch64::D0:  return AArch64::B0;
@@ -250,7 +269,13 @@ enum CondCode {  // Meaning (integer)          Meaning (floating-point)
   AL = 0xe,      // Always (unconditional)     Always (unconditional)
   NV = 0xf,      // Always (unconditional)     Always (unconditional)
   // Note the NV exists purely to disassemble 0b1111. Execution is "always".
-  Invalid
+  Invalid,
+
+  // Common aliases used for SVE.
+  ANY_ACTIVE   = NE, // (!Z)
+  FIRST_ACTIVE = MI, // ( N)
+  LAST_ACTIVE  = LO, // (!C)
+  NONE_ACTIVE  = EQ  // ( Z)
 };
 
 inline static const char *getCondCodeName(CondCode Code) {
@@ -313,9 +338,9 @@ struct SysAlias {
   uint16_t Encoding;
   FeatureBitset FeaturesRequired;
 
-  SysAlias (const char *N, uint16_t E) : Name(N), Encoding(E) {};
-  SysAlias (const char *N, uint16_t E, FeatureBitset F) :
-    Name(N), Encoding(E), FeaturesRequired(F) {};
+  constexpr SysAlias(const char *N, uint16_t E) : Name(N), Encoding(E) {}
+  constexpr SysAlias(const char *N, uint16_t E, FeatureBitset F)
+      : Name(N), Encoding(E), FeaturesRequired(F) {}
 
   bool haveFeatures(FeatureBitset ActiveFeatures) const {
     return (FeaturesRequired & ActiveFeatures) == FeaturesRequired;
@@ -326,10 +351,27 @@ struct SysAlias {
 
 struct SysAliasReg : SysAlias {
   bool NeedsReg;
-  SysAliasReg(const char *N, uint16_t E, bool R) : SysAlias(N, E), NeedsReg(R) {};
-  SysAliasReg(const char *N, uint16_t E, bool R, FeatureBitset F) : SysAlias(N, E, F),
-    NeedsReg(R) {};
+  constexpr SysAliasReg(const char *N, uint16_t E, bool R)
+      : SysAlias(N, E), NeedsReg(R) {}
+  constexpr SysAliasReg(const char *N, uint16_t E, bool R, FeatureBitset F)
+      : SysAlias(N, E, F), NeedsReg(R) {}
 };
+
+struct SysAliasImm : SysAlias {
+  uint16_t ImmValue;
+  constexpr SysAliasImm(const char *N, uint16_t E, uint16_t I)
+      : SysAlias(N, E), ImmValue(I) {}
+  constexpr SysAliasImm(const char *N, uint16_t E, uint16_t I, FeatureBitset F)
+      : SysAlias(N, E, F), ImmValue(I) {}
+};
+
+namespace AArch64SVCR {
+  struct SVCR : SysAlias{
+    using SysAlias::SysAlias;
+  };
+  #define GET_SVCR_DECL
+  #include "AArch64GenSystemOperands.inc"
+}
 
 namespace AArch64AT{
   struct AT : SysAlias {
@@ -344,6 +386,14 @@ namespace AArch64DB {
     using SysAlias::SysAlias;
   };
   #define GET_DB_DECL
+  #include "AArch64GenSystemOperands.inc"
+}
+
+namespace AArch64DBnXS {
+  struct DBnXS : SysAliasImm {
+    using SysAliasImm::SysAliasImm;
+  };
+  #define GET_DBNXS_DECL
   #include "AArch64GenSystemOperands.inc"
 }
 
@@ -545,7 +595,7 @@ namespace AArch64TLBI {
   struct TLBI : SysAliasReg {
     using SysAliasReg::SysAliasReg;
   };
-  #define GET_TLBI_DECL
+  #define GET_TLBITable_DECL
   #include "AArch64GenSystemOperands.inc"
 }
 
@@ -599,7 +649,7 @@ namespace AArch64II {
     MO_HI12 = 7,
 
     /// MO_COFFSTUB - On a symbol operand "FOO", this indicates that the
-    /// reference is actually to the ".refptrp.FOO" symbol.  This is used for
+    /// reference is actually to the ".refptr.FOO" symbol.  This is used for
     /// stub symbols on windows.
     MO_COFFSTUB = 0x8,
 
@@ -627,9 +677,33 @@ namespace AArch64II {
     /// MO_S - Indicates that the bits of the symbol operand represented by
     /// MO_G0 etc are signed.
     MO_S = 0x100,
+
+    /// MO_PREL - Indicates that the bits of the symbol operand represented by
+    /// MO_G0 etc are PC relative.
+    MO_PREL = 0x200,
+
+    /// MO_TAGGED - With MO_PAGE, indicates that the page includes a memory tag
+    /// in bits 56-63.
+    /// On a FrameIndex operand, indicates that the underlying memory is tagged
+    /// with an unknown tag value (MTE); this needs to be lowered either to an
+    /// SP-relative load or store instruction (which do not check tags), or to
+    /// an LDG instruction to obtain the tag value.
+    MO_TAGGED = 0x400,
   };
 } // end namespace AArch64II
 
+namespace AArch64 {
+// The number of bits in a SVE register is architecturally defined
+// to be a multiple of this value.  If <M x t> has this number of bits,
+// a <n x M x t> vector can be stored in a SVE register without any
+// redundant bits.  If <M x t> has this number of bits divided by P,
+// a <n x M x t> vector is stored in a SVE register by placing index i
+// in index i*P of a <n x (M*P) x t> vector.  The other elements of the
+// <n x (M*P) x t> vector (such as index 1) are undefined.
+static constexpr unsigned SVEBitsPerBlock = 128;
+static constexpr unsigned SVEMaxBitsPerVector = 2048;
+const unsigned NeonBitsPerVector = 128;
+} // end namespace AArch64
 } // end namespace llvm
 
 #endif

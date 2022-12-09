@@ -41,8 +41,11 @@ Using Clang as a Compiler
    SourceBasedCodeCoverage
    Modules
    MSVCCompatibility
+   OpenCLSupport
    OpenMPSupport
+   SYCLSupport
    ThinLTO
+   APINotes
    CommandGuide/index
    FAQ
 
@@ -61,6 +64,7 @@ Using Clang as a Library
    RAVFrontendAction
    LibASTMatchersTutorial
    LibASTMatchers
+   LibASTImporter
    HowToSetupToolingForLLVM
    JSONCompilationDatabase
    RefactoringEngine
@@ -75,6 +79,8 @@ Using Clang Tools
    ClangCheck
    ClangFormat
    ClangFormatStyleOptions
+   ClangFormattedStatus
+   ClangOffloadBundler
 
 Design Documents
 ================
@@ -87,6 +93,7 @@ Design Documents
    PCHInternals
    ItaniumMangleAbiTags
    HardwareAssistedAddressSanitizerDesign.rst
+   ConstantInterpreter
 
 
 Indices and tables

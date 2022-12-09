@@ -26,7 +26,6 @@
 #include <map>
 #include <set>
 #include <utility>
-#include <vector>
 
 namespace llvm {
 
@@ -130,7 +129,7 @@ public:
   using DomSetType = typename DominanceFrontierBase<BlockT, false>::DomSetType;
 
   void analyze(DomTreeT &DT) {
-    assert(DT.getRoots().size() == 1 &&
+    assert(DT.root_size() == 1 &&
            "Only one entry block for forward domfronts!");
     this->Roots = {DT.getRoot()};
     calculate(DT, DT[this->Roots[0]]);

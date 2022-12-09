@@ -15,9 +15,9 @@
 #include "clang/Basic/JsonSupport.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/AnalysisManager.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/CallEvent.h"
-#include "clang/StaticAnalyzer/Core/PathSensitive/DynamicTypeMap.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/DynamicType.h"
+#include "clang/StaticAnalyzer/Core/PathSensitive/ExprEngine.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramStateTrait.h"
-#include "clang/StaticAnalyzer/Core/PathSensitive/SubEngine.h"
 #include "llvm/Support/raw_ostream.h"
 
 using namespace clang;
@@ -76,12 +76,12 @@ ProgramStateManager::ProgramStateManager(ASTContext &Ctx,
                                          StoreManagerCreator CreateSMgr,
                                          ConstraintManagerCreator CreateCMgr,
                                          llvm::BumpPtrAllocator &alloc,
-                                         SubEngine *SubEng)
-  : Eng(SubEng), EnvMgr(alloc), GDMFactory(alloc),
+                                         ExprEngine *ExprEng)
+  : Eng(ExprEng), EnvMgr(alloc), GDMFactory(alloc),
     svalBuilder(createSimpleSValBuilder(alloc, Ctx, *this)),
     CallEventMgr(new CallEventManager(alloc)), Alloc(alloc) {
   StoreMgr = (*CreateSMgr)(*this);
-  ConstraintMgr = (*CreateCMgr)(*this, SubEng);
+  ConstraintMgr = (*CreateCMgr)(*this, ExprEng);
 }
 
 
@@ -91,10 +91,9 @@ ProgramStateManager::~ProgramStateManager() {
     I->second.second(I->second.first);
 }
 
-ProgramStateRef
-ProgramStateManager::removeDeadBindings(ProgramStateRef state,
-                                   const StackFrameContext *LCtx,
-                                   SymbolReaper& SymReaper) {
+ProgramStateRef ProgramStateManager::removeDeadBindingsFromEnvironmentAndStore(
+    ProgramStateRef state, const StackFrameContext *LCtx,
+    SymbolReaper &SymReaper) {
 
   // This code essentially performs a "mark-and-sweep" of the VariableBindings.
   // The roots are any Block-level exprs and Decls that our liveness algorithm
@@ -112,8 +111,7 @@ ProgramStateManager::removeDeadBindings(ProgramStateRef state,
   NewState.setStore(newStore);
   SymReaper.setReapedStore(newStore);
 
-  ProgramStateRef Result = getPersistentState(NewState);
-  return ConstraintMgr->removeDeadBindings(Result, SymReaper);
+  return getPersistentState(NewState);
 }
 
 ProgramStateRef ProgramState::bindLoc(Loc LV,
@@ -191,7 +189,7 @@ ProgramState::invalidateRegionsImpl(ValueList Values,
                                     RegionAndSymbolInvalidationTraits *ITraits,
                                     const CallEvent *Call) const {
   ProgramStateManager &Mgr = getStateManager();
-  SubEngine &Eng = Mgr.getOwningEngine();
+  ExprEngine &Eng = Mgr.getOwningEngine();
 
   InvalidatedSymbols InvalidatedSyms;
   if (!IS)
@@ -240,6 +238,13 @@ ProgramState::enterStackFrame(const CallEvent &Call,
   const StoreRef &NewStore =
     getStateManager().StoreMgr->enterStackFrame(getStore(), Call, CalleeCtx);
   return makeWithStore(NewStore);
+}
+
+SVal ProgramState::getSelfSVal(const LocationContext *LCtx) const {
+  const ImplicitParamDecl *SelfDecl = LCtx->getSelfDecl();
+  if (!SelfDecl)
+    return SVal();
+  return getSVal(getRegion(SelfDecl, LCtx));
 }
 
 SVal ProgramState::getSValAsScalarOrLoc(const MemRegion *R) const {
@@ -575,9 +580,6 @@ bool ScanReachableSymbols::scan(SVal val) {
     return scan(X->getLoc());
 
   if (SymbolRef Sym = val.getAsSymbol())
-    return scan(Sym);
-
-  if (const SymExpr *Sym = val.getAsSymbolicExpression())
     return scan(Sym);
 
   if (Optional<nonloc::CompoundVal> X = val.getAs<nonloc::CompoundVal>())

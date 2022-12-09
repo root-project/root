@@ -18,6 +18,8 @@
 //   -- Export: dict => Json representation of one CoverageMapping
 //     -- Files: array => List of objects describing coverage for files
 //       -- File: dict => Coverage for a single file
+//         -- Branches: array => List of Branches in the file
+//           -- Branch: dict => Describes a branch of the file with counters
 //         -- Segments: array => List of Segments contained in the file
 //           -- Segment: dict => Describes a segment of the file with a counter
 //         -- Expansions: array => List of expansion records
@@ -25,10 +27,13 @@
 //             -- CountedRegion: dict => The region to be expanded
 //             -- TargetRegions: array => List of Regions in the expansion
 //               -- CountedRegion: dict => Single Region in the expansion
+//             -- Branches: array => List of Branches in the expansion
+//               -- Branch: dict => Describes a branch in expansion and counters
 //         -- Summary: dict => Object summarizing the coverage for this file
 //           -- LineCoverage: dict => Object summarizing line coverage
 //           -- FunctionCoverage: dict => Object summarizing function coverage
 //           -- RegionCoverage: dict => Object summarizing region coverage
+//           -- BranchCoverage: dict => Object summarizing branch coverage
 //     -- Functions: array => List of objects describing coverage for functions
 //       -- Function: dict => Coverage info for a single function
 //         -- Filenames: array => List of filenames that the function relates to
@@ -37,6 +42,7 @@
 //     -- FunctionCoverage: dict => Object summarizing function coverage
 //     -- InstantiationCoverage: dict => Object summarizing inst. coverage
 //     -- RegionCoverage: dict => Object summarizing region coverage
+//     -- BranchCoverage: dict => Object summarizing branch coverage
 //
 //===----------------------------------------------------------------------===//
 
@@ -48,11 +54,12 @@
 #include "llvm/Support/ThreadPool.h"
 #include "llvm/Support/Threading.h"
 #include <algorithm>
+#include <limits>
 #include <mutex>
 #include <utility>
 
 /// The semantic version combined as a string.
-#define LLVM_COVERAGE_EXPORT_JSON_STR "2.0.0"
+#define LLVM_COVERAGE_EXPORT_JSON_STR "2.0.1"
 
 /// Unique type identifier for JSON coverage export.
 #define LLVM_COVERAGE_EXPORT_JSON_TYPE_STR "llvm.coverage.json.export"
@@ -61,16 +68,34 @@ using namespace llvm;
 
 namespace {
 
+// The JSON library accepts int64_t, but profiling counts are stored as uint64_t.
+// Therefore we need to explicitly convert from unsigned to signed, since a naive
+// cast is implementation-defined behavior when the unsigned value cannot be
+// represented as a signed value. We choose to clamp the values to preserve the
+// invariant that counts are always >= 0.
+int64_t clamp_uint64_to_int64(uint64_t u) {
+  return std::min(u, static_cast<uint64_t>(std::numeric_limits<int64_t>::max()));
+}
+
 json::Array renderSegment(const coverage::CoverageSegment &Segment) {
-  return json::Array({Segment.Line, Segment.Col, int64_t(Segment.Count),
-                      Segment.HasCount, Segment.IsRegionEntry});
+  return json::Array({Segment.Line, Segment.Col,
+                      clamp_uint64_to_int64(Segment.Count), Segment.HasCount,
+                      Segment.IsRegionEntry, Segment.IsGapRegion});
 }
 
 json::Array renderRegion(const coverage::CountedRegion &Region) {
   return json::Array({Region.LineStart, Region.ColumnStart, Region.LineEnd,
-                      Region.ColumnEnd, int64_t(Region.ExecutionCount),
+                      Region.ColumnEnd, clamp_uint64_to_int64(Region.ExecutionCount),
                       Region.FileID, Region.ExpandedFileID,
                       int64_t(Region.Kind)});
+}
+
+json::Array renderBranch(const coverage::CountedRegion &Region) {
+  return json::Array(
+      {Region.LineStart, Region.ColumnStart, Region.LineEnd, Region.ColumnEnd,
+       clamp_uint64_to_int64(Region.ExecutionCount),
+       clamp_uint64_to_int64(Region.FalseExecutionCount), Region.FileID,
+       Region.ExpandedFileID, int64_t(Region.Kind)});
 }
 
 json::Array renderRegions(ArrayRef<coverage::CountedRegion> Regions) {
@@ -80,13 +105,48 @@ json::Array renderRegions(ArrayRef<coverage::CountedRegion> Regions) {
   return RegionArray;
 }
 
-json::Object renderExpansion(const coverage::ExpansionRecord &Expansion) {
+json::Array renderBranchRegions(ArrayRef<coverage::CountedRegion> Regions) {
+  json::Array RegionArray;
+  for (const auto &Region : Regions)
+    if (!Region.Folded)
+      RegionArray.push_back(renderBranch(Region));
+  return RegionArray;
+}
+
+std::vector<llvm::coverage::CountedRegion>
+collectNestedBranches(const coverage::CoverageMapping &Coverage,
+                      ArrayRef<llvm::coverage::ExpansionRecord> Expansions) {
+  std::vector<llvm::coverage::CountedRegion> Branches;
+  for (const auto &Expansion : Expansions) {
+    auto ExpansionCoverage = Coverage.getCoverageForExpansion(Expansion);
+
+    // Recursively collect branches from nested expansions.
+    auto NestedExpansions = ExpansionCoverage.getExpansions();
+    auto NestedExBranches = collectNestedBranches(Coverage, NestedExpansions);
+    append_range(Branches, NestedExBranches);
+
+    // Add branches from this level of expansion.
+    auto ExBranches = ExpansionCoverage.getBranches();
+    for (auto B : ExBranches)
+      if (B.FileID == Expansion.FileID)
+        Branches.push_back(B);
+  }
+
+  return Branches;
+}
+
+json::Object renderExpansion(const coverage::CoverageMapping &Coverage,
+                             const coverage::ExpansionRecord &Expansion) {
+  std::vector<llvm::coverage::ExpansionRecord> Expansions = {Expansion};
   return json::Object(
       {{"filenames", json::Array(Expansion.Function.Filenames)},
        // Mark the beginning and end of this expansion in the source file.
        {"source_region", renderRegion(Expansion.Region)},
        // Enumerate the coverage information for the expansion.
-       {"target_regions", renderRegions(Expansion.Function.CountedRegions)}});
+       {"target_regions", renderRegions(Expansion.Function.CountedRegions)},
+       // Enumerate the branch coverage information for the expansion.
+       {"branches",
+        renderBranchRegions(collectNestedBranches(Coverage, Expansions))}});
 }
 
 json::Object renderSummary(const FileCoverageSummary &Summary) {
@@ -112,14 +172,22 @@ json::Object renderSummary(const FileCoverageSummary &Summary) {
              {"covered", int64_t(Summary.RegionCoverage.getCovered())},
              {"notcovered", int64_t(Summary.RegionCoverage.getNumRegions() -
                                     Summary.RegionCoverage.getCovered())},
-             {"percent", Summary.RegionCoverage.getPercentCovered()}})}});
+             {"percent", Summary.RegionCoverage.getPercentCovered()}})},
+       {"branches",
+        json::Object(
+            {{"count", int64_t(Summary.BranchCoverage.getNumBranches())},
+             {"covered", int64_t(Summary.BranchCoverage.getCovered())},
+             {"notcovered", int64_t(Summary.BranchCoverage.getNumBranches() -
+                                    Summary.BranchCoverage.getCovered())},
+             {"percent", Summary.BranchCoverage.getPercentCovered()}})}});
 }
 
-json::Array renderFileExpansions(const coverage::CoverageData &FileCoverage,
+json::Array renderFileExpansions(const coverage::CoverageMapping &Coverage,
+                                 const coverage::CoverageData &FileCoverage,
                                  const FileCoverageSummary &FileReport) {
   json::Array ExpansionArray;
   for (const auto &Expansion : FileCoverage.getExpansions())
-    ExpansionArray.push_back(renderExpansion(Expansion));
+    ExpansionArray.push_back(renderExpansion(Coverage, Expansion));
   return ExpansionArray;
 }
 
@@ -131,6 +199,14 @@ json::Array renderFileSegments(const coverage::CoverageData &FileCoverage,
   return SegmentArray;
 }
 
+json::Array renderFileBranches(const coverage::CoverageData &FileCoverage,
+                               const FileCoverageSummary &FileReport) {
+  json::Array BranchArray;
+  for (const auto &Branch : FileCoverage.getBranches())
+    BranchArray.push_back(renderBranch(Branch));
+  return BranchArray;
+}
+
 json::Object renderFile(const coverage::CoverageMapping &Coverage,
                         const std::string &Filename,
                         const FileCoverageSummary &FileReport,
@@ -140,8 +216,10 @@ json::Object renderFile(const coverage::CoverageMapping &Coverage,
     // Calculate and render detailed coverage information for given file.
     auto FileCoverage = Coverage.getCoverageForFile(Filename);
     File["segments"] = renderFileSegments(FileCoverage, FileReport);
+    File["branches"] = renderFileBranches(FileCoverage, FileReport);
     if (!Options.SkipExpansions) {
-      File["expansions"] = renderFileExpansions(FileCoverage, FileReport);
+      File["expansions"] =
+          renderFileExpansions(Coverage, FileCoverage, FileReport);
     }
   }
   File["summary"] = renderSummary(FileReport);
@@ -152,12 +230,14 @@ json::Array renderFiles(const coverage::CoverageMapping &Coverage,
                         ArrayRef<std::string> SourceFiles,
                         ArrayRef<FileCoverageSummary> FileReports,
                         const CoverageViewOptions &Options) {
-  auto NumThreads = Options.NumThreads;
-  if (NumThreads == 0) {
-    NumThreads = std::max(1U, std::min(llvm::heavyweight_hardware_concurrency(),
-                                       unsigned(SourceFiles.size())));
+  ThreadPoolStrategy S = hardware_concurrency(Options.NumThreads);
+  if (Options.NumThreads == 0) {
+    // If NumThreads is not specified, create one thread for each input, up to
+    // the number of hardware cores.
+    S = heavyweight_hardware_concurrency(SourceFiles.size());
+    S.Limit = true;
   }
-  ThreadPool Pool(NumThreads);
+  ThreadPool Pool(S);
   json::Array FileArray;
   std::mutex FileArrayMutex;
 
@@ -182,8 +262,9 @@ json::Array renderFunctions(
   for (const auto &F : Functions)
     FunctionArray.push_back(
         json::Object({{"name", F.Name},
-                      {"count", int64_t(F.ExecutionCount)},
+                      {"count", clamp_uint64_to_int64(F.ExecutionCount)},
                       {"regions", renderRegions(F.CountedRegions)},
+                      {"branches", renderBranchRegions(F.CountedBranchRegions)},
                       {"filenames", json::Array(F.Filenames)}}));
   return FunctionArray;
 }
@@ -205,16 +286,15 @@ void CoverageExporterJson::renderRoot(ArrayRef<std::string> SourceFiles) {
                                                         SourceFiles, Options);
   auto Files = renderFiles(Coverage, SourceFiles, FileReports, Options);
   // Sort files in order of their names.
-  std::sort(Files.begin(), Files.end(),
-    [](const json::Value &A, const json::Value &B) {
-      const json::Object *ObjA = A.getAsObject();
-      const json::Object *ObjB = B.getAsObject();
-      assert(ObjA != nullptr && "Value A was not an Object");
-      assert(ObjB != nullptr && "Value B was not an Object");
-      const StringRef FilenameA = ObjA->getString("filename").getValue();
-      const StringRef FilenameB = ObjB->getString("filename").getValue();
-      return FilenameA.compare(FilenameB) < 0;
-    });
+  llvm::sort(Files, [](const json::Value &A, const json::Value &B) {
+    const json::Object *ObjA = A.getAsObject();
+    const json::Object *ObjB = B.getAsObject();
+    assert(ObjA != nullptr && "Value A was not an Object");
+    assert(ObjB != nullptr && "Value B was not an Object");
+    const StringRef FilenameA = ObjA->getString("filename").getValue();
+    const StringRef FilenameB = ObjB->getString("filename").getValue();
+    return FilenameA.compare(FilenameB) < 0;
+  });
   auto Export = json::Object(
       {{"files", std::move(Files)}, {"totals", renderSummary(Totals)}});
   // Skip functions-level information  if necessary.

@@ -53,9 +53,9 @@ struct SubOp : public SetTheory::Operator {
     RecSet Add, Sub;
     ST.evaluate(*Expr->arg_begin(), Add, Loc);
     ST.evaluate(Expr->arg_begin() + 1, Expr->arg_end(), Sub, Loc);
-    for (RecSet::iterator I = Add.begin(), E = Add.end(); I != E; ++I)
-      if (!Sub.count(*I))
-        Elts.insert(*I);
+    for (const auto &I : Add)
+      if (!Sub.count(I))
+        Elts.insert(I);
   }
 };
 
@@ -69,9 +69,9 @@ struct AndOp : public SetTheory::Operator {
     RecSet S1, S2;
     ST.evaluate(Expr->arg_begin()[0], S1, Loc);
     ST.evaluate(Expr->arg_begin()[1], S2, Loc);
-    for (RecSet::iterator I = S1.begin(), E = S1.end(); I != E; ++I)
-      if (S2.count(*I))
-        Elts.insert(*I);
+    for (const auto &I : S1)
+      if (S2.count(I))
+        Elts.insert(I);
   }
 };
 
@@ -191,7 +191,7 @@ struct SequenceOp : public SetTheory::Operator {
 
     std::string Format;
     if (StringInit *SI = dyn_cast<StringInit>(Expr->arg_begin()[0]))
-      Format = SI->getValue();
+      Format = std::string(SI->getValue());
     else
       PrintFatalError(Loc,  "Format must be a string: " + Expr->getAsString());
 
@@ -255,16 +255,16 @@ void SetTheory::Operator::anchor() {}
 void SetTheory::Expander::anchor() {}
 
 SetTheory::SetTheory() {
-  addOperator("add", llvm::make_unique<AddOp>());
-  addOperator("sub", llvm::make_unique<SubOp>());
-  addOperator("and", llvm::make_unique<AndOp>());
-  addOperator("shl", llvm::make_unique<ShlOp>());
-  addOperator("trunc", llvm::make_unique<TruncOp>());
-  addOperator("rotl", llvm::make_unique<RotOp>(false));
-  addOperator("rotr", llvm::make_unique<RotOp>(true));
-  addOperator("decimate", llvm::make_unique<DecimateOp>());
-  addOperator("interleave", llvm::make_unique<InterleaveOp>());
-  addOperator("sequence", llvm::make_unique<SequenceOp>());
+  addOperator("add", std::make_unique<AddOp>());
+  addOperator("sub", std::make_unique<SubOp>());
+  addOperator("and", std::make_unique<AndOp>());
+  addOperator("shl", std::make_unique<ShlOp>());
+  addOperator("trunc", std::make_unique<TruncOp>());
+  addOperator("rotl", std::make_unique<RotOp>(false));
+  addOperator("rotr", std::make_unique<RotOp>(true));
+  addOperator("decimate", std::make_unique<DecimateOp>());
+  addOperator("interleave", std::make_unique<InterleaveOp>());
+  addOperator("sequence", std::make_unique<SequenceOp>());
 }
 
 void SetTheory::addOperator(StringRef Name, std::unique_ptr<Operator> Op) {
@@ -276,7 +276,7 @@ void SetTheory::addExpander(StringRef ClassName, std::unique_ptr<Expander> E) {
 }
 
 void SetTheory::addFieldExpander(StringRef ClassName, StringRef FieldName) {
-  addExpander(ClassName, llvm::make_unique<FieldExpander>(FieldName));
+  addExpander(ClassName, std::make_unique<FieldExpander>(FieldName));
 }
 
 void SetTheory::evaluate(Init *Expr, RecSet &Elts, ArrayRef<SMLoc> Loc) {

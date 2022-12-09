@@ -10,15 +10,21 @@
 #define LLVM_CODEGEN_SWITCHLOWERINGUTILS_H
 
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/CodeGen/ISDOpcodes.h"
 #include "llvm/CodeGen/SelectionDAGNodes.h"
-#include "llvm/CodeGen/TargetLowering.h"
-#include "llvm/IR/Constants.h"
+#include "llvm/IR/InstrTypes.h"
 #include "llvm/Support/BranchProbability.h"
+#include <vector>
 
 namespace llvm {
 
+class BlockFrequencyInfo;
+class ConstantInt;
 class FunctionLoweringInfo;
 class MachineBasicBlock;
+class ProfileSummaryInfo;
+class TargetLowering;
+class TargetMachine;
 
 namespace SwitchCG {
 
@@ -212,16 +218,17 @@ struct BitTestBlock {
   BitTestInfo Cases;
   BranchProbability Prob;
   BranchProbability DefaultProb;
+  bool OmitRangeCheck;
 
   BitTestBlock(APInt F, APInt R, const Value *SV, unsigned Rg, MVT RgVT, bool E,
                bool CR, MachineBasicBlock *P, MachineBasicBlock *D,
                BitTestInfo C, BranchProbability Pr)
       : First(std::move(F)), Range(std::move(R)), SValue(SV), Reg(Rg),
         RegVT(RgVT), Emitted(E), ContiguousRange(CR), Parent(P), Default(D),
-        Cases(std::move(C)), Prob(Pr) {}
+        Cases(std::move(C)), Prob(Pr), OmitRangeCheck(false) {}
 };
 
-/// Return the range of value within a range.
+/// Return the range of values within a range.
 uint64_t getJumpTableRange(const CaseClusterVector &Clusters, unsigned First,
                            unsigned Last);
 
@@ -263,7 +270,8 @@ public:
   std::vector<BitTestBlock> BitTestCases;
 
   void findJumpTables(CaseClusterVector &Clusters, const SwitchInst *SI,
-                      MachineBasicBlock *DefaultMBB);
+                      MachineBasicBlock *DefaultMBB,
+                      ProfileSummaryInfo *PSI, BlockFrequencyInfo *BFI);
 
   bool buildJumpTable(const CaseClusterVector &Clusters, unsigned First,
                       unsigned Last, const SwitchInst *SI,
@@ -294,4 +302,3 @@ private:
 } // namespace llvm
 
 #endif // LLVM_CODEGEN_SWITCHLOWERINGUTILS_H
-

@@ -32,6 +32,7 @@
 #include "llvm/Config/llvm-config.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/Function.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/BlockFrequency.h"
 #include "llvm/Support/CommandLine.h"
@@ -92,7 +93,7 @@ void RegBankSelect::init(MachineFunction &MF) {
     MBPI = nullptr;
   }
   MIRBuilder.setMF(MF);
-  MORE = llvm::make_unique<MachineOptimizationRemarkEmitter>(MF, MBFI);
+  MORE = std::make_unique<MachineOptimizationRemarkEmitter>(MF, MBFI);
 }
 
 void RegBankSelect::getAnalysisUsage(AnalysisUsage &AU) const {
@@ -118,16 +119,16 @@ bool RegBankSelect::assignmentMatch(
     return false;
 
   const RegisterBank *CurRegBank = RBI->getRegBank(Reg, *MRI, *TRI);
-  const RegisterBank *DesiredRegBrank = ValMapping.BreakDown[0].RegBank;
+  const RegisterBank *DesiredRegBank = ValMapping.BreakDown[0].RegBank;
   // Reg is free of assignment, a simple assignment will make the
   // register bank to match.
   OnlyAssign = CurRegBank == nullptr;
   LLVM_DEBUG(dbgs() << "Does assignment already match: ";
              if (CurRegBank) dbgs() << *CurRegBank; else dbgs() << "none";
              dbgs() << " against ";
-             assert(DesiredRegBrank && "The mapping must be valid");
-             dbgs() << *DesiredRegBrank << '\n';);
-  return CurRegBank == DesiredRegBrank;
+             assert(DesiredRegBank && "The mapping must be valid");
+             dbgs() << *DesiredRegBank << '\n';);
+  return CurRegBank == DesiredRegBank;
 }
 
 bool RegBankSelect::repairReg(
@@ -139,7 +140,7 @@ bool RegBankSelect::repairReg(
          "need new vreg for each breakdown");
 
   // An empty range of new register means no repairing.
-  assert(!empty(NewVRegs) && "We should not have to repair");
+  assert(!NewVRegs.empty() && "We should not have to repair");
 
   MachineInstr *MI;
   if (ValMapping.NumBreakDowns == 1) {
@@ -154,7 +155,7 @@ bool RegBankSelect::repairReg(
       std::swap(Src, Dst);
 
     assert((RepairPt.getNumInsertPoints() == 1 ||
-            TargetRegisterInfo::isPhysicalRegister(Dst)) &&
+            Register::isPhysicalRegister(Dst)) &&
            "We are about to create several defs for Dst");
 
     // Build the instruction used to repair, then clone it at the right
@@ -259,11 +260,11 @@ uint64_t RegBankSelect::getRepairCost(
     return RBI->getBreakDownCost(ValMapping, CurRegBank);
 
   if (IsSameNumOfValues) {
-    const RegisterBank *DesiredRegBrank = ValMapping.BreakDown[0].RegBank;
+    const RegisterBank *DesiredRegBank = ValMapping.BreakDown[0].RegBank;
     // If we repair a definition, swap the source and destination for
     // the repairing.
     if (MO.isDef())
-      std::swap(CurRegBank, DesiredRegBrank);
+      std::swap(CurRegBank, DesiredRegBank);
     // TODO: It may be possible to actually avoid the copy.
     // If we repair something where the source is defined by a copy
     // and the source of that copy is on the right bank, we can reuse
@@ -275,7 +276,7 @@ uint64_t RegBankSelect::getRepairCost(
     // into a new virtual register.
     // We would also need to propagate this information in the
     // repairing placement.
-    unsigned Cost = RBI->copyCost(*DesiredRegBrank, *CurRegBank,
+    unsigned Cost = RBI->copyCost(*DesiredRegBank, *CurRegBank,
                                   RBI->getSizeInBits(MO.getReg(), *MRI, *TRI));
     // TODO: use a dedicated constant for ImpossibleCost.
     if (Cost != std::numeric_limits<unsigned>::max())
@@ -398,7 +399,7 @@ void RegBankSelect::tryAvoidingSplit(
 
   // Check if this is a physical or virtual register.
   Register Reg = MO.getReg();
-  if (TargetRegisterInfo::isPhysicalRegister(Reg)) {
+  if (Register::isPhysicalRegister(Reg)) {
     // We are going to split every outgoing edges.
     // Check that this is possible.
     // FIXME: The machine representation is currently broken
@@ -621,6 +622,23 @@ bool RegBankSelect::applyMapping(
 
 bool RegBankSelect::assignInstr(MachineInstr &MI) {
   LLVM_DEBUG(dbgs() << "Assign: " << MI);
+
+  unsigned Opc = MI.getOpcode();
+  if (isPreISelGenericOptimizationHint(Opc)) {
+    assert((Opc == TargetOpcode::G_ASSERT_ZEXT ||
+            Opc == TargetOpcode::G_ASSERT_SEXT) &&
+           "Unexpected hint opcode!");
+    // The only correct mapping for these is to always use the source register
+    // bank.
+    const RegisterBank *RB = MRI->getRegBankOrNull(MI.getOperand(1).getReg());
+    // We can assume every instruction above this one has a selected register
+    // bank.
+    assert(RB && "Expected source register to have a register bank?");
+    LLVM_DEBUG(dbgs() << "... Hint always uses source's register bank.\n");
+    MRI->setRegBank(MI.getOperand(0).getReg(), *RB);
+    return true;
+  }
+
   // Remember the repairing placement for all the operands.
   SmallVector<RepairingPlacement, 4> RepairPts;
 
@@ -687,8 +705,22 @@ bool RegBankSelect::runOnMachineFunction(MachineFunction &MF) {
       // iterator before hand.
       MachineInstr &MI = *MII++;
 
-      // Ignore target-specific instructions: they should use proper regclasses.
-      if (isTargetSpecificOpcode(MI.getOpcode()))
+      // Ignore target-specific post-isel instructions: they should use proper
+      // regclasses.
+      if (isTargetSpecificOpcode(MI.getOpcode()) && !MI.isPreISelOpcode())
+        continue;
+
+      // Ignore inline asm instructions: they should use physical
+      // registers/regclasses
+      if (MI.isInlineAsm())
+        continue;
+
+      // Ignore debug info.
+      if (MI.isDebugInstr())
+        continue;
+
+      // Ignore IMPLICIT_DEF which must have a regclass.
+      if (MI.isImplicitDef())
         continue;
 
       if (!assignInstr(MI)) {

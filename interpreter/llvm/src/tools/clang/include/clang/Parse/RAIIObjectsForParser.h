@@ -287,6 +287,25 @@ namespace clang {
     }
   };
 
+  /// Activates OpenMP parsing mode to preseve OpenMP specific annotation
+  /// tokens.
+  class ParsingOpenMPDirectiveRAII {
+    Parser &P;
+    bool OldVal;
+
+  public:
+    ParsingOpenMPDirectiveRAII(Parser &P, bool Value = true)
+        : P(P), OldVal(P.OpenMPDirectiveParsing) {
+      P.OpenMPDirectiveParsing = Value;
+    }
+
+    /// This can be used to restore the state early, before the dtor
+    /// is run.
+    void restore() { P.OpenMPDirectiveParsing = OldVal; }
+
+    ~ParsingOpenMPDirectiveRAII() { restore(); }
+  };
+
   /// RAII object that makes '>' behave either as an operator
   /// or as the closing angle bracket for a template argument list.
   class GreaterThanIsOperatorScope {
@@ -439,29 +458,6 @@ namespace clang {
       return diagnoseMissingClose();
     }
     void skipToEnd();
-  };
-
-  /// RAIIObject to destroy the contents of a SmallVector of
-  /// TemplateIdAnnotation pointers and clear the vector.
-  class DestroyTemplateIdAnnotationsRAIIObj {
-    SmallVectorImpl<TemplateIdAnnotation *> &Container;
-
-  public:
-    DestroyTemplateIdAnnotationsRAIIObj(
-        SmallVectorImpl<TemplateIdAnnotation *> &Container)
-        : Container(Container) {}
-
-    DestroyTemplateIdAnnotationsRAIIObj(Parser& P)
-        : Container(P.TemplateIds) {}
-
-    ~DestroyTemplateIdAnnotationsRAIIObj() {
-      for (SmallVectorImpl<TemplateIdAnnotation *>::iterator I =
-               Container.begin(),
-             E = Container.end();
-           I != E; ++I)
-        (*I)->Destroy();
-      Container.clear();
-    }
   };
 } // end namespace clang
 

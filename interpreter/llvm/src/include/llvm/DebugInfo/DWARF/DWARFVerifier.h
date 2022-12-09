@@ -9,27 +9,25 @@
 #ifndef LLVM_DEBUGINFO_DWARF_DWARFVERIFIER_H
 #define LLVM_DEBUGINFO_DWARF_DWARFVERIFIER_H
 
+#include "llvm/ADT/Optional.h"
 #include "llvm/DebugInfo/DIContext.h"
 #include "llvm/DebugInfo/DWARF/DWARFAcceleratorTable.h"
-#include "llvm/DebugInfo/DWARF/DWARFAddressRange.h"
 #include "llvm/DebugInfo/DWARF/DWARFDie.h"
 #include "llvm/DebugInfo/DWARF/DWARFUnitIndex.h"
-
 #include <cstdint>
 #include <map>
 #include <set>
 
 namespace llvm {
 class raw_ostream;
+struct DWARFAddressRange;
 struct DWARFAttribute;
 class DWARFContext;
-class DWARFDie;
-class DWARFUnit;
-class DWARFCompileUnit;
 class DWARFDataExtractor;
 class DWARFDebugAbbrev;
 class DataExtractor;
 struct DWARFSection;
+class DWARFUnit;
 
 /// A class that verifies DWARF debug information given a DWARF Context.
 class DWARFVerifier {
@@ -56,11 +54,13 @@ public:
     typedef std::set<DieRangeInfo>::const_iterator die_range_info_iterator;
 
     /// Inserts the address range. If the range overlaps with an existing
-    /// range, the range is *not* added and an iterator to the overlapping
-    /// range is returned.
+    /// range, the range that it overlaps with will be returned and the two
+    /// address ranges will be unioned together in "Ranges".
     ///
-    /// This is used for finding overlapping ranges within the same DIE.
-    address_range_iterator insert(const DWARFAddressRange &R);
+    /// This is used for finding overlapping ranges in the DW_AT_ranges
+    /// attribute of a DIE. It is also used as a set of address ranges that
+    /// children address ranges must all be contained in.
+    Optional<DWARFAddressRange> insert(const DWARFAddressRange &R);
 
     /// Finds an address range in the sorted vector of ranges.
     address_range_iterator findRange(const DWARFAddressRange &R) const {
@@ -94,7 +94,7 @@ private:
   /// A map that tracks all references (converted absolute references) so we
   /// can verify each reference points to a valid DIE and not an offset that
   /// lies between to valid DIEs.
-  std::map<uint64_t, std::set<uint32_t>> ReferenceToDIEOffsets;
+  std::map<uint64_t, std::set<uint64_t>> ReferenceToDIEOffsets;
   uint32_t NumDebugLineErrors = 0;
   // Used to relax some checks that do not currently work portably
   bool IsObjectFile;
@@ -138,7 +138,7 @@ private:
   ///
   /// \returns true if the header is verified successfully, false otherwise.
   bool verifyUnitHeader(const DWARFDataExtractor DebugInfoData,
-                        uint32_t *Offset, unsigned UnitIndex, uint8_t &UnitType,
+                        uint64_t *Offset, unsigned UnitIndex, uint8_t &UnitType,
                         bool &isUnitDWARF64);
 
   /// Verifies the header of a unit in a .debug_info or .debug_types section.
@@ -333,4 +333,4 @@ static inline bool operator<(const DWARFVerifier::DieRangeInfo &LHS,
 
 } // end namespace llvm
 
-#endif // LLVM_DEBUGINFO_DWARF_DWARFCONTEXT_H
+#endif // LLVM_DEBUGINFO_DWARF_DWARFVERIFIER_H

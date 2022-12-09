@@ -6,8 +6,8 @@
 //
 //===------------------------------------------------------------------===//
 
-#ifndef LLVM_DEBUGINFO_DWARFDEBUGADDR_H
-#define LLVM_DEBUGINFO_DWARFDEBUGADDR_H
+#ifndef LLVM_DEBUGINFO_DWARF_DWARFDEBUGADDR_H
+#define LLVM_DEBUGINFO_DWARF_DWARFDEBUGADDR_H
 
 #include "llvm/BinaryFormat/Dwarf.h"
 #include "llvm/DebugInfo/DIContext.h"
@@ -27,71 +27,73 @@ class raw_ostream;
 /// The table consists of a header followed by an array of address values from
 /// .debug_addr section.
 class DWARFDebugAddrTable {
-public:
-  struct Header {
-    /// The total length of the entries for this table, not including the length
-    /// field itself.
-    uint32_t Length = 0;
-    /// The DWARF version number.
-    uint16_t Version = 5;
-    /// The size in bytes of an address on the target architecture. For
-    /// segmented addressing, this is the size of the offset portion of the
-    /// address.
-    uint8_t AddrSize;
-    /// The size in bytes of a segment selector on the target architecture.
-    /// If the target system uses a flat address space, this value is 0.
-    uint8_t SegSize = 0;
-  };
-
-private:
   dwarf::DwarfFormat Format;
-  uint32_t HeaderOffset;
-  Header HeaderData;
-  uint32_t DataSize = 0;
+  uint64_t Offset;
+  /// The total length of the entries for this table, not including the length
+  /// field itself.
+  uint64_t Length = 0;
+  /// The DWARF version number.
+  uint16_t Version;
+  /// The size in bytes of an address on the target architecture. For
+  /// segmented addressing, this is the size of the offset portion of the
+  /// address.
+  uint8_t AddrSize;
+  /// The size in bytes of a segment selector on the target architecture.
+  /// If the target system uses a flat address space, this value is 0.
+  uint8_t SegSize;
   std::vector<uint64_t> Addrs;
 
-public:
-  void clear();
+  /// Invalidate Length field to stop further processing.
+  void invalidateLength() { Length = 0; }
 
-  /// Extract an entire table, including all addresses.
-  Error extract(DWARFDataExtractor Data, uint32_t *OffsetPtr,
-                uint16_t Version, uint8_t AddrSize,
+  Error extractAddresses(const DWARFDataExtractor &Data, uint64_t *OffsetPtr,
+                         uint64_t EndOffset);
+
+public:
+
+  /// Extract the entire table, including all addresses.
+  Error extract(const DWARFDataExtractor &Data, uint64_t *OffsetPtr,
+                uint16_t CUVersion, uint8_t CUAddrSize,
                 std::function<void(Error)> WarnCallback);
 
-  uint32_t getHeaderOffset() const { return HeaderOffset; }
-  uint8_t getAddrSize() const { return HeaderData.AddrSize; }
+  /// Extract a DWARFv5 address table.
+  Error extractV5(const DWARFDataExtractor &Data, uint64_t *OffsetPtr,
+                  uint8_t CUAddrSize, std::function<void(Error)> WarnCallback);
+
+  /// Extract a pre-DWARFv5 address table. Such tables do not have a header
+  /// and consist only of a series of addresses.
+  /// See https://gcc.gnu.org/wiki/DebugFission for details.
+  Error extractPreStandard(const DWARFDataExtractor &Data, uint64_t *OffsetPtr,
+                           uint16_t CUVersion, uint8_t CUAddrSize);
+
   void dump(raw_ostream &OS, DIDumpOptions DumpOpts = {}) const;
 
   /// Return the address based on a given index.
   Expected<uint64_t> getAddrEntry(uint32_t Index) const;
 
-  /// Return the size of the table header including the length
-  /// but not including the addresses.
-  uint8_t getHeaderSize() const {
-    switch (Format) {
-    case dwarf::DwarfFormat::DWARF32:
-      return 8; // 4 + 2 + 1 + 1
-    case dwarf::DwarfFormat::DWARF64:
-      return 16; // 12 + 2 + 1 + 1
-    }
-    llvm_unreachable("Invalid DWARF format (expected DWARF32 or DWARF64)");
-  }
+  /// Return the full length of this table, including the length field.
+  /// Return None if the length cannot be identified reliably.
+  Optional<uint64_t> getFullLength() const;
 
-  /// Returns the length of this table, including the length field, or 0 if the
-  /// length has not been determined (e.g. because the table has not yet been
-  /// parsed, or there was a problem in parsing).
-  uint32_t getLength() const;
+  /// Return the DWARF format of this table.
+  dwarf::DwarfFormat getFormat() const { return Format; }
 
-  /// Verify that the given length is valid for this table.
-  bool hasValidLength() const { return getLength() != 0; }
+  /// Return the length of this table.
+  uint64_t getLength() const { return Length; }
 
-  /// Invalidate Length field to stop further processing.
-  void invalidateLength() { HeaderData.Length = 0; }
+  /// Return the version of this table.
+  uint16_t getVersion() const { return Version; }
 
-  /// Returns the length of the array of addresses.
-  uint32_t getDataSize() const;
+  /// Return the address size of this table.
+  uint8_t getAddressSize() const { return AddrSize; }
+
+  /// Return the segment selector size of this table.
+  uint8_t getSegmentSelectorSize() const { return SegSize; }
+
+  /// Return the parsed addresses of this table.
+  ArrayRef<uint64_t> getAddressEntries() const { return Addrs; }
 };
 
 } // end namespace llvm
 
-#endif // LLVM_DEBUGINFO_DWARFDEBUGADDR_H
+#endif // LLVM_DEBUGINFO_DWARF_DWARFDEBUGADDR_H

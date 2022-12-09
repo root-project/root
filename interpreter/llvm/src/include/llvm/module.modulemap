@@ -29,8 +29,8 @@ module LLVM_Backend {
     exclude header "CodeGen/LinkAllCodegenComponents.h"
 
     // These are intended for (repeated) textual inclusion.
-    textual header "CodeGen/CommandFlags.inc"
     textual header "CodeGen/DIEValue.def"
+    textual header "CodeGen/MachinePassRegistry.def"
   }
 }
 
@@ -47,6 +47,11 @@ module LLVM_Bitcode {
  module * { export * }
 }
 
+module LLVM_Bitstream {
+ requires cplusplus
+ umbrella "Bitstream"
+ module * { export * }
+}
 
 module LLVM_BinaryFormat {
     requires cplusplus
@@ -61,9 +66,11 @@ module LLVM_BinaryFormat {
     textual header "BinaryFormat/ELFRelocs/ARC.def"
     textual header "BinaryFormat/ELFRelocs/AVR.def"
     textual header "BinaryFormat/ELFRelocs/BPF.def"
+    textual header "BinaryFormat/ELFRelocs/CSKY.def"
     textual header "BinaryFormat/ELFRelocs/Hexagon.def"
     textual header "BinaryFormat/ELFRelocs/i386.def"
     textual header "BinaryFormat/ELFRelocs/Lanai.def"
+    textual header "BinaryFormat/ELFRelocs/M68k.def"
     textual header "BinaryFormat/ELFRelocs/Mips.def"
     textual header "BinaryFormat/ELFRelocs/MSP430.def"
     textual header "BinaryFormat/ELFRelocs/PowerPC64.def"
@@ -71,6 +78,7 @@ module LLVM_BinaryFormat {
     textual header "BinaryFormat/ELFRelocs/RISCV.def"
     textual header "BinaryFormat/ELFRelocs/Sparc.def"
     textual header "BinaryFormat/ELFRelocs/SystemZ.def"
+    textual header "BinaryFormat/ELFRelocs/VE.def"
     textual header "BinaryFormat/ELFRelocs/x86_64.def"
     textual header "BinaryFormat/WasmRelocs.def"
     textual header "BinaryFormat/MsgPack.def"
@@ -114,6 +122,7 @@ module LLVM_DebugInfo_PDB {
   exclude header "DebugInfo/PDB/DIA/DIAEnumSourceFiles.h"
   exclude header "DebugInfo/PDB/DIA/DIAEnumSymbols.h"
   exclude header "DebugInfo/PDB/DIA/DIAEnumTables.h"
+  exclude header "DebugInfo/PDB/DIA/DIAError.h"
   exclude header "DebugInfo/PDB/DIA/DIAFrameData.h"
   exclude header "DebugInfo/PDB/DIA/DIAInjectedSource.h"
   exclude header "DebugInfo/PDB/DIA/DIALineNumber.h"
@@ -152,6 +161,13 @@ module LLVM_DebugInfo_CodeView {
   textual header "DebugInfo/CodeView/CodeViewSymbols.def"
 }
 
+module LLVM_DWARFLinker {
+  requires cplusplus
+
+  umbrella "DWARFLinker"
+  module * { export * }
+}
+
 module LLVM_ExecutionEngine {
   requires cplusplus
 
@@ -169,12 +185,47 @@ module LLVM_ExecutionEngine {
 
   // FIXME: These exclude directives were added as a workaround for
   //        <rdar://problem/29247092> and should be removed once it is fixed.
-  exclude header "ExecutionEngine/Orc/RawByteChannel.h"
-  exclude header "ExecutionEngine/Orc/RPCUtils.h"
   exclude header "ExecutionEngine/Orc/OrcRemoteTargetRPCAPI.h"
   exclude header "ExecutionEngine/Orc/OrcRemoteTargetClient.h"
   exclude header "ExecutionEngine/Orc/OrcRemoteTargetServer.h"
   exclude header "ExecutionEngine/Orc/RemoteObjectLayer.h"
+
+  // Exclude headers from LLVM_OrcSupport.
+  exclude header "ExecutionEngine/Orc/Shared/OrcError.h"
+  exclude header "ExecutionEngine/Orc/RPC/RPCUtils.h"
+  exclude header "ExecutionEngine/Orc/RPC/RPCSerialization.h"
+  exclude header "ExecutionEngine/Orc/RPC/RawByteChannel.h"
+
+}
+
+module LLVM_FileCheck {
+  requires cplusplus
+
+  umbrella "FileCheck"
+  module * { export * }
+}
+
+module LLVM_Frontend_OpenMP {
+  requires cplusplus
+
+  umbrella "Frontend/OpenMP"
+  module * { export * }
+
+  exclude header "Frontend/OpenMP/OMPKinds.def"
+}
+
+// Orc utilities that don't depend only on Support (not ExecutionEngine or
+// IR). This is a workaround for ExecutionEngine's broken layering, and will
+// be removed in the future.
+module LLVM_OrcSupport {
+  requires cplusplus
+
+  header "ExecutionEngine/Orc/Shared/OrcError.h"
+  header "ExecutionEngine/Orc/Shared/RPCUtils.h"
+  header "ExecutionEngine/Orc/Shared/Serialization.h"
+  header "ExecutionEngine/Orc/Shared/RawByteChannel.h"
+
+  export *
 }
 
 module LLVM_Pass {
@@ -182,8 +233,8 @@ module LLVM_Pass {
     // PassSupport.h and PassAnalysisSupport.h are made available only through
     // Pass.h.
     header "Pass.h"
-    header "PassSupport.h"
-    header "PassAnalysisSupport.h"
+    textual header "PassSupport.h"
+    textual header "PassAnalysisSupport.h"
     export *
   }
 
@@ -204,10 +255,11 @@ module LLVM_intrinsic_gen {
     extern module LLVM_Extern_IR_Attributes_Gen "module.extern.modulemap"
     export *
   }
-  module IR_CallSite { header "IR/CallSite.h" export * }
+  module IR_AbstractCallSite { header "IR/AbstractCallSite.h" export * }
   module IR_ConstantFolder { header "IR/ConstantFolder.h" export * }
   module IR_GlobalVariable { header "IR/GlobalVariable.h" export * }
   module IR_NoFolder { header "IR/NoFolder.h" export * }
+  module IRBuilderFolder { header "IR/IRBuilderFolder.h" export * }
   module IR_Module { header "IR/Module.h" export * }
   module IR_ModuleSummaryIndex { header "IR/ModuleSummaryIndex.h" export * }
   module IR_ModuleSummaryIndexYAML { header "IR/ModuleSummaryIndexYAML.h" export * }
@@ -218,13 +270,16 @@ module LLVM_intrinsic_gen {
 
   // Intrinsics.h
   module IR_CFG { header "IR/CFG.h" export * }
-  module IR_CFGDiff { header "IR/CFGDiff.h" export * }
   module IR_ConstantRange { header "IR/ConstantRange.h" export * }
   module IR_Dominators { header "IR/Dominators.h" export * }
+  module IR_FixedPointBuilder { header "IR/FixedPointBuilder.h" export * }
   module Analysis_PostDominators { header "Analysis/PostDominators.h" export * }
   module Analysis_DomTreeUpdater { header "Analysis/DomTreeUpdater.h" export * }
   module IR_IRBuilder { header "IR/IRBuilder.h" export * }
+  module IR_IRPrintingPasses { header "IR/IRPrintingPasses.h" export * }
+  module IR_MatrixBuilder { header "IR/MatrixBuilder.h" export * }
   module IR_PassManager { header "IR/PassManager.h" export * }
+  module IR_PassManagerImpl { header "IR/PassManagerImpl.h" export * }
   module IR_PredIteratorCache { header "IR/PredIteratorCache.h" export * }
   module IR_Verifier { header "IR/Verifier.h" export * }
   module IR_InstIterator { header "IR/InstIterator.h" export * }
@@ -250,10 +305,13 @@ module LLVM_IR {
   module * { export * }
 
   // These are intended for (repeated) textual inclusion.
+  textual header "IR/ConstrainedOps.def"
   textual header "IR/DebugInfoFlags.def"
   textual header "IR/Instruction.def"
   textual header "IR/Metadata.def"
+  textual header "IR/FixedMetadataKinds.def"
   textual header "IR/Value.def"
+  textual header "IR/VPIntrinsics.def"
   textual header "IR/RuntimeLibcalls.def"
 }
 
@@ -280,8 +338,6 @@ module LLVM_MC {
 
   umbrella "MC"
   module * { export * }
-
-  textual header "MC/MCTargetOptionsCommandFlags.inc"
 }
 
 // Used by llvm-tblgen
@@ -331,6 +387,7 @@ module LLVM_TableGen {
 module LLVM_Transforms {
   requires cplusplus
   umbrella "Transforms"
+
   module * { export * }
 }
 
@@ -352,13 +409,17 @@ module LLVM_Utils {
     umbrella "Support"
     module * { export * }
 
+    // Exclude this; it should only be used on Windows.
+    exclude header "Support/Windows/WindowsSupport.h"
+
     // Exclude these; they are fundamentally non-modular.
     exclude header "Support/PluginLoader.h"
     exclude header "Support/Solaris/sys/regset.h"
 
     // These are intended for textual inclusion.
-    textual header "Support/ARMTargetParser.def"
     textual header "Support/AArch64TargetParser.def"
+    textual header "Support/ARMTargetParser.def"
+    textual header "Support/RISCVTargetParser.def"
     textual header "Support/TargetOpcodes.def"
     textual header "Support/X86TargetParser.def"
   }

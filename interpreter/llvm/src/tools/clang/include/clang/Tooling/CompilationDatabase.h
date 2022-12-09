@@ -31,6 +31,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Twine.h"
+#include "llvm/Support/VirtualFileSystem.h"
 #include <memory>
 #include <string>
 #include <utility>
@@ -42,10 +43,10 @@ namespace tooling {
 /// Specifies the working directory and command of a compilation.
 struct CompileCommand {
   CompileCommand() = default;
-  CompileCommand(Twine Directory, Twine Filename,
-                 std::vector<std::string> CommandLine, Twine Output)
+  CompileCommand(const Twine &Directory, const Twine &Filename,
+                 std::vector<std::string> CommandLine, const Twine &Output)
       : Directory(Directory.str()), Filename(Filename.str()),
-        CommandLine(std::move(CommandLine)), Output(Output.str()){}
+        CommandLine(std::move(CommandLine)), Output(Output.str()) {}
 
   /// The working directory the command was executed from.
   std::string Directory;
@@ -179,18 +180,24 @@ public:
   /// \param Argv Points to the command line arguments.
   /// \param ErrorMsg Contains error text if the function returns null pointer.
   /// \param Directory The base directory used in the FixedCompilationDatabase.
-  static std::unique_ptr<FixedCompilationDatabase> loadFromCommandLine(
-      int &Argc, const char *const *Argv, std::string &ErrorMsg,
-      Twine Directory = ".");
+  static std::unique_ptr<FixedCompilationDatabase>
+  loadFromCommandLine(int &Argc, const char *const *Argv, std::string &ErrorMsg,
+                      const Twine &Directory = ".");
 
-  /// Reads flags from the given file, one-per line.
+  /// Reads flags from the given file, one-per-line.
   /// Returns nullptr and sets ErrorMessage if we can't read the file.
   static std::unique_ptr<FixedCompilationDatabase>
   loadFromFile(StringRef Path, std::string &ErrorMsg);
 
+  /// Reads flags from the given buffer, one-per-line.
+  /// Directory is the command CWD, typically the parent of compile_flags.txt.
+  static std::unique_ptr<FixedCompilationDatabase>
+  loadFromBuffer(StringRef Directory, StringRef Data, std::string &ErrorMsg);
+
   /// Constructs a compilation data base from a specified directory
   /// and command line.
-  FixedCompilationDatabase(Twine Directory, ArrayRef<std::string> CommandLine);
+  FixedCompilationDatabase(const Twine &Directory,
+                           ArrayRef<std::string> CommandLine);
 
   /// Returns the given compile command.
   ///
@@ -206,6 +213,12 @@ private:
   std::vector<CompileCommand> CompileCommands;
 };
 
+/// Transforms a compile command so that it applies the same configuration to
+/// a different file. Most args are left intact, but tweaks may be needed
+/// to certain flags (-x, -std etc).
+tooling::CompileCommand transferCompileCommand(tooling::CompileCommand,
+                                               StringRef Filename);
+
 /// Returns a wrapped CompilationDatabase that defers to the provided one,
 /// but getCompileCommands() will infer commands for unknown files.
 /// The return value of getAllFiles() or getAllCompileCommands() is unchanged.
@@ -218,6 +231,12 @@ std::unique_ptr<CompilationDatabase>
 /// by underlying database.
 std::unique_ptr<CompilationDatabase>
 inferTargetAndDriverMode(std::unique_ptr<CompilationDatabase> Base);
+
+/// Returns a wrapped CompilationDatabase that will expand all rsp(response)
+/// files on commandline returned by underlying database.
+std::unique_ptr<CompilationDatabase>
+expandResponseFiles(std::unique_ptr<CompilationDatabase> Base,
+                    llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem> FS);
 
 } // namespace tooling
 } // namespace clang

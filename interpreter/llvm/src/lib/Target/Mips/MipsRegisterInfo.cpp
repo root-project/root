@@ -198,8 +198,7 @@ getReservedRegs(const MachineFunction &MF) const {
       // Reserve the base register if we need to both realign the stack and
       // allocate variable-sized objects at runtime. This should test the
       // same conditions as MipsFrameLowering::hasBP().
-      if (needsStackRealignment(MF) &&
-          MF.getFrameInfo().hasVarSizedObjects()) {
+      if (hasStackRealignment(MF) && MF.getFrameInfo().hasVarSizedObjects()) {
         Reserved.set(Mips::S7);
         Reserved.set(Mips::S7_64);
       }
@@ -245,11 +244,6 @@ MipsRegisterInfo::requiresRegisterScavenging(const MachineFunction &MF) const {
   return true;
 }
 
-bool
-MipsRegisterInfo::trackLivenessAfterRegAlloc(const MachineFunction &MF) const {
-  return true;
-}
-
 // FrameIndex represent objects inside a abstract stack.
 // We must replace FrameIndex with an stack/frame pointer
 // direct reference.
@@ -271,7 +265,7 @@ eliminateFrameIndex(MachineBasicBlock::iterator II, int SPAdj,
                     << "spOffset   : " << spOffset << "\n"
                     << "stackSize  : " << stackSize << "\n"
                     << "alignment  : "
-                    << MF.getFrameInfo().getObjectAlignment(FrameIndex)
+                    << DebugStr(MF.getFrameInfo().getObjectAlign(FrameIndex))
                     << "\n");
 
   eliminateFI(MI, FIOperandNum, FrameIndex, stackSize, spOffset);

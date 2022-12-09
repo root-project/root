@@ -98,7 +98,13 @@ static cl::opt<bool> Force("force",
                            cl::cat(ClangRenameOptions));
 
 int main(int argc, const char **argv) {
-  tooling::CommonOptionsParser OP(argc, argv, ClangRenameOptions);
+  auto ExpectedParser =
+      tooling::CommonOptionsParser::create(argc, argv, ClangRenameOptions);
+  if (!ExpectedParser) {
+    llvm::errs() << ExpectedParser.takeError();
+    return 1;
+  }
+  tooling::CommonOptionsParser &OP = ExpectedParser.get();
 
   if (!Input.empty()) {
     // Populate QualifiedNames and NewNames from a YAML file.
@@ -188,7 +194,7 @@ int main(int argc, const char **argv) {
 
     if (!ExportFixes.empty()) {
       std::error_code EC;
-      llvm::raw_fd_ostream OS(ExportFixes, EC, llvm::sys::fs::F_None);
+      llvm::raw_fd_ostream OS(ExportFixes, EC, llvm::sys::fs::OF_None);
       if (EC) {
         llvm::errs() << "Error opening output file: " << EC.message() << '\n';
         return 1;
@@ -222,8 +228,8 @@ int main(int argc, const char **argv) {
 
     Tool.applyAllReplacements(Rewrite);
     for (const auto &File : Files) {
-      const auto *Entry = FileMgr.getFile(File);
-      const auto ID = Sources.getOrCreateFileID(Entry, SrcMgr::C_User);
+      auto Entry = FileMgr.getFile(File);
+      const auto ID = Sources.getOrCreateFileID(*Entry, SrcMgr::C_User);
       Rewrite.getEditBuffer(ID).write(outs());
     }
   }

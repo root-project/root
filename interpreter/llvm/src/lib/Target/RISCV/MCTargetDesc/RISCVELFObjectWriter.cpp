@@ -7,7 +7,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "MCTargetDesc/RISCVFixupKinds.h"
+#include "MCTargetDesc/RISCVMCExpr.h"
 #include "MCTargetDesc/RISCVMCTargetDesc.h"
+#include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCELFObjectWriter.h"
 #include "llvm/MC/MCFixup.h"
 #include "llvm/MC/MCObjectWriter.h"
@@ -47,12 +49,16 @@ unsigned RISCVELFObjectWriter::getRelocType(MCContext &Ctx,
                                             const MCValue &Target,
                                             const MCFixup &Fixup,
                                             bool IsPCRel) const {
+  const MCExpr *Expr = Fixup.getValue();
   // Determine the type of the relocation
-  unsigned Kind = Fixup.getKind();
+  unsigned Kind = Fixup.getTargetKind();
+  if (Kind >= FirstLiteralRelocationKind)
+    return Kind - FirstLiteralRelocationKind;
   if (IsPCRel) {
     switch (Kind) {
     default:
-      llvm_unreachable("invalid fixup kind!");
+      Ctx.reportError(Fixup.getLoc(), "Unsupported relocation type");
+      return ELF::R_RISCV_NONE;
     case FK_Data_4:
     case FK_PCRel_4:
       return ELF::R_RISCV_32_PCREL;
@@ -80,32 +86,42 @@ unsigned RISCVELFObjectWriter::getRelocType(MCContext &Ctx,
       return ELF::R_RISCV_CALL;
     case RISCV::fixup_riscv_call_plt:
       return ELF::R_RISCV_CALL_PLT;
+    case RISCV::fixup_riscv_add_8:
+      return ELF::R_RISCV_ADD8;
+    case RISCV::fixup_riscv_sub_8:
+      return ELF::R_RISCV_SUB8;
+    case RISCV::fixup_riscv_add_16:
+      return ELF::R_RISCV_ADD16;
+    case RISCV::fixup_riscv_sub_16:
+      return ELF::R_RISCV_SUB16;
+    case RISCV::fixup_riscv_add_32:
+      return ELF::R_RISCV_ADD32;
+    case RISCV::fixup_riscv_sub_32:
+      return ELF::R_RISCV_SUB32;
+    case RISCV::fixup_riscv_add_64:
+      return ELF::R_RISCV_ADD64;
+    case RISCV::fixup_riscv_sub_64:
+      return ELF::R_RISCV_SUB64;
     }
   }
 
   switch (Kind) {
   default:
-    llvm_unreachable("invalid fixup kind!");
+    Ctx.reportError(Fixup.getLoc(), "Unsupported relocation type");
+    return ELF::R_RISCV_NONE;
+  case FK_Data_1:
+    Ctx.reportError(Fixup.getLoc(), "1-byte data relocations not supported");
+    return ELF::R_RISCV_NONE;
+  case FK_Data_2:
+    Ctx.reportError(Fixup.getLoc(), "2-byte data relocations not supported");
+    return ELF::R_RISCV_NONE;
   case FK_Data_4:
+    if (Expr->getKind() == MCExpr::Target &&
+        cast<RISCVMCExpr>(Expr)->getKind() == RISCVMCExpr::VK_RISCV_32_PCREL)
+      return ELF::R_RISCV_32_PCREL;
     return ELF::R_RISCV_32;
   case FK_Data_8:
     return ELF::R_RISCV_64;
-  case FK_Data_Add_1:
-    return ELF::R_RISCV_ADD8;
-  case FK_Data_Add_2:
-    return ELF::R_RISCV_ADD16;
-  case FK_Data_Add_4:
-    return ELF::R_RISCV_ADD32;
-  case FK_Data_Add_8:
-    return ELF::R_RISCV_ADD64;
-  case FK_Data_Sub_1:
-    return ELF::R_RISCV_SUB8;
-  case FK_Data_Sub_2:
-    return ELF::R_RISCV_SUB16;
-  case FK_Data_Sub_4:
-    return ELF::R_RISCV_SUB32;
-  case FK_Data_Sub_8:
-    return ELF::R_RISCV_SUB64;
   case RISCV::fixup_riscv_hi20:
     return ELF::R_RISCV_HI20;
   case RISCV::fixup_riscv_lo12_i:
@@ -124,10 +140,36 @@ unsigned RISCVELFObjectWriter::getRelocType(MCContext &Ctx,
     return ELF::R_RISCV_RELAX;
   case RISCV::fixup_riscv_align:
     return ELF::R_RISCV_ALIGN;
+  case RISCV::fixup_riscv_set_6b:
+    return ELF::R_RISCV_SET6;
+  case RISCV::fixup_riscv_sub_6b:
+    return ELF::R_RISCV_SUB6;
+  case RISCV::fixup_riscv_add_8:
+    return ELF::R_RISCV_ADD8;
+  case RISCV::fixup_riscv_set_8:
+    return ELF::R_RISCV_SET8;
+  case RISCV::fixup_riscv_sub_8:
+    return ELF::R_RISCV_SUB8;
+  case RISCV::fixup_riscv_set_16:
+    return ELF::R_RISCV_SET16;
+  case RISCV::fixup_riscv_add_16:
+    return ELF::R_RISCV_ADD16;
+  case RISCV::fixup_riscv_sub_16:
+    return ELF::R_RISCV_SUB16;
+  case RISCV::fixup_riscv_set_32:
+    return ELF::R_RISCV_SET32;
+  case RISCV::fixup_riscv_add_32:
+    return ELF::R_RISCV_ADD32;
+  case RISCV::fixup_riscv_sub_32:
+    return ELF::R_RISCV_SUB32;
+  case RISCV::fixup_riscv_add_64:
+    return ELF::R_RISCV_ADD64;
+  case RISCV::fixup_riscv_sub_64:
+    return ELF::R_RISCV_SUB64;
   }
 }
 
 std::unique_ptr<MCObjectTargetWriter>
 llvm::createRISCVELFObjectWriter(uint8_t OSABI, bool Is64Bit) {
-  return llvm::make_unique<RISCVELFObjectWriter>(OSABI, Is64Bit);
+  return std::make_unique<RISCVELFObjectWriter>(OSABI, Is64Bit);
 }

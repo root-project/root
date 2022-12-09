@@ -8,7 +8,9 @@
 
 #include "clang/Tooling/AllTUsExecution.h"
 #include "clang/Tooling/ToolExecutorPluginRegistry.h"
+#include "llvm/Support/Regex.h"
 #include "llvm/Support/ThreadPool.h"
+#include "llvm/Support/Threading.h"
 #include "llvm/Support/VirtualFileSystem.h"
 
 namespace clang {
@@ -113,8 +115,7 @@ llvm::Error AllTUsToolExecutor::execute(
   auto &Action = Actions.front();
 
   {
-    llvm::ThreadPool Pool(ThreadCount == 0 ? llvm::hardware_concurrency()
-                                           : ThreadCount);
+    llvm::ThreadPool Pool(llvm::hardware_concurrency(ThreadCount));
     for (std::string File : Files) {
       Pool.async(
           [&](std::string Path) {
@@ -123,7 +124,7 @@ llvm::Error AllTUsToolExecutor::execute(
             // Each thread gets an indepent copy of a VFS to allow different
             // concurrent working directories.
             IntrusiveRefCntPtr<llvm::vfs::FileSystem> FS =
-                llvm::vfs::createPhysicalFileSystem().release();
+                llvm::vfs::createPhysicalFileSystem();
             ClangTool Tool(Compilations, {Path},
                            std::make_shared<PCHContainerOperations>(), FS);
             Tool.appendArgumentsAdjuster(Action.second);
@@ -147,7 +148,7 @@ llvm::Error AllTUsToolExecutor::execute(
   return llvm::Error::success();
 }
 
-static llvm::cl::opt<unsigned> ExecutorConcurrency(
+llvm::cl::opt<unsigned> ExecutorConcurrency(
     "execute-concurrency",
     llvm::cl::desc("The number of threads used to process all files in "
                    "parallel. Set to 0 for hardware concurrency. "
@@ -162,7 +163,7 @@ public:
       return make_string_error(
           "[AllTUsToolExecutorPlugin] Please provide a directory/file path in "
           "the compilation database.");
-    return llvm::make_unique<AllTUsToolExecutor>(std::move(OptionsParser),
+    return std::make_unique<AllTUsToolExecutor>(std::move(OptionsParser),
                                                  ExecutorConcurrency);
   }
 };

@@ -7,9 +7,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/DebugInfo/PDB/Native/PDBFileBuilder.h"
-
-#include "llvm/ADT/BitVector.h"
-
 #include "llvm/DebugInfo/MSF/MSFBuilder.h"
 #include "llvm/DebugInfo/PDB/Native/DbiStream.h"
 #include "llvm/DebugInfo/PDB/Native/DbiStreamBuilder.h"
@@ -22,7 +19,8 @@
 #include "llvm/DebugInfo/PDB/Native/TpiStreamBuilder.h"
 #include "llvm/Support/BinaryStream.h"
 #include "llvm/Support/BinaryStreamWriter.h"
-#include "llvm/Support/JamCRC.h"
+#include "llvm/Support/CRC.h"
+#include "llvm/Support/Chrono.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/xxhash.h"
 
@@ -42,7 +40,7 @@ Error PDBFileBuilder::initialize(uint32_t BlockSize) {
   auto ExpectedMsf = MSFBuilder::create(Allocator, BlockSize);
   if (!ExpectedMsf)
     return ExpectedMsf.takeError();
-  Msf = llvm::make_unique<MSFBuilder>(std::move(*ExpectedMsf));
+  Msf = std::make_unique<MSFBuilder>(std::move(*ExpectedMsf));
   return Error::success();
 }
 
@@ -50,25 +48,25 @@ MSFBuilder &PDBFileBuilder::getMsfBuilder() { return *Msf; }
 
 InfoStreamBuilder &PDBFileBuilder::getInfoBuilder() {
   if (!Info)
-    Info = llvm::make_unique<InfoStreamBuilder>(*Msf, NamedStreams);
+    Info = std::make_unique<InfoStreamBuilder>(*Msf, NamedStreams);
   return *Info;
 }
 
 DbiStreamBuilder &PDBFileBuilder::getDbiBuilder() {
   if (!Dbi)
-    Dbi = llvm::make_unique<DbiStreamBuilder>(*Msf);
+    Dbi = std::make_unique<DbiStreamBuilder>(*Msf);
   return *Dbi;
 }
 
 TpiStreamBuilder &PDBFileBuilder::getTpiBuilder() {
   if (!Tpi)
-    Tpi = llvm::make_unique<TpiStreamBuilder>(*Msf, StreamTPI);
+    Tpi = std::make_unique<TpiStreamBuilder>(*Msf, StreamTPI);
   return *Tpi;
 }
 
 TpiStreamBuilder &PDBFileBuilder::getIpiBuilder() {
   if (!Ipi)
-    Ipi = llvm::make_unique<TpiStreamBuilder>(*Msf, StreamIPI);
+    Ipi = std::make_unique<TpiStreamBuilder>(*Msf, StreamIPI);
   return *Ipi;
 }
 
@@ -78,7 +76,7 @@ PDBStringTableBuilder &PDBFileBuilder::getStringTableBuilder() {
 
 GSIStreamBuilder &PDBFileBuilder::getGsiBuilder() {
   if (!Gsi)
-    Gsi = llvm::make_unique<GSIStreamBuilder>(*Msf);
+    Gsi = std::make_unique<GSIStreamBuilder>(*Msf);
   return *Gsi;
 }
 
@@ -95,7 +93,7 @@ Error PDBFileBuilder::addNamedStream(StringRef Name, StringRef Data) {
   if (!ExpectedIndex)
     return ExpectedIndex.takeError();
   assert(NamedStreamData.count(*ExpectedIndex) == 0);
-  NamedStreamData[*ExpectedIndex] = Data;
+  NamedStreamData[*ExpectedIndex] = std::string(Data);
   return Error::success();
 }
 
@@ -144,7 +142,7 @@ Error PDBFileBuilder::finalizeMsfLayout() {
     if (Dbi) {
       Dbi->setPublicsStreamIndex(Gsi->getPublicsStreamIndex());
       Dbi->setGlobalsStreamIndex(Gsi->getGlobalsStreamIndex());
-      Dbi->setSymbolRecordStreamIndex(Gsi->getRecordStreamIdx());
+      Dbi->setSymbolRecordStreamIndex(Gsi->getRecordStreamIndex());
     }
   }
   if (Tpi) {
@@ -174,8 +172,7 @@ Error PDBFileBuilder::finalizeMsfLayout() {
   if (!InjectedSources.empty()) {
     for (const auto &IS : InjectedSources) {
       JamCRC CRC(0);
-      CRC.update(makeArrayRef(IS.Content->getBufferStart(),
-                              IS.Content->getBufferSize()));
+      CRC.update(arrayRefFromStringRef(IS.Content->getBuffer()));
 
       SrcHeaderBlockEntry Entry;
       ::memset(&Entry, 0, sizeof(SrcHeaderBlockEntry));

@@ -192,8 +192,7 @@ protected:
 public: // Public Interface
 
    virtual ~TCling();
-   TCling(const char* name, const char* title, const char* const argv[]);
-   TCling(const char* name, const char* title): TCling(name, title, kNullArgv) {}
+   TCling(const char* name, const char* title, const char* const argv[], void *interpLibHandle);
 
    void    AddIncludePath(const char* path) final;
    void   *GetAutoLoadCallBack() const final { return fAutoLoadCallBack; }

@@ -233,7 +233,7 @@ static std::unique_ptr<ExprAST> ParseExpression();
 
 /// numberexpr ::= number
 static std::unique_ptr<ExprAST> ParseNumberExpr() {
-  auto Result = llvm::make_unique<NumberExprAST>(NumVal);
+  auto Result = std::make_unique<NumberExprAST>(NumVal);
   getNextToken(); // consume the number
   return std::move(Result);
 }
@@ -260,7 +260,7 @@ static std::unique_ptr<ExprAST> ParseIdentifierExpr() {
   getNextToken(); // eat identifier.
 
   if (CurTok != '(') // Simple variable ref.
-    return llvm::make_unique<VariableExprAST>(IdName);
+    return std::make_unique<VariableExprAST>(IdName);
 
   // Call.
   getNextToken(); // eat (
@@ -284,7 +284,7 @@ static std::unique_ptr<ExprAST> ParseIdentifierExpr() {
   // Eat the ')'.
   getNextToken();
 
-  return llvm::make_unique<CallExprAST>(IdName, std::move(Args));
+  return std::make_unique<CallExprAST>(IdName, std::move(Args));
 }
 
 /// primary
@@ -337,7 +337,7 @@ static std::unique_ptr<ExprAST> ParseBinOpRHS(int ExprPrec,
 
     // Merge LHS/RHS.
     LHS =
-        llvm::make_unique<BinaryExprAST>(BinOp, std::move(LHS), std::move(RHS));
+        std::make_unique<BinaryExprAST>(BinOp, std::move(LHS), std::move(RHS));
   }
 }
 
@@ -373,7 +373,7 @@ static std::unique_ptr<PrototypeAST> ParsePrototype() {
   // success.
   getNextToken(); // eat ')'.
 
-  return llvm::make_unique<PrototypeAST>(FnName, std::move(ArgNames));
+  return std::make_unique<PrototypeAST>(FnName, std::move(ArgNames));
 }
 
 /// definition ::= 'def' prototype expression
@@ -384,7 +384,7 @@ static std::unique_ptr<FunctionAST> ParseDefinition() {
     return nullptr;
 
   if (auto E = ParseExpression())
-    return llvm::make_unique<FunctionAST>(std::move(Proto), std::move(E));
+    return std::make_unique<FunctionAST>(std::move(Proto), std::move(E));
   return nullptr;
 }
 
@@ -392,9 +392,9 @@ static std::unique_ptr<FunctionAST> ParseDefinition() {
 static std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
   if (auto E = ParseExpression()) {
     // Make an anonymous proto.
-    auto Proto = llvm::make_unique<PrototypeAST>("__anon_expr",
+    auto Proto = std::make_unique<PrototypeAST>("__anon_expr",
                                                  std::vector<std::string>());
-    return llvm::make_unique<FunctionAST>(std::move(Proto), std::move(E));
+    return std::make_unique<FunctionAST>(std::move(Proto), std::move(E));
   }
   return nullptr;
 }
@@ -409,13 +409,14 @@ static std::unique_ptr<PrototypeAST> ParseExtern() {
 // Code Generation
 //===----------------------------------------------------------------------===//
 
-static LLVMContext TheContext;
-static IRBuilder<> Builder(TheContext);
+static std::unique_ptr<LLVMContext> TheContext;
 static std::unique_ptr<Module> TheModule;
+static std::unique_ptr<IRBuilder<>> Builder;
 static std::map<std::string, Value *> NamedValues;
 static std::unique_ptr<legacy::FunctionPassManager> TheFPM;
 static std::unique_ptr<KaleidoscopeJIT> TheJIT;
 static std::map<std::string, std::unique_ptr<PrototypeAST>> FunctionProtos;
+static ExitOnError ExitOnErr;
 
 Value *LogErrorV(const char *Str) {
   LogError(Str);
@@ -438,7 +439,7 @@ Function *getFunction(std::string Name) {
 }
 
 Value *NumberExprAST::codegen() {
-  return ConstantFP::get(TheContext, APFloat(Val));
+  return ConstantFP::get(*TheContext, APFloat(Val));
 }
 
 Value *VariableExprAST::codegen() {
@@ -457,15 +458,15 @@ Value *BinaryExprAST::codegen() {
 
   switch (Op) {
   case '+':
-    return Builder.CreateFAdd(L, R, "addtmp");
+    return Builder->CreateFAdd(L, R, "addtmp");
   case '-':
-    return Builder.CreateFSub(L, R, "subtmp");
+    return Builder->CreateFSub(L, R, "subtmp");
   case '*':
-    return Builder.CreateFMul(L, R, "multmp");
+    return Builder->CreateFMul(L, R, "multmp");
   case '<':
-    L = Builder.CreateFCmpULT(L, R, "cmptmp");
+    L = Builder->CreateFCmpULT(L, R, "cmptmp");
     // Convert bool 0/1 to double 0.0 or 1.0
-    return Builder.CreateUIToFP(L, Type::getDoubleTy(TheContext), "booltmp");
+    return Builder->CreateUIToFP(L, Type::getDoubleTy(*TheContext), "booltmp");
   default:
     return LogErrorV("invalid binary operator");
   }
@@ -488,14 +489,14 @@ Value *CallExprAST::codegen() {
       return nullptr;
   }
 
-  return Builder.CreateCall(CalleeF, ArgsV, "calltmp");
+  return Builder->CreateCall(CalleeF, ArgsV, "calltmp");
 }
 
 Function *PrototypeAST::codegen() {
   // Make the function type:  double(double,double) etc.
-  std::vector<Type *> Doubles(Args.size(), Type::getDoubleTy(TheContext));
+  std::vector<Type *> Doubles(Args.size(), Type::getDoubleTy(*TheContext));
   FunctionType *FT =
-      FunctionType::get(Type::getDoubleTy(TheContext), Doubles, false);
+      FunctionType::get(Type::getDoubleTy(*TheContext), Doubles, false);
 
   Function *F =
       Function::Create(FT, Function::ExternalLinkage, Name, TheModule.get());
@@ -518,17 +519,17 @@ Function *FunctionAST::codegen() {
     return nullptr;
 
   // Create a new basic block to start insertion into.
-  BasicBlock *BB = BasicBlock::Create(TheContext, "entry", TheFunction);
-  Builder.SetInsertPoint(BB);
+  BasicBlock *BB = BasicBlock::Create(*TheContext, "entry", TheFunction);
+  Builder->SetInsertPoint(BB);
 
   // Record the function arguments in the NamedValues map.
   NamedValues.clear();
   for (auto &Arg : TheFunction->args())
-    NamedValues[Arg.getName()] = &Arg;
+    NamedValues[std::string(Arg.getName())] = &Arg;
 
   if (Value *RetVal = Body->codegen()) {
     // Finish off the function.
-    Builder.CreateRet(RetVal);
+    Builder->CreateRet(RetVal);
 
     // Validate the generated code, checking for consistency.
     verifyFunction(*TheFunction);
@@ -549,12 +550,16 @@ Function *FunctionAST::codegen() {
 //===----------------------------------------------------------------------===//
 
 static void InitializeModuleAndPassManager() {
-  // Open a new module.
-  TheModule = llvm::make_unique<Module>("my cool jit", TheContext);
-  TheModule->setDataLayout(TheJIT->getTargetMachine().createDataLayout());
+  // Open a new context and module.
+  TheContext = std::make_unique<LLVMContext>();
+  TheModule = std::make_unique<Module>("my cool jit", *TheContext);
+  TheModule->setDataLayout(TheJIT->getDataLayout());
+
+  // Create a new builder for the module.
+  Builder = std::make_unique<IRBuilder<>>(*TheContext);
 
   // Create a new pass manager attached to it.
-  TheFPM = llvm::make_unique<legacy::FunctionPassManager>(TheModule.get());
+  TheFPM = std::make_unique<legacy::FunctionPassManager>(TheModule.get());
 
   // Do simple "peephole" optimizations and bit-twiddling optzns.
   TheFPM->add(createInstructionCombiningPass());
@@ -574,7 +579,8 @@ static void HandleDefinition() {
       fprintf(stderr, "Read function definition:");
       FnIR->print(errs());
       fprintf(stderr, "\n");
-      TheJIT->addModule(std::move(TheModule));
+      ExitOnErr(TheJIT->addModule(
+          ThreadSafeModule(std::move(TheModule), std::move(TheContext))));
       InitializeModuleAndPassManager();
     }
   } else {
@@ -601,22 +607,24 @@ static void HandleTopLevelExpression() {
   // Evaluate a top-level expression into an anonymous function.
   if (auto FnAST = ParseTopLevelExpr()) {
     if (FnAST->codegen()) {
-      // JIT the module containing the anonymous expression, keeping a handle so
-      // we can free it later.
-      auto H = TheJIT->addModule(std::move(TheModule));
+      // Create a ResourceTracker to track JIT'd memory allocated to our
+      // anonymous expression -- that way we can free it after executing.
+      auto RT = TheJIT->getMainJITDylib().createResourceTracker();
+
+      auto TSM = ThreadSafeModule(std::move(TheModule), std::move(TheContext));
+      ExitOnErr(TheJIT->addModule(std::move(TSM), RT));
       InitializeModuleAndPassManager();
 
       // Search the JIT for the __anon_expr symbol.
-      auto ExprSymbol = TheJIT->findSymbol("__anon_expr");
-      assert(ExprSymbol && "Function not found");
+      auto ExprSymbol = ExitOnErr(TheJIT->lookup("__anon_expr"));
 
       // Get the symbol's address and cast it to the right type (takes no
       // arguments, returns a double) so we can call it as a native function.
-      double (*FP)() = (double (*)())(intptr_t)cantFail(ExprSymbol.getAddress());
+      double (*FP)() = (double (*)())(intptr_t)ExprSymbol.getAddress();
       fprintf(stderr, "Evaluated to %f\n", FP());
 
       // Delete the anonymous expression module from the JIT.
-      TheJIT->removeModule(H);
+      ExitOnErr(RT->remove());
     }
   } else {
     // Skip token for error recovery.
@@ -689,7 +697,7 @@ int main() {
   fprintf(stderr, "ready> ");
   getNextToken();
 
-  TheJIT = llvm::make_unique<KaleidoscopeJIT>();
+  TheJIT = ExitOnErr(KaleidoscopeJIT::Create());
 
   InitializeModuleAndPassManager();
 

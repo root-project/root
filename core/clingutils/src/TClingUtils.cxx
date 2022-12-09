@@ -1380,7 +1380,7 @@ void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::Nam
    cl.getNameForDiagnostic(stream,policy,true);
    stream.flush(); // flush to string.
 
-   if ( qual_name ==  "(anonymous " ) {
+   if ( qual_name ==  "(anonymous " || qual_name ==  "(unnamed" ) {
       size_t pos = qual_name.find(':');
       qual_name.erase(0,pos+2);
    }
@@ -1622,7 +1622,7 @@ int ROOT::TMetaUtils::extractAttrString(clang::Attr* attribute, std::string& att
       //TMetaUtils::Error(0,"Could not cast Attribute to AnnotatedAttribute\n");
       return 1;
    }
-   attrString = annAttr->getAnnotation();
+   attrString = annAttr->getAnnotation().str();
    return 0;
 }
 
@@ -1669,7 +1669,7 @@ bool ROOT::TMetaUtils::ExtractAttrPropertyFromName(const clang::Decl& decl,
       std::pair<llvm::StringRef,llvm::StringRef> split = attribute.split(propNames::separator.c_str());
       if (split.first != propName.c_str()) continue;
       else {
-         propValue = split.second;
+         propValue = split.second.str();
          return true;
       }
    }
@@ -2590,14 +2590,12 @@ ROOT::TMetaUtils::GetTrivialIntegralReturnValue(const clang::FunctionDecl *funcC
    // ClassDef argument. It's usually just be an integer literal but it could
    // also be an enum or a variable template for all we know.
    // Go through ICE to be more general.
-   llvm::APSInt RetRes;
-   if (!RetExpr->isIntegerConstantExpr(RetRes, funcCV->getASTContext()))
-      return res_t{false, -1};
-   if (RetRes.isSigned()) {
-      return res_t{true, (Version_t)RetRes.getSExtValue()};
+   if (auto RetRes = RetExpr->getIntegerConstantExpr(funcCV->getASTContext())) {
+      if (RetRes->isSigned())
+         return res_t{true, (Version_t)RetRes->getSExtValue()};
+      return res_t{true, (Version_t)RetRes->getZExtValue()};
    }
-   // else
-   return res_t{true, (Version_t)RetRes.getZExtValue()};
+   return res_t{false, -1};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3347,7 +3345,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       // use HeaderSearch on the basename, to make sure it takes a header from
       // the include path (e.g. not from /usr/include/bits/)
       assert(headerFE && "Couldn't find FileEntry from FID!");
-      const FileEntry *FEhdr
+      auto FEhdr
          = HdrSearch.LookupFile(llvm::sys::path::filename(headerFE->getName()),
                                 SourceLocation(),
                                 true /*isAngled*/, 0/*FromDir*/, foundDir,
@@ -3392,7 +3390,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
    // points to the same file as the long version. If such a short version
    // exists it will be returned. If it doesn't the long version is returned.
    bool isAbsolute = llvm::sys::path::is_absolute(headerFileName);
-   const FileEntry* FELong = 0;
+   llvm::Optional<clang::FileEntryRef> FELong;
    // Find the longest available match.
    for (llvm::sys::path::const_iterator
            IDir = llvm::sys::path::begin(headerFileName),
@@ -3441,7 +3439,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
                                0/*Searchpath*/, 0/*RelPath*/,
                                0/*SuggestedModule*/, 0/*RequestingModule*/,
                                0/*IsMapped*/, nullptr /*IsFrameworkFound*/) == FELong) {
-         return trailingPart;
+         return trailingPart.str();
       }
    }
 
@@ -3675,7 +3673,8 @@ static bool areEqualValues(const clang::TemplateArgument& tArg,
    llvm::APSInt defaultValueAPSInt(64, false);
    if (Expr* defArgExpr = nttpd.getDefaultArgument()) {
       const ASTContext& astCtxt = nttpdPtr->getASTContext();
-      defArgExpr->isIntegerConstantExpr(defaultValueAPSInt, astCtxt);
+      if (auto Value = defArgExpr->getIntegerConstantExpr(astCtxt))
+         defaultValueAPSInt = *Value;
    }
 
    const int value = tArg.getAsIntegral().getLimitedValue();
@@ -4609,8 +4608,9 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
          QualType newQT= ReSubstTemplateArg(arr->getElementType(),instance);
 
          if (newQT == arr->getElementType()) return QT;
-         QT = Ctxt.getConstantArrayType (newQT,
+         QT = Ctxt.getConstantArrayType(newQT,
                                         arr->getSize(),
+                                        arr->getSizeExpr(),
                                         arr->getSizeModifier(),
                                         arr->getIndexTypeCVRQualifiers());
 
@@ -4723,7 +4723,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       } else {
          std::string astDump;
          llvm::raw_string_ostream ostream(astDump);
-         instance->dump(ostream);
+         instance->dump(ostream, Ctxt);
          ostream.flush();
          ROOT::TMetaUtils::Warning("ReSubstTemplateArg","Unexpected type of declaration context for template parameter: %s.\n\tThe responsible class is:\n\t%s\n",
                                    replacedDeclCtxt->getDeclKindName(), astDump.c_str());

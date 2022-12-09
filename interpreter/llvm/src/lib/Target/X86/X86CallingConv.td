@@ -336,6 +336,9 @@ def RetCC_X86_64_C : CallingConv<[
   // MMX vector types are always returned in XMM0.
   CCIfType<[x86mmx], CCAssignToReg<[XMM0, XMM1]>>,
 
+  // Pointers are always returned in full 64-bit registers.
+  CCIfPtr<CCCustom<"CC_X86_64_Pointer">>,
+
   CCIfSwiftError<CCIfType<[i64], CCAssignToReg<[R12]>>>,
 
   CCDelegateTo<RetCC_X86Common>
@@ -345,6 +348,10 @@ def RetCC_X86_64_C : CallingConv<[
 def RetCC_X86_Win64_C : CallingConv<[
   // The X86-Win64 calling convention always returns __m64 values in RAX.
   CCIfType<[x86mmx], CCBitConvertToType<i64>>,
+
+  // GCC returns FP values in RAX on Win64.
+  CCIfType<[f32], CCIfNotSubtarget<"hasSSE1()", CCBitConvertToType<i32>>>,
+  CCIfType<[f64], CCIfNotSubtarget<"hasSSE1()", CCBitConvertToType<i64>>>,
 
   // Otherwise, everything is the same as 'normal' X86-64 C CC.
   CCDelegateTo<RetCC_X86_64_C>
@@ -433,6 +440,8 @@ defm X86_SysV64_RegCall :
 def RetCC_X86_32 : CallingConv<[
   // If FastCC, use RetCC_X86_32_Fast.
   CCIfCC<"CallingConv::Fast", CCDelegateTo<RetCC_X86_32_Fast>>,
+  CCIfCC<"CallingConv::Tail", CCDelegateTo<RetCC_X86_32_Fast>>,
+  // CFGuard_Check never returns a value so does not need a RetCC.
   // If HiPE, use RetCC_X86_32_HiPE.
   CCIfCC<"CallingConv::HiPE", CCDelegateTo<RetCC_X86_32_HiPE>>,
   CCIfCC<"CallingConv::X86_VectorCall", CCDelegateTo<RetCC_X86_32_VectorCall>>,
@@ -453,6 +462,7 @@ def RetCC_X86_64 : CallingConv<[
 
   // Handle Swift calls.
   CCIfCC<"CallingConv::Swift", CCDelegateTo<RetCC_X86_64_Swift>>,
+  CCIfCC<"CallingConv::SwiftTail", CCDelegateTo<RetCC_X86_64_Swift>>,
 
   // Handle explicit CC selection
   CCIfCC<"CallingConv::Win64", CCDelegateTo<RetCC_X86_Win64_C>>,
@@ -508,9 +518,18 @@ def CC_X86_64_C : CallingConv<[
   // A SwiftError is passed in R12.
   CCIfSwiftError<CCIfType<[i64], CCAssignToReg<[R12]>>>,
 
-  // For Swift Calling Convention, pass sret in %rax.
+  // Pass SwiftAsync in an otherwise callee saved register so that calls to
+  // normal functions don't need to save it somewhere.
+  CCIfSwiftAsync<CCIfType<[i64], CCAssignToReg<[R14]>>>,
+
+  // For Swift Calling Conventions, pass sret in %rax.
   CCIfCC<"CallingConv::Swift",
     CCIfSRet<CCIfType<[i64], CCAssignToReg<[RAX]>>>>,
+  CCIfCC<"CallingConv::SwiftTail",
+    CCIfSRet<CCIfType<[i64], CCAssignToReg<[RAX]>>>>,
+
+  // Pointers are always passed in full 64-bit registers.
+  CCIfPtr<CCCustom<"CC_X86_64_Pointer">>,
 
   // The first 6 integer arguments are passed in integer registers.
   CCIfType<[i32], CCAssignToReg<[EDI, ESI, EDX, ECX, R8D, R9D]>>,
@@ -605,9 +624,18 @@ def CC_X86_Win64_C : CallingConv<[
   // A SwiftError is passed in R12.
   CCIfSwiftError<CCIfType<[i64], CCAssignToReg<[R12]>>>,
 
+  // Pass SwiftSelf in a callee saved register.
+  CCIfSwiftSelf<CCIfType<[i64], CCAssignToReg<[R13]>>>,
+
+  // Pass SwiftAsync in an otherwise callee saved register so that calls to
+  // normal functions don't need to save it somewhere.
+  CCIfSwiftAsync<CCIfType<[i64], CCAssignToReg<[R14]>>>,
+
+  // The 'CFGuardTarget' parameter, if any, is passed in RAX.
+  CCIfCFGuardTarget<CCAssignToReg<[RAX]>>,
+
   // 128 bit vectors are passed by pointer
   CCIfType<[v16i8, v8i16, v4i32, v2i64, v4f32, v2f64], CCPassIndirect<i64>>,
-
 
   // 256 bit vectors are passed by pointer
   CCIfType<[v32i8, v16i16, v8i32, v4i64, v8f32, v4f64], CCPassIndirect<i64>>,
@@ -620,6 +648,16 @@ def CC_X86_Win64_C : CallingConv<[
 
   // The first 4 MMX vector arguments are passed in GPRs.
   CCIfType<[x86mmx], CCBitConvertToType<i64>>,
+
+  // If SSE was disabled, pass FP values smaller than 64-bits as integers in
+  // GPRs or on the stack.
+  CCIfType<[f32], CCIfNotSubtarget<"hasSSE1()", CCBitConvertToType<i32>>>,
+  CCIfType<[f64], CCIfNotSubtarget<"hasSSE1()", CCBitConvertToType<i64>>>,
+
+  // The first 4 FP/Vector arguments are passed in XMM registers.
+  CCIfType<[f32, f64],
+           CCAssignToRegWithShadow<[XMM0, XMM1, XMM2, XMM3],
+                                   [RCX , RDX , R8  , R9  ]>>,
 
   // The first 4 integer arguments are passed in integer registers.
   CCIfType<[i8 ], CCAssignToRegWithShadow<[CL  , DL  , R8B , R9B ],
@@ -637,11 +675,6 @@ def CC_X86_Win64_C : CallingConv<[
 
   CCIfType<[i64], CCAssignToRegWithShadow<[RCX , RDX , R8  , R9  ],
                                           [XMM0, XMM1, XMM2, XMM3]>>,
-
-  // The first 4 FP/Vector arguments are passed in XMM registers.
-  CCIfType<[f32, f64, v16i8, v8i16, v4i32, v2i64, v4f32, v2f64],
-           CCAssignToRegWithShadow<[XMM0, XMM1, XMM2, XMM3],
-                                   [RCX , RDX , R8  , R9  ]>>,
 
   // Integer/FP values get stored in stack slots that are 8 bytes in size and
   // 8-byte aligned if there are no more registers to hold them.
@@ -776,8 +809,9 @@ def CC_X86_32_Vector_Darwin : CallingConv<[
 /// CC_X86_32_Common - In all X86-32 calling conventions, extra integers and FP
 /// values are spilled on the stack.
 def CC_X86_32_Common : CallingConv<[
-  // Handles byval parameters.
+  // Handles byval/preallocated parameters.
   CCIfByVal<CCPassByVal<4, 4>>,
+  CCIfPreallocated<CCPassByVal<4, 4>>,
 
   // The first 3 float or double arguments, if marked 'inreg' and if the call
   // is not a vararg call and if SSE2 is available, are passed in SSE registers.
@@ -827,6 +861,10 @@ def CC_X86_32_C : CallingConv<[
 
   // The 'nest' parameter, if any, is passed in ECX.
   CCIfNest<CCAssignToReg<[ECX]>>,
+
+  // On swifttailcc pass swiftself in ECX.
+  CCIfCC<"CallingConv::SwiftTail",
+         CCIfSwiftSelf<CCIfType<[i32], CCAssignToReg<[ECX]>>>>,
 
   // The first 3 integer arguments, if marked 'inreg' and if the call is not
   // a vararg call, are passed in integer registers.
@@ -935,6 +973,12 @@ def CC_X86_32_FastCC : CallingConv<[
   CCDelegateTo<CC_X86_32_Common>
 ]>;
 
+def CC_X86_Win32_CFGuard_Check : CallingConv<[
+  // The CFGuard check call takes exactly one integer argument
+  // (i.e. the target function address), which is passed in ECX.
+  CCIfType<[i32], CCAssignToReg<[ECX]>>
+]>;
+
 def CC_X86_32_GHC : CallingConv<[
   // Promote i8/i16 arguments to i32.
   CCIfType<[i8, i16], CCPromoteToType<i32>>,
@@ -999,7 +1043,9 @@ def CC_X86_32 : CallingConv<[
   CCIfCC<"CallingConv::X86_FastCall", CCDelegateTo<CC_X86_32_FastCall>>,
   CCIfCC<"CallingConv::X86_VectorCall", CCDelegateTo<CC_X86_Win32_VectorCall>>,
   CCIfCC<"CallingConv::X86_ThisCall", CCDelegateTo<CC_X86_32_ThisCall>>,
+  CCIfCC<"CallingConv::CFGuard_Check", CCDelegateTo<CC_X86_Win32_CFGuard_Check>>,
   CCIfCC<"CallingConv::Fast", CCDelegateTo<CC_X86_32_FastCC>>,
+  CCIfCC<"CallingConv::Tail", CCDelegateTo<CC_X86_32_FastCC>>,
   CCIfCC<"CallingConv::GHC", CCDelegateTo<CC_X86_32_GHC>>,
   CCIfCC<"CallingConv::HiPE", CCDelegateTo<CC_X86_32_HiPE>>,
   CCIfCC<"CallingConv::X86_RegCall", CCDelegateTo<CC_X86_32_RegCall>>,
@@ -1049,6 +1095,7 @@ def CSR_32 : CalleeSavedRegs<(add ESI, EDI, EBX, EBP)>;
 def CSR_64 : CalleeSavedRegs<(add RBX, R12, R13, R14, R15, RBP)>;
 
 def CSR_64_SwiftError : CalleeSavedRegs<(sub CSR_64, R12)>;
+def CSR_64_SwiftTail : CalleeSavedRegs<(sub CSR_64, R13, R14)>;
 
 def CSR_32EHRet : CalleeSavedRegs<(add EAX, EDX, CSR_32)>;
 def CSR_64EHRet : CalleeSavedRegs<(add RAX, RDX, CSR_64)>;
@@ -1059,6 +1106,7 @@ def CSR_Win64 : CalleeSavedRegs<(add CSR_Win64_NoSSE,
                                      (sequence "XMM%u", 6, 15))>;
 
 def CSR_Win64_SwiftError : CalleeSavedRegs<(sub CSR_Win64, R12)>;
+def CSR_Win64_SwiftTail : CalleeSavedRegs<(sub CSR_Win64, R13, R14)>;
 
 // The function used by Darwin to obtain the address of a thread-local variable
 // uses rdi to pass a single parameter and rax for the return value. All other
@@ -1074,7 +1122,7 @@ def CSR_64_CXX_TLS_Darwin_ViaCopy : CalleeSavedRegs<(sub CSR_64_TLS_Darwin, RBP)
 
 // All GPRs - except r11
 def CSR_64_RT_MostRegs : CalleeSavedRegs<(add CSR_64, RAX, RCX, RDX, RSI, RDI,
-                                              R8, R9, R10, RSP)>;
+                                              R8, R9, R10)>;
 
 // All registers - except r11
 def CSR_64_RT_AllRegs     : CalleeSavedRegs<(add CSR_64_RT_MostRegs,
@@ -1124,7 +1172,7 @@ def CSR_64_Intel_OCL_BI       : CalleeSavedRegs<(add CSR_64,
 def CSR_64_Intel_OCL_BI_AVX    : CalleeSavedRegs<(add CSR_64,
                                                   (sequence "YMM%u", 8, 15))>;
 
-def CSR_64_Intel_OCL_BI_AVX512 : CalleeSavedRegs<(add RBX, RDI, RSI, R14, R15,
+def CSR_64_Intel_OCL_BI_AVX512 : CalleeSavedRegs<(add RBX, RSI, R14, R15,
                                                   (sequence "ZMM%u", 16, 31),
                                                   K4, K5, K6, K7)>;
 
@@ -1132,15 +1180,16 @@ def CSR_64_Intel_OCL_BI_AVX512 : CalleeSavedRegs<(add RBX, RDI, RSI, R14, R15,
 def CSR_64_HHVM : CalleeSavedRegs<(add R12)>;
 
 // Register calling convention preserves few GPR and XMM8-15
-def CSR_32_RegCall_NoSSE : CalleeSavedRegs<(add ESI, EDI, EBX, EBP, ESP)>;
+def CSR_32_RegCall_NoSSE : CalleeSavedRegs<(add ESI, EDI, EBX, EBP)>;
 def CSR_32_RegCall       : CalleeSavedRegs<(add CSR_32_RegCall_NoSSE,
-                                           (sequence "XMM%u", 4, 7))>;                                            
-def CSR_Win64_RegCall_NoSSE : CalleeSavedRegs<(add RBX, RBP, RSP,
+                                           (sequence "XMM%u", 4, 7))>;
+def CSR_Win32_CFGuard_Check_NoSSE : CalleeSavedRegs<(add CSR_32_RegCall_NoSSE, ECX)>;
+def CSR_Win32_CFGuard_Check       : CalleeSavedRegs<(add CSR_32_RegCall, ECX)>;
+def CSR_Win64_RegCall_NoSSE : CalleeSavedRegs<(add RBX, RBP,
                                               (sequence "R%u", 10, 15))>;
 def CSR_Win64_RegCall       : CalleeSavedRegs<(add CSR_Win64_RegCall_NoSSE,                                  
                                               (sequence "XMM%u", 8, 15))>;
-def CSR_SysV64_RegCall_NoSSE : CalleeSavedRegs<(add RBX, RBP, RSP,
+def CSR_SysV64_RegCall_NoSSE : CalleeSavedRegs<(add RBX, RBP,
                                                (sequence "R%u", 12, 15))>;
 def CSR_SysV64_RegCall       : CalleeSavedRegs<(add CSR_SysV64_RegCall_NoSSE,               
                                                (sequence "XMM%u", 8, 15))>;
-                                               

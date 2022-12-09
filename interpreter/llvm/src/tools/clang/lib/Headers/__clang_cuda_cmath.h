@@ -12,7 +12,9 @@
 #error "This file is for CUDA compilation only."
 #endif
 
+#ifndef __OPENMP_NVPTX__
 #include <limits>
+#endif
 
 // CUDA lets us use various std math functions on the device side.  This file
 // works in concert with __clang_cuda_math_forward_declares.h to make this work.
@@ -30,32 +32,16 @@
 // implementation.  Declaring in the global namespace and pulling into namespace
 // std covers all of the known knowns.
 
-#ifdef _OPENMP
-#define __DEVICE__ static __attribute__((always_inline))
+#ifdef __OPENMP_NVPTX__
+#define __DEVICE__ static constexpr __attribute__((always_inline, nothrow))
 #else
 #define __DEVICE__ static __device__ __inline__ __attribute__((always_inline))
 #endif
 
-// For C++ 17 we need to include noexcept attribute to be compatible
-// with the header-defined version. This may be removed once
-// variant is supported.
-#if defined(_OPENMP) && defined(__cplusplus) && __cplusplus >= 201703L
-#define __NOEXCEPT noexcept
-#else
-#define __NOEXCEPT
-#endif
-
-#if !(defined(_OPENMP) && defined(__cplusplus))
 __DEVICE__ long long abs(long long __n) { return ::llabs(__n); }
 __DEVICE__ long abs(long __n) { return ::labs(__n); }
 __DEVICE__ float abs(float __x) { return ::fabsf(__x); }
 __DEVICE__ double abs(double __x) { return ::fabs(__x); }
-#endif
-// TODO: remove once variat is supported.
-#if defined(_OPENMP) && defined(__cplusplus)
-__DEVICE__ const float abs(const float __x) { return ::fabsf((float)__x); }
-__DEVICE__ const double abs(const double __x) { return ::fabs((double)__x); }
-#endif
 __DEVICE__ float acos(float __x) { return ::acosf(__x); }
 __DEVICE__ float asin(float __x) { return ::asinf(__x); }
 __DEVICE__ float atan(float __x) { return ::atanf(__x); }
@@ -64,11 +50,9 @@ __DEVICE__ float ceil(float __x) { return ::ceilf(__x); }
 __DEVICE__ float cos(float __x) { return ::cosf(__x); }
 __DEVICE__ float cosh(float __x) { return ::coshf(__x); }
 __DEVICE__ float exp(float __x) { return ::expf(__x); }
-__DEVICE__ float fabs(float __x) __NOEXCEPT { return ::fabsf(__x); }
+__DEVICE__ float fabs(float __x) { return ::fabsf(__x); }
 __DEVICE__ float floor(float __x) { return ::floorf(__x); }
 __DEVICE__ float fmod(float __x, float __y) { return ::fmodf(__x, __y); }
-// TODO: remove when variant is supported
-#ifndef _OPENMP
 __DEVICE__ int fpclassify(float __x) {
   return __builtin_fpclassify(FP_NAN, FP_INFINITE, FP_NORMAL, FP_SUBNORMAL,
                               FP_ZERO, __x);
@@ -77,14 +61,43 @@ __DEVICE__ int fpclassify(double __x) {
   return __builtin_fpclassify(FP_NAN, FP_INFINITE, FP_NORMAL, FP_SUBNORMAL,
                               FP_ZERO, __x);
 }
-#endif
 __DEVICE__ float frexp(float __arg, int *__exp) {
   return ::frexpf(__arg, __exp);
 }
 
 // For inscrutable reasons, the CUDA headers define these functions for us on
 // Windows.
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) || defined(__OPENMP_NVPTX__)
+
+// For OpenMP we work around some old system headers that have non-conforming
+// `isinf(float)` and `isnan(float)` implementations that return an `int`. We do
+// this by providing two versions of these functions, differing only in the
+// return type. To avoid conflicting definitions we disable implicit base
+// function generation. That means we will end up with two specializations, one
+// per type, but only one has a base function defined by the system header.
+#if defined(__OPENMP_NVPTX__)
+#pragma omp begin declare variant match(                                       \
+    implementation = {extension(disable_implicit_base)})
+
+// FIXME: We lack an extension to customize the mangling of the variants, e.g.,
+//        add a suffix. This means we would clash with the names of the variants
+//        (note that we do not create implicit base functions here). To avoid
+//        this clash we add a new trait to some of them that is always true
+//        (this is LLVM after all ;)). It will only influence the mangled name
+//        of the variants inside the inner region and avoid the clash.
+#pragma omp begin declare variant match(implementation = {vendor(llvm)})
+
+__DEVICE__ int isinf(float __x) { return ::__isinff(__x); }
+__DEVICE__ int isinf(double __x) { return ::__isinf(__x); }
+__DEVICE__ int isfinite(float __x) { return ::__finitef(__x); }
+__DEVICE__ int isfinite(double __x) { return ::__isfinited(__x); }
+__DEVICE__ int isnan(float __x) { return ::__isnanf(__x); }
+__DEVICE__ int isnan(double __x) { return ::__isnan(__x); }
+
+#pragma omp end declare variant
+
+#endif
+
 __DEVICE__ bool isinf(float __x) { return ::__isinff(__x); }
 __DEVICE__ bool isinf(double __x) { return ::__isinf(__x); }
 __DEVICE__ bool isfinite(float __x) { return ::__finitef(__x); }
@@ -94,6 +107,11 @@ __DEVICE__ bool isfinite(float __x) { return ::__finitef(__x); }
 __DEVICE__ bool isfinite(double __x) { return ::__isfinited(__x); }
 __DEVICE__ bool isnan(float __x) { return ::__isnanf(__x); }
 __DEVICE__ bool isnan(double __x) { return ::__isnan(__x); }
+
+#if defined(__OPENMP_NVPTX__)
+#pragma omp end declare variant
+#endif
+
 #endif
 
 __DEVICE__ bool isgreater(float __x, float __y) {
@@ -157,9 +175,20 @@ __DEVICE__ float sqrt(float __x) { return ::sqrtf(__x); }
 __DEVICE__ float tan(float __x) { return ::tanf(__x); }
 __DEVICE__ float tanh(float __x) { return ::tanhf(__x); }
 
+// There was a redefinition error for this this overload in CUDA mode.
+// We restrict it to OpenMP mode for now, that is where it is actually needed
+// anyway.
+#ifdef __OPENMP_NVPTX__
+__DEVICE__ float remquo(float __n, float __d, int *__q) {
+  return ::remquof(__n, __d, __q);
+}
+#endif
+
 // Notably missing above is nexttoward.  We omit it because
 // libdevice doesn't provide an implementation, and we don't want to be in the
 // business of implementing tricky libm functions in this header.
+
+#ifndef __OPENMP_NVPTX__
 
 // Now we've defined everything we promised we'd define in
 // __clang_cuda_math_forward_declares.h.  We need to do two additional things to
@@ -457,10 +486,7 @@ using ::remainderf;
 using ::remquof;
 using ::rintf;
 using ::roundf;
-// TODO: remove once variant is supported
-#ifndef _OPENMP
 using ::scalblnf;
-#endif
 using ::scalbnf;
 using ::sinf;
 using ::sinhf;
@@ -479,7 +505,8 @@ _GLIBCXX_END_NAMESPACE_VERSION
 } // namespace std
 #endif
 
-#undef __NOEXCEPT
+#endif // __OPENMP_NVPTX__
+
 #undef __DEVICE__
 
 #endif

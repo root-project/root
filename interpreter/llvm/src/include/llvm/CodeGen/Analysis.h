@@ -18,7 +18,6 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/CodeGen/ISDOpcodes.h"
-#include "llvm/IR/CallSite.h"
 #include "llvm/IR/InlineAsm.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/Support/CodeGen.h"
@@ -31,9 +30,6 @@ class MachineFunction;
 class TargetLoweringBase;
 class TargetLowering;
 class TargetMachine;
-class SDNode;
-class SDValue;
-class SelectionDAG;
 struct EVT;
 
 /// Compute the linearized index of a member in a nested
@@ -96,11 +92,6 @@ void computeValueLLTs(const DataLayout &DL, Type &Ty,
 /// ExtractTypeInfo - Returns the type info, possibly bitcast, encoded in V.
 GlobalValue *ExtractTypeInfo(Value *V);
 
-/// hasInlineAsmMemConstraint - Return true if the inline asm instruction being
-/// processed uses a memory 'm' constraint.
-bool hasInlineAsmMemConstraint(InlineAsm::ConstraintInfoVector &CInfos,
-                               const TargetLowering &TLI);
-
 /// getFCmpCondCode - Return the ISD condition code corresponding to
 /// the given LLVM IR floating-point condition code.  This includes
 /// consideration of global floating-point math flags.
@@ -122,7 +113,7 @@ ISD::CondCode getICmpCondCode(ICmpInst::Predicate Pred);
 /// between it and the return.
 ///
 /// This function only tests target-independent requirements.
-bool isInTailCallPosition(ImmutableCallSite CS, const TargetMachine &TM);
+bool isInTailCallPosition(const CallBase &Call, const TargetMachine &TM);
 
 /// Test if given that the input instruction is in the tail call position, if
 /// there is an attribute mismatch between the caller and the callee that will

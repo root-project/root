@@ -73,7 +73,7 @@ public:
   }
 
   void copyPhysReg(MachineBasicBlock &MBB, MachineBasicBlock::iterator MI,
-                   const DebugLoc &DL, unsigned DestReg, unsigned SrcReg,
+                   const DebugLoc &DL, MCRegister DestReg, MCRegister SrcReg,
                    bool KillSrc) const override;
   bool isLegalToSplitMBBAt(MachineBasicBlock &MBB,
                            MachineBasicBlock::iterator MBBI) const override;
@@ -194,8 +194,8 @@ public:
                            unsigned NumFCycles, unsigned ExtraFCycles,
                            BranchProbability Probability) const override;
 
-  bool DefinesPredicate(MachineInstr &MI,
-                        std::vector<MachineOperand> &Pred) const override;
+  bool ClobbersPredicate(MachineInstr &MI, std::vector<MachineOperand> &Pred,
+                         bool SkipDead) const override;
 
   bool isProfitableToUnpredicate(MachineBasicBlock &TMBB,
                                  MachineBasicBlock &FMBB) const override;

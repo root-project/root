@@ -97,9 +97,10 @@ void ARCInstPrinter::printRegName(raw_ostream &OS, unsigned RegNo) const {
   OS << StringRef(getRegisterName(RegNo)).lower();
 }
 
-void ARCInstPrinter::printInst(const MCInst *MI, raw_ostream &O,
-                               StringRef Annot, const MCSubtargetInfo &STI) {
-  printInstruction(MI, O);
+void ARCInstPrinter::printInst(const MCInst *MI, uint64_t Address,
+                               StringRef Annot, const MCSubtargetInfo &STI,
+                               raw_ostream &O) {
+  printInstruction(MI, Address, O);
   printAnnotation(O, Annot);
 }
 
@@ -176,4 +177,31 @@ void ARCInstPrinter::printBRCCPredicateOperand(const MCInst *MI, unsigned OpNum,
   const MCOperand &Op = MI->getOperand(OpNum);
   assert(Op.isImm() && "Predicate operand is immediate.");
   O << ARCBRCondCodeToString((ARCCC::BRCondCode)Op.getImm());
+}
+
+void ARCInstPrinter::printCCOperand(const MCInst *MI, int OpNum,
+                                    raw_ostream &O) {
+  O << ARCCondCodeToString((ARCCC::CondCode)MI->getOperand(OpNum).getImm());
+}
+
+void ARCInstPrinter::printU6ShiftedBy(unsigned ShiftBy, const MCInst *MI,
+                                      int OpNum, raw_ostream &O) {
+  const MCOperand &MO = MI->getOperand(OpNum);
+  if (MO.isImm()) {
+    unsigned Value = MO.getImm();
+    unsigned Value2 = Value >> ShiftBy;
+    if (Value2 > 0x3F || (Value2 << ShiftBy != Value)) {
+      errs() << "!!! Instruction has out-of-range U6 immediate operand:\n"
+             << "    Opcode is " << MI->getOpcode() << "; operand value is "
+             << Value;
+      if (ShiftBy)
+        errs() << " scaled by " << (1 << ShiftBy) << "\n";
+      assert(false && "instruction has wrong format");
+    }
+  }
+  printOperand(MI, OpNum, O);
+}
+
+void ARCInstPrinter::printU6(const MCInst *MI, int OpNum, raw_ostream &O) {
+  printU6ShiftedBy(0, MI, OpNum, O);
 }

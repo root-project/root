@@ -12,6 +12,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "Views/TimelineView.h"
+#include <numeric>
 
 namespace llvm {
 namespace mca {
@@ -19,10 +20,10 @@ namespace mca {
 TimelineView::TimelineView(const MCSubtargetInfo &sti, MCInstPrinter &Printer,
                            llvm::ArrayRef<llvm::MCInst> S, unsigned Iterations,
                            unsigned Cycles)
-    : STI(sti), MCIP(Printer), Source(S), CurrentCycle(0),
-      MaxCycle(Cycles == 0 ? 80 : Cycles), LastCycle(0), WaitTime(S.size()),
-      UsedBuffer(S.size()) {
-  unsigned NumInstructions = Source.size();
+    : InstructionView(sti, Printer, S), CurrentCycle(0),
+      MaxCycle(Cycles == 0 ? std::numeric_limits<unsigned>::max() : Cycles),
+      LastCycle(0), WaitTime(S.size()), UsedBuffer(S.size()) {
+  unsigned NumInstructions = getSource().size();
   assert(Iterations && "Invalid number of iterations specified!");
   NumInstructions *= Iterations;
   Timeline.resize(NumInstructions);
@@ -39,10 +40,10 @@ TimelineView::TimelineView(const MCSubtargetInfo &sti, MCInstPrinter &Printer,
 
 void TimelineView::onReservedBuffers(const InstRef &IR,
                                      ArrayRef<unsigned> Buffers) {
-  if (IR.getSourceIndex() >= Source.size())
+  if (IR.getSourceIndex() >= getSource().size())
     return;
 
-  const MCSchedModel &SM = STI.getSchedModel();
+  const MCSchedModel &SM = getSubTargetInfo().getSchedModel();
   std::pair<unsigned, int> BufferInfo = {0, -1};
   for (const unsigned Buffer : Buffers) {
     const MCProcResourceDesc &MCDesc = *SM.getProcResource(Buffer);
@@ -69,15 +70,17 @@ void TimelineView::onEvent(const HWInstructionEvent &Event) {
     // Update the WaitTime entry which corresponds to this Index.
     assert(TVEntry.CycleDispatched >= 0 && "Invalid TVEntry found!");
     unsigned CycleDispatched = static_cast<unsigned>(TVEntry.CycleDispatched);
-    WaitTimeEntry &WTEntry = WaitTime[Index % Source.size()];
+    WaitTimeEntry &WTEntry = WaitTime[Index % getSource().size()];
     WTEntry.CyclesSpentInSchedulerQueue +=
         TVEntry.CycleIssued - CycleDispatched;
     assert(CycleDispatched <= TVEntry.CycleReady &&
            "Instruction cannot be ready if it hasn't been dispatched yet!");
     WTEntry.CyclesSpentInSQWhileReady +=
         TVEntry.CycleIssued - TVEntry.CycleReady;
-    WTEntry.CyclesSpentAfterWBAndBeforeRetire +=
-        (CurrentCycle - 1) - TVEntry.CycleExecuted;
+    if (CurrentCycle > TVEntry.CycleExecuted) {
+      WTEntry.CyclesSpentAfterWBAndBeforeRetire +=
+          (CurrentCycle - 1) - TVEntry.CycleExecuted;
+    }
     break;
   }
   case HWInstructionEvent::Ready:
@@ -132,26 +135,41 @@ void TimelineView::printWaitTimeEntry(formatted_raw_ostream &OS,
                                       const WaitTimeEntry &Entry,
                                       unsigned SourceIndex,
                                       unsigned Executions) const {
-  OS << SourceIndex << '.';
+  bool PrintingTotals = SourceIndex == getSource().size();
+  unsigned CumulativeExecutions = PrintingTotals ? Timeline.size() : Executions;
+
+  if (!PrintingTotals)
+    OS << SourceIndex << '.';
+
   OS.PadToColumn(7);
 
   double AverageTime1, AverageTime2, AverageTime3;
-  AverageTime1 = (double)Entry.CyclesSpentInSchedulerQueue / Executions;
-  AverageTime2 = (double)Entry.CyclesSpentInSQWhileReady / Executions;
-  AverageTime3 = (double)Entry.CyclesSpentAfterWBAndBeforeRetire / Executions;
+  AverageTime1 =
+      (double)(Entry.CyclesSpentInSchedulerQueue * 10) / CumulativeExecutions;
+  AverageTime2 =
+      (double)(Entry.CyclesSpentInSQWhileReady * 10) / CumulativeExecutions;
+  AverageTime3 = (double)(Entry.CyclesSpentAfterWBAndBeforeRetire * 10) /
+                 CumulativeExecutions;
 
   OS << Executions;
   OS.PadToColumn(13);
-  int BufferSize = UsedBuffer[SourceIndex].second;
-  tryChangeColor(OS, Entry.CyclesSpentInSchedulerQueue, Executions, BufferSize);
-  OS << format("%.1f", floor((AverageTime1 * 10) + 0.5) / 10);
+
+  int BufferSize = PrintingTotals ? 0 : UsedBuffer[SourceIndex].second;
+  if (!PrintingTotals)
+    tryChangeColor(OS, Entry.CyclesSpentInSchedulerQueue, CumulativeExecutions,
+                   BufferSize);
+  OS << format("%.1f", floor(AverageTime1 + 0.5) / 10);
   OS.PadToColumn(20);
-  tryChangeColor(OS, Entry.CyclesSpentInSQWhileReady, Executions, BufferSize);
-  OS << format("%.1f", floor((AverageTime2 * 10) + 0.5) / 10);
+  if (!PrintingTotals)
+    tryChangeColor(OS, Entry.CyclesSpentInSQWhileReady, CumulativeExecutions,
+                   BufferSize);
+  OS << format("%.1f", floor(AverageTime2 + 0.5) / 10);
   OS.PadToColumn(27);
-  tryChangeColor(OS, Entry.CyclesSpentAfterWBAndBeforeRetire, Executions,
-                 STI.getSchedModel().MicroOpBufferSize);
-  OS << format("%.1f", floor((AverageTime3 * 10) + 0.5) / 10);
+  if (!PrintingTotals)
+    tryChangeColor(OS, Entry.CyclesSpentAfterWBAndBeforeRetire,
+                   CumulativeExecutions,
+                   getSubTargetInfo().getSchedModel().MicroOpBufferSize);
+  OS << format("%.1f", floor(AverageTime3 + 0.5) / 10);
 
   if (OS.has_colors())
     OS.resetColor();
@@ -167,28 +185,32 @@ void TimelineView::printAverageWaitTimes(raw_ostream &OS) const {
       "[3]: Average time elapsed from WB until retire stage\n\n"
       "      [0]    [1]    [2]    [3]\n";
   OS << Header;
-
-  // Use a different string stream for printing instructions.
-  std::string Instruction;
-  raw_string_ostream InstrStream(Instruction);
-
   formatted_raw_ostream FOS(OS);
-  unsigned Executions = Timeline.size() / Source.size();
+  unsigned Executions = Timeline.size() / getSource().size();
   unsigned IID = 0;
-  for (const MCInst &Inst : Source) {
+  for (const MCInst &Inst : getSource()) {
     printWaitTimeEntry(FOS, WaitTime[IID], IID, Executions);
-    // Append the instruction info at the end of the line.
-    MCIP.printInst(&Inst, InstrStream, "", STI);
-    InstrStream.flush();
-
-    // Consume any tabs or spaces at the beginning of the string.
-    StringRef Str(Instruction);
-    Str = Str.ltrim();
-    FOS << "   " << Str << '\n';
+    FOS << "   " << printInstructionString(Inst) << '\n';
     FOS.flush();
-    Instruction = "";
-
     ++IID;
+  }
+
+  // If the timeline contains more than one instruction,
+  // let's also print global averages.
+  if (getSource().size() != 1) {
+    WaitTimeEntry TotalWaitTime = std::accumulate(
+        WaitTime.begin(), WaitTime.end(), WaitTimeEntry{0, 0, 0},
+        [](const WaitTimeEntry &A, const WaitTimeEntry &B) {
+          return WaitTimeEntry{
+              A.CyclesSpentInSchedulerQueue + B.CyclesSpentInSchedulerQueue,
+              A.CyclesSpentInSQWhileReady + B.CyclesSpentInSQWhileReady,
+              A.CyclesSpentAfterWBAndBeforeRetire +
+                  B.CyclesSpentAfterWBAndBeforeRetire};
+        });
+    printWaitTimeEntry(FOS, TotalWaitTime, IID, Executions);
+    FOS << "   "
+        << "<total>" << '\n';
+    FOS.flush();
   }
 }
 
@@ -224,7 +246,8 @@ void TimelineView::printTimelineViewEntry(formatted_raw_ostream &OS,
 
   for (unsigned I = Entry.CycleExecuted + 1, E = Entry.CycleRetired; I < E; ++I)
     OS << TimelineView::DisplayChar::RetireLag;
-  OS << TimelineView::DisplayChar::Retired;
+  if (Entry.CycleExecuted < Entry.CycleRetired)
+    OS << TimelineView::DisplayChar::Retired;
 
   // Skip other columns.
   for (unsigned I = Entry.CycleRetired + 1, E = LastCycle; I <= E; ++I)
@@ -260,34 +283,44 @@ void TimelineView::printTimeline(raw_ostream &OS) const {
   printTimelineHeader(FOS, LastCycle);
   FOS.flush();
 
-  // Use a different string stream for the instruction.
-  std::string Instruction;
-  raw_string_ostream InstrStream(Instruction);
-
   unsigned IID = 0;
+  ArrayRef<llvm::MCInst> Source = getSource();
   const unsigned Iterations = Timeline.size() / Source.size();
   for (unsigned Iteration = 0; Iteration < Iterations; ++Iteration) {
     for (const MCInst &Inst : Source) {
       const TimelineViewEntry &Entry = Timeline[IID];
-      if (Entry.CycleRetired == 0)
+      // When an instruction is retired after timeline-max-cycles,
+      // its CycleRetired is left at 0. However, it's possible for
+      // a 0 latency instruction to be retired during cycle 0 and we
+      // don't want to early exit in that case. The CycleExecuted
+      // attribute is set correctly whether or not it is greater
+      // than timeline-max-cycles so we can use that to ensure
+      // we don't early exit because of a 0 latency instruction.
+      if (Entry.CycleRetired == 0 && Entry.CycleExecuted != 0)
         return;
 
       unsigned SourceIndex = IID % Source.size();
       printTimelineViewEntry(FOS, Entry, Iteration, SourceIndex);
-      // Append the instruction info at the end of the line.
-      MCIP.printInst(&Inst, InstrStream, "", STI);
-      InstrStream.flush();
-
-      // Consume any tabs or spaces at the beginning of the string.
-      StringRef Str(Instruction);
-      Str = Str.ltrim();
-      FOS << "   " << Str << '\n';
+      FOS << "   " << printInstructionString(Inst) << '\n';
       FOS.flush();
-      Instruction = "";
 
       ++IID;
     }
   }
+}
+
+json::Value TimelineView::toJSON() const {
+  json::Array TimelineInfo;
+
+  for (const TimelineViewEntry &TLE : Timeline) {
+    TimelineInfo.push_back(
+        json::Object({{"CycleDispatched", TLE.CycleDispatched},
+                      {"CycleReady", TLE.CycleReady},
+                      {"CycleIssued", TLE.CycleIssued},
+                      {"CycleExecuted", TLE.CycleExecuted},
+                      {"CycleRetired", TLE.CycleRetired}}));
+  }
+  return json::Object({{"TimelineInfo", std::move(TimelineInfo)}});
 }
 } // namespace mca
 } // namespace llvm

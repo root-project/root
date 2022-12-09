@@ -10,8 +10,8 @@
 /// pass.
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_TRANSFORMS_INSTRPROFILING_H
-#define LLVM_TRANSFORMS_INSTRPROFILING_H
+#ifndef LLVM_TRANSFORMS_INSTRUMENTATION_INSTRPROFILING_H
+#define LLVM_TRANSFORMS_INSTRUMENTATION_INSTRPROFILING_H
 
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/StringRef.h"
@@ -39,13 +39,14 @@ public:
       : Options(Options), IsCS(IsCS) {}
 
   PreservedAnalyses run(Module &M, ModuleAnalysisManager &AM);
-  bool run(Module &M, const TargetLibraryInfo &TLI);
+  bool run(Module &M,
+           std::function<const TargetLibraryInfo &(Function &F)> GetTLI);
 
 private:
   InstrProfOptions Options;
   Module *M;
   Triple TT;
-  const TargetLibraryInfo *TLI;
+  std::function<const TargetLibraryInfo &(Function &F)> GetTLI;
   struct PerFunctionProfileData {
     uint32_t NumValueSites[IPVK_Last + 1];
     GlobalVariable *RegionCounters = nullptr;
@@ -56,6 +57,7 @@ private:
     }
   };
   DenseMap<GlobalVariable *, PerFunctionProfileData> ProfileDataMap;
+  std::vector<GlobalValue *> CompilerUsedVars;
   std::vector<GlobalValue *> UsedVars;
   std::vector<GlobalVariable *> ReferencedNames;
   GlobalVariable *NamesVar;
@@ -67,11 +69,6 @@ private:
   // vector of counter load/store pairs to be register promoted.
   std::vector<LoadStorePair> PromotionCandidates;
 
-  // The start value of precise value profile range for memory intrinsic sizes.
-  int64_t MemOPSizeRangeStart;
-  // The end value of precise value profile range for memory intrinsic sizes.
-  int64_t MemOPSizeRangeLast;
-
   int64_t TotalCountersPromoted = 0;
 
   /// Lower instrumentation intrinsics in the function. Returns true if there
@@ -80,6 +77,9 @@ private:
 
   /// Register-promote counter loads and stores in loops.
   void promoteCounterLoadStores(Function *F);
+
+  /// Returns true if relocating counters at runtime is enabled.
+  bool isRuntimeCounterRelocationEnabled() const;
 
   /// Returns true if profile counter update register promotion is enabled.
   bool isCounterPromotionEnabled() const;
@@ -125,4 +125,4 @@ private:
 
 } // end namespace llvm
 
-#endif // LLVM_TRANSFORMS_INSTRPROFILING_H
+#endif // LLVM_TRANSFORMS_INSTRUMENTATION_INSTRPROFILING_H

@@ -33,6 +33,7 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
+#include <queue>
 #include <utility>
 
 using namespace clang;
@@ -94,7 +95,7 @@ ObjCContainerDecl::getMethod(Selector Sel, bool isInstance,
   // methods there.
   if (const auto *Proto = dyn_cast<ObjCProtocolDecl>(this)) {
     if (const ObjCProtocolDecl *Def = Proto->getDefinition())
-      if (Def->isHidden() && !AllowHidden)
+      if (!Def->isUnconditionallyVisible() && !AllowHidden)
         return nullptr;
   }
 
@@ -146,7 +147,8 @@ bool ObjCContainerDecl::HasUserDeclaredSetterMethod(
       // auto-synthesized).
       for (const auto *P : Cat->properties())
         if (P->getIdentifier() == Property->getIdentifier()) {
-          if (P->getPropertyAttributes() & ObjCPropertyDecl::OBJC_PR_readwrite)
+          if (P->getPropertyAttributes() &
+              ObjCPropertyAttribute::kind_readwrite)
             return true;
           break;
         }
@@ -180,7 +182,7 @@ ObjCPropertyDecl::findPropertyDecl(const DeclContext *DC,
   // property.
   if (const auto *Proto = dyn_cast<ObjCProtocolDecl>(DC)) {
     if (const ObjCProtocolDecl *Def = Proto->getDefinition())
-      if (Def->isHidden())
+      if (!Def->isUnconditionallyVisible())
         return nullptr;
   }
 
@@ -238,7 +240,7 @@ ObjCPropertyDecl *ObjCContainerDecl::FindPropertyDeclaration(
   // Don't find properties within hidden protocol definitions.
   if (const auto *Proto = dyn_cast<ObjCProtocolDecl>(this)) {
     if (const ObjCProtocolDecl *Def = Proto->getDefinition())
-      if (Def->isHidden())
+      if (!Def->isUnconditionallyVisible())
         return nullptr;
   }
 
@@ -775,14 +777,12 @@ ObjCMethodDecl *ObjCInterfaceDecl::lookupPrivateMethod(
 // ObjCMethodDecl
 //===----------------------------------------------------------------------===//
 
-ObjCMethodDecl::ObjCMethodDecl(SourceLocation beginLoc, SourceLocation endLoc,
-                               Selector SelInfo, QualType T,
-                               TypeSourceInfo *ReturnTInfo,
-                               DeclContext *contextDecl, bool isInstance,
-                               bool isVariadic, bool isPropertyAccessor,
-                               bool isImplicitlyDeclared, bool isDefined,
-                               ImplementationControl impControl,
-                               bool HasRelatedResultType)
+ObjCMethodDecl::ObjCMethodDecl(
+    SourceLocation beginLoc, SourceLocation endLoc, Selector SelInfo,
+    QualType T, TypeSourceInfo *ReturnTInfo, DeclContext *contextDecl,
+    bool isInstance, bool isVariadic, bool isPropertyAccessor,
+    bool isSynthesizedAccessorStub, bool isImplicitlyDeclared, bool isDefined,
+    ImplementationControl impControl, bool HasRelatedResultType)
     : NamedDecl(ObjCMethod, contextDecl, beginLoc, SelInfo),
       DeclContext(ObjCMethod), MethodDeclType(T), ReturnTInfo(ReturnTInfo),
       DeclEndLoc(endLoc) {
@@ -793,6 +793,7 @@ ObjCMethodDecl::ObjCMethodDecl(SourceLocation beginLoc, SourceLocation endLoc,
   setInstanceMethod(isInstance);
   setVariadic(isVariadic);
   setPropertyAccessor(isPropertyAccessor);
+  setSynthesizedAccessorStub(isSynthesizedAccessorStub);
   setDefined(isDefined);
   setIsRedeclaration(false);
   setHasRedeclaration(false);
@@ -810,17 +811,23 @@ ObjCMethodDecl *ObjCMethodDecl::Create(
     ASTContext &C, SourceLocation beginLoc, SourceLocation endLoc,
     Selector SelInfo, QualType T, TypeSourceInfo *ReturnTInfo,
     DeclContext *contextDecl, bool isInstance, bool isVariadic,
-    bool isPropertyAccessor, bool isImplicitlyDeclared, bool isDefined,
-    ImplementationControl impControl, bool HasRelatedResultType) {
+    bool isPropertyAccessor, bool isSynthesizedAccessorStub,
+    bool isImplicitlyDeclared, bool isDefined, ImplementationControl impControl,
+    bool HasRelatedResultType) {
   return new (C, contextDecl) ObjCMethodDecl(
       beginLoc, endLoc, SelInfo, T, ReturnTInfo, contextDecl, isInstance,
-      isVariadic, isPropertyAccessor, isImplicitlyDeclared, isDefined,
-      impControl, HasRelatedResultType);
+      isVariadic, isPropertyAccessor, isSynthesizedAccessorStub,
+      isImplicitlyDeclared, isDefined, impControl, HasRelatedResultType);
 }
 
 ObjCMethodDecl *ObjCMethodDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
   return new (C, ID) ObjCMethodDecl(SourceLocation(), SourceLocation(),
                                     Selector(), QualType(), nullptr, nullptr);
+}
+
+bool ObjCMethodDecl::isDirectMethod() const {
+  return hasAttr<ObjCDirectAttr>() &&
+         !getASTContext().getLangOpts().ObjCDisableDirectMethodsForTesting;
 }
 
 bool ObjCMethodDecl::isThisDeclarationADesignatedInitializer() const {
@@ -944,7 +951,8 @@ ObjCMethodDecl *ObjCMethodDecl::getNextRedeclarationImpl() {
   if (!Redecl && isRedeclaration()) {
     // This is the last redeclaration, go back to the first method.
     return cast<ObjCContainerDecl>(CtxD)->getMethod(getSelector(),
-                                                    isInstanceMethod());
+                                                    isInstanceMethod(),
+                                                    /*AllowHidden=*/true);
   }
 
   return Redecl ? Redecl : this;
@@ -952,24 +960,33 @@ ObjCMethodDecl *ObjCMethodDecl::getNextRedeclarationImpl() {
 
 ObjCMethodDecl *ObjCMethodDecl::getCanonicalDecl() {
   auto *CtxD = cast<Decl>(getDeclContext());
+  const auto &Sel = getSelector();
 
   if (auto *ImplD = dyn_cast<ObjCImplementationDecl>(CtxD)) {
-    if (ObjCInterfaceDecl *IFD = ImplD->getClassInterface())
-      if (ObjCMethodDecl *MD = IFD->getMethod(getSelector(),
-                                              isInstanceMethod()))
+    if (ObjCInterfaceDecl *IFD = ImplD->getClassInterface()) {
+      // When the container is the ObjCImplementationDecl (the primary
+      // @implementation), then the canonical Decl is either in
+      // the class Interface, or in any of its extension.
+      //
+      // So when we don't find it in the ObjCInterfaceDecl,
+      // sift through extensions too.
+      if (ObjCMethodDecl *MD = IFD->getMethod(Sel, isInstanceMethod()))
         return MD;
+      for (auto *Ext : IFD->known_extensions())
+        if (ObjCMethodDecl *MD = Ext->getMethod(Sel, isInstanceMethod()))
+          return MD;
+    }
   } else if (auto *CImplD = dyn_cast<ObjCCategoryImplDecl>(CtxD)) {
     if (ObjCCategoryDecl *CatD = CImplD->getCategoryDecl())
-      if (ObjCMethodDecl *MD = CatD->getMethod(getSelector(),
-                                               isInstanceMethod()))
+      if (ObjCMethodDecl *MD = CatD->getMethod(Sel, isInstanceMethod()))
         return MD;
   }
 
   if (isRedeclaration()) {
     // It is possible that we have not done deserializing the ObjCMethod yet.
     ObjCMethodDecl *MD =
-        cast<ObjCContainerDecl>(CtxD)->getMethod(getSelector(),
-                                                 isInstanceMethod());
+        cast<ObjCContainerDecl>(CtxD)->getMethod(Sel, isInstanceMethod(),
+                                                 /*AllowHidden=*/true);
     return MD ? MD : this;
   }
 
@@ -1077,7 +1094,7 @@ ObjCMethodFamily ObjCMethodDecl::getMethodFamily() const {
 QualType ObjCMethodDecl::getSelfType(ASTContext &Context,
                                      const ObjCInterfaceDecl *OID,
                                      bool &selfIsPseudoStrong,
-                                     bool &selfIsConsumed) {
+                                     bool &selfIsConsumed) const {
   QualType selfTy;
   selfIsPseudoStrong = false;
   selfIsConsumed = false;
@@ -1150,6 +1167,14 @@ ObjCInterfaceDecl *ObjCMethodDecl::getClassInterface() {
   if (isa<ObjCProtocolDecl>(getDeclContext()))
     return nullptr;
   llvm_unreachable("unknown method context");
+}
+
+ObjCCategoryDecl *ObjCMethodDecl::getCategory() {
+  if (auto *CD = dyn_cast<ObjCCategoryDecl>(getDeclContext()))
+    return CD;
+  if (auto *IMD = dyn_cast<ObjCCategoryImplDecl>(getDeclContext()))
+    return IMD->getCategoryDecl();
+  return nullptr;
 }
 
 SourceRange ObjCMethodDecl::getReturnTypeSourceRange() const {
@@ -1286,8 +1311,9 @@ void ObjCMethodDecl::getOverriddenMethods(
   const ObjCMethodDecl *Method = this;
 
   if (Method->isRedeclaration()) {
-    Method = cast<ObjCContainerDecl>(Method->getDeclContext())->
-                   getMethod(Method->getSelector(), Method->isInstanceMethod());
+    Method = cast<ObjCContainerDecl>(Method->getDeclContext())
+                 ->getMethod(Method->getSelector(), Method->isInstanceMethod(),
+                             /*AllowHidden=*/true);
   }
 
   if (Method->isOverriding()) {
@@ -1306,6 +1332,11 @@ ObjCMethodDecl::findPropertyDecl(bool CheckOverrides) const {
 
   if (isPropertyAccessor()) {
     const auto *Container = cast<ObjCContainerDecl>(getParent());
+    // For accessor stubs, go back to the interface.
+    if (auto *ImplDecl = dyn_cast<ObjCImplDecl>(Container))
+      if (isSynthesizedAccessorStub())
+        Container = ImplDecl->getClassInterface();
+
     bool IsGetter = (NumArgs == 0);
     bool IsInstance = isInstanceMethod();
 
@@ -1344,18 +1375,25 @@ ObjCMethodDecl::findPropertyDecl(bool CheckOverrides) const {
         return Found;
     } else {
       // Determine whether the container is a class.
-      ClassDecl = dyn_cast<ObjCInterfaceDecl>(Container);
+      ClassDecl = cast<ObjCInterfaceDecl>(Container);
     }
+    assert(ClassDecl && "Failed to find main class");
 
     // If we have a class, check its visible extensions.
-    if (ClassDecl) {
-      for (const auto *Ext : ClassDecl->visible_extensions()) {
-        if (Ext == Container)
-          continue;
+    for (const auto *Ext : ClassDecl->visible_extensions()) {
+      if (Ext == Container)
+        continue;
+      if (const auto *Found = findMatchingProperty(Ext))
+        return Found;
+    }
 
-        if (const auto *Found = findMatchingProperty(Ext))
-          return Found;
-      }
+    assert(isSynthesizedAccessorStub() && "expected an accessor stub");
+
+    for (const auto *Cat : ClassDecl->known_categories()) {
+      if (Cat == Container)
+        continue;
+      if (const auto *Found = findMatchingProperty(Cat))
+        return Found;
     }
 
     llvm_unreachable("Marked as a property accessor but no property found!");
@@ -1424,9 +1462,7 @@ SourceRange ObjCTypeParamDecl::getSourceRange() const {
 ObjCTypeParamList::ObjCTypeParamList(SourceLocation lAngleLoc,
                                      ArrayRef<ObjCTypeParamDecl *> typeParams,
                                      SourceLocation rAngleLoc)
-    : NumParams(typeParams.size()) {
-  Brackets.Begin = lAngleLoc.getRawEncoding();
-  Brackets.End = rAngleLoc.getRawEncoding();
+    : Brackets(lAngleLoc, rAngleLoc), NumParams(typeParams.size()) {
   std::copy(typeParams.begin(), typeParams.end(), begin());
 }
 
@@ -1872,6 +1908,27 @@ ObjCProtocolDecl *ObjCProtocolDecl::CreateDeserialized(ASTContext &C,
   return Result;
 }
 
+bool ObjCProtocolDecl::isNonRuntimeProtocol() const {
+  return hasAttr<ObjCNonRuntimeProtocolAttr>();
+}
+
+void ObjCProtocolDecl::getImpliedProtocols(
+    llvm::DenseSet<const ObjCProtocolDecl *> &IPs) const {
+  std::queue<const ObjCProtocolDecl *> WorkQueue;
+  WorkQueue.push(this);
+
+  while (!WorkQueue.empty()) {
+    const auto *PD = WorkQueue.front();
+    WorkQueue.pop();
+    for (const auto *Parent : PD->protocols()) {
+      const auto *Can = Parent->getCanonicalDecl();
+      auto Result = IPs.insert(Can);
+      if (Result.second)
+        WorkQueue.push(Parent);
+    }
+  }
+}
+
 ObjCProtocolDecl *ObjCProtocolDecl::lookupProtocolNamed(IdentifierInfo *Name) {
   ObjCProtocolDecl *PDecl = this;
 
@@ -1894,7 +1951,7 @@ ObjCMethodDecl *ObjCProtocolDecl::lookupMethod(Selector Sel,
   // If there is no definition or the definition is hidden, we don't find
   // anything.
   const ObjCProtocolDecl *Def = getDefinition();
-  if (!Def || Def->isHidden())
+  if (!Def || !Def->isUnconditionallyVisible())
     return nullptr;
 
   if ((MethodDecl = getMethod(Sel, isInstance)))
@@ -2237,6 +2294,11 @@ ObjCPropertyDecl *ObjCPropertyDecl::CreateDeserialized(ASTContext &C,
 QualType ObjCPropertyDecl::getUsageType(QualType objectType) const {
   return DeclType.substObjCMemberType(objectType, getDeclContext(),
                                       ObjCSubstitutionContext::Property);
+}
+
+bool ObjCPropertyDecl::isDirectProperty() const {
+  return (PropertyAttributes & ObjCPropertyAttribute::kind_direct) &&
+         !getASTContext().getLangOpts().ObjCDisableDirectMethodsForTesting;
 }
 
 //===----------------------------------------------------------------------===//

@@ -22,19 +22,15 @@
 #ifndef LLVM_LIB_TRANSFORMS_OBJCARC_ARCRUNTIMEENTRYPOINTS_H
 #define LLVM_LIB_TRANSFORMS_OBJCARC_ARCRUNTIMEENTRYPOINTS_H
 
-#include "llvm/ADT/StringRef.h"
 #include "llvm/IR/Attributes.h"
-#include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Intrinsics.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/Type.h"
 #include "llvm/Support/ErrorHandling.h"
 #include <cassert>
 
 namespace llvm {
 
 class Function;
-class LLVMContext;
+class Module;
 
 namespace objcarc {
 
@@ -46,6 +42,7 @@ enum class ARCRuntimeEntryPointKind {
   Autorelease,
   StoreStrong,
   RetainRV,
+  ClaimRV,
   RetainAutorelease,
   RetainAutoreleaseRV,
 };
@@ -65,6 +62,7 @@ public:
     Autorelease = nullptr;
     StoreStrong = nullptr;
     RetainRV = nullptr;
+    ClaimRV = nullptr;
     RetainAutorelease = nullptr;
     RetainAutoreleaseRV = nullptr;
   }
@@ -89,6 +87,9 @@ public:
     case ARCRuntimeEntryPointKind::RetainRV:
       return getIntrinsicEntryPoint(RetainRV,
                                 Intrinsic::objc_retainAutoreleasedReturnValue);
+    case ARCRuntimeEntryPointKind::ClaimRV:
+      return getIntrinsicEntryPoint(
+          ClaimRV, Intrinsic::objc_unsafeClaimAutoreleasedReturnValue);
     case ARCRuntimeEntryPointKind::RetainAutorelease:
       return getIntrinsicEntryPoint(RetainAutorelease,
                                     Intrinsic::objc_retainAutorelease);
@@ -124,6 +125,9 @@ private:
 
   /// Declaration for objc_retainAutoreleasedReturnValue().
   Function *RetainRV = nullptr;
+
+  /// Declaration for objc_unsafeClaimAutoreleasedReturnValue().
+  Function *ClaimRV = nullptr;
 
   /// Declaration for objc_retainAutorelease().
   Function *RetainAutorelease = nullptr;

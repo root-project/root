@@ -13,7 +13,10 @@
 #ifndef LLVM_CLANG_STATICANALYZER_CORE_PATHSENSITIVE_CHECKERHELPERS_H
 #define LLVM_CLANG_STATICANALYZER_CORE_PATHSENSITIVE_CHECKERHELPERS_H
 
+#include "clang/AST/OperationKinds.h"
 #include "clang/AST/Stmt.h"
+#include "clang/Basic/OperatorKinds.h"
+#include "llvm/ADT/Optional.h"
 #include <tuple>
 
 namespace clang {
@@ -22,6 +25,7 @@ class Expr;
 class VarDecl;
 class QualType;
 class AttributedType;
+class Preprocessor;
 
 namespace ento {
 
@@ -62,8 +66,52 @@ enum class Nullability : char {
 /// Get nullability annotation for a given type.
 Nullability getNullabilityAnnotation(QualType Type);
 
-} // end GR namespace
+/// Try to parse the value of a defined preprocessor macro. We can only parse
+/// simple expressions that consist of an optional minus sign token and then a
+/// token for an integer. If we cannot parse the value then None is returned.
+llvm::Optional<int> tryExpandAsInteger(StringRef Macro, const Preprocessor &PP);
 
-} // end clang namespace
+class OperatorKind {
+  union {
+    BinaryOperatorKind Bin;
+    UnaryOperatorKind Un;
+  } Op;
+  bool IsBinary;
+
+public:
+  explicit OperatorKind(BinaryOperatorKind Bin) : Op{Bin}, IsBinary{true} {}
+  explicit OperatorKind(UnaryOperatorKind Un) : IsBinary{false} { Op.Un = Un; }
+  bool IsBinaryOp() const { return IsBinary; }
+
+  BinaryOperatorKind GetBinaryOpUnsafe() const {
+    assert(IsBinary && "cannot get binary operator - we have a unary operator");
+    return Op.Bin;
+  }
+
+  Optional<BinaryOperatorKind> GetBinaryOp() const {
+    if (IsBinary)
+      return Op.Bin;
+    return {};
+  }
+
+  UnaryOperatorKind GetUnaryOpUnsafe() const {
+    assert(!IsBinary &&
+           "cannot get unary operator - we have a binary operator");
+    return Op.Un;
+  }
+
+  Optional<UnaryOperatorKind> GetUnaryOp() const {
+    if (!IsBinary)
+      return Op.Un;
+    return {};
+  }
+};
+
+OperatorKind operationKindFromOverloadedOperator(OverloadedOperatorKind OOK,
+                                                 bool IsBinary);
+
+} // namespace ento
+
+} // namespace clang
 
 #endif

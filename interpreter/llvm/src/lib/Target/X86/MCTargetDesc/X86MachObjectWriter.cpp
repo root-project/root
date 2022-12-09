@@ -68,7 +68,7 @@ public:
                           FixedValue);
   }
 };
-}
+} // namespace
 
 static bool isFixupKindRIPRel(unsigned Kind) {
   return Kind == X86::reloc_riprel_4byte ||
@@ -276,7 +276,7 @@ void X86MachObjectWriter::RecordX86_64Relocation(
           // x86_64 distinguishes movq foo@GOTPCREL so that the linker can
           // rewrite the movq to an leaq at link time if the symbol ends up in
           // the same linkage unit.
-          if (unsigned(Fixup.getKind()) == X86::reloc_riprel_4byte_movq_load)
+          if (Fixup.getTargetKind() == X86::reloc_riprel_4byte_movq_load)
             Type = MachO::X86_64_RELOC_GOT_LOAD;
           else
             Type = MachO::X86_64_RELOC_GOT;
@@ -339,8 +339,7 @@ void X86MachObjectWriter::RecordX86_64Relocation(
         return;
       } else {
         Type = MachO::X86_64_RELOC_UNSIGNED;
-        unsigned Kind = Fixup.getKind();
-        if (Kind == X86::reloc_signed_4byte) {
+        if (Fixup.getTargetKind() == X86::reloc_signed_4byte) {
           Asm.getContext().reportError(
               Fixup.getLoc(),
               "32-bit absolute addressing is not supported in 64-bit mode");
@@ -538,6 +537,7 @@ void X86MachObjectWriter::RecordX86Relocation(MachObjectWriter *Writer,
   uint32_t Offset = Target.getConstant();
   if (IsPCRel)
     Offset += 1 << Log2Size;
+
   // Try to record the scattered relocation if needed. Fall back to non
   // scattered if necessary (see comments in recordScatteredRelocation()
   // for details).
@@ -559,6 +559,8 @@ void X86MachObjectWriter::RecordX86Relocation(MachObjectWriter *Writer,
     // find a case where they are actually emitted.
     Type = MachO::GENERIC_RELOC_VANILLA;
   } else {
+    assert(A && "Unknown symbol data");
+
     // Resolve constant variables.
     if (A->isVariable()) {
       int64_t Res;
@@ -600,5 +602,5 @@ void X86MachObjectWriter::RecordX86Relocation(MachObjectWriter *Writer,
 std::unique_ptr<MCObjectTargetWriter>
 llvm::createX86MachObjectWriter(bool Is64Bit, uint32_t CPUType,
                                 uint32_t CPUSubtype) {
-  return llvm::make_unique<X86MachObjectWriter>(Is64Bit, CPUType, CPUSubtype);
+  return std::make_unique<X86MachObjectWriter>(Is64Bit, CPUType, CPUSubtype);
 }

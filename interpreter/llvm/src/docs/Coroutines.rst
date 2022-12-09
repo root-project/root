@@ -41,31 +41,225 @@ then destroy it:
 In addition to the function stack frame which exists when a coroutine is 
 executing, there is an additional region of storage that contains objects that 
 keep the coroutine state when a coroutine is suspended. This region of storage
-is called **coroutine frame**. It is created when a coroutine is called and 
-destroyed when a coroutine runs to completion or destroyed by a call to 
-the `coro.destroy`_ intrinsic. 
+is called the **coroutine frame**. It is created when a coroutine is called
+and destroyed when a coroutine either runs to completion or is destroyed
+while suspended.
 
-An LLVM coroutine is represented as an LLVM function that has calls to
-`coroutine intrinsics`_ defining the structure of the coroutine.
-After lowering, a coroutine is split into several
-functions that represent three different ways of how control can enter the 
-coroutine: 
+LLVM currently supports two styles of coroutine lowering. These styles
+support substantially different sets of features, have substantially
+different ABIs, and expect substantially different patterns of frontend
+code generation. However, the styles also have a great deal in common.
 
-1. a ramp function, which represents an initial invocation of the coroutine that
-   creates the coroutine frame and executes the coroutine code until it 
-   encounters a suspend point or reaches the end of the function;
+In all cases, an LLVM coroutine is initially represented as an ordinary LLVM
+function that has calls to `coroutine intrinsics`_ defining the structure of
+the coroutine. The coroutine function is then, in the most general case,
+rewritten by the coroutine lowering passes to become the "ramp function",
+the initial entrypoint of the coroutine, which executes until a suspend point
+is first reached. The remainder of the original coroutine function is split
+out into some number of "resume functions". Any state which must persist
+across suspensions is stored in the coroutine frame. The resume functions
+must somehow be able to handle either a "normal" resumption, which continues
+the normal execution of the coroutine, or an "abnormal" resumption, which
+must unwind the coroutine without attempting to suspend it.
 
-2. a coroutine resume function that is invoked when the coroutine is resumed;
+Switched-Resume Lowering
+------------------------
 
-3. a coroutine destroy function that is invoked when the coroutine is destroyed.
+In LLVM's standard switched-resume lowering, signaled by the use of
+`llvm.coro.id`, the coroutine frame is stored as part of a "coroutine
+object" which represents a handle to a particular invocation of the
+coroutine.  All coroutine objects support a common ABI allowing certain
+features to be used without knowing anything about the coroutine's
+implementation:
 
-.. note:: Splitting out resume and destroy functions are just one of the 
-   possible ways of lowering the coroutine. We chose it for initial 
-   implementation as it matches closely the mental model and results in 
-   reasonably nice code.
+- A coroutine object can be queried to see if it has reached completion
+  with `llvm.coro.done`.
+
+- A coroutine object can be resumed normally if it has not already reached
+  completion with `llvm.coro.resume`.
+
+- A coroutine object can be destroyed, invalidating the coroutine object,
+  with `llvm.coro.destroy`.  This must be done separately even if the
+  coroutine has reached completion normally.
+
+- "Promise" storage, which is known to have a certain size and alignment,
+  can be projected out of the coroutine object with `llvm.coro.promise`.
+  The coroutine implementation must have been compiled to define a promise
+  of the same size and alignment.
+
+In general, interacting with a coroutine object in any of these ways while
+it is running has undefined behavior.
+
+The coroutine function is split into three functions, representing three
+different ways that control can enter the coroutine:
+
+1. the ramp function that is initially invoked, which takes arbitrary
+   arguments and returns a pointer to the coroutine object;
+
+2. a coroutine resume function that is invoked when the coroutine is resumed,
+   which takes a pointer to the coroutine object and returns `void`;
+
+3. a coroutine destroy function that is invoked when the coroutine is
+   destroyed, which takes a pointer to the coroutine object and returns
+   `void`.
+
+Because the resume and destroy functions are shared across all suspend
+points, suspend points must store the index of the active suspend in
+the coroutine object, and the resume/destroy functions must switch over
+that index to get back to the correct point.  Hence the name of this
+lowering.
+
+Pointers to the resume and destroy functions are stored in the coroutine
+object at known offsets which are fixed for all coroutines.  A completed
+coroutine is represented with a null resume function.
+
+There is a somewhat complex protocol of intrinsics for allocating and
+deallocating the coroutine object.  It is complex in order to allow the
+allocation to be elided due to inlining.  This protocol is discussed
+in further detail below.
+
+The frontend may generate code to call the coroutine function directly;
+this will become a call to the ramp function and will return a pointer
+to the coroutine object.  The frontend should always resume or destroy
+the coroutine using the corresponding intrinsics.
+
+Returned-Continuation Lowering
+------------------------------
+
+In returned-continuation lowering, signaled by the use of
+`llvm.coro.id.retcon` or `llvm.coro.id.retcon.once`, some aspects of
+the ABI must be handled more explicitly by the frontend.
+
+In this lowering, every suspend point takes a list of "yielded values"
+which are returned back to the caller along with a function pointer,
+called the continuation function.  The coroutine is resumed by simply
+calling this continuation function pointer.  The original coroutine
+is divided into the ramp function and then an arbitrary number of
+these continuation functions, one for each suspend point.
+
+LLVM actually supports two closely-related returned-continuation
+lowerings:
+
+- In normal returned-continuation lowering, the coroutine may suspend
+  itself multiple times. This means that a continuation function
+  itself returns another continuation pointer, as well as a list of
+  yielded values.
+
+  The coroutine indicates that it has run to completion by returning
+  a null continuation pointer. Any yielded values will be `undef`
+  should be ignored.
+
+- In yield-once returned-continuation lowering, the coroutine must
+  suspend itself exactly once (or throw an exception).  The ramp
+  function returns a continuation function pointer and yielded
+  values, but the continuation function simply returns `void`
+  when the coroutine has run to completion.
+
+The coroutine frame is maintained in a fixed-size buffer that is
+passed to the `coro.id` intrinsic, which guarantees a certain size
+and alignment statically. The same buffer must be passed to the
+continuation function(s). The coroutine will allocate memory if the
+buffer is insufficient, in which case it will need to store at
+least that pointer in the buffer; therefore the buffer must always
+be at least pointer-sized. How the coroutine uses the buffer may
+vary between suspend points.
+
+In addition to the buffer pointer, continuation functions take an
+argument indicating whether the coroutine is being resumed normally
+(zero) or abnormally (non-zero).
+
+LLVM is currently ineffective at statically eliminating allocations
+after fully inlining returned-continuation coroutines into a caller.
+This may be acceptable if LLVM's coroutine support is primarily being
+used for low-level lowering and inlining is expected to be applied
+earlier in the pipeline.
+
+Async Lowering
+--------------
+
+In async-continuation lowering, signaled by the use of `llvm.coro.id.async`,
+handling of control-flow must be handled explicitly by the frontend.
+
+In this lowering, a coroutine is assumed to take the current `async context` as
+one of its arguments (the argument position is determined by
+`llvm.coro.id.async`). It is used to marshal arguments and return values of the
+coroutine. Therefore an async coroutine returns `void`.
+
+.. code-block:: llvm
+
+  define swiftcc void @async_coroutine(i8* %async.ctxt, i8*, i8*) {
+  }
+
+Values live across a suspend point need to be stored in the coroutine frame to
+be available in the continuation function. This frame is stored as a tail to the
+`async context`.
+
+Every suspend point takes an `context projection function` argument which
+describes how-to obtain the continuations `async context` and every suspend
+point has an associated `resume function` denoted by the
+`llvm.coro.async.resume` intrinsic. The coroutine is resumed by calling this
+`resume function` passing the `async context` as the one of its arguments
+argument. The `resume function` can restore its (the caller's) `async context`
+by applying a `context projection function` that is provided by the frontend as
+a parameter to the `llvm.coro.suspend.async` intrinsic.
+
+.. code-block:: c
+
+  // For example:
+  struct async_context {
+    struct async_context *caller_context;
+    ...
+  }
+
+  char *context_projection_function(struct async_context *callee_ctxt) {
+     return callee_ctxt->caller_context;
+  }
+
+.. code-block:: llvm
+
+  %resume_func_ptr = call i8* @llvm.coro.async.resume()
+  call {i8*, i8*, i8*} (i8*, i8*, ...) @llvm.coro.suspend.async(
+                                              i8* %resume_func_ptr,
+                                              i8* %context_projection_function
+
+The frontend should provide a `async function pointer` struct associated with
+each async coroutine by `llvm.coro.id.async`'s argument. The initial size and
+alignment of the `async context` must be provided as arguments to the
+`llvm.coro.id.async` intrinsic. Lowering will update the size entry with the
+coroutine frame  requirements. The frontend is responsible for allocating the
+memory for the `async context` but can use the `async function pointer` struct
+to obtain the required size.
+
+.. code-block:: c
+
+  struct async_function_pointer {
+    uint32_t relative_function_pointer_to_async_impl;
+    uint32_t context_size;
+  }
+
+Lowering will split an async coroutine into a ramp function and one resume
+function per suspend point.
+
+How control-flow is passed between caller, suspension point, and back to
+resume function is left up to the frontend.
+
+The suspend point takes a function and its arguments. The function is intended
+to model the transfer to the callee function. It will be tail called by
+lowering and therefore must have the same signature and calling convention as
+the async coroutine.
+
+.. code-block:: llvm
+
+  call {i8*, i8*, i8*} (i8*, i8*, ...) @llvm.coro.suspend.async(
+                   i8* %resume_func_ptr,
+                   i8* %context_projection_function,
+                   i8* (bitcast void (i8*, i8*, i8*)* to i8*) %suspend_function,
+                   i8* %arg1, i8* %arg2, i8 %arg3)
 
 Coroutines by Example
 =====================
+
+The examples below are all of switched-resume coroutines.
 
 Coroutine Representation
 ------------------------
@@ -145,10 +339,10 @@ Coroutine Transformation
 One of the steps of coroutine lowering is building the coroutine frame. The
 def-use chains are analyzed to determine which objects need be kept alive across
 suspend points. In the coroutine shown in the previous section, use of virtual register 
-`%n.val` is separated from the definition by a suspend point, therefore, it 
+`%inc` is separated from the definition by a suspend point, therefore, it 
 cannot reside on the stack frame since the latter goes away once the coroutine 
 is suspended and control is returned back to the caller. An i32 slot is 
-allocated in the coroutine frame and `%n.val` is spilled and reloaded from that
+allocated in the coroutine frame and `%inc` is spilled and reloaded from that
 slot as needed.
 
 We also store addresses of the resume and destroy functions so that the 
@@ -554,6 +748,7 @@ and python iterator `__next__` would look like:
     return *(int*)coro.promise(hdl, 4, false);
   }
 
+
 Intrinsics
 ==========
 
@@ -580,7 +775,7 @@ Overview:
 """""""""
 
 The '``llvm.coro.destroy``' intrinsic destroys a suspended
-coroutine.
+switched-resume coroutine.
 
 Arguments:
 """"""""""
@@ -607,7 +802,7 @@ frame. Destroying a coroutine that is not suspended leads to undefined behavior.
 Overview:
 """""""""
 
-The '``llvm.coro.resume``' intrinsic resumes a suspended coroutine.
+The '``llvm.coro.resume``' intrinsic resumes a suspended switched-resume coroutine.
 
 Arguments:
 """"""""""
@@ -634,8 +829,8 @@ Resuming a coroutine that is not suspended leads to undefined behavior.
 Overview:
 """""""""
 
-The '``llvm.coro.done``' intrinsic checks whether a suspended coroutine is at 
-the final suspend point or not.
+The '``llvm.coro.done``' intrinsic checks whether a suspended
+switched-resume coroutine is at the final suspend point or not.
 
 Arguments:
 """"""""""
@@ -661,7 +856,7 @@ Overview:
 """""""""
 
 The '``llvm.coro.promise``' intrinsic obtains a pointer to a 
-`coroutine promise`_ given a coroutine handle and vice versa.
+`coroutine promise`_ given a switched-resume coroutine handle and vice versa.
 
 Arguments:
 """"""""""
@@ -739,7 +934,8 @@ Overview:
 """""""""
 
 The '``llvm.coro.size``' intrinsic returns the number of bytes
-required to store a `coroutine frame`_.
+required to store a `coroutine frame`_.  This is only supported for
+switched-resume coroutines.
 
 Arguments:
 """"""""""
@@ -772,7 +968,8 @@ The first argument is a token returned by a call to '``llvm.coro.id``'
 identifying the coroutine.
 
 The second argument is a pointer to a block of memory where coroutine frame
-will be stored if it is allocated dynamically.
+will be stored if it is allocated dynamically.  This pointer is ignored
+for returned-continuation coroutines.
 
 Semantics:
 """"""""""
@@ -798,7 +995,8 @@ Overview:
 
 The '``llvm.coro.free``' intrinsic returns a pointer to a block of memory where 
 coroutine frame is stored or `null` if this instance of a coroutine did not use
-dynamically allocated memory for its coroutine frame.
+dynamically allocated memory for its coroutine frame.  This intrinsic is not
+supported for returned-continuation coroutines.
 
 Arguments:
 """"""""""
@@ -847,6 +1045,7 @@ Overview:
 
 The '``llvm.coro.alloc``' intrinsic returns `true` if dynamic allocation is
 required to obtain a memory for the coroutine frame and `false` otherwise.
+This is not supported for returned-continuation coroutines.
 
 Arguments:
 """"""""""
@@ -944,7 +1143,8 @@ coroutine frame.
 Overview:
 """""""""
 
-The '``llvm.coro.id``' intrinsic returns a token identifying a coroutine.
+The '``llvm.coro.id``' intrinsic returns a token identifying a
+switched-resume coroutine.
 
 Arguments:
 """"""""""
@@ -974,6 +1174,118 @@ duplicating any of these instructions unless entire body of the coroutine is
 duplicated.
 
 A frontend should emit exactly one `coro.id` intrinsic per coroutine.
+
+.. _coro.id.async:
+
+'llvm.coro.id.async' Intrinsic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+::
+
+  declare token @llvm.coro.id.async(i32 <context size>, i32 <align>,
+                                    i8* <context arg>,
+                                    i8* <async function pointer>)
+
+Overview:
+"""""""""
+
+The '``llvm.coro.id.async``' intrinsic returns a token identifying an async coroutine.
+
+Arguments:
+""""""""""
+
+The first argument provides the initial size of the `async context` as required
+from the frontend. Lowering will add to this size the size required by the frame
+storage and store that value to the `async function pointer`.
+
+The second argument, is the alignment guarantee of the memory of the
+`async context`. The frontend guarantees that the memory will be aligned by this
+value.
+
+The third argument is the `async context` argument in the current coroutine.
+
+The fourth argument is the address of the `async function pointer` struct.
+Lowering will update the context size requirement in this struct by adding the
+coroutine frame size requirement to the initial size requirement as specified by
+the first argument of this intrinsic.
+
+
+Semantics:
+""""""""""
+
+A frontend should emit exactly one `coro.id.async` intrinsic per coroutine.
+
+.. _coro.id.retcon:
+
+'llvm.coro.id.retcon' Intrinsic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+::
+
+  declare token @llvm.coro.id.retcon(i32 <size>, i32 <align>, i8* <buffer>,
+                                     i8* <continuation prototype>,
+                                     i8* <alloc>, i8* <dealloc>)
+
+Overview:
+"""""""""
+
+The '``llvm.coro.id.retcon``' intrinsic returns a token identifying a
+multiple-suspend returned-continuation coroutine.
+
+The 'result-type sequence' of the coroutine is defined as follows:
+
+- if the return type of the coroutine function is ``void``, it is the
+  empty sequence;
+
+- if the return type of the coroutine function is a ``struct``, it is the
+  element types of that ``struct`` in order;
+
+- otherwise, it is just the return type of the coroutine function.
+
+The first element of the result-type sequence must be a pointer type;
+continuation functions will be coerced to this type.  The rest of
+the sequence are the 'yield types', and any suspends in the coroutine
+must take arguments of these types.
+
+Arguments:
+""""""""""
+
+The first and second arguments are the expected size and alignment of
+the buffer provided as the third argument.  They must be constant.
+
+The fourth argument must be a reference to a global function, called
+the 'continuation prototype function'.  The type, calling convention,
+and attributes of any continuation functions will be taken from this
+declaration.  The return type of the prototype function must match the
+return type of the current function.  The first parameter type must be
+a pointer type.  The second parameter type must be an integer type;
+it will be used only as a boolean flag.
+
+The fifth argument must be a reference to a global function that will
+be used to allocate memory.  It may not fail, either by returning null
+or throwing an exception.  It must take an integer and return a pointer.
+
+The sixth argument must be a reference to a global function that will
+be used to deallocate memory.  It must take a pointer and return ``void``.
+
+'llvm.coro.id.retcon.once' Intrinsic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+::
+
+  declare token @llvm.coro.id.retcon.once(i32 <size>, i32 <align>, i8* <buffer>,
+                                          i8* <prototype>,
+                                          i8* <alloc>, i8* <dealloc>)
+
+Overview:
+"""""""""
+
+The '``llvm.coro.id.retcon.once``' intrinsic returns a token identifying a
+unique-suspend returned-continuation coroutine.
+
+Arguments:
+""""""""""
+
+As for ``llvm.core.id.retcon``, except that the return type of the
+continuation prototype must be `void` instead of matching the
+coroutine's return type.
 
 .. _coro.end:
 
@@ -1007,6 +1319,17 @@ Semantics:
 The purpose of this intrinsic is to allow frontends to mark the cleanup and
 other code that is only relevant during the initial invocation of the coroutine
 and should not be present in resume and destroy parts. 
+
+In returned-continuation lowering, ``llvm.coro.end`` fully destroys the
+coroutine frame.  If the second argument is `false`, it also returns from
+the coroutine with a null continuation pointer, and the next instruction
+will be unreachable.  If the second argument is `true`, it falls through
+so that the following logic can resume unwinding.  In a yield-once
+coroutine, reaching a non-unwind ``llvm.coro.end`` without having first
+reached a ``llvm.coro.suspend.retcon`` has undefined behavior.
+
+The remainder of this section describes the behavior under switched-resume
+lowering.
 
 This intrinsic is lowered when a coroutine is split into
 the start, resume and destroy parts. In the start part, it is a no-op,
@@ -1066,6 +1389,48 @@ The following table summarizes the handling of `coro.end`_ intrinsic.
 |            | Landingpad  | nothing           | nothing                       |
 +------------+-------------+-------------------+-------------------------------+
 
+
+'llvm.coro.end.async' Intrinsic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+::
+
+  declare i1 @llvm.coro.end.async(i8* <handle>, i1 <unwind>, ...)
+
+Overview:
+"""""""""
+
+The '``llvm.coro.end.async``' marks the point where execution of the resume part
+of the coroutine should end and control should return to the caller. As part of
+its variable tail arguments this instruction allows to specify a function and
+the function's arguments that are to be tail called as the last action before
+returning.
+
+
+Arguments:
+""""""""""
+
+The first argument should refer to the coroutine handle of the enclosing
+coroutine. A frontend is allowed to supply null as the first parameter, in this
+case `coro-early` pass will replace the null with an appropriate coroutine
+handle value.
+
+The second argument should be `true` if this coro.end is in the block that is
+part of the unwind sequence leaving the coroutine body due to an exception and
+`false` otherwise.
+
+The third argument if present should specify a function to be called.
+
+If the third argument is present, the remaining arguments are the arguments to
+the function call.
+
+.. code-block:: llvm
+
+  call i1 (i8*, i1, ...) @llvm.coro.end.async(
+                           i8* %hdl, i1 0,
+                           void (i8*, %async.task*, %async.actor*)* @must_tail_call_return,
+                           i8* %ctxt, %async.task* %task, %async.actor* %actor)
+  unreachable
+
 .. _coro.suspend:
 .. _suspend points:
 
@@ -1078,11 +1443,11 @@ The following table summarizes the handling of `coro.end`_ intrinsic.
 Overview:
 """""""""
 
-The '``llvm.coro.suspend``' marks the point where execution of the coroutine 
-need to get suspended and control returned back to the caller.
-Conditional branches consuming the result of this intrinsic lead to basic blocks
-where coroutine should proceed when suspended (-1), resumed (0) or destroyed 
-(1).
+The '``llvm.coro.suspend``' marks the point where execution of a
+switched-resume coroutine is suspended and control is returned back
+to the caller.  Conditional branches consuming the result of this
+intrinsic lead to basic blocks where coroutine should proceed when
+suspended (-1), resumed (0) or destroyed (1).
 
 Arguments:
 """"""""""
@@ -1177,6 +1542,107 @@ to the coroutine:
     %suspend1 = call i1 @llvm.coro.suspend(token %save1, i1 false)
     switch i8 %suspend1, label %suspend [i8 0, label %resume1
                                          i8 1, label %cleanup]
+
+.. _coro.suspend.async:
+
+'llvm.coro.suspend.async' Intrinsic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+::
+
+  declare {i8*, i8*, i8*} @llvm.coro.suspend.async(
+                             i8* <resume function>,
+                             i8* <context projection function>,
+                             ... <function to call>
+                             ... <arguments to function>)
+
+Overview:
+"""""""""
+
+The '``llvm.coro.suspend.async``' intrinsic marks the point where
+execution of a async coroutine is suspended and control is passed to a callee.
+
+Arguments:
+""""""""""
+
+The first argument should be the result of the `llvm.coro.async.resume` intrinsic.
+Lowering will replace this intrinsic with the resume function for this suspend
+point.
+
+The second argument is the `context projection function`. It should describe
+how-to restore the `async context` in the continuation function from the first
+argument of the continuation function. Its type is `i8* (i8*)`.
+
+The third argument is the function that models transfer to the callee at the
+suspend point. It should take 3 arguments. Lowering will `musttail` call this
+function.
+
+The fourth to six argument are the arguments for the third argument.
+
+Semantics:
+""""""""""
+
+The result of the intrinsic are mapped to the arguments of the resume function.
+Execution is suspended at this intrinsic and resumed when the resume function is
+called.
+
+.. _coro.prepare.async:
+
+'llvm.coro.prepare.async' Intrinsic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+::
+
+  declare i8* @llvm.coro.prepare.async(i8* <coroutine function>)
+
+Overview:
+"""""""""
+
+The '``llvm.coro.prepare.async``' intrinsic is used to block inlining of the
+async coroutine until after coroutine splitting.
+
+Arguments:
+""""""""""
+
+The first argument should be an async coroutine of type `void (i8*, i8*, i8*)`.
+Lowering will replace this intrinsic with its coroutine function argument.
+
+.. _coro.suspend.retcon:
+
+'llvm.coro.suspend.retcon' Intrinsic
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+::
+
+  declare i1 @llvm.coro.suspend.retcon(...)
+
+Overview:
+"""""""""
+
+The '``llvm.coro.suspend.retcon``' intrinsic marks the point where
+execution of a returned-continuation coroutine is suspended and control
+is returned back to the caller.
+
+`llvm.coro.suspend.retcon`` does not support separate save points;
+they are not useful when the continuation function is not locally
+accessible.  That would be a more appropriate feature for a ``passcon``
+lowering that is not yet implemented.
+
+Arguments:
+""""""""""
+
+The types of the arguments must exactly match the yielded-types sequence
+of the coroutine.  They will be turned into return values from the ramp
+and continuation functions, along with the next continuation function.
+
+Semantics:
+""""""""""
+
+The result of the intrinsic indicates whether the coroutine should resume
+abnormally (non-zero).
+
+In a normal coroutine, it is undefined behavior if the coroutine executes
+a call to ``llvm.coro.suspend.retcon`` after resuming abnormally.
+
+In a yield-once coroutine, it is undefined behavior if the coroutine
+executes a call to ``llvm.coro.suspend.retcon`` after resuming in any way.
 
 .. _coro.param:
 
@@ -1294,9 +1760,13 @@ earlier passes.
 
 Areas Requiring Attention
 =========================
-#. A coroutine frame is bigger than it could be. Adding stack packing and stack 
-   coloring like optimization on the coroutine frame will result in tighter
-   coroutine frames.
+#. When coro.suspend returns -1, the coroutine is suspended, and it's possible
+   that the coroutine has already been destroyed (hence the frame has been freed).
+   We cannot access anything on the frame on the suspend path.
+   However there is nothing that prevents the compiler from moving instructions
+   along that path (e.g. LICM), which can lead to use-after-free. At the moment
+   we disabled LICM for loops that have coro.suspend, but the general problem still
+   exists and requires a general solution.
 
 #. Take advantage of the lifetime intrinsics for the data that goes into the
    coroutine frame. Leave lifetime intrinsics as is for the data that stays in

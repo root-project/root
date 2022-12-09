@@ -48,7 +48,7 @@ namespace {
 std::unique_ptr<ASTConsumer>
 clang::CreateHTMLPrinter(std::unique_ptr<raw_ostream> OS, Preprocessor &PP,
                          bool SyntaxHighlight, bool HighlightMacros) {
-  return llvm::make_unique<HTMLPrinter>(std::move(OS), PP, SyntaxHighlight,
+  return std::make_unique<HTMLPrinter>(std::move(OS), PP, SyntaxHighlight,
                                         HighlightMacros);
 }
 
@@ -70,7 +70,7 @@ void HTMLPrinter::HandleTranslationUnit(ASTContext &Ctx) {
   if (Entry)
     Name = Entry->getName();
   else
-    Name = R.getSourceMgr().getBuffer(FID)->getBufferIdentifier();
+    Name = R.getSourceMgr().getBufferOrFake(FID).getBufferIdentifier();
 
   html::AddLineNumbers(R, FID);
   html::AddHeaderFooterInternalBuiltinCSS(R, FID, Name);

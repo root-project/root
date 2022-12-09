@@ -36,7 +36,7 @@ namespace llvm {
 
     /// MiOpNo - For isMachineInstrOperand, this is the operand number of the
     /// machine instruction.
-    unsigned MIOpNo;
+    unsigned MIOpNo = 0;
 
     /// Str - For isLiteralTextOperand, this IS the literal text.  For
     /// isMachineInstrOperand, this is the PrinterMethodName for the operand..
@@ -48,6 +48,8 @@ namespace llvm {
     /// an operand, specified with syntax like ${opname:modifier}.
     std::string MiModifier;
 
+    bool PCRel = false;
+
     // To make VS STL happy
     AsmWriterOperand(OpType op = isLiteralTextOperand):OperandType(op) {}
 
@@ -55,16 +57,17 @@ namespace llvm {
                      OpType op = isLiteralTextOperand)
     : OperandType(op), Str(LitStr) {}
 
-    AsmWriterOperand(const std::string &Printer,
-                     unsigned _MIOpNo,
+    AsmWriterOperand(const std::string &Printer, unsigned _MIOpNo,
                      const std::string &Modifier,
-                     OpType op = isMachineInstrOperand)
-    : OperandType(op), MIOpNo(_MIOpNo), Str(Printer), MiModifier(Modifier) {}
+                     OpType op = isMachineInstrOperand, bool PCRel = false)
+        : OperandType(op), MIOpNo(_MIOpNo), Str(Printer), MiModifier(Modifier),
+          PCRel(PCRel) {}
 
     bool operator!=(const AsmWriterOperand &Other) const {
       if (OperandType != Other.OperandType || Str != Other.Str) return true;
       if (OperandType == isMachineInstrOperand)
-        return MIOpNo != Other.MIOpNo || MiModifier != Other.MiModifier;
+        return MIOpNo != Other.MIOpNo || MiModifier != Other.MiModifier ||
+               PCRel != Other.PCRel;
       return false;
     }
     bool operator==(const AsmWriterOperand &Other) const {

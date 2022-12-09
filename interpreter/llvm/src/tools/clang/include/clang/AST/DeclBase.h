@@ -66,6 +66,7 @@ class SourceManager;
 class Stmt;
 class StoredDeclsMap;
 class TemplateDecl;
+class TemplateParameterList;
 class TranslationUnitDecl;
 class UsingDirectiveDecl;
 
@@ -465,6 +466,10 @@ public:
 
   ASTContext &getASTContext() const LLVM_READONLY;
 
+  /// Helper to get the language options from the ASTContext.
+  /// Defined out of line to avoid depending on ASTContext.h.
+  const LangOptions &getLangOpts() const LLVM_READONLY;
+
   void setAccess(AccessSpecifier AS) {
     Access = AS;
     assert(AccessDeclContextSanity());
@@ -514,7 +519,7 @@ public:
     if (!HasAttrs) return;
 
     AttrVec &Vec = getAttrs();
-    Vec.erase(std::remove_if(Vec.begin(), Vec.end(), isa<T, Attr*>), Vec.end());
+    llvm::erase_if(Vec, [](Attr *A) { return isa<T>(A); });
 
     if (Vec.empty())
       HasAttrs = false;
@@ -626,7 +631,16 @@ protected:
     setModuleOwnershipKind(ModuleOwnershipKind::ModulePrivate);
   }
 
-  /// Set the owning module ID.
+public:
+  /// Set the FromASTFile flag. This indicates that this declaration
+  /// was deserialized and not parsed from source code and enables
+  /// features such as module ownership information.
+  void setFromASTFile() {
+    FromASTFile = true;
+  }
+
+  /// Set the owning module ID.  This may only be called for
+  /// deserialized Decls.
   void setOwningModuleID(unsigned ID) {
     assert(isFromASTFile() && "Only works on a deserialized declaration");
     *((unsigned*)this - 2) = ID;
@@ -767,18 +781,19 @@ public:
   /// all declarations in a global module fragment are unowned.
   Module *getOwningModuleForLinkage(bool IgnoreLinkage = false) const;
 
-  /// Determine whether this declaration might be hidden from name
-  /// lookup. Note that the declaration might be visible even if this returns
-  /// \c false, if the owning module is visible within the query context.
-  // FIXME: Rename this to make it clearer what it does.
-  bool isHidden() const {
-    return (int)getModuleOwnershipKind() > (int)ModuleOwnershipKind::Visible;
+  /// Determine whether this declaration is definitely visible to name lookup,
+  /// independent of whether the owning module is visible.
+  /// Note: The declaration may be visible even if this returns \c false if the
+  /// owning module is visible within the query context. This is a low-level
+  /// helper function; most code should be calling Sema::isVisible() instead.
+  bool isUnconditionallyVisible() const {
+    return (int)getModuleOwnershipKind() <= (int)ModuleOwnershipKind::Visible;
   }
 
   /// Set that this declaration is globally visible, even if it came from a
   /// module that is not visible.
   void setVisibleDespiteOwningModule() {
-    if (isHidden())
+    if (!isUnconditionallyVisible())
       setModuleOwnershipKind(ModuleOwnershipKind::Visible);
   }
 
@@ -848,6 +863,10 @@ public:
   // within the scope of a template parameter).
   bool isTemplated() const;
 
+  /// Determine the number of levels of template parameter surrounding this
+  /// declaration.
+  unsigned getTemplateDepth() const;
+
   /// isDefinedOutsideFunctionOrMethod - This predicate returns true if this
   /// scoped decl is defined outside the current function or method.  This is
   /// roughly global variables and functions, but also handles enums (which
@@ -856,14 +875,19 @@ public:
     return getParentFunctionOrMethod() == nullptr;
   }
 
-  /// Returns true if this declaration lexically is inside a function.
-  /// It recognizes non-defining declarations as well as members of local
-  /// classes:
+  /// Determine whether a substitution into this declaration would occur as
+  /// part of a substitution into a dependent local scope. Such a substitution
+  /// transitively substitutes into all constructs nested within this
+  /// declaration.
+  ///
+  /// This recognizes non-defining declarations as well as members of local
+  /// classes and lambdas:
   /// \code
-  ///     void foo() { void bar(); }
-  ///     void foo2() { class ABC { void bar(); }; }
+  ///     template<typename T> void foo() { void bar(); }
+  ///     template<typename T> void foo2() { class ABC { void bar(); }; }
+  ///     template<typename T> inline int x = [](){ return 0; }();
   /// \endcode
-  bool isLexicallyWithinFunctionOrMethod() const;
+  bool isInLocalScopeForInstantiation() const;
 
   /// If this decl is defined inside a function/method/block it returns
   /// the corresponding DeclContext, otherwise it returns null.
@@ -959,7 +983,7 @@ public:
   /// as this declaration, or NULL if there is no previous declaration.
   Decl *getPreviousDecl() { return getPreviousDeclImpl(); }
 
-  /// Retrieve the most recent declaration that declares the same entity
+  /// Retrieve the previous declaration that declares the same entity
   /// as this declaration, or NULL if there is no previous declaration.
   const Decl *getPreviousDecl() const {
     return const_cast<Decl *>(this)->getPreviousDeclImpl();
@@ -1023,7 +1047,15 @@ public:
 
   /// If this is a declaration that describes some template, this
   /// method returns that template declaration.
+  ///
+  /// Note that this returns nullptr for partial specializations, because they
+  /// are not modeled as TemplateDecls. Use getDescribedTemplateParams to handle
+  /// those cases.
   TemplateDecl *getDescribedTemplate() const;
+
+  /// If this is a declaration that describes some template or partial
+  /// specialization, this returns the corresponding template parameter list.
+  const TemplateParameterList *getDescribedTemplateParams() const;
 
   /// Returns the function itself, or the templated function if this is a
   /// function template.
@@ -1188,66 +1220,110 @@ public:
 
   void print(raw_ostream &OS) const override;
 };
+} // namespace clang
 
-/// The results of name lookup within a DeclContext. This is either a
-/// single result (with no stable storage) or a collection of results (with
-/// stable storage provided by the lookup table).
+// Required to determine the layout of the PointerUnion<NamedDecl*> before
+// seeing the NamedDecl definition being first used in DeclListNode::operator*.
+namespace llvm {
+  template <> struct PointerLikeTypeTraits<::clang::NamedDecl *> {
+    static inline void *getAsVoidPointer(::clang::NamedDecl *P) { return P; }
+    static inline ::clang::NamedDecl *getFromVoidPointer(void *P) {
+      return static_cast<::clang::NamedDecl *>(P);
+    }
+    static constexpr int NumLowBitsAvailable = 3;
+  };
+}
+
+namespace clang {
+/// A list storing NamedDecls in the lookup tables.
+class DeclListNode {
+  friend class ASTContext; // allocate, deallocate nodes.
+  friend class StoredDeclsList;
+public:
+  using Decls = llvm::PointerUnion<NamedDecl*, DeclListNode*>;
+  class iterator {
+    friend class DeclContextLookupResult;
+    friend class StoredDeclsList;
+
+    Decls Ptr;
+    iterator(Decls Node) : Ptr(Node) { }
+  public:
+    using difference_type = ptrdiff_t;
+    using value_type = NamedDecl*;
+    using pointer = void;
+    using reference = value_type;
+    using iterator_category = std::forward_iterator_tag;
+
+    iterator() = default;
+
+    reference operator*() const {
+      assert(Ptr && "dereferencing end() iterator");
+      if (DeclListNode *CurNode = Ptr.dyn_cast<DeclListNode*>())
+        return CurNode->D;
+      return Ptr.get<NamedDecl*>();
+    }
+    void operator->() const { } // Unsupported.
+    bool operator==(const iterator &X) const { return Ptr == X.Ptr; }
+    bool operator!=(const iterator &X) const { return Ptr != X.Ptr; }
+    inline iterator &operator++() { // ++It
+      assert(!Ptr.isNull() && "Advancing empty iterator");
+
+      if (DeclListNode *CurNode = Ptr.dyn_cast<DeclListNode*>())
+        Ptr = CurNode->Rest;
+      else
+        Ptr = nullptr;
+      return *this;
+    }
+    iterator operator++(int) { // It++
+      iterator temp = *this;
+      ++(*this);
+      return temp;
+    }
+    // Enables the pattern for (iterator I =..., E = I.end(); I != E; ++I)
+    iterator end() { return iterator(); }
+  };
+private:
+  NamedDecl *D = nullptr;
+  Decls Rest = nullptr;
+  DeclListNode(NamedDecl *ND) : D(ND) {}
+};
+
+/// The results of name lookup within a DeclContext.
 class DeclContextLookupResult {
-  using ResultTy = ArrayRef<NamedDecl *>;
+  using Decls = DeclListNode::Decls;
 
-  ResultTy Result;
-
-  // If there is only one lookup result, it would be invalidated by
-  // reallocations of the name table, so store it separately.
-  NamedDecl *Single = nullptr;
-
-  static NamedDecl *const SingleElementDummyList;
+  /// When in collection form, this is what the Data pointer points to.
+  Decls Result;
 
 public:
   DeclContextLookupResult() = default;
-  DeclContextLookupResult(ArrayRef<NamedDecl *> Result)
-      : Result(Result) {}
-  DeclContextLookupResult(NamedDecl *Single)
-      : Result(SingleElementDummyList), Single(Single) {}
+  DeclContextLookupResult(Decls Result) : Result(Result) {}
 
-  class iterator;
-
-  using IteratorBase =
-      llvm::iterator_adaptor_base<iterator, ResultTy::iterator,
-                                  std::random_access_iterator_tag,
-                                  NamedDecl *const>;
-
-  class iterator : public IteratorBase {
-    value_type SingleElement;
-
-  public:
-    explicit iterator(pointer Pos, value_type Single = nullptr)
-        : IteratorBase(Pos), SingleElement(Single) {}
-
-    reference operator*() const {
-      return SingleElement ? SingleElement : IteratorBase::operator*();
-    }
-  };
-
+  using iterator = DeclListNode::iterator;
   using const_iterator = iterator;
-  using pointer = iterator::pointer;
   using reference = iterator::reference;
 
-  iterator begin() const { return iterator(Result.begin(), Single); }
-  iterator end() const { return iterator(Result.end(), Single); }
+  iterator begin() { return iterator(Result); }
+  iterator end() { return iterator(); }
+  const_iterator begin() const {
+    return const_cast<DeclContextLookupResult*>(this)->begin();
+  }
+  const_iterator end() const { return iterator(); }
 
-  bool empty() const { return Result.empty(); }
-  pointer data() const { return Single ? &Single : Result.data(); }
-  size_t size() const { return Single ? 1 : Result.size(); }
-  reference front() const { return Single ? Single : Result.front(); }
-  reference back() const { return Single ? Single : Result.back(); }
-  reference operator[](size_t N) const { return Single ? Single : Result[N]; }
+  bool empty() const { return Result.isNull();  }
+  bool isSingleResult() const { return Result.dyn_cast<NamedDecl*>(); }
+  reference front() const { return *begin(); }
 
-  // FIXME: Remove this from the interface
-  DeclContextLookupResult slice(size_t N) const {
-    DeclContextLookupResult Sliced = Result.slice(N);
-    Sliced.Single = Single;
-    return Sliced;
+  // Find the first declaration of the given type in the list. Note that this
+  // is not in general the earliest-declared declaration, and should only be
+  // used when it's not possible for there to be more than one match or where
+  // it doesn't matter which one is found.
+  template<class T> T *find_first() const {
+    for (auto *D : *this)
+      if (T *Decl = dyn_cast<T>(D))
+        return Decl;
+
+    return nullptr;
   }
 };
 
@@ -1501,10 +1577,9 @@ class DeclContext {
     /// constructor or a destructor.
     uint64_t IsTrivialForCall : 1;
 
-    /// Used by CXXMethodDecl
     uint64_t IsDefaulted : 1;
-    /// Used by CXXMethodDecl
     uint64_t IsExplicitlyDefaulted : 1;
+    uint64_t HasDefaultedFunctionInfo : 1;
     uint64_t HasImplicitReturnZero : 1;
     uint64_t IsLateTemplateParsed : 1;
 
@@ -1534,10 +1609,13 @@ class DeclContext {
 
     /// Store the ODRHash after first calculation.
     uint64_t HasODRHash : 1;
+
+    /// Indicates if the function uses Floating Point Constrained Intrinsics
+    uint64_t UsesFPIntrin : 1;
   };
 
   /// Number of non-inherited bits in FunctionDeclBitfields.
-  enum { NumFunctionDeclBits = 25 };
+  enum { NumFunctionDeclBits = 27 };
 
   /// Stores the bits used by CXXConstructorDecl. If modified
   /// NumCXXConstructorDeclBits and the accessor
@@ -1554,7 +1632,7 @@ class DeclContext {
     /// exactly 64 bits and thus the width of NumCtorInitializers
     /// will need to be shrunk if some bit is added to NumDeclContextBitfields,
     /// NumFunctionDeclBitfields or CXXConstructorDeclBitfields.
-    uint64_t NumCtorInitializers : 23;
+    uint64_t NumCtorInitializers : 21;
     uint64_t IsInheritingConstructor : 1;
 
     /// Whether this constructor has a trail-allocated explicit specifier.
@@ -1589,6 +1667,9 @@ class DeclContext {
 
     /// True if this method is the getter or setter for an explicit property.
     uint64_t IsPropertyAccessor : 1;
+
+    /// True if this method is a synthesized property accessor stub.
+    uint64_t IsSynthesizedAccessorStub : 1;
 
     /// Method has a definition.
     uint64_t IsDefined : 1;
@@ -2297,7 +2378,7 @@ public:
 
   using udir_iterator_base =
       llvm::iterator_adaptor_base<udir_iterator, lookup_iterator,
-                                  std::random_access_iterator_tag,
+                                  typename lookup_iterator::iterator_category,
                                   UsingDirectiveDecl *>;
 
   struct udir_iterator : udir_iterator_base {

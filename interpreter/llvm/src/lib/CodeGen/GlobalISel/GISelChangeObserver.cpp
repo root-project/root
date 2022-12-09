@@ -16,7 +16,7 @@
 using namespace llvm;
 
 void GISelChangeObserver::changingAllUsesOfReg(
-    const MachineRegisterInfo &MRI, unsigned Reg) {
+    const MachineRegisterInfo &MRI, Register Reg) {
   for (auto &ChangingMI : MRI.use_instructions(Reg)) {
     changingInstr(ChangingMI);
     ChangingAllUsesOfReg.insert(&ChangingMI);
@@ -38,3 +38,11 @@ RAIIDelegateInstaller::RAIIDelegateInstaller(MachineFunction &MF,
 }
 
 RAIIDelegateInstaller::~RAIIDelegateInstaller() { MF.resetDelegate(Delegate); }
+
+RAIIMFObserverInstaller::RAIIMFObserverInstaller(MachineFunction &MF,
+                                                 GISelChangeObserver &Observer)
+    : MF(MF) {
+  MF.setObserver(&Observer);
+}
+
+RAIIMFObserverInstaller::~RAIIMFObserverInstaller() { MF.setObserver(nullptr); }

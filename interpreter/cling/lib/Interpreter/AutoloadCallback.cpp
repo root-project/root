@@ -121,12 +121,14 @@ namespace cling {
         else if (FileName.equals(m_PrevFileName.second))
           FE = m_PrevFE.second;
         else {
-          FE = m_PP->LookupFile(fileNameLoc, FileName, isAngled,
-                                FromDir, FromFile, CurDir, /*SearchPath*/0,
-                                /*RelativePath*/ 0, /*suggestedModule*/0,
-                                /*IsMapped*/0, /*IsFrameworkFound*/ nullptr,
-                                /*SkipCache*/ false,
-                                /*OpenFile*/ false, /*CacheFail*/ true);
+          auto FERef = m_PP->LookupFile(fileNameLoc, FileName, isAngled,
+                                        FromDir, FromFile, CurDir,
+                                        /*SearchPath*/0, /*RelativePath*/ 0,
+                                        /*suggestedModule*/0, /*IsMapped*/0,
+                                        /*IsFrameworkFound*/ nullptr,
+                                        /*SkipCache*/ false,
+                                        /*OpenFile*/ false, /*CacheFail*/ true);
+          FE = &FERef->getFileEntry();
           needCacheUpdate = true;
         }
 
@@ -163,11 +165,11 @@ namespace cling {
 
       if ( (cacheUpdate = addFile(FileNames.first,true)) ) {
         m_PrevFE.first = cacheUpdate;
-        m_PrevFileName.first = FileNames.first;
+        m_PrevFileName.first = FileNames.first.str();
       }
       if ( (cacheUpdate = addFile(FileNames.second,false)) ) {
         m_PrevFE.second = cacheUpdate;
-        m_PrevFileName.second = FileNames.second;
+        m_PrevFileName.second = FileNames.second.str();
       }
 
 

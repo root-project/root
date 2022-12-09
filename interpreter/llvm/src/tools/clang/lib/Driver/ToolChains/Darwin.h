@@ -10,7 +10,9 @@
 #define LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_DARWIN_H
 
 #include "Cuda.h"
-#include "clang/Driver/DarwinSDKInfo.h"
+#include "ROCm.h"
+#include "clang/Basic/DarwinSDKInfo.h"
+#include "clang/Basic/LangOptions.h"
 #include "clang/Driver/Tool.h"
 #include "clang/Driver/ToolChain.h"
 #include "clang/Driver/XRayArgs.h"
@@ -40,13 +42,8 @@ protected:
   }
 
 public:
-  MachOTool(
-      const char *Name, const char *ShortName, const ToolChain &TC,
-      ResponseFileSupport ResponseSupport = RF_None,
-      llvm::sys::WindowsEncodingMethod ResponseEncoding = llvm::sys::WEM_UTF8,
-      const char *ResponseFlag = "@")
-      : Tool(Name, ShortName, TC, ResponseSupport, ResponseEncoding,
-             ResponseFlag) {}
+  MachOTool(const char *Name, const char *ShortName, const ToolChain &TC)
+      : Tool(Name, ShortName, TC) {}
 };
 
 class LLVM_LIBRARY_VISIBILITY Assembler : public MachOTool {
@@ -66,12 +63,11 @@ class LLVM_LIBRARY_VISIBILITY Linker : public MachOTool {
   bool NeedsTempPath(const InputInfoList &Inputs) const;
   void AddLinkArgs(Compilation &C, const llvm::opt::ArgList &Args,
                    llvm::opt::ArgStringList &CmdArgs,
-                   const InputInfoList &Inputs) const;
+                   const InputInfoList &Inputs, unsigned Version[5],
+                   bool LinkerIsLLD, bool LinkerIsLLDDarwinNew) const;
 
 public:
-  Linker(const ToolChain &TC)
-      : MachOTool("darwin::Linker", "linker", TC, RF_FileList,
-                  llvm::sys::WEM_UTF8, "-filelist") {}
+  Linker(const ToolChain &TC) : MachOTool("darwin::Linker", "linker", TC) {}
 
   bool hasIntegratedCPP() const override { return false; }
   bool isLinkJob() const override { return true; }
@@ -167,6 +163,10 @@ public:
   virtual void addMinVersionArgs(const llvm::opt::ArgList &Args,
                                  llvm::opt::ArgStringList &CmdArgs) const {}
 
+  virtual void addPlatformVersionArgs(const llvm::opt::ArgList &Args,
+                                      llvm::opt::ArgStringList &CmdArgs) const {
+  }
+
   /// On some iOS platforms, kernel and kernel modules were built statically. Is
   /// this such a target?
   virtual bool isKernelStatic() const { return false; }
@@ -184,9 +184,6 @@ public:
 
     /// Emit rpaths for @executable_path as well as the resource directory.
     RLO_AddRPath = 1 << 2,
-
-    /// Link the library in before any others.
-    RLO_FirstLink = 1 << 3,
   };
 
   /// Add a runtime library to the list of items to link.
@@ -258,6 +255,9 @@ public:
     return "";
   }
 
+  // Darwin toolchain uses legacy thin LTO API, which is not
+  // capable of unit splitting.
+  bool canSplitThinLTOUnit() const override { return false; }
   /// }
 };
 
@@ -281,18 +281,22 @@ public:
   enum DarwinEnvironmentKind {
     NativeEnvironment,
     Simulator,
+    MacCatalyst,
   };
 
   mutable DarwinPlatformKind TargetPlatform;
   mutable DarwinEnvironmentKind TargetEnvironment;
 
-  /// The OS version we are targeting.
+  /// The native OS version we are targeting.
   mutable VersionTuple TargetVersion;
+  /// The OS version we are targeting as specified in the triple.
+  mutable VersionTuple OSTargetVersion;
 
   /// The information about the darwin SDK that was used.
   mutable Optional<DarwinSDKInfo> SDKInfo;
 
   CudaInstallationDetector CudaInstallation;
+  RocmInstallationDetector RocmInstallation;
 
 private:
   void AddDeploymentTarget(llvm::opt::DerivedArgList &Args) const;
@@ -310,6 +314,9 @@ public:
 
   void addMinVersionArgs(const llvm::opt::ArgList &Args,
                          llvm::opt::ArgStringList &CmdArgs) const override;
+
+  void addPlatformVersionArgs(const llvm::opt::ArgList &Args,
+                              llvm::opt::ArgStringList &CmdArgs) const override;
 
   void addStartObjectFileArgs(const llvm::opt::ArgList &Args,
                               llvm::opt::ArgStringList &CmdArgs) const override;
@@ -330,12 +337,14 @@ protected:
   // FIXME: Eliminate these ...Target functions and derive separate tool chains
   // for these targets and put version in constructor.
   void setTarget(DarwinPlatformKind Platform, DarwinEnvironmentKind Environment,
-                 unsigned Major, unsigned Minor, unsigned Micro) const {
+                 unsigned Major, unsigned Minor, unsigned Micro,
+                 VersionTuple NativeTargetVersion) const {
     // FIXME: For now, allow reinitialization as long as values don't
     // change. This will go away when we move away from argument translation.
     if (TargetInitialized && TargetPlatform == Platform &&
         TargetEnvironment == Environment &&
-        TargetVersion == VersionTuple(Major, Minor, Micro))
+        (Environment == MacCatalyst ? OSTargetVersion : TargetVersion) ==
+            VersionTuple(Major, Minor, Micro))
       return;
 
     assert(!TargetInitialized && "Target already initialized!");
@@ -345,8 +354,14 @@ protected:
     TargetVersion = VersionTuple(Major, Minor, Micro);
     if (Environment == Simulator)
       const_cast<Darwin *>(this)->setTripleEnvironment(llvm::Triple::Simulator);
+    else if (Environment == MacCatalyst) {
+      const_cast<Darwin *>(this)->setTripleEnvironment(llvm::Triple::MacABI);
+      TargetVersion = NativeTargetVersion;
+      OSTargetVersion = VersionTuple(Major, Minor, Micro);
+    }
   }
 
+public:
   bool isTargetIPhoneOS() const {
     assert(TargetInitialized && "Target not initialized!");
     return (TargetPlatform == IPhoneOS || TargetPlatform == TvOS) &&
@@ -394,16 +409,34 @@ protected:
     return TargetPlatform == WatchOS;
   }
 
+  bool isTargetMacCatalyst() const {
+    return TargetPlatform == IPhoneOS && TargetEnvironment == MacCatalyst;
+  }
+
   bool isTargetMacOS() const {
     assert(TargetInitialized && "Target not initialized!");
     return TargetPlatform == MacOS;
   }
 
+  bool isTargetMacOSBased() const {
+    assert(TargetInitialized && "Target not initialized!");
+    return TargetPlatform == MacOS || isTargetMacCatalyst();
+  }
+
+  bool isTargetAppleSiliconMac() const {
+    assert(TargetInitialized && "Target not initialized!");
+    return isTargetMacOSBased() && getArch() == llvm::Triple::aarch64;
+  }
+
   bool isTargetInitialized() const { return TargetInitialized; }
 
-  VersionTuple getTargetVersion() const {
+  /// The version of the OS that's used by the OS specified in the target
+  /// triple. It might be different from the actual target OS on which the
+  /// program will run, e.g. MacCatalyst code runs on a macOS target, but its
+  /// target triple is iOS.
+  VersionTuple getTripleTargetVersion() const {
     assert(TargetInitialized && "Target not initialized!");
-    return TargetVersion;
+    return isTargetMacCatalyst() ? OSTargetVersion : TargetVersion;
   }
 
   bool isIPhoneOSVersionLT(unsigned V0, unsigned V1 = 0,
@@ -412,11 +445,25 @@ protected:
     return TargetVersion < VersionTuple(V0, V1, V2);
   }
 
+  /// Returns true if the minimum supported macOS version for the slice that's
+  /// being built is less than the specified version. If there's no minimum
+  /// supported macOS version, the deployment target version is compared to the
+  /// specifed version instead.
   bool isMacosxVersionLT(unsigned V0, unsigned V1 = 0, unsigned V2 = 0) const {
-    assert(isTargetMacOS() && "Unexpected call for non OS X target!");
-    return TargetVersion < VersionTuple(V0, V1, V2);
+    assert(isTargetMacOSBased() &&
+           (getTriple().isMacOSX() || getTriple().isMacCatalystEnvironment()) &&
+           "Unexpected call for non OS X target!");
+    // The effective triple might not be initialized yet, so construct a
+    // pseudo-effective triple to get the minimum supported OS version.
+    VersionTuple MinVers =
+        llvm::Triple(getTriple().getArchName(), "apple", "macos")
+            .getMinimumSupportedOSVersion();
+    return (!MinVers.empty() && MinVers > TargetVersion
+                ? MinVers
+                : TargetVersion) < VersionTuple(V0, V1, V2);
   }
 
+protected:
   /// Return true if c++17 aligned allocation/deallocation functions are not
   /// implemented in the c++ standard library of the deployment target we are
   /// targeting.
@@ -451,25 +498,28 @@ public:
 
   void AddCudaIncludeArgs(const llvm::opt::ArgList &DriverArgs,
                           llvm::opt::ArgStringList &CC1Args) const override;
+  void AddHIPIncludeArgs(const llvm::opt::ArgList &DriverArgs,
+                         llvm::opt::ArgStringList &CC1Args) const override;
 
   bool UseObjCMixedDispatch() const override {
     // This is only used with the non-fragile ABI and non-legacy dispatch.
 
     // Mixed dispatch is used everywhere except OS X before 10.6.
-    return !(isTargetMacOS() && isMacosxVersionLT(10, 6));
+    return !(isTargetMacOSBased() && isMacosxVersionLT(10, 6));
   }
 
-  unsigned GetDefaultStackProtectorLevel(bool KernelOrKext) const override {
+  LangOptions::StackProtectorMode
+  GetDefaultStackProtectorLevel(bool KernelOrKext) const override {
     // Stack protectors default to on for user code on 10.5,
     // and for everything in 10.6 and beyond
     if (isTargetIOSBased() || isTargetWatchOSBased())
-      return 1;
-    else if (isTargetMacOS() && !isMacosxVersionLT(10, 6))
-      return 1;
-    else if (isTargetMacOS() && !isMacosxVersionLT(10, 5) && !KernelOrKext)
-      return 1;
+      return LangOptions::SSPOn;
+    else if (isTargetMacOSBased() && !isMacosxVersionLT(10, 6))
+      return LangOptions::SSPOn;
+    else if (isTargetMacOSBased() && !isMacosxVersionLT(10, 5) && !KernelOrKext)
+      return LangOptions::SSPOn;
 
-    return 0;
+    return LangOptions::SSPOff;
   }
 
   void CheckObjCARC() const override;

@@ -1,4 +1,4 @@
-add_llvm_library(LLVMOption
+add_llvm_component_library(LLVMOption
   Arg.cpp
   ArgList.cpp
   Option.cpp
@@ -6,4 +6,7 @@ add_llvm_library(LLVMOption
 
   ADDITIONAL_HEADER_DIRS
   ${LLVM_MAIN_INCLUDE_DIR}/llvm/Option
+
+  LINK_COMPONENTS
+  Support
   )

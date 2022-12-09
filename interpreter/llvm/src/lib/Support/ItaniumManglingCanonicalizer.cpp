@@ -7,15 +7,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Support/ItaniumManglingCanonicalizer.h"
-
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/FoldingSet.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Demangle/ItaniumDemangle.h"
 #include "llvm/Support/Allocator.h"
-
-#include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/FoldingSet.h"
-#include "llvm/ADT/StringRef.h"
 
 using namespace llvm;
 using llvm::itanium_demangle::ForwardTemplateReference;
@@ -30,22 +26,10 @@ struct FoldingSetNodeIDBuilder {
   void operator()(StringView Str) {
     ID.AddString(llvm::StringRef(Str.begin(), Str.size()));
   }
-  template<typename T>
-  typename std::enable_if<std::is_integral<T>::value ||
-                          std::is_enum<T>::value>::type
+  template <typename T>
+  std::enable_if_t<std::is_integral<T>::value || std::is_enum<T>::value>
   operator()(T V) {
     ID.AddInteger((unsigned long long)V);
-  }
-  void operator()(itanium_demangle::NodeOrString NS) {
-    if (NS.isNode()) {
-      ID.AddInteger(0);
-      (*this)(NS.asNode());
-    } else if (NS.isString()) {
-      ID.AddInteger(1);
-      (*this)(NS.asString());
-    } else {
-      ID.AddInteger(2);
-    }
   }
   void operator()(itanium_demangle::NodeArray A) {
     ID.AddInteger(A.size());
@@ -223,7 +207,7 @@ struct CanonicalizerAllocator::MakeNodeImpl<
 
 using CanonicalizingDemangler =
     itanium_demangle::ManglingParser<CanonicalizerAllocator>;
-}
+} // namespace
 
 struct ItaniumManglingCanonicalizer::Impl {
   CanonicalizingDemangler Demangler = {nullptr, nullptr};
@@ -307,16 +291,32 @@ ItaniumManglingCanonicalizer::addEquivalence(FragmentKind Kind, StringRef First,
   return EquivalenceError::Success;
 }
 
+static ItaniumManglingCanonicalizer::Key
+parseMaybeMangledName(CanonicalizingDemangler &Demangler, StringRef Mangling,
+                      bool CreateNewNodes) {
+  Demangler.ASTAllocator.setCreateNewNodes(CreateNewNodes);
+  Demangler.reset(Mangling.begin(), Mangling.end());
+  // Attempt demangling only for names that look like C++ mangled names.
+  // Otherwise, treat them as extern "C" names. We permit the latter to
+  // be remapped by (eg)
+  //   encoding 6memcpy 7memmove
+  // consistent with how they are encoded as local-names inside a C++ mangling.
+  Node *N;
+  if (Mangling.startswith("_Z") || Mangling.startswith("__Z") ||
+      Mangling.startswith("___Z") || Mangling.startswith("____Z"))
+    N = Demangler.parse();
+  else
+    N = Demangler.make<itanium_demangle::NameType>(
+        StringView(Mangling.data(), Mangling.size()));
+  return reinterpret_cast<ItaniumManglingCanonicalizer::Key>(N);
+}
+
 ItaniumManglingCanonicalizer::Key
 ItaniumManglingCanonicalizer::canonicalize(StringRef Mangling) {
-  P->Demangler.ASTAllocator.setCreateNewNodes(true);
-  P->Demangler.reset(Mangling.begin(), Mangling.end());
-  return reinterpret_cast<Key>(P->Demangler.parse());
+  return parseMaybeMangledName(P->Demangler, Mangling, true);
 }
 
 ItaniumManglingCanonicalizer::Key
 ItaniumManglingCanonicalizer::lookup(StringRef Mangling) {
-  P->Demangler.ASTAllocator.setCreateNewNodes(false);
-  P->Demangler.reset(Mangling.begin(), Mangling.end());
-  return reinterpret_cast<Key>(P->Demangler.parse());
+  return parseMaybeMangledName(P->Demangler, Mangling, false);
 }

@@ -125,6 +125,10 @@ defm : X86WriteRes<WriteLoad,    [HWPort23], 5, [1], 1>;
 defm : X86WriteRes<WriteMove,    [HWPort0156], 1, [1], 1>;
 def  : WriteRes<WriteZero,       []>;
 
+// Model the effect of clobbering the read-write mask operand of the GATHER operation.
+// Does not cost anything by itself, only has latency, matching that of the WriteLoad,
+defm : X86WriteRes<WriteVecMaskedGatherWriteback, [], 5, [], 0>;
+
 // Arithmetic.
 defm : HWWriteResPair<WriteALU,    [HWPort0156], 1>;
 defm : HWWriteResPair<WriteADC,    [HWPort06, HWPort0156], 2, [1,1], 2>;
@@ -231,8 +235,12 @@ defm : X86WriteRes<WriteFStoreY,       [HWPort237,HWPort4], 1, [1,1], 2>;
 defm : X86WriteRes<WriteFStoreNT,      [HWPort237,HWPort4], 1, [1,1], 2>;
 defm : X86WriteRes<WriteFStoreNTX,     [HWPort237,HWPort4], 1, [1,1], 2>;
 defm : X86WriteRes<WriteFStoreNTY,     [HWPort237,HWPort4], 1, [1,1], 2>;
-defm : X86WriteRes<WriteFMaskedStore,  [HWPort0,HWPort4,HWPort237,HWPort15], 5, [1,1,1,1], 4>;
-defm : X86WriteRes<WriteFMaskedStoreY, [HWPort0,HWPort4,HWPort237,HWPort15], 5, [1,1,1,1], 4>;
+
+defm : X86WriteRes<WriteFMaskedStore32,  [HWPort0,HWPort4,HWPort237,HWPort15], 5, [1,1,1,1], 4>;
+defm : X86WriteRes<WriteFMaskedStore32Y, [HWPort0,HWPort4,HWPort237,HWPort15], 5, [1,1,1,1], 4>;
+defm : X86WriteRes<WriteFMaskedStore64,  [HWPort0,HWPort4,HWPort237,HWPort15], 5, [1,1,1,1], 4>;
+defm : X86WriteRes<WriteFMaskedStore64Y, [HWPort0,HWPort4,HWPort237,HWPort15], 5, [1,1,1,1], 4>;
+
 defm : X86WriteRes<WriteFMove,         [HWPort5], 1, [1], 1>;
 defm : X86WriteRes<WriteFMoveX,        [HWPort5], 1, [1], 1>;
 defm : X86WriteRes<WriteFMoveY,        [HWPort5], 1, [1], 1>;
@@ -257,6 +265,7 @@ defm : HWWriteResPair<WriteFCmp64Y, [HWPort1],  3, [1], 1, 7>;
 defm : HWWriteResPair<WriteFCmp64Z, [HWPort1],  3, [1], 1, 7>; // Unsupported = 1
 
 defm : HWWriteResPair<WriteFCom,    [HWPort1],  3>;
+defm : HWWriteResPair<WriteFComX,   [HWPort1],  3>;
 
 defm : HWWriteResPair<WriteFMul,    [HWPort01],  5, [1], 1, 5>;
 defm : HWWriteResPair<WriteFMulX,   [HWPort01],  5, [1], 1, 6>;
@@ -387,8 +396,10 @@ defm : X86WriteRes<WriteVecStoreX,       [HWPort237,HWPort4], 1, [1,1], 2>;
 defm : X86WriteRes<WriteVecStoreY,       [HWPort237,HWPort4], 1, [1,1], 2>;
 defm : X86WriteRes<WriteVecStoreNT,      [HWPort237,HWPort4], 1, [1,1], 2>;
 defm : X86WriteRes<WriteVecStoreNTY,     [HWPort237,HWPort4], 1, [1,1], 2>;
-defm : X86WriteRes<WriteVecMaskedStore,  [HWPort0,HWPort4,HWPort237,HWPort15], 5, [1,1,1,1], 4>;
-defm : X86WriteRes<WriteVecMaskedStoreY, [HWPort0,HWPort4,HWPort237,HWPort15], 5, [1,1,1,1], 4>;
+defm : X86WriteRes<WriteVecMaskedStore32,  [HWPort0,HWPort4,HWPort237,HWPort15], 5, [1,1,1,1], 4>;
+defm : X86WriteRes<WriteVecMaskedStore32Y, [HWPort0,HWPort4,HWPort237,HWPort15], 5, [1,1,1,1], 4>;
+defm : X86WriteRes<WriteVecMaskedStore64,  [HWPort0,HWPort4,HWPort237,HWPort15], 5, [1,1,1,1], 4>;
+defm : X86WriteRes<WriteVecMaskedStore64Y, [HWPort0,HWPort4,HWPort237,HWPort15], 5, [1,1,1,1], 4>;
 defm : X86WriteRes<WriteVecMove,         [HWPort015], 1, [1], 1>;
 defm : X86WriteRes<WriteVecMoveX,        [HWPort015], 1, [1], 1>;
 defm : X86WriteRes<WriteVecMoveY,        [HWPort015], 1, [1], 1>;
@@ -425,6 +436,7 @@ defm : HWWriteResPair<WriteBlend,  [HWPort5], 1, [1], 1, 6>;
 defm : HWWriteResPair<WriteBlendY, [HWPort5], 1, [1], 1, 7>;
 defm : HWWriteResPair<WriteBlendZ, [HWPort5], 1, [1], 1, 7>; // Unsupported = 1
 defm : HWWriteResPair<WriteShuffle256, [HWPort5], 3, [1], 1, 7>;
+defm : HWWriteResPair<WriteVPMOV256, [HWPort5], 3, [1], 1, 7>;
 defm : HWWriteResPair<WriteVarShuffle256, [HWPort5], 3, [1], 1, 7>;
 defm : HWWriteResPair<WriteVarBlend,  [HWPort5], 2, [2], 2, 6>;
 defm : HWWriteResPair<WriteVarBlendY, [HWPort5], 2, [2], 2, 7>;
@@ -770,7 +782,7 @@ def : InstRW<[HWWrite3P01], (instrs COM_FIPr, COM_FIr, UCOM_FIPr, UCOM_FIr)>;
 def : InstRW<[HWWriteP1], (instregex "TST_F")>;
 
 // FXAM.
-def : InstRW<[HWWrite2P1], (instrs FXAM)>;
+def : InstRW<[HWWrite2P1], (instrs XAM_F)>;
 
 // FPREM.
 def HWWriteFPREM : SchedWriteRes<[]> {
@@ -992,7 +1004,7 @@ def HWWriteResGroup14 : SchedWriteRes<[HWPort6,HWPort23]> {
   let NumMicroOps = 2;
   let ResourceCycles = [1,1];
 }
-def: InstRW<[HWWriteResGroup14], (instrs FARJMP64)>;
+def: InstRW<[HWWriteResGroup14], (instrs FARJMP64m)>;
 def: InstRW<[HWWriteResGroup14], (instregex "JMP(16|32|64)m")>;
 
 def HWWriteResGroup16 : SchedWriteRes<[HWPort23,HWPort15]> {
@@ -1201,7 +1213,7 @@ def HWWriteResGroup48 : SchedWriteRes<[HWPort4,HWPort6,HWPort23,HWPort237,HWPort
   let ResourceCycles = [1,1,1,1,1];
 }
 def: InstRW<[HWWriteResGroup48], (instregex "CALL(16|32|64)m")>;
-def: InstRW<[HWWriteResGroup48], (instrs FARCALL64)>;
+def: InstRW<[HWWriteResGroup48], (instrs FARCALL64m)>;
 
 def HWWriteResGroup50 : SchedWriteRes<[HWPort1]> {
   let Latency = 3;
@@ -1780,80 +1792,60 @@ def HWWriteResGroup183 : SchedWriteRes<[HWPort0,HWPort1,HWPort4,HWPort5,HWPort6,
 }
 def: InstRW<[HWWriteResGroup183], (instrs FSTENVm)>;
 
-def HWWriteResGroup184 : SchedWriteRes<[HWPort0, HWPort5, HWPort15, HWPort015, HWPort06, HWPort23]> {
-  let Latency = 26;
+def HWWriteResGroup184 : SchedWriteRes<[HWPort0,HWPort5,HWPort06,HWPort15,HWPort015,HWPort23]> {
+  let Latency = 14;
   let NumMicroOps = 12;
-  let ResourceCycles = [2,2,1,3,2,2];
+  let ResourceCycles = [2,2,2,1,3,2];
 }
-def: InstRW<[HWWriteResGroup184], (instrs VGATHERDPDrm,
-                                          VPGATHERDQrm,
-                                          VPGATHERDDrm)>;
+def: InstRW<[HWWriteResGroup184], (instrs VGATHERDPDrm, VPGATHERDQrm)>;
 
-def HWWriteResGroup185 : SchedWriteRes<[HWPort0, HWPort5, HWPort06, HWPort15, HWPort015, HWPort23]> {
-  let Latency = 24;
-  let NumMicroOps = 22;
-  let ResourceCycles = [5,3,4,1,5,4];
-}
-def: InstRW<[HWWriteResGroup185], (instrs VGATHERQPDYrm,
-                                          VPGATHERQQYrm)>;
-
-def HWWriteResGroup186 : SchedWriteRes<[HWPort0, HWPort5, HWPort06, HWPort15, HWPort015, HWPort23]> {
-  let Latency = 28;
-  let NumMicroOps = 22;
-  let ResourceCycles = [5,3,4,1,5,4];
-}
-def: InstRW<[HWWriteResGroup186], (instrs VPGATHERQDYrm)>;
-
-def HWWriteResGroup187 : SchedWriteRes<[HWPort0, HWPort5, HWPort06, HWPort15, HWPort015, HWPort23]> {
-  let Latency = 25;
-  let NumMicroOps = 22;
-  let ResourceCycles = [5,3,4,1,5,4];
-}
-def: InstRW<[HWWriteResGroup187], (instrs VPGATHERQDrm)>;
-
-def HWWriteResGroup188 : SchedWriteRes<[HWPort0, HWPort5, HWPort06, HWPort15, HWPort015, HWPort23]> {
-  let Latency = 27;
+def HWWriteResGroup185 : SchedWriteRes<[HWPort0,HWPort5,HWPort06,HWPort15,HWPort015,HWPort23]> {
+  let Latency = 17;
   let NumMicroOps = 20;
   let ResourceCycles = [3,3,4,1,5,4];
 }
-def: InstRW<[HWWriteResGroup188], (instrs VGATHERDPDYrm,
-                                          VPGATHERDQYrm)>;
+def: InstRW<[HWWriteResGroup185], (instrs VGATHERDPDYrm, VPGATHERDQYrm)>;
 
-def HWWriteResGroup189 : SchedWriteRes<[HWPort0, HWPort5, HWPort06, HWPort15, HWPort015, HWPort23]> {
-  let Latency = 27;
+def HWWriteResGroup186 : SchedWriteRes<[HWPort0,HWPort5,HWPort06,HWPort15,HWPort015,HWPort23]> {
+  let Latency = 16;
+  let NumMicroOps = 20;
+  let ResourceCycles = [3,3,4,1,5,4];
+}
+def: InstRW<[HWWriteResGroup186], (instrs VGATHERDPSrm, VPGATHERDDrm)>;
+
+def HWWriteResGroup187 : SchedWriteRes<[HWPort0,HWPort5,HWPort06,HWPort15,HWPort015,HWPort23]> {
+  let Latency = 22;
   let NumMicroOps = 34;
   let ResourceCycles = [5,3,8,1,9,8];
 }
-def: InstRW<[HWWriteResGroup189], (instrs VGATHERDPSYrm,
-                                          VPGATHERDDYrm)>;
+def: InstRW<[HWWriteResGroup187], (instrs VGATHERDPSYrm, VPGATHERDDYrm)>;
 
-def HWWriteResGroup190 : SchedWriteRes<[HWPort0, HWPort5, HWPort06, HWPort15, HWPort015, HWPort23]> {
-  let Latency = 23;
+def HWWriteResGroup188 : SchedWriteRes<[HWPort0,HWPort5,HWPort06,HWPort15,HWPort015,HWPort23]> {
+  let Latency = 15;
   let NumMicroOps = 14;
   let ResourceCycles = [3,3,2,1,3,2];
 }
-def: InstRW<[HWWriteResGroup190], (instrs VGATHERQPDrm,
-                                          VPGATHERQQrm)>;
+def: InstRW<[HWWriteResGroup188], (instrs VGATHERQPDrm, VPGATHERQQrm)>;
 
-def HWWriteResGroup191 : SchedWriteRes<[HWPort0, HWPort5, HWPort06, HWPort15, HWPort015, HWPort23]> {
-  let Latency = 28;
+def HWWriteResGroup189 : SchedWriteRes<[HWPort0,HWPort5,HWPort06,HWPort15,HWPort015,HWPort23]> {
+  let Latency = 17;
+  let NumMicroOps = 22;
+  let ResourceCycles = [5,3,4,1,5,4];
+}
+def: InstRW<[HWWriteResGroup189], (instrs VGATHERQPDYrm, VPGATHERQQYrm,
+                                          VGATHERQPSYrm, VPGATHERQDYrm)>;
+
+def HWWriteResGroup190 : SchedWriteRes<[HWPort0,HWPort5,HWPort06,HWPort15,HWPort015,HWPort23]> {
+  let Latency = 16;
   let NumMicroOps = 15;
   let ResourceCycles = [3,3,2,1,4,2];
 }
-def: InstRW<[HWWriteResGroup191], (instrs VGATHERQPSYrm)>;
-
-def HWWriteResGroup192 : SchedWriteRes<[HWPort0, HWPort5, HWPort06, HWPort15, HWPort015, HWPort23]> {
-  let Latency = 25;
-  let NumMicroOps = 15;
-  let ResourceCycles = [3,3,2,1,4,2];
-}
-def: InstRW<[HWWriteResGroup192], (instrs VGATHERQPSrm,
-                                          VGATHERDPSrm)>;
+def: InstRW<[HWWriteResGroup190], (instrs VGATHERQPSrm, VPGATHERQDrm)>;
 
 def: InstRW<[WriteZero], (instrs CLC)>;
 
 
-// Intruction variants handled by the renamer. These might not need execution
+// Instruction variants handled by the renamer. These might not need execution
 // ports in certain conditions.
 // See Agner's Fog "The microarchitecture of Intel, AMD and VIA CPUs",
 // section "Haswell and Broadwell Pipeline" > "Register allocation and

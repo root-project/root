@@ -28,21 +28,28 @@ namespace DWARFYAML {
 struct Data;
 struct PubSection;
 
-void EmitDebugAbbrev(raw_ostream &OS, const Data &DI);
-void EmitDebugStr(raw_ostream &OS, const Data &DI);
+Error emitDebugAbbrev(raw_ostream &OS, const Data &DI);
+Error emitDebugStr(raw_ostream &OS, const Data &DI);
 
-void EmitDebugAranges(raw_ostream &OS, const Data &DI);
-void EmitPubSection(raw_ostream &OS, const PubSection &Sect,
-                    bool IsLittleEndian);
-void EmitDebugInfo(raw_ostream &OS, const Data &DI);
-void EmitDebugLine(raw_ostream &OS, const Data &DI);
+Error emitDebugAranges(raw_ostream &OS, const Data &DI);
+Error emitDebugRanges(raw_ostream &OS, const Data &DI);
+Error emitDebugPubnames(raw_ostream &OS, const Data &DI);
+Error emitDebugPubtypes(raw_ostream &OS, const Data &DI);
+Error emitDebugGNUPubnames(raw_ostream &OS, const Data &DI);
+Error emitDebugGNUPubtypes(raw_ostream &OS, const Data &DI);
+Error emitDebugInfo(raw_ostream &OS, const Data &DI);
+Error emitDebugLine(raw_ostream &OS, const Data &DI);
+Error emitDebugAddr(raw_ostream &OS, const Data &DI);
+Error emitDebugStrOffsets(raw_ostream &OS, const Data &DI);
+Error emitDebugRnglists(raw_ostream &OS, const Data &DI);
+Error emitDebugLoclists(raw_ostream &OS, const Data &DI);
 
+std::function<Error(raw_ostream &, const Data &)>
+getDWARFEmitterByName(StringRef SecName);
 Expected<StringMap<std::unique_ptr<MemoryBuffer>>>
-EmitDebugSections(StringRef YAMLString, bool ApplyFixups = false,
-                  bool IsLittleEndian = sys::IsLittleEndianHost);
-StringMap<std::unique_ptr<MemoryBuffer>>
-EmitDebugSections(llvm::DWARFYAML::Data &DI, bool ApplyFixups);
-
+emitDebugSections(StringRef YAMLString,
+                  bool IsLittleEndian = sys::IsLittleEndianHost,
+                  bool Is64BitAddrSize = true);
 } // end namespace DWARFYAML
 } // end namespace llvm
 

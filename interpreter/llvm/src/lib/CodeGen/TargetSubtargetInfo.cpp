@@ -15,13 +15,12 @@
 using namespace llvm;
 
 TargetSubtargetInfo::TargetSubtargetInfo(
-    const Triple &TT, StringRef CPU, StringRef FS,
+    const Triple &TT, StringRef CPU, StringRef TuneCPU, StringRef FS,
     ArrayRef<SubtargetFeatureKV> PF, ArrayRef<SubtargetSubTypeKV> PD,
-    const MCWriteProcResEntry *WPR,
-    const MCWriteLatencyEntry *WL, const MCReadAdvanceEntry *RA,
-    const InstrStage *IS, const unsigned *OC, const unsigned *FP)
-    : MCSubtargetInfo(TT, CPU, FS, PF, PD, WPR, WL, RA, IS, OC, FP) {
-}
+    const MCWriteProcResEntry *WPR, const MCWriteLatencyEntry *WL,
+    const MCReadAdvanceEntry *RA, const InstrStage *IS, const unsigned *OC,
+    const unsigned *FP)
+    : MCSubtargetInfo(TT, CPU, TuneCPU, FS, PF, PD, WPR, WL, RA, IS, OC, FP) {}
 
 TargetSubtargetInfo::~TargetSubtargetInfo() = default;
 
@@ -52,6 +51,10 @@ bool TargetSubtargetInfo::enableAdvancedRASplitCost() const {
 
 bool TargetSubtargetInfo::enablePostRAScheduler() const {
   return getSchedModel().PostRAScheduler;
+}
+
+bool TargetSubtargetInfo::enablePostRAMachineScheduler() const {
+  return enableMachineScheduler() && enablePostRAScheduler();
 }
 
 bool TargetSubtargetInfo::useAA() const {

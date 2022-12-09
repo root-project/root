@@ -123,6 +123,15 @@ be reduced to ``N`` via:
 - lld-link:
   ``/opt:lldltojobs=N``
 
+Other possible values for ``N`` are:
+
+- 0:
+  Use one thread per physical core (default)
+- 1:
+  Use a single thread only (disable multi-threading)
+- all:
+  Use one thread per logical core (uses all hyper-threads)
+
 Incremental
 -----------
 .. _incremental:
@@ -194,7 +203,8 @@ Possible key-value pairs are:
 Clang Bootstrap
 ---------------
 
-To bootstrap clang/LLVM with ThinLTO, follow these steps:
+To `bootstrap clang/LLVM <https://llvm.org/docs/AdvancedBuilds.html#bootstrap-builds>`_
+with ThinLTO, follow these steps:
 
 1. The host compiler_ must be a version of clang that supports ThinLTO.
 #. The host linker_ must support ThinLTO (and in the case of gold, must be
@@ -224,6 +234,10 @@ To bootstrap clang/LLVM with ThinLTO, follow these steps:
    build directory. Specify any additional linker options after
    ``CMAKE_EXE_LINKER_FLAGS:STRING=``. Note the configure may fail if
    linker plugin options are instead specified directly in the previous step.
+
+The ``BOOTSTRAP_LLVM_ENABLE_LTO=Thin`` will enable ThinLTO for stage 2 and
+stage 3 in case the compiler used for stage 1 does not support the ThinLTO
+option.
 
 More Information
 ================

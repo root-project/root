@@ -86,7 +86,7 @@ HexagonEvaluator::HexagonEvaluator(const HexagonRegisterInfo &tri,
   }
 }
 
-BT::BitMask HexagonEvaluator::mask(unsigned Reg, unsigned Sub) const {
+BT::BitMask HexagonEvaluator::mask(Register Reg, unsigned Sub) const {
   if (Sub == 0)
     return MachineEvaluator::mask(Reg, 0);
   const TargetRegisterClass &RC = *MRI.getRegClass(Reg);
@@ -110,9 +110,7 @@ BT::BitMask HexagonEvaluator::mask(unsigned Reg, unsigned Sub) const {
   llvm_unreachable("Unexpected register/subregister");
 }
 
-uint16_t HexagonEvaluator::getPhysRegBitWidth(unsigned Reg) const {
-  assert(TargetRegisterInfo::isPhysicalRegister(Reg));
-
+uint16_t HexagonEvaluator::getPhysRegBitWidth(MCRegister Reg) const {
   using namespace Hexagon;
   const auto &HST = MF.getSubtarget<HexagonSubtarget>();
   if (HST.useHVXOps()) {
@@ -330,7 +328,7 @@ bool HexagonEvaluator::evaluate(const MachineInstr &MI,
     case PS_fi: {
       int FI = op(1).getIndex();
       int Off = op(2).getImm();
-      unsigned A = MFI.getObjectAlignment(FI) + std::abs(Off);
+      unsigned A = MFI.getObjectAlign(FI).value() + std::abs(Off);
       unsigned L = countTrailingZeros(A);
       RegisterCell RC = RegisterCell::self(Reg[0].Reg, W0);
       RC.fill(0, L, BT::BitValue::Zero);
@@ -1042,8 +1040,8 @@ unsigned HexagonEvaluator::getUniqueDefVReg(const MachineInstr &MI) const {
   for (const MachineOperand &Op : MI.operands()) {
     if (!Op.isReg() || !Op.isDef())
       continue;
-    unsigned R = Op.getReg();
-    if (!TargetRegisterInfo::isVirtualRegister(R))
+    Register R = Op.getReg();
+    if (!R.isVirtual())
       continue;
     if (DefReg != 0)
       return 0;
@@ -1220,7 +1218,7 @@ bool HexagonEvaluator::evaluateFormalCopy(const MachineInstr &MI,
   RegisterRef RD = MI.getOperand(0);
   RegisterRef RS = MI.getOperand(1);
   assert(RD.Sub == 0);
-  if (!TargetRegisterInfo::isPhysicalRegister(RS.Reg))
+  if (!Register::isPhysicalRegister(RS.Reg))
     return false;
   RegExtMap::const_iterator F = VRX.find(RD.Reg);
   if (F == VRX.end())

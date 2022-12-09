@@ -19,6 +19,7 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Errc.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/Process.h"
 #include "llvm/Support/Signals.h"
 #include "llvm/Support/Threading.h"
 #include "llvm/Support/WindowsError.h"
@@ -122,7 +123,7 @@ void llvm::report_fatal_error(const Twine &Reason, bool GenCrashDiag) {
   // files registered with RemoveFileOnSignal.
   sys::RunInterruptHandlers();
 
-  exit(1);
+  abort();
 }
 
 void llvm::install_bad_alloc_error_handler(fatal_error_handler_t handler,
@@ -167,9 +168,11 @@ void llvm::report_bad_alloc_error(const char *Reason, bool GenCrashDiag) {
 #else
   // Don't call the normal error handler. It may allocate memory. Directly write
   // an OOM to stderr and abort.
-  char OOMMessage[] = "LLVM ERROR: out of memory\n";
-  ssize_t written = ::write(2, OOMMessage, strlen(OOMMessage));
-  (void)written;
+  const char *OOMMessage = "LLVM ERROR: out of memory\n";
+  const char *Newline = "\n";
+  (void)!::write(2, OOMMessage, strlen(OOMMessage));
+  (void)!::write(2, Reason, strlen(Reason));
+  (void)!::write(2, Newline, strlen(Newline));
   abort();
 #endif
 }
@@ -191,7 +194,8 @@ static void out_of_memory_new_handler() {
 void llvm::install_out_of_memory_new_handler() {
   std::new_handler old = std::set_new_handler(out_of_memory_new_handler);
   (void)old;
-  assert(old == nullptr && "new-handler already installed");
+  assert((old == nullptr || old == out_of_memory_new_handler) &&
+         "new-handler already installed");
 }
 #endif
 

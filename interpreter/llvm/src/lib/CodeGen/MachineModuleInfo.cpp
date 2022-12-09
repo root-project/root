@@ -16,12 +16,16 @@
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Value.h"
 #include "llvm/IR/ValueHandle.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCSymbol.h"
+#include "llvm/MC/MCSymbolXCOFF.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -35,11 +39,6 @@
 
 using namespace llvm;
 using namespace llvm::dwarf;
-
-// Handle the Pass registration stuff necessary to use DataLayout's.
-INITIALIZE_PASS(MachineModuleInfo, "machinemoduleinfo",
-                "Machine Module Information", false, false)
-char MachineModuleInfo::ID = 0;
 
 // Out of line virtual method.
 MachineModuleInfoImpl::~MachineModuleInfoImpl() = default;
@@ -121,7 +120,9 @@ ArrayRef<MCSymbol *> MMIAddrLabelMap::getAddrLabelSymbolToEmit(BasicBlock *BB) {
   BBCallbacks.back().setMap(this);
   Entry.Index = BBCallbacks.size() - 1;
   Entry.Fn = BB->getParent();
-  Entry.Symbols.push_back(Context.createTempSymbol(!BB->hasAddressTaken()));
+  MCSymbol *Sym = BB->hasAddressTaken() ? Context.createNamedTempSymbol()
+                                        : Context.createTempSymbol();
+  Entry.Symbols.push_back(Sym);
   return Entry.Symbols;
 }
 
@@ -181,8 +182,7 @@ void MMIAddrLabelMap::UpdateForRAUWBlock(BasicBlock *Old, BasicBlock *New) {
   BBCallbacks[OldEntry.Index] = nullptr;    // Update the callback.
 
   // Otherwise, we need to add the old symbols to the new block's set.
-  NewEntry.Symbols.insert(NewEntry.Symbols.end(), OldEntry.Symbols.begin(),
-                          OldEntry.Symbols.end());
+  llvm::append_range(NewEntry.Symbols, OldEntry.Symbols);
 }
 
 void MMIAddrLabelMapCallbackPtr::deleted() {
@@ -193,39 +193,65 @@ void MMIAddrLabelMapCallbackPtr::allUsesReplacedWith(Value *V2) {
   Map->UpdateForRAUWBlock(cast<BasicBlock>(getValPtr()), cast<BasicBlock>(V2));
 }
 
-MachineModuleInfo::MachineModuleInfo(const LLVMTargetMachine *TM)
-  : ImmutablePass(ID), TM(*TM),
-    Context(TM->getMCAsmInfo(), TM->getMCRegisterInfo(),
-            TM->getObjFileLowering(), nullptr, false) {
-  initializeMachineModuleInfoPass(*PassRegistry::getPassRegistry());
-}
-
-MachineModuleInfo::~MachineModuleInfo() = default;
-
-bool MachineModuleInfo::doInitialization(Module &M) {
+void MachineModuleInfo::initialize() {
   ObjFileMMI = nullptr;
   CurCallSite = 0;
+  NextFnNum = 0;
   UsesMSVCFloatingPoint = UsesMorestackAddr = false;
   HasSplitStack = HasNosplitStack = false;
   AddrLabelSymbols = nullptr;
-  TheModule = &M;
-  DbgInfoAvailable = !llvm::empty(M.debug_compile_units());
-  return false;
 }
 
-bool MachineModuleInfo::doFinalization(Module &M) {
+void MachineModuleInfo::finalize() {
   Personalities.clear();
 
   delete AddrLabelSymbols;
   AddrLabelSymbols = nullptr;
 
   Context.reset();
+  // We don't clear the ExternalContext.
 
   delete ObjFileMMI;
   ObjFileMMI = nullptr;
-
-  return false;
 }
+
+MachineModuleInfo::MachineModuleInfo(MachineModuleInfo &&MMI)
+    : TM(std::move(MMI.TM)),
+      Context(MMI.TM.getTargetTriple(), MMI.TM.getMCAsmInfo(),
+              MMI.TM.getMCRegisterInfo(), MMI.TM.getMCSubtargetInfo(), nullptr,
+              nullptr, false),
+      MachineFunctions(std::move(MMI.MachineFunctions)) {
+  Context.setObjectFileInfo(MMI.TM.getObjFileLowering());
+  ObjFileMMI = MMI.ObjFileMMI;
+  CurCallSite = MMI.CurCallSite;
+  UsesMSVCFloatingPoint = MMI.UsesMSVCFloatingPoint;
+  UsesMorestackAddr = MMI.UsesMorestackAddr;
+  HasSplitStack = MMI.HasSplitStack;
+  HasNosplitStack = MMI.HasNosplitStack;
+  AddrLabelSymbols = MMI.AddrLabelSymbols;
+  ExternalContext = MMI.ExternalContext;
+  TheModule = MMI.TheModule;
+}
+
+MachineModuleInfo::MachineModuleInfo(const LLVMTargetMachine *TM)
+    : TM(*TM), Context(TM->getTargetTriple(), TM->getMCAsmInfo(),
+                       TM->getMCRegisterInfo(), TM->getMCSubtargetInfo(),
+                       nullptr, nullptr, false) {
+  Context.setObjectFileInfo(TM->getObjFileLowering());
+  initialize();
+}
+
+MachineModuleInfo::MachineModuleInfo(const LLVMTargetMachine *TM,
+                                     MCContext *ExtContext)
+    : TM(*TM), Context(TM->getTargetTriple(), TM->getMCAsmInfo(),
+                       TM->getMCRegisterInfo(), TM->getMCSubtargetInfo(),
+                       nullptr, nullptr, false),
+      ExternalContext(ExtContext) {
+  Context.setObjectFileInfo(TM->getObjFileLowering());
+  initialize();
+}
+
+MachineModuleInfo::~MachineModuleInfo() { finalize(); }
 
 //===- Address of Block Management ----------------------------------------===//
 
@@ -233,7 +259,7 @@ ArrayRef<MCSymbol *>
 MachineModuleInfo::getAddrLabelSymbolToEmit(const BasicBlock *BB) {
   // Lazily create AddrLabelSymbols.
   if (!AddrLabelSymbols)
-    AddrLabelSymbols = new MMIAddrLabelMap(Context);
+    AddrLabelSymbols = new MMIAddrLabelMap(getContext());
  return AddrLabelSymbols->getAddrLabelSymbolToEmit(const_cast<BasicBlock*>(BB));
 }
 
@@ -250,10 +276,8 @@ takeDeletedSymbolsForFunction(const Function *F,
 /// \{
 
 void MachineModuleInfo::addPersonality(const Function *Personality) {
-  for (unsigned i = 0; i < Personalities.size(); ++i)
-    if (Personalities[i] == Personality)
-      return;
-  Personalities.push_back(Personality);
+  if (!llvm::is_contained(Personalities, Personality))
+    Personalities.push_back(Personality);
 }
 
 /// \}
@@ -264,8 +288,7 @@ MachineModuleInfo::getMachineFunction(const Function &F) const {
   return I != MachineFunctions.end() ? I->second.get() : nullptr;
 }
 
-MachineFunction &
-MachineModuleInfo::getOrCreateMachineFunction(const Function &F) {
+MachineFunction &MachineModuleInfo::getOrCreateMachineFunction(Function &F) {
   // Shortcut for the common case where a sequence of MachineFunctionPasses
   // all query for the same Function.
   if (LastRequest == &F)
@@ -305,12 +328,13 @@ public:
   FreeMachineFunction() : FunctionPass(ID) {}
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
-    AU.addRequired<MachineModuleInfo>();
-    AU.addPreserved<MachineModuleInfo>();
+    AU.addRequired<MachineModuleInfoWrapperPass>();
+    AU.addPreserved<MachineModuleInfoWrapperPass>();
   }
 
   bool runOnFunction(Function &F) override {
-    MachineModuleInfo &MMI = getAnalysis<MachineModuleInfo>();
+    MachineModuleInfo &MMI =
+        getAnalysis<MachineModuleInfoWrapperPass>().getMMI();
     MMI.deleteMachineFunctionFor(F);
     return true;
   }
@@ -326,4 +350,78 @@ char FreeMachineFunction::ID;
 
 FunctionPass *llvm::createFreeMachineFunctionPass() {
   return new FreeMachineFunction();
+}
+
+MachineModuleInfoWrapperPass::MachineModuleInfoWrapperPass(
+    const LLVMTargetMachine *TM)
+    : ImmutablePass(ID), MMI(TM) {
+  initializeMachineModuleInfoWrapperPassPass(*PassRegistry::getPassRegistry());
+}
+
+MachineModuleInfoWrapperPass::MachineModuleInfoWrapperPass(
+    const LLVMTargetMachine *TM, MCContext *ExtContext)
+    : ImmutablePass(ID), MMI(TM, ExtContext) {
+  initializeMachineModuleInfoWrapperPassPass(*PassRegistry::getPassRegistry());
+}
+
+// Handle the Pass registration stuff necessary to use DataLayout's.
+INITIALIZE_PASS(MachineModuleInfoWrapperPass, "machinemoduleinfo",
+                "Machine Module Information", false, false)
+char MachineModuleInfoWrapperPass::ID = 0;
+
+static unsigned getLocCookie(const SMDiagnostic &SMD, const SourceMgr &SrcMgr,
+                             std::vector<const MDNode *> &LocInfos) {
+  // Look up a LocInfo for the buffer this diagnostic is coming from.
+  unsigned BufNum = SrcMgr.FindBufferContainingLoc(SMD.getLoc());
+  const MDNode *LocInfo = nullptr;
+  if (BufNum > 0 && BufNum <= LocInfos.size())
+    LocInfo = LocInfos[BufNum - 1];
+
+  // If the inline asm had metadata associated with it, pull out a location
+  // cookie corresponding to which line the error occurred on.
+  unsigned LocCookie = 0;
+  if (LocInfo) {
+    unsigned ErrorLine = SMD.getLineNo() - 1;
+    if (ErrorLine >= LocInfo->getNumOperands())
+      ErrorLine = 0;
+
+    if (LocInfo->getNumOperands() != 0)
+      if (const ConstantInt *CI =
+              mdconst::dyn_extract<ConstantInt>(LocInfo->getOperand(ErrorLine)))
+        LocCookie = CI->getZExtValue();
+  }
+
+  return LocCookie;
+}
+
+bool MachineModuleInfoWrapperPass::doInitialization(Module &M) {
+  MMI.initialize();
+  MMI.TheModule = &M;
+  // FIXME: Do this for new pass manager.
+  LLVMContext &Ctx = M.getContext();
+  MMI.getContext().setDiagnosticHandler(
+      [&Ctx](const SMDiagnostic &SMD, bool IsInlineAsm, const SourceMgr &SrcMgr,
+             std::vector<const MDNode *> &LocInfos) {
+        unsigned LocCookie = 0;
+        if (IsInlineAsm)
+          LocCookie = getLocCookie(SMD, SrcMgr, LocInfos);
+        Ctx.diagnose(DiagnosticInfoSrcMgr(SMD, IsInlineAsm, LocCookie));
+      });
+  MMI.DbgInfoAvailable = !M.debug_compile_units().empty();
+  return false;
+}
+
+bool MachineModuleInfoWrapperPass::doFinalization(Module &M) {
+  MMI.finalize();
+  return false;
+}
+
+AnalysisKey MachineModuleAnalysis::Key;
+
+MachineModuleInfo MachineModuleAnalysis::run(Module &M,
+                                             ModuleAnalysisManager &) {
+  MachineModuleInfo MMI(TM);
+  MMI.TheModule = &M;
+  MMI.DbgInfoAvailable = !M.debug_compile_units().empty();
+  return MMI;
 }
