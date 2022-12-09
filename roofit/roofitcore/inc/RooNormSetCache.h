@@ -67,7 +67,7 @@ public:
   {
     const Pair pair(set1, (const RooArgSet*)0);
     PairIdxMapType::const_iterator it = _pairToIdx.lower_bound(pair);
-    if (_pairToIdx.end() != it && it->first.first() == RooFit::getUniqueId(set1))
+    if (_pairToIdx.end() != it && it->first.first() == (RooNormSetCache::Pair::Value_t)RooFit::getUniqueId(set1))
       return true;
     return false;
   }
