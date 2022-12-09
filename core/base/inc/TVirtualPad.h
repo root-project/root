@@ -56,6 +56,20 @@ protected:
    void  *GetSender() override { return this; }  //used to set gTQSender
 
 public:
+
+   /** small helper class to store/restore gPad context in TPad methods */
+   class TContext {
+       Bool_t fInteractive{kFALSE};
+       TVirtualPad *fSaved{nullptr};
+   public:
+       TContext(Bool_t _interactive = kFALSE);
+       TContext(TVirtualPad *set_gpad, Bool_t _interactive = kFALSE);
+       ~TContext();
+       auto IsInteractive() const { return fInteractive; }
+       auto GetSaved() const { return fSaved; }
+   };
+
+
    TVirtualPad();
    TVirtualPad(const char *name, const char *title, Double_t xlow,
                Double_t ylow, Double_t xup, Double_t yup,

@@ -149,31 +149,6 @@ private:
    void              LineNotFree(Int_t x1, Int_t x2, Int_t y1, Int_t y2);
 
 public:
-
-   /** small helper class to store/restore gPad context in TPad methods */
-   class TContext {
-       Bool_t interactive{kFALSE};
-       TVirtualPad *save_gpad{nullptr};
-   public:
-       TContext(Bool_t _interactive = kFALSE) : interactive(_interactive), save_gpad(gPad) {}
-       TContext(TVirtualPad *set_gpad, Bool_t _interactive = kFALSE) : interactive(_interactive), save_gpad(gPad)
-       {
-          if (_interactive && set_gpad)
-             set_gpad->cd();
-          else
-             gPad = set_gpad;
-       }
-       ~TContext()
-       {
-          if (!interactive || !save_gpad)
-             gPad = save_gpad;
-          else
-             save_gpad->cd();
-       }
-
-       TVirtualPad *GetSaved() const { return save_gpad; }
-   };
-
    // TPad status bits
    enum {
       kFraming      = BIT(6),  ///< Frame is requested
