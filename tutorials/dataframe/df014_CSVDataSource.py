@@ -29,7 +29,7 @@ fileName = "df014_CsvDataSource_MuRun2010B_py.csv"
 if not os.path.isfile(fileName):
     ROOT.TFile.Cp(fileNameUrl, fileName)
 
-df = ROOT.RDF.MakeCsvDataFrame(fileName)
+df = ROOT.RDF.FromCSV(fileName)
 
 # Now we will apply a first filter based on two columns of the CSV,
 # and we will define a new column that will contain the invariant mass.
