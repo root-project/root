@@ -333,24 +333,30 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
       return;
    }
 
-   TPad *padsav = (TPad*)gPad;
+   TContext ctxt(kTRUE);
+
+   Bool_t zombie = kFALSE;
 
    if ((xlow < 0) || (xlow > 1) || (ylow < 0) || (ylow > 1)) {
       Error("TPad", "illegal bottom left position: x=%f, y=%f", xlow, ylow);
-      goto zombie;
-   }
-   if ((xup < 0) || (xup > 1) || (yup < 0) || (yup > 1)) {
+      zombie = kTRUE;
+   } else if ((xup < 0) || (xup > 1) || (yup < 0) || (yup > 1)) {
       Error("TPad", "illegal top right position: x=%f, y=%f", xup, yup);
-      goto zombie;
-   }
-   if (xup-xlow <= 0) {
+      zombie = kTRUE;
+   } else if (xup-xlow <= 0) {
       Error("TPad", "illegal width: %f", xup-xlow);
-      goto zombie;
-   }
-   if (yup-ylow <= 0) {
+      zombie = kTRUE;
+   } else if (yup-ylow <= 0) {
       Error("TPad", "illegal height: %f", yup-ylow);
-      goto zombie;
+      zombie = kTRUE;
    }
+
+   if (zombie) {
+      // error in creating pad occurred, make this pad a zombie
+      MakeZombie();
+      return;
+   }
+
 
    fLogx = gStyle->GetOptLogx();
    fLogy = gStyle->GetOptLogy();
@@ -363,14 +369,6 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    Range(0, 0, 1, 1);
    SetBit(kMustCleanup);
    SetBit(kCanDelete);
-
-   padsav->cd();
-   return;
-
-zombie:
-   // error in creating pad occurred, make this pad a zombie
-   MakeZombie();
-   padsav->cd();
 }
 
 
@@ -1162,7 +1160,8 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
       if ((*gThreadXAR)("PDCD", 7, arr, nullptr)) return;
    }
 
-   TPad *padsav = (TPad*)gPad;
+   TContext ctxt(kTRUE);
+
    cd();
    if (nx <= 0) nx = 1;
    if (ny <= 0) ny = 1;
@@ -1236,7 +1235,6 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
       }
    }
    Modified();
-   if (padsav) padsav->cd();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1504,7 +1502,7 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
 
 void TPad::DrawCrosshair()
 {
-   if (gPad->GetEvent() == kMouseEnter) return;
+   if (!gPad || (gPad->GetEvent() == kMouseEnter)) return;
 
    TPad *cpad = (TPad*)gPad;
    TCanvas *canvas = cpad->GetCanvas();
@@ -1577,11 +1575,12 @@ void TPad::DrawCrosshair()
 
 TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title)
 {
-   if (!IsEditable()) return nullptr;
-   TPad *padsav = (TPad*)gPad;
-   if (this !=  padsav) {
-      Warning("DrawFrame","Must be called for the current pad only");
-      return padsav->DrawFrame(xmin,ymin,xmax,ymax,title);
+   if (!IsEditable())
+      return nullptr;
+
+   if (this != gPad) {
+      Warning("DrawFrame", "Must be called for the current pad only");
+      return gPad->DrawFrame(xmin,ymin,xmax,ymax,title);
    }
 
    cd();
@@ -1612,7 +1611,7 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
    hframe->SetDirectory(nullptr);
    hframe->Draw(" ");
    Update();
-   if (padsav) padsav->cd();
+   cd();
    return hframe;
 }
 
@@ -3410,51 +3409,50 @@ Double_t TPad::YtoPad(Double_t y) const
 
 void TPad::Paint(Option_t * /*option*/)
 {
-   if (!fPrimitives) fPrimitives = new TList;
+   if (!fPrimitives)
+      fPrimitives = new TList;
    if (fViewer3D && fViewer3D->CanLoopOnPrimitives()) {
       fViewer3D->PadPaint(this);
       Modified(kFALSE);
       if (GetGLDevice()!=-1 && gVirtualPS) {
-         TPad *padsav = (TPad*)gPad;
-         gPad = this;
+         TContext ctxt(this, kFALSE);
          if (gGLManager) gGLManager->PrintViewer(GetViewer3D());
-         gPad = padsav;
       }
       return;
    }
 
    if (fCanvas) TColor::SetGrayscale(fCanvas->IsGrayscale());
 
-   TPad *padsav = (TPad*)gPad;
-
-   fPadPaint = 1;
-   cd();
-
-   PaintBorder(GetFillColor(), kTRUE);
-   PaintDate();
-
-   TObjOptLink *lnk = (TObjOptLink*)GetListOfPrimitives()->FirstLink();
-
    Bool_t began3DScene = kFALSE;
-   while (lnk) {
-      TObject *obj = lnk->GetObject();
+   fPadPaint = 1;
 
-      // Create a pad 3D viewer if none exists and we encounter a 3D shape
-      if (!fViewer3D && obj->InheritsFrom(TAtt3D::Class())) {
-         GetViewer3D("pad");
+   {
+      TContext ctxt(this, kTRUE);
+
+      PaintBorder(GetFillColor(), kTRUE);
+      PaintDate();
+
+      TObjOptLink *lnk = (TObjOptLink*)GetListOfPrimitives()->FirstLink();
+
+      while (lnk) {
+         TObject *obj = lnk->GetObject();
+
+         // Create a pad 3D viewer if none exists and we encounter a 3D shape
+         if (!fViewer3D && obj->InheritsFrom(TAtt3D::Class())) {
+            GetViewer3D("pad");
+         }
+
+         // Open a 3D scene if required
+         if (fViewer3D && !fViewer3D->BuildingScene()) {
+            fViewer3D->BeginScene();
+            began3DScene = kTRUE;
+         }
+
+         obj->Paint(lnk->GetOption());
+         lnk = (TObjOptLink*)lnk->Next();
       }
-
-      // Open a 3D scene if required
-      if (fViewer3D && !fViewer3D->BuildingScene()) {
-         fViewer3D->BeginScene();
-         began3DScene = kTRUE;
-      }
-
-      obj->Paint(lnk->GetOption());
-      lnk = (TObjOptLink*)lnk->Next();
    }
 
-   if (padsav) padsav->cd();
    fPadPaint = 0;
    Modified(kFALSE);
 
@@ -3659,52 +3657,53 @@ void TPad::PaintModified()
 
    if (fCanvas) TColor::SetGrayscale(fCanvas->IsGrayscale());
 
-   TPad *padsav = (TPad*)gPad;
    TVirtualPS *saveps = gVirtualPS;
    if (gVirtualPS) {
-      if (gVirtualPS->TestBit(kPrintingPS)) gVirtualPS = nullptr;
+      if (gVirtualPS->TestBit(kPrintingPS))
+         gVirtualPS = nullptr;
    }
-   fPadPaint = 1;
-   cd();
-   if (IsModified() || IsTransparent()) {
-      if ((fFillStyle < 3026) && (fFillStyle > 3000)) {
-         if (!gPad->IsBatch() && GetPainter()) GetPainter()->ClearDrawable();
-      }
-      PaintBorder(GetFillColor(), kTRUE);
-   }
-
-   PaintDate();
-
-   TList *pList = GetListOfPrimitives();
-   TObjOptLink *lnk = nullptr;
-   if (pList) lnk = (TObjOptLink*)pList->FirstLink();
 
    Bool_t began3DScene = kFALSE;
-
-   while (lnk) {
-      TObject *obj = lnk->GetObject();
-      if (obj->InheritsFrom(TPad::Class())) {
-         ((TPad*)obj)->PaintModified();
-      } else if (IsModified() || IsTransparent()) {
-
-         // Create a pad 3D viewer if none exists and we encounter a
-         // 3D shape
-         if (!fViewer3D && obj->InheritsFrom(TAtt3D::Class())) {
-            GetViewer3D("pad");
+   fPadPaint = 1;
+   {
+      TContext ctxt(this, kTRUE);
+      if (IsModified() || IsTransparent()) {
+         if ((fFillStyle < 3026) && (fFillStyle > 3000)) {
+            if (!gPad->IsBatch() && GetPainter()) GetPainter()->ClearDrawable();
          }
-
-         // Open a 3D scene if required
-         if (fViewer3D && !fViewer3D->BuildingScene()) {
-            fViewer3D->BeginScene();
-            began3DScene = kTRUE;
-         }
-
-         obj->Paint(lnk->GetOption());
+         PaintBorder(GetFillColor(), kTRUE);
       }
-      lnk = (TObjOptLink*)lnk->Next();
+
+      PaintDate();
+
+      TList *pList = GetListOfPrimitives();
+      TObjOptLink *lnk = nullptr;
+      if (pList) lnk = (TObjOptLink*)pList->FirstLink();
+
+      while (lnk) {
+         TObject *obj = lnk->GetObject();
+         if (obj->InheritsFrom(TPad::Class())) {
+            ((TPad*)obj)->PaintModified();
+         } else if (IsModified() || IsTransparent()) {
+
+            // Create a pad 3D viewer if none exists and we encounter a
+            // 3D shape
+            if (!fViewer3D && obj->InheritsFrom(TAtt3D::Class())) {
+               GetViewer3D("pad");
+            }
+
+            // Open a 3D scene if required
+            if (fViewer3D && !fViewer3D->BuildingScene()) {
+               fViewer3D->BeginScene();
+               began3DScene = kTRUE;
+            }
+
+            obj->Paint(lnk->GetOption());
+         }
+         lnk = (TObjOptLink*)lnk->Next();
+      }
    }
 
-   if (padsav) padsav->cd();
    fPadPaint = 0;
    Modified(kFALSE);
 
@@ -4513,8 +4512,9 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
 
    // search for a primitive in this pad or its sub-pads
    static TObjOptLink dummyLink(nullptr,"");  //place holder for when no link available
-   TPad *padsav = (TPad*)gPad;
-   gPad  = this;    // since no drawing will be done, don't use cd() for efficiency reasons
+
+   TContext ctxt(this, kFALSE); // since no drawing will be done, don't use cd() for efficiency reasons
+
    TPad *pick   = nullptr;
    TPad *picked = this;
    pickobj      = nullptr;
@@ -4607,7 +4607,6 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
 
    }
 
-   gPad = padsav;
    return picked;
 }
 
@@ -5291,8 +5290,7 @@ void TPad::RedrawAxis(Option_t *option)
    TString opt = option;
    opt.ToLower();
 
-   TPad *padsav = (TPad*)gPad;
-   cd();
+   TContext ctxt(this, kTRUE);
 
    TH1 *hobj = nullptr;
 
@@ -5336,8 +5334,6 @@ void TPad::RedrawAxis(Option_t *option)
       b->SetLineColor(gPad->GetFrameLineColor());
       b->Draw();
    }
-
-   if (padsav) padsav->cd();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5584,13 +5580,11 @@ void TPad::ResizePad(Option_t *option)
       }
    }
    if (fView) {
-      TPad *padsav  = (TPad*)gPad;
-      if (padsav == this) {
+      if (gPad == this) {
          fView->ResizePad();
       } else {
-         cd();
+         TContext ctxt(this, kTRUE);
          fView->ResizePad();
-         padsav->cd();
       }
    }
 }
@@ -5690,9 +5684,9 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
 
 void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   TPad *padsav = (TPad*)gPad;
-   gPad = this;
-   char quote='"';
+   TContext ctxt(this, kFALSE); // not interactive
+
+   char quote = '"';
    char lcname[10];
    const char *cname = GetName();
    size_t nch = strlen(cname);
@@ -5865,7 +5859,6 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    }
    out<<"   "<<cname<<"->Modified();"<<std::endl;
    out<<"   "<<GetMother()->GetName()<<"->cd();"<<std::endl;
-   if (padsav) padsav->cd();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6564,11 +6557,11 @@ void TPad::Streamer(TBuffer &b)
    if (b.IsReading()) {
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 5) {
-         if (!gPad) gPad = new TCanvas(GetName());
-         TPad *padsave = (TPad*)gPad;
+         if (!gPad)
+            gPad = new TCanvas(GetName());
          fMother = (TPad*)gPad;
-         if (fMother)  fCanvas = fMother->GetCanvas();
-         gPad      = this;
+         fCanvas = fMother->GetCanvas();
+         TContext ctxt(this, kFALSE);
          fPixmapID = -1;      // -1 means pixmap will be created by ResizePad()
          gReadLevel++;
          gROOT->SetReadingObject(kTRUE);
@@ -6587,7 +6580,6 @@ void TPad::Streamer(TBuffer &b)
          gReadLevel--;
          if (gReadLevel == 0 && IsA() == TPad::Class()) ResizePad();
          gROOT->SetReadingObject(kFALSE);
-         gPad = padsave;
          return;
       }
 
@@ -6694,11 +6686,16 @@ void TPad::Streamer(TBuffer &b)
          b >> fUymax;
       }
 
-      if (!gPad) gPad = new TCanvas(GetName());
-      if (gReadLevel == 0) fMother = (TPad*)gROOT->GetSelectedPad();
-      else                fMother = (TPad*)gPad;
-      if (!fMother) fMother = (TPad*)gPad;
-      if (fMother)  fCanvas = fMother->GetCanvas();
+      if (!gPad)
+         gPad = new TCanvas(GetName());
+      if (gReadLevel == 0)
+         fMother = (TPad *)gROOT->GetSelectedPad();
+      else
+         fMother = (TPad *)gPad;
+      if (!fMother)
+         fMother = (TPad *)gPad;
+      if (fMother)
+         fCanvas = fMother->GetCanvas();
       gPad      = fMother;
       fPixmapID = -1;      // -1 means pixmap will be created by ResizePad()
       //-------------------------
@@ -6709,8 +6706,7 @@ void TPad::Streamer(TBuffer &b)
       fPrimitives = new TList;
       b >> nobjects;
       if (nobjects > 0) {
-         TPad *padsav = (TPad*)gPad;
-         gPad = this;
+         TContext ctxt(this, kFALSE);
          char drawoption[64];
          for (Int_t i = 0; i < nobjects; i++) {
             b >> obj;
@@ -6719,7 +6715,6 @@ void TPad::Streamer(TBuffer &b)
             fPrimitives->AddLast(obj, drawoption);
             gPad = this; // gPad may be modified in b >> obj if obj is a pad
          }
-         gPad = padsav;
       }
       gReadLevel--;
       gROOT->SetReadingObject(kFALSE);
