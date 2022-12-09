@@ -20,7 +20,7 @@ y = np.array([4, 5, 6], dtype=np.float64)
 # The column names in the RDataFrame are defined by the keys of the dictionary.
 # Please note that only fundamental types (int, float, ...) are supported and
 # the arrays must have the same length.
-df = ROOT.RDF.MakeNumpyDataFrame({'x': x, 'y': y})
+df = ROOT.RDF.FromNumpy({'x': x, 'y': y})
 
 # You can now use the RDataFrame as usually, e.g. add a column ...
 df = df.Define('z', 'x + y')
@@ -29,4 +29,4 @@ df = df.Define('z', 'x + y')
 df.Display().Print()
 
 # ... or save the data as a ROOT file
-df.Snapshot('tree', 'df032_MakeNumpyDataFrame.root')
+df.Snapshot('tree', 'df032_RDFFromNumpy.root')

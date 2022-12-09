@@ -325,9 +325,15 @@ class ROOTFacade(types.ModuleType):
     def RDF(self):
         ns = self._fallback_getattr('RDF')
         try:
-            # Inject MakeNumpyDataFrame function
+            # Inject FromNumpy function
             from libROOTPythonizations import MakeNumpyDataFrame
-            ns.MakeNumpyDataFrame = MakeNumpyDataFrame
+            def DeprecatedMakeNumpy(*args, **kwargs):
+                import warnings
+                warnings.warn("MakeNumpyDataFrame is deprecated since v6.28 and will be removed in v6.30."\
+                              "Please use FromNumpy instead.", FutureWarning)
+                MakeNumpyDataFrame(*args, **kwargs)
+            ns.MakeNumpyDataFrame = DeprecatedMakeNumpy
+            ns.FromNumpy = MakeNumpyDataFrame
 
             if sys.version_info >= (3, 7):
                 # Inject Experimental.Distributed package into namespace RDF
