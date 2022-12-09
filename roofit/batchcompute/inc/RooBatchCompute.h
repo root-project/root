@@ -19,6 +19,7 @@
 #include "TError.h"
 
 #include <functional>
+#include <string>
 
 /**
  * Namespace for dispatching RooFit computations to various backends.
