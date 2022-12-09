@@ -57,7 +57,7 @@ The most significant bit is used to indicate that there are more than 63 feature
 That means that readers need to continue reading feature flags as long as their signed integer value is negative.
 
 
-### Frames
+## Frames
 
 RNTuple envelopes can store records and lists of basic types and other records or lists by means of **frames**.
 The frame has the following format
@@ -88,7 +88,7 @@ This approach ensures that frames can be extended in future file format versions
 without breaking the deserialization of older readers.
 
 
-### Locators and Envelope Links
+## Locators and Envelope Links
 
 A locator is a generalized way to specify a certain byte range on the storage medium.
 For disk-based storage, the locator is just byte offset and byte size.
@@ -133,18 +133,42 @@ In this case, the last 8 bits of the size should be interpreted as a locator typ
 To determine the locator type, the absolute value of the 8bit integer should be taken.
 The type can take one of the following values
 
-| Type | Meaning                |
-|------|------------------------|
-| 0x01 | URI string             |
-| 0x02 | DAOS (64bit object ID) |
+| Type | Meaning      | Payload format     |
+|------|--------------|--------------------|
+| 0x01 | URI string   | [ASCII characters] |
+| 0x02 | DAOS locator | Object64           |
 
-For object ID locators, specifies the 64bit object ID.
+The range 0x03 - 0x7f is currently unused. Additional types can be registered in the future.
 For URI locators, the locator contains the ASCII characters of the URI following the size and the type.
+Each locator type follows a given format for the payload (see Section "Well-known payload formats" below).
 
 _Reserved_ is an 8bit field that can be used by concrete storage backends to store additional information about the locator.
 
 An envelope link consists of a 32bit unsigned integer that specifies the uncompressed size of the envelope
 followed by a locator.
+
+### Well-known Payload Formats
+
+This section describes the well-known payload formats used in non-disk locators.
+Note that locators having a different value for _Type_ may share a given payload format (see the table above).
+
+- _Object64_: Targets object storage systems in which 64bit suffice to locate a specific object. The payload has the following format
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                          Content size                         |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                            Location                           +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+
+_Content size_: the number of bytes to read, i.e. the compressed size of the referenced block.
+
+_Location_: 64bit object address; its specific use depends on the object store.
+In particular, it might contain a partial address that can be qualified using some other information depending on the storage backend, e.g. a URL might be generated based on this value.
 
 
 ## Envelopes
