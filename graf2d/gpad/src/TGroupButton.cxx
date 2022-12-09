@@ -221,7 +221,7 @@ void TGroupButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 void TGroupButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   TPad *padsav = (TPad*)gPad;
+   TVirtualPad::TContext ctxt(kTRUE);
    char quote = '"';
    if (gROOT->ClassSaved(TGroupButton::Class())) {
       out<<"   ";
@@ -251,11 +251,11 @@ void TGroupButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"   button->cd();"<<std::endl;
 
    TIter next(GetListOfPrimitives());
-   TObject *obj = next();  //do not save first primitive
+   next();  //do not save first primitive
 
-   while ((obj = next()))
-         obj->SavePrimitive(out, (Option_t *)next.GetOption());
+   while (auto obj = next())
+      obj->SavePrimitive(out, (Option_t *)next.GetOption());
 
-   out<<"   "<<padsav->GetName()<<"->cd();"<<std::endl;
-   padsav->cd();
+   if (ctxt.GetSaved())
+      out<<"   "<<ctxt.GetSaved()->GetName()<<"->cd();"<<std::endl;
 }

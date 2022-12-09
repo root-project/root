@@ -268,7 +268,7 @@ void TButton::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   TPad *padsav = (TPad*)gPad;
+   TVirtualPad::TContext ctxt(kTRUE);
    char quote = '"';
    if (gROOT->ClassSaved(TButton::Class())) {
       out<<"   ";
@@ -315,17 +315,17 @@ void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"   button->Draw();"<<std::endl;
 
    TIter next(GetListOfPrimitives());
-   TObject *obj = next();  //do not save first primitive
+   next();  //do not save first primitive
 
    Int_t nprim = 0;
-   while ((obj = next())) {
+   while (auto obj = next()) {
       if (!nprim) out<<"   button->cd();"<<std::endl;
       nprim++;
       obj->SavePrimitive(out, (Option_t *)next.GetOption());
    }
 
-   if (nprim) out<<"   "<<padsav->GetName()<<"->cd();"<<std::endl;
-   padsav->cd();
+   if (nprim && ctxt.GetSaved())
+      out<<"   "<<ctxt.GetSaved()->GetName()<<"->cd();"<<std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
