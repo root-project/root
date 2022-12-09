@@ -787,7 +787,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(
    case RNTupleLocator::kTypeDAOS: size += SerializeLocatorPayloadObject64(locator, payloadp); break;
    default: throw RException(R__FAIL("locator has unknown type"));
    }
-   std::int32_t head = size;
+   std::int32_t head = sizeof(std::int32_t) + size;
    head |= locator.fReserved << 16;
    head |= static_cast<int>(locator.fType) << 24;
    head = -head;
@@ -809,17 +809,17 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    if (head < 0) {
       head = -head;
       const int type = head >> 24;
-      const std::uint32_t locatorSize = static_cast<std::uint32_t>(head) & 0x0000FFFF;
-      if (bufSize < locatorSize)
+      const std::uint32_t payloadSize = (static_cast<std::uint32_t>(head) & 0x0000FFFF) - sizeof(std::int32_t);
+      if (bufSize < payloadSize)
          return R__FAIL("too short locator");
       locator.fType = static_cast<RNTupleLocator::ELocatorType>(type);
       locator.fReserved = static_cast<std::uint32_t>(head >> 16) & 0xFF;
       switch (type) {
-      case RNTupleLocator::kTypeURI: DeserializeLocatorPayloadURI(bytes, locatorSize, locator); break;
-      case RNTupleLocator::kTypeDAOS: DeserializeLocatorPayloadObject64(bytes, locatorSize, locator); break;
+      case RNTupleLocator::kTypeURI: DeserializeLocatorPayloadURI(bytes, payloadSize, locator); break;
+      case RNTupleLocator::kTypeDAOS: DeserializeLocatorPayloadObject64(bytes, payloadSize, locator); break;
       default: return R__FAIL("unsupported locator type: " + std::to_string(type));
       }
-      bytes += locatorSize;
+      bytes += payloadSize;
    } else {
       if (bufSize < sizeof(std::uint64_t))
          return R__FAIL("too short locator");
