@@ -3010,17 +3010,8 @@ void TPad::FillCollideGrid(TObject *oi)
 {
    Int_t const cellSize = 10; // Size of an individual grid cell in pixels.
 
-   if (fCGnx == 0 && fCGny == 0) {
-      fCGnx = (Int_t)(gPad->GetWw())/cellSize;
-      fCGny = (Int_t)(gPad->GetWh())/cellSize;
-   } else {
-      Int_t CGnx = (Int_t)(gPad->GetWw())/cellSize;
-      Int_t CGny = (Int_t)(gPad->GetWh())/cellSize;
-      if (fCGnx != CGnx || fCGny != CGny) {
-         fCGnx = CGnx;
-         fCGny = CGny;
-      }
-   }
+   fCGnx = GetWw()/cellSize;
+   fCGny = GetWh()/cellSize;
 
    // Initialise the collide grid
    fCollideGrid.resize(fCGnx*fCGny);
@@ -3029,30 +3020,28 @@ void TPad::FillCollideGrid(TObject *oi)
          fCollideGrid[i + j * fCGnx] = kTRUE;
 
    // Fill the collide grid
-   TList *l = GetListOfPrimitives();
-   if (!l) return;
-   Int_t np = l->GetSize();
+   TIter iter(GetListOfPrimitives());
 
-   for (int i=0; i<np; i++) {
-      TObject *o = (TObject *) l->At(i);
-      if (o!=oi) {
-         if (o->InheritsFrom(TFrame::Class())) { FillCollideGridTFrame(o); continue;}
-         if (o->InheritsFrom(TBox::Class()))   { FillCollideGridTBox(o);   continue;}
-         if (o->InheritsFrom(TH1::Class()))    { FillCollideGridTH1(o);    continue;}
-         if (o->InheritsFrom(TGraph::Class())) { FillCollideGridTGraph(o); continue;}
-         if (o->InheritsFrom(TMultiGraph::Class())) {
-            TList * grlist = ((TMultiGraph *)o)->GetListOfGraphs();
-            TIter nextgraph(grlist);
-            TObject * og;
-            while ((og = nextgraph())) FillCollideGridTGraph(og);
-         }
-         if (o->InheritsFrom(THStack::Class())) {
-            TList * hlist = ((THStack *)o)->GetHists();
-            TIter nexthist(hlist);
-            TObject * oh;
-            while ((oh = nexthist())) {
-               if (oh->InheritsFrom(TH1::Class())) FillCollideGridTH1(oh);
-            }
+   while(auto o = iter()) {
+      if (o == oi)
+         continue;
+      if (o->InheritsFrom(TFrame::Class()))
+         FillCollideGridTFrame(o);
+      else if (o->InheritsFrom(TBox::Class()))
+         FillCollideGridTBox(o);
+      else if (o->InheritsFrom(TH1::Class()))
+         FillCollideGridTH1(o);
+      else if (o->InheritsFrom(TGraph::Class()))
+         FillCollideGridTGraph(o);
+      else if (o->InheritsFrom(TMultiGraph::Class())) {
+         TIter nextgraph(((TMultiGraph *)o)->GetListOfGraphs());
+         while (auto og = nextgraph())
+            FillCollideGridTGraph(og);
+      } else if (o->InheritsFrom(THStack::Class())) {
+         TIter nexthist(((THStack *)o)->GetHists());
+         while (auto oh = nexthist()) {
+            if (oh->InheritsFrom(TH1::Class()))
+               FillCollideGridTH1(oh);
          }
       }
    }
@@ -3064,9 +3053,10 @@ void TPad::FillCollideGrid(TObject *oi)
 
 Bool_t TPad::Collide(Int_t i, Int_t j, Int_t w, Int_t h)
 {
-   for (int r=i; r<w+i; r++) {
-      for (int c=j; c<h+j; c++) {
-         if (!fCollideGrid[r + c*fCGnx]) return kTRUE;
+   for (int r = i; r < w + i; r++) {
+      for (int c = j; c < h + j; c++) {
+         if (!fCollideGrid[r + c * fCGnx])
+            return kTRUE;
       }
    }
    return kFALSE;
@@ -3314,6 +3304,9 @@ void TPad::FillCollideGridTH1(TObject *o)
 void TPad::DrawCollideGrid()
 {
    if (fCGnx==0||fCGny==0) return;
+
+   TContext ctxt(this, kTRUE);
+
    TBox box;
    box.SetFillColorAlpha(kRed,0.5);
 
@@ -3330,14 +3323,14 @@ void TPad::DrawCollideGrid()
       Y1 = fY1;
       Y2 = Y1+ys;
       for (int j = 0; j<fCGny; j++) {
-         if (gPad->GetLogx()) {
+         if (GetLogx()) {
             X1L = TMath::Power(10,X1);
             X2L = TMath::Power(10,X2);
          } else {
             X1L = X1;
             X2L = X2;
          }
-         if (gPad->GetLogy()) {
+         if (GetLogy()) {
             Y1L = TMath::Power(10,Y1);
             Y2L = TMath::Power(10,Y2);
          } else {
