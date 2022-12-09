@@ -157,11 +157,8 @@ protected:
 private:
    void InvokeReadCallbacks(RFieldValue &value)
    {
-      if (R__likely(fReadCallbacks.empty()))
-         return;
-      for (const auto &func : fReadCallbacks) {
+      for (const auto &func : fReadCallbacks)
          func(value);
-      }
    }
 
 public:
@@ -261,7 +258,8 @@ public:
          fPrincipalColumn->Read(globalIndex, &value->fMappedElement);
       else
          ReadGlobalImpl(globalIndex, value);
-      InvokeReadCallbacks(*value);
+      if (R__unlikely(!fReadCallbacks.empty()))
+         InvokeReadCallbacks(*value);
    }
 
    void Read(const RClusterIndex &clusterIndex, RFieldValue *value) {
@@ -272,7 +270,8 @@ public:
          fPrincipalColumn->Read(clusterIndex, &value->fMappedElement);
       else
          ReadInClusterImpl(clusterIndex, value);
-      InvokeReadCallbacks(*value);
+      if (R__unlikely(!fReadCallbacks.empty()))
+         InvokeReadCallbacks(*value);
    }
 
    /// Ensure that all received items are written from page buffers to the storage.
