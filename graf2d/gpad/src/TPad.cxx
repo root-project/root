@@ -4881,18 +4881,17 @@ void TPad::Print(const char *filename, Option_t *option)
       image = kTRUE;
    }
 
-   Int_t wid = 0;
    if (!GetCanvas()) return;
    if (!gROOT->IsBatch() && image) {
       if ((gtype == TImage::kGif) && !ContainsTImage(fPrimitives)) {
-         wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
+         Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
          Color_t hc = gPad->GetCanvas()->GetHighLightColor();
          gPad->GetCanvas()->SetHighLightColor(-1);
          gPad->Modified();
          gPad->Update();
          if (GetPainter()){
-           GetPainter()->SelectDrawable(wid);
-           GetPainter()->SaveImage(this, psname.Data(), gtype);
+            GetPainter()->SelectDrawable(wid);
+            GetPainter()->SaveImage(this, psname.Data(), gtype);
          }
          if (!gSystem->AccessPathName(psname.Data())) {
             Info("Print", "GIF file %s has been created", psname.Data());
@@ -4953,13 +4952,12 @@ void TPad::Print(const char *filename, Option_t *option)
          GetCanvas()->SetBatch(kTRUE);
       }
 
-      TPad *padsav = (TPad*)gPad;
+      auto padsav = gPad;
       cd();
 
       if (!gVirtualPS) {
          // Plugin Postscript/SVG driver
-         TPluginHandler *h;
-         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "svg"))) {
+         if (auto h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "svg")) {
             if (h->LoadPlugin() == -1)
                return;
             h->ExecPlugin(0);
@@ -4974,13 +4972,18 @@ void TPad::Print(const char *filename, Option_t *option)
          gVirtualPS->NewPage();
       }
       Paint();
-      if (noScreen)  GetCanvas()->SetBatch(kFALSE);
+      if (noScreen)
+         GetCanvas()->SetBatch(kFALSE);
 
-      if (!gSystem->AccessPathName(psname)) Info("Print", "SVG file %s has been created", psname.Data());
+      if (!gSystem->AccessPathName(psname))
+         Info("Print", "SVG file %s has been created", psname.Data());
 
       delete gVirtualPS;
       gVirtualPS = nullptr;
-      padsav->cd();
+      if (padsav)
+         padsav->cd();
+      else
+         gPad = nullptr;
 
       return;
    }
@@ -4995,13 +4998,12 @@ void TPad::Print(const char *filename, Option_t *option)
          GetCanvas()->SetBatch(kTRUE);
       }
 
-      TPad *padsav = (TPad*)gPad;
+      auto padsav = gPad;
       cd();
 
       if (!gVirtualPS) {
          // Plugin Postscript/SVG driver
-         TPluginHandler *h;
-         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "tex"))) {
+         if (auto h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "tex")) {
             if (h->LoadPlugin() == -1)
                return;
             h->ExecPlugin(0);
@@ -5032,7 +5034,10 @@ void TPad::Print(const char *filename, Option_t *option)
 
       delete gVirtualPS;
       gVirtualPS = nullptr;
-      padsav->cd();
+      if (padsav)
+         padsav->cd();
+      else
+         gPad = nullptr;
 
       return;
    }
@@ -5042,9 +5047,8 @@ void TPad::Print(const char *filename, Option_t *option)
    // in case we read directly from a Root file and the canvas
    // is not on the screen, set batch mode
 
-   Bool_t mustOpen  = kTRUE;
-   Bool_t mustClose = kTRUE;
-   Bool_t copen=kFALSE, cclose=kFALSE, copenb=kFALSE, ccloseb=kFALSE;
+   Bool_t mustOpen  = kTRUE, mustClose = kTRUE,
+          copen = kFALSE, cclose = kFALSE, copenb = kFALSE, ccloseb = kFALSE;
    if (!image) {
       // The parenthesis mechanism is only valid for PS and PDF files.
       copen   = psname.EndsWith("("); if (copen)   psname[psname.Length()-1] = 0;
@@ -5053,7 +5057,7 @@ void TPad::Print(const char *filename, Option_t *option)
       ccloseb = psname.EndsWith("]"); if (ccloseb) psname[psname.Length()-1] = 0;
    }
    gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
-   if (gVirtualPS) {mustOpen = kFALSE; mustClose = kFALSE;}
+   if (gVirtualPS) mustOpen = mustClose = kFALSE;
    if (copen  || copenb)  mustClose = kFALSE;
    if (cclose || ccloseb) mustClose = kTRUE;
 
@@ -5071,40 +5075,37 @@ void TPad::Print(const char *filename, Option_t *option)
    if (strstr(opt,"Landscape")) pstype = 112;
    if (strstr(opt,"eps"))       pstype = 113;
    if (strstr(opt,"Preview"))   pstype = 113;
-   TPad *padsav = (TPad*)gPad;
+   auto padsav = gPad;
    cd();
    TVirtualPS *psave = gVirtualPS;
 
    if (!gVirtualPS || mustOpen) {
-      // Plugin Postscript driver
-      TPluginHandler *h;
-      if (strstr(opt,"pdf") || strstr(opt,"Title:") || strstr(opt,"EmbedFonts")) {
-         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "pdf"))) {
-            if (h->LoadPlugin() == -1) return;
-            h->ExecPlugin(0);
-         }
-      } else if (image) {
-         // Plugin TImageDump driver
-         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "image"))) {
-            if (h->LoadPlugin() == -1) return;
-            h->ExecPlugin(0);
-         }
-      } else {
-         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", "ps"))) {
-            if (h->LoadPlugin() == -1) return;
-            h->ExecPlugin(0);
-         }
+
+      const char *pluginName = "ps"; // Plugin Postscript driver
+      if (strstr(opt,"pdf") || strstr(opt,"Title:") || strstr(opt,"EmbedFonts"))
+         pluginName = "pdf";
+      else if (image)
+         pluginName = "image"; // Plugin TImageDump driver
+
+      if (auto h = gROOT->GetPluginManager()->FindHandler("TVirtualPS", pluginName)) {
+         if (h->LoadPlugin() == -1)
+            return;
+          h->ExecPlugin(0);
       }
 
       // Create a new Postscript, PDF or image file
-      if (gVirtualPS) gVirtualPS->SetName(psname);
+      if (gVirtualPS)
+         gVirtualPS->SetName(psname);
       const Ssiz_t titlePos = opt.Index("Title:");
       if (titlePos != kNPOS) {
-         if (gVirtualPS) gVirtualPS->SetTitle(opt.Data()+titlePos+6);
+         if (gVirtualPS)
+            gVirtualPS->SetTitle(opt.Data()+titlePos+6);
          opt.Replace(titlePos,opt.Length(),"pdf");
       }
-      if (gVirtualPS) gVirtualPS->Open(psname,pstype);
-      if (gVirtualPS) gVirtualPS->SetBit(kPrintingPS);
+      if (gVirtualPS)
+         gVirtualPS->Open(psname,pstype);
+      if (gVirtualPS)
+         gVirtualPS->SetBit(kPrintingPS);
       if (!copenb) {
          if (!strstr(opt,"pdf") || image) {
             if (gVirtualPS) gVirtualPS->NewPage();
@@ -5159,7 +5160,11 @@ void TPad::Print(const char *filename, Option_t *option)
       gSystem->Rename("pdf_temp.pdf", psname.Data());
    }
 
-   padsav->cd();
+   if (padsav)
+      padsav->cd();
+   else
+      gPad = nullptr;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
