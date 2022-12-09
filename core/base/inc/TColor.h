@@ -125,6 +125,7 @@ public:
                        kStarryNight=102,     kSunset=103,      kTemperatureMap=104,
                        kThermometer=105,     kValentine=106,   kVisibleSpectrum=107,
                        kWaterMelon=108,      kCool=109,        kCopper=110,
-                       kGistEarth=111,       kViridis=112,     kCividis=113};
+                       kGistEarth=111,       kViridis=112,     kCividis=113,
+                       kRainbow=kRainBow,    kDarkRainbow=kDarkRainBow};
 #endif
 
