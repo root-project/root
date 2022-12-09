@@ -454,6 +454,8 @@ TBranch::~TBranch()
    delete [] fBasketBytes;
    fBasketBytes = 0;
 
+   if (fExtraBasket && !fBaskets.Remove(fExtraBasket))
+      delete fExtraBasket;
    fBaskets.Delete();
    fNBaskets = 0;
    fCurrentBasket = 0;
