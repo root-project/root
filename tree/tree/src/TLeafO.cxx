@@ -173,7 +173,7 @@ void TLeafO::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 void TLeafO::ReadValue(std::istream &s, Char_t /*delim = ' '*/)
 {
    char *value = (char*)GetValuePointer();
-   s >> value;
+   for (Int_t i=0;i<fLen;i++) s >> value[i];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
