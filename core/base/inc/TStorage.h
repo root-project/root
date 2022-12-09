@@ -130,9 +130,9 @@ R__INTENTIONALLY_UNINIT_END
 // overhead (compared to inlining)
 R__NEVER_INLINE void TStorage::UpdateIsOnHeap(volatile const UInt_t &uniqueID, volatile UInt_t &bits) {
    if (TStorage::FilledByObjectAlloc(&uniqueID))
-      bits |= kIsOnHeap;
+      bits = bits | kIsOnHeap;
    else
-      bits &= ~kIsOnHeap;
+      bits = bits & ~kIsOnHeap;
 }
 
 
