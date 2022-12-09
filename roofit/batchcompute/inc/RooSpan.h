@@ -74,7 +74,7 @@ public:
 
   /// Construct from start pointer and size.
   constexpr RooSpan(typename std::span<T>::pointer beginIn,
-      typename std::span<T>::index_type sizeIn) :
+      typename std::span<T>::size_type sizeIn) :
   _span{beginIn, sizeIn}
   { }
 
@@ -108,17 +108,17 @@ public:
   }
 
 #ifdef NDEBUG
-  constexpr typename std::span<T>::reference operator[](typename std::span<T>::index_type i) const noexcept {
+  constexpr typename std::span<T>::reference operator[](typename std::span<T>::size_type i) const noexcept {
     return _span[i];
   }
 #else
-  typename std::span<T>::reference operator[](typename std::span<T>::index_type i) const noexcept {
+  typename std::span<T>::reference operator[](typename std::span<T>::size_type i) const noexcept {
     assert(i < _span.size());
     return _span[i];
   }
 #endif
 
-  constexpr typename std::span<T>::index_type size() const noexcept {
+  constexpr typename std::span<T>::size_type size() const noexcept {
     return _span.size();
   }
 
