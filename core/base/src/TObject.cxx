@@ -77,7 +77,7 @@ bool DeleteChangesMemoryImpl()
 {
    static constexpr UInt_t kGoldenUUID = 0x00000021;
    static constexpr UInt_t kGoldenbits = 0x03000000;
- 
+
    TObject *o = new TObject;
    o->SetUniqueID(kGoldenUUID);
    UInt_t *o_fuid = &(o->fUniqueID);
@@ -302,7 +302,8 @@ TObject *TObject::DrawClone(Option_t *option) const
    if (pad) pad->cd();
 
    TObject *newobj = Clone();
-   if (!newobj) return nullptr;
+   if (!newobj)
+      return nullptr; // intentionally not restore gPad
    if (pad) {
       if (option && *option)
          pad->GetListOfPrimitives()->Add(newobj, option);
@@ -317,8 +318,8 @@ TObject *TObject::DrawClone(Option_t *option) const
       newobj->Draw(option);
    else
       newobj->Draw(GetDrawOption());
-   if (padsav) padsav->cd();
 
+   if (padsav) padsav->cd();
    return newobj;
 }
 
