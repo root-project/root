@@ -1534,6 +1534,7 @@ UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
    return 0;
 }
 
+
 //////////////////////////////////////////////////////////////////////////////////////////
 /// if canvas or any subpad was modified,
 /// scan all primitives in the TCanvas and subpads and convert them into
@@ -1608,6 +1609,28 @@ Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
    return kFALSE;
 }
 
+TString TWebCanvas::CreatePadJSON(TPad *pad, Int_t json_compression)
+{
+   TString res;
+   if (!pad)
+      return res;
+
+   TCanvas *c = dynamic_cast<TCanvas *>(pad);
+   if (c) {
+      res = CreateCanvasJSON(c, json_compression);
+   } else {
+      auto imp = std::make_unique<TWebCanvas>(pad->GetCanvas(), pad->GetName(), 0, 0, 1000, 500);
+
+      TPadWebSnapshot holder(true, false); // readonly, no ids
+
+      imp->CreatePadSnapshot(holder, pad, 0, [&res, json_compression](TPadWebSnapshot *snap) {
+         res = TBufferJSON::ToJSON(snap, json_compression);
+      });
+   }
+
+   return res;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Create JSON painting output for given canvas
 /// Produce JSON can be used for offline drawing with JSROOT
@@ -1657,19 +1680,19 @@ Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Create image using batch (headless) capability of Chrome browser
+/// Create image using batch (headless) capability of Chrome or Firefox browsers
 /// Supported png, jpeg, svg, pdf formats
 
-bool TWebCanvas::ProduceImage(TCanvas *c, const char *fileName, Int_t width, Int_t height)
+bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_t height)
 {
-   if (!c)
+   if (!pad)
       return false;
 
-   auto json = TWebCanvas::CreateCanvasJSON(c, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression);
+   auto json = TWebCanvas::CreatePadJSON(pad, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression);
    if (!json.Length())
       return false;
 
-   return ROOT::Experimental::RWebDisplayHandle::ProduceImage(fileName, json.Data(), width ? width : c->GetWw(), height ? height : c->GetWh());
+   return ROOT::Experimental::RWebDisplayHandle::ProduceImage(fileName, json.Data(), width ? width : pad->GetWw(), height ? height : pad->GetWh());
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
