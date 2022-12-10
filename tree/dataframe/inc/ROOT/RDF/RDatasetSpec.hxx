@@ -47,17 +47,16 @@ public:
 private:
    std::vector<RDatasetGroup> fDatasetGroups; ///< List of groups
    ROOT::TreeUtils::RFriendInfo fFriendInfo;  ///< List of friends
-   REntryRange fEntryRange;                   ///< Start (inclusive) and end (exclusive) entry for the dataset processing
+   REntryRange fEntryRange; ///< Start (inclusive) and end (exclusive) entry for the dataset processing
 
-   RDatasetSpec(const std::vector<RDatasetGroup> &datasetGroups,
-                const ROOT::TreeUtils::RFriendInfo &friendInfo = {},
+   RDatasetSpec(const std::vector<RDatasetGroup> &datasetGroups, const ROOT::TreeUtils::RFriendInfo &friendInfo = {},
                 const REntryRange &entryRange = {});
 
 public:
    const std::vector<std::string> GetGroupNames() const;
    const std::vector<std::string> GetTreeNames() const;
    const std::vector<std::string> GetFileNameGlobs() const;
-   const std::vector<RMetaData> GetMetaDatas() const;
+   const std::vector<RMetaData> GetMetaData() const;
    const ROOT::TreeUtils::RFriendInfo &GetFriendInfo() const;
    Long64_t GetEntryRangeBegin() const;
    Long64_t GetEntryRangeEnd() const;
@@ -70,7 +69,7 @@ public:
 class RSpecBuilder {
    std::vector<RDatasetGroup> fDatasetGroups; ///< List of groups
    ROOT::TreeUtils::RFriendInfo fFriendInfo;  ///< List of friends
-   RDatasetSpec::REntryRange fEntryRange;     ///< Start (inclusive) and end (exclusive) entry for the dataset processing
+   RDatasetSpec::REntryRange fEntryRange; ///< Start (inclusive) and end (exclusive) entry for the dataset processing
 
 public:
    RSpecBuilder &AddGroup(RDatasetGroup datasetGroup);
