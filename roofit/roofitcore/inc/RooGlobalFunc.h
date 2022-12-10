@@ -17,6 +17,7 @@
 #define ROO_GLOBAL_FUNC
 
 #include "RooCmdArg.h"
+#include "RooLinkedList.h"
 #include "RooArgSet.h"
 
 #include "ROOT/RConfig.hxx"
@@ -395,7 +396,24 @@ RooConstVar& RooConst(double val) ;
 /**
  * @}
  */
+
+namespace Detail {
+
+// Function to pack an arbitrary number of RooCmdArgs into a RooLinkedList. Implementation detail of many high-level RooFit functions.
+template <typename... Args>
+inline std::unique_ptr<RooLinkedList> createCmdList(Args &&... args)
+{
+  auto cmdList = std::make_unique<RooLinkedList>();
+  for (auto * arg : {args...}) {
+    cmdList->Add(const_cast<RooCmdArg*>(arg));
+    //cmdList->Add(new RooCmdArg{arg});
+  }
+  return cmdList;
 }
+
+} // namespace Detail
+
+} // namespace RooFit
 
 namespace RooFitShortHand {
 

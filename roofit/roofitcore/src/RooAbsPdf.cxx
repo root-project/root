@@ -879,8 +879,7 @@ double RooAbsPdf::extendedTerm(double sumEntries, double expected, double sumEnt
 ///            the ratio of squared event weights over event weights:
 ///            \f$ \sum w_{i}^2 / \sum w_{i} \f$.
 ///            Indended to be used by fits with the `SumW2Error()` option that
-///            can be passed to
-///            RooAbsPdf::fitTo(RooAbsData&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&)
+///            can be passed to RooAbsPdf::fitTo(RooAbsData&, const RooLinkedList&)
 ///            (see the documentation of said function to learn more about the
 ///            interpretation of fits with squared weights).
 
@@ -972,26 +971,6 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared) const
 /// </table>
 ///
 ///
-
-RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
-                                             const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
-{
-  RooLinkedList l ;
-  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;
-  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
-  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;
-  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
-  return createNLL(data,l) ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Construct representation of -log(L) of PDFwith given dataset. If dataset is unbinned, an unbinned likelihood is constructed. If the dataset
-/// is binned, a binned likelihood is constructed.
-///
-/// See RooAbsPdf::createNLL(RooAbsData& data, RooCmdArg arg1, RooCmdArg arg2, RooCmdArg arg3, RooCmdArg arg4,
-///                                    RooCmdArg arg5, RooCmdArg arg6, RooCmdArg arg7, RooCmdArg arg8)
-/// for documentation of options
 
 RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 {
@@ -1355,6 +1334,97 @@ int RooAbsPdf::calcSumW2CorrectedCovariance(RooMinimizer &minimizer, RooAbsReal 
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Minimizes a given NLL variable by finding the optimal parameters with the
+/// RooMinimzer. The NLL variable can be created with RooAbsPdf::createNLL.
+/// If you are looking for a function that combines likelihood creation with
+/// fitting, see RooAbsPdf::fitTo.
+/// \param[in] nll The negative log-likelihood variable to minimize.
+/// \param[in] data The dataset that was als used for the NLL. It's a necessary
+///            parameter because it is used in the asymptotic error correction.
+/// \param[in] cfg Configuration struct with all the configuration options for
+///            the RooMinimizer. These are a subset of the options that you can
+///            also pass to RooAbsPdf::fitTo via the RooFit command arguments.
+std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
+        RooAbsData const& data, MinimizerConfig const& cfg) {
+
+  // Determine if the dataset has weights
+  bool weightedData = data.isNonPoissonWeighted();
+
+  // Warn user that a method to determine parameter uncertainties should be provided if weighted data is offered
+  if (weightedData && cfg.doSumW2==-1 && cfg.doAsymptotic==-1) {
+    coutW(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: a likelihood fit is requested of what appears to be weighted data.\n"
+                          << "       While the estimated values of the parameters will always be calculated taking the weights into account,\n"
+                          << "       there are multiple ways to estimate the errors of the parameters. You are advised to make an \n"
+                          << "       explicit choice for the error calculation:\n"
+                          << "           - Either provide SumW2Error(true), to calculate a sum-of-weights-corrected HESSE error matrix\n"
+                          << "             (error will be proportional to the number of events in MC).\n"
+                          << "           - Or provide SumW2Error(false), to return errors from original HESSE error matrix\n"
+                          << "             (which will be proportional to the sum of the weights, i.e., a dataset with <sum of weights> events).\n"
+                          << "           - Or provide AsymptoticError(true), to use the asymptotically correct expression\n"
+                          << "             (for details see https://arxiv.org/abs/1911.01303)."
+                          << endl ;
+  }
+
+  if (cfg.minos && (cfg.doSumW2==1 || cfg.doAsymptotic == 1)) {
+    coutE(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << "): sum-of-weights and asymptotic error correction do not work with MINOS errors. Not fitting." << endl;
+    return nullptr;
+  }
+  if (cfg.doAsymptotic==1 && cfg.minos) {
+    coutW(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: asymptotic correction does not apply to MINOS errors" << endl ;
+  }
+
+  //avoid setting both SumW2 and Asymptotic for uncertainty correction
+  if (cfg.doSumW2==1 && cfg.doAsymptotic==1) {
+    coutE(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") ERROR: Cannot compute both asymptotically correct and SumW2 errors." << endl ;
+    return nullptr;
+  }
+
+  // Instantiate RooMinimizer
+  RooMinimizer::Config minimizerConfig;
+  minimizerConfig.parallelGradient = cfg.parallelGradient;
+  minimizerConfig.parallelLikelihood = cfg.parallelLikelihood;
+  minimizerConfig.nWorkers = cfg.nWorkers;
+  RooMinimizer m(nll, minimizerConfig);
+
+  m.setMinimizerType(cfg.minType.c_str());
+  m.setEvalErrorWall(cfg.doEEWall);
+  m.setRecoverFromNaNStrength(cfg.recoverFromNaN);
+  m.setPrintEvalErrors(cfg.numee);
+  if (cfg.maxCalls > 0) m.setMaxFunctionCalls(cfg.maxCalls);
+  if (cfg.printLevel!=1) m.setPrintLevel(cfg.printLevel);
+  if (cfg.optConst) m.optimizeConst(cfg.optConst); // Activate constant term optimization
+  if (cfg.verbose) m.setVerbose(1); // Activate verbose options
+  if (cfg.doTimer) m.setProfile(1); // Activate timer options
+  if (cfg.strat!=1) m.setStrategy(cfg.strat); // Modify fit strategy
+  if (cfg.initHesse) m.hesse(); // Initialize errors with hesse
+  m.minimize(cfg.minType.c_str(), cfg.minAlg.c_str()); // Minimize using chosen algorithm
+  if (cfg.hesse) m.hesse(); // Evaluate errors with Hesse
+
+  int corrCovQual = -1;
+
+  if (m.getNPar()>0) {
+    if (cfg.doAsymptotic == 1) corrCovQual = calcAsymptoticCorrectedCovariance(m, data); // Asymptotically correct
+    if (cfg.doSumW2 == 1) corrCovQual = calcSumW2CorrectedCovariance(m, nll);
+  }
+
+  if (cfg.minos) cfg.minosSet ? m.minos(*cfg.minosSet) : m.minos(); // Evaluate errs with Minos
+
+  // Optionally return fit result
+  std::unique_ptr<RooFitResult> ret;
+  if (cfg.doSave) {
+    auto name = std::string("fitresult_") + GetName() + "_" + data.GetName();
+    auto title = std::string("Result of fit of p.d.f. ") + GetName() + " to dataset " + data.GetName();
+    ret.reset(m.save(name.c_str(),title.c_str()));
+    if((cfg.doSumW2==1 || cfg.doAsymptotic==1) && m.getNPar()>0) ret->setCovQual(corrCovQual);
+  }
+
+  if (cfg.optConst) m.optimizeConst(0) ;
+  return ret ;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Fit PDF to given dataset. If dataset is unbinned, an unbinned maximum likelihood is performed. If the dataset
 /// is binned, a binned maximum likelihood is performed. By default the fit is executed through the MINUIT
 /// commands MIGRAD, HESSE in succession.
@@ -1498,118 +1568,6 @@ int RooAbsPdf::calcSumW2CorrectedCovariance(RooMinimizer &minimizer, RooAbsReal 
 ///                                                                                                will by default enable the `NewStyle` named argument.
 /// </table>
 ///
-
-RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
-                                                 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
-{
-  RooLinkedList l ;
-  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;
-  l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
-  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;
-  l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
-  return fitTo(data,l) ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Minimizes a given NLL variable by finding the optimal parameters with the
-/// RooMinimzer. The NLL variable can be created with RooAbsPdf::createNLL.
-/// If you are looking for a function that combines likelihood creation with
-/// fitting, see RooAbsPdf::fitTo.
-/// \param[in] nll The negative log-likelihood variable to minimize.
-/// \param[in] data The dataset that was als used for the NLL. It's a necessary
-///            parameter because it is used in the asymptotic error correction.
-/// \param[in] cfg Configuration struct with all the configuration options for
-///            the RooMinimizer. These are a subset of the options that you can
-///            also pass to RooAbsPdf::fitTo via the RooFit command arguments.
-std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
-        RooAbsData const& data, MinimizerConfig const& cfg) {
-
-  // Determine if the dataset has weights
-  bool weightedData = data.isNonPoissonWeighted();
-
-  // Warn user that a method to determine parameter uncertainties should be provided if weighted data is offered
-  if (weightedData && cfg.doSumW2==-1 && cfg.doAsymptotic==-1) {
-    coutW(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: a likelihood fit is requested of what appears to be weighted data.\n"
-                          << "       While the estimated values of the parameters will always be calculated taking the weights into account,\n"
-                          << "       there are multiple ways to estimate the errors of the parameters. You are advised to make an \n"
-                          << "       explicit choice for the error calculation:\n"
-                          << "           - Either provide SumW2Error(true), to calculate a sum-of-weights-corrected HESSE error matrix\n"
-                          << "             (error will be proportional to the number of events in MC).\n"
-                          << "           - Or provide SumW2Error(false), to return errors from original HESSE error matrix\n"
-                          << "             (which will be proportional to the sum of the weights, i.e., a dataset with <sum of weights> events).\n"
-                          << "           - Or provide AsymptoticError(true), to use the asymptotically correct expression\n"
-                          << "             (for details see https://arxiv.org/abs/1911.01303)."
-                          << endl ;
-  }
-
-  if (cfg.minos && (cfg.doSumW2==1 || cfg.doAsymptotic == 1)) {
-    coutE(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << "): sum-of-weights and asymptotic error correction do not work with MINOS errors. Not fitting." << endl;
-    return nullptr;
-  }
-  if (cfg.doAsymptotic==1 && cfg.minos) {
-    coutW(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") WARNING: asymptotic correction does not apply to MINOS errors" << endl ;
-  }
-
-  //avoid setting both SumW2 and Asymptotic for uncertainty correction
-  if (cfg.doSumW2==1 && cfg.doAsymptotic==1) {
-    coutE(InputArguments) << "RooAbsPdf::fitTo(" << GetName() << ") ERROR: Cannot compute both asymptotically correct and SumW2 errors." << endl ;
-    return nullptr;
-  }
-
-  // Instantiate RooMinimizer
-  RooMinimizer::Config minimizerConfig;
-  minimizerConfig.parallelGradient = cfg.parallelGradient;
-  minimizerConfig.parallelLikelihood = cfg.parallelLikelihood;
-  minimizerConfig.nWorkers = cfg.nWorkers;
-  RooMinimizer m(nll, minimizerConfig);
-
-  m.setMinimizerType(cfg.minType.c_str());
-  m.setEvalErrorWall(cfg.doEEWall);
-  m.setRecoverFromNaNStrength(cfg.recoverFromNaN);
-  m.setPrintEvalErrors(cfg.numee);
-  if (cfg.maxCalls > 0) m.setMaxFunctionCalls(cfg.maxCalls);
-  if (cfg.printLevel!=1) m.setPrintLevel(cfg.printLevel);
-  if (cfg.optConst) m.optimizeConst(cfg.optConst); // Activate constant term optimization
-  if (cfg.verbose) m.setVerbose(1); // Activate verbose options
-  if (cfg.doTimer) m.setProfile(1); // Activate timer options
-  if (cfg.strat!=1) m.setStrategy(cfg.strat); // Modify fit strategy
-  if (cfg.initHesse) m.hesse(); // Initialize errors with hesse
-  m.minimize(cfg.minType.c_str(), cfg.minAlg.c_str()); // Minimize using chosen algorithm
-  if (cfg.hesse) m.hesse(); // Evaluate errors with Hesse
-
-  int corrCovQual = -1;
-
-  if (m.getNPar()>0) {
-    if (cfg.doAsymptotic == 1) corrCovQual = calcAsymptoticCorrectedCovariance(m, data); // Asymptotically correct
-    if (cfg.doSumW2 == 1) corrCovQual = calcSumW2CorrectedCovariance(m, nll);
-  }
-
-  if (cfg.minos) cfg.minosSet ? m.minos(*cfg.minosSet) : m.minos(); // Evaluate errs with Minos
-
-  // Optionally return fit result
-  std::unique_ptr<RooFitResult> ret;
-  if (cfg.doSave) {
-    auto name = std::string("fitresult_") + GetName() + "_" + data.GetName();
-    auto title = std::string("Result of fit of p.d.f. ") + GetName() + " to dataset " + data.GetName();
-    ret.reset(m.save(name.c_str(),title.c_str()));
-    if((cfg.doSumW2==1 || cfg.doAsymptotic==1) && m.getNPar()>0) ret->setCovQual(corrCovQual);
-  }
-
-  if (cfg.optConst) m.optimizeConst(0) ;
-  return ret ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Fit PDF to given dataset. If dataset is unbinned, an unbinned maximum likelihood is performed. If the dataset
-/// is binned, a binned maximum likelihood is performed. By default the fit is executed through the MINUIT
-/// commands MIGRAD, HESSE and MINOS in succession.
-///
-/// See RooAbsPdf::fitTo(RooAbsData&,RooCmdArg&,RooCmdArg&,RooCmdArg&,RooCmdArg&,RooCmdArg&,RooCmdArg&,RooCmdArg&,RooCmdArg&)
-///
-/// for documentation of options
 
 RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 {

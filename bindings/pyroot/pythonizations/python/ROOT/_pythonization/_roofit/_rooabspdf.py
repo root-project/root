@@ -15,6 +15,31 @@ from ._rooabsreal import RooAbsReal
 from ._utils import _kwargs_to_roocmdargs, cpp_signature
 
 
+def _pack_cmd_args(*args, **kwargs):
+    # Pack command arguments passed into a RooLinkedList.
+
+    import ROOT
+
+    # If the second argument is already a RooLinkedList, do nothing
+    if len(kwargs) == 0 and len(args) == 1 and isinstance(args[0], ROOT.RooLinkedList):
+        return args[0]
+
+    # Transform keyword arguments to RooCmdArgs
+    args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
+
+    # All keyword arguments should be transformed now
+    assert len(kwargs) == 0
+
+    # Put RooCmdArgs in a RooLinkedList
+    cmdList = ROOT.RooLinkedList()
+    for cmd in args:
+        if not isinstance(cmd, ROOT.RooCmdArg):
+            raise TypeError("This function only takes RooFit command arguments.")
+        cmdList.Add(cmd)
+
+    return cmdList
+
+
 class RooAbsPdf(RooAbsReal):
     r"""Some member functions of RooAbsPdf that take a RooCmdArg as argument also support keyword arguments.
     So far, this applies to RooAbsPdf::fitTo, RooAbsPdf::plotOn, RooAbsPdf::generate, RooAbsPdf::paramOn, RooAbsPdf::createCdf,
@@ -28,16 +53,13 @@ class RooAbsPdf(RooAbsReal):
     pdf.fitTo(data, Range="r1")
     \endcode"""
 
-    @cpp_signature(
-        "RooAbsPdf::fitTo(RooAbsData&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&)"
-    )
+    @cpp_signature("RooAbsPdf::fitTo(RooAbsData&, const RooLinkedList&) ;")
     def fitTo(self, *args, **kwargs):
         r"""The RooAbsPdf::fitTo() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsPdf.fitTo` for keyword arguments.
-        args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._fitTo(*args, **kwargs)
+        return self._fitTo(args[0], _pack_cmd_args(*args[1:], **kwargs))
 
     @cpp_signature(
         "RooPlot *RooAbsPdf::plotOn(RooPlot* frame,"
@@ -85,18 +107,13 @@ class RooAbsPdf(RooAbsReal):
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
         return self._paramOn(*args, **kwargs)
 
-    @cpp_signature(
-        "RooAbsReal *RooAbsPdf::createNLL(RooAbsData& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),"
-        "    const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),"
-        "    const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
-    )
+    @cpp_signature("RooAbsPdf::createNLL(RooAbsData&, const RooLinkedList&) ;")
     def createNLL(self, *args, **kwargs):
         r"""The RooAbsPdf::createNLL() function is pythonized with the command argument pythonization.
         The keywords must correspond to the CmdArgs of the function.
         """
         # Redefinition of `RooAbsPdf.createNLL` for keyword arguments.
-        args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
-        return self._createNLL(*args, **kwargs)
+        return self._createNLL(args[0], _pack_cmd_args(*args[1:], **kwargs))
 
     @cpp_signature(
         "RooAbsReal *RooAbsPdf::createChi2(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),"
