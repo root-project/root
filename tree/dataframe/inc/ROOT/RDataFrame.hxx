@@ -59,8 +59,8 @@ namespace Experimental {
 ///                     https://github.com/root-project/root/issues/11624
 ROOT::RDataFrame FromJSON(const std::string &jsonFile);
 
-}
-}
+} // namespace Experimental
+} // namespace RDF
 
 } // ns ROOT
 

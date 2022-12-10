@@ -366,8 +366,9 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
 }
 
 RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
-   : fBeginEntry(spec.GetEntryRangeBegin()), fEndEntry(spec.GetEntryRangeEnd()), fDatasetGroups(spec.GetDatasetGroups()),
-     fNSlots(RDFInternal::GetNSlots()), fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
+   : fBeginEntry(spec.GetEntryRangeBegin()), fEndEntry(spec.GetEntryRangeEnd()),
+     fDatasetGroups(spec.GetDatasetGroups()), fNSlots(RDFInternal::GetNSlots()),
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
      fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
 {
    auto chain = std::make_shared<TChain>("");
@@ -407,7 +408,7 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
          }
       } else {
          // Otherwise, the new friend chain needs to be built using the nomenclature
-         // "filename?#treename" as argument to `TChain::Add`
+         // "filename/treename" as argument to `TChain::Add`
          for (auto j = 0u; j < nFileNames; ++j) {
             frChain->Add((thisFriendFiles[j] + "/" + thisFriendChainSubNames[j]).c_str());
          }
@@ -709,7 +710,8 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
       range.second = tree->GetEntries(); // convert '-1', i.e. 'until the end', to the actual entry number
    }
    const std::string &id = fname + "/" + treename;
-   fSampleInfos[slot] = fDatasetGroupMap.empty() ? RSampleInfo(id, range) : RSampleInfo(id, range, *fDatasetGroupMap[id]);
+   fSampleInfos[slot] =
+      fDatasetGroupMap.empty() ? RSampleInfo(id, range) : RSampleInfo(id, range, *fDatasetGroupMap[id]);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.

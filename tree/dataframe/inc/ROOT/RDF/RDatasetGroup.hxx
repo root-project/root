@@ -24,7 +24,7 @@ namespace Experimental {
 \class ROOT::RDF::Experimental::RDatasetGroup
 \ingroup dataframe
 \brief Class representing a dataset group (mapping of trees (and their fileglobs) to metadata)
- 
+
  This class should be passed to RSpecBuilder in order to build a RDataFrame.
 */
 class RDatasetGroup {
@@ -68,7 +68,7 @@ public:
    unsigned int GetGroupId() const; // intended to be used only after the RDataSpec is build, otherwise is 0
    void SetGroupId(unsigned int id);
    /// \endcond
-   };
+};
 
 } // namespace Experimental
 } // namespace RDF
