@@ -30,7 +30,7 @@ void RMetaData::Add(const std::string &key, const std::string &val)
    fJson[key] = val;
 }
 
-const std::string RMetaData::Dump(const std::string &key) const
+std::string RMetaData::Dump(const std::string &key) const
 {
    return fJson[key].dump();
 }
@@ -53,7 +53,7 @@ double RMetaData::GetD(const std::string &key) const
    return fJson[key].get<double>();
 }
 
-const std::string RMetaData::GetS(const std::string &key) const
+std::string RMetaData::GetS(const std::string &key) const
 {
    if (!fJson.contains(key))
       throw std::logic_error("No key with name " + key + " in the metadata object.");
@@ -80,7 +80,7 @@ double RMetaData::GetD(const std::string &key, double defaultVal) const
    return fJson[key].get<double>();
 }
 
-const std::string RMetaData::GetS(const std::string &key, std::string defaultVal) const
+const std::string RMetaData::GetS(const std::string &key, const std::string &defaultVal) const
 {
    if (!fJson.contains(key))
       return defaultVal;
