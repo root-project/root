@@ -28,9 +28,6 @@
 #include <string>
 #include <vector>
 
-
-
-
 // clang-format off
 /**
 * \class ROOT::RDataFrame

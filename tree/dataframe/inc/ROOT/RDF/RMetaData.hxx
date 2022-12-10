@@ -34,13 +34,13 @@ public:
    void Add(const std::string &key, double val);
    void Add(const std::string &key, const std::string &val);
 
-   const std::string Dump(const std::string &key) const; // always returns a string
+   std::string Dump(const std::string &key) const; // always returns a string
    int GetI(const std::string &key) const;
    double GetD(const std::string &key) const;
-   const std::string GetS(const std::string &key) const;
+   std::string GetS(const std::string &key) const;
    int GetI(const std::string &key, int defaultVal) const;
    double GetD(const std::string &key, double defaultVal) const;
-   const std::string GetS(const std::string &key, std::string defaultVal) const;
+   const std::string GetS(const std::string &key, const std::string &defaultVal) const;
 };
 
 } // namespace Experimental
