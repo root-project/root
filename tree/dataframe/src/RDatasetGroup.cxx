@@ -18,20 +18,20 @@ namespace Experimental {
 
 RDatasetGroup::RDatasetGroup(const std::string &groupName, const std::string &treeName, const std::string &fileNameGlob,
                              const RMetaData &metaData)
-: RDatasetGroup(groupName, std::vector<std::string>{treeName}, std::vector<std::string>{fileNameGlob}, metaData)
+   : RDatasetGroup(groupName, std::vector<std::string>{treeName}, std::vector<std::string>{fileNameGlob}, metaData)
 {
 }
 
 RDatasetGroup::RDatasetGroup(const std::string &groupName, const std::string &treeName,
                              const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData)
-: RDatasetGroup(groupName, std::vector<std::string>(fileNameGlobs.size(), treeName), fileNameGlobs, metaData)
+   : RDatasetGroup(groupName, std::vector<std::string>(fileNameGlobs.size(), treeName), fileNameGlobs, metaData)
 {
 }
 
 RDatasetGroup::RDatasetGroup(const std::string &groupName,
                              const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
                              const RMetaData &metaData)
-: fGroupName(groupName), fMetaData(metaData)
+   : fGroupName(groupName), fMetaData(metaData)
 {
    TChain chain;
    for (const auto &p : treeAndFileNameGlobs) {
@@ -49,7 +49,7 @@ RDatasetGroup::RDatasetGroup(const std::string &groupName,
 
 RDatasetGroup::RDatasetGroup(const std::string &groupName, const std::vector<std::string> &treeNames,
                              const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData)
-: fGroupName(groupName), fMetaData(metaData)
+   : fGroupName(groupName), fMetaData(metaData)
 {
    if (treeNames.size() != 1 && treeNames.size() != fileNameGlobs.size())
       throw std::logic_error("Mismatch between number of trees and file globs.");

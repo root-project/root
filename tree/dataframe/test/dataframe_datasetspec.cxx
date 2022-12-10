@@ -132,7 +132,8 @@ TEST_P(RDatasetSpecTest, SimpleChainsCreation)
             EXPECT_VEC_SEQ_EQ(dfC1, ROOT::TSeq<ULong64_t>(t.start, t.end));
 
             // second AddGroup overload: 1 tree, many files; files passed as a vector; testing with 1 specTestFile
-            const auto dfC2 = *(RDataFrame(RSpecBuilder().AddGroup({"", t.tree, {t.file}}).Build()).Take<ULong64_t>("x"));
+            const auto dfC2 =
+               *(RDataFrame(RSpecBuilder().AddGroup({"", t.tree, {t.file}}).Build()).Take<ULong64_t>("x"));
             EXPECT_VEC_SEQ_EQ(dfC2, ROOT::TSeq<ULong64_t>(t.start, t.end));
 
             // third AddGroup overload: many trees, many files; trees and files passed in a vector of pairs

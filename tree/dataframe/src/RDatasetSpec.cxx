@@ -57,7 +57,7 @@ const std::vector<std::string> RDatasetSpec::GetFileNameGlobs() const
    return fileNames;
 }
 
-const std::vector<RMetaData> RDatasetSpec::GetMetaDatas() const
+const std::vector<RMetaData> RDatasetSpec::GetMetaData() const
 {
    std::vector<RMetaData> metaDatas;
    metaDatas.reserve(fDatasetGroups.size());
@@ -86,8 +86,8 @@ const std::vector<RDatasetGroup> &RDatasetSpec::GetDatasetGroups() const
    return fDatasetGroups;
 }
 
-RDatasetSpec::RDatasetSpec(const std::vector<RDatasetGroup> &datasetGroups, const ROOT::TreeUtils::RFriendInfo &friendInfo,
-                           const REntryRange &entryRange)
+RDatasetSpec::RDatasetSpec(const std::vector<RDatasetGroup> &datasetGroups,
+                           const ROOT::TreeUtils::RFriendInfo &friendInfo, const REntryRange &entryRange)
    : fDatasetGroups(datasetGroups), fFriendInfo(friendInfo), fEntryRange(entryRange)
 {
 }
@@ -126,8 +126,8 @@ RSpecBuilder &RSpecBuilder::WithRange(const RDatasetSpec::REntryRange &entryRang
    return *this;
 }
 
-RSpecBuilder &RSpecBuilder::WithFriends(const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNameGlobs,
-                                        const std::string &alias)
+RSpecBuilder &RSpecBuilder::WithFriends(const std::vector<std::string> &treeNames,
+                                        const std::vector<std::string> &fileNameGlobs, const std::string &alias)
 {
    if (treeNames.size() != 1 && treeNames.size() != fileNameGlobs.size())
       throw std::logic_error("Mismatch between number of trees and file globs.");

@@ -20,7 +20,7 @@
 #include "RtypesCore.h" // for ULong64_t
 #include "TTree.h"
 
-#include <fstream> // std::ifstream
+#include <fstream>           // std::ifstream
 #include <nlohmann/json.hpp> // nlohmann::json::parse
 #include <memory>  // for make_shared, allocator, shared_ptr
 #include <ostream> // ostringstream
@@ -1521,8 +1521,8 @@ ROOT::RDataFrame FromJSON(const std::string &jsonFile)
    return ROOT::RDataFrame(specBuilder.Build());
 }
 
-}
-}
+} // namespace Experimental
+} // namespace RDF
 
 } // namespace ROOT
 
