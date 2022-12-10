@@ -51,7 +51,7 @@ public:
    RSampleInfo &operator=(RSampleInfo &&) = default;
    ~RSampleInfo() = default;
 
-   const std::string GetGroupName() const { return fDatasetGroup.GetGroupName(); }
+   const std::string &GetGroupName() const { return fDatasetGroup.GetGroupName(); }
 
    unsigned int GetGroupId() const { return fDatasetGroup.GetGroupId(); }
 
@@ -59,7 +59,7 @@ public:
 
    double GetD(const std::string &key) const { return fDatasetGroup.GetMetaData().GetD(key); }
 
-   const std::string GetS(const std::string &key) const { return fDatasetGroup.GetMetaData().GetS(key); }
+   std::string GetS(const std::string &key) const { return fDatasetGroup.GetMetaData().GetS(key); }
 
    /// Check whether the sample name contains the given substring.
    bool Contains(std::string_view substr) const

@@ -134,7 +134,7 @@ RSpecBuilder &RSpecBuilder::WithFriends(const std::vector<std::string> &treeName
    std::vector<std::pair<std::string, std::string>> target;
    target.reserve(fileNameGlobs.size());
    std::transform(treeNames.begin(), treeNames.end(), fileNameGlobs.begin(), std::back_inserter(target),
-                  [](std::string a, std::string b) { return std::make_pair(a, b); });
+                  [](const std::string &a, const std::string &b) { return std::make_pair(a, b); });
    fFriendInfo.AddFriend(target, alias);
    return *this;
 }
