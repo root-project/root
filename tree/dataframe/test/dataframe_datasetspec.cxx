@@ -373,7 +373,6 @@ TEST_P(RDatasetSpecTest, Friends)
    }
 
    for (auto i = 0u; i < data.size(); ++i) {
-      std::cout << i << std::endl;
       std::sort(res["friend_glob_" + data[i].name + "x"]->begin(), res["friend_glob_" + data[i].name + "x"]->end());
       std::sort(res["friend_expanded_" + data[i].name + "x"]->begin(),
                 res["friend_expanded_" + data[i].name + "x"]->end());
@@ -386,8 +385,8 @@ TEST_P(RDatasetSpecTest, Friends)
          if (GetParam()) { // MT case
             auto sol = *res["friend_glob_" + data[i].name + "x"];
             ASSERT_EQ(sol.size(), 24u);
-            for (auto i = 0u; i < sol.size(); ++i)
-               EXPECT_EQ(sol[i], i > 8 ? i - 9 : 0u);
+            for (auto j = 0u; j < sol.size(); ++j)
+               EXPECT_EQ(sol[j], j > 8 ? j - 9 : 0u);
          }
          // sigle-threaded case with shorter friend behaves unexpectedly!
       }
