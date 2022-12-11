@@ -342,7 +342,7 @@ def get_clustered_range_from_percs(percrange: TreeRangePerc) -> Tuple[Optional[T
 
     # Connect each tree in each file with its number of entries
     trees_with_entries: Dict[str, int] = {
-        filename + "?#" + treename: entries
+        filename + "/" + treename: entries
         for filename, treename, entries
         in zip(
             percrange.filenames[first_file_idx:last_file_idx],
