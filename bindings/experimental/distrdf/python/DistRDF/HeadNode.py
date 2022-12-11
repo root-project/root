@@ -468,8 +468,7 @@ class TreeHeadNode(HeadNode):
                     current_range.friendinfo.fFriendChainSubNames
                 )
                 for (friend_name, friend_alias), friend_filenames, friend_chainsubnames in zipped_friendinfo:
-                    friends = list(zip_longest(friend_chainsubnames, friend_filenames, fillvalue=friend_name))
-                    ds.WithFriends(friends, friend_alias)
+                    ds = ds.WithFriends(friend_chainsubnames, friend_filenames, friend_alias)
 
         def build_rdf_from_range(current_range: Ranges.TreeRangePerc) -> TaskObjects:
             """
@@ -486,8 +485,8 @@ class TreeHeadNode(HeadNode):
 
             ds = ROOT.RDF.Experimental.RSpecBuilder()
             # add a group with no name to represent the whole dataset
-            ds.AddGroup(("", clustered_range.treenames, clustered_range.filenames))
-            ds.WithRange((clustered_range.globalstart, clustered_range.globalend))
+            ds = ds.AddGroup(("", clustered_range.treenames, clustered_range.filenames))
+            ds = ds.WithRange((clustered_range.globalstart, clustered_range.globalend))
 
             attach_friend_info_if_present(clustered_range, ds)
 
