@@ -310,8 +310,15 @@ bool RooMinimizer::fitFcn() const
 /// \param[in] alg  Fit algorithm to use. (Optional)
 int RooMinimizer::minimize(const char *type, const char *alg)
 {
-   if (_cfg.logTimings) addParamsToProcessTimer();
-
+   if (_cfg.logTimings) 
+#ifdef R__HAS_ROOFIT_MULTIPROCESS
+      addParamsToProcessTimer();
+#else
+      throw std::logic_error(
+            "ProcessTimer, but ROOT was not compiled with multiprocessing enabled, "
+            "please recompile with -Droofit_multiprocess=ON for logging with the "
+            "ProcessTimer.");
+#endif
    _fcn->Synchronize(_theFitter->Config().ParamsSettings());
 
    setMinimizerType(type);
@@ -750,6 +757,7 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
 
 void RooMinimizer::addParamsToProcessTimer()
 {
+#ifdef R__HAS_ROOFIT_MULTIPROCESS
   // parameter indices for use in timing heat matrix
   std::vector<std::string> parameter_names;
   for (auto && parameter : *_fcn->GetFloatParamList()) {
@@ -759,6 +767,10 @@ void RooMinimizer::addParamsToProcessTimer()
     }
   }
   RooFit::MultiProcess::ProcessTimer::add_metadata(parameter_names);
+#else
+   coutI(Minimization) << "Not adding parameters to processtimer because multiprocessing "
+                       << "is not enabled." << std::endl;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
