@@ -87,7 +87,15 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, int numBins):
   _xmax.resize(_function->getDimension()) ;
 
   auto realBinding = dynamic_cast<const RooRealBinding*>(_function);
-  if (realBinding) {
+
+  // We could use BatchMode for RooRealBindings as they implement getValues().
+  // However, this is not efficient right now, because every time getValue() is
+  // called, a new RooFitDriver is created. Needs to be refactored.
+
+  //const bool useBatchMode = realBinding;
+  const bool useBatchMode = false;
+
+  if (useBatchMode) {
     _evalData.reset(new RooBatchCompute::RunContext());
     _evalDataOrig.reset(new RooBatchCompute::RunContext());
   }
@@ -108,7 +116,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, int numBins):
     }
     _binb.emplace_back(tmp->begin(), tmp->end());
 
-    if (realBinding) {
+    if (useBatchMode) {
       const std::vector<double>& binb = _binb.back();
       RooSpan<double> binCentres = _evalDataOrig->makeBatch(realBinding->observable(i), binb.size() - 1);
       for (unsigned int ibin = 0; ibin < binb.size() - 1; ++ibin) {
