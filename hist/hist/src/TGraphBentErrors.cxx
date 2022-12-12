@@ -148,25 +148,25 @@ TGraphBentErrors::TGraphBentErrors(Int_t n,
   : TGraph(n,x,y)
 {
    if (!CtorAllocate()) return;
-   n = sizeof(Double_t)*fNpoints;
+   auto memsz = sizeof(Double_t)*fNpoints;
 
-      if (exl) memcpy(fEXlow, exl, n);
-      else     memset(fEXlow, 0, n);
-      if (exh) memcpy(fEXhigh, exh, n);
-      else     memset(fEXhigh, 0, n);
-      if (eyl) memcpy(fEYlow, eyl, n);
-      else     memset(fEYlow, 0, n);
-      if (eyh) memcpy(fEYhigh, eyh, n);
-      else     memset(fEYhigh, 0, n);
+   if (exl) memcpy(fEXlow, exl, memsz);
+       else memset(fEXlow, 0, memsz);
+   if (exh) memcpy(fEXhigh, exh, memsz);
+       else memset(fEXhigh, 0, memsz);
+   if (eyl) memcpy(fEYlow, eyl, memsz);
+       else memset(fEYlow, 0, memsz);
+   if (eyh) memcpy(fEYhigh, eyh, memsz);
+       else memset(fEYhigh, 0, memsz);
 
-      if (exld) memcpy(fEXlowd, exld, n);
-      else      memset(fEXlowd, 0, n);
-      if (exhd) memcpy(fEXhighd, exhd, n);
-      else      memset(fEXhighd, 0, n);
-      if (eyld) memcpy(fEYlowd,  eyld, n);
-      else      memset(fEYlowd, 0, n);
-      if (eyhd) memcpy(fEYhighd, eyhd, n);
-      else      memset(fEYhighd, 0, n);
+   if (exld) memcpy(fEXlowd, exld, memsz);
+        else memset(fEXlowd, 0, memsz);
+   if (exhd) memcpy(fEXhighd, exhd, memsz);
+        else memset(fEXhighd, 0, memsz);
+   if (eyld) memcpy(fEYlowd,  eyld, memsz);
+        else memset(fEYlowd, 0, memsz);
+   if (eyhd) memcpy(fEYhighd, eyhd, memsz);
+        else memset(fEYhighd, 0, memsz);
 }
 
 
@@ -204,25 +204,24 @@ void TGraphBentErrors::Apply(TF1 *f)
 
    if (fHistogram) {
       delete fHistogram;
-      fHistogram = 0;
+      fHistogram = nullptr;
    }
-   for (Int_t i=0;i<GetN();i++) {
-      GetPoint(i,x,y);
-      exl=GetErrorXlow(i);
-      exh=GetErrorXhigh(i);
-      eyl=GetErrorYlow(i);
-      eyh=GetErrorYhigh(i);
+   for (Int_t i = 0; i < GetN(); i++) {
+      GetPoint(i, x, y);
+      exl = GetErrorXlow(i);
+      exh = GetErrorXhigh(i);
+      eyl = GetErrorYlow(i);
+      eyh = GetErrorYhigh(i);
 
-      fxy = f->Eval(x,y);
-      SetPoint(i,x,fxy);
+      fxy = f->Eval(x, y);
+      SetPoint(i, x, fxy);
 
       // in the case of the functions like y-> -1*y the roles of the
       // upper and lower error bars is reversed
-      if (f->Eval(x,y-eyl)<f->Eval(x,y+eyh)) {
+      if (f->Eval(x,y-eyl) < f->Eval(x,y+eyh)) {
          eyl_new = TMath::Abs(fxy - f->Eval(x,y-eyl));
          eyh_new = TMath::Abs(f->Eval(x,y+eyh) - fxy);
-      }
-      else {
+      } else {
          eyh_new = TMath::Abs(fxy - f->Eval(x,y-eyl));
          eyl_new = TMath::Abs(f->Eval(x,y+eyh) - fxy);
       }
@@ -335,11 +334,11 @@ Bool_t TGraphBentErrors::CopyPoints(Double_t **arrays,
 ////////////////////////////////////////////////////////////////////////////////
 /// Should be called from ctors after `fNpoints` has been set.
 
-Bool_t TGraphBentErrors::CtorAllocate(void)
+Bool_t TGraphBentErrors::CtorAllocate()
 {
    if (!fNpoints) {
-      fEXlow = fEYlow = fEXhigh = fEYhigh = 0;
-      fEXlowd = fEYlowd = fEXhighd = fEYhighd = 0;
+      fEXlow = fEYlow = fEXhigh = fEYhigh = nullptr;
+      fEXlowd = fEYlowd = fEXhighd = fEYhighd = nullptr;
       return kFALSE;
    }
    fEXlow = new Double_t[fMaxSize];
@@ -360,20 +359,20 @@ Bool_t TGraphBentErrors::DoMerge(const TGraph *g)
 {
    if (g->GetN() == 0) return kFALSE;
 
-   Double_t * exl = g->GetEXlow();
-   Double_t * exh = g->GetEXhigh();
-   Double_t * eyl = g->GetEYlow();
-   Double_t * eyh = g->GetEYhigh();
+   Double_t *exl = g->GetEXlow();
+   Double_t *exh = g->GetEXhigh();
+   Double_t *eyl = g->GetEYlow();
+   Double_t *eyh = g->GetEYhigh();
 
-   Double_t * exld = g->GetEXlowd();
-   Double_t * exhd = g->GetEXhighd();
-   Double_t * eyld = g->GetEYlowd();
-   Double_t * eyhd = g->GetEYhighd();
+   Double_t *exld = g->GetEXlowd();
+   Double_t *exhd = g->GetEXhighd();
+   Double_t *eyld = g->GetEYlowd();
+   Double_t *eyhd = g->GetEYhighd();
 
-   if (exl == 0 || exh == 0 || eyl == 0 || eyh == 0 ||
-       exld == 0 || exhd == 0 || eyld == 0 || eyhd == 0) {
+   if (!exl || !exh || !eyl || !eyh ||
+       !exld || !exhd || !eyld || !eyhd) {
       if (g->IsA() != TGraph::Class() )
-         Warning("DoMerge","Merging a %s is not compatible with a TGraphBentErrors - errors will be ignored",g->IsA()->GetName());
+         Warning("DoMerge", "Merging a %s is not compatible with a TGraphBentErrors - errors will be ignored", g->IsA()->GetName());
       return TGraph::DoMerge(g);
    }
    for (Int_t i = 0 ; i < g->GetN(); i++) {
@@ -382,7 +381,7 @@ Bool_t TGraphBentErrors::DoMerge(const TGraph *g)
       Double_t y = g->GetY()[i];
       SetPoint(ipoint, x, y);
       SetPointError(ipoint, exl[i],  exh[i],  eyl[i],  eyh[i],
-                            exld[i], exhd[i], eyld[i], eyhd[i] );
+                            exld[i], exhd[i], eyld[i], eyhd[i]);
    }
 
    return kTRUE;
@@ -395,7 +394,7 @@ Double_t TGraphBentErrors::GetErrorX(Int_t i) const
 {
    if (i < 0 || i >= fNpoints) return -1;
    if (!fEXlow && !fEXhigh) return -1;
-   Double_t elow=0, ehigh=0;
+   Double_t elow = 0, ehigh = 0;
    if (fEXlow)  elow  = fEXlow[i];
    if (fEXhigh) ehigh = fEXhigh[i];
    return TMath::Sqrt(0.5*(elow*elow + ehigh*ehigh));
@@ -579,14 +578,18 @@ void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
 void TGraphBentErrors::SetPointError(Double_t exl, Double_t exh, Double_t eyl, Double_t eyh,
                                      Double_t exld, Double_t exhd, Double_t eyld, Double_t eyhd)
 {
+   if (!gPad) {
+      Error("SetPointError", "Cannot be used without gPad, requires last mouse position");
+      return;
+   }
+
    Int_t px = gPad->GetEventX();
    Int_t py = gPad->GetEventY();
 
    //localize point to be deleted
    Int_t ipoint = -2;
-   Int_t i;
    // start with a small window (in case the mouse is very close to one point)
-   for (i=0;i<fNpoints;i++) {
+   for (Int_t i = 0; i < fNpoints; i++) {
       Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
       Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
       if (dpx*dpx+dpy*dpy < 25) {ipoint = i; break;}
@@ -601,6 +604,7 @@ void TGraphBentErrors::SetPointError(Double_t exl, Double_t exh, Double_t eyl, D
    fEXhighd[ipoint] = exhd;
    fEYlowd[ipoint]  = eyld;
    fEYhighd[ipoint] = eyhd;
+
    gPad->Modified();
 }
 
@@ -613,7 +617,7 @@ void TGraphBentErrors::SetPointError(Int_t i, Double_t exl, Double_t exh, Double
 {
    if (i < 0) return;
    if (i >= fNpoints) {
-   // re-allocate the object
+      // re-allocate the object
       TGraphBentErrors::SetPoint(i,0,0);
    }
    fEXlow[i]   = exl;
