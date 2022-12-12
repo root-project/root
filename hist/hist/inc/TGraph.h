@@ -64,6 +64,8 @@ protected:
    Double_t         **ShrinkAndCopy(Int_t size, Int_t iend);
    virtual Bool_t     DoMerge(const TGraph * g);
 
+   void               SaveHistogramAndFunctions(std::ostream &out, const char *varname, Int_t &frameNumber, Option_t *option);
+
 public:
    // TGraph status bits
    enum EStatusBits {
