@@ -1235,36 +1235,16 @@ void TGraphAsymmErrors::Print(Option_t *) const
 
 void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
    out << "   " << std::endl;
    static Int_t frameNumber = 3000;
    frameNumber++;
 
-   Int_t i;
-   auto fXName   = TString::Format("%s_fx%d", GetName(), frameNumber);
-   auto fYName   = TString::Format("%s_fy%d", GetName(), frameNumber);
-   auto fElXName = TString::Format("%s_felx%d", GetName(), frameNumber);
-   auto fElYName = TString::Format("%s_fely%d", GetName(), frameNumber);
-   auto fEhXName = TString::Format("%s_fehx%d", GetName(), frameNumber);
-   auto fEhYName = TString::Format("%s_fehy%d", GetName(), frameNumber);
-   out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fX[i] << "," << std::endl;
-   out << "   " << fX[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fY[i] << "," << std::endl;
-   out << "   " << fY[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fElXName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEXlow[i] << "," << std::endl;
-   out << "   " << fEXlow[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fElYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEYlow[i] << "," << std::endl;
-   out << "   " << fEYlow[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fEhXName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEXhigh[i] << "," << std::endl;
-   out << "   " << fEXhigh[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fEhYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEYhigh[i] << "," << std::endl;
-   out << "   " << fEYhigh[fNpoints-1] << "};" << std::endl;
+   auto fXName   = SaveArray(out, "fx", frameNumber, fX);
+   auto fYName   = SaveArray(out, "fy", frameNumber, fY);
+   auto fElXName = SaveArray(out, "felx", frameNumber, fEXlow);
+   auto fElYName = SaveArray(out, "fely", frameNumber, fEYlow);
+   auto fEhXName = SaveArray(out, "fehx", frameNumber, fEXhigh);
+   auto fEhYName = SaveArray(out, "fehy", frameNumber, fEYhigh);
 
    if (gROOT->ClassSaved(TGraphAsymmErrors::Class()))
       out<<"   ";
@@ -1275,13 +1255,6 @@ void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""
                                     << fElXName  << ","  << fEhXName << ","
                                     << fElYName  << ","  << fEhYName << ");"
                                     << std::endl;
-
-   out << "   grae->SetName(" << quote << GetName() << quote << ");" << std::endl;
-   out << "   grae->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
-
-   SaveFillAttributes(out, "grae", 0, 1001);
-   SaveLineAttributes(out, "grae", 1, 1, 1);
-   SaveMarkerAttributes(out, "grae", 1, 1, 1);
 
    SaveHistogramAndFunctions(out, "grae", frameNumber, option);
 }

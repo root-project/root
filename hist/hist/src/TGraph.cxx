@@ -2117,7 +2117,6 @@ void TGraph::SaveAs(const char *filename, Option_t *option) const
 
 void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
    out << "   " << std::endl;
    static Int_t frameNumber = 0;
    frameNumber++;
@@ -2125,16 +2124,8 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TString fXName, fYName;
 
    if (fNpoints >= 1) {
-      fXName = TString::Format("%s_fx%d", GetName(), frameNumber);
-      fYName = TString::Format("%s_fy%d", GetName(), frameNumber);
-      out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
-      for (Int_t i = 0; i < fNpoints-1; i++)
-         out << "   " << fX[i] << "," << std::endl;
-      out << "   " << fX[fNpoints-1] << "};" << std::endl;
-      out << "   Double_t " << fYName << "[" << fNpoints << "] = {" << std::endl;
-      for (Int_t i = 0; i < fNpoints-1; i++)
-         out << "   " << fY[i] << "," << std::endl;
-      out << "   " << fY[fNpoints-1] << "};" << std::endl;
+      fXName = SaveArray(out, "fx", frameNumber, fX);
+      fYName = SaveArray(out, "fy", frameNumber, fY);
    }
 
    if (gROOT->ClassSaved(TGraph::Class()))
@@ -2147,16 +2138,27 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    else
       out << "graph = new TGraph();" << std::endl;
 
-   out << "   graph->SetName(" << quote << GetName() << quote << ");" << std::endl;
-   out << "   graph->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
-
-   SaveFillAttributes(out, "graph", 0, 1001);
-   SaveLineAttributes(out, "graph", 1, 1, 1);
-   SaveMarkerAttributes(out, "graph", 1, 1, 1);
-
    SaveHistogramAndFunctions(out, "graph", frameNumber, option);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save array as C++ code
+/// Returns name of created array
+
+TString TGraph::SaveArray(std::ostream &out, const char *suffix, Int_t frameNumber, Double_t *arr)
+{
+   const char *name = GetName();
+   if (!name || !*name)
+      name = "Graph";
+   TString arrname = TString::Format("%s_%s%d", name, suffix, frameNumber);
+
+   out << "   Double_t " << arrname << "[" << fNpoints << "] = {" << std::endl;
+   for (Int_t i = 0; i < fNpoints-1; i++)
+      out << "   " << arr[i] << "," << std::endl;
+   out << "   " << arr[fNpoints-1] << "};" << std::endl;
+
+   return arrname;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save histogram and list of functions of TGraph as C++ statement
@@ -2165,6 +2167,13 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, Int_t &frameNumber, Option_t *option)
 {
    char quote = '"';
+
+   out << "   "<<varname<<"->SetName(" << quote << GetName() << quote << ");" << std::endl;
+   out << "   "<<varname<<"->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
+
+   SaveFillAttributes(out, varname, 0, 1001);
+   SaveLineAttributes(out, varname, 1, 1, 1);
+   SaveMarkerAttributes(out, varname, 1, 1, 1);
 
    if (fHistogram) {
       TString hname = fHistogram->GetName();

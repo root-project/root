@@ -713,28 +713,14 @@ void TGraphErrors::Print(Option_t *) const
 
 void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
    out << "   " << std::endl;
    static Int_t frameNumber = 1000;
    frameNumber++;
 
-   Int_t i;
-   auto fXName  = TString::Format("%s_fx%d", GetName(), frameNumber);
-   auto fYName  = TString::Format("%s_fy%d", GetName(), frameNumber);
-   auto fEXName = TString::Format("%s_fex%d", GetName(), frameNumber);
-   auto fEYName = TString::Format("%s_fey%d", GetName(), frameNumber);
-   out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fX[i] << "," << std::endl;
-   out << "   " << fX[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fY[i] << "," << std::endl;
-   out << "   " << fY[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fEXName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEX[i] << "," << std::endl;
-   out << "   " << fEX[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fEYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEY[i] << "," << std::endl;
-   out << "   " << fEY[fNpoints-1] << "};" << std::endl;
+   auto fXName  = SaveArray(out, "fx", frameNumber, fX);
+   auto fYName  = SaveArray(out, "fy", frameNumber, fY);
+   auto fEXName = SaveArray(out, "fex", frameNumber, fEX);
+   auto fEYName = SaveArray(out, "fey", frameNumber, fEY);
 
    if (gROOT->ClassSaved(TGraphErrors::Class()))
       out << "   ";
@@ -744,13 +730,6 @@ void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
                                     << fXName   << ","  << fYName  << ","
                                     << fEXName  << ","  << fEYName << ");"
                                     << std::endl;
-
-   out << "   gre->SetName(" << quote << GetName() << quote << ");" << std::endl;
-   out << "   gre->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
-
-   SaveFillAttributes(out, "gre", 0, 1001);
-   SaveLineAttributes(out, "gre", 1, 1, 1);
-   SaveMarkerAttributes(out, "gre", 1, 1, 1);
 
    SaveHistogramAndFunctions(out, "gre", frameNumber, option);
 }

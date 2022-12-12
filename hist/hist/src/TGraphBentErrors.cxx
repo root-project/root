@@ -542,52 +542,20 @@ void TGraphBentErrors::Scale(Double_t c1, Option_t *option)
 
 void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
    out << "   " << std::endl;
    static Int_t frameNumber = 2000;
    frameNumber++;
 
-   Int_t i;
-   auto fXName    = TString::Format("%s_fx%d", GetName(), frameNumber);
-   auto fYName    = TString::Format("%s_fy%d", GetName(), frameNumber);
-   auto fElXName  = TString::Format("%s_felx%d", GetName(), frameNumber);
-   auto fElYName  = TString::Format("%s_fely%d", GetName(), frameNumber);
-   auto fEhXName  = TString::Format("%s_fehx%d", GetName(), frameNumber);
-   auto fEhYName  = TString::Format("%s_fehy%d", GetName(), frameNumber);
-   auto fEldXName = TString::Format("%s_feldx%d", GetName(), frameNumber);
-   auto fEldYName = TString::Format("%s_feldy%d", GetName(), frameNumber);
-   auto fEhdXName = TString::Format("%s_fehdx%d", GetName(), frameNumber);
-   auto fEhdYName = TString::Format("%s_fehdy%d", GetName(), frameNumber);
-   out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fX[i] << "," << std::endl;
-   out << "   " << fX[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fY[i] << "," << std::endl;
-   out << "   " << fY[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fElXName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEXlow[i] << "," << std::endl;
-   out << "   " << fEXlow[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fElYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEYlow[i] << "," << std::endl;
-   out << "   " << fEYlow[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fEhXName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEXhigh[i] << "," << std::endl;
-   out << "   " << fEXhigh[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fEhYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEYhigh[i] << "," << std::endl;
-   out << "   " << fEYhigh[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fEldXName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEXlowd[i] << "," << std::endl;
-   out << "   " << fEXlowd[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fEldYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEYlowd[i] << "," << std::endl;
-   out << "   " << fEYlowd[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fEhdXName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEXhighd[i] << "," << std::endl;
-   out << "   " << fEXhighd[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fEhdYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEYhighd[i] << "," << std::endl;
-   out << "   " << fEYhighd[fNpoints-1] << "};" << std::endl;
+   auto fXName   = SaveArray(out, "fx", frameNumber, fX);
+   auto fYName   = SaveArray(out, "fy", frameNumber, fY);
+   auto fElXName = SaveArray(out, "felx", frameNumber, fEXlow);
+   auto fElYName = SaveArray(out, "fely", frameNumber, fEYlow);
+   auto fEhXName = SaveArray(out, "fehx", frameNumber, fEXhigh);
+   auto fEhYName = SaveArray(out, "fehy", frameNumber, fEYhigh);
+   auto fEldXName = SaveArray(out, "feldx", frameNumber, fEXlowd);
+   auto fEldYName = SaveArray(out, "feldy", frameNumber, fEYlowd);
+   auto fEhdXName = SaveArray(out, "fehdx", frameNumber, fEXhighd);
+   auto fEhdYName = SaveArray(out, "fehdy", frameNumber, fEYhighd);
 
    if (gROOT->ClassSaved(TGraphBentErrors::Class()))
       out << "   ";
@@ -600,13 +568,6 @@ void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
                                     << fEldXName  << ","  << fEhdXName << ","
                                     << fEldYName  << ","  << fEhdYName << ");"
                                     << std::endl;
-
-   out << "   grbe->SetName(" << quote << GetName() << quote << ");" << std::endl;
-   out << "   grbe->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
-
-   SaveFillAttributes(out,"grbe",0,1001);
-   SaveLineAttributes(out,"grbe",1,1,1);
-   SaveMarkerAttributes(out,"grbe",1,1,1);
 
    SaveHistogramAndFunctions(out, "grbe", frameNumber, option);
 }
