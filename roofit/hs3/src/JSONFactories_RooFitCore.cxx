@@ -11,14 +11,14 @@
  */
 
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
-#include <RooFitHS3/JSONInterface.h>
+#include <RooFit/Detail/JSONInterface.h>
 
 #include <RooDataHist.h>
 #include <RooWorkspace.h>
 
 #include "static_execute.h"
 
-using RooFit::Experimental::JSONNode;
+using RooFit::Detail::JSONNode;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // individually implemented importers
