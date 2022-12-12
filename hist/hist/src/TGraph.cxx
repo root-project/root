@@ -2152,10 +2152,15 @@ TString TGraph::SaveArray(std::ostream &out, const char *suffix, Int_t frameNumb
       name = "Graph";
    TString arrname = TString::Format("%s_%s%d", name, suffix, frameNumber);
 
-   out << "   Double_t " << arrname << "[" << fNpoints << "] = {" << std::endl;
-   for (Int_t i = 0; i < fNpoints-1; i++)
-      out << "   " << arr[i] << "," << std::endl;
-   out << "   " << arr[fNpoints-1] << "};" << std::endl;
+   out << "   Double_t " << arrname << "[" << fNpoints << "] = { ";
+   for (Int_t i = 0; i < fNpoints-1; i++) {
+      out << arr[i] << ",";
+      if (i && (i % 16 == 0))
+         out << std::endl << "   ";
+      else
+         out << " ";
+   }
+   out << arr[fNpoints-1] << " };" << std::endl;
 
    return arrname;
 }
