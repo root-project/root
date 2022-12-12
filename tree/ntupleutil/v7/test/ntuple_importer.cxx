@@ -345,12 +345,12 @@ TEST(RNTupleImporter, CustomClass)
    {
       std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
       auto tree = std::make_unique<TTree>("tree", "");
-      CustomStructUtil *klass = nullptr;
-      tree->Branch("klass", &klass);
-      klass->a = 1.0;
-      klass->v1.emplace_back(2.0);
-      klass->v1.emplace_back(3.0);
-      klass->s = "ROOT";
+      CustomStructUtil *object = nullptr;
+      tree->Branch("object", &object);
+      object->a = 1.0;
+      object->v1.emplace_back(2.0);
+      object->v1.emplace_back(3.0);
+      object->s = "ROOT";
       tree->Fill();
       tree->Write();
    }
@@ -363,10 +363,10 @@ TEST(RNTupleImporter, CustomClass)
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(1U, reader->GetNEntries());
    reader->LoadEntry(0);
-   auto klass = reader->GetModel()->Get<CustomStructUtil>("klass");
-   EXPECT_FLOAT_EQ(1.0, klass->a);
-   EXPECT_EQ(2U, klass->v1.size());
-   EXPECT_FLOAT_EQ(2.0, klass->v1[0]);
-   EXPECT_FLOAT_EQ(3.0, klass->v1[1]);
-   EXPECT_EQ(std::string("ROOT"), klass->s);
+   auto object = reader->GetModel()->Get<CustomStructUtil>("object");
+   EXPECT_FLOAT_EQ(1.0, object->a);
+   EXPECT_EQ(2U, object->v1.size());
+   EXPECT_FLOAT_EQ(2.0, object->v1[0]);
+   EXPECT_FLOAT_EQ(3.0, object->v1[1]);
+   EXPECT_EQ(std::string("ROOT"), object->s);
 }
