@@ -11,6 +11,7 @@
  */
 
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
+#include <RooFitHS3/JSONInterface.h>
 
 #include <RooGlobalFunc.h>
 #include <RooConstVar.h>
@@ -28,14 +29,6 @@
 #include "TH1.h"
 
 #include "RConfigure.h"
-
-#ifdef ROOFIT_HS3_WITH_RYML
-#include "RYMLParser.h"
-typedef TRYMLTree tree_t;
-#else
-#include "JSONParser.h"
-typedef TJSONTree tree_t;
-#endif
 
 #include <algorithm>
 #include <fstream>
@@ -477,8 +470,8 @@ void RooJSONFactoryWSTool::loadFactoryExpressions(const std::string &fname)
       return;
    }
    try {
-      tree_t p(infile);
-      const JSONNode &n = p.rootnode();
+      std::unique_ptr<JSONTree> tree = JSONTree::create(infile);
+      const JSONNode &n = tree->rootnode();
       for (const auto &cl : n.children()) {
          std::string key(RooJSONFactoryWSTool::name(cl));
          if (!cl.has_child("class")) {
@@ -626,8 +619,8 @@ void RooJSONFactoryWSTool::loadExportKeys(const std::string &fname)
       return;
    }
    try {
-      tree_t p(infile);
-      const JSONNode &n = p.rootnode();
+      std::unique_ptr<JSONTree> tree = JSONTree::create(infile);
+      const JSONNode &n = tree->rootnode();
       for (const auto &cl : n.children()) {
          std::string classname(RooJSONFactoryWSTool::name(cl));
          TClass *c = TClass::GetClass(classname.c_str());
@@ -1666,8 +1659,8 @@ std::string RooJSONFactoryWSTool::exportYMLtoString()
 bool RooJSONFactoryWSTool::exportJSON(std::ostream &os)
 {
    // export the workspace in JSON
-   tree_t p;
-   JSONNode &n = p.rootnode();
+   std::unique_ptr<JSONTree> tree = JSONTree::create();
+   JSONNode &n = tree->rootnode();
    n.set_map();
    this->exportAllObjects(n);
    n.writeJSON(os);
@@ -1689,8 +1682,8 @@ bool RooJSONFactoryWSTool::exportJSON(std::string const &filename)
 bool RooJSONFactoryWSTool::exportYML(std::ostream &os)
 {
    // export the workspace in YML
-   tree_t p;
-   JSONNode &n = p.rootnode();
+   std::unique_ptr<JSONTree> tree = JSONTree::create();
+   JSONNode &n = tree->rootnode();
    n.set_map();
    this->exportAllObjects(n);
    n.writeYML(os);
@@ -1749,8 +1742,8 @@ bool RooJSONFactoryWSTool::importJSON(std::istream &is)
 {
    // import a JSON file to the workspace
    try {
-      tree_t p(is);
-      this->importAllNodes(p.rootnode());
+      std::unique_ptr<JSONTree> tree = JSONTree::create(is);
+      this->importAllNodes(tree->rootnode());
    } catch (const std::exception &ex) {
       std::cerr << "unable to import JSON: " << ex.what() << std::endl;
       return false;
@@ -1775,8 +1768,8 @@ bool RooJSONFactoryWSTool::importYML(std::istream &is)
 {
    // import a YML file to the workspace
    try {
-      tree_t p(is);
-      this->importAllNodes(p.rootnode());
+      std::unique_ptr<JSONTree> tree = JSONTree::create(is);
+      this->importAllNodes(tree->rootnode());
    } catch (const std::exception &ex) {
       std::cerr << "unable to import JSON: " << ex.what() << std::endl;
       return false;
