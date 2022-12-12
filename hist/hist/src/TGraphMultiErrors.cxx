@@ -1696,7 +1696,6 @@ void TGraphMultiErrors::Print(Option_t *) const
 
 void TGraphMultiErrors::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   char quote = '"';
    out << "   " << std::endl;
    static Int_t frameNumber = 5000;
    frameNumber++;
@@ -1707,16 +1706,10 @@ void TGraphMultiErrors::SavePrimitive(std::ostream &out, Option_t *option)
       out << "   TGraphMultiErrors* ";
 
    out << "tgme = new TGraphMultiErrors(" << fNpoints << ", " << fNYErrors << ");" << std::endl;
-   out << "   tgme->SetName(" << quote << GetName() << quote << ");" << std::endl;
-   out << "   tgme->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
-
-   SaveFillAttributes(out, "tgme", 0, 1001);
-   SaveLineAttributes(out, "tgme", 1, 1, 1);
-   SaveMarkerAttributes(out, "tgme", 1, 1, 1);
 
    for (Int_t j = 0; j < fNYErrors; j++) {
-      fAttFill[j].SaveFillAttributes(out, Form("tgme->GetAttFill(%d)", j), 0, 1001);
-      fAttLine[j].SaveLineAttributes(out, Form("tgme->GetAttLine(%d)", j), 1, 1, 1);
+      fAttFill[j].SaveFillAttributes(out, TString::Format("tgme->GetAttFill(%d)", j).Data(), 0, 1001);
+      fAttLine[j].SaveLineAttributes(out, TString::Format("tgme->GetAttLine(%d)", j).Data(), 1, 1, 1);
    }
 
    for (Int_t i = 0; i < fNpoints; i++) {
