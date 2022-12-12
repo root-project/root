@@ -6781,13 +6781,11 @@ void THistPainter::PaintFrame()
 
 void THistPainter::PaintFunction(Option_t *)
 {
-
-   TObjOptLink *lnk = (TObjOptLink*)fFunctions->FirstLink();
-   TObject *obj;
+   auto lnk = fFunctions->FirstLink();
 
    while (lnk) {
-      obj = lnk->GetObject();
-      TVirtualPad *padsave = gPad;
+      auto obj = lnk->GetObject();
+      TVirtualPad::TContext ctxt(true);
       if (obj->InheritsFrom(TF2::Class())) {
          if (!obj->TestBit(TF2::kNotDraw)) {
             if (Hoption.Lego || Hoption.Surf || Hoption.Error >= 100) {
@@ -6811,8 +6809,7 @@ void THistPainter::PaintFunction(Option_t *)
          if (!gPad->PadInHighlightMode() || (gPad->PadInHighlightMode() && obj == gPad->GetSelected()))
             obj->Paint(lnk->GetOption());
       }
-      lnk = (TObjOptLink*)lnk->Next();
-      padsave->cd();
+      lnk = lnk->Next();
    }
 }
 
@@ -10707,7 +10704,7 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
    pyold2 = py2;
 
    // Create or set the new canvas proj x
-   TVirtualPad *padsav = gPad;
+   TVirtualPad::TContext ctxt(true);
    TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(TString::Format("c_%zx_projection_%d",
                                                                               (size_t)fH, fShowProjection).Data());
    if (c) {
@@ -10719,8 +10716,8 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
       return;
    }
    c->cd();
-   c->SetLogy(padsav->GetLogz());
-   c->SetLogx(padsav->GetLogx());
+   c->SetLogy(ctxt.GetSaved()->GetLogz());
+   c->SetLogx(ctxt.GetSaved()->GetLogx());
 
    // Draw slice corresponding to mouse position
    TString prjName = TString::Format("slice_px_of_%s",fH->GetName());
@@ -10756,7 +10753,6 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
       hp->SetYTitle("Number of Entries");
       hp->Draw();
       c->Update();
-      padsav->cd();
    }
 }
 
@@ -10790,7 +10786,8 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
    pxold2 = px2;
 
    // Create or set the new canvas proj y
-   TVirtualPad *padsav = gPad;
+   TVirtualPad::TContext ctxt(true);
+
    TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(TString::Format("c_%zx_projection_%d",
                                                                               (size_t)fH, fShowProjection).Data());
    if (c) {
@@ -10802,8 +10799,8 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
       return;
    }
    c->cd();
-   c->SetLogy(padsav->GetLogz());
-   c->SetLogx(padsav->GetLogy());
+   c->SetLogy(ctxt.GetSaved()->GetLogz());
+   c->SetLogx(ctxt.GetSaved()->GetLogy());
 
    // Draw slice corresponding to mouse position
    TString prjName = TString::Format("slice_py_of_%s",fH->GetName());
@@ -10839,7 +10836,6 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
       hp->SetYTitle("Number of Entries");
       hp->Draw();
       c->Update();
-      padsav->cd();
    }
 }
 
@@ -10894,13 +10890,14 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
    if (pymin==pymax) return;
    Double_t cx    = (pxmax-pxmin)/(uxmax-uxmin);
    Double_t cy    = (pymax-pymin)/(uymax-uymin);
-   TVirtualPad *padsav = gPad;
    TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(TString::Format("c_%zx_projection_%d",
                                                                               (size_t)fH, fShowProjection).Data());
    if (!c) {
       fShowProjection = 0;
       return;
    }
+
+   TVirtualPad::TContext ctxt(true);
 
    switch ((Int_t)fShowProjection%100) {
       case 1:
@@ -11668,5 +11665,4 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
          break;
    }
    c->Update();
-   padsav->cd();
 }
