@@ -1761,14 +1761,18 @@ void TGraphMultiErrors::Scale(Double_t c1, Option_t *option)
 void TGraphMultiErrors::SetPointError(Double_t exL, Double_t exH, Double_t eyL1, Double_t eyH1, Double_t eyL2,
                                       Double_t eyH2, Double_t eyL3, Double_t eyH3)
 {
+   if (!gPad) {
+      Error("SetPointError", "Cannot be used without gPad, requires last mouse position");
+      return;
+   }
+
    Int_t px = gPad->GetEventX();
    Int_t py = gPad->GetEventY();
 
    // localize point to be deleted
    Int_t ipoint = -2;
-   Int_t i;
    // start with a small window (in case the mouse is very close to one point)
-   for (i = 0; i < fNpoints; i++) {
+   for (Int_t i = 0; i < fNpoints; i++) {
       Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
       Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
 

@@ -597,7 +597,7 @@ Double_t** TGraph::AllocateArrays(Int_t Narrays, Int_t arraySize)
    Double_t **newarrays = new Double_t*[Narrays];
    if (!arraySize) {
       for (Int_t i = 0; i < Narrays; ++i)
-         newarrays[i] = 0;
+         newarrays[i] = nullptr;
    } else {
       for (Int_t i = 0; i < Narrays; ++i)
          newarrays[i] = new Double_t[arraySize];
@@ -1061,9 +1061,8 @@ void TGraph::Expand(Int_t newsize, Int_t step)
 
 Double_t **TGraph::ExpandAndCopy(Int_t size, Int_t iend)
 {
-   if (size <= fMaxSize) {
-      return 0;
-   }
+   if (size <= fMaxSize)
+      return nullptr;
    Double_t **newarrays = Allocate(2 * size);
    CopyPoints(newarrays, 0, iend, 0);
    return newarrays;
@@ -1084,8 +1083,7 @@ void TGraph::FillZero(Int_t begin, Int_t end, Bool_t)
 
 TObject *TGraph::FindObject(const char *name) const
 {
-   if (fFunctions) return fFunctions->FindObject(name);
-   return 0;
+   return fFunctions ? fFunctions->FindObject(name) : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1093,8 +1091,7 @@ TObject *TGraph::FindObject(const char *name) const
 
 TObject *TGraph::FindObject(const TObject *obj) const
 {
-   if (fFunctions) return fFunctions->FindObject(obj);
-   return 0;
+   return fFunctions ? fFunctions->FindObject(obj) : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1552,9 +1549,8 @@ Double_t TGraph::GetPointY(Int_t i) const
 
 TAxis *TGraph::GetXaxis() const
 {
-   TH1 *h = GetHistogram();
-   if (!h) return 0;
-   return h->GetXaxis();
+   auto h = GetHistogram();
+   return h ? h->GetXaxis() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1562,9 +1558,8 @@ TAxis *TGraph::GetXaxis() const
 
 TAxis *TGraph::GetYaxis() const
 {
-   TH1 *h = GetHistogram();
-   if (!h) return 0;
-   return h->GetYaxis();
+   auto h = GetHistogram();
+   return h ? h->GetYaxis() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1573,11 +1568,15 @@ TAxis *TGraph::GetYaxis() const
 
 char *TGraph::GetObjectInfo(Int_t px, Int_t py) const
 {
+   if (!gPad) {
+      Error("GetObjectInfo", "Cannot be used without gPad");
+      return nullptr;
+   }
+
    // localize point
    Int_t ipoint = -2;
-   Int_t i;
    // start with a small window (in case the mouse is very close to one point)
-   for (i = 0; i < fNpoints; i++) {
+   for (Int_t i = 0; i < fNpoints; i++) {
       Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
       Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
 
@@ -1683,6 +1682,11 @@ void TGraph::InitPolynom(Double_t xmin, Double_t xmax)
 
 Int_t TGraph::InsertPoint()
 {
+   if (!gPad) {
+      Error("InsertPoint", "Cannot be used without gPad, requires last mouse position");
+      return -1;
+   }
+
    Int_t px = gPad->GetEventX();
    Int_t py = gPad->GetEventY();
 
@@ -2003,7 +2007,8 @@ void TGraph::Print(Option_t *) const
 void TGraph::RecursiveRemove(TObject *obj)
 {
    if (fFunctions) {
-      if (!fFunctions->TestBit(kInvalidObject)) fFunctions->RecursiveRemove(obj);
+      if (!fFunctions->TestBit(kInvalidObject))
+         fFunctions->RecursiveRemove(obj);
    }
    if (fHistogram == obj)
       fHistogram = nullptr;
@@ -2011,17 +2016,22 @@ void TGraph::RecursiveRemove(TObject *obj)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete point close to the mouse position
+/// Returns index of removed point (or -1 if nothing was changed)
 
 Int_t TGraph::RemovePoint()
 {
+   if (!gPad) {
+      Error("RemovePoint", "Cannot be used without gPad, requires last mouse position");
+      return -1;
+   }
+
    Int_t px = gPad->GetEventX();
    Int_t py = gPad->GetEventY();
 
    //localize point to be deleted
    Int_t ipoint = -2;
-   Int_t i;
    // start with a small window (in case the mouse is very close to one point)
-   for (i = 0; i < fNpoints; i++) {
+   for (Int_t i = 0; i < fNpoints; i++) {
       Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
       Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
       if (dpx * dpx + dpy * dpy < 100) {
@@ -2034,11 +2044,12 @@ Int_t TGraph::RemovePoint()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete point number ipoint
+/// Returns index of removed point (or -1 if nothing was changed)
 
 Int_t TGraph::RemovePoint(Int_t ipoint)
 {
-   if (ipoint < 0) return -1;
-   if (ipoint >= fNpoints) return -1;
+   if ((ipoint < 0) || (ipoint >= fNpoints))
+      return -1;
 
    Double_t **ps = ShrinkAndCopy(fNpoints - 1, ipoint);
    CopyAndRelease(ps, ipoint + 1, fNpoints--, ipoint);
@@ -2424,9 +2435,9 @@ void TGraph::SetStats(Bool_t stats)
 
 Double_t **TGraph::ShrinkAndCopy(Int_t size, Int_t oend)
 {
-   if (size * 2 > fMaxSize || !fMaxSize) {
-      return 0;
-   }
+   if (size * 2 > fMaxSize || !fMaxSize)
+      return nullptr;
+
    Double_t **newarrays = Allocate(size);
    CopyPoints(newarrays, 0, oend, 0);
    return newarrays;
