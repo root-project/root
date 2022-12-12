@@ -1062,12 +1062,12 @@ TH1F *TMultiGraph::GetHistogram()
       rwymax = rwymax + dy;
    }
    fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
-   if (!fHistogram) return 0;
+   if (!fHistogram) return nullptr;
    fHistogram->SetMinimum(rwymin);
    fHistogram->SetBit(TH1::kNoStats);
    fHistogram->SetMaximum(rwymax);
    fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
-   fHistogram->SetDirectory(0);
+   fHistogram->SetDirectory(nullptr);
    return fHistogram;
 }
 
@@ -1589,24 +1589,19 @@ void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    char quote = '"';
    out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TMultiGraph::Class())) {
+   if (gROOT->ClassSaved(TMultiGraph::Class())) 
       out<<"   ";
-   } else {
+   else 
       out<<"   TMultiGraph *";
-   }
    out<<"multigraph = new TMultiGraph();"<<std::endl;
    out<<"   multigraph->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
    out<<"   multigraph->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
 
-   if (fGraphs) {
-      auto lnk = fGraphs->FirstLink();
+   TIter iter(fGraphs);
 
-      while (lnk) {
-         auto g = lnk->GetObject();
-         g->SavePrimitive(out, TString::Format("multigraph%s",lnk->GetOption()).Data());
-         lnk = lnk->Next();
-      }
-   }
+   while (auto g = iter())
+      g->SavePrimitive(out, TString::Format("multigraph%s", iter.GetOption()).Data());
+
    const char *l = strstr(option,"th2poly");
    if (l) {
       out<<"   "<<l+7<<"->AddBin(multigraph);"<<std::endl;

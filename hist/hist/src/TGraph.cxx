@@ -2122,24 +2122,30 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    static Int_t frameNumber = 0;
    frameNumber++;
 
+   TString fXName, fYName;
+
    if (fNpoints >= 1) {
-      Int_t i;
-      TString fXName = TString(GetName()) + Form("_fx%d",frameNumber);
-      TString fYName = TString(GetName()) + Form("_fy%d",frameNumber);
+      fXName = TString::Format("%s_fx%d", GetName(), frameNumber);
+      fYName = TString::Format("%s_fy%d", GetName(), frameNumber);
       out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
-      for (i = 0; i < fNpoints-1; i++) out << "   " << fX[i] << "," << std::endl;
+      for (Int_t i = 0; i < fNpoints-1; i++)
+         out << "   " << fX[i] << "," << std::endl;
       out << "   " << fX[fNpoints-1] << "};" << std::endl;
       out << "   Double_t " << fYName << "[" << fNpoints << "] = {" << std::endl;
-      for (i = 0; i < fNpoints-1; i++) out << "   " << fY[i] << "," << std::endl;
+      for (Int_t i = 0; i < fNpoints-1; i++)
+         out << "   " << fY[i] << "," << std::endl;
       out << "   " << fY[fNpoints-1] << "};" << std::endl;
-      if (gROOT->ClassSaved(TGraph::Class())) out << "   ";
-      else out << "   TGraph *";
-      out << "graph = new TGraph(" << fNpoints << "," << fXName << "," << fYName << ");" << std::endl;
-   } else {
-      if (gROOT->ClassSaved(TGraph::Class())) out << "   ";
-      else out << "   TGraph *";
-      out << "graph = new TGraph();" << std::endl;
    }
+
+   if (gROOT->ClassSaved(TGraph::Class()))
+      out << "   ";
+   else
+      out << "   TGraph *";
+
+   if (fNpoints >= 1)
+      out << "graph = new TGraph(" << fNpoints << "," << fXName << "," << fYName << ");" << std::endl;
+   else
+      out << "graph = new TGraph();" << std::endl;
 
    out << "   graph->SetName(" << quote << GetName() << quote << ");" << std::endl;
    out << "   graph->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
@@ -2148,47 +2154,58 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    SaveLineAttributes(out, "graph", 1, 1, 1);
    SaveMarkerAttributes(out, "graph", 1, 1, 1);
 
+   SaveHistogramAndFunctions(out, "graph", frameNumber, option);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save histogram and list of functions of TGraph as C++ statement
+/// Used in all TGraph-derived classes
+
+void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, Int_t &frameNumber, Option_t *option)
+{
+   char quote = '"';
+
    if (fHistogram) {
       TString hname = fHistogram->GetName();
-      hname += frameNumber;
-      fHistogram->SetName(Form("Graph_%s", hname.Data()));
+      fHistogram->SetName(TString::Format("Graph_%s%d", hname.Data(), frameNumber).Data());
       fHistogram->SavePrimitive(out, "nodraw");
-      out << "   graph->SetHistogram(" << fHistogram->GetName() << ");" << std::endl;
+      out << "   "<<varname<<"->SetHistogram(" << fHistogram->GetName() << ");" << std::endl;
       out << "   " << std::endl;
+      fHistogram->SetName(hname.Data());
    }
 
    // save list of functions
    TIter next(fFunctions);
-   TObject *obj;
-   while ((obj = next())) {
-      obj->SavePrimitive(out, Form("nodraw #%d\n",++frameNumber));
+   while (auto obj = next()) {
+      obj->SavePrimitive(out, TString::Format("nodraw #%d\n", ++frameNumber).Data());
       if (obj->InheritsFrom("TPaveStats")) {
-         out << "   graph->GetListOfFunctions()->Add(ptstats);" << std::endl;
-         out << "   ptstats->SetParent(graph->GetListOfFunctions());" << std::endl;
+         out << "   "<<varname<<"->GetListOfFunctions()->Add(ptstats);" << std::endl;
+         out << "   ptstats->SetParent("<<varname<<"->GetListOfFunctions());" << std::endl;
       } else {
-         TString objname;
-         objname.Form("%s%d",obj->GetName(),frameNumber);
+         auto objname = TString::Format("%s%d",obj->GetName(), frameNumber);
          if (obj->InheritsFrom("TF1")) {
-            out << "   " << objname << "->SetParent(graph);\n";
+            out << "   " << objname << "->SetParent("<<varname<<");\n";
          }
-         out << "   graph->GetListOfFunctions()->Add("
-             << objname << ");" << std::endl;
+         out << "   "<<varname<<"->GetListOfFunctions()->Add(" << objname << ");" << std::endl;
       }
    }
 
    const char *soption = option ? option : "";
    const char *l = strstr(soption, "multigraph");
    if (l) {
-      out << "   multigraph->Add(graph," << quote << l + 10 << quote << ");" << std::endl;
+      out << "   multigraph->Add("<<varname<<"," << quote << l + 10 << quote << ");" << std::endl;
       return;
    }
    l = strstr(soption, "th2poly");
    if (l) {
-      out << "   " << l + 7 << "->AddBin(graph);" << std::endl;
+      out << "   " << l + 7 << "->AddBin("<<varname<<");" << std::endl;
       return;
    }
-   out << "   graph->Draw(" << quote << soption << quote << ");" << std::endl;
+   out << "   "<<varname<<"->Draw(" << quote << soption << quote << ");" << std::endl;
+
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Multiply the values of a TGraph by a constant c1.
