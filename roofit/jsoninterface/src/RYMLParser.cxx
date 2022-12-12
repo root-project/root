@@ -42,7 +42,7 @@ c4::yml::Tree makeTree(std::istream &is)
    size_t nlines = count_nlines(src);
    c4::yml::Tree tree(nlines, s.size());
    c4::yml::Parser np;
-   np.parse({}, tree.copy_to_arena(src), &tree);
+   np.parse_in_place({}, tree.copy_to_arena(src), &tree);
    return tree;
 }
 } // namespace

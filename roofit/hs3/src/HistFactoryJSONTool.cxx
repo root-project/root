@@ -12,13 +12,14 @@
 
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 #include <RooFitHS3/HistFactoryJSONTool.h>
-#include <RooFitHS3/JSONInterface.h>
+#include <RooFit/Detail/JSONInterface.h>
 
 #include "RooStats/HistFactory/Measurement.h"
 #include "RooStats/HistFactory/Channel.h"
 #include "RooStats/HistFactory/Sample.h"
 
-using RooFit::Experimental::JSONNode;
+using RooFit::Detail::JSONNode;
+using RooFit::Detail::JSONTree;
 
 namespace {
 
