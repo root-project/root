@@ -89,3 +89,21 @@ std::string JSONNode::val_t<std::string>() const
 
 } // namespace Experimental
 } // namespace RooFit
+
+#ifdef ROOFIT_HS3_WITH_RYML
+#include "RYMLParser.h"
+typedef TRYMLTree tree_t;
+#else
+#include "JSONParser.h"
+typedef TJSONTree tree_t;
+#endif
+
+std::unique_ptr<JSONTree> JSONTree::create()
+{
+   return std::make_unique<tree_t>();
+}
+
+std::unique_ptr<JSONTree> JSONTree::create(std::istream &is)
+{
+   return std::make_unique<tree_t>(is);
+}
