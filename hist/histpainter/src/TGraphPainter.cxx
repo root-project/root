@@ -4142,7 +4142,6 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
 
 void TGraphPainter::PaintGraphSimple(TGraph *theGraph, Option_t *option)
 {
-
    if (strstr(option,"H") || strstr(option,"h")) {
       PaintGrapHist(theGraph, theGraph->GetN(), theGraph->GetX(), theGraph->GetY(), option);
    } else {
@@ -4155,21 +4154,18 @@ void TGraphPainter::PaintGraphSimple(TGraph *theGraph, Option_t *option)
    // the fit function).
    TList *functions = theGraph->GetListOfFunctions();
    if (!functions) return;
-   TObjOptLink *lnk = (TObjOptLink*)functions->FirstLink();
-   TObject *obj;
+   auto lnk = functions->FirstLink();
 
    while (lnk) {
-      obj = lnk->GetObject();
-      TVirtualPad *padsave = gPad;
+      auto obj = lnk->GetObject();
+      TVirtualPad::TContext ctxt(true);
       if (obj->InheritsFrom(TF1::Class())) {
          if (obj->TestBit(TF1::kNotDraw) == 0) obj->Paint("lsame");
       } else  {
          obj->Paint(lnk->GetOption());
       }
-      lnk = (TObjOptLink*)lnk->Next();
-      padsave->cd();
+      lnk = lnk->Next();
    }
-   return;
 }
 
 
