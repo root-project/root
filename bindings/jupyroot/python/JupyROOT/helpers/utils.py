@@ -34,7 +34,6 @@ from JupyROOT.helpers import handlers
 
 # We want iPython to take over the graphics
 ROOT.gROOT.SetBatch()
-ROOT.gROOT.SetWebDisplay("jupyter")
 
 cppMIME = 'text/x-c++src'
 
