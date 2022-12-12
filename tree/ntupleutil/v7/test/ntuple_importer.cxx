@@ -20,13 +20,18 @@ using ROOT::Experimental::RNTupleReader;
  */
 class FileRaii {
 private:
+   static constexpr bool kDebug = false; // if true, don't delete the file on destruction
    std::string fPath;
 
 public:
    explicit FileRaii(const std::string &path) : fPath(path) {}
    FileRaii(const FileRaii &) = delete;
    FileRaii &operator=(const FileRaii &) = delete;
-   ~FileRaii() { std::remove(fPath.c_str()); }
+   ~FileRaii()
+   {
+      if (!kDebug)
+         std::remove(fPath.c_str());
+   }
    std::string GetPath() const { return fPath; }
 };
 
