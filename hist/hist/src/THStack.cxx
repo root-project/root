@@ -1042,29 +1042,27 @@ void THStack::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (fHistogram) {
       frameNumber++;
       TString hname = fHistogram->GetName();
-      hname += "_stack_";
-      hname += frameNumber;
-      fHistogram->SetName(hname.Data());
+      fHistogram->SetName(TString::Format("%s_stack_%d", hname.Data(), frameNumber).Data());
       fHistogram->SavePrimitive(out,"nodraw");
       out<<"   "<<GetName()<<"->SetHistogram("<<fHistogram->GetName()<<");"<<std::endl;
       out<<"   "<<std::endl;
+      fHistogram->SetName(hname.Data()); // restore histogram name
    }
 
    if (fHists) {
       auto lnk = fHists->FirstLink();
       Int_t hcount = 0;
       while (lnk) {
-         TH1 *h = (TH1*)lnk->GetObject();
+         auto h = (TH1 *) lnk->GetObject();
          TString hname = h->GetName();
-         hname += TString::Format("_stack_%d",++hcount);
-         h->SetName(hname.Data());
+         h->SetName(TString::Format("%s_stack_%d", hname.Data(), ++hcount).Data());
          h->SavePrimitive(out,"nodraw");
          out<<"   "<<GetName()<<"->Add("<<h->GetName()<<","<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
          lnk = lnk->Next();
+         h->SetName(hname.Data()); // restore histogram name
       }
    }
-   out<<"   "<<GetName()<<"->Draw("
-      <<quote<<option<<quote<<");"<<std::endl;
+   out<<"   "<<GetName()<<"->Draw("<<quote<<option<<quote<<");"<<std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
