@@ -1293,6 +1293,11 @@ void TGraphAsymmErrors::Scale(Double_t c1, Option_t *option)
 
 void TGraphAsymmErrors::SetPointError(Double_t exl, Double_t exh, Double_t eyl, Double_t eyh)
 {
+   if (!gPad) {
+      Error("SetPointError", "Cannot be used without gPad, requires last mouse position");
+      return;
+   }
+
    Int_t px = gPad->GetEventX();
    Int_t py = gPad->GetEventY();
 
@@ -1322,7 +1327,7 @@ void TGraphAsymmErrors::SetPointError(Int_t i, Double_t exl, Double_t exh, Doubl
 {
    if (i < 0) return;
    if (i >= fNpoints) {
-   // re-allocate the object
+      // re-allocate the object
       TGraphAsymmErrors::SetPoint(i,0,0);
    }
    fEXlow[i]  = exl;
@@ -1339,7 +1344,7 @@ void TGraphAsymmErrors::SetPointEXlow(Int_t i, Double_t exl)
 {
    if (i < 0) return;
    if (i >= fNpoints) {
-   // re-allocate the object
+      // re-allocate the object
       TGraphAsymmErrors::SetPoint(i,0,0);
    }
    fEXlow[i]  = exl;
@@ -1353,7 +1358,7 @@ void TGraphAsymmErrors::SetPointEXhigh(Int_t i, Double_t exh)
 {
    if (i < 0) return;
    if (i >= fNpoints) {
-   // re-allocate the object
+      // re-allocate the object
       TGraphAsymmErrors::SetPoint(i,0,0);
    }
    fEXhigh[i]  = exh;
