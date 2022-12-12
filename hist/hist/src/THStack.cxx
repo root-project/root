@@ -724,7 +724,6 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
       if (l3) memcpy(l3,"   ",3);
       TString ws = option;
       if (ws.IsWhitespace()) strncpy(option,"\0",1);
-      TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
       TH1* hAti;
       TH1* hsAti;
       Int_t nhists = fHists->GetSize();
@@ -742,7 +741,6 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
             if (l2) hsAti->SetLineColor(ic);
             if (l3) hsAti->SetMarkerColor(ic);
          }
-         lnk = (TObjOptLink*)lnk->Next();
       }
    }
 
@@ -777,15 +775,13 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
          if (((nx*ny)-nx) >= npads) ny--;
          padsav->Divide(nx,ny);
 
-         TH1 *h;
          Int_t i = 0;
-         TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
+         auto lnk = fHists->FirstLink();
          while (lnk) {
             i++;
             padsav->cd(i);
-            h = (TH1*)lnk->GetObject();
-            h->Draw(lnk->GetOption());
-            lnk = (TObjOptLink*)lnk->Next();
+            lnk->GetObject()->Draw(lnk->GetOption());
+            lnk = lnk->Next();
          }
          padsav->cd();
       }
@@ -898,15 +894,12 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
    }
 
    // Copy the axis labels if needed.
-   TH1 *hfirst;
-   TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
-   hfirst = (TH1*)lnk->GetObject();
+   TH1 *hfirst = (TH1*)fHists->First();
    THashList* labels = hfirst->GetXaxis()->GetLabels();
    if (labels) {
       TIter iL(labels);
-      TObjString* lb;
       Int_t ilab = 1;
-      while ((lb=(TObjString*)iL())) {
+      while (auto lb=(TObjString*)iL()) {
          fHistogram->GetXaxis()->SetBinLabel(ilab,lb->String().Data());
          ilab++;
       }
@@ -928,9 +921,8 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
    strlcpy(noption,loption.Data(),32);
    Int_t nhists = fHists->GetSize();
    if (nostack || candle || violin) {
-      lnk = (TObjOptLink*)fHists->FirstLink();
-      TH1* hAti;
-      Double_t bo=0.03;
+      auto lnk = fHists->FirstLink();
+      Double_t bo = 0.03;
       Double_t bw = (1.-(2*bo))/nhists;
       for (Int_t i=0;i<nhists;i++) {
          if (strstr(lnk->GetOption(),"same")) {
@@ -943,7 +935,7 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
             else if (candle && (indivOpt.Contains("candle") || indivOpt.Contains("violin"))) loption.Form("%ssame",lnk->GetOption());
             else          loption.Form("%ssame%s",noption,lnk->GetOption());
          }
-         hAti = (TH1F*)(fHists->At(i));
+         TH1* hAti = (TH1*) fHists->At(i);
          if (nostackb) {
             hAti->SetBarWidth(bw);
             hAti->SetBarOffset(bo);
@@ -958,11 +950,10 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
          }
          if (paint)
             hAti->Paint(loption.Data());
-         lnk = (TObjOptLink*)lnk->Next();
+         lnk = lnk->Next();
       }
    } else {
-      lnk = (TObjOptLink*)fHists->LastLink();
-      TH1 *h1;
+      auto lnk = fHists->LastLink();
       Int_t h1col, h1fill;
       for (Int_t i=0;i<nhists;i++) {
          if (strstr(lnk->GetOption(),"same")) {
@@ -970,7 +961,7 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
          } else {
             loption.Form("%ssame%s",noption,lnk->GetOption());
          }
-         h1 = (TH1*)fStack->At(nhists-i-1);
+         TH1 *h1 = (TH1*) fStack->At(nhists-i-1);
          if ((i > 0) && lclear && paint) {
             // Erase before drawing the histogram
             h1col  = h1->GetFillColor();
@@ -978,7 +969,7 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
             h1->SetFillColor(10);
             h1->SetFillStyle(1001);
             h1->Paint(loption.Data());
-            static TClassRef clTFrame = TClass::GetClass("TFrame",kFALSE);
+            static TClassRef clTFrame = TClass::GetClass("TFrame", kFALSE);
             TAttFill *frameFill = (TAttFill*)clTFrame->DynamicCast(TAttFill::Class(),gPad->GetFrame());
             if (frameFill) {
                h1->SetFillColor(frameFill->GetFillColor());
@@ -990,7 +981,7 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
          }
          if (paint)
             h1->Paint(loption.Data());
-         lnk = (TObjOptLink*)lnk->Prev();
+         lnk = lnk->Prev();
       }
    }
 
@@ -1060,7 +1051,7 @@ void THStack::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 
    if (fHists) {
-      TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
+      auto lnk = fHists->FirstLink();
       Int_t hcount = 0;
       while (lnk) {
          TH1 *h = (TH1*)lnk->GetObject();
@@ -1069,7 +1060,7 @@ void THStack::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
          h->SetName(hname.Data());
          h->SavePrimitive(out,"nodraw");
          out<<"   "<<GetName()<<"->Add("<<h->GetName()<<","<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
-         lnk = (TObjOptLink*)lnk->Next();
+         lnk = lnk->Next();
       }
    }
    out<<"   "<<GetName()<<"->Draw("

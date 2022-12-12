@@ -7335,11 +7335,10 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
    }
 
    // save list of functions
-   TObjOptLink *lnk = (TObjOptLink*)fFunctions->FirstLink();
-   TObject *obj;
+   auto lnk = fFunctions->FirstLink();
    static Int_t funcNumber = 0;
    while (lnk) {
-      obj = lnk->GetObject();
+      auto obj = lnk->GetObject();
       obj->SavePrimitive(out, TString::Format("nodraw #%d\n",++funcNumber).Data());
       if (obj->InheritsFrom(TF1::Class())) {
          TString fname;
@@ -7358,7 +7357,7 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
             <<obj->GetName()
             <<","<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
       }
-      lnk = (TObjOptLink*)lnk->Next();
+      lnk = lnk->Next();
    }
 
    // save attributes

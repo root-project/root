@@ -3425,7 +3425,7 @@ void TPad::Paint(Option_t * /*option*/)
       PaintBorder(GetFillColor(), kTRUE);
       PaintDate();
 
-      TObjOptLink *lnk = (TObjOptLink*)GetListOfPrimitives()->FirstLink();
+      auto lnk = GetListOfPrimitives()->FirstLink();
 
       while (lnk) {
          TObject *obj = lnk->GetObject();
@@ -3442,7 +3442,7 @@ void TPad::Paint(Option_t * /*option*/)
          }
 
          obj->Paint(lnk->GetOption());
-         lnk = (TObjOptLink*)lnk->Next();
+         lnk = lnk->Next();
       }
    }
 
@@ -3636,14 +3636,12 @@ void TPad::PaintModified()
          Modified(kFALSE);
       }
       TList *pList = GetListOfPrimitives();
-      TObjOptLink *lnk = nullptr;
-      if (pList) lnk = (TObjOptLink*)pList->FirstLink();
-      TObject *obj;
+      auto lnk = pList ? pList->FirstLink() : nullptr;
       while (lnk) {
-         obj = lnk->GetObject();
+         auto obj = lnk->GetObject();
          if (obj->InheritsFrom(TPad::Class()))
             ((TPad*)obj)->PaintModified();
-         lnk = (TObjOptLink*)lnk->Next();
+         lnk = lnk->Next();
       }
       return;
    }
@@ -3670,8 +3668,7 @@ void TPad::PaintModified()
       PaintDate();
 
       TList *pList = GetListOfPrimitives();
-      TObjOptLink *lnk = nullptr;
-      if (pList) lnk = (TObjOptLink*)pList->FirstLink();
+      auto lnk = pList ? pList->FirstLink() : nullptr;
 
       while (lnk) {
          TObject *obj = lnk->GetObject();
@@ -3693,7 +3690,7 @@ void TPad::PaintModified()
 
             obj->Paint(lnk->GetOption());
          }
-         lnk = (TObjOptLink*)lnk->Next();
+         lnk = lnk->Next();
       }
    }
 
