@@ -548,16 +548,16 @@ void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
    frameNumber++;
 
    Int_t i;
-   TString fXName    = TString(GetName()) + Form("_fx%d",frameNumber);
-   TString fYName    = TString(GetName()) + Form("_fy%d",frameNumber);
-   TString fElXName  = TString(GetName()) + Form("_felx%d",frameNumber);
-   TString fElYName  = TString(GetName()) + Form("_fely%d",frameNumber);
-   TString fEhXName  = TString(GetName()) + Form("_fehx%d",frameNumber);
-   TString fEhYName  = TString(GetName()) + Form("_fehy%d",frameNumber);
-   TString fEldXName = TString(GetName()) + Form("_feldx%d",frameNumber);
-   TString fEldYName = TString(GetName()) + Form("_feldy%d",frameNumber);
-   TString fEhdXName = TString(GetName()) + Form("_fehdx%d",frameNumber);
-   TString fEhdYName = TString(GetName()) + Form("_fehdy%d",frameNumber);
+   auto fXName    = TString::Format("%s_fx%d", GetName(), frameNumber);
+   auto fYName    = TString::Format("%s_fy%d", GetName(), frameNumber);
+   auto fElXName  = TString::Format("%s_felx%d", GetName(), frameNumber);
+   auto fElYName  = TString::Format("%s_fely%d", GetName(), frameNumber);
+   auto fEhXName  = TString::Format("%s_fehx%d", GetName(), frameNumber);
+   auto fEhYName  = TString::Format("%s_fehy%d", GetName(), frameNumber);
+   auto fEldXName = TString::Format("%s_feldx%d", GetName(), frameNumber);
+   auto fEldYName = TString::Format("%s_feldy%d", GetName(), frameNumber);
+   auto fEhdXName = TString::Format("%s_fehdx%d", GetName(), frameNumber);
+   auto fEhdYName = TString::Format("%s_fehdy%d", GetName(), frameNumber);
    out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
    for (i = 0; i < fNpoints-1; i++) out << "   " << fX[i] << "," << std::endl;
    out << "   " << fX[fNpoints-1] << "};" << std::endl;
@@ -589,8 +589,10 @@ void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
    for (i = 0; i < fNpoints-1; i++) out << "   " << fEYhighd[i] << "," << std::endl;
    out << "   " << fEYhighd[fNpoints-1] << "};" << std::endl;
 
-   if (gROOT->ClassSaved(TGraphBentErrors::Class())) out << "   ";
-   else out << "   TGraphBentErrors *";
+   if (gROOT->ClassSaved(TGraphBentErrors::Class()))
+      out << "   ";
+   else
+      out << "   TGraphBentErrors *";
    out << "grbe = new TGraphBentErrors("<< fNpoints << ","
                                     << fXName     << ","  << fYName  << ","
                                     << fElXName   << ","  << fEhXName << ","
@@ -606,40 +608,7 @@ void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
    SaveLineAttributes(out,"grbe",1,1,1);
    SaveMarkerAttributes(out,"grbe",1,1,1);
 
-   if (fHistogram) {
-      TString hname = fHistogram->GetName();
-      hname += frameNumber;
-      fHistogram->SetName(Form("Graph_%s",hname.Data()));
-      fHistogram->SavePrimitive(out,"nodraw");
-      out<<"   grbe->SetHistogram("<<fHistogram->GetName()<<");"<<std::endl;
-      out<<"   "<<std::endl;
-   }
-
-   // save list of functions
-   TIter next(fFunctions);
-   TObject *obj;
-   while ((obj = next())) {
-      obj->SavePrimitive(out, Form("nodraw #%d\n",++frameNumber));
-      if (obj->InheritsFrom("TPaveStats")) {
-         out << "   grbe->GetListOfFunctions()->Add(ptstats);" << std::endl;
-         out << "   ptstats->SetParent(grbe->GetListOfFunctions());" << std::endl;
-      } else {
-         TString objname;
-         objname.Form("%s%d",obj->GetName(),frameNumber);
-         if (obj->InheritsFrom("TF1")) {
-            out << "   " << objname << "->SetParent(grbe);\n";
-         }
-         out << "   grbe->GetListOfFunctions()->Add("
-             << objname << ");" << std::endl;
-      }
-   }
-
-   const char *l = strstr(option,"multigraph");
-   if (l) {
-      out<<"   multigraph->Add(grbe,"<<quote<<l+10<<quote<<");"<<std::endl;
-   } else {
-      out<<"   grbe->Draw("<<quote<<option<<quote<<");"<<std::endl;
-   }
+   SaveHistogramAndFunctions(out, "grbe", frameNumber, option);
 }
 
 

@@ -1241,12 +1241,12 @@ void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""
    frameNumber++;
 
    Int_t i;
-   TString fXName   = TString(GetName()) + Form("_fx%d",frameNumber);
-   TString fYName   = TString(GetName()) + Form("_fy%d",frameNumber);
-   TString fElXName = TString(GetName()) + Form("_felx%d",frameNumber);
-   TString fElYName = TString(GetName()) + Form("_fely%d",frameNumber);
-   TString fEhXName = TString(GetName()) + Form("_fehx%d",frameNumber);
-   TString fEhYName = TString(GetName()) + Form("_fehy%d",frameNumber);
+   auto fXName   = TString::Format("%s_fx%d", GetName(), frameNumber);
+   auto fYName   = TString::Format("%s_fy%d", GetName(), frameNumber);
+   auto fElXName = TString::Format("%s_felx%d", GetName(), frameNumber);
+   auto fElYName = TString::Format("%s_fely%d", GetName(), frameNumber);
+   auto fEhXName = TString::Format("%s_fehx%d", GetName(), frameNumber);
+   auto fEhYName = TString::Format("%s_fehy%d", GetName(), frameNumber);
    out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
    for (i = 0; i < fNpoints-1; i++) out << "   " << fX[i] << "," << std::endl;
    out << "   " << fX[fNpoints-1] << "};" << std::endl;
@@ -1266,8 +1266,10 @@ void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""
    for (i = 0; i < fNpoints-1; i++) out << "   " << fEYhigh[i] << "," << std::endl;
    out << "   " << fEYhigh[fNpoints-1] << "};" << std::endl;
 
-   if (gROOT->ClassSaved(TGraphAsymmErrors::Class())) out<<"   ";
-   else out << "   TGraphAsymmErrors *";
+   if (gROOT->ClassSaved(TGraphAsymmErrors::Class()))
+      out<<"   ";
+   else
+      out << "   TGraphAsymmErrors *";
    out << "grae = new TGraphAsymmErrors("<< fNpoints << ","
                                     << fXName   << ","  << fYName  << ","
                                     << fElXName  << ","  << fEhXName << ","
@@ -1281,40 +1283,7 @@ void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""
    SaveLineAttributes(out, "grae", 1, 1, 1);
    SaveMarkerAttributes(out, "grae", 1, 1, 1);
 
-   if (fHistogram) {
-      TString hname = fHistogram->GetName();
-      hname += frameNumber;
-      fHistogram->SetName(Form("Graph_%s",hname.Data()));
-      fHistogram->SavePrimitive(out,"nodraw");
-      out<<"   grae->SetHistogram("<<fHistogram->GetName()<<");"<<std::endl;
-      out<<"   "<<std::endl;
-   }
-
-   // save list of functions
-   TIter next(fFunctions);
-   TObject *obj;
-   while ((obj = next())) {
-      obj->SavePrimitive(out, Form("nodraw #%d\n",++frameNumber));
-      if (obj->InheritsFrom("TPaveStats")) {
-         out << "   grae->GetListOfFunctions()->Add(ptstats);" << std::endl;
-         out << "   ptstats->SetParent(grae->GetListOfFunctions());" << std::endl;
-      } else {
-         TString objname;
-         objname.Form("%s%d",obj->GetName(),frameNumber);
-         if (obj->InheritsFrom("TF1")) {
-            out << "   " << objname << "->SetParent(grae);\n";
-         }
-         out << "   grae->GetListOfFunctions()->Add("
-             << objname << ");" << std::endl;
-      }
-   }
-
-   const char *l = strstr(option,"multigraph");
-   if (l) {
-      out<<"   multigraph->Add(grae,"<<quote<<l+10<<quote<<");"<<std::endl;
-   } else {
-      out<<"   grae->Draw("<<quote<<option<<quote<<");"<<std::endl;
-   }
+   SaveHistogramAndFunctions(out, "grae", frameNumber, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
