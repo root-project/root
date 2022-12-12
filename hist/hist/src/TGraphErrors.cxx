@@ -760,6 +760,11 @@ void TGraphErrors::Scale(Double_t c1, Option_t *option)
 
 void TGraphErrors::SetPointError(Double_t ex, Double_t ey)
 {
+   if (!gPad) {
+      Error("SetPointError", "Cannot be used without gPad, requires last mouse position");
+      return;
+   }
+
    Int_t px = gPad->GetEventX();
    Int_t py = gPad->GetEventY();
 
