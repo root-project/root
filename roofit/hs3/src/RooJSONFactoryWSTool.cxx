@@ -11,7 +11,7 @@
  */
 
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
-#include <RooFitHS3/JSONInterface.h>
+#include <RooFit/Detail/JSONInterface.h>
 
 #include <RooGlobalFunc.h>
 #include <RooConstVar.h>
@@ -95,7 +95,8 @@ tool.writedoc("hs3.tex")
 
 */
 
-using RooFit::Experimental::JSONNode;
+using RooFit::Detail::JSONNode;
+using RooFit::Detail::JSONTree;
 
 namespace {
 bool isNumber(const std::string &str)
@@ -110,13 +111,13 @@ bool isNumber(const std::string &str)
 }
 } // namespace
 
-RooFit::Experimental::JSONNode &RooJSONFactoryWSTool::orootnode()
+RooFit::Detail::JSONNode &RooJSONFactoryWSTool::orootnode()
 {
    if (_rootnode_output)
       return *_rootnode_output;
    throw MissingRootnodeError();
 }
-const RooFit::Experimental::JSONNode &RooJSONFactoryWSTool::irootnode() const
+const RooFit::Detail::JSONNode &RooJSONFactoryWSTool::irootnode() const
 {
    if (_rootnode_input)
       return *_rootnode_input;
@@ -1702,7 +1703,7 @@ bool RooJSONFactoryWSTool::exportYML(std::string const &filename)
    return this->exportYML(out);
 }
 
-void RooJSONFactoryWSTool::importAllNodes(const RooFit::Experimental::JSONNode &n)
+void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
 {
    _rootnode_input = &n;
    gROOT->ProcessLine("using namespace RooStats::HistFactory;");

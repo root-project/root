@@ -11,7 +11,7 @@
  */
 
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
-#include <RooFitHS3/JSONInterface.h>
+#include <RooFit/Detail/JSONInterface.h>
 
 #include <RooStats/HistFactory/ParamHistFunc.h>
 #include <RooStats/HistFactory/PiecewiseInterpolation.h>
@@ -35,7 +35,7 @@
 
 #include "static_execute.h"
 
-using RooFit::Experimental::JSONNode;
+using RooFit::Detail::JSONNode;
 
 namespace {
 inline void collectNames(const JSONNode &n, std::vector<std::string> &names)

@@ -10,13 +10,21 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooFitHS3/JSONInterface.h>
+#include <RooFit/Detail/JSONInterface.h>
+
+#ifdef ROOFIT_WITH_RYML
+#include "RYMLParser.h"
+using Tree_t = TRYMLTree;
+#else
+#include "JSONParser.h"
+using Tree_t = TJSONTree;
+#endif
 
 namespace {
 template <class Nd>
-class ChildItImpl final : public RooFit::Experimental::JSONNode::child_iterator_t<Nd>::Impl {
+class ChildItImpl final : public RooFit::Detail::JSONNode::child_iterator_t<Nd>::Impl {
 public:
-   using child_iterator = RooFit::Experimental::JSONNode::child_iterator_t<Nd>;
+   using child_iterator = RooFit::Detail::JSONNode::child_iterator_t<Nd>;
    ChildItImpl(Nd &n, size_t p) : node(n), pos(p) {}
    ChildItImpl(const ChildItImpl &other) : node(other.node), pos(other.pos) {}
    std::unique_ptr<typename child_iterator::Impl> clone() const override
@@ -39,7 +47,7 @@ private:
 } // namespace
 
 namespace RooFit {
-namespace Experimental {
+namespace Detail {
 
 template class JSONNode::child_iterator_t<JSONNode>;
 template class JSONNode::child_iterator_t<const JSONNode>;
@@ -87,23 +95,15 @@ std::string JSONNode::val_t<std::string>() const
    return val();
 }
 
-} // namespace Experimental
-} // namespace RooFit
-
-#ifdef ROOFIT_HS3_WITH_RYML
-#include "RYMLParser.h"
-typedef TRYMLTree tree_t;
-#else
-#include "JSONParser.h"
-typedef TJSONTree tree_t;
-#endif
-
 std::unique_ptr<JSONTree> JSONTree::create()
 {
-   return std::make_unique<tree_t>();
+   return std::make_unique<Tree_t>();
 }
 
 std::unique_ptr<JSONTree> JSONTree::create(std::istream &is)
 {
-   return std::make_unique<tree_t>(is);
+   return std::make_unique<Tree_t>(is);
 }
+
+} // namespace Detail
+} // namespace RooFit
