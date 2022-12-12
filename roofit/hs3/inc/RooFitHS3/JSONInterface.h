@@ -129,7 +129,11 @@ public:
 } // namespace RooFit
 
 class JSONTree {
+public:
    virtual RooFit::Experimental::JSONNode &rootnode() = 0;
+
+   static std::unique_ptr<JSONTree> create();
+   static std::unique_ptr<JSONTree> create(std::istream &is);
 };
 
 std::ostream &operator<<(std::ostream &os, RooFit::Experimental::JSONNode const &s);

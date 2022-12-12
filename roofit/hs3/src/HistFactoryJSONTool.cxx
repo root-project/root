@@ -12,18 +12,11 @@
 
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 #include <RooFitHS3/HistFactoryJSONTool.h>
+#include <RooFitHS3/JSONInterface.h>
 
 #include "RooStats/HistFactory/Measurement.h"
 #include "RooStats/HistFactory/Channel.h"
 #include "RooStats/HistFactory/Sample.h"
-
-#ifdef ROOFIT_HS3_WITH_RYML
-#include "RYMLParser.h"
-typedef TRYMLTree tree_t;
-#else
-#include "JSONParser.h"
-typedef TJSONTree tree_t;
-#endif
 
 using RooFit::Experimental::JSONNode;
 
@@ -228,8 +221,8 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
 
 void RooStats::HistFactory::JSONTool::PrintJSON(std::ostream &os)
 {
-   tree_t p;
-   auto &n = p.rootnode();
+   std::unique_ptr<JSONTree> tree = JSONTree::create();
+   auto &n = tree->rootnode();
    n.set_map();
    exportMeasurement(_measurement, n);
    n.writeJSON(os);
