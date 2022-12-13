@@ -15,15 +15,19 @@ class RooJSONFactoryWSTool(object):
     @classmethod
     def gendoc(cls):
         """Generate the importer and exporter documentation."""
+        import ROOT
+
+        jio = ROOT.RooFit.JSONIO
+
         hs3 = {}
 
-        for key, importer in cls.importers():
+        for key, importer in jio.importers():
             if not key in hs3.keys():
                 hs3[key] = {}
             if not "import" in hs3[key]:
                 hs3[key]["import"] = []
             hs3[key]["import"].append({"native": True})
-        for tclass, exporters in cls.exporters():
+        for tclass, exporters in jio.exporters():
             for exp in exporters:
                 key = exp.key()
                 if not key in hs3.keys():
@@ -32,7 +36,7 @@ class RooJSONFactoryWSTool(object):
                 if not "export" in hs3[key]:
                     hs3[key]["export"] = []
                 hs3[key]["export"].append({"native": True})
-        for key, importer in cls.pdfImportExpressions():
+        for key, importer in jio.pdfImportExpressions():
             if not key in hs3.keys():
                 hs3[key] = {}
             if not "import" in hs3[key]:
@@ -44,7 +48,7 @@ class RooJSONFactoryWSTool(object):
                     "native": False,
                 }
             )
-        for key, importer in cls.functionImportExpressions():
+        for key, importer in jio.functionImportExpressions():
             if not key in hs3.keys():
                 hs3[key] = {}
             if not "import" in hs3[key]:
@@ -56,7 +60,7 @@ class RooJSONFactoryWSTool(object):
                     "native": False,
                 }
             )
-        for tclass, exporter in cls.exportKeys():
+        for tclass, exporter in jio.exportKeys():
             key = exporter.type
             if not key in hs3.keys():
                 hs3[key] = {}

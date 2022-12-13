@@ -10,6 +10,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
+#include <RooFitHS3/JSONIO.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 #include <RooFit/Detail/JSONInterface.h>
 
@@ -80,11 +81,10 @@ to learn how to do that.
 
 You can always get a list of all the avialable importers and exporters by calling the following functions:
 ~~~ {.py}
-tool = ROOT.RooJSONFactoryWSTool(ws)
-tool.printImporters()
-tool.printExporters()
-tool.printFactoryExpressions()
-tool.printExportKeys()
+ROOT.RooFit.JSONIO.printImporters()
+ROOT.RooFit.JSONIO.printExporters()
+ROOT.RooFit.JSONIO.printFactoryExpressions()
+ROOT.RooFit.JSONIO.printExportKeys()
 ~~~
 
 Alternatively, you can generate a LaTeX version of the available importers and exporters by calling
@@ -285,75 +285,6 @@ std::string containerName(RooAbsArg *elem)
 
 bool RooJSONFactoryWSTool::Config::stripObservables = true;
 
-bool RooJSONFactoryWSTool::registerImporter(const std::string &key,
-                                            std::unique_ptr<const RooJSONFactoryWSTool::Importer> f, bool topPriority)
-{
-   auto &vec = staticImporters()[key];
-   vec.insert(topPriority ? vec.begin() : vec.end(), std::move(f));
-   return true;
-}
-
-bool RooJSONFactoryWSTool::registerExporter(const TClass *key, std::unique_ptr<const RooJSONFactoryWSTool::Exporter> f,
-                                            bool topPriority)
-{
-   auto &vec = staticExporters()[key];
-   vec.insert(topPriority ? vec.begin() : vec.end(), std::move(f));
-   return true;
-}
-
-int RooJSONFactoryWSTool::removeImporters(const std::string &needle)
-{
-   int n = 0;
-   for (auto &element : staticImporters()) {
-      for (size_t i = element.second.size(); i > 0; --i) {
-         auto *imp = element.second[i - 1].get();
-         std::string name(typeid(*imp).name());
-         if (name.find(needle) != std::string::npos) {
-            element.second.erase(element.second.begin() + i - 1);
-            ++n;
-         }
-      }
-   }
-   return n;
-}
-
-int RooJSONFactoryWSTool::removeExporters(const std::string &needle)
-{
-   int n = 0;
-   for (auto &element : staticExporters()) {
-      for (size_t i = element.second.size(); i > 0; --i) {
-         auto *imp = element.second[i - 1].get();
-         std::string name(typeid(*imp).name());
-         if (name.find(needle) != std::string::npos) {
-            element.second.erase(element.second.begin() + i - 1);
-            ++n;
-         }
-      }
-   }
-   return n;
-}
-
-void RooJSONFactoryWSTool::printImporters()
-{
-   for (const auto &x : staticImporters()) {
-      for (const auto &ePtr : x.second) {
-         // Passing *e directory to typeid results in clang warnings.
-         auto const &e = *ePtr;
-         std::cout << x.first << "\t" << typeid(e).name() << std::endl;
-      }
-   }
-}
-void RooJSONFactoryWSTool::printExporters()
-{
-   for (const auto &x : staticExporters()) {
-      for (const auto &ePtr : x.second) {
-         // Passing *e directory to typeid results in clang warnings.
-         auto const &e = *ePtr;
-         std::cout << x.first->GetName() << "\t" << typeid(e).name() << std::endl;
-      }
-   }
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // helper functions specific to JSON
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -407,7 +338,7 @@ inline void writeAxis(JSONNode &bounds, const TAxis &ax)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace {
-std::string generate(const RooJSONFactoryWSTool::ImportExpression &ex, const JSONNode &p, RooJSONFactoryWSTool *tool)
+std::string generate(const RooFit::JSONIO::ImportExpression &ex, const JSONNode &p, RooJSONFactoryWSTool *tool)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
    std::stringstream expression;
@@ -458,83 +389,6 @@ std::string generate(const RooJSONFactoryWSTool::ImportExpression &ex, const JSO
    return expression.str();
 }
 }; // namespace
-
-void RooJSONFactoryWSTool::loadFactoryExpressions(const std::string &fname)
-{
-   auto &pdfFactoryExpressions = staticPdfImportExpressions();
-   auto &funcFactoryExpressions = staticFunctionImportExpressions();
-
-   // load a yml file defining the factory expressions
-   std::ifstream infile(fname);
-   if (!infile.is_open()) {
-      std::cerr << "unable to read file '" << fname << "'" << std::endl;
-      return;
-   }
-   try {
-      std::unique_ptr<JSONTree> tree = JSONTree::create(infile);
-      const JSONNode &n = tree->rootnode();
-      for (const auto &cl : n.children()) {
-         std::string key(RooJSONFactoryWSTool::name(cl));
-         if (!cl.has_child("class")) {
-            std::cerr << "error in file '" << fname << "' for entry '" << key << "': 'class' key is required!"
-                      << std::endl;
-            continue;
-         }
-         std::string classname(cl["class"].val());
-         TClass *c = TClass::GetClass(classname.c_str());
-         if (!c) {
-            std::cerr << "unable to find class " << classname << ", skipping." << std::endl;
-         } else {
-            ImportExpression ex;
-            ex.tclass = c;
-            if (!cl.has_child("arguments")) {
-               std::cerr << "class " << classname << " seems to have no arguments attached, skipping" << std::endl;
-               continue;
-            }
-            for (const auto &arg : cl["arguments"].children()) {
-               ex.arguments.push_back(arg.val());
-            }
-            if (c->InheritsFrom(RooAbsPdf::Class())) {
-               pdfFactoryExpressions[key] = ex;
-            } else if (c->InheritsFrom(RooAbsReal::Class())) {
-               funcFactoryExpressions[key] = ex;
-            } else {
-               std::cerr << "class " << classname << " seems to not inherit from any suitable class, skipping"
-                         << std::endl;
-            }
-         }
-      }
-   } catch (const std::exception &ex) {
-      std::cout << "caught" << std::endl;
-      std::cerr << "unable to load factory expressions: " << ex.what() << std::endl;
-   }
-}
-void RooJSONFactoryWSTool::clearFactoryExpressions()
-{
-   // clear all factory expressions
-   staticPdfImportExpressions().clear();
-   staticFunctionImportExpressions().clear();
-}
-void RooJSONFactoryWSTool::printFactoryExpressions()
-{
-   // print all factory expressions
-   for (auto it : staticPdfImportExpressions()) {
-      std::cout << it.first;
-      std::cout << " " << it.second.tclass->GetName();
-      for (auto v : it.second.arguments) {
-         std::cout << " " << v;
-      }
-      std::cout << std::endl;
-   }
-   for (auto it : staticFunctionImportExpressions()) {
-      std::cout << it.first;
-      std::cout << " " << it.second.tclass->GetName();
-      for (auto v : it.second.arguments) {
-         std::cout << " " << v;
-      }
-      std::cout << std::endl;
-   }
-}
 
 std::vector<std::vector<int>> RooJSONFactoryWSTool::generateBinIndices(const RooArgList &vars)
 {
@@ -602,70 +456,6 @@ void RooJSONFactoryWSTool::exportHistogram(const TH1 &h, JSONNode &n, const std:
             }
          }
       }
-   }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-// RooProxy-based export handling
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void RooJSONFactoryWSTool::loadExportKeys(const std::string &fname)
-{
-   auto &exportKeys = staticExportKeys();
-
-   // load a yml file defining the export keys
-   std::ifstream infile(fname);
-   if (!infile.is_open()) {
-      std::cerr << "unable to read file '" << fname << "'" << std::endl;
-      return;
-   }
-   try {
-      std::unique_ptr<JSONTree> tree = JSONTree::create(infile);
-      const JSONNode &n = tree->rootnode();
-      for (const auto &cl : n.children()) {
-         std::string classname(RooJSONFactoryWSTool::name(cl));
-         TClass *c = TClass::GetClass(classname.c_str());
-         if (!c) {
-            std::cerr << "unable to find class " << classname << ", skipping." << std::endl;
-         } else {
-            ExportKeys ex;
-            if (!cl.has_child("type")) {
-               std::cerr << "class " << classname << "has not type key set, skipping" << std::endl;
-               continue;
-            }
-            if (!cl.has_child("proxies")) {
-               std::cerr << "class " << classname << "has no proxies identified, skipping" << std::endl;
-               continue;
-            }
-            ex.type = cl["type"].val();
-            for (const auto &k : cl["proxies"].children()) {
-               std::string key(RooJSONFactoryWSTool::name(k));
-               std::string val(k.val());
-               ex.proxies[key] = val;
-            }
-            exportKeys[c] = ex;
-         }
-      }
-   } catch (const std::exception &ex) {
-      std::cerr << "unable to load export keys: " << ex.what() << std::endl;
-   }
-}
-
-void RooJSONFactoryWSTool::clearExportKeys()
-{
-   // clear all export keys
-   staticExportKeys().clear();
-}
-
-void RooJSONFactoryWSTool::printExportKeys()
-{
-   // print all export keys
-   for (const auto &it : staticExportKeys()) {
-      std::cout << it.first->GetName() << ": " << it.second.type;
-      for (const auto &kv : it.second.proxies) {
-         std::cout << " " << kv.first << "=" << kv.second;
-      }
-      std::cout << std::endl;
    }
 }
 
@@ -758,8 +548,8 @@ void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &
 
 void RooJSONFactoryWSTool::exportObject(const RooAbsArg *func, JSONNode &n)
 {
-   auto const &exporters = staticExporters();
-   auto const &exportKeys = staticExportKeys();
+   auto const &exporters = RooFit::JSONIO::exporters();
+   auto const &exportKeys = RooFit::JSONIO::exportKeys();
 
    // if this element already exists, skip
    if (n.has_child(func->GetName()))
@@ -895,9 +685,9 @@ void RooJSONFactoryWSTool::importFunctions(const JSONNode &n)
 // importing functions
 void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
 {
-   auto const &importers = staticImporters();
-   auto const &pdfFactoryExpressions = staticPdfImportExpressions();
-   auto const &funcFactoryExpressions = staticFunctionImportExpressions();
+   auto const &importers = RooFit::JSONIO::importers();
+   auto const &pdfFactoryExpressions = RooFit::JSONIO::pdfImportExpressions();
+   auto const &funcFactoryExpressions = RooFit::JSONIO::functionImportExpressions();
 
    // some preparations: what type of function are we dealing with here?
    std::string name(RooJSONFactoryWSTool::name(p));
@@ -1804,34 +1594,4 @@ std::ostream &RooJSONFactoryWSTool::log(int level) const
 {
    return RooMsgService::instance().log(static_cast<TObject *>(nullptr), static_cast<RooFit::MsgLevel>(level),
                                         RooFit::IO);
-}
-
-RooJSONFactoryWSTool::ImportMap &RooJSONFactoryWSTool::staticImporters()
-{
-   static ImportMap _importers;
-   return _importers;
-}
-
-RooJSONFactoryWSTool::ExportMap &RooJSONFactoryWSTool::staticExporters()
-{
-   static ExportMap _exporters;
-   return _exporters;
-}
-
-RooJSONFactoryWSTool::ImportExpressionMap &RooJSONFactoryWSTool::staticPdfImportExpressions()
-{
-   static ImportExpressionMap _pdfFactoryExpressions;
-   return _pdfFactoryExpressions;
-}
-
-RooJSONFactoryWSTool::ImportExpressionMap &RooJSONFactoryWSTool::staticFunctionImportExpressions()
-{
-   static ImportExpressionMap _funcFactoryExpressions;
-   return _funcFactoryExpressions;
-}
-
-RooJSONFactoryWSTool::ExportKeysMap &RooJSONFactoryWSTool::staticExportKeys()
-{
-   static ExportKeysMap _exportKeys;
-   return _exportKeys;
 }
