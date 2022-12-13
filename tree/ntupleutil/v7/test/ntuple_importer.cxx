@@ -300,20 +300,26 @@ TEST(RNTupleImporter, LeafCountArray)
    auto viewJetEta = viewJets.GetView<float>("jet_eta");
    auto viewMuons = reader->GetViewCollection("_collection1");
    auto viewMuonPt = viewMuons.GetView<float>("muon_pt");
+
+   // Entry 0: 1 jet, 1 muon
    EXPECT_EQ(1, viewJets(0));
    EXPECT_FLOAT_EQ(1.0, viewJetPt(0));
    EXPECT_FLOAT_EQ(2.0, viewJetEta(0));
+   EXPECT_EQ(1, viewMuons(0));
+   EXPECT_FLOAT_EQ(10.0, viewMuonPt(0));
+
+   // Entry 1: 0 jets, 1 muon
    EXPECT_EQ(0, viewJets(1));
+   EXPECT_EQ(1, viewMuons(1));
+   EXPECT_FLOAT_EQ(11.0, viewMuonPt(1));
+
+   // Entry 2: 2 jets, 1 muon
    EXPECT_EQ(2, viewJets(2));
    EXPECT_FLOAT_EQ(3.0, viewJetPt(1));
    EXPECT_FLOAT_EQ(4.0, viewJetEta(1));
    EXPECT_FLOAT_EQ(5.0, viewJetPt(2));
    EXPECT_FLOAT_EQ(6.0, viewJetEta(2));
-   EXPECT_EQ(1, viewMuons(0));
-   EXPECT_EQ(1, viewMuons(1));
    EXPECT_EQ(1, viewMuons(2));
-   EXPECT_FLOAT_EQ(10.0, viewMuonPt(0));
-   EXPECT_FLOAT_EQ(11.0, viewMuonPt(1));
    EXPECT_FLOAT_EQ(12.0, viewMuonPt(2));
 }
 
