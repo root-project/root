@@ -37,7 +37,8 @@ class TClass;
 namespace RooFit {
 namespace Detail {
 class JSONNode;
-}
+class JSONTree;
+} // namespace Detail
 } // namespace RooFit
 
 class RooJSONFactoryWSTool {
@@ -49,10 +50,7 @@ public:
    class Importer {
    public:
       virtual bool importPdf(RooJSONFactoryWSTool *, const RooFit::Detail::JSONNode &) const { return false; }
-      virtual bool importFunction(RooJSONFactoryWSTool *, const RooFit::Detail::JSONNode &) const
-      {
-         return false;
-      }
+      virtual bool importFunction(RooJSONFactoryWSTool *, const RooFit::Detail::JSONNode &) const { return false; }
       virtual ~Importer(){};
    };
    class Exporter {
@@ -219,12 +217,10 @@ public:
    }
 
    static std::string genPrefix(const RooFit::Detail::JSONNode &p, bool trailing_underscore);
-   static void exportHistogram(const TH1 &h, RooFit::Detail::JSONNode &n,
-                               const std::vector<std::string> &obsnames, const TH1 *errH = nullptr,
-                               bool writeObservables = true, bool writeErrors = true);
+   static void exportHistogram(const TH1 &h, RooFit::Detail::JSONNode &n, const std::vector<std::string> &obsnames,
+                               const TH1 *errH = nullptr, bool writeObservables = true, bool writeErrors = true);
    void exportData(RooAbsData *data, RooFit::Detail::JSONNode &n);
-   static void
-   writeObservables(const TH1 &h, RooFit::Detail::JSONNode &n, const std::vector<std::string> &varnames);
+   static void writeObservables(const TH1 &h, RooFit::Detail::JSONNode &n, const std::vector<std::string> &varnames);
    static std::vector<std::vector<int>> generateBinIndices(const RooArgList &vars);
    std::unique_ptr<RooDataHist>
    readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgList observables);
@@ -281,5 +277,7 @@ public:
    void exportAllObjects(RooFit::Detail::JSONNode &n);
    void exportDependants(const RooAbsArg *source, RooFit::Detail::JSONNode &n);
    void exportDependants(const RooAbsArg *source, RooFit::Detail::JSONNode *n);
+
+   static std::unique_ptr<RooFit::Detail::JSONTree> createNewJSONTree();
 };
 #endif

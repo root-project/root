@@ -222,9 +222,8 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
 
 void RooStats::HistFactory::JSONTool::PrintJSON(std::ostream &os)
 {
-   std::unique_ptr<JSONTree> tree = JSONTree::create();
+   std::unique_ptr<RooFit::Detail::JSONTree> tree = RooJSONFactoryWSTool::createNewJSONTree();
    auto &n = tree->rootnode();
-   n.set_map();
    exportMeasurement(_measurement, n);
    n.writeJSON(os);
 }
