@@ -338,20 +338,22 @@ class RooHistFuncFactory : public RooFit::JSONIO::Importer {
 public:
    bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
+      RooWorkspace &ws = *tool->workspace();
+
       std::string name(RooJSONFactoryWSTool::name(p));
       if (!p.has_child("data")) {
          RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
       RooArgSet varlist;
       tool->getObservables(p["data"], name, varlist);
-      RooDataHist *dh = dynamic_cast<RooDataHist *>(tool->workspace()->embeddedData(name));
+      RooDataHist *dh = dynamic_cast<RooDataHist *>(ws.embeddedData(name));
       if (!dh) {
-         auto dhForImport = tool->readBinnedData(p["data"], name, varlist);
-         tool->workspace()->import(*dhForImport, RooFit::Silence(true), RooFit::Embedded());
-         dh = static_cast<RooDataHist *>(tool->workspace()->embeddedData(dhForImport->GetName()));
+         auto dhForImport = RooJSONFactoryWSTool::readBinnedData(ws, p["data"], name, varlist);
+         ws.import(*dhForImport, RooFit::Silence(true), RooFit::Embedded());
+         dh = static_cast<RooDataHist *>(ws.embeddedData(dhForImport->GetName()));
       }
       RooHistFunc hf(name.c_str(), name.c_str(), *(dh->get()), *dh);
-      tool->workspace()->import(hf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      ws.import(hf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
    }
 };
