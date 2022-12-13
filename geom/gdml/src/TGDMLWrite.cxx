@@ -712,6 +712,7 @@ void TGDMLWrite::ExtractVolumes(TGeoNode* node)
          physvolname = fNameList->fLst[TString::Format("%p", geoNode)];
          childN = CreatePhysVolN(physvolname, geoNode->GetNumber(), nodevolname.Data(),
                                  posname.Data(), rotname.Data(), scaleN);
+         fGdmlE->AddChild(volumeN, childN);
       }
       nCnt++;
    }
