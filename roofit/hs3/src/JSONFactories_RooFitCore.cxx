@@ -11,6 +11,7 @@
  */
 
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
+#include <RooFitHS3/JSONIO.h>
 #include <RooFit/Detail/JSONInterface.h>
 
 #include <RooDataHist.h>
@@ -27,7 +28,7 @@ using RooFit::Detail::JSONNode;
 #include <RooGenericPdf.h>
 
 namespace {
-class RooGenericPdfFactory : public RooJSONFactoryWSTool::Importer {
+class RooGenericPdfFactory : public RooFit::JSONIO::Importer {
 public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
@@ -57,7 +58,7 @@ public:
 #include <RooFormulaVar.h>
 
 namespace {
-class RooFormulaVarFactory : public RooJSONFactoryWSTool::Importer {
+class RooFormulaVarFactory : public RooFit::JSONIO::Importer {
 public:
    bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
@@ -87,7 +88,7 @@ public:
 #include <RooProdPdf.h>
 
 namespace {
-class RooProdPdfFactory : public RooJSONFactoryWSTool::Importer {
+class RooProdPdfFactory : public RooFit::JSONIO::Importer {
 public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
@@ -114,7 +115,7 @@ public:
 #include <RooAddPdf.h>
 
 namespace {
-class RooAddPdfFactory : public RooJSONFactoryWSTool::Importer {
+class RooAddPdfFactory : public RooFit::JSONIO::Importer {
 public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
@@ -153,7 +154,7 @@ public:
 #include <RooBinWidthFunction.h>
 
 namespace {
-class RooBinWidthFunctionFactory : public RooJSONFactoryWSTool::Importer {
+class RooBinWidthFunctionFactory : public RooFit::JSONIO::Importer {
 public:
    bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
@@ -171,7 +172,7 @@ public:
 #include <RooCategory.h>
 
 namespace {
-class RooSimultaneousFactory : public RooJSONFactoryWSTool::Importer {
+class RooSimultaneousFactory : public RooFit::JSONIO::Importer {
 public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
@@ -202,7 +203,7 @@ public:
 #include <RooRealVar.h>
 
 namespace {
-class RooBinSamplingPdfFactory : public RooJSONFactoryWSTool::Importer {
+class RooBinSamplingPdfFactory : public RooFit::JSONIO::Importer {
 public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
@@ -242,7 +243,7 @@ public:
 #include <RooRealSumPdf.h>
 
 namespace {
-class RooRealSumPdfFactory : public RooJSONFactoryWSTool::Importer {
+class RooRealSumPdfFactory : public RooFit::JSONIO::Importer {
 public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
@@ -282,7 +283,7 @@ public:
 #include <RooRealSumPdf.h>
 
 namespace {
-class RooRealSumPdfStreamer : public RooJSONFactoryWSTool::Exporter {
+class RooRealSumPdfStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
    {
@@ -310,7 +311,7 @@ public:
 } // namespace
 
 namespace {
-class RooSimultaneousStreamer : public RooJSONFactoryWSTool::Exporter {
+class RooSimultaneousStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
    {
@@ -342,7 +343,7 @@ public:
 #include <TH1.h>
 
 namespace {
-class RooHistFuncStreamer : public RooJSONFactoryWSTool::Exporter {
+class RooHistFuncStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
    {
@@ -364,7 +365,7 @@ public:
 } // namespace
 
 namespace {
-class RooHistFuncFactory : public RooJSONFactoryWSTool::Importer {
+class RooHistFuncFactory : public RooFit::JSONIO::Importer {
 public:
    bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
@@ -390,7 +391,7 @@ public:
 #include <RooBinSamplingPdf.h>
 
 namespace {
-class RooBinSamplingPdfStreamer : public RooJSONFactoryWSTool::Exporter {
+class RooBinSamplingPdfStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
    {
@@ -412,7 +413,7 @@ public:
 #include <RooProdPdf.h>
 
 namespace {
-class RooProdPdfStreamer : public RooJSONFactoryWSTool::Exporter {
+class RooProdPdfStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
    {
@@ -435,7 +436,7 @@ public:
 #include <RooGenericPdf.h>
 
 namespace {
-class RooGenericPdfStreamer : public RooJSONFactoryWSTool::Exporter {
+class RooGenericPdfStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
    {
@@ -459,7 +460,7 @@ public:
 #include <RooBinWidthFunction.h>
 
 namespace {
-class RooBinWidthFunctionStreamer : public RooJSONFactoryWSTool::Exporter {
+class RooBinWidthFunctionStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
    {
@@ -480,7 +481,7 @@ public:
 #include <RooFormulaVar.h>
 
 namespace {
-class RooFormulaVarStreamer : public RooJSONFactoryWSTool::Exporter {
+class RooFormulaVarStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
    {
@@ -499,35 +500,34 @@ public:
       return true;
    }
 };
-} // namespace
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // instantiate all importers and exporters
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-namespace {
 STATIC_EXECUTE(
 
-   using Tool = RooJSONFactoryWSTool;
+   using namespace RooFit::JSONIO;
 
-   Tool::registerImporter<RooProdPdfFactory>("pdfprod", false);
-   Tool::registerImporter<RooGenericPdfFactory>("genericpdf", false);
-   Tool::registerImporter<RooFormulaVarFactory>("formulavar", false);
-   Tool::registerImporter<RooBinSamplingPdfFactory>("binsampling", false);
-   Tool::registerImporter<RooAddPdfFactory>("pdfsum", false);
-   Tool::registerImporter<RooHistFuncFactory>("histogram", false);
-   Tool::registerImporter<RooSimultaneousFactory>("simultaneous", false);
-   Tool::registerImporter<RooBinWidthFunctionFactory>("binwidth", false);
-   Tool::registerImporter<RooRealSumPdfFactory>("sumpdf", false);
+   registerImporter<RooProdPdfFactory>("pdfprod", false);
+   registerImporter<RooGenericPdfFactory>("genericpdf", false);
+   registerImporter<RooFormulaVarFactory>("formulavar", false);
+   registerImporter<RooBinSamplingPdfFactory>("binsampling", false);
+   registerImporter<RooAddPdfFactory>("pdfsum", false);
+   registerImporter<RooHistFuncFactory>("histogram", false);
+   registerImporter<RooSimultaneousFactory>("simultaneous", false);
+   registerImporter<RooBinWidthFunctionFactory>("binwidth", false);
+   registerImporter<RooRealSumPdfFactory>("sumpdf", false);
 
-   Tool::registerExporter<RooBinWidthFunctionStreamer>(RooBinWidthFunction::Class(), false);
-   Tool::registerExporter<RooProdPdfStreamer>(RooProdPdf::Class(), false);
-   Tool::registerExporter<RooSimultaneousStreamer>(RooSimultaneous::Class(), false);
-   Tool::registerExporter<RooBinSamplingPdfStreamer>(RooBinSamplingPdf::Class(), false);
-   Tool::registerExporter<RooHistFuncStreamer>(RooHistFunc::Class(), false);
-   Tool::registerExporter<RooGenericPdfStreamer>(RooGenericPdf::Class(), false);
-   Tool::registerExporter<RooFormulaVarStreamer>(RooFormulaVar::Class(), false);
-   Tool::registerExporter<RooRealSumPdfStreamer>(RooRealSumPdf::Class(), false);
+   registerExporter<RooBinWidthFunctionStreamer>(RooBinWidthFunction::Class(), false);
+   registerExporter<RooProdPdfStreamer>(RooProdPdf::Class(), false);
+   registerExporter<RooSimultaneousStreamer>(RooSimultaneous::Class(), false);
+   registerExporter<RooBinSamplingPdfStreamer>(RooBinSamplingPdf::Class(), false);
+   registerExporter<RooHistFuncStreamer>(RooHistFunc::Class(), false);
+   registerExporter<RooGenericPdfStreamer>(RooGenericPdf::Class(), false);
+   registerExporter<RooFormulaVarStreamer>(RooFormulaVar::Class(), false);
+   registerExporter<RooRealSumPdfStreamer>(RooRealSumPdf::Class(), false);
 
 )
+
 } // namespace

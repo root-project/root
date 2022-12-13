@@ -11,6 +11,7 @@
  */
 
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
+#include <RooFitHS3/JSONIO.h>
 #include <RooFit/Detail/JSONInterface.h>
 
 #include <RooStats/HistFactory/ParamHistFunc.h>
@@ -161,7 +162,7 @@ RooAbsPdf *getConstraint(RooJSONFactoryWSTool *tool, const std::string &sysname)
    return pdf;
 }
 
-class RooHistogramFactory : public RooJSONFactoryWSTool::Importer {
+class RooHistogramFactory : public RooFit::JSONIO::Importer {
 public:
    bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
@@ -302,7 +303,7 @@ public:
    }
 };
 
-class RooRealSumPdfFactory : public RooJSONFactoryWSTool::Importer {
+class RooRealSumPdfFactory : public RooFit::JSONIO::Importer {
 public:
    std::unique_ptr<ParamHistFunc> createPHF(const std::string &sysname, const std::string &phfname,
                                             const std::vector<double> &vals, RooWorkspace &w, RooArgList &constraints,
@@ -537,7 +538,7 @@ public:
 } // namespace
 
 namespace {
-class FlexibleInterpVarStreamer : public RooJSONFactoryWSTool::Exporter {
+class FlexibleInterpVarStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
    {
@@ -561,7 +562,7 @@ public:
    }
 };
 
-class PiecewiseInterpolationStreamer : public RooJSONFactoryWSTool::Exporter {
+class PiecewiseInterpolationStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
    {
@@ -599,7 +600,7 @@ public:
 } // namespace
 
 namespace {
-class PiecewiseInterpolationFactory : public RooJSONFactoryWSTool::Importer {
+class PiecewiseInterpolationFactory : public RooFit::JSONIO::Importer {
 public:
    bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
@@ -656,7 +657,7 @@ public:
 } // namespace
 
 namespace {
-class HistFactoryStreamer : public RooJSONFactoryWSTool::Exporter {
+class HistFactoryStreamer : public RooFit::JSONIO::Exporter {
 public:
    bool autoExportDependants() const override { return false; }
    void collectElements(RooArgSet &elems, RooProduct *prod) const
@@ -925,14 +926,14 @@ public:
 
 STATIC_EXECUTE(
 
-   using Tool = RooJSONFactoryWSTool;
+   using namespace RooFit::JSONIO;
 
-   Tool::registerImporter<RooRealSumPdfFactory>("histfactory", true);
-   Tool::registerImporter<RooHistogramFactory>("hist-sample", true);
-   Tool::registerImporter<PiecewiseInterpolationFactory>("interpolation", true);
-   Tool::registerExporter<FlexibleInterpVarStreamer>(RooStats::HistFactory::FlexibleInterpVar::Class(), true);
-   Tool::registerExporter<PiecewiseInterpolationStreamer>(PiecewiseInterpolation::Class(), true);
-   Tool::registerExporter<HistFactoryStreamer>(RooProdPdf::Class(), true);
+   registerImporter<RooRealSumPdfFactory>("histfactory", true);
+   registerImporter<RooHistogramFactory>("hist-sample", true);
+   registerImporter<PiecewiseInterpolationFactory>("interpolation", true);
+   registerExporter<FlexibleInterpVarStreamer>(RooStats::HistFactory::FlexibleInterpVar::Class(), true);
+   registerExporter<PiecewiseInterpolationStreamer>(PiecewiseInterpolation::Class(), true);
+   registerExporter<HistFactoryStreamer>(RooProdPdf::Class(), true);
 
 )
 

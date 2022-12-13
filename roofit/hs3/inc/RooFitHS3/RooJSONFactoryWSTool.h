@@ -31,9 +31,6 @@ class RooRealVar;
 class RooRealVar;
 class RooWorkspace;
 
-class TH1;
-class TClass;
-
 namespace RooFit {
 namespace Detail {
 class JSONNode;
@@ -41,51 +38,14 @@ class JSONTree;
 } // namespace Detail
 } // namespace RooFit
 
+class TH1;
+class TClass;
+
 class RooJSONFactoryWSTool {
 public:
    struct Config {
       static bool stripObservables;
    };
-
-   class Importer {
-   public:
-      virtual bool importPdf(RooJSONFactoryWSTool *, const RooFit::Detail::JSONNode &) const { return false; }
-      virtual bool importFunction(RooJSONFactoryWSTool *, const RooFit::Detail::JSONNode &) const { return false; }
-      virtual ~Importer(){};
-   };
-   class Exporter {
-   public:
-      virtual std::string const &key() const = 0;
-      virtual bool autoExportDependants() const { return true; }
-      virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *, RooFit::Detail::JSONNode &) const
-      {
-         return false;
-      }
-      virtual ~Exporter(){};
-   };
-   struct ExportKeys {
-      std::string type;
-      std::map<std::string, std::string> proxies;
-   };
-   struct ImportExpression {
-      TClass const *tclass = nullptr;
-      std::vector<std::string> arguments;
-   };
-
-   typedef std::map<const std::string, std::vector<std::unique_ptr<const Importer>>> ImportMap;
-   typedef std::map<TClass const *, std::vector<std::unique_ptr<const Exporter>>> ExportMap;
-   typedef std::map<TClass const *, ExportKeys> ExportKeysMap;
-   typedef std::map<const std::string, ImportExpression> ImportExpressionMap;
-
-   // The following maps to hold the importers and exporters for runtime lookup
-   // could also be static variables directly, but to avoid the static
-   // initialization order fiasco these are functions that return static
-   // variables.
-   static ImportMap &staticImporters();
-   static ExportMap &staticExporters();
-   static ImportExpressionMap &staticPdfImportExpressions();
-   static ImportExpressionMap &staticFunctionImportExpressions();
-   static ExportKeysMap &staticExportKeys();
 
    struct Var {
       int nbins;
@@ -147,32 +107,6 @@ public:
 
    RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{&ws} {}
    RooWorkspace *workspace() { return _workspace; }
-
-   template <class T>
-   static bool registerImporter(const std::string &key, bool topPriority = true)
-   {
-      return registerImporter(key, std::make_unique<T>(), topPriority);
-   }
-   template <class T>
-   static bool registerExporter(const TClass *key, bool topPriority = true)
-   {
-      return registerExporter(key, std::make_unique<T>(), topPriority);
-   }
-
-   static bool registerImporter(const std::string &key, std::unique_ptr<const RooJSONFactoryWSTool::Importer> f,
-                                bool topPriority = true);
-   static bool registerExporter(const TClass *key, std::unique_ptr<const RooJSONFactoryWSTool::Exporter> f,
-                                bool topPriority = true);
-   static int removeImporters(const std::string &needle);
-   static int removeExporters(const std::string &needle);
-   static void printImporters();
-   static void printExporters();
-
-   static ImportMap const &importers() { return staticImporters(); }
-   static ExportMap const &exporters() { return staticExporters(); }
-   static ImportExpressionMap const &pdfImportExpressions() { return staticPdfImportExpressions(); }
-   static ImportExpressionMap const &functionImportExpressions() { return staticFunctionImportExpressions(); }
-   static ExportKeysMap const &exportKeys() { return staticExportKeys(); }
 
    // error handling helpers
    static void error(const char *s) { throw std::runtime_error(s); }
@@ -245,13 +179,6 @@ public:
    std::string exportYMLtoString();
    bool importJSONfromString(const std::string &s);
    bool importYMLfromString(const std::string &s);
-
-   static void loadFactoryExpressions(const std::string &fname);
-   static void clearFactoryExpressions();
-   static void printFactoryExpressions();
-   static void loadExportKeys(const std::string &fname);
-   static void clearExportKeys();
-   static void printExportKeys();
 
    void importAllNodes(const RooFit::Detail::JSONNode &n);
 

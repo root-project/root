@@ -11,9 +11,11 @@
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
   HEADERS
+    RooFitHS3/JSONIO.h
     RooFitHS3/RooJSONFactoryWSTool.h
     RooFitHS3/HistFactoryJSONTool.h
   SOURCES
+    src/JSONIO.cxx
     src/RooJSONFactoryWSTool.cxx
     src/HistFactoryJSONTool.cxx
     src/JSONFactories_RooFitCore.cxx
