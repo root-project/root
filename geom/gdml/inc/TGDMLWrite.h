@@ -85,6 +85,10 @@ public:
    void SetG4Compatibility(Bool_t G4Compatible) {
       fgG4Compatibility = G4Compatible;
    };
+   // Access the floating point precision for writing GDML
+   UInt_t GetFltPrecision() const { return fFltPrecision; }
+   // Set the floating point precision for writing GDML
+   void SetFltPrecision(UInt_t prec) { fFltPrecision = prec; }
 
 private:
    struct Xyz {
@@ -228,8 +232,6 @@ private:
    TString GetPattAxis(Int_t divAxis, const char * pattName, TString& unit);
    Bool_t IsNullParam(Double_t parValue, TString parName, TString objName);
    void UnsetTemporaryBits(TGeoManager * geoMng);
-   UInt_t GetFltPrecision() const { return fFltPrecision; }
-   void SetFltPrecision(UInt_t prec) { fFltPrecision = prec; }
 
    ////////////////////////////////////////////////////////////////////////////////
    //
