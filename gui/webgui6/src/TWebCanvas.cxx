@@ -201,7 +201,7 @@ void TWebCanvas::CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObjec
    auto *painter = dynamic_cast<TWebPadPainter *>(Canvas()->GetCanvasPainter());
 
    TView *view = nullptr;
-   TVirtualPad *savepad = gPad;
+   auto savepad = gPad;
 
    pad->cd();
 
