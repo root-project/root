@@ -766,9 +766,7 @@ void TRatioPlot::CreateGridline()
    if (!fShowGridlines)
       return; // don't draw them
 
-   TVirtualPad *padsav = gPad;
-
-   fLowerPad->cd();
+   TVirtualPad::TContext ctxt(fLowerPad, kTRUE);
 
    unsigned int dest = fGridlinePositions.size();
 
@@ -804,7 +802,6 @@ void TRatioPlot::CreateGridline()
    Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
    Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
 
-   TLine *line;
    unsigned int skipped = 0;
    for (unsigned int i=0;i<fGridlinePositions.size();++i) {
       y = fGridlinePositions[i];
@@ -815,15 +812,13 @@ void TRatioPlot::CreateGridline()
          continue;
       }
 
-      line = fGridlines.at(i-skipped);
+      auto line = fGridlines.at(i-skipped);
 
       line->SetX1(first);
       line->SetX2(last);
       line->SetY1(y);
       line->SetY2(y);
    }
-
-   padsav->cd();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1106,8 +1101,7 @@ Int_t TRatioPlot::BuildLowerPlot()
 
 void TRatioPlot::CreateVisualAxes()
 {
-   TVirtualPad *padsav = gPad;
-   fTopPad->cd();
+   TVirtualPad::TContext ctxt(fTopPad, kTRUE);
 
    // this is for errors
    TString thisfunc = "CreateVisualAxes";
@@ -1370,8 +1364,6 @@ void TRatioPlot::CreateVisualAxes()
       fUpperGYaxisMirror->SetLabelSize(0.);
       fLowerGYaxisMirror->SetLabelSize(0.);
    }
-
-   padsav->cd();
 
 }
 

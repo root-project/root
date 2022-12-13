@@ -370,7 +370,7 @@ void TInspectCanvas::GoForward()
 
 void TInspectCanvas::Inspector(TObject *obj)
 {
-   TVirtualPad *padsav = gPad;
+   TVirtualPad::TContext ctxt(kTRUE);
    TInspectCanvas *inspect = (TInspectCanvas*)(gROOT->GetListOfCanvases())->FindObject("inspect");
    if (!inspect) inspect = new TInspectCanvas(700,600);
    else          inspect->cd();
@@ -378,8 +378,6 @@ void TInspectCanvas::Inspector(TObject *obj)
    inspect->InspectObject(obj);
    inspect->GetObjects()->Add(obj);
    //obj->SetBit(kMustCleanup);
-
-   if (padsav) padsav->cd();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

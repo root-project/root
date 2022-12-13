@@ -156,7 +156,7 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       return;
    }
 
-   TPad *cdpad = (TPad*)gROOT->GetSelectedPad();
+   auto cdpad = gROOT->GetSelectedPad();
    HideToolTip(event);
 
    switch (event) {
