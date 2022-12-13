@@ -43,7 +43,7 @@ class TClass;
 
 class RooJSONFactoryWSTool {
 public:
-   std::ostream &log(int level) const;
+   static std::ostream &log(int level);
 
    static std::string name(const RooFit::Detail::JSONNode &n);
 
@@ -102,7 +102,8 @@ public:
    static std::unique_ptr<RooDataHist> readBinnedData(RooWorkspace &ws, const RooFit::Detail::JSONNode &n,
                                                       const std::string &namecomp, RooArgList observables);
 
-   void getObservables(const RooFit::Detail::JSONNode &n, const std::string &obsnamecomp, RooArgSet &out);
+   static void
+   getObservables(RooWorkspace &ws, const RooFit::Detail::JSONNode &n, const std::string &obsnamecomp, RooArgSet &out);
 
    bool importJSON(std::string const &filename);
    bool importYML(std::string const &filename);
@@ -145,7 +146,7 @@ private:
    std::map<std::string, std::unique_ptr<RooAbsData>> loadData(const RooFit::Detail::JSONNode &n);
    std::unique_ptr<RooDataSet> unbinned(RooDataHist const &hist);
    RooRealVar *getWeightVar(const char *name);
-   RooRealVar *createObservable(const std::string &name, const RooJSONFactoryWSTool::Var &var);
+   static RooRealVar *createObservable(RooWorkspace &ws, const std::string &name, const RooJSONFactoryWSTool::Var &var);
 
    class MissingRootnodeError : public std::exception {
    public:

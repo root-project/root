@@ -176,7 +176,7 @@ public:
       RooCategory cat(indexname.c_str(), indexname.c_str());
       for (const auto &comp : p["channels"].children()) {
          std::string catname(RooJSONFactoryWSTool::name(comp));
-         tool->log(RooFit::INFO) << "importing category " << catname << std::endl;
+         RooJSONFactoryWSTool::log(RooFit::INFO) << "importing category " << catname << std::endl;
          tool->importFunction(comp, true);
          std::string pdfname(comp.has_val() ? comp.val() : RooJSONFactoryWSTool::name(comp));
          RooAbsPdf *pdf = tool->request<RooAbsPdf>(pdfname, name);
@@ -345,7 +345,7 @@ public:
          RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
       RooArgSet varlist;
-      tool->getObservables(p["data"], name, varlist);
+      RooJSONFactoryWSTool::getObservables(ws, p["data"], name, varlist);
       RooDataHist *dh = dynamic_cast<RooDataHist *>(ws.embeddedData(name));
       if (!dh) {
          auto dhForImport = RooJSONFactoryWSTool::readBinnedData(ws, p["data"], name, varlist);

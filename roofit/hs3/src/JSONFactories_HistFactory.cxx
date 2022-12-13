@@ -465,7 +465,7 @@ public:
       std::vector<std::string> coefnames;
       RooArgSet observables;
       if (p.has_child("observables")) {
-         tool->getObservables(p, name, observables);
+         RooJSONFactoryWSTool::getObservables(ws, p, name, observables);
          scope.setObservables(observables);
       }
       for (const auto &comp : p["samples"].children()) {
@@ -474,7 +474,7 @@ public:
          std::string fprefix = RooJSONFactoryWSTool::genPrefix(def, true);
          try {
             if (observables.empty()) {
-               tool->getObservables(comp["data"], fprefix, observables);
+               RooJSONFactoryWSTool::getObservables(ws, comp["data"], fprefix, observables);
                scope.setObservables(observables);
             }
             if (def.has_child("overallSystematics"))
