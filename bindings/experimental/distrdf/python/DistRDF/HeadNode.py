@@ -460,9 +460,14 @@ class TreeHeadNode(HeadNode):
                 # only one filename and the list of names of the sub trees
                 # is empty, so the zipped information looks like:
                 # (name, alias), (filename.root, ), ()
-                for friend in current_range.friendinfo:
-                    ds = ds.WithFriends(friend.fFriendChainSubNames, friend.fFriendFileNames,
-                                        friend.fFriendNames[1])
+                zipped_friendinfo = zip(
+                    current_range.friendinfo.fFriendNames,
+                    current_range.friendinfo.fFriendFileNames,
+                    current_range.friendinfo.fFriendChainSubNames
+                )
+                for (friend_name, friend_alias), friend_filenames, friend_chainsubnames in zipped_friendinfo:
+                    friend_chainsubnames = friend_chainsubnames if len(friend_chainsubnames) > 0 else [friend_name]*len(friend_filenames)
+                    ds.WithFriends(friend_chainsubnames, friend_filenames, friend_alias)
 
         def build_rdf_from_range(current_range: Ranges.TreeRangePerc) -> TaskObjects:
             """
