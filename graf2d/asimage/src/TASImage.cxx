@@ -1105,10 +1105,10 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
          itmp->BeginPaint();
       }
 
-      TVirtualPad *sav = gPad;
-      gPad = pad;
-      pad->Paint();
-      gPad = sav;
+      {
+         TVirtualPad::TContext ctxt(pad, kFALSE);
+         pad->Paint();
+      }
 
       if (itmp && itmp->fImage && (itmp != this)) {
          fImage = clone_asimage(itmp->fImage, SCL_DO_ALL);

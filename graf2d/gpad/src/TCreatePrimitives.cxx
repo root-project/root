@@ -271,9 +271,8 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
 {
    static Int_t px1old, py1old, px2old, py2old;
    static Int_t px1, py1, px2, py2, pxl, pyl, pxt, pyt;
-   static TPad *padsav = nullptr;
+   static TVirtualPad *padsav = nullptr;
    Double_t xlow, ylow, xup, yup;
-   TPad *newpad;
 
    Int_t  n = 0;
    TObject *obj;
@@ -288,7 +287,7 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
    switch (event) {
 
    case kButton1Down:
-      padsav = (TPad*)gPad;
+      padsav = gPad;
       gPad->cd();
       px1 = gPad->XtoAbsPixel(gPad->GetX1());
       py1 = gPad->YtoAbsPixel(gPad->GetY1());
@@ -332,11 +331,11 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
 
       gROOT->SetEditorMode();
       if (xup <= xlow || yup <= ylow) return;
-      newpad = new TPad(Form("%s_%d",gPad->GetName(),n+1),"newpad",xlow, ylow, xup, yup);
+      auto newpad = new TPad(TString::Format("%s_%d",gPad->GetName(),n+1).Data(),"newpad",xlow, ylow, xup, yup);
       if (newpad->IsZombie()) break;
       newpad->SetFillColor(gStyle->GetPadColor());
       newpad->Draw();
-      TCanvas *canvas = gPad->GetCanvas();
+      auto canvas = gPad->GetCanvas();
       if (canvas) canvas->Selected((TPad*)gPad, newpad, kButton1Down);
       if (padsav) {
          padsav->cd();
