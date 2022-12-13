@@ -675,7 +675,7 @@ void TGDMLWrite::ExtractVolumes(TGeoNode* node)
          nodPos.x = pos[0];
          nodPos.y = pos[1];
          nodPos.z = pos[2];
-         childN = CreatePositionN(posname.Data(), nodPos);
+         childN = CreatePositionN(posname.Data(), nodPos, "position", fDefault_lunit);
          fGdmlE->AddChild(fDefineNode, childN); //adding node to <define> node
          //Deal with reflection
          XMLNodePointer_t scaleN = nullptr;
@@ -1701,7 +1701,7 @@ XMLNodePointer_t TGDMLWrite::CreateTessellatedN(TGeoTessellated * geoShape)
       nodPos.x = vertex[0];
       nodPos.y = vertex[1];
       nodPos.z = vertex[2];
-      auto childN = CreatePositionN(posName.Data(), nodPos);
+      auto childN = CreatePositionN(posName.Data(), nodPos, "position", fDefault_lunit);
       fGdmlE->AddChild(fDefineNode, childN); //adding node to <define> node
    }
    XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "tessellated", nullptr);
@@ -1830,7 +1830,7 @@ XMLNodePointer_t TGDMLWrite::CreateCommonBoolN(TGeoCompositeShape *geoShape)
 
    //<firstposition> (left)
    if ((translL.x != 0.0) || (translL.y != 0.0) || (translL.z != 0.0)) {
-      childN = CreatePositionN((nodeName + lname + "pos").Data(), translL, "firstposition");
+      childN = CreatePositionN((nodeName + lname + "pos").Data(), translL, "firstposition", fDefault_lunit);
       fGdmlE->AddChild(mainN, childN);
    }
    //<firstrotation> (left)
@@ -1840,7 +1840,7 @@ XMLNodePointer_t TGDMLWrite::CreateCommonBoolN(TGeoCompositeShape *geoShape)
    }
    //<position> (right)
    if ((translR.x != 0.0) || (translR.y != 0.0) || (translR.z != 0.0)) {
-      childN = CreatePositionN((nodeName + rname + "pos").Data(), translR, "position");
+      childN = CreatePositionN((nodeName + rname + "pos").Data(), translR, "position", fDefault_lunit);
       fGdmlE->AddChild(mainN, childN);
    }
    //<rotation> (right)
@@ -2707,7 +2707,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
          nodPos.x = pos[0];
          nodPos.y = pos[1];
          nodPos.z = pos[2];
-         childN = CreatePositionN(posname.Data(), nodPos);
+         childN = CreatePositionN(posname.Data(), nodPos, "position", fDefault_lunit);
          fGdmlE->AddChild(fDefineNode, childN); //adding node to <define> node
          //Deal with reflection
          XMLNodePointer_t scaleN = nullptr;
