@@ -284,7 +284,7 @@ void TFileDrawMap::DrawObject()
    if (padsave == gPad) {
       //must create a new canvas
       gROOT->MakeDefCanvas();
-   } else {
+   } else if (padsave) {
       padsave->cd();
    }
 
