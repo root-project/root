@@ -704,7 +704,7 @@ void TRootCanvas::ReallyDelete()
    fCanvas->Clear();
    fCanvas->SetName("");
    if (gPad && gPad->GetCanvas() == fCanvas)
-      gPad = 0;
+      gPad = nullptr;
    delete this;
 }
 
@@ -1023,7 +1023,7 @@ again:
                      break;
                   case kViewMarkers:
                      {
-                        TVirtualPad *padsav = gPad->GetCanvas();
+                        TVirtualPad *padsav = gPad ? gPad->GetCanvas() : nullptr;
                         TCanvas *m = new TCanvas("markers","Marker Types",600,200);
                         TMarker::DisplayMarkerTypes();
                         m->Update();
@@ -1466,9 +1466,7 @@ void TRootCanvas::ShowStatusBar(Bool_t show)
 
 void TRootCanvas::ShowEditor(Bool_t show)
 {
-   TVirtualPad *savedPad = 0;
-   savedPad = (TVirtualPad *) gPad;
-   gPad = Canvas();
+   TVirtualPad::TContext ctxt(Canvas(), kFALSE);
 
    UInt_t w = GetWidth();
    UInt_t e = fEditorFrame->GetWidth();
@@ -1538,7 +1536,6 @@ void TRootCanvas::ShowEditor(Bool_t show)
       }
       Resize(w, h);
    }
-   if (savedPad) gPad = savedPad;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

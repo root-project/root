@@ -1647,7 +1647,7 @@ void TRootBrowserLite::ExecuteDefaultAction(TObject *obj)
    TRootBrowserCursorSwitcher cursorSwitcher(fIconBox, fLt);
    char action[512];
    fBrowser->SetDrawOption(GetDrawOption());
-   TVirtualPad *wasp = gPad ? (TVirtualPad*)gPad->GetCanvas() : 0;
+   TVirtualPad *wasp = gPad ? (TVirtualPad*)gPad->GetCanvas() : nullptr;
    TFile *wasf = gFile;
 
    // Special case for file system objects...
@@ -1701,7 +1701,7 @@ void TRootBrowserLite::ExecuteDefaultAction(TObject *obj)
          BrowseTextFile(obj->GetName());
 
       /////////////// cache and change file's icon ///////////////////////
-      TVirtualPad *nowp = gPad ? (TVirtualPad*)gPad->GetCanvas() : 0;
+      TVirtualPad *nowp = gPad ? (TVirtualPad*)gPad->GetCanvas() : nullptr;
 
       if (fIconBox->fAutoThumbnail && nowp && (nowp != wasp)) {
          TSystemFile *sf = (TSystemFile*)obj;
