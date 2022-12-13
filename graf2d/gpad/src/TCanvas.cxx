@@ -783,9 +783,8 @@ void TCanvas::Closed()
 
 void TCanvas::Close(Option_t *option)
 {
-   TPad    *padsave = (TPad*)gPad;
-   TCanvas *cansave = nullptr;
-   if (padsave) cansave = (TCanvas*)gPad->GetCanvas();
+   auto padsave = gPad;
+   TCanvas *cansave = padsave ? padsave->GetCanvas() : nullptr;
 
    if (fCanvasID != -1) {
 
@@ -915,9 +914,9 @@ TObject *TCanvas::DrawClone(Option_t *option) const
 
 TObject *TCanvas::DrawClonePad()
 {
-   TPad *padsav = (TPad*)gPad;
-   TPad *selpad = (TPad*)gROOT->GetSelectedPad();
-   TPad *pad = padsav;
+   auto padsav = gPad;
+   auto selpad = gROOT->GetSelectedPad();
+   auto pad = padsav;
    if (pad == this) pad = selpad;
    if (!padsav || !pad || pad == this) {
       TCanvas *newCanvas = (TCanvas*)DrawClone();
@@ -950,10 +949,10 @@ TObject *TCanvas::DrawClonePad()
 
    //copy primitives
    TIter next(GetListOfPrimitives());
-   while (auto obj=next()) {
+   while (auto obj = next()) {
       pad->cd();
       auto clone = obj->Clone();
-      pad->GetListOfPrimitives()->Add(clone,next.GetOption());
+      pad->GetListOfPrimitives()->Add(clone, next.GetOption());
    }
    pad->ResizePad();
    pad->Modified();
@@ -1224,7 +1223,7 @@ Int_t TCanvas::GetWindowTopY()
 void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 {
    TPad    *pad;
-   TPad    *prevSelPad = (TPad*) fSelectedPad;
+   TPad    *prevSelPad = fSelectedPad;
    TObject *prevSelObj = fSelected;
 
    fPadSave = (TPad*)gPad;
