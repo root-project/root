@@ -708,7 +708,7 @@ bool RFitPanel::DoFit()
 
    fitOpts.StoreResult = 1;
 
-   TVirtualPad *save = gPad;
+   TVirtualPad::TContext ctxt(kFALSE);
 
    auto pad = GetDrawPad(obj);
 
@@ -783,9 +783,6 @@ bool RFitPanel::DoFit()
    UpdateFunctionsList();
 
    SelectFunction("previous::"s + funcname);
-
-   if (save && (gPad != save))
-      gPad = save;
 
    return true; // provide client with latest changes
 }
