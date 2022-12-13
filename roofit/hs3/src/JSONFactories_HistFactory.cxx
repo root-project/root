@@ -39,6 +39,7 @@
 using RooFit::Detail::JSONNode;
 
 namespace {
+
 inline void collectNames(const JSONNode &n, std::vector<std::string> &names)
 {
    for (const auto &c : n.children()) {
@@ -115,19 +116,19 @@ T *findClient(RooAbsArg *gamma)
    return nullptr;
 }
 
-RooRealVar *getNP(RooJSONFactoryWSTool *tool, const char *parname)
+RooRealVar *getNP(RooWorkspace &ws, const char *parname)
 {
-   RooRealVar *par = tool->workspace()->var(parname);
-   if (!tool->workspace()->var(parname)) {
-      par = (RooRealVar *)tool->workspace()->factory(std::string(parname) + "[0.,-5,5]");
+   RooRealVar *par = ws.var(parname);
+   if (!ws.var(parname)) {
+      par = static_cast<RooRealVar *>(ws.factory(std::string(parname) + "[0.,-5,5]"));
    }
    if (par) {
       par->setAttribute("np");
    }
    std::string globname = std::string("nom_") + parname;
-   RooRealVar *nom = tool->workspace()->var(globname);
+   RooRealVar *nom = ws.var(globname);
    if (!nom) {
-      nom = (RooRealVar *)tool->workspace()->factory(globname + "[0.]");
+      nom = static_cast<RooRealVar *>(ws.factory(globname + "[0.]"));
    }
    if (nom) {
       nom->setAttribute("glob");
@@ -135,9 +136,9 @@ RooRealVar *getNP(RooJSONFactoryWSTool *tool, const char *parname)
       nom->setConstant(true);
    }
    std::string constrname = std::string("sigma_") + parname;
-   RooRealVar *sigma = tool->workspace()->var(constrname);
+   RooRealVar *sigma = ws.var(constrname);
    if (!sigma) {
-      sigma = (RooRealVar *)tool->workspace()->factory(constrname + "[1.]");
+      sigma = static_cast<RooRealVar *>(ws.factory(constrname + "[1.]"));
    }
    if (sigma) {
       sigma->setRange(sigma->getVal(), sigma->getVal());
@@ -147,14 +148,14 @@ RooRealVar *getNP(RooJSONFactoryWSTool *tool, const char *parname)
       RooJSONFactoryWSTool::error(TString::Format("unable to find nuisance parameter '%s'", parname));
    return par;
 }
-RooAbsPdf *getConstraint(RooJSONFactoryWSTool *tool, const std::string &sysname)
+RooAbsPdf *getConstraint(RooWorkspace &ws, const std::string &sysname)
 {
-   RooAbsPdf *pdf = tool->workspace()->pdf((sysname + "_constraint").c_str());
+   RooAbsPdf *pdf = ws.pdf((sysname + "_constraint").c_str());
    if (!pdf) {
-      pdf = (RooAbsPdf *)(tool->workspace()->factory(
-         TString::Format("RooGaussian::%s_constraint(alpha_%s,nom_alpha_%s,sigma_alpha_%s)", sysname.c_str(),
-                         sysname.c_str(), sysname.c_str(), sysname.c_str())
-            .Data()));
+      pdf = static_cast<RooAbsPdf *>(
+         ws.factory(TString::Format("RooGaussian::%s_constraint(alpha_%s,nom_alpha_%s,sigma_alpha_%s)", sysname.c_str(),
+                                    sysname.c_str(), sysname.c_str(), sysname.c_str())
+                       .Data()));
    }
    if (!pdf) {
       RooJSONFactoryWSTool::error(TString::Format("unable to find constraint term '%s'", sysname.c_str()));
@@ -211,8 +212,7 @@ public:
          if (p.has_child("normFactors")) {
             for (const auto &nf : p["normFactors"].children()) {
                std::string nfname(RooJSONFactoryWSTool::name(nf));
-               RooAbsReal *r = tool->workspace()->var(nfname);
-               if (r) {
+               if (RooAbsReal *r = tool->workspace()->var(nfname)) {
                   normElems.add(*r);
                } else {
                   normElems.add(*static_cast<RooRealVar *>(tool->workspace()->factory(nfname + "[1.]")));
@@ -228,8 +228,7 @@ public:
                std::string sysname(RooJSONFactoryWSTool::name(sys));
                std::string parname(sys.has_child("parameter") ? RooJSONFactoryWSTool::name(sys["parameter"])
                                                               : "alpha_" + sysname);
-               RooRealVar *par = ::getNP(tool, parname.c_str());
-               if (par) {
+               if (RooRealVar *par = ::getNP(*tool->workspace(), parname.c_str())) {
                   nps.add(*par);
                   low.push_back(sys["low"].val_float());
                   high.push_back(sys["high"].val_float());
@@ -252,7 +251,7 @@ public:
                std::string sysname(RooJSONFactoryWSTool::name(sys));
                std::string parname(sys.has_child("parameter") ? RooJSONFactoryWSTool::name(sys["parameter"])
                                                               : "alpha_" + sysname);
-               RooAbsReal *par = ::getNP(tool, parname.c_str());
+               RooAbsReal *par = ::getNP(*tool->workspace(), parname.c_str());
                nps.add(*par);
                RooDataHist &dh_low = getBinnedData(sysname + "Low_" + name);
                ownedArgsStack.push(std::make_unique<RooHistFunc>(
@@ -512,7 +511,7 @@ public:
          coefs.add(*coef);
       }
       for (auto sysname : sysnames) {
-         RooAbsPdf *pdf = ::getConstraint(tool, sysname.c_str());
+         RooAbsPdf *pdf = ::getConstraint(*tool->workspace(), sysname.c_str());
          constraints.add(*pdf);
       }
       if (constraints.empty()) {
@@ -535,9 +534,6 @@ public:
    }
 };
 
-} // namespace
-
-namespace {
 class FlexibleInterpVarStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
@@ -597,9 +593,7 @@ public:
       return true;
    }
 };
-} // namespace
 
-namespace {
 class PiecewiseInterpolationFactory : public RooFit::JSONIO::Importer {
 public:
    bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
@@ -654,9 +648,7 @@ public:
       return true;
    }
 };
-} // namespace
 
-namespace {
 class HistFactoryStreamer : public RooFit::JSONIO::Exporter {
 public:
    bool autoExportDependants() const override { return false; }
