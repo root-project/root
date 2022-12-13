@@ -29,7 +29,6 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &s)
                                            "obs_z_" + sample.GetChannelName()};
 
    s.set_map();
-   s["type"] << "hist-sample";
 
    if (sample.GetOverallSysList().size() > 0) {
       auto &overallSys = s["overallSystematics"];

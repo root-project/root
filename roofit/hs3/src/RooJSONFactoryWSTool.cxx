@@ -1013,10 +1013,6 @@ void RooJSONFactoryWSTool::exportData(RooAbsData *data, JSONNode &n)
 // create several observables
 void RooJSONFactoryWSTool::getObservables(const JSONNode &n, const std::string &obsnamecomp, RooArgSet &out)
 {
-   if (!_scope.observables.empty()) {
-      out.add(_scope.observables.begin(), _scope.observables.end());
-      return;
-   }
    auto vars = readObservables(n, obsnamecomp);
    for (auto v : vars) {
       std::string name(v.first);
@@ -1026,26 +1022,6 @@ void RooJSONFactoryWSTool::getObservables(const JSONNode &n, const std::string &
          out.add(*RooJSONFactoryWSTool::createObservable(name, v.second));
       }
    }
-}
-
-void RooJSONFactoryWSTool::setScopeObservables(const RooArgList &args)
-{
-   for (auto *arg : args) {
-      _scope.observables.push_back(arg);
-   }
-}
-void RooJSONFactoryWSTool::setScopeObject(const std::string &name, RooAbsArg *obj)
-{
-   _scope.objects[name] = obj;
-}
-RooAbsArg *RooJSONFactoryWSTool::getScopeObject(const std::string &name)
-{
-   return _scope.objects[name];
-}
-void RooJSONFactoryWSTool::clearScope()
-{
-   _scope.objects.clear();
-   _scope.observables.clear();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
