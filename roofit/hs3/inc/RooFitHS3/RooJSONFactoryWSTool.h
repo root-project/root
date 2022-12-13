@@ -43,62 +43,7 @@ class TClass;
 
 class RooJSONFactoryWSTool {
 public:
-   struct Config {
-      static bool stripObservables;
-   };
-
-   struct Var {
-      int nbins;
-      double min;
-      double max;
-      std::vector<double> bounds;
-
-      Var(int n) : nbins(n), min(0), max(n) {}
-      Var(const RooFit::Detail::JSONNode &val);
-   };
-
    std::ostream &log(int level) const;
-
-protected:
-   struct Scope {
-      std::vector<RooAbsArg *> observables;
-      std::map<std::string, RooAbsArg *> objects;
-   };
-   mutable Scope _scope;
-   const RooFit::Detail::JSONNode *_rootnode_input = nullptr;
-   RooFit::Detail::JSONNode *_rootnode_output = nullptr;
-
-   RooFit::Detail::JSONNode &orootnode();
-   const RooFit::Detail::JSONNode &irootnode() const;
-
-   RooWorkspace *_workspace;
-
-   std::map<std::string, std::unique_ptr<RooAbsData>> loadData(const RooFit::Detail::JSONNode &n);
-   std::unique_ptr<RooDataSet> unbinned(RooDataHist const &hist);
-   RooRealVar *getWeightVar(const char *name);
-   RooRealVar *createObservable(const std::string &name, const RooJSONFactoryWSTool::Var &var);
-
-public:
-   class MissingRootnodeError : public std::exception {
-   public:
-      const char *what() const noexcept override { return "no rootnode set"; }
-   };
-
-   class DependencyMissingError : public std::exception {
-      std::string _parent, _child, _class, _message;
-
-   public:
-      DependencyMissingError(const std::string &p, const std::string &c, const std::string &classname)
-         : _parent(p), _child(c), _class(classname)
-      {
-         _message = "object '" + _parent + "' is missing dependency '" + _child + "' of type '" + _class + "'";
-      };
-      const std::string &parent() const { return _parent; }
-      const std::string &child() const { return _child; }
-      const std::string &classname() const { return _class; }
-      const char *what() const noexcept override { return _message.c_str(); }
-   };
-   friend DependencyMissingError;
 
    static std::string name(const RooFit::Detail::JSONNode &n);
 
@@ -108,7 +53,6 @@ public:
    RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{&ws} {}
    RooWorkspace *workspace() { return _workspace; }
 
-   // error handling helpers
    static void error(const char *s) { throw std::runtime_error(s); }
    static void error(const std::string &s) { throw std::runtime_error(s); }
    template <class T>
@@ -153,13 +97,11 @@ public:
    static std::string genPrefix(const RooFit::Detail::JSONNode &p, bool trailing_underscore);
    static void exportHistogram(const TH1 &h, RooFit::Detail::JSONNode &n, const std::vector<std::string> &obsnames,
                                const TH1 *errH = nullptr, bool writeObservables = true, bool writeErrors = true);
-   void exportData(RooAbsData *data, RooFit::Detail::JSONNode &n);
    static void writeObservables(const TH1 &h, RooFit::Detail::JSONNode &n, const std::vector<std::string> &varnames);
-   static std::vector<std::vector<int>> generateBinIndices(const RooArgList &vars);
+
    std::unique_ptr<RooDataHist>
    readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgList observables);
-   static std::map<std::string, RooJSONFactoryWSTool::Var>
-   readObservables(const RooFit::Detail::JSONNode &n, const std::string &obsnamecomp);
+
    void getObservables(const RooFit::Detail::JSONNode &n, const std::string &obsnamecomp, RooArgSet &out);
    void setScopeObservables(const RooArgList &args);
    RooAbsArg *getScopeObject(const std::string &name);
@@ -175,6 +117,66 @@ public:
    bool exportJSON(std::ostream &os);
    bool exportYML(std::ostream &os);
 
+   void importFunctions(const RooFit::Detail::JSONNode &n);
+   void importFunction(const RooFit::Detail::JSONNode &n, bool isPdf);
+   void exportObject(const RooAbsArg *func, RooFit::Detail::JSONNode &n);
+
+   static std::unique_ptr<RooFit::Detail::JSONTree> createNewJSONTree();
+
+private:
+   struct Config {
+      static bool stripObservables;
+   };
+
+   struct Var {
+      int nbins;
+      double min;
+      double max;
+      std::vector<double> bounds;
+
+      Var(int n) : nbins(n), min(0), max(n) {}
+      Var(const RooFit::Detail::JSONNode &val);
+   };
+
+   struct Scope {
+      std::vector<RooAbsArg *> observables;
+      std::map<std::string, RooAbsArg *> objects;
+   };
+
+   RooFit::Detail::JSONNode &orootnode();
+   const RooFit::Detail::JSONNode &irootnode() const;
+
+   std::map<std::string, std::unique_ptr<RooAbsData>> loadData(const RooFit::Detail::JSONNode &n);
+   std::unique_ptr<RooDataSet> unbinned(RooDataHist const &hist);
+   RooRealVar *getWeightVar(const char *name);
+   RooRealVar *createObservable(const std::string &name, const RooJSONFactoryWSTool::Var &var);
+
+   class MissingRootnodeError : public std::exception {
+   public:
+      const char *what() const noexcept override { return "no rootnode set"; }
+   };
+
+   class DependencyMissingError : public std::exception {
+      std::string _parent, _child, _class, _message;
+
+   public:
+      DependencyMissingError(const std::string &p, const std::string &c, const std::string &classname)
+         : _parent(p), _child(c), _class(classname)
+      {
+         _message = "object '" + _parent + "' is missing dependency '" + _child + "' of type '" + _class + "'";
+      };
+      const std::string &parent() const { return _parent; }
+      const std::string &child() const { return _child; }
+      const std::string &classname() const { return _class; }
+      const char *what() const noexcept override { return _message.c_str(); }
+   };
+
+   // error handling helpers
+   void exportData(RooAbsData *data, RooFit::Detail::JSONNode &n);
+   static std::vector<std::vector<int>> generateBinIndices(const RooArgList &vars);
+   static std::map<std::string, RooJSONFactoryWSTool::Var>
+   readObservables(const RooFit::Detail::JSONNode &n, const std::string &obsnamecomp);
+
    std::string exportJSONtoString();
    std::string exportYMLtoString();
    bool importJSONfromString(const std::string &s);
@@ -182,10 +184,8 @@ public:
 
    void importAllNodes(const RooFit::Detail::JSONNode &n);
 
-   void importFunctions(const RooFit::Detail::JSONNode &n);
    void importPdfs(const RooFit::Detail::JSONNode &n);
    void importVariables(const RooFit::Detail::JSONNode &n);
-   void importFunction(const RooFit::Detail::JSONNode &n, bool isPdf);
    void importVariable(const RooFit::Detail::JSONNode &n);
    void configureVariable(const RooFit::Detail::JSONNode &p, RooRealVar &v);
    void importDependants(const RooFit::Detail::JSONNode &n);
@@ -198,13 +198,16 @@ public:
    void exportAttributes(const RooAbsArg *arg, RooFit::Detail::JSONNode &n);
    void exportVariable(const RooAbsReal *v, RooFit::Detail::JSONNode &n);
    void exportVariables(const RooArgSet &allElems, RooFit::Detail::JSONNode &n);
-   void exportObject(const RooAbsArg *func, RooFit::Detail::JSONNode &n);
    void exportFunctions(const RooArgSet &allElems, RooFit::Detail::JSONNode &n);
 
    void exportAllObjects(RooFit::Detail::JSONNode &n);
    void exportDependants(const RooAbsArg *source, RooFit::Detail::JSONNode &n);
    void exportDependants(const RooAbsArg *source, RooFit::Detail::JSONNode *n);
 
-   static std::unique_ptr<RooFit::Detail::JSONTree> createNewJSONTree();
+   // member variables
+   mutable Scope _scope;
+   const RooFit::Detail::JSONNode *_rootnode_input = nullptr;
+   RooFit::Detail::JSONNode *_rootnode_output = nullptr;
+   RooWorkspace *_workspace;
 };
 #endif
