@@ -1657,12 +1657,23 @@ std::string RooJSONFactoryWSTool::exportYMLtoString()
    return ss.str();
 }
 
-bool RooJSONFactoryWSTool::exportJSON(std::ostream &os)
+/// Create a new JSON tree with version information.
+std::unique_ptr<JSONTree> RooJSONFactoryWSTool::createNewJSONTree()
 {
-   // export the workspace in JSON
    std::unique_ptr<JSONTree> tree = JSONTree::create();
    JSONNode &n = tree->rootnode();
    n.set_map();
+   n["metadata"].set_map();
+   // The currently implemented HS3 standard is version 0.1
+   n["metadata"]["version"] << "0.1";
+   return tree;
+}
+
+bool RooJSONFactoryWSTool::exportJSON(std::ostream &os)
+{
+   // export the workspace in JSON
+   std::unique_ptr<JSONTree> tree = createNewJSONTree();
+   JSONNode &n = tree->rootnode();
    this->exportAllObjects(n);
    n.writeJSON(os);
    return true;
@@ -1683,9 +1694,8 @@ bool RooJSONFactoryWSTool::exportJSON(std::string const &filename)
 bool RooJSONFactoryWSTool::exportYML(std::ostream &os)
 {
    // export the workspace in YML
-   std::unique_ptr<JSONTree> tree = JSONTree::create();
+   std::unique_ptr<JSONTree> tree = createNewJSONTree();
    JSONNode &n = tree->rootnode();
-   n.set_map();
    this->exportAllObjects(n);
    n.writeYML(os);
    return true;
