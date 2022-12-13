@@ -169,15 +169,35 @@ ClassImp(TGDMLWrite);
 TGDMLWrite *TGDMLWrite::fgGDMLWrite = nullptr;
 
 namespace {
-  struct MaterialExtractor  {
-    std::set<TGeoMaterial*> materials;
-    void operator() (const TGeoVolume* v)   {
-      materials.insert(v->GetMaterial());
-      for(Int_t i=0; i<v->GetNdaughters(); ++i)
-        (*this)(v->GetNode(i)->GetVolume());
-    }
-  };
+
+// Helper to replace string patterns
+std::string str_replace(const std::string &str, const std::string &pattern, const std::string &replacement)
+{
+   std::string res = str;
+   for (size_t id = res.find(pattern); id != std::string::npos; id = res.find(pattern))
+      res.replace(id, pattern.length(), replacement);
+   return res;
 }
+
+// Create a NCN compliant name (no '/' and no '#')
+std::string make_NCName(const std::string &in)
+{
+   std::string res = str_replace(in, "/", "_");
+   res = str_replace(res, "#", "_");
+   return res;
+}
+
+// Materials extractor from a volume tree
+struct MaterialExtractor {
+   std::set<TGeoMaterial *> materials;
+   void operator()(const TGeoVolume *v)
+   {
+      materials.insert(v->GetMaterial());
+      for (Int_t i = 0; i < v->GetNdaughters(); ++i)
+         (*this)(v->GetNode(i)->GetVolume());
+   }
+};
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -615,6 +635,7 @@ void TGDMLWrite::ExtractVolumes(TGeoNode* node)
    TObjArray *nodeLst = volume->GetNodes();
    TIter next(nodeLst);
    TGeoNode *geoNode;
+   TString physvolname;
    Int_t nCnt = 0;
    //loop through all nodes
    while ((geoNode = (TGeoNode *) next())) {
@@ -677,7 +698,7 @@ void TGDMLWrite::ExtractVolumes(TGeoNode* node)
             }
          }
 
-         //rotation
+         // rotation
          TGDMLWrite::Xyz lxyz = GetXYZangles(geoNode->GetMatrix()->GetRotationMatrix());
          lxyz.x -= xangle;
          lxyz.z -= zangle;
@@ -687,9 +708,10 @@ void TGDMLWrite::ExtractVolumes(TGeoNode* node)
             fGdmlE->AddChild(fDefineNode, childN); //adding node to <define> node
          }
 
-         //create physvol for main volume/assembly node
-         childN = CreatePhysVolN(geoNode->GetName(), geoNode->GetNumber(), nodevolname.Data(), posname.Data(), rotname.Data(), scaleN);
-         fGdmlE->AddChild(volumeN, childN);
+         // create physvol for main volume/assembly node
+         physvolname = fNameList->fLst[TString::Format("%p", geoNode)];
+         childN = CreatePhysVolN(physvolname, geoNode->GetNumber(), nodevolname.Data(),
+                                 posname.Data(), rotname.Data(), scaleN);
       }
       nCnt++;
    }
@@ -1833,7 +1855,8 @@ XMLNodePointer_t TGDMLWrite::CreateOpticalSurfaceN(TGeoOpticalSurface * geoSurf)
 {
    XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "opticalsurface", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
-   fGdmlE->NewAttr(mainN, nullptr, "name", geoSurf->GetName());
+   std::string name = make_NCName(geoSurf->GetName());
+   fGdmlE->NewAttr(mainN, nullptr, "name", name.c_str());
    fGdmlE->NewAttr(mainN, nullptr, "model", TGeoOpticalSurface::ModelToString(geoSurf->GetModel()));
    fGdmlE->NewAttr(mainN, nullptr, "finish", TGeoOpticalSurface::FinishToString(geoSurf->GetFinish()));
    fGdmlE->NewAttr(mainN, nullptr, "type", TGeoOpticalSurface::TypeToString(geoSurf->GetType()));
@@ -1856,11 +1879,16 @@ XMLNodePointer_t TGDMLWrite::CreateOpticalSurfaceN(TGeoOpticalSurface * geoSurf)
 XMLNodePointer_t TGDMLWrite::CreateSkinSurfaceN(TGeoSkinSurface * geoSurf)
 {
    XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "skinsurface", nullptr);
-   fGdmlE->NewAttr(mainN, nullptr, "name", geoSurf->GetName());
-   fGdmlE->NewAttr(mainN, nullptr, "surfaceproperty", geoSurf->GetTitle());
+   std::string name = make_NCName(geoSurf->GetName());
+   std::string prop = make_NCName(geoSurf->GetTitle());
+
+   fGdmlE->NewAttr(mainN, nullptr, "name", name.c_str());
+   fGdmlE->NewAttr(mainN, nullptr, "surfaceproperty", prop.c_str());
+
    // Cretate the logical volume reference node
-   auto childN = fGdmlE->NewChild(nullptr, nullptr, "volumeref", nullptr);
-   fGdmlE->NewAttr(childN, nullptr, "ref", geoSurf->GetVolume()->GetName());
+   XMLNodePointer_t childN = fGdmlE->NewChild(nullptr, nullptr, "volumeref", nullptr);
+   const TString &volname = fNameList->fLst[TString::Format("%p", geoSurf->GetVolume())];
+   fGdmlE->NewAttr(childN, nullptr, "ref", volname.Data());
    fGdmlE->AddChild(mainN, childN);
    return mainN;
 }
@@ -1871,12 +1899,21 @@ XMLNodePointer_t TGDMLWrite::CreateSkinSurfaceN(TGeoSkinSurface * geoSurf)
 XMLNodePointer_t TGDMLWrite::CreateBorderSurfaceN(TGeoBorderSurface * geoSurf)
 {
    XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "bordersurface", nullptr);
-   fGdmlE->NewAttr(mainN, nullptr, "name", geoSurf->GetName());
-   fGdmlE->NewAttr(mainN, nullptr, "surfaceproperty", geoSurf->GetTitle());
-   // Cretate the logical volume reference node
-   auto childN = fGdmlE->NewChild(nullptr, nullptr, "physvolref", nullptr);
-   fGdmlE->NewAttr(childN, nullptr, "ref", geoSurf->GetNode1()->GetName());
-   fGdmlE->NewAttr(childN, nullptr, "ref", geoSurf->GetNode2()->GetName());
+   std::string name = make_NCName(geoSurf->GetName());
+   std::string prop = make_NCName(geoSurf->GetTitle());
+
+   fGdmlE->NewAttr(mainN, nullptr, "name", name.c_str());
+   fGdmlE->NewAttr(mainN, nullptr, "surfaceproperty", prop.c_str());
+
+   // Cretate the logical volume reference nodes
+   XMLNodePointer_t childN = fGdmlE->NewChild(nullptr, nullptr, "physvolref", nullptr);
+   TString physvolname = fNameList->fLst[TString::Format("%p", geoSurf->GetNode1())];
+   fGdmlE->NewAttr(childN, nullptr, "ref", physvolname);
+   fGdmlE->AddChild(mainN, childN);
+
+   childN = fGdmlE->NewChild(nullptr, nullptr, "physvolref", nullptr);
+   physvolname = fNameList->fLst[TString::Format("%p", geoSurf->GetNode2())];
+   fGdmlE->NewAttr(childN, nullptr, "ref", physvolname);
    fGdmlE->AddChild(mainN, childN);
    return mainN;
 }
@@ -2629,6 +2666,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
    //get all nodes in volume
    TObjArray *nodeLst = volume->GetNodes();
    TIter next(nodeLst);
+   TString physvolname;
    TGeoNode *geoNode;
    Int_t nCnt = 0;
    //loop through all nodes
@@ -2702,7 +2740,9 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
          }
 
          //create physvol for main volume/assembly node
-         childN = CreatePhysVolN(geoNode->GetName(), geoNode->GetNumber(), nodevolname.Data(), posname.Data(), rotname.Data(), scaleN);
+         physvolname = fNameList->fLst[TString::Format("%p", geoNode)];
+         childN = CreatePhysVolN(physvolname, geoNode->GetNumber(), nodevolname.Data(),
+                                 posname.Data(), rotname.Data(), scaleN);
          fGdmlE->AddChild(volumeN, childN);
       }
       nCnt++;
