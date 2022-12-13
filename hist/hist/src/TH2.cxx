@@ -1993,16 +1993,13 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
 
 
    if (opt.Contains("d")) {
-      TVirtualPad *padsav = gPad;
-      TVirtualPad *pad = gROOT->GetSelectedPad();
-      if (pad) pad->cd();
+      TVirtualPad::TContext ctxt(gROOT->GetSelectedPad(), true, true);
       opt.Remove(opt.First("d"),1);
       if (!gPad || !gPad->FindObject(h1)) {
          h1->Draw(opt);
       } else {
          h1->Paint(opt);
       }
-      if (padsav) padsav->cd();
    }
    return h1;
 }
@@ -2326,9 +2323,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
    }
 
    if (opt.Contains("d")) {
-      TVirtualPad *padsav = gPad;
-      TVirtualPad *pad = gROOT->GetSelectedPad();
-      if (pad) pad->cd();
+      TVirtualPad::TContext ctxt(gROOT->GetSelectedPad(), true, true);
       opt.Remove(opt.First("d"),1);
       // remove also other options
       if (opt.Contains("e")) opt.Remove(opt.First("e"),1);
@@ -2337,7 +2332,6 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
       } else {
          h1->Paint(opt);
       }
-      if (padsav) padsav->cd();
    }
 
    return h1;
