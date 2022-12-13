@@ -231,6 +231,14 @@ void TGDMLWrite::SetNamingSpeed(ENamingType naming)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Ignore dummy material instance, which causes trouble reading GDML in Geant4
+
+void TGDMLWrite::SetIgnoreDummyMaterial(bool value)
+{
+   fIgnoreDummyMaterial = (value ? 1 : 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 //wrapper of all main methods for extraction
 void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, const char* filename, TString option)
 {
@@ -519,8 +527,17 @@ XMLNodePointer_t TGDMLWrite::ExtractMaterials(TList* materialsLst)
    //go through materials  - iterator and object declaration
    TIter next(materialsLst);
    TGeoMaterial *lmaterial;
+   TGeoMedium *dummy_med = TGeoVolume::DummyMedium();
+   TGeoMaterial *dummy_mat = dummy_med ? dummy_med->GetMaterial() : nullptr;
+   std::string dummy_nam = dummy_mat ? dummy_mat->GetName() : "dummy";
 
    while ((lmaterial = (TGeoMaterial *)next())) {
+      //check for dummy material: if requested, ignore it
+      std::string mname = lmaterial->GetName();
+      if (fIgnoreDummyMaterial && dummy_mat && dummy_nam == mname) {
+         Info("ExtractMaterials", "Skip dummy material: %s", dummy_nam.c_str());
+         continue;
+      }
       //generate uniq name
       TString lname = GenName(lmaterial->GetName(), TString::Format("%p", lmaterial));
 
