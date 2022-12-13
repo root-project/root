@@ -4,6 +4,7 @@
 
 #include "TROOT.h"
 
+#include <RooFitHS3/JSONIO.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
 #include "gtest/gtest.h"
@@ -20,7 +21,6 @@
 #include "RooSimultaneous.h"
 #include "RooProdPdf.h"
 #include "RooCategory.h"
-
 
 using namespace RooFit;
 
@@ -49,8 +49,8 @@ TEST(RooFitHS3, RooArgusBG)
    RooAddPdf model("model", "g+a", RooArgList(signalModel, background), RooArgList(nsig, nbkg));
 
    auto etcDir = std::string(TROOT::GetEtcDir());
-   RooJSONFactoryWSTool::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
-   RooJSONFactoryWSTool::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
+   RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
+   RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
 
    RooWorkspace work;
    work.import(model);
@@ -64,8 +64,8 @@ TEST(RooFitHS3, SimultaneousGaussians)
 
    // Import keys and factory expressions files for the RooJSONFactoryWSTool.
    auto etcDir = std::string(TROOT::GetEtcDir());
-   RooJSONFactoryWSTool::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
-   RooJSONFactoryWSTool::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
+   RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
+   RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
 
    // Create a test model: RooSimultaneous with Gaussian in one component, and
    // product of two Gaussians in the other.
