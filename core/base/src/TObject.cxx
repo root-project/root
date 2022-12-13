@@ -292,34 +292,32 @@ void TObject::DrawClass() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw a clone of this object in the current selected pad for instance with:
-/// `gROOT->SetSelectedPad(gPad)`.
+/// Draw a clone of this object in the current selected pad with:
+/// `gROOT->SetSelectedPad(c1)`.
+/// If pad was not selected - `gPad` will be used.
 
 TObject *TObject::DrawClone(Option_t *option) const
 {
-   TVirtualPad *pad    = gROOT->GetSelectedPad();
-   TVirtualPad *padsav = gPad;
-   if (pad) pad->cd();
+   TVirtualPad::TContext ctxt(true);
+   auto pad = gROOT->GetSelectedPad();
+   if (pad)
+      pad->cd();
 
    TObject *newobj = Clone();
    if (!newobj)
-      return nullptr; // intentionally not restore gPad
+      return nullptr;
+
+   if (!option || !*option)
+      option = GetDrawOption();
+
    if (pad) {
-      if (option && *option)
-         pad->GetListOfPrimitives()->Add(newobj, option);
-      else
-         pad->GetListOfPrimitives()->Add(newobj, GetDrawOption());
+      pad->GetListOfPrimitives()->Add(newobj, option);
       pad->Modified(kTRUE);
       pad->Update();
-      if (padsav) padsav->cd();
-      return newobj;
-   }
-   if (option && *option)
+   } else {
       newobj->Draw(option);
-   else
-      newobj->Draw(GetDrawOption());
+   }
 
-   if (padsav) padsav->cd();
    return newobj;
 }
 
