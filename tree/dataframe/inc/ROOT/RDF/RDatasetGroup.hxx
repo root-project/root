@@ -46,6 +46,12 @@ class RDatasetGroup {
    unsigned int fGroupId{0}; // global group index, set inside of the RDatasetSpec
 
 public:
+   RDatasetGroup(RDatasetGroup &&) = default;
+   RDatasetGroup &operator=(RDatasetGroup &&) = default;
+   RDatasetGroup(const RDatasetGroup &) = default;
+   RDatasetGroup &operator=(const RDatasetGroup &) = default;
+   RDatasetGroup() = delete;
+
    RDatasetGroup(const std::string &groupName, const std::string &treeName, const std::string &fileNameGlob,
                  const RMetaData &metaData = {});
 
