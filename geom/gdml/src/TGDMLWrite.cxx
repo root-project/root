@@ -1944,10 +1944,11 @@ XMLNodePointer_t TGDMLWrite::CreateMatrixN(TGDMLMatrix const *matrix)
 
 XMLNodePointer_t TGDMLWrite::CreateConstantN(const char *name, Double_t value)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "constant", nullptr);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "matrix", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    fGdmlE->NewAttr(mainN, nullptr, "name", name);
-   fGdmlE->NewAttr(mainN, nullptr, "value", TString::Format(fltPrecision.Data(), value));
+   fGdmlE->NewAttr(mainN, nullptr, "coldim", "1");
+   fGdmlE->NewAttr(mainN, nullptr, "values", TString::Format(fltPrecision.Data(), value));
    return mainN;
 }
 
