@@ -95,7 +95,7 @@ RDatasetSpec::RDatasetSpec(const std::vector<RDatasetGroup> &datasetGroups,
 RSpecBuilder &RSpecBuilder::AddGroup(RDatasetGroup datasetGroup)
 {
    datasetGroup.SetGroupId(fDatasetGroups.size());
-   fDatasetGroups.emplace_back(datasetGroup);
+   fDatasetGroups.push_back(std::move(datasetGroup));
    return *this;
 }
 
