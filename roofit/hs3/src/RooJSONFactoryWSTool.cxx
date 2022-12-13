@@ -843,7 +843,7 @@ std::map<std::string, std::unique_ptr<RooAbsData>> RooJSONFactoryWSTool::loadDat
          // binned
          RooArgSet vars;
          this->getObservables(p, name, vars);
-         dataMap[name] = this->readBinnedData(p, name, vars);
+         dataMap[name] = this->readBinnedData(*_workspace, p, name, vars);
       } else if (p.has_child("coordinates")) {
          // unbinned
          RooArgSet vars;
@@ -1064,14 +1064,14 @@ RooRealVar *RooJSONFactoryWSTool::createObservable(const std::string &name, cons
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // reading binned data
-std::unique_ptr<RooDataHist>
-RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &namecomp, RooArgList varlist)
+std::unique_ptr<RooDataHist> RooJSONFactoryWSTool::readBinnedData(RooWorkspace &ws, const JSONNode &n,
+                                                                  const std::string &namecomp, RooArgList varlist)
 {
    if (!n.is_map())
       RooJSONFactoryWSTool::error("data is not a map");
    if (varlist.empty()) {
       std::string obsname = "obs_x_" + namecomp;
-      varlist.add(*(_workspace->factory(obsname + "[0.]")));
+      varlist.add(*ws.factory(obsname + "[0.]"));
    }
    auto bins = RooJSONFactoryWSTool::generateBinIndices(varlist);
    if (!n.has_child("counts"))
