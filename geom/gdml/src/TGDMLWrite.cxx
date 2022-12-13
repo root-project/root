@@ -728,7 +728,6 @@ XMLNodePointer_t TGDMLWrite::CreateAtomN(Double_t atom, const char * unit)
 {
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    XMLNodePointer_t atomN = fGdmlE->NewChild(nullptr, nullptr, "atom", nullptr);
-   if ( gGeoManager->GetDefaultUnits() != TGeoManager::kRootUnits ) atom /= 1e19; // Correct for G4 unit system
    fGdmlE->NewAttr(atomN, nullptr, "unit", unit);
    fGdmlE->NewAttr(atomN, nullptr, "value", TString::Format(fltPrecision.Data(), atom));
    return atomN;
@@ -741,7 +740,6 @@ XMLNodePointer_t TGDMLWrite::CreateDN(Double_t density, const char * unit)
 {
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    XMLNodePointer_t densN = fGdmlE->NewChild(nullptr, nullptr, "D", nullptr);
-   if ( gGeoManager->GetDefaultUnits() != TGeoManager::kRootUnits ) density /= 1e16; // Correct for G4 unit system
    fGdmlE->NewAttr(densN, nullptr, "unit", unit);
    fGdmlE->NewAttr(densN, nullptr, "value", TString::Format(fltPrecision.Data(), density));
    return densN;
