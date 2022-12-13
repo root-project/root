@@ -532,7 +532,7 @@ XMLNodePointer_t TGDMLWrite::ExtractMaterials(TList* materialsLst)
    std::string dummy_nam = dummy_mat ? dummy_mat->GetName() : "dummy";
 
    while ((lmaterial = (TGeoMaterial *)next())) {
-      //check for dummy material: if requested, ignore it
+      // check for dummy material: if requested, ignore it
       std::string mname = lmaterial->GetName();
       if (fIgnoreDummyMaterial && dummy_mat && dummy_nam == mname) {
          Info("ExtractMaterials", "Skip dummy material: %s", dummy_nam.c_str());
