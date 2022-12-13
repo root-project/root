@@ -51,15 +51,7 @@ public:
    void setObject(const std::string &name, RooAbsArg *obj) { _objects[name] = obj; }
    RooAbsArg *getObject(const std::string &name) const { return _objects.at(name); }
 
-   void
-   getObservables(RooJSONFactoryWSTool *tool, const JSONNode &n, const std::string &obsnamecomp, RooArgSet &out) const
-   {
-      if (!_observables.empty()) {
-         out.add(_observables.begin(), _observables.end());
-         return;
-      }
-      tool->getObservables(n, obsnamecomp, out);
-   }
+   void getObservables(RooArgSet &out) const { out.add(_observables.begin(), _observables.end()); }
 
 private:
    std::vector<RooAbsArg *> _observables;
@@ -189,10 +181,8 @@ RooAbsPdf *getConstraint(RooWorkspace &ws, const std::string &sysname)
    return pdf;
 }
 
-bool importHistSample(RooJSONFactoryWSTool *tool, Scope const &scope, const JSONNode &p)
+bool importHistSample(RooWorkspace &ws, Scope const &scope, const JSONNode &p)
 {
-   RooWorkspace &ws = *tool->workspace();
-
    std::string name(RooJSONFactoryWSTool::name(p));
    std::string prefix = RooJSONFactoryWSTool::genPrefix(p, true);
    if (prefix.size() > 0)
@@ -205,7 +195,7 @@ bool importHistSample(RooJSONFactoryWSTool *tool, Scope const &scope, const JSON
       RooArgSet shapeElems;
       RooArgSet normElems;
       RooArgSet varlist;
-      scope.getObservables(tool, p["data"], prefix, varlist);
+      scope.getObservables(varlist);
 
       auto getBinnedData = [&](std::string const &binnedDataName) -> RooDataHist & {
          auto *dh = dynamic_cast<RooDataHist *>(ws.embeddedData(binnedDataName));
@@ -475,7 +465,7 @@ public:
       std::vector<std::string> coefnames;
       RooArgSet observables;
       if (p.has_child("observables")) {
-         scope.getObservables(tool, p, name, observables);
+         tool->getObservables(p, name, observables);
          scope.setObservables(observables);
       }
       for (const auto &comp : p["samples"].children()) {
@@ -484,7 +474,8 @@ public:
          std::string fprefix = RooJSONFactoryWSTool::genPrefix(def, true);
          try {
             if (observables.empty()) {
-               scope.getObservables(tool, comp["data"], fprefix, observables);
+               tool->getObservables(comp["data"], fprefix, observables);
+               scope.setObservables(observables);
             }
             if (def.has_child("overallSystematics"))
                ::collectNames(def["overallSystematics"], sysnames);
@@ -527,7 +518,7 @@ public:
       }
 
       for (const auto &sampleNode : p["samples"].children()) {
-         importHistSample(tool, scope, sampleNode);
+         importHistSample(ws, scope, sampleNode);
       }
 
       for (const auto &fname : funcnames) {
