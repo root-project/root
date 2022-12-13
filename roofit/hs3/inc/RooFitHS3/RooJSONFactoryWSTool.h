@@ -117,6 +117,11 @@ public:
    bool exportJSON(std::ostream &os);
    bool exportYML(std::ostream &os);
 
+   std::string exportJSONtoString();
+   std::string exportYMLtoString();
+   bool importJSONfromString(const std::string &s);
+   bool importYMLfromString(const std::string &s);
+
    void importFunctions(const RooFit::Detail::JSONNode &n);
    void importFunction(const RooFit::Detail::JSONNode &n, bool isPdf);
    void exportObject(const RooAbsArg *func, RooFit::Detail::JSONNode &n);
@@ -176,11 +181,6 @@ private:
    static std::vector<std::vector<int>> generateBinIndices(const RooArgList &vars);
    static std::map<std::string, RooJSONFactoryWSTool::Var>
    readObservables(const RooFit::Detail::JSONNode &n, const std::string &obsnamecomp);
-
-   std::string exportJSONtoString();
-   std::string exportYMLtoString();
-   bool importJSONfromString(const std::string &s);
-   bool importYMLfromString(const std::string &s);
 
    void importAllNodes(const RooFit::Detail::JSONNode &n);
 
