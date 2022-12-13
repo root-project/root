@@ -41,16 +41,17 @@ TVirtualPad::TContext::TContext(Bool_t _interactive)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor which stores gPad and set it to new value
-/// @param _interactive defines how gPad will be restored: with cd() call (kTRUE) or just by assign gPad back
+/// @param interactive defines how gPad will be restored: with cd() call (kTRUE) or just by assign gPad back
+/// @param not_null allows to set only pad which is not null
 
-TVirtualPad::TContext::TContext(TVirtualPad *set_gpad, Bool_t _interactive)
+TVirtualPad::TContext::TContext(TVirtualPad *gpad, Bool_t interactive, Bool_t not_null)
 {
-   fInteractive = _interactive;
+   fInteractive = interactive;
    fSaved = gPad;
-   if (fInteractive && set_gpad)
-      set_gpad->cd();
-   else
-      gPad = set_gpad;
+   if (fInteractive && gpad)
+      gpad->cd();
+   else if (!not_null || gpad)
+      gPad = gpad;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1385,13 +1385,10 @@ TF1 *TF1::DrawCopy(Option_t *option) const
 
 TObject *TF1::DrawDerivative(Option_t *option)
 {
-   TVirtualPad *pad = gROOT->GetSelectedPad();
-   TVirtualPad *padsav = gPad;
-   if (pad) pad->cd();
+   TVirtualPad::TContext ctxt(gROOT->GetSelectedPad(), true, true);
 
    TGraph *gr = new TGraph(this, "d");
    gr->Draw(option);
-   if (padsav) padsav->cd();
    return gr;
 }
 
@@ -1410,13 +1407,10 @@ TObject *TF1::DrawDerivative(Option_t *option)
 
 TObject *TF1::DrawIntegral(Option_t *option)
 {
-   TVirtualPad *pad = gROOT->GetSelectedPad();
-   TVirtualPad *padsav = gPad;
-   if (pad) pad->cd();
+   TVirtualPad::TContext ctxt(gROOT->GetSelectedPad(), true, true);
 
    TGraph *gr = new TGraph(this, "i");
    gr->Draw(option);
-   if (padsav) padsav->cd();
    return gr;
 }
 

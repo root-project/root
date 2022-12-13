@@ -63,7 +63,7 @@ public:
        TVirtualPad *fSaved{nullptr};
    public:
        TContext(Bool_t _interactive = kFALSE);
-       TContext(TVirtualPad *set_gpad, Bool_t _interactive = kFALSE);
+       TContext(TVirtualPad *gpad, Bool_t interactive = kFALSE, Bool_t not_null = kFALSE);
        ~TContext();
        auto IsInteractive() const { return fInteractive; }
        auto GetSaved() const { return fSaved; }

@@ -1829,15 +1829,12 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, int imin1, int imax
    // draw in current pad
    if (h1 && opt.Contains("d")) {
       opt.Remove(opt.First("d"),1);
-      TVirtualPad *padsav = gPad;
-      TVirtualPad *pad = gROOT->GetSelectedPad();
-      if (pad) pad->cd();
+      TVirtualPad::TContext ctxt(gROOT->GetSelectedPad(), true, true);
       if (!gPad || !gPad->FindObject(h1)) {
          h1->Draw(opt);
       } else {
          h1->Paint(opt);
       }
-      if (padsav) padsav->cd();
    }
 
    return h1;
@@ -2476,15 +2473,12 @@ TH1 *TH3::Project3D(Option_t *option) const
    // draw in current pad
    if (h && opt.Contains("d")) {
       opt.Remove(opt.First("d"),1);
-      TVirtualPad *padsav = gPad;
-      TVirtualPad *pad = gROOT->GetSelectedPad();
-      if (pad) pad->cd();
+      TVirtualPad::TContext ctxt(gROOT->GetSelectedPad(), true, true);
       if (!gPad || !gPad->FindObject(h)) {
          h->Draw(opt);
       } else {
          h->Paint(opt);
       }
-      if (padsav) padsav->cd();
    }
 
    return h;
