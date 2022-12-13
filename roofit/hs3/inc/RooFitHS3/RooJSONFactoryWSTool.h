@@ -103,10 +103,6 @@ public:
                                                       const std::string &namecomp, RooArgList observables);
 
    void getObservables(const RooFit::Detail::JSONNode &n, const std::string &obsnamecomp, RooArgSet &out);
-   void setScopeObservables(const RooArgList &args);
-   RooAbsArg *getScopeObject(const std::string &name);
-   void setScopeObject(const std::string &key, RooAbsArg *obj);
-   void clearScope();
 
    bool importJSON(std::string const &filename);
    bool importYML(std::string const &filename);
@@ -141,11 +137,6 @@ private:
 
       Var(int n) : nbins(n), min(0), max(n) {}
       Var(const RooFit::Detail::JSONNode &val);
-   };
-
-   struct Scope {
-      std::vector<RooAbsArg *> observables;
-      std::map<std::string, RooAbsArg *> objects;
    };
 
    RooFit::Detail::JSONNode &orootnode();
@@ -205,7 +196,6 @@ private:
    void exportDependants(const RooAbsArg *source, RooFit::Detail::JSONNode *n);
 
    // member variables
-   mutable Scope _scope;
    const RooFit::Detail::JSONNode *_rootnode_input = nullptr;
    RooFit::Detail::JSONNode *_rootnode_output = nullptr;
    RooWorkspace *_workspace;
