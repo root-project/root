@@ -6,7 +6,7 @@ import ROOT
 from DistRDF.Backends import Dask
 
 
-TREENAMES = [f"distrdf_check_friend_trees_alignment_dask_tree_{i}.root" for i in range(1, 7)]
+TREENAMES = [f"distrdf_check_friend_trees_alignment_dask_tree_{i}" for i in range(1, 7)]
 FILENAMES = [f"distrdf_check_friend_trees_alignment_dask_file_{i}.root" for i in range(1, 7)]
 
 
