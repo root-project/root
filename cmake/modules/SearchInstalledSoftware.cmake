@@ -1201,6 +1201,7 @@ if(builtin_davix)
   else()
     list(APPEND ROOT_BUILTINS Davix)
     add_subdirectory(builtins/davix)
+    set(davix ON CACHE BOOL "Enabled because builtin_davix is enabled)" FORCE)
   endif()
 endif()
 
