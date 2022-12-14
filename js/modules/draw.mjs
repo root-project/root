@@ -9,7 +9,8 @@ import { clTStreamerInfoList } from './io.mjs';
 import { clTBranchFunc } from './tree.mjs';
 import { BasePainter, compressSVG, _loadJSDOM } from './base/BasePainter.mjs';
 import { ObjectPainter, cleanup, drawRawText, getElementCanvPainter, getElementMainPainter } from './base/ObjectPainter.mjs';
-import { TPadPainter } from './gpad/TPadPainter.mjs';
+import { TPadPainter, clTButton } from './gpad/TPadPainter.mjs';
+
 
 // v7 namespace prefix
 const _v7 = 'ROOT::Experimental::';
@@ -32,6 +33,7 @@ const drawFuncs = { lst: [
    { name: clTCanvas, icon: 'img_canvas', class: () => import('./gpad/TCanvasPainter.mjs').then(h => h.TCanvasPainter), opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: 'fPrimitives' },
    { name: clTPad, icon: 'img_canvas', class: () => import('./gpad/TPadPainter.mjs').then(h => h.TPadPainter), opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: 'fPrimitives' },
    { name: 'TSlider', icon: 'img_canvas', class: () => import('./gpad/TPadPainter.mjs').then(h => h.TPadPainter) },
+   { name: clTButton, icon: 'img_canvas', class: () => import('./gpad/TPadPainter.mjs').then(h => h.TPadPainter) },
    { name: 'TFrame', icon: 'img_frame', draw: () => import('./gpad/TCanvasPainter.mjs').then(h => h.drawTFrame) },
    { name: clTPave, icon: 'img_pavetext', class: () => import('./hist/TPavePainter.mjs').then(h => h.TPavePainter) },
    { name: clTPaveText, sameas: clTPave },
