@@ -1,5 +1,17 @@
+/*
+* Project: xRooFit
+* Author:
+*   Will Buttinger, RAL 2022
+*
+* Copyright (c) 2022, CERN
+*
+* Redistribution and use in source and binary forms,
+* with or without modification, are permitted according to the terms
+* listed in LICENSE (http://roofit.sourceforge.net/license.txt)
+ */
 
 #include "xRooFit/xRooBrowser.h"
+#include "xRooFit/xRooNode.h"
 
 #include "TSystem.h"
 #include "TKey.h"
@@ -78,6 +90,22 @@ xRooBrowser::xRooBrowser() :xRooBrowser([]() {
     }
     */
 }
+
+void xRooBrowser::ls(const char* path) const {
+   if (!fNode) return;
+   if (!path) fNode->Print();
+   else {
+      // will throw exception if not found
+      fNode->at(path)->Print();
+   }
+}
+
+void xRooBrowser::cd(const char* path) {
+   auto _node = fNode->at(path); // throws exception if not found
+   fNode = _node;
+}
+
+xRooNode* xRooBrowser::GetSelected() { return dynamic_cast<xRooNode*>(TBrowser::GetSelected()); }
 
 #ifdef XROOFIT_NAMESPACE
 }

@@ -1,6 +1,16 @@
-#pragma once
+/*
+* Project: xRooFit
+* Author:
+*   Will Buttinger, RAL 2022
+*
+* Copyright (c) 2022, CERN
+*
+* Redistribution and use in source and binary forms,
+* with or without modification, are permitted according to the terms
+* listed in LICENSE (http://roofit.sourceforge.net/license.txt)
+ */
 
-#include "xRooNode.h"
+#pragma once
 
 #include "TBrowser.h"
 
@@ -8,30 +18,20 @@
 namespace XROOFIT_NAMESPACE {
 #endif
 
+class xRooNode;
+
 class xRooBrowser: public TBrowser {
 public:
     xRooBrowser();
     xRooBrowser(xRooNode* o);
 
-    xRooNode* GetSelected() { return dynamic_cast<xRooNode*>(TBrowser::GetSelected()); }
+    xRooNode* GetSelected();
 
-    void ls(const char* path = nullptr) const override {
-        if (!fNode) return;
-        if (!path) fNode->Print();
-        else {
-            // will throw exception if not found
-            fNode->at(path)->Print();
-        }
-    }
-
-    void cd(const char* path) {
-        auto _node = fNode->at(path); // throws exception if not found
-        fNode = _node;
-    }
+    void ls(const char* path = nullptr) const override;
+    void cd(const char* path);
 
 private:
     std::shared_ptr<xRooNode> fNode; //!
-
     std::shared_ptr<xRooNode> fTopNode; //!
 
 ClassDefOverride(TBrowser,0)

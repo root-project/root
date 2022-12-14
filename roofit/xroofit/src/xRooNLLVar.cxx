@@ -1,3 +1,14 @@
+/*
+* Project: xRooFit
+* Author:
+*   Will Buttinger, RAL 2022
+*
+* Copyright (c) 2022, CERN
+*
+* Redistribution and use in source and binary forms,
+* with or without modification, are permitted according to the terms
+* listed in LICENSE (http://roofit.sourceforge.net/license.txt)
+ */
 
 #define protected public
 #include "RooFitResult.h"
@@ -252,7 +263,7 @@ void xRooNLLVar::reinitialize() {
         // before creating, clear away caches if any if pdf is in ws
         if (fPdf->_myws) {
             std::set<std::string> setNames;
-            for(auto& a : fPdf->_myws->_namedSets) {
+            for(auto& a : static_cast<RooWorkspace*>(fPdf->_myws)->_namedSets) {
                 if (TString(a.first.c_str()).BeginsWith("CACHE_")) { setNames.insert(a.first); }
             }
             for(auto& a : setNames) fPdf->_myws->removeSet(a.c_str());

@@ -1,3 +1,15 @@
+/*
+* Project: xRooFit
+* Author:
+*   Will Buttinger, RAL 2022
+*
+* Copyright (c) 2022, CERN
+*
+* Redistribution and use in source and binary forms,
+* with or without modification, are permitted according to the terms
+* listed in LICENSE (http://roofit.sourceforge.net/license.txt)
+ */
+
 #pragma once
 // removed the include guard because was preventing having local version of xRooFit on top of ROOT's version
 //#ifndef XROOFIT_XROOFIT_H

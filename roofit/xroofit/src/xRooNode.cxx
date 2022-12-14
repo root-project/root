@@ -1,3 +1,15 @@
+/*
+* Project: xRooFit
+* Author:
+*   Will Buttinger, RAL 2022
+*
+* Copyright (c) 2022, CERN
+*
+* Redistribution and use in source and binary forms,
+* with or without modification, are permitted according to the terms
+* listed in LICENSE (http://roofit.sourceforge.net/license.txt)
+ */
+
 #ifndef XROOFIT_NAMESPACE
 #pragma clang diagnostic push
 #endif
@@ -30,7 +42,6 @@
 
 #include "RooAddition.h"
 
-#include "TParameter.h"
 
 #include "RooCategory.h"
 #include "RooRealVar.h"
@@ -82,7 +93,6 @@
 #include "TTimeStamp.h"
 
 #include <csignal>
-#include "TSystem.h"
 
 #include "TCanvas.h"
 #include "THStack.h"
@@ -2718,7 +2728,7 @@ bool xRooNode::SetBinError(int bin, double value) {
         auto _prodParent = fParent;
         while (_prodParent && !_prodParent->get<RooProduct>() && !_prodParent->get<RooAbsPdf>()) {
             if (_prodParent->get<PiecewiseInterpolation>() && strcmp(GetName(),"nominal")) {
-                _prodParent.reset(); break; // only the 'nominal' variation can look for a statFactor outside of the variation container
+                _prodParent.reset(); break; // only the 'nominal' variation can look for a statFactor outside the variation container
             }
             _prodParent = _prodParent->fParent;
         }
@@ -2728,7 +2738,7 @@ bool xRooNode::SetBinError(int bin, double value) {
             throw std::runtime_error("stat factor must be a paramhistfunc");
         }
 
-        // stat uncertainty lives in the "statFactor" factor, each sample has its own one
+        // stat uncertainty lives in the "statFactor" factor, each sample has its own one,
         // but they can share parameters
         if (!f_stat) {
             if (value==0) return true;

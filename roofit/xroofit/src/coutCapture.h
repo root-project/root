@@ -1,3 +1,15 @@
+/*
+* Project: xRooFit
+* Author:
+*   Will Buttinger, RAL 2022
+*
+* Copyright (c) 2022, CERN
+*
+* Redistribution and use in source and binary forms,
+* with or without modification, are permitted according to the terms
+* listed in LICENSE (http://roofit.sourceforge.net/license.txt)
+ */
+
 struct cout_redirect {
     cout_redirect(std::string& _out, size_t bufSize=102*1024) : out(_out) { old = std::cout.rdbuf(buffer.rdbuf()); old2 = std::cerr.rdbuf(buffer.rdbuf());
         old3 = stdout;
