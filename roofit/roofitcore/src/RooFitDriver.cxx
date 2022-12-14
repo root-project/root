@@ -26,7 +26,7 @@ of data transfers. An instance of this class is created every time
 RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 **/
 
-#include <RooFitDriver.h>
+#include "RooFitDriver.h"
 
 #include <RooAbsCategory.h>
 #include <RooAbsData.h>
@@ -37,9 +37,9 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooHelpers.h>
 #include <RooMsgService.h>
 #include <RooBatchCompute/Initialisation.h>
-#include <RooFit/BatchModeDataHelpers.h>
-#include <RooFit/BatchModeHelpers.h>
-#include <RooFit/CUDAHelpers.h>
+#include "RooFit/BatchModeDataHelpers.h"
+#include "RooFit/BatchModeHelpers.h"
+#include "RooFit/CUDAHelpers.h"
 #include <RooSimultaneous.h>
 
 #include "NormalizationHelpers.h"

@@ -22,13 +22,13 @@ transfered away to other classes, like the `RooFitDriver`. This class also calls
 functions from `RooBatchCompute` library to provide faster computation times.
 **/
 
-#include <RooNLLVarNew.h>
+#include "RooNLLVarNew.h"
 
 #include <RooAddition.h>
 #include <RooFormulaVar.h>
 #include <RooNaNPacker.h>
 #include <RooRealVar.h>
-#include <RooFit/Detail/Buffers.h>
+#include "RooFit/Detail/Buffers.h"
 
 #include <ROOT/StringUtils.hxx>
 
