@@ -64,22 +64,16 @@ public:
 } // anonymous namespace
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleImporter::RCStringTransformation::Transform(std::int64_t /* entry */,
-                                                                       const RImportBranch &branch, RImportField &field)
+ROOT::Experimental::RNTupleImporter::RCStringTransformation::Transform(const RImportBranch &branch, RImportField &field)
 {
    *reinterpret_cast<std::string *>(field.fFieldBuffer) = reinterpret_cast<const char *>(branch.fBranchBuffer.get());
    return RResult<void>::Success();
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleImporter::RLeafArrayTransformation::Transform(std::int64_t entry,
-                                                                         const RImportBranch &branch,
-                                                                         RImportField &field)
+ROOT::Experimental::RNTupleImporter::RLeafArrayTransformation::Transform(
+   const RImportBranch &branch, RImportField &field)
 {
-   if (entry != fEntry) {
-      fEntry = entry;
-      fNum = 0;
-   }
    auto valueSize = field.fField->GetValueSize();
    memcpy(field.fFieldBuffer, branch.fBranchBuffer.get() + (fNum * valueSize), valueSize);
    fNum++;
@@ -320,18 +314,21 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
       for (const auto &[_, c] : fLeafCountCollections) {
          for (Int_t l = 0; l < *c.fCountVal; ++l) {
             for (auto &t : c.fTransformations) {
-               auto result = t->Transform(i, fImportBranches[t->fImportBranchIdx], fImportFields[t->fImportFieldIdx]);
+               auto result = t->Transform(fImportBranches[t->fImportBranchIdx], fImportFields[t->fImportFieldIdx]);
                if (!result)
                   return R__FORWARD_ERROR(result);
             }
             c.fCollectionWriter->Fill(c.fCollectionEntry.get());
          }
+         for (auto &t : c.fTransformations)
+            t->ResetEntry();
       }
 
       for (auto &t : fImportTransformations) {
-         auto result = t->Transform(i, fImportBranches[t->fImportBranchIdx], fImportFields[t->fImportFieldIdx]);
+         auto result = t->Transform(fImportBranches[t->fImportBranchIdx], fImportFields[t->fImportFieldIdx]);
          if (!result)
             return R__FORWARD_ERROR(result);
+         t->ResetEntry();
       }
 
       ntplWriter->Fill(*fEntry);
