@@ -558,7 +558,7 @@ TEST(RDatasetSpecTest, FromSpec)
    dfWriter0.Snapshot<ULong64_t>("anotherTree", "PYspecTestFile7.root", {"z"});
 
    auto rdf =
-      FromJSON("spec.json")
+      FromSpec("spec.json")
          .DefinePerSample("name", [](unsigned int, const ROOT::RDF::RSampleInfo &id) { return id.GetGroupName(); })
          .DefinePerSample("lumi", "rdfsampleinfo_.GetD(\"lumi\")");
    auto resP = rdf.Take<ULong64_t>("z");
