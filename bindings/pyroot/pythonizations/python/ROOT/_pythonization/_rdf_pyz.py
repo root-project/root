@@ -332,31 +332,9 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     rdf_node = _handle_cpp_callables(func, rdf._OriginalFilter, func, *_convert_to_vector(args))
     if rdf_node is not None:
         return rdf_node
-
-    jitter = FunctionJitter(rdf)
-    func.__annotations__['return'] = 'bool' # return type for Filters is bool # Note: You can keep double and Filter still works.
-
-    col_list = []
-    filter_name  = ""
-    
-    if len(args) == 1:
-        if isinstance(args[0], list): 
-            col_list = args[0]
-        elif isinstance(args[0], str):
-            filter_name = args[0]
-        else:
-            raise ValueError(f"Argument should be either 'list' or 'str', not {type(args[0]).__name__}.")
-    
-    elif len(args) == 2:
-        if isinstance(args[0], list) and isinstance(args[1], str):
-            col_list = args[0]
-            filter_name = args[1]
-        else:
-            raise ValueError(f"Arguments should be ('list', 'str',) not ({type(args[0]).__name__,type(args[1]).__name__}.")
-            
-    
-    func_call = jitter.jit_function(func, col_list, extra_args)
-    return rdf._OriginalFilter("Numba::" + func_call, filter_name)
+    else:
+        raise NotImplementedError(
+            f"Passing callables of type {type(func)} will be supported in future versions of ROOT.")
 
 def _PyDefine(rdf, col_name, callable_or_str, cols = [] , extra_args = {} ):
     """
@@ -403,7 +381,6 @@ def _PyDefine(rdf, col_name, callable_or_str, cols = [] , extra_args = {} ):
     rdf_node = _handle_cpp_callables(func, rdf._OriginalDefine, col_name, func, cols)
     if rdf_node is not None:
         return rdf_node
-
-    jitter = FunctionJitter(rdf)    
-    func_call = jitter.jit_function(func, cols, extra_args)
-    return rdf._OriginalDefine(col_name, "Numba::" + func_call)
+    else:
+        raise NotImplementedError(
+            f"Passing callables of type {type(func)} will be supported in future versions of ROOT.")
