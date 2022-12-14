@@ -72,7 +72,7 @@ public:
    RDatasetSpec &WithFriends(const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNameGlobs,
                              const std::string &alias = "");
 
-   RDatasetSpec &WithRange(const RDatasetSpec::REntryRange &entryRange = {});
+   RDatasetSpec &WithGlobalRange(const RDatasetSpec::REntryRange &entryRange = {});
 };
 
 } // namespace Experimental

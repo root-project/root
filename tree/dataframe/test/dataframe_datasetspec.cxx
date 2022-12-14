@@ -284,7 +284,7 @@ TEST_P(RDatasetSpecTest, Ranges)
    }
    for (auto &spec : specs) {
       for (auto i = 0u; i < ranges.size(); ++i) {
-         auto df = RDataFrame(spec.WithRange(ranges[i]));
+         auto df = RDataFrame(spec.WithGlobalRange(ranges[i]));
          auto takeRes = df.Take<ULong64_t>("x"); // lazy action
          if (i < 6u) {                           // the first 6 ranges, are logically correct
             auto &res = *takeRes;
@@ -662,7 +662,7 @@ TEST(RDatasetSpecTest, Clusters)
                         {{"mainA"s, "CspecTestFile0.root"s},
                          {"mainB"s, "CspecTestFile1.root"s},
                          {"mainC"s, "CspecTestFile2.root"s}}});
-         spec.WithRange(range);
+         spec.WithGlobalRange(range);
          spec.WithFriends({{"friendA"s, "CspecTestFile3.root"s},
                            {"friendB"s, "CspecTestFile4.root"s},
                            {"friendC"s, "CspecTestFile5.root"s}},
