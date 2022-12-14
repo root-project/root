@@ -485,7 +485,7 @@ class TreeHeadNode(HeadNode):
             ds = ROOT.RDF.Experimental.RDatasetSpec()
             # add a group with no name to represent the whole dataset
             ds.AddGroup(("", clustered_range.treenames, clustered_range.filenames))
-            ds.WithRange((clustered_range.globalstart, clustered_range.globalend))
+            ds.WithGlobalRange((clustered_range.globalstart, clustered_range.globalend))
 
             attach_friend_info_if_present(clustered_range, ds)
 

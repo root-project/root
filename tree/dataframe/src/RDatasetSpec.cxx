@@ -114,7 +114,7 @@ RDatasetSpec &RDatasetSpec::WithFriends(const std::vector<std::pair<std::string,
    return *this;
 }
 
-RDatasetSpec &RDatasetSpec::WithRange(const RDatasetSpec::REntryRange &entryRange)
+RDatasetSpec &RDatasetSpec::WithGlobalRange(const RDatasetSpec::REntryRange &entryRange)
 {
    fEntryRange = entryRange;
    return *this;
