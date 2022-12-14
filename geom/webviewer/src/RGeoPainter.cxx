@@ -12,6 +12,7 @@
 #include <ROOT/RGeoPainter.hxx>
 
 #include "TGeoVolume.h"
+#include "TGeoManager.h"
 #include "TVirtualPad.h"
 
 using namespace ROOT::Experimental;
@@ -26,6 +27,12 @@ RGeoPainter::~RGeoPainter()
 {
 }
 
+void RGeoPainter::SetTopVisible(Bool_t on)
+{
+   fTopVisible = on ? 1 : 0;
+}
+
+
 void RGeoPainter::SetGeoManager(TGeoManager *mgr)
 {
    if (fViewer && (fGeoManager != mgr))
@@ -37,8 +44,14 @@ void RGeoPainter::SetGeoManager(TGeoManager *mgr)
 void RGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *opt)
 {
    if (gPad) {
-      // append volume to the pad, web canvas also support geometry drawing now
-      vol->AppendPad(opt);
+      auto g = vol->GetGeoManager();
+
+      // append volume or geomanager itself to the pad, web canvas also support geometry drawing now
+      if (g && (g->GetTopVolume() == vol))
+         g->AppendPad(opt);
+      else
+         vol->AppendPad(opt);
+
       return;
    }
 
@@ -55,6 +68,10 @@ void RGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *opt)
 
    // specify JSROOT draw options - here clipping on X,Y,Z axes
    fViewer->SetDrawOptions(drawopt);
+
+   if (fTopVisible >= 0)
+      fViewer->SetTopVisible(fTopVisible > 0);
+
 
    // set default limits for number of visible nodes and faces
    // when viewer created, initial values exported from TGeoManager

@@ -24,6 +24,7 @@ class RGeoPainter : public TVirtualGeoPainter {
    TGeoManager *fGeoManager{nullptr};
 
    std::shared_ptr<RGeomViewer> fViewer;
+   Int_t fTopVisible{-1};   ///<!  is s
 
 public:
    RGeoPainter(TGeoManager *manager);
@@ -99,7 +100,7 @@ public:
    void       SetNsegments(Int_t =20) override {}
    void       SetNmeshPoints(Int_t) override {}
    void       SetRaytracing(Bool_t =kTRUE) override {}
-   void       SetTopVisible(Bool_t =kTRUE) override {}
+   void       SetTopVisible(Bool_t on = kTRUE) override;
    void       SetTopVolume(TGeoVolume *) override {}
    void       SetVisLevel(Int_t =3) override {}
    void       SetVisOption(Int_t =0) override {}
