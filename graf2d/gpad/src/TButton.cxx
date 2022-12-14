@@ -119,8 +119,8 @@ TButton::TButton(const char *title, const char *method, Double_t x1, Double_t y1
       TLatex *text = new TLatex(0.5 * (fX1 + fX2), 0.5 * (fY1 + fY2), title);
       fPrimitives->Add(text);
    }
-   fLogx    = kFALSE;
-   fLogy    = kFALSE;
+   fLogx    = 0;
+   fLogy    = 0;
    SetEditable(kFALSE);
    fFocused = kFALSE;
 }
@@ -198,7 +198,7 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kButton1Up:
       SetCursor(kWatch);
       if (fFocused) {
-         if (cdpad) cdpad->cd();
+         TVirtualPad::TContext ctxt(cdpad, kTRUE, kTRUE);
          gROOT->ProcessLine(GetMethod());
       }
       //check case where pressing a button deletes itself
@@ -219,7 +219,7 @@ void TButton::Paint(Option_t *option)
    if (!fCanvas) return;
    if (!fPrimitives) fPrimitives = new TList();
    TObject *obj = GetListOfPrimitives()->First();
-   if (obj && obj->InheritsFrom(TText::Class())) {
+   if (obj && obj->InheritsFrom(TLatex::Class())) {
       TLatex *text = (TLatex*)obj;
       text->SetTitle(GetTitle());
       text->SetTextSize(GetTextSize());
@@ -241,7 +241,7 @@ void TButton::PaintModified()
    if (!fCanvas) return;
    if (!fPrimitives) fPrimitives = new TList();
    TObject *obj = GetListOfPrimitives()->First();
-   if (obj && obj->InheritsFrom(TText::Class())) {
+   if (obj && obj->InheritsFrom(TLatex::Class())) {
       TLatex *text = (TLatex*)obj;
       text->SetTitle(GetTitle());
       text->SetTextSize(GetTextSize());
@@ -268,46 +268,30 @@ void TButton::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   TVirtualPad::TContext ctxt(kTRUE);
    char quote = '"';
-   if (gROOT->ClassSaved(TButton::Class())) {
+   if (gROOT->ClassSaved(TButton::Class()))
       out<<"   ";
-   } else {
+   else
       out<<"   TButton *";
-   }
-   const char *cm = GetMethod();
-   Int_t nch = strlen(cm);
-   char *cmethod = new char[nch+10];
-   Int_t i = 0;
-   while(*cm) {
-      if (*cm == '"') {
-         cmethod[i] = '\\';
-         i++;
-      }
-      cmethod[i] = *cm;
-      i++;
-      cm++;
-   }
-   cmethod[i] = 0;
-   out<<"button = new TButton("<<quote<<GetTitle()
-      <<quote<<","<<quote<<cmethod<<quote
-      <<","<<fXlowNDC
-      <<","<<fYlowNDC
-      <<","<<fXlowNDC+fWNDC
-      <<","<<fYlowNDC+fHNDC
-      <<");"<<std::endl;
-   delete [] cmethod;
+
+   TString cmethod = GetMethod();
+   cmethod.ReplaceAll("\"", "\\\"");
+   cmethod.ReplaceAll("\\n", "\\\\n");
+   cmethod.ReplaceAll("\\t", "\\\\t");
+
+   out << "button = new TButton(" << quote << GetTitle() << quote << ","
+         << quote << cmethod << quote << "," << fXlowNDC << "," << fYlowNDC
+         << "," << fXlowNDC + fWNDC << "," << fYlowNDC + fHNDC << ");"
+         << std::endl;
 
    SaveFillAttributes(out,"button",0,1001);
    SaveLineAttributes(out,"button",1,1,1);
    SaveTextAttributes(out,"button",22,0,1,61,.65);
 
-   if (GetBorderSize() != 2) {
+   if (GetBorderSize() != 2)
       out<<"   button->SetBorderSize("<<GetBorderSize()<<");"<<std::endl;
-   }
-   if (GetBorderMode() != 1) {
+   if (GetBorderMode() != 1)
       out<<"   button->SetBorderMode("<<GetBorderMode()<<");"<<std::endl;
-   }
 
    if (GetFraming()) out<<"button->SetFraming();"<<std::endl;
    if (IsEditable()) out<<"button->SetEditable(kTRUE);"<<std::endl;
@@ -315,17 +299,17 @@ void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"   button->Draw();"<<std::endl;
 
    TIter next(GetListOfPrimitives());
-   next();  //do not save first primitive
+   next();  //do not save first primitive which should be text
 
    Int_t nprim = 0;
    while (auto obj = next()) {
-      if (!nprim) out<<"   button->cd();"<<std::endl;
-      nprim++;
-      obj->SavePrimitive(out, (Option_t *)next.GetOption());
+      if (nprim++ == 0)
+         out<<"   button->cd();"<<std::endl;
+      obj->SavePrimitive(out, next.GetOption());
    }
 
-   if (nprim && ctxt.GetSaved())
-      out<<"   "<<ctxt.GetSaved()->GetName()<<"->cd();"<<std::endl;
+   if ((nprim > 0) && gPad)
+      out<<"   "<<gPad->GetName()<<"->cd();"<<std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
