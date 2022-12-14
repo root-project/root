@@ -654,7 +654,7 @@ bool RWebDisplayHandle::DisplayUrl(const std::string &url)
 /// Produce image file using JSON data as source
 /// Invokes JSROOT drawing functionality in headless browser - Google Chrome or Mozilla Firefox
 
-bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string &json, int width, int height)
+bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string &json, int width, int height, const char *batch_file)
 {
    if (json.empty())
       return false;
@@ -705,7 +705,10 @@ bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string
    else
       return false;
 
-   TString origin = TROOT::GetDataDir() + "/js/files/canv_batch.htm";
+   if (!batch_file || !*batch_file)
+      batch_file = "/js/files/canv_batch.htm";
+
+   TString origin = TROOT::GetDataDir() + batch_file;
    if (gSystem->ExpandPathName(origin)) {
       R__LOG_ERROR(WebGUILog()) << "Fail to find " << origin;
       return false;
