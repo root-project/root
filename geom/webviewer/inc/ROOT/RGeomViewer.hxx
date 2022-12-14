@@ -84,7 +84,7 @@ public:
 
    void Update();
 
-   void SaveImage(const std::string &fname = "geometry.png");
+   void SaveImage(const std::string &fname = "geometry.png", int width = 0, int height = 0);
 
 };
 
