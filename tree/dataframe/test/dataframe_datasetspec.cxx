@@ -547,6 +547,48 @@ TEST(RDatasetSpecTest, Describe)
       gSystem->Unlink(("specTestFile" + std::to_string(i) + ".root").c_str());
 }
 
+TEST(RDatasetSpecTest, FromSpec)
+{
+   auto dfWriter0 = ROOT::RDataFrame(5).Define("z", [](ULong64_t e) { return e + 100; }, {"rdfentry_"});
+   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree", "PYspecTestFile2.root", {"z"});
+   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree", "PYspecTestFile3.root", {"z"});
+   dfWriter0.Range(4, 5).Snapshot<ULong64_t>("subTree", "PYspecTestFile4.root", {"z"});
+   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree1", "PYspecTestFile5.root", {"z"});
+   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree2", "PYspecTestFile6.root", {"z"});
+   dfWriter0.Snapshot<ULong64_t>("anotherTree", "PYspecTestFile7.root", {"z"});
+
+   auto rdf =
+      FromJSON("spec.json")
+         .DefinePerSample("name", [](unsigned int, const ROOT::RDF::RSampleInfo &id) { return id.GetGroupName(); })
+         .DefinePerSample("lumi", "rdfsampleinfo_.GetD(\"lumi\")");
+   auto resP = rdf.Take<ULong64_t>("z");
+   auto namP = rdf.Take<std::string>("name");
+   auto lumP = rdf.Take<double>("lumi");
+   auto fr1P = rdf.Take<ULong64_t>("friendTree.z");
+   auto fr2P = rdf.Take<ULong64_t>("friendChain1.z");
+   auto res = resP.GetValue();
+   auto nam = namP.GetValue();
+   auto lum = lumP.GetValue();
+   auto fr1 = fr1P.GetValue();
+   auto fr2 = fr2P.GetValue();
+
+   std::vector<ULong64_t> expectedRes{101, 102, 103, 104};
+   std::vector<std::string> names{"groupA", "groupA", "groupA", "groupB"};
+   std::vector<double> lumis{1.0, 1.0, 1.0, 0.5};
+
+   ASSERT_EQ(res.size(), expectedRes.size());
+   for (auto i = 0u; i < expectedRes.size(); ++i) {
+      EXPECT_EQ(nam[i], names[i]);
+      EXPECT_DOUBLE_EQ(lum[i], lumis[i]);
+      EXPECT_EQ(res[i], expectedRes[i]);
+      EXPECT_EQ(fr1[i], expectedRes[i]);
+      EXPECT_EQ(fr2[i], expectedRes[i]);
+   }
+
+   for (auto i = 2u; i < 8u; ++i)
+      gSystem->Unlink(("PYspecTestFile" + std::to_string(i) + ".root").c_str());
+}
+
 TEST(RMetaData, SimpleOperations)
 {
    ROOT::RDF::Experimental::RMetaData m;
