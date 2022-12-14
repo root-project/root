@@ -33,6 +33,12 @@ Bool_t TDirectory::fgAddDirectory = kTRUE;
 
 const Int_t  kMaxLen = 2048;
 
+static std::atomic_flag *GetCurrentDirectoryLock()
+{
+   thread_local std::atomic_flag gDirectory_lock = ATOMIC_FLAG_INIT;
+   return &gDirectory_lock;
+}
+
 /** \class TDirectory
 \ingroup Base
 
@@ -273,8 +279,9 @@ void TDirectory::CleanTargets()
       }
 
       for(auto ptr : fGDirectories) {
-         if (ptr->load() == this) {
-            (*ptr) = nullptr;
+         if (ptr.fCurrent->load() == this) {
+            ROOT::Internal::TSpinLockGuard(*(ptr.fLock));
+            (*ptr.fCurrent) = nullptr;
          }
       }
    }
@@ -297,6 +304,10 @@ void TDirectory::CleanTargets()
          }
       }
    }
+
+   // Wait until all register attempts are done.
+   while(fContextPeg) {}
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1251,7 +1262,7 @@ void TDirectory::EncodeNameCycle(char *buffer, const char *name, Short_t cycle)
 /// namesize.
 /// @note Edge cases:
 ///   - If the number after the `;` is larger than `SHORT_MAX`, cycle is set to `0`.
-///   - If name ends with `;*`, cycle is set to 10000`. 
+///   - If name ends with `;*`, cycle is set to 10000`.
 ///   - In all other cases, i.e. when number is not a digit or buffer is a nullptr, cycle is set to `9999`.
 
 void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
@@ -1261,7 +1272,7 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
       cycle = 9999;
       return;
    }
-   
+
    size_t len = 0;
    const char *ni = strchr(buffer, ';');
 
@@ -1297,12 +1308,29 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
       cycle = 9999;
 }
 
+void TDirectory::TContext::RegisterCurrentDirectory()
+{
+   // peg the current directly
+   TDirectory *current;
+   {
+      ROOT::Internal::TSpinLockGuard slg(*GetCurrentDirectoryLock());
+      current = TDirectory::CurrentDirectory().load();
+      if (!current || !current->IsBuilt())
+         return;
+      ++(current->fContextPeg);
+   }
+   current->RegisterContext(this);
+   --(current->fContextPeg);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 /// Register a TContext pointing to this TDirectory object
 
 void TDirectory::RegisterContext(TContext *ctxt) {
    ROOT::Internal::TSpinLockGuard slg(fSpinLock);
 
+   if (!IsBuilt())
+      return;
    if (fContext) {
       TContext *current = fContext;
       while(current->fNext) {
@@ -1323,7 +1351,7 @@ void TDirectory::RegisterGDirectory(std::atomic<TDirectory*> *globalptr)
    ROOT::Internal::TSpinLockGuard slg(fSpinLock);
 
    if (std::find(fGDirectories.begin(), fGDirectories.end(), globalptr) == fGDirectories.end())
-      fGDirectories.push_back(globalptr);
+      fGDirectories.emplace_back(GetCurrentDirectoryLock(), (std::atomic<TDirectory *> *)globalptr);
    // globalptr->load()->fGDirectories will still contain globalptr, but we cannot
    // know whether globalptr->load() has been deleted by another thread in the meantime.
 }
