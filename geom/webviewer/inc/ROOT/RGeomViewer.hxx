@@ -72,6 +72,11 @@ public:
       fDesc.SetVisLevel(lvl);
    }
 
+   void SetTopVisible(bool on = true)
+   {
+      fDesc.SetTopVisible(on);
+   }
+
    /** Configures default hierarchy browser visibility, only has effect before showing web window */
    void SetShowHierarchy(bool on = true) { fShowHierarchy = on; }
 

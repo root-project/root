@@ -310,6 +310,11 @@ public:
    /** Returns draw options, used for JSROOT TGeoPainter */
    std::string GetDrawOptions() const { return fCfg.drawopt; }
 
+   /** Set draw options as string for JSROOT TGeoPainter */
+   void SetTopVisible(bool on = true) { fCfg.showtop = on; }
+   /** Returns draw options, used for JSROOT TGeoPainter */
+   bool GetTopVisible() const { return fCfg.showtop; }
+
    /** Instruct to build binary 3D model already on the server (true) or send TGeoShape as is to client, which can build model itself */
    void SetBuildShapes(int lvl = 1) { fCfg.build_shapes = lvl; }
    /** Returns true if binary 3D model build already by C++ server (default) */
