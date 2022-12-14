@@ -178,15 +178,35 @@ void RGeomViewer::SetDrawOptions(const std::string &opt)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// Produce PNG image of drawn geometry
-/// Drawing should be completed at the moment
-/// Executed asynchronous - method returns immediately, image stored when received from the client
+/// Produce PNG image of the geometry
+/// If web-browser is shown and drawing completed, image is requested from the browser.
+/// In this case method executed asynchronously - it returns immediately and image will stored shortly afterwards when received from the client
+/// Height and width parameters are ignored in that case and derived from actual drawing size in the browser.
+/// Another possibility is to invoke headless browser, providing positive width and height parameter explicitely
+///
 
-void RGeomViewer::SaveImage(const std::string &fname)
+void RGeomViewer::SaveImage(const std::string &fname, int width, int height)
 {
-    unsigned connid = fWebWindow->GetConnectionId();
-    if (connid)
-       fWebWindow->Send(connid, "IMAGE:"s + fname);
+   unsigned connid = fWebWindow ? fWebWindow->GetConnectionId() : 0;
+
+   if (connid && (width <= 0) && (height <= 0)) {
+      fWebWindow->Send(connid, "IMAGE:"s + fname);
+   } else {
+      if (width <= 0) width = 800;
+      if (height <= 0) height = width;
+
+      if (!fDesc.HasDrawData())
+         fDesc.ProduceDrawData();
+
+      std::string json = fDesc.GetDrawJson();
+      if (json.find("GDRAW:") != 0) {
+         printf("GDRAW missing!!!!\n");
+         return;
+      }
+      json.erase(0, 6);
+
+      RWebDisplayHandle::ProduceImage(fname, json, width, height, "/js/files/geom_batch.htm");
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -194,7 +214,7 @@ void RGeomViewer::SaveImage(const std::string &fname)
 
 void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 {
-   printf("Recv %s\n", arg.substr(0,100).c_str());
+   // printf("Recv %s\n", arg.substr(0,100).c_str());
 
    if (arg == "GETDRAW") {
 
