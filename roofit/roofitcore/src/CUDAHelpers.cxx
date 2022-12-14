@@ -10,7 +10,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooFit/CUDAHelpers.h>
+#include "RooFit/CUDAHelpers.h"
 
 #include <RooBatchCompute.h>
 
