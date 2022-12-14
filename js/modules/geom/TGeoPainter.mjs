@@ -3426,10 +3426,64 @@ class TGeoPainter extends ObjectPainter {
       this._clones = clones;
    }
 
+    /** @summary Extract shapes from draw message of geometry painter
+      * @desc For the moment used in batch production */
+   extractRawShapes(draw_msg, recreate) {
+      let nodes = null, old_gradpersegm = 0;
+
+      // array for descriptors for each node
+      // if array too large (>1M), use JS object while only ~1K nodes are expected to be used
+      if (recreate) {
+         // if (draw_msg.kind !== "draw") return false;
+         nodes = (draw_msg.numnodes > 1e6) ? { length: draw_msg.numnodes } : new Array(draw_msg.numnodes); // array for all nodes
+      }
+
+      draw_msg.nodes.forEach(node => {
+         node = ClonedNodes.formatServerElement(node);
+         if (nodes)
+            nodes[node.id] = node;
+         else
+            this._clones.updateNode(node);
+      });
+
+      if (recreate) {
+         this._clones_owner = true;
+         this._clones = new ClonedNodes(null, nodes);
+         this._clones.name_prefix = this._clones.getNodeName(0);
+         // normally only need when making selection, not used in geo viewer
+         // this.geo_clones.setMaxVisNodes(draw_msg.maxvisnodes);
+         // this.geo_clones.setVisLevel(draw_msg.vislevel);
+         // parameter need for visualization with transparency
+         // TODO: provide from server
+         this._clones.maxdepth = 20;
+      }
+
+      let nsegm = 0;
+      if (draw_msg.cfg)
+         nsegm = draw_msg.cfg.nsegm;
+
+      if (nsegm) {
+         old_gradpersegm = geoCfg("GradPerSegm");
+         geoCfg("GradPerSegm", 360 / Math.max(nsegm,6));
+      }
+
+      for (let cnt = 0; cnt < draw_msg.visibles.length; ++cnt) {
+         let item = draw_msg.visibles[cnt], rd = item.ri;
+
+         // entry may be provided without shape - it is ok
+         if (rd)
+            item.server_shape = rd.server_shape = createServerGeometry(rd, nsegm);
+      }
+
+      if (old_gradpersegm)
+         geoCfg("GradPerSegm", old_gradpersegm);
+
+      return true;
+   }
+
    /** @summary Prepare drawings
      * @desc Return value used as promise for painter */
    async prepareObjectDraw(draw_obj, name_prefix) {
-
       // if did cleanup - ignore all kind of activity
       if (this.did_cleanup)
          return null;

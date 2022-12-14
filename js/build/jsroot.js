@@ -65218,6 +65218,9734 @@ __proto__: null,
 TH3Painter: TH3Painter
 });
 
+/// CSG library for THREE.js
+
+const EPSILON = 1e-5,
+      COPLANAR = 0,
+      FRONT = 1,
+      BACK = 2,
+      SPANNING = FRONT | BACK;
+
+class Vertex {
+
+   constructor(x, y, z, nx, ny, nz) {
+      this.x = x;
+      this.y = y;
+      this.z = z;
+      this.nx = nx;
+      this.ny = ny;
+      this.nz = nz;
+   }
+
+   setnormal(nx, ny, nz) {
+      this.nx = nx;
+      this.ny = ny;
+      this.nz = nz;
+   }
+
+   clone() {
+      return new Vertex( this.x, this.y, this.z, this.nx, this.ny, this.nz);
+   }
+
+   add( vertex ) {
+      this.x += vertex.x;
+      this.y += vertex.y;
+      this.z += vertex.z;
+      return this;
+   }
+
+   subtract( vertex ) {
+      this.x -= vertex.x;
+      this.y -= vertex.y;
+      this.z -= vertex.z;
+      return this;
+   }
+
+   // multiplyScalar( scalar ) {
+   //   this.x *= scalar;
+   //   this.y *= scalar;
+   //   this.z *= scalar;
+   //   return this;
+   // }
+
+   // cross( vertex ) {
+   //    let x = this.x, y = this.y, z = this.z,
+   //        vx = vertex.x, vy = vertex.y, vz = vertex.z;
+   //
+   //    this.x = y * vz - z * vy;
+   //    this.y = z * vx - x * vz;
+   //    this.z = x * vy - y * vx;
+   //
+   //    return this;
+   // }
+
+   cross3( vx, vy, vz ) {
+      let x = this.x, y = this.y, z = this.z;
+
+      this.x = y * vz - z * vy;
+      this.y = z * vx - x * vz;
+      this.z = x * vy - y * vx;
+
+      return this;
+   }
+
+
+   normalize() {
+      let length = Math.sqrt( this.x**2 + this.y**2 + this.z**2 );
+
+      this.x /= length;
+      this.y /= length;
+      this.z /= length;
+
+      return this;
+   }
+
+   dot( vertex ) {
+      return this.x*vertex.x + this.y*vertex.y + this.z*vertex.z;
+   }
+
+   diff( vertex ) {
+      let dx = (this.x - vertex.x),
+          dy = (this.y - vertex.y),
+          dz = (this.z - vertex.z),
+          len2 = this.x**2 + this.y**2 + this.z**2;
+
+      return (dx**2 + dy**2 + dz**2) / (len2 > 0 ? len2 : 1e-10);
+   }
+
+/*
+   lerp( a, t ) {
+      this.add(
+         a.clone().subtract( this ).multiplyScalar( t )
+      );
+
+      this.normal.add(
+         a.normal.clone().sub( this.normal ).multiplyScalar( t )
+      );
+
+      //this.uv.add(
+      //   a.uv.clone().sub( this.uv ).multiplyScalar( t )
+      //);
+
+      return this;
+   };
+
+   interpolate( other, t ) {
+      return this.clone().lerp( other, t );
+   };
+*/
+
+   interpolate( a, t ) {
+      let t1 = 1 - t;
+      return new Vertex(this.x*t1 + a.x*t, this.y*t1 + a.y*t, this.z*t1 + a.z*t,
+                        this.nx*t1 + a.nx*t, this.ny*t1 + a.ny*t, this.nz*t1 + a.nz*t);
+   }
+
+   applyMatrix4(m) {
+
+      // input: Matrix4 affine matrix
+
+      let x = this.x, y = this.y, z = this.z, e = m.elements;
+
+      this.x = e[0] * x + e[4] * y + e[8]  * z + e[12];
+      this.y = e[1] * x + e[5] * y + e[9]  * z + e[13];
+      this.z = e[2] * x + e[6] * y + e[10] * z + e[14];
+
+      x = this.nx; y = this.ny; z = this.nz;
+
+      this.nx = e[0] * x + e[4] * y + e[8]  * z;
+      this.ny = e[1] * x + e[5] * y + e[9]  * z;
+      this.nz = e[2] * x + e[6] * y + e[10] * z;
+
+      return this;
+   }
+
+} // class Vertex
+
+
+class Polygon {
+
+   constructor(vertices, parent, more) {
+      this.vertices = vertices || [];
+      this.nsign = 1;
+      if (parent)
+         this.copyProperties(parent, more);
+      else if (this.vertices.length > 0)
+         this.calculateProperties();
+   }
+
+   copyProperties(parent, more) {
+      this.normal = parent.normal; // .clone();
+      this.w = parent.w;
+      this.nsign = parent.nsign;
+      if (more && (parent.id !== undefined)) {
+         this.id = parent.id;
+         this.parent = parent;
+      }
+      return this;
+   }
+
+   calculateProperties(force) {
+      if (this.normal && !force) return;
+
+      let a = this.vertices[0],
+          b = this.vertices[1],
+          c = this.vertices[2];
+
+      this.nsign = 1;
+
+      //this.normal = b.clone().subtract( a ).cross( c.clone().subtract( a ) ).normalize();
+
+      this.normal = new Vertex(b.x - a.x, b.y - a.y, b.z - a.z, 0, 0, 0).cross3(c.x - a.x, c.y - a.y, c.z - a.z).normalize();
+
+      this.w = this.normal.dot( a );
+      return this;
+   }
+
+   clone() {
+      let vertice_count = this.vertices.length,
+          vertices = [];
+
+      for (let i = 0; i < vertice_count; ++i )
+         vertices.push( this.vertices[i].clone() );
+
+      return new Polygon(vertices, this);
+   }
+
+   flip() {
+
+      /// normal is not changed, only sign variable
+      //this.normal.multiplyScalar( -1 );
+      //this.w *= -1;
+
+      this.nsign *= -1;
+
+      this.vertices.reverse();
+
+      return this;
+   }
+
+   classifyVertex( vertex ) {
+      let side_value = this.nsign * (this.normal.dot( vertex ) - this.w);
+
+      if ( side_value < -EPSILON ) return BACK;
+      if ( side_value > EPSILON ) return FRONT;
+      return COPLANAR;
+   }
+
+   classifySide( polygon ) {
+      let num_positive = 0, num_negative = 0,
+          vertice_count = polygon.vertices.length;
+
+      for (let i = 0; i < vertice_count; ++i ) {
+         let classification = this.classifyVertex( polygon.vertices[i] );
+         if ( classification === FRONT ) {
+            ++num_positive;
+         } else if ( classification === BACK ) {
+            ++num_negative;
+         }
+      }
+
+      if ( num_positive > 0 && num_negative === 0 ) return FRONT;
+      if ( num_positive === 0 && num_negative > 0 ) return BACK;
+      if ( num_positive === 0 && num_negative === 0 ) return COPLANAR;
+      return SPANNING;
+   }
+
+   splitPolygon( polygon, coplanar_front, coplanar_back, front, back ) {
+      let classification = this.classifySide( polygon );
+
+      if ( classification === COPLANAR ) {
+
+         ( (this.nsign * polygon.nsign * this.normal.dot( polygon.normal ) > 0) ? coplanar_front : coplanar_back ).push( polygon );
+
+      } else if ( classification === FRONT ) {
+
+         front.push( polygon );
+
+      } else if ( classification === BACK ) {
+
+         back.push( polygon );
+
+      } else {
+
+         let vertice_count = polygon.vertices.length,
+             nnx = this.normal.x,
+             nny = this.normal.y,
+             nnz = this.normal.z,
+             i, j, ti, tj, vi, vj,
+             t, v,
+             f = [], b = [];
+
+         for ( i = 0; i < vertice_count; ++i ) {
+
+            j = (i + 1) % vertice_count;
+            vi = polygon.vertices[i];
+            vj = polygon.vertices[j];
+            ti = this.classifyVertex( vi );
+            tj = this.classifyVertex( vj );
+
+            if ( ti != BACK ) f.push( vi );
+            if ( ti != FRONT ) b.push( vi );
+            if ( (ti | tj) === SPANNING ) {
+               // t = ( this.w - this.normal.dot( vi ) ) / this.normal.dot( vj.clone().subtract( vi ) );
+               //v = vi.clone().lerp( vj, t );
+
+               t = (this.w - (nnx*vi.x + nny*vi.y + nnz*vi.z)) / (nnx*(vj.x-vi.x) + nny*(vj.y-vi.y) + nnz*(vj.z-vi.z));
+
+               v = vi.interpolate( vj, t );
+               f.push( v );
+               b.push( v );
+            }
+         }
+
+         //if ( f.length >= 3 ) front.push( new Polygon( f ).calculateProperties() );
+         //if ( b.length >= 3 ) back.push( new Polygon( b ).calculateProperties() );
+         if ( f.length >= 3 ) front.push( new Polygon( f, polygon, true ) );
+         if ( b.length >= 3 ) back.push( new Polygon( b, polygon, true ) );
+      }
+   }
+
+} // class Polygon
+
+
+class Node {
+   constructor(polygons, nodeid) {
+      this.polygons = [];
+      this.front = this.back = undefined;
+
+      if (!polygons) return;
+
+      this.divider = polygons[0].clone();
+
+      let polygon_count = polygons.length,
+          front = [], back = [];
+
+      for (let i = 0; i < polygon_count; ++i) {
+         if (nodeid !== undefined) {
+            polygons[i].id = nodeid++;
+            delete polygons[i].parent;
+         }
+
+         // by difinition polygon should be COPLANAR for itself
+         if (i == 0)
+            this.polygons.push(polygons[0]);
+         else
+            this.divider.splitPolygon( polygons[i], this.polygons, this.polygons, front, back );
+      }
+
+      if (nodeid !== undefined) this.maxnodeid = nodeid;
+
+      if (front.length > 0)
+         this.front = new Node( front );
+
+      if (back.length > 0)
+         this.back = new Node( back );
+   }
+
+   //isConvex(polygons) {
+   //   let i, j, len = polygons.length;
+   //   for ( i = 0; i < len; ++i )
+   //      for ( j = 0; j < len; ++j )
+   //         if ( i !== j && polygons[i].classifySide( polygons[j] ) !== BACK ) return false;
+   //   return true;
+   //}
+
+   build( polygons ) {
+      let polygon_count = polygons.length,
+          first = 0, front = [], back = [];
+
+      if ( !this.divider ) {
+         this.divider = polygons[0].clone();
+         this.polygons.push(polygons[0]);
+         first = 1;
+      }
+
+      for (let i = first; i < polygon_count; ++i )
+         this.divider.splitPolygon( polygons[i], this.polygons, this.polygons, front, back );
+
+      if (front.length > 0) {
+         if ( !this.front ) this.front = new Node();
+         this.front.build( front );
+      }
+
+      if (back.length > 0) {
+         if ( !this.back ) this.back = new Node();
+         this.back.build( back );
+      }
+   }
+
+   collectPolygons(arr) {
+      if (arr === undefined)
+         arr = [];
+      let len = this.polygons.length;
+      for (let i = 0; i < len; ++i)
+         arr.push(this.polygons[i]);
+      this.front?.collectPolygons(arr);
+      this.back?.collectPolygons(arr);
+      return arr;
+   }
+
+   numPolygons() {
+      return this.polygons.length + (this.front?.numPolygons() || 0) + (this.back?.numPolygons() || 0);
+   }
+
+   clone() {
+      let node = new Node();
+
+      node.divider = this.divider?.clone();
+      node.polygons = this.polygons.map( polygon => polygon.clone() );
+      node.front = this.front?.clone();
+      node.back = this.back?.clone();
+
+      return node;
+   }
+
+   invert() {
+      let polygon_count = this.polygons.length;
+
+      for (let i = 0; i < polygon_count; ++i )
+         this.polygons[i].flip();
+
+      this.divider.flip();
+      if ( this.front ) this.front.invert();
+      if ( this.back ) this.back.invert();
+
+      let temp = this.front;
+      this.front = this.back;
+      this.back = temp;
+
+      return this;
+   }
+
+   clipPolygons( polygons ) {
+
+      if ( !this.divider ) return polygons.slice();
+
+      let polygon_count = polygons.length, front = [], back = [];
+
+      for (let i = 0; i < polygon_count; ++i )
+         this.divider.splitPolygon( polygons[i], front, back, front, back );
+
+      if ( this.front ) front = this.front.clipPolygons( front );
+      if ( this.back ) back = this.back.clipPolygons( back );
+      else back = [];
+
+      return front.concat( back );
+   }
+
+   clipTo( node ) {
+      this.polygons = node.clipPolygons( this.polygons );
+      if ( this.front ) this.front.clipTo( node );
+      if ( this.back ) this.back.clipTo( node );
+   }
+
+ } // class Node
+
+
+function createBufferGeometry(polygons) {
+   let i, j, polygon_count = polygons.length, buf_size = 0;
+
+   for ( i = 0; i < polygon_count; ++i )
+      buf_size += (polygons[i].vertices.length - 2) * 9;
+
+   let positions_buf = new Float32Array(buf_size),
+       normals_buf = new Float32Array(buf_size),
+       iii = 0, polygon;
+
+   function CopyVertex(vertex) {
+
+      positions_buf[iii] = vertex.x;
+      positions_buf[iii+1] = vertex.y;
+      positions_buf[iii+2] = vertex.z;
+
+      normals_buf[iii] = polygon.nsign * vertex.nx;
+      normals_buf[iii+1] = polygon.nsign * vertex.ny;
+      normals_buf[iii+2] = polygon.nsign * vertex.nz;
+      iii+=3;
+   }
+
+   for ( i = 0; i < polygon_count; ++i ) {
+      polygon = polygons[i];
+      for ( j = 2; j < polygon.vertices.length; ++j ) {
+         CopyVertex(polygon.vertices[0]);
+         CopyVertex(polygon.vertices[j-1]);
+         CopyVertex(polygon.vertices[j]);
+      }
+   }
+
+   let geometry = new BufferGeometry();
+   geometry.setAttribute('position', new BufferAttribute(positions_buf, 3));
+   geometry.setAttribute('normal', new BufferAttribute(normals_buf, 3));
+
+   // geometry.computeVertexNormals();
+   return geometry;
+}
+
+
+class Geometry {
+
+   constructor(geometry, transfer_matrix, nodeid, flippedMesh) {
+      // Convert BufferGeometry to ThreeBSP
+
+      if ( geometry instanceof Mesh ) {
+         // #todo: add hierarchy support
+         geometry.updateMatrix();
+         transfer_matrix = this.matrix = geometry.matrix.clone();
+         geometry = geometry.geometry;
+      } else if ( geometry instanceof Node ) {
+         this.tree = geometry;
+         this.matrix = null; // new Matrix4;
+         return this;
+      } else if ( geometry instanceof BufferGeometry ) {
+         let pos_buf = geometry.getAttribute('position').array,
+             norm_buf = geometry.getAttribute('normal').array,
+             polygons = [], polygon, vert1, vert2, vert3;
+
+         for (let i=0; i < pos_buf.length; i+=9) {
+            polygon = new Polygon;
+
+            vert1 = new Vertex( pos_buf[i], pos_buf[i+1], pos_buf[i+2], norm_buf[i], norm_buf[i+1], norm_buf[i+2]);
+            if (transfer_matrix) vert1.applyMatrix4(transfer_matrix);
+
+            vert2 = new Vertex( pos_buf[i+3], pos_buf[i+4], pos_buf[i+5], norm_buf[i+3], norm_buf[i+4], norm_buf[i+5]);
+            if (transfer_matrix) vert2.applyMatrix4(transfer_matrix);
+
+            vert3 = new Vertex( pos_buf[i+6], pos_buf[i+7], pos_buf[i+8], norm_buf[i+6], norm_buf[i+7], norm_buf[i+8]);
+            if (transfer_matrix) vert3.applyMatrix4(transfer_matrix);
+
+            if (flippedMesh) polygon.vertices.push( vert1, vert3, vert2 );
+                        else polygon.vertices.push( vert1, vert2, vert3 );
+
+            polygon.calculateProperties(true);
+            polygons.push( polygon );
+         }
+
+         this.tree = new Node( polygons, nodeid );
+         if (nodeid !== undefined) this.maxid = this.tree.maxnodeid;
+         return this;
+
+      } else if (geometry.polygons && (geometry.polygons[0] instanceof Polygon)) {
+         let polygons = geometry.polygons;
+
+         for (let i = 0; i < polygons.length; ++i) {
+            let polygon = polygons[i];
+            if (transfer_matrix) {
+               let new_vertices = [];
+
+               for (let n = 0; n < polygon.vertices.length; ++n)
+                  new_vertices.push(polygon.vertices[n].clone().applyMatrix4(transfer_matrix));
+
+               polygon.vertices = new_vertices;
+            }
+
+            polygon.calculateProperties(transfer_matrix);
+         }
+
+         this.tree = new Node( polygons, nodeid );
+         if (nodeid !== undefined) this.maxid = this.tree.maxnodeid;
+         return this;
+
+      } else {
+         throw Error('ThreeBSP: Given geometry is unsupported');
+      }
+
+      let polygons = [],
+          nfaces = geometry.faces.length,
+          face, polygon, vertex, normal, useVertexNormals;
+
+      for (let i = 0; i < nfaces; ++i ) {
+         face = geometry.faces[i];
+         normal = face.normal;
+         // faceVertexUvs = geometry.faceVertexUvs[0][i];
+         polygon = new Polygon;
+
+         useVertexNormals = face.vertexNormals && (face.vertexNormals.length==3);
+
+         vertex = geometry.vertices[ face.a ];
+         if (useVertexNormals) normal = face.vertexNormals[0];
+         // uvs = faceVertexUvs ? new Vector2( faceVertexUvs[0].x, faceVertexUvs[0].y ) : null;
+         vertex = new Vertex( vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /*face.normal , uvs */ );
+         if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
+         polygon.vertices.push( vertex );
+
+         vertex = geometry.vertices[ face.b ];
+         if (useVertexNormals) normal = face.vertexNormals[1];
+         //uvs = faceVertexUvs ? new Vector2( faceVertexUvs[1].x, faceVertexUvs[1].y ) : null;
+         vertex = new Vertex( vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /*face.normal , uvs */ );
+         if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
+         polygon.vertices.push( vertex );
+
+         vertex = geometry.vertices[ face.c ];
+         if (useVertexNormals) normal = face.vertexNormals[2];
+         // uvs = faceVertexUvs ? new Vector2( faceVertexUvs[2].x, faceVertexUvs[2].y ) : null;
+         vertex = new Vertex( vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /*face.normal, uvs */ );
+         if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
+         polygon.vertices.push( vertex );
+
+         polygon.calculateProperties(true);
+         polygons.push( polygon );
+      }
+
+      this.tree = new Node( polygons, nodeid );
+      if (nodeid !== undefined) this.maxid = this.tree.maxnodeid;
+   }
+
+   subtract( other_tree ) {
+      let a = this.tree.clone(),
+          b = other_tree.tree.clone();
+
+      a.invert();
+      a.clipTo( b );
+      b.clipTo( a );
+      b.invert();
+      b.clipTo( a );
+      b.invert();
+      a.build( b.collectPolygons() );
+      a.invert();
+      a = new Geometry( a );
+      a.matrix = this.matrix;
+      return a;
+   }
+
+   union( other_tree ) {
+      let a = this.tree.clone(),
+          b = other_tree.tree.clone();
+
+      a.clipTo( b );
+      b.clipTo( a );
+      b.invert();
+      b.clipTo( a );
+      b.invert();
+      a.build( b.collectPolygons() );
+      a = new Geometry( a );
+      a.matrix = this.matrix;
+      return a;
+   }
+
+   intersect( other_tree ) {
+      let a = this.tree.clone(),
+          b = other_tree.tree.clone();
+
+      a.invert();
+      b.clipTo( a );
+      b.invert();
+      a.clipTo( b );
+      b.clipTo( a );
+      a.build( b.collectPolygons() );
+      a.invert();
+      a = new Geometry( a );
+      a.matrix = this.matrix;
+      return a;
+   }
+
+   tryToCompress(polygons) {
+
+      if (this.maxid === undefined) return;
+
+      let arr = [], parts, foundpair,
+          nreduce = 0, n, len = polygons.length,
+          p, p1, p2, i1, i2;
+
+      // sort out polygons
+      for (n = 0; n < len; ++n) {
+         p = polygons[n];
+         if (p.id === undefined) continue;
+         if (arr[p.id] === undefined) arr[p.id] = [];
+
+         arr[p.id].push(p);
+      }
+
+      for(n = 0; n < arr.length; ++n) {
+         parts = arr[n];
+         if (parts === undefined) continue;
+
+         len = parts.length;
+
+         foundpair = (len > 1);
+
+         while (foundpair) {
+            foundpair = false;
+
+            for (i1 = 0; i1 < len-1; ++i1) {
+               p1 = parts[i1];
+               if (!p1?.parent) continue;
+               for (i2 = i1+1; i2 < len; ++i2) {
+                  p2 = parts[i2];
+                  if (p2 && (p1.parent === p2.parent) && (p1.nsign === p2.nsign)) {
+
+                     if (p1.nsign !== p1.parent.nsign) p1.parent.flip();
+
+                     nreduce++;
+                     parts[i1] = p1.parent;
+                     parts[i2] = null;
+                     if (p1.parent.vertices.length < 3) console.log('something wrong with parent');
+                     foundpair = true;
+                     break;
+                  }
+               }
+            }
+         }
+      }
+
+      if (nreduce > 0) {
+         polygons.splice(0, polygons.length);
+
+         for(n = 0; n < arr.length; ++n) {
+            parts = arr[n];
+            if (parts !== undefined)
+               for (i1 = 0, len = parts.length; i1 < len; ++i1)
+                  if (parts[i1]) polygons.push(parts[i1]);
+         }
+
+      }
+   }
+
+   direct_subtract( other_tree ) {
+      let a = this.tree,
+          b = other_tree.tree;
+      a.invert();
+      a.clipTo( b );
+      b.clipTo( a );
+      b.invert();
+      b.clipTo( a );
+      b.invert();
+      a.build( b.collectPolygons() );
+      a.invert();
+      return this;
+   }
+
+   direct_union( other_tree ) {
+      let a = this.tree,
+          b = other_tree.tree;
+
+      a.clipTo( b );
+      b.clipTo( a );
+      b.invert();
+      b.clipTo( a );
+      b.invert();
+      a.build( b.collectPolygons() );
+      return this;
+   }
+
+   direct_intersect( other_tree ) {
+      let a = this.tree,
+          b = other_tree.tree;
+
+      a.invert();
+      b.clipTo( a );
+      b.invert();
+      a.clipTo( b );
+      b.clipTo( a );
+      a.build( b.collectPolygons() );
+      a.invert();
+      return this;
+   }
+
+   cut_from_plane( other_tree) {
+      // just cut peaces from second geometry, which just simple plane
+
+      let a = this.tree,
+          b = other_tree.tree;
+
+      a.invert();
+      b.clipTo( a );
+
+      return this;
+   }
+
+   scale(x,y,z) {
+      // try to scale as BufferGeometry
+      let polygons = this.tree.collectPolygons();
+
+      for (let i = 0; i < polygons.length; ++i) {
+         let polygon = polygons[i];
+         for (let k=0; k < polygon.vertices.length; ++k) {
+            let v = polygon.vertices[k];
+            v.x *= x;
+            v.y *= y;
+            v.z *= z;
+         }
+         polygon.calculateProperties(true);
+      }
+   }
+
+   toPolygons() {
+      let polygons = this.tree.collectPolygons();
+
+      this.tryToCompress(polygons);
+
+      for (let i = 0; i < polygons.length; ++i ) {
+         delete polygons[i].id;
+         delete polygons[i].parent;
+      }
+
+      return polygons;
+   }
+
+   toBufferGeometry() {
+      return createBufferGeometry(this.toPolygons());
+   }
+
+   toMesh( material ) {
+      let geometry = this.toBufferGeometry(),
+         mesh = new Mesh( geometry, material );
+
+      if (this.matrix) {
+         mesh.position.setFromMatrixPosition( this.matrix );
+         mesh.rotation.setFromRotationMatrix( this.matrix );
+      }
+
+      return mesh;
+   }
+
+} // class Geometry
+
+/** @summary create geometry to make cut on specified axis
+  * @private */
+function createNormal(axis_name, pos, size) {
+   if (!size || (size < 10000)) size = 10000;
+
+   let vertices;
+
+   switch(axis_name) {
+      case 'x':
+         vertices = [ new Vertex(pos, -3*size,    size, 1, 0, 0),
+                      new Vertex(pos,    size, -3*size, 1, 0, 0),
+                      new Vertex(pos,    size,    size, 1, 0, 0) ];
+         break;
+      case 'y':
+         vertices = [ new Vertex(-3*size,  pos,    size, 0, 1, 0),
+                      new Vertex(   size,  pos,    size, 0, 1, 0),
+                      new Vertex(   size,  pos, -3*size, 0, 1, 0) ];
+         break;
+      // case 'z':
+      default:
+         vertices = [ new Vertex(-3*size,    size, pos, 0, 0, 1),
+                      new Vertex(   size, -3*size, pos, 0, 0, 1),
+                      new Vertex(   size,    size, pos, 0, 0, 1) ];
+   }
+
+   let node = new Node([ new Polygon(vertices) ]);
+
+   return new Geometry(node);
+}
+
+let cfg = {
+   GradPerSegm: 6,       // grad per segment in cylinder/spherical symmetry shapes
+   CompressComp: true    // use faces compression in composite shapes
+};
+
+function geoCfg(name, value) {
+   if (value === undefined)
+      return cfg[name];
+
+   cfg[name] = value;
+}
+
+
+const kindGeo = 0,    // TGeoNode / TGeoShape
+      kindEve = 1,    // TEveShape / TEveGeoShapeExtract
+      kindShape = 2;  // special kind for single shape handling
+
+/** @summary TGeo-related bits
+  * @private */
+const geoBITS = {
+   kVisOverride   : BIT(0),  // volume's vis. attributes are overwritten
+   kVisNone       : BIT(1),  // the volume/node is invisible, as well as daughters
+   kVisThis       : BIT(2),  // this volume/node is visible
+   kVisDaughters  : BIT(3),  // all leaves are visible
+   kVisOneLevel   : BIT(4),  // first level daughters are visible (not used)
+   kVisStreamed   : BIT(5),  // true if attributes have been streamed
+   kVisTouched    : BIT(6),  // true if attributes are changed after closing geom
+   kVisOnScreen   : BIT(7),  // true if volume is visible on screen
+   kVisContainers : BIT(12), // all containers visible
+   kVisOnly       : BIT(13), // just this visible
+   kVisBranch     : BIT(14), // only a given branch visible
+   kVisRaytrace   : BIT(15)  // raytracing flag
+};
+
+const clTGeoBBox = 'TGeoBBox',
+      clTGeoArb8 = 'TGeoArb8',
+      clTGeoCone = 'TGeoCone',
+      clTGeoConeSeg = 'TGeoConeSeg',
+      clTGeoTube = 'TGeoTube',
+      clTGeoTubeSeg = 'TGeoTubeSeg',
+      clTGeoCtub = 'TGeoCtub',
+      clTGeoTrd1 = 'TGeoTrd1',
+      clTGeoTrd2 = 'TGeoTrd2',
+      clTGeoPara = 'TGeoPara',
+      clTGeoParaboloid = 'TGeoParaboloid',
+      clTGeoPcon = 'TGeoPcon',
+      clTGeoPgon = 'TGeoPgon',
+      clTGeoShapeAssembly = 'TGeoShapeAssembly',
+      clTGeoSphere = 'TGeoSphere',
+      clTGeoTorus = 'TGeoTorus',
+      clTGeoXtru = 'TGeoXtru',
+      clTGeoTrap = 'TGeoTrap',
+      clTGeoGtra = 'TGeoGtra',
+      clTGeoEltu = 'TGeoEltu',
+      clTGeoHype = 'TGeoHype',
+      clTGeoCompositeShape = 'TGeoCompositeShape',
+      clTGeoHalfSpace = 'TGeoHalfSpace',
+      clTGeoScaledShape = 'TGeoScaledShape';
+
+/** @summary Test fGeoAtt bits
+  * @private */
+function testGeoBit(volume, f) {
+   let att = volume.fGeoAtt;
+   return att === undefined ? false : ((att & f) !== 0);
+}
+
+/** @summary Set fGeoAtt bit
+  * @private */
+function setGeoBit(volume, f, value) {
+   if (volume.fGeoAtt === undefined) return;
+   volume.fGeoAtt = value ? (volume.fGeoAtt | f) : (volume.fGeoAtt & ~f);
+}
+
+/** @summary Toggle fGeoAttBit
+  * @private */
+function toggleGeoBit(volume, f) {
+   if (volume.fGeoAtt !== undefined)
+      volume.fGeoAtt = volume.fGeoAtt ^ (f & 0xffffff);
+}
+
+/** @summary Implementation of TGeoVolume::InvisibleAll
+  * @private */
+function setInvisibleAll(volume, flag) {
+   if (flag === undefined) flag = true;
+
+   setGeoBit(volume, geoBITS.kVisThis, !flag);
+   // setGeoBit(this, geoBITS.kVisDaughters, !flag);
+
+   if (volume.fNodes)
+      for (let n = 0; n < volume.fNodes.arr.length; ++n) {
+         let sub = volume.fNodes.arr[n].fVolume;
+         setGeoBit(sub, geoBITS.kVisThis, !flag);
+         // setGeoBit(sub, geoBITS.kVisDaughters, !flag);
+      }
+}
+
+const _warn_msgs = {};
+
+/** @summary method used to avoid duplication of warnings
+ * @private */
+function geoWarn(msg) {
+   if (_warn_msgs[msg] !== undefined) return;
+   _warn_msgs[msg] = true;
+   console.warn(msg);
+}
+
+/** @summary Analyze TGeo node kind
+ *  @desc  0 - TGeoNode
+ *         1 - TEveGeoNode
+ *        -1 - unsupported
+ * @return detected node kind
+ * @private */
+function getNodeKind(obj) {
+   if (!isObject(obj)) return -1;
+   return ('fShape' in obj) && ('fTrans' in obj) ? kindEve : kindGeo;
+}
+
+/** @summary Returns number of shapes
+  * @desc Used to count total shapes number in composites
+  * @private */
+function countNumShapes(shape) {
+   if (!shape) return 0;
+   if (shape._typename !== clTGeoCompositeShape) return 1;
+   return countNumShapes(shape.fNode.fLeft) + countNumShapes(shape.fNode.fRight);
+}
+
+
+/** @summary Returns geo object name
+  * @desc Can appends some special suffixes
+  * @private */
+function getObjectName(obj) {
+   return obj?.fName ? (obj.fName + (obj.$geo_suffix || '')) : '';
+}
+
+/** @summary Check duplicates
+  * @private */
+function checkDuplicates(parent, chlds) {
+   if (parent) {
+      if (parent.$geo_checked) return;
+      parent.$geo_checked = true;
+   }
+
+   let names = [], cnts = [];
+   for (let k = 0; k < chlds.length; ++k) {
+      let chld = chlds[k];
+      if (!chld?.fName) continue;
+      if (!chld.$geo_suffix) {
+         let indx = names.indexOf(chld.fName);
+         if (indx >= 0) {
+            let cnt = cnts[indx] || 1;
+            while(names.indexOf(chld.fName+'#'+cnt) >= 0) ++cnt;
+            chld.$geo_suffix = '#' + cnt;
+            cnts[indx] = cnt+1;
+         }
+      }
+      names.push(getObjectName(chld));
+   }
+}
+
+
+/** @summary Create normal to plane, defined with three points
+  * @private */
+function produceNormal(x1,y1,z1, x2,y2,z2, x3,y3,z3) {
+
+   let pA = new Vector3(x1,y1,z1),
+       pB = new Vector3(x2,y2,z2),
+       pC = new Vector3(x3,y3,z3),
+       cb = new Vector3(),
+       ab = new Vector3();
+
+   cb.subVectors(pC, pB);
+   ab.subVectors(pA, pB);
+   cb.cross(ab);
+
+   return cb;
+}
+
+// ==========================================================================
+
+/**
+  * @summary Helper class for geometry creation
+  *
+  * @private
+  */
+
+class GeometryCreator {
+   /** @summary Constructor
+     * @param numfaces - number of faces */
+   constructor(numfaces) {
+      this.nfaces = numfaces;
+      this.indx = 0;
+      this.pos = new Float32Array(numfaces*9);
+      this.norm = new Float32Array(numfaces*9);
+   }
+
+   /** @summary Add face with 3 vertices */
+   addFace3(x1,y1,z1, x2,y2,z2, x3,y3,z3) {
+      let indx = this.indx, pos = this.pos;
+      pos[indx] = x1;
+      pos[indx+1] = y1;
+      pos[indx+2] = z1;
+      pos[indx+3] = x2;
+      pos[indx+4] = y2;
+      pos[indx+5] = z2;
+      pos[indx+6] = x3;
+      pos[indx+7] = y3;
+      pos[indx+8] = z3;
+      this.last4 = false;
+      this.indx = indx + 9;
+   }
+
+   /** @summary Start polygon */
+   startPolygon() {}
+
+   /** @summary Stop polygon */
+   stopPolygon() {}
+
+   /** @summary Add face with 4 vertices
+     * @desc From four vertices one normally creates two faces (1,2,3) and (1,3,4)
+     * if (reduce == 1), first face is reduced
+     * if (reduce == 2), second face is reduced*/
+   addFace4(x1,y1,z1, x2,y2,z2, x3,y3,z3, x4,y4,z4, reduce) {
+      let indx = this.indx, pos = this.pos;
+
+      if (reduce !== 1) {
+         pos[indx] = x1;
+         pos[indx+1] = y1;
+         pos[indx+2] = z1;
+         pos[indx+3] = x2;
+         pos[indx+4] = y2;
+         pos[indx+5] = z2;
+         pos[indx+6] = x3;
+         pos[indx+7] = y3;
+         pos[indx+8] = z3;
+         indx+=9;
+      }
+
+      if (reduce !== 2) {
+         pos[indx] = x1;
+         pos[indx+1] = y1;
+         pos[indx+2] = z1;
+         pos[indx+3] = x3;
+         pos[indx+4] = y3;
+         pos[indx+5] = z3;
+         pos[indx+6] = x4;
+         pos[indx+7] = y4;
+         pos[indx+8] = z4;
+         indx+=9;
+      }
+
+      this.last4 = (indx !== this.indx + 9);
+      this.indx = indx;
+   }
+
+   /** @summary Specify normal for face with 4 vertices
+     * @desc same as addFace4, assign normals for each individual vertex
+     * reduce has same meaning and should be the same */
+   setNormal4(nx1,ny1,nz1, nx2,ny2,nz2, nx3,ny3,nz3, nx4,ny4,nz4, reduce) {
+      if (this.last4 && reduce)
+         return console.error('missmatch between addFace4 and setNormal4 calls');
+
+      let indx = this.indx - (this.last4 ? 18 : 9), norm = this.norm;
+
+      if (reduce!==1) {
+         norm[indx] = nx1;
+         norm[indx+1] = ny1;
+         norm[indx+2] = nz1;
+         norm[indx+3] = nx2;
+         norm[indx+4] = ny2;
+         norm[indx+5] = nz2;
+         norm[indx+6] = nx3;
+         norm[indx+7] = ny3;
+         norm[indx+8] = nz3;
+         indx+=9;
+      }
+
+      if (reduce!==2) {
+         norm[indx] = nx1;
+         norm[indx+1] = ny1;
+         norm[indx+2] = nz1;
+         norm[indx+3] = nx3;
+         norm[indx+4] = ny3;
+         norm[indx+5] = nz3;
+         norm[indx+6] = nx4;
+         norm[indx+7] = ny4;
+         norm[indx+8] = nz4;
+      }
+   }
+
+   /** @summary Recalculate Z with provided func */
+   recalcZ(func) {
+      let pos = this.pos,
+          last = this.indx,
+          indx = last - (this.last4 ? 18 : 9);
+
+      while (indx < last) {
+         pos[indx+2] = func(pos[indx], pos[indx+1], pos[indx+2]);
+         indx+=3;
+      }
+   }
+
+   /** @summary Caclualte normal */
+   calcNormal() {
+      if (!this.cb) {
+         this.pA = new Vector3();
+         this.pB = new Vector3();
+         this.pC = new Vector3();
+         this.cb = new Vector3();
+         this.ab = new Vector3();
+      }
+
+      this.pA.fromArray(this.pos, this.indx - 9);
+      this.pB.fromArray(this.pos, this.indx - 6);
+      this.pC.fromArray(this.pos, this.indx - 3);
+
+      this.cb.subVectors(this.pC, this.pB);
+      this.ab.subVectors(this.pA, this.pB);
+      this.cb.cross(this.ab);
+
+      this.setNormal(this.cb.x, this.cb.y, this.cb.z);
+   }
+
+   /** @summary Set normal */
+   setNormal(nx,ny,nz) {
+      let indx = this.indx - 9, norm = this.norm;
+
+      norm[indx]   = norm[indx+3] = norm[indx+6] = nx;
+      norm[indx+1] = norm[indx+4] = norm[indx+7] = ny;
+      norm[indx+2] = norm[indx+5] = norm[indx+8] = nz;
+
+      if (this.last4) {
+         indx -= 9;
+         norm[indx]   = norm[indx+3] = norm[indx+6] = nx;
+         norm[indx+1] = norm[indx+4] = norm[indx+7] = ny;
+         norm[indx+2] = norm[indx+5] = norm[indx+8] = nz;
+      }
+   }
+
+   /** @summary Set normal
+     * @desc special shortcut, when same normals can be applied for 1-2 point and 3-4 point */
+   setNormal_12_34(nx12,ny12,nz12, nx34,ny34,nz34, reduce) {
+      if (reduce === undefined) reduce = 0;
+
+      let indx = this.indx - ((reduce > 0) ? 9 : 18), norm = this.norm;
+
+      if (reduce!==1) {
+         norm[indx]   = nx12;
+         norm[indx+1] = ny12;
+         norm[indx+2] = nz12;
+         norm[indx+3] = nx12;
+         norm[indx+4] = ny12;
+         norm[indx+5] = nz12;
+         norm[indx+6] = nx34;
+         norm[indx+7] = ny34;
+         norm[indx+8] = nz34;
+         indx+=9;
+      }
+
+      if (reduce!==2) {
+         norm[indx]   = nx12;
+         norm[indx+1] = ny12;
+         norm[indx+2] = nz12;
+         norm[indx+3] = nx34;
+         norm[indx+4] = ny34;
+         norm[indx+5] = nz34;
+         norm[indx+6] = nx34;
+         norm[indx+7] = ny34;
+         norm[indx+8] = nz34;
+         indx+=9;
+      }
+   }
+
+   /** @summary Create geometry */
+   create() {
+      if (this.nfaces !== this.indx/9)
+         console.error(`Mismatch with created ${this.nfaces} and filled ${this.indx/9} number of faces`);
+
+      let geometry = new BufferGeometry();
+      geometry.setAttribute('position', new BufferAttribute(this.pos, 3));
+      geometry.setAttribute('normal', new BufferAttribute(this.norm, 3));
+      return geometry;
+   }
+}
+
+// ================================================================================
+
+/** @summary Helper class for CsgGeometry creation
+  *
+  * @private
+  */
+
+class PolygonsCreator{
+
+   /** @summary constructor */
+   constructor() {
+      this.polygons = [];
+   }
+
+   /** @summary Start polygon */
+   startPolygon(normal) {
+      this.multi = 1;
+      this.mnormal = normal;
+   }
+
+   /** @summary Stop polygon */
+   stopPolygon() {
+      if (!this.multi) return;
+      this.multi = 0;
+      console.error('Polygon should be already closed at this moment');
+   }
+
+   /** @summary Add face with 3 vertices */
+   addFace3(x1,y1,z1, x2,y2,z2, x3,y3,z3) {
+      this.addFace4(x1,y1,z1, x2,y2,z2, x3,y3,z3, x3,y3,z3, 2);
+   }
+
+   /** @summary Add face with 4 vertices
+     * @desc From four vertices one normally creates two faces (1,2,3) and (1,3,4)
+     * if (reduce == 1), first face is reduced
+     * if (reduce == 2), second face is reduced */
+   addFace4(x1,y1,z1, x2,y2,z2, x3,y3,z3, x4,y4,z4, reduce) {
+      if (reduce === undefined) reduce = 0;
+
+      this.v1 = new Vertex(x1,y1,z1, 0,0,0);
+      this.v2 = (reduce === 1) ? null : new Vertex(x2,y2,z2, 0,0,0);
+      this.v3 = new Vertex(x3,y3,z3, 0,0,0);
+      this.v4 = (reduce === 2) ? null : new Vertex(x4,y4,z4, 0,0,0);
+
+      this.reduce = reduce;
+
+      if (this.multi) {
+
+         if (reduce!==2) console.error('polygon not supported for not-reduced faces');
+
+         let polygon;
+
+         if (this.multi++ === 1) {
+            polygon = new Polygon;
+
+            polygon.vertices.push(this.mnormal ? this.v2 : this.v3);
+            this.polygons.push(polygon);
+         } else {
+            polygon = this.polygons[this.polygons.length-1];
+            // check that last vertice equals to v2
+            let last = this.mnormal ? polygon.vertices[polygon.vertices.length-1] : polygon.vertices[0],
+                comp = this.mnormal ? this.v2 : this.v3;
+
+            if (comp.diff(last) > 1e-12)
+               console.error('vertex missmatch when building polygon');
+         }
+
+         let first = this.mnormal ? polygon.vertices[0] : polygon.vertices[polygon.vertices.length-1],
+             next = this.mnormal ? this.v3 : this.v2;
+
+         if (next.diff(first) < 1e-12) {
+            //console.log(`polygon closed!!! nvertices = ${polygon.vertices.length}`);
+            this.multi = 0;
+         } else
+         if (this.mnormal) {
+            polygon.vertices.push(this.v3);
+         } else {
+            polygon.vertices.unshift(this.v2);
+         }
+
+         return;
+
+      }
+
+      let polygon = new Polygon;
+
+      switch (reduce) {
+         case 0: polygon.vertices.push(this.v1, this.v2, this.v3, this.v4); break;
+         case 1: polygon.vertices.push(this.v1, this.v3, this.v4); break;
+         case 2: polygon.vertices.push(this.v1, this.v2, this.v3); break;
+      }
+
+      this.polygons.push(polygon);
+   }
+
+   /** @summary Specify normal for face with 4 vertices
+     * @desc same as addFace4, assign normals for each individual vertex
+     * reduce has same meaning and should be the same */
+   setNormal4(nx1,ny1,nz1, nx2,ny2,nz2, nx3,ny3,nz3, nx4,ny4,nz4) {
+      this.v1.setnormal(nx1,ny1,nz1);
+      if (this.v2) this.v2.setnormal(nx2,ny2,nz2);
+      this.v3.setnormal(nx3,ny3,nz3);
+      if (this.v4) this.v4.setnormal(nx4,ny4,nz4);
+   }
+
+   /** @summary Set normal
+     * @desc special shortcut, when same normals can be applied for 1-2 point and 3-4 point */
+   setNormal_12_34(nx12,ny12,nz12, nx34,ny34,nz34) {
+      this.v1.setnormal(nx12,ny12,nz12);
+      if (this.v2) this.v2.setnormal(nx12,ny12,nz12);
+      this.v3.setnormal(nx34,ny34,nz34);
+      if (this.v4) this.v4.setnormal(nx34,ny34,nz34);
+   }
+
+   /** @summary Calculate normal */
+   calcNormal() {
+
+      if (!this.cb) {
+         this.pA = new Vector3();
+         this.pB = new Vector3();
+         this.pC = new Vector3();
+         this.cb = new Vector3();
+         this.ab = new Vector3();
+      }
+
+      this.pA.set( this.v1.x, this.v1.y, this.v1.z);
+
+      if (this.reduce !== 1) {
+         this.pB.set( this.v2.x, this.v2.y, this.v2.z);
+         this.pC.set( this.v3.x, this.v3.y, this.v3.z);
+      } else {
+         this.pB.set( this.v3.x, this.v3.y, this.v3.z);
+         this.pC.set( this.v4.x, this.v4.y, this.v4.z);
+      }
+
+      this.cb.subVectors(this.pC, this.pB);
+      this.ab.subVectors(this.pA, this.pB);
+      this.cb.cross(this.ab);
+
+      this.setNormal(this.cb.x, this.cb.y, this.cb.z);
+   }
+
+   /** @summary Set normal*/
+   setNormal(nx,ny,nz) {
+      this.v1.setnormal(nx,ny,nz);
+      if (this.v2) this.v2.setnormal(nx,ny,nz);
+      this.v3.setnormal(nx,ny,nz);
+      if (this.v4) this.v4.setnormal(nx,ny,nz);
+   }
+
+   /** @summary Recalculate Z with provided func */
+   recalcZ(func) {
+      this.v1.z = func(this.v1.x, this.v1.y, this.v1.z);
+      if (this.v2) this.v2.z = func(this.v2.x, this.v2.y, this.v2.z);
+      this.v3.z = func(this.v3.x, this.v3.y, this.v3.z);
+      if (this.v4) this.v4.z = func(this.v4.x, this.v4.y, this.v4.z);
+   }
+
+   /** @summary Create geometry
+     * @private */
+   create() {
+      return { polygons: this.polygons };
+   }
+}
+
+// ================= all functions to create geometry ===================================
+
+/** @summary Creates cube geometrey
+  * @private */
+function createCubeBuffer(shape, faces_limit) {
+
+   if (faces_limit < 0) return 12;
+
+   let dx = shape.fDX, dy = shape.fDY, dz = shape.fDZ,
+       creator = faces_limit ? new PolygonsCreator : new GeometryCreator(12);
+
+   creator.addFace4(dx,dy,dz, dx,-dy,dz, dx,-dy,-dz, dx,dy,-dz); creator.setNormal(1,0,0);
+
+   creator.addFace4(-dx,dy,-dz, -dx,-dy,-dz, -dx,-dy,dz, -dx,dy,dz); creator.setNormal(-1,0,0);
+
+   creator.addFace4(-dx,dy,-dz, -dx,dy,dz, dx,dy,dz, dx,dy,-dz); creator.setNormal(0,1,0);
+
+   creator.addFace4(-dx,-dy,dz, -dx,-dy,-dz, dx,-dy,-dz, dx,-dy,dz); creator.setNormal(0,-1,0);
+
+   creator.addFace4(-dx,dy,dz, -dx,-dy,dz, dx,-dy,dz, dx,dy,dz); creator.setNormal(0,0,1);
+
+   creator.addFace4(dx,dy,-dz, dx,-dy,-dz, -dx,-dy,-dz, -dx,dy,-dz); creator.setNormal(0,0,-1);
+
+   return creator.create();
+}
+
+/** @summary Creates 8 edges geometry
+  * @private */
+function create8edgesBuffer( v, faces_limit ) {
+
+   let indicies = [4,7,6,5, 0,3,7,4, 4,5,1,0, 6,2,1,5, 7,3,2,6, 1,2,3,0],
+        creator = (faces_limit > 0) ? new PolygonsCreator : new GeometryCreator(12);
+
+   for (let n = 0; n < indicies.length; n += 4) {
+      let i1 = indicies[n]*3,
+          i2 = indicies[n+1]*3,
+          i3 = indicies[n+2]*3,
+          i4 = indicies[n+3]*3;
+      creator.addFace4(v[i1], v[i1+1], v[i1+2], v[i2], v[i2+1], v[i2+2],
+                       v[i3], v[i3+1], v[i3+2], v[i4], v[i4+1], v[i4+2]);
+      if (n === 0)
+         creator.setNormal(0,0,1);
+      else if (n === 20)
+         creator.setNormal(0,0,-1);
+      else
+         creator.calcNormal();
+   }
+
+   return creator.create();
+}
+
+/** @summary Creates PARA geometrey
+  * @private */
+function createParaBuffer( shape, faces_limit ) {
+
+   if (faces_limit < 0) return 12;
+
+   let txy = shape.fTxy, txz = shape.fTxz, tyz = shape.fTyz, v = [
+       -shape.fZ*txz-txy*shape.fY-shape.fX, -shape.fY-shape.fZ*tyz, -shape.fZ,
+       -shape.fZ*txz+txy*shape.fY-shape.fX,  shape.fY-shape.fZ*tyz, -shape.fZ,
+       -shape.fZ*txz+txy*shape.fY+shape.fX,  shape.fY-shape.fZ*tyz, -shape.fZ,
+       -shape.fZ*txz-txy*shape.fY+shape.fX, -shape.fY-shape.fZ*tyz, -shape.fZ,
+        shape.fZ*txz-txy*shape.fY-shape.fX, -shape.fY+shape.fZ*tyz,  shape.fZ,
+        shape.fZ*txz+txy*shape.fY-shape.fX,  shape.fY+shape.fZ*tyz,  shape.fZ,
+        shape.fZ*txz+txy*shape.fY+shape.fX,  shape.fY+shape.fZ*tyz,  shape.fZ,
+        shape.fZ*txz-txy*shape.fY+shape.fX, -shape.fY+shape.fZ*tyz,  shape.fZ ];
+
+   return create8edgesBuffer(v, faces_limit );
+}
+
+/** @summary Creates Ttrapezoid geometrey
+  * @private */
+function createTrapezoidBuffer( shape, faces_limit ) {
+
+   if (faces_limit < 0) return 12;
+
+   let y1, y2;
+   if (shape._typename == clTGeoTrd1) {
+      y1 = y2 = shape.fDY;
+   } else {
+      y1 = shape.fDy1; y2 = shape.fDy2;
+   }
+
+   let v = [
+      -shape.fDx1,  y1, -shape.fDZ,
+       shape.fDx1,  y1, -shape.fDZ,
+       shape.fDx1, -y1, -shape.fDZ,
+      -shape.fDx1, -y1, -shape.fDZ,
+      -shape.fDx2,  y2,  shape.fDZ,
+       shape.fDx2,  y2,  shape.fDZ,
+       shape.fDx2, -y2,  shape.fDZ,
+      -shape.fDx2, -y2,  shape.fDZ
+   ];
+
+   return create8edgesBuffer(v, faces_limit );
+}
+
+
+/** @summary Creates arb8 geometrey
+  * @private */
+function createArb8Buffer( shape, faces_limit ) {
+
+   if (faces_limit < 0) return 12;
+
+   let vertices = [
+      shape.fXY[0][0], shape.fXY[0][1], -shape.fDZ,
+      shape.fXY[1][0], shape.fXY[1][1], -shape.fDZ,
+      shape.fXY[2][0], shape.fXY[2][1], -shape.fDZ,
+      shape.fXY[3][0], shape.fXY[3][1], -shape.fDZ,
+      shape.fXY[4][0], shape.fXY[4][1],  shape.fDZ,
+      shape.fXY[5][0], shape.fXY[5][1],  shape.fDZ,
+      shape.fXY[6][0], shape.fXY[6][1],  shape.fDZ,
+      shape.fXY[7][0], shape.fXY[7][1],  shape.fDZ
+   ];
+   const indicies = [
+         4,7,6,  6,5,4,  3,7,4,  4,0,3,
+         5,1,0,  0,4,5,  6,2,1,  1,5,6,
+         7,3,2,  2,6,7,  1,2,3,  3,0,1 ];
+
+   // detect same vertices on both Z-layers
+   for (let side = 0; side < vertices.length; side += vertices.length/2)
+      for (let n1 = side; n1 < side + vertices.length/2 - 3 ; n1+=3)
+         for (let n2 = n1+3; n2 < side + vertices.length/2 ; n2+=3)
+            if ((vertices[n1] === vertices[n2]) &&
+                (vertices[n1+1] === vertices[n2+1]) &&
+                (vertices[n1+2] === vertices[n2+2])) {
+                   for (let k=0;k<indicies.length;++k)
+                     if (indicies[k] === n2/3) indicies[k] = n1/3;
+               }
+
+
+   let map = [], // list of existing faces (with all rotations)
+       numfaces = 0;
+
+   for (let k = 0; k < indicies.length; k += 3) {
+      let id1 = indicies[k]*100   + indicies[k+1]*10 + indicies[k+2],
+          id2 = indicies[k+1]*100 + indicies[k+2]*10 + indicies[k],
+          id3 = indicies[k+2]*100 + indicies[k]*10   + indicies[k+1];
+
+      if ((indicies[k] == indicies[k+1]) || (indicies[k] == indicies[k+2]) || (indicies[k+1] == indicies[k+2]) ||
+          (map.indexOf(id1) >= 0) || (map.indexOf(id2) >= 0) || (map.indexOf(id3) >= 0)) {
+         indicies[k] = indicies[k+1] = indicies[k+2] = -1;
+      } else {
+         map.push(id1,id2,id3);
+         numfaces++;
+      }
+   }
+
+   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
+
+   for (let n = 0; n < indicies.length; n += 6) {
+      let i1 = indicies[n]   * 3,
+          i2 = indicies[n+1] * 3,
+          i3 = indicies[n+2] * 3,
+          i4 = indicies[n+3] * 3,
+          i5 = indicies[n+4] * 3,
+          i6 = indicies[n+5] * 3,
+          norm = null;
+
+      if ((i1 >= 0) && (i4 >= 0) && faces_limit) {
+         // try to identify two faces with same normal - very useful if one can create face4
+         if (n === 0)
+            norm = new Vector3(0,0,1);
+         else if (n === 30)
+            norm = new Vector3(0,0,-1);
+         else {
+            let norm1 = produceNormal(vertices[i1], vertices[i1+1], vertices[i1+2],
+                                      vertices[i2], vertices[i2+1], vertices[i2+2],
+                                      vertices[i3], vertices[i3+1], vertices[i3+2]);
+
+            norm1.normalize();
+
+            let norm2 = produceNormal(vertices[i4], vertices[i4+1], vertices[i4+2],
+                                      vertices[i5], vertices[i5+1], vertices[i5+2],
+                                      vertices[i6], vertices[i6+1], vertices[i6+2]);
+
+            norm2.normalize();
+
+            if (norm1.distanceToSquared(norm2) < 1e-12) norm = norm1;
+         }
+      }
+
+      if (norm !== null) {
+         creator.addFace4(vertices[i1], vertices[i1+1], vertices[i1+2],
+                          vertices[i2], vertices[i2+1], vertices[i2+2],
+                          vertices[i3], vertices[i3+1], vertices[i3+2],
+                          vertices[i5], vertices[i5+1], vertices[i5+2]);
+         creator.setNormal(norm.x, norm.y, norm.z);
+      }  else {
+         if (i1 >= 0) {
+            creator.addFace3(vertices[i1], vertices[i1+1], vertices[i1+2],
+                             vertices[i2], vertices[i2+1], vertices[i2+2],
+                             vertices[i3], vertices[i3+1], vertices[i3+2]);
+            creator.calcNormal();
+         }
+         if (i4 >= 0) {
+            creator.addFace3(vertices[i4], vertices[i4+1], vertices[i4+2],
+                             vertices[i5], vertices[i5+1], vertices[i5+2],
+                             vertices[i6], vertices[i6+1], vertices[i6+2]);
+            creator.calcNormal();
+         }
+      }
+   }
+
+   return creator.create();
+}
+
+/** @summary Creates sphere geometrey
+  * @private */
+function createSphereBuffer( shape, faces_limit ) {
+   let radius = [shape.fRmax, shape.fRmin],
+       phiStart = shape.fPhi1,
+       phiLength = shape.fPhi2 - shape.fPhi1,
+       thetaStart = shape.fTheta1,
+       thetaLength = shape.fTheta2 - shape.fTheta1,
+       widthSegments = shape.fNseg,
+       heightSegments = shape.fNz,
+       noInside = (radius[1] <= 0);
+
+   if (faces_limit > 0) {
+      let fact = (noInside ? 2 : 4) * widthSegments * heightSegments / faces_limit;
+
+      if (fact > 1.) {
+         widthSegments = Math.max(4, Math.floor(widthSegments/Math.sqrt(fact)));
+         heightSegments = Math.max(4, Math.floor(heightSegments/Math.sqrt(fact)));
+      }
+   }
+
+   let numoutside = widthSegments * heightSegments * 2,
+       numtop = widthSegments * 2,
+       numbottom = widthSegments * 2,
+       numcut = phiLength === 360 ? 0 : heightSegments * (noInside ? 2 : 4),
+       epsilon = 1e-10;
+
+   if (noInside) numbottom = numtop = widthSegments;
+
+   if (faces_limit < 0) return numoutside * (noInside ? 1 : 2) + numtop + numbottom + numcut;
+
+   let _sinp = new Float32Array(widthSegments+1),
+       _cosp = new Float32Array(widthSegments+1),
+       _sint = new Float32Array(heightSegments+1),
+       _cost = new Float32Array(heightSegments+1);
+
+   for (let n = 0; n <= heightSegments; ++n) {
+      let theta = (thetaStart + thetaLength/heightSegments*n)*Math.PI/180;
+      _sint[n] = Math.sin(theta);
+      _cost[n] = Math.cos(theta);
+   }
+
+   for (let n = 0; n <= widthSegments; ++n) {
+      let phi = (phiStart + phiLength/widthSegments*n)*Math.PI/180;
+      _sinp[n] = Math.sin(phi);
+      _cosp[n] = Math.cos(phi);
+   }
+
+   if (Math.abs(_sint[0]) <= epsilon) { numoutside -= widthSegments; numtop = 0; }
+   if (Math.abs(_sint[heightSegments]) <= epsilon) { numoutside -= widthSegments; numbottom = 0; }
+
+   let numfaces = numoutside * (noInside ? 1 : 2) + numtop + numbottom + numcut,
+       creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
+
+   for (let side = 0; side < 2; ++side) {
+      if ((side === 1) && noInside) break;
+
+      let r = radius[side],
+          s = (side === 0) ? 1 : -1,
+          d1 = 1 - side, d2 = 1 - d1;
+
+      // use direct algorithm for the sphere - here normals and position can be calculated directly
+      for (let k = 0; k < heightSegments; ++k) {
+
+         let k1 = k + d1, k2 = k + d2, skip = 0;
+         if (Math.abs(_sint[k1]) <= epsilon) skip = 1; else
+         if (Math.abs(_sint[k2]) <= epsilon) skip = 2;
+
+         for (let n=0;n<widthSegments;++n) {
+            creator.addFace4(
+                  r*_sint[k1]*_cosp[n],   r*_sint[k1] *_sinp[n],   r*_cost[k1],
+                  r*_sint[k1]*_cosp[n+1], r*_sint[k1] *_sinp[n+1], r*_cost[k1],
+                  r*_sint[k2]*_cosp[n+1], r*_sint[k2] *_sinp[n+1], r*_cost[k2],
+                  r*_sint[k2]*_cosp[n],   r*_sint[k2] *_sinp[n],   r*_cost[k2],
+                  skip);
+            creator.setNormal4(
+                  s*_sint[k1]*_cosp[n],   s*_sint[k1] *_sinp[n],   s*_cost[k1],
+                  s*_sint[k1]*_cosp[n+1], s*_sint[k1] *_sinp[n+1], s*_cost[k1],
+                  s*_sint[k2]*_cosp[n+1], s*_sint[k2] *_sinp[n+1], s*_cost[k2],
+                  s*_sint[k2]*_cosp[n],   s*_sint[k2] *_sinp[n],   s*_cost[k2],
+                  skip);
+         }
+      }
+   }
+
+   // top/bottom
+   for (let side = 0; side <= heightSegments; side += heightSegments)
+      if (Math.abs(_sint[side]) >= epsilon) {
+         let ss = _sint[side], cc = _cost[side],
+             d1 = (side === 0) ? 0 : 1, d2 = 1 - d1;
+         for (let n = 0; n < widthSegments; ++n) {
+            creator.addFace4(
+                  radius[1] * ss * _cosp[n+d1], radius[1] * ss * _sinp[n+d1], radius[1] * cc,
+                  radius[0] * ss * _cosp[n+d1], radius[0] * ss * _sinp[n+d1], radius[0] * cc,
+                  radius[0] * ss * _cosp[n+d2], radius[0] * ss * _sinp[n+d2], radius[0] * cc,
+                  radius[1] * ss * _cosp[n+d2], radius[1] * ss * _sinp[n+d2], radius[1] * cc,
+                  noInside ? 2 : 0);
+            creator.calcNormal();
+         }
+      }
+
+   // cut left/right sides
+   if (phiLength < 360) {
+      for (let side=0;side<=widthSegments;side+=widthSegments) {
+         let ss = _sinp[side], cc = _cosp[side],
+             d1 = (side === 0) ? 1 : 0, d2 = 1 - d1;
+
+         for (let k=0;k<heightSegments;++k) {
+            creator.addFace4(
+                  radius[1] * _sint[k+d1] * cc, radius[1] * _sint[k+d1] * ss, radius[1] * _cost[k+d1],
+                  radius[0] * _sint[k+d1] * cc, radius[0] * _sint[k+d1] * ss, radius[0] * _cost[k+d1],
+                  radius[0] * _sint[k+d2] * cc, radius[0] * _sint[k+d2] * ss, radius[0] * _cost[k+d2],
+                  radius[1] * _sint[k+d2] * cc, radius[1] * _sint[k+d2] * ss, radius[1] * _cost[k+d2],
+                  noInside ? 2 : 0);
+            creator.calcNormal();
+         }
+      }
+   }
+
+   return creator.create();
+}
+
+/** @summary Creates tube geometrey
+  * @private */
+function createTubeBuffer( shape, faces_limit) {
+   let outerR, innerR; // inner/outer tube radius
+   if ((shape._typename == clTGeoCone) || (shape._typename == clTGeoConeSeg)) {
+      outerR = [ shape.fRmax2, shape.fRmax1 ];
+      innerR = [ shape.fRmin2, shape.fRmin1 ];
+   } else {
+      outerR = [ shape.fRmax, shape.fRmax ];
+      innerR = [ shape.fRmin, shape.fRmin ];
+   }
+
+   let hasrmin = (innerR[0] > 0) || (innerR[1] > 0),
+       thetaStart = 0, thetaLength = 360;
+
+   if ((shape._typename == clTGeoConeSeg) || (shape._typename == clTGeoTubeSeg) || (shape._typename == clTGeoCtub)) {
+      thetaStart = shape.fPhi1;
+      thetaLength = shape.fPhi2 - shape.fPhi1;
+   }
+
+   let radiusSegments = Math.max(4, Math.round(thetaLength/cfg.GradPerSegm));
+
+   // external surface
+   let numfaces = radiusSegments * (((outerR[0] <= 0) || (outerR[1] <= 0)) ? 1 : 2);
+
+   // internal surface
+   if (hasrmin)
+      numfaces += radiusSegments * (((innerR[0] <= 0) || (innerR[1] <= 0)) ? 1 : 2);
+
+   // upper cap
+   if (outerR[0] > 0) numfaces += radiusSegments * ((innerR[0] > 0) ? 2 : 1);
+   // bottom cup
+   if (outerR[1] > 0) numfaces += radiusSegments * ((innerR[1] > 0) ? 2 : 1);
+
+   if (thetaLength < 360)
+      numfaces += ((outerR[0] > innerR[0]) ? 2 : 0) + ((outerR[1] > innerR[1]) ? 2 : 0);
+
+   if (faces_limit < 0) return numfaces;
+
+   let phi0 = thetaStart*Math.PI/180,
+       dphi = thetaLength/radiusSegments*Math.PI/180,
+       _sin = new Float32Array(radiusSegments+1),
+       _cos = new Float32Array(radiusSegments+1);
+
+   for (let seg = 0; seg <= radiusSegments; ++seg) {
+      _cos[seg] = Math.cos(phi0+seg*dphi);
+      _sin[seg] = Math.sin(phi0+seg*dphi);
+   }
+
+   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
+
+   const calcZ = (shape._typename !== clTGeoCtub) ? null : (x,y,z) => {
+      let arr = (z < 0) ? shape.fNlow : shape.fNhigh;
+      return ((z < 0) ? -shape.fDz : shape.fDz) - (x*arr[0] + y*arr[1]) / arr[2];
+   };
+
+   // create outer/inner tube
+   for (let side = 0; side < 2; ++side) {
+      if ((side === 1) && !hasrmin) break;
+
+      let R = (side === 0) ? outerR : innerR,
+          d1 = side, d2 = 1 - side, nxy = 1., nz = 0;
+
+      if (R[0] !== R[1]) {
+         let angle = Math.atan2((R[1]-R[0]), 2*shape.fDZ);
+         nxy = Math.cos(angle);
+         nz = Math.sin(angle);
+      }
+
+      if (side === 1) { nxy *= -1; nz *= -1; }
+      let reduce = (R[0] <= 0) ? 2 : ((R[1] <= 0) ? 1 : 0);
+
+      for (let seg = 0; seg < radiusSegments; ++seg) {
+         creator.addFace4(
+               R[0] * _cos[seg+d1], R[0] * _sin[seg+d1],  shape.fDZ,
+               R[1] * _cos[seg+d1], R[1] * _sin[seg+d1], -shape.fDZ,
+               R[1] * _cos[seg+d2], R[1] * _sin[seg+d2], -shape.fDZ,
+               R[0] * _cos[seg+d2], R[0] * _sin[seg+d2],  shape.fDZ,
+               reduce );
+
+         if (calcZ) creator.recalcZ(calcZ);
+
+         creator.setNormal_12_34(nxy*_cos[seg+d1], nxy*_sin[seg+d1], nz,
+                                 nxy*_cos[seg+d2], nxy*_sin[seg+d2], nz,
+                                 reduce);
+      }
+   }
+
+   // create upper/bottom part
+   for (let side = 0; side < 2; ++side) {
+      if (outerR[side] <= 0) continue;
+
+      let d1 = side, d2 = 1- side,
+          sign = (side == 0) ? 1 : -1,
+          reduce = (innerR[side] <= 0) ? 2 : 0;
+      if ((reduce === 2) && (thetaLength === 360) && !calcZ)
+         creator.startPolygon(side === 0);
+      for (let seg = 0; seg < radiusSegments; ++seg) {
+         creator.addFace4(
+               innerR[side] * _cos[seg+d1], innerR[side] * _sin[seg+d1], sign*shape.fDZ,
+               outerR[side] * _cos[seg+d1], outerR[side] * _sin[seg+d1], sign*shape.fDZ,
+               outerR[side] * _cos[seg+d2], outerR[side] * _sin[seg+d2], sign*shape.fDZ,
+               innerR[side] * _cos[seg+d2], innerR[side] * _sin[seg+d2], sign*shape.fDZ,
+               reduce);
+         if (calcZ) {
+            creator.recalcZ(calcZ);
+            creator.calcNormal();
+         } else {
+            creator.setNormal(0,0,sign);
+         }
+      }
+
+      creator.stopPolygon();
+   }
+
+   // create cut surfaces
+   if (thetaLength < 360) {
+      creator.addFace4(innerR[1] * _cos[0], innerR[1] * _sin[0], -shape.fDZ,
+                       outerR[1] * _cos[0], outerR[1] * _sin[0], -shape.fDZ,
+                       outerR[0] * _cos[0], outerR[0] * _sin[0],  shape.fDZ,
+                       innerR[0] * _cos[0], innerR[0] * _sin[0],  shape.fDZ,
+                       (outerR[0] === innerR[0]) ? 2 : ((innerR[1]===outerR[1]) ? 1 : 0));
+      if (calcZ) creator.recalcZ(calcZ);
+      creator.calcNormal();
+
+      creator.addFace4(innerR[0] * _cos[radiusSegments], innerR[0] * _sin[radiusSegments],  shape.fDZ,
+                       outerR[0] * _cos[radiusSegments], outerR[0] * _sin[radiusSegments],  shape.fDZ,
+                       outerR[1] * _cos[radiusSegments], outerR[1] * _sin[radiusSegments], -shape.fDZ,
+                       innerR[1] * _cos[radiusSegments], innerR[1] * _sin[radiusSegments], -shape.fDZ,
+                       (outerR[0] === innerR[0]) ? 1 : ((innerR[1]===outerR[1]) ? 2 : 0));
+
+      if (calcZ) creator.recalcZ(calcZ);
+      creator.calcNormal();
+   }
+
+   return creator.create();
+}
+
+/** @summary Creates eltu geometrey
+  * @private */
+function createEltuBuffer( shape , faces_limit ) {
+   let radiusSegments = Math.max(4, Math.round(360/cfg.GradPerSegm));
+
+   if (faces_limit < 0) return radiusSegments*4;
+
+   // calculate all sin/cos tables in advance
+   let x = new Float32Array(radiusSegments+1),
+       y = new Float32Array(radiusSegments+1);
+   for (let seg=0; seg<=radiusSegments; ++seg) {
+       let phi = seg/radiusSegments*2*Math.PI;
+       x[seg] = shape.fRmin*Math.cos(phi);
+       y[seg] = shape.fRmax*Math.sin(phi);
+   }
+
+   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(radiusSegments*4),
+       nx1, ny1, nx2 = 1, ny2 = 0;
+
+   // create tube faces
+   for (let seg = 0; seg < radiusSegments; ++seg) {
+      creator.addFace4(x[seg],   y[seg],   +shape.fDZ,
+                       x[seg],   y[seg],   -shape.fDZ,
+                       x[seg+1], y[seg+1], -shape.fDZ,
+                       x[seg+1], y[seg+1],  shape.fDZ);
+
+      // calculate normals ourself
+      nx1 = nx2; ny1 = ny2;
+      nx2 = x[seg+1] * shape.fRmax / shape.fRmin;
+      ny2 = y[seg+1] * shape.fRmin / shape.fRmax;
+      let dist = Math.sqrt(nx2**2 + ny2**2);
+      nx2 = nx2 / dist; ny2 = ny2/dist;
+
+      creator.setNormal_12_34(nx1,ny1,0,nx2,ny2,0);
+   }
+
+   // create top/bottom sides
+   for (let side = 0; side < 2; ++side) {
+      let sign = (side === 0) ? 1 : -1, d1 = side, d2 = 1 - side;
+      for (let seg=0; seg<radiusSegments; ++seg) {
+         creator.addFace3(0,          0,          sign*shape.fDZ,
+                          x[seg+d1],  y[seg+d1],  sign*shape.fDZ,
+                          x[seg+d2],  y[seg+d2],  sign*shape.fDZ);
+         creator.setNormal(0, 0, sign);
+      }
+   }
+
+   return creator.create();
+}
+
+/** @summary Creates torus geometrey
+  * @private */
+function createTorusBuffer( shape, faces_limit ) {
+   let radius = shape.fR,
+       radialSegments = Math.max(6, Math.round(360/cfg.GradPerSegm)),
+       tubularSegments = Math.max(8, Math.round(shape.fDphi/cfg.GradPerSegm)),
+       numfaces = (shape.fRmin > 0 ? 4 : 2) * radialSegments * (tubularSegments + (shape.fDphi !== 360 ? 1 : 0));
+
+   if (faces_limit < 0) return numfaces;
+
+   if ((faces_limit > 0) && (numfaces > faces_limit)) {
+      radialSegments = Math.floor(radialSegments/Math.sqrt(numfaces / faces_limit));
+      tubularSegments = Math.floor(tubularSegments/Math.sqrt(numfaces / faces_limit));
+      numfaces = (shape.fRmin > 0 ? 4 : 2) * radialSegments * (tubularSegments + (shape.fDphi !== 360 ? 1 : 0));
+   }
+
+   let _sinr = new Float32Array(radialSegments+1),
+       _cosr = new Float32Array(radialSegments+1),
+       _sint = new Float32Array(tubularSegments+1),
+       _cost = new Float32Array(tubularSegments+1);
+
+   for (let n = 0; n <= radialSegments; ++n) {
+      _sinr[n] = Math.sin(n/radialSegments*2*Math.PI);
+      _cosr[n] = Math.cos(n/radialSegments*2*Math.PI);
+   }
+
+   for (let t = 0; t <= tubularSegments; ++t) {
+      let angle = (shape.fPhi1 + shape.fDphi*t/tubularSegments)/180*Math.PI;
+      _sint[t] = Math.sin(angle);
+      _cost[t] = Math.cos(angle);
+   }
+
+   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces),
+       // use vectors for normals calculation
+       p1 = new Vector3(), p2 = new Vector3(), p3 = new Vector3(), p4 = new Vector3(),
+       n1 = new Vector3(), n2 = new Vector3(), n3 = new Vector3(), n4 = new Vector3(),
+       center1 = new Vector3(), center2 = new Vector3();
+
+   for (let side = 0; side < 2; ++side) {
+      if ((side > 0) && (shape.fRmin <= 0)) break;
+      let tube = (side > 0) ? shape.fRmin : shape.fRmax,
+          d1 = 1 - side, d2 = 1 - d1, ns = side > 0 ? -1 : 1;
+
+      for (let t = 0; t < tubularSegments; ++t) {
+         let t1 = t + d1, t2 = t + d2;
+         center1.x = radius * _cost[t1]; center1.y = radius * _sint[t1];
+         center2.x = radius * _cost[t2]; center2.y = radius * _sint[t2];
+
+         for (let n = 0; n < radialSegments; ++n) {
+            p1.x = (radius + tube * _cosr[n])   * _cost[t1]; p1.y = (radius + tube * _cosr[n])   * _sint[t1]; p1.z = tube*_sinr[n];
+            p2.x = (radius + tube * _cosr[n+1]) * _cost[t1]; p2.y = (radius + tube * _cosr[n+1]) * _sint[t1]; p2.z = tube*_sinr[n+1];
+            p3.x = (radius + tube * _cosr[n+1]) * _cost[t2]; p3.y = (radius + tube * _cosr[n+1]) * _sint[t2]; p3.z = tube*_sinr[n+1];
+            p4.x = (radius + tube * _cosr[n])   * _cost[t2]; p4.y = (radius + tube * _cosr[n])   * _sint[t2]; p4.z = tube*_sinr[n];
+
+            creator.addFace4(p1.x, p1.y, p1.z,
+                             p2.x, p2.y, p2.z,
+                             p3.x, p3.y, p3.z,
+                             p4.x, p4.y, p4.z);
+
+            n1.subVectors( p1, center1 ).normalize();
+            n2.subVectors( p2, center1 ).normalize();
+            n3.subVectors( p3, center2 ).normalize();
+            n4.subVectors( p4, center2 ).normalize();
+
+            creator.setNormal4(ns*n1.x, ns*n1.y, ns*n1.z,
+                               ns*n2.x, ns*n2.y, ns*n2.z,
+                               ns*n3.x, ns*n3.y, ns*n3.z,
+                               ns*n4.x, ns*n4.y, ns*n4.z);
+         }
+      }
+   }
+
+   if (shape.fDphi !== 360)
+      for (let t = 0; t <= tubularSegments; t += tubularSegments) {
+         let tube1 = shape.fRmax, tube2 = shape.fRmin,
+             d1 = (t > 0) ? 0 : 1, d2 = 1 - d1,
+             skip = (shape.fRmin) > 0 ?  0 : 1,
+             nsign = (t > 0) ? 1 : -1;
+         for (let n = 0; n < radialSegments; ++n) {
+            creator.addFace4((radius + tube1 * _cosr[n+d1]) * _cost[t], (radius + tube1 * _cosr[n+d1]) * _sint[t], tube1*_sinr[n+d1],
+                             (radius + tube2 * _cosr[n+d1]) * _cost[t], (radius + tube2 * _cosr[n+d1]) * _sint[t], tube2*_sinr[n+d1],
+                             (radius + tube2 * _cosr[n+d2]) * _cost[t], (radius + tube2 * _cosr[n+d2]) * _sint[t], tube2*_sinr[n+d2],
+                             (radius + tube1 * _cosr[n+d2]) * _cost[t], (radius + tube1 * _cosr[n+d2]) * _sint[t], tube1*_sinr[n+d2], skip);
+            creator.setNormal(-nsign* _sint[t], nsign * _cost[t], 0);
+         }
+      }
+
+   return creator.create();
+}
+
+
+/** @summary Creates polygon geometrey
+  * @private */
+function createPolygonBuffer( shape, faces_limit ) {
+   let thetaStart = shape.fPhi1,
+       thetaLength = shape.fDphi,
+       radiusSegments, factor;
+
+   if (shape._typename == clTGeoPgon) {
+      radiusSegments = shape.fNedges;
+      factor = 1. / Math.cos(Math.PI/180 * thetaLength / radiusSegments / 2);
+   } else {
+      radiusSegments = Math.max(5, Math.round(thetaLength/cfg.GradPerSegm));
+      factor = 1;
+   }
+
+   let usage = new Int16Array(2*shape.fNz), numusedlayers = 0, hasrmin = false;
+
+   for (let layer = 0; layer < shape.fNz; ++layer)
+      if (shape.fRmin[layer] > 0) hasrmin = true;
+
+   // return very rough estimation, number of faces may be much less
+   if (faces_limit < 0) return (hasrmin ? 4 : 2) * radiusSegments * (shape.fNz-1);
+
+   // coordinate of point on cut edge (x,z)
+   let pnts = (thetaLength === 360) ? null : [];
+
+   // first analyse levels - if we need to create all of them
+   for (let side = 0; side < 2; ++side) {
+      let rside = (side === 0) ? 'fRmax' : 'fRmin';
+
+      for (let layer=0; layer < shape.fNz; ++layer) {
+
+         // first create points for the layer
+         let layerz = shape.fZ[layer], rad = shape[rside][layer];
+
+         usage[layer*2+side] = 0;
+
+         if ((layer > 0) && (layer < shape.fNz-1))
+            if (((shape.fZ[layer-1] === layerz) && (shape[rside][layer-1] === rad)) ||
+                ((shape[rside][layer+1] === rad) && (shape[rside][layer-1] === rad))) {
+
+               // same Z and R as before - ignore
+               // or same R before and after
+
+               continue;
+            }
+
+         if ((layer > 0) && ((side === 0) || hasrmin)) {
+            usage[layer*2+side] = 1;
+            numusedlayers++;
+         }
+
+         if (pnts !== null) {
+            if (side === 0) {
+               pnts.push(new Vector2(factor*rad, layerz));
+            } else if (rad < shape.fRmax[layer]) {
+               pnts.unshift(new Vector2(factor*rad, layerz));
+            }
+         }
+      }
+   }
+
+   let numfaces = numusedlayers*radiusSegments*2;
+   if (shape.fRmin[0] !== shape.fRmax[0]) numfaces += radiusSegments * (hasrmin ? 2 : 1);
+   if (shape.fRmin[shape.fNz-1] !== shape.fRmax[shape.fNz-1]) numfaces += radiusSegments * (hasrmin ? 2 : 1);
+
+   let cut_faces = null;
+
+   if (pnts !== null) {
+      if (pnts.length === shape.fNz * 2) {
+         // special case - all layers are there, create faces ourself
+         cut_faces = [];
+         for (let layer = shape.fNz-1; layer > 0; --layer) {
+            if (shape.fZ[layer] === shape.fZ[layer-1]) continue;
+            let right = 2*shape.fNz - 1 - layer;
+            cut_faces.push([right, layer - 1, layer]);
+            cut_faces.push([right, right + 1, layer-1]);
+         }
+
+      } else {
+         // let three.js calculate our faces
+         // console.log(`triangulate polygon ${shape.fShapeId}`);
+         cut_faces = ShapeUtils.triangulateShape(pnts, []);
+      }
+      numfaces += cut_faces.length*2;
+   }
+
+   let phi0 = thetaStart*Math.PI/180, dphi = thetaLength/radiusSegments*Math.PI/180;
+
+   // calculate all sin/cos tables in advance
+   let _sin = new Float32Array(radiusSegments+1),
+       _cos = new Float32Array(radiusSegments+1);
+   for (let seg=0;seg<=radiusSegments;++seg) {
+      _cos[seg] = Math.cos(phi0+seg*dphi);
+      _sin[seg] = Math.sin(phi0+seg*dphi);
+   }
+
+   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
+
+   // add sides
+   for (let side = 0; side < 2; ++side) {
+      let rside = (side === 0) ? 'fRmax' : 'fRmin',
+          z1 = shape.fZ[0], r1 = factor*shape[rside][0],
+          d1 = 1 - side, d2 = side;
+
+      for (let layer = 0; layer < shape.fNz; ++layer) {
+
+         if (usage[layer*2+side] === 0) continue;
+
+         let z2 = shape.fZ[layer], r2 = factor*shape[rside][layer],
+             nxy = 1, nz = 0;
+
+         if ((r2 !== r1)) {
+            let angle = Math.atan2((r2-r1), (z2-z1));
+            nxy = Math.cos(angle);
+            nz = Math.sin(angle);
+         }
+
+         if (side > 0) { nxy*=-1; nz*=-1; }
+
+         for (let seg = 0; seg < radiusSegments; ++seg) {
+            creator.addFace4(r1 * _cos[seg+d1], r1 * _sin[seg+d1], z1,
+                             r2 * _cos[seg+d1], r2 * _sin[seg+d1], z2,
+                             r2 * _cos[seg+d2], r2 * _sin[seg+d2], z2,
+                             r1 * _cos[seg+d2], r1 * _sin[seg+d2], z1);
+            creator.setNormal_12_34(nxy*_cos[seg+d1], nxy*_sin[seg+d1], nz, nxy*_cos[seg+d2], nxy*_sin[seg+d2], nz);
+         }
+
+         z1 = z2; r1 = r2;
+      }
+   }
+
+   // add top/bottom
+   for (let layer = 0; layer < shape.fNz; layer += (shape.fNz-1)) {
+
+      let rmin = factor*shape.fRmin[layer], rmax = factor*shape.fRmax[layer];
+
+      if (rmin === rmax) continue;
+
+      let layerz = shape.fZ[layer],
+          d1 = (layer === 0) ? 1 : 0, d2 = 1 - d1,
+          normalz = (layer === 0) ? -1: 1;
+
+      if (!hasrmin && !cut_faces)
+         creator.startPolygon(layer > 0);
+
+      for (let seg = 0; seg < radiusSegments; ++seg) {
+         creator.addFace4(rmin * _cos[seg+d1], rmin * _sin[seg+d1], layerz,
+                          rmax * _cos[seg+d1], rmax * _sin[seg+d1], layerz,
+                          rmax * _cos[seg+d2], rmax * _sin[seg+d2], layerz,
+                          rmin * _cos[seg+d2], rmin * _sin[seg+d2], layerz,
+                          hasrmin ? 0 : 2);
+         creator.setNormal(0, 0, normalz);
+      }
+
+      creator.stopPolygon();
+   }
+
+   if (cut_faces)
+      for (let seg = 0; seg <= radiusSegments; seg += radiusSegments) {
+         let d1 = (seg === 0) ? 1 : 2, d2 = 3 - d1;
+         for (let n=0;n<cut_faces.length;++n) {
+            let a = pnts[cut_faces[n][0]],
+                b = pnts[cut_faces[n][d1]],
+                c = pnts[cut_faces[n][d2]];
+
+            creator.addFace3(a.x * _cos[seg], a.x * _sin[seg], a.y,
+                             b.x * _cos[seg], b.x * _sin[seg], b.y,
+                             c.x * _cos[seg], c.x * _sin[seg], c.y);
+
+            creator.calcNormal();
+         }
+      }
+
+   return creator.create();
+}
+
+/** @summary Creates xtru geometrey
+  * @private */
+function createXtruBuffer( shape, faces_limit ) {
+   let nfaces = (shape.fNz-1) * shape.fNvert * 2;
+
+   if (faces_limit < 0) return nfaces + shape.fNvert*3;
+
+   // create points
+   let pnts = [];
+   for (let vert = 0; vert < shape.fNvert; ++vert)
+      pnts.push(new Vector2(shape.fX[vert], shape.fY[vert]));
+
+   let faces = ShapeUtils.triangulateShape(pnts , []);
+   if (faces.length < pnts.length-2) {
+      geoWarn(`Problem with XTRU shape ${shape.fName} with ${pnts.length} vertices`);
+      faces = [];
+   } else {
+      nfaces += faces.length * 2;
+   }
+
+   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(nfaces);
+
+   for (let layer = 0; layer < shape.fNz-1; ++layer) {
+      let z1 = shape.fZ[layer], scale1 = shape.fScale[layer],
+          z2 = shape.fZ[layer+1], scale2 = shape.fScale[layer+1],
+          x01 = shape.fX0[layer], x02 = shape.fX0[layer+1],
+          y01 = shape.fY0[layer], y02 = shape.fY0[layer+1];
+
+      for (let vert1 = 0; vert1 < shape.fNvert; ++vert1) {
+         let vert2 = (vert1+1) % shape.fNvert;
+         creator.addFace4(scale1 * shape.fX[vert1] + x01, scale1 * shape.fY[vert1] + y01, z1,
+                          scale2 * shape.fX[vert1] + x02, scale2 * shape.fY[vert1] + y02, z2,
+                          scale2 * shape.fX[vert2] + x02, scale2 * shape.fY[vert2] + y02, z2,
+                          scale1 * shape.fX[vert2] + x01, scale1 * shape.fY[vert2] + y01, z1);
+         creator.calcNormal();
+      }
+   }
+
+   for (let layer = 0; layer <= shape.fNz-1; layer += (shape.fNz-1)) {
+      let z = shape.fZ[layer], scale = shape.fScale[layer],
+          x0 = shape.fX0[layer], y0 = shape.fY0[layer];
+
+      for (let n = 0; n < faces.length; ++n) {
+         let face = faces[n],
+             pnt1 = pnts[face[0]],
+             pnt2 = pnts[face[layer === 0 ? 2 : 1]],
+             pnt3 = pnts[face[layer === 0 ? 1 : 2]];
+
+         creator.addFace3(scale * pnt1.x + x0, scale * pnt1.y + y0, z,
+                          scale * pnt2.x + x0, scale * pnt2.y + y0, z,
+                          scale * pnt3.x + x0, scale * pnt3.y + y0, z);
+         creator.setNormal(0,0,layer === 0 ? -1 : 1);
+      }
+   }
+
+   return creator.create();
+}
+
+/** @summary Creates para geometrey
+  * @private */
+function createParaboloidBuffer( shape, faces_limit ) {
+
+   let radiusSegments = Math.max(4, Math.round(360/cfg.GradPerSegm)),
+       heightSegments = 30;
+
+   if (faces_limit > 0) {
+      let fact = 2*radiusSegments*(heightSegments+1) / faces_limit;
+      if (fact > 1.) {
+         radiusSegments = Math.max(5, Math.floor(radiusSegments/Math.sqrt(fact)));
+         heightSegments = Math.max(5, Math.floor(heightSegments/Math.sqrt(fact)));
+      }
+   }
+
+   let zmin = -shape.fDZ, zmax = shape.fDZ, rmin = shape.fRlo, rmax = shape.fRhi;
+
+   // if no radius at -z, find intersection
+   if (shape.fA >= 0) {
+      if (shape.fB > zmin) zmin = shape.fB;
+   } else {
+      if (shape.fB < zmax) zmax = shape.fB;
+   }
+
+   let ttmin = Math.atan2(zmin, rmin), ttmax = Math.atan2(zmax, rmax);
+
+   let numfaces = (heightSegments+1)*radiusSegments*2;
+   if (rmin === 0) numfaces -= radiusSegments*2; // complete layer
+   if (rmax === 0) numfaces -= radiusSegments*2; // complete layer
+
+   if (faces_limit < 0) return numfaces;
+
+   // calculate all sin/cos tables in advance
+   let _sin = new Float32Array(radiusSegments+1),
+       _cos = new Float32Array(radiusSegments+1);
+   for (let seg=0;seg<=radiusSegments;++seg) {
+      _cos[seg] = Math.cos(seg/radiusSegments*2*Math.PI);
+      _sin[seg] = Math.sin(seg/radiusSegments*2*Math.PI);
+   }
+
+   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces),
+       lastz = zmin, lastr = 0, lastnxy = 0, lastnz = -1;
+
+   for (let layer = 0; layer <= heightSegments + 1; ++layer) {
+
+      let layerz = 0, radius = 0, nxy = 0, nz = -1;
+
+      if ((layer === 0) && (rmin === 0)) continue;
+
+      if ((layer === heightSegments + 1) && (lastr === 0)) break;
+
+      switch (layer) {
+         case 0: layerz = zmin; radius = rmin; break;
+         case heightSegments: layerz = zmax; radius = rmax; break;
+         case heightSegments + 1: layerz = zmax; radius = 0; break;
+         default: {
+            let tt = Math.tan(ttmin + (ttmax-ttmin) * layer / heightSegments),
+                delta = tt**2 - 4*shape.fA*shape.fB; // should be always positive (a*b < 0)
+            radius = 0.5*(tt+Math.sqrt(delta))/shape.fA;
+            if (radius < 1e-6) radius = 0;
+            layerz = radius*tt;
+         }
+      }
+
+      nxy = shape.fA * radius;
+      nz = (shape.fA > 0) ? -1 : 1;
+
+      let skip = (lastr === 0) ? 1 : ((radius === 0) ? 2 : 0);
+
+      for (let seg = 0; seg < radiusSegments; ++seg) {
+         creator.addFace4(radius*_cos[seg],   radius*_sin[seg], layerz,
+                          lastr*_cos[seg],    lastr*_sin[seg], lastz,
+                          lastr*_cos[seg+1],  lastr*_sin[seg+1], lastz,
+                          radius*_cos[seg+1], radius*_sin[seg+1], layerz, skip);
+
+         // use analytic normal values when open/closing paraboloid around 0
+         // cut faces (top or bottom) set with simple normal
+         if ((skip === 0) || ((layer === 1) && (rmin === 0)) || ((layer === heightSegments+1) && (rmax === 0)))
+            creator.setNormal4(nxy*_cos[seg],       nxy*_sin[seg],       nz,
+                               lastnxy*_cos[seg],   lastnxy*_sin[seg],   lastnz,
+                               lastnxy*_cos[seg+1], lastnxy*_sin[seg+1], lastnz,
+                               nxy*_cos[seg+1],     nxy*_sin[seg+1],     nz, skip);
+         else
+            creator.setNormal(0, 0, (layer < heightSegments) ? -1 : 1);
+      }
+
+      lastz = layerz; lastr = radius;
+      lastnxy = nxy; lastnz = nz;
+   }
+
+   return creator.create();
+}
+
+/** @summary Creates hype geometrey
+  * @private */
+function createHypeBuffer( shape, faces_limit ) {
+
+   if ((shape.fTin === 0) && (shape.fTout === 0))
+      return createTubeBuffer(shape, faces_limit);
+
+   let radiusSegments = Math.max(4, Math.round(360/cfg.GradPerSegm)),
+       heightSegments = 30,
+       numfaces = radiusSegments * (heightSegments + 1) * ((shape.fRmin > 0) ? 4 : 2);
+
+   if (faces_limit < 0) return numfaces;
+
+   if ((faces_limit > 0) && (faces_limit > numfaces)) {
+      radiusSegments = Math.max(4, Math.floor(radiusSegments/Math.sqrt(numfaces/faces_limit)));
+      heightSegments = Math.max(4, Math.floor(heightSegments/Math.sqrt(numfaces/faces_limit)));
+      numfaces = radiusSegments * (heightSegments + 1) * ((shape.fRmin > 0) ? 4 : 2);
+   }
+
+   // calculate all sin/cos tables in advance
+   let _sin = new Float32Array(radiusSegments+1), _cos = new Float32Array(radiusSegments+1);
+   for (let seg=0;seg<=radiusSegments;++seg) {
+      _cos[seg] = Math.cos(seg/radiusSegments*2*Math.PI);
+      _sin[seg] = Math.sin(seg/radiusSegments*2*Math.PI);
+   }
+
+   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
+
+   // in-out side
+   for (let side = 0; side < 2; ++side) {
+      if ((side > 0) && (shape.fRmin <= 0)) break;
+
+      let r0 = (side > 0) ? shape.fRmin : shape.fRmax,
+          tsq = (side > 0) ? shape.fTinsq : shape.fToutsq,
+          d1 = 1- side, d2 = 1 - d1;
+
+      // vertical layers
+      for (let layer = 0; layer < heightSegments; ++layer) {
+         let z1 = -shape.fDz + layer/heightSegments*2*shape.fDz,
+             z2 = -shape.fDz + (layer+1)/heightSegments*2*shape.fDz,
+             r1 = Math.sqrt(r0**2 + tsq*z1**2),
+             r2 = Math.sqrt(r0**2 + tsq*z2**2);
+
+         for (let seg = 0; seg < radiusSegments; ++seg) {
+            creator.addFace4(r1 * _cos[seg+d1], r1 * _sin[seg+d1], z1,
+                             r2 * _cos[seg+d1], r2 * _sin[seg+d1], z2,
+                             r2 * _cos[seg+d2], r2 * _sin[seg+d2], z2,
+                             r1 * _cos[seg+d2], r1 * _sin[seg+d2], z1);
+            creator.calcNormal();
+         }
+      }
+   }
+
+   // add caps
+   for (let layer = 0; layer < 2; ++layer) {
+      let z = (layer === 0) ? shape.fDz : -shape.fDz,
+          r1 = Math.sqrt(shape.fRmax**2 + shape.fToutsq*z**2),
+          r2 = (shape.fRmin > 0) ? Math.sqrt(shape.fRmin**2 + shape.fTinsq*z**2) : 0,
+          skip = (shape.fRmin > 0) ? 0 : 1,
+          d1 = 1 - layer, d2 = 1 - d1;
+      for (let seg = 0; seg < radiusSegments; ++seg) {
+          creator.addFace4(r1 * _cos[seg+d1], r1 * _sin[seg+d1], z,
+                           r2 * _cos[seg+d1], r2 * _sin[seg+d1], z,
+                           r2 * _cos[seg+d2], r2 * _sin[seg+d2], z,
+                           r1 * _cos[seg+d2], r1 * _sin[seg+d2], z, skip);
+          creator.setNormal(0,0, (layer === 0) ? 1 : -1);
+       }
+   }
+
+   return creator.create();
+}
+
+/** @summary Creates tessalated geometrey
+  * @private */
+function createTessellatedBuffer( shape, faces_limit) {
+   let numfaces = 0;
+
+   for (let i = 0; i < shape.fFacets.length; ++i) {
+      let f = shape.fFacets[i];
+      if (f.fNvert == 4) numfaces += 2;
+                    else numfaces += 1;
+   }
+
+   if (faces_limit < 0) return numfaces;
+
+   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
+
+   for (let i = 0; i < shape.fFacets.length; ++i) {
+      let f = shape.fFacets[i],
+          v0 = shape.fVertices[f.fIvert[0]].fVec,
+          v1 = shape.fVertices[f.fIvert[1]].fVec,
+          v2 = shape.fVertices[f.fIvert[2]].fVec;
+
+      if (f.fNvert == 4) {
+         let v3 = shape.fVertices[f.fIvert[3]].fVec;
+         creator.addFace4(v0[0], v0[1], v0[2], v1[0], v1[1], v1[2], v2[0], v2[1], v2[2], v3[0], v3[1], v3[2]);
+         creator.calcNormal();
+      } else {
+         creator.addFace3(v0[0], v0[1], v0[2], v1[0], v1[1], v1[2], v2[0], v2[1], v2[2]);
+         creator.calcNormal();
+      }
+   }
+
+   return creator.create();
+}
+
+/** @summary Creates Matrix4 from TGeoMatrix
+  * @private */
+function createMatrix(matrix) {
+
+   if (!matrix) return null;
+
+   let translation, rotation, scale;
+
+   switch (matrix._typename) {
+      case 'TGeoTranslation': translation = matrix.fTranslation; break;
+      case 'TGeoRotation': rotation = matrix.fRotationMatrix; break;
+      case 'TGeoScale': scale = matrix.fScale; break;
+      case 'TGeoGenTrans':
+         scale = matrix.fScale; // no break, translation and rotation follows
+      case 'TGeoCombiTrans':
+         translation = matrix.fTranslation;
+         if (matrix.fRotation) rotation = matrix.fRotation.fRotationMatrix;
+         break;
+      case 'TGeoHMatrix':
+         translation = matrix.fTranslation;
+         rotation = matrix.fRotationMatrix;
+         scale = matrix.fScale;
+         break;
+      case 'TGeoIdentity':
+         break;
+      default:
+         console.warn(`unsupported matrix ${matrix._typename}`);
+   }
+
+   if (!translation && !rotation && !scale) return null;
+
+   let res = new Matrix4();
+
+   if (rotation)
+      res.set(rotation[0], rotation[1], rotation[2],  0,
+              rotation[3], rotation[4], rotation[5],  0,
+              rotation[6], rotation[7], rotation[8],  0,
+                        0,           0,           0,  1);
+
+   if (translation)
+      res.setPosition(translation[0], translation[1], translation[2]);
+
+   if (scale)
+      res.scale(new Vector3(scale[0], scale[1], scale[2]));
+
+   return res;
+}
+
+/** @summary Creates transformation matrix for TGeoNode
+  * @desc created after node visibility flag is checked and volume cut is performed
+  * @private */
+function getNodeMatrix(kind, node) {
+
+   let matrix = null;
+
+   if (kind === kindEve) {
+      // special handling for EVE nodes
+
+      matrix = new Matrix4();
+
+      if (node.fTrans) {
+         matrix.set(node.fTrans[0],  node.fTrans[4],  node.fTrans[8],  0,
+                    node.fTrans[1],  node.fTrans[5],  node.fTrans[9],  0,
+                    node.fTrans[2],  node.fTrans[6],  node.fTrans[10], 0,
+                                 0,               0,               0,  1);
+         // second - set position with proper sign
+         matrix.setPosition(node.fTrans[12], node.fTrans[13], node.fTrans[14]);
+      }
+   } else if (node.fMatrix) {
+      matrix = createMatrix(node.fMatrix);
+   } else if ((node._typename == 'TGeoNodeOffset') && node.fFinder) {
+      const kPatternReflected = BIT(14);
+      if ((node.fFinder.fBits & kPatternReflected) !== 0)
+         geoWarn('Unsupported reflected pattern ' + node.fFinder._typename);
+
+      // if (node.fFinder._typename === 'TGeoPatternCylR') { }
+      // if (node.fFinder._typename === 'TGeoPatternSphR') { }
+      // if (node.fFinder._typename === 'TGeoPatternSphTheta') { }
+      // if (node.fFinder._typename === 'TGeoPatternSphPhi') { }
+      // if (node.fFinder._typename === 'TGeoPatternHoneycomb') { }
+      switch(node.fFinder._typename) {
+        case 'TGeoPatternX':
+        case 'TGeoPatternY':
+        case 'TGeoPatternZ':
+        case 'TGeoPatternParaX':
+        case 'TGeoPatternParaY':
+        case 'TGeoPatternParaZ':
+           let _shift = node.fFinder.fStart + (node.fIndex + 0.5) * node.fFinder.fStep;
+
+           matrix = new Matrix4();
+
+           switch (node.fFinder._typename[node.fFinder._typename.length-1]) {
+              case 'X': matrix.setPosition(_shift, 0, 0); break;
+              case 'Y': matrix.setPosition(0, _shift, 0); break;
+              case 'Z': matrix.setPosition(0, 0, _shift); break;
+           }
+           break;
+
+        case 'TGeoPatternCylPhi':
+           let phi = (Math.PI/180)*(node.fFinder.fStart+(node.fIndex+0.5)*node.fFinder.fStep),
+               _cos = Math.cos(phi), _sin = Math.sin(phi);
+
+           matrix = new Matrix4();
+
+           matrix.set(_cos, -_sin,  0,  0,
+                      _sin,  _cos,  0,  0,
+                         0,     0,  1,  0,
+                         0,     0,  0,  1);
+           break;
+
+        case 'TGeoPatternCylR':
+            // seems to be, require no transformation
+            matrix = new Matrix4();
+            break;
+
+        case 'TGeoPatternTrapZ':
+           let dz = node.fFinder.fStart + (node.fIndex+0.5)*node.fFinder.fStep;
+           matrix = new Matrix4();
+           matrix.setPosition(node.fFinder.fTxz*dz, node.fFinder.fTyz*dz, dz);
+           break;
+
+        default:
+           geoWarn(`Unsupported pattern type ${node.fFinder._typename}`);
+           break;
+      }
+   }
+
+   return matrix;
+}
+
+/** @summary Returns number of faces for provided geometry
+  * @param {Object} geom  - can be BufferGeometry, CsgGeometry or interim array of polygons
+  * @private */
+function numGeometryFaces(geom) {
+   if (!geom) return 0;
+
+   if (geom instanceof Geometry)
+      return geom.tree.numPolygons();
+
+   // special array of polygons
+   if (geom.polygons)
+      return geom.polygons.length;
+
+   let attr = geom.getAttribute('position');
+   return attr?.count ? Math.round(attr.count / 3) : 0;
+}
+
+/** @summary Returns geometry bounding box
+  * @private */
+function geomBoundingBox(geom) {
+   if (!geom) return null;
+
+   let polygons = null;
+
+   if (geom instanceof Geometry)
+      polygons = geom.tree.collectPolygons();
+   else if (geom.polygons)
+      polygons = geom.polygons;
+
+   if (polygons !== null) {
+      let box = new Box3();
+      for (let n = 0; n < polygons.length; ++n) {
+         let polygon = polygons[n], nvert = polygon.vertices.length;
+         for (let k = 0; k < nvert; ++k)
+            box.expandByPoint(polygon.vertices[k]);
+      }
+      return box;
+   }
+
+   if (!geom.boundingBox)
+      geom.computeBoundingBox();
+
+   return geom.boundingBox.clone();
+}
+
+/** @summary Creates half-space geometry for given shape
+  * @desc Just big-enough triangle to make BSP calculations
+  * @private */
+function createHalfSpace(shape, geom) {
+   if (!shape?.fN || !shape?.fP) return null;
+
+   let vertex = new Vector3(shape.fP[0], shape.fP[1], shape.fP[2]),
+       normal = new Vector3(shape.fN[0], shape.fN[1], shape.fN[2]);
+
+   normal.normalize();
+
+   let sz = 1e10;
+   if (geom) {
+      // using real size of other geometry, we probably improve precision
+      let box = geomBoundingBox(geom);
+      if (box) sz = box.getSize(new Vector3()).length() * 1000;
+   }
+
+   let v0 = new Vector3(-sz, -sz/2, 0),
+       v1 = new Vector3(0, sz, 0),
+       v2 = new Vector3(sz, -sz/2, 0),
+       v3 = new Vector3(0, 0, -sz),
+       geometry = new BufferGeometry(),
+       positions = new Float32Array([ v0.x,v0.y,v0.z, v2.x,v2.y,v2.z, v1.x,v1.y,v1.z,
+                                      v0.x,v0.y,v0.z, v1.x,v1.y,v1.z, v3.x,v3.y,v3.z,
+                                      v1.x,v1.y,v1.z, v2.x,v2.y,v2.z, v3.x,v3.y,v3.z,
+                                      v2.x,v2.y,v2.z, v0.x,v0.y,v0.z, v3.x,v3.y,v3.z ]);
+   geometry.setAttribute('position', new BufferAttribute(positions, 3));
+   geometry.computeVertexNormals();
+
+   geometry.lookAt(normal);
+   geometry.computeVertexNormals();
+
+   for(let k = 0; k < positions.length; k += 3) {
+      positions[k] = positions[k] + vertex.x;
+      positions[k+1] = positions[k+1] + vertex.y;
+      positions[k+2] = positions[k+2] + vertex.z;
+   }
+
+   return geometry;
+}
+
+/** @summary Returns number of faces for provided geometry
+  * @param geom  - can be BufferGeometry, CsgGeometry or interim array of polygons
+  * @private */
+function countGeometryFaces(geom) {
+   if (!geom) return 0;
+
+   if (geom instanceof Geometry)
+      return geom.tree.numPolygons();
+
+   // special array of polygons
+   if (geom.polygons)
+      return geom.polygons.length;
+
+   let attr = geom.getAttribute('position');
+   return attr?.count ? Math.round(attr.count / 3) : 0;
+}
+
+/** @summary Creates geometrey for composite shape
+  * @private */
+function createComposite( shape, faces_limit ) {
+
+   if (faces_limit < 0)
+      return createGeometry(shape.fNode.fLeft, -10) +
+             createGeometry(shape.fNode.fRight, -10);
+
+   let geom1, geom2, bsp1, bsp2, return_bsp = false,
+       matrix1 = createMatrix(shape.fNode.fLeftMat),
+       matrix2 = createMatrix(shape.fNode.fRightMat);
+
+   if (faces_limit === 0) faces_limit = 4000;
+                     else return_bsp = true;
+
+   if (matrix1 && (matrix1.determinant() < -0.9))
+      geoWarn('Axis reflection in left composite shape - not supported');
+
+   if (matrix2 && (matrix2.determinant() < -0.9))
+      geoWarn('Axis reflections in right composite shape - not supported');
+
+   if (shape.fNode.fLeft._typename == clTGeoHalfSpace) {
+      geom1 = createHalfSpace(shape.fNode.fLeft);
+   } else {
+      geom1 = createGeometry(shape.fNode.fLeft, faces_limit);
+   }
+
+   if (!geom1) return null;
+
+   let n1 = countGeometryFaces(geom1), n2 = 0;
+   if (geom1._exceed_limit) n1 += faces_limit;
+
+   if (n1 < faces_limit) {
+
+      if (shape.fNode.fRight._typename == clTGeoHalfSpace) {
+         geom2 = createHalfSpace(shape.fNode.fRight, geom1);
+      } else {
+         geom2 = createGeometry(shape.fNode.fRight, faces_limit);
+      }
+
+      n2 = countGeometryFaces(geom2);
+   }
+
+   if ((n1 + n2 >= faces_limit) || !geom2) {
+      if (geom1.polygons)
+         geom1 = createBufferGeometry(geom1.polygons);
+      if (matrix1) geom1.applyMatrix4(matrix1);
+      geom1._exceed_limit = true;
+      return geom1;
+   }
+
+   bsp1 = new Geometry(geom1, matrix1, cfg.CompressComp ? 0 : undefined);
+
+   bsp2 = new Geometry(geom2, matrix2, bsp1.maxid);
+
+   // take over maxid from both geometries
+   bsp1.maxid = bsp2.maxid;
+
+   switch(shape.fNode._typename) {
+      case 'TGeoIntersection': bsp1.direct_intersect(bsp2);  break; // '*'
+      case 'TGeoUnion': bsp1.direct_union(bsp2); break;   // '+'
+      case 'TGeoSubtraction': bsp1.direct_subtract(bsp2); break; // '/'
+      default:
+         geoWarn('unsupported bool operation ' + shape.fNode._typename + ', use first geom');
+   }
+
+   if (countGeometryFaces(bsp1) === 0) {
+      geoWarn('Zero faces in comp shape'
+            + ` left: ${shape.fNode.fLeft._typename} ${countGeometryFaces(geom1)} faces`
+            + ` right: ${shape.fNode.fRight._typename} ${countGeometryFaces(geom2)} faces`
+            + '  use first');
+      bsp1 = new Geometry(geom1, matrix1);
+   }
+
+   return return_bsp ? { polygons: bsp1.toPolygons() } : bsp1.toBufferGeometry();
+}
+
+/** @summary Try to create projected geometry
+  * @private */
+function projectGeometry(geom, matrix, projection, position, flippedMesh) {
+
+   if (!geom.boundingBox) geom.computeBoundingBox();
+
+   let box = geom.boundingBox.clone();
+
+   box.applyMatrix4(matrix);
+
+   if (!position) position = 0;
+
+   if (((box.min[projection] >= position) && (box.max[projection] >= position)) ||
+       ((box.min[projection] <= position) && (box.max[projection] <= position))) {
+      return null; // not interesting
+   }
+
+   let bsp1 = new Geometry(geom, matrix, 0, flippedMesh),
+       sizex = 2*Math.max(Math.abs(box.min.x), Math.abs(box.max.x)),
+       sizey = 2*Math.max(Math.abs(box.min.y), Math.abs(box.max.y)),
+       sizez = 2*Math.max(Math.abs(box.min.z), Math.abs(box.max.z)),
+       size = 10000;
+
+   switch (projection) {
+      case 'x': size = Math.max(sizey,sizez); break;
+      case 'y': size = Math.max(sizex,sizez); break;
+      case 'z': size = Math.max(sizex,sizey); break;
+   }
+
+   let bsp2 = createNormal(projection, position, size);
+
+   bsp1.cut_from_plane(bsp2);
+
+   return bsp2.toBufferGeometry();
+}
+
+/** @summary Creates geometry model for the provided shape
+  * @param {Object} shape - instance of TGeoShape object
+  * @param {Number} limit - defines return value, see details
+  * @desc
+  *  - if limit === 0 (or undefined) returns BufferGeometry
+  *  - if limit < 0 just returns estimated number of faces
+  *  - if limit > 0 return list of CsgPolygons (used only for composite shapes)
+  * @private */
+function createGeometry(shape, limit) {
+   if (limit === undefined) limit = 0;
+
+   try {
+      switch (shape._typename) {
+         case clTGeoBBox: return createCubeBuffer( shape, limit );
+         case clTGeoPara: return createParaBuffer( shape, limit );
+         case clTGeoTrd1:
+         case clTGeoTrd2: return createTrapezoidBuffer( shape, limit );
+         case clTGeoArb8:
+         case clTGeoTrap:
+         case clTGeoGtra: return createArb8Buffer( shape, limit );
+         case clTGeoSphere: return createSphereBuffer( shape , limit );
+         case clTGeoCone:
+         case clTGeoConeSeg:
+         case clTGeoTube:
+         case clTGeoTubeSeg:
+         case clTGeoCtub: return createTubeBuffer( shape, limit );
+         case clTGeoEltu: return createEltuBuffer( shape, limit );
+         case clTGeoTorus: return createTorusBuffer( shape, limit );
+         case clTGeoPcon:
+         case clTGeoPgon: return createPolygonBuffer( shape, limit );
+         case clTGeoXtru: return createXtruBuffer( shape, limit );
+         case clTGeoParaboloid: return createParaboloidBuffer( shape, limit );
+         case clTGeoHype: return createHypeBuffer( shape, limit );
+         case 'TGeoTessellated': return createTessellatedBuffer( shape, limit );
+         case clTGeoCompositeShape: return createComposite( shape, limit );
+         case clTGeoShapeAssembly: break;
+         case clTGeoScaledShape: {
+            let res = createGeometry(shape.fShape, limit);
+            if (shape.fScale && (limit >= 0) && isFunc(res?.scale))
+               res.scale(shape.fScale.fScale[0], shape.fScale.fScale[1], shape.fScale.fScale[2]);
+            return res;
+         }
+         case clTGeoHalfSpace:
+            if (limit < 0) return 1; // half space if just plane used in composite
+            // no break here - warning should appear
+         default: geoWarn(`unsupported shape type ${shape._typename}`);
+      }
+   } catch(e) {
+      let place = '';
+      if (e.stack !== undefined) {
+         place = e.stack.split('\n')[0];
+         if (place.indexOf(e.message) >= 0) place = e.stack.split('\n')[1];
+                                       else place = 'at: ' + place;
+      }
+      geoWarn(`${shape._typename} err: ${e.message} ${place}`);
+   }
+
+   return limit < 0 ? 0 : null;
+}
+
+
+/** @summary Create single shape from EVE7 render date
+  * @private */
+function makeEveGeometry(rd) {
+
+   let off = 0;
+
+   if (rd.sz[0]) {
+      rd.vtxBuff = new Float32Array(rd.raw.buffer, off, rd.sz[0]);
+      off += rd.sz[0]*4;
+   }
+
+   if (rd.sz[1]) {
+      // normals were not used
+      // rd.nrmBuff = new Float32Array(rd.raw.buffer, off, rd.sz[1]);
+      off += rd.sz[1]*4;
+   }
+
+   if (rd.sz[2]) {
+      // these are special values in the buffer begin
+      rd.prefixBuf = new Uint32Array(rd.raw.buffer, off, 2);
+      off += 2*4;
+      rd.idxBuff = new Uint32Array(rd.raw.buffer, off, rd.sz[2]-2);
+      off += (rd.sz[2]-2)*4;
+   }
+
+   const GL_TRIANGLES = 4; // same as in EVE7
+
+   if (rd.prefixBuf[0] != GL_TRIANGLES)
+      throw 'Expect triangles first.';
+
+   let nVert = 3 * rd.prefixBuf[1]; // number of vertices to draw
+
+   if (rd.idxBuff.length != nVert)
+      throw 'Expect single list of triangles in index buffer.';
+
+   let body = new BufferGeometry();
+   body.setAttribute('position', new BufferAttribute(rd.vtxBuff, 3));
+   body.setIndex(new BufferAttribute(rd.idxBuff, 1));
+   body.computeVertexNormals();
+
+   return body;
+}
+
+/** @summary Create single shape from geometry veiwer render date
+  * @private */
+function makeViewerGeometry(rd) {
+
+   let vtxBuff = new Float32Array(rd.raw.buffer, 0, rd.raw.buffer.byteLength/4);
+
+   let body = new BufferGeometry();
+   body.setAttribute('position', new BufferAttribute(vtxBuff, 3));
+   body.setIndex(new BufferAttribute(new Uint32Array(rd.idx), 1));
+   body.computeVertexNormals();
+   return body;
+}
+
+/** @summary Create single shape from provided raw data from web viewer.
+  * @desc If nsegm changed, shape will be recreated
+  * @private */
+function createServerGeometry(rd, nsegm) {
+
+   if (rd.server_shape && ((rd.nsegm === nsegm) || !rd.shape))
+      return rd.server_shape;
+
+   rd.nsegm = nsegm;
+
+   let g = null;
+
+   if (rd.shape) {
+      // case when TGeoShape provided as is
+      g = createGeometry(rd.shape);
+   } else {
+
+      if (!rd.raw?.buffer) {
+         console.error('No raw data at all');
+         return null;
+      }
+
+      if (rd.sz)
+         g = makeEveGeometry(rd);
+      else
+         g = makeViewerGeometry(rd);
+
+   }
+
+   // shape handle is similar to created in JSROOT.GeoPainter
+   return {
+      _typename: '$$Shape$$', // indicate that shape can be used as is
+      ready: true,
+      geom: g,
+      nfaces: numGeometryFaces(g)
+   }
+}
+
+/** @summary Provides info about geo object, used for tooltip info
+  * @param {Object} obj - any kind of TGeo-related object like shape or node or volume
+  * @private */
+function provideObjectInfo(obj) {
+   let info = [], shape = null;
+
+   if (obj.fVolume !== undefined)
+      shape = obj.fVolume.fShape;
+   else if (obj.fShape !== undefined)
+      shape = obj.fShape;
+   else if ((obj.fShapeBits !== undefined) && (obj.fShapeId !== undefined))
+      shape = obj;
+
+   if (!shape) {
+      info.push(obj._typename);
+      return info;
+   }
+
+   let sz = Math.max(shape.fDX, shape.fDY, shape.fDZ),
+       useexp = (sz > 1e7) || (sz < 1e-7),
+       conv = (v) => {
+          if (v === undefined) return '???';
+          if ((v == Math.round(v) && v < 1e7)) return Math.round(v);
+          return useexp ? v.toExponential(4) : v.toPrecision(7);
+       };
+
+   info.push(shape._typename);
+
+   info.push(`DX=${conv(shape.fDX)} DY=${conv(shape.fDY)} DZ=${conv(shape.fDZ)}`);
+
+   switch (shape._typename) {
+      case clTGeoBBox: break;
+      case clTGeoPara: info.push(`Alpha=${shape.fAlpha} Phi=${shape.fPhi} Theta=${shape.fTheta}`); break;
+      case clTGeoTrd2: info.push(`Dy1=${conv(shape.fDy1)} Dy2=${conv(shape.fDy1)}`); // no break
+      case clTGeoTrd1: info.push(`Dx1=${conv(shape.fDx1)} Dx2=${conv(shape.fDx1)}`); break;
+      case clTGeoArb8: break;
+      case clTGeoTrap: break;
+      case clTGeoGtra: break;
+      case clTGeoSphere:
+         info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`,
+                   `Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`,
+                   `Theta1=${shape.fTheta1} Theta2=${shape.fTheta2}`);
+         break;
+      case clTGeoConeSeg:
+         info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
+         // no break;
+      case clTGeoCone:
+         info.push(`Rmin1=${conv(shape.fRmin1)} Rmax1=${conv(shape.fRmax1)}`,
+                   `Rmin2=${conv(shape.fRmin2)} Rmax2=${conv(shape.fRmax2)}`);
+         break;
+      case clTGeoCtub:
+      case clTGeoTubeSeg:
+         info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
+         // no break
+      case clTGeoEltu:
+      case clTGeoTube:
+         info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`);
+         break;
+      case clTGeoTorus:
+         info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`,
+                   `Phi1=${shape.fPhi1} Dphi=${shape.fDphi}`);
+         break;
+      case clTGeoPcon:
+      case clTGeoPgon: break;
+      case clTGeoXtru: break;
+      case clTGeoParaboloid:
+         info.push(`Rlo=${conv(shape.fRlo)} Rhi=${conv(shape.fRhi)}`,
+                   `A=${conv(shape.fA)} B=${conv(shape.fB)}`);
+         break;
+      case clTGeoHype:
+         info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`,
+                   `StIn=${conv(shape.fStIn)} StOut=${conv(shape.fStOut)}`);
+         break;
+      case clTGeoCompositeShape: break;
+      case clTGeoShapeAssembly: break;
+      case clTGeoScaledShape:
+         info = provideObjectInfo(shape.fShape);
+         if (shape.fScale)
+            info.unshift(`Scale X=${shape.fScale.fScale[0]} Y=${shape.fScale.fScale[1]} Z=${shape.fScale.fScale[2]}`);
+         break;
+   }
+
+   return info;
+}
+
+/** @summary Creates projection matrix for the camera
+  * @private */
+function createProjectionMatrix(camera) {
+   let cameraProjectionMatrix = new Matrix4();
+
+   camera.updateMatrixWorld();
+
+   camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+   cameraProjectionMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse);
+
+   return cameraProjectionMatrix;
+}
+
+/** @summary Creates frustum
+  * @private */
+function createFrustum(source) {
+   if (!source) return null;
+
+   if (source instanceof PerspectiveCamera)
+      source = createProjectionMatrix(source);
+
+   let frustum = new Frustum();
+   frustum.setFromProjectionMatrix(source);
+
+   frustum.corners = new Float32Array([
+       1,  1,  1,
+       1,  1, -1,
+       1, -1,  1,
+       1, -1, -1,
+      -1,  1,  1,
+      -1,  1, -1,
+      -1, -1,  1,
+      -1, -1, -1,
+       0,  0,  0 // also check center of the shape
+   ]);
+
+   frustum.test = new Vector3(0,0,0);
+
+   frustum.CheckShape = function(matrix, shape) {
+      let pnt = this.test, len = this.corners.length, corners = this.corners, i;
+
+      for (i = 0; i < len; i+=3) {
+         pnt.x = corners[i] * shape.fDX;
+         pnt.y = corners[i+1] * shape.fDY;
+         pnt.z = corners[i+2] * shape.fDZ;
+         if (this.containsPoint(pnt.applyMatrix4(matrix))) return true;
+     }
+
+     return false;
+   };
+
+   frustum.CheckBox = function(box) {
+      let pnt = this.test, cnt = 0;
+      pnt.set(box.min.x, box.min.y, box.min.z);
+      if (this.containsPoint(pnt)) cnt++;
+      pnt.set(box.min.x, box.min.y, box.max.z);
+      if (this.containsPoint(pnt)) cnt++;
+      pnt.set(box.min.x, box.max.y, box.min.z);
+      if (this.containsPoint(pnt)) cnt++;
+      pnt.set(box.min.x, box.max.y, box.max.z);
+      if (this.containsPoint(pnt)) cnt++;
+      pnt.set(box.max.x, box.max.y, box.max.z);
+      if (this.containsPoint(pnt)) cnt++;
+      pnt.set(box.max.x, box.min.y, box.max.z);
+      if (this.containsPoint(pnt)) cnt++;
+      pnt.set(box.max.x, box.max.y, box.min.z);
+      if (this.containsPoint(pnt)) cnt++;
+      pnt.set(box.max.x, box.max.y, box.max.z);
+      if (this.containsPoint(pnt)) cnt++;
+      return cnt > 5; // only if 6 edges and more are seen, we think that box is fully visible
+   };
+
+   return frustum;
+}
+
+/** @summary Checks if two stack arrays are identical
+  * @private */
+function isSameStack(stack1, stack2) {
+   if (!stack1 || !stack2) return false;
+   if (stack1 === stack2) return true;
+   if (stack1.length !== stack2.length) return false;
+   for (let k = 0; k < stack1.length; ++k)
+      if (stack1[k] !== stack2[k]) return false;
+   return true;
+}
+
+
+/**
+  * @summary class for working with cloned nodes
+  *
+  * @private
+  */
+
+class ClonedNodes {
+
+   /** @summary Constructor */
+   constructor(obj, clones) {
+      this.toplevel = true; // indicate if object creates top-level structure with Nodes and Volumes folder
+      this.name_prefix = ''; // name prefix used for nodes names
+      this.maxdepth = 1;  // maximal hierarchy depth, required for transparency
+      this.vislevel = 4;  // maximal depth of nodes visibility aka gGeoManager->SetVisLevel, same default
+      this.maxnodes = 10000; // maximal number of visisble nodes aka gGeoManager->fMaxVisNodes
+
+      if (obj) {
+         if (obj.$geoh) this.toplevel = false;
+         this.createClones(obj);
+      } else if (clones) {
+         this.nodes = clones;
+      }
+   }
+
+   /** @summary Set maximal depth for nodes visibility */
+   setVisLevel(lvl) {
+      this.vislevel = lvl && Number.isInteger(lvl) ? lvl : 4;
+   }
+
+   /** @summary Returns maximal depth for nodes visibility */
+   getVisLevel() {
+      return this.vislevel;
+   }
+
+   /** @summary Set maximal number of visible nodes */
+   setMaxVisNodes(v) {
+      this.maxnodes = Number.isFinite(v) ? v : 10000;
+   }
+
+   /** @summary Returns configured maximal number of visible nodes */
+   getMaxVisNodes() {
+      return this.maxnodes;
+   }
+
+   /** @summary Insert node into existing array */
+   updateNode(node) {
+      if (node && Number.isInteger(node.id) && (node.id < this.nodes.length))
+         this.nodes[node.id] = node;
+   }
+
+   /** @summary Returns TGeoShape for element with given indx */
+   getNodeShape(indx) {
+      if (!this.origin || !this.nodes) return null;
+      let obj = this.origin[indx], clone = this.nodes[indx];
+      if (!obj || !clone) return null;
+      if (clone.kind === kindGeo) {
+         if (obj.fVolume) return obj.fVolume.fShape;
+      } else {
+         return obj.fShape;
+      }
+      return null;
+   }
+
+   /** @summary function to cleanup as much as possible structures
+     * @desc Provided parameters drawnodes and drawshapes are arrays created during building of geometry */
+   cleanup(drawnodes, drawshapes) {
+
+      if (drawnodes) {
+         for (let n = 0; n < drawnodes.length; ++n) {
+            delete drawnodes[n].stack;
+            drawnodes[n] = undefined;
+         }
+      }
+
+      if (drawshapes) {
+         for (let n = 0; n < drawshapes.length; ++n) {
+            delete drawshapes[n].geom;
+            drawshapes[n] = undefined;
+         }
+      }
+
+      if (this.nodes) {
+         for (let n = 0; n < this.nodes.length; ++n) {
+            if (this.nodes[n])
+               delete this.nodes[n].chlds;
+         }
+      }
+
+      delete this.nodes;
+      delete this.origin;
+
+      delete this.sortmap;
+   }
+
+   /** @summary Create complete description for provided Geo object */
+   createClones(obj, sublevel, kind) {
+      if (!sublevel) {
+
+         if (obj && obj._typename == '$$Shape$$')
+            return this.createClonesForShape(obj);
+
+         this.origin = [];
+         sublevel = 1;
+         kind = getNodeKind(obj);
+      }
+
+      if ((kind < 0) || !obj || ('_refid' in obj)) return;
+
+      obj._refid = this.origin.length;
+      this.origin.push(obj);
+      if (sublevel > this.maxdepth) this.maxdepth = sublevel;
+
+      let chlds = null;
+      if (kind === kindGeo)
+         chlds = (obj.fVolume && obj.fVolume.fNodes) ? obj.fVolume.fNodes.arr : null;
+      else
+         chlds = obj.fElements ? obj.fElements.arr : null;
+
+      if (chlds !== null) {
+         checkDuplicates(obj, chlds);
+         for (let i = 0; i < chlds.length; ++i)
+            this.createClones(chlds[i], sublevel + 1, kind);
+      }
+
+      if (sublevel > 1) return;
+
+      this.nodes = [];
+
+      let sortarr = [];
+
+      // first create nodes objects
+      for (let id = 0; id < this.origin.length; ++id) {
+         // let obj = this.origin[id];
+         let node = { id, kind, vol: 0, nfaces: 0 };
+         this.nodes.push(node);
+         sortarr.push(node); // array use to produce sortmap
+      }
+
+      // than fill children lists
+      for (let n = 0; n < this.origin.length; ++n) {
+         let obj = this.origin[n], clone = this.nodes[n],
+             chlds = null, shape = null;
+
+         if (kind === kindEve) {
+            shape = obj.fShape;
+            if (obj.fElements) chlds = obj.fElements.arr;
+         } else if (obj.fVolume) {
+            shape = obj.fVolume.fShape;
+            if (obj.fVolume.fNodes) chlds = obj.fVolume.fNodes.arr;
+         }
+
+         let matrix = getNodeMatrix(kind, obj);
+         if (matrix) {
+            clone.matrix = matrix.elements; // take only matrix elements, matrix will be constructed in worker
+            if (clone.matrix[0] === 1) {
+               let issimple = true;
+               for (let k = 1; (k < clone.matrix.length) && issimple; ++k)
+                  issimple = (clone.matrix[k] === ((k === 5) || (k === 10) || (k === 15) ? 1 : 0));
+               if (issimple) delete clone.matrix;
+            }
+            if (clone.matrix && (kind == kindEve)) clone.abs_matrix = true;
+         }
+         if (shape) {
+            clone.fDX = shape.fDX;
+            clone.fDY = shape.fDY;
+            clone.fDZ = shape.fDZ;
+            clone.vol = shape.fDX * shape.fDY * shape.fDZ;
+            if (shape.$nfaces === undefined)
+               shape.$nfaces = createGeometry(shape, -1);
+            clone.nfaces = shape.$nfaces;
+            if (clone.nfaces <= 0) clone.vol = 0;
+         }
+
+         if (!chlds) continue;
+
+         // in cloned object children is only list of ids
+         clone.chlds = new Array(chlds.length);
+         for (let k = 0; k < chlds.length; ++k)
+            clone.chlds[k] = chlds[k]._refid;
+      }
+
+      // remove _refid identifiers from original objects
+      for (let n = 0; n < this.origin.length; ++n)
+         delete this.origin[n]._refid;
+
+      // do sorting once
+      sortarr.sort((a, b) => b.vol - a.vol);
+
+      // remember sort map and also sortid
+      this.sortmap = new Array(this.nodes.length);
+      for (let n = 0; n < this.nodes.length; ++n) {
+         this.sortmap[n] = sortarr[n].id;
+         sortarr[n].sortid = n;
+      }
+   }
+
+   /** @summary Create elementary item with single already existing shape
+     * @desc used by details view of geometry shape */
+   createClonesForShape(obj) {
+      this.origin = [];
+
+      // indicate that just plain shape is used
+      this.plain_shape = obj;
+
+      let node = {
+            id: 0, sortid: 0, kind: kindShape,
+            name: 'Shape',
+            nfaces: obj.nfaces,
+            fDX: 1, fDY: 1, fDZ: 1, vol: 1,
+            vis: true
+         };
+
+      this.nodes = [ node ];
+   }
+
+   /** @summary Count all visisble nodes */
+   countVisibles() {
+      let cnt = 0, len = this.nodes?.length || 0;
+      for (let k = 0; k < len; ++k)
+          if (this.nodes[k].vis) cnt++;
+      return cnt;
+   }
+
+   /** @summary Mark visisble nodes.
+     * @desc Set only basic flags, actual visibility depends from hierarchy */
+   markVisibles(on_screen, copy_bits, hide_top_volume) {
+      if (this.plain_shape) return 1;
+      if (!this.origin || !this.nodes) return 0;
+
+      let res = 0;
+
+      for (let n = 0; n < this.nodes.length; ++n) {
+         let clone = this.nodes[n], obj = this.origin[n];
+
+         clone.vis = 0; // 1 - only with last level
+         delete clone.nochlds;
+
+         if (clone.kind === kindGeo) {
+            if (obj.fVolume) {
+               if (on_screen) {
+                  // on screen bits used always, childs always checked
+                  clone.vis = testGeoBit(obj.fVolume, geoBITS.kVisOnScreen) ? 99 : 0;
+
+                  if ((n == 0) && clone.vis && hide_top_volume) clone.vis = 0;
+
+                  if (copy_bits) {
+                     setGeoBit(obj.fVolume, geoBITS.kVisNone, false);
+                     setGeoBit(obj.fVolume, geoBITS.kVisThis, (clone.vis > 0));
+                     setGeoBit(obj.fVolume, geoBITS.kVisDaughters, true);
+                     setGeoBit(obj, geoBITS.kVisDaughters, true);
+                  }
+
+               } else {
+                  clone.vis = !testGeoBit(obj.fVolume, geoBITS.kVisNone) &&
+                               testGeoBit(obj.fVolume, geoBITS.kVisThis) ? 99 : 0;
+
+                  if (!testGeoBit(obj, geoBITS.kVisDaughters) ||
+                      !testGeoBit(obj.fVolume, geoBITS.kVisDaughters)) clone.nochlds = true;
+
+                  // node with childs only shown in case if it is last level in hierarchy
+                  if ((clone.vis > 0) && clone.chlds && !clone.nochlds) clone.vis = 1;
+
+                  // special handling for top node
+                  if (n === 0) {
+                     if (hide_top_volume) clone.vis = 0;
+                     delete clone.nochlds;
+                  }
+               }
+            }
+         } else {
+            clone.vis = obj.fRnrSelf ? 99 : 0;
+
+            // when the only node is selected, draw it
+            if ((n === 0) && (this.nodes.length === 1)) clone.vis = 99;
+
+            this.vislevel = 9999; // automatically take all volumes
+         }
+
+         // shape with zero volume or without faces will not be observed
+         if ((clone.vol <= 0) || (clone.nfaces <= 0)) clone.vis = 0;
+
+         if (clone.vis) res++;
+      }
+
+      return res;
+   }
+
+   /** @summary After visibility flags is set, produce idshift for all nodes as it would be maximum level */
+   produceIdShifts() {
+      for (let k = 0; k < this.nodes.length; ++k)
+         this.nodes[k].idshift = -1;
+
+      function scan_func(nodes, node) {
+         if (node.idshift < 0) {
+            node.idshift = 0;
+            if (node.chlds)
+               for(let k = 0; k<node.chlds.length; ++k)
+                  node.idshift += scan_func(nodes, nodes[node.chlds[k]]);
+         }
+
+         return node.idshift + 1;
+      }
+
+      scan_func(this.nodes, this.nodes[0]);
+   }
+
+   /** @summary Extract only visibility flags
+     * @desc Used to transfer them to the worker */
+   getVisibleFlags() {
+      let res = new Array(this.nodes.length);
+      for (let n=0;n<this.nodes.length;++n)
+         res[n] = { vis: this.nodes[n].vis, nochlds: this.nodes[n].nochlds };
+      return res;
+   }
+
+   /** @summary Assign only visibility flags, extracted with getVisibleFlags */
+   setVisibleFlags(flags) {
+      if (!this.nodes || !flags || !flags.length != this.nodes.length)
+         return 0;
+
+      let res = 0;
+      for (let n=0;n<this.nodes.length;++n) {
+         let clone = this.nodes[n];
+
+         clone.vis = flags[n].vis;
+         clone.nochlds = flags[n].nochlds;
+         if (clone.vis) res++;
+      }
+
+      return res;
+   }
+
+   /** @summary Scan visible nodes in hierarchy, starting from nodeid
+     * @desc Each entry in hierarchy get its unique id, which is not changed with visibility flags */
+   scanVisible(arg, vislvl) {
+
+      if (!this.nodes) return 0;
+
+      if (vislvl === undefined) {
+         if (!arg) arg = {};
+
+         vislvl = arg.vislvl || this.vislevel || 4; // default 3 in ROOT
+         if (vislvl > 88) vislvl = 88;
+
+         arg.stack = new Array(100); // current stack
+         arg.nodeid = 0;
+         arg.counter = 0; // sequence ID of the node, used to identify it later
+         arg.last = 0;
+         arg.CopyStack = function(factor) {
+            let entry = { nodeid: this.nodeid, seqid: this.counter, stack: new Array(this.last) };
+            if (factor) entry.factor = factor; // factor used to indicate importance of entry, will be built as first
+            for (let n=0;n<this.last;++n) entry.stack[n] = this.stack[n+1]; // copy stack
+            return entry;
+         };
+
+         if (arg.domatrix) {
+            arg.matrices = [];
+            arg.mpool = [ new Matrix4() ]; // pool of Matrix objects to avoid permanent creation
+            arg.getmatrix = function() { return this.matrices[this.last]; };
+         }
+      }
+
+      let res = 0, node = this.nodes[arg.nodeid];
+
+      if (arg.domatrix) {
+         if (!arg.mpool[arg.last+1])
+            arg.mpool[arg.last+1] = new Matrix4();
+
+         let prnt = (arg.last > 0) ? arg.matrices[arg.last-1] : new Matrix4();
+         if (node.matrix) {
+            arg.matrices[arg.last] = arg.mpool[arg.last].fromArray(prnt.elements);
+            arg.matrices[arg.last].multiply(arg.mpool[arg.last+1].fromArray(node.matrix));
+         } else {
+            arg.matrices[arg.last] = prnt;
+         }
+      }
+
+      if (node.nochlds) vislvl = 0;
+
+      if (node.vis > vislvl) {
+         if (!arg.func || arg.func(node)) res++;
+      }
+
+      arg.counter++;
+
+      if ((vislvl > 0) && node.chlds) {
+         arg.last++;
+         for (let i = 0; i < node.chlds.length; ++i) {
+            arg.nodeid = node.chlds[i];
+            arg.stack[arg.last] = i; // in the stack one store index of child, it is path in the hierarchy
+            res += this.scanVisible(arg, vislvl-1);
+         }
+         arg.last--;
+      } else {
+         arg.counter += (node.idshift || 0);
+      }
+
+      if (arg.last === 0) {
+         delete arg.last;
+         delete arg.stack;
+         delete arg.CopyStack;
+         delete arg.counter;
+         delete arg.matrices;
+         delete arg.mpool;
+         delete arg.getmatrix;
+      }
+
+      return res;
+   }
+
+   /** @summary Return node name with given id.
+    * @desc Either original object or description is used */
+   getNodeName(nodeid) {
+      if (this.origin) {
+         let obj = this.origin[nodeid];
+         return obj ? getObjectName(obj) : '';
+      }
+      let node = this.nodes[nodeid];
+      return node ? node.name : '';
+   }
+
+   /** @summary Returns description for provide stack */
+   resolveStack(stack, withmatrix) {
+
+      let res = { id: 0, obj: null, node: this.nodes[0], name: this.name_prefix };
+
+      // if (!this.toplevel || (this.nodes.length === 1) || (res.node.kind === 1)) res.name = '';
+
+      if (withmatrix) {
+         res.matrix = new Matrix4();
+         if (res.node.matrix) res.matrix.fromArray(res.node.matrix);
+      }
+
+      if (this.origin)
+         res.obj = this.origin[0];
+
+      //if (!res.name)
+      //   res.name = this.getNodeName(0);
+
+      if (stack)
+         for(let lvl = 0; lvl < stack.length; ++lvl) {
+            res.id = res.node.chlds[stack[lvl]];
+            res.node = this.nodes[res.id];
+
+            if (this.origin)
+               res.obj = this.origin[res.id];
+
+            let subname = this.getNodeName(res.id);
+            if (subname) {
+               if (res.name) res.name += '/';
+               res.name += subname;
+            }
+
+            if (withmatrix && res.node.matrix)
+               res.matrix.multiply(new Matrix4().fromArray(res.node.matrix));
+         }
+
+      return res;
+   }
+
+   /** @summary Create stack array based on nodes ids array.
+    * @desc Ids list should correspond to existing nodes hierarchy */
+   buildStackByIds(ids) {
+      if (!ids) return null;
+
+      if (ids[0] !== 0) {
+         console.error('wrong ids - first should be 0');
+         return null;
+      }
+
+      let node = this.nodes[0], stack = [];
+
+      for (let k = 1; k < ids.length; ++k) {
+         let nodeid = ids[k];
+         if (!node) return null;
+         let chindx = node.chlds.indexOf(nodeid);
+         if (chindx < 0) {
+            console.error(`wrong nodes ids ${ids[k]} is not child of ${ids[k-1]}`);
+            return null;
+         }
+
+         stack.push(chindx);
+         node = this.nodes[nodeid];
+      }
+
+      return stack;
+   }
+
+   /** @summary Retuns ids array which correspond to the stack */
+   buildIdsByStack(stack) {
+      if (!stack) return null;
+      let node = this.nodes[0], ids = [0];
+      for (let k = 0; k < stack.length; ++k) {
+         let id = node.chlds[stack[k]];
+         ids.push(id);
+         node = this.nodes[id];
+      }
+      return ids;
+   }
+
+   /** @summary Returns true if stack includes at any place provided nodeid */
+   isIdInStack(nodeid, stack) {
+
+      if (!nodeid) return true;
+
+      let node = this.nodes[0], id = 0;
+
+      for(let lvl = 0; lvl < stack.length; ++lvl) {
+         id = node.chlds[stack[lvl]];
+         if (id == nodeid) return true;
+         node = this.nodes[id];
+      }
+
+      return false;
+   }
+
+   /** @summary Find stack by name which include names of all parents */
+   findStackByName(fullname) {
+
+      let names = fullname.split('/'), currid = 0, stack = [];
+
+      if (this.getNodeName(currid) !== names[0]) return null;
+
+      for (let n = 1; n < names.length; ++n) {
+         let node = this.nodes[currid];
+         if (!node.chlds) return null;
+
+         for (let k=0;k<node.chlds.length;++k) {
+            let chldid = node.chlds[k];
+            if (this.getNodeName(chldid) === names[n]) { stack.push(k); currid = chldid; break; }
+         }
+
+         // no new entry - not found stack
+         if (stack.length === n - 1) return null;
+      }
+
+      return stack;
+   }
+
+   /** @summary Set usage of default ROOT colors */
+   setDefaultColors(on) {
+      this.use_dflt_colors = on;
+      if (this.use_dflt_colors && !this.dflt_table) {
+
+         let dflt = { kWhite: 0,  kBlack: 1, kGray: 920,
+                      kRed: 632, kGreen: 416, kBlue: 600, kYellow: 400, kMagenta: 616, kCyan: 432,
+                      kOrange: 800, kSpring: 820, kTeal: 840, kAzure: 860, kViolet: 880, kPink: 900 };
+
+         let nmax = 110, col = [];
+         for (let i=0;i<nmax;i++) col.push(dflt.kGray);
+
+         //  here we should create a new TColor with the same rgb as in the default
+         //  ROOT colors used below
+         col[ 3] = dflt.kYellow-10;
+         col[ 4] = col[ 5] = dflt.kGreen-10;
+         col[ 6] = col[ 7] = dflt.kBlue-7;
+         col[ 8] = col[ 9] = dflt.kMagenta-3;
+         col[10] = col[11] = dflt.kRed-10;
+         col[12] = dflt.kGray+1;
+         col[13] = dflt.kBlue-10;
+         col[14] = dflt.kOrange+7;
+         col[16] = dflt.kYellow+1;
+         col[20] = dflt.kYellow-10;
+         col[24] = col[25] = col[26] = dflt.kBlue-8;
+         col[29] = dflt.kOrange+9;
+         col[79] = dflt.kOrange-2;
+
+         this.dflt_table = col;
+      }
+   }
+
+   /** @summary Provide different properties of draw entry nodeid
+     * @desc Only if node visible, material will be created */
+   getDrawEntryProperties(entry, root_colors) {
+
+      let clone = this.nodes[entry.nodeid];
+
+      if (clone.kind === kindShape) {
+         let prop = { name: clone.name, nname: clone.name, shape: null, material: null, chlds: null },
+            _opacity = entry.opacity || 1;
+         prop.fillcolor = new Color$1( entry.color ? `rgb(${entry.color})` : 'blue' );
+         prop.material = new MeshLambertMaterial({ transparent: _opacity < 1,
+                          opacity: _opacity, wireframe: false, color: prop.fillcolor,
+                          side: FrontSide, vertexColors: false,
+                          depthWrite: _opacity == 1 });
+         prop.material.inherentOpacity = _opacity;
+
+         return prop;
+      }
+
+      if (!this.origin) {
+         console.error('origin not there - kind', clone.kind, entry.nodeid, clone);
+         return null;
+      }
+
+      let node = this.origin[entry.nodeid];
+
+      if (clone.kind === kindEve) {
+         // special handling for EVE nodes
+
+         let prop = { name: getObjectName(node), nname: getObjectName(node), shape: node.fShape, material: null, chlds: null };
+
+         if (node.fElements !== null) prop.chlds = node.fElements.arr;
+
+         {
+            let opacity = Math.min(1, node.fRGBA[3]);
+            prop.fillcolor = new Color$1( node.fRGBA[0], node.fRGBA[1], node.fRGBA[2] );
+            prop.material = new MeshLambertMaterial({ transparent: opacity < 1,
+                             opacity, wireframe: false, color: prop.fillcolor,
+                             side: FrontSide, vertexColors: false, depthWrite: opacity == 1 });
+            prop.material.inherentOpacity = opacity;
+         }
+
+         return prop;
+      }
+
+      let volume = node.fVolume;
+
+      let prop = { name: getObjectName(volume), nname: getObjectName(node), volume: node.fVolume, shape: volume.fShape, material: null, chlds: null };
+
+      if (node.fVolume.fNodes !== null) prop.chlds = node.fVolume.fNodes.arr;
+
+      if (volume) prop.linewidth = volume.fLineWidth;
+
+      {
+
+         // TODO: maybe correctly extract ROOT colors here?
+         let _opacity = 1.0;
+         if (!root_colors) root_colors = ['white', 'black', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
+
+         if (entry.custom_color)
+            prop.fillcolor = entry.custom_color;
+         else if ((volume.fFillColor > 1) && (volume.fLineColor == 1))
+            prop.fillcolor = root_colors[volume.fFillColor];
+         else if (volume.fLineColor >= 0)
+            prop.fillcolor = root_colors[volume.fLineColor];
+
+         let mat = volume?.fMedium?.fMaterial;
+
+         if (mat) {
+            let fillstyle = mat.fFillStyle,
+                transparency = (fillstyle >= 3000 && fillstyle <= 3100) ? fillstyle - 3000 : 0;
+
+            if (this.use_dflt_colors) {
+               let matZ = Math.round(mat.fZ), icol = this.dflt_table[matZ];
+               prop.fillcolor = root_colors[icol];
+               if (mat.fDensity < 0.1) transparency = 60;
+            }
+
+            if (transparency > 0)
+               _opacity = (100.0 - transparency) / 100.0;
+            if (prop.fillcolor === undefined)
+               prop.fillcolor = root_colors[mat.fFillColor];
+         }
+         if (prop.fillcolor === undefined)
+            prop.fillcolor = 'lightgrey';
+
+         prop.material = new MeshLambertMaterial({ transparent: _opacity < 1,
+                              opacity: _opacity, wireframe: false, color: prop.fillcolor,
+                              side: FrontSide, vertexColors: false,
+                              depthWrite: _opacity == 1 });
+         prop.material.inherentOpacity = _opacity;
+      }
+
+      return prop;
+   }
+
+   /** @summary Creates hierarchy of Object3D for given stack entry
+     * @desc Such hierarchy repeats hierarchy of TGeoNodes and set matrix for the objects drawing
+     * also set renderOrder, required to handle transparency */
+   createObject3D(stack, toplevel, options) {
+
+      let node = this.nodes[0], three_prnt = toplevel, draw_depth = 0,
+          force = isObject(options) || (options === 'force');
+
+      for(let lvl = 0; lvl <= stack.length; ++lvl) {
+         let nchld = (lvl > 0) ? stack[lvl-1] : 0;
+         // extract current node
+         if (lvl > 0)  node = this.nodes[node.chlds[nchld]];
+
+         let obj3d = undefined;
+
+         if (three_prnt.children)
+            for (let i = 0; i < three_prnt.children.length; ++i) {
+               if (three_prnt.children[i].nchld === nchld) {
+                  obj3d = three_prnt.children[i];
+                  break;
+               }
+            }
+
+         if (obj3d) {
+            three_prnt = obj3d;
+            if (obj3d.$jsroot_drawable) draw_depth++;
+            continue;
+         }
+
+         if (!force) return null;
+
+         obj3d = new Object3D();
+
+         if (node.abs_matrix) {
+            obj3d.absMatrix = new Matrix4();
+            obj3d.absMatrix.fromArray(node.matrix);
+         } else if (node.matrix) {
+            obj3d.matrix.fromArray(node.matrix);
+            obj3d.matrix.decompose( obj3d.position, obj3d.quaternion, obj3d.scale );
+         }
+
+         // this.accountNodes(obj3d);
+         obj3d.nchld = nchld; // mark index to find it again later
+
+         // add the mesh to the scene
+         three_prnt.add(obj3d);
+
+         // this is only for debugging - test inversion of whole geometry
+         if ((lvl == 0) && isObject(options) && options.scale) {
+            if ((options.scale.x < 0) || (options.scale.y < 0) || (options.scale.z < 0)) {
+               obj3d.scale.copy(options.scale);
+               obj3d.updateMatrix();
+            }
+         }
+
+         obj3d.updateMatrixWorld();
+
+         three_prnt = obj3d;
+      }
+
+      if ((options === 'mesh') || (options === 'delete_mesh')) {
+         let mesh = null;
+         if (three_prnt)
+            for (let n = 0; (n < three_prnt.children.length) && !mesh; ++n) {
+               let chld = three_prnt.children[n];
+               if ((chld.type === 'Mesh') && (chld.nchld === undefined)) mesh = chld;
+            }
+
+         if ((options === 'mesh') || !mesh) return mesh;
+
+         let res = three_prnt;
+         while (mesh && (mesh !== toplevel)) {
+            three_prnt = mesh.parent;
+            three_prnt.remove(mesh);
+            mesh = (three_prnt.children.length == 0) ? three_prnt : null;
+         }
+
+         return res;
+      }
+
+      if (three_prnt) {
+         three_prnt.$jsroot_drawable = true;
+         three_prnt.$jsroot_depth = draw_depth;
+      }
+
+      return three_prnt;
+   }
+
+   /** @summary Get volume boundary */
+   getVolumeBoundary(viscnt, facelimit, nodeslimit) {
+
+      let result = { min: 0, max: 1, sortidcut: 0 };
+
+      if (!this.sortmap) {
+         console.error('sorting map do not exist');
+         return result;
+      }
+
+      let maxNode, currNode, cnt=0, facecnt=0;
+
+      for (let n = 0; (n < this.sortmap.length) && (cnt < nodeslimit) && (facecnt < facelimit); ++n) {
+         let id = this.sortmap[n];
+         if (viscnt[id] === 0) continue;
+         currNode = this.nodes[id];
+         if (!maxNode) maxNode = currNode;
+         cnt += viscnt[id];
+         facecnt += viscnt[id] * currNode.nfaces;
+      }
+
+      if (!currNode) {
+         console.error('no volumes selected');
+         return result;
+      }
+
+      // console.log(`Volume boundary ${currNode.vol}  cnt=${cnt}  faces=${facecnt}`);
+      result.max = maxNode.vol;
+      result.min = currNode.vol;
+      result.sortidcut = currNode.sortid; // latest node is not included
+      return result;
+   }
+
+   /** @summary Collects visible nodes, using maxlimit
+     * @desc One can use map to define cut based on the volume or serious of cuts */
+   collectVisibles(maxnumfaces, frustum) {
+
+      // in simple case shape as it is
+      if (this.plain_shape)
+         return { lst: [ { nodeid: 0, seqid: 0, stack: [], factor: 1, shapeid: 0, server_shape: this.plain_shape } ], complete: true };
+
+      let arg = {
+         facecnt: 0,
+         viscnt: new Array(this.nodes.length), // counter for each node
+         vislvl: this.getVisLevel(),
+         reset() {
+            this.total = 0;
+            this.facecnt = 0;
+            this.viscnt.fill(0);
+         },
+         // nodes: this.nodes,
+         func(node) {
+            this.total++;
+            this.facecnt += node.nfaces;
+            this.viscnt[node.id]++;
+            return true;
+         }
+      };
+
+      arg.reset();
+
+      let total = this.scanVisible(arg),
+          maxnumnodes = this.getMaxVisNodes();
+
+      if (maxnumnodes > 0) {
+         while ((total > maxnumnodes) && (arg.vislvl > 1)) {
+            arg.vislvl--;
+            arg.reset();
+            total = this.scanVisible(arg);
+         }
+      }
+
+      this.actual_level = arg.vislvl; // not used, can be shown somewhere in the gui
+
+      let minVol = 0, maxVol = 0, camVol = -1, camFact = 10, sortidcut = this.nodes.length + 1;
+
+      console.log(`Total visible nodes ${total} numfaces ${arg.facecnt}`);
+
+      if (arg.facecnt > maxnumfaces) {
+
+         let bignumfaces = maxnumfaces * (frustum ? 0.8 : 1.0),
+             bignumnodes = maxnumnodes * (frustum ? 0.8 : 1.0);
+
+         // define minimal volume, which always to shown
+         let boundary = this.getVolumeBoundary(arg.viscnt, bignumfaces, bignumnodes);
+
+         minVol = boundary.min;
+         maxVol = boundary.max;
+         sortidcut = boundary.sortidcut;
+
+         if (frustum) {
+             arg.domatrix = true;
+             arg.frustum = frustum;
+             arg.totalcam = 0;
+             arg.func = function(node) {
+                if (node.vol <= minVol) // only small volumes are interesting
+                   if (this.frustum.CheckShape(this.getmatrix(), node)) {
+                      this.viscnt[node.id]++;
+                      this.totalcam += node.nfaces;
+                   }
+
+                return true;
+             };
+
+             for (let n=0;n<arg.viscnt.length;++n) arg.viscnt[n] = 0;
+
+             this.scanVisible(arg);
+
+             if (arg.totalcam > maxnumfaces*0.2)
+                camVol = this.getVolumeBoundary(arg.viscnt, maxnumfaces*0.2, maxnumnodes*0.2).min;
+             else
+                camVol = 0;
+
+             camFact = maxVol / ((camVol > 0) ? (camVol > 0) : minVol);
+
+             // console.log(`Limit for camera ${camVol}  faces in camera view ${arg.totalcam}`);
+         }
+      }
+
+      arg.items = [];
+
+      arg.func = function(node) {
+         if (node.sortid < sortidcut) {
+            this.items.push(this.CopyStack());
+         } else if ((camVol >= 0) && (node.vol > camVol)) {
+            if (this.frustum.CheckShape(this.getmatrix(), node))
+               this.items.push(this.CopyStack(camFact));
+         }
+         return true;
+      };
+
+      this.scanVisible(arg);
+
+      return { lst: arg.items, complete: minVol === 0 };
+   }
+
+   /** @summary Merge list of drawn objects
+     * @desc In current list we should mark if object already exists
+     * from previous list we should collect objects which are not there */
+   mergeVisibles(current, prev) {
+
+      let indx2 = 0, del = [];
+      for (let indx1 = 0; (indx1 < current.length) && (indx2 < prev.length); ++indx1) {
+
+         while ((indx2 < prev.length) && (prev[indx2].seqid < current[indx1].seqid)) {
+            del.push(prev[indx2++]); // this entry should be removed
+         }
+
+         if ((indx2 < prev.length) && (prev[indx2].seqid === current[indx1].seqid)) {
+            if (prev[indx2].done) current[indx1].done = true; // copy ready flag
+            indx2++;
+         }
+      }
+
+      // remove rest
+      while (indx2 < prev.length)
+         del.push(prev[indx2++]);
+
+      return del;
+   }
+
+   /** @summary Collect all uniques shapes which should be built
+    *  @desc Check if same shape used many times for drawing */
+   collectShapes(lst) {
+
+      // nothing else - just that single shape
+      if (this.plain_shape)
+         return [ this.plain_shape ];
+
+      let shapes = [];
+
+      for (let i=0;i<lst.length;++i) {
+         let entry = lst[i];
+         let shape = this.getNodeShape(entry.nodeid);
+
+         if (!shape) continue; // strange, but avoid misleading
+
+         if (shape._id === undefined) {
+            shape._id = shapes.length;
+
+            shapes.push({ id: shape._id, shape: shape, vol: this.nodes[entry.nodeid].vol, refcnt: 1, factor: 1, ready: false });
+
+            // shapes.push( { obj: shape, vol: this.nodes[entry.nodeid].vol });
+         } else {
+            shapes[shape._id].refcnt++;
+         }
+
+         entry.shape = shapes[shape._id]; // remember shape used
+
+         // use maximal importance factor to push element to the front
+         if (entry.factor && (entry.factor>entry.shape.factor))
+            entry.shape.factor = entry.factor;
+      }
+
+      // now sort shapes in volume decrease order
+      shapes.sort((a,b) => b.vol*b.factor - a.vol*a.factor);
+
+      // now set new shape ids according to the sorted order and delete temporary field
+      for (let n = 0; n < shapes.length; ++n) {
+         let item = shapes[n];
+         item.id = n; // set new ID
+         delete item.shape._id; // remove temporary field
+      }
+
+      // as last action set current shape id to each entry
+      for (let i = 0; i < lst.length; ++i) {
+         let entry = lst[i];
+         if (entry.shape) {
+            entry.shapeid = entry.shape.id; // keep only id for the entry
+            delete entry.shape; // remove direct references
+         }
+      }
+
+      return shapes;
+   }
+
+   /** @summary Merge shape lists */
+   mergeShapesLists(oldlst, newlst) {
+
+      if (!oldlst) return newlst;
+
+      // set geometry to shape object itself
+      for (let n = 0; n < oldlst.length; ++n) {
+         let item = oldlst[n];
+
+         item.shape._geom = item.geom;
+         delete item.geom;
+
+         if (item.geomZ !== undefined) {
+            item.shape._geomZ = item.geomZ;
+            delete item.geomZ;
+         }
+      }
+
+      // take from shape (if match)
+      for (let n = 0; n < newlst.length; ++n) {
+         let item = newlst[n];
+
+         if (item.shape._geom !== undefined) {
+            item.geom = item.shape._geom;
+            delete item.shape._geom;
+         }
+
+         if (item.shape._geomZ !== undefined) {
+            item.geomZ = item.shape._geomZ;
+            delete item.shape._geomZ;
+         }
+      }
+
+      // now delete all unused geometries
+      for (let n = 0; n < oldlst.length; ++n) {
+         let item = oldlst[n];
+         delete item.shape._geom;
+         delete item.shape._geomZ;
+      }
+
+      return newlst;
+   }
+
+   /** @summary Build shapes */
+   buildShapes(lst, limit, timelimit) {
+
+      let created = 0,
+          tm1 = new Date().getTime(),
+          res = { done: false, shapes: 0, faces: 0, notusedshapes: 0 };
+
+      for (let n = 0; n < lst.length; ++n) {
+         let item = lst[n];
+
+         // if enough faces are produced, nothing else is required
+         if (res.done) { item.ready = true; continue; }
+
+         if (!item.ready) {
+            item._typename = '$$Shape$$'; // let reuse item for direct drawing
+            item.ready = true;
+            if (item.geom === undefined) {
+               item.geom = createGeometry(item.shape);
+               if (item.geom) created++; // indicate that at least one shape was created
+            }
+            item.nfaces = countGeometryFaces(item.geom);
+         }
+
+         res.shapes++;
+         if (!item.used) res.notusedshapes++;
+         res.faces += item.nfaces*item.refcnt;
+
+         if (res.faces >= limit) {
+            res.done = true;
+         } else if ((created > 0.01*lst.length) && (timelimit !== undefined)) {
+            let tm2 = new Date().getTime();
+            if (tm2-tm1 > timelimit) return res;
+         }
+      }
+
+      res.done = true;
+
+      return res;
+   }
+
+   /** @summary Format REveGeomNode data to be able use it in list of clones
+     * @private */
+   static formatServerElement(elem) {
+      elem.kind = 2; // special element for geom viewer, used in TGeoPainter
+      elem.vis = 2; // visibility is alwys on
+      let m = elem.matr;
+      delete elem.matr;
+      if (!m?.length) return elem;
+
+      if (m.length == 16) {
+         elem.matrix = m;
+      } else {
+         let nm = elem.matrix = new Array(16);
+         nm.fill(0);
+         nm[0] = nm[5] = nm[10] = nm[15] = 1;
+
+         if (m.length == 3) {
+            // translation martix
+            nm[12] = m[0]; nm[13] = m[1]; nm[14] = m[2];
+         } else if (m.length == 4) {
+            // scale matrix
+            nm[0] = m[0]; nm[5] = m[1]; nm[10] = m[2]; nm[15] = m[3];
+         } else if (m.length == 9) {
+            // rotation matrix
+            nm[0] = m[0]; nm[4] = m[1]; nm[8] = m[2];
+            nm[1] = m[3]; nm[5] = m[4]; nm[9] = m[5];
+            nm[2] = m[6]; nm[6] = m[7]; nm[10] = m[8];
+         } else {
+            console.error(`wrong number of elements ${m.length} in the matrix`);
+         }
+      }
+      return elem;
+   }
+}
+
+/** @summary Create flipped mesh for the shape
+  * @desc When transformation matrix includes one or several inversion of axis,
+  * one should inverse geometry object, otherwise three.js cannot correctly draw it
+  * @param {Object} shape - TGeoShape object
+  * @param {Object} material - material
+  * @private */
+function createFlippedMesh(shape, material) {
+
+   let flip =  new Vector3(1,1,-1);
+
+   if (shape.geomZ === undefined) {
+
+      let pos = shape.geom.getAttribute('position').array,
+          norm = shape.geom.getAttribute('normal').array,
+          index = shape.geom.getIndex();
+
+      if (index) {
+         // we need to unfold all points to
+         let arr = index.array,
+             i0 = shape.geom.drawRange.start,
+             ilen = shape.geom.drawRange.count;
+         if (i0 + ilen > arr.length) ilen = arr.length - i0;
+
+         let dpos = new Float32Array(ilen*3), dnorm = new Float32Array(ilen*3);
+         for (let ii = 0; ii < ilen; ++ii) {
+            let k = arr[i0 + ii];
+            if ((k < 0) || (k*3 >= pos.length))
+               console.log(`strange index ${k*3} totallen = ${pos.length}`);
+            dpos[ii*3] = pos[k*3];
+            dpos[ii*3+1] = pos[k*3+1];
+            dpos[ii*3+2] = pos[k*3+2];
+            dnorm[ii*3] = norm[k*3];
+            dnorm[ii*3+1] = norm[k*3+1];
+            dnorm[ii*3+2] = norm[k*3+2];
+         }
+
+         pos = dpos; norm = dnorm;
+      }
+
+      let len = pos.length, n, shift = 0,
+          newpos = new Float32Array(len),
+          newnorm = new Float32Array(len);
+
+      // we should swap second and third point in each face
+      for (n = 0; n < len; n += 3) {
+         newpos[n]   = pos[n+shift];
+         newpos[n+1] = pos[n+1+shift];
+         newpos[n+2] = -pos[n+2+shift];
+
+         newnorm[n]   = norm[n+shift];
+         newnorm[n+1] = norm[n+1+shift];
+         newnorm[n+2] = -norm[n+2+shift];
+
+         shift+=3; if (shift===6) shift=-3; // values 0,3,-3
+      }
+
+      shape.geomZ = new BufferGeometry();
+      shape.geomZ.setAttribute('position', new BufferAttribute(newpos, 3));
+      shape.geomZ.setAttribute('normal', new BufferAttribute(newnorm, 3));
+      // normals are calculated with normal geometry and correctly scaled
+      // geom.computeVertexNormals();
+   }
+
+   let mesh = new Mesh( shape.geomZ, material );
+   mesh.scale.copy(flip);
+   mesh.updateMatrix();
+
+   mesh._flippedMesh = true;
+
+   return mesh;
+}
+
+/** @summary extract code of Box3.expandByObject
+  * @desc Major difference - do not traverse hierarchy
+  * @private */
+function getBoundingBox(node, box3, local_coordinates) {
+   if (!node?.geometry) return box3;
+
+   if (!box3) box3 = new Box3().makeEmpty();
+
+   if (!local_coordinates) node.updateWorldMatrix(false, false);
+
+   let v1 = new Vector3(), attribute = node.geometry.attributes?.position;
+
+   if ( attribute !== undefined )
+      for (let i = 0, l = attribute.count; i < l; i++) {
+         // v1.fromAttribute( attribute, i ).applyMatrix4( node.matrixWorld );
+         v1.fromBufferAttribute( attribute, i );
+         if (!local_coordinates) v1.applyMatrix4( node.matrixWorld );
+         box3.expandByPoint( v1 );
+      }
+
+   return box3;
+}
+
+/** @summary Cleanup shape entity
+  * @private */
+function cleanupShape(shape) {
+   if (!shape) return;
+
+   if (isFunc(shape.geom?.dispose))
+      shape.geom.dispose();
+
+   if (isFunc(shape.geomZ?.dispose))
+      shape.geomZ.dispose();
+
+   delete shape.geom;
+   delete shape.geomZ;
+}
+
+/** @summary Set rendering order for created hierarchy
+  * @desc depending from provided method sort differently objects
+  * @param toplevel - top element
+  * @param origin - camera position used to provide sorting
+  * @param method - name of sorting method like 'pnt', 'ray', 'size', 'dflt'  */
+function produceRenderOrder(toplevel, origin, method, clones) {
+
+   let raycast = new Raycaster();
+
+   function setdefaults(top) {
+      if (!top) return;
+      top.traverse(obj => {
+         obj.renderOrder = obj.defaultOrder || 0;
+         if (obj.material) obj.material.depthWrite = true; // by default depthWriting enabled
+      });
+   }
+
+   function traverse(obj, lvl, arr) {
+      // traverse hierarchy and extract all children of given level
+      // if (obj.$jsroot_depth === undefined) return;
+
+      if (!obj.children) return;
+
+      for (let k = 0; k < obj.children.length; ++k) {
+         let chld = obj.children[k];
+         if (chld.$jsroot_order === lvl) {
+            if (chld.material) {
+               if (chld.material.transparent) {
+                  chld.material.depthWrite = false; // disable depth writing for transparent
+                  arr.push(chld);
+               } else {
+                  setdefaults(chld);
+               }
+            }
+         } else if ((obj.$jsroot_depth === undefined) || (obj.$jsroot_depth < lvl)) {
+            traverse(chld, lvl, arr);
+         }
+      }
+   }
+
+   function sort(arr, minorder, maxorder) {
+      // resort meshes using ray caster and camera position
+      // idea to identify meshes which are in front or behind
+
+      if (arr.length > 1000) {
+         // too many of them, just set basic level and exit
+         for (let i = 0; i < arr.length; ++i)
+            arr[i].renderOrder = (minorder + maxorder)/2;
+         return false;
+      }
+
+      let tmp_vect = new Vector3();
+
+      // first calculate distance to the camera
+      // it gives preliminary order of volumes
+
+      for (let i = 0; i < arr.length; ++i) {
+         let mesh = arr[i],
+             box3 = mesh.$jsroot_box3;
+
+         if (!box3)
+            mesh.$jsroot_box3 = box3 = getBoundingBox(mesh);
+
+         if (method === 'size') {
+            let sz = box3.getSize(new Vector3());
+            mesh.$jsroot_distance = sz.x*sz.y*sz.z;
+            continue;
+         }
+
+         if (method === 'pnt') {
+            mesh.$jsroot_distance = origin.distanceTo(box3.getCenter(tmp_vect));
+            continue;
+         }
+
+         let dist = Math.min(origin.distanceTo(box3.min), origin.distanceTo(box3.max)),
+             pnt = new Vector3(box3.min.x, box3.min.y, box3.max.z);
+
+         dist = Math.min(dist, origin.distanceTo(pnt));
+         pnt.set(box3.min.x, box3.max.y, box3.min.z);
+         dist = Math.min(dist, origin.distanceTo(pnt));
+         pnt.set(box3.max.x, box3.min.y, box3.min.z);
+         dist = Math.min(dist, origin.distanceTo(pnt));
+         pnt.set(box3.max.x, box3.max.y, box3.min.z);
+         dist = Math.min(dist, origin.distanceTo(pnt));
+         pnt.set(box3.max.x, box3.min.y, box3.max.z);
+         dist = Math.min(dist, origin.distanceTo(pnt));
+         pnt.set(box3.min.x, box3.max.y, box3.max.z);
+         dist = Math.min(dist, origin.distanceTo(pnt));
+
+         mesh.$jsroot_distance = dist;
+      }
+
+      arr.sort((a,b) => a.$jsroot_distance - b.$jsroot_distance);
+
+      let resort = new Array(arr.length);
+
+      for (let i = 0; i < arr.length; ++i) {
+         arr[i].$jsroot_index = i;
+         resort[i] = arr[i];
+      }
+
+      if (method === 'ray')
+         for (let i=arr.length - 1; i >= 0; --i) {
+            let mesh = arr[i], intersects,
+                box3 = mesh.$jsroot_box3,
+                direction = box3.getCenter(tmp_vect);
+
+            for(let ntry = 0; ntry < 2; ++ntry) {
+
+               direction.sub(origin).normalize();
+
+               raycast.set( origin, direction );
+
+               intersects = raycast.intersectObjects(arr, false) || []; // only plain array
+               let unique = [];
+
+               for (let k1 = 0; k1 < intersects.length; ++k1) {
+                  if (unique.indexOf(intersects[k1].object) < 0)
+                     unique.push(intersects[k1].object);
+                  // if (intersects[k1].object === mesh) break; // trace until object itself
+               }
+
+               intersects = unique;
+
+               if ((intersects.indexOf(mesh) < 0) && (ntry > 0))
+                  console.log(`MISS ${clones?.resolveStack(mesh.stack)?.name}`);
+
+               if ((intersects.indexOf(mesh) >= 0) || (ntry > 0)) break;
+
+               let pos = mesh.geometry.attributes.position.array;
+
+               direction = new Vector3((pos[0]+pos[3]+pos[6])/3, (pos[1]+pos[4]+pos[7])/3, (pos[2]+pos[5]+pos[8])/3);
+
+               direction.applyMatrix4(mesh.matrixWorld);
+            }
+
+            // now push first object in intersects to the front
+            for (let k1 = 0; k1 < intersects.length - 1; ++k1) {
+               let mesh1 = intersects[k1], mesh2 = intersects[k1+1],
+                   i1 = mesh1.$jsroot_index, i2 = mesh2.$jsroot_index;
+               if (i1 < i2) continue;
+               for (let ii = i2; ii < i1; ++ii) {
+                  resort[ii] = resort[ii+1];
+                  resort[ii].$jsroot_index = ii;
+               }
+               resort[i1] = mesh2;
+               mesh2.$jsroot_index = i1;
+            }
+         }
+
+      for (let i = 0; i < resort.length; ++i) {
+         resort[i].renderOrder = Math.round( maxorder - (i+1) / (resort.length+1) * (maxorder-minorder));
+         delete resort[i].$jsroot_index;
+         delete resort[i].$jsroot_distance;
+      }
+
+      return true;
+   }
+
+   function process(obj, lvl, minorder, maxorder) {
+      let arr = [], did_sort = false;
+
+      traverse(obj, lvl, arr);
+
+      if (!arr.length) return;
+
+      if (minorder === maxorder) {
+         for (let k = 0; k < arr.length; ++k)
+            arr[k].renderOrder = minorder;
+      } else {
+        did_sort = sort(arr, minorder, maxorder);
+        if (!did_sort) minorder = maxorder = (minorder + maxorder) / 2;
+      }
+
+      for (let k = 0; k < arr.length; ++k) {
+         let next = arr[k].parent, min = minorder, max = maxorder;
+
+         if (did_sort) {
+            max = arr[k].renderOrder;
+            min = max - (maxorder - minorder) / (arr.length + 2);
+         }
+
+         process(next, lvl+1, min, max);
+      }
+   }
+
+   if (!method || (method == 'dflt'))
+      setdefaults(toplevel);
+   else
+      process(toplevel, 0, 1, 1000000);
+}
+
+/** @summary provide icon name for the shape
+  * @private */
+function getShapeIcon(shape) {
+   switch (shape._typename) {
+      case clTGeoArb8: return 'img_geoarb8';
+      case clTGeoCone: return 'img_geocone';
+      case clTGeoConeSeg: return 'img_geoconeseg';
+      case clTGeoCompositeShape: return 'img_geocomposite';
+      case clTGeoTube: return 'img_geotube';
+      case clTGeoTubeSeg: return 'img_geotubeseg';
+      case clTGeoPara: return 'img_geopara';
+      case clTGeoParaboloid: return 'img_geoparab';
+      case clTGeoPcon: return 'img_geopcon';
+      case clTGeoPgon: return 'img_geopgon';
+      case clTGeoShapeAssembly: return 'img_geoassembly';
+      case clTGeoSphere: return 'img_geosphere';
+      case clTGeoTorus: return 'img_geotorus';
+      case clTGeoTrd1: return 'img_geotrd1';
+      case clTGeoTrd2: return 'img_geotrd2';
+      case clTGeoXtru: return 'img_geoxtru';
+      case clTGeoTrap: return 'img_geotrap';
+      case clTGeoGtra: return 'img_geogtra';
+      case clTGeoEltu: return 'img_geoeltu';
+      case clTGeoHype: return 'img_geohype';
+      case clTGeoCtub: return 'img_geoctub';
+   }
+   return 'img_geotube';
+}
+
+const _ENTIRE_SCENE = 0, _BLOOM_SCENE = 1,
+      clTGeoManager = 'TGeoManager', clTEveGeoShapeExtract = 'TEveGeoShapeExtract',
+      clTGeoOverlap = 'TGeoOverlap', clTGeoVolumeAssembly = 'TGeoVolumeAssembly',
+      clTEveTrack = 'TEveTrack', clTEvePointSet = 'TEvePointSet',
+      clREveGeoShapeExtract = 'ROOT::Experimental::REveGeoShapeExtract';
+
+/** @summary Function used to build hierarchy of elements of overlap object
+  * @private */
+function buildOverlapVolume(overlap) {
+
+   let vol = create$1(clTGeoVolume);
+
+   setGeoBit(vol, geoBITS.kVisDaughters, true);
+   vol.$geoh = true; // workaround, let know browser that we are in volumes hierarchy
+   vol.fName = '';
+
+   let node1 = create$1(clTGeoNodeMatrix);
+   node1.fName = overlap.fVolume1.fName || 'Overlap1';
+   node1.fMatrix = overlap.fMatrix1;
+   node1.fVolume = overlap.fVolume1;
+   // node1.fVolume.fLineColor = 2; // color assigned with _splitColors
+
+   let node2 = create$1(clTGeoNodeMatrix);
+   node2.fName = overlap.fVolume2.fName || 'Overlap2';
+   node2.fMatrix = overlap.fMatrix2;
+   node2.fVolume = overlap.fVolume2;
+   // node2.fVolume.fLineColor = 3;  // color assigned with _splitColors
+
+   vol.fNodes = create$1(clTList);
+   vol.fNodes.Add(node1);
+   vol.fNodes.Add(node2);
+
+   return vol;
+}
+
+let $comp_col_cnt = 0;
+
+/** @summary Function used to build hierarchy of elements of composite shapes
+  * @private */
+function buildCompositeVolume(comp, maxlvl, side) {
+
+   if (maxlvl === undefined) maxlvl = 1;
+   if (!side) {
+      $comp_col_cnt = 0;
+      side = '';
+   }
+
+   let vol = create$1(clTGeoVolume);
+   setGeoBit(vol, geoBITS.kVisThis, true);
+   setGeoBit(vol, geoBITS.kVisDaughters, true);
+
+   if ((side && (comp._typename !== clTGeoCompositeShape)) || (maxlvl <= 0)) {
+      vol.fName = side;
+      vol.fLineColor = ($comp_col_cnt++ % 8) + 2;
+      vol.fShape = comp;
+      return vol;
+   }
+
+   if (side) side += '/';
+   vol.$geoh = true; // workaround, let know browser that we are in volumes hierarchy
+   vol.fName = '';
+
+   let node1 = create$1(clTGeoNodeMatrix);
+   setGeoBit(node1, geoBITS.kVisThis, true);
+   setGeoBit(node1, geoBITS.kVisDaughters, true);
+   node1.fName = 'Left';
+   node1.fMatrix = comp.fNode.fLeftMat;
+   node1.fVolume = buildCompositeVolume(comp.fNode.fLeft, maxlvl-1, side + 'Left');
+
+   let node2 = create$1(clTGeoNodeMatrix);
+   setGeoBit(node2, geoBITS.kVisThis, true);
+   setGeoBit(node2, geoBITS.kVisDaughters, true);
+   node2.fName = 'Right';
+   node2.fMatrix = comp.fNode.fRightMat;
+   node2.fVolume = buildCompositeVolume(comp.fNode.fRight, maxlvl-1, side + 'Right');
+
+   vol.fNodes = create$1(clTList);
+   vol.fNodes.Add(node1);
+   vol.fNodes.Add(node2);
+
+   if (!side) $comp_col_cnt = 0;
+
+   return vol;
+}
+
+
+/** @summary create list entity for geo object
+  * @private */
+function createList(parent, lst, name, title) {
+
+   if (!lst?.arr?.length) return;
+
+   let list_item = {
+       _name: name,
+       _kind: 'ROOT.' + clTList,
+       _title: title,
+       _more: true,
+       _geoobj: lst,
+       _parent: parent,
+       _get(item /*, itemname */) {
+          return Promise.resolve(item._geoobj || null);
+       },
+       _expand(node, lst) {
+          // only childs
+
+          if (lst.fVolume)
+             lst = lst.fVolume.fNodes;
+
+          if (!lst.arr) return false;
+
+          node._childs = [];
+
+          checkDuplicates(null, lst.arr);
+
+          for (let n in lst.arr)
+             createItem(node, lst.arr[n]);
+
+          return true;
+       }
+   };
+
+   if (!parent._childs)
+      parent._childs = [];
+   parent._childs.push(list_item);
+}
+
+
+/** @summary Expand geo object
+  * @private */
+function expandGeoObject(parent, obj) {
+   injectGeoStyle();
+
+   if (!parent || !obj) return false;
+
+   let isnode = (obj._typename.indexOf(clTGeoNode) === 0),
+       isvolume = (obj._typename.indexOf(clTGeoVolume) === 0),
+       ismanager = (obj._typename === clTGeoManager),
+       iseve = ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)),
+       isoverlap = (obj._typename === clTGeoOverlap);
+
+   if (!isnode && !isvolume && !ismanager && !iseve && !isoverlap) return false;
+
+   if (parent._childs) return true;
+
+   if (ismanager) {
+      createList(parent, obj.fMaterials, 'Materials', 'list of materials');
+      createList(parent, obj.fMedia, 'Media', 'list of media');
+      createList(parent, obj.fTracks, 'Tracks', 'list of tracks');
+      createList(parent, obj.fOverlaps, 'Overlaps', 'list of detected overlaps');
+      createItem(parent, obj.fMasterVolume);
+      return true;
+   }
+
+   if (isoverlap) {
+      createItem(parent, obj.fVolume1);
+      createItem(parent, obj.fVolume2);
+      createItem(parent, obj.fMarker, 'Marker');
+      return true;
+   }
+
+   let volume, subnodes, shape;
+
+   if (iseve) {
+      subnodes = obj.fElements?.arr;
+      shape = obj.fShape;
+   } else {
+      volume = isnode ? obj.fVolume : obj;
+      subnodes = volume?.fNodes?.arr;
+      shape = volume?.fShape;
+   }
+
+   if (!subnodes && (shape?._typename === clTGeoCompositeShape) && shape?.fNode) {
+      if (!parent._childs) {
+         createItem(parent, shape.fNode.fLeft, 'Left');
+         createItem(parent, shape.fNode.fRight, 'Right');
+      }
+
+      return true;
+   }
+
+   if (!subnodes) return false;
+
+   checkDuplicates(obj, subnodes);
+
+   for (let i = 0; i < subnodes.length; ++i)
+      createItem(parent, subnodes[i]);
+
+   return true;
+}
+
+
+/** @summary find item with 3d painter
+  * @private */
+function findItemWithPainter(hitem, funcname) {
+   while (hitem) {
+      if (hitem._painter?._camera) {
+         if (funcname && isFunc(hitem._painter[funcname]))
+            hitem._painter[funcname]();
+         return hitem;
+      }
+      hitem = hitem._parent;
+   }
+   return null;
+}
+
+/** @summary provide css style for geo object
+  * @private */
+function provideVisStyle(obj) {
+   if ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract))
+      return obj.fRnrSelf ? ' geovis_this' : '';
+
+   let vis = !testGeoBit(obj, geoBITS.kVisNone) &&
+              testGeoBit(obj, geoBITS.kVisThis),
+       chld = testGeoBit(obj, geoBITS.kVisDaughters);
+
+   if (chld && (!obj.fNodes || (obj.fNodes.arr.length === 0))) chld = false;
+
+   if (vis && chld) return ' geovis_all';
+   if (vis) return ' geovis_this';
+   if (chld) return ' geovis_daughters';
+   return '';
+}
+
+
+/** @summary update icons
+  * @private */
+function updateBrowserIcons(obj, hpainter) {
+   if (!obj || !hpainter) return;
+
+   hpainter.forEachItem(m => {
+      // update all items with that volume
+      if ((obj === m._volume) || (obj === m._geoobj)) {
+         m._icon = m._icon.split(' ')[0] + provideVisStyle(obj);
+         hpainter.updateTreeNode(m);
+      }
+   });
+}
+
+
+/**
+  * @summary Toolbar for geometry painter
+  *
+  * @private
+  */
+
+class Toolbar {
+
+   /** @summary constructor */
+   constructor(container, bright) {
+      this.bright = bright;
+
+      this.element = container.append('div').attr('class','geo_toolbar_group');
+
+      injectStyle(
+         `.geo_toolbar_group { float: left; box-sizing: border-box; position: relative; bottom: 23px; vertical-align: middle; white-space: nowrap; }
+          .geo_toolbar_group:first-child { margin-left: 2px; }
+          .geo_toolbar_group a { position: relative; font-size: 16px; padding: 3px 1px; cursor: pointer; line-height: normal; box-sizing: border-box; }
+          .geo_toolbar_group a svg { position: relative; top: 2px; }
+          .geo_toolbar_btn path { fill: rgba(0, 31, 95, 0.2); }
+          .geo_toolbar_btn path .active,
+          .geo_toolbar_btn path:hover { fill: rgba(0, 22, 72, 0.5); }
+          .geo_toolbar_btn_bright path { fill: rgba(255, 224, 160, 0.2); }
+          .geo_toolbar_btn_bright path .active,
+          .geo_toolbar_btn_bright path:hover { fill: rgba(255, 233, 183, 0.5); }`, this.element.node());
+   }
+
+   /** @summary add buttons */
+   addButtons(buttons) {
+      this.buttonsNames = [];
+
+      buttons.forEach(buttonConfig => {
+         let buttonName = buttonConfig.name;
+         if (!buttonName)
+            throw new Error('must provide button name in button config');
+         if (this.buttonsNames.indexOf(buttonName) !== -1)
+            throw new Error(`button name ${buttonName} is taken`);
+
+         this.buttonsNames.push(buttonName);
+
+         let title = buttonConfig.title || buttonConfig.name;
+
+         if (!isFunc(buttonConfig.click))
+            throw new Error('must provide button click() function in button config');
+
+         let button = this.element.append('a')
+                           .attr('class', this.bright ? 'geo_toolbar_btn_bright' : 'geo_toolbar_btn')
+                           .attr('rel', 'tooltip')
+                           .attr('data-title', title)
+                           .on('click', buttonConfig.click);
+
+         ToolbarIcons.createSVG(button, ToolbarIcons[buttonConfig.icon], 16, title);
+      });
+
+   }
+
+   /** @summary change brightness */
+   changeBrightness(bright) {
+      this.bright = bright;
+      if (this.element)
+         this.element.selectAll(bright ? '.geo_toolbar_btn' : '.geo_toolbar_btn_bright')
+                     .attr('class', !bright ? 'geo_toolbar_btn' : 'geo_toolbar_btn_bright');
+   }
+
+   /** @summary cleanup toolbar */
+   cleanup() {
+      if (this.element) {
+         this.element.remove();
+         delete this.element;
+      }
+   }
+
+} // class ToolBar
+
+
+/**
+  * @summary geometry drawing control
+  *
+  * @private
+  */
+
+class GeoDrawingControl extends InteractiveControl {
+
+   constructor(mesh, bloom) {
+      super();
+      this.mesh = (mesh && mesh.material) ? mesh : null;
+      this.bloom = bloom;
+   }
+
+   /** @summary set highlight */
+   setHighlight(col, indx) {
+      return this.drawSpecial(col, indx);
+   }
+
+   /** @summary draw special */
+   drawSpecial(col /*, indx*/) {
+      let c = this.mesh;
+      if (!c || !c.material) return;
+
+      if (col) {
+         if (!c.origin)
+            c.origin = {
+              color: c.material.color,
+              emissive: c.material.emissive,
+              opacity: c.material.opacity,
+              width: c.material.linewidth,
+              size: c.material.size
+           };
+         if (this.bloom) {
+            c.layers.enable(_BLOOM_SCENE);
+            c.material.emissive = new Color$1(0x00ff00);
+         } else {
+            c.material.color = new Color$1( col );
+            c.material.opacity = 1.;
+         }
+
+         if (c.hightlightWidthScale && !browser$1.isWin)
+            c.material.linewidth = c.origin.width * c.hightlightWidthScale;
+         if (c.highlightScale)
+            c.material.size = c.origin.size * c.highlightScale;
+         return true;
+      } else if (c.origin) {
+         if (this.bloom) {
+            c.material.emissive = c.origin.emissive;
+            c.layers.enable(_ENTIRE_SCENE);
+         } else {
+            c.material.color = c.origin.color;
+            c.material.opacity = c.origin.opacity;
+         }
+         if (c.hightlightWidthScale)
+            c.material.linewidth = c.origin.width;
+         if (c.highlightScale)
+            c.material.size = c.origin.size;
+         return true;
+      }
+   }
+
+} // class GeoDrawingControl
+
+
+const stageInit = 0, stageCollect = 1, stageWorkerCollect = 2, stageAnalyze = 3, stageCollShapes = 4,
+      stageStartBuild = 5, stageWorkerBuild = 6, stageBuild = 7, stageBuildReady = 8, stageWaitMain = 9, stageBuildProj = 10;
+
+/**
+ * @summary Painter class for geometries drawing
+ *
+ * @private
+ */
+
+class TGeoPainter extends ObjectPainter {
+
+   /** @summary Constructor
+     * @param {object|string} dom - DOM element for drawing or element id
+     * @param {object} obj - supported TGeo object */
+   constructor(dom, obj) {
+
+      let gm;
+      if (obj?._typename === clTGeoManager) {
+         gm = obj;
+         obj = obj.fMasterVolume;
+      }
+
+      if (obj?._typename && (obj._typename.indexOf(clTGeoVolume) === 0))
+         obj = { _typename: clTGeoNode, fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
+
+      super(dom, obj);
+
+      if (gm) this.geo_manager = gm;
+
+      this.no_default_title = true; // do not set title to main DIV
+      this.mode3d = true; // indication of 3D mode
+      this.drawing_stage = stageInit; //
+      this.drawing_log = 'Init';
+      this.ctrl = {
+         clipIntersect: true,
+         clip: [{ name: 'x', enabled: false, value: 0, min: -100, max: 100 },
+                { name: 'y', enabled: false, value: 0, min: -100, max: 100 },
+                { name: 'z', enabled: false, value: 0, min: -100, max: 100 }],
+         ssao: { enabled: false, output: SSAOPass.OUTPUT.Default, kernelRadius: 0, minDistance: 0.001, maxDistance: 0.1 },
+         bloom: { enabled: true, strength: 1.5 },
+         info: { num_meshes: 0, num_faces: 0, num_shapes: 0 },
+         highlight: false,
+         highlight_scene: false,
+         depthTest: true,
+         depthMethod: 'dflt',
+         select_in_view: false,
+         update_browser: true,
+         light: { kind: 'points', top: false, bottom: false, left: false, right: false, front: false, specular: true, power: 1 },
+         trans_radial: 0,
+         trans_z: 0
+      };
+
+      this.ctrl.depthMethodItems = [
+         { name: 'Default', value: 'dflt' },
+         { name: 'Raytraicing', value: 'ray' },
+         { name: 'Boundary box', value: 'box' },
+         { name: 'Mesh size', value: 'size' },
+         { name: 'Central point', value: 'pnt' }
+       ];
+
+      this.ctrl.ssao.outputItems = [
+         { name: 'Default', value: SSAOPass.OUTPUT.Default },
+         { name: 'SSAO Only', value: SSAOPass.OUTPUT.SSAO },
+         { name: 'SSAO Only + Blur', value: SSAOPass.OUTPUT.Blur },
+         { name: 'Beauty', value: SSAOPass.OUTPUT.Beauty },
+         { name: 'Depth', value: SSAOPass.OUTPUT.Depth },
+         { name: 'Normal', value: SSAOPass.OUTPUT.Normal }
+      ];
+
+      this.cleanup(true);
+   }
+
+   /** @summary Change drawing stage
+     * @private */
+   changeStage(value, msg) {
+      this.drawing_stage = value;
+      if (!msg)
+         switch(value) {
+            case stageInit: msg = 'Building done'; break;
+            case stageCollect: msg = 'collect visibles'; break;
+            case stageWorkerCollect: msg = 'worker collect visibles'; break;
+            case stageAnalyze: msg = 'Analyse visibles'; break;
+            case stageCollShapes: msg = 'collect shapes for building'; break;
+            case stageStartBuild: msg = 'Start build shapes'; break;
+            case stageWorkerBuild: msg = 'Worker build shapes'; break;
+            case stageBuild: msg = 'Build shapes'; break;
+            case stageBuildReady: msg = 'Build ready'; break;
+            case stageWaitMain: msg = 'Wait for main painter'; break;
+            case stageBuildProj: msg = 'Build projection'; break;
+            default: msg = `stage ${value}`;
+         }
+      this.drawing_log = msg;
+   }
+
+   /** @summary Check drawing stage */
+   isStage(value) { return value === this.drawing_stage; }
+
+   /** @summary Create toolbar */
+   createToolbar() {
+      if (this._toolbar || !this._webgl || this.ctrl.notoolbar || isBatchMode()) return;
+      let buttonList = [{
+         name: 'toImage',
+         title: 'Save as PNG',
+         icon: 'camera',
+         click: () => this.createSnapshot()
+      }, {
+         name: 'control',
+         title: 'Toggle control UI',
+         icon: 'rect',
+         click: () => this.showControlOptions('toggle')
+      }, {
+         name: 'enlarge',
+         title: 'Enlarge geometry drawing',
+         icon: 'circle',
+         click: () => this.toggleEnlarge()
+      }];
+
+      // Only show VR icon if WebVR API available.
+      if (navigator.getVRDisplays) {
+         buttonList.push({
+            name: 'entervr',
+            title: 'Enter VR (It requires a VR Headset connected)',
+            icon: 'vrgoggles',
+            click: () => this.toggleVRMode()
+         });
+         this.initVRMode();
+      }
+
+      if (settings.ContextMenu)
+      buttonList.push({
+         name: 'menu',
+         title: 'Show context menu',
+         icon: 'question',
+         click: evnt => {
+
+            evnt.preventDefault();
+            evnt.stopPropagation();
+
+            if (closeMenu()) return;
+
+            createMenu$1(evnt, this).then(menu => {
+                menu.painter.fillContextMenu(menu);
+                menu.show();
+            });
+         }
+      });
+
+      let bkgr = new Color$1(this.ctrl.background);
+
+      this._toolbar = new Toolbar(this.selectDom(), (bkgr.r + bkgr.g + bkgr.b) < 1);
+
+      this._toolbar.addButtons(buttonList);
+   }
+
+   /** @summary Initialize VR mode */
+   initVRMode() {
+      // Dolly contains camera and controllers in VR Mode
+      // Allows moving the user in the scene
+      this._dolly = new Group();
+      this._scene.add(this._dolly);
+      this._standingMatrix = new Matrix4();
+
+      // Raycaster temp variables to avoid one per frame allocation.
+      this._raycasterEnd = new Vector3();
+      this._raycasterOrigin = new Vector3();
+
+      navigator.getVRDisplays().then(displays => {
+         let vrDisplay = displays[0];
+         if (!vrDisplay) return;
+         this._renderer.vr.setDevice(vrDisplay);
+         this._vrDisplay = vrDisplay;
+         if (vrDisplay.stageParameters) {
+            this._standingMatrix.fromArray(vrDisplay.stageParameters.sittingToStandingTransform);
+         }
+         this.initVRControllersGeometry();
+      });
+   }
+
+   /** @summary Init VR controllers geometry
+     * @private */
+   initVRControllersGeometry() {
+      let geometry = new SphereGeometry(0.025, 18, 36),
+          material = new MeshBasicMaterial({ color: 'grey', vertexColors: false }),
+          rayMaterial = new MeshBasicMaterial({ color: 'fuchsia', vertexColors: false }),
+          rayGeometry = new BoxGeometry(0.001, 0.001, 2),
+          ray1Mesh = new Mesh(rayGeometry, rayMaterial),
+          ray2Mesh = new Mesh(rayGeometry, rayMaterial),
+          sphere1 = new Mesh(geometry, material),
+          sphere2 = new Mesh(geometry, material);
+
+      this._controllersMeshes = [];
+      this._controllersMeshes.push(sphere1);
+      this._controllersMeshes.push(sphere2);
+      ray1Mesh.position.z -= 1;
+      ray2Mesh.position.z -= 1;
+      sphere1.add(ray1Mesh);
+      sphere2.add(ray2Mesh);
+      this._dolly.add(sphere1);
+      this._dolly.add(sphere2);
+      // Controller mesh hidden by default
+      sphere1.visible = false;
+      sphere2.visible = false;
+   }
+
+   /** @summary Update VR controllers list
+     * @private */
+   updateVRControllersList() {
+      let gamepads = navigator.getGamepads && navigator.getGamepads();
+      // Has controller list changed?
+      if (this.vrControllers && (gamepads.length === this.vrControllers.length)) { return; }
+      // Hide meshes.
+      this._controllersMeshes.forEach(mesh => { mesh.visible = false; });
+      this._vrControllers = [];
+      for (let i = 0; i < gamepads.length; ++i) {
+         if (!gamepads[i] || !gamepads[i].pose) { continue; }
+         this._vrControllers.push({
+            gamepad: gamepads[i],
+            mesh: this._controllersMeshes[i]
+         });
+         this._controllersMeshes[i].visible = true;
+      }
+   }
+
+   /** @summary Process VR controller intersection
+     * @private */
+   processVRControllerIntersections() {
+      let intersects = [];
+      for (let i = 0; i < this._vrControllers.length; ++i) {
+         let controller = this._vrControllers[i].mesh,
+             end = controller.localToWorld(this._raycasterEnd.set(0, 0, -1)),
+             origin = controller.localToWorld(this._raycasterOrigin.set(0, 0, 0));
+         end.sub(origin).normalize();
+         intersects = intersects.concat(this._controls.getOriginDirectionIntersects(origin, end));
+      }
+      // Remove duplicates.
+      intersects = intersects.filter(function (item, pos) {return intersects.indexOf(item) === pos});
+      this._controls.processMouseMove(intersects);
+   }
+
+   /** @summary Update VR controllers
+     * @private */
+   updateVRControllers() {
+      this.updateVRControllersList();
+      // Update pose.
+      for (let i = 0; i < this._vrControllers.length; ++i) {
+         let controller = this._vrControllers[i],
+             orientation = controller.gamepad.pose.orientation,
+             position = controller.gamepad.pose.position,
+             controllerMesh = controller.mesh;
+         if (orientation) { controllerMesh.quaternion.fromArray(orientation); }
+         if (position) { controllerMesh.position.fromArray(position); }
+         controllerMesh.updateMatrix();
+         controllerMesh.applyMatrix4(this._standingMatrix);
+         controllerMesh.matrixWorldNeedsUpdate = true;
+      }
+      this.processVRControllerIntersections();
+   }
+
+   /** @summary Toggle VR mode
+     * @private */
+   toggleVRMode() {
+      if (!this._vrDisplay) return;
+      // Toggle VR mode off
+      if (this._vrDisplay.isPresenting) {
+         this.exitVRMode();
+         return;
+      }
+      this._previousCameraPosition = this._camera.position.clone();
+      this._previousCameraRotation = this._camera.rotation.clone();
+      this._vrDisplay.requestPresent([{ source: this._renderer.domElement }]).then(() => {
+         this._previousCameraNear = this._camera.near;
+         this._dolly.position.set(this._camera.position.x/4, - this._camera.position.y/8, - this._camera.position.z/4);
+         this._camera.position.set(0,0,0);
+         this._dolly.add(this._camera);
+         this._camera.near = 0.1;
+         this._camera.updateProjectionMatrix();
+         this._renderer.vr.enabled = true;
+         this._renderer.setAnimationLoop(() => {
+            this.updateVRControllers();
+            this.render3D(0);
+         });
+      });
+      this._renderer.vr.enabled = true;
+
+      window.addEventListener( 'keydown', evnt => {
+         // Esc Key turns VR mode off
+         if (evnt.code == 'Escape') this.exitVRMode();
+      });
+   }
+
+   /** @summary Exit VR mode
+     * @private */
+   exitVRMode() {
+      if (!this._vrDisplay.isPresenting) return;
+      this._renderer.vr.enabled = false;
+      this._dolly.remove(this._camera);
+      this._scene.add(this._camera);
+      // Restore Camera pose
+      this._camera.position.copy(this._previousCameraPosition);
+      this._previousCameraPosition = undefined;
+      this._camera.rotation.copy(this._previousCameraRotation);
+      this._previousCameraRotation = undefined;
+      this._camera.near = this._previousCameraNear;
+      this._camera.updateProjectionMatrix();
+      this._vrDisplay.exitPresent();
+   }
+
+   /** @summary Returns main geometry object */
+   getGeometry() {
+      return this.getObject();
+   }
+
+   /** @summary Modify visibility of provided node by name */
+   modifyVisisbility(name, sign) {
+      if (getNodeKind(this.getGeometry()) !== 0) return;
+
+      if (!name)
+         return setGeoBit(this.getGeometry().fVolume, geoBITS.kVisThis, (sign === '+'));
+
+      let regexp, exact = false;
+
+      //arg.node.fVolume
+      if (name.indexOf('*') < 0) {
+         regexp = new RegExp('^'+name+'$');
+         exact = true;
+      } else {
+         regexp = new RegExp('^' + name.split('*').join('.*') + '$');
+         exact = false;
+      }
+
+      this.findNodeWithVolume(regexp, function(arg) {
+         setInvisibleAll(arg.node.fVolume, (sign !== '+'));
+         return exact ? arg : null; // continue search if not exact expression provided
+      });
+   }
+
+   /** @summary Decode drawing options */
+   decodeOptions(opt) {
+      if (!isStr(opt)) opt = '';
+
+      let res = { _grid: false, _bound: false, _debug: false,
+                  _full: false, _axis: 0,
+                  _count: false, wireframe: false,
+                   scale: new Vector3(1,1,1), zoom: 1.0, rotatey: 0, rotatez: 0,
+                   more: 1, maxlimit: 100000,
+                   vislevel: undefined, maxnodes: undefined, dflt_colors: false,
+                   use_worker: false, show_controls: false,
+                   highlight: false, highlight_scene: false, no_screen: false,
+                   project: '', is_main: false, tracks: false, showtop: false, can_rotate: true, ortho_camera: false,
+                   clipx: false, clipy: false, clipz: false, usessao: false, usebloom: true, outline: false,
+                   script_name: '', transparency: 0, rotate: false, background: '#FFFFFF',
+                   depthMethod: 'dflt', mouse_tmout: 50, trans_radial: 0, trans_z: 0 };
+
+      let dd = decodeUrl();
+      if (dd.get('_grid') == 'true') res._grid = true;
+      let _opt = dd.get('_debug');
+      if (_opt == 'true') { res._debug = true; res._grid = true; }
+      if (_opt == 'bound') { res._debug = true; res._grid = true; res._bound = true; }
+      if (_opt == 'full') { res._debug = true; res._grid = true; res._full = true; res._bound = true; }
+
+      let macro = opt.indexOf('macro:');
+      if (macro >= 0) {
+         let separ = opt.indexOf(';', macro+6);
+         if (separ < 0) separ = opt.length;
+         res.script_name = opt.slice(macro+6, separ);
+         opt = opt.slice(0, macro) + opt.slice(separ+1);
+         console.log(`script ${res.script_name} rest ${opt}`);
+      }
+
+      while (true) {
+         let pp = opt.indexOf('+'), pm = opt.indexOf('-');
+         if ((pp < 0) && (pm < 0)) break;
+         let p1 = pp, sign = '+';
+         if ((p1 < 0) || ((pm >= 0) && (pm < pp))) { p1 = pm; sign = '-'; }
+
+         let p2 = p1+1, regexp = new RegExp('[,; .]');
+         while ((p2 < opt.length) && !regexp.test(opt[p2]) && (opt[p2]!='+') && (opt[p2]!='-')) p2++;
+
+         let name = opt.substring(p1+1, p2);
+         opt = opt.slice(0,p1) + opt.slice(p2);
+         // console.log(`Modify visibility ${sign} : ${name}`);
+
+         this.modifyVisisbility(name, sign);
+      }
+
+      let d = new DrawOptions(opt);
+
+      if (d.check('MAIN')) res.is_main = true;
+
+      if (d.check('TRACKS')) res.tracks = true; // only for TGeoManager
+      if (d.check('SHOWTOP')) res.showtop = true; // only for TGeoManager
+      if (d.check('NO_SCREEN')) res.no_screen = true; // ignore kVisOnScreen bits for visibility
+
+      if (d.check('ORTHO_CAMERA_ROTATE')) { res.ortho_camera = true; res.can_rotate = true; }
+      if (d.check('ORTHO_CAMERA')) { res.ortho_camera = true; res.can_rotate = false; }
+      if (d.check('MOUSE_CLICK')) res.mouse_click = true;
+
+      if (d.check('DEPTHRAY') || d.check('DRAY')) res.depthMethod = 'ray';
+      if (d.check('DEPTHBOX') || d.check('DBOX')) res.depthMethod = 'box';
+      if (d.check('DEPTHPNT') || d.check('DPNT')) res.depthMethod = 'pnt';
+      if (d.check('DEPTHSIZE') || d.check('DSIZE')) res.depthMethod = 'size';
+      if (d.check('DEPTHDFLT') || d.check('DDFLT')) res.depthMethod = 'dflt';
+
+      if (d.check('ZOOM', true)) res.zoom = d.partAsFloat(0, 100) / 100;
+      if (d.check('ROTY', true)) res.rotatey = d.partAsFloat();
+      if (d.check('ROTZ', true)) res.rotatez = d.partAsFloat();
+      if (d.check('VISLVL', true)) res.vislevel = d.partAsInt();
+
+      if (d.check('BLACK')) res.background = '#000000';
+      if (d.check('WHITE')) res.background = '#FFFFFF';
+
+      if (d.check('BKGR_', true)) {
+         let bckgr = null;
+         if (d.partAsInt(1) > 0) {
+           bckgr = getColor(d.partAsInt());
+         } else {
+            for (let col = 0; col < 8; ++col)
+               if (getColor(col).toUpperCase() === d.part)
+                  bckgr = getColor(col);
+         }
+         if (bckgr) res.background = '#' + new Color$1(bckgr).getHexString();
+      }
+
+      if (d.check('R3D_', true))
+         res.Render3D = constants$1.Render3D.fromString(d.part.toLowerCase());
+
+      if (d.check('MORE3')) res.more = 3;
+      if (d.check('MORE')) res.more = 2;
+      if (d.check('ALL')) { res.more = 10; res.vislevel = 9; }
+
+      if (d.check('CONTROLS') || d.check('CTRL')) res.show_controls = true;
+
+      if (d.check('CLIPXYZ')) res.clipx = res.clipy = res.clipz = true;
+      if (d.check('CLIPX')) res.clipx = true;
+      if (d.check('CLIPY')) res.clipy = true;
+      if (d.check('CLIPZ')) res.clipz = true;
+      if (d.check('CLIP')) res.clipx = res.clipy = res.clipz = true;
+
+      if (d.check('PROJX', true)) { res.project = 'x'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = false; }
+      if (d.check('PROJY', true)) { res.project = 'y'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = false; }
+      if (d.check('PROJZ', true)) { res.project = 'z'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = false; }
+
+      if (d.check('DFLT_COLORS') || d.check('DFLT')) res.dflt_colors = true;
+      if (d.check('SSAO')) res.usessao = true;
+      if (d.check('NOBLOOM')) res.usebloom = false;
+      if (d.check('BLOOM')) res.usebloom = true;
+      if (d.check('OUTLINE')) res.outline = true;
+
+      if (d.check('NOWORKER')) res.use_worker = -1;
+      if (d.check('WORKER')) res.use_worker = 1;
+
+      if (d.check('NOHIGHLIGHT') || d.check('NOHIGH')) res.highlight_scene = res.highlight = 0;
+      if (d.check('HIGHLIGHT')) res.highlight_scene = res.highlight = true;
+      if (d.check('HSCENEONLY')) { res.highlight_scene = true; res.highlight = 0; }
+      if (d.check('NOHSCENE')) res.highlight_scene = 0;
+      if (d.check('HSCENE')) res.highlight_scene = true;
+
+      if (d.check('WIREFRAME') || d.check('WIRE')) res.wireframe = true;
+      if (d.check('ROTATE')) res.rotate = true;
+
+      if (d.check('INVX') || d.check('INVERTX')) res.scale.x = -1;
+      if (d.check('INVY') || d.check('INVERTY')) res.scale.y = -1;
+      if (d.check('INVZ') || d.check('INVERTZ')) res.scale.z = -1;
+
+      if (d.check('COUNT')) res._count = true;
+
+      if (d.check('TRANSP',true))
+         res.transparency = d.partAsInt(0,100)/100;
+
+      if (d.check('OPACITY',true))
+         res.transparency = 1 - d.partAsInt(0,100)/100;
+
+      if (d.check('AXISCENTER') || d.check('AC')) res._axis = 2;
+
+      if (d.check('TRR',true)) res.trans_radial = d.partAsInt()/100;
+      if (d.check('TRZ',true)) res.trans_z = d.partAsInt()/100;
+
+      if (d.check('AXIS') || d.check('A')) res._axis = true;
+
+      if (d.check('D')) res._debug = true;
+      if (d.check('G')) res._grid = true;
+      if (d.check('B')) res._bound = true;
+      if (d.check('W')) res.wireframe = true;
+      if (d.check('F')) res._full = true;
+      if (d.check('Y')) res._yup = true;
+      if (d.check('Z')) res._yup = false;
+
+      // when drawing geometry without TCanvas, yup = true by default
+      if (res._yup === undefined)
+         res._yup = this.getCanvSvg().empty();
+
+      return res;
+   }
+
+   /** @summary Activate specified items in the browser */
+   activateInBrowser(names, force) {
+
+      if (isStr(names)) names = [ names ];
+
+      if (this._hpainter) {
+         // show browser if it not visible
+
+         this._hpainter.activateItems(names, force);
+
+         // if highlight in the browser disabled, suppress in few seconds
+         if (!this.ctrl.update_browser)
+            setTimeout(() => this._hpainter.activateItems([]), 2000);
+      }
+   }
+
+   /** @summary  method used to check matrix calculations performance with current three.js model */
+   testMatrixes() {
+
+      let errcnt = 0, totalcnt = 0, totalmax = 0;
+
+      let arg = {
+            domatrix: true,
+            func: (/*node*/) => {
+
+               let m2 = this.getmatrix();
+
+               let entry = this.CopyStack();
+
+               let mesh = this._clones.createObject3D(entry.stack, this._toplevel, 'mesh');
+
+               if (!mesh) return true;
+
+               totalcnt++;
+
+               let m1 = mesh.matrixWorld, flip;
+
+               if (m1.equals(m2)) return true;
+               if ((m1.determinant() > 0) && (m2.determinant()<-0.9)) {
+                  flip = new Vector3(1,1,-1);
+                  m2 = m2.clone().scale(flip);
+                  if (m1.equals(m2)) return true;
+               }
+
+               let max = 0;
+               for (let k = 0; k < 16; ++k)
+                  max = Math.max(max, Math.abs(m1.elements[k] - m2.elements[k]));
+
+               totalmax = Math.max(max, totalmax);
+
+               if (max < 1e-4) return true;
+
+               console.log(`${this._clones.resolveStack(entry.stack).name} maxdiff ${max} determ ${m1.determinant()} ${m2.determinant()}`);
+
+               errcnt++;
+
+               return false;
+            }
+         };
+
+
+      let tm1 = new Date().getTime();
+
+      /* let cnt = */ this._clones.scanVisible(arg);
+
+      let tm2 = new Date().getTime();
+
+      console.log(`Compare matrixes total ${totalcnt} errors ${errcnt} takes ${tm2-tm1} maxdiff ${totalmax}`);
+   }
+
+   /** @summary Fill context menu */
+   fillContextMenu(menu) {
+      menu.add('header: Draw options');
+
+      menu.addchk(this.ctrl.update_browser, 'Browser update', () => {
+         this.ctrl.update_browser = !this.ctrl.update_browser;
+         if (!this.ctrl.update_browser) this.activateInBrowser([]);
+      });
+      menu.addchk(this.ctrl.show_controls, 'Show Controls', () => this.showControlOptions('toggle'));
+
+      menu.addchk(this.ctrl._axis, 'Show axes', () => this.setAxesDraw('toggle'));
+
+      if (this.geo_manager)
+         menu.addchk(this.ctrl.showtop, 'Show top volume', () => this.setShowTop(!this.ctrl.showtop));
+
+      menu.addchk(this.ctrl.wireframe, 'Wire frame', () => this.toggleWireFrame());
+
+      menu.addchk(this.ctrl.highlight, 'Highlight volumes', () => {
+         this.ctrl.highlight = !this.ctrl.highlight;
+      });
+      menu.addchk(this.ctrl.highlight_scene, 'Highlight scene', () => {
+         this.ctrl.highlight_scene = !this.ctrl.highlight_scene;
+      });
+      menu.add('Reset camera position', () => this.focusCamera());
+
+      if (!this._geom_viewer)
+         menu.add('Get camera position', () => menu.info('Position (as url)', '&opt=' + this.produceCameraUrl()));
+
+      if (!this.ctrl.project)
+         menu.addchk(this.ctrl.rotate, 'Autorotate', () => this.setAutoRotate(!this.ctrl.rotate));
+      menu.addchk(this.ctrl.select_in_view, 'Select in view', () => {
+         this.ctrl.select_in_view = !this.ctrl.select_in_view;
+         if (this.ctrl.select_in_view) this.startDrawGeometry();
+      });
+   }
+
+   /** @summary Method used to set transparency for all geometrical shapes
+     * @param {number|Function} transparency - one could provide function
+     * @param {boolean} [skip_render] - if specified, do not perform rendering */
+   changedGlobalTransparency(transparency, skip_render) {
+      let func = isFunc(transparency) ? transparency : null;
+      if (func || (transparency === undefined)) transparency = this.ctrl.transparency;
+      this._toplevel.traverse( node => {
+         if (node?.material?.inherentOpacity !== undefined) {
+            let t = func ? func(node) : undefined;
+            if (t !== undefined)
+               node.material.opacity = 1 - t;
+            else
+               node.material.opacity = Math.min(1 - (transparency || 0), node.material.inherentOpacity);
+            node.material.transparent = node.material.opacity < 1;
+         }
+      });
+      if (!skip_render)
+         this.render3D(-1);
+   }
+
+   /** @summary Reset transformation */
+   resetTransformation() {
+      this.changedTransformation('reset');
+   }
+
+   /** @summary Method should be called when transformation parameters were changed */
+   changedTransformation(arg) {
+      if (!this._toplevel) return;
+
+      let ctrl = this.ctrl,
+          translation = new Matrix4(),
+          vect2 = new Vector3();
+
+      if (arg == 'reset')
+         ctrl.trans_z = ctrl.trans_radial = 0;
+
+      this._toplevel.traverse(mesh => {
+         if (mesh.stack === undefined) return;
+
+         let node = mesh.parent;
+
+         if (arg == 'reset') {
+            if (node.matrix0) {
+               node.matrix.copy(node.matrix0);
+               node.matrix.decompose( node.position, node.quaternion, node.scale );
+               node.matrixWorldNeedsUpdate = true;
+            }
+            delete node.matrix0;
+            delete node.vect0;
+            delete node.vect1;
+            delete node.minvert;
+            return;
+         }
+
+         if (node.vect0 === undefined) {
+            node.matrix0 = node.matrix.clone();
+            node.minvert = new Matrix4().copy(node.matrixWorld).invert();
+
+            let box3 = getBoundingBox(mesh, null, true),
+                signz = mesh._flippedMesh ? -1 : 1;
+
+            // real center of mesh in local coordinates
+            node.vect0 = new Vector3((box3.max.x  + box3.min.x) / 2, (box3.max.y  + box3.min.y) / 2, signz * (box3.max.z  + box3.min.z) / 2).applyMatrix4(node.matrixWorld);
+            node.vect1 = new Vector3(0,0,0).applyMatrix4(node.minvert);
+         }
+
+         vect2.set(ctrl.trans_radial * node.vect0.x, ctrl.trans_radial * node.vect0.y, ctrl.trans_z * node.vect0.z).applyMatrix4(node.minvert).sub(node.vect1);
+
+         node.matrix.multiplyMatrices(node.matrix0, translation.makeTranslation(vect2.x, vect2.y, vect2.z));
+         node.matrix.decompose( node.position, node.quaternion, node.scale );
+         node.matrixWorldNeedsUpdate = true;
+      });
+
+      this._toplevel.updateMatrixWorld();
+
+      // axes drawing always triggers rendering
+      if (arg != 'norender')
+         this.drawSimpleAxis();
+   }
+
+   /** @summary Should be called when autorotate property changed */
+   changedAutoRotate() {
+      this.autorotate(2.5);
+   }
+
+   /** @summary Method should be called when changing axes drawing */
+   changedAxes() {
+      if (isStr(this.ctrl._axis))
+         this.ctrl._axis = parseInt(this.ctrl._axis);
+
+      this.drawSimpleAxis();
+   }
+
+   /** @summary Method should be called to change background color */
+   changedBackground(val) {
+      if (val !== undefined)
+         this.ctrl.background = val;
+      this._renderer.setClearColor(this.ctrl.background, 1);
+      this.render3D(0);
+
+      if (this._toolbar) {
+         let bkgr = new Color$1(this.ctrl.background);
+         this._toolbar.changeBrightness((bkgr.r + bkgr.g + bkgr.b) < 1);
+      }
+   }
+
+   /** @summary Method called when SSAO configuration changed via GUI */
+   changedSSAO() {
+      if (!this.ctrl.ssao.enabled) {
+         this.removeSSAO();
+      } else {
+         this.createSSAO();
+
+         this._ssaoPass.output = parseInt(this.ctrl.ssao.output);
+         this._ssaoPass.kernelRadius = this.ctrl.ssao.kernelRadius;
+         this._ssaoPass.minDistance = this.ctrl.ssao.minDistance;
+         this._ssaoPass.maxDistance = this.ctrl.ssao.maxDistance;
+      }
+
+      this.updateClipping();
+
+      if (this._slave_painters)
+         this._slave_painters.forEach(p => {
+            Object.assign(p.ctrl.ssao, this.ctrl.ssao);
+            p.changedSSAO();
+         });
+   }
+
+   /** @summary Display control GUI */
+   showControlOptions(on) {
+      // while complete geo drawing can be removed until dat is loaded - just check and ignore callback
+      if (!this.ctrl) return;
+
+      if (on === 'toggle') {
+         on = !this._datgui;
+      } else if (on === undefined) {
+         on = this.ctrl.show_controls;
+      }
+
+      this.ctrl.show_controls = on;
+
+      if (this._datgui) {
+         if (!on) {
+            this._datgui.domElement.remove();
+            this._datgui.destroy();
+            delete this._datgui;
+         }
+         return;
+      }
+
+      if (on)
+         Promise.resolve().then(function () { return dat_gui; }).then(h => this.buildDatGui(h));
+   }
+
+   /** @summary build dat.gui elements
+     * @private */
+   buildDatGui(dat) {
+      // can happen when dat gui loaded after drawing is already cleaned
+      if (!this._renderer) return;
+
+      if (!dat)
+         throw Error('Fail to load dat.gui');
+
+      this._datgui = new dat.GUI({ autoPlace: false, width: Math.min(650, this._renderer.domElement.width / 2) });
+
+      let main = this.selectDom();
+      if (main.style('position') == 'static') main.style('position','relative');
+
+      let dom = this._datgui.domElement;
+      dom.style.position = 'absolute';
+      dom.style.top = 0;
+      dom.style.right = 0;
+      main.node().appendChild(dom);
+
+      this._datgui.painter = this;
+
+      if (this.ctrl.project) {
+
+         let bound = this.getGeomBoundingBox(this.getProjectionSource(), 0.01),
+             axis = this.ctrl.project;
+
+         if (this.ctrl.projectPos === undefined)
+            this.ctrl.projectPos = (bound.min[axis] + bound.max[axis])/2;
+
+         this._datgui.add(this.ctrl, 'projectPos', bound.min[axis], bound.max[axis])
+             .name(axis.toUpperCase() + ' projection')
+             .onChange(() => this.startDrawGeometry());
+
+      } else {
+         // Clipping Options
+
+         let clipFolder = this._datgui.addFolder('Clipping'),
+             clip_handler = () => this.changedClipping(-1);
+
+         for (let naxis = 0; naxis < 3; ++naxis) {
+            let cc = this.ctrl.clip[naxis],
+                axisC = cc.name.toUpperCase();
+
+            clipFolder.add(cc, 'enabled')
+                .name('Enable ' + axisC)
+                .listen() // react if option changed outside
+                .onChange(clip_handler);
+
+            clipFolder.add(cc, 'value', cc.min, cc.max)
+                .name(axisC + ' position')
+                .onChange(this.changedClipping.bind(this, naxis));
+         }
+
+         clipFolder.add(this.ctrl, 'clipIntersect').name('Clip intersection')
+                   .listen().onChange(clip_handler);
+
+      }
+
+      // Appearance Options
+
+      let appearance = this._datgui.addFolder('Appearance');
+
+      appearance.add(this.ctrl, 'highlight').name('Highlight Selection')
+                .listen().onChange(() => this.changedHighlight());
+
+      appearance.add(this.ctrl, 'transparency', 0.0, 1.0, 0.001)
+                     .listen().onChange(value => this.changedGlobalTransparency(value));
+
+      appearance.addColor(this.ctrl, 'background').name('Background')
+                .onChange(col => this.changedBackground(col));
+
+      appearance.add(this.ctrl, 'wireframe').name('Wireframe')
+                     .listen().onChange(() => this.changedWireFrame());
+
+      this.ctrl._axis_cfg = 0;
+      appearance.add(this.ctrl, '_axis', { 'none': 0, 'show': 1, 'center': 2 }).name('Axes')
+                    .onChange(() => this.changedAxes());
+
+      if (!this.ctrl.project)
+         appearance.add(this.ctrl, 'rotate').name('Autorotate')
+                      .listen().onChange(() => this.changedAutoRotate());
+
+      appearance.add(this, 'focusCamera').name('Reset camera position');
+
+      // Advanced Options
+
+      if (this._webgl) {
+         let advanced = this._datgui.addFolder('Advanced'), depthcfg = {};
+         this.ctrl.depthMethodItems.forEach(i => { depthcfg[i.name] = i.value; });
+
+         advanced.add(this.ctrl, 'depthTest').name('Depth test')
+            .listen().onChange(() => this.changedDepthTest());
+
+         advanced.add( this.ctrl, 'depthMethod', depthcfg)
+             .name('Rendering order')
+             .onChange(method => this.changedDepthMethod(method));
+
+         advanced.add(this.ctrl, 'ortho_camera').name('Orhographic camera')
+                 .listen().onChange(() => this.changeCamera());
+
+        advanced.add(this, 'resetAdvanced').name('Reset');
+      }
+
+      // Transformation Options
+      if (!this.ctrl.project) {
+         let transform = this._datgui.addFolder('Transform');
+         transform.add(this.ctrl, 'trans_z', 0., 3., 0.01)
+                     .name('Z axis')
+                     .listen().onChange(() => this.changedTransformation());
+         transform.add(this.ctrl, 'trans_radial', 0., 3., 0.01)
+                  .name('Radial')
+                  .listen().onChange(() => this.changedTransformation());
+
+         transform.add(this, 'resetTransformation').name('Reset');
+
+         if (this.ctrl.trans_z || this.ctrl.trans_radial) transform.open();
+      }
+
+      // no SSAO folder if outline is enabled
+      if (this.ctrl.outline) return;
+
+      let ssaofolder = this._datgui.addFolder('Smooth Lighting (SSAO)'),
+          ssao_handler = () => this.changedSSAO(), ssaocfg = {};
+
+      this.ctrl.ssao.outputItems.forEach(i => { ssaocfg[i.name] = i.value; });
+
+      ssaofolder.add(this.ctrl.ssao, 'enabled').name('Enable SSAO')
+                .listen().onChange(ssao_handler);
+
+      ssaofolder.add( this.ctrl.ssao, 'output', ssaocfg)
+                .listen().onChange(ssao_handler);
+
+      ssaofolder.add( this.ctrl.ssao, 'kernelRadius', 0, 32)
+                .listen().onChange(ssao_handler);
+
+      ssaofolder.add( this.ctrl.ssao, 'minDistance', 0.001, 0.02)
+                .listen().onChange(ssao_handler);
+
+      ssaofolder.add( this.ctrl.ssao, 'maxDistance', 0.01, 0.3)
+                .listen().onChange(ssao_handler);
+
+      let blooming = this._datgui.addFolder('Unreal Bloom'),
+          bloom_handler = () => this.changedBloomSettings();
+
+      blooming.add(this.ctrl.bloom, 'enabled').name('Enable Blooming')
+              .listen().onChange(bloom_handler);
+
+      blooming.add( this.ctrl.bloom, 'strength', 0.0, 3.0).name('Strength')
+               .listen().onChange(bloom_handler);
+   }
+
+   /** @summary Method called when bloom configuration changed via GUI */
+   changedBloomSettings() {
+      if (this.ctrl.bloom.enabled) {
+         this.createBloom();
+         this._bloomPass.strength = this.ctrl.bloom.strength;
+      } else {
+         this.removeBloom();
+      }
+
+      if (this._slave_painters)
+         this._slave_painters.forEach(p => {
+            Object.assign(p.ctrl.bloom, this.ctrl.bloom);
+            p.changedBloomSettings();
+         });
+   }
+
+   /** @summary Handle change of camera kind */
+   changeCamera() {
+      // force control recreation
+      if (this._controls) {
+          this._controls.cleanup();
+          delete this._controls;
+       }
+
+       this.removeBloom();
+       this.removeSSAO();
+
+      // recreate camera
+      this.createCamera();
+
+      this.createSpecialEffects();
+
+      this._first_drawing = true;
+      this.startDrawGeometry(true);
+   }
+
+   /** @summary create bloom effect */
+   createBloom() {
+      if (this._bloomPass) return;
+
+      this._camera.layers.enable( _BLOOM_SCENE );
+      this._bloomComposer = new EffectComposer( this._renderer );
+      this._bloomComposer.addPass( new RenderPass( this._scene, this._camera ) );
+      this._bloomPass = new UnrealBloomPass(new Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85);
+      this._bloomPass.threshold = 0;
+      this._bloomPass.strength = this.ctrl.bloom.strength;
+      this._bloomPass.radius = 0;
+      this._bloomPass.renderToScreen = true;
+      this._bloomComposer.addPass( this._bloomPass );
+      this._renderer.autoClear = false;
+   }
+
+   /** @summary Remove bloom highlight */
+   removeBloom() {
+      if (!this._bloomPass) return;
+      delete this._bloomPass;
+      delete this._bloomComposer;
+      this._renderer.autoClear = true;
+      this._camera.layers.disable( _BLOOM_SCENE );
+   }
+
+   /** @summary Remove composer */
+   removeSSAO() {
+      // we cannot remove pass from composer - just disable it
+      delete this._ssaoPass;
+      delete this._effectComposer;
+   }
+
+   /** @summary create SSAO */
+   createSSAO() {
+      if (!this._webgl) return;
+
+      // this._depthRenderTarget = new WebGLRenderTarget(this._scene_width, this._scene_height, { minFilter: LinearFilter, magFilter: LinearFilter });
+      // Setup SSAO pass
+      if (!this._ssaoPass) {
+         if (!this._effectComposer) {
+            this._effectComposer = new EffectComposer( this._renderer );
+            this._effectComposer.addPass(new RenderPass( this._scene, this._camera));
+         }
+
+         this._ssaoPass = new SSAOPass( this._scene, this._camera, this._scene_width, this._scene_height );
+         this._ssaoPass.kernelRadius = 16;
+         this._ssaoPass.renderToScreen = true;
+
+         // Add pass to effect composer
+         this._effectComposer.addPass( this._ssaoPass );
+      }
+   }
+
+   /** @summary Show context menu for orbit control
+     * @private */
+   orbitContext(evnt, intersects) {
+
+      createMenu$1(evnt, this).then(menu => {
+         let numitems = 0, numnodes = 0, cnt = 0;
+         if (intersects)
+            for (let n = 0; n < intersects.length; ++n) {
+               if (intersects[n].object.stack) numnodes++;
+               if (intersects[n].object.geo_name) numitems++;
+            }
+
+         if (numnodes + numitems === 0) {
+            this.fillContextMenu(menu);
+         } else {
+            let many = (numnodes + numitems) > 1;
+
+            if (many) menu.add('header:' + ((numitems > 0) ? 'Items' : 'Nodes'));
+
+            for (let n = 0; n < intersects.length; ++n) {
+               let obj = intersects[n].object,
+                   name, itemname, hdr;
+
+               if (obj.geo_name) {
+                  itemname = obj.geo_name;
+                  if (itemname.indexOf('<prnt>') == 0)
+                     itemname = (this.getItemName() || 'top') + itemname.slice(6);
+                  name = itemname.slice(itemname.lastIndexOf('/')+1);
+                  if (!name) name = itemname;
+                  hdr = name;
+               } else if (obj.stack) {
+                  name = this._clones.resolveStack(obj.stack).name;
+                  itemname = this.getStackFullName(obj.stack);
+                  hdr = this.getItemName();
+                  if (name.indexOf('Nodes/') === 0)
+                     hdr = name.slice(6);
+                  else if (name)
+                     hdr = name;
+                  else if (!hdr)
+                     hdr = 'header';
+
+               } else
+                  continue;
+
+               menu.add((many ? 'sub:' : 'header:') + hdr, itemname, arg => this.activateInBrowser([arg], true));
+
+               menu.add('Browse', itemname, arg => this.activateInBrowser([arg], true));
+
+               if (this._hpainter)
+                  menu.add('Inspect', itemname, arg => this._hpainter.display(arg, 'inspect'));
+
+               if (obj.geo_name) {
+                  menu.add('Hide', n, indx => {
+                     let mesh = intersects[indx].object;
+                     mesh.visible = false; // just disable mesh
+                     if (mesh.geo_object) mesh.geo_object.$hidden_via_menu = true; // and hide object for further redraw
+                     menu.painter.render3D();
+                  });
+
+                  if (many) menu.add('endsub:');
+
+                  continue;
+               }
+
+               let wireframe = this.accessObjectWireFrame(obj);
+
+               if (wireframe !== undefined)
+                  menu.addchk(wireframe, 'Wireframe', n, function(indx) {
+                     let m = intersects[indx].object.material;
+                     m.wireframe = !m.wireframe;
+                     this.render3D();
+                  });
+
+               if (++cnt > 1)
+                  menu.add('Manifest', n, function(indx) {
+
+                     if (this._last_manifest)
+                        this._last_manifest.wireframe = !this._last_manifest.wireframe;
+
+                     if (this._last_hidden)
+                        this._last_hidden.forEach(obj => { obj.visible = true; });
+
+                     this._last_hidden = [];
+
+                     for (let i = 0; i < indx; ++i)
+                        this._last_hidden.push(intersects[i].object);
+
+                     this._last_hidden.forEach(obj => { obj.visible = false; });
+
+                     this._last_manifest = intersects[indx].object.material;
+
+                     this._last_manifest.wireframe = !this._last_manifest.wireframe;
+
+                     this.render3D();
+                  });
+
+
+               menu.add('Focus', n, function(indx) {
+                  this.focusCamera(intersects[indx].object);
+               });
+
+               if (!this._geom_viewer)
+               menu.add('Hide', n, function(indx) {
+                  let resolve = menu.painter._clones.resolveStack(intersects[indx].object.stack);
+                  if (resolve.obj && (resolve.node.kind === kindGeo) && resolve.obj.fVolume) {
+                     setGeoBit(resolve.obj.fVolume, geoBITS.kVisThis, false);
+                     updateBrowserIcons(resolve.obj.fVolume, this._hpainter);
+                  } else if (resolve.obj && (resolve.node.kind === kindEve)) {
+                     resolve.obj.fRnrSelf = false;
+                     updateBrowserIcons(resolve.obj, this._hpainter);
+                  }
+
+                  this.testGeomChanges();// while many volumes may disappear, recheck all of them
+               });
+
+               if (many) menu.add('endsub:');
+            }
+         }
+         menu.show();
+      });
+   }
+
+   /** @summary Filter some objects from three.js intersects array */
+   filterIntersects(intersects) {
+
+      if (!intersects.length) return intersects;
+
+      // check redirections
+      for (let n = 0; n < intersects.length; ++n)
+         if (intersects[n].object.geo_highlight)
+            intersects[n].object = intersects[n].object.geo_highlight;
+
+      // remove all elements without stack - indicator that this is geometry object
+      // also remove all objects which are mostly transparent
+      for (let n = intersects.length - 1; n >= 0; --n) {
+
+         let obj = intersects[n].object,
+            unique = (obj.stack !== undefined) || (obj.geo_name !== undefined);
+
+         if (unique && obj.material && (obj.material.opacity !== undefined))
+            unique = (obj.material.opacity >= 0.1);
+
+         if (obj.jsroot_special) unique = false;
+
+         for (let k = 0; (k < n) && unique;++k)
+            if (intersects[k].object === obj) unique = false;
+
+         if (!unique) intersects.splice(n,1);
+      }
+
+      let clip = this.ctrl.clip;
+
+      if (clip[0].enabled || clip[1].enabled || clip[2].enabled) {
+         let clippedIntersects = [];
+
+         for (let i = 0; i < intersects.length; ++i) {
+            let point = intersects[i].point, special = (intersects[i].object.type == 'Points'), clipped = true;
+
+            if (clip[0].enabled && ((this._clipPlanes[0].normal.dot(point) > this._clipPlanes[0].constant) ^ special)) clipped = false;
+            if (clip[1].enabled && ((this._clipPlanes[1].normal.dot(point) > this._clipPlanes[1].constant) ^ special)) clipped = false;
+            if (clip[2].enabled && (this._clipPlanes[2].normal.dot(point) > this._clipPlanes[2].constant)) clipped = false;
+
+            if (!clipped) clippedIntersects.push(intersects[i]);
+         }
+
+         intersects = clippedIntersects;
+      }
+
+      return intersects;
+   }
+
+   /** @summary test camera position
+     * @desc function analyzes camera position and start redraw of geometry
+     *  if objects in view may be changed */
+   testCameraPositionChange() {
+
+      if (!this.ctrl.select_in_view || this._draw_all_nodes) return;
+
+      let matrix = createProjectionMatrix(this._camera),
+          frustum = createFrustum(matrix);
+
+      // check if overall bounding box seen
+      if (!frustum.CheckBox(this.getGeomBoundingBox(this._toplevel)))
+         this.startDrawGeometry();
+   }
+
+   /** @summary Resolve stack */
+   resolveStack(stack) {
+      return this._clones && stack ? this._clones.resolveStack(stack) : null;
+   }
+
+   /** @summary Returns stack full name
+     * @desc Includes item name of top geo object */
+   getStackFullName(stack) {
+      let mainitemname = this.getItemName(),
+          sub = this.resolveStack(stack);
+      if (!sub || !sub.name) return mainitemname;
+      return mainitemname ? mainitemname + '/' + sub.name : sub.name;
+   }
+
+   /** @summary Add handler which will be called when element is highlighted in geometry drawing
+     * @desc Handler should have highlightMesh function with same arguments as TGeoPainter  */
+   addHighlightHandler(handler) {
+      if (!isFunc(handler?.highlightMesh)) return;
+      if (!this._highlight_handlers)
+         this._highlight_handlers = [];
+      this._highlight_handlers.push(handler);
+   }
+
+   /** @summary perform mesh highlight */
+   highlightMesh(active_mesh, color, geo_object, geo_index, geo_stack, no_recursive) {
+
+      if (geo_object) {
+         active_mesh = active_mesh ? [ active_mesh ] : [];
+         let extras = this.getExtrasContainer();
+         if (extras)
+            extras.traverse(obj3d => {
+               if ((obj3d.geo_object === geo_object) && (active_mesh.indexOf(obj3d) < 0)) active_mesh.push(obj3d);
+            });
+      } else if (geo_stack && this._toplevel) {
+         active_mesh = [];
+         this._toplevel.traverse(mesh => {
+            if ((mesh instanceof Mesh) && isSameStack(mesh.stack, geo_stack)) active_mesh.push(mesh);
+         });
+      } else {
+         active_mesh = active_mesh ? [ active_mesh ] : [];
+      }
+
+      if (!active_mesh.length) active_mesh = null;
+
+      if (active_mesh) {
+         // check if highlight is disabled for correspondent objects kinds
+         if (active_mesh[0].geo_object) {
+            if (!this.ctrl.highlight_scene) active_mesh = null;
+         } else {
+            if (!this.ctrl.highlight) active_mesh = null;
+         }
+      }
+
+      if (!no_recursive) {
+         // check all other painters
+
+         if (active_mesh) {
+            if (!geo_object) geo_object = active_mesh[0].geo_object;
+            if (!geo_stack) geo_stack = active_mesh[0].stack;
+         }
+
+         let lst = this._highlight_handlers || (!this._main_painter ? this._slave_painters : this._main_painter._slave_painters.concat([this._main_painter]));
+
+         for (let k = 0; k < lst.length; ++k)
+            if (lst[k] !== this)
+               lst[k].highlightMesh(null, color, geo_object, geo_index, geo_stack, true);
+      }
+
+      let curr_mesh = this._selected_mesh, same = false;
+
+      if (!curr_mesh && !active_mesh) return false;
+
+      const get_ctrl = mesh => mesh.get_ctrl ? mesh.get_ctrl() : new GeoDrawingControl(mesh, this.ctrl.bloom.enabled);
+
+      // check if selections are the same
+      if (curr_mesh && active_mesh && (curr_mesh.length == active_mesh.length)) {
+         same = true;
+         for (let k = 0; (k < curr_mesh.length) && same; ++k) {
+            if ((curr_mesh[k] !== active_mesh[k]) || get_ctrl(curr_mesh[k]).checkHighlightIndex(geo_index)) same = false;
+         }
+      }
+      if (same) return !!curr_mesh;
+
+      if (curr_mesh)
+         for (let k = 0; k < curr_mesh.length; ++k)
+            get_ctrl(curr_mesh[k]).setHighlight();
+
+      this._selected_mesh = active_mesh;
+
+      if (active_mesh)
+         for (let k = 0; k < active_mesh.length; ++k)
+            get_ctrl(active_mesh[k]).setHighlight(color || 0x00ff00, geo_index);
+
+      this.render3D(0);
+
+      return !!active_mesh;
+   }
+
+   /** @summary handle mouse click event */
+   processMouseClick(pnt, intersects, evnt) {
+      if (!intersects.length) return;
+
+      let mesh = intersects[0].object;
+      if (!mesh.get_ctrl) return;
+
+      let ctrl = mesh.get_ctrl(),
+          click_indx = ctrl.extractIndex(intersects[0]);
+
+      ctrl.evnt = evnt;
+
+      if (ctrl.setSelected('blue', click_indx))
+         this.render3D();
+
+      ctrl.evnt = null;
+   }
+
+   /** @summary Configure mouse delay, required for complex geometries */
+   setMouseTmout(val) {
+      if (this.ctrl)
+         this.ctrl.mouse_tmout = val;
+
+      if (this._controls)
+         this._controls.mouse_tmout = val;
+   }
+
+   /** @summary Configure depth method, used for render order production.
+     * @param {string} method - Allowed values: 'ray', 'box','pnt', 'size', 'dflt' */
+   setDepthMethod(method) {
+      if (this.ctrl)
+         this.ctrl.depthMethod = method;
+   }
+
+   /** @summary Add orbit control */
+   addOrbitControls() {
+
+      if (this._controls || !this._webgl || isBatchMode()) return;
+
+      this.setTooltipAllowed(settings.Tooltip);
+
+      this._controls = createOrbitControl(this, this._camera, this._scene, this._renderer, this._lookat);
+
+      this._controls.mouse_tmout = this.ctrl.mouse_tmout; // set larger timeout for geometry processing
+
+      if (!this.ctrl.can_rotate) this._controls.enableRotate = false;
+
+      this._controls.contextMenu = this.orbitContext.bind(this);
+
+      this._controls.processMouseMove = intersects => {
+
+         // painter already cleaned up, ignore any incoming events
+         if (!this.ctrl || !this._controls) return;
+
+         let active_mesh = null, tooltip = null, resolve = null, names = [], geo_object, geo_index;
+
+         // try to find mesh from intersections
+         for (let k = 0; k < intersects.length; ++k) {
+            let obj = intersects[k].object, info = null;
+            if (!obj) continue;
+            if (obj.geo_object)
+               info = obj.geo_name;
+            else if (obj.stack)
+               info = this.getStackFullName(obj.stack);
+            if (!info) continue;
+
+            if (info.indexOf('<prnt>') == 0)
+               info = this.getItemName() + info.slice(6);
+
+            names.push(info);
+
+            if (!active_mesh) {
+               active_mesh = obj;
+               tooltip = info;
+               geo_object = obj.geo_object;
+               if (obj.get_ctrl) {
+                  geo_index = obj.get_ctrl().extractIndex(intersects[k]);
+                  if ((geo_index !== undefined) && isStr(tooltip))
+                     tooltip += ' indx:' + JSON.stringify(geo_index);
+               }
+               if (active_mesh.stack) resolve = this.resolveStack(active_mesh.stack);
+            }
+         }
+
+         this.highlightMesh(active_mesh, undefined, geo_object, geo_index);
+
+         if (this.ctrl.update_browser) {
+            if (this.ctrl.highlight && tooltip) names = [ tooltip ];
+            this.activateInBrowser(names);
+         }
+
+         if (!resolve || !resolve.obj) return tooltip;
+
+         let lines = provideObjectInfo(resolve.obj);
+         lines.unshift(tooltip);
+
+         return { name: resolve.obj.fName, title: resolve.obj.fTitle || resolve.obj._typename, lines: lines };
+      };
+
+      this._controls.processMouseLeave = function() {
+         this.processMouseMove([]); // to disable highlight and reset browser
+      };
+
+      this._controls.processDblClick = () => {
+         // painter already cleaned up, ignore any incoming events
+         if (!this.ctrl || !this._controls) return;
+
+         if (this._last_manifest) {
+            this._last_manifest.wireframe = !this._last_manifest.wireframe;
+            if (this._last_hidden)
+               this._last_hidden.forEach(obj => { obj.visible = true; });
+            delete this._last_hidden;
+            delete this._last_manifest;
+            this.render3D();
+         } else {
+            this.adjustCameraPosition();
+         }
+      };
+   }
+
+   /** @summary add transformation control */
+   addTransformControl() {
+      if (this._tcontrols) return;
+
+      if (!this.ctrl._debug && !this.ctrl._grid) return;
+
+      this._tcontrols = new TransformControls(this._camera, this._renderer.domElement);
+      this._scene.add(this._tcontrols);
+      this._tcontrols.attach(this._toplevel);
+      //this._tcontrols.setSize( 1.1 );
+
+      window.addEventListener( 'keydown', event => {
+         switch ( event.key ) {
+         case 'q':
+            this._tcontrols.setSpace( this._tcontrols.space === 'local' ? 'world' : 'local' );
+            break;
+         case 'Control':
+            this._tcontrols.setTranslationSnap( Math.ceil( this._overall_size ) / 50 );
+            this._tcontrols.setRotationSnap( MathUtils.degToRad( 15 ) );
+            break;
+         case 't': // Translate
+            this._tcontrols.setMode( 'translate' );
+            break;
+         case 'r': // Rotate
+            this._tcontrols.setMode( 'rotate' );
+            break;
+         case 's': // Scale
+            this._tcontrols.setMode( 'scale' );
+            break;
+         case '+':
+            this._tcontrols.setSize(this._tcontrols.size + 0.1);
+            break;
+         case '-':
+            this._tcontrols.setSize(Math.max(this._tcontrols.size - 0.1, 0.1));
+            break;
+         }
+      });
+      window.addEventListener( 'keyup', event => {
+         if (event.key == 'Control') {
+            this._tcontrols.setTranslationSnap(null);
+            this._tcontrols.setRotationSnap(null);
+         }
+      });
+
+      this._tcontrols.addEventListener('change', () => this.render3D(0));
+   }
+
+   /** @summary Main function in geometry creation loop
+     * @desc Returns:
+     * - false when nothing todo
+     * - true if one could perform next action immediately
+     * - 1 when call after short timeout required
+     * - 2 when call must be done from processWorkerReply */
+   nextDrawAction() {
+
+      if (!this._clones || this.isStage(stageInit)) return false;
+
+      if (this.isStage(stageCollect)) {
+
+         if (this._geom_viewer) {
+            this._draw_all_nodes = false;
+            this.changeStage(stageAnalyze);
+            return true;
+         }
+
+         // wait until worker is really started
+         if (this.ctrl.use_worker > 0) {
+            if (!this._worker) { this.startWorker(); return 1; }
+            if (!this._worker_ready) return 1;
+         }
+
+         // first copy visibility flags and check how many unique visible nodes exists
+         let numvis = this._first_drawing ? this._clones.countVisibles() : 0,
+             matrix = null, frustum = null;
+
+         if (!numvis)
+            numvis = this._clones.markVisibles(false, false, !!this.geo_manager && !this.ctrl.showtop);
+
+         if (this.ctrl.select_in_view && !this._first_drawing) {
+            // extract camera projection matrix for selection
+
+            matrix = createProjectionMatrix(this._camera);
+
+            frustum = createFrustum(matrix);
+
+            // check if overall bounding box seen
+            if (frustum.CheckBox(this.getGeomBoundingBox(this._toplevel))) {
+               matrix = null; // not use camera for the moment
+               frustum = null;
+            }
+         }
+
+         this._current_face_limit = this.ctrl.maxlimit;
+         if (matrix) this._current_face_limit *= 1.25;
+
+         // here we decide if we need worker for the drawings
+         // main reason - too large geometry and large time to scan all camera positions
+         let need_worker = !isBatchMode() && browser$1.isChrome && ((numvis > 10000) || (matrix && (this._clones.scanVisible() > 1e5)));
+
+         // worker does not work when starting from file system
+         if (need_worker && exports.source_dir.indexOf('file://') == 0) {
+            console.log('disable worker for jsroot from file system');
+            need_worker = false;
+         }
+
+         if (need_worker && !this._worker && (this.ctrl.use_worker >= 0))
+            this.startWorker(); // we starting worker, but it may not be ready so fast
+
+         if (!need_worker || !this._worker_ready) {
+            let res = this._clones.collectVisibles(this._current_face_limit, frustum);
+            this._new_draw_nodes = res.lst;
+            this._draw_all_nodes = res.complete;
+            this.changeStage(stageAnalyze);
+            return true;
+         }
+
+         let job = {
+            collect: this._current_face_limit,   // indicator for the command
+            flags: this._clones.getVisibleFlags(),
+            matrix: matrix ? matrix.elements : null
+         };
+
+         this.submitToWorker(job);
+
+         this.changeStage(stageWorkerCollect);
+
+         return 2; // we now waiting for the worker reply
+      }
+
+      if (this.isStage(stageWorkerCollect)) {
+         // do nothing, we are waiting for worker reply
+         return 2;
+      }
+
+      if (this.isStage(stageAnalyze)) {
+         // here we merge new and old list of nodes for drawing,
+         // normally operation is fast and can be implemented with one c
+
+         if (this._new_append_nodes) {
+
+            this._new_draw_nodes = this._draw_nodes.concat(this._new_append_nodes);
+
+            delete this._new_append_nodes;
+
+         } else if (this._draw_nodes) {
+
+            let del;
+            if (this._geom_viewer)
+               del = this._draw_nodes;
+            else
+               del = this._clones.mergeVisibles(this._new_draw_nodes, this._draw_nodes);
+
+            // remove should be fast, do it here
+            for (let n = 0; n < del.length; ++n)
+               this._clones.createObject3D(del[n].stack, this._toplevel, 'delete_mesh');
+
+            if (del.length > 0)
+               this.drawing_log = `Delete ${del.length} nodes`;
+         }
+
+         this._draw_nodes = this._new_draw_nodes;
+         delete this._new_draw_nodes;
+         this.changeStage(stageCollShapes);
+         return true;
+      }
+
+      if (this.isStage(stageCollShapes)) {
+
+         // collect shapes
+         let shapes = this._clones.collectShapes(this._draw_nodes);
+
+         // merge old and new list with produced shapes
+         this._build_shapes = this._clones.mergeShapesLists(this._build_shapes, shapes);
+
+         this.changeStage(stageStartBuild);
+         return true;
+      }
+
+      if (this.isStage(stageStartBuild)) {
+         // this is building of geometries,
+         // one can ask worker to build them or do it ourself
+
+         if (this.canSubmitToWorker()) {
+            let job = { limit: this._current_face_limit, shapes: [] }, cnt = 0;
+            for (let n = 0; n < this._build_shapes.length; ++n) {
+               let cl = null, item = this._build_shapes[n];
+               // only submit not-done items
+               if (item.ready || item.geom) {
+                  // this is place holder for existing geometry
+                  cl = { id: item.id, ready: true, nfaces: countGeometryFaces(item.geom), refcnt: item.refcnt };
+               } else {
+                  cl = clone(item, null, true);
+                  cnt++;
+               }
+
+               job.shapes.push(cl);
+            }
+
+            if (cnt > 0) {
+               /// only if some geom missing, submit job to the worker
+               this.submitToWorker(job);
+               this.changeStage(stageWorkerBuild);
+               return 2;
+            }
+         }
+
+         this.changeStage(stageBuild);
+      }
+
+      if (this.isStage(stageWorkerBuild)) {
+         // waiting shapes from the worker, worker should activate our code
+         return 2;
+      }
+
+      if (this.isStage(stageBuild) || this.isStage(stageBuildReady)) {
+
+         if (this.isStage(stageBuild)) {
+            // building shapes
+            let res = this._clones.buildShapes(this._build_shapes, this._current_face_limit, 500);
+            if (res.done) {
+               this.ctrl.info.num_shapes = this._build_shapes.length;
+               this.changeStage(stageBuildReady);
+            } else {
+               this.ctrl.info.num_shapes = res.shapes;
+               this.drawing_log = `Creating: ${res.shapes} / ${this._build_shapes.length} shapes,  ${res.faces} faces`;
+               if (res.notusedshapes < 30) return true;
+            }
+         }
+
+         // final stage, create all meshes
+
+         let tm0 = new Date().getTime(), ready = true,
+             toplevel = this.ctrl.project ? this._full_geom : this._toplevel;
+
+         for (let n = 0; n < this._draw_nodes.length; ++n) {
+            let entry = this._draw_nodes[n];
+            if (entry.done) continue;
+
+            /// shape can be provided with entry itself
+            let shape = entry.server_shape || this._build_shapes[entry.shapeid];
+            if (!shape.ready) {
+               if (this.isStage(stageBuildReady)) console.warn('shape marked as not ready when should');
+               ready = false;
+               continue;
+            }
+
+            entry.done = true;
+            shape.used = true; // indicate that shape was used in building
+
+            if (this.createEntryMesh(entry, shape, toplevel)) {
+               this.ctrl.info.num_meshes++;
+               this.ctrl.info.num_faces += shape.nfaces;
+            }
+
+            let tm1 = new Date().getTime();
+            if (tm1 - tm0 > 500) { ready = false; break; }
+         }
+
+         if (ready) {
+            if (this.ctrl.project) {
+               this.changeStage(stageBuildProj);
+               return true;
+            }
+            this.changeStage(stageInit);
+            return false;
+         }
+
+         if (!this.isStage(stageBuild))
+            this.drawing_log = `Building meshes ${this.ctrl.info.num_meshes} / ${this.ctrl.info.num_faces}`;
+         return true;
+      }
+
+      if (this.isStage(stageWaitMain)) {
+         // wait for main painter to be ready
+
+         if (!this._main_painter) {
+            this.changeStage(stageInit, 'Lost main painter');
+            return false;
+         }
+         if (!this._main_painter._drawing_ready) return 1;
+
+         this.changeStage(stageBuildProj); // just do projection
+      }
+
+      if (this.isStage(stageBuildProj)) {
+         this.doProjection();
+         this.changeStage(stageInit);
+         return false;
+      }
+
+      console.error(`never come here, stage ${this.drawing_stage}`);
+
+      return false;
+   }
+
+   /** @summary Insert appropriate mesh for given entry */
+   createEntryMesh(entry, shape, toplevel) {
+
+      if (!shape.geom || (shape.nfaces === 0)) {
+         // node is visible, but shape does not created
+         this._clones.createObject3D(entry.stack, toplevel, 'delete_mesh');
+         return false;
+      }
+
+      // workaround for the TGeoOverlap, where two branches should get predefined color
+      if (this._splitColors && entry.stack) {
+         if (entry.stack[0] === 0)
+            entry.custom_color = 'green';
+         else if (entry.stack[0] === 1)
+            entry.custom_color = 'blue';
+      }
+
+      let prop = this._clones.getDrawEntryProperties(entry, getRootColors()),
+          obj3d = this._clones.createObject3D(entry.stack, toplevel, this.ctrl),
+          matrix = obj3d.absMatrix || obj3d.matrixWorld, mesh;
+
+      prop.material.wireframe = this.ctrl.wireframe;
+
+      prop.material.side = this.ctrl.bothSides ? DoubleSide : FrontSide;
+
+      if (matrix.determinant() > -0.9) {
+         mesh = new Mesh(shape.geom, prop.material);
+      } else {
+         mesh = createFlippedMesh(shape, prop.material);
+      }
+
+      obj3d.add(mesh);
+
+      if (obj3d.absMatrix) {
+         mesh.matrix.copy(obj3d.absMatrix);
+         mesh.matrix.decompose(mesh.position, mesh.quaternion, mesh.scale);
+         mesh.updateMatrixWorld();
+      }
+
+      // keep full stack of nodes
+      mesh.stack = entry.stack;
+      mesh.renderOrder = this._clones.maxdepth - entry.stack.length; // order of transparency handling
+
+      // keep hierarchy level
+      mesh.$jsroot_order = obj3d.$jsroot_depth;
+
+      // set initial render order, when camera moves, one must refine it
+      //mesh.$jsroot_order = mesh.renderOrder =
+      //   this._clones.maxdepth - ((obj3d.$jsroot_depth !== undefined) ? obj3d.$jsroot_depth : entry.stack.length);
+
+      if (this.ctrl._debug || this.ctrl._full) {
+         let wfg = new WireframeGeometry( mesh.geometry ),
+             wfm = new LineBasicMaterial({ color: prop.fillcolor, linewidth: prop.linewidth || 1 }),
+             helper = new LineSegments(wfg, wfm);
+         obj3d.add(helper);
+      }
+
+      if (this.ctrl._bound || this.ctrl._full) {
+         let boxHelper = new BoxHelper( mesh );
+         obj3d.add( boxHelper );
+      }
+
+      return true;
+   }
+
+   /** @summary used by geometry viewer to show more nodes
+     * @desc These nodes excluded from selection logic and always inserted into the model
+     * Shape already should be created and assigned to the node */
+   appendMoreNodes(nodes, from_drawing) {
+
+      if (!this.isStage(stageInit) && !from_drawing) {
+         this._provided_more_nodes = nodes;
+         return;
+      }
+
+      // delete old nodes
+      if (this._more_nodes)
+         for (let n = 0; n < this._more_nodes.length; ++n) {
+            let entry = this._more_nodes[n],
+                obj3d = this._clones.createObject3D(entry.stack, this._toplevel, 'delete_mesh');
+            disposeThreejsObject(obj3d);
+            cleanupShape(entry.server_shape);
+            delete entry.server_shape;
+         }
+
+      delete this._more_nodes;
+
+      if (!nodes) return;
+
+      let real_nodes = [];
+
+      for (let k = 0; k < nodes.length; ++k) {
+         let entry = nodes[k],
+             shape = entry.server_shape;
+         if (!shape?.ready) continue;
+
+         entry.done = true;
+         shape.used = true; // indicate that shape was used in building
+
+         if (this.createEntryMesh(entry, shape, this._toplevel))
+            real_nodes.push(entry);
+      }
+
+      // remember additional nodes only if they include shape - otherwise one can ignore them
+      if (real_nodes.length > 0)
+         this._more_nodes = real_nodes;
+
+      if (!from_drawing) this.render3D();
+   }
+
+   /** @summary Returns hierarchy of 3D objects used to produce projection.
+     * @desc Typically external master painter is used, but also internal data can be used */
+   getProjectionSource() {
+      if (this._clones_owner)
+         return this._full_geom;
+      if (!this._main_painter) {
+         console.warn('MAIN PAINTER DISAPPER');
+         return null;
+      }
+      if (!this._main_painter._drawing_ready) {
+         console.warn('MAIN PAINTER NOT READY WHEN DO PROJECTION');
+         return null;
+      }
+      return this._main_painter._toplevel;
+   }
+
+   /** @summary Calculate geometry bounding box */
+   getGeomBoundingBox(topitem, scalar) {
+      let box3 = new Box3(), check_any = !this._clones;
+
+      if (!topitem) {
+         box3.min.x = box3.min.y = box3.min.z = -1;
+         box3.max.x = box3.max.y = box3.max.z = 1;
+         return box3;
+      }
+
+      box3.makeEmpty();
+
+      topitem.traverse(mesh => {
+         if (check_any || (mesh.stack && (mesh instanceof Mesh)) ||
+             (mesh.main_track && (mesh instanceof LineSegments)))
+            getBoundingBox(mesh, box3);
+      });
+
+      if (scalar !== undefined)
+         box3.expandByVector(box3.getSize(new Vector3()).multiplyScalar(scalar));
+
+      return box3;
+   }
+
+   /** @summary Create geometry projection */
+   doProjection() {
+      let toplevel = this.getProjectionSource();
+
+      if (!toplevel) return false;
+
+      disposeThreejsObject(this._toplevel, true);
+
+      // let axis = this.ctrl.project;
+
+      if (this.ctrl.projectPos === undefined) {
+
+         let bound = this.getGeomBoundingBox(toplevel),
+             min = bound.min[this.ctrl.project], max = bound.max[this.ctrl.project],
+             mean = (min+max)/2;
+
+         if ((min < 0) && (max > 0) && (Math.abs(mean) < 0.2*Math.max(-min,max))) mean = 0; // if middle is around 0, use 0
+
+         this.ctrl.projectPos = mean;
+      }
+
+      toplevel.traverse(mesh => {
+         if (!(mesh instanceof Mesh) || !mesh.stack) return;
+
+         let geom2 = projectGeometry(mesh.geometry, mesh.parent.absMatrix || mesh.parent.matrixWorld, this.ctrl.project, this.ctrl.projectPos, mesh._flippedMesh);
+
+         if (!geom2) return;
+
+         let mesh2 = new Mesh(geom2, mesh.material.clone());
+
+         this._toplevel.add(mesh2);
+
+         mesh2.stack = mesh.stack;
+      });
+
+      return true;
+   }
+
+   /** @summary Should be invoked when light configuration changed */
+   changedLight(box) {
+      if (!this._camera) return;
+
+      let need_render = !box;
+
+      if (!box) box = this.getGeomBoundingBox(this._toplevel);
+
+      let sizex = box.max.x - box.min.x,
+          sizey = box.max.y - box.min.y,
+          sizez = box.max.z - box.min.z,
+          plights = [], p = this.ctrl.light.power;
+
+      if (p === undefined) p = 1;
+
+      if (this._camera._lights != this.ctrl.light.kind) {
+         // remove all childs and recreate only necessary lights
+         disposeThreejsObject(this._camera, true);
+
+         this._camera._lights = this.ctrl.light.kind;
+
+         switch (this._camera._lights) {
+            case 'ambient' : this._camera.add(new AmbientLight(0xefefef, p)); break;
+            case 'hemisphere' : this._camera.add(new HemisphereLight(0xffffbb, 0x080820, p)); break;
+            default: // 6 point lights
+               for (let n = 0; n < 6; ++n)
+                  this._camera.add(new PointLight(0xefefef, p));
+         }
+      }
+
+      for (let k = 0; k < this._camera.children.length; ++k) {
+         let light = this._camera.children[k], enabled = false;
+         if (light.isAmbientLight || light.isHemisphereLight) {
+            light.intensity = p;
+            continue;
+         }
+
+         if (!light.isPointLight) continue;
+         switch (k) {
+            case 0: light.position.set(sizex/5, sizey/5, sizez/5); enabled = this.ctrl.light.specular; break;
+            case 1: light.position.set(0, 0, sizez/2); enabled = this.ctrl.light.front; break;
+            case 2: light.position.set(0, 2*sizey, 0); enabled = this.ctrl.light.top; break;
+            case 3: light.position.set(0, -2*sizey, 0); enabled = this.ctrl.light.bottom; break;
+            case 4: light.position.set(-2*sizex, 0, 0); enabled = this.ctrl.light.left; break;
+            case 5: light.position.set(2*sizex, 0, 0); enabled = this.ctrl.light.right; break;
+         }
+         light.power = enabled ? p*Math.PI*4 : 0;
+         if (enabled) plights.push(light);
+      }
+
+      // keep light power of all soources constant
+      plights.forEach(ll => { ll.power = p*4*Math.PI/plights.length; });
+
+      if (need_render) this.render3D();
+   }
+
+   /** @summary Create configured camera */
+   createCamera() {
+
+      if (this._camera) {
+          this._scene.remove(this._camera);
+          disposeThreejsObject(this._camera);
+          delete this._camera;
+       }
+
+      if (this.ctrl.ortho_camera) {
+         this._camera = new OrthographicCamera(-this._scene_width/2, this._scene_width/2, this._scene_height/2, -this._scene_height/2, 1, 10000);
+      } else {
+         this._camera = new PerspectiveCamera(25, this._scene_width / this._scene_height, 1, 10000);
+         this._camera.up = this.ctrl._yup ? new Vector3(0,1,0) : new Vector3(0,0,1);
+      }
+
+      // Light - add default point light, adjust later
+      let light = new PointLight(0xefefef, 1);
+      light.position.set(10, 10, 10);
+      this._camera.add(light);
+
+      this._scene.add(this._camera);
+   }
+
+   /** @summary Create special effects */
+   createSpecialEffects() {
+      // Smooth Lighting Shader (Screen Space Ambient Occlusion)
+      // http://threejs.org/examples/webgl_postprocessing_ssao.html
+
+      if (this._webgl && (this.ctrl.ssao.enabled || this.ctrl.outline)) {
+
+         if (this.ctrl.outline && isFunc(this.createOutline)) {
+            this._effectComposer = new EffectComposer(this._renderer);
+            this._effectComposer.addPass(new RenderPass(this._scene, this._camera));
+            this.createOutline(this._scene_width, this._scene_height);
+         } else if (this.ctrl.ssao.enabled) {
+            this.createSSAO();
+         }
+      }
+
+      if (this._webgl && this.ctrl.bloom.enabled)
+         this.createBloom();
+   }
+
+   /** @summary Initial scene creation */
+   async createScene(w, h) {
+      // three.js 3D drawing
+      this._scene = new Scene();
+      this._scene.fog = new Fog(0xffffff, 1, 10000);
+      this._scene.overrideMaterial = new MeshLambertMaterial({ color: 0x7000ff, vertexColors: false, transparent: true, opacity: 0.2, depthTest: false });
+
+      this._scene_width = w;
+      this._scene_height = h;
+
+      this.createCamera();
+
+      this._selected_mesh = null;
+
+      this._overall_size = 10;
+
+      this._toplevel = new Object3D();
+
+      this._scene.add(this._toplevel);
+
+      return createRender3D(w, h, this.options.Render3D, { antialias: true, logarithmicDepthBuffer: false, preserveDrawingBuffer: true }).then(r => {
+
+         this._renderer = r;
+
+         this._webgl = (this._renderer.jsroot_render3d === constants$1.Render3D.WebGL);
+
+         if (this._renderer.setPixelRatio && !isNodeJs())
+            this._renderer.setPixelRatio(window.devicePixelRatio);
+         this._renderer.setSize(w, h, !this._fit_main_area);
+         this._renderer.localClippingEnabled = true;
+
+         this._renderer.setClearColor(this.ctrl.background, 1);
+
+         if (this._fit_main_area && this._webgl) {
+            this._renderer.domElement.style.width = '100%';
+            this._renderer.domElement.style.height = '100%';
+            let main = this.selectDom();
+            if (main.style('position') == 'static')
+               main.style('position', 'relative');
+         }
+
+         this._animating = false;
+
+         this.ctrl.bothSides = false; // both sides need for clipping
+         this.createSpecialEffects();
+
+         if (this._fit_main_area && !this._webgl) {
+            // create top-most SVG for geomtery drawings
+            let doc = getDocument(),
+                svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', w);
+            svg.setAttribute('height', h);
+            svg.appendChild(this._renderer.jsroot_dom);
+            return svg;
+         }
+
+         return this._renderer.jsroot_dom;
+      });
+   }
+
+   /** @summary Start geometry drawing */
+   startDrawGeometry(force) {
+
+      if (!force && !this.isStage(stageInit)) {
+         this._draw_nodes_again = true;
+         return;
+      }
+
+      if (this._clones_owner && this._clones)
+         this._clones.setDefaultColors(this.ctrl.dflt_colors);
+
+      this._startm = new Date().getTime();
+      this._last_render_tm = this._startm;
+      this._last_render_meshes = 0;
+      this.changeStage(stageCollect);
+      this._drawing_ready = false;
+      this.ctrl.info.num_meshes = 0;
+      this.ctrl.info.num_faces = 0;
+      this.ctrl.info.num_shapes = 0;
+      this._selected_mesh = null;
+
+      if (this.ctrl.project) {
+         if (this._clones_owner) {
+            if (this._full_geom) {
+               this.changeStage(stageBuildProj);
+            } else {
+               this._full_geom = new Object3D();
+            }
+         } else {
+            this.changeStage(stageWaitMain);
+         }
+      }
+
+      delete this._last_manifest;
+      delete this._last_hidden; // clear list of hidden objects
+
+      delete this._draw_nodes_again; // forget about such flag
+
+      this.continueDraw();
+   }
+
+   /** @summary reset all kind of advanced features like SSAO or depth test changes */
+   resetAdvanced() {
+      this.ctrl.ssao.kernelRadius = 16;
+      this.ctrl.ssao.output = SSAOPass.OUTPUT.Default;
+
+      this.ctrl.depthTest = true;
+      this.ctrl.clipIntersect = true;
+      this.ctrl.depthMethod = 'ray';
+
+      this.changedDepthMethod('norender');
+      this.changedDepthTest();
+   }
+
+   /** @summary returns maximal dimension */
+   getOverallSize(force) {
+      if (!this._overall_size || force) {
+         let box = this.getGeomBoundingBox(this._toplevel);
+
+         // if detect of coordinates fails - ignore
+         if (!Number.isFinite(box.min.x)) return 1000;
+
+         this._overall_size = 2 * Math.max(box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z);
+      }
+
+      return this._overall_size;
+   }
+
+   /** @summary Create png image with drawing snapshot. */
+   createSnapshot(filename) {
+      if (!this._renderer) return;
+      this.render3D(0);
+      let dataUrl = this._renderer.domElement.toDataURL('image/png');
+      if (filename === 'asis') return dataUrl;
+      dataUrl.replace('image/png', 'image/octet-stream');
+      let doc = getDocument(),
+          link = doc.createElement('a');
+      if (isStr(link.download)) {
+         doc.body.appendChild(link); //Firefox requires the link to be in the body
+         link.download = filename || 'geometry.png';
+         link.href = dataUrl;
+         link.click();
+         doc.body.removeChild(link); //remove the link when done
+      }
+   }
+
+   /** @summary Returns url parameters defining camera position.
+     * @desc It is zoom, roty, rotz parameters
+     * These parameters applied from default position which is shift along X axis */
+   produceCameraUrl(prec) {
+
+      if (!this._lookat || !this._camera0pos || !this._camera || !this.ctrl) return;
+
+      let pos1 = new Vector3().add(this._camera0pos).sub(this._lookat),
+          pos2 = new Vector3().add(this._camera.position).sub(this._lookat),
+          zoom = Math.min(10000, Math.max(1, this.ctrl.zoom * pos2.length() / pos1.length() * 100));
+
+      pos1.normalize();
+      pos2.normalize();
+
+      let quat = new Quaternion(), euler = new Euler();
+
+      quat.setFromUnitVectors(pos1, pos2);
+      euler.setFromQuaternion(quat, 'YZX');
+
+      let roty = euler.y / Math.PI * 180,
+          rotz = euler.z / Math.PI * 180;
+
+      if (roty < 0) roty += 360;
+      if (rotz < 0) rotz += 360;
+      prec = prec || 0;
+
+      return `roty${roty.toFixed(prec)},rotz${rotz.toFixed(prec)},zoom${zoom.toFixed(prec)}`;
+   }
+
+   /** @summary Calculates current zoom factor */
+   calculateZoom() {
+      if (this._camera0pos && this._camera && this._lookat) {
+         let pos1 = new Vector3().add(this._camera0pos).sub(this._lookat),
+             pos2 = new Vector3().add(this._camera.position).sub(this._lookat);
+         return pos2.length() / pos1.length();
+      }
+
+      return 0;
+   }
+
+   /** @summary Place camera to default position */
+   adjustCameraPosition(first_time, keep_zoom) {
+      if (!this._toplevel) return;
+
+      let box = this.getGeomBoundingBox(this._toplevel);
+
+      // let box2 = new Box3().makeEmpty();
+      // box2.expandByObject(this._toplevel, true);
+      // console.log('min,max', box.min.x, box.max.x, box2.min.x, box2.max.x);
+
+      // if detect of coordinates fails - ignore
+      if (!Number.isFinite(box.min.x)) return;
+
+      let sizex = box.max.x - box.min.x,
+          sizey = box.max.y - box.min.y,
+          sizez = box.max.z - box.min.z,
+          midx = (box.max.x + box.min.x)/2,
+          midy = (box.max.y + box.min.y)/2,
+          midz = (box.max.z + box.min.z)/2;
+
+      this._overall_size = 2 * Math.max(sizex, sizey, sizez);
+
+      this._camera.near = this._overall_size / 350;
+      this._camera.far = this._overall_size * 12;
+      this._scene.fog.near = this._overall_size * 2;
+      this._scene.fog.far = this._overall_size * 12;
+
+      if (first_time)
+         for (let naxis = 0; naxis < 3; ++naxis) {
+            let cc = this.ctrl.clip[naxis];
+            cc.min = box.min[cc.name];
+            cc.max = box.max[cc.name];
+            let sz = cc.max - cc.min;
+            cc.max += sz*0.01;
+            cc.min -= sz*0.01;
+            if (!cc.value)
+               cc.value = (cc.min + cc.max) / 2;
+            else if (cc.value < cc.min)
+               cc.value = cc.min;
+            else if (cc.value > cc.max)
+               cc.value = cc.max;
+         }
+
+      if (this.ctrl.ortho_camera) {
+         this._camera.left = box.min.x;
+         this._camera.right = box.max.x;
+         this._camera.top = box.max.y;
+         this._camera.bottom = box.min.y;
+      }
+
+      // this._camera.far = 100000000000;
+
+      this._camera.updateProjectionMatrix();
+
+      let k = 2*this.ctrl.zoom,
+          max_all = Math.max(sizex,sizey,sizez);
+
+      if ((this.ctrl.rotatey || this.ctrl.rotatez) && this.ctrl.can_rotate) {
+
+         let prev_zoom = this.calculateZoom();
+         if (keep_zoom && prev_zoom) k = 2*prev_zoom;
+
+         let euler = new Euler(0, this.ctrl.rotatey/180.*Math.PI, this.ctrl.rotatez/180.*Math.PI, 'YZX');
+
+         this._camera.position.set(-k*max_all, 0, 0);
+         this._camera.position.applyEuler(euler);
+         this._camera.position.add(new Vector3(midx,midy,midz));
+
+         if (keep_zoom && prev_zoom) {
+            let actual_zoom = this.calculateZoom();
+            k *= prev_zoom/actual_zoom;
+
+            this._camera.position.set(-k*max_all, 0, 0);
+            this._camera.position.applyEuler(euler);
+            this._camera.position.add(new Vector3(midx,midy,midz));
+         }
+
+      } else if (this.ctrl.ortho_camera) {
+         this._camera.position.set(midx, midy, Math.max(sizex,sizey));
+      } else if (this.ctrl.project) {
+         switch (this.ctrl.project) {
+            case 'x': this._camera.position.set(k*1.5*Math.max(sizey,sizez), 0, 0); break;
+            case 'y': this._camera.position.set(0, k*1.5*Math.max(sizex,sizez), 0); break;
+            case 'z': this._camera.position.set(0, 0, k*1.5*Math.max(sizex,sizey)); break;
+         }
+      } else if (this.ctrl._yup) {
+         this._camera.position.set(midx-k*Math.max(sizex,sizez), midy+k*sizey, midz-k*Math.max(sizex,sizez));
+      } else {
+         this._camera.position.set(midx-k*Math.max(sizex,sizey), midy-k*Math.max(sizex,sizey), midz+k*sizez);
+      }
+
+      this._lookat = new Vector3(midx, midy, midz);
+      this._camera0pos = new Vector3(-2*max_all, 0, 0); // virtual 0 position, where rotation starts
+      this._camera.lookAt(this._lookat);
+
+      this.changedLight(box);
+
+      if (this._controls) {
+         this._controls.target.copy(this._lookat);
+         this._controls.update();
+      }
+
+      // recheck which elements to draw
+      if (this.ctrl.select_in_view)
+         this.startDrawGeometry();
+   }
+
+   /** @summary Specifies camera position */
+   setCameraPosition(rotatey, rotatez, zoom) {
+      if (!this.ctrl) return;
+      this.ctrl.rotatey = rotatey || 0;
+      this.ctrl.rotatez = rotatez || 0;
+      let preserve_zoom = false;
+      if (zoom && Number.isFinite(zoom)) {
+         this.ctrl.zoom = zoom;
+      } else {
+         preserve_zoom = true;
+      }
+      this.adjustCameraPosition(false, preserve_zoom);
+   }
+
+   /** @summary focus on item */
+   focusOnItem(itemname) {
+
+      if (!itemname || !this._clones) return;
+
+      let stack = this._clones.findStackByName(itemname);
+
+      if (stack)
+         this.focusCamera(this._clones.resolveStack(stack, true), false);
+   }
+
+   /** @summary focus camera on speicifed position */
+   focusCamera( focus, autoClip ) {
+
+      if (this.ctrl.project || this.ctrl.ortho_camera)
+         return this.adjustCameraPosition();
+
+      let box = new Box3();
+      if (focus === undefined) {
+         box = this.getGeomBoundingBox(this._toplevel);
+      } else if (focus instanceof Mesh) {
+         box.setFromObject(focus);
+      } else {
+         let center = new Vector3().setFromMatrixPosition(focus.matrix),
+             node = focus.node,
+             halfDelta = new Vector3(node.fDX, node.fDY, node.fDZ).multiplyScalar(0.5);
+         box.min = center.clone().sub(halfDelta);
+         box.max = center.clone().add(halfDelta);
+      }
+
+      let sizex = box.max.x - box.min.x,
+          sizey = box.max.y - box.min.y,
+          sizez = box.max.z - box.min.z,
+          midx = (box.max.x + box.min.x)/2,
+          midy = (box.max.y + box.min.y)/2,
+          midz = (box.max.z + box.min.z)/2;
+
+      let position;
+      if (this.ctrl._yup)
+         position = new Vector3(midx-2*Math.max(sizex,sizez), midy+2*sizey, midz-2*Math.max(sizex,sizez));
+      else
+         position = new Vector3(midx-2*Math.max(sizex,sizey), midy-2*Math.max(sizex,sizey), midz+2*sizez);
+
+      let target = new Vector3(midx, midy, midz),
+          oldTarget = this._controls.target,
+          // probably, reduce number of frames
+          frames = 50, step = 0,
+          // Amount to change camera position at each step
+          posIncrement = position.sub(this._camera.position).divideScalar(frames),
+          // Amount to change 'lookAt' so it will end pointed at target
+          targetIncrement = target.sub(oldTarget).divideScalar(frames);
+
+      autoClip = autoClip && this._webgl;
+
+      // Automatic Clipping
+      if (autoClip) {
+         for (let axis = 0; axis < 3; ++axis) {
+            let cc = this.ctrl.clip[axis];
+            if (!cc.enabled) { cc.value = cc.min; cc.enabled = true; }
+            cc.inc = ((cc.min + cc.max) / 2 - cc.value) / frames;
+         }
+         this.updateClipping();
+      }
+
+      this._animating = true;
+
+      // Interpolate //
+
+      const animate = () => {
+         if (this._animating === undefined) return;
+
+         if (this._animating) {
+            requestAnimationFrame(animate);
+         } else {
+            if (!this._geom_viewer)
+               this.startDrawGeometry();
+         }
+         let smoothFactor = -Math.cos((2.0*Math.PI*step)/frames) + 1.0;
+         this._camera.position.add(posIncrement.clone().multiplyScalar(smoothFactor));
+         oldTarget.add(targetIncrement.clone().multiplyScalar(smoothFactor));
+         this._lookat = oldTarget;
+         this._camera.lookAt(this._lookat);
+         this._camera.updateProjectionMatrix();
+
+         let tm1 = new Date().getTime();
+         if (autoClip) {
+            for (let axis = 0; axis < 3; ++axis)
+               this.ctrl.clip[axis].value += this.ctrl.clip[axis].inc * smoothFactor;
+            this.updateClipping();
+         } else {
+            this.render3D(0);
+         }
+         let tm2 = new Date().getTime();
+         if ((step == 0) && (tm2-tm1 > 200)) frames = 20;
+         step++;
+         this._animating = step < frames;
+      };
+
+      animate();
+
+   //   this._controls.update();
+   }
+
+   /** @summary actiavte auto rotate */
+   autorotate(speed) {
+
+      let rotSpeed = (speed === undefined) ? 2.0 : speed,
+          last = new Date();
+
+      const animate = () => {
+         if (!this._renderer || !this.ctrl) return;
+
+         let current = new Date();
+
+         if (this.ctrl.rotate)
+            requestAnimationFrame(animate);
+
+         if (this._controls) {
+            this._controls.autoRotate = this.ctrl.rotate;
+            this._controls.autoRotateSpeed = rotSpeed * ( current.getTime() - last.getTime() ) / 16.6666;
+            this._controls.update();
+         }
+         last = new Date();
+         this.render3D(0);
+      };
+
+      if (this._webgl) animate();
+   }
+
+   /** @summary called at the end of scene drawing */
+   completeScene() {
+
+      if ( this.ctrl._debug || this.ctrl._grid ) {
+         if ( this.ctrl._full ) {
+            let boxHelper = new BoxHelper(this._toplevel);
+            this._scene.add( boxHelper );
+         }
+         this._scene.add(new AxesHelper(2 * this._overall_size));
+         this._scene.add(new GridHelper(Math.ceil(this._overall_size), Math.ceil(this._overall_size)/50));
+         this.helpText("<font face='verdana' size='1' color='red'><center>Transform Controls<br>" +
+               "'T' translate | 'R' rotate | 'S' scale<br>" +
+               "'+' increase size | '-' decrease size<br>" +
+               "'W' toggle wireframe/solid display<br>"+
+               "keep 'Ctrl' down to snap to grid</center></font>");
+      }
+   }
+
+   /** @summary Drawing with 'count' option
+     * @desc Scans hieararchy and check for unique nodes
+     * @return {Promise} with object drawing ready */
+   async drawCount(unqievis, clonetm) {
+
+      const makeTime = tm => (isBatchMode() ? 'anytime' : tm.toString()) + ' ms';
+
+      let res = [ 'Unique nodes: ' + this._clones.nodes.length,
+                  'Unique visible: ' + unqievis,
+                  'Time to clone: ' + makeTime(clonetm) ];
+
+      // need to fill cached value line numvischld
+      this._clones.scanVisible();
+
+      let nshapes = 0, arg = {
+         clones: this._clones,
+         cnt: [],
+         func(node) {
+            if (this.cnt[this.last] === undefined)
+               this.cnt[this.last] = 1;
+            else
+               this.cnt[this.last]++;
+
+            nshapes += countNumShapes(this.clones.getNodeShape(node.id));
+            return true;
+         }
+      };
+
+      let tm1 = new Date().getTime(),
+          numvis = this._clones.scanVisible(arg),
+          tm2 = new Date().getTime();
+
+      res.push(`Total visible nodes: ${numvis}`, `Total shapes: ${nshapes}`);
+
+      for (let lvl = 0; lvl < arg.cnt.length; ++lvl) {
+         if (arg.cnt[lvl] !== undefined)
+            res.push(`  lvl${lvl}: ${arg.cnt[lvl]}`);
+      }
+
+      res.push(`Time to scan: ${makeTime(tm2-tm1)}`, '', 'Check timing for matrix calculations ...');
+
+      let elem = this.selectDom().style('overflow', 'auto');
+
+      if (isBatchMode())
+         elem.property('_json_object_', res);
+      else
+         res.forEach(str => elem.append('p').text(str));
+
+      return new Promise(resolveFunc => {
+         setTimeout(() => {
+            arg.domatrix = true;
+            tm1 = new Date().getTime();
+            numvis = this._clones.scanVisible(arg);
+            tm2 = new Date().getTime();
+
+            let last_str = `Time to scan with matrix: ${makeTime(tm2-tm1)}`;
+            if (isBatchMode())
+               res.push(last_str);
+            else
+               elem.append('p').text(last_str);
+            resolveFunc(this);
+         }, 100);
+      });
+   }
+
+   /** @summary Handle drop operation
+     * @desc opt parameter can include function name like opt$func_name
+     * Such function should be possible to find via {@link findFunction}
+     * Function has to return Promise with objects to draw on geometry
+     * By default function with name 'extract_geo_tracks' is checked
+     * @return {Promise} handling of drop operation */
+   async performDrop(obj, itemname, hitem, opt) {
+
+      if (obj?.$kind === 'TTree') {
+         // drop tree means function call which must extract tracks from provided tree
+
+         let funcname = 'extract_geo_tracks';
+
+         if (opt && opt.indexOf('$') > 0) {
+            funcname = opt.slice(0, opt.indexOf('$'));
+            opt = opt.slice(opt.indexOf('$')+1);
+         }
+
+         let func = findFunction(funcname);
+
+         if (!func) return Promise.reject(Error(`Function ${funcname} not found`));
+
+         return func(obj, opt).then(tracks => {
+            if (!tracks) return this;
+
+            // FIXME: probably tracks should be remembered?
+            return this.drawExtras(tracks, '', false).then(()=> {
+               this.updateClipping(true);
+               return this.render3D(100);
+            });
+         });
+      }
+
+      return this.drawExtras(obj, itemname).then(is_any => {
+         if (!is_any) return this;
+
+         if (hitem) hitem._painter = this; // set for the browser item back pointer
+
+         return this.render3D(100);
+      });
+   }
+
+   /** @summary function called when mouse is going over the item in the browser */
+   mouseOverHierarchy(on, itemname, hitem) {
+      if (!this.ctrl) return; // protection for cleaned-up painter
+
+      let obj = hitem._obj;
+      if (this.ctrl._debug)
+         console.log(`Mouse over ${on} ${itemname} ${obj?._typename}`);
+
+      // let's highlight tracks and hits only for the time being
+      if (!obj || (obj._typename !== clTEveTrack && obj._typename !== clTEvePointSet && obj._typename !== clTPolyMarker3D)) return;
+
+      this.highlightMesh(null, 0x00ff00, on ? obj : null);
+   }
+
+   /** @summary clear extra drawn objects like tracks or hits */
+   clearExtras() {
+      this.getExtrasContainer('delete');
+      delete this._extraObjects; // workaround, later will be normal function
+      this.render3D();
+   }
+
+   /** @summary Register extra objects like tracks or hits
+    * @desc Rendered after main geometry volumes are created
+    * Check if object already exists to prevent duplication */
+   addExtra(obj, itemname) {
+      if (this._extraObjects === undefined)
+         this._extraObjects = create$1(clTList);
+
+      if (this._extraObjects.arr.indexOf(obj) >= 0) return false;
+
+      this._extraObjects.Add(obj, itemname);
+
+      delete obj.$hidden_via_menu; // remove previous hidden property
+
+      return true;
+   }
+
+   /** @summary manipulate visisbility of extra objects, used for HierarchyPainter
+     * @private */
+   extraObjectVisible(hpainter, hitem, toggle) {
+      if (!this._extraObjects) return;
+
+      let itemname = hpainter.itemFullName(hitem),
+          indx = this._extraObjects.opt.indexOf(itemname);
+
+      if ((indx < 0) && hitem._obj) {
+         indx = this._extraObjects.arr.indexOf(hitem._obj);
+         // workaround - if object found, replace its name
+         if (indx >= 0) this._extraObjects.opt[indx] = itemname;
+      }
+
+      if (indx < 0) return;
+
+      let obj = this._extraObjects.arr[indx],
+          res = obj.$hidden_via_menu ? false : true;
+
+      if (toggle) {
+         obj.$hidden_via_menu = res; res = !res;
+
+         let mesh = null;
+         // either found painted object or just draw once again
+         this._toplevel.traverse(node => { if (node.geo_object === obj) mesh = node; });
+
+         if (mesh) {
+            mesh.visible = res;
+            this.render3D();
+         } else if (res) {
+            this.drawExtras(obj, '', false).then(() => {
+               this.updateClipping(true);
+               this.render3D();
+            });
+         }
+      }
+
+      return res;
+   }
+
+   /** @summary Draw extra object like tracks
+     * @return {Promise} for ready */
+   async drawExtras(obj, itemname, add_objects) {
+      // if object was hidden via menu, do not redraw it with next draw call
+      if (!obj?._typename || (!add_objects && obj.$hidden_via_menu))
+         return false;
+
+      let do_render = false;
+      if (add_objects === undefined) {
+         add_objects = true;
+         do_render = true;
+      }
+
+      let promise = false;
+
+      if ((obj._typename === clTList) || (obj._typename === clTObjArray)) {
+         if (!obj.arr) return false;
+         let parr = [];
+         for (let n = 0; n < obj.arr.length; ++n) {
+            let sobj = obj.arr[n], sname = obj.opt ? obj.opt[n] : '';
+            if (!sname) sname = (itemname || '<prnt>') + `/[${n}]`;
+            parr.push(this.drawExtras(sobj, sname, add_objects));
+         }
+         promise = Promise.all(parr).then(ress => ress.indexOf(true) >= 0);
+      } else if (obj._typename === 'Mesh') {
+         // adding mesh as is
+         this.addToExtrasContainer(obj);
+         promise = Promise.resolve(true);
+      } else if (obj._typename === 'TGeoTrack') {
+         if (!add_objects || this.addExtra(obj, itemname))
+            promise = this.drawGeoTrack(obj, itemname);
+      } else if (obj._typename === clTPolyLine3D) {
+         if (!add_objects || this.addExtra(obj, itemname))
+            promise = this.drawPolyLine(obj, itemname);
+      } else if ((obj._typename === clTEveTrack) || (obj._typename === 'ROOT::Experimental::REveTrack')) {
+         if (!add_objects || this.addExtra(obj, itemname))
+            promise = this.drawEveTrack(obj, itemname);
+      } else if ((obj._typename === clTEvePointSet) || (obj._typename === 'ROOT::Experimental::REvePointSet') || (obj._typename === clTPolyMarker3D)) {
+         if (!add_objects || this.addExtra(obj, itemname))
+            promise = this.drawHit(obj, itemname);
+      } else if ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)) {
+         if (!add_objects || this.addExtra(obj, itemname))
+            promise = this.drawExtraShape(obj, itemname);
+      }
+
+      return getPromise(promise).then(is_any => {
+         if (!is_any || !do_render) return is_any;
+
+         this.updateClipping(true);
+         return this.render3D(100);
+      });
+   }
+
+   /** @summary returns container for extra objects */
+   getExtrasContainer(action, name) {
+      if (!this._toplevel) return null;
+
+      if (!name) name = 'tracks';
+
+      let extras = null, lst = [];
+      for (let n = 0; n < this._toplevel.children.length; ++n) {
+         let chld = this._toplevel.children[n];
+         if (!chld._extras) continue;
+         if (action == 'collect') { lst.push(chld); continue; }
+         if (chld._extras === name) { extras = chld; break; }
+      }
+
+      if (action == 'collect') {
+         for (let k = 0; k < lst.length; ++k)
+            this._toplevel.remove(lst[k]);
+         return lst;
+      }
+
+      if (action == 'delete') {
+         if (extras) this._toplevel.remove(extras);
+         disposeThreejsObject(extras);
+         return null;
+      }
+
+      if ((action !== 'get') && !extras) {
+         extras = new Object3D();
+         extras._extras = name;
+         this._toplevel.add(extras);
+      }
+
+      return extras;
+   }
+
+   /** @summary add object to extras container.
+     * @desc If fail, dispose object */
+   addToExtrasContainer(obj, name) {
+      let container = this.getExtrasContainer('', name);
+      if (container) {
+         container.add(obj);
+      } else {
+         console.warn('Fail to add object to extras');
+         disposeThreejsObject(obj);
+      }
+   }
+
+   /** @summary drawing TGeoTrack */
+   drawGeoTrack(track, itemname) {
+      if (!track?.fNpoints) return false;
+
+      let linewidth = browser$1.isWin ? 1 : (track.fLineWidth || 1), // line width not supported on windows
+          color = getColor(track.fLineColor) || '#ff00ff',
+          npoints = Math.round(track.fNpoints/4), // each track point has [x,y,z,t] coordinate
+          buf = new Float32Array((npoints-1)*6),
+          pos = 0, projv = this.ctrl.projectPos,
+          projx = (this.ctrl.project === 'x'),
+          projy = (this.ctrl.project === 'y'),
+          projz = (this.ctrl.project === 'z');
+
+      for (let k = 0; k < npoints-1; ++k) {
+         buf[pos]   = projx ? projv : track.fPoints[k*4];
+         buf[pos+1] = projy ? projv : track.fPoints[k*4+1];
+         buf[pos+2] = projz ? projv : track.fPoints[k*4+2];
+         buf[pos+3] = projx ? projv : track.fPoints[k*4+4];
+         buf[pos+4] = projy ? projv : track.fPoints[k*4+5];
+         buf[pos+5] = projz ? projv : track.fPoints[k*4+6];
+         pos+=6;
+      }
+
+      let lineMaterial = new LineBasicMaterial({ color, linewidth }),
+          line = createLineSegments(buf, lineMaterial);
+
+      line.defaultOrder = line.renderOrder = 1000000; // to bring line to the front
+      line.geo_name = itemname;
+      line.geo_object = track;
+      line.hightlightWidthScale = 2;
+
+      if (itemname && itemname.indexOf('<prnt>/Tracks') == 0)
+         line.main_track = true;
+
+      this.addToExtrasContainer(line);
+
+      return true;
+   }
+
+   /** @summary drawing TPolyLine3D */
+   drawPolyLine(line, itemname) {
+      if (!line) return false;
+
+      let linewidth = browser$1.isWin ? 1 : (line.fLineWidth || 1),
+          color = getColor(line.fLineColor) || '#ff00ff',
+          npoints = line.fN,
+          fP = line.fP,
+          buf = new Float32Array((npoints-1)*6),
+          pos = 0, projv = this.ctrl.projectPos,
+          projx = (this.ctrl.project === 'x'),
+          projy = (this.ctrl.project === 'y'),
+          projz = (this.ctrl.project === 'z');
+
+      for (let k = 0; k < npoints-1; ++k) {
+         buf[pos]   = projx ? projv : fP[k*3];
+         buf[pos+1] = projy ? projv : fP[k*3+1];
+         buf[pos+2] = projz ? projv : fP[k*3+2];
+         buf[pos+3] = projx ? projv : fP[k*3+3];
+         buf[pos+4] = projy ? projv : fP[k*3+4];
+         buf[pos+5] = projz ? projv : fP[k*3+5];
+         pos += 6;
+      }
+
+      let lineMaterial = new LineBasicMaterial({ color, linewidth }),
+          line3d = createLineSegments(buf, lineMaterial);
+
+      line3d.defaultOrder = line3d.renderOrder = 1000000; // to bring line to the front
+      line3d.geo_name = itemname;
+      line3d.geo_object = line;
+      line3d.hightlightWidthScale = 2;
+
+      this.addToExtrasContainer(line3d);
+
+      return true;
+   }
+
+   /** @summary Drawing TEveTrack */
+   drawEveTrack(track, itemname) {
+      if (!track || (track.fN <= 0)) return false;
+
+      let linewidth = browser$1.isWin ? 1 : (track.fLineWidth || 1),
+          color = getColor(track.fLineColor) || '#ff00ff',
+          buf = new Float32Array((track.fN-1)*6), pos = 0,
+          projv = this.ctrl.projectPos,
+          projx = (this.ctrl.project === 'x'),
+          projy = (this.ctrl.project === 'y'),
+          projz = (this.ctrl.project === 'z');
+
+      for (let k = 0; k < track.fN-1; ++k) {
+         buf[pos]   = projx ? projv : track.fP[k*3];
+         buf[pos+1] = projy ? projv : track.fP[k*3+1];
+         buf[pos+2] = projz ? projv : track.fP[k*3+2];
+         buf[pos+3] = projx ? projv : track.fP[k*3+3];
+         buf[pos+4] = projy ? projv : track.fP[k*3+4];
+         buf[pos+5] = projz ? projv : track.fP[k*3+5];
+         pos+=6;
+      }
+
+      let lineMaterial = new LineBasicMaterial({ color, linewidth }),
+          line = createLineSegments(buf, lineMaterial);
+
+      line.defaultOrder = line.renderOrder = 1000000; // to bring line to the front
+      line.geo_name = itemname;
+      line.geo_object = track;
+      line.hightlightWidthScale = 2;
+
+      this.addToExtrasContainer(line);
+
+      return true;
+   }
+
+   /** @summary Drawing different hits types like TPolyMarker3D */
+   async drawHit(hit, itemname) {
+      if (!hit || !hit.fN || (hit.fN < 0))
+         return false;
+
+      // make hit size scaling factor of overall geometry size
+      // otherwise it is not possible to correctly see hits at all
+      let hit_size = Math.max(hit.fMarkerSize * this.getOverallSize() * 0.005, 0.2),
+          nhits = hit.fN,
+          projv = this.ctrl.projectPos,
+          projx = (this.ctrl.project === 'x'),
+          projy = (this.ctrl.project === 'y'),
+          projz = (this.ctrl.project === 'z'),
+          style = hit.fMarkerStyle;
+
+      // FIXME: styles 2 and 4 does not work properly, see Misc/basic3d demo
+      // style 4 is very bad for hits representation
+      if ((style == 4) || (style == 2)) { style = 7; hit_size *= 1.5; }
+
+      let pnts = new PointsCreator(nhits, this._webgl, hit_size);
+
+      for (let i = 0; i < nhits; i++)
+         pnts.addPoint(projx ? projv : hit.fP[i*3],
+                       projy ? projv : hit.fP[i*3+1],
+                       projz ? projv : hit.fP[i*3+2]);
+
+      return pnts.createPoints({ color: getColor(hit.fMarkerColor) || '#0000ff', style }).then(mesh => {
+         mesh.defaultOrder = mesh.renderOrder = 1000000; // to bring points to the front
+         mesh.highlightScale = 2;
+         mesh.geo_name = itemname;
+         mesh.geo_object = hit;
+         this.addToExtrasContainer(mesh);
+         return true; // indicate that rendering should be done
+      });
+   }
+
+   /** @summary Draw extra shape on the geometry */
+   drawExtraShape(obj, itemname) {
+      let mesh = build(obj);
+      if (!mesh) return false;
+
+      mesh.geo_name = itemname;
+      mesh.geo_object = obj;
+
+      this.addToExtrasContainer(mesh);
+      return true;
+   }
+
+   /** @summary Serach for specified node
+     * @private */
+   findNodeWithVolume(name, action, prnt, itemname, volumes) {
+
+      let first_level = false, res = null;
+
+      if (!prnt) {
+         prnt = this.getGeometry();
+         if (!prnt && (getNodeKind(prnt) !== 0)) return null;
+         itemname = this.geo_manager ? prnt.fName : '';
+         first_level = true;
+         volumes = [];
+      } else {
+         if (itemname) itemname += '/';
+         itemname += prnt.fName;
+      }
+
+      if (!prnt.fVolume || prnt.fVolume._searched) return null;
+
+      if (name.test(prnt.fVolume.fName)) {
+         res = action({ node: prnt, item: itemname });
+         if (res) return res;
+      }
+
+      prnt.fVolume._searched = true;
+      volumes.push(prnt.fVolume);
+
+      if (prnt.fVolume.fNodes)
+         for (let n = 0, len = prnt.fVolume.fNodes.arr.length; n < len; ++n) {
+            res = this.findNodeWithVolume(name, action, prnt.fVolume.fNodes.arr[n], itemname, volumes);
+            if (res) break;
+         }
+
+      if (first_level)
+         for (let n = 0, len = volumes.length; n < len; ++n)
+            delete volumes[n]._searched;
+
+      return res;
+   }
+
+   /** @summary Process script option - load and execute some gGeoManager-related calls */
+   async loadMacro(script_name) {
+
+      let result = { obj: this.getGeometry(), prefix: '' };
+
+      if (this.geo_manager)
+         result.prefix = result.obj.fName;
+
+      if (!script_name || (script_name.length < 3) || (getNodeKind(result.obj) !== 0))
+         return result;
+
+      let mgr = {
+            GetVolume: name => {
+               let regexp = new RegExp('^'+name+'$'),
+                   currnode = this.findNodeWithVolume(regexp, arg => arg);
+
+               if (!currnode) console.log(`Did not found ${name} volume`);
+
+               // return proxy object with several methods, typically used in ROOT geom scripts
+               return {
+                   found: currnode,
+                   fVolume: currnode?.node?.fVolume,
+                   InvisibleAll(flag) {
+                      setInvisibleAll(this.fVolume, flag);
+                   },
+                   Draw() {
+                      if (!this.found || !this.fVolume) return;
+                      result.obj = this.found.node;
+                      result.prefix = this.found.item;
+                      console.log(`Select volume for drawing ${this.fVolume.fName} ${result.prefix}`);
+                   },
+                   SetTransparency(lvl) {
+                     if (this.fVolume?.fMedium?.fMaterial)
+                        this.fVolume.fMedium.fMaterial.fFillStyle = 3000 + lvl;
+                   },
+                   SetLineColor(col) {
+                      if (this.fVolume) this.fVolume.fLineColor = col;
+                   }
+                };
+            },
+
+            DefaultColors: () => {
+               this.ctrl.dflt_colors = true;
+            },
+
+            SetMaxVisNodes: limit => {
+               if (!this.ctrl.maxnodes)
+                  this.ctrl.maxnodes = pasrseInt(limit) || 0;
+            },
+
+            SetVisLevel: limit => {
+               if (!this.ctrl.vislevel)
+                  this.ctrl.vislevel = parseInt(limit) || 0;
+            }
+          };
+
+      showProgress('Loading macro ' + script_name);
+
+      return httpRequest(script_name, 'text').then(script => {
+         let lines = script.split('\n'), indx = 0;
+
+         while (indx < lines.length) {
+            let line = lines[indx++].trim();
+
+            if (line.indexOf('//') == 0) continue;
+
+            if (line.indexOf('gGeoManager') < 0) continue;
+            line = line.replace('->GetVolume','.GetVolume');
+            line = line.replace('->InvisibleAll','.InvisibleAll');
+            line = line.replace('->SetMaxVisNodes','.SetMaxVisNodes');
+            line = line.replace('->DefaultColors','.DefaultColors');
+            line = line.replace('->Draw','.Draw');
+            line = line.replace('->SetTransparency','.SetTransparency');
+            line = line.replace('->SetLineColor','.SetLineColor');
+            line = line.replace('->SetVisLevel','.SetVisLevel');
+            if (line.indexOf('->') >= 0) continue;
+
+            try {
+               let func = new Function('gGeoManager', line);
+               func(mgr);
+            } catch(err) {
+               console.error(`Problem by processing ${line}`);
+            }
+         }
+
+         return result;
+      }).catch(() => {
+         console.error(`Fail to load ${script_name}`);
+         return result;
+      });
+   }
+
+   /** @summary Assign clones, created outside.
+     * @desc Used by geometry painter, where clones are handled by the server */
+   assignClones(clones) {
+      this._clones_owner = true;
+      this._clones = clones;
+   }
+
+    /** @summary Extract shapes from draw message of geometry painter
+      * @desc For the moment used in batch production */
+   extractRawShapes(draw_msg, recreate) {
+      let nodes = null, old_gradpersegm = 0;
+
+      // array for descriptors for each node
+      // if array too large (>1M), use JS object while only ~1K nodes are expected to be used
+      if (recreate) {
+         // if (draw_msg.kind !== "draw") return false;
+         nodes = (draw_msg.numnodes > 1e6) ? { length: draw_msg.numnodes } : new Array(draw_msg.numnodes); // array for all nodes
+      }
+
+      draw_msg.nodes.forEach(node => {
+         node = ClonedNodes.formatServerElement(node);
+         if (nodes)
+            nodes[node.id] = node;
+         else
+            this._clones.updateNode(node);
+      });
+
+      if (recreate) {
+         this._clones_owner = true;
+         this._clones = new ClonedNodes(null, nodes);
+         this._clones.name_prefix = this._clones.getNodeName(0);
+         // normally only need when making selection, not used in geo viewer
+         // this.geo_clones.setMaxVisNodes(draw_msg.maxvisnodes);
+         // this.geo_clones.setVisLevel(draw_msg.vislevel);
+         // parameter need for visualization with transparency
+         // TODO: provide from server
+         this._clones.maxdepth = 20;
+      }
+
+      let nsegm = 0;
+      if (draw_msg.cfg)
+         nsegm = draw_msg.cfg.nsegm;
+
+      if (nsegm) {
+         old_gradpersegm = geoCfg("GradPerSegm");
+         geoCfg("GradPerSegm", 360 / Math.max(nsegm,6));
+      }
+
+      for (let cnt = 0; cnt < draw_msg.visibles.length; ++cnt) {
+         let item = draw_msg.visibles[cnt], rd = item.ri;
+
+         // entry may be provided without shape - it is ok
+         if (rd)
+            item.server_shape = rd.server_shape = createServerGeometry(rd, nsegm);
+      }
+
+      if (old_gradpersegm)
+         geoCfg("GradPerSegm", old_gradpersegm);
+
+      return true;
+   }
+
+   /** @summary Prepare drawings
+     * @desc Return value used as promise for painter */
+   async prepareObjectDraw(draw_obj, name_prefix) {
+      // if did cleanup - ignore all kind of activity
+      if (this.did_cleanup)
+         return null;
+
+      if (name_prefix == '__geom_viewer_append__') {
+         this._new_append_nodes = draw_obj;
+         this.ctrl.use_worker = 0;
+         this._geom_viewer = true; // indicate that working with geom viewer
+      } else if ((name_prefix == '__geom_viewer_selection__') && this._clones) {
+         // these are selection done from geom viewer
+         this._new_draw_nodes = draw_obj;
+         this.ctrl.use_worker = 0;
+         this._geom_viewer = true; // indicate that working with geom viewer
+      } else if (this._main_painter) {
+         this._clones_owner = false;
+         this._clones = this._main_painter._clones;
+         console.log(`Reuse clones ${this._clones.nodes.length} from main painter`);
+      } else if (!draw_obj) {
+         this._clones_owner = false;
+         this._clones = null;
+      } else {
+         this._start_drawing_time = new Date().getTime();
+         this._clones_owner = true;
+         this._clones = new ClonedNodes(draw_obj);
+         let lvl = this.ctrl.vislevel, maxnodes = this.ctrl.maxnodes;
+         if (this.geo_manager) {
+            if (!lvl && this.geo_manager.fVisLevel)
+               lvl = this.geo_manager.fVisLevel;
+            if (!maxnodes)
+               maxnodes = this.geo_manager.fMaxVisNodes;
+         }
+         this._clones.setVisLevel(lvl);
+         this._clones.setMaxVisNodes(maxnodes);
+
+         this._clones.name_prefix = name_prefix;
+
+         let hide_top_volume = !!this.geo_manager && !this.ctrl.showtop,
+             uniquevis = this.ctrl.no_screen ? 0 : this._clones.markVisibles(true, false, hide_top_volume);
+
+         if (uniquevis <= 0)
+            uniquevis = this._clones.markVisibles(false, false, hide_top_volume);
+         else
+            uniquevis = this._clones.markVisibles(true, true, hide_top_volume); // copy bits once and use normal visibility bits
+
+         this._clones.produceIdShifts();
+
+         let spent = new Date().getTime() - this._start_drawing_time;
+
+         if (!this._scene)
+            console.log(`Creating clones ${this._clones.nodes.length} takes ${spent} ms uniquevis ${uniquevis}`);
+
+         if (this.options._count)
+            return this.drawCount(uniquevis, spent);
+      }
+
+      let promise = Promise.resolve(true);
+
+      if (!this._scene) {
+         this._first_drawing = true;
+
+         this._on_pad = !!this.getPadPainter();
+
+         if (this._on_pad) {
+            let size, render3d, fp;
+            promise = ensureTCanvas(this,'3d').then(() => {
+
+               fp = this.getFramePainter();
+
+               render3d = getRender3DKind();
+               assign3DHandler(fp);
+               fp.mode3d = true;
+
+               size = fp.getSizeFor3d(undefined, render3d);
+
+               this._fit_main_area = (size.can3d === -1);
+
+               return this.createScene(size.width, size.height)
+                          .then(dom => fp.add3dCanvas(size, dom, render3d === constants$1.Render3D.WebGL));
+            });
+
+         } else {
+            // activate worker
+            if (this.ctrl.use_worker > 0)
+               this.startWorker();
+
+            assign3DHandler(this);
+
+            let size = this.getSizeFor3d(undefined, getRender3DKind(this.options.Render3D));
+
+            this._fit_main_area = (size.can3d === -1);
+
+            promise = this.createScene(size.width, size.height)
+                          .then(dom => this.add3dCanvas(size, dom, this._webgl));
+         }
+      }
+
+      return promise.then(() => {
+
+         // this is limit for the visible faces, number of volumes does not matter
+         if (this._first_drawing)
+            this.ctrl.maxlimit = (this._webgl ? 200000 : 100000) * this.ctrl.more;
+
+         // set top painter only when first child exists
+         this.setAsMainPainter();
+
+         this.createToolbar();
+
+         // just draw extras and complete drawing if there are no main model
+         if (!this._clones)
+            return this.completeDraw();
+
+         return new Promise(resolveFunc => {
+            this._resolveFunc = resolveFunc;
+            this.showDrawInfo('Drawing geometry');
+            this.startDrawGeometry(true);
+         });
+      });
+   }
+
+   /** @summary methods show info when first geometry drawing is performed */
+   showDrawInfo(msg) {
+      if (isBatchMode() || !this._first_drawing || !this._start_drawing_time) return;
+
+      let main = this._renderer.domElement.parentNode,
+          info = main.querySelector('.geo_info');
+
+      if (!msg) {
+         info.remove();
+      } else {
+         let spent = (new Date().getTime() - this._start_drawing_time)*1e-3;
+         if (!info) {
+            info = document.createElement('p');
+            info.setAttribute('class', 'geo_info');
+            info.setAttribute('style', 'position: absolute; text-align: center; vertical-align: middle; top: 45%; left: 40%; color: red; font-size: 150%;');
+            main.append(info);
+         }
+         info.innerHTML = `${msg}, ${spent.toFixed(1)}s`;
+      }
+   }
+
+   /** @summary Reentrant method to perform geometry drawing step by step */
+   continueDraw() {
+
+      // nothing to do - exit
+      if (this.isStage(stageInit)) return;
+
+      let tm0 = new Date().getTime(),
+          interval = this._first_drawing ? 1000 : 200,
+          now = tm0;
+
+      while(true) {
+
+         let res = this.nextDrawAction();
+         if (!res) break;
+
+         now = new Date().getTime();
+
+         // stop creation after 100 sec, render as is
+         if (now - this._startm > 1e5) {
+            this.changeStage(stageInit, 'Abort build after 100s');
+            break;
+         }
+
+         // if we are that fast, do next action
+         if ((res === true) && (now - tm0 < interval)) continue;
+
+         if ((now - tm0 > interval) || (res === 1) || (res === 2)) {
+
+            showProgress(this.drawing_log);
+
+            this.showDrawInfo(this.drawing_log);
+
+            if (this._first_drawing && this._webgl && (this._num_meshes - this._last_render_meshes > 100) && (now - this._last_render_tm > 2.5*interval)) {
+               this.adjustCameraPosition();
+               this.render3D(-1);
+               this._last_render_meshes = this.ctrl.info.num_meshes;
+            }
+            if (res !== 2) setTimeout(() => this.continueDraw(), (res === 1) ? 100 : 1);
+
+            return;
+         }
+      }
+
+      let take_time = now - this._startm;
+
+      if (this._first_drawing || this._full_redrawing)
+         console.log(`Create tm = ${take_time} meshes ${this.ctrl.info.num_meshes} faces ${this.ctrl.info.num_faces}`);
+
+      if (take_time > 300) {
+         showProgress('Rendering geometry');
+         this.showDrawInfo('Rendering');
+         return setTimeout(() => this.completeDraw(true), 10);
+      }
+
+      this.completeDraw(true);
+   }
+
+   /** @summary Checks camera position and recalculate rendering order if needed
+     * @param force - if specified, forces calculations of render order */
+   testCameraPosition(force) {
+      this._camera.updateMatrixWorld();
+      let origin = this._camera.position.clone();
+
+      if (!force && this._last_camera_position) {
+         // if camera position does not changed a lot, ignore such change
+         let dist = this._last_camera_position.distanceTo(origin);
+         if (dist < (this._overall_size || 1000)*1e-4) return;
+      }
+
+      this._last_camera_position = origin; // remember current camera position
+
+      if (!this.ctrl.project)
+         produceRenderOrder(this._toplevel, origin, this.ctrl.depthMethod, this._clones);
+   }
+
+   /** @summary Call 3D rendering of the geometry
+     * @param tmout - specifies delay, after which actual rendering will be invoked
+     * @param [measure] - when true, for the first time printout rendering time
+     * @return {Promise} when tmout bigger than 0 is specified
+     * @desc Timeout used to avoid multiple rendering of the picture when several 3D drawings
+     * superimposed with each other. If tmeout <= 0, rendering performed immediately
+     * Several special values are used:
+     *   -1    - force recheck of rendering order based on camera position */
+   render3D(tmout, measure) {
+
+      if (!this._renderer) {
+         if (!this.did_cleanup)
+            console.warn('renderer object not exists - check code');
+         else
+            console.warn('try to render after cleanup');
+         return this;
+      }
+
+      let ret_promise = (tmout !== undefined) && (tmout > 0);
+
+      if (tmout === undefined) tmout = 5; // by default, rendering happens with timeout
+
+      if ((tmout > 0) && this._webgl /* && !isBatchMode() */) {
+         if (isBatchMode()) tmout = 1; // use minimal timeout in batch mode
+         if (ret_promise)
+            return new Promise(resolveFunc => {
+               if (!this._render_resolveFuncs) this._render_resolveFuncs = [];
+               this._render_resolveFuncs.push(resolveFunc);
+               if (!this.render_tmout)
+                  this.render_tmout = setTimeout(() => this.render3D(0, measure), tmout);
+            });
+
+         if (!this.render_tmout)
+            this.render_tmout = setTimeout(() => this.render3D(0, measure), tmout);
+         return this;
+      }
+
+      if (this.render_tmout) {
+         clearTimeout(this.render_tmout);
+         delete this.render_tmout;
+      }
+
+      beforeRender3D(this._renderer);
+
+      let tm1 = new Date();
+
+      this.testCameraPosition(tmout === -1);
+
+      // its needed for outlinePass - do rendering, most consuming time
+      if (this._webgl && this._effectComposer && (this._effectComposer.passes.length > 0)) {
+         this._effectComposer.render();
+      } else if (this._webgl && this._bloomComposer && (this._bloomComposer.passes.length > 0)) {
+         this._renderer.clear();
+         this._camera.layers.set( _BLOOM_SCENE );
+         this._bloomComposer.render();
+         this._renderer.clearDepth();
+         this._camera.layers.set( _ENTIRE_SCENE );
+         this._renderer.render(this._scene, this._camera);
+      } else {
+    //     this._renderer.logarithmicDepthBuffer = true;
+         this._renderer.render(this._scene, this._camera);
+      }
+
+      let tm2 = new Date();
+
+      this.last_render_tm = tm2.getTime();
+
+      if ((this.first_render_tm === 0) && measure) {
+         this.first_render_tm = tm2.getTime() - tm1.getTime();
+         console.log(`three.js r${REVISION}, first render tm = ${this.first_render_tm}`);
+      }
+
+      afterRender3D(this._renderer);
+
+      if (this._render_resolveFuncs) {
+         this._render_resolveFuncs.forEach(func => func(this));
+         delete this._render_resolveFuncs;
+      }
+   }
+
+   /** @summary Start geo worker */
+   startWorker() {
+
+      if (this._worker) return;
+
+      this._worker_ready = false;
+      this._worker_jobs = 0; // counter how many requests send to worker
+
+      // TODO: modules not yet working, see https://www.codedread.com/blog/archives/2017/10/19/web-workers-can-be-es6-modules-too/
+      this._worker = new Worker(exports.source_dir + 'scripts/geoworker.js' /*, { type: 'module' } */);
+
+      this._worker.onmessage = e => {
+
+         if (!isObject(e.data)) return;
+
+         if ('log' in e.data)
+            return console.log(`geo: ${e.data.log}`);
+
+         if ('progress' in e.data)
+            return showProgress(e.data.progress);
+
+         e.data.tm3 = new Date().getTime();
+
+         if ('init' in e.data) {
+            this._worker_ready = true;
+            console.log(`Worker ready: ${e.data.tm3 - e.data.tm0}`);
+         } else {
+            this.processWorkerReply(e.data);
+         }
+      };
+
+      // send initialization message with clones
+      this._worker.postMessage({
+         init: true,   // indicate init command for worker
+         browser: browser$1,
+         tm0: new Date().getTime(),
+         vislevel: this._clones.getVisLevel(),
+         maxvisnodes: this._clones.getMaxVisNodes(),
+         clones: this._clones.nodes,
+         sortmap: this._clones.sortmap
+      });
+   }
+
+   /** @summary check if one can submit request to worker
+     * @private */
+   canSubmitToWorker(force) {
+      if (!this._worker) return false;
+
+      return this._worker_ready && ((this._worker_jobs == 0) || force);
+   }
+
+   /** @summary submit request to worker
+     * @private */
+   submitToWorker(job) {
+      if (!this._worker) return false;
+
+      this._worker_jobs++;
+      job.tm0 = new Date().getTime();
+      this._worker.postMessage(job);
+   }
+
+   /** @summary process reply from worker
+     * @private */
+   processWorkerReply(job) {
+      this._worker_jobs--;
+
+      if ('collect' in job) {
+         this._new_draw_nodes = job.new_nodes;
+         this._draw_all_nodes = job.complete;
+         this.changeStage(stageAnalyze);
+         // invoke methods immediately
+         return this.continueDraw();
+      }
+
+      if ('shapes' in job) {
+
+         for (let n=0;n<job.shapes.length;++n) {
+            let item = job.shapes[n],
+                origin = this._build_shapes[n];
+
+            // let shape = this._clones.getNodeShape(item.nodeid);
+
+            if (item.buf_pos && item.buf_norm) {
+               if (item.buf_pos.length === 0) {
+                  origin.geom = null;
+               } else if (item.buf_pos.length !== item.buf_norm.length) {
+                  console.error(`item.buf_pos.length ${item.buf_pos.length} != item.buf_norm.length ${item.buf_norm.length}`);
+                  origin.geom = null;
+               } else {
+                  origin.geom = new BufferGeometry();
+
+                  origin.geom.setAttribute('position', new BufferAttribute(item.buf_pos, 3));
+                  origin.geom.setAttribute('normal', new BufferAttribute(item.buf_norm, 3));
+               }
+
+               origin.ready = true;
+               origin.nfaces = item.nfaces;
+            }
+         }
+
+         job.tm4 = new Date().getTime();
+
+         this.changeStage(stageBuild); // first check which shapes are used, than build meshes
+
+         // invoke methods immediately
+         return this.continueDraw();
+      }
+   }
+
+   /** @summary start draw geometries on master and all slaves
+     * @private */
+   testGeomChanges() {
+      if (this._main_painter) {
+         console.warn('Get testGeomChanges call for slave painter');
+         return this._main_painter.testGeomChanges();
+      }
+      this.startDrawGeometry();
+      for (let k = 0; k < this._slave_painters.length; ++k)
+         this._slave_painters[k].startDrawGeometry();
+   }
+
+   /** @summary Draw axes if configured, otherwise just remove completely
+     * @return {Promise} when norender not specified */
+   drawSimpleAxis(norender) {
+      this.getExtrasContainer('delete', 'axis');
+
+      if (!this.ctrl._axis)
+         return norender ? null : this.render3D();
+
+      let box = this.getGeomBoundingBox(this._toplevel),
+          container = this.getExtrasContainer('create', 'axis'),
+          text_size = 0.02 * Math.max((box.max.x - box.min.x), (box.max.y - box.min.y), (box.max.z - box.min.z)),
+          center = [0,0,0],
+          names = ['x','y','z'],
+          labels = ['X','Y','Z'],
+          colors = ['red','green','blue'],
+          ortho = this.ctrl.ortho_camera,
+          yup = [this.ctrl._yup, this.ctrl._yup, this.ctrl._yup],
+          numaxis = 3;
+
+      if (this.ctrl._axis == 2)
+         for (let naxis = 0; naxis < 3; ++naxis) {
+            let name = names[naxis];
+            if ((box.min[name] <= 0) && (box.max[name] >= 0)) continue;
+            center[naxis] = (box.min[name] + box.max[name])/2;
+         }
+
+      // only two dimensions are seen by ortho camera, X draws Z, can be configured better later
+      if (this.ctrl.ortho_camera) {
+         numaxis = 2;
+         labels[0] = labels[2];
+         colors[0] = colors[2];
+         yup[0] = yup[2];
+         ortho = true;
+      }
+
+      for (let naxis = 0; naxis < numaxis; ++naxis) {
+
+         let buf = new Float32Array(6),
+             color = colors[naxis],
+             name = names[naxis];
+
+         const Convert = value => {
+            let range = box.max[name] - box.min[name];
+            if (range < 2) return value.toFixed(3);
+            return (Math.abs(value) > 1e5) ? value.toExponential(3) : Math.round(value).toString();
+         };
+
+         let lbl = Convert(box.max[name]);
+
+         buf[0] = box.min.x;
+         buf[1] = box.min.y;
+         buf[2] = box.min.z;
+
+         buf[3] = box.min.x;
+         buf[4] = box.min.y;
+         buf[5] = box.min.z;
+
+         switch (naxis) {
+           case 0: buf[3] = box.max.x; if (yup[0] && !ortho) lbl = labels[0] + ' ' + lbl; else lbl += ' ' + labels[0]; break;
+           case 1: buf[4] = box.max.y; if (yup[1]) lbl += ' ' + labels[1]; else lbl = labels[1] + ' ' + lbl; break;
+           case 2: buf[5] = box.max.z; lbl += ' ' + labels[2]; break;
+         }
+
+         if (this.ctrl._axis == 2)
+            for (let k = 0; k < 6; ++k)
+               if ((k % 3) !== naxis) buf[k] = center[k%3];
+
+         let lineMaterial = new LineBasicMaterial({ color }),
+             mesh = createLineSegments(buf, lineMaterial);
+
+         mesh._axis_draw = true; // skip from clipping
+
+         container.add(mesh);
+
+         let textMaterial = new MeshBasicMaterial({ color, vertexColors: false });
+
+         if ((center[naxis] === 0) && (center[naxis] >= box.min[name]) && (center[naxis] <= box.max[name]))
+           if ((this.ctrl._axis != 2) || (naxis === 0)) {
+               let geom = ortho ? new CircleGeometry(text_size*0.25) :
+                                  new SphereGeometry(text_size*0.25);
+               mesh = new Mesh(geom, textMaterial);
+               mesh.translateX(naxis === 0 ? center[0] : buf[0]);
+               mesh.translateY(naxis === 1 ? center[1] : buf[1]);
+               mesh.translateZ(naxis === 2 ? center[2] : buf[2]);
+               container.add(mesh);
+           }
+
+         let text3d = new TextGeometry(lbl, { font: HelveticerRegularFont, size: text_size, height: 0, curveSegments: 5 });
+         mesh = new Mesh(text3d, textMaterial);
+         mesh._axis_draw = true; // skip from clipping
+         let textbox = new Box3().setFromObject(mesh);
+
+         mesh.translateX(buf[3]);
+         mesh.translateY(buf[4]);
+         mesh.translateZ(buf[5]);
+
+         if (yup[naxis]) {
+            switch (naxis) {
+               case 0:
+                  if (!ortho) {
+                     mesh.rotateY(Math.PI);
+                     mesh.translateX(-textbox.max.x-text_size*0.5);
+                  } else {
+                     mesh.translateX(text_size*0.5);
+                  }
+                  mesh.translateY(-textbox.max.y/2);
+                  break;
+               case 1:
+                  if (!ortho) {
+                     mesh.rotateX(-Math.PI/2);
+                     mesh.rotateY(-Math.PI/2);
+                  } else {
+                     mesh.rotateZ(Math.PI/2);
+                  }
+                  mesh.translateX(text_size*0.5);
+                  mesh.translateY(-textbox.max.y/2);
+                  break;
+               case 2: mesh.rotateY(-Math.PI/2); mesh.translateX(text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
+           }
+         } else {
+            switch (naxis) {
+               case 0: mesh.rotateX(Math.PI/2); mesh.translateY(-textbox.max.y/2); mesh.translateX(text_size*0.5); break;
+               case 1: mesh.rotateX(Math.PI/2); mesh.rotateY(-Math.PI/2); mesh.translateX(-textbox.max.x-text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
+               case 2: mesh.rotateX(Math.PI/2); mesh.rotateZ(Math.PI/2); mesh.translateX(text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
+            }
+         }
+
+         container.add(mesh);
+
+         text3d = new TextGeometry(Convert(box.min[name]), { font: HelveticerRegularFont, size: text_size, height: 0, curveSegments: 5 });
+
+         mesh = new Mesh(text3d, textMaterial);
+         mesh._axis_draw = true; // skip from clipping
+         textbox = new Box3().setFromObject(mesh);
+
+         mesh.translateX(buf[0]);
+         mesh.translateY(buf[1]);
+         mesh.translateZ(buf[2]);
+
+         if (yup[naxis]) {
+            switch (naxis) {
+               case 0:
+                  if (!ortho) {
+                     mesh.rotateY(Math.PI);
+                     mesh.translateX(text_size*0.5);
+                  } else {
+                     mesh.translateX(-textbox.max.x-text_size*0.5);
+                  }
+                  mesh.translateY(-textbox.max.y/2);
+                  break;
+               case 1:
+                  if (!ortho) {
+                     mesh.rotateX(-Math.PI/2);
+                     mesh.rotateY(-Math.PI/2);
+                  } else {
+                     mesh.rotateZ(Math.PI/2);
+                  }
+                  mesh.translateY(-textbox.max.y/2);
+                  mesh.translateX(-textbox.max.x-text_size*0.5);
+                  break;
+               case 2: mesh.rotateY(-Math.PI/2);  mesh.translateX(-textbox.max.x-text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
+            }
+         } else {
+            switch (naxis) {
+               case 0: mesh.rotateX(Math.PI/2); mesh.translateX(-textbox.max.x-text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
+               case 1: mesh.rotateX(Math.PI/2); mesh.rotateY(-Math.PI/2); mesh.translateY(-textbox.max.y/2); mesh.translateX(text_size*0.5); break;
+               case 2: mesh.rotateX(Math.PI/2); mesh.rotateZ(Math.PI/2);  mesh.translateX(-textbox.max.x-text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
+            }
+         }
+
+         container.add(mesh);
+      }
+
+      // after creating axes trigger rendering and recalculation of depth
+      return this.changedDepthMethod(norender ? 'norender' : undefined);
+   }
+
+   /** @summary Set axes visibility 0 - off, 1 - on, 2 - centered */
+   setAxesDraw(on) {
+      if (on === 'toggle')
+         this.ctrl._axis = this.ctrl._axis ? 0 : 1;
+      else
+         this.ctrl._axis = (typeof on == 'number') ? on : (on ? 1 : 0);
+      return this.drawSimpleAxis();
+   }
+
+   /** @summary Set auto rotate mode */
+   setAutoRotate(on) {
+      if (this.ctrl.project) return;
+      if (on !== undefined) this.ctrl.rotate = on;
+      this.autorotate(2.5);
+   }
+
+   /** @summary Toggle wireframe mode */
+   toggleWireFrame() {
+      this.ctrl.wireframe = !this.ctrl.wireframe;
+      this.changedWireFrame();
+   }
+
+   /** @summary Specify wireframe mode */
+   setWireFrame(on) {
+      this.ctrl.wireframe = on ? true : false;
+      this.changedWireFrame();
+   }
+
+   /** @summary Specify showtop draw options, relevant only for TGeoManager */
+   setShowTop(on) {
+      this.ctrl.showtop = on ? true : false;
+      this.redrawObject('same');
+   }
+
+   /** @summary Should be called when configuration of particular axis is changed */
+   changedClipping(naxis) {
+      let clip = this.ctrl.clip;
+
+      if ((naxis !== undefined) && (naxis >= 0)) {
+         if (!clip[naxis].enabled) return;
+      }
+
+      if (clip[0].enabled || clip[1].enabled || clip[2].enabled) {
+         this.ctrl.ssao.enabled = false;
+         this.removeSSAO();
+      }
+
+      this.updateClipping(false, true);
+   }
+
+   /** @summary Should be called when depth test flag is changed */
+   changedDepthTest() {
+      if (!this._toplevel) return;
+      let flag = this.ctrl.depthTest;
+      this._toplevel.traverse(node => {
+         if (node instanceof Mesh) {
+            node.material.depthTest = flag;
+         }
+      });
+
+      this.render3D(0);
+   }
+
+   /** @summary Should be called when depth method is changed */
+   changedDepthMethod(arg) {
+      // force recalculatiion of render order
+      delete this._last_camera_position;
+      if (arg !== 'norender')
+         return this.render3D();
+   }
+
+   /** @summary Should be called when configuration of highlight is changed */
+   changedHighlight() {
+      if (!this.ctrl.highlight)
+         this.highlightMesh(null);
+   }
+
+   /** @summary Assign clipping attributes to the meshes - supported only for webgl */
+   updateClipping(without_render, force_traverse) {
+      // do not try clipping with SVG renderer
+      if (this._renderer?.jsroot_render3d === constants$1.Render3D.SVG) return;
+
+      if (!this._clipPlanes)
+         this._clipPlanes = [ new Plane(new Vector3(1, 0, 0), 0),
+                              new Plane(new Vector3(0, this.ctrl._yup ? -1 : 1, 0), 0),
+                              new Plane(new Vector3(0, 0, this.ctrl._yup ? 1 : -1), 0) ];
+
+      let clip = this.ctrl.clip, panels = [], changed = false,
+          clip_constants = [ -1 * clip[0].value, clip[1].value, (this.ctrl._yup ? -1 : 1) * clip[2].value ],
+          clip_cfg = this.ctrl.clipIntersect ? 16 : 0;
+
+      for (let k = 0; k < 3; ++k) {
+         if (clip[k].enabled)
+            clip_cfg += 2 << k;
+         if (this._clipPlanes[k].constant !== clip_constants[k]) {
+            if (clip[k].enabled) changed = true;
+            this._clipPlanes[k].constant = clip_constants[k];
+         }
+      }
+
+      if (!this.ctrl.ssao.enabled) {
+         if (clip[0].enabled) panels.push(this._clipPlanes[0]);
+         if (clip[1].enabled) panels.push(this._clipPlanes[1]);
+         if (clip[2].enabled) panels.push(this._clipPlanes[2]);
+         clip_cfg += panels.length*1000;
+      }
+      if (panels.length == 0) panels = null;
+
+      if (this._clipCfg !== clip_cfg) changed = true;
+
+      this._clipCfg = clip_cfg;
+
+      let any_clipping = !!panels, ci = this.ctrl.clipIntersect,
+          material_side = any_clipping ? DoubleSide : FrontSide;
+
+      if (force_traverse || changed)
+         this._scene.traverse(node => {
+            if (!node._axis_draw && node.hasOwnProperty('material') && (node.material?.clippingPlanes !== undefined)) {
+
+               if (node.material.clippingPlanes !== panels) {
+                  node.material.clipIntersection = ci;
+                  node.material.clippingPlanes = panels;
+                  node.material.needsUpdate = true;
+               }
+
+               if (node.material.emissive !== undefined) {
+                  if (node.material.side != material_side) {
+                     node.material.side = material_side;
+                     node.material.needsUpdate = true;
+                  }
+               }
+            }
+         });
+
+      this.ctrl.bothSides = any_clipping;
+
+      if (!without_render) this.render3D(0);
+
+      return changed;
+   }
+
+   /** @summary Assign callback, invoked every time when drawing is completed
+     * @desc Used together with web-based geometry viewer
+     * @private */
+   setCompleteHandler(callback) {
+      this._complete_handler = callback;
+   }
+
+   /** @summary Completes drawing procedure
+     * @return {Promise} for ready */
+   async completeDraw(close_progress) {
+
+      let first_time = false, full_redraw = false, check_extras = true;
+
+      if (!this.ctrl) {
+         console.warn('ctrl object does not exist in completeDraw - something went wrong');
+         return this;
+      }
+
+      let promise = Promise.resolve(true);
+
+      if (!this._clones) {
+         check_extras = false;
+         // if extra object where append, redraw them at the end
+         this.getExtrasContainer('delete'); // delete old container
+         let extras = (this._main_painter ? this._main_painter._extraObjects : null) || this._extraObjects;
+         promise = this.drawExtras(extras, '', false);
+      } else if (this._first_drawing || this._full_redrawing) {
+         if (this.ctrl.tracks && this.geo_manager)
+            promise = this.drawExtras(this.geo_manager.fTracks, '<prnt>/Tracks');
+      }
+
+      return promise.then(() => {
+
+         if (this._full_redrawing) {
+            this.adjustCameraPosition(true);
+            this._full_redrawing = false;
+            full_redraw = true;
+            this.changedDepthMethod('norender');
+         }
+
+         if (this._first_drawing) {
+            this.adjustCameraPosition(true);
+            this.showDrawInfo();
+            this._first_drawing = false;
+            first_time = true;
+            full_redraw = true;
+         }
+
+         if (this.ctrl.transparency !== 0)
+            this.changedGlobalTransparency(this.ctrl.transparency, true);
+
+         if (first_time)
+            this.completeScene();
+
+         if (full_redraw && (this.ctrl.trans_radial || this.ctrl.trans_z))
+            this.changedTransformation('norender');
+
+         if (full_redraw && this.ctrl._axis)
+            this.drawSimpleAxis(true);
+
+         this._scene.overrideMaterial = null;
+
+         if (this._provided_more_nodes !== undefined) {
+            this.appendMoreNodes(this._provided_more_nodes, true);
+            delete this._provided_more_nodes;
+         }
+
+         if (check_extras) {
+            // if extra object where append, redraw them at the end
+            this.getExtrasContainer('delete'); // delete old container
+            let extras = (this._main_painter ? this._main_painter._extraObjects : null) || this._extraObjects;
+            return this.drawExtras(extras, '', false);
+         }
+      }).then(() => {
+
+         this.updateClipping(true); // do not render
+
+         this.render3D(0, true);
+
+         if (close_progress) showProgress();
+
+         this.addOrbitControls();
+
+         this.addTransformControl();
+
+         if (first_time) {
+
+            // after first draw check if highlight can be enabled
+            if (this.ctrl.highlight === false)
+               this.ctrl.highlight = (this.first_render_tm < 1000);
+
+            // also highlight of scene object can be assigned at the first draw
+            if (this.ctrl.highlight_scene === false)
+               this.ctrl.highlight_scene = this.ctrl.highlight;
+
+            // if rotation was enabled, do it
+            if (this._webgl && this.ctrl.rotate && !this.ctrl.project) this.autorotate(2.5);
+            if (this._webgl && this.ctrl.show_controls && !isBatchMode()) this.showControlOptions(true);
+         }
+
+         this.setAsMainPainter();
+
+         if (isFunc(this._resolveFunc)) {
+            this._resolveFunc(this);
+            delete this._resolveFunc;
+         }
+
+         if (isFunc(this._complete_handler))
+            this._complete_handler(this);
+
+         if (this._draw_nodes_again)
+            this.startDrawGeometry(); // relaunch drawing
+         else
+            this._drawing_ready = true; // indicate that drawing is completed
+
+         return this;
+      });
+   }
+
+   /** @summary Returns true if geometry drawing is completed */
+   isDrawingReady() {
+      return this._drawing_ready || false;
+   }
+
+   /** @summary Remove already drawn node. Used by geom viewer */
+   removeDrawnNode(nodeid) {
+      if (!this._draw_nodes) return;
+
+      let new_nodes = [];
+
+      for (let n = 0; n < this._draw_nodes.length; ++n) {
+         let entry = this._draw_nodes[n];
+         if ((entry.nodeid === nodeid) || this._clones.isIdInStack(nodeid, entry.stack)) {
+            this._clones.createObject3D(entry.stack, this._toplevel, 'delete_mesh');
+         } else {
+            new_nodes.push(entry);
+         }
+      }
+
+      if (new_nodes.length < this._draw_nodes.length) {
+         this._draw_nodes = new_nodes;
+         this.render3D();
+      }
+   }
+
+   /** @summary Cleanup geometry painter */
+   cleanup(first_time) {
+
+      if (!first_time) {
+
+         this.removeSSAO();
+
+         this.clearTopPainter(); // remove as pointer
+
+         let can3d = 0;
+         if (this._on_pad) {
+            let fp = this.getFramePainter();
+            if (fp?.mode3d) {
+               fp.clear3dCanvas();
+               fp.mode3d = false;
+            }
+         } else {
+            can3d = this.clear3dCanvas(); // remove 3d canvas from main HTML element
+         }
+
+         if (this._toolbar) this._toolbar.cleanup(); // remove toolbar
+
+         this.helpText();
+
+         disposeThreejsObject(this._scene);
+
+         disposeThreejsObject(this._full_geom);
+
+         if (this._tcontrols)
+            this._tcontrols.dispose();
+
+         if (this._controls)
+            this._controls.cleanup();
+
+         if (this._context_menu)
+            this._renderer.domElement.removeEventListener( 'contextmenu', this._context_menu, false );
+
+         if (this._datgui)
+            this._datgui.destroy();
+
+         if (this._worker) this._worker.terminate();
+
+         delete this._animating;
+
+         let obj = this.getGeometry();
+         if (obj && this.ctrl.is_main) {
+            if (obj.$geo_painter===this) delete obj.$geo_painter; else
+            if (obj.fVolume && obj.fVolume.$geo_painter===this) delete obj.fVolume.$geo_painter;
+         }
+
+         if (this._main_painter) {
+            let pos = this._main_painter._slave_painters.indexOf(this);
+            if (pos >= 0) this._main_painter._slave_painters.splice(pos,1);
+         }
+
+         for (let k = 0; k < this._slave_painters.length;++k) {
+            let slave = this._slave_painters[k];
+            if (slave && (slave._main_painter===this)) slave._main_painter = null;
+         }
+
+         delete this.geo_manager;
+         delete this._highlight_handlers;
+
+         super.cleanup();
+
+         delete this.ctrl;
+         delete this.options;
+
+         this.did_cleanup = true;
+
+         if (can3d < 0) this.selectDom().html('');
+      }
+
+      if (this._slave_painters)
+         for (let k in this._slave_painters) {
+            let slave = this._slave_painters[k];
+            slave._main_painter = null;
+            if (slave._clones === this._clones) slave._clones = null;
+         }
+
+      this._main_painter = null;
+      this._slave_painters = [];
+
+      if (this._render_resolveFuncs) {
+         this._render_resolveFuncs.forEach(func => func(this));
+         delete this._render_resolveFuncs;
+      }
+
+      cleanupRender3D(this._renderer);
+
+      delete this._scene;
+      this._scene_width = 0;
+      this._scene_height = 0;
+      this._renderer = null;
+      this._toplevel = null;
+      delete this._full_geom;
+      delete this._camera;
+      delete this._camera0pos;
+      delete this._lookat;
+      delete this._selected_mesh;
+
+      if (this._clones && this._clones_owner)
+         this._clones.cleanup(this._draw_nodes, this._build_shapes);
+      delete this._clones;
+      delete this._clones_owner;
+      delete this._draw_nodes;
+      delete this._drawing_ready;
+      delete this._build_shapes;
+      delete this._new_draw_nodes;
+      delete this._new_append_nodes;
+      delete this._last_camera_position;
+
+      this.first_render_tm = 0; // time needed for first rendering
+      this.last_render_tm = 0;
+
+      this.changeStage(stageInit, 'cleanup');
+      delete this.drawing_log;
+
+      delete this._datgui;
+      delete this._controls;
+      delete this._context_menu;
+      delete this._tcontrols;
+      delete this._toolbar;
+
+      delete this._worker;
+   }
+
+   /** @summary show message in progress area
+     * @private */
+   helpText(msg) {
+      showProgress(msg);
+   }
+
+   /** @summary perform resize */
+   performResize(width, height) {
+      if ((this._scene_width === width) && (this._scene_height === height)) return false;
+      if ((width < 10) || (height < 10)) return false;
+
+      this._scene_width = width;
+      this._scene_height = height;
+
+      if (this._camera && this._renderer) {
+         if (this._camera.type == 'PerspectiveCamera')
+            this._camera.aspect = this._scene_width / this._scene_height;
+         this._camera.updateProjectionMatrix();
+         this._renderer.setSize( this._scene_width, this._scene_height, !this._fit_main_area );
+         if (this._effectComposer)
+            this._effectComposer.setSize( this._scene_width, this._scene_height );
+         if (this._bloomComposer)
+            this._bloomComposer.setSize( this._scene_width, this._scene_height );
+
+         if (this.isStage(stageInit))
+            this.render3D();
+      }
+
+      return true;
+   }
+
+   /** @summary Check if HTML element was resized and drawing need to be adjusted */
+   checkResize(arg) {
+      let cp = this.getCanvPainter();
+
+      // firefox is the only browser which correctly supports resize of embedded canvas,
+      // for others we should force canvas redrawing at every step
+      if (cp && !cp.checkCanvasResize(arg)) return false;
+
+      let sz = this.getSizeFor3d();
+
+      return this.performResize(sz.width, sz.height);
+   }
+
+   /** @summary Toggle enlarge state */
+   toggleEnlarge() {
+      if (this.enlargeMain('toggle'))
+        this.checkResize();
+   }
+
+   /** @summary check if element belongs to trnasform control
+     * @private */
+   ownedByTransformControls(child) {
+      let obj = child.parent;
+      while (obj && !(obj instanceof TransformControls) )
+         obj = obj.parent;
+      return obj && (obj instanceof TransformControls);
+   }
+
+   /** @summary either change mesh wireframe or return current value
+     * @return undefined when wireframe cannot be accessed
+     * @private */
+   accessObjectWireFrame(obj, on) {
+      if (!obj.hasOwnProperty('material') || (obj instanceof GridHelper)) return;
+
+      if (this.ownedByTransformControls(obj)) return;
+
+      if ((on !== undefined) && obj.stack)
+         obj.material.wireframe = on;
+
+      return obj.material.wireframe;
+   }
+
+   /** @summary handle wireframe flag change in GUI
+     * @private */
+   changedWireFrame() {
+      if (!this._scene) return;
+
+      let on = this.ctrl.wireframe;
+
+      this._scene.traverse(obj => this.accessObjectWireFrame(obj, on));
+
+      this.render3D();
+   }
+
+   /** @summary Update object in geo painter */
+   updateObject(obj) {
+      if (obj === 'same') return true;
+      if (!obj?._typename) return false;
+      if (obj === this.getObject()) return true;
+
+      if (this.geo_manager && (obj._typename == clTGeoManager)) {
+         this.geo_manager = obj;
+         this.assignObject({ _typename: clTGeoNode, fVolume: obj.fMasterVolume, fName: obj.fMasterVolume.fName, $geoh: obj.fMasterVolume.$geoh, _proxy: true });
+         return true;
+      }
+
+      if (!this.matchObjectType(obj._typename)) return false;
+
+      this.assignObject(obj);
+      return true;
+   }
+
+   /** @summary Cleanup TGeo drawings */
+   clearDrawings() {
+      if (this._clones && this._clones_owner)
+         this._clones.cleanup(this._draw_nodes, this._build_shapes);
+      delete this._clones;
+      delete this._clones_owner;
+      delete this._draw_nodes;
+      delete this._drawing_ready;
+      delete this._build_shapes;
+
+      delete this._extraObjects;
+      delete this._clipCfg;
+
+      // only remove all childs from top level object
+      disposeThreejsObject(this._toplevel, true);
+
+      this._full_redrawing = true;
+   }
+
+    /** @summary Redraw TGeo object inside TPad */
+   redraw() {
+      if (!this._on_pad) return;
+
+      let main = this.getFramePainter();
+      if (!main) return;
+
+      let sz = main.getSizeFor3d(main.access3dKind());
+      main.apply3dSize(sz);
+      return this.performResize(sz.width, sz.height);
+   }
+
+   /** @summary Redraw TGeo object */
+   redrawObject(obj /*, opt */) {
+      if (!this.updateObject(obj))
+         return false;
+
+      this.clearDrawings();
+
+      let draw_obj = this.getGeometry(), name_prefix = '';
+      if (this.geo_manager) name_prefix = draw_obj.fName;
+
+      return this.prepareObjectDraw(draw_obj, name_prefix);
+   }
+
+  /** @summary draw TGeo object */
+   static async draw(dom, obj, opt) {
+      if (!obj) return null;
+
+      let shape = null, extras = null, extras_path = '', is_eve = false;
+
+      if (('fShapeBits' in obj) && ('fShapeId' in obj)) {
+         shape = obj; obj = null;
+      } else if ((obj._typename === clTGeoVolumeAssembly) || (obj._typename === clTGeoVolume)) {
+         shape = obj.fShape;
+      } else if ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)) {
+         shape = obj.fShape; is_eve = true;
+      } else if (obj._typename === clTGeoManager) {
+         shape = obj.fMasterVolume.fShape;
+      } else if (obj._typename === clTGeoOverlap) {
+         extras = obj.fMarker; extras_path = '<prnt>/Marker';
+         obj = buildOverlapVolume(obj);
+         if (!opt) opt = 'wire';
+      } else if ('fVolume' in obj) {
+         if (obj.fVolume) shape = obj.fVolume.fShape;
+      } else {
+         obj = null;
+      }
+
+      if (isStr(opt) && opt.indexOf('comp') == 0 && shape && (shape._typename == clTGeoCompositeShape) && shape.fNode) {
+         let maxlvl = 1;
+         opt = opt.slice(4);
+         if (opt[0] == 'x') {  maxlvl = 999; opt = opt.slice(1) + '_vislvl999'; }
+         obj = buildCompositeVolume(shape, maxlvl);
+      }
+
+      if (!obj && shape)
+         obj = Object.assign(create$1(clTNamed),
+                   { _typename: clTEveGeoShapeExtract, fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 1], fElements: null, fRnrSelf: true });
+
+      if (!obj) return null;
+
+      let painter = createGeoPainter(dom, obj, opt);
+
+      if (painter.ctrl.is_main && !obj.$geo_painter)
+         obj.$geo_painter = painter;
+
+      if (!painter.ctrl.is_main && painter.ctrl.project && obj.$geo_painter) {
+         painter._main_painter = obj.$geo_painter;
+         painter._main_painter._slave_painters.push(painter);
+      }
+
+      if (is_eve && !painter.ctrl.vislevel || (painter.ctrl.vislevel < 9))
+         painter.ctrl.vislevel = 9;
+
+      if (extras) {
+         painter._splitColors = true;
+         painter.addExtra(extras, extras_path);
+      }
+
+      return painter.loadMacro(painter.ctrl.script_name).then(arg => painter.prepareObjectDraw(arg.obj, arg.prefix));
+   }
+
+} // class TGeoPainter
+
+
+let add_settings = false;
+
+/** @summary Create geo-related css entries
+  * @private */
+function injectGeoStyle() {
+
+   if (!add_settings && isFunc(internals.addDrawFunc)) {
+      add_settings = true;
+      // indication that draw and hierarchy is loaded, create css
+      internals.addDrawFunc({ name: clTEvePointSet, icon_get: getBrowserIcon, icon_click: browserIconClick });
+      internals.addDrawFunc({ name: clTEveTrack, icon_get: getBrowserIcon, icon_click: browserIconClick });
+   }
+
+   function img(name,code) {
+      return `.jsroot .img_${name} { display: inline-block; height: 16px; width: 16px; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQ${code}'); }`;
+   }
+
+   injectStyle(`
+${img('geoarb8','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB1SURBVBjTdY6rEYAwEETTy6lzK8/Fo+Jj18dTAjUgaQGfGiggtRDE8RtY93Zu514If2nzk2ux9c5TZkwXbiWTUavzws69oBfpYBrMT4r0Jhsw+QfRgQSw+CaKRsKsnV+SaF8MN49RBSgPUxO85PMl5n4tfGUH2gghs2uPAeQAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geocombi','CAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAAlUlEQVQoz5VQMQ4CMQyzEUNnBqT7Bo+4nZUH8gj+welWJsQDkHoCEYakTXMHSFiq2jqu4xRAEl2A7w4myWzpzCSZRZ658ldKu1hPnFsequBIc/hcLli3l52MAIANtpWrDsv8waGTW6BPuFtsdZArXyFuj33TQpazGEQF38phipnLgItxRcAoOeNpzv4PTXnC42fb//AGI5YqfQAU8dkAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geocone','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACRSURBVBjTdY+xDcNACEVvEm/ggo6Olva37IB0C3iEzJABvAHFTXBDeJRwthMnUvylk44vPjxK+afeokX0flQhJO7L4pafSOMxzaxIKc/Tc7SIjNLyieyZSjBzc4DqMZI0HTMonWPBNlogOLeuewbg9c0hOiIqH7DKmTCuFykjHe4XOzQ58XVMGxzt575tKzd6AX9yMkcWyPlsAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geogtra','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACCSURBVBjTVc+hDQMxDAVQD1FyqCQk0MwsCwQEG3+eCW6B0FvheDboFMGepTlVitPP/Cz5y0S/mNkw8pySU9INJDDH4vM4Usm5OrQXasXtkA+tQF+zxfcDY8EVwgNeiwmA37TEccK5oLOwQtuCj7BM2Fq7iGrxVqJbSsH+GzXs+798AThwKMh3/6jDAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geomedium','BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAABVQTFRFAAAAAAAAMDAww8PDWKj/////gICAG0/C4AAAAAF0Uk5TAEDm2GYAAAABYktHRAX4b+nHAAAACXBIWXMAAABIAAAASABGyWs+AAAAXElEQVQI102MwRGAMAgEuQ6IDwvQCjQdhAl/H7ED038JHhkd3dcOLAgESFARaAqnEB3yrj6QSEym1RbbOKinN+8q2Esui1GaX7VXSi4RUbxHRbER8X6O5Pg/fLgBBzMN8HfXD3AAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geopara','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABtSURBVBjTY2DADq5MT7+CzD9kaKjp+QhJYIWqublhMbKAgpOnZxWSQJdsVJTndCSBKoWoAM/VSALpqlEBAYeQBKJAAsi2BGgCBZDdEWUYFZCOLFBlGOWJ7AyGFeaotjIccopageK3R12PGHABACTYHWd0tGw6AAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('georotation','CAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAAiklEQVQoz2NgYGBgYGDg+A/BmIAFIvyDEbs0AwMTAwHACLPiB5QVBTdpGSOSCZjScDcgc4z+32BgYGBgEGIQw3QDLkdCTZD8/xJFeBfDVxQT/j9n/MeIrMCNIRBJwX8GRuzGM/yHKMAljeILNFOuMTyEisEUMKIqucrwB2oyIhyQpH8y/MZrLWkAAHFzIHIc0Q5yAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geotranslation','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABESURBVBjTY2DgYGAAYzjgAAIQgSLAgSwAAcrWUUCAJBAVhSpgBAQumALGCJPAAsriHIS0IAQ4UAU4cGphQBWwZSAOAADGJBKdZk/rHQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('geotrd2','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABsSURBVBjTbY+xDcAwCARZx6UraiaAmpoRvIIb75PWI2QITxIiRQKk0CCO/xcA/NZ9LRs7RkJEYg3QxczUwoGsXiMAoe8lAelqRWFNKpiNXZLAalRDd0f3TMgeMckABKsCDmu+442RddeHz9cf9jUkW8smGn8AAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geovolume','BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAB5QTFRFAAAAMDAw///Ay8uc/7+Q/4BgmJh4gIDgAAD/////CZb2ugAAAAF0Uk5TAEDm2GYAAAABYktHRAnx2aXsAAAACXBIWXMAAABIAAAASABGyWs+AAAAR0lEQVQI12NggAEBIBAEQgYGQUYQAyIGIhgwAZMSGCgwMJuEKimFOhswsKWAGG4JDGxJIBk1EEO9o6NIDVkEpgauC24ODAAASQ8Pkj/retYAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geoassembly','BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAA9QTFRFAAAAMDAw/wAAAAD/////jEo0BQAAAAF0Uk5TAEDm2GYAAAABYktHRASPaNlRAAAACXBIWXMAAABIAAAASABGyWs+AAAAOklEQVQI12NggAFGRgEgEBRgEBSAMhgYGQQEgAR+oARGDIwCIAYjUL0A2DQQg9nY2ABVBKoGrgsDAADxzgNboMz8zQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('geocomposite','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABuSURBVBjTY2AgF2hqgQCCr+0V4O7hFmgCF7CJyKysKkmxhfGNLaw9SppqAi2gfMuY5Agrl+ZaC6iAUXRJZX6Ic0klTMA5urapPFY5NRcmYKFqWl8S5RobBRNg0PbNT3a1dDGH8RlM3LysTRjIBwAG6xrzJt11BAAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('geoctub','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACESURBVBjTdc+xDcMwDARA7cKKHTuWX37LHaw+vQbQAJomA7j2DB7FhCMFCZB8pxPwJEv5kQcZW+3HencRBekak4aaMQIi8YJdAQ1CMeE0UBkuaLMETklQ9Alhka0JzzXWqLVBuQYPpWcVuBbZjZafNRYcDk9o/b07bvhINz+/zxu1/M0FSRcmAk/HaIcAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geohype','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACKSURBVBjTbU+rFQQhDKQSDDISEYuMREfHx6eHKMpYuf5qoIQt5bgDblfcuJk3nySEhSvceDV3c/ejT66lspopE9pXyIlkCrHMBACpu1DClekQAREi/loviCnF/NhRwJLaQ6hVhPjB8bOCsjlnNnNl0FWJVWxAqGzHONRHpu5Ml+nQ+8GzNW9n+Is3eg80Nk0iiwoAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geomixture','BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAACFQTFRFAAAAAAAAKysrVVUA//8B//8AgICAqqpV398gv79A////VYJtlwAAAAF0Uk5TAEDm2GYAAAABYktHRApo0PRWAAAACXBIWXMAAABIAAAASABGyWs+AAAAXklEQVQI12NgwASCQsJCgoZAhoADq1tKIJAhEpDGxpYIZKgxsLElgBhibAkOCY4gKTaGkPRGIEPUIYEBrEaAIY0tDawmgYWNgREkkjCVjRWkWCUhLY0FJCIIBljsBgCZTAykgaRiRwAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('geopcon','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACJSURBVBjTdc+hGcQwCIZhhjl/rkgWiECj8XgGyAbZoD5LdIRMkEnKkV575n75Pp8AgLU54dmh6mauelyAL2Qzxfe2sklioq6FacFAcRFXYhwJHdU5rDD2hEYB/CmoJVRMiIJqgtENuoqA8ltAlYAqRH4d1tGkwzTqN2gA7Nv+fUwkgZ/3mg34txM+szzATJS1HQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('geosphere','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACFSURBVBjTdY+xEcQwCAQp5QNFjpQ5vZACFBFTADFFfKYCXINzlUAJruXll2ekxDAEt9zcANFbXb2mqm56dxsymAH0yccAJaeNi0h5QGyfxGJmivMPjj0nmLsbRmyFCss3rlbpcUjfS8wLUNRcJyCF6uqg2IvYCnoKC7f1kSbA6riTz7evfwj3Ml+H3KBqAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geotrap','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB5SURBVBjTbY+hFYAwDETZB1OJi4yNPp0JqjtAZ2AELL5DdABmIS2PtLxHXH7u7l2W5W+uHMHpGiCHLYR1yw4SCZMIXBOJWVSjK7QDDAu4g8OBmAKK4sAEDdR3rw8YmcUcrEijKKhl7lN1IQPn9ExlgU6/WEyc75+5AYK0KY5oHBDfAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geotubeseg','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACBSURBVBjTdc+hEcQwDARA12P6QFBQ9LDwcXEVkA7SQTr4BlJBakgpsWdsh/wfux3NSCrlV86Mlrxmz1pBWq3bAHwETohxABVmDZADQp1BE+wDNnGywzHgmHDOreJNTDH3Xn3CVX0dpu2MHcIFBkYp/gKsQ8SCQ72V+36/+2aWf3kAQfgshnpXF0wAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geoxtru','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABcSURBVBjTY2AgEmhpeZV56vmWwQW00QUYwAJlSAI6XmVqukh8PT1bT03PchhXX09Pr9wQIQDiJ+ZowgWAXD3bck+QQDlCQTkDQgCoxA/ERBKwhbDglgA1lDMQDwCc/Rvq8nYsWgAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('geobbox','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB/SURBVBjTVc+hEYAwDAXQLlNRF1tVGxn9NRswQiSSCdgDyQBM0FlIIb2WuL77uf6E8E0N02wKYRwDciTKREVvB04GuZSyOMCABRB1WGzF3uDNQTvs/RcDtJXT4fSEXA5XoiQt0ttVSm8Co2psIOvoimjAOqBmFtH5wEP2373TPIvTK1nrpULXAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geoconeseg','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB4SURBVBjTdc6hEcAgDAXQbFNZXHQkFlkd/30myAIMwAws0gmYpVzvoFyv/S5P/B+izzQ387ZA2pkDnvsU1SQLVIFrOM4JFmEaYp2gCQbmPEGODhJ8jt7Am47hwgrzInGAifa/elUZnQLY00iU30BZAV+BWi2VfnIBv1osbHH8jX0AAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
+${img('geoeltu','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACGSURBVBjTdY+hFYUwDEU7xq9CIXC4uNjY6KczQXeoYgVMR2ABRmCGjvIp/6dgiEruueedvBDuOR57LQnKyc8CJmKO+N8bieIUPtmBWjIIx8XDBHYCipsnql1g2D0UP2OoDqwBncf+RdZmzFMHizRjog7KZYzawd4Ay93lEAPWR7WAvNbwMl/XwSxBV8qCjgAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('geomaterial','CAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAAbElEQVQoz62QMRbAIAhDP319Xon7j54qHSyCtaMZFCUkRjgDIdRU9yZUCfg8ut5aAHdcxtoNurmgA3ABNKIR9KimhSukPe2qxcCYC0pfFXx/aFWo7i42KKItOpopqvvnLzJmtlZTS7EfGAfwAM4EQbLIGV0sAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geoparab','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB/SURBVBjTbY+xDYAwDAQ9UAp3X7p0m9o9dUZgA9oMwAjpMwMzMAnYBAQSX9mn9+tN9KOtzsWsLOvYCziUGNX3nnCLJRzKPgeYrhPW7FJNLUB3YJazYKQKTnBaxgXRzNmJcrt7XCHQp9kEB1wfELEir/KGj4Foh8A+/zW1nf51AFabKZuWK+mNAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geopgon','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABwSURBVBjTY2AgDlwAAzh3sX1sPRDEeuwDc+8V2dsHgQQ8LCzq74HkLSzs7Yva2tLt7S3sN4MNiDUGKQmysCi6BzWkzcI+PdY+aDPCljZlj1iFOUjW1tvHLjYuQhJIt5/DcAFZYLH9YnSn7iPST9gAACbsJth21haFAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geotorus','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACGSURBVBjTjY+hFcMwDEQ9SkFggXGIoejhw+LiGkBDlHoAr+AhgjNL5byChuXeE7gvPelUyjOds/f5Zw0ggfj5KVCPMBWeyx+SbQ1XUriAC2XfpWWxjQQEZasRtRHiCUAj3qN4JaolUJppzh4q7dUTdHFXW/tH9OuswWm3nI7tc08+/eGLl758ey9KpKrNOQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('geotrd1','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB/SURBVBjTbc6xDQMhDAVQ9qH6lUtal65/zQ5IDMAMmYAZrmKGm4FJzlEQQUo+bvwkG4fwm9lbodV7w40Y4WGfSxQiXiJlQfZOjWRb8Ioi3tKuBQMCo7+9N72BzPsfAuoTdUP9QN8wgOQwvsfWmHzpeT5BKydMNW0nhJGvGf7mAc5WKO9e5N2dAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
+${img('geotube','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACGSURBVBjTRc+tEcAwCAXgLFNbWeSzSDQazw5doWNUZIOM0BEyS/NHy10E30HyklKvWnJ+0le3sJoKn3X2z7GRuvG++YRyMMDt0IIKUXMzxbnugJi5m9K1gNnGBOUFElAWGMaKIKI4xoQggl00gT+A9hXWgDwnfqgsHRAx2m+8bfjfdyrx5AtsSjpwu+M2RgAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
+${img('evepoints','BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAABJQTFRF////n4mJcEdKRDMzcEdH////lLE/CwAAAAF0Uk5TAEDm2GYAAAABYktHRACIBR1IAAAACXBIWXMAAABIAAAASABGyWs+AAAAI0lEQVQI12NgIAowIpgKEJIZLiAgAKWZGQzQ9UGlWIizBQgAN4IAvGtVrTcAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTYtMDktMDJUMTU6MDQ6MzgrMDI6MDDPyc7hAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE2LTA5LTAyVDE1OjA0OjM4KzAyOjAwvpR2XQAAAABJRU5ErkJggg==')}
+${img('evetrack', 'CAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAAqElEQVQoz32RMQrCQBBFf4IgSMB0IpGkMpVHCFh7BbHIGTyVhU0K8QYewEKsbVJZaCUiPAsXV8Puzhaz7H8zs5+JUDjikLilQr5zpCRl5xMXZNScQE5gSMGaz70jjUAJcw5c3UBMTsUe+9Kzf065SbropeLXimWfDIgoab/tOyPGzOhz53+oSWcSGh7UdB2ZNKXBZdgAuUdEKJYmrEILyVgG6pE2tEHgDfe42rbjYzSHAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE2LTA5LTAyVDE1OjA0OjQ3KzAyOjAwM0S3EQAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNi0wOS0wMlQxNTowNDo0NyswMjowMEIZD60AAAAASUVORK5CYII=')}
+.jsroot .geovis_this { background-color: lightgreen; }
+.jsroot .geovis_daughters { background-color: lightblue; }
+.jsroot .geovis_all { background-color: yellow; }`);
+}
+
+
+/** @summary Create geo painter
+  * @private */
+function createGeoPainter(dom, obj, opt) {
+
+   injectGeoStyle();
+
+   geoCfg('GradPerSegm', settings.GeoGradPerSegm);
+   geoCfg('CompressComp', settings.GeoCompressComp);
+
+   let painter = new TGeoPainter(dom, obj);
+
+   painter.options = painter.decodeOptions(opt); // indicator of initialization
+
+   // copy all attributes from options to control
+   Object.assign(painter.ctrl, painter.options);
+
+   painter.ctrl.ssao.enabled = painter.options.usessao;
+   painter.ctrl.bloom.enabled = painter.options.usebloom;
+
+   // special handling for array of clips
+   painter.ctrl.clip[0].enabled = painter.options.clipx;
+   painter.ctrl.clip[1].enabled = painter.options.clipy;
+   painter.ctrl.clip[2].enabled = painter.options.clipz;
+
+   return painter;
+}
+
+
+/** @summary provide menu for geo object
+  * @private */
+function provideMenu(menu, item, hpainter) {
+
+   if (!item._geoobj) return false;
+
+   let obj = item._geoobj, vol = item._volume,
+       iseve = ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract));
+
+   if (!vol && !iseve) return false;
+
+   menu.add('separator');
+
+   const ScanEveVisible = (obj, arg, skip_this) => {
+
+      if (!arg) arg = { visible: 0, hidden: 0 };
+
+      if (!skip_this) {
+         if (arg.assign !== undefined)
+            obj.fRnrSelf = arg.assign;
+         else if (obj.fRnrSelf)
+            arg.vis++;
+         else
+            arg.hidden++;
+      }
+
+      if (obj.fElements)
+         for (let n = 0; n < obj.fElements.arr.length; ++n)
+            ScanEveVisible(obj.fElements.arr[n], arg, false);
+
+      return arg;
+
+   }, ToggleEveVisibility = arg => {
+
+      if (arg === 'self') {
+         obj.fRnrSelf = !obj.fRnrSelf;
+         item._icon = item._icon.split(' ')[0] + provideVisStyle(obj);
+         hpainter.updateTreeNode(item);
+      } else {
+         ScanEveVisible(obj, { assign: (arg === 'true') }, true);
+         hpainter.forEachItem(m => {
+            // update all child items
+            if (m._geoobj && m._icon) {
+               m._icon = item._icon.split(' ')[0] + provideVisStyle(m._geoobj);
+               hpainter.updateTreeNode(m);
+            }
+         }, item);
+      }
+
+      findItemWithPainter(item, 'testGeomChanges');
+   }, ToggleMenuBit = arg => {
+      toggleGeoBit(vol, arg);
+      let newname = item._icon.split(' ')[0] + provideVisStyle(vol);
+      hpainter.forEachItem(m => {
+         // update all items with that volume
+         if (item._volume === m._volume) {
+            m._icon = newname;
+            hpainter.updateTreeNode(m);
+         }
+      });
+
+      hpainter.updateTreeNode(item);
+      findItemWithPainter(item, 'testGeomChanges');
+   };
+
+   if ((item._geoobj._typename.indexOf(clTGeoNode) === 0) && findItemWithPainter(item))
+      menu.add('Focus', function() {
+
+        let drawitem = findItemWithPainter(item);
+
+        if (!drawitem) return;
+
+        let fullname = hpainter.itemFullName(item, drawitem);
+
+        if (isFunc(drawitem._painter?.focusOnItem))
+           drawitem._painter.focusOnItem(fullname);
+      });
+
+   if (iseve) {
+      menu.addchk(obj.fRnrSelf, 'Visible', 'self', ToggleEveVisibility);
+      let res = ScanEveVisible(obj, undefined, true);
+      if (res.hidden + res.visible > 0)
+         menu.addchk((res.hidden == 0), 'Daughters', res.hidden !== 0 ? 'true' : 'false', ToggleEveVisibility);
+   } else {
+      menu.addchk(testGeoBit(vol, geoBITS.kVisNone), 'Invisible',
+            geoBITS.kVisNone, ToggleMenuBit);
+      menu.addchk(testGeoBit(vol, geoBITS.kVisThis), 'Visible',
+            geoBITS.kVisThis, ToggleMenuBit);
+      menu.addchk(testGeoBit(vol, geoBITS.kVisDaughters), 'Daughters',
+            geoBITS.kVisDaughters, ToggleMenuBit);
+   }
+
+   return true;
+}
+
+/** @summary handle click on browser icon
+  * @private */
+function browserIconClick(hitem, hpainter) {
+   if (hitem._volume) {
+      if (hitem._more && hitem._volume.fNodes && (hitem._volume.fNodes.arr.length > 0))
+         toggleGeoBit(hitem._volume, geoBITS.kVisDaughters);
+      else
+         toggleGeoBit(hitem._volume, geoBITS.kVisThis);
+
+      updateBrowserIcons(hitem._volume, hpainter);
+
+      findItemWithPainter(hitem, 'testGeomChanges');
+      return false; // no need to update icon - we did it ourself
+   }
+
+   if (hitem._geoobj && ((hitem._geoobj._typename == clTEveGeoShapeExtract) || (hitem._geoobj._typename == clREveGeoShapeExtract))) {
+      hitem._geoobj.fRnrSelf = !hitem._geoobj.fRnrSelf;
+
+      updateBrowserIcons(hitem._geoobj, hpainter);
+      findItemWithPainter(hitem, 'testGeomChanges');
+      return false; // no need to update icon - we did it ourself
+   }
+
+
+   // first check that geo painter assigned with the item
+   let drawitem = findItemWithPainter(hitem);
+   if (!drawitem) return false;
+
+   let newstate = drawitem._painter.extraObjectVisible(hpainter, hitem, true);
+
+   // return true means browser should update icon for the item
+   return (newstate !== undefined) ? true : false;
+}
+
+
+/** @summary Get icon for the browser
+  * @private */
+function getBrowserIcon(hitem, hpainter) {
+   let icon = '';
+   switch(hitem._kind) {
+      case 'ROOT.' + clTEveTrack: icon = 'img_evetrack'; break;
+      case 'ROOT.' + clTEvePointSet: icon = 'img_evepoints'; break;
+      case 'ROOT.' + clTPolyMarker3D: icon = 'img_evepoints'; break;
+   }
+   if (icon) {
+      let drawitem = findItemWithPainter(hitem);
+      if (drawitem?._painter && drawitem._painter.extraObjectVisible(hpainter, hitem))
+         icon += ' geovis_this';
+   }
+   return icon;
+}
+
+
+/** @summary create hierarchy item for geo object
+  * @private */
+function createItem(node, obj, name) {
+   let sub = {
+      _kind: 'ROOT.' + obj._typename,
+      _name: name ? name : getObjectName(obj),
+      _title: obj.fTitle,
+      _parent: node,
+      _geoobj: obj,
+      _get(item /* ,itemname */) {
+          // mark object as belong to the hierarchy, require to
+          if (item._geoobj) item._geoobj.$geoh = true;
+          return Promise.resolve(item._geoobj);
+      }
+   }, volume, shape, subnodes, iseve = false;
+
+   if (obj._typename == 'TGeoMaterial')
+      sub._icon = 'img_geomaterial';
+   else if (obj._typename == 'TGeoMedium')
+      sub._icon = 'img_geomedium';
+   else if (obj._typename == 'TGeoMixture')
+      sub._icon = 'img_geomixture';
+   else if ((obj._typename.indexOf(clTGeoNode) === 0) && obj.fVolume) {
+      sub._title = 'node:'  + obj._typename;
+      if (obj.fTitle) sub._title += ' ' + obj.fTitle;
+      volume = obj.fVolume;
+   } else if (obj._typename.indexOf(clTGeoVolume) === 0) {
+      volume = obj;
+   } else if ((obj._typename == clTEveGeoShapeExtract) || (obj._typename == clREveGeoShapeExtract)) {
+      iseve = true;
+      shape = obj.fShape;
+      subnodes = obj.fElements ? obj.fElements.arr : null;
+   } else if ((obj.fShapeBits !== undefined) && (obj.fShapeId !== undefined)) {
+      shape = obj;
+   }
+
+   if (volume) {
+      shape = volume.fShape;
+      subnodes = volume.fNodes ? volume.fNodes.arr : null;
+   }
+
+   if (volume || shape || subnodes) {
+      if (volume) sub._volume = volume;
+
+      if (subnodes) {
+         sub._more = true;
+         sub._expand = expandGeoObject;
+      } else if (shape && (shape._typename === clTGeoCompositeShape) && shape.fNode) {
+         sub._more = true;
+         sub._shape = shape;
+         sub._expand = function(node /*, obj */) {
+            createItem(node, node._shape.fNode.fLeft, 'Left');
+            createItem(node, node._shape.fNode.fRight, 'Right');
+            return true;
+         };
+      }
+
+      if (!sub._title && (obj._typename != clTGeoVolume))
+         sub._title = obj._typename;
+
+      if (shape) {
+         if (sub._title == '')
+            sub._title = shape._typename;
+
+         sub._icon = getShapeIcon(shape);
+      } else {
+         sub._icon = sub._more ? 'img_geocombi' : 'img_geobbox';
+      }
+
+      if (volume)
+         sub._icon += provideVisStyle(volume);
+      else if (iseve)
+         sub._icon += provideVisStyle(obj);
+
+      sub._menu = provideMenu;
+      sub._icon_click  = browserIconClick;
+   }
+
+   if (!node._childs) node._childs = [];
+
+   if (!sub._name)
+      if (isStr(node._name)) {
+         sub._name = node._name;
+         if (sub._name.lastIndexOf('s')===sub._name.length-1)
+            sub._name = sub._name.slice(0, sub._name.length-1);
+         sub._name += '_' + node._childs.length;
+      } else {
+         sub._name = 'item_' + node._childs.length;
+      }
+
+   node._childs.push(sub);
+
+   return sub;
+}
+
+/** @summary Draw dummy geometry
+  * @private */
+async function drawDummy3DGeom(painter) {
+
+   let extra = painter.getObject(),
+       min = [-1, -1, -1], max = [1, 1, 1];
+
+   if (extra.fP?.length)
+      for(let k = 0; k < extra.fP.length; k += 3)
+         for (let i = 0; i < 3; ++i) {
+            min[i] = Math.min(min[i], extra.fP[k+i]);
+            max[i] = Math.max(max[i], extra.fP[k+i]);
+         }
+
+
+   let shape = create$1(clTNamed);
+   shape._typename = clTGeoBBox;
+   shape.fDX = max[0] - min[0];
+   shape.fDY = max[1] - min[1];
+   shape.fDZ = max[2] - min[2];
+   shape.fShapeId = 1;
+   shape.fShapeBits = 0;
+   shape.fOrigin = [0,0,0];
+
+   let obj = Object.assign(create$1(clTNamed),
+                { _typename: clTEveGeoShapeExtract,
+                  fTrans: [1,0,0,0, 0,1,0,0, 0,0,1,0, (min[0]+max[0])/2, (min[1]+max[1])/2, (min[2]+max[2])/2, 0],
+                  fShape: shape, fRGBA: [0, 0, 0, 0], fElements: null, fRnrSelf: false });
+
+   let opt = '', pp = painter.getPadPainter();
+
+   if (pp?.pad?.fFillColor && (pp?.pad?.fFillStyle > 1000))
+      opt = 'bkgr_' +  pp.pad.fFillColor;
+
+   return TGeoPainter.draw(painter.getDom(), obj, opt)
+                     .then(geop => geop.drawExtras(extra));
+}
+
+/** @summary Direct draw function for TAxis3D
+  * @private */
+function drawAxis3D() {
+   let main = this.getMainPainter();
+
+   if (isFunc(main?.setAxesDraw))
+      return main.setAxesDraw(true);
+
+   console.error('no geometry painter found to toggle TAxis3D drawing');
+}
+
+/** @summary Build three.js model for given geometry object
+  * @param {Object} obj - TGeo-related object
+  * @param {Object} [opt] - options
+  * @param {Number} [opt.vislevel] - visibility level like TGeoManager, when not specified - show all
+  * @param {Number} [opt.numnodes=1000] - maximal number of visible nodes
+  * @param {Number} [opt.numfaces=100000] - approx maximal number of created triangles
+  * @param {boolean} [opt.doubleside=false] - use double-side material
+  * @param {boolean} [opt.wireframe=false] - show wireframe for created shapes
+  * @param {boolean} [opt.dflt_colors=false] - use default ROOT colors
+  * @return {object} Object3D with created model
+  * @example
+  * import { build } from './path_to_jsroot/modules/geom/TGeoPainter.mjs';
+  * let obj3d = build(obj);
+  * // this is three.js object and can be now inserted in the scene
+  */
+function build(obj, opt) {
+
+   if (!obj) return null;
+
+   if (!opt) opt = {};
+   if (!opt.numfaces) opt.numfaces = 100000;
+   if (!opt.numnodes) opt.numnodes = 1000;
+   if (!opt.frustum) opt.frustum = null;
+
+   opt.res_mesh = opt.res_faces = 0;
+
+   let clones = null, visibles = null;
+
+   if (obj.visibles && obj.nodes && obj.numnodes) {
+      // case of draw message from geometry viewer
+
+      let nodes = obj.numnodes > 1e6 ? { length: obj.numnodes } : new Array(obj.numnodes);
+
+      obj.nodes.forEach(node => {
+         nodes[node.id] = ClonedNodes.formatServerElement(node);
+      });
+
+      clones = new ClonedNodes(null, nodes);
+      clones.name_prefix = clones.getNodeName(0);
+      // normally only need when making selection, not used in geo viewer
+      // this.geo_clones.setMaxVisNodes(draw_msg.maxvisnodes);
+      // this.geo_clones.setVisLevel(draw_msg.vislevel);
+      // parameter need for visualization with transparency
+      // TODO: provide from server
+      clones.maxdepth = 20;
+
+      let nsegm = obj.cfg?.nsegm || 30;
+
+      for (let cnt = 0; cnt < obj.visibles.length; ++cnt) {
+         let item = obj.visibles[cnt], rd = item.ri;
+
+         // entry may be provided without shape - it is ok
+         if (rd)
+            item.server_shape = rd.server_shape = createServerGeometry(rd, nsegm);
+      }
+
+      visibles = obj.visibles;
+
+   } else {
+      let shape = null, hide_top = false;
+
+      if (('fShapeBits' in obj) && ('fShapeId' in obj)) {
+         shape = obj; obj = null;
+      } else if ((obj._typename === clTGeoVolumeAssembly) || (obj._typename === clTGeoVolume)) {
+         shape = obj.fShape;
+      } else if ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)) {
+         shape = obj.fShape;
+      } else if (obj._typename === clTGeoManager) {
+         obj = obj.fMasterVolume;
+         hide_top = !opt.showtop;
+         shape = obj.fShape;
+      } else if (obj.fVolume) {
+         shape = obj.fVolume.fShape;
+      } else {
+         obj = null;
+      }
+
+      if (opt.composite && shape && (shape._typename == clTGeoCompositeShape) && shape.fNode)
+         obj = buildCompositeVolume(shape);
+
+      if (!obj && shape)
+         obj = Object.assign(create$1(clTNamed), { _typename: clTEveGeoShapeExtract, fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 1], fElements: null, fRnrSelf: true });
+
+      if (!obj) return null;
+
+      if (obj._typename.indexOf(clTGeoVolume) === 0)
+         obj = { _typename: clTGeoNode, fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
+
+      clones = new ClonedNodes(obj);
+      clones.setVisLevel(opt.vislevel);
+      clones.setMaxVisNodes(opt.numnodes);
+
+      if (opt.dflt_colors)
+         clones.setDefaultColors(true);
+
+      let uniquevis = opt.no_screen ? 0 : clones.markVisibles(true);
+      if (uniquevis <= 0)
+         clones.markVisibles(false, false, hide_top);
+      else
+         clones.markVisibles(true, true, hide_top); // copy bits once and use normal visibility bits
+
+      clones.produceIdShifts();
+
+      // collect visible nodes
+      let res = clones.collectVisibles(opt.numfaces, opt.frustum);
+
+      visibles = res.lst;
+   }
+
+   // collect shapes
+   let shapes = clones.collectShapes(visibles);
+
+   clones.buildShapes(shapes, opt.numfaces);
+
+   let toplevel = new Object3D();
+
+   for (let n = 0; n < visibles.length; ++n) {
+      let entry = visibles[n];
+      if (entry.done) continue;
+
+      let shape = entry.server_shape || shapes[entry.shapeid];
+      if (!shape.ready) {
+         console.warn('shape marked as not ready when should');
+         break;
+      }
+      entry.done = true;
+      shape.used = true; // indicate that shape was used in building
+
+      if (!shape.geom || (shape.nfaces === 0)) {
+         // node is visible, but shape does not created
+         clones.createObject3D(entry.stack, toplevel, 'delete_mesh');
+         continue;
+      }
+
+      let prop = clones.getDrawEntryProperties(entry, getRootColors());
+
+      opt.res_mesh++;
+      opt.res_faces += shape.nfaces;
+
+      let obj3d = clones.createObject3D(entry.stack, toplevel, opt);
+
+      prop.material.wireframe = opt.wireframe;
+
+      prop.material.side = opt.doubleside ? DoubleSide : FrontSide;
+
+      let mesh = null, matrix = obj3d.absMatrix || obj3d.matrixWorld;
+
+      if (matrix.determinant() > -0.9) {
+         mesh = new Mesh(shape.geom, prop.material);
+      } else {
+         mesh = createFlippedMesh(shape, prop.material);
+      }
+
+      mesh.name = clones.getNodeName(entry.nodeid);
+
+      obj3d.add(mesh);
+
+      if (obj3d.absMatrix) {
+         mesh.matrix.copy(obj3d.absMatrix);
+         mesh.matrix.decompose( obj3d.position, obj3d.quaternion, obj3d.scale );
+         mesh.updateMatrixWorld();
+      }
+
+      // specify rendering order, required for transparency handling
+      //if (obj3d.$jsroot_depth !== undefined)
+      //   mesh.renderOrder = clones.maxdepth - obj3d.$jsroot_depth;
+      //else
+      //   mesh.renderOrder = clones.maxdepth - entry.stack.length;
+   }
+
+   return toplevel;
+}
+
+var TGeoPainter$1 = /*#__PURE__*/Object.freeze({
+__proto__: null,
+ClonedNodes: ClonedNodes,
+build: build,
+TGeoPainter: TGeoPainter,
+GeoDrawingControl: GeoDrawingControl,
+expandGeoObject: expandGeoObject,
+createGeoPainter: createGeoPainter,
+drawAxis3D: drawAxis3D,
+drawDummy3DGeom: drawDummy3DGeom,
+produceRenderOrder: produceRenderOrder
+});
+
 const clTStreamerElement = 'TStreamerElement', clTStreamerObject = 'TStreamerObject',
       clTStreamerSTL = 'TStreamerSTL', clTStreamerInfoList = 'TStreamerInfoList',
       clTDirectory = 'TDirectory', clTDirectoryFile = 'TDirectoryFile',
@@ -76355,6 +86083,2537 @@ __proto__: null,
 'default': _rollup_plugin_ignore_empty_module_placeholder
 });
 
+/**
+ * dat-gui JavaScript Controller Library
+ * https://github.com/dataarts/dat.gui
+ *
+ * Copyright 2011 Data Arts Team, Google Creative Lab
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
+function ___$insertStyle(css) {
+  if (!css) {
+    return;
+  }
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  var style = document.createElement('style');
+
+  style.setAttribute('type', 'text/css');
+  style.innerHTML = css;
+  document.head.appendChild(style);
+
+  return css;
+}
+
+function colorToString (color, forceCSSHex) {
+  var colorFormat = color.__state.conversionName.toString();
+  var r = Math.round(color.r);
+  var g = Math.round(color.g);
+  var b = Math.round(color.b);
+  var a = color.a;
+  var h = Math.round(color.h);
+  var s = color.s.toFixed(1);
+  var v = color.v.toFixed(1);
+  if (forceCSSHex || colorFormat === 'THREE_CHAR_HEX' || colorFormat === 'SIX_CHAR_HEX') {
+    var str = color.hex.toString(16);
+    while (str.length < 6) {
+      str = '0' + str;
+    }
+    return '#' + str;
+  } else if (colorFormat === 'CSS_RGB') {
+    return 'rgb(' + r + ',' + g + ',' + b + ')';
+  } else if (colorFormat === 'CSS_RGBA') {
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+  } else if (colorFormat === 'HEX') {
+    return '0x' + color.hex.toString(16);
+  } else if (colorFormat === 'RGB_ARRAY') {
+    return '[' + r + ',' + g + ',' + b + ']';
+  } else if (colorFormat === 'RGBA_ARRAY') {
+    return '[' + r + ',' + g + ',' + b + ',' + a + ']';
+  } else if (colorFormat === 'RGB_OBJ') {
+    return '{r:' + r + ',g:' + g + ',b:' + b + '}';
+  } else if (colorFormat === 'RGBA_OBJ') {
+    return '{r:' + r + ',g:' + g + ',b:' + b + ',a:' + a + '}';
+  } else if (colorFormat === 'HSV_OBJ') {
+    return '{h:' + h + ',s:' + s + ',v:' + v + '}';
+  } else if (colorFormat === 'HSVA_OBJ') {
+    return '{h:' + h + ',s:' + s + ',v:' + v + ',a:' + a + '}';
+  }
+  return 'unknown format';
+}
+
+var ARR_EACH = Array.prototype.forEach;
+var ARR_SLICE = Array.prototype.slice;
+var Common = {
+  BREAK: {},
+  extend: function extend(target) {
+    this.each(ARR_SLICE.call(arguments, 1), function (obj) {
+      var keys = this.isObject(obj) ? Object.keys(obj) : [];
+      keys.forEach(function (key) {
+        if (!this.isUndefined(obj[key])) {
+          target[key] = obj[key];
+        }
+      }.bind(this));
+    }, this);
+    return target;
+  },
+  defaults: function defaults(target) {
+    this.each(ARR_SLICE.call(arguments, 1), function (obj) {
+      var keys = this.isObject(obj) ? Object.keys(obj) : [];
+      keys.forEach(function (key) {
+        if (this.isUndefined(target[key])) {
+          target[key] = obj[key];
+        }
+      }.bind(this));
+    }, this);
+    return target;
+  },
+  compose: function compose() {
+    var toCall = ARR_SLICE.call(arguments);
+    return function () {
+      var args = ARR_SLICE.call(arguments);
+      for (var i = toCall.length - 1; i >= 0; i--) {
+        args = [toCall[i].apply(this, args)];
+      }
+      return args[0];
+    };
+  },
+  each: function each(obj, itr, scope) {
+    if (!obj) {
+      return;
+    }
+    if (ARR_EACH && obj.forEach && obj.forEach === ARR_EACH) {
+      obj.forEach(itr, scope);
+    } else if (obj.length === obj.length + 0) {
+      var key = void 0;
+      var l = void 0;
+      for (key = 0, l = obj.length; key < l; key++) {
+        if (key in obj && itr.call(scope, obj[key], key) === this.BREAK) {
+          return;
+        }
+      }
+    } else {
+      for (var _key in obj) {
+        if (itr.call(scope, obj[_key], _key) === this.BREAK) {
+          return;
+        }
+      }
+    }
+  },
+  defer: function defer(fnc) {
+    setTimeout(fnc, 0);
+  },
+  debounce: function debounce(func, threshold, callImmediately) {
+    var timeout = void 0;
+    return function () {
+      var obj = this;
+      var args = arguments;
+      function delayed() {
+        timeout = null;
+        if (!callImmediately) func.apply(obj, args);
+      }
+      var callNow = callImmediately || !timeout;
+      clearTimeout(timeout);
+      timeout = setTimeout(delayed, threshold);
+      if (callNow) {
+        func.apply(obj, args);
+      }
+    };
+  },
+  toArray: function toArray(obj) {
+    if (obj.toArray) return obj.toArray();
+    return ARR_SLICE.call(obj);
+  },
+  isUndefined: function isUndefined(obj) {
+    return obj === undefined;
+  },
+  isNull: function isNull(obj) {
+    return obj === null;
+  },
+  isNaN: function (_isNaN) {
+    function isNaN(_x) {
+      return _isNaN.apply(this, arguments);
+    }
+    isNaN.toString = function () {
+      return _isNaN.toString();
+    };
+    return isNaN;
+  }(function (obj) {
+    return isNaN(obj);
+  }),
+  isArray: Array.isArray || function (obj) {
+    return obj.constructor === Array;
+  },
+  isObject: function isObject(obj) {
+    return obj === Object(obj);
+  },
+  isNumber: function isNumber(obj) {
+    return obj === obj + 0;
+  },
+  isString: function isString(obj) {
+    return obj === obj + '';
+  },
+  isBoolean: function isBoolean(obj) {
+    return obj === false || obj === true;
+  },
+  isFunction: function isFunction(obj) {
+    return obj instanceof Function;
+  }
+};
+
+var INTERPRETATIONS = [
+{
+  litmus: Common.isString,
+  conversions: {
+    THREE_CHAR_HEX: {
+      read: function read(original) {
+        var test = original.match(/^#([A-F0-9])([A-F0-9])([A-F0-9])$/i);
+        if (test === null) {
+          return false;
+        }
+        return {
+          space: 'HEX',
+          hex: parseInt('0x' + test[1].toString() + test[1].toString() + test[2].toString() + test[2].toString() + test[3].toString() + test[3].toString(), 0)
+        };
+      },
+      write: colorToString
+    },
+    SIX_CHAR_HEX: {
+      read: function read(original) {
+        var test = original.match(/^#([A-F0-9]{6})$/i);
+        if (test === null) {
+          return false;
+        }
+        return {
+          space: 'HEX',
+          hex: parseInt('0x' + test[1].toString(), 0)
+        };
+      },
+      write: colorToString
+    },
+    CSS_RGB: {
+      read: function read(original) {
+        var test = original.match(/^rgb\(\s*(\S+)\s*,\s*(\S+)\s*,\s*(\S+)\s*\)/);
+        if (test === null) {
+          return false;
+        }
+        return {
+          space: 'RGB',
+          r: parseFloat(test[1]),
+          g: parseFloat(test[2]),
+          b: parseFloat(test[3])
+        };
+      },
+      write: colorToString
+    },
+    CSS_RGBA: {
+      read: function read(original) {
+        var test = original.match(/^rgba\(\s*(\S+)\s*,\s*(\S+)\s*,\s*(\S+)\s*,\s*(\S+)\s*\)/);
+        if (test === null) {
+          return false;
+        }
+        return {
+          space: 'RGB',
+          r: parseFloat(test[1]),
+          g: parseFloat(test[2]),
+          b: parseFloat(test[3]),
+          a: parseFloat(test[4])
+        };
+      },
+      write: colorToString
+    }
+  }
+},
+{
+  litmus: Common.isNumber,
+  conversions: {
+    HEX: {
+      read: function read(original) {
+        return {
+          space: 'HEX',
+          hex: original,
+          conversionName: 'HEX'
+        };
+      },
+      write: function write(color) {
+        return color.hex;
+      }
+    }
+  }
+},
+{
+  litmus: Common.isArray,
+  conversions: {
+    RGB_ARRAY: {
+      read: function read(original) {
+        if (original.length !== 3) {
+          return false;
+        }
+        return {
+          space: 'RGB',
+          r: original[0],
+          g: original[1],
+          b: original[2]
+        };
+      },
+      write: function write(color) {
+        return [color.r, color.g, color.b];
+      }
+    },
+    RGBA_ARRAY: {
+      read: function read(original) {
+        if (original.length !== 4) return false;
+        return {
+          space: 'RGB',
+          r: original[0],
+          g: original[1],
+          b: original[2],
+          a: original[3]
+        };
+      },
+      write: function write(color) {
+        return [color.r, color.g, color.b, color.a];
+      }
+    }
+  }
+},
+{
+  litmus: Common.isObject,
+  conversions: {
+    RGBA_OBJ: {
+      read: function read(original) {
+        if (Common.isNumber(original.r) && Common.isNumber(original.g) && Common.isNumber(original.b) && Common.isNumber(original.a)) {
+          return {
+            space: 'RGB',
+            r: original.r,
+            g: original.g,
+            b: original.b,
+            a: original.a
+          };
+        }
+        return false;
+      },
+      write: function write(color) {
+        return {
+          r: color.r,
+          g: color.g,
+          b: color.b,
+          a: color.a
+        };
+      }
+    },
+    RGB_OBJ: {
+      read: function read(original) {
+        if (Common.isNumber(original.r) && Common.isNumber(original.g) && Common.isNumber(original.b)) {
+          return {
+            space: 'RGB',
+            r: original.r,
+            g: original.g,
+            b: original.b
+          };
+        }
+        return false;
+      },
+      write: function write(color) {
+        return {
+          r: color.r,
+          g: color.g,
+          b: color.b
+        };
+      }
+    },
+    HSVA_OBJ: {
+      read: function read(original) {
+        if (Common.isNumber(original.h) && Common.isNumber(original.s) && Common.isNumber(original.v) && Common.isNumber(original.a)) {
+          return {
+            space: 'HSV',
+            h: original.h,
+            s: original.s,
+            v: original.v,
+            a: original.a
+          };
+        }
+        return false;
+      },
+      write: function write(color) {
+        return {
+          h: color.h,
+          s: color.s,
+          v: color.v,
+          a: color.a
+        };
+      }
+    },
+    HSV_OBJ: {
+      read: function read(original) {
+        if (Common.isNumber(original.h) && Common.isNumber(original.s) && Common.isNumber(original.v)) {
+          return {
+            space: 'HSV',
+            h: original.h,
+            s: original.s,
+            v: original.v
+          };
+        }
+        return false;
+      },
+      write: function write(color) {
+        return {
+          h: color.h,
+          s: color.s,
+          v: color.v
+        };
+      }
+    }
+  }
+}];
+var result = void 0;
+var toReturn = void 0;
+var interpret = function interpret() {
+  toReturn = false;
+  var original = arguments.length > 1 ? Common.toArray(arguments) : arguments[0];
+  Common.each(INTERPRETATIONS, function (family) {
+    if (family.litmus(original)) {
+      Common.each(family.conversions, function (conversion, conversionName) {
+        result = conversion.read(original);
+        if (toReturn === false && result !== false) {
+          toReturn = result;
+          result.conversionName = conversionName;
+          result.conversion = conversion;
+          return Common.BREAK;
+        }
+      });
+      return Common.BREAK;
+    }
+  });
+  return toReturn;
+};
+
+var tmpComponent = void 0;
+var ColorMath = {
+  hsv_to_rgb: function hsv_to_rgb(h, s, v) {
+    var hi = Math.floor(h / 60) % 6;
+    var f = h / 60 - Math.floor(h / 60);
+    var p = v * (1.0 - s);
+    var q = v * (1.0 - f * s);
+    var t = v * (1.0 - (1.0 - f) * s);
+    var c = [[v, t, p], [q, v, p], [p, v, t], [p, q, v], [t, p, v], [v, p, q]][hi];
+    return {
+      r: c[0] * 255,
+      g: c[1] * 255,
+      b: c[2] * 255
+    };
+  },
+  rgb_to_hsv: function rgb_to_hsv(r, g, b) {
+    var min = Math.min(r, g, b);
+    var max = Math.max(r, g, b);
+    var delta = max - min;
+    var h = void 0;
+    var s = void 0;
+    if (max !== 0) {
+      s = delta / max;
+    } else {
+      return {
+        h: NaN,
+        s: 0,
+        v: 0
+      };
+    }
+    if (r === max) {
+      h = (g - b) / delta;
+    } else if (g === max) {
+      h = 2 + (b - r) / delta;
+    } else {
+      h = 4 + (r - g) / delta;
+    }
+    h /= 6;
+    if (h < 0) {
+      h += 1;
+    }
+    return {
+      h: h * 360,
+      s: s,
+      v: max / 255
+    };
+  },
+  rgb_to_hex: function rgb_to_hex(r, g, b) {
+    var hex = this.hex_with_component(0, 2, r);
+    hex = this.hex_with_component(hex, 1, g);
+    hex = this.hex_with_component(hex, 0, b);
+    return hex;
+  },
+  component_from_hex: function component_from_hex(hex, componentIndex) {
+    return hex >> componentIndex * 8 & 0xFF;
+  },
+  hex_with_component: function hex_with_component(hex, componentIndex, value) {
+    return value << (tmpComponent = componentIndex * 8) | hex & ~(0xFF << tmpComponent);
+  }
+};
+
+var _typeof = typeof Symbol === 'function' && typeof Symbol.iterator === "symbol" ? function (obj) {
+  return typeof obj;
+} : function (obj) {
+  return obj && typeof Symbol === 'function' && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+};
+
+
+
+
+
+
+
+
+
+
+
+var classCallCheck = function (instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+};
+
+var createClass = function () {
+  function defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  return function (Constructor, protoProps, staticProps) {
+    if (protoProps) defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) defineProperties(Constructor, staticProps);
+    return Constructor;
+  };
+}();
+
+
+
+
+
+
+
+var get = function get(object, property, receiver) {
+  if (object === null) object = Function.prototype;
+  var desc = Object.getOwnPropertyDescriptor(object, property);
+
+  if (desc === undefined) {
+    var parent = Object.getPrototypeOf(object);
+
+    if (parent === null) {
+      return undefined;
+    } else {
+      return get(parent, property, receiver);
+    }
+  } else if ("value" in desc) {
+    return desc.value;
+  } else {
+    var getter = desc.get;
+
+    if (getter === undefined) {
+      return undefined;
+    }
+
+    return getter.call(receiver);
+  }
+};
+
+var inherits = function (subClass, superClass) {
+  if (typeof superClass !== 'function' && superClass !== null) {
+    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+  }
+
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    }
+  });
+  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+};
+
+
+
+
+
+
+
+
+
+
+
+var possibleConstructorReturn = function (self, call) {
+  if (!self) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return call && (typeof call === 'object' || typeof call === 'function') ? call : self;
+};
+
+var Color = function () {
+  function Color() {
+    classCallCheck(this, Color);
+    this.__state = interpret.apply(this, arguments);
+    if (this.__state === false) {
+      throw new Error('Failed to interpret color arguments');
+    }
+    this.__state.a = this.__state.a || 1;
+  }
+  createClass(Color, [{
+    key: 'toString',
+    value: function toString() {
+      return colorToString(this);
+    }
+  }, {
+    key: 'toHexString',
+    value: function toHexString() {
+      return colorToString(this, true);
+    }
+  }, {
+    key: 'toOriginal',
+    value: function toOriginal() {
+      return this.__state.conversion.write(this);
+    }
+  }]);
+  return Color;
+}();
+function defineRGBComponent(target, component, componentHexIndex) {
+  Object.defineProperty(target, component, {
+    get: function get$$1() {
+      if (this.__state.space === 'RGB') {
+        return this.__state[component];
+      }
+      Color.recalculateRGB(this, component, componentHexIndex);
+      return this.__state[component];
+    },
+    set: function set$$1(v) {
+      if (this.__state.space !== 'RGB') {
+        Color.recalculateRGB(this, component, componentHexIndex);
+        this.__state.space = 'RGB';
+      }
+      this.__state[component] = v;
+    }
+  });
+}
+function defineHSVComponent(target, component) {
+  Object.defineProperty(target, component, {
+    get: function get$$1() {
+      if (this.__state.space === 'HSV') {
+        return this.__state[component];
+      }
+      Color.recalculateHSV(this);
+      return this.__state[component];
+    },
+    set: function set$$1(v) {
+      if (this.__state.space !== 'HSV') {
+        Color.recalculateHSV(this);
+        this.__state.space = 'HSV';
+      }
+      this.__state[component] = v;
+    }
+  });
+}
+Color.recalculateRGB = function (color, component, componentHexIndex) {
+  if (color.__state.space === 'HEX') {
+    color.__state[component] = ColorMath.component_from_hex(color.__state.hex, componentHexIndex);
+  } else if (color.__state.space === 'HSV') {
+    Common.extend(color.__state, ColorMath.hsv_to_rgb(color.__state.h, color.__state.s, color.__state.v));
+  } else {
+    throw new Error('Corrupted color state');
+  }
+};
+Color.recalculateHSV = function (color) {
+  var result = ColorMath.rgb_to_hsv(color.r, color.g, color.b);
+  Common.extend(color.__state, {
+    s: result.s,
+    v: result.v
+  });
+  if (!Common.isNaN(result.h)) {
+    color.__state.h = result.h;
+  } else if (Common.isUndefined(color.__state.h)) {
+    color.__state.h = 0;
+  }
+};
+Color.COMPONENTS = ['r', 'g', 'b', 'h', 's', 'v', 'hex', 'a'];
+defineRGBComponent(Color.prototype, 'r', 2);
+defineRGBComponent(Color.prototype, 'g', 1);
+defineRGBComponent(Color.prototype, 'b', 0);
+defineHSVComponent(Color.prototype, 'h');
+defineHSVComponent(Color.prototype, 's');
+defineHSVComponent(Color.prototype, 'v');
+Object.defineProperty(Color.prototype, 'a', {
+  get: function get$$1() {
+    return this.__state.a;
+  },
+  set: function set$$1(v) {
+    this.__state.a = v;
+  }
+});
+Object.defineProperty(Color.prototype, 'hex', {
+  get: function get$$1() {
+    if (this.__state.space !== 'HEX') {
+      this.__state.hex = ColorMath.rgb_to_hex(this.r, this.g, this.b);
+      this.__state.space = 'HEX';
+    }
+    return this.__state.hex;
+  },
+  set: function set$$1(v) {
+    this.__state.space = 'HEX';
+    this.__state.hex = v;
+  }
+});
+
+var Controller = function () {
+  function Controller(object, property) {
+    classCallCheck(this, Controller);
+    this.initialValue = object[property];
+    this.domElement = document.createElement('div');
+    this.object = object;
+    this.property = property;
+    this.__onChange = undefined;
+    this.__onFinishChange = undefined;
+  }
+  createClass(Controller, [{
+    key: 'onChange',
+    value: function onChange(fnc) {
+      this.__onChange = fnc;
+      return this;
+    }
+  }, {
+    key: 'onFinishChange',
+    value: function onFinishChange(fnc) {
+      this.__onFinishChange = fnc;
+      return this;
+    }
+  }, {
+    key: 'setValue',
+    value: function setValue(newValue) {
+      this.object[this.property] = newValue;
+      if (this.__onChange) {
+        this.__onChange.call(this, newValue);
+      }
+      this.updateDisplay();
+      return this;
+    }
+  }, {
+    key: 'getValue',
+    value: function getValue() {
+      return this.object[this.property];
+    }
+  }, {
+    key: 'updateDisplay',
+    value: function updateDisplay() {
+      return this;
+    }
+  }, {
+    key: 'isModified',
+    value: function isModified() {
+      return this.initialValue !== this.getValue();
+    }
+  }]);
+  return Controller;
+}();
+
+var EVENT_MAP = {
+  HTMLEvents: ['change'],
+  MouseEvents: ['click', 'mousemove', 'mousedown', 'mouseup', 'mouseover'],
+  KeyboardEvents: ['keydown']
+};
+var EVENT_MAP_INV = {};
+Common.each(EVENT_MAP, function (v, k) {
+  Common.each(v, function (e) {
+    EVENT_MAP_INV[e] = k;
+  });
+});
+var CSS_VALUE_PIXELS = /(\d+(\.\d+)?)px/;
+function cssValueToPixels(val) {
+  if (val === '0' || Common.isUndefined(val)) {
+    return 0;
+  }
+  var match = val.match(CSS_VALUE_PIXELS);
+  if (!Common.isNull(match)) {
+    return parseFloat(match[1]);
+  }
+  return 0;
+}
+var dom = {
+  makeSelectable: function makeSelectable(elem, selectable) {
+    if (elem === undefined || elem.style === undefined) return;
+    elem.onselectstart = selectable ? function () {
+      return false;
+    } : function () {};
+    elem.style.MozUserSelect = selectable ? 'auto' : 'none';
+    elem.style.KhtmlUserSelect = selectable ? 'auto' : 'none';
+    elem.unselectable = selectable ? 'on' : 'off';
+  },
+  makeFullscreen: function makeFullscreen(elem, hor, vert) {
+    var vertical = vert;
+    var horizontal = hor;
+    if (Common.isUndefined(horizontal)) {
+      horizontal = true;
+    }
+    if (Common.isUndefined(vertical)) {
+      vertical = true;
+    }
+    elem.style.position = 'absolute';
+    if (horizontal) {
+      elem.style.left = 0;
+      elem.style.right = 0;
+    }
+    if (vertical) {
+      elem.style.top = 0;
+      elem.style.bottom = 0;
+    }
+  },
+  fakeEvent: function fakeEvent(elem, eventType, pars, aux) {
+    var params = pars || {};
+    var className = EVENT_MAP_INV[eventType];
+    if (!className) {
+      throw new Error('Event type ' + eventType + ' not supported.');
+    }
+    var evt = document.createEvent(className);
+    switch (className) {
+      case 'MouseEvents':
+        {
+          var clientX = params.x || params.clientX || 0;
+          var clientY = params.y || params.clientY || 0;
+          evt.initMouseEvent(eventType, params.bubbles || false, params.cancelable || true, window, params.clickCount || 1, 0,
+          0,
+          clientX,
+          clientY,
+          false, false, false, false, 0, null);
+          break;
+        }
+      case 'KeyboardEvents':
+        {
+          var init = evt.initKeyboardEvent || evt.initKeyEvent;
+          Common.defaults(params, {
+            cancelable: true,
+            ctrlKey: false,
+            altKey: false,
+            shiftKey: false,
+            metaKey: false,
+            keyCode: undefined,
+            charCode: undefined
+          });
+          init(eventType, params.bubbles || false, params.cancelable, window, params.ctrlKey, params.altKey, params.shiftKey, params.metaKey, params.keyCode, params.charCode);
+          break;
+        }
+      default:
+        {
+          evt.initEvent(eventType, params.bubbles || false, params.cancelable || true);
+          break;
+        }
+    }
+    Common.defaults(evt, aux);
+    elem.dispatchEvent(evt);
+  },
+  bind: function bind(elem, event, func, newBool) {
+    var bool = newBool || false;
+    if (elem.addEventListener) {
+      elem.addEventListener(event, func, bool);
+    } else if (elem.attachEvent) {
+      elem.attachEvent('on' + event, func);
+    }
+    return dom;
+  },
+  unbind: function unbind(elem, event, func, newBool) {
+    var bool = newBool || false;
+    if (elem.removeEventListener) {
+      elem.removeEventListener(event, func, bool);
+    } else if (elem.detachEvent) {
+      elem.detachEvent('on' + event, func);
+    }
+    return dom;
+  },
+  addClass: function addClass(elem, className) {
+    if (elem.className === undefined) {
+      elem.className = className;
+    } else if (elem.className !== className) {
+      var classes = elem.className.split(/ +/);
+      if (classes.indexOf(className) === -1) {
+        classes.push(className);
+        elem.className = classes.join(' ').replace(/^\s+/, '').replace(/\s+$/, '');
+      }
+    }
+    return dom;
+  },
+  removeClass: function removeClass(elem, className) {
+    if (className) {
+      if (elem.className === className) {
+        elem.removeAttribute('class');
+      } else {
+        var classes = elem.className.split(/ +/);
+        var index = classes.indexOf(className);
+        if (index !== -1) {
+          classes.splice(index, 1);
+          elem.className = classes.join(' ');
+        }
+      }
+    } else {
+      elem.className = undefined;
+    }
+    return dom;
+  },
+  hasClass: function hasClass(elem, className) {
+    return new RegExp('(?:^|\\s+)' + className + '(?:\\s+|$)').test(elem.className) || false;
+  },
+  getWidth: function getWidth(elem) {
+    var style = getComputedStyle(elem);
+    return cssValueToPixels(style['border-left-width']) + cssValueToPixels(style['border-right-width']) + cssValueToPixels(style['padding-left']) + cssValueToPixels(style['padding-right']) + cssValueToPixels(style.width);
+  },
+  getHeight: function getHeight(elem) {
+    var style = getComputedStyle(elem);
+    return cssValueToPixels(style['border-top-width']) + cssValueToPixels(style['border-bottom-width']) + cssValueToPixels(style['padding-top']) + cssValueToPixels(style['padding-bottom']) + cssValueToPixels(style.height);
+  },
+  getOffset: function getOffset(el) {
+    var elem = el;
+    var offset = { left: 0, top: 0 };
+    if (elem.offsetParent) {
+      do {
+        offset.left += elem.offsetLeft;
+        offset.top += elem.offsetTop;
+        elem = elem.offsetParent;
+      } while (elem);
+    }
+    return offset;
+  },
+  isActive: function isActive(elem) {
+    return elem === document.activeElement && (elem.type || elem.href);
+  }
+};
+
+var BooleanController = function (_Controller) {
+  inherits(BooleanController, _Controller);
+  function BooleanController(object, property) {
+    classCallCheck(this, BooleanController);
+    var _this2 = possibleConstructorReturn(this, (BooleanController.__proto__ || Object.getPrototypeOf(BooleanController)).call(this, object, property));
+    var _this = _this2;
+    _this2.__prev = _this2.getValue();
+    _this2.__checkbox = document.createElement('input');
+    _this2.__checkbox.setAttribute('type', 'checkbox');
+    function onChange() {
+      _this.setValue(!_this.__prev);
+    }
+    dom.bind(_this2.__checkbox, 'change', onChange, false);
+    _this2.domElement.appendChild(_this2.__checkbox);
+    _this2.updateDisplay();
+    return _this2;
+  }
+  createClass(BooleanController, [{
+    key: 'setValue',
+    value: function setValue(v) {
+      var toReturn = get(BooleanController.prototype.__proto__ || Object.getPrototypeOf(BooleanController.prototype), 'setValue', this).call(this, v);
+      if (this.__onFinishChange) {
+        this.__onFinishChange.call(this, this.getValue());
+      }
+      this.__prev = this.getValue();
+      return toReturn;
+    }
+  }, {
+    key: 'updateDisplay',
+    value: function updateDisplay() {
+      if (this.getValue() === true) {
+        this.__checkbox.setAttribute('checked', 'checked');
+        this.__checkbox.checked = true;
+        this.__prev = true;
+      } else {
+        this.__checkbox.checked = false;
+        this.__prev = false;
+      }
+      return get(BooleanController.prototype.__proto__ || Object.getPrototypeOf(BooleanController.prototype), 'updateDisplay', this).call(this);
+    }
+  }]);
+  return BooleanController;
+}(Controller);
+
+var OptionController = function (_Controller) {
+  inherits(OptionController, _Controller);
+  function OptionController(object, property, opts) {
+    classCallCheck(this, OptionController);
+    var _this2 = possibleConstructorReturn(this, (OptionController.__proto__ || Object.getPrototypeOf(OptionController)).call(this, object, property));
+    var options = opts;
+    var _this = _this2;
+    _this2.__select = document.createElement('select');
+    if (Common.isArray(options)) {
+      var map = {};
+      Common.each(options, function (element) {
+        map[element] = element;
+      });
+      options = map;
+    }
+    Common.each(options, function (value, key) {
+      var opt = document.createElement('option');
+      opt.innerHTML = key;
+      opt.setAttribute('value', value);
+      _this.__select.appendChild(opt);
+    });
+    _this2.updateDisplay();
+    dom.bind(_this2.__select, 'change', function () {
+      var desiredValue = this.options[this.selectedIndex].value;
+      _this.setValue(desiredValue);
+    });
+    _this2.domElement.appendChild(_this2.__select);
+    return _this2;
+  }
+  createClass(OptionController, [{
+    key: 'setValue',
+    value: function setValue(v) {
+      var toReturn = get(OptionController.prototype.__proto__ || Object.getPrototypeOf(OptionController.prototype), 'setValue', this).call(this, v);
+      if (this.__onFinishChange) {
+        this.__onFinishChange.call(this, this.getValue());
+      }
+      return toReturn;
+    }
+  }, {
+    key: 'updateDisplay',
+    value: function updateDisplay() {
+      if (dom.isActive(this.__select)) return this;
+      this.__select.value = this.getValue();
+      return get(OptionController.prototype.__proto__ || Object.getPrototypeOf(OptionController.prototype), 'updateDisplay', this).call(this);
+    }
+  }]);
+  return OptionController;
+}(Controller);
+
+var StringController = function (_Controller) {
+  inherits(StringController, _Controller);
+  function StringController(object, property) {
+    classCallCheck(this, StringController);
+    var _this2 = possibleConstructorReturn(this, (StringController.__proto__ || Object.getPrototypeOf(StringController)).call(this, object, property));
+    var _this = _this2;
+    function onChange() {
+      _this.setValue(_this.__input.value);
+    }
+    function onBlur() {
+      if (_this.__onFinishChange) {
+        _this.__onFinishChange.call(_this, _this.getValue());
+      }
+    }
+    _this2.__input = document.createElement('input');
+    _this2.__input.setAttribute('type', 'text');
+    dom.bind(_this2.__input, 'keyup', onChange);
+    dom.bind(_this2.__input, 'change', onChange);
+    dom.bind(_this2.__input, 'blur', onBlur);
+    dom.bind(_this2.__input, 'keydown', function (e) {
+      if (e.keyCode === 13) {
+        this.blur();
+      }
+    });
+    _this2.updateDisplay();
+    _this2.domElement.appendChild(_this2.__input);
+    return _this2;
+  }
+  createClass(StringController, [{
+    key: 'updateDisplay',
+    value: function updateDisplay() {
+      if (!dom.isActive(this.__input)) {
+        this.__input.value = this.getValue();
+      }
+      return get(StringController.prototype.__proto__ || Object.getPrototypeOf(StringController.prototype), 'updateDisplay', this).call(this);
+    }
+  }]);
+  return StringController;
+}(Controller);
+
+function numDecimals(x) {
+  var _x = x.toString();
+  if (_x.indexOf('.') > -1) {
+    return _x.length - _x.indexOf('.') - 1;
+  }
+  return 0;
+}
+var NumberController = function (_Controller) {
+  inherits(NumberController, _Controller);
+  function NumberController(object, property, params) {
+    classCallCheck(this, NumberController);
+    var _this = possibleConstructorReturn(this, (NumberController.__proto__ || Object.getPrototypeOf(NumberController)).call(this, object, property));
+    var _params = params || {};
+    _this.__min = _params.min;
+    _this.__max = _params.max;
+    _this.__step = _params.step;
+    if (Common.isUndefined(_this.__step)) {
+      if (_this.initialValue === 0) {
+        _this.__impliedStep = 1;
+      } else {
+        _this.__impliedStep = Math.pow(10, Math.floor(Math.log(Math.abs(_this.initialValue)) / Math.LN10)) / 10;
+      }
+    } else {
+      _this.__impliedStep = _this.__step;
+    }
+    _this.__precision = numDecimals(_this.__impliedStep);
+    return _this;
+  }
+  createClass(NumberController, [{
+    key: 'setValue',
+    value: function setValue(v) {
+      var _v = v;
+      if (this.__min !== undefined && _v < this.__min) {
+        _v = this.__min;
+      } else if (this.__max !== undefined && _v > this.__max) {
+        _v = this.__max;
+      }
+      if (this.__step !== undefined && _v % this.__step !== 0) {
+        _v = Math.round(_v / this.__step) * this.__step;
+      }
+      return get(NumberController.prototype.__proto__ || Object.getPrototypeOf(NumberController.prototype), 'setValue', this).call(this, _v);
+    }
+  }, {
+    key: 'min',
+    value: function min(minValue) {
+      this.__min = minValue;
+      return this;
+    }
+  }, {
+    key: 'max',
+    value: function max(maxValue) {
+      this.__max = maxValue;
+      return this;
+    }
+  }, {
+    key: 'step',
+    value: function step(stepValue) {
+      this.__step = stepValue;
+      this.__impliedStep = stepValue;
+      this.__precision = numDecimals(stepValue);
+      return this;
+    }
+  }]);
+  return NumberController;
+}(Controller);
+
+function roundToDecimal(value, decimals) {
+  var tenTo = Math.pow(10, decimals);
+  return Math.round(value * tenTo) / tenTo;
+}
+var NumberControllerBox = function (_NumberController) {
+  inherits(NumberControllerBox, _NumberController);
+  function NumberControllerBox(object, property, params) {
+    classCallCheck(this, NumberControllerBox);
+    var _this2 = possibleConstructorReturn(this, (NumberControllerBox.__proto__ || Object.getPrototypeOf(NumberControllerBox)).call(this, object, property, params));
+    _this2.__truncationSuspended = false;
+    var _this = _this2;
+    var prevY = void 0;
+    function onChange() {
+      var attempted = parseFloat(_this.__input.value);
+      if (!Common.isNaN(attempted)) {
+        _this.setValue(attempted);
+      }
+    }
+    function onFinish() {
+      if (_this.__onFinishChange) {
+        _this.__onFinishChange.call(_this, _this.getValue());
+      }
+    }
+    function onBlur() {
+      onFinish();
+    }
+    function onMouseDrag(e) {
+      var diff = prevY - e.clientY;
+      _this.setValue(_this.getValue() + diff * _this.__impliedStep);
+      prevY = e.clientY;
+    }
+    function onMouseUp() {
+      dom.unbind(window, 'mousemove', onMouseDrag);
+      dom.unbind(window, 'mouseup', onMouseUp);
+      onFinish();
+    }
+    function onMouseDown(e) {
+      dom.bind(window, 'mousemove', onMouseDrag);
+      dom.bind(window, 'mouseup', onMouseUp);
+      prevY = e.clientY;
+    }
+    _this2.__input = document.createElement('input');
+    _this2.__input.setAttribute('type', 'text');
+    dom.bind(_this2.__input, 'change', onChange);
+    dom.bind(_this2.__input, 'blur', onBlur);
+    dom.bind(_this2.__input, 'mousedown', onMouseDown);
+    dom.bind(_this2.__input, 'keydown', function (e) {
+      if (e.keyCode === 13) {
+        _this.__truncationSuspended = true;
+        this.blur();
+        _this.__truncationSuspended = false;
+        onFinish();
+      }
+    });
+    _this2.updateDisplay();
+    _this2.domElement.appendChild(_this2.__input);
+    return _this2;
+  }
+  createClass(NumberControllerBox, [{
+    key: 'updateDisplay',
+    value: function updateDisplay() {
+      this.__input.value = this.__truncationSuspended ? this.getValue() : roundToDecimal(this.getValue(), this.__precision);
+      return get(NumberControllerBox.prototype.__proto__ || Object.getPrototypeOf(NumberControllerBox.prototype), 'updateDisplay', this).call(this);
+    }
+  }]);
+  return NumberControllerBox;
+}(NumberController);
+
+function map(v, i1, i2, o1, o2) {
+  return o1 + (o2 - o1) * ((v - i1) / (i2 - i1));
+}
+var NumberControllerSlider = function (_NumberController) {
+  inherits(NumberControllerSlider, _NumberController);
+  function NumberControllerSlider(object, property, min, max, step) {
+    classCallCheck(this, NumberControllerSlider);
+    var _this2 = possibleConstructorReturn(this, (NumberControllerSlider.__proto__ || Object.getPrototypeOf(NumberControllerSlider)).call(this, object, property, { min: min, max: max, step: step }));
+    var _this = _this2;
+    _this2.__background = document.createElement('div');
+    _this2.__foreground = document.createElement('div');
+    dom.bind(_this2.__background, 'mousedown', onMouseDown);
+    dom.bind(_this2.__background, 'touchstart', onTouchStart);
+    dom.addClass(_this2.__background, 'slider');
+    dom.addClass(_this2.__foreground, 'slider-fg');
+    function onMouseDown(e) {
+      document.activeElement.blur();
+      dom.bind(window, 'mousemove', onMouseDrag);
+      dom.bind(window, 'mouseup', onMouseUp);
+      onMouseDrag(e);
+    }
+    function onMouseDrag(e) {
+      e.preventDefault();
+      var bgRect = _this.__background.getBoundingClientRect();
+      _this.setValue(map(e.clientX, bgRect.left, bgRect.right, _this.__min, _this.__max));
+      return false;
+    }
+    function onMouseUp() {
+      dom.unbind(window, 'mousemove', onMouseDrag);
+      dom.unbind(window, 'mouseup', onMouseUp);
+      if (_this.__onFinishChange) {
+        _this.__onFinishChange.call(_this, _this.getValue());
+      }
+    }
+    function onTouchStart(e) {
+      if (e.touches.length !== 1) {
+        return;
+      }
+      dom.bind(window, 'touchmove', onTouchMove);
+      dom.bind(window, 'touchend', onTouchEnd);
+      onTouchMove(e);
+    }
+    function onTouchMove(e) {
+      var clientX = e.touches[0].clientX;
+      var bgRect = _this.__background.getBoundingClientRect();
+      _this.setValue(map(clientX, bgRect.left, bgRect.right, _this.__min, _this.__max));
+    }
+    function onTouchEnd() {
+      dom.unbind(window, 'touchmove', onTouchMove);
+      dom.unbind(window, 'touchend', onTouchEnd);
+      if (_this.__onFinishChange) {
+        _this.__onFinishChange.call(_this, _this.getValue());
+      }
+    }
+    _this2.updateDisplay();
+    _this2.__background.appendChild(_this2.__foreground);
+    _this2.domElement.appendChild(_this2.__background);
+    return _this2;
+  }
+  createClass(NumberControllerSlider, [{
+    key: 'updateDisplay',
+    value: function updateDisplay() {
+      var pct = (this.getValue() - this.__min) / (this.__max - this.__min);
+      this.__foreground.style.width = pct * 100 + '%';
+      return get(NumberControllerSlider.prototype.__proto__ || Object.getPrototypeOf(NumberControllerSlider.prototype), 'updateDisplay', this).call(this);
+    }
+  }]);
+  return NumberControllerSlider;
+}(NumberController);
+
+var FunctionController = function (_Controller) {
+  inherits(FunctionController, _Controller);
+  function FunctionController(object, property, text) {
+    classCallCheck(this, FunctionController);
+    var _this2 = possibleConstructorReturn(this, (FunctionController.__proto__ || Object.getPrototypeOf(FunctionController)).call(this, object, property));
+    var _this = _this2;
+    _this2.__button = document.createElement('div');
+    _this2.__button.innerHTML = text === undefined ? 'Fire' : text;
+    dom.bind(_this2.__button, 'click', function (e) {
+      e.preventDefault();
+      _this.fire();
+      return false;
+    });
+    dom.addClass(_this2.__button, 'button');
+    _this2.domElement.appendChild(_this2.__button);
+    return _this2;
+  }
+  createClass(FunctionController, [{
+    key: 'fire',
+    value: function fire() {
+      if (this.__onChange) {
+        this.__onChange.call(this);
+      }
+      this.getValue().call(this.object);
+      if (this.__onFinishChange) {
+        this.__onFinishChange.call(this, this.getValue());
+      }
+    }
+  }]);
+  return FunctionController;
+}(Controller);
+
+var ColorController = function (_Controller) {
+  inherits(ColorController, _Controller);
+  function ColorController(object, property) {
+    classCallCheck(this, ColorController);
+    var _this2 = possibleConstructorReturn(this, (ColorController.__proto__ || Object.getPrototypeOf(ColorController)).call(this, object, property));
+    _this2.__color = new Color(_this2.getValue());
+    _this2.__temp = new Color(0);
+    var _this = _this2;
+    _this2.domElement = document.createElement('div');
+    dom.makeSelectable(_this2.domElement, false);
+    _this2.__selector = document.createElement('div');
+    _this2.__selector.className = 'selector';
+    _this2.__saturation_field = document.createElement('div');
+    _this2.__saturation_field.className = 'saturation-field';
+    _this2.__field_knob = document.createElement('div');
+    _this2.__field_knob.className = 'field-knob';
+    _this2.__field_knob_border = '2px solid ';
+    _this2.__hue_knob = document.createElement('div');
+    _this2.__hue_knob.className = 'hue-knob';
+    _this2.__hue_field = document.createElement('div');
+    _this2.__hue_field.className = 'hue-field';
+    _this2.__input = document.createElement('input');
+    _this2.__input.type = 'text';
+    _this2.__input_textShadow = '0 1px 1px ';
+    dom.bind(_this2.__input, 'keydown', function (e) {
+      if (e.keyCode === 13) {
+        onBlur.call(this);
+      }
+    });
+    dom.bind(_this2.__input, 'blur', onBlur);
+    dom.bind(_this2.__selector, 'mousedown', function () {
+      dom.addClass(this, 'drag').bind(window, 'mouseup', function () {
+        dom.removeClass(_this.__selector, 'drag');
+      });
+    });
+    dom.bind(_this2.__selector, 'touchstart', function () {
+      dom.addClass(this, 'drag').bind(window, 'touchend', function () {
+        dom.removeClass(_this.__selector, 'drag');
+      });
+    });
+    var valueField = document.createElement('div');
+    Common.extend(_this2.__selector.style, {
+      width: '122px',
+      height: '102px',
+      padding: '3px',
+      backgroundColor: '#222',
+      boxShadow: '0px 1px 3px rgba(0,0,0,0.3)'
+    });
+    Common.extend(_this2.__field_knob.style, {
+      position: 'absolute',
+      width: '12px',
+      height: '12px',
+      border: _this2.__field_knob_border + (_this2.__color.v < 0.5 ? '#fff' : '#000'),
+      boxShadow: '0px 1px 3px rgba(0,0,0,0.5)',
+      borderRadius: '12px',
+      zIndex: 1
+    });
+    Common.extend(_this2.__hue_knob.style, {
+      position: 'absolute',
+      width: '15px',
+      height: '2px',
+      borderRight: '4px solid #fff',
+      zIndex: 1
+    });
+    Common.extend(_this2.__saturation_field.style, {
+      width: '100px',
+      height: '100px',
+      border: '1px solid #555',
+      marginRight: '3px',
+      display: 'inline-block',
+      cursor: 'pointer'
+    });
+    Common.extend(valueField.style, {
+      width: '100%',
+      height: '100%',
+      background: 'none'
+    });
+    linearGradient(valueField, 'top', 'rgba(0,0,0,0)', '#000');
+    Common.extend(_this2.__hue_field.style, {
+      width: '15px',
+      height: '100px',
+      border: '1px solid #555',
+      cursor: 'ns-resize',
+      position: 'absolute',
+      top: '3px',
+      right: '3px'
+    });
+    hueGradient(_this2.__hue_field);
+    Common.extend(_this2.__input.style, {
+      outline: 'none',
+      textAlign: 'center',
+      color: '#fff',
+      border: 0,
+      fontWeight: 'bold',
+      textShadow: _this2.__input_textShadow + 'rgba(0,0,0,0.7)'
+    });
+    dom.bind(_this2.__saturation_field, 'mousedown', fieldDown);
+    dom.bind(_this2.__saturation_field, 'touchstart', fieldDown);
+    dom.bind(_this2.__field_knob, 'mousedown', fieldDown);
+    dom.bind(_this2.__field_knob, 'touchstart', fieldDown);
+    dom.bind(_this2.__hue_field, 'mousedown', fieldDownH);
+    dom.bind(_this2.__hue_field, 'touchstart', fieldDownH);
+    function fieldDown(e) {
+      setSV(e);
+      dom.bind(window, 'mousemove', setSV);
+      dom.bind(window, 'touchmove', setSV);
+      dom.bind(window, 'mouseup', fieldUpSV);
+      dom.bind(window, 'touchend', fieldUpSV);
+    }
+    function fieldDownH(e) {
+      setH(e);
+      dom.bind(window, 'mousemove', setH);
+      dom.bind(window, 'touchmove', setH);
+      dom.bind(window, 'mouseup', fieldUpH);
+      dom.bind(window, 'touchend', fieldUpH);
+    }
+    function fieldUpSV() {
+      dom.unbind(window, 'mousemove', setSV);
+      dom.unbind(window, 'touchmove', setSV);
+      dom.unbind(window, 'mouseup', fieldUpSV);
+      dom.unbind(window, 'touchend', fieldUpSV);
+      onFinish();
+    }
+    function fieldUpH() {
+      dom.unbind(window, 'mousemove', setH);
+      dom.unbind(window, 'touchmove', setH);
+      dom.unbind(window, 'mouseup', fieldUpH);
+      dom.unbind(window, 'touchend', fieldUpH);
+      onFinish();
+    }
+    function onBlur() {
+      var i = interpret(this.value);
+      if (i !== false) {
+        _this.__color.__state = i;
+        _this.setValue(_this.__color.toOriginal());
+      } else {
+        this.value = _this.__color.toString();
+      }
+    }
+    function onFinish() {
+      if (_this.__onFinishChange) {
+        _this.__onFinishChange.call(_this, _this.__color.toOriginal());
+      }
+    }
+    _this2.__saturation_field.appendChild(valueField);
+    _this2.__selector.appendChild(_this2.__field_knob);
+    _this2.__selector.appendChild(_this2.__saturation_field);
+    _this2.__selector.appendChild(_this2.__hue_field);
+    _this2.__hue_field.appendChild(_this2.__hue_knob);
+    _this2.domElement.appendChild(_this2.__input);
+    _this2.domElement.appendChild(_this2.__selector);
+    _this2.updateDisplay();
+    function setSV(e) {
+      if (e.type.indexOf('touch') === -1) {
+        e.preventDefault();
+      }
+      var fieldRect = _this.__saturation_field.getBoundingClientRect();
+      var _ref = e.touches && e.touches[0] || e,
+          clientX = _ref.clientX,
+          clientY = _ref.clientY;
+      var s = (clientX - fieldRect.left) / (fieldRect.right - fieldRect.left);
+      var v = 1 - (clientY - fieldRect.top) / (fieldRect.bottom - fieldRect.top);
+      if (v > 1) {
+        v = 1;
+      } else if (v < 0) {
+        v = 0;
+      }
+      if (s > 1) {
+        s = 1;
+      } else if (s < 0) {
+        s = 0;
+      }
+      _this.__color.v = v;
+      _this.__color.s = s;
+      _this.setValue(_this.__color.toOriginal());
+      return false;
+    }
+    function setH(e) {
+      if (e.type.indexOf('touch') === -1) {
+        e.preventDefault();
+      }
+      var fieldRect = _this.__hue_field.getBoundingClientRect();
+      var _ref2 = e.touches && e.touches[0] || e,
+          clientY = _ref2.clientY;
+      var h = 1 - (clientY - fieldRect.top) / (fieldRect.bottom - fieldRect.top);
+      if (h > 1) {
+        h = 1;
+      } else if (h < 0) {
+        h = 0;
+      }
+      _this.__color.h = h * 360;
+      _this.setValue(_this.__color.toOriginal());
+      return false;
+    }
+    return _this2;
+  }
+  createClass(ColorController, [{
+    key: 'updateDisplay',
+    value: function updateDisplay() {
+      var i = interpret(this.getValue());
+      if (i !== false) {
+        var mismatch = false;
+        Common.each(Color.COMPONENTS, function (component) {
+          if (!Common.isUndefined(i[component]) && !Common.isUndefined(this.__color.__state[component]) && i[component] !== this.__color.__state[component]) {
+            mismatch = true;
+            return {};
+          }
+        }, this);
+        if (mismatch) {
+          Common.extend(this.__color.__state, i);
+        }
+      }
+      Common.extend(this.__temp.__state, this.__color.__state);
+      this.__temp.a = 1;
+      var flip = this.__color.v < 0.5 || this.__color.s > 0.5 ? 255 : 0;
+      var _flip = 255 - flip;
+      Common.extend(this.__field_knob.style, {
+        marginLeft: 100 * this.__color.s - 7 + 'px',
+        marginTop: 100 * (1 - this.__color.v) - 7 + 'px',
+        backgroundColor: this.__temp.toHexString(),
+        border: this.__field_knob_border + 'rgb(' + flip + ',' + flip + ',' + flip + ')'
+      });
+      this.__hue_knob.style.marginTop = (1 - this.__color.h / 360) * 100 + 'px';
+      this.__temp.s = 1;
+      this.__temp.v = 1;
+      linearGradient(this.__saturation_field, 'left', '#fff', this.__temp.toHexString());
+      this.__input.value = this.__color.toString();
+      Common.extend(this.__input.style, {
+        backgroundColor: this.__color.toHexString(),
+        color: 'rgb(' + flip + ',' + flip + ',' + flip + ')',
+        textShadow: this.__input_textShadow + 'rgba(' + _flip + ',' + _flip + ',' + _flip + ',.7)'
+      });
+    }
+  }]);
+  return ColorController;
+}(Controller);
+var vendors = ['-moz-', '-o-', '-webkit-', '-ms-', ''];
+function linearGradient(elem, x, a, b) {
+  elem.style.background = '';
+  Common.each(vendors, function (vendor) {
+    elem.style.cssText += 'background: ' + vendor + 'linear-gradient(' + x + ', ' + a + ' 0%, ' + b + ' 100%); ';
+  });
+}
+function hueGradient(elem) {
+  elem.style.background = '';
+  elem.style.cssText += 'background: -moz-linear-gradient(top,  #ff0000 0%, #ff00ff 17%, #0000ff 34%, #00ffff 50%, #00ff00 67%, #ffff00 84%, #ff0000 100%);';
+  elem.style.cssText += 'background: -webkit-linear-gradient(top,  #ff0000 0%,#ff00ff 17%,#0000ff 34%,#00ffff 50%,#00ff00 67%,#ffff00 84%,#ff0000 100%);';
+  elem.style.cssText += 'background: -o-linear-gradient(top,  #ff0000 0%,#ff00ff 17%,#0000ff 34%,#00ffff 50%,#00ff00 67%,#ffff00 84%,#ff0000 100%);';
+  elem.style.cssText += 'background: -ms-linear-gradient(top,  #ff0000 0%,#ff00ff 17%,#0000ff 34%,#00ffff 50%,#00ff00 67%,#ffff00 84%,#ff0000 100%);';
+  elem.style.cssText += 'background: linear-gradient(top,  #ff0000 0%,#ff00ff 17%,#0000ff 34%,#00ffff 50%,#00ff00 67%,#ffff00 84%,#ff0000 100%);';
+}
+
+var css = {
+  load: function load(url, indoc) {
+    var doc = indoc || document;
+    var link = doc.createElement('link');
+    link.type = 'text/css';
+    link.rel = 'stylesheet';
+    link.href = url;
+    doc.getElementsByTagName('head')[0].appendChild(link);
+  },
+  inject: function inject(cssContent, indoc) {
+    var doc = indoc || document;
+    var injected = document.createElement('style');
+    injected.type = 'text/css';
+    injected.innerHTML = cssContent;
+    var head = doc.getElementsByTagName('head')[0];
+    try {
+      head.appendChild(injected);
+    } catch (e) {
+    }
+  }
+};
+
+var saveDialogContents = "<div id=\"dg-save\" class=\"dg dialogue\">\n\n  Here's the new load parameter for your <code>GUI</code>'s constructor:\n\n  <textarea id=\"dg-new-constructor\"></textarea>\n\n  <div id=\"dg-save-locally\">\n\n    <input id=\"dg-local-storage\" type=\"checkbox\"/> Automatically save\n    values to <code>localStorage</code> on exit.\n\n    <div id=\"dg-local-explain\">The values saved to <code>localStorage</code> will\n      override those passed to <code>dat.GUI</code>'s constructor. This makes it\n      easier to work incrementally, but <code>localStorage</code> is fragile,\n      and your friends may not see the same values you do.\n\n    </div>\n\n  </div>\n\n</div>";
+
+var ControllerFactory = function ControllerFactory(object, property) {
+  var initialValue = object[property];
+  if (Common.isArray(arguments[2]) || Common.isObject(arguments[2])) {
+    return new OptionController(object, property, arguments[2]);
+  }
+  if (Common.isNumber(initialValue)) {
+    if (Common.isNumber(arguments[2]) && Common.isNumber(arguments[3])) {
+      if (Common.isNumber(arguments[4])) {
+        return new NumberControllerSlider(object, property, arguments[2], arguments[3], arguments[4]);
+      }
+      return new NumberControllerSlider(object, property, arguments[2], arguments[3]);
+    }
+    if (Common.isNumber(arguments[4])) {
+      return new NumberControllerBox(object, property, { min: arguments[2], max: arguments[3], step: arguments[4] });
+    }
+    return new NumberControllerBox(object, property, { min: arguments[2], max: arguments[3] });
+  }
+  if (Common.isString(initialValue)) {
+    return new StringController(object, property);
+  }
+  if (Common.isFunction(initialValue)) {
+    return new FunctionController(object, property, '');
+  }
+  if (Common.isBoolean(initialValue)) {
+    return new BooleanController(object, property);
+  }
+  return null;
+};
+
+function requestAnimationFrame$1(callback) {
+  setTimeout(callback, 1000 / 60);
+}
+var requestAnimationFrame$1$1 = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || requestAnimationFrame$1;
+
+var CenteredDiv = function () {
+  function CenteredDiv() {
+    classCallCheck(this, CenteredDiv);
+    this.backgroundElement = document.createElement('div');
+    Common.extend(this.backgroundElement.style, {
+      backgroundColor: 'rgba(0,0,0,0.8)',
+      top: 0,
+      left: 0,
+      display: 'none',
+      zIndex: '1000',
+      opacity: 0,
+      WebkitTransition: 'opacity 0.2s linear',
+      transition: 'opacity 0.2s linear'
+    });
+    dom.makeFullscreen(this.backgroundElement);
+    this.backgroundElement.style.position = 'fixed';
+    this.domElement = document.createElement('div');
+    Common.extend(this.domElement.style, {
+      position: 'fixed',
+      display: 'none',
+      zIndex: '1001',
+      opacity: 0,
+      WebkitTransition: '-webkit-transform 0.2s ease-out, opacity 0.2s linear',
+      transition: 'transform 0.2s ease-out, opacity 0.2s linear'
+    });
+    document.body.appendChild(this.backgroundElement);
+    document.body.appendChild(this.domElement);
+    var _this = this;
+    dom.bind(this.backgroundElement, 'click', function () {
+      _this.hide();
+    });
+  }
+  createClass(CenteredDiv, [{
+    key: 'show',
+    value: function show() {
+      var _this = this;
+      this.backgroundElement.style.display = 'block';
+      this.domElement.style.display = 'block';
+      this.domElement.style.opacity = 0;
+      this.domElement.style.webkitTransform = 'scale(1.1)';
+      this.layout();
+      Common.defer(function () {
+        _this.backgroundElement.style.opacity = 1;
+        _this.domElement.style.opacity = 1;
+        _this.domElement.style.webkitTransform = 'scale(1)';
+      });
+    }
+  }, {
+    key: 'hide',
+    value: function hide() {
+      var _this = this;
+      var hide = function hide() {
+        _this.domElement.style.display = 'none';
+        _this.backgroundElement.style.display = 'none';
+        dom.unbind(_this.domElement, 'webkitTransitionEnd', hide);
+        dom.unbind(_this.domElement, 'transitionend', hide);
+        dom.unbind(_this.domElement, 'oTransitionEnd', hide);
+      };
+      dom.bind(this.domElement, 'webkitTransitionEnd', hide);
+      dom.bind(this.domElement, 'transitionend', hide);
+      dom.bind(this.domElement, 'oTransitionEnd', hide);
+      this.backgroundElement.style.opacity = 0;
+      this.domElement.style.opacity = 0;
+      this.domElement.style.webkitTransform = 'scale(1.1)';
+    }
+  }, {
+    key: 'layout',
+    value: function layout() {
+      this.domElement.style.left = window.innerWidth / 2 - dom.getWidth(this.domElement) / 2 + 'px';
+      this.domElement.style.top = window.innerHeight / 2 - dom.getHeight(this.domElement) / 2 + 'px';
+    }
+  }]);
+  return CenteredDiv;
+}();
+
+var styleSheet = ___$insertStyle(".dg ul{list-style:none;margin:0;padding:0;width:100%;clear:both}.dg.ac{position:fixed;top:0;left:0;right:0;height:0;z-index:0}.dg:not(.ac) .main{overflow:hidden}.dg.main{-webkit-transition:opacity .1s linear;-o-transition:opacity .1s linear;-moz-transition:opacity .1s linear;transition:opacity .1s linear}.dg.main.taller-than-window{overflow-y:auto}.dg.main.taller-than-window .close-button{opacity:1;margin-top:-1px;border-top:1px solid #2c2c2c}.dg.main ul.closed .close-button{opacity:1 !important}.dg.main:hover .close-button,.dg.main .close-button.drag{opacity:1}.dg.main .close-button{-webkit-transition:opacity .1s linear;-o-transition:opacity .1s linear;-moz-transition:opacity .1s linear;transition:opacity .1s linear;border:0;line-height:19px;height:20px;cursor:pointer;text-align:center;background-color:#000}.dg.main .close-button.close-top{position:relative}.dg.main .close-button.close-bottom{position:absolute}.dg.main .close-button:hover{background-color:#111}.dg.a{float:right;margin-right:15px;overflow-y:visible}.dg.a.has-save>ul.close-top{margin-top:0}.dg.a.has-save>ul.close-bottom{margin-top:27px}.dg.a.has-save>ul.closed{margin-top:0}.dg.a .save-row{top:0;z-index:1002}.dg.a .save-row.close-top{position:relative}.dg.a .save-row.close-bottom{position:fixed}.dg li{-webkit-transition:height .1s ease-out;-o-transition:height .1s ease-out;-moz-transition:height .1s ease-out;transition:height .1s ease-out;-webkit-transition:overflow .1s linear;-o-transition:overflow .1s linear;-moz-transition:overflow .1s linear;transition:overflow .1s linear}.dg li:not(.folder){cursor:auto;height:27px;line-height:27px;padding:0 4px 0 5px}.dg li.folder{padding:0;border-left:4px solid rgba(0,0,0,0)}.dg li.title{cursor:pointer;margin-left:-4px}.dg .closed li:not(.title),.dg .closed ul li,.dg .closed ul li>*{height:0;overflow:hidden;border:0}.dg .cr{clear:both;padding-left:3px;height:27px;overflow:hidden}.dg .property-name{cursor:default;float:left;clear:left;width:40%;overflow:hidden;text-overflow:ellipsis}.dg .cr.function .property-name{width:100%}.dg .c{float:left;width:60%;position:relative}.dg .c input[type=text]{border:0;margin-top:4px;padding:3px;width:100%;float:right}.dg .has-slider input[type=text]{width:30%;margin-left:0}.dg .slider{float:left;width:66%;margin-left:-5px;margin-right:0;height:19px;margin-top:4px}.dg .slider-fg{height:100%}.dg .c input[type=checkbox]{margin-top:7px}.dg .c select{margin-top:5px}.dg .cr.function,.dg .cr.function .property-name,.dg .cr.function *,.dg .cr.boolean,.dg .cr.boolean *{cursor:pointer}.dg .cr.color{overflow:visible}.dg .selector{display:none;position:absolute;margin-left:-9px;margin-top:23px;z-index:10}.dg .c:hover .selector,.dg .selector.drag{display:block}.dg li.save-row{padding:0}.dg li.save-row .button{display:inline-block;padding:0px 6px}.dg.dialogue{background-color:#222;width:460px;padding:15px;font-size:13px;line-height:15px}#dg-new-constructor{padding:10px;color:#222;font-family:Monaco, monospace;font-size:10px;border:0;resize:none;box-shadow:inset 1px 1px 1px #888;word-wrap:break-word;margin:12px 0;display:block;width:440px;overflow-y:scroll;height:100px;position:relative}#dg-local-explain{display:none;font-size:11px;line-height:17px;border-radius:3px;background-color:#333;padding:8px;margin-top:10px}#dg-local-explain code{font-size:10px}#dat-gui-save-locally{display:none}.dg{color:#eee;font:11px 'Lucida Grande', sans-serif;text-shadow:0 -1px 0 #111}.dg.main::-webkit-scrollbar{width:5px;background:#1a1a1a}.dg.main::-webkit-scrollbar-corner{height:0;display:none}.dg.main::-webkit-scrollbar-thumb{border-radius:5px;background:#676767}.dg li:not(.folder){background:#1a1a1a;border-bottom:1px solid #2c2c2c}.dg li.save-row{line-height:25px;background:#dad5cb;border:0}.dg li.save-row select{margin-left:5px;width:108px}.dg li.save-row .button{margin-left:5px;margin-top:1px;border-radius:2px;font-size:9px;line-height:7px;padding:4px 4px 5px 4px;background:#c5bdad;color:#fff;text-shadow:0 1px 0 #b0a58f;box-shadow:0 -1px 0 #b0a58f;cursor:pointer}.dg li.save-row .button.gears{background:#c5bdad url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAANCAYAAAB/9ZQ7AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAQJJREFUeNpiYKAU/P//PwGIC/ApCABiBSAW+I8AClAcgKxQ4T9hoMAEUrxx2QSGN6+egDX+/vWT4e7N82AMYoPAx/evwWoYoSYbACX2s7KxCxzcsezDh3evFoDEBYTEEqycggWAzA9AuUSQQgeYPa9fPv6/YWm/Acx5IPb7ty/fw+QZblw67vDs8R0YHyQhgObx+yAJkBqmG5dPPDh1aPOGR/eugW0G4vlIoTIfyFcA+QekhhHJhPdQxbiAIguMBTQZrPD7108M6roWYDFQiIAAv6Aow/1bFwXgis+f2LUAynwoIaNcz8XNx3Dl7MEJUDGQpx9gtQ8YCueB+D26OECAAQDadt7e46D42QAAAABJRU5ErkJggg==) 2px 1px no-repeat;height:7px;width:8px}.dg li.save-row .button:hover{background-color:#bab19e;box-shadow:0 -1px 0 #b0a58f}.dg li.folder{border-bottom:0}.dg li.title{padding-left:16px;background:#000 url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlI+hKgFxoCgAOw==) 6px 10px no-repeat;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.2)}.dg .closed li.title{background-image:url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlGIWqMCbWAEAOw==)}.dg .cr.boolean{border-left:3px solid #806787}.dg .cr.color{border-left:3px solid}.dg .cr.function{border-left:3px solid #e61d5f}.dg .cr.number{border-left:3px solid #2FA1D6}.dg .cr.number input[type=text]{color:#2FA1D6}.dg .cr.string{border-left:3px solid #1ed36f}.dg .cr.string input[type=text]{color:#1ed36f}.dg .cr.function:hover,.dg .cr.boolean:hover{background:#111}.dg .c input[type=text]{background:#303030;outline:none}.dg .c input[type=text]:hover{background:#3c3c3c}.dg .c input[type=text]:focus{background:#494949;color:#fff}.dg .c .slider{background:#303030;cursor:ew-resize}.dg .c .slider-fg{background:#2FA1D6;max-width:100%}.dg .c .slider:hover{background:#3c3c3c}.dg .c .slider:hover .slider-fg{background:#44abda}\n");
+
+css.inject(styleSheet);
+var CSS_NAMESPACE = 'dg';
+var HIDE_KEY_CODE = 72;
+var CLOSE_BUTTON_HEIGHT = 20;
+var DEFAULT_DEFAULT_PRESET_NAME = 'Default';
+var SUPPORTS_LOCAL_STORAGE = function () {
+  try {
+    return !!window.localStorage;
+  } catch (e) {
+    return false;
+  }
+}();
+var SAVE_DIALOGUE = void 0;
+var autoPlaceVirgin = true;
+var autoPlaceContainer = void 0;
+var hide = false;
+var hideableGuis = [];
+var GUI = function GUI(pars) {
+  var _this = this;
+  var params = pars || {};
+  this.domElement = document.createElement('div');
+  this.__ul = document.createElement('ul');
+  this.domElement.appendChild(this.__ul);
+  dom.addClass(this.domElement, CSS_NAMESPACE);
+  this.__folders = {};
+  this.__controllers = [];
+  this.__rememberedObjects = [];
+  this.__rememberedObjectIndecesToControllers = [];
+  this.__listening = [];
+  params = Common.defaults(params, {
+    closeOnTop: false,
+    autoPlace: true,
+    width: GUI.DEFAULT_WIDTH
+  });
+  params = Common.defaults(params, {
+    resizable: params.autoPlace,
+    hideable: params.autoPlace
+  });
+  if (!Common.isUndefined(params.load)) {
+    if (params.preset) {
+      params.load.preset = params.preset;
+    }
+  } else {
+    params.load = { preset: DEFAULT_DEFAULT_PRESET_NAME };
+  }
+  if (Common.isUndefined(params.parent) && params.hideable) {
+    hideableGuis.push(this);
+  }
+  params.resizable = Common.isUndefined(params.parent) && params.resizable;
+  if (params.autoPlace && Common.isUndefined(params.scrollable)) {
+    params.scrollable = true;
+  }
+  var useLocalStorage = SUPPORTS_LOCAL_STORAGE && localStorage.getItem(getLocalStorageHash(this, 'isLocal')) === 'true';
+  var saveToLocalStorage = void 0;
+  var titleRow = void 0;
+  Object.defineProperties(this,
+  {
+    parent: {
+      get: function get$$1() {
+        return params.parent;
+      }
+    },
+    scrollable: {
+      get: function get$$1() {
+        return params.scrollable;
+      }
+    },
+    autoPlace: {
+      get: function get$$1() {
+        return params.autoPlace;
+      }
+    },
+    closeOnTop: {
+      get: function get$$1() {
+        return params.closeOnTop;
+      }
+    },
+    preset: {
+      get: function get$$1() {
+        if (_this.parent) {
+          return _this.getRoot().preset;
+        }
+        return params.load.preset;
+      },
+      set: function set$$1(v) {
+        if (_this.parent) {
+          _this.getRoot().preset = v;
+        } else {
+          params.load.preset = v;
+        }
+        setPresetSelectIndex(this);
+        _this.revert();
+      }
+    },
+    width: {
+      get: function get$$1() {
+        return params.width;
+      },
+      set: function set$$1(v) {
+        params.width = v;
+        setWidth(_this, v);
+      }
+    },
+    name: {
+      get: function get$$1() {
+        return params.name;
+      },
+      set: function set$$1(v) {
+        params.name = v;
+        if (titleRow) {
+          titleRow.innerHTML = params.name;
+        }
+      }
+    },
+    closed: {
+      get: function get$$1() {
+        return params.closed;
+      },
+      set: function set$$1(v) {
+        params.closed = v;
+        if (params.closed) {
+          dom.addClass(_this.__ul, GUI.CLASS_CLOSED);
+        } else {
+          dom.removeClass(_this.__ul, GUI.CLASS_CLOSED);
+        }
+        this.onResize();
+        if (_this.__closeButton) {
+          _this.__closeButton.innerHTML = v ? GUI.TEXT_OPEN : GUI.TEXT_CLOSED;
+        }
+      }
+    },
+    load: {
+      get: function get$$1() {
+        return params.load;
+      }
+    },
+    useLocalStorage: {
+      get: function get$$1() {
+        return useLocalStorage;
+      },
+      set: function set$$1(bool) {
+        if (SUPPORTS_LOCAL_STORAGE) {
+          useLocalStorage = bool;
+          if (bool) {
+            dom.bind(window, 'unload', saveToLocalStorage);
+          } else {
+            dom.unbind(window, 'unload', saveToLocalStorage);
+          }
+          localStorage.setItem(getLocalStorageHash(_this, 'isLocal'), bool);
+        }
+      }
+    }
+  });
+  if (Common.isUndefined(params.parent)) {
+    this.closed = params.closed || false;
+    dom.addClass(this.domElement, GUI.CLASS_MAIN);
+    dom.makeSelectable(this.domElement, false);
+    if (SUPPORTS_LOCAL_STORAGE) {
+      if (useLocalStorage) {
+        _this.useLocalStorage = true;
+        var savedGui = localStorage.getItem(getLocalStorageHash(this, 'gui'));
+        if (savedGui) {
+          params.load = JSON.parse(savedGui);
+        }
+      }
+    }
+    this.__closeButton = document.createElement('div');
+    this.__closeButton.innerHTML = GUI.TEXT_CLOSED;
+    dom.addClass(this.__closeButton, GUI.CLASS_CLOSE_BUTTON);
+    if (params.closeOnTop) {
+      dom.addClass(this.__closeButton, GUI.CLASS_CLOSE_TOP);
+      this.domElement.insertBefore(this.__closeButton, this.domElement.childNodes[0]);
+    } else {
+      dom.addClass(this.__closeButton, GUI.CLASS_CLOSE_BOTTOM);
+      this.domElement.appendChild(this.__closeButton);
+    }
+    dom.bind(this.__closeButton, 'click', function () {
+      _this.closed = !_this.closed;
+    });
+  } else {
+    if (params.closed === undefined) {
+      params.closed = true;
+    }
+    var titleRowName = document.createTextNode(params.name);
+    dom.addClass(titleRowName, 'controller-name');
+    titleRow = addRow(_this, titleRowName);
+    var onClickTitle = function onClickTitle(e) {
+      e.preventDefault();
+      _this.closed = !_this.closed;
+      return false;
+    };
+    dom.addClass(this.__ul, GUI.CLASS_CLOSED);
+    dom.addClass(titleRow, 'title');
+    dom.bind(titleRow, 'click', onClickTitle);
+    if (!params.closed) {
+      this.closed = false;
+    }
+  }
+  if (params.autoPlace) {
+    if (Common.isUndefined(params.parent)) {
+      if (autoPlaceVirgin) {
+        autoPlaceContainer = document.createElement('div');
+        dom.addClass(autoPlaceContainer, CSS_NAMESPACE);
+        dom.addClass(autoPlaceContainer, GUI.CLASS_AUTO_PLACE_CONTAINER);
+        document.body.appendChild(autoPlaceContainer);
+        autoPlaceVirgin = false;
+      }
+      autoPlaceContainer.appendChild(this.domElement);
+      dom.addClass(this.domElement, GUI.CLASS_AUTO_PLACE);
+    }
+    if (!this.parent) {
+      setWidth(_this, params.width);
+    }
+  }
+  this.__resizeHandler = function () {
+    _this.onResizeDebounced();
+  };
+  dom.bind(window, 'resize', this.__resizeHandler);
+  dom.bind(this.__ul, 'webkitTransitionEnd', this.__resizeHandler);
+  dom.bind(this.__ul, 'transitionend', this.__resizeHandler);
+  dom.bind(this.__ul, 'oTransitionEnd', this.__resizeHandler);
+  this.onResize();
+  if (params.resizable) {
+    addResizeHandle(this);
+  }
+  saveToLocalStorage = function saveToLocalStorage() {
+    if (SUPPORTS_LOCAL_STORAGE && localStorage.getItem(getLocalStorageHash(_this, 'isLocal')) === 'true') {
+      localStorage.setItem(getLocalStorageHash(_this, 'gui'), JSON.stringify(_this.getSaveObject()));
+    }
+  };
+  this.saveToLocalStorageIfPossible = saveToLocalStorage;
+  function resetWidth() {
+    var root = _this.getRoot();
+    root.width += 1;
+    Common.defer(function () {
+      root.width -= 1;
+    });
+  }
+  if (!params.parent) {
+    resetWidth();
+  }
+};
+GUI.toggleHide = function () {
+  hide = !hide;
+  Common.each(hideableGuis, function (gui) {
+    gui.domElement.style.display = hide ? 'none' : '';
+  });
+};
+GUI.CLASS_AUTO_PLACE = 'a';
+GUI.CLASS_AUTO_PLACE_CONTAINER = 'ac';
+GUI.CLASS_MAIN = 'main';
+GUI.CLASS_CONTROLLER_ROW = 'cr';
+GUI.CLASS_TOO_TALL = 'taller-than-window';
+GUI.CLASS_CLOSED = 'closed';
+GUI.CLASS_CLOSE_BUTTON = 'close-button';
+GUI.CLASS_CLOSE_TOP = 'close-top';
+GUI.CLASS_CLOSE_BOTTOM = 'close-bottom';
+GUI.CLASS_DRAG = 'drag';
+GUI.DEFAULT_WIDTH = 245;
+GUI.TEXT_CLOSED = 'Close Controls';
+GUI.TEXT_OPEN = 'Open Controls';
+GUI._keydownHandler = function (e) {
+  if (document.activeElement.type !== 'text' && (e.which === HIDE_KEY_CODE || e.keyCode === HIDE_KEY_CODE)) {
+    GUI.toggleHide();
+  }
+};
+dom.bind(window, 'keydown', GUI._keydownHandler, false);
+Common.extend(GUI.prototype,
+{
+  add: function add(object, property) {
+    return _add(this, object, property, {
+      factoryArgs: Array.prototype.slice.call(arguments, 2)
+    });
+  },
+  addColor: function addColor(object, property) {
+    return _add(this, object, property, {
+      color: true
+    });
+  },
+  remove: function remove(controller) {
+    this.__ul.removeChild(controller.__li);
+    this.__controllers.splice(this.__controllers.indexOf(controller), 1);
+    var _this = this;
+    Common.defer(function () {
+      _this.onResize();
+    });
+  },
+  destroy: function destroy() {
+    if (this.parent) {
+      throw new Error('Only the root GUI should be removed with .destroy(). ' + 'For subfolders, use gui.removeFolder(folder) instead.');
+    }
+    if (this.autoPlace) {
+      autoPlaceContainer.removeChild(this.domElement);
+    }
+    var _this = this;
+    Common.each(this.__folders, function (subfolder) {
+      _this.removeFolder(subfolder);
+    });
+    dom.unbind(window, 'keydown', GUI._keydownHandler, false);
+    removeListeners(this);
+  },
+  addFolder: function addFolder(name) {
+    if (this.__folders[name] !== undefined) {
+      throw new Error('You already have a folder in this GUI by the' + ' name "' + name + '"');
+    }
+    var newGuiParams = { name: name, parent: this };
+    newGuiParams.autoPlace = this.autoPlace;
+    if (this.load &&
+    this.load.folders &&
+    this.load.folders[name]) {
+      newGuiParams.closed = this.load.folders[name].closed;
+      newGuiParams.load = this.load.folders[name];
+    }
+    var gui = new GUI(newGuiParams);
+    this.__folders[name] = gui;
+    var li = addRow(this, gui.domElement);
+    dom.addClass(li, 'folder');
+    return gui;
+  },
+  removeFolder: function removeFolder(folder) {
+    this.__ul.removeChild(folder.domElement.parentElement);
+    delete this.__folders[folder.name];
+    if (this.load &&
+    this.load.folders &&
+    this.load.folders[folder.name]) {
+      delete this.load.folders[folder.name];
+    }
+    removeListeners(folder);
+    var _this = this;
+    Common.each(folder.__folders, function (subfolder) {
+      folder.removeFolder(subfolder);
+    });
+    Common.defer(function () {
+      _this.onResize();
+    });
+  },
+  open: function open() {
+    this.closed = false;
+  },
+  close: function close() {
+    this.closed = true;
+  },
+  hide: function hide() {
+    this.domElement.style.display = 'none';
+  },
+  show: function show() {
+    this.domElement.style.display = '';
+  },
+  onResize: function onResize() {
+    var root = this.getRoot();
+    if (root.scrollable) {
+      var top = dom.getOffset(root.__ul).top;
+      var h = 0;
+      Common.each(root.__ul.childNodes, function (node) {
+        if (!(root.autoPlace && node === root.__save_row)) {
+          h += dom.getHeight(node);
+        }
+      });
+      if (window.innerHeight - top - CLOSE_BUTTON_HEIGHT < h) {
+        dom.addClass(root.domElement, GUI.CLASS_TOO_TALL);
+        root.__ul.style.height = window.innerHeight - top - CLOSE_BUTTON_HEIGHT + 'px';
+      } else {
+        dom.removeClass(root.domElement, GUI.CLASS_TOO_TALL);
+        root.__ul.style.height = 'auto';
+      }
+    }
+    if (root.__resize_handle) {
+      Common.defer(function () {
+        root.__resize_handle.style.height = root.__ul.offsetHeight + 'px';
+      });
+    }
+    if (root.__closeButton) {
+      root.__closeButton.style.width = root.width + 'px';
+    }
+  },
+  onResizeDebounced: Common.debounce(function () {
+    this.onResize();
+  }, 50),
+  remember: function remember() {
+    if (Common.isUndefined(SAVE_DIALOGUE)) {
+      SAVE_DIALOGUE = new CenteredDiv();
+      SAVE_DIALOGUE.domElement.innerHTML = saveDialogContents;
+    }
+    if (this.parent) {
+      throw new Error('You can only call remember on a top level GUI.');
+    }
+    var _this = this;
+    Common.each(Array.prototype.slice.call(arguments), function (object) {
+      if (_this.__rememberedObjects.length === 0) {
+        addSaveMenu(_this);
+      }
+      if (_this.__rememberedObjects.indexOf(object) === -1) {
+        _this.__rememberedObjects.push(object);
+      }
+    });
+    if (this.autoPlace) {
+      setWidth(this, this.width);
+    }
+  },
+  getRoot: function getRoot() {
+    var gui = this;
+    while (gui.parent) {
+      gui = gui.parent;
+    }
+    return gui;
+  },
+  getSaveObject: function getSaveObject() {
+    var toReturn = this.load;
+    toReturn.closed = this.closed;
+    if (this.__rememberedObjects.length > 0) {
+      toReturn.preset = this.preset;
+      if (!toReturn.remembered) {
+        toReturn.remembered = {};
+      }
+      toReturn.remembered[this.preset] = getCurrentPreset(this);
+    }
+    toReturn.folders = {};
+    Common.each(this.__folders, function (element, key) {
+      toReturn.folders[key] = element.getSaveObject();
+    });
+    return toReturn;
+  },
+  save: function save() {
+    if (!this.load.remembered) {
+      this.load.remembered = {};
+    }
+    this.load.remembered[this.preset] = getCurrentPreset(this);
+    markPresetModified(this, false);
+    this.saveToLocalStorageIfPossible();
+  },
+  saveAs: function saveAs(presetName) {
+    if (!this.load.remembered) {
+      this.load.remembered = {};
+      this.load.remembered[DEFAULT_DEFAULT_PRESET_NAME] = getCurrentPreset(this, true);
+    }
+    this.load.remembered[presetName] = getCurrentPreset(this);
+    this.preset = presetName;
+    addPresetOption(this, presetName, true);
+    this.saveToLocalStorageIfPossible();
+  },
+  revert: function revert(gui) {
+    Common.each(this.__controllers, function (controller) {
+      if (!this.getRoot().load.remembered) {
+        controller.setValue(controller.initialValue);
+      } else {
+        recallSavedValue(gui || this.getRoot(), controller);
+      }
+      if (controller.__onFinishChange) {
+        controller.__onFinishChange.call(controller, controller.getValue());
+      }
+    }, this);
+    Common.each(this.__folders, function (folder) {
+      folder.revert(folder);
+    });
+    if (!gui) {
+      markPresetModified(this.getRoot(), false);
+    }
+  },
+  listen: function listen(controller) {
+    var init = this.__listening.length === 0;
+    this.__listening.push(controller);
+    if (init) {
+      updateDisplays(this.__listening);
+    }
+  },
+  updateDisplay: function updateDisplay() {
+    Common.each(this.__controllers, function (controller) {
+      controller.updateDisplay();
+    });
+    Common.each(this.__folders, function (folder) {
+      folder.updateDisplay();
+    });
+  }
+});
+function addRow(gui, newDom, liBefore) {
+  var li = document.createElement('li');
+  if (newDom) {
+    li.appendChild(newDom);
+  }
+  if (liBefore) {
+    gui.__ul.insertBefore(li, liBefore);
+  } else {
+    gui.__ul.appendChild(li);
+  }
+  gui.onResize();
+  return li;
+}
+function removeListeners(gui) {
+  dom.unbind(window, 'resize', gui.__resizeHandler);
+  if (gui.saveToLocalStorageIfPossible) {
+    dom.unbind(window, 'unload', gui.saveToLocalStorageIfPossible);
+  }
+}
+function markPresetModified(gui, modified) {
+  var opt = gui.__preset_select[gui.__preset_select.selectedIndex];
+  if (modified) {
+    opt.innerHTML = opt.value + '*';
+  } else {
+    opt.innerHTML = opt.value;
+  }
+}
+function augmentController(gui, li, controller) {
+  controller.__li = li;
+  controller.__gui = gui;
+  Common.extend(controller, {
+    options: function options(_options) {
+      if (arguments.length > 1) {
+        var nextSibling = controller.__li.nextElementSibling;
+        controller.remove();
+        return _add(gui, controller.object, controller.property, {
+          before: nextSibling,
+          factoryArgs: [Common.toArray(arguments)]
+        });
+      }
+      if (Common.isArray(_options) || Common.isObject(_options)) {
+        var _nextSibling = controller.__li.nextElementSibling;
+        controller.remove();
+        return _add(gui, controller.object, controller.property, {
+          before: _nextSibling,
+          factoryArgs: [_options]
+        });
+      }
+    },
+    name: function name(_name) {
+      controller.__li.firstElementChild.firstElementChild.innerHTML = _name;
+      return controller;
+    },
+    listen: function listen() {
+      controller.__gui.listen(controller);
+      return controller;
+    },
+    remove: function remove() {
+      controller.__gui.remove(controller);
+      return controller;
+    }
+  });
+  if (controller instanceof NumberControllerSlider) {
+    var box = new NumberControllerBox(controller.object, controller.property, { min: controller.__min, max: controller.__max, step: controller.__step });
+    Common.each(['updateDisplay', 'onChange', 'onFinishChange', 'step', 'min', 'max'], function (method) {
+      var pc = controller[method];
+      var pb = box[method];
+      controller[method] = box[method] = function () {
+        var args = Array.prototype.slice.call(arguments);
+        pb.apply(box, args);
+        return pc.apply(controller, args);
+      };
+    });
+    dom.addClass(li, 'has-slider');
+    controller.domElement.insertBefore(box.domElement, controller.domElement.firstElementChild);
+  } else if (controller instanceof NumberControllerBox) {
+    var r = function r(returned) {
+      if (Common.isNumber(controller.__min) && Common.isNumber(controller.__max)) {
+        var oldName = controller.__li.firstElementChild.firstElementChild.innerHTML;
+        var wasListening = controller.__gui.__listening.indexOf(controller) > -1;
+        controller.remove();
+        var newController = _add(gui, controller.object, controller.property, {
+          before: controller.__li.nextElementSibling,
+          factoryArgs: [controller.__min, controller.__max, controller.__step]
+        });
+        newController.name(oldName);
+        if (wasListening) newController.listen();
+        return newController;
+      }
+      return returned;
+    };
+    controller.min = Common.compose(r, controller.min);
+    controller.max = Common.compose(r, controller.max);
+  } else if (controller instanceof BooleanController) {
+    dom.bind(li, 'click', function () {
+      dom.fakeEvent(controller.__checkbox, 'click');
+    });
+    dom.bind(controller.__checkbox, 'click', function (e) {
+      e.stopPropagation();
+    });
+  } else if (controller instanceof FunctionController) {
+    dom.bind(li, 'click', function () {
+      dom.fakeEvent(controller.__button, 'click');
+    });
+    dom.bind(li, 'mouseover', function () {
+      dom.addClass(controller.__button, 'hover');
+    });
+    dom.bind(li, 'mouseout', function () {
+      dom.removeClass(controller.__button, 'hover');
+    });
+  } else if (controller instanceof ColorController) {
+    dom.addClass(li, 'color');
+    controller.updateDisplay = Common.compose(function (val) {
+      li.style.borderLeftColor = controller.__color.toString();
+      return val;
+    }, controller.updateDisplay);
+    controller.updateDisplay();
+  }
+  controller.setValue = Common.compose(function (val) {
+    if (gui.getRoot().__preset_select && controller.isModified()) {
+      markPresetModified(gui.getRoot(), true);
+    }
+    return val;
+  }, controller.setValue);
+}
+function recallSavedValue(gui, controller) {
+  var root = gui.getRoot();
+  var matchedIndex = root.__rememberedObjects.indexOf(controller.object);
+  if (matchedIndex !== -1) {
+    var controllerMap = root.__rememberedObjectIndecesToControllers[matchedIndex];
+    if (controllerMap === undefined) {
+      controllerMap = {};
+      root.__rememberedObjectIndecesToControllers[matchedIndex] = controllerMap;
+    }
+    controllerMap[controller.property] = controller;
+    if (root.load && root.load.remembered) {
+      var presetMap = root.load.remembered;
+      var preset = void 0;
+      if (presetMap[gui.preset]) {
+        preset = presetMap[gui.preset];
+      } else if (presetMap[DEFAULT_DEFAULT_PRESET_NAME]) {
+        preset = presetMap[DEFAULT_DEFAULT_PRESET_NAME];
+      } else {
+        return;
+      }
+      if (preset[matchedIndex] && preset[matchedIndex][controller.property] !== undefined) {
+        var value = preset[matchedIndex][controller.property];
+        controller.initialValue = value;
+        controller.setValue(value);
+      }
+    }
+  }
+}
+function _add(gui, object, property, params) {
+  if (object[property] === undefined) {
+    throw new Error('Object "' + object + '" has no property "' + property + '"');
+  }
+  var controller = void 0;
+  if (params.color) {
+    controller = new ColorController(object, property);
+  } else {
+    var factoryArgs = [object, property].concat(params.factoryArgs);
+    controller = ControllerFactory.apply(gui, factoryArgs);
+  }
+  if (params.before instanceof Controller) {
+    params.before = params.before.__li;
+  }
+  recallSavedValue(gui, controller);
+  dom.addClass(controller.domElement, 'c');
+  var name = document.createElement('span');
+  dom.addClass(name, 'property-name');
+  name.innerHTML = controller.property;
+  var container = document.createElement('div');
+  container.appendChild(name);
+  container.appendChild(controller.domElement);
+  var li = addRow(gui, container, params.before);
+  dom.addClass(li, GUI.CLASS_CONTROLLER_ROW);
+  if (controller instanceof ColorController) {
+    dom.addClass(li, 'color');
+  } else {
+    dom.addClass(li, _typeof(controller.getValue()));
+  }
+  augmentController(gui, li, controller);
+  gui.__controllers.push(controller);
+  return controller;
+}
+function getLocalStorageHash(gui, key) {
+  return document.location.href + '.' + key;
+}
+function addPresetOption(gui, name, setSelected) {
+  var opt = document.createElement('option');
+  opt.innerHTML = name;
+  opt.value = name;
+  gui.__preset_select.appendChild(opt);
+  if (setSelected) {
+    gui.__preset_select.selectedIndex = gui.__preset_select.length - 1;
+  }
+}
+function showHideExplain(gui, explain) {
+  explain.style.display = gui.useLocalStorage ? 'block' : 'none';
+}
+function addSaveMenu(gui) {
+  var div = gui.__save_row = document.createElement('li');
+  dom.addClass(gui.domElement, 'has-save');
+  gui.__ul.insertBefore(div, gui.__ul.firstChild);
+  dom.addClass(div, 'save-row');
+  var gears = document.createElement('span');
+  gears.innerHTML = '&nbsp;';
+  dom.addClass(gears, 'button gears');
+  var button = document.createElement('span');
+  button.innerHTML = 'Save';
+  dom.addClass(button, 'button');
+  dom.addClass(button, 'save');
+  var button2 = document.createElement('span');
+  button2.innerHTML = 'New';
+  dom.addClass(button2, 'button');
+  dom.addClass(button2, 'save-as');
+  var button3 = document.createElement('span');
+  button3.innerHTML = 'Revert';
+  dom.addClass(button3, 'button');
+  dom.addClass(button3, 'revert');
+  var select = gui.__preset_select = document.createElement('select');
+  if (gui.load && gui.load.remembered) {
+    Common.each(gui.load.remembered, function (value, key) {
+      addPresetOption(gui, key, key === gui.preset);
+    });
+  } else {
+    addPresetOption(gui, DEFAULT_DEFAULT_PRESET_NAME, false);
+  }
+  dom.bind(select, 'change', function () {
+    for (var index = 0; index < gui.__preset_select.length; index++) {
+      gui.__preset_select[index].innerHTML = gui.__preset_select[index].value;
+    }
+    gui.preset = this.value;
+  });
+  div.appendChild(select);
+  div.appendChild(gears);
+  div.appendChild(button);
+  div.appendChild(button2);
+  div.appendChild(button3);
+  if (SUPPORTS_LOCAL_STORAGE) {
+    var explain = document.getElementById('dg-local-explain');
+    var localStorageCheckBox = document.getElementById('dg-local-storage');
+    var saveLocally = document.getElementById('dg-save-locally');
+    saveLocally.style.display = 'block';
+    if (localStorage.getItem(getLocalStorageHash(gui, 'isLocal')) === 'true') {
+      localStorageCheckBox.setAttribute('checked', 'checked');
+    }
+    showHideExplain(gui, explain);
+    dom.bind(localStorageCheckBox, 'change', function () {
+      gui.useLocalStorage = !gui.useLocalStorage;
+      showHideExplain(gui, explain);
+    });
+  }
+  var newConstructorTextArea = document.getElementById('dg-new-constructor');
+  dom.bind(newConstructorTextArea, 'keydown', function (e) {
+    if (e.metaKey && (e.which === 67 || e.keyCode === 67)) {
+      SAVE_DIALOGUE.hide();
+    }
+  });
+  dom.bind(gears, 'click', function () {
+    newConstructorTextArea.innerHTML = JSON.stringify(gui.getSaveObject(), undefined, 2);
+    SAVE_DIALOGUE.show();
+    newConstructorTextArea.focus();
+    newConstructorTextArea.select();
+  });
+  dom.bind(button, 'click', function () {
+    gui.save();
+  });
+  dom.bind(button2, 'click', function () {
+    var presetName = prompt('Enter a new preset name.');
+    if (presetName) {
+      gui.saveAs(presetName);
+    }
+  });
+  dom.bind(button3, 'click', function () {
+    gui.revert();
+  });
+}
+function addResizeHandle(gui) {
+  var pmouseX = void 0;
+  gui.__resize_handle = document.createElement('div');
+  Common.extend(gui.__resize_handle.style, {
+    width: '6px',
+    marginLeft: '-3px',
+    height: '200px',
+    cursor: 'ew-resize',
+    position: 'absolute'
+  });
+  function drag(e) {
+    e.preventDefault();
+    gui.width += pmouseX - e.clientX;
+    gui.onResize();
+    pmouseX = e.clientX;
+    return false;
+  }
+  function dragStop() {
+    dom.removeClass(gui.__closeButton, GUI.CLASS_DRAG);
+    dom.unbind(window, 'mousemove', drag);
+    dom.unbind(window, 'mouseup', dragStop);
+  }
+  function dragStart(e) {
+    e.preventDefault();
+    pmouseX = e.clientX;
+    dom.addClass(gui.__closeButton, GUI.CLASS_DRAG);
+    dom.bind(window, 'mousemove', drag);
+    dom.bind(window, 'mouseup', dragStop);
+    return false;
+  }
+  dom.bind(gui.__resize_handle, 'mousedown', dragStart);
+  dom.bind(gui.__closeButton, 'mousedown', dragStart);
+  gui.domElement.insertBefore(gui.__resize_handle, gui.domElement.firstElementChild);
+}
+function setWidth(gui, w) {
+  gui.domElement.style.width = w + 'px';
+  if (gui.__save_row && gui.autoPlace) {
+    gui.__save_row.style.width = w + 'px';
+  }
+  if (gui.__closeButton) {
+    gui.__closeButton.style.width = w + 'px';
+  }
+}
+function getCurrentPreset(gui, useInitialValues) {
+  var toReturn = {};
+  Common.each(gui.__rememberedObjects, function (val, index) {
+    var savedValues = {};
+    var controllerMap = gui.__rememberedObjectIndecesToControllers[index];
+    Common.each(controllerMap, function (controller, property) {
+      savedValues[property] = useInitialValues ? controller.initialValue : controller.getValue();
+    });
+    toReturn[index] = savedValues;
+  });
+  return toReturn;
+}
+function setPresetSelectIndex(gui) {
+  for (var index = 0; index < gui.__preset_select.length; index++) {
+    if (gui.__preset_select[index].value === gui.preset) {
+      gui.__preset_select.selectedIndex = index;
+    }
+  }
+}
+function updateDisplays(controllerArray) {
+  if (controllerArray.length !== 0) {
+    requestAnimationFrame$1$1.call(window, function () {
+      updateDisplays(controllerArray);
+    });
+  }
+  Common.each(controllerArray, function (c) {
+    c.updateDisplay();
+  });
+}
+
+var color = {
+  Color: Color,
+  math: ColorMath,
+  interpret: interpret
+};
+var controllers = {
+  Controller: Controller,
+  BooleanController: BooleanController,
+  OptionController: OptionController,
+  StringController: StringController,
+  NumberController: NumberController,
+  NumberControllerBox: NumberControllerBox,
+  NumberControllerSlider: NumberControllerSlider,
+  FunctionController: FunctionController,
+  ColorController: ColorController
+};
+var dom$1 = { dom: dom };
+var gui = { GUI: GUI };
+var GUI$1 = GUI;
+var index = {
+  color: color,
+  controllers: controllers,
+  dom: dom$1,
+  gui: gui,
+  GUI: GUI$1
+};
+
+var dat_gui = /*#__PURE__*/Object.freeze({
+__proto__: null,
+color: color,
+controllers: controllers,
+dom: dom$1,
+gui: gui,
+GUI: GUI$1,
+'default': index
+});
+
 /** @summary Draw TText
   * @private */
 async function drawText$1() {
@@ -76728,9680 +88987,6 @@ drawBox: drawBox$1,
 drawMarker: drawMarker$1,
 drawPolyMarker: drawPolyMarker,
 drawJSImage: drawJSImage
-});
-
-/// CSG library for THREE.js
-
-const EPSILON = 1e-5,
-      COPLANAR = 0,
-      FRONT = 1,
-      BACK = 2,
-      SPANNING = FRONT | BACK;
-
-class Vertex {
-
-   constructor(x, y, z, nx, ny, nz) {
-      this.x = x;
-      this.y = y;
-      this.z = z;
-      this.nx = nx;
-      this.ny = ny;
-      this.nz = nz;
-   }
-
-   setnormal(nx, ny, nz) {
-      this.nx = nx;
-      this.ny = ny;
-      this.nz = nz;
-   }
-
-   clone() {
-      return new Vertex( this.x, this.y, this.z, this.nx, this.ny, this.nz);
-   }
-
-   add( vertex ) {
-      this.x += vertex.x;
-      this.y += vertex.y;
-      this.z += vertex.z;
-      return this;
-   }
-
-   subtract( vertex ) {
-      this.x -= vertex.x;
-      this.y -= vertex.y;
-      this.z -= vertex.z;
-      return this;
-   }
-
-   // multiplyScalar( scalar ) {
-   //   this.x *= scalar;
-   //   this.y *= scalar;
-   //   this.z *= scalar;
-   //   return this;
-   // }
-
-   // cross( vertex ) {
-   //    let x = this.x, y = this.y, z = this.z,
-   //        vx = vertex.x, vy = vertex.y, vz = vertex.z;
-   //
-   //    this.x = y * vz - z * vy;
-   //    this.y = z * vx - x * vz;
-   //    this.z = x * vy - y * vx;
-   //
-   //    return this;
-   // }
-
-   cross3( vx, vy, vz ) {
-      let x = this.x, y = this.y, z = this.z;
-
-      this.x = y * vz - z * vy;
-      this.y = z * vx - x * vz;
-      this.z = x * vy - y * vx;
-
-      return this;
-   }
-
-
-   normalize() {
-      let length = Math.sqrt( this.x**2 + this.y**2 + this.z**2 );
-
-      this.x /= length;
-      this.y /= length;
-      this.z /= length;
-
-      return this;
-   }
-
-   dot( vertex ) {
-      return this.x*vertex.x + this.y*vertex.y + this.z*vertex.z;
-   }
-
-   diff( vertex ) {
-      let dx = (this.x - vertex.x),
-          dy = (this.y - vertex.y),
-          dz = (this.z - vertex.z),
-          len2 = this.x**2 + this.y**2 + this.z**2;
-
-      return (dx**2 + dy**2 + dz**2) / (len2 > 0 ? len2 : 1e-10);
-   }
-
-/*
-   lerp( a, t ) {
-      this.add(
-         a.clone().subtract( this ).multiplyScalar( t )
-      );
-
-      this.normal.add(
-         a.normal.clone().sub( this.normal ).multiplyScalar( t )
-      );
-
-      //this.uv.add(
-      //   a.uv.clone().sub( this.uv ).multiplyScalar( t )
-      //);
-
-      return this;
-   };
-
-   interpolate( other, t ) {
-      return this.clone().lerp( other, t );
-   };
-*/
-
-   interpolate( a, t ) {
-      let t1 = 1 - t;
-      return new Vertex(this.x*t1 + a.x*t, this.y*t1 + a.y*t, this.z*t1 + a.z*t,
-                        this.nx*t1 + a.nx*t, this.ny*t1 + a.ny*t, this.nz*t1 + a.nz*t);
-   }
-
-   applyMatrix4(m) {
-
-      // input: Matrix4 affine matrix
-
-      let x = this.x, y = this.y, z = this.z, e = m.elements;
-
-      this.x = e[0] * x + e[4] * y + e[8]  * z + e[12];
-      this.y = e[1] * x + e[5] * y + e[9]  * z + e[13];
-      this.z = e[2] * x + e[6] * y + e[10] * z + e[14];
-
-      x = this.nx; y = this.ny; z = this.nz;
-
-      this.nx = e[0] * x + e[4] * y + e[8]  * z;
-      this.ny = e[1] * x + e[5] * y + e[9]  * z;
-      this.nz = e[2] * x + e[6] * y + e[10] * z;
-
-      return this;
-   }
-
-} // class Vertex
-
-
-class Polygon {
-
-   constructor(vertices, parent, more) {
-      this.vertices = vertices || [];
-      this.nsign = 1;
-      if (parent)
-         this.copyProperties(parent, more);
-      else if (this.vertices.length > 0)
-         this.calculateProperties();
-   }
-
-   copyProperties(parent, more) {
-      this.normal = parent.normal; // .clone();
-      this.w = parent.w;
-      this.nsign = parent.nsign;
-      if (more && (parent.id !== undefined)) {
-         this.id = parent.id;
-         this.parent = parent;
-      }
-      return this;
-   }
-
-   calculateProperties(force) {
-      if (this.normal && !force) return;
-
-      let a = this.vertices[0],
-          b = this.vertices[1],
-          c = this.vertices[2];
-
-      this.nsign = 1;
-
-      //this.normal = b.clone().subtract( a ).cross( c.clone().subtract( a ) ).normalize();
-
-      this.normal = new Vertex(b.x - a.x, b.y - a.y, b.z - a.z, 0, 0, 0).cross3(c.x - a.x, c.y - a.y, c.z - a.z).normalize();
-
-      this.w = this.normal.dot( a );
-      return this;
-   }
-
-   clone() {
-      let vertice_count = this.vertices.length,
-          vertices = [];
-
-      for (let i = 0; i < vertice_count; ++i )
-         vertices.push( this.vertices[i].clone() );
-
-      return new Polygon(vertices, this);
-   }
-
-   flip() {
-
-      /// normal is not changed, only sign variable
-      //this.normal.multiplyScalar( -1 );
-      //this.w *= -1;
-
-      this.nsign *= -1;
-
-      this.vertices.reverse();
-
-      return this;
-   }
-
-   classifyVertex( vertex ) {
-      let side_value = this.nsign * (this.normal.dot( vertex ) - this.w);
-
-      if ( side_value < -EPSILON ) return BACK;
-      if ( side_value > EPSILON ) return FRONT;
-      return COPLANAR;
-   }
-
-   classifySide( polygon ) {
-      let num_positive = 0, num_negative = 0,
-          vertice_count = polygon.vertices.length;
-
-      for (let i = 0; i < vertice_count; ++i ) {
-         let classification = this.classifyVertex( polygon.vertices[i] );
-         if ( classification === FRONT ) {
-            ++num_positive;
-         } else if ( classification === BACK ) {
-            ++num_negative;
-         }
-      }
-
-      if ( num_positive > 0 && num_negative === 0 ) return FRONT;
-      if ( num_positive === 0 && num_negative > 0 ) return BACK;
-      if ( num_positive === 0 && num_negative === 0 ) return COPLANAR;
-      return SPANNING;
-   }
-
-   splitPolygon( polygon, coplanar_front, coplanar_back, front, back ) {
-      let classification = this.classifySide( polygon );
-
-      if ( classification === COPLANAR ) {
-
-         ( (this.nsign * polygon.nsign * this.normal.dot( polygon.normal ) > 0) ? coplanar_front : coplanar_back ).push( polygon );
-
-      } else if ( classification === FRONT ) {
-
-         front.push( polygon );
-
-      } else if ( classification === BACK ) {
-
-         back.push( polygon );
-
-      } else {
-
-         let vertice_count = polygon.vertices.length,
-             nnx = this.normal.x,
-             nny = this.normal.y,
-             nnz = this.normal.z,
-             i, j, ti, tj, vi, vj,
-             t, v,
-             f = [], b = [];
-
-         for ( i = 0; i < vertice_count; ++i ) {
-
-            j = (i + 1) % vertice_count;
-            vi = polygon.vertices[i];
-            vj = polygon.vertices[j];
-            ti = this.classifyVertex( vi );
-            tj = this.classifyVertex( vj );
-
-            if ( ti != BACK ) f.push( vi );
-            if ( ti != FRONT ) b.push( vi );
-            if ( (ti | tj) === SPANNING ) {
-               // t = ( this.w - this.normal.dot( vi ) ) / this.normal.dot( vj.clone().subtract( vi ) );
-               //v = vi.clone().lerp( vj, t );
-
-               t = (this.w - (nnx*vi.x + nny*vi.y + nnz*vi.z)) / (nnx*(vj.x-vi.x) + nny*(vj.y-vi.y) + nnz*(vj.z-vi.z));
-
-               v = vi.interpolate( vj, t );
-               f.push( v );
-               b.push( v );
-            }
-         }
-
-         //if ( f.length >= 3 ) front.push( new Polygon( f ).calculateProperties() );
-         //if ( b.length >= 3 ) back.push( new Polygon( b ).calculateProperties() );
-         if ( f.length >= 3 ) front.push( new Polygon( f, polygon, true ) );
-         if ( b.length >= 3 ) back.push( new Polygon( b, polygon, true ) );
-      }
-   }
-
-} // class Polygon
-
-
-class Node {
-   constructor(polygons, nodeid) {
-      this.polygons = [];
-      this.front = this.back = undefined;
-
-      if (!polygons) return;
-
-      this.divider = polygons[0].clone();
-
-      let polygon_count = polygons.length,
-          front = [], back = [];
-
-      for (let i = 0; i < polygon_count; ++i) {
-         if (nodeid !== undefined) {
-            polygons[i].id = nodeid++;
-            delete polygons[i].parent;
-         }
-
-         // by difinition polygon should be COPLANAR for itself
-         if (i == 0)
-            this.polygons.push(polygons[0]);
-         else
-            this.divider.splitPolygon( polygons[i], this.polygons, this.polygons, front, back );
-      }
-
-      if (nodeid !== undefined) this.maxnodeid = nodeid;
-
-      if (front.length > 0)
-         this.front = new Node( front );
-
-      if (back.length > 0)
-         this.back = new Node( back );
-   }
-
-   //isConvex(polygons) {
-   //   let i, j, len = polygons.length;
-   //   for ( i = 0; i < len; ++i )
-   //      for ( j = 0; j < len; ++j )
-   //         if ( i !== j && polygons[i].classifySide( polygons[j] ) !== BACK ) return false;
-   //   return true;
-   //}
-
-   build( polygons ) {
-      let polygon_count = polygons.length,
-          first = 0, front = [], back = [];
-
-      if ( !this.divider ) {
-         this.divider = polygons[0].clone();
-         this.polygons.push(polygons[0]);
-         first = 1;
-      }
-
-      for (let i = first; i < polygon_count; ++i )
-         this.divider.splitPolygon( polygons[i], this.polygons, this.polygons, front, back );
-
-      if (front.length > 0) {
-         if ( !this.front ) this.front = new Node();
-         this.front.build( front );
-      }
-
-      if (back.length > 0) {
-         if ( !this.back ) this.back = new Node();
-         this.back.build( back );
-      }
-   }
-
-   collectPolygons(arr) {
-      if (arr === undefined)
-         arr = [];
-      let len = this.polygons.length;
-      for (let i = 0; i < len; ++i)
-         arr.push(this.polygons[i]);
-      this.front?.collectPolygons(arr);
-      this.back?.collectPolygons(arr);
-      return arr;
-   }
-
-   numPolygons() {
-      return this.polygons.length + (this.front?.numPolygons() || 0) + (this.back?.numPolygons() || 0);
-   }
-
-   clone() {
-      let node = new Node();
-
-      node.divider = this.divider?.clone();
-      node.polygons = this.polygons.map( polygon => polygon.clone() );
-      node.front = this.front?.clone();
-      node.back = this.back?.clone();
-
-      return node;
-   }
-
-   invert() {
-      let polygon_count = this.polygons.length;
-
-      for (let i = 0; i < polygon_count; ++i )
-         this.polygons[i].flip();
-
-      this.divider.flip();
-      if ( this.front ) this.front.invert();
-      if ( this.back ) this.back.invert();
-
-      let temp = this.front;
-      this.front = this.back;
-      this.back = temp;
-
-      return this;
-   }
-
-   clipPolygons( polygons ) {
-
-      if ( !this.divider ) return polygons.slice();
-
-      let polygon_count = polygons.length, front = [], back = [];
-
-      for (let i = 0; i < polygon_count; ++i )
-         this.divider.splitPolygon( polygons[i], front, back, front, back );
-
-      if ( this.front ) front = this.front.clipPolygons( front );
-      if ( this.back ) back = this.back.clipPolygons( back );
-      else back = [];
-
-      return front.concat( back );
-   }
-
-   clipTo( node ) {
-      this.polygons = node.clipPolygons( this.polygons );
-      if ( this.front ) this.front.clipTo( node );
-      if ( this.back ) this.back.clipTo( node );
-   }
-
- } // class Node
-
-
-function createBufferGeometry(polygons) {
-   let i, j, polygon_count = polygons.length, buf_size = 0;
-
-   for ( i = 0; i < polygon_count; ++i )
-      buf_size += (polygons[i].vertices.length - 2) * 9;
-
-   let positions_buf = new Float32Array(buf_size),
-       normals_buf = new Float32Array(buf_size),
-       iii = 0, polygon;
-
-   function CopyVertex(vertex) {
-
-      positions_buf[iii] = vertex.x;
-      positions_buf[iii+1] = vertex.y;
-      positions_buf[iii+2] = vertex.z;
-
-      normals_buf[iii] = polygon.nsign * vertex.nx;
-      normals_buf[iii+1] = polygon.nsign * vertex.ny;
-      normals_buf[iii+2] = polygon.nsign * vertex.nz;
-      iii+=3;
-   }
-
-   for ( i = 0; i < polygon_count; ++i ) {
-      polygon = polygons[i];
-      for ( j = 2; j < polygon.vertices.length; ++j ) {
-         CopyVertex(polygon.vertices[0]);
-         CopyVertex(polygon.vertices[j-1]);
-         CopyVertex(polygon.vertices[j]);
-      }
-   }
-
-   let geometry = new BufferGeometry();
-   geometry.setAttribute('position', new BufferAttribute(positions_buf, 3));
-   geometry.setAttribute('normal', new BufferAttribute(normals_buf, 3));
-
-   // geometry.computeVertexNormals();
-   return geometry;
-}
-
-
-class Geometry {
-
-   constructor(geometry, transfer_matrix, nodeid, flippedMesh) {
-      // Convert BufferGeometry to ThreeBSP
-
-      if ( geometry instanceof Mesh ) {
-         // #todo: add hierarchy support
-         geometry.updateMatrix();
-         transfer_matrix = this.matrix = geometry.matrix.clone();
-         geometry = geometry.geometry;
-      } else if ( geometry instanceof Node ) {
-         this.tree = geometry;
-         this.matrix = null; // new Matrix4;
-         return this;
-      } else if ( geometry instanceof BufferGeometry ) {
-         let pos_buf = geometry.getAttribute('position').array,
-             norm_buf = geometry.getAttribute('normal').array,
-             polygons = [], polygon, vert1, vert2, vert3;
-
-         for (let i=0; i < pos_buf.length; i+=9) {
-            polygon = new Polygon;
-
-            vert1 = new Vertex( pos_buf[i], pos_buf[i+1], pos_buf[i+2], norm_buf[i], norm_buf[i+1], norm_buf[i+2]);
-            if (transfer_matrix) vert1.applyMatrix4(transfer_matrix);
-
-            vert2 = new Vertex( pos_buf[i+3], pos_buf[i+4], pos_buf[i+5], norm_buf[i+3], norm_buf[i+4], norm_buf[i+5]);
-            if (transfer_matrix) vert2.applyMatrix4(transfer_matrix);
-
-            vert3 = new Vertex( pos_buf[i+6], pos_buf[i+7], pos_buf[i+8], norm_buf[i+6], norm_buf[i+7], norm_buf[i+8]);
-            if (transfer_matrix) vert3.applyMatrix4(transfer_matrix);
-
-            if (flippedMesh) polygon.vertices.push( vert1, vert3, vert2 );
-                        else polygon.vertices.push( vert1, vert2, vert3 );
-
-            polygon.calculateProperties(true);
-            polygons.push( polygon );
-         }
-
-         this.tree = new Node( polygons, nodeid );
-         if (nodeid !== undefined) this.maxid = this.tree.maxnodeid;
-         return this;
-
-      } else if (geometry.polygons && (geometry.polygons[0] instanceof Polygon)) {
-         let polygons = geometry.polygons;
-
-         for (let i = 0; i < polygons.length; ++i) {
-            let polygon = polygons[i];
-            if (transfer_matrix) {
-               let new_vertices = [];
-
-               for (let n = 0; n < polygon.vertices.length; ++n)
-                  new_vertices.push(polygon.vertices[n].clone().applyMatrix4(transfer_matrix));
-
-               polygon.vertices = new_vertices;
-            }
-
-            polygon.calculateProperties(transfer_matrix);
-         }
-
-         this.tree = new Node( polygons, nodeid );
-         if (nodeid !== undefined) this.maxid = this.tree.maxnodeid;
-         return this;
-
-      } else {
-         throw Error('ThreeBSP: Given geometry is unsupported');
-      }
-
-      let polygons = [],
-          nfaces = geometry.faces.length,
-          face, polygon, vertex, normal, useVertexNormals;
-
-      for (let i = 0; i < nfaces; ++i ) {
-         face = geometry.faces[i];
-         normal = face.normal;
-         // faceVertexUvs = geometry.faceVertexUvs[0][i];
-         polygon = new Polygon;
-
-         useVertexNormals = face.vertexNormals && (face.vertexNormals.length==3);
-
-         vertex = geometry.vertices[ face.a ];
-         if (useVertexNormals) normal = face.vertexNormals[0];
-         // uvs = faceVertexUvs ? new Vector2( faceVertexUvs[0].x, faceVertexUvs[0].y ) : null;
-         vertex = new Vertex( vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /*face.normal , uvs */ );
-         if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
-         polygon.vertices.push( vertex );
-
-         vertex = geometry.vertices[ face.b ];
-         if (useVertexNormals) normal = face.vertexNormals[1];
-         //uvs = faceVertexUvs ? new Vector2( faceVertexUvs[1].x, faceVertexUvs[1].y ) : null;
-         vertex = new Vertex( vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /*face.normal , uvs */ );
-         if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
-         polygon.vertices.push( vertex );
-
-         vertex = geometry.vertices[ face.c ];
-         if (useVertexNormals) normal = face.vertexNormals[2];
-         // uvs = faceVertexUvs ? new Vector2( faceVertexUvs[2].x, faceVertexUvs[2].y ) : null;
-         vertex = new Vertex( vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /*face.normal, uvs */ );
-         if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
-         polygon.vertices.push( vertex );
-
-         polygon.calculateProperties(true);
-         polygons.push( polygon );
-      }
-
-      this.tree = new Node( polygons, nodeid );
-      if (nodeid !== undefined) this.maxid = this.tree.maxnodeid;
-   }
-
-   subtract( other_tree ) {
-      let a = this.tree.clone(),
-          b = other_tree.tree.clone();
-
-      a.invert();
-      a.clipTo( b );
-      b.clipTo( a );
-      b.invert();
-      b.clipTo( a );
-      b.invert();
-      a.build( b.collectPolygons() );
-      a.invert();
-      a = new Geometry( a );
-      a.matrix = this.matrix;
-      return a;
-   }
-
-   union( other_tree ) {
-      let a = this.tree.clone(),
-          b = other_tree.tree.clone();
-
-      a.clipTo( b );
-      b.clipTo( a );
-      b.invert();
-      b.clipTo( a );
-      b.invert();
-      a.build( b.collectPolygons() );
-      a = new Geometry( a );
-      a.matrix = this.matrix;
-      return a;
-   }
-
-   intersect( other_tree ) {
-      let a = this.tree.clone(),
-          b = other_tree.tree.clone();
-
-      a.invert();
-      b.clipTo( a );
-      b.invert();
-      a.clipTo( b );
-      b.clipTo( a );
-      a.build( b.collectPolygons() );
-      a.invert();
-      a = new Geometry( a );
-      a.matrix = this.matrix;
-      return a;
-   }
-
-   tryToCompress(polygons) {
-
-      if (this.maxid === undefined) return;
-
-      let arr = [], parts, foundpair,
-          nreduce = 0, n, len = polygons.length,
-          p, p1, p2, i1, i2;
-
-      // sort out polygons
-      for (n = 0; n < len; ++n) {
-         p = polygons[n];
-         if (p.id === undefined) continue;
-         if (arr[p.id] === undefined) arr[p.id] = [];
-
-         arr[p.id].push(p);
-      }
-
-      for(n = 0; n < arr.length; ++n) {
-         parts = arr[n];
-         if (parts === undefined) continue;
-
-         len = parts.length;
-
-         foundpair = (len > 1);
-
-         while (foundpair) {
-            foundpair = false;
-
-            for (i1 = 0; i1 < len-1; ++i1) {
-               p1 = parts[i1];
-               if (!p1?.parent) continue;
-               for (i2 = i1+1; i2 < len; ++i2) {
-                  p2 = parts[i2];
-                  if (p2 && (p1.parent === p2.parent) && (p1.nsign === p2.nsign)) {
-
-                     if (p1.nsign !== p1.parent.nsign) p1.parent.flip();
-
-                     nreduce++;
-                     parts[i1] = p1.parent;
-                     parts[i2] = null;
-                     if (p1.parent.vertices.length < 3) console.log('something wrong with parent');
-                     foundpair = true;
-                     break;
-                  }
-               }
-            }
-         }
-      }
-
-      if (nreduce > 0) {
-         polygons.splice(0, polygons.length);
-
-         for(n = 0; n < arr.length; ++n) {
-            parts = arr[n];
-            if (parts !== undefined)
-               for (i1 = 0, len = parts.length; i1 < len; ++i1)
-                  if (parts[i1]) polygons.push(parts[i1]);
-         }
-
-      }
-   }
-
-   direct_subtract( other_tree ) {
-      let a = this.tree,
-          b = other_tree.tree;
-      a.invert();
-      a.clipTo( b );
-      b.clipTo( a );
-      b.invert();
-      b.clipTo( a );
-      b.invert();
-      a.build( b.collectPolygons() );
-      a.invert();
-      return this;
-   }
-
-   direct_union( other_tree ) {
-      let a = this.tree,
-          b = other_tree.tree;
-
-      a.clipTo( b );
-      b.clipTo( a );
-      b.invert();
-      b.clipTo( a );
-      b.invert();
-      a.build( b.collectPolygons() );
-      return this;
-   }
-
-   direct_intersect( other_tree ) {
-      let a = this.tree,
-          b = other_tree.tree;
-
-      a.invert();
-      b.clipTo( a );
-      b.invert();
-      a.clipTo( b );
-      b.clipTo( a );
-      a.build( b.collectPolygons() );
-      a.invert();
-      return this;
-   }
-
-   cut_from_plane( other_tree) {
-      // just cut peaces from second geometry, which just simple plane
-
-      let a = this.tree,
-          b = other_tree.tree;
-
-      a.invert();
-      b.clipTo( a );
-
-      return this;
-   }
-
-   scale(x,y,z) {
-      // try to scale as BufferGeometry
-      let polygons = this.tree.collectPolygons();
-
-      for (let i = 0; i < polygons.length; ++i) {
-         let polygon = polygons[i];
-         for (let k=0; k < polygon.vertices.length; ++k) {
-            let v = polygon.vertices[k];
-            v.x *= x;
-            v.y *= y;
-            v.z *= z;
-         }
-         polygon.calculateProperties(true);
-      }
-   }
-
-   toPolygons() {
-      let polygons = this.tree.collectPolygons();
-
-      this.tryToCompress(polygons);
-
-      for (let i = 0; i < polygons.length; ++i ) {
-         delete polygons[i].id;
-         delete polygons[i].parent;
-      }
-
-      return polygons;
-   }
-
-   toBufferGeometry() {
-      return createBufferGeometry(this.toPolygons());
-   }
-
-   toMesh( material ) {
-      let geometry = this.toBufferGeometry(),
-         mesh = new Mesh( geometry, material );
-
-      if (this.matrix) {
-         mesh.position.setFromMatrixPosition( this.matrix );
-         mesh.rotation.setFromRotationMatrix( this.matrix );
-      }
-
-      return mesh;
-   }
-
-} // class Geometry
-
-/** @summary create geometry to make cut on specified axis
-  * @private */
-function createNormal(axis_name, pos, size) {
-   if (!size || (size < 10000)) size = 10000;
-
-   let vertices;
-
-   switch(axis_name) {
-      case 'x':
-         vertices = [ new Vertex(pos, -3*size,    size, 1, 0, 0),
-                      new Vertex(pos,    size, -3*size, 1, 0, 0),
-                      new Vertex(pos,    size,    size, 1, 0, 0) ];
-         break;
-      case 'y':
-         vertices = [ new Vertex(-3*size,  pos,    size, 0, 1, 0),
-                      new Vertex(   size,  pos,    size, 0, 1, 0),
-                      new Vertex(   size,  pos, -3*size, 0, 1, 0) ];
-         break;
-      // case 'z':
-      default:
-         vertices = [ new Vertex(-3*size,    size, pos, 0, 0, 1),
-                      new Vertex(   size, -3*size, pos, 0, 0, 1),
-                      new Vertex(   size,    size, pos, 0, 0, 1) ];
-   }
-
-   let node = new Node([ new Polygon(vertices) ]);
-
-   return new Geometry(node);
-}
-
-let cfg = {
-   GradPerSegm: 6,       // grad per segment in cylinder/spherical symmetry shapes
-   CompressComp: true    // use faces compression in composite shapes
-};
-
-function geoCfg(name, value) {
-   if (value === undefined)
-      return cfg[name];
-
-   cfg[name] = value;
-}
-
-
-const kindGeo = 0,    // TGeoNode / TGeoShape
-      kindEve = 1,    // TEveShape / TEveGeoShapeExtract
-      kindShape = 2;  // special kind for single shape handling
-
-/** @summary TGeo-related bits
-  * @private */
-const geoBITS = {
-   kVisOverride   : BIT(0),  // volume's vis. attributes are overwritten
-   kVisNone       : BIT(1),  // the volume/node is invisible, as well as daughters
-   kVisThis       : BIT(2),  // this volume/node is visible
-   kVisDaughters  : BIT(3),  // all leaves are visible
-   kVisOneLevel   : BIT(4),  // first level daughters are visible (not used)
-   kVisStreamed   : BIT(5),  // true if attributes have been streamed
-   kVisTouched    : BIT(6),  // true if attributes are changed after closing geom
-   kVisOnScreen   : BIT(7),  // true if volume is visible on screen
-   kVisContainers : BIT(12), // all containers visible
-   kVisOnly       : BIT(13), // just this visible
-   kVisBranch     : BIT(14), // only a given branch visible
-   kVisRaytrace   : BIT(15)  // raytracing flag
-};
-
-const clTGeoBBox = 'TGeoBBox',
-      clTGeoArb8 = 'TGeoArb8',
-      clTGeoCone = 'TGeoCone',
-      clTGeoConeSeg = 'TGeoConeSeg',
-      clTGeoTube = 'TGeoTube',
-      clTGeoTubeSeg = 'TGeoTubeSeg',
-      clTGeoCtub = 'TGeoCtub',
-      clTGeoTrd1 = 'TGeoTrd1',
-      clTGeoTrd2 = 'TGeoTrd2',
-      clTGeoPara = 'TGeoPara',
-      clTGeoParaboloid = 'TGeoParaboloid',
-      clTGeoPcon = 'TGeoPcon',
-      clTGeoPgon = 'TGeoPgon',
-      clTGeoShapeAssembly = 'TGeoShapeAssembly',
-      clTGeoSphere = 'TGeoSphere',
-      clTGeoTorus = 'TGeoTorus',
-      clTGeoXtru = 'TGeoXtru',
-      clTGeoTrap = 'TGeoTrap',
-      clTGeoGtra = 'TGeoGtra',
-      clTGeoEltu = 'TGeoEltu',
-      clTGeoHype = 'TGeoHype',
-      clTGeoCompositeShape = 'TGeoCompositeShape',
-      clTGeoHalfSpace = 'TGeoHalfSpace',
-      clTGeoScaledShape = 'TGeoScaledShape';
-
-/** @summary Test fGeoAtt bits
-  * @private */
-function testGeoBit(volume, f) {
-   let att = volume.fGeoAtt;
-   return att === undefined ? false : ((att & f) !== 0);
-}
-
-/** @summary Set fGeoAtt bit
-  * @private */
-function setGeoBit(volume, f, value) {
-   if (volume.fGeoAtt === undefined) return;
-   volume.fGeoAtt = value ? (volume.fGeoAtt | f) : (volume.fGeoAtt & ~f);
-}
-
-/** @summary Toggle fGeoAttBit
-  * @private */
-function toggleGeoBit(volume, f) {
-   if (volume.fGeoAtt !== undefined)
-      volume.fGeoAtt = volume.fGeoAtt ^ (f & 0xffffff);
-}
-
-/** @summary Implementation of TGeoVolume::InvisibleAll
-  * @private */
-function setInvisibleAll(volume, flag) {
-   if (flag === undefined) flag = true;
-
-   setGeoBit(volume, geoBITS.kVisThis, !flag);
-   // setGeoBit(this, geoBITS.kVisDaughters, !flag);
-
-   if (volume.fNodes)
-      for (let n = 0; n < volume.fNodes.arr.length; ++n) {
-         let sub = volume.fNodes.arr[n].fVolume;
-         setGeoBit(sub, geoBITS.kVisThis, !flag);
-         // setGeoBit(sub, geoBITS.kVisDaughters, !flag);
-      }
-}
-
-const _warn_msgs = {};
-
-/** @summary method used to avoid duplication of warnings
- * @private */
-function geoWarn(msg) {
-   if (_warn_msgs[msg] !== undefined) return;
-   _warn_msgs[msg] = true;
-   console.warn(msg);
-}
-
-/** @summary Analyze TGeo node kind
- *  @desc  0 - TGeoNode
- *         1 - TEveGeoNode
- *        -1 - unsupported
- * @return detected node kind
- * @private */
-function getNodeKind(obj) {
-   if (!isObject(obj)) return -1;
-   return ('fShape' in obj) && ('fTrans' in obj) ? kindEve : kindGeo;
-}
-
-/** @summary Returns number of shapes
-  * @desc Used to count total shapes number in composites
-  * @private */
-function countNumShapes(shape) {
-   if (!shape) return 0;
-   if (shape._typename !== clTGeoCompositeShape) return 1;
-   return countNumShapes(shape.fNode.fLeft) + countNumShapes(shape.fNode.fRight);
-}
-
-
-/** @summary Returns geo object name
-  * @desc Can appends some special suffixes
-  * @private */
-function getObjectName(obj) {
-   return obj?.fName ? (obj.fName + (obj.$geo_suffix || '')) : '';
-}
-
-/** @summary Check duplicates
-  * @private */
-function checkDuplicates(parent, chlds) {
-   if (parent) {
-      if (parent.$geo_checked) return;
-      parent.$geo_checked = true;
-   }
-
-   let names = [], cnts = [];
-   for (let k = 0; k < chlds.length; ++k) {
-      let chld = chlds[k];
-      if (!chld?.fName) continue;
-      if (!chld.$geo_suffix) {
-         let indx = names.indexOf(chld.fName);
-         if (indx >= 0) {
-            let cnt = cnts[indx] || 1;
-            while(names.indexOf(chld.fName+'#'+cnt) >= 0) ++cnt;
-            chld.$geo_suffix = '#' + cnt;
-            cnts[indx] = cnt+1;
-         }
-      }
-      names.push(getObjectName(chld));
-   }
-}
-
-
-/** @summary Create normal to plane, defined with three points
-  * @private */
-function produceNormal(x1,y1,z1, x2,y2,z2, x3,y3,z3) {
-
-   let pA = new Vector3(x1,y1,z1),
-       pB = new Vector3(x2,y2,z2),
-       pC = new Vector3(x3,y3,z3),
-       cb = new Vector3(),
-       ab = new Vector3();
-
-   cb.subVectors(pC, pB);
-   ab.subVectors(pA, pB);
-   cb.cross(ab);
-
-   return cb;
-}
-
-// ==========================================================================
-
-/**
-  * @summary Helper class for geometry creation
-  *
-  * @private
-  */
-
-class GeometryCreator {
-   /** @summary Constructor
-     * @param numfaces - number of faces */
-   constructor(numfaces) {
-      this.nfaces = numfaces;
-      this.indx = 0;
-      this.pos = new Float32Array(numfaces*9);
-      this.norm = new Float32Array(numfaces*9);
-   }
-
-   /** @summary Add face with 3 vertices */
-   addFace3(x1,y1,z1, x2,y2,z2, x3,y3,z3) {
-      let indx = this.indx, pos = this.pos;
-      pos[indx] = x1;
-      pos[indx+1] = y1;
-      pos[indx+2] = z1;
-      pos[indx+3] = x2;
-      pos[indx+4] = y2;
-      pos[indx+5] = z2;
-      pos[indx+6] = x3;
-      pos[indx+7] = y3;
-      pos[indx+8] = z3;
-      this.last4 = false;
-      this.indx = indx + 9;
-   }
-
-   /** @summary Start polygon */
-   startPolygon() {}
-
-   /** @summary Stop polygon */
-   stopPolygon() {}
-
-   /** @summary Add face with 4 vertices
-     * @desc From four vertices one normally creates two faces (1,2,3) and (1,3,4)
-     * if (reduce == 1), first face is reduced
-     * if (reduce == 2), second face is reduced*/
-   addFace4(x1,y1,z1, x2,y2,z2, x3,y3,z3, x4,y4,z4, reduce) {
-      let indx = this.indx, pos = this.pos;
-
-      if (reduce !== 1) {
-         pos[indx] = x1;
-         pos[indx+1] = y1;
-         pos[indx+2] = z1;
-         pos[indx+3] = x2;
-         pos[indx+4] = y2;
-         pos[indx+5] = z2;
-         pos[indx+6] = x3;
-         pos[indx+7] = y3;
-         pos[indx+8] = z3;
-         indx+=9;
-      }
-
-      if (reduce !== 2) {
-         pos[indx] = x1;
-         pos[indx+1] = y1;
-         pos[indx+2] = z1;
-         pos[indx+3] = x3;
-         pos[indx+4] = y3;
-         pos[indx+5] = z3;
-         pos[indx+6] = x4;
-         pos[indx+7] = y4;
-         pos[indx+8] = z4;
-         indx+=9;
-      }
-
-      this.last4 = (indx !== this.indx + 9);
-      this.indx = indx;
-   }
-
-   /** @summary Specify normal for face with 4 vertices
-     * @desc same as addFace4, assign normals for each individual vertex
-     * reduce has same meaning and should be the same */
-   setNormal4(nx1,ny1,nz1, nx2,ny2,nz2, nx3,ny3,nz3, nx4,ny4,nz4, reduce) {
-      if (this.last4 && reduce)
-         return console.error('missmatch between addFace4 and setNormal4 calls');
-
-      let indx = this.indx - (this.last4 ? 18 : 9), norm = this.norm;
-
-      if (reduce!==1) {
-         norm[indx] = nx1;
-         norm[indx+1] = ny1;
-         norm[indx+2] = nz1;
-         norm[indx+3] = nx2;
-         norm[indx+4] = ny2;
-         norm[indx+5] = nz2;
-         norm[indx+6] = nx3;
-         norm[indx+7] = ny3;
-         norm[indx+8] = nz3;
-         indx+=9;
-      }
-
-      if (reduce!==2) {
-         norm[indx] = nx1;
-         norm[indx+1] = ny1;
-         norm[indx+2] = nz1;
-         norm[indx+3] = nx3;
-         norm[indx+4] = ny3;
-         norm[indx+5] = nz3;
-         norm[indx+6] = nx4;
-         norm[indx+7] = ny4;
-         norm[indx+8] = nz4;
-      }
-   }
-
-   /** @summary Recalculate Z with provided func */
-   recalcZ(func) {
-      let pos = this.pos,
-          last = this.indx,
-          indx = last - (this.last4 ? 18 : 9);
-
-      while (indx < last) {
-         pos[indx+2] = func(pos[indx], pos[indx+1], pos[indx+2]);
-         indx+=3;
-      }
-   }
-
-   /** @summary Caclualte normal */
-   calcNormal() {
-      if (!this.cb) {
-         this.pA = new Vector3();
-         this.pB = new Vector3();
-         this.pC = new Vector3();
-         this.cb = new Vector3();
-         this.ab = new Vector3();
-      }
-
-      this.pA.fromArray(this.pos, this.indx - 9);
-      this.pB.fromArray(this.pos, this.indx - 6);
-      this.pC.fromArray(this.pos, this.indx - 3);
-
-      this.cb.subVectors(this.pC, this.pB);
-      this.ab.subVectors(this.pA, this.pB);
-      this.cb.cross(this.ab);
-
-      this.setNormal(this.cb.x, this.cb.y, this.cb.z);
-   }
-
-   /** @summary Set normal */
-   setNormal(nx,ny,nz) {
-      let indx = this.indx - 9, norm = this.norm;
-
-      norm[indx]   = norm[indx+3] = norm[indx+6] = nx;
-      norm[indx+1] = norm[indx+4] = norm[indx+7] = ny;
-      norm[indx+2] = norm[indx+5] = norm[indx+8] = nz;
-
-      if (this.last4) {
-         indx -= 9;
-         norm[indx]   = norm[indx+3] = norm[indx+6] = nx;
-         norm[indx+1] = norm[indx+4] = norm[indx+7] = ny;
-         norm[indx+2] = norm[indx+5] = norm[indx+8] = nz;
-      }
-   }
-
-   /** @summary Set normal
-     * @desc special shortcut, when same normals can be applied for 1-2 point and 3-4 point */
-   setNormal_12_34(nx12,ny12,nz12, nx34,ny34,nz34, reduce) {
-      if (reduce === undefined) reduce = 0;
-
-      let indx = this.indx - ((reduce > 0) ? 9 : 18), norm = this.norm;
-
-      if (reduce!==1) {
-         norm[indx]   = nx12;
-         norm[indx+1] = ny12;
-         norm[indx+2] = nz12;
-         norm[indx+3] = nx12;
-         norm[indx+4] = ny12;
-         norm[indx+5] = nz12;
-         norm[indx+6] = nx34;
-         norm[indx+7] = ny34;
-         norm[indx+8] = nz34;
-         indx+=9;
-      }
-
-      if (reduce!==2) {
-         norm[indx]   = nx12;
-         norm[indx+1] = ny12;
-         norm[indx+2] = nz12;
-         norm[indx+3] = nx34;
-         norm[indx+4] = ny34;
-         norm[indx+5] = nz34;
-         norm[indx+6] = nx34;
-         norm[indx+7] = ny34;
-         norm[indx+8] = nz34;
-         indx+=9;
-      }
-   }
-
-   /** @summary Create geometry */
-   create() {
-      if (this.nfaces !== this.indx/9)
-         console.error(`Mismatch with created ${this.nfaces} and filled ${this.indx/9} number of faces`);
-
-      let geometry = new BufferGeometry();
-      geometry.setAttribute('position', new BufferAttribute(this.pos, 3));
-      geometry.setAttribute('normal', new BufferAttribute(this.norm, 3));
-      return geometry;
-   }
-}
-
-// ================================================================================
-
-/** @summary Helper class for CsgGeometry creation
-  *
-  * @private
-  */
-
-class PolygonsCreator{
-
-   /** @summary constructor */
-   constructor() {
-      this.polygons = [];
-   }
-
-   /** @summary Start polygon */
-   startPolygon(normal) {
-      this.multi = 1;
-      this.mnormal = normal;
-   }
-
-   /** @summary Stop polygon */
-   stopPolygon() {
-      if (!this.multi) return;
-      this.multi = 0;
-      console.error('Polygon should be already closed at this moment');
-   }
-
-   /** @summary Add face with 3 vertices */
-   addFace3(x1,y1,z1, x2,y2,z2, x3,y3,z3) {
-      this.addFace4(x1,y1,z1, x2,y2,z2, x3,y3,z3, x3,y3,z3, 2);
-   }
-
-   /** @summary Add face with 4 vertices
-     * @desc From four vertices one normally creates two faces (1,2,3) and (1,3,4)
-     * if (reduce == 1), first face is reduced
-     * if (reduce == 2), second face is reduced */
-   addFace4(x1,y1,z1, x2,y2,z2, x3,y3,z3, x4,y4,z4, reduce) {
-      if (reduce === undefined) reduce = 0;
-
-      this.v1 = new Vertex(x1,y1,z1, 0,0,0);
-      this.v2 = (reduce === 1) ? null : new Vertex(x2,y2,z2, 0,0,0);
-      this.v3 = new Vertex(x3,y3,z3, 0,0,0);
-      this.v4 = (reduce === 2) ? null : new Vertex(x4,y4,z4, 0,0,0);
-
-      this.reduce = reduce;
-
-      if (this.multi) {
-
-         if (reduce!==2) console.error('polygon not supported for not-reduced faces');
-
-         let polygon;
-
-         if (this.multi++ === 1) {
-            polygon = new Polygon;
-
-            polygon.vertices.push(this.mnormal ? this.v2 : this.v3);
-            this.polygons.push(polygon);
-         } else {
-            polygon = this.polygons[this.polygons.length-1];
-            // check that last vertice equals to v2
-            let last = this.mnormal ? polygon.vertices[polygon.vertices.length-1] : polygon.vertices[0],
-                comp = this.mnormal ? this.v2 : this.v3;
-
-            if (comp.diff(last) > 1e-12)
-               console.error('vertex missmatch when building polygon');
-         }
-
-         let first = this.mnormal ? polygon.vertices[0] : polygon.vertices[polygon.vertices.length-1],
-             next = this.mnormal ? this.v3 : this.v2;
-
-         if (next.diff(first) < 1e-12) {
-            //console.log(`polygon closed!!! nvertices = ${polygon.vertices.length}`);
-            this.multi = 0;
-         } else
-         if (this.mnormal) {
-            polygon.vertices.push(this.v3);
-         } else {
-            polygon.vertices.unshift(this.v2);
-         }
-
-         return;
-
-      }
-
-      let polygon = new Polygon;
-
-      switch (reduce) {
-         case 0: polygon.vertices.push(this.v1, this.v2, this.v3, this.v4); break;
-         case 1: polygon.vertices.push(this.v1, this.v3, this.v4); break;
-         case 2: polygon.vertices.push(this.v1, this.v2, this.v3); break;
-      }
-
-      this.polygons.push(polygon);
-   }
-
-   /** @summary Specify normal for face with 4 vertices
-     * @desc same as addFace4, assign normals for each individual vertex
-     * reduce has same meaning and should be the same */
-   setNormal4(nx1,ny1,nz1, nx2,ny2,nz2, nx3,ny3,nz3, nx4,ny4,nz4) {
-      this.v1.setnormal(nx1,ny1,nz1);
-      if (this.v2) this.v2.setnormal(nx2,ny2,nz2);
-      this.v3.setnormal(nx3,ny3,nz3);
-      if (this.v4) this.v4.setnormal(nx4,ny4,nz4);
-   }
-
-   /** @summary Set normal
-     * @desc special shortcut, when same normals can be applied for 1-2 point and 3-4 point */
-   setNormal_12_34(nx12,ny12,nz12, nx34,ny34,nz34) {
-      this.v1.setnormal(nx12,ny12,nz12);
-      if (this.v2) this.v2.setnormal(nx12,ny12,nz12);
-      this.v3.setnormal(nx34,ny34,nz34);
-      if (this.v4) this.v4.setnormal(nx34,ny34,nz34);
-   }
-
-   /** @summary Calculate normal */
-   calcNormal() {
-
-      if (!this.cb) {
-         this.pA = new Vector3();
-         this.pB = new Vector3();
-         this.pC = new Vector3();
-         this.cb = new Vector3();
-         this.ab = new Vector3();
-      }
-
-      this.pA.set( this.v1.x, this.v1.y, this.v1.z);
-
-      if (this.reduce !== 1) {
-         this.pB.set( this.v2.x, this.v2.y, this.v2.z);
-         this.pC.set( this.v3.x, this.v3.y, this.v3.z);
-      } else {
-         this.pB.set( this.v3.x, this.v3.y, this.v3.z);
-         this.pC.set( this.v4.x, this.v4.y, this.v4.z);
-      }
-
-      this.cb.subVectors(this.pC, this.pB);
-      this.ab.subVectors(this.pA, this.pB);
-      this.cb.cross(this.ab);
-
-      this.setNormal(this.cb.x, this.cb.y, this.cb.z);
-   }
-
-   /** @summary Set normal*/
-   setNormal(nx,ny,nz) {
-      this.v1.setnormal(nx,ny,nz);
-      if (this.v2) this.v2.setnormal(nx,ny,nz);
-      this.v3.setnormal(nx,ny,nz);
-      if (this.v4) this.v4.setnormal(nx,ny,nz);
-   }
-
-   /** @summary Recalculate Z with provided func */
-   recalcZ(func) {
-      this.v1.z = func(this.v1.x, this.v1.y, this.v1.z);
-      if (this.v2) this.v2.z = func(this.v2.x, this.v2.y, this.v2.z);
-      this.v3.z = func(this.v3.x, this.v3.y, this.v3.z);
-      if (this.v4) this.v4.z = func(this.v4.x, this.v4.y, this.v4.z);
-   }
-
-   /** @summary Create geometry
-     * @private */
-   create() {
-      return { polygons: this.polygons };
-   }
-}
-
-// ================= all functions to create geometry ===================================
-
-/** @summary Creates cube geometrey
-  * @private */
-function createCubeBuffer(shape, faces_limit) {
-
-   if (faces_limit < 0) return 12;
-
-   let dx = shape.fDX, dy = shape.fDY, dz = shape.fDZ,
-       creator = faces_limit ? new PolygonsCreator : new GeometryCreator(12);
-
-   creator.addFace4(dx,dy,dz, dx,-dy,dz, dx,-dy,-dz, dx,dy,-dz); creator.setNormal(1,0,0);
-
-   creator.addFace4(-dx,dy,-dz, -dx,-dy,-dz, -dx,-dy,dz, -dx,dy,dz); creator.setNormal(-1,0,0);
-
-   creator.addFace4(-dx,dy,-dz, -dx,dy,dz, dx,dy,dz, dx,dy,-dz); creator.setNormal(0,1,0);
-
-   creator.addFace4(-dx,-dy,dz, -dx,-dy,-dz, dx,-dy,-dz, dx,-dy,dz); creator.setNormal(0,-1,0);
-
-   creator.addFace4(-dx,dy,dz, -dx,-dy,dz, dx,-dy,dz, dx,dy,dz); creator.setNormal(0,0,1);
-
-   creator.addFace4(dx,dy,-dz, dx,-dy,-dz, -dx,-dy,-dz, -dx,dy,-dz); creator.setNormal(0,0,-1);
-
-   return creator.create();
-}
-
-/** @summary Creates 8 edges geometry
-  * @private */
-function create8edgesBuffer( v, faces_limit ) {
-
-   let indicies = [4,7,6,5, 0,3,7,4, 4,5,1,0, 6,2,1,5, 7,3,2,6, 1,2,3,0],
-        creator = (faces_limit > 0) ? new PolygonsCreator : new GeometryCreator(12);
-
-   for (let n = 0; n < indicies.length; n += 4) {
-      let i1 = indicies[n]*3,
-          i2 = indicies[n+1]*3,
-          i3 = indicies[n+2]*3,
-          i4 = indicies[n+3]*3;
-      creator.addFace4(v[i1], v[i1+1], v[i1+2], v[i2], v[i2+1], v[i2+2],
-                       v[i3], v[i3+1], v[i3+2], v[i4], v[i4+1], v[i4+2]);
-      if (n === 0)
-         creator.setNormal(0,0,1);
-      else if (n === 20)
-         creator.setNormal(0,0,-1);
-      else
-         creator.calcNormal();
-   }
-
-   return creator.create();
-}
-
-/** @summary Creates PARA geometrey
-  * @private */
-function createParaBuffer( shape, faces_limit ) {
-
-   if (faces_limit < 0) return 12;
-
-   let txy = shape.fTxy, txz = shape.fTxz, tyz = shape.fTyz, v = [
-       -shape.fZ*txz-txy*shape.fY-shape.fX, -shape.fY-shape.fZ*tyz, -shape.fZ,
-       -shape.fZ*txz+txy*shape.fY-shape.fX,  shape.fY-shape.fZ*tyz, -shape.fZ,
-       -shape.fZ*txz+txy*shape.fY+shape.fX,  shape.fY-shape.fZ*tyz, -shape.fZ,
-       -shape.fZ*txz-txy*shape.fY+shape.fX, -shape.fY-shape.fZ*tyz, -shape.fZ,
-        shape.fZ*txz-txy*shape.fY-shape.fX, -shape.fY+shape.fZ*tyz,  shape.fZ,
-        shape.fZ*txz+txy*shape.fY-shape.fX,  shape.fY+shape.fZ*tyz,  shape.fZ,
-        shape.fZ*txz+txy*shape.fY+shape.fX,  shape.fY+shape.fZ*tyz,  shape.fZ,
-        shape.fZ*txz-txy*shape.fY+shape.fX, -shape.fY+shape.fZ*tyz,  shape.fZ ];
-
-   return create8edgesBuffer(v, faces_limit );
-}
-
-/** @summary Creates Ttrapezoid geometrey
-  * @private */
-function createTrapezoidBuffer( shape, faces_limit ) {
-
-   if (faces_limit < 0) return 12;
-
-   let y1, y2;
-   if (shape._typename == clTGeoTrd1) {
-      y1 = y2 = shape.fDY;
-   } else {
-      y1 = shape.fDy1; y2 = shape.fDy2;
-   }
-
-   let v = [
-      -shape.fDx1,  y1, -shape.fDZ,
-       shape.fDx1,  y1, -shape.fDZ,
-       shape.fDx1, -y1, -shape.fDZ,
-      -shape.fDx1, -y1, -shape.fDZ,
-      -shape.fDx2,  y2,  shape.fDZ,
-       shape.fDx2,  y2,  shape.fDZ,
-       shape.fDx2, -y2,  shape.fDZ,
-      -shape.fDx2, -y2,  shape.fDZ
-   ];
-
-   return create8edgesBuffer(v, faces_limit );
-}
-
-
-/** @summary Creates arb8 geometrey
-  * @private */
-function createArb8Buffer( shape, faces_limit ) {
-
-   if (faces_limit < 0) return 12;
-
-   let vertices = [
-      shape.fXY[0][0], shape.fXY[0][1], -shape.fDZ,
-      shape.fXY[1][0], shape.fXY[1][1], -shape.fDZ,
-      shape.fXY[2][0], shape.fXY[2][1], -shape.fDZ,
-      shape.fXY[3][0], shape.fXY[3][1], -shape.fDZ,
-      shape.fXY[4][0], shape.fXY[4][1],  shape.fDZ,
-      shape.fXY[5][0], shape.fXY[5][1],  shape.fDZ,
-      shape.fXY[6][0], shape.fXY[6][1],  shape.fDZ,
-      shape.fXY[7][0], shape.fXY[7][1],  shape.fDZ
-   ];
-   const indicies = [
-         4,7,6,  6,5,4,  3,7,4,  4,0,3,
-         5,1,0,  0,4,5,  6,2,1,  1,5,6,
-         7,3,2,  2,6,7,  1,2,3,  3,0,1 ];
-
-   // detect same vertices on both Z-layers
-   for (let side = 0; side < vertices.length; side += vertices.length/2)
-      for (let n1 = side; n1 < side + vertices.length/2 - 3 ; n1+=3)
-         for (let n2 = n1+3; n2 < side + vertices.length/2 ; n2+=3)
-            if ((vertices[n1] === vertices[n2]) &&
-                (vertices[n1+1] === vertices[n2+1]) &&
-                (vertices[n1+2] === vertices[n2+2])) {
-                   for (let k=0;k<indicies.length;++k)
-                     if (indicies[k] === n2/3) indicies[k] = n1/3;
-               }
-
-
-   let map = [], // list of existing faces (with all rotations)
-       numfaces = 0;
-
-   for (let k = 0; k < indicies.length; k += 3) {
-      let id1 = indicies[k]*100   + indicies[k+1]*10 + indicies[k+2],
-          id2 = indicies[k+1]*100 + indicies[k+2]*10 + indicies[k],
-          id3 = indicies[k+2]*100 + indicies[k]*10   + indicies[k+1];
-
-      if ((indicies[k] == indicies[k+1]) || (indicies[k] == indicies[k+2]) || (indicies[k+1] == indicies[k+2]) ||
-          (map.indexOf(id1) >= 0) || (map.indexOf(id2) >= 0) || (map.indexOf(id3) >= 0)) {
-         indicies[k] = indicies[k+1] = indicies[k+2] = -1;
-      } else {
-         map.push(id1,id2,id3);
-         numfaces++;
-      }
-   }
-
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
-
-   for (let n = 0; n < indicies.length; n += 6) {
-      let i1 = indicies[n]   * 3,
-          i2 = indicies[n+1] * 3,
-          i3 = indicies[n+2] * 3,
-          i4 = indicies[n+3] * 3,
-          i5 = indicies[n+4] * 3,
-          i6 = indicies[n+5] * 3,
-          norm = null;
-
-      if ((i1 >= 0) && (i4 >= 0) && faces_limit) {
-         // try to identify two faces with same normal - very useful if one can create face4
-         if (n === 0)
-            norm = new Vector3(0,0,1);
-         else if (n === 30)
-            norm = new Vector3(0,0,-1);
-         else {
-            let norm1 = produceNormal(vertices[i1], vertices[i1+1], vertices[i1+2],
-                                      vertices[i2], vertices[i2+1], vertices[i2+2],
-                                      vertices[i3], vertices[i3+1], vertices[i3+2]);
-
-            norm1.normalize();
-
-            let norm2 = produceNormal(vertices[i4], vertices[i4+1], vertices[i4+2],
-                                      vertices[i5], vertices[i5+1], vertices[i5+2],
-                                      vertices[i6], vertices[i6+1], vertices[i6+2]);
-
-            norm2.normalize();
-
-            if (norm1.distanceToSquared(norm2) < 1e-12) norm = norm1;
-         }
-      }
-
-      if (norm !== null) {
-         creator.addFace4(vertices[i1], vertices[i1+1], vertices[i1+2],
-                          vertices[i2], vertices[i2+1], vertices[i2+2],
-                          vertices[i3], vertices[i3+1], vertices[i3+2],
-                          vertices[i5], vertices[i5+1], vertices[i5+2]);
-         creator.setNormal(norm.x, norm.y, norm.z);
-      }  else {
-         if (i1 >= 0) {
-            creator.addFace3(vertices[i1], vertices[i1+1], vertices[i1+2],
-                             vertices[i2], vertices[i2+1], vertices[i2+2],
-                             vertices[i3], vertices[i3+1], vertices[i3+2]);
-            creator.calcNormal();
-         }
-         if (i4 >= 0) {
-            creator.addFace3(vertices[i4], vertices[i4+1], vertices[i4+2],
-                             vertices[i5], vertices[i5+1], vertices[i5+2],
-                             vertices[i6], vertices[i6+1], vertices[i6+2]);
-            creator.calcNormal();
-         }
-      }
-   }
-
-   return creator.create();
-}
-
-/** @summary Creates sphere geometrey
-  * @private */
-function createSphereBuffer( shape, faces_limit ) {
-   let radius = [shape.fRmax, shape.fRmin],
-       phiStart = shape.fPhi1,
-       phiLength = shape.fPhi2 - shape.fPhi1,
-       thetaStart = shape.fTheta1,
-       thetaLength = shape.fTheta2 - shape.fTheta1,
-       widthSegments = shape.fNseg,
-       heightSegments = shape.fNz,
-       noInside = (radius[1] <= 0);
-
-   if (faces_limit > 0) {
-      let fact = (noInside ? 2 : 4) * widthSegments * heightSegments / faces_limit;
-
-      if (fact > 1.) {
-         widthSegments = Math.max(4, Math.floor(widthSegments/Math.sqrt(fact)));
-         heightSegments = Math.max(4, Math.floor(heightSegments/Math.sqrt(fact)));
-      }
-   }
-
-   let numoutside = widthSegments * heightSegments * 2,
-       numtop = widthSegments * 2,
-       numbottom = widthSegments * 2,
-       numcut = phiLength === 360 ? 0 : heightSegments * (noInside ? 2 : 4),
-       epsilon = 1e-10;
-
-   if (noInside) numbottom = numtop = widthSegments;
-
-   if (faces_limit < 0) return numoutside * (noInside ? 1 : 2) + numtop + numbottom + numcut;
-
-   let _sinp = new Float32Array(widthSegments+1),
-       _cosp = new Float32Array(widthSegments+1),
-       _sint = new Float32Array(heightSegments+1),
-       _cost = new Float32Array(heightSegments+1);
-
-   for (let n = 0; n <= heightSegments; ++n) {
-      let theta = (thetaStart + thetaLength/heightSegments*n)*Math.PI/180;
-      _sint[n] = Math.sin(theta);
-      _cost[n] = Math.cos(theta);
-   }
-
-   for (let n = 0; n <= widthSegments; ++n) {
-      let phi = (phiStart + phiLength/widthSegments*n)*Math.PI/180;
-      _sinp[n] = Math.sin(phi);
-      _cosp[n] = Math.cos(phi);
-   }
-
-   if (Math.abs(_sint[0]) <= epsilon) { numoutside -= widthSegments; numtop = 0; }
-   if (Math.abs(_sint[heightSegments]) <= epsilon) { numoutside -= widthSegments; numbottom = 0; }
-
-   let numfaces = numoutside * (noInside ? 1 : 2) + numtop + numbottom + numcut,
-       creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
-
-   for (let side = 0; side < 2; ++side) {
-      if ((side === 1) && noInside) break;
-
-      let r = radius[side],
-          s = (side === 0) ? 1 : -1,
-          d1 = 1 - side, d2 = 1 - d1;
-
-      // use direct algorithm for the sphere - here normals and position can be calculated directly
-      for (let k = 0; k < heightSegments; ++k) {
-
-         let k1 = k + d1, k2 = k + d2, skip = 0;
-         if (Math.abs(_sint[k1]) <= epsilon) skip = 1; else
-         if (Math.abs(_sint[k2]) <= epsilon) skip = 2;
-
-         for (let n=0;n<widthSegments;++n) {
-            creator.addFace4(
-                  r*_sint[k1]*_cosp[n],   r*_sint[k1] *_sinp[n],   r*_cost[k1],
-                  r*_sint[k1]*_cosp[n+1], r*_sint[k1] *_sinp[n+1], r*_cost[k1],
-                  r*_sint[k2]*_cosp[n+1], r*_sint[k2] *_sinp[n+1], r*_cost[k2],
-                  r*_sint[k2]*_cosp[n],   r*_sint[k2] *_sinp[n],   r*_cost[k2],
-                  skip);
-            creator.setNormal4(
-                  s*_sint[k1]*_cosp[n],   s*_sint[k1] *_sinp[n],   s*_cost[k1],
-                  s*_sint[k1]*_cosp[n+1], s*_sint[k1] *_sinp[n+1], s*_cost[k1],
-                  s*_sint[k2]*_cosp[n+1], s*_sint[k2] *_sinp[n+1], s*_cost[k2],
-                  s*_sint[k2]*_cosp[n],   s*_sint[k2] *_sinp[n],   s*_cost[k2],
-                  skip);
-         }
-      }
-   }
-
-   // top/bottom
-   for (let side = 0; side <= heightSegments; side += heightSegments)
-      if (Math.abs(_sint[side]) >= epsilon) {
-         let ss = _sint[side], cc = _cost[side],
-             d1 = (side === 0) ? 0 : 1, d2 = 1 - d1;
-         for (let n = 0; n < widthSegments; ++n) {
-            creator.addFace4(
-                  radius[1] * ss * _cosp[n+d1], radius[1] * ss * _sinp[n+d1], radius[1] * cc,
-                  radius[0] * ss * _cosp[n+d1], radius[0] * ss * _sinp[n+d1], radius[0] * cc,
-                  radius[0] * ss * _cosp[n+d2], radius[0] * ss * _sinp[n+d2], radius[0] * cc,
-                  radius[1] * ss * _cosp[n+d2], radius[1] * ss * _sinp[n+d2], radius[1] * cc,
-                  noInside ? 2 : 0);
-            creator.calcNormal();
-         }
-      }
-
-   // cut left/right sides
-   if (phiLength < 360) {
-      for (let side=0;side<=widthSegments;side+=widthSegments) {
-         let ss = _sinp[side], cc = _cosp[side],
-             d1 = (side === 0) ? 1 : 0, d2 = 1 - d1;
-
-         for (let k=0;k<heightSegments;++k) {
-            creator.addFace4(
-                  radius[1] * _sint[k+d1] * cc, radius[1] * _sint[k+d1] * ss, radius[1] * _cost[k+d1],
-                  radius[0] * _sint[k+d1] * cc, radius[0] * _sint[k+d1] * ss, radius[0] * _cost[k+d1],
-                  radius[0] * _sint[k+d2] * cc, radius[0] * _sint[k+d2] * ss, radius[0] * _cost[k+d2],
-                  radius[1] * _sint[k+d2] * cc, radius[1] * _sint[k+d2] * ss, radius[1] * _cost[k+d2],
-                  noInside ? 2 : 0);
-            creator.calcNormal();
-         }
-      }
-   }
-
-   return creator.create();
-}
-
-/** @summary Creates tube geometrey
-  * @private */
-function createTubeBuffer( shape, faces_limit) {
-   let outerR, innerR; // inner/outer tube radius
-   if ((shape._typename == clTGeoCone) || (shape._typename == clTGeoConeSeg)) {
-      outerR = [ shape.fRmax2, shape.fRmax1 ];
-      innerR = [ shape.fRmin2, shape.fRmin1 ];
-   } else {
-      outerR = [ shape.fRmax, shape.fRmax ];
-      innerR = [ shape.fRmin, shape.fRmin ];
-   }
-
-   let hasrmin = (innerR[0] > 0) || (innerR[1] > 0),
-       thetaStart = 0, thetaLength = 360;
-
-   if ((shape._typename == clTGeoConeSeg) || (shape._typename == clTGeoTubeSeg) || (shape._typename == clTGeoCtub)) {
-      thetaStart = shape.fPhi1;
-      thetaLength = shape.fPhi2 - shape.fPhi1;
-   }
-
-   let radiusSegments = Math.max(4, Math.round(thetaLength/cfg.GradPerSegm));
-
-   // external surface
-   let numfaces = radiusSegments * (((outerR[0] <= 0) || (outerR[1] <= 0)) ? 1 : 2);
-
-   // internal surface
-   if (hasrmin)
-      numfaces += radiusSegments * (((innerR[0] <= 0) || (innerR[1] <= 0)) ? 1 : 2);
-
-   // upper cap
-   if (outerR[0] > 0) numfaces += radiusSegments * ((innerR[0] > 0) ? 2 : 1);
-   // bottom cup
-   if (outerR[1] > 0) numfaces += radiusSegments * ((innerR[1] > 0) ? 2 : 1);
-
-   if (thetaLength < 360)
-      numfaces += ((outerR[0] > innerR[0]) ? 2 : 0) + ((outerR[1] > innerR[1]) ? 2 : 0);
-
-   if (faces_limit < 0) return numfaces;
-
-   let phi0 = thetaStart*Math.PI/180,
-       dphi = thetaLength/radiusSegments*Math.PI/180,
-       _sin = new Float32Array(radiusSegments+1),
-       _cos = new Float32Array(radiusSegments+1);
-
-   for (let seg = 0; seg <= radiusSegments; ++seg) {
-      _cos[seg] = Math.cos(phi0+seg*dphi);
-      _sin[seg] = Math.sin(phi0+seg*dphi);
-   }
-
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
-
-   const calcZ = (shape._typename !== clTGeoCtub) ? null : (x,y,z) => {
-      let arr = (z < 0) ? shape.fNlow : shape.fNhigh;
-      return ((z < 0) ? -shape.fDz : shape.fDz) - (x*arr[0] + y*arr[1]) / arr[2];
-   };
-
-   // create outer/inner tube
-   for (let side = 0; side < 2; ++side) {
-      if ((side === 1) && !hasrmin) break;
-
-      let R = (side === 0) ? outerR : innerR,
-          d1 = side, d2 = 1 - side, nxy = 1., nz = 0;
-
-      if (R[0] !== R[1]) {
-         let angle = Math.atan2((R[1]-R[0]), 2*shape.fDZ);
-         nxy = Math.cos(angle);
-         nz = Math.sin(angle);
-      }
-
-      if (side === 1) { nxy *= -1; nz *= -1; }
-      let reduce = (R[0] <= 0) ? 2 : ((R[1] <= 0) ? 1 : 0);
-
-      for (let seg = 0; seg < radiusSegments; ++seg) {
-         creator.addFace4(
-               R[0] * _cos[seg+d1], R[0] * _sin[seg+d1],  shape.fDZ,
-               R[1] * _cos[seg+d1], R[1] * _sin[seg+d1], -shape.fDZ,
-               R[1] * _cos[seg+d2], R[1] * _sin[seg+d2], -shape.fDZ,
-               R[0] * _cos[seg+d2], R[0] * _sin[seg+d2],  shape.fDZ,
-               reduce );
-
-         if (calcZ) creator.recalcZ(calcZ);
-
-         creator.setNormal_12_34(nxy*_cos[seg+d1], nxy*_sin[seg+d1], nz,
-                                 nxy*_cos[seg+d2], nxy*_sin[seg+d2], nz,
-                                 reduce);
-      }
-   }
-
-   // create upper/bottom part
-   for (let side = 0; side < 2; ++side) {
-      if (outerR[side] <= 0) continue;
-
-      let d1 = side, d2 = 1- side,
-          sign = (side == 0) ? 1 : -1,
-          reduce = (innerR[side] <= 0) ? 2 : 0;
-      if ((reduce === 2) && (thetaLength === 360) && !calcZ)
-         creator.startPolygon(side === 0);
-      for (let seg = 0; seg < radiusSegments; ++seg) {
-         creator.addFace4(
-               innerR[side] * _cos[seg+d1], innerR[side] * _sin[seg+d1], sign*shape.fDZ,
-               outerR[side] * _cos[seg+d1], outerR[side] * _sin[seg+d1], sign*shape.fDZ,
-               outerR[side] * _cos[seg+d2], outerR[side] * _sin[seg+d2], sign*shape.fDZ,
-               innerR[side] * _cos[seg+d2], innerR[side] * _sin[seg+d2], sign*shape.fDZ,
-               reduce);
-         if (calcZ) {
-            creator.recalcZ(calcZ);
-            creator.calcNormal();
-         } else {
-            creator.setNormal(0,0,sign);
-         }
-      }
-
-      creator.stopPolygon();
-   }
-
-   // create cut surfaces
-   if (thetaLength < 360) {
-      creator.addFace4(innerR[1] * _cos[0], innerR[1] * _sin[0], -shape.fDZ,
-                       outerR[1] * _cos[0], outerR[1] * _sin[0], -shape.fDZ,
-                       outerR[0] * _cos[0], outerR[0] * _sin[0],  shape.fDZ,
-                       innerR[0] * _cos[0], innerR[0] * _sin[0],  shape.fDZ,
-                       (outerR[0] === innerR[0]) ? 2 : ((innerR[1]===outerR[1]) ? 1 : 0));
-      if (calcZ) creator.recalcZ(calcZ);
-      creator.calcNormal();
-
-      creator.addFace4(innerR[0] * _cos[radiusSegments], innerR[0] * _sin[radiusSegments],  shape.fDZ,
-                       outerR[0] * _cos[radiusSegments], outerR[0] * _sin[radiusSegments],  shape.fDZ,
-                       outerR[1] * _cos[radiusSegments], outerR[1] * _sin[radiusSegments], -shape.fDZ,
-                       innerR[1] * _cos[radiusSegments], innerR[1] * _sin[radiusSegments], -shape.fDZ,
-                       (outerR[0] === innerR[0]) ? 1 : ((innerR[1]===outerR[1]) ? 2 : 0));
-
-      if (calcZ) creator.recalcZ(calcZ);
-      creator.calcNormal();
-   }
-
-   return creator.create();
-}
-
-/** @summary Creates eltu geometrey
-  * @private */
-function createEltuBuffer( shape , faces_limit ) {
-   let radiusSegments = Math.max(4, Math.round(360/cfg.GradPerSegm));
-
-   if (faces_limit < 0) return radiusSegments*4;
-
-   // calculate all sin/cos tables in advance
-   let x = new Float32Array(radiusSegments+1),
-       y = new Float32Array(radiusSegments+1);
-   for (let seg=0; seg<=radiusSegments; ++seg) {
-       let phi = seg/radiusSegments*2*Math.PI;
-       x[seg] = shape.fRmin*Math.cos(phi);
-       y[seg] = shape.fRmax*Math.sin(phi);
-   }
-
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(radiusSegments*4),
-       nx1, ny1, nx2 = 1, ny2 = 0;
-
-   // create tube faces
-   for (let seg = 0; seg < radiusSegments; ++seg) {
-      creator.addFace4(x[seg],   y[seg],   +shape.fDZ,
-                       x[seg],   y[seg],   -shape.fDZ,
-                       x[seg+1], y[seg+1], -shape.fDZ,
-                       x[seg+1], y[seg+1],  shape.fDZ);
-
-      // calculate normals ourself
-      nx1 = nx2; ny1 = ny2;
-      nx2 = x[seg+1] * shape.fRmax / shape.fRmin;
-      ny2 = y[seg+1] * shape.fRmin / shape.fRmax;
-      let dist = Math.sqrt(nx2**2 + ny2**2);
-      nx2 = nx2 / dist; ny2 = ny2/dist;
-
-      creator.setNormal_12_34(nx1,ny1,0,nx2,ny2,0);
-   }
-
-   // create top/bottom sides
-   for (let side = 0; side < 2; ++side) {
-      let sign = (side === 0) ? 1 : -1, d1 = side, d2 = 1 - side;
-      for (let seg=0; seg<radiusSegments; ++seg) {
-         creator.addFace3(0,          0,          sign*shape.fDZ,
-                          x[seg+d1],  y[seg+d1],  sign*shape.fDZ,
-                          x[seg+d2],  y[seg+d2],  sign*shape.fDZ);
-         creator.setNormal(0, 0, sign);
-      }
-   }
-
-   return creator.create();
-}
-
-/** @summary Creates torus geometrey
-  * @private */
-function createTorusBuffer( shape, faces_limit ) {
-   let radius = shape.fR,
-       radialSegments = Math.max(6, Math.round(360/cfg.GradPerSegm)),
-       tubularSegments = Math.max(8, Math.round(shape.fDphi/cfg.GradPerSegm)),
-       numfaces = (shape.fRmin > 0 ? 4 : 2) * radialSegments * (tubularSegments + (shape.fDphi !== 360 ? 1 : 0));
-
-   if (faces_limit < 0) return numfaces;
-
-   if ((faces_limit > 0) && (numfaces > faces_limit)) {
-      radialSegments = Math.floor(radialSegments/Math.sqrt(numfaces / faces_limit));
-      tubularSegments = Math.floor(tubularSegments/Math.sqrt(numfaces / faces_limit));
-      numfaces = (shape.fRmin > 0 ? 4 : 2) * radialSegments * (tubularSegments + (shape.fDphi !== 360 ? 1 : 0));
-   }
-
-   let _sinr = new Float32Array(radialSegments+1),
-       _cosr = new Float32Array(radialSegments+1),
-       _sint = new Float32Array(tubularSegments+1),
-       _cost = new Float32Array(tubularSegments+1);
-
-   for (let n = 0; n <= radialSegments; ++n) {
-      _sinr[n] = Math.sin(n/radialSegments*2*Math.PI);
-      _cosr[n] = Math.cos(n/radialSegments*2*Math.PI);
-   }
-
-   for (let t = 0; t <= tubularSegments; ++t) {
-      let angle = (shape.fPhi1 + shape.fDphi*t/tubularSegments)/180*Math.PI;
-      _sint[t] = Math.sin(angle);
-      _cost[t] = Math.cos(angle);
-   }
-
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces),
-       // use vectors for normals calculation
-       p1 = new Vector3(), p2 = new Vector3(), p3 = new Vector3(), p4 = new Vector3(),
-       n1 = new Vector3(), n2 = new Vector3(), n3 = new Vector3(), n4 = new Vector3(),
-       center1 = new Vector3(), center2 = new Vector3();
-
-   for (let side = 0; side < 2; ++side) {
-      if ((side > 0) && (shape.fRmin <= 0)) break;
-      let tube = (side > 0) ? shape.fRmin : shape.fRmax,
-          d1 = 1 - side, d2 = 1 - d1, ns = side > 0 ? -1 : 1;
-
-      for (let t = 0; t < tubularSegments; ++t) {
-         let t1 = t + d1, t2 = t + d2;
-         center1.x = radius * _cost[t1]; center1.y = radius * _sint[t1];
-         center2.x = radius * _cost[t2]; center2.y = radius * _sint[t2];
-
-         for (let n = 0; n < radialSegments; ++n) {
-            p1.x = (radius + tube * _cosr[n])   * _cost[t1]; p1.y = (radius + tube * _cosr[n])   * _sint[t1]; p1.z = tube*_sinr[n];
-            p2.x = (radius + tube * _cosr[n+1]) * _cost[t1]; p2.y = (radius + tube * _cosr[n+1]) * _sint[t1]; p2.z = tube*_sinr[n+1];
-            p3.x = (radius + tube * _cosr[n+1]) * _cost[t2]; p3.y = (radius + tube * _cosr[n+1]) * _sint[t2]; p3.z = tube*_sinr[n+1];
-            p4.x = (radius + tube * _cosr[n])   * _cost[t2]; p4.y = (radius + tube * _cosr[n])   * _sint[t2]; p4.z = tube*_sinr[n];
-
-            creator.addFace4(p1.x, p1.y, p1.z,
-                             p2.x, p2.y, p2.z,
-                             p3.x, p3.y, p3.z,
-                             p4.x, p4.y, p4.z);
-
-            n1.subVectors( p1, center1 ).normalize();
-            n2.subVectors( p2, center1 ).normalize();
-            n3.subVectors( p3, center2 ).normalize();
-            n4.subVectors( p4, center2 ).normalize();
-
-            creator.setNormal4(ns*n1.x, ns*n1.y, ns*n1.z,
-                               ns*n2.x, ns*n2.y, ns*n2.z,
-                               ns*n3.x, ns*n3.y, ns*n3.z,
-                               ns*n4.x, ns*n4.y, ns*n4.z);
-         }
-      }
-   }
-
-   if (shape.fDphi !== 360)
-      for (let t = 0; t <= tubularSegments; t += tubularSegments) {
-         let tube1 = shape.fRmax, tube2 = shape.fRmin,
-             d1 = (t > 0) ? 0 : 1, d2 = 1 - d1,
-             skip = (shape.fRmin) > 0 ?  0 : 1,
-             nsign = (t > 0) ? 1 : -1;
-         for (let n = 0; n < radialSegments; ++n) {
-            creator.addFace4((radius + tube1 * _cosr[n+d1]) * _cost[t], (radius + tube1 * _cosr[n+d1]) * _sint[t], tube1*_sinr[n+d1],
-                             (radius + tube2 * _cosr[n+d1]) * _cost[t], (radius + tube2 * _cosr[n+d1]) * _sint[t], tube2*_sinr[n+d1],
-                             (radius + tube2 * _cosr[n+d2]) * _cost[t], (radius + tube2 * _cosr[n+d2]) * _sint[t], tube2*_sinr[n+d2],
-                             (radius + tube1 * _cosr[n+d2]) * _cost[t], (radius + tube1 * _cosr[n+d2]) * _sint[t], tube1*_sinr[n+d2], skip);
-            creator.setNormal(-nsign* _sint[t], nsign * _cost[t], 0);
-         }
-      }
-
-   return creator.create();
-}
-
-
-/** @summary Creates polygon geometrey
-  * @private */
-function createPolygonBuffer( shape, faces_limit ) {
-   let thetaStart = shape.fPhi1,
-       thetaLength = shape.fDphi,
-       radiusSegments, factor;
-
-   if (shape._typename == clTGeoPgon) {
-      radiusSegments = shape.fNedges;
-      factor = 1. / Math.cos(Math.PI/180 * thetaLength / radiusSegments / 2);
-   } else {
-      radiusSegments = Math.max(5, Math.round(thetaLength/cfg.GradPerSegm));
-      factor = 1;
-   }
-
-   let usage = new Int16Array(2*shape.fNz), numusedlayers = 0, hasrmin = false;
-
-   for (let layer = 0; layer < shape.fNz; ++layer)
-      if (shape.fRmin[layer] > 0) hasrmin = true;
-
-   // return very rough estimation, number of faces may be much less
-   if (faces_limit < 0) return (hasrmin ? 4 : 2) * radiusSegments * (shape.fNz-1);
-
-   // coordinate of point on cut edge (x,z)
-   let pnts = (thetaLength === 360) ? null : [];
-
-   // first analyse levels - if we need to create all of them
-   for (let side = 0; side < 2; ++side) {
-      let rside = (side === 0) ? 'fRmax' : 'fRmin';
-
-      for (let layer=0; layer < shape.fNz; ++layer) {
-
-         // first create points for the layer
-         let layerz = shape.fZ[layer], rad = shape[rside][layer];
-
-         usage[layer*2+side] = 0;
-
-         if ((layer > 0) && (layer < shape.fNz-1))
-            if (((shape.fZ[layer-1] === layerz) && (shape[rside][layer-1] === rad)) ||
-                ((shape[rside][layer+1] === rad) && (shape[rside][layer-1] === rad))) {
-
-               // same Z and R as before - ignore
-               // or same R before and after
-
-               continue;
-            }
-
-         if ((layer > 0) && ((side === 0) || hasrmin)) {
-            usage[layer*2+side] = 1;
-            numusedlayers++;
-         }
-
-         if (pnts !== null) {
-            if (side === 0) {
-               pnts.push(new Vector2(factor*rad, layerz));
-            } else if (rad < shape.fRmax[layer]) {
-               pnts.unshift(new Vector2(factor*rad, layerz));
-            }
-         }
-      }
-   }
-
-   let numfaces = numusedlayers*radiusSegments*2;
-   if (shape.fRmin[0] !== shape.fRmax[0]) numfaces += radiusSegments * (hasrmin ? 2 : 1);
-   if (shape.fRmin[shape.fNz-1] !== shape.fRmax[shape.fNz-1]) numfaces += radiusSegments * (hasrmin ? 2 : 1);
-
-   let cut_faces = null;
-
-   if (pnts !== null) {
-      if (pnts.length === shape.fNz * 2) {
-         // special case - all layers are there, create faces ourself
-         cut_faces = [];
-         for (let layer = shape.fNz-1; layer > 0; --layer) {
-            if (shape.fZ[layer] === shape.fZ[layer-1]) continue;
-            let right = 2*shape.fNz - 1 - layer;
-            cut_faces.push([right, layer - 1, layer]);
-            cut_faces.push([right, right + 1, layer-1]);
-         }
-
-      } else {
-         // let three.js calculate our faces
-         // console.log(`triangulate polygon ${shape.fShapeId}`);
-         cut_faces = ShapeUtils.triangulateShape(pnts, []);
-      }
-      numfaces += cut_faces.length*2;
-   }
-
-   let phi0 = thetaStart*Math.PI/180, dphi = thetaLength/radiusSegments*Math.PI/180;
-
-   // calculate all sin/cos tables in advance
-   let _sin = new Float32Array(radiusSegments+1),
-       _cos = new Float32Array(radiusSegments+1);
-   for (let seg=0;seg<=radiusSegments;++seg) {
-      _cos[seg] = Math.cos(phi0+seg*dphi);
-      _sin[seg] = Math.sin(phi0+seg*dphi);
-   }
-
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
-
-   // add sides
-   for (let side = 0; side < 2; ++side) {
-      let rside = (side === 0) ? 'fRmax' : 'fRmin',
-          z1 = shape.fZ[0], r1 = factor*shape[rside][0],
-          d1 = 1 - side, d2 = side;
-
-      for (let layer = 0; layer < shape.fNz; ++layer) {
-
-         if (usage[layer*2+side] === 0) continue;
-
-         let z2 = shape.fZ[layer], r2 = factor*shape[rside][layer],
-             nxy = 1, nz = 0;
-
-         if ((r2 !== r1)) {
-            let angle = Math.atan2((r2-r1), (z2-z1));
-            nxy = Math.cos(angle);
-            nz = Math.sin(angle);
-         }
-
-         if (side > 0) { nxy*=-1; nz*=-1; }
-
-         for (let seg = 0; seg < radiusSegments; ++seg) {
-            creator.addFace4(r1 * _cos[seg+d1], r1 * _sin[seg+d1], z1,
-                             r2 * _cos[seg+d1], r2 * _sin[seg+d1], z2,
-                             r2 * _cos[seg+d2], r2 * _sin[seg+d2], z2,
-                             r1 * _cos[seg+d2], r1 * _sin[seg+d2], z1);
-            creator.setNormal_12_34(nxy*_cos[seg+d1], nxy*_sin[seg+d1], nz, nxy*_cos[seg+d2], nxy*_sin[seg+d2], nz);
-         }
-
-         z1 = z2; r1 = r2;
-      }
-   }
-
-   // add top/bottom
-   for (let layer = 0; layer < shape.fNz; layer += (shape.fNz-1)) {
-
-      let rmin = factor*shape.fRmin[layer], rmax = factor*shape.fRmax[layer];
-
-      if (rmin === rmax) continue;
-
-      let layerz = shape.fZ[layer],
-          d1 = (layer === 0) ? 1 : 0, d2 = 1 - d1,
-          normalz = (layer === 0) ? -1: 1;
-
-      if (!hasrmin && !cut_faces)
-         creator.startPolygon(layer > 0);
-
-      for (let seg = 0; seg < radiusSegments; ++seg) {
-         creator.addFace4(rmin * _cos[seg+d1], rmin * _sin[seg+d1], layerz,
-                          rmax * _cos[seg+d1], rmax * _sin[seg+d1], layerz,
-                          rmax * _cos[seg+d2], rmax * _sin[seg+d2], layerz,
-                          rmin * _cos[seg+d2], rmin * _sin[seg+d2], layerz,
-                          hasrmin ? 0 : 2);
-         creator.setNormal(0, 0, normalz);
-      }
-
-      creator.stopPolygon();
-   }
-
-   if (cut_faces)
-      for (let seg = 0; seg <= radiusSegments; seg += radiusSegments) {
-         let d1 = (seg === 0) ? 1 : 2, d2 = 3 - d1;
-         for (let n=0;n<cut_faces.length;++n) {
-            let a = pnts[cut_faces[n][0]],
-                b = pnts[cut_faces[n][d1]],
-                c = pnts[cut_faces[n][d2]];
-
-            creator.addFace3(a.x * _cos[seg], a.x * _sin[seg], a.y,
-                             b.x * _cos[seg], b.x * _sin[seg], b.y,
-                             c.x * _cos[seg], c.x * _sin[seg], c.y);
-
-            creator.calcNormal();
-         }
-      }
-
-   return creator.create();
-}
-
-/** @summary Creates xtru geometrey
-  * @private */
-function createXtruBuffer( shape, faces_limit ) {
-   let nfaces = (shape.fNz-1) * shape.fNvert * 2;
-
-   if (faces_limit < 0) return nfaces + shape.fNvert*3;
-
-   // create points
-   let pnts = [];
-   for (let vert = 0; vert < shape.fNvert; ++vert)
-      pnts.push(new Vector2(shape.fX[vert], shape.fY[vert]));
-
-   let faces = ShapeUtils.triangulateShape(pnts , []);
-   if (faces.length < pnts.length-2) {
-      geoWarn(`Problem with XTRU shape ${shape.fName} with ${pnts.length} vertices`);
-      faces = [];
-   } else {
-      nfaces += faces.length * 2;
-   }
-
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(nfaces);
-
-   for (let layer = 0; layer < shape.fNz-1; ++layer) {
-      let z1 = shape.fZ[layer], scale1 = shape.fScale[layer],
-          z2 = shape.fZ[layer+1], scale2 = shape.fScale[layer+1],
-          x01 = shape.fX0[layer], x02 = shape.fX0[layer+1],
-          y01 = shape.fY0[layer], y02 = shape.fY0[layer+1];
-
-      for (let vert1 = 0; vert1 < shape.fNvert; ++vert1) {
-         let vert2 = (vert1+1) % shape.fNvert;
-         creator.addFace4(scale1 * shape.fX[vert1] + x01, scale1 * shape.fY[vert1] + y01, z1,
-                          scale2 * shape.fX[vert1] + x02, scale2 * shape.fY[vert1] + y02, z2,
-                          scale2 * shape.fX[vert2] + x02, scale2 * shape.fY[vert2] + y02, z2,
-                          scale1 * shape.fX[vert2] + x01, scale1 * shape.fY[vert2] + y01, z1);
-         creator.calcNormal();
-      }
-   }
-
-   for (let layer = 0; layer <= shape.fNz-1; layer += (shape.fNz-1)) {
-      let z = shape.fZ[layer], scale = shape.fScale[layer],
-          x0 = shape.fX0[layer], y0 = shape.fY0[layer];
-
-      for (let n = 0; n < faces.length; ++n) {
-         let face = faces[n],
-             pnt1 = pnts[face[0]],
-             pnt2 = pnts[face[layer === 0 ? 2 : 1]],
-             pnt3 = pnts[face[layer === 0 ? 1 : 2]];
-
-         creator.addFace3(scale * pnt1.x + x0, scale * pnt1.y + y0, z,
-                          scale * pnt2.x + x0, scale * pnt2.y + y0, z,
-                          scale * pnt3.x + x0, scale * pnt3.y + y0, z);
-         creator.setNormal(0,0,layer === 0 ? -1 : 1);
-      }
-   }
-
-   return creator.create();
-}
-
-/** @summary Creates para geometrey
-  * @private */
-function createParaboloidBuffer( shape, faces_limit ) {
-
-   let radiusSegments = Math.max(4, Math.round(360/cfg.GradPerSegm)),
-       heightSegments = 30;
-
-   if (faces_limit > 0) {
-      let fact = 2*radiusSegments*(heightSegments+1) / faces_limit;
-      if (fact > 1.) {
-         radiusSegments = Math.max(5, Math.floor(radiusSegments/Math.sqrt(fact)));
-         heightSegments = Math.max(5, Math.floor(heightSegments/Math.sqrt(fact)));
-      }
-   }
-
-   let zmin = -shape.fDZ, zmax = shape.fDZ, rmin = shape.fRlo, rmax = shape.fRhi;
-
-   // if no radius at -z, find intersection
-   if (shape.fA >= 0) {
-      if (shape.fB > zmin) zmin = shape.fB;
-   } else {
-      if (shape.fB < zmax) zmax = shape.fB;
-   }
-
-   let ttmin = Math.atan2(zmin, rmin), ttmax = Math.atan2(zmax, rmax);
-
-   let numfaces = (heightSegments+1)*radiusSegments*2;
-   if (rmin === 0) numfaces -= radiusSegments*2; // complete layer
-   if (rmax === 0) numfaces -= radiusSegments*2; // complete layer
-
-   if (faces_limit < 0) return numfaces;
-
-   // calculate all sin/cos tables in advance
-   let _sin = new Float32Array(radiusSegments+1),
-       _cos = new Float32Array(radiusSegments+1);
-   for (let seg=0;seg<=radiusSegments;++seg) {
-      _cos[seg] = Math.cos(seg/radiusSegments*2*Math.PI);
-      _sin[seg] = Math.sin(seg/radiusSegments*2*Math.PI);
-   }
-
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces),
-       lastz = zmin, lastr = 0, lastnxy = 0, lastnz = -1;
-
-   for (let layer = 0; layer <= heightSegments + 1; ++layer) {
-
-      let layerz = 0, radius = 0, nxy = 0, nz = -1;
-
-      if ((layer === 0) && (rmin === 0)) continue;
-
-      if ((layer === heightSegments + 1) && (lastr === 0)) break;
-
-      switch (layer) {
-         case 0: layerz = zmin; radius = rmin; break;
-         case heightSegments: layerz = zmax; radius = rmax; break;
-         case heightSegments + 1: layerz = zmax; radius = 0; break;
-         default: {
-            let tt = Math.tan(ttmin + (ttmax-ttmin) * layer / heightSegments),
-                delta = tt**2 - 4*shape.fA*shape.fB; // should be always positive (a*b < 0)
-            radius = 0.5*(tt+Math.sqrt(delta))/shape.fA;
-            if (radius < 1e-6) radius = 0;
-            layerz = radius*tt;
-         }
-      }
-
-      nxy = shape.fA * radius;
-      nz = (shape.fA > 0) ? -1 : 1;
-
-      let skip = (lastr === 0) ? 1 : ((radius === 0) ? 2 : 0);
-
-      for (let seg = 0; seg < radiusSegments; ++seg) {
-         creator.addFace4(radius*_cos[seg],   radius*_sin[seg], layerz,
-                          lastr*_cos[seg],    lastr*_sin[seg], lastz,
-                          lastr*_cos[seg+1],  lastr*_sin[seg+1], lastz,
-                          radius*_cos[seg+1], radius*_sin[seg+1], layerz, skip);
-
-         // use analytic normal values when open/closing paraboloid around 0
-         // cut faces (top or bottom) set with simple normal
-         if ((skip === 0) || ((layer === 1) && (rmin === 0)) || ((layer === heightSegments+1) && (rmax === 0)))
-            creator.setNormal4(nxy*_cos[seg],       nxy*_sin[seg],       nz,
-                               lastnxy*_cos[seg],   lastnxy*_sin[seg],   lastnz,
-                               lastnxy*_cos[seg+1], lastnxy*_sin[seg+1], lastnz,
-                               nxy*_cos[seg+1],     nxy*_sin[seg+1],     nz, skip);
-         else
-            creator.setNormal(0, 0, (layer < heightSegments) ? -1 : 1);
-      }
-
-      lastz = layerz; lastr = radius;
-      lastnxy = nxy; lastnz = nz;
-   }
-
-   return creator.create();
-}
-
-/** @summary Creates hype geometrey
-  * @private */
-function createHypeBuffer( shape, faces_limit ) {
-
-   if ((shape.fTin === 0) && (shape.fTout === 0))
-      return createTubeBuffer(shape, faces_limit);
-
-   let radiusSegments = Math.max(4, Math.round(360/cfg.GradPerSegm)),
-       heightSegments = 30,
-       numfaces = radiusSegments * (heightSegments + 1) * ((shape.fRmin > 0) ? 4 : 2);
-
-   if (faces_limit < 0) return numfaces;
-
-   if ((faces_limit > 0) && (faces_limit > numfaces)) {
-      radiusSegments = Math.max(4, Math.floor(radiusSegments/Math.sqrt(numfaces/faces_limit)));
-      heightSegments = Math.max(4, Math.floor(heightSegments/Math.sqrt(numfaces/faces_limit)));
-      numfaces = radiusSegments * (heightSegments + 1) * ((shape.fRmin > 0) ? 4 : 2);
-   }
-
-   // calculate all sin/cos tables in advance
-   let _sin = new Float32Array(radiusSegments+1), _cos = new Float32Array(radiusSegments+1);
-   for (let seg=0;seg<=radiusSegments;++seg) {
-      _cos[seg] = Math.cos(seg/radiusSegments*2*Math.PI);
-      _sin[seg] = Math.sin(seg/radiusSegments*2*Math.PI);
-   }
-
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
-
-   // in-out side
-   for (let side = 0; side < 2; ++side) {
-      if ((side > 0) && (shape.fRmin <= 0)) break;
-
-      let r0 = (side > 0) ? shape.fRmin : shape.fRmax,
-          tsq = (side > 0) ? shape.fTinsq : shape.fToutsq,
-          d1 = 1- side, d2 = 1 - d1;
-
-      // vertical layers
-      for (let layer = 0; layer < heightSegments; ++layer) {
-         let z1 = -shape.fDz + layer/heightSegments*2*shape.fDz,
-             z2 = -shape.fDz + (layer+1)/heightSegments*2*shape.fDz,
-             r1 = Math.sqrt(r0**2 + tsq*z1**2),
-             r2 = Math.sqrt(r0**2 + tsq*z2**2);
-
-         for (let seg = 0; seg < radiusSegments; ++seg) {
-            creator.addFace4(r1 * _cos[seg+d1], r1 * _sin[seg+d1], z1,
-                             r2 * _cos[seg+d1], r2 * _sin[seg+d1], z2,
-                             r2 * _cos[seg+d2], r2 * _sin[seg+d2], z2,
-                             r1 * _cos[seg+d2], r1 * _sin[seg+d2], z1);
-            creator.calcNormal();
-         }
-      }
-   }
-
-   // add caps
-   for (let layer = 0; layer < 2; ++layer) {
-      let z = (layer === 0) ? shape.fDz : -shape.fDz,
-          r1 = Math.sqrt(shape.fRmax**2 + shape.fToutsq*z**2),
-          r2 = (shape.fRmin > 0) ? Math.sqrt(shape.fRmin**2 + shape.fTinsq*z**2) : 0,
-          skip = (shape.fRmin > 0) ? 0 : 1,
-          d1 = 1 - layer, d2 = 1 - d1;
-      for (let seg = 0; seg < radiusSegments; ++seg) {
-          creator.addFace4(r1 * _cos[seg+d1], r1 * _sin[seg+d1], z,
-                           r2 * _cos[seg+d1], r2 * _sin[seg+d1], z,
-                           r2 * _cos[seg+d2], r2 * _sin[seg+d2], z,
-                           r1 * _cos[seg+d2], r1 * _sin[seg+d2], z, skip);
-          creator.setNormal(0,0, (layer === 0) ? 1 : -1);
-       }
-   }
-
-   return creator.create();
-}
-
-/** @summary Creates tessalated geometrey
-  * @private */
-function createTessellatedBuffer( shape, faces_limit) {
-   let numfaces = 0;
-
-   for (let i = 0; i < shape.fFacets.length; ++i) {
-      let f = shape.fFacets[i];
-      if (f.fNvert == 4) numfaces += 2;
-                    else numfaces += 1;
-   }
-
-   if (faces_limit < 0) return numfaces;
-
-   let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
-
-   for (let i = 0; i < shape.fFacets.length; ++i) {
-      let f = shape.fFacets[i],
-          v0 = shape.fVertices[f.fIvert[0]].fVec,
-          v1 = shape.fVertices[f.fIvert[1]].fVec,
-          v2 = shape.fVertices[f.fIvert[2]].fVec;
-
-      if (f.fNvert == 4) {
-         let v3 = shape.fVertices[f.fIvert[3]].fVec;
-         creator.addFace4(v0[0], v0[1], v0[2], v1[0], v1[1], v1[2], v2[0], v2[1], v2[2], v3[0], v3[1], v3[2]);
-         creator.calcNormal();
-      } else {
-         creator.addFace3(v0[0], v0[1], v0[2], v1[0], v1[1], v1[2], v2[0], v2[1], v2[2]);
-         creator.calcNormal();
-      }
-   }
-
-   return creator.create();
-}
-
-/** @summary Creates Matrix4 from TGeoMatrix
-  * @private */
-function createMatrix(matrix) {
-
-   if (!matrix) return null;
-
-   let translation, rotation, scale;
-
-   switch (matrix._typename) {
-      case 'TGeoTranslation': translation = matrix.fTranslation; break;
-      case 'TGeoRotation': rotation = matrix.fRotationMatrix; break;
-      case 'TGeoScale': scale = matrix.fScale; break;
-      case 'TGeoGenTrans':
-         scale = matrix.fScale; // no break, translation and rotation follows
-      case 'TGeoCombiTrans':
-         translation = matrix.fTranslation;
-         if (matrix.fRotation) rotation = matrix.fRotation.fRotationMatrix;
-         break;
-      case 'TGeoHMatrix':
-         translation = matrix.fTranslation;
-         rotation = matrix.fRotationMatrix;
-         scale = matrix.fScale;
-         break;
-      case 'TGeoIdentity':
-         break;
-      default:
-         console.warn(`unsupported matrix ${matrix._typename}`);
-   }
-
-   if (!translation && !rotation && !scale) return null;
-
-   let res = new Matrix4();
-
-   if (rotation)
-      res.set(rotation[0], rotation[1], rotation[2],  0,
-              rotation[3], rotation[4], rotation[5],  0,
-              rotation[6], rotation[7], rotation[8],  0,
-                        0,           0,           0,  1);
-
-   if (translation)
-      res.setPosition(translation[0], translation[1], translation[2]);
-
-   if (scale)
-      res.scale(new Vector3(scale[0], scale[1], scale[2]));
-
-   return res;
-}
-
-/** @summary Creates transformation matrix for TGeoNode
-  * @desc created after node visibility flag is checked and volume cut is performed
-  * @private */
-function getNodeMatrix(kind, node) {
-
-   let matrix = null;
-
-   if (kind === kindEve) {
-      // special handling for EVE nodes
-
-      matrix = new Matrix4();
-
-      if (node.fTrans) {
-         matrix.set(node.fTrans[0],  node.fTrans[4],  node.fTrans[8],  0,
-                    node.fTrans[1],  node.fTrans[5],  node.fTrans[9],  0,
-                    node.fTrans[2],  node.fTrans[6],  node.fTrans[10], 0,
-                                 0,               0,               0,  1);
-         // second - set position with proper sign
-         matrix.setPosition(node.fTrans[12], node.fTrans[13], node.fTrans[14]);
-      }
-   } else if (node.fMatrix) {
-      matrix = createMatrix(node.fMatrix);
-   } else if ((node._typename == 'TGeoNodeOffset') && node.fFinder) {
-      const kPatternReflected = BIT(14);
-      if ((node.fFinder.fBits & kPatternReflected) !== 0)
-         geoWarn('Unsupported reflected pattern ' + node.fFinder._typename);
-
-      // if (node.fFinder._typename === 'TGeoPatternCylR') { }
-      // if (node.fFinder._typename === 'TGeoPatternSphR') { }
-      // if (node.fFinder._typename === 'TGeoPatternSphTheta') { }
-      // if (node.fFinder._typename === 'TGeoPatternSphPhi') { }
-      // if (node.fFinder._typename === 'TGeoPatternHoneycomb') { }
-      switch(node.fFinder._typename) {
-        case 'TGeoPatternX':
-        case 'TGeoPatternY':
-        case 'TGeoPatternZ':
-        case 'TGeoPatternParaX':
-        case 'TGeoPatternParaY':
-        case 'TGeoPatternParaZ':
-           let _shift = node.fFinder.fStart + (node.fIndex + 0.5) * node.fFinder.fStep;
-
-           matrix = new Matrix4();
-
-           switch (node.fFinder._typename[node.fFinder._typename.length-1]) {
-              case 'X': matrix.setPosition(_shift, 0, 0); break;
-              case 'Y': matrix.setPosition(0, _shift, 0); break;
-              case 'Z': matrix.setPosition(0, 0, _shift); break;
-           }
-           break;
-
-        case 'TGeoPatternCylPhi':
-           let phi = (Math.PI/180)*(node.fFinder.fStart+(node.fIndex+0.5)*node.fFinder.fStep),
-               _cos = Math.cos(phi), _sin = Math.sin(phi);
-
-           matrix = new Matrix4();
-
-           matrix.set(_cos, -_sin,  0,  0,
-                      _sin,  _cos,  0,  0,
-                         0,     0,  1,  0,
-                         0,     0,  0,  1);
-           break;
-
-        case 'TGeoPatternCylR':
-            // seems to be, require no transformation
-            matrix = new Matrix4();
-            break;
-
-        case 'TGeoPatternTrapZ':
-           let dz = node.fFinder.fStart + (node.fIndex+0.5)*node.fFinder.fStep;
-           matrix = new Matrix4();
-           matrix.setPosition(node.fFinder.fTxz*dz, node.fFinder.fTyz*dz, dz);
-           break;
-
-        default:
-           geoWarn(`Unsupported pattern type ${node.fFinder._typename}`);
-           break;
-      }
-   }
-
-   return matrix;
-}
-
-/** @summary Returns number of faces for provided geometry
-  * @param {Object} geom  - can be BufferGeometry, CsgGeometry or interim array of polygons
-  * @private */
-function numGeometryFaces(geom) {
-   if (!geom) return 0;
-
-   if (geom instanceof Geometry)
-      return geom.tree.numPolygons();
-
-   // special array of polygons
-   if (geom.polygons)
-      return geom.polygons.length;
-
-   let attr = geom.getAttribute('position');
-   return attr?.count ? Math.round(attr.count / 3) : 0;
-}
-
-/** @summary Returns geometry bounding box
-  * @private */
-function geomBoundingBox(geom) {
-   if (!geom) return null;
-
-   let polygons = null;
-
-   if (geom instanceof Geometry)
-      polygons = geom.tree.collectPolygons();
-   else if (geom.polygons)
-      polygons = geom.polygons;
-
-   if (polygons !== null) {
-      let box = new Box3();
-      for (let n = 0; n < polygons.length; ++n) {
-         let polygon = polygons[n], nvert = polygon.vertices.length;
-         for (let k = 0; k < nvert; ++k)
-            box.expandByPoint(polygon.vertices[k]);
-      }
-      return box;
-   }
-
-   if (!geom.boundingBox)
-      geom.computeBoundingBox();
-
-   return geom.boundingBox.clone();
-}
-
-/** @summary Creates half-space geometry for given shape
-  * @desc Just big-enough triangle to make BSP calculations
-  * @private */
-function createHalfSpace(shape, geom) {
-   if (!shape?.fN || !shape?.fP) return null;
-
-   let vertex = new Vector3(shape.fP[0], shape.fP[1], shape.fP[2]),
-       normal = new Vector3(shape.fN[0], shape.fN[1], shape.fN[2]);
-
-   normal.normalize();
-
-   let sz = 1e10;
-   if (geom) {
-      // using real size of other geometry, we probably improve precision
-      let box = geomBoundingBox(geom);
-      if (box) sz = box.getSize(new Vector3()).length() * 1000;
-   }
-
-   let v0 = new Vector3(-sz, -sz/2, 0),
-       v1 = new Vector3(0, sz, 0),
-       v2 = new Vector3(sz, -sz/2, 0),
-       v3 = new Vector3(0, 0, -sz),
-       geometry = new BufferGeometry(),
-       positions = new Float32Array([ v0.x,v0.y,v0.z, v2.x,v2.y,v2.z, v1.x,v1.y,v1.z,
-                                      v0.x,v0.y,v0.z, v1.x,v1.y,v1.z, v3.x,v3.y,v3.z,
-                                      v1.x,v1.y,v1.z, v2.x,v2.y,v2.z, v3.x,v3.y,v3.z,
-                                      v2.x,v2.y,v2.z, v0.x,v0.y,v0.z, v3.x,v3.y,v3.z ]);
-   geometry.setAttribute('position', new BufferAttribute(positions, 3));
-   geometry.computeVertexNormals();
-
-   geometry.lookAt(normal);
-   geometry.computeVertexNormals();
-
-   for(let k = 0; k < positions.length; k += 3) {
-      positions[k] = positions[k] + vertex.x;
-      positions[k+1] = positions[k+1] + vertex.y;
-      positions[k+2] = positions[k+2] + vertex.z;
-   }
-
-   return geometry;
-}
-
-/** @summary Returns number of faces for provided geometry
-  * @param geom  - can be BufferGeometry, CsgGeometry or interim array of polygons
-  * @private */
-function countGeometryFaces(geom) {
-   if (!geom) return 0;
-
-   if (geom instanceof Geometry)
-      return geom.tree.numPolygons();
-
-   // special array of polygons
-   if (geom.polygons)
-      return geom.polygons.length;
-
-   let attr = geom.getAttribute('position');
-   return attr?.count ? Math.round(attr.count / 3) : 0;
-}
-
-/** @summary Creates geometrey for composite shape
-  * @private */
-function createComposite( shape, faces_limit ) {
-
-   if (faces_limit < 0)
-      return createGeometry(shape.fNode.fLeft, -10) +
-             createGeometry(shape.fNode.fRight, -10);
-
-   let geom1, geom2, bsp1, bsp2, return_bsp = false,
-       matrix1 = createMatrix(shape.fNode.fLeftMat),
-       matrix2 = createMatrix(shape.fNode.fRightMat);
-
-   if (faces_limit === 0) faces_limit = 4000;
-                     else return_bsp = true;
-
-   if (matrix1 && (matrix1.determinant() < -0.9))
-      geoWarn('Axis reflection in left composite shape - not supported');
-
-   if (matrix2 && (matrix2.determinant() < -0.9))
-      geoWarn('Axis reflections in right composite shape - not supported');
-
-   if (shape.fNode.fLeft._typename == clTGeoHalfSpace) {
-      geom1 = createHalfSpace(shape.fNode.fLeft);
-   } else {
-      geom1 = createGeometry(shape.fNode.fLeft, faces_limit);
-   }
-
-   if (!geom1) return null;
-
-   let n1 = countGeometryFaces(geom1), n2 = 0;
-   if (geom1._exceed_limit) n1 += faces_limit;
-
-   if (n1 < faces_limit) {
-
-      if (shape.fNode.fRight._typename == clTGeoHalfSpace) {
-         geom2 = createHalfSpace(shape.fNode.fRight, geom1);
-      } else {
-         geom2 = createGeometry(shape.fNode.fRight, faces_limit);
-      }
-
-      n2 = countGeometryFaces(geom2);
-   }
-
-   if ((n1 + n2 >= faces_limit) || !geom2) {
-      if (geom1.polygons)
-         geom1 = createBufferGeometry(geom1.polygons);
-      if (matrix1) geom1.applyMatrix4(matrix1);
-      geom1._exceed_limit = true;
-      return geom1;
-   }
-
-   bsp1 = new Geometry(geom1, matrix1, cfg.CompressComp ? 0 : undefined);
-
-   bsp2 = new Geometry(geom2, matrix2, bsp1.maxid);
-
-   // take over maxid from both geometries
-   bsp1.maxid = bsp2.maxid;
-
-   switch(shape.fNode._typename) {
-      case 'TGeoIntersection': bsp1.direct_intersect(bsp2);  break; // '*'
-      case 'TGeoUnion': bsp1.direct_union(bsp2); break;   // '+'
-      case 'TGeoSubtraction': bsp1.direct_subtract(bsp2); break; // '/'
-      default:
-         geoWarn('unsupported bool operation ' + shape.fNode._typename + ', use first geom');
-   }
-
-   if (countGeometryFaces(bsp1) === 0) {
-      geoWarn('Zero faces in comp shape'
-            + ` left: ${shape.fNode.fLeft._typename} ${countGeometryFaces(geom1)} faces`
-            + ` right: ${shape.fNode.fRight._typename} ${countGeometryFaces(geom2)} faces`
-            + '  use first');
-      bsp1 = new Geometry(geom1, matrix1);
-   }
-
-   return return_bsp ? { polygons: bsp1.toPolygons() } : bsp1.toBufferGeometry();
-}
-
-/** @summary Try to create projected geometry
-  * @private */
-function projectGeometry(geom, matrix, projection, position, flippedMesh) {
-
-   if (!geom.boundingBox) geom.computeBoundingBox();
-
-   let box = geom.boundingBox.clone();
-
-   box.applyMatrix4(matrix);
-
-   if (!position) position = 0;
-
-   if (((box.min[projection] >= position) && (box.max[projection] >= position)) ||
-       ((box.min[projection] <= position) && (box.max[projection] <= position))) {
-      return null; // not interesting
-   }
-
-   let bsp1 = new Geometry(geom, matrix, 0, flippedMesh),
-       sizex = 2*Math.max(Math.abs(box.min.x), Math.abs(box.max.x)),
-       sizey = 2*Math.max(Math.abs(box.min.y), Math.abs(box.max.y)),
-       sizez = 2*Math.max(Math.abs(box.min.z), Math.abs(box.max.z)),
-       size = 10000;
-
-   switch (projection) {
-      case 'x': size = Math.max(sizey,sizez); break;
-      case 'y': size = Math.max(sizex,sizez); break;
-      case 'z': size = Math.max(sizex,sizey); break;
-   }
-
-   let bsp2 = createNormal(projection, position, size);
-
-   bsp1.cut_from_plane(bsp2);
-
-   return bsp2.toBufferGeometry();
-}
-
-/** @summary Creates geometry model for the provided shape
-  * @param {Object} shape - instance of TGeoShape object
-  * @param {Number} limit - defines return value, see details
-  * @desc
-  *  - if limit === 0 (or undefined) returns BufferGeometry
-  *  - if limit < 0 just returns estimated number of faces
-  *  - if limit > 0 return list of CsgPolygons (used only for composite shapes)
-  * @private */
-function createGeometry(shape, limit) {
-   if (limit === undefined) limit = 0;
-
-   try {
-      switch (shape._typename) {
-         case clTGeoBBox: return createCubeBuffer( shape, limit );
-         case clTGeoPara: return createParaBuffer( shape, limit );
-         case clTGeoTrd1:
-         case clTGeoTrd2: return createTrapezoidBuffer( shape, limit );
-         case clTGeoArb8:
-         case clTGeoTrap:
-         case clTGeoGtra: return createArb8Buffer( shape, limit );
-         case clTGeoSphere: return createSphereBuffer( shape , limit );
-         case clTGeoCone:
-         case clTGeoConeSeg:
-         case clTGeoTube:
-         case clTGeoTubeSeg:
-         case clTGeoCtub: return createTubeBuffer( shape, limit );
-         case clTGeoEltu: return createEltuBuffer( shape, limit );
-         case clTGeoTorus: return createTorusBuffer( shape, limit );
-         case clTGeoPcon:
-         case clTGeoPgon: return createPolygonBuffer( shape, limit );
-         case clTGeoXtru: return createXtruBuffer( shape, limit );
-         case clTGeoParaboloid: return createParaboloidBuffer( shape, limit );
-         case clTGeoHype: return createHypeBuffer( shape, limit );
-         case 'TGeoTessellated': return createTessellatedBuffer( shape, limit );
-         case clTGeoCompositeShape: return createComposite( shape, limit );
-         case clTGeoShapeAssembly: break;
-         case clTGeoScaledShape: {
-            let res = createGeometry(shape.fShape, limit);
-            if (shape.fScale && (limit >= 0) && isFunc(res?.scale))
-               res.scale(shape.fScale.fScale[0], shape.fScale.fScale[1], shape.fScale.fScale[2]);
-            return res;
-         }
-         case clTGeoHalfSpace:
-            if (limit < 0) return 1; // half space if just plane used in composite
-            // no break here - warning should appear
-         default: geoWarn(`unsupported shape type ${shape._typename}`);
-      }
-   } catch(e) {
-      let place = '';
-      if (e.stack !== undefined) {
-         place = e.stack.split('\n')[0];
-         if (place.indexOf(e.message) >= 0) place = e.stack.split('\n')[1];
-                                       else place = 'at: ' + place;
-      }
-      geoWarn(`${shape._typename} err: ${e.message} ${place}`);
-   }
-
-   return limit < 0 ? 0 : null;
-}
-
-
-/** @summary Create single shape from EVE7 render date
-  * @private */
-function makeEveGeometry(rd) {
-
-   let off = 0;
-
-   if (rd.sz[0]) {
-      rd.vtxBuff = new Float32Array(rd.raw.buffer, off, rd.sz[0]);
-      off += rd.sz[0]*4;
-   }
-
-   if (rd.sz[1]) {
-      // normals were not used
-      // rd.nrmBuff = new Float32Array(rd.raw.buffer, off, rd.sz[1]);
-      off += rd.sz[1]*4;
-   }
-
-   if (rd.sz[2]) {
-      // these are special values in the buffer begin
-      rd.prefixBuf = new Uint32Array(rd.raw.buffer, off, 2);
-      off += 2*4;
-      rd.idxBuff = new Uint32Array(rd.raw.buffer, off, rd.sz[2]-2);
-      off += (rd.sz[2]-2)*4;
-   }
-
-   const GL_TRIANGLES = 4; // same as in EVE7
-
-   if (rd.prefixBuf[0] != GL_TRIANGLES)
-      throw 'Expect triangles first.';
-
-   let nVert = 3 * rd.prefixBuf[1]; // number of vertices to draw
-
-   if (rd.idxBuff.length != nVert)
-      throw 'Expect single list of triangles in index buffer.';
-
-   let body = new BufferGeometry();
-   body.setAttribute('position', new BufferAttribute(rd.vtxBuff, 3));
-   body.setIndex(new BufferAttribute(rd.idxBuff, 1));
-   body.computeVertexNormals();
-
-   return body;
-}
-
-/** @summary Create single shape from geometry veiwer render date
-  * @private */
-function makeViewerGeometry(rd) {
-
-   let vtxBuff = new Float32Array(rd.raw.buffer, 0, rd.raw.buffer.byteLength/4);
-
-   let body = new BufferGeometry();
-   body.setAttribute('position', new BufferAttribute(vtxBuff, 3));
-   body.setIndex(new BufferAttribute(new Uint32Array(rd.idx), 1));
-   body.computeVertexNormals();
-   return body;
-}
-
-/** @summary Create single shape from provided raw data from web viewer.
-  * @desc If nsegm changed, shape will be recreated
-  * @private */
-function createServerGeometry(rd, nsegm) {
-
-   if (rd.server_shape && ((rd.nsegm === nsegm) || !rd.shape))
-      return rd.server_shape;
-
-   rd.nsegm = nsegm;
-
-   let g = null;
-
-   if (rd.shape) {
-      // case when TGeoShape provided as is
-      g = createGeometry(rd.shape);
-   } else {
-
-      if (!rd.raw?.buffer) {
-         console.error('No raw data at all');
-         return null;
-      }
-
-      if (rd.sz)
-         g = makeEveGeometry(rd);
-      else
-         g = makeViewerGeometry(rd);
-
-   }
-
-   // shape handle is similar to created in JSROOT.GeoPainter
-   return {
-      _typename: '$$Shape$$', // indicate that shape can be used as is
-      ready: true,
-      geom: g,
-      nfaces: numGeometryFaces(g)
-   }
-}
-
-/** @summary Provides info about geo object, used for tooltip info
-  * @param {Object} obj - any kind of TGeo-related object like shape or node or volume
-  * @private */
-function provideObjectInfo(obj) {
-   let info = [], shape = null;
-
-   if (obj.fVolume !== undefined)
-      shape = obj.fVolume.fShape;
-   else if (obj.fShape !== undefined)
-      shape = obj.fShape;
-   else if ((obj.fShapeBits !== undefined) && (obj.fShapeId !== undefined))
-      shape = obj;
-
-   if (!shape) {
-      info.push(obj._typename);
-      return info;
-   }
-
-   let sz = Math.max(shape.fDX, shape.fDY, shape.fDZ),
-       useexp = (sz > 1e7) || (sz < 1e-7),
-       conv = (v) => {
-          if (v === undefined) return '???';
-          if ((v == Math.round(v) && v < 1e7)) return Math.round(v);
-          return useexp ? v.toExponential(4) : v.toPrecision(7);
-       };
-
-   info.push(shape._typename);
-
-   info.push(`DX=${conv(shape.fDX)} DY=${conv(shape.fDY)} DZ=${conv(shape.fDZ)}`);
-
-   switch (shape._typename) {
-      case clTGeoBBox: break;
-      case clTGeoPara: info.push(`Alpha=${shape.fAlpha} Phi=${shape.fPhi} Theta=${shape.fTheta}`); break;
-      case clTGeoTrd2: info.push(`Dy1=${conv(shape.fDy1)} Dy2=${conv(shape.fDy1)}`); // no break
-      case clTGeoTrd1: info.push(`Dx1=${conv(shape.fDx1)} Dx2=${conv(shape.fDx1)}`); break;
-      case clTGeoArb8: break;
-      case clTGeoTrap: break;
-      case clTGeoGtra: break;
-      case clTGeoSphere:
-         info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`,
-                   `Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`,
-                   `Theta1=${shape.fTheta1} Theta2=${shape.fTheta2}`);
-         break;
-      case clTGeoConeSeg:
-         info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
-         // no break;
-      case clTGeoCone:
-         info.push(`Rmin1=${conv(shape.fRmin1)} Rmax1=${conv(shape.fRmax1)}`,
-                   `Rmin2=${conv(shape.fRmin2)} Rmax2=${conv(shape.fRmax2)}`);
-         break;
-      case clTGeoCtub:
-      case clTGeoTubeSeg:
-         info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
-         // no break
-      case clTGeoEltu:
-      case clTGeoTube:
-         info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`);
-         break;
-      case clTGeoTorus:
-         info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`,
-                   `Phi1=${shape.fPhi1} Dphi=${shape.fDphi}`);
-         break;
-      case clTGeoPcon:
-      case clTGeoPgon: break;
-      case clTGeoXtru: break;
-      case clTGeoParaboloid:
-         info.push(`Rlo=${conv(shape.fRlo)} Rhi=${conv(shape.fRhi)}`,
-                   `A=${conv(shape.fA)} B=${conv(shape.fB)}`);
-         break;
-      case clTGeoHype:
-         info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`,
-                   `StIn=${conv(shape.fStIn)} StOut=${conv(shape.fStOut)}`);
-         break;
-      case clTGeoCompositeShape: break;
-      case clTGeoShapeAssembly: break;
-      case clTGeoScaledShape:
-         info = provideObjectInfo(shape.fShape);
-         if (shape.fScale)
-            info.unshift(`Scale X=${shape.fScale.fScale[0]} Y=${shape.fScale.fScale[1]} Z=${shape.fScale.fScale[2]}`);
-         break;
-   }
-
-   return info;
-}
-
-/** @summary Creates projection matrix for the camera
-  * @private */
-function createProjectionMatrix(camera) {
-   let cameraProjectionMatrix = new Matrix4();
-
-   camera.updateMatrixWorld();
-
-   camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
-   cameraProjectionMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse);
-
-   return cameraProjectionMatrix;
-}
-
-/** @summary Creates frustum
-  * @private */
-function createFrustum(source) {
-   if (!source) return null;
-
-   if (source instanceof PerspectiveCamera)
-      source = createProjectionMatrix(source);
-
-   let frustum = new Frustum();
-   frustum.setFromProjectionMatrix(source);
-
-   frustum.corners = new Float32Array([
-       1,  1,  1,
-       1,  1, -1,
-       1, -1,  1,
-       1, -1, -1,
-      -1,  1,  1,
-      -1,  1, -1,
-      -1, -1,  1,
-      -1, -1, -1,
-       0,  0,  0 // also check center of the shape
-   ]);
-
-   frustum.test = new Vector3(0,0,0);
-
-   frustum.CheckShape = function(matrix, shape) {
-      let pnt = this.test, len = this.corners.length, corners = this.corners, i;
-
-      for (i = 0; i < len; i+=3) {
-         pnt.x = corners[i] * shape.fDX;
-         pnt.y = corners[i+1] * shape.fDY;
-         pnt.z = corners[i+2] * shape.fDZ;
-         if (this.containsPoint(pnt.applyMatrix4(matrix))) return true;
-     }
-
-     return false;
-   };
-
-   frustum.CheckBox = function(box) {
-      let pnt = this.test, cnt = 0;
-      pnt.set(box.min.x, box.min.y, box.min.z);
-      if (this.containsPoint(pnt)) cnt++;
-      pnt.set(box.min.x, box.min.y, box.max.z);
-      if (this.containsPoint(pnt)) cnt++;
-      pnt.set(box.min.x, box.max.y, box.min.z);
-      if (this.containsPoint(pnt)) cnt++;
-      pnt.set(box.min.x, box.max.y, box.max.z);
-      if (this.containsPoint(pnt)) cnt++;
-      pnt.set(box.max.x, box.max.y, box.max.z);
-      if (this.containsPoint(pnt)) cnt++;
-      pnt.set(box.max.x, box.min.y, box.max.z);
-      if (this.containsPoint(pnt)) cnt++;
-      pnt.set(box.max.x, box.max.y, box.min.z);
-      if (this.containsPoint(pnt)) cnt++;
-      pnt.set(box.max.x, box.max.y, box.max.z);
-      if (this.containsPoint(pnt)) cnt++;
-      return cnt > 5; // only if 6 edges and more are seen, we think that box is fully visible
-   };
-
-   return frustum;
-}
-
-/** @summary Checks if two stack arrays are identical
-  * @private */
-function isSameStack(stack1, stack2) {
-   if (!stack1 || !stack2) return false;
-   if (stack1 === stack2) return true;
-   if (stack1.length !== stack2.length) return false;
-   for (let k = 0; k < stack1.length; ++k)
-      if (stack1[k] !== stack2[k]) return false;
-   return true;
-}
-
-
-/**
-  * @summary class for working with cloned nodes
-  *
-  * @private
-  */
-
-class ClonedNodes {
-
-   /** @summary Constructor */
-   constructor(obj, clones) {
-      this.toplevel = true; // indicate if object creates top-level structure with Nodes and Volumes folder
-      this.name_prefix = ''; // name prefix used for nodes names
-      this.maxdepth = 1;  // maximal hierarchy depth, required for transparency
-      this.vislevel = 4;  // maximal depth of nodes visibility aka gGeoManager->SetVisLevel, same default
-      this.maxnodes = 10000; // maximal number of visisble nodes aka gGeoManager->fMaxVisNodes
-
-      if (obj) {
-         if (obj.$geoh) this.toplevel = false;
-         this.createClones(obj);
-      } else if (clones) {
-         this.nodes = clones;
-      }
-   }
-
-   /** @summary Set maximal depth for nodes visibility */
-   setVisLevel(lvl) {
-      this.vislevel = lvl && Number.isInteger(lvl) ? lvl : 4;
-   }
-
-   /** @summary Returns maximal depth for nodes visibility */
-   getVisLevel() {
-      return this.vislevel;
-   }
-
-   /** @summary Set maximal number of visible nodes */
-   setMaxVisNodes(v) {
-      this.maxnodes = Number.isFinite(v) ? v : 10000;
-   }
-
-   /** @summary Returns configured maximal number of visible nodes */
-   getMaxVisNodes() {
-      return this.maxnodes;
-   }
-
-   /** @summary Insert node into existing array */
-   updateNode(node) {
-      if (node && Number.isInteger(node.id) && (node.id < this.nodes.length))
-         this.nodes[node.id] = node;
-   }
-
-   /** @summary Returns TGeoShape for element with given indx */
-   getNodeShape(indx) {
-      if (!this.origin || !this.nodes) return null;
-      let obj = this.origin[indx], clone = this.nodes[indx];
-      if (!obj || !clone) return null;
-      if (clone.kind === kindGeo) {
-         if (obj.fVolume) return obj.fVolume.fShape;
-      } else {
-         return obj.fShape;
-      }
-      return null;
-   }
-
-   /** @summary function to cleanup as much as possible structures
-     * @desc Provided parameters drawnodes and drawshapes are arrays created during building of geometry */
-   cleanup(drawnodes, drawshapes) {
-
-      if (drawnodes) {
-         for (let n = 0; n < drawnodes.length; ++n) {
-            delete drawnodes[n].stack;
-            drawnodes[n] = undefined;
-         }
-      }
-
-      if (drawshapes) {
-         for (let n = 0; n < drawshapes.length; ++n) {
-            delete drawshapes[n].geom;
-            drawshapes[n] = undefined;
-         }
-      }
-
-      if (this.nodes) {
-         for (let n = 0; n < this.nodes.length; ++n) {
-            if (this.nodes[n])
-               delete this.nodes[n].chlds;
-         }
-      }
-
-      delete this.nodes;
-      delete this.origin;
-
-      delete this.sortmap;
-   }
-
-   /** @summary Create complete description for provided Geo object */
-   createClones(obj, sublevel, kind) {
-      if (!sublevel) {
-
-         if (obj && obj._typename == '$$Shape$$')
-            return this.createClonesForShape(obj);
-
-         this.origin = [];
-         sublevel = 1;
-         kind = getNodeKind(obj);
-      }
-
-      if ((kind < 0) || !obj || ('_refid' in obj)) return;
-
-      obj._refid = this.origin.length;
-      this.origin.push(obj);
-      if (sublevel > this.maxdepth) this.maxdepth = sublevel;
-
-      let chlds = null;
-      if (kind === kindGeo)
-         chlds = (obj.fVolume && obj.fVolume.fNodes) ? obj.fVolume.fNodes.arr : null;
-      else
-         chlds = obj.fElements ? obj.fElements.arr : null;
-
-      if (chlds !== null) {
-         checkDuplicates(obj, chlds);
-         for (let i = 0; i < chlds.length; ++i)
-            this.createClones(chlds[i], sublevel + 1, kind);
-      }
-
-      if (sublevel > 1) return;
-
-      this.nodes = [];
-
-      let sortarr = [];
-
-      // first create nodes objects
-      for (let id = 0; id < this.origin.length; ++id) {
-         // let obj = this.origin[id];
-         let node = { id, kind, vol: 0, nfaces: 0 };
-         this.nodes.push(node);
-         sortarr.push(node); // array use to produce sortmap
-      }
-
-      // than fill children lists
-      for (let n = 0; n < this.origin.length; ++n) {
-         let obj = this.origin[n], clone = this.nodes[n],
-             chlds = null, shape = null;
-
-         if (kind === kindEve) {
-            shape = obj.fShape;
-            if (obj.fElements) chlds = obj.fElements.arr;
-         } else if (obj.fVolume) {
-            shape = obj.fVolume.fShape;
-            if (obj.fVolume.fNodes) chlds = obj.fVolume.fNodes.arr;
-         }
-
-         let matrix = getNodeMatrix(kind, obj);
-         if (matrix) {
-            clone.matrix = matrix.elements; // take only matrix elements, matrix will be constructed in worker
-            if (clone.matrix[0] === 1) {
-               let issimple = true;
-               for (let k = 1; (k < clone.matrix.length) && issimple; ++k)
-                  issimple = (clone.matrix[k] === ((k === 5) || (k === 10) || (k === 15) ? 1 : 0));
-               if (issimple) delete clone.matrix;
-            }
-            if (clone.matrix && (kind == kindEve)) clone.abs_matrix = true;
-         }
-         if (shape) {
-            clone.fDX = shape.fDX;
-            clone.fDY = shape.fDY;
-            clone.fDZ = shape.fDZ;
-            clone.vol = shape.fDX * shape.fDY * shape.fDZ;
-            if (shape.$nfaces === undefined)
-               shape.$nfaces = createGeometry(shape, -1);
-            clone.nfaces = shape.$nfaces;
-            if (clone.nfaces <= 0) clone.vol = 0;
-         }
-
-         if (!chlds) continue;
-
-         // in cloned object children is only list of ids
-         clone.chlds = new Array(chlds.length);
-         for (let k = 0; k < chlds.length; ++k)
-            clone.chlds[k] = chlds[k]._refid;
-      }
-
-      // remove _refid identifiers from original objects
-      for (let n = 0; n < this.origin.length; ++n)
-         delete this.origin[n]._refid;
-
-      // do sorting once
-      sortarr.sort((a, b) => b.vol - a.vol);
-
-      // remember sort map and also sortid
-      this.sortmap = new Array(this.nodes.length);
-      for (let n = 0; n < this.nodes.length; ++n) {
-         this.sortmap[n] = sortarr[n].id;
-         sortarr[n].sortid = n;
-      }
-   }
-
-   /** @summary Create elementary item with single already existing shape
-     * @desc used by details view of geometry shape */
-   createClonesForShape(obj) {
-      this.origin = [];
-
-      // indicate that just plain shape is used
-      this.plain_shape = obj;
-
-      let node = {
-            id: 0, sortid: 0, kind: kindShape,
-            name: 'Shape',
-            nfaces: obj.nfaces,
-            fDX: 1, fDY: 1, fDZ: 1, vol: 1,
-            vis: true
-         };
-
-      this.nodes = [ node ];
-   }
-
-   /** @summary Count all visisble nodes */
-   countVisibles() {
-      let cnt = 0, len = this.nodes?.length || 0;
-      for (let k = 0; k < len; ++k)
-          if (this.nodes[k].vis) cnt++;
-      return cnt;
-   }
-
-   /** @summary Mark visisble nodes.
-     * @desc Set only basic flags, actual visibility depends from hierarchy */
-   markVisibles(on_screen, copy_bits, hide_top_volume) {
-      if (this.plain_shape) return 1;
-      if (!this.origin || !this.nodes) return 0;
-
-      let res = 0;
-
-      for (let n = 0; n < this.nodes.length; ++n) {
-         let clone = this.nodes[n], obj = this.origin[n];
-
-         clone.vis = 0; // 1 - only with last level
-         delete clone.nochlds;
-
-         if (clone.kind === kindGeo) {
-            if (obj.fVolume) {
-               if (on_screen) {
-                  // on screen bits used always, childs always checked
-                  clone.vis = testGeoBit(obj.fVolume, geoBITS.kVisOnScreen) ? 99 : 0;
-
-                  if ((n == 0) && clone.vis && hide_top_volume) clone.vis = 0;
-
-                  if (copy_bits) {
-                     setGeoBit(obj.fVolume, geoBITS.kVisNone, false);
-                     setGeoBit(obj.fVolume, geoBITS.kVisThis, (clone.vis > 0));
-                     setGeoBit(obj.fVolume, geoBITS.kVisDaughters, true);
-                     setGeoBit(obj, geoBITS.kVisDaughters, true);
-                  }
-
-               } else {
-                  clone.vis = !testGeoBit(obj.fVolume, geoBITS.kVisNone) &&
-                               testGeoBit(obj.fVolume, geoBITS.kVisThis) ? 99 : 0;
-
-                  if (!testGeoBit(obj, geoBITS.kVisDaughters) ||
-                      !testGeoBit(obj.fVolume, geoBITS.kVisDaughters)) clone.nochlds = true;
-
-                  // node with childs only shown in case if it is last level in hierarchy
-                  if ((clone.vis > 0) && clone.chlds && !clone.nochlds) clone.vis = 1;
-
-                  // special handling for top node
-                  if (n === 0) {
-                     if (hide_top_volume) clone.vis = 0;
-                     delete clone.nochlds;
-                  }
-               }
-            }
-         } else {
-            clone.vis = obj.fRnrSelf ? 99 : 0;
-
-            // when the only node is selected, draw it
-            if ((n === 0) && (this.nodes.length === 1)) clone.vis = 99;
-
-            this.vislevel = 9999; // automatically take all volumes
-         }
-
-         // shape with zero volume or without faces will not be observed
-         if ((clone.vol <= 0) || (clone.nfaces <= 0)) clone.vis = 0;
-
-         if (clone.vis) res++;
-      }
-
-      return res;
-   }
-
-   /** @summary After visibility flags is set, produce idshift for all nodes as it would be maximum level */
-   produceIdShifts() {
-      for (let k = 0; k < this.nodes.length; ++k)
-         this.nodes[k].idshift = -1;
-
-      function scan_func(nodes, node) {
-         if (node.idshift < 0) {
-            node.idshift = 0;
-            if (node.chlds)
-               for(let k = 0; k<node.chlds.length; ++k)
-                  node.idshift += scan_func(nodes, nodes[node.chlds[k]]);
-         }
-
-         return node.idshift + 1;
-      }
-
-      scan_func(this.nodes, this.nodes[0]);
-   }
-
-   /** @summary Extract only visibility flags
-     * @desc Used to transfer them to the worker */
-   getVisibleFlags() {
-      let res = new Array(this.nodes.length);
-      for (let n=0;n<this.nodes.length;++n)
-         res[n] = { vis: this.nodes[n].vis, nochlds: this.nodes[n].nochlds };
-      return res;
-   }
-
-   /** @summary Assign only visibility flags, extracted with getVisibleFlags */
-   setVisibleFlags(flags) {
-      if (!this.nodes || !flags || !flags.length != this.nodes.length)
-         return 0;
-
-      let res = 0;
-      for (let n=0;n<this.nodes.length;++n) {
-         let clone = this.nodes[n];
-
-         clone.vis = flags[n].vis;
-         clone.nochlds = flags[n].nochlds;
-         if (clone.vis) res++;
-      }
-
-      return res;
-   }
-
-   /** @summary Scan visible nodes in hierarchy, starting from nodeid
-     * @desc Each entry in hierarchy get its unique id, which is not changed with visibility flags */
-   scanVisible(arg, vislvl) {
-
-      if (!this.nodes) return 0;
-
-      if (vislvl === undefined) {
-         if (!arg) arg = {};
-
-         vislvl = arg.vislvl || this.vislevel || 4; // default 3 in ROOT
-         if (vislvl > 88) vislvl = 88;
-
-         arg.stack = new Array(100); // current stack
-         arg.nodeid = 0;
-         arg.counter = 0; // sequence ID of the node, used to identify it later
-         arg.last = 0;
-         arg.CopyStack = function(factor) {
-            let entry = { nodeid: this.nodeid, seqid: this.counter, stack: new Array(this.last) };
-            if (factor) entry.factor = factor; // factor used to indicate importance of entry, will be built as first
-            for (let n=0;n<this.last;++n) entry.stack[n] = this.stack[n+1]; // copy stack
-            return entry;
-         };
-
-         if (arg.domatrix) {
-            arg.matrices = [];
-            arg.mpool = [ new Matrix4() ]; // pool of Matrix objects to avoid permanent creation
-            arg.getmatrix = function() { return this.matrices[this.last]; };
-         }
-      }
-
-      let res = 0, node = this.nodes[arg.nodeid];
-
-      if (arg.domatrix) {
-         if (!arg.mpool[arg.last+1])
-            arg.mpool[arg.last+1] = new Matrix4();
-
-         let prnt = (arg.last > 0) ? arg.matrices[arg.last-1] : new Matrix4();
-         if (node.matrix) {
-            arg.matrices[arg.last] = arg.mpool[arg.last].fromArray(prnt.elements);
-            arg.matrices[arg.last].multiply(arg.mpool[arg.last+1].fromArray(node.matrix));
-         } else {
-            arg.matrices[arg.last] = prnt;
-         }
-      }
-
-      if (node.nochlds) vislvl = 0;
-
-      if (node.vis > vislvl) {
-         if (!arg.func || arg.func(node)) res++;
-      }
-
-      arg.counter++;
-
-      if ((vislvl > 0) && node.chlds) {
-         arg.last++;
-         for (let i = 0; i < node.chlds.length; ++i) {
-            arg.nodeid = node.chlds[i];
-            arg.stack[arg.last] = i; // in the stack one store index of child, it is path in the hierarchy
-            res += this.scanVisible(arg, vislvl-1);
-         }
-         arg.last--;
-      } else {
-         arg.counter += (node.idshift || 0);
-      }
-
-      if (arg.last === 0) {
-         delete arg.last;
-         delete arg.stack;
-         delete arg.CopyStack;
-         delete arg.counter;
-         delete arg.matrices;
-         delete arg.mpool;
-         delete arg.getmatrix;
-      }
-
-      return res;
-   }
-
-   /** @summary Return node name with given id.
-    * @desc Either original object or description is used */
-   getNodeName(nodeid) {
-      if (this.origin) {
-         let obj = this.origin[nodeid];
-         return obj ? getObjectName(obj) : '';
-      }
-      let node = this.nodes[nodeid];
-      return node ? node.name : '';
-   }
-
-   /** @summary Returns description for provide stack */
-   resolveStack(stack, withmatrix) {
-
-      let res = { id: 0, obj: null, node: this.nodes[0], name: this.name_prefix };
-
-      // if (!this.toplevel || (this.nodes.length === 1) || (res.node.kind === 1)) res.name = '';
-
-      if (withmatrix) {
-         res.matrix = new Matrix4();
-         if (res.node.matrix) res.matrix.fromArray(res.node.matrix);
-      }
-
-      if (this.origin)
-         res.obj = this.origin[0];
-
-      //if (!res.name)
-      //   res.name = this.getNodeName(0);
-
-      if (stack)
-         for(let lvl = 0; lvl < stack.length; ++lvl) {
-            res.id = res.node.chlds[stack[lvl]];
-            res.node = this.nodes[res.id];
-
-            if (this.origin)
-               res.obj = this.origin[res.id];
-
-            let subname = this.getNodeName(res.id);
-            if (subname) {
-               if (res.name) res.name += '/';
-               res.name += subname;
-            }
-
-            if (withmatrix && res.node.matrix)
-               res.matrix.multiply(new Matrix4().fromArray(res.node.matrix));
-         }
-
-      return res;
-   }
-
-   /** @summary Create stack array based on nodes ids array.
-    * @desc Ids list should correspond to existing nodes hierarchy */
-   buildStackByIds(ids) {
-      if (!ids) return null;
-
-      if (ids[0] !== 0) {
-         console.error('wrong ids - first should be 0');
-         return null;
-      }
-
-      let node = this.nodes[0], stack = [];
-
-      for (let k = 1; k < ids.length; ++k) {
-         let nodeid = ids[k];
-         if (!node) return null;
-         let chindx = node.chlds.indexOf(nodeid);
-         if (chindx < 0) {
-            console.error(`wrong nodes ids ${ids[k]} is not child of ${ids[k-1]}`);
-            return null;
-         }
-
-         stack.push(chindx);
-         node = this.nodes[nodeid];
-      }
-
-      return stack;
-   }
-
-   /** @summary Retuns ids array which correspond to the stack */
-   buildIdsByStack(stack) {
-      if (!stack) return null;
-      let node = this.nodes[0], ids = [0];
-      for (let k = 0; k < stack.length; ++k) {
-         let id = node.chlds[stack[k]];
-         ids.push(id);
-         node = this.nodes[id];
-      }
-      return ids;
-   }
-
-   /** @summary Returns true if stack includes at any place provided nodeid */
-   isIdInStack(nodeid, stack) {
-
-      if (!nodeid) return true;
-
-      let node = this.nodes[0], id = 0;
-
-      for(let lvl = 0; lvl < stack.length; ++lvl) {
-         id = node.chlds[stack[lvl]];
-         if (id == nodeid) return true;
-         node = this.nodes[id];
-      }
-
-      return false;
-   }
-
-   /** @summary Find stack by name which include names of all parents */
-   findStackByName(fullname) {
-
-      let names = fullname.split('/'), currid = 0, stack = [];
-
-      if (this.getNodeName(currid) !== names[0]) return null;
-
-      for (let n = 1; n < names.length; ++n) {
-         let node = this.nodes[currid];
-         if (!node.chlds) return null;
-
-         for (let k=0;k<node.chlds.length;++k) {
-            let chldid = node.chlds[k];
-            if (this.getNodeName(chldid) === names[n]) { stack.push(k); currid = chldid; break; }
-         }
-
-         // no new entry - not found stack
-         if (stack.length === n - 1) return null;
-      }
-
-      return stack;
-   }
-
-   /** @summary Set usage of default ROOT colors */
-   setDefaultColors(on) {
-      this.use_dflt_colors = on;
-      if (this.use_dflt_colors && !this.dflt_table) {
-
-         let dflt = { kWhite: 0,  kBlack: 1, kGray: 920,
-                      kRed: 632, kGreen: 416, kBlue: 600, kYellow: 400, kMagenta: 616, kCyan: 432,
-                      kOrange: 800, kSpring: 820, kTeal: 840, kAzure: 860, kViolet: 880, kPink: 900 };
-
-         let nmax = 110, col = [];
-         for (let i=0;i<nmax;i++) col.push(dflt.kGray);
-
-         //  here we should create a new TColor with the same rgb as in the default
-         //  ROOT colors used below
-         col[ 3] = dflt.kYellow-10;
-         col[ 4] = col[ 5] = dflt.kGreen-10;
-         col[ 6] = col[ 7] = dflt.kBlue-7;
-         col[ 8] = col[ 9] = dflt.kMagenta-3;
-         col[10] = col[11] = dflt.kRed-10;
-         col[12] = dflt.kGray+1;
-         col[13] = dflt.kBlue-10;
-         col[14] = dflt.kOrange+7;
-         col[16] = dflt.kYellow+1;
-         col[20] = dflt.kYellow-10;
-         col[24] = col[25] = col[26] = dflt.kBlue-8;
-         col[29] = dflt.kOrange+9;
-         col[79] = dflt.kOrange-2;
-
-         this.dflt_table = col;
-      }
-   }
-
-   /** @summary Provide different properties of draw entry nodeid
-     * @desc Only if node visible, material will be created */
-   getDrawEntryProperties(entry, root_colors) {
-
-      let clone = this.nodes[entry.nodeid];
-
-      if (clone.kind === kindShape) {
-         let prop = { name: clone.name, nname: clone.name, shape: null, material: null, chlds: null },
-            _opacity = entry.opacity || 1;
-         prop.fillcolor = new Color$1( entry.color ? `rgb(${entry.color})` : 'blue' );
-         prop.material = new MeshLambertMaterial({ transparent: _opacity < 1,
-                          opacity: _opacity, wireframe: false, color: prop.fillcolor,
-                          side: FrontSide, vertexColors: false,
-                          depthWrite: _opacity == 1 });
-         prop.material.inherentOpacity = _opacity;
-
-         return prop;
-      }
-
-      if (!this.origin) {
-         console.error('origin not there - kind', clone.kind, entry.nodeid, clone);
-         return null;
-      }
-
-      let node = this.origin[entry.nodeid];
-
-      if (clone.kind === kindEve) {
-         // special handling for EVE nodes
-
-         let prop = { name: getObjectName(node), nname: getObjectName(node), shape: node.fShape, material: null, chlds: null };
-
-         if (node.fElements !== null) prop.chlds = node.fElements.arr;
-
-         {
-            let opacity = Math.min(1, node.fRGBA[3]);
-            prop.fillcolor = new Color$1( node.fRGBA[0], node.fRGBA[1], node.fRGBA[2] );
-            prop.material = new MeshLambertMaterial({ transparent: opacity < 1,
-                             opacity, wireframe: false, color: prop.fillcolor,
-                             side: FrontSide, vertexColors: false, depthWrite: opacity == 1 });
-            prop.material.inherentOpacity = opacity;
-         }
-
-         return prop;
-      }
-
-      let volume = node.fVolume;
-
-      let prop = { name: getObjectName(volume), nname: getObjectName(node), volume: node.fVolume, shape: volume.fShape, material: null, chlds: null };
-
-      if (node.fVolume.fNodes !== null) prop.chlds = node.fVolume.fNodes.arr;
-
-      if (volume) prop.linewidth = volume.fLineWidth;
-
-      {
-
-         // TODO: maybe correctly extract ROOT colors here?
-         let _opacity = 1.0;
-         if (!root_colors) root_colors = ['white', 'black', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
-
-         if (entry.custom_color)
-            prop.fillcolor = entry.custom_color;
-         else if ((volume.fFillColor > 1) && (volume.fLineColor == 1))
-            prop.fillcolor = root_colors[volume.fFillColor];
-         else if (volume.fLineColor >= 0)
-            prop.fillcolor = root_colors[volume.fLineColor];
-
-         let mat = volume?.fMedium?.fMaterial;
-
-         if (mat) {
-            let fillstyle = mat.fFillStyle,
-                transparency = (fillstyle >= 3000 && fillstyle <= 3100) ? fillstyle - 3000 : 0;
-
-            if (this.use_dflt_colors) {
-               let matZ = Math.round(mat.fZ), icol = this.dflt_table[matZ];
-               prop.fillcolor = root_colors[icol];
-               if (mat.fDensity < 0.1) transparency = 60;
-            }
-
-            if (transparency > 0)
-               _opacity = (100.0 - transparency) / 100.0;
-            if (prop.fillcolor === undefined)
-               prop.fillcolor = root_colors[mat.fFillColor];
-         }
-         if (prop.fillcolor === undefined)
-            prop.fillcolor = 'lightgrey';
-
-         prop.material = new MeshLambertMaterial({ transparent: _opacity < 1,
-                              opacity: _opacity, wireframe: false, color: prop.fillcolor,
-                              side: FrontSide, vertexColors: false,
-                              depthWrite: _opacity == 1 });
-         prop.material.inherentOpacity = _opacity;
-      }
-
-      return prop;
-   }
-
-   /** @summary Creates hierarchy of Object3D for given stack entry
-     * @desc Such hierarchy repeats hierarchy of TGeoNodes and set matrix for the objects drawing
-     * also set renderOrder, required to handle transparency */
-   createObject3D(stack, toplevel, options) {
-
-      let node = this.nodes[0], three_prnt = toplevel, draw_depth = 0,
-          force = isObject(options) || (options === 'force');
-
-      for(let lvl = 0; lvl <= stack.length; ++lvl) {
-         let nchld = (lvl > 0) ? stack[lvl-1] : 0;
-         // extract current node
-         if (lvl > 0)  node = this.nodes[node.chlds[nchld]];
-
-         let obj3d = undefined;
-
-         if (three_prnt.children)
-            for (let i = 0; i < three_prnt.children.length; ++i) {
-               if (three_prnt.children[i].nchld === nchld) {
-                  obj3d = three_prnt.children[i];
-                  break;
-               }
-            }
-
-         if (obj3d) {
-            three_prnt = obj3d;
-            if (obj3d.$jsroot_drawable) draw_depth++;
-            continue;
-         }
-
-         if (!force) return null;
-
-         obj3d = new Object3D();
-
-         if (node.abs_matrix) {
-            obj3d.absMatrix = new Matrix4();
-            obj3d.absMatrix.fromArray(node.matrix);
-         } else if (node.matrix) {
-            obj3d.matrix.fromArray(node.matrix);
-            obj3d.matrix.decompose( obj3d.position, obj3d.quaternion, obj3d.scale );
-         }
-
-         // this.accountNodes(obj3d);
-         obj3d.nchld = nchld; // mark index to find it again later
-
-         // add the mesh to the scene
-         three_prnt.add(obj3d);
-
-         // this is only for debugging - test inversion of whole geometry
-         if ((lvl == 0) && isObject(options) && options.scale) {
-            if ((options.scale.x < 0) || (options.scale.y < 0) || (options.scale.z < 0)) {
-               obj3d.scale.copy(options.scale);
-               obj3d.updateMatrix();
-            }
-         }
-
-         obj3d.updateMatrixWorld();
-
-         three_prnt = obj3d;
-      }
-
-      if ((options === 'mesh') || (options === 'delete_mesh')) {
-         let mesh = null;
-         if (three_prnt)
-            for (let n = 0; (n < three_prnt.children.length) && !mesh; ++n) {
-               let chld = three_prnt.children[n];
-               if ((chld.type === 'Mesh') && (chld.nchld === undefined)) mesh = chld;
-            }
-
-         if ((options === 'mesh') || !mesh) return mesh;
-
-         let res = three_prnt;
-         while (mesh && (mesh !== toplevel)) {
-            three_prnt = mesh.parent;
-            three_prnt.remove(mesh);
-            mesh = (three_prnt.children.length == 0) ? three_prnt : null;
-         }
-
-         return res;
-      }
-
-      if (three_prnt) {
-         three_prnt.$jsroot_drawable = true;
-         three_prnt.$jsroot_depth = draw_depth;
-      }
-
-      return three_prnt;
-   }
-
-   /** @summary Get volume boundary */
-   getVolumeBoundary(viscnt, facelimit, nodeslimit) {
-
-      let result = { min: 0, max: 1, sortidcut: 0 };
-
-      if (!this.sortmap) {
-         console.error('sorting map do not exist');
-         return result;
-      }
-
-      let maxNode, currNode, cnt=0, facecnt=0;
-
-      for (let n = 0; (n < this.sortmap.length) && (cnt < nodeslimit) && (facecnt < facelimit); ++n) {
-         let id = this.sortmap[n];
-         if (viscnt[id] === 0) continue;
-         currNode = this.nodes[id];
-         if (!maxNode) maxNode = currNode;
-         cnt += viscnt[id];
-         facecnt += viscnt[id] * currNode.nfaces;
-      }
-
-      if (!currNode) {
-         console.error('no volumes selected');
-         return result;
-      }
-
-      // console.log(`Volume boundary ${currNode.vol}  cnt=${cnt}  faces=${facecnt}`);
-      result.max = maxNode.vol;
-      result.min = currNode.vol;
-      result.sortidcut = currNode.sortid; // latest node is not included
-      return result;
-   }
-
-   /** @summary Collects visible nodes, using maxlimit
-     * @desc One can use map to define cut based on the volume or serious of cuts */
-   collectVisibles(maxnumfaces, frustum) {
-
-      // in simple case shape as it is
-      if (this.plain_shape)
-         return { lst: [ { nodeid: 0, seqid: 0, stack: [], factor: 1, shapeid: 0, server_shape: this.plain_shape } ], complete: true };
-
-      let arg = {
-         facecnt: 0,
-         viscnt: new Array(this.nodes.length), // counter for each node
-         vislvl: this.getVisLevel(),
-         reset() {
-            this.total = 0;
-            this.facecnt = 0;
-            this.viscnt.fill(0);
-         },
-         // nodes: this.nodes,
-         func(node) {
-            this.total++;
-            this.facecnt += node.nfaces;
-            this.viscnt[node.id]++;
-            return true;
-         }
-      };
-
-      arg.reset();
-
-      let total = this.scanVisible(arg),
-          maxnumnodes = this.getMaxVisNodes();
-
-      if (maxnumnodes > 0) {
-         while ((total > maxnumnodes) && (arg.vislvl > 1)) {
-            arg.vislvl--;
-            arg.reset();
-            total = this.scanVisible(arg);
-         }
-      }
-
-      this.actual_level = arg.vislvl; // not used, can be shown somewhere in the gui
-
-      let minVol = 0, maxVol = 0, camVol = -1, camFact = 10, sortidcut = this.nodes.length + 1;
-
-      console.log(`Total visible nodes ${total} numfaces ${arg.facecnt}`);
-
-      if (arg.facecnt > maxnumfaces) {
-
-         let bignumfaces = maxnumfaces * (frustum ? 0.8 : 1.0),
-             bignumnodes = maxnumnodes * (frustum ? 0.8 : 1.0);
-
-         // define minimal volume, which always to shown
-         let boundary = this.getVolumeBoundary(arg.viscnt, bignumfaces, bignumnodes);
-
-         minVol = boundary.min;
-         maxVol = boundary.max;
-         sortidcut = boundary.sortidcut;
-
-         if (frustum) {
-             arg.domatrix = true;
-             arg.frustum = frustum;
-             arg.totalcam = 0;
-             arg.func = function(node) {
-                if (node.vol <= minVol) // only small volumes are interesting
-                   if (this.frustum.CheckShape(this.getmatrix(), node)) {
-                      this.viscnt[node.id]++;
-                      this.totalcam += node.nfaces;
-                   }
-
-                return true;
-             };
-
-             for (let n=0;n<arg.viscnt.length;++n) arg.viscnt[n] = 0;
-
-             this.scanVisible(arg);
-
-             if (arg.totalcam > maxnumfaces*0.2)
-                camVol = this.getVolumeBoundary(arg.viscnt, maxnumfaces*0.2, maxnumnodes*0.2).min;
-             else
-                camVol = 0;
-
-             camFact = maxVol / ((camVol > 0) ? (camVol > 0) : minVol);
-
-             // console.log(`Limit for camera ${camVol}  faces in camera view ${arg.totalcam}`);
-         }
-      }
-
-      arg.items = [];
-
-      arg.func = function(node) {
-         if (node.sortid < sortidcut) {
-            this.items.push(this.CopyStack());
-         } else if ((camVol >= 0) && (node.vol > camVol)) {
-            if (this.frustum.CheckShape(this.getmatrix(), node))
-               this.items.push(this.CopyStack(camFact));
-         }
-         return true;
-      };
-
-      this.scanVisible(arg);
-
-      return { lst: arg.items, complete: minVol === 0 };
-   }
-
-   /** @summary Merge list of drawn objects
-     * @desc In current list we should mark if object already exists
-     * from previous list we should collect objects which are not there */
-   mergeVisibles(current, prev) {
-
-      let indx2 = 0, del = [];
-      for (let indx1 = 0; (indx1 < current.length) && (indx2 < prev.length); ++indx1) {
-
-         while ((indx2 < prev.length) && (prev[indx2].seqid < current[indx1].seqid)) {
-            del.push(prev[indx2++]); // this entry should be removed
-         }
-
-         if ((indx2 < prev.length) && (prev[indx2].seqid === current[indx1].seqid)) {
-            if (prev[indx2].done) current[indx1].done = true; // copy ready flag
-            indx2++;
-         }
-      }
-
-      // remove rest
-      while (indx2 < prev.length)
-         del.push(prev[indx2++]);
-
-      return del;
-   }
-
-   /** @summary Collect all uniques shapes which should be built
-    *  @desc Check if same shape used many times for drawing */
-   collectShapes(lst) {
-
-      // nothing else - just that single shape
-      if (this.plain_shape)
-         return [ this.plain_shape ];
-
-      let shapes = [];
-
-      for (let i=0;i<lst.length;++i) {
-         let entry = lst[i];
-         let shape = this.getNodeShape(entry.nodeid);
-
-         if (!shape) continue; // strange, but avoid misleading
-
-         if (shape._id === undefined) {
-            shape._id = shapes.length;
-
-            shapes.push({ id: shape._id, shape: shape, vol: this.nodes[entry.nodeid].vol, refcnt: 1, factor: 1, ready: false });
-
-            // shapes.push( { obj: shape, vol: this.nodes[entry.nodeid].vol });
-         } else {
-            shapes[shape._id].refcnt++;
-         }
-
-         entry.shape = shapes[shape._id]; // remember shape used
-
-         // use maximal importance factor to push element to the front
-         if (entry.factor && (entry.factor>entry.shape.factor))
-            entry.shape.factor = entry.factor;
-      }
-
-      // now sort shapes in volume decrease order
-      shapes.sort((a,b) => b.vol*b.factor - a.vol*a.factor);
-
-      // now set new shape ids according to the sorted order and delete temporary field
-      for (let n = 0; n < shapes.length; ++n) {
-         let item = shapes[n];
-         item.id = n; // set new ID
-         delete item.shape._id; // remove temporary field
-      }
-
-      // as last action set current shape id to each entry
-      for (let i = 0; i < lst.length; ++i) {
-         let entry = lst[i];
-         if (entry.shape) {
-            entry.shapeid = entry.shape.id; // keep only id for the entry
-            delete entry.shape; // remove direct references
-         }
-      }
-
-      return shapes;
-   }
-
-   /** @summary Merge shape lists */
-   mergeShapesLists(oldlst, newlst) {
-
-      if (!oldlst) return newlst;
-
-      // set geometry to shape object itself
-      for (let n = 0; n < oldlst.length; ++n) {
-         let item = oldlst[n];
-
-         item.shape._geom = item.geom;
-         delete item.geom;
-
-         if (item.geomZ !== undefined) {
-            item.shape._geomZ = item.geomZ;
-            delete item.geomZ;
-         }
-      }
-
-      // take from shape (if match)
-      for (let n = 0; n < newlst.length; ++n) {
-         let item = newlst[n];
-
-         if (item.shape._geom !== undefined) {
-            item.geom = item.shape._geom;
-            delete item.shape._geom;
-         }
-
-         if (item.shape._geomZ !== undefined) {
-            item.geomZ = item.shape._geomZ;
-            delete item.shape._geomZ;
-         }
-      }
-
-      // now delete all unused geometries
-      for (let n = 0; n < oldlst.length; ++n) {
-         let item = oldlst[n];
-         delete item.shape._geom;
-         delete item.shape._geomZ;
-      }
-
-      return newlst;
-   }
-
-   /** @summary Build shapes */
-   buildShapes(lst, limit, timelimit) {
-
-      let created = 0,
-          tm1 = new Date().getTime(),
-          res = { done: false, shapes: 0, faces: 0, notusedshapes: 0 };
-
-      for (let n = 0; n < lst.length; ++n) {
-         let item = lst[n];
-
-         // if enough faces are produced, nothing else is required
-         if (res.done) { item.ready = true; continue; }
-
-         if (!item.ready) {
-            item._typename = '$$Shape$$'; // let reuse item for direct drawing
-            item.ready = true;
-            if (item.geom === undefined) {
-               item.geom = createGeometry(item.shape);
-               if (item.geom) created++; // indicate that at least one shape was created
-            }
-            item.nfaces = countGeometryFaces(item.geom);
-         }
-
-         res.shapes++;
-         if (!item.used) res.notusedshapes++;
-         res.faces += item.nfaces*item.refcnt;
-
-         if (res.faces >= limit) {
-            res.done = true;
-         } else if ((created > 0.01*lst.length) && (timelimit !== undefined)) {
-            let tm2 = new Date().getTime();
-            if (tm2-tm1 > timelimit) return res;
-         }
-      }
-
-      res.done = true;
-
-      return res;
-   }
-
-   /** @summary Format REveGeomNode data to be able use it in list of clones
-     * @private */
-   static formatServerElement(elem) {
-      elem.kind = 2; // special element for geom viewer, used in TGeoPainter
-      elem.vis = 2; // visibility is alwys on
-      let m = elem.matr;
-      delete elem.matr;
-      if (!m?.length) return elem;
-
-      if (m.length == 16) {
-         elem.matrix = m;
-      } else {
-         let nm = elem.matrix = new Array(16);
-         nm.fill(0);
-         nm[0] = nm[5] = nm[10] = nm[15] = 1;
-
-         if (m.length == 3) {
-            // translation martix
-            nm[12] = m[0]; nm[13] = m[1]; nm[14] = m[2];
-         } else if (m.length == 4) {
-            // scale matrix
-            nm[0] = m[0]; nm[5] = m[1]; nm[10] = m[2]; nm[15] = m[3];
-         } else if (m.length == 9) {
-            // rotation matrix
-            nm[0] = m[0]; nm[4] = m[1]; nm[8] = m[2];
-            nm[1] = m[3]; nm[5] = m[4]; nm[9] = m[5];
-            nm[2] = m[6]; nm[6] = m[7]; nm[10] = m[8];
-         } else {
-            console.error(`wrong number of elements ${m.length} in the matrix`);
-         }
-      }
-      return elem;
-   }
-}
-
-/** @summary Create flipped mesh for the shape
-  * @desc When transformation matrix includes one or several inversion of axis,
-  * one should inverse geometry object, otherwise three.js cannot correctly draw it
-  * @param {Object} shape - TGeoShape object
-  * @param {Object} material - material
-  * @private */
-function createFlippedMesh(shape, material) {
-
-   let flip =  new Vector3(1,1,-1);
-
-   if (shape.geomZ === undefined) {
-
-      let pos = shape.geom.getAttribute('position').array,
-          norm = shape.geom.getAttribute('normal').array,
-          index = shape.geom.getIndex();
-
-      if (index) {
-         // we need to unfold all points to
-         let arr = index.array,
-             i0 = shape.geom.drawRange.start,
-             ilen = shape.geom.drawRange.count;
-         if (i0 + ilen > arr.length) ilen = arr.length - i0;
-
-         let dpos = new Float32Array(ilen*3), dnorm = new Float32Array(ilen*3);
-         for (let ii = 0; ii < ilen; ++ii) {
-            let k = arr[i0 + ii];
-            if ((k < 0) || (k*3 >= pos.length))
-               console.log(`strange index ${k*3} totallen = ${pos.length}`);
-            dpos[ii*3] = pos[k*3];
-            dpos[ii*3+1] = pos[k*3+1];
-            dpos[ii*3+2] = pos[k*3+2];
-            dnorm[ii*3] = norm[k*3];
-            dnorm[ii*3+1] = norm[k*3+1];
-            dnorm[ii*3+2] = norm[k*3+2];
-         }
-
-         pos = dpos; norm = dnorm;
-      }
-
-      let len = pos.length, n, shift = 0,
-          newpos = new Float32Array(len),
-          newnorm = new Float32Array(len);
-
-      // we should swap second and third point in each face
-      for (n = 0; n < len; n += 3) {
-         newpos[n]   = pos[n+shift];
-         newpos[n+1] = pos[n+1+shift];
-         newpos[n+2] = -pos[n+2+shift];
-
-         newnorm[n]   = norm[n+shift];
-         newnorm[n+1] = norm[n+1+shift];
-         newnorm[n+2] = -norm[n+2+shift];
-
-         shift+=3; if (shift===6) shift=-3; // values 0,3,-3
-      }
-
-      shape.geomZ = new BufferGeometry();
-      shape.geomZ.setAttribute('position', new BufferAttribute(newpos, 3));
-      shape.geomZ.setAttribute('normal', new BufferAttribute(newnorm, 3));
-      // normals are calculated with normal geometry and correctly scaled
-      // geom.computeVertexNormals();
-   }
-
-   let mesh = new Mesh( shape.geomZ, material );
-   mesh.scale.copy(flip);
-   mesh.updateMatrix();
-
-   mesh._flippedMesh = true;
-
-   return mesh;
-}
-
-/** @summary extract code of Box3.expandByObject
-  * @desc Major difference - do not traverse hierarchy
-  * @private */
-function getBoundingBox(node, box3, local_coordinates) {
-   if (!node?.geometry) return box3;
-
-   if (!box3) box3 = new Box3().makeEmpty();
-
-   if (!local_coordinates) node.updateWorldMatrix(false, false);
-
-   let v1 = new Vector3(), attribute = node.geometry.attributes?.position;
-
-   if ( attribute !== undefined )
-      for (let i = 0, l = attribute.count; i < l; i++) {
-         // v1.fromAttribute( attribute, i ).applyMatrix4( node.matrixWorld );
-         v1.fromBufferAttribute( attribute, i );
-         if (!local_coordinates) v1.applyMatrix4( node.matrixWorld );
-         box3.expandByPoint( v1 );
-      }
-
-   return box3;
-}
-
-/** @summary Cleanup shape entity
-  * @private */
-function cleanupShape(shape) {
-   if (!shape) return;
-
-   if (isFunc(shape.geom?.dispose))
-      shape.geom.dispose();
-
-   if (isFunc(shape.geomZ?.dispose))
-      shape.geomZ.dispose();
-
-   delete shape.geom;
-   delete shape.geomZ;
-}
-
-/** @summary Set rendering order for created hierarchy
-  * @desc depending from provided method sort differently objects
-  * @param toplevel - top element
-  * @param origin - camera position used to provide sorting
-  * @param method - name of sorting method like 'pnt', 'ray', 'size', 'dflt'  */
-function produceRenderOrder(toplevel, origin, method, clones) {
-
-   let raycast = new Raycaster();
-
-   function setdefaults(top) {
-      if (!top) return;
-      top.traverse(obj => {
-         obj.renderOrder = obj.defaultOrder || 0;
-         if (obj.material) obj.material.depthWrite = true; // by default depthWriting enabled
-      });
-   }
-
-   function traverse(obj, lvl, arr) {
-      // traverse hierarchy and extract all children of given level
-      // if (obj.$jsroot_depth === undefined) return;
-
-      if (!obj.children) return;
-
-      for (let k = 0; k < obj.children.length; ++k) {
-         let chld = obj.children[k];
-         if (chld.$jsroot_order === lvl) {
-            if (chld.material) {
-               if (chld.material.transparent) {
-                  chld.material.depthWrite = false; // disable depth writing for transparent
-                  arr.push(chld);
-               } else {
-                  setdefaults(chld);
-               }
-            }
-         } else if ((obj.$jsroot_depth === undefined) || (obj.$jsroot_depth < lvl)) {
-            traverse(chld, lvl, arr);
-         }
-      }
-   }
-
-   function sort(arr, minorder, maxorder) {
-      // resort meshes using ray caster and camera position
-      // idea to identify meshes which are in front or behind
-
-      if (arr.length > 1000) {
-         // too many of them, just set basic level and exit
-         for (let i = 0; i < arr.length; ++i)
-            arr[i].renderOrder = (minorder + maxorder)/2;
-         return false;
-      }
-
-      let tmp_vect = new Vector3();
-
-      // first calculate distance to the camera
-      // it gives preliminary order of volumes
-
-      for (let i = 0; i < arr.length; ++i) {
-         let mesh = arr[i],
-             box3 = mesh.$jsroot_box3;
-
-         if (!box3)
-            mesh.$jsroot_box3 = box3 = getBoundingBox(mesh);
-
-         if (method === 'size') {
-            let sz = box3.getSize(new Vector3());
-            mesh.$jsroot_distance = sz.x*sz.y*sz.z;
-            continue;
-         }
-
-         if (method === 'pnt') {
-            mesh.$jsroot_distance = origin.distanceTo(box3.getCenter(tmp_vect));
-            continue;
-         }
-
-         let dist = Math.min(origin.distanceTo(box3.min), origin.distanceTo(box3.max)),
-             pnt = new Vector3(box3.min.x, box3.min.y, box3.max.z);
-
-         dist = Math.min(dist, origin.distanceTo(pnt));
-         pnt.set(box3.min.x, box3.max.y, box3.min.z);
-         dist = Math.min(dist, origin.distanceTo(pnt));
-         pnt.set(box3.max.x, box3.min.y, box3.min.z);
-         dist = Math.min(dist, origin.distanceTo(pnt));
-         pnt.set(box3.max.x, box3.max.y, box3.min.z);
-         dist = Math.min(dist, origin.distanceTo(pnt));
-         pnt.set(box3.max.x, box3.min.y, box3.max.z);
-         dist = Math.min(dist, origin.distanceTo(pnt));
-         pnt.set(box3.min.x, box3.max.y, box3.max.z);
-         dist = Math.min(dist, origin.distanceTo(pnt));
-
-         mesh.$jsroot_distance = dist;
-      }
-
-      arr.sort((a,b) => a.$jsroot_distance - b.$jsroot_distance);
-
-      let resort = new Array(arr.length);
-
-      for (let i = 0; i < arr.length; ++i) {
-         arr[i].$jsroot_index = i;
-         resort[i] = arr[i];
-      }
-
-      if (method === 'ray')
-         for (let i=arr.length - 1; i >= 0; --i) {
-            let mesh = arr[i], intersects,
-                box3 = mesh.$jsroot_box3,
-                direction = box3.getCenter(tmp_vect);
-
-            for(let ntry = 0; ntry < 2; ++ntry) {
-
-               direction.sub(origin).normalize();
-
-               raycast.set( origin, direction );
-
-               intersects = raycast.intersectObjects(arr, false) || []; // only plain array
-               let unique = [];
-
-               for (let k1 = 0; k1 < intersects.length; ++k1) {
-                  if (unique.indexOf(intersects[k1].object) < 0)
-                     unique.push(intersects[k1].object);
-                  // if (intersects[k1].object === mesh) break; // trace until object itself
-               }
-
-               intersects = unique;
-
-               if ((intersects.indexOf(mesh) < 0) && (ntry > 0))
-                  console.log(`MISS ${clones?.resolveStack(mesh.stack)?.name}`);
-
-               if ((intersects.indexOf(mesh) >= 0) || (ntry > 0)) break;
-
-               let pos = mesh.geometry.attributes.position.array;
-
-               direction = new Vector3((pos[0]+pos[3]+pos[6])/3, (pos[1]+pos[4]+pos[7])/3, (pos[2]+pos[5]+pos[8])/3);
-
-               direction.applyMatrix4(mesh.matrixWorld);
-            }
-
-            // now push first object in intersects to the front
-            for (let k1 = 0; k1 < intersects.length - 1; ++k1) {
-               let mesh1 = intersects[k1], mesh2 = intersects[k1+1],
-                   i1 = mesh1.$jsroot_index, i2 = mesh2.$jsroot_index;
-               if (i1 < i2) continue;
-               for (let ii = i2; ii < i1; ++ii) {
-                  resort[ii] = resort[ii+1];
-                  resort[ii].$jsroot_index = ii;
-               }
-               resort[i1] = mesh2;
-               mesh2.$jsroot_index = i1;
-            }
-         }
-
-      for (let i = 0; i < resort.length; ++i) {
-         resort[i].renderOrder = Math.round( maxorder - (i+1) / (resort.length+1) * (maxorder-minorder));
-         delete resort[i].$jsroot_index;
-         delete resort[i].$jsroot_distance;
-      }
-
-      return true;
-   }
-
-   function process(obj, lvl, minorder, maxorder) {
-      let arr = [], did_sort = false;
-
-      traverse(obj, lvl, arr);
-
-      if (!arr.length) return;
-
-      if (minorder === maxorder) {
-         for (let k = 0; k < arr.length; ++k)
-            arr[k].renderOrder = minorder;
-      } else {
-        did_sort = sort(arr, minorder, maxorder);
-        if (!did_sort) minorder = maxorder = (minorder + maxorder) / 2;
-      }
-
-      for (let k = 0; k < arr.length; ++k) {
-         let next = arr[k].parent, min = minorder, max = maxorder;
-
-         if (did_sort) {
-            max = arr[k].renderOrder;
-            min = max - (maxorder - minorder) / (arr.length + 2);
-         }
-
-         process(next, lvl+1, min, max);
-      }
-   }
-
-   if (!method || (method == 'dflt'))
-      setdefaults(toplevel);
-   else
-      process(toplevel, 0, 1, 1000000);
-}
-
-/** @summary provide icon name for the shape
-  * @private */
-function getShapeIcon(shape) {
-   switch (shape._typename) {
-      case clTGeoArb8: return 'img_geoarb8';
-      case clTGeoCone: return 'img_geocone';
-      case clTGeoConeSeg: return 'img_geoconeseg';
-      case clTGeoCompositeShape: return 'img_geocomposite';
-      case clTGeoTube: return 'img_geotube';
-      case clTGeoTubeSeg: return 'img_geotubeseg';
-      case clTGeoPara: return 'img_geopara';
-      case clTGeoParaboloid: return 'img_geoparab';
-      case clTGeoPcon: return 'img_geopcon';
-      case clTGeoPgon: return 'img_geopgon';
-      case clTGeoShapeAssembly: return 'img_geoassembly';
-      case clTGeoSphere: return 'img_geosphere';
-      case clTGeoTorus: return 'img_geotorus';
-      case clTGeoTrd1: return 'img_geotrd1';
-      case clTGeoTrd2: return 'img_geotrd2';
-      case clTGeoXtru: return 'img_geoxtru';
-      case clTGeoTrap: return 'img_geotrap';
-      case clTGeoGtra: return 'img_geogtra';
-      case clTGeoEltu: return 'img_geoeltu';
-      case clTGeoHype: return 'img_geohype';
-      case clTGeoCtub: return 'img_geoctub';
-   }
-   return 'img_geotube';
-}
-
-const _ENTIRE_SCENE = 0, _BLOOM_SCENE = 1,
-      clTGeoManager = 'TGeoManager', clTEveGeoShapeExtract = 'TEveGeoShapeExtract',
-      clTGeoOverlap = 'TGeoOverlap', clTGeoVolumeAssembly = 'TGeoVolumeAssembly',
-      clTEveTrack = 'TEveTrack', clTEvePointSet = 'TEvePointSet',
-      clREveGeoShapeExtract = 'ROOT::Experimental::REveGeoShapeExtract';
-
-/** @summary Function used to build hierarchy of elements of overlap object
-  * @private */
-function buildOverlapVolume(overlap) {
-
-   let vol = create$1(clTGeoVolume);
-
-   setGeoBit(vol, geoBITS.kVisDaughters, true);
-   vol.$geoh = true; // workaround, let know browser that we are in volumes hierarchy
-   vol.fName = '';
-
-   let node1 = create$1(clTGeoNodeMatrix);
-   node1.fName = overlap.fVolume1.fName || 'Overlap1';
-   node1.fMatrix = overlap.fMatrix1;
-   node1.fVolume = overlap.fVolume1;
-   // node1.fVolume.fLineColor = 2; // color assigned with _splitColors
-
-   let node2 = create$1(clTGeoNodeMatrix);
-   node2.fName = overlap.fVolume2.fName || 'Overlap2';
-   node2.fMatrix = overlap.fMatrix2;
-   node2.fVolume = overlap.fVolume2;
-   // node2.fVolume.fLineColor = 3;  // color assigned with _splitColors
-
-   vol.fNodes = create$1(clTList);
-   vol.fNodes.Add(node1);
-   vol.fNodes.Add(node2);
-
-   return vol;
-}
-
-let $comp_col_cnt = 0;
-
-/** @summary Function used to build hierarchy of elements of composite shapes
-  * @private */
-function buildCompositeVolume(comp, maxlvl, side) {
-
-   if (maxlvl === undefined) maxlvl = 1;
-   if (!side) {
-      $comp_col_cnt = 0;
-      side = '';
-   }
-
-   let vol = create$1(clTGeoVolume);
-   setGeoBit(vol, geoBITS.kVisThis, true);
-   setGeoBit(vol, geoBITS.kVisDaughters, true);
-
-   if ((side && (comp._typename !== clTGeoCompositeShape)) || (maxlvl <= 0)) {
-      vol.fName = side;
-      vol.fLineColor = ($comp_col_cnt++ % 8) + 2;
-      vol.fShape = comp;
-      return vol;
-   }
-
-   if (side) side += '/';
-   vol.$geoh = true; // workaround, let know browser that we are in volumes hierarchy
-   vol.fName = '';
-
-   let node1 = create$1(clTGeoNodeMatrix);
-   setGeoBit(node1, geoBITS.kVisThis, true);
-   setGeoBit(node1, geoBITS.kVisDaughters, true);
-   node1.fName = 'Left';
-   node1.fMatrix = comp.fNode.fLeftMat;
-   node1.fVolume = buildCompositeVolume(comp.fNode.fLeft, maxlvl-1, side + 'Left');
-
-   let node2 = create$1(clTGeoNodeMatrix);
-   setGeoBit(node2, geoBITS.kVisThis, true);
-   setGeoBit(node2, geoBITS.kVisDaughters, true);
-   node2.fName = 'Right';
-   node2.fMatrix = comp.fNode.fRightMat;
-   node2.fVolume = buildCompositeVolume(comp.fNode.fRight, maxlvl-1, side + 'Right');
-
-   vol.fNodes = create$1(clTList);
-   vol.fNodes.Add(node1);
-   vol.fNodes.Add(node2);
-
-   if (!side) $comp_col_cnt = 0;
-
-   return vol;
-}
-
-
-/** @summary create list entity for geo object
-  * @private */
-function createList(parent, lst, name, title) {
-
-   if (!lst?.arr?.length) return;
-
-   let list_item = {
-       _name: name,
-       _kind: 'ROOT.' + clTList,
-       _title: title,
-       _more: true,
-       _geoobj: lst,
-       _parent: parent,
-       _get(item /*, itemname */) {
-          return Promise.resolve(item._geoobj || null);
-       },
-       _expand(node, lst) {
-          // only childs
-
-          if (lst.fVolume)
-             lst = lst.fVolume.fNodes;
-
-          if (!lst.arr) return false;
-
-          node._childs = [];
-
-          checkDuplicates(null, lst.arr);
-
-          for (let n in lst.arr)
-             createItem(node, lst.arr[n]);
-
-          return true;
-       }
-   };
-
-   if (!parent._childs)
-      parent._childs = [];
-   parent._childs.push(list_item);
-}
-
-
-/** @summary Expand geo object
-  * @private */
-function expandGeoObject(parent, obj) {
-   injectGeoStyle();
-
-   if (!parent || !obj) return false;
-
-   let isnode = (obj._typename.indexOf(clTGeoNode) === 0),
-       isvolume = (obj._typename.indexOf(clTGeoVolume) === 0),
-       ismanager = (obj._typename === clTGeoManager),
-       iseve = ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)),
-       isoverlap = (obj._typename === clTGeoOverlap);
-
-   if (!isnode && !isvolume && !ismanager && !iseve && !isoverlap) return false;
-
-   if (parent._childs) return true;
-
-   if (ismanager) {
-      createList(parent, obj.fMaterials, 'Materials', 'list of materials');
-      createList(parent, obj.fMedia, 'Media', 'list of media');
-      createList(parent, obj.fTracks, 'Tracks', 'list of tracks');
-      createList(parent, obj.fOverlaps, 'Overlaps', 'list of detected overlaps');
-      createItem(parent, obj.fMasterVolume);
-      return true;
-   }
-
-   if (isoverlap) {
-      createItem(parent, obj.fVolume1);
-      createItem(parent, obj.fVolume2);
-      createItem(parent, obj.fMarker, 'Marker');
-      return true;
-   }
-
-   let volume, subnodes, shape;
-
-   if (iseve) {
-      subnodes = obj.fElements?.arr;
-      shape = obj.fShape;
-   } else {
-      volume = isnode ? obj.fVolume : obj;
-      subnodes = volume?.fNodes?.arr;
-      shape = volume?.fShape;
-   }
-
-   if (!subnodes && (shape?._typename === clTGeoCompositeShape) && shape?.fNode) {
-      if (!parent._childs) {
-         createItem(parent, shape.fNode.fLeft, 'Left');
-         createItem(parent, shape.fNode.fRight, 'Right');
-      }
-
-      return true;
-   }
-
-   if (!subnodes) return false;
-
-   checkDuplicates(obj, subnodes);
-
-   for (let i = 0; i < subnodes.length; ++i)
-      createItem(parent, subnodes[i]);
-
-   return true;
-}
-
-
-/** @summary find item with 3d painter
-  * @private */
-function findItemWithPainter(hitem, funcname) {
-   while (hitem) {
-      if (hitem._painter?._camera) {
-         if (funcname && isFunc(hitem._painter[funcname]))
-            hitem._painter[funcname]();
-         return hitem;
-      }
-      hitem = hitem._parent;
-   }
-   return null;
-}
-
-/** @summary provide css style for geo object
-  * @private */
-function provideVisStyle(obj) {
-   if ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract))
-      return obj.fRnrSelf ? ' geovis_this' : '';
-
-   let vis = !testGeoBit(obj, geoBITS.kVisNone) &&
-              testGeoBit(obj, geoBITS.kVisThis),
-       chld = testGeoBit(obj, geoBITS.kVisDaughters);
-
-   if (chld && (!obj.fNodes || (obj.fNodes.arr.length === 0))) chld = false;
-
-   if (vis && chld) return ' geovis_all';
-   if (vis) return ' geovis_this';
-   if (chld) return ' geovis_daughters';
-   return '';
-}
-
-
-/** @summary update icons
-  * @private */
-function updateBrowserIcons(obj, hpainter) {
-   if (!obj || !hpainter) return;
-
-   hpainter.forEachItem(m => {
-      // update all items with that volume
-      if ((obj === m._volume) || (obj === m._geoobj)) {
-         m._icon = m._icon.split(' ')[0] + provideVisStyle(obj);
-         hpainter.updateTreeNode(m);
-      }
-   });
-}
-
-
-/**
-  * @summary Toolbar for geometry painter
-  *
-  * @private
-  */
-
-class Toolbar {
-
-   /** @summary constructor */
-   constructor(container, bright) {
-      this.bright = bright;
-
-      this.element = container.append('div').attr('class','geo_toolbar_group');
-
-      injectStyle(
-         `.geo_toolbar_group { float: left; box-sizing: border-box; position: relative; bottom: 23px; vertical-align: middle; white-space: nowrap; }
-          .geo_toolbar_group:first-child { margin-left: 2px; }
-          .geo_toolbar_group a { position: relative; font-size: 16px; padding: 3px 1px; cursor: pointer; line-height: normal; box-sizing: border-box; }
-          .geo_toolbar_group a svg { position: relative; top: 2px; }
-          .geo_toolbar_btn path { fill: rgba(0, 31, 95, 0.2); }
-          .geo_toolbar_btn path .active,
-          .geo_toolbar_btn path:hover { fill: rgba(0, 22, 72, 0.5); }
-          .geo_toolbar_btn_bright path { fill: rgba(255, 224, 160, 0.2); }
-          .geo_toolbar_btn_bright path .active,
-          .geo_toolbar_btn_bright path:hover { fill: rgba(255, 233, 183, 0.5); }`, this.element.node());
-   }
-
-   /** @summary add buttons */
-   addButtons(buttons) {
-      this.buttonsNames = [];
-
-      buttons.forEach(buttonConfig => {
-         let buttonName = buttonConfig.name;
-         if (!buttonName)
-            throw new Error('must provide button name in button config');
-         if (this.buttonsNames.indexOf(buttonName) !== -1)
-            throw new Error(`button name ${buttonName} is taken`);
-
-         this.buttonsNames.push(buttonName);
-
-         let title = buttonConfig.title || buttonConfig.name;
-
-         if (!isFunc(buttonConfig.click))
-            throw new Error('must provide button click() function in button config');
-
-         let button = this.element.append('a')
-                           .attr('class', this.bright ? 'geo_toolbar_btn_bright' : 'geo_toolbar_btn')
-                           .attr('rel', 'tooltip')
-                           .attr('data-title', title)
-                           .on('click', buttonConfig.click);
-
-         ToolbarIcons.createSVG(button, ToolbarIcons[buttonConfig.icon], 16, title);
-      });
-
-   }
-
-   /** @summary change brightness */
-   changeBrightness(bright) {
-      this.bright = bright;
-      if (this.element)
-         this.element.selectAll(bright ? '.geo_toolbar_btn' : '.geo_toolbar_btn_bright')
-                     .attr('class', !bright ? 'geo_toolbar_btn' : 'geo_toolbar_btn_bright');
-   }
-
-   /** @summary cleanup toolbar */
-   cleanup() {
-      if (this.element) {
-         this.element.remove();
-         delete this.element;
-      }
-   }
-
-} // class ToolBar
-
-
-/**
-  * @summary geometry drawing control
-  *
-  * @private
-  */
-
-class GeoDrawingControl extends InteractiveControl {
-
-   constructor(mesh, bloom) {
-      super();
-      this.mesh = (mesh && mesh.material) ? mesh : null;
-      this.bloom = bloom;
-   }
-
-   /** @summary set highlight */
-   setHighlight(col, indx) {
-      return this.drawSpecial(col, indx);
-   }
-
-   /** @summary draw special */
-   drawSpecial(col /*, indx*/) {
-      let c = this.mesh;
-      if (!c || !c.material) return;
-
-      if (col) {
-         if (!c.origin)
-            c.origin = {
-              color: c.material.color,
-              emissive: c.material.emissive,
-              opacity: c.material.opacity,
-              width: c.material.linewidth,
-              size: c.material.size
-           };
-         if (this.bloom) {
-            c.layers.enable(_BLOOM_SCENE);
-            c.material.emissive = new Color$1(0x00ff00);
-         } else {
-            c.material.color = new Color$1( col );
-            c.material.opacity = 1.;
-         }
-
-         if (c.hightlightWidthScale && !browser$1.isWin)
-            c.material.linewidth = c.origin.width * c.hightlightWidthScale;
-         if (c.highlightScale)
-            c.material.size = c.origin.size * c.highlightScale;
-         return true;
-      } else if (c.origin) {
-         if (this.bloom) {
-            c.material.emissive = c.origin.emissive;
-            c.layers.enable(_ENTIRE_SCENE);
-         } else {
-            c.material.color = c.origin.color;
-            c.material.opacity = c.origin.opacity;
-         }
-         if (c.hightlightWidthScale)
-            c.material.linewidth = c.origin.width;
-         if (c.highlightScale)
-            c.material.size = c.origin.size;
-         return true;
-      }
-   }
-
-} // class GeoDrawingControl
-
-
-const stageInit = 0, stageCollect = 1, stageWorkerCollect = 2, stageAnalyze = 3, stageCollShapes = 4,
-      stageStartBuild = 5, stageWorkerBuild = 6, stageBuild = 7, stageBuildReady = 8, stageWaitMain = 9, stageBuildProj = 10;
-
-/**
- * @summary Painter class for geometries drawing
- *
- * @private
- */
-
-class TGeoPainter extends ObjectPainter {
-
-   /** @summary Constructor
-     * @param {object|string} dom - DOM element for drawing or element id
-     * @param {object} obj - supported TGeo object */
-   constructor(dom, obj) {
-
-      let gm;
-      if (obj?._typename === clTGeoManager) {
-         gm = obj;
-         obj = obj.fMasterVolume;
-      }
-
-      if (obj?._typename && (obj._typename.indexOf(clTGeoVolume) === 0))
-         obj = { _typename: clTGeoNode, fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
-
-      super(dom, obj);
-
-      if (gm) this.geo_manager = gm;
-
-      this.no_default_title = true; // do not set title to main DIV
-      this.mode3d = true; // indication of 3D mode
-      this.drawing_stage = stageInit; //
-      this.drawing_log = 'Init';
-      this.ctrl = {
-         clipIntersect: true,
-         clip: [{ name: 'x', enabled: false, value: 0, min: -100, max: 100 },
-                { name: 'y', enabled: false, value: 0, min: -100, max: 100 },
-                { name: 'z', enabled: false, value: 0, min: -100, max: 100 }],
-         ssao: { enabled: false, output: SSAOPass.OUTPUT.Default, kernelRadius: 0, minDistance: 0.001, maxDistance: 0.1 },
-         bloom: { enabled: true, strength: 1.5 },
-         info: { num_meshes: 0, num_faces: 0, num_shapes: 0 },
-         highlight: false,
-         highlight_scene: false,
-         depthTest: true,
-         depthMethod: 'dflt',
-         select_in_view: false,
-         update_browser: true,
-         light: { kind: 'points', top: false, bottom: false, left: false, right: false, front: false, specular: true, power: 1 },
-         trans_radial: 0,
-         trans_z: 0
-      };
-
-      this.ctrl.depthMethodItems = [
-         { name: 'Default', value: 'dflt' },
-         { name: 'Raytraicing', value: 'ray' },
-         { name: 'Boundary box', value: 'box' },
-         { name: 'Mesh size', value: 'size' },
-         { name: 'Central point', value: 'pnt' }
-       ];
-
-      this.ctrl.ssao.outputItems = [
-         { name: 'Default', value: SSAOPass.OUTPUT.Default },
-         { name: 'SSAO Only', value: SSAOPass.OUTPUT.SSAO },
-         { name: 'SSAO Only + Blur', value: SSAOPass.OUTPUT.Blur },
-         { name: 'Beauty', value: SSAOPass.OUTPUT.Beauty },
-         { name: 'Depth', value: SSAOPass.OUTPUT.Depth },
-         { name: 'Normal', value: SSAOPass.OUTPUT.Normal }
-      ];
-
-      this.cleanup(true);
-   }
-
-   /** @summary Change drawing stage
-     * @private */
-   changeStage(value, msg) {
-      this.drawing_stage = value;
-      if (!msg)
-         switch(value) {
-            case stageInit: msg = 'Building done'; break;
-            case stageCollect: msg = 'collect visibles'; break;
-            case stageWorkerCollect: msg = 'worker collect visibles'; break;
-            case stageAnalyze: msg = 'Analyse visibles'; break;
-            case stageCollShapes: msg = 'collect shapes for building'; break;
-            case stageStartBuild: msg = 'Start build shapes'; break;
-            case stageWorkerBuild: msg = 'Worker build shapes'; break;
-            case stageBuild: msg = 'Build shapes'; break;
-            case stageBuildReady: msg = 'Build ready'; break;
-            case stageWaitMain: msg = 'Wait for main painter'; break;
-            case stageBuildProj: msg = 'Build projection'; break;
-            default: msg = `stage ${value}`;
-         }
-      this.drawing_log = msg;
-   }
-
-   /** @summary Check drawing stage */
-   isStage(value) { return value === this.drawing_stage; }
-
-   /** @summary Create toolbar */
-   createToolbar() {
-      if (this._toolbar || !this._webgl || this.ctrl.notoolbar || isBatchMode()) return;
-      let buttonList = [{
-         name: 'toImage',
-         title: 'Save as PNG',
-         icon: 'camera',
-         click: () => this.createSnapshot()
-      }, {
-         name: 'control',
-         title: 'Toggle control UI',
-         icon: 'rect',
-         click: () => this.showControlOptions('toggle')
-      }, {
-         name: 'enlarge',
-         title: 'Enlarge geometry drawing',
-         icon: 'circle',
-         click: () => this.toggleEnlarge()
-      }];
-
-      // Only show VR icon if WebVR API available.
-      if (navigator.getVRDisplays) {
-         buttonList.push({
-            name: 'entervr',
-            title: 'Enter VR (It requires a VR Headset connected)',
-            icon: 'vrgoggles',
-            click: () => this.toggleVRMode()
-         });
-         this.initVRMode();
-      }
-
-      if (settings.ContextMenu)
-      buttonList.push({
-         name: 'menu',
-         title: 'Show context menu',
-         icon: 'question',
-         click: evnt => {
-
-            evnt.preventDefault();
-            evnt.stopPropagation();
-
-            if (closeMenu()) return;
-
-            createMenu$1(evnt, this).then(menu => {
-                menu.painter.fillContextMenu(menu);
-                menu.show();
-            });
-         }
-      });
-
-      let bkgr = new Color$1(this.ctrl.background);
-
-      this._toolbar = new Toolbar(this.selectDom(), (bkgr.r + bkgr.g + bkgr.b) < 1);
-
-      this._toolbar.addButtons(buttonList);
-   }
-
-   /** @summary Initialize VR mode */
-   initVRMode() {
-      // Dolly contains camera and controllers in VR Mode
-      // Allows moving the user in the scene
-      this._dolly = new Group();
-      this._scene.add(this._dolly);
-      this._standingMatrix = new Matrix4();
-
-      // Raycaster temp variables to avoid one per frame allocation.
-      this._raycasterEnd = new Vector3();
-      this._raycasterOrigin = new Vector3();
-
-      navigator.getVRDisplays().then(displays => {
-         let vrDisplay = displays[0];
-         if (!vrDisplay) return;
-         this._renderer.vr.setDevice(vrDisplay);
-         this._vrDisplay = vrDisplay;
-         if (vrDisplay.stageParameters) {
-            this._standingMatrix.fromArray(vrDisplay.stageParameters.sittingToStandingTransform);
-         }
-         this.initVRControllersGeometry();
-      });
-   }
-
-   /** @summary Init VR controllers geometry
-     * @private */
-   initVRControllersGeometry() {
-      let geometry = new SphereGeometry(0.025, 18, 36),
-          material = new MeshBasicMaterial({ color: 'grey', vertexColors: false }),
-          rayMaterial = new MeshBasicMaterial({ color: 'fuchsia', vertexColors: false }),
-          rayGeometry = new BoxGeometry(0.001, 0.001, 2),
-          ray1Mesh = new Mesh(rayGeometry, rayMaterial),
-          ray2Mesh = new Mesh(rayGeometry, rayMaterial),
-          sphere1 = new Mesh(geometry, material),
-          sphere2 = new Mesh(geometry, material);
-
-      this._controllersMeshes = [];
-      this._controllersMeshes.push(sphere1);
-      this._controllersMeshes.push(sphere2);
-      ray1Mesh.position.z -= 1;
-      ray2Mesh.position.z -= 1;
-      sphere1.add(ray1Mesh);
-      sphere2.add(ray2Mesh);
-      this._dolly.add(sphere1);
-      this._dolly.add(sphere2);
-      // Controller mesh hidden by default
-      sphere1.visible = false;
-      sphere2.visible = false;
-   }
-
-   /** @summary Update VR controllers list
-     * @private */
-   updateVRControllersList() {
-      let gamepads = navigator.getGamepads && navigator.getGamepads();
-      // Has controller list changed?
-      if (this.vrControllers && (gamepads.length === this.vrControllers.length)) { return; }
-      // Hide meshes.
-      this._controllersMeshes.forEach(mesh => { mesh.visible = false; });
-      this._vrControllers = [];
-      for (let i = 0; i < gamepads.length; ++i) {
-         if (!gamepads[i] || !gamepads[i].pose) { continue; }
-         this._vrControllers.push({
-            gamepad: gamepads[i],
-            mesh: this._controllersMeshes[i]
-         });
-         this._controllersMeshes[i].visible = true;
-      }
-   }
-
-   /** @summary Process VR controller intersection
-     * @private */
-   processVRControllerIntersections() {
-      let intersects = [];
-      for (let i = 0; i < this._vrControllers.length; ++i) {
-         let controller = this._vrControllers[i].mesh,
-             end = controller.localToWorld(this._raycasterEnd.set(0, 0, -1)),
-             origin = controller.localToWorld(this._raycasterOrigin.set(0, 0, 0));
-         end.sub(origin).normalize();
-         intersects = intersects.concat(this._controls.getOriginDirectionIntersects(origin, end));
-      }
-      // Remove duplicates.
-      intersects = intersects.filter(function (item, pos) {return intersects.indexOf(item) === pos});
-      this._controls.processMouseMove(intersects);
-   }
-
-   /** @summary Update VR controllers
-     * @private */
-   updateVRControllers() {
-      this.updateVRControllersList();
-      // Update pose.
-      for (let i = 0; i < this._vrControllers.length; ++i) {
-         let controller = this._vrControllers[i],
-             orientation = controller.gamepad.pose.orientation,
-             position = controller.gamepad.pose.position,
-             controllerMesh = controller.mesh;
-         if (orientation) { controllerMesh.quaternion.fromArray(orientation); }
-         if (position) { controllerMesh.position.fromArray(position); }
-         controllerMesh.updateMatrix();
-         controllerMesh.applyMatrix4(this._standingMatrix);
-         controllerMesh.matrixWorldNeedsUpdate = true;
-      }
-      this.processVRControllerIntersections();
-   }
-
-   /** @summary Toggle VR mode
-     * @private */
-   toggleVRMode() {
-      if (!this._vrDisplay) return;
-      // Toggle VR mode off
-      if (this._vrDisplay.isPresenting) {
-         this.exitVRMode();
-         return;
-      }
-      this._previousCameraPosition = this._camera.position.clone();
-      this._previousCameraRotation = this._camera.rotation.clone();
-      this._vrDisplay.requestPresent([{ source: this._renderer.domElement }]).then(() => {
-         this._previousCameraNear = this._camera.near;
-         this._dolly.position.set(this._camera.position.x/4, - this._camera.position.y/8, - this._camera.position.z/4);
-         this._camera.position.set(0,0,0);
-         this._dolly.add(this._camera);
-         this._camera.near = 0.1;
-         this._camera.updateProjectionMatrix();
-         this._renderer.vr.enabled = true;
-         this._renderer.setAnimationLoop(() => {
-            this.updateVRControllers();
-            this.render3D(0);
-         });
-      });
-      this._renderer.vr.enabled = true;
-
-      window.addEventListener( 'keydown', evnt => {
-         // Esc Key turns VR mode off
-         if (evnt.code == 'Escape') this.exitVRMode();
-      });
-   }
-
-   /** @summary Exit VR mode
-     * @private */
-   exitVRMode() {
-      if (!this._vrDisplay.isPresenting) return;
-      this._renderer.vr.enabled = false;
-      this._dolly.remove(this._camera);
-      this._scene.add(this._camera);
-      // Restore Camera pose
-      this._camera.position.copy(this._previousCameraPosition);
-      this._previousCameraPosition = undefined;
-      this._camera.rotation.copy(this._previousCameraRotation);
-      this._previousCameraRotation = undefined;
-      this._camera.near = this._previousCameraNear;
-      this._camera.updateProjectionMatrix();
-      this._vrDisplay.exitPresent();
-   }
-
-   /** @summary Returns main geometry object */
-   getGeometry() {
-      return this.getObject();
-   }
-
-   /** @summary Modify visibility of provided node by name */
-   modifyVisisbility(name, sign) {
-      if (getNodeKind(this.getGeometry()) !== 0) return;
-
-      if (!name)
-         return setGeoBit(this.getGeometry().fVolume, geoBITS.kVisThis, (sign === '+'));
-
-      let regexp, exact = false;
-
-      //arg.node.fVolume
-      if (name.indexOf('*') < 0) {
-         regexp = new RegExp('^'+name+'$');
-         exact = true;
-      } else {
-         regexp = new RegExp('^' + name.split('*').join('.*') + '$');
-         exact = false;
-      }
-
-      this.findNodeWithVolume(regexp, function(arg) {
-         setInvisibleAll(arg.node.fVolume, (sign !== '+'));
-         return exact ? arg : null; // continue search if not exact expression provided
-      });
-   }
-
-   /** @summary Decode drawing options */
-   decodeOptions(opt) {
-      if (!isStr(opt)) opt = '';
-
-      let res = { _grid: false, _bound: false, _debug: false,
-                  _full: false, _axis: 0,
-                  _count: false, wireframe: false,
-                   scale: new Vector3(1,1,1), zoom: 1.0, rotatey: 0, rotatez: 0,
-                   more: 1, maxlimit: 100000,
-                   vislevel: undefined, maxnodes: undefined, dflt_colors: false,
-                   use_worker: false, show_controls: false,
-                   highlight: false, highlight_scene: false, no_screen: false,
-                   project: '', is_main: false, tracks: false, showtop: false, can_rotate: true, ortho_camera: false,
-                   clipx: false, clipy: false, clipz: false, usessao: false, usebloom: true, outline: false,
-                   script_name: '', transparency: 0, rotate: false, background: '#FFFFFF',
-                   depthMethod: 'dflt', mouse_tmout: 50, trans_radial: 0, trans_z: 0 };
-
-      let dd = decodeUrl();
-      if (dd.get('_grid') == 'true') res._grid = true;
-      let _opt = dd.get('_debug');
-      if (_opt == 'true') { res._debug = true; res._grid = true; }
-      if (_opt == 'bound') { res._debug = true; res._grid = true; res._bound = true; }
-      if (_opt == 'full') { res._debug = true; res._grid = true; res._full = true; res._bound = true; }
-
-      let macro = opt.indexOf('macro:');
-      if (macro >= 0) {
-         let separ = opt.indexOf(';', macro+6);
-         if (separ < 0) separ = opt.length;
-         res.script_name = opt.slice(macro+6, separ);
-         opt = opt.slice(0, macro) + opt.slice(separ+1);
-         console.log(`script ${res.script_name} rest ${opt}`);
-      }
-
-      while (true) {
-         let pp = opt.indexOf('+'), pm = opt.indexOf('-');
-         if ((pp < 0) && (pm < 0)) break;
-         let p1 = pp, sign = '+';
-         if ((p1 < 0) || ((pm >= 0) && (pm < pp))) { p1 = pm; sign = '-'; }
-
-         let p2 = p1+1, regexp = new RegExp('[,; .]');
-         while ((p2 < opt.length) && !regexp.test(opt[p2]) && (opt[p2]!='+') && (opt[p2]!='-')) p2++;
-
-         let name = opt.substring(p1+1, p2);
-         opt = opt.slice(0,p1) + opt.slice(p2);
-         // console.log(`Modify visibility ${sign} : ${name}`);
-
-         this.modifyVisisbility(name, sign);
-      }
-
-      let d = new DrawOptions(opt);
-
-      if (d.check('MAIN')) res.is_main = true;
-
-      if (d.check('TRACKS')) res.tracks = true; // only for TGeoManager
-      if (d.check('SHOWTOP')) res.showtop = true; // only for TGeoManager
-      if (d.check('NO_SCREEN')) res.no_screen = true; // ignore kVisOnScreen bits for visibility
-
-      if (d.check('ORTHO_CAMERA_ROTATE')) { res.ortho_camera = true; res.can_rotate = true; }
-      if (d.check('ORTHO_CAMERA')) { res.ortho_camera = true; res.can_rotate = false; }
-      if (d.check('MOUSE_CLICK')) res.mouse_click = true;
-
-      if (d.check('DEPTHRAY') || d.check('DRAY')) res.depthMethod = 'ray';
-      if (d.check('DEPTHBOX') || d.check('DBOX')) res.depthMethod = 'box';
-      if (d.check('DEPTHPNT') || d.check('DPNT')) res.depthMethod = 'pnt';
-      if (d.check('DEPTHSIZE') || d.check('DSIZE')) res.depthMethod = 'size';
-      if (d.check('DEPTHDFLT') || d.check('DDFLT')) res.depthMethod = 'dflt';
-
-      if (d.check('ZOOM', true)) res.zoom = d.partAsFloat(0, 100) / 100;
-      if (d.check('ROTY', true)) res.rotatey = d.partAsFloat();
-      if (d.check('ROTZ', true)) res.rotatez = d.partAsFloat();
-      if (d.check('VISLVL', true)) res.vislevel = d.partAsInt();
-
-      if (d.check('BLACK')) res.background = '#000000';
-      if (d.check('WHITE')) res.background = '#FFFFFF';
-
-      if (d.check('BKGR_', true)) {
-         let bckgr = null;
-         if (d.partAsInt(1) > 0) {
-           bckgr = getColor(d.partAsInt());
-         } else {
-            for (let col = 0; col < 8; ++col)
-               if (getColor(col).toUpperCase() === d.part)
-                  bckgr = getColor(col);
-         }
-         if (bckgr) res.background = '#' + new Color$1(bckgr).getHexString();
-      }
-
-      if (d.check('R3D_', true))
-         res.Render3D = constants$1.Render3D.fromString(d.part.toLowerCase());
-
-      if (d.check('MORE3')) res.more = 3;
-      if (d.check('MORE')) res.more = 2;
-      if (d.check('ALL')) { res.more = 10; res.vislevel = 9; }
-
-      if (d.check('CONTROLS') || d.check('CTRL')) res.show_controls = true;
-
-      if (d.check('CLIPXYZ')) res.clipx = res.clipy = res.clipz = true;
-      if (d.check('CLIPX')) res.clipx = true;
-      if (d.check('CLIPY')) res.clipy = true;
-      if (d.check('CLIPZ')) res.clipz = true;
-      if (d.check('CLIP')) res.clipx = res.clipy = res.clipz = true;
-
-      if (d.check('PROJX', true)) { res.project = 'x'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = false; }
-      if (d.check('PROJY', true)) { res.project = 'y'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = false; }
-      if (d.check('PROJZ', true)) { res.project = 'z'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = false; }
-
-      if (d.check('DFLT_COLORS') || d.check('DFLT')) res.dflt_colors = true;
-      if (d.check('SSAO')) res.usessao = true;
-      if (d.check('NOBLOOM')) res.usebloom = false;
-      if (d.check('BLOOM')) res.usebloom = true;
-      if (d.check('OUTLINE')) res.outline = true;
-
-      if (d.check('NOWORKER')) res.use_worker = -1;
-      if (d.check('WORKER')) res.use_worker = 1;
-
-      if (d.check('NOHIGHLIGHT') || d.check('NOHIGH')) res.highlight_scene = res.highlight = 0;
-      if (d.check('HIGHLIGHT')) res.highlight_scene = res.highlight = true;
-      if (d.check('HSCENEONLY')) { res.highlight_scene = true; res.highlight = 0; }
-      if (d.check('NOHSCENE')) res.highlight_scene = 0;
-      if (d.check('HSCENE')) res.highlight_scene = true;
-
-      if (d.check('WIREFRAME') || d.check('WIRE')) res.wireframe = true;
-      if (d.check('ROTATE')) res.rotate = true;
-
-      if (d.check('INVX') || d.check('INVERTX')) res.scale.x = -1;
-      if (d.check('INVY') || d.check('INVERTY')) res.scale.y = -1;
-      if (d.check('INVZ') || d.check('INVERTZ')) res.scale.z = -1;
-
-      if (d.check('COUNT')) res._count = true;
-
-      if (d.check('TRANSP',true))
-         res.transparency = d.partAsInt(0,100)/100;
-
-      if (d.check('OPACITY',true))
-         res.transparency = 1 - d.partAsInt(0,100)/100;
-
-      if (d.check('AXISCENTER') || d.check('AC')) res._axis = 2;
-
-      if (d.check('TRR',true)) res.trans_radial = d.partAsInt()/100;
-      if (d.check('TRZ',true)) res.trans_z = d.partAsInt()/100;
-
-      if (d.check('AXIS') || d.check('A')) res._axis = true;
-
-      if (d.check('D')) res._debug = true;
-      if (d.check('G')) res._grid = true;
-      if (d.check('B')) res._bound = true;
-      if (d.check('W')) res.wireframe = true;
-      if (d.check('F')) res._full = true;
-      if (d.check('Y')) res._yup = true;
-      if (d.check('Z')) res._yup = false;
-
-      // when drawing geometry without TCanvas, yup = true by default
-      if (res._yup === undefined)
-         res._yup = this.getCanvSvg().empty();
-
-      return res;
-   }
-
-   /** @summary Activate specified items in the browser */
-   activateInBrowser(names, force) {
-
-      if (isStr(names)) names = [ names ];
-
-      if (this._hpainter) {
-         // show browser if it not visible
-
-         this._hpainter.activateItems(names, force);
-
-         // if highlight in the browser disabled, suppress in few seconds
-         if (!this.ctrl.update_browser)
-            setTimeout(() => this._hpainter.activateItems([]), 2000);
-      }
-   }
-
-   /** @summary  method used to check matrix calculations performance with current three.js model */
-   testMatrixes() {
-
-      let errcnt = 0, totalcnt = 0, totalmax = 0;
-
-      let arg = {
-            domatrix: true,
-            func: (/*node*/) => {
-
-               let m2 = this.getmatrix();
-
-               let entry = this.CopyStack();
-
-               let mesh = this._clones.createObject3D(entry.stack, this._toplevel, 'mesh');
-
-               if (!mesh) return true;
-
-               totalcnt++;
-
-               let m1 = mesh.matrixWorld, flip;
-
-               if (m1.equals(m2)) return true;
-               if ((m1.determinant() > 0) && (m2.determinant()<-0.9)) {
-                  flip = new Vector3(1,1,-1);
-                  m2 = m2.clone().scale(flip);
-                  if (m1.equals(m2)) return true;
-               }
-
-               let max = 0;
-               for (let k = 0; k < 16; ++k)
-                  max = Math.max(max, Math.abs(m1.elements[k] - m2.elements[k]));
-
-               totalmax = Math.max(max, totalmax);
-
-               if (max < 1e-4) return true;
-
-               console.log(`${this._clones.resolveStack(entry.stack).name} maxdiff ${max} determ ${m1.determinant()} ${m2.determinant()}`);
-
-               errcnt++;
-
-               return false;
-            }
-         };
-
-
-      let tm1 = new Date().getTime();
-
-      /* let cnt = */ this._clones.scanVisible(arg);
-
-      let tm2 = new Date().getTime();
-
-      console.log(`Compare matrixes total ${totalcnt} errors ${errcnt} takes ${tm2-tm1} maxdiff ${totalmax}`);
-   }
-
-   /** @summary Fill context menu */
-   fillContextMenu(menu) {
-      menu.add('header: Draw options');
-
-      menu.addchk(this.ctrl.update_browser, 'Browser update', () => {
-         this.ctrl.update_browser = !this.ctrl.update_browser;
-         if (!this.ctrl.update_browser) this.activateInBrowser([]);
-      });
-      menu.addchk(this.ctrl.show_controls, 'Show Controls', () => this.showControlOptions('toggle'));
-
-      menu.addchk(this.ctrl._axis, 'Show axes', () => this.setAxesDraw('toggle'));
-
-      if (this.geo_manager)
-         menu.addchk(this.ctrl.showtop, 'Show top volume', () => this.setShowTop(!this.ctrl.showtop));
-
-      menu.addchk(this.ctrl.wireframe, 'Wire frame', () => this.toggleWireFrame());
-
-      menu.addchk(this.ctrl.highlight, 'Highlight volumes', () => {
-         this.ctrl.highlight = !this.ctrl.highlight;
-      });
-      menu.addchk(this.ctrl.highlight_scene, 'Highlight scene', () => {
-         this.ctrl.highlight_scene = !this.ctrl.highlight_scene;
-      });
-      menu.add('Reset camera position', () => this.focusCamera());
-
-      if (!this._geom_viewer)
-         menu.add('Get camera position', () => menu.info('Position (as url)', '&opt=' + this.produceCameraUrl()));
-
-      if (!this.ctrl.project)
-         menu.addchk(this.ctrl.rotate, 'Autorotate', () => this.setAutoRotate(!this.ctrl.rotate));
-      menu.addchk(this.ctrl.select_in_view, 'Select in view', () => {
-         this.ctrl.select_in_view = !this.ctrl.select_in_view;
-         if (this.ctrl.select_in_view) this.startDrawGeometry();
-      });
-   }
-
-   /** @summary Method used to set transparency for all geometrical shapes
-     * @param {number|Function} transparency - one could provide function
-     * @param {boolean} [skip_render] - if specified, do not perform rendering */
-   changedGlobalTransparency(transparency, skip_render) {
-      let func = isFunc(transparency) ? transparency : null;
-      if (func || (transparency === undefined)) transparency = this.ctrl.transparency;
-      this._toplevel.traverse( node => {
-         if (node?.material?.inherentOpacity !== undefined) {
-            let t = func ? func(node) : undefined;
-            if (t !== undefined)
-               node.material.opacity = 1 - t;
-            else
-               node.material.opacity = Math.min(1 - (transparency || 0), node.material.inherentOpacity);
-            node.material.transparent = node.material.opacity < 1;
-         }
-      });
-      if (!skip_render)
-         this.render3D(-1);
-   }
-
-   /** @summary Reset transformation */
-   resetTransformation() {
-      this.changedTransformation('reset');
-   }
-
-   /** @summary Method should be called when transformation parameters were changed */
-   changedTransformation(arg) {
-      if (!this._toplevel) return;
-
-      let ctrl = this.ctrl,
-          translation = new Matrix4(),
-          vect2 = new Vector3();
-
-      if (arg == 'reset')
-         ctrl.trans_z = ctrl.trans_radial = 0;
-
-      this._toplevel.traverse(mesh => {
-         if (mesh.stack === undefined) return;
-
-         let node = mesh.parent;
-
-         if (arg == 'reset') {
-            if (node.matrix0) {
-               node.matrix.copy(node.matrix0);
-               node.matrix.decompose( node.position, node.quaternion, node.scale );
-               node.matrixWorldNeedsUpdate = true;
-            }
-            delete node.matrix0;
-            delete node.vect0;
-            delete node.vect1;
-            delete node.minvert;
-            return;
-         }
-
-         if (node.vect0 === undefined) {
-            node.matrix0 = node.matrix.clone();
-            node.minvert = new Matrix4().copy(node.matrixWorld).invert();
-
-            let box3 = getBoundingBox(mesh, null, true),
-                signz = mesh._flippedMesh ? -1 : 1;
-
-            // real center of mesh in local coordinates
-            node.vect0 = new Vector3((box3.max.x  + box3.min.x) / 2, (box3.max.y  + box3.min.y) / 2, signz * (box3.max.z  + box3.min.z) / 2).applyMatrix4(node.matrixWorld);
-            node.vect1 = new Vector3(0,0,0).applyMatrix4(node.minvert);
-         }
-
-         vect2.set(ctrl.trans_radial * node.vect0.x, ctrl.trans_radial * node.vect0.y, ctrl.trans_z * node.vect0.z).applyMatrix4(node.minvert).sub(node.vect1);
-
-         node.matrix.multiplyMatrices(node.matrix0, translation.makeTranslation(vect2.x, vect2.y, vect2.z));
-         node.matrix.decompose( node.position, node.quaternion, node.scale );
-         node.matrixWorldNeedsUpdate = true;
-      });
-
-      this._toplevel.updateMatrixWorld();
-
-      // axes drawing always triggers rendering
-      if (arg != 'norender')
-         this.drawSimpleAxis();
-   }
-
-   /** @summary Should be called when autorotate property changed */
-   changedAutoRotate() {
-      this.autorotate(2.5);
-   }
-
-   /** @summary Method should be called when changing axes drawing */
-   changedAxes() {
-      if (isStr(this.ctrl._axis))
-         this.ctrl._axis = parseInt(this.ctrl._axis);
-
-      this.drawSimpleAxis();
-   }
-
-   /** @summary Method should be called to change background color */
-   changedBackground(val) {
-      if (val !== undefined)
-         this.ctrl.background = val;
-      this._renderer.setClearColor(this.ctrl.background, 1);
-      this.render3D(0);
-
-      if (this._toolbar) {
-         let bkgr = new Color$1(this.ctrl.background);
-         this._toolbar.changeBrightness((bkgr.r + bkgr.g + bkgr.b) < 1);
-      }
-   }
-
-   /** @summary Method called when SSAO configuration changed via GUI */
-   changedSSAO() {
-      if (!this.ctrl.ssao.enabled) {
-         this.removeSSAO();
-      } else {
-         this.createSSAO();
-
-         this._ssaoPass.output = parseInt(this.ctrl.ssao.output);
-         this._ssaoPass.kernelRadius = this.ctrl.ssao.kernelRadius;
-         this._ssaoPass.minDistance = this.ctrl.ssao.minDistance;
-         this._ssaoPass.maxDistance = this.ctrl.ssao.maxDistance;
-      }
-
-      this.updateClipping();
-
-      if (this._slave_painters)
-         this._slave_painters.forEach(p => {
-            Object.assign(p.ctrl.ssao, this.ctrl.ssao);
-            p.changedSSAO();
-         });
-   }
-
-   /** @summary Display control GUI */
-   showControlOptions(on) {
-      // while complete geo drawing can be removed until dat is loaded - just check and ignore callback
-      if (!this.ctrl) return;
-
-      if (on === 'toggle') {
-         on = !this._datgui;
-      } else if (on === undefined) {
-         on = this.ctrl.show_controls;
-      }
-
-      this.ctrl.show_controls = on;
-
-      if (this._datgui) {
-         if (!on) {
-            this._datgui.domElement.remove();
-            this._datgui.destroy();
-            delete this._datgui;
-         }
-         return;
-      }
-
-      if (on)
-         Promise.resolve().then(function () { return dat_gui; }).then(h => this.buildDatGui(h));
-   }
-
-   /** @summary build dat.gui elements
-     * @private */
-   buildDatGui(dat) {
-      // can happen when dat gui loaded after drawing is already cleaned
-      if (!this._renderer) return;
-
-      if (!dat)
-         throw Error('Fail to load dat.gui');
-
-      this._datgui = new dat.GUI({ autoPlace: false, width: Math.min(650, this._renderer.domElement.width / 2) });
-
-      let main = this.selectDom();
-      if (main.style('position') == 'static') main.style('position','relative');
-
-      let dom = this._datgui.domElement;
-      dom.style.position = 'absolute';
-      dom.style.top = 0;
-      dom.style.right = 0;
-      main.node().appendChild(dom);
-
-      this._datgui.painter = this;
-
-      if (this.ctrl.project) {
-
-         let bound = this.getGeomBoundingBox(this.getProjectionSource(), 0.01),
-             axis = this.ctrl.project;
-
-         if (this.ctrl.projectPos === undefined)
-            this.ctrl.projectPos = (bound.min[axis] + bound.max[axis])/2;
-
-         this._datgui.add(this.ctrl, 'projectPos', bound.min[axis], bound.max[axis])
-             .name(axis.toUpperCase() + ' projection')
-             .onChange(() => this.startDrawGeometry());
-
-      } else {
-         // Clipping Options
-
-         let clipFolder = this._datgui.addFolder('Clipping'),
-             clip_handler = () => this.changedClipping(-1);
-
-         for (let naxis = 0; naxis < 3; ++naxis) {
-            let cc = this.ctrl.clip[naxis],
-                axisC = cc.name.toUpperCase();
-
-            clipFolder.add(cc, 'enabled')
-                .name('Enable ' + axisC)
-                .listen() // react if option changed outside
-                .onChange(clip_handler);
-
-            clipFolder.add(cc, 'value', cc.min, cc.max)
-                .name(axisC + ' position')
-                .onChange(this.changedClipping.bind(this, naxis));
-         }
-
-         clipFolder.add(this.ctrl, 'clipIntersect').name('Clip intersection')
-                   .listen().onChange(clip_handler);
-
-      }
-
-      // Appearance Options
-
-      let appearance = this._datgui.addFolder('Appearance');
-
-      appearance.add(this.ctrl, 'highlight').name('Highlight Selection')
-                .listen().onChange(() => this.changedHighlight());
-
-      appearance.add(this.ctrl, 'transparency', 0.0, 1.0, 0.001)
-                     .listen().onChange(value => this.changedGlobalTransparency(value));
-
-      appearance.addColor(this.ctrl, 'background').name('Background')
-                .onChange(col => this.changedBackground(col));
-
-      appearance.add(this.ctrl, 'wireframe').name('Wireframe')
-                     .listen().onChange(() => this.changedWireFrame());
-
-      this.ctrl._axis_cfg = 0;
-      appearance.add(this.ctrl, '_axis', { 'none': 0, 'show': 1, 'center': 2 }).name('Axes')
-                    .onChange(() => this.changedAxes());
-
-      if (!this.ctrl.project)
-         appearance.add(this.ctrl, 'rotate').name('Autorotate')
-                      .listen().onChange(() => this.changedAutoRotate());
-
-      appearance.add(this, 'focusCamera').name('Reset camera position');
-
-      // Advanced Options
-
-      if (this._webgl) {
-         let advanced = this._datgui.addFolder('Advanced'), depthcfg = {};
-         this.ctrl.depthMethodItems.forEach(i => { depthcfg[i.name] = i.value; });
-
-         advanced.add(this.ctrl, 'depthTest').name('Depth test')
-            .listen().onChange(() => this.changedDepthTest());
-
-         advanced.add( this.ctrl, 'depthMethod', depthcfg)
-             .name('Rendering order')
-             .onChange(method => this.changedDepthMethod(method));
-
-         advanced.add(this.ctrl, 'ortho_camera').name('Orhographic camera')
-                 .listen().onChange(() => this.changeCamera());
-
-        advanced.add(this, 'resetAdvanced').name('Reset');
-      }
-
-      // Transformation Options
-      if (!this.ctrl.project) {
-         let transform = this._datgui.addFolder('Transform');
-         transform.add(this.ctrl, 'trans_z', 0., 3., 0.01)
-                     .name('Z axis')
-                     .listen().onChange(() => this.changedTransformation());
-         transform.add(this.ctrl, 'trans_radial', 0., 3., 0.01)
-                  .name('Radial')
-                  .listen().onChange(() => this.changedTransformation());
-
-         transform.add(this, 'resetTransformation').name('Reset');
-
-         if (this.ctrl.trans_z || this.ctrl.trans_radial) transform.open();
-      }
-
-      // no SSAO folder if outline is enabled
-      if (this.ctrl.outline) return;
-
-      let ssaofolder = this._datgui.addFolder('Smooth Lighting (SSAO)'),
-          ssao_handler = () => this.changedSSAO(), ssaocfg = {};
-
-      this.ctrl.ssao.outputItems.forEach(i => { ssaocfg[i.name] = i.value; });
-
-      ssaofolder.add(this.ctrl.ssao, 'enabled').name('Enable SSAO')
-                .listen().onChange(ssao_handler);
-
-      ssaofolder.add( this.ctrl.ssao, 'output', ssaocfg)
-                .listen().onChange(ssao_handler);
-
-      ssaofolder.add( this.ctrl.ssao, 'kernelRadius', 0, 32)
-                .listen().onChange(ssao_handler);
-
-      ssaofolder.add( this.ctrl.ssao, 'minDistance', 0.001, 0.02)
-                .listen().onChange(ssao_handler);
-
-      ssaofolder.add( this.ctrl.ssao, 'maxDistance', 0.01, 0.3)
-                .listen().onChange(ssao_handler);
-
-      let blooming = this._datgui.addFolder('Unreal Bloom'),
-          bloom_handler = () => this.changedBloomSettings();
-
-      blooming.add(this.ctrl.bloom, 'enabled').name('Enable Blooming')
-              .listen().onChange(bloom_handler);
-
-      blooming.add( this.ctrl.bloom, 'strength', 0.0, 3.0).name('Strength')
-               .listen().onChange(bloom_handler);
-   }
-
-   /** @summary Method called when bloom configuration changed via GUI */
-   changedBloomSettings() {
-      if (this.ctrl.bloom.enabled) {
-         this.createBloom();
-         this._bloomPass.strength = this.ctrl.bloom.strength;
-      } else {
-         this.removeBloom();
-      }
-
-      if (this._slave_painters)
-         this._slave_painters.forEach(p => {
-            Object.assign(p.ctrl.bloom, this.ctrl.bloom);
-            p.changedBloomSettings();
-         });
-   }
-
-   /** @summary Handle change of camera kind */
-   changeCamera() {
-      // force control recreation
-      if (this._controls) {
-          this._controls.cleanup();
-          delete this._controls;
-       }
-
-       this.removeBloom();
-       this.removeSSAO();
-
-      // recreate camera
-      this.createCamera();
-
-      this.createSpecialEffects();
-
-      this._first_drawing = true;
-      this.startDrawGeometry(true);
-   }
-
-   /** @summary create bloom effect */
-   createBloom() {
-      if (this._bloomPass) return;
-
-      this._camera.layers.enable( _BLOOM_SCENE );
-      this._bloomComposer = new EffectComposer( this._renderer );
-      this._bloomComposer.addPass( new RenderPass( this._scene, this._camera ) );
-      this._bloomPass = new UnrealBloomPass(new Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85);
-      this._bloomPass.threshold = 0;
-      this._bloomPass.strength = this.ctrl.bloom.strength;
-      this._bloomPass.radius = 0;
-      this._bloomPass.renderToScreen = true;
-      this._bloomComposer.addPass( this._bloomPass );
-      this._renderer.autoClear = false;
-   }
-
-   /** @summary Remove bloom highlight */
-   removeBloom() {
-      if (!this._bloomPass) return;
-      delete this._bloomPass;
-      delete this._bloomComposer;
-      this._renderer.autoClear = true;
-      this._camera.layers.disable( _BLOOM_SCENE );
-   }
-
-   /** @summary Remove composer */
-   removeSSAO() {
-      // we cannot remove pass from composer - just disable it
-      delete this._ssaoPass;
-      delete this._effectComposer;
-   }
-
-   /** @summary create SSAO */
-   createSSAO() {
-      if (!this._webgl) return;
-
-      // this._depthRenderTarget = new WebGLRenderTarget(this._scene_width, this._scene_height, { minFilter: LinearFilter, magFilter: LinearFilter });
-      // Setup SSAO pass
-      if (!this._ssaoPass) {
-         if (!this._effectComposer) {
-            this._effectComposer = new EffectComposer( this._renderer );
-            this._effectComposer.addPass(new RenderPass( this._scene, this._camera));
-         }
-
-         this._ssaoPass = new SSAOPass( this._scene, this._camera, this._scene_width, this._scene_height );
-         this._ssaoPass.kernelRadius = 16;
-         this._ssaoPass.renderToScreen = true;
-
-         // Add pass to effect composer
-         this._effectComposer.addPass( this._ssaoPass );
-      }
-   }
-
-   /** @summary Show context menu for orbit control
-     * @private */
-   orbitContext(evnt, intersects) {
-
-      createMenu$1(evnt, this).then(menu => {
-         let numitems = 0, numnodes = 0, cnt = 0;
-         if (intersects)
-            for (let n = 0; n < intersects.length; ++n) {
-               if (intersects[n].object.stack) numnodes++;
-               if (intersects[n].object.geo_name) numitems++;
-            }
-
-         if (numnodes + numitems === 0) {
-            this.fillContextMenu(menu);
-         } else {
-            let many = (numnodes + numitems) > 1;
-
-            if (many) menu.add('header:' + ((numitems > 0) ? 'Items' : 'Nodes'));
-
-            for (let n = 0; n < intersects.length; ++n) {
-               let obj = intersects[n].object,
-                   name, itemname, hdr;
-
-               if (obj.geo_name) {
-                  itemname = obj.geo_name;
-                  if (itemname.indexOf('<prnt>') == 0)
-                     itemname = (this.getItemName() || 'top') + itemname.slice(6);
-                  name = itemname.slice(itemname.lastIndexOf('/')+1);
-                  if (!name) name = itemname;
-                  hdr = name;
-               } else if (obj.stack) {
-                  name = this._clones.resolveStack(obj.stack).name;
-                  itemname = this.getStackFullName(obj.stack);
-                  hdr = this.getItemName();
-                  if (name.indexOf('Nodes/') === 0)
-                     hdr = name.slice(6);
-                  else if (name)
-                     hdr = name;
-                  else if (!hdr)
-                     hdr = 'header';
-
-               } else
-                  continue;
-
-               menu.add((many ? 'sub:' : 'header:') + hdr, itemname, arg => this.activateInBrowser([arg], true));
-
-               menu.add('Browse', itemname, arg => this.activateInBrowser([arg], true));
-
-               if (this._hpainter)
-                  menu.add('Inspect', itemname, arg => this._hpainter.display(arg, 'inspect'));
-
-               if (obj.geo_name) {
-                  menu.add('Hide', n, indx => {
-                     let mesh = intersects[indx].object;
-                     mesh.visible = false; // just disable mesh
-                     if (mesh.geo_object) mesh.geo_object.$hidden_via_menu = true; // and hide object for further redraw
-                     menu.painter.render3D();
-                  });
-
-                  if (many) menu.add('endsub:');
-
-                  continue;
-               }
-
-               let wireframe = this.accessObjectWireFrame(obj);
-
-               if (wireframe !== undefined)
-                  menu.addchk(wireframe, 'Wireframe', n, function(indx) {
-                     let m = intersects[indx].object.material;
-                     m.wireframe = !m.wireframe;
-                     this.render3D();
-                  });
-
-               if (++cnt > 1)
-                  menu.add('Manifest', n, function(indx) {
-
-                     if (this._last_manifest)
-                        this._last_manifest.wireframe = !this._last_manifest.wireframe;
-
-                     if (this._last_hidden)
-                        this._last_hidden.forEach(obj => { obj.visible = true; });
-
-                     this._last_hidden = [];
-
-                     for (let i = 0; i < indx; ++i)
-                        this._last_hidden.push(intersects[i].object);
-
-                     this._last_hidden.forEach(obj => { obj.visible = false; });
-
-                     this._last_manifest = intersects[indx].object.material;
-
-                     this._last_manifest.wireframe = !this._last_manifest.wireframe;
-
-                     this.render3D();
-                  });
-
-
-               menu.add('Focus', n, function(indx) {
-                  this.focusCamera(intersects[indx].object);
-               });
-
-               if (!this._geom_viewer)
-               menu.add('Hide', n, function(indx) {
-                  let resolve = menu.painter._clones.resolveStack(intersects[indx].object.stack);
-                  if (resolve.obj && (resolve.node.kind === kindGeo) && resolve.obj.fVolume) {
-                     setGeoBit(resolve.obj.fVolume, geoBITS.kVisThis, false);
-                     updateBrowserIcons(resolve.obj.fVolume, this._hpainter);
-                  } else if (resolve.obj && (resolve.node.kind === kindEve)) {
-                     resolve.obj.fRnrSelf = false;
-                     updateBrowserIcons(resolve.obj, this._hpainter);
-                  }
-
-                  this.testGeomChanges();// while many volumes may disappear, recheck all of them
-               });
-
-               if (many) menu.add('endsub:');
-            }
-         }
-         menu.show();
-      });
-   }
-
-   /** @summary Filter some objects from three.js intersects array */
-   filterIntersects(intersects) {
-
-      if (!intersects.length) return intersects;
-
-      // check redirections
-      for (let n = 0; n < intersects.length; ++n)
-         if (intersects[n].object.geo_highlight)
-            intersects[n].object = intersects[n].object.geo_highlight;
-
-      // remove all elements without stack - indicator that this is geometry object
-      // also remove all objects which are mostly transparent
-      for (let n = intersects.length - 1; n >= 0; --n) {
-
-         let obj = intersects[n].object,
-            unique = (obj.stack !== undefined) || (obj.geo_name !== undefined);
-
-         if (unique && obj.material && (obj.material.opacity !== undefined))
-            unique = (obj.material.opacity >= 0.1);
-
-         if (obj.jsroot_special) unique = false;
-
-         for (let k = 0; (k < n) && unique;++k)
-            if (intersects[k].object === obj) unique = false;
-
-         if (!unique) intersects.splice(n,1);
-      }
-
-      let clip = this.ctrl.clip;
-
-      if (clip[0].enabled || clip[1].enabled || clip[2].enabled) {
-         let clippedIntersects = [];
-
-         for (let i = 0; i < intersects.length; ++i) {
-            let point = intersects[i].point, special = (intersects[i].object.type == 'Points'), clipped = true;
-
-            if (clip[0].enabled && ((this._clipPlanes[0].normal.dot(point) > this._clipPlanes[0].constant) ^ special)) clipped = false;
-            if (clip[1].enabled && ((this._clipPlanes[1].normal.dot(point) > this._clipPlanes[1].constant) ^ special)) clipped = false;
-            if (clip[2].enabled && (this._clipPlanes[2].normal.dot(point) > this._clipPlanes[2].constant)) clipped = false;
-
-            if (!clipped) clippedIntersects.push(intersects[i]);
-         }
-
-         intersects = clippedIntersects;
-      }
-
-      return intersects;
-   }
-
-   /** @summary test camera position
-     * @desc function analyzes camera position and start redraw of geometry
-     *  if objects in view may be changed */
-   testCameraPositionChange() {
-
-      if (!this.ctrl.select_in_view || this._draw_all_nodes) return;
-
-      let matrix = createProjectionMatrix(this._camera),
-          frustum = createFrustum(matrix);
-
-      // check if overall bounding box seen
-      if (!frustum.CheckBox(this.getGeomBoundingBox(this._toplevel)))
-         this.startDrawGeometry();
-   }
-
-   /** @summary Resolve stack */
-   resolveStack(stack) {
-      return this._clones && stack ? this._clones.resolveStack(stack) : null;
-   }
-
-   /** @summary Returns stack full name
-     * @desc Includes item name of top geo object */
-   getStackFullName(stack) {
-      let mainitemname = this.getItemName(),
-          sub = this.resolveStack(stack);
-      if (!sub || !sub.name) return mainitemname;
-      return mainitemname ? mainitemname + '/' + sub.name : sub.name;
-   }
-
-   /** @summary Add handler which will be called when element is highlighted in geometry drawing
-     * @desc Handler should have highlightMesh function with same arguments as TGeoPainter  */
-   addHighlightHandler(handler) {
-      if (!isFunc(handler?.highlightMesh)) return;
-      if (!this._highlight_handlers)
-         this._highlight_handlers = [];
-      this._highlight_handlers.push(handler);
-   }
-
-   /** @summary perform mesh highlight */
-   highlightMesh(active_mesh, color, geo_object, geo_index, geo_stack, no_recursive) {
-
-      if (geo_object) {
-         active_mesh = active_mesh ? [ active_mesh ] : [];
-         let extras = this.getExtrasContainer();
-         if (extras)
-            extras.traverse(obj3d => {
-               if ((obj3d.geo_object === geo_object) && (active_mesh.indexOf(obj3d) < 0)) active_mesh.push(obj3d);
-            });
-      } else if (geo_stack && this._toplevel) {
-         active_mesh = [];
-         this._toplevel.traverse(mesh => {
-            if ((mesh instanceof Mesh) && isSameStack(mesh.stack, geo_stack)) active_mesh.push(mesh);
-         });
-      } else {
-         active_mesh = active_mesh ? [ active_mesh ] : [];
-      }
-
-      if (!active_mesh.length) active_mesh = null;
-
-      if (active_mesh) {
-         // check if highlight is disabled for correspondent objects kinds
-         if (active_mesh[0].geo_object) {
-            if (!this.ctrl.highlight_scene) active_mesh = null;
-         } else {
-            if (!this.ctrl.highlight) active_mesh = null;
-         }
-      }
-
-      if (!no_recursive) {
-         // check all other painters
-
-         if (active_mesh) {
-            if (!geo_object) geo_object = active_mesh[0].geo_object;
-            if (!geo_stack) geo_stack = active_mesh[0].stack;
-         }
-
-         let lst = this._highlight_handlers || (!this._main_painter ? this._slave_painters : this._main_painter._slave_painters.concat([this._main_painter]));
-
-         for (let k = 0; k < lst.length; ++k)
-            if (lst[k] !== this)
-               lst[k].highlightMesh(null, color, geo_object, geo_index, geo_stack, true);
-      }
-
-      let curr_mesh = this._selected_mesh, same = false;
-
-      if (!curr_mesh && !active_mesh) return false;
-
-      const get_ctrl = mesh => mesh.get_ctrl ? mesh.get_ctrl() : new GeoDrawingControl(mesh, this.ctrl.bloom.enabled);
-
-      // check if selections are the same
-      if (curr_mesh && active_mesh && (curr_mesh.length == active_mesh.length)) {
-         same = true;
-         for (let k = 0; (k < curr_mesh.length) && same; ++k) {
-            if ((curr_mesh[k] !== active_mesh[k]) || get_ctrl(curr_mesh[k]).checkHighlightIndex(geo_index)) same = false;
-         }
-      }
-      if (same) return !!curr_mesh;
-
-      if (curr_mesh)
-         for (let k = 0; k < curr_mesh.length; ++k)
-            get_ctrl(curr_mesh[k]).setHighlight();
-
-      this._selected_mesh = active_mesh;
-
-      if (active_mesh)
-         for (let k = 0; k < active_mesh.length; ++k)
-            get_ctrl(active_mesh[k]).setHighlight(color || 0x00ff00, geo_index);
-
-      this.render3D(0);
-
-      return !!active_mesh;
-   }
-
-   /** @summary handle mouse click event */
-   processMouseClick(pnt, intersects, evnt) {
-      if (!intersects.length) return;
-
-      let mesh = intersects[0].object;
-      if (!mesh.get_ctrl) return;
-
-      let ctrl = mesh.get_ctrl(),
-          click_indx = ctrl.extractIndex(intersects[0]);
-
-      ctrl.evnt = evnt;
-
-      if (ctrl.setSelected('blue', click_indx))
-         this.render3D();
-
-      ctrl.evnt = null;
-   }
-
-   /** @summary Configure mouse delay, required for complex geometries */
-   setMouseTmout(val) {
-      if (this.ctrl)
-         this.ctrl.mouse_tmout = val;
-
-      if (this._controls)
-         this._controls.mouse_tmout = val;
-   }
-
-   /** @summary Configure depth method, used for render order production.
-     * @param {string} method - Allowed values: 'ray', 'box','pnt', 'size', 'dflt' */
-   setDepthMethod(method) {
-      if (this.ctrl)
-         this.ctrl.depthMethod = method;
-   }
-
-   /** @summary Add orbit control */
-   addOrbitControls() {
-
-      if (this._controls || !this._webgl || isBatchMode()) return;
-
-      this.setTooltipAllowed(settings.Tooltip);
-
-      this._controls = createOrbitControl(this, this._camera, this._scene, this._renderer, this._lookat);
-
-      this._controls.mouse_tmout = this.ctrl.mouse_tmout; // set larger timeout for geometry processing
-
-      if (!this.ctrl.can_rotate) this._controls.enableRotate = false;
-
-      this._controls.contextMenu = this.orbitContext.bind(this);
-
-      this._controls.processMouseMove = intersects => {
-
-         // painter already cleaned up, ignore any incoming events
-         if (!this.ctrl || !this._controls) return;
-
-         let active_mesh = null, tooltip = null, resolve = null, names = [], geo_object, geo_index;
-
-         // try to find mesh from intersections
-         for (let k = 0; k < intersects.length; ++k) {
-            let obj = intersects[k].object, info = null;
-            if (!obj) continue;
-            if (obj.geo_object)
-               info = obj.geo_name;
-            else if (obj.stack)
-               info = this.getStackFullName(obj.stack);
-            if (!info) continue;
-
-            if (info.indexOf('<prnt>') == 0)
-               info = this.getItemName() + info.slice(6);
-
-            names.push(info);
-
-            if (!active_mesh) {
-               active_mesh = obj;
-               tooltip = info;
-               geo_object = obj.geo_object;
-               if (obj.get_ctrl) {
-                  geo_index = obj.get_ctrl().extractIndex(intersects[k]);
-                  if ((geo_index !== undefined) && isStr(tooltip))
-                     tooltip += ' indx:' + JSON.stringify(geo_index);
-               }
-               if (active_mesh.stack) resolve = this.resolveStack(active_mesh.stack);
-            }
-         }
-
-         this.highlightMesh(active_mesh, undefined, geo_object, geo_index);
-
-         if (this.ctrl.update_browser) {
-            if (this.ctrl.highlight && tooltip) names = [ tooltip ];
-            this.activateInBrowser(names);
-         }
-
-         if (!resolve || !resolve.obj) return tooltip;
-
-         let lines = provideObjectInfo(resolve.obj);
-         lines.unshift(tooltip);
-
-         return { name: resolve.obj.fName, title: resolve.obj.fTitle || resolve.obj._typename, lines: lines };
-      };
-
-      this._controls.processMouseLeave = function() {
-         this.processMouseMove([]); // to disable highlight and reset browser
-      };
-
-      this._controls.processDblClick = () => {
-         // painter already cleaned up, ignore any incoming events
-         if (!this.ctrl || !this._controls) return;
-
-         if (this._last_manifest) {
-            this._last_manifest.wireframe = !this._last_manifest.wireframe;
-            if (this._last_hidden)
-               this._last_hidden.forEach(obj => { obj.visible = true; });
-            delete this._last_hidden;
-            delete this._last_manifest;
-            this.render3D();
-         } else {
-            this.adjustCameraPosition();
-         }
-      };
-   }
-
-   /** @summary add transformation control */
-   addTransformControl() {
-      if (this._tcontrols) return;
-
-      if (!this.ctrl._debug && !this.ctrl._grid) return;
-
-      this._tcontrols = new TransformControls(this._camera, this._renderer.domElement);
-      this._scene.add(this._tcontrols);
-      this._tcontrols.attach(this._toplevel);
-      //this._tcontrols.setSize( 1.1 );
-
-      window.addEventListener( 'keydown', event => {
-         switch ( event.key ) {
-         case 'q':
-            this._tcontrols.setSpace( this._tcontrols.space === 'local' ? 'world' : 'local' );
-            break;
-         case 'Control':
-            this._tcontrols.setTranslationSnap( Math.ceil( this._overall_size ) / 50 );
-            this._tcontrols.setRotationSnap( MathUtils.degToRad( 15 ) );
-            break;
-         case 't': // Translate
-            this._tcontrols.setMode( 'translate' );
-            break;
-         case 'r': // Rotate
-            this._tcontrols.setMode( 'rotate' );
-            break;
-         case 's': // Scale
-            this._tcontrols.setMode( 'scale' );
-            break;
-         case '+':
-            this._tcontrols.setSize(this._tcontrols.size + 0.1);
-            break;
-         case '-':
-            this._tcontrols.setSize(Math.max(this._tcontrols.size - 0.1, 0.1));
-            break;
-         }
-      });
-      window.addEventListener( 'keyup', event => {
-         if (event.key == 'Control') {
-            this._tcontrols.setTranslationSnap(null);
-            this._tcontrols.setRotationSnap(null);
-         }
-      });
-
-      this._tcontrols.addEventListener('change', () => this.render3D(0));
-   }
-
-   /** @summary Main function in geometry creation loop
-     * @desc Returns:
-     * - false when nothing todo
-     * - true if one could perform next action immediately
-     * - 1 when call after short timeout required
-     * - 2 when call must be done from processWorkerReply */
-   nextDrawAction() {
-
-      if (!this._clones || this.isStage(stageInit)) return false;
-
-      if (this.isStage(stageCollect)) {
-
-         if (this._geom_viewer) {
-            this._draw_all_nodes = false;
-            this.changeStage(stageAnalyze);
-            return true;
-         }
-
-         // wait until worker is really started
-         if (this.ctrl.use_worker > 0) {
-            if (!this._worker) { this.startWorker(); return 1; }
-            if (!this._worker_ready) return 1;
-         }
-
-         // first copy visibility flags and check how many unique visible nodes exists
-         let numvis = this._first_drawing ? this._clones.countVisibles() : 0,
-             matrix = null, frustum = null;
-
-         if (!numvis)
-            numvis = this._clones.markVisibles(false, false, !!this.geo_manager && !this.ctrl.showtop);
-
-         if (this.ctrl.select_in_view && !this._first_drawing) {
-            // extract camera projection matrix for selection
-
-            matrix = createProjectionMatrix(this._camera);
-
-            frustum = createFrustum(matrix);
-
-            // check if overall bounding box seen
-            if (frustum.CheckBox(this.getGeomBoundingBox(this._toplevel))) {
-               matrix = null; // not use camera for the moment
-               frustum = null;
-            }
-         }
-
-         this._current_face_limit = this.ctrl.maxlimit;
-         if (matrix) this._current_face_limit *= 1.25;
-
-         // here we decide if we need worker for the drawings
-         // main reason - too large geometry and large time to scan all camera positions
-         let need_worker = !isBatchMode() && browser$1.isChrome && ((numvis > 10000) || (matrix && (this._clones.scanVisible() > 1e5)));
-
-         // worker does not work when starting from file system
-         if (need_worker && exports.source_dir.indexOf('file://') == 0) {
-            console.log('disable worker for jsroot from file system');
-            need_worker = false;
-         }
-
-         if (need_worker && !this._worker && (this.ctrl.use_worker >= 0))
-            this.startWorker(); // we starting worker, but it may not be ready so fast
-
-         if (!need_worker || !this._worker_ready) {
-            let res = this._clones.collectVisibles(this._current_face_limit, frustum);
-            this._new_draw_nodes = res.lst;
-            this._draw_all_nodes = res.complete;
-            this.changeStage(stageAnalyze);
-            return true;
-         }
-
-         let job = {
-            collect: this._current_face_limit,   // indicator for the command
-            flags: this._clones.getVisibleFlags(),
-            matrix: matrix ? matrix.elements : null
-         };
-
-         this.submitToWorker(job);
-
-         this.changeStage(stageWorkerCollect);
-
-         return 2; // we now waiting for the worker reply
-      }
-
-      if (this.isStage(stageWorkerCollect)) {
-         // do nothing, we are waiting for worker reply
-         return 2;
-      }
-
-      if (this.isStage(stageAnalyze)) {
-         // here we merge new and old list of nodes for drawing,
-         // normally operation is fast and can be implemented with one c
-
-         if (this._new_append_nodes) {
-
-            this._new_draw_nodes = this._draw_nodes.concat(this._new_append_nodes);
-
-            delete this._new_append_nodes;
-
-         } else if (this._draw_nodes) {
-
-            let del;
-            if (this._geom_viewer)
-               del = this._draw_nodes;
-            else
-               del = this._clones.mergeVisibles(this._new_draw_nodes, this._draw_nodes);
-
-            // remove should be fast, do it here
-            for (let n = 0; n < del.length; ++n)
-               this._clones.createObject3D(del[n].stack, this._toplevel, 'delete_mesh');
-
-            if (del.length > 0)
-               this.drawing_log = `Delete ${del.length} nodes`;
-         }
-
-         this._draw_nodes = this._new_draw_nodes;
-         delete this._new_draw_nodes;
-         this.changeStage(stageCollShapes);
-         return true;
-      }
-
-      if (this.isStage(stageCollShapes)) {
-
-         // collect shapes
-         let shapes = this._clones.collectShapes(this._draw_nodes);
-
-         // merge old and new list with produced shapes
-         this._build_shapes = this._clones.mergeShapesLists(this._build_shapes, shapes);
-
-         this.changeStage(stageStartBuild);
-         return true;
-      }
-
-      if (this.isStage(stageStartBuild)) {
-         // this is building of geometries,
-         // one can ask worker to build them or do it ourself
-
-         if (this.canSubmitToWorker()) {
-            let job = { limit: this._current_face_limit, shapes: [] }, cnt = 0;
-            for (let n = 0; n < this._build_shapes.length; ++n) {
-               let cl = null, item = this._build_shapes[n];
-               // only submit not-done items
-               if (item.ready || item.geom) {
-                  // this is place holder for existing geometry
-                  cl = { id: item.id, ready: true, nfaces: countGeometryFaces(item.geom), refcnt: item.refcnt };
-               } else {
-                  cl = clone(item, null, true);
-                  cnt++;
-               }
-
-               job.shapes.push(cl);
-            }
-
-            if (cnt > 0) {
-               /// only if some geom missing, submit job to the worker
-               this.submitToWorker(job);
-               this.changeStage(stageWorkerBuild);
-               return 2;
-            }
-         }
-
-         this.changeStage(stageBuild);
-      }
-
-      if (this.isStage(stageWorkerBuild)) {
-         // waiting shapes from the worker, worker should activate our code
-         return 2;
-      }
-
-      if (this.isStage(stageBuild) || this.isStage(stageBuildReady)) {
-
-         if (this.isStage(stageBuild)) {
-            // building shapes
-            let res = this._clones.buildShapes(this._build_shapes, this._current_face_limit, 500);
-            if (res.done) {
-               this.ctrl.info.num_shapes = this._build_shapes.length;
-               this.changeStage(stageBuildReady);
-            } else {
-               this.ctrl.info.num_shapes = res.shapes;
-               this.drawing_log = `Creating: ${res.shapes} / ${this._build_shapes.length} shapes,  ${res.faces} faces`;
-               if (res.notusedshapes < 30) return true;
-            }
-         }
-
-         // final stage, create all meshes
-
-         let tm0 = new Date().getTime(), ready = true,
-             toplevel = this.ctrl.project ? this._full_geom : this._toplevel;
-
-         for (let n = 0; n < this._draw_nodes.length; ++n) {
-            let entry = this._draw_nodes[n];
-            if (entry.done) continue;
-
-            /// shape can be provided with entry itself
-            let shape = entry.server_shape || this._build_shapes[entry.shapeid];
-            if (!shape.ready) {
-               if (this.isStage(stageBuildReady)) console.warn('shape marked as not ready when should');
-               ready = false;
-               continue;
-            }
-
-            entry.done = true;
-            shape.used = true; // indicate that shape was used in building
-
-            if (this.createEntryMesh(entry, shape, toplevel)) {
-               this.ctrl.info.num_meshes++;
-               this.ctrl.info.num_faces += shape.nfaces;
-            }
-
-            let tm1 = new Date().getTime();
-            if (tm1 - tm0 > 500) { ready = false; break; }
-         }
-
-         if (ready) {
-            if (this.ctrl.project) {
-               this.changeStage(stageBuildProj);
-               return true;
-            }
-            this.changeStage(stageInit);
-            return false;
-         }
-
-         if (!this.isStage(stageBuild))
-            this.drawing_log = `Building meshes ${this.ctrl.info.num_meshes} / ${this.ctrl.info.num_faces}`;
-         return true;
-      }
-
-      if (this.isStage(stageWaitMain)) {
-         // wait for main painter to be ready
-
-         if (!this._main_painter) {
-            this.changeStage(stageInit, 'Lost main painter');
-            return false;
-         }
-         if (!this._main_painter._drawing_ready) return 1;
-
-         this.changeStage(stageBuildProj); // just do projection
-      }
-
-      if (this.isStage(stageBuildProj)) {
-         this.doProjection();
-         this.changeStage(stageInit);
-         return false;
-      }
-
-      console.error(`never come here, stage ${this.drawing_stage}`);
-
-      return false;
-   }
-
-   /** @summary Insert appropriate mesh for given entry */
-   createEntryMesh(entry, shape, toplevel) {
-
-      if (!shape.geom || (shape.nfaces === 0)) {
-         // node is visible, but shape does not created
-         this._clones.createObject3D(entry.stack, toplevel, 'delete_mesh');
-         return false;
-      }
-
-      // workaround for the TGeoOverlap, where two branches should get predefined color
-      if (this._splitColors && entry.stack) {
-         if (entry.stack[0] === 0)
-            entry.custom_color = 'green';
-         else if (entry.stack[0] === 1)
-            entry.custom_color = 'blue';
-      }
-
-      let prop = this._clones.getDrawEntryProperties(entry, getRootColors()),
-          obj3d = this._clones.createObject3D(entry.stack, toplevel, this.ctrl),
-          matrix = obj3d.absMatrix || obj3d.matrixWorld, mesh;
-
-      prop.material.wireframe = this.ctrl.wireframe;
-
-      prop.material.side = this.ctrl.bothSides ? DoubleSide : FrontSide;
-
-      if (matrix.determinant() > -0.9) {
-         mesh = new Mesh(shape.geom, prop.material);
-      } else {
-         mesh = createFlippedMesh(shape, prop.material);
-      }
-
-      obj3d.add(mesh);
-
-      if (obj3d.absMatrix) {
-         mesh.matrix.copy(obj3d.absMatrix);
-         mesh.matrix.decompose(mesh.position, mesh.quaternion, mesh.scale);
-         mesh.updateMatrixWorld();
-      }
-
-      // keep full stack of nodes
-      mesh.stack = entry.stack;
-      mesh.renderOrder = this._clones.maxdepth - entry.stack.length; // order of transparency handling
-
-      // keep hierarchy level
-      mesh.$jsroot_order = obj3d.$jsroot_depth;
-
-      // set initial render order, when camera moves, one must refine it
-      //mesh.$jsroot_order = mesh.renderOrder =
-      //   this._clones.maxdepth - ((obj3d.$jsroot_depth !== undefined) ? obj3d.$jsroot_depth : entry.stack.length);
-
-      if (this.ctrl._debug || this.ctrl._full) {
-         let wfg = new WireframeGeometry( mesh.geometry ),
-             wfm = new LineBasicMaterial({ color: prop.fillcolor, linewidth: prop.linewidth || 1 }),
-             helper = new LineSegments(wfg, wfm);
-         obj3d.add(helper);
-      }
-
-      if (this.ctrl._bound || this.ctrl._full) {
-         let boxHelper = new BoxHelper( mesh );
-         obj3d.add( boxHelper );
-      }
-
-      return true;
-   }
-
-   /** @summary used by geometry viewer to show more nodes
-     * @desc These nodes excluded from selection logic and always inserted into the model
-     * Shape already should be created and assigned to the node */
-   appendMoreNodes(nodes, from_drawing) {
-
-      if (!this.isStage(stageInit) && !from_drawing) {
-         this._provided_more_nodes = nodes;
-         return;
-      }
-
-      // delete old nodes
-      if (this._more_nodes)
-         for (let n = 0; n < this._more_nodes.length; ++n) {
-            let entry = this._more_nodes[n],
-                obj3d = this._clones.createObject3D(entry.stack, this._toplevel, 'delete_mesh');
-            disposeThreejsObject(obj3d);
-            cleanupShape(entry.server_shape);
-            delete entry.server_shape;
-         }
-
-      delete this._more_nodes;
-
-      if (!nodes) return;
-
-      let real_nodes = [];
-
-      for (let k = 0; k < nodes.length; ++k) {
-         let entry = nodes[k],
-             shape = entry.server_shape;
-         if (!shape?.ready) continue;
-
-         entry.done = true;
-         shape.used = true; // indicate that shape was used in building
-
-         if (this.createEntryMesh(entry, shape, this._toplevel))
-            real_nodes.push(entry);
-      }
-
-      // remember additional nodes only if they include shape - otherwise one can ignore them
-      if (real_nodes.length > 0)
-         this._more_nodes = real_nodes;
-
-      if (!from_drawing) this.render3D();
-   }
-
-   /** @summary Returns hierarchy of 3D objects used to produce projection.
-     * @desc Typically external master painter is used, but also internal data can be used */
-   getProjectionSource() {
-      if (this._clones_owner)
-         return this._full_geom;
-      if (!this._main_painter) {
-         console.warn('MAIN PAINTER DISAPPER');
-         return null;
-      }
-      if (!this._main_painter._drawing_ready) {
-         console.warn('MAIN PAINTER NOT READY WHEN DO PROJECTION');
-         return null;
-      }
-      return this._main_painter._toplevel;
-   }
-
-   /** @summary Calculate geometry bounding box */
-   getGeomBoundingBox(topitem, scalar) {
-      let box3 = new Box3(), check_any = !this._clones;
-
-      if (!topitem) {
-         box3.min.x = box3.min.y = box3.min.z = -1;
-         box3.max.x = box3.max.y = box3.max.z = 1;
-         return box3;
-      }
-
-      box3.makeEmpty();
-
-      topitem.traverse(mesh => {
-         if (check_any || (mesh.stack && (mesh instanceof Mesh)) ||
-             (mesh.main_track && (mesh instanceof LineSegments)))
-            getBoundingBox(mesh, box3);
-      });
-
-      if (scalar !== undefined)
-         box3.expandByVector(box3.getSize(new Vector3()).multiplyScalar(scalar));
-
-      return box3;
-   }
-
-   /** @summary Create geometry projection */
-   doProjection() {
-      let toplevel = this.getProjectionSource();
-
-      if (!toplevel) return false;
-
-      disposeThreejsObject(this._toplevel, true);
-
-      // let axis = this.ctrl.project;
-
-      if (this.ctrl.projectPos === undefined) {
-
-         let bound = this.getGeomBoundingBox(toplevel),
-             min = bound.min[this.ctrl.project], max = bound.max[this.ctrl.project],
-             mean = (min+max)/2;
-
-         if ((min < 0) && (max > 0) && (Math.abs(mean) < 0.2*Math.max(-min,max))) mean = 0; // if middle is around 0, use 0
-
-         this.ctrl.projectPos = mean;
-      }
-
-      toplevel.traverse(mesh => {
-         if (!(mesh instanceof Mesh) || !mesh.stack) return;
-
-         let geom2 = projectGeometry(mesh.geometry, mesh.parent.absMatrix || mesh.parent.matrixWorld, this.ctrl.project, this.ctrl.projectPos, mesh._flippedMesh);
-
-         if (!geom2) return;
-
-         let mesh2 = new Mesh(geom2, mesh.material.clone());
-
-         this._toplevel.add(mesh2);
-
-         mesh2.stack = mesh.stack;
-      });
-
-      return true;
-   }
-
-   /** @summary Should be invoked when light configuration changed */
-   changedLight(box) {
-      if (!this._camera) return;
-
-      let need_render = !box;
-
-      if (!box) box = this.getGeomBoundingBox(this._toplevel);
-
-      let sizex = box.max.x - box.min.x,
-          sizey = box.max.y - box.min.y,
-          sizez = box.max.z - box.min.z,
-          plights = [], p = this.ctrl.light.power;
-
-      if (p === undefined) p = 1;
-
-      if (this._camera._lights != this.ctrl.light.kind) {
-         // remove all childs and recreate only necessary lights
-         disposeThreejsObject(this._camera, true);
-
-         this._camera._lights = this.ctrl.light.kind;
-
-         switch (this._camera._lights) {
-            case 'ambient' : this._camera.add(new AmbientLight(0xefefef, p)); break;
-            case 'hemisphere' : this._camera.add(new HemisphereLight(0xffffbb, 0x080820, p)); break;
-            default: // 6 point lights
-               for (let n = 0; n < 6; ++n)
-                  this._camera.add(new PointLight(0xefefef, p));
-         }
-      }
-
-      for (let k = 0; k < this._camera.children.length; ++k) {
-         let light = this._camera.children[k], enabled = false;
-         if (light.isAmbientLight || light.isHemisphereLight) {
-            light.intensity = p;
-            continue;
-         }
-
-         if (!light.isPointLight) continue;
-         switch (k) {
-            case 0: light.position.set(sizex/5, sizey/5, sizez/5); enabled = this.ctrl.light.specular; break;
-            case 1: light.position.set(0, 0, sizez/2); enabled = this.ctrl.light.front; break;
-            case 2: light.position.set(0, 2*sizey, 0); enabled = this.ctrl.light.top; break;
-            case 3: light.position.set(0, -2*sizey, 0); enabled = this.ctrl.light.bottom; break;
-            case 4: light.position.set(-2*sizex, 0, 0); enabled = this.ctrl.light.left; break;
-            case 5: light.position.set(2*sizex, 0, 0); enabled = this.ctrl.light.right; break;
-         }
-         light.power = enabled ? p*Math.PI*4 : 0;
-         if (enabled) plights.push(light);
-      }
-
-      // keep light power of all soources constant
-      plights.forEach(ll => { ll.power = p*4*Math.PI/plights.length; });
-
-      if (need_render) this.render3D();
-   }
-
-   /** @summary Create configured camera */
-   createCamera() {
-
-      if (this._camera) {
-          this._scene.remove(this._camera);
-          disposeThreejsObject(this._camera);
-          delete this._camera;
-       }
-
-      if (this.ctrl.ortho_camera) {
-         this._camera = new OrthographicCamera(-this._scene_width/2, this._scene_width/2, this._scene_height/2, -this._scene_height/2, 1, 10000);
-      } else {
-         this._camera = new PerspectiveCamera(25, this._scene_width / this._scene_height, 1, 10000);
-         this._camera.up = this.ctrl._yup ? new Vector3(0,1,0) : new Vector3(0,0,1);
-      }
-
-      // Light - add default point light, adjust later
-      let light = new PointLight(0xefefef, 1);
-      light.position.set(10, 10, 10);
-      this._camera.add(light);
-
-      this._scene.add(this._camera);
-   }
-
-   /** @summary Create special effects */
-   createSpecialEffects() {
-      // Smooth Lighting Shader (Screen Space Ambient Occlusion)
-      // http://threejs.org/examples/webgl_postprocessing_ssao.html
-
-      if (this._webgl && (this.ctrl.ssao.enabled || this.ctrl.outline)) {
-
-         if (this.ctrl.outline && isFunc(this.createOutline)) {
-            this._effectComposer = new EffectComposer(this._renderer);
-            this._effectComposer.addPass(new RenderPass(this._scene, this._camera));
-            this.createOutline(this._scene_width, this._scene_height);
-         } else if (this.ctrl.ssao.enabled) {
-            this.createSSAO();
-         }
-      }
-
-      if (this._webgl && this.ctrl.bloom.enabled)
-         this.createBloom();
-   }
-
-   /** @summary Initial scene creation */
-   async createScene(w, h) {
-      // three.js 3D drawing
-      this._scene = new Scene();
-      this._scene.fog = new Fog(0xffffff, 1, 10000);
-      this._scene.overrideMaterial = new MeshLambertMaterial({ color: 0x7000ff, vertexColors: false, transparent: true, opacity: 0.2, depthTest: false });
-
-      this._scene_width = w;
-      this._scene_height = h;
-
-      this.createCamera();
-
-      this._selected_mesh = null;
-
-      this._overall_size = 10;
-
-      this._toplevel = new Object3D();
-
-      this._scene.add(this._toplevel);
-
-      return createRender3D(w, h, this.options.Render3D, { antialias: true, logarithmicDepthBuffer: false, preserveDrawingBuffer: true }).then(r => {
-
-         this._renderer = r;
-
-         this._webgl = (this._renderer.jsroot_render3d === constants$1.Render3D.WebGL);
-
-         if (this._renderer.setPixelRatio && !isNodeJs())
-            this._renderer.setPixelRatio(window.devicePixelRatio);
-         this._renderer.setSize(w, h, !this._fit_main_area);
-         this._renderer.localClippingEnabled = true;
-
-         this._renderer.setClearColor(this.ctrl.background, 1);
-
-         if (this._fit_main_area && this._webgl) {
-            this._renderer.domElement.style.width = '100%';
-            this._renderer.domElement.style.height = '100%';
-            let main = this.selectDom();
-            if (main.style('position') == 'static')
-               main.style('position', 'relative');
-         }
-
-         this._animating = false;
-
-         this.ctrl.bothSides = false; // both sides need for clipping
-         this.createSpecialEffects();
-
-         if (this._fit_main_area && !this._webgl) {
-            // create top-most SVG for geomtery drawings
-            let doc = getDocument(),
-                svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('width', w);
-            svg.setAttribute('height', h);
-            svg.appendChild(this._renderer.jsroot_dom);
-            return svg;
-         }
-
-         return this._renderer.jsroot_dom;
-      });
-   }
-
-   /** @summary Start geometry drawing */
-   startDrawGeometry(force) {
-
-      if (!force && !this.isStage(stageInit)) {
-         this._draw_nodes_again = true;
-         return;
-      }
-
-      if (this._clones_owner && this._clones)
-         this._clones.setDefaultColors(this.ctrl.dflt_colors);
-
-      this._startm = new Date().getTime();
-      this._last_render_tm = this._startm;
-      this._last_render_meshes = 0;
-      this.changeStage(stageCollect);
-      this._drawing_ready = false;
-      this.ctrl.info.num_meshes = 0;
-      this.ctrl.info.num_faces = 0;
-      this.ctrl.info.num_shapes = 0;
-      this._selected_mesh = null;
-
-      if (this.ctrl.project) {
-         if (this._clones_owner) {
-            if (this._full_geom) {
-               this.changeStage(stageBuildProj);
-            } else {
-               this._full_geom = new Object3D();
-            }
-         } else {
-            this.changeStage(stageWaitMain);
-         }
-      }
-
-      delete this._last_manifest;
-      delete this._last_hidden; // clear list of hidden objects
-
-      delete this._draw_nodes_again; // forget about such flag
-
-      this.continueDraw();
-   }
-
-   /** @summary reset all kind of advanced features like SSAO or depth test changes */
-   resetAdvanced() {
-      this.ctrl.ssao.kernelRadius = 16;
-      this.ctrl.ssao.output = SSAOPass.OUTPUT.Default;
-
-      this.ctrl.depthTest = true;
-      this.ctrl.clipIntersect = true;
-      this.ctrl.depthMethod = 'ray';
-
-      this.changedDepthMethod('norender');
-      this.changedDepthTest();
-   }
-
-   /** @summary returns maximal dimension */
-   getOverallSize(force) {
-      if (!this._overall_size || force) {
-         let box = this.getGeomBoundingBox(this._toplevel);
-
-         // if detect of coordinates fails - ignore
-         if (!Number.isFinite(box.min.x)) return 1000;
-
-         this._overall_size = 2 * Math.max(box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z);
-      }
-
-      return this._overall_size;
-   }
-
-   /** @summary Create png image with drawing snapshot. */
-   createSnapshot(filename) {
-      if (!this._renderer) return;
-      this.render3D(0);
-      let dataUrl = this._renderer.domElement.toDataURL('image/png');
-      if (filename === 'asis') return dataUrl;
-      dataUrl.replace('image/png', 'image/octet-stream');
-      let doc = getDocument(),
-          link = doc.createElement('a');
-      if (isStr(link.download)) {
-         doc.body.appendChild(link); //Firefox requires the link to be in the body
-         link.download = filename || 'geometry.png';
-         link.href = dataUrl;
-         link.click();
-         doc.body.removeChild(link); //remove the link when done
-      }
-   }
-
-   /** @summary Returns url parameters defining camera position.
-     * @desc It is zoom, roty, rotz parameters
-     * These parameters applied from default position which is shift along X axis */
-   produceCameraUrl(prec) {
-
-      if (!this._lookat || !this._camera0pos || !this._camera || !this.ctrl) return;
-
-      let pos1 = new Vector3().add(this._camera0pos).sub(this._lookat),
-          pos2 = new Vector3().add(this._camera.position).sub(this._lookat),
-          zoom = Math.min(10000, Math.max(1, this.ctrl.zoom * pos2.length() / pos1.length() * 100));
-
-      pos1.normalize();
-      pos2.normalize();
-
-      let quat = new Quaternion(), euler = new Euler();
-
-      quat.setFromUnitVectors(pos1, pos2);
-      euler.setFromQuaternion(quat, 'YZX');
-
-      let roty = euler.y / Math.PI * 180,
-          rotz = euler.z / Math.PI * 180;
-
-      if (roty < 0) roty += 360;
-      if (rotz < 0) rotz += 360;
-      prec = prec || 0;
-
-      return `roty${roty.toFixed(prec)},rotz${rotz.toFixed(prec)},zoom${zoom.toFixed(prec)}`;
-   }
-
-   /** @summary Calculates current zoom factor */
-   calculateZoom() {
-      if (this._camera0pos && this._camera && this._lookat) {
-         let pos1 = new Vector3().add(this._camera0pos).sub(this._lookat),
-             pos2 = new Vector3().add(this._camera.position).sub(this._lookat);
-         return pos2.length() / pos1.length();
-      }
-
-      return 0;
-   }
-
-   /** @summary Place camera to default position */
-   adjustCameraPosition(first_time, keep_zoom) {
-      if (!this._toplevel) return;
-
-      let box = this.getGeomBoundingBox(this._toplevel);
-
-      // let box2 = new Box3().makeEmpty();
-      // box2.expandByObject(this._toplevel, true);
-      // console.log('min,max', box.min.x, box.max.x, box2.min.x, box2.max.x);
-
-      // if detect of coordinates fails - ignore
-      if (!Number.isFinite(box.min.x)) return;
-
-      let sizex = box.max.x - box.min.x,
-          sizey = box.max.y - box.min.y,
-          sizez = box.max.z - box.min.z,
-          midx = (box.max.x + box.min.x)/2,
-          midy = (box.max.y + box.min.y)/2,
-          midz = (box.max.z + box.min.z)/2;
-
-      this._overall_size = 2 * Math.max(sizex, sizey, sizez);
-
-      this._camera.near = this._overall_size / 350;
-      this._camera.far = this._overall_size * 12;
-      this._scene.fog.near = this._overall_size * 2;
-      this._scene.fog.far = this._overall_size * 12;
-
-      if (first_time)
-         for (let naxis = 0; naxis < 3; ++naxis) {
-            let cc = this.ctrl.clip[naxis];
-            cc.min = box.min[cc.name];
-            cc.max = box.max[cc.name];
-            let sz = cc.max - cc.min;
-            cc.max += sz*0.01;
-            cc.min -= sz*0.01;
-            if (!cc.value)
-               cc.value = (cc.min + cc.max) / 2;
-            else if (cc.value < cc.min)
-               cc.value = cc.min;
-            else if (cc.value > cc.max)
-               cc.value = cc.max;
-         }
-
-      if (this.ctrl.ortho_camera) {
-         this._camera.left = box.min.x;
-         this._camera.right = box.max.x;
-         this._camera.top = box.max.y;
-         this._camera.bottom = box.min.y;
-      }
-
-      // this._camera.far = 100000000000;
-
-      this._camera.updateProjectionMatrix();
-
-      let k = 2*this.ctrl.zoom,
-          max_all = Math.max(sizex,sizey,sizez);
-
-      if ((this.ctrl.rotatey || this.ctrl.rotatez) && this.ctrl.can_rotate) {
-
-         let prev_zoom = this.calculateZoom();
-         if (keep_zoom && prev_zoom) k = 2*prev_zoom;
-
-         let euler = new Euler(0, this.ctrl.rotatey/180.*Math.PI, this.ctrl.rotatez/180.*Math.PI, 'YZX');
-
-         this._camera.position.set(-k*max_all, 0, 0);
-         this._camera.position.applyEuler(euler);
-         this._camera.position.add(new Vector3(midx,midy,midz));
-
-         if (keep_zoom && prev_zoom) {
-            let actual_zoom = this.calculateZoom();
-            k *= prev_zoom/actual_zoom;
-
-            this._camera.position.set(-k*max_all, 0, 0);
-            this._camera.position.applyEuler(euler);
-            this._camera.position.add(new Vector3(midx,midy,midz));
-         }
-
-      } else if (this.ctrl.ortho_camera) {
-         this._camera.position.set(midx, midy, Math.max(sizex,sizey));
-      } else if (this.ctrl.project) {
-         switch (this.ctrl.project) {
-            case 'x': this._camera.position.set(k*1.5*Math.max(sizey,sizez), 0, 0); break;
-            case 'y': this._camera.position.set(0, k*1.5*Math.max(sizex,sizez), 0); break;
-            case 'z': this._camera.position.set(0, 0, k*1.5*Math.max(sizex,sizey)); break;
-         }
-      } else if (this.ctrl._yup) {
-         this._camera.position.set(midx-k*Math.max(sizex,sizez), midy+k*sizey, midz-k*Math.max(sizex,sizez));
-      } else {
-         this._camera.position.set(midx-k*Math.max(sizex,sizey), midy-k*Math.max(sizex,sizey), midz+k*sizez);
-      }
-
-      this._lookat = new Vector3(midx, midy, midz);
-      this._camera0pos = new Vector3(-2*max_all, 0, 0); // virtual 0 position, where rotation starts
-      this._camera.lookAt(this._lookat);
-
-      this.changedLight(box);
-
-      if (this._controls) {
-         this._controls.target.copy(this._lookat);
-         this._controls.update();
-      }
-
-      // recheck which elements to draw
-      if (this.ctrl.select_in_view)
-         this.startDrawGeometry();
-   }
-
-   /** @summary Specifies camera position */
-   setCameraPosition(rotatey, rotatez, zoom) {
-      if (!this.ctrl) return;
-      this.ctrl.rotatey = rotatey || 0;
-      this.ctrl.rotatez = rotatez || 0;
-      let preserve_zoom = false;
-      if (zoom && Number.isFinite(zoom)) {
-         this.ctrl.zoom = zoom;
-      } else {
-         preserve_zoom = true;
-      }
-      this.adjustCameraPosition(false, preserve_zoom);
-   }
-
-   /** @summary focus on item */
-   focusOnItem(itemname) {
-
-      if (!itemname || !this._clones) return;
-
-      let stack = this._clones.findStackByName(itemname);
-
-      if (stack)
-         this.focusCamera(this._clones.resolveStack(stack, true), false);
-   }
-
-   /** @summary focus camera on speicifed position */
-   focusCamera( focus, autoClip ) {
-
-      if (this.ctrl.project || this.ctrl.ortho_camera)
-         return this.adjustCameraPosition();
-
-      let box = new Box3();
-      if (focus === undefined) {
-         box = this.getGeomBoundingBox(this._toplevel);
-      } else if (focus instanceof Mesh) {
-         box.setFromObject(focus);
-      } else {
-         let center = new Vector3().setFromMatrixPosition(focus.matrix),
-             node = focus.node,
-             halfDelta = new Vector3(node.fDX, node.fDY, node.fDZ).multiplyScalar(0.5);
-         box.min = center.clone().sub(halfDelta);
-         box.max = center.clone().add(halfDelta);
-      }
-
-      let sizex = box.max.x - box.min.x,
-          sizey = box.max.y - box.min.y,
-          sizez = box.max.z - box.min.z,
-          midx = (box.max.x + box.min.x)/2,
-          midy = (box.max.y + box.min.y)/2,
-          midz = (box.max.z + box.min.z)/2;
-
-      let position;
-      if (this.ctrl._yup)
-         position = new Vector3(midx-2*Math.max(sizex,sizez), midy+2*sizey, midz-2*Math.max(sizex,sizez));
-      else
-         position = new Vector3(midx-2*Math.max(sizex,sizey), midy-2*Math.max(sizex,sizey), midz+2*sizez);
-
-      let target = new Vector3(midx, midy, midz),
-          oldTarget = this._controls.target,
-          // probably, reduce number of frames
-          frames = 50, step = 0,
-          // Amount to change camera position at each step
-          posIncrement = position.sub(this._camera.position).divideScalar(frames),
-          // Amount to change 'lookAt' so it will end pointed at target
-          targetIncrement = target.sub(oldTarget).divideScalar(frames);
-
-      autoClip = autoClip && this._webgl;
-
-      // Automatic Clipping
-      if (autoClip) {
-         for (let axis = 0; axis < 3; ++axis) {
-            let cc = this.ctrl.clip[axis];
-            if (!cc.enabled) { cc.value = cc.min; cc.enabled = true; }
-            cc.inc = ((cc.min + cc.max) / 2 - cc.value) / frames;
-         }
-         this.updateClipping();
-      }
-
-      this._animating = true;
-
-      // Interpolate //
-
-      const animate = () => {
-         if (this._animating === undefined) return;
-
-         if (this._animating) {
-            requestAnimationFrame(animate);
-         } else {
-            if (!this._geom_viewer)
-               this.startDrawGeometry();
-         }
-         let smoothFactor = -Math.cos((2.0*Math.PI*step)/frames) + 1.0;
-         this._camera.position.add(posIncrement.clone().multiplyScalar(smoothFactor));
-         oldTarget.add(targetIncrement.clone().multiplyScalar(smoothFactor));
-         this._lookat = oldTarget;
-         this._camera.lookAt(this._lookat);
-         this._camera.updateProjectionMatrix();
-
-         let tm1 = new Date().getTime();
-         if (autoClip) {
-            for (let axis = 0; axis < 3; ++axis)
-               this.ctrl.clip[axis].value += this.ctrl.clip[axis].inc * smoothFactor;
-            this.updateClipping();
-         } else {
-            this.render3D(0);
-         }
-         let tm2 = new Date().getTime();
-         if ((step == 0) && (tm2-tm1 > 200)) frames = 20;
-         step++;
-         this._animating = step < frames;
-      };
-
-      animate();
-
-   //   this._controls.update();
-   }
-
-   /** @summary actiavte auto rotate */
-   autorotate(speed) {
-
-      let rotSpeed = (speed === undefined) ? 2.0 : speed,
-          last = new Date();
-
-      const animate = () => {
-         if (!this._renderer || !this.ctrl) return;
-
-         let current = new Date();
-
-         if (this.ctrl.rotate)
-            requestAnimationFrame(animate);
-
-         if (this._controls) {
-            this._controls.autoRotate = this.ctrl.rotate;
-            this._controls.autoRotateSpeed = rotSpeed * ( current.getTime() - last.getTime() ) / 16.6666;
-            this._controls.update();
-         }
-         last = new Date();
-         this.render3D(0);
-      };
-
-      if (this._webgl) animate();
-   }
-
-   /** @summary called at the end of scene drawing */
-   completeScene() {
-
-      if ( this.ctrl._debug || this.ctrl._grid ) {
-         if ( this.ctrl._full ) {
-            let boxHelper = new BoxHelper(this._toplevel);
-            this._scene.add( boxHelper );
-         }
-         this._scene.add(new AxesHelper(2 * this._overall_size));
-         this._scene.add(new GridHelper(Math.ceil(this._overall_size), Math.ceil(this._overall_size)/50));
-         this.helpText("<font face='verdana' size='1' color='red'><center>Transform Controls<br>" +
-               "'T' translate | 'R' rotate | 'S' scale<br>" +
-               "'+' increase size | '-' decrease size<br>" +
-               "'W' toggle wireframe/solid display<br>"+
-               "keep 'Ctrl' down to snap to grid</center></font>");
-      }
-   }
-
-   /** @summary Drawing with 'count' option
-     * @desc Scans hieararchy and check for unique nodes
-     * @return {Promise} with object drawing ready */
-   async drawCount(unqievis, clonetm) {
-
-      const makeTime = tm => (isBatchMode() ? 'anytime' : tm.toString()) + ' ms';
-
-      let res = [ 'Unique nodes: ' + this._clones.nodes.length,
-                  'Unique visible: ' + unqievis,
-                  'Time to clone: ' + makeTime(clonetm) ];
-
-      // need to fill cached value line numvischld
-      this._clones.scanVisible();
-
-      let nshapes = 0, arg = {
-         clones: this._clones,
-         cnt: [],
-         func(node) {
-            if (this.cnt[this.last] === undefined)
-               this.cnt[this.last] = 1;
-            else
-               this.cnt[this.last]++;
-
-            nshapes += countNumShapes(this.clones.getNodeShape(node.id));
-            return true;
-         }
-      };
-
-      let tm1 = new Date().getTime(),
-          numvis = this._clones.scanVisible(arg),
-          tm2 = new Date().getTime();
-
-      res.push(`Total visible nodes: ${numvis}`, `Total shapes: ${nshapes}`);
-
-      for (let lvl = 0; lvl < arg.cnt.length; ++lvl) {
-         if (arg.cnt[lvl] !== undefined)
-            res.push(`  lvl${lvl}: ${arg.cnt[lvl]}`);
-      }
-
-      res.push(`Time to scan: ${makeTime(tm2-tm1)}`, '', 'Check timing for matrix calculations ...');
-
-      let elem = this.selectDom().style('overflow', 'auto');
-
-      if (isBatchMode())
-         elem.property('_json_object_', res);
-      else
-         res.forEach(str => elem.append('p').text(str));
-
-      return new Promise(resolveFunc => {
-         setTimeout(() => {
-            arg.domatrix = true;
-            tm1 = new Date().getTime();
-            numvis = this._clones.scanVisible(arg);
-            tm2 = new Date().getTime();
-
-            let last_str = `Time to scan with matrix: ${makeTime(tm2-tm1)}`;
-            if (isBatchMode())
-               res.push(last_str);
-            else
-               elem.append('p').text(last_str);
-            resolveFunc(this);
-         }, 100);
-      });
-   }
-
-   /** @summary Handle drop operation
-     * @desc opt parameter can include function name like opt$func_name
-     * Such function should be possible to find via {@link findFunction}
-     * Function has to return Promise with objects to draw on geometry
-     * By default function with name 'extract_geo_tracks' is checked
-     * @return {Promise} handling of drop operation */
-   async performDrop(obj, itemname, hitem, opt) {
-
-      if (obj?.$kind === 'TTree') {
-         // drop tree means function call which must extract tracks from provided tree
-
-         let funcname = 'extract_geo_tracks';
-
-         if (opt && opt.indexOf('$') > 0) {
-            funcname = opt.slice(0, opt.indexOf('$'));
-            opt = opt.slice(opt.indexOf('$')+1);
-         }
-
-         let func = findFunction(funcname);
-
-         if (!func) return Promise.reject(Error(`Function ${funcname} not found`));
-
-         return func(obj, opt).then(tracks => {
-            if (!tracks) return this;
-
-            // FIXME: probably tracks should be remembered?
-            return this.drawExtras(tracks, '', false).then(()=> {
-               this.updateClipping(true);
-               return this.render3D(100);
-            });
-         });
-      }
-
-      return this.drawExtras(obj, itemname).then(is_any => {
-         if (!is_any) return this;
-
-         if (hitem) hitem._painter = this; // set for the browser item back pointer
-
-         return this.render3D(100);
-      });
-   }
-
-   /** @summary function called when mouse is going over the item in the browser */
-   mouseOverHierarchy(on, itemname, hitem) {
-      if (!this.ctrl) return; // protection for cleaned-up painter
-
-      let obj = hitem._obj;
-      if (this.ctrl._debug)
-         console.log(`Mouse over ${on} ${itemname} ${obj?._typename}`);
-
-      // let's highlight tracks and hits only for the time being
-      if (!obj || (obj._typename !== clTEveTrack && obj._typename !== clTEvePointSet && obj._typename !== clTPolyMarker3D)) return;
-
-      this.highlightMesh(null, 0x00ff00, on ? obj : null);
-   }
-
-   /** @summary clear extra drawn objects like tracks or hits */
-   clearExtras() {
-      this.getExtrasContainer('delete');
-      delete this._extraObjects; // workaround, later will be normal function
-      this.render3D();
-   }
-
-   /** @summary Register extra objects like tracks or hits
-    * @desc Rendered after main geometry volumes are created
-    * Check if object already exists to prevent duplication */
-   addExtra(obj, itemname) {
-      if (this._extraObjects === undefined)
-         this._extraObjects = create$1(clTList);
-
-      if (this._extraObjects.arr.indexOf(obj) >= 0) return false;
-
-      this._extraObjects.Add(obj, itemname);
-
-      delete obj.$hidden_via_menu; // remove previous hidden property
-
-      return true;
-   }
-
-   /** @summary manipulate visisbility of extra objects, used for HierarchyPainter
-     * @private */
-   extraObjectVisible(hpainter, hitem, toggle) {
-      if (!this._extraObjects) return;
-
-      let itemname = hpainter.itemFullName(hitem),
-          indx = this._extraObjects.opt.indexOf(itemname);
-
-      if ((indx < 0) && hitem._obj) {
-         indx = this._extraObjects.arr.indexOf(hitem._obj);
-         // workaround - if object found, replace its name
-         if (indx >= 0) this._extraObjects.opt[indx] = itemname;
-      }
-
-      if (indx < 0) return;
-
-      let obj = this._extraObjects.arr[indx],
-          res = obj.$hidden_via_menu ? false : true;
-
-      if (toggle) {
-         obj.$hidden_via_menu = res; res = !res;
-
-         let mesh = null;
-         // either found painted object or just draw once again
-         this._toplevel.traverse(node => { if (node.geo_object === obj) mesh = node; });
-
-         if (mesh) {
-            mesh.visible = res;
-            this.render3D();
-         } else if (res) {
-            this.drawExtras(obj, '', false).then(() => {
-               this.updateClipping(true);
-               this.render3D();
-            });
-         }
-      }
-
-      return res;
-   }
-
-   /** @summary Draw extra object like tracks
-     * @return {Promise} for ready */
-   async drawExtras(obj, itemname, add_objects) {
-      // if object was hidden via menu, do not redraw it with next draw call
-      if (!obj?._typename || (!add_objects && obj.$hidden_via_menu))
-         return false;
-
-      let do_render = false;
-      if (add_objects === undefined) {
-         add_objects = true;
-         do_render = true;
-      }
-
-      let promise = false;
-
-      if ((obj._typename === clTList) || (obj._typename === clTObjArray)) {
-         if (!obj.arr) return false;
-         let parr = [];
-         for (let n = 0; n < obj.arr.length; ++n) {
-            let sobj = obj.arr[n], sname = obj.opt ? obj.opt[n] : '';
-            if (!sname) sname = (itemname || '<prnt>') + `/[${n}]`;
-            parr.push(this.drawExtras(sobj, sname, add_objects));
-         }
-         promise = Promise.all(parr).then(ress => ress.indexOf(true) >= 0);
-      } else if (obj._typename === 'Mesh') {
-         // adding mesh as is
-         this.addToExtrasContainer(obj);
-         promise = Promise.resolve(true);
-      } else if (obj._typename === 'TGeoTrack') {
-         if (!add_objects || this.addExtra(obj, itemname))
-            promise = this.drawGeoTrack(obj, itemname);
-      } else if (obj._typename === clTPolyLine3D) {
-         if (!add_objects || this.addExtra(obj, itemname))
-            promise = this.drawPolyLine(obj, itemname);
-      } else if ((obj._typename === clTEveTrack) || (obj._typename === 'ROOT::Experimental::REveTrack')) {
-         if (!add_objects || this.addExtra(obj, itemname))
-            promise = this.drawEveTrack(obj, itemname);
-      } else if ((obj._typename === clTEvePointSet) || (obj._typename === 'ROOT::Experimental::REvePointSet') || (obj._typename === clTPolyMarker3D)) {
-         if (!add_objects || this.addExtra(obj, itemname))
-            promise = this.drawHit(obj, itemname);
-      } else if ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)) {
-         if (!add_objects || this.addExtra(obj, itemname))
-            promise = this.drawExtraShape(obj, itemname);
-      }
-
-      return getPromise(promise).then(is_any => {
-         if (!is_any || !do_render) return is_any;
-
-         this.updateClipping(true);
-         return this.render3D(100);
-      });
-   }
-
-   /** @summary returns container for extra objects */
-   getExtrasContainer(action, name) {
-      if (!this._toplevel) return null;
-
-      if (!name) name = 'tracks';
-
-      let extras = null, lst = [];
-      for (let n = 0; n < this._toplevel.children.length; ++n) {
-         let chld = this._toplevel.children[n];
-         if (!chld._extras) continue;
-         if (action == 'collect') { lst.push(chld); continue; }
-         if (chld._extras === name) { extras = chld; break; }
-      }
-
-      if (action == 'collect') {
-         for (let k = 0; k < lst.length; ++k)
-            this._toplevel.remove(lst[k]);
-         return lst;
-      }
-
-      if (action == 'delete') {
-         if (extras) this._toplevel.remove(extras);
-         disposeThreejsObject(extras);
-         return null;
-      }
-
-      if ((action !== 'get') && !extras) {
-         extras = new Object3D();
-         extras._extras = name;
-         this._toplevel.add(extras);
-      }
-
-      return extras;
-   }
-
-   /** @summary add object to extras container.
-     * @desc If fail, dispose object */
-   addToExtrasContainer(obj, name) {
-      let container = this.getExtrasContainer('', name);
-      if (container) {
-         container.add(obj);
-      } else {
-         console.warn('Fail to add object to extras');
-         disposeThreejsObject(obj);
-      }
-   }
-
-   /** @summary drawing TGeoTrack */
-   drawGeoTrack(track, itemname) {
-      if (!track?.fNpoints) return false;
-
-      let linewidth = browser$1.isWin ? 1 : (track.fLineWidth || 1), // line width not supported on windows
-          color = getColor(track.fLineColor) || '#ff00ff',
-          npoints = Math.round(track.fNpoints/4), // each track point has [x,y,z,t] coordinate
-          buf = new Float32Array((npoints-1)*6),
-          pos = 0, projv = this.ctrl.projectPos,
-          projx = (this.ctrl.project === 'x'),
-          projy = (this.ctrl.project === 'y'),
-          projz = (this.ctrl.project === 'z');
-
-      for (let k = 0; k < npoints-1; ++k) {
-         buf[pos]   = projx ? projv : track.fPoints[k*4];
-         buf[pos+1] = projy ? projv : track.fPoints[k*4+1];
-         buf[pos+2] = projz ? projv : track.fPoints[k*4+2];
-         buf[pos+3] = projx ? projv : track.fPoints[k*4+4];
-         buf[pos+4] = projy ? projv : track.fPoints[k*4+5];
-         buf[pos+5] = projz ? projv : track.fPoints[k*4+6];
-         pos+=6;
-      }
-
-      let lineMaterial = new LineBasicMaterial({ color, linewidth }),
-          line = createLineSegments(buf, lineMaterial);
-
-      line.defaultOrder = line.renderOrder = 1000000; // to bring line to the front
-      line.geo_name = itemname;
-      line.geo_object = track;
-      line.hightlightWidthScale = 2;
-
-      if (itemname && itemname.indexOf('<prnt>/Tracks') == 0)
-         line.main_track = true;
-
-      this.addToExtrasContainer(line);
-
-      return true;
-   }
-
-   /** @summary drawing TPolyLine3D */
-   drawPolyLine(line, itemname) {
-      if (!line) return false;
-
-      let linewidth = browser$1.isWin ? 1 : (line.fLineWidth || 1),
-          color = getColor(line.fLineColor) || '#ff00ff',
-          npoints = line.fN,
-          fP = line.fP,
-          buf = new Float32Array((npoints-1)*6),
-          pos = 0, projv = this.ctrl.projectPos,
-          projx = (this.ctrl.project === 'x'),
-          projy = (this.ctrl.project === 'y'),
-          projz = (this.ctrl.project === 'z');
-
-      for (let k = 0; k < npoints-1; ++k) {
-         buf[pos]   = projx ? projv : fP[k*3];
-         buf[pos+1] = projy ? projv : fP[k*3+1];
-         buf[pos+2] = projz ? projv : fP[k*3+2];
-         buf[pos+3] = projx ? projv : fP[k*3+3];
-         buf[pos+4] = projy ? projv : fP[k*3+4];
-         buf[pos+5] = projz ? projv : fP[k*3+5];
-         pos += 6;
-      }
-
-      let lineMaterial = new LineBasicMaterial({ color, linewidth }),
-          line3d = createLineSegments(buf, lineMaterial);
-
-      line3d.defaultOrder = line3d.renderOrder = 1000000; // to bring line to the front
-      line3d.geo_name = itemname;
-      line3d.geo_object = line;
-      line3d.hightlightWidthScale = 2;
-
-      this.addToExtrasContainer(line3d);
-
-      return true;
-   }
-
-   /** @summary Drawing TEveTrack */
-   drawEveTrack(track, itemname) {
-      if (!track || (track.fN <= 0)) return false;
-
-      let linewidth = browser$1.isWin ? 1 : (track.fLineWidth || 1),
-          color = getColor(track.fLineColor) || '#ff00ff',
-          buf = new Float32Array((track.fN-1)*6), pos = 0,
-          projv = this.ctrl.projectPos,
-          projx = (this.ctrl.project === 'x'),
-          projy = (this.ctrl.project === 'y'),
-          projz = (this.ctrl.project === 'z');
-
-      for (let k = 0; k < track.fN-1; ++k) {
-         buf[pos]   = projx ? projv : track.fP[k*3];
-         buf[pos+1] = projy ? projv : track.fP[k*3+1];
-         buf[pos+2] = projz ? projv : track.fP[k*3+2];
-         buf[pos+3] = projx ? projv : track.fP[k*3+3];
-         buf[pos+4] = projy ? projv : track.fP[k*3+4];
-         buf[pos+5] = projz ? projv : track.fP[k*3+5];
-         pos+=6;
-      }
-
-      let lineMaterial = new LineBasicMaterial({ color, linewidth }),
-          line = createLineSegments(buf, lineMaterial);
-
-      line.defaultOrder = line.renderOrder = 1000000; // to bring line to the front
-      line.geo_name = itemname;
-      line.geo_object = track;
-      line.hightlightWidthScale = 2;
-
-      this.addToExtrasContainer(line);
-
-      return true;
-   }
-
-   /** @summary Drawing different hits types like TPolyMarker3D */
-   async drawHit(hit, itemname) {
-      if (!hit || !hit.fN || (hit.fN < 0))
-         return false;
-
-      // make hit size scaling factor of overall geometry size
-      // otherwise it is not possible to correctly see hits at all
-      let hit_size = Math.max(hit.fMarkerSize * this.getOverallSize() * 0.005, 0.2),
-          nhits = hit.fN,
-          projv = this.ctrl.projectPos,
-          projx = (this.ctrl.project === 'x'),
-          projy = (this.ctrl.project === 'y'),
-          projz = (this.ctrl.project === 'z'),
-          style = hit.fMarkerStyle;
-
-      // FIXME: styles 2 and 4 does not work properly, see Misc/basic3d demo
-      // style 4 is very bad for hits representation
-      if ((style == 4) || (style == 2)) { style = 7; hit_size *= 1.5; }
-
-      let pnts = new PointsCreator(nhits, this._webgl, hit_size);
-
-      for (let i = 0; i < nhits; i++)
-         pnts.addPoint(projx ? projv : hit.fP[i*3],
-                       projy ? projv : hit.fP[i*3+1],
-                       projz ? projv : hit.fP[i*3+2]);
-
-      return pnts.createPoints({ color: getColor(hit.fMarkerColor) || '#0000ff', style }).then(mesh => {
-         mesh.defaultOrder = mesh.renderOrder = 1000000; // to bring points to the front
-         mesh.highlightScale = 2;
-         mesh.geo_name = itemname;
-         mesh.geo_object = hit;
-         this.addToExtrasContainer(mesh);
-         return true; // indicate that rendering should be done
-      });
-   }
-
-   /** @summary Draw extra shape on the geometry */
-   drawExtraShape(obj, itemname) {
-      let mesh = build(obj);
-      if (!mesh) return false;
-
-      mesh.geo_name = itemname;
-      mesh.geo_object = obj;
-
-      this.addToExtrasContainer(mesh);
-      return true;
-   }
-
-   /** @summary Serach for specified node
-     * @private */
-   findNodeWithVolume(name, action, prnt, itemname, volumes) {
-
-      let first_level = false, res = null;
-
-      if (!prnt) {
-         prnt = this.getGeometry();
-         if (!prnt && (getNodeKind(prnt) !== 0)) return null;
-         itemname = this.geo_manager ? prnt.fName : '';
-         first_level = true;
-         volumes = [];
-      } else {
-         if (itemname) itemname += '/';
-         itemname += prnt.fName;
-      }
-
-      if (!prnt.fVolume || prnt.fVolume._searched) return null;
-
-      if (name.test(prnt.fVolume.fName)) {
-         res = action({ node: prnt, item: itemname });
-         if (res) return res;
-      }
-
-      prnt.fVolume._searched = true;
-      volumes.push(prnt.fVolume);
-
-      if (prnt.fVolume.fNodes)
-         for (let n = 0, len = prnt.fVolume.fNodes.arr.length; n < len; ++n) {
-            res = this.findNodeWithVolume(name, action, prnt.fVolume.fNodes.arr[n], itemname, volumes);
-            if (res) break;
-         }
-
-      if (first_level)
-         for (let n = 0, len = volumes.length; n < len; ++n)
-            delete volumes[n]._searched;
-
-      return res;
-   }
-
-   /** @summary Process script option - load and execute some gGeoManager-related calls */
-   async loadMacro(script_name) {
-
-      let result = { obj: this.getGeometry(), prefix: '' };
-
-      if (this.geo_manager)
-         result.prefix = result.obj.fName;
-
-      if (!script_name || (script_name.length < 3) || (getNodeKind(result.obj) !== 0))
-         return result;
-
-      let mgr = {
-            GetVolume: name => {
-               let regexp = new RegExp('^'+name+'$'),
-                   currnode = this.findNodeWithVolume(regexp, arg => arg);
-
-               if (!currnode) console.log(`Did not found ${name} volume`);
-
-               // return proxy object with several methods, typically used in ROOT geom scripts
-               return {
-                   found: currnode,
-                   fVolume: currnode?.node?.fVolume,
-                   InvisibleAll(flag) {
-                      setInvisibleAll(this.fVolume, flag);
-                   },
-                   Draw() {
-                      if (!this.found || !this.fVolume) return;
-                      result.obj = this.found.node;
-                      result.prefix = this.found.item;
-                      console.log(`Select volume for drawing ${this.fVolume.fName} ${result.prefix}`);
-                   },
-                   SetTransparency(lvl) {
-                     if (this.fVolume?.fMedium?.fMaterial)
-                        this.fVolume.fMedium.fMaterial.fFillStyle = 3000 + lvl;
-                   },
-                   SetLineColor(col) {
-                      if (this.fVolume) this.fVolume.fLineColor = col;
-                   }
-                };
-            },
-
-            DefaultColors: () => {
-               this.ctrl.dflt_colors = true;
-            },
-
-            SetMaxVisNodes: limit => {
-               if (!this.ctrl.maxnodes)
-                  this.ctrl.maxnodes = pasrseInt(limit) || 0;
-            },
-
-            SetVisLevel: limit => {
-               if (!this.ctrl.vislevel)
-                  this.ctrl.vislevel = parseInt(limit) || 0;
-            }
-          };
-
-      showProgress('Loading macro ' + script_name);
-
-      return httpRequest(script_name, 'text').then(script => {
-         let lines = script.split('\n'), indx = 0;
-
-         while (indx < lines.length) {
-            let line = lines[indx++].trim();
-
-            if (line.indexOf('//') == 0) continue;
-
-            if (line.indexOf('gGeoManager') < 0) continue;
-            line = line.replace('->GetVolume','.GetVolume');
-            line = line.replace('->InvisibleAll','.InvisibleAll');
-            line = line.replace('->SetMaxVisNodes','.SetMaxVisNodes');
-            line = line.replace('->DefaultColors','.DefaultColors');
-            line = line.replace('->Draw','.Draw');
-            line = line.replace('->SetTransparency','.SetTransparency');
-            line = line.replace('->SetLineColor','.SetLineColor');
-            line = line.replace('->SetVisLevel','.SetVisLevel');
-            if (line.indexOf('->') >= 0) continue;
-
-            try {
-               let func = new Function('gGeoManager', line);
-               func(mgr);
-            } catch(err) {
-               console.error(`Problem by processing ${line}`);
-            }
-         }
-
-         return result;
-      }).catch(() => {
-         console.error(`Fail to load ${script_name}`);
-         return result;
-      });
-   }
-
-   /** @summary Assign clones, created outside.
-     * @desc Used by geometry painter, where clones are handled by the server */
-   assignClones(clones) {
-      this._clones_owner = true;
-      this._clones = clones;
-   }
-
-   /** @summary Prepare drawings
-     * @desc Return value used as promise for painter */
-   async prepareObjectDraw(draw_obj, name_prefix) {
-
-      // if did cleanup - ignore all kind of activity
-      if (this.did_cleanup)
-         return null;
-
-      if (name_prefix == '__geom_viewer_append__') {
-         this._new_append_nodes = draw_obj;
-         this.ctrl.use_worker = 0;
-         this._geom_viewer = true; // indicate that working with geom viewer
-      } else if ((name_prefix == '__geom_viewer_selection__') && this._clones) {
-         // these are selection done from geom viewer
-         this._new_draw_nodes = draw_obj;
-         this.ctrl.use_worker = 0;
-         this._geom_viewer = true; // indicate that working with geom viewer
-      } else if (this._main_painter) {
-         this._clones_owner = false;
-         this._clones = this._main_painter._clones;
-         console.log(`Reuse clones ${this._clones.nodes.length} from main painter`);
-      } else if (!draw_obj) {
-         this._clones_owner = false;
-         this._clones = null;
-      } else {
-         this._start_drawing_time = new Date().getTime();
-         this._clones_owner = true;
-         this._clones = new ClonedNodes(draw_obj);
-         let lvl = this.ctrl.vislevel, maxnodes = this.ctrl.maxnodes;
-         if (this.geo_manager) {
-            if (!lvl && this.geo_manager.fVisLevel)
-               lvl = this.geo_manager.fVisLevel;
-            if (!maxnodes)
-               maxnodes = this.geo_manager.fMaxVisNodes;
-         }
-         this._clones.setVisLevel(lvl);
-         this._clones.setMaxVisNodes(maxnodes);
-
-         this._clones.name_prefix = name_prefix;
-
-         let hide_top_volume = !!this.geo_manager && !this.ctrl.showtop,
-             uniquevis = this.ctrl.no_screen ? 0 : this._clones.markVisibles(true, false, hide_top_volume);
-
-         if (uniquevis <= 0)
-            uniquevis = this._clones.markVisibles(false, false, hide_top_volume);
-         else
-            uniquevis = this._clones.markVisibles(true, true, hide_top_volume); // copy bits once and use normal visibility bits
-
-         this._clones.produceIdShifts();
-
-         let spent = new Date().getTime() - this._start_drawing_time;
-
-         if (!this._scene)
-            console.log(`Creating clones ${this._clones.nodes.length} takes ${spent} ms uniquevis ${uniquevis}`);
-
-         if (this.options._count)
-            return this.drawCount(uniquevis, spent);
-      }
-
-      let promise = Promise.resolve(true);
-
-      if (!this._scene) {
-         this._first_drawing = true;
-
-         this._on_pad = !!this.getPadPainter();
-
-         if (this._on_pad) {
-            let size, render3d, fp;
-            promise = ensureTCanvas(this,'3d').then(() => {
-
-               fp = this.getFramePainter();
-
-               render3d = getRender3DKind();
-               assign3DHandler(fp);
-               fp.mode3d = true;
-
-               size = fp.getSizeFor3d(undefined, render3d);
-
-               this._fit_main_area = (size.can3d === -1);
-
-               return this.createScene(size.width, size.height)
-                          .then(dom => fp.add3dCanvas(size, dom, render3d === constants$1.Render3D.WebGL));
-            });
-
-         } else {
-            // activate worker
-            if (this.ctrl.use_worker > 0)
-               this.startWorker();
-
-            assign3DHandler(this);
-
-            let size = this.getSizeFor3d(undefined, getRender3DKind(this.options.Render3D));
-
-            this._fit_main_area = (size.can3d === -1);
-
-            promise = this.createScene(size.width, size.height)
-                          .then(dom => this.add3dCanvas(size, dom, this._webgl));
-         }
-      }
-
-      return promise.then(() => {
-
-         // this is limit for the visible faces, number of volumes does not matter
-         if (this._first_drawing)
-            this.ctrl.maxlimit = (this._webgl ? 200000 : 100000) * this.ctrl.more;
-
-         // set top painter only when first child exists
-         this.setAsMainPainter();
-
-         this.createToolbar();
-
-         // just draw extras and complete drawing if there are no main model
-         if (!this._clones)
-            return this.completeDraw();
-
-         return new Promise(resolveFunc => {
-            this._resolveFunc = resolveFunc;
-            this.showDrawInfo('Drawing geometry');
-            this.startDrawGeometry(true);
-         });
-      });
-   }
-
-   /** @summary methods show info when first geometry drawing is performed */
-   showDrawInfo(msg) {
-      if (isBatchMode() || !this._first_drawing || !this._start_drawing_time) return;
-
-      let main = this._renderer.domElement.parentNode,
-          info = main.querySelector('.geo_info');
-
-      if (!msg) {
-         info.remove();
-      } else {
-         let spent = (new Date().getTime() - this._start_drawing_time)*1e-3;
-         if (!info) {
-            info = document.createElement('p');
-            info.setAttribute('class', 'geo_info');
-            info.setAttribute('style', 'position: absolute; text-align: center; vertical-align: middle; top: 45%; left: 40%; color: red; font-size: 150%;');
-            main.append(info);
-         }
-         info.innerHTML = `${msg}, ${spent.toFixed(1)}s`;
-      }
-   }
-
-   /** @summary Reentrant method to perform geometry drawing step by step */
-   continueDraw() {
-
-      // nothing to do - exit
-      if (this.isStage(stageInit)) return;
-
-      let tm0 = new Date().getTime(),
-          interval = this._first_drawing ? 1000 : 200,
-          now = tm0;
-
-      while(true) {
-
-         let res = this.nextDrawAction();
-         if (!res) break;
-
-         now = new Date().getTime();
-
-         // stop creation after 100 sec, render as is
-         if (now - this._startm > 1e5) {
-            this.changeStage(stageInit, 'Abort build after 100s');
-            break;
-         }
-
-         // if we are that fast, do next action
-         if ((res === true) && (now - tm0 < interval)) continue;
-
-         if ((now - tm0 > interval) || (res === 1) || (res === 2)) {
-
-            showProgress(this.drawing_log);
-
-            this.showDrawInfo(this.drawing_log);
-
-            if (this._first_drawing && this._webgl && (this._num_meshes - this._last_render_meshes > 100) && (now - this._last_render_tm > 2.5*interval)) {
-               this.adjustCameraPosition();
-               this.render3D(-1);
-               this._last_render_meshes = this.ctrl.info.num_meshes;
-            }
-            if (res !== 2) setTimeout(() => this.continueDraw(), (res === 1) ? 100 : 1);
-
-            return;
-         }
-      }
-
-      let take_time = now - this._startm;
-
-      if (this._first_drawing || this._full_redrawing)
-         console.log(`Create tm = ${take_time} meshes ${this.ctrl.info.num_meshes} faces ${this.ctrl.info.num_faces}`);
-
-      if (take_time > 300) {
-         showProgress('Rendering geometry');
-         this.showDrawInfo('Rendering');
-         return setTimeout(() => this.completeDraw(true), 10);
-      }
-
-      this.completeDraw(true);
-   }
-
-   /** @summary Checks camera position and recalculate rendering order if needed
-     * @param force - if specified, forces calculations of render order */
-   testCameraPosition(force) {
-      this._camera.updateMatrixWorld();
-      let origin = this._camera.position.clone();
-
-      if (!force && this._last_camera_position) {
-         // if camera position does not changed a lot, ignore such change
-         let dist = this._last_camera_position.distanceTo(origin);
-         if (dist < (this._overall_size || 1000)*1e-4) return;
-      }
-
-      this._last_camera_position = origin; // remember current camera position
-
-      if (!this.ctrl.project)
-         produceRenderOrder(this._toplevel, origin, this.ctrl.depthMethod, this._clones);
-   }
-
-   /** @summary Call 3D rendering of the geometry
-     * @param tmout - specifies delay, after which actual rendering will be invoked
-     * @param [measure] - when true, for the first time printout rendering time
-     * @return {Promise} when tmout bigger than 0 is specified
-     * @desc Timeout used to avoid multiple rendering of the picture when several 3D drawings
-     * superimposed with each other. If tmeout <= 0, rendering performed immediately
-     * Several special values are used:
-     *   -1    - force recheck of rendering order based on camera position */
-   render3D(tmout, measure) {
-
-      if (!this._renderer) {
-         if (!this.did_cleanup)
-            console.warn('renderer object not exists - check code');
-         else
-            console.warn('try to render after cleanup');
-         return this;
-      }
-
-      let ret_promise = (tmout !== undefined) && (tmout > 0);
-
-      if (tmout === undefined) tmout = 5; // by default, rendering happens with timeout
-
-      if ((tmout > 0) && this._webgl /* && !isBatchMode() */) {
-         if (isBatchMode()) tmout = 1; // use minimal timeout in batch mode
-         if (ret_promise)
-            return new Promise(resolveFunc => {
-               if (!this._render_resolveFuncs) this._render_resolveFuncs = [];
-               this._render_resolveFuncs.push(resolveFunc);
-               if (!this.render_tmout)
-                  this.render_tmout = setTimeout(() => this.render3D(0, measure), tmout);
-            });
-
-         if (!this.render_tmout)
-            this.render_tmout = setTimeout(() => this.render3D(0, measure), tmout);
-         return this;
-      }
-
-      if (this.render_tmout) {
-         clearTimeout(this.render_tmout);
-         delete this.render_tmout;
-      }
-
-      beforeRender3D(this._renderer);
-
-      let tm1 = new Date();
-
-      this.testCameraPosition(tmout === -1);
-
-      // its needed for outlinePass - do rendering, most consuming time
-      if (this._webgl && this._effectComposer && (this._effectComposer.passes.length > 0)) {
-         this._effectComposer.render();
-      } else if (this._webgl && this._bloomComposer && (this._bloomComposer.passes.length > 0)) {
-         this._renderer.clear();
-         this._camera.layers.set( _BLOOM_SCENE );
-         this._bloomComposer.render();
-         this._renderer.clearDepth();
-         this._camera.layers.set( _ENTIRE_SCENE );
-         this._renderer.render(this._scene, this._camera);
-      } else {
-    //     this._renderer.logarithmicDepthBuffer = true;
-         this._renderer.render(this._scene, this._camera);
-      }
-
-      let tm2 = new Date();
-
-      this.last_render_tm = tm2.getTime();
-
-      if ((this.first_render_tm === 0) && measure) {
-         this.first_render_tm = tm2.getTime() - tm1.getTime();
-         console.log(`three.js r${REVISION}, first render tm = ${this.first_render_tm}`);
-      }
-
-      afterRender3D(this._renderer);
-
-      if (this._render_resolveFuncs) {
-         this._render_resolveFuncs.forEach(func => func(this));
-         delete this._render_resolveFuncs;
-      }
-   }
-
-   /** @summary Start geo worker */
-   startWorker() {
-
-      if (this._worker) return;
-
-      this._worker_ready = false;
-      this._worker_jobs = 0; // counter how many requests send to worker
-
-      // TODO: modules not yet working, see https://www.codedread.com/blog/archives/2017/10/19/web-workers-can-be-es6-modules-too/
-      this._worker = new Worker(exports.source_dir + 'scripts/geoworker.js' /*, { type: 'module' } */);
-
-      this._worker.onmessage = e => {
-
-         if (!isObject(e.data)) return;
-
-         if ('log' in e.data)
-            return console.log(`geo: ${e.data.log}`);
-
-         if ('progress' in e.data)
-            return showProgress(e.data.progress);
-
-         e.data.tm3 = new Date().getTime();
-
-         if ('init' in e.data) {
-            this._worker_ready = true;
-            console.log(`Worker ready: ${e.data.tm3 - e.data.tm0}`);
-         } else {
-            this.processWorkerReply(e.data);
-         }
-      };
-
-      // send initialization message with clones
-      this._worker.postMessage({
-         init: true,   // indicate init command for worker
-         browser: browser$1,
-         tm0: new Date().getTime(),
-         vislevel: this._clones.getVisLevel(),
-         maxvisnodes: this._clones.getMaxVisNodes(),
-         clones: this._clones.nodes,
-         sortmap: this._clones.sortmap
-      });
-   }
-
-   /** @summary check if one can submit request to worker
-     * @private */
-   canSubmitToWorker(force) {
-      if (!this._worker) return false;
-
-      return this._worker_ready && ((this._worker_jobs == 0) || force);
-   }
-
-   /** @summary submit request to worker
-     * @private */
-   submitToWorker(job) {
-      if (!this._worker) return false;
-
-      this._worker_jobs++;
-      job.tm0 = new Date().getTime();
-      this._worker.postMessage(job);
-   }
-
-   /** @summary process reply from worker
-     * @private */
-   processWorkerReply(job) {
-      this._worker_jobs--;
-
-      if ('collect' in job) {
-         this._new_draw_nodes = job.new_nodes;
-         this._draw_all_nodes = job.complete;
-         this.changeStage(stageAnalyze);
-         // invoke methods immediately
-         return this.continueDraw();
-      }
-
-      if ('shapes' in job) {
-
-         for (let n=0;n<job.shapes.length;++n) {
-            let item = job.shapes[n],
-                origin = this._build_shapes[n];
-
-            // let shape = this._clones.getNodeShape(item.nodeid);
-
-            if (item.buf_pos && item.buf_norm) {
-               if (item.buf_pos.length === 0) {
-                  origin.geom = null;
-               } else if (item.buf_pos.length !== item.buf_norm.length) {
-                  console.error(`item.buf_pos.length ${item.buf_pos.length} != item.buf_norm.length ${item.buf_norm.length}`);
-                  origin.geom = null;
-               } else {
-                  origin.geom = new BufferGeometry();
-
-                  origin.geom.setAttribute('position', new BufferAttribute(item.buf_pos, 3));
-                  origin.geom.setAttribute('normal', new BufferAttribute(item.buf_norm, 3));
-               }
-
-               origin.ready = true;
-               origin.nfaces = item.nfaces;
-            }
-         }
-
-         job.tm4 = new Date().getTime();
-
-         this.changeStage(stageBuild); // first check which shapes are used, than build meshes
-
-         // invoke methods immediately
-         return this.continueDraw();
-      }
-   }
-
-   /** @summary start draw geometries on master and all slaves
-     * @private */
-   testGeomChanges() {
-      if (this._main_painter) {
-         console.warn('Get testGeomChanges call for slave painter');
-         return this._main_painter.testGeomChanges();
-      }
-      this.startDrawGeometry();
-      for (let k = 0; k < this._slave_painters.length; ++k)
-         this._slave_painters[k].startDrawGeometry();
-   }
-
-   /** @summary Draw axes if configured, otherwise just remove completely
-     * @return {Promise} when norender not specified */
-   drawSimpleAxis(norender) {
-      this.getExtrasContainer('delete', 'axis');
-
-      if (!this.ctrl._axis)
-         return norender ? null : this.render3D();
-
-      let box = this.getGeomBoundingBox(this._toplevel),
-          container = this.getExtrasContainer('create', 'axis'),
-          text_size = 0.02 * Math.max((box.max.x - box.min.x), (box.max.y - box.min.y), (box.max.z - box.min.z)),
-          center = [0,0,0],
-          names = ['x','y','z'],
-          labels = ['X','Y','Z'],
-          colors = ['red','green','blue'],
-          ortho = this.ctrl.ortho_camera,
-          yup = [this.ctrl._yup, this.ctrl._yup, this.ctrl._yup],
-          numaxis = 3;
-
-      if (this.ctrl._axis == 2)
-         for (let naxis = 0; naxis < 3; ++naxis) {
-            let name = names[naxis];
-            if ((box.min[name] <= 0) && (box.max[name] >= 0)) continue;
-            center[naxis] = (box.min[name] + box.max[name])/2;
-         }
-
-      // only two dimensions are seen by ortho camera, X draws Z, can be configured better later
-      if (this.ctrl.ortho_camera) {
-         numaxis = 2;
-         labels[0] = labels[2];
-         colors[0] = colors[2];
-         yup[0] = yup[2];
-         ortho = true;
-      }
-
-      for (let naxis = 0; naxis < numaxis; ++naxis) {
-
-         let buf = new Float32Array(6),
-             color = colors[naxis],
-             name = names[naxis];
-
-         const Convert = value => {
-            let range = box.max[name] - box.min[name];
-            if (range < 2) return value.toFixed(3);
-            return (Math.abs(value) > 1e5) ? value.toExponential(3) : Math.round(value).toString();
-         };
-
-         let lbl = Convert(box.max[name]);
-
-         buf[0] = box.min.x;
-         buf[1] = box.min.y;
-         buf[2] = box.min.z;
-
-         buf[3] = box.min.x;
-         buf[4] = box.min.y;
-         buf[5] = box.min.z;
-
-         switch (naxis) {
-           case 0: buf[3] = box.max.x; if (yup[0] && !ortho) lbl = labels[0] + ' ' + lbl; else lbl += ' ' + labels[0]; break;
-           case 1: buf[4] = box.max.y; if (yup[1]) lbl += ' ' + labels[1]; else lbl = labels[1] + ' ' + lbl; break;
-           case 2: buf[5] = box.max.z; lbl += ' ' + labels[2]; break;
-         }
-
-         if (this.ctrl._axis == 2)
-            for (let k = 0; k < 6; ++k)
-               if ((k % 3) !== naxis) buf[k] = center[k%3];
-
-         let lineMaterial = new LineBasicMaterial({ color }),
-             mesh = createLineSegments(buf, lineMaterial);
-
-         mesh._axis_draw = true; // skip from clipping
-
-         container.add(mesh);
-
-         let textMaterial = new MeshBasicMaterial({ color, vertexColors: false });
-
-         if ((center[naxis] === 0) && (center[naxis] >= box.min[name]) && (center[naxis] <= box.max[name]))
-           if ((this.ctrl._axis != 2) || (naxis === 0)) {
-               let geom = ortho ? new CircleGeometry(text_size*0.25) :
-                                  new SphereGeometry(text_size*0.25);
-               mesh = new Mesh(geom, textMaterial);
-               mesh.translateX(naxis === 0 ? center[0] : buf[0]);
-               mesh.translateY(naxis === 1 ? center[1] : buf[1]);
-               mesh.translateZ(naxis === 2 ? center[2] : buf[2]);
-               container.add(mesh);
-           }
-
-         let text3d = new TextGeometry(lbl, { font: HelveticerRegularFont, size: text_size, height: 0, curveSegments: 5 });
-         mesh = new Mesh(text3d, textMaterial);
-         mesh._axis_draw = true; // skip from clipping
-         let textbox = new Box3().setFromObject(mesh);
-
-         mesh.translateX(buf[3]);
-         mesh.translateY(buf[4]);
-         mesh.translateZ(buf[5]);
-
-         if (yup[naxis]) {
-            switch (naxis) {
-               case 0:
-                  if (!ortho) {
-                     mesh.rotateY(Math.PI);
-                     mesh.translateX(-textbox.max.x-text_size*0.5);
-                  } else {
-                     mesh.translateX(text_size*0.5);
-                  }
-                  mesh.translateY(-textbox.max.y/2);
-                  break;
-               case 1:
-                  if (!ortho) {
-                     mesh.rotateX(-Math.PI/2);
-                     mesh.rotateY(-Math.PI/2);
-                  } else {
-                     mesh.rotateZ(Math.PI/2);
-                  }
-                  mesh.translateX(text_size*0.5);
-                  mesh.translateY(-textbox.max.y/2);
-                  break;
-               case 2: mesh.rotateY(-Math.PI/2); mesh.translateX(text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
-           }
-         } else {
-            switch (naxis) {
-               case 0: mesh.rotateX(Math.PI/2); mesh.translateY(-textbox.max.y/2); mesh.translateX(text_size*0.5); break;
-               case 1: mesh.rotateX(Math.PI/2); mesh.rotateY(-Math.PI/2); mesh.translateX(-textbox.max.x-text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
-               case 2: mesh.rotateX(Math.PI/2); mesh.rotateZ(Math.PI/2); mesh.translateX(text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
-            }
-         }
-
-         container.add(mesh);
-
-         text3d = new TextGeometry(Convert(box.min[name]), { font: HelveticerRegularFont, size: text_size, height: 0, curveSegments: 5 });
-
-         mesh = new Mesh(text3d, textMaterial);
-         mesh._axis_draw = true; // skip from clipping
-         textbox = new Box3().setFromObject(mesh);
-
-         mesh.translateX(buf[0]);
-         mesh.translateY(buf[1]);
-         mesh.translateZ(buf[2]);
-
-         if (yup[naxis]) {
-            switch (naxis) {
-               case 0:
-                  if (!ortho) {
-                     mesh.rotateY(Math.PI);
-                     mesh.translateX(text_size*0.5);
-                  } else {
-                     mesh.translateX(-textbox.max.x-text_size*0.5);
-                  }
-                  mesh.translateY(-textbox.max.y/2);
-                  break;
-               case 1:
-                  if (!ortho) {
-                     mesh.rotateX(-Math.PI/2);
-                     mesh.rotateY(-Math.PI/2);
-                  } else {
-                     mesh.rotateZ(Math.PI/2);
-                  }
-                  mesh.translateY(-textbox.max.y/2);
-                  mesh.translateX(-textbox.max.x-text_size*0.5);
-                  break;
-               case 2: mesh.rotateY(-Math.PI/2);  mesh.translateX(-textbox.max.x-text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
-            }
-         } else {
-            switch (naxis) {
-               case 0: mesh.rotateX(Math.PI/2); mesh.translateX(-textbox.max.x-text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
-               case 1: mesh.rotateX(Math.PI/2); mesh.rotateY(-Math.PI/2); mesh.translateY(-textbox.max.y/2); mesh.translateX(text_size*0.5); break;
-               case 2: mesh.rotateX(Math.PI/2); mesh.rotateZ(Math.PI/2);  mesh.translateX(-textbox.max.x-text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
-            }
-         }
-
-         container.add(mesh);
-      }
-
-      // after creating axes trigger rendering and recalculation of depth
-      return this.changedDepthMethod(norender ? 'norender' : undefined);
-   }
-
-   /** @summary Set axes visibility 0 - off, 1 - on, 2 - centered */
-   setAxesDraw(on) {
-      if (on === 'toggle')
-         this.ctrl._axis = this.ctrl._axis ? 0 : 1;
-      else
-         this.ctrl._axis = (typeof on == 'number') ? on : (on ? 1 : 0);
-      return this.drawSimpleAxis();
-   }
-
-   /** @summary Set auto rotate mode */
-   setAutoRotate(on) {
-      if (this.ctrl.project) return;
-      if (on !== undefined) this.ctrl.rotate = on;
-      this.autorotate(2.5);
-   }
-
-   /** @summary Toggle wireframe mode */
-   toggleWireFrame() {
-      this.ctrl.wireframe = !this.ctrl.wireframe;
-      this.changedWireFrame();
-   }
-
-   /** @summary Specify wireframe mode */
-   setWireFrame(on) {
-      this.ctrl.wireframe = on ? true : false;
-      this.changedWireFrame();
-   }
-
-   /** @summary Specify showtop draw options, relevant only for TGeoManager */
-   setShowTop(on) {
-      this.ctrl.showtop = on ? true : false;
-      this.redrawObject('same');
-   }
-
-   /** @summary Should be called when configuration of particular axis is changed */
-   changedClipping(naxis) {
-      let clip = this.ctrl.clip;
-
-      if ((naxis !== undefined) && (naxis >= 0)) {
-         if (!clip[naxis].enabled) return;
-      }
-
-      if (clip[0].enabled || clip[1].enabled || clip[2].enabled) {
-         this.ctrl.ssao.enabled = false;
-         this.removeSSAO();
-      }
-
-      this.updateClipping(false, true);
-   }
-
-   /** @summary Should be called when depth test flag is changed */
-   changedDepthTest() {
-      if (!this._toplevel) return;
-      let flag = this.ctrl.depthTest;
-      this._toplevel.traverse(node => {
-         if (node instanceof Mesh) {
-            node.material.depthTest = flag;
-         }
-      });
-
-      this.render3D(0);
-   }
-
-   /** @summary Should be called when depth method is changed */
-   changedDepthMethod(arg) {
-      // force recalculatiion of render order
-      delete this._last_camera_position;
-      if (arg !== 'norender')
-         return this.render3D();
-   }
-
-   /** @summary Should be called when configuration of highlight is changed */
-   changedHighlight() {
-      if (!this.ctrl.highlight)
-         this.highlightMesh(null);
-   }
-
-   /** @summary Assign clipping attributes to the meshes - supported only for webgl */
-   updateClipping(without_render, force_traverse) {
-      // do not try clipping with SVG renderer
-      if (this._renderer?.jsroot_render3d === constants$1.Render3D.SVG) return;
-
-      if (!this._clipPlanes)
-         this._clipPlanes = [ new Plane(new Vector3(1, 0, 0), 0),
-                              new Plane(new Vector3(0, this.ctrl._yup ? -1 : 1, 0), 0),
-                              new Plane(new Vector3(0, 0, this.ctrl._yup ? 1 : -1), 0) ];
-
-      let clip = this.ctrl.clip, panels = [], changed = false,
-          clip_constants = [ -1 * clip[0].value, clip[1].value, (this.ctrl._yup ? -1 : 1) * clip[2].value ],
-          clip_cfg = this.ctrl.clipIntersect ? 16 : 0;
-
-      for (let k = 0; k < 3; ++k) {
-         if (clip[k].enabled)
-            clip_cfg += 2 << k;
-         if (this._clipPlanes[k].constant !== clip_constants[k]) {
-            if (clip[k].enabled) changed = true;
-            this._clipPlanes[k].constant = clip_constants[k];
-         }
-      }
-
-      if (!this.ctrl.ssao.enabled) {
-         if (clip[0].enabled) panels.push(this._clipPlanes[0]);
-         if (clip[1].enabled) panels.push(this._clipPlanes[1]);
-         if (clip[2].enabled) panels.push(this._clipPlanes[2]);
-         clip_cfg += panels.length*1000;
-      }
-      if (panels.length == 0) panels = null;
-
-      if (this._clipCfg !== clip_cfg) changed = true;
-
-      this._clipCfg = clip_cfg;
-
-      let any_clipping = !!panels, ci = this.ctrl.clipIntersect,
-          material_side = any_clipping ? DoubleSide : FrontSide;
-
-      if (force_traverse || changed)
-         this._scene.traverse(node => {
-            if (!node._axis_draw && node.hasOwnProperty('material') && (node.material?.clippingPlanes !== undefined)) {
-
-               if (node.material.clippingPlanes !== panels) {
-                  node.material.clipIntersection = ci;
-                  node.material.clippingPlanes = panels;
-                  node.material.needsUpdate = true;
-               }
-
-               if (node.material.emissive !== undefined) {
-                  if (node.material.side != material_side) {
-                     node.material.side = material_side;
-                     node.material.needsUpdate = true;
-                  }
-               }
-            }
-         });
-
-      this.ctrl.bothSides = any_clipping;
-
-      if (!without_render) this.render3D(0);
-
-      return changed;
-   }
-
-   /** @summary Assign callback, invoked every time when drawing is completed
-     * @desc Used together with web-based geometry viewer
-     * @private */
-   setCompleteHandler(callback) {
-      this._complete_handler = callback;
-   }
-
-   /** @summary Completes drawing procedure
-     * @return {Promise} for ready */
-   async completeDraw(close_progress) {
-
-      let first_time = false, full_redraw = false, check_extras = true;
-
-      if (!this.ctrl) {
-         console.warn('ctrl object does not exist in completeDraw - something went wrong');
-         return this;
-      }
-
-      let promise = Promise.resolve(true);
-
-      if (!this._clones) {
-         check_extras = false;
-         // if extra object where append, redraw them at the end
-         this.getExtrasContainer('delete'); // delete old container
-         let extras = (this._main_painter ? this._main_painter._extraObjects : null) || this._extraObjects;
-         promise = this.drawExtras(extras, '', false);
-      } else if (this._first_drawing || this._full_redrawing) {
-         if (this.ctrl.tracks && this.geo_manager)
-            promise = this.drawExtras(this.geo_manager.fTracks, '<prnt>/Tracks');
-      }
-
-      return promise.then(() => {
-
-         if (this._full_redrawing) {
-            this.adjustCameraPosition(true);
-            this._full_redrawing = false;
-            full_redraw = true;
-            this.changedDepthMethod('norender');
-         }
-
-         if (this._first_drawing) {
-            this.adjustCameraPosition(true);
-            this.showDrawInfo();
-            this._first_drawing = false;
-            first_time = true;
-            full_redraw = true;
-         }
-
-         if (this.ctrl.transparency !== 0)
-            this.changedGlobalTransparency(this.ctrl.transparency, true);
-
-         if (first_time)
-            this.completeScene();
-
-         if (full_redraw && (this.ctrl.trans_radial || this.ctrl.trans_z))
-            this.changedTransformation('norender');
-
-         if (full_redraw && this.ctrl._axis)
-            this.drawSimpleAxis(true);
-
-         this._scene.overrideMaterial = null;
-
-         if (this._provided_more_nodes !== undefined) {
-            this.appendMoreNodes(this._provided_more_nodes, true);
-            delete this._provided_more_nodes;
-         }
-
-         if (check_extras) {
-            // if extra object where append, redraw them at the end
-            this.getExtrasContainer('delete'); // delete old container
-            let extras = (this._main_painter ? this._main_painter._extraObjects : null) || this._extraObjects;
-            return this.drawExtras(extras, '', false);
-         }
-      }).then(() => {
-
-         this.updateClipping(true); // do not render
-
-         this.render3D(0, true);
-
-         if (close_progress) showProgress();
-
-         this.addOrbitControls();
-
-         this.addTransformControl();
-
-         if (first_time) {
-
-            // after first draw check if highlight can be enabled
-            if (this.ctrl.highlight === false)
-               this.ctrl.highlight = (this.first_render_tm < 1000);
-
-            // also highlight of scene object can be assigned at the first draw
-            if (this.ctrl.highlight_scene === false)
-               this.ctrl.highlight_scene = this.ctrl.highlight;
-
-            // if rotation was enabled, do it
-            if (this._webgl && this.ctrl.rotate && !this.ctrl.project) this.autorotate(2.5);
-            if (this._webgl && this.ctrl.show_controls && !isBatchMode()) this.showControlOptions(true);
-         }
-
-         this.setAsMainPainter();
-
-         if (isFunc(this._resolveFunc)) {
-            this._resolveFunc(this);
-            delete this._resolveFunc;
-         }
-
-         if (isFunc(this._complete_handler))
-            this._complete_handler(this);
-
-         if (this._draw_nodes_again)
-            this.startDrawGeometry(); // relaunch drawing
-         else
-            this._drawing_ready = true; // indicate that drawing is completed
-
-         return this;
-      });
-   }
-
-   /** @summary Returns true if geometry drawing is completed */
-   isDrawingReady() {
-      return this._drawing_ready || false;
-   }
-
-   /** @summary Remove already drawn node. Used by geom viewer */
-   removeDrawnNode(nodeid) {
-      if (!this._draw_nodes) return;
-
-      let new_nodes = [];
-
-      for (let n = 0; n < this._draw_nodes.length; ++n) {
-         let entry = this._draw_nodes[n];
-         if ((entry.nodeid === nodeid) || this._clones.isIdInStack(nodeid, entry.stack)) {
-            this._clones.createObject3D(entry.stack, this._toplevel, 'delete_mesh');
-         } else {
-            new_nodes.push(entry);
-         }
-      }
-
-      if (new_nodes.length < this._draw_nodes.length) {
-         this._draw_nodes = new_nodes;
-         this.render3D();
-      }
-   }
-
-   /** @summary Cleanup geometry painter */
-   cleanup(first_time) {
-
-      if (!first_time) {
-
-         this.removeSSAO();
-
-         this.clearTopPainter(); // remove as pointer
-
-         let can3d = 0;
-         if (this._on_pad) {
-            let fp = this.getFramePainter();
-            if (fp?.mode3d) {
-               fp.clear3dCanvas();
-               fp.mode3d = false;
-            }
-         } else {
-            can3d = this.clear3dCanvas(); // remove 3d canvas from main HTML element
-         }
-
-         if (this._toolbar) this._toolbar.cleanup(); // remove toolbar
-
-         this.helpText();
-
-         disposeThreejsObject(this._scene);
-
-         disposeThreejsObject(this._full_geom);
-
-         if (this._tcontrols)
-            this._tcontrols.dispose();
-
-         if (this._controls)
-            this._controls.cleanup();
-
-         if (this._context_menu)
-            this._renderer.domElement.removeEventListener( 'contextmenu', this._context_menu, false );
-
-         if (this._datgui)
-            this._datgui.destroy();
-
-         if (this._worker) this._worker.terminate();
-
-         delete this._animating;
-
-         let obj = this.getGeometry();
-         if (obj && this.ctrl.is_main) {
-            if (obj.$geo_painter===this) delete obj.$geo_painter; else
-            if (obj.fVolume && obj.fVolume.$geo_painter===this) delete obj.fVolume.$geo_painter;
-         }
-
-         if (this._main_painter) {
-            let pos = this._main_painter._slave_painters.indexOf(this);
-            if (pos >= 0) this._main_painter._slave_painters.splice(pos,1);
-         }
-
-         for (let k = 0; k < this._slave_painters.length;++k) {
-            let slave = this._slave_painters[k];
-            if (slave && (slave._main_painter===this)) slave._main_painter = null;
-         }
-
-         delete this.geo_manager;
-         delete this._highlight_handlers;
-
-         super.cleanup();
-
-         delete this.ctrl;
-         delete this.options;
-
-         this.did_cleanup = true;
-
-         if (can3d < 0) this.selectDom().html('');
-      }
-
-      if (this._slave_painters)
-         for (let k in this._slave_painters) {
-            let slave = this._slave_painters[k];
-            slave._main_painter = null;
-            if (slave._clones === this._clones) slave._clones = null;
-         }
-
-      this._main_painter = null;
-      this._slave_painters = [];
-
-      if (this._render_resolveFuncs) {
-         this._render_resolveFuncs.forEach(func => func(this));
-         delete this._render_resolveFuncs;
-      }
-
-      cleanupRender3D(this._renderer);
-
-      delete this._scene;
-      this._scene_width = 0;
-      this._scene_height = 0;
-      this._renderer = null;
-      this._toplevel = null;
-      delete this._full_geom;
-      delete this._camera;
-      delete this._camera0pos;
-      delete this._lookat;
-      delete this._selected_mesh;
-
-      if (this._clones && this._clones_owner)
-         this._clones.cleanup(this._draw_nodes, this._build_shapes);
-      delete this._clones;
-      delete this._clones_owner;
-      delete this._draw_nodes;
-      delete this._drawing_ready;
-      delete this._build_shapes;
-      delete this._new_draw_nodes;
-      delete this._new_append_nodes;
-      delete this._last_camera_position;
-
-      this.first_render_tm = 0; // time needed for first rendering
-      this.last_render_tm = 0;
-
-      this.changeStage(stageInit, 'cleanup');
-      delete this.drawing_log;
-
-      delete this._datgui;
-      delete this._controls;
-      delete this._context_menu;
-      delete this._tcontrols;
-      delete this._toolbar;
-
-      delete this._worker;
-   }
-
-   /** @summary show message in progress area
-     * @private */
-   helpText(msg) {
-      showProgress(msg);
-   }
-
-   /** @summary perform resize */
-   performResize(width, height) {
-      if ((this._scene_width === width) && (this._scene_height === height)) return false;
-      if ((width < 10) || (height < 10)) return false;
-
-      this._scene_width = width;
-      this._scene_height = height;
-
-      if (this._camera && this._renderer) {
-         if (this._camera.type == 'PerspectiveCamera')
-            this._camera.aspect = this._scene_width / this._scene_height;
-         this._camera.updateProjectionMatrix();
-         this._renderer.setSize( this._scene_width, this._scene_height, !this._fit_main_area );
-         if (this._effectComposer)
-            this._effectComposer.setSize( this._scene_width, this._scene_height );
-         if (this._bloomComposer)
-            this._bloomComposer.setSize( this._scene_width, this._scene_height );
-
-         if (this.isStage(stageInit))
-            this.render3D();
-      }
-
-      return true;
-   }
-
-   /** @summary Check if HTML element was resized and drawing need to be adjusted */
-   checkResize(arg) {
-      let cp = this.getCanvPainter();
-
-      // firefox is the only browser which correctly supports resize of embedded canvas,
-      // for others we should force canvas redrawing at every step
-      if (cp && !cp.checkCanvasResize(arg)) return false;
-
-      let sz = this.getSizeFor3d();
-
-      return this.performResize(sz.width, sz.height);
-   }
-
-   /** @summary Toggle enlarge state */
-   toggleEnlarge() {
-      if (this.enlargeMain('toggle'))
-        this.checkResize();
-   }
-
-   /** @summary check if element belongs to trnasform control
-     * @private */
-   ownedByTransformControls(child) {
-      let obj = child.parent;
-      while (obj && !(obj instanceof TransformControls) )
-         obj = obj.parent;
-      return obj && (obj instanceof TransformControls);
-   }
-
-   /** @summary either change mesh wireframe or return current value
-     * @return undefined when wireframe cannot be accessed
-     * @private */
-   accessObjectWireFrame(obj, on) {
-      if (!obj.hasOwnProperty('material') || (obj instanceof GridHelper)) return;
-
-      if (this.ownedByTransformControls(obj)) return;
-
-      if ((on !== undefined) && obj.stack)
-         obj.material.wireframe = on;
-
-      return obj.material.wireframe;
-   }
-
-   /** @summary handle wireframe flag change in GUI
-     * @private */
-   changedWireFrame() {
-      if (!this._scene) return;
-
-      let on = this.ctrl.wireframe;
-
-      this._scene.traverse(obj => this.accessObjectWireFrame(obj, on));
-
-      this.render3D();
-   }
-
-   /** @summary Update object in geo painter */
-   updateObject(obj) {
-      if (obj === 'same') return true;
-      if (!obj?._typename) return false;
-      if (obj === this.getObject()) return true;
-
-      if (this.geo_manager && (obj._typename == clTGeoManager)) {
-         this.geo_manager = obj;
-         this.assignObject({ _typename: clTGeoNode, fVolume: obj.fMasterVolume, fName: obj.fMasterVolume.fName, $geoh: obj.fMasterVolume.$geoh, _proxy: true });
-         return true;
-      }
-
-      if (!this.matchObjectType(obj._typename)) return false;
-
-      this.assignObject(obj);
-      return true;
-   }
-
-   /** @summary Cleanup TGeo drawings */
-   clearDrawings() {
-      if (this._clones && this._clones_owner)
-         this._clones.cleanup(this._draw_nodes, this._build_shapes);
-      delete this._clones;
-      delete this._clones_owner;
-      delete this._draw_nodes;
-      delete this._drawing_ready;
-      delete this._build_shapes;
-
-      delete this._extraObjects;
-      delete this._clipCfg;
-
-      // only remove all childs from top level object
-      disposeThreejsObject(this._toplevel, true);
-
-      this._full_redrawing = true;
-   }
-
-    /** @summary Redraw TGeo object inside TPad */
-   redraw() {
-      if (!this._on_pad) return;
-
-      let main = this.getFramePainter();
-      if (!main) return;
-
-      let sz = main.getSizeFor3d(main.access3dKind());
-      main.apply3dSize(sz);
-      return this.performResize(sz.width, sz.height);
-   }
-
-   /** @summary Redraw TGeo object */
-   redrawObject(obj /*, opt */) {
-      if (!this.updateObject(obj))
-         return false;
-
-      this.clearDrawings();
-
-      let draw_obj = this.getGeometry(), name_prefix = '';
-      if (this.geo_manager) name_prefix = draw_obj.fName;
-
-      return this.prepareObjectDraw(draw_obj, name_prefix);
-   }
-
-  /** @summary draw TGeo object */
-   static async draw(dom, obj, opt) {
-      if (!obj) return null;
-
-      let shape = null, extras = null, extras_path = '', is_eve = false;
-
-      if (('fShapeBits' in obj) && ('fShapeId' in obj)) {
-         shape = obj; obj = null;
-      } else if ((obj._typename === clTGeoVolumeAssembly) || (obj._typename === clTGeoVolume)) {
-         shape = obj.fShape;
-      } else if ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)) {
-         shape = obj.fShape; is_eve = true;
-      } else if (obj._typename === clTGeoManager) {
-         shape = obj.fMasterVolume.fShape;
-      } else if (obj._typename === clTGeoOverlap) {
-         extras = obj.fMarker; extras_path = '<prnt>/Marker';
-         obj = buildOverlapVolume(obj);
-         if (!opt) opt = 'wire';
-      } else if ('fVolume' in obj) {
-         if (obj.fVolume) shape = obj.fVolume.fShape;
-      } else {
-         obj = null;
-      }
-
-      if (isStr(opt) && opt.indexOf('comp') == 0 && shape && (shape._typename == clTGeoCompositeShape) && shape.fNode) {
-         let maxlvl = 1;
-         opt = opt.slice(4);
-         if (opt[0] == 'x') {  maxlvl = 999; opt = opt.slice(1) + '_vislvl999'; }
-         obj = buildCompositeVolume(shape, maxlvl);
-      }
-
-      if (!obj && shape)
-         obj = Object.assign(create$1(clTNamed),
-                   { _typename: clTEveGeoShapeExtract, fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 1], fElements: null, fRnrSelf: true });
-
-      if (!obj) return null;
-
-      let painter = createGeoPainter(dom, obj, opt);
-
-      if (painter.ctrl.is_main && !obj.$geo_painter)
-         obj.$geo_painter = painter;
-
-      if (!painter.ctrl.is_main && painter.ctrl.project && obj.$geo_painter) {
-         painter._main_painter = obj.$geo_painter;
-         painter._main_painter._slave_painters.push(painter);
-      }
-
-      if (is_eve && !painter.ctrl.vislevel || (painter.ctrl.vislevel < 9))
-         painter.ctrl.vislevel = 9;
-
-      if (extras) {
-         painter._splitColors = true;
-         painter.addExtra(extras, extras_path);
-      }
-
-      return painter.loadMacro(painter.ctrl.script_name).then(arg => painter.prepareObjectDraw(arg.obj, arg.prefix));
-   }
-
-} // class TGeoPainter
-
-
-let add_settings = false;
-
-/** @summary Create geo-related css entries
-  * @private */
-function injectGeoStyle() {
-
-   if (!add_settings && isFunc(internals.addDrawFunc)) {
-      add_settings = true;
-      // indication that draw and hierarchy is loaded, create css
-      internals.addDrawFunc({ name: clTEvePointSet, icon_get: getBrowserIcon, icon_click: browserIconClick });
-      internals.addDrawFunc({ name: clTEveTrack, icon_get: getBrowserIcon, icon_click: browserIconClick });
-   }
-
-   function img(name,code) {
-      return `.jsroot .img_${name} { display: inline-block; height: 16px; width: 16px; background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQ${code}'); }`;
-   }
-
-   injectStyle(`
-${img('geoarb8','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB1SURBVBjTdY6rEYAwEETTy6lzK8/Fo+Jj18dTAjUgaQGfGiggtRDE8RtY93Zu514If2nzk2ux9c5TZkwXbiWTUavzws69oBfpYBrMT4r0Jhsw+QfRgQSw+CaKRsKsnV+SaF8MN49RBSgPUxO85PMl5n4tfGUH2gghs2uPAeQAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
-${img('geocombi','CAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAAlUlEQVQoz5VQMQ4CMQyzEUNnBqT7Bo+4nZUH8gj+welWJsQDkHoCEYakTXMHSFiq2jqu4xRAEl2A7w4myWzpzCSZRZ658ldKu1hPnFsequBIc/hcLli3l52MAIANtpWrDsv8waGTW6BPuFtsdZArXyFuj33TQpazGEQF38phipnLgItxRcAoOeNpzv4PTXnC42fb//AGI5YqfQAU8dkAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
-${img('geocone','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACRSURBVBjTdY+xDcNACEVvEm/ggo6Olva37IB0C3iEzJABvAHFTXBDeJRwthMnUvylk44vPjxK+afeokX0flQhJO7L4pafSOMxzaxIKc/Tc7SIjNLyieyZSjBzc4DqMZI0HTMonWPBNlogOLeuewbg9c0hOiIqH7DKmTCuFykjHe4XOzQ58XVMGxzt575tKzd6AX9yMkcWyPlsAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
-${img('geogtra','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACCSURBVBjTVc+hDQMxDAVQD1FyqCQk0MwsCwQEG3+eCW6B0FvheDboFMGepTlVitPP/Cz5y0S/mNkw8pySU9INJDDH4vM4Usm5OrQXasXtkA+tQF+zxfcDY8EVwgNeiwmA37TEccK5oLOwQtuCj7BM2Fq7iGrxVqJbSsH+GzXs+798AThwKMh3/6jDAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
-${img('geomedium','BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAABVQTFRFAAAAAAAAMDAww8PDWKj/////gICAG0/C4AAAAAF0Uk5TAEDm2GYAAAABYktHRAX4b+nHAAAACXBIWXMAAABIAAAASABGyWs+AAAAXElEQVQI102MwRGAMAgEuQ6IDwvQCjQdhAl/H7ED038JHhkd3dcOLAgESFARaAqnEB3yrj6QSEym1RbbOKinN+8q2Esui1GaX7VXSi4RUbxHRbER8X6O5Pg/fLgBBzMN8HfXD3AAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
-${img('geopara','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABtSURBVBjTY2DADq5MT7+CzD9kaKjp+QhJYIWqublhMbKAgpOnZxWSQJdsVJTndCSBKoWoAM/VSALpqlEBAYeQBKJAAsi2BGgCBZDdEWUYFZCOLFBlGOWJ7AyGFeaotjIccopageK3R12PGHABACTYHWd0tGw6AAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
-${img('georotation','CAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAAiklEQVQoz2NgYGBgYGDg+A/BmIAFIvyDEbs0AwMTAwHACLPiB5QVBTdpGSOSCZjScDcgc4z+32BgYGBgEGIQw3QDLkdCTZD8/xJFeBfDVxQT/j9n/MeIrMCNIRBJwX8GRuzGM/yHKMAljeILNFOuMTyEisEUMKIqucrwB2oyIhyQpH8y/MZrLWkAAHFzIHIc0Q5yAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
-${img('geotranslation','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABESURBVBjTY2DgYGAAYzjgAAIQgSLAgSwAAcrWUUCAJBAVhSpgBAQumALGCJPAAsriHIS0IAQ4UAU4cGphQBWwZSAOAADGJBKdZk/rHQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
-${img('geotrd2','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABsSURBVBjTbY+xDcAwCARZx6UraiaAmpoRvIIb75PWI2QITxIiRQKk0CCO/xcA/NZ9LRs7RkJEYg3QxczUwoGsXiMAoe8lAelqRWFNKpiNXZLAalRDd0f3TMgeMckABKsCDmu+442RddeHz9cf9jUkW8smGn8AAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
-${img('geovolume','BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAB5QTFRFAAAAMDAw///Ay8uc/7+Q/4BgmJh4gIDgAAD/////CZb2ugAAAAF0Uk5TAEDm2GYAAAABYktHRAnx2aXsAAAACXBIWXMAAABIAAAASABGyWs+AAAAR0lEQVQI12NggAEBIBAEQgYGQUYQAyIGIhgwAZMSGCgwMJuEKimFOhswsKWAGG4JDGxJIBk1EEO9o6NIDVkEpgauC24ODAAASQ8Pkj/retYAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
-${img('geoassembly','BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAA9QTFRFAAAAMDAw/wAAAAD/////jEo0BQAAAAF0Uk5TAEDm2GYAAAABYktHRASPaNlRAAAACXBIWXMAAABIAAAASABGyWs+AAAAOklEQVQI12NggAFGRgEgEBRgEBSAMhgYGQQEgAR+oARGDIwCIAYjUL0A2DQQg9nY2ABVBKoGrgsDAADxzgNboMz8zQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
-${img('geocomposite','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABuSURBVBjTY2AgF2hqgQCCr+0V4O7hFmgCF7CJyKysKkmxhfGNLaw9SppqAi2gfMuY5Agrl+ZaC6iAUXRJZX6Ic0klTMA5urapPFY5NRcmYKFqWl8S5RobBRNg0PbNT3a1dDGH8RlM3LysTRjIBwAG6xrzJt11BAAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
-${img('geoctub','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACESURBVBjTdc+xDcMwDARA7cKKHTuWX37LHaw+vQbQAJomA7j2DB7FhCMFCZB8pxPwJEv5kQcZW+3HencRBekak4aaMQIi8YJdAQ1CMeE0UBkuaLMETklQ9Alhka0JzzXWqLVBuQYPpWcVuBbZjZafNRYcDk9o/b07bvhINz+/zxu1/M0FSRcmAk/HaIcAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
-${img('geohype','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACKSURBVBjTbU+rFQQhDKQSDDISEYuMREfHx6eHKMpYuf5qoIQt5bgDblfcuJk3nySEhSvceDV3c/ejT66lspopE9pXyIlkCrHMBACpu1DClekQAREi/loviCnF/NhRwJLaQ6hVhPjB8bOCsjlnNnNl0FWJVWxAqGzHONRHpu5Ml+nQ+8GzNW9n+Is3eg80Nk0iiwoAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
-${img('geomixture','BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAACFQTFRFAAAAAAAAKysrVVUA//8B//8AgICAqqpV398gv79A////VYJtlwAAAAF0Uk5TAEDm2GYAAAABYktHRApo0PRWAAAACXBIWXMAAABIAAAASABGyWs+AAAAXklEQVQI12NgwASCQsJCgoZAhoADq1tKIJAhEpDGxpYIZKgxsLElgBhibAkOCY4gKTaGkPRGIEPUIYEBrEaAIY0tDawmgYWNgREkkjCVjRWkWCUhLY0FJCIIBljsBgCZTAykgaRiRwAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
-${img('geopcon','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACJSURBVBjTdc+hGcQwCIZhhjl/rkgWiECj8XgGyAbZoD5LdIRMkEnKkV575n75Pp8AgLU54dmh6mauelyAL2Qzxfe2sklioq6FacFAcRFXYhwJHdU5rDD2hEYB/CmoJVRMiIJqgtENuoqA8ltAlYAqRH4d1tGkwzTqN2gA7Nv+fUwkgZ/3mg34txM+szzATJS1HQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
-${img('geosphere','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACFSURBVBjTdY+xEcQwCAQp5QNFjpQ5vZACFBFTADFFfKYCXINzlUAJruXll2ekxDAEt9zcANFbXb2mqm56dxsymAH0yccAJaeNi0h5QGyfxGJmivMPjj0nmLsbRmyFCss3rlbpcUjfS8wLUNRcJyCF6uqg2IvYCnoKC7f1kSbA6riTz7evfwj3Ml+H3KBqAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
-${img('geotrap','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB5SURBVBjTbY+hFYAwDETZB1OJi4yNPp0JqjtAZ2AELL5DdABmIS2PtLxHXH7u7l2W5W+uHMHpGiCHLYR1yw4SCZMIXBOJWVSjK7QDDAu4g8OBmAKK4sAEDdR3rw8YmcUcrEijKKhl7lN1IQPn9ExlgU6/WEyc75+5AYK0KY5oHBDfAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
-${img('geotubeseg','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACBSURBVBjTdc+hEcQwDARA12P6QFBQ9LDwcXEVkA7SQTr4BlJBakgpsWdsh/wfux3NSCrlV86Mlrxmz1pBWq3bAHwETohxABVmDZADQp1BE+wDNnGywzHgmHDOreJNTDH3Xn3CVX0dpu2MHcIFBkYp/gKsQ8SCQ72V+36/+2aWf3kAQfgshnpXF0wAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
-${img('geoxtru','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABcSURBVBjTY2AgEmhpeZV56vmWwQW00QUYwAJlSAI6XmVqukh8PT1bT03PchhXX09Pr9wQIQDiJ+ZowgWAXD3bck+QQDlCQTkDQgCoxA/ERBKwhbDglgA1lDMQDwCc/Rvq8nYsWgAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
-${img('geobbox','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB/SURBVBjTVc+hEYAwDAXQLlNRF1tVGxn9NRswQiSSCdgDyQBM0FlIIb2WuL77uf6E8E0N02wKYRwDciTKREVvB04GuZSyOMCABRB1WGzF3uDNQTvs/RcDtJXT4fSEXA5XoiQt0ttVSm8Co2psIOvoimjAOqBmFtH5wEP2373TPIvTK1nrpULXAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
-${img('geoconeseg','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB4SURBVBjTdc6hEcAgDAXQbFNZXHQkFlkd/30myAIMwAws0gmYpVzvoFyv/S5P/B+izzQ387ZA2pkDnvsU1SQLVIFrOM4JFmEaYp2gCQbmPEGODhJ8jt7Am47hwgrzInGAifa/elUZnQLY00iU30BZAV+BWi2VfnIBv1osbHH8jX0AAAAldEVYdGRhdGU6Y3JlYXRlADIwMTUtMTItMDJUMTQ6MjY6MjkrMDE6MDDARtd2AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE0LTExLTEyVDA4OjM5OjE5KzAxOjAwO3ydwwAAAABJRU5ErkJggg==')}
-${img('geoeltu','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACGSURBVBjTdY+hFYUwDEU7xq9CIXC4uNjY6KczQXeoYgVMR2ABRmCGjvIp/6dgiEruueedvBDuOR57LQnKyc8CJmKO+N8bieIUPtmBWjIIx8XDBHYCipsnql1g2D0UP2OoDqwBncf+RdZmzFMHizRjog7KZYzawd4Ay93lEAPWR7WAvNbwMl/XwSxBV8qCjgAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
-${img('geomaterial','CAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAAbElEQVQoz62QMRbAIAhDP319Xon7j54qHSyCtaMZFCUkRjgDIdRU9yZUCfg8ut5aAHdcxtoNurmgA3ABNKIR9KimhSukPe2qxcCYC0pfFXx/aFWo7i42KKItOpopqvvnLzJmtlZTS7EfGAfwAM4EQbLIGV0sAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
-${img('geoparab','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB/SURBVBjTbY+xDYAwDAQ9UAp3X7p0m9o9dUZgA9oMwAjpMwMzMAnYBAQSX9mn9+tN9KOtzsWsLOvYCziUGNX3nnCLJRzKPgeYrhPW7FJNLUB3YJazYKQKTnBaxgXRzNmJcrt7XCHQp9kEB1wfELEir/KGj4Foh8A+/zW1nf51AFabKZuWK+mNAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
-${img('geopgon','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAABwSURBVBjTY2AgDlwAAzh3sX1sPRDEeuwDc+8V2dsHgQQ8LCzq74HkLSzs7Yva2tLt7S3sN4MNiDUGKQmysCi6BzWkzcI+PdY+aDPCljZlj1iFOUjW1tvHLjYuQhJIt5/DcAFZYLH9YnSn7iPST9gAACbsJth21haFAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
-${img('geotorus','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACGSURBVBjTjY+hFcMwDEQ9SkFggXGIoejhw+LiGkBDlHoAr+AhgjNL5byChuXeE7gvPelUyjOds/f5Zw0ggfj5KVCPMBWeyx+SbQ1XUriAC2XfpWWxjQQEZasRtRHiCUAj3qN4JaolUJppzh4q7dUTdHFXW/tH9OuswWm3nI7tc08+/eGLl758ey9KpKrNOQAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
-${img('geotrd1','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAAB/SURBVBjTbc6xDQMhDAVQ9qH6lUtal65/zQ5IDMAMmYAZrmKGm4FJzlEQQUo+bvwkG4fwm9lbodV7w40Y4WGfSxQiXiJlQfZOjWRb8Ioi3tKuBQMCo7+9N72BzPsfAuoTdUP9QN8wgOQwvsfWmHzpeT5BKydMNW0nhJGvGf7mAc5WKO9e5N2dAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE1LTEyLTAyVDE0OjI2OjI5KzAxOjAwwEbXdgAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNC0xMS0xMlQwODozOToxOSswMTowMDt8ncMAAAAASUVORK5CYII=')}
-${img('geotube','CAAAAAA6mKC9AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJ0Uk5TAAB2k804AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAAAEgAAABIAEbJaz4AAACGSURBVBjTRc+tEcAwCAXgLFNbWeSzSDQazw5doWNUZIOM0BEyS/NHy10E30HyklKvWnJ+0le3sJoKn3X2z7GRuvG++YRyMMDt0IIKUXMzxbnugJi5m9K1gNnGBOUFElAWGMaKIKI4xoQggl00gT+A9hXWgDwnfqgsHRAx2m+8bfjfdyrx5AtsSjpwu+M2RgAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0xMi0wMlQxNDoyNjoyOSswMTowMMBG13YAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTQtMTEtMTJUMDg6Mzk6MTkrMDE6MDA7fJ3DAAAAAElFTkSuQmCC')}
-${img('evepoints','BAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAABJQTFRF////n4mJcEdKRDMzcEdH////lLE/CwAAAAF0Uk5TAEDm2GYAAAABYktHRACIBR1IAAAACXBIWXMAAABIAAAASABGyWs+AAAAI0lEQVQI12NgIAowIpgKEJIZLiAgAKWZGQzQ9UGlWIizBQgAN4IAvGtVrTcAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTYtMDktMDJUMTU6MDQ6MzgrMDI6MDDPyc7hAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE2LTA5LTAyVDE1OjA0OjM4KzAyOjAwvpR2XQAAAABJRU5ErkJggg==')}
-${img('evetrack', 'CAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAAqElEQVQoz32RMQrCQBBFf4IgSMB0IpGkMpVHCFh7BbHIGTyVhU0K8QYewEKsbVJZaCUiPAsXV8Puzhaz7H8zs5+JUDjikLilQr5zpCRl5xMXZNScQE5gSMGaz70jjUAJcw5c3UBMTsUe+9Kzf065SbropeLXimWfDIgoab/tOyPGzOhz53+oSWcSGh7UdB2ZNKXBZdgAuUdEKJYmrEILyVgG6pE2tEHgDfe42rbjYzSHAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE2LTA5LTAyVDE1OjA0OjQ3KzAyOjAwM0S3EQAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNi0wOS0wMlQxNTowNDo0NyswMjowMEIZD60AAAAASUVORK5CYII=')}
-.jsroot .geovis_this { background-color: lightgreen; }
-.jsroot .geovis_daughters { background-color: lightblue; }
-.jsroot .geovis_all { background-color: yellow; }`);
-}
-
-
-/** @summary Create geo painter
-  * @private */
-function createGeoPainter(dom, obj, opt) {
-
-   injectGeoStyle();
-
-   geoCfg('GradPerSegm', settings.GeoGradPerSegm);
-   geoCfg('CompressComp', settings.GeoCompressComp);
-
-   let painter = new TGeoPainter(dom, obj);
-
-   painter.options = painter.decodeOptions(opt); // indicator of initialization
-
-   // copy all attributes from options to control
-   Object.assign(painter.ctrl, painter.options);
-
-   painter.ctrl.ssao.enabled = painter.options.usessao;
-   painter.ctrl.bloom.enabled = painter.options.usebloom;
-
-   // special handling for array of clips
-   painter.ctrl.clip[0].enabled = painter.options.clipx;
-   painter.ctrl.clip[1].enabled = painter.options.clipy;
-   painter.ctrl.clip[2].enabled = painter.options.clipz;
-
-   return painter;
-}
-
-
-/** @summary provide menu for geo object
-  * @private */
-function provideMenu(menu, item, hpainter) {
-
-   if (!item._geoobj) return false;
-
-   let obj = item._geoobj, vol = item._volume,
-       iseve = ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract));
-
-   if (!vol && !iseve) return false;
-
-   menu.add('separator');
-
-   const ScanEveVisible = (obj, arg, skip_this) => {
-
-      if (!arg) arg = { visible: 0, hidden: 0 };
-
-      if (!skip_this) {
-         if (arg.assign !== undefined)
-            obj.fRnrSelf = arg.assign;
-         else if (obj.fRnrSelf)
-            arg.vis++;
-         else
-            arg.hidden++;
-      }
-
-      if (obj.fElements)
-         for (let n = 0; n < obj.fElements.arr.length; ++n)
-            ScanEveVisible(obj.fElements.arr[n], arg, false);
-
-      return arg;
-
-   }, ToggleEveVisibility = arg => {
-
-      if (arg === 'self') {
-         obj.fRnrSelf = !obj.fRnrSelf;
-         item._icon = item._icon.split(' ')[0] + provideVisStyle(obj);
-         hpainter.updateTreeNode(item);
-      } else {
-         ScanEveVisible(obj, { assign: (arg === 'true') }, true);
-         hpainter.forEachItem(m => {
-            // update all child items
-            if (m._geoobj && m._icon) {
-               m._icon = item._icon.split(' ')[0] + provideVisStyle(m._geoobj);
-               hpainter.updateTreeNode(m);
-            }
-         }, item);
-      }
-
-      findItemWithPainter(item, 'testGeomChanges');
-   }, ToggleMenuBit = arg => {
-      toggleGeoBit(vol, arg);
-      let newname = item._icon.split(' ')[0] + provideVisStyle(vol);
-      hpainter.forEachItem(m => {
-         // update all items with that volume
-         if (item._volume === m._volume) {
-            m._icon = newname;
-            hpainter.updateTreeNode(m);
-         }
-      });
-
-      hpainter.updateTreeNode(item);
-      findItemWithPainter(item, 'testGeomChanges');
-   };
-
-   if ((item._geoobj._typename.indexOf(clTGeoNode) === 0) && findItemWithPainter(item))
-      menu.add('Focus', function() {
-
-        let drawitem = findItemWithPainter(item);
-
-        if (!drawitem) return;
-
-        let fullname = hpainter.itemFullName(item, drawitem);
-
-        if (isFunc(drawitem._painter?.focusOnItem))
-           drawitem._painter.focusOnItem(fullname);
-      });
-
-   if (iseve) {
-      menu.addchk(obj.fRnrSelf, 'Visible', 'self', ToggleEveVisibility);
-      let res = ScanEveVisible(obj, undefined, true);
-      if (res.hidden + res.visible > 0)
-         menu.addchk((res.hidden == 0), 'Daughters', res.hidden !== 0 ? 'true' : 'false', ToggleEveVisibility);
-   } else {
-      menu.addchk(testGeoBit(vol, geoBITS.kVisNone), 'Invisible',
-            geoBITS.kVisNone, ToggleMenuBit);
-      menu.addchk(testGeoBit(vol, geoBITS.kVisThis), 'Visible',
-            geoBITS.kVisThis, ToggleMenuBit);
-      menu.addchk(testGeoBit(vol, geoBITS.kVisDaughters), 'Daughters',
-            geoBITS.kVisDaughters, ToggleMenuBit);
-   }
-
-   return true;
-}
-
-/** @summary handle click on browser icon
-  * @private */
-function browserIconClick(hitem, hpainter) {
-   if (hitem._volume) {
-      if (hitem._more && hitem._volume.fNodes && (hitem._volume.fNodes.arr.length > 0))
-         toggleGeoBit(hitem._volume, geoBITS.kVisDaughters);
-      else
-         toggleGeoBit(hitem._volume, geoBITS.kVisThis);
-
-      updateBrowserIcons(hitem._volume, hpainter);
-
-      findItemWithPainter(hitem, 'testGeomChanges');
-      return false; // no need to update icon - we did it ourself
-   }
-
-   if (hitem._geoobj && ((hitem._geoobj._typename == clTEveGeoShapeExtract) || (hitem._geoobj._typename == clREveGeoShapeExtract))) {
-      hitem._geoobj.fRnrSelf = !hitem._geoobj.fRnrSelf;
-
-      updateBrowserIcons(hitem._geoobj, hpainter);
-      findItemWithPainter(hitem, 'testGeomChanges');
-      return false; // no need to update icon - we did it ourself
-   }
-
-
-   // first check that geo painter assigned with the item
-   let drawitem = findItemWithPainter(hitem);
-   if (!drawitem) return false;
-
-   let newstate = drawitem._painter.extraObjectVisible(hpainter, hitem, true);
-
-   // return true means browser should update icon for the item
-   return (newstate !== undefined) ? true : false;
-}
-
-
-/** @summary Get icon for the browser
-  * @private */
-function getBrowserIcon(hitem, hpainter) {
-   let icon = '';
-   switch(hitem._kind) {
-      case 'ROOT.' + clTEveTrack: icon = 'img_evetrack'; break;
-      case 'ROOT.' + clTEvePointSet: icon = 'img_evepoints'; break;
-      case 'ROOT.' + clTPolyMarker3D: icon = 'img_evepoints'; break;
-   }
-   if (icon) {
-      let drawitem = findItemWithPainter(hitem);
-      if (drawitem?._painter && drawitem._painter.extraObjectVisible(hpainter, hitem))
-         icon += ' geovis_this';
-   }
-   return icon;
-}
-
-
-/** @summary create hierarchy item for geo object
-  * @private */
-function createItem(node, obj, name) {
-   let sub = {
-      _kind: 'ROOT.' + obj._typename,
-      _name: name ? name : getObjectName(obj),
-      _title: obj.fTitle,
-      _parent: node,
-      _geoobj: obj,
-      _get(item /* ,itemname */) {
-          // mark object as belong to the hierarchy, require to
-          if (item._geoobj) item._geoobj.$geoh = true;
-          return Promise.resolve(item._geoobj);
-      }
-   }, volume, shape, subnodes, iseve = false;
-
-   if (obj._typename == 'TGeoMaterial')
-      sub._icon = 'img_geomaterial';
-   else if (obj._typename == 'TGeoMedium')
-      sub._icon = 'img_geomedium';
-   else if (obj._typename == 'TGeoMixture')
-      sub._icon = 'img_geomixture';
-   else if ((obj._typename.indexOf(clTGeoNode) === 0) && obj.fVolume) {
-      sub._title = 'node:'  + obj._typename;
-      if (obj.fTitle) sub._title += ' ' + obj.fTitle;
-      volume = obj.fVolume;
-   } else if (obj._typename.indexOf(clTGeoVolume) === 0) {
-      volume = obj;
-   } else if ((obj._typename == clTEveGeoShapeExtract) || (obj._typename == clREveGeoShapeExtract)) {
-      iseve = true;
-      shape = obj.fShape;
-      subnodes = obj.fElements ? obj.fElements.arr : null;
-   } else if ((obj.fShapeBits !== undefined) && (obj.fShapeId !== undefined)) {
-      shape = obj;
-   }
-
-   if (volume) {
-      shape = volume.fShape;
-      subnodes = volume.fNodes ? volume.fNodes.arr : null;
-   }
-
-   if (volume || shape || subnodes) {
-      if (volume) sub._volume = volume;
-
-      if (subnodes) {
-         sub._more = true;
-         sub._expand = expandGeoObject;
-      } else if (shape && (shape._typename === clTGeoCompositeShape) && shape.fNode) {
-         sub._more = true;
-         sub._shape = shape;
-         sub._expand = function(node /*, obj */) {
-            createItem(node, node._shape.fNode.fLeft, 'Left');
-            createItem(node, node._shape.fNode.fRight, 'Right');
-            return true;
-         };
-      }
-
-      if (!sub._title && (obj._typename != clTGeoVolume))
-         sub._title = obj._typename;
-
-      if (shape) {
-         if (sub._title == '')
-            sub._title = shape._typename;
-
-         sub._icon = getShapeIcon(shape);
-      } else {
-         sub._icon = sub._more ? 'img_geocombi' : 'img_geobbox';
-      }
-
-      if (volume)
-         sub._icon += provideVisStyle(volume);
-      else if (iseve)
-         sub._icon += provideVisStyle(obj);
-
-      sub._menu = provideMenu;
-      sub._icon_click  = browserIconClick;
-   }
-
-   if (!node._childs) node._childs = [];
-
-   if (!sub._name)
-      if (isStr(node._name)) {
-         sub._name = node._name;
-         if (sub._name.lastIndexOf('s')===sub._name.length-1)
-            sub._name = sub._name.slice(0, sub._name.length-1);
-         sub._name += '_' + node._childs.length;
-      } else {
-         sub._name = 'item_' + node._childs.length;
-      }
-
-   node._childs.push(sub);
-
-   return sub;
-}
-
-/** @summary Draw dummy geometry
-  * @private */
-async function drawDummy3DGeom(painter) {
-
-   let extra = painter.getObject(),
-       min = [-1, -1, -1], max = [1, 1, 1];
-
-   if (extra.fP?.length)
-      for(let k = 0; k < extra.fP.length; k += 3)
-         for (let i = 0; i < 3; ++i) {
-            min[i] = Math.min(min[i], extra.fP[k+i]);
-            max[i] = Math.max(max[i], extra.fP[k+i]);
-         }
-
-
-   let shape = create$1(clTNamed);
-   shape._typename = clTGeoBBox;
-   shape.fDX = max[0] - min[0];
-   shape.fDY = max[1] - min[1];
-   shape.fDZ = max[2] - min[2];
-   shape.fShapeId = 1;
-   shape.fShapeBits = 0;
-   shape.fOrigin = [0,0,0];
-
-   let obj = Object.assign(create$1(clTNamed),
-                { _typename: clTEveGeoShapeExtract,
-                  fTrans: [1,0,0,0, 0,1,0,0, 0,0,1,0, (min[0]+max[0])/2, (min[1]+max[1])/2, (min[2]+max[2])/2, 0],
-                  fShape: shape, fRGBA: [0, 0, 0, 0], fElements: null, fRnrSelf: false });
-
-   let opt = '', pp = painter.getPadPainter();
-
-   if (pp?.pad?.fFillColor && (pp?.pad?.fFillStyle > 1000))
-      opt = 'bkgr_' +  pp.pad.fFillColor;
-
-   return TGeoPainter.draw(painter.getDom(), obj, opt)
-                     .then(geop => geop.drawExtras(extra));
-}
-
-/** @summary Direct draw function for TAxis3D
-  * @private */
-function drawAxis3D() {
-   let main = this.getMainPainter();
-
-   if (isFunc(main?.setAxesDraw))
-      return main.setAxesDraw(true);
-
-   console.error('no geometry painter found to toggle TAxis3D drawing');
-}
-
-/** @summary Build three.js model for given geometry object
-  * @param {Object} obj - TGeo-related object
-  * @param {Object} [opt] - options
-  * @param {Number} [opt.vislevel] - visibility level like TGeoManager, when not specified - show all
-  * @param {Number} [opt.numnodes=1000] - maximal number of visible nodes
-  * @param {Number} [opt.numfaces=100000] - approx maximal number of created triangles
-  * @param {boolean} [opt.doubleside=false] - use double-side material
-  * @param {boolean} [opt.wireframe=false] - show wireframe for created shapes
-  * @param {boolean} [opt.dflt_colors=false] - use default ROOT colors
-  * @return {object} Object3D with created model
-  * @example
-  * import { build } from './path_to_jsroot/modules/geom/TGeoPainter.mjs';
-  * let obj3d = build(obj);
-  * // this is three.js object and can be now inserted in the scene
-  */
-function build(obj, opt) {
-
-   if (!obj) return null;
-
-   if (!opt) opt = {};
-   if (!opt.numfaces) opt.numfaces = 100000;
-   if (!opt.numnodes) opt.numnodes = 1000;
-   if (!opt.frustum) opt.frustum = null;
-
-   opt.res_mesh = opt.res_faces = 0;
-
-   let clones = null, visibles = null;
-
-   if (obj.visibles && obj.nodes && obj.numnodes) {
-      // case of draw message from geometry viewer
-
-      let nodes = obj.numnodes > 1e6 ? { length: obj.numnodes } : new Array(obj.numnodes);
-
-      obj.nodes.forEach(node => {
-         nodes[node.id] = ClonedNodes.formatServerElement(node);
-      });
-
-      clones = new ClonedNodes(null, nodes);
-      clones.name_prefix = clones.getNodeName(0);
-      // normally only need when making selection, not used in geo viewer
-      // this.geo_clones.setMaxVisNodes(draw_msg.maxvisnodes);
-      // this.geo_clones.setVisLevel(draw_msg.vislevel);
-      // parameter need for visualization with transparency
-      // TODO: provide from server
-      clones.maxdepth = 20;
-
-      let nsegm = obj.cfg?.nsegm || 30;
-
-      for (let cnt = 0; cnt < obj.visibles.length; ++cnt) {
-         let item = obj.visibles[cnt], rd = item.ri;
-
-         // entry may be provided without shape - it is ok
-         if (rd)
-            item.server_shape = rd.server_shape = createServerGeometry(rd, nsegm);
-      }
-
-      visibles = obj.visibles;
-
-   } else {
-      let shape = null, hide_top = false;
-
-      if (('fShapeBits' in obj) && ('fShapeId' in obj)) {
-         shape = obj; obj = null;
-      } else if ((obj._typename === clTGeoVolumeAssembly) || (obj._typename === clTGeoVolume)) {
-         shape = obj.fShape;
-      } else if ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)) {
-         shape = obj.fShape;
-      } else if (obj._typename === clTGeoManager) {
-         obj = obj.fMasterVolume;
-         hide_top = !opt.showtop;
-         shape = obj.fShape;
-      } else if (obj.fVolume) {
-         shape = obj.fVolume.fShape;
-      } else {
-         obj = null;
-      }
-
-      if (opt.composite && shape && (shape._typename == clTGeoCompositeShape) && shape.fNode)
-         obj = buildCompositeVolume(shape);
-
-      if (!obj && shape)
-         obj = Object.assign(create$1(clTNamed), { _typename: clTEveGeoShapeExtract, fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 1], fElements: null, fRnrSelf: true });
-
-      if (!obj) return null;
-
-      if (obj._typename.indexOf(clTGeoVolume) === 0)
-         obj = { _typename: clTGeoNode, fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
-
-      clones = new ClonedNodes(obj);
-      clones.setVisLevel(opt.vislevel);
-      clones.setMaxVisNodes(opt.numnodes);
-
-      if (opt.dflt_colors)
-         clones.setDefaultColors(true);
-
-      let uniquevis = opt.no_screen ? 0 : clones.markVisibles(true);
-      if (uniquevis <= 0)
-         clones.markVisibles(false, false, hide_top);
-      else
-         clones.markVisibles(true, true, hide_top); // copy bits once and use normal visibility bits
-
-      clones.produceIdShifts();
-
-      // collect visible nodes
-      let res = clones.collectVisibles(opt.numfaces, opt.frustum);
-
-      visibles = res.lst;
-   }
-
-   // collect shapes
-   let shapes = clones.collectShapes(visibles);
-
-   clones.buildShapes(shapes, opt.numfaces);
-
-   let toplevel = new Object3D();
-
-   for (let n = 0; n < visibles.length; ++n) {
-      let entry = visibles[n];
-      if (entry.done) continue;
-
-      let shape = entry.server_shape || shapes[entry.shapeid];
-      if (!shape.ready) {
-         console.warn('shape marked as not ready when should');
-         break;
-      }
-      entry.done = true;
-      shape.used = true; // indicate that shape was used in building
-
-      if (!shape.geom || (shape.nfaces === 0)) {
-         // node is visible, but shape does not created
-         clones.createObject3D(entry.stack, toplevel, 'delete_mesh');
-         continue;
-      }
-
-      let prop = clones.getDrawEntryProperties(entry, getRootColors());
-
-      opt.res_mesh++;
-      opt.res_faces += shape.nfaces;
-
-      let obj3d = clones.createObject3D(entry.stack, toplevel, opt);
-
-      prop.material.wireframe = opt.wireframe;
-
-      prop.material.side = opt.doubleside ? DoubleSide : FrontSide;
-
-      let mesh = null, matrix = obj3d.absMatrix || obj3d.matrixWorld;
-
-      if (matrix.determinant() > -0.9) {
-         mesh = new Mesh(shape.geom, prop.material);
-      } else {
-         mesh = createFlippedMesh(shape, prop.material);
-      }
-
-      mesh.name = clones.getNodeName(entry.nodeid);
-
-      obj3d.add(mesh);
-
-      if (obj3d.absMatrix) {
-         mesh.matrix.copy(obj3d.absMatrix);
-         mesh.matrix.decompose( obj3d.position, obj3d.quaternion, obj3d.scale );
-         mesh.updateMatrixWorld();
-      }
-
-      // specify rendering order, required for transparency handling
-      //if (obj3d.$jsroot_depth !== undefined)
-      //   mesh.renderOrder = clones.maxdepth - obj3d.$jsroot_depth;
-      //else
-      //   mesh.renderOrder = clones.maxdepth - entry.stack.length;
-   }
-
-   return toplevel;
-}
-
-var TGeoPainter$1 = /*#__PURE__*/Object.freeze({
-__proto__: null,
-ClonedNodes: ClonedNodes,
-build: build,
-TGeoPainter: TGeoPainter,
-GeoDrawingControl: GeoDrawingControl,
-expandGeoObject: expandGeoObject,
-createGeoPainter: createGeoPainter,
-drawAxis3D: drawAxis3D,
-drawDummy3DGeom: drawDummy3DGeom,
-produceRenderOrder: produceRenderOrder
 });
 
 /**
@@ -102998,2537 +105583,6 @@ RH3Painter: RH3Painter,
 drawHistDisplayItem: drawHistDisplayItem
 });
 
-/**
- * dat-gui JavaScript Controller Library
- * https://github.com/dataarts/dat.gui
- *
- * Copyright 2011 Data Arts Team, Google Creative Lab
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- */
-
-function ___$insertStyle(css) {
-  if (!css) {
-    return;
-  }
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  var style = document.createElement('style');
-
-  style.setAttribute('type', 'text/css');
-  style.innerHTML = css;
-  document.head.appendChild(style);
-
-  return css;
-}
-
-function colorToString (color, forceCSSHex) {
-  var colorFormat = color.__state.conversionName.toString();
-  var r = Math.round(color.r);
-  var g = Math.round(color.g);
-  var b = Math.round(color.b);
-  var a = color.a;
-  var h = Math.round(color.h);
-  var s = color.s.toFixed(1);
-  var v = color.v.toFixed(1);
-  if (forceCSSHex || colorFormat === 'THREE_CHAR_HEX' || colorFormat === 'SIX_CHAR_HEX') {
-    var str = color.hex.toString(16);
-    while (str.length < 6) {
-      str = '0' + str;
-    }
-    return '#' + str;
-  } else if (colorFormat === 'CSS_RGB') {
-    return 'rgb(' + r + ',' + g + ',' + b + ')';
-  } else if (colorFormat === 'CSS_RGBA') {
-    return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
-  } else if (colorFormat === 'HEX') {
-    return '0x' + color.hex.toString(16);
-  } else if (colorFormat === 'RGB_ARRAY') {
-    return '[' + r + ',' + g + ',' + b + ']';
-  } else if (colorFormat === 'RGBA_ARRAY') {
-    return '[' + r + ',' + g + ',' + b + ',' + a + ']';
-  } else if (colorFormat === 'RGB_OBJ') {
-    return '{r:' + r + ',g:' + g + ',b:' + b + '}';
-  } else if (colorFormat === 'RGBA_OBJ') {
-    return '{r:' + r + ',g:' + g + ',b:' + b + ',a:' + a + '}';
-  } else if (colorFormat === 'HSV_OBJ') {
-    return '{h:' + h + ',s:' + s + ',v:' + v + '}';
-  } else if (colorFormat === 'HSVA_OBJ') {
-    return '{h:' + h + ',s:' + s + ',v:' + v + ',a:' + a + '}';
-  }
-  return 'unknown format';
-}
-
-var ARR_EACH = Array.prototype.forEach;
-var ARR_SLICE = Array.prototype.slice;
-var Common = {
-  BREAK: {},
-  extend: function extend(target) {
-    this.each(ARR_SLICE.call(arguments, 1), function (obj) {
-      var keys = this.isObject(obj) ? Object.keys(obj) : [];
-      keys.forEach(function (key) {
-        if (!this.isUndefined(obj[key])) {
-          target[key] = obj[key];
-        }
-      }.bind(this));
-    }, this);
-    return target;
-  },
-  defaults: function defaults(target) {
-    this.each(ARR_SLICE.call(arguments, 1), function (obj) {
-      var keys = this.isObject(obj) ? Object.keys(obj) : [];
-      keys.forEach(function (key) {
-        if (this.isUndefined(target[key])) {
-          target[key] = obj[key];
-        }
-      }.bind(this));
-    }, this);
-    return target;
-  },
-  compose: function compose() {
-    var toCall = ARR_SLICE.call(arguments);
-    return function () {
-      var args = ARR_SLICE.call(arguments);
-      for (var i = toCall.length - 1; i >= 0; i--) {
-        args = [toCall[i].apply(this, args)];
-      }
-      return args[0];
-    };
-  },
-  each: function each(obj, itr, scope) {
-    if (!obj) {
-      return;
-    }
-    if (ARR_EACH && obj.forEach && obj.forEach === ARR_EACH) {
-      obj.forEach(itr, scope);
-    } else if (obj.length === obj.length + 0) {
-      var key = void 0;
-      var l = void 0;
-      for (key = 0, l = obj.length; key < l; key++) {
-        if (key in obj && itr.call(scope, obj[key], key) === this.BREAK) {
-          return;
-        }
-      }
-    } else {
-      for (var _key in obj) {
-        if (itr.call(scope, obj[_key], _key) === this.BREAK) {
-          return;
-        }
-      }
-    }
-  },
-  defer: function defer(fnc) {
-    setTimeout(fnc, 0);
-  },
-  debounce: function debounce(func, threshold, callImmediately) {
-    var timeout = void 0;
-    return function () {
-      var obj = this;
-      var args = arguments;
-      function delayed() {
-        timeout = null;
-        if (!callImmediately) func.apply(obj, args);
-      }
-      var callNow = callImmediately || !timeout;
-      clearTimeout(timeout);
-      timeout = setTimeout(delayed, threshold);
-      if (callNow) {
-        func.apply(obj, args);
-      }
-    };
-  },
-  toArray: function toArray(obj) {
-    if (obj.toArray) return obj.toArray();
-    return ARR_SLICE.call(obj);
-  },
-  isUndefined: function isUndefined(obj) {
-    return obj === undefined;
-  },
-  isNull: function isNull(obj) {
-    return obj === null;
-  },
-  isNaN: function (_isNaN) {
-    function isNaN(_x) {
-      return _isNaN.apply(this, arguments);
-    }
-    isNaN.toString = function () {
-      return _isNaN.toString();
-    };
-    return isNaN;
-  }(function (obj) {
-    return isNaN(obj);
-  }),
-  isArray: Array.isArray || function (obj) {
-    return obj.constructor === Array;
-  },
-  isObject: function isObject(obj) {
-    return obj === Object(obj);
-  },
-  isNumber: function isNumber(obj) {
-    return obj === obj + 0;
-  },
-  isString: function isString(obj) {
-    return obj === obj + '';
-  },
-  isBoolean: function isBoolean(obj) {
-    return obj === false || obj === true;
-  },
-  isFunction: function isFunction(obj) {
-    return obj instanceof Function;
-  }
-};
-
-var INTERPRETATIONS = [
-{
-  litmus: Common.isString,
-  conversions: {
-    THREE_CHAR_HEX: {
-      read: function read(original) {
-        var test = original.match(/^#([A-F0-9])([A-F0-9])([A-F0-9])$/i);
-        if (test === null) {
-          return false;
-        }
-        return {
-          space: 'HEX',
-          hex: parseInt('0x' + test[1].toString() + test[1].toString() + test[2].toString() + test[2].toString() + test[3].toString() + test[3].toString(), 0)
-        };
-      },
-      write: colorToString
-    },
-    SIX_CHAR_HEX: {
-      read: function read(original) {
-        var test = original.match(/^#([A-F0-9]{6})$/i);
-        if (test === null) {
-          return false;
-        }
-        return {
-          space: 'HEX',
-          hex: parseInt('0x' + test[1].toString(), 0)
-        };
-      },
-      write: colorToString
-    },
-    CSS_RGB: {
-      read: function read(original) {
-        var test = original.match(/^rgb\(\s*(\S+)\s*,\s*(\S+)\s*,\s*(\S+)\s*\)/);
-        if (test === null) {
-          return false;
-        }
-        return {
-          space: 'RGB',
-          r: parseFloat(test[1]),
-          g: parseFloat(test[2]),
-          b: parseFloat(test[3])
-        };
-      },
-      write: colorToString
-    },
-    CSS_RGBA: {
-      read: function read(original) {
-        var test = original.match(/^rgba\(\s*(\S+)\s*,\s*(\S+)\s*,\s*(\S+)\s*,\s*(\S+)\s*\)/);
-        if (test === null) {
-          return false;
-        }
-        return {
-          space: 'RGB',
-          r: parseFloat(test[1]),
-          g: parseFloat(test[2]),
-          b: parseFloat(test[3]),
-          a: parseFloat(test[4])
-        };
-      },
-      write: colorToString
-    }
-  }
-},
-{
-  litmus: Common.isNumber,
-  conversions: {
-    HEX: {
-      read: function read(original) {
-        return {
-          space: 'HEX',
-          hex: original,
-          conversionName: 'HEX'
-        };
-      },
-      write: function write(color) {
-        return color.hex;
-      }
-    }
-  }
-},
-{
-  litmus: Common.isArray,
-  conversions: {
-    RGB_ARRAY: {
-      read: function read(original) {
-        if (original.length !== 3) {
-          return false;
-        }
-        return {
-          space: 'RGB',
-          r: original[0],
-          g: original[1],
-          b: original[2]
-        };
-      },
-      write: function write(color) {
-        return [color.r, color.g, color.b];
-      }
-    },
-    RGBA_ARRAY: {
-      read: function read(original) {
-        if (original.length !== 4) return false;
-        return {
-          space: 'RGB',
-          r: original[0],
-          g: original[1],
-          b: original[2],
-          a: original[3]
-        };
-      },
-      write: function write(color) {
-        return [color.r, color.g, color.b, color.a];
-      }
-    }
-  }
-},
-{
-  litmus: Common.isObject,
-  conversions: {
-    RGBA_OBJ: {
-      read: function read(original) {
-        if (Common.isNumber(original.r) && Common.isNumber(original.g) && Common.isNumber(original.b) && Common.isNumber(original.a)) {
-          return {
-            space: 'RGB',
-            r: original.r,
-            g: original.g,
-            b: original.b,
-            a: original.a
-          };
-        }
-        return false;
-      },
-      write: function write(color) {
-        return {
-          r: color.r,
-          g: color.g,
-          b: color.b,
-          a: color.a
-        };
-      }
-    },
-    RGB_OBJ: {
-      read: function read(original) {
-        if (Common.isNumber(original.r) && Common.isNumber(original.g) && Common.isNumber(original.b)) {
-          return {
-            space: 'RGB',
-            r: original.r,
-            g: original.g,
-            b: original.b
-          };
-        }
-        return false;
-      },
-      write: function write(color) {
-        return {
-          r: color.r,
-          g: color.g,
-          b: color.b
-        };
-      }
-    },
-    HSVA_OBJ: {
-      read: function read(original) {
-        if (Common.isNumber(original.h) && Common.isNumber(original.s) && Common.isNumber(original.v) && Common.isNumber(original.a)) {
-          return {
-            space: 'HSV',
-            h: original.h,
-            s: original.s,
-            v: original.v,
-            a: original.a
-          };
-        }
-        return false;
-      },
-      write: function write(color) {
-        return {
-          h: color.h,
-          s: color.s,
-          v: color.v,
-          a: color.a
-        };
-      }
-    },
-    HSV_OBJ: {
-      read: function read(original) {
-        if (Common.isNumber(original.h) && Common.isNumber(original.s) && Common.isNumber(original.v)) {
-          return {
-            space: 'HSV',
-            h: original.h,
-            s: original.s,
-            v: original.v
-          };
-        }
-        return false;
-      },
-      write: function write(color) {
-        return {
-          h: color.h,
-          s: color.s,
-          v: color.v
-        };
-      }
-    }
-  }
-}];
-var result = void 0;
-var toReturn = void 0;
-var interpret = function interpret() {
-  toReturn = false;
-  var original = arguments.length > 1 ? Common.toArray(arguments) : arguments[0];
-  Common.each(INTERPRETATIONS, function (family) {
-    if (family.litmus(original)) {
-      Common.each(family.conversions, function (conversion, conversionName) {
-        result = conversion.read(original);
-        if (toReturn === false && result !== false) {
-          toReturn = result;
-          result.conversionName = conversionName;
-          result.conversion = conversion;
-          return Common.BREAK;
-        }
-      });
-      return Common.BREAK;
-    }
-  });
-  return toReturn;
-};
-
-var tmpComponent = void 0;
-var ColorMath = {
-  hsv_to_rgb: function hsv_to_rgb(h, s, v) {
-    var hi = Math.floor(h / 60) % 6;
-    var f = h / 60 - Math.floor(h / 60);
-    var p = v * (1.0 - s);
-    var q = v * (1.0 - f * s);
-    var t = v * (1.0 - (1.0 - f) * s);
-    var c = [[v, t, p], [q, v, p], [p, v, t], [p, q, v], [t, p, v], [v, p, q]][hi];
-    return {
-      r: c[0] * 255,
-      g: c[1] * 255,
-      b: c[2] * 255
-    };
-  },
-  rgb_to_hsv: function rgb_to_hsv(r, g, b) {
-    var min = Math.min(r, g, b);
-    var max = Math.max(r, g, b);
-    var delta = max - min;
-    var h = void 0;
-    var s = void 0;
-    if (max !== 0) {
-      s = delta / max;
-    } else {
-      return {
-        h: NaN,
-        s: 0,
-        v: 0
-      };
-    }
-    if (r === max) {
-      h = (g - b) / delta;
-    } else if (g === max) {
-      h = 2 + (b - r) / delta;
-    } else {
-      h = 4 + (r - g) / delta;
-    }
-    h /= 6;
-    if (h < 0) {
-      h += 1;
-    }
-    return {
-      h: h * 360,
-      s: s,
-      v: max / 255
-    };
-  },
-  rgb_to_hex: function rgb_to_hex(r, g, b) {
-    var hex = this.hex_with_component(0, 2, r);
-    hex = this.hex_with_component(hex, 1, g);
-    hex = this.hex_with_component(hex, 0, b);
-    return hex;
-  },
-  component_from_hex: function component_from_hex(hex, componentIndex) {
-    return hex >> componentIndex * 8 & 0xFF;
-  },
-  hex_with_component: function hex_with_component(hex, componentIndex, value) {
-    return value << (tmpComponent = componentIndex * 8) | hex & ~(0xFF << tmpComponent);
-  }
-};
-
-var _typeof = typeof Symbol === 'function' && typeof Symbol.iterator === "symbol" ? function (obj) {
-  return typeof obj;
-} : function (obj) {
-  return obj && typeof Symbol === 'function' && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-};
-
-
-
-
-
-
-
-
-
-
-
-var classCallCheck = function (instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-};
-
-var createClass = function () {
-  function defineProperties(target, props) {
-    for (var i = 0; i < props.length; i++) {
-      var descriptor = props[i];
-      descriptor.enumerable = descriptor.enumerable || false;
-      descriptor.configurable = true;
-      if ("value" in descriptor) descriptor.writable = true;
-      Object.defineProperty(target, descriptor.key, descriptor);
-    }
-  }
-
-  return function (Constructor, protoProps, staticProps) {
-    if (protoProps) defineProperties(Constructor.prototype, protoProps);
-    if (staticProps) defineProperties(Constructor, staticProps);
-    return Constructor;
-  };
-}();
-
-
-
-
-
-
-
-var get = function get(object, property, receiver) {
-  if (object === null) object = Function.prototype;
-  var desc = Object.getOwnPropertyDescriptor(object, property);
-
-  if (desc === undefined) {
-    var parent = Object.getPrototypeOf(object);
-
-    if (parent === null) {
-      return undefined;
-    } else {
-      return get(parent, property, receiver);
-    }
-  } else if ("value" in desc) {
-    return desc.value;
-  } else {
-    var getter = desc.get;
-
-    if (getter === undefined) {
-      return undefined;
-    }
-
-    return getter.call(receiver);
-  }
-};
-
-var inherits = function (subClass, superClass) {
-  if (typeof superClass !== 'function' && superClass !== null) {
-    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-  }
-
-  subClass.prototype = Object.create(superClass && superClass.prototype, {
-    constructor: {
-      value: subClass,
-      enumerable: false,
-      writable: true,
-      configurable: true
-    }
-  });
-  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-};
-
-
-
-
-
-
-
-
-
-
-
-var possibleConstructorReturn = function (self, call) {
-  if (!self) {
-    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-  }
-
-  return call && (typeof call === 'object' || typeof call === 'function') ? call : self;
-};
-
-var Color = function () {
-  function Color() {
-    classCallCheck(this, Color);
-    this.__state = interpret.apply(this, arguments);
-    if (this.__state === false) {
-      throw new Error('Failed to interpret color arguments');
-    }
-    this.__state.a = this.__state.a || 1;
-  }
-  createClass(Color, [{
-    key: 'toString',
-    value: function toString() {
-      return colorToString(this);
-    }
-  }, {
-    key: 'toHexString',
-    value: function toHexString() {
-      return colorToString(this, true);
-    }
-  }, {
-    key: 'toOriginal',
-    value: function toOriginal() {
-      return this.__state.conversion.write(this);
-    }
-  }]);
-  return Color;
-}();
-function defineRGBComponent(target, component, componentHexIndex) {
-  Object.defineProperty(target, component, {
-    get: function get$$1() {
-      if (this.__state.space === 'RGB') {
-        return this.__state[component];
-      }
-      Color.recalculateRGB(this, component, componentHexIndex);
-      return this.__state[component];
-    },
-    set: function set$$1(v) {
-      if (this.__state.space !== 'RGB') {
-        Color.recalculateRGB(this, component, componentHexIndex);
-        this.__state.space = 'RGB';
-      }
-      this.__state[component] = v;
-    }
-  });
-}
-function defineHSVComponent(target, component) {
-  Object.defineProperty(target, component, {
-    get: function get$$1() {
-      if (this.__state.space === 'HSV') {
-        return this.__state[component];
-      }
-      Color.recalculateHSV(this);
-      return this.__state[component];
-    },
-    set: function set$$1(v) {
-      if (this.__state.space !== 'HSV') {
-        Color.recalculateHSV(this);
-        this.__state.space = 'HSV';
-      }
-      this.__state[component] = v;
-    }
-  });
-}
-Color.recalculateRGB = function (color, component, componentHexIndex) {
-  if (color.__state.space === 'HEX') {
-    color.__state[component] = ColorMath.component_from_hex(color.__state.hex, componentHexIndex);
-  } else if (color.__state.space === 'HSV') {
-    Common.extend(color.__state, ColorMath.hsv_to_rgb(color.__state.h, color.__state.s, color.__state.v));
-  } else {
-    throw new Error('Corrupted color state');
-  }
-};
-Color.recalculateHSV = function (color) {
-  var result = ColorMath.rgb_to_hsv(color.r, color.g, color.b);
-  Common.extend(color.__state, {
-    s: result.s,
-    v: result.v
-  });
-  if (!Common.isNaN(result.h)) {
-    color.__state.h = result.h;
-  } else if (Common.isUndefined(color.__state.h)) {
-    color.__state.h = 0;
-  }
-};
-Color.COMPONENTS = ['r', 'g', 'b', 'h', 's', 'v', 'hex', 'a'];
-defineRGBComponent(Color.prototype, 'r', 2);
-defineRGBComponent(Color.prototype, 'g', 1);
-defineRGBComponent(Color.prototype, 'b', 0);
-defineHSVComponent(Color.prototype, 'h');
-defineHSVComponent(Color.prototype, 's');
-defineHSVComponent(Color.prototype, 'v');
-Object.defineProperty(Color.prototype, 'a', {
-  get: function get$$1() {
-    return this.__state.a;
-  },
-  set: function set$$1(v) {
-    this.__state.a = v;
-  }
-});
-Object.defineProperty(Color.prototype, 'hex', {
-  get: function get$$1() {
-    if (this.__state.space !== 'HEX') {
-      this.__state.hex = ColorMath.rgb_to_hex(this.r, this.g, this.b);
-      this.__state.space = 'HEX';
-    }
-    return this.__state.hex;
-  },
-  set: function set$$1(v) {
-    this.__state.space = 'HEX';
-    this.__state.hex = v;
-  }
-});
-
-var Controller = function () {
-  function Controller(object, property) {
-    classCallCheck(this, Controller);
-    this.initialValue = object[property];
-    this.domElement = document.createElement('div');
-    this.object = object;
-    this.property = property;
-    this.__onChange = undefined;
-    this.__onFinishChange = undefined;
-  }
-  createClass(Controller, [{
-    key: 'onChange',
-    value: function onChange(fnc) {
-      this.__onChange = fnc;
-      return this;
-    }
-  }, {
-    key: 'onFinishChange',
-    value: function onFinishChange(fnc) {
-      this.__onFinishChange = fnc;
-      return this;
-    }
-  }, {
-    key: 'setValue',
-    value: function setValue(newValue) {
-      this.object[this.property] = newValue;
-      if (this.__onChange) {
-        this.__onChange.call(this, newValue);
-      }
-      this.updateDisplay();
-      return this;
-    }
-  }, {
-    key: 'getValue',
-    value: function getValue() {
-      return this.object[this.property];
-    }
-  }, {
-    key: 'updateDisplay',
-    value: function updateDisplay() {
-      return this;
-    }
-  }, {
-    key: 'isModified',
-    value: function isModified() {
-      return this.initialValue !== this.getValue();
-    }
-  }]);
-  return Controller;
-}();
-
-var EVENT_MAP = {
-  HTMLEvents: ['change'],
-  MouseEvents: ['click', 'mousemove', 'mousedown', 'mouseup', 'mouseover'],
-  KeyboardEvents: ['keydown']
-};
-var EVENT_MAP_INV = {};
-Common.each(EVENT_MAP, function (v, k) {
-  Common.each(v, function (e) {
-    EVENT_MAP_INV[e] = k;
-  });
-});
-var CSS_VALUE_PIXELS = /(\d+(\.\d+)?)px/;
-function cssValueToPixels(val) {
-  if (val === '0' || Common.isUndefined(val)) {
-    return 0;
-  }
-  var match = val.match(CSS_VALUE_PIXELS);
-  if (!Common.isNull(match)) {
-    return parseFloat(match[1]);
-  }
-  return 0;
-}
-var dom = {
-  makeSelectable: function makeSelectable(elem, selectable) {
-    if (elem === undefined || elem.style === undefined) return;
-    elem.onselectstart = selectable ? function () {
-      return false;
-    } : function () {};
-    elem.style.MozUserSelect = selectable ? 'auto' : 'none';
-    elem.style.KhtmlUserSelect = selectable ? 'auto' : 'none';
-    elem.unselectable = selectable ? 'on' : 'off';
-  },
-  makeFullscreen: function makeFullscreen(elem, hor, vert) {
-    var vertical = vert;
-    var horizontal = hor;
-    if (Common.isUndefined(horizontal)) {
-      horizontal = true;
-    }
-    if (Common.isUndefined(vertical)) {
-      vertical = true;
-    }
-    elem.style.position = 'absolute';
-    if (horizontal) {
-      elem.style.left = 0;
-      elem.style.right = 0;
-    }
-    if (vertical) {
-      elem.style.top = 0;
-      elem.style.bottom = 0;
-    }
-  },
-  fakeEvent: function fakeEvent(elem, eventType, pars, aux) {
-    var params = pars || {};
-    var className = EVENT_MAP_INV[eventType];
-    if (!className) {
-      throw new Error('Event type ' + eventType + ' not supported.');
-    }
-    var evt = document.createEvent(className);
-    switch (className) {
-      case 'MouseEvents':
-        {
-          var clientX = params.x || params.clientX || 0;
-          var clientY = params.y || params.clientY || 0;
-          evt.initMouseEvent(eventType, params.bubbles || false, params.cancelable || true, window, params.clickCount || 1, 0,
-          0,
-          clientX,
-          clientY,
-          false, false, false, false, 0, null);
-          break;
-        }
-      case 'KeyboardEvents':
-        {
-          var init = evt.initKeyboardEvent || evt.initKeyEvent;
-          Common.defaults(params, {
-            cancelable: true,
-            ctrlKey: false,
-            altKey: false,
-            shiftKey: false,
-            metaKey: false,
-            keyCode: undefined,
-            charCode: undefined
-          });
-          init(eventType, params.bubbles || false, params.cancelable, window, params.ctrlKey, params.altKey, params.shiftKey, params.metaKey, params.keyCode, params.charCode);
-          break;
-        }
-      default:
-        {
-          evt.initEvent(eventType, params.bubbles || false, params.cancelable || true);
-          break;
-        }
-    }
-    Common.defaults(evt, aux);
-    elem.dispatchEvent(evt);
-  },
-  bind: function bind(elem, event, func, newBool) {
-    var bool = newBool || false;
-    if (elem.addEventListener) {
-      elem.addEventListener(event, func, bool);
-    } else if (elem.attachEvent) {
-      elem.attachEvent('on' + event, func);
-    }
-    return dom;
-  },
-  unbind: function unbind(elem, event, func, newBool) {
-    var bool = newBool || false;
-    if (elem.removeEventListener) {
-      elem.removeEventListener(event, func, bool);
-    } else if (elem.detachEvent) {
-      elem.detachEvent('on' + event, func);
-    }
-    return dom;
-  },
-  addClass: function addClass(elem, className) {
-    if (elem.className === undefined) {
-      elem.className = className;
-    } else if (elem.className !== className) {
-      var classes = elem.className.split(/ +/);
-      if (classes.indexOf(className) === -1) {
-        classes.push(className);
-        elem.className = classes.join(' ').replace(/^\s+/, '').replace(/\s+$/, '');
-      }
-    }
-    return dom;
-  },
-  removeClass: function removeClass(elem, className) {
-    if (className) {
-      if (elem.className === className) {
-        elem.removeAttribute('class');
-      } else {
-        var classes = elem.className.split(/ +/);
-        var index = classes.indexOf(className);
-        if (index !== -1) {
-          classes.splice(index, 1);
-          elem.className = classes.join(' ');
-        }
-      }
-    } else {
-      elem.className = undefined;
-    }
-    return dom;
-  },
-  hasClass: function hasClass(elem, className) {
-    return new RegExp('(?:^|\\s+)' + className + '(?:\\s+|$)').test(elem.className) || false;
-  },
-  getWidth: function getWidth(elem) {
-    var style = getComputedStyle(elem);
-    return cssValueToPixels(style['border-left-width']) + cssValueToPixels(style['border-right-width']) + cssValueToPixels(style['padding-left']) + cssValueToPixels(style['padding-right']) + cssValueToPixels(style.width);
-  },
-  getHeight: function getHeight(elem) {
-    var style = getComputedStyle(elem);
-    return cssValueToPixels(style['border-top-width']) + cssValueToPixels(style['border-bottom-width']) + cssValueToPixels(style['padding-top']) + cssValueToPixels(style['padding-bottom']) + cssValueToPixels(style.height);
-  },
-  getOffset: function getOffset(el) {
-    var elem = el;
-    var offset = { left: 0, top: 0 };
-    if (elem.offsetParent) {
-      do {
-        offset.left += elem.offsetLeft;
-        offset.top += elem.offsetTop;
-        elem = elem.offsetParent;
-      } while (elem);
-    }
-    return offset;
-  },
-  isActive: function isActive(elem) {
-    return elem === document.activeElement && (elem.type || elem.href);
-  }
-};
-
-var BooleanController = function (_Controller) {
-  inherits(BooleanController, _Controller);
-  function BooleanController(object, property) {
-    classCallCheck(this, BooleanController);
-    var _this2 = possibleConstructorReturn(this, (BooleanController.__proto__ || Object.getPrototypeOf(BooleanController)).call(this, object, property));
-    var _this = _this2;
-    _this2.__prev = _this2.getValue();
-    _this2.__checkbox = document.createElement('input');
-    _this2.__checkbox.setAttribute('type', 'checkbox');
-    function onChange() {
-      _this.setValue(!_this.__prev);
-    }
-    dom.bind(_this2.__checkbox, 'change', onChange, false);
-    _this2.domElement.appendChild(_this2.__checkbox);
-    _this2.updateDisplay();
-    return _this2;
-  }
-  createClass(BooleanController, [{
-    key: 'setValue',
-    value: function setValue(v) {
-      var toReturn = get(BooleanController.prototype.__proto__ || Object.getPrototypeOf(BooleanController.prototype), 'setValue', this).call(this, v);
-      if (this.__onFinishChange) {
-        this.__onFinishChange.call(this, this.getValue());
-      }
-      this.__prev = this.getValue();
-      return toReturn;
-    }
-  }, {
-    key: 'updateDisplay',
-    value: function updateDisplay() {
-      if (this.getValue() === true) {
-        this.__checkbox.setAttribute('checked', 'checked');
-        this.__checkbox.checked = true;
-        this.__prev = true;
-      } else {
-        this.__checkbox.checked = false;
-        this.__prev = false;
-      }
-      return get(BooleanController.prototype.__proto__ || Object.getPrototypeOf(BooleanController.prototype), 'updateDisplay', this).call(this);
-    }
-  }]);
-  return BooleanController;
-}(Controller);
-
-var OptionController = function (_Controller) {
-  inherits(OptionController, _Controller);
-  function OptionController(object, property, opts) {
-    classCallCheck(this, OptionController);
-    var _this2 = possibleConstructorReturn(this, (OptionController.__proto__ || Object.getPrototypeOf(OptionController)).call(this, object, property));
-    var options = opts;
-    var _this = _this2;
-    _this2.__select = document.createElement('select');
-    if (Common.isArray(options)) {
-      var map = {};
-      Common.each(options, function (element) {
-        map[element] = element;
-      });
-      options = map;
-    }
-    Common.each(options, function (value, key) {
-      var opt = document.createElement('option');
-      opt.innerHTML = key;
-      opt.setAttribute('value', value);
-      _this.__select.appendChild(opt);
-    });
-    _this2.updateDisplay();
-    dom.bind(_this2.__select, 'change', function () {
-      var desiredValue = this.options[this.selectedIndex].value;
-      _this.setValue(desiredValue);
-    });
-    _this2.domElement.appendChild(_this2.__select);
-    return _this2;
-  }
-  createClass(OptionController, [{
-    key: 'setValue',
-    value: function setValue(v) {
-      var toReturn = get(OptionController.prototype.__proto__ || Object.getPrototypeOf(OptionController.prototype), 'setValue', this).call(this, v);
-      if (this.__onFinishChange) {
-        this.__onFinishChange.call(this, this.getValue());
-      }
-      return toReturn;
-    }
-  }, {
-    key: 'updateDisplay',
-    value: function updateDisplay() {
-      if (dom.isActive(this.__select)) return this;
-      this.__select.value = this.getValue();
-      return get(OptionController.prototype.__proto__ || Object.getPrototypeOf(OptionController.prototype), 'updateDisplay', this).call(this);
-    }
-  }]);
-  return OptionController;
-}(Controller);
-
-var StringController = function (_Controller) {
-  inherits(StringController, _Controller);
-  function StringController(object, property) {
-    classCallCheck(this, StringController);
-    var _this2 = possibleConstructorReturn(this, (StringController.__proto__ || Object.getPrototypeOf(StringController)).call(this, object, property));
-    var _this = _this2;
-    function onChange() {
-      _this.setValue(_this.__input.value);
-    }
-    function onBlur() {
-      if (_this.__onFinishChange) {
-        _this.__onFinishChange.call(_this, _this.getValue());
-      }
-    }
-    _this2.__input = document.createElement('input');
-    _this2.__input.setAttribute('type', 'text');
-    dom.bind(_this2.__input, 'keyup', onChange);
-    dom.bind(_this2.__input, 'change', onChange);
-    dom.bind(_this2.__input, 'blur', onBlur);
-    dom.bind(_this2.__input, 'keydown', function (e) {
-      if (e.keyCode === 13) {
-        this.blur();
-      }
-    });
-    _this2.updateDisplay();
-    _this2.domElement.appendChild(_this2.__input);
-    return _this2;
-  }
-  createClass(StringController, [{
-    key: 'updateDisplay',
-    value: function updateDisplay() {
-      if (!dom.isActive(this.__input)) {
-        this.__input.value = this.getValue();
-      }
-      return get(StringController.prototype.__proto__ || Object.getPrototypeOf(StringController.prototype), 'updateDisplay', this).call(this);
-    }
-  }]);
-  return StringController;
-}(Controller);
-
-function numDecimals(x) {
-  var _x = x.toString();
-  if (_x.indexOf('.') > -1) {
-    return _x.length - _x.indexOf('.') - 1;
-  }
-  return 0;
-}
-var NumberController = function (_Controller) {
-  inherits(NumberController, _Controller);
-  function NumberController(object, property, params) {
-    classCallCheck(this, NumberController);
-    var _this = possibleConstructorReturn(this, (NumberController.__proto__ || Object.getPrototypeOf(NumberController)).call(this, object, property));
-    var _params = params || {};
-    _this.__min = _params.min;
-    _this.__max = _params.max;
-    _this.__step = _params.step;
-    if (Common.isUndefined(_this.__step)) {
-      if (_this.initialValue === 0) {
-        _this.__impliedStep = 1;
-      } else {
-        _this.__impliedStep = Math.pow(10, Math.floor(Math.log(Math.abs(_this.initialValue)) / Math.LN10)) / 10;
-      }
-    } else {
-      _this.__impliedStep = _this.__step;
-    }
-    _this.__precision = numDecimals(_this.__impliedStep);
-    return _this;
-  }
-  createClass(NumberController, [{
-    key: 'setValue',
-    value: function setValue(v) {
-      var _v = v;
-      if (this.__min !== undefined && _v < this.__min) {
-        _v = this.__min;
-      } else if (this.__max !== undefined && _v > this.__max) {
-        _v = this.__max;
-      }
-      if (this.__step !== undefined && _v % this.__step !== 0) {
-        _v = Math.round(_v / this.__step) * this.__step;
-      }
-      return get(NumberController.prototype.__proto__ || Object.getPrototypeOf(NumberController.prototype), 'setValue', this).call(this, _v);
-    }
-  }, {
-    key: 'min',
-    value: function min(minValue) {
-      this.__min = minValue;
-      return this;
-    }
-  }, {
-    key: 'max',
-    value: function max(maxValue) {
-      this.__max = maxValue;
-      return this;
-    }
-  }, {
-    key: 'step',
-    value: function step(stepValue) {
-      this.__step = stepValue;
-      this.__impliedStep = stepValue;
-      this.__precision = numDecimals(stepValue);
-      return this;
-    }
-  }]);
-  return NumberController;
-}(Controller);
-
-function roundToDecimal(value, decimals) {
-  var tenTo = Math.pow(10, decimals);
-  return Math.round(value * tenTo) / tenTo;
-}
-var NumberControllerBox = function (_NumberController) {
-  inherits(NumberControllerBox, _NumberController);
-  function NumberControllerBox(object, property, params) {
-    classCallCheck(this, NumberControllerBox);
-    var _this2 = possibleConstructorReturn(this, (NumberControllerBox.__proto__ || Object.getPrototypeOf(NumberControllerBox)).call(this, object, property, params));
-    _this2.__truncationSuspended = false;
-    var _this = _this2;
-    var prevY = void 0;
-    function onChange() {
-      var attempted = parseFloat(_this.__input.value);
-      if (!Common.isNaN(attempted)) {
-        _this.setValue(attempted);
-      }
-    }
-    function onFinish() {
-      if (_this.__onFinishChange) {
-        _this.__onFinishChange.call(_this, _this.getValue());
-      }
-    }
-    function onBlur() {
-      onFinish();
-    }
-    function onMouseDrag(e) {
-      var diff = prevY - e.clientY;
-      _this.setValue(_this.getValue() + diff * _this.__impliedStep);
-      prevY = e.clientY;
-    }
-    function onMouseUp() {
-      dom.unbind(window, 'mousemove', onMouseDrag);
-      dom.unbind(window, 'mouseup', onMouseUp);
-      onFinish();
-    }
-    function onMouseDown(e) {
-      dom.bind(window, 'mousemove', onMouseDrag);
-      dom.bind(window, 'mouseup', onMouseUp);
-      prevY = e.clientY;
-    }
-    _this2.__input = document.createElement('input');
-    _this2.__input.setAttribute('type', 'text');
-    dom.bind(_this2.__input, 'change', onChange);
-    dom.bind(_this2.__input, 'blur', onBlur);
-    dom.bind(_this2.__input, 'mousedown', onMouseDown);
-    dom.bind(_this2.__input, 'keydown', function (e) {
-      if (e.keyCode === 13) {
-        _this.__truncationSuspended = true;
-        this.blur();
-        _this.__truncationSuspended = false;
-        onFinish();
-      }
-    });
-    _this2.updateDisplay();
-    _this2.domElement.appendChild(_this2.__input);
-    return _this2;
-  }
-  createClass(NumberControllerBox, [{
-    key: 'updateDisplay',
-    value: function updateDisplay() {
-      this.__input.value = this.__truncationSuspended ? this.getValue() : roundToDecimal(this.getValue(), this.__precision);
-      return get(NumberControllerBox.prototype.__proto__ || Object.getPrototypeOf(NumberControllerBox.prototype), 'updateDisplay', this).call(this);
-    }
-  }]);
-  return NumberControllerBox;
-}(NumberController);
-
-function map(v, i1, i2, o1, o2) {
-  return o1 + (o2 - o1) * ((v - i1) / (i2 - i1));
-}
-var NumberControllerSlider = function (_NumberController) {
-  inherits(NumberControllerSlider, _NumberController);
-  function NumberControllerSlider(object, property, min, max, step) {
-    classCallCheck(this, NumberControllerSlider);
-    var _this2 = possibleConstructorReturn(this, (NumberControllerSlider.__proto__ || Object.getPrototypeOf(NumberControllerSlider)).call(this, object, property, { min: min, max: max, step: step }));
-    var _this = _this2;
-    _this2.__background = document.createElement('div');
-    _this2.__foreground = document.createElement('div');
-    dom.bind(_this2.__background, 'mousedown', onMouseDown);
-    dom.bind(_this2.__background, 'touchstart', onTouchStart);
-    dom.addClass(_this2.__background, 'slider');
-    dom.addClass(_this2.__foreground, 'slider-fg');
-    function onMouseDown(e) {
-      document.activeElement.blur();
-      dom.bind(window, 'mousemove', onMouseDrag);
-      dom.bind(window, 'mouseup', onMouseUp);
-      onMouseDrag(e);
-    }
-    function onMouseDrag(e) {
-      e.preventDefault();
-      var bgRect = _this.__background.getBoundingClientRect();
-      _this.setValue(map(e.clientX, bgRect.left, bgRect.right, _this.__min, _this.__max));
-      return false;
-    }
-    function onMouseUp() {
-      dom.unbind(window, 'mousemove', onMouseDrag);
-      dom.unbind(window, 'mouseup', onMouseUp);
-      if (_this.__onFinishChange) {
-        _this.__onFinishChange.call(_this, _this.getValue());
-      }
-    }
-    function onTouchStart(e) {
-      if (e.touches.length !== 1) {
-        return;
-      }
-      dom.bind(window, 'touchmove', onTouchMove);
-      dom.bind(window, 'touchend', onTouchEnd);
-      onTouchMove(e);
-    }
-    function onTouchMove(e) {
-      var clientX = e.touches[0].clientX;
-      var bgRect = _this.__background.getBoundingClientRect();
-      _this.setValue(map(clientX, bgRect.left, bgRect.right, _this.__min, _this.__max));
-    }
-    function onTouchEnd() {
-      dom.unbind(window, 'touchmove', onTouchMove);
-      dom.unbind(window, 'touchend', onTouchEnd);
-      if (_this.__onFinishChange) {
-        _this.__onFinishChange.call(_this, _this.getValue());
-      }
-    }
-    _this2.updateDisplay();
-    _this2.__background.appendChild(_this2.__foreground);
-    _this2.domElement.appendChild(_this2.__background);
-    return _this2;
-  }
-  createClass(NumberControllerSlider, [{
-    key: 'updateDisplay',
-    value: function updateDisplay() {
-      var pct = (this.getValue() - this.__min) / (this.__max - this.__min);
-      this.__foreground.style.width = pct * 100 + '%';
-      return get(NumberControllerSlider.prototype.__proto__ || Object.getPrototypeOf(NumberControllerSlider.prototype), 'updateDisplay', this).call(this);
-    }
-  }]);
-  return NumberControllerSlider;
-}(NumberController);
-
-var FunctionController = function (_Controller) {
-  inherits(FunctionController, _Controller);
-  function FunctionController(object, property, text) {
-    classCallCheck(this, FunctionController);
-    var _this2 = possibleConstructorReturn(this, (FunctionController.__proto__ || Object.getPrototypeOf(FunctionController)).call(this, object, property));
-    var _this = _this2;
-    _this2.__button = document.createElement('div');
-    _this2.__button.innerHTML = text === undefined ? 'Fire' : text;
-    dom.bind(_this2.__button, 'click', function (e) {
-      e.preventDefault();
-      _this.fire();
-      return false;
-    });
-    dom.addClass(_this2.__button, 'button');
-    _this2.domElement.appendChild(_this2.__button);
-    return _this2;
-  }
-  createClass(FunctionController, [{
-    key: 'fire',
-    value: function fire() {
-      if (this.__onChange) {
-        this.__onChange.call(this);
-      }
-      this.getValue().call(this.object);
-      if (this.__onFinishChange) {
-        this.__onFinishChange.call(this, this.getValue());
-      }
-    }
-  }]);
-  return FunctionController;
-}(Controller);
-
-var ColorController = function (_Controller) {
-  inherits(ColorController, _Controller);
-  function ColorController(object, property) {
-    classCallCheck(this, ColorController);
-    var _this2 = possibleConstructorReturn(this, (ColorController.__proto__ || Object.getPrototypeOf(ColorController)).call(this, object, property));
-    _this2.__color = new Color(_this2.getValue());
-    _this2.__temp = new Color(0);
-    var _this = _this2;
-    _this2.domElement = document.createElement('div');
-    dom.makeSelectable(_this2.domElement, false);
-    _this2.__selector = document.createElement('div');
-    _this2.__selector.className = 'selector';
-    _this2.__saturation_field = document.createElement('div');
-    _this2.__saturation_field.className = 'saturation-field';
-    _this2.__field_knob = document.createElement('div');
-    _this2.__field_knob.className = 'field-knob';
-    _this2.__field_knob_border = '2px solid ';
-    _this2.__hue_knob = document.createElement('div');
-    _this2.__hue_knob.className = 'hue-knob';
-    _this2.__hue_field = document.createElement('div');
-    _this2.__hue_field.className = 'hue-field';
-    _this2.__input = document.createElement('input');
-    _this2.__input.type = 'text';
-    _this2.__input_textShadow = '0 1px 1px ';
-    dom.bind(_this2.__input, 'keydown', function (e) {
-      if (e.keyCode === 13) {
-        onBlur.call(this);
-      }
-    });
-    dom.bind(_this2.__input, 'blur', onBlur);
-    dom.bind(_this2.__selector, 'mousedown', function () {
-      dom.addClass(this, 'drag').bind(window, 'mouseup', function () {
-        dom.removeClass(_this.__selector, 'drag');
-      });
-    });
-    dom.bind(_this2.__selector, 'touchstart', function () {
-      dom.addClass(this, 'drag').bind(window, 'touchend', function () {
-        dom.removeClass(_this.__selector, 'drag');
-      });
-    });
-    var valueField = document.createElement('div');
-    Common.extend(_this2.__selector.style, {
-      width: '122px',
-      height: '102px',
-      padding: '3px',
-      backgroundColor: '#222',
-      boxShadow: '0px 1px 3px rgba(0,0,0,0.3)'
-    });
-    Common.extend(_this2.__field_knob.style, {
-      position: 'absolute',
-      width: '12px',
-      height: '12px',
-      border: _this2.__field_knob_border + (_this2.__color.v < 0.5 ? '#fff' : '#000'),
-      boxShadow: '0px 1px 3px rgba(0,0,0,0.5)',
-      borderRadius: '12px',
-      zIndex: 1
-    });
-    Common.extend(_this2.__hue_knob.style, {
-      position: 'absolute',
-      width: '15px',
-      height: '2px',
-      borderRight: '4px solid #fff',
-      zIndex: 1
-    });
-    Common.extend(_this2.__saturation_field.style, {
-      width: '100px',
-      height: '100px',
-      border: '1px solid #555',
-      marginRight: '3px',
-      display: 'inline-block',
-      cursor: 'pointer'
-    });
-    Common.extend(valueField.style, {
-      width: '100%',
-      height: '100%',
-      background: 'none'
-    });
-    linearGradient(valueField, 'top', 'rgba(0,0,0,0)', '#000');
-    Common.extend(_this2.__hue_field.style, {
-      width: '15px',
-      height: '100px',
-      border: '1px solid #555',
-      cursor: 'ns-resize',
-      position: 'absolute',
-      top: '3px',
-      right: '3px'
-    });
-    hueGradient(_this2.__hue_field);
-    Common.extend(_this2.__input.style, {
-      outline: 'none',
-      textAlign: 'center',
-      color: '#fff',
-      border: 0,
-      fontWeight: 'bold',
-      textShadow: _this2.__input_textShadow + 'rgba(0,0,0,0.7)'
-    });
-    dom.bind(_this2.__saturation_field, 'mousedown', fieldDown);
-    dom.bind(_this2.__saturation_field, 'touchstart', fieldDown);
-    dom.bind(_this2.__field_knob, 'mousedown', fieldDown);
-    dom.bind(_this2.__field_knob, 'touchstart', fieldDown);
-    dom.bind(_this2.__hue_field, 'mousedown', fieldDownH);
-    dom.bind(_this2.__hue_field, 'touchstart', fieldDownH);
-    function fieldDown(e) {
-      setSV(e);
-      dom.bind(window, 'mousemove', setSV);
-      dom.bind(window, 'touchmove', setSV);
-      dom.bind(window, 'mouseup', fieldUpSV);
-      dom.bind(window, 'touchend', fieldUpSV);
-    }
-    function fieldDownH(e) {
-      setH(e);
-      dom.bind(window, 'mousemove', setH);
-      dom.bind(window, 'touchmove', setH);
-      dom.bind(window, 'mouseup', fieldUpH);
-      dom.bind(window, 'touchend', fieldUpH);
-    }
-    function fieldUpSV() {
-      dom.unbind(window, 'mousemove', setSV);
-      dom.unbind(window, 'touchmove', setSV);
-      dom.unbind(window, 'mouseup', fieldUpSV);
-      dom.unbind(window, 'touchend', fieldUpSV);
-      onFinish();
-    }
-    function fieldUpH() {
-      dom.unbind(window, 'mousemove', setH);
-      dom.unbind(window, 'touchmove', setH);
-      dom.unbind(window, 'mouseup', fieldUpH);
-      dom.unbind(window, 'touchend', fieldUpH);
-      onFinish();
-    }
-    function onBlur() {
-      var i = interpret(this.value);
-      if (i !== false) {
-        _this.__color.__state = i;
-        _this.setValue(_this.__color.toOriginal());
-      } else {
-        this.value = _this.__color.toString();
-      }
-    }
-    function onFinish() {
-      if (_this.__onFinishChange) {
-        _this.__onFinishChange.call(_this, _this.__color.toOriginal());
-      }
-    }
-    _this2.__saturation_field.appendChild(valueField);
-    _this2.__selector.appendChild(_this2.__field_knob);
-    _this2.__selector.appendChild(_this2.__saturation_field);
-    _this2.__selector.appendChild(_this2.__hue_field);
-    _this2.__hue_field.appendChild(_this2.__hue_knob);
-    _this2.domElement.appendChild(_this2.__input);
-    _this2.domElement.appendChild(_this2.__selector);
-    _this2.updateDisplay();
-    function setSV(e) {
-      if (e.type.indexOf('touch') === -1) {
-        e.preventDefault();
-      }
-      var fieldRect = _this.__saturation_field.getBoundingClientRect();
-      var _ref = e.touches && e.touches[0] || e,
-          clientX = _ref.clientX,
-          clientY = _ref.clientY;
-      var s = (clientX - fieldRect.left) / (fieldRect.right - fieldRect.left);
-      var v = 1 - (clientY - fieldRect.top) / (fieldRect.bottom - fieldRect.top);
-      if (v > 1) {
-        v = 1;
-      } else if (v < 0) {
-        v = 0;
-      }
-      if (s > 1) {
-        s = 1;
-      } else if (s < 0) {
-        s = 0;
-      }
-      _this.__color.v = v;
-      _this.__color.s = s;
-      _this.setValue(_this.__color.toOriginal());
-      return false;
-    }
-    function setH(e) {
-      if (e.type.indexOf('touch') === -1) {
-        e.preventDefault();
-      }
-      var fieldRect = _this.__hue_field.getBoundingClientRect();
-      var _ref2 = e.touches && e.touches[0] || e,
-          clientY = _ref2.clientY;
-      var h = 1 - (clientY - fieldRect.top) / (fieldRect.bottom - fieldRect.top);
-      if (h > 1) {
-        h = 1;
-      } else if (h < 0) {
-        h = 0;
-      }
-      _this.__color.h = h * 360;
-      _this.setValue(_this.__color.toOriginal());
-      return false;
-    }
-    return _this2;
-  }
-  createClass(ColorController, [{
-    key: 'updateDisplay',
-    value: function updateDisplay() {
-      var i = interpret(this.getValue());
-      if (i !== false) {
-        var mismatch = false;
-        Common.each(Color.COMPONENTS, function (component) {
-          if (!Common.isUndefined(i[component]) && !Common.isUndefined(this.__color.__state[component]) && i[component] !== this.__color.__state[component]) {
-            mismatch = true;
-            return {};
-          }
-        }, this);
-        if (mismatch) {
-          Common.extend(this.__color.__state, i);
-        }
-      }
-      Common.extend(this.__temp.__state, this.__color.__state);
-      this.__temp.a = 1;
-      var flip = this.__color.v < 0.5 || this.__color.s > 0.5 ? 255 : 0;
-      var _flip = 255 - flip;
-      Common.extend(this.__field_knob.style, {
-        marginLeft: 100 * this.__color.s - 7 + 'px',
-        marginTop: 100 * (1 - this.__color.v) - 7 + 'px',
-        backgroundColor: this.__temp.toHexString(),
-        border: this.__field_knob_border + 'rgb(' + flip + ',' + flip + ',' + flip + ')'
-      });
-      this.__hue_knob.style.marginTop = (1 - this.__color.h / 360) * 100 + 'px';
-      this.__temp.s = 1;
-      this.__temp.v = 1;
-      linearGradient(this.__saturation_field, 'left', '#fff', this.__temp.toHexString());
-      this.__input.value = this.__color.toString();
-      Common.extend(this.__input.style, {
-        backgroundColor: this.__color.toHexString(),
-        color: 'rgb(' + flip + ',' + flip + ',' + flip + ')',
-        textShadow: this.__input_textShadow + 'rgba(' + _flip + ',' + _flip + ',' + _flip + ',.7)'
-      });
-    }
-  }]);
-  return ColorController;
-}(Controller);
-var vendors = ['-moz-', '-o-', '-webkit-', '-ms-', ''];
-function linearGradient(elem, x, a, b) {
-  elem.style.background = '';
-  Common.each(vendors, function (vendor) {
-    elem.style.cssText += 'background: ' + vendor + 'linear-gradient(' + x + ', ' + a + ' 0%, ' + b + ' 100%); ';
-  });
-}
-function hueGradient(elem) {
-  elem.style.background = '';
-  elem.style.cssText += 'background: -moz-linear-gradient(top,  #ff0000 0%, #ff00ff 17%, #0000ff 34%, #00ffff 50%, #00ff00 67%, #ffff00 84%, #ff0000 100%);';
-  elem.style.cssText += 'background: -webkit-linear-gradient(top,  #ff0000 0%,#ff00ff 17%,#0000ff 34%,#00ffff 50%,#00ff00 67%,#ffff00 84%,#ff0000 100%);';
-  elem.style.cssText += 'background: -o-linear-gradient(top,  #ff0000 0%,#ff00ff 17%,#0000ff 34%,#00ffff 50%,#00ff00 67%,#ffff00 84%,#ff0000 100%);';
-  elem.style.cssText += 'background: -ms-linear-gradient(top,  #ff0000 0%,#ff00ff 17%,#0000ff 34%,#00ffff 50%,#00ff00 67%,#ffff00 84%,#ff0000 100%);';
-  elem.style.cssText += 'background: linear-gradient(top,  #ff0000 0%,#ff00ff 17%,#0000ff 34%,#00ffff 50%,#00ff00 67%,#ffff00 84%,#ff0000 100%);';
-}
-
-var css = {
-  load: function load(url, indoc) {
-    var doc = indoc || document;
-    var link = doc.createElement('link');
-    link.type = 'text/css';
-    link.rel = 'stylesheet';
-    link.href = url;
-    doc.getElementsByTagName('head')[0].appendChild(link);
-  },
-  inject: function inject(cssContent, indoc) {
-    var doc = indoc || document;
-    var injected = document.createElement('style');
-    injected.type = 'text/css';
-    injected.innerHTML = cssContent;
-    var head = doc.getElementsByTagName('head')[0];
-    try {
-      head.appendChild(injected);
-    } catch (e) {
-    }
-  }
-};
-
-var saveDialogContents = "<div id=\"dg-save\" class=\"dg dialogue\">\n\n  Here's the new load parameter for your <code>GUI</code>'s constructor:\n\n  <textarea id=\"dg-new-constructor\"></textarea>\n\n  <div id=\"dg-save-locally\">\n\n    <input id=\"dg-local-storage\" type=\"checkbox\"/> Automatically save\n    values to <code>localStorage</code> on exit.\n\n    <div id=\"dg-local-explain\">The values saved to <code>localStorage</code> will\n      override those passed to <code>dat.GUI</code>'s constructor. This makes it\n      easier to work incrementally, but <code>localStorage</code> is fragile,\n      and your friends may not see the same values you do.\n\n    </div>\n\n  </div>\n\n</div>";
-
-var ControllerFactory = function ControllerFactory(object, property) {
-  var initialValue = object[property];
-  if (Common.isArray(arguments[2]) || Common.isObject(arguments[2])) {
-    return new OptionController(object, property, arguments[2]);
-  }
-  if (Common.isNumber(initialValue)) {
-    if (Common.isNumber(arguments[2]) && Common.isNumber(arguments[3])) {
-      if (Common.isNumber(arguments[4])) {
-        return new NumberControllerSlider(object, property, arguments[2], arguments[3], arguments[4]);
-      }
-      return new NumberControllerSlider(object, property, arguments[2], arguments[3]);
-    }
-    if (Common.isNumber(arguments[4])) {
-      return new NumberControllerBox(object, property, { min: arguments[2], max: arguments[3], step: arguments[4] });
-    }
-    return new NumberControllerBox(object, property, { min: arguments[2], max: arguments[3] });
-  }
-  if (Common.isString(initialValue)) {
-    return new StringController(object, property);
-  }
-  if (Common.isFunction(initialValue)) {
-    return new FunctionController(object, property, '');
-  }
-  if (Common.isBoolean(initialValue)) {
-    return new BooleanController(object, property);
-  }
-  return null;
-};
-
-function requestAnimationFrame$1(callback) {
-  setTimeout(callback, 1000 / 60);
-}
-var requestAnimationFrame$1$1 = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || requestAnimationFrame$1;
-
-var CenteredDiv = function () {
-  function CenteredDiv() {
-    classCallCheck(this, CenteredDiv);
-    this.backgroundElement = document.createElement('div');
-    Common.extend(this.backgroundElement.style, {
-      backgroundColor: 'rgba(0,0,0,0.8)',
-      top: 0,
-      left: 0,
-      display: 'none',
-      zIndex: '1000',
-      opacity: 0,
-      WebkitTransition: 'opacity 0.2s linear',
-      transition: 'opacity 0.2s linear'
-    });
-    dom.makeFullscreen(this.backgroundElement);
-    this.backgroundElement.style.position = 'fixed';
-    this.domElement = document.createElement('div');
-    Common.extend(this.domElement.style, {
-      position: 'fixed',
-      display: 'none',
-      zIndex: '1001',
-      opacity: 0,
-      WebkitTransition: '-webkit-transform 0.2s ease-out, opacity 0.2s linear',
-      transition: 'transform 0.2s ease-out, opacity 0.2s linear'
-    });
-    document.body.appendChild(this.backgroundElement);
-    document.body.appendChild(this.domElement);
-    var _this = this;
-    dom.bind(this.backgroundElement, 'click', function () {
-      _this.hide();
-    });
-  }
-  createClass(CenteredDiv, [{
-    key: 'show',
-    value: function show() {
-      var _this = this;
-      this.backgroundElement.style.display = 'block';
-      this.domElement.style.display = 'block';
-      this.domElement.style.opacity = 0;
-      this.domElement.style.webkitTransform = 'scale(1.1)';
-      this.layout();
-      Common.defer(function () {
-        _this.backgroundElement.style.opacity = 1;
-        _this.domElement.style.opacity = 1;
-        _this.domElement.style.webkitTransform = 'scale(1)';
-      });
-    }
-  }, {
-    key: 'hide',
-    value: function hide() {
-      var _this = this;
-      var hide = function hide() {
-        _this.domElement.style.display = 'none';
-        _this.backgroundElement.style.display = 'none';
-        dom.unbind(_this.domElement, 'webkitTransitionEnd', hide);
-        dom.unbind(_this.domElement, 'transitionend', hide);
-        dom.unbind(_this.domElement, 'oTransitionEnd', hide);
-      };
-      dom.bind(this.domElement, 'webkitTransitionEnd', hide);
-      dom.bind(this.domElement, 'transitionend', hide);
-      dom.bind(this.domElement, 'oTransitionEnd', hide);
-      this.backgroundElement.style.opacity = 0;
-      this.domElement.style.opacity = 0;
-      this.domElement.style.webkitTransform = 'scale(1.1)';
-    }
-  }, {
-    key: 'layout',
-    value: function layout() {
-      this.domElement.style.left = window.innerWidth / 2 - dom.getWidth(this.domElement) / 2 + 'px';
-      this.domElement.style.top = window.innerHeight / 2 - dom.getHeight(this.domElement) / 2 + 'px';
-    }
-  }]);
-  return CenteredDiv;
-}();
-
-var styleSheet = ___$insertStyle(".dg ul{list-style:none;margin:0;padding:0;width:100%;clear:both}.dg.ac{position:fixed;top:0;left:0;right:0;height:0;z-index:0}.dg:not(.ac) .main{overflow:hidden}.dg.main{-webkit-transition:opacity .1s linear;-o-transition:opacity .1s linear;-moz-transition:opacity .1s linear;transition:opacity .1s linear}.dg.main.taller-than-window{overflow-y:auto}.dg.main.taller-than-window .close-button{opacity:1;margin-top:-1px;border-top:1px solid #2c2c2c}.dg.main ul.closed .close-button{opacity:1 !important}.dg.main:hover .close-button,.dg.main .close-button.drag{opacity:1}.dg.main .close-button{-webkit-transition:opacity .1s linear;-o-transition:opacity .1s linear;-moz-transition:opacity .1s linear;transition:opacity .1s linear;border:0;line-height:19px;height:20px;cursor:pointer;text-align:center;background-color:#000}.dg.main .close-button.close-top{position:relative}.dg.main .close-button.close-bottom{position:absolute}.dg.main .close-button:hover{background-color:#111}.dg.a{float:right;margin-right:15px;overflow-y:visible}.dg.a.has-save>ul.close-top{margin-top:0}.dg.a.has-save>ul.close-bottom{margin-top:27px}.dg.a.has-save>ul.closed{margin-top:0}.dg.a .save-row{top:0;z-index:1002}.dg.a .save-row.close-top{position:relative}.dg.a .save-row.close-bottom{position:fixed}.dg li{-webkit-transition:height .1s ease-out;-o-transition:height .1s ease-out;-moz-transition:height .1s ease-out;transition:height .1s ease-out;-webkit-transition:overflow .1s linear;-o-transition:overflow .1s linear;-moz-transition:overflow .1s linear;transition:overflow .1s linear}.dg li:not(.folder){cursor:auto;height:27px;line-height:27px;padding:0 4px 0 5px}.dg li.folder{padding:0;border-left:4px solid rgba(0,0,0,0)}.dg li.title{cursor:pointer;margin-left:-4px}.dg .closed li:not(.title),.dg .closed ul li,.dg .closed ul li>*{height:0;overflow:hidden;border:0}.dg .cr{clear:both;padding-left:3px;height:27px;overflow:hidden}.dg .property-name{cursor:default;float:left;clear:left;width:40%;overflow:hidden;text-overflow:ellipsis}.dg .cr.function .property-name{width:100%}.dg .c{float:left;width:60%;position:relative}.dg .c input[type=text]{border:0;margin-top:4px;padding:3px;width:100%;float:right}.dg .has-slider input[type=text]{width:30%;margin-left:0}.dg .slider{float:left;width:66%;margin-left:-5px;margin-right:0;height:19px;margin-top:4px}.dg .slider-fg{height:100%}.dg .c input[type=checkbox]{margin-top:7px}.dg .c select{margin-top:5px}.dg .cr.function,.dg .cr.function .property-name,.dg .cr.function *,.dg .cr.boolean,.dg .cr.boolean *{cursor:pointer}.dg .cr.color{overflow:visible}.dg .selector{display:none;position:absolute;margin-left:-9px;margin-top:23px;z-index:10}.dg .c:hover .selector,.dg .selector.drag{display:block}.dg li.save-row{padding:0}.dg li.save-row .button{display:inline-block;padding:0px 6px}.dg.dialogue{background-color:#222;width:460px;padding:15px;font-size:13px;line-height:15px}#dg-new-constructor{padding:10px;color:#222;font-family:Monaco, monospace;font-size:10px;border:0;resize:none;box-shadow:inset 1px 1px 1px #888;word-wrap:break-word;margin:12px 0;display:block;width:440px;overflow-y:scroll;height:100px;position:relative}#dg-local-explain{display:none;font-size:11px;line-height:17px;border-radius:3px;background-color:#333;padding:8px;margin-top:10px}#dg-local-explain code{font-size:10px}#dat-gui-save-locally{display:none}.dg{color:#eee;font:11px 'Lucida Grande', sans-serif;text-shadow:0 -1px 0 #111}.dg.main::-webkit-scrollbar{width:5px;background:#1a1a1a}.dg.main::-webkit-scrollbar-corner{height:0;display:none}.dg.main::-webkit-scrollbar-thumb{border-radius:5px;background:#676767}.dg li:not(.folder){background:#1a1a1a;border-bottom:1px solid #2c2c2c}.dg li.save-row{line-height:25px;background:#dad5cb;border:0}.dg li.save-row select{margin-left:5px;width:108px}.dg li.save-row .button{margin-left:5px;margin-top:1px;border-radius:2px;font-size:9px;line-height:7px;padding:4px 4px 5px 4px;background:#c5bdad;color:#fff;text-shadow:0 1px 0 #b0a58f;box-shadow:0 -1px 0 #b0a58f;cursor:pointer}.dg li.save-row .button.gears{background:#c5bdad url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAANCAYAAAB/9ZQ7AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAQJJREFUeNpiYKAU/P//PwGIC/ApCABiBSAW+I8AClAcgKxQ4T9hoMAEUrxx2QSGN6+egDX+/vWT4e7N82AMYoPAx/evwWoYoSYbACX2s7KxCxzcsezDh3evFoDEBYTEEqycggWAzA9AuUSQQgeYPa9fPv6/YWm/Acx5IPb7ty/fw+QZblw67vDs8R0YHyQhgObx+yAJkBqmG5dPPDh1aPOGR/eugW0G4vlIoTIfyFcA+QekhhHJhPdQxbiAIguMBTQZrPD7108M6roWYDFQiIAAv6Aow/1bFwXgis+f2LUAynwoIaNcz8XNx3Dl7MEJUDGQpx9gtQ8YCueB+D26OECAAQDadt7e46D42QAAAABJRU5ErkJggg==) 2px 1px no-repeat;height:7px;width:8px}.dg li.save-row .button:hover{background-color:#bab19e;box-shadow:0 -1px 0 #b0a58f}.dg li.folder{border-bottom:0}.dg li.title{padding-left:16px;background:#000 url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlI+hKgFxoCgAOw==) 6px 10px no-repeat;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.2)}.dg .closed li.title{background-image:url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlGIWqMCbWAEAOw==)}.dg .cr.boolean{border-left:3px solid #806787}.dg .cr.color{border-left:3px solid}.dg .cr.function{border-left:3px solid #e61d5f}.dg .cr.number{border-left:3px solid #2FA1D6}.dg .cr.number input[type=text]{color:#2FA1D6}.dg .cr.string{border-left:3px solid #1ed36f}.dg .cr.string input[type=text]{color:#1ed36f}.dg .cr.function:hover,.dg .cr.boolean:hover{background:#111}.dg .c input[type=text]{background:#303030;outline:none}.dg .c input[type=text]:hover{background:#3c3c3c}.dg .c input[type=text]:focus{background:#494949;color:#fff}.dg .c .slider{background:#303030;cursor:ew-resize}.dg .c .slider-fg{background:#2FA1D6;max-width:100%}.dg .c .slider:hover{background:#3c3c3c}.dg .c .slider:hover .slider-fg{background:#44abda}\n");
-
-css.inject(styleSheet);
-var CSS_NAMESPACE = 'dg';
-var HIDE_KEY_CODE = 72;
-var CLOSE_BUTTON_HEIGHT = 20;
-var DEFAULT_DEFAULT_PRESET_NAME = 'Default';
-var SUPPORTS_LOCAL_STORAGE = function () {
-  try {
-    return !!window.localStorage;
-  } catch (e) {
-    return false;
-  }
-}();
-var SAVE_DIALOGUE = void 0;
-var autoPlaceVirgin = true;
-var autoPlaceContainer = void 0;
-var hide = false;
-var hideableGuis = [];
-var GUI = function GUI(pars) {
-  var _this = this;
-  var params = pars || {};
-  this.domElement = document.createElement('div');
-  this.__ul = document.createElement('ul');
-  this.domElement.appendChild(this.__ul);
-  dom.addClass(this.domElement, CSS_NAMESPACE);
-  this.__folders = {};
-  this.__controllers = [];
-  this.__rememberedObjects = [];
-  this.__rememberedObjectIndecesToControllers = [];
-  this.__listening = [];
-  params = Common.defaults(params, {
-    closeOnTop: false,
-    autoPlace: true,
-    width: GUI.DEFAULT_WIDTH
-  });
-  params = Common.defaults(params, {
-    resizable: params.autoPlace,
-    hideable: params.autoPlace
-  });
-  if (!Common.isUndefined(params.load)) {
-    if (params.preset) {
-      params.load.preset = params.preset;
-    }
-  } else {
-    params.load = { preset: DEFAULT_DEFAULT_PRESET_NAME };
-  }
-  if (Common.isUndefined(params.parent) && params.hideable) {
-    hideableGuis.push(this);
-  }
-  params.resizable = Common.isUndefined(params.parent) && params.resizable;
-  if (params.autoPlace && Common.isUndefined(params.scrollable)) {
-    params.scrollable = true;
-  }
-  var useLocalStorage = SUPPORTS_LOCAL_STORAGE && localStorage.getItem(getLocalStorageHash(this, 'isLocal')) === 'true';
-  var saveToLocalStorage = void 0;
-  var titleRow = void 0;
-  Object.defineProperties(this,
-  {
-    parent: {
-      get: function get$$1() {
-        return params.parent;
-      }
-    },
-    scrollable: {
-      get: function get$$1() {
-        return params.scrollable;
-      }
-    },
-    autoPlace: {
-      get: function get$$1() {
-        return params.autoPlace;
-      }
-    },
-    closeOnTop: {
-      get: function get$$1() {
-        return params.closeOnTop;
-      }
-    },
-    preset: {
-      get: function get$$1() {
-        if (_this.parent) {
-          return _this.getRoot().preset;
-        }
-        return params.load.preset;
-      },
-      set: function set$$1(v) {
-        if (_this.parent) {
-          _this.getRoot().preset = v;
-        } else {
-          params.load.preset = v;
-        }
-        setPresetSelectIndex(this);
-        _this.revert();
-      }
-    },
-    width: {
-      get: function get$$1() {
-        return params.width;
-      },
-      set: function set$$1(v) {
-        params.width = v;
-        setWidth(_this, v);
-      }
-    },
-    name: {
-      get: function get$$1() {
-        return params.name;
-      },
-      set: function set$$1(v) {
-        params.name = v;
-        if (titleRow) {
-          titleRow.innerHTML = params.name;
-        }
-      }
-    },
-    closed: {
-      get: function get$$1() {
-        return params.closed;
-      },
-      set: function set$$1(v) {
-        params.closed = v;
-        if (params.closed) {
-          dom.addClass(_this.__ul, GUI.CLASS_CLOSED);
-        } else {
-          dom.removeClass(_this.__ul, GUI.CLASS_CLOSED);
-        }
-        this.onResize();
-        if (_this.__closeButton) {
-          _this.__closeButton.innerHTML = v ? GUI.TEXT_OPEN : GUI.TEXT_CLOSED;
-        }
-      }
-    },
-    load: {
-      get: function get$$1() {
-        return params.load;
-      }
-    },
-    useLocalStorage: {
-      get: function get$$1() {
-        return useLocalStorage;
-      },
-      set: function set$$1(bool) {
-        if (SUPPORTS_LOCAL_STORAGE) {
-          useLocalStorage = bool;
-          if (bool) {
-            dom.bind(window, 'unload', saveToLocalStorage);
-          } else {
-            dom.unbind(window, 'unload', saveToLocalStorage);
-          }
-          localStorage.setItem(getLocalStorageHash(_this, 'isLocal'), bool);
-        }
-      }
-    }
-  });
-  if (Common.isUndefined(params.parent)) {
-    this.closed = params.closed || false;
-    dom.addClass(this.domElement, GUI.CLASS_MAIN);
-    dom.makeSelectable(this.domElement, false);
-    if (SUPPORTS_LOCAL_STORAGE) {
-      if (useLocalStorage) {
-        _this.useLocalStorage = true;
-        var savedGui = localStorage.getItem(getLocalStorageHash(this, 'gui'));
-        if (savedGui) {
-          params.load = JSON.parse(savedGui);
-        }
-      }
-    }
-    this.__closeButton = document.createElement('div');
-    this.__closeButton.innerHTML = GUI.TEXT_CLOSED;
-    dom.addClass(this.__closeButton, GUI.CLASS_CLOSE_BUTTON);
-    if (params.closeOnTop) {
-      dom.addClass(this.__closeButton, GUI.CLASS_CLOSE_TOP);
-      this.domElement.insertBefore(this.__closeButton, this.domElement.childNodes[0]);
-    } else {
-      dom.addClass(this.__closeButton, GUI.CLASS_CLOSE_BOTTOM);
-      this.domElement.appendChild(this.__closeButton);
-    }
-    dom.bind(this.__closeButton, 'click', function () {
-      _this.closed = !_this.closed;
-    });
-  } else {
-    if (params.closed === undefined) {
-      params.closed = true;
-    }
-    var titleRowName = document.createTextNode(params.name);
-    dom.addClass(titleRowName, 'controller-name');
-    titleRow = addRow(_this, titleRowName);
-    var onClickTitle = function onClickTitle(e) {
-      e.preventDefault();
-      _this.closed = !_this.closed;
-      return false;
-    };
-    dom.addClass(this.__ul, GUI.CLASS_CLOSED);
-    dom.addClass(titleRow, 'title');
-    dom.bind(titleRow, 'click', onClickTitle);
-    if (!params.closed) {
-      this.closed = false;
-    }
-  }
-  if (params.autoPlace) {
-    if (Common.isUndefined(params.parent)) {
-      if (autoPlaceVirgin) {
-        autoPlaceContainer = document.createElement('div');
-        dom.addClass(autoPlaceContainer, CSS_NAMESPACE);
-        dom.addClass(autoPlaceContainer, GUI.CLASS_AUTO_PLACE_CONTAINER);
-        document.body.appendChild(autoPlaceContainer);
-        autoPlaceVirgin = false;
-      }
-      autoPlaceContainer.appendChild(this.domElement);
-      dom.addClass(this.domElement, GUI.CLASS_AUTO_PLACE);
-    }
-    if (!this.parent) {
-      setWidth(_this, params.width);
-    }
-  }
-  this.__resizeHandler = function () {
-    _this.onResizeDebounced();
-  };
-  dom.bind(window, 'resize', this.__resizeHandler);
-  dom.bind(this.__ul, 'webkitTransitionEnd', this.__resizeHandler);
-  dom.bind(this.__ul, 'transitionend', this.__resizeHandler);
-  dom.bind(this.__ul, 'oTransitionEnd', this.__resizeHandler);
-  this.onResize();
-  if (params.resizable) {
-    addResizeHandle(this);
-  }
-  saveToLocalStorage = function saveToLocalStorage() {
-    if (SUPPORTS_LOCAL_STORAGE && localStorage.getItem(getLocalStorageHash(_this, 'isLocal')) === 'true') {
-      localStorage.setItem(getLocalStorageHash(_this, 'gui'), JSON.stringify(_this.getSaveObject()));
-    }
-  };
-  this.saveToLocalStorageIfPossible = saveToLocalStorage;
-  function resetWidth() {
-    var root = _this.getRoot();
-    root.width += 1;
-    Common.defer(function () {
-      root.width -= 1;
-    });
-  }
-  if (!params.parent) {
-    resetWidth();
-  }
-};
-GUI.toggleHide = function () {
-  hide = !hide;
-  Common.each(hideableGuis, function (gui) {
-    gui.domElement.style.display = hide ? 'none' : '';
-  });
-};
-GUI.CLASS_AUTO_PLACE = 'a';
-GUI.CLASS_AUTO_PLACE_CONTAINER = 'ac';
-GUI.CLASS_MAIN = 'main';
-GUI.CLASS_CONTROLLER_ROW = 'cr';
-GUI.CLASS_TOO_TALL = 'taller-than-window';
-GUI.CLASS_CLOSED = 'closed';
-GUI.CLASS_CLOSE_BUTTON = 'close-button';
-GUI.CLASS_CLOSE_TOP = 'close-top';
-GUI.CLASS_CLOSE_BOTTOM = 'close-bottom';
-GUI.CLASS_DRAG = 'drag';
-GUI.DEFAULT_WIDTH = 245;
-GUI.TEXT_CLOSED = 'Close Controls';
-GUI.TEXT_OPEN = 'Open Controls';
-GUI._keydownHandler = function (e) {
-  if (document.activeElement.type !== 'text' && (e.which === HIDE_KEY_CODE || e.keyCode === HIDE_KEY_CODE)) {
-    GUI.toggleHide();
-  }
-};
-dom.bind(window, 'keydown', GUI._keydownHandler, false);
-Common.extend(GUI.prototype,
-{
-  add: function add(object, property) {
-    return _add(this, object, property, {
-      factoryArgs: Array.prototype.slice.call(arguments, 2)
-    });
-  },
-  addColor: function addColor(object, property) {
-    return _add(this, object, property, {
-      color: true
-    });
-  },
-  remove: function remove(controller) {
-    this.__ul.removeChild(controller.__li);
-    this.__controllers.splice(this.__controllers.indexOf(controller), 1);
-    var _this = this;
-    Common.defer(function () {
-      _this.onResize();
-    });
-  },
-  destroy: function destroy() {
-    if (this.parent) {
-      throw new Error('Only the root GUI should be removed with .destroy(). ' + 'For subfolders, use gui.removeFolder(folder) instead.');
-    }
-    if (this.autoPlace) {
-      autoPlaceContainer.removeChild(this.domElement);
-    }
-    var _this = this;
-    Common.each(this.__folders, function (subfolder) {
-      _this.removeFolder(subfolder);
-    });
-    dom.unbind(window, 'keydown', GUI._keydownHandler, false);
-    removeListeners(this);
-  },
-  addFolder: function addFolder(name) {
-    if (this.__folders[name] !== undefined) {
-      throw new Error('You already have a folder in this GUI by the' + ' name "' + name + '"');
-    }
-    var newGuiParams = { name: name, parent: this };
-    newGuiParams.autoPlace = this.autoPlace;
-    if (this.load &&
-    this.load.folders &&
-    this.load.folders[name]) {
-      newGuiParams.closed = this.load.folders[name].closed;
-      newGuiParams.load = this.load.folders[name];
-    }
-    var gui = new GUI(newGuiParams);
-    this.__folders[name] = gui;
-    var li = addRow(this, gui.domElement);
-    dom.addClass(li, 'folder');
-    return gui;
-  },
-  removeFolder: function removeFolder(folder) {
-    this.__ul.removeChild(folder.domElement.parentElement);
-    delete this.__folders[folder.name];
-    if (this.load &&
-    this.load.folders &&
-    this.load.folders[folder.name]) {
-      delete this.load.folders[folder.name];
-    }
-    removeListeners(folder);
-    var _this = this;
-    Common.each(folder.__folders, function (subfolder) {
-      folder.removeFolder(subfolder);
-    });
-    Common.defer(function () {
-      _this.onResize();
-    });
-  },
-  open: function open() {
-    this.closed = false;
-  },
-  close: function close() {
-    this.closed = true;
-  },
-  hide: function hide() {
-    this.domElement.style.display = 'none';
-  },
-  show: function show() {
-    this.domElement.style.display = '';
-  },
-  onResize: function onResize() {
-    var root = this.getRoot();
-    if (root.scrollable) {
-      var top = dom.getOffset(root.__ul).top;
-      var h = 0;
-      Common.each(root.__ul.childNodes, function (node) {
-        if (!(root.autoPlace && node === root.__save_row)) {
-          h += dom.getHeight(node);
-        }
-      });
-      if (window.innerHeight - top - CLOSE_BUTTON_HEIGHT < h) {
-        dom.addClass(root.domElement, GUI.CLASS_TOO_TALL);
-        root.__ul.style.height = window.innerHeight - top - CLOSE_BUTTON_HEIGHT + 'px';
-      } else {
-        dom.removeClass(root.domElement, GUI.CLASS_TOO_TALL);
-        root.__ul.style.height = 'auto';
-      }
-    }
-    if (root.__resize_handle) {
-      Common.defer(function () {
-        root.__resize_handle.style.height = root.__ul.offsetHeight + 'px';
-      });
-    }
-    if (root.__closeButton) {
-      root.__closeButton.style.width = root.width + 'px';
-    }
-  },
-  onResizeDebounced: Common.debounce(function () {
-    this.onResize();
-  }, 50),
-  remember: function remember() {
-    if (Common.isUndefined(SAVE_DIALOGUE)) {
-      SAVE_DIALOGUE = new CenteredDiv();
-      SAVE_DIALOGUE.domElement.innerHTML = saveDialogContents;
-    }
-    if (this.parent) {
-      throw new Error('You can only call remember on a top level GUI.');
-    }
-    var _this = this;
-    Common.each(Array.prototype.slice.call(arguments), function (object) {
-      if (_this.__rememberedObjects.length === 0) {
-        addSaveMenu(_this);
-      }
-      if (_this.__rememberedObjects.indexOf(object) === -1) {
-        _this.__rememberedObjects.push(object);
-      }
-    });
-    if (this.autoPlace) {
-      setWidth(this, this.width);
-    }
-  },
-  getRoot: function getRoot() {
-    var gui = this;
-    while (gui.parent) {
-      gui = gui.parent;
-    }
-    return gui;
-  },
-  getSaveObject: function getSaveObject() {
-    var toReturn = this.load;
-    toReturn.closed = this.closed;
-    if (this.__rememberedObjects.length > 0) {
-      toReturn.preset = this.preset;
-      if (!toReturn.remembered) {
-        toReturn.remembered = {};
-      }
-      toReturn.remembered[this.preset] = getCurrentPreset(this);
-    }
-    toReturn.folders = {};
-    Common.each(this.__folders, function (element, key) {
-      toReturn.folders[key] = element.getSaveObject();
-    });
-    return toReturn;
-  },
-  save: function save() {
-    if (!this.load.remembered) {
-      this.load.remembered = {};
-    }
-    this.load.remembered[this.preset] = getCurrentPreset(this);
-    markPresetModified(this, false);
-    this.saveToLocalStorageIfPossible();
-  },
-  saveAs: function saveAs(presetName) {
-    if (!this.load.remembered) {
-      this.load.remembered = {};
-      this.load.remembered[DEFAULT_DEFAULT_PRESET_NAME] = getCurrentPreset(this, true);
-    }
-    this.load.remembered[presetName] = getCurrentPreset(this);
-    this.preset = presetName;
-    addPresetOption(this, presetName, true);
-    this.saveToLocalStorageIfPossible();
-  },
-  revert: function revert(gui) {
-    Common.each(this.__controllers, function (controller) {
-      if (!this.getRoot().load.remembered) {
-        controller.setValue(controller.initialValue);
-      } else {
-        recallSavedValue(gui || this.getRoot(), controller);
-      }
-      if (controller.__onFinishChange) {
-        controller.__onFinishChange.call(controller, controller.getValue());
-      }
-    }, this);
-    Common.each(this.__folders, function (folder) {
-      folder.revert(folder);
-    });
-    if (!gui) {
-      markPresetModified(this.getRoot(), false);
-    }
-  },
-  listen: function listen(controller) {
-    var init = this.__listening.length === 0;
-    this.__listening.push(controller);
-    if (init) {
-      updateDisplays(this.__listening);
-    }
-  },
-  updateDisplay: function updateDisplay() {
-    Common.each(this.__controllers, function (controller) {
-      controller.updateDisplay();
-    });
-    Common.each(this.__folders, function (folder) {
-      folder.updateDisplay();
-    });
-  }
-});
-function addRow(gui, newDom, liBefore) {
-  var li = document.createElement('li');
-  if (newDom) {
-    li.appendChild(newDom);
-  }
-  if (liBefore) {
-    gui.__ul.insertBefore(li, liBefore);
-  } else {
-    gui.__ul.appendChild(li);
-  }
-  gui.onResize();
-  return li;
-}
-function removeListeners(gui) {
-  dom.unbind(window, 'resize', gui.__resizeHandler);
-  if (gui.saveToLocalStorageIfPossible) {
-    dom.unbind(window, 'unload', gui.saveToLocalStorageIfPossible);
-  }
-}
-function markPresetModified(gui, modified) {
-  var opt = gui.__preset_select[gui.__preset_select.selectedIndex];
-  if (modified) {
-    opt.innerHTML = opt.value + '*';
-  } else {
-    opt.innerHTML = opt.value;
-  }
-}
-function augmentController(gui, li, controller) {
-  controller.__li = li;
-  controller.__gui = gui;
-  Common.extend(controller, {
-    options: function options(_options) {
-      if (arguments.length > 1) {
-        var nextSibling = controller.__li.nextElementSibling;
-        controller.remove();
-        return _add(gui, controller.object, controller.property, {
-          before: nextSibling,
-          factoryArgs: [Common.toArray(arguments)]
-        });
-      }
-      if (Common.isArray(_options) || Common.isObject(_options)) {
-        var _nextSibling = controller.__li.nextElementSibling;
-        controller.remove();
-        return _add(gui, controller.object, controller.property, {
-          before: _nextSibling,
-          factoryArgs: [_options]
-        });
-      }
-    },
-    name: function name(_name) {
-      controller.__li.firstElementChild.firstElementChild.innerHTML = _name;
-      return controller;
-    },
-    listen: function listen() {
-      controller.__gui.listen(controller);
-      return controller;
-    },
-    remove: function remove() {
-      controller.__gui.remove(controller);
-      return controller;
-    }
-  });
-  if (controller instanceof NumberControllerSlider) {
-    var box = new NumberControllerBox(controller.object, controller.property, { min: controller.__min, max: controller.__max, step: controller.__step });
-    Common.each(['updateDisplay', 'onChange', 'onFinishChange', 'step', 'min', 'max'], function (method) {
-      var pc = controller[method];
-      var pb = box[method];
-      controller[method] = box[method] = function () {
-        var args = Array.prototype.slice.call(arguments);
-        pb.apply(box, args);
-        return pc.apply(controller, args);
-      };
-    });
-    dom.addClass(li, 'has-slider');
-    controller.domElement.insertBefore(box.domElement, controller.domElement.firstElementChild);
-  } else if (controller instanceof NumberControllerBox) {
-    var r = function r(returned) {
-      if (Common.isNumber(controller.__min) && Common.isNumber(controller.__max)) {
-        var oldName = controller.__li.firstElementChild.firstElementChild.innerHTML;
-        var wasListening = controller.__gui.__listening.indexOf(controller) > -1;
-        controller.remove();
-        var newController = _add(gui, controller.object, controller.property, {
-          before: controller.__li.nextElementSibling,
-          factoryArgs: [controller.__min, controller.__max, controller.__step]
-        });
-        newController.name(oldName);
-        if (wasListening) newController.listen();
-        return newController;
-      }
-      return returned;
-    };
-    controller.min = Common.compose(r, controller.min);
-    controller.max = Common.compose(r, controller.max);
-  } else if (controller instanceof BooleanController) {
-    dom.bind(li, 'click', function () {
-      dom.fakeEvent(controller.__checkbox, 'click');
-    });
-    dom.bind(controller.__checkbox, 'click', function (e) {
-      e.stopPropagation();
-    });
-  } else if (controller instanceof FunctionController) {
-    dom.bind(li, 'click', function () {
-      dom.fakeEvent(controller.__button, 'click');
-    });
-    dom.bind(li, 'mouseover', function () {
-      dom.addClass(controller.__button, 'hover');
-    });
-    dom.bind(li, 'mouseout', function () {
-      dom.removeClass(controller.__button, 'hover');
-    });
-  } else if (controller instanceof ColorController) {
-    dom.addClass(li, 'color');
-    controller.updateDisplay = Common.compose(function (val) {
-      li.style.borderLeftColor = controller.__color.toString();
-      return val;
-    }, controller.updateDisplay);
-    controller.updateDisplay();
-  }
-  controller.setValue = Common.compose(function (val) {
-    if (gui.getRoot().__preset_select && controller.isModified()) {
-      markPresetModified(gui.getRoot(), true);
-    }
-    return val;
-  }, controller.setValue);
-}
-function recallSavedValue(gui, controller) {
-  var root = gui.getRoot();
-  var matchedIndex = root.__rememberedObjects.indexOf(controller.object);
-  if (matchedIndex !== -1) {
-    var controllerMap = root.__rememberedObjectIndecesToControllers[matchedIndex];
-    if (controllerMap === undefined) {
-      controllerMap = {};
-      root.__rememberedObjectIndecesToControllers[matchedIndex] = controllerMap;
-    }
-    controllerMap[controller.property] = controller;
-    if (root.load && root.load.remembered) {
-      var presetMap = root.load.remembered;
-      var preset = void 0;
-      if (presetMap[gui.preset]) {
-        preset = presetMap[gui.preset];
-      } else if (presetMap[DEFAULT_DEFAULT_PRESET_NAME]) {
-        preset = presetMap[DEFAULT_DEFAULT_PRESET_NAME];
-      } else {
-        return;
-      }
-      if (preset[matchedIndex] && preset[matchedIndex][controller.property] !== undefined) {
-        var value = preset[matchedIndex][controller.property];
-        controller.initialValue = value;
-        controller.setValue(value);
-      }
-    }
-  }
-}
-function _add(gui, object, property, params) {
-  if (object[property] === undefined) {
-    throw new Error('Object "' + object + '" has no property "' + property + '"');
-  }
-  var controller = void 0;
-  if (params.color) {
-    controller = new ColorController(object, property);
-  } else {
-    var factoryArgs = [object, property].concat(params.factoryArgs);
-    controller = ControllerFactory.apply(gui, factoryArgs);
-  }
-  if (params.before instanceof Controller) {
-    params.before = params.before.__li;
-  }
-  recallSavedValue(gui, controller);
-  dom.addClass(controller.domElement, 'c');
-  var name = document.createElement('span');
-  dom.addClass(name, 'property-name');
-  name.innerHTML = controller.property;
-  var container = document.createElement('div');
-  container.appendChild(name);
-  container.appendChild(controller.domElement);
-  var li = addRow(gui, container, params.before);
-  dom.addClass(li, GUI.CLASS_CONTROLLER_ROW);
-  if (controller instanceof ColorController) {
-    dom.addClass(li, 'color');
-  } else {
-    dom.addClass(li, _typeof(controller.getValue()));
-  }
-  augmentController(gui, li, controller);
-  gui.__controllers.push(controller);
-  return controller;
-}
-function getLocalStorageHash(gui, key) {
-  return document.location.href + '.' + key;
-}
-function addPresetOption(gui, name, setSelected) {
-  var opt = document.createElement('option');
-  opt.innerHTML = name;
-  opt.value = name;
-  gui.__preset_select.appendChild(opt);
-  if (setSelected) {
-    gui.__preset_select.selectedIndex = gui.__preset_select.length - 1;
-  }
-}
-function showHideExplain(gui, explain) {
-  explain.style.display = gui.useLocalStorage ? 'block' : 'none';
-}
-function addSaveMenu(gui) {
-  var div = gui.__save_row = document.createElement('li');
-  dom.addClass(gui.domElement, 'has-save');
-  gui.__ul.insertBefore(div, gui.__ul.firstChild);
-  dom.addClass(div, 'save-row');
-  var gears = document.createElement('span');
-  gears.innerHTML = '&nbsp;';
-  dom.addClass(gears, 'button gears');
-  var button = document.createElement('span');
-  button.innerHTML = 'Save';
-  dom.addClass(button, 'button');
-  dom.addClass(button, 'save');
-  var button2 = document.createElement('span');
-  button2.innerHTML = 'New';
-  dom.addClass(button2, 'button');
-  dom.addClass(button2, 'save-as');
-  var button3 = document.createElement('span');
-  button3.innerHTML = 'Revert';
-  dom.addClass(button3, 'button');
-  dom.addClass(button3, 'revert');
-  var select = gui.__preset_select = document.createElement('select');
-  if (gui.load && gui.load.remembered) {
-    Common.each(gui.load.remembered, function (value, key) {
-      addPresetOption(gui, key, key === gui.preset);
-    });
-  } else {
-    addPresetOption(gui, DEFAULT_DEFAULT_PRESET_NAME, false);
-  }
-  dom.bind(select, 'change', function () {
-    for (var index = 0; index < gui.__preset_select.length; index++) {
-      gui.__preset_select[index].innerHTML = gui.__preset_select[index].value;
-    }
-    gui.preset = this.value;
-  });
-  div.appendChild(select);
-  div.appendChild(gears);
-  div.appendChild(button);
-  div.appendChild(button2);
-  div.appendChild(button3);
-  if (SUPPORTS_LOCAL_STORAGE) {
-    var explain = document.getElementById('dg-local-explain');
-    var localStorageCheckBox = document.getElementById('dg-local-storage');
-    var saveLocally = document.getElementById('dg-save-locally');
-    saveLocally.style.display = 'block';
-    if (localStorage.getItem(getLocalStorageHash(gui, 'isLocal')) === 'true') {
-      localStorageCheckBox.setAttribute('checked', 'checked');
-    }
-    showHideExplain(gui, explain);
-    dom.bind(localStorageCheckBox, 'change', function () {
-      gui.useLocalStorage = !gui.useLocalStorage;
-      showHideExplain(gui, explain);
-    });
-  }
-  var newConstructorTextArea = document.getElementById('dg-new-constructor');
-  dom.bind(newConstructorTextArea, 'keydown', function (e) {
-    if (e.metaKey && (e.which === 67 || e.keyCode === 67)) {
-      SAVE_DIALOGUE.hide();
-    }
-  });
-  dom.bind(gears, 'click', function () {
-    newConstructorTextArea.innerHTML = JSON.stringify(gui.getSaveObject(), undefined, 2);
-    SAVE_DIALOGUE.show();
-    newConstructorTextArea.focus();
-    newConstructorTextArea.select();
-  });
-  dom.bind(button, 'click', function () {
-    gui.save();
-  });
-  dom.bind(button2, 'click', function () {
-    var presetName = prompt('Enter a new preset name.');
-    if (presetName) {
-      gui.saveAs(presetName);
-    }
-  });
-  dom.bind(button3, 'click', function () {
-    gui.revert();
-  });
-}
-function addResizeHandle(gui) {
-  var pmouseX = void 0;
-  gui.__resize_handle = document.createElement('div');
-  Common.extend(gui.__resize_handle.style, {
-    width: '6px',
-    marginLeft: '-3px',
-    height: '200px',
-    cursor: 'ew-resize',
-    position: 'absolute'
-  });
-  function drag(e) {
-    e.preventDefault();
-    gui.width += pmouseX - e.clientX;
-    gui.onResize();
-    pmouseX = e.clientX;
-    return false;
-  }
-  function dragStop() {
-    dom.removeClass(gui.__closeButton, GUI.CLASS_DRAG);
-    dom.unbind(window, 'mousemove', drag);
-    dom.unbind(window, 'mouseup', dragStop);
-  }
-  function dragStart(e) {
-    e.preventDefault();
-    pmouseX = e.clientX;
-    dom.addClass(gui.__closeButton, GUI.CLASS_DRAG);
-    dom.bind(window, 'mousemove', drag);
-    dom.bind(window, 'mouseup', dragStop);
-    return false;
-  }
-  dom.bind(gui.__resize_handle, 'mousedown', dragStart);
-  dom.bind(gui.__closeButton, 'mousedown', dragStart);
-  gui.domElement.insertBefore(gui.__resize_handle, gui.domElement.firstElementChild);
-}
-function setWidth(gui, w) {
-  gui.domElement.style.width = w + 'px';
-  if (gui.__save_row && gui.autoPlace) {
-    gui.__save_row.style.width = w + 'px';
-  }
-  if (gui.__closeButton) {
-    gui.__closeButton.style.width = w + 'px';
-  }
-}
-function getCurrentPreset(gui, useInitialValues) {
-  var toReturn = {};
-  Common.each(gui.__rememberedObjects, function (val, index) {
-    var savedValues = {};
-    var controllerMap = gui.__rememberedObjectIndecesToControllers[index];
-    Common.each(controllerMap, function (controller, property) {
-      savedValues[property] = useInitialValues ? controller.initialValue : controller.getValue();
-    });
-    toReturn[index] = savedValues;
-  });
-  return toReturn;
-}
-function setPresetSelectIndex(gui) {
-  for (var index = 0; index < gui.__preset_select.length; index++) {
-    if (gui.__preset_select[index].value === gui.preset) {
-      gui.__preset_select.selectedIndex = index;
-    }
-  }
-}
-function updateDisplays(controllerArray) {
-  if (controllerArray.length !== 0) {
-    requestAnimationFrame$1$1.call(window, function () {
-      updateDisplays(controllerArray);
-    });
-  }
-  Common.each(controllerArray, function (c) {
-    c.updateDisplay();
-  });
-}
-
-var color = {
-  Color: Color,
-  math: ColorMath,
-  interpret: interpret
-};
-var controllers = {
-  Controller: Controller,
-  BooleanController: BooleanController,
-  OptionController: OptionController,
-  StringController: StringController,
-  NumberController: NumberController,
-  NumberControllerBox: NumberControllerBox,
-  NumberControllerSlider: NumberControllerSlider,
-  FunctionController: FunctionController,
-  ColorController: ColorController
-};
-var dom$1 = { dom: dom };
-var gui = { GUI: GUI };
-var GUI$1 = GUI;
-var index = {
-  color: color,
-  controllers: controllers,
-  dom: dom$1,
-  gui: gui,
-  GUI: GUI$1
-};
-
-var dat_gui = /*#__PURE__*/Object.freeze({
-__proto__: null,
-color: color,
-controllers: controllers,
-dom: dom$1,
-gui: gui,
-GUI: GUI$1,
-'default': index
-});
-
 exports.BIT = BIT;
 exports.BasePainter = BasePainter;
 exports.BatchDisplay = BatchDisplay;
@@ -105542,6 +105596,7 @@ exports.GridDisplay = GridDisplay;
 exports.HierarchyPainter = HierarchyPainter;
 exports.MDIDisplay = MDIDisplay;
 exports.ObjectPainter = ObjectPainter;
+exports.TGeoPainter = TGeoPainter;
 exports.TH1Painter = TH1Painter;
 exports.TH2Painter = TH2Painter;
 exports.TH3Painter = TH3Painter;
@@ -105611,6 +105666,7 @@ exports.clone = clone;
 exports.compressSVG = compressSVG;
 exports.constants = constants$1;
 exports.create = create$1;
+exports.createGeoPainter = createGeoPainter;
 exports.createHistogram = createHistogram;
 exports.createHttpRequest = createHttpRequest;
 exports.createTGraph = createTGraph;
