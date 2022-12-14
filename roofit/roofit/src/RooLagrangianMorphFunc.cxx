@@ -51,13 +51,16 @@ describe the same process or not.
 #include "RooRealVar.h"
 #include "RooStringVar.h"
 #include "RooWorkspace.h"
+#include "RooFactoryWSTool.h"
+
+#include "ROOT/StringUtils.hxx"
 #include "TFile.h"
 #include "TFolder.h"
 #include "TH1.h"
 #include "TMap.h"
 #include "TParameter.h"
 #include "TRandom3.h"
-// stl includes
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -1775,34 +1778,6 @@ void RooLagrangianMorphFunc::collectInputs(TDirectory *file)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// convert the RooArgList folders into a simple vector of std::string
-
-void RooLagrangianMorphFunc::addFolders(const RooArgList &folders)
-{
-   for (auto const &folder : folders) {
-      RooStringVar *var = dynamic_cast<RooStringVar *>(folder);
-      const std::string sample(var ? var->getVal() : folder->GetName());
-      if (sample.empty())
-         continue;
-      _config.folderNames.push_back(sample);
-   }
-
-   TDirectory *file = openFile(_config.fileName);
-   TIter next(file->GetList());
-   TObject *obj = nullptr;
-   while ((obj = (TObject *)next())) {
-      auto f = readOwningFolderFromFile(file, obj->GetName());
-      if (!f)
-         continue;
-      std::string name(f->GetName());
-      if (name.empty())
-         continue;
-      _config.folderNames.push_back(name);
-   }
-   closeFile(file);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// print all the parameters and their values in the given sample to the console
 
 void RooLagrangianMorphFunc::printParameters(const char *samplename) const
@@ -1851,25 +1826,6 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *tit
 {
    this->init();
    this->disableInterferences(_config.nonInterfering);
-   this->setup(false);
-
-   TRACE_CREATE
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// constructor with proper arguments
-RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *title, const char *filename,
-                                               const char *observableName, const RooArgSet &couplings,
-                                               const RooArgSet &folders)
-   : RooAbsReal(name, title), _cacheMgr(this, 10, true, true), _physics("physics", "physics", this),
-     _operators("operators", "set of operators", this), _observables("observables", "morphing observables", this),
-     _binWidths("binWidths", "set of binWidth objects", this), _flags("flags", "flags", this)
-{
-   _config.fileName = filename;
-   _config.observableName = observableName;
-   _config.couplings.add(couplings);
-   this->addFolders(folders);
-   this->init();
    this->setup(false);
 
    TRACE_CREATE
@@ -3078,3 +3034,93 @@ RooLagrangianMorphFunc::makeRatio(const char *name, const char *title, RooArgLis
    // same for denom
    return make_unique<RooRatio>(name, title, num, denom);
 }
+
+// Register the factory interface
+
+namespace {
+
+// Helper function for factory interface
+std::vector<std::string> asStringV(std::string const &arg)
+{
+   std::vector<std::string> out;
+
+   for (std::string &tok : ROOT::Split(arg, ",{}", true)) {
+      if (tok[0] == '\'') {
+         out.emplace_back(tok.substr(1, tok.size() - 2));
+      } else {
+         throw std::runtime_error("Strings in factory expressions need to be in single quotes!");
+      }
+   }
+
+   return out;
+}
+
+class LMIFace : public RooFactoryWSTool::IFace {
+public:
+   std::string
+   create(RooFactoryWSTool &, const char *typeName, const char *instName, std::vector<std::string> args) override;
+};
+
+std::string LMIFace::create(RooFactoryWSTool &ft, const char * /*typeName*/, const char *instanceName,
+                            std::vector<std::string> args)
+{
+   // Perform syntax check. Warn about any meta parameters other than the ones needed
+   const std::array<std::string, 4> funcArgs{{"fileName", "observableName", "couplings", "folders"}};
+   std::map<string, string> mappedInputs;
+
+   for (unsigned int i = 1; i < args.size(); i++) {
+      if (args[i].find("$fileName(") != 0 && args[i].find("$observableName(") != 0 &&
+          args[i].find("$couplings(") != 0 && args[i].find("$folders(") != 0 && args[i].find("$NewPhysics(") != 0) {
+         throw std::string(Form("%s::create() ERROR: unknown token %s encountered", instanceName, args[i].c_str()));
+      }
+   }
+
+   for (unsigned int i = 0; i < args.size(); i++) {
+      if (args[i].find("$NewPhysics(") == 0) {
+         vector<string> subargs = ft.splitFunctionArgs(args[i].c_str());
+         for (const auto &subarg : subargs) {
+            std::vector<std::string> parts = ROOT::Split(subarg, "=");
+            if (parts.size() == 2) {
+               ft.ws().arg(parts[0].c_str())->setAttribute("NewPhysics", atoi(parts[1].c_str()));
+            } else
+               throw std::string(Form("%s::create() ERROR: unknown token %s encountered, check input provided for %s",
+                                      instanceName, subarg.c_str(), args[i].c_str()));
+         }
+      } else {
+         std::vector<string> subargs = ft.splitFunctionArgs(args[i].c_str());
+         if (subargs.size() == 1) {
+            string expr = ft.processExpression(subargs[0].c_str());
+            for (auto const &param : funcArgs) {
+               if (args[i].find(param) != string::npos)
+                  mappedInputs[param] = subargs[0];
+            }
+         } else
+            throw std::string(
+               Form("Incorrect number of arguments in %s, have %d, expect 1", args[i].c_str(), (Int_t)subargs.size()));
+      }
+   }
+
+   RooLagrangianMorphFunc::Config config;
+   config.fileName = asStringV(mappedInputs["fileName"])[0];
+   config.observableName = asStringV(mappedInputs["observableName"])[0];
+   config.folderNames = asStringV(mappedInputs["folders"]);
+   config.couplings.add(ft.asLIST(mappedInputs["couplings"].c_str()));
+
+   ft.ws().import(RooLagrangianMorphFunc{instanceName, instanceName, config}, RooFit::Silence());
+
+   return instanceName;
+}
+
+static Int_t init();
+
+int dummy = init();
+
+static Int_t init()
+{
+   RooFactoryWSTool::IFace *iface = new LMIFace;
+   RooFactoryWSTool::registerSpecial("lagrangianmorph", iface);
+   (void)dummy;
+   return 0;
+}
+
+} // namespace
