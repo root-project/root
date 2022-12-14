@@ -94,21 +94,22 @@ RDatasetSpec &RDatasetSpec::AddGroup(RDatasetGroup datasetGroup)
 }
 
 RDatasetSpec &
-RDatasetSpec::WithFriends(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias)
+RDatasetSpec::WithGlobalFriends(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias)
 {
    fFriendInfo.AddFriend(treeName, fileNameGlob, alias);
    return *this;
 }
 
-RDatasetSpec &RDatasetSpec::WithFriends(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
-                                        const std::string &alias)
+RDatasetSpec &RDatasetSpec::WithGlobalFriends(const std::string &treeName,
+                                              const std::vector<std::string> &fileNameGlobs, const std::string &alias)
 {
    fFriendInfo.AddFriend(treeName, fileNameGlobs, alias);
    return *this;
 }
 
-RDatasetSpec &RDatasetSpec::WithFriends(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-                                        const std::string &alias)
+RDatasetSpec &
+RDatasetSpec::WithGlobalFriends(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
+                                const std::string &alias)
 {
    fFriendInfo.AddFriend(treeAndFileNameGlobs, alias);
    return *this;
@@ -120,7 +121,7 @@ RDatasetSpec &RDatasetSpec::WithGlobalRange(const RDatasetSpec::REntryRange &ent
    return *this;
 }
 
-RDatasetSpec &RDatasetSpec::WithFriends(const std::vector<std::string> &treeNames,
+RDatasetSpec &RDatasetSpec::WithGlobalFriends(const std::vector<std::string> &treeNames,
                                         const std::vector<std::string> &fileNameGlobs, const std::string &alias)
 {
    if (treeNames.size() != 1 && treeNames.size() != fileNameGlobs.size())

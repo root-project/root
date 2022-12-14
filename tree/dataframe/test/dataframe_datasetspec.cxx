@@ -359,8 +359,8 @@ TEST_P(RDatasetSpecTest, Friends)
          treeNames.emplace_back(d.trees[i][0].tree);
          fileGlobs.emplace_back(d.fileGlobs[i]);
       }
-      spec.WithFriends(treeNames, fileGlobs, "friend_glob_" + d.name);
-      spec.WithFriends(treeNamesExpanded, fileGlobsExpanded, "friend_expanded_" + d.name);
+      spec.WithGlobalFriends(treeNames, fileGlobs, "friend_glob_" + d.name);
+      spec.WithGlobalFriends(treeNamesExpanded, fileGlobsExpanded, "friend_expanded_" + d.name);
    }
    auto df = RDataFrame(spec);
    std::unordered_map<std::string, ROOT::RDF::RResultPtr<std::vector<ULong64_t>>> res;
@@ -396,7 +396,7 @@ TEST_P(RDatasetSpecTest, Histo1D)
    spec.AddGroup({"real0", "tree"s, {"specTestFile0.root"s}});
    spec.AddGroup({"real1", {{"tree"s, "specTestFile00*.root"s}}});
    // 1 friend with entries from 15 up to 39 -> shortened to have the size of the main chain
-   spec.WithFriends({{"subTree"s, "specTestFile1*.root"s}}, "friend"s);
+   spec.WithGlobalFriends({{"subTree"s, "specTestFile1*.root"s}}, "friend"s);
    ROOT::RDataFrame d(spec);
 
    auto h1 = d.Histo1D(::TH1D("h1", "h1", 10, 0, 10), "x");
@@ -443,7 +443,7 @@ TEST_P(RDatasetSpecTest, FilterDependingOnVariation)
    spec.AddGroup({"real0", "tree"s, {"specTestFile0.root"s}});
    spec.AddGroup({"real1", {{"tree"s, "specTestFile00*.root"s}}});
    // 1 friend with entries from 15 up to 39 -> shortened to have the size of the main chain
-   spec.WithFriends({{"subTree"s, "specTestFile1*.root"s}}, "friend"s);
+   spec.WithGlobalFriends({{"subTree"s, "specTestFile1*.root"s}}, "friend"s);
    ROOT::RDataFrame df(spec);
 
    auto sum = df.Vary(
@@ -484,7 +484,7 @@ TEST_P(RDatasetSpecTest, SaveGraph)
    spec.AddGroup({"real0", "tree"s, {"specTestFile0.root"s}});
    spec.AddGroup({"real1", {{"tree"s, "specTestFile00*.root"s}}});
    // 1 friend with entries from 15 up to 39 -> shortened to have the size of the main chain
-   spec.WithFriends({{"subTree"s, "specTestFile1*.root"s}}, "friend"s);
+   spec.WithGlobalFriends({{"subTree"s, "specTestFile1*.root"s}}, "friend"s);
    ROOT::RDataFrame df(spec);
    auto res0 = df.Sum<double>("x");
    auto res1 = df.Sum<double>("friend.x");
@@ -515,7 +515,7 @@ TEST(RDatasetSpecTest, Describe)
    RDatasetSpec spec;
    spec.AddGroup({"groupA", "subTree0"s, "specTestFile12.root"s});
    spec.AddGroup({"groupB", "subTree1"s, "specTestFile13.root"s});
-   spec.WithFriends({{"subTree2"s, "specTestFile14.root"s}, {"subTree3"s, "specTestFile15.root"s}});
+   spec.WithGlobalFriends({{"subTree2"s, "specTestFile14.root"s}, {"subTree3"s, "specTestFile15.root"s}});
    auto df = ROOT::RDataFrame(spec);
    auto res0 = df.Sum<double>("x");
    auto res1 = df.Sum<double>("w");
@@ -663,10 +663,10 @@ TEST(RDatasetSpecTest, Clusters)
                          {"mainB"s, "CspecTestFile1.root"s},
                          {"mainC"s, "CspecTestFile2.root"s}}});
          spec.WithGlobalRange(range);
-         spec.WithFriends({{"friendA"s, "CspecTestFile3.root"s},
-                           {"friendB"s, "CspecTestFile4.root"s},
-                           {"friendC"s, "CspecTestFile5.root"s}},
-                          "friend");
+         spec.WithGlobalFriends({{"friendA"s, "CspecTestFile3.root"s},
+                                 {"friendB"s, "CspecTestFile4.root"s},
+                                 {"friendC"s, "CspecTestFile5.root"s}},
+                                "friend");
          auto takeRes = RDataFrame(spec).Take<ULong64_t>("x");              // lazy action
          auto takeFriendRes = RDataFrame(spec).Take<ULong64_t>("friend.x"); // lazy action
          auto &res = *takeRes;
