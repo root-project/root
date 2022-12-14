@@ -23,7 +23,7 @@ if(monalisa)
   add_subdirectory(monalisa)
 endif()
 
-if(davix)
+if(davix OR builtin_davix)
    add_subdirectory(davix)
 endif()
 
