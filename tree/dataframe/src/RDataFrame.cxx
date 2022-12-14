@@ -1474,7 +1474,7 @@ RDataFrame::RDataFrame(ROOT::RDF::Experimental::RDatasetSpec spec)
 namespace RDF {
 namespace Experimental {
 
-ROOT::RDataFrame FromJSON(const std::string &jsonFile)
+ROOT::RDataFrame FromSpec(const std::string &jsonFile)
 {
    const nlohmann::json fullData = nlohmann::json::parse(std::ifstream(jsonFile));
    RSpecBuilder specBuilder;

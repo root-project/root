@@ -57,7 +57,7 @@ namespace Experimental {
 /// \brief Factory method to create an RDataFrame from a JSON specification file.
 /// \param[in] jsonFile Path of the JSON file, which should follow the format described in
 ///                     https://github.com/root-project/root/issues/11624
-ROOT::RDataFrame FromJSON(const std::string &jsonFile);
+ROOT::RDataFrame FromSpec(const std::string &jsonFile);
 
 } // namespace Experimental
 } // namespace RDF
