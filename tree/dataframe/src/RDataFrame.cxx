@@ -1514,9 +1514,9 @@ ROOT::RDataFrame FromSpec(const std::string &jsonFile)
       std::vector<int> range = fullData["range"];
 
       if (range.size() == 1)
-         spec.WithRange({range[0]});
+         spec.WithGlobalRange({range[0]});
       else if (range.size() == 2)
-         spec.WithRange({range[0], range[1]});
+         spec.WithGlobalRange({range[0], range[1]});
    }
    return ROOT::RDataFrame(spec);
 }

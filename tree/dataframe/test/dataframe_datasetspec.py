@@ -85,7 +85,7 @@ class RDatasetSpecTest(unittest.TestCase):
                 )
             )
             spec.AddGroup(("groupB", "subTree", "PYspecTestFile4.root", metaB))
-            spec.WithRange(r)
+            spec.WithGlobalRange(r)
             spec.WithFriends("anotherTree", "PYspecTestFile7.root", "friendTree")
             spec.WithFriends(
                 "subTree",
