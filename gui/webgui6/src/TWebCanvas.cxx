@@ -18,6 +18,7 @@
 #include "TSystem.h"
 #include "TStyle.h"
 #include "TCanvas.h"
+#include "TButton.h"
 #include "TFrame.h"
 #include "TPaveText.h"
 #include "TPaveStats.h"
@@ -1273,8 +1274,18 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       if (click && IsFirstConn(connid) && !IsReadOnly()) {
 
          TPad *pad = dynamic_cast<TPad *>(FindPrimitive(click->padid));
+
+         if (pad && pad->InheritsFrom(TButton::Class())) {
+            auto btn = (TButton *) pad;
+            const char *mthd = btn->GetMethod();
+            if (mthd && *mthd) {
+               TVirtualPad::TContext ctxt(gROOT->GetSelectedPad(), kTRUE, kTRUE);
+               gROOT->ProcessLine(mthd);
+            }
+            return kTRUE;
+         }
+
          if (pad && (pad != gPad)) {
-            Info("ProcessData", "Activate pad %s", pad->GetName());
             gPad = pad;
             Canvas()->SetClickSelectedPad(pad);
             if (fActivePadChangedSignal)
