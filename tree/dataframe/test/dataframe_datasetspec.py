@@ -6,8 +6,6 @@ RDataFrame = ROOT.ROOT.RDataFrame
 RDatasetSpec = ROOT.RDF.Experimental.RDatasetSpec
 REntryRange = ROOT.RDF.Experimental.RDatasetSpec.REntryRange
 RMetaData = ROOT.RDF.Experimental.RMetaData
-RSpecBuilder = ROOT.RDF.Experimental.RSpecBuilder
-
 
 class RDatasetSpecTest(unittest.TestCase):
     @classmethod
@@ -77,8 +75,8 @@ class RDatasetSpecTest(unittest.TestCase):
             metaB = RMetaData()
             metaB.Add("lumi", 0.5)
 
-            builder = RSpecBuilder()
-            builder.AddGroup(
+            spec = RDatasetSpec()
+            spec.AddGroup(
                 (
                     "groupA",
                     ["subTree1", "subTree2"],
@@ -86,10 +84,10 @@ class RDatasetSpecTest(unittest.TestCase):
                     metaA,
                 )
             )
-            builder.AddGroup(("groupB", "subTree", "PYspecTestFile4.root", metaB))
-            builder.WithRange(r)
-            builder.WithFriends("anotherTree", "PYspecTestFile7.root", "friendTree")
-            builder.WithFriends(
+            spec.AddGroup(("groupB", "subTree", "PYspecTestFile4.root", metaB))
+            spec.WithRange(r)
+            spec.WithFriends("anotherTree", "PYspecTestFile7.root", "friendTree")
+            spec.WithFriends(
                 "subTree",
                 [
                     "PYspecTestFile2.root",
@@ -102,11 +100,11 @@ class RDatasetSpecTest(unittest.TestCase):
             # TODO: this emits a warning: Maybe you need to load the corresponding shared library?
             # cling JIT session error: Failed to materialize symbols: ... emplace_back
             # Despite the warning, the result is correct
-            # builder.WithFriends([("subTree1", "PYspecTestFile5.root"),
-            #                      ("subTree2", "PYspecTestFile6.root"),
-            #                      ("subTree", "PYspecTestFile4.root")], "friendChainN")
+            # spec.WithFriends([("subTree1", "PYspecTestFile5.root"),
+            #                   ("subTree2", "PYspecTestFile6.root"),
+            #                   ("subTree", "PYspecTestFile4.root")], "friendChainN")
 
-            specs.append(builder.Build())
+            specs.append(spec)
 
         for i in range(len(ranges)):
             rdf = RDataFrame(specs[i])
