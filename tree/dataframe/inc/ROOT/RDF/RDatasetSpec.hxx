@@ -25,11 +25,8 @@ namespace RDF {
 namespace Experimental {
 
 /**
-\class ROOT::RDF::Experimental::RDatasetSpec
 \ingroup dataframe
-\brief Class used to store semi-structured dataset specification
-
- This class is responsible for the creation of dataframe with metadata information.
+\brief A dataset specification for RDataFrame.
 */
 class RDatasetSpec {
 
