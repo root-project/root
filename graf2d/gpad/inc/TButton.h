@@ -31,7 +31,7 @@ public:
    TButton();
    TButton(const char *title, const char *method, Double_t x1, Double_t y1, Double_t x2, Double_t y2);
    virtual ~TButton();
-   void Divide(Int_t nx = 1, Int_t ny = 1, Float_t xmargin = 0.01, Float_t ymargin = 0.01, Int_t color = 0) override;
+   void Divide(Int_t = 1, Int_t = 1, Float_t = 0.01, Float_t = 0.01, Int_t = 0) override {}
    void Draw(Option_t *option = "") override;
    void ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual const char *GetMethod() const { return fMethod.Data(); }
@@ -40,23 +40,17 @@ public:
    void Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2) override;
    void SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void SetBorderMode(Short_t bordermode) override { fBorderMode = bordermode; }
-   virtual void SetFraming(Bool_t f = 1);
+   virtual void SetFraming(Bool_t f = kTRUE);
    virtual Bool_t GetFraming() { return fFraming; };
-   void SetGrid(Int_t valuex = 1, Int_t valuey = 1) override;
-   void SetLogx(Int_t value = 1) override;
-   void SetLogy(Int_t value = 1) override;
+   void SetGrid(Int_t = 1, Int_t = 1) override {}
+   void SetLogx(Int_t = 1) override {}
+   void SetLogy(Int_t = 1) override {}
    virtual void SetMethod(const char *method) { fMethod = method; } // *MENU*
    void SetName(const char *name) override { fName = name; }
-   void x3d(Option_t *option = "") override;
+   void x3d(Option_t * /*option */ = "") override {}
 
    ClassDefOverride(TButton,0)  //A user interface button.
 };
-
-inline void TButton::Divide(Int_t, Int_t, Float_t, Float_t, Int_t) { }
-inline void TButton::SetGrid(Int_t, Int_t) { }
-inline void TButton::SetLogx(Int_t) { }
-inline void TButton::SetLogy(Int_t) { }
-inline void TButton::x3d(Option_t *) { }
 
 #endif
 
