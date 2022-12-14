@@ -475,8 +475,8 @@ public:
    static  void           SetVerboseLevel(Int_t vl);
    static TGeoManager    *Import(const char *filename, const char *name="", Option_t *option="");
    static Bool_t          IsLocked();
-   static void            SetExportPrecision(UInt_t prec) {fgExportPrecision = prec;}
-   static UInt_t          GetExportPrecision() {return fgExportPrecision;}
+   static void            SetExportPrecision(UInt_t prec);
+   static UInt_t          GetExportPrecision();
    static void            SetDefaultUnits(EDefaultUnits new_value);
    static EDefaultUnits   GetDefaultUnits();
    static Bool_t          LockDefaultUnits(Bool_t new_value);
