@@ -1,9 +1,9 @@
-<!-- file used in batch mode to produce canvas images with headless chrome or firefox -->
+<!-- file used in batch mode to produce geometry images with headless chrome or firefox -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
    <meta charset="utf-8">
-   <title>Batch production</title>
+   <title>Batch geometry production</title>
    <style>
      @media print {
         @page { margin: 0; }
@@ -14,7 +14,7 @@
   <script src="$jsrootsys/build/jsroot.js"></script>
 </head>
 
-<body style="margin:0; padding:0; overflow:hidden">
+<body>
   <div id="drawing" style="width:$draw_widthpx; height:$draw_heightpx; overflow:hidden; margin:0; padding:0"></div>
 </body>
 
@@ -26,7 +26,7 @@
 
    JSROOT.setBatchMode(true);
 
-   let kind = "$draw_kind";
+   let kind = '$draw_kind';
 
    function complete() {
       if (JSROOT.browser.isFirefox && window && (typeof window.dump == "function")) {
@@ -35,27 +35,30 @@
       }
    }
 
-   JSROOT.draw("drawing", globalThis.main_object, "").then(painter => {
+   let msg = globalThis.main_object;
+
+   let geo_painter = JSROOT.createGeoPainter(document.getElementById('drawing'), null, msg.cfg?.drawopt || '');
+
+   geo_painter.ctrl.cfg = msg.cfg ?? {};
+
+   geo_painter.extractRawShapes(msg, true);
+
+   geo_painter.prepareObjectDraw(msg.visibles, '__geom_viewer_selection__').then(() => {
       document.getElementById('data').remove();
       if (kind == 'draw')
          return complete();
 
-      painter.produceImage(true, kind).then(res => {
+      let dataUrl = geo_painter._renderer.domElement.toDataURL(`image/${kind}`);
 
-         let elem = document.getElementById('drawing');
-         elem.removeAttribute('style');
-         if (kind == 'svg') {
-            elem.innerHTML = res;
-         } else {
-            elem.innerHTML = '';
-            let img = document.createElement('img');
-            img.setAttribute('src', res);
-            elem.appendChild(img);
-         }
+      let elem = document.getElementById('drawing');
+      elem.innerHTML = '';
+      let img = document.createElement('img');
+      img.setAttribute('src', dataUrl);
+      elem.appendChild(img);
 
-         complete();
-      });
+      complete();
    });
+
 </script>
 
 </html>
