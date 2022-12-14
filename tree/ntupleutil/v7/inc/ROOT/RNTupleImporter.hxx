@@ -205,7 +205,7 @@ private:
    std::unique_ptr<TFile> fDestFile;
    RNTupleWriteOptions fWriteOptions;
 
-   /// No standard output, conversly if set to false, schema information and progress is printed
+   /// No standard output, conversely if set to false, schema information and progress is printed
    bool fIsQuiet = false;
    std::unique_ptr<RProgressCallback> fProgressCallback;
 
