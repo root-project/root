@@ -319,6 +319,9 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
       SetNamingSpeed(kelegantButSlow);
       Info("WriteGDMLfile", "Potentially slow with incremental suffix naming convention set");
    }
+
+   SetFltPrecision(TGeoManager::GetExportPrecision());
+
    auto def_units = gGeoManager->GetDefaultUnits();
    switch (def_units) {
       case TGeoManager::kG4Units:

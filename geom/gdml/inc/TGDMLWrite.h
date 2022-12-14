@@ -67,7 +67,6 @@ public:
       //        if "n" then there is no suffix, but uniqness of names
       //        is not secured.
       TGDMLWrite *writer = new TGDMLWrite;
-      writer->SetFltPrecision(TGeoManager::GetExportPrecision());
       writer->WriteGDMLfile(geomanager, filename, option);
       delete writer;
    }
