@@ -153,7 +153,8 @@ private:
       {
       }
       virtual ~RImportTransformation() = default;
-      virtual RResult<void> Transform(std::int64_t entry, const RImportBranch &branch, RImportField &field) = 0;
+      virtual RResult<void> Transform(const RImportBranch &branch, RImportField &field) = 0;
+      virtual void ResetEntry() = 0; // called at the end of an entry
    };
 
    /// Leaf count arrays require special treatment. They are translated into RNTuple untyped collections.
@@ -181,18 +182,19 @@ private:
    struct RCStringTransformation : public RImportTransformation {
       RCStringTransformation(std::size_t b, std::size_t f) : RImportTransformation(b, f) {}
       virtual ~RCStringTransformation() = default;
-      RResult<void> Transform(std::int64_t entry, const RImportBranch &branch, RImportField &field) final;
+      RResult<void> Transform(const RImportBranch &branch, RImportField &field) final;
+      void ResetEntry() final {}
    };
 
    /// When writing the elements of a leaf count array, moves the data from the input array one-by-one
    /// to the memory locations of the fields of the corresponding untyped collection.
    /// TODO(jblomer): write arrays as a whole to RNTuple
    struct RLeafArrayTransformation : public RImportTransformation {
-      std::int64_t fEntry = -1;
       std::int64_t fNum = 0;
       RLeafArrayTransformation(std::size_t b, std::size_t f) : RImportTransformation(b, f) {}
       virtual ~RLeafArrayTransformation() = default;
-      RResult<void> Transform(std::int64_t entry, const RImportBranch &branch, RImportField &field) final;
+      RResult<void> Transform(const RImportBranch &branch, RImportField &field) final;
+      void ResetEntry() final { fNum = 0; }
    };
 
    RNTupleImporter() = default;
