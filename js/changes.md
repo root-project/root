@@ -1,18 +1,19 @@
 # JSROOT changelog
 
-## Changes in dev
-1. Force MathJax rendering when `\` symbol is found (#243)
-2. Fix - show correct bin index in TH2 tooltips
-3. Mark methods returning `Promise` objects as **async**
-4. Fix several bugs in csg.mjs
-5. Upgrade three.js to r146
-6. Improve geometry clipping
-7. 3-dimensional TTree::Draw now produces TPolyMarker3D by default
-8. Fix - interactive move/resize on touch devices
-9. Provide `settings.PreferSavedPoints` to exclude function evaluation when there are saved points
-10. Improve TWebCanvas support
-11. Correctly handle axis zooming on lego plots
-12. Fix hist stats calculation with negative bins
+## Changes in 7.3.0
+1. Mark methods returning `Promise` as **async**
+2. Upgrade three.js to r146
+3. Fix several bugs in `csg.mjs`, improve geometry clipping
+4. Provide `settings.PreferSavedPoints` to exclude function evaluation when there are saved points
+5. Add more interactive features with `TWebCanvas`
+6. 3-dimensional `TTree::Draw()` now produces `TPolyMarker3D` by default
+7. Force MathJax rendering when `\` symbol is found (#243)
+8. Support `TButton` class
+9. Fix - show correct bin index in `TH2` tooltips
+10. Fix - interactive move/resize on touch devices
+11. Fix - correctly handle axis zooming on lego plots
+12. Fix - histogram statistics calculation with negative bins
+13. Base version for ROOT 6.28 release
 
 
 ## Changes in 7.2.1
@@ -136,6 +137,7 @@
 12. Fix logic how "ndiv" parameter of TAxis is handled, showing really the configured number of ticks
 13. Fix problem with curved TGraph drawings (#218)
 14. Fix problems with TGraph drawing updates
+15. Base version for ROOT 6.26 release
 
 
 ## Changes in 6.2.2
