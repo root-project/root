@@ -33,14 +33,16 @@ using namespace ROOT::Experimental;
 
 RGeomViewer::RGeomViewer(TGeoManager *mgr, const std::string &volname)
 {
-   fWebWindow = RWebWindow::Create();
-   fWebWindow->SetDefaultPage("file:rootui5sys/geom/index.html");
+   if (!gROOT->IsWebDisplayBatch()) {
+      fWebWindow = RWebWindow::Create();
+      fWebWindow->SetDefaultPage("file:rootui5sys/geom/index.html");
 
-   // this is call-back, invoked when message received via websocket
-   fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
-   fWebWindow->SetGeometry(900, 700); // configure predefined window geometry
-   fWebWindow->SetConnLimit(0); // allow any connections numbers at the same time
-   fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
+      // this is call-back, invoked when message received via websocket
+      fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
+      fWebWindow->SetGeometry(900, 700); // configure predefined window geometry
+      fWebWindow->SetConnLimit(0); // allow any connections numbers at the same time
+      fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
+   }
 
    fDesc.SetPreferredOffline(gEnv->GetValue("WebGui.PreferredOffline",0) != 0);
    fDesc.SetJsonComp(gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces));
@@ -54,7 +56,6 @@ RGeomViewer::RGeomViewer(TGeoManager *mgr, const std::string &volname)
 
 RGeomViewer::~RGeomViewer()
 {
-
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,7 +70,6 @@ void RGeomViewer::SetGeometry(TGeoManager *mgr, const std::string &volname)
 
    Update();
 }
-
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Select visible top volume, all other volumes will be disabled
@@ -101,6 +101,9 @@ void RGeomViewer::SetOnlyVolume(TGeoVolume *vol)
 
 void RGeomViewer::Show(const RWebDisplayArgs &args, bool always_start_new_browser)
 {
+   if (!fWebWindow)
+      return;
+
    std::string user_args = "";
    if (!GetShowHierarchy()) user_args = "{ nobrowser: true }";
    fWebWindow->SetUserArgs(user_args);
@@ -119,8 +122,7 @@ void RGeomViewer::Show(const RWebDisplayArgs &args, bool always_start_new_browse
 
 std::string RGeomViewer::GetWindowAddr() const
 {
-   if (!fWebWindow) return "";
-   return fWebWindow->GetAddr();
+   return fWebWindow ? fWebWindow->GetAddr() : ""s;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +130,8 @@ std::string RGeomViewer::GetWindowAddr() const
 
 void RGeomViewer::Update()
 {
-   fWebWindow->Send(0, "RELOAD");
+   if (fWebWindow)
+      fWebWindow->Send(0, "RELOAD");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +164,8 @@ void RGeomViewer::SendGeometry(unsigned connid)
 
    R__LOG_DEBUG(0, RGeomLog()) << "Produce geometry JSON len: " << json.length();
 
-   fWebWindow->Send(connid, json);
+   if (fWebWindow)
+      fWebWindow->Send(connid, json);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +176,8 @@ void RGeomViewer::SendGeometry(unsigned connid)
 void RGeomViewer::SetDrawOptions(const std::string &opt)
 {
    fDesc.SetDrawOptions(opt);
-   unsigned connid = fWebWindow->GetConnectionId();
+
+   unsigned connid = fWebWindow ? fWebWindow->GetConnectionId() : 0;
    if (connid)
       fWebWindow->Send(connid, "DROPT:"s + opt);
 }
@@ -214,8 +219,6 @@ void RGeomViewer::SaveImage(const std::string &fname, int width, int height)
 
 void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 {
-   // printf("Recv %s\n", arg.substr(0,100).c_str());
-
    if (arg == "GETDRAW") {
 
       SendGeometry(connid);
@@ -230,9 +233,7 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 
       std::string hjson, json;
 
-      auto nmatches = fDesc.SearchVisibles(query, hjson, json);
-
-      printf("Searches %s found %d hjson %d json %d\n", query.c_str(), nmatches, (int) hjson.length(), (int) json.length());
+      /* auto nmatches = */ fDesc.SearchVisibles(query, hjson, json);
 
       // send reply with appropriate header - NOFOUND, FOUND0:, FOUND1:
       fWebWindow->Send(connid, hjson);
@@ -250,8 +251,6 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
       std::string json{"SHAPE:"};
 
       fDesc.ProduceDrawingFor(nodeid, json);
-
-      printf("Produce shape for stack json %d\n", (int) json.length());
 
       fWebWindow->Send(connid, json);
 
@@ -304,12 +303,8 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 
             std::string json{"APPND:"};
 
-            if (fDesc.ProduceDrawingFor(nodeid, json, true)) {
-
-               printf("Send appending JSON %d\n", (int) json.length());
-
+            if (fDesc.ProduceDrawingFor(nodeid, json, true))
                fWebWindow->Send(connid, json);
-            }
          } else if (selected) {
 
             // just resend full geometry
