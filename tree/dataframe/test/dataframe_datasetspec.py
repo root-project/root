@@ -86,8 +86,8 @@ class RDatasetSpecTest(unittest.TestCase):
             )
             spec.AddGroup(("groupB", "subTree", "PYspecTestFile4.root", metaB))
             spec.WithGlobalRange(r)
-            spec.WithFriends("anotherTree", "PYspecTestFile7.root", "friendTree")
-            spec.WithFriends(
+            spec.WithGlobalFriends("anotherTree", "PYspecTestFile7.root", "friendTree")
+            spec.WithGlobalFriends(
                 "subTree",
                 [
                     "PYspecTestFile2.root",
@@ -100,9 +100,9 @@ class RDatasetSpecTest(unittest.TestCase):
             # TODO: this emits a warning: Maybe you need to load the corresponding shared library?
             # cling JIT session error: Failed to materialize symbols: ... emplace_back
             # Despite the warning, the result is correct
-            # spec.WithFriends([("subTree1", "PYspecTestFile5.root"),
-            #                   ("subTree2", "PYspecTestFile6.root"),
-            #                   ("subTree", "PYspecTestFile4.root")], "friendChainN")
+            # spec.WithGlobalFriends([("subTree1", "PYspecTestFile5.root"),
+            #                         ("subTree2", "PYspecTestFile6.root"),
+            #                         ("subTree", "PYspecTestFile4.root")], "friendChainN")
 
             specs.append(spec)
 
