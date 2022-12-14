@@ -99,10 +99,15 @@ can be replaced with the simpler and exception safe:
 
       void CdNull();
       friend class TDirectory;
+
+      void RegisterCurrentDirectory();
+
    public:
+      // Note: the directory pointed to by `previous` must not be already deleted
+      // or in the process of being deleted by another thread while this constructor runs.
       TContext(TDirectory *previous, TDirectory *newCurrent) : fDirectory(previous)
       {
-         // Store the current directory so we can restore it
+         // Store the user given directory so we can restore it
          // later and cd to the new directory.
          if (fDirectory)
             (*fDirectory).RegisterContext(this);
@@ -115,15 +120,13 @@ can be replaced with the simpler and exception safe:
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
-         if (fDirectory)
-            (*fDirectory).RegisterContext(this);
+         RegisterCurrentDirectory();
       }
       TContext(TDirectory *newCurrent) : fDirectory(TDirectory::CurrentDirectory().load())
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
-         if (fDirectory)
-            (*fDirectory).RegisterContext(this);
+         RegisterCurrentDirectory();
          if (newCurrent)
             newCurrent->cd();
          else
@@ -140,9 +143,20 @@ protected:
    mutable TString  fPathBuffer;        //! Buffer for GetPath() function
    TContext        *fContext{nullptr};  //! Pointer to a list of TContext object pointing to this TDirectory
 
-   std::vector<std::atomic<TDirectory*>*> fGDirectories; //! thread local gDirectory pointing to this object.
+   // Struct to hold the pointer to a thread local gDirectory pointer and
+   // a related atomic_flag to enable locking access to that gDirectory.
+   struct TGDirectory {
+      TGDirectory(std::atomic_flag* f, std::atomic<TDirectory*> *d) : fLock(f), fCurrent(d) {}
+      bool operator==(std::atomic<TDirectory*> *d) {
+         return fCurrent == d;
+      }
+      std::atomic_flag          *fLock = nullptr;
+      std::atomic<TDirectory *> *fCurrent = nullptr;
+   };
 
-   std::atomic<size_t> fContextPeg;     //!Counter delaying the TDirectory destructor from finishing.
+   std::vector<TGDirectory> fGDirectories; //! thread local gDirectory pointing to this object.
+
+   std::atomic<size_t> fContextPeg{0};  //! Counter delaying the TDirectory destructor from finishing.
    mutable std::atomic_flag fSpinLock;  //! MSVC doesn't support = ATOMIC_FLAG_INIT;
 
    static Bool_t fgAddDirectory;        //!flag to add histograms, graphs,etc to the directory
@@ -222,6 +236,7 @@ public:
    virtual const char *GetPathStatic() const;
    virtual const char *GetPath() const;
    TUUID               GetUUID() const {return fUUID;}
+           Bool_t      IsBuilt() const { return fList != nullptr; }
            Bool_t      IsFolder() const override { return kTRUE; }
    virtual Bool_t      IsModified() const { return kFALSE; }
    virtual Bool_t      IsWritable() const { return kFALSE; }
