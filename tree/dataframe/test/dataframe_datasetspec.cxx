@@ -128,42 +128,39 @@ TEST_P(RDatasetSpecTest, SimpleChainsCreation)
       for (const auto &trees : d.trees) {
          for (const auto &t : trees) {
             // first AddGroup overload: 1 tree, 1 file; both passed as string directly
-            const auto dfC1 = *(RDataFrame(RSpecBuilder().AddGroup({"", t.tree, t.file}).Build()).Take<ULong64_t>("x"));
+            const auto dfC1 = *(RDataFrame(RDatasetSpec().AddGroup({"", t.tree, t.file})).Take<ULong64_t>("x"));
             EXPECT_VEC_SEQ_EQ(dfC1, ROOT::TSeq<ULong64_t>(t.start, t.end));
 
             // second AddGroup overload: 1 tree, many files; files passed as a vector; testing with 1 specTestFile
-            const auto dfC2 =
-               *(RDataFrame(RSpecBuilder().AddGroup({"", t.tree, {t.file}}).Build()).Take<ULong64_t>("x"));
+            const auto dfC2 = *(RDataFrame(RDatasetSpec().AddGroup({"", t.tree, {t.file}})).Take<ULong64_t>("x"));
             EXPECT_VEC_SEQ_EQ(dfC2, ROOT::TSeq<ULong64_t>(t.start, t.end));
 
             // third AddGroup overload: many trees, many files; trees and files passed in a vector of pairs
-            const auto dfC3 =
-               *(RDataFrame(RSpecBuilder().AddGroup({"", {{t.tree, t.file}}}).Build()).Take<ULong64_t>("x"));
+            const auto dfC3 = *(RDataFrame(RDatasetSpec().AddGroup({"", {{t.tree, t.file}}})).Take<ULong64_t>("x"));
             EXPECT_VEC_SEQ_EQ(dfC3, ROOT::TSeq<ULong64_t>(t.start, t.end));
 
             // fourth AddGroup overload: many trees, many files; trees and files passed in separate vectors
-            const auto dfC4 =
-               *(RDataFrame(RSpecBuilder().AddGroup({"", {t.tree}, {t.file}}).Build()).Take<ULong64_t>("x"));
+            const auto dfC4 = *(RDataFrame(RDatasetSpec().AddGroup({"", {t.tree}, {t.file}})).Take<ULong64_t>("x"));
             EXPECT_VEC_SEQ_EQ(dfC4, ROOT::TSeq<ULong64_t>(t.start, t.end));
          }
       }
    }
 
    // groups with hard-coded file names
-   std::vector<RSpecBuilder> builders(4);
+   std::vector<RDatasetSpec> specs(4);
    for (const auto &d : data) {
       for (const auto &trees : d.trees) {
          for (const auto &t : trees) {
-            builders[0].AddGroup({"", t.tree, t.file});
-            builders[1].AddGroup({"", t.tree, {t.file}});
-            builders[2].AddGroup({"", {{t.tree, t.file}}});
-            builders[3].AddGroup({"", {t.tree}, {t.file}});
+            specs[0].AddGroup({"", t.tree, t.file});
+            specs[1].AddGroup({"", t.tree, {t.file}});
+            specs[2].AddGroup({"", {{t.tree, t.file}}});
+            specs[3].AddGroup({"", {t.tree}, {t.file}});
          }
       }
    }
 
-   for (auto &b : builders) {
-      auto df = *(RDataFrame(b.Build()).Take<ULong64_t>("x"));
+   for (const auto &spec : specs) {
+      auto df = *(RDataFrame(spec).Take<ULong64_t>("x"));
       std::sort(df.begin(), df.end());
       EXPECT_VEC_SEQ_EQ(df, ROOT::TSeq<ULong64_t>(data[0].groupStart, data[data.size() - 1].groupEnd));
    }
@@ -172,7 +169,7 @@ TEST_P(RDatasetSpecTest, SimpleChainsCreation)
    // the second builder takes tree/file glob as separate group
    // the third build takes tree/expanded glob (similar to second)
    // the fourth builder takes a vector of trees/vector of file globs as a separate group
-   std::vector<RSpecBuilder> buildersGranularity(4);
+   std::vector<RDatasetSpec> specsGranularity(4);
    for (const auto &d : data) {
       std::vector<std::string> treeNames{};
       std::vector<std::string> fileGlobs{};
@@ -180,19 +177,19 @@ TEST_P(RDatasetSpecTest, SimpleChainsCreation)
          std::vector<std::string> treeNamesExpanded{};
          std::vector<std::string> fileGlobsExpanded{};
          for (const auto &t : d.trees[i]) {
-            buildersGranularity[0].AddGroup({"", t.tree, t.file});
+            specsGranularity[0].AddGroup({"", t.tree, t.file});
             treeNamesExpanded.emplace_back(t.tree);
             fileGlobsExpanded.emplace_back(t.file);
          }
-         buildersGranularity[1].AddGroup({"", d.trees[i][0].tree, d.fileGlobs[i]});
-         buildersGranularity[2].AddGroup({"", treeNamesExpanded, fileGlobsExpanded});
+         specsGranularity[1].AddGroup({"", d.trees[i][0].tree, d.fileGlobs[i]});
+         specsGranularity[2].AddGroup({"", treeNamesExpanded, fileGlobsExpanded});
          treeNames.emplace_back(d.trees[i][0].tree);
          fileGlobs.emplace_back(d.fileGlobs[i]);
       }
-      buildersGranularity[3].AddGroup({"", treeNames, fileGlobs});
+      specsGranularity[3].AddGroup({"", treeNames, fileGlobs});
    }
-   for (auto &b : buildersGranularity) {
-      auto df = *(RDataFrame(b.Build()).Take<ULong64_t>("x"));
+   for (const auto &spec : specsGranularity) {
+      auto df = *(RDataFrame(spec).Take<ULong64_t>("x"));
       std::sort(df.begin(), df.end());
       EXPECT_VEC_SEQ_EQ(df, ROOT::TSeq<ULong64_t>(data[0].groupStart, data[data.size() - 1].groupEnd));
    }
@@ -200,7 +197,7 @@ TEST_P(RDatasetSpecTest, SimpleChainsCreation)
 
 TEST_P(RDatasetSpecTest, SimpleMetaDataHandling)
 {
-   std::vector<RSpecBuilder> builders(2);
+   std::vector<RDatasetSpec> specs(2);
    for (const auto &d : data) {
       std::vector<std::string> treeNames{};
       std::vector<std::string> fileGlobs{};
@@ -214,12 +211,12 @@ TEST_P(RDatasetSpecTest, SimpleMetaDataHandling)
          treeNames.emplace_back(d.trees[i][0].tree);
          fileGlobs.emplace_back(d.fileGlobs[i]);
       }
-      builders[0].AddGroup({d.name, treeNames, fileGlobs, d.meta});
-      builders[1].AddGroup({d.name, treeNamesExpanded, fileGlobsExpanded, d.meta});
+      specs[0].AddGroup({d.name, treeNames, fileGlobs, d.meta});
+      specs[1].AddGroup({d.name, treeNamesExpanded, fileGlobsExpanded, d.meta});
    }
-   for (auto &b : builders) {
+   for (const auto &spec : specs) {
       auto df =
-         RDataFrame(b.Build())
+         RDataFrame(spec)
             .DefinePerSample("group_name_col",
                              [](unsigned int, const ROOT::RDF::RSampleInfo &id) { return id.GetS("group_name"); })
             .DefinePerSample("group_start_col",
@@ -268,7 +265,7 @@ TEST_P(RDatasetSpecTest, Ranges)
    std::vector<RDatasetSpec::REntryRange> ranges = {{1, 4},     {2, 4},    {100},     {1, 100}, {2, 2},
                                                     {100, 100}, {85, 100}, {86, 100}, {92, 100}};
 
-   std::vector<RSpecBuilder> builders(2);
+   std::vector<RDatasetSpec> specs(2);
    for (const auto &d : data) {
       std::vector<std::string> treeNames{};
       std::vector<std::string> fileGlobs{};
@@ -282,12 +279,12 @@ TEST_P(RDatasetSpecTest, Ranges)
          treeNames.emplace_back(d.trees[i][0].tree);
          fileGlobs.emplace_back(d.fileGlobs[i]);
       }
-      builders[0].AddGroup({d.name, treeNames, fileGlobs, d.meta});
-      builders[1].AddGroup({d.name, treeNamesExpanded, fileGlobsExpanded, d.meta});
+      specs[0].AddGroup({d.name, treeNames, fileGlobs, d.meta});
+      specs[1].AddGroup({d.name, treeNamesExpanded, fileGlobsExpanded, d.meta});
    }
-   for (auto &b : builders) {
+   for (auto &spec : specs) {
       for (auto i = 0u; i < ranges.size(); ++i) {
-         auto df = RDataFrame(b.WithRange(ranges[i]).Build());
+         auto df = RDataFrame(spec.WithRange(ranges[i]));
          auto takeRes = df.Take<ULong64_t>("x"); // lazy action
          if (i < 6u) {                           // the first 6 ranges, are logically correct
             auto &res = *takeRes;
@@ -346,9 +343,9 @@ TEST_P(RDatasetSpecTest, Ranges)
 TEST_P(RDatasetSpecTest, Friends)
 {
 
-   RSpecBuilder builder;
+   RDatasetSpec spec;
    // pick the second group as the main chain, so that can test shorter, equal-sized, longer friends
-   builder.AddGroup({data[1].name, data[1].trees[0][0].tree, data[1].fileGlobs});
+   spec.AddGroup({data[1].name, data[1].trees[0][0].tree, data[1].fileGlobs});
    for (const auto &d : data) {
       std::vector<std::string> treeNames{};
       std::vector<std::string> fileGlobs{};
@@ -362,10 +359,10 @@ TEST_P(RDatasetSpecTest, Friends)
          treeNames.emplace_back(d.trees[i][0].tree);
          fileGlobs.emplace_back(d.fileGlobs[i]);
       }
-      builder.WithFriends(treeNames, fileGlobs, "friend_glob_" + d.name);
-      builder.WithFriends(treeNamesExpanded, fileGlobsExpanded, "friend_expanded_" + d.name);
+      spec.WithFriends(treeNames, fileGlobs, "friend_glob_" + d.name);
+      spec.WithFriends(treeNamesExpanded, fileGlobsExpanded, "friend_expanded_" + d.name);
    }
-   auto df = RDataFrame(builder.Build());
+   auto df = RDataFrame(spec);
    std::unordered_map<std::string, ROOT::RDF::RResultPtr<std::vector<ULong64_t>>> res;
    for (const auto &d : data) {
       res["friend_glob_" + d.name + "x"] = df.Take<ULong64_t>("friend_glob_" + d.name + ".x");
@@ -395,12 +392,12 @@ TEST_P(RDatasetSpecTest, Friends)
 
 TEST_P(RDatasetSpecTest, Histo1D)
 {
-   RSpecBuilder builder;
-   builder.AddGroup({"real0", "tree"s, {"specTestFile0.root"s}});
-   builder.AddGroup({"real1", {{"tree"s, "specTestFile00*.root"s}}});
+   RDatasetSpec spec;
+   spec.AddGroup({"real0", "tree"s, {"specTestFile0.root"s}});
+   spec.AddGroup({"real1", {{"tree"s, "specTestFile00*.root"s}}});
    // 1 friend with entries from 15 up to 39 -> shortened to have the size of the main chain
-   builder.WithFriends({{"subTree"s, "specTestFile1*.root"s}}, "friend"s);
-   ROOT::RDataFrame d(builder.Build());
+   spec.WithFriends({{"subTree"s, "specTestFile1*.root"s}}, "friend"s);
+   ROOT::RDataFrame d(spec);
 
    auto h1 = d.Histo1D(::TH1D("h1", "h1", 10, 0, 10), "x");
    auto h2 = d.Histo1D({"h2", "h2", 10, 0, 10}, "x");
@@ -442,12 +439,12 @@ TEST_P(RDatasetSpecTest, Histo1D)
 
 TEST_P(RDatasetSpecTest, FilterDependingOnVariation)
 {
-   RSpecBuilder builder;
-   builder.AddGroup({"real0", "tree"s, {"specTestFile0.root"s}});
-   builder.AddGroup({"real1", {{"tree"s, "specTestFile00*.root"s}}});
+   RDatasetSpec spec;
+   spec.AddGroup({"real0", "tree"s, {"specTestFile0.root"s}});
+   spec.AddGroup({"real1", {{"tree"s, "specTestFile00*.root"s}}});
    // 1 friend with entries from 15 up to 39 -> shortened to have the size of the main chain
-   builder.WithFriends({{"subTree"s, "specTestFile1*.root"s}}, "friend"s);
-   ROOT::RDataFrame df(builder.Build());
+   spec.WithFriends({{"subTree"s, "specTestFile1*.root"s}}, "friend"s);
+   ROOT::RDataFrame df(spec);
 
    auto sum = df.Vary(
                    "x",
@@ -483,12 +480,12 @@ TEST_P(RDatasetSpecTest, FilterDependingOnVariation)
 // see: https://github.com/root-project/root/issues/10928
 TEST_P(RDatasetSpecTest, SaveGraph)
 {
-   RSpecBuilder builder;
-   builder.AddGroup({"real0", "tree"s, {"specTestFile0.root"s}});
-   builder.AddGroup({"real1", {{"tree"s, "specTestFile00*.root"s}}});
+   RDatasetSpec spec;
+   spec.AddGroup({"real0", "tree"s, {"specTestFile0.root"s}});
+   spec.AddGroup({"real1", {{"tree"s, "specTestFile00*.root"s}}});
    // 1 friend with entries from 15 up to 39 -> shortened to have the size of the main chain
-   builder.WithFriends({{"subTree"s, "specTestFile1*.root"s}}, "friend"s);
-   ROOT::RDataFrame df(builder.Build());
+   spec.WithFriends({{"subTree"s, "specTestFile1*.root"s}}, "friend"s);
+   ROOT::RDataFrame df(spec);
    auto res0 = df.Sum<double>("x");
    auto res1 = df.Sum<double>("friend.x");
 
@@ -515,11 +512,11 @@ TEST(RDatasetSpecTest, Describe)
    dfWriter1.Range(5).Snapshot<double>("subTree2", "specTestFile14.root", {"w"});
    dfWriter1.Range(5, 10).Snapshot<double>("subTree3", "specTestFile15.root", {"w"});
 
-   RSpecBuilder builder;
-   builder.AddGroup({"groupA", "subTree0"s, "specTestFile12.root"s});
-   builder.AddGroup({"groupB", "subTree1"s, "specTestFile13.root"s});
-   builder.WithFriends({{"subTree2"s, "specTestFile14.root"s}, {"subTree3"s, "specTestFile15.root"s}});
-   auto df = ROOT::RDataFrame(builder.Build());
+   RDatasetSpec spec;
+   spec.AddGroup({"groupA", "subTree0"s, "specTestFile12.root"s});
+   spec.AddGroup({"groupB", "subTree1"s, "specTestFile13.root"s});
+   spec.WithFriends({{"subTree2"s, "specTestFile14.root"s}, {"subTree3"s, "specTestFile15.root"s}});
+   auto df = ROOT::RDataFrame(spec);
    auto res0 = df.Sum<double>("x");
    auto res1 = df.Sum<double>("w");
 
@@ -660,17 +657,16 @@ TEST(RDatasetSpecTest, Clusters)
       std::vector<ROOT::RDF::Experimental::RDatasetSpec::REntryRange> ranges = {{}, {20}, {100, 110}, {130, 200}};
 
       for (const auto &range : ranges) {
-         RSpecBuilder builder;
-         builder.AddGroup({"",
-                           {{"mainA"s, "CspecTestFile0.root"s},
-                            {"mainB"s, "CspecTestFile1.root"s},
-                            {"mainC"s, "CspecTestFile2.root"s}}});
-         builder.WithRange(range);
-         builder.WithFriends({{"friendA"s, "CspecTestFile3.root"s},
-                              {"friendB"s, "CspecTestFile4.root"s},
-                              {"friendC"s, "CspecTestFile5.root"s}},
-                             "friend");
-         auto spec = builder.Build();
+         RDatasetSpec spec;
+         spec.AddGroup({"",
+                        {{"mainA"s, "CspecTestFile0.root"s},
+                         {"mainB"s, "CspecTestFile1.root"s},
+                         {"mainC"s, "CspecTestFile2.root"s}}});
+         spec.WithRange(range);
+         spec.WithFriends({{"friendA"s, "CspecTestFile3.root"s},
+                           {"friendB"s, "CspecTestFile4.root"s},
+                           {"friendC"s, "CspecTestFile5.root"s}},
+                          "friend");
          auto takeRes = RDataFrame(spec).Take<ULong64_t>("x");              // lazy action
          auto takeFriendRes = RDataFrame(spec).Take<ULong64_t>("friend.x"); // lazy action
          auto &res = *takeRes;

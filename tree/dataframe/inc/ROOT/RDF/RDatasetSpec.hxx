@@ -29,9 +29,6 @@ namespace Experimental {
 \brief A dataset specification for RDataFrame.
 */
 class RDatasetSpec {
-
-   friend class RSpecBuilder;
-
 public:
    struct REntryRange {
       Long64_t fBegin{0};
@@ -46,10 +43,9 @@ private:
    ROOT::TreeUtils::RFriendInfo fFriendInfo;  ///< List of friends
    REntryRange fEntryRange; ///< Start (inclusive) and end (exclusive) entry for the dataset processing
 
-   RDatasetSpec(const std::vector<RDatasetGroup> &datasetGroups, const ROOT::TreeUtils::RFriendInfo &friendInfo = {},
-                const REntryRange &entryRange = {});
-
 public:
+   RDatasetSpec() = default;
+
    const std::vector<std::string> GetGroupNames() const;
    const std::vector<std::string> GetTreeNames() const;
    const std::vector<std::string> GetFileNameGlobs() const;
@@ -61,31 +57,22 @@ public:
    /// \cond HIDDEN_SYMBOLS
    const std::vector<RDatasetGroup> &GetDatasetGroups() const;
    /// \endcond
-};
 
-class RSpecBuilder {
-   std::vector<RDatasetGroup> fDatasetGroups; ///< List of groups
-   ROOT::TreeUtils::RFriendInfo fFriendInfo;  ///< List of friends
-   RDatasetSpec::REntryRange fEntryRange; ///< Start (inclusive) and end (exclusive) entry for the dataset processing
+   RDatasetSpec &AddGroup(RDatasetGroup datasetGroup);
 
-public:
-   RSpecBuilder &AddGroup(RDatasetGroup datasetGroup);
-
-   RSpecBuilder &
+   RDatasetSpec &
    WithFriends(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias = "");
 
-   RSpecBuilder &WithFriends(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
+   RDatasetSpec &WithFriends(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
                              const std::string &alias = "");
 
-   RSpecBuilder &WithFriends(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
+   RDatasetSpec &WithFriends(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
                              const std::string &alias = "");
 
-   RSpecBuilder &WithFriends(const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNameGlobs,
+   RDatasetSpec &WithFriends(const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNameGlobs,
                              const std::string &alias = "");
 
-   RSpecBuilder &WithRange(const RDatasetSpec::REntryRange &entryRange = {});
-
-   RDatasetSpec Build();
+   RDatasetSpec &WithRange(const RDatasetSpec::REntryRange &entryRange = {});
 };
 
 } // namespace Experimental

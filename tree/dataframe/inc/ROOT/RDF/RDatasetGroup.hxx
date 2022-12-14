@@ -21,11 +21,10 @@ namespace RDF {
 namespace Experimental {
 
 /**
-\class ROOT::RDF::Experimental::RDatasetGroup
 \ingroup dataframe
 \brief Class representing a dataset group (mapping of trees (and their fileglobs) to metadata)
 
- This class should be passed to RSpecBuilder in order to build a RDataFrame.
+ This class should be passed to RDatasetSpec in order to build a RDataFrame.
 */
 class RDatasetGroup {
    std::string fGroupName;
