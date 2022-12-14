@@ -30,6 +30,7 @@ The following people have contributed to this new version:
  Fons Rademakers, CERN/SFT,\
  Jonas Rembser, CERN/SFT,\
  Enric Tejedor Saavedra, CERN/SFT,\
+ Garima Singh, Princeton/SFT,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,\
