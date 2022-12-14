@@ -12,6 +12,7 @@
 #include <ROOT/RGeoPainter.hxx>
 
 #include "TGeoVolume.h"
+#include "TVirtualPad.h"
 
 using namespace ROOT::Experimental;
 
@@ -27,7 +28,7 @@ RGeoPainter::~RGeoPainter()
 
 void RGeoPainter::SetGeoManager(TGeoManager *mgr)
 {
-   if (fViewer && (fGeoManager!=mgr))
+   if (fViewer && (fGeoManager != mgr))
       fViewer->SetGeometry(fGeoManager);
 
    fGeoManager = mgr;
@@ -35,6 +36,13 @@ void RGeoPainter::SetGeoManager(TGeoManager *mgr)
 
 void RGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *opt)
 {
+   if (gPad) {
+      // append volume to the pad, web canvas also support geometry drawing now
+      vol->AppendPad(opt);
+      return;
+   }
+
+
    if (!fViewer)
       fViewer = std::make_shared<RGeomViewer>(fGeoManager);
 
