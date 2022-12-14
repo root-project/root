@@ -83,7 +83,6 @@ public:
    typedef std::map<const std::string, FlagSet> FlagMap;
 
    struct Config {
-
       std::string observableName;
       RooRealVar *observable = nullptr;
       std::string fileName;
@@ -101,8 +100,6 @@ public:
    };
 
    RooLagrangianMorphFunc();
-   RooLagrangianMorphFunc(const char *name, const char *title, const char *filename, const char *observableName,
-                          const RooArgSet &couplings, const RooArgSet &inputs);
    RooLagrangianMorphFunc(const char *name, const char *title, const Config &config);
    RooLagrangianMorphFunc(const RooLagrangianMorphFunc &other, const char *newName);
 
@@ -180,8 +177,6 @@ private:
    void setup(bool ownParams = true);
    void disableInterference(const std::vector<const char *> &nonInterfering);
    void disableInterferences(const std::vector<std::vector<const char *>> &nonInterfering);
-
-   void addFolders(const RooArgList &folders);
 
    bool hasCache() const;
    RooLagrangianMorphFunc::CacheElem *getCache() const;
