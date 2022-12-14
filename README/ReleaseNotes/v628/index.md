@@ -301,6 +301,14 @@ So, if we take the same example as above, and leave out the x-points, the diagra
 
 ## Geometry Libraries
 
+- Support with web geometry viewer image production in batch mode. Just do:
+```
+   ROOT::Experimental::RGeomViewer viewer(geom);
+   viewer.SaveImage("rootgeom.jpeg", 800, 600);
+```
+This runs normal WebGL rendering in headless web browser (Chrome or Firefox) and
+creates png or jpeg image out of it.
+
 
 ## Database Libraries
 
