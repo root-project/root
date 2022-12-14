@@ -1426,10 +1426,9 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
       clingArgsStorage.push_back("-Wno-undefined-inline");
       clingArgsStorage.push_back("-fsigned-char");
-      // The -O1 optimization flag has nasty side effects on Windows (32 and 64 bit)
+      // The -O1 optimization flag has nasty side effects on Windows (32 bit)
       // See the GitHub issues #9809 and #9944
-      // TODO: to be reviewed after the upgrade of LLVM & Clang
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) || defined(_WIN64)
       clingArgsStorage.push_back("-O1");
       // Disable optimized register allocation which is turned on automatically
       // by -O1, but seems to require -O2 to not explode in run time.
