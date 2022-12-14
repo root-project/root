@@ -79,6 +79,11 @@ Most RNTuple fields have a type identical to the corresponding TTree input branc
       ROOT::RVec<float> jet_pt (projected from _collection0.jet_pt)
       ROOT::RVec<float> jet_eta (projected from _collection0.jet_eta)
     These projections are meta-data only operations and don't involve duplicating the data.
+
+Current limitations of the importer:
+  - Adding projected fields where necessary is pending the implementation of the core functionality in RNTuple
+  - Importing collection proxies is untested
+  - Some types are not (yet) available in RNTuple, such as Double32_t or std::map
 */
 // clang-format on
 class RNTupleImporter {
