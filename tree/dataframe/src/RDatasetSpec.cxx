@@ -133,8 +133,8 @@ RSpecBuilder &RSpecBuilder::WithFriends(const std::vector<std::string> &treeName
       throw std::logic_error("Mismatch between number of trees and file globs.");
    std::vector<std::pair<std::string, std::string>> target;
    target.reserve(fileNameGlobs.size());
-   std::transform(treeNames.begin(), treeNames.end(), fileNameGlobs.begin(), std::back_inserter(target),
-                  [](const std::string &a, const std::string &b) { return std::make_pair(a, b); });
+   for (auto i = 0u; i < fileNameGlobs.size(); ++i)
+      target.emplace_back(std::make_pair((treeNames.size() == 1u ? treeNames[0] : treeNames[i]), fileNameGlobs[i]));
    fFriendInfo.AddFriend(target, alias);
    return *this;
 }

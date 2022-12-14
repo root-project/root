@@ -40,7 +40,6 @@ class RDatasetSpecTest(unittest.TestCase):
         for i in range(2, 8):
             ROOT.gSystem.Unlink("PYspecTestFile" + str(i) + ".root")
 
-    # a test involving all 3 constructors, all possible valid ranges, all possible friends
     def test_General(self):
         ranges = [
             REntryRange(),
@@ -133,13 +132,49 @@ class RDatasetSpecTest(unittest.TestCase):
             fr2 = fr2P.GetValue()
             # fr3 = fr3P.GetValue()
 
+            self.assertEqual(len(res), len(expectedRess[i]))
             for j in range(len(expectedRess[i])):
-                self.assertEqual(len(res), len(expectedRess[i]))
                 self.assertEqual(lum[j], lumis[i][j])
                 self.assertEqual(res[j], expectedRess[i][j])
                 self.assertEqual(fr1[j], expectedRess[i][j])
                 self.assertEqual(fr2[j], expectedRess[i][j])
                 # self.assertEqual(fr3[j], expectedRess[i][j])
+
+    def test_FromSpec(self):
+        rdf = ROOT.RDF.Experimental.FromJSON("spec.json")
+        rdf = rdf.DefinePerSample("name", "rdfsampleinfo_.GetGroupName()")
+        rdf = rdf.DefinePerSample("lumi", 'rdfsampleinfo_.GetD("lumi")')
+
+        if self.legacy_pyroot:
+            resP = rdf.Take("ULong64_t")("z")
+            namP = rdf.Take("string")("name")
+            lumP = rdf.Take("double")("lumi")
+            fr1P = rdf.Take("ULong64_t")("friendTree.z")
+            fr2P = rdf.Take("ULong64_t")("friendChain1.z")
+        else:
+            resP = rdf.Take["ULong64_t"]("z")
+            namP = rdf.Take["string"]("name")
+            lumP = rdf.Take["double"]("lumi")
+            fr1P = rdf.Take["ULong64_t"]("friendTree.z")
+            fr2P = rdf.Take["ULong64_t"]("friendChain1.z")
+
+        res = resP.GetValue()
+        nam = namP.GetValue()
+        lum = lumP.GetValue()
+        fr1 = fr1P.GetValue()
+        fr2 = fr2P.GetValue()
+
+        expectedRes = [101, 102, 103, 104]
+        names = ["groupA", "groupA", "groupA", "groupB"]
+        lumis = [1.0, 1.0, 1.0, 0.5]
+
+        self.assertEqual(len(res), len(expectedRes))
+        for j in range(len(expectedRes)):
+            self.assertEqual(nam[j], names[j])
+            self.assertEqual(lum[j], lumis[j])
+            self.assertEqual(res[j], expectedRes[j])
+            self.assertEqual(fr1[j], expectedRes[j])
+            self.assertEqual(fr2[j], expectedRes[j])
 
 
 if __name__ == "__main__":
