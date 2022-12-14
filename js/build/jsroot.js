@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.2.99
+// https://root.cern/js/ v7.3.0
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -7,11 +7,11 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-let version_id = 'dev';
+let version_id = '7.3.0';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '9/12/2022';
+let version_date = '14/12/2022';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -3792,30 +3792,6 @@ function select(selector) {
       : new Selection$1([[selector]], root$1);
 }
 
-var nextId = 0;
-
-function Local() {
-  this._ = "@" + (++nextId).toString(36);
-}
-
-Local.prototype = {
-  constructor: Local,
-  get: function(node) {
-    var id = this._;
-    while (!(id in node)) if (!(node = node.parentNode)) return;
-    return node[id];
-  },
-  set: function(node, value) {
-    return node[this._] = value;
-  },
-  remove: function(node) {
-    return this._ in node && delete node[this._];
-  },
-  toString: function() {
-    return this._;
-  }
-};
-
 function sourceEvent(event) {
   let sourceEvent;
   while (sourceEvent = event.sourceEvent) event = sourceEvent;
@@ -5379,7 +5355,6 @@ millisecond.every = function(k) {
 };
 
 var millisecond$1 = millisecond;
-millisecond.range;
 
 const durationSecond = 1000;
 const durationMinute = durationSecond * 60;
@@ -5400,7 +5375,6 @@ var second = newInterval(function(date) {
 });
 
 var utcSecond = second;
-second.range;
 
 var minute = newInterval(function(date) {
   date.setTime(date - date.getMilliseconds() - date.getSeconds() * durationSecond);
@@ -5413,7 +5387,6 @@ var minute = newInterval(function(date) {
 });
 
 var timeMinute = minute;
-minute.range;
 
 var hour = newInterval(function(date) {
   date.setTime(date - date.getMilliseconds() - date.getSeconds() * durationSecond - date.getMinutes() * durationMinute);
@@ -5426,7 +5399,6 @@ var hour = newInterval(function(date) {
 });
 
 var timeHour = hour;
-hour.range;
 
 var day = newInterval(
   date => date.setHours(0, 0, 0, 0),
@@ -5436,7 +5408,6 @@ var day = newInterval(
 );
 
 var timeDay = day;
-day.range;
 
 function weekday(i) {
   return newInterval(function(date) {
@@ -5451,19 +5422,11 @@ function weekday(i) {
 
 var sunday = weekday(0);
 var monday = weekday(1);
-var tuesday = weekday(2);
-var wednesday = weekday(3);
+weekday(2);
+weekday(3);
 var thursday = weekday(4);
-var friday = weekday(5);
-var saturday = weekday(6);
-
-sunday.range;
-monday.range;
-tuesday.range;
-wednesday.range;
-thursday.range;
-friday.range;
-saturday.range;
+weekday(5);
+weekday(6);
 
 var month = newInterval(function(date) {
   date.setDate(1);
@@ -5477,7 +5440,6 @@ var month = newInterval(function(date) {
 });
 
 var timeMonth = month;
-month.range;
 
 var year = newInterval(function(date) {
   date.setMonth(0, 1);
@@ -5502,9 +5464,8 @@ year.every = function(k) {
 };
 
 var timeYear = year;
-year.range;
 
-var utcMinute = newInterval(function(date) {
+newInterval(function(date) {
   date.setUTCSeconds(0, 0);
 }, function(date, step) {
   date.setTime(+date + step * durationMinute);
@@ -5513,9 +5474,8 @@ var utcMinute = newInterval(function(date) {
 }, function(date) {
   return date.getUTCMinutes();
 });
-utcMinute.range;
 
-var utcHour = newInterval(function(date) {
+newInterval(function(date) {
   date.setUTCMinutes(0, 0, 0);
 }, function(date, step) {
   date.setTime(+date + step * durationHour);
@@ -5524,7 +5484,6 @@ var utcHour = newInterval(function(date) {
 }, function(date) {
   return date.getUTCHours();
 });
-utcHour.range;
 
 var utcDay = newInterval(function(date) {
   date.setUTCHours(0, 0, 0, 0);
@@ -5537,7 +5496,6 @@ var utcDay = newInterval(function(date) {
 });
 
 var utcDay$1 = utcDay;
-utcDay.range;
 
 function utcWeekday(i) {
   return newInterval(function(date) {
@@ -5552,21 +5510,13 @@ function utcWeekday(i) {
 
 var utcSunday = utcWeekday(0);
 var utcMonday = utcWeekday(1);
-var utcTuesday = utcWeekday(2);
-var utcWednesday = utcWeekday(3);
+utcWeekday(2);
+utcWeekday(3);
 var utcThursday = utcWeekday(4);
-var utcFriday = utcWeekday(5);
-var utcSaturday = utcWeekday(6);
+utcWeekday(5);
+utcWeekday(6);
 
-utcSunday.range;
-utcMonday.range;
-utcTuesday.range;
-utcWednesday.range;
-utcThursday.range;
-utcFriday.range;
-utcSaturday.range;
-
-var utcMonth = newInterval(function(date) {
+newInterval(function(date) {
   date.setUTCDate(1);
   date.setUTCHours(0, 0, 0, 0);
 }, function(date, step) {
@@ -5576,7 +5526,6 @@ var utcMonth = newInterval(function(date) {
 }, function(date) {
   return date.getUTCMonth();
 });
-utcMonth.range;
 
 var utcYear = newInterval(function(date) {
   date.setUTCMonth(0, 1);
@@ -5601,7 +5550,6 @@ utcYear.every = function(k) {
 };
 
 var utcYear$1 = utcYear;
-utcYear.range;
 
 function ticker(year, month, week, day, hour, minute) {
 
@@ -6351,7 +6299,6 @@ defaultLocale({
 function defaultLocale(definition) {
   locale = formatLocale(definition);
   timeFormat = locale.format;
-  locale.parse;
   utcFormat = locale.utcFormat;
   utcParse = locale.utcParse;
   return locale;
@@ -53808,6 +53755,8 @@ class BrowserLayout {
 
 } // class BrowserLayout
 
+const clTButton = 'TButton';
+
 function getButtonSize(handler, fact) {
    return Math.round((fact || 1) * (handler.iscan || !handler.has_canvas ? 16 : 12));
 }
@@ -53975,7 +53924,8 @@ class TPadPainter extends ObjectPainter {
       if (!this.iscan && pad?.fName) {
          this.this_pad_name = pad.fName.replace(' ', '_'); // avoid empty symbol in pad name
          let regexp = new RegExp('^[A-Za-z][A-Za-z0-9_]*$');
-         if (!regexp.test(this.this_pad_name)) this.this_pad_name = 'jsroot_pad_' + internals.id_counter++;
+         if (!regexp.test(this.this_pad_name) || ((this.this_pad_name == 'button') && (pad._typename == clTButton)))
+            this.this_pad_name = 'jsroot_pad_' + internals.id_counter++;
       }
       this.painters = []; // complete list of all painters in the pad
       this.has_canvas = true;
@@ -55925,7 +55875,8 @@ class TPadPainter extends ObjectPainter {
 var TPadPainter$1 = /*#__PURE__*/Object.freeze({
 __proto__: null,
 TPadPainter: TPadPainter,
-PadButtonsHandler: PadButtonsHandler
+PadButtonsHandler: PadButtonsHandler,
+clTButton: clTButton
 });
 
 /** @summary direct draw of TFrame object,
@@ -56541,12 +56492,12 @@ class TCanvasPainter extends TPadPainter {
    selectActivePad(pad_painter, obj_painter, click_pos) {
       if (!this.snapid || !pad_painter) return; // only interactive canvas
 
-      let arg = null, ischanged = false;
+      let arg = null, ischanged = false, is_button = pad_painter.matchObjectType(clTButton);
 
       if (pad_painter.snapid && this._websocket)
          arg = { _typename: 'TWebPadClick', padid: pad_painter.snapid.toString(), objid: '', x: -1, y: -1, dbl: false };
 
-      if (!pad_painter.is_active_pad) {
+      if (!pad_painter.is_active_pad && !is_button) {
          ischanged = true;
          this.forEachPainterInPad(pp => pp.drawActiveBorder(null, pp === pad_painter), 'pads');
       }
@@ -56563,7 +56514,7 @@ class TCanvasPainter extends TPadPainter {
          if (click_pos.dbl) arg.dbl = true;
       }
 
-      if (arg && ischanged)
+      if (arg && (ischanged || is_button))
          this.sendWebsocket('PADCLICKED:' + toJSON(arg));
    }
 
@@ -71878,6 +71829,7 @@ const drawFuncs = { lst: [
    { name: clTCanvas, icon: 'img_canvas', class: () => Promise.resolve().then(function () { return TCanvasPainter$1; }).then(h => h.TCanvasPainter), opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: 'fPrimitives' },
    { name: clTPad, icon: 'img_canvas', class: () => Promise.resolve().then(function () { return TPadPainter$1; }).then(h => h.TPadPainter), opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: 'fPrimitives' },
    { name: 'TSlider', icon: 'img_canvas', class: () => Promise.resolve().then(function () { return TPadPainter$1; }).then(h => h.TPadPainter) },
+   { name: clTButton, icon: 'img_canvas', class: () => Promise.resolve().then(function () { return TPadPainter$1; }).then(h => h.TPadPainter) },
    { name: 'TFrame', icon: 'img_frame', draw: () => Promise.resolve().then(function () { return TCanvasPainter$1; }).then(h => h.drawTFrame) },
    { name: clTPave, icon: 'img_pavetext', class: () => Promise.resolve().then(function () { return TPavePainter$1; }).then(h => h.TPavePainter) },
    { name: clTPaveText, sameas: clTPave },
