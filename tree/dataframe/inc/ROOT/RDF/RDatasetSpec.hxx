@@ -61,16 +61,16 @@ public:
    RDatasetSpec &AddGroup(RDatasetGroup datasetGroup);
 
    RDatasetSpec &
-   WithFriends(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias = "");
+   WithGlobalFriends(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias = "");
 
-   RDatasetSpec &WithFriends(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
+   RDatasetSpec &WithGlobalFriends(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
                              const std::string &alias = "");
 
-   RDatasetSpec &WithFriends(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
+   RDatasetSpec &WithGlobalFriends(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
                              const std::string &alias = "");
 
-   RDatasetSpec &WithFriends(const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNameGlobs,
-                             const std::string &alias = "");
+   RDatasetSpec &WithGlobalFriends(const std::vector<std::string> &treeNames,
+                                   const std::vector<std::string> &fileNameGlobs, const std::string &alias = "");
 
    RDatasetSpec &WithGlobalRange(const RDatasetSpec::REntryRange &entryRange = {});
 };

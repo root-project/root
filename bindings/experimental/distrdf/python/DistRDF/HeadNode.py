@@ -467,7 +467,7 @@ class TreeHeadNode(HeadNode):
                 )
                 for (friend_name, friend_alias), friend_filenames, friend_chainsubnames in zipped_friendinfo:
                     friend_chainsubnames = friend_chainsubnames if len(friend_chainsubnames) > 0 else [friend_name]*len(friend_filenames)
-                    ds.WithFriends(friend_chainsubnames, friend_filenames, friend_alias)
+                    ds.WithGlobalFriends(friend_chainsubnames, friend_filenames, friend_alias)
 
         def build_rdf_from_range(current_range: Ranges.TreeRangePerc) -> TaskObjects:
             """

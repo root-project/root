@@ -1506,7 +1506,7 @@ ROOT::RDataFrame FromSpec(const std::string &jsonFile)
          std::vector<std::string> files = friends.value()["files"];
          if (files.size() != trees.size() && trees.size() > 1)
             throw std::runtime_error("Mismatch between trees and files in a friend.");
-         spec.WithFriends(trees, files, alias);
+         spec.WithGlobalFriends(trees, files, alias);
       }
    }
 
