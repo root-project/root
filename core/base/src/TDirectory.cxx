@@ -1324,7 +1324,7 @@ void TDirectory::RegisterGDirectory(std::atomic<TDirectory*> *globalptr)
 {
    ROOT::Internal::TSpinLockGuard slg(fSpinLock);
 
-   if (std::find(fGDirectories.begin(), fGDirectories.end(), globalptr) != fGDirectories.end())
+   if (std::find(fGDirectories.begin(), fGDirectories.end(), globalptr) == fGDirectories.end())
       fGDirectories.push_back(globalptr);
    // globalptr->load()->fGDirectories will still contain globalptr, but we cannot
    // know whether globalptr->load() has been deleted by another thread in the meantime.
