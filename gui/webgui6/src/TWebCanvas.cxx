@@ -134,6 +134,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
                             {"TSpline3"},
                             {"TSpline5"},
                             {"TGeoManager"},
+                            {"TGeoVolume"},
                             {}};
 
    // fast check of class name
