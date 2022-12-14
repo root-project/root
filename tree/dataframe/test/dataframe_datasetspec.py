@@ -5,6 +5,9 @@ import os
 RDataFrame = ROOT.ROOT.RDataFrame
 RDatasetSpec = ROOT.RDF.Experimental.RDatasetSpec
 REntryRange = ROOT.RDF.Experimental.RDatasetSpec.REntryRange
+RMetaData = ROOT.RDF.Experimental.RMetaData
+RSpecBuilder = ROOT.RDF.Experimental.RSpecBuilder
+
 
 class RDatasetSpecTest(unittest.TestCase):
     @classmethod
@@ -19,10 +22,10 @@ class RDatasetSpecTest(unittest.TestCase):
         # Take['float']()
         # instead of:
         # Take('float')()
-        cls.legacy_pyroot = os.environ.get('LEGACY_PYROOT') == 'on'
+        cls.legacy_pyroot = os.environ.get("LEGACY_PYROOT") == "on"
 
         # reuse the code from the C++ unit tests to create some files
-        code = ''' {
+        code = """ {
         auto dfWriter0 = ROOT::RDataFrame(5).Define("z", [](ULong64_t e) { return e + 100; }, {"rdfentry_"});
         dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree", "PYspecTestFile2.root", {"z"});
         dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree", "PYspecTestFile3.root", {"z"});
@@ -30,7 +33,7 @@ class RDatasetSpecTest(unittest.TestCase):
         dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree1", "PYspecTestFile5.root", {"z"});
         dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree2", "PYspecTestFile6.root", {"z"});
         dfWriter0.Snapshot<ULong64_t>("anotherTree", "PYspecTestFile7.root", {"z"});
-        }'''
+        }"""
         ROOT.gInterpreter.Calc(code)
 
     def tearDown(self):
@@ -39,59 +42,105 @@ class RDatasetSpecTest(unittest.TestCase):
 
     # a test involving all 3 constructors, all possible valid ranges, all possible friends
     def test_General(self):
-        ranges = [REntryRange(), REntryRange(1, 4), REntryRange(2,4), REntryRange(100), REntryRange(1, 100),
-                  REntryRange(2, 2), REntryRange(7, 7)]
-        expectedRess = [[100, 101, 102, 103, 104], [101, 102, 103], [102, 103], [100, 101, 102, 103, 104],
-                        [101, 102, 103, 104], [], []]
+        ranges = [
+            REntryRange(),
+            REntryRange(1, 4),
+            REntryRange(2, 4),
+            REntryRange(100),
+            REntryRange(1, 100),
+            REntryRange(2, 2),
+            REntryRange(7, 7),
+        ]
+        expectedRess = [
+            [100, 101, 102, 103, 104],
+            [101, 102, 103],
+            [102, 103],
+            [100, 101, 102, 103, 104],
+            [101, 102, 103, 104],
+            [],
+            [],
+        ]
+        lumis = [
+            [1.0, 1.0, 1.0, 1.0, 0.5],
+            [1.0, 1.0, 1.0],
+            [1.0, 1.0],
+            [1.0, 1.0, 1.0, 1.0, 0.5],
+            [1.0, 1.0, 1.0, 0.5],
+            [],
+            [],
+        ]
         specs = []
-        
-        for r in ranges:
-            # for each range add all constructors
-            specs.append([])
-            specs[-1].append(RDatasetSpec("anotherTree", "PYspecTestFile7.root", r))
-            specs[-1].append(RDatasetSpec("subTree", ["PYspecTestFile2.root",
-                                                 "PYspecTestFile3.root",
-                                                 "PYspecTestFile4.root"], r))
-            specs[-1].append(RDatasetSpec([("subTree1", "PYspecTestFile5.root"),
-                                      ("subTree2", "PYspecTestFile6.root"),
-                                      ("subTree", "PYspecTestFile4.root")], r))
 
-            # for each spec constructor add all possible combination of friends
-            for s in specs[-1]:
-                s.AddFriend("anotherTree", "PYspecTestFile7.root", "friendTree")
-                s.AddFriend("subTree", ["PYspecTestFile2.root",
-                                        "PYspecTestFile3.root",
-                                        "PYspecTestFile4.root"], "friendChain1")
-                s.AddFriend([("subTree1", "PYspecTestFile5.root"),
-                             ("subTree2", "PYspecTestFile6.root"),
-                             ("subTree", "PYspecTestFile4.root")], "friendChainN")
+        for r in ranges:
+            metaA = RMetaData()
+            metaA.Add("lumi", 1.0)
+
+            metaB = RMetaData()
+            metaB.Add("lumi", 0.5)
+
+            builder = RSpecBuilder()
+            builder.AddGroup(
+                (
+                    "groupA",
+                    ["subTree1", "subTree2"],
+                    ["PYspecTestFile5.root", "PYspecTestFile6.root"],
+                    metaA,
+                )
+            )
+            builder.AddGroup(("groupB", "subTree", "PYspecTestFile4.root", metaB))
+            builder.WithRange(r)
+            builder.WithFriends("anotherTree", "PYspecTestFile7.root", "friendTree")
+            builder.WithFriends(
+                "subTree",
+                [
+                    "PYspecTestFile2.root",
+                    "PYspecTestFile3.root",
+                    "PYspecTestFile4.root",
+                ],
+                "friendChain1",
+            )
+
+            # TODO: this emits a warning: Maybe you need to load the corresponding shared library?
+            # cling JIT session error: Failed to materialize symbols: ... emplace_back
+            # Despite the warning, the result is correct
+            # builder.WithFriends([("subTree1", "PYspecTestFile5.root"),
+            #                      ("subTree2", "PYspecTestFile6.root"),
+            #                      ("subTree", "PYspecTestFile4.root")], "friendChainN")
+
+            specs.append(builder.Build())
 
         for i in range(len(ranges)):
-            for s in specs[i]:
-                rdf = RDataFrame(s)
+            rdf = RDataFrame(specs[i])
 
-                if self.legacy_pyroot:
-                    resP = rdf.Take("ULong64_t")("z")
-                    fr1P = rdf.Take("ULong64_t")("friendTree.z")
-                    fr2P = rdf.Take("ULong64_t")("friendChain1.z")
-                    fr3P = rdf.Take("ULong64_t")("friendChainN.z")
-                else:
-                    resP = rdf.Take["ULong64_t"]("z")
-                    fr1P = rdf.Take["ULong64_t"]("friendTree.z")
-                    fr2P = rdf.Take["ULong64_t"]("friendChain1.z")
-                    fr3P = rdf.Take["ULong64_t"]("friendChainN.z")
+            rdf = rdf.DefinePerSample("lumi", 'rdfsampleinfo_.GetD("lumi")')
 
-                res = resP.GetValue()
-                fr1 = fr1P.GetValue()
-                fr2 = fr2P.GetValue()
-                fr3 = fr3P.GetValue()
+            if self.legacy_pyroot:
+                resP = rdf.Take("ULong64_t")("z")
+                lumP = rdf.Take("double")("lumi")
+                fr1P = rdf.Take("ULong64_t")("friendTree.z")
+                fr2P = rdf.Take("ULong64_t")("friendChain1.z")
+                # fr3P = rdf.Take("ULong64_t")("friendChainN.z")
+            else:
+                resP = rdf.Take["ULong64_t"]("z")
+                lumP = rdf.Take["double"]("lumi")
+                fr1P = rdf.Take["ULong64_t"]("friendTree.z")
+                fr2P = rdf.Take["ULong64_t"]("friendChain1.z")
+                # fr3P = rdf.Take["ULong64_t"]("friendChainN.z")
 
-                for j in range(len(expectedRess[i])):
-                    self.assertEqual(len(res), len(expectedRess[i]))
-                    self.assertEqual(res[j], expectedRess[i][j])
-                    self.assertEqual(fr1[j], expectedRess[i][j])
-                    self.assertEqual(fr2[j], expectedRess[i][j])
-                    self.assertEqual(fr3[j], expectedRess[i][j])
+            res = resP.GetValue()
+            lum = lumP.GetValue()
+            fr1 = fr1P.GetValue()
+            fr2 = fr2P.GetValue()
+            # fr3 = fr3P.GetValue()
 
-if __name__ == '__main__':
+            for j in range(len(expectedRess[i])):
+                self.assertEqual(len(res), len(expectedRess[i]))
+                self.assertEqual(lum[j], lumis[i][j])
+                self.assertEqual(res[j], expectedRess[i][j])
+                self.assertEqual(fr1[j], expectedRess[i][j])
+                self.assertEqual(fr2[j], expectedRess[i][j])
+                # self.assertEqual(fr3[j], expectedRess[i][j])
+
+
+if __name__ == "__main__":
     unittest.main()
