@@ -86,47 +86,41 @@ const std::vector<RDatasetGroup> &RDatasetSpec::GetDatasetGroups() const
    return fDatasetGroups;
 }
 
-RDatasetSpec::RDatasetSpec(const std::vector<RDatasetGroup> &datasetGroups,
-                           const ROOT::TreeUtils::RFriendInfo &friendInfo, const REntryRange &entryRange)
-   : fDatasetGroups(datasetGroups), fFriendInfo(friendInfo), fEntryRange(entryRange)
-{
-}
-
-RSpecBuilder &RSpecBuilder::AddGroup(RDatasetGroup datasetGroup)
+RDatasetSpec &RDatasetSpec::AddGroup(RDatasetGroup datasetGroup)
 {
    datasetGroup.SetGroupId(fDatasetGroups.size());
    fDatasetGroups.push_back(std::move(datasetGroup));
    return *this;
 }
 
-RSpecBuilder &
-RSpecBuilder::WithFriends(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias)
+RDatasetSpec &
+RDatasetSpec::WithFriends(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias)
 {
    fFriendInfo.AddFriend(treeName, fileNameGlob, alias);
    return *this;
 }
 
-RSpecBuilder &RSpecBuilder::WithFriends(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
+RDatasetSpec &RDatasetSpec::WithFriends(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
                                         const std::string &alias)
 {
    fFriendInfo.AddFriend(treeName, fileNameGlobs, alias);
    return *this;
 }
 
-RSpecBuilder &RSpecBuilder::WithFriends(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
+RDatasetSpec &RDatasetSpec::WithFriends(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
                                         const std::string &alias)
 {
    fFriendInfo.AddFriend(treeAndFileNameGlobs, alias);
    return *this;
 }
 
-RSpecBuilder &RSpecBuilder::WithRange(const RDatasetSpec::REntryRange &entryRange)
+RDatasetSpec &RDatasetSpec::WithRange(const RDatasetSpec::REntryRange &entryRange)
 {
    fEntryRange = entryRange;
    return *this;
 }
 
-RSpecBuilder &RSpecBuilder::WithFriends(const std::vector<std::string> &treeNames,
+RDatasetSpec &RDatasetSpec::WithFriends(const std::vector<std::string> &treeNames,
                                         const std::vector<std::string> &fileNameGlobs, const std::string &alias)
 {
    if (treeNames.size() != 1 && treeNames.size() != fileNameGlobs.size())
@@ -137,11 +131,6 @@ RSpecBuilder &RSpecBuilder::WithFriends(const std::vector<std::string> &treeName
       target.emplace_back(std::make_pair((treeNames.size() == 1u ? treeNames[0] : treeNames[i]), fileNameGlobs[i]));
    fFriendInfo.AddFriend(target, alias);
    return *this;
-}
-
-RDatasetSpec RSpecBuilder::Build()
-{
-   return RDatasetSpec(fDatasetGroups, fFriendInfo, fEntryRange);
 }
 
 } // namespace Experimental
