@@ -4050,3 +4050,14 @@ void TGeoManager::SetDefaultUnits(EDefaultUnits new_value)
    }
    fgDefaultUnits = new_value;
 }
+
+void TGeoManager::SetExportPrecision(UInt_t prec)
+{
+   fgExportPrecision = prec;
+}
+
+UInt_t TGeoManager::GetExportPrecision()
+{
+   return fgExportPrecision;
+}
+
