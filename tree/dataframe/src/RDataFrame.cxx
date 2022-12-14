@@ -1477,7 +1477,7 @@ namespace Experimental {
 ROOT::RDataFrame FromSpec(const std::string &jsonFile)
 {
    const nlohmann::json fullData = nlohmann::json::parse(std::ifstream(jsonFile));
-   RSpecBuilder specBuilder;
+   RDatasetSpec spec;
 
    for (const auto &groups : fullData["groups"]) {
       std::string tag = groups["tag"];
@@ -1497,7 +1497,7 @@ ROOT::RDataFrame FromSpec(const std::string &jsonFile)
          else
             throw std::logic_error("The metadata keys can only be of type [string|int|double].");
       }
-      specBuilder.AddGroup(RDatasetGroup{tag, trees, files, m});
+      spec.AddGroup(RDatasetGroup{tag, trees, files, m});
    }
    if (fullData.contains("friends")) {
       for (const auto &friends : fullData["friends"].items()) {
@@ -1506,7 +1506,7 @@ ROOT::RDataFrame FromSpec(const std::string &jsonFile)
          std::vector<std::string> files = friends.value()["files"];
          if (files.size() != trees.size() && trees.size() > 1)
             throw std::runtime_error("Mismatch between trees and files in a friend.");
-         specBuilder.WithFriends(trees, files, alias);
+         spec.WithFriends(trees, files, alias);
       }
    }
 
@@ -1514,11 +1514,11 @@ ROOT::RDataFrame FromSpec(const std::string &jsonFile)
       std::vector<int> range = fullData["range"];
 
       if (range.size() == 1)
-         specBuilder.WithRange({range[0]});
+         spec.WithRange({range[0]});
       else if (range.size() == 2)
-         specBuilder.WithRange({range[0], range[1]});
+         spec.WithRange({range[0], range[1]});
    }
-   return ROOT::RDataFrame(specBuilder.Build());
+   return ROOT::RDataFrame(spec);
 }
 
 } // namespace Experimental
