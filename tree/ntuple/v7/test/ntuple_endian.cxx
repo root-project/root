@@ -84,7 +84,7 @@ public:
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t i) final
    {
       auto pageBuffer = RPageSource::UnsealPage(fPages[i], fElement);
-      RPage newPage(columnHandle.fId, pageBuffer.release(), fElement.GetSize(), fPages[i].fNElements);
+      RPage newPage(columnHandle.fPhysicalId, pageBuffer.release(), fElement.GetSize(), fPages[i].fNElements);
       newPage.GrowUnchecked(fPages[i].fNElements);
       return newPage;
    }

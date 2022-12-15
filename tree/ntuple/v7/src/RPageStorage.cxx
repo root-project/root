@@ -86,7 +86,7 @@ ROOT::Experimental::Detail::RPageSource::AddColumn(DescriptorId_t fieldId, const
 
 void ROOT::Experimental::Detail::RPageSource::DropColumn(ColumnHandle_t columnHandle)
 {
-   fActiveColumns.erase(columnHandle.fId);
+   fActiveColumns.erase(columnHandle.fPhysicalId);
 }
 
 ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSource::GetNEntries()
@@ -96,13 +96,13 @@ ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSource::GetNEn
 
 ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSource::GetNElements(ColumnHandle_t columnHandle)
 {
-   return GetSharedDescriptorGuard()->GetNElements(columnHandle.fId);
+   return GetSharedDescriptorGuard()->GetNElements(columnHandle.fPhysicalId);
 }
 
 ROOT::Experimental::ColumnId_t ROOT::Experimental::Detail::RPageSource::GetColumnId(ColumnHandle_t columnHandle)
 {
    // TODO(jblomer) distinguish trees
-   return columnHandle.fId;
+   return columnHandle.fPhysicalId;
 }
 
 void ROOT::Experimental::Detail::RPageSource::UnzipCluster(RCluster *cluster)
@@ -316,12 +316,12 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
 
 void ROOT::Experimental::Detail::RPageSink::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
-   fOpenColumnRanges.at(columnHandle.fId).fNElements += page.GetNElements();
+   fOpenColumnRanges.at(columnHandle.fPhysicalId).fNElements += page.GetNElements();
 
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
    pageInfo.fNElements = page.GetNElements();
    pageInfo.fLocator = CommitPageImpl(columnHandle, page);
-   fOpenPageRanges.at(columnHandle.fId).fPageInfos.emplace_back(pageInfo);
+   fOpenPageRanges.at(columnHandle.fPhysicalId).fPageInfos.emplace_back(pageInfo);
 }
 
 
