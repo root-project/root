@@ -120,7 +120,10 @@ class RColumnDescriptor {
    friend class RNTupleDescriptorBuilder;
 
 private:
-   DescriptorId_t fColumnId = kInvalidDescriptorId;
+   /// The actual column identifier, which is the link to the corresponding field
+   DescriptorId_t fLogicalColumnId = kInvalidDescriptorId;
+   /// Usually identical to the logical column ID, except for alias columns where it references the shadowed column
+   DescriptorId_t fPhysicalColumnId = kInvalidDescriptorId;
    /// Contains the column type and whether it is sorted
    RColumnModel fModel;
    /// Every column belongs to one and only one field
@@ -139,10 +142,12 @@ public:
    /// Get a copy of the descriptor
    RColumnDescriptor Clone() const;
 
-   DescriptorId_t GetId() const { return fColumnId; }
+   DescriptorId_t GetLogicalId() const { return fLogicalColumnId; }
+   DescriptorId_t GetPhysicalId() const { return fPhysicalColumnId; }
    RColumnModel GetModel() const { return fModel; }
    std::uint32_t GetIndex() const { return fIndex; }
    DescriptorId_t GetFieldId() const { return fFieldId; }
+   bool IsAliasColumn() const { return fPhysicalColumnId != fLogicalColumnId; }
 };
 
 // clang-format off
@@ -453,10 +458,10 @@ public:
          : fNTuple(ntuple)
       {
          for (unsigned int i = 0; true; ++i) {
-            auto columnId = ntuple.FindColumnId(field.GetId(), i);
-            if (columnId == kInvalidDescriptorId)
+            auto logicalId = ntuple.FindLogicalColumnId(field.GetId(), i);
+            if (logicalId == kInvalidDescriptorId)
                break;
-            fColumns.emplace_back(columnId);
+            fColumns.emplace_back(logicalId);
          }
       }
       RIterator begin() { return RIterator(fNTuple, fColumns, 0); }
@@ -702,7 +707,8 @@ public:
    DescriptorId_t FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const;
    /// Searches for a top-level field
    DescriptorId_t FindFieldId(std::string_view fieldName) const;
-   DescriptorId_t FindColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const;
+   DescriptorId_t FindLogicalColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const;
+   DescriptorId_t FindPhysicalColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const;
    DescriptorId_t FindClusterId(DescriptorId_t columnId, NTupleSize_t index) const;
    DescriptorId_t FindNextClusterId(DescriptorId_t clusterId) const;
    DescriptorId_t FindPrevClusterId(DescriptorId_t clusterId) const;
@@ -741,8 +747,14 @@ public:
    /// Make an empty column descriptor builder.
    RColumnDescriptorBuilder() = default;
 
-   RColumnDescriptorBuilder& ColumnId(DescriptorId_t columnId) {
-      fColumn.fColumnId = columnId;
+   RColumnDescriptorBuilder &LogicalColumnId(DescriptorId_t logicalColumnId)
+   {
+      fColumn.fLogicalColumnId = logicalColumnId;
+      return *this;
+   }
+   RColumnDescriptorBuilder &PhysicalColumnId(DescriptorId_t physicalColumnId)
+   {
+      fColumn.fPhysicalColumnId = physicalColumnId;
       return *this;
    }
    RColumnDescriptorBuilder& Model(const RColumnModel &model) {
