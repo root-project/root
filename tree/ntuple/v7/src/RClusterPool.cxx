@@ -33,10 +33,9 @@
 bool ROOT::Experimental::Detail::RClusterPool::RInFlightCluster::operator <(const RInFlightCluster &other) const
 {
    if (fClusterKey.fClusterId == other.fClusterKey.fClusterId) {
-      if (fClusterKey.fColumnSet.size() == other.fClusterKey.fColumnSet.size()) {
-         for (auto itr1 = fClusterKey.fColumnSet.begin(), itr2 = other.fClusterKey.fColumnSet.begin();
-              itr1 != fClusterKey.fColumnSet.end(); ++itr1, ++itr2)
-         {
+      if (fClusterKey.fPhysicalColumnSet.size() == other.fClusterKey.fPhysicalColumnSet.size()) {
+         for (auto itr1 = fClusterKey.fPhysicalColumnSet.begin(), itr2 = other.fClusterKey.fPhysicalColumnSet.begin();
+              itr1 != fClusterKey.fPhysicalColumnSet.end(); ++itr1, ++itr2) {
             if (*itr1 == *itr2)
                continue;
             return *itr1 < *itr2;
@@ -44,7 +43,7 @@ bool ROOT::Experimental::Detail::RClusterPool::RInFlightCluster::operator <(cons
          // *this == other
          return false;
       }
-      return fClusterKey.fColumnSet.size() < other.fClusterKey.fColumnSet.size();
+      return fClusterKey.fPhysicalColumnSet.size() < other.fClusterKey.fPhysicalColumnSet.size();
    }
    return fClusterKey.fClusterId < other.fClusterKey.fClusterId;
 }
@@ -298,7 +297,7 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
 
          if (itr->fFuture.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
             // Remove the set of columns that are already scheduled for being loaded
-            provide.Erase(itr->fClusterKey.fClusterId, itr->fClusterKey.fColumnSet);
+            provide.Erase(itr->fClusterKey.fClusterId, itr->fClusterKey.fPhysicalColumnSet);
             ++itr;
             continue;
          }
@@ -352,11 +351,11 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
             RReadItem readItem;
             readItem.fClusterKey.fClusterId = kv.first;
             readItem.fBunchId = kv.second.fBunchId;
-            readItem.fClusterKey.fColumnSet = kv.second.fColumnSet;
+            readItem.fClusterKey.fPhysicalColumnSet = kv.second.fColumnSet;
 
             RInFlightCluster inFlightCluster;
             inFlightCluster.fClusterKey.fClusterId = kv.first;
-            inFlightCluster.fClusterKey.fColumnSet = kv.second.fColumnSet;
+            inFlightCluster.fClusterKey.fPhysicalColumnSet = kv.second.fColumnSet;
             inFlightCluster.fFuture = readItem.fPromise.get_future();
             fInFlightClusters.emplace_back(std::move(inFlightCluster));
 
