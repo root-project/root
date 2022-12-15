@@ -253,7 +253,7 @@ RResult<std::uint32_t> DeserializeColumnV1(
 
 std::uint32_t SerializeLocatorPayloadURI(const ROOT::Experimental::RNTupleLocator &locator, unsigned char *buffer)
 {
-   const auto &uri = locator.Get<std::string>();
+   const auto &uri = locator.GetPosition<std::string>();
    if (uri.length() >= (1 << 16))
       throw ROOT::Experimental::RException(R__FAIL("locator too large"));
    if (buffer)
@@ -272,7 +272,7 @@ void DeserializeLocatorPayloadURI(const unsigned char *buffer, std::uint32_t pay
 
 std::uint32_t SerializeLocatorPayloadObject64(const ROOT::Experimental::RNTupleLocator &locator, unsigned char *buffer)
 {
-   const auto &data = locator.Get<ROOT::Experimental::RNTupleLocatorObject64>();
+   const auto &data = locator.GetPosition<ROOT::Experimental::RNTupleLocatorObject64>();
    if (buffer) {
       RNTupleSerializer::SerializeUInt32(locator.fBytesOnStorage, buffer);
       RNTupleSerializer::SerializeUInt64(data.fLocation, buffer + sizeof(std::uint32_t));
@@ -776,7 +776,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(
       if (static_cast<std::int32_t>(locator.fBytesOnStorage) < 0)
          throw RException(R__FAIL("locator too large"));
       size += SerializeUInt32(locator.fBytesOnStorage, buffer);
-      size += SerializeUInt64(locator.Get<std::uint64_t>(),
+      size += SerializeUInt64(locator.GetPosition<std::uint64_t>(),
                               buffer ? reinterpret_cast<unsigned char *>(buffer) + size : nullptr);
       return size;
    }

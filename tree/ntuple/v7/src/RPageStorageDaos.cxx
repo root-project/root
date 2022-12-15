@@ -468,7 +468,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
       buffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLength());
       zipBuffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLocator().fBytesOnStorage);
       fDaosContainer->ReadSingleAkey(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, oidPageList,
-                                     kDistributionKeyDefault, cgDesc.GetPageListLocator().Get<std::uint64_t>(),
+                                     kDistributionKeyDefault, cgDesc.GetPageListLocator().GetPosition<std::uint64_t>(),
                                      kCidMetadata);
       fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
                            buffer.get());
@@ -505,8 +505,8 @@ void ROOT::Experimental::Detail::RPageSourceDaos::LoadSealedPage(DescriptorId_t 
    sealedPage.fSize = bytesOnStorage;
    sealedPage.fNElements = pageInfo.fNElements;
    if (sealedPage.fBuffer) {
-      RDaosKey daosKey =
-         GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, columnId, pageInfo.fLocator.Get<std::uint64_t>());
+      RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, columnId,
+                                                             pageInfo.fLocator.GetPosition<std::uint64_t>());
       fDaosContainer->ReadSingleAkey(const_cast<void *>(sealedPage.fBuffer), bytesOnStorage, daosKey.fOid,
                                      daosKey.fDkey, daosKey.fAkey);
    }
@@ -530,8 +530,8 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(ColumnHandl
 
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
       directReadBuffer = std::make_unique<unsigned char[]>(bytesOnStorage);
-      RDaosKey daosKey =
-         GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, columnId, pageInfo.fLocator.Get<std::uint64_t>());
+      RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, columnId,
+                                                             pageInfo.fLocator.GetPosition<std::uint64_t>());
       fDaosContainer->ReadSingleAkey(directReadBuffer.get(), bytesOnStorage, daosKey.fOid, daosKey.fDkey,
                                      daosKey.fAkey);
       fCounters->fNPageLoaded.Inc();
@@ -674,7 +674,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
             for (const auto &pageInfo : pageRange.fPageInfos) {
                const auto &pageLocator = pageInfo.fLocator;
                onDiskClusterPages.push_back(RDaosSealedPageLocator(clusterId, columnId, columnPageCount,
-                                                                   pageLocator.Get<std::uint64_t>(),
+                                                                   pageLocator.GetPosition<std::uint64_t>(),
                                                                    pageLocator.fBytesOnStorage, clusterBufSz));
                ++columnPageCount;
                clusterBufSz += pageLocator.fBytesOnStorage;
