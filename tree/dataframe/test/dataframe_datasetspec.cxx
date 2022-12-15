@@ -507,26 +507,26 @@ TEST(RDatasetSpecTest, Describe)
    auto dfWriter1 = RDataFrame(10)
                        .Define("x", [](ULong64_t e) { return double(e); }, {"rdfentry_"})
                        .Define("w", [](ULong64_t e) { return e + 1.; }, {"rdfentry_"});
-   dfWriter1.Range(5).Snapshot<double>("subTree0", "specTestFile12.root", {"x"});
-   dfWriter1.Range(5, 10).Snapshot<double>("subTree1", "specTestFile13.root", {"x"});
-   dfWriter1.Range(5).Snapshot<double>("subTree2", "specTestFile14.root", {"w"});
-   dfWriter1.Range(5, 10).Snapshot<double>("subTree3", "specTestFile15.root", {"w"});
+   dfWriter1.Range(5).Snapshot<double>("subTree0", "specTestDescribe1.root", {"x"});
+   dfWriter1.Range(5, 10).Snapshot<double>("subTree1", "specTestDescribe2.root", {"x"});
+   dfWriter1.Range(5).Snapshot<double>("subTree2", "specTestDescribe3.root", {"w"});
+   dfWriter1.Range(5, 10).Snapshot<double>("subTree3", "specTestDescribe4.root", {"w"});
 
    RDatasetSpec spec;
-   spec.AddGroup({"groupA", "subTree0"s, "specTestFile12.root"s});
-   spec.AddGroup({"groupB", "subTree1"s, "specTestFile13.root"s});
-   spec.WithGlobalFriends({{"subTree2"s, "specTestFile14.root"s}, {"subTree3"s, "specTestFile15.root"s}});
+   spec.AddGroup({"groupA", "subTree0"s, "specTestDescribe1.root"s});
+   spec.AddGroup({"groupB", "subTree1"s, "specTestDescribe2.root"s});
+   spec.WithGlobalFriends({{"subTree2"s, "specTestDescribe3.root"s}, {"subTree3"s, "specTestDescribe4.root"s}});
    auto df = ROOT::RDataFrame(spec);
    auto res0 = df.Sum<double>("x");
    auto res1 = df.Sum<double>("w");
 
    static const std::string expectedDescribe("Dataframe from TChain  in files\n"
-                                             "  specTestFile12.root\n"
-                                             "  specTestFile13.root\n"
+                                             "  specTestDescribe1.root\n"
+                                             "  specTestDescribe2.root\n"
                                              "with friend\n"
                                              "  \n"
-                                             "    subTree2 specTestFile14.root\n"
-                                             "    subTree3 specTestFile15.root\n"
+                                             "    subTree2 specTestDescribe3.root\n"
+                                             "    subTree3 specTestDescribe4.root\n"
                                              "\n"
                                              "Property                Value\n"
                                              "--------                -----\n"
