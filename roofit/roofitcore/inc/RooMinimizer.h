@@ -50,9 +50,20 @@ public:
       int doEEWall = 1;                   // RooAbsMinimizerFcn config
       int offsetting = -1;                // RooAbsMinimizerFcn config
       const char *logf = nullptr;         // RooAbsMinimizerFcn config
-      int nWorkers = getDefaultWorkers(); // RooAbsMinimizerFcn config that can only be set in ctor
-      bool parallelGradient = false;      // RooAbsMinimizerFcn config that can only be set in ctor
-      bool parallelLikelihood = false;    // RooAbsMinimizerFcn config that can only be set in ctor
+
+      // RooAbsMinimizerFcn config that can only be set in ctor, 0 means no parallelization (default), 
+      // -1 is parallelization with the number of workers controlled by RooFit::MultiProcess which 
+      // defaults to the number of available processors, n means parallelization with n CPU's
+      int parallelize = 0;
+
+      // Experimental: RooAbsMinimizerFcn config that can only be set in ctor
+      // argument is ignored when parallelize is 0
+      bool enableParallelGradient = true;
+
+      // Experimental: RooAbsMinimizerFcn config that can only be set in ctor
+      // argument is ignored when parallelize is 0
+      bool enableParallelDescent = false;
+
       bool verbose = false;               // local config
       bool profile = false;               // local config
       std::string minimizerType = "";     // local config

@@ -126,7 +126,7 @@ TEST_P(LikelihoodGradientJobTest, Gaussian1D)
 
    // Convert to RooRealL to enter into minimizer
    RooMinimizer::Config cfg1;
-   cfg1.parallelGradient = true;
+   cfg1.parallelize = -1;
    RooMinimizer m1(likelihood, cfg1);
 
    m1.setStrategy(0);
@@ -174,7 +174,7 @@ TEST(LikelihoodGradientJob, RepeatMigrad)
    auto unbinned_l = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
    RooFit::TestStatistics::RooRealL likelihood("likelihood", "likelihood", unbinned_l);
    RooMinimizer::Config cfg;
-   cfg.parallelGradient = true;
+   cfg.parallelize = -1;
    RooMinimizer m1(likelihood, cfg);
 
    m1.setStrategy(0);
@@ -251,7 +251,7 @@ TEST_P(LikelihoodGradientJobTest, GaussianND)
    auto unbinned_l = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
    RooFit::TestStatistics::RooRealL likelihood("likelihood", "likelihood", unbinned_l);
    RooMinimizer::Config cfg1;
-   cfg1.parallelGradient = true;
+   cfg1.parallelize = -1;
    RooMinimizer m1(likelihood, cfg1);
 
    m1.setStrategy(0);
@@ -419,11 +419,11 @@ TEST_P(SimBinnedConstrainedTest, ConstrainedAndOffset)
 
    std::unique_ptr<RooAbsReal> likelihoodAbsReal{pdf->createNLL(*data, Constrain(*w.var("alpha_bkg_obs_A")),
                                                                 GlobalObservables(*w.var("alpha_bkg_obs_B")),
-                                                                NewStyle(true))};
+                                                                ModularL(true))};
 
    RooMinimizer::Config cfg1;
-   cfg1.parallelGradient = true;
-   cfg1.parallelLikelihood = parallelLikelihood;
+   cfg1.parallelize = -1;
+   cfg1.enableParallelDescent = parallelLikelihood;
    RooMinimizer m1(*likelihoodAbsReal, cfg1);
 
    m1.setStrategy(0);
@@ -519,8 +519,8 @@ TEST_P(LikelihoodGradientJobTest, Gaussian1DAlsoWithLikelihoodJob)
    auto unbinned_l = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data);
    RooFit::TestStatistics::RooRealL likelihood("likelihood", "likelihood", unbinned_l);
    RooMinimizer::Config cfg;
-   cfg.parallelLikelihood = true;
-   cfg.parallelGradient = true;
+   cfg.parallelize = -1;
+   cfg.enableParallelDescent = true;
    RooMinimizer m1(likelihood, cfg);
    m1.setStrategy(0);
    m1.setPrintLevel(-1);

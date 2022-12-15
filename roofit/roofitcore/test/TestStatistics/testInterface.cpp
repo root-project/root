@@ -40,7 +40,7 @@ TEST(Interface, createNLLRooAbsL)
    auto x = w.var("x");
    RooAbsPdf *pdf = w.pdf("g");
    std::unique_ptr<RooDataSet> data{pdf->generate(RooArgSet(*x), 10000)};
-   RooAbsReal *nll = pdf->createNLL(*data, RooFit::NewStyle(true));
+   RooAbsReal *nll = pdf->createNLL(*data, RooFit::ModularL(true));
 
    RooFit::TestStatistics::RooRealL *nll_real = dynamic_cast<RooFit::TestStatistics::RooRealL *>(nll);
 
@@ -53,7 +53,7 @@ TEST(Interface, createNLLRooAbsL)
 }
 
 // New Style likelihoods cannot be initialized with offsetting
-TEST(Interface, createNLLNewStyleAndOffset)
+TEST(Interface, createNLLModularLAndOffset)
 {
    using namespace RooFit;
 
@@ -63,7 +63,7 @@ TEST(Interface, createNLLNewStyleAndOffset)
    auto x = w.var("x");
    RooAbsPdf *pdf = w.pdf("g");
    std::unique_ptr<RooDataSet> data{pdf->generate(RooArgSet(*x), 10000)};
-   RooAbsReal *nll = pdf->createNLL(*data, RooFit::Offset(true), RooFit::NewStyle(true));
+   RooAbsReal *nll = pdf->createNLL(*data, RooFit::Offset(true), RooFit::ModularL(true));
 
    EXPECT_TRUE(nll == nullptr);
 }
@@ -96,7 +96,7 @@ TEST(Interface, DISABLED_fitTo)
 
    *values = *savedValues;
 
-   std::unique_ptr<RooFitResult> result2{pdf->fitTo(*data, RooFit::Save(), RooFit::Parallelize(4, true, true))};
+   std::unique_ptr<RooFitResult> result2{pdf->fitTo(*data, RooFit::Save(), RooFit::Parallelize(4), RooFit::Experimental::ParallelGradientOptions(true), RooFit::Experimental::ParallelDescentOptions(true))};
 
    double minNll_GradientJob = result2->minNll();
    double edm_GradientJob = result2->edm();

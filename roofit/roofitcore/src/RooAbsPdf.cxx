@@ -963,10 +963,10 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared) const
 ///                                                 - precision = 0: Activate bin integration only for continuous PDFs fit to a RooDataHist.
 ///                                                 - precision < 0: Deactivate.
 ///                                                 \see RooBinSamplingPdf
-/// <tr><td> `NewStyle(bool flag)`           <td>  Enable or disable new style likelihoods, which will become the default in a future release.
+/// <tr><td> `ModularL(bool flag)`           <td>  Enable or disable modular likelihoods, which will become the default in a future release.
 ///                                                This does not change any user-facing code, but only enables a different likelihood class in the back-end. Note that this
 ///                                                should be set to true for parallel minimization of likelihoods!
-///                                                Note that it is currently not recommended to use NewStyle without any parallelization enabled in the minimization, since
+///                                                Note that it is currently not recommended to use Modular likelihoods without any parallelization enabled in the minimization, since
 ///                                                some features such as offsetting might not yet work in this case.
 /// </table>
 ///
@@ -1004,13 +1004,13 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineDouble("IntegrateBins", "IntegrateBins", 0, -1.);
   pc.defineMutex("Range","RangeWithName") ;
   pc.defineMutex("GlobalObservables","GlobalObservablesTag") ;
-  pc.defineInt("NewStyle", "NewStyle", 0, 0);
+  pc.defineInt("ModularL", "ModularL", 0, 0);
 
   // New style likelihoods define parallelization through Parallelize(...) on fitTo or attributes on RooMinimizer::Config.
-  pc.defineMutex("NewStyle", "NumCPU");
+  pc.defineMutex("ModularL", "NumCPU");
 
   // New style likelihoods define offsetting on minimizer, not on likelihood
-  pc.defineMutex("NewStyle", "OffsetLikelihood");
+  pc.defineMutex("ModularL", "OffsetLikelihood");
 
   // Process and check varargs
   pc.process(cmdList) ;
@@ -1018,7 +1018,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     return 0 ;
   }
 
-  if (pc.getInt("NewStyle")) {
+  if (pc.getInt("ModularL")) {
       int lut[3] = {2, 1, 0};
       RooFit::TestStatistics::RooAbsL::Extended ext{
         static_cast<RooFit::TestStatistics::RooAbsL::Extended>(lut[pc.getInt("ext")])};
@@ -1381,9 +1381,9 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
 
   // Instantiate RooMinimizer
   RooMinimizer::Config minimizerConfig;
-  minimizerConfig.parallelGradient = cfg.parallelGradient;
-  minimizerConfig.parallelLikelihood = cfg.parallelLikelihood;
-  minimizerConfig.nWorkers = cfg.nWorkers;
+  minimizerConfig.enableParallelGradient = cfg.enableParallelGradient;
+  minimizerConfig.enableParallelDescent = cfg.enableParallelDescent;
+  minimizerConfig.parallelize = cfg.parallelize;
   RooMinimizer m(nll, minimizerConfig);
 
   m.setMinimizerType(cfg.minType.c_str());
@@ -1556,19 +1556,28 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
 /// <tr><td> `PrintEvalErrors(Int_t numErr)`   <td>  Control number of p.d.f evaluation errors printed per likelihood evaluation.
 ///                                                A negative value suppresses output completely, a zero value will only print the error count per p.d.f component,
 ///                                                a positive value will print details of each error up to `numErr` messages per p.d.f component.
-/// <tr><td> `NewStyle(bool flag)`           <td>  Enable or disable new style likelihoods, which will become the default in a future release.
+/// <tr><td> `ModularL(bool flag)`           <td>  Enable or disable modular likelihoods, which will become the default in a future release.
 ///                                                This does not change any user-facing code, but only enables a different likelihood class in the back-end.
 ///                                                This option is forced to true in case parallelization is requested with the `Parallelize` named argument.
-///                                                Note that it is currently not recommended to use NewStyle without any parallelization enabled, since
+///                                                Note that it is currently not recommended to use modular likelihoods without any parallelization enabled, since
 ///                                                some features such as offsetting might not yet work in this case.
-/// <tr><td> `Parallelize(Int_t nWorkers, bool parallelGradient, bool parallelLikelihood)`   <td>  Control parallelization settings. The first argument controls the number of workers (parallel processes) to use.
-///                                                                                                The second argument controls whether the gradient is parallelized and the third argument controls whether
-///                                                                                                likelihood evaluation is parallelized. Setting only `nWorkers` but neither of the other arguments does not enable
-///                                                                                                parallelization. Note also that parallelization requires new style likelihoods, so setting anything in `Parallelize`
-///                                                                                                will by default enable the `NewStyle` named argument.
+/// <tr><td> `Parallelize(Int_t nWorkers)`   <td>  Control global parallelization settings. Arguments 1 and above enable the use of RooFit's parallel minimization
+///                                                backend and uses the number given as the number of workers to use in the parallelization. -1 also enables
+///                                                RooFit's parallel minimization backend, and sets the number of workers to the number of available processes. 
+///                                                0 disables this feature.
+/// <tr><td> `ParallelGradientOptions(bool enable=true, int orderStrategy=0, int chainFactor=1)`   <td>  **Experimental** Control gradient parallelization settings. The first argument
+///                                                                                                      only disables or enables gradient parallelization, this is on by default.
+///                                                                                                      The second argument determines the internal partial derivative calculation 
+///                                                                                                      ordering strategy. The third argument determines the number of partial 
+///                                                                                                      derivatives that are executed per task package on each worker.
+/// <tr><td> `ParallelDescentOptions(bool enable=false, int splitStrategy=0, int numSplits=4)`   <td>  **Experimental** Control settings related to the parallelization of likelihoods
+///                                                                                                      outside of the gradient calculation but in the minimization, most prominently
+///                                                                                                      in the linesearch step. The first argument this disables or enables likelihood
+///                                                                                                      parallelization. The second argument determines whether to split the task batches
+///                                                                                                      per event or per likelihood component. And the third argument how many events or
+///                                                                                                      respectively components to include in each batch.                                                                            
 /// </table>
 ///
-
 RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
@@ -1578,7 +1587,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,"
       "RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,"
       "CloneData,GlobalObservables,GlobalObservablesSource,GlobalObservablesTag,OffsetLikelihood,"
-      "BatchMode,IntegrateBins,NewStyle");
+      "BatchMode,IntegrateBins,ModularL");
 
   // Default-initialized instance of MinimizerConfig to get the default
   // minimizer parameter values.
@@ -1602,9 +1611,9 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineInt("doAsymptoticError","AsymptoticError",0,minimizerDefaults.doAsymptotic) ;
   pc.defineInt("maxCalls","MaxCalls",0,minimizerDefaults.maxCalls);
   pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
-  pc.defineInt("nWorkers", "Parallelize", 0, 0); // Three parallelize arguments
-  pc.defineInt("parallelGradient", "Parallelize", 1, 0);
-  pc.defineDouble("parallelLikelihood", "Parallelize", 2, 0);
+  pc.defineInt("parallelize", "Parallelize", 0, 0); // Three parallelize arguments
+  pc.defineInt("enableParallelGradient", "ParallelGradientOptions", 0, 0);
+  pc.defineInt("enableParallelDescent", "ParallelDescentOptions", 0, 0);
   pc.defineString("mintype","Minimizer",0,minimizerDefaults.minType.c_str()) ;
   pc.defineString("minalg","Minimizer",1,minimizerDefaults.minAlg.c_str()) ;
   pc.defineSet("minosSet","Minos",0,minimizerDefaults.minosSet) ;
@@ -1668,11 +1677,11 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     }
   }
 
-  RooCmdArg newstyle_option;
-  if (pc.getInt("nWorkers") || pc.getInt("parallelGradient") || pc.getInt("parallelLikelihood")) {
+  RooCmdArg modularL_option;
+  if (pc.getInt("parallelize") != 0 || pc.getInt("enableParallelGradient") || pc.getInt("enableParallelDescent")) {
     // Set to new style likelihood if parallelization is requested
-    newstyle_option = RooFit::NewStyle(true);
-    nllCmdList.Add(&newstyle_option);
+    modularL_option = RooFit::ModularL(true);
+    nllCmdList.Add(&modularL_option);
   }
 
   std::unique_ptr<RooAbsReal> nll{createNLL(data,nllCmdList)};
@@ -1697,9 +1706,9 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   cfg.minosSet = pc.getSet("minosSet");
   cfg.minType = pc.getString("mintype","");
   cfg.minAlg = pc.getString("minalg","minuit");
-  cfg.nWorkers = pc.getInt("nWorkers");
-  cfg.parallelGradient = pc.getInt("parallelGradient");
-  cfg.parallelLikelihood = pc.getInt("parallelLikelihood");
+  cfg.parallelize = pc.getInt("parallelize");
+  cfg.enableParallelGradient = pc.getInt("enableParallelGradient");
+  cfg.enableParallelDescent = pc.getInt("enableParallelDescent");
 
   return minimizeNLL(*nll, data, cfg).release();
 }
