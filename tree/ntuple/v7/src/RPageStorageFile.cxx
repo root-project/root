@@ -335,7 +335,7 @@ ROOT::Experimental::Detail::RPageSourceFile::PopulatePageFromCluster(ColumnHandl
       sealedPageBuffer = directReadBuffer.get();
    } else {
       if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
-         fCurrentCluster = fClusterPool->GetCluster(clusterId, fActiveColumns);
+         fCurrentCluster = fClusterPool->GetCluster(clusterId, fActiveColumns.ToColumnSet());
       R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
 
       auto cachedPage = fPagePool->GetPage(columnId, RClusterIndex(clusterId, idxInCluster));
