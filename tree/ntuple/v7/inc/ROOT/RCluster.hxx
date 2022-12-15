@@ -158,7 +158,7 @@ public:
    /// The identifiers that specifies the content of a (partial) cluster
    struct RKey {
       DescriptorId_t fClusterId = kInvalidDescriptorId;
-      ColumnSet_t fColumnSet;
+      ColumnSet_t fPhysicalColumnSet;
    };
 
 protected:

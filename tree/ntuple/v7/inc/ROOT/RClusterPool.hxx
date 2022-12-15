@@ -81,7 +81,8 @@ private:
 
       bool operator ==(const RInFlightCluster &other) const {
          return (fClusterKey.fClusterId == other.fClusterKey.fClusterId) &&
-                (fClusterKey.fColumnSet == other.fClusterKey.fColumnSet); }
+                (fClusterKey.fPhysicalColumnSet == other.fClusterKey.fPhysicalColumnSet);
+      }
       bool operator !=(const RInFlightCluster &other) const { return !(*this == other); }
       /// First order by cluster id, then by number of columns, than by the column ids in fColumns
       bool operator <(const RInFlightCluster &other) const;
