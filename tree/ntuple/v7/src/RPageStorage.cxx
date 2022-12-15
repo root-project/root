@@ -324,17 +324,16 @@ void ROOT::Experimental::Detail::RPageSink::CommitPage(ColumnHandle_t columnHand
    fOpenPageRanges.at(columnHandle.fPhysicalId).fPageInfos.emplace_back(pageInfo);
 }
 
-
 void ROOT::Experimental::Detail::RPageSink::CommitSealedPage(
-   ROOT::Experimental::DescriptorId_t columnId,
+   ROOT::Experimental::DescriptorId_t physicalColumnId,
    const ROOT::Experimental::Detail::RPageStorage::RSealedPage &sealedPage)
 {
-   fOpenColumnRanges.at(columnId).fNElements += sealedPage.fNElements;
+   fOpenColumnRanges.at(physicalColumnId).fNElements += sealedPage.fNElements;
 
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
    pageInfo.fNElements = sealedPage.fNElements;
-   pageInfo.fLocator = CommitSealedPageImpl(columnId, sealedPage);
-   fOpenPageRanges.at(columnId).fPageInfos.emplace_back(pageInfo);
+   pageInfo.fLocator = CommitSealedPageImpl(physicalColumnId, sealedPage);
+   fOpenPageRanges.at(physicalColumnId).fPageInfos.emplace_back(pageInfo);
 }
 
 std::vector<ROOT::Experimental::RNTupleLocator>
