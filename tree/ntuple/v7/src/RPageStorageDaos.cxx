@@ -303,7 +303,8 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
          d_iov_set(&pageIov, const_cast<void *>(s.fBuffer), s.fSize);
          auto offsetData = fPageId.fetch_add(1);
 
-         RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, range.fColumnId, offsetData);
+         RDaosKey daosKey =
+            GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, range.fPhysicalColumnId, offsetData);
          auto odPair = RDaosContainer::ROidDkeyPair{daosKey.fOid, daosKey.fDkey};
          auto [it, ret] = writeRequests.emplace(odPair, RDaosContainer::RWOperation(odPair));
          it->second.insert(daosKey.fAkey, pageIov);
