@@ -885,6 +885,8 @@ XMLNodePointer_t TGDMLWrite::CreateElementN(TGeoElement * element, XMLNodePointe
       if (valZ >= 1) {
          fGdmlE->NewAttr(mainN, nullptr, "Z", TString::Format("%i", valZ));
       }
+      Int_t valN = element->N();
+      fGdmlE->NewAttr(mainN, nullptr, "N", TString::Format("%i", valN));
       fGdmlE->AddChild(mainN, CreateAtomN(element->A()));
    }
    return mainN;
@@ -897,6 +899,24 @@ XMLNodePointer_t TGDMLWrite::CreateMixtureN(TGeoMixture * mixture, XMLNodePointe
 {
    XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "material", nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "name", mname);
+
+   // Write properties
+   TList const &properties = mixture->GetProperties();
+   if (properties.GetSize()) {
+      TIter next(&properties);
+      TNamed *property;
+      while ((property = (TNamed*)next()))
+        fGdmlE->AddChild(mainN, CreatePropertyN(*property));
+   }
+   // Write CONST properties
+   TList const &const_properties = mixture->GetConstProperties();
+   if (const_properties.GetSize()) {
+      TIter next(&const_properties);
+      TNamed *property;
+      while ((property = (TNamed*)next()))
+        fGdmlE->AddChild(mainN, CreatePropertyN(*property));
+   }
+
    fGdmlE->AddChild(mainN, CreateDN(mixture->GetDensity()));
    //local associative arrays for saving elements and their weight
    //inside mixture
@@ -940,23 +960,6 @@ XMLNodePointer_t TGDMLWrite::CreateMixtureN(TGeoMixture * mixture, XMLNodePointe
       fGdmlE->AddChild(mainN, CreateFractionN(wPercentage[itr->first], itr->first.Data()));
    }
 
-   // Write properties
-   TList const &properties = mixture->GetProperties();
-   if (properties.GetSize()) {
-      TIter next(&properties);
-      TNamed *property;
-      while ((property = (TNamed*)next()))
-        fGdmlE->AddChild(mainN, CreatePropertyN(*property));
-   }
-   // Write CONST properties
-   TList const &const_properties = mixture->GetConstProperties();
-   if (const_properties.GetSize()) {
-      TIter next(&const_properties);
-      TNamed *property;
-      while ((property = (TNamed*)next()))
-        fGdmlE->AddChild(mainN, CreatePropertyN(*property));
-   }
-
    return mainN;
 }
 
@@ -986,24 +989,27 @@ XMLNodePointer_t TGDMLWrite::CreateMaterialN(TGeoMaterial * material, TString mn
       }
    }
    fGdmlE->NewAttr(mainN, nullptr, "Z", TString::Format(fltPrecision.Data(), valZ)); //material->GetZ()));
-   fGdmlE->AddChild(mainN, CreateDN(material->GetDensity()));
-   fGdmlE->AddChild(mainN, CreateAtomN(material->GetA()));
-   // Create properties if any
+
+   // Create properties if any: Properties according to the GDML schema MUST come first!
    TList const &properties = material->GetProperties();
    if (properties.GetSize()) {
       TIter next(&properties);
       TNamed *property;
-      while ((property = (TNamed*)next()))
-        fGdmlE->AddChild(mainN, CreatePropertyN(*property));
+      while ((property = (TNamed *)next()))
+         fGdmlE->AddChild(mainN, CreatePropertyN(*property));
    }
    // Write CONST properties
    TList const &const_properties = material->GetConstProperties();
    if (const_properties.GetSize()) {
       TIter next(&const_properties);
       TNamed *property;
-      while ((property = (TNamed*)next()))
-        fGdmlE->AddChild(mainN, CreatePropertyN(*property));
+      while ((property = (TNamed *)next()))
+         fGdmlE->AddChild(mainN, CreatePropertyN(*property));
    }
+
+   // Now add the other children
+   fGdmlE->AddChild(mainN, CreateDN(material->GetDensity()));
+   fGdmlE->AddChild(mainN, CreateAtomN(material->GetA()));
    return mainN;
 }
 
@@ -1996,10 +2002,11 @@ XMLNodePointer_t TGDMLWrite::CreateMatrixN(TGDMLMatrix const *matrix)
 
 XMLNodePointer_t TGDMLWrite::CreateConstantN(const char *name, Double_t value)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "constant", nullptr);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "matrix", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    fGdmlE->NewAttr(mainN, nullptr, "name", name);
-   fGdmlE->NewAttr(mainN, nullptr, "value", TString::Format(fltPrecision.Data(), value));
+   fGdmlE->NewAttr(mainN, nullptr, "coldim", "1");
+   fGdmlE->NewAttr(mainN, nullptr, "values", TString::Format(fltPrecision.Data(), value));
    return mainN;
 }
 
