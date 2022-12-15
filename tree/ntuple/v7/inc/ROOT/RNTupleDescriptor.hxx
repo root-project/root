@@ -704,7 +704,7 @@ public:
 
    /// We know the number of entries from adding the cluster summaries
    NTupleSize_t GetNEntries() const { return fNEntries; }
-   NTupleSize_t GetNElements(DescriptorId_t columnId) const;
+   NTupleSize_t GetNElements(DescriptorId_t physicalColumnId) const;
 
    /// Returns the logical parent of all top-level NTuple data fields.
    DescriptorId_t GetFieldZeroId() const;
@@ -714,7 +714,7 @@ public:
    DescriptorId_t FindFieldId(std::string_view fieldName) const;
    DescriptorId_t FindLogicalColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const;
    DescriptorId_t FindPhysicalColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const;
-   DescriptorId_t FindClusterId(DescriptorId_t columnId, NTupleSize_t index) const;
+   DescriptorId_t FindClusterId(DescriptorId_t physicalColumnId, NTupleSize_t index) const;
    DescriptorId_t FindNextClusterId(DescriptorId_t clusterId) const;
    DescriptorId_t FindPrevClusterId(DescriptorId_t clusterId) const;
 

@@ -201,14 +201,14 @@ bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &
           fClusterDescriptors == other.fClusterDescriptors;
 }
 
-
-ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleDescriptor::GetNElements(DescriptorId_t columnId) const
+ROOT::Experimental::NTupleSize_t
+ROOT::Experimental::RNTupleDescriptor::GetNElements(DescriptorId_t physicalColumnId) const
 {
    NTupleSize_t result = 0;
    for (const auto &cd : fClusterDescriptors) {
-      if (!cd.second.ContainsColumn(columnId))
+      if (!cd.second.ContainsColumn(physicalColumnId))
          continue;
-      auto columnRange = cd.second.GetColumnRange(columnId);
+      auto columnRange = cd.second.GetColumnRange(physicalColumnId);
       result = std::max(result, columnRange.fFirstElementIndex + columnRange.fNElements);
    }
    return result;
@@ -279,13 +279,13 @@ ROOT::Experimental::RNTupleDescriptor::FindPhysicalColumnId(DescriptorId_t field
 }
 
 ROOT::Experimental::DescriptorId_t
-ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t columnId, NTupleSize_t index) const
+ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t physicalColumnId, NTupleSize_t index) const
 {
    // TODO(jblomer): binary search?
    for (const auto &cd : fClusterDescriptors) {
-      if (!cd.second.ContainsColumn(columnId))
+      if (!cd.second.ContainsColumn(physicalColumnId))
          continue;
-      auto columnRange = cd.second.GetColumnRange(columnId);
+      auto columnRange = cd.second.GetColumnRange(physicalColumnId);
       if (columnRange.Contains(index))
          return cd.second.GetId();
    }
