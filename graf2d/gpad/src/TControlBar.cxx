@@ -82,6 +82,7 @@ will return the name of the last clicked button.
 #include "TGuiFactory.h"
 #include "TList.h"
 #include "TStyle.h"
+#include "TROOT.h"
 
 
 ClassImp(TControlBar);
@@ -210,10 +211,12 @@ void TControlBar::Initialize(Int_t x, Int_t y)
    if (gApplication)
       gApplication->InitializeGraphics();
 
+   auto factory = gROOT->IsWebDisplay() ? gBatchGuiFactory : gGuiFactory;
+
    if (x == -999) {
-      fControlBarImp = gGuiFactory->CreateControlBarImp( this, GetName() );
+      fControlBarImp = factory->CreateControlBarImp( this, GetName() );
    } else {
-      fControlBarImp = gGuiFactory->CreateControlBarImp( this, GetName(), x, y );
+      fControlBarImp = factory->CreateControlBarImp( this, GetName(), x, y );
    }
 
    fButtons       = new TList();
