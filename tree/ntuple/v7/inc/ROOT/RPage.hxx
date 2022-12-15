@@ -57,7 +57,7 @@ public:
    };
 
 private:
-   ColumnId_t fColumnId;
+   ColumnId_t fPhysicalColumnId;
    void *fBuffer;
    ClusterSize_t::ValueType fElementSize;
    ClusterSize_t::ValueType fNElements;
@@ -68,15 +68,18 @@ private:
 
 public:
    RPage()
-      : fColumnId(kInvalidColumnId), fBuffer(nullptr), fElementSize(0), fNElements(0), fMaxElements(0), fRangeFirst(0)
-   {}
-   RPage(ColumnId_t columnId, void* buffer, ClusterSize_t::ValueType elementSize, ClusterSize_t::ValueType maxElements)
-      : fColumnId(columnId), fBuffer(buffer), fElementSize(elementSize), fNElements(0), fMaxElements(maxElements),
+      : fPhysicalColumnId(kInvalidColumnId), fBuffer(nullptr), fElementSize(0), fNElements(0), fMaxElements(0),
         fRangeFirst(0)
+   {
+   }
+   RPage(ColumnId_t physicalColumnId, void *buffer, ClusterSize_t::ValueType elementSize,
+         ClusterSize_t::ValueType maxElements)
+      : fPhysicalColumnId(physicalColumnId), fBuffer(buffer), fElementSize(elementSize), fNElements(0),
+        fMaxElements(maxElements), fRangeFirst(0)
    {}
    ~RPage() = default;
 
-   ColumnId_t GetColumnId() const { return fColumnId; }
+   ColumnId_t GetPhysicalColumnId() const { return fPhysicalColumnId; }
    /// The space taken by column elements in the buffer
    ClusterSize_t::ValueType GetNBytes() const { return fElementSize * fNElements; }
    ClusterSize_t::ValueType GetElementSize() const { return fElementSize; }
@@ -121,9 +124,9 @@ public:
    void ResetCluster(const RClusterInfo &clusterInfo) { fNElements = 0; fClusterInfo = clusterInfo; }
 
    /// Used by virtual page sources to map the physical column and cluster IDs to ther virtual counterparts
-   void ChangeIds(DescriptorId_t columnId, DescriptorId_t clusterId)
+   void ChangeIds(DescriptorId_t physicalColumnId, DescriptorId_t clusterId)
    {
-      fColumnId = columnId;
+      fPhysicalColumnId = physicalColumnId;
       fClusterInfo = RClusterInfo(clusterId, fClusterInfo.GetIndexOffset());
    }
 
