@@ -33,4 +33,6 @@
 
 #pragma link C++ class TWebCanvas+;
 
+#pragma link C++ class TWebControlBar+;
+
 #endif

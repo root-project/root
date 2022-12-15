@@ -147,6 +147,15 @@ TContextMenuImp *TGuiFactory::CreateContextMenuImp(TContextMenu *c, const char *
 
 TControlBarImp *TGuiFactory::CreateControlBarImp(TControlBar *c, const char *title)
 {
+   if (gROOT->IsWebDisplay()) {
+      auto ph = gROOT->GetPluginManager()->FindHandler("TControlBarImp", "TWebControlBar");
+
+      if (ph && ph->LoadPlugin() != -1) {
+         auto imp = (TControlBarImp *) ph->ExecPlugin(4, c, title, 0, 0);
+         if (imp) return imp;
+      }
+   }
+
    return new TControlBarImp(c, title);
 }
 
@@ -155,6 +164,15 @@ TControlBarImp *TGuiFactory::CreateControlBarImp(TControlBar *c, const char *tit
 
 TControlBarImp *TGuiFactory::CreateControlBarImp(TControlBar *c, const char *title, Int_t x, Int_t y)
 {
+   if (gROOT->IsWebDisplay()) {
+      auto ph = gROOT->GetPluginManager()->FindHandler("TControlBarImp", "TWebControlBar");
+
+      if (ph && ph->LoadPlugin() != -1) {
+         auto imp = (TControlBarImp *) ph->ExecPlugin(4, c, title, x, y);
+         if (imp) return imp;
+      }
+   }
+
    return new TControlBarImp(c, title, x, y);
 }
 
