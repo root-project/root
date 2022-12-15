@@ -117,7 +117,7 @@ In this case, the locator should be interpreted like a frame, i.e. size indicate
 _Offset_:
 For on-disk / in-file locators, the 64bit byte offset of the referenced byte range counted from the start of the file.
 
-For non-disk locators, i.e. `T` == 1, the format is more accurately described as
+For non-disk locators, i.e. `T` == 1, the locator format is as follows
 
 ```
  0                   1                   2                   3
@@ -142,7 +142,7 @@ The range 0x03 - 0x7f is currently unused. Additional types can be registered in
 For URI locators, the locator contains the ASCII characters of the URI following the size and the type.
 Each locator type follows a given format for the payload (see Section "Well-known payload formats" below).
 
-_Reserved_ is an 8bit field that can be used by concrete storage backends to store additional information about the locator.
+_Reserved_ is an 8bit field that can be used by the storage backend corresponding to the type in order to store additional information about the locator.
 
 An envelope link consists of a 32bit unsigned integer that specifies the uncompressed size of the envelope
 followed by a locator.
