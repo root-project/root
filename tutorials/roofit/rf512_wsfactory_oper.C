@@ -49,7 +49,7 @@ void rf512_wsfactory_oper()
    w->factory("FCONV::lxg( x, Gaussian::g(x,mg[0],1), Landau::lc(x,0,1) )");
 
    // Simultaneous pdfs are constructed with SIMUL( index, state1=pdf1, state2=pdf2,...)
-   w->factory("SIMUL::smodel( c[A=0,B=1], A=Gaussian::gs(x,m,s[1]), B=Landau::ls(x,0,1) )");
+   w->factory("SIMUL::smodel( c[A=0,B=1], A=Gaussian::gs(x,m,s[1.0, 0.01, 10.0]), B=Landau::ls(x,0,1) )");
 
    // O p e r a t o r   f u n c t i o n   e x a m p l e s
    // ---------------------------------------------------
@@ -60,11 +60,11 @@ void rf512_wsfactory_oper()
    // Function addition is done with sum(func1,func2)
    w->factory("sum::uv2(u,v)");
 
-   // Lagrangian morphing function for the example shown in rf711_lagrangianmorph 
+   // Lagrangian morphing function for the example shown in rf711_lagrangianmorph
    std::string infilename = std::string(gROOT->GetTutorialDir()) + "/roofit/input_histos_rf_lagrangianmorph.root";
    w->factory(("lagrangianmorph::morph($fileName('"+infilename+"'),$observableName('pTV'),$couplings({cHq3[0,1],SM[1]}),$NewPhysics(cHq3=1,SM=0),$folders({'SM_NPsq0','cHq3_NPsq1','cHq3_NPsq2'}))").c_str());
 
-   
+
    // Taylor expansion is done with taylorexpand(func,{var1,var2,...},val,order)
    w->factory("taylorexpand::te(expr::poly('x^4+5*x^3+2*x^2+x+1',x),{x},0.0,2)");
 
