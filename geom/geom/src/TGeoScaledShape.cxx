@@ -330,10 +330,10 @@ void TGeoScaledShape::SavePrimitive(std::ostream &out, Option_t *option)
    TString sname = fShape->GetPointerName();
    const Double_t *sc = fScale->GetScale();
    out << "   // Scale factor:" << std::endl;
-   out << "   TGeoScale *pScale = new TGeoScale(\"" << fScale->GetName()
+   out << "   auto pScale_" << GetPointerName() << " = new TGeoScale(\"" << fScale->GetName()
        << "\"," << sc[0] << "," << sc[1] << "," << sc[2] << ");" << std::endl;
    out << "   TGeoScaledShape *" << GetPointerName() << " = new TGeoScaledShape(\""
-       << GetName() << "\"," << sname << ", pScale);" << std::endl;
+       << GetName() << "\"," << sname << ", pScale_" << GetPointerName() << " );" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
