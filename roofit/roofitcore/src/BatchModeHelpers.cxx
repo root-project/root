@@ -32,7 +32,8 @@ using ROOT::Experimental::RooNLLVarNew;
 namespace {
 
 std::unique_ptr<RooAbsArg> createSimultaneousNLL(RooSimultaneous const &simPdf, RooArgSet &observables, bool isExtended,
-                                                 std::string const &rangeName, bool doOffset, bool splitRange)
+                                                 std::string const &rangeName, RooFit::OffsetMode offset,
+                                                 bool splitRange)
 {
    RooAbsCategoryLValue const &simCat = simPdf.indexCat();
 
@@ -63,7 +64,7 @@ std::unique_ptr<RooAbsArg> createSimultaneousNLL(RooSimultaneous const &simPdf, 
          if (!rangeName.empty()) {
             pdf->setNormRange(RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, catName).c_str());
          }
-         auto nll = std::make_unique<RooNLLVarNew>(name.c_str(), name.c_str(), *pdf, observables, isExtended, doOffset,
+         auto nll = std::make_unique<RooNLLVarNew>(name.c_str(), name.c_str(), *pdf, observables, isExtended, offset,
                                                    binnedInfo.isBinnedL);
          // Rename the observables and weights
          newObservables.add(nll->prefixArgNames(std::string("_") + catName + "_"));
@@ -169,12 +170,12 @@ private:
 
 } // namespace
 
-std::unique_ptr<RooAbsReal> RooFit::BatchModeHelpers::createNLL(std::unique_ptr<RooAbsPdf> &&pdf, RooAbsData &data,
-                                                                std::unique_ptr<RooAbsReal> &&constraints,
-                                                                std::string const &rangeName, RooArgSet const &projDeps,
-                                                                bool isExtended, double integrateOverBinsPrecision,
-                                                                RooFit::BatchModeOption batchMode, bool doOffset,
-                                                                bool splitRange, bool takeGlobalObservablesFromData)
+std::unique_ptr<RooAbsReal>
+RooFit::BatchModeHelpers::createNLL(std::unique_ptr<RooAbsPdf> &&pdf, RooAbsData &data,
+                                    std::unique_ptr<RooAbsReal> &&constraints, std::string const &rangeName,
+                                    RooArgSet const &projDeps, bool isExtended, double integrateOverBinsPrecision,
+                                    RooFit::BatchModeOption batchMode, RooFit::OffsetMode offset, bool splitRange,
+                                    bool takeGlobalObservablesFromData)
 {
    if (constraints) {
       // Redirect the global observables to the ones from the dataset if applicable.
@@ -214,10 +215,10 @@ std::unique_ptr<RooAbsReal> RooFit::BatchModeHelpers::createNLL(std::unique_ptr<
    if (simPdf) {
       simPdf->wrapPdfsInBinSamplingPdfs(data, integrateOverBinsPrecision);
       // Warning! This mutates "observables"
-      nllTerms.addOwned(createSimultaneousNLL(*simPdf, observables, isExtended, rangeName, doOffset, splitRange));
+      nllTerms.addOwned(createSimultaneousNLL(*simPdf, observables, isExtended, rangeName, offset, splitRange));
    } else {
       nllTerms.addOwned(
-         std::make_unique<RooNLLVarNew>("RooNLLVarNew", "RooNLLVarNew", finalPdf, observables, isExtended, doOffset));
+         std::make_unique<RooNLLVarNew>("RooNLLVarNew", "RooNLLVarNew", finalPdf, observables, isExtended, offset));
    }
    if (constraints) {
       nllTerms.addOwned(std::move(constraints));

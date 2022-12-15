@@ -65,8 +65,12 @@ enum MsgTopic { Generation=1, Minimization=2, Plotting=4, Fitting=8, Integration
 enum MPSplit { BulkPartition=0, Interleave=1, SimComponents=2, Hybrid=3 } ;
 
 /// For setting the batch mode flag with the BatchMode() command argument to
-/// RooAbsPdf::fitTo();
+/// RooAbsPdf::fitTo()
 enum class BatchModeOption { Off, Cpu, Cuda, Old };
+
+/// For setting the offset mode with the Offset() command argument to
+/// RooAbsPdf::fitTo()
+enum class OffsetMode { Off, Initial, Bin };
 
 namespace Experimental {
 
@@ -279,7 +283,13 @@ RooCmdArg AsymptoticError(bool flag) ;
 RooCmdArg CloneData(bool flag) ;
 RooCmdArg Integrate(bool flag) ;
 RooCmdArg Minimizer(const char* type, const char* alg=nullptr) ;
-RooCmdArg Offset(bool flag=true) ;
+RooCmdArg Offset(std::string const& mode);
+// The const char * overload is necessary, otherwise the compiler will cast a
+// C-Style string to a bool and choose the Offset(bool) overload if one
+// calls for example Offset("off").
+inline RooCmdArg Offset(const char * mode) { return Offset(std::string(mode)); }
+// For backwards compatibility
+inline RooCmdArg Offset(bool flag=true) { return flag ? Offset("initial") : Offset("off"); }
 RooCmdArg RecoverFromUndefinedRegions(double strength);
 /** @} */
 

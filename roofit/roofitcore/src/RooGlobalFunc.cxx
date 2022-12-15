@@ -278,7 +278,17 @@ namespace RooFit {
   RooCmdArg CloneData(bool flag)                       { return RooCmdArg("CloneData",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Integrate(bool flag)                       { return RooCmdArg("Integrate",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Minimizer(const char* type, const char* alg) { return RooCmdArg("Minimizer",0,0,0,0,type,alg,0,0) ; }
-  RooCmdArg Offset(bool flag)                          { return RooCmdArg("OffsetLikelihood",flag,0,0,0,0,0,0,0) ; }
+
+  RooCmdArg Offset(std::string const& mode) {
+      std::string lower = mode;
+      std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c){ return std::tolower(c); });
+      OffsetMode modeVal = OffsetMode::Off;
+      if(lower == "off") modeVal = OffsetMode::Off;
+      else if(lower == "initial") modeVal = OffsetMode::Initial;
+      else if(lower == "bin") modeVal = OffsetMode::Bin;
+      return RooCmdArg("OffsetLikelihood", static_cast<int>(modeVal));
+  }
+
   /// When parameters are chosen such that a PDF is undefined, try to indicate to the minimiser how to leave this region.
   /// \param strength Strength of hints for minimiser. Set to zero to switch off.
   RooCmdArg RecoverFromUndefinedRegions(double strength) { return RooCmdArg("RecoverFromUndefinedRegions",0,0,strength,0,0,0,0,0) ; }

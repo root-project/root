@@ -925,9 +925,15 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared) const
 /// <tr><td> `GlobalObservablesTag(const char* tagName)` <td> Define the set of normalization observables to be used for the constraint terms by
 ///                                                         a string attribute associated with pdf observables that match the given tagName.
 /// <tr><td> `Verbose(bool flag)`           <td> Controls RooFit informational messages in likelihood construction
-/// <tr><td> `CloneData(Bool flag)`           <td> Use clone of dataset in NLL (default is true)
-/// <tr><td> `Offset(bool)`                 <td> Offset likelihood by initial value (so that starting value of FCN in minuit is zero).
-///                                              This can improve numeric stability in simultaneous fits with components with large likelihood values
+/// <tr><td> `CloneData(bool flag)`            <td> Use clone of dataset in NLL (default is true)
+/// <tr><td> `Offset(std::string const& mode)` <td> Likelihood offsetting mode. Can be either:
+///                                                 - `"off"` (default): no offsetting
+///                                                 - `"initial"`: Offset likelihood by initial value (so that starting value of FCN in minuit is zero).
+///                                                    This can improve numeric stability in simultaneous fits with components with large likelihood values.
+///                                                 - `"bin"`: Offset by the likelihood bin-by-bin with a template histogram model based on the obersved data.
+///                                                   This results in per-bin values that are all in the same order of magnitude, which reduces precision loss in the sum,
+///                                                   which can drastically improve numeric stability.
+///                                                   Furthermore, 2 * NLL defined like this is approximately chi-square distributed, allowing for goodness-of-fit tests.
 /// <tr><td> `IntegrateBins(double precision)` <td> In binned fits, integrate the PDF over the bins instead of using the probability density at the bin centre.
 ///                                                 This can reduce the bias observed when fitting functions with high curvature to binned data.
 ///                                                 - precision > 0: Activate bin integration everywhere. Use precision between 0.01 and 1.E-6, depending on binning.
@@ -1038,7 +1044,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   bool verbose = pc.getInt("verbose") ;
   Int_t optConst = pc.getInt("optConst") ;
   Int_t cloneData = pc.getInt("cloneData") ;
-  Int_t doOffset = pc.getInt("doOffset") ;
+  auto offset = static_cast<RooFit::OffsetMode>(pc.getInt("doOffset"));
 
   // If no explicit cloneData command is specified, cloneData is set to true if optimization is activated
   if (cloneData==2) {
@@ -1115,7 +1121,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
                                                ext,
                                                pc.getDouble("IntegrateBins"),
                                                batchMode,
-                                               doOffset,
+                                               offset,
                                                static_cast<bool>(splitRange),
                                                takeGlobalObservablesFromData).release();
   }
@@ -1134,8 +1140,10 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   cfg.binnedL = false;
   cfg.takeGlobalObservablesFromData = takeGlobalObservablesFromData;
   cfg.rangeName = rangeName ? rangeName : "";
-  nll = std::make_unique<RooNLLVar>(baseName.c_str(),"-log(likelihood)",*this,data,projDeps, ext, cfg);
-  static_cast<RooNLLVar&>(*nll).batchMode(batchMode == RooFit::BatchModeOption::Old);
+  auto nllVar = std::make_unique<RooNLLVar>(baseName.c_str(),"-log(likelihood)",*this,data,projDeps, ext, cfg);
+  nllVar->batchMode(batchMode == RooFit::BatchModeOption::Old);
+  nllVar->templateRatioOffset(offset == RooFit::OffsetMode::Bin);
+  nll = std::move(nllVar);
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
   // Include constraints, if any, in likelihood
@@ -1166,7 +1174,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     nll->constOptimizeTestStatistic(RooAbsArg::Activate,optConst>1) ;
   }
 
-  if (doOffset) {
+  if (offset == RooFit::OffsetMode::Initial) {
     nll->enableOffsetting(true) ;
   }
 
@@ -1449,8 +1457,7 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
 /// <tr><td> `ExternalConstraints(const RooArgSet& )`   <td> Include given external constraints to likelihood by multiplying them with the original likelihood.
 /// <tr><td> `GlobalObservables(const RooArgSet&)`      <td> Define the set of normalization observables to be used for the constraint terms.
 ///                                                        If none are specified the constrained parameters are used.
-/// <tr><td> `Offset(bool)`                           <td>  Offset likelihood by initial value (so that starting value of FCN in minuit is zero).
-///                                                         This can improve numeric stability in simultaneously fits with components with large likelihood values
+/// <tr><td> `Offset(std::string const& mode)`          <td>  Likelihood offsetting mode. See createNLL(RooAbsData&, RooLinkedList const&).
 /// <tr><td> `BatchMode(bool on)`                       <td> **Experimental** batch evaluation mode. This computes a batch of likelihood values at a time,
 ///                                                          uses faster math functions and possibly auto vectorisation (this depends on the compiler flags).
 ///                                                          Depending on hardware capabilities, the compiler flags and whether a batch evaluation function was
@@ -1538,21 +1545,21 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
 ///                                                some features such as offsetting might not yet work in this case.
 /// <tr><td> `Parallelize(Int_t nWorkers)`   <td>  Control global parallelization settings. Arguments 1 and above enable the use of RooFit's parallel minimization
 ///                                                backend and uses the number given as the number of workers to use in the parallelization. -1 also enables
-///                                                RooFit's parallel minimization backend, and sets the number of workers to the number of available processes. 
+///                                                RooFit's parallel minimization backend, and sets the number of workers to the number of available processes.
 ///                                                0 disables this feature.
 /// <tr><td> `ParallelGradientOptions(bool enable=true, int orderStrategy=0, int chainFactor=1)`   <td>  **Experimental** Control gradient parallelization settings. The first argument
 ///                                                                                                      only disables or enables gradient parallelization, this is on by default.
-///                                                                                                      The second argument determines the internal partial derivative calculation 
-///                                                                                                      ordering strategy. The third argument determines the number of partial 
+///                                                                                                      The second argument determines the internal partial derivative calculation
+///                                                                                                      ordering strategy. The third argument determines the number of partial
 ///                                                                                                      derivatives that are executed per task package on each worker.
 /// <tr><td> `ParallelDescentOptions(bool enable=false, int splitStrategy=0, int numSplits=4)`   <td>  **Experimental** Control settings related to the parallelization of likelihoods
 ///                                                                                                      outside of the gradient calculation but in the minimization, most prominently
 ///                                                                                                      in the linesearch step. The first argument this disables or enables likelihood
 ///                                                                                                      parallelization. The second argument determines whether to split the task batches
 ///                                                                                                      per event or per likelihood component. And the third argument how many events or
-///                                                                                                      respectively components to include in each batch.                                                                            
+///                                                                                                      respectively components to include in each batch.
 /// <tr><td> `TimingAnalysis(bool flag)`   <td> **Experimental** log timings. This feature logs timings with NewStyle likelihoods on multiple processes simultaneously
-///                                         and outputs the timings at the end of a run to json log files, which can be analyzed with the 
+///                                         and outputs the timings at the end of a run to json log files, which can be analyzed with the
 ///                                         `RooFit::MultiProcess::HeatmapAnalyzer`. Only works with simultaneous likelihoods.
 /// </table>
 ///
@@ -1608,7 +1615,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   // TimingAnalysis works only for RooSimultaneus.
   if (pc.getInt("timingAnalysis") && !this->InheritsFrom("RooSimultaneous") ) {
      coutW(Minimization) << "The timingAnalysis feature was built for minimization with RooSimulteneous "
-                            "and is not implemented for other PDF's. Please create a RooSimultenous to " 
+                            "and is not implemented for other PDF's. Please create a RooSimultenous to "
                             "enable this feature."  << endl;
   }
 

@@ -41,6 +41,7 @@ In extended mode, a
 #include "RooProdPdf.h"
 #include "RooNaNPacker.h"
 #include "RunContext.h"
+#include "RooDataHist.h"
 
 #ifdef ROOFIT_CHECK_CACHED_VALUES
 #include <iomanip>
@@ -465,28 +466,39 @@ RooNLLVar::ComputeResult RooNLLVar::computeBatchedFunc(const RooAbsPdf *pdfClone
 
 RooNLLVar::ComputeResult RooNLLVar::computeScalar(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const {
   auto pdfClone = static_cast<const RooAbsPdf*>(_funcClone);
-  return computeScalarFunc(pdfClone, _dataClone, _normSet, _weightSq, stepSize, firstEvent, lastEvent);
+  return computeScalarFunc(pdfClone, _dataClone, _normSet, _weightSq, stepSize, firstEvent, lastEvent, _templateRatioOffset);
 }
 
 // static function, also used from TestStatistics::RooUnbinnedL
 RooNLLVar::ComputeResult RooNLLVar::computeScalarFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone,
                                                       RooArgSet *normSet, bool weightSq, std::size_t stepSize,
-                                                      std::size_t firstEvent, std::size_t lastEvent)
+                                                      std::size_t firstEvent, std::size_t lastEvent, bool templateRatioOffset)
 {
   ROOT::Math::KahanSum<double> kahanWeight;
   ROOT::Math::KahanSum<double> kahanProb;
   RooNaNPacker packedNaN(0.f);
+  const double logSumW = std::log(dataClone->sumEntries());
+
+  auto* dataHist = templateRatioOffset ? dynamic_cast<RooDataHist*>(dataClone) : nullptr;
 
   for (auto i=firstEvent; i<lastEvent; i+=stepSize) {
     dataClone->get(i) ;
 
-    double eventWeight = dataClone->weight(); //FIXME
-    if (0. == eventWeight * eventWeight) continue ;
-    if (weightSq) eventWeight = dataClone->weightSquared() ;
+    double weight = dataClone->weight(); //FIXME
+    const double ni = weight;
 
-    const double term = -eventWeight * pdfClone->getLogVal(normSet);
+    if (0. == weight * weight) continue ;
+    if (weightSq) weight = dataClone->weightSquared() ;
 
-    kahanWeight.Add(eventWeight);
+    double logProba = pdfClone->getLogVal(normSet);
+
+    if(templateRatioOffset && dataHist) {
+      logProba -= std::log(ni) - std::log(dataHist->binVolume(i)) - logSumW;
+    }
+
+    const double term = -weight * logProba;
+
+    kahanWeight.Add(weight);
     kahanProb.Add(term);
     packedNaN.accumulate(term);
   }
