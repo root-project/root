@@ -305,7 +305,7 @@ void box(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Wrong division axis. Range is 1-3.\n");
       return;
    }
-   TCanvas *c = new TCanvas("box shape", "A simple box", 700,1000);
+   TCanvas *c = new TCanvas("box_shape", "A simple box", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -369,7 +369,7 @@ void box(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 void para(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
    gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("para shape", "A parallelepiped", 700,1000);
+   TCanvas *c = new TCanvas("para_shape", "A parallelepiped", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -436,7 +436,7 @@ void tube(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Wrong division axis. Range is 1-3.\n");
       return;
    }
-   TCanvas *c = new TCanvas("tube shape", "A tube", 700,1000);
+   TCanvas *c = new TCanvas("tube_shape", "A tube", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -501,7 +501,7 @@ void tubeseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Wrong division axis. Range is 1-3.\n");
       return;
    }
-   TCanvas *c = new TCanvas("tubeseg shape", "A tube segment ", 700,1000);
+   TCanvas *c = new TCanvas("tubeseg_shape", "A tube segment ", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -568,7 +568,7 @@ void ctub(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Wrong division axis. Range is 1-2.\n");
       return;
    }
-   TCanvas *c = new TCanvas("ctub shape", "A cut tube segment ", 700,1000);
+   TCanvas *c = new TCanvas("ctub_shape", "A cut tube segment ", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -641,7 +641,7 @@ void cone(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("cannot divide cone on Rxy\n");
       return;
    }
-   TCanvas *c = new TCanvas("cone shape", "A cone", 700,1000);
+   TCanvas *c = new TCanvas("cone_shape", "A cone", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -707,7 +707,7 @@ void coneseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Wrong division axis. Range is 1-3.\n");
       return;
    }
-   TCanvas *c = new TCanvas("coneseg shape", "A cone segment", 700,1000);
+   TCanvas *c = new TCanvas("coneseg_shape", "A cone segment", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -771,7 +771,7 @@ void coneseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 void eltu(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
    gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("eltu shape", "An Elliptical tube", 700,1000);
+   TCanvas *c = new TCanvas("eltu_shape", "An Elliptical tube", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -835,7 +835,7 @@ void sphere(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Cannot divide spheres\n");
       return;
    }
-   TCanvas *c = new TCanvas("Sphere shap", "A spherical sector", 700,1000);
+   TCanvas *c = new TCanvas("Sphere_shape", "A spherical sector", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -891,7 +891,7 @@ void torus(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Cannot divide a torus\n");
       return;
    }
-   TCanvas *c = new TCanvas("torus shape", "A toroidal segment", 700,1000);
+   TCanvas *c = new TCanvas("torus_shape", "A toroidal segment", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -949,7 +949,7 @@ void trd1(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       return;
    }
 
-   TCanvas *c = new TCanvas("trd1 shape", "A trapezoid with dX varying", 700,1000);
+   TCanvas *c = new TCanvas("trd1_shape", "A trapezoid with dX varying", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -1010,7 +1010,7 @@ void trd1(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 void parab()
 {
    gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("parab shape", "A paraboloid segment", 700,1000);
+   TCanvas *c = new TCanvas("parab_shape", "A paraboloid segment", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -1063,7 +1063,7 @@ void parab()
 void hype()
 {
    gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("hype shape", "A hyperboloid", 700,1000);
+   TCanvas *c = new TCanvas("hype_shape", "A hyperboloid", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -1124,7 +1124,7 @@ void pcon(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Cannot divide pcon on Rxy\n");
       return;
    }
-   TCanvas *c = new TCanvas("pcon shape", "A polycone", 700,1000);
+   TCanvas *c = new TCanvas("pcon_shape", "A polycone", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -1204,7 +1204,7 @@ void pgon(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Cannot divide pgon on Rxy\n");
       return;
    }
-   TCanvas *c = new TCanvas("pgon shape", "A polygone", 700,1000);
+   TCanvas *c = new TCanvas("pgon_shape", "A polygone", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -1282,7 +1282,7 @@ void arb8(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Cannot divide arb8\n");
       return;
    }
-   TCanvas *c = new TCanvas("arb8 shape", "An arbitrary polyhedron", 700,1000);
+   TCanvas *c = new TCanvas("arb8_shape", "An arbitrary polyhedron", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -1361,7 +1361,7 @@ void trd2(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Wrong division axis. Can divide only in Z (3)\n");
       return;
    }
-   TCanvas *c = new TCanvas("trd2 shape", "A trapezoid with dX and dY varying with Z", 700,1000);
+   TCanvas *c = new TCanvas("trd2_shape", "A trapezoid with dX and dY varying with Z", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -1427,7 +1427,7 @@ void trap(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Wrong division axis. Can divide only in Z (3)\n");
       return;
    }
-   TCanvas *c = new TCanvas("trap shape", "A more general trapezoid", 700,1000);
+   TCanvas *c = new TCanvas("trap_shape", "A more general trapezoid", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -1499,7 +1499,7 @@ void gtra(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Wrong division axis. Can divide only in Z (3)\n");
       return;
    }
-   TCanvas *c = new TCanvas("gtra shape", "A twisted trapezoid", 700,1000);
+   TCanvas *c = new TCanvas("gtra_shape", "A twisted trapezoid", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -1568,7 +1568,7 @@ void gtra(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 void xtru()
 {
    gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("gtra shape", "A twisted trapezoid", 700,1000);
+   TCanvas *c = new TCanvas("xtru_shape", "A twisted trapezoid", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -1631,7 +1631,7 @@ void tessellated()
 {
    // Create a [triacontahedron solid](https://en.wikipedia.org/wiki/Rhombic_triacontahedron)
    gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("tessellated shape", "A tessellated shape", 700,1000);
+   TCanvas *c = new TCanvas("tessellated_shape", "A tessellated shape", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -1742,7 +1742,7 @@ void tessellated()
 void composite()
 {
    gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("composite shape", "A Boolean shape composition", 700,1000);
+   TCanvas *c = new TCanvas("composite_shape", "A Boolean shape composition", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -1838,7 +1838,7 @@ void ideal()
 //   check = optional check if the new aligned node is overlapping
 // gGeoManager->SetDrawExtraPaths(Bool_t flag)
    gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("composite shape", "A Boolean shape composition", 700,1000);
+   TCanvas *c = new TCanvas("composite_shape", "A Boolean shape composition", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
