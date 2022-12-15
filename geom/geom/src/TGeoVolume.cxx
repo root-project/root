@@ -1671,11 +1671,11 @@ Bool_t TGeoVolume::GetOptimalVoxels() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Provide a pointer name containing uid.
 
-char *TGeoVolume::GetPointerName() const
+const char *TGeoVolume::GetPointerName() const
 {
    static TString name;
-   name = TString::Format("p%s_%zx", GetName(), (size_t)this);
-   return (char*)name.Data();
+   name.Form("p%s_%zx", GetName(), (size_t)this);
+   return name.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

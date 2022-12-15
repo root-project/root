@@ -124,11 +124,11 @@ TGeoMedium::~TGeoMedium()
 ////////////////////////////////////////////////////////////////////////////////
 /// Provide a pointer name containing uid.
 
-char *TGeoMedium::GetPointerName() const
+const char *TGeoMedium::GetPointerName() const
 {
    static TString name;
-   name = TString::Format("pMed%d", GetUniqueID());
-   return (char*)name.Data();
+   name.Form("pMed%d", GetUniqueID());
+   return name.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

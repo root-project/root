@@ -48,7 +48,7 @@ public:
    Int_t                    GetId()   const     {return fId;}
    Double_t                 GetParam(Int_t i) const {return fParams[i];}
    void                     SetParam(Int_t i, Double_t val)   {fParams[i] = val;}
-   char                    *GetPointerName() const;
+   const char              *GetPointerName() const;
    TGeoMaterial            *GetMaterial() const {return fMaterial;}
    virtual void             SavePrimitive(std::ostream &out, Option_t *option = "");
    void                     SetId(Int_t id)     {fId = id;}
