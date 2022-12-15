@@ -99,8 +99,9 @@ ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSource::GetNEl
    return GetSharedDescriptorGuard()->GetNElements(columnHandle.fPhysicalId);
 }
 
-ROOT::Experimental::ColumnId_t ROOT::Experimental::Detail::RPageSource::GetPhysicalColumnId(ColumnHandle_t columnHandle)
+ROOT::Experimental::ColumnId_t ROOT::Experimental::Detail::RPageSource::GetColumnId(ColumnHandle_t columnHandle)
 {
+   // TODO(jblomer) distinguish trees
    return columnHandle.fPhysicalId;
 }
 
