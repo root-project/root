@@ -537,7 +537,7 @@ TEST(RNTuple, SerializeFooter)
    ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfo pageInfo;
    RClusterDescriptorBuilder clusterBuilder(84, 0, 100);
    ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
-   pageRange.fColumnId = 17;
+   pageRange.fPhysicalColumnId = 17;
    pageInfo.fNElements = 100;
    pageInfo.fLocator.fPosition = 7000U;
    pageRange.fPageInfos.emplace_back(pageInfo);
