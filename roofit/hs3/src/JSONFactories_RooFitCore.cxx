@@ -177,7 +177,6 @@ public:
       for (const auto &comp : p["channels"].children()) {
          std::string catname(RooJSONFactoryWSTool::name(comp));
          RooJSONFactoryWSTool::log(RooFit::INFO) << "importing category " << catname << std::endl;
-         tool->importFunction(comp, true);
          std::string pdfname(comp.has_val() ? comp.val() : RooJSONFactoryWSTool::name(comp));
          RooAbsPdf *pdf = tool->request<RooAbsPdf>(pdfname, name);
          components[catname] = pdf;
@@ -294,8 +293,7 @@ public:
       const static std::string keystring = "simultaneous";
       return keystring;
    }
-   bool autoExportDependants() const override { return false; }
-   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooSimultaneous *sim = static_cast<const RooSimultaneous *>(func);
       elem["type"] << key();
@@ -308,7 +306,7 @@ public:
          RooAbsPdf *pdf = sim->getPdf(catname);
          if (!pdf)
             RooJSONFactoryWSTool::error("no pdf found for category");
-         tool->exportObject(pdf);
+         channels[catname] << pdf->GetName();
       }
       return true;
    }

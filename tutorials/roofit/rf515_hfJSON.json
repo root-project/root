@@ -10,78 +10,76 @@
                 "toplevel"
             ],
             "channels": {
-                "channel1": {
-                    "type": "histfactory",
-                    "observables": {
-                        "obs_x_channel1": {
-                            "nbins": 2,
-                            "min": 1,
-                            "max": 2
+                "channel1" : "model_channel1"
+            }
+        },
+        "model_channel1": {
+            "type": "histfactory",
+            "observables": {
+                "obs_x_channel1": {
+                    "nbins": 2,
+                    "min": 1,
+                    "max": 2
+                }
+            },
+            "samples": {
+                "signal": {
+                    "overallSystematics": {
+                        "syst1": {
+                            "low": 0.95,
+                            "high": 1.05
                         }
                     },
-                    "samples": {
-                        "signal": {
-                            "type": "hist-sample",
-                            "overallSystematics": {
-                                "syst1": {
-                                    "low": 0.95,
-                                    "high": 1.05
-                                }
-                            },
-                            "normFactors": [
-                                "mu"
-                            ],
-                            "statError": 0,
-                            "data": {
-                                "counts": [
-                                    20,
-                                    10
-                                ]
-                            }
-                        },
-                        "background1": {
-                            "type": "hist-sample",
-                            "overallSystematics": {
-                                "syst2": {
-                                    "low": 0.95,
-                                    "high": 1.05
-                                }
-                            },
-                            "statError": 1,
-                            "data": {
-                                "counts": [
-                                    100,
-                                    0
-                                ],
-                                "errors": [
-                                    5,
-                                    0
-                                ]
-                            }
-                        },
-                        "background2": {
-                            "type": "hist-sample",
-                            "overallSystematics": {
-                                "syst3": {
-                                    "low": 0.95,
-                                    "high": 1.05
-                                }
-                            },
-                            "dict": {
-                                "normalizeByTheory": 1
-                            },
-                            "statError": 1,
-                            "data": {
-                                "counts": [
-                                    0,
-                                    100
-                                ],
-                                "errors": [
-                                    0,
-                                    10
-                                ]
-                            }
+                    "normFactors": [
+                        "mu"
+                    ],
+                    "statError": 0,
+                    "data": {
+                        "counts": [
+                            20,
+                            10
+                        ]
+                    }
+                },
+                "background1": {
+                    "overallSystematics": {
+                        "syst2": {
+                            "low": 0.95,
+                            "high": 1.05
                         }
+                    },
+                    "statError": 1,
+                    "data": {
+                        "counts": [
+                            100,
+                            0
+                        ],
+                        "errors": [
+                            5,
+                            0
+                        ]
+                    }
+                },
+                "background2": {
+                    "overallSystematics": {
+                        "syst3": {
+                            "low": 0.95,
+                            "high": 1.05
+                        }
+                    },
+                    "dict": {
+                        "normalizeByTheory": 1
+                    },
+                    "statError": 1,
+                    "data": {
+                        "counts": [
+                            0,
+                            100
+                        ],
+                        "errors": [
+                            0,
+                            10
+                        ]
                     }
                 }
             }

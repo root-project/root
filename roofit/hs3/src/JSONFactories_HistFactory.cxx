@@ -684,9 +684,6 @@ public:
    bool tryExport(const RooProdPdf *prodpdf, JSONNode &elem) const
    {
       std::string chname(prodpdf->GetName());
-      if (chname.find("model_") == 0) {
-         chname = chname.substr(6);
-      }
       RooRealSumPdf *sumpdf = nullptr;
       for (const auto &v : prodpdf->pdfList()) {
          if (v->InheritsFrom(RooRealSumPdf::Class())) {
