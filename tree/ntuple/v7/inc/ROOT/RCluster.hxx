@@ -51,11 +51,11 @@ public:
    /// On-disk pages within a page source are identified by the column and page number. The key is used for
    /// associative collections of on-disk pages.
    struct Key {
-      DescriptorId_t fColumnId;
+      DescriptorId_t fPhysicalColumnId;
       std::uint64_t fPageNo;
-      Key(DescriptorId_t columnId, std::uint64_t pageNo) : fColumnId(columnId), fPageNo(pageNo) {}
+      Key(DescriptorId_t columnId, std::uint64_t pageNo) : fPhysicalColumnId(columnId), fPageNo(pageNo) {}
       friend bool operator ==(const Key &lhs, const Key &rhs) {
-         return lhs.fColumnId == rhs.fColumnId && lhs.fPageNo == rhs.fPageNo;
+         return lhs.fPhysicalColumnId == rhs.fPhysicalColumnId && lhs.fPageNo == rhs.fPageNo;
       }
    };
 
@@ -81,8 +81,9 @@ namespace std
       // TODO(jblomer): quick and dirty hash, likely very sub-optimal, to be revised later.
       size_t operator()(const ROOT::Experimental::Detail::ROnDiskPage::Key &key) const
       {
-         return ((std::hash<ROOT::Experimental::DescriptorId_t>()(key.fColumnId) ^
-                 (hash<ROOT::Experimental::NTupleSize_t>()(key.fPageNo) << 1)) >> 1);
+         return ((std::hash<ROOT::Experimental::DescriptorId_t>()(key.fPhysicalColumnId) ^
+                  (hash<ROOT::Experimental::NTupleSize_t>()(key.fPageNo) << 1)) >>
+                 1);
       }
    };
 }
