@@ -11,7 +11,13 @@
 #include "TWebControlBar.h"
 
 #include "TROOT.h"
+#include "TBufferJSON.h"
+#include "TControlBar.h"
+#include "TControlBarButton.h"
+#include "TList.h"
 
+#include <vector>
+#include <string>
 
 /** \class TWebControlBar
 \ingroup webgui6
@@ -38,10 +44,23 @@ void TWebControlBar::SendInitMsg(unsigned connid)
    if (!fWindow)
       return;
 
-   std::string buf = "INIT";
+   auto lst = fControlBar->GetListOfButtons();
 
-   if (!buf.empty())
-      fWindow->Send(connid, buf);
+   std::vector<std::string> btns;
+
+   TIter iter(lst);
+   while (auto btn = iter()) {
+      btns.emplace_back(btn->GetName());
+      btns.emplace_back(btn->GetTitle());
+   }
+
+   if (btns.size() == 0)
+      return;
+
+   std::string buf = "BTNS:";
+   buf.append(TBufferJSON::ToJSON(&btns).Data());
+
+   fWindow->Send(connid, buf);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -53,7 +72,21 @@ Bool_t TWebControlBar::ProcessData(unsigned connid, const std::string &arg)
    if (arg.empty())
       return kTRUE;
 
-   printf("Get msg %s from conn %u\n", arg.c_str(), connid);
+   if (arg.compare(0, 6, "CLICK:") == 0) {
+      auto id = std::stoi(arg.substr(6));
+
+      auto lst = fControlBar->GetListOfButtons();
+
+      auto btn = dynamic_cast<TControlBarButton *>(lst->At(id));
+
+      if (btn) {
+         printf("Click btn %s act %s\n", btn->GetName(), btn->GetAction());
+         btn->Action();
+      }
+
+   } else {
+      printf("Get msg %s from conn %u\n", arg.c_str(), connid);
+   }
 
    return kTRUE;
 }
@@ -99,6 +132,23 @@ void TWebControlBar::Show()
 
    ROOT::Experimental::RWebDisplayArgs args;
    args.SetWidgetKind("TControlBar");
+
+   auto lst = fControlBar->GetListOfButtons();
+   int nbtns = 0, maxlen = 0;
+   TIter iter(lst);
+   while (auto btn = iter()) {
+      nbtns++;
+      int len = strlen(btn->GetName());
+      if (len > maxlen)
+         maxlen = len;
+   }
+
+   if (nbtns > 0) {
+      maxlen*=10;
+      if (maxlen < 100) maxlen = 100;
+
+      fWindow->SetGeometry(maxlen + 6, nbtns*25 + 22);
+   }
 
    fWindow->Show(args);
 }
