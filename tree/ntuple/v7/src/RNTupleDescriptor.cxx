@@ -602,16 +602,17 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldI
    return RResult<void>::Success();
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(DescriptorId_t columnId, DescriptorId_t fieldId,
-                                                             const RColumnModel &model, std::uint32_t index)
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(DescriptorId_t logicalId, DescriptorId_t physicalId,
+                                                             DescriptorId_t fieldId, const RColumnModel &model,
+                                                             std::uint32_t index)
 {
    RColumnDescriptor c;
-   c.fLogicalColumnId = columnId;
-   c.fPhysicalColumnId = columnId;
+   c.fLogicalColumnId = logicalId;
+   c.fPhysicalColumnId = physicalId;
    c.fFieldId = fieldId;
    c.fModel = model;
    c.fIndex = index;
-   fDescriptor.fColumnDescriptors.emplace(columnId, std::move(c));
+   fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(c));
 }
 
 

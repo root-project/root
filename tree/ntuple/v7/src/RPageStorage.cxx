@@ -305,7 +305,7 @@ ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
 ROOT::Experimental::Detail::RPageSink::AddColumn(DescriptorId_t fieldId, const RColumn &column)
 {
    auto columnId = fDescriptorBuilder.GetDescriptor().GetNColumns();
-   fDescriptorBuilder.AddColumn(columnId, fieldId, column.GetModel(), column.GetIndex());
+   fDescriptorBuilder.AddColumn(columnId, columnId, fieldId, column.GetModel(), column.GetIndex());
    return ColumnHandle_t{columnId, &column};
 }
 

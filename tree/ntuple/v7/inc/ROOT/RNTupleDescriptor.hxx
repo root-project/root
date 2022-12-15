@@ -982,7 +982,8 @@ public:
    void AddField(const RFieldDescriptor& fieldDesc);
    RResult<void> AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
 
-   void AddColumn(DescriptorId_t columnId, DescriptorId_t fieldId, const RColumnModel &model, std::uint32_t index);
+   void AddColumn(DescriptorId_t logicalId, DescriptorId_t physicalId, DescriptorId_t fieldId,
+                  const RColumnModel &model, std::uint32_t index);
    RResult<void> AddColumn(RColumnDescriptor &&columnDesc);
 
    RResult<void> AddClusterSummary(DescriptorId_t clusterId, std::uint64_t firstEntry, std::uint64_t nEntries);
