@@ -2046,11 +2046,11 @@ void TGeoCombiTrans::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << "   dz = " << fTranslation[2] << ";" << std::endl;
    if (fRotation && fRotation->IsRotation()) {
       fRotation->SavePrimitive(out,option);
-      out << "   " << GetPointerName() << " = new TGeoCombiTrans(\"" << GetName() << "\", dx,dy,dz,";
-      out << fRotation->GetPointerName() << ");" << std::endl;
+      out << "   auto " << GetPointerName() << " = new TGeoCombiTrans(\"" << GetName() << "\", dx, dy, dz, "
+          << fRotation->GetPointerName() << ");" << std::endl;
    } else {
-      out << "   " << GetPointerName() << " = new TGeoCombiTrans(\"" << GetName() << "\");" << std::endl;
-      out << "   " << GetPointerName() << "->SetTranslation(dx,dy,dz);" << std::endl;
+      out << "   auto " << GetPointerName() << " = new TGeoCombiTrans(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetPointerName() << "->SetTranslation(dx, dy, dz);" << std::endl;
    }
    TObject::SetBit(kGeoSavePrimitive);
 }
