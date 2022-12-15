@@ -203,10 +203,10 @@ public:
    std::map<std::string, std::string>
    createWeightStrings(const ParamMap &inputs, const std::vector<RooArgList *> &vertices, RooArgList &couplings,
                        const FlagMap &flagValues, const RooArgList &flags,
-                       const std::vector<RooArgList *> &nonInterfering);
+                       const std::vector<std::vector<std::string>> &nonInterfering);
    RooArgSet createWeights(const ParamMap &inputs, const std::vector<RooArgList *> &vertices, RooArgList &couplings,
                            const FlagMap &inputFlags, const RooArgList &flags,
-                           const std::vector<RooArgList *> &nonInterfering);
+                           const std::vector<std::vector<std::string>> &nonInterfering);
    RooArgSet createWeights(const ParamMap &inputs, const std::vector<RooArgList *> &vertices, RooArgList &couplings);
 
    bool updateCoefficients();
@@ -252,9 +252,9 @@ private:
    RooListProxy _flags;
    Config _config;
    std::vector<std::vector<RooListProxy *>> _diagrams;
-   std::vector<RooListProxy *> _nonInterfering;
+   std::vector<std::vector<std::string>> _nonInterfering;
 
-   ClassDefOverride(RooLagrangianMorphFunc, 1)
+   ClassDefOverride(RooLagrangianMorphFunc, 2)
 };
 
 #endif
