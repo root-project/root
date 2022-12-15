@@ -184,7 +184,7 @@ public:
    virtual char   *GetObjectInfo(Int_t px, Int_t py) const;
    Bool_t          GetOptimalVoxels() const;
    Option_t       *GetOption() const { return fOption.Data(); }
-   char           *GetPointerName() const;
+   const char     *GetPointerName() const;
    Char_t          GetTransparency() const { return !fMedium ? 0 : fMedium->GetMaterial()->GetTransparency(); }
    TGeoShape      *GetShape() const                  {return fShape;}
    void            GrabFocus(); // *MENU*

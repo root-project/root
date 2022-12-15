@@ -77,7 +77,7 @@ public :
    Bool_t               IsRegistered()  const {return TestBit(kGeoRegistered);}
    Bool_t               IsRotAboutZ()   const;
    void                 GetHomogenousMatrix(Double_t *hmat) const;
-   char                *GetPointerName() const;
+   const char          *GetPointerName() const;
 
    virtual Int_t              GetByteCount() const;
    virtual const Double_t    *GetTranslation()    const = 0;

@@ -291,11 +291,11 @@ Int_t TGeoMatrix::GetByteCount() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Provide a pointer name containing uid.
 
-char *TGeoMatrix::GetPointerName() const
+const char *TGeoMatrix::GetPointerName() const
 {
    static TString name;
-   name = TString::Format("pMatrix%d", GetUniqueID());
-   return (char*)name.Data();
+   name.Form("pMatrix%d", GetUniqueID());
+   return name.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2785,8 +2785,8 @@ void TGeoHMatrix::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*
    out << "   rot[0] =" << rot[0] << ";    " << "rot[1] = " << rot[1] << ";    " << "rot[2] = " << rot[2] << ";" << std::endl;
    out << "   rot[3] =" << rot[3] << ";    " << "rot[4] = " << rot[4] << ";    " << "rot[5] = " << rot[5] << ";" << std::endl;
    out << "   rot[6] =" << rot[6] << ";    " << "rot[7] = " << rot[7] << ";    " << "rot[8] = " << rot[8] << ";" << std::endl;
-   char *name = GetPointerName();
-   out << "   TGeoHMatrix *" << name << " = new TGeoHMatrix(\"" << GetName() << "\");" << std::endl;
+   const char *name = GetPointerName();
+   out << "   auto " << name << " = new TGeoHMatrix(\"" << GetName() << "\");" << std::endl;
    out << "   " << name << "->SetTranslation(tr);" << std::endl;
    out << "   " << name << "->SetRotation(rot);" << std::endl;
    if (IsTranslation()) out << "   " << name << "->SetBit(TGeoMatrix::kGeoTranslation);" << std::endl;
