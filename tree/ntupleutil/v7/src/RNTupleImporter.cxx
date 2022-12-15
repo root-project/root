@@ -71,8 +71,8 @@ ROOT::Experimental::RNTupleImporter::RCStringTransformation::Transform(const RIm
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleImporter::RLeafArrayTransformation::Transform(
-   const RImportBranch &branch, RImportField &field)
+ROOT::Experimental::RNTupleImporter::RLeafArrayTransformation::Transform(const RImportBranch &branch,
+                                                                         RImportField &field)
 {
    auto valueSize = field.fField->GetValueSize();
    memcpy(field.fFieldBuffer, branch.fBranchBuffer.get() + (fNum * valueSize), valueSize);
