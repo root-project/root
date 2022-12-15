@@ -402,6 +402,7 @@ private:
    std::uint64_t fOnDiskFooterSize = 0; ///< Like fOnDiskHeaderSize, contains both cluster summaries and page locations
 
    std::uint64_t fNEntries = 0; ///< Updated by the descriptor builder when the cluster summaries are added
+   std::uint64_t fNPhysicalColumns = 0; ///< Updated by the descriptor builder when columns are added
 
    /**
     * Once constructed by an RNTupleDescriptorBuilder, the descriptor is mostly immutable except for set of
@@ -696,7 +697,8 @@ public:
    std::string GetDescription() const { return fDescription; }
 
    std::size_t GetNFields() const { return fFieldDescriptors.size(); }
-   std::size_t GetNColumns() const { return fColumnDescriptors.size(); }
+   std::size_t GetNLogicalColumns() const { return fColumnDescriptors.size(); }
+   std::size_t GetNPhysicalColumns() const { return fNPhysicalColumns; }
    std::size_t GetNClusterGroups() const { return fClusterGroupDescriptors.size(); }
    std::size_t GetNClusters() const { return fClusterDescriptors.size(); }
 

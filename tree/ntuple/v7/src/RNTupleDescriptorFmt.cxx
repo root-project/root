@@ -140,7 +140,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    output << "------------------------------------------------------------" << std::endl;
    output << "  # Entries:        " << GetNEntries() << std::endl;
    output << "  # Fields:         " << GetNFields() << std::endl;
-   output << "  # Columns:        " << GetNColumns() << std::endl;
+   output << "  # Columns:        " << GetNPhysicalColumns() << std::endl;
    output << "  # Pages:          " << nPages << std::endl;
    output << "  # Clusters:       " << GetNClusters() << std::endl;
    output << "  Size on storage:  " << bytesOnStorage << " B" << std::endl;
