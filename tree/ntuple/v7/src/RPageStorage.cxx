@@ -329,7 +329,7 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
    auto nColumns = descriptor.GetNColumns();
    for (DescriptorId_t i = 0; i < nColumns; ++i) {
       RClusterDescriptor::RColumnRange columnRange;
-      columnRange.fColumnId = i;
+      columnRange.fPhysicalColumnId = i;
       columnRange.fFirstElementIndex = 0;
       columnRange.fNElements = 0;
       columnRange.fCompressionSettings = GetWriteOptions().GetCompression();

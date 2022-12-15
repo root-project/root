@@ -204,7 +204,7 @@ class RClusterDescriptor {
 public:
    /// The window of element indexes of a particular column in a particular cluster
    struct RColumnRange {
-      DescriptorId_t fColumnId = kInvalidDescriptorId;
+      DescriptorId_t fPhysicalColumnId = kInvalidDescriptorId;
       /// A 64bit element index
       NTupleSize_t fFirstElementIndex = kInvalidNTupleIndex;
       /// A 32bit value for the number of column elements in the cluster
@@ -217,7 +217,7 @@ public:
       // Should this be done on the field level?
 
       bool operator==(const RColumnRange &other) const {
-         return fColumnId == other.fColumnId && fFirstElementIndex == other.fFirstElementIndex &&
+         return fPhysicalColumnId == other.fPhysicalColumnId && fFirstElementIndex == other.fFirstElementIndex &&
                 fNElements == other.fNElements && fCompressionSettings == other.fCompressionSettings;
       }
 
