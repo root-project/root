@@ -124,6 +124,14 @@ namespace ROOT {
          // evaluate the derivative of the function with respect to the parameters
          void ParameterGradient(const T *x, const double *par, T *grad) const override;
 
+         // evaluate the hessian of the function with respect to the parameters
+         bool ParameterHessian(const T *x, const double *par, T *h) const override;
+
+         // evaluate the 2nd derivatives of the function with respect to the parameters
+         bool ParameterG2(const T *, const double *, T *) const override {
+            return false; // not yet implemented
+         }
+
          /// precision value used for calculating the derivative step-size
          /// h = eps * |x|. The default is 0.001, give a smaller in case function changes rapidly
          static void SetDerivPrecision(double eps);
@@ -289,6 +297,28 @@ namespace ROOT {
             for (unsigned int i = 0; i < np; ++i)
                grad[i] = DoParameterDerivative(x, par, i);
          }
+      }
+
+      template <class T>
+      bool WrappedMultiTF1Templ<T>::ParameterHessian(const T *x, const double *par, T *h) const
+      {
+         // compute Hessian if TF1 is a formula based
+         auto formula = fFunc->GetFormula();
+         if (!formula) return false;
+         // need to be sure h is initialized to zero values
+         unsigned int np = NPar();
+         //TFormula requires a np*np vector
+         std::vector<T> h2(np*np);
+         fFunc->SetParameters(par);
+         formula->HessianPar(x,h2);
+         for (unsigned int i = 0; i < np; i++) {
+            for (unsigned int j = 0; j <= i; j++) {
+               unsigned int ih = j + i *(i+1)/2;  // formula for j <= i
+               unsigned int im = i*np + j;
+               h[ih] = h2[im];
+            }
+         }
+         return true;
       }
 
       template <class T>
