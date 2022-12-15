@@ -451,14 +451,14 @@ ROOT::Experimental::Detail::RPageSourceFile::PrepareSingleCluster(
       const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterKey.fClusterId);
 
       // Collect the page necessary page meta-data and sum up the total size of the compressed and packed pages
-      for (auto columnId : clusterKey.fColumnSet) {
-         const auto &pageRange = clusterDesc.GetPageRange(columnId);
+      for (auto physicalColumnId : clusterKey.fPhysicalColumnSet) {
+         const auto &pageRange = clusterDesc.GetPageRange(physicalColumnId);
          NTupleSize_t pageNo = 0;
          for (const auto &pageInfo : pageRange.fPageInfos) {
             const auto &pageLocator = pageInfo.fLocator;
             activeSize += pageLocator.fBytesOnStorage;
             onDiskPages.push_back(
-               {columnId, pageNo, pageLocator.GetPosition<std::uint64_t>(), pageLocator.fBytesOnStorage, 0});
+               {physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(), pageLocator.fBytesOnStorage, 0});
             ++pageNo;
          }
       }
@@ -544,7 +544,7 @@ ROOT::Experimental::Detail::RPageSourceFile::PrepareSingleCluster(
 
    auto cluster = std::make_unique<RCluster>(clusterKey.fClusterId);
    cluster->Adopt(std::move(pageMap));
-   for (auto colId : clusterKey.fColumnSet)
+   for (auto colId : clusterKey.fPhysicalColumnSet)
       cluster->SetColumnAvailable(colId);
    return cluster;
 }

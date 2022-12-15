@@ -668,12 +668,12 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
          const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterId);
 
          // Collect the necessary page meta-data and sum up the total size of the compressed and packed pages
-         for (auto columnId : clusterKey.fColumnSet) {
-            const auto &pageRange = clusterDesc.GetPageRange(columnId);
+         for (auto physicalColumnId : clusterKey.fPhysicalColumnSet) {
+            const auto &pageRange = clusterDesc.GetPageRange(physicalColumnId);
             NTupleSize_t columnPageCount = 0;
             for (const auto &pageInfo : pageRange.fPageInfos) {
                const auto &pageLocator = pageInfo.fLocator;
-               onDiskClusterPages.push_back(RDaosSealedPageLocator(clusterId, columnId, columnPageCount,
+               onDiskClusterPages.push_back(RDaosSealedPageLocator(clusterId, physicalColumnId, columnPageCount,
                                                                    pageLocator.GetPosition<std::uint64_t>(),
                                                                    pageLocator.fBytesOnStorage, clusterBufSz));
                ++columnPageCount;
@@ -718,7 +718,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
    for (unsigned i = 0; i < clusterKeys.size(); ++i) {
       auto cluster = std::make_unique<RCluster>(clusterKeys[i].fClusterId);
       cluster->Adopt(std::move(pageMaps[i]));
-      for (auto colId : clusterKeys[i].fColumnSet)
+      for (auto colId : clusterKeys[i].fPhysicalColumnSet)
          cluster->SetColumnAvailable(colId);
 
       result.emplace_back(std::move(cluster));
