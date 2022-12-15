@@ -71,7 +71,8 @@ private:
 protected:
    void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) final;
    RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
-   RNTupleLocator CommitSealedPageImpl(DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage) final;
+   RNTupleLocator
+   CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) final;
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
    void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
@@ -180,8 +181,8 @@ public:
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
    void ReleasePage(RPage &page) final;
 
-   void LoadSealedPage(DescriptorId_t columnId, const RClusterIndex &clusterIndex,
-                       RSealedPage &sealedPage) final;
+   void
+   LoadSealedPage(DescriptorId_t physicalColumnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
 };
