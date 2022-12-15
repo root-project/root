@@ -49,7 +49,6 @@ describe the same process or not.
 #include "RooParamHistFunc.h"
 #include "RooProduct.h"
 #include "RooRealVar.h"
-#include "RooStringVar.h"
 #include "RooWorkspace.h"
 #include "RooFactoryWSTool.h"
 
@@ -1091,7 +1090,7 @@ inline void checkNameConflict(const RooLagrangianMorphFunc::ParamMap &inputParam
 FormulaList buildFormulas(const char *mfname, const RooLagrangianMorphFunc::ParamMap &inputParameters,
                           const RooLagrangianMorphFunc::FlagMap &inputFlags, const MorphFuncPattern &morphfunc,
                           const RooArgList &couplings, const RooArgList &flags,
-                          const std::vector<RooArgList *> &nonInterfering)
+                          const std::vector<std::vector<std::string>> &nonInterfering)
 {
    // example vbf hww:
    //                        Operators kSM,  kHww, kAww, kHdwR,kHzz, kAzz
@@ -1159,9 +1158,9 @@ FormulaList buildFormulas(const char *mfname, const RooLagrangianMorphFunc::Para
          int nInterferingOperators = 0;
          for (size_t j = 0; j < morphfunc[i].size(); ++j) {
             if (morphfunc[i][j] % 2 == 0)
-               continue;                                   // even exponents are not interference terms
-            if (group->find(couplings.at(j)->GetName())) { // if the coupling is part of a
-                                                           // "pairwise non-interfering group"
+               continue; // even exponents are not interference terms
+            // if the coupling is part of a "pairwise non-interfering group"
+            if (std::find(group.begin(), group.end(), couplings.at(j)->GetName()) != group.end()) {
                nInterferingOperators++;
             }
          }
@@ -1230,7 +1229,7 @@ FormulaList buildFormulas(const char *mfname, const RooLagrangianMorphFunc::Para
 FormulaList createFormulas(const char *name, const RooLagrangianMorphFunc::ParamMap &inputs,
                            const RooLagrangianMorphFunc::FlagMap &inputFlags,
                            const std::vector<std::vector<RooArgList *>> &diagrams, RooArgList &couplings,
-                           const RooArgList &flags, const std::vector<RooArgList *> &nonInterfering)
+                           const RooArgList &flags, const std::vector<std::vector<std::string>> &nonInterfering)
 {
    MorphFuncPattern morphfuncpattern;
 
@@ -1355,7 +1354,7 @@ public:
    inline void createComponents(const RooLagrangianMorphFunc::ParamMap &inputParameters,
                                 const RooLagrangianMorphFunc::FlagMap &inputFlags, const char *funcname,
                                 const std::vector<std::vector<RooListProxy *>> &diagramProxyList,
-                                const std::vector<RooArgList *> &nonInterfering, const RooArgList &flags)
+                                const std::vector<std::vector<std::string>> &nonInterfering, const RooArgList &flags)
    {
       RooArgList operators;
       std::vector<std::vector<RooArgList *>> diagrams;
@@ -1528,7 +1527,7 @@ public:
       RooLagrangianMorphFunc::CacheElem *cache = new RooLagrangianMorphFunc::CacheElem();
 
       cache->createComponents(func->_config.paramCards, func->_config.flagValues, func->GetName(), func->_diagrams,
-                              {func->_nonInterfering.begin(), func->_nonInterfering.end()}, func->_flags);
+                              func->_nonInterfering, func->_flags);
 
       cache->buildMatrix(func->_config.paramCards, func->_config.flagValues, func->_flags);
       if (obsName.empty()) {
@@ -1560,7 +1559,7 @@ public:
       RooLagrangianMorphFunc::CacheElem *cache = new RooLagrangianMorphFunc::CacheElem();
 
       cache->createComponents(func->_config.paramCards, func->_config.flagValues, func->GetName(), func->_diagrams,
-                              {func->_nonInterfering.begin(), func->_nonInterfering.end()}, func->_flags);
+                              func->_nonInterfering, func->_flags);
 
 #ifndef USE_UBLAS
       cache->_inverse.ResizeTo(inverse.GetNrows(), inverse.GetNrows());
@@ -1886,10 +1885,9 @@ void RooLagrangianMorphFunc::disableInterference(const std::vector<const char *>
    for (auto c : nonInterfering) {
       name << c;
    }
-   auto *p = new RooListProxy(name.str().c_str(), name.str().c_str(), this, true, false);
-   this->_nonInterfering.push_back(p);
+   _nonInterfering.emplace_back();
    for (auto c : nonInterfering) {
-      p->addOwned(std::make_unique<RooStringVar>(c, c, c));
+      _nonInterfering.back().emplace_back(c);
    }
 }
 
@@ -2003,9 +2001,6 @@ RooLagrangianMorphFunc::~RooLagrangianMorphFunc()
          delete vertex;
       }
    }
-   for (RooListProxy *l : _nonInterfering) {
-      delete l;
-   }
    TRACE_DESTROY
 }
 
@@ -2099,7 +2094,7 @@ std::map<std::string, std::string>
 RooLagrangianMorphFunc::createWeightStrings(const RooLagrangianMorphFunc::ParamMap &inputs,
                                             const std::vector<RooArgList *> &vertices, RooArgList &couplings,
                                             const RooLagrangianMorphFunc::FlagMap &flagValues, const RooArgList &flags,
-                                            const std::vector<RooArgList *> &nonInterfering)
+                                            const std::vector<std::vector<std::string>> &nonInterfering)
 {
    FormulaList formulas = ::createFormulas("", inputs, flagValues, {vertices}, couplings, flags, nonInterfering);
    RooArgSet operators;
@@ -2121,7 +2116,7 @@ RooArgSet RooLagrangianMorphFunc::createWeights(const RooLagrangianMorphFunc::Pa
                                                 const std::vector<RooArgList *> &vertices, RooArgList &couplings,
                                                 const RooLagrangianMorphFunc::FlagMap &flagValues,
                                                 const RooArgList &flags,
-                                                const std::vector<RooArgList *> &nonInterfering)
+                                                const std::vector<std::vector<std::string>> &nonInterfering)
 {
    FormulaList formulas = ::createFormulas("", inputs, flagValues, {vertices}, couplings, flags, nonInterfering);
    RooArgSet operators;
@@ -2143,10 +2138,9 @@ RooArgSet RooLagrangianMorphFunc::createWeights(const RooLagrangianMorphFunc::Pa
 RooArgSet RooLagrangianMorphFunc::createWeights(const RooLagrangianMorphFunc::ParamMap &inputs,
                                                 const std::vector<RooArgList *> &vertices, RooArgList &couplings)
 {
-   std::vector<RooArgList *> nonInterfering;
    RooArgList flags;
    FlagMap flagValues;
-   return RooLagrangianMorphFunc::createWeights(inputs, vertices, couplings, flagValues, flags, nonInterfering);
+   return RooLagrangianMorphFunc::createWeights(inputs, vertices, couplings, flagValues, flags, {});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
