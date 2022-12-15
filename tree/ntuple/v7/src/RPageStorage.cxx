@@ -343,7 +343,7 @@ ROOT::Experimental::Detail::RPageSink::CommitSealedPageVImpl(std::span<RPageStor
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
    for (auto &range : ranges) {
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt)
-         locators.push_back(CommitSealedPageImpl(range.fColumnId, *sealedPageIt));
+         locators.push_back(CommitSealedPageImpl(range.fPhysicalColumnId, *sealedPageIt));
    }
    return locators;
 }
@@ -355,12 +355,12 @@ void ROOT::Experimental::Detail::RPageSink::CommitSealedPageV(std::span<RPageSto
 
    for (auto &range : ranges) {
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
-         fOpenColumnRanges.at(range.fColumnId).fNElements += sealedPageIt->fNElements;
+         fOpenColumnRanges.at(range.fPhysicalColumnId).fNElements += sealedPageIt->fNElements;
 
          RClusterDescriptor::RPageRange::RPageInfo pageInfo;
          pageInfo.fNElements = sealedPageIt->fNElements;
          pageInfo.fLocator = locators[i++];
-         fOpenPageRanges.at(range.fColumnId).fPageInfos.emplace_back(pageInfo);
+         fOpenPageRanges.at(range.fPhysicalColumnId).fPageInfos.emplace_back(pageInfo);
       }
    }
 }

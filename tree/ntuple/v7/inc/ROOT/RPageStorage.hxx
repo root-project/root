@@ -99,12 +99,12 @@ public:
    using SealedPageSequence_t = std::deque<RSealedPage>;
    /// A range of sealed pages referring to the same column that can be used for vector commit
    struct RSealedPageGroup {
-      DescriptorId_t fColumnId;
+      DescriptorId_t fPhysicalColumnId;
       SealedPageSequence_t::const_iterator fFirst;
       SealedPageSequence_t::const_iterator fLast;
 
       RSealedPageGroup(DescriptorId_t d, SealedPageSequence_t::const_iterator b, SealedPageSequence_t::const_iterator e)
-         : fColumnId(d), fFirst(b), fLast(e)
+         : fPhysicalColumnId(d), fFirst(b), fLast(e)
       {
       }
    };
