@@ -165,7 +165,7 @@ class RColumnGroupDescriptor {
 
 private:
    DescriptorId_t fColumnGroupId = kInvalidDescriptorId;
-   std::unordered_set<DescriptorId_t> fColumnIds;
+   std::unordered_set<DescriptorId_t> fPhysicalColumnIds;
 
 public:
    RColumnGroupDescriptor() = default;
@@ -177,9 +177,12 @@ public:
    bool operator==(const RColumnGroupDescriptor &other) const;
 
    DescriptorId_t GetId() const { return fColumnGroupId; }
-   const std::unordered_set<DescriptorId_t> &GetColumnIds() const { return fColumnIds; }
-   bool Contains(DescriptorId_t columnId) const { return fColumnIds.empty() || fColumnIds.count(columnId) > 0; }
-   bool HasAllColumns() const { return fColumnIds.empty(); }
+   const std::unordered_set<DescriptorId_t> &GetPhysicalColumnIds() const { return fPhysicalColumnIds; }
+   bool Contains(DescriptorId_t physicalId) const
+   {
+      return fPhysicalColumnIds.empty() || fPhysicalColumnIds.count(physicalId) > 0;
+   }
+   bool HasAllColumns() const { return fPhysicalColumnIds.empty(); }
 };
 
 // clang-format off
@@ -940,7 +943,7 @@ public:
       fColumnGroup.fColumnGroupId = columnGroupId;
       return *this;
    }
-   void AddColumn(DescriptorId_t columnId) { fColumnGroup.fColumnIds.insert(columnId); }
+   void AddColumn(DescriptorId_t physicalId) { fColumnGroup.fPhysicalColumnIds.insert(physicalId); }
 
    RResult<RColumnGroupDescriptor> MoveDescriptor();
 };

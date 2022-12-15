@@ -381,7 +381,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleDescriptor> ROOT::Experimental::RNTup
 
 bool ROOT::Experimental::RColumnGroupDescriptor::operator==(const RColumnGroupDescriptor &other) const
 {
-   return fColumnGroupId == other.fColumnGroupId && fColumnIds == other.fColumnIds;
+   return fColumnGroupId == other.fColumnGroupId && fPhysicalColumnIds == other.fPhysicalColumnIds;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
