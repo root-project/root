@@ -368,13 +368,27 @@ protected:
       RNTupleCalcPerf &fFractionReadOverhead;
       RNTupleCalcPerf &fCompressionRatio;
    };
+
+   /// Keeps track of the requested physical column IDs. When using alias columns (projected fields), physical
+   /// columns may be requested multiple times.
+   class RActiveColumns {
+   private:
+      std::vector<DescriptorId_t> fPhysicalColumnIDs;
+      std::vector<std::size_t> fRefCounters;
+
+   public:
+      void Insert(DescriptorId_t physicalColumnID);
+      void Erase(DescriptorId_t physicalColumnID);
+      RCluster::ColumnSet_t ToColumnSet();
+   };
+
    std::unique_ptr<RCounters> fCounters;
    /// Wraps the I/O counters and is observed by the RNTupleReader metrics
    RNTupleMetrics fMetrics;
 
    RNTupleReadOptions fOptions;
    /// The active columns are implicitly defined by the model fields or views
-   RCluster::ColumnSet_t fActiveColumns;
+   RActiveColumns fActiveColumns;
 
    /// Helper to unzip pages and header/footer; comprises a 16MB (kMAXZIPBUF) unzip buffer.
    /// Not all page sources need a decompressor (e.g. virtual ones for chains and friends don't), thus we
