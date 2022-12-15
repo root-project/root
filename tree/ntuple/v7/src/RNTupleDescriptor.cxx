@@ -612,6 +612,8 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(DescriptorId_t logi
    c.fFieldId = fieldId;
    c.fModel = model;
    c.fIndex = index;
+   if (!c.IsAliasColumn())
+      fDescriptor.fNPhysicalColumns++;
    fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(c));
 }
 
@@ -638,6 +640,8 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&colu
    }
 
    auto logicalId = columnDesc.GetLogicalId();
+   if (!columnDesc.IsAliasColumn())
+      fDescriptor.fNPhysicalColumns++;
    fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(columnDesc));
 
    return RResult<void>::Success();

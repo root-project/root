@@ -37,7 +37,7 @@ void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &mo
                                                           unsigned char * /* serializedHeader */,
                                                           std::uint32_t /* length */)
 {
-   fBufferedColumns.resize(fDescriptorBuilder.GetDescriptor().GetNColumns());
+   fBufferedColumns.resize(fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns());
    fInnerModel = model.Clone();
    fInnerSink->Create(*fInnerModel);
 }

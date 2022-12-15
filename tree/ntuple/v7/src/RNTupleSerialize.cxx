@@ -984,7 +984,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    frame = pos;
-   pos += SerializeListFramePreamble(desc.GetNColumns(), *where);
+   pos += SerializeListFramePreamble(desc.GetNPhysicalColumns(), *where);
    pos += SerializeColumnListV1(desc, context, *where);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
