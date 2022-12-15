@@ -1,4 +1,4 @@
-ROOT_STANDARD_LIBRARY_PACKAGE(RooFitxRooFit
+ROOT_STANDARD_LIBRARY_PACKAGE(RooFitXRooFit
         HEADERS
         RooBrowser.h
         RooFit/xRooFit/xRooNode.h
@@ -25,4 +25,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitxRooFit
         LINKDEF
         inc/LinkDef.h
         )
-target_compile_definitions(RooFitxRooFit PUBLIC XROOFIT_NAMESPACE=RooFit::XRooFit)
+target_compile_definitions(RooFitXRooFit PUBLIC XROOFIT_NAMESPACE=RooFit::Detail::XRooFit)
