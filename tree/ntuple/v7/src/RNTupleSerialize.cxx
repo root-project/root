@@ -180,6 +180,9 @@ std::uint32_t SerializeColumnListV1(
       idQueue.pop_front();
 
       for (const auto &c : desc.GetColumnIterable(parentId)) {
+         if (c.IsAliasColumn())
+            continue;
+
          auto frame = pos;
          pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
 
@@ -198,7 +201,7 @@ std::uint32_t SerializeColumnListV1(
 
          pos += RNTupleSerializer::SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
-         context.MapColumnId(c.GetId());
+         context.MapColumnId(c.GetLogicalId());
       }
 
       for (const auto &f : desc.GetFieldIterable(parentId))
@@ -1220,7 +1223,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
          idx = maxIdx->second + 1;
       maxIndexes[fieldId] = idx;
 
-      auto columnDesc = columnBuilder.Index(idx).ColumnId(columnId).MakeDescriptor();
+      auto columnDesc = columnBuilder.Index(idx).LogicalColumnId(columnId).PhysicalColumnId(columnId).MakeDescriptor();
       if (!columnDesc)
          return R__FORWARD_ERROR(columnDesc);
       auto resVoid = descBuilder.AddColumn(columnDesc.Unwrap());
