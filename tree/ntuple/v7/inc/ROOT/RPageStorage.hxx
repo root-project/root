@@ -438,7 +438,7 @@ public:
    void Attach() { GetExclDescriptorGuard().MoveIn(AttachImpl()); }
    NTupleSize_t GetNEntries();
    NTupleSize_t GetNElements(ColumnHandle_t columnHandle);
-   ColumnId_t GetPhysicalColumnId(ColumnHandle_t columnHandle);
+   ColumnId_t GetColumnId(ColumnHandle_t columnHandle);
 
    /// Allocates and fills a page that contains the index-th element
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) = 0;

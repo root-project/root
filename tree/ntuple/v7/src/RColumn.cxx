@@ -57,7 +57,7 @@ void ROOT::Experimental::Detail::RColumn::Connect(DescriptorId_t fieldId, RPageS
       fPageSource = static_cast<RPageSource*>(pageStorage);
       fHandleSource = fPageSource->AddColumn(fieldId, *this);
       fNElements = fPageSource->GetNElements(fHandleSource);
-      fColumnIdSource = fPageSource->GetPhysicalColumnId(fHandleSource);
+      fColumnIdSource = fPageSource->GetColumnId(fHandleSource);
       break;
    default:
       R__ASSERT(false);
