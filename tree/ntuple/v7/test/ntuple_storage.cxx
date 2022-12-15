@@ -40,7 +40,7 @@ protected:
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final
    {
       auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
-      return fPageAllocator.NewPage(columnHandle.fId, elementSize, nElements);
+      return fPageAllocator.NewPage(columnHandle.fPhysicalId, elementSize, nElements);
    }
    void ReleasePage(RPage &page) final { fPageAllocator.DeletePage(page); }
 
