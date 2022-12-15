@@ -3544,12 +3544,15 @@ class TGeoPainter extends ObjectPainter {
       if (!this._scene) {
          this._first_drawing = true;
 
-         this._on_pad = !!this.getPadPainter();
+         let pp = this.getPadPainter();
+
+         this._on_pad = !!pp;
 
          if (this._on_pad) {
             let size, render3d, fp;
             promise = ensureTCanvas(this,'3d').then(() => {
-
+               if (pp.fillatt?.color)
+                  this.ctrl.background = pp.fillatt.color;
                fp = this.getFramePainter();
 
                render3d = getRender3DKind();

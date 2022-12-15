@@ -9,11 +9,12 @@
 6. 3-dimensional `TTree::Draw()` now produces `TPolyMarker3D` by default
 7. Force MathJax rendering when `\` symbol is found (#243)
 8. Support `TButton` class
-9. Fix - show correct bin index in `TH2` tooltips
-10. Fix - interactive move/resize on touch devices
-11. Fix - correctly handle axis zooming on lego plots
-12. Fix - histogram statistics calculation with negative bins
-13. Base version for ROOT 6.28 release
+9. Remove `localfile` url option, only interactively one can open file selection dialog
+10. Fix - show correct bin index in `TH2` tooltips
+11. Fix - interactive move/resize on touch devices
+12. Fix - correctly handle axis zooming on lego plots
+13. Fix - histogram statistics calculation with negative bins
+14. Base version for ROOT 6.28 release
 
 
 ## Changes in 7.2.1
