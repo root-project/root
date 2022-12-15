@@ -14,6 +14,8 @@
 #define ROOT_Math_FitMethodFunction
 
 #include "Math/IFunction.h"
+#include <vector>
+#include <limits>
 
 // #ifndef ROOT_Math_IParamFunctionfwd
 // #include "Math/IParamFunctionfwd.h"
@@ -41,7 +43,7 @@ public:
    typedef  typename FunctionType::BaseFunc BaseFunction;
 
    /// enumeration specifying the possible fit method types
-   enum Type_t { kUndefined , kLeastSquare, kLogLikelihood };
+   enum Type_t { kUndefined , kLeastSquare, kLogLikelihood, kPoissonLikelihood };
 
 
    BasicFitMethodFunction(int dim, int npoint) :
@@ -64,10 +66,39 @@ public:
       method returning the data i-th contribution to the fit objective function
       For example the residual for the least square functions or the pdf element for the
       likelihood functions.
-      Estimating eventually also the gradient of the data element if the passed pointer  is not null
+      Estimating also the gradient of the data element if the passed pointer  is not null
+      and the Hessian. The flag fullHessian is set when one needs to compute the full Hessian (not the approximated one)
+      and should be used when the full second derivatives of the model functions are available
     */
-   virtual double DataElement(const double *x, unsigned int i, double *g = nullptr) const = 0;
+   virtual double DataElement(const double *x, unsigned int i, double *g = nullptr, double *h = nullptr, bool fullHessian = false) const = 0;
 
+   /**
+    * Computes the full Hessian. Return false if Hessian is not supported
+    */
+   virtual bool Hessian(const double * x, double * hess) const {
+      //return full Hessian of  the objective function which is Sum(F(i))
+      unsigned int np = NPoints();
+      unsigned int ndim = NDim();
+      unsigned int nh = ndim*(ndim+1)/2;
+      for (unsigned int k = 0; k < nh;  ++k) {
+         hess[k] = 0;
+      }
+      std::vector<double> g(np);  // gradient of the F(i)
+      std::vector<double> h(nh);  // hessian of F(i)
+      for (unsigned int i = 0; i < np; i++) {
+         double f = DataElement(x,i,g.data(),h.data(),true);
+         if (f == std::numeric_limits<double>::quiet_NaN() ) return false;
+         for (unsigned int j = 0; j < nh; j++) {
+            hess[j] += h[j];
+         }
+      }
+      return true;
+   }
+
+   /**
+    * Computes the Second derivatives. Return false if this is not supported
+    */
+   virtual bool G2(const double * , double * ) const { return false; }
 
    /**
       return the number of data points used in evaluating the function
@@ -93,6 +124,7 @@ public:
       reset number of function calls
     */
    virtual void ResetNCalls() { fNCalls = 0; }
+
 
    /**
       Static function to indicate if a function is supporting gradient
