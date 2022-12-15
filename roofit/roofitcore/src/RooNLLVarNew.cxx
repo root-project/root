@@ -72,7 +72,7 @@ RooArgSet getObs(RooAbsArg const &arg, RooArgSet const &observables)
 \param isExtended Set to true if this is an extended fit
 **/
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables,
-                           bool isExtended, bool doOffset, bool binnedL)
+                           bool isExtended, RooFit::OffsetMode offsetMode, bool binnedL)
    : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{getObs(pdf, observables)},
      _isExtended{isExtended}, _binnedL{binnedL},
      _weightVar{"weightVar", "weightVar", this, *new RooRealVar(weightVarName, weightVarName, 1.0), true, false, true},
@@ -105,7 +105,8 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
    }
 
    resetWeightVarNames();
-   enableOffsetting(doOffset);
+   enableOffsetting(offsetMode == RooFit::OffsetMode::Initial);
+   // TODO: implement template offsetting mode as well
 }
 
 RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
@@ -290,7 +291,7 @@ double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> &&result, doubl
    }
 
    // Check if value offset flag is set.
-   if (_doOffset) {
+   if (_offset) {
 
       // If no offset is stored enable this feature now
       if (_offset == 0 && result != 0) {

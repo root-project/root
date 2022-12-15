@@ -14,9 +14,10 @@
 #ifndef RooFit_RooNLLVarNew_h
 #define RooFit_RooNLLVarNew_h
 
-#include "RooAbsPdf.h"
-#include "RooAbsReal.h"
-#include "RooTemplateProxy.h"
+#include <RooAbsPdf.h>
+#include <RooAbsReal.h>
+#include <RooGlobalFunc.h>
+#include <RooTemplateProxy.h>
 
 #include <Math/Util.h>
 
@@ -34,7 +35,7 @@ public:
 
    RooNLLVarNew(){};
    RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables, bool isExtended,
-                bool doOffset, bool binnedL = false);
+                RooFit::OffsetMode offsetMode, bool binnedL = false);
    RooNLLVarNew(const RooNLLVarNew &other, const char *name = nullptr);
    TObject *clone(const char *newname) const override { return new RooNLLVarNew(*this, newname); }
 
