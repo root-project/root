@@ -371,9 +371,9 @@ protected:
 
    /// Keeps track of the requested physical column IDs. When using alias columns (projected fields), physical
    /// columns may be requested multiple times.
-   class RActiveColumns {
+   class RActivePhysicalColumns {
    private:
-      std::vector<DescriptorId_t> fPhysicalColumnIDs;
+      std::vector<DescriptorId_t> fIDs;
       std::vector<std::size_t> fRefCounters;
 
    public:
@@ -388,7 +388,7 @@ protected:
 
    RNTupleReadOptions fOptions;
    /// The active columns are implicitly defined by the model fields or views
-   RActiveColumns fActiveColumns;
+   RActivePhysicalColumns fActivePhysicalColumns;
 
    /// Helper to unzip pages and header/footer; comprises a 16MB (kMAXZIPBUF) unzip buffer.
    /// Not all page sources need a decompressor (e.g. virtual ones for chains and friends don't), thus we
