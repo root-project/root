@@ -59,14 +59,15 @@ void ROOT::Experimental::Detail::RPagePool::ReturnPage(const RPage& page)
    R__ASSERT(false);
 }
 
-ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPagePool::GetPage(
-   ColumnId_t columnId, NTupleSize_t globalIndex)
+ROOT::Experimental::Detail::RPage
+ROOT::Experimental::Detail::RPagePool::GetPage(ColumnId_t physicalColumnId, NTupleSize_t globalIndex)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    unsigned int N = fPages.size();
    for (unsigned int i = 0; i < N; ++i) {
       if (fReferences[i] < 0) continue;
-      if (fPages[i].GetColumnId() != columnId) continue;
+      if (fPages[i].GetPhysicalColumnId() != physicalColumnId)
+         continue;
       if (!fPages[i].Contains(globalIndex)) continue;
       fReferences[i]++;
       return fPages[i];
@@ -74,14 +75,15 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPagePool::GetPage
    return RPage();
 }
 
-ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPagePool::GetPage(
-   ColumnId_t columnId, const RClusterIndex &clusterIndex)
+ROOT::Experimental::Detail::RPage
+ROOT::Experimental::Detail::RPagePool::GetPage(ColumnId_t physicalColumnId, const RClusterIndex &clusterIndex)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    unsigned int N = fPages.size();
    for (unsigned int i = 0; i < N; ++i) {
       if (fReferences[i] < 0) continue;
-      if (fPages[i].GetColumnId() != columnId) continue;
+      if (fPages[i].GetPhysicalColumnId() != physicalColumnId)
+         continue;
       if (!fPages[i].Contains(clusterIndex)) continue;
       fReferences[i]++;
       return fPages[i];
