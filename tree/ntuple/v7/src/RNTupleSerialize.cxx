@@ -81,9 +81,9 @@ std::uint32_t SerializeFieldTree(
       idQueue.pop_front();
 
       for (const auto &f : desc.GetFieldIterable(parentId)) {
-         auto physFieldId = context.MapFieldId(f.GetId());
-         auto physParentId = (parentId == desc.GetFieldZeroId()) ? physFieldId : context.GetPhysFieldId(parentId);
-         pos += SerializeFieldV1(f, physParentId, *where);
+         auto onDiskFieldId = context.MapFieldId(f.GetId());
+         auto onDiskParentId = (parentId == desc.GetFieldZeroId()) ? onDiskFieldId : context.GetOnDiskFieldId(parentId);
+         pos += SerializeFieldV1(f, onDiskParentId, *where);
          idQueue.push_back(f.GetId());
       }
    }
@@ -189,7 +189,7 @@ std::uint32_t SerializeColumnListV1(
          auto type = c.GetModel().GetType();
          pos += RNTupleSerializer::SerializeColumnType(type, *where);
          pos += RNTupleSerializer::SerializeUInt16(RColumnElementBase::GetBitsOnStorage(type), *where);
-         pos += RNTupleSerializer::SerializeUInt32(context.GetPhysFieldId(c.GetFieldId()), *where);
+         pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskFieldId(c.GetFieldId()), *where);
          std::uint32_t flags = 0;
          // TODO(jblomer): add support for descending columns in the column model
          if (c.GetModel().GetIsSorted())
@@ -1021,14 +1021,14 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList
    for (auto clusterId : physClusterIDs) {
       const auto &clusterDesc = desc.GetClusterDescriptor(context.GetMemClusterId(clusterId));
       // Get an ordered set of physical column ids
-      std::set<DescriptorId_t> physColumnIds;
+      std::set<DescriptorId_t> onDiskColumnIds;
       for (auto column : clusterDesc.GetColumnIds())
-         physColumnIds.insert(context.GetPhysColumnId(column));
+         onDiskColumnIds.insert(context.GetOnDiskColumnId(column));
 
       auto outerFrame = pos;
-      pos += SerializeListFramePreamble(physColumnIds.size(), *where);
-      for (auto physId : physColumnIds) {
-         auto memId = context.GetMemColumnId(physId);
+      pos += SerializeListFramePreamble(onDiskColumnIds.size(), *where);
+      for (auto onDiskId : onDiskColumnIds) {
+         auto memId = context.GetMemColumnId(onDiskId);
          const auto &columnRange = clusterDesc.GetColumnRange(memId);
          const auto &pageRange = clusterDesc.GetPageRange(memId);
 
