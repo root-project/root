@@ -325,7 +325,7 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
       for (auto &cptr : fPool) {
          if (!cptr)
             continue;
-         provide.Erase(cptr->GetId(), cptr->GetAvailColumns());
+         provide.Erase(cptr->GetId(), cptr->GetAvailPhysicalColumns());
       }
 
       // Figure out if enough work accumulated to justify I/O calls

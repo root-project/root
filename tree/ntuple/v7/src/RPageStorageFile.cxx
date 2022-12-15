@@ -584,7 +584,7 @@ void ROOT::Experimental::Detail::RPageSourceFile::UnzipClusterImpl(RCluster *clu
 
    std::vector<std::unique_ptr<RColumnElementBase>> allElements;
 
-   const auto &columnsInCluster = cluster->GetAvailColumns();
+   const auto &columnsInCluster = cluster->GetAvailPhysicalColumns();
    for (const auto columnId : columnsInCluster) {
       const auto &columnDesc = descriptorGuard->GetColumnDescriptor(columnId);
 
