@@ -73,6 +73,11 @@ namespace RooFit {
     return batchMode;
   }
 
+  RooCmdArg ParallelGradientOptions(bool enable, int orderStrategy, int chainFactor) {
+    return RooCmdArg("ParallelGradientOptions",enable,chainFactor,orderStrategy,0,0,0,0,0) ;}
+  RooCmdArg ParallelDescentOptions(bool enable, int splitStrategy, int numSplits) { 
+    return RooCmdArg("ParallelDescentOptions",enable,numSplits,splitStrategy,0,0,0,0,0) ;}
+
   }
 
   // RooAbsReal::plotOn arguments
@@ -185,8 +190,8 @@ namespace RooFit {
   RooCmdArg Extended(bool flag) { return RooCmdArg("Extended",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg DataError(Int_t etype) { return RooCmdArg("DataError",(Int_t)etype,0,0,0,0,0,0,0) ; }
   RooCmdArg NumCPU(Int_t nCPU, Int_t interleave)   { return RooCmdArg("NumCPU",nCPU,interleave,0,0,0,0,0,0) ; }
-  RooCmdArg NewStyle(bool flag) { return RooCmdArg("NewStyle",flag,0,0,0,0,0,0) ; }
-  RooCmdArg Parallelize(Int_t nWorkers, bool parallelGradient, bool parallelLikelihood) { return RooCmdArg("Parallelize",nWorkers,parallelGradient,parallelLikelihood,0,0,0,0,0) ; }
+  RooCmdArg ModularL(bool flag) { return RooCmdArg("ModularL",flag,0,0,0,0,0,0) ; }
+  RooCmdArg Parallelize(Int_t nWorkers) { return RooCmdArg("Parallelize",nWorkers,0,0,0,0,0,0,0) ; }
   RooCmdArg BatchMode(std::string const& batchMode) {
       std::string lower = batchMode;
       std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c){ return std::tolower(c); });

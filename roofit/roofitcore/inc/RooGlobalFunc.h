@@ -74,6 +74,10 @@ namespace Experimental {
 /// likelihoods. \note Experimental, the interface might change in the future.
 std::string& defaultBatchMode();
 
+/// Configuration options for parallel minimization with multiprocessing library
+RooCmdArg ParallelGradientOptions(bool enable=true, int orderStrategy=0, int chainFactor=1) ;
+RooCmdArg ParallelDescentOptions(bool enable=false, int splitStrategy=0, int numSplits=4) ;
+
 } // Experimental
 
 /**
@@ -210,8 +214,8 @@ RooCmdArg EventRange(Int_t nStart, Int_t nStop) ;
 RooCmdArg Extended(bool flag=true) ;
 RooCmdArg DataError(Int_t) ;
 RooCmdArg NumCPU(Int_t nCPU, Int_t interleave=0) ;
-RooCmdArg Parallelize(int nWorkers, bool parallelGradient, bool parallelLikelihood) ;
-RooCmdArg NewStyle(bool flag=false) ;
+RooCmdArg Parallelize(int nWorkers) ;
+RooCmdArg ModularL(bool flag=false) ;
 
 RooCmdArg BatchMode(std::string const& batchMode="cpu");
 // The const char * overload is necessary, otherwise the compiler will cast a

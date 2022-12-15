@@ -67,14 +67,15 @@ public:
       // --------------------------------------------------------------------------------
 
       // Creating a RooAbsL likelihood
-      RooAbsReal *likelihood = w.pdf("model")->createNLL(d, NewStyle(true));
+      RooAbsReal *likelihood = w.pdf("model")->createNLL(d, ModularL(true));
 
       // Creating a minimizer and explicitly setting type of parallelization
       std::size_t nWorkers = 1;
       RooFit::MultiProcess::Config::setDefaultNWorkers(nWorkers);
       RooMinimizer::Config cfg;
-      cfg.parallelLikelihood = false;
-      cfg.parallelGradient = true;
+      cfg.parallelize = -1;
+      cfg.enableParallelDescent = false;
+      cfg.enableParallelGradient = true;
       RooMinimizer m(*likelihood, cfg);
 
       // Minimize
