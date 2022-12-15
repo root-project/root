@@ -155,8 +155,9 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    auto &ch = sim["channels"];
    ch.set_map();
    for (const auto &c : measurement.GetChannels()) {
-      auto &thisch = ch[c.GetName()];
-      exportChannel(c, thisch);
+      auto pdfName = std::string("model_") + c.GetName();
+      ch[c.GetName()] << pdfName;
+      exportChannel(c, pdflist[pdfName]);
    }
 
    // the variables
