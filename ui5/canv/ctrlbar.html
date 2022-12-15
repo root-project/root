@@ -6,39 +6,44 @@
   </head>
 
   <style>
-    body {
-      margin: 2px;
+    body { min-height: 100%; margin: 2px; overflow: hidden }
+
+    .btn-group {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        display: flex; /* Make the buttons appear below each other */
+        align-content: stretch;
     }
 
-    .btn-group button {
+    button {
       background-color: #4CAF50; /* Green background */
       border: 1px solid green; /* Green border */
       color: white; /* White text */
       padding: 4px 4px; /* Some padding */
       cursor: pointer; /* Pointer/hand icon */
-      width: 100%; /* Set a width if needed */
-      display: block; /* Make the buttons appear below each other */
-    }
-
-    .btn-group button:not(:last-child) {
-      border-bottom: none; /* Prevent double borders */
+      text-align: center;
+      flex-grow: 1;
     }
 
     /* Add a background color on hover */
-    .btn-group button:hover {
+    button:hover {
       background-color: #3e8e41;
     }
   </style>
 
   <body>
-     <div class="btn-group" id="btns"></div>
+     <div class="btn-group" id="btns">
+     </div>
   </body>
 
   <script type="module">
 
      import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
 
-     let conn_handle = null;
+     let conn_handle = null, vertical = false;
 
      function sendMsg(txt) {
        if (conn_handle)
@@ -50,7 +55,12 @@
         if (id !== undefined)
            btn.onclick = sendMsg.bind(null, `CLICK:${id}`);
         btn.title = title;
+        if (vertical)
+           btn.style.width = "100%"; /* Set a width if needed */
+        else
+           btn.style.height = "100%"; /* Set a width if needed */
         btn.innerHTML = text;
+
         document.getElementById("btns").appendChild(btn);
      }
 
@@ -64,10 +74,16 @@
           },
 
           onWebsocketMsg(handle, msg) {
-             console.log('msg', msg);
              if (msg.slice(0,5) == 'BTNS:') {
-                document.getElementById("btns").innerHTML = '';
+                let btns = document.getElementById("btns");
+                btns.innerHTML = '';
+
                 let arr = JSON.parse(msg.slice(5));
+                vertical = (arr.shift() == 'vertical');
+                document.title = arr.shift() || "Select";
+
+                btns.style['flex-direction'] = vertical ? 'column' : 'row';
+
                 for (let n = 0; n < arr.length; n += 2)
                    addButton(arr[n], arr[n+1], n/2);
              }

@@ -48,6 +48,13 @@ void TWebControlBar::SendInitMsg(unsigned connid)
 
    std::vector<std::string> btns;
 
+   if (fControlBar->GetOrientation() == TControlBar::kHorizontal)
+      btns.emplace_back("horizontal");
+   else
+      btns.emplace_back("vertical");
+
+   btns.emplace_back(fControlBar->GetName());
+
    TIter iter(lst);
    while (auto btn = iter()) {
       btns.emplace_back(btn->GetName());
@@ -134,21 +141,28 @@ void TWebControlBar::Show()
    args.SetWidgetKind("TControlBar");
 
    auto lst = fControlBar->GetListOfButtons();
-   int nbtns = 0, maxlen = 0;
+   int nbtns = 0, maxlen = 0, totallen = 0;
    TIter iter(lst);
    while (auto btn = iter()) {
       nbtns++;
       int len = strlen(btn->GetName());
+      totallen += len;
       if (len > maxlen)
          maxlen = len;
    }
 
-   if (nbtns > 0) {
-      maxlen*=10;
-      if (maxlen < 100) maxlen = 100;
+   int w = 100, h = 50;
 
-      fWindow->SetGeometry(maxlen + 6, nbtns*25 + 22);
+   if (nbtns > 0) {
+      if (fControlBar->GetOrientation() == TControlBar::kHorizontal) {
+         w = totallen*10 + nbtns*20;
+         h = 35;
+      } else {
+         w = maxlen*10 + 10;
+         h = nbtns*30 + 30;
+      }
    }
+   fWindow->SetGeometry(w, h);
 
    fWindow->Show(args);
 }
