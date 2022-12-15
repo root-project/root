@@ -206,7 +206,7 @@ void TControlBar::Initialize(Int_t x, Int_t y)
    // TApplication::NeedGraphicsLibs() has been called by a
    // library static initializer.
    if (gApplication)
-      gApplication->InitializeGraphics();
+      gApplication->InitializeGraphics(gROOT->IsWebDisplay());
 
    auto factory = gROOT->IsWebDisplay() ? gBatchGuiFactory : gGuiFactory;
 
