@@ -10,10 +10,14 @@
 * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
+// when not using the namespace will use the once pragma.
+// when using the namespace (as happens in the ROOT build of xRooFit) then
+// will effectively use an include guard
+#ifndef XROOFIT_NAMESPACE
 #pragma once
-// removed the include guard because was preventing having local version of xRooFit on top of ROOT's version
-//#ifndef XROOFIT_XROOFIT_H
-//#define XROOFIT_XROOFIT_H
+#endif
+#if !defined(XROOFIT_XROOFIT_H) || !defined(XROOFIT_NAMESPACE)
+#define XROOFIT_XROOFIT_H
 
 
 /**
@@ -190,4 +194,4 @@ public:
 
 
   
-//#endif // include guard
+#endif // include guard

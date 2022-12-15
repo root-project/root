@@ -10,7 +10,11 @@
 * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
+#ifndef XROOFIT_NAMESPACE
 #pragma once
+#endif
+#if !defined(XROOFIT_XROONODE_H) || !defined(XROOFIT_NAMESPACE)
+#define XROOFIT_XROONODE_H
 
 #include "TNamed.h"
 #include <vector>
@@ -305,3 +309,5 @@ public:
 #ifdef XROOFIT_NAMESPACE
 }
 #endif
+
+#endif // include guard

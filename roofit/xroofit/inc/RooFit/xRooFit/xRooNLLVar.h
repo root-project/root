@@ -10,7 +10,11 @@
 * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
+#ifndef XROOFIT_NAMESPACE
 #pragma once
+#endif
+#if !defined(XROOFIT_XROONLLVAR_H) || !defined(XROOFIT_NAMESPACE)
+#define XROOFIT_XROONLLVAR_H
 
 #include "xRooFit.h"
 
@@ -300,3 +304,5 @@ public:
 #ifdef XROOFIT_NAMESPACE
 }
 #endif
+
+#endif // include guard

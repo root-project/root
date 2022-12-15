@@ -10,7 +10,11 @@
 * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
+#ifndef XROOFIT_NAMESPACE
 #pragma once
+#endif
+#if !defined(XROOFIT_XROOBROWSER_H) || !defined(XROOFIT_NAMESPACE)
+#define XROOFIT_XROOBROWSER_H
 
 #include "TBrowser.h"
 
@@ -41,3 +45,5 @@ ClassDefOverride(TBrowser,0)
 #ifdef XROOFIT_NAMESPACE
 }
 #endif
+
+#endif // include guard
