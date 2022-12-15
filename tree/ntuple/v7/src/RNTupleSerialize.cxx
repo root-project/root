@@ -789,7 +789,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(
    }
    std::int32_t head = sizeof(std::int32_t) + size;
    head |= locator.fReserved << 16;
-   head |= static_cast<int>(locator.fType) << 24;
+   head |= static_cast<int>(locator.fType & 0x7F) << 24;
    head = -head;
    size += RNTupleSerializer::SerializeInt32(head, buffer);
    return size;
