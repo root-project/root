@@ -45,45 +45,16 @@
           conn_handle.send(txt);
      }
 
-     function addButton(text, exec, title) {
-        let btn = document.createElement("button");
-        btn.onclick = sendMsg.bind(null, exec +  ";");
+     function addButton(text, title, id) {
+        let btn = document.createElement('button');
+        if (id !== undefined)
+           btn.onclick = sendMsg.bind(null, `CLICK:${id}`);
         btn.title = title;
         btn.innerHTML = text;
         document.getElementById("btns").appendChild(btn);
      }
 
-     // use code from geodemo.C
-     addButton("How to run  ","help()","Instructions for running this macro");
-     addButton("Arb8        ","arb8()","An arbitrary polyhedron defined by vertices (max 8) sitting on 2 parallel planes");
-     addButton("Box         ","box()","A box shape.");
-     addButton("Composite   ","composite()","A composite shape");
-     addButton("Cone        ","cone()","A conical tube");
-     addButton("Cone segment","coneseg()","A conical segment");
-     addButton("Cut tube    ","ctub()","A cut tube segment");
-     addButton("Elliptical tube","eltu()","An elliptical tube");
-     addButton("Extruded poly","xtru()","A general polygone extrusion");
-     addButton("Hyperboloid  ","hype()","A hyperboloid");
-     addButton("Paraboloid  ","parab()","A paraboloid");
-     addButton("Polycone    ","pcon()","A polycone shape");
-     addButton("Polygone    ","pgon()","A polygone");
-     addButton("Parallelepiped","para()","A parallelepiped shape");
-     addButton("Sphere      ","sphere()","A spherical sector");
-     addButton("Trd1        ","trd1()","A trapezoid with dX varying with Z");
-     addButton("Trd2        ","trd2()","A trapezoid with both dX and dY varying with Z");
-     addButton("Trapezoid   ","trap()","A general trapezoid");
-     addButton("Tessellated","tessellated()","A tessellated shape");
-     addButton("Torus       ","torus()","A toroidal segment");
-     addButton("Tube        ","tube()","A tube with inner and outer radius");
-     addButton("Tube segment","tubeseg()","A tube segment");
-     addButton("Twisted trap","gtra()","A twisted trapezoid");
-     addButton("Aligned (ideal)","ideal()","An ideal (un-aligned) geometry");
-     addButton("Un-aligned","align()","Some alignment operation");
-     // addButton("RAY-TRACE ON/OFF","raytrace()","Toggle ray-tracing mode");
-     addButton("COMMENTS  ON/OFF","gcomments()","Toggle explanations pad ON/OFF");
-     addButton("AXES ON/OFF","axes()","Toggle axes ON/OFF");
-     addButton("AUTOROTATE ON/OFF","autorotate()","Toggle autorotation ON/OFF");
-     addButton("Quit","quit()","Quit ROOT seesion");
+     addButton('init', 'Just dummy button until connection established');
 
      connectWebWindow({
        receiver: {
@@ -92,8 +63,14 @@
              conn_handle = handle;
           },
 
-          onWebsocketMessage(msg) {
-             console.log('get msg', msg);
+          onWebsocketMsg(handle, msg) {
+             console.log('msg', msg);
+             if (msg.slice(0,5) == 'BTNS:') {
+                document.getElementById("btns").innerHTML = '';
+                let arr = JSON.parse(msg.slice(5));
+                for (let n = 0; n < arr.length; n += 2)
+                   addButton(arr[n], arr[n+1], n/2);
+             }
           },
 
           // method called when connection is gone
