@@ -3203,7 +3203,6 @@ class HierarchyPainter extends BasePainter {
       let prereq = GetOption('prereq') || '',
           filesdir = d.get('path') || '', // path used in normal gui
           filesarr = GetOptionAsArray('#file;files'),
-          localfile = GetOption('localfile'),
           jsonarr = GetOptionAsArray('#json;jsons'),
           expanditems = GetOptionAsArray('expand'),
           focusitem = GetOption('focus'),
@@ -3308,9 +3307,7 @@ class HierarchyPainter extends BasePainter {
             promise = this.openJsonFile(jsonarr.shift());
          else if (filesarr.length > 0)
             promise = this.openRootFile(filesarr.shift());
-         else if ((localfile !== null) && isFunc(this.selectLocalFile)) {
-            localfile = null; promise = this.selectLocalFile();
-         } else if (expanditems.length > 0)
+         else if (expanditems.length > 0)
             promise = this.expandItem(expanditems.shift());
          else if (style.length > 0)
             promise = this.applyStyle(style.shift());
@@ -3504,8 +3501,6 @@ class HierarchyPainter extends BasePainter {
          });
       });
 
-      let localfile_read_callback = null;
-
       if (!this.is_online && !this.no_select) {
 
          this.readSelectedFile = function() {
@@ -3531,28 +3526,14 @@ class HierarchyPainter extends BasePainter {
          });
 
          main.select('.gui_localFile').on('change', evnt => {
-            let files = evnt.target.files, promises = [];
+            let files = evnt.target.files;
 
             for (let n = 0; n < files.length; ++n) {
                let f = files[n];
                main.select('.gui_urlToLoad').property('value', f.name);
-               promises.push(this.openRootFile(f));
+               this.openRootFile(f);
             }
-
-            Promise.all(promises).then(() => {
-               if (localfile_read_callback) {
-                  localfile_read_callback();
-                  localfile_read_callback = null;
-               }
-            });
          });
-
-         this.selectLocalFile = async function() {
-            return new Promise(resolveFunc => {
-               localfile_read_callback = resolveFunc;
-               main.select('.gui_localFile').node().click();
-            });
-         };
       }
 
       let layout = main.select('.gui_layout');

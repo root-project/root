@@ -5,7 +5,7 @@ let version_id = '7.3.0';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '14/12/2022';
+let version_date = '15/12/2022';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}

@@ -11,7 +11,7 @@ let version_id = '7.3.0';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '14/12/2022';
+let version_date = '15/12/2022';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -3792,6 +3792,30 @@ function select(selector) {
       : new Selection$1([[selector]], root$1);
 }
 
+var nextId = 0;
+
+function Local() {
+  this._ = "@" + (++nextId).toString(36);
+}
+
+Local.prototype = {
+  constructor: Local,
+  get: function(node) {
+    var id = this._;
+    while (!(id in node)) if (!(node = node.parentNode)) return;
+    return node[id];
+  },
+  set: function(node, value) {
+    return node[this._] = value;
+  },
+  remove: function(node) {
+    return this._ in node && delete node[this._];
+  },
+  toString: function() {
+    return this._;
+  }
+};
+
 function sourceEvent(event) {
   let sourceEvent;
   while (sourceEvent = event.sourceEvent) event = sourceEvent;
@@ -5355,6 +5379,7 @@ millisecond.every = function(k) {
 };
 
 var millisecond$1 = millisecond;
+millisecond.range;
 
 const durationSecond = 1000;
 const durationMinute = durationSecond * 60;
@@ -5375,6 +5400,7 @@ var second = newInterval(function(date) {
 });
 
 var utcSecond = second;
+second.range;
 
 var minute = newInterval(function(date) {
   date.setTime(date - date.getMilliseconds() - date.getSeconds() * durationSecond);
@@ -5387,6 +5413,7 @@ var minute = newInterval(function(date) {
 });
 
 var timeMinute = minute;
+minute.range;
 
 var hour = newInterval(function(date) {
   date.setTime(date - date.getMilliseconds() - date.getSeconds() * durationSecond - date.getMinutes() * durationMinute);
@@ -5399,6 +5426,7 @@ var hour = newInterval(function(date) {
 });
 
 var timeHour = hour;
+hour.range;
 
 var day = newInterval(
   date => date.setHours(0, 0, 0, 0),
@@ -5408,6 +5436,7 @@ var day = newInterval(
 );
 
 var timeDay = day;
+day.range;
 
 function weekday(i) {
   return newInterval(function(date) {
@@ -5422,11 +5451,19 @@ function weekday(i) {
 
 var sunday = weekday(0);
 var monday = weekday(1);
-weekday(2);
-weekday(3);
+var tuesday = weekday(2);
+var wednesday = weekday(3);
 var thursday = weekday(4);
-weekday(5);
-weekday(6);
+var friday = weekday(5);
+var saturday = weekday(6);
+
+sunday.range;
+monday.range;
+tuesday.range;
+wednesday.range;
+thursday.range;
+friday.range;
+saturday.range;
 
 var month = newInterval(function(date) {
   date.setDate(1);
@@ -5440,6 +5477,7 @@ var month = newInterval(function(date) {
 });
 
 var timeMonth = month;
+month.range;
 
 var year = newInterval(function(date) {
   date.setMonth(0, 1);
@@ -5464,8 +5502,9 @@ year.every = function(k) {
 };
 
 var timeYear = year;
+year.range;
 
-newInterval(function(date) {
+var utcMinute = newInterval(function(date) {
   date.setUTCSeconds(0, 0);
 }, function(date, step) {
   date.setTime(+date + step * durationMinute);
@@ -5474,8 +5513,9 @@ newInterval(function(date) {
 }, function(date) {
   return date.getUTCMinutes();
 });
+utcMinute.range;
 
-newInterval(function(date) {
+var utcHour = newInterval(function(date) {
   date.setUTCMinutes(0, 0, 0);
 }, function(date, step) {
   date.setTime(+date + step * durationHour);
@@ -5484,6 +5524,7 @@ newInterval(function(date) {
 }, function(date) {
   return date.getUTCHours();
 });
+utcHour.range;
 
 var utcDay = newInterval(function(date) {
   date.setUTCHours(0, 0, 0, 0);
@@ -5496,6 +5537,7 @@ var utcDay = newInterval(function(date) {
 });
 
 var utcDay$1 = utcDay;
+utcDay.range;
 
 function utcWeekday(i) {
   return newInterval(function(date) {
@@ -5510,13 +5552,21 @@ function utcWeekday(i) {
 
 var utcSunday = utcWeekday(0);
 var utcMonday = utcWeekday(1);
-utcWeekday(2);
-utcWeekday(3);
+var utcTuesday = utcWeekday(2);
+var utcWednesday = utcWeekday(3);
 var utcThursday = utcWeekday(4);
-utcWeekday(5);
-utcWeekday(6);
+var utcFriday = utcWeekday(5);
+var utcSaturday = utcWeekday(6);
 
-newInterval(function(date) {
+utcSunday.range;
+utcMonday.range;
+utcTuesday.range;
+utcWednesday.range;
+utcThursday.range;
+utcFriday.range;
+utcSaturday.range;
+
+var utcMonth = newInterval(function(date) {
   date.setUTCDate(1);
   date.setUTCHours(0, 0, 0, 0);
 }, function(date, step) {
@@ -5526,6 +5576,7 @@ newInterval(function(date) {
 }, function(date) {
   return date.getUTCMonth();
 });
+utcMonth.range;
 
 var utcYear = newInterval(function(date) {
   date.setUTCMonth(0, 1);
@@ -5550,6 +5601,7 @@ utcYear.every = function(k) {
 };
 
 var utcYear$1 = utcYear;
+utcYear.range;
 
 function ticker(year, month, week, day, hour, minute) {
 
@@ -6299,6 +6351,7 @@ defaultLocale({
 function defaultLocale(definition) {
   locale = formatLocale(definition);
   timeFormat = locale.format;
+  locale.parse;
   utcFormat = locale.utcFormat;
   utcParse = locale.utcParse;
   return locale;
@@ -73231,12 +73284,15 @@ class TGeoPainter extends ObjectPainter {
       if (!this._scene) {
          this._first_drawing = true;
 
-         this._on_pad = !!this.getPadPainter();
+         let pp = this.getPadPainter();
+
+         this._on_pad = !!pp;
 
          if (this._on_pad) {
             let size, render3d, fp;
             promise = ensureTCanvas(this,'3d').then(() => {
-
+               if (pp.fillatt?.color)
+                  this.ctrl.background = pp.fillatt.color;
                fp = this.getFramePainter();
 
                render3d = getRender3DKind();
@@ -85333,7 +85389,6 @@ class HierarchyPainter extends BasePainter {
       let prereq = GetOption('prereq') || '',
           filesdir = d.get('path') || '', // path used in normal gui
           filesarr = GetOptionAsArray('#file;files'),
-          localfile = GetOption('localfile'),
           jsonarr = GetOptionAsArray('#json;jsons'),
           expanditems = GetOptionAsArray('expand'),
           focusitem = GetOption('focus'),
@@ -85438,9 +85493,7 @@ class HierarchyPainter extends BasePainter {
             promise = this.openJsonFile(jsonarr.shift());
          else if (filesarr.length > 0)
             promise = this.openRootFile(filesarr.shift());
-         else if ((localfile !== null) && isFunc(this.selectLocalFile)) {
-            localfile = null; promise = this.selectLocalFile();
-         } else if (expanditems.length > 0)
+         else if (expanditems.length > 0)
             promise = this.expandItem(expanditems.shift());
          else if (style.length > 0)
             promise = this.applyStyle(style.shift());
@@ -85634,8 +85687,6 @@ class HierarchyPainter extends BasePainter {
          });
       });
 
-      let localfile_read_callback = null;
-
       if (!this.is_online && !this.no_select) {
 
          this.readSelectedFile = function() {
@@ -85661,28 +85712,14 @@ class HierarchyPainter extends BasePainter {
          });
 
          main.select('.gui_localFile').on('change', evnt => {
-            let files = evnt.target.files, promises = [];
+            let files = evnt.target.files;
 
             for (let n = 0; n < files.length; ++n) {
                let f = files[n];
                main.select('.gui_urlToLoad').property('value', f.name);
-               promises.push(this.openRootFile(f));
+               this.openRootFile(f);
             }
-
-            Promise.all(promises).then(() => {
-               if (localfile_read_callback) {
-                  localfile_read_callback();
-                  localfile_read_callback = null;
-               }
-            });
          });
-
-         this.selectLocalFile = async function() {
-            return new Promise(resolveFunc => {
-               localfile_read_callback = resolveFunc;
-               main.select('.gui_localFile').node().click();
-            });
-         };
       }
 
       let layout = main.select('.gui_layout');
