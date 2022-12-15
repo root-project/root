@@ -310,7 +310,7 @@ TEST(PageStorageFile, LoadClusters)
       auto descriptorGuard = source.GetSharedDescriptorGuard();
       ptId = descriptorGuard->FindFieldId("pt");
       EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, ptId);
-      colId = descriptorGuard->FindColumnId(ptId, 0);
+      colId = descriptorGuard->FindPhysicalColumnId(ptId, 0);
       EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, colId);
    }
 
