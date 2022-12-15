@@ -167,7 +167,7 @@ protected:
    /// Multiple page maps can be combined in a single RCluster
    std::vector<std::unique_ptr<ROnDiskPageMap>> fPageMaps;
    /// Set of the (complete) columns represented by the RCluster
-   ColumnSet_t fAvailColumns;
+   ColumnSet_t fAvailPhysicalColumns;
    /// Lookup table for the on-disk pages
    std::unordered_map<ROnDiskPage::Key, ROnDiskPage> fOnDiskPages;
 
@@ -192,12 +192,12 @@ public:
    /// Marks the column as complete; must be done for all columns, even empty ones without associated pages,
    /// before the cluster is given from the page storage to the cluster pool.  Marking the available columns is
    /// typically the last step of RPageSouce::LoadCluster().
-   void SetColumnAvailable(DescriptorId_t columnId);
+   void SetColumnAvailable(DescriptorId_t physicalColumnId);
    const ROnDiskPage *GetOnDiskPage(const ROnDiskPage::Key &key) const;
 
    DescriptorId_t GetId() const { return fClusterId; }
-   const ColumnSet_t &GetAvailColumns() const { return fAvailColumns; }
-   bool ContainsColumn(DescriptorId_t columnId) const { return fAvailColumns.count(columnId) > 0; }
+   const ColumnSet_t &GetAvailPhysicalColumns() const { return fAvailPhysicalColumns; }
+   bool ContainsColumn(DescriptorId_t colId) const { return fAvailPhysicalColumns.count(colId) > 0; }
    size_t GetNOnDiskPages() const { return fOnDiskPages.size(); }
 };
 
