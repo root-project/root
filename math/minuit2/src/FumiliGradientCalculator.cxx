@@ -23,6 +23,14 @@ namespace ROOT {
 
 namespace Minuit2 {
 
+FumiliGradientCalculator::FumiliGradientCalculator(const FumiliFCNBase &fcn, const MnUserTransformation &trafo, int n)
+   : AnalyticalGradientCalculator(fcn, trafo),
+   fFcn(fcn),
+   fHessian(MnAlgebraicSymMatrix(n))
+{
+}
+
+
 FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters &par) const
 {
 
@@ -65,16 +73,22 @@ FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters &p
    MnPrint print("FumiliGradientCalculator");
    print.Debug([&](std::ostream &os) {
       // compare Fumili with Minuit gradient
-
+      int plevel = MnPrint::SetGlobalLevel(MnPrint::GlobalLevel()-1);
       Numerical2PGradientCalculator gc(MnUserFcn(fFcn, fTransformation), fTransformation, MnStrategy(1));
-      FunctionGradient g2 = gc(par);
-
-      os << "Fumili Gradient" << v << "\nMinuit Gradient" << g2.Vec();
+      FunctionGradient grd2 = gc(par);
+      os << "Fumili Gradient:" << v << "\nMinuit Gradient" << grd2.Vec();
+      os << "\nFumili Hessian:  " << h << std::endl;
+      os << "Numerical g2 " << grd2.G2() << std::endl;
+      MnPrint::SetGlobalLevel(plevel);
    });
 
    // store calculated Hessian
    fHessian = h;
-   return FunctionGradient(v);
+   // compute also g2 from diagonal Hessian
+   MnAlgebraicVector g2(nvar);
+   G2(par,g2);
+
+   return FunctionGradient(v,g2);
 }
 
 FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters &par, const FunctionGradient &) const
@@ -82,6 +96,29 @@ FunctionGradient FumiliGradientCalculator::operator()(const MinimumParameters &p
 {
    // Needed for interface of base class.
    return this->operator()(par);
+}
+bool FumiliGradientCalculator::G2(const MinimumParameters &par, MnAlgebraicVector & g2) const
+{
+   unsigned int n = par.Vec().size();
+   if (fHessian.Nrow() != n || g2.size() != n) {
+      assert(false);
+      return false;
+   }
+   for (unsigned int i = 0; i < n ; i++) {
+      g2(i) = fHessian(i,i);
+   }
+   return true;
+}
+
+bool FumiliGradientCalculator::Hessian(const MinimumParameters &par, MnAlgebraicSymMatrix & h) const
+{
+   unsigned int n = par.Vec().size();
+   if (fHessian.Nrow() != n ) {
+      assert(false);
+      return false;
+   }
+   h = fHessian;
+   return true;
 }
 
 } // namespace Minuit2

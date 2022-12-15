@@ -82,7 +82,11 @@ bool AnalyticalGradientCalculator::Hessian(const MinimumParameters &par, MnAlgeb
    assert(hmat.size() == n *(n+1)/2);
    // compute external Hessian and then transform
    std::vector<double> extHessian = fGradFunc.Hessian(fTransformation(par.Vec()));
-   if (extHessian.empty()) return false;
+   if (extHessian.empty()) {
+      MnPrint print("AnalyticalGradientCalculator::Hessian");
+      print.Info("FCN cannot compute Hessian matrix");
+      return false;
+   }
    unsigned int next = sqrt(extHessian.size());
    // we need now to transform the matrix from external to internal coordinates
    for (unsigned int i = 0; i < n; i++) {
@@ -108,7 +112,11 @@ bool AnalyticalGradientCalculator::G2(const MinimumParameters &par, MnAlgebraicV
    unsigned int n = par.Vec().size();  // n is size of internal parameters
    assert(g2.Size() == n );
    std::vector<double> extG2 = fGradFunc.G2(fTransformation(par.Vec()));
-   if (extG2.empty()) return false;
+   if (extG2.empty()) {
+      MnPrint print("AnalyticalGradientCalculator::G2");
+      print.Info("FCN cannot compute the 2nd derivatives vector (G2)");
+      return false;
+   }
    assert(extG2.size() == fTransformation.Parameters().size());
    // we need now to transform the matrix from external to internal coordinates
    for (unsigned int i = 0; i < n; i++) {

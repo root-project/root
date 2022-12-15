@@ -265,11 +265,11 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
          p = MinimumParameters(s0.Vec() + pp.X() * step, pp.Y());
       }
 
-      print.Debug("Before Gradient", fcn.NumOfCalls());
+      print.Debug("Before Gradient - NCalls = ", fcn.NumOfCalls());
 
       FunctionGradient g = gc(p, s0.Gradient());
 
-      print.Debug("After Gradient", fcn.NumOfCalls());
+      print.Debug("After Gradient - NCalls = ", fcn.NumOfCalls());
 
 
       // move Error updator after Gradient since the Value is cached inside

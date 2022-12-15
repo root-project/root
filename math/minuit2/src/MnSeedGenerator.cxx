@@ -109,10 +109,12 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
                                         const MnUserParameterState &st, const MnStrategy &stra) const
 {
    MnPrint print("MnSeedGenerator");
+
    // check gradient (slow: will require more function evaluations)
-   if (gc.CheckGradient()) {
-         //CheckGradient(st,trado,stra,grd)
-   }
+   //if (gc.CheckGradient()) {
+   //      //CheckGradient(st,trado,stra,grd)
+   //}
+
    if (!gc.CanComputeG2()) {
       Numerical2PGradientCalculator ngc(fcn, st.Trafo(), stra);
       return this->operator()(fcn, ngc, st, stra);
@@ -151,12 +153,18 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
          g2(i) = hmat(i,i);
       grad = FunctionGradient(grad.Grad(),g2);
 
+      print.Debug("Computed analytical G2",g2);
+
       // when Hessian has been computed invert to get covariance
       // we prefer not using full Hessian in strategy 1 since we need to be sure that
-      // is pos-defined. Uncomment following line if want to have seed with full Hessian
+      // is pos-defined. Uncomment following line if want to have seed with the full Hessian
       //computedHessian = true;
-      if (computedHessian)
+      if (computedHessian) {
          mat = MinimumError::InvertMatrix(hmat);
+         print.Info("Use full Hessian as seed");
+         print.Debug("computed Hessian",hmat);
+         print.Debug("computed Error matrix (H^-1)",mat);
+      }
    }
    // do this only when we have not computed the Hessian or always ?
    if (!computedHessian) {
@@ -183,7 +191,9 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
    MinimumError err(mat, dcovar);
    double edm = VariableMetricEDMEstimator().Estimate(grad, err);
 
-   assert(grad.HasG2());
+   if (!grad.HasG2()) {
+      print.Error("Cannot compute seed because G2 is not computed");
+   }
    MinimumState state(pa, err, grad, edm, fcn.NumOfCalls());
    NegativeG2LineSearch ng2ls;
    if (ng2ls.HasNegativeG2(grad, prec)) {

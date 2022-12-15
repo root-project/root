@@ -47,9 +47,10 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
    unsigned int iter = 0;
    // in case of analytical gradients we don't have step sizes
    bool hasGStep = !dgrad.IsAnalytical();
+   print.Debug("Gradient ", dgrad.Vec(), "G2",dgrad.G2());
    MnAlgebraicSymMatrix mat(n);
    // gradient present in the state must have G2 otherwise something is wrong
-   assert(dgrad.HasG2());
+   //assert(dgrad.HasG2());
    if (!dgrad.HasG2()) {
       print.Error("Input gradient to NG2LS must have G2 already computed");
       return st;
@@ -59,9 +60,6 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
    do {
       iterate = false;
       for (unsigned int i = 0; i < n; i++) {
-
-         print.Debug("negative G2 - iter", iter, "param", i, pa.Vec()(i), "grad2", dgrad.G2()(i), "grad",
-                     dgrad.Vec()(i), "grad step", dgrad.Gstep()(i), "step size", pa.Dirin()(i));
 
          if (dgrad.G2()(i) <= 0) {
 
@@ -84,8 +82,8 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
             // if using sec derivative information
             // double g2del = step(i)*step(i) * dgrad.G2()(i);
 
-            print.Debug("step(i)", step(i), "gdel", gdel);
-            //            std::cout << " g2del " << g2del << std::endl;
+            print.Debug("Iter", iter, "param", i, pa.Vec()(i), "grad2", dgrad.G2()(i), "grad",
+                        dgrad.Vec()(i), "grad step", step(i), " gdel ", gdel);
 
             MnParabolaPoint pp = lsearch(fcn, pa, step, gdel, prec);
 
@@ -95,9 +93,10 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
             pa = MinimumParameters(pa.Vec() + step, pp.Y());
 
             dgrad = gc(pa, dgrad);
-            // re-compute also G2 of needed
+            // re-compute also G2 if needed
             if (!dgrad.HasG2()) {
                computeHessian = true;
+               print.Debug("Compute  Hessian at the new point", pa.Vec());
                bool ret = gc.Hessian(pa,mat);
                if (!ret) {
                   print.Error("Cannot compute Hessian");
@@ -110,8 +109,8 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
                dgrad = FunctionGradient(dgrad.Grad(), g2);
             }
 
-            print.Debug("Line search - iter", iter, "param", i, pa.Vec()(i), "step", step(i), "new grad2",
-                        dgrad.G2()(i), "new grad", dgrad.Vec()(i), "grad step", dgrad.Gstep()(i));
+            print.Debug("New result after Line search - iter", iter, "param", i, pa.Vec()(i), "step", step(i), "new grad2",
+                        dgrad.G2()(i), "new grad", dgrad.Vec()(i));
 
             iterate = true;
             break;
