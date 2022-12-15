@@ -84,6 +84,7 @@ Current limitations of the importer:
   - Adding projected fields where necessary is pending the implementation of the core functionality in RNTuple
   - Importing collection proxies is untested
   - No support for importing split objects and nested split collections
+  - No support for trees containing TObject (or derived classes) or TClonesArray collections
   - Due to RNTuple currently storing data fully split, "don't split" markers are ignored
   - Some types are not (yet) available in RNTuple, such as Double32_t or std::map
 */
