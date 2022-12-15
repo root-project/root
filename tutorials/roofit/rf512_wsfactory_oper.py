@@ -43,7 +43,7 @@ w.factory("FCONV::lxg( x, Gaussian::g(x,mg[0],1), Landau::lc(x,0,1) )")
 
 # Simultaneous p.d.f.s are constructed with SIMUL( index, state1=pdf1,
 # state2=pdf2,...)
-w.factory("SIMUL::smodel( c[A=0,B=1], A=Gaussian::gs(x,m,s[1]), B=Landau::ls(x,0,1) )")
+w.factory("SIMUL::smodel( c[A=0,B=1], A=Gaussian::gs(x,m,s[1.0, 0.01, 10.0]), B=Landau::ls(x,0,1) )")
 
 # Operator function examples
 # ---------------------------------------------------
