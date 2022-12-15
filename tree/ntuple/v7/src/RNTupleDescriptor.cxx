@@ -151,11 +151,10 @@ std::unordered_set<ROOT::Experimental::DescriptorId_t> ROOT::Experimental::RClus
    return result;
 }
 
-
-bool ROOT::Experimental::RClusterDescriptor::ContainsColumn(DescriptorId_t columnId) const
+bool ROOT::Experimental::RClusterDescriptor::ContainsColumn(DescriptorId_t physicalId) const
 {
    EnsureHasPageLocations();
-   return fColumnRanges.find(columnId) != fColumnRanges.end();
+   return fColumnRanges.find(physicalId) != fColumnRanges.end();
 }
 
 
@@ -404,21 +403,22 @@ ROOT::Experimental::RClusterGroupDescriptor ROOT::Experimental::RClusterGroupDes
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RClusterDescriptorBuilder::CommitColumnRange(
-   DescriptorId_t columnId, std::uint64_t firstElementIndex, std::uint32_t compressionSettings,
-   const RClusterDescriptor::RPageRange &pageRange)
+ROOT::Experimental::RClusterDescriptorBuilder::CommitColumnRange(DescriptorId_t physicalId,
+                                                                 std::uint64_t firstElementIndex,
+                                                                 std::uint32_t compressionSettings,
+                                                                 const RClusterDescriptor::RPageRange &pageRange)
 {
-   if (columnId != pageRange.fColumnId)
+   if (physicalId != pageRange.fPhysicalColumnId)
       return R__FAIL("column ID mismatch");
-   if (fCluster.fPageRanges.count(columnId) > 0)
+   if (fCluster.fPageRanges.count(physicalId) > 0)
       return R__FAIL("column ID conflict");
-   RClusterDescriptor::RColumnRange columnRange{columnId, firstElementIndex, RClusterSize(0)};
+   RClusterDescriptor::RColumnRange columnRange{physicalId, firstElementIndex, RClusterSize(0)};
    columnRange.fCompressionSettings = compressionSettings;
    for (const auto &pi : pageRange.fPageInfos) {
       columnRange.fNElements += pi.fNElements;
    }
-   fCluster.fPageRanges[columnId] = pageRange.Clone();
-   fCluster.fColumnRanges[columnId] = columnRange;
+   fCluster.fPageRanges[physicalId] = pageRange.Clone();
+   fCluster.fColumnRanges[physicalId] = columnRange;
    return RResult<void>::Success();
 }
 

@@ -335,7 +335,7 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
       columnRange.fCompressionSettings = GetWriteOptions().GetCompression();
       fOpenColumnRanges.emplace_back(columnRange);
       RClusterDescriptor::RPageRange pageRange;
-      pageRange.fColumnId = i;
+      pageRange.fPhysicalColumnId = i;
       fOpenPageRanges.emplace_back(std::move(pageRange));
    }
 
@@ -407,7 +407,7 @@ std::uint64_t ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experim
                                             nEntriesInCluster);
    for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
       RClusterDescriptor::RPageRange fullRange;
-      fullRange.fColumnId = i;
+      fullRange.fPhysicalColumnId = i;
       std::swap(fullRange, fOpenPageRanges[i]);
       clusterBuilder.CommitColumnRange(i, fOpenColumnRanges[i].fFirstElementIndex,
                                        fOpenColumnRanges[i].fCompressionSettings, fullRange);

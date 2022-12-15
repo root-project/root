@@ -1411,7 +1411,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
          bytes += result.Unwrap();
 
          RClusterDescriptor::RPageRange pageRange;
-         pageRange.fColumnId = j;
+         pageRange.fPhysicalColumnId = j;
          for (std::uint32_t k = 0; k < nPages; ++k) {
             if (fnInnerFrameSizeLeft() < static_cast<int>(sizeof(std::uint32_t)))
                return R__FAIL("inner frame too short");
