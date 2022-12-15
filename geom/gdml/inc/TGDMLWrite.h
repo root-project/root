@@ -81,6 +81,8 @@ public:
       kfastButUglySufix = 2
    };
    void SetNamingSpeed(ENamingType naming);
+   // Ignore dummy material instance, which causes trouble reading GDML in Geant4
+   void SetIgnoreDummyMaterial(bool value);
    void SetG4Compatibility(Bool_t G4Compatible) {
       fgG4Compatibility = G4Compatible;
    };
@@ -121,6 +123,7 @@ private:
    //Data members
    static TGDMLWrite *fgGDMLWrite;                         //pointer to gdml writer
    Int_t  fgNamingSpeed;                                   //input option for volume and solid naming
+   Int_t fIgnoreDummyMaterial;                             // Flag to ignore TGeo's dummy material
    Bool_t fgG4Compatibility;                               //input option for Geant4 compatibility
    XMLDocPointer_t  fGdmlFile;                             //pointer storing xml file
    TString fDefault_lunit;                                 //Default unit of length (depends on ROOT unit system)
