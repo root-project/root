@@ -129,13 +129,12 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitPageImpl(ColumnHandle_t columnH
    return WriteSealedPage(sealedPage, element->GetPackedSize(page.GetNElements()));
 }
 
-
 ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Detail::RPageSinkFile::CommitSealedPageImpl(
-   DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage)
+ROOT::Experimental::Detail::RPageSinkFile::CommitSealedPageImpl(DescriptorId_t physicalColumnId,
+                                                                const RPageStorage::RSealedPage &sealedPage)
 {
    const auto bitsOnStorage = RColumnElementBase::GetBitsOnStorage(
-      fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(columnId).GetModel().GetType());
+      fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(physicalColumnId).GetModel().GetType());
    const auto bytesPacked = (bitsOnStorage * sealedPage.fNElements + 7) / 8;
 
    return WriteSealedPage(sealedPage, bytesPacked);
@@ -290,9 +289,9 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
    return ntplDesc;
 }
 
-
-void ROOT::Experimental::Detail::RPageSourceFile::LoadSealedPage(
-   DescriptorId_t columnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage)
+void ROOT::Experimental::Detail::RPageSourceFile::LoadSealedPage(DescriptorId_t physicalColumnId,
+                                                                 const RClusterIndex &clusterIndex,
+                                                                 RSealedPage &sealedPage)
 {
    const auto clusterId = clusterIndex.GetClusterId();
 
@@ -300,7 +299,7 @@ void ROOT::Experimental::Detail::RPageSourceFile::LoadSealedPage(
    {
       auto descriptorGuard = GetSharedDescriptorGuard();
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
-      pageInfo = clusterDescriptor.GetPageRange(columnId).Find(clusterIndex.GetIndex());
+      pageInfo = clusterDescriptor.GetPageRange(physicalColumnId).Find(clusterIndex.GetIndex());
    }
 
    const auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
