@@ -571,7 +571,7 @@ void TGeoMaterial::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""
    out << "   radl    = " << fRadLen << ";" << std::endl;
    out << "   absl    = " << fIntLen << ";" << std::endl;
 
-   out << "   " << name << " = new TGeoMaterial(\"" << GetName() << "\", a,z,density,radl,absl);" << std::endl;
+   out << "   auto " << name << " = new TGeoMaterial(\"" << GetName() << "\", a, z, density, radl, absl);" << std::endl;
    out << "   " << name << "->SetIndex(" << GetIndex() << ");" << std::endl;
    SetBit(TGeoMaterial::kMatSavePrimitive);
 }
