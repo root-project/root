@@ -11,6 +11,7 @@
 ROOT_STANDARD_LIBRARY_PACKAGE(WebGui6
   HEADERS
     TWebCanvas.h
+    TWebControlBar.h
     TWebMenuItem.h
     TWebPadOptions.h
     TWebPadPainter.h
@@ -19,6 +20,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(WebGui6
     TWebSnapshot.h
   SOURCES
     src/TWebCanvas.cxx
+    src/TWebControlBar.cxx
     src/TWebMenuItem.cxx
     src/TWebPadPainter.cxx
     src/TWebPainting.cxx
