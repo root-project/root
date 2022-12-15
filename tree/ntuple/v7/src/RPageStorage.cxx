@@ -45,24 +45,24 @@ ROOT::Experimental::Detail::RPageStorage::~RPageStorage()
 
 //------------------------------------------------------------------------------
 
-void ROOT::Experimental::Detail::RPageSource::RActiveColumns::Insert(DescriptorId_t physicalColumnID)
+void ROOT::Experimental::Detail::RPageSource::RActivePhysicalColumns::Insert(DescriptorId_t physicalColumnID)
 {
-   for (unsigned i = 0; i < fPhysicalColumnIDs.size(); ++i) {
-      if (fPhysicalColumnIDs[i] == physicalColumnID) {
+   for (unsigned i = 0; i < fIDs.size(); ++i) {
+      if (fIDs[i] == physicalColumnID) {
          fRefCounters[i]++;
          return;
       }
    }
-   fPhysicalColumnIDs.emplace_back(physicalColumnID);
+   fIDs.emplace_back(physicalColumnID);
    fRefCounters.emplace_back(1);
 }
 
-void ROOT::Experimental::Detail::RPageSource::RActiveColumns::Erase(DescriptorId_t physicalColumnID)
+void ROOT::Experimental::Detail::RPageSource::RActivePhysicalColumns::Erase(DescriptorId_t physicalColumnID)
 {
-   for (unsigned i = 0; i < fPhysicalColumnIDs.size(); ++i) {
-      if (fPhysicalColumnIDs[i] == physicalColumnID) {
+   for (unsigned i = 0; i < fIDs.size(); ++i) {
+      if (fIDs[i] == physicalColumnID) {
          if (--fRefCounters[i] == 0) {
-            fPhysicalColumnIDs.erase(fPhysicalColumnIDs.begin() + i);
+            fIDs.erase(fIDs.begin() + i);
             fRefCounters.erase(fRefCounters.begin() + i);
          }
          return;
@@ -70,10 +70,11 @@ void ROOT::Experimental::Detail::RPageSource::RActiveColumns::Erase(DescriptorId
    }
 }
 
-ROOT::Experimental::Detail::RCluster::ColumnSet_t ROOT::Experimental::Detail::RPageSource::RActiveColumns::ToColumnSet()
+ROOT::Experimental::Detail::RCluster::ColumnSet_t
+ROOT::Experimental::Detail::RPageSource::RActivePhysicalColumns::ToColumnSet()
 {
    RCluster::ColumnSet_t result;
-   for (const auto &id : fPhysicalColumnIDs)
+   for (const auto &id : fIDs)
       result.insert(id);
    return result;
 }
@@ -112,13 +113,13 @@ ROOT::Experimental::Detail::RPageSource::AddColumn(DescriptorId_t fieldId, const
    R__ASSERT(fieldId != kInvalidDescriptorId);
    auto columnId = GetSharedDescriptorGuard()->FindColumnId(fieldId, column.GetIndex());
    R__ASSERT(columnId != kInvalidDescriptorId);
-   fActiveColumns.Insert(columnId);
+   fActivePhysicalColumns.Insert(columnId);
    return ColumnHandle_t{columnId, &column};
 }
 
 void ROOT::Experimental::Detail::RPageSource::DropColumn(ColumnHandle_t columnHandle)
 {
-   fActiveColumns.Erase(columnHandle.fPhysicalId);
+   fActivePhysicalColumns.Erase(columnHandle.fPhysicalId);
 }
 
 ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSource::GetNEntries()
