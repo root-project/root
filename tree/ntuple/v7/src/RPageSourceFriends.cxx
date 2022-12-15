@@ -96,7 +96,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
             DescriptorId_t virtualColumnId = fIdBiMap.GetVirtualId({i, originColumnId});
 
             auto pageRange = c.GetPageRange(originColumnId).Clone();
-            pageRange.fColumnId = virtualColumnId;
+            pageRange.fPhysicalColumnId = virtualColumnId;
 
             auto firstElementIndex = c.GetColumnRange(originColumnId).fFirstElementIndex;
             auto compressionSettings = c.GetColumnRange(originColumnId).fCompressionSettings;

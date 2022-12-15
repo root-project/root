@@ -259,7 +259,7 @@ public:
 
       RPageRange Clone() const {
          RPageRange clone;
-         clone.fColumnId = fColumnId;
+         clone.fPhysicalColumnId = fPhysicalColumnId;
          clone.fPageInfos = fPageInfos;
          return clone;
       }
@@ -267,11 +267,11 @@ public:
       /// Find the page in the RPageRange that contains the given element. The element must exist.
       RPageInfoExtended Find(RClusterSize::ValueType idxInCluster) const;
 
-      DescriptorId_t fColumnId = kInvalidDescriptorId;
+      DescriptorId_t fPhysicalColumnId = kInvalidDescriptorId;
       std::vector<RPageInfo> fPageInfos;
 
       bool operator==(const RPageRange &other) const {
-         return fColumnId == other.fColumnId && fPageInfos == other.fPageInfos;
+         return fPhysicalColumnId == other.fPhysicalColumnId && fPageInfos == other.fPageInfos;
       }
    };
 
@@ -307,17 +307,17 @@ public:
    DescriptorId_t GetId() const { return fClusterId; }
    NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
    ClusterSize_t GetNEntries() const { return fNEntries; }
-   const RColumnRange &GetColumnRange(DescriptorId_t columnId) const
+   const RColumnRange &GetColumnRange(DescriptorId_t physicalId) const
    {
       EnsureHasPageLocations();
-      return fColumnRanges.at(columnId);
+      return fColumnRanges.at(physicalId);
    }
-   const RPageRange &GetPageRange(DescriptorId_t columnId) const
+   const RPageRange &GetPageRange(DescriptorId_t physicalId) const
    {
       EnsureHasPageLocations();
-      return fPageRanges.at(columnId);
+      return fPageRanges.at(physicalId);
    }
-   bool ContainsColumn(DescriptorId_t columnId) const;
+   bool ContainsColumn(DescriptorId_t physicalId) const;
    std::unordered_set<DescriptorId_t> GetColumnIds() const;
    std::uint64_t GetBytesOnStorage() const;
    bool HasPageLocations() const { return fHasPageLocations; }
@@ -877,7 +877,7 @@ public:
    {
    }
 
-   RResult<void> CommitColumnRange(DescriptorId_t columnId, std::uint64_t firstElementIndex,
+   RResult<void> CommitColumnRange(DescriptorId_t physicalId, std::uint64_t firstElementIndex,
                                    std::uint32_t compressionSettings, const RClusterDescriptor::RPageRange &pageRange);
 
    /// Move out the full cluster descriptor including page locations
