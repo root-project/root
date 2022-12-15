@@ -260,7 +260,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitPageImpl(ColumnHandle_t columnH
 }
 
 ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(DescriptorId_t columnId,
+ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(DescriptorId_t physicalColumnId,
                                                                 const RPageStorage::RSealedPage &sealedPage)
 {
    auto offsetData = fPageId.fetch_add(1);
@@ -268,7 +268,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(DescriptorId_t c
 
    {
       RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
-      RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, columnId, offsetData);
+      RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, physicalColumnId, offsetData);
       fDaosContainer->WriteSingleAkey(sealedPage.fBuffer, sealedPage.fSize, daosKey.fOid, daosKey.fDkey, daosKey.fAkey);
    }
 
@@ -489,7 +489,7 @@ std::string ROOT::Experimental::Detail::RPageSourceDaos::GetObjectClass() const
    return fDaosContainer->GetDefaultObjectClass().ToString();
 }
 
-void ROOT::Experimental::Detail::RPageSourceDaos::LoadSealedPage(DescriptorId_t columnId,
+void ROOT::Experimental::Detail::RPageSourceDaos::LoadSealedPage(DescriptorId_t physicalColumnId,
                                                                  const RClusterIndex &clusterIndex,
                                                                  RSealedPage &sealedPage)
 {
@@ -499,14 +499,14 @@ void ROOT::Experimental::Detail::RPageSourceDaos::LoadSealedPage(DescriptorId_t 
    {
       auto descriptorGuard = GetSharedDescriptorGuard();
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
-      pageInfo = clusterDescriptor.GetPageRange(columnId).Find(clusterIndex.GetIndex());
+      pageInfo = clusterDescriptor.GetPageRange(physicalColumnId).Find(clusterIndex.GetIndex());
    }
 
    const auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
    sealedPage.fSize = bytesOnStorage;
    sealedPage.fNElements = pageInfo.fNElements;
    if (sealedPage.fBuffer) {
-      RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, columnId,
+      RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, physicalColumnId,
                                                              pageInfo.fLocator.GetPosition<std::uint64_t>());
       fDaosContainer->ReadSingleAkey(const_cast<void *>(sealedPage.fBuffer), bytesOnStorage, daosKey.fOid,
                                      daosKey.fDkey, daosKey.fAkey);
