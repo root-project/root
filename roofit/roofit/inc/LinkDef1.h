@@ -62,6 +62,14 @@
 #pragma link C++ class RooJohnson+;
 #pragma link C++ class RooLagrangianMorphFunc+;
 #pragma link C++ class RooLagrangianMorphFunc::Config+;
+#pragma read sourceClass="RooLagrangianMorphFunc" targetClass="RooLagrangianMorphFunc" version="[1]" \
+  source="std::vector<RooListProxy *> _nonInterfering;" target="_nonInterfering" \
+  code="{ for(RooListProxy const * list : onfile._nonInterfering) {  \
+             _nonInterfering.emplace_back();                         \
+             for(RooAbsArg * arg : *list) {                          \
+                _nonInterfering.back().emplace_back(arg->GetName()); \
+             }                                                       \
+          } }";
 #pragma link C++ class RooFunctorBinding+ ;
 #pragma link C++ class RooFunctor1DBinding+ ;
 #pragma link C++ class RooFunctorPdfBinding+ ;
