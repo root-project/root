@@ -136,10 +136,10 @@ private:
    /// The unzip thread routine which takes a loaded cluster and passes it to fPageSource.UnzipCluster (which
    /// might be a no-op if IMT is off). Marks the cluster as ready to be picked up by the main thread.
    void ExecUnzipClusters();
-   /// Returns the given cluster from the pool, which needs to contain at least the columns `columns`.
+   /// Returns the given cluster from the pool, which needs to contain at least the columns `physicalColumns`.
    /// Executed at the end of GetCluster when all missing data pieces have been sent to the load queue.
    /// Ideally, the function returns without blocking if the cluster is already in the pool.
-   RCluster *WaitFor(DescriptorId_t clusterId, const RCluster::ColumnSet_t &columns);
+   RCluster *WaitFor(DescriptorId_t clusterId, const RCluster::ColumnSet_t &physicalColumns);
 
 public:
    static constexpr unsigned int kDefaultClusterBunchSize = 1;
@@ -151,11 +151,11 @@ public:
 
    /// Returns the requested cluster either from the pool or, in case of a cache miss, lets the I/O thread load
    /// the cluster in the pool, blocks until done, and then returns it.  Triggers along the way the background loading
-   /// of the following fWindowPost number of clusters.  The returned cluster has at least all the pages of `columns`
-   /// and possibly pages of other columns, too.  If implicit multi-threading is turned on, the uncompressed pages
-   /// of the returned cluster are already pushed into the page pool associated with the page source upon return.
-   /// The cluster remains valid until the next call to GetCluster().
-   RCluster *GetCluster(DescriptorId_t clusterId, const RCluster::ColumnSet_t &columns);
+   /// of the following fWindowPost number of clusters.  The returned cluster has at least all the pages of
+   /// `physicalColumns` and possibly pages of other columns, too.  If implicit multi-threading is turned on, the
+   /// uncompressed pages of the returned cluster are already pushed into the page pool associated with the page source
+   /// upon return. The cluster remains valid until the next call to GetCluster().
+   RCluster *GetCluster(DescriptorId_t clusterId, const RCluster::ColumnSet_t &physicalColumns);
 
    /// Used by the unit tests to drain the queue of clusters to be preloaded
    void WaitForInFlightClusters();

@@ -188,7 +188,7 @@ public:
    struct RInfo {
       std::int64_t fBunchId = -1;
       std::int64_t fFlags = 0;
-      ColumnSet_t fColumnSet;
+      ColumnSet_t fPhysicalColumnSet;
    };
 
    static constexpr std::int64_t kFlagRequired = 0x01;
@@ -209,18 +209,19 @@ public:
 
    std::size_t GetSize() const { return fMap.size(); }
 
-   void Erase(DescriptorId_t clusterId, const ColumnSet_t &columns)
+   void Erase(DescriptorId_t clusterId, const ColumnSet_t &physicalColumns)
    {
       auto itr = fMap.find(clusterId);
       if (itr == fMap.end())
          return;
       ColumnSet_t d;
-      std::copy_if(itr->second.fColumnSet.begin(), itr->second.fColumnSet.end(), std::inserter(d, d.end()),
-         [&columns] (DescriptorId_t needle) { return columns.count(needle) == 0; });
+      std::copy_if(itr->second.fPhysicalColumnSet.begin(), itr->second.fPhysicalColumnSet.end(),
+                   std::inserter(d, d.end()),
+                   [&physicalColumns](DescriptorId_t needle) { return physicalColumns.count(needle) == 0; });
       if (d.empty()) {
          fMap.erase(itr);
       } else {
-         itr->second.fColumnSet = d;
+         itr->second.fPhysicalColumnSet = d;
       }
    }
 
@@ -231,8 +232,8 @@ public:
 } // anonymous namespace
 
 ROOT::Experimental::Detail::RCluster *
-ROOT::Experimental::Detail::RClusterPool::GetCluster(
-   DescriptorId_t clusterId, const RCluster::ColumnSet_t &columns)
+ROOT::Experimental::Detail::RClusterPool::GetCluster(DescriptorId_t clusterId,
+                                                     const RCluster::ColumnSet_t &physicalColumns)
 {
    std::set<DescriptorId_t> keep;
    RProvides provide;
@@ -250,7 +251,7 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
 
       // Determine following cluster ids and the column ids that we want to make available
       RProvides::RInfo provideInfo;
-      provideInfo.fColumnSet = columns;
+      provideInfo.fPhysicalColumnSet = physicalColumns;
       provideInfo.fBunchId = fBunchId;
       provideInfo.fFlags = RProvides::kFlagRequired;
       for (DescriptorId_t i = 0, next = clusterId; i < 2 * fClusterBunchSize; ++i) {
@@ -346,16 +347,16 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
       // case but it's not ensured by the code
       if (!skipPrefetch) {
          for (const auto &kv : provide) {
-            R__ASSERT(!kv.second.fColumnSet.empty());
+            R__ASSERT(!kv.second.fPhysicalColumnSet.empty());
 
             RReadItem readItem;
             readItem.fClusterKey.fClusterId = kv.first;
             readItem.fBunchId = kv.second.fBunchId;
-            readItem.fClusterKey.fPhysicalColumnSet = kv.second.fColumnSet;
+            readItem.fClusterKey.fPhysicalColumnSet = kv.second.fPhysicalColumnSet;
 
             RInFlightCluster inFlightCluster;
             inFlightCluster.fClusterKey.fClusterId = kv.first;
-            inFlightCluster.fClusterKey.fPhysicalColumnSet = kv.second.fColumnSet;
+            inFlightCluster.fClusterKey.fPhysicalColumnSet = kv.second.fPhysicalColumnSet;
             inFlightCluster.fFuture = readItem.fPromise.get_future();
             fInFlightClusters.emplace_back(std::move(inFlightCluster));
 
@@ -366,20 +367,19 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(
       }
    } // work queue lock guard
 
-   return WaitFor(clusterId, columns);
+   return WaitFor(clusterId, physicalColumns);
 }
 
-
 ROOT::Experimental::Detail::RCluster *
-ROOT::Experimental::Detail::RClusterPool::WaitFor(
-   DescriptorId_t clusterId, const RCluster::ColumnSet_t &columns)
+ROOT::Experimental::Detail::RClusterPool::WaitFor(DescriptorId_t clusterId,
+                                                  const RCluster::ColumnSet_t &physicalColumns)
 {
    while (true) {
       // Fast exit: the cluster happens to be already present in the cache pool
       auto result = FindInPool(clusterId);
       if (result) {
          bool hasMissingColumn = false;
-         for (auto cid : columns) {
+         for (auto cid : physicalColumns) {
             if (result->ContainsColumn(cid))
                continue;
 
