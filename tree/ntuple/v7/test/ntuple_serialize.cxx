@@ -297,7 +297,7 @@ TEST(RNTuple, SerializeLocator)
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
    EXPECT_EQ(12u, RNTupleSerializer::DeserializeLocator(buffer, 12, locator).Unwrap());
-   EXPECT_EQ(1u, locator.Get<std::uint64_t>());
+   EXPECT_EQ(1u, locator.GetPosition<std::uint64_t>());
    EXPECT_EQ(2u, locator.fBytesOnStorage);
 
    locator.fPosition.emplace<std::string>("X");
@@ -316,13 +316,13 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(5u, RNTupleSerializer::DeserializeLocator(buffer, 5, locator).Unwrap());
    EXPECT_EQ(0u, locator.fBytesOnStorage);
    EXPECT_EQ(RNTupleLocator::kTypeURI, locator.fType);
-   EXPECT_EQ("X", locator.Get<std::string>());
+   EXPECT_EQ("X", locator.GetPosition<std::string>());
 
    locator.fPosition.emplace<std::string>("abcdefghijkl");
    EXPECT_EQ(16u, RNTupleSerializer::SerializeLocator(locator, buffer));
    locator.fPosition = 0U;
    EXPECT_EQ(16u, RNTupleSerializer::DeserializeLocator(buffer, 16, locator).Unwrap());
-   EXPECT_EQ("abcdefghijkl", locator.Get<std::string>());
+   EXPECT_EQ("abcdefghijkl", locator.GetPosition<std::string>());
 
    locator.fType = RNTupleLocator::kTypeDAOS;
    locator.fPosition.emplace<RNTupleLocatorObject64>(RNTupleLocatorObject64{1337U});
@@ -334,7 +334,7 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(locator.fType, RNTupleLocator::kTypeDAOS);
    EXPECT_EQ(locator.fBytesOnStorage, 420420U);
    EXPECT_EQ(locator.fReserved, 0x5a);
-   EXPECT_EQ(1337U, locator.Get<RNTupleLocatorObject64>().fLocation);
+   EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().fLocation);
 
    std::int32_t *head = reinterpret_cast<std::int32_t *>(buffer);
    *head = (0x3 << 24) | *head;
@@ -426,8 +426,8 @@ TEST(RNTuple, SerializeClusterGroup)
    EXPECT_EQ(24u, RNTupleSerializer::DeserializeClusterGroup(buffer, 24, reco).Unwrap());
    EXPECT_EQ(group.fNClusters, reco.fNClusters);
    EXPECT_EQ(group.fPageListEnvelopeLink.fUnzippedSize, reco.fPageListEnvelopeLink.fUnzippedSize);
-   EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.Get<std::uint64_t>(),
-             reco.fPageListEnvelopeLink.fLocator.Get<std::uint64_t>());
+   EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.GetPosition<std::uint64_t>(),
+             reco.fPageListEnvelopeLink.fLocator.GetPosition<std::uint64_t>());
    EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.fBytesOnStorage, reco.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
 
    // Test frame evolution
@@ -441,8 +441,8 @@ TEST(RNTuple, SerializeClusterGroup)
    EXPECT_EQ(26u, RNTupleSerializer::DeserializeClusterGroup(buffer, 26, reco).Unwrap());
    EXPECT_EQ(group.fNClusters, reco.fNClusters);
    EXPECT_EQ(group.fPageListEnvelopeLink.fUnzippedSize, reco.fPageListEnvelopeLink.fUnzippedSize);
-   EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.Get<std::uint64_t>(),
-             reco.fPageListEnvelopeLink.fLocator.Get<std::uint64_t>());
+   EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.GetPosition<std::uint64_t>(),
+             reco.fPageListEnvelopeLink.fLocator.GetPosition<std::uint64_t>());
    EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.fBytesOnStorage, reco.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
    std::uint16_t remainder;
    RNTupleSerializer::DeserializeUInt16(buffer + 24, remainder);
@@ -585,7 +585,7 @@ TEST(RNTuple, SerializeFooter)
    const auto &clusterGroupDesc = desc.GetClusterGroupDescriptor(0);
    EXPECT_EQ(1u, clusterGroupDesc.GetNClusters());
    EXPECT_EQ(137u, clusterGroupDesc.GetPageListLength());
-   EXPECT_EQ(1337u, clusterGroupDesc.GetPageListLocator().Get<std::uint64_t>());
+   EXPECT_EQ(1337u, clusterGroupDesc.GetPageListLocator().GetPosition<std::uint64_t>());
    EXPECT_EQ(42u, clusterGroupDesc.GetPageListLocator().fBytesOnStorage);
 
    std::vector<RClusterDescriptorBuilder> clusters = RClusterGroupDescriptorBuilder::GetClusterSummaries(desc, 0);
@@ -608,5 +608,5 @@ TEST(RNTuple, SerializeFooter)
    pageRange = clusterDesc.GetPageRange(0).Clone();
    EXPECT_EQ(1u, pageRange.fPageInfos.size());
    EXPECT_EQ(100u, pageRange.fPageInfos[0].fNElements);
-   EXPECT_EQ(7000u, pageRange.fPageInfos[0].fLocator.Get<std::uint64_t>());
+   EXPECT_EQ(7000u, pageRange.fPageInfos[0].fLocator.GetPosition<std::uint64_t>());
 }

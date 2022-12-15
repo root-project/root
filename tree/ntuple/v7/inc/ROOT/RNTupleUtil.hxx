@@ -143,7 +143,7 @@ struct RNTupleLocator {
       return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage;
    }
    template <typename T>
-   const T &Get() const
+   const T &GetPosition() const
    {
       return std::get<T>(fPosition);
    }
