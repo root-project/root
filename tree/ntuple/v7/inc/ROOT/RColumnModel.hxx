@@ -75,6 +75,7 @@ public:
    bool operator ==(const RColumnModel &other) const {
       return (fType == other.fType) && (fIsSorted == other.fIsSorted);
    }
+   bool operator!=(const RColumnModel &other) const { return !(other == *this); }
 };
 
 } // namespace Experimental

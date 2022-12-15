@@ -376,13 +376,13 @@ ROOT::Experimental::EColumnType ROOT::Experimental::Detail::RFieldBase::EnsureCo
    const std::vector<EColumnType> &requestedTypes, unsigned int columnIndex, const RNTupleDescriptor &desc)
 {
    R__ASSERT(!requestedTypes.empty());
-   auto columnId = desc.FindColumnId(fOnDiskId, columnIndex);
-   if (columnId == kInvalidDescriptorId) {
+   auto logicalId = desc.FindLogicalColumnId(fOnDiskId, columnIndex);
+   if (logicalId == kInvalidDescriptorId) {
       throw RException(R__FAIL("Column missing: column #" + std::to_string(columnIndex) +
                                " for field " + fName));
    }
 
-   const auto &columnDesc = desc.GetColumnDescriptor(columnId);
+   const auto &columnDesc = desc.GetColumnDescriptor(logicalId);
    for (auto type : requestedTypes) {
       if (type == columnDesc.GetModel().GetType())
          return type;
