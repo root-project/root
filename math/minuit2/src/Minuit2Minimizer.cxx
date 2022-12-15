@@ -417,8 +417,9 @@ void Minuit2Minimizer::SetFunction(const ROOT::Math::IMultiGradFunction &func)
 
 void Minuit2Minimizer::SetHessianFunction(std::function<bool(const std::vector<double> &, double *)> hfunc)
 {
+   // for Fumili not supported for the time being
+   if (fUseFumili) return;
    auto fcn = static_cast<ROOT::Minuit2::FCNGradAdapter<ROOT::Math::IMultiGradFunction> *>(fMinuitFCN);
-   assert(fcn);
    if (!fcn) return;
    fcn->SetHessianFunction(hfunc);
 }
@@ -639,6 +640,7 @@ bool Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum &min)
    bool validMinimum = min.IsValid();
    if (validMinimum) {
       // print a warning message in case something is not ok
+      // this for example is case when Covar was made posdef and fStatus=3
       if (fStatus != 0 && debugLevel > 0)
          print.Warn(txt);
    } else {

@@ -47,24 +47,12 @@ public:
    std::vector<double> Gradient(const std::vector<double> &v) const override
    {
       fFunc.Gradient(&v[0], &fGrad[0]);
-
-      MnPrint("FCNGradAdapter").Debug([&](std::ostream &os) {
-         os << "gradient in FCNAdapter = {";
-         for (unsigned int i = 0; i < fGrad.size(); ++i)
-            os << fGrad[i] << (i == fGrad.size() - 1 ? '}' : '\t');
-      });
       return fGrad;
    }
    std::vector<double> GradientWithPrevResult(const std::vector<double> &v, double *previous_grad, double *previous_g2,
                                               double *previous_gstep) const override
    {
       fFunc.GradientWithPrevResult(&v[0], &fGrad[0], previous_grad, previous_g2, previous_gstep);
-
-      MnPrint("FCNGradAdapter").Debug([&](std::ostream &os) {
-         os << "gradient in FCNAdapter = {";
-         for (unsigned int i = 0; i < fGrad.size(); ++i)
-            os << fGrad[i] << (i == fGrad.size() - 1 ? '}' : '\t');
-      });
       return fGrad;
    }
    // forward interface
@@ -107,8 +95,9 @@ public:
          if (fHessian.empty() ) fHessian.resize(n * n);
          bool ret = fHessianFunc(x,fHessian.data());
          if (!ret) fHessian.clear();
-      } else
+      } else {
          fHessian.clear();
+      }
 
       return fHessian;
    }

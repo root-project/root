@@ -349,16 +349,15 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
 
    if (fcn.NumOfCalls() >= maxfcn) {
       print.Warn("Call limit exceeded");
-
       return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnReachedCallLimit);
    }
 
    if (edm > edmval) {
-      if (edm < std::fabs(prec.Eps2() * result.back().Fval())) {
-         print.Warn("Machine accuracy limits further improvement");
-
+      if (edm < 10 * edmval) {
+         print.Info("Edm is close to limit - return current minimum");
          return FunctionMinimum(seed, result, fcn.Up());
-      } else if (edm < 10 * edmval) {
+      } else if (edm < std::fabs(prec.Eps2() * result.back().Fval())) {
+         print.Warn("Edm is limited by Machine accuracy - return current minimum");
          return FunctionMinimum(seed, result, fcn.Up());
       } else {
          print.Warn("Iterations finish without convergence; Edm", edm, "Requested", edmval);

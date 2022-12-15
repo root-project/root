@@ -51,20 +51,18 @@ public:
    typedef sym Type;
 
    LASymMatrix(unsigned int n)
-      : fSize(n * (n + 1) / 2), fNRow(n),
-        fData((double *)StackAllocatorHolder::Get().Allocate(sizeof(double) * n * (n + 1) / 2))
+      : fSize(n * (n + 1) / 2),
+        fNRow(n),
+        fData( (n> 0) ? (double *)StackAllocatorHolder::Get().Allocate(sizeof(double) * n * (n + 1) / 2)
+                      : nullptr )
    {
       //     assert(fSize>0);
-      std::memset(fData, 0, fSize * sizeof(double));
-      //     std::cout<<"LASymMatrix(unsigned int n), n= "<<n<<std::endl;
+      if (fData)
+         std::memset(fData, 0, fSize * sizeof(double));
    }
 
    ~LASymMatrix()
    {
-      //     std::cout<<"~LASymMatrix()"<<std::endl;
-      //     if(fData) std::cout<<"deleting "<<fSize<<std::endl;
-      //     else std::cout<<"no delete"<<std::endl;
-      //     if(fData) delete [] fData;
       if (fData)
          StackAllocatorHolder::Get().Deallocate(fData);
    }
@@ -73,16 +71,17 @@ public:
       : fSize(v.size()), fNRow(v.Nrow()),
         fData((double *)StackAllocatorHolder::Get().Allocate(sizeof(double) * v.size()))
    {
-      //     std::cout<<"LASymMatrix(const LASymMatrix& v)"<<std::endl;
       std::memcpy(fData, v.Data(), fSize * sizeof(double));
    }
 
    LASymMatrix &operator=(const LASymMatrix &v)
    {
-      //     std::cout<<"LASymMatrix& operator=(const LASymMatrix& v)"<<std::endl;
-      //     std::cout<<"fSize= "<<fSize<<std::endl;
-      //     std::cout<<"v.size()= "<<v.size()<<std::endl;
-      assert(fSize == v.size());
+      if (fSize < v.size()) {
+         if (fData)
+          StackAllocatorHolder::Get().Deallocate(fData);
+         fSize = v.size();
+         fData = (double *)StackAllocatorHolder::Get().Allocate(sizeof(double) * fSize);
+      }
       std::memcpy(fData, v.Data(), fSize * sizeof(double));
       return *this;
    }

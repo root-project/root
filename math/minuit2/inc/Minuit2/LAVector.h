@@ -37,10 +37,14 @@ private:
 public:
    typedef vec Type;
 
-   LAVector(unsigned int n) : fSize(n), fData((double *)StackAllocatorHolder::Get().Allocate(sizeof(double) * n))
+   LAVector(unsigned int n) :
+   fSize(n),
+   fData( (n>0) ? (double *)StackAllocatorHolder::Get().Allocate(sizeof(double) * n)
+                : nullptr)
    {
       //     assert(fSize>0);
-      std::memset(fData, 0, size() * sizeof(double));
+      if (fData)
+         std::memset(fData, 0, size() * sizeof(double));
       //     std::cout<<"LAVector(unsigned int n), n= "<<n<<std::endl;
    }
 
@@ -63,10 +67,12 @@ public:
 
    LAVector &operator=(const LAVector &v)
    {
-      //     std::cout<<"LAVector& operator=(const LAVector& v)"<<std::endl;
-      //     std::cout<<"fSize= "<<fSize<<std::endl;
-      //     std::cout<<"v.size()= "<<v.size()<<std::endl;
-      assert(fSize == v.size());
+      // implement proper copy constructor in case size is different
+      if (v.size() > fSize) {
+         if (fData) StackAllocatorHolder::Get().Deallocate(fData);
+         fSize = v.size();
+         fData = (double *)StackAllocatorHolder::Get().Allocate(sizeof(double) * fSize);
+      }
       std::memcpy(fData, v.Data(), fSize * sizeof(double));
       return *this;
    }

@@ -93,7 +93,7 @@ public:
    void SetFunction(const ROOT::Math::IMultiGradFunction &func) override;
 
    /// set the function implementing Hessian computation
-   void SetHessianFunction(std::function<bool(const std::vector<double> &, double *)> hfunc);
+   void SetHessianFunction(std::function<bool(const std::vector<double> &, double *)> hfunc) override;
 
    /// set free variable
    bool SetVariable(unsigned int ivar, const std::string &name, double val, double step) override;
