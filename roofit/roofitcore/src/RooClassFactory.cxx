@@ -497,7 +497,7 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
   }
 
   hf << "  " << className << "(const " << className << "& other, const char* name=0) ;" << endl
-     << "  virtual TObject* clone(const char* newname) const { return new " << className << "(*this,newname); }" << endl
+     << "  virtual TObject* clone(const char* newname) const override { return new " << className << "(*this,newname); }" << endl
      << "  inline virtual ~" << className << "() { }" << endl
      << endl ;
 
@@ -527,7 +527,7 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
   }
 
   hf << "  " << endl
-     << "  double evaluate() const ;" << endl
+     << "  double evaluate() const override;" << endl
      << "" << endl
      << "private:" << endl
      << "" << endl
