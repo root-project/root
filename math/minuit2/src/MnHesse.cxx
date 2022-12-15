@@ -220,6 +220,7 @@ MinimumState MnHesse::ComputeNumerical(const MnFcn &mfcn, const MinimumState &st
       gst = tmp.Gstep();
       dirin = tmp.Gstep();
       g2 = tmp.G2();
+      print.Warn("Analytical calculator ",grd," numerical ",tmp.Grad()," g2 ",g2);
    }
 
    MnAlgebraicVector x = st.Parameters().Vec();
