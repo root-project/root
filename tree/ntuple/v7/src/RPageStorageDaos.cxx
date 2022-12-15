@@ -256,7 +256,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitPageImpl(ColumnHandle_t columnH
    }
 
    fCounters->fSzZip.Add(page.GetNBytes());
-   return CommitSealedPageImpl(columnHandle.fId, sealedPage);
+   return CommitSealedPageImpl(columnHandle.fPhysicalId, sealedPage);
 }
 
 ROOT::Experimental::RNTupleLocator
@@ -399,7 +399,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::ReservePage(ColumnHandle_t columnHand
    if (nElements == 0)
       throw RException(R__FAIL("invalid call: request empty page"));
    auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
-   return fPageAllocator->NewPage(columnHandle.fId, elementSize, nElements);
+   return fPageAllocator->NewPage(columnHandle.fPhysicalId, elementSize, nElements);
 }
 
 void ROOT::Experimental::Detail::RPageSinkDaos::ReleasePage(RPage &page)
@@ -517,7 +517,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(ColumnHandl
                                                                      const RClusterInfo &clusterInfo,
                                                                      ClusterSize_t::ValueType idxInCluster)
 {
-   const auto columnId = columnHandle.fId;
+   const auto columnId = columnHandle.fPhysicalId;
    const auto clusterId = clusterInfo.fClusterId;
    const auto &pageInfo = clusterInfo.fPageInfo;
 
@@ -573,7 +573,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(ColumnHandl
 ROOT::Experimental::Detail::RPage
 ROOT::Experimental::Detail::RPageSourceDaos::PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
 {
-   const auto columnId = columnHandle.fId;
+   const auto columnId = columnHandle.fPhysicalId;
    auto cachedPage = fPagePool->GetPage(columnId, globalIndex);
    if (!cachedPage.IsNull())
       return cachedPage;
@@ -600,7 +600,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePage(ColumnHandle_t columnH
 {
    const auto clusterId = clusterIndex.GetClusterId();
    const auto idxInCluster = clusterIndex.GetIndex();
-   const auto columnId = columnHandle.fId;
+   const auto columnId = columnHandle.fPhysicalId;
    auto cachedPage = fPagePool->GetPage(columnId, clusterIndex);
    if (!cachedPage.IsNull())
       return cachedPage;
