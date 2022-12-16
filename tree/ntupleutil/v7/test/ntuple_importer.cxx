@@ -375,6 +375,9 @@ TEST(RNTupleImporter, CustomClass)
       object->a = 1.0;
       object->v1.emplace_back(2.0);
       object->v1.emplace_back(3.0);
+      object->nnlo.push_back(std::vector<float>{42.0, 43.0});
+      object->nnlo.push_back(std::vector<float>());
+      object->nnlo.push_back(std::vector<float>{137.0});
       object->s = "ROOT";
       tree->Fill();
       tree->Write();
@@ -394,4 +397,11 @@ TEST(RNTupleImporter, CustomClass)
    EXPECT_FLOAT_EQ(2.0, object->v1[0]);
    EXPECT_FLOAT_EQ(3.0, object->v1[1]);
    EXPECT_EQ(std::string("ROOT"), object->s);
+   EXPECT_EQ(3U, object->nnlo.size());
+   EXPECT_EQ(2U, object->nnlo[0].size());
+   EXPECT_FLOAT_EQ(42.0, object->nnlo[0][0]);
+   EXPECT_FLOAT_EQ(43.0, object->nnlo[0][1]);
+   EXPECT_EQ(0U, object->nnlo[1].size());
+   EXPECT_EQ(1U, object->nnlo[2].size());
+   EXPECT_FLOAT_EQ(137.0, object->nnlo[2][0]);
 }
