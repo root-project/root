@@ -81,7 +81,7 @@ TMacro::TMacro(const char *name, const char *title): TNamed(name,title)
    strlcpy(s,name,nch+1);
    char *slash = (char*)strrchr(s,'/');
    if (!slash) slash = s;
-   else ++slash;
+          else ++slash;
    char *dot   = (char*)strchr(slash,'.');
    if (dot) {
       *dot = 0;
@@ -99,10 +99,9 @@ TMacro::TMacro(const TMacro &macro): TNamed(macro)
 {
    fLines = new TList();
    TIter next(macro.GetListOfLines());
-   TObjString *obj;
-   while ((obj = (TObjString*) next())) {
+   while (auto obj = next())
       fLines->Add(new TObjString(obj->GetName()));
-   }
+
    fParams = macro.fParams;
 }
 
@@ -126,10 +125,8 @@ TMacro& TMacro::operator=(const TMacro &macro)
       delete fLines;
       fLines = new TList();
       TIter next(macro.GetListOfLines());
-      TObjString *obj;
-      while ((obj = (TObjString*) next())) {
+      while (auto obj = next())
          fLines->Add(new TObjString(obj->GetName()));
-      }
       fParams = macro.fParams;
    }
    return *this;
@@ -206,12 +203,11 @@ TMD5 *TMacro::Checksum()
    Long64_t left = bufSize;
 
    TIter nxl(fLines);
-   TObjString *l;
-   while ((l = (TObjString *) nxl())) {
+   while (auto l = (TObjString *) nxl()) {
       TString line = l->GetString();
       line += '\n';
       Int_t len = line.Length();
-      char *p = (char *) line.Data();
+      const char *p = line.Data();
       if (left > len) {
          strlcpy((char *)&buf[pos], p, len+1);
          pos += len;
@@ -250,10 +246,9 @@ Bool_t TMacro::Load() const
    std::stringstream ss;
 
    TIter next(fLines);
-   TObjString *obj;
-   while ((obj = (TObjString*) next())) {
+   while (auto obj = (TObjString*) next())
       ss << obj->GetName() << std::endl;
-   }
+
    return gInterpreter->LoadText(ss.str().c_str());
 }
 
@@ -303,9 +298,9 @@ TObjString *TMacro::GetLineWith(const char *text) const
 {
    if (!fLines) return nullptr;
    TIter next(fLines);
-   TObjString *obj;
-   while ((obj = (TObjString*) next())) {
-      if (strstr(obj->GetName(),text)) return obj;
+   while (auto obj = (TObjString*) next()) {
+      if (strstr(obj->GetName(),text))
+         return obj;
    }
    return nullptr;
 }
@@ -323,12 +318,9 @@ void TMacro::Paint(Option_t *option)
 
 void TMacro::Print(Option_t * /*option*/) const
 {
-   if (!fLines) return;
    TIter next(fLines);
-   TObjString *obj;
-   while ((obj = (TObjString*) next())) {
-      printf("%s\n",obj->GetName());
-   }
+   while (auto obj = next())
+      printf("%s\n", obj->GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -363,16 +355,13 @@ void TMacro::SaveSource(const char *filename)
 {
    std::ofstream out;
    out.open(filename, std::ios::out);
-   if (!out.good ()) {
-      Printf("SaveSource cannot open file: %s",filename);
+   if (!out.good()) {
+      Error("SaveSource", "cannot open file: %s",filename);
       return;
    }
-   if (!fLines) {out.close(); return;}
    TIter next(fLines);
-   TObjString *obj;
-   while ((obj = (TObjString*) next())) {
-      out<<obj->GetName()<<std::endl;
-   }
+   while (auto obj = next())
+      out << obj->GetName() << std::endl;
    out.close();
 }
 
@@ -381,12 +370,9 @@ void TMacro::SaveSource(const char *filename)
 
 void TMacro::SaveSource(FILE *fp)
 {
-   if (!fLines) {fclose(fp); return;}
    TIter next(fLines);
-   TObjString *obj;
-   while ((obj = (TObjString*) next())) {
+   while (auto obj = next())
       fprintf(fp, "%s\n", obj->GetName());
-   }
    fclose(fp);
 }
 
