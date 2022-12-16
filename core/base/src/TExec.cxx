@@ -173,12 +173,8 @@ void TExec::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    else
       out<<"   TExec *";
 
-   TString cmethod = GetTitle();
-   cmethod.ReplaceAll("\"", "\\\"");
-   cmethod.ReplaceAll("\\n", "\\\\n");
-   cmethod.ReplaceAll("\\t", "\\\\t");
-
-   out<<"exec = new TExec("<<quote<<GetName()<<quote<<", "<<quote<<cmethod<<quote<<");"<<std::endl;
+   out<<"exec = new TExec("<<quote<<GetName()<<quote<<", "
+      <<quote<<TString(GetTitle()).ReplaceSpecialCppChars()<<quote<<");"<<std::endl;
 
    out<<"   exec->Draw();"<<std::endl;
 }

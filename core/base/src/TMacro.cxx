@@ -393,10 +393,7 @@ void TMacro::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TIter next(fLines);
    while (auto obj = next()) {
       TString s = obj->GetName();
-      s.ReplaceAll("\"","\\\"");
-      s.ReplaceAll("\\n", "\\\\n");
-      s.ReplaceAll("\\t", "\\\\t");
-      out<<"   macro->AddLine("<<quote<<s.Data()<<quote<<");"<<std::endl;
+      out<<"   macro->AddLine("<<quote<<s.ReplaceSpecialCppChars()<<quote<<");"<<std::endl;
    }
    out<<"   macro->Draw("<<quote<<option<<quote<<");"<<std::endl;
 }
