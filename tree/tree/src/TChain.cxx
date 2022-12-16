@@ -2398,18 +2398,7 @@ void TChain::SavePrimitive(std::ostream &out, Option_t *option)
    }
    out << std::endl;
 
-   if (GetMarkerColor() != 1) {
-      if (TColor::SaveColor(out, GetMarkerColor()))
-         out << "   " << chName.Data() << "->SetMarkerColor(ci);" << std::endl;
-      else
-         out << "   " << chName.Data() << "->SetMarkerColor(" << GetMarkerColor() << ");" << std::endl;
-   }
-   if (GetMarkerStyle() != 1) {
-      out << "   " << chName.Data() << "->SetMarkerStyle(" << GetMarkerStyle() << ");" << std::endl;
-   }
-   if (GetMarkerSize() != 1) {
-      out << "   " << chName.Data() << "->SetMarkerSize(" << GetMarkerSize() << ");" << std::endl;
-   }
+   SaveMarkerAttributes(out, chName.Data(), 1, 1, 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
