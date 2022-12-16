@@ -114,17 +114,15 @@ void TAttAxis::SaveAttributes(std::ostream &out, const char *name, const char *s
       out<<"   "<<name<<subname<<"->SetNdivisions("<<fNdivisions<<");"<<std::endl;
    }
    if (fAxisColor != 1) {
-      if (fAxisColor > 228) {
-         TColor::SaveColor(out, fAxisColor);
+      if (TColor::SaveColor(out, fAxisColor))
          out<<"   "<<name<<subname<<"->SetAxisColor(ci);" << std::endl;
-      } else
+      else
          out<<"   "<<name<<subname<<"->SetAxisColor("<<fAxisColor<<");"<<std::endl;
    }
    if (fLabelColor != 1) {
-      if (fLabelColor > 228) {
-         TColor::SaveColor(out, fLabelColor);
+      if (TColor::SaveColor(out, fLabelColor))
          out<<"   "<<name<<subname<<"->SetLabelColor(ci);" << std::endl;
-      } else
+      else
          out<<"   "<<name<<subname<<"->SetLabelColor("<<fLabelColor<<");"<<std::endl;
    }
    if (fLabelFont != 62) {
@@ -146,10 +144,9 @@ void TAttAxis::SaveAttributes(std::ostream &out, const char *name, const char *s
       out<<"   "<<name<<subname<<"->SetTitleOffset("<<fTitleOffset<<");"<<std::endl;
    }
    if (fTitleColor != 1) {
-      if (fTitleColor > 228) {
-         TColor::SaveColor(out, fTitleColor);
+      if (TColor::SaveColor(out, fTitleColor))
          out<<"   "<<name<<subname<<"->SetTitleColor(ci);" << std::endl;
-      } else
+      else
          out<<"   "<<name<<subname<<"->SetTitleColor("<<fTitleColor<<");"<<std::endl;
    }
    if (fTitleFont != 62) {
