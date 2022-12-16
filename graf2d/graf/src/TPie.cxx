@@ -12,19 +12,20 @@
 #include "TPie.h"
 #include "TPieSlice.h"
 
+#include "TROOT.h"
+#include "TVirtualPad.h"
+#include "TVirtualX.h"
+#include "TArc.h"
+#include "TLegend.h"
+#include "TMath.h"
+#include "TStyle.h"
+#include "TLatex.h"
+#include "TPaveText.h"
+#include "TH1.h"
+#include "TColor.h"
+#include "TLine.h"
+
 #include <iostream>
-#include <TROOT.h>
-#include <TVirtualPad.h>
-#include <TVirtualX.h>
-#include <TArc.h>
-#include <TLegend.h>
-#include <TMath.h>
-#include <TStyle.h>
-#include <TLatex.h>
-#include <TPaveText.h>
-#include <TH1.h>
-#include <TColor.h>
-#include <TLine.h>
 
 ClassImp(TPie);
 
@@ -1118,52 +1119,29 @@ void TPie::Paint(Option_t *option)
 void TPie::SavePrimitive(std::ostream &out, Option_t *option)
 {
    out << "   " << std::endl;
-   if (gROOT->ClassSaved(TPie::Class())) {
+   if (gROOT->ClassSaved(TPie::Class()))
       out << "   ";
-   } else {
+   else
       out << "   TPie *";
-   }
-   out << GetName() << " = new TPie(\"" << GetName() << "\", \"" << GetTitle()
-       << "\", " << fNvals << ");" << std::endl;
-   out << "   " << GetName() << "->SetCircle(" << fX << ", " << fY << ", "
-       << fRadius << ");" << std::endl;
-   out << "   " << GetName() << "->SetValueFormat(\"" << GetValueFormat()
-       << "\");" << std::endl;
-   out << "   " << GetName() << "->SetLabelFormat(\"" << GetLabelFormat()
-       << "\");" << std::endl;
-   out << "   " << GetName() << "->SetPercentFormat(\"" << GetPercentFormat()
-       << "\");" << std::endl;
-   out << "   " << GetName() << "->SetLabelsOffset(" << GetLabelsOffset()
-       << ");" << std::endl;
-   out << "   " << GetName() << "->SetAngularOffset(" << GetAngularOffset()
-       << ");" << std::endl;
-   out << "   " << GetName() << "->SetTextAngle(" << GetTextAngle() << ");" << std::endl;
-   out << "   " << GetName() << "->SetTextColor(" << GetTextColor() << ");" << std::endl;
-   out << "   " << GetName() << "->SetTextFont(" << GetTextFont() << ");" << std::endl;
-   out << "   " << GetName() << "->SetTextSize(" << GetTextSize() << ");" << std::endl;
 
+   out << "pie = new TPie(\"" << GetName() << "\", \"" << GetTitle()
+       << "\", " << fNvals << ");" << std::endl;
+   out << "   pie->SetCircle(" << fX << ", " << fY << ", " << fRadius << ");" << std::endl;
+   out << "   pie->SetValueFormat(\"" << GetValueFormat() << "\");" << std::endl;
+   out << "   pie->SetLabelFormat(\"" << GetLabelFormat() << "\");" << std::endl;
+   out << "   pie->SetPercentFormat(\"" << GetPercentFormat()   << "\");" << std::endl;
+   out << "   pie->SetLabelsOffset(" << GetLabelsOffset() << ");" << std::endl;
+   out << "   pie->SetAngularOffset(" << GetAngularOffset() << ");" << std::endl;
+
+   SaveTextAttributes(out,"pie",11,0,1,62,0.05);
 
    // Save the values for the slices
-   for (Int_t i=0;i<fNvals;++i) {
-      out << "   " << GetName() << "->GetSlice(" << i << ")->SetTitle(\""
-          << fPieSlices[i]->GetTitle() << "\");" << std::endl;
-      out << "   " << GetName() << "->GetSlice(" << i << ")->SetValue("
-          << fPieSlices[i]->GetValue() << ");" << std::endl;
-      out << "   " << GetName() << "->GetSlice(" << i << ")->SetRadiusOffset("
-          << fPieSlices[i]->GetRadiusOffset() << ");" << std::endl;
-      out << "   " << GetName() << "->GetSlice(" << i << ")->SetFillColor("
-          << fPieSlices[i]->GetFillColor() << ");" << std::endl;
-      out << "   " << GetName() << "->GetSlice(" << i << ")->SetFillStyle("
-          << fPieSlices[i]->GetFillStyle() << ");" << std::endl;
-      out << "   " << GetName() << "->GetSlice(" << i << ")->SetLineColor("
-          << fPieSlices[i]->GetLineColor() << ");" << std::endl;
-      out << "   " << GetName() << "->GetSlice(" << i << ")->SetLineStyle("
-          << fPieSlices[i]->GetLineStyle() << ");" << std::endl;
-      out << "   " << GetName() << "->GetSlice(" << i << ")->SetLineWidth("
-          << fPieSlices[i]->GetLineWidth() << ");" << std::endl;
+   for (Int_t i = 0; i < fNvals; ++i) {
+      auto slice_name = TString::Format("pie->GetSlice(%d)", i);
+      fPieSlices[i]->SavePrimitive(out, slice_name.Data());
    }
 
-   out << "   " << GetName() << "->Draw(\"" << option << "\");" << std::endl;
+   out << "   pie->Draw(\"" << option << "\");" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
