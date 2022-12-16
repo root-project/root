@@ -855,20 +855,18 @@ void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 
    if (GetFillColor() != 0) {
-      if (GetFillColor() > 228) {
-         TColor::SaveColor(out, GetFillColor());
+      if (TColor::SaveColor(out, GetFillColor()))
          out<<"   "<<GetName()<<"->SetFillColor(ci);" << std::endl;
-      } else
+      else
          out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<std::endl;
    }
    if (GetFillStyle() != 1001) {
       out<<"   "<<GetName()<<"->SetFillStyle("<<GetFillStyle()<<");"<<std::endl;
    }
    if (GetMarkerColor() != 1) {
-      if (GetMarkerColor() > 228) {
-         TColor::SaveColor(out, GetMarkerColor());
+      if (TColor::SaveColor(out, GetMarkerColor()))
          out<<"   "<<GetName()<<"->SetMarkerColor(ci);" << std::endl;
-      } else
+      else
          out<<"   "<<GetName()<<"->SetMarkerColor("<<GetMarkerColor()<<");"<<std::endl;
    }
    if (GetMarkerStyle() != 1) {
@@ -878,10 +876,9 @@ void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out<<"   "<<GetName()<<"->SetMarkerSize("<<GetMarkerSize()<<");"<<std::endl;
    }
    if (GetLineColor() != 1) {
-      if (GetLineColor() > 228) {
-         TColor::SaveColor(out, GetLineColor());
+      if (TColor::SaveColor(out, GetLineColor()))
          out<<"   "<<GetName()<<"->SetLineColor(ci);" << std::endl;
-      } else
+      else
          out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<std::endl;
    }
    if (GetLineWidth() != 4) {

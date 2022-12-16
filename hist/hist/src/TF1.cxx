@@ -3307,20 +3307,18 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << "   " << f1Name.Data() << "->SetBit(TF1::kNotDraw);" << std::endl;
    }
    if (GetFillColor() != 0) {
-      if (GetFillColor() > 228) {
-         TColor::SaveColor(out, GetFillColor());
+      if (TColor::SaveColor(out, GetFillColor()))
          out << "   " << f1Name.Data() << "->SetFillColor(ci);" << std::endl;
-      } else
+      else
          out << "   " << f1Name.Data() << "->SetFillColor(" << GetFillColor() << ");" << std::endl;
    }
    if (GetFillStyle() != 1001) {
       out << "   " << f1Name.Data() << "->SetFillStyle(" << GetFillStyle() << ");" << std::endl;
    }
    if (GetMarkerColor() != 1) {
-      if (GetMarkerColor() > 228) {
-         TColor::SaveColor(out, GetMarkerColor());
+      if (TColor::SaveColor(out, GetMarkerColor()))
          out << "   " << f1Name.Data() << "->SetMarkerColor(ci);" << std::endl;
-      } else
+      else
          out << "   " << f1Name.Data() << "->SetMarkerColor(" << GetMarkerColor() << ");" << std::endl;
    }
    if (GetMarkerStyle() != 1) {
@@ -3330,10 +3328,9 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << "   " << f1Name.Data() << "->SetMarkerSize(" << GetMarkerSize() << ");" << std::endl;
    }
    if (GetLineColor() != 1) {
-      if (GetLineColor() > 228) {
-         TColor::SaveColor(out, GetLineColor());
+      if (TColor::SaveColor(out, GetLineColor()))
          out << "   " << f1Name.Data() << "->SetLineColor(ci);" << std::endl;
-      } else
+      else
          out << "   " << f1Name.Data() << "->SetLineColor(" << GetLineColor() << ");" << std::endl;
    }
    if (GetLineWidth() != 4) {

@@ -1788,10 +1788,9 @@ void TCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out<<"   "<<GetName()<<"->ToggleToolBar();"<<std::endl;
    }
    if (GetHighLightColor() != 5) {
-      if (GetHighLightColor() > 228) {
-         TColor::SaveColor(out, GetHighLightColor());
+      if (TColor::SaveColor(out, GetHighLightColor()))
          out<<"   "<<GetName()<<"->SetHighLightColor(ci);" << std::endl;
-      } else
+      else
          out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<std::endl;
    }
 
@@ -1918,10 +1917,9 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
       out<<"   "<<GetName()<<"->ToggleToolTips();"<<std::endl;
    }
    if (GetHighLightColor() != 5) {
-      if (GetHighLightColor() > 228) {
-         TColor::SaveColor(out, GetHighLightColor());
+      if (TColor::SaveColor(out, GetHighLightColor()))
          out<<"   "<<GetName()<<"->SetHighLightColor(ci);" << std::endl;
-      } else
+      else
          out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<std::endl;
    }
 

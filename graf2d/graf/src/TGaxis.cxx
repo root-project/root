@@ -2574,17 +2574,15 @@ void TGaxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    }
 
    if (fLabelColor != 1) {
-      if (fLabelColor > 228) {
-         TColor::SaveColor(out, fLabelColor);
+      if (TColor::SaveColor(out, fLabelColor))
          out<<"   gaxis->SetLabelColor(ci);" << std::endl;
-      } else
+      else
          out<<"   gaxis->SetLabelColor("<<GetLabelColor()<<");"<<std::endl;
    }
    if (fLineColor != 1) {
-      if (fLineColor > 228) {
-         TColor::SaveColor(out, fLineColor);
+      if (TColor::SaveColor(out, fLineColor))
          out<<"   gaxis->SetLineColor(ci);" << std::endl;
-      } else
+      else
          out<<"   gaxis->SetLineColor("<<GetLineColor()<<");"<<std::endl;
    }
    if (fLineStyle != 1) {
