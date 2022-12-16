@@ -275,12 +275,9 @@ void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
       out<<"   TButton *";
 
    TString cmethod = GetMethod();
-   cmethod.ReplaceAll("\"", "\\\"");
-   cmethod.ReplaceAll("\\n", "\\\\n");
-   cmethod.ReplaceAll("\\t", "\\\\t");
 
    out << "button = new TButton(" << quote << GetTitle() << quote << ","
-         << quote << cmethod << quote << "," << fXlowNDC << "," << fYlowNDC
+         << quote << cmethod.ReplaceSpecialCppChars() << quote << "," << fXlowNDC << "," << fYlowNDC
          << "," << fXlowNDC + fWNDC << "," << fYlowNDC + fHNDC << ");"
          << std::endl;
 

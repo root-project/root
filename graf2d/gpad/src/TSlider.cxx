@@ -173,12 +173,8 @@ void TSlider::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"   slider->SetRange("<< fMinimum <<", "<< fMaximum <<");"<<std::endl;
 
    TString cmethod = GetMethod();
-   if (cmethod.Length() > 0) {
-      cmethod.ReplaceAll("\"", "\\\"");
-      cmethod.ReplaceAll("\\n", "\\\\n");
-      cmethod.ReplaceAll("\\t", "\\\\t");
-      out<<"   slider->SetMethod("<<quote<<cmethod<<quote<<");"<<std::endl;
-   }
+   if (cmethod.Length() > 0)
+      out<<"   slider->SetMethod("<<quote<<cmethod.ReplaceSpecialCppChars()<<quote<<");"<<std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
