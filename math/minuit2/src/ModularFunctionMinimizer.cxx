@@ -127,7 +127,7 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, const MnU
    // based on FCNBase. Create in this case a NumericalGradient calculator
    // Create the minuit FCN wrapper (MnUserFcn) containing the trasformation (int<->ext)
 
-   // neeed MnUsserFcn for difference int-ext parameters
+   // neeed MnUserFcn for difference int-ext parameters
    MnUserFcn mfcn(fcn, st.Trafo());
    Numerical2PGradientCalculator gc(mfcn, st.Trafo(), strategy);
 

@@ -104,8 +104,8 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
                   return st;
                }
                MnAlgebraicVector g2(n);
-               for (unsigned int i = 0; i < n; i++)
-                  g2(i) = mat(i,i);
+               for (unsigned int j = 0; j < n; j++)
+                  g2(j) = mat(j,j);
                dgrad = FunctionGradient(dgrad.Grad(), g2);
             }
 

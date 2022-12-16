@@ -27,8 +27,9 @@ void MnPrint::Impl(MnPrint::Verbosity level, const std::string &s)
    switch (level) {
    case MnPrint::eError: ::Error("Minuit2", "%s", s.c_str()); break;
    case MnPrint::eWarn: ::Warning("Minuit2", "%s", s.c_str()); break;
-   case MnPrint::eInfo:
+   case MnPrint::eInfo:  ::Info("Minuit2", "%s", s.c_str()); break;
    case MnPrint::eDebug: ::Info("Minuit2", "%s", s.c_str()); break;
+   case MnPrint::eTrace: ::Info("Minuit2", "%s", s.c_str()); break;
    }
 }
 
