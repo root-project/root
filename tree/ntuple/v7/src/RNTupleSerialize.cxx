@@ -1246,18 +1246,18 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nAliasColumns);
    if (!result)
       return R__FORWARD_ERROR(result);
-   bytes += result.Unwrap();
    if (nAliasColumns > 0)
       R__LOG_WARNING(NTupleLog()) << "Alias columns are still unsupported! ";
+   bytes = frame + frameSize;
 
    std::uint32_t nTypeInfo;
    frame = bytes;
    result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nTypeInfo);
    if (!result)
       return R__FORWARD_ERROR(result);
-   bytes += result.Unwrap();
    if (nTypeInfo > 0)
       R__LOG_WARNING(NTupleLog()) << "Extra type information is still unsupported! ";
+   bytes = frame + frameSize;
 
    return RResult<void>::Success();
 }
