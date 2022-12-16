@@ -749,8 +749,7 @@ bool Fitter::DoInitMinimizer() {
       fMinimizer->SetFunction( *gradfcn);
       // set also Hessian if available
       const ROOT::Math::FitMethodGradFunction * fitGradFcn = dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(gradfcn);
-      if (fitGradFcn) {
-         // need to check if function provide Hessian?
+      if (fitGradFcn && fitGradFcn->HasHessian()) {
          auto hessFcn = [=](const std::vector<double> &x, double *hess) {
             unsigned int ndim = x.size();
             unsigned int nh = ndim*(ndim+1)/2;

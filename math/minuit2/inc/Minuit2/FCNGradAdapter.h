@@ -94,7 +94,11 @@ public:
       if (fHessianFunc) {
          if (fHessian.empty() ) fHessian.resize(n * n);
          bool ret = fHessianFunc(x,fHessian.data());
-         if (!ret) fHessian.clear();
+         if (!ret) {
+            fHessian.clear();
+            std::function<bool(const std::vector<double> &, double *)> emptyFunc;
+            fHessianFunc = emptyFunc;
+         }
       } else {
          fHessian.clear();
       }
@@ -123,7 +127,7 @@ private:
    mutable std::vector<double> fG2Vec;
 
    std::function<std::vector<double>(const std::vector<double> &)> fG2Func;
-   std::function<bool(const std::vector<double> &, double *)> fHessianFunc;
+   mutable std::function<bool(const std::vector<double> &, double *)> fHessianFunc;
 };
 
 } // end namespace Minuit2
