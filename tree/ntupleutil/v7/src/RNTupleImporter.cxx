@@ -186,22 +186,17 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
 
          RImportField f;
          f.fIsClass = isClass;
-         std::unique_ptr<Detail::RFieldBase> field;
+         auto fieldOrError = Detail::RFieldBase::Create(fieldName, fieldType);
+         if (!fieldOrError)
+            return R__FORWARD_ERROR(fieldOrError);
+         auto field = fieldOrError.Unwrap();
          if (isCString) {
             branchBufferSize = l->GetMaximum();
-            auto result = Detail::RFieldBase::Create(fieldName, fieldType);
-            if (!result)
-               return R__FORWARD_ERROR(result);
-            field = result.Unwrap();
             f.fFieldBuffer = field->GenerateValue().GetRawPtr();
             f.fOwnsFieldBuffer = true;
             fImportTransformations.emplace_back(
                std::make_unique<RCStringTransformation>(fImportBranches.size(), fImportFields.size()));
          } else {
-            auto result = Detail::RFieldBase::Create(fieldName, fieldType);
-            if (!result)
-               return R__FORWARD_ERROR(result);
-            field = result.Unwrap();
             if (isClass) {
                // For classes, the branch buffer contains a pointer to object, which gets instantiated by TTree upon
                // calling SetBranchAddress()
