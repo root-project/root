@@ -649,10 +649,10 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
          g[k] *= - invError;
          if (useBinVolume) g[k] *= binVolume;
          if (h) {
-            for (unsigned int l = k; l <= npar; l++) {
-               unsigned int idx = k + l * (l + 1) / 2;
+            for (unsigned int l = 0; l <= k; l++) {  // use lower diagonal because I modify g[k]
+               unsigned int idx = l + k * (k + 1) / 2;
                if (useFullHessian) {
-                  h[idx] *= 2.* resval;  // hessian of model function
+                  h[idx] *= 2.* resval * (-invError);  // hessian of model function
                   if (useBinVolume) h[idx] *= binVolume;
                }
                else {

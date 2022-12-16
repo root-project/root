@@ -314,28 +314,26 @@ double TFumiliMinimizer::EvaluateFCN(const double * x, double * grad) {
          }
          else {
             if (fgFunc != 0)
-               fval = fgFunc->DataElement(x, i, &gf[0] );
+               fval = fgFunc->DataElement(x, i, gf.data(), h.data()  );
             else
-               fval = fgGradFunc->DataElement(x, i, &gf[0]);
+               fval = fgGradFunc->DataElement(x, i, gf.data(), h.data());
          }
 
          // t.b.d should protect for bad  values of fval
-         sum += fval*fval;
-
-         // to be check (TFumili uses a factor of 1/2 for chi2)
+         sum += 0.5 * fval * fval; // neeedd to divide chi2 by 2
 
          for (unsigned int j = 0; j < npar; ++j) {
             grad[j] +=  fval * gf[j];
             for (unsigned int k = j; k < npar; ++ k) {
                int idx =  j + k*(k+1)/2;
-               hess[idx] += gf[j] * gf[k];
+               //hess[idx] += gf[j] * gf[k];
+               hess[idx] += 0.5 * h[idx]; // h is gradient of full residual (2 * gf[j] n* gf[k] )
             }
          }
       }
    }
    else if ( (fgFunc && fgFunc->Type() == ROOT::Math::FitMethodFunction::kPoissonLikelihood) ||
              (fgGradFunc && fgGradFunc->Type() == ROOT::Math::FitMethodGradFunction::kPoissonLikelihood) ) {
-
 
 
       double fval = 0;
@@ -365,9 +363,35 @@ double TFumiliMinimizer::EvaluateFCN(const double * x, double * grad) {
             }
          }
       }
-   }
-   else {
-      Error("EvaluateFCN"," type of fit method is not supported, it must be chi2 or log-likelihood");
+   } else if ((fgFunc && fgFunc->Type() == ROOT::Math::FitMethodFunction::kLogLikelihood) ||
+              (fgGradFunc && fgGradFunc->Type() == ROOT::Math::FitMethodGradFunction::kLogLikelihood)) {
+
+      double fval = 0;
+
+      for (unsigned int i = 0; i < ndata; ++i) {
+
+         if (gUseFumiliFunction) {
+            fval = fgFunc->DataElement(x, i, &gf[0]);
+         } else {
+            // calculate data element and gradient
+            if (fgFunc != 0)
+               fval = fgFunc->DataElement(x, i, &gf[0]);
+            else
+               fval = fgGradFunc->DataElement(x, i, &gf[0]);
+         }
+         sum -= fval;
+
+         for (unsigned int j = 0; j < npar; ++j) {
+            double gfj = gf[j]; // / fval;
+            grad[j] -= gfj;
+            for (unsigned int k = j; k < npar; ++k) {
+               int idx = j + k * (k + 1) / 2;
+               hess[idx] += gfj * gf[k]; // / (fval );
+            }
+         }
+      }
+   } else {
+      Error("EvaluateFCN", " type of fit method is not supported, it must be chi2 or log-likelihood");
    }
 
    // now TFumili excludes fixed prameter in second-derivative matrix
@@ -395,7 +419,7 @@ double TFumiliMinimizer::EvaluateFCN(const double * x, double * grad) {
 #endif
 
 
-   return 0.5*sum; // fumili multiply then by 2
+   return sum;
 
 }
 
@@ -592,4 +616,3 @@ bool TFumiliMinimizer::Minimize() {
 //    } // end namespace Fit
 
 // } // end namespace ROOT
-
