@@ -2399,10 +2399,9 @@ void TChain::SavePrimitive(std::ostream &out, Option_t *option)
    out << std::endl;
 
    if (GetMarkerColor() != 1) {
-      if (GetMarkerColor() > 228) {
-         TColor::SaveColor(out, GetMarkerColor());
+      if (TColor::SaveColor(out, GetMarkerColor()))
          out << "   " << chName.Data() << "->SetMarkerColor(ci);" << std::endl;
-      } else
+      else
          out << "   " << chName.Data() << "->SetMarkerColor(" << GetMarkerColor() << ");" << std::endl;
    }
    if (GetMarkerStyle() != 1) {
