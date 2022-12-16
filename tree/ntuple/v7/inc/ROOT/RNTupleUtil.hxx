@@ -140,7 +140,7 @@ struct RNTupleLocator {
    std::uint8_t fReserved = 0;
 
    bool operator==(const RNTupleLocator &other) const {
-      return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage;
+      return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage && fType == other.fType;
    }
    template <typename T>
    const T &GetPosition() const
