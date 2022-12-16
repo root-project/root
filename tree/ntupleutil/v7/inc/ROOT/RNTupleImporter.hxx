@@ -146,7 +146,7 @@ private:
       /// The field is kept during schema preparation and transferred to the fModel before the writing starts
       Detail::RFieldBase *fField = nullptr;
       void *fFieldBuffer = nullptr; ///< Usually points to the corresponding RImportBranch::fBranchBuffer but not always
-      bool fOwnsFieldBuffer = false;       ///< Whether or now fFieldBuffer needs to be freed on destruction
+      bool fOwnsFieldBuffer = false;       ///< Whether or not `fFieldBuffer` needs to be freed on destruction
       bool fIsInUntypedCollection = false; ///< Sub-fields of untyped collections (leaf count arrays in the input)
       bool fIsClass = false; ///< Field imported from a branch with stramer info (e.g., STL, user-defined class)
    };
