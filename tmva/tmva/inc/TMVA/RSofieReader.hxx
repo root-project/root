@@ -1,7 +1,6 @@
 /**********************************************************************************
  * Project: ROOT - a Root-integrated toolkit for multivariate data analysis       *
- * Package: TMVA                                                                  *
- * Web    : http://tmva.sourceforge.net                                           *
+ * Package: TMVA                                                                  *                                        *
  *                                                                                *
  * Description:                                                                   *
  *                                                                                *
@@ -11,9 +10,6 @@
  * Copyright (c) 2022:                                                            *
  *      CERN, Switzerland                                                         *
  *                                                                                *
- * Redistribution and use in source and binary forms, with or without             *
- * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 
@@ -32,6 +28,7 @@
 #include "TInterpreter.h"
 #include "TUUID.h"
 #include "TMVA/RTensor.hxx"
+#include "Math/Util.h"
 
 namespace TMVA {
 namespace Experimental {
@@ -51,7 +48,7 @@ class RSofieReader  {
 public:
    /// Create TMVA model from ONNX file
    /// print level can be 0 (minimal) 1 with info , 2 with all ONNX parsing info
-    RSofieReader(const std::string &path, int verbose = 0)
+    RSofieReader(const std::string &path, std::vector<std::vector<size_t>> inputShape = {}, int verbose = 0)
    {
 
       enum EModelType {kONNX, kKeras, kPt, kROOT, kNotDef}; // type of model
@@ -111,7 +108,7 @@ public:
             Error("RSofieReader","Cannot use SOFIE with Keras since libPyMVA is missing");
             return;
          }
-         parserCode += "TMVA::Experimental::SOFIE::RModel model = SOFIE::PyKeras::Parse(\"" + path + "\"); \n";
+         parserCode += "TMVA::Experimental::SOFIE::RModel model = TMVA::Experimental::SOFIE::PyKeras::Parse(\"" + path + "\"); \n";
       }
       else if (type == kPt) {
          // use PyTorch direct parser
@@ -119,7 +116,23 @@ public:
             Error("RSofieReader","Cannot use SOFIE with PyTorch since libPyMVA is missing");
             return;
          }
-         parserCode += "TMVA::Experimental::SOFIE::RModel model = SOFIE::PyTorch::Parse(\"" + path + "\"); \n";
+         if (inputShape.size() == 0) {
+            Error("RSofieReader","Cannot use SOFIE with PyTorch since the input tensor shape is missing and is needed by the PyTorch parser");
+            return;
+         }
+         std::string inputShapeStr = "{";
+         for (unsigned int i = 0; i < inputShape.size(); i++) {
+            inputShapeStr += "{ ";
+            for (unsigned int j = 0; j < inputShape[i].size(); j++) {
+               inputShapeStr += ROOT::Math::Util::ToString(inputShape[i][j]);
+               if (j < inputShape[i].size()-1) inputShapeStr += ", ";
+            }
+            inputShapeStr += "}";
+            if (i < inputShape.size()-1) inputShapeStr += ", ";
+         }
+         inputShapeStr += "}";
+         parserCode += "TMVA::Experimental::SOFIE::RModel model = TMVA::Experimental::SOFIE::PyTorch::Parse(\"" + path + "\", "
+                    + inputShapeStr + "); \n";
       }
       else if (type == kROOT) {
          // use  parser from ROOT
@@ -135,8 +148,14 @@ public:
       if (verbose) std::cout << parserCode << std::endl;
       gROOT->ProcessLine(parserCode.c_str());
 
-      if (verbose) std::cout << "generating the code ...\n";
-      parserCode = "model.Generate(); \n";
+      int batchSize = 1;
+      if (inputShape.size() > 0 && inputShape[0].size() > 0) {
+         batchSize = inputShape[0][0];
+         if (batchSize < 1) batchSize = 1;
+      }
+      if (verbose) std::cout << "generating the code with batch size = " << batchSize << " ...\n";
+      parserCode = "model.Generate(TMVA::Experimental::SOFIE::Options::kDefault,"
+                   + ROOT::Math::Util::ToString(batchSize) + "); \n";
       if (verbose)
          parserCode += "model.PrintGenerated(); \n";
       parserCode += "model.OutputGenerated();\n";
