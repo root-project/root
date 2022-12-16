@@ -792,17 +792,19 @@ void TText::Print(Option_t *) const
 void TText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    char quote = '"';
-   if (gROOT->ClassSaved(TText::Class())) {
-       out<<"   ";
-   } else {
-       out<<"   TText *";
-   }
-   TString s = GetTitle();
-   s.ReplaceAll("\"","\\\"");
-   out<<"text = new TText("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<std::endl;
-   if (TestBit(kTextNDC)) out<<"   text->SetNDC();"<<std::endl;
+   if (gROOT->ClassSaved(TText::Class()))
+      out<<"   ";
+   else
+      out<<"   TText *";
 
-   SaveTextAttributes(out,"text",11,0,1,62,0.05);
+   TString s = GetTitle();
+   s.ReplaceSpecialCppChars();
+
+   out<<"text = new TText("<<fX<<","<<fY<<","<<quote<<s<<quote<<");"<<std::endl;
+   if (TestBit(kTextNDC))
+      out<<"   text->SetNDC();"<<std::endl;
+
+   SaveTextAttributes(out, "text", 11, 0, 1, 62, 0.05);
 
    out<<"   text->Draw();"<<std::endl;
 }
