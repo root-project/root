@@ -434,6 +434,7 @@ public:
    TString     &ReplaceAll(const    char *s1, const TString &s2); // Find&Replace all s1 with s2 if any
    TString     &ReplaceAll(const char *s1, const char *s2);       // Find&Replace all s1 with s2 if any
    TString     &ReplaceAll(const char *s1, Ssiz_t ls1, const char *s2, Ssiz_t ls2);  // Find&Replace all s1 with s2 if any
+   TString     &ReplaceSpecialCppChars();
    void         Resize(Ssiz_t n);                       // Truncate or add blanks as necessary
    TSubString   Strip(EStripType s = kTrailing, char c = ' ') const;
    TString     &Swap(TString &other); // Swap the contents of this and other without reallocation
