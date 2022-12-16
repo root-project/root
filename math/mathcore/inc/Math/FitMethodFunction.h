@@ -72,6 +72,9 @@ public:
     */
    virtual double DataElement(const double *x, unsigned int i, double *g = nullptr, double *h = nullptr, bool fullHessian = false) const = 0;
 
+   // flag to indicate if full Hessian computation is supported
+   virtual bool HasHessian() const { return false;}
+
    /**
     * Computes the full Hessian. Return false if Hessian is not supported
     */

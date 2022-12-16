@@ -618,9 +618,8 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
       const IGradModelFunction * gfunc = (hasGrad) ?
          dynamic_cast<const IGradModelFunction *>( &func) : nullptr;
 
-      assert (useFullHessian && gfunc && !useBinIntegral);
-      assert (useFullHessian && h != nullptr);
-      if (useFullHessian && (!gfunc || useBinIntegral))
+      if (!h ) useFullHessian = false;
+      if (useFullHessian &&  (!gfunc || useBinIntegral || (gfunc && !gfunc->HasParameterHessian())))
          return std::numeric_limits<double>::quiet_NaN();
 
       if (gfunc) {
@@ -1349,8 +1348,7 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
       dynamic_cast<const IGradModelFunction *>( &func) : nullptr;
 
    // for full Hessian we need a gradient function and not bin intgegral computation
-   assert (useFullHessian && gfunc && !useBinIntegral);
-   if (useFullHessian && (!gfunc || useBinIntegral))
+   if (useFullHessian &&  (!gfunc || useBinIntegral || (gfunc && !gfunc->HasParameterHessian())))
       return std::numeric_limits<double>::quiet_NaN();
 
    // gradient  calculation
@@ -1359,6 +1357,8 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
       if (!useBinIntegral ) {
          gfunc->ParameterGradient(  x , p, g );
          if (useFullHessian && h) {
+            if (!gfunc->HasParameterHessian())
+               return std::numeric_limits<double>::quiet_NaN();
             bool goodHessFunc = gfunc->ParameterHessian(x , p, h);
             if (!goodHessFunc) {
                return std::numeric_limits<double>::quiet_NaN();

@@ -143,10 +143,10 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, const MnU
 FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNGradientBase &fcn, const MnUserParameterState &st,
                                                    const MnStrategy &strategy, unsigned int maxfcn, double toler) const
 {
-   // minimize from a FCNGradientBase and a MnUserparameterState - interface used by all the previous ones
-   // based on FCNGradientBase.
-   // Create in this acase an AnalyticalGradient calculator
-   // Create the minuit FCN wrapper (MnUserFcn) containing the trasformation (int<->ext)
+   // minimize from a FCNGradientBase and a MnUserParameterState -
+   // interface based on FCNGradientBase (external/analytical gradients)
+   // Create in this case an AnalyticalGradient calculator
+   // Create the minuit FCN wrapper (MnUserFcn) containing the transformation (int<->ext)
 
    MnUserFcn mfcn(fcn, st.Trafo());
    std::unique_ptr<AnalyticalGradientCalculator> gc;
