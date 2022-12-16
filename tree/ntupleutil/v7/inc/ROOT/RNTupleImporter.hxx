@@ -55,7 +55,7 @@ importer->Import().ThrowOnError();
 ~~~
 
 The output file is created if it does not exist, otherwise the ntuple is added to the existing file.
-Note that input file and output file can be identical if the nutple is stored under a different name than the tree
+Note that input file and output file can be identical if the ntuple is stored under a different name than the tree
 (use `SetNTupleName()`).
 
 By default, the RNTuple is compressed with zstd, independent of the input compression. The compression settings
