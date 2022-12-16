@@ -620,17 +620,15 @@ void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 
    if (GetFillColor() != 0) {
-      if (GetFillColor() > 228) {
-         TColor::SaveColor(out, GetFillColor());
+      if (TColor::SaveColor(out, GetFillColor()))
          out<<"   "<<GetName()<<"->SetFillColor(ci);" << std::endl;
-      } else
+      else
          out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<std::endl;
    }
    if (GetLineColor() != 1) {
-      if (GetLineColor() > 228) {
-         TColor::SaveColor(out, GetLineColor());
+      if (TColor::SaveColor(out, GetLineColor()))
          out<<"   "<<GetName()<<"->SetLineColor(ci);" << std::endl;
-      } else
+      else
          out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<std::endl;
    }
    if (GetNpz() != 100) {
