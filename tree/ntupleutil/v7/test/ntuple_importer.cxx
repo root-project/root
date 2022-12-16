@@ -8,6 +8,9 @@
 
 #include <cstdio>
 #include <string>
+#include <tuple>
+#include <vector>
+#include <utility>
 
 #include "CustomStructUtil.hxx"
 
@@ -330,7 +333,11 @@ TEST(RNTupleImporter, STL)
       std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
       auto tree = std::make_unique<TTree>("tree", "");
       auto vec = new std::vector<float>{1.0, 2.0};
+      auto pair = new std::pair<float, float>{3.0, 4.0};
+      auto tuple = new std::tuple<int, float, bool>{5, 6.0, true};
       tree->Branch("vec", &vec);
+      tree->Branch("pair", &pair);
+      tree->Branch("tuple", &tuple);
       tree->Fill();
       tree->Write();
       delete vec;
@@ -348,6 +355,13 @@ TEST(RNTupleImporter, STL)
    EXPECT_EQ(2U, vec->size());
    EXPECT_FLOAT_EQ(1.0, vec->at(0));
    EXPECT_FLOAT_EQ(2.0, vec->at(1));
+   auto pair = reader->GetModel()->Get<std::pair<float, float>>("pair");
+   EXPECT_FLOAT_EQ(3.0, pair->first);
+   EXPECT_FLOAT_EQ(4.0, pair->second);
+   auto tuple = reader->GetModel()->Get<std::tuple<int, float, bool>>("tuple");
+   EXPECT_EQ(5, std::get<0>(*tuple));
+   EXPECT_FLOAT_EQ(6.0, std::get<1>(*tuple));
+   EXPECT_TRUE(std::get<2>(*tuple));
 }
 
 TEST(RNTupleImporter, CustomClass)
