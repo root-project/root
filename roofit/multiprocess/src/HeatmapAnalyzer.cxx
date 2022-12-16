@@ -44,18 +44,18 @@ namespace MultiProcess {
 /// \param[in] logs_dir Directory where log files are stored in the format
 ///                     outputted by RooFit::MultiProcess::ProcessTimer.
 ///                     There can be other files in this directory as well.
-HeatmapAnalyzer::HeatmapAnalyzer(TString logs_dir)
+HeatmapAnalyzer::HeatmapAnalyzer(std::string const& logs_dir)
 {
-   TSystemDirectory dir(logs_dir, logs_dir);
+   TSystemDirectory dir(logs_dir.c_str(), logs_dir.c_str());
    TList *duration_files = dir.GetListOfFiles();
 
    for (const auto &&file : *duration_files) {
-      if (!TString(file->GetName()).Contains("p_"))
+      if (std::string(file->GetName()).find("p_") == std::string::npos)
          continue;
 
-      std::ifstream f(logs_dir + "/" + TString(file->GetName()));
+      std::ifstream f(logs_dir + "/" + std::string(file->GetName()));
 
-      if (TString(file->GetName()).Contains("999"))
+      if (std::string(file->GetName()).find("999") != std::string::npos)
          gradients_ = json::parse(f);
       else
          durations_.push_back(json::parse(f));
@@ -91,17 +91,18 @@ HeatmapAnalyzer::HeatmapAnalyzer(TString logs_dir)
 /// \param[in] analyzed_gradient Gradient to analyze. For example, setting to 1
 ///                              analyzes the first gradient (ordered by time)
 ///                              in the logs.
-TH2I HeatmapAnalyzer::analyze(int analyzed_gradient)
+std::unique_ptr<TH2I> HeatmapAnalyzer::analyze(int analyzed_gradient)
 {
    int gradient_start_t = gradients_["master:gradient"][analyzed_gradient * 2 - 2];
    int gradient_end_t = gradients_["master:gradient"][analyzed_gradient * 2 - 1];
 
-   TH2I total_matrix("heatmap", "", eval_partitions_names_.size(), 0, 1, tasks_names_.size(), 0, 1);
+
+   std::unique_ptr<TH2I> total_matrix = std::make_unique<TH2I>("heatmap", "", eval_partitions_names_.size(), 0, 1, tasks_names_.size(), 0, 1);
 
    // loop over all logfiles stored in durations_
    for (json &durations_json : durations_) {
       // partial heatmap is the heatmap that will be filled in for the current durations logfile
-      TH2I partial_matrix("partial_heatmap", "", eval_partitions_names_.size(), 0, 1, tasks_names_.size(), 0, 1);
+      std::unique_ptr<TH2I> partial_matrix = std::make_unique<TH2I>("partial_heatmap", "", eval_partitions_names_.size(), 0, 1, tasks_names_.size(), 0, 1);
 
       // remove unneccesary components (those that are out of range)
       for (auto &&el : durations_json.items()) {
@@ -133,21 +134,21 @@ TH2I HeatmapAnalyzer::analyze(int analyzed_gradient)
             int eval_partitions_idx =
                find(eval_partitions_names_.begin(), eval_partitions_names_.end(), eval_partition_name) -
                eval_partitions_names_.begin() + 1;
-            partial_matrix.SetBinContent(eval_partitions_idx, tasks_idx,
+            partial_matrix->SetBinContent(eval_partitions_idx, tasks_idx,
                                          durations_json[eval_partition_name][idx + 1].get<int>() -
                                             durations_json[eval_partition_name][idx].get<int>());
          }
       }
       // add all partial matrices to form one matrix with entire gradient evaluation information
-      total_matrix.Add(&partial_matrix);
+      total_matrix->Add(partial_matrix.get());
    }
 
    // do not need the legend in case heatmap is plotted
-   total_matrix.SetStats(0);
+   total_matrix->SetStats(0);
 
    // set the axes labels on the heatmap matrix
-   TAxis *y = total_matrix.GetYaxis();
-   TAxis *x = total_matrix.GetXaxis();
+   TAxis *y = total_matrix->GetYaxis();
+   TAxis *x = total_matrix->GetXaxis();
    for (std::size_t i = 0; i != tasks_names_.size(); ++i) {
       y->SetBinLabel(i + 1, (metadata_[0][i].get<std::string>()).c_str());
       y->ChangeLabel(i + 1, 30, 0.01, -1, -1, -1, "");

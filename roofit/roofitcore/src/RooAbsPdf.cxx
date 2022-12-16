@@ -1384,6 +1384,7 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
   minimizerConfig.enableParallelGradient = cfg.enableParallelGradient;
   minimizerConfig.enableParallelDescent = cfg.enableParallelDescent;
   minimizerConfig.parallelize = cfg.parallelize;
+  minimizerConfig.timingAnalysis = cfg.timingAnalysis;
   RooMinimizer m(nll, minimizerConfig);
 
   m.setMinimizerType(cfg.minType.c_str());
@@ -1576,8 +1577,12 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
 ///                                                                                                      parallelization. The second argument determines whether to split the task batches
 ///                                                                                                      per event or per likelihood component. And the third argument how many events or
 ///                                                                                                      respectively components to include in each batch.                                                                            
+/// <tr><td> `TimingAnalysis(bool flag)`   <td> **Experimental** log timings. This feature logs timings with NewStyle likelihoods on multiple processes simultaneously
+///                                         and outputs the timings at the end of a run to json log files, which can be analyzed with the 
+///                                         `RooFit::MultiProcess::HeatmapAnalyzer`. Only works with simultaneous likelihoods.
 /// </table>
 ///
+
 RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
@@ -1624,6 +1629,13 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.process(fitCmdList) ;
   if (!pc.ok(true)) {
     return 0 ;
+  }
+
+  // TimingAnalysis works only for RooSimultaneus.
+  if (pc.getInt("timingAnalysis") && !this->InheritsFrom("RooSimultaneous") ) {
+     coutW(Minimization) << "The timingAnalysis feature was built for minimization with RooSimulteneous "
+                            "and is not implemented for other PDF's. Please create a RooSimultenous to " 
+                            "enable this feature."  << endl;
   }
 
   // Decode command line arguments

@@ -97,11 +97,11 @@ RooSumL::evaluatePartition(Section events, std::size_t components_begin, std::si
    // from RooAbsOptTestStatistic::combinedValue (which is virtual, so could be different for non-RooNLLVar!):
    for (std::size_t ix = components_begin; ix < components_end; ++ix) {
 #ifdef R__HAS_ROOFIT_MULTIPROCESS
-      if (RooFit::MultiProcess::Config::getLogTimings()) RooFit::MultiProcess::ProcessTimer::start_timer("worker:eval_partition:" + components_[ix]->GetClassName() + ":" + components_[ix]->GetName());
+      if (RooFit::MultiProcess::Config::getTimingAnalysis()) RooFit::MultiProcess::ProcessTimer::start_timer("worker:eval_partition:" + components_[ix]->GetClassName() + ":" + components_[ix]->GetName());
 #endif
       ret += components_[ix]->evaluatePartition(events, 0, 0);
 #ifdef R__HAS_ROOFIT_MULTIPROCESS
-      if (RooFit::MultiProcess::Config::getLogTimings()) RooFit::MultiProcess::ProcessTimer::end_timer("worker:eval_partition:" + components_[ix]->GetClassName() + ":" + components_[ix]->GetName());
+      if (RooFit::MultiProcess::Config::getTimingAnalysis()) RooFit::MultiProcess::ProcessTimer::end_timer("worker:eval_partition:" + components_[ix]->GetClassName() + ":" + components_[ix]->GetName());
 #endif
    }
 

@@ -17,6 +17,8 @@
 #include <fstream>
 #include <iomanip> // setw
 
+using namespace std;
+
 namespace RooFit {
 namespace MultiProcess {
 
@@ -28,6 +30,8 @@ namespace MultiProcess {
  * timings to be written out in json format, one file for each process. Multiple overlapping
  * sections can be timed independently on the same process. It also allows for the timings
  * to be written out to json logfiles in a specified interval, for example every half hour.
+ * 
+ * Note that this class logs timings in milliseconds.
  */
 
 list<chrono::time_point<chrono::steady_clock>> ProcessTimer::get_durations(string to_return)

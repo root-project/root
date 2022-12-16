@@ -22,8 +22,6 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
-using namespace std;
-
 namespace RooFit {
 namespace MultiProcess {
 
@@ -34,19 +32,19 @@ public:
    {
       ProcessTimer::process = proc;
       if (set_begin)
-         ProcessTimer::begin = chrono::steady_clock::now();
+         ProcessTimer::begin = std::chrono::steady_clock::now();
       ProcessTimer::previous_write = ProcessTimer::begin;
    };
 
    static pid_t get_process() { return ProcessTimer::process; };
    static void set_process(pid_t proc) { ProcessTimer::process = proc; };
 
-   static list<chrono::time_point<chrono::steady_clock>> get_durations(string section_name);
+   static std::list<std::chrono::time_point<std::chrono::steady_clock>> get_durations(std::string section_name);
 
-   static void start_timer(string section_name);
-   static void end_timer(string section_name);
+   static void start_timer(std::string section_name);
+   static void end_timer(std::string section_name);
 
-   static void print_durations(string to_print = "all");
+   static void print_durations(std::string to_print = "all");
    static void print_timestamps();
 
    static void write_file();
@@ -57,11 +55,11 @@ public:
 
 private:
    // Map of a list of timepoints, even timepoints are start times, uneven timepoints are end times
-   using duration_map_t = map<string, list<chrono::time_point<chrono::steady_clock>>>;
+   using duration_map_t = std::map<std::string, std::list<std::chrono::time_point<std::chrono::steady_clock>>>;
 
    static duration_map_t durations;
-   static chrono::time_point<chrono::steady_clock> begin;
-   static chrono::time_point<chrono::steady_clock> previous_write;
+   static std::chrono::time_point<std::chrono::steady_clock> begin;
+   static std::chrono::time_point<std::chrono::steady_clock> previous_write;
    static pid_t process;
    static json metadata;
    static int write_interval;

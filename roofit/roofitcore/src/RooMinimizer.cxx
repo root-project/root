@@ -115,11 +115,11 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
                                   << "also setting parallel gradient calculation mode." << std::endl;
             _cfg.enableParallelGradient = 1;
          }
-
          // If _cfg.parallelize is larger than zero set the number of workers to that value. Otherwise do not do anything and let 
          // RooFit::MultiProcess handle the number of workers
          if (_cfg.parallelize > 0) RooFit::MultiProcess::Config::setDefaultNWorkers(_cfg.parallelize);
          RooFit::MultiProcess::Config::setTimingAnalysis(_cfg.timingAnalysis);
+
          _fcn = std::make_unique<RooFit::TestStatistics::MinuitFcnGrad>(
             nll_real->getRooAbsL(), this, _theFitter->Config().ParamsSettings(),
             RooFit::TestStatistics::LikelihoodMode{
@@ -310,7 +310,7 @@ bool RooMinimizer::fitFcn() const
 /// \param[in] alg  Fit algorithm to use. (Optional)
 int RooMinimizer::minimize(const char *type, const char *alg)
 {
-   if (_cfg.logTimings) 
+   if (_cfg.timingAnalysis) 
 #ifdef R__HAS_ROOFIT_MULTIPROCESS
       addParamsToProcessTimer();
 #else

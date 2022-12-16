@@ -26,8 +26,8 @@ public:
    static void setDefaultNWorkers(unsigned int N_workers);
    static unsigned int getDefaultNWorkers();
 
-   static void setLogTimings(bool logTimings);
-   static bool getLogTimings();
+   static void setTimingAnalysis(bool timingAnalysis);
+   static bool getTimingAnalysis();
 
    struct LikelihoodJob {
       // magic values to indicate that the number of tasks will be set automatically
@@ -49,7 +49,7 @@ public:
    };
 private:
    static unsigned int defaultNWorkers_;
-   static bool logTimings_;
+   static bool timingAnalysis_;
 };
 
 } // namespace MultiProcess

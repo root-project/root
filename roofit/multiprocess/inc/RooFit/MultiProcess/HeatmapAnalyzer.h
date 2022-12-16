@@ -16,6 +16,7 @@
 #include "TString.h"
 #include "TH2I.h"
 
+#include <memory>
 #include <vector>
 #include <string>
 #include <nlohmann/json.hpp>
@@ -26,10 +27,10 @@ namespace MultiProcess {
 
 class HeatmapAnalyzer {
 public:
-   HeatmapAnalyzer(TString logs_dir);
+   HeatmapAnalyzer(std::string const& logs_dir);
 
    // main method of this class, produces heatmap
-   TH2I analyze(int analyzed_gradient);
+   std::unique_ptr<TH2I> analyze(int analyzed_gradient);
 
    // getters to inspect logfiles
    std::vector<std::string> const getPartitionNames();

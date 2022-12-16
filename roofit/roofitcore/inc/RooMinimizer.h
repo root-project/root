@@ -66,7 +66,7 @@ public:
 
       bool verbose = false;               // local config
       bool profile = false;               // local config
-      bool logTimings = false;            // local config
+      bool timingAnalysis = false;            // local config
       std::string minimizerType = "";     // local config
    private:
       int getDefaultWorkers();

@@ -18,6 +18,8 @@
 #include <chrono>
 #include <thread>
 
+using namespace std;
+
 TEST(TestMPProcessTimer, Timings)
 {
    RooFit::MultiProcess::ProcessManager pm(1);

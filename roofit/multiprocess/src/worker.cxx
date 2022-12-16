@@ -110,9 +110,9 @@ void worker_loop()
                         JobManager::instance()->messenger().receive_from_master_on_worker<std::size_t>();
                      JobManager::get_job_object(job_id_for_state)->update_state();
                   }
-                  if (RooFit::MultiProcess::Config::getLogTimings()) ProcessTimer::start_timer("worker:eval_task:" + std::to_string(task_id));
+                  if (RooFit::MultiProcess::Config::getTimingAnalysis()) ProcessTimer::start_timer("worker:eval_task:" + std::to_string(task_id));
                   JobManager::get_job_object(job_id)->evaluate_task(task_id);
-                  if (RooFit::MultiProcess::Config::getLogTimings()) ProcessTimer::end_timer("worker:eval_task:" + std::to_string(task_id));
+                  if (RooFit::MultiProcess::Config::getTimingAnalysis()) ProcessTimer::end_timer("worker:eval_task:" + std::to_string(task_id));
                   JobManager::get_job_object(job_id)->send_back_task_result_from_worker(task_id);
 
                   break;
@@ -145,7 +145,7 @@ void worker_loop()
       }
    }
 
-   if (RooFit::MultiProcess::Config::getLogTimings()) ProcessTimer::write_file();
+   if (RooFit::MultiProcess::Config::getTimingAnalysis()) ProcessTimer::write_file();
    
    // clean up signal management modifications
    sigprocmask(SIG_SETMASK, &JobManager::instance()->messenger().ppoll_sigmask, nullptr);

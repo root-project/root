@@ -114,7 +114,7 @@ void ProcessManager::initialize_processes(bool cpu_pinning)
    // ... first workers:
 
    // Setup process timer master and assign pid_t 999
-   if (RooFit::MultiProcess::Config::getLogTimings()) ProcessTimer::setup(999);
+   if (RooFit::MultiProcess::Config::getTimingAnalysis()) ProcessTimer::setup(999);
 
    worker_pids_.resize(N_workers_);
    pid_t child_pid{};
@@ -124,7 +124,7 @@ void ProcessManager::initialize_processes(bool cpu_pinning)
          // Setup process timer, do not overwrite begin time, this keeps timing
          // synced between worker and master processes. The forked process keeps
          // the master process' begin time
-         if (RooFit::MultiProcess::Config::getLogTimings()) ProcessTimer::setup(ix, false);
+         if (RooFit::MultiProcess::Config::getTimingAnalysis()) ProcessTimer::setup(ix, false);
          is_worker_ = true;
          worker_id_ = ix;
          break;
@@ -266,9 +266,9 @@ int chill_wait()
 void ProcessManager::shutdown_processes()
 {
    if (is_master()) {
-      if (RooFit::MultiProcess::Config::getLogTimings()) ProcessTimer::write_file();
+      if (RooFit::MultiProcess::Config::getTimingAnalysis()) ProcessTimer::write_file();
       // Give children some time to write to file
-      if (RooFit::MultiProcess::Config::getLogTimings()) std::this_thread::sleep_for(std::chrono::seconds(2));
+      if (RooFit::MultiProcess::Config::getTimingAnalysis()) std::this_thread::sleep_for(std::chrono::seconds(2));
       // terminate all children
       std::unordered_set<pid_t> children;
       children.insert(queue_pid_);
