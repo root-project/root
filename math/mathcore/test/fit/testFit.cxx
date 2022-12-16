@@ -797,8 +797,8 @@ int testUnBin1DFit() {
       std::cout << "Unbinned Likelihood Fit using FUMILI Failed " << std::endl;
       iret |= 1;
    }
-
-   iret |= compareResult(fitter.Result().MinFcnValue(), lref,"1D unbin FUMILI fit");
+   // Fumili multiply FCN by 2
+   iret |= compareResult(fitter.Result().MinFcnValue(), 2. * lref,"1D unbin FUMILI fit");
 
 
    return iret;
