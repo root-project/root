@@ -2647,21 +2647,20 @@ void TLatex::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    char quote = '"';
 
-   if (gROOT->ClassSaved(TLatex::Class())) {
+   if (gROOT->ClassSaved(TLatex::Class()))
       out<<"   ";
-   } else {
+   else
       out<<"   TLatex *";
-   }
 
    TString s = GetTitle();
+   s.ReplaceSpecialCppChars();
 
-   s.ReplaceAll("\\","\\\\");
-   s.ReplaceAll("\"","\\\"");
-   out<<"   tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<std::endl;
-   if (TestBit(kTextNDC)) out<<"tex->SetNDC();"<<std::endl;
+   out<<"   tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s<<quote<<");"<<std::endl;
+   if (TestBit(kTextNDC))
+      out<<"   tex->SetNDC();"<<std::endl;
 
-   SaveTextAttributes(out,"tex",11,0,1,62,0.05);
-   SaveLineAttributes(out,"tex",1,1,1);
+   SaveTextAttributes(out, "tex", 11, 0, 1, 62, 0.05);
+   SaveLineAttributes(out, "tex", 1, 1, 1);
 
    out<<"   tex->Draw();"<<std::endl;
 }
