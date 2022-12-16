@@ -80,8 +80,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             ShowHiddenFiles: false,
             AppendToCanvas: false,
             DBLCLKRun: false,
-            optTH1: 'hist',
+            optTH1: '<dflt>',
             TH1: [
+               {name: '<dflt>'},
                {name: 'hist'},
                {name: 'p'},
                {name: 'p0'},
@@ -102,6 +103,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             ],
             optTH2: 'col',
             TH2: [
+               {name: '<dflt>'},
                {name: 'col'},
                {name: 'colz'},
                {name: 'col0'},
@@ -143,8 +145,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                {name: 'lego4'},
                {name: 'same'}
             ],
-            optTProfile: 'e0',
+            optTProfile: '<dflt>',
             TProfile: [
+               {name: '<dflt>'},
                {name: 'e0'},
                {name: 'e1'},
                {name: 'e2'},
@@ -744,9 +747,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       handleSettingsReset() {
-         this._oSettingsModel.setProperty('/optTH1', 'hist');
+         this._oSettingsModel.setProperty('/optTH1', '<dflt>');
          this._oSettingsModel.setProperty('/optTH2', 'col');
-         this._oSettingsModel.setProperty('/optTProfile', 'e0')
+         this._oSettingsModel.setProperty('/optTProfile', '<dflt>')
       },
 
       handleSeetingsConfirm() {
@@ -795,6 +798,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let arr = [ this._oSettingsModel.getProperty('/optTH1') || '',
                      this._oSettingsModel.getProperty('/optTH2') || '',
                      this._oSettingsModel.getProperty('/optTProfile') || '' ];
+         for (let n = 0; n < arr.length; ++n)
+            if (arr[n] == '<dflt>')
+               arr[n] = '';
          return 'OPTIONS:' + JSON.stringify(arr);
       },
 
@@ -1275,9 +1281,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                arr[k].shift();
                this.updateLogs(arr[k]);
             } else if (kind == "drawoptions") {
-               this._oSettingsModel.setProperty('/optTH1', arr[k][1]);
-               this._oSettingsModel.setProperty('/optTH2', arr[k][2]);
-               this._oSettingsModel.setProperty('/optTProfile', arr[k][3]);
+               this._oSettingsModel.setProperty('/optTH1', arr[k][1] || '<dflt>');
+               this._oSettingsModel.setProperty('/optTH2', arr[k][2]|| '<dflt>');
+               this._oSettingsModel.setProperty('/optTProfile', arr[k][3]|| '<dflt>');
             } else {
                this.createElement(kind, arr[k][1], arr[k][2], arr[k][3], arr[k][4]);
             }

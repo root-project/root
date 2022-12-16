@@ -572,10 +572,10 @@ public:
       RegisterTObject("TDirectory", "sap-icon://folder-blank", true, 0);
       RegisterTObject("TClass", "sap-icon://tag-cloud-chart", false, 0);
       RegisterTObject("TQClass", "sap-icon://tag-cloud-chart", false, 0);
-      RegisterTObject("TH1", "sap-icon://bar-chart", false, 3, "hist"s);
+      RegisterTObject("TH1", "sap-icon://bar-chart", false, 3, ""s);
       RegisterTObject("TH2", "sap-icon://pixelate", false, 3, "col"s);
       RegisterTObject("TH3", "sap-icon://product");
-      RegisterTObject("TProfile", "sap-icon://vertical-bar-chart", false, 3, "e0"s);
+      RegisterTObject("TProfile", "sap-icon://vertical-bar-chart", false, 3, ""s);
       RegisterTObject("TGraph", "sap-icon://line-chart");
       RegisterTObject("TCanvas", "sap-icon://business-objects-experience", false, 1); // only can use TWebCanvas
       RegisterTObject("TASImage", "sap-icon://picture", false, 1); // only can use TWebCanvas
