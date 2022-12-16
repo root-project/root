@@ -278,10 +278,11 @@ void TDirectory::CleanTargets()
          fContext = next;
       }
 
-      for(auto ptr : fGDirectories) {
-         if (ptr.fCurrent->load() == this) {
-            ROOT::Internal::TSpinLockGuard(*(ptr.fLock));
-            (*ptr.fCurrent) = nullptr;
+      for (auto &ptr : fGDirectories) {
+         if (ptr->fCurrent.load() == this) {
+            ROOT::Internal::TSpinLockGuard(ptr->fLock);
+            auto This = this;
+            ptr->fCurrent.compare_exchange_strong(This, nullptr);
          }
       }
    }
@@ -393,15 +394,30 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the (address of) a shared pointer to the struct holding the
+/// actual thread local gDirectory pointer and the atomic_flag for its lock.
+std::shared_ptr<TDirectory::TGDirectory> &TDirectory::GetSharedLocalCurrentDirectory()
+{
+   using shared_ptr_type = std::shared_ptr<TDirectory::TGDirectory>;
+
+   // NOTE: Maybe we could replace the call to gThreadTsd simply a single
+   // thread local:
+   thread_local shared_ptr_type currentDirectory =
+      std::make_shared<TDirectory::TGDirectory>(ROOT::Internal::gROOTLocal);
+
+   // Reproduce inadvertent feature of Thread::GetTls when we were using it
+   // for TDirectory.
+   if (!currentDirectory->fCurrent)
+      currentDirectory->fCurrent = gROOT;
+   return currentDirectory;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the current directory for the current thread.
 
 std::atomic<TDirectory*> &TDirectory::CurrentDirectory()
 {
-   static std::atomic<TDirectory*> currentDirectory{nullptr};
-   if (!gThreadTsd)
-      return currentDirectory;
-   else
-      return *(std::atomic<TDirectory*>*)(*gThreadTsd)(&currentDirectory,ROOT::kDirectoryThreadSlot);
+   return GetSharedLocalCurrentDirectory()->fCurrent;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -535,8 +551,7 @@ Bool_t TDirectory::cd1(const char *apath)
    Int_t nch = 0;
    if (apath) nch = strlen(apath);
    if (!nch) {
-      auto &global = CurrentDirectory();
-      RegisterGDirectory(&global);
+      auto &global = RegisterGDirectory(nullptr);
       global = this;
       return kTRUE;
    }
@@ -1348,14 +1363,19 @@ void TDirectory::RegisterContext(TContext *ctxt) {
 ////////////////////////////////////////////////////////////////////////////////
 /// Register a std::atomic<TDirectory*> that will soon be pointing to this TDirectory object
 
-void TDirectory::RegisterGDirectory(std::atomic<TDirectory*> *globalptr)
+std::atomic<TDirectory*> &TDirectory::RegisterGDirectory(std::atomic<TDirectory*> *)
 {
-   ROOT::Internal::TSpinLockGuard slg(fSpinLock);
 
-   if (std::find(fGDirectories.begin(), fGDirectories.end(), globalptr) == fGDirectories.end())
-      fGDirectories.emplace_back(GetCurrentDirectoryLock(), (std::atomic<TDirectory *> *)globalptr);
+   auto &thread_local_gdirectory = GetSharedLocalCurrentDirectory();
+
+   ROOT::Internal::TSpinLockGuard slg(fSpinLock);
+   if (std::find(fGDirectories.begin(), fGDirectories.end(), thread_local_gdirectory) == fGDirectories.end()) {
+      fGDirectories.emplace_back(thread_local_gdirectory);
+   }
+   // FIXME:
    // globalptr->load()->fGDirectories will still contain globalptr, but we cannot
    // know whether globalptr->load() has been deleted by another thread in the meantime.
+   return thread_local_gdirectory->fCurrent;
 }
 
 

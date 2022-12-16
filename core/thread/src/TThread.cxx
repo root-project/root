@@ -912,14 +912,6 @@ void **TThread::Tsd(void *dflt, Int_t k)
 void **TThread::GetTls(Int_t k) {
    TTHREAD_TLS_ARRAY(void*, ROOT::kMaxThreadSlot, tls);
 
-   // In order for the thread 'gDirectory' value to be properly
-   // initialized we set it now (otherwise it defaults
-   // to zero which is 'unexpected')
-   // We initialize it to gROOT rather than gDirectory, since
-   // TFile are currently expected to not be shared by two threads.
-   if (k == ROOT::kDirectoryThreadSlot && tls[k] == nullptr)
-      tls[k] = gROOT;
-
    return &(tls[k]);
 }
 
