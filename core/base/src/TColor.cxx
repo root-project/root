@@ -2183,21 +2183,18 @@ const char *TColor::PixelAsHexString(ULong_t pixel)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save a color with index > 228 as a C++ statement(s) on output stream out.
+/// Return kFALSE if color not saved in the output stream
 
-void TColor::SaveColor(std::ostream &out, Int_t ci)
+Bool_t TColor::SaveColor(std::ostream &out, Int_t ci)
 {
+   if (ci <= 228)
+      return kFALSE;
+
    char quote = '"';
-   Float_t r,g,b,a;
-   Int_t ri, gi, bi;
-   TString cname;
 
    TColor *c = gROOT->GetColor(ci);
-   if (c) {
-      c->GetRGB(r, g, b);
-      a = c->GetAlpha();
-   } else {
-      return;
-   }
+   if (!c)
+      return kFALSE;
 
    if (gROOT->ClassSaved(TColor::Class())) {
       out << std::endl;
@@ -2207,17 +2204,24 @@ void TColor::SaveColor(std::ostream &out, Int_t ci)
       out << "   TColor *color; // for color definition with alpha" << std::endl;
    }
 
-   if (a<1) {
+   Float_t r, g, b, a;
+
+   c->GetRGB(r, g, b);
+   a = c->GetAlpha();
+
+   if (a < 1.) {
       out<<"   ci = "<<ci<<";"<<std::endl;
       out<<"   color = new TColor(ci, "<<r<<", "<<g<<", "<<b<<", "
       <<"\" \", "<<a<<");"<<std::endl;
    } else {
-      ri = (Int_t)(255*r);
-      gi = (Int_t)(255*g);
-      bi = (Int_t)(255*b);
-      cname.Form("#%02x%02x%02x", ri, gi, bi);
+      Int_t ri = (Int_t)(255*r),
+            gi = (Int_t)(255*g),
+            bi = (Int_t)(255*b);
+      TString cname = TString::Format("#%02x%02x%02x", ri, gi, bi);
       out<<"   ci = TColor::GetColor("<<quote<<cname.Data()<<quote<<");"<<std::endl;
    }
+
+   return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
