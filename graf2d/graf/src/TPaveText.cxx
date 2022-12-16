@@ -684,150 +684,94 @@ void TPaveText::SaveLines(std::ostream &out, const char *name, Bool_t saved)
 
    // Iterate over all lines
    char quote = '"';
-   TObject *line;
-   TText *linet;
-   TLatex *latex;
-   TLine *linel;
-   TBox  *lineb;
    TIter next(fLines);
-   Bool_t savedlt = kFALSE;
-   Bool_t savedt = kFALSE;
-   Bool_t savedl = kFALSE;
-   Bool_t savedb = kFALSE;
 
-   while ((line = (TObject*) next())) {
-   // Next primitive is a line
+   Bool_t savedlt = kFALSE, savedt = kFALSE, savedl = kFALSE, savedb = kFALSE;
+
+   while (auto line = next()) {
+      // Next primitive is a line
       if (line->IsA() == TLine::Class()) {
-         linel = (TLine*)line;
+         auto linel = (TLine*)line;
          if (saved || savedl) {
             out<<"   ";
          } else {
             out<<"   TLine *";
             savedl = kTRUE;
          }
-         out<<name<<"_Line = "<<name<<"->AddLine("
+
+         auto line_name = TString::Format("%s_Line", name);
+
+         out<<line_name<<" = "<<name<<"->AddLine("
             <<linel->GetX1()<<","<<linel->GetY1()<<","<<linel->GetX2()<<","<<linel->GetY2()<<");"<<std::endl;
-         if (linel->GetLineColor() != 1) {
-            if (TColor::SaveColor(out, linel->GetLineColor()))
-               out<<"   "<<name<<"_Line->SetLineColor(ci);" << std::endl;
-            else
-               out<<"   "<<name<<"_Line->SetLineColor("<<linel->GetLineColor()<<");"<<std::endl;
-         }
-         if (linel->GetLineStyle() != 1) {
-            out<<"   "<<name<<"_Line->SetLineStyle("<<linel->GetLineStyle()<<");"<<std::endl;
-         }
-         if (linel->GetLineWidth() != 1) {
-            out<<"   "<<name<<"_Line->SetLineWidth("<<linel->GetLineWidth()<<");"<<std::endl;
-         }
+
+         linel->SaveLineAttributes(out, line_name.Data(), 1, 1, 1);
          continue;
       }
-   // Next primitive is a box
+      // Next primitive is a box
       if (line->IsA() == TBox::Class()) {
-         lineb = (TBox*)line;
+         auto lineb = (TBox*)line;
          if (saved || savedb) {
             out<<"   ";
          } else {
             out<<"   TBox *";
             savedb = kTRUE;
          }
-         out<<name<<"_Box = "<<name<<"->AddBox("
+
+         auto box_name = TString::Format("%s_Box", name);
+
+         out<<box_name<<" = "<<name<<"->AddBox("
             <<lineb->GetX1()<<","<<lineb->GetY1()<<","<<lineb->GetX2()<<","<<lineb->GetY2()<<");"<<std::endl;
-         if (lineb->GetFillColor() != 18) {
-            if (TColor::SaveColor(out, lineb->GetFillColor()))
-               out<<"   "<<name<<"_Box->SetFillColor(ci);" << std::endl;
-            else
-               out<<"   "<<name<<"_Box->SetFillColor("<<lineb->GetFillColor()<<");"<<std::endl;
-         }
-         if (lineb->GetFillStyle() != 1001) {
-            out<<"   "<<name<<"_Box->SetFillStyle("<<lineb->GetFillStyle()<<");"<<std::endl;
-         }
-         if (lineb->GetLineColor() != 1) {
-            if (TColor::SaveColor(out, lineb->GetLineColor()))
-               out<<"   "<<name<<"_Box->SetLineColor(ci);" << std::endl;
-            else
-               out<<"   "<<name<<"_Box->SetLineColor("<<lineb->GetLineColor()<<");"<<std::endl;
-         }
-         if (lineb->GetLineStyle() != 1) {
-            out<<"   "<<name<<"_Box->SetLineStyle("<<lineb->GetLineStyle()<<");"<<std::endl;
-         }
-         if (lineb->GetLineWidth() != 1) {
-            out<<"   "<<name<<"_Box->SetLineWidth("<<lineb->GetLineWidth()<<");"<<std::endl;
-         }
+
+         lineb->SaveFillAttributes(out, box_name.Data(), 18, 1001);
+         lineb->SaveLineAttributes(out, box_name.Data(), 1, 1, 1);
          continue;
       }
-   // Next primitive is a text
+      // Next primitive is a text
       if (line->IsA() == TText::Class()) {
-         linet = (TText*)line;
+         auto linet = (TText*)line;
          if (saved || savedt) {
             out<<"   ";
          } else {
             out<<"   TText *";
             savedt = kTRUE;
          }
-         if (!linet->GetX() && !linet->GetY()) {
-            TString s = linet->GetTitle();
-            s.ReplaceAll("\"","\\\"");
-            out<<name<<"_Text = "<<name<<"->AddText("
-               <<quote<<s.Data()<<quote<<");"<<std::endl;
-         } else {
-            out<<name<<"_Text = "<<name<<"->AddText("
-               <<linet->GetX()<<","<<linet->GetY()<<","<<quote<<linet->GetTitle()<<quote<<");"<<std::endl;
-         }
-         if (linet->GetTextColor()) {
-            if (TColor::SaveColor(out, linet->GetTextColor()))
-               out<<"   "<<name<<"_Text->SetTextColor(ci);" << std::endl;
-            else
-               out<<"   "<<name<<"_Text->SetTextColor("<<linet->GetTextColor()<<");"<<std::endl;
-         }
-         if (linet->GetTextFont()) {
-            out<<"   "<<name<<"_Text->SetTextFont("<<linet->GetTextFont()<<");"<<std::endl;
-         }
-         if (linet->GetTextSize()) {
-            out<<"   "<<name<<"_Text->SetTextSize("<<linet->GetTextSize()<<");"<<std::endl;
-         }
-         if (linet->GetTextAngle() != GetTextAngle()) {
-            out<<"   "<<name<<"_Text->SetTextAngle("<<linet->GetTextAngle()<<");"<<std::endl;
-         }
-         if (linet->GetTextAlign()) {
-            out<<"   "<<name<<"_Text->SetTextAlign("<<linet->GetTextAlign()<<");"<<std::endl;
-         }
+
+         auto text_name = TString::Format("%s_Text", name);
+
+         TString s = linet->GetTitle();
+         s.ReplaceSpecialCppChars();
+
+         if (!linet->GetX() && !linet->GetY())
+            out<<text_name<<" = "<<name<<"->AddText(" <<quote<<s<<quote<<");"<<std::endl;
+         else
+            out<<text_name<<" = "<<name<<"->AddText("
+               <<linet->GetX()<<","<<linet->GetY()<<","<<quote<<s<<quote<<");"<<std::endl;
+
+         linet->SaveTextAttributes(out, text_name.Data(), 0, GetTextAngle(), 0, 0, 0);
+         continue;
       }
-   // Next primitive is a Latex text
+      // Next primitive is a Latex text
       if (line->IsA() == TLatex::Class()) {
-         latex = (TLatex*)line;
+         auto latex = (TLatex*)line;
          if (saved || savedlt) {
             out<<"   ";
          } else {
             out<<"   TText *";
             savedlt = kTRUE;
          }
-         if (!latex->GetX() && !latex->GetY()) {
-            TString sl = latex->GetTitle();
-            sl.ReplaceAll("\"","\\\"");
-            out<<name<<"_LaTex = "<<name<<"->AddText("
-               <<quote<<sl.Data()<<quote<<");"<<std::endl;
-         } else {
-            out<<name<<"_LaTex = "<<name<<"->AddText("
-               <<latex->GetX()<<","<<latex->GetY()<<","<<quote<<latex->GetTitle()<<quote<<");"<<std::endl;
-         }
-         if (latex->GetTextColor()) {
-            if (TColor::SaveColor(out, latex->GetTextColor()))
-               out<<"   "<<name<<"_LaTex->SetTextColor(ci);" << std::endl;
-            else
-               out<<"   "<<name<<"_LaTex->SetTextColor("<<latex->GetTextColor()<<");"<<std::endl;
-         }
-         if (latex->GetTextFont()) {
-            out<<"   "<<name<<"_LaTex->SetTextFont("<<latex->GetTextFont()<<");"<<std::endl;
-         }
-         if (latex->GetTextSize()) {
-            out<<"   "<<name<<"_LaTex->SetTextSize("<<latex->GetTextSize()<<");"<<std::endl;
-         }
-         if (latex->GetTextAngle() != GetTextAngle()) {
-            out<<"   "<<name<<"_LaTex->SetTextAngle("<<latex->GetTextAngle()<<");"<<std::endl;
-         }
-         if (latex->GetTextAlign()) {
-            out<<"   "<<name<<"_LaTex->SetTextAlign("<<latex->GetTextAlign()<<");"<<std::endl;
-         }
+
+         auto latex_name = TString::Format("%s_LaTex", name);
+
+         TString sl = latex->GetTitle();
+         sl.ReplaceSpecialCppChars();
+
+         if (!latex->GetX() && !latex->GetY())
+            out<< latex_name << " = "<<name<<"->AddText(" <<quote<<sl<<quote<<");"<<std::endl;
+         else
+            out<< latex_name << " = "<<name<<"->AddText("
+               <<latex->GetX()<<","<<latex->GetY()<<","<<quote<<sl<<quote<<");"<<std::endl;
+
+         latex->SaveTextAttributes(out, latex_name.Data(), 0, GetTextAngle(), 0, 0, 0);
       }
    }
 }
