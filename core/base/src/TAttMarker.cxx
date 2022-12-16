@@ -345,10 +345,9 @@ void TAttMarker::ResetAttMarker(Option_t *)
 void TAttMarker::SaveMarkerAttributes(std::ostream &out, const char *name, Int_t coldef, Int_t stydef, Int_t sizdef)
 {
    if (fMarkerColor != coldef) {
-      if (fMarkerColor > 228) {
-         TColor::SaveColor(out, fMarkerColor);
+      if (TColor::SaveColor(out, fMarkerColor))
          out<<"   "<<name<<"->SetMarkerColor(ci);" << std::endl;
-      } else
+      else
          out<<"   "<<name<<"->SetMarkerColor("<<fMarkerColor<<");"<<std::endl;
    }
    if (fMarkerStyle != stydef) {
