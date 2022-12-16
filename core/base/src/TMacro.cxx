@@ -397,18 +397,19 @@ void TMacro::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    char quote = '"';
    out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TMacro::Class())) {
+   if (gROOT->ClassSaved(TMacro::Class()))
       out<<"   ";
-   } else {
+   else
       out<<"   "<<ClassName()<<" *";
-   }
+
    out<<"macro = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<");"<<std::endl;
-   if (!fLines) return;
+
    TIter next(fLines);
-   TObjString *obj;
-   while ((obj = (TObjString*) next())) {
+   while (auto obj = next()) {
       TString s = obj->GetName();
       s.ReplaceAll("\"","\\\"");
+      s.ReplaceAll("\\n", "\\\\n");
+      s.ReplaceAll("\\t", "\\\\t");
       out<<"   macro->AddLine("<<quote<<s.Data()<<quote<<");"<<std::endl;
    }
    out<<"   macro->Draw("<<quote<<option<<quote<<");"<<std::endl;
