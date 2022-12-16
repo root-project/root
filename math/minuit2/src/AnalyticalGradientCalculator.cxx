@@ -110,7 +110,7 @@ bool AnalyticalGradientCalculator::Hessian(const MinimumParameters &par, MnAlgeb
 bool AnalyticalGradientCalculator::G2(const MinimumParameters &par, MnAlgebraicVector & g2) const {
    // compute G2 using external calculator
    unsigned int n = par.Vec().size();  // n is size of internal parameters
-   assert(g2.Size() == n );
+   assert(g2.size() == n );
    std::vector<double> extG2 = fGradFunc.G2(fTransformation(par.Vec()));
    if (extG2.empty()) {
       MnPrint print("AnalyticalGradientCalculator::G2");

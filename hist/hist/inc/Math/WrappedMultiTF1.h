@@ -127,6 +127,9 @@ namespace ROOT {
          // evaluate the hessian of the function with respect to the parameters
          bool ParameterHessian(const T *x, const double *par, T *h) const override;
 
+         // return capability of computing parameter Hessian
+         bool HasParameterHessian() const override;
+
          // evaluate the 2nd derivatives of the function with respect to the parameters
          bool ParameterG2(const T *, const double *, T *) const override {
             return false; // not yet implemented
@@ -299,26 +302,56 @@ namespace ROOT {
          }
       }
 
+      // struct for dealing of generic Hessian computation, since it is available only in TFormula
+      template <class T>
+      struct GeneralHessianCalc {
+         static bool Hessian(TF1 *, const T *, const double *, T *)
+         {
+            Error("Hessian", "The vectorized implementation of ParameterHessian is not supported");
+            return false;
+         }
+         static bool IsAvailable(TF1 * ) { return false;}
+      };
+
+      template <>
+      struct GeneralHessianCalc<double> {
+         static bool Hessian(TF1 * func, const double *x, const double * par, double * h)
+         {
+            // compute Hessian if TF1 is a formula based
+            unsigned int np = func->GetNpar();
+            auto formula = func->GetFormula();
+            if (!formula) return false;
+            std::vector<double> h2(np*np);
+            func->SetParameters(par);
+            formula->HessianPar(x,h2);
+            for (unsigned int i = 0; i < np; i++) {
+               for (unsigned int j = 0; j <= i; j++) {
+                  unsigned int ih = j + i *(i+1)/2;  // formula for j <= i
+                  unsigned int im = i*np + j;
+                  h[ih] = h2[im];
+               }
+            }
+            return true;
+         }
+         static bool IsAvailable(TF1 * func) {
+            auto formula = func->GetFormula();
+            if (!formula) return false;
+            return formula->GenerateHessianPar();
+         }
+      };
+
+
+
       template <class T>
       bool WrappedMultiTF1Templ<T>::ParameterHessian(const T *x, const double *par, T *h) const
       {
-         // compute Hessian if TF1 is a formula based
-         auto formula = fFunc->GetFormula();
-         if (!formula) return false;
-         // need to be sure h is initialized to zero values
-         unsigned int np = NPar();
-         //TFormula requires a np*np vector
-         std::vector<T> h2(np*np);
-         fFunc->SetParameters(par);
-         formula->HessianPar(x,h2);
-         for (unsigned int i = 0; i < np; i++) {
-            for (unsigned int j = 0; j <= i; j++) {
-               unsigned int ih = j + i *(i+1)/2;  // formula for j <= i
-               unsigned int im = i*np + j;
-               h[ih] = h2[im];
-            }
-         }
-         return true;
+         return GeneralHessianCalc<T>::Hessian(fFunc, x, par, h);
+      }
+
+      template <class T>
+      bool WrappedMultiTF1Templ<T>::HasParameterHessian() const
+      {
+         return GeneralHessianCalc<T>::IsAvailable(fFunc);
       }
 
       template <class T>

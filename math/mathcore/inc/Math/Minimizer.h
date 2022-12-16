@@ -25,6 +25,7 @@
 #include <string>
 #include <limits>
 #include <cmath>
+#include <vector>
 #include <functional>
 
 
