@@ -1,0 +1,32 @@
+{
+    "metadata": [
+        [
+            "test_param1",
+            "test_param2"
+        ]
+    ],
+    "worker:eval_partition:test_partition1": [
+        110,
+        190,
+        325,
+        330,
+        530,
+        570
+    ],
+    "worker:eval_partition:test_partition2": [
+        110,
+        190,
+        355,
+        370,
+        530,
+        570
+    ],
+    "worker:eval_task:0": [
+        110,
+        190,
+        320,
+        380,
+        530,
+        570
+    ]
+}

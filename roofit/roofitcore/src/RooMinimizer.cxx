@@ -58,6 +58,7 @@ automatic PDF optimization.
 #include "RooFit/TestStatistics/RooRealL.h"
 #ifdef R__HAS_ROOFIT_MULTIPROCESS
 #include "RooFit/MultiProcess/Config.h"
+#include "RooFit/MultiProcess/ProcessTimer.h"
 #endif
 
 #include "TClass.h"
@@ -114,10 +115,10 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
                                   << "also setting parallel gradient calculation mode." << std::endl;
             _cfg.enableParallelGradient = 1;
          }
-
          // If _cfg.parallelize is larger than zero set the number of workers to that value. Otherwise do not do anything and let 
          // RooFit::MultiProcess handle the number of workers
          if (_cfg.parallelize > 0) RooFit::MultiProcess::Config::setDefaultNWorkers(_cfg.parallelize);
+         RooFit::MultiProcess::Config::setTimingAnalysis(_cfg.timingAnalysis);
 
          _fcn = std::make_unique<RooFit::TestStatistics::MinuitFcnGrad>(
             nll_real->getRooAbsL(), this, _theFitter->Config().ParamsSettings(),
@@ -309,6 +310,15 @@ bool RooMinimizer::fitFcn() const
 /// \param[in] alg  Fit algorithm to use. (Optional)
 int RooMinimizer::minimize(const char *type, const char *alg)
 {
+   if (_cfg.timingAnalysis) 
+#ifdef R__HAS_ROOFIT_MULTIPROCESS
+      addParamsToProcessTimer();
+#else
+      throw std::logic_error(
+            "ProcessTimer, but ROOT was not compiled with multiprocessing enabled, "
+            "please recompile with -Droofit_multiprocess=ON for logging with the "
+            "ProcessTimer.");
+#endif
    _fcn->Synchronize(_theFitter->Config().ParamsSettings());
 
    setMinimizerType(type);
@@ -740,6 +750,27 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
    params->assign(*paramSave);
 
    return frame;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add parameters in metadata field to process timer
+
+void RooMinimizer::addParamsToProcessTimer()
+{
+#ifdef R__HAS_ROOFIT_MULTIPROCESS
+  // parameter indices for use in timing heat matrix
+  std::vector<std::string> parameter_names;
+  for (auto && parameter : *_fcn->GetFloatParamList()) {
+    parameter_names.push_back(parameter->GetName());
+    if (_cfg.verbose) {
+      coutI(Minimization) << "parameter name: " << parameter_names.back() << std::endl;
+    }
+  }
+  RooFit::MultiProcess::ProcessTimer::add_metadata(parameter_names);
+#else
+   coutI(Minimization) << "Not adding parameters to processtimer because multiprocessing "
+                       << "is not enabled." << std::endl;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
