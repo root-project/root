@@ -1,13 +1,13 @@
 /*
-* Project: xRooFit
-* Author:
-*   Will Buttinger, RAL 2022
-*
-* Copyright (c) 2022, CERN
-*
-* Redistribution and use in source and binary forms,
-* with or without modification, are permitted according to the terms
-* listed in LICENSE (http://roofit.sourceforge.net/license.txt)
+ * Project: xRooFit
+ * Author:
+ *   Will Buttinger, RAL 2022
+ *
+ * Copyright (c) 2022, CERN
+ *
+ * Redistribution and use in source and binary forms,
+ * with or without modification, are permitted according to the terms
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
 #include "xRooFit/xRooBrowser.h"
@@ -62,39 +62,34 @@ xRooBrowser::xRooBrowser(xRooNode *o) : TBrowser("RooBrowser", o, "RooFit Browse
    }
 
    // override file menu event handling so that can intercept "Open"
-   if(auto rb = dynamic_cast<TRootBrowser *>(GetBrowserImp())) {
+   if (auto rb = dynamic_cast<TRootBrowser *>(GetBrowserImp())) {
       rb->Disconnect(rb->fMenuFile, "Activated(Int_t)", rb, "HandleMenu(Int_t)");
       rb->fMenuFile->Connect("Activated(Int_t)", ClassName(), this, "HandleMenu(Int_t)");
    }
 }
 
-void xRooBrowser::HandleMenu(Int_t id) {
-   if(id == TRootBrowser::kOpenFile) {
+void xRooBrowser::HandleMenu(Int_t id)
+{
+   if (id == TRootBrowser::kOpenFile) {
       static TString dir(".");
       TGFileInfo fi;
-      static const char *openFileTypes[] = {
-         "ROOT files",   "*.root",
-         "JSON files",   "*.json",
-         "All files",    "*",
-         0,              0
-      };
+      static const char *openFileTypes[] = {"ROOT files", "*.root", "JSON files", "*.json", "All files", "*", 0, 0};
       fi.fFileTypes = openFileTypes;
       fi.SetIniDir(dir);
-      new TGFileDialog(gClient->GetDefaultRoot(), dynamic_cast<TRootBrowser *>(GetBrowserImp()),
-                       kFDOpen,&fi);
+      new TGFileDialog(gClient->GetDefaultRoot(), dynamic_cast<TRootBrowser *>(GetBrowserImp()), kFDOpen, &fi);
       dir = fi.fIniDir;
       std::vector<std::string> filesToOpen;
       if (fi.fMultipleSelection && fi.fFileNamesList) {
          TObjString *el;
          TIter next(fi.fFileNamesList);
-         while ((el = (TObjString *) next())) {
+         while ((el = (TObjString *)next())) {
             filesToOpen.push_back(gSystem->UnixPathName(el->GetString()));
          }
       } else if (fi.fFilename) {
          filesToOpen.push_back(gSystem->UnixPathName(fi.fFilename));
       }
       if (!filesToOpen.empty()) {
-         for(auto& f : filesToOpen) {
+         for (auto &f : filesToOpen) {
             if (TString(f.data()).EndsWith(".json")) {
                fTopNode->push_back(std::make_shared<xRooNode>(f.c_str()));
             } else {
@@ -102,35 +97,44 @@ void xRooBrowser::HandleMenu(Int_t id) {
             }
          }
       }
-   } else if(auto rb = dynamic_cast<TRootBrowser *>(GetBrowserImp())) {
+   } else if (auto rb = dynamic_cast<TRootBrowser *>(GetBrowserImp())) {
       rb->HandleMenu(id);
    }
 }
 
-xRooBrowser::xRooBrowser() :xRooBrowser([]() {
-    gEnv->SetValue("X11.UseXft","no"); // for faster x11
-    gEnv->SetValue("X11.Sync","no");
-    gEnv->SetValue("X11.FindBestVisual","no");
-    gEnv->SetValue("Browser.Name","TRootBrowser"); // forces classic root browser (in 6.26 onwards)
-    return new xRooNode("!Workspaces"); }()) {
-
+xRooBrowser::xRooBrowser()
+   : xRooBrowser([]() {
+        gEnv->SetValue("X11.UseXft", "no"); // for faster x11
+        gEnv->SetValue("X11.Sync", "no");
+        gEnv->SetValue("X11.FindBestVisual", "no");
+        gEnv->SetValue("Browser.Name", "TRootBrowser"); // forces classic root browser (in 6.26 onwards)
+        return new xRooNode("!Workspaces");
+     }())
+{
 }
 
-void xRooBrowser::ls(const char* path) const {
-   if (!fNode) return;
-   if (!path) fNode->Print();
+void xRooBrowser::ls(const char *path) const
+{
+   if (!fNode)
+      return;
+   if (!path)
+      fNode->Print();
    else {
       // will throw exception if not found
       fNode->at(path)->Print();
    }
 }
 
-void xRooBrowser::cd(const char* path) {
+void xRooBrowser::cd(const char *path)
+{
    auto _node = fNode->at(path); // throws exception if not found
    fNode = _node;
 }
 
-xRooNode* xRooBrowser::GetSelected() { return dynamic_cast<xRooNode*>(TBrowser::GetSelected()); }
+xRooNode *xRooBrowser::GetSelected()
+{
+   return dynamic_cast<xRooNode *>(TBrowser::GetSelected());
+}
 
 #ifdef XROOFIT_NAMESPACE
 }

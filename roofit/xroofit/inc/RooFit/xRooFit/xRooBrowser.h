@@ -1,13 +1,13 @@
 /*
-* Project: xRooFit
-* Author:
-*   Will Buttinger, RAL 2022
-*
-* Copyright (c) 2022, CERN
-*
-* Redistribution and use in source and binary forms,
-* with or without modification, are permitted according to the terms
-* listed in LICENSE (http://roofit.sourceforge.net/license.txt)
+ * Project: xRooFit
+ * Author:
+ *   Will Buttinger, RAL 2022
+ *
+ * Copyright (c) 2022, CERN
+ *
+ * Redistribution and use in source and binary forms,
+ * with or without modification, are permitted according to the terms
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
 #ifndef XROOFIT_NAMESPACE
@@ -25,25 +25,24 @@ namespace XROOFIT_NAMESPACE {
 
 class xRooNode;
 
-class xRooBrowser: public TBrowser, public TQObject {
+class xRooBrowser : public TBrowser, public TQObject {
 public:
-    xRooBrowser();
-    xRooBrowser(xRooNode* o);
+   xRooBrowser();
+   xRooBrowser(xRooNode *o);
 
-    xRooNode* GetSelected();
+   xRooNode *GetSelected();
 
-    void ls(const char* path = nullptr) const override;
-    void cd(const char* path);
+   void ls(const char *path = nullptr) const override;
+   void cd(const char *path);
 
-    void HandleMenu(Int_t id);
+   void HandleMenu(Int_t id);
 
 private:
-    std::shared_ptr<xRooNode> fNode; //!
-    std::shared_ptr<xRooNode> fTopNode; //!
+   std::shared_ptr<xRooNode> fNode;    //!
+   std::shared_ptr<xRooNode> fTopNode; //!
 
- public:
-ClassDefOverride(xRooBrowser,0)
-
+public:
+   ClassDefOverride(xRooBrowser, 0)
 };
 
 #ifdef XROOFIT_NAMESPACE
