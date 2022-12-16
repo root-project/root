@@ -17,6 +17,7 @@
 #define XROOFIT_XROOBROWSER_H
 
 #include "TBrowser.h"
+#include "TQObject.h"
 
 #ifdef XROOFIT_NAMESPACE
 namespace XROOFIT_NAMESPACE {
@@ -24,7 +25,7 @@ namespace XROOFIT_NAMESPACE {
 
 class xRooNode;
 
-class xRooBrowser: public TBrowser {
+class xRooBrowser: public TBrowser, public TQObject {
 public:
     xRooBrowser();
     xRooBrowser(xRooNode* o);
@@ -34,11 +35,14 @@ public:
     void ls(const char* path = nullptr) const override;
     void cd(const char* path);
 
+    void HandleMenu(Int_t id);
+
 private:
     std::shared_ptr<xRooNode> fNode; //!
     std::shared_ptr<xRooNode> fTopNode; //!
 
-ClassDefOverride(TBrowser,0)
+ public:
+ClassDefOverride(xRooBrowser,0)
 
 };
 
