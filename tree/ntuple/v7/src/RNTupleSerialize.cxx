@@ -34,8 +34,8 @@ using RResult = ROOT::Experimental::RResult<T>;
 namespace {
 using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
 
-std::uint32_t SerializeFieldV1(
-   const ROOT::Experimental::RFieldDescriptor &fieldDesc, ROOT::Experimental::DescriptorId_t physParentId, void *buffer)
+std::uint32_t SerializeFieldV1(const ROOT::Experimental::RFieldDescriptor &fieldDesc,
+                               ROOT::Experimental::DescriptorId_t onDiskParentId, bool isAliasField, void *buffer)
 {
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
@@ -46,13 +46,15 @@ std::uint32_t SerializeFieldV1(
 
    pos += RNTupleSerializer::SerializeUInt32(fieldDesc.GetFieldVersion(), *where);
    pos += RNTupleSerializer::SerializeUInt32(fieldDesc.GetTypeVersion(), *where);
-   pos += RNTupleSerializer::SerializeUInt32(physParentId, *where);
+   pos += RNTupleSerializer::SerializeUInt32(onDiskParentId, *where);
    pos += RNTupleSerializer::SerializeFieldStructure(fieldDesc.GetStructure(), *where);
+   std::uint16_t flags = isAliasField ? RNTupleSerializer::kFlagAliasField : 0;
    if (fieldDesc.GetNRepetitions() > 0) {
-      pos += RNTupleSerializer::SerializeUInt16(RNTupleSerializer::kFlagRepetitiveField, *where);
+      flags |= RNTupleSerializer::kFlagRepetitiveField;
+      pos += RNTupleSerializer::SerializeUInt16(flags, *where);
       pos += RNTupleSerializer::SerializeUInt64(fieldDesc.GetNRepetitions(), *where);
    } else {
-      pos += RNTupleSerializer::SerializeUInt16(0, *where);
+      pos += RNTupleSerializer::SerializeUInt16(flags, *where);
    }
    pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldName(), *where);
    pos += RNTupleSerializer::SerializeString(fieldDesc.GetTypeName(), *where);
@@ -83,7 +85,14 @@ std::uint32_t SerializeFieldTree(
       for (const auto &f : desc.GetFieldIterable(parentId)) {
          auto onDiskFieldId = context.MapFieldId(f.GetId());
          auto onDiskParentId = (parentId == desc.GetFieldZeroId()) ? onDiskFieldId : context.GetOnDiskFieldId(parentId);
-         pos += SerializeFieldV1(f, onDiskParentId, *where);
+         bool isAliasField = false;
+         for (const auto &c : desc.GetColumnIterable(f.GetId())) {
+            if (c.IsAliasColumn()) {
+               isAliasField = true;
+               break;
+            }
+         }
+         pos += SerializeFieldV1(f, onDiskParentId, isAliasField, *where);
          idQueue.push_back(f.GetId());
       }
    }
