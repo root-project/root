@@ -15,6 +15,7 @@ The following people have contributed to this new version:
  Bertrand Bellenot, CERN/SFT,\
  Jakob Blomer, CERN/SFT,\
  Rene Brun, CERN/SFT,\
+ Will Buttinger, RAL/Atlas,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
  Gerri Ganis, CERN/SFT,\
@@ -230,6 +231,13 @@ function that only assigns the value of another `RooAbsReal`.
 
 With all these inconsistencies, it was deemed safer to disable copy assignment
 of RooAbsArgs from now on.
+
+### RooBrowser: a graphical user interface for workspace exploration, visualization, and analysis
+
+This experimental new feature utilises the technology from ROOT's familiar `TBrowser` in order to create an interface for graphically exploring and visualizing the content of a workspace, as well as perform basic fitting operations with the models and datasets.
+
+![Demonstration of RooBrowser using json workspace from the roofit tutorials directory](RooBrowser.png)
+
 
 ### Removal of deprecated HistFactory functionality
 

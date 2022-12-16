@@ -1,0 +1,28 @@
+ROOT_STANDARD_LIBRARY_PACKAGE(RooFitXRooFit
+        HEADERS
+        RooBrowser.h
+        RooFit/xRooFit/xRooNode.h
+        RooFit/xRooFit/xRooBrowser.h
+        SOURCES
+        src/Banner.cxx
+        src/Asymptotics.cxx
+        src/xRooBrowser.cxx
+        src/xRooFit.cxx
+        src/xRooHypoSpace.cxx
+        src/xRooNLLVar.cxx
+        src/xRooNode.cxx
+        src/xRooNode_interactive.cxx
+        DICTIONARY_OPTIONS
+        "-writeEmptyRootPCM"
+        LIBRARIES
+        HistFactory
+        RooFit
+        RooFitHS3
+        RooStats
+        DEPENDENCIES
+        Gui
+        Ged
+        LINKDEF
+        inc/LinkDef.h
+        )
+target_compile_definitions(RooFitXRooFit PUBLIC XROOFIT_NAMESPACE=RooFit::Detail::XRooFit)
