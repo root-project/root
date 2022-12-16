@@ -3306,39 +3306,11 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (TestBit(kNotDraw)) {
       out << "   " << f1Name.Data() << "->SetBit(TF1::kNotDraw);" << std::endl;
    }
-   if (GetFillColor() != 0) {
-      if (TColor::SaveColor(out, GetFillColor()))
-         out << "   " << f1Name.Data() << "->SetFillColor(ci);" << std::endl;
-      else
-         out << "   " << f1Name.Data() << "->SetFillColor(" << GetFillColor() << ");" << std::endl;
-   }
-   if (GetFillStyle() != 1001) {
-      out << "   " << f1Name.Data() << "->SetFillStyle(" << GetFillStyle() << ");" << std::endl;
-   }
-   if (GetMarkerColor() != 1) {
-      if (TColor::SaveColor(out, GetMarkerColor()))
-         out << "   " << f1Name.Data() << "->SetMarkerColor(ci);" << std::endl;
-      else
-         out << "   " << f1Name.Data() << "->SetMarkerColor(" << GetMarkerColor() << ");" << std::endl;
-   }
-   if (GetMarkerStyle() != 1) {
-      out << "   " << f1Name.Data() << "->SetMarkerStyle(" << GetMarkerStyle() << ");" << std::endl;
-   }
-   if (GetMarkerSize() != 1) {
-      out << "   " << f1Name.Data() << "->SetMarkerSize(" << GetMarkerSize() << ");" << std::endl;
-   }
-   if (GetLineColor() != 1) {
-      if (TColor::SaveColor(out, GetLineColor()))
-         out << "   " << f1Name.Data() << "->SetLineColor(ci);" << std::endl;
-      else
-         out << "   " << f1Name.Data() << "->SetLineColor(" << GetLineColor() << ");" << std::endl;
-   }
-   if (GetLineWidth() != 4) {
-      out << "   " << f1Name.Data() << "->SetLineWidth(" << GetLineWidth() << ");" << std::endl;
-   }
-   if (GetLineStyle() != 1) {
-      out << "   " << f1Name.Data() << "->SetLineStyle(" << GetLineStyle() << ");" << std::endl;
-   }
+
+   SaveFillAttributes(out, f1Name.Data(), 0, 1001);
+   SaveMarkerAttributes(out, f1Name.Data(), 1, 1, 1);
+   SaveLineAttributes(out, f1Name.Data(), 1, 1, 4);
+
    if (GetChisquare() != 0) {
       out << "   " << f1Name.Data() << "->SetChisquare(" << GetChisquare() << ");" << std::endl;
       out << "   " << f1Name.Data() << "->SetNDF(" << GetNDF() << ");" << std::endl;
