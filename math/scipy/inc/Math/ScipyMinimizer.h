@@ -43,7 +43,6 @@ namespace Experimental {
    @ingroup MultiMin
 */
 
-
 //_____________________________________________________________________________________
 /**
  * \class ScipyMinimizer
@@ -58,11 +57,13 @@ namespace Experimental {
 
 class ScipyMinimizer : public BasicMinimizer {
 private:
-      PyObject *fMinimize;
-      PyObject *fTarget;
+   PyObject *fMinimize;
+   PyObject *fTarget;
+
 protected:
-      PyObject *fGlobalNS;
-      PyObject *fLocalNS;
+   PyObject *fGlobalNS;
+   PyObject *fLocalNS;
+
 public:
    /**
       Default constructor
@@ -91,14 +92,15 @@ public:
    /**
       Checks if Python was initialized
     */
-   int  PyIsInitialized();
+   int PyIsInitialized();
 
    /*
       Python finalization
     */
    void PyFinalize();
-   void PyRunString(TString code, TString errorMessage="Failed to run python code", int start=Py_single_input);
+   void PyRunString(TString code, TString errorMessage = "Failed to run python code", int start = Py_single_input);
    void LoadWrappers();
+
 private:
    // usually copying is non trivial, so we make this unaccessible
 
@@ -107,13 +109,12 @@ private:
    */
    ScipyMinimizer(const ScipyMinimizer &) : BasicMinimizer() {}
 
-
 public:
    /// set the function to minimize
-   //virtual void SetFunction(const ROOT::Math::IMultiGenFunction &func);
+   // virtual void SetFunction(const ROOT::Math::IMultiGenFunction &func);
 
    /// set the function to minimize
-   //virtual void SetFunction(const ROOT::Math::IMultiGradFunction &func) { BasicMinimizer::SetFunction(func); }
+   // virtual void SetFunction(const ROOT::Math::IMultiGradFunction &func) { BasicMinimizer::SetFunction(func); }
 
    /// method to perform the minimization
    virtual bool Minimize();
@@ -132,6 +133,7 @@ public:
        The ordering of the variables is the same as in errors
    */
    virtual double CovMatrix(unsigned int, unsigned int) const { return 0; }
+
 protected:
    ClassDef(ScipyMinimizer, 0) //
 };
