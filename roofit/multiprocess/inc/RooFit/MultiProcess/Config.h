@@ -26,6 +26,9 @@ public:
    static void setDefaultNWorkers(unsigned int N_workers);
    static unsigned int getDefaultNWorkers();
 
+   static void setTimingAnalysis(bool timingAnalysis);
+   static bool getTimingAnalysis();
+
    struct LikelihoodJob {
       // magic values to indicate that the number of tasks will be set automatically
       constexpr static std::size_t automaticNEventTasks = 0;
@@ -46,6 +49,7 @@ public:
    };
 private:
    static unsigned int defaultNWorkers_;
+   static bool timingAnalysis_;
 };
 
 } // namespace MultiProcess

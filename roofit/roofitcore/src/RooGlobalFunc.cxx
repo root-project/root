@@ -192,6 +192,7 @@ namespace RooFit {
   RooCmdArg NumCPU(Int_t nCPU, Int_t interleave)   { return RooCmdArg("NumCPU",nCPU,interleave,0,0,0,0,0,0) ; }
   RooCmdArg ModularL(bool flag) { return RooCmdArg("ModularL",flag,0,0,0,0,0,0) ; }
   RooCmdArg Parallelize(Int_t nWorkers) { return RooCmdArg("Parallelize",nWorkers,0,0,0,0,0,0,0) ; }
+  RooCmdArg TimingAnalysis(bool flag) { return RooCmdArg("TimingAnalysis",flag,0,0,0,0,0,0) ; }
   RooCmdArg BatchMode(std::string const& batchMode) {
       std::string lower = batchMode;
       std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c){ return std::tolower(c); });

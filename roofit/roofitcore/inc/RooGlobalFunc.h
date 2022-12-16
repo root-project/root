@@ -216,6 +216,7 @@ RooCmdArg DataError(Int_t) ;
 RooCmdArg NumCPU(Int_t nCPU, Int_t interleave=0) ;
 RooCmdArg Parallelize(int nWorkers) ;
 RooCmdArg ModularL(bool flag=false) ;
+RooCmdArg TimingAnalysis(bool timingAnalysis) ;
 
 RooCmdArg BatchMode(std::string const& batchMode="cpu");
 // The const char * overload is necessary, otherwise the compiler will cast a

@@ -192,6 +192,7 @@ public:
       int parallelize = 0;
       bool enableParallelGradient = true;
       bool enableParallelDescent = false;
+      bool timingAnalysis = false;
       const RooArgSet* minosSet = nullptr;
       std::string minType;
       std::string minAlg = "minuit";

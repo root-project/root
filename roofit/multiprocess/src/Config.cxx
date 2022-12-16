@@ -13,6 +13,7 @@
 #include "RooFit/MultiProcess/Config.h"
 #include "RooFit/MultiProcess/JobManager.h"
 #include "PriorityQueue.h"
+#include "RooFit/MultiProcess/ProcessManager.h"
 
 #include <thread> // std::thread::hardware_concurrency()
 #include <cstdio>
@@ -74,6 +75,20 @@ void Config::setDefaultNWorkers(unsigned int N_workers)
    }
 }
 
+void Config::setTimingAnalysis(bool timingAnalysis)
+{
+   if (JobManager::is_instantiated() && JobManager::instance()->process_manager().is_initialized()) {
+      printf("Warning: Config::setTimingAnalysis cannot set logging of timings, forking has already taken place!\n");
+   } else {
+      timingAnalysis_ = timingAnalysis;
+   }
+}
+
+bool Config::getTimingAnalysis()
+{
+   return timingAnalysis_;
+}
+
 unsigned int Config::getDefaultNWorkers()
 {
    return defaultNWorkers_;
@@ -132,6 +147,7 @@ unsigned int Config::defaultNWorkers_ = std::thread::hardware_concurrency();
 std::size_t Config::LikelihoodJob::defaultNEventTasks = Config::LikelihoodJob::automaticNEventTasks;
 std::size_t Config::LikelihoodJob::defaultNComponentTasks = Config::LikelihoodJob::automaticNComponentTasks;
 Config::Queue::QueueType Config::Queue::queueType_ = Config::Queue::QueueType::FIFO;
+bool Config::timingAnalysis_ = false;
 
 } // namespace MultiProcess
 } // namespace RooFit
