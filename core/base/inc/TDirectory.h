@@ -146,15 +146,22 @@ protected:
    // Struct to hold the pointer to a thread local gDirectory pointer and
    // a related atomic_flag to enable locking access to that gDirectory.
    struct TGDirectory {
-      TGDirectory(std::atomic_flag* f, std::atomic<TDirectory*> *d) : fLock(f), fCurrent(d) {}
-      bool operator==(std::atomic<TDirectory*> *d) {
-         return fCurrent == d;
+      TGDirectory(TDirectory *in) : fCurrent(in)
+      {
+         // MSVC doesn't support fSpinLock=ATOMIC_FLAG_INIT; in the class definition
+         std::atomic_flag_clear(&fLock);
       }
-      std::atomic_flag          *fLock = nullptr;
-      std::atomic<TDirectory *> *fCurrent = nullptr;
+      bool operator==(std::atomic<TDirectory*> *d)
+      {
+         return &fCurrent == d;
+      }
+      std::atomic_flag          fLock;
+      std::atomic<TDirectory *> fCurrent{ nullptr };
    };
 
-   std::vector<TGDirectory> fGDirectories; //! thread local gDirectory pointing to this object.
+   static std::shared_ptr<TDirectory::TGDirectory> &GetSharedLocalCurrentDirectory();
+
+   std::vector<std::shared_ptr<TDirectory::TGDirectory>> fGDirectories; //! thread local gDirectory pointing to this object.
 
    std::atomic<size_t> fContextPeg{0};  //! Counter delaying the TDirectory destructor from finishing.
    mutable std::atomic_flag fSpinLock;  //! MSVC doesn't support = ATOMIC_FLAG_INIT;
@@ -168,8 +175,9 @@ protected:
            void   FillFullPath(TString& buf) const;
            void   RegisterContext(TContext *ctxt);
            void   UnregisterContext(TContext *ctxt);
-           void   RegisterGDirectory(std::atomic<TDirectory*>*);
            void   BuildDirectory(TFile* motherFile, TDirectory* motherDir);
+
+   std::atomic<TDirectory*> &RegisterGDirectory(std::atomic<TDirectory*> *);
 
    friend class TContext;
    friend struct ROOT::Internal::TDirectoryAtomicAdapter;
@@ -350,7 +358,7 @@ namespace Internal {
 
       TDirectory *operator=(TDirectory *newvalue) {
          if (newvalue) {
-            newvalue->RegisterGDirectory(&fValue);
+            newvalue->RegisterGDirectory(&fValue); // FIXME this is wrong :(
          }
          fValue = newvalue;
          return newvalue;
