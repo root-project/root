@@ -257,7 +257,7 @@ public:
    TCollection      *GetListOfFunctionTemplates();
    TList            *GetListOfBrowsables() const { return fBrowsables; }
    TDataType        *GetType(const char *name, Bool_t load = kFALSE) const;
-   TFile            *GetFile() const { if (gDirectory != this) return gDirectory->GetFile(); else return 0;}
+   TFile            *GetFile() const { if (gDirectory && gDirectory != this) return gDirectory->GetFile(); else return nullptr;}
    TFile            *GetFile(const char *name) const;
    TFunctionTemplate*GetFunctionTemplate(const char *name);
    TStyle           *GetStyle(const char *name) const;
