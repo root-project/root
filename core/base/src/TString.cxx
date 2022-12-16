@@ -1094,6 +1094,21 @@ TString& TString::ReplaceAll(const char *s1, Ssiz_t ls1, const char *s2,
    return *this;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Find special characters which are typically used in `printf()` calls
+/// and replace them by appropriate escape sequences. Result can be
+/// stored as string argument in ROOT macros. The content of TString will be changed!
+/// Following symbols are handled: ", \n, \t, \a, \b, \r, \0, \v, \?, \'
+
+TString &TString::ReplaceSpecialCppChars()
+{
+   return ReplaceAll("\"", "\\\"").ReplaceAll("\\n", "\\\\n").ReplaceAll("\\t", "\\\\t").ReplaceAll("\\a", "\\\\a")
+          .ReplaceAll("\\b", "\\\\b").ReplaceAll("\\r", "\\\\r").ReplaceAll("\0", "\\\\0").ReplaceAll("\\v", "\\\\v")
+          .ReplaceAll("\\?", "\\\\?").ReplaceAll("\\'", "\\\\'");
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove char c at begin and/or end of string (like Strip()) but
 /// modifies directly the string.
