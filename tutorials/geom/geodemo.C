@@ -50,9 +50,9 @@ void MakePicture()
 //      view->RotateView(248,66);
       if (axis) view->ShowAxis();
    }
-   Bool_t is_raytracing = gGeoManager->GetGeomPainter()->IsRaytracing();
+   Bool_t is_raytracing = gGeoManager->GetTopVolume()->IsRaytracing();
    if (is_raytracing != raytracing) {
-      gGeoManager->GetGeomPainter()->SetRaytracing(raytracing);
+      gGeoManager->GetTopVolume()->SetVisRaytrace(raytracing);
       gPad->Modified();
       gPad->Update();
    }
@@ -148,13 +148,13 @@ Int_t randomColor()
 //______________________________________________________________________________
 void raytrace() {
    raytracing = !raytracing;
-   if (!gGeoManager) return;
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return;
-   painter->SetRaytracing(raytracing);
-   if (!gPad) return;
-   gPad->Modified();
-   gPad->Update();
+   if (gGeoManager && gPad) {
+      auto top = gGeoManager->GetTopVolume();
+      bool drawn = gPad->GetListOfPrimitives()->FindObject(top);
+      if (drawn) top->SetVisRaytrace(raytracing);
+      gPad->Modified();
+      gPad->Update();
+   }
 }
 
 //______________________________________________________________________________

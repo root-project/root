@@ -36,9 +36,9 @@ TCanvas *create_canvas(const char *title, bool divide = true)
 //______________________________________________________________________________
 void MakePicture()
 {
-   Bool_t is_raytracing = gGeoManager->GetGeomPainter()->IsRaytracing();
+   Bool_t is_raytracing = gGeoManager->GetTopVolume()->IsRaytracing();
    if (is_raytracing != raytracing) {
-      gGeoManager->GetGeomPainter()->SetRaytracing(raytracing);
+      gGeoManager->GetTopVolume()->SetVisRaytrace(raytracing);
       gPad->Modified();
       gPad->Update();
    }
@@ -259,12 +259,12 @@ void s_complex()
 //______________________________________________________________________________
 void raytrace()
 {
-   raytracing = !raytracing;
-   if (!gGeoManager) return;
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (painter)
-      painter->SetRaytracing(raytracing);
-   if (gPad) {
+   if (gGeoManager && gPad) {
+      auto top = gGeoManager->GetTopVolume();
+      bool drawn = gPad->GetListOfPrimitives()->FindObject(top);
+      if (drawn) top->SetVisRaytrace(raytracing);
+
+      printf("raytrace %d\n", raytracing);
       gPad->Modified();
       gPad->Update();
    }
