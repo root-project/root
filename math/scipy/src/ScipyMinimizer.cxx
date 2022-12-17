@@ -29,6 +29,19 @@ PyObject *target_function(PyObject * /*self*/, PyObject *args)
    return PyFloat_FromDouble(r);
 };
 
+PyObject *jac_function(PyObject * /*self*/, PyObject *args)
+{
+   PyArrayObject *arr = (PyArrayObject *)PyTuple_GetItem(args, 0);
+
+   uint size = PyArray_SIZE(arr);
+   auto params = (double *)PyArray_DATA(arr);
+   double values[size];
+   gGradFunction->Gradient(params, values);
+   npy_intp dims[1] = {size};
+   PyObject *py_array = PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, values);
+   return py_array;
+};
+
 //_______________________________________________________________________
 ScipyMinimizer::ScipyMinimizer() : BasicMinimizer()
 {
@@ -55,6 +68,7 @@ void ScipyMinimizer::PyInitialize()
    static PyObject *ParamsError;
    static PyMethodDef ParamsMethods[] = {
       {"target_function", target_function, METH_VARARGS, "Target function to minimize."},
+      {"jac_function", jac_function, METH_VARARGS, "Jacobian function."},
       {NULL, NULL, 0, NULL} /* Sentinel */
    };
 
@@ -100,8 +114,9 @@ void ScipyMinimizer::PyInitialize()
    // Scipy initialization
    PyRunString("from scipy.optimize import minimize");
    fMinimize = PyDict_GetItemString(fLocalNS, "minimize");
-   PyRunString("from params import target_function");
+   PyRunString("from params import target_function, jac_function");
    fTarget = PyDict_GetItemString(fLocalNS, "target_function");
+   fJacobian = PyDict_GetItemString(fLocalNS, "jac_function");
 }
 
 //_______________________________________________________________________
@@ -130,7 +145,6 @@ bool ScipyMinimizer::Minimize()
    (gFunction) = ObjFunction();
    (gGradFunction) = GradObjFunction();
    auto method = fOptions.MinimizerAlgorithm();
-
    std::cout << "=== Scipy Minimization" << std::endl;
    std::cout << "=== Method: " << method << std::endl;
    std::cout << "=== Initial value: (";
@@ -147,7 +161,7 @@ bool ScipyMinimizer::Minimize()
 
    PyObject *pargs = PyTuple_New(0);
 
-   auto pyvalues = Py_BuildValue("(OOOs)", fTarget, py_array, pargs, method.c_str());
+   auto pyvalues = Py_BuildValue("(OOOsO)", fTarget, py_array, pargs, method.c_str(), fJacobian);
 
    PyObject *result = PyObject_CallObject(fMinimize, pyvalues);
    Py_DECREF(pyvalues);

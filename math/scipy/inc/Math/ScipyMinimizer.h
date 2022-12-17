@@ -59,6 +59,7 @@ class ScipyMinimizer : public BasicMinimizer {
 private:
    PyObject *fMinimize;
    PyObject *fTarget;
+   PyObject *fJacobian;
 
 protected:
    PyObject *fGlobalNS;
@@ -98,8 +99,10 @@ public:
       Python finalization
     */
    void PyFinalize();
+   /*
+      Python code execution
+    */
    void PyRunString(TString code, TString errorMessage = "Failed to run python code", int start = Py_single_input);
-   void LoadWrappers();
 
 private:
    // usually copying is non trivial, so we make this unaccessible
