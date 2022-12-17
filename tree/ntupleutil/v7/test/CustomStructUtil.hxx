@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 
-
 struct BaseUtil {
    int base;
 };
@@ -20,27 +19,22 @@ struct HitUtil : BaseUtil {
    float x;
    float y;
 
-   bool operator==(const HitUtil &other) const
-   {
-      return base == other.base && x == other.x && y == other.y;
-   }
+   bool operator==(const HitUtil &other) const { return base == other.base && x == other.x && y == other.y; }
 };
 
 struct TrackUtil : BaseUtil {
    float E;
    std::vector<HitUtil> hits;
 
-   bool operator==(const TrackUtil &other) const
-   {
-      return base == other.base && E == other.E && hits == other.hits;
-   }
+   bool operator==(const TrackUtil &other) const { return base == other.base && E == other.E && hits == other.hits; }
 };
 
 struct ComplexStructUtil : BaseUtil {
    float pt;
    std::vector<TrackUtil> tracks;
 
-   void Init1() {
+   void Init1()
+   {
       tracks.clear();
       base = 1;
       pt = 2.0;
@@ -55,13 +49,15 @@ struct ComplexStructUtil : BaseUtil {
       tracks.emplace_back(track);
    }
 
-   void Init2() {
+   void Init2()
+   {
       tracks.clear();
       base = 100;
       pt = 101.0;
    }
 
-   void Init3() {
+   void Init3()
+   {
       tracks.clear();
       base = 1000;
       pt = 1001.0;
