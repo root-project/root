@@ -4,10 +4,12 @@
 #include <string>
 #include <vector>
 
-/**
- * Used to test importing of classes with dictionary
- */
-struct CustomStructUtil {
+
+struct Base {
+   int base;
+};
+
+struct CustomStructUtil : Base {
    float a = 0.0;
    std::vector<float> v1;
    std::vector<std::vector<float>> nnlo;

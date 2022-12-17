@@ -372,6 +372,7 @@ TEST(RNTupleImporter, CustomClass)
       auto tree = std::make_unique<TTree>("tree", "");
       CustomStructUtil *object = nullptr;
       tree->Branch("object", &object);
+      object->base = 13;
       object->a = 1.0;
       object->v1.emplace_back(2.0);
       object->v1.emplace_back(3.0);
@@ -392,6 +393,7 @@ TEST(RNTupleImporter, CustomClass)
    EXPECT_EQ(1U, reader->GetNEntries());
    reader->LoadEntry(0);
    auto object = reader->GetModel()->Get<CustomStructUtil>("object");
+   EXPECT_EQ(13, object->base);
    EXPECT_FLOAT_EQ(1.0, object->a);
    EXPECT_EQ(2U, object->v1.size());
    EXPECT_FLOAT_EQ(2.0, object->v1[0]);
