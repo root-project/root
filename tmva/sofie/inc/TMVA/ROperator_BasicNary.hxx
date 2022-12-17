@@ -45,7 +45,10 @@ struct NaryOperatorTraits<T, EBasicNaryOperator::Min> {
 };
 
 template<typename T>
-struct NaryOperatorTraits<T, EBasicNaryOperator::Mean> {
+struct NaryOperatorTraits<T, EBasicNaryOperator::Mean> {};
+
+template<>
+struct NaryOperatorTraits<float, EBasicNaryOperator::Mean> {
    static const std::string Name() {return "Mean";}
    static std::string Op(const std::string& res, std::vector<std::string>& inputs) {
       std::stringstream out;
@@ -53,14 +56,7 @@ struct NaryOperatorTraits<T, EBasicNaryOperator::Mean> {
       for (size_t i = 1; i < inputs.size(); i++) {
          out << " + " << inputs[i];
       }
-      out << ") / ";
-      if constexpr (std::is_same<T, float>::value) {
-         out << "float";
-      } else {
-         throw
-            std::runtime_error("TMVA::SOFIE - Data type not supported for Mean operator");
-      }
-      out << "(" << inputs.size() << ");\n";
+      out << ") / float(" << inputs.size() << ");\n";
       return out.str();
    }
 };
