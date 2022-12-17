@@ -407,3 +407,43 @@ TEST(RNTupleImporter, CustomClass)
    EXPECT_EQ(1U, object->nnlo[2].size());
    EXPECT_FLOAT_EQ(137.0, object->nnlo[2][0]);
 }
+
+TEST(RNTupleImporter, ComplexClass)
+{
+   int splitlevels[] = {0, 1, 99};
+   for (auto lvl : splitlevels) {
+      FileRaii fileGuard("test_ntuple_importer_complex_class.root");
+      {
+         std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+         auto tree = std::make_unique<TTree>("tree", "");
+         ComplexStructUtil *object = nullptr;
+         tree->Branch("object", &object, 32000, lvl);
+         object->Init1();
+         tree->Fill();
+         object->Init2();
+         tree->Fill();
+         object->Init3();
+         tree->Fill();
+         tree->Write();
+      }
+
+      auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+      importer->SetIsQuiet(true);
+      importer->SetNTupleName("ntuple");
+      importer->Import();
+
+      auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+      EXPECT_EQ(3U, reader->GetNEntries());
+      auto object = reader->GetModel()->Get<ComplexStructUtil>("object");
+      ComplexStructUtil reference;
+      reader->LoadEntry(0);
+      reference.Init1();
+      EXPECT_EQ(reference, *object);
+      reader->LoadEntry(1);
+      reference.Init2();
+      EXPECT_EQ(reference, *object);
+      reader->LoadEntry(2);
+      reference.Init3();
+      EXPECT_EQ(reference, *object);
+   }
+}
