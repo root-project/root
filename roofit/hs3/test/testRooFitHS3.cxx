@@ -1,31 +1,30 @@
-#include "RooRealVar.h"
-#include "RooConstVar.h"
-#include "RooWorkspace.h"
-
-#include "TROOT.h"
+// Tests for the RooJSONFactoryWSTool
+// Authors: Carsten D. Burgard, DESY/ATLAS, 12/2021
+//          Jonas Rembser, CERN 12/2022
 
 #include <RooFitHS3/JSONIO.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
-#include "gtest/gtest.h"
+#include <RooRealVar.h>
+#include <RooConstVar.h>
+#include <RooWorkspace.h>
+#include <RooGlobalFunc.h>
+#include <RooArgusBG.h>
+#include <RooGaussian.h>
+#include <RooAddPdf.h>
+#include <RooRealVar.h>
+#include <RooSimultaneous.h>
+#include <RooProdPdf.h>
+#include <RooCategory.h>
 
-#include "RooGlobalFunc.h"
+#include <TROOT.h>
 
-// includes for RooArgusBG
-#include "RooArgusBG.h"
-#include "RooGaussian.h"
-#include "RooAddPdf.h"
-
-// includes for SimultaneousGaussians
-#include "RooRealVar.h"
-#include "RooSimultaneous.h"
-#include "RooProdPdf.h"
-#include "RooCategory.h"
-
-using namespace RooFit;
+#include <gtest/gtest.h>
 
 TEST(RooFitHS3, RooArgusBG)
 {
+   using namespace RooFit;
+
    auto &msg = RooMsgService::instance();
    msg.setGlobalKillBelow(RooFit::WARNING);
 
