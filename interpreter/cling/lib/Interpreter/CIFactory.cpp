@@ -21,6 +21,7 @@
 #include "clang/Basic/Builtins.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Basic/Version.h"
+#include "clang/Interpreter/Interpreter.h"
 #include "clang/Driver/Compilation.h"
 #include "clang/Driver/Driver.h"
 #include "clang/Driver/Job.h"
@@ -42,6 +43,7 @@
 #include "llvm/Config/llvm-config.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/Option/ArgList.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Host.h"
 #include "llvm/Support/MemoryBuffer.h"
@@ -58,6 +60,8 @@
 
 using namespace clang;
 using namespace cling;
+
+llvm::ExitOnError ExitOnErr;
 
 namespace {
   static constexpr unsigned CxxStdCompiledWith() {
@@ -506,32 +510,6 @@ namespace {
         "Using incompatible clang library! "
         "Please use the one provided by cling!\n";
     return;
-  }
-
-  /// \brief Retrieves the clang CC1 specific flags out of the compilation's
-  /// jobs. Returns NULL on error.
-  static const llvm::opt::ArgStringList*
-  GetCC1Arguments(clang::driver::Compilation *Compilation,
-                  clang::DiagnosticsEngine* = nullptr) {
-    // We expect to get back exactly one Command job, if we didn't something
-    // failed. Extract that job from the Compilation.
-    const clang::driver::JobList &Jobs = Compilation->getJobs();
-    if (!Jobs.size() || !isa<clang::driver::Command>(*Jobs.begin())) {
-      // diagnose this better...
-      cling::errs() << "No Command jobs were built.\n";
-      return nullptr;
-    }
-
-    // The one job we find should be to invoke clang again.
-    const clang::driver::Command *Cmd
-      = cast<clang::driver::Command>(&(*Jobs.begin()));
-    if (llvm::StringRef(Cmd->getCreator().getName()) != "clang") {
-      // diagnose this better...
-      cling::errs() << "Clang wasn't the first job.\n";
-      return nullptr;
-    }
-
-    return &Cmd->getArguments();
   }
 
   /// \brief Splits the given environment variable by the path separator.
@@ -1337,11 +1315,8 @@ namespace {
       argvCompile.push_back("-");
     }
 
-    auto InvocationPtr = std::make_shared<clang::CompilerInvocation>();
-
-    // The compiler invocation is the owner of the diagnostic options.
-    // Everything else points to them.
-    DiagnosticOptions& DiagOpts = InvocationPtr->getDiagnosticOpts();
+    auto CI = ExitOnErr(clang::IncrementalCompilerBuilder::create(argvCompile));
+    auto *Diags = &CI->getDiagnostics();
     // add prefix to diagnostic messages if second compiler instance is existing
     // e.g. in CUDA mode
     std::string ExeName = "";
@@ -1349,62 +1324,27 @@ namespace {
       ExeName = "cling";
     if (COpts.CUDADevice)
       ExeName = "cling-ptx";
-    llvm::IntrusiveRefCntPtr<DiagnosticsEngine> Diags =
-        SetupDiagnostics(DiagOpts, ExeName);
-    if (!Diags) {
-      cling::errs() << "Could not setup diagnostic engine.\n";
-      return nullptr;
-    }
+    CI->getDiagnosticClient()->setPrefix(ExeName);
+    // FIXME: Call SetupDiagnostics
 
     llvm::Triple TheTriple(llvm::sys::getProcessTriple());
 #ifdef _WIN32
     // COFF format currently needs a few changes in LLVM to function properly.
     TheTriple.setObjectFormat(llvm::Triple::COFF);
 #endif
-    clang::driver::Driver Drvr(argv[0], TheTriple.getTriple(), *Diags);
-    //Drvr.setWarnMissingInput(false);
-    Drvr.setCheckInputsExist(false); // think foo.C(12)
-    llvm::ArrayRef<const char*>RF(&(argvCompile[0]), argvCompile.size());
-    std::unique_ptr<clang::driver::Compilation>
-      Compilation(Drvr.BuildCompilation(RF));
-    if (!Compilation) {
-      cling::errs() << "Couldn't create clang::driver::Compilation.\n";
-      return nullptr;
-    }
-
-    const llvm::opt::ArgStringList* CC1Args = GetCC1Arguments(Compilation.get());
-    if (!CC1Args) {
-      cling::errs() << "Could not get cc1 arguments.\n";
-      return nullptr;
-    }
-
-    clang::CompilerInvocation::CreateFromArgs(*InvocationPtr, *CC1Args, *Diags);
-    // We appreciate the error message about an unknown flag (or do we? if not
-    // we should switch to a different DiagEngine for parsing the flags).
-    // But in general we'll happily go on.
-    Diags->Reset();
-
-    // Create and setup a compiler instance.
-    std::unique_ptr<CompilerInstance> CI(new CompilerInstance());
-    CI->setInvocation(InvocationPtr);
-    CI->setDiagnostics(Diags.get()); // Diags is ref-counted
     if (!OnlyLex)
       CI->getDiagnosticOpts().ShowColors =
         llvm::sys::Process::StandardOutIsDisplayed() ||
         llvm::sys::Process::StandardErrIsDisplayed();
 
-    // Copied from CompilerInstance::createDiagnostics:
-    // Chain in -verify checker, if requested.
-    if (DiagOpts.VerifyDiagnostics)
-      Diags->setClient(new clang::VerifyDiagnosticConsumer(*Diags));
     // Configure our handling of diagnostics.
-    ProcessWarningOptions(*Diags, DiagOpts);
+    //ProcessWarningOptions(*Diags, DiagOpts);
 
     if (COpts.HasOutput && !OnlyLex) {
       if (!SetupCompiler(CI.get(), COpts))
         return nullptr;
 
-      ProcessWarningOptions(*Diags, DiagOpts);
+      //ProcessWarningOptions(*Diags, DiagOpts);
       return CI.release();
     }
 
