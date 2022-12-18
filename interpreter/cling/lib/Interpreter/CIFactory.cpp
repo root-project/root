@@ -1449,73 +1449,6 @@ namespace {
 
     CI->createFileManager();
     clang::CompilerInvocation& Invocation = CI->getInvocation();
-    std::string& PCHFile = Invocation.getPreprocessorOpts().ImplicitPCHInclude;
-    bool InitLang = true, InitTarget = true;
-    if (!PCHFile.empty()) {
-      if (cling::utils::LookForFile(argvCompile, PCHFile,
-              &CI->getFileManager(),
-              COpts.Verbose ? "Precompiled header" : nullptr)) {
-        // Load target options etc from PCH.
-        struct PCHListener: public ASTReaderListener {
-          CompilerInvocation& m_Invocation;
-          bool m_ReadLang, m_ReadTarget;
-
-          PCHListener(CompilerInvocation& I) :
-            m_Invocation(I), m_ReadLang(false), m_ReadTarget(false) {}
-
-          bool ReadLanguageOptions(const LangOptions &LangOpts,
-                                   bool /*Complain*/,
-                                   bool /*AllowCompatibleDifferences*/) override {
-            *m_Invocation.getLangOpts() = LangOpts;
-            m_ReadLang = true;
-            return false;
-          }
-          bool ReadTargetOptions(const TargetOptions &TargetOpts,
-                                 bool /*Complain*/,
-                                 bool /*AllowCompatibleDifferences*/) override {
-            m_Invocation.getTargetOpts() = TargetOpts;
-            m_ReadTarget = true;
-            return false;
-          }
-          bool ReadPreprocessorOptions(const PreprocessorOptions &PPOpts,
-                                       bool /*Complain*/,
-                                  std::string &/*SuggestedPredefines*/) override {
-            // Import selected options, e.g. don't overwrite ImplicitPCHInclude.
-            PreprocessorOptions& myPP = m_Invocation.getPreprocessorOpts();
-            insertBehind(myPP.Macros, PPOpts.Macros);
-            insertBehind(myPP.Includes, PPOpts.Includes);
-            insertBehind(myPP.MacroIncludes, PPOpts.MacroIncludes);
-            return false;
-          }
-        };
-        PCHListener listener(Invocation);
-        if (ASTReader::readASTFileControlBlock(PCHFile,
-                                               CI->getFileManager(),
-                                               CI->getPCHContainerReader(),
-                                               false /*FindModuleFileExt*/,
-                                               listener,
-                                         /*ValidateDiagnosticOptions=*/false)) {
-          // When running interactively pass on the info that the PCH
-          // has failed so that IncrmentalParser::Initialize won't try again.
-          if (!HasInput && llvm::sys::Process::StandardInIsUserInput()) {
-            const unsigned ID = Diags->getCustomDiagID(
-                                       clang::DiagnosticsEngine::Level::Error,
-                                       "Problems loading PCH: '%0'.");
-            
-            Diags->Report(ID) << PCHFile;
-            // If this was the only error, then don't let it stop anything
-            if (Diags->getClient()->getNumErrors() == 1)
-              Diags->Reset(true);
-            // Clear the include so no one else uses it.
-            std::string().swap(PCHFile);
-          }
-        }
-        // All we care about is if Language and Target options were successful.
-        InitLang = !listener.m_ReadLang;
-        InitTarget = !listener.m_ReadTarget;
-      }
-    }
-
     FrontendOptions& FrontendOpts = Invocation.getFrontendOpts();
 
     // Register the externally constructed extensions.
@@ -1526,7 +1459,7 @@ namespace {
     FrontendOpts.DisableFree = true;
 
     // Set up compiler language and target
-    if (!SetupCompiler(CI.get(), COpts, InitLang, InitTarget))
+    if (!SetupCompiler(CI.get(), COpts))
       return nullptr;
 
     // Set up source managers
