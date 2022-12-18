@@ -964,38 +964,6 @@ namespace {
     return true;
   }
 
-  class ActionScan {
-    std::set<const clang::driver::Action*> m_Visited;
-    llvm::SmallVector<clang::driver::Action::ActionClass, 2> m_Kinds;
-
-    bool find (const clang::driver::Action* A) {
-      if (A && !m_Visited.count(A)) {
-        if (std::find(m_Kinds.begin(), m_Kinds.end(), A->getKind()) !=
-            m_Kinds.end())
-          return true;
-
-        m_Visited.insert(A);
-        return find(*A->input_begin());
-      }
-      return false;
-    }
-
-  public:
-    ActionScan(clang::driver::Action::ActionClass a, int b = -1) {
-      m_Kinds.push_back(a);
-      if (b != -1)
-        m_Kinds.push_back(clang::driver::Action::ActionClass(b));
-    }
-
-    bool find (clang::driver::Compilation* C) {
-      for (clang::driver::Action* A : C->getActions()) {
-        if (find(A))
-          return true;
-      }
-      return false;
-    }
-  };
-
   static void HandleProgramActions(CompilerInstance &CI) {
     const clang::FrontendOptions& FrontendOpts = CI.getFrontendOpts();
     if (FrontendOpts.ProgramAction == clang::frontend::ModuleFileInfo) {
@@ -1433,13 +1401,6 @@ namespace {
     ProcessWarningOptions(*Diags, DiagOpts);
 
     if (COpts.HasOutput && !OnlyLex) {
-      ActionScan scan(clang::driver::Action::PrecompileJobClass,
-                      clang::driver::Action::PreprocessJobClass);
-      if (!scan.find(Compilation.get())) {
-        cling::errs() << "Only precompiled header or preprocessor "
-                        "output is supported.\n";
-        return nullptr;
-      }
       if (!SetupCompiler(CI.get(), COpts))
         return nullptr;
 
