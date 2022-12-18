@@ -867,25 +867,6 @@ namespace {
     }
   }
 
-  static llvm::IntrusiveRefCntPtr<DiagnosticsEngine>
-  SetupDiagnostics(DiagnosticOptions& DiagOpts, const std::string& ExeName) {
-    // The compiler invocation is the owner of the diagnostic options.
-    // Everything else points to them.
-    llvm::IntrusiveRefCntPtr<clang::DiagnosticIDs> DiagIDs(new DiagnosticIDs());
-
-    std::unique_ptr<TextDiagnosticPrinter>
-      DiagnosticPrinter(new TextDiagnosticPrinter(cling::errs(), &DiagOpts));
-
-    DiagnosticPrinter->setPrefix(ExeName);
-
-    llvm::IntrusiveRefCntPtr<DiagnosticsEngine>
-      Diags(new DiagnosticsEngine(DiagIDs, &DiagOpts,
-                                  DiagnosticPrinter.get(), /*Owns it*/ true));
-    DiagnosticPrinter.release();
-
-    return Diags;
-  }
-
   static bool
   SetupCompiler(CompilerInstance* CI, const CompilerOptions& CompilerOpts,
                 bool Lang = true, bool Targ = true) {
@@ -1316,7 +1297,6 @@ namespace {
     }
 
     auto CI = ExitOnErr(clang::IncrementalCompilerBuilder::create(argvCompile));
-    auto *Diags = &CI->getDiagnostics();
     // add prefix to diagnostic messages if second compiler instance is existing
     // e.g. in CUDA mode
     std::string ExeName = "";
@@ -1324,8 +1304,8 @@ namespace {
       ExeName = "cling";
     if (COpts.CUDADevice)
       ExeName = "cling-ptx";
-    CI->getDiagnosticClient()->setPrefix(ExeName);
-    // FIXME: Call SetupDiagnostics
+    // FIXME: This might not be clang::TextDiagnosticPrinter.
+    static_cast<TextDiagnosticPrinter&>(CI->getDiagnosticClient()).setPrefix(ExeName);
 
     llvm::Triple TheTriple(llvm::sys::getProcessTriple());
 #ifdef _WIN32
@@ -1337,14 +1317,9 @@ namespace {
         llvm::sys::Process::StandardOutIsDisplayed() ||
         llvm::sys::Process::StandardErrIsDisplayed();
 
-    // Configure our handling of diagnostics.
-    //ProcessWarningOptions(*Diags, DiagOpts);
-
     if (COpts.HasOutput && !OnlyLex) {
       if (!SetupCompiler(CI.get(), COpts))
         return nullptr;
-
-      //ProcessWarningOptions(*Diags, DiagOpts);
       return CI.release();
     }
 
@@ -1547,7 +1522,6 @@ namespace {
 
     // Tell the diagnostic client that we are entering file parsing mode as the
     // handling of modulemap files may issue diagnostics.
-    // FIXME: Consider moving in SetupDiagnostics.
     DiagnosticConsumer& DClient = CI->getDiagnosticClient();
     DClient.BeginSourceFile(CI->getLangOpts(), &PP);
 
