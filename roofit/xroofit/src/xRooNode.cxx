@@ -835,7 +835,7 @@ TAxis *xRooNode::GetXaxis() const
          if (/*o->isBinnedDistribution(*dynamic_cast<RooAbsArg *>(x))*/
              auto bins = _or_func(
                 /*o->plotSamplingHint(*dynamic_cast<RooAbsRealLValue
-                   *>(x),-std::numeric_limits<double>::infinity(),std::numeric_limits<double>::infinity())*/
+                 *>(x),-std::numeric_limits<double>::infinity(),std::numeric_limits<double>::infinity())*/
                 (std::list<double> *)(nullptr),
                 o->binBoundaries(*dynamic_cast<RooAbsRealLValue *>(x), -std::numeric_limits<double>::infinity(),
                                  std::numeric_limits<double>::infinity()));
@@ -852,7 +852,7 @@ TAxis *xRooNode::GetXaxis() const
                _v->getBinning(o->GetName())
                   .SetTitle(""); // indicates to use the current var title when building histograms etc
                                  //_v->getBinning(o->GetName()).SetTitle(strlen(dynamic_cast<TObject*>(x)->GetTitle()) ?
-                                 //dynamic_cast<TObject*>(x)->GetTitle() : dynamic_cast<TObject*>(x)->GetName());
+                                 // dynamic_cast<TObject*>(x)->GetTitle() : dynamic_cast<TObject*>(x)->GetName());
             }
             binningName = o->GetName();
             delete bins;
@@ -4949,9 +4949,8 @@ void xRooNode::SetFitResult(const RooFitResult *fr)
          allVars = fr->constPars();
       } else {
          // need to add to memory as a specific name
-         throw std::runtime_error(
-            "Not supported yet"); // complication is how to replace an existing fitResult in .memory
-                                  // auto _clone = std::make_shared<RooFitResult>(*fr);
+         throw std::runtime_error("Not supported yet"); // complication is how to replace an existing fitResult in
+                                                        // .memory auto _clone = std::make_shared<RooFitResult>(*fr);
          //_clone->SetName("fitResult");
       }
    } else {

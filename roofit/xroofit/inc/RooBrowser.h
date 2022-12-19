@@ -10,7 +10,6 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-
 /** \class RooBrowser
 \ingroup roofit
 
@@ -23,12 +22,16 @@ To get started with the RooBrowser, open any ROOT file containing a workspace
  present in the loaded file. Note that additional files, <b>including json workspace files</b>,
  can be loaded through the `Browser --> Open` menu in the top left corner.
 
-The context menu for each node (access by right clicking on the node) in the tree structure can be used to get more information about the node. In particular, the `Draw` command can be selected on many of the nodes that are part of a statistical model, which will visualize that part of the model in the browser window. A number of options are available for the `Draw` command, including (some options can be combined):
+The context menu for each node (access by right clicking on the node) in the tree structure can be used to get more
+information about the node. In particular, the `Draw` command can be selected on many of the nodes that are part of a
+statistical model, which will visualize that part of the model in the browser window. A number of options are available
+for the `Draw` command, including (some options can be combined):
 
  - "e" : calculate and visualize propagated model uncertainty
  - "auxratio" : Draw a ratio auxiliary plot below the main plot
  - "auxsignif" : Draw a significance auxiliary plot below the main plot
- - "pull" : show panel of current parameter values, which can be dragged in order to change the values and visualize the effect on the model (very experimental feature).
+ - "pull" : show panel of current parameter values, which can be dragged in order to change the values and visualize the
+effect on the model (very experimental feature).
 
  Once a node has been drawn, the styling of subsequent draws can be controlled through `TStyle` objects
  that will now appear in the `objects` folder in the workspace.
