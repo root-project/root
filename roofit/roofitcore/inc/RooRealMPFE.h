@@ -20,7 +20,6 @@
 #include "RooRealProxy.h"
 #include "RooListProxy.h"
 #include "RooArgList.h"
-#include "RooMPSentinel.h"
 #include "TStopwatch.h"
 #include <vector>
 
@@ -84,8 +83,6 @@ public:
   RooRealMPFE* _updateMaster ; ///<! Update master
   mutable bool _retrieveDispatched ; ///<!
   mutable double _evalCarry; ///<!
-
-  static RooMPSentinel _sentinel ;
 
   ClassDefOverride(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function
 };

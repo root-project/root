@@ -139,7 +139,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooMCStudy.h
     RooMinimizer.h
     RooMoment.h
-    RooMPSentinel.h
     RooMsgService.h
     RooMultiCategory.h
     RooMultiGenFunction.h
@@ -194,7 +193,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooSecondMoment.h
     RooSegmentedIntegrator1D.h
     RooSegmentedIntegrator2D.h
-    RooSentinel.h
     RooSetProxy.h
     RooSharedProperties.h
     RooSimGenContext.h
@@ -371,7 +369,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooMinimizer.cxx
     src/RooMinimizerFcn.cxx
     src/RooMoment.cxx
-    src/RooMPSentinel.cxx
     src/RooMsgService.cxx
     src/RooMultiCategory.cxx
     src/RooMultiGenFunction.cxx

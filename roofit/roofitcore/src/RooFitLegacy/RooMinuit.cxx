@@ -60,7 +60,7 @@ automatic PDF optimization.
 #include "RooRealVar.h"
 #include "RooFitResult.h"
 #include "RooAbsPdf.h"
-#include "RooSentinel.h"
+#include "../RooSentinel.h"
 #include "RooMsgService.h"
 #include "RooPlot.h"
 
