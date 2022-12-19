@@ -7,9 +7,7 @@
 
 #include "RooStats/RooStatsUtils.h"
 
-#ifdef XROOFIT_NAMESPACE
-namespace XROOFIT_NAMESPACE {
-#endif
+BEGIN_XROOFIT_NAMESPACE
 
 Double_t xRooFit::Asymptotics::k(const IncompatFunc &compatRegions, double pValue, double poiVal, double poiPrimeVal,
                                  double sigma, double low, double high)
@@ -246,6 +244,4 @@ int xRooFit::Asymptotics::CompatFactor(const IncompatFunc &func, double mu_hat)
 //     return RooRealVar("limit","limit",std::numeric_limits<double>::quiet_NaN());
 // }
 
-#ifdef XROOFIT_NAMESPACE
-}
-#endif
+END_XROOFIT_NAMESPACE

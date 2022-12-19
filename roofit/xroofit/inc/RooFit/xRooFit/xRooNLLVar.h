@@ -10,45 +10,50 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef XROOFIT_NAMESPACE
+#include "Config.h"
+
+#ifdef XROOFIT_USE_PRAGMA_ONCE
 #pragma once
 #endif
-#if !defined(XROOFIT_XROONLLVAR_H) || !defined(XROOFIT_NAMESPACE)
+#if !defined(XROOFIT_XROONLLVAR_H) || defined(XROOFIT_USE_PRAGMA_ONCE)
+#ifndef XROOFIT_USE_PRAGMA_ONCE
 #define XROOFIT_XROONLLVAR_H
+#endif
 
 #include "xRooFit.h"
 
-class RooAbsPdf;
-class RooAbsData;
-class RooAbsCollection;
+#include <RooFitResult.h>
+#include <RooLinkedList.h>
 
-#include "RooLinkedList.h"
-
-class RooAbsReal;
-
-class RooNLLVar;
-class RooConstraintSum;
-class RooRealVar;
-class TGraphErrors;
-
-#include "Fit/FitConfig.h"
-#include "Math/IOptions.h"
+#include <Fit/FitConfig.h>
+#include <Math/IOptions.h>
+#include <TAttFill.h>
+#include <TAttLine.h>
+#include <TAttMarker.h>
 
 #include <map>
 #include <set>
-#include "TAttFill.h"
-#include "TAttLine.h"
-#include "TAttMarker.h"
 
-//#include "RooStats/HypoTestResult.h"
+class RooAbsReal;
+class RooAbsPdf;
+class RooAbsData;
+class RooAbsCollection;
+class RooNLLVar;
+class RooConstraintSum;
+class RooRealVar;
+class RooCmdArg;
+
+class TGraph;
+class TGraphErrors;
+
 namespace RooStats {
 class HypoTestResult;
 class HypoTestInverterResult;
 } // namespace RooStats
 
-#ifdef XROOFIT_NAMESPACE
-namespace XROOFIT_NAMESPACE {
-#endif
+BEGIN_XROOFIT_NAMESPACE
+
+class xRooNode;
 
 class xRooNLLVar : public std::shared_ptr<RooAbsReal> {
 
@@ -317,8 +322,6 @@ public:
    bool kReuseNLL = true;
 };
 
-#ifdef XROOFIT_NAMESPACE
-}
-#endif
+END_XROOFIT_NAMESPACE
 
 #endif // include guard

@@ -56,10 +56,6 @@ Many more features are available in the `RooBrowser`, and further documentation 
 #ifndef RooFit_RooBrowser_h
 #define RooFit_RooBrowser_h
 
-#ifndef XROOFIT_NAMESPACE
-#define XROOFIT_NAMESPACE RooFit::Detail::XRooFit
-#endif
-
 #include "RooFit/xRooFit/xRooBrowser.h"
 
 namespace ROOT::Experimental {

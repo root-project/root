@@ -10,21 +10,23 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
+#include "Config.h"
+
 // when not using the namespace will use the once pragma.
 // when using the namespace (as happens in the ROOT build of xRooFit) then
 // will effectively use an include guard
-#ifndef XROOFIT_NAMESPACE
+#ifdef XROOFIT_USE_PRAGMA_ONCE
 #pragma once
 #endif
-#if !defined(XROOFIT_XROOFIT_H) || !defined(XROOFIT_NAMESPACE)
+#if !defined(XROOFIT_XROOFIT_H) || defined(XROOFIT_USE_PRAGMA_ONCE)
+#ifndef XROOFIT_USE_PRAGMA_ONCE
 #define XROOFIT_XROOFIT_H
+#endif
 
 /**
  * This is the main include for the xRooFit project.
  * Including this should give you access to all xRooFit features
  */
-
-#include "xRooNode.h"
 
 class RooAbsData;
 class RooAbsCollection;
@@ -32,6 +34,7 @@ class RooFitResult;
 class RooAbsPdf;
 class RooAbsReal;
 class RooLinkedList;
+class RooWorkspace;
 
 #include "Fit/FitConfig.h"
 
@@ -41,9 +44,7 @@ class TCanvas;
 
 #include <memory>
 
-#ifdef XROOFIT_NAMESPACE
-namespace XROOFIT_NAMESPACE {
-#endif
+BEGIN_XROOFIT_NAMESPACE
 
 class xRooNLLVar;
 
@@ -178,11 +179,10 @@ public:
                             const xRooFit::Asymptotics::PLLType &pllType = xRooFit::Asymptotics::Unknown);
 };
 
-#ifdef XROOFIT_NAMESPACE
-}
-#endif
+END_XROOFIT_NAMESPACE
 
-#include "xRooNLLVar.h"
 #include "xRooHypoSpace.h"
+#include "xRooNLLVar.h"
+#include "xRooNode.h"
 
 #endif // include guard
