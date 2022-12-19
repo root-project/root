@@ -34,9 +34,7 @@
 #include "TLine.h"
 #include "RooStats/HypoTestInverterResult.h"
 
-#ifdef XROOFIT_NAMESPACE
-namespace XROOFIT_NAMESPACE {
-#endif
+BEGIN_XROOFIT_NAMESPACE
 
 // bool xRooNLLVar::xRooHypoSpace::AddWorkspace(const char* wsFilename, const char* extraPars){
 //
@@ -1356,6 +1354,4 @@ RooStats::HypoTestInverterResult *xRooNLLVar::xRooHypoSpace::result()
    return out;
 }
 
-#ifdef XROOFIT_NAMESPACE
-}
-#endif
+END_XROOFIT_NAMESPACE

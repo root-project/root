@@ -25,9 +25,7 @@
 #include "TMultiGraph.h"
 #include "TSystem.h"
 
-#ifdef XROOFIT_NAMESPACE
-namespace XROOFIT_NAMESPACE {
-#endif
+BEGIN_XROOFIT_NAMESPACE
 
 void xRooNode::Interactive_Pull()
 {
@@ -239,6 +237,4 @@ void xRooNode::InteractiveObject::Interactive_PLLPlot(TVirtualPad *pad, TObject 
    }
 }
 
-#ifdef XROOFIT_NAMESPACE
-}
-#endif
+END_XROOFIT_NAMESPACE

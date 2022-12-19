@@ -57,9 +57,7 @@
 #include "RooStats/HypoTestResult.h"
 #undef protected
 
-#ifdef XROOFIT_NAMESPACE
-namespace XROOFIT_NAMESPACE {
-#endif
+BEGIN_XROOFIT_NAMESPACE
 
 std::set<int> xRooNLLVar::xRooHypoPoint::allowedStatusCodes = {0};
 
@@ -1854,6 +1852,4 @@ RooStats::HypoTestResult xRooNLLVar::xRooHypoPoint::result()
    return out;
 }
 
-#ifdef XROOFIT_NAMESPACE
-}
-#endif
+END_XROOFIT_NAMESPACE

@@ -10,34 +10,29 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef XROOFIT_NAMESPACE
+#include "Config.h"
+
+#ifdef XROOFIT_USE_PRAGMA_ONCE
 #pragma once
 #endif
-#if !defined(XROOFIT_XROONODE_H) || !defined(XROOFIT_NAMESPACE)
+#if !defined(XROOFIT_XROONODE_H) || defined(XROOFIT_USE_PRAGMA_ONCE)
+#ifndef XROOFIT_USE_PRAGMA_ONCE
 #define XROOFIT_XROONODE_H
+#endif
 
 #include "TNamed.h"
 #include <vector>
 #include <functional>
 
-class TAxis;
-#ifdef XROOFIT_NAMESPACE
-namespace XROOFIT_NAMESPACE {
-#endif
-
-class xRooNode;
-
-#ifdef XROOFIT_NAMESPACE
-}
-#endif
 class RooWorkspace;
 class RooAbsReal;
 class TH1;
 class RooAbsLValue;
 class RooArgList;
 class RooAbsBinning;
-class TGraph;
 class RooFitResult;
+class TGraph;
+class TAxis;
 class TGListTreeItem;
 class TGListTree;
 class TVirtualPad;
@@ -48,10 +43,9 @@ class TStyle;
 #include "RooCmdArg.h"
 #include "TQObject.h"
 
-#ifdef XROOFIT_NAMESPACE
-namespace XROOFIT_NAMESPACE {
-#endif
+BEGIN_XROOFIT_NAMESPACE
 
+class xRooNode;
 class xRooNLLVar;
 
 class xRooNode : public TNamed, public std::vector<std::shared_ptr<xRooNode>> {
@@ -382,8 +376,6 @@ public:
    ClassDefOverride(xRooNode, 0)
 };
 
-#ifdef XROOFIT_NAMESPACE
-}
-#endif
+END_XROOFIT_NAMESPACE
 
 #endif // include guard
