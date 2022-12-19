@@ -134,7 +134,7 @@ std::vector<size_t>  UTILITY::MultidirectionalBroadcastShape(std::vector<std::ve
       // Check if they have the same shape
       bool sameShape = true;
       for (size_t i = 1; i < n; i++) {
-         for (size_t dim = 1; dim < shape.size(); i++) {
+         for (size_t dim = 0; dim < shape[0].size(); dim++) {
             if (shape[i][dim] != shape[0][dim]) {
                sameShape = false;
                break;
