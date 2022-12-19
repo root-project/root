@@ -22,6 +22,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitXRooFit
         DEPENDENCIES
         Gui
         Ged
+        RooFitCore
         LINKDEF
         inc/LinkDef.h
         )
