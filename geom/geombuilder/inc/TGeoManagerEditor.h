@@ -113,7 +113,7 @@ public:
                     UInt_t options = kChildFrame,
                     Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoManagerEditor();
-   static void    LoadLib() {}
+   static void    LoadLib();
    virtual void   SetModel(TObject *obj);
 
    virtual void   SelectedSlot(TVirtualPad* pad, TObject* obj, Int_t event);
