@@ -1,5 +1,9 @@
 # JSROOT changelog
 
+## Changes in 7.3.x
+1. Fix - TGeo update in the TWebCanvas
+
+
 ## Changes in 7.3.0
 1. Mark methods returning `Promise` as **async**
 2. Upgrade three.js to r146

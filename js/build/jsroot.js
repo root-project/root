@@ -7,11 +7,11 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-let version_id = '7.3.0';
+let version_id = '7.3.x';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '15/12/2022';
+let version_date = '19/12/2022';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -74320,19 +74320,32 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Update object in geo painter */
    updateObject(obj) {
-      if (obj === 'same') return true;
-      if (!obj?._typename) return false;
-      if (obj === this.getObject()) return true;
+      if ((obj === 'same') || !obj?._typename)
+         return false;
+      if (obj === this.getObject())
+         return true;
 
-      if (this.geo_manager && (obj._typename == clTGeoManager)) {
-         this.geo_manager = obj;
-         this.assignObject({ _typename: clTGeoNode, fVolume: obj.fMasterVolume, fName: obj.fMasterVolume.fName, $geoh: obj.fMasterVolume.$geoh, _proxy: true });
+      let gm;
+      if (obj._typename === clTGeoManager) {
+         gm = obj;
+         obj = obj.fMasterVolume;
+      }
+
+      if (obj._typename.indexOf(clTGeoVolume) === 0)
+         obj = { _typename: clTGeoNode, fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
+
+      if (this.geo_manager && gm) {
+         this.geo_manager = gm;
+         this.assignObject(obj);
+         this._did_update = true;
          return true;
       }
 
-      if (!this.matchObjectType(obj._typename)) return false;
+      if (!this.matchObjectType(obj._typename))
+         return false;
 
       this.assignObject(obj);
+      this._did_update = true;
       return true;
    }
 
@@ -74357,26 +74370,32 @@ class TGeoPainter extends ObjectPainter {
 
     /** @summary Redraw TGeo object inside TPad */
    redraw() {
-      if (!this._on_pad) return;
+      if (this._did_update)
+         return this.startRedraw();
 
-      let main = this.getFramePainter();
-      if (!main) return;
-
+      let main = this._on_pad ? this.getFramePainter() : null;
+      if (!main)
+         return Promise.resolve(false);
       let sz = main.getSizeFor3d(main.access3dKind());
       main.apply3dSize(sz);
       return this.performResize(sz.width, sz.height);
    }
 
    /** @summary Redraw TGeo object */
-   redrawObject(obj /*, opt */) {
-      if (!this.updateObject(obj))
+   redrawObject(obj, opt) {
+      if (!this.updateObject(obj, opt))
          return false;
 
-      this.clearDrawings();
+      return this.startRedraw();
+   }
 
+   /** @summary Start geometry redraw */
+   startRedraw() {
+      delete this._did_update;
+
+      this.clearDrawings();
       let draw_obj = this.getGeometry(), name_prefix = '';
       if (this.geo_manager) name_prefix = draw_obj.fName;
-
       return this.prepareObjectDraw(draw_obj, name_prefix);
    }
 
