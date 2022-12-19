@@ -622,3 +622,27 @@ TEST(RNTuple, Traits)
    EXPECT_EQ(RFieldBase::kTraitTriviallyDestructible, RField<ConstructorTraits>("f").GetTraits());
    EXPECT_EQ(RFieldBase::kTraitTriviallyConstructible, RField<DestructorTraits>("f").GetTraits());
 }
+
+TEST(RNTuple, TClassReadRules)
+{
+   FileRaii fileGuard("test_ntuple_tclassrules.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldKlass = model->MakeField<StructWithIORules>("klass");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      for (int i = 0; i < 20; i++) {
+         *fieldKlass = {/*a=*/static_cast<float>(i), /*b=*/0.0f};
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   EXPECT_EQ(20U, ntuple->GetNEntries());
+   auto viewKlass = ntuple->GetView<StructWithIORules>("klass");
+   for (auto i : ntuple->GetEntryRange()) {
+      float fi = static_cast<float>(i);
+      EXPECT_EQ(fi, viewKlass(i).a);
+      // Value of `b` set from a read rule; see CustomStructLinkDef.h
+      EXPECT_EQ(fi + 1.0f, viewKlass(i).b);
+   }
+}
