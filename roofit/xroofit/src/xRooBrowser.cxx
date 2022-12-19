@@ -26,9 +26,7 @@
 #include "TGFileDialog.h"
 #include "TObjString.h"
 
-#ifdef XROOFIT_NAMESPACE
-namespace XROOFIT_NAMESPACE {
-#endif
+BEGIN_XROOFIT_NAMESPACE
 
 xRooBrowser::xRooBrowser(xRooNode *o) : TBrowser("RooBrowser", o, "RooFit Browser"), fTopNode(o)
 {
@@ -136,6 +134,4 @@ xRooNode *xRooBrowser::GetSelected()
    return dynamic_cast<xRooNode *>(TBrowser::GetSelected());
 }
 
-#ifdef XROOFIT_NAMESPACE
-}
-#endif
+END_XROOFIT_NAMESPACE

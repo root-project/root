@@ -10,18 +10,20 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef XROOFIT_NAMESPACE
+#include "Config.h"
+
+#ifdef XROOFIT_USE_PRAGMA_ONCE
 #pragma once
 #endif
-#if !defined(XROOFIT_XROOBROWSER_H) || !defined(XROOFIT_NAMESPACE)
+#if !defined(XROOFIT_XROOBROWSER_H) || defined(XROOFIT_USE_PRAGMA_ONCE)
+#ifndef XROOFIT_USE_PRAGMA_ONCE
 #define XROOFIT_XROOBROWSER_H
+#endif
 
 #include "TBrowser.h"
 #include "TQObject.h"
 
-#ifdef XROOFIT_NAMESPACE
-namespace XROOFIT_NAMESPACE {
-#endif
+BEGIN_XROOFIT_NAMESPACE
 
 class xRooNode;
 
@@ -45,8 +47,6 @@ public:
    ClassDefOverride(xRooBrowser, 0)
 };
 
-#ifdef XROOFIT_NAMESPACE
-}
-#endif
+END_XROOFIT_NAMESPACE
 
 #endif // include guard

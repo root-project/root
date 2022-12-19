@@ -10,13 +10,6 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef XROOFIT_NAMESPACE
-#pragma clang diagnostic push
-#endif
-
-#include "xRooFit/xRooNode.h"
-#include "xRooFit/xRooFit.h"
-
 #define protected public
 #include "TRootBrowser.h"
 #include "RooStats/HistFactory/ParamHistFunc.h"
@@ -49,6 +42,9 @@
 #include "RooAbsData.h"
 #include "RooDataHist.h"
 #include "RooDataSet.h"
+
+#include "xRooFit/xRooNode.h"
+#include "xRooFit/xRooFit.h"
 
 #include "TH1.h"
 #include "TBrowser.h"
@@ -100,13 +96,7 @@
 #include "TMultiGraph.h"
 #include "TFrame.h"
 
-#ifdef XROOFIT_NAMESPACE
-#define VAL(str) #str
-#define TOSTRING(str) VAL(str)
-namespace XROOFIT_NAMESPACE {
-#else
-#pragma ide diagnostic ignored "misc-no-recursion"
-#endif
+BEGIN_XROOFIT_NAMESPACE
 
 xRooNode::InteractiveObject *xRooNode::gIntObj = nullptr;
 std::map<std::string, std::tuple<std::function<double(double, double, double)>, bool>> xRooNode::auxFunctions;
@@ -7819,10 +7809,4 @@ std::vector<double> xRooNode::GetBinErrors(int binStart, int binEnd, const xRooN
    return out;
 }
 
-#ifdef XROOFIT_NAMESPACE
-}
-#endif
-
-#ifndef XROOFIT_NAMESPACE
-#pragma clang diagnostic pop
-#endif
+END_XROOFIT_NAMESPACE

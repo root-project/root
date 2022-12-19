@@ -10,25 +10,25 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef XROOFIT_NAMESPACE
+#include "Config.h"
+
+#ifdef XROOFIT_USE_PRAGMA_ONCE
 #pragma once
 #endif
-#if !defined(XROOFIT_XROOHYPOSPACE_H) || !defined(XROOFIT_NAMESPACE)
+#if !defined(XROOFIT_XROOHYPOSPACE_H) || defined(XROOFIT_USE_PRAGMA_ONCE)
+#ifndef XROOFIT_USE_PRAGMA_ONCE
 #define XROOFIT_XROOHYPOSPACE_H
+#endif
 
 #include "xRooNLLVar.h"
 
-#ifdef XROOFIT_NAMESPACE
-namespace XROOFIT_NAMESPACE {
-#endif
+BEGIN_XROOFIT_NAMESPACE
 
 class xRooHypoSpace : public xRooNLLVar::xRooHypoSpace {
 
    ClassDef(xRooHypoSpace, 0)
 };
 
-#ifdef XROOFIT_NAMESPACE
-}
-#endif
+END_XROOFIT_NAMESPACE
 
 #endif // include guard

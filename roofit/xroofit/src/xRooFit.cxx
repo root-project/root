@@ -10,15 +10,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include "xRooFit/xRooFit.h"
-
-#include "RooDataSet.h"
-#include "RooSimultaneous.h"
-
 #define protected public
 #include "RooFitResult.h"
 #undef protected
 
+#include "xRooFit/xRooFit.h"
+
+#include "RooDataSet.h"
+#include "RooSimultaneous.h"
 #include "RooArgSet.h"
 #include "RooRandom.h"
 #include "RooAbsPdf.h"
@@ -55,9 +54,7 @@
 
 #include <signal.h>
 
-#ifdef XROOFIT_NAMESPACE
-namespace XROOFIT_NAMESPACE {
-#endif
+BEGIN_XROOFIT_NAMESPACE
 
 RooCmdArg xRooFit::ReuseNLL(bool flag)
 {
@@ -1480,6 +1477,4 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
    return out;
 }
 
-#ifdef XROOFIT_NAMESPACE
-}
-#endif
+END_XROOFIT_NAMESPACE
