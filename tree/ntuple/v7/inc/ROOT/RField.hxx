@@ -46,6 +46,9 @@
 class TClass;
 
 namespace ROOT {
+
+class TSchemaRule;
+
 namespace Experimental {
 
 class RCollectionField;
@@ -153,6 +156,9 @@ protected:
    /// Returns an index that can be used to remove the callback.
    size_t AddReadCallback(ReadCallback_t func);
    void RemoveReadCallback(size_t idx);
+   /// Register post-read callbacks corresponding to a list of ROOT I/O customization rules. `classp` is used to
+   /// fill the `TVirtualObject` instance passed to the user function.
+   void AddReadCallbacksFromIORules(const std::span<const TSchemaRule *> rules, TClass *classp = nullptr);
 
 private:
    void InvokeReadCallbacks(RFieldValue &value)

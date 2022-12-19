@@ -32,6 +32,9 @@
 #include <TError.h>
 #include <TList.h>
 #include <TRealData.h>
+#include <TSchemaRule.h>
+#include <TSchemaRuleSet.h>
+#include <TVirtualObject.h>
 
 #include <algorithm>
 #include <cctype> // for isspace
@@ -415,6 +418,26 @@ void ROOT::Experimental::Detail::RFieldBase::RemoveReadCallback(size_t idx)
 {
    fReadCallbacks.erase(fReadCallbacks.begin() + idx);
    fIsSimple = (fTraits & kTraitMappable) && fReadCallbacks.empty();
+}
+
+void ROOT::Experimental::Detail::RFieldBase::AddReadCallbacksFromIORules(
+   const std::span<const ROOT::TSchemaRule *> rules, TClass *classp)
+{
+   for (const auto rule : rules) {
+      if (rule->GetRuleType() != ROOT::TSchemaRule::kReadRule) {
+         R__LOG_WARNING(NTupleLog()) << "ignoring I/O customization rule with unsupported type";
+         continue;
+      }
+      if (auto func = rule->GetReadFunctionPointer()) {
+         fReadCallbacks.emplace_back([func, classp](Detail::RFieldValue &value) {
+            TVirtualObject oldObj{nullptr};
+            oldObj.fClass = classp;
+            oldObj.fObject = value.GetRawPtr();
+            func(static_cast<char *>(value.GetRawPtr()), &oldObj);
+            oldObj.fClass = nullptr; // TVirtualObject does not own the value
+         });
+      }
+   }
 }
 
 void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink)
