@@ -5651,7 +5651,7 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    TContext ctxt(this, kFALSE); // not interactive
 
    char quote = '"';
-   char lcname[10];
+   char lcname[100];
    const char *cname = GetName();
    size_t nch = strlen(cname);
    if (nch < sizeof(lcname)) {
@@ -5684,23 +5684,17 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    }
    out<<"   "<<cname<<"->Range("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<std::endl;
    TView *view = GetView();
-   Double_t rmin[3], rmax[3];
    if (view) {
+      Double_t rmin[3], rmax[3];
       view->GetRange(rmin, rmax);
       static Int_t viewNumber = 0;
       out<<"   TView *view"<<++viewNumber<<" = TView::CreateView(1);"<<std::endl;
       out<<"   view"<<viewNumber<<"->SetRange("<<rmin[0]<<","<<rmin[1]<<","<<rmin[2]<<","
                                <<rmax[0]<<","<<rmax[1]<<","<<rmax[2]<<");"<<std::endl;
    }
-   if (GetFillColor() != 19) {
-      if (TColor::SaveColor(out, GetFillColor()))
-         out<<"   "<<cname<<"->SetFillColor(ci);" << std::endl;
-      else
-         out<<"   "<<cname<<"->SetFillColor("<<GetFillColor()<<");"<<std::endl;
-   }
-   if (GetFillStyle() != 1001) {
-      out<<"   "<<cname<<"->SetFillStyle("<<GetFillStyle()<<");"<<std::endl;
-   }
+
+   SaveFillAttributes(out, cname, 19, 1001);
+
    if (GetBorderMode() != 1) {
       out<<"   "<<cname<<"->SetBorderMode("<<GetBorderMode()<<");"<<std::endl;
    }
