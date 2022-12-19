@@ -19,6 +19,7 @@
 #include "TF1.h"
 #include <string>
 #include <vector>
+#include <algorithm>
 
 namespace ROOT {
 
@@ -346,10 +347,7 @@ namespace ROOT {
       bool WrappedMultiTF1Templ<T>::ParameterHessian(const T *x, const double *par, T *h) const
       {
          if (fLinear) {
-            unsigned int nh = NPar()*(NPar()+1)/2;
-            for (unsigned int i = 0; i < nh; i++) {
-               h[i] = 0;
-            }
+            std::fill(h, h + NPar()*(NPar()+1)/2, 0.0);
             return true;
          }
          return GeneralHessianCalc<T>::Hessian(fFunc, x, par, h);

@@ -96,8 +96,7 @@ public:
          bool ret = fHessianFunc(x,fHessian.data());
          if (!ret) {
             fHessian.clear();
-            std::function<bool(const std::vector<double> &, double *)> emptyFunc;
-            fHessianFunc = emptyFunc;
+            fHessianFunc = nullptr;
          }
       } else {
          fHessian.clear();
