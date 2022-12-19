@@ -36,4 +36,8 @@
 #pragma link C++ class ConstructorTraits + ;
 #pragma link C++ class DestructorTraits + ;
 
+#pragma link C++ class StructWithIORules + ;
+#pragma read sourceClass = "StructWithIORules" source = "float a" version = "[1-]" targetClass = \
+   "StructWithIORules" target = "b" code = "{ b = onfile.a + 1.0f; }"
+
 #endif

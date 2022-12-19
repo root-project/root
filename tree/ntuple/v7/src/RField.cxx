@@ -929,6 +929,12 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
       Attach(std::move(subField),
 	     RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
    }
+
+   // Add post-read callbacks for I/O customization rules
+   if (const auto ruleset = fClass->GetSchemaRules()) {
+      auto rules = ruleset->FindRules(std::string(className).c_str());
+      AddReadCallbacksFromIORules(rules, fClass);
+   }
 }
 
 void ROOT::Experimental::RClassField::Attach(std::unique_ptr<Detail::RFieldBase> child, RSubFieldInfo info)

@@ -135,4 +135,9 @@ struct DestructorTraits : TrivialTraitsBase {
    ~DestructorTraits() {}
 };
 
+struct StructWithIORules {
+   float a;
+   float b; //! transient member
+};
+
 #endif
