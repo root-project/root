@@ -400,15 +400,12 @@ std::shared_ptr<TDirectory::TGDirectory> &TDirectory::GetSharedLocalCurrentDirec
 {
    using shared_ptr_type = std::shared_ptr<TDirectory::TGDirectory>;
 
-   // NOTE: Maybe we could replace the call to gThreadTsd simply a single
-   // thread local:
+   // Note in previous implementation every time gDirectory was lookup in
+   // a thread, if it was set to nullptr it would be reset to gROOT.  This
+   // was unexpected and this routine is not re-introducing this issue.
    thread_local shared_ptr_type currentDirectory =
       std::make_shared<TDirectory::TGDirectory>(ROOT::Internal::gROOTLocal);
 
-   // Reproduce inadvertent feature of Thread::GetTls when we were using it
-   // for TDirectory.
-   if (!currentDirectory->fCurrent)
-      currentDirectory->fCurrent = gROOT;
    return currentDirectory;
 }
 
