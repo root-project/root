@@ -2,6 +2,8 @@
 #include "TMemFile.h"
 #include "TSystem.h"
 #include "TROOT.h"
+#include "TGraph2D.h"
+#include "TH2.h"
 #include <atomic>
 #include <iostream>
 
@@ -238,11 +240,39 @@ int tcontext_thread_hoping_gdirectory_update()
    return gErrorCount;
 }
 
+void graph2d_create() {
+   TGraph2D gr(1);
+   gr.AddPoint(1,2,3);
+   gr.AddPoint(2,2,3);
+   gr.AddPoint(3,2,3);
+   TH2 *histo = gr.GetHistogram();
+   if (histo->GetDirectory())
+   {
+      std::cerr << "ERROR: The hisogram for TGraph2D is attached to a directory: "
+         << histo->GetDirectory()->GetName()
+         << '\n';
+      ++gErrorCount;
+   }
+}
+
+int graph2d_test()
+{
+   std::cout << "Testing that the histogram owned by the TGraph2D is not registered with a TFile\n";
+
+   // Run in main thread (was already working in v6.26 and older)
+   graph2d_create();
+
+   // Run in a thread (was failing in v6.26 and older)
+   std::thread t7(graph2d_create);
+   t7.join();
+   return gErrorCount;
+}
 
 int assert_tcontext_thread_hoping()
 {
    tcontext_thread_hoping_gdirectory_update();
    tcontext_thread_hoping_rare_race();
+   graph2d_test();
    return gErrorCount;
 }
 
