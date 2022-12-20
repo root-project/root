@@ -29,9 +29,7 @@ class LikelihoodGradientJob : public MultiProcess::Job, public LikelihoodGradien
 public:
    LikelihoodGradientJob(std::shared_ptr<RooAbsL> likelihood,
                          std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, std::size_t N_dim,
-                         RooMinimizer *minimizer);
-   LikelihoodGradientJob *clone() const override;
-   LikelihoodGradientJob(const LikelihoodGradientJob &other);
+                         RooMinimizer *minimizer, SharedOffset offset);
 
    void fillGradient(double *grad) override;
    void fillGradientWithPrevResult(double *grad, double *previous_grad, double *previous_g2,
@@ -87,6 +85,8 @@ private:
    std::vector<double> minuit_internal_x_;
 
    mutable bool isCalculating_ = false;
+
+   SharedOffset::OffsetVec offsets_previous_;
 };
 
 } // namespace TestStatistics
