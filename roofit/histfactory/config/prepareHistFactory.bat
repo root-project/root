@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 rem HistFactory workplace setup script
-set ROOTETCDIR=root-config --etcdir
+
 for /f "tokens=*" %%g in ('root-config --etcdir') do (set ROOTETCDIR=%%g)
 echo Using etcdir !ROOTETCDIR!
 for /f "tokens=*" %%g in ('root-config --tutdir') do (set ROOTTUTDIR=%%g)
