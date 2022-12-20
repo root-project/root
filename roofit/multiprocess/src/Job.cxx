@@ -92,7 +92,9 @@ namespace MultiProcess {
 
 Job::Job() : id_(JobManager::add_job_object(this)) {}
 
-Job::Job(const Job &other) : id_(JobManager::add_job_object(this)), _manager(other._manager) {}
+Job::Job(const Job &other) : id_(JobManager::add_job_object(this)), state_id_(other.state_id_), _manager(other._manager)
+{
+}
 
 Job::~Job()
 {
