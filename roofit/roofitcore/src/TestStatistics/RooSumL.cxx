@@ -117,7 +117,7 @@ ROOT::Math::KahanSum<double> RooSumL::getSubsidiaryValue()
          return (*component)->evaluatePartition({0, 1}, 0, 0);
       }
    }
-   return {};
+   return ROOT::Math::KahanSum<double>{};
 }
 
 void RooSumL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)

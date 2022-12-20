@@ -116,7 +116,7 @@ TEST_F(LikelihoodJobTest, UnbinnedGaussian1D)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1);
+   EXPECT_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodJobTest, UnbinnedGaussian1DTwice)
@@ -132,7 +132,7 @@ TEST_F(LikelihoodJobTest, UnbinnedGaussian1DTwice)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1);
+   EXPECT_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodJobTest, UnbinnedGaussianND)
@@ -148,7 +148,8 @@ TEST_F(LikelihoodJobTest, UnbinnedGaussianND)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1);
+   EXPECT_EQ(nll0, nll1.Sum());
+//   printf("%a =?= %a\n", nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodJobBinnedDatasetTest, UnbinnedPdf)
@@ -165,7 +166,7 @@ TEST_F(LikelihoodJobBinnedDatasetTest, UnbinnedPdf)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1);
+   EXPECT_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodJobBinnedDatasetTest, BinnedManualNLL)
@@ -190,7 +191,7 @@ TEST_F(LikelihoodJobBinnedDatasetTest, BinnedManualNLL)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1);
+   EXPECT_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodJobTest, SimBinned)
@@ -237,7 +238,7 @@ TEST_F(LikelihoodJobTest, SimBinned)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1);
+   EXPECT_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodJobTest, BinnedConstrained)
@@ -283,7 +284,7 @@ TEST_F(LikelihoodJobTest, BinnedConstrained)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_DOUBLE_EQ(nll0, nll1);
+   EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodJobTest, SimUnbinned)
@@ -310,7 +311,7 @@ TEST_F(LikelihoodJobTest, SimUnbinned)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_DOUBLE_EQ(nll0, nll1);
+   EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodJobTest, SimUnbinnedNonExtended)
@@ -343,7 +344,7 @@ TEST_F(LikelihoodJobTest, SimUnbinnedNonExtended)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1);
+   EXPECT_EQ(nll0, nll1.Sum());
 }
 
 class LikelihoodJobSimBinnedConstrainedTest : public LikelihoodJobTest {
@@ -410,7 +411,7 @@ TEST_F(LikelihoodJobSimBinnedConstrainedTest, BasicParameters)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_DOUBLE_EQ(nll0, nll1);
+   EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodJobSimBinnedConstrainedTest, ConstrainedAndOffset)
@@ -437,8 +438,8 @@ TEST_F(LikelihoodJobSimBinnedConstrainedTest, ConstrainedAndOffset)
    // manually add the offset.
    ROOT::Math::KahanSum<double> nll1 = nll_ts->getResult() + nll_ts->offset();
 
-   EXPECT_DOUBLE_EQ(nll0, nll1);
-   EXPECT_FALSE(nll_ts->offset() == 0);
+   EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
+   EXPECT_FALSE(nll_ts->offset().Sum() == 0);
 
    // also check against RooRealL value
    RooFit::TestStatistics::RooRealL nll_real("real_nll", "RooRealL version", likelihood);
@@ -446,7 +447,7 @@ TEST_F(LikelihoodJobSimBinnedConstrainedTest, ConstrainedAndOffset)
    auto nll2 = nll_real.getVal();
 
    EXPECT_EQ(nll0, nll2);
-   EXPECT_DOUBLE_EQ(nll1, nll2);
+   EXPECT_DOUBLE_EQ(nll1.Sum(), nll2);
 }
 
 TEST_F(LikelihoodJobTest, BatchedUnbinnedGaussianND)
@@ -472,7 +473,7 @@ TEST_F(LikelihoodJobTest, BatchedUnbinnedGaussianND)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_NEAR(nll0, nll1, 1e-14 * nll0);
+   EXPECT_NEAR(nll0, nll1.Sum(), 1e-14 * nll0);
 }
 
 class LikelihoodJobSplitStrategies : public LikelihoodJobSimBinnedConstrainedTest, public testing::WithParamInterface<std::tuple<std::size_t, std::size_t>> {};
@@ -505,8 +506,8 @@ TEST_P(LikelihoodJobSplitStrategies, SimBinnedConstrainedAndOffset)
    // manually add the offset.
    ROOT::Math::KahanSum<double> nll1 = nll_ts->getResult() + nll_ts->offset();
 
-   EXPECT_DOUBLE_EQ(nll0, nll1);
-   EXPECT_FALSE(nll_ts->offset() == 0);
+   EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
+   EXPECT_FALSE(nll_ts->offset().Sum() == 0);
 
    // also check against RooRealL value
    RooFit::TestStatistics::RooRealL nll_real("real_nll", "RooRealL version", likelihood);
@@ -514,7 +515,7 @@ TEST_P(LikelihoodJobSplitStrategies, SimBinnedConstrainedAndOffset)
    auto nll2 = nll_real.getVal();
 
    EXPECT_EQ(nll0, nll2);
-   EXPECT_DOUBLE_EQ(nll1, nll2);
+   EXPECT_DOUBLE_EQ(nll1.Sum(), nll2);
 }
 
 INSTANTIATE_TEST_SUITE_P(
