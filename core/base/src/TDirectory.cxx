@@ -280,9 +280,27 @@ void TDirectory::CleanTargets()
 
       for (auto &ptr : fGDirectories) {
          if (ptr->fCurrent.load() == this) {
+            TDirectory *next = GetMotherDir();
+            if (!next || next == this) {
+               if (this == ROOT::Internal::gROOTLocal) { /// in that case next == this.
+                  next = nullptr;
+               } else {
+                  next = gROOT;
+               }
+            } else {
+               // Don't we need to register that local gDirectory with the
+               // new guy?
+               // We can not use 'cd' as this would access the current thread
+               // rather than the thread corresponding to that gDirectory.
+   ROOT::Internal::TSpinLockGuard other_slg(next->fSpinLock);
+   if (std::find(next->fGDirectories.begin(), next->fGDirectories.end(), ptr) == next->fGDirectories.end()) {
+      next->fGDirectories.emplace_back(ptr);
+   }
+
+            }
             ROOT::Internal::TSpinLockGuard(ptr->fLock);
             auto This = this;
-            ptr->fCurrent.compare_exchange_strong(This, nullptr);
+            ptr->fCurrent.compare_exchange_strong(This, next);
          }
       }
    }
