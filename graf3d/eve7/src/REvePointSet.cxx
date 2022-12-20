@@ -45,8 +45,10 @@ REveProjectionManager class.
 
 REvePointSet::REvePointSet(const std::string& name, const std::string& title, Int_t n_points) :
    REveElement(name, title),
+   REveProjectable(),
    TAttMarker(),
-   TAttBBox()
+   TAttBBox(),
+   REveSecondarySelectable()
 {
    fMarkerStyle = 20;
 
@@ -65,7 +67,8 @@ REvePointSet::REvePointSet(const REvePointSet& e) :
    REveElement(e),
    REveProjectable(e),
    TAttMarker(e),
-   TAttBBox(e)
+   TAttBBox(e),
+   REveSecondarySelectable()
 {
    fAlwaysSecSelect = e.GetAlwaysSecSelect();
    ClonePoints(e);
