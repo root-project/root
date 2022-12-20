@@ -39,5 +39,9 @@
 #pragma link C++ class StructWithIORules + ;
 #pragma read sourceClass = "StructWithIORules" source = "float a" version = "[1-]" targetClass = \
    "StructWithIORules" target = "b" code = "{ b = onfile.a + 1.0f; }"
+// Including a non-transient member in `target` should issue a warning and ignore the rule; thus, `a` remains unchanged
+// in the test
+#pragma read sourceClass = "StructWithIORules" source = "float a" version = "[1-]" targetClass = \
+   "StructWithIORules" target = "a" code = "{ a = 0.0f; }"
 
 #endif

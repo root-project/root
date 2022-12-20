@@ -31,6 +31,7 @@
 #include <TDataMember.h>
 #include <TError.h>
 #include <TList.h>
+#include <TObjString.h>
 #include <TRealData.h>
 #include <TSchemaRule.h>
 #include <TSchemaRuleSet.h>
@@ -930,9 +931,24 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
 	     RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
    }
 
-   // Add post-read callbacks for I/O customization rules
+   // Add post-read callbacks for I/O customization rules; only rules that target transient members are allowed for now
+   // TODO(jalopezg): revise after supporting schema evolution
    if (const auto ruleset = fClass->GetSchemaRules()) {
+      auto referencesNonTransientMembers = [this](const ROOT::TSchemaRule *rule) {
+         R__ASSERT(rule->GetTarget() != nullptr);
+         for (auto target : ROOT::Detail::TRangeStaticCast<TObjString>(*rule->GetTarget())) {
+            const auto dataMember = fClass->GetDataMember(target->GetString());
+            if (dataMember && dataMember->IsPersistent()) {
+               R__LOG_WARNING(NTupleLog())
+                  << "ignoring I/O customization rule with non-transient member: " << dataMember->GetName();
+               return true;
+            }
+         }
+         return false;
+      };
+
       auto rules = ruleset->FindRules(std::string(className).c_str());
+      rules.erase(std::remove_if(rules.begin(), rules.end(), referencesNonTransientMembers), rules.end());
       AddReadCallbacksFromIORules(rules, fClass);
    }
 }
