@@ -588,7 +588,7 @@ void RooAbsTestStatistic::enableOffsetting(bool flag)
     _doOffset = flag ;
     // Clear offset if feature is disabled to that it is recalculated next time it is enabled
     if (!_doOffset) {
-      _offset = 0 ;
+      _offset = ROOT::Math::KahanSum<double>{0.} ;
     }
     setValueDirty() ;
     break ;

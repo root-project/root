@@ -591,7 +591,7 @@ double RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const
   }
 
   // Return chisq/nDOF
-  return chisq / (nbin-nFitParam) ;
+  return chisq.Sum() / (nbin-nFitParam) ;
 }
 
 
