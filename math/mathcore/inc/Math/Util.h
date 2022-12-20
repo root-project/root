@@ -262,30 +262,61 @@ namespace ROOT {
          return *this;
        }
 
-       /// Add `arg` into accumulator. Does not vectorise.
+       /// Add other KahanSum into accumulator. Does not vectorise.
+       ///
+       /// Based on KahanIncrement from:
+       /// Y. Tian, S. Tatikonda and B. Reinwald, "Scalable and Numerically Stable Descriptive Statistics in SystemML," 2012 IEEE 28th International Conference on Data Engineering, 2012, pp. 1351-1359, doi: 10.1109/ICDE.2012.12.
+       /// Note that while Tian et al. add the carry in the first step, we subtract
+       /// the carry, in accordance with the Add(Indexed) implementation(s) above.
+       /// This is purely an implementation choice that has no impact on performance.
        template<typename U>
-       KahanSum& operator+=(const KahanSum<U>& arg) {
-         Add(arg.Sum());
-         fCarry[0] += arg.Carry();
+       KahanSum& operator+=(const KahanSum<U>& other) {
+         U corrected_arg_sum = other.Sum() - (fCarry[0] + other.Carry());
+         U sum = fSum[0] + corrected_arg_sum;
+         U correction = (sum - fSum[0]) - corrected_arg_sum;
+         fSum[0] = sum;
+         fCarry[0] = correction;
          return *this;
        }
 
        /// Subtract other KahanSum. Does not vectorise.
        ///
-       /// This is only meaningful when both the sum and carry of each operand are of similar order of magnitude.
-       KahanSum<T, N>& operator-=(KahanSum<T, N> const& other) {
-         fSum[0]   -= other.Sum();
-         fCarry[0] -= other.Carry();
-         // add zero such that if the summed carry is large enough to be partly represented in the sum,
-         // it will happen
-         Add(T{});
+       /// Based on KahanIncrement from: Tian et al., 2012 (see operator+= documentation).
+       template<typename U>
+       KahanSum& operator-=(KahanSum<U> const& other) {
+         U corrected_arg_sum = -other.Sum() - (fCarry[0] - other.Carry());
+         U sum = fSum[0] + corrected_arg_sum;
+         U correction = (sum - fSum[0]) - corrected_arg_sum;
+         fSum[0] = sum;
+         fCarry[0] = correction;
          return *this;
+       }
+
+       KahanSum<T> operator-()
+       {
+          return {-this->fSum[0], -this->fCarry[0]};
        }
 
      private:
        T fSum[N];
        T fCarry[N];
    };
+
+   /// Add two non-vectorized KahanSums.
+   template<typename T = double>
+   KahanSum<T> operator+(const KahanSum<T>& left, const KahanSum<T>& right) {
+      KahanSum<T> sum(left);
+      sum += right;
+      return sum;
+   }
+
+   /// Subtract two non-vectorized KahanSums.
+   template<typename T = double>
+   KahanSum<T> operator-(const KahanSum<T>& left, const KahanSum<T>& right) {
+      KahanSum<T> sum(left);
+      sum -= right;
+      return sum;
+   }
 
    } // end namespace Math
 
