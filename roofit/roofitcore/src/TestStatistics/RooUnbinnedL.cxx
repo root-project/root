@@ -89,7 +89,7 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
    double sumWeight;
 
    // Do not reevaluate likelihood if parameters nor event range have changed
-   if (!paramTracker_->hasChanged(true) && events == lastSection_ && (cachedResult_ != 0)) return cachedResult_;
+   if (!paramTracker_->hasChanged(true) && events == lastSection_ && (cachedResult_.Sum() != 0 || cachedResult_.Carry() != 0)) return cachedResult_;
 
    data_->store()->recalculateCache(nullptr, events.begin(N_events_), events.end(N_events_), 1, true);
 

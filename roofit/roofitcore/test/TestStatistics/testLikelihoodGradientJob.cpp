@@ -366,7 +366,7 @@ TEST(SimBinnedConstrainedTestBasic, BasicParameters)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_DOUBLE_EQ(nll0, nll1);
+   EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
 }
 
 class SimBinnedConstrainedTest : public ::testing::TestWithParam<std::tuple<bool>> {};
