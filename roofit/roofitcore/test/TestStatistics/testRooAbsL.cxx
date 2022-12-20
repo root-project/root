@@ -215,7 +215,7 @@ TEST_F(BinnedDatasetTest, EventSections)
    auto whole = likelihood->evaluatePartition({0, 1}, 0, 0);
    auto part1 = likelihood->evaluatePartition({0, 0.5}, 0, 0);
    auto part2 = likelihood->evaluatePartition({0.5, 1}, 0, 0);
-   EXPECT_EQ(whole, part1 + part2);
+   EXPECT_EQ(whole.Sum(), (part1 + part2).Sum());
 }
 
 TEST_F(SimBinnedConstrainedTest, EventSections)
@@ -228,13 +228,13 @@ TEST_F(SimBinnedConstrainedTest, EventSections)
    auto whole = likelihood->evaluatePartition({0, 1}, 0, likelihood->getNComponents());
    auto part1 = likelihood->evaluatePartition({0, 0.5}, 0, likelihood->getNComponents());
    auto part2 = likelihood->evaluatePartition({0.5, 1}, 0, likelihood->getNComponents());
-   EXPECT_EQ(whole, part1 + part2);
+   EXPECT_EQ(whole.Sum(), (part1 + part2).Sum());
 
    auto part1of4 = likelihood->evaluatePartition({0, 0.25}, 0, likelihood->getNComponents());
    auto part2of4 = likelihood->evaluatePartition({0.25, 0.5}, 0, likelihood->getNComponents());
    auto part3of4 = likelihood->evaluatePartition({0.5, 0.75}, 0, likelihood->getNComponents());
    auto part4of4 = likelihood->evaluatePartition({0.75, 1}, 0, likelihood->getNComponents());
-   EXPECT_EQ(whole, part1of4 + part2of4 + part3of4 + part4of4);
+   EXPECT_EQ(whole.Sum(), (part1of4 + part2of4 + part3of4 + part4of4).Sum());
 }
 
 TEST_F(RooAbsLTest, SubEventSections)
@@ -253,17 +253,17 @@ TEST_F(RooAbsLTest, SubEventSections)
    for (std::size_t ix = 0; ix < 9; ++ix) {
       nine_parts += likelihood->evaluatePartition({static_cast<double>(ix)/9, static_cast<double>(ix+1)/9}, 0, likelihood->getNComponents());
    }
-   EXPECT_EQ(whole, nine_parts);
+   EXPECT_EQ(whole.Sum(), nine_parts.Sum());
 
    for (std::size_t ix = 0; ix < 11; ++ix) {
       eleven_parts += likelihood->evaluatePartition({static_cast<double>(ix)/11, static_cast<double>(ix+1)/11}, 0, likelihood->getNComponents());
    }
-   EXPECT_EQ(whole, eleven_parts);
+   EXPECT_EQ(whole.Sum(), eleven_parts.Sum());
 
    for (std::size_t ix = 0; ix < 20; ++ix) {
       twenty_parts += likelihood->evaluatePartition({static_cast<double>(ix)/20, static_cast<double>(ix+1)/20}, 0, likelihood->getNComponents());
    }
-   EXPECT_EQ(whole, twenty_parts);
+   EXPECT_EQ(whole.Sum(), twenty_parts.Sum());
 }
 
 TEST_F(SimBinnedConstrainedTest, SubEventSections)
@@ -284,7 +284,7 @@ TEST_F(SimBinnedConstrainedTest, SubEventSections)
    for (std::size_t ix = 0; ix < N_events_total; ++ix) {
       N_events_total_parts += likelihood->evaluatePartition({static_cast<double>(ix)/N_events_total, static_cast<double>(ix+1)/N_events_total}, 0, likelihood->getNComponents());
    }
-   EXPECT_EQ(whole, N_events_total_parts);
+   EXPECT_EQ(whole.Sum(), N_events_total_parts.Sum());
 
    // now let's do it again over a number of sections 3 times the number of events
    ROOT::Math::KahanSum<double> thrice_N_events_total_parts;
@@ -292,5 +292,5 @@ TEST_F(SimBinnedConstrainedTest, SubEventSections)
    for (std::size_t ix = 0; ix < 3 * N_events_total; ++ix) {
       thrice_N_events_total_parts += likelihood->evaluatePartition({static_cast<double>(ix)/(3 * N_events_total), static_cast<double>(ix+1)/(3 * N_events_total)}, 0, likelihood->getNComponents());
    }
-   EXPECT_EQ(whole, thrice_N_events_total_parts);
+   EXPECT_EQ(whole.Sum(), thrice_N_events_total_parts.Sum());
 }

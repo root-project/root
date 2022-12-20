@@ -193,7 +193,8 @@ void LikelihoodJob::evaluate()
       // wait for task results back from workers to master
       gather_worker_results();
 
-      result_ = 0;
+      result_ = ROOT::Math::KahanSum<double>{0.};
+//      printf("Master evaluate: ");
       for (auto const &item : results_) {
          result_ += item;
       }

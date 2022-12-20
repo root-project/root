@@ -1812,9 +1812,9 @@ double RooDataHist::sum(bool correctForBinSize, bool inverseBinCor) const
 
   // Store result in cache
   _cache_sum_valid = cache_code;
-  _cache_sum = kahanSum;
+  _cache_sum = kahanSum.Sum();
 
-  return kahanSum;
+  return kahanSum.Sum();
 }
 
 
@@ -1888,7 +1888,7 @@ double RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, bool
 
   _vars.assign(varSave) ;
 
-  return total;
+  return total.Sum();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1997,7 +1997,7 @@ double RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
 
   _vars.assign(varSave);
 
-  return total;
+  return total.Sum();
 }
 
 
@@ -2055,7 +2055,7 @@ const std::vector<double>& RooDataHist::calculatePartialBinVolume(const RooArgSe
 ////////////////////////////////////////////////////////////////////////////////
 /// Sum the weights of all bins.
 double RooDataHist::sumEntries() const {
-  return ROOT::Math::KahanSum<double>::Accumulate(_wgt, _wgt + _arrSize);
+  return ROOT::Math::KahanSum<double>::Accumulate(_wgt, _wgt + _arrSize).Sum();
 }
 
 
@@ -2089,7 +2089,7 @@ double RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) const
       kahanSum += weight(i);
     }
 
-    return kahanSum;
+    return kahanSum.Sum();
   }
 }
 

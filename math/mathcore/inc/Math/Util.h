@@ -123,7 +123,7 @@ namespace ROOT {
      public:
        /// Initialise the sum.
        /// \param[in] initialValue Initialise with this value. Defaults to 0.
-       KahanSum(T initialValue = T{}) {
+       explicit KahanSum(T initialValue = T{}) {
          fSum[0] = initialValue;
          std::fill(std::begin(fSum)+1, std::end(fSum), 0.);
          std::fill(std::begin(fCarry), std::end(fCarry), 0.);
@@ -243,11 +243,6 @@ namespace ROOT {
 
        /// \return Compensated sum.
        T Result() const {
-         return Sum();
-       }
-
-       /// Auto-convert to type T
-       operator T() const {
          return Sum();
        }
 

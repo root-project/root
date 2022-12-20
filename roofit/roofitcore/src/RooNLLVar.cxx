@@ -334,8 +334,8 @@ double RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEven
   if (_doOffset) {
 
     // If no offset is stored enable this feature now
-    if (_offset==0 && result !=0 ) {
-      coutI(Minimization) << "RooNLLVar::evaluatePartition(" << GetName() << ") first = "<< firstEvent << " last = " << lastEvent << " Likelihood offset now set to " << result << std::endl ;
+    if (_offset.Sum() == 0 && _offset.Carry() == 0 && (result.Sum() != 0 || result.Carry() != 0)) {
+      coutI(Minimization) << "RooNLLVar::evaluatePartition(" << GetName() << ") first = "<< firstEvent << " last = " << lastEvent << " Likelihood offset now set to " << result.Sum() << std::endl ;
       _offset = result ;
     }
 
@@ -454,7 +454,7 @@ RooNLLVar::ComputeResult RooNLLVar::computeBatchedFunc(const RooAbsPdf *pdfClone
 
     // Some events with evaluation errors. Return "badness" of errors.
     if (nanPacker.getPayload() > 0.) {
-      return {{nanPacker.getNaNWithPayload()}, sumOfWeights};
+      return {ROOT::Math::KahanSum<double>{nanPacker.getNaNWithPayload()}, sumOfWeights};
     } else {
       return {kahanSanitised, sumOfWeights};
     }
@@ -505,7 +505,7 @@ RooNLLVar::ComputeResult RooNLLVar::computeScalarFunc(const RooAbsPdf *pdfClone,
 
   if (packedNaN.getPayload() != 0.) {
     // Some events with evaluation errors. Return "badness" of errors.
-    return {{packedNaN.getNaNWithPayload()}, kahanWeight.Sum()};
+    return {ROOT::Math::KahanSum<double>{packedNaN.getNaNWithPayload()}, kahanWeight.Sum()};
   }
 
   return {kahanProb, kahanWeight.Sum()};

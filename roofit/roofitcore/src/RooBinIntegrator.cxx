@@ -283,7 +283,7 @@ double RooBinIntegrator::integral(const double *)
     }
   }
 
-  return sum;
+  return sum.Sum();
 }
 
 
