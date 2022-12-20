@@ -47,7 +47,7 @@ private:
 
    double DoDerivative(double const * /*x*/, unsigned int /*icoord*/) const override
    {
-      throw std::runtime_error("MinuitFcnGrad::DoDerivative is not implemented, please use Gradient instead.");
+      throw std::runtime_error("MinuitGradFunctor::DoDerivative is not implemented, please use Gradient instead.");
    }
 
    MinuitFcnGrad const &_fcn;
@@ -91,13 +91,20 @@ MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAb
 
    _calculationIsClean = std::make_unique<WrapperCalculationCleanFlags>();
 
-   _likelihood = LikelihoodWrapper::create(likelihoodMode, absL, _calculationIsClean);
+   SharedOffset shared_offset;
+
    if (likelihoodMode == LikelihoodMode::multiprocess &&
        likelihoodGradientMode == LikelihoodGradientMode::multiprocess) {
-      _likelihoodInGradient = LikelihoodWrapper::create(LikelihoodMode::serial, absL, _calculationIsClean);
+      _likelihood = LikelihoodWrapper::create(likelihoodMode, absL, _calculationIsClean, shared_offset);
+      _likelihoodInGradient =
+         LikelihoodWrapper::create(LikelihoodMode::serial, absL, _calculationIsClean, shared_offset);
+   } else {
+      _likelihood = LikelihoodWrapper::create(likelihoodMode, absL, _calculationIsClean, shared_offset);
+      _likelihoodInGradient = _likelihood;
    }
-   _gradient =
-      LikelihoodGradientWrapper::create(likelihoodGradientMode, absL, _calculationIsClean, getNDim(), _context);
+
+   _gradient = LikelihoodGradientWrapper::create(likelihoodGradientMode, absL, _calculationIsClean, getNDim(), _context,
+                                                 shared_offset);
 
    applyToLikelihood([&](auto &l) { l.synchronizeParameterSettings(parameters); });
    _gradient->synchronizeParameterSettings(getMultiGenFcn(), parameters);
@@ -108,9 +115,27 @@ MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAb
    _gradient->synchronizeWithMinimizer(ROOT::Math::MinimizerOptions());
 }
 
+/// Make sure the offsets are up to date
+///
+/// If the offsets need to be updated, this function triggers a likelihood evaluation.
+/// The likelihood will make sure the offset is set correctly in their shared_ptr
+/// offsets object, that is also shared with possible other LikelihoodWrapper members
+/// of MinuitFcnGrad and also the LikelihoodGradientWrapper member. Other necessary
+/// synchronization steps are also performed from the Wrapper child classes (e.g.
+/// sending the values to workers from MultiProcess::Jobs).
+void MinuitFcnGrad::syncOffsets() const
+{
+   if (_likelihood->isOffsetting() && (_evalCounter == 0 || offsets_reset_)) {
+      _likelihoodInGradient->evaluate();
+      offsets_reset_ = false;
+   }
+}
+
 double MinuitFcnGrad::operator()(const double *x) const
 {
    bool parameters_changed = syncParameterValuesFromMinuitCalls(x, false);
+
+   syncOffsets();
 
    // Calculate the function for these parameters
    //   RooAbsReal::setHideOffset(false);
@@ -265,6 +290,7 @@ void MinuitFcnGrad::Gradient(const double *x, double *grad) const
 {
    _calculatingGradient = true;
    syncParameterValuesFromMinuitCalls(x, returnsInMinuit2ParameterSpace());
+   syncOffsets();
    _gradient->fillGradient(grad);
    _calculatingGradient = false;
 }
@@ -274,6 +300,7 @@ void MinuitFcnGrad::GradientWithPrevResult(const double *x, double *grad, double
 {
    _calculatingGradient = true;
    syncParameterValuesFromMinuitCalls(x, returnsInMinuit2ParameterSpace());
+   syncOffsets();
    _gradient->fillGradientWithPrevResult(grad, previous_grad, previous_g2, previous_gstep);
    _calculatingGradient = false;
 }

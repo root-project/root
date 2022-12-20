@@ -13,6 +13,8 @@
 #ifndef ROOT_ROOFIT_TESTSTATISTICS_LikelihoodWrapper
 #define ROOT_ROOFIT_TESTSTATISTICS_LikelihoodWrapper
 
+#include "RooFit/TestStatistics/SharedOffset.h"
+
 #include "RooArgSet.h"
 #include "RooAbsArg.h" // enum ConstOpCode
 
@@ -57,14 +59,18 @@ enum class LikelihoodMode { serial, multiprocess };
 enum class OffsettingMode { legacy, full };
 
 class LikelihoodWrapper {
-public:
+protected:
    LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood,
-                     std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean);
+                     std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, SharedOffset offset);
+
+public:
    virtual ~LikelihoodWrapper() = default;
-   virtual LikelihoodWrapper *clone() const = 0;
+   LikelihoodWrapper(const LikelihoodWrapper &) = delete;
+   LikelihoodWrapper &operator=(const LikelihoodWrapper &) = delete;
 
    static std::unique_ptr<LikelihoodWrapper> create(LikelihoodMode likelihoodMode, std::shared_ptr<RooAbsL> likelihood,
-                                                    std::shared_ptr<WrapperCalculationCleanFlags> calculationIsClean);
+                                                    std::shared_ptr<WrapperCalculationCleanFlags> calculationIsClean,
+                                                    SharedOffset offset);
 
    /// \brief Triggers (possibly asynchronous) evaluation of the likelihood
    ///
@@ -95,19 +101,17 @@ public:
    inline virtual bool isOffsetting() const { return do_offset_; }
    virtual void enableOffsetting(bool flag);
    void setOffsettingMode(OffsettingMode mode);
-   inline ROOT::Math::KahanSum<double> offset() const { return offset_; }
    void setApplyWeightSquared(bool flag);
 
 protected:
    std::shared_ptr<RooAbsL> likelihood_;
+   LikelihoodType likelihood_type_;
    std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean_;
 
    bool do_offset_ = false;
-   ROOT::Math::KahanSum<double> offset_;
-   ROOT::Math::KahanSum<double> offset_save_ {0.}; ///<!
+   SharedOffset shared_offset_;
+   void calculate_offsets();
    OffsettingMode offsetting_mode_ = OffsettingMode::legacy;
-   ROOT::Math::KahanSum<double> applyOffsetting(ROOT::Math::KahanSum<double> current_value);
-   void swapOffsets();
 };
 
 } // namespace TestStatistics

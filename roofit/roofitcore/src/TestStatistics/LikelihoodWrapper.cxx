@@ -15,6 +15,8 @@
 #include <RooFit/TestStatistics/RooAbsL.h> // need complete type for likelihood->...
 #include <RooFit/TestStatistics/RooUnbinnedL.h>
 #include <RooFit/TestStatistics/RooSumL.h> // need complete type for dynamic cast
+#include <RooFit/TestStatistics/RooBinnedL.h>
+#include <RooFit/TestStatistics/RooSubsidiaryL.h>
 
 #include <RooMsgService.h>
 
@@ -48,12 +50,24 @@ namespace TestStatistics {
  * between them.
  */
 LikelihoodWrapper::LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood,
-                                     std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean)
-   : likelihood_(std::move(likelihood)), calculation_is_clean_(std::move(calculation_is_clean))
+                                     std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean,
+                                     SharedOffset offset)
+   : likelihood_(std::move(likelihood)),
+     calculation_is_clean_(std::move(calculation_is_clean)),
+     shared_offset_(std::move(offset))
 {
-   // Note to future maintainers: take care when storing the minimizer_fcn pointer. The
-   // RooAbsMinimizerFcn subclasses may get cloned inside MINUIT, which means the pointer
-   // should also somehow be updated in this class.
+   // determine likelihood type
+   if (dynamic_cast<RooUnbinnedL *>(likelihood_.get()) != nullptr) {
+      likelihood_type_ = LikelihoodType::unbinned;
+   } else if (dynamic_cast<RooBinnedL *>(likelihood_.get()) != nullptr) {
+      likelihood_type_ = LikelihoodType::binned;
+   } else if (dynamic_cast<RooSumL *>(likelihood_.get()) != nullptr) {
+      likelihood_type_ = LikelihoodType::sum;
+   } else if (dynamic_cast<RooSubsidiaryL *>(likelihood_.get()) != nullptr) {
+      likelihood_type_ = LikelihoodType::subsidiary;
+   } else {
+      throw std::logic_error("in LikelihoodWrapper constructor: _likelihood is not of a valid subclass!");
+   }
 }
 
 void LikelihoodWrapper::synchronizeWithMinimizer(const ROOT::Math::MinimizerOptions & /*options*/) {}
@@ -84,9 +98,9 @@ std::string LikelihoodWrapper::GetTitle() const
 void LikelihoodWrapper::enableOffsetting(bool flag)
 {
    do_offset_ = flag;
-   // Clear offset if feature is disabled so that it is recalculated next time it is enabled
+   // Clear offsets if feature is disabled so that it is recalculated next time it is enabled
    if (!do_offset_) {
-      offset_ = ROOT::Math::KahanSum<double>();
+      shared_offset_.clear();
    }
 }
 
@@ -97,57 +111,96 @@ void LikelihoodWrapper::setOffsettingMode(OffsettingMode mode)
       oocoutI(nullptr, Minimization)
          << "LikelihoodWrapper::setOffsettingMode(" << GetName()
          << "): changed offsetting mode while offsetting was enabled; resetting offset values" << std::endl;
-      offset_ = ROOT::Math::KahanSum<double>();
+      shared_offset_.clear();
    }
 }
 
-ROOT::Math::KahanSum<double> LikelihoodWrapper::applyOffsetting(ROOT::Math::KahanSum<double> current_value)
+/// (Re)calculate (on each worker) all component offsets.
+///
+/// Note that these are calculated over the full event range! This will decrease the effectiveness of offsetting
+/// proportionally to the number of splits over the event range. The alternative, however, becomes very complex to
+/// implement and maintain, so this is a compromise.
+void LikelihoodWrapper::calculate_offsets()
 {
-   if (do_offset_) {
+   shared_offset_.clear();
 
-      // If no offset is stored enable this feature now
-      if (offset_.Sum() == 0 && offset_.Carry() == 0 && (current_value.Sum() != 0 || current_value.Carry() != 0)) {
-         offset_ = current_value;
-         if (offsetting_mode_ == OffsettingMode::legacy) {
-            auto sum_likelihood = dynamic_cast<RooSumL *>(likelihood_.get());
-            if (sum_likelihood != nullptr) {
-               auto subsidiary_value = sum_likelihood->getSubsidiaryValue();
-               // "undo" the addition of the subsidiary value to emulate legacy behavior
-               offset_ -= subsidiary_value;
-               // manually calculate result with zero carry, again to emulate legacy behavior
-               return ROOT::Math::KahanSum<double>{current_value.Result() - offset_.Result()};
-            }
-         }
-         oocoutI(nullptr, Minimization)
-            << "LikelihoodWrapper::applyOffsetting(" << GetName() << "): Likelihood offset now set to " << offset_.Sum()
-            << std::endl;
+   switch (likelihood_type_) {
+   case LikelihoodType::unbinned: {
+      shared_offset_.offsets().push_back(likelihood_->evaluatePartition({0, 1}, 0, 0));
+      shared_offset_.offsets_save().emplace_back();
+      break;
+   }
+   case LikelihoodType::binned: {
+      shared_offset_.offsets().push_back(likelihood_->evaluatePartition({0, 1}, 0, 0));
+      break;
+   }
+   case LikelihoodType::subsidiary: {
+      if (offsetting_mode_ == OffsettingMode::full) {
+         shared_offset_.offsets().push_back(likelihood_->evaluatePartition({0, 1}, 0, 0));
+      } else {
+         shared_offset_.offsets().emplace_back();
       }
-
-      return current_value - offset_;
-   } else {
-      return current_value;
+      break;
+   }
+   case LikelihoodType::sum: {
+      auto sum_likelihood = dynamic_cast<RooSumL *>(likelihood_.get());
+      assert(sum_likelihood != nullptr);
+      for (std::size_t comp_ix = 0; comp_ix < likelihood_->getNComponents(); ++comp_ix) {
+         auto component_subsidiary_cast =
+            dynamic_cast<RooSubsidiaryL *>(sum_likelihood->GetComponents()[comp_ix].get());
+         if (offsetting_mode_ == OffsettingMode::full || component_subsidiary_cast == nullptr) {
+            // Note: we leave out here the check for whether the calculated value is zero to reduce complexity, which
+            // RooNLLVar does do at this (equivalent) point. Instead, we check whether the offset is zero when
+            // subtracting it in evaluations.
+            shared_offset_.offsets().push_back(likelihood_->evaluatePartition({0, 1}, comp_ix, comp_ix + 1));
+            oocoutI(nullptr, Minimization)
+               << "LikelihoodSerial::evaluate(" << GetName() << "): Likelihood offset now set to "
+               << shared_offset_.offsets().back().Sum() << std::endl;
+         } else {
+            shared_offset_.offsets().emplace_back();
+         }
+         // default initialize the save offsets, just in case we have an unbinned component
+         shared_offset_.offsets_save().emplace_back();
+      }
+      break;
+   }
    }
 }
 
-/// When calculating an unbinned likelihood with square weights applied, a different offset
-/// is necessary. Similar situations may ask for a separate offset as well. This function
-/// switches between the two sets of offset values.
-void LikelihoodWrapper::swapOffsets()
-{
-   std::swap(offset_, offset_save_);
-}
-
+/// \note Currently we do not recalculate the offset value, so in practice swapped offsets
+///       are zero/disabled. This differs from using RooNLLVar, so your fit may yield slightly
+///       different values.
 void LikelihoodWrapper::setApplyWeightSquared(bool flag)
 {
-   RooUnbinnedL *unbinned_likelihood = dynamic_cast<RooUnbinnedL *>(likelihood_.get());
-   if (unbinned_likelihood == nullptr) {
-      throw std::logic_error("LikelihoodWrapper::setApplyWeightSquared can only be used on unbinned likelihoods, but "
-                             "the wrapped likelihood_ member is not a RooUnbinnedL!");
+   std::vector<std::size_t> comp_was_changed;
+   switch (likelihood_type_) {
+   case LikelihoodType::unbinned: {
+      auto unbinned_likelihood = dynamic_cast<RooUnbinnedL *>(likelihood_.get());
+      assert(unbinned_likelihood != nullptr);
+      if (unbinned_likelihood->setApplyWeightSquared(flag))
+         comp_was_changed.emplace_back(0);
+      break;
    }
-   bool flag_was_changed = unbinned_likelihood->setApplyWeightSquared(flag);
-
-   if (flag_was_changed) {
-      swapOffsets();
+   case LikelihoodType::sum: {
+      auto sum_likelihood = dynamic_cast<RooSumL *>(likelihood_.get());
+      assert(sum_likelihood != nullptr);
+      for (std::size_t comp_ix = 0; comp_ix < likelihood_->getNComponents(); ++comp_ix) {
+         auto component_unbinned_cast = dynamic_cast<RooUnbinnedL *>(sum_likelihood->GetComponents()[comp_ix].get());
+         if (component_unbinned_cast != nullptr) {
+            if (component_unbinned_cast->setApplyWeightSquared(flag))
+               comp_was_changed.emplace_back(comp_ix);
+         }
+      }
+      break;
+   }
+   default: {
+      throw std::logic_error("LikelihoodWrapper::setApplyWeightSquared can only be used on unbinned likelihoods, but "
+                             "the wrapped likelihood_ member is not a RooUnbinnedL nor a RooSumL containing an unbinned"
+                             "component!");
+   }
+   }
+   if (!comp_was_changed.empty()) {
+      shared_offset_.swap(comp_was_changed);
    }
 }
 
@@ -157,15 +210,16 @@ void LikelihoodWrapper::updateMinuitExternalParameterValues(const std::vector<do
 /// Factory method.
 std::unique_ptr<LikelihoodWrapper>
 LikelihoodWrapper::create(LikelihoodMode likelihoodMode, std::shared_ptr<RooAbsL> likelihood,
-                          std::shared_ptr<WrapperCalculationCleanFlags> calculationIsClean)
+                          std::shared_ptr<WrapperCalculationCleanFlags> calculationIsClean, SharedOffset offset)
 {
    switch (likelihoodMode) {
    case LikelihoodMode::serial: {
-      return std::make_unique<LikelihoodSerial>(std::move(likelihood), std::move(calculationIsClean));
+      return std::make_unique<LikelihoodSerial>(std::move(likelihood), std::move(calculationIsClean),
+                                                std::move(offset));
    }
    case LikelihoodMode::multiprocess: {
 #ifdef ROOFIT_MULTIPROCESS
-      return std::make_unique<LikelihoodJob>(std::move(likelihood), std::move(calculationIsClean));
+      return std::make_unique<LikelihoodJob>(std::move(likelihood), std::move(calculationIsClean), std::move(offset));
 #else
       throw std::runtime_error("MinuitFcnGrad ctor with LikelihoodMode::multiprocess is not available in this build "
                                "without RooFit::Multiprocess!");
