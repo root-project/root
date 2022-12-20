@@ -197,7 +197,7 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
 
    if (packedNaN.getPayload() != 0.) {
       // Some events with evaluation errors. Return "badness" of errors.
-      kahanProb = packedNaN.getNaNWithPayload();
+      kahanProb = Math::KahanSum<double>(packedNaN.getNaNWithPayload());
    }
 
    if (_isExtended) {
@@ -279,7 +279,7 @@ RooNLLVarNew::fillNormSetForServer(RooArgSet const & /*normSet*/, RooAbsArg cons
 void RooNLLVarNew::enableOffsetting(bool flag)
 {
    _doOffset = flag;
-   _offset = {};
+   _offset = ROOT::Math::KahanSum<double>{};
 }
 
 double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> &&result, double weightSum) const
@@ -294,7 +294,7 @@ double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> &&result, doubl
    if (_offset) {
 
       // If no offset is stored enable this feature now
-      if (_offset == 0 && result != 0) {
+      if (_offset.Sum() == 0 && _offset.Carry() == 0 && (result.Sum() != 0 || result.Carry() != 0)) {
          _offset = result;
       }
 
