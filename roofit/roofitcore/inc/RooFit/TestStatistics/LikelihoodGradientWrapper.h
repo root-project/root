@@ -16,6 +16,7 @@
 #include <Fit/ParameterSettings.h>
 #include <Math/IFunctionfwd.h>
 #include "Math/MinimizerOptions.h"
+#include "Math/Util.h"
 
 #include <vector>
 #include <memory> // shared_ptr
@@ -37,12 +38,22 @@ public:
    LikelihoodGradientWrapper(std::shared_ptr<RooAbsL> likelihood,
                              std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, std::size_t N_dim,
                              RooMinimizer *minimizer);
+   LikelihoodGradientWrapper(std::shared_ptr<RooAbsL> likelihood,
+                             std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean, std::size_t N_dim,
+                             RooMinimizer *minimizer,
+                             std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets,
+                             std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets_save);
    virtual ~LikelihoodGradientWrapper() = default;
    virtual LikelihoodGradientWrapper *clone() const = 0;
 
    static std::unique_ptr<LikelihoodGradientWrapper>
    create(LikelihoodGradientMode likelihoodGradientMode, std::shared_ptr<RooAbsL> likelihood,
           std::shared_ptr<WrapperCalculationCleanFlags> calculationIsClean, std::size_t nDim, RooMinimizer *minimizer);
+   static std::unique_ptr<LikelihoodGradientWrapper>
+   create(LikelihoodGradientMode likelihoodGradientMode, std::shared_ptr<RooAbsL> likelihood,
+          std::shared_ptr<WrapperCalculationCleanFlags> calculationIsClean, std::size_t nDim, RooMinimizer *minimizer,
+          std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets,
+          std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets_save);
 
    virtual void fillGradient(double *grad) = 0;
    virtual void
@@ -82,6 +93,8 @@ protected:
    std::shared_ptr<RooAbsL> likelihood_;
    RooMinimizer *minimizer_;
    std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean_;
+   std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> component_offsets_;
+   std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> component_offsets_save_;
 };
 
 } // namespace TestStatistics

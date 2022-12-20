@@ -18,8 +18,6 @@
 
 #include "Math/MinimizerOptions.h"
 
-#include <map>
-
 namespace RooFit {
 namespace TestStatistics {
 
@@ -27,6 +25,10 @@ class LikelihoodSerial : public LikelihoodWrapper {
 public:
    LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood,
                     std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean);
+   LikelihoodSerial(std::shared_ptr<RooAbsL> _likelihood,
+                    std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean,
+                    std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets,
+                    std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets_save);
    inline LikelihoodSerial *clone() const override { return new LikelihoodSerial(*this); }
 
    void initVars();
@@ -39,8 +41,6 @@ private:
 
    RooArgList _vars;     ///< Variables
    RooArgList _saveVars; ///< Copy of variables
-
-   LikelihoodType likelihood_type;
 };
 
 } // namespace TestStatistics

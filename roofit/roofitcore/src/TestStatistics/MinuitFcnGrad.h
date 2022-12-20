@@ -61,6 +61,9 @@ public:
    inline void setOffsetting(bool flag) override
    {
       applyToLikelihood([&](auto &l) { l.enableOffsetting(flag); });
+      if (!flag) {
+         offsets_reset_ = true;
+      }
    }
 
 private:
@@ -76,8 +79,9 @@ private:
    }
 
    // members
-   std::unique_ptr<LikelihoodWrapper> _likelihood;
-   std::unique_ptr<LikelihoodWrapper> _likelihoodInGradient;
+   // the likelihoods are shared_ptrs because they may point to the same object
+   std::shared_ptr<LikelihoodWrapper> _likelihood;
+   std::shared_ptr<LikelihoodWrapper> _likelihoodInGradient;
    std::unique_ptr<LikelihoodGradientWrapper> _gradient;
    mutable bool _calculatingGradient = false;
 
@@ -85,6 +89,10 @@ private:
 
    mutable std::vector<double> _minuitInternalX;
    mutable std::vector<double> _minuitExternalX;
+   // offsets_reset_ should be reset also when applyWeightSquared is activated in LikelihoodWrappers;
+   // currently setting this is not supported, so it doesn't happen.
+   mutable bool offsets_reset_ = false;
+   void syncOffsets() const;
 
    std::unique_ptr<ROOT::Math::IMultiGradFunction> _multiGenFcn;
 

@@ -49,6 +49,19 @@ LikelihoodGradientWrapper::LikelihoodGradientWrapper(std::shared_ptr<RooAbsL> li
    // should also somehow be updated in this class.
 }
 
+LikelihoodGradientWrapper::LikelihoodGradientWrapper(std::shared_ptr<RooAbsL> likelihood,
+                                                     std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean,
+                                                     std::size_t /*N_dim*/, RooMinimizer *minimizer,
+                                                     std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets,
+                                                     std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets_save)
+   : likelihood_(std::move(likelihood)), minimizer_(minimizer), calculation_is_clean_(std::move(calculation_is_clean)),
+     component_offsets_(std::move(offsets)), component_offsets_save_(std::move(offsets_save))
+{
+   // Note to future maintainers: take care when storing the minimizer_fcn pointer. The
+   // RooAbsMinimizerFcn subclasses may get cloned inside MINUIT, which means the pointer
+   // should also somehow be updated in this class.
+}
+
 void LikelihoodGradientWrapper::synchronizeWithMinimizer(const ROOT::Math::MinimizerOptions & /*options*/) {}
 
 void LikelihoodGradientWrapper::synchronizeParameterSettings(
@@ -75,6 +88,35 @@ LikelihoodGradientWrapper::create(LikelihoodGradientMode likelihoodGradientMode,
 #ifdef ROOFIT_MULTIPROCESS
       return std::make_unique<LikelihoodGradientJob>(std::move(likelihood), std::move(calculationIsClean), nDim,
                                                      minimizer);
+#else
+      (void) likelihood;
+      (void) calculationIsClean;
+      (void) nDim;
+      (void) minimizer;
+      throw std::runtime_error("MinuitFcnGrad ctor with LikelihoodGradientMode::multiprocess is not available in this "
+                               "build without RooFit::Multiprocess!");
+#endif
+      break;
+   }
+   default: {
+      throw std::logic_error("In MinuitFcnGrad constructor: likelihoodGradientMode has an unsupported value!");
+   }
+   }
+}
+
+/// Factory method.
+std::unique_ptr<LikelihoodGradientWrapper>
+LikelihoodGradientWrapper::create(LikelihoodGradientMode likelihoodGradientMode, std::shared_ptr<RooAbsL> likelihood,
+                                  std::shared_ptr<WrapperCalculationCleanFlags> calculationIsClean, std::size_t nDim,
+                                  RooMinimizer *minimizer,
+                                  std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets,
+                                  std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets_save)
+{
+   switch (likelihoodGradientMode) {
+   case LikelihoodGradientMode::multiprocess: {
+#ifdef ROOFIT_MULTIPROCESS
+      return std::make_unique<LikelihoodGradientJob>(std::move(likelihood), std::move(calculationIsClean), nDim,
+                                                     minimizer, std::move(offsets), std::move(offsets_save));
 #else
       (void) likelihood;
       (void) calculationIsClean;

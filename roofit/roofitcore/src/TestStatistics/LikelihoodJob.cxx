@@ -12,6 +12,7 @@
 
 #include "LikelihoodJob.h"
 
+#include "LikelihoodSerial.h"
 #include "RooFit/MultiProcess/JobManager.h"
 #include "RooFit/MultiProcess/ProcessManager.h"
 #include "RooFit/MultiProcess/Queue.h"
@@ -28,29 +29,33 @@
 namespace RooFit {
 namespace TestStatistics {
 
-LikelihoodJob::LikelihoodJob(
-   std::shared_ptr<RooAbsL> likelihood,
-   std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean)
-   : LikelihoodWrapper(std::move(likelihood), std::move(calculation_is_clean)),
+LikelihoodJob::LikelihoodJob(std::shared_ptr<RooAbsL> likelihood,
+                             std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean)
+   : LikelihoodJob(std::move(likelihood), std::move(calculation_is_clean),
+                   std::make_shared<std::vector<ROOT::Math::KahanSum<double>>>(), std::make_shared<std::vector<ROOT::Math::KahanSum<double>>>())
+{
+}
+
+LikelihoodJob::LikelihoodJob(std::shared_ptr<RooAbsL> likelihood,
+                             std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean,
+                             std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets,
+                             std::shared_ptr<std::vector<ROOT::Math::KahanSum<double>>> offsets_save)
+   : LikelihoodWrapper(std::move(likelihood), std::move(calculation_is_clean), std::move(offsets),
+                       std::move(offsets_save)),
      n_event_tasks_(MultiProcess::Config::LikelihoodJob::defaultNEventTasks),
-     n_component_tasks_(MultiProcess::Config::LikelihoodJob::defaultNComponentTasks)
+     n_component_tasks_(MultiProcess::Config::LikelihoodJob::defaultNComponentTasks),
+     likelihood_serial_(std::make_unique<LikelihoodSerial>(likelihood_, calculation_is_clean_, component_offsets_, component_offsets_save_))
 {
    init_vars();
-   // determine likelihood type
-   if (dynamic_cast<RooUnbinnedL *>(likelihood_.get()) != nullptr) {
-      likelihood_type_ = LikelihoodType::unbinned;
-   } else if (dynamic_cast<RooBinnedL *>(likelihood_.get()) != nullptr) {
-      likelihood_type_ = LikelihoodType::binned;
-   } else if (dynamic_cast<RooSumL *>(likelihood_.get()) != nullptr) {
-      likelihood_type_ = LikelihoodType::sum;
-   } else if (dynamic_cast<RooSubsidiaryL *>(likelihood_.get()) != nullptr) {
-      likelihood_type_ = LikelihoodType::subsidiary;
-   } else {
-      throw std::logic_error("in LikelihoodJob constructor: likelihood is not of a valid subclass!");
-   }
-   // Note to future maintainers: take care when storing the minimizer_fcn pointer. The
-   // RooAbsMinimizerFcn subclasses may get cloned inside MINUIT, which means the pointer
-   // should also somehow be updated in this class.
+   offsets_previous_ = *component_offsets_;
+}
+
+LikelihoodJob::LikelihoodJob(const LikelihoodJob &other)
+   : MultiProcess::Job(other), LikelihoodWrapper(other), result_(other.result_), results_(other.results_), vars_(other.vars_),
+     save_vars_(other.save_vars_), n_tasks_at_workers_(other.n_tasks_at_workers_), n_event_tasks_(other.n_event_tasks_),
+     n_component_tasks_(other.n_component_tasks_), offsets_previous_(other.offsets_previous_),
+     likelihood_serial_(other.likelihood_serial_->clone())
+{
 }
 
 LikelihoodJob *LikelihoodJob::clone() const
@@ -84,11 +89,16 @@ void LikelihoodJob::init_vars()
 void LikelihoodJob::update_state()
 {
    if (get_manager()->process_manager().is_worker()) {
-      auto mode = get_manager()->messenger().receive_from_master_on_worker<update_state_mode>();
+      bool more;
+
+      auto mode = get_manager()->messenger().receive_from_master_on_worker<update_state_mode>(&more);
+      assert(more);
+
       switch (mode) {
       case update_state_mode::parameters: {
-         state_id_ = get_manager()->messenger().receive_from_master_on_worker<RooFit::MultiProcess::State>();
-         auto message = get_manager()->messenger().receive_from_master_on_worker<zmq::message_t>();
+         state_id_ = get_manager()->messenger().receive_from_master_on_worker<RooFit::MultiProcess::State>(&more);
+         assert(more);
+         auto message = get_manager()->messenger().receive_from_master_on_worker<zmq::message_t>(&more);
          auto message_begin = message.data<update_state_t>();
          auto message_end = message_begin + message.size() / sizeof(update_state_t);
          std::vector<update_state_t> to_update(message_begin, message_end);
@@ -99,10 +109,23 @@ void LikelihoodJob::update_state()
                rvar->setConstant(static_cast<bool>(item.is_constant));
             }
          }
+
+         if (more) {
+            // offsets also incoming
+            auto offsets_message = get_manager()->messenger().receive_from_master_on_worker<zmq::message_t>(&more);
+            assert(!more);
+            auto offsets_message_begin = offsets_message.data<ROOT::Math::KahanSum<double>>();
+            std::size_t N_offsets = offsets_message.size() / sizeof(ROOT::Math::KahanSum<double>);
+            component_offsets_->reserve(N_offsets);
+            auto offsets_message_end = offsets_message_begin + N_offsets;
+            std::copy(offsets_message_begin, offsets_message_end, component_offsets_->begin());
+         }
+
          break;
       }
       case update_state_mode::offsetting: {
-         LikelihoodWrapper::enableOffsetting(get_manager()->messenger().receive_from_master_on_worker<bool>());
+         LikelihoodWrapper::enableOffsetting(get_manager()->messenger().receive_from_master_on_worker<bool>(&more));
+         assert(!more);
          break;
       }
       }
@@ -163,12 +186,19 @@ void LikelihoodJob::updateWorkersParameters()
             }
          }
       }
-      if (!to_update.empty()) {
+      bool update_offsets = isOffsetting() && component_offsets_ != nullptr && *component_offsets_ != offsets_previous_;
+      if (!to_update.empty() || update_offsets) {
          ++state_id_;
          zmq::message_t message(to_update.begin(), to_update.end());
          // always send Job id first! This is used in worker_loop to route the
          // update_state call to the correct Job.
-         get_manager()->messenger().publish_from_master_to_workers(id_, update_state_mode::parameters, state_id_, std::move(message));
+         if (update_offsets) {
+            zmq::message_t offsets_message(component_offsets_->begin(), component_offsets_->end());
+            get_manager()->messenger().publish_from_master_to_workers(id_, update_state_mode::parameters, state_id_, std::move(message), std::move(offsets_message));
+            offsets_previous_ = *component_offsets_;
+         } else {
+            get_manager()->messenger().publish_from_master_to_workers(id_, update_state_mode::parameters, state_id_, std::move(message));
+         }
       }
    }
 }
@@ -181,6 +211,13 @@ void LikelihoodJob::updateWorkersOffsetting()
 void LikelihoodJob::evaluate()
 {
    if (get_manager()->process_manager().is_master()) {
+      // evaluate the serial likelihood to set the offsets
+      if (do_offset_ && component_offsets_->empty()) {
+         likelihood_serial_->evaluate();
+         // note: we don't need to get the offsets from the serial likelihood, because they are already coupled through
+         // the shared_ptr
+      }
+
       // update parameters that changed since last calculation (or creation if first time)
       updateWorkersParameters();
 
@@ -194,12 +231,14 @@ void LikelihoodJob::evaluate()
       // wait for task results back from workers to master
       gather_worker_results();
 
-      result_ = ROOT::Math::KahanSum<double>{0.};
-//      printf("Master evaluate: ");
-      for (auto const &item : results_) {
-         result_ += item;
+      // Note: initializing result_ to results_[0] instead of zero-initializing it makes
+      // a difference due to Kahan sum precision. This way, a single-worker run gives
+      // the same result as a run with serial likelihood. Adding the terms to a zero
+      // initial sum can cancel the carry in some cases, causing divergent values.
+      result_ = results_[0];
+      for (auto item_it = results_.cbegin() + 1; item_it != results_.cend(); ++item_it) {
+         result_ += *item_it;
       }
-      result_ = applyOffsetting(result_);
       results_.clear();
    }
 }
@@ -248,6 +287,17 @@ void LikelihoodJob::evaluate_task(std::size_t task)
    case LikelihoodType::unbinned:
    case LikelihoodType::binned: {
       result_ = likelihood_->evaluatePartition({section_first, section_last}, 0, 0);
+      if (do_offset_ && section_last == 1) {
+         // we only subtract at the end of event sections, otherwise the offset is subtracted for each event split
+         result_ -= (*component_offsets_)[0];
+      }
+      break;
+   }
+   case LikelihoodType::subsidiary: {
+      result_ = likelihood_->evaluatePartition({0, 1}, 0, 0);
+      if (do_offset_ && offsetting_mode_ == OffsettingMode::full) {
+         result_ -= (*component_offsets_)[0];
+      }
       break;
    }
    case LikelihoodType::sum: {
@@ -262,13 +312,18 @@ void LikelihoodJob::evaluate_task(std::size_t task)
             components_last = likelihood_->getNComponents() * (component_task + 1) / getNComponentTasks();
          }
       }
-      result_ = likelihood_->evaluatePartition({section_first, section_last}, components_first, components_last);
-      break;
-   }
 
-   default: {
-      throw std::logic_error(
-         "in LikelihoodJob::evaluate_task: likelihood types other than binned and unbinned not yet implemented!");
+      result_ = ROOT::Math::KahanSum<double>();
+      for (std::size_t comp_ix = components_first; comp_ix < components_last; ++comp_ix) {
+         auto component_result = likelihood_->evaluatePartition({section_first, section_last}, comp_ix, comp_ix + 1);
+         if (do_offset_ && section_last == 1 && (*component_offsets_)[comp_ix] != ROOT::Math::KahanSum<double>(0, 0)) {
+            // we only subtract at the end of event sections, otherwise the offset is subtracted for each event split
+            result_ += (component_result - (*component_offsets_)[comp_ix]);
+         } else {
+            result_ += component_result;
+         }
+      }
+
       break;
    }
    }
@@ -276,6 +331,7 @@ void LikelihoodJob::evaluate_task(std::size_t task)
 
 void LikelihoodJob::enableOffsetting(bool flag)
 {
+   likelihood_serial_->enableOffsetting(flag);
    LikelihoodWrapper::enableOffsetting(flag);
    if (RooFit::MultiProcess::JobManager::is_instantiated()) {
       printf("WARNING: when calling MinuitFcnGrad::setOffsetting after the run has already been started the MinuitFcnGrad::likelihood_in_gradient object (a LikelihoodSerial) on the workers can no longer be updated! This function (LikelihoodJob::enableOffsetting) can in principle be used outside of MinuitFcnGrad, but be aware of this limitation. To do a minimization with a different offsetting setting, please delete all RooFit::MultiProcess based objects so that the forked processes are killed and then set up a new RooMinimizer.\n");
