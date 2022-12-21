@@ -3,6 +3,7 @@
 #include <Fit/ParameterSettings.h>
 #include <Math/IFunction.h>
 #include <Math/FitMethodFunction.h>
+#include "Math/GenAlgoOptions.h"
 #include <TString.h>
 #include <iostream>
 
@@ -15,9 +16,11 @@ using namespace ROOT::Math::Experimental;
 using namespace ROOT::Fit;
 
 /// function wrapper for the function to be minimized
-const ROOT::Math::IMultiGenFunction *gFunction;
+const ROOT::Math::IMultiGenFunction *gFunction = nullptr;
 /// function wrapper for the gradient of the function to be minimized
-const ROOT::Math::IMultiGradFunction *gGradFunction;
+const ROOT::Math::IMultiGradFunction *gGradFunction = nullptr;
+
+#define PyPrint(pyo) PyObject_Print(pyo, stdout, Py_PRINT_RAW)
 
 PyObject *target_function(PyObject * /*self*/, PyObject *args)
 {
@@ -46,10 +49,12 @@ PyObject *jac_function(PyObject * /*self*/, PyObject *args)
 ScipyMinimizer::ScipyMinimizer() : BasicMinimizer()
 {
    fOptions.SetMinimizerType("Scipy");
-   fOptions.SetMinimizerAlgorithm("lbfgsb");
+   fOptions.SetMinimizerAlgorithm("L-BFGS-B");
    if (!PyIsInitialized()) {
       PyInitialize();
    }
+   // set extra options
+   SetAlgoExtraOptions();
 }
 
 //_______________________________________________________________________
@@ -60,6 +65,19 @@ ScipyMinimizer::ScipyMinimizer(const char *type)
    if (!PyIsInitialized()) {
       PyInitialize();
    }
+   // set extra options
+   SetAlgoExtraOptions();
+}
+
+//_______________________________________________________________________
+void ScipyMinimizer::SetAlgoExtraOptions()
+{
+   std::string type = fOptions.MinimizerAlgorithm();
+   if (type == "L-BFGS-B") {
+      fExtraOpts.SetValue("gtol", 1e-10);
+      fExtraOpts.SetValue("eps", 1.0);
+   }
+   SetExtraOptions(fExtraOpts);
 }
 
 //_______________________________________________________________________
@@ -144,7 +162,19 @@ bool ScipyMinimizer::Minimize()
 {
    (gFunction) = ObjFunction();
    (gGradFunction) = GradObjFunction();
+   if (gGradFunction == nullptr) {
+      fJacobian = Py_None;
+   }
    auto method = fOptions.MinimizerAlgorithm();
+   PyObject *pyoptions = PyDict_New();
+   if (method == "L-BFGS-B") {
+      for (std::string key : fExtraOpts.GetAllRealKeys()) {
+         double value = 0;
+         fExtraOpts.GetRealValue(key.c_str(), value);
+         PyDict_SetItemString(pyoptions, key.c_str(), PyFloat_FromDouble(value));
+      }
+   }
+
    std::cout << "=== Scipy Minimization" << std::endl;
    std::cout << "=== Method: " << method << std::endl;
    std::cout << "=== Initial value: (";
@@ -157,15 +187,20 @@ bool ScipyMinimizer::Minimize()
 
    double *values = const_cast<double *>(X());
    npy_intp dims[1] = {NDim()};
-   PyObject *py_array = PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, values);
+   PyObject *x0 = PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, values);
 
-   PyObject *pargs = PyTuple_New(0);
+   // minimize(fun, x0, args=(), method=None, jac=None, hess=None, hessp=None, bounds=None, constraints=(), tol=None,
+   // callback=None, options=None)
+   auto args = Py_BuildValue("(OO)", fTarget, x0);
+   auto kw = Py_BuildValue("{s:s,s:O,s:d,s:O}", "method", method.c_str(), "jac", fJacobian, "tol", Tolerance(),
+                           "options", pyoptions);
 
-   auto pyvalues = Py_BuildValue("(OOOsO)", fTarget, py_array, pargs, method.c_str(), fJacobian);
-
-   PyObject *result = PyObject_CallObject(fMinimize, pyvalues);
-   Py_DECREF(pyvalues);
-   Py_DECREF(py_array);
+   //PyPrint(kw);
+   PyObject *result = PyObject_Call(fMinimize, args, kw);
+   //PyPrint(result);
+   Py_DECREF(args);
+   Py_DECREF(kw);
+   Py_DECREF(x0);
 
    // if the minimization works
    PyObject *pstatus = PyObject_GetAttrString(result, "status");

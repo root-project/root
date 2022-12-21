@@ -21,6 +21,8 @@
 
 #include "Math/BasicMinimizer.h"
 
+#include "Math/GenAlgoOptions.h"
+
 #include "Rtypes.h"
 #include "TString.h"
 
@@ -36,6 +38,8 @@ typedef _object PyObject;
 namespace ROOT {
 
 namespace Math {
+
+class GenAlgoOptions;
 
 namespace Experimental {
 /**
@@ -60,6 +64,7 @@ private:
    PyObject *fMinimize;
    PyObject *fTarget;
    PyObject *fJacobian;
+   GenAlgoOptions fExtraOpts;
 
 protected:
    PyObject *fGlobalNS;
@@ -111,6 +116,7 @@ private:
       Copy constructor
    */
    ScipyMinimizer(const ScipyMinimizer &) : BasicMinimizer() {}
+   void SetAlgoExtraOptions();
 
 public:
    /// set the function to minimize
@@ -120,22 +126,13 @@ public:
    // virtual void SetFunction(const ROOT::Math::IMultiGradFunction &func) { BasicMinimizer::SetFunction(func); }
 
    /// method to perform the minimization
-   virtual bool Minimize();
+   virtual bool Minimize() override;
 
-   /// return expected distance reached from the minimum
-   virtual double Edm() const { return 0; } // not impl. }
-
-   /// minimizer provides error and error matrix
-   virtual bool ProvidesError() const { return false; }
-
-   /// return errors at the minimum
-   virtual const double *Errors() const { return 0; }
-
-   /** return covariance matrices elements
-       if the variable is fixed the matrix is zero
-       The ordering of the variables is the same as in errors
-   */
-   virtual double CovMatrix(unsigned int, unsigned int) const { return 0; }
+   template <class T>
+   void SetExtraOption(const char *key, T value)
+   {
+      fExtraOpts.SetValue(key, value);
+   }
 
 protected:
    ClassDef(ScipyMinimizer, 0) //
