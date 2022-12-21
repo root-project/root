@@ -119,11 +119,6 @@ private:
    void SetAlgoExtraOptions();
 
 public:
-   /// set the function to minimize
-   // virtual void SetFunction(const ROOT::Math::IMultiGenFunction &func);
-
-   /// set the function to minimize
-   // virtual void SetFunction(const ROOT::Math::IMultiGradFunction &func) { BasicMinimizer::SetFunction(func); }
 
    /// method to perform the minimization
    virtual bool Minimize() override;
