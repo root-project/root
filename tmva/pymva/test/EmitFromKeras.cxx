@@ -36,16 +36,18 @@ int main(){
    modelBatchNorm.Generate();
    modelBatchNorm.OutputGenerated("KerasBatchNormModel.hxx");
 
-   //Emitting header file for Keras Conv2D Model with valid padding
+#if PY_MAJOR_VERSION >= 3  // parsing of convolutional models supported only for Python3
+   // Emitting header file for Keras Conv2D Model with valid padding
    RModel modelConv2D_Valid = TMVA::Experimental::SOFIE::PyKeras::Parse("KerasModelConv2D_Valid.h5");
    modelConv2D_Valid.Generate();
    modelConv2D_Valid.OutputGenerated("KerasConv2D_Valid.hxx");
 
-   //Emitting header file for Keras Conv2D Model with valid padding
+   // Emitting header file for Keras Conv2D Model with valid padding
    RModel modelConv2D_Same = TMVA::Experimental::SOFIE::PyKeras::Parse("KerasModelConv2D_Same.h5");
    modelConv2D_Same.Generate();
    modelConv2D_Same.OutputGenerated("KerasConv2D_Same.hxx");
- 
+#endif
+
    //Emitting header file for Keras model with Reshape layer
    RModel modelReshape = TMVA::Experimental::SOFIE::PyKeras::Parse("KerasModelReshape.h5");
    modelReshape.Generate();
