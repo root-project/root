@@ -159,7 +159,7 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
       PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
 
       std::string fLayerName = PyStringAsString(PyDict_GetItemString(fAttributes,"_name"));
-      
+
       PyObject* fPActivation = PyDict_GetItemString(fAttributes,"activation");
       std::string fLayerActivation = PyStringAsString(PyObject_GetAttrString(fPActivation,"__name__"));
 
@@ -187,7 +187,7 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
          PyDict_SetItemString(fLayer,"layerOutput",fOutputs);
          rmodel.AddOperator((findLayer->second)(fLayer));
 
-         std::string fActivationLayerInput = fLayerName+fLayerType;   
+         std::string fActivationLayerInput = fLayerName+fLayerType;
          if(fLayerType == "Conv2D"){
             std::unique_ptr<ROperator> op_post_transpose;
             op_post_transpose.reset(new ROperator_Transpose<float>({0,2,3,1}, fLayerName+fLayerType, fLayerName+"PostTrans"));
@@ -271,8 +271,9 @@ std::unique_ptr<ROperator> MakeKerasDense(PyObject* fLayer){
 ///
 /// For Keras's Conv layer, the names of the input tensor, output tensor, and
 /// weight tensors are extracted, along with attributes like dilation_rate,
-/// groups, kernel size, padding, strides. Padding attribute is then 
+/// groups, kernel size, padding, strides. Padding attribute is then
 /// computed for ROperator depending on Keras' attribute parameter.
+#if PY_MAJOR_VERSION >= 3   // using PyDict_GetItemWithError that is available only in Python3
 std::unique_ptr<ROperator> MakeKerasConv(PyObject* fLayer){
       PyObject* fAttributes = PyDict_GetItemWithError(fLayer,PyUnicode_FromString("layerAttributes"));
       PyObject* fInputs  = PyDict_GetItemWithError(fLayer,PyUnicode_FromString("layerInput"));
@@ -343,6 +344,12 @@ std::unique_ptr<ROperator> MakeKerasConv(PyObject* fLayer){
          throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Conv does not yet support input type " + fLayerDType);
          }
          return op;
+#else
+std::unique_ptr<ROperator> MakeKerasConv(PyObject* ) {
+  std::cout << "python version " << PY_MAJOR_VERSION << std::endl;
+  throw std::runtime_error("TMVA::SOFIE - Conv operator parsing is supported only for Python version 3");
+  return std::unique_ptr<ROperator>();
+#endif
 }
 
 
@@ -485,7 +492,7 @@ std::unique_ptr<ROperator> MakeKerasSoftmax(PyObject* fLayer){
 /// \return Unique pointer to ROperator object
 ///
 /// For instantiating a ROperator_LeakyRelu object, the names of
-/// input & output tensors, the data-type and the alpha attribute of the layer 
+/// input & output tensors, the data-type and the alpha attribute of the layer
 /// are extracted.
 std::unique_ptr<ROperator> MakeKerasLeakyRelu(PyObject* fLayer){
       PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
@@ -620,7 +627,7 @@ std::unique_ptr<ROperator> MakeKerasBatchNorm(PyObject* fLayer)
 /// \param[in] fLayer Python Keras layer as a Dictionary object
 /// \return Unique pointer to ROperator object
 std::unique_ptr<ROperator> MakeKerasReshape(PyObject* fLayer)
-{      
+{
       // Extracting required layer information
       PyObject* fAttributes = PyDict_GetItemString(fLayer,"layerAttributes");
       PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
@@ -651,8 +658,8 @@ std::unique_ptr<ROperator> MakeKerasConcat(PyObject* fLayer)
 
       std::vector<std::string> inputs;
       for(Py_ssize_t i=0; i<PyList_Size(fInputs); ++i){
-         inputs.emplace_back(PyStringAsString(PyList_GetItem(fInputs,i)));      
-      }            
+         inputs.emplace_back(PyStringAsString(PyList_GetItem(fInputs,i)));
+      }
       std::string output  = PyStringAsString(PyList_GetItem(fOutputs,0));
 
       int axis = (int)PyLong_AsLong(PyDict_GetItemString(fAttributes,"axis"));
@@ -662,7 +669,7 @@ std::unique_ptr<ROperator> MakeKerasConcat(PyObject* fLayer)
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-/// \brief Prepares a ROperator object for Keras binary operations like Add, 
+/// \brief Prepares a ROperator object for Keras binary operations like Add,
 ///        subtract, and multiply.
 ///
 /// \param[in] fLayer Python Keras layer as a Dictionary object
@@ -815,15 +822,15 @@ RModel Parse(std::string filename){
       // inference code.
       else if(fLayerType == "Dense")
          rmodel.AddBlasRoutines({"Gemm", "Gemv"});
-      else if (fLayerType == "BatchNormalization") 
+      else if (fLayerType == "BatchNormalization")
          rmodel.AddBlasRoutines({"Copy", "Axpy"});
-         
+
       else if(fLayerType == "Conv1D" || fLayerType == "Conv2D" || fLayerType == "Conv3D")
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
       INTERNAL::AddKerasLayer(rmodel,fLayer);
 
    }
-   
+
    //Extracting model's weights
    //For every initialized tensor, weightProp will have its name and dtype in string
    //and value in numpy array
