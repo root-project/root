@@ -537,7 +537,8 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change current directory to "this" directory.
+/// Change current directory to "this" directory or to the directory described
+/// by the path if given one.
 ///
 /// Using path one can change the current directory to "path". The absolute path
 /// syntax is: `file.root:/dir1/dir2`
@@ -554,7 +555,8 @@ Bool_t TDirectory::cd(const char *path)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change current directory to "this" directory.
+/// Change current directory to "this" directory or to the directory described
+/// by the path if given one.
 ///
 /// Using path one can
 /// change the current directory to "path". The absolute path syntax is:
@@ -603,6 +605,7 @@ Bool_t TDirectory::Cd(const char *path)
 /// `file.root:/dir1/dir2`
 /// where file.root is the file and `/dir1/dir2` the desired subdirectory
 /// in the file.
+/// Relative syntax is relative to the current directory `gDirectory`, e.g.: `../aa`.
 ///
 /// Returns kFALSE in case path does not exist.
 
