@@ -477,6 +477,7 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSource(RPageSource &page
       fPrincipalColumn = fColumns[0].get();
    for (auto& column : fColumns)
       column->Connect(fOnDiskId, &pageSource);
+   RegisterReadCallbacks();
 }
 
 
