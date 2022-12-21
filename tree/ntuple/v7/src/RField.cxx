@@ -1026,6 +1026,11 @@ size_t ROOT::Experimental::RClassField::GetValueSize() const
    return fClass->GetClassSize();
 }
 
+std::uint32_t ROOT::Experimental::RClassField::GetTypeVersion() const
+{
+   return fClass->GetClassVersion();
+}
+
 void ROOT::Experimental::RClassField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitClassField(*this);
