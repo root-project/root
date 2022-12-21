@@ -67,6 +67,70 @@ TEST(RNTupleDescriptorBuilder, CatchBadLinks)
    }
 }
 
+TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
+{
+   RNTupleDescriptorBuilder descBuilder;
+   descBuilder.AddField(
+      RFieldDescriptorBuilder().FieldId(0).Structure(ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(1)
+                           .FieldName("field")
+                           .TypeName("int32_t")
+                           .Structure(ENTupleStructure::kLeaf)
+                           .MakeDescriptor()
+                           .Unwrap());
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(2)
+                           .FieldName("fieldAlias")
+                           .TypeName("int32_t")
+                           .Structure(ENTupleStructure::kLeaf)
+                           .MakeDescriptor()
+                           .Unwrap());
+   descBuilder.AddFieldLink(0, 1);
+   descBuilder.AddFieldLink(0, 2);
+   RColumnModel colModel(EColumnType::kInt32, false);
+   RColumnDescriptorBuilder colBuilder1;
+   colBuilder1.LogicalColumnId(0).PhysicalColumnId(0).Model(colModel).FieldId(1).Index(0);
+   descBuilder.AddColumn(colBuilder1.MakeDescriptor().Unwrap()).ThrowOnError();
+
+   RColumnDescriptorBuilder colBuilder2;
+   colBuilder2.LogicalColumnId(1).PhysicalColumnId(0).Model(colModel).FieldId(42).Index(0);
+   try {
+      descBuilder.AddColumn(colBuilder2.MakeDescriptor().Unwrap()).ThrowOnError();
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("doesn't exist"));
+   }
+
+   RColumnDescriptorBuilder colBuilder3;
+   colBuilder3.LogicalColumnId(0).PhysicalColumnId(0).Model(colModel).FieldId(2).Index(0);
+   try {
+      descBuilder.AddColumn(colBuilder3.MakeDescriptor().Unwrap()).ThrowOnError();
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("column index clash"));
+   }
+
+   RColumnDescriptorBuilder colBuilder4;
+   colBuilder4.LogicalColumnId(1).PhysicalColumnId(0).Model(colModel).FieldId(2).Index(1);
+   try {
+      descBuilder.AddColumn(colBuilder4.MakeDescriptor().Unwrap()).ThrowOnError();
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("out of bounds column index"));
+   }
+
+   RColumnDescriptorBuilder colBuilder5;
+   RColumnModel falseModel(EColumnType::kInt64, false);
+   colBuilder5.LogicalColumnId(1).PhysicalColumnId(0).Model(falseModel).FieldId(2).Index(0);
+   try {
+      descBuilder.AddColumn(colBuilder5.MakeDescriptor().Unwrap()).ThrowOnError();
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("alias column type mismatch"));
+   }
+
+   RColumnDescriptorBuilder colBuilder6;
+   colBuilder6.LogicalColumnId(1).PhysicalColumnId(0).Model(colModel).FieldId(2).Index(0);
+   descBuilder.AddColumn(colBuilder6.MakeDescriptor().Unwrap()).ThrowOnError();
+}
+
 TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
 {
    RNTupleDescriptorBuilder descBuilder;
