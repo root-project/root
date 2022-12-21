@@ -141,6 +141,7 @@ namespace TMVA {
       static const char* PyStringAsString(PyObject *string); // Python Utility function for converting a Python String object to const char*
       static std::vector<size_t> GetDataFromTuple(PyObject *tupleObject);  // Function casts Python Tuple object into vector of size_t
       static std::vector<size_t> GetDataFromList(PyObject *listObject);    // Function casts Python List object into vector of size_t
+      static PyObject* GetValueFromDict(PyObject* dict, const char* key);  // Function to check for a key in dict and return the associated value if present
       ClassDef(PyMethodBase, 0) // Virtual base class for all TMVA method
 
    };

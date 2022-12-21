@@ -154,7 +154,11 @@ TEST(RModelParser_Keras, BATCH_NORM)
     }
 }
 
+#if PY_MAJOR_VERSION >= 3
 TEST(RModelParser_Keras, CONV_VALID)
+#else
+TEST(DISABLED_RModelParser_Keras, CONV_VALID)
+#endif
 {
     constexpr float TOLERANCE = DEFAULT_TOLERANCE;
     float inputConv2D_Valid[]= {1,1,1,1,
@@ -196,7 +200,11 @@ TEST(RModelParser_Keras, CONV_VALID)
     }
 }
 
+#if PY_MAJOR_VERSION >= 3
 TEST(RModelParser_Keras, CONV_SAME)
+#else
+TEST(DISABLED_RModelParser_Keras, CONV_SAME)
+#endif
 {
     constexpr float TOLERANCE = DEFAULT_TOLERANCE;
     float inputConv2D_Same[]= {1,1,1,1,
