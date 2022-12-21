@@ -268,7 +268,12 @@ void TDirectory::CleanTargets()
          const auto ctxt = fContext;
          ctxt->fDirectoryWait = true;
 
-         ctxt->fDirectory = nullptr;
+         // If fDirectory is assigned to gROOT but we do not unregister ctxt
+         // (and/or stop unregister for gROOT) then ~TContext will call Unregister on gROOT.
+         // Then unregister of this ctxt and its Previous context can actually be run
+         // in parallel (this takes the gROOT lock, Previous takes the lock of fDirectory)
+         // and thus step on each other.
+         ctxt->fDirectory = nullptr; // Can not be gROOT
 
          if (ctxt->fActiveDestructor) {
             extraWait.push_back(fContext);
