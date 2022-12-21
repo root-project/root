@@ -160,7 +160,6 @@ public:
 protected:
 
   friend class RooAbsPdf ;
-  friend class RooMinuit ;
   friend class RooMinimizer ;
   void setCovarianceMatrix(TMatrixDSym& V) ;
   void setConstParList(const RooArgList& list) ;
