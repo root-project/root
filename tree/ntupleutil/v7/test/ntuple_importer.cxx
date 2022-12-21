@@ -341,6 +341,8 @@ TEST(RNTupleImporter, STL)
       tree->Fill();
       tree->Write();
       delete vec;
+      delete pair;
+      delete tuple;
    }
 
    auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
