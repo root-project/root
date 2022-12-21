@@ -938,7 +938,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
          R__ASSERT(rule->GetTarget() != nullptr);
          for (auto target : ROOT::Detail::TRangeStaticCast<TObjString>(*rule->GetTarget())) {
             const auto dataMember = fClass->GetDataMember(target->GetString());
-            if (dataMember && dataMember->IsPersistent()) {
+            if (!dataMember || dataMember->IsPersistent()) {
                R__LOG_WARNING(NTupleLog())
                   << "ignoring I/O customization rule with non-transient member: " << dataMember->GetName();
                return true;
