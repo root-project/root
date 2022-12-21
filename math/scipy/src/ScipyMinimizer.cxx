@@ -38,7 +38,7 @@ PyObject *jac_function(PyObject * /*self*/, PyObject *args)
 
    uint size = PyArray_SIZE(arr);
    auto params = (double *)PyArray_DATA(arr);
-   double values[size];
+   double *values=new double[size];
    gGradFunction->Gradient(params, values);
    npy_intp dims[1] = {size};
    PyObject *py_array = PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, values);
@@ -74,8 +74,8 @@ void ScipyMinimizer::SetAlgoExtraOptions()
 {
    std::string type = fOptions.MinimizerAlgorithm();
    if (type == "L-BFGS-B") {
-      fExtraOpts.SetValue("gtol", 1e-10);
-      fExtraOpts.SetValue("eps", 1.0);
+      fExtraOpts.SetValue("gtol", 1e-8);
+      fExtraOpts.SetValue("eps", 0.01);
    }
    SetExtraOptions(fExtraOpts);
 }
