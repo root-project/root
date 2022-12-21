@@ -324,7 +324,6 @@ public:
    ClassDefOverride(TDirectory,5)  //Describe directory structure in memory
 };
 
-#ifndef __CINT__
 namespace ROOT {
 namespace Internal {
    struct TDirectoryAtomicAdapter {
@@ -374,10 +373,5 @@ namespace Internal {
 } // Internal
 } // ROOT
 #define gDirectory (ROOT::Internal::TDirectoryAtomicAdapter{})
-
-#elif defined(__MAKECINT__)
-// To properly handle the use of gDirectory in header files (in static declarations)
-R__EXTERN TDirectory *gDirectory;
-#endif
 
 #endif
