@@ -59,6 +59,7 @@ using RColumnModel = ROOT::Experimental::RColumnModel;
 using RClusterIndex = ROOT::Experimental::RClusterIndex;
 using RClusterDescriptorBuilder = ROOT::Experimental::RClusterDescriptorBuilder;
 using RClusterGroupDescriptorBuilder = ROOT::Experimental::RClusterGroupDescriptorBuilder;
+using RColumnDescriptorBuilder = ROOT::Experimental::RColumnDescriptorBuilder;
 using RFieldDescriptorBuilder = ROOT::Experimental::RFieldDescriptorBuilder;
 using RException = ROOT::Experimental::RException;
 template <class T>
