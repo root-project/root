@@ -302,8 +302,6 @@ void DeserializeLocatorPayloadObject64(const unsigned char *buffer, ROOT::Experi
 std::uint32_t SerializeAliasColumnList(const ROOT::Experimental::RNTupleDescriptor &desc,
                                        ROOT::Experimental::Internal::RNTupleSerializer::RContext &context, void *buffer)
 {
-   using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
-
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
@@ -338,8 +336,6 @@ std::uint32_t SerializeAliasColumnList(const ROOT::Experimental::RNTupleDescript
 RResult<std::uint32_t> DeserializeAliasColumn(const void *buffer, std::uint32_t bufSize,
                                               std::uint32_t &physicalColumnId, std::uint32_t &fieldId)
 {
-   using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
-
    auto base = reinterpret_cast<const unsigned char *>(buffer);
    auto bytes = base;
    std::uint32_t frameSize;
