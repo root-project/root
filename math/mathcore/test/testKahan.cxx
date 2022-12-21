@@ -82,29 +82,38 @@ TEST(KahanTest, Compensation)
   EXPECT_FLOAT_EQ(result, 1. + 1.E-15) << "Kahan compensation works";
 }
 
+constexpr double smallLower = 1.E-20, smallUpper = 1.E-16;
+
+std::tuple<std::vector<double>, std::vector<double>> generateSummableNumbers()
+{
+   std::default_random_engine engine(12345u);
+   //Should more or less accumulate:
+   std::uniform_real_distribution<double> realLarge(1.E-13, 1.);
+   //None of these should be possible to accumulate:
+   std::uniform_real_distribution<double> realSmall(smallLower, smallUpper);
+
+   std::vector<double> summableNumbers;
+   std::vector<double> allNumbers;
+
+   for (unsigned int i=0; i<1000; ++i) {
+      const double large = realLarge(engine);
+      summableNumbers.push_back(large);
+      allNumbers.push_back(large);
+      for (unsigned int j=0; j<1000; ++j) {
+         const double small = realSmall(engine);
+         allNumbers.push_back(small);
+      }
+   }
+
+   return {summableNumbers, allNumbers};
+}
+
 
 TEST(KahanTest, VectorisableVsLegacy)
 {
-  std::default_random_engine engine(12345u);
-  //Should more or less accumulate:
-  std::uniform_real_distribution<double> realLarge(1.E-13, 1.);
-  //None of these should be possible to accumulate:
-  constexpr double a = 1.E-20, b = 1.E-16;
-  std::uniform_real_distribution<double> realSmall(a, b);
-
-  std::vector<double> summableNumbers;
-  std::vector<double> allNumbers;
-
-  for (unsigned int i=0; i<1000; ++i) {
-    const double large = realLarge(engine);
-    summableNumbers.push_back(large);
-    allNumbers.push_back(large);
-    for (unsigned int j=0; j<1000; ++j) {
-      const double small = realSmall(engine);
-      allNumbers.push_back(small);
-    }
-  }
-
+   std::vector<double> summableNumbers;
+   std::vector<double> allNumbers;
+   std::tie(summableNumbers, allNumbers) = generateSummableNumbers();
 
   // Test that normal summation has catastrophic cancellation, we are actually testing something here:
   const double summableNormal = std::accumulate(summableNumbers.begin(), summableNumbers.end(), 0.);
@@ -120,7 +129,7 @@ TEST(KahanTest, VectorisableVsLegacy)
   EXPECT_FLOAT_EQ(summableNormal, summableLegacy)
       << "Test that legacy Kahan works on numbers summable without errors.";
   // Expect to miss 1.E6 numbers that are on average equal to mean({a,b})
-  constexpr double expectedCancellationError = 1.E6 * 0.5*(a+b);
+  constexpr double expectedCancellationError = 1.E6 * 0.5*(smallLower+smallUpper);
   EXPECT_NEAR(allLegacy-allNormal, expectedCancellationError, expectedCancellationError/100.)
       << "Test that legacy Kahan doesn't miss the numbers that std::accumulate misses.";
 
@@ -413,4 +422,37 @@ TEST(KahanAddSubtractAssignTest, AddMinusXEqualsSubtractX)
 
    EXPECT_EQ(addMinusX.Sum(), subtractX.Sum());
    EXPECT_EQ(addMinusX.Carry(), subtractX.Carry());
+}
+
+TEST(KahanAddSubtractAssignTest, MultipleAccumulators)
+{
+   // Adding and subtracting also works for multiple accumulators, even mixing different N.
+   // It doesn't vectorize, but that's only a performance issue, not a precision issue.
+   ROOT::Math::KahanSum<double, 4> sum4Acc;
+   ROOT::Math::KahanSum<double, 2> sum2Acc;
+
+   std::vector<double> _;
+   std::vector<double> allNumbers;
+   std::tie(_, allNumbers) = generateSummableNumbers();
+
+   sum4Acc.Add(allNumbers);
+   sum2Acc.Add(allNumbers);
+
+   auto total2_4 = sum2Acc + sum4Acc;
+   auto total4_2 = sum4Acc + sum2Acc;
+
+   // note that with different numbers of accumulators we expect floating-point equality,
+   // like in the legacy test above, not exact equality
+   EXPECT_FLOAT_EQ(total2_4.Sum(), total4_2.Sum());
+   EXPECT_NEAR(total2_4.Carry(), total4_2.Carry(), 1e-12);
+
+   auto diff2_4 = sum2Acc - sum4Acc;
+   auto diff4_2 = sum4Acc - sum2Acc;
+
+   // now the result should be (almost) zero
+   EXPECT_NEAR(diff2_4.Sum(), 0, 1e-12);
+   EXPECT_NEAR(diff4_2.Sum(), 0, 1e-12);
+   // the carries as well
+   EXPECT_NEAR(diff2_4.Carry(), 0, 1e-12);
+   EXPECT_NEAR(diff4_2.Carry(), 0, 1e-12);
 }
