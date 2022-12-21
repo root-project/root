@@ -17,6 +17,7 @@
 #define RooFit_RooFit_RooPolyFunc_h
 
 #include "RooAbsReal.h"
+#include "RooRealVar.h"
 #include "RooListProxy.h"
 
 #include <vector>
@@ -36,6 +37,16 @@ public:
    TObject *clone(const char *newname) const override { return new RooPolyFunc(*this, newname); }
 
    std::string asString() const;
+   inline const RooArgList &variables() const { return _vars; }
+   inline const std::vector<std::unique_ptr<RooListProxy>> &terms() const { return _terms; }
+   inline RooRealVar *getCoefficient(const RooArgList &term)
+   {
+      return static_cast<RooRealVar *>(term.at(term.size() - 1));
+   }
+   inline RooRealVar *getExponent(const RooArgList &term, RooRealVar *v)
+   {
+      return static_cast<RooRealVar *>(term.at(_vars.index(v)));
+   }
 
    void addTerm(double coefficient);
    void addTerm(double coefficient, const RooAbsCollection &exponents);
@@ -46,7 +57,10 @@ public:
    taylorExpand(const char *name, const char *title, RooAbsReal &func, const RooAbsCollection &observables,
                 std::vector<double> const &observableValues, int order = 1, double eps1 = 1e-6, double eps2 = 1e-3);
    static std::unique_ptr<RooPolyFunc> taylorExpand(const char *name, const char *title, RooAbsReal &func,
-                                                    const RooAbsCollection &observables, double observablesValue = 0.0,
+                                                    const RooAbsCollection &observables, int order = 1,
+                                                    double eps1 = 1e-6, double eps2 = 1e-3);
+   static std::unique_ptr<RooPolyFunc> taylorExpand(const char *name, const char *title, RooAbsReal &func,
+                                                    const RooAbsCollection &observables, double observablesValue,
                                                     int order = 1, double eps = 1e-6, double eps2 = 1e-3);
 
 protected:

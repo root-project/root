@@ -174,17 +174,22 @@ std::string RooPolyFunc::asString() const
       auto coef = dynamic_cast<RooRealVar *>(term->at(n_vars));
       if (coef->getVal() > 0 && !first)
          ss << "+";
-      ss << coef->getVal() << " * (";
+      ss << coef->getVal();
       first = true;
       for (size_t i_var = 0; i_var < n_vars; ++i_var) {
          auto var = dynamic_cast<RooRealVar *>(_vars.at(i_var));
          auto exp = dynamic_cast<RooRealVar *>(term->at(i_var));
-         if (!first)
-            ss << "+";
+         if (exp->getVal() == 0)
+            continue;
+         if (first)
+            ss << " * (";
+         else
+            ss << "*";
          ss << "pow(" << var->GetName() << "," << exp->getVal() << ")";
          first = false;
       }
-      ss << ")";
+      if (!first)
+         ss << ")";
    }
    return ss.str();
 }
@@ -224,6 +229,26 @@ void fixObservables(const RooAbsCollection &observables)
       var->setConstant(true);
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///// Taylor expanding given function in terms of observables around
+///// observableValues. Supports expansions upto order 2.
+///// \param[in] function of variables that is taylor expanded.
+///// \param[in] observables set of variables to perform the expansion.
+///// \param[in] order order of the expansion (0,1,2 supported).
+///// \param[in] eps1 precision for first derivative and second derivative.
+///// \param[in] eps2 precision for second partial derivative of cross-derivative.
+std::unique_ptr<RooPolyFunc> RooPolyFunc::taylorExpand(const char *name, const char *title, RooAbsReal &func,
+                                                       const RooAbsCollection &observables, int order, double eps1,
+                                                       double eps2)
+{
+   std::vector<double> observableValues;
+   for (auto *var : static_range_cast<RooRealVar *>(observables)) {
+      observableValues.push_back(var->getVal());
+   }
+   return RooPolyFunc::taylorExpand(name, title, func, observables, observableValues, order, eps1, eps2);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ///// Taylor expanding given function in terms of observables around
 ///// observableValues. Supports expansions upto order 2.
