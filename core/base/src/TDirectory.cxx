@@ -1374,7 +1374,7 @@ void TDirectory::TContext::RegisterCurrentDirectory()
 void TDirectory::RegisterContext(TContext *ctxt) {
    ROOT::Internal::TSpinLockGuard slg(fSpinLock);
 
-   if (!IsBuilt())
+   if (!IsBuilt() || this == ROOT::Internal::gROOTLocal)
       return;
    if (fContext) {
       TContext *current = fContext;
@@ -1393,6 +1393,8 @@ void TDirectory::RegisterContext(TContext *ctxt) {
 
 void TDirectory::RegisterGDirectory(TDirectory::SharedGDirectory_t &gdirectory_ptr)
 {
+   if (this == ROOT::Internal::gROOTLocal)
+      return;
    ROOT::Internal::TSpinLockGuard slg(fSpinLock);
    if (std::find(fGDirectories.begin(), fGDirectories.end(), gdirectory_ptr) == fGDirectories.end()) {
       fGDirectories.emplace_back(gdirectory_ptr);
@@ -1423,7 +1425,7 @@ void TDirectory::UnregisterContext(TContext *ctxt) {
    ROOT::Internal::TSpinLockGuard slg(fSpinLock);
 
    // Another thread already unregistered the TContext.
-   if (ctxt->fDirectory == nullptr)
+   if (ctxt->fDirectory == nullptr || ctxt->fDirectory == ROOT::Internal::gROOTLocal)
       return;
 
    if (ctxt==fContext) {
