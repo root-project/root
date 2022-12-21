@@ -269,8 +269,8 @@ namespace ROOT {
        /// Note that while Tian et al. add the carry in the first step, we subtract
        /// the carry, in accordance with the Add(Indexed) implementation(s) above.
        /// This is purely an implementation choice that has no impact on performance.
-       template<typename U>
-       KahanSum& operator+=(const KahanSum<U>& other) {
+       template<typename U, unsigned int M>
+       KahanSum<T, N>& operator+=(const KahanSum<U, M>& other) {
          U corrected_arg_sum = other.Sum() - (fCarry[0] + other.Carry());
          U sum = fSum[0] + corrected_arg_sum;
          U correction = (sum - fSum[0]) - corrected_arg_sum;
@@ -282,8 +282,8 @@ namespace ROOT {
        /// Subtract other KahanSum. Does not vectorise.
        ///
        /// Based on KahanIncrement from: Tian et al., 2012 (see operator+= documentation).
-       template<typename U>
-       KahanSum& operator-=(KahanSum<U> const& other) {
+       template<typename U, unsigned int M>
+       KahanSum<T, N>& operator-=(KahanSum<U, M> const& other) {
          U corrected_arg_sum = -other.Sum() - (fCarry[0] - other.Carry());
          U sum = fSum[0] + corrected_arg_sum;
          U correction = (sum - fSum[0]) - corrected_arg_sum;
@@ -292,7 +292,7 @@ namespace ROOT {
          return *this;
        }
 
-       KahanSum<T> operator-()
+       KahanSum<T, N> operator-()
        {
           return {-this->fSum[0], -this->fCarry[0]};
        }
@@ -303,17 +303,17 @@ namespace ROOT {
    };
 
    /// Add two non-vectorized KahanSums.
-   template<typename T = double>
-   KahanSum<T> operator+(const KahanSum<T>& left, const KahanSum<T>& right) {
-      KahanSum<T> sum(left);
+   template<typename T, unsigned int N, typename U, unsigned int M>
+   KahanSum<T, N> operator+(const KahanSum<T, N>& left, const KahanSum<U, M>& right) {
+      KahanSum<T, N> sum(left);
       sum += right;
       return sum;
    }
 
    /// Subtract two non-vectorized KahanSums.
-   template<typename T = double>
-   KahanSum<T> operator-(const KahanSum<T>& left, const KahanSum<T>& right) {
-      KahanSum<T> sum(left);
+   template<typename T, unsigned int N, typename U, unsigned int M>
+   KahanSum<T, N> operator-(const KahanSum<T, N>& left, const KahanSum<U, M>& right) {
+      KahanSum<T, N> sum(left);
       sum -= right;
       return sum;
    }
