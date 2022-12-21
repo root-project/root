@@ -94,7 +94,11 @@ if(xml)
   )
 endif()
 
-file(COPY config/prepareHistFactory DESTINATION  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+if(MSVC)
+  file(COPY config/prepareHistFactory.bat DESTINATION  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+else()
+  file(COPY config/prepareHistFactory DESTINATION  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+endif()
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prepareHistFactory
                 PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
                             GROUP_EXECUTE GROUP_READ
