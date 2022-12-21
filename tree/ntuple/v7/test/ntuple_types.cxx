@@ -2,6 +2,8 @@
 #include "SimpleCollectionProxy.hxx"
 #include "TInterpreter.h"
 
+#include <cstring>
+
 TEST(RNTuple, TypeName) {
    EXPECT_STREQ("float", ROOT::Experimental::RField<float>::TypeName().c_str());
    EXPECT_STREQ("std::vector<std::string>",
@@ -626,12 +628,13 @@ TEST(RNTuple, Traits)
 TEST(RNTuple, TClassReadRules)
 {
    FileRaii fileGuard("test_ntuple_tclassrules.ntuple");
+   char c[4] = {'R', 'O', 'O', 'T'};
    {
       auto model = RNTupleModel::Create();
       auto fieldKlass = model->MakeField<StructWithIORules>("klass");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       for (int i = 0; i < 20; i++) {
-         *fieldKlass = {/*a=*/static_cast<float>(i), /*b=*/0.0f};
+         *fieldKlass = StructWithIORules{/*a=*/static_cast<float>(i), /*chars=*/c};
          ntuple->Fill();
       }
    }
@@ -642,7 +645,11 @@ TEST(RNTuple, TClassReadRules)
    for (auto i : ntuple->GetEntryRange()) {
       float fi = static_cast<float>(i);
       EXPECT_EQ(fi, viewKlass(i).a);
-      // Value of `b` set from a read rule; see CustomStructLinkDef.h
+      EXPECT_TRUE(0 == memcmp(c, viewKlass(i).s.chars, sizeof(c)));
+
+      // The following values are set from a read rule; see CustomStructLinkDef.h
       EXPECT_EQ(fi + 1.0f, viewKlass(i).b);
+      EXPECT_EQ(viewKlass(i).a + viewKlass(i).b, viewKlass(i).c);
+      EXPECT_EQ("ROOT", viewKlass(i).s.str);
    }
 }

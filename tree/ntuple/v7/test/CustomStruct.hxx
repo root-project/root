@@ -135,9 +135,22 @@ struct DestructorTraits : TrivialTraitsBase {
    ~DestructorTraits() {}
 };
 
-struct StructWithIORules {
+struct StructWithIORulesBase {
    float a;
    float b; //! transient member
+};
+
+struct StructWithTransientString {
+   char chars[4];
+   std::string str; //! transient member
+};
+
+struct StructWithIORules : StructWithIORulesBase {
+   StructWithTransientString s;
+   float c = 0.0f; //! transient member
+
+   StructWithIORules() = default;
+   StructWithIORules(float _a, char _c[4]) : StructWithIORulesBase{_a, 0.0f}, s{{_c[0], _c[1], _c[2], _c[3]}, {}} {}
 };
 
 #endif
