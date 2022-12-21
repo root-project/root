@@ -297,11 +297,7 @@ void TDirectory::CleanTargets()
                // new guy?
                // We can not use 'cd' as this would access the current thread
                // rather than the thread corresponding to that gDirectory.
-   ROOT::Internal::TSpinLockGuard other_slg(next->fSpinLock);
-   if (std::find(next->fGDirectories.begin(), next->fGDirectories.end(), ptr) == next->fGDirectories.end()) {
-      next->fGDirectories.emplace_back(ptr);
-   }
-
+               next->RegisterGDirectory(ptr);
             }
             ROOT::Internal::TSpinLockGuard(ptr->fLock);
             auto This = this;
@@ -543,8 +539,12 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
 
 Bool_t TDirectory::cd()
 {
-   auto &global = RegisterGDirectory(nullptr);
-   global = this;
+   auto &thread_local_gdirectory = GetSharedLocalCurrentDirectory();
+
+   RegisterGDirectory(thread_local_gdirectory);
+
+   thread_local_gdirectory->fCurrent = this;
+
    return kTRUE;
 }
 
@@ -1389,19 +1389,15 @@ void TDirectory::RegisterContext(TContext *ctxt) {
 ////////////////////////////////////////////////////////////////////////////////
 /// Register a std::atomic<TDirectory*> that will soon be pointing to this TDirectory object
 
-std::atomic<TDirectory*> &TDirectory::RegisterGDirectory(std::atomic<TDirectory*> *)
+void TDirectory::RegisterGDirectory(TDirectory::SharedGDirectory_t &gdirectory_ptr)
 {
-
-   auto &thread_local_gdirectory = GetSharedLocalCurrentDirectory();
-
    ROOT::Internal::TSpinLockGuard slg(fSpinLock);
-   if (std::find(fGDirectories.begin(), fGDirectories.end(), thread_local_gdirectory) == fGDirectories.end()) {
-      fGDirectories.emplace_back(thread_local_gdirectory);
+   if (std::find(fGDirectories.begin(), fGDirectories.end(), gdirectory_ptr) == fGDirectories.end()) {
+      fGDirectories.emplace_back(gdirectory_ptr);
    }
    // FIXME:
    // globalptr->load()->fGDirectories will still contain globalptr, but we cannot
    // know whether globalptr->load() has been deleted by another thread in the meantime.
-   return thread_local_gdirectory->fCurrent;
 }
 
 
