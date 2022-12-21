@@ -36,16 +36,19 @@
 #pragma link C++ class ConstructorTraits + ;
 #pragma link C++ class DestructorTraits + ;
 
-#pragma link C++ class StructWithIORulesBase + ;
-#pragma link C++ class StructWithTransientString + ;
-#pragma link C++ class StructWithIORules + ;
+#pragma link C++ options = version(3) class StructWithIORulesBase + ;
+#pragma link C++ options = version(3) class StructWithTransientString + ;
+#pragma link C++ options = version(3) class StructWithIORules + ;
 
-#pragma read sourceClass = "StructWithIORulesBase" source = "float a" version = "[1-]" targetClass = \
+#pragma read sourceClass = "StructWithIORulesBase" source = "float a" version = "[1-99]" targetClass = \
    "StructWithIORulesBase" target = "b" code = "{ b = onfile.a + 1.0f; }"
 // Including a non-transient member in `target` should issue a warning and ignore the rule; thus, `a` remains unchanged
 // in the test
 #pragma read sourceClass = "StructWithIORulesBase" source = "float a" version = "[1-]" targetClass = \
    "StructWithIORulesBase" target = "a" code = "{ a = 0.0f; }"
+// This rule is ignored due to type version mismatch
+#pragma read sourceClass = "StructWithIORulesBase" source = "float a" version = "[100-]" targetClass = \
+   "StructWithIORulesBase" target = "b" code = "{ b = 0.0f; }"
 
 #pragma read sourceClass = "StructWithTransientString" source = "char chars[4]" version = "[1-]" targetClass = \
    "StructWithTransientString" target = "str" include = "string" code = "{ str = std::string{onfile.chars, 4}; }"

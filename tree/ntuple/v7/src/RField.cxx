@@ -992,7 +992,7 @@ void ROOT::Experimental::RClassField::RegisterReadCallbacks()
          return false;
       };
 
-      auto rules = ruleset->FindRules(fClass->GetName());
+      auto rules = ruleset->FindRules(fClass->GetName(), static_cast<Int_t>(GetOnDiskTypeVersion()));
       rules.erase(std::remove_if(rules.begin(), rules.end(), referencesNonTransientMembers), rules.end());
       AddReadCallbacksFromIORules(rules, fClass);
    }
