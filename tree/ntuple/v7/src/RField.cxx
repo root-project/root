@@ -468,7 +468,10 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSource(RPageSource &page
    R__ASSERT(fColumns.empty());
    {
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
-      GenerateColumnsImpl(descriptorGuard.GetRef());
+      const RNTupleDescriptor &desc = descriptorGuard.GetRef();
+      GenerateColumnsImpl(desc);
+      if (fOnDiskId != kInvalidDescriptorId)
+         fOnDiskTypeVersion = desc.GetFieldDescriptor(fOnDiskId).GetTypeVersion();
    }
    if (!fColumns.empty())
       fPrincipalColumn = fColumns[0].get();

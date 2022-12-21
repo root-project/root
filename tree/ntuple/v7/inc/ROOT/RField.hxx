@@ -127,6 +127,8 @@ protected:
    int fTraits = 0;
    /// List of functions to be called after reading a value
    std::vector<ReadCallback_t> fReadCallbacks;
+   /// C++ type version cached from the descriptor after a call to `ConnectPageSource()`
+   std::uint32_t fOnDiskTypeVersion = 0;
 
    /// Creates the backing columns corresponsing to the field type for writing
    virtual void GenerateColumnsImpl() = 0;
@@ -314,6 +316,8 @@ public:
    virtual std::uint32_t GetFieldVersion() const { return 0; }
    /// Indicates an evolution of the C++ type itself
    virtual std::uint32_t GetTypeVersion() const { return 0; }
+   /// Return the C++ type version stored in the field descriptor; only valid after a call to `ConnectPageSource()`
+   std::uint32_t GetOnDiskTypeVersion() const { return fOnDiskTypeVersion; }
 
    RSchemaIterator begin();
    RSchemaIterator end();
