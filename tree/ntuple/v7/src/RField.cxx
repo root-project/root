@@ -429,15 +429,15 @@ void ROOT::Experimental::Detail::RFieldBase::AddReadCallbacksFromIORules(
          R__LOG_WARNING(NTupleLog()) << "ignoring I/O customization rule with unsupported type";
          continue;
       }
-      if (auto func = rule->GetReadFunctionPointer()) {
-         fReadCallbacks.emplace_back([func, classp](Detail::RFieldValue &value) {
-            TVirtualObject oldObj{nullptr};
-            oldObj.fClass = classp;
-            oldObj.fObject = value.GetRawPtr();
-            func(static_cast<char *>(value.GetRawPtr()), &oldObj);
-            oldObj.fClass = nullptr; // TVirtualObject does not own the value
-         });
-      }
+      auto func = rule->GetReadFunctionPointer();
+      R__ASSERT(func != nullptr);
+      fReadCallbacks.emplace_back([func, classp](Detail::RFieldValue &value) {
+         TVirtualObject oldObj{nullptr};
+         oldObj.fClass = classp;
+         oldObj.fObject = value.GetRawPtr();
+         func(static_cast<char *>(value.GetRawPtr()), &oldObj);
+         oldObj.fClass = nullptr; // TVirtualObject does not own the value
+      });
    }
 }
 
