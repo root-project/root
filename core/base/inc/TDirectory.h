@@ -159,9 +159,11 @@ protected:
       std::atomic<TDirectory *> fCurrent{ nullptr };
    };
 
-   static std::shared_ptr<TDirectory::TGDirectory> &GetSharedLocalCurrentDirectory();
+   using SharedGDirectory_t = std::shared_ptr<TDirectory::TGDirectory>;
 
-   std::vector<std::shared_ptr<TDirectory::TGDirectory>> fGDirectories; //! thread local gDirectory pointing to this object.
+   static SharedGDirectory_t &GetSharedLocalCurrentDirectory();
+
+   std::vector<SharedGDirectory_t> fGDirectories; //! thread local gDirectory pointing to this object.
 
    std::atomic<size_t> fContextPeg{0};  //! Counter delaying the TDirectory destructor from finishing.
    mutable std::atomic_flag fSpinLock;  //! MSVC doesn't support = ATOMIC_FLAG_INIT;
@@ -174,10 +176,9 @@ protected:
            void   CleanTargets();
            void   FillFullPath(TString& buf) const;
            void   RegisterContext(TContext *ctxt);
+           void   RegisterGDirectory(SharedGDirectory_t &ptr);
            void   UnregisterContext(TContext *ctxt);
            void   BuildDirectory(TFile* motherFile, TDirectory* motherDir);
-
-   std::atomic<TDirectory*> &RegisterGDirectory(std::atomic<TDirectory*> *);
 
    friend class TContext;
    friend struct ROOT::Internal::TDirectoryAtomicAdapter;
@@ -327,49 +328,52 @@ public:
 namespace ROOT {
 namespace Internal {
    struct TDirectoryAtomicAdapter {
-      std::atomic<TDirectory*> &fValue;
-      TDirectoryAtomicAdapter(std::atomic<TDirectory*> &value) : fValue(value) {}
+      TDirectory::SharedGDirectory_t &fValue;
+
+      TDirectoryAtomicAdapter() : fValue(TDirectory::GetSharedLocalCurrentDirectory()) {}
+
+      TDirectoryAtomicAdapter(TDirectory::SharedGDirectory_t &value) : fValue(value) {}
 
       template <typename T>
       explicit operator T*() const {
-         return (T*)fValue.load();
+         return (T *)fValue->fCurrent.load();
       }
 
       operator TDirectory*() const {
-         return fValue.load();
+         return fValue->fCurrent.load();
       }
 
-      operator bool() const { return fValue.load() != nullptr; }
+      operator bool() const { return fValue->fCurrent.load() != nullptr; }
 
       bool operator==(const TDirectory *other) const {
-         return fValue.load() == other;
+         return fValue->fCurrent.load() == other;
       }
 
       bool operator!=(const TDirectory *other) const {
-         return fValue.load() != other;
+         return fValue->fCurrent.load() != other;
       }
 
       bool operator==(TDirectory *other) const {
-         return fValue.load() == other;
+         return fValue->fCurrent.load() == other;
       }
 
       bool operator!=(TDirectory *other) const {
-         return fValue.load() != other;
+         return fValue->fCurrent.load() != other;
       }
 
       TDirectory *operator=(TDirectory *newvalue) {
          if (newvalue) {
-            newvalue->RegisterGDirectory(&fValue); // FIXME this is wrong :(
+            newvalue->RegisterGDirectory(fValue);
          }
-         fValue = newvalue;
+         fValue->fCurrent = newvalue;
          return newvalue;
       }
 
-      TDirectory *operator->() const { return fValue.load(); }
+      TDirectory *operator->() const { return fValue->fCurrent.load(); }
    };
 } // Internal
 } // ROOT
-#define gDirectory (ROOT::Internal::TDirectoryAtomicAdapter(TDirectory::CurrentDirectory()))
+#define gDirectory (ROOT::Internal::TDirectoryAtomicAdapter{})
 
 #elif defined(__MAKECINT__)
 // To properly handle the use of gDirectory in header files (in static declarations)
