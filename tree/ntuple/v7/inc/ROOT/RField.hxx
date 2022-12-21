@@ -376,6 +376,7 @@ protected:
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
+   void RegisterReadCallbacks() final;
 
 public:
    RClassField(std::string_view fieldName, std::string_view className);
