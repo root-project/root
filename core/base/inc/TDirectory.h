@@ -203,7 +203,8 @@ public:
    virtual void        Close(Option_t *option="");
    static std::atomic<TDirectory*> &CurrentDirectory();  // Return the current directory for this thread.
            void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
-   virtual Bool_t      cd(const char *path = nullptr);
+   virtual Bool_t      cd();
+   virtual Bool_t      cd(const char *path);
    virtual void        DeleteAll(Option_t *option="");
            void        Delete(const char *namecycle="") override;
            void        Draw(Option_t *option="") override;

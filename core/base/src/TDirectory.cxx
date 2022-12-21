@@ -537,6 +537,18 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Change current directory to "this" directory.
+///
+/// Returns kTRUE in case of success.
+
+Bool_t TDirectory::cd()
+{
+   auto &global = RegisterGDirectory(nullptr);
+   global = this;
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Change current directory to "this" directory or to the directory described
 /// by the path if given one.
 ///
@@ -570,15 +582,10 @@ Bool_t TDirectory::cd(const char *path)
 
 Bool_t TDirectory::cd1(const char *apath)
 {
-   Int_t nch = 0;
-   if (apath) nch = strlen(apath);
-   if (!nch) {
-      auto &global = RegisterGDirectory(nullptr);
-      global = this;
-      return kTRUE;
-   }
+   if (!apath || !apath[0])
+      return this->cd();
 
-   TDirectory *where = GetDirectory(apath,kTRUE,"cd");
+   TDirectory *where = GetDirectory(apath, kTRUE, "cd");
    if (where) {
       where->cd();
       return kTRUE;
@@ -612,11 +619,10 @@ Bool_t TDirectory::Cd(const char *path)
 Bool_t TDirectory::Cd1(const char *apath)
 {
    // null path is always true (i.e. stay in the current directory)
-   Int_t nch = 0;
-   if (apath) nch = strlen(apath);
-   if (!nch) return kTRUE;
+   if (!apath || !apath[0])
+      return kTRUE;
 
-   TDirectory *where = gDirectory->GetDirectory(apath,kTRUE,"Cd");
+   TDirectory *where = gDirectory->GetDirectory(apath, kTRUE, "Cd");
    if (where) {
       where->cd();
       return kTRUE;
@@ -630,7 +636,6 @@ Bool_t TDirectory::Cd1(const char *apath)
 void TDirectory::Clear(Option_t *)
 {
    if (fList) fList->Clear();
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
