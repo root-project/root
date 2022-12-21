@@ -73,10 +73,6 @@ ScipyMinimizer::ScipyMinimizer(const char *type)
 void ScipyMinimizer::SetAlgoExtraOptions()
 {
    std::string type = fOptions.MinimizerAlgorithm();
-   if (type == "L-BFGS-B") {
-      fExtraOpts.SetValue("gtol", 1e-8);
-      fExtraOpts.SetValue("eps", 0.01);
-   }
    SetExtraOptions(fExtraOpts);
 }
 
@@ -197,6 +193,11 @@ bool ScipyMinimizer::Minimize()
 
    //PyPrint(kw);
    PyObject *result = PyObject_Call(fMinimize, args, kw);
+   if(result == NULL)
+   {
+      PyErr_Print();
+      return false;
+   }
    //PyPrint(result);
    Py_DECREF(args);
    Py_DECREF(kw);
