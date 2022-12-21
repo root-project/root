@@ -352,9 +352,9 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
 
   EXPECT_LT(nOff, 5u);
   EXPECT_EQ(nFarOff, 0u);
-  EXPECT_GT(sumDiffs/outputsScalar.size(), -toleranceCompare) << "Batch outputs biased towards negative.";
-  EXPECT_LT(sumDiffs/outputsScalar.size(), toleranceCompare)  << "Batch outputs biased towards positive.";
-  EXPECT_LT(sqrt(sumVars/outputsScalar.size()), toleranceCompare) << "High standard deviation for batch results vs scalar.";
+  EXPECT_GT(sumDiffs.Sum()/outputsScalar.size(), -toleranceCompare) << "Batch outputs biased towards negative.";
+  EXPECT_LT(sumDiffs.Sum()/outputsScalar.size(), toleranceCompare)  << "Batch outputs biased towards positive.";
+  EXPECT_LT(sqrt(sumVars.Sum()/outputsScalar.size()), toleranceCompare) << "High standard deviation for batch results vs scalar.";
 }
 
 
