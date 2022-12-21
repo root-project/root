@@ -291,7 +291,7 @@ double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> &&result, doubl
    }
 
    // Check if value offset flag is set.
-   if (_offset) {
+   if (_doOffset) {
 
       // If no offset is stored enable this feature now
       if (_offset.Sum() == 0 && _offset.Carry() == 0 && (result.Sum() != 0 || result.Carry() != 0)) {
