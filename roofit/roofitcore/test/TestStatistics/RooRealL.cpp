@@ -25,7 +25,6 @@
 #include <RooProdPdf.h>
 #include <RooAddition.h>
 #include <RooConstraintSum.h>
-#include <RooPolynomial.h>
 #include <RooDataHist.h>
 #include <RooRealSumPdf.h>
 #include <RooNLLVar.h>
@@ -33,7 +32,7 @@
 
 #include <algorithm>  // count_if
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 // Backward compatibility for gtest version < 1.10.0
 #ifndef INSTANTIATE_TEST_SUITE_P
@@ -137,17 +136,17 @@ TEST_P(RooRealL, getValRooConstraintSumAddition)
 
    RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
-   int bins = 10000;
+   RooWorkspace ws;
+   ws.factory("Polynomial::p0(x[0, 10000])");
+   ws.factory("Polynomial::p1(x, {a0[0], a1[1., 0., 2.], a2[0]}, 0)");
 
-   RooRealVar x("x", "x", 0, bins);
-   x.setBins(bins);
-   // Parameters
-   RooRealVar a0("a0", "a0", 0);
-   RooRealVar a1("a1", "a1", 1, 0, 2);
-   RooRealVar a2("a2", "a2", 0);
+   RooRealVar& x = *ws.var("x");
+   RooRealVar& a1 = *ws.var("a1");
 
-   RooPolynomial p0("p0", "p0", x);
-   RooPolynomial p1("p1", "p1", x, RooArgList(a0, a1, a2), 0);
+   RooAbsPdf& p0 = *ws.pdf("p0");
+   RooAbsPdf& p1 = *ws.pdf("p1");
+
+   x.setBins(x.getMax());
 
    std::unique_ptr<RooDataHist> dh_bkg {p0.generateBinned(x, 1000000000)};
    std::unique_ptr<RooDataHist> dh_sig {p1.generateBinned(x, 100000000)};
