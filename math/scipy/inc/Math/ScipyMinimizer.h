@@ -26,6 +26,7 @@
 #include "Rtypes.h"
 #include "TString.h"
 
+#include <functional>
 #include <vector>
 #include <map>
 
@@ -64,7 +65,10 @@ private:
    PyObject *fMinimize;
    PyObject *fTarget;
    PyObject *fJacobian;
+   PyObject *fHessian;
+
    GenAlgoOptions fExtraOpts;
+   std::function<bool(const std::vector<double> &, double *)> fHessianFunc;
 
 protected:
    PyObject *fGlobalNS;
@@ -84,11 +88,6 @@ public:
       Destructor
    */
    virtual ~ScipyMinimizer();
-
-   /**
-      Python eval function
-    */
-   PyObject *Eval(TString code);
 
    /**
       Python initialization
@@ -119,10 +118,10 @@ private:
    void SetAlgoExtraOptions();
 
 public:
-
    /// method to perform the minimization
    virtual bool Minimize() override;
 
+   virtual void SetHessianFunction(std::function<bool(const std::vector<double> &, double *)>) override;
    template <class T>
    void SetExtraOption(const char *key, T value)
    {

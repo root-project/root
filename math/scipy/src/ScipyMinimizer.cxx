@@ -20,6 +20,8 @@ const ROOT::Math::IMultiGenFunction *gFunction = nullptr;
 /// function wrapper for the gradient of the function to be minimized
 const ROOT::Math::IMultiGradFunction *gGradFunction = nullptr;
 
+std::function<bool(const std::vector<double> &, double *)> gfHessianFunction;
+
 #define PyPrint(pyo) PyObject_Print(pyo, stdout, Py_PRINT_RAW)
 
 PyObject *target_function(PyObject * /*self*/, PyObject *args)
@@ -38,10 +40,27 @@ PyObject *jac_function(PyObject * /*self*/, PyObject *args)
 
    uint size = PyArray_SIZE(arr);
    auto params = (double *)PyArray_DATA(arr);
-   double *values=new double[size];
+   double *values = new double[size];
    gGradFunction->Gradient(params, values);
    npy_intp dims[1] = {size};
    PyObject *py_array = PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, values);
+   return py_array;
+};
+
+PyObject *hessian_function(PyObject * /*self*/, PyObject *args)
+{
+   PyArrayObject *arr = (PyArrayObject *)PyTuple_GetItem(args, 0);
+
+   uint size = PyArray_SIZE(arr);
+   auto params = (double *)PyArray_DATA(arr);
+   double *values = new double[size * size];
+   std::vector<double> x(params, params + size);
+   gfHessianFunction(x, values);
+   npy_intp dims[2] = {size, size};
+   PyObject *py_array = PyArray_SimpleNewFromData(2, dims, NPY_DOUBLE, values);
+   //    std::cout<<"---------------"<<std::endl;
+   //    PyPrint(py_array);
+   //    std::cout<<"---------------"<<std::endl;
    return py_array;
 };
 
@@ -53,6 +72,7 @@ ScipyMinimizer::ScipyMinimizer() : BasicMinimizer()
    if (!PyIsInitialized()) {
       PyInitialize();
    }
+   fHessianFunc = [](const std::vector<double> &, double *) -> bool { return false; };
    // set extra options
    SetAlgoExtraOptions();
 }
@@ -65,6 +85,7 @@ ScipyMinimizer::ScipyMinimizer(const char *type)
    if (!PyIsInitialized()) {
       PyInitialize();
    }
+   fHessianFunc = [](const std::vector<double> &, double *) -> bool { return false; };
    // set extra options
    SetAlgoExtraOptions();
 }
@@ -83,6 +104,7 @@ void ScipyMinimizer::PyInitialize()
    static PyMethodDef ParamsMethods[] = {
       {"target_function", target_function, METH_VARARGS, "Target function to minimize."},
       {"jac_function", jac_function, METH_VARARGS, "Jacobian function."},
+      {"hessian_function", hessian_function, METH_VARARGS, "Hessianfunction."},
       {NULL, NULL, 0, NULL} /* Sentinel */
    };
 
@@ -128,9 +150,10 @@ void ScipyMinimizer::PyInitialize()
    // Scipy initialization
    PyRunString("from scipy.optimize import minimize");
    fMinimize = PyDict_GetItemString(fLocalNS, "minimize");
-   PyRunString("from params import target_function, jac_function");
+   PyRunString("from params import target_function, jac_function, hessian_function");
    fTarget = PyDict_GetItemString(fLocalNS, "target_function");
    fJacobian = PyDict_GetItemString(fLocalNS, "jac_function");
+   fHessian = PyDict_GetItemString(fLocalNS, "hessian_function");
 }
 
 //_______________________________________________________________________
@@ -158,8 +181,12 @@ bool ScipyMinimizer::Minimize()
 {
    (gFunction) = ObjFunction();
    (gGradFunction) = GradObjFunction();
+   gfHessianFunction = fHessianFunc;
    if (gGradFunction == nullptr) {
       fJacobian = Py_None;
+   }
+   if (!gfHessianFunction) {
+      fHessian = Py_None;
    }
    auto method = fOptions.MinimizerAlgorithm();
    PyObject *pyoptions = PyDict_New();
@@ -188,17 +215,16 @@ bool ScipyMinimizer::Minimize()
    // minimize(fun, x0, args=(), method=None, jac=None, hess=None, hessp=None, bounds=None, constraints=(), tol=None,
    // callback=None, options=None)
    auto args = Py_BuildValue("(OO)", fTarget, x0);
-   auto kw = Py_BuildValue("{s:s,s:O,s:d,s:O}", "method", method.c_str(), "jac", fJacobian, "tol", Tolerance(),
-                           "options", pyoptions);
+   auto kw = Py_BuildValue("{s:s,s:O,,s:O,s:d,s:O}", "method", method.c_str(), "jac", fJacobian, "hess", fHessian,
+                           "tol", Tolerance(), "options", pyoptions);
 
-   //PyPrint(kw);
+   // PyPrint(kw);
    PyObject *result = PyObject_Call(fMinimize, args, kw);
-   if(result == NULL)
-   {
+   if (result == NULL) {
       PyErr_Print();
       return false;
    }
-   //PyPrint(result);
+   // PyPrint(result);
    Py_DECREF(args);
    Py_DECREF(kw);
    Py_DECREF(x0);
@@ -242,4 +268,10 @@ void ScipyMinimizer::PyRunString(TString code, TString errorMessage, int start)
       PyErr_Print();
       exit(1);
    }
+}
+
+//_______________________________________________________________________
+void ScipyMinimizer::SetHessianFunction(std::function<bool(const std::vector<double> &, double *)> func)
+{
+   fHessianFunc = func;
 }
