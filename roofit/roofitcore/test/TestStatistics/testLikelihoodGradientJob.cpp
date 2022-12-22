@@ -26,7 +26,6 @@
 #include "RooFit/TestStatistics/buildLikelihood.h"
 #include "RooFit/MultiProcess/JobManager.h"
 #include "RooFit/MultiProcess/Config.h"
-#include "RooStats/ModelConfig.h"
 
 #include "Math/Minimizer.h"
 

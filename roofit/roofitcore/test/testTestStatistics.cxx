@@ -6,12 +6,12 @@
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooFitResult.h>
-#include <RooGaussian.h>
 #include <RooGenericPdf.h>
 #include <RooNLLVar.h>
 #include <RooRandom.h>
 #include <RooPlot.h>
 #include <RooRealVar.h>
+#include <RooWorkspace.h>
 
 #include <gtest/gtest.h>
 
@@ -299,10 +299,11 @@ TEST(RooChi2Var, IntegrateBins) {
 /// as it happens when it is plotted Covers JIRA ticket ROOT-9752.
 TEST(RooNLLVar, CopyRangedNLL)
 {
-   RooRealVar x("x", "x", 0, 10);
-   RooRealVar mean("mean", "mean", 5, 0, 10);
-   RooRealVar sigma("sigma", "sigma", 0.5, 0.01, 5);
-   RooGaussian model("model", "model", x, mean, sigma);
+   RooWorkspace ws;
+   ws.factory("Gaussian::model(x[0, 10], mean[5, 0, 10], sigma[0.5, 0.01, 5.0])");
+
+   RooRealVar& x = *ws.var("x");
+   RooAbsPdf& model = *ws.pdf("model");
 
    x.setRange("fitrange", 0, 10);
 
