@@ -59,7 +59,6 @@ public:
    static constexpr std::uint32_t kReleaseCandidateTag    = 1;
 
    static constexpr std::uint16_t kFlagRepetitiveField = 0x01;
-   static constexpr std::uint16_t kFlagAliasField      = 0x02;
 
    static constexpr std::uint32_t kFlagSortAscColumn     = 0x01;
    static constexpr std::uint32_t kFlagSortDesColumn     = 0x02;

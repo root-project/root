@@ -270,7 +270,6 @@ The flags field can have one of the following bits set
 | Bit      | Meaning                                                                    |
 |----------|----------------------------------------------------------------------------|
 | 0x01     | Repetitive field, i.e. for every entry $n$ copies of the field are stored  |
-| 0x02     | Alias field, the columns referring to this field are alias columns         |
 
 The structural role of the field can have on of the following values
 
@@ -356,7 +355,7 @@ An alias column has the following format
 ```
 
 The first 32bit integer references the physical column ID.
-The second 32bit integer references a field that needs to have the "alias field" flag set.
+The second 32bit integer references the associated "projected" field.
 The ID of the alias column itself is given implicitly by the serialization order.
 In particular, alias columns have larger IDs than physical columns.
 In the footer and page list envelopes, only physical column IDs must be referenced.
