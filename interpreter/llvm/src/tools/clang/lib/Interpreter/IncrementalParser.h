@@ -38,11 +38,11 @@ class Parser;
 /// changes between the subsequent incremental input.
 ///
 class IncrementalParser {
-  /// Long-lived, incremental parsing action.
-  std::unique_ptr<IncrementalAction> Act;
-
   /// Compiler instance performing the incremental compilation.
   std::unique_ptr<CompilerInstance> CI;
+
+  /// Long-lived, incremental parsing action, we must delete after CI
+  std::unique_ptr<IncrementalAction> Act;
 
   /// Parser.
   std::unique_ptr<Parser> P;

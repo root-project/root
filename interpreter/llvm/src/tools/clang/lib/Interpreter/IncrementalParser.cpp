@@ -44,6 +44,11 @@ class IncrementalAction : public WrapperFrontendAction {
 private:
   bool IsTerminating = false;
 
+  void FinalizeAction() {
+    assert(!IsTerminating && "Already finalized!");
+    IsTerminating = true;
+    EndSourceFile();
+  }
 public:
   IncrementalAction(CompilerInstance &CI, llvm::LLVMContext &LLVMCtx,
                     llvm::Error &Err)
@@ -75,11 +80,13 @@ public:
           }
           return Act;
         }()) {}
+  ~IncrementalAction() { }
   FrontendAction *getWrapped() const { return WrappedAction.get(); }
   TranslationUnitKind getTranslationUnitKind() override {
     return TU_Incremental;
   }
   void ExecuteAction() override {
+    // FIXME: Copied from the base class without calling ParseAST in the end.
     CompilerInstance &CI = getCompilerInstance();
     assert(CI.hasPreprocessor() && "No PP!");
 
@@ -110,11 +117,6 @@ public:
       WrapperFrontendAction::EndSourceFile();
   }
 
-  void FinalizeAction() {
-    assert(!IsTerminating && "Already finalized!");
-    IsTerminating = true;
-    EndSourceFile();
-  }
 };
 
 IncrementalParser::IncrementalParser(std::unique_ptr<CompilerInstance> Instance,
