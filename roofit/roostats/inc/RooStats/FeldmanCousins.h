@@ -46,6 +46,10 @@ namespace RooStats {
       double Size() const override {return fSize;}
       /// Get the Confidence level for the test
       double ConfidenceLevel()  const override {return 1.-fSize;}
+      /// Set the DataSet
+      void SetData(RooAbsData& /*data*/) override {
+         std::cout << "DEPRECATED, set data in constructor" << std::endl;
+      }
 
       /// User-defined set of points to test
       void SetParameterPointsToTest(RooAbsData& pointsToTest) {
