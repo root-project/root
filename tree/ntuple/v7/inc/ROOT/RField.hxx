@@ -283,6 +283,8 @@ public:
    void Attach(std::unique_ptr<Detail::RFieldBase> child);
 
    std::string GetName() const { return fName; }
+   /// Returns the field name and parent field names separated by dots ("grandparent.parent.child")
+   std::string GetQualifiedFieldName() const;
    std::string GetType() const { return fType; }
    ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
