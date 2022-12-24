@@ -189,6 +189,17 @@ ROOT::Experimental::Detail::RFieldBase::~RFieldBase()
 {
 }
 
+std::string ROOT::Experimental::Detail::RFieldBase::GetQualifiedFieldName() const
+{
+   std::string result = GetName();
+   RFieldBase *parent = GetParent();
+   while (parent && !parent->GetName().empty()) {
+      result = parent->GetName() + "." + result;
+      parent = parent->GetParent();
+   }
+   return result;
+}
+
 ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>>
 ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
 {
