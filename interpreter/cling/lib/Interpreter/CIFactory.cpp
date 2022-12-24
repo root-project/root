@@ -929,7 +929,8 @@ namespace {
                const char* LLVMDir,
                std::unique_ptr<clang::ASTConsumer> customConsumer,
                const CIFactory::ModuleFileExtensions& moduleExtensions,
-               bool OnlyLex, bool HasInput = false) {
+               bool OnlyLex, bool HasInput = false,
+               clang::CodeGenerator **CG = nullptr) {
     // Follow clang -v convention of printing version on first line
     if (COpts.Verbose)
       cling::log() << "cling version " << ClingStringify(CLING_VERSION) << '\n';
@@ -1101,7 +1102,9 @@ namespace {
       return CI.release();
     }
 
-    CI->createFileManager();
+    auto A = ExitOnErr(clang::IncrementalCompilerBuilder::createIncrementalAction(*CI, /*LLVMContext*/nullptr, CG));
+
+    //CI->createFileManager();
     clang::CompilerInvocation& Invocation = CI->getInvocation();
     FrontendOptions& FrontendOpts = Invocation.getFrontendOpts();
 
@@ -1117,10 +1120,12 @@ namespace {
       return nullptr;
 
     // Set up source managers
-    SourceManager* SM = new SourceManager(CI->getDiagnostics(),
-                                          CI->getFileManager(),
-                                          /*UserFilesAreVolatile*/ true);
-    CI->setSourceManager(SM); // CI now owns SM
+    // SourceManager* SM = new SourceManager(CI->getDiagnostics(),
+    //                                       CI->getFileManager(),
+    //                                       /*UserFilesAreVolatile*/ true);
+    // CI->setSourceManager(SM); // CI now owns SM
+
+    SourceManager *SM = &CI->getSourceManager();
 
     if (CI->getCodeGenOpts().TimePasses)
       CI->createFrontendTimer();
@@ -1167,7 +1172,7 @@ namespace {
 
     // Set up the preprocessor
     auto TUKind = COpts.ModuleName.empty() ? TU_Complete : TU_Module;
-    CI->createPreprocessor(TUKind);
+    //CI->createPreprocessor(TUKind);
 
     // With modules, we now start adding prebuilt module paths to the CI.
     // Modules from those paths are treated like they are never out of date
@@ -1180,11 +1185,11 @@ namespace {
 
     Preprocessor& PP = CI->getPreprocessor();
 
-    PP.getBuiltinInfo().initializeBuiltins(PP.getIdentifierTable(),
-                                           PP.getLangOpts());
+    //PP.getBuiltinInfo().initializeBuiltins(PP.getIdentifierTable(),
+    //                                       PP.getLangOpts());
 
     // Set up the ASTContext
-    CI->createASTContext();
+    //CI->createASTContext();
 
     std::vector<std::unique_ptr<ASTConsumer>> Consumers;
 
@@ -1244,7 +1249,7 @@ namespace {
     // Set up Sema
     CodeCompleteConsumer* CCC = 0;
     // Make sure we inform Sema we compile a Module.
-    CI->createSema(TUKind, CCC);
+    //CI->createSema(TUKind, CCC);
 
     // Set CodeGen options.
     CodeGenOptions& CGOpts = CI->getCodeGenOpts();
@@ -1324,11 +1329,12 @@ CompilerInstance*
 CIFactory::createCI(llvm::StringRef Code, const InvocationOptions& Opts,
                     const char* LLVMDir,
                     std::unique_ptr<clang::ASTConsumer> consumer,
-                    const ModuleFileExtensions& moduleExtensions) {
+                    const ModuleFileExtensions& moduleExtensions,
+                    clang::CodeGenerator **CG /*=nullptr*/) {
   return createCIImpl(llvm::MemoryBuffer::getMemBuffer(Code), Opts.CompilerOpts,
                       LLVMDir, std::move(consumer), moduleExtensions,
                       false /*OnlyLex*/,
-                      !Opts.IsInteractive());
+                      !Opts.IsInteractive(), CG);
 }
 
 CompilerInstance* CIFactory::createCI(

@@ -18,6 +18,7 @@
 
 #include "clang/AST/ASTContext.h"
 #include "clang/Basic/TargetInfo.h"
+#include "clang/CodeGen/CodeGenAction.h"
 #include "clang/CodeGen/ModuleBuilder.h"
 #include "clang/CodeGen/ObjectFilePCHContainerOperations.h"
 #include "clang/Driver/Compilation.h"
@@ -26,7 +27,9 @@
 #include "clang/Driver/Options.h"
 #include "clang/Driver/Tool.h"
 #include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/FrontendAction.h"
 #include "clang/Frontend/TextDiagnosticBuffer.h"
+#include "clang/FrontendTool/Utils.h"
 #include "clang/Lex/PreprocessorOptions.h"
 
 #include "llvm/IR/Module.h"
@@ -117,6 +120,98 @@ CreateCI(const llvm::opt::ArgStringList &Argv) {
 
 } // anonymous namespace
 
+namespace clang {
+/// A custom action enabling the incremental processing functionality.
+///
+/// The usual \p FrontendAction expects one call to ExecuteAction and once it
+/// sees a call to \p EndSourceFile it deletes some of the important objects
+/// such as \p Preprocessor and \p Sema assuming no further input will come.
+///
+/// \p IncrementalAction ensures it keep its underlying action's objects alive
+/// as long as the \p IncrementalParser needs them.
+///
+class IncrementalAction : public WrapperFrontendAction {
+private:
+  bool IsTerminating = false;
+
+  void FinalizeAction() {
+    assert(!IsTerminating && "Already finalized!");
+    IsTerminating = true;
+    EndSourceFile();
+  }
+public:
+   IncrementalAction(CompilerInstance &CI, llvm::Error &Err,
+                     llvm::LLVMContext *LLVMCtx = nullptr)
+      : WrapperFrontendAction([&]() {
+          llvm::ErrorAsOutParameter EAO(&Err);
+          std::unique_ptr<FrontendAction> Act;
+          switch (CI.getFrontendOpts().ProgramAction) {
+          default:
+            Err = llvm::createStringError(
+                std::errc::state_not_recoverable,
+                "Driver initialization failed. "
+                "Incremental mode for action %d is not supported",
+                CI.getFrontendOpts().ProgramAction);
+            return Act;
+          case frontend::ASTDump:
+            LLVM_FALLTHROUGH;
+          case frontend::ASTPrint:
+            LLVM_FALLTHROUGH;
+          case frontend::ParseSyntaxOnly:
+            LLVM_FALLTHROUGH;
+          case frontend::ModuleFileInfo:
+            Act = CreateFrontendAction(CI);
+            break;
+          case frontend::EmitAssembly:
+            LLVM_FALLTHROUGH;
+          case frontend::EmitObj:
+            LLVM_FALLTHROUGH;
+          case frontend::EmitLLVMOnly:
+            Act.reset(new EmitLLVMOnlyAction(LLVMCtx));
+            break;
+          }
+          return Act;
+        }()) {}
+  ~IncrementalAction() { }
+  FrontendAction *getWrapped() const { return WrappedAction.get(); }
+  TranslationUnitKind getTranslationUnitKind() override {
+    return TU_Incremental;
+  }
+  void ExecuteAction() override {
+    // FIXME: Copied from the base class without calling ParseAST in the end.
+    CompilerInstance &CI = getCompilerInstance();
+    assert(CI.hasPreprocessor() && "No PP!");
+
+    // FIXME: Move the truncation aspect of this into Sema, we delayed this till
+    // here so the source manager would be initialized.
+    if (hasCodeCompletionSupport() &&
+        !CI.getFrontendOpts().CodeCompletionAt.FileName.empty())
+      CI.createCodeCompletionConsumer();
+
+    // Use a code completion consumer?
+    CodeCompleteConsumer *CompletionConsumer = nullptr;
+    if (CI.hasCodeCompletionConsumer())
+      CompletionConsumer = &CI.getCodeCompletionConsumer();
+
+    Preprocessor &PP = CI.getPreprocessor();
+    PP.enableIncrementalProcessing();
+    PP.EnterMainSourceFile();
+
+    if (!CI.hasSema())
+      CI.createSema(getTranslationUnitKind(), CompletionConsumer);
+  }
+
+  // Do not terminate after processing the input. This allows us to keep various
+  // clang objects alive and to incrementally grow the current TU.
+  void EndSourceFile() override {
+    // The WrappedAction can be nullptr if we issued an error in the ctor.
+    if (IsTerminating && getWrapped())
+      WrapperFrontendAction::EndSourceFile();
+  }
+
+};
+} // namespace clang
+
 llvm::Expected<std::unique_ptr<CompilerInstance>>
 IncrementalCompilerBuilder::create(std::vector<const char *> &ClangArgv) {
 
@@ -173,13 +268,39 @@ IncrementalCompilerBuilder::create(std::vector<const char *> &ClangArgv) {
   return CreateCI(**ErrOrCC1Args);
 }
 
+
+llvm::Expected<std::unique_ptr<FrontendAction>>
+IncrementalCompilerBuilder::createIncrementalAction(
+    CompilerInstance &CI, llvm::LLVMContext *LLVMCtx,
+    CodeGenerator **CG /*=nullptr*/) {
+  llvm::Error Err = llvm::Error::success();
+  auto Action = std::make_unique<IncrementalAction>(CI, Err, LLVMCtx);
+  if (Err)
+    return std::move(Err);
+
+  // Initialize CodeGen
+  CI.ExecuteAction(*Action);
+
+  if (CG) {
+    FrontendAction *WrappedAct = Action->getWrapped();
+    if (WrappedAct->hasIRSupport())
+      *CG = static_cast<CodeGenAction *>(WrappedAct)->getCodeGenerator();
+  }
+  return Action;
+}
+
 Interpreter::Interpreter(std::unique_ptr<CompilerInstance> CI,
                          llvm::Error &Err) {
   llvm::ErrorAsOutParameter EAO(&Err);
   auto LLVMCtx = std::make_unique<llvm::LLVMContext>();
   TSCtx = std::make_unique<llvm::orc::ThreadSafeContext>(std::move(LLVMCtx));
-  IncrParser = std::make_unique<IncrementalParser>(std::move(CI),
-                                                   *TSCtx->getContext(), Err);
+  CodeGenerator *CG = nullptr;
+  auto A = IncrementalCompilerBuilder::createIncrementalAction(
+      *CI, TSCtx->getContext(), &CG);
+  if (auto E = A.takeError())
+    Err = std::move(E);
+  IncrParser =
+      std::make_unique<IncrementalParser>(std::move(CI), std::move(*A), CG);
 }
 
 Interpreter::~Interpreter() {}

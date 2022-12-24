@@ -27,11 +27,11 @@ class LLVMContext;
 
 namespace clang {
 class ASTConsumer;
+class CodeGenerator;
 class CompilerInstance;
 class CodeGenerator;
 class DeclGroupRef;
 class FrontendAction;
-class IncrementalAction;
 class Parser;
 
 /// Provides support for incremental compilation. Keeps track of the state
@@ -42,7 +42,10 @@ class IncrementalParser {
   std::unique_ptr<CompilerInstance> CI;
 
   /// Long-lived, incremental parsing action, we must delete after CI
-  std::unique_ptr<IncrementalAction> Act;
+  std::unique_ptr<FrontendAction> Act;
+
+  /// CodeGenerator owned by Act.
+  CodeGenerator *CodeGen = nullptr;
 
   /// Parser.
   std::unique_ptr<Parser> P;
@@ -59,7 +62,7 @@ class IncrementalParser {
 
 public:
   IncrementalParser(std::unique_ptr<CompilerInstance> Instance,
-                    llvm::LLVMContext &LLVMCtx, llvm::Error &Err);
+                    std::unique_ptr<FrontendAction> A, CodeGenerator *CG);
   ~IncrementalParser();
 
   const CompilerInstance *getCI() const { return CI.get(); }
