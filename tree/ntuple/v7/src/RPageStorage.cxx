@@ -326,6 +326,19 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
       f.ConnectPageSink(*this); // issues in turn one or several calls to AddColumn()
    }
 
+   model.GetProjectedFields().GetFieldZero()->SetOnDiskId(0);
+   for (auto &f : *model.GetProjectedFields().GetFieldZero()) {
+      auto fieldId = descriptor.GetNFields();
+      fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
+      fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fieldId);
+      f.SetOnDiskId(fieldId);
+      auto sourceFieldId = model.GetProjectedFields().GetSourceField(&f)->GetOnDiskId();
+      for (const auto &source : descriptor.GetColumnIterable(sourceFieldId)) {
+         auto targetId = descriptor.GetNLogicalColumns();
+         fDescriptorBuilder.AddColumn(targetId, source.GetLogicalId(), fieldId, source.GetModel(), source.GetIndex());
+      }
+   }
+
    auto nColumns = descriptor.GetNPhysicalColumns();
    for (DescriptorId_t i = 0; i < nColumns; ++i) {
       RClusterDescriptor::RColumnRange columnRange;
