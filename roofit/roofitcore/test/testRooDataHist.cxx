@@ -91,11 +91,13 @@ TEST(RooDataHist, UnWeightedEntries)
   ASSERT_EQ(dataHist.sumEntries(), 20 * targetBinContent);
 
   x.setVal(0.);
-  RooArgSet* coordsAtZero = dataHist.get(coordinates)->snapshot();
+  RooArgSet coordsAtZero;
+  dataHist.get(coordinates)->snapshot(coordsAtZero);
   x.setVal(0.9);
-  RooArgSet* coordsAtPoint9 = dataHist.get(coordinates)->snapshot();
-  EXPECT_EQ(static_cast<RooRealVar*>(coordsAtZero->find(x))->getVal(),
-            static_cast<RooRealVar*>(coordsAtPoint9->find(x))->getVal());
+  RooArgSet coordsAtPoint9;
+  dataHist.get(coordinates)->snapshot(coordsAtPoint9);
+  EXPECT_EQ(static_cast<RooRealVar*>(coordsAtZero.find(x))->getVal(),
+            static_cast<RooRealVar*>(coordsAtPoint9.find(x))->getVal());
 
   const double weight = dataHist.weight();
   EXPECT_EQ(weight, targetBinContent);
@@ -123,10 +125,11 @@ TEST(RooDataHist, UnWeightedEntries)
   }
 
 
-  RooArgSet* coordsAt10 = dataHist.get(10)->snapshot();
+  RooArgSet coordsAt10;
+  dataHist.get(10)->snapshot(coordsAt10);
   const double weightBin10 = dataHist.weight();
 
-  EXPECT_NEAR(static_cast<RooRealVar*>(coordsAt10->find(x))->getVal(), 0.5, 1.E-1);
+  EXPECT_NEAR(static_cast<RooRealVar*>(coordsAt10.find(x))->getVal(), 0.5, 1.E-1);
   EXPECT_EQ(weight, weightBin10);
 }
 
@@ -150,7 +153,7 @@ TEST(RooDataHist, WeightedEntries)
   EXPECT_EQ(dataHist.sumEntries(), 20 * targetBinContent);
 
   x.setVal(0.);
-  dataHist.get(coordinates)->snapshot();
+  dataHist.get(coordinates);
   const double weight = dataHist.weight();
   ASSERT_EQ(weight, targetBinContent);
 
@@ -180,10 +183,11 @@ TEST(RooDataHist, WeightedEntries)
   }
 
 
-  RooArgSet* coordsAt10 = dataHist.get(10)->snapshot();
+  RooArgSet coordsAt10;
+  dataHist.get(10)->snapshot(coordsAt10);
   const double weightBin10 = dataHist.weight();
 
-  EXPECT_NEAR(static_cast<RooRealVar*>(coordsAt10->find(x))->getVal(), 0.5, 1.E-1);
+  EXPECT_NEAR(static_cast<RooRealVar*>(coordsAt10.find(x))->getVal(), 0.5, 1.E-1);
   EXPECT_EQ(weight, weightBin10);
 }
 
@@ -211,16 +215,17 @@ TEST_P(RooDataHistIO, ReadLegacy) {
 
   constexpr double targetBinContent = 20.;
 
-  RooArgSet* legacyVals = dataHist.get(10)->snapshot();
-  EXPECT_EQ(static_cast<RooAbsReal*>(legacyVals->find("x"))->getVal(),
+  RooArgSet legacyVals;
+  dataHist.get(10)->snapshot(legacyVals);
+  EXPECT_EQ(static_cast<RooAbsReal*>(legacyVals.find("x"))->getVal(),
       static_cast<RooAbsReal*>(dataHist.get(10)->find("x"))->getVal());
 
 
   EXPECT_EQ(dataHist.numEntries(), 20);
   EXPECT_EQ(dataHist.sumEntries(), 20 * targetBinContent);
 
-  static_cast<RooRealVar*>(legacyVals->find("x"))->setVal(0.);
-  dataHist.get(*legacyVals); // trigger side effect for weight below.
+  static_cast<RooRealVar*>(legacyVals.find("x"))->setVal(0.);
+  dataHist.get(legacyVals); // trigger side effect for weight below.
   const double weight = dataHist.weight();
   ASSERT_EQ(weight, targetBinContent);
 
@@ -249,10 +254,11 @@ TEST_P(RooDataHistIO, ReadLegacy) {
   }
 
 
-  RooArgSet* coordsAt10 = dataHist.get(10)->snapshot();
+  RooArgSet coordsAt10;
+  dataHist.get(10)->snapshot(coordsAt10);
   const double weightBin10 = dataHist.weight();
 
-  EXPECT_NEAR(static_cast<RooRealVar*>(coordsAt10->find("x"))->getVal(), 0.5, 1.E-1);
+  EXPECT_NEAR(static_cast<RooRealVar*>(coordsAt10.find("x"))->getVal(), 0.5, 1.E-1);
   EXPECT_EQ(weight, weightBin10);
 }
 

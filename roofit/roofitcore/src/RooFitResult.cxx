@@ -91,10 +91,16 @@ RooFitResult::RooFitResult(const RooFitResult& other) :
   _GC(0),
   _statusHistory(other._statusHistory)
 {
-  _constPars = (RooArgList*) other._constPars->snapshot() ;
-  _initPars = (RooArgList*) other._initPars->snapshot() ;
-  _finalPars = (RooArgList*) other._finalPars->snapshot() ;
-  if (other._randomPars) _randomPars = (RooArgList*) other._randomPars->snapshot() ;
+  _constPars = new RooArgList;
+  other._constPars->snapshot(*_constPars);
+  _initPars = new RooArgList;
+  other._initPars->snapshot(*_initPars);
+  _finalPars = new RooArgList;
+  other._finalPars->snapshot(*_finalPars);
+  if (other._randomPars) {
+    _randomPars = new RooArgList;
+    other._randomPars->snapshot(*_randomPars);
+  }
   if (other._Lt) _Lt = new TMatrix(*other._Lt);
   if (other._VM) _VM = new TMatrixDSym(*other._VM) ;
   if (other._CM) _CM = new TMatrixDSym(*other._CM) ;
@@ -134,7 +140,8 @@ RooFitResult::~RooFitResult()
 void RooFitResult::setConstParList(const RooArgList& list)
 {
   if (_constPars) delete _constPars ;
-  _constPars = (RooArgList*) list.snapshot() ;
+  _constPars = new RooArgList;
+  list.snapshot(*_constPars);
   for(auto* rrv : dynamic_range_cast<RooRealVar*>(*_constPars)) {
     if (rrv) {
       rrv->deleteSharedProperties() ;
@@ -150,7 +157,8 @@ void RooFitResult::setConstParList(const RooArgList& list)
 void RooFitResult::setInitParList(const RooArgList& list)
 {
   if (_initPars) delete _initPars ;
-  _initPars = (RooArgList*) list.snapshot() ;
+  _initPars = new RooArgList;
+  list.snapshot(*_initPars);
   for(auto* rrv : dynamic_range_cast<RooRealVar*>(*_initPars)) {
     if (rrv) {
       rrv->deleteSharedProperties() ;
@@ -166,7 +174,8 @@ void RooFitResult::setInitParList(const RooArgList& list)
 void RooFitResult::setFinalParList(const RooArgList& list)
 {
   if (_finalPars) delete _finalPars ;
-  _finalPars = (RooArgList*) list.snapshot() ;
+  _finalPars = new RooArgList;
+  list.snapshot(*_finalPars);
 
   for(auto* rrv : dynamic_range_cast<RooRealVar*>(*_finalPars)) {
     if (rrv) {
@@ -334,7 +343,8 @@ const RooArgList& RooFitResult::randomizePars() const
   if(0 == _randomPars) { // first-time initialization
     assert(0 != _finalPars);
     // create the list of random values to fill
-    _randomPars= (RooArgList*)_finalPars->snapshot();
+    _randomPars = new RooArgList;
+    _finalPars->snapshot(*_randomPars);
     // calculate the elements of the upper-triangular matrix L that gives Lt*L = C
     // where Lt is the transpose of L (the "square-root method")
     TMatrix L(nPar,nPar);

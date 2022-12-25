@@ -367,7 +367,10 @@ void RooPlot::SetDirectory(TDirectory *dir) {
 
 void RooPlot::updateNormVars(const RooArgSet &vars)
 {
-  if(0 == _normVars) _normVars= (RooArgSet*) vars.snapshot(true);
+  if(_normVars == nullptr) {
+    _normVars = new RooArgSet;
+    vars.snapshot(*_normVars, true);
+  }
 }
 
 
