@@ -78,8 +78,9 @@ void RooAbsSelfCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cach
   RooDataHist& cacheHist = *cache.hist() ;
 
   // Make deep clone of self in non-caching mde and attach to dataset observables
-  RooArgSet* cloneSet = (RooArgSet*) RooArgSet(*this).snapshot(true) ;
-  RooAbsSelfCachedReal* clone2 = (RooAbsSelfCachedReal*) cloneSet->find(GetName()) ;
+  RooArgSet cloneSet;
+  RooArgSet(*this).snapshot(cloneSet, true) ;
+  RooAbsSelfCachedReal* clone2 = (RooAbsSelfCachedReal*) cloneSet.find(GetName()) ;
   clone2->disableCache(true) ;
   clone2->attachDataSet(cacheHist) ;
 
@@ -89,8 +90,6 @@ void RooAbsSelfCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cach
     double wgt = clone2->getVal(obs) ;
     cacheHist.set(i, wgt, 0.);
   }
-
-  delete cloneSet ;
 }
 
 

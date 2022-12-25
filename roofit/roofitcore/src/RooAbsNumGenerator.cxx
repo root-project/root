@@ -49,19 +49,18 @@ using namespace std;
 /// cloned and so will not be disturbed during the generation process.
 
 RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, bool verbose, const RooAbsReal* maxFuncVal) :
-  _cloneSet(0), _funcClone(0), _funcMaxVal(maxFuncVal), _verbose(verbose), _funcValStore(0), _funcValPtr(0), _cache(0)
+  _funcClone(0), _funcMaxVal(maxFuncVal), _verbose(verbose), _funcValStore(0), _funcValPtr(0), _cache(0)
 {
   // Clone the function and all nodes that it depends on so that this generator
   // is independent of any existing objects.
   RooArgSet nodes(func,func.GetName());
-  _cloneSet= (RooArgSet*) nodes.snapshot(true);
-  if (!_cloneSet) {
+  if (nodes.snapshot(_cloneSet, true)) {
     oocoutE(nullptr, Generation) << "RooAbsNumGenerator::RooAbsNumGenerator(" << func.GetName() << ") Couldn't deep-clone function, abort," << endl ;
     RooErrorHandler::softAbort() ;
   }
 
   // Find the clone in the snapshot list
-  _funcClone = (RooAbsReal*)_cloneSet->find(func.GetName());
+  _funcClone = (RooAbsReal*)_cloneSet.find(func.GetName());
 
 
   // Check that each argument is fundamental, and separate them into
@@ -77,12 +76,12 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
       continue;
     }
     // look for this argument in the generating function's dependents
-    found= (const RooAbsArg*)_cloneSet->find(arg->GetName());
+    found= (const RooAbsArg*)_cloneSet.find(arg->GetName());
     if(found) {
       arg= found;
     } else {
       // clone any variables we generate that we haven't cloned already
-      arg= _cloneSet->addClone(*arg);
+      arg= _cloneSet.addClone(*arg);
     }
     assert(0 != arg);
     // is this argument a category or a real?
@@ -145,7 +144,6 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
 
 RooAbsNumGenerator::~RooAbsNumGenerator()
 {
-  delete _cloneSet;
   delete _cache ;
   delete _funcValStore ;
 }

@@ -287,12 +287,10 @@ TEST_P(RealLVsMPFE, minimize)
    RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL", std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
 
    // save initial values for the start of all minimizations
-   RooArgSet values = RooArgSet(*mu, *pdf);
+   RooArgSet values{*mu, *pdf};
 
-   auto savedValues = dynamic_cast<RooArgSet *>(values.snapshot());
-   if (savedValues == nullptr) {
-      throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
-   }
+   RooArgSet savedValues;
+   values.snapshot(savedValues);
 
    // --------
 
@@ -310,7 +308,7 @@ TEST_P(RealLVsMPFE, minimize)
    double mu0 = mu->getVal();
    double muerr0 = mu->getError();
 
-   values = *savedValues;
+   values.assign(savedValues);
 
    RooMinimizer m1(nll_new);
    m1.setMinimizerType("Minuit2");
@@ -330,8 +328,6 @@ TEST_P(RealLVsMPFE, minimize)
    EXPECT_EQ(mu0, mu1);
    EXPECT_EQ(muerr0, muerr1);
    EXPECT_EQ(edm0, edm1);
-
-   delete savedValues;
 }
 
 INSTANTIATE_TEST_SUITE_P(NworkersModeSeed, RealLVsMPFE,

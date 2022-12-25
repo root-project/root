@@ -808,17 +808,18 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 
   checkInit() ;
 
-  std::vector<RooArgSet*> vlist;
+  std::vector<std::unique_ptr<RooArgSet>> vlist;
   RooArgList cloneSet;
 
   for (const auto var : orderedArgs) {
 
     // Clone variable and attach to cloned tree
-    RooArgSet* newVarCloneList = (RooArgSet*) RooArgSet(*var).snapshot() ;
+    auto newVarCloneList = std::make_unique<RooArgSet>();
+    RooArgSet(*var).snapshot(*newVarCloneList);
     RooAbsArg* newVarClone = newVarCloneList->find(var->GetName()) ;
     newVarClone->recursiveRedirectServers(_vars,false) ;
 
-    vlist.push_back(newVarCloneList) ;
+    vlist.emplace_back(std::move(newVarCloneList));
     cloneSet.add(*newVarClone) ;
   }
 
@@ -905,9 +906,6 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
   }
 
 
-  for (auto set : vlist) {
-    delete set;
-  }
   for (auto set : argObsList) {
     delete set;
   }
@@ -950,10 +948,11 @@ void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs, Int_t
 
 
   // Refill caches of elements that require recalculation
-  RooArgSet* ownedNset = 0 ;
-  RooArgSet* usedNset = 0 ;
+  RooArgSet* ownedNset = nullptr;
+  RooArgSet* usedNset = nullptr;
   if (projectedArgs && projectedArgs->getSize()>0) {
-    ownedNset = (RooArgSet*) _vars.snapshot(false) ;
+    ownedNset = new RooArgSet;
+    _vars.snapshot(*ownedNset, false) ;
     ownedNset->remove(*projectedArgs,false,true);
     usedNset = ownedNset ;
   } else {

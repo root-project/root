@@ -2165,8 +2165,8 @@ Roo1DTable* RooAbsData::table(const RooAbsCategory& cat, const char* cuts, const
     }
 
     // Clone derived variable
-    tableSet.reset(static_cast<RooArgSet*>(RooArgSet(cat).snapshot(true)));
-    if (!tableSet) {
+    tableSet = std::make_unique<RooArgSet>();
+    if (RooArgSet(cat).snapshot(*tableSet, true)) {
       coutE(Plotting) << "RooTreeData::table(" << GetName() << ") Couldn't deep-clone table category, abort." << std::endl;
       return nullptr;
     }

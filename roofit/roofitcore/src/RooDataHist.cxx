@@ -918,12 +918,12 @@ RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaV
   _vars.selectCommon(varSubset, myVarSubset);
   RooDataHist *rdh = new RooDataHist(GetName(), GetTitle(), myVarSubset);
 
-  RooFormulaVar* cloneVar = 0;
+  RooFormulaVar* cloneVar = nullptr;
   std::unique_ptr<RooArgSet> tmp;
   if (cutVar) {
+    tmp = std::make_unique<RooArgSet>();
     // Deep clone cutVar and attach clone to this dataset
-    tmp.reset(static_cast<RooArgSet*>(RooArgSet(*cutVar).snapshot()));
-    if (!tmp) {
+    if (RooArgSet(*cutVar).snapshot(*tmp)) {
       coutE(DataHandling) << "RooDataHist::reduceEng(" << GetName() << ") Couldn't deep-clone cut variable, abort," << endl ;
       return nullptr;
     }
@@ -1763,8 +1763,8 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, doubl
   std::unique_ptr<RooArgSet> tmp;
   if (cutVar) {
     // Deep clone cutVar and attach clone to this dataset
-    tmp.reset(static_cast<RooArgSet*>(RooArgSet(*cutVar).snapshot()));
-    if (!tmp) {
+    tmp = std::make_unique<RooArgSet>();
+    if(RooArgSet(*cutVar).snapshot(*tmp)) {
       coutE(DataHandling) << "RooDataHist::add(" << GetName() << ") Couldn't deep-clone cut variable, abort," << endl ;
       return ;
     }

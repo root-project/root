@@ -907,8 +907,8 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
   if(0 != projectedVars) leafNodes.remove(*projectedVars,true);
 
   // Make a deep-clone of ourself so later operations do not disturb our original state
-  cloneSet= (RooArgSet*)RooArgSet(*this).snapshot(true);
-  if (!cloneSet) {
+  cloneSet = new RooArgSet;
+  if (RooArgSet(*this).snapshot(*cloneSet, true)) {
     coutE(Plotting) << "RooAbsPdf::createPlotProjection(" << GetName() << ") Couldn't deep-clone PDF, abort," << std::endl ;
     return 0 ;
   }
@@ -1176,8 +1176,9 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSe
 
   // Make deep clone of self and attach to dataset observables
   //RooArgSet* origObs = getObservables(hist) ;
-  std::unique_ptr<RooArgSet> cloneSet{static_cast<RooArgSet*>(RooArgSet(*this).snapshot(true))};
-  RooAbsReal* theClone = (RooAbsReal*) cloneSet->find(GetName()) ;
+  RooArgSet cloneSet;
+  RooArgSet(*this).snapshot(cloneSet, true);
+  RooAbsReal* theClone = static_cast<RooAbsReal*>(cloneSet.find(GetName()));
   theClone->recursiveRedirectServers(*hist->get()) ;
   //const_cast<RooAbsReal*>(this)->recursiveRedirectServers(*hist->get()) ;
 

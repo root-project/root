@@ -197,7 +197,8 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) :
 
   // Copy snapshots
   for(auto * snap : static_range_cast<RooArgSet*>(other._snapshots)) {
-    auto snapClone = static_cast<RooArgSet*>(snap->snapshot());
+    auto snapClone = new RooArgSet;
+    snap->snapshot(*snapClone);
     snapClone->setName(snap->GetName()) ;
     _snapshots.Add(snapClone) ;
   }
@@ -1138,7 +1139,8 @@ bool RooWorkspace::saveSnapshot(const char* name, const RooArgSet& params, bool 
 {
   RooArgSet actualParams;
   _allOwnedNodes.selectCommon(params, actualParams);
-  auto snapshot = static_cast<RooArgSet*>(actualParams.snapshot());
+  auto snapshot = new RooArgSet;
+  actualParams.snapshot(*snapshot);
 
   snapshot->setName(name) ;
 

@@ -116,10 +116,12 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
   }
 
   // Copy constructor
-  _compSetOwnedN = (RooArgSet*) other._compSetN.snapshot() ;
+  _compSetOwnedN = new RooArgSet;
+  other._compSetN.snapshot(*_compSetOwnedN);
   _compSetN.add(*_compSetOwnedN) ;
 
-  _compSetOwnedD = (RooArgSet*) other._compSetD.snapshot() ;
+  _compSetOwnedD = new RooArgSet;
+  other._compSetD.snapshot(*_compSetOwnedN);
   _compSetD.add(*_compSetOwnedD) ;
 
   for (RooAbsArg * arg : *_compSetOwnedN) {

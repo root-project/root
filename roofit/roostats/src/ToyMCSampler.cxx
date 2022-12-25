@@ -252,13 +252,21 @@ RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, const RooA
 ////////////////////////////////////////////////////////////////////////////////
 
 const RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, const RooArgSet& poi, DetailedOutputAggregator& detOutAgg) {
-   RooArgSet *allVars = fPdf ? fPdf->getVariables() : nullptr;
-   RooArgSet *saveAll = allVars ? allVars->snapshot() : nullptr;
+   std::unique_ptr<RooArgSet> allVars;
+   std::unique_ptr<RooArgSet> saveAll;
+   if(fPdf) {
+      allVars.reset(fPdf->getVariables());
+   }
+   if(allVars) {
+      saveAll = std::make_unique<RooArgSet>();
+      allVars->snapshot(*saveAll);
+   }
    for( unsigned int i = 0; i < fTestStatistics.size(); i++ ) {
       if( fTestStatistics[i] == nullptr ) continue;
       TString name( TString::Format("%s_TS%u", fSamplingDistName.c_str(), i) );
-      std::unique_ptr<RooArgSet> parForTS(poi.snapshot());
-      RooRealVar ts( name, fTestStatistics[i]->GetVarName(), fTestStatistics[i]->Evaluate( data, *parForTS ) );
+      RooArgSet parForTS;
+      poi.snapshot(parForTS);
+      RooRealVar ts( name, fTestStatistics[i]->GetVarName(), fTestStatistics[i]->Evaluate( data, parForTS ) );
       RooArgList tset(ts);
       detOutAgg.AppendArgSet(&tset);
       if (const RooArgSet* detOut = fTestStatistics[i]->GetDetailedOutput()) {
@@ -270,8 +278,6 @@ const RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, cons
         allVars->assign(*saveAll);
       }
    }
-   delete saveAll;
-   delete allVars;
    return detOutAgg.GetAsArgList();
 }
 

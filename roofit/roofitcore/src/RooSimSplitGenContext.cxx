@@ -134,13 +134,11 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
   }
 
   // Clone the index category
-  _idxCatSet = (RooArgSet*) RooArgSet(model._indexCat.arg()).snapshot(true) ;
-  if (!_idxCatSet) {
+  if(RooArgSet(model._indexCat.arg()).snapshot(_idxCatSet, true)) {
     oocoutE(_pdf,Generation) << "RooSimSplitGenContext::RooSimSplitGenContext(" << GetName() << ") Couldn't deep-clone index category, abort," << endl ;
     throw std::string("RooSimSplitGenContext::RooSimSplitGenContext() Couldn't deep-clone index category, abort") ;
   }
-
-  _idxCat = (RooAbsCategoryLValue*) _idxCatSet->find(model._indexCat.arg().GetName()) ;
+  _idxCat = (RooAbsCategoryLValue*) _idxCatSet.find(model._indexCat.arg().GetName()) ;
 }
 
 
@@ -151,7 +149,6 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
 RooSimSplitGenContext::~RooSimSplitGenContext()
 {
   delete[] _fracThresh ;
-  delete _idxCatSet ;
   for (vector<RooAbsGenContext*>::iterator iter = _gcList.begin() ; iter!=_gcList.end() ; ++iter) {
     delete (*iter) ;
   }

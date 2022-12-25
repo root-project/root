@@ -84,17 +84,15 @@ TEST(Interface, DISABLED_fitTo)
 
    values->add(*pdf);
 
-   RooArgSet *savedValues = dynamic_cast<RooArgSet *>(values->snapshot());
-   if (savedValues == nullptr) {
-      throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
-   }
+   RooArgSet savedValues;
+   values->snapshot(savedValues);
 
    std::unique_ptr<RooFitResult> result1{pdf->fitTo(*data, RooFit::Save())};
 
    double minNll_nominal = result1->minNll();
    double edm_nominal = result1->edm();
 
-   *values = *savedValues;
+   values->assign(savedValues);
 
    std::unique_ptr<RooFitResult> result2{pdf->fitTo(*data, RooFit::Save(), RooFit::Parallelize(4), RooFit::Experimental::ParallelGradientOptions(true), RooFit::Experimental::ParallelDescentOptions(true))};
 

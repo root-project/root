@@ -47,7 +47,7 @@ protected:
   RooBinnedGenContext(const RooBinnedGenContext& other) ;
 
   const RooArgSet* _vars ;
-  RooArgSet* _pdfSet ;          ///<  Set owned all nodes of internal clone of p.d.f
+  RooArgSet _pdfSet ;          ///<  Set owned all nodes of internal clone of p.d.f
   RooAbsPdf *_pdf ;             ///<  Pointer to cloned p.d.f
   RooDataHist* _hist ;          ///< Histogram
   bool _expectedData ;        ///< Asimov?
