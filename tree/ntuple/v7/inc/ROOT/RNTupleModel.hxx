@@ -27,6 +27,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 
@@ -47,14 +48,63 @@ that faciliates checking whether entries are compatible with it (i.e.: have been
 */
 // clang-format on
 class RNTupleModel {
+public:
+   /// Projected fields are fields whose columns are reused from existing fields. Projected fields are not attached
+   /// to the models zero field.  Only the real source fields are written to, projected fields are stored as meta-data
+   /// (header) information only.  Only top-level projected fields are supported because otherwise the layout of types
+   /// could be altered in unexpected ways.
+   /// All projected fields the the source fields used to back them are kept in this class.
+   class RProjectedFields {
+   public:
+      /// The map keys are the projected target fields, the map values are the backing source fields
+      /// Note that sub fields are treated individually and indepently of their parent field
+      using FieldMap_t = std::unordered_map<const Detail::RFieldBase *, const Detail::RFieldBase *>;
+
+   private:
+      explicit RProjectedFields(std::unique_ptr<RFieldZero> fieldZero) : fFieldZero(std::move(fieldZero)) {}
+      /// The projected fields are attached to this zero field
+      std::unique_ptr<RFieldZero> fFieldZero;
+      /// Maps the source fields from fModel to the target projected fields attached to fFieldZero
+      FieldMap_t fFieldMap;
+      /// The model this set of projected fields belongs to
+      const RNTupleModel *fModel;
+
+      /// Asserts that the passed field is a valid target of the source field provided in the field map.
+      /// Checks the field without looking into sub fields.
+      RResult<void> EnsureValidMapping(const Detail::RFieldBase *target, const FieldMap_t &fieldMap);
+
+   public:
+      explicit RProjectedFields(const RNTupleModel *model) : fFieldZero(std::make_unique<RFieldZero>()), fModel(model)
+      {
+      }
+      RProjectedFields(const RProjectedFields &) = delete;
+      RProjectedFields(RProjectedFields &&) = default;
+      RProjectedFields &operator=(const RProjectedFields &) = delete;
+      RProjectedFields &operator=(RProjectedFields &&) = default;
+      ~RProjectedFields() = default;
+
+      /// The new model needs to be a clone of fModel
+      std::unique_ptr<RProjectedFields> Clone(const RNTupleModel *newModel) const;
+
+      RFieldZero *GetFieldZero() const { return fFieldZero.get(); }
+      const Detail::RFieldBase *GetSourceField(const Detail::RFieldBase *target) const;
+      /// Adds a new projected field. The field map needs to provide valid source fields of fModel for 'field'
+      /// and each of its sub fields.
+      RResult<void> Add(std::unique_ptr<Detail::RFieldBase> field, const FieldMap_t &fieldMap);
+      bool IsEmpty() const { return fFieldZero->begin() == fFieldZero->end(); }
+   };
+
+private:
    /// Hierarchy of fields consisting of simple types and collections (sub trees)
    std::unique_ptr<RFieldZero> fFieldZero;
    /// Contains field values corresponding to the created top-level fields
    std::unique_ptr<REntry> fDefaultEntry;
-   /// Keeps track of which field names are taken.
+   /// Keeps track of which field names are taken, including projected field names.
    std::unordered_set<std::string> fFieldNames;
    /// Free text set by the user
    std::string fDescription;
+   /// The set of projected top-level fields
+   std::unique_ptr<RProjectedFields> fProjectedFields;
    /// Upon freezing, every model has a unique ID to distingusish it from other models.  Cloning preserves the ID.
    /// Entries are linked to models via the ID.
    std::uint64_t fModelId = 0;
@@ -69,13 +119,9 @@ class RNTupleModel {
    /// Throws an RException if fDefaultEntry is nullptr
    void EnsureNotBare() const;
 
-   void EnsureValidFieldMapping(const Detail::RFieldBase &target, const std::string &source) const;
-
    RNTupleModel();
 
 public:
-   using FieldMapper_t = std::function<std::string(const Detail::RFieldBase &)>;
-
    RNTupleModel(const RNTupleModel&) = delete;
    RNTupleModel& operator =(const RNTupleModel&) = delete;
    ~RNTupleModel() = default;
@@ -83,7 +129,7 @@ public:
    std::unique_ptr<RNTupleModel> Clone() const;
    static std::unique_ptr<RNTupleModel> Create();
    /// A bare model has no default entry
-   static std::unique_ptr<RNTupleModel> CreateBare() { return std::unique_ptr<RNTupleModel>(new RNTupleModel()); }
+   static std::unique_ptr<RNTupleModel> CreateBare();
 
    /// Creates a new field and a corresponding tree value that is managed by a shared pointer.
    ///
@@ -177,7 +223,11 @@ public:
       fFieldZero->Attach(std::move(field));
    }
 
-   RResult<void> AddProjectedField(std::unique_ptr<Detail::RFieldBase> field, FieldMapper_t mapping);
+   /// Adds a top-level field based on existing fields. The mapping function is called with the qualified field names
+   /// of the provided field and the subfields.  It should return the qualified field names used as a mapping source.
+   /// Projected fields can only be used for models used to write data.
+   RResult<void> AddProjectedField(std::unique_ptr<Detail::RFieldBase> field,
+                                   std::function<std::string(const std::string &)> mapping);
 
    template <typename T>
    T *Get(std::string_view fieldName) const
@@ -185,6 +235,8 @@ public:
       EnsureNotBare();
       return fDefaultEntry->Get<T>(fieldName);
    }
+
+   const RProjectedFields &GetProjectedFields() const { return *fProjectedFields; }
 
    void Freeze();
    bool IsFrozen() const { return fModelId != 0; }
