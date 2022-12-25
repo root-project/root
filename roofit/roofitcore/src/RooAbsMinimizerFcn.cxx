@@ -69,17 +69,21 @@ RooAbsMinimizerFcn::RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *conte
    _nDim = _floatParamList->getSize();
 
    // Save snapshot of initial lists
-   _initFloatParamList.reset((RooArgList *)_floatParamList->snapshot(false));
-   _initConstParamList.reset((RooArgList *)_constParamList->snapshot(false));
+   _initFloatParamList = std::make_unique<RooArgList>();
+   _initConstParamList = std::make_unique<RooArgList>();
+   _floatParamList->snapshot(*_initFloatParamList, false);
+   _constParamList->snapshot(*_initConstParamList, false);
 }
 
 RooAbsMinimizerFcn::RooAbsMinimizerFcn(const RooAbsMinimizerFcn &other)
    : _context(other._context), _maxFCN(other._maxFCN), _funcOffset(other._funcOffset), _numBadNLL(other._numBadNLL),
      _evalCounter(other._evalCounter), _nDim(other._nDim), _optConst(other._optConst),
      _floatParamList(new RooArgList(*other._floatParamList)), _constParamList(new RooArgList(*other._constParamList)),
-     _initFloatParamList((RooArgList *)other._initFloatParamList->snapshot(false)),
-     _initConstParamList((RooArgList *)other._initConstParamList->snapshot(false)), _logfile(other._logfile)
+     _initFloatParamList(std::make_unique<RooArgList>()), _initConstParamList(std::make_unique<RooArgList>()),
+     _logfile(other._logfile)
 {
+   other._initFloatParamList->snapshot(*_initFloatParamList, false);
+   other._initConstParamList->snapshot(*_initConstParamList, false);
 }
 
 /// Internal function to synchronize TMinimizer with current
@@ -132,7 +136,7 @@ bool RooAbsMinimizerFcn::synchronizeParameterSettings(std::vector<ROOT::Fit::Par
    }
 
    // Update reference list
-   *_initConstParamList = *_constParamList;
+   _initConstParamList->assign(*_constParamList);
 
    // Synchronize MINUIT with function state
    // Handle floatParamList

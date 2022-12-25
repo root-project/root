@@ -726,8 +726,9 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
   // Clone the index category to be able to cycle through the category states for plotting without
   // affecting the category state of our instance
-  std::unique_ptr<RooArgSet> idxCloneSet( RooArgSet(*_indexCat).snapshot(true) );
-  auto idxCatClone = static_cast<RooAbsCategoryLValue*>( idxCloneSet->find(_indexCat->GetName()) );
+  RooArgSet idxCloneSet;
+  RooArgSet(*_indexCat).snapshot(idxCloneSet, true);
+  auto idxCatClone = static_cast<RooAbsCategoryLValue*>( idxCloneSet.find(_indexCat->GetName()) );
   assert(idxCatClone);
 
   // Make list of category columns to exclude from projection data
@@ -802,7 +803,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     bool skip(false) ;
     for (const auto idxSliceCompArg : *idxCompSliceSet) {
       const auto idxSliceComp = static_cast<RooAbsCategory*>(idxSliceCompArg);
-      RooAbsCategory* idxComp = (RooAbsCategory*) idxCloneSet->find(idxSliceComp->GetName()) ;
+      RooAbsCategory* idxComp = (RooAbsCategory*) idxCloneSet.find(idxSliceComp->GetName()) ;
       if (idxComp->getCurrentIndex()!=idxSliceComp->getCurrentIndex()) {
         skip=true ;
         break ;
@@ -1079,7 +1080,8 @@ RooDataHist* RooSimultaneous::fillDataHist(RooDataHist *hist,
 RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents)
 {
   // Make set with clone of variables (placeholder for output)
-  RooArgSet* globClone = (RooArgSet*) whatVars.snapshot() ;
+  RooArgSet globClone;
+  whatVars.snapshot(globClone);
 
   RooDataSet* data = new RooDataSet("gensimglobal","gensimglobal",whatVars) ;
 
@@ -1090,20 +1092,16 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
       RooAbsPdf* pdftmp = getPdf(nameIdx.first.c_str());
 
       // Generate only global variables defined by the pdf associated with this state
-      RooArgSet* globtmp = pdftmp->getObservables(whatVars) ;
-      RooDataSet* tmp = pdftmp->generate(*globtmp,1) ;
+      RooArgSet globtmp;
+      pdftmp->getObservables(&whatVars, globtmp) ;
+      std::unique_ptr<RooDataSet> tmp{pdftmp->generate(globtmp,1)};
 
       // Transfer values to output placeholder
-      globClone->assign(*tmp->get(0)) ;
-
-      // Cleanup
-      delete globtmp ;
-      delete tmp ;
+      globClone.assign(*tmp->get(0)) ;
     }
-    data->add(*globClone) ;
+    data->add(globClone) ;
   }
 
-  delete globClone ;
   return data ;
 }
 

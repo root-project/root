@@ -656,13 +656,17 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     // Make list of wholly imported dependents
     RooArgSet impDeps(depAllList[i]);
     impDeps.remove(*normDeps, true, true);
-    impDepList.Add(impDeps.snapshot());
+    auto snap = new RooArgSet;
+    impDeps.snapshot(*snap);
+    impDepList.Add(snap);
 //     cout << GetName() << ": list of imported dependents for term " << (*term) << " set to " << impDeps << endl ;
 
     // Make list of cross dependents (term is self contained for these dependents,
     // but components import dependents from other components)
     auto crossDeps = std::unique_ptr<RooAbsCollection>{depIntNoNormList[i].selectCommon(*normDeps)};
-    crossDepList.Add(crossDeps->snapshot());
+    snap = new RooArgSet;
+    crossDeps->snapshot(*snap);
+    crossDepList.Add(snap);
 //     cout << GetName() << ": list of cross dependents for term " << (*term) << " set to " << *crossDeps << endl ;
   }
 
@@ -885,7 +889,8 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
           cache->_partList.add(*func[0]);
           if (isOwned) cache->_ownedList.addOwned(*func[0]);
 
-          cache->_normList.emplace_back(norm->snapshot(false));
+          cache->_normList.emplace_back(std::make_unique<RooArgSet>());
+          norm->snapshot(*cache->_normList.back(), false);
 
           cache->_numList.addOwned(*func[1]);
           cache->_denList.addOwned(*func[2]);
@@ -980,7 +985,8 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
       cache->_ownedList.addOwned(std::move(prodtmp_den));
       cache->_numList.addOwned(std::move(numtmp));
       cache->_denList.addOwned(*(RooAbsArg*)RooFit::RooConst(1).clone("1"));
-      cache->_normList.emplace_back(compTermNorm.snapshot(false));
+      cache->_normList.emplace_back(std::make_unique<RooArgSet>());
+      compTermNorm.snapshot(*cache->_normList.back(), false);
     }
   }
 

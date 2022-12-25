@@ -144,7 +144,8 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
 
 
   // Clone the index category
-  _idxCatSet = (RooArgSet*) RooArgSet(model._indexCat.arg()).snapshot(true) ;
+  _idxCatSet = new RooArgSet;
+  RooArgSet(model._indexCat.arg()).snapshot(*_idxCatSet, true);
   if (!_idxCatSet) {
     oocoutE(_pdf,Generation) << "RooSimGenContext::RooSimGenContext(" << GetName() << ") Couldn't deep-clone index category, abort," << endl ;
     throw std::string("RooSimGenContext::RooSimGenContext() Couldn't deep-clone index category, abort") ;

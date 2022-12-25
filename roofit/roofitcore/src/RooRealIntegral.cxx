@@ -746,7 +746,10 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _rangeName(other._rangeName),
   _cacheNum(false)
 {
- _funcNormSet.reset(other._funcNormSet ? static_cast<RooArgSet*>(other._funcNormSet->snapshot(false)) : nullptr);
+ if(other._funcNormSet) {
+   _funcNormSet = std::make_unique<RooArgSet>();
+   other._funcNormSet->snapshot(*_funcNormSet, false);
+ }
 
  for (const auto arg : other._facList) {
    RooAbsArg* argClone = (RooAbsArg*) arg->Clone() ;
