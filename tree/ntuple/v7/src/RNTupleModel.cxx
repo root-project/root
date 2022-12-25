@@ -25,6 +25,102 @@
 #include <typeinfo>
 #include <utility>
 
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const Detail::RFieldBase *target,
+                                                                       const FieldMap_t &fieldMap)
+{
+   auto source = fieldMap.at(target);
+   if (typeid(*target) != typeid(*source))
+      return R__FAIL("field mapping type mismatch: " + source->GetName() + " --> " + target->GetName());
+
+   // We support projections only across records and collections. In the following, we check that the projected
+   // field is on the same path of collection fields in the field tree than the source field.
+
+   // Finds the first non-record parent field of the input field
+   auto fnBreakPoint = [](const Detail::RFieldBase *f) -> const Detail::RFieldBase * {
+      auto parent = f->GetParent();
+      while (parent) {
+         if (parent->GetStructure() != ENTupleStructure::kRecord)
+            return parent;
+         parent = parent->GetParent();
+      }
+      // We reached the zero field
+      return nullptr;
+   };
+
+   // If source or target has a variant or reference as a parent, error out
+   auto *sourceBreakPoint = fnBreakPoint(source);
+   if (sourceBreakPoint && sourceBreakPoint->GetStructure() != ENTupleStructure::kCollection)
+      return R__FAIL("unsupported field mapping (source structure)");
+   auto *targetBreakPoint = fnBreakPoint(target);
+   if (targetBreakPoint && sourceBreakPoint->GetStructure() != ENTupleStructure::kCollection)
+      return R__FAIL("unsupported field mapping (target structure)");
+
+   if (!sourceBreakPoint && !targetBreakPoint) {
+      // Source and target have no collections as parent
+      return RResult<void>::Success();
+   }
+   if (sourceBreakPoint && targetBreakPoint) {
+      if (sourceBreakPoint == targetBreakPoint) {
+         // Source and target are children of the same collection
+         return RResult<void>::Success();
+      }
+      if ((fieldMap.count(targetBreakPoint) > 0) && fieldMap.at(targetBreakPoint) == sourceBreakPoint) {
+         // The parent collection of parent is mapped to the parent collection of the source
+         return RResult<void>::Success();
+      }
+      // Source and target are children of different collections
+      return R__FAIL("field mapping structure mismatch: " + source->GetName() + " --> " + target->GetName());
+   }
+
+   // Either source or target have no collection as a parent, but the other one has; that doesn't fit
+   return R__FAIL("field mapping structure mismatch: " + source->GetName() + " --> " + target->GetName());
+}
+
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleModel::RProjectedFields::Add(std::unique_ptr<Detail::RFieldBase> field,
+                                                        const FieldMap_t &fieldMap)
+{
+   auto result = EnsureValidMapping(field.get(), fieldMap);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   for (const auto &f : *field) {
+      result = EnsureValidMapping(&f, fieldMap);
+      if (!result)
+         return R__FORWARD_ERROR(result);
+   }
+
+   fFieldMap.insert(fieldMap.begin(), fieldMap.end());
+   fFieldZero->Attach(std::move(field));
+   return RResult<void>::Success();
+}
+
+const ROOT::Experimental::Detail::RFieldBase *
+ROOT::Experimental::RNTupleModel::RProjectedFields::GetSourceField(const Detail::RFieldBase *target) const
+{
+   if (fFieldMap.count(target) > 0)
+      return fFieldMap.at(target);
+   return nullptr;
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleModel::RProjectedFields>
+ROOT::Experimental::RNTupleModel::RProjectedFields::Clone(const RNTupleModel *newModel) const
+{
+   auto cloneFieldZero = std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(fFieldZero->Clone("").release()));
+   auto clone = std::unique_ptr<RProjectedFields>(new RProjectedFields(std::move(cloneFieldZero)));
+   clone->fModel = newModel;
+   // TODO(jblomer): improve quadratic search to re-wire the field mappings given the new model and the cloned
+   // projected fields. Not too critical as we generally expect a limited number of projected fields
+   for (const auto &[k, v] : fFieldMap) {
+      for (const auto &f : *clone->GetFieldZero()) {
+         if (f.GetQualifiedFieldName() == k->GetQualifiedFieldName()) {
+            clone->fFieldMap[&f] = clone->fModel->GetField(v->GetQualifiedFieldName());
+            break;
+         }
+      }
+   }
+   return clone;
+}
 
 void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fieldName)
 {
@@ -50,19 +146,16 @@ void ROOT::Experimental::RNTupleModel::EnsureNotBare() const
       throw RException(R__FAIL("invalid attempt to use default entry of bare model"));
 }
 
-void ROOT::Experimental::RNTupleModel::EnsureValidFieldMapping(const Detail::RFieldBase &fieldTarget,
-                                                               const std::string &source) const
-{
-   auto fieldSource = GetField(source);
-   if (!fieldSource)
-      throw RException(R__FAIL("unknown source field for mapping: " + source));
-   if (typeid(fieldTarget) != typeid(*fieldSource))
-      throw RException(R__FAIL("field mapping type mismatch: " + source + " --> " + fieldTarget.GetName()));
-}
-
 ROOT::Experimental::RNTupleModel::RNTupleModel()
   : fFieldZero(std::make_unique<RFieldZero>())
 {}
+
+std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::CreateBare()
+{
+   auto model = std::unique_ptr<RNTupleModel>(new RNTupleModel());
+   model->fProjectedFields = std::make_unique<RProjectedFields>(model.get());
+   return model;
+}
 
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::Create()
 {
@@ -79,6 +172,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    cloneModel->fFieldZero = std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(cloneFieldZero.release()));
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
+   cloneModel->fProjectedFields = fProjectedFields->Clone(cloneModel.get());
    if (fDefaultEntry) {
       cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(fModelId));
       for (const auto &f : cloneModel->fFieldZero->GetSubFields()) {
@@ -102,20 +196,31 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBa
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<Detail::RFieldBase> field, FieldMapper_t mapping)
+ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<Detail::RFieldBase> field,
+                                                    std::function<std::string(const std::string &)> mapping)
 {
    EnsureNotFrozen();
    if (!field)
       throw RException(R__FAIL("null field"));
 
-   printf("MAPPING %s\n", field->GetName().c_str());
-   mapping(*field);
+   RProjectedFields::FieldMap_t fieldMap;
+   auto sourceField = GetField(mapping(field->GetName()));
+   if (!sourceField)
+      return R__FAIL("no such field: " + mapping(field->GetName()));
+   fieldMap[field.get()] = sourceField;
    for (const auto &subField : *field) {
-      printf("MAPPING %s\n", subField.GetName().c_str());
-      auto mappedField = mapping(subField);
+      sourceField = GetField(mapping(subField.GetQualifiedFieldName()));
+      if (!sourceField)
+         return R__FAIL("no such field: " + mapping(field->GetName()));
+      fieldMap[&subField] = sourceField;
    }
 
    EnsureValidFieldName(field->GetName());
+   auto result = fProjectedFields->Add(std::move(field), fieldMap);
+   if (!result) {
+      fFieldNames.erase(field->GetName());
+      return R__FORWARD_ERROR(result);
+   }
    return RResult<void>::Success();
 }
 
