@@ -39,6 +39,6 @@ private:
    RooArgSet _vars;               ///< Vars to generate
    double _maxEff;                 ///< Maximum of efficiency in vars
 
-   ClassDefOverride(RooEffGenContext, 1) // Context for generating a dataset from a PDF
+   ClassDefOverride(RooEffGenContext, 0); // Context for generating a dataset from a PDF
 };
 #endif
