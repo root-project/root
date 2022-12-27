@@ -1,3 +1,5 @@
+#include "classes.h"
+
 #include "memory"
 #include "TFile.h"
 #include "TH1F.h"
