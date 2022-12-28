@@ -30,8 +30,12 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const Det
                                                                        const FieldMap_t &fieldMap)
 {
    auto source = fieldMap.at(target);
-   if (typeid(*target) != typeid(*source))
-      return R__FAIL("field mapping type mismatch: " + source->GetName() + " --> " + target->GetName());
+   if (source->GetStructure() != target->GetStructure())
+      return R__FAIL("field mapping structural mismatch: " + source->GetName() + " --> " + target->GetName());
+   if (target->GetStructure() == ENTupleStructure::kLeaf) {
+      if (typeid(*target) != typeid(*source))
+         return R__FAIL("field mapping type mismatch: " + source->GetName() + " --> " + target->GetName());
+   }
 
    // We support projections only across records and collections. In the following, we check that the projected
    // field is on the same path of collection fields in the field tree than the source field.
@@ -201,24 +205,25 @@ ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<Detail::RFie
 {
    EnsureNotFrozen();
    if (!field)
-      throw RException(R__FAIL("null field"));
+      return R__FAIL("null field");
+   auto fieldName = field->GetName();
 
    RProjectedFields::FieldMap_t fieldMap;
-   auto sourceField = GetField(mapping(field->GetName()));
+   auto sourceField = GetField(mapping(fieldName));
    if (!sourceField)
-      return R__FAIL("no such field: " + mapping(field->GetName()));
+      return R__FAIL("no such field: " + mapping(fieldName));
    fieldMap[field.get()] = sourceField;
    for (const auto &subField : *field) {
       sourceField = GetField(mapping(subField.GetQualifiedFieldName()));
       if (!sourceField)
-         return R__FAIL("no such field: " + mapping(field->GetName()));
+         return R__FAIL("no such field: " + mapping(fieldName));
       fieldMap[&subField] = sourceField;
    }
 
-   EnsureValidFieldName(field->GetName());
+   EnsureValidFieldName(fieldName);
    auto result = fProjectedFields->Add(std::move(field), fieldMap);
    if (!result) {
-      fFieldNames.erase(field->GetName());
+      fFieldNames.erase(fieldName);
       return R__FORWARD_ERROR(result);
    }
    return RResult<void>::Success();
