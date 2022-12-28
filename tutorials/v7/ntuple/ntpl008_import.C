@@ -19,6 +19,7 @@
 R__LOAD_LIBRARY(ROOTNTupleUtil)
 
 #include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RNTupleImporter.hxx>
 
 #include <TFile.h>
@@ -60,4 +61,7 @@ void ntpl008_import()
    auto ntpl = file->Get<RNTuple>("Events");
    auto reader = RNTupleReader::Open(ntpl);
    reader->PrintInfo();
+
+   auto df = ROOT::RDF::Experimental::FromRNTuple("Events", kNTupleFileName);
+   df.Histo1D({"Jet_pt", "Jet_pt", 100, 0, 0}, "Jet_pt")->DrawCopy();
 }
