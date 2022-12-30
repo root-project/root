@@ -20,6 +20,7 @@
 #include <RooWorkspace.h>
 #include <RooAbsPdf.h>
 #include <RooDataSet.h>
+#include <RooHelpers.h>
 #include <RooMinimizer.h>
 #include <RooFitResult.h>
 #include <RooProdPdf.h>
@@ -105,7 +106,7 @@ void count_NLL_components(RooAbsReal *nll)
 
 TEST_P(RooRealL, getValRooAddition)
 {
-   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
 
    RooRandom::randomGenerator()->SetSeed(std::get<0>(GetParam()));
 
@@ -134,7 +135,7 @@ TEST_P(RooRealL, getValRooConstraintSumAddition)
    // modified from
    // https://github.com/roofit-dev/rootbench/blob/43d12f33e8dac7af7d587b53a2804ddf6717e92f/root/roofit/roofit/RooFitASUM.cxx#L417
 
-   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
 
    RooWorkspace ws;
    ws.factory("Polynomial::p0(x[0, 10000])");
@@ -235,7 +236,7 @@ TEST_P(RealLVsMPFE, getVal)
 {
    // Compare our MP NLL to actual RooRealMPFE results using the same strategies.
 
-   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
 
    // parameters
    std::size_t seed = std::get<0>(GetParam());
@@ -266,7 +267,7 @@ TEST_P(RealLVsMPFE, minimize)
 {
    // do a minimization (e.g. like in GradMinimizer_Gaussian1D test)
 
-   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::ERROR);
 
    // parameters
    std::size_t seed = std::get<0>(GetParam());

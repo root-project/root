@@ -7,6 +7,7 @@
 #include <RooDataSet.h>
 #include <RooFitResult.h>
 #include <RooGenericPdf.h>
+#include <RooHelpers.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooProdPdf.h>
@@ -25,7 +26,7 @@ TEST(RooSimultaneous, SingleChannelCrossCheck)
    using namespace RooFit;
 
    // silence log output
-   RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    RooWorkspace ws;
    ws.factory("Gaussian::gauss1(x[0, 10], mean[1., 0., 10.], width[1, 0.1, 10])");
