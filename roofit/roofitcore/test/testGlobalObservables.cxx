@@ -4,7 +4,7 @@
 #include <RooAbsPdf.h>
 #include <RooDataSet.h>
 #include <RooFitResult.h>
-#include <RooMsgService.h>
+#include <RooHelpers.h>
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
 
@@ -42,7 +42,7 @@ public:
    void SetUp() override
    {
       // silence log output
-      RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
+      RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
       // We use the global observable also in the model for the event
       // observables. It's unusual, but let's better do this to also cover the

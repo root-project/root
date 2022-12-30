@@ -9,7 +9,7 @@
 #include <RooStats/HistFactory/Measurement.h>
 #include <RooStats/HistFactory/MakeModelAndMeasurementsFast.h>
 
-#include <RooMsgService.h>
+#include <RooHelpers.h>
 
 #include <TROOT.h>
 
@@ -73,8 +73,7 @@ measurement(std::string const &inputFileName = "test_hs3_histfactory_json_input.
 
 TEST(TestHS3HistFactoryJSON, Create)
 {
-   auto &msg = RooMsgService::instance();
-   msg.setGlobalKillBelow(RooFit::WARNING);
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    toJSON(*measurement(), "hf.json");
 }

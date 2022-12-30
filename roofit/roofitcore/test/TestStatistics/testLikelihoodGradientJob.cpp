@@ -18,6 +18,7 @@
 #include "RooWorkspace.h"
 #include "RooDataHist.h" // complete type in Binned test
 #include "RooCategory.h" // complete type in MultiBinnedConstraint test
+#include "RooHelpers.h"
 #include "RooMinimizer.h"
 #include "RooFitResult.h"
 #include "RooFit/TestStatistics/LikelihoodWrapper.h"
@@ -62,9 +63,15 @@ class Environment : public testing::Environment {
 public:
    void SetUp() override
    {
-      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::ERROR);
       ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
    }
+   void TearDown() override
+   {
+      _changeMsgLvl.reset();
+   }
+private:
+   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
 
 // Previously, we just called AddGlobalTestEnvironment in global namespace, but this caused either a warning about an
