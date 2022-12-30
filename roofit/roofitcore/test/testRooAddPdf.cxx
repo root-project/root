@@ -28,8 +28,7 @@
 /// is taken from the GitHub issue thread, with the plotting part removed.
 TEST(RooAddPdf, TestSPlot)
 {
-   auto &msg = RooMsgService::instance();
-   msg.setGlobalKillBelow(RooFit::WARNING);
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    double lowRange = 0.;
    double highRange = 200.;
@@ -121,8 +120,7 @@ TEST(RooAddPdf, TestSPlot)
 /// issues of RooAddPdf integrals.
 TEST(RooAddPdf, Issue10988)
 {
-   auto &msg = RooMsgService::instance();
-   msg.setGlobalKillBelow(RooFit::WARNING);
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    using namespace RooFit;
 

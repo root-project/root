@@ -277,8 +277,7 @@ TEST(RooDataSet, CrashAfterImportFromTree)
 // root-project/root#6951: Broken weights after reducing RooDataSet created with RooAbsPdf::generate()
 TEST(RooDataSet, ReduceWithCompositeDataStore)
 {
-   auto &msg = RooMsgService::instance();
-   msg.setGlobalKillBelow(RooFit::WARNING);
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    RooWorkspace ws{};
    ws.factory("Gaussian::gauss(x[-10,10], mean[3,-10,10], sig    ma[1,0.1,10])");
