@@ -33,9 +33,15 @@ class Environment : public testing::Environment {
 public:
    void SetUp() override
    {
-      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::ERROR);
       ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
    }
+   void TearDown() override
+   {
+      _changeMsgLvl.reset();
+   }
+private:
+   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
 
 int main(int argc, char **argv)

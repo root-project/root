@@ -30,8 +30,7 @@ TEST(RooAbsPdf, AsymptoticallyCorrectErrors)
 {
    using namespace RooFit;
 
-   auto &msg = RooMsgService::instance();
-   msg.setGlobalKillBelow(RooFit::WARNING);
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    RooRealVar x("x", "xxx", 0, 0, 10);
    RooRealVar a("a", "aaa", 2, 0, 10);
@@ -146,8 +145,7 @@ TEST(RooAbsPdf, ConditionalFitBatchMode)
 TEST(RooAbsPdf, MultiRangeFit)
 {
    using namespace RooFit;
-   auto &msg = RooMsgService::instance();
-   msg.setGlobalKillBelow(RooFit::WARNING);
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    RooWorkspace ws;
 
@@ -205,8 +203,7 @@ TEST(RooAbsPdf, MultiRangeFit)
 TEST(RooAbsPdf, MultiRangeFit2D)
 {
    using namespace RooFit;
-   auto &msg = RooMsgService::instance();
-   msg.setGlobalKillBelow(RooFit::WARNING);
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    // model taken from the rf312_multirangefit.C tutorial
    RooWorkspace ws;

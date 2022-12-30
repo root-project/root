@@ -36,7 +36,7 @@ namespace RooHelpers {
 /// Can also temporarily activate / deactivate message topics.
 /// Use as
 /// ~~~{.cpp}
-/// RooHelpers::LocalChangeMessageLevel changeMsgLvl(RooFit::WARNING);
+/// RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 /// [ statements that normally generate a lot of output ]
 /// ~~~
 class LocalChangeMsgLevel {

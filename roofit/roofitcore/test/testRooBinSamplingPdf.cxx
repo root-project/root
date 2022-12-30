@@ -8,7 +8,7 @@
 #include <RooDataSet.h>
 #include <RooDataHist.h>
 #include <RooRealVar.h>
-#include <RooMsgService.h>
+#include <RooHelpers.h>
 
 #include <gtest/gtest.h>
 
@@ -20,8 +20,7 @@ TEST(RooBinSamplingPdf, LinearPdfCrossCheck)
 {
    using namespace RooFit;
 
-   auto& msg = RooMsgService::instance();
-   msg.setGlobalKillBelow(RooFit::WARNING);
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    RooRandom::randomGenerator()->SetSeed(1337ul);
 
@@ -50,8 +49,7 @@ TEST(RooBinSamplingPdf, LinearPdfSubRangeCrossCheck)
 {
    using namespace RooFit;
 
-   auto& msg = RooMsgService::instance();
-   msg.setGlobalKillBelow(RooFit::WARNING);
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    RooRandom::randomGenerator()->SetSeed(1337ul);
 

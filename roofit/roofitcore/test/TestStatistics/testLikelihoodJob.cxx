@@ -45,9 +45,15 @@ class Environment : public testing::Environment {
 public:
    void SetUp() override
    {
-      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::ERROR);
       RooFit::MultiProcess::Config::setDefaultNWorkers(2);
    }
+   void TearDown() override
+   {
+      _changeMsgLvl.reset();
+   }
+private:
+   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
 
 // Previously, we just called AddGlobalTestEnvironment in global namespace, but this caused either a warning about an
