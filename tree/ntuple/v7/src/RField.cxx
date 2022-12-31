@@ -223,6 +223,8 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
 
    if (normalizedType == "ROOT::Experimental::ClusterSize_t") {
       result = std::make_unique<RField<ClusterSize_t>>(fieldName);
+   } else if (normalizedType == "ROOT::Experimental::RNTupleCardinality") {
+      result = std::make_unique<RField<RNTupleCardinality>>(fieldName);
    } else if (normalizedType == "bool") {
       result = std::make_unique<RField<bool>>(fieldName);
    } else if (normalizedType == "char") {
@@ -544,6 +546,24 @@ void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::GenerateColu
 void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitClusterSizeField(*this);
+}
+
+//------------------------------------------------------------------------------
+
+void ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality>::GenerateColumnsImpl(
+   const RNTupleDescriptor &desc)
+{
+   EnsureColumnType({EColumnType::kIndex}, 0, desc);
+   RColumnModel model(EColumnType::kIndex, true /* isSorted*/);
+   fColumns.emplace_back(std::unique_ptr<ROOT::Experimental::Detail::RColumn>(
+      ROOT::Experimental::Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(model, 0)));
+   fPrincipalColumn = fColumns[0].get();
+}
+
+void ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality>::AcceptVisitor(
+   Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitCardinalityField(*this);
 }
 
 //------------------------------------------------------------------------------
