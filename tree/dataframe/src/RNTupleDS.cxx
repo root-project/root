@@ -49,6 +49,70 @@ namespace ROOT {
 namespace Experimental {
 namespace Internal {
 
+/// An artificial field that transforms an RNTuple column that contains the offset of collections into
+/// collection sizes. It is used to provide the "number of" RDF columns for collections, e.g.
+/// `R_rdf_sizeof_jets` for a collection named `jets`.
+///
+/// This field owns the collection offset field but instead of exposing the collection offsets it exposes
+/// the collection sizes (offset(N+1) - offset(N)).  For the time being, we offer this functionality only in RDataFrame.
+/// TODO(jblomer): consider providing a general set of useful virtual fields as part of RNTuple.
+class RRDFCardinalityField : public ROOT::Experimental::Detail::RFieldBase {
+protected:
+   std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> CloneImpl(std::string_view /* newName */) const final
+   {
+      return std::make_unique<RRDFCardinalityField>();
+   }
+
+public:
+   static std::string TypeName() { return "std::size_t"; }
+   RRDFCardinalityField()
+      : ROOT::Experimental::Detail::RFieldBase("", TypeName(), ENTupleStructure::kLeaf, false /* isSimple */) {}
+   RRDFCardinalityField(RRDFCardinalityField &&other) = default;
+   RRDFCardinalityField &operator=(RRDFCardinalityField &&other) = default;
+   ~RRDFCardinalityField() = default;
+
+   // Field is only used for reading
+   void GenerateColumnsImpl() final { assert(false && "Cardinality fields must only be used for reading"); }
+
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final
+   {
+      RColumnModel model(EColumnType::kIndex, true /* isSorted*/);
+      fColumns.emplace_back(std::unique_ptr<ROOT::Experimental::Detail::RColumn>(
+         ROOT::Experimental::Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(model, 0)));
+      fPrincipalColumn = fColumns[0].get();
+   }
+
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final
+   {
+      return ROOT::Experimental::Detail::RFieldValue(this, static_cast<std::size_t *>(where));
+   }
+   ROOT::Experimental::Detail::RFieldValue CaptureValue(void *where) final
+   {
+      return ROOT::Experimental::Detail::RFieldValue(true /* captureFlag */, this, where);
+   }
+   size_t GetValueSize() const final { return sizeof(std::size_t); }
+
+   /// Get the number of elements of the collection identified by globalIndex
+   void
+   ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, ROOT::Experimental::Detail::RFieldValue *value) final
+   {
+      RClusterIndex collectionStart;
+      ClusterSize_t size;
+      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
+      *value->Get<std::size_t>() = size;
+   }
+
+   /// Get the number of elements of the collection identified by clusterIndex
+   void ReadInClusterImpl(const ROOT::Experimental::RClusterIndex &clusterIndex,
+                          ROOT::Experimental::Detail::RFieldValue *value) final
+   {
+      RClusterIndex collectionStart;
+      ClusterSize_t size;
+      fPrincipalColumn->GetCollectionInfo(clusterIndex, &collectionStart, &size);
+      *value->Get<std::size_t>() = size;
+   }
+};
+
 /// Every RDF column is represented by exactly one RNTuple field
 class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
@@ -139,7 +203,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
 
       if (fieldDesc.GetTypeName().empty()) {
          // Anonymous collection with one or several sub fields
-         auto cardinalityField = std::make_unique<ROOT::Experimental::RField<RNTupleCardinality>>("");
+         auto cardinalityField = std::make_unique<ROOT::Experimental::Internal::RRDFCardinalityField>();
          cardinalityField->SetOnDiskId(fieldId);
          fColumnNames.emplace_back("R_rdf_sizeof_" + std::string(colName));
          fColumnTypes.emplace_back(cardinalityField->GetType());
@@ -176,7 +240,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    std::unique_ptr<Detail::RFieldBase> cardinalityField;
    // Collections get the additional "number of" RDF column (e.g. "R_rdf_sizeof_tracks")
    if (!skeinIDs.empty()) {
-      cardinalityField = std::make_unique<ROOT::Experimental::RField<RNTupleCardinality>>("");
+      cardinalityField = std::make_unique<ROOT::Experimental::Internal::RRDFCardinalityField>();
       cardinalityField->SetOnDiskId(skeinIDs.back());
    }
 
