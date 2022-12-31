@@ -29,9 +29,13 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const Det
                                                                        const FieldMap_t &fieldMap)
 {
    auto source = fieldMap.at(target);
-   if (source->GetStructure() != target->GetStructure())
+   const bool hasCompatibleStructure =
+      (source->GetStructure() == target->GetStructure()) ||
+      ((source->GetStructure() == ENTupleStructure::kCollection) &&
+       (typeid(*target) == typeid(ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality>)));
+   if (!hasCompatibleStructure)
       return R__FAIL("field mapping structural mismatch: " + source->GetName() + " --> " + target->GetName());
-   if (target->GetStructure() == ENTupleStructure::kLeaf) {
+   if (source->GetStructure() == ENTupleStructure::kLeaf) {
       if (target->GetType() != source->GetType())
          return R__FAIL("field mapping type mismatch: " + source->GetName() + " --> " + target->GetName());
    }
