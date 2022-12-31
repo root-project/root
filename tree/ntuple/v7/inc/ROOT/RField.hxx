@@ -900,6 +900,64 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
+/// An artificial field that transforms an RNTuple column that contains the offset of collections into
+/// collection sizes. It is only used for reading, e.g. as projected field or as an artificial field that provides the
+/// "number of" RDF columns for collections (e.g. `R_rdf_sizeof_jets` for a collection named `jets`).
+template <>
+class RField<RNTupleCardinality> : public Detail::RFieldBase {
+protected:
+   std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      return std::make_unique<RField>(newName);
+   }
+
+public:
+   static std::string TypeName() { return "ROOT::Experimental::RNTupleCardinality"; }
+   explicit RField(std::string_view name)
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
+   {
+   }
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() = default;
+
+   // Field is only used for reading
+   void GenerateColumnsImpl() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final;
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT &&...args)
+   {
+      return Detail::RFieldValue(this, static_cast<RNTupleCardinality *>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final { return GenerateValue(where, 0); }
+   Detail::RFieldValue CaptureValue(void *where) override
+   {
+      return Detail::RFieldValue(true /* captureFlag */, this, where);
+   }
+   size_t GetValueSize() const final { return sizeof(RNTupleCardinality); }
+
+   /// Get the number of elements of the collection identified by globalIndex
+   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final
+   {
+      RClusterIndex collectionStart;
+      ClusterSize_t size;
+      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
+      *value->Get<RNTupleCardinality>() = size;
+   }
+
+   /// Get the number of elements of the collection identified by clusterIndex
+   void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final
+   {
+      RClusterIndex collectionStart;
+      ClusterSize_t size;
+      fPrincipalColumn->GetCollectionInfo(clusterIndex, &collectionStart, &size);
+      *value->Get<RNTupleCardinality>() = size;
+   }
+
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
 
 template <>
 class RField<bool> : public Detail::RFieldBase {
