@@ -162,6 +162,10 @@ class RFieldProvider : public RProvider {
       void VisitUInt32Field(const RField<std::uint32_t> &field) final { FillHistogram(field); }
       void VisitUInt64Field(const RField<std::uint64_t> &field) final { FillHistogram(field); }
       void VisitUInt8Field(const RField<std::uint8_t> &field) final { FillHistogram(field); }
+      void VisitCardinalityField(const RField<ROOT::Experimental::RNTupleCardinality> &field) final
+      {
+         FillHistogram(field);
+      }
    }; // class RDrawVisitor
 
 public:
