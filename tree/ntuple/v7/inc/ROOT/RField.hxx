@@ -912,7 +912,7 @@ protected:
    }
 
 public:
-   static std::string TypeName() { return "ROOT::Experimental::RNTupleCardinality"; }
+   static std::string TypeName() { return "std::size_t"; }
    explicit RField(std::string_view name)
       : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
    {
@@ -929,14 +929,14 @@ public:
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT &&...args)
    {
-      return Detail::RFieldValue(this, static_cast<RNTupleCardinality *>(where), std::forward<ArgsT>(args)...);
+      return Detail::RFieldValue(this, static_cast<std::size_t *>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final { return GenerateValue(where, 0); }
    Detail::RFieldValue CaptureValue(void *where) override
    {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
-   size_t GetValueSize() const final { return sizeof(RNTupleCardinality); }
+   size_t GetValueSize() const final { return sizeof(std::size_t); }
 
    /// Get the number of elements of the collection identified by globalIndex
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final
@@ -944,7 +944,7 @@ public:
       RClusterIndex collectionStart;
       ClusterSize_t size;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
-      *value->Get<RNTupleCardinality>() = size;
+      *value->Get<std::size_t>() = size;
    }
 
    /// Get the number of elements of the collection identified by clusterIndex
@@ -953,7 +953,7 @@ public:
       RClusterIndex collectionStart;
       ClusterSize_t size;
       fPrincipalColumn->GetCollectionInfo(clusterIndex, &collectionStart, &size);
-      *value->Get<RNTupleCardinality>() = size;
+      *value->Get<std::size_t>() = size;
    }
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
