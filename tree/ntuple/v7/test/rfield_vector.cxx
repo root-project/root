@@ -83,12 +83,21 @@ TEST(RNTuple, InsideCollection)
    field->SetOnDiskId(idKlassVec);
    field->ConnectPageSource(*source);
 
+   auto fieldCardinality =
+      std::unique_ptr<RFieldBase>(RFieldBase::Create("", "ROOT::Experimental::RNTupleCardinality").Unwrap());
+   fieldCardinality->SetOnDiskId(idKlassVec);
+   fieldCardinality->ConnectPageSource(*source);
+
    auto value = field->GenerateValue();
    field->Read(0, &value);
    auto aVec = value.Get<std::vector<float>>();
    EXPECT_EQ(1U, aVec->size());
    EXPECT_EQ(42.0, (*aVec)[0]);
    field->DestroyValue(value);
+
+   auto valueCardinality = fieldCardinality->GenerateValue();
+   fieldCardinality->Read(0, &valueCardinality);
+   EXPECT_EQ(1U, *valueCardinality.Get<std::size_t>());
 
    // TODO: test reading of "klassVec.v1"
 }
