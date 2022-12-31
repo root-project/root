@@ -75,13 +75,12 @@ Most RNTuple fields have a type identical to the corresponding TTree input branc
       _collection0 (untyped collection)
       |- float jet_pt
       |- float jet_eta
-      std::uint64_t njets (projected from _collection0 without subfields)
+      std::size_t (RNTupleCardinality) njets (projected from _collection0 without subfields)
       ROOT::RVec<float> jet_pt (projected from _collection0.jet_pt)
       ROOT::RVec<float> jet_eta (projected from _collection0.jet_eta)
     These projections are meta-data only operations and don't involve duplicating the data.
 
 Current limitations of the importer:
-  - Adding projected fields where necessary is pending the implementation of the core functionality in RNTuple
   - Importing collection proxies is untested
   - No support for trees containing TObject (or derived classes) or TClonesArray collections
   - Due to RNTuple currently storing data fully split, "don't split" markers are ignored

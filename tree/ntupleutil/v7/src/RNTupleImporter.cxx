@@ -160,8 +160,6 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
          c.fCountVal = std::make_unique<Int_t>(); // count leafs are integers
          // Casting to void * makes it work for both Int_t and UInt_t
          fSourceTree->SetBranchAddress(b->GetName(), static_cast<void *>(c.fCountVal.get()));
-         // We use the leaf pointer as a map key.  The array leafs return that leaf pointer from GetLeafCount(),
-         // so that they will be able to find the information to attach their fields to the collection model.
          fLeafCountCollections.emplace(firstLeaf->GetName(), std::move(c));
          continue;
       }
@@ -260,6 +258,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
    for (auto &p : fLeafCountCollections) {
       // We want to capture this variable, which is not possible with a
       // structured binding in C++17. Explicitly defining a variable works.
+      auto &countLeafName = p.first;
       auto &c = p.second;
       c.fCollectionModel->Freeze();
       c.fCollectionEntry = c.fCollectionModel->CreateBareEntry();
@@ -282,6 +281,10 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
                return c.fFieldName + "." + name;
          });
       }
+      // Add projected fields for count leaf
+      auto projectedField =
+         Detail::RFieldBase::Create(countLeafName, "ROOT::Experimental::RNTupleCardinality").Unwrap();
+      fModel->AddProjectedField(std::move(projectedField), [&c](const std::string &) { return c.fFieldName; });
       iLeafCountCollection++;
    }
 
