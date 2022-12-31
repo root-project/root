@@ -63,6 +63,22 @@ struct RClusterSize {
 using ClusterSize_t = RClusterSize;
 constexpr ClusterSize_t kInvalidClusterIndex(std::uint32_t(-1));
 
+/// Helper type to present an offset column as array of collection sizes. See RField<RNTupleCardinality> for details.
+struct RNTupleCardinality {
+   using ValueType = std::size_t;
+
+   RNTupleCardinality() : fValue(0) {}
+   explicit constexpr RNTupleCardinality(ValueType value) : fValue(value) {}
+   RNTupleCardinality &operator=(const ValueType value)
+   {
+      fValue = value;
+      return *this;
+   }
+   operator ValueType() const { return fValue; }
+
+   ValueType fValue;
+};
+
 /// Holds the index and the tag of a kSwitch column
 class RColumnSwitch {
 private:
