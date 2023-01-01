@@ -80,7 +80,7 @@ TEST(RooPolyFunc, TaylorExpansionClosure1D)
 {
    RooRealVar x("x", "x", 0., -10., 10.);
    auto polyfunc = makePolyFunc1D(x);
-   auto taylor = RooPolyFunc::taylorExpand("taylor", "taylor expansion", *polyfunc, RooArgSet{x}, 0.0, 2);
+   auto taylor = RooPolyFunc::taylorExpand("taylor", "taylor expansion", *polyfunc, {x}, 2);
    for (double theX : Doubles{0., 0.5, 1., 5., 10.}) {
       x = theX;
       // Taylor epansion of 2nd degree polynomial from RooPolyFunc
@@ -94,7 +94,7 @@ TEST(RooPolyFunc, TaylorExpansionClosure2D)
    RooRealVar x("x", "x", 0., -10., 10.);
    RooRealVar y("y", "y", 0., -10., 10.);
    auto polyfunc = makePolyFunc2D(x, y);
-   auto taylor = RooPolyFunc::taylorExpand("taylor", "taylor expansion", *polyfunc, RooArgSet{x, y}, 0.0, 2);
+   auto taylor = RooPolyFunc::taylorExpand("taylor", "taylor expansion", *polyfunc, {x, y}, 2);
    for (double theX : Doubles{0., 0.5, 1., 5., 10.}) {
       for (double theY : Doubles{0., 0.5, 1., 5., 10.}) {
          x = theX;
