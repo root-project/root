@@ -37,8 +37,8 @@ void rf710_roopoly()
    // C r e a t e   t a y l o r  e x p a n s i o n
    // ---------------------------------------------
    double x0 = 2.0;
-   auto taylor_o1 = RooPolyFunc::taylorExpand("taylor_o1", "taylor expansion order 1", f, RooArgSet(x), x0, 1);
-   auto taylor_o2 = RooPolyFunc::taylorExpand("taylor_o2", "taylor expansion order 2", f, RooArgSet(x), x0, 2);
+   auto taylor_o1 = RooPolyFunc::taylorExpand("taylor_o1", "taylor expansion order 1", f, {x}, 1, {x0});
+   auto taylor_o2 = RooPolyFunc::taylorExpand("taylor_o2", "taylor expansion order 2", f, {x}, 2, {x0});
 
    // Plot polynomial with first and second order taylor expansion overlaid
    auto frame = x.frame(Title("x^{4} - 5x^{3} + 5x^{2} + 5x - 6"));

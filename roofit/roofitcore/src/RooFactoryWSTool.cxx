@@ -2062,7 +2062,7 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
       throw string(
         Form("taylorexpand::%s, requires max. 6 arguments, has %d arguments", instName, (Int_t)pargv.size()));
 
-    auto taylor = RooPolyFunc::taylorExpand(instName, instName, func, observables, observablesValue, order, eps1, eps2);
+    auto taylor = RooPolyFunc::taylorExpand(instName, instName, func, observables, order, {observablesValue}, eps1, eps2);
     if (ft.ws().import(*taylor, Silence())) ft.logError();
 
    } else if (cl=="nconv") {
