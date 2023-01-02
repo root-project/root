@@ -690,12 +690,7 @@ namespace {
                             clingIncLoc.str().str(), MOverlay,
                             /*RegisterModuleMap=*/ true,
                             /*AllowModulemapOverride=*/true);
-#if __cplusplus >= 202000
-# define R__STDVERS "20"
-#else
-# define R__STDVERS ""
-#endif
-    maybeAppendOverlayEntry(stdIncLoc.str(), "std" R__STDVERS ".modulemap",
+    maybeAppendOverlayEntry(stdIncLoc.str(), "std.modulemap",
                             clingIncLoc.str().str(), MOverlay,
                             /*RegisterModuleMap=*/ true,
                             /*AllowModulemapOverride=*/true);
