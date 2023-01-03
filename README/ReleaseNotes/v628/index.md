@@ -12,20 +12,34 @@ For more information, see:
 
 The following people have contributed to this new version:
 
+ Rahul Balasubramanian, NIKHEF/ATLAS,\
  Bertrand Bellenot, CERN/SFT,\
  Jakob Blomer, CERN/SFT,\
+ Patrick Bos, Netherlands eScience Center,\
  Rene Brun, CERN/SFT,\
- Will Buttinger, RAL/Atlas,\
+ Carsten D. Burgard, TU Dortmund University/ATLAS,\
+ Will Buttinger, RAL/ATLAS,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
+ Michel De Cian, EPFL/LHCb,\
+ Mattias Ellert, Uppsala University,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
+ Konstantin Gizdov, University of Edinburgh/LHCb,\
+ Max Goblirsch, CERN/ATLAS,\
  Enrico Guiraud, CERN/SFT,\
+ Stephan Hageboeck, CERN/IT,\
+ Jonas Hahnfeld, CERN/SFT,\
+ Fernando Hueso-González, University of Valencia,\
+ Subham Jyoti, ITER Bhubaneswar,\
  Sergey Linev, GSI,\
  Javier Lopez-Gomez, CERN/SFT,\
+ Enrico Lusiani, INFN/CMS,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
+ Nicolas Morange, CNRS/ATLAS,\
  Axel Naumann, CERN/SFT,\
+ Hanna Olvhammar, CERN/SFT,\
  Vincenzo Eduardo Padulano, CERN/SFT and UPV,\
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
@@ -34,7 +48,8 @@ The following people have contributed to this new version:
  Garima Singh, Princeton/SFT,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
- Wouter Verkerke, NIKHEF/Atlas,\
+ Wouter Verkerke, NIKHEF/ATLAS,\
+ Zef Wolffs, NIKHEF/ATLAS,\
  Ivan Kabadzhov, CERN/SFT,\
  David Poulton, Wits/SFT
 
