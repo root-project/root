@@ -21,6 +21,18 @@
 #define R__CONSTEXPR_IF_CXX14
 #endif
 
+
+#ifndef R__INLINE_CXX20
+#if __cplusplus>=202002L
+#define R__INLINE_CXX20
+#include <span>
+#else
+// std::span should not be defined, so we inline std::ROOT_CXX20
+// which contains a span implementation
+#define R__INLINE_CXX20 inline
+#endif
+#endif
+
 // From https://github.com/rhysd/array_view/blob/master/include/array_view.hpp
 
 #include <cstddef>
@@ -144,7 +156,8 @@ using make_indices = typename make_indices_< Start, Last, Step >::type;
 
 namespace std {
 
-inline namespace __ROOT {
+R__INLINE_CXX20
+namespace __ROOT_CXX20 {
 
 // span {{{
 
@@ -465,7 +478,9 @@ bool operator_equal_impl(ArrayL const& lhs, size_t const lhs_size, ArrayR const&
 } // namespace ROOT
 
 namespace std {
-inline namespace __ROOT {
+
+R__INLINE_CXX20
+namespace __ROOT_CXX20 {
 
 template<class T1, class T2>
 inline constexpr
