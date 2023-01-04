@@ -251,7 +251,8 @@ Every field record frame of the list of fields has the following contents
 The field version and type version are used for schema evolution.
 
 If the flag 0x01 (_repetitive field_) is set, the field represents a fixed sized array.
-In this case, an additional 64bit integer specifies the size of the array.
+In this case, an additional 64bit integer specifies the size of the array. And
+one more (leaf) field description is expected to be found. 
 
 The block of integers is followed by a list of strings:
 
@@ -622,8 +623,12 @@ They are stored as two fields:
 
 #### std::array<T, N> and array type of the form T[N]
 
-Fixed-sized arrays are stored as single repetitive fields of type `T`.
-The array size `N` is stored in the field meta-data.
+Fixed-sized arrays are stored as single field of type `T`.
+The array size `N` is stored in the meta-data of the parent field.
+In other words, you should find two field descriptions for each `std::array<T, N>`:
+one has `flags == 0x0001` for reptition, purely for meta data purpose, the other one
+being a field corresponding to type `T` and column pointing to the second field.
+  
 Multi-dimensional arrays of the form `T[N][M]...` are currently not supported.
 
 #### std::variant<T1, T2, ..., Tn>
