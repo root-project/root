@@ -95,7 +95,6 @@ void RRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
    chain->ResetBit(kMustCleanup);
    chain->Add(fFileNameGlob.c_str());
    chain->GetEntry(firstEntry);
-   TString setBranches;
    for (auto i : ROOT::TSeqU(fListOfBranches.size())) {
       auto colName = fListOfBranches[i].c_str();
       auto &addr = fBranchAddresses[i][slot];
