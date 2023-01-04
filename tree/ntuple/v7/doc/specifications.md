@@ -627,7 +627,7 @@ Fixed-sized arrays are stored as single field of type `T`.
 The array size `N` is stored in the meta-data of the parent field.
 In other words, you should find two field descriptions for each `std::array<T, N>`:
 one has `flags == 0x0001` for reptition, purely for meta data purpose, the other one
-being a field corresponding to type `T` and column pointing to the second field.
+being a field corresponding to type `T` and column records only pointing to the second field.
   
 Multi-dimensional arrays of the form `T[N][M]...` are currently not supported.
 
