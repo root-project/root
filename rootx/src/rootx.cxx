@@ -311,7 +311,7 @@ int main(int argc, char **argv)
       if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2) ||
           !strncmp(argv[i], "--help", 6)) {
          PrintUsage();
-         return 1;
+         return 0;
       }
       if (!strcmp(argv[i], "-b"))         batch    = true;
       if (!strcmp(argv[i], "-l"))         gNoLogo  = true;
