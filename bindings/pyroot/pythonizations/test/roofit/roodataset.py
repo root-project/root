@@ -2,9 +2,6 @@ import unittest
 
 import ROOT
 
-import numpy as np
-
-
 class TestRooDataSet(unittest.TestCase):
     def test_createHistogram_decls(self):
         """RooDataSet::createHistogram overloads obtained with using decls."""
