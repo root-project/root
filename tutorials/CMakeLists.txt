@@ -804,6 +804,7 @@ if(ROOT_pyroot_FOUND)
   # and add it to the list "fixtureLists" below.
   file(GLOB requires_numpy   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       dataframe/df026_AsNumpyArrays.py
+      dataframe/df032_RDFFromNumpy.py
       fit/combinedFit.py
       fit/multifit.py
       roofit/rf409_NumPyPandasToRooFit.py)
