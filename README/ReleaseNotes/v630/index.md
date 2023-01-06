@@ -53,6 +53,38 @@ The following people have contributed to this new version:
 
 ## RooFit Libraries
 
+### Removal of the RooGenFunction and RooMultiGenFunction classes
+
+The `RooGenFunction` was only a lightweight adaptor that exports a RooAbsReal as a `ROOT::Math::IGenFunction`.
+The same can be easily achieved with the generic `ROOT::Math::Functor1D`, so in the spirit of not duplicating interfaces, the `RooGenFunction` is removed in this release.
+
+Here is an example that shows how to replace it in the unlikely case you were using it:
+
+```C++
+RooArgSet normSet{x}; // normalization set
+
+// Old way 1: create a RooGenFunction:
+RooGenFunction func1{pdf, x, {}, normSet};
+
+// Old way 2: use `RooAbsReal::iGenFunction()`:
+std::unique_ptr<ROOT::Math::IGenFunction> func2{
+    pdf.iGenFunction(x, normSet)
+};
+
+// How to do it now:
+RooFunctor functor{pdf, x, {}, normSet};
+ROOT::Math::Functor1D func3{functor};
+// Functor1D takes by reference, so the RooFunctor also needs to stay alive.
+```
+
+For the same reason, the `RooMultiGenFunction` class that implements a multidimensional `ROOT::Math::IMultiGenFunction` is removed too.
+It can easily be replaced by a `ROOT::Math::Functor`:
+
+```C++
+RooFunctor functor{pdf, observables, {}, normSet};
+ROOT::Math::Functor func4{functor, static_cast<unsigned int>(functor.nObs())};
+// Functor takes by reference, so the RooFunctor also needs to stay alive.
+```
 
 ## 2D Graphics Libraries
 

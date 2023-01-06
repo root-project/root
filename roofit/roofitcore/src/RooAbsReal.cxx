@@ -63,8 +63,6 @@
 #include "RooProfileLL.h"
 #include "RooFunctor.h"
 #include "RooDerivative.h"
-#include "RooGenFunction.h"
-#include "RooMultiGenFunction.h"
 #include "RooXYChi2Var.h"
 #include "RooMinimizer.h"
 #include "RooChi2Var.h"
@@ -4177,26 +4175,6 @@ double RooAbsReal::findRoot(RooRealVar& x, double xmin, double xmax, double yval
   RooBrentRootFinder(RooRealBinding(*this,x)).findRoot(result,xmin,xmax,yval) ;
   return result ;
 }
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooGenFunction* RooAbsReal::iGenFunction(RooRealVar& x, const RooArgSet& nset)
-{
-  return new RooGenFunction(*this,x,RooArgList(),nset.getSize()>0?nset:RooArgSet(x)) ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooMultiGenFunction* RooAbsReal::iGenFunction(const RooArgSet& observables, const RooArgSet& nset)
-{
-  return new RooMultiGenFunction(*this,observables,RooArgList(),nset.getSize()>0?nset:observables) ;
-}
-
 
 
 
