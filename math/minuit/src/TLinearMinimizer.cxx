@@ -143,7 +143,7 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfu
    assert(modfunc != 0);
 
    fDim = chi2func->NDim(); // number of parameters
-   fNFree = fDim;
+   fNFree = fDim;  // in case of no fixed parameters
    // get the basis functions (derivatives of the modelfunc)
    TObjArray flist(fDim);
    flist.SetOwner(kFALSE);  // we do not want to own the list - it will be owned by the TLinearFitter class
@@ -196,6 +196,8 @@ bool TLinearMinimizer::Minimize() {
    // solving the linear equation. Use  TVirtualFitter::Eval.
 
    if (fFitter == 0 || fObjFunc == 0) return false;
+
+   fNFree = fFitter->GetNumberFreeParameters();
 
    int iret = 0;
    if (!fRobust)
