@@ -35,8 +35,6 @@ class RooLinkedList ;
 class RooNumIntConfig ;
 class RooDataHist ;
 class RooFunctor ;
-class RooGenFunction ;
-class RooMultiGenFunction ;
 class RooFitResult ;
 class RooAbsMoment ;
 class RooDerivative ;
@@ -342,9 +340,6 @@ public:
   virtual bool isBinnedDistribution(const RooArgSet& /*obs*/) const { return false ; }
   virtual std::list<double>* binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const;
   virtual std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const;
-
-  RooGenFunction* iGenFunction(RooRealVar& x, const RooArgSet& nset=RooArgSet()) ;
-  RooMultiGenFunction* iGenFunction(const RooArgSet& observables, const RooArgSet& nset=RooArgSet()) ;
 
   RooFunctor* functor(const RooArgList& obs, const RooArgList& pars=RooArgList(), const RooArgSet& nset=RooArgSet()) const ;
   TF1* asTF(const RooArgList& obs, const RooArgList& pars=RooArgList(), const RooArgSet& nset=RooArgSet()) const ;
