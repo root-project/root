@@ -68,8 +68,8 @@ public:
    /// set the function to minimize
    void SetFunction(const ROOT::Math::IMultiGradFunction & func) override;
 
-   /// set free variable (dummy impl. )
-   bool SetVariable(unsigned int , const std::string & , double , double ) override { return false; }
+   /// set free variable (dummy impl. since there is no need to set variables in the Linear Fitter)
+   bool SetVariable(unsigned int , const std::string & , double , double ) override { return true; }
 
    /// set fixed variable (override if minimizer supports them )
    bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */) override;
