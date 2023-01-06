@@ -574,6 +574,10 @@ void REvePointSetProjected::UpdateProjection()
    Int_t n = ps.GetSize();
    Reset(n);
    fSize = n;
+
+   if (n == 0)
+     return;
+
    const Float_t *o = & ps.RefPoint(0).fX;
          Float_t *p = & fPoints[0].fX;
    for (Int_t i = 0; i < n; ++i, o+=3, p+=3)
