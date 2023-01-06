@@ -314,7 +314,7 @@ public:
    void              Reset(Option_t *option="");
    void              SaveContext();
    void              SetApplication(TApplication *app) { fApplication = app; }
-   /// Set the "Batch mode". "True" means the session is without graphics
+   /// Set the "Batch mode". "True" means the session is without interactive graphics
    void              SetBatch(Bool_t batch = kTRUE) { fIsWebDisplayBatch = fBatch = batch; }
    void              SetWebDisplay(const char *webdisplay = "");
    void              SetCutClassName(const char *name = "TCutG");
