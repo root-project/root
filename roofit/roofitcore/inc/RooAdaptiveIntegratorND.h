@@ -20,8 +20,14 @@
 #include "RooNumIntConfig.h"
 #include "TString.h"
 
-namespace ROOT { namespace Math { class AdaptiveIntegratorMultiDim ; } }
-class RooMultiGenFunction ;
+#include <Math/IFunctionfwd.h>
+
+namespace ROOT {
+namespace Math {
+class AdaptiveIntegratorMultiDim;
+}
+}
+class RooFunctor;
 
 class RooAdaptiveIntegratorND : public RooAbsIntegrator {
 public:
@@ -59,7 +65,8 @@ protected:
   Int_t    _nmax ;             ///< Max number of divisions
   Int_t    _nError ;           ///< Number of error occurrences
   Int_t    _nWarn ;            ///< Max number of warnings to be issued ;
-  RooMultiGenFunction* _func ; ///<! ROOT::Math multi-parameter function binding
+  std::unique_ptr<RooFunctor> _rooFunctor ; ///<! RooFunctor binding
+  std::unique_ptr<ROOT::Math::IMultiGenFunction> _func; ///<! ROOT::Math multi-parameter function binding
   ROOT::Math::AdaptiveIntegratorMultiDim* _integrator ;
   TString _intName ;           ///< Integrand name
 

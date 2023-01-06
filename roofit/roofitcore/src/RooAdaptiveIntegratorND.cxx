@@ -28,13 +28,14 @@ numerical integration algorithm.
 
 #include "TClass.h"
 #include "RooAdaptiveIntegratorND.h"
+#include "RooFunctor.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 #include "RooNumber.h"
 #include "RooMsgService.h"
 #include "RooNumIntFactory.h"
-#include "RooMultiGenFunction.h"
 #include "Math/AdaptiveIntegratorMultiDim.h"
+#include "Math/Functor.h"
 
 #include <assert.h>
 
@@ -70,7 +71,6 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND()
   _epsRel = 1e-7 ;
   _epsAbs = 1e-7 ;
   _nmax = 10000 ;
-  _func = 0 ;
   _integrator = 0 ;
   _nError = 0 ;
   _nWarn = 0 ;
@@ -89,7 +89,8 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, con
   RooAbsIntegrator(function)
 {
 
-  _func = new RooMultiGenFunction(function) ;
+  _rooFunctor = std::make_unique<RooFunctor>(function);
+  _func = std::make_unique<ROOT::Math::Functor>(*_rooFunctor, static_cast<unsigned int>(_rooFunctor->nObs()));
   _nWarn = static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxWarn")) ;
   switch (_func->NDim()) {
   case 1: throw string(Form("RooAdaptiveIntegratorND::ctor ERROR dimension of function must be at least 2")) ;
@@ -131,7 +132,6 @@ RooAbsIntegrator* RooAdaptiveIntegratorND::clone(const RooAbsFunc& function, con
 RooAdaptiveIntegratorND::~RooAdaptiveIntegratorND()
 {
   delete _integrator ;
-  delete _func ;
   if (_nError>_nWarn) {
     coutW(NumIntegration) << "RooAdaptiveIntegratorND::dtor(" << _intName
            << ") WARNING: Number of suppressed warningings about integral evaluations where target precision was not reached is " << _nError-_nWarn << endl ;
