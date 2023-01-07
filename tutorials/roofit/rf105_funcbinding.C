@@ -13,6 +13,9 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooFormulaVar.h"
+#include "RooGenericPdf.h"
+
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "RooPlot.h"
@@ -31,14 +34,14 @@ void rf105_funcbinding()
 
    // Bind one-dimensional TMath::Erf function as RooAbsReal function
    RooRealVar x("x", "x", -3, 3);
-   RooAbsReal *errorFunc = bindFunction("erf", TMath::Erf, x);
+   RooFormulaVar errorFunc{"erf", "TMath::Erf(x)", {x}};
 
    // Print erf definition
-   errorFunc->Print();
+   errorFunc.Print();
 
    // Plot erf on frame
    RooPlot *frame1 = x.frame(Title("TMath::Erf bound as RooFit function"));
-   errorFunc->plotOn(frame1);
+   errorFunc.plotOn(frame1);
 
    // B i n d   R O O T : : M a t h : : b e t a _ p d f   C   f u n c t i o n
    // -----------------------------------------------------------------------
@@ -47,19 +50,19 @@ void rf105_funcbinding()
    RooRealVar x2("x2", "x2", 0, 0.999);
    RooRealVar a("a", "a", 5, 0, 10);
    RooRealVar b("b", "b", 2, 0, 10);
-   RooAbsPdf *beta = bindPdf("beta", ROOT::Math::beta_pdf, x2, a, b);
+   RooGenericPdf beta{"beta", "ROOT::Math::beta_pdf(x2, a, b)", {x2, a, b}};
 
    // Perf beta definition
-   beta->Print();
+   beta.Print();
 
    // Generate some events and fit
-   std::unique_ptr<RooDataSet> data{beta->generate(x2, 10000)};
-   beta->fitTo(*data, PrintLevel(-1));
+   std::unique_ptr<RooDataSet> data{beta.generate(x2, 10000)};
+   beta.fitTo(*data, PrintLevel(-1));
 
    // Plot data and pdf on frame
    RooPlot *frame2 = x2.frame(Title("ROOT::Math::Beta bound as RooFit pdf"));
    data->plotOn(frame2);
-   beta->plotOn(frame2);
+   beta.plotOn(frame2);
 
    // B i n d   R O O T   T F 1   a s   R o o F i t   f u n c t i o n
    // ---------------------------------------------------------------

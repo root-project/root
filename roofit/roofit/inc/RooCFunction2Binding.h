@@ -21,6 +21,8 @@
 #include "TBuffer.h"
 #include "TString.h"
 
+#include <ROOT/RConfig.hxx> // R__DEPRECATED
+
 #include <string>
 #include <map>
 #include <vector>
@@ -34,15 +36,25 @@ typedef double (*CFUNCD2DI)(double,Int_t) ;
 typedef double (*CFUNCD2II)(Int_t,Int_t) ;
 
 
+R__DEPRECATED(6, 34, "Use RooFormulaVar instead.")
 RooAbsReal* bindFunction(const char* name,CFUNCD2DD func,RooAbsReal& x, RooAbsReal& y) ;
+R__DEPRECATED(6, 34, "Use RooFormulaVar instead.")
 RooAbsReal* bindFunction(const char* name,CFUNCD2ID func,RooAbsReal& x, RooAbsReal& y) ;
+R__DEPRECATED(6, 34, "Use RooFormulaVar instead.")
 RooAbsReal* bindFunction(const char* name,CFUNCD2UD func,RooAbsReal& x, RooAbsReal& y) ;
+R__DEPRECATED(6, 34, "Use RooFormulaVar instead.")
 RooAbsReal* bindFunction(const char* name,CFUNCD2DI func,RooAbsReal& x, RooAbsReal& y) ;
+R__DEPRECATED(6, 34, "Use RooFormulaVar instead.")
 RooAbsReal* bindFunction(const char* name,CFUNCD2II func,RooAbsReal& x, RooAbsReal& y) ;
+R__DEPRECATED(6, 34, "Use RooGenericPdf instead.")
 RooAbsPdf* bindPdf(const char* name,CFUNCD2DD func,RooAbsReal& x, RooAbsReal& y) ;
+R__DEPRECATED(6, 34, "Use RooGenericPdf instead.")
 RooAbsPdf* bindPdf(const char* name,CFUNCD2ID func,RooAbsReal& x, RooAbsReal& y) ;
+R__DEPRECATED(6, 34, "Use RooGenericPdf instead.")
 RooAbsPdf* bindPdf(const char* name,CFUNCD2UD func,RooAbsReal& x, RooAbsReal& y) ;
+R__DEPRECATED(6, 34, "Use RooGenericPdf instead.")
 RooAbsPdf* bindPdf(const char* name,CFUNCD2DI func,RooAbsReal& x, RooAbsReal& y) ;
+R__DEPRECATED(6, 34, "Use RooGenericPdf instead.")
 RooAbsPdf* bindPdf(const char* name,CFUNCD2II func,RooAbsReal& x, RooAbsReal& y) ;
 
 }

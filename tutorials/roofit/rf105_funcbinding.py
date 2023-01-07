@@ -19,7 +19,7 @@ import ROOT
 
 # Bind one-dimensional ROOT.TMath.Erf function as ROOT.RooAbsReal function
 x = ROOT.RooRealVar("x", "x", -3, 3)
-erf = ROOT.RooFit.bindFunction("erf", ROOT.TMath.Erf, x)
+erf = ROOT.RooFormulaVar("erf", "TMath::Erf(x)", [x])
 
 # Print erf definition
 erf.Print()
@@ -35,7 +35,7 @@ erf.plotOn(frame1)
 x2 = ROOT.RooRealVar("x2", "x2", 0, 0.999)
 a = ROOT.RooRealVar("a", "a", 5, 0, 10)
 b = ROOT.RooRealVar("b", "b", 2, 0, 10)
-beta = ROOT.RooFit.bindPdf("beta", ROOT.Math.beta_pdf, x2, a, b)
+beta = ROOT.RooGenericPdf("beta", "ROOT::Math::beta_pdf(x2, a, b)", [x2, a, b])
 
 # Perf beta definition
 beta.Print()

@@ -21,6 +21,8 @@
 #include "TBuffer.h"
 #include "TString.h"
 
+#include <ROOT/RConfig.hxx> // R__DEPRECATED
+
 #include <string>
 #include <map>
 #include <vector>
@@ -31,9 +33,13 @@ namespace RooFit {
 typedef double (*CFUNCD1D)(double) ;
 typedef double (*CFUNCD1I)(Int_t) ;
 
+R__DEPRECATED(6, 34, "Use RooFormulaVar instead.")
 RooAbsReal* bindFunction(const char* name,CFUNCD1D func,RooAbsReal& x) ;
+R__DEPRECATED(6, 34, "Use RooFormulaVar instead.")
 RooAbsReal* bindFunction(const char* name,CFUNCD1I func,RooAbsReal& x) ;
+R__DEPRECATED(6, 34, "Use RooGenericPdf instead.")
 RooAbsPdf*  bindPdf(const char* name,CFUNCD1D func,RooAbsReal& x) ;
+R__DEPRECATED(6, 34, "Use RooGenericPdf instead.")
 RooAbsPdf*  bindPdf(const char* name,CFUNCD1I func,RooAbsReal& x) ;
 
 }

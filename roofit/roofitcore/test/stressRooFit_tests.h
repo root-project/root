@@ -369,11 +369,11 @@ public:
 
       // Bind one-dimensional TMath::Erf function as RooAbsReal function
       RooRealVar x("x", "x", -3, 3);
-      std::unique_ptr<RooAbsReal> erf{bindFunction("erf", TMath::Erf, x)};
+      RooFormulaVar errorFunc{"erf", "TMath::Erf(x)", {x}};
 
       // Plot erf on frame
       RooPlot *frame1 = x.frame(Title("TMath::Erf bound as RooFit function"));
-      erf->plotOn(frame1);
+      errorFunc.plotOn(frame1);
 
       // B i n d   R O O T : : M a t h : : b e t a _ p d f   C   f u n c t i o n
       // -----------------------------------------------------------------------
@@ -384,16 +384,16 @@ public:
       RooRealVar x2("x2", "x2", 0.001, 0.999);
       RooRealVar a("a", "a", 5, 0, 10);
       RooRealVar b("b", "b", 2, 0, 10);
-      std::unique_ptr<RooAbsPdf> beta{bindPdf("beta", ROOT::Math::beta_pdf, x2, a, b)};
+      RooGenericPdf beta{"beta", "ROOT::Math::beta_pdf(x2, a, b)", {x2, a, b}};
 
       // Generate some events and fit
-      std::unique_ptr<RooDataSet> data{beta->generate(x2, 10000)};
-      beta->fitTo(*data);
+      std::unique_ptr<RooDataSet> data{beta.generate(x2, 10000)};
+      beta.fitTo(*data);
 
       // Plot data and pdf on frame
       RooPlot *frame2 = x2.frame(Title("ROOT::Math::Beta bound as RooFit pdf"));
       data->plotOn(frame2);
-      beta->plotOn(frame2);
+      beta.plotOn(frame2);
 
       // B i n d   R O O T   T F 1   a s   R o o F i t   f u n c t i o n
       // ---------------------------------------------------------------

@@ -40,9 +40,7 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 - The RooFit legacy iterators are deprecated and will be removed in ROOT 6.34 (see section "RooFit libraries")
-- Some memory-unsafe RooFit interfaces were removed
-- Some redundant **RooDataSet** constructors are deprecated and will be removed in ROOT 6.34.
-  Please use the RooDataSet constructors that take RooFit command arguments instead
+- The `RooCFunction*Binding` classes and the associated `RooFit::bindFunction()` and `RooFit::bindPdf()` functions are deprecated and will be removed in ROOT 6.34. Their functionality is redundant with the `RooFormulaVar` and `RooGenericPdf` that should be used instead.
 
 ## Core Libraries
 

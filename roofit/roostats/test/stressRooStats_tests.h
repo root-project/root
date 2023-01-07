@@ -32,7 +32,6 @@
 #include <TMath.h>
 
 // RooFit headers
-#include <RooCFunction1Binding.h>
 #include <RooDataSet.h>
 #include <RooGlobalFunc.h>
 #include <RooPlot.h>
@@ -498,8 +497,6 @@ class TestBayesianCalculator1 : public RooUnitTest {
 private:
    Int_t fObsValue;
    double fConfidenceLevel;
-   static double priorInv(double mean) { return 1.0 / mean; }
-   static double priorInvSqrt(double mean) { return 1.0 / sqrt(mean); }
 
 public:
    TestBayesianCalculator1(TFile *refFile, bool writeRef, Int_t verbose, Int_t obsValue = 3,
@@ -577,9 +574,8 @@ public:
 
          // create prior pdfs
          ws.factory("Uniform::prior(mean)");
-         ws.import(RooCFunction1PdfBinding<double, double>("priorInv", "priorInv", &priorInv, *ws.var("mean")));
-         ws.import(
-            RooCFunction1PdfBinding<double, double>("priorInvSqrt", "priorInvSqrt", priorInvSqrt, *ws.var("mean")));
+         ws.factory("EXPR::priorInv('1./mean', mean)");
+         ws.factory("EXPR::priorInvSqrt('1./std::sqrt(mean)', mean)");
          ws.factory(TString::Format("Gamma::priorGamma(mean, %lf, %lf, 0)", gammaShape, gammaRate).Data());
 
          // build argument sets and data set
