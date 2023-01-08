@@ -38,8 +38,8 @@ alpha = ROOT.RooRealVar("alpha", "alpha", -1)
 bkg2 = ROOT.RooExponential("bkg2", "Background 2", x, alpha)
 
 # Sum the background components into a composite background pdf
-bkg1frac = ROOT.RooRealVar("sig1frac", "fraction of component 1 in background", 0.2, 0.0, 1.0)
-bkg = ROOT.RooAddPdf("bkg", "Signal", [bkg1, bkg2], [sig1frac])
+bkg1frac = ROOT.RooRealVar("bkg1frac", "fraction of component 1 in background", 0.8, 0.0, 1.0)
+bkg = ROOT.RooAddPdf("bkg", "Total background", [bkg1, bkg2], [bkg1frac])
 
 # Sum the composite signal and background
 bkgfrac = ROOT.RooRealVar("bkgfrac", "fraction of background", 0.5, 0.0, 1.0)
