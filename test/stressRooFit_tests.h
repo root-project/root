@@ -1270,12 +1270,12 @@ public:
     RooExponential bkg2("bkg2","Background 2",x,alpha) ;
 
     // Sum the background components into a composite background p.d.f.
-    RooRealVar bkg1frac("sig1frac","fraction of component 1 in background",0.2,0.,1.) ;
-    RooAddPdf bkg("bkg","Signal",RooArgList(bkg1,bkg2),sig1frac) ;
+    RooRealVar bkg1frac("bkg1frac","fraction of component 1 in background",0.8,0.,1.) ;
+    RooAddPdf bkg("bkg", "Total background", {bkg1,bkg2}, bkg1frac);
 
     // Sum the composite signal and background
     RooRealVar bkgfrac("bkgfrac","fraction of background",0.5,0.,1.) ;
-    RooAddPdf  model("model","g1+g2+a",RooArgList(bkg,sig),bkgfrac) ;
+    RooAddPdf  model("model", "g1+g2+a", {bkg,sig}, bkgfrac);
 
 
 
