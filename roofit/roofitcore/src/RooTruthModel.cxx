@@ -162,32 +162,32 @@ double RooTruthModel::evaluate() const
   // Return desired basis function
   switch(basisType) {
   case expBasis: {
-    //cout << " RooTruthModel::eval(" << GetName() << ") expBasis mode ret = " << exp(-fabs((double)x)/tau) << " tau = " << tau << endl ;
-    return exp(-fabs((double)x)/tau) ;
+    //cout << " RooTruthModel::eval(" << GetName() << ") expBasis mode ret = " << exp(-std::abs((double)x)/tau) << " tau = " << tau << endl ;
+    return exp(-std::abs((double)x)/tau) ;
   }
   case sinBasis: {
     double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-    return exp(-fabs((double)x)/tau)*sin(x*dm) ;
+    return exp(-std::abs((double)x)/tau)*sin(x*dm) ;
   }
   case cosBasis: {
     double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-    return exp(-fabs((double)x)/tau)*cos(x*dm) ;
+    return exp(-std::abs((double)x)/tau)*cos(x*dm) ;
   }
   case linBasis: {
-    double tscaled = fabs((double)x)/tau;
+    double tscaled = std::abs((double)x)/tau;
     return exp(-tscaled)*tscaled ;
   }
   case quadBasis: {
-    double tscaled = fabs((double)x)/tau;
+    double tscaled = std::abs((double)x)/tau;
     return exp(-tscaled)*tscaled*tscaled;
   }
   case sinhBasis: {
     double dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-    return exp(-fabs((double)x)/tau)*sinh(x*dg/2) ;
+    return exp(-std::abs((double)x)/tau)*sinh(x*dg/2) ;
   }
   case coshBasis: {
     double dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-    return exp(-fabs((double)x)/tau)*cosh(x*dg/2) ;
+    return exp(-std::abs((double)x)/tau)*cosh(x*dg/2) ;
   }
   default:
     R__ASSERT(0) ;

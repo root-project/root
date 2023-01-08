@@ -665,7 +665,7 @@ bool RooAbsCategory::isSignType(bool mustHaveZero) const
   if (mustHaveZero && theStateNames.size() != 3) return false;
 
   for (const auto& type : theStateNames) {
-    if (abs(type.second)>1)
+    if (std::abs(type.second)>1)
       return false;
   }
 

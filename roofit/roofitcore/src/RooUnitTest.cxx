@@ -197,7 +197,7 @@ bool RooUnitTest::areTHidentical(TH1* htest, TH1* href)
     }
 
     for (Int_t i=0 ; i<ntest ; i++) {
-      if (fabs(htest->GetBinContent(i)-href->GetBinContent(i))>htol()) {
+      if (std::abs(htest->GetBinContent(i)-href->GetBinContent(i))>htol()) {
         if(_verb >= 0) std::cout << "htest[" << i << "] = " << htest->GetBinContent(i) << " href[" << i << "] = " << href->GetBinContent(i) << endl;
       }
     }
@@ -398,7 +398,7 @@ bool RooUnitTest::runCompTests()
    cout << "comparing value " << iter3->first << " to benchmark " << iter3->second << " = " << (double)(*ref) << endl ;
       }
 
-      if (fabs(iter3->first - (double)(*ref))>vtol() ) {
+      if (std::abs(iter3->first - (double)(*ref))>vtol() ) {
         if(_verb >= 0) cout << "RooUnitTest ERROR: comparison of value " << iter3->first <<   " fails comparison with reference " << ref->GetName() << endl ;
         ret = false ;
       }

@@ -389,7 +389,7 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
     // Calculate additional offset to apply if bin ixlo does not have X value calculated at bin center
     double xBinC = xmin + (i+0.5)*binw ;
     double xOffset = xBinC-_calcX[i] ;
-    if (fabs(xOffset/binw)>1e-3) {
+    if (std::abs(xOffset/binw)>1e-3) {
       double slope = (_yatX[i+1]-_yatX[i-1])/(_calcX[i+1]-_calcX[i-1]) ;
       double newY = _yatX[i] + slope*xOffset ;
       //cout << "bin " << i << " needs to be re-centered " << xOffset/binw << " slope = " << slope << " origY = " << _yatX[i] << " newY = " << newY << endl ;
@@ -481,7 +481,7 @@ void RooIntegralMorph::MorphCacheElem::fillGap(Int_t ixlo, Int_t ixhi, double sp
 
 
   // Policy: If centration quality is better than 1% OR better than 1/10 of a bin, fill interval with linear interpolation
-  if (fabs(cq)<0.01 || fabs(cq*(ixhi-ixlo))<0.1 || ymid<_ycutoff ) {
+  if (std::abs(cq)<0.01 || std::abs(cq*(ixhi-ixlo))<0.1 || ymid<_ycutoff ) {
 
     // Fill remaining gaps on either side with linear interpolation
     if (iX-ixlo>1) {
@@ -584,7 +584,7 @@ void RooIntegralMorph::MorphCacheElem::findRange()
 
     // Terminate if value of X no longer moves by >0.1 bin size
     double X = _alpha->getVal()*x1 + (1-_alpha->getVal())*x2 ;
-    if (fabs(X-Xlast)/(xmax-xmin)<0.0001) {
+    if (std::abs(X-Xlast)/(xmax-xmin)<0.0001) {
       break ;
     }
     Xlast=X ;
@@ -621,7 +621,7 @@ void RooIntegralMorph::MorphCacheElem::findRange()
 
     // Terminate if value of X no longer moves by >0.1 bin size
     double X = _alpha->getVal()*x1 + (1-_alpha->getVal())*x2 ;
-    if (fabs(X-Xlast)/(xmax-xmin)<0.0001) {
+    if (std::abs(X-Xlast)/(xmax-xmin)<0.0001) {
       break ;
     }
     Xlast=X ;

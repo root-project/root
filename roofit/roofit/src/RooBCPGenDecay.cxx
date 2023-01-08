@@ -224,7 +224,7 @@ void RooBCPGenDecay::generateEvent(Int_t code)
     // Accept event if T is in generated range
     double maxDil = 1.0 ;
 // 2 in next line is conservative and inefficient - allows for delMistag=1!
-    double maxAcceptProb = 2 + fabs(maxDil*_avgS) + fabs(maxDil*_avgC);
+    double maxAcceptProb = 2 + std::abs(maxDil*_avgS) + std::abs(maxDil*_avgC);
     double acceptProb    = (1-_tag*_delMistag + _mu*_tag*(1. - 2.*_avgMistag))
                            + (_tag*(1-2*_avgMistag) + _mu*(1. - _tag*_delMistag))*_avgS*sin(_dm*tval)
                            - (_tag*(1-2*_avgMistag) + _mu*(1. - _tag*_delMistag))*_avgC*cos(_dm*tval);

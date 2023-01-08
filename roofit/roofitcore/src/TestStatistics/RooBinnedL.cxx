@@ -120,7 +120,7 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
          oocoutI(nullptr, Minimization)
             << "Observed " << N << " events in bin " << i << " with zero event yield" << std::endl;
 
-      } else if (fabs(mu) < 1e-10 && fabs(N) < 1e-10) {
+      } else if (std::abs(mu) < 1e-10 && std::abs(N) < 1e-10) {
 
          // Special handling of this case since log(Poisson(0,0)=0 but can't be calculated with usual log-formula
          // since log(mu)=0. No update of result is required since term=0.

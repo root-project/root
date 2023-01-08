@@ -213,7 +213,7 @@ void RooNumRunningInt::RICacheElem::addRange(Int_t ixlo, Int_t ixhi, Int_t nbins
   double yInt = _ay[ixlo] + (_ay[ixhi]-_ay[ixlo])*(ixmid-ixlo)/(ixhi-ixlo) ;
 
   // If relative deviation is greater than tolerance divide and iterate
-  if (fabs(yInt-_ay[ixmid])*(_ax[nbins-1]-_ax[0])>1e-6) {
+  if (std::abs(yInt-_ay[ixmid])*(_ax[nbins-1]-_ax[0])>1e-6) {
     addRange(ixlo,ixmid,nbins) ;
     addRange(ixmid,ixhi,nbins) ;
   } else {

@@ -80,7 +80,7 @@ bool RooBrentRootFinder::findRoot(double &result, double xlo, double xhi, double
       e = b - a;
     }
 
-    if (fabs (fc) < fabs (fb)) {
+    if (std::abs(fc) < std::abs(fb)) {
       ac_equal = true;
       a = b;
       b = c;
@@ -90,18 +90,18 @@ bool RooBrentRootFinder::findRoot(double &result, double xlo, double xhi, double
       fc = fa;
     }
 
-    double tol = 0.5 * _tol * fabs(b);
+    double tol = 0.5 * _tol * std::abs(b);
     double m = 0.5 * (c - b);
 
 
-    if (fb == 0 || fabs(m) <= tol) {
+    if (fb == 0 || std::abs(m) <= tol) {
       //cout << "RooBrentRootFinder: iter = " << iter << " m = " << m << " tol = " << tol << endl ;
       result= b;
       _function->restoreXVec() ;
       return true;
     }
 
-    if (fabs (e) < tol || fabs (fa) <= fabs (fb)) {
+    if (std::abs(e) < tol || std::abs(fa) <= std::abs(fb)) {
       // Bounds decreasing too slowly: use bisection
       d = m;
       e = m;
@@ -129,8 +129,8 @@ bool RooBrentRootFinder::findRoot(double &result, double xlo, double xhi, double
    p = -p;
       }
 
-      double min1= 3 * m * q - fabs (tol * q);
-      double min2= fabs (e * q);
+      double min1= 3 * m * q - std::abs(tol * q);
+      double min2= std::abs(e * q);
       if (2 * p < (min1 < min2 ? min1 : min2)) {
    // Accept the interpolation
    e = d;
@@ -146,7 +146,7 @@ bool RooBrentRootFinder::findRoot(double &result, double xlo, double xhi, double
     a = b;
     fa = fb;
     // Evaluate new trial root
-    if (fabs (d) > tol) {
+    if (std::abs(d) > tol) {
       b += d;
     }
     else {

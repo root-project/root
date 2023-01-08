@@ -311,7 +311,7 @@ inline bool checkRegularBins(const TAxis &ax)
    double w = ax.GetXmax() - ax.GetXmin();
    double bw = w / ax.GetNbins();
    for (int i = 0; i <= ax.GetNbins(); ++i) {
-      if (fabs(ax.GetBinUpEdge(i) - (ax.GetXmin() + (bw * i))) > w * 1e-6)
+      if (std::abs(ax.GetBinUpEdge(i) - (ax.GetXmin() + (bw * i))) > w * 1e-6)
          return false;
    }
    return true;

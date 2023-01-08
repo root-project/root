@@ -974,9 +974,9 @@ double RooRealIntegral::jacobianProduct() const
     jacProd *= arg->jacobian() ;
   }
 
-  // Take fabs() here: if jacobian is negative, min and max are swapped and analytical integral
+  // Take std::abs() here: if jacobian is negative, min and max are swapped and analytical integral
   // will be positive, so must multiply with positive jacobian.
-  return fabs(jacProd) ;
+  return std::abs(jacProd) ;
 }
 
 

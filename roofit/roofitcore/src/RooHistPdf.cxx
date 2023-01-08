@@ -520,12 +520,12 @@ double RooHistPdf::maxVal(Int_t code) const
 
 bool RooHistPdf::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2)
 {
-  if (fabs(dh1.sumEntries()-dh2.sumEntries())>1e-8) return false ;
+  if (std::abs(dh1.sumEntries()-dh2.sumEntries())>1e-8) return false ;
   if (dh1.numEntries() != dh2.numEntries()) return false ;
   for (int i=0 ; i < dh1.numEntries() ; i++) {
     dh1.get(i) ;
     dh2.get(i) ;
-    if (fabs(dh1.weight()-dh2.weight())>1e-8) return false ;
+    if (std::abs(dh1.weight()-dh2.weight())>1e-8) return false ;
   }
   return true ;
 }

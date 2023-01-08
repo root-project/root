@@ -424,7 +424,7 @@ void RooCurve::addRange(const RooAbsFunc& func, double x1, double x2,
          Int_t numee, bool doEEVal, double eeVal)
 {
   // Explicitly skip empty ranges to eliminate point duplication
-  if (fabs(x2-x1)<1e-20) {
+  if (std::abs(x2-x1)<1e-20) {
     return ;
   }
 
@@ -449,7 +449,7 @@ void RooCurve::addRange(const RooAbsFunc& func, double x1, double x2,
 
   // test if the midpoint is sufficiently close to a straight line across this interval
   double dy= ymid - 0.5*(y1+y2);
-  if((xmid - x1 >= minDx) && fabs(dy)>0 && fabs(dy) >= minDy) {
+  if((xmid - x1 >= minDx) && std::abs(dy)>0 && std::abs(dy) >= minDy) {
     // fill in each subrange
     addRange(func,x1,xmid,y1,ymid,minDy,minDx,numee,doEEVal,eeVal);
     addRange(func,xmid,x2,ymid,y2,minDy,minDx,numee,doEEVal,eeVal);
@@ -671,8 +671,8 @@ Int_t RooCurve::findPoint(double xvalue, double tolerance) const
   Int_t ibest(-1) ;
   for (i=0 ; i<n ; i++) {
     GetPoint(i,x,y);
-    if (fabs(xvalue-x)<delta) {
-      delta = fabs(xvalue-x) ;
+    if (std::abs(xvalue-x)<delta) {
+      delta = std::abs(xvalue-x) ;
       ibest = i ;
     }
   }
@@ -697,7 +697,7 @@ double RooCurve::interpolate(double xvalue, double tolerance) const
   const_cast<RooCurve*>(this)->GetPoint(ibest,xbest,ybest) ;
 
   // Handle trivial case of being dead on
-  if (fabs(xbest-xvalue)<tolerance) {
+  if (std::abs(xbest-xvalue)<tolerance) {
     return ybest ;
   }
 
@@ -897,7 +897,7 @@ bool RooCurve::isIdentical(const RooCurve& other, double tol, bool verbose) cons
   bool ret(true) ;
   for(Int_t i= 2; i < n-2; i++) {
     double yTest = interpolate(other.fX[i],1e-10) ;
-    double rdy = fabs(yTest-other.fY[i])/Yrange ;
+    double rdy = std::abs(yTest-other.fY[i])/Yrange ;
     if (rdy>tol) {
       ret = false;
       if(!verbose) continue;

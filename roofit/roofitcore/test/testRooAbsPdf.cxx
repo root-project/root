@@ -93,7 +93,7 @@ TEST(RooAbsPdf, ConditionalFitBatchMode)
       for (int i = 0; i < 10000; i++) {
          double tmpy = gRandom->Gaus(3, 2);
          double tmpx = gRandom->Poisson(tmpy);
-         if (fabs(tmpy) > 1 && std::abs(tmpy) < 5 && std::abs(tmpx) < 10) {
+         if (std::abs(tmpy) > 1 && std::abs(tmpy) < 5 && std::abs(tmpx) < 10) {
             x = tmpx;
             y = tmpy;
             d->add(coord);

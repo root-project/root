@@ -2503,7 +2503,7 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, double nEvents
     // Second pass for regular mode - Trim/Extend dataset to exact number of entries
 
     // Calculate difference between what is generated so far and what is requested
-    Int_t nEvtExtra = abs(Int_t(nEvents)-histOutSum) ;
+    Int_t nEvtExtra = std::abs(Int_t(nEvents)-histOutSum) ;
     Int_t wgt = (histOutSum>nEvents) ? -1 : 1 ;
 
     // Perform simple binned accept/reject procedure to get to exact event count

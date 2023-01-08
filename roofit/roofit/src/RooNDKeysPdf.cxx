@@ -1242,9 +1242,9 @@ double RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
      chi[j] = (bi->xVarHi[j]-x[j])/weight[j];
 
    if (chi[j]>0) // inVarRange
-     prob *= (0.5 + TMath::Erf(fabs(chi[j])/sqrt(2.))/2.);
+     prob *= (0.5 + TMath::Erf(std::abs(chi[j])/sqrt(2.))/2.);
    else // outside Var range
-     prob *= (0.5 - TMath::Erf(fabs(chi[j])/sqrt(2.))/2.);
+     prob *= (0.5 - TMath::Erf(std::abs(chi[j])/sqrt(2.))/2.);
       }
 
       norm += prob * _wMap.at(_idx[bi->sIdcs[i]]);

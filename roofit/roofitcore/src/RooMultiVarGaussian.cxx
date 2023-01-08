@@ -287,7 +287,7 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet
 double RooMultiVarGaussian::analyticalIntegral(Int_t code, const char* /*rangeName*/) const
 {
   if (code==-1) {
-    return pow(2*3.14159268,_x.getSize()/2.)*sqrt(fabs(_det)) ;
+    return pow(2*3.14159268,_x.getSize()/2.)*sqrt(std::abs(_det)) ;
   }
 
   // Handle partial integrals here
@@ -303,7 +303,7 @@ double RooMultiVarGaussian::analyticalIntegral(Int_t code, const char* /*rangeNa
   }
 
   // Calculate partial integral
-  double ret = pow(2*3.14159268,aid.nint/2.)/sqrt(fabs(aid.S22det))*exp(-0.5*u*(aid.S22bar*u)) ;
+  double ret = pow(2*3.14159268,aid.nint/2.)/sqrt(std::abs(aid.S22det))*exp(-0.5*u*(aid.S22bar*u)) ;
 
   return ret ;
 }

@@ -1527,16 +1527,16 @@ void xRooNLLVar::xRooHypoPoint::Draw(Option_t *opt)
 
    auto obs = pll();
    if (!std::isnan(obs.first)) {
-      _min = std::min(obs.first - abs(obs.first) * 0.1, _min);
-      _max = std::max(obs.first + abs(obs.first) * 0.1, _max);
+      _min = std::min(obs.first - std::abs(obs.first) * 0.1, _min);
+      _max = std::max(obs.first + std::abs(obs.first) * 0.1, _max);
    }
 
    auto asi = (fAsimov && fAsimov->fUfit && fAsimov->fNull_cfit) ? fAsimov->pll().first
                                                                  : std::numeric_limits<double>::quiet_NaN();
    if (!std::isnan(asi) && asi > 0 && fPllType != xRooFit::Asymptotics::Unknown) {
       // can calculate asymptotic distributions,
-      _min = std::min(asi - abs(asi), _min);
-      _max = std::max(asi + abs(asi), _max);
+      _min = std::min(asi - std::abs(asi), _min);
+      _max = std::max(asi + std::abs(asi), _max);
    }
    if (_min > 0)
       _min = 0;

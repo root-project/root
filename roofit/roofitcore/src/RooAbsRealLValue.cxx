@@ -493,7 +493,7 @@ bool RooAbsRealLValue::fitRangeOKForPlotting() const
 bool RooAbsRealLValue::inRange(const char* name) const
 {
   const double val = getVal() ;
-  const double epsilon = 1e-8 * fabs(val) ;
+  const double epsilon = 1e-8 * std::abs(val) ;
   if (!name || name[0] == '\0') {
     const auto minMax = getRange(nullptr);
     return minMax.first - epsilon <= val && val <= minMax.second + epsilon;

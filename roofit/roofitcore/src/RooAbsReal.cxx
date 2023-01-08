@@ -4822,7 +4822,7 @@ void RooAbsReal::checkBatchComputation(const RooBatchCompute::RunContext& evalDa
   const double batchVal = batch.size() == 1 ? batch[0] : batch[evtNo];
   const double relDiff = value != 0. ? (value - batchVal)/value : value - batchVal;
 
-  if (fabs(relDiff) > relAccuracy && fabs(value) > 1.E-300) {
+  if (std::abs(relDiff) > relAccuracy && std::abs(value) > 1.E-300) {
     FormatPdfTree formatter;
     formatter << "--> (Batch computation wrong:)\n";
     printStream(formatter.stream(), kName | kClassName | kArgs | kExtras | kAddress, kInline);

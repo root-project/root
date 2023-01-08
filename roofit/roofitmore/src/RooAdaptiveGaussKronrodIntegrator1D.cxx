@@ -731,9 +731,9 @@ subinterval_too_small (double a1, double a2, double b2)
   const double e = GSL_DBL_EPSILON;
   const double u = GSL_DBL_MIN;
 
-  double tmp = (1 + 100 * e) * (fabs (a2) + 1000 * u);
+  double tmp = (1 + 100 * e) * (std::abs(a2) + 1000 * u);
 
-  int status = fabs (a1) <= tmp && fabs (b2) <= tmp;
+  int status = std::abs(a1) <= tmp && std::abs(b2) <= tmp;
 
   return status;
 }
@@ -841,7 +841,7 @@ qag (const gsl_function * f,
 
   /* Test on accuracy */
 
-  tolerance = GSL_MAX_DBL (epsabs, epsrel * fabs (result0));
+  tolerance = GSL_MAX_DBL (epsabs, epsrel * std::abs(result0));
 
   /* need IEEE rounding here to match original quadpack behavior */
 
@@ -906,7 +906,7 @@ qag (const gsl_function * f,
         {
           double delta = r_i - area12;
 
-          if (fabs (delta) <= 1.0e-5 * fabs (area12) && error12 >= 0.99 * e_i)
+          if (std::abs(delta) <= 1.0e-5 * std::abs(area12) && error12 >= 0.99 * e_i)
             {
               roundoff_type1++;
             }
@@ -916,7 +916,7 @@ qag (const gsl_function * f,
             }
         }
 
-      tolerance = GSL_MAX_DBL (epsabs, epsrel * fabs (area));
+      tolerance = GSL_MAX_DBL (epsabs, epsrel * std::abs(area));
 
       if (errsum > tolerance)
         {
@@ -975,7 +975,7 @@ static double rescale_error (double err, const double result_abs, const double r
 static double
 rescale_error (double err, const double result_abs, const double result_asc)
 {
-  err = fabs(err) ;
+  err = std::abs(err) ;
 
   if (result_asc != 0 && err != 0)
       {
@@ -1015,13 +1015,13 @@ gsl_integration_qk (const int n,
 
   const double center = 0.5 * (a + b);
   const double half_length = 0.5 * (b - a);
-  const double abs_half_length = fabs (half_length);
+  const double abs_half_length = std::abs(half_length);
   const double f_center = GSL_FN_EVAL (f, center);
 
   double result_gauss = 0;
   double result_kronrod = f_center * wgk[n - 1];
 
-  double result_abs = fabs (result_kronrod);
+  double result_abs = std::abs(result_kronrod);
   double result_asc = 0;
   double mean = 0, err = 0;
 
@@ -1043,7 +1043,7 @@ gsl_integration_qk (const int n,
       fv2[jtw] = fval2;
       result_gauss += wg[j] * fsum;
       result_kronrod += wgk[jtw] * fsum;
-      result_abs += wgk[jtw] * (fabs (fval1) + fabs (fval2));
+      result_abs += wgk[jtw] * (std::abs(fval1) + std::abs(fval2));
     }
 
   for (j = 0; j < n / 2; j++)
@@ -1055,16 +1055,16 @@ gsl_integration_qk (const int n,
       fv1[jtwm1] = fval1;
       fv2[jtwm1] = fval2;
       result_kronrod += wgk[jtwm1] * (fval1 + fval2);
-      result_abs += wgk[jtwm1] * (fabs (fval1) + fabs (fval2));
+      result_abs += wgk[jtwm1] * (std::abs(fval1) + std::abs(fval2));
     };
 
   mean = result_kronrod * 0.5;
 
-  result_asc = wgk[n - 1] * fabs (f_center - mean);
+  result_asc = wgk[n - 1] * std::abs(f_center - mean);
 
   for (j = 0; j < n - 1; j++)
     {
-      result_asc += wgk[j] * (fabs (fv1[j] - mean) + fabs (fv2[j] - mean));
+      result_asc += wgk[j] * (std::abs(fv1[j] - mean) + std::abs(fv2[j] - mean));
     }
 
   /* scale by the width of the integration region */
@@ -1790,7 +1790,7 @@ qelg (struct extrapolation_table *table, double *result, double *abserr)
   const double current = epstab[n];
 
   double absolute = GSL_DBL_MAX;
-  double relative = 5 * GSL_DBL_EPSILON * fabs (current);
+  double relative = 5 * GSL_DBL_EPSILON * std::abs(current);
 
   const size_t newelm = n / 2;
   const size_t n_orig = n;
@@ -1819,13 +1819,13 @@ qelg (struct extrapolation_table *table, double *result, double *abserr)
       double e1 = epstab[n - 2 * i - 1];
       double e2 = res;
 
-      double e1abs = fabs (e1);
+      double e1abs = std::abs(e1);
       double delta2 = e2 - e1;
-      double err2 = fabs (delta2);
-      double tol2 = GSL_MAX_DBL (fabs (e2), e1abs) * GSL_DBL_EPSILON;
+      double err2 = std::abs(delta2);
+      double tol2 = GSL_MAX_DBL (std::abs(e2), e1abs) * GSL_DBL_EPSILON;
       double delta3 = e1 - e0;
-      double err3 = fabs (delta3);
-      double tol3 = GSL_MAX_DBL (e1abs, fabs (e0)) * GSL_DBL_EPSILON;
+      double err3 = std::abs(delta3);
+      double tol3 = GSL_MAX_DBL (e1abs, std::abs(e0)) * GSL_DBL_EPSILON;
 
       double e3, delta1, err1, tol1, ss;
 
@@ -1836,7 +1836,7 @@ qelg (struct extrapolation_table *table, double *result, double *abserr)
 
           *result = res;
           absolute = err2 + err3;
-          relative = 5 * GSL_DBL_EPSILON * fabs (res);
+          relative = 5 * GSL_DBL_EPSILON * std::abs(res);
           *abserr = GSL_MAX_DBL (absolute, relative);
           return;
         }
@@ -1844,8 +1844,8 @@ qelg (struct extrapolation_table *table, double *result, double *abserr)
       e3 = epstab[n - 2 * i];
       epstab[n - 2 * i] = e1;
       delta1 = e1 - e3;
-      err1 = fabs (delta1);
-      tol1 = GSL_MAX_DBL (e1abs, fabs (e3)) * GSL_DBL_EPSILON;
+      err1 = std::abs(delta1);
+      tol1 = GSL_MAX_DBL (e1abs, std::abs(e3)) * GSL_DBL_EPSILON;
 
       /* If two elements are very close to each other, omit a part of
          the table by adjusting the value of n */
@@ -1862,7 +1862,7 @@ qelg (struct extrapolation_table *table, double *result, double *abserr)
          eventually omit a part of the table by adjusting the value of
          n. */
 
-      if (fabs (ss * e1) <= 0.0001)
+      if (std::abs(ss * e1) <= 0.0001)
         {
           n_final = 2 * i;
           break;
@@ -1875,7 +1875,7 @@ qelg (struct extrapolation_table *table, double *result, double *abserr)
       epstab[n - 2 * i] = res;
 
       {
-        const double error = err2 + fabs (res - e2) + err3;
+        const double error = err2 + std::abs(res - e2) + err3;
 
         if (error <= *abserr)
           {
@@ -1928,8 +1928,8 @@ qelg (struct extrapolation_table *table, double *result, double *abserr)
     }
   else
     {                           /* Compute error estimate */
-      *abserr = (fabs (*result - res3la[2]) + fabs (*result - res3la[1])
-                 + fabs (*result - res3la[0]));
+      *abserr = (std::abs(*result - res3la[2]) + std::abs(*result - res3la[1])
+                 + std::abs(*result - res3la[0]));
 
       res3la[0] = res3la[1];
       res3la[1] = res3la[2];
@@ -1944,7 +1944,7 @@ qelg (struct extrapolation_table *table, double *result, double *abserr)
 
   table->nres = nres_orig + 1;
 
-  *abserr = GSL_MAX_DBL (*abserr, 5 * GSL_DBL_EPSILON * fabs (*result));
+  *abserr = GSL_MAX_DBL (*abserr, 5 * GSL_DBL_EPSILON * std::abs(*result));
 
   return;
 }
@@ -1960,7 +1960,7 @@ test_positivity (double result, double resabs);
 static inline int
 test_positivity (double result, double resabs)
 {
-  int status = (fabs (result) >= (1 - 50 * GSL_DBL_EPSILON) * resabs);
+  int status = (std::abs(result) >= (1 - 50 * GSL_DBL_EPSILON) * resabs);
 
   return status;
 }
@@ -2180,7 +2180,7 @@ qags (const gsl_function * f,
 
   set_initial_result (workspace, result0, abserr0);
 
-  tolerance = GSL_MAX_DBL (epsabs, epsrel * fabs (result0));
+  tolerance = GSL_MAX_DBL (epsabs, epsrel * std::abs(result0));
 
   if (abserr0 <= 100 * GSL_DBL_EPSILON * resabs0 && abserr0 > tolerance)
     {
@@ -2261,13 +2261,13 @@ qags (const gsl_function * f,
       errsum = errsum + error12 - e_i;
       area = area + area12 - r_i;
 
-      tolerance = GSL_MAX_DBL (epsabs, epsrel * fabs (area));
+      tolerance = GSL_MAX_DBL (epsabs, epsrel * std::abs(area));
 
       if (resasc1 != error1 && resasc2 != error2)
         {
           double delta = r_i - area12;
 
-          if (fabs (delta) <= 1.0e-5 * fabs (area12) && error12 >= 0.99 * e_i)
+          if (std::abs(delta) <= 1.0e-5 * std::abs(area12) && error12 >= 0.99 * e_i)
             {
               if (!extrapolate)
                 {
@@ -2381,7 +2381,7 @@ qags (const gsl_function * f,
           err_ext = abseps;
           res_ext = reseps;
           correc = error_over_large_intervals;
-          ertest = GSL_MAX_DBL (epsabs, epsrel * fabs (reseps));
+          ertest = GSL_MAX_DBL (epsabs, epsrel * std::abs(reseps));
           if (err_ext <= ertest)
             break;
         }
@@ -2425,7 +2425,7 @@ qags (const gsl_function * f,
 
       if (res_ext != 0.0 && area != 0.0)
         {
-          if (err_ext / fabs (res_ext) > errsum / fabs (area))
+          if (err_ext / std::abs(res_ext) > errsum / std::abs(area))
             goto compute_result;
         }
       else if (err_ext > errsum)
@@ -2441,7 +2441,7 @@ qags (const gsl_function * f,
   /*  Test on divergence. */
 
   {
-    double max_area = GSL_MAX_DBL (fabs (res_ext), fabs (area));
+    double max_area = GSL_MAX_DBL (std::abs(res_ext), std::abs(area));
 
     if (!positive_integrand && max_area < 0.01 * resabs0)
       goto return_error;
@@ -2450,7 +2450,7 @@ qags (const gsl_function * f,
   {
     double ratio = res_ext / area;
 
-    if (ratio < 0.01 || ratio > 100.0 || errsum > fabs (area))
+    if (ratio < 0.01 || ratio > 100.0 || errsum > std::abs(area))
       error_type = 6;
   }
 

@@ -1094,7 +1094,7 @@ bool RooDataSet::isNonPoissonWeighted() const
   // Now examine individual weights
   for (int i=0 ; i<numEntries() ; i++) {
     get(i) ;
-    if (fabs(weight()-Int_t(weight()))>1e-10) return true ;
+    if (std::abs(weight()-Int_t(weight()))>1e-10) return true ;
   }
   // If sum of weights is less than number of events there are negative (integer) weights
   if (sumEntries()<numEntries()) return true ;
@@ -1147,7 +1147,7 @@ void RooDataSet::add(const RooArgSet& data, double wgt, double wgtError)
 
   if (_wgtVar && _doWeightErrorCheck
       && wgtError != 0.
-      && fabs(wgt*wgt - wgtError)/wgtError > 1.E-15 //Exception for standard wgt^2 errors, which need not be stored.
+      && std::abs(wgt*wgt - wgtError)/wgtError > 1.E-15 //Exception for standard wgt^2 errors, which need not be stored.
       && _errorMsgCount < 5 && !_wgtVar->getAttribute("StoreError")) {
     coutE(DataHandling) << "An event weight error was passed to the RooDataSet '" << GetName()
         << "', but the weight variable '" << _wgtVar->GetName()

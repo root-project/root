@@ -125,13 +125,13 @@ namespace {
   {
     if (phi) {
       return range == 0 || strlen(range) == 0
-          ? std::fabs(x.max() - x.min() - TMath::TwoPi()) < 1.e-8
-          : std::fabs(x.max(range) - x.min(range) - TMath::TwoPi()) < 1.e-8;
+          ? std::abs(x.max() - x.min() - TMath::TwoPi()) < 1.e-8
+          : std::abs(x.max(range) - x.min(range) - TMath::TwoPi()) < 1.e-8;
     }
 
     return range == 0 || strlen(range) == 0
-        ? std::fabs(x.min() + 1.) < 1.e-8 && std::fabs(x.max() - 1.) < 1.e-8
-        : std::fabs(x.min(range) + 1.) < 1.e-8 && std::fabs(x.max(range) - 1.) < 1.e-8;
+        ? std::abs(x.min() + 1.) < 1.e-8 && std::abs(x.max() - 1.) < 1.e-8
+        : std::abs(x.min(range) + 1.) < 1.e-8 && std::abs(x.max(range) - 1.) < 1.e-8;
   }
 }
 

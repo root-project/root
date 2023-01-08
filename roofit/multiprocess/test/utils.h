@@ -53,7 +53,7 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_ev
    double mean[n], sigma[n];
    for (unsigned ix = 0; ix < n; ++ix) {
       mean[ix] = RooRandom::randomGenerator()->Gaus(0, 2);
-      sigma[ix] = 0.1 + abs(RooRandom::randomGenerator()->Gaus(0, 2));
+      sigma[ix] = 0.1 + std::abs(RooRandom::randomGenerator()->Gaus(0, 2));
    }
 
    // create gaussians and also the observables and parameters they depend on
@@ -126,7 +126,7 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_ev
          std::ostringstream os;
          os << "s" << ix;
          dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))
-            ->setVal(0.1 + abs(RooRandom::randomGenerator()->Gaus(0, 2)));
+            ->setVal(0.1 + std::abs(RooRandom::randomGenerator()->Gaus(0, 2)));
       }
    }
 
