@@ -250,9 +250,10 @@ Every field record frame of the list of fields has the following contents
 
 The field version and type version are used for schema evolution.
 
-If the flag 0x01 (_repetitive field_) is set, the field represents a fixed sized array.
-In this case, an additional 64bit integer specifies the size of the array. And
-one more (leaf) field description is expected to be found. 
+If `flags=0x0001` (_repetitive field_) is set, the field represents a fixed sized array.
+Typically, another (sub) field with `Parent Field ID` equals the id of aforemention field
+is expected to be found, representing the array content for the fixed-array
+(see Section "Mapping of C++ Types to Fields and Columns").
 
 The block of integers is followed by a list of strings:
 
