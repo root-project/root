@@ -331,7 +331,7 @@ double* HybridPlot::GetHistoPvals (TH1* histo, double percentage){
    for (it = extremes_map.begin();it != extremes_map.end();++it){
       a=it->first;
       b=it->second;
-      current_diff=std::fabs(histo->GetBinContent(a)-histo->GetBinContent(b));
+      current_diff=std::abs(histo->GetBinContent(a)-histo->GetBinContent(b));
       if (current_diff<diff){
          //std::cout << "a=" << a << " b=" << b << std::endl;
          diff=current_diff;
