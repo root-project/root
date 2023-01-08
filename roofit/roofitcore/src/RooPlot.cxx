@@ -582,7 +582,7 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, bool refreshNorm)
     if (dynamic_cast<const RooHist*>(rp)) corFac = _normBinWidth/rp->getFitRangeBinW() ;
 
 
-    if (fabs(rp->getFitRangeNEvt()/corFac-_normNumEvts)>1e-6) {
+    if (std::abs(rp->getFitRangeNEvt()/corFac-_normNumEvts)>1e-6) {
       coutI(Plotting) << "RooPlot::updateFitRangeNorm: New event count of " << rp->getFitRangeNEvt()/corFac
             << " will supercede previous event count of " << _normNumEvts << " for normalization of PDF projections" << endl ;
     }

@@ -223,7 +223,7 @@ const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set absolute convergence criteria (convergence if abs(Err)<newEpsAbs)
+/// Set absolute convergence criteria (convergence if std::abs(Err)<newEpsAbs)
 
 void RooNumIntConfig::setEpsAbs(double newEpsAbs)
 {
@@ -253,7 +253,7 @@ RooPrintable::StyleOption RooNumIntConfig::defaultPrintStyle(Option_t* opt) cons
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set relative convergence criteria (convergence if abs(Err)/abs(Int)<newEpsRel)
+/// Set relative convergence criteria (convergence if std::abs(Err)/abs(Int)<newEpsRel)
 
 void RooNumIntConfig::setEpsRel(double newEpsRel)
 {

@@ -684,7 +684,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
      pdfvec[n]->setVal( pdfvalues[ievt][n] ) ;
 
-     if( !(fabs(nsum/dsum)>=0 ) )
+     if( !(std::abs(nsum/dsum)>=0 ) )
        {
          coutE(Contents) << "error: " << nsum/dsum << endl ;
          return;

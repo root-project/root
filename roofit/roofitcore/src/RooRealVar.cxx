@@ -945,13 +945,13 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const
   if(sigDigits < 1) sigDigits= 1;
   Int_t leadingDigitVal = 0;
   if (useErrorForPrecision) {
-    leadingDigitVal = (Int_t)floor(log10(fabs(_error+1e-10)));
+    leadingDigitVal = (Int_t)floor(log10(std::abs(_error+1e-10)));
     if (_value==0&&_error==0) leadingDigitVal=0 ;
   } else {
-    leadingDigitVal = (Int_t)floor(log10(fabs(_value+1e-10)));
+    leadingDigitVal = (Int_t)floor(log10(std::abs(_value+1e-10)));
     if (_value==0) leadingDigitVal=0 ;
   }
-  Int_t leadingDigitErr= (Int_t)floor(log10(fabs(_error+1e-10)));
+  Int_t leadingDigitErr= (Int_t)floor(log10(std::abs(_error+1e-10)));
   Int_t whereVal= leadingDigitVal - sigDigits + 1;
   Int_t whereErr= leadingDigitErr - sigDigits + 1;
   char fmtVal[16], fmtErr[16];

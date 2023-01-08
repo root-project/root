@@ -225,7 +225,7 @@ void RooBCPEffDecay::generateEvent(Int_t code)
     // Accept event if T is in generated range
     double maxDil = 1.0 ;
     double al2 = _absLambda*_absLambda ;
-    double maxAcceptProb = (1+al2) + fabs(maxDil*_CPeigenval*_absLambda*_argLambda) + fabs(maxDil*(1-al2)/2);
+    double maxAcceptProb = (1+al2) + std::abs(maxDil*_CPeigenval*_absLambda*_argLambda) + std::abs(maxDil*(1-al2)/2);
     double acceptProb    = (1+al2)/2*(1-_tag*_delMistag)
                            - (_tag*(1-2*_avgMistag))*(_CPeigenval*_absLambda*_argLambda)*sin(_dm*tval)
                            - (_tag*(1-2*_avgMistag))*(1-al2)/2*cos(_dm*tval);
