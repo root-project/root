@@ -55,7 +55,7 @@ TEST_P(TestProdPdf, CachingOpt)
 
    using namespace RooFit;
    prod.fitTo(*datap, Optimize(_optimize), PrintLevel(-1), BatchMode(_batchMode));
-   EXPECT_LT(fabs(b.getVal() - bTruth), b.getError() * 2.5) // 2.5-sigma compatibility check
+   EXPECT_LT(std::abs(b.getVal() - bTruth), b.getError() * 2.5) // 2.5-sigma compatibility check
       << "b=" << b.getVal() << " +- " << b.getError() << " doesn't match truth value with O" << _optimize << ".";
 }
 

@@ -65,7 +65,7 @@ TEST(RooWrapperPdf, GenerateAndFit) {
   auto result = polPdf.fitTo(*data, RooFit::Save(), RooFit::PrintLevel(-1));
 
   EXPECT_EQ(result->status(), 0) << "Fit converged.";
-  EXPECT_LT(fabs(a2.getVal()-0.01), a2.getError());
+  EXPECT_LT(std::abs(a2.getVal()-0.01), a2.getError());
 
 //  auto frame = x.frame();
 //  data->plotOn(frame);

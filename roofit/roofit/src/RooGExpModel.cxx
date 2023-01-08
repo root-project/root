@@ -211,7 +211,7 @@ namespace {
 double logErfC(double xx)
 {
   double t,z,ans;
-  z=fabs(xx);
+  z=std::abs(xx);
   t=1.0/(1.0+0.5*z);
 
   if(xx >= 0.0)
@@ -469,10 +469,10 @@ double RooGExpModel::calcDecayConv(double sign, double tau, double sig, double r
   sign *= fsign ;  // modified FMV,08/13/03
 
   double cFly;
-  if ((sign<0)&&(fabs(tau-rtau)<tau/260)) {
+  if ((sign<0)&&(std::abs(tau-rtau)<tau/260)) {
 
     double MeanTau=0.5*(tau+rtau);
-    if (fabs(xp/MeanTau)>300) {
+    if (std::abs(xp/MeanTau)>300) {
       return 0 ;
     }
 
@@ -848,7 +848,7 @@ double RooGExpModel::calcSinConvNorm(double sign, double tau, double sig, double
   double term2 = evalCerfInt(-fsign, rtau, fsign*umin2, fsign*umax2, c2)*fsign*sign;
 
   // WVE Handle 0/0 numeric divergence
-  if (fabs(tau-rtau)<1e-10 && fabs(term1+term2)<1e-10) {
+  if (std::abs(tau-rtau)<1e-10 && std::abs(term1+term2)<1e-10) {
     cout << "epsilon method" << endl ;
     static double epsilon = 1e-4 ;
     return calcSinConvNorm(sign,tau+epsilon,sig,rtau-epsilon,fsign,rangeName) ;

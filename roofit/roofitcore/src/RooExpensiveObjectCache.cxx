@@ -237,7 +237,7 @@ bool RooExpensiveObjectCache::ExpensiveObject::matches(TClass* tc, const RooArgS
   for(RooAbsArg * arg : params) {
     RooAbsReal* real = dynamic_cast<RooAbsReal*>(arg) ;
     if (real) {
-      if (fabs(real->getVal()-_realRefParams[real->GetName()])>1e-12) {
+      if (std::abs(real->getVal()-_realRefParams[real->GetName()])>1e-12) {
    return false ;
       }
     } else {
