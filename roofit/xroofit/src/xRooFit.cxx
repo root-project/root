@@ -569,7 +569,7 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
                            if (auto _p = dynamic_cast<RooAbsReal *>(cachedFit->constPars().find(p->GetName())); _p) {
                               // note: do not need global observable values to match (globals currently added to
                               // constPars list)
-                              if (!_p->getAttribute("global") && abs(_p->getVal() - v->getVal()) > 1e-12) {
+                              if (!_p->getAttribute("global") && std::abs(_p->getVal() - v->getVal()) > 1e-12) {
                                  match = false;
                                  break;
                               }
@@ -1004,12 +1004,12 @@ int xRooFit::minos(RooAbsReal &nll, const RooFitResult &ufit, const char *parNam
    auto findValue = [&](double val_guess, double N_sigma = 1, double precision = 0.002, int printLevel = 0) {
       double tmu;
       int nrItr = 0;
-      double sigma_guess = fabs((val_guess - val_best) / N_sigma);
+      double sigma_guess = std::abs((val_guess - val_best) / N_sigma);
       double val_pre =
          val_guess -
          10 * precision * sigma_guess; // this is just to set value st. guarantees will do at least one iteration
       bool lastOverflow = false, lastUnderflow = false;
-      while (fabs(val_pre - val_guess) > precision * sigma_guess) {
+      while (std::abs(val_pre - val_guess) > precision * sigma_guess) {
          val_pre = val_guess;
          if (val_guess > 0 && par->getMax() < val_guess)
             par->setMax(2 * val_guess);
@@ -1024,7 +1024,7 @@ int xRooFit::minos(RooAbsReal &nll, const RooFitResult &ufit, const char *parNam
          double nll_val = result->minNll();
          status += result->status() * 10;
          tmu = 2 * (nll_val - nll_min);
-         sigma_guess = fabs(val_guess - val_best) / sqrt(tmu);
+         sigma_guess = std::abs(val_guess - val_best) / sqrt(tmu);
 
          if (tmu <= 0) {
             // found an alternative or improved minima
@@ -1033,7 +1033,7 @@ int xRooFit::minos(RooAbsReal &nll, const RooFitResult &ufit, const char *parNam
             double new_guess = val_guess + (val_guess - val_best);
             val_best = val_guess;
             val_guess = new_guess;
-            sigma_guess = fabs((val_guess - val_best) / N_sigma);
+            sigma_guess = std::abs((val_guess - val_best) / N_sigma);
             val_pre = val_guess - 10 * precision * sigma_guess;
             status = (status / 10) * 10 + 1;
             continue;
@@ -1049,14 +1049,14 @@ int xRooFit::minos(RooAbsReal &nll, const RooFitResult &ufit, const char *parNam
             // cout << "NLL:            " << nll->GetName() << " = " << nll->getVal() << endl;
             // cout << "delta(NLL):     " << nll->getVal()-nll_min << endl;
             std::cout << "NLL min: " << nll_min << std::endl;
-            std::cout << "N_sigma*sigma(pre):   " << fabs(val_pre - val_best) << std::endl;
+            std::cout << "N_sigma*sigma(pre):   " << std::abs(val_pre - val_best) << std::endl;
             std::cout << "sigma(guess):   " << sigma_guess << std::endl;
             std::cout << "par(guess):     " << val_guess + corr << std::endl;
             std::cout << "true val:       " << val_best << std::endl;
             std::cout << "tmu:            " << tmu << std::endl;
             std::cout << "Precision:      " << sigma_guess * precision << std::endl;
             std::cout << "Correction:     " << (-corr < 0 ? " " : "") << -corr << std::endl;
-            std::cout << "N_sigma*sigma(guess): " << fabs(val_guess - val_best) << std::endl;
+            std::cout << "N_sigma*sigma(guess): " << std::abs(val_guess - val_best) << std::endl;
             std::cout << std::endl;
          }
          if (val_guess > par->getMax()) {
@@ -1249,7 +1249,7 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
                              "the physical range");
       }
       bool doCLs =
-         !std::isnan(altVal) && abs(mu->getMin("hypoPoints")) > altVal && abs(mu->getMax("hypoPoints")) > altVal;
+         !std::isnan(altVal) && std::abs(mu->getMin("hypoPoints")) > altVal && std::abs(mu->getMax("hypoPoints")) > altVal;
 
       const char *sCL = (doCLs) ? "CLs" : "null";
       Info("hypoTest", "%s testing active", sCL);
@@ -1320,7 +1320,7 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
          testPoint(mu->getMax("hypoPoints"));
          testPoint((mu->getMax("hypoPoints") + mu->getMin("hypoPoints")) / 2.);
 
-         while (abs(obs_pcls->GetPointY(obs_pcls->GetN() - 1) - (1. - CL)) > 0.01) {
+         while (std::abs(obs_pcls->GetPointY(obs_pcls->GetN() - 1) - (1. - CL)) > 0.01) {
             obs_pcls->Sort();
             double nextTest = getLimit(*obs_pcls);
             if (std::isnan(nextTest))
@@ -1328,7 +1328,7 @@ xRooFit::hypoTest(RooWorkspace &w, int nToysNull, int /*nToysAlt*/, const xRooFi
             testPoint(nextTest);
          }
          for (auto s : expSig) {
-            while (abs(exp_pcls[s].GetPointY(exp_pcls[s].GetN() - 1) - (1. - CL)) > 0.01) {
+            while (std::abs(exp_pcls[s].GetPointY(exp_pcls[s].GetN() - 1) - (1. - CL)) > 0.01) {
                exp_pcls[s].Sort();
                double nextTest = getLimit(exp_pcls[s]);
                if (std::isnan(nextTest))

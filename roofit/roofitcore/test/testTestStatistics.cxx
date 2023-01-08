@@ -61,7 +61,7 @@ TEST(RooNLLVar, IntegrateBins) {
     return dynamic_cast<const RooRealVar&>(set[name]).getError();
   };
 
-  EXPECT_GT(fabs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())), 1. * getErr("a", fit1->floatParsFinal()))
+  EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())), 1. * getErr("a", fit1->floatParsFinal()))
       << "Expecting a bias when sampling PDF in bin centre.";
 
   EXPECT_NEAR(getVal("a", targetValues), getVal("a", fit2->floatParsFinal()), 1. * getErr("a", fit2->floatParsFinal()))
@@ -124,7 +124,7 @@ TEST(RooNLLVar, IntegrateBins_SubRange) {
     return dynamic_cast<const RooRealVar&>(set[name]).getError();
   };
 
-  EXPECT_GT(fabs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())), 1. * getErr("a", fit1->floatParsFinal()))
+  EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())), 1. * getErr("a", fit1->floatParsFinal()))
       << "Expecting a bias when sampling PDF in bin centre.";
 
   EXPECT_NEAR(getVal("a", targetValues), getVal("a", fit2->floatParsFinal()), 1. * getErr("a", fit2->floatParsFinal()))
@@ -186,7 +186,7 @@ TEST(RooNLLVar, IntegrateBins_CustomBinning) {
     return dynamic_cast<const RooRealVar&>(set[name]).getError();
   };
 
-  EXPECT_GT(fabs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())), 1. * getErr("a", fit1->floatParsFinal()))
+  EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())), 1. * getErr("a", fit1->floatParsFinal()))
       << "Expecting a bias when sampling PDF in bin centre.";
 
   EXPECT_NEAR(getVal("a", targetValues), getVal("a", fit2->floatParsFinal()), 1. * getErr("a", fit2->floatParsFinal()))
@@ -238,7 +238,7 @@ TEST(RooNLLVar, IntegrateBins_RooDataHist) {
     return dynamic_cast<const RooRealVar&>(set[name]).getError();
   };
 
-  EXPECT_GT(fabs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())), 1. * getErr("a", fit1->floatParsFinal()))
+  EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())), 1. * getErr("a", fit1->floatParsFinal()))
       << "Expecting a bias when sampling PDF in bin centre.";
 
   EXPECT_NEAR(getVal("a", targetValues), getVal("a", fit2->floatParsFinal()), 1. * getErr("a", fit2->floatParsFinal()))
@@ -284,7 +284,7 @@ TEST(RooChi2Var, IntegrateBins) {
     return dynamic_cast<const RooRealVar&>(set[name]).getError();
   };
 
-  EXPECT_GT(fabs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())), 1. * getErr("a", fit1->floatParsFinal()))
+  EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())), 1. * getErr("a", fit1->floatParsFinal()))
       << "Expecting a bias when sampling PDF in bin centre.";
 
   EXPECT_NEAR(getVal("a", targetValues), getVal("a", fit2->floatParsFinal()), 1. * getErr("a", fit2->floatParsFinal()))

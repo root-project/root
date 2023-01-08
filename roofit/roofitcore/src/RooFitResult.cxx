@@ -860,7 +860,7 @@ bool RooFitResult::isIdentical(const RooFitResult& other, double tol, double tol
   bool ret = isIdenticalNoCov(other, tol, 1e-3 /* synced with default parameter*/, verbose);
 
   auto deviationCorr = [tolCorr](const double left, const double right){
-    return fabs(left - right) >= tolCorr;
+    return std::abs(left - right) >= tolCorr;
   };
 
   // Only examine correlations for cases with >1 floating parameter

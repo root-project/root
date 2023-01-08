@@ -182,7 +182,7 @@ double low_x_LnBK(double nu, double x){
 }
 
 double besselK(double ni, double x) {
-  const double nu = std::fabs(ni);
+  const double nu = std::abs(ni);
   if ((x < 1.e-06 && nu > 0.) ||
       (x < 1.e-04 && nu > 0. && nu < 55.) ||
       (x < 0.1 && nu >= 55.) )
@@ -197,7 +197,7 @@ double besselK(double ni, double x) {
 }
 
 double LnBesselK(double ni, double x) {
-  const double nu = std::fabs(ni);
+  const double nu = std::abs(ni);
   if ((x < 1.e-06 && nu > 0.) ||
       (x < 1.e-04 && nu > 0. && nu < 55.) ||
       (x < 0.1 && nu >= 55.) )
@@ -219,7 +219,7 @@ double LogEval(double d, double l, double alpha, double beta, double delta) {
 
   return std::exp(logno + beta*d
       + (0.5-l)*(std::log(alpha)-0.5*std::log(thing))
-      + LnBesselK(l-0.5, alpha*std::sqrt(thing)) );// + std::log(std::fabs(beta)+0.0001) );
+      + LnBesselK(l-0.5, alpha*std::sqrt(thing)) );// + std::log(std::abs(beta)+0.0001) );
 
 }
 
@@ -243,7 +243,7 @@ double diff_eval(double d, double l, double alpha, double beta, double delta){
 
 /*
 double Gauss2F1(double a, double b, double c, double x){
-  if (fabs(x) <= 1.) {
+  if (std::abs(x) <= 1.) {
     return ROOT::Math::hyperg(a, b, c, x);
   } else {
     return ROOT::Math::hyperg(c-a, b, c, 1-1/(1-x))/std::pow(1-x, b);

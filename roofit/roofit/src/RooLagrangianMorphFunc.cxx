@@ -317,7 +317,7 @@ inline double invertMatrix(const Matrix &matrix, Matrix &inverse)
    // sanitize numeric problems
    for (size_t i = 0; i < n; ++i)
       for (size_t j = 0; j < n; ++j)
-         if (fabs(inverse(i, j)) < 1e-9)
+         if (std::abs(inverse(i, j)) < 1e-9)
             inverse(i, j) = 0;
    return condition;
 }
@@ -1060,8 +1060,8 @@ inline void inverseSanity(const Matrix &matrix, const Matrix &inverse, double &u
          if (inverse(i, j) > largestWeight) {
             largestWeight = (double)inverse(i, j);
          }
-         if (fabs(unity(i, j) - static_cast<int>(i == j)) > unityDeviation) {
-            unityDeviation = fabs((double)unity(i, j)) - static_cast<int>(i == j);
+         if (std::abs(unity(i, j) - static_cast<int>(i == j)) > unityDeviation) {
+            unityDeviation = std::abs((double)unity(i, j)) - static_cast<int>(i == j);
          }
       }
    }

@@ -179,7 +179,7 @@ double round_to_digits(double value, int digits)
 {
    if (value == 0.0)
       return 0.0;
-   double factor = pow(10.0, digits - ceil(log10(fabs(value))));
+   double factor = pow(10.0, digits - ceil(log10(std::abs(value))));
    return std::round(value * factor) / factor;
 };
 double round_to_decimal(double value, int decimal_places)
@@ -195,7 +195,7 @@ std::pair<double, double> matchPrecision(const std::pair<double, double> &in)
    if (!std::isinf(out.second)) {
       auto tmp = out.second;
       out.second = round_to_digits(out.second, 2);
-      int expo = (out.second == 0) ? 0 : (int)std::floor(std::log10(std::fabs(out.second)));
+      int expo = (out.second == 0) ? 0 : (int)std::floor(std::log10(std::abs(out.second)));
       if (TString::Format("%e", out.second)(0) != '1') {
          out.second = round_to_digits(tmp, 1);
          out.first = (expo >= 0) ? round(out.first) : round_to_decimal(out.first, -expo);
