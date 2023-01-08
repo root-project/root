@@ -250,9 +250,9 @@ Every field record frame of the list of fields has the following contents
 
 The field version and type version are used for schema evolution.
 
-If `flags=0x0001` (_repetitive field_) is set, the field represents a fixed sized array.
+If `flags=0x0001` (_repetitive field_) is set, the field represents a fixed-size array.
 Typically, another (sub) field with `Parent Field ID` equals the id of aforemention field
-is expected to be found, representing the array content for the fixed-array
+is expected to be found, representing the array content for the fixed-size array
 (see Section "Mapping of C++ Types to Fields and Columns").
 
 The block of integers is followed by a list of strings:
