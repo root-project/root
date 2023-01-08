@@ -5775,9 +5775,9 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
          if (x->hasError())
             h->SetBinError(1, x->getError());
          h->SetMaximum(x->hasMax() ? x->getMax()
-                                   : (h->GetBinContent(1) + std::max(abs(h->GetBinContent(1) * 0.1), 50.)));
+                                   : (h->GetBinContent(1) + std::max(std::abs(h->GetBinContent(1) * 0.1), 50.)));
          h->SetMinimum(x->hasMin() ? x->getMin()
-                                   : (h->GetBinContent(1) - std::max(abs(h->GetBinContent(1) * 0.1), 50.)));
+                                   : (h->GetBinContent(1) - std::max(std::abs(h->GetBinContent(1) * 0.1), 50.)));
          h->GetXaxis()->SetName(dynamic_cast<TObject *>(v)->GetName());
          return h;
       }
