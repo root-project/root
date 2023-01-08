@@ -38,30 +38,30 @@ void rf205_compplot()
 
    // Sum the signal components into a composite signal pdf
    RooRealVar sig1frac("sig1frac", "fraction of component 1 in signal", 0.8, 0., 1.);
-   RooAddPdf sig("sig", "Signal", RooArgList(sig1, sig2), sig1frac);
+   RooAddPdf sig("sig", "Signal", {sig1, sig2}, sig1frac);
 
    // Build Chebychev polynomial pdf
    RooRealVar a0("a0", "a0", 0.5, 0., 1.);
    RooRealVar a1("a1", "a1", 0.2, 0., 1.);
-   RooChebychev bkg1("bkg1", "Background 1", x, RooArgSet(a0, a1));
+   RooChebychev bkg1("bkg1", "Background 1", x, {a0, a1});
 
    // Build exponential pdf
    RooRealVar alpha("alpha", "alpha", -1);
    RooExponential bkg2("bkg2", "Background 2", x, alpha);
 
    // Sum the background components into a composite background pdf
-   RooRealVar bkg1frac("sig1frac", "fraction of component 1 in background", 0.2, 0., 1.);
-   RooAddPdf bkg("bkg", "Signal", RooArgList(bkg1, bkg2), sig1frac);
+   RooRealVar bkg1frac("bkg1frac", "fraction of component 1 in background", 0.8, 0., 1.);
+   RooAddPdf bkg("bkg", "Total background", {bkg1, bkg2}, bkg1frac);
 
    // Sum the composite signal and background
    RooRealVar bkgfrac("bkgfrac", "fraction of background", 0.5, 0., 1.);
-   RooAddPdf model("model", "g1+g2+a", RooArgList(bkg, sig), bkgfrac);
+   RooAddPdf model("model", "g1+g2+a", {bkg, sig}, bkgfrac);
 
    // S e t u p   b a s i c   p l o t   w i t h   d a t a   a n d   f u l l   p d f
    // ------------------------------------------------------------------------------
 
    // Generate a data sample of 1000 events in x from model
-   RooDataSet *data = model.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{model.generate(x, 1000)};
 
    // Plot data and complete PDF overlaid
    RooPlot *xframe = x.frame(Title("Component plotting of pdf=(sig1+sig2)+(bkg1+bkg2)"));
@@ -83,7 +83,7 @@ void rf205_compplot()
    // Plot multiple background components specified by object reference
    // Note that specified components may occur at any level in object tree
    // (e.g bkg is component of 'model' and 'sig2' is component 'sig')
-   model.plotOn(xframe, Components(RooArgSet(bkg, sig2)), LineStyle(kDotted));
+   model.plotOn(xframe, Components(bkg, sig2), LineStyle(kDotted));
 
    // M a k e   c o m p o n e n t   b y   n a m e  /   r e g e x p
    // ------------------------------------------------------------
