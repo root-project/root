@@ -356,6 +356,7 @@ An alias column has the following format
 Alias columns do not have associated data pages.  Instead, their data comes from another column referred to below as "physical column".
 The first 32bit integer references the physical column ID.
 The second 32bit integer references the associated "projected" field.
+A projected field is a field using alias columns to present available data by an alternative C++ type.
 The ID of the alias column itself is given implicitly by the serialization order.
 In particular, alias columns have larger IDs than physical columns.
 In the footer and page list envelopes, only physical column IDs must be referenced.
