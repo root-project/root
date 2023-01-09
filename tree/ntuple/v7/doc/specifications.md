@@ -626,7 +626,7 @@ They are stored as two fields:
 #### std::array<T, N> and array type of the form T[N]
 
 Fixed-sized arrays are stored as two fields:
-  - A repetitive field of type `std::array<T, N>` with no attached columns. The array size `N` is stored in the field meta-data. (the extra 64-bit ineteger read upon seeing `flags==0x0001`)
+  - A repetitive field of type `std::array<T, N>` with no attached columns. The array size `N` is stored in the field meta-data.
   - Child field of type `T`, which must be a type with RNTuple I/O support.
   
 Multi-dimensional arrays of the form `T[N][M]...` are currently not supported.
