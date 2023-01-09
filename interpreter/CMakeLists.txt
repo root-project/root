@@ -193,7 +193,7 @@ if(builtin_llvm)
   message(STATUS "Building LLVM in '${LLVM_BUILD_TYPE}' mode.")
 
   if(NOT DEFINED LLVM_ENABLE_ASSERTIONS)
-    if(CMAKE_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)"
+    if(CMAKE_BUILD_TYPE MATCHES "Debug"
      OR LLVM_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)")
       set(LLVM_ENABLE_ASSERTIONS TRUE)
     else()
