@@ -22,7 +22,6 @@
 #include <atomic>
 #include <cstdlib>
 #include <memory>
-#include <typeinfo>
 #include <utility>
 
 ROOT::Experimental::RResult<void>
@@ -33,7 +32,7 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const Det
    if (source->GetStructure() != target->GetStructure())
       return R__FAIL("field mapping structural mismatch: " + source->GetName() + " --> " + target->GetName());
    if (target->GetStructure() == ENTupleStructure::kLeaf) {
-      if (typeid(*target) != typeid(*source))
+      if (target->GetType() != source->GetType())
          return R__FAIL("field mapping type mismatch: " + source->GetName() + " --> " + target->GetName());
    }
 
