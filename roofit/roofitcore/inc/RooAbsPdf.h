@@ -299,9 +299,9 @@ public:
   static void verboseEval(Int_t stat) ;
   static int verboseEval() ;
 
-  double extendedTerm(double sumEntries, double expected, double sumEntriesW2=0.0) const;
-  double extendedTerm(double sumEntries, RooArgSet const* nset, double sumEntriesW2=0.0) const;
-  double extendedTerm(RooAbsData const& data, bool weightSquared) const;
+  double extendedTerm(double sumEntries, double expected, double sumEntriesW2=0.0, bool doOffset=false) const;
+  double extendedTerm(double sumEntries, RooArgSet const* nset, double sumEntriesW2=0.0, bool doOffset=false) const;
+  double extendedTerm(RooAbsData const& data, bool weightSquared, bool doOffset=false) const;
 
   void setNormRange(const char* rangeName) ;
   const char* normRange() const {
