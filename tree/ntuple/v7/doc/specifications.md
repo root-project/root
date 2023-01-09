@@ -356,7 +356,7 @@ An alias column has the following format
 |                           Field ID                            |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
-
+Alias columns do not have associated data pages.  Instead, their data comes from another column referred to below as "physical column".
 The first 32bit integer references the physical column ID.
 The second 32bit integer references the associated "projected" field.
 The ID of the alias column itself is given implicitly by the serialization order.
