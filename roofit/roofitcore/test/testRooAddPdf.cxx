@@ -6,6 +6,7 @@
 #include <RooDataHist.h>
 #include <RooExponential.h>
 #include <RooGaussian.h>
+#include <RooHelpers.h>
 #include <RooHistPdf.h>
 #include <RooMsgService.h>
 #include <RooProdPdf.h>
@@ -191,12 +192,18 @@ TEST(RooAddPdf, RecursiveCoefficients)
 }
 
 class ProjCacheTest : public testing::TestWithParam<std::tuple<bool>> {
-   void SetUp() override { _fixCoefNormalization = std::get<0>(GetParam()); }
+   void SetUp() override
+   {
+      _fixCoefNormalization = std::get<0>(GetParam());
+      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
+   }
 
-   void TearDown() override {}
+   void TearDown() override { _changeMsgLvl.reset(); }
 
 protected:
    bool _fixCoefNormalization = false;
+private:
+   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
 
 /// Verify that the coefficient projection works for different configurations
@@ -251,6 +258,8 @@ INSTANTIATE_TEST_SUITE_P(RooAddPdf, ProjCacheTest,
 TEST(RooAddPdf, ResetServerNormRange)
 {
    using namespace RooFit;
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    RooWorkspace ws;
    ws.factory("PROD::sig(Polynomial(x[-10, 10], {0.0, 0.0, 1.0}, 0), Polynomial(y[-10, 10], {}))");
@@ -318,6 +327,8 @@ TEST(RooAddPdf, ResetServerNormRange)
 /// https://sft.its.cern.ch/jira/browse/ROOT-10483.
 TEST(RooAddPdf, ROOT10483)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    RooWorkspace ws;
 
    // Create model

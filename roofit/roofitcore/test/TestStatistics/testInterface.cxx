@@ -36,13 +36,15 @@ TEST(Interface, createNLLRooAbsL)
 
    RooRandom::randomGenerator()->SetSeed(42);
    RooWorkspace w;
-   w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
-   auto x = w.var("x");
+   w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1, 0.01, 3])");
+   RooRealVar *x = w.var("x");
+   RooRealVar *sigma = w.var("sigma");
+   sigma->setConstant(true);
    RooAbsPdf *pdf = w.pdf("g");
    std::unique_ptr<RooDataSet> data{pdf->generate(RooArgSet(*x), 10000)};
    RooAbsReal *nll = pdf->createNLL(*data, RooFit::ModularL(true));
 
-   RooFit::TestStatistics::RooRealL *nll_real = dynamic_cast<RooFit::TestStatistics::RooRealL *>(nll);
+   auto *nll_real = dynamic_cast<RooFit::TestStatistics::RooRealL *>(nll);
 
    EXPECT_TRUE(nll_real != nullptr);
 
@@ -59,8 +61,10 @@ TEST(Interface, createNLLModularLAndOffset)
 
    RooRandom::randomGenerator()->SetSeed(42);
    RooWorkspace w;
-   w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
-   auto x = w.var("x");
+   w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1, 0.01, 3])");
+   RooRealVar *x = w.var("x");
+   RooRealVar *sigma = w.var("sigma");
+   sigma->setConstant(true);
    RooAbsPdf *pdf = w.pdf("g");
    std::unique_ptr<RooDataSet> data{pdf->generate(RooArgSet(*x), 10000)};
    RooAbsReal *nll = pdf->createNLL(*data, RooFit::Offset(true), RooFit::ModularL(true));

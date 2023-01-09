@@ -42,7 +42,7 @@ public:
    void SetUp() override
    {
       // silence log output
-      RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
 
       // We use the global observable also in the model for the event
       // observables. It's unusual, but let's better do this to also cover the
@@ -112,6 +112,7 @@ public:
       _data.reset();
       _dataWithMeanSigmaGlobs.reset();
       _data.reset();
+      _changeMsgLvl.reset();
    }
 
 private:
@@ -119,6 +120,7 @@ private:
    std::unique_ptr<RooDataSet> _data;
    std::unique_ptr<RooDataSet> _dataWithMeanSigmaGlobs;
    std::unique_ptr<RooDataSet> _dataWithMeanGlob;
+   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
 
 TEST_F(TestGlobalObservables, NoConstraints)
