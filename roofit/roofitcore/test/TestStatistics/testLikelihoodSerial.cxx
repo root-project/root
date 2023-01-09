@@ -37,14 +37,9 @@ using RooFit::TestStatistics::LikelihoodWrapper;
 
 class Environment : public testing::Environment {
 public:
-   void SetUp() override
-   {
-      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::ERROR);
-   }
-   void TearDown() override
-   {
-      _changeMsgLvl.reset();
-   }
+   void SetUp() override { _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::ERROR); }
+   void TearDown() override { _changeMsgLvl.reset(); }
+
 private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };

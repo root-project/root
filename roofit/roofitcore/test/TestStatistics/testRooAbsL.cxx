@@ -37,14 +37,9 @@ using RooFit::TestStatistics::LikelihoodWrapper;
 
 class Environment : public testing::Environment {
 public:
-   void SetUp() override
-   {
-      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::ERROR);
-   }
-   void TearDown() override
-   {
-      _changeMsgLvl.reset();
-   }
+   void SetUp() override { _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::ERROR); }
+   void TearDown() override { _changeMsgLvl.reset(); }
+
 private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
@@ -190,7 +185,6 @@ TEST_F(RooAbsLTest, SumLikelihoodIntrospection)
    EXPECT_STREQ("RooSumL::model", (likelihood->GetInfo()).c_str());
 }
 
-
 TEST_F(SimBinnedConstrainedTest, SumSubsidiaryLikelihoodIntrospection)
 {
 
@@ -200,9 +194,8 @@ TEST_F(SimBinnedConstrainedTest, SumSubsidiaryLikelihoodIntrospection)
    EXPECT_STREQ("RooSumL", (likelihood->GetClassName()).c_str());
    EXPECT_STREQ("RooSumL::model", (likelihood->GetInfo()).c_str());
 
-
    // Is RooSumL so we can cast to this type to use its further functionality
-   RooFit::TestStatistics::RooSumL* sum_likelihood = dynamic_cast<RooFit::TestStatistics::RooSumL*>(likelihood.get());
+   RooFit::TestStatistics::RooSumL *sum_likelihood = dynamic_cast<RooFit::TestStatistics::RooSumL *>(likelihood.get());
 
    EXPECT_STREQ("RooUnbinnedL", (sum_likelihood->GetComponents()[0]->GetClassName()).c_str());
    EXPECT_STREQ("RooUnbinnedL::model_A", (sum_likelihood->GetComponents()[0]->GetInfo()).c_str());
@@ -211,7 +204,6 @@ TEST_F(SimBinnedConstrainedTest, SumSubsidiaryLikelihoodIntrospection)
    EXPECT_STREQ("RooSubsidiaryL", (sum_likelihood->GetComponents()[2]->GetClassName()).c_str());
    EXPECT_STREQ("RooSubsidiaryL::likelihood for pdf model", (sum_likelihood->GetComponents()[2]->GetInfo()).c_str());
 }
-
 
 TEST_F(BinnedDatasetTest, EventSections)
 {
@@ -260,17 +252,20 @@ TEST_F(RooAbsLTest, SubEventSections)
    ROOT::Math::KahanSum<double> nine_parts, eleven_parts, twenty_parts;
 
    for (std::size_t ix = 0; ix < 9; ++ix) {
-      nine_parts += likelihood->evaluatePartition({static_cast<double>(ix)/9, static_cast<double>(ix+1)/9}, 0, likelihood->getNComponents());
+      nine_parts += likelihood->evaluatePartition({static_cast<double>(ix) / 9, static_cast<double>(ix + 1) / 9}, 0,
+                                                  likelihood->getNComponents());
    }
    EXPECT_EQ(whole.Sum(), nine_parts.Sum());
 
    for (std::size_t ix = 0; ix < 11; ++ix) {
-      eleven_parts += likelihood->evaluatePartition({static_cast<double>(ix)/11, static_cast<double>(ix+1)/11}, 0, likelihood->getNComponents());
+      eleven_parts += likelihood->evaluatePartition({static_cast<double>(ix) / 11, static_cast<double>(ix + 1) / 11}, 0,
+                                                    likelihood->getNComponents());
    }
    EXPECT_EQ(whole.Sum(), eleven_parts.Sum());
 
    for (std::size_t ix = 0; ix < 20; ++ix) {
-      twenty_parts += likelihood->evaluatePartition({static_cast<double>(ix)/20, static_cast<double>(ix+1)/20}, 0, likelihood->getNComponents());
+      twenty_parts += likelihood->evaluatePartition({static_cast<double>(ix) / 20, static_cast<double>(ix + 1) / 20}, 0,
+                                                    likelihood->getNComponents());
    }
    EXPECT_EQ(whole.Sum(), twenty_parts.Sum());
 }
@@ -291,7 +286,9 @@ TEST_F(SimBinnedConstrainedTest, SubEventSections)
    auto N_events_total = likelihood->getNEvents();
 
    for (std::size_t ix = 0; ix < N_events_total; ++ix) {
-      N_events_total_parts += likelihood->evaluatePartition({static_cast<double>(ix)/N_events_total, static_cast<double>(ix+1)/N_events_total}, 0, likelihood->getNComponents());
+      N_events_total_parts += likelihood->evaluatePartition(
+         {static_cast<double>(ix) / N_events_total, static_cast<double>(ix + 1) / N_events_total}, 0,
+         likelihood->getNComponents());
    }
    EXPECT_EQ(whole.Sum(), N_events_total_parts.Sum());
 
@@ -299,7 +296,9 @@ TEST_F(SimBinnedConstrainedTest, SubEventSections)
    ROOT::Math::KahanSum<double> thrice_N_events_total_parts;
 
    for (std::size_t ix = 0; ix < 3 * N_events_total; ++ix) {
-      thrice_N_events_total_parts += likelihood->evaluatePartition({static_cast<double>(ix)/(3 * N_events_total), static_cast<double>(ix+1)/(3 * N_events_total)}, 0, likelihood->getNComponents());
+      thrice_N_events_total_parts += likelihood->evaluatePartition(
+         {static_cast<double>(ix) / (3 * N_events_total), static_cast<double>(ix + 1) / (3 * N_events_total)}, 0,
+         likelihood->getNComponents());
    }
    EXPECT_EQ(whole.Sum(), thrice_N_events_total_parts.Sum());
 }

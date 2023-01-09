@@ -66,10 +66,8 @@ public:
       _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::ERROR);
       ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
    }
-   void TearDown() override
-   {
-      _changeMsgLvl.reset();
-   }
+   void TearDown() override { _changeMsgLvl.reset(); }
+
 private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
@@ -423,9 +421,8 @@ TEST_P(SimBinnedConstrainedTest, ConstrainedAndOffset)
 
    RooFit::MultiProcess::Config::setDefaultNWorkers(NWorkers);
 
-   std::unique_ptr<RooAbsReal> likelihoodAbsReal{pdf->createNLL(*data, Constrain(*w.var("alpha_bkg_obs_A")),
-                                                                GlobalObservables(*w.var("alpha_bkg_obs_B")),
-                                                                ModularL(true))};
+   std::unique_ptr<RooAbsReal> likelihoodAbsReal{pdf->createNLL(
+      *data, Constrain(*w.var("alpha_bkg_obs_A")), GlobalObservables(*w.var("alpha_bkg_obs_B")), ModularL(true))};
 
    RooMinimizer::Config cfg1;
    cfg1.parallelize = -1;
