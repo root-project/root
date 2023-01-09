@@ -17,7 +17,7 @@ The RArrowDS implements a proxy RDataSource to be able to use Apache Arrow
 tables with RDataFrame.
 
 A RDataFrame that adapts an arrow::Table class can be constructed using the factory method
-ROOT::RDF::MakeArrowDataFrame, which accepts one parameter:
+ROOT::RDF::FromArrow, which accepts one parameter:
 1. An arrow::Table smart pointer.
 
 The types of the columns are derived from the types in the associated

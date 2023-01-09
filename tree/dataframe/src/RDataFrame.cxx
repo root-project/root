@@ -308,7 +308,7 @@ This is useful to generate simple datasets on the fly: the contents of each even
 For data sources other than TTrees and TChains, RDataFrame objects are constructed using ad-hoc factory functions (see e.g. FromCSV(), FromSqlite(), FromArrow()):
 
 ~~~{.cpp}
-auto df = ROOT::RDF::MakeCsvDataFrame("input.csv");
+auto df = ROOT::RDF::FromCSV("input.csv");
 // use df as usual
 ~~~
 
@@ -1262,7 +1262,7 @@ RDataFrame calls into concrete RDataSource implementations to retrieve informati
 and to advance the readers to the desired data entry.
 Some predefined RDataSources are natively provided by ROOT such as the ROOT::RDF::RCsvDS which allows to read comma separated files:
 ~~~{.cpp}
-auto tdf = ROOT::RDF::MakeCsvDataFrame("MuRun2010B.csv");
+auto tdf = ROOT::RDF::FromCSV("MuRun2010B.csv");
 auto filteredEvents =
    tdf.Filter("Q1 * Q2 == -1")
       .Define("m", "sqrt(pow(E1 + E2, 2) - (pow(px1 + px2, 2) + pow(py1 + py2, 2) + pow(pz1 + pz2, 2)))");
