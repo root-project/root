@@ -53,7 +53,7 @@ public:
    /// to the models zero field.  Only the real source fields are written to, projected fields are stored as meta-data
    /// (header) information only.  Only top-level projected fields are supported because otherwise the layout of types
    /// could be altered in unexpected ways.
-   /// All projected fields the the source fields used to back them are kept in this class.
+   /// All projected fields and the source fields used to back them are kept in this class.
    class RProjectedFields {
    public:
       /// The map keys are the projected target fields, the map values are the backing source fields
