@@ -96,7 +96,9 @@ TEST(Interface, DISABLED_fitTo)
 
    *values = *savedValues;
 
-   std::unique_ptr<RooFitResult> result2{pdf->fitTo(*data, RooFit::Save(), RooFit::Parallelize(4), RooFit::Experimental::ParallelGradientOptions(true), RooFit::Experimental::ParallelDescentOptions(true))};
+   std::unique_ptr<RooFitResult> result2{pdf->fitTo(*data, RooFit::Save(), RooFit::Parallelize(4),
+                                                    RooFit::Experimental::ParallelGradientOptions(true),
+                                                    RooFit::Experimental::ParallelDescentOptions(true))};
 
    double minNll_GradientJob = result2->minNll();
    double edm_GradientJob = result2->edm();

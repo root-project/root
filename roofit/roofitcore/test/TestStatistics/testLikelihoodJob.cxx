@@ -48,10 +48,8 @@ public:
       _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::ERROR);
       RooFit::MultiProcess::Config::setDefaultNWorkers(2);
    }
-   void TearDown() override
-   {
-      _changeMsgLvl.reset();
-   }
+   void TearDown() override { _changeMsgLvl.reset(); }
+
 private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
@@ -115,7 +113,8 @@ TEST_F(LikelihoodJobTest, UnbinnedGaussian1D)
 {
    std::tie(nll, pdf, data, values) = generate_1D_gaussian_pdf_nll(w, 10000);
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
    auto nll0 = nll->getVal();
 
@@ -129,7 +128,8 @@ TEST_F(LikelihoodJobTest, UnbinnedGaussian1DTwice)
 {
    std::tie(nll, pdf, data, values) = generate_1D_gaussian_pdf_nll(w, 10000);
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
    auto nll0 = nll->getVal();
 
@@ -147,7 +147,8 @@ TEST_F(LikelihoodJobTest, UnbinnedGaussianND)
 
    std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000);
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
    auto nll0 = nll->getVal();
 
@@ -155,7 +156,7 @@ TEST_F(LikelihoodJobTest, UnbinnedGaussianND)
    auto nll1 = nll_ts->getResult();
 
    EXPECT_EQ(nll0, nll1.Sum());
-//   printf("%a =?= %a\n", nll0, nll1.Sum());
+   //   printf("%a =?= %a\n", nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodJobBinnedDatasetTest, UnbinnedPdf)
@@ -165,7 +166,8 @@ TEST_F(LikelihoodJobBinnedDatasetTest, UnbinnedPdf)
    nll.reset(pdf->createNLL(*data));
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
    auto nll0 = nll->getVal();
 
@@ -190,7 +192,8 @@ TEST_F(LikelihoodJobBinnedDatasetTest, BinnedManualNLL)
    RooNLLVar nll_manual("nlletje", "-log(likelihood)", *pdf, *data, projDeps, extended, nll_config);
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
    auto nll0 = nll_manual.getVal();
 
@@ -237,7 +240,8 @@ TEST_F(LikelihoodJobTest, SimBinned)
    nll.reset(pdf->createNLL(*data));
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
    auto nll0 = nll->getVal();
 
@@ -285,7 +289,8 @@ TEST_F(LikelihoodJobTest, BinnedConstrained)
 
    likelihood = RooFit::TestStatistics::buildLikelihood(
       pdf, data, RooFit::TestStatistics::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs"))));
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
@@ -312,7 +317,8 @@ TEST_F(LikelihoodJobTest, SimUnbinned)
    auto nll0 = nll->getVal();
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
@@ -343,7 +349,8 @@ TEST_F(LikelihoodJobTest, SimUnbinnedNonExtended)
    nll.reset(pdf->createNLL(*data));
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
    auto nll0 = nll->getVal();
 
@@ -412,7 +419,8 @@ TEST_F(LikelihoodJobSimBinnedConstrainedTest, BasicParameters)
 
    likelihood = RooFit::TestStatistics::buildLikelihood(
       pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
@@ -433,7 +441,8 @@ TEST_F(LikelihoodJobSimBinnedConstrainedTest, ConstrainedAndOffset)
    likelihood = RooFit::TestStatistics::buildLikelihood(
       pdf, data, RooFit::TestStatistics::ConstrainedParameters(RooArgSet(*w.var("alpha_bkg_obs_A"))),
       RooFit::TestStatistics::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))));
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
    nll_ts->enableOffsetting(true);
 
    nll_ts->evaluate();
@@ -472,7 +481,8 @@ TEST_F(LikelihoodJobTest, BatchedUnbinnedGaussianND)
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
    dynamic_cast<RooFit::TestStatistics::RooUnbinnedL *>(likelihood.get())->setUseBatchedEvaluations(true);
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
    auto nll0 = nll->getVal();
 
@@ -482,7 +492,8 @@ TEST_F(LikelihoodJobTest, BatchedUnbinnedGaussianND)
    EXPECT_NEAR(nll0, nll1.Sum(), 1e-14 * nll0);
 }
 
-class LikelihoodJobSplitStrategies : public LikelihoodJobSimBinnedConstrainedTest, public testing::WithParamInterface<std::tuple<std::size_t, std::size_t>> {};
+class LikelihoodJobSplitStrategies : public LikelihoodJobSimBinnedConstrainedTest,
+                                     public testing::WithParamInterface<std::tuple<std::size_t, std::size_t>> {};
 
 TEST_P(LikelihoodJobSplitStrategies, SimBinnedConstrainedAndOffset)
 {
@@ -501,7 +512,8 @@ TEST_P(LikelihoodJobSplitStrategies, SimBinnedConstrainedAndOffset)
    RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks = std::get<0>(GetParam());
    RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks = std::get<1>(GetParam());
 
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
    nll_ts->enableOffsetting(true);
 
    nll_ts->evaluate();
@@ -524,12 +536,11 @@ TEST_P(LikelihoodJobSplitStrategies, SimBinnedConstrainedAndOffset)
    EXPECT_DOUBLE_EQ(nll1.Sum(), nll2);
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    SplitStrategies, LikelihoodJobSplitStrategies,
-    testing::Combine(
-        // number of event tasks:
-        testing::Values(0, 1, 2, 50, 100, 101, 102, 100000),  // the last value is larger than number of events to test that
-        // number of component tasks:
-        testing::Values(0, 1, 2, 4)  // the last value is larger than number of components
-    )
-);
+INSTANTIATE_TEST_SUITE_P(SplitStrategies, LikelihoodJobSplitStrategies,
+                         testing::Combine(
+                            // number of event tasks:
+                            testing::Values(0, 1, 2, 50, 100, 101, 102,
+                                            100000), // the last value is larger than number of events to test that
+                            // number of component tasks:
+                            testing::Values(0, 1, 2, 4) // the last value is larger than number of components
+                            ));
