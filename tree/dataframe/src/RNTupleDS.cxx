@@ -368,13 +368,3 @@ ROOT::RDataFrame ROOT::RDF::Experimental::FromRNTuple(ROOT::Experimental::RNTupl
    ROOT::RDataFrame rdf(std::make_unique<ROOT::Experimental::RNTupleDS>(ntuple->MakePageSource()));
    return rdf;
 }
-
-ROOT::RDataFrame ROOT::Experimental::MakeNTupleDataFrame(std::string_view ntupleName, std::string_view fileName)
-{
-   return ROOT::RDF::Experimental::FromRNTuple(ntupleName, fileName);
-}
-
-ROOT::RDataFrame ROOT::Experimental::MakeNTupleDataFrame(RNTuple *ntuple)
-{
-   return ROOT::RDF::Experimental::FromRNTuple(ntuple);
-}
