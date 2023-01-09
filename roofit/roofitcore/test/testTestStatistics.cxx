@@ -2,10 +2,12 @@
 // Authors: Stephan Hageboeck, CERN 10/2020
 //          Jonas Rembser, CERN 10/2022
 
+#include <RooAddPdf.h>
 #include <RooBinning.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooFitResult.h>
+#include <RooHistPdf.h>
 #include <RooNLLVar.h>
 #include <RooRandom.h>
 #include <RooPlot.h>
@@ -13,6 +15,11 @@
 #include <RooWorkspace.h>
 
 #include <gtest/gtest.h>
+
+// Backward compatibility for gtest version < 1.10.0
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
 
 #include <memory>
 #include <cmath>
@@ -309,3 +316,98 @@ TEST(RooNLLVar, CopyRangedNLL)
    EXPECT_FLOAT_EQ(nll->getVal(), nllrange->getVal());
    EXPECT_FLOAT_EQ(nllrange->getVal(), nllrangeClone->getVal());
 }
+
+class OffsetBinTest : public testing::TestWithParam<std::tuple<std::string, bool, bool, bool>> {
+   void SetUp() override
+   {
+      _batchMode = std::get<0>(GetParam());
+      _binned = std::get<1>(GetParam());
+      _ext = std::get<2>(GetParam());
+      _sumw2 = std::get<3>(GetParam());
+   }
+
+   void TearDown() override {}
+
+protected:
+   std::string _batchMode;
+   bool _binned = false;
+   bool _ext = false;
+   bool _sumw2 = false;
+};
+
+// Test the `Offset("bin")` feature of RooAbsPdf::createNLL. Doing the
+// bin-by-bin offset is equivalent to calculating the likelihood ratio with the
+// NLL of a template histogram that is based of the dataset, so we use this
+// relation to do a cross check: if we create a template pdf from the fit data
+// and fit this template to the data with the `Offset("bin")` option, the
+// resulting NLL should always be zero (within some numerical errors).
+TEST_P(OffsetBinTest, CrossCheck)
+{
+   using namespace RooFit;
+   using RealPtr = std::unique_ptr<RooAbsReal>;
+
+   // Create extended PDF model
+   RooWorkspace ws;
+   ws.factory("Gaussian::gauss(x[-10, 10], mean[0, -10, 10], sigma[4, 0.1, 10])");
+   ws.factory("AddPdf::extGauss({gauss}, {nEvents[10000, 100, 100000]})");
+
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &nEvents = *ws.var("nEvents");
+   RooAbsPdf &extGauss = *ws.pdf("extGauss");
+
+   // We have to generate double the number of events because in the next step
+   // we will weight down each event by a factor of two.
+   std::unique_ptr<RooDataSet> data{extGauss.generate(x, 2. * nEvents.getVal())};
+
+   // Replace dataset with a clone where the weights are different from unity
+   // such that the effect of the SumW2Error option is not trivial and we test
+   // it correctly.
+   {
+      // Create weighted dataset and hist to test SumW2 feature
+      RooRealVar weight("weight", "weight", 0.5, 0.0, 1.0);
+      auto dataW = std::make_unique<RooDataSet>("dataW", "dataW", RooArgSet{x, weight}, "weight");
+      for (int i = 0; i < data->numEntries(); ++i) {
+         dataW->add(*data->get(i), 0.5);
+      }
+      std::swap(dataW, data);
+   }
+
+   std::unique_ptr<RooDataHist> hist{data->binnedClone()};
+
+   // Create template PDF based on data
+   RooHistPdf histPdf{"histPdf", "histPdf", x, *hist};
+   RooAddPdf extHistPdf("extHistPdf", "extHistPdf", histPdf, nEvents);
+
+   RooAbsData *fitData = _binned ? static_cast<RooAbsData *>(hist.get()) : static_cast<RooAbsData *>(data.get());
+
+   RealPtr nll0{extHistPdf.createNLL(*fitData, BatchMode(_batchMode), Extended(_ext))};
+   RealPtr nll1{extHistPdf.createNLL(*fitData, Offset("bin"), BatchMode(_batchMode), Extended(_ext))};
+
+   if (_sumw2) {
+      nll0->applyWeightSquared(true);
+      nll1->applyWeightSquared(true);
+   }
+
+   double nllVal0 = nll0->getVal();
+   double nllVal1 = nll1->getVal();
+
+   // For all configurations, the bin offset should have the effect of bringing
+   // the NLL to zero, modulo some numerical imprecisions:
+   EXPECT_NEAR(nllVal1, 0.0, 1e-8) << "NLL with bin offsetting is " << nllVal1 << ", and " << nllVal0 << " without it.";
+}
+
+INSTANTIATE_TEST_SUITE_P(
+   RooNLLVar, OffsetBinTest,
+   testing::Combine(testing::Values("OFF", "CPU"), // BatchMode
+                    testing::Values(true),         // unbinned or binned (we don't support unbinned fits yet)
+                    testing::Values(false, true),  // extended fit
+                    testing::Values(false, true)   // use sumW2
+                    ),
+   [](testing::TestParamInfo<OffsetBinTest::ParamType> const &paramInfo) {
+      std::stringstream ss;
+      ss << std::get<0>(paramInfo.param);
+      ss << (std::get<1>(paramInfo.param) ? "Binned" : "Unbinned");
+      ss << (std::get<2>(paramInfo.param) ? "Extended" : "");
+      ss << (std::get<3>(paramInfo.param) ? "SumW2" : "");
+      return ss.str();
+   });
