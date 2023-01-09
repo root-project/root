@@ -34,6 +34,7 @@ The following people have contributed to this new version:
  Wouter Verkerke, NIKHEF/Atlas,
 
 ## Deprecation and Removal
+- The RDataFrame factory functions `MakeCsvDataFrame`, `MakeArrowDataFrame`, `MakeNTupleDataFrame` and `MakeSqliteDataFrame` that were deprecated in v6.28 have been removed. Use `FromCSV`, `FromArrow`, `FromRNTuple` or `FromSqlite` instead.
 
 
 ## Core Libraries
