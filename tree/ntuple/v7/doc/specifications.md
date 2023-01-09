@@ -252,8 +252,8 @@ The field version and type version are used for schema evolution.
 
 If `flags=0x0001` (_repetitive field_) is set, the field represents a fixed-size array.
 In this case, an additional 64bit integer follows immediately that specifies the size of the array.
-Typically, another (sub) field with `Parent Field ID` equals the id of aforemention field
-is expected to be found, representing the array content for the fixed-size array
+Typically, another (sub) field with `Parent Field ID` equal to the ID of this field
+is expected to be found, representing the array content
 (see Section "Mapping of C++ Types to Fields and Columns").
 
 The block of integers is followed by a list of strings:
