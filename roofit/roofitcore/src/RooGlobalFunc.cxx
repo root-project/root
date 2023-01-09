@@ -282,8 +282,8 @@ namespace RooFit {
   RooCmdArg Offset(std::string const& mode) {
       std::string lower = mode;
       std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c){ return std::tolower(c); });
-      OffsetMode modeVal = OffsetMode::Off;
-      if(lower == "off") modeVal = OffsetMode::Off;
+      OffsetMode modeVal = OffsetMode::None;
+      if(lower == "none") modeVal = OffsetMode::None;
       else if(lower == "initial") modeVal = OffsetMode::Initial;
       else if(lower == "bin") modeVal = OffsetMode::Bin;
       return RooCmdArg("OffsetLikelihood", static_cast<int>(modeVal));
