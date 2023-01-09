@@ -7,6 +7,7 @@
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooFitResult.h>
+#include <RooHelpers.h>
 #include <RooHistPdf.h>
 #include <RooNLLVar.h>
 #include <RooRandom.h>
@@ -24,23 +25,37 @@
 #include <memory>
 #include <cmath>
 
-const bool batchMode = true;
-
 namespace {
 
 double getVal(const char *name, const RooArgSet &set)
 {
-   return dynamic_cast<const RooRealVar &>(set[name]).getVal();
+   return static_cast<const RooRealVar &>(set[name]).getVal();
 }
 
 double getErr(const char *name, const RooArgSet &set)
 {
-   return dynamic_cast<const RooRealVar &>(set[name]).getError();
+   return static_cast<const RooRealVar &>(set[name]).getError();
 }
 
 } // namespace
 
-TEST(RooNLLVar, IntegrateBins)
+class TestStatisticTest : public testing::TestWithParam<std::tuple<std::string>> {
+   void SetUp() override
+   {
+      _batchMode = std::get<0>(GetParam());
+      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::ERROR);
+   }
+
+   void TearDown() override { _changeMsgLvl.reset(); }
+
+protected:
+   std::string _batchMode;
+
+private:
+   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
+};
+
+TEST_P(TestStatisticTest, IntegrateBins)
 {
    RooRandom::randomGenerator()->SetSeed(1337ul);
 
@@ -56,26 +71,28 @@ TEST(RooNLLVar, IntegrateBins)
    RooArgSet targetValues;
    RooArgSet(a).snapshot(targetValues);
 
+   using namespace RooFit;
+
    std::unique_ptr<RooDataHist> dataH(pdf.generateBinned(x, 10000));
    RooRealVar w("w", "weight", 0., 0., 10000.);
-   RooDataSet data("data", "data", {x, w}, RooFit::WeightVar(w));
+   RooDataSet data("data", "data", {x, w}, WeightVar(w));
    for (int i = 0; i < dataH->numEntries(); ++i) {
       auto coords = dataH->get(i);
       data.add(*coords, dataH->weight());
    }
 
    std::unique_ptr<RooPlot> frame(x.frame());
-   dataH->plotOn(frame.get(), RooFit::MarkerColor(kRed));
-   data.plotOn(frame.get(), RooFit::Name("data"));
+   dataH->plotOn(frame.get(), MarkerColor(kRed));
+   data.plotOn(frame.get(), Name("data"));
 
    a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit1(pdf.fitTo(data, RooFit::Save(), RooFit::PrintLevel(-1)));
-   pdf.plotOn(frame.get(), RooFit::LineColor(kRed), RooFit::Name("standard"));
+   std::unique_ptr<RooFitResult> fit1(pdf.fitTo(data, Save(), PrintLevel(-1), BatchMode(_batchMode)));
+   pdf.plotOn(frame.get(), LineColor(kRed), Name("standard"));
 
    a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit2(pdf.fitTo(data, RooFit::Save(), RooFit::PrintLevel(-1),
-                                                RooFit::BatchMode(batchMode), RooFit::IntegrateBins(1.E-3)));
-   pdf.plotOn(frame.get(), RooFit::LineColor(kBlue), RooFit::Name("highRes"));
+   std::unique_ptr<RooFitResult> fit2(
+      pdf.fitTo(data, Save(), PrintLevel(-1), BatchMode(_batchMode), IntegrateBins(1.E-3)));
+   pdf.plotOn(frame.get(), LineColor(kBlue), Name("highRes"));
 
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
              1. * getErr("a", fit1->floatParsFinal()))
@@ -91,7 +108,7 @@ TEST(RooNLLVar, IntegrateBins)
 /// Prepare a RooDataSet that looks like the one that HistFactory uses:
 /// It pretends to be an unbinned dataset, but instead of single events,
 /// events are aggregated in the bin centres using weights.
-TEST(RooNLLVar, IntegrateBins_SubRange)
+TEST_P(TestStatisticTest, IntegrateBins_SubRange)
 {
    RooRandom::randomGenerator()->SetSeed(1337ul);
 
@@ -109,28 +126,28 @@ TEST(RooNLLVar, IntegrateBins_SubRange)
    RooArgSet targetValues;
    RooArgSet(a).snapshot(targetValues);
 
+   using namespace RooFit;
+
    std::unique_ptr<RooDataHist> dataH(pdf.generateBinned(x, 10000));
    RooRealVar w("w", "weight", 0., 0., 10000.);
-   RooDataSet data("data", "data", {x, w}, RooFit::WeightVar(w));
+   RooDataSet data("data", "data", {x, w}, WeightVar(w));
    for (int i = 0; i < dataH->numEntries(); ++i) {
       auto coords = dataH->get(i);
       data.add(*coords, dataH->weight());
    }
 
    std::unique_ptr<RooPlot> frame(x.frame());
-   dataH->plotOn(frame.get(), RooFit::MarkerColor(kRed));
-   data.plotOn(frame.get(), RooFit::Name("data"));
-
-   using namespace RooFit;
+   dataH->plotOn(frame.get(), MarkerColor(kRed));
+   data.plotOn(frame.get(), Name("data"));
 
    a.setVal(3.);
    std::unique_ptr<RooFitResult> fit1(
-      pdf.fitTo(data, Save(), PrintLevel(-1), Optimize(0), Range("range"), BatchMode(batchMode)));
+      pdf.fitTo(data, Save(), PrintLevel(-1), Optimize(0), Range("range"), BatchMode(_batchMode)));
    pdf.plotOn(frame.get(), LineColor(kRed), Name("standard"), Range("range"), NormRange("range"));
 
    a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit2(
-      pdf.fitTo(data, Save(), PrintLevel(-1), Optimize(0), Range("range"), BatchMode(batchMode), IntegrateBins(1.E-3)));
+   std::unique_ptr<RooFitResult> fit2(pdf.fitTo(data, Save(), PrintLevel(-1), Optimize(0), Range("range"),
+                                                BatchMode(_batchMode), IntegrateBins(1.E-3)));
    pdf.plotOn(frame.get(), LineColor(kBlue), Name("highRes"), Range("range"), NormRange("range"));
 
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
@@ -147,7 +164,7 @@ TEST(RooNLLVar, IntegrateBins_SubRange)
 /// Prepare a RooDataSet that looks like the one that HistFactory uses:
 /// It pretends to be an unbinned dataset, but instead of single events,
 /// events are aggregated in the bin centres using weights.
-TEST(RooNLLVar, IntegrateBins_CustomBinning)
+TEST_P(TestStatisticTest, IntegrateBins_CustomBinning)
 {
    RooRandom::randomGenerator()->SetSeed(1337ul);
 
@@ -168,26 +185,28 @@ TEST(RooNLLVar, IntegrateBins_CustomBinning)
    RooArgSet targetValues;
    RooArgSet(a).snapshot(targetValues);
 
+   using namespace RooFit;
+
    std::unique_ptr<RooDataHist> dataH(pdf.generateBinned(x, 50000));
    RooRealVar w("w", "weight", 0., 0., 1000000.);
-   RooDataSet data("data", "data", {x, w}, RooFit::WeightVar(w));
+   RooDataSet data("data", "data", {x, w}, WeightVar(w));
    for (int i = 0; i < dataH->numEntries(); ++i) {
       auto coords = dataH->get(i);
       data.add(*coords, dataH->weight());
    }
 
    std::unique_ptr<RooPlot> frame(x.frame());
-   dataH->plotOn(frame.get(), RooFit::Name("dataHist"), RooFit::MarkerColor(kRed));
-   data.plotOn(frame.get(), RooFit::Name("data"));
+   dataH->plotOn(frame.get(), Name("dataHist"), MarkerColor(kRed));
+   data.plotOn(frame.get(), Name("data"));
 
    a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit1(pdf.fitTo(data, RooFit::Save(), RooFit::PrintLevel(-1), RooFit::Optimize(0)));
-   pdf.plotOn(frame.get(), RooFit::LineColor(kRed), RooFit::Name("standard"));
+   std::unique_ptr<RooFitResult> fit1(pdf.fitTo(data, Save(), PrintLevel(-1), BatchMode(_batchMode), Optimize(0)));
+   pdf.plotOn(frame.get(), LineColor(kRed), Name("standard"));
 
    a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit2(pdf.fitTo(data, RooFit::Save(), RooFit::PrintLevel(-1), RooFit::Optimize(0),
-                                                RooFit::BatchMode(batchMode), RooFit::IntegrateBins(1.E-3)));
-   pdf.plotOn(frame.get(), RooFit::LineColor(kBlue), RooFit::Name("highRes"));
+   std::unique_ptr<RooFitResult> fit2(
+      pdf.fitTo(data, Save(), PrintLevel(-1), Optimize(0), BatchMode(_batchMode), IntegrateBins(1.E-3)));
+   pdf.plotOn(frame.get(), LineColor(kBlue), Name("highRes"));
 
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
              1. * getErr("a", fit1->floatParsFinal()))
@@ -204,7 +223,7 @@ TEST(RooNLLVar, IntegrateBins_CustomBinning)
 }
 
 /// Test the same, but now with RooDataHist. Here, the feature should switch on automatically.
-TEST(RooNLLVar, IntegrateBins_RooDataHist)
+TEST_P(TestStatisticTest, IntegrateBins_RooDataHist)
 {
    RooWorkspace ws;
    ws.factory("Power::pow(x[0.1, 5.0], {1.0}, {a[-0.3, -5., 5.]})");
@@ -218,24 +237,24 @@ TEST(RooNLLVar, IntegrateBins_RooDataHist)
    RooArgSet targetValues;
    RooArgSet(a).snapshot(targetValues);
 
+   using namespace RooFit;
+
    std::unique_ptr<RooDataHist> data(pdf.generateBinned(x, 10000));
 
    std::unique_ptr<RooPlot> frame(x.frame());
-   data->plotOn(frame.get(), RooFit::Name("data"));
+   data->plotOn(frame.get(), Name("data"));
 
    a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit1(pdf.fitTo(*data, RooFit::Save(), RooFit::PrintLevel(-1),
-                                                RooFit::BatchMode(batchMode),
-                                                RooFit::IntegrateBins(-1.) // Disable forcefully
-                                                ));
-   pdf.plotOn(frame.get(), RooFit::LineColor(kRed), RooFit::Name("standard"));
+   // Disable IntegrateBins forcefully
+   std::unique_ptr<RooFitResult> fit1(
+      pdf.fitTo(*data, Save(), PrintLevel(-1), BatchMode(_batchMode), IntegrateBins(-1.)));
+   pdf.plotOn(frame.get(), LineColor(kRed), Name("standard"));
 
    a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit2(pdf.fitTo(*data, RooFit::Save(), RooFit::PrintLevel(-1),
-                                                RooFit::BatchMode(batchMode),
-                                                RooFit::IntegrateBins(0.) // Auto-enable for all RooDataHists.
-                                                ));
-   pdf.plotOn(frame.get(), RooFit::LineColor(kBlue), RooFit::Name("highRes"));
+   // Auto-enable IntegrateBins for all RooDataHists.
+   std::unique_ptr<RooFitResult> fit2(
+      pdf.fitTo(*data, Save(), PrintLevel(-1), BatchMode(_batchMode), IntegrateBins(0.)));
+   pdf.plotOn(frame.get(), LineColor(kBlue), Name("highRes"));
 
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
              1. * getErr("a", fit1->floatParsFinal()))
@@ -250,6 +269,8 @@ TEST(RooNLLVar, IntegrateBins_RooDataHist)
 
 TEST(RooChi2Var, IntegrateBins)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    RooRandom::randomGenerator()->SetSeed(1337ul);
 
    RooWorkspace ws;
@@ -264,19 +285,20 @@ TEST(RooChi2Var, IntegrateBins)
    RooArgSet targetValues;
    RooArgSet(a).snapshot(targetValues);
 
+   using namespace RooFit;
+
    std::unique_ptr<RooDataHist> dataH(pdf.generateBinned(x, 10000));
 
    std::unique_ptr<RooPlot> frame(x.frame());
-   dataH->plotOn(frame.get(), RooFit::MarkerColor(kRed));
+   dataH->plotOn(frame.get(), MarkerColor(kRed));
 
    a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit1(pdf.chi2FitTo(*dataH, RooFit::Save(), RooFit::PrintLevel(-1)));
-   pdf.plotOn(frame.get(), RooFit::LineColor(kRed), RooFit::Name("standard"));
+   std::unique_ptr<RooFitResult> fit1(pdf.chi2FitTo(*dataH, Save(), PrintLevel(-1)));
+   pdf.plotOn(frame.get(), LineColor(kRed), Name("standard"));
 
    a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit2(pdf.chi2FitTo(*dataH, RooFit::Save(), RooFit::PrintLevel(-1),
-                                                    RooFit::BatchMode(batchMode), RooFit::IntegrateBins(1.E-3)));
-   pdf.plotOn(frame.get(), RooFit::LineColor(kBlue), RooFit::Name("highRes"));
+   std::unique_ptr<RooFitResult> fit2(pdf.chi2FitTo(*dataH, Save(), PrintLevel(-1), IntegrateBins(1.E-3)));
+   pdf.plotOn(frame.get(), LineColor(kBlue), Name("highRes"));
 
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
              1. * getErr("a", fit1->floatParsFinal()))
@@ -293,6 +315,8 @@ TEST(RooChi2Var, IntegrateBins)
 /// as it happens when it is plotted Covers JIRA ticket ROOT-9752.
 TEST(RooNLLVar, CopyRangedNLL)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    RooWorkspace ws;
    ws.factory("Gaussian::model(x[0, 10], mean[5, 0, 10], sigma[0.5, 0.01, 5.0])");
 
@@ -320,19 +344,23 @@ TEST(RooNLLVar, CopyRangedNLL)
 class OffsetBinTest : public testing::TestWithParam<std::tuple<std::string, bool, bool, bool>> {
    void SetUp() override
    {
+      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::ERROR);
       _batchMode = std::get<0>(GetParam());
       _binned = std::get<1>(GetParam());
       _ext = std::get<2>(GetParam());
       _sumw2 = std::get<3>(GetParam());
    }
 
-   void TearDown() override {}
+   void TearDown() override { _changeMsgLvl.reset(); }
 
 protected:
    std::string _batchMode;
    bool _binned = false;
    bool _ext = false;
    bool _sumw2 = false;
+
+private:
+   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
 
 // Test the `Offset("bin")` feature of RooAbsPdf::createNLL. Doing the
@@ -396,16 +424,24 @@ TEST_P(OffsetBinTest, CrossCheck)
    EXPECT_NEAR(nllVal1, 0.0, 1e-8) << "NLL with bin offsetting is " << nllVal1 << ", and " << nllVal0 << " without it.";
 }
 
+INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Combine(testing::Values("Off", "Cpu")),
+                         [](testing::TestParamInfo<TestStatisticTest::ParamType> const &paramInfo) {
+                            std::stringstream ss;
+                            ss << "BatchMode" << std::get<0>(paramInfo.param);
+                            ss << std::get<0>(paramInfo.param);
+                            return ss.str();
+                         });
+
 INSTANTIATE_TEST_SUITE_P(
    RooNLLVar, OffsetBinTest,
-   testing::Combine(testing::Values("OFF", "CPU"), // BatchMode
+   testing::Combine(testing::Values("Off", "Cpu"), // BatchMode
                     testing::Values(true),         // unbinned or binned (we don't support unbinned fits yet)
                     testing::Values(false, true),  // extended fit
                     testing::Values(false, true)   // use sumW2
                     ),
    [](testing::TestParamInfo<OffsetBinTest::ParamType> const &paramInfo) {
       std::stringstream ss;
-      ss << std::get<0>(paramInfo.param);
+      ss << "BatchMode" << std::get<0>(paramInfo.param);
       ss << (std::get<1>(paramInfo.param) ? "Binned" : "Unbinned");
       ss << (std::get<2>(paramInfo.param) ? "Extended" : "");
       ss << (std::get<3>(paramInfo.param) ? "SumW2" : "");
