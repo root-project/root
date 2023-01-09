@@ -71,7 +71,7 @@ void ROOT::Experimental::Detail::RPageSource::RActivePhysicalColumns::Erase(Desc
 }
 
 ROOT::Experimental::Detail::RCluster::ColumnSet_t
-ROOT::Experimental::Detail::RPageSource::RActivePhysicalColumns::ToColumnSet()
+ROOT::Experimental::Detail::RPageSource::RActivePhysicalColumns::ToColumnSet() const
 {
    RCluster::ColumnSet_t result;
    for (const auto &id : fIDs)
