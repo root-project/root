@@ -937,7 +937,7 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
 /// <tr><td> `Verbose(bool flag)`           <td> Controls RooFit informational messages in likelihood construction
 /// <tr><td> `CloneData(bool flag)`            <td> Use clone of dataset in NLL (default is true)
 /// <tr><td> `Offset(std::string const& mode)` <td> Likelihood offsetting mode. Can be either:
-///                                                 - `"off"` (default): no offsetting
+///                                                 - `"none"` (default): no offsetting
 ///                                                 - `"initial"`: Offset likelihood by initial value (so that starting value of FCN in minuit is zero).
 ///                                                    This can improve numeric stability in simultaneous fits with components with large likelihood values.
 ///                                                 - `"bin"`: Offset by the likelihood bin-by-bin with a template histogram model based on the obersved data.
@@ -1056,6 +1056,12 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t cloneData = pc.getInt("cloneData") ;
   auto offset = static_cast<RooFit::OffsetMode>(pc.getInt("doOffset"));
 
+  if(offset == RooFit::OffsetMode::Bin && dynamic_cast<RooDataSet*>(&data)) {
+    coutE(Minimization) << "The Offset(\"bin\") option doesn't suppot fits to RooDataSet yet, only to RooDataHist."
+                           " Falling back to no offsetting."  << endl;
+    offset = RooFit::OffsetMode::None;
+  }
+
   // If no explicit cloneData command is specified, cloneData is set to true if optimization is activated
   if (cloneData==2) {
     cloneData = optConst ;
@@ -1152,7 +1158,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   cfg.rangeName = rangeName ? rangeName : "";
   auto nllVar = std::make_unique<RooNLLVar>(baseName.c_str(),"-log(likelihood)",*this,data,projDeps, ext, cfg);
   nllVar->batchMode(batchMode == RooFit::BatchModeOption::Old);
-  nllVar->templateRatioOffset(offset == RooFit::OffsetMode::Bin);
+  nllVar->enableBinOffsetting(offset == RooFit::OffsetMode::Bin);
   nll = std::move(nllVar);
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
