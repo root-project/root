@@ -36,6 +36,10 @@ constexpr char const *kNTupleFileName = "ntpl008_import.root";
 
 void ntpl008_import()
 {
+   // RNTupleImporter appends keys to the output file; make sure a second run of the tutorial does not fail
+   // with `Key 'Events' already exists in file ntpl008_import.root` by removing the output file.
+   gSystem->Unlink(kNTupleFileName);
+
    // Use multiple threads to compress RNTuple data
    ROOT::EnableImplicitMT();
 
