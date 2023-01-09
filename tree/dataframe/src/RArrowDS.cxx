@@ -609,14 +609,6 @@ RDataFrame FromArrow(std::shared_ptr<arrow::Table> table, std::vector<std::strin
    return tdf;
 }
 
-/// \brief Factory method to create a Apache Arrow RDataFrame.
-///
-/// Deprecated in favor of FromArrow().
-RDataFrame MakeArrowDataFrame(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columnNames)
-{
-   return FromArrow(table, columnNames);
-}
-
 } // namespace RDF
 
 } // namespace ROOT

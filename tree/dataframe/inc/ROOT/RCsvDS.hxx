@@ -105,14 +105,6 @@ public:
 RDataFrame FromCSV(std::string_view fileName, bool readHeaders = true, char delimiter = ',',
                    Long64_t linesChunkSize = -1LL, std::unordered_map<std::string, char> &&colTypes = {});
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-/// \brief Factory method to create a CSV RDataFrame.
-///
-/// Deprecated in favor of FromCSV().
-R__DEPRECATED(6, 30, "Use FromCSV instead.")
-RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders = true, char delimiter = ',',
-                            Long64_t linesChunkSize = -1LL, std::unordered_map<std::string, char> &&colTypes = {});
-
 } // ns RDF
 
 } // ns ROOT

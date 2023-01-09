@@ -54,9 +54,6 @@ public:
 
 RDataFrame FromArrow(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columnNames);
 
-R__DEPRECATED(6, 30, "Use FromArrow instead.")
-RDataFrame MakeArrowDataFrame(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columnNames);
-
 } // namespace RDF
 
 } // namespace ROOT
