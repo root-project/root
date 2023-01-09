@@ -6,7 +6,6 @@
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooFitResult.h>
-#include <RooGenericPdf.h>
 #include <RooNLLVar.h>
 #include <RooRandom.h>
 #include <RooPlot.h>
@@ -20,18 +19,36 @@
 
 const bool batchMode = true;
 
+namespace {
+
+double getVal(const char *name, const RooArgSet &set)
+{
+   return dynamic_cast<const RooRealVar &>(set[name]).getVal();
+}
+
+double getErr(const char *name, const RooArgSet &set)
+{
+   return dynamic_cast<const RooRealVar &>(set[name]).getError();
+}
+
+} // namespace
+
 TEST(RooNLLVar, IntegrateBins)
 {
    RooRandom::randomGenerator()->SetSeed(1337ul);
 
-   RooRealVar x("x", "x", 0.1, 5.1);
+   RooWorkspace ws;
+   ws.factory("Power::pow(x[0.1, 5.1], {1.0}, {a[-0.3, -5., 5.]})");
+
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &a = *ws.var("a");
+   RooAbsPdf &pdf = *ws.pdf("pow");
+
    x.setBins(10);
 
-   RooRealVar a("a", "a", -0.3, -5., 5.);
    RooArgSet targetValues;
    RooArgSet(a).snapshot(targetValues);
 
-   RooGenericPdf pdf("pow", "std::pow(x, a)", {x, a});
    std::unique_ptr<RooDataHist> dataH(pdf.generateBinned(x, 10000));
    RooRealVar w("w", "weight", 0., 0., 10000.);
    RooDataSet data("data", "data", {x, w}, RooFit::WeightVar(w));
@@ -53,13 +70,6 @@ TEST(RooNLLVar, IntegrateBins)
                                                 RooFit::BatchMode(batchMode), RooFit::IntegrateBins(1.E-3)));
    pdf.plotOn(frame.get(), RooFit::LineColor(kBlue), RooFit::Name("highRes"));
 
-   auto getVal = [](const char *name, const RooArgSet &set) {
-      return dynamic_cast<const RooRealVar &>(set[name]).getVal();
-   };
-   auto getErr = [](const char *name, const RooArgSet &set) {
-      return dynamic_cast<const RooRealVar &>(set[name]).getError();
-   };
-
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
              1. * getErr("a", fit1->floatParsFinal()))
       << "Expecting a bias when sampling PDF in bin centre.";
@@ -78,16 +88,20 @@ TEST(RooNLLVar, IntegrateBins_SubRange)
 {
    RooRandom::randomGenerator()->SetSeed(1337ul);
 
-   RooRealVar x("x", "x", 0.1, 5.1);
+   RooWorkspace ws;
+   ws.factory("Power::pow(x[0.1, 5.1], {1.0}, {a[-0.3, -5., 5.]})");
+
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &a = *ws.var("a");
+   RooAbsPdf &pdf = *ws.pdf("pow");
+
    x.setBins(10);
    x.setRange("range", 0.1, 4.1);
    x.setBins(8, "range"); // consistent binning
 
-   RooRealVar a("a", "a", -0.3, -5., 5.);
    RooArgSet targetValues;
    RooArgSet(a).snapshot(targetValues);
 
-   RooGenericPdf pdf("pow", "std::pow(x, a)", {x, a});
    std::unique_ptr<RooDataHist> dataH(pdf.generateBinned(x, 10000));
    RooRealVar w("w", "weight", 0., 0., 10000.);
    RooDataSet data("data", "data", {x, w}, RooFit::WeightVar(w));
@@ -111,13 +125,6 @@ TEST(RooNLLVar, IntegrateBins_SubRange)
                                                 RooFit::IntegrateBins(1.E-3)));
    pdf.plotOn(frame.get(), RooFit::LineColor(kBlue), RooFit::Name("highRes"));
 
-   auto getVal = [](const char *name, const RooArgSet &set) {
-      return dynamic_cast<const RooRealVar &>(set[name]).getVal();
-   };
-   auto getErr = [](const char *name, const RooArgSet &set) {
-      return dynamic_cast<const RooRealVar &>(set[name]).getError();
-   };
-
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
              1. * getErr("a", fit1->floatParsFinal()))
       << "Expecting a bias when sampling PDF in bin centre.";
@@ -136,7 +143,13 @@ TEST(RooNLLVar, IntegrateBins_CustomBinning)
 {
    RooRandom::randomGenerator()->SetSeed(1337ul);
 
-   RooRealVar x("x", "x", 1., 5.);
+   RooWorkspace ws;
+   ws.factory("Power::pow(x[1.0, 5.], {1.0}, {a[-0.3, -5., 5.]})");
+
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &a = *ws.var("a");
+   RooAbsPdf &pdf = *ws.pdf("pow");
+
    RooBinning binning(1., 5.);
    binning.addBoundary(1.5);
    binning.addBoundary(2.0);
@@ -144,11 +157,9 @@ TEST(RooNLLVar, IntegrateBins_CustomBinning)
    binning.addBoundary(4.);
    x.setBinning(binning);
 
-   RooRealVar a("a", "a", -0.3, -5., 5.);
    RooArgSet targetValues;
    RooArgSet(a).snapshot(targetValues);
 
-   RooGenericPdf pdf("pow", "std::pow(x, a)", {x, a});
    std::unique_ptr<RooDataHist> dataH(pdf.generateBinned(x, 50000));
    RooRealVar w("w", "weight", 0., 0., 1000000.);
    RooDataSet data("data", "data", {x, w}, RooFit::WeightVar(w));
@@ -170,13 +181,6 @@ TEST(RooNLLVar, IntegrateBins_CustomBinning)
                                                 RooFit::BatchMode(batchMode), RooFit::IntegrateBins(1.E-3)));
    pdf.plotOn(frame.get(), RooFit::LineColor(kBlue), RooFit::Name("highRes"));
 
-   auto getVal = [](const char *name, const RooArgSet &set) {
-      return dynamic_cast<const RooRealVar &>(set[name]).getVal();
-   };
-   auto getErr = [](const char *name, const RooArgSet &set) {
-      return dynamic_cast<const RooRealVar &>(set[name]).getError();
-   };
-
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
              1. * getErr("a", fit1->floatParsFinal()))
       << "Expecting a bias when sampling PDF in bin centre.";
@@ -194,14 +198,18 @@ TEST(RooNLLVar, IntegrateBins_CustomBinning)
 /// Test the same, but now with RooDataHist. Here, the feature should switch on automatically.
 TEST(RooNLLVar, IntegrateBins_RooDataHist)
 {
-   RooRealVar x("x", "x", 0.1, 5.);
+   RooWorkspace ws;
+   ws.factory("Power::pow(x[0.1, 5.0], {1.0}, {a[-0.3, -5., 5.]})");
+
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &a = *ws.var("a");
+   RooAbsPdf &pdf = *ws.pdf("pow");
+
    x.setBins(10);
 
-   RooRealVar a("a", "a", -0.3, -5., 5.);
    RooArgSet targetValues;
    RooArgSet(a).snapshot(targetValues);
 
-   RooGenericPdf pdf("pow", "std::pow(x, a)", {x, a});
    std::unique_ptr<RooDataHist> data(pdf.generateBinned(x, 10000));
 
    std::unique_ptr<RooPlot> frame(x.frame());
@@ -221,13 +229,6 @@ TEST(RooNLLVar, IntegrateBins_RooDataHist)
                                                 ));
    pdf.plotOn(frame.get(), RooFit::LineColor(kBlue), RooFit::Name("highRes"));
 
-   auto getVal = [](const char *name, const RooArgSet &set) {
-      return dynamic_cast<const RooRealVar &>(set[name]).getVal();
-   };
-   auto getErr = [](const char *name, const RooArgSet &set) {
-      return dynamic_cast<const RooRealVar &>(set[name]).getError();
-   };
-
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
              1. * getErr("a", fit1->floatParsFinal()))
       << "Expecting a bias when sampling PDF in bin centre.";
@@ -243,14 +244,18 @@ TEST(RooChi2Var, IntegrateBins)
 {
    RooRandom::randomGenerator()->SetSeed(1337ul);
 
-   RooRealVar x("x", "x", 0.1, 5.1);
+   RooWorkspace ws;
+   ws.factory("Power::pow(x[0.1, 5.1], {1.0}, {a[-0.3, -5., 5.]})");
+
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &a = *ws.var("a");
+   RooAbsPdf &pdf = *ws.pdf("pow");
+
    x.setBins(10);
 
-   RooRealVar a("a", "a", -0.3, -5., 5.);
    RooArgSet targetValues;
    RooArgSet(a).snapshot(targetValues);
 
-   RooGenericPdf pdf("pow", "std::pow(x, a)", {x, a});
    std::unique_ptr<RooDataHist> dataH(pdf.generateBinned(x, 10000));
 
    std::unique_ptr<RooPlot> frame(x.frame());
@@ -264,13 +269,6 @@ TEST(RooChi2Var, IntegrateBins)
    std::unique_ptr<RooFitResult> fit2(pdf.chi2FitTo(*dataH, RooFit::Save(), RooFit::PrintLevel(-1),
                                                     RooFit::BatchMode(batchMode), RooFit::IntegrateBins(1.E-3)));
    pdf.plotOn(frame.get(), RooFit::LineColor(kBlue), RooFit::Name("highRes"));
-
-   auto getVal = [](const char *name, const RooArgSet &set) {
-      return dynamic_cast<const RooRealVar &>(set[name]).getVal();
-   };
-   auto getErr = [](const char *name, const RooArgSet &set) {
-      return dynamic_cast<const RooRealVar &>(set[name]).getError();
-   };
 
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
              1. * getErr("a", fit1->floatParsFinal()))
