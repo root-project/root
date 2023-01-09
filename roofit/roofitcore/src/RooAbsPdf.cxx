@@ -765,6 +765,13 @@ void RooAbsPdf::getLogProbabilities(RooSpan<const double> pdfValues, double * ou
 /// \param[in] observedSumW2 The number of observed events when weighting with
 ///            squared weights. If non-zero, the weight-squared error
 ///            correction is applied to the extended term.
+/// \param[in] doOffset Offset the extended term by a counterterm where the
+///            expected number of events equals the observed number of events.
+///            This constant shift results in a term closer to zero that is
+///            approximately chi-square distributed. It is useful to do this
+///            also when summing multiple NLL terms to avoid numeric precision
+///            loss that happens if you sum multiple terms of different orders
+///            of magnitude.
 ///
 /// The weight-squared error correction works as follows:
 /// adjust poisson such that
@@ -789,26 +796,26 @@ void RooAbsPdf::getLogProbabilities(RooSpan<const double> pdfValues, double * ou
 ///
 ///  Since the weights are constants in the likelihood we can use \f$\log{N_\mathrm{expect}}\f$ instead of \f$\log{W_\mathrm{expect}}\f$.
 ///
-/// See also RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared),
+/// See also RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool doOffset),
 /// which takes a dataset to extract \f$N_\mathrm{observed}\f$ and the
 /// normalization set.
-double RooAbsPdf::extendedTerm(double sumEntries, RooArgSet const* nset, double sumEntriesW2) const
+double RooAbsPdf::extendedTerm(double sumEntries, RooArgSet const* nset, double sumEntriesW2, bool doOffset) const
 {
-  return extendedTerm(sumEntries, expectedEvents(nset), sumEntriesW2);
+  return extendedTerm(sumEntries, expectedEvents(nset), sumEntriesW2, doOffset);
 }
 
-double RooAbsPdf::extendedTerm(double sumEntries, double expected, double sumEntriesW2) const
+double RooAbsPdf::extendedTerm(double sumEntries, double expected, double sumEntriesW2, bool doOffset) const
 {
   // check if this PDF supports extended maximum likelihood fits
   if(!canBeExtended()) {
-    coutE(InputArguments) << fName << ": this PDF does not support extended maximum likelihood"
-         << endl;
-    return 0;
+    coutE(InputArguments) << GetName() << ": this PDF does not support extended maximum likelihood"
+         << std::endl;
+    return 0.0;
   }
 
-  if(expected < 0) {
-    coutE(InputArguments) << fName << ": calculated negative expected events: " << expected
-         << endl;
+  if(expected < 0.0) {
+    coutE(InputArguments) << GetName() << ": calculated negative expected events: " << expected
+         << std::endl;
     logEvalError("extendedTerm #expected events is <0 return a  NaN");
     return TMath::QuietNaN();
   }
@@ -816,7 +823,7 @@ double RooAbsPdf::extendedTerm(double sumEntries, double expected, double sumEnt
 
   // Explicitly handle case Nobs=Nexp=0
   if (std::abs(expected)<1e-10 && std::abs(sumEntries)<1e-10) {
-    return 0 ;
+    return 0.0;
   }
 
   // Check for errors in Nexpected
@@ -825,7 +832,9 @@ double RooAbsPdf::extendedTerm(double sumEntries, double expected, double sumEnt
     return TMath::QuietNaN() ;
   }
 
-  double extra = expected - sumEntries*log(expected);
+  double extra = doOffset
+      ? (expected - sumEntries) - sumEntries * (std::log(expected) - std::log(sumEntries))
+      : expected - sumEntries * std::log(expected);
 
   if(sumEntriesW2 != 0.0) {
     extra *= sumEntriesW2 / sumEntries;
@@ -856,14 +865,15 @@ double RooAbsPdf::extendedTerm(double sumEntries, double expected, double sumEnt
 ///            can be passed to RooAbsPdf::fitTo(RooAbsData&, const RooLinkedList&)
 ///            (see the documentation of said function to learn more about the
 ///            interpretation of fits with squared weights).
+/// \param[in] doOffset See RooAbsPdf::extendedTerm(double, RooArgSet const*, double bool).
 
-double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared) const {
+double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool doOffset) const {
   double sumW = data.sumEntries();
   double sumW2 = 0.0;
   if (weightSquared) {
     sumW2 = data.sumEntriesW2();
   }
-  return extendedTerm(sumW, data.get(), sumW2);
+  return extendedTerm(sumW, data.get(), sumW2, doOffset);
 }
 
 
