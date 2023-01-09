@@ -311,7 +311,7 @@ double RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEven
 
     // include the extended maximum likelihood term, if requested
     if(_extended && _setNum==_extSet) {
-      result += pdfClone->extendedTerm(*_dataClone, _weightSq);
+      result += pdfClone->extendedTerm(*_dataClone, _weightSq, _templateRatioOffset);
     }
   } //unbinned PDF
 
