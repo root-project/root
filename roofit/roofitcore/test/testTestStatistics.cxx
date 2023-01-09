@@ -114,16 +114,17 @@ TEST(RooNLLVar, IntegrateBins_SubRange)
    dataH->plotOn(frame.get(), RooFit::MarkerColor(kRed));
    data.plotOn(frame.get(), RooFit::Name("data"));
 
-   a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit1(pdf.fitTo(data, RooFit::Save(), RooFit::PrintLevel(-1), RooFit::Optimize(0),
-                                                RooFit::Range("range"), RooFit::BatchMode(batchMode)));
-   pdf.plotOn(frame.get(), RooFit::LineColor(kRed), RooFit::Name("standard"));
+   using namespace RooFit;
 
    a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit2(pdf.fitTo(data, RooFit::Save(), RooFit::PrintLevel(-1), RooFit::Optimize(0),
-                                                RooFit::Range("range"), RooFit::BatchMode(batchMode),
-                                                RooFit::IntegrateBins(1.E-3)));
-   pdf.plotOn(frame.get(), RooFit::LineColor(kBlue), RooFit::Name("highRes"));
+   std::unique_ptr<RooFitResult> fit1(
+      pdf.fitTo(data, Save(), PrintLevel(-1), Optimize(0), Range("range"), BatchMode(batchMode)));
+   pdf.plotOn(frame.get(), LineColor(kRed), Name("standard"), Range("range"), NormRange("range"));
+
+   a.setVal(3.);
+   std::unique_ptr<RooFitResult> fit2(
+      pdf.fitTo(data, Save(), PrintLevel(-1), Optimize(0), Range("range"), BatchMode(batchMode), IntegrateBins(1.E-3)));
+   pdf.plotOn(frame.get(), LineColor(kBlue), Name("highRes"), Range("range"), NormRange("range"));
 
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
              1. * getErr("a", fit1->floatParsFinal()))
