@@ -311,7 +311,7 @@ double RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEven
 
     // include the extended maximum likelihood term, if requested
     if(_extended && _setNum==_extSet) {
-      result += pdfClone->extendedTerm(*_dataClone, _weightSq, _templateRatioOffset);
+      result += pdfClone->extendedTerm(*_dataClone, _weightSq, _doBinOffset);
     }
   } //unbinned PDF
 
@@ -466,20 +466,20 @@ RooNLLVar::ComputeResult RooNLLVar::computeBatchedFunc(const RooAbsPdf *pdfClone
 
 RooNLLVar::ComputeResult RooNLLVar::computeScalar(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const {
   auto pdfClone = static_cast<const RooAbsPdf*>(_funcClone);
-  return computeScalarFunc(pdfClone, _dataClone, _normSet, _weightSq, stepSize, firstEvent, lastEvent, _templateRatioOffset);
+  return computeScalarFunc(pdfClone, _dataClone, _normSet, _weightSq, stepSize, firstEvent, lastEvent, _doBinOffset);
 }
 
 // static function, also used from TestStatistics::RooUnbinnedL
 RooNLLVar::ComputeResult RooNLLVar::computeScalarFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone,
                                                       RooArgSet *normSet, bool weightSq, std::size_t stepSize,
-                                                      std::size_t firstEvent, std::size_t lastEvent, bool templateRatioOffset)
+                                                      std::size_t firstEvent, std::size_t lastEvent, bool doBinOffset)
 {
   ROOT::Math::KahanSum<double> kahanWeight;
   ROOT::Math::KahanSum<double> kahanProb;
   RooNaNPacker packedNaN(0.f);
   const double logSumW = std::log(dataClone->sumEntries());
 
-  auto* dataHist = templateRatioOffset ? dynamic_cast<RooDataHist*>(dataClone) : nullptr;
+  auto* dataHist = doBinOffset ? static_cast<RooDataHist*>(dataClone) : nullptr;
 
   for (auto i=firstEvent; i<lastEvent; i+=stepSize) {
     dataClone->get(i) ;
@@ -492,7 +492,7 @@ RooNLLVar::ComputeResult RooNLLVar::computeScalarFunc(const RooAbsPdf *pdfClone,
 
     double logProba = pdfClone->getLogVal(normSet);
 
-    if(templateRatioOffset && dataHist) {
+    if(doBinOffset) {
       logProba -= std::log(ni) - std::log(dataHist->binVolume(i)) - logSumW;
     }
 

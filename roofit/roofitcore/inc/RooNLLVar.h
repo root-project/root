@@ -61,8 +61,8 @@ public:
     _batchEvaluations = on;
   }
 
-  void templateRatioOffset(bool on = true) {
-    _templateRatioOffset = on;
+  void enableBinOffsetting(bool on = true) {
+    _doBinOffset = on;
   }
 
   using ComputeResult = std::pair<ROOT::Math::KahanSum<double>, double>;
@@ -73,7 +73,7 @@ public:
                                                  std::size_t firstEvent, std::size_t lastEvent);
   static RooNLLVar::ComputeResult computeScalarFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone, RooArgSet *normSet,
                                                 bool weightSq, std::size_t stepSize, std::size_t firstEvent,
-                                                std::size_t lastEvent, bool templateRatioOffset=false);
+                                                std::size_t lastEvent, bool doBinOffset=false);
 
 protected:
 
@@ -88,7 +88,7 @@ private:
 
   bool _extended{false};
   bool _batchEvaluations{false};
-  bool _templateRatioOffset{false};
+  bool _doBinOffset{false};
   bool _weightSq{false}; ///< Apply weights squared?
   mutable bool _first{true}; ///<!
   ROOT::Math::KahanSum<double> _offsetSaveW2{0.0}; ///<!
