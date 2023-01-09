@@ -16,7 +16,7 @@
 The RCsvDS class implements a CSV file reader for RDataFrame.
 
 A RDataFrame that reads from a CSV file can be constructed using the factory method
-ROOT::RDF::MakeCsvDataFrame, which accepts five parameters:
+ROOT::RDF::FromCSV, which accepts five parameters:
 1. Path to the CSV file.
 2. Boolean that specifies whether the first row of the CSV file contains headers or
 not (optional, default `true`). If `false`, header names will be automatically generated as Col0, Col1, ..., ColN.
