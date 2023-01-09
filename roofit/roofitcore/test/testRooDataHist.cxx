@@ -760,30 +760,12 @@ TEST_P(WeightsTest, VectorizedWeights)
 }
 
 INSTANTIATE_TEST_SUITE_P(RooDataHist, WeightsTest,
-                         testing::Values(WeightsTest::ParamType{0, false, false, false},
-                                         WeightsTest::ParamType{1, false, false, false},
-                                         WeightsTest::ParamType{2, false, false, false},
-                                         WeightsTest::ParamType{0, false, true, false},
-                                         WeightsTest::ParamType{1, false, true, false},
-                                         WeightsTest::ParamType{2, false, true, false},
-                                         WeightsTest::ParamType{0, true, false, false},
-                                         WeightsTest::ParamType{1, true, false, false},
-                                         WeightsTest::ParamType{2, true, false, false},
-                                         WeightsTest::ParamType{0, true, true, false},
-                                         WeightsTest::ParamType{1, true, true, false},
-                                         WeightsTest::ParamType{2, true, true, false},
-                                         WeightsTest::ParamType{0, false, false, true},
-                                         WeightsTest::ParamType{1, false, false, true},
-                                         WeightsTest::ParamType{2, false, false, true},
-                                         WeightsTest::ParamType{0, false, true, true},
-                                         WeightsTest::ParamType{1, false, true, true},
-                                         WeightsTest::ParamType{2, false, true, true},
-                                         WeightsTest::ParamType{0, true, false, true},
-                                         WeightsTest::ParamType{1, true, false, true},
-                                         WeightsTest::ParamType{2, true, false, true},
-                                         WeightsTest::ParamType{0, true, true, true},
-                                         WeightsTest::ParamType{1, true, true, true},
-                                         WeightsTest::ParamType{2, true, true, true}),
+                         testing::Combine(
+                            testing::Values(0, 1, 2), // interpolation order
+                            testing::Values(false, true), // RooHistPdf or RooHistFunc?
+                            testing::Values(false, true), // CDF boundary mode
+                            testing::Values(false, true) // uniform bins or not
+                         ),
                          [](testing::TestParamInfo<WeightsTest::ParamType> const &paramInfo) {
                             std::stringstream ss;
                             ss << (std::get<1>(paramInfo.param) ? "RooHistFunc" : "RooHistPdf");
