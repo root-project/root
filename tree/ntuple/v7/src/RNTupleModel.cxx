@@ -69,7 +69,7 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const Det
          // Source and target are children of the same collection
          return RResult<void>::Success();
       }
-      if ((fieldMap.count(targetBreakPoint) > 0) && fieldMap.at(targetBreakPoint) == sourceBreakPoint) {
+      if ((fieldMap.find(targetBreakPoint) != fieldMap.end()) && (fieldMap.at(targetBreakPoint) == sourceBreakPoint)) {
          // The parent collection of parent is mapped to the parent collection of the source
          return RResult<void>::Success();
       }
@@ -102,7 +102,7 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::Add(std::unique_ptr<Detail::
 const ROOT::Experimental::Detail::RFieldBase *
 ROOT::Experimental::RNTupleModel::RProjectedFields::GetSourceField(const Detail::RFieldBase *target) const
 {
-   if (fFieldMap.count(target) > 0)
+   if (fFieldMap.find(target) != fFieldMap.end())
       return fFieldMap.at(target);
    return nullptr;
 }
