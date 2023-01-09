@@ -379,7 +379,7 @@ protected:
    public:
       void Insert(DescriptorId_t physicalColumnID);
       void Erase(DescriptorId_t physicalColumnID);
-      RCluster::ColumnSet_t ToColumnSet();
+      RCluster::ColumnSet_t ToColumnSet() const;
    };
 
    std::unique_ptr<RCounters> fCounters;
