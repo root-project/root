@@ -24,34 +24,38 @@
 #include <map>
 
 class RooChangeTracker;
+class RooAddPdf;
 
 class RooMomentMorphND : public RooAbsPdf {
 
 public:
-   class Grid {
+   using Base_t = RooAbsPdf;
+   using Sum_t = RooAddPdf;
+
+   class Grid2 {
    public:
-      Grid(){};
-      Grid(const Grid &other);
-      Grid(const RooAbsBinning &binning_x) { _grid.push_back(binning_x.clone()); };
-      Grid(const RooAbsBinning &binning_x, const RooAbsBinning &binning_y)
+      Grid2(){};
+      Grid2(const Grid2 &other);
+      Grid2(const RooAbsBinning &binning_x) { _grid.push_back(binning_x.clone()); };
+      Grid2(const RooAbsBinning &binning_x, const RooAbsBinning &binning_y)
       {
          _grid.push_back(binning_x.clone());
          _grid.push_back(binning_y.clone());
       };
-      Grid(const RooAbsBinning &binning_x, const RooAbsBinning &binning_y, const RooAbsBinning &binning_z)
+      Grid2(const RooAbsBinning &binning_x, const RooAbsBinning &binning_y, const RooAbsBinning &binning_z)
       {
          _grid.push_back(binning_x.clone());
          _grid.push_back(binning_y.clone());
          _grid.push_back(binning_z.clone());
       };
-      Grid(const std::vector<RooAbsBinning *> binnings)
+      Grid2(const std::vector<RooAbsBinning *> binnings)
       {
          for (unsigned int i = 0; i < binnings.size(); i++) {
             _grid.push_back(binnings[i]->clone());
          }
       };
 
-      ~Grid();
+      virtual ~Grid2();
 
       void addPdf(const RooAbsPdf &pdf, int bin_x);
       void addPdf(const RooAbsPdf &pdf, int bin_x, int bin_y);
@@ -67,17 +71,19 @@ public:
       mutable std::vector<int> _nnuis;
    };
 
+   using Grid = Grid2;
+
 protected:
    class CacheElem : public RooAbsCacheElement {
    public:
       CacheElem(RooAbsPdf &sumPdf, RooChangeTracker &tracker, const RooArgList &flist)
-         : _sumPdf(&sumPdf), _tracker(&tracker)
+         : _sum(&sumPdf), _tracker(&tracker)
       {
          _frac.add(flist);
       };
       ~CacheElem() override;
       RooArgList containedArgs(Action) override;
-      RooAbsPdf *_sumPdf;
+      RooAbsPdf *_sum;
       RooChangeTracker *_tracker;
       RooArgList _frac;
 
@@ -93,7 +99,7 @@ public:
    RooMomentMorphND(const char *name, const char *title, RooAbsReal &_m, const RooArgList &varList,
                     const RooArgList &pdfList, const RooArgList &mrefList, Setting setting);
    RooMomentMorphND(const char *name, const char *title, const RooArgList &parList, const RooArgList &obsList,
-                    const Grid &referenceGrid, const Setting &setting);
+                    const Grid2 &referenceGrid, const Setting &setting);
    RooMomentMorphND(const RooMomentMorphND &other, const char *name = nullptr);
    RooMomentMorphND(const char *name, const char *title, RooAbsReal &_m, const RooArgList &varList,
                     const RooArgList &pdfList, const TVectorD &mrefpoints, Setting setting);
@@ -119,14 +125,14 @@ protected:
    void findShape(const std::vector<double> &x) const;
 
    friend class CacheElem;
-   friend class Grid;
+   friend class Grid2;
 
    mutable RooObjCacheManager _cacheMgr; ///<! Transient cache manager
    mutable RooArgSet *_curNormSet;
 
    RooListProxy _parList;
    RooSetProxy _obsList;
-   mutable Grid _referenceGrid;
+   mutable Grid2 _referenceGrid;
    RooListProxy _pdfList;
 
    mutable TMatrixD *_M;
@@ -139,7 +145,7 @@ protected:
 
    inline int sij(const int &i, const int &j) const { return (i * _obsList.getSize() + j); }
 
-   ClassDefOverride(RooMomentMorphND, 2)
+   ClassDefOverride(RooMomentMorphND, 2);
 };
 
 #endif
