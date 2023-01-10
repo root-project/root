@@ -24,10 +24,14 @@
 #include <map>
 
 class RooChangeTracker;
+class RooRealSumFunc;
 
 class RooMomentMorphFuncND : public RooAbsReal {
 
 public:
+   using Base_t = RooAbsReal;
+   using Sum_t = RooRealSumFunc;
+
    class Grid2 {
    public:
       Grid2(){};
@@ -66,20 +70,22 @@ public:
       mutable std::vector<std::vector<double>> _nref;
       mutable std::vector<int> _nnuis;
 
-      ClassDef(RooMomentMorphFuncND::Grid2, 1)
+      ClassDef(RooMomentMorphFuncND::Grid2, 1);
    };
+
+   using Grid = Grid2;
 
 protected:
    class CacheElem : public RooAbsCacheElement {
    public:
       CacheElem(RooAbsReal &sumFunc, RooChangeTracker &tracker, const RooArgList &flist)
-         : _sumFunc(&sumFunc), _tracker(&tracker)
+         : _sum(&sumFunc), _tracker(&tracker)
       {
          _frac.add(flist);
       };
       ~CacheElem() override;
       RooArgList containedArgs(Action) override;
-      RooAbsReal *_sumFunc;
+      RooAbsReal *_sum;
       RooChangeTracker *_tracker;
       RooArgList _frac;
 
@@ -141,7 +147,7 @@ protected:
 
    inline int sij(const int &i, const int &j) const { return (i * _obsList.getSize() + j); }
 
-   ClassDefOverride(RooMomentMorphFuncND, 2)
+   ClassDefOverride(RooMomentMorphFuncND, 2);
 };
 
 #endif

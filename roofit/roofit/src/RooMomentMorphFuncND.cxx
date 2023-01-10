@@ -33,10 +33,7 @@
 
 using namespace std;
 
-// ClassImp for RooMomentMorphFuncND
 ClassImp(RooMomentMorphFuncND);
-
-// ClassImp for RooMomentMorphFuncND
 ClassImp(RooMomentMorphFuncND::Grid2);
 
 //_____________________________________________________________________________
@@ -51,9 +48,9 @@ RooMomentMorphFuncND::RooMomentMorphFuncND()
 RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, const RooArgList &parList,
                                            const RooArgList &obsList, const Grid2 &referenceGrid,
                                            const Setting &setting)
-   : RooAbsReal(name, title), _cacheMgr(this, 10, true, true), _parList("parList", "List of morph parameters", this),
-     _obsList("obsList", "List of observables", this), _referenceGrid(referenceGrid),
-     _pdfList("pdfList", "List of pdfs", this), _setting(setting), _useHorizMorph(true)
+   : RooMomentMorphFuncND::Base_t(name, title), _cacheMgr(this, 10, true, true),
+     _parList("parList", "List of morph parameters", this), _obsList("obsList", "List of observables", this),
+     _referenceGrid(referenceGrid), _pdfList("pdfList", "List of pdfs", this), _setting(setting), _useHorizMorph(true)
 {
    // morph parameters
    initializeParameters(parList);
@@ -73,9 +70,9 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
 RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, RooAbsReal &_m,
                                            const RooArgList &varList, const RooArgList &pdfList,
                                            const TVectorD &mrefpoints, Setting setting)
-   : RooAbsReal(name, title), _cacheMgr(this, 10, true, true), _parList("parList", "List of morph parameters", this),
-     _obsList("obsList", "List of observables", this), _pdfList("pdfList", "List of pdfs", this), _setting(setting),
-     _useHorizMorph(true)
+   : RooMomentMorphFuncND::Base_t(name, title), _cacheMgr(this, 10, true, true),
+     _parList("parList", "List of morph parameters", this), _obsList("obsList", "List of observables", this),
+     _pdfList("pdfList", "List of pdfs", this), _setting(setting), _useHorizMorph(true)
 {
    // make reference grid
    RooBinning grid(mrefpoints.GetNrows() - 1, mrefpoints.GetMatrixArray());
@@ -84,7 +81,7 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
    for (int i = 0; i < mrefpoints.GetNrows(); ++i) {
       for (int j = 0; j < grid.numBoundaries(); ++j) {
          if (mrefpoints[i] == grid.array()[j]) {
-            _referenceGrid.addPdf(*(RooAbsReal *)pdfList.at(i), j);
+            _referenceGrid.addPdf(*(Base_t *)pdfList.at(i), j);
             break;
          }
       }
@@ -110,9 +107,9 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
 RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, RooAbsReal &_m,
                                            const RooArgList &varList, const RooArgList &pdfList,
                                            const RooArgList &mrefList, Setting setting)
-   : RooAbsReal(name, title), _cacheMgr(this, 10, true, true), _parList("parList", "List of morph parameters", this),
-     _obsList("obsList", "List of observables", this), _pdfList("pdfList", "List of pdfs", this), _setting(setting),
-     _useHorizMorph(true)
+   : RooMomentMorphFuncND::Base_t(name, title), _cacheMgr(this, 10, true, true),
+     _parList("parList", "List of morph parameters", this), _obsList("obsList", "List of observables", this),
+     _pdfList("pdfList", "List of pdfs", this), _setting(setting), _useHorizMorph(true)
 {
    // make reference grid
    TVectorD mrefpoints(mrefList.getSize());
@@ -128,7 +125,7 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
                                << " is not a constant, taking a snapshot of its value" << endl;
       }
       mrefpoints[i] = static_cast<RooAbsReal *>(mref)->getVal();
-      ++i;
+      i++;
    }
 
    RooBinning grid(mrefpoints.GetNrows() - 1, mrefpoints.GetMatrixArray());
@@ -136,7 +133,7 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
    for (i = 0; i < mrefpoints.GetNrows(); ++i) {
       for (int j = 0; j < grid.numBoundaries(); ++j) {
          if (mrefpoints[i] == grid.array()[j]) {
-            _referenceGrid.addPdf(static_cast<RooAbsReal &>(pdfList[i]), j);
+            _referenceGrid.addPdf(static_cast<Base_t &>(pdfList[i]), j);
             break;
          }
       }
@@ -160,12 +157,11 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
 
 //_____________________________________________________________________________
 RooMomentMorphFuncND::RooMomentMorphFuncND(const RooMomentMorphFuncND &other, const char *name)
-   : RooAbsReal(other, name), _cacheMgr(other._cacheMgr, this), _curNormSet(0),
+   : RooMomentMorphFuncND::Base_t(other, name), _cacheMgr(other._cacheMgr, this), _curNormSet(0),
      _parList("parList", this, other._parList), _obsList("obsList", this, other._obsList),
      _referenceGrid(other._referenceGrid), _pdfList("pdfList", this, other._pdfList), _M(0), _MSqr(0),
      _setting(other._setting), _useHorizMorph(other._useHorizMorph)
 {
-
    // general initialization
    initialize();
 
@@ -296,7 +292,7 @@ RooMomentMorphFuncND::Grid2::Grid2(const RooMomentMorphFuncND::Grid2 &other)
 RooMomentMorphFuncND::Grid2::~Grid2() {}
 
 //_____________________________________________________________________________
-void RooMomentMorphFuncND::Grid2::addPdf(const RooAbsReal &pdf, int bin_x)
+void RooMomentMorphFuncND::Grid2::addPdf(const RooMomentMorphFuncND::Base_t &pdf, int bin_x)
 {
    vector<int> thisBoundaries;
    vector<double> thisBoundaryCoordinates;
@@ -308,7 +304,7 @@ void RooMomentMorphFuncND::Grid2::addPdf(const RooAbsReal &pdf, int bin_x)
 }
 
 //_____________________________________________________________________________
-void RooMomentMorphFuncND::Grid2::addPdf(const RooAbsReal &pdf, int bin_x, int bin_y)
+void RooMomentMorphFuncND::Grid2::addPdf(const RooMomentMorphFuncND::Base_t &pdf, int bin_x, int bin_y)
 {
    vector<int> thisBoundaries;
    vector<double> thisBoundaryCoordinates;
@@ -322,7 +318,7 @@ void RooMomentMorphFuncND::Grid2::addPdf(const RooAbsReal &pdf, int bin_x, int b
 }
 
 //_____________________________________________________________________________
-void RooMomentMorphFuncND::Grid2::addPdf(const RooAbsReal &pdf, int bin_x, int bin_y, int bin_z)
+void RooMomentMorphFuncND::Grid2::addPdf(const RooMomentMorphFuncND::Base_t &pdf, int bin_x, int bin_y, int bin_z)
 {
    vector<int> thisBoundaries;
    vector<double> thisBoundaryCoordinates;
@@ -338,7 +334,7 @@ void RooMomentMorphFuncND::Grid2::addPdf(const RooAbsReal &pdf, int bin_x, int b
 }
 
 //_____________________________________________________________________________
-void RooMomentMorphFuncND::Grid2::addPdf(const RooAbsReal &pdf, vector<int> bins)
+void RooMomentMorphFuncND::Grid2::addPdf(const RooMomentMorphFuncND::Base_t &pdf, vector<int> bins)
 {
    vector<double> thisBoundaryCoordinates;
    int nBins = bins.size();
@@ -394,17 +390,16 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
       ownedComps.add(*(RooRealVar *)(fracl.at(i)));
    }
 
-   RooRealSumFunc *theSumFunc = 0;
-   string sumfuncName = Form("%s_sumfunc", GetName());
+   Sum_t *theSum = nullptr;
+   string sumName = Form("%s_sum", GetName());
 
    if (_useHorizMorph) {
       // mean and sigma
       RooArgList obsList(_obsList);
       for (int i = 0; i < nPdf; ++i) {
          for (int j = 0; j < nObs; ++j) {
-            RooAbsMoment *mom = nObs == 1
-                                   ? ((RooAbsReal *)_pdfList.at(i))->sigma((RooRealVar &)*obsList.at(j))
-                                   : ((RooAbsReal *)_pdfList.at(i))->sigma((RooRealVar &)*obsList.at(j), obsList);
+            RooAbsMoment *mom = nObs == 1 ? ((Base_t *)_pdfList.at(i))->sigma((RooRealVar &)*obsList.at(j))
+                                          : ((Base_t *)_pdfList.at(i))->sigma((RooRealVar &)*obsList.at(j), obsList);
 
             mom->setLocalNoDirtyInhibit(true);
             mom->mean()->setLocalNoDirtyInhibit(true);
@@ -416,7 +411,7 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
          }
       }
 
-      // slope and offsets (to be set later, depend on nuisance parameters)
+      // slope and offset (to be set later, depend on nuisance parameters)
       for (int j = 0; j < nObs; ++j) {
          RooArgList meanList("meanList");
          RooArgList rmsList("rmsList");
@@ -435,14 +430,14 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
       RooArgList transPdfList;
 
       Int_t i = 0;
-      for (auto const *pdf : static_range_cast<RooAbsReal *>(_pdfList)) {
+      for (auto const *pdf : static_range_cast<Base_t *>(_pdfList)) {
 
          string pdfName = Form("pdf_%d", i);
          RooCustomizer cust(*pdf, pdfName.c_str());
 
          Int_t j = 0;
          for (auto *var : static_range_cast<RooRealVar *>(obsList)) {
-            // slope and offsets formulas
+            // slope and offset formulas
             string slopeName = Form("%s_slope_%d_%d", GetName(), i, j);
             string offsetName = Form("%s_offset_%d_%d", GetName(), i, j);
 
@@ -465,29 +460,29 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
             cust.replaceArg(*var, *transVar[sij(i, j)]);
             ++j;
          }
-         transPdf[i] = (RooAbsReal *)cust.build();
+         transPdf[i] = static_cast<Base_t *>(cust.build());
          transPdfList.add(*transPdf[i]);
          ownedComps.add(*transPdf[i]);
          ++i;
       }
 
       // sum pdf
-      theSumFunc = new RooRealSumFunc(sumfuncName.c_str(), sumfuncName.c_str(), transPdfList, coefList);
+      theSum = new Sum_t(sumName.c_str(), sumName.c_str(), transPdfList, coefList);
    } else {
-      theSumFunc = new RooRealSumFunc(sumfuncName.c_str(), sumfuncName.c_str(), _pdfList, coefList);
+      theSum = new Sum_t(sumName.c_str(), sumName.c_str(), _pdfList, coefList);
    }
 
    // *** WVE this is important *** this declares that frac effectively depends on the morphing parameters
    // This will prevent the likelihood optimizers from erroneously declaring terms constant
-   theSumFunc->addServerList((RooAbsCollection &)_parList);
-   theSumFunc->addOwnedComponents(ownedComps);
+   theSum->addServerList((RooAbsCollection &)_parList);
+   theSum->addOwnedComponents(ownedComps);
 
    // change tracker for fraction parameters
    string trackerName = Form("%s_frac_tracker", GetName());
    RooChangeTracker *tracker = new RooChangeTracker(trackerName.c_str(), trackerName.c_str(), _parList, true);
 
    // Store it in the cache
-   cache = new CacheElem(*theSumFunc, *tracker, fracl);
+   cache = new CacheElem(*theSum, *tracker, fracl);
    _cacheMgr.setObj(0, 0, cache, 0);
 
    return cache;
@@ -496,33 +491,33 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
 //_____________________________________________________________________________
 RooArgList RooMomentMorphFuncND::CacheElem::containedArgs(Action)
 {
-   return RooArgList(*_sumFunc, *_tracker);
+   return RooArgList(*_sum, *_tracker);
 }
 
 //_____________________________________________________________________________
 RooMomentMorphFuncND::CacheElem::~CacheElem()
 {
-   delete _sumFunc;
+   delete _sum;
    delete _tracker;
 }
 
 //_____________________________________________________________________________
 double RooMomentMorphFuncND::getVal(const RooArgSet *set) const
 {
-   // Special version of getVal() overrides RooAbsReal::getVal() to save value of current normalization set
+   // Special version of getVal() overrides Base_t::getVal() to save value of current normalization set
    _curNormSet = set ? (RooArgSet *)set : (RooArgSet *)&_obsList;
-   return RooAbsReal::getVal(set);
+   return Base_t::getVal(set);
 }
 
 //_____________________________________________________________________________
-RooAbsReal *RooMomentMorphFuncND::sumFunc(const RooArgSet *nset)
+RooMomentMorphFuncND::Base_t *RooMomentMorphFuncND::sumFunc(const RooArgSet *nset)
 {
    CacheElem *cache = getCache(nset ? nset : _curNormSet);
 
    if (cache->_tracker->hasChanged(true)) {
       cache->calculateFractions(*this, false); // verbose turned off
    }
-   return cache->_sumFunc;
+   return cache->_sum;
 }
 
 //_____________________________________________________________________________
@@ -534,7 +529,7 @@ double RooMomentMorphFuncND::evaluate() const
       cache->calculateFractions(*this, false); // verbose turned off
    }
 
-   double ret = cache->_sumFunc->getVal(_obsList.nset());
+   double ret = cache->_sum->getVal(_obsList.nset());
 
    return ret;
 }
@@ -642,7 +637,7 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
          ((RooRealVar *)frac(2 * nPdf + i))->setVal(initval);
       }
 
-      vector<double> mtmp;
+      std::vector<double> mtmp;
 
       // loop over parList
       for (auto *m : static_range_cast<RooRealVar *>(self._parList)) {
@@ -708,14 +703,14 @@ void RooMomentMorphFuncND::findShape(const vector<double> &x) const
    int nRef = _referenceGrid._nref.size();
 
    // Find hypercube enclosing the location to morph to
-   bool isEnclosed = true;
-   for (int i = 0; i < nPar; i++) {
-      if (x[i] < _referenceGrid._grid[i]->lowBound())
-         isEnclosed = false;
-      if (x[i] > _referenceGrid._grid[i]->highBound())
-         isEnclosed = false;
-   }
-   (void)isEnclosed; // Silence warning for isEnclosed being unused.
+   // bool isEnclosed = true;
+   // for (int i = 0; i < nPar; i++) {
+   //    if (x[i] < _referenceGrid._grid[i]->lowBound())
+   //       isEnclosed = false;
+   //    if (x[i] > _referenceGrid._grid[i]->highBound())
+   //       isEnclosed = false;
+   // }
+
    // cout << "isEnclosed = " << isEnclosed << endl;
 
    int depth = TMath::Power(2, nPar);
