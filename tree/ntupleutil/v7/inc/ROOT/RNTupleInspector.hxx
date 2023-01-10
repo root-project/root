@@ -31,6 +31,25 @@ namespace Experimental {
 \class ROOT::Experimental::Detail::RNTupleInspector
 \ingroup NTuple
 \brief Inspect a given RNTuple
+
+Example usage:
+
+~~~ {.cpp}
+#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleInspector.hxx>
+
+#include <iostream>
+
+using ROOT::Experimental::RNTupleReader;
+using ROOT::Experimental::RNTupleInspector;
+
+auto rntuple = RNTupleReader::Open("NTupleName", "data.rntuple");
+auto inspector = RNTupleInspector::Create(rntuple).Unwrap();
+
+std::cout << "The compression factor is " << std::fixed << std::setprecision(2)
+                                          << inspector->GetCompressionFactor()
+                                          << std::endl;
+~~~
 */
 // clang-format on
 class RNTupleInspector {
