@@ -17,9 +17,10 @@
 #include <RooWorkspace.h>
 #include <RooAbsPdf.h>
 #include <RooAbsReal.h>
-#include <RooDataSet.h>
-#include <RooRealVar.h>
 #include <RooArgSet.h>
+#include <RooDataSet.h>
+#include <RooHelpers.h>
+#include <RooRealVar.h>
 #include <RooGlobalFunc.h>
 #include <RooFitResult.h>
 
@@ -41,15 +42,14 @@ TEST(Interface, createNLLRooAbsL)
    RooRealVar *sigma = w.var("sigma");
    sigma->setConstant(true);
    RooAbsPdf *pdf = w.pdf("g");
-   std::unique_ptr<RooDataSet> data{pdf->generate(RooArgSet(*x), 10000)};
+   std::unique_ptr<RooDataSet> data{pdf->generate(*x, 10000)};
    RooAbsReal *nll = pdf->createNLL(*data, RooFit::ModularL(true));
 
    auto *nll_real = dynamic_cast<RooFit::TestStatistics::RooRealL *>(nll);
 
    EXPECT_TRUE(nll_real != nullptr);
 
-   RooFit::TestStatistics::RooAbsL *nll_absL =
-      dynamic_cast<RooFit::TestStatistics::RooAbsL *>(nll_real->getRooAbsL().get());
+   auto *nll_absL = dynamic_cast<RooFit::TestStatistics::RooAbsL *>(nll_real->getRooAbsL().get());
 
    EXPECT_TRUE(nll_absL != nullptr);
 }
@@ -66,41 +66,57 @@ TEST(Interface, createNLLModularLAndOffset)
    RooRealVar *sigma = w.var("sigma");
    sigma->setConstant(true);
    RooAbsPdf *pdf = w.pdf("g");
-   std::unique_ptr<RooDataSet> data{pdf->generate(RooArgSet(*x), 10000)};
-   RooAbsReal *nll = pdf->createNLL(*data, RooFit::Offset(true), RooFit::ModularL(true));
+   std::unique_ptr<RooDataSet> data{pdf->generate(*x, 10000)};
+
+   RooHelpers::HijackMessageStream hijack(RooFit::ERROR, RooFit::InputArguments);
+
+   std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data, RooFit::Offset(true), RooFit::ModularL(true))};
+
+   EXPECT_NE(hijack.str().find("ERROR"), std::string::npos) << "Stream contents: " << hijack.str();
 
    EXPECT_TRUE(nll == nullptr);
 }
 
 // Verifies that the fitTo parallelize interface creates a valid minimization
+#ifdef R__HAS_ROOFIT_MULTIPROCESS
+TEST(Interface, fitTo)
+#else
 TEST(Interface, DISABLED_fitTo)
+#endif
 {
+   using namespace RooFit;
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
 
    RooRandom::randomGenerator()->SetSeed(42);
    RooWorkspace w;
-   w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1])");
+   w.factory("Gaussian::g(x[-5,5],mu[0,-3,3],sigma[1, 0.01, 3])");
    auto x = w.var("x");
+   RooRealVar *sigma = w.var("sigma");
+   sigma->setConstant(true);
    RooAbsPdf *pdf = w.pdf("g");
-   std::unique_ptr<RooDataSet> data{pdf->generate(RooArgSet(*x), 10000)};
+   std::unique_ptr<RooDataSet> data{pdf->generate({*x}, 10000)};
 
-   RooArgSet *values = pdf->getParameters(data.get());
+   RooArgSet values;
+   pdf->getParameters(data->get(), values);
 
-   values->add(*pdf);
+   values.add(*pdf);
 
    RooArgSet savedValues;
-   values->snapshot(savedValues);
+   values.snapshot(savedValues);
 
-   std::unique_ptr<RooFitResult> result1{pdf->fitTo(*data, RooFit::Save())};
+   std::unique_ptr<RooFitResult> result1{pdf->fitTo(*data, Save(), PrintLevel(-1))};
 
    double minNll_nominal = result1->minNll();
    double edm_nominal = result1->edm();
 
-   values->assign(savedValues);
+   values.assign(savedValues);
 
-   std::unique_ptr<RooFitResult> result2{pdf->fitTo(*data, RooFit::Save(), RooFit::Parallelize(4),
-                                                    RooFit::Experimental::ParallelGradientOptions(true),
-                                                    RooFit::Experimental::ParallelDescentOptions(true))};
+   std::unique_ptr<RooFitResult> result2{pdf->fitTo(*data, Save(), PrintLevel(-1), Parallelize(4),
+                                                    Experimental::ParallelGradientOptions(true),
+                                                    Experimental::ParallelDescentOptions(true))};
 
    double minNll_GradientJob = result2->minNll();
    double edm_GradientJob = result2->edm();
