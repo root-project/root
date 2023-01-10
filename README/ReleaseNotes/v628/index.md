@@ -296,6 +296,23 @@ In the unlikely case that this causes any problem for you, please open a GitHub 
 The `RooAbsBinning` interface for bin index lookups was changed to enable vectorized implementations.
 Instead of having the override `RooAbsBinning::binNumber()`, the binning implementations now have to override the `RooAbsBinning::binNumbers()` function to evaluate the bin indices of multiple values in one function call.
 
+### Disable relative and absolute epsilon in `RooAbsRealLValue::inRange()`
+
+So far, the `RooAbsRealLValue::inRange()` function used the following
+undocumented convention to check whether a value `x` is in the range with
+limits `a` and `b`: test if `[x - eps * x, x + eps * x]` overlaps with `[a, b]`, where the
+parameter `eps` is defined as `max(epsRel * x, epsAbs)`.
+
+The values of the relative and absolute epsilons were inconsistent among the overloads:
+
+* [RooAbsRealLValue::inRange(const char* rangeName)](https://root.cern.ch/doc/v626/classRooAbsRealLValue.html#ab6050a0c3e5583b9d755a38fd7fb82f7): `epsRel = 1e-8, epsAbs = 0`
+* [RooAbsRealLValue::inRange(double value, const char* rangeName, double* clippedValPtr)](https://root.cern.ch/doc/v626/classRooAbsRealLValue.html#afc2a8818f433a9a4ec0c437cbdad4e8a): `epsRel = 0, epsAbs = 1e-6`
+* [RooAbsRealLValue::inRange(std::span<const double> values, std::string const& rangeName, std::vector<bool>& out)](https://root.cern.ch/doc/v626/classRooAbsRealLValue.html#af9217abd0afe34364562ad0c194f5d2c): `epsRel = 0, epsAbs = 1e-6`
+
+
+With this release, the default absolute and relative epsilon is zero to avoid confusion.
+You can change them with `RooNumber::setRangeEpsRel(epsRel)` and `RooNumber::setRangeEpsAbs(epsAbs)`.
+
 ## 2D Graphics Libraries
 
 - Implement the option "File": The current file name is painted on the bottom right of each plot
