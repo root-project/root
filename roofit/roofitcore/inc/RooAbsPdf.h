@@ -189,6 +189,7 @@ public:
       int doSumW2 = -1;
       int doAsymptotic = -1;
       int maxCalls = -1;
+      int doOffset = -1;
       int parallelize = 0;
       bool enableParallelGradient = true;
       bool enableParallelDescent = false;
