@@ -51,6 +51,18 @@ double RooNumber::infinity()
 }
 
 
+double& RooNumber::staticRangeEpsRel() {
+  static double epsRel = 0.0;
+  return epsRel;
+}
+
+
+double& RooNumber::staticRangeEpsAbs() {
+  static double epsAbs = 0.0;
+  return epsAbs;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if x is infinite by RooNumBer internal specification
 
