@@ -1383,6 +1383,7 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
   minimizerConfig.enableParallelDescent = cfg.enableParallelDescent;
   minimizerConfig.parallelize = cfg.parallelize;
   minimizerConfig.timingAnalysis = cfg.timingAnalysis;
+  minimizerConfig.offsetting = cfg.doOffset;
   RooMinimizer m(nll, minimizerConfig);
 
   m.setMinimizerType(cfg.minType.c_str());
@@ -1563,6 +1564,12 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
 ///                                                backend and uses the number given as the number of workers to use in the parallelization. -1 also enables
 ///                                                RooFit's parallel minimization backend, and sets the number of workers to the number of available processes.
 ///                                                0 disables this feature.
+/// <tr><td> `Offset(std::string const& mode)` <td> Likelihood offsetting mode. Can be either:
+///                                                 - `"none"` (default): no offsetting
+///                                                 - `"initial"`: Offset likelihood by initial value (so that starting value of FCN in minuit is zero).
+///                                                    This can improve numeric stability in simultaneous fits with components with large likelihood values.
+///                                                 Note that this named argument only works if combined with `modularL` or `Parallelize`. For non-modular
+///                                                 likelihoods offsetting is enabled on the likelihood itself.
 /// <tr><td> `ParallelGradientOptions(bool enable=true, int orderStrategy=0, int chainFactor=1)`   <td>  **Experimental** Control gradient parallelization settings. The first argument
 ///                                                                                                      only disables or enables gradient parallelization, this is on by default.
 ///                                                                                                      The second argument determines the internal partial derivative calculation
@@ -1716,6 +1723,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   cfg.minosSet = pc.getSet("minosSet");
   cfg.minType = pc.getString("mintype","");
   cfg.minAlg = pc.getString("minalg","minuit");
+  cfg.doOffset = pc.getInt("doOffset");
   cfg.parallelize = pc.getInt("parallelize");
   cfg.enableParallelGradient = pc.getInt("enableParallelGradient");
   cfg.enableParallelDescent = pc.getInt("enableParallelDescent");
