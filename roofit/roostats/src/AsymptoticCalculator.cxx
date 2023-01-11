@@ -57,6 +57,7 @@ The calculator can generate Asimov datasets from two kinds of PDFs:
 #include "RooUniform.h"
 #include "RooGamma.h"
 #include "RooGaussian.h"
+#include "RooMultiVarGaussian.h"
 #include "RooBifurGauss.h"
 #include "RooLognormal.h"
 #include "RooDataHist.h"
@@ -917,12 +918,15 @@ bool AsymptoticCalculator::SetObsToExpected(RooProdPdf &prod, const RooArgSet &o
     for (auto *a : prod.pdfList()) {
         if (!a->dependsOn(obs)) continue;
         RooPoisson *pois = nullptr;
-        RooGaussian * gauss = nullptr;
+        RooGaussian *gauss = nullptr;
+        RooMultiVarGaussian *mvgauss = nullptr;
         if ((pois = dynamic_cast<RooPoisson *>(a)) != nullptr) {
             ret &= SetObsToExpected(*pois, obs);
             pois->setNoRounding(true);  //needed since expected value is not an integer
         } else if ((gauss = dynamic_cast<RooGaussian *>(a)) != nullptr) {
             ret &= SetObsToExpected(*gauss, obs);
+        } else if ((mvgauss = dynamic_cast<RooMultiVarGaussian *>(a)) != nullptr) {
+            ret &= SetObsToExpected(*mvgauss, obs);
         } else {
            // should try to add also lognormal case ?
             RooProdPdf *subprod = dynamic_cast<RooProdPdf *>(a);
@@ -1007,6 +1011,7 @@ RooAbsData * AsymptoticCalculator::GenerateCountingAsimovData(RooAbsPdf & pdf, c
     RooProdPdf *prod = dynamic_cast<RooProdPdf *>(&pdf);
     RooPoisson *pois = nullptr;
     RooGaussian *gauss = nullptr;
+    RooMultiVarGaussian *mvgauss = nullptr;
 
     if (fgPrintLevel > 1)
        std::cout << "generate counting Asimov data for pdf of type " << pdf.ClassName() << std::endl;
@@ -1020,6 +1025,8 @@ RooAbsData * AsymptoticCalculator::GenerateCountingAsimovData(RooAbsPdf & pdf, c
         pois->setNoRounding(true);
     } else if ((gauss = dynamic_cast<RooGaussian *>(&pdf)) != nullptr) {
         r = SetObsToExpected(*gauss, observables);
+    } else if ((mvgauss = dynamic_cast<RooMultiVarGaussian *>(&pdf)) != nullptr) {
+        r = SetObsToExpected(*mvgauss, observables);
     } else {
        oocoutE(nullptr,InputArguments) << "A counting model pdf must be either a RooProdPdf or a RooPoisson or a RooGaussian" << endl;
     }
