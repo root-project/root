@@ -37,7 +37,7 @@ void ROOT::Experimental::RNTupleInspector::CollectSizeData()
       }
    }
 
-   for (uint64_t colId = 0; colId < descriptorGuard->GetNColumns(); ++colId) {
+   for (uint64_t colId = 0; colId < descriptorGuard->GetNPhysicalColumns(); ++colId) {
       const ROOT::Experimental::RColumnDescriptor &colDescriptor = descriptorGuard->GetColumnDescriptor(colId);
 
       uint64_t elemSize =
