@@ -162,9 +162,9 @@ protected:
    /// Register post-read callbacks corresponding to a list of ROOT I/O customization rules. `classp` is used to
    /// fill the `TVirtualObject` instance passed to the user function.
    void AddReadCallbacksFromIORules(const std::span<const TSchemaRule *> rules, TClass *classp = nullptr);
-   /// Called by `ConnectPageSource()` to register read callbacks only once connected; derived classes may override this
+   /// Called by `ConnectPageSource()` only once connected; derived classes may override this
    /// as appropriate
-   virtual void RegisterReadCallbacks() {}
+   virtual void OnConnectPageSource() {}
 
 private:
    void InvokeReadCallbacks(RFieldValue &value)
@@ -377,7 +377,7 @@ protected:
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
-   void RegisterReadCallbacks() final;
+   void OnConnectPageSource() final;
 
 public:
    RClassField(std::string_view fieldName, std::string_view className);
