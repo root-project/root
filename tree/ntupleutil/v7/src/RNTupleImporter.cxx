@@ -257,7 +257,10 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
    }
 
    int iLeafCountCollection = 0;
-   for (auto &[_, c] : fLeafCountCollections) {
+   for (auto &p : fLeafCountCollections) {
+      // We want to capture this variable, which is not possible with a
+      // structured binding in C++17. Explicitly defining a variable works.
+      auto &c = p.second;
       c.fCollectionModel->Freeze();
       c.fCollectionEntry = c.fCollectionModel->CreateBareEntry();
       for (auto idx : c.fImportFieldIndexes) {
