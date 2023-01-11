@@ -159,9 +159,6 @@ protected:
    /// Returns an index that can be used to remove the callback.
    size_t AddReadCallback(ReadCallback_t func);
    void RemoveReadCallback(size_t idx);
-   /// Register post-read callbacks corresponding to a list of ROOT I/O customization rules. `classp` is used to
-   /// fill the `TVirtualObject` instance passed to the user function.
-   void AddReadCallbacksFromIORules(const std::span<const TSchemaRule *> rules, TClass *classp = nullptr);
    /// Called by `ConnectPageSource()` only once connected; derived classes may override this
    /// as appropriate
    virtual void OnConnectPageSource() {}
@@ -373,6 +370,9 @@ private:
 private:
    RClassField(std::string_view fieldName, std::string_view className, TClass *classp);
    void Attach(std::unique_ptr<Detail::RFieldBase> child, RSubFieldInfo info);
+   /// Register post-read callbacks corresponding to a list of ROOT I/O customization rules. `classp` is used to
+   /// fill the `TVirtualObject` instance passed to the user function.
+   void AddReadCallbacksFromIORules(const std::span<const TSchemaRule *> rules, TClass *classp = nullptr);
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
