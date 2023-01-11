@@ -477,7 +477,7 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSource(RPageSource &page
       fPrincipalColumn = fColumns[0].get();
    for (auto& column : fColumns)
       column->Connect(fOnDiskId, &pageSource);
-   RegisterReadCallbacks();
+   OnConnectPageSource();
 }
 
 
@@ -974,7 +974,7 @@ void ROOT::Experimental::RClassField::ReadInClusterImpl(const RClusterIndex &clu
    }
 }
 
-void ROOT::Experimental::RClassField::RegisterReadCallbacks()
+void ROOT::Experimental::RClassField::OnConnectPageSource()
 {
    // Add post-read callbacks for I/O customization rules; only rules that target transient members are allowed for now
    // TODO(jalopezg): revise after supporting schema evolution
