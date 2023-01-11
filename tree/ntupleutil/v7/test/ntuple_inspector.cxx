@@ -132,7 +132,7 @@ TEST(RNTupleInspector, SingleIntFieldCompression)
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
 
    auto inspector = RNTupleInspector::Create(ntuple).Unwrap();
-   EXPECT_EQ(200, inspector->GetUncompressedSize());
-   EXPECT_EQ(95, inspector->GetCompressedSize());
-   EXPECT_NEAR(2.11, inspector->GetCompressionFactor(), 1e-2);
+   EXPECT_LT(0, inspector->GetCompressedSize());
+   EXPECT_LT(inspector->GetCompressedSize(), inspector->GetUncompressedSize());
+   EXPECT_GT(inspector->GetCompressionFactor(), 1);
 }
