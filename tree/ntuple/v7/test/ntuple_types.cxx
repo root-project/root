@@ -1,5 +1,6 @@
 #include "ntuple_test.hxx"
 #include "SimpleCollectionProxy.hxx"
+#include "ROOT/TestSupport.hxx"
 #include "TInterpreter.h"
 
 #include <cstring>
@@ -627,6 +628,12 @@ TEST(RNTuple, Traits)
 
 TEST(RNTuple, TClassReadRules)
 {
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kWarning, "[ROOT.NTuple]", "ignoring I/O customization rule with non-transient member: a", false);
+   diags.requiredDiag(kWarning, "ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile",
+                      "The RNTuple file format will change.", false);
+   diags.requiredDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 1", false);
+
    FileRaii fileGuard("test_ntuple_tclassrules.ntuple");
    char c[4] = {'R', 'O', 'O', 'T'};
    {
