@@ -83,6 +83,7 @@ class RFieldBase {
    using ReadCallback_t = std::function<void(RFieldValue &)>;
 
 public:
+   static constexpr std::uint32_t kInvalidTypeVersion = -1U;
    /// No constructor needs to be called, i.e. any bit pattern in the allocated memory represents a valid type
    /// A trivially constructible field has a no-op GenerateValue() implementation
    static constexpr int kTraitTriviallyConstructible = 0x01;
@@ -128,7 +129,7 @@ protected:
    /// List of functions to be called after reading a value
    std::vector<ReadCallback_t> fReadCallbacks;
    /// C++ type version cached from the descriptor after a call to `ConnectPageSource()`
-   std::uint32_t fOnDiskTypeVersion = 0;
+   std::uint32_t fOnDiskTypeVersion = kInvalidTypeVersion;
 
    /// Creates the backing columns corresponsing to the field type for writing
    virtual void GenerateColumnsImpl() = 0;
