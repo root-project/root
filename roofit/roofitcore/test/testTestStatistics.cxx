@@ -68,7 +68,7 @@ class TestStatisticTest : public testing::TestWithParam<std::tuple<std::string>>
    {
       RooRandom::randomGenerator()->SetSeed(1337ul);
       _batchMode = std::get<0>(GetParam());
-      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::ERROR);
+      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
    }
 
    void TearDown() override { _changeMsgLvl.reset(); }
@@ -104,12 +104,13 @@ TEST_P(TestStatisticTest, IntegrateBins)
    dataS->plotOn(frame.get(), Name("data"));
 
    a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit1(pdf.fitTo(*dataS, Save(), PrintLevel(-1), BatchMode(_batchMode)));
+   std::unique_ptr<RooFitResult> fit1(
+      pdf.fitTo(*dataS, Save(), PrintLevel(-1), BatchMode(_batchMode), SumW2Error(false)));
    pdf.plotOn(frame.get(), LineColor(kRed), Name("standard"));
 
    a.setVal(3.);
    std::unique_ptr<RooFitResult> fit2(
-      pdf.fitTo(*dataS, Save(), PrintLevel(-1), BatchMode(_batchMode), IntegrateBins(1.E-3)));
+      pdf.fitTo(*dataS, Save(), PrintLevel(-1), BatchMode(_batchMode), SumW2Error(false), IntegrateBins(1.E-3)));
    pdf.plotOn(frame.get(), LineColor(kBlue), Name("highRes"));
 
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
@@ -153,12 +154,12 @@ TEST_P(TestStatisticTest, IntegrateBins_SubRange)
 
    a.setVal(3.);
    std::unique_ptr<RooFitResult> fit1(
-      pdf.fitTo(*dataS, Save(), PrintLevel(-1), Optimize(0), Range("range"), BatchMode(_batchMode)));
+      pdf.fitTo(*dataS, Save(), PrintLevel(-1), Optimize(0), Range("range"), BatchMode(_batchMode), SumW2Error(false)));
    pdf.plotOn(frame.get(), LineColor(kRed), Name("standard"), Range("range"), NormRange("range"));
 
    a.setVal(3.);
    std::unique_ptr<RooFitResult> fit2(pdf.fitTo(*dataS, Save(), PrintLevel(-1), Optimize(0), Range("range"),
-                                                BatchMode(_batchMode), IntegrateBins(1.E-3)));
+                                                BatchMode(_batchMode), SumW2Error(false), IntegrateBins(1.E-3)));
    pdf.plotOn(frame.get(), LineColor(kBlue), Name("highRes"), Range("range"), NormRange("range"));
 
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
@@ -204,12 +205,13 @@ TEST_P(TestStatisticTest, IntegrateBins_CustomBinning)
    dataS->plotOn(frame.get(), Name("data"));
 
    a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit1(pdf.fitTo(*dataS, Save(), PrintLevel(-1), BatchMode(_batchMode), Optimize(0)));
+   std::unique_ptr<RooFitResult> fit1(
+      pdf.fitTo(*dataS, Save(), PrintLevel(-1), BatchMode(_batchMode), SumW2Error(false), Optimize(0)));
    pdf.plotOn(frame.get(), LineColor(kRed), Name("standard"));
 
    a.setVal(3.);
-   std::unique_ptr<RooFitResult> fit2(
-      pdf.fitTo(*dataS, Save(), PrintLevel(-1), Optimize(0), BatchMode(_batchMode), IntegrateBins(1.E-3)));
+   std::unique_ptr<RooFitResult> fit2(pdf.fitTo(*dataS, Save(), PrintLevel(-1), Optimize(0), BatchMode(_batchMode),
+                                                SumW2Error(false), IntegrateBins(1.E-3)));
    pdf.plotOn(frame.get(), LineColor(kBlue), Name("highRes"));
 
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
@@ -251,13 +253,13 @@ TEST_P(TestStatisticTest, IntegrateBins_RooDataHist)
    a.setVal(3.);
    // Disable IntegrateBins forcefully
    std::unique_ptr<RooFitResult> fit1(
-      pdf.fitTo(*data, Save(), PrintLevel(-1), BatchMode(_batchMode), IntegrateBins(-1.)));
+      pdf.fitTo(*data, Save(), PrintLevel(-1), BatchMode(_batchMode), SumW2Error(false), IntegrateBins(-1.)));
    pdf.plotOn(frame.get(), LineColor(kRed), Name("standard"));
 
    a.setVal(3.);
    // Auto-enable IntegrateBins for all RooDataHists.
    std::unique_ptr<RooFitResult> fit2(
-      pdf.fitTo(*data, Save(), PrintLevel(-1), BatchMode(_batchMode), IntegrateBins(0.)));
+      pdf.fitTo(*data, Save(), PrintLevel(-1), BatchMode(_batchMode), SumW2Error(false), IntegrateBins(0.)));
    pdf.plotOn(frame.get(), LineColor(kBlue), Name("highRes"));
 
    EXPECT_GT(std::abs(getVal("a", targetValues) - getVal("a", fit1->floatParsFinal())),
@@ -348,7 +350,7 @@ TEST(RooNLLVar, CopyRangedNLL)
 class OffsetBinTest : public testing::TestWithParam<std::tuple<std::string, bool, bool, bool>> {
    void SetUp() override
    {
-      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::ERROR);
+      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
       _batchMode = std::get<0>(GetParam());
       _binned = std::get<1>(GetParam());
       _ext = std::get<2>(GetParam());
