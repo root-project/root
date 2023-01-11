@@ -929,7 +929,7 @@ double RooRealIntegral::evaluate() const
       // Multiply by fit range for 'real' dependents
       if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
         RooAbsRealLValue* argLV = (RooAbsRealLValue*)arg ;
-        retVal *= (argLV->getMax() - argLV->getMin()) ;
+        retVal *= (argLV->getMax(intRange()) - argLV->getMin(intRange())) ;
       }
       // Multiply by number of states for category dependents
       if (arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
