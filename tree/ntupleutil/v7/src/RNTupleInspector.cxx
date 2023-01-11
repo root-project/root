@@ -23,11 +23,13 @@
 
 void ROOT::Experimental::RNTupleInspector::CollectSizeData()
 {
+   fPageSource->Attach();
+   auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
    int compressionSettings = -1;
    std::uint64_t compressedSize = 0;
    std::uint64_t uncompressedSize = 0;
 
-   for (const auto &clusterDescriptor : fSourceNTupleDescriptor->GetClusterIterable()) {
+   for (const auto &clusterDescriptor : descriptorGuard->GetClusterIterable()) {
       compressedSize += clusterDescriptor.GetBytesOnStorage();
 
       if (compressionSettings == -1) {
@@ -35,13 +37,13 @@ void ROOT::Experimental::RNTupleInspector::CollectSizeData()
       }
    }
 
-   for (uint64_t colId = 0; colId < fSourceNTupleDescriptor->GetNColumns(); ++colId) {
-      const ROOT::Experimental::RColumnDescriptor &colDescriptor = fSourceNTupleDescriptor->GetColumnDescriptor(colId);
+   for (uint64_t colId = 0; colId < descriptorGuard->GetNColumns(); ++colId) {
+      const ROOT::Experimental::RColumnDescriptor &colDescriptor = descriptorGuard->GetColumnDescriptor(colId);
 
       uint64_t elemSize =
          ROOT::Experimental::Detail::RColumnElementBase::Generate(colDescriptor.GetModel().GetType())->GetSize();
 
-      uint64_t nElems = fSourceNTupleDescriptor->GetNElements(colId);
+      uint64_t nElems = descriptorGuard->GetNElements(colId);
       uncompressedSize += nElems * elemSize;
    }
 
@@ -51,35 +53,28 @@ void ROOT::Experimental::RNTupleInspector::CollectSizeData()
 }
 
 ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RNTupleInspector>>
-ROOT::Experimental::RNTupleInspector::Create(std::unique_ptr<RNTupleReader> &sourceNTupleReader)
+ROOT::Experimental::RNTupleInspector::Create(std::shared_ptr<ROOT::Experimental::Detail::RPageSource> pageSource)
 {
-   auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector());
-
-   inspector->fSourceNTupleDescriptor = sourceNTupleReader->GetDescriptor();
-
-   if (!inspector->fSourceNTupleDescriptor) {
-      return R__FAIL("cannot get descriptor for provided RNTuple");
-   }
+   auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(pageSource));
 
    inspector->CollectSizeData();
+
    return inspector;
 }
 
 ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RNTupleInspector>>
 ROOT::Experimental::RNTupleInspector::Create(ROOT::Experimental::RNTuple *sourceNTuple)
 {
-   auto reader = ROOT::Experimental::RNTupleReader::Open(sourceNTuple);
+   std::shared_ptr<ROOT::Experimental::Detail::RPageSource> pageSource = sourceNTuple->MakePageSource();
 
-   if (!reader) {
-      return R__FAIL("cannot get reader for provided RNTuple");
-   }
-
-   return ROOT::Experimental::RNTupleInspector::Create(reader);
+   return ROOT::Experimental::RNTupleInspector::Create(pageSource);
 }
 
 std::string ROOT::Experimental::RNTupleInspector::GetName()
 {
-   return fSourceNTupleDescriptor->GetName();
+   fPageSource->Attach();
+   auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
+   return descriptorGuard->GetName();
 }
 
 int ROOT::Experimental::RNTupleInspector::GetCompressionSettings()
