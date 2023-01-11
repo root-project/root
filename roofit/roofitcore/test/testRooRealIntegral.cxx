@@ -5,6 +5,7 @@
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooFormulaVar.h>
+#include <RooGenProdProj.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
 #include <RooHistPdf.h>
@@ -14,6 +15,8 @@
 #include <RooRealIntegral.h>
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
+
+#include <ROOT/StringUtils.hxx>
 
 #include <gtest/gtest.h>
 
@@ -45,8 +48,8 @@ TEST(RooRealIntegral, ClientServerInterface1)
    ws.factory("Product::mu_mod({mu[-0.005, -5.0, 5.0], 10.0})");
    ws.factory("Gaussian::gauss(x[0, 1], mu_mod, 2.0)");
 
-   RooRealVar& x = *ws.var("x");
-   RooAbsPdf& gauss = *ws.pdf("gauss");
+   RooRealVar &x = *ws.var("x");
+   RooAbsPdf &gauss = *ws.pdf("gauss");
    RooGenericPdf pdf{"gaussWrapped", "gauss", gauss};
 
    std::unique_ptr<RooAbsReal> integ1{gauss.createIntegral(x, *pdf.getIntegratorConfig(), nullptr)};
@@ -117,9 +120,9 @@ TEST(RooRealIntegral, IntegrateFuncWithShapeServers)
    ws.factory("Gaussian::gauss(x[0, 1], mu_mod, sigma[1, 0.5, 2.0])");
 
    RooRealVar &x = *ws.var("x");
-   RooAbsReal& muMod = *ws.function("mu_mod");
-   RooRealVar& sigma = *ws.var("sigma");
-   RooAbsPdf& gauss = *ws.pdf("gauss");
+   RooAbsReal &muMod = *ws.function("mu_mod");
+   RooRealVar &sigma = *ws.var("sigma");
+   RooAbsPdf &gauss = *ws.pdf("gauss");
    RooGenericPdf pdf("pdf", "gauss", gauss);
 
    // Project over sigma, meaning sigma should now become a shape server
@@ -220,7 +223,12 @@ TEST(RooRealIntegral, UseCloneAsIntegrationVariable2)
 /// Make sure that the normalization set for a RooAddPdf is always defined when
 /// numerically integrating a RooProdPdf where the RooAddPdf is one of the
 /// factors. Covers GitHub #11476 and JIRA issue ROOT-9436.
-TEST(RooRealIntegral, Issue11476)
+///
+/// Disabled for now because the fix to the bug that is covered by this unit
+/// test caused a severe performance problem and was reverted. The performace
+/// regression is covered by another unit test in this file, called
+/// "ProjectConditional".
+TEST(RooRealIntegral, DISABLED_Issue11476)
 {
    // Silence the info about numeric integration because we don't care about it
    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
@@ -243,7 +251,7 @@ TEST(RooRealIntegral, Issue11476)
    // Check that there were no warnings (covers GitHub issue #11476)
    const std::string messages = hijack.str();
    std::cout << messages;
-   EXPECT_TRUE(messages.empty()) << "Unexpected warnings were issued!";
+   EXPECT_TRUE(messages.empty()) << "Unexpected warnings were issued! Stream contents: " << hijack.str();
 
    // Verify that plot is correctly normalized
    std::unique_ptr<RooPlot> frame{x.frame()};
@@ -255,3 +263,96 @@ TEST(RooRealIntegral, Issue11476)
    EXPECT_LE(frame->chiSquare(), 1.0)
       << "The chi-square of the plot is too high, the normalization of the PDF is probably wrong!";
 }
+
+class LevelTest : public testing::TestWithParam<int> {
+   void SetUp() override { _level = GetParam(); }
+
+protected:
+   int _level;
+
+private:
+   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
+};
+
+/// Related to GitHub issue #11814.
+TEST_P(LevelTest, ProjectConditional)
+{
+   RooHelpers::HijackMessageStream hijack(RooFit::INFO, RooFit::NumIntegration);
+
+   constexpr bool verbose = false;
+
+   RooWorkspace w;
+   w.factory("Poisson::px(x[150,0,500],sum::splusb(s[0,0,100],b[100,0,300]))");
+   w.factory("Poisson::py(y[100,0,500],prod::taub(tau[1.],b))");
+   w.factory("Uniform::prior_b(b)");
+
+   RooRealVar &x = *w.var("x");
+   RooRealVar &b = *w.var("b");
+
+   std::unique_ptr<RooAbsReal> function;
+   std::size_t expectedNumInts = 0;
+
+   // The following three code blocks all cover the issue, but generate the
+   // computation graph using different levels of interacting with RooFit, from low to high level.
+   switch (_level) {
+
+   case 1: {
+      // Version 1) Manually reproducing the RooGenProdProj instance that the
+      //            RooProdPdf would create under the hood:
+      RooAbsPdf &px = *w.pdf("px");
+      RooAbsPdf &py = *w.pdf("py");
+      RooArgSet iset{b};
+      RooArgSet eset{};
+      std::unique_ptr<RooAbsReal> pxNormed{px.createIntegral({}, x)};
+      auto genProdProj = std::make_unique<RooGenProdProj>("genProdProj", "", RooArgSet{py}, eset, iset, nullptr);
+      auto prod = std::make_unique<RooProduct>("prod", "", RooArgList{*genProdProj, *pxNormed});
+      function = std::unique_ptr<RooAbsReal>{prod->createIntegral(iset)};
+
+      function->addOwnedComponents(std::move(pxNormed));
+      function->addOwnedComponents(std::move(genProdProj));
+      function->addOwnedComponents(std::move(prod));
+
+      expectedNumInts = 2;
+   } break;
+
+   case 2: {
+      // Version 2) Doing the final projection integral manually:
+      w.factory("PROD::foo(px|b,py,prior_b)");
+      function = std::unique_ptr<RooAbsReal>{w.pdf("foo")->createIntegral({b}, {b, x})};
+      expectedNumInts = 3;
+   } break;
+
+   case 3: {
+      // Version 3) High-level Projection in RooWorkspace factory language, as
+      //            it originally appeared in the RooStats tutorials:
+      w.factory("PROJ::averagedModel(PROD::foo(px|b,py,prior_b),b)");
+      function = std::unique_ptr<RooAbsReal>{static_cast<RooAbsReal *>(w.pdf("averagedModel")->Clone())};
+      expectedNumInts = 4;
+   } break;
+
+   default: break;
+   }
+
+   RooArgSet nset{b, x};
+
+   for (int i = 0; i < 10; ++i) {
+      x.setVal(i % 500);
+
+      const double val = function->getVal(nset);
+      if (verbose) {
+         std::cout << val << std::endl;
+      }
+   }
+
+   EXPECT_LE(ROOT::Split(hijack.str(), "\n", true).size(), expectedNumInts)
+      << "More numeric integrals than expected! This might be okay, but could also point to a performance regression "
+         "for the model covered in this unit test. Please investigate, and increase the number of expected numeric "
+         "integrals in this test if they are not related to performance regressions.";
+}
+
+INSTANTIATE_TEST_SUITE_P(RooRealIntegral, LevelTest, testing::Values(1, 2, 3),
+                         [](testing::TestParamInfo<LevelTest::ParamType> const &paramInfo) {
+                            std::stringstream ss;
+                            ss << "Level" << paramInfo.param;
+                            return ss.str();
+                         });
