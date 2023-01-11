@@ -183,13 +183,22 @@ if(NOT ROOT_r_FOUND)
   set(r_veto  r/*.C)
 endif()
 
-if(WIN32)
-  set(histfactory_veto histfactory/*.C
-                       roostats/StandardFrequentistDiscovery.C) # histfactory doesn't work on Windows
-else()
-  set(histfactory_veto histfactory/makeExample.C)
+# The following tests use hist2workspace, which requires xml
+if(NOT ROOT_xml_FOUND)
+  list(APPEND xml_veto roostats/OneSidedFrequentistUpperLimitWithBands.C
+                       roostats/StandardBayesianMCMCDemo.C
+                       roostats/StandardBayesianNumericalDemo.C
+                       roostats/StandardFeldmanCousinsDemo.C
+                       roostats/StandardFrequentistDiscovery.C
+                       roostats/StandardHistFactoryPlotsWithCategories.C
+                       roostats/StandardHypoTestDemo.C
+                       roostats/StandardHypoTestInvDemo.C
+                       roostats/StandardProfileInspectorDemo.C
+                       roostats/StandardProfileLikelihoodDemo.C
+                       roostats/StandardTestStatDistributionDemo.C
+                       roostats/TwoSidedFrequentistUpperLimitWithBands.C)
 endif()
-
+set(histfactory_veto histfactory/makeExample.C)
 
 if(NOT ROOT_fitsio_FOUND)
   set(fitsio_veto  fitsio/*.C)
