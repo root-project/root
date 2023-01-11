@@ -1,4 +1,19 @@
+#include <ROOT/RNTupleImporter.hxx>
+
+#include <TFile.h>
+#include <TTree.h>
+
+#include <cstdio>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+#include "CustomStructUtil.hxx"
 #include "ntupleutil_test.hxx"
+
+using ROOT::Experimental::RNTupleImporter;
+using ROOT::Experimental::RNTupleReader;
 
 TEST(RNTupleImporter, Empty)
 {

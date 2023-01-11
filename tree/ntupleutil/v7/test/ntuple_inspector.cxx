@@ -1,4 +1,22 @@
+#include <ROOT/RNTupleInspector.hxx>
+#include <ROOT/RNTupleOptions.hxx>
+
+#include <TFile.h>
+#include <TTree.h>
+
+#include <cstdio>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
+
 #include "ntupleutil_test.hxx"
+
+using ROOT::Experimental::RNTupleInspector;
+using ROOT::Experimental::RNTupleModel;
+using ROOT::Experimental::RNTupleReader;
+using ROOT::Experimental::RNTupleWriteOptions;
+using ROOT::Experimental::RNTupleWriter;
 
 TEST(RNTupleInspector, Name)
 {
