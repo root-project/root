@@ -2,16 +2,15 @@
 #include <ROOT/RNTupleOptions.hxx>
 
 #include <TFile.h>
-#include <TTree.h>
 
-#include <cstdio>
-#include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
+// #include <cstdio>
+// #include <string>
+// #include <tuple>
+// #include <utility>
 
 #include "ntupleutil_test.hxx"
 
+using ROOT::Experimental::RNTuple;
 using ROOT::Experimental::RNTupleInspector;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleReader;
@@ -26,8 +25,10 @@ TEST(RNTupleInspector, Name)
       RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
    }
 
-   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
+   auto ntuple = file->Get<RNTuple>("ntuple");
    auto inspector = RNTupleInspector::Create(ntuple).Unwrap();
+
    EXPECT_EQ("ntuple", inspector->GetName());
 }
 
@@ -46,9 +47,10 @@ TEST(RNTupleInspector, CompressionSettings)
       ntuple->Fill();
    }
 
-   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
+   auto ntuple = file->Get<RNTuple>("ntuple");
    auto inspector = RNTupleInspector::Create(ntuple).Unwrap();
+
    EXPECT_EQ(505, inspector->GetCompressionSettings());
 }
 
@@ -67,9 +69,10 @@ TEST(RNTupleInspector, SizeUncompressed)
       ntuple->Fill();
    }
 
-   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
+   auto ntuple = file->Get<RNTuple>("ntuple");
    auto inspector = RNTupleInspector::Create(ntuple).Unwrap();
+
    EXPECT_EQ(sizeof(int32_t), inspector->GetUncompressedSize());
    EXPECT_EQ(inspector->GetCompressedSize(), inspector->GetUncompressedSize());
 }
@@ -91,9 +94,10 @@ TEST(RNTupleInspector, SizeCompressed)
       }
    }
 
-   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
+   auto ntuple = file->Get<RNTuple>("ntuple");
    auto inspector = RNTupleInspector::Create(ntuple).Unwrap();
+
    EXPECT_NE(inspector->GetCompressedSize(), inspector->GetUncompressedSize());
 }
 
@@ -105,9 +109,10 @@ TEST(RNTupleInspector, SizeEmpty)
       RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
    }
 
-   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
+   auto ntuple = file->Get<RNTuple>("ntuple");
    auto inspector = RNTupleInspector::Create(ntuple).Unwrap();
+
    EXPECT_EQ(0, inspector->GetCompressedSize());
    EXPECT_EQ(0, inspector->GetUncompressedSize());
 }
@@ -129,9 +134,10 @@ TEST(RNTupleInspector, SingleIntFieldCompression)
       }
    }
 
-   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
+   auto ntuple = file->Get<RNTuple>("ntuple");
    auto inspector = RNTupleInspector::Create(ntuple).Unwrap();
+
    EXPECT_LT(0, inspector->GetCompressedSize());
    EXPECT_LT(inspector->GetCompressedSize(), inspector->GetUncompressedSize());
    EXPECT_GT(inspector->GetCompressionFactor(), 1);

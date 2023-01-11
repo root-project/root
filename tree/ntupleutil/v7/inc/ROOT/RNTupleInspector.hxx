@@ -54,13 +54,13 @@ std::cout << "The compression factor is " << std::fixed << std::setprecision(2)
 // clang-format on
 class RNTupleInspector {
 private:
-   RNTupleInspector() = default;
-
-   const RNTupleDescriptor *fSourceNTupleDescriptor;
+   std::shared_ptr<ROOT::Experimental::Detail::RPageSource> fPageSource;
    int fCompressionSettings;
    std::uint64_t fCompressedSize;
    std::uint64_t fUncompressedSize;
    float fCompressionFactor;
+
+   RNTupleInspector(std::shared_ptr<ROOT::Experimental::Detail::RPageSource> pageSource) : fPageSource(pageSource) {};
 
    void CollectSizeData();
 
@@ -72,7 +72,7 @@ public:
    ~RNTupleInspector() = default;
 
    /// Creates a new inspector for a given RNTuple.
-   static RResult<std::unique_ptr<RNTupleInspector>> Create(std::unique_ptr<RNTupleReader> &sourceNTupleReader);
+   static RResult<std::unique_ptr<RNTupleInspector>> Create(std::shared_ptr<ROOT::Experimental::Detail::RPageSource> pageSource);
    static RResult<std::unique_ptr<RNTupleInspector>> Create(RNTuple *sourceNTuple);
 
    /// Get the name of the RNTuple being inspected.
