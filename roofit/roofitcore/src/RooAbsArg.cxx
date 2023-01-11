@@ -1000,7 +1000,11 @@ bool RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, bool mustRep
 {
   // Trivial case, no servers
   if (_serverList.empty()) return false ;
-  if (newSetOrig.empty()) return false ;
+
+  // We don't need to do anything if there are no new servers or if the only
+  // new server is this RooAbsArg itself. And by returning early, we avoid
+  // potentially annoying side effects of the redirectServersHook.
+  if (newSetOrig.empty() || (newSetOrig.size() == 1 && newSetOrig[0] == this)) return false ;
 
   // Strip any non-matching removal nodes from newSetOrig
   RooAbsCollection* newSet ;
