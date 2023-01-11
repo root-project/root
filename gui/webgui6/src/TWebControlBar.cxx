@@ -131,9 +131,6 @@ void TWebControlBar::Show()
          // data
          [this](unsigned connid, const std::string &arg) {
             ProcessData(connid, arg);
-         },
-         // disconnect
-         [this](unsigned) {
          });
    }
 
