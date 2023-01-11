@@ -967,24 +967,25 @@ void ROOT::Experimental::RClassField::OnConnectPageSource()
 {
    // Add post-read callbacks for I/O customization rules; only rules that target transient members are allowed for now
    // TODO(jalopezg): revise after supporting schema evolution
-   if (const auto ruleset = fClass->GetSchemaRules()) {
-      auto referencesNonTransientMembers = [klass = fClass](const ROOT::TSchemaRule *rule) {
-         R__ASSERT(rule->GetTarget() != nullptr);
-         for (auto target : ROOT::Detail::TRangeStaticCast<TObjString>(*rule->GetTarget())) {
-            const auto dataMember = klass->GetDataMember(target->GetString());
-            if (!dataMember || dataMember->IsPersistent()) {
-               R__LOG_WARNING(NTupleLog())
-                  << "ignoring I/O customization rule with non-transient member: " << dataMember->GetName();
-               return true;
-            }
+   const auto ruleset = fClass->GetSchemaRules();
+   if (!ruleset)
+      return;
+   auto referencesNonTransientMembers = [klass = fClass](const ROOT::TSchemaRule *rule) {
+      R__ASSERT(rule->GetTarget() != nullptr);
+      for (auto target : ROOT::Detail::TRangeStaticCast<TObjString>(*rule->GetTarget())) {
+         const auto dataMember = klass->GetDataMember(target->GetString());
+         if (!dataMember || dataMember->IsPersistent()) {
+            R__LOG_WARNING(NTupleLog()) << "ignoring I/O customization rule with non-transient member: "
+                                        << dataMember->GetName();
+            return true;
          }
-         return false;
-      };
+      }
+      return false;
+   };
 
-      auto rules = ruleset->FindRules(fClass->GetName(), static_cast<Int_t>(GetOnDiskTypeVersion()));
-      rules.erase(std::remove_if(rules.begin(), rules.end(), referencesNonTransientMembers), rules.end());
-      AddReadCallbacksFromIORules(rules, fClass);
-   }
+   auto rules = ruleset->FindRules(fClass->GetName(), static_cast<Int_t>(GetOnDiskTypeVersion()));
+   rules.erase(std::remove_if(rules.begin(), rules.end(), referencesNonTransientMembers), rules.end());
+   AddReadCallbacksFromIORules(rules, fClass);
 }
 
 void ROOT::Experimental::RClassField::GenerateColumnsImpl()
