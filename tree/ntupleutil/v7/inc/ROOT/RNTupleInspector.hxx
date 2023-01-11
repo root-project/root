@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
