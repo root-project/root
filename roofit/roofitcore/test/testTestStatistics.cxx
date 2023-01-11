@@ -12,6 +12,7 @@
 #include <RooNLLVar.h>
 #include <RooRandom.h>
 #include <RooPlot.h>
+#include <RooPolyVar.h>
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
 
@@ -343,6 +344,65 @@ TEST(RooNLLVar, CopyRangedNLL)
    EXPECT_FLOAT_EQ(nll->getVal(), nllClone->getVal());
    EXPECT_FLOAT_EQ(nll->getVal(), nllrange->getVal());
    EXPECT_FLOAT_EQ(nllrange->getVal(), nllrangeClone->getVal());
+}
+
+/// When using the Integrate() command argument in chi2FitTo, the result should
+/// be identical to a fit without bin integration if the fit function is
+/// linear. This is a good cross check to see if the integration works.
+/// Inspired by the rf609_xychi2fit tutorial.
+TEST(RooXYChi2Var, IntegrateLinearFunction)
+{
+   using namespace RooFit;
+
+   // Make weighted XY dataset with asymmetric errors stored The StoreError()
+   // argument is essential as it makes the dataset store the error in addition
+   // to the values of the observables. If errors on one or more observables
+   // are asymmetric, one can store the asymmetric error using the
+   // StoreAsymError() argument
+   RooRealVar x("x", "x", -11, 11);
+   RooRealVar y("y", "y", -10, 200);
+   RooDataSet dxy("dxy", "dxy", {x, y}, StoreError({x, y}));
+
+   const double aTrue = 0.1;
+   const double bTrue = 10.0;
+
+   // Fill an example dataset with X,err(X),Y,err(Y) values
+   for (int i = 0; i <= 10; i++) {
+
+      // Set X value and error
+      x = -10 + 2 * i;
+      x.setError(i < 5 ? 0.5 / 1. : 1.0 / 1.);
+
+      // Set Y value and error
+      y = aTrue * x.getVal() + bTrue;
+      y.setError(std::sqrt(y.getVal()));
+
+      dxy.add({x, y});
+   }
+
+   // Make linear fit function
+   RooRealVar a("a", "a", 0.0, -10, 10);
+   RooRealVar b("b", "b", 0.0, -100, 100);
+   RooArgList coefs{b, a};
+   RooPolyVar f("f", "f", x, coefs);
+
+   RooArgSet savedValues;
+   coefs.snapshot(savedValues);
+
+   // Fit chi^2 using X and Y errors
+   std::unique_ptr<RooFitResult> fit1{f.chi2FitTo(dxy, YVar(y), Save(), PrintLevel(-1), Optimize(0))};
+
+   coefs.assign(savedValues);
+   // Alternative: fit chi^2 integrating f(x) over ranges defined by X errors,
+   // rather than taking point at center of bin
+   std::unique_ptr<RooFitResult> fit2{f.chi2FitTo(dxy, YVar(y), Integrate(true), Save(), PrintLevel(-1), Optimize(0))};
+
+   // Verify that the fit result is compatible with true values within the error
+   EXPECT_NEAR(getVal("a", fit1->floatParsFinal()), aTrue, getErr("a", fit1->floatParsFinal()));
+   EXPECT_NEAR(getVal("b", fit1->floatParsFinal()), bTrue, getErr("b", fit1->floatParsFinal()));
+
+   EXPECT_NEAR(getVal("a", fit2->floatParsFinal()), aTrue, getErr("a", fit2->floatParsFinal()));
+   EXPECT_NEAR(getVal("b", fit2->floatParsFinal()), bTrue, getErr("b", fit2->floatParsFinal()));
 }
 
 class OffsetBinTest : public testing::TestWithParam<std::tuple<std::string, bool, bool, bool>> {
