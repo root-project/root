@@ -421,26 +421,6 @@ void ROOT::Experimental::Detail::RFieldBase::RemoveReadCallback(size_t idx)
    fIsSimple = (fTraits & kTraitMappable) && fReadCallbacks.empty();
 }
 
-void ROOT::Experimental::Detail::RFieldBase::AddReadCallbacksFromIORules(
-   const std::span<const ROOT::TSchemaRule *> rules, TClass *classp)
-{
-   for (const auto rule : rules) {
-      if (rule->GetRuleType() != ROOT::TSchemaRule::kReadRule) {
-         R__LOG_WARNING(NTupleLog()) << "ignoring I/O customization rule with unsupported type";
-         continue;
-      }
-      auto func = rule->GetReadFunctionPointer();
-      R__ASSERT(func != nullptr);
-      fReadCallbacks.emplace_back([func, classp](Detail::RFieldValue &value) {
-         TVirtualObject oldObj{nullptr};
-         oldObj.fClass = classp;
-         oldObj.fObject = value.GetRawPtr();
-         func(static_cast<char *>(value.GetRawPtr()), &oldObj);
-         oldObj.fClass = nullptr; // TVirtualObject does not own the value
-      });
-   }
-}
-
 void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink)
 {
    R__ASSERT(fColumns.empty());
@@ -930,6 +910,26 @@ void ROOT::Experimental::RClassField::Attach(std::unique_ptr<Detail::RFieldBase>
    fMaxAlignment = std::max(fMaxAlignment, child->GetAlignment());
    fSubFieldsInfo.push_back(info);
    RFieldBase::Attach(std::move(child));
+}
+
+void ROOT::Experimental::RClassField::AddReadCallbacksFromIORules(const std::span<const ROOT::TSchemaRule *> rules,
+                                                                  TClass *classp)
+{
+   for (const auto rule : rules) {
+      if (rule->GetRuleType() != ROOT::TSchemaRule::kReadRule) {
+         R__LOG_WARNING(NTupleLog()) << "ignoring I/O customization rule with unsupported type";
+         continue;
+      }
+      auto func = rule->GetReadFunctionPointer();
+      R__ASSERT(func != nullptr);
+      fReadCallbacks.emplace_back([func, classp](Detail::RFieldValue &value) {
+         TVirtualObject oldObj{nullptr};
+         oldObj.fClass = classp;
+         oldObj.fObject = value.GetRawPtr();
+         func(static_cast<char *>(value.GetRawPtr()), &oldObj);
+         oldObj.fClass = nullptr; // TVirtualObject does not own the value
+      });
+   }
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
