@@ -184,6 +184,22 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   RooArgSet prodSet ;
   numIntSet.add(intSet) ;
 
+  // The idea of the RooGenProdProj is that we divide two integral objects each
+  // created with this makeIntgral() function to get the normalized integral of
+  // a product. Therefore, we don't need to normalize the numerater and
+  // denominator integrals themselves. Doing the normalization would be
+  // expensive and it would cancel out anyway. However, if we don't specify an
+  // explicit normalization integral in createIntegral(), the last-used
+  // normalization set might be used to normalize the pdf, resulting in
+  // redundant computations.
+  //
+  // For this reason, the normalization set of the integrated pdfs is fixed to
+  // an empty set in this case. Note that in RooFit, a nullptr normalization
+  // set and an empty normalization set is not equivalent. The former implies
+  // taking the last-used normalization set, and the latter means explicitly no
+  // normalization.
+  RooArgSet emptyNormSet{};
+
   for (const auto pdfAsArg : compSet) {
     auto pdf = static_cast<const RooAbsPdf*>(pdfAsArg);
 
@@ -192,7 +208,7 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
       Int_t code = pdf->getAnalyticalIntegralWN(anaIntSet,anaSet,0,isetRangeName) ;
       if (code!=0) {
         // Analytical integral, create integral object
-        RooAbsReal* pai = pdf->createIntegral(anaSet,isetRangeName) ;
+        RooAbsReal* pai = pdf->createIntegral(anaSet,emptyNormSet,isetRangeName) ;
         pai->setOperMode(_operMode) ;
 
         // Add to integral to product
@@ -235,7 +251,7 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   prod->setOperMode(_operMode) ;
 
   // Create integral performing remaining numeric integration over (partial) analytic product
-  std::unique_ptr<RooAbsReal> integral{prod->createIntegral(numIntSet,isetRangeName)};
+  std::unique_ptr<RooAbsReal> integral{prod->createIntegral(numIntSet,emptyNormSet,isetRangeName)};
   integral->setOperMode(_operMode) ;
   auto ret = integral.get();
 
