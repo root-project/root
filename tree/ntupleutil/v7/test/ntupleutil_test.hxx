@@ -4,28 +4,8 @@
 #include "gtest/gtest.h"
 
 #include <ROOT/RNTuple.hxx>
-#include <ROOT/RNTupleImporter.hxx>
-#include <ROOT/RNTupleInspector.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleOptions.hxx>
-
-#include <TFile.h>
-#include <TTree.h>
-
-#include <cstdio>
-#include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
-
-#include "CustomStructUtil.hxx"
-
-using ROOT::Experimental::RNTupleImporter;
-using ROOT::Experimental::RNTupleInspector;
-using ROOT::Experimental::RNTupleModel;
-using ROOT::Experimental::RNTupleReader;
-using ROOT::Experimental::RNTupleWriteOptions;
-using ROOT::Experimental::RNTupleWriter;
 
 /**
  * An RAII wrapper around an open temporary file on disk. It cleans up the
