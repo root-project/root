@@ -908,7 +908,7 @@ class RField<RNTupleCardinality> : public Detail::RFieldBase {
 protected:
    std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> CloneImpl(std::string_view newName) const final
    {
-      return std::make_unique<RField>(newName);
+      return std::make_unique<RField<RNTupleCardinality>>(newName);
    }
 
 public:
