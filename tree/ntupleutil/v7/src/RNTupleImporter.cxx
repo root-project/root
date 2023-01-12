@@ -237,9 +237,10 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       ib.fBranchBuffer = std::make_unique<unsigned char[]>(branchBufferSize);
       if (isClass) {
          auto klass = TClass::GetClass(firstLeaf->GetTypeName());
-         if (!klass)
+         if (!klass) {
             return R__FAIL("unable to load class " + std::string(firstLeaf->GetTypeName()) + " for branch " +
                            std::string(b->GetName()));
+         }
          auto ptrBuf = reinterpret_cast<void **>(ib.fBranchBuffer.get());
          fSourceTree->SetBranchAddress(b->GetName(), ptrBuf, klass, EDataType::kOther_t, true /* isptr*/);
       } else {
