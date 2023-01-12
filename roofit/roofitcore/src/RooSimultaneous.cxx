@@ -979,53 +979,37 @@ RooAbsGenContext* RooSimultaneous::autoGenContext(const RooArgSet &vars, const R
 RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDataSet *prototype,
                      const RooArgSet* auxProto, bool verbose) const
 {
-  const char* idxCatName = _indexCat.arg().GetName() ;
-  const RooArgSet* protoVars = prototype ? prototype->get() : 0 ;
+  RooArgSet allVars{vars};
+  if(prototype) allVars.add(*prototype->get());
 
-  if (vars.find(idxCatName) || (protoVars && protoVars->find(idxCatName))) {
-
-    // Generating index category: return special sim-context
-    return new RooSimGenContext(*this,vars,prototype,auxProto,verbose) ;
-
-  } else if (auto superIndexCat = dynamic_cast<RooSuperCategory const*>(&_indexCat.arg())) {
-    // Generating dependents of a RooSuperCategory index category.
-    // Note that the index category of a RooSimultaneous can only be of type
-    // RooCategory or RooSuperCategory, because these are the only classes that
-    // inherit from RooAbsCategoryLValue.
-
-    // Determine if we none,any or all servers
-    bool anyServer = false;
-    bool allServers = true;
-    if (prototype) {
-      RooArgSet common;
-      RooArgSet const& inputCats = superIndexCat->inputCatList();
-      prototype->get()->selectCommon(inputCats, common);
-      anyServer = !common.empty();
-      allServers = common.size() == inputCats.size();
-    }
-
-    if (allServers) {
-      // Use simcontext if we have all servers
-
-      return new RooSimGenContext(*this,vars,prototype,auxProto,verbose) ;
-    } else if (!allServers && anyServer) {
-      // Abort if we have only part of the servers
-      coutE(Plotting) << "RooSimultaneous::genContext: ERROR: prototype must include either all "
-            << " components of the RooSimultaneous index category or none " << endl ;
-      return 0 ;
-    }
-    // Otherwise make single gencontext for current state
-  }
+  RooArgSet catsAmongAllVars;
+  allVars.selectCommon(flattenedCatList(), catsAmongAllVars);
 
   // Not generating index cat: return context for pdf associated with present index state
-  RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject(_indexCat.arg().getCurrentLabel()) ;
-  if (!proxy) {
-    coutE(InputArguments) << "RooSimultaneous::genContext(" << GetName()
-           << ") ERROR: no PDF associated with current state ("
-           << _indexCat.arg().GetName() << "=" << _indexCat.arg().getCurrentLabel() << ")" << endl ;
-    return 0 ;
+  if(catsAmongAllVars.empty()) {
+    auto* proxy = static_cast<RooRealProxy*>(_pdfProxyList.FindObject(_indexCat->getCurrentLabel()));
+    if (!proxy) {
+      coutE(InputArguments) << "RooSimultaneous::genContext(" << GetName()
+             << ") ERROR: no PDF associated with current state ("
+             << _indexCat.arg().GetName() << "=" << _indexCat.arg().getCurrentLabel() << ")" << endl ;
+      return nullptr;
+    }
+    return static_cast<RooAbsPdf*>(proxy->absArg())->genContext(vars,prototype,auxProto,verbose) ;
   }
-  return ((RooAbsPdf*)proxy->absArg())->genContext(vars,prototype,auxProto,verbose) ;
+
+  RooArgSet catsAmongProtoVars;
+  if(prototype) {
+    prototype->get()->selectCommon(flattenedCatList(), catsAmongProtoVars);
+
+    if(!catsAmongProtoVars.empty() && catsAmongProtoVars.size() != flattenedCatList().size()) {
+      // Abort if we have only part of the servers
+      coutE(Plotting) << "RooSimultaneous::genContext: ERROR: prototype must include either all "
+            << " components of the RooSimultaneous index category or none " << std::endl;
+      return nullptr;
+    }
+  }
+
+  return new RooSimGenContext(*this,vars,prototype,auxProto,verbose) ;
 }
 
 
@@ -1162,4 +1146,23 @@ void RooSimultaneous::wrapPdfsInBinSamplingPdfs(RooAbsData const &data,
 
   this->redirectServers(newSamplingPdfs, false, true);
   this->addOwnedComponents(std::move(newSamplingPdfs));
+}
+
+/// Internal utility function to get a list of all category components for this
+/// RooSimultaneous. The output contains only the index category if it is a
+/// RooCategory, or the list of all category components if it is a
+/// RooSuperCategory.
+RooArgSet const& RooSimultaneous::flattenedCatList() const
+{
+   // Note that the index category of a RooSimultaneous can only be of type
+   // RooCategory or RooSuperCategory, because these are the only classes that
+   // inherit from RooAbsCategoryLValue.
+   if (auto superCat = dynamic_cast<RooSuperCategory const*>(&_indexCat.arg())) {
+       return superCat->inputCatList();
+   }
+
+   if(!_indexCatSet) {
+      _indexCatSet = std::make_unique<RooArgSet>(_indexCat.arg());
+   }
+   return *_indexCatSet;
 }
