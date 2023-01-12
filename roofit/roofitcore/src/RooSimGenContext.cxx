@@ -61,15 +61,15 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
   RooAbsGenContext(model,vars,prototype,auxProto,verbose), _pdf(&model), _protoData(0)
 {
   // Determine if we are requested to generate the index category
-  RooAbsCategory *idxCat = (RooAbsCategory*) model._indexCat.absArg() ;
+  RooAbsCategoryLValue const& idxCat = model.indexCat();
   RooArgSet pdfVars(vars) ;
 
   RooArgSet allPdfVars(pdfVars) ;
   if (prototype) allPdfVars.add(*prototype->get(),true) ;
 
-  if (!idxCat->isDerived()) {
-    pdfVars.remove(*idxCat,true,true) ;
-    bool doGenIdx = allPdfVars.find(idxCat->GetName())?true:false ;
+  if (!idxCat.isDerived()) {
+    pdfVars.remove(idxCat,true,true) ;
+    bool doGenIdx = allPdfVars.find(idxCat.GetName())?true:false ;
 
     if (!doGenIdx) {
       oocoutE(_pdf,Generation) << "RooSimGenContext::ctor(" << GetName() << ") ERROR: This context must"
@@ -81,7 +81,7 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
     }
   } else {
     bool anyServer(false), allServers(true) ;
-    for(RooAbsArg* server : idxCat->servers()) {
+    for(RooAbsArg* server : idxCat.servers()) {
       if (vars.find(server->GetName())) {
    anyServer=true ;
    pdfVars.remove(*server,true,true) ;
@@ -103,7 +103,7 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
   // We must either have the prototype or extended likelihood to determined
   // the relative fractions of the components
   _haveIdxProto = prototype ? true : false ;
-  _idxCatName = idxCat->GetName() ;
+  _idxCatName = idxCat.GetName() ;
   if (!_haveIdxProto && !model.canBeExtended()) {
     oocoutE(_pdf,Generation) << "RooSimGenContext::ctor(" << GetName() << ") ERROR: Need either extended mode"
               << " or prototype data to calculate number of events per category" << endl ;
@@ -129,7 +129,7 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
     // Name the context after the associated state and add to list
     cx->SetName(proxy->name()) ;
     _gcList.push_back(cx) ;
-    _gcIndex.push_back(idxCat->lookupIndex(proxy->name()));
+    _gcIndex.push_back(idxCat.lookupIndex(proxy->name()));
 
     // Fill fraction threshold array
     _fracThresh[i] = _fracThresh[i-1] + (_haveIdxProto?0:pdf->expectedEvents(&allPdfVars)) ;
@@ -144,13 +144,13 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
 
 
   // Clone the index category
-  _idxCatSet = (RooArgSet*) RooArgSet(model._indexCat.arg()).snapshot(true) ;
+  _idxCatSet = (RooArgSet*) RooArgSet(model.indexCat()).snapshot(true) ;
   if (!_idxCatSet) {
     oocoutE(_pdf,Generation) << "RooSimGenContext::RooSimGenContext(" << GetName() << ") Couldn't deep-clone index category, abort," << endl ;
     throw std::string("RooSimGenContext::RooSimGenContext() Couldn't deep-clone index category, abort") ;
   }
 
-  _idxCat = (RooAbsCategoryLValue*) _idxCatSet->find(model._indexCat.arg().GetName()) ;
+  _idxCat = static_cast<RooAbsCategoryLValue*>(_idxCatSet->find(model.indexCat().GetName()));
 }
 
 
