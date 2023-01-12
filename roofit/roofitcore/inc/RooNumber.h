@@ -20,33 +20,32 @@
 
 class RooNumber {
 public:
+   virtual ~RooNumber(){};
 
-  virtual ~RooNumber() {} ;
+   static double infinity();
+   static Int_t isInfinite(double x);
 
-  static double infinity() ;
-  static Int_t isInfinite(double x) ;
+   /// Set the relative epsilon that is used by range checks in RooFit,
+   /// e.g., in RooAbsRealLValue::inRange().
+   inline static void setRangeEpsRel(double epsRel) { staticRangeEpsRel() = epsRel; }
+   /// Get the relative epsilon that is used by range checks in RooFit,
+   /// e.g., in RooAbsRealLValue::inRange().
+   inline static double rangeEpsRel() { return staticRangeEpsRel(); }
 
-  /// Set the relative epsilon that is used by range checks in RooFit,
-  /// e.g., in RooAbsRealLValue::inRange().
-  inline static void setRangeEpsRel(double epsRel) { staticRangeEpsRel() = epsRel; }
-  /// Get the relative epsilon that is used by range checks in RooFit,
-  /// e.g., in RooAbsRealLValue::inRange().
-  inline static double rangeEpsRel() { return staticRangeEpsRel(); }
+   /// Set the absolute epsilon that is used by range checks in RooFit,
+   /// e.g., in RooAbsRealLValue::inRange().
+   inline static void setRangeEpsAbs(double epsRel) { staticRangeEpsAbs() = epsRel; }
+   /// Get the absolute epsilon that is used by range checks in RooFit,
+   /// e.g., in RooAbsRealLValue::inRange().
+   inline static double rangeEpsAbs() { return staticRangeEpsAbs(); }
 
-  /// Set the absolute epsilon that is used by range checks in RooFit,
-  /// e.g., in RooAbsRealLValue::inRange().
-  inline static void setRangeEpsAbs(double epsRel) { staticRangeEpsAbs() = epsRel; }
-  /// Get the absolute epsilon that is used by range checks in RooFit,
-  /// e.g., in RooAbsRealLValue::inRange().
-  inline static double rangeEpsAbs() { return staticRangeEpsAbs(); }
+private:
+   static double &staticRangeEpsRel();
+   static double &staticRangeEpsAbs();
 
- private:
-  static double& staticRangeEpsRel() ;
-  static double& staticRangeEpsAbs() ;
+   static double _Infinity;
 
-  static double _Infinity ;
-
-  ClassDef(RooNumber,0) // wrapper class for portable numerics
+   ClassDef(RooNumber, 0) // wrapper class for portable numerics
 };
 
 #endif

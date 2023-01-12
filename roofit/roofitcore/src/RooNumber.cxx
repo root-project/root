@@ -32,42 +32,39 @@ ClassImp(RooNumber);
 #ifdef HAS_NUMERIC_LIMITS
 
 #include <numeric_limits.h>
-double RooNumber::_Infinity= numeric_limits<double>::infinity();
+double RooNumber::_Infinity = numeric_limits<double>::infinity();
 #else
 
 // This assumes a well behaved IEEE-754 floating point implementation.
 // The next line may generate a compiler warning that can be ignored.
-double RooNumber::_Infinity= 1.0e30 ;  //1./0.;
+double RooNumber::_Infinity = 1.0e30; // 1./0.;
 
 #endif
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return internal infinity representation
 
 double RooNumber::infinity()
 {
-  return _Infinity ;
+   return _Infinity;
 }
 
-
-double& RooNumber::staticRangeEpsRel() {
-  static double epsRel = 0.0;
-  return epsRel;
+double &RooNumber::staticRangeEpsRel()
+{
+   static double epsRel = 0.0;
+   return epsRel;
 }
 
-
-double& RooNumber::staticRangeEpsAbs() {
-  static double epsAbs = 0.0;
-  return epsAbs;
+double &RooNumber::staticRangeEpsAbs()
+{
+   static double epsAbs = 0.0;
+   return epsAbs;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if x is infinite by RooNumBer internal specification
 
 Int_t RooNumber::isInfinite(double x)
 {
-  return (x >= +_Infinity) ? +1 : ((x <= -_Infinity) ? -1 : 0);
+   return (x >= +_Infinity) ? +1 : ((x <= -_Infinity) ? -1 : 0);
 }
-
