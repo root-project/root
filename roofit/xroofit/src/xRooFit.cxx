@@ -16,7 +16,7 @@
 #define protected public
 #endif
 #include "RooFitResult.h"
-#if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
+#ifdef protected
 #undef protected
 #endif
 
@@ -506,8 +506,6 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
    auto myFitConfig = _fitConfig ? _fitConfig : createFitConfig();
    auto &fitConfig = *myFitConfig;
 
-   bool save = true;
-
    auto _nll = &nll;
 
    TString resultTitle = nll.getStringAttribute("fitresultTitle");
@@ -720,10 +718,10 @@ xRooFit::minimize(RooAbsReal &nll, const std::shared_ptr<ROOT::Fit::FitConfig> &
                      ->Result()
                      .Status(); // note: Minuit failure is status code 4, minuit2 that is edm above max
          minim = _minimizer.fitter()->Config().MinimizerType(); // may have changed value
-         statusHistory.push_back(std::make_pair(
+         statusHistory.emplace_back(
             _minimizer.fitter()->Config().MinimizerType() + _minimizer.fitter()->Config().MinimizerAlgoType() +
                std::to_string(_minimizer.fitter()->Config().MinimizerOptions().Strategy()),
-            status));
+            status);
          if (status % 1000 == 0)
             break; // fit was good
 
@@ -1122,8 +1120,9 @@ int xRooFit::minos(RooAbsReal &nll, const RooFitResult &ufit, const char *parNam
    par->setConstant(isConst);
 
    std::vector<std::pair<std::string, int>> statusHistory;
-   for (int i = 0; i < ufit.numStatusHistory(); i++)
+   for (unsigned int i = 0; i < ufit.numStatusHistory(); i++) {
       statusHistory.emplace_back(ufit.statusLabelHistory(i), ufit.statusCodeHistory(i));
+   }
    statusHistory.emplace_back(TString::Format("xMINOS_%s", parName), status);
    const_cast<RooFitResult &>(ufit).setStatusHistory(statusHistory);
    const_cast<RooFitResult &>(ufit).setStatus(ufit.status() + status);
