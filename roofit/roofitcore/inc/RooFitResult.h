@@ -157,11 +157,8 @@ public:
   void SetName(const char *name) override ;
   void SetNameTitle(const char *name, const char* title) override ;
 
-protected:
 
-  friend class RooAbsPdf ;
-  friend class RooMinuit ;
-  friend class RooMinimizer ;
+
   void setCovarianceMatrix(TMatrixDSym& V) ;
   void setConstParList(const RooArgList& list) ;
   void setInitParList(const RooArgList& list) ;
@@ -171,12 +168,15 @@ protected:
   inline void setStatus(Int_t val) { _status = val ; }
   inline void setCovQual(Int_t val) { _covQual = val ; }
   inline void setNumInvalidNLL(Int_t val) { _numBadNLL=val ; }
-  void fillCorrMatrix() ;
+  void setStatusHistory(std::vector<std::pair<std::string,int> >& hist) { _statusHistory = hist ; }
   void fillCorrMatrix(const std::vector<double>& globalCC, const TMatrixDSym& corrs, const TMatrixDSym& covs) ;
+
+protected:
+
+  friend class RooMinuit ;
+  void fillCorrMatrix() ;
   void fillLegacyCorrMatrix() const ;
   void fillPrefitCorrMatrix();
-  void setStatusHistory(std::vector<std::pair<std::string,int> >& hist) { _statusHistory = hist ; }
-
   double correlation(Int_t row, Int_t col) const;
   double covariance(Int_t row, Int_t col) const;
 
