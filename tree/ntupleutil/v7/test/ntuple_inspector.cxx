@@ -3,11 +3,6 @@
 
 #include <TFile.h>
 
-// #include <cstdio>
-// #include <string>
-// #include <tuple>
-// #include <utility>
-
 #include "ntupleutil_test.hxx"
 
 using ROOT::Experimental::RNTuple;
