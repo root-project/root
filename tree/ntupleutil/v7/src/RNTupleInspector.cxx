@@ -53,9 +53,9 @@ void ROOT::Experimental::RNTupleInspector::CollectSizeData()
 }
 
 ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RNTupleInspector>>
-ROOT::Experimental::RNTupleInspector::Create(std::shared_ptr<ROOT::Experimental::Detail::RPageSource> pageSource)
+ROOT::Experimental::RNTupleInspector::Create(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource)
 {
-   auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(pageSource));
+   auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
 
    inspector->CollectSizeData();
 
@@ -65,9 +65,9 @@ ROOT::Experimental::RNTupleInspector::Create(std::shared_ptr<ROOT::Experimental:
 ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RNTupleInspector>>
 ROOT::Experimental::RNTupleInspector::Create(ROOT::Experimental::RNTuple *sourceNTuple)
 {
-   std::shared_ptr<ROOT::Experimental::Detail::RPageSource> pageSource = sourceNTuple->MakePageSource();
+   std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource = sourceNTuple->MakePageSource();
 
-   return ROOT::Experimental::RNTupleInspector::Create(pageSource);
+   return ROOT::Experimental::RNTupleInspector::Create(std::move(pageSource));
 }
 
 std::string ROOT::Experimental::RNTupleInspector::GetName()
