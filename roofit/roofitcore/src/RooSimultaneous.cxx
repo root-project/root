@@ -91,10 +91,8 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
              RooAbsCategoryLValue& inIndexCat) :
   RooAbsPdf(name,title),
   _plotCoefNormSet("!plotCoefNormSet","plotCoefNormSet",this,false,false),
-  _plotCoefNormRange(0),
   _partIntMgr(this,10),
-  _indexCat("indexCat","Index category",this,inIndexCat),
-  _numPdf(0)
+  _indexCat("indexCat","Index category",this,inIndexCat)
 {
 }
 
@@ -112,12 +110,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 
 RooSimultaneous::RooSimultaneous(const char *name, const char *title,
              const RooArgList& inPdfList, RooAbsCategoryLValue& inIndexCat) :
-  RooAbsPdf(name,title),
-  _plotCoefNormSet("!plotCoefNormSet","plotCoefNormSet",this,false,false),
-  _plotCoefNormRange(0),
-  _partIntMgr(this,10),
-  _indexCat("indexCat","Index category",this,inIndexCat),
-  _numPdf(0)
+  RooSimultaneous(name,title,inIndexCat)
 {
   if (inPdfList.size() != inIndexCat.size()) {
     coutE(InputArguments) << "RooSimultaneous::ctor(" << GetName()
@@ -141,12 +134,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
 
 RooSimultaneous::RooSimultaneous(const char *name, const char *title,
              map<string,RooAbsPdf*> pdfMap, RooAbsCategoryLValue& inIndexCat) :
-  RooAbsPdf(name,title),
-  _plotCoefNormSet("!plotCoefNormSet","plotCoefNormSet",this,false,false),
-  _plotCoefNormRange(0),
-  _partIntMgr(this,10),
-  _indexCat("indexCat","Index category",this,inIndexCat),
-  _numPdf(0)
+  RooSimultaneous(name,title,inIndexCat)
 {
   initialize(inIndexCat,pdfMap) ;
 }
@@ -161,7 +149,7 @@ namespace RooSimultaneousAux {
     RooAbsPdf* pdf ;
     RooSimultaneous* simPdf ;
     const RooAbsCategoryLValue* subIndex ;
-    RooArgSet* subIndexComps ;
+    std::unique_ptr<RooArgSet> subIndexComps;
   } ;
 }
 
@@ -169,8 +157,8 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
 {
   // First see if there are any RooSimultaneous input components
   bool simComps(false) ;
-  for (map<string,RooAbsPdf*>::iterator iter=pdfMap.begin() ; iter!=pdfMap.end() ; ++iter) {
-    if (dynamic_cast<RooSimultaneous*>(iter->second)) {
+  for (auto const& item : pdfMap) {
+    if (dynamic_cast<RooSimultaneous*>(item.second)) {
       simComps = true ;
       break ;
     }
@@ -179,8 +167,8 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
   // If there are no simultaneous component p.d.f. do simple processing through addPdf()
   if (!simComps) {
     bool failure = false;
-    for (map<string,RooAbsPdf*>::iterator iter=pdfMap.begin() ; iter!=pdfMap.end() ; ++iter) {
-      failure |= addPdf(*iter->second,iter->first.c_str()) ;
+    for (auto const& item : pdfMap) {
+      failure |= addPdf(*item.second,item.first.c_str()) ;
     }
 
     if (failure) {
@@ -197,42 +185,42 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
 
 
   RooArgSet allAuxCats ;
-  map<string,RooSimultaneousAux::CompInfo> compMap ;
-  for (map<string,RooAbsPdf*>::iterator iter=pdfMap.begin() ; iter!=pdfMap.end() ; ++iter) {
+  std::map<string,RooSimultaneousAux::CompInfo> compMap ;
+  for (auto const& item : pdfMap) {
     RooSimultaneousAux::CompInfo ci ;
-    ci.pdf = iter->second ;
-    RooSimultaneous* simComp = dynamic_cast<RooSimultaneous*>(iter->second) ;
+    ci.pdf = item.second ;
+    RooSimultaneous* simComp = dynamic_cast<RooSimultaneous*>(item.second) ;
     if (simComp) {
       ci.simPdf = simComp ;
       ci.subIndex = &simComp->indexCat() ;
-      ci.subIndexComps = simComp->indexCat().isFundamental() ? new RooArgSet(simComp->indexCat()) : simComp->indexCat().getVariables() ;
-      allAuxCats.add(*(ci.subIndexComps),true) ;
+      ci.subIndexComps = simComp->indexCat().isFundamental()
+          ? std::make_unique<RooArgSet>(simComp->indexCat())
+          : std::unique_ptr<RooArgSet>(simComp->indexCat().getVariables());
+      allAuxCats.add(*ci.subIndexComps,true) ;
     } else {
-      ci.simPdf = 0 ;
-      ci.subIndex = 0 ;
-      ci.subIndexComps = 0 ;
+      ci.simPdf = nullptr;
+      ci.subIndex = nullptr;
     }
-    compMap[iter->first] = ci ;
+    compMap[item.first] = std::move(ci);
   }
 
   // Construct the 'superIndex' from the nominal index category and all auxiliary components
   RooArgSet allCats(inIndexCat) ;
   allCats.add(allAuxCats) ;
   string siname = Form("%s_index",GetName()) ;
-  RooSuperCategory* superIndex = new RooSuperCategory(siname.c_str(),siname.c_str(),allCats) ;
+  auto superIndex = std::make_unique<RooSuperCategory>(siname.c_str(),siname.c_str(),allCats) ;
   bool failure = false;
 
   // Now process each of original pdf/state map entries
-  for (map<string,RooSimultaneousAux::CompInfo>::iterator citer = compMap.begin() ; citer != compMap.end() ; ++citer) {
+  for (auto const& citem : compMap) {
 
     RooArgSet repliCats(allAuxCats) ;
-    if (citer->second.subIndexComps) {
-      repliCats.remove(*citer->second.subIndexComps) ;
-      delete citer->second.subIndexComps ;
+    if (citem.second.subIndexComps) {
+      repliCats.remove(*citem.second.subIndexComps) ;
     }
-    inIndexCat.setLabel(citer->first.c_str()) ;
+    inIndexCat.setLabel(citem.first.c_str()) ;
 
-    if (!citer->second.simPdf) {
+    if (!citem.second.simPdf) {
 
       // Entry is a plain p.d.f. assign it to every state permutation of the repliCats set
       RooSuperCategory repliSuperCat("tmp","tmp",repliCats) ;
@@ -243,9 +231,9 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
         repliSuperCat.setLabel(nameIdx.first) ;
         // Retrieve corresponding label of superIndex
         string superLabel = superIndex->getCurrentLabel() ;
-        failure |= addPdf(*citer->second.pdf,superLabel.c_str()) ;
+        failure |= addPdf(*citem.second.pdf,superLabel.c_str()) ;
         cxcoutD(InputArguments) << "RooSimultaneous::initialize(" << GetName()
-                << ") assigning pdf " << citer->second.pdf->GetName() << " to super label " << superLabel << endl ;
+                << ") assigning pdf " << citem.second.pdf->GetName() << " to super label " << superLabel << endl ;
       }
     } else {
 
@@ -255,19 +243,19 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
 
         // Case 1 -- No replication of components of RooSim component are required
 
-        for (const auto& type : *citer->second.subIndex) {
-          const_cast<RooAbsCategoryLValue*>(citer->second.subIndex)->setLabel(type.first.c_str());
+        for (const auto& type : *citem.second.subIndex) {
+          const_cast<RooAbsCategoryLValue*>(citem.second.subIndex)->setLabel(type.first.c_str());
           string superLabel = superIndex->getCurrentLabel() ;
-          RooAbsPdf* compPdf = citer->second.simPdf->getPdf(type.first.c_str());
+          RooAbsPdf* compPdf = citem.second.simPdf->getPdf(type.first.c_str());
           if (compPdf) {
             failure |= addPdf(*compPdf,superLabel.c_str()) ;
             cxcoutD(InputArguments) << "RooSimultaneous::initialize(" << GetName()
-                    << ") assigning pdf " << compPdf->GetName() << "(member of " << citer->second.pdf->GetName()
+                    << ") assigning pdf " << compPdf->GetName() << "(member of " << citem.second.pdf->GetName()
                     << ") to super label " << superLabel << endl ;
           } else {
             coutW(InputArguments) << "RooSimultaneous::initialize(" << GetName() << ") WARNING: No p.d.f. associated with label "
-                << type.second << " for component RooSimultaneous p.d.f " << citer->second.pdf->GetName()
-                << "which is associated with master index label " << citer->first << endl ;
+                << type.second << " for component RooSimultaneous p.d.f " << citem.second.pdf->GetName()
+                << "which is associated with master index label " << citem.first << endl ;
           }
         }
 
@@ -278,22 +266,22 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
         // Make replication supercat
         RooSuperCategory repliSuperCat("tmp","tmp",repliCats) ;
 
-        for (const auto& stype : *citer->second.subIndex) {
-          const_cast<RooAbsCategoryLValue*>(citer->second.subIndex)->setLabel(stype.first.c_str());
+        for (const auto& stype : *citem.second.subIndex) {
+          const_cast<RooAbsCategoryLValue*>(citem.second.subIndex)->setLabel(stype.first.c_str());
 
           for (const auto& nameIdx : repliSuperCat) {
             repliSuperCat.setLabel(nameIdx.first) ;
             const string superLabel = superIndex->getCurrentLabel() ;
-            RooAbsPdf* compPdf = citer->second.simPdf->getPdf(stype.first.c_str());
+            RooAbsPdf* compPdf = citem.second.simPdf->getPdf(stype.first.c_str());
             if (compPdf) {
               failure |= addPdf(*compPdf,superLabel.c_str()) ;
               cxcoutD(InputArguments) << "RooSimultaneous::initialize(" << GetName()
-                      << ") assigning pdf " << compPdf->GetName() << "(member of " << citer->second.pdf->GetName()
+                      << ") assigning pdf " << compPdf->GetName() << "(member of " << citem.second.pdf->GetName()
                       << ") to super label " << superLabel << endl ;
             } else {
               coutW(InputArguments) << "RooSimultaneous::initialize(" << GetName() << ") WARNING: No p.d.f. associated with label "
-                  << stype.second << " for component RooSimultaneous p.d.f " << citer->second.pdf->GetName()
-                  << "which is associated with master index label " << citer->first << endl ;
+                  << stype.second << " for component RooSimultaneous p.d.f " << citem.second.pdf->GetName()
+                  << "which is associated with master index label " << citem.first << endl ;
             }
           }
         }
@@ -307,7 +295,7 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
 
   // Change original master index to super index and take ownership of it
   _indexCat.setArg(*superIndex) ;
-  addOwnedComponents(*superIndex) ;
+  addOwnedComponents(std::move(superIndex));
 
 }
 
@@ -619,7 +607,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
     // Make the master slice set if it doesnt exist
     if (!sliceSet) {
-      sliceSet.reset(new RooArgSet);
+      sliceSet = std::make_unique<RooArgSet>();
     }
 
     // Prepare comma separated label list for parsing
@@ -811,8 +799,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     if (skip) continue ;
 
     // Instantiate a RRV holding this pdfs weight fraction
-    RooRealVar *wgtVar = new RooRealVar(proxy->name(),"coef",wTable->getFrac(proxy->name())) ;
-    wgtCompList.addOwned(*wgtVar) ;
+    wgtCompList.addOwned(std::make_unique<RooRealVar>(proxy->name(),"coef",wTable->getFrac(proxy->name())));
     sumWeight += wTable->getFrac(proxy->name()) ;
 
     // Add the PDF to list list
@@ -833,7 +820,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
     // Construct cut string to only select projection data event that match the current slice
     TString cutString ;
-    if (idxCompSliceSet->getSize()>0) {
+    if (!idxCompSliceSet->empty()) {
       bool first(true) ;
       for (const auto idxSliceCompArg : *idxCompSliceSet) {
         const auto idxSliceComp = static_cast<RooAbsCategory*>(idxSliceCompArg);
@@ -870,7 +857,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   }
 
 
-  if (_indexCat.arg().isDerived() && idxCompSliceSet->getSize()>0) {
+  if (_indexCat.arg().isDerived() && !idxCompSliceSet->empty()) {
     coutI(Plotting) << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName()
           << " represents a slice in index category components " << *idxCompSliceSet << endl ;
 
@@ -899,7 +886,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   cmdList2.Add(&tmp2) ;
 
   RooPlot* frame2 ;
-  if (projSetTmp.getSize()>0) {
+  if (!projSetTmp.empty()) {
     // Plot temporary function
     RooCmdArg tmp3 = RooFit::Project(projSetTmp) ;
     cmdList2.Add(&tmp3) ;

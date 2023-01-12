@@ -96,7 +96,7 @@ protected:
   void selectNormalization(const RooArgSet* depSet=nullptr, bool force=false) override ;
   void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override ;
   mutable RooSetProxy _plotCoefNormSet ;
-  const TNamed* _plotCoefNormRange ;
+  const TNamed* _plotCoefNormRange = nullptr;
 
   class CacheElem : public RooAbsCacheElement {
   public:
@@ -116,7 +116,7 @@ protected:
 
   RooCategoryProxy _indexCat ; ///< Index category
   TList    _pdfProxyList ;     ///< List of PDF proxies (named after applicable category state)
-  Int_t    _numPdf ;           ///< Number of registered PDFs
+  Int_t    _numPdf = 0;        ///< Number of registered PDFs
 
   ClassDefOverride(RooSimultaneous,3)  // Simultaneous operator p.d.f, functions like C++  'switch()' on input p.d.fs operating on index category5A
 };
