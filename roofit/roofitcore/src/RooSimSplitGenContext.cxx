@@ -165,7 +165,7 @@ RooSimSplitGenContext::~RooSimSplitGenContext()
 void RooSimSplitGenContext::attach(const RooArgSet& args)
 {
   if (_idxCat->isDerived()) {
-    _idxCat->recursiveRedirectServers(args,true) ;
+    _idxCat->recursiveRedirectServers(args) ;
   }
 
   // Forward initGenerator call to all components
@@ -183,7 +183,7 @@ void RooSimSplitGenContext::initGenerator(const RooArgSet &theEvent)
 {
   // Attach the index category clone to the event
   if (_idxCat->isDerived()) {
-    _idxCat->recursiveRedirectServers(theEvent,true) ;
+    _idxCat->recursiveRedirectServers(theEvent) ;
   } else {
     _idxCat = (RooAbsCategoryLValue*) theEvent.find(_idxCat->GetName()) ;
   }
