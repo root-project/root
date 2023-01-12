@@ -151,7 +151,6 @@
 #pragma link C++ class RooMultiCategory+ ;
 #pragma link off class RooNameReg+ ;
 #pragma link C++ class RooNLLVar+ ;
-#pragma link C++ class RooNumber+ ;
 #pragma link C++ class RooNumConvolution+ ;
 #pragma link C++ class RooNumConvPdf+ ;
 #pragma link C++ class RooNumIntConfig+ ;
