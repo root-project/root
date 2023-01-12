@@ -21,15 +21,7 @@
 class RooNumber {
 public:
    /// Return internal infinity representation.
-   constexpr static double infinity()
-   {
-      // In the future, it should better do this:
-      //    return std::numeric_limits<double>::infinity();
-
-      // This assumes a well behaved IEEE-754 floating point implementation.
-      // The next line may generate a compiler warning that can be ignored.
-      return 1.0e30; // 1./0.;
-   }
+   constexpr static double infinity() { return std::numeric_limits<double>::infinity(); }
    /// Return true if x is infinite by RooNumber internal specification.
    constexpr static int isInfinite(double x) { return (x >= +infinity()) ? +1 : ((x <= -infinity()) ? -1 : 0); }
 
