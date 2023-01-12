@@ -64,6 +64,8 @@ TEST(RooSimultaneous, SingleChannelCrossCheck)
 /// of the observables is a category.
 TEST(RooSimultaneous, MultiRangeNLL)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    using namespace RooFit;
 
    RooWorkspace ws{};
@@ -99,6 +101,8 @@ TEST(RooSimultaneous, MultiRangeNLL)
 /// Crash when RooSimultaneous does not contain a pdf for each value of the index category.
 TEST(RooSimultaneous, CategoriesWithNoPdf)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    RooRealVar x("x", "", 0, 1);
    RooRealVar rnd("rnd", "", 0, 1);
    RooThresholdCategory catThr("cat", "", rnd, "v2", 2);
@@ -134,6 +138,8 @@ TEST(RooSimultaneous, CategoriesWithNoPdf)
 /// fits is correctly considered in multi-range fits.
 TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    using namespace RooFit;
 
    int nEventsInCat = 11000;
@@ -196,6 +202,8 @@ TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
 /// specific components from a RooSimultaneous. Covers GitHub issue #8231.
 TEST(RooSimultaneous, RangedCategory)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    using namespace RooFit;
 
    // Create the model with the RooWorkspace to not explicitely depend on
@@ -263,4 +271,51 @@ TEST(RooSimultaneous, RangedCategory)
    EXPECT_TRUE(resA->isIdentical(*resAref)) << "Selecting only state A didn't work!";
    EXPECT_TRUE(resB->isIdentical(*resBref)) << "Selecting only state B didn't work!";
    EXPECT_TRUE(resAB->isIdentical(*res)) << "Result when selecting all states inconsistent with default fit!";
+}
+
+/// Check that the dataset generation from a nested RooSimultaneous with
+/// protodata containing the category values works.
+/// Covers GitHub issue #12020.
+TEST(RooSimultaneous, NestedSimPdfGenContext)
+{
+   RooHelpers::LocalChangeMsgLevel locmsg(RooFit::WARNING, 0u, RooFit::InputArguments, false);
+
+   RooRealVar x{"x", "", 0, 1};
+
+   // It's important that there are different values for the first (inner)
+   // category such that we can test that the different values are correctly
+   // picked up from the proto dataset.
+   RooCategory c1{"c1", ""};
+   c1.defineType("c11", 1);
+   c1.defineType("c12", 2);
+
+   RooCategory c2{"c2", ""};
+   c2.defineType("c21", 1);
+
+   RooGenericPdf u11{"u11", "1.0", {}};
+   RooGenericPdf u12{"u12", "1.0", {}};
+
+   RooSimultaneous s1("s1", "", {{"c11", &u11}, {"c12", &u12}}, c1);
+   RooSimultaneous s2("s2", "", {{"c21", &s1}}, c2);
+
+   RooArgSet categories{c1, c2};
+   RooDataSet proto{"proto", "", categories};
+
+   c1.setIndex(1);
+   proto.add(categories);
+
+   c1.setIndex(2);
+   proto.add(categories);
+
+   std::unique_ptr<RooDataSet> data2{s2.generate(x, RooFit::ProtoData(proto))};
+
+   auto catIndex = [](RooArgSet const *vars, const char *name) {
+      return static_cast<RooAbsCategory *>(vars->find(name))->getCurrentIndex();
+   };
+
+   // If all went well, the category values are taken from the proto dataset
+   EXPECT_EQ(catIndex(data2->get(0), "c1"), catIndex(proto.get(0), "c1"));
+   EXPECT_EQ(catIndex(data2->get(0), "c2"), catIndex(proto.get(0), "c2"));
+   EXPECT_EQ(catIndex(data2->get(1), "c1"), catIndex(proto.get(1), "c1"));
+   EXPECT_EQ(catIndex(data2->get(1), "c2"), catIndex(proto.get(1), "c2"));
 }
