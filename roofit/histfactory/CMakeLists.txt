@@ -95,11 +95,12 @@ if(xml)
 endif()
 
 if(MSVC)
-  file(COPY config/prepareHistFactory.bat DESTINATION  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+  set(prepareHistFactory_script prepareHistFactory.bat)
 else()
-  file(COPY config/prepareHistFactory DESTINATION  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+  set(prepareHistFactory_script prepareHistFactory)
 endif()
-install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prepareHistFactory
+file(COPY config/${prepareHistFactory_script} DESTINATION  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${prepareHistFactory_script}
                 PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
                             GROUP_EXECUTE GROUP_READ
                             WORLD_EXECUTE WORLD_READ
