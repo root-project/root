@@ -53,14 +53,14 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
   RooAbsGenContext(model,vars,0,0,verbose), _pdf(&model)
 {
   // Determine if we are requested to generate the index category
-  RooAbsCategory *idxCat = (RooAbsCategory*) model._indexCat.absArg() ;
+  RooAbsCategoryLValue const& idxCat = model.indexCat();
   RooArgSet pdfVars(vars) ;
 
   RooArgSet allPdfVars(pdfVars) ;
 
-  if (!idxCat->isDerived()) {
-    pdfVars.remove(*idxCat,true,true) ;
-    bool doGenIdx = allPdfVars.find(idxCat->GetName())?true:false ;
+  if (!idxCat.isDerived()) {
+    pdfVars.remove(idxCat,true,true) ;
+    bool doGenIdx = allPdfVars.find(idxCat.GetName())?true:false ;
 
     if (!doGenIdx) {
       oocoutE(_pdf,Generation) << "RooSimSplitGenContext::ctor(" << GetName() << ") ERROR: This context must"
@@ -72,7 +72,7 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
     }
   } else {
     bool anyServer(false), allServers(true) ;
-    for(RooAbsArg* server : idxCat->servers()) {
+    for(RooAbsArg* server : idxCat.servers()) {
       if (vars.find(server->GetName())) {
    anyServer=true ;
    pdfVars.remove(*server,true,true) ;
@@ -92,7 +92,7 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
   }
 
   // We must extended likelihood to determine the relative fractions of the components
-  _idxCatName = idxCat->GetName() ;
+  _idxCatName = idxCat.GetName() ;
   if (!model.canBeExtended()) {
     oocoutE(_pdf,Generation) << "RooSimSplitGenContext::RooSimSplitGenContext(" << GetName() << "): All components of the simultaneous PDF "
               << "must be extended PDFs. Otherwise, it is impossible to calculate the number of events to be generated per component." << endl ;
@@ -118,7 +118,7 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
     RooAbsGenContext* cx = pdf->autoGenContext(*compVars,0,0,verbose,autoBinned,binnedTag) ;
     delete compVars ;
 
-    const auto state = idxCat->lookupIndex(proxy->name());
+    const auto state = idxCat.lookupIndex(proxy->name());
 
     cx->SetName(proxy->name()) ;
     _gcList.push_back(cx) ;
@@ -134,13 +134,13 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
   }
 
   // Clone the index category
-  _idxCatSet = (RooArgSet*) RooArgSet(model._indexCat.arg()).snapshot(true) ;
+  _idxCatSet = (RooArgSet*) RooArgSet(model.indexCat()).snapshot(true) ;
   if (!_idxCatSet) {
     oocoutE(_pdf,Generation) << "RooSimSplitGenContext::RooSimSplitGenContext(" << GetName() << ") Couldn't deep-clone index category, abort," << endl ;
     throw std::string("RooSimSplitGenContext::RooSimSplitGenContext() Couldn't deep-clone index category, abort") ;
   }
 
-  _idxCat = (RooAbsCategoryLValue*) _idxCatSet->find(model._indexCat.arg().GetName()) ;
+  _idxCat = static_cast<RooAbsCategoryLValue*>(_idxCatSet->find(model.indexCat().GetName()));
 }
 
 
