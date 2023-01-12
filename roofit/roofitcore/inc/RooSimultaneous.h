@@ -89,6 +89,11 @@ public:
                                  std::map<std::string, double> const& precisions,
                                  bool useCategoryNames=false);
 
+  RooAbsGenContext* autoGenContext(const RooArgSet &vars, const RooDataSet* prototype=nullptr, const RooArgSet* auxProto=nullptr,
+                  bool verbose=false, bool autoBinned=true, const char* binnedTag="") const override ;
+  RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=nullptr,
+                                  const RooArgSet* auxProto=nullptr, bool verbose= false) const override ;
+
 protected:
 
   void initialize(RooAbsCategoryLValue& inIndexCat, std::map<std::string,RooAbsPdf*> pdfMap) ;
@@ -109,10 +114,6 @@ protected:
 
   friend class RooSimGenContext ;
   friend class RooSimSplitGenContext ;
-  RooAbsGenContext* autoGenContext(const RooArgSet &vars, const RooDataSet* prototype=nullptr, const RooArgSet* auxProto=nullptr,
-                  bool verbose=false, bool autoBinned=true, const char* binnedTag="") const override ;
-  RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=nullptr,
-                                  const RooArgSet* auxProto=nullptr, bool verbose= false) const override ;
 
   RooCategoryProxy _indexCat ; ///< Index category
   TList    _pdfProxyList ;     ///< List of PDF proxies (named after applicable category state)
