@@ -16,14 +16,22 @@
 #ifndef ROO_NUMBER
 #define ROO_NUMBER
 
-#include "Rtypes.h"
+#include <limits>
 
 class RooNumber {
 public:
-   virtual ~RooNumber(){};
+   /// Return internal infinity representation.
+   constexpr static double infinity()
+   {
+      // In the future, it should better do this:
+      //    return std::numeric_limits<double>::infinity();
 
-   static double infinity();
-   static Int_t isInfinite(double x);
+      // This assumes a well behaved IEEE-754 floating point implementation.
+      // The next line may generate a compiler warning that can be ignored.
+      return 1.0e30; // 1./0.;
+   }
+   /// Return true if x is infinite by RooNumber internal specification.
+   constexpr static int isInfinite(double x) { return (x >= +infinity()) ? +1 : ((x <= -infinity()) ? -1 : 0); }
 
    /// Set the relative epsilon that is used by range checks in RooFit,
    /// e.g., in RooAbsRealLValue::inRange().
@@ -42,10 +50,6 @@ public:
 private:
    static double &staticRangeEpsRel();
    static double &staticRangeEpsAbs();
-
-   static double _Infinity;
-
-   ClassDef(RooNumber, 0) // wrapper class for portable numerics
 };
 
 #endif
