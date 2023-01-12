@@ -58,37 +58,16 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
 
   RooArgSet allPdfVars(pdfVars) ;
 
-  if (!idxCat.isDerived()) {
-    pdfVars.remove(idxCat,true,true) ;
-    bool doGenIdx = allPdfVars.find(idxCat.GetName())?true:false ;
+  RooArgSet catsAmongAllVars;
+  allPdfVars.selectCommon(model.flattenedCatList(), catsAmongAllVars);
 
-    if (!doGenIdx) {
+  if(catsAmongAllVars.size() != model.flattenedCatList().size()) {
       oocoutE(_pdf,Generation) << "RooSimSplitGenContext::ctor(" << GetName() << ") ERROR: This context must"
-                << " generate the index category" << endl ;
+                << " generate all components of the index category" << endl ;
       _isValid = false ;
       _numPdf = 0 ;
       // coverity[UNINIT_CTOR]
       return ;
-    }
-  } else {
-    bool anyServer(false), allServers(true) ;
-    for(RooAbsArg* server : idxCat.servers()) {
-      if (vars.find(server->GetName())) {
-   anyServer=true ;
-   pdfVars.remove(*server,true,true) ;
-      } else {
-   allServers=false ;
-      }
-    }
-
-    if (anyServer && !allServers) {
-      oocoutE(_pdf,Generation) << "RooSimSplitGenContext::ctor(" << GetName() << ") ERROR: This context must"
-                << " generate all components of a derived index category" << endl ;
-      _isValid = false ;
-      _numPdf = 0 ;
-      // coverity[UNINIT_CTOR]
-      return ;
-    }
   }
 
   // We must extended likelihood to determine the relative fractions of the components
