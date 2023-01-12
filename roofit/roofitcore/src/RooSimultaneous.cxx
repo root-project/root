@@ -1004,21 +1004,21 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDa
     // Generating index category: return special sim-context
     return new RooSimGenContext(*this,vars,prototype,auxProto,verbose) ;
 
-  } else if (_indexCat.arg().isDerived()) {
-    // Generating dependents of a derived index category
+  } else if (auto superIndexCat = dynamic_cast<RooSuperCategory const*>(&_indexCat.arg())) {
+    // Generating dependents of a RooSuperCategory index category.
+    // Note that the index category of a RooSimultaneous can only be of type
+    // RooCategory or RooSuperCategory, because these are the only classes that
+    // inherit from RooAbsCategoryLValue.
 
     // Determine if we none,any or all servers
-    bool anyServer(false), allServers(true) ;
+    bool anyServer = false;
+    bool allServers = true;
     if (prototype) {
-      for(RooAbsArg * server : _indexCat.arg().servers()) {
-   if (prototype->get()->find(server->GetName())) {
-     anyServer=true ;
-   } else {
-     allServers=false ;
-   }
-      }
-    } else {
-      allServers=true ;
+      RooArgSet common;
+      RooArgSet const& inputCats = superIndexCat->inputCatList();
+      prototype->get()->selectCommon(inputCats, common);
+      anyServer = !common.empty();
+      allServers = common.size() == inputCats.size();
     }
 
     if (allServers) {
