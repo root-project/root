@@ -51,12 +51,7 @@ public:
 
   /// Replaces underlying RooDataHist with a clone, which is now owned, and returns the clone.
   /// If the underlying RooDataHist is already owned, then that is returned instead of being cloned.
-  RooDataHist* cloneAndOwnDataHist(const char* newname="") {
-     if (_ownedDataHist) return _ownedDataHist.get();
-     _ownedDataHist.reset(static_cast<RooDataHist*>(_dataHist->Clone(newname)));
-     _dataHist = _ownedDataHist.get();
-     return _dataHist;
-  }
+  RooDataHist* cloneAndOwnDataHist(const char* newname="");
 
   void setInterpolationOrder(Int_t order) {
     // Set histogram interpolation order

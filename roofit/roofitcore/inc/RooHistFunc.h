@@ -53,12 +53,7 @@ public:
 
   /// Replaces underlying RooDataHist with a clone, which is now owned, and returns the clone.
   /// If the underlying RooDataHist is already owned, then that is returned instead of being cloned.
-  RooDataHist* cloneAndOwnDataHist(const char* newname="") {
-     if (_ownedDataHist) return _ownedDataHist.get();
-     _ownedDataHist.reset(static_cast<RooDataHist*>(_dataHist->Clone(newname)));
-     _dataHist = _ownedDataHist.get();
-     return _dataHist;
-  }
+  RooDataHist* cloneAndOwnDataHist(const char* newname="");
 
   /// Get total bin volume spanned by this hist function.
   /// In 1-d, this is e.g. the range spanned on the x-axis.
