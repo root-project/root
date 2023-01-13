@@ -20,10 +20,10 @@
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <condition_variable>
+#include <deque>
 #include <memory>
 #include <mutex>
 #include <future>
-#include <queue>
 #include <thread>
 #include <set>
 #include <vector>
@@ -109,13 +109,13 @@ private:
    /// Signals a non-empty I/O work queue
    std::condition_variable fCvHasReadWork;
    /// The communication channel to the I/O thread
-   std::queue<RReadItem> fReadQueue;
+   std::deque<RReadItem> fReadQueue;
    /// The lock associated with the fCvHasUnzipWork conditional variable
    std::mutex fLockUnzipQueue;
    /// Signals non-empty unzip work queue
    std::condition_variable fCvHasUnzipWork;
    /// The communication channel between the I/O thread and the unzip thread
-   std::queue<RUnzipItem> fUnzipQueue;
+   std::deque<RUnzipItem> fUnzipQueue;
 
    /// The I/O thread calls RPageSource::LoadClusters() asynchronously.  The thread is mostly waiting for the
    /// data to arrive (blocked by the kernel) and therefore can safely run in addition to the application
