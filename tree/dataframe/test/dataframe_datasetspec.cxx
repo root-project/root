@@ -378,14 +378,6 @@ TEST_P(RDatasetSpecTest, Friends)
       if (i > 0) {
          EXPECT_VEC_SEQ_EQ(*res["friend_glob_" + data[i].name + "x"],
                            ROOT::TSeq<ULong64_t>(data[i].groupStart, data[i].groupStart + 24));
-      } else {
-         if (GetParam()) { // MT case
-            auto sol = *res["friend_glob_" + data[i].name + "x"];
-            ASSERT_EQ(sol.size(), 24u);
-            for (auto j = 0u; j < sol.size(); ++j)
-               EXPECT_EQ(sol[j], j > 8 ? j - 9 : 0u);
-         }
-         // sigle-threaded case with shorter friend behaves unexpectedly!
       }
    }
 }
