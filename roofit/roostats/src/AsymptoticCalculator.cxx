@@ -876,12 +876,12 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
             if (fval*expectedEvents < 0) {
                oocoutW(nullptr,InputArguments)
                    << "AsymptoticCalculator::" << __func__
-                   << "(): Detected a bin with negative expected events! Please check your inputs." << endl;
+                   << "(): Bin " << i << " of " << v->GetName() << " has negative expected events! Please check your inputs." << endl;
             }
             else {
                oocoutW(nullptr,InputArguments)
                    << "AsymptoticCalculator::" << __func__
-                   << "(): Detected a bin with zero expected events- skip it" << endl;
+                   << "(): Bin " << i << " of " << v->GetName() << " has zero expected events - skip it" << endl;
             }
          }
          // have a cut off for overflows ??
