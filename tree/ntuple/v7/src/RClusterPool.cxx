@@ -63,7 +63,7 @@ ROOT::Experimental::Detail::RClusterPool::~RClusterPool()
    {
       // Controlled shutdown of the I/O thread
       std::unique_lock<std::mutex> lock(fLockWorkQueue);
-      fReadQueue.emplace(RReadItem());
+      fReadQueue.emplace_back(RReadItem());
       fCvHasReadWork.notify_one();
    }
    fThreadIo.join();
@@ -71,7 +71,7 @@ ROOT::Experimental::Detail::RClusterPool::~RClusterPool()
    {
       // Controlled shutdown of the unzip thread
       std::unique_lock<std::mutex> lock(fLockUnzipQueue);
-      fUnzipQueue.emplace(RUnzipItem());
+      fUnzipQueue.emplace_back(RUnzipItem());
       fCvHasUnzipWork.notify_one();
    }
    fThreadUnzip.join();
@@ -79,15 +79,16 @@ ROOT::Experimental::Detail::RClusterPool::~RClusterPool()
 
 void ROOT::Experimental::Detail::RClusterPool::ExecUnzipClusters()
 {
+   // The thread keeps its local buffer of elements to be processed. On wakeup, the local copy is swapped with
+   // `fUnzipQueue`, which not only reduces contention but also reduces the overall number of allocations, as the
+   // internal storage of both copies is reused. The local copy should be cleared before the `std::swap()` in the next
+   // iteration.
+   std::deque<RUnzipItem> unzipItems;
    while (true) {
-      std::vector<RUnzipItem> unzipItems;
       {
          std::unique_lock<std::mutex> lock(fLockUnzipQueue);
          fCvHasUnzipWork.wait(lock, [&]{ return !fUnzipQueue.empty(); });
-         while (!fUnzipQueue.empty()) {
-            unzipItems.emplace_back(std::move(fUnzipQueue.front()));
-            fUnzipQueue.pop();
-         }
+         std::swap(unzipItems, fUnzipQueue);
       }
 
       for (auto &item : unzipItems) {
@@ -99,57 +100,57 @@ void ROOT::Experimental::Detail::RClusterPool::ExecUnzipClusters()
          // Afterwards the GetCluster() method in the main thread can pick-up the cluster
          item.fPromise.set_value(std::move(item.fCluster));
       }
+      unzipItems.clear();
    } // while (true)
 }
 
 void ROOT::Experimental::Detail::RClusterPool::ExecReadClusters()
 {
+   std::deque<RReadItem> readItems;
    while (true) {
-      std::vector<RReadItem> readItems;
-      std::vector<RCluster::RKey> clusterKeys;
-      std::int64_t bunchId = -1;
       {
          std::unique_lock<std::mutex> lock(fLockWorkQueue);
          fCvHasReadWork.wait(lock, [&]{ return !fReadQueue.empty(); });
-         while (!fReadQueue.empty()) {
-            if (fReadQueue.front().fClusterKey.fClusterId == kInvalidDescriptorId) {
-               fReadQueue.pop();
-               return;
-            }
-
-            if ((bunchId >= 0) && (fReadQueue.front().fBunchId != bunchId))
-               break;
-            readItems.emplace_back(std::move(fReadQueue.front()));
-            fReadQueue.pop();
-            bunchId = readItems.back().fBunchId;
-            clusterKeys.emplace_back(readItems.back().fClusterKey);
-         }
+         std::swap(readItems, fReadQueue);
       }
 
-      auto clusters = fPageSource.LoadClusters(clusterKeys);
-
-      for (std::size_t i = 0; i < clusters.size(); ++i) {
-         // Meanwhile, the user might have requested clusters outside the look-ahead window, so that we don't
-         // need the cluster anymore, in which case we simply discard it right away, before moving it to the pool
-         bool discard = false;
-         {
-            std::unique_lock<std::mutex> lock(fLockWorkQueue);
-            for (auto &inFlight : fInFlightClusters) {
-               if (inFlight.fClusterKey.fClusterId != clusters[i]->GetId())
-                  continue;
-               discard = inFlight.fIsExpired;
+      while (!readItems.empty()) {
+         std::vector<RCluster::RKey> clusterKeys;
+         std::int64_t bunchId = -1;
+         for (auto &item : readItems) {
+            if (item.fClusterKey.fClusterId == kInvalidDescriptorId)
+               return;
+            if ((bunchId >= 0) && (item.fBunchId != bunchId))
                break;
+            bunchId = item.fBunchId;
+            clusterKeys.emplace_back(item.fClusterKey);
+         }
+
+         auto clusters = fPageSource.LoadClusters(clusterKeys);
+         for (std::size_t i = 0; i < clusters.size(); ++i) {
+            // Meanwhile, the user might have requested clusters outside the look-ahead window, so that we don't
+            // need the cluster anymore, in which case we simply discard it right away, before moving it to the pool
+            bool discard = false;
+            {
+               std::unique_lock<std::mutex> lock(fLockWorkQueue);
+               for (auto &inFlight : fInFlightClusters) {
+                  if (inFlight.fClusterKey.fClusterId != clusters[i]->GetId())
+                     continue;
+                  discard = inFlight.fIsExpired;
+                  break;
+               }
+            }
+            if (discard) {
+               clusters[i].reset();
+               readItems[i].fPromise.set_value(std::move(clusters[i]));
+            } else {
+               // Hand-over the loaded cluster pages to the unzip thread
+               std::unique_lock<std::mutex> lock(fLockUnzipQueue);
+               fUnzipQueue.emplace_back(RUnzipItem{std::move(clusters[i]), std::move(readItems[i].fPromise)});
+               fCvHasUnzipWork.notify_one();
             }
          }
-         if (discard) {
-            clusters[i].reset();
-            readItems[i].fPromise.set_value(std::move(clusters[i]));
-         } else {
-            // Hand-over the loaded cluster pages to the unzip thread
-            std::unique_lock<std::mutex> lock(fLockUnzipQueue);
-            fUnzipQueue.emplace(RUnzipItem{std::move(clusters[i]), std::move(readItems[i].fPromise)});
-            fCvHasUnzipWork.notify_one();
-         }
+         readItems.erase(readItems.begin(), readItems.begin() + clusters.size());
       }
    } // while (true)
 }
@@ -360,7 +361,7 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(DescriptorId_t clusterId,
             inFlightCluster.fFuture = readItem.fPromise.get_future();
             fInFlightClusters.emplace_back(std::move(inFlightCluster));
 
-            fReadQueue.emplace(std::move(readItem));
+            fReadQueue.emplace_back(std::move(readItem));
          }
          if (fReadQueue.size() > 0)
             fCvHasReadWork.notify_one();
