@@ -1687,6 +1687,11 @@ void TGeoVoxelFinder::SortAll(Option_t *)
       boundaries[2*id+4*nd] = fBoxes[6*id+5]-fBoxes[6*id+2];
       boundaries[2*id+4*nd+1] = fBoxes[6*id+5]+fBoxes[6*id+2];
    }
+   if (static_cast<size_t>(nmaxslices)*nperslice > static_cast<size_t>(nmaxslices*nperslice)) {
+      Error("SortAll", "Data type (Int_t) overflow for volume %s", fVolume->GetName());
+      return;
+   }
+   
    Int_t *index = new Int_t[2*nd]; // indexes for sorted boundaries on one axis
    UChar_t *ind = new UChar_t[nmaxslices*nperslice]; // ind[fOBx[i]] = ndghts in slice fInd[i]--fInd[i+1]
    Int_t *extra = new Int_t[nmaxslices*4];
