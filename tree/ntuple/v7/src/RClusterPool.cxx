@@ -130,15 +130,13 @@ void ROOT::Experimental::Detail::RClusterPool::ExecReadClusters()
          for (std::size_t i = 0; i < clusters.size(); ++i) {
             // Meanwhile, the user might have requested clusters outside the look-ahead window, so that we don't
             // need the cluster anymore, in which case we simply discard it right away, before moving it to the pool
-            bool discard = false;
+            bool discard;
             {
                std::unique_lock<std::mutex> lock(fLockWorkQueue);
-               for (auto &inFlight : fInFlightClusters) {
-                  if (inFlight.fClusterKey.fClusterId != clusters[i]->GetId())
-                     continue;
-                  discard = inFlight.fIsExpired;
-                  break;
-               }
+               discard = std::any_of(fInFlightClusters.begin(), fInFlightClusters.end(),
+                                     [thisClusterId = clusters[i]->GetId()](auto &inFlight) {
+                                        return inFlight.fClusterKey.fClusterId == thisClusterId && inFlight.fIsExpired;
+                                     });
             }
             if (discard) {
                clusters[i].reset();
