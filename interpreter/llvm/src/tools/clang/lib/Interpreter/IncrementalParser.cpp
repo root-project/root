@@ -18,7 +18,6 @@
 #include "clang/CodeGen/ModuleBuilder.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendAction.h"
-#include "clang/FrontendTool/Utils.h"
 #include "clang/Parse/Parser.h"
 #include "clang/Sema/Sema.h"
 
@@ -31,108 +30,17 @@
 
 namespace clang {
 
-/// A custom action enabling the incremental processing functionality.
-///
-/// The usual \p FrontendAction expects one call to ExecuteAction and once it
-/// sees a call to \p EndSourceFile it deletes some of the important objects
-/// such as \p Preprocessor and \p Sema assuming no further input will come.
-///
-/// \p IncrementalAction ensures it keep its underlying action's objects alive
-/// as long as the \p IncrementalParser needs them.
-///
-class IncrementalAction : public WrapperFrontendAction {
-private:
-  bool IsTerminating = false;
-
-public:
-  IncrementalAction(CompilerInstance &CI, llvm::LLVMContext &LLVMCtx,
-                    llvm::Error &Err)
-      : WrapperFrontendAction([&]() {
-          llvm::ErrorAsOutParameter EAO(&Err);
-          std::unique_ptr<FrontendAction> Act;
-          switch (CI.getFrontendOpts().ProgramAction) {
-          default:
-            Err = llvm::createStringError(
-                std::errc::state_not_recoverable,
-                "Driver initialization failed. "
-                "Incremental mode for action %d is not supported",
-                CI.getFrontendOpts().ProgramAction);
-            return Act;
-          case frontend::ASTDump:
-            LLVM_FALLTHROUGH;
-          case frontend::ASTPrint:
-            LLVM_FALLTHROUGH;
-          case frontend::ParseSyntaxOnly:
-            Act = CreateFrontendAction(CI);
-            break;
-          case frontend::EmitAssembly:
-            LLVM_FALLTHROUGH;
-          case frontend::EmitObj:
-            LLVM_FALLTHROUGH;
-          case frontend::EmitLLVMOnly:
-            Act.reset(new EmitLLVMOnlyAction(&LLVMCtx));
-            break;
-          }
-          return Act;
-        }()) {}
-  FrontendAction *getWrapped() const { return WrappedAction.get(); }
-  TranslationUnitKind getTranslationUnitKind() override {
-    return TU_Incremental;
-  }
-  void ExecuteAction() override {
-    CompilerInstance &CI = getCompilerInstance();
-    assert(CI.hasPreprocessor() && "No PP!");
-
-    // FIXME: Move the truncation aspect of this into Sema, we delayed this till
-    // here so the source manager would be initialized.
-    if (hasCodeCompletionSupport() &&
-        !CI.getFrontendOpts().CodeCompletionAt.FileName.empty())
-      CI.createCodeCompletionConsumer();
-
-    // Use a code completion consumer?
-    CodeCompleteConsumer *CompletionConsumer = nullptr;
-    if (CI.hasCodeCompletionConsumer())
-      CompletionConsumer = &CI.getCodeCompletionConsumer();
-
-    Preprocessor &PP = CI.getPreprocessor();
-    PP.enableIncrementalProcessing();
-    PP.EnterMainSourceFile();
-
-    if (!CI.hasSema())
-      CI.createSema(getTranslationUnitKind(), CompletionConsumer);
-  }
-
-  // Do not terminate after processing the input. This allows us to keep various
-  // clang objects alive and to incrementally grow the current TU.
-  void EndSourceFile() override {
-    // The WrappedAction can be nullptr if we issued an error in the ctor.
-    if (IsTerminating && getWrapped())
-      WrapperFrontendAction::EndSourceFile();
-  }
-
-  void FinalizeAction() {
-    assert(!IsTerminating && "Already finalized!");
-    IsTerminating = true;
-    EndSourceFile();
-  }
-};
-
 IncrementalParser::IncrementalParser(std::unique_ptr<CompilerInstance> Instance,
-                                     llvm::LLVMContext &LLVMCtx,
-                                     llvm::Error &Err)
-    : CI(std::move(Instance)) {
-  llvm::ErrorAsOutParameter EAO(&Err);
-  Act = std::make_unique<IncrementalAction>(*CI, LLVMCtx, Err);
-  if (Err)
-    return;
-  CI->ExecuteAction(*Act);
+                                     std::unique_ptr<FrontendAction> A,
+                                     CodeGenerator *CG)
+   : CI(std::move(Instance)), Act(std::move(A)), CodeGen(CG) {
   Consumer = &CI->getASTConsumer();
   P.reset(
       new Parser(CI->getPreprocessor(), CI->getSema(), /*SkipBodies=*/false));
   P->Initialize();
 }
 
-IncrementalParser::~IncrementalParser() { Act->FinalizeAction(); }
+IncrementalParser::~IncrementalParser() { }
 
 llvm::Expected<PartialTranslationUnit &>
 IncrementalParser::ParseOrWrapTopLevelDecl() {
@@ -217,14 +125,6 @@ IncrementalParser::ParseOrWrapTopLevelDecl() {
   return LastPTU;
 }
 
-static CodeGenerator *getCodeGen(FrontendAction *Act) {
-  IncrementalAction *IncrAct = static_cast<IncrementalAction *>(Act);
-  FrontendAction *WrappedAct = IncrAct->getWrapped();
-  if (!WrappedAct->hasIRSupport())
-    return nullptr;
-  return static_cast<CodeGenAction *>(WrappedAct)->getCodeGenerator();
-}
-
 llvm::Expected<PartialTranslationUnit &>
 IncrementalParser::Parse(llvm::StringRef input) {
   Preprocessor &PP = CI->getPreprocessor();
@@ -279,9 +179,9 @@ IncrementalParser::Parse(llvm::StringRef input) {
   assert(AssertTok.is(tok::eof) &&
          "Lexer must be EOF when starting incremental parse!");
 
-  if (CodeGenerator *CG = getCodeGen(Act.get())) {
-    std::unique_ptr<llvm::Module> M(CG->ReleaseModule());
-    CG->StartModule("incr_module_" + std::to_string(PTUs.size()),
+  if (CodeGen) {
+    std::unique_ptr<llvm::Module> M(CodeGen->ReleaseModule());
+    CodeGen->StartModule("incr_module_" + std::to_string(PTUs.size()),
                     M->getContext());
 
     PTU->TheModule = std::move(M);

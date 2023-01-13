@@ -291,7 +291,7 @@ namespace cling {
     std::unique_ptr<cling::DeclCollector> consumer;
     consumer.reset(m_Consumer = new cling::DeclCollector());
     m_CI.reset(CIFactory::createCI("\n", interp->getOptions(), llvmdir,
-                                   std::move(consumer), moduleExtensions));
+                                   std::move(consumer), moduleExtensions, &m_CodeGen));
 
     if (!m_CI) {
       cling::errs() << "Compiler instance could not be created.\n";
@@ -313,22 +313,22 @@ namespace cling {
 
     DiagnosticsEngine& Diag = m_CI->getDiagnostics();
     if (m_CI->getFrontendOpts().ProgramAction != frontend::ParseSyntaxOnly) {
-      auto CG
-        = std::unique_ptr<clang::CodeGenerator>(CreateLLVMCodeGen(Diag,
-                                                               makeModuleName(),
-                                                    m_CI->getHeaderSearchOpts(),
-                                                    m_CI->getPreprocessorOpts(),
-                                                         m_CI->getCodeGenOpts(),
-                                               *m_Interpreter->getLLVMContext())
-                                                );
-      m_CodeGen = CG.get();
-      assert(m_CodeGen);
-      if (!Consumers.empty()) {
-        Consumers.push_back(std::move(CG));
-        WrappedConsumer.reset(new MultiplexConsumer(std::move(Consumers)));
-      }
-      else
-        WrappedConsumer = std::move(CG);
+      // auto CG
+      //   = std::unique_ptr<clang::CodeGenerator>(CreateLLVMCodeGen(Diag,
+      //                                                          makeModuleName(),
+      //                                               m_CI->getHeaderSearchOpts(),
+      //                                               m_CI->getPreprocessorOpts(),
+      //                                                    m_CI->getCodeGenOpts(),
+      //                                          *m_Interpreter->getLLVMContext())
+      //                                           );
+      //m_CodeGen = CG.get();
+      // assert(m_CodeGen);
+      // if (!Consumers.empty()) {
+      //   Consumers.push_back(std::move(CG));
+      //   WrappedConsumer.reset(new MultiplexConsumer(std::move(Consumers)));
+      // }
+      // else
+      //   WrappedConsumer = std::move(CG);
     }
 
     // Initialize the DeclCollector and add callbacks keeping track of macros.
@@ -343,8 +343,8 @@ namespace cling {
   IncrementalParser::Initialize(llvm::SmallVectorImpl<ParseResultTransaction>&
                                 result, bool isChildInterpreter) {
     m_TransactionPool.reset(new TransactionPool);
-    if (hasCodeGenerator())
-      getCodeGenerator()->Initialize(getCI()->getASTContext());
+    // if (hasCodeGenerator())
+    //   getCodeGenerator()->Initialize(getCI()->getASTContext());
 
     CompilationOptions CO = m_Interpreter->makeDefaultCompilationOpts();
     Transaction* CurT = beginTransaction(CO);
@@ -373,7 +373,7 @@ namespace cling {
 
     // Must happen after attaching the PCH, else PCH elements will end up
     // being lexed.
-    PP.EnterMainSourceFile();
+    //PP.EnterMainSourceFile();
 
     Sema* TheSema = &m_CI->getSema();
     m_Parser.reset(new Parser(PP, *TheSema, false /*skipFuncBodies*/));

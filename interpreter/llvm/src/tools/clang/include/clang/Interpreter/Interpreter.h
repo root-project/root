@@ -22,6 +22,8 @@
 #include <vector>
 
 namespace llvm {
+class LLVMContext;
+
 namespace orc {
 class ThreadSafeContext;
 }
@@ -30,7 +32,9 @@ class Module;
 
 namespace clang {
 
+class CodeGenerator;
 class CompilerInstance;
+class FrontendAction;
 class DeclGroupRef;
 class IncrementalExecutor;
 class IncrementalParser;
@@ -40,6 +44,10 @@ class IncrementalCompilerBuilder {
 public:
   static llvm::Expected<std::unique_ptr<CompilerInstance>>
   create(std::vector<const char *> &ClangArgv);
+  static llvm::Expected<std::unique_ptr<FrontendAction>>
+  createIncrementalAction(CompilerInstance &CI, llvm::LLVMContext *LLVMCtx,
+                          CodeGenerator **CG = nullptr);
+
 };
 
 /// Provides top-level interfaces for incremental compilation and execution.
