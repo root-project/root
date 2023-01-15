@@ -77,6 +77,12 @@ public:
   double offset() const override { return _offset.Sum() ; }
   virtual double offsetCarry() const { return _offset.Carry(); }
 
+  enum GOFOpMode { SimMaster,MPMaster,Slave } ;
+  GOFOpMode operMode() const {
+     // Return test statistic operation mode of this instance (SimMaster, MPMaster or Slave)
+     return _gofOpMode ;
+  }
+
 protected:
 
   void printCompactTreeHook(std::ostream& os, const char* indent="") override ;
@@ -109,11 +115,6 @@ protected:
 
   RooSetProxy _paramSet ;          ///< Parameters of the test statistic (=parameters of the input function)
 
-  enum GOFOpMode { SimMaster,MPMaster,Slave } ;
-  GOFOpMode operMode() const {
-    // Return test statistic operation mode of this instance (SimMaster, MPMaster or Slave)
-    return _gofOpMode ;
-  }
 
   // Original arguments
   RooAbsReal* _func = nullptr;          ///< Pointer to original input function
