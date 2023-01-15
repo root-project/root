@@ -49,6 +49,10 @@ public:
     return *_dataHist ;
   }
 
+  /// Replaces underlying RooDataHist with a clone, which is now owned, and returns the clone.
+  /// If the underlying RooDataHist is already owned, then that is returned instead of being cloned.
+  RooDataHist* cloneAndOwnDataHist(const char* newname="");
+
   void setInterpolationOrder(Int_t order) {
     // Set histogram interpolation order
     _intOrder = order ;
