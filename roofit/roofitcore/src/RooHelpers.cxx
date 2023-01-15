@@ -184,32 +184,9 @@ std::pair<double, double> getRangeOrBinningInterval(RooAbsArg const* arg, const 
 
 /// Check if there is any overlap when a list of ranges is applied to a set of observables.
 /// \param[in] observables The observables to check for overlap
-/// \param[in] data RooAbsCollection with the observables to check for overlap.
 /// \param[in] rangeNames The names of the ranges.
-bool checkIfRangesOverlap(RooArgSet const& observables,
-                          RooAbsData const& data,
-                          std::vector<std::string> const& rangeNames)
+bool checkIfRangesOverlap(RooArgSet const& observables, std::vector<std::string> const& rangeNames)
 {
-  auto getLimits = [&](RooAbsRealLValue const& rlv, const char* rangeName) {
-
-    // RooDataHistCase
-    if(dynamic_cast<RooDataHist const*>(&data)) {
-      if (auto binning = rlv.getBinningPtr(rangeName)) {
-        return getBinningInterval(*binning);
-      } else {
-        // default binning if range is not defined
-        return getBinningInterval(*rlv.getBinningPtr(nullptr));
-      }
-    }
-
-    // RooDataSet and other cases
-    if (rlv.hasRange(rangeName)) {
-      return std::pair<double, double>{rlv.getMin(rangeName), rlv.getMax(rangeName)};
-    }
-    // default range if range with given name is not defined
-    return std::pair<double, double>{rlv.getMin(), rlv.getMax()};
-  };
-
   // cache the range limits in a flat vector
   std::vector<std::pair<double,double>> limits;
   limits.reserve(rangeNames.size() * observables.size());
@@ -219,7 +196,7 @@ bool checkIfRangesOverlap(RooArgSet const& observables,
       if(dynamic_cast<RooAbsCategory const*>(obs)) {
         // Nothing to be done for category observables
       } else if(auto * rlv = dynamic_cast<RooAbsRealLValue const*>(obs)) {
-        limits.push_back(getLimits(*rlv, range.c_str()));
+        limits.emplace_back(rlv->getMin(range.c_str()), rlv->getMax(range.c_str()));
       } else {
         throw std::logic_error("Classes that represent observables are expected to inherit from RooAbsRealLValue or RooAbsCategory!");
       }
