@@ -258,6 +258,13 @@ double RooHistFunc::maxVal(Int_t code) const
   return max*1.05 ;
 }
 
+RooDataHist* RooHistFunc::cloneAndOwnDataHist(const char* newname) {
+   if (_ownedDataHist) return _ownedDataHist.get();
+   _ownedDataHist.reset(static_cast<RooDataHist*>(_dataHist->Clone(newname)));
+   _dataHist = _ownedDataHist.get();
+   return _dataHist;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the total volume spanned by the observables of the RooDataHist
 
