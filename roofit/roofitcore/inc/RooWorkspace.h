@@ -86,6 +86,7 @@ public:
   bool renameSet(const char* name, const char* newName) ;
   bool removeSet(const char* name) ;
   const RooArgSet* set(const char* name) ;
+  inline const std::map<std::string,RooArgSet>& sets() const { return _namedSets; }
 
   // Import, load and save parameter value snapshots
   bool saveSnapshot(const char* name, const char* paramNames) ;

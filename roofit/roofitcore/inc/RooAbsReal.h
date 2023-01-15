@@ -385,10 +385,16 @@ protected:
   TString integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset=nullptr, const char* rangeName=nullptr, bool omitEmpty=false) const ;
 
 
-  bool isSelectedComp() const ;
+
 
 
  public:
+  bool isSelectedComp() const ;
+  void selectComp(bool flag) {
+     // If flag is true, only selected component will be included in evaluates of RooAddPdf components
+     _selectComp = flag ;
+  }
+
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
   const RooAbsReal *createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
                      RooArgSet *&cloneSet, const char* rangeName=nullptr, const RooArgSet* condObs=nullptr) const;
@@ -550,10 +556,7 @@ protected:
   friend class RooAddHelpers ;
   friend class RooAddPdf ;
   friend class RooAddModel ;
-  void selectComp(bool flag) {
-    // If flag is true, only selected component will be included in evaluates of RooAddPdf components
-    _selectComp = flag ;
-  }
+
   static void globalSelectComp(bool flag) ;
   bool _selectComp ;               //! Component selection flag for RooAbsPdf::plotCompOn
   static bool _globalSelectComp ;  // Global activation switch for component selection
