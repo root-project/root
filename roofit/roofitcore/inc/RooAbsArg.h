@@ -549,6 +549,7 @@ public:
   void setProhibitServerRedirect(bool flag) { _prohibitServerRedirect = flag ; }
 
   void setWorkspace(RooWorkspace &ws) { _myws = &ws; }
+  inline RooWorkspace* workspace() const { return _myws; }
 
   RooAbsProxy* getProxy(Int_t index) const ;
   Int_t numProxies() const ;
