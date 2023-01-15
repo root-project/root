@@ -187,6 +187,12 @@ RooHistPdf::~RooHistPdf()
 
 }
 
+RooDataHist* RooHistPdf::cloneAndOwnDataHist(const char* newname) {
+   if (_ownedDataHist) return _ownedDataHist.get();
+   _ownedDataHist.reset(static_cast<RooDataHist*>(_dataHist->Clone(newname)));
+   _dataHist = _ownedDataHist.get();
+   return _dataHist;
+}
 
 void RooHistPdf::computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
 
