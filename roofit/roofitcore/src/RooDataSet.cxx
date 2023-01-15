@@ -893,7 +893,7 @@ RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVa
   } else {
     // Composite case: multiple ranges
     auto tokens = ROOT::Split(cutRange, ",");
-    if (RooHelpers::checkIfRangesOverlap(tmp, *this, tokens)) {
+    if (RooHelpers::checkIfRangesOverlap(tmp, tokens)) {
       std::stringstream errMsg;
       errMsg << "Error in RooAbsData::reduce! The ranges " << cutRange << " are overlapping!";
       throw std::runtime_error(errMsg.str());
