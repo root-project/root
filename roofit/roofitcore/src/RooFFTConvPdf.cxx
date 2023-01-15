@@ -150,7 +150,7 @@ ClassImp(RooFFTConvPdf);
 RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooRealVar& convVar, RooAbsPdf& pdf1, RooAbsPdf& pdf2, Int_t ipOrder) :
   RooAbsCachedPdf(name,title,ipOrder),
   _x("!x","Convolution Variable",this,convVar),
-  _xprime("!xprime","External Convolution Variable",this,0),
+  _xprime("!xprime","External Convolution Variable",this,false),
   _pdf1("!pdf1","pdf1",this,pdf1,false),
   _pdf2("!pdf2","pdf2",this,pdf2,false),
   _params("!params","effective parameters",this),
