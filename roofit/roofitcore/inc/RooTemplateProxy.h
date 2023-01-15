@@ -160,9 +160,19 @@ public:
   /// \param[in] valueServer Notify the owner if value changes.
   /// \param[in] shapeServer Notify the owner if shape (e.g. binning) changes.
   /// \param[in] proxyOwnsArg Proxy will delete the payload if owning.
+  template<typename Bool = bool, typename = std::enable_if_t<std::is_same<Bool,bool>::value>>
   RooTemplateProxy(const char* theName, const char* desc, RooAbsArg* owner,
-      bool valueServer=true, bool shapeServer=false, bool proxyOwnsArg=false)
-  : RooArgProxy(theName, desc, owner, valueServer, shapeServer, proxyOwnsArg) { }
+      Bool valueServer=true, bool shapeServer=false, bool proxyOwnsArg=false)
+  : RooArgProxy(theName, desc, owner, valueServer, shapeServer, proxyOwnsArg) {
+    // Note for developers: the type of the first bool parameter is templated
+    // such that implicit conversion from int or pointers to bool is disabled.
+    // This is because there is another constructor with the signature
+    // `RooTemplateProxy(name, title, owner, T& ref)`. It happened already more
+    // than once that other developers accidentally used a `T*` pointer instead
+    // of a reference, in which case it resolved to this constructor via
+    // implicit conversion to bool. This is completely meaningless and should
+    // not happen.
+  }
 
   ////////////////////////////////////////////////////////////////////////////////
   /// Constructor with owner and proxied object.
