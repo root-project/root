@@ -31,6 +31,7 @@
 #include <TDataMember.h>
 #include <TError.h>
 #include <TList.h>
+#include <TObjArray.h>
 #include <TObjString.h>
 #include <TRealData.h>
 #include <TSchemaRule.h>
