@@ -59,7 +59,6 @@ private:
    int fCompressionSettings;
    std::uint64_t fCompressedSize;
    std::uint64_t fUncompressedSize;
-   float fCompressionFactor;
 
    RNTupleInspector(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource) : fPageSource(std::move(pageSource)) {};
 
