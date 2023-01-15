@@ -76,6 +76,10 @@ namespace RooStats {
       const RooArgList* GetAllTestStatisticsData(void) const { return fAllTestStatisticsData; }
       bool HasTestStatisticData(void) const;
 
+      void SetNullPValue(double pvalue) { fNullPValue = pvalue; }
+      void SetNullPValueError(double err) { fNullPValueError = err; }
+      void SetAltPValue(double pvalue) { fAlternatePValue = pvalue; }
+      void SetAltPValueError(double err) { fAlternatePValueError = err; }
       void SetAltDistribution(SamplingDistribution *alt);
       void SetNullDistribution(SamplingDistribution *null);
       void SetAltDetailedOutput(RooDataSet* d) { fAltDetailedOutput = d; }
