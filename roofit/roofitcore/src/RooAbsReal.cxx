@@ -571,7 +571,16 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
   // Integral over multiple ranges
   RooArgSet components ;
 
-  auto tokens = ROOT::Split(rangeName, ",");
+  std::vector<std::string> tokens = ROOT::Split(rangeName, ",");
+
+  if(RooHelpers::checkIfRangesOverlap(iset, tokens)) {
+    std::stringstream errMsg;
+    errMsg << GetName() << " : integrating with respect to the variables " << iset << " on the ranges  \"" << rangeName
+           << "\" is not possible because the ranges are overlapping";
+    const std::string errMsgString = errMsg.str();
+    coutE(Integration) << errMsgString << std::endl;
+    throw std::invalid_argument(errMsgString);
+  }
 
   for (const std::string& token : tokens) {
     RooAbsReal* compIntegral = createIntObj(iset,nset,cfg, token.c_str());
