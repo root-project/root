@@ -48,7 +48,7 @@ public:
          _grid.push_back(binning_y.clone());
          _grid.push_back(binning_z.clone());
       };
-      Grid2(const std::vector<RooAbsBinning *> binnings)
+      Grid2(std::vector<RooAbsBinning *> const &binnings)
       {
          for (unsigned int i = 0; i < binnings.size(); i++) {
             _grid.push_back(binnings[i]->clone());
@@ -129,16 +129,16 @@ protected:
    friend class CacheElem;
    friend class Grid2;
 
-   mutable RooObjCacheManager _cacheMgr; ///<! Transient cache manager
-   mutable RooArgSet *_curNormSet;
+   mutable RooObjCacheManager _cacheMgr;     ///<! Transient cache manager
+   mutable RooArgSet *_curNormSet = nullptr; ///<! Transient cache manager
 
    RooListProxy _parList;
    RooSetProxy _obsList;
    mutable Grid2 _referenceGrid;
    RooListProxy _pdfList;
 
-   mutable TMatrixD *_M;
-   mutable TMatrixD *_MSqr;
+   mutable std::unique_ptr<TMatrixD> _M;
+   mutable std::unique_ptr<TMatrixD> _MSqr;
    mutable std::vector<std::vector<double>> _squareVec;
    mutable std::vector<int> _squareIdx;
 
@@ -147,7 +147,7 @@ protected:
 
    inline int sij(const int &i, const int &j) const { return (i * _obsList.getSize() + j); }
 
-   ClassDefOverride(RooMomentMorphFuncND, 2);
+   ClassDefOverride(RooMomentMorphFuncND, 3);
 };
 
 #endif
