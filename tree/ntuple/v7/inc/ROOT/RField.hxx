@@ -99,6 +99,8 @@ public:
    /// All column representations supported for writing also need to be supported for reading. In addition,
    /// fields can support extra column representations for reading only, e.g. a 64bit integer reading from a
    /// 32bit column.
+   /// The defined column representations must be supported by corresponding column packing/unpacking implementations,
+   /// i.e. for the example above, the unpacking of 32bit ints to 64bit pages must be implemented in RColumnElement.hxx
    class RColumnRepresentations {
    public:
       using TypesList_t = std::vector<std::vector<EColumnType>>;
@@ -265,6 +267,9 @@ public:
    virtual size_t GetValueSize() const = 0;
    /// For many types, the alignment requirement is equal to the size; otherwise override.
    virtual size_t GetAlignment() const { return GetValueSize(); }
+   /// Implementations in derived classes should return a static RColumnRepresentations object. The default
+   /// implementation does not attach any columns to the field.
+   virtual const RColumnRepresentations &GetColumnRepresentations() const;
    int GetTraits() const { return fTraits; }
    bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
 
