@@ -660,3 +660,19 @@ TEST(RNTuple, TClassReadRules)
       EXPECT_EQ("ROOT", viewKlass(i).s.str);
    }
 }
+
+TEST(RNTuple, RColumnRepresentations)
+{
+   using RColumnRepresentations = ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations;
+   RColumnRepresentations colReps1;
+   EXPECT_EQ(std::vector<EColumnType>(), colReps1.GetSerializationDefault());
+   EXPECT_EQ(RColumnRepresentations::TypesList_t(), colReps1.GetDeserializeTypes());
+
+   // TODO(jblomer): replace kMax by kReal64Split
+   RColumnRepresentations colReps2({{EColumnType::kReal64}, {EColumnType::kMax}},
+                                   {{EColumnType::kReal32}, {EColumnType::kReal16}});
+   EXPECT_EQ(std::vector<EColumnType>({EColumnType::kReal64}), colReps2.GetSerializationDefault());
+   EXPECT_EQ(RColumnRepresentations::TypesList_t(
+                {{EColumnType::kReal64}, {EColumnType::kMax}, {EColumnType::kReal32}, {EColumnType::kReal16}}),
+             colReps2.GetDeserializeTypes());
+}
