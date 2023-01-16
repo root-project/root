@@ -569,8 +569,14 @@ file(GLOB long_running RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${long_running})
 set (multithreaded
      dataframe/df10[2-7]*
      multicore/mp103*
+     tmva/TMVAMultiClass.C
      tmva/TMVA_CNN_Classification.C
-     tmva/TMVA_RNN_Classification.C)
+     tmva/TMVA_Higgs_Classification.C
+     tmva/TMVA_RNN_Classification.C
+     tmva/TMVA_CNN_Classification.py
+     tmva/TMVA_Higgs_Classification.py
+     tmva/TMVA_RNN_Classification.py
+     )
 file(GLOB multithreaded RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded})
 
 #---Loop over all tutorials and define the corresponding test---------
