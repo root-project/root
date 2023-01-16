@@ -23,8 +23,11 @@ class RooExtendPdf : public RooAbsPdf {
 public:
 
   RooExtendPdf() ;
+  // Original constructor without RooAbsReal::Ref for backwards compatibility.
   RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
-          RooAbsReal& norm, const char* rangeName=nullptr) ;
+                      RooAbsReal& norm, const char* rangeName=nullptr);
+  RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
+          RooAbsReal::Ref norm, const char* rangeName=nullptr) ;
   RooExtendPdf(const RooExtendPdf& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooExtendPdf(*this,newname) ; }
   ~RooExtendPdf() override ;

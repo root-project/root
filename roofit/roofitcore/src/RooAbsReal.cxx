@@ -38,6 +38,7 @@
 #include "RooArgList.h"
 #include "RooBinning.h"
 #include "RooPlot.h"
+#include "RooConstVar.h"
 #include "RooCurve.h"
 #include "RooHist.h"
 #include "RooRealVar.h"
@@ -4890,3 +4891,6 @@ void RooAbsReal::enableOffsetting(bool flag)
     }
   }
 }
+
+
+RooAbsReal::Ref::Ref(double val) : _ref{RooFit::RooConst(val)} {}
