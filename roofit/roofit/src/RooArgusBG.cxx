@@ -42,20 +42,7 @@ ClassImp(RooArgusBG);
 /// Constructor.
 
 RooArgusBG::RooArgusBG(const char *name, const char *title,
-             RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c) :
-  RooAbsPdf(name, title),
-  m("m","Mass",this,_m),
-  m0("m0","Resonance mass",this,_m0),
-  c("c","Slope parameter",this,_c),
-  p("p","Power",this,(RooRealVar&)RooRealConstant::value(0.5))
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-RooArgusBG::RooArgusBG(const char *name, const char *title,
-             RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c, RooAbsReal& _p) :
+             RooAbsReal::Ref _m, RooAbsReal::Ref _m0, RooAbsReal::Ref _c, RooAbsReal::Ref _p) :
   RooAbsPdf(name, title),
   m("m","Mass",this,_m),
   m0("m0","Resonance mass",this,_m0),

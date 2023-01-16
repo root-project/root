@@ -380,7 +380,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
     Int_t i(0) ;
     list<string>::iterator ti = ca.first.begin() ; ++ti ; ++ti ;
     for (vector<string>::iterator ai = _args.begin() ; ai != _args.end() ; ++ai,++ti,++i) {
-      if ((*ti)=="RooAbsReal&" || (*ti)=="const RooAbsReal&") {
+      if ((*ti)=="RooAbsReal&" || (*ti)=="const RooAbsReal&" || (*ti)=="RooAbsReal::Ref") {
    RooFactoryWSTool::as_FUNC(i) ;
    cintExpr += Form(",RooFactoryWSTool::as_FUNC(%d)",i) ;
       } else if ((*ti)=="RooAbsArg&" || (*ti)=="const RooAbsArg&") {

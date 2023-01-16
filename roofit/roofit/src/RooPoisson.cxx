@@ -26,8 +26,8 @@ ClassImp(RooPoisson);
 /// Constructor
 
 RooPoisson::RooPoisson(const char *name, const char *title,
-             RooAbsReal& _x,
-             RooAbsReal& _mean,
+             RooAbsReal::Ref _x,
+             RooAbsReal::Ref _mean,
              bool noRounding) :
   RooAbsPdf(name,title),
   x("x","x",this,_x),

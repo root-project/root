@@ -61,6 +61,21 @@ class RooAbsReal : public RooAbsArg {
 public:
   using value_type = double;
 
+  /// A RooAbsReal::Ref can be constructed from a `RooAbsReal&` or a `double`
+  /// that will be implicitly converted to a RooConstVar&. The RooAbsReal::Ref
+  /// can be used as a replacement for `RooAbsReal&`. With this type
+  /// definition, you can write RooFit interfaces that accept both RooAbsReal,
+  /// or simply a number that will be implicitly converted to a RooConstVar&.
+  class Ref {
+  public:
+     inline Ref(RooAbsReal &ref) : _ref{ref} {}
+     Ref(double val);
+     inline operator RooAbsReal &() const { return _ref; }
+
+  private:
+     RooAbsReal &_ref;
+  };
+
   // Constructors, assignment etc
   RooAbsReal() ;
   RooAbsReal(const char *name, const char *title, const char *unit= "") ;
