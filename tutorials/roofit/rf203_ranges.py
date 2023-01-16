@@ -19,7 +19,7 @@ x = ROOT.RooRealVar("x", "x", -10, 10)
 
 # Construct gaussx(x,mx,1)
 mx = ROOT.RooRealVar("mx", "mx", 0, -10, 10)
-gx = ROOT.RooGaussian("gx", "gx", x, mx, ROOT.RooFit.RooConst(1))
+gx = ROOT.RooGaussian("gx", "gx", x, mx, 1.0)
 
 # px = 1 (flat in x)
 px = ROOT.RooPolynomial("px", "px", x)

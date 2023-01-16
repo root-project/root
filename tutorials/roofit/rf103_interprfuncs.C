@@ -18,7 +18,6 @@
 #include "RooPlot.h"
 #include "RooFitResult.h"
 #include "RooGenericPdf.h"
-#include "RooConstVar.h"
 
 using namespace RooFit;
 
@@ -76,7 +75,7 @@ void rf103_interprfuncs()
    // ---------------------------------
 
    // Construct a separate gaussian g1(x,10,3) to generate a toy Gaussian dataset with mean 10 and width 3
-   RooGaussian g1("g1", "g1", x, RooConst(10), RooConst(3));
+   RooGaussian g1("g1", "g1", x, 10.0, 3.0);
    RooDataSet *data2 = g1.generate(x, 1000);
 
    // F i t   a n d   p l o t   t a i l o r e d   s t a n d a r d   p d f

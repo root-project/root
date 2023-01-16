@@ -14,7 +14,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "RooPlot.h"
@@ -33,7 +32,7 @@ void rf109_chi2residpull()
    // Create Gaussian
    RooRealVar sigma("sigma", "sigma", 3, 0.1, 10);
    RooRealVar mean("mean", "mean", 0, -10, 10);
-   RooGaussian gauss("gauss", "gauss", x, RooConst(0), sigma);
+   RooGaussian gauss("gauss", "gauss", x, 0.0, sigma);
 
    // Generate a sample of 1000 events with sigma=3
    RooDataSet *data = gauss.generate(x, 10000);

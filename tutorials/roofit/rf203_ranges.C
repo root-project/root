@@ -13,7 +13,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 #include "RooFitResult.h"
@@ -33,7 +32,7 @@ void rf203_ranges()
 
    // Construct gaussx(x,mx,1)
    RooRealVar mx("mx", "mx", 0, -10, 10);
-   RooGaussian gx("gx", "gx", x, mx, RooConst(1));
+   RooGaussian gx("gx", "gx", x, mx, 1.0);
 
    // Construct px = 1 (flat in x)
    RooPolynomial px("px", "px", x);

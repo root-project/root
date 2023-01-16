@@ -33,7 +33,7 @@ sigmax = ROOT.RooRealVar("sigmax", "width of gaussian", 0.5)
 gaussx = ROOT.RooGaussian("gaussx", "Gaussian in x with shifting mean in y", x, fy, sigmax)
 
 # Create gaussy(y,0,2)
-gaussy = ROOT.RooGaussian("gaussy", "Gaussian in y", y, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(2))
+gaussy = ROOT.RooGaussian("gaussy", "Gaussian in y", y, 0.0, 2.0)
 
 # Create gaussx(x,sx|y) * gaussy(y)
 model = ROOT.RooProdPdf(

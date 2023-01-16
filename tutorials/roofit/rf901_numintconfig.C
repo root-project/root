@@ -12,7 +12,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "RooPlot.h"
@@ -49,7 +48,7 @@ void rf901_numintconfig()
    // ------------------------------------------------------------------
 
    RooRealVar x("x", "x", -10, 10);
-   RooLandau landau("landau", "landau", x, RooConst(0), RooConst(0.1));
+   RooLandau landau("landau", "landau", x, 0.0, 0.1);
 
    // Disable analytic integration from demonstration purposes
    landau.forceNumInt(true);

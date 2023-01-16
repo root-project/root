@@ -14,7 +14,6 @@
 #include "RooDataSet.h"
 #include "RooGaussian.h"
 #include "RooGaussModel.h"
-#include "RooConstVar.h"
 #include "RooDecay.h"
 #include "RooLandau.h"
 #include "RooPlot.h"
@@ -45,7 +44,7 @@ void rf306_condpereventerrors()
    // ------------------------------------------------------------------------------------------------------
 
    // Use landau pdf to get somewhat realistic distribution with long tail
-   RooLandau pdfDtErr("pdfDtErr", "pdfDtErr", dterr, RooConst(1), RooConst(0.25));
+   RooLandau pdfDtErr("pdfDtErr", "pdfDtErr", dterr, 1.0, 0.25);
    RooDataSet *expDataDterr = pdfDtErr.generate(dterr, 10000);
 
    // S a m p l e   d a t a   f r o m   c o n d i t i o n a l   d e c a y _ g m ( d t | d t e r r )

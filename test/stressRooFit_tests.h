@@ -390,7 +390,7 @@ public:
     // ---------------------------------
 
     // Construct a separate gaussian g1(x,10,3) to generate a toy Gaussian dataset with mean 10 and width 3
-    RooGaussian g1("g1","g1",x,RooConst(10),RooConst(3)) ;
+    RooGaussian g1("g1","g1",x,10.0,3.0) ;
     std::unique_ptr<RooDataSet> data2{g1.generate(x,1000)};
 
 
@@ -631,7 +631,7 @@ public:
     // Create Gaussian
     RooRealVar sigma("sigma","sigma",3,0.1,10) ;
     RooRealVar mean("mean","mean",0,-10,10) ;
-    RooGaussian gauss("gauss","gauss",x,RooConst(0),sigma) ;
+    RooGaussian gauss("gauss","gauss",x,0.0,sigma) ;
 
     // Generate a sample of 1000 events with sigma=3
     std::unique_ptr<RooDataSet> data{gauss.generate(x,10000)};
@@ -714,7 +714,7 @@ public:
     RooRealVar x("x","x",-10,10) ;
 
     // Create p.d.f. gaussx(x,-2,3)
-    RooGaussian gx("gx","gx",x,RooConst(-2),RooConst(3)) ;
+    RooGaussian gx("gx","gx",x,-2.0,3.0) ;
 
 
     // R e t r i e v e   r a w  &   n o r m a l i z e d   v a l u e s   o f   R o o F i t   p . d . f . s
@@ -807,7 +807,7 @@ public:
     // ------------------------------------------------------------------
 
     RooRealVar x("x","x",-10,10) ;
-    RooLandau landau("landau","landau",x,RooConst(0),RooConst(0.1)) ;
+    RooLandau landau("landau","landau",x,0.0,0.1) ;
 
     // Disable analytic integration from demonstration purposes
     landau.forceNumInt(true);
@@ -1099,7 +1099,7 @@ public:
 
     // Construct gaussx(x,mx,1)
     RooRealVar mx("mx","mx",0,-10,10) ;
-    RooGaussian gx("gx","gx",x,mx,RooConst(1)) ;
+    RooGaussian gx("gx","gx",x,mx,1.0) ;
 
     // Construct px = 1 (flat in x)
     RooPolynomial px("px","px",x) ;
@@ -1902,7 +1902,7 @@ public:
   // -----------------------------------------------------------
 
   // Create gaussy(y,0,5)
-  RooGaussian gaussy("gaussy","Gaussian in y",y,RooConst(0),RooConst(3)) ;
+  RooGaussian gaussy("gaussy","Gaussian in y",y,0.0,3.0) ;
 
 
 
@@ -1986,7 +1986,7 @@ public:
   // ------------------------------------------------------------------------------------------------------
 
   // Use landau p.d.f to get somewhat realistic distribution with long tail
-  RooLandau pdfDtErr("pdfDtErr","pdfDtErr",dterr,RooConst(1),RooConst(0.25)) ;
+  RooLandau pdfDtErr("pdfDtErr","pdfDtErr",dterr,1.0,0.25) ;
   std::unique_ptr<RooDataSet> expDataDterr{pdfDtErr.generate(dterr,10000)};
 
 
@@ -2085,7 +2085,7 @@ public:
   // -----------------------------------------------------------------
 
   // Use landau p.d.f to get empirical distribution with long tail
-  RooLandau pdfDtErr("pdfDtErr","pdfDtErr",dterr,RooConst(1),RooConst(0.25)) ;
+  RooLandau pdfDtErr("pdfDtErr","pdfDtErr",dterr,1.0,0.25) ;
   std::unique_ptr<RooDataSet> expDataDterr{pdfDtErr.generate(dterr,10000)};
 
   // Construct a histogram pdf to describe the shape of the dtErr distribution
@@ -2164,8 +2164,8 @@ public:
   RooRealVar y("y","y",-10,10) ;
 
   // Create p.d.f. gaussx(x,-2,3), gaussy(y,2,2)
-  RooGaussian gx("gx","gx",x,RooConst(-2),RooConst(3)) ;
-  RooGaussian gy("gy","gy",y,RooConst(+2),RooConst(2)) ;
+  RooGaussian gx("gx","gx",x,-2.0,3.0) ;
+  RooGaussian gy("gy","gy",y,+2.0,2.0) ;
 
   // Create gxy = gx(x)*gy(y)
   RooProdPdf gxy("gxy","gxy",RooArgSet(gx,gy)) ;
@@ -2346,14 +2346,14 @@ public:
   RooRealVar z("z","z",-5,5) ;
 
   // Create signal pdf gauss(x)*gauss(y)*gauss(z)
-  RooGaussian gx("gx","gx",x,RooConst(0),RooConst(1)) ;
-  RooGaussian gy("gy","gy",y,RooConst(0),RooConst(1)) ;
-  RooGaussian gz("gz","gz",z,RooConst(0),RooConst(1)) ;
+  RooGaussian gx("gx","gx",x,0.0,1.0) ;
+  RooGaussian gy("gy","gy",y,0.0,1.0) ;
+  RooGaussian gz("gz","gz",z,0.0,1.0) ;
   RooProdPdf sig("sig","sig",RooArgSet(gx,gy,gz)) ;
 
   // Create background pdf poly(x)*poly(y)*poly(z)
-  RooPolynomial px("px","px",x,RooArgSet(RooConst(-0.1),RooConst(0.004))) ;
-  RooPolynomial py("py","py",y,RooArgSet(RooConst(0.1),RooConst(-0.004))) ;
+  RooPolynomial px("px","px",x,RooArgSet(-0.1,0.004)) ;
+  RooPolynomial py("py","py",y,RooArgSet(0.1,-0.004)) ;
   RooPolynomial pz("pz","pz",z) ;
   RooProdPdf bkg("bkg","bkg",RooArgSet(px,py,pz)) ;
 
@@ -2430,8 +2430,8 @@ public:
   RooRealVar mx("mx","mx",1,-10,10) ;
   RooRealVar my("my","my",1,-10,10) ;
 
-  RooGaussian gx("gx","gx",x,mx,RooConst(1)) ;
-  RooGaussian gy("gy","gy",y,my,RooConst(1)) ;
+  RooGaussian gx("gx","gx",x,mx,1.0) ;
+  RooGaussian gy("gy","gy",y,my,1.0) ;
 
   RooProdPdf sig("sig","sig",gx,gy) ;
 
@@ -2631,7 +2631,7 @@ public:
   std::unique_ptr<RooDataSet> dall{model.generate(t,10000)};
 
   // Generate a (fake) prototype dataset for acceptance limit values
-  std::unique_ptr<RooDataSet> tmp{RooGaussian("gmin","gmin",tmin,RooConst(0),RooConst(0.5)).generate(tmin,5000)};
+  std::unique_ptr<RooDataSet> tmp{RooGaussian("gmin","gmin",tmin,0.0,0.5).generate(tmin,5000)};
 
   // Generate dataset with t values that observe (t>tmin)
   std::unique_ptr<RooDataSet> dacc{model.generate(t,ProtoData(*tmp))};
@@ -2705,7 +2705,7 @@ public:
     RooGaussian gaussx("gaussx","Gaussian in x with shifting mean in y",x,fy,sigmax) ;
 
     // Create gaussy(y,0,2)
-    RooGaussian gaussy("gaussy","Gaussian in y",y,RooConst(0),RooConst(2)) ;
+    RooGaussian gaussy("gaussy","Gaussian in y",y,0.0,2.0) ;
 
     // Create gaussx(x,sx|y) * gaussy(y)
     RooProdPdf model("model","gaussx(x|y)*gaussy(y)",gaussy,Conditional(gaussx,x)) ;
@@ -2773,14 +2773,14 @@ public:
   RooRealVar z("z","z",-5,5) ;
 
   // Create signal pdf gauss(x)*gauss(y)*gauss(z)
-  RooGaussian gx("gx","gx",x,RooConst(0),RooConst(1)) ;
-  RooGaussian gy("gy","gy",y,RooConst(0),RooConst(1)) ;
-  RooGaussian gz("gz","gz",z,RooConst(0),RooConst(1)) ;
+  RooGaussian gx("gx","gx",x,0.0,1.0) ;
+  RooGaussian gy("gy","gy",y,0.0,1.0) ;
+  RooGaussian gz("gz","gz",z,0.0,1.0) ;
   RooProdPdf sig("sig","sig",RooArgSet(gx,gy,gz)) ;
 
   // Create background pdf poly(x)*poly(y)*poly(z)
-  RooPolynomial px("px","px",x,RooArgSet(RooConst(-0.1),RooConst(0.004))) ;
-  RooPolynomial py("py","py",y,RooArgSet(RooConst(0.1),RooConst(-0.004))) ;
+  RooPolynomial px("px","px",x,RooArgSet(-0.1,0.004)) ;
+  RooPolynomial py("py","py",y,RooArgSet(0.1,-0.004)) ;
   RooPolynomial pz("pz","pz",z) ;
   RooProdPdf bkg("bkg","bkg",RooArgSet(px,py,pz)) ;
 
@@ -3957,7 +3957,7 @@ public:
   // -----------------------------------------
 
   // Construct Gaussian constraint p.d.f on parameter f at 0.8 with resolution of 0.1
-  RooGaussian fconstraint("fconstraint","fconstraint",f,RooConst(0.8),RooConst(0.1)) ;
+  RooGaussian fconstraint("fconstraint","fconstraint",f,0.8,0.1) ;
 
 
 
@@ -3982,7 +3982,7 @@ public:
   // -------------------------------------------------------------------------------------------------------
 
   // Construct another Gaussian constraint p.d.f on parameter f at 0.8 with resolution of 0.1
-  RooGaussian fconstext("fconstext","fconstext",f,RooConst(0.2),RooConst(0.1)) ;
+  RooGaussian fconstext("fconstext","fconstext",f,0.2,0.1) ;
 
   // Fit with external constraint
   RooFitResult* r3 = model.fitTo(*d,ExternalConstraints(fconstext),Save(),BatchMode(_batchMode)) ;
@@ -4648,8 +4648,8 @@ public:
   std::unique_ptr<RooAbsReal> sinhGConv{tm.convolution(&sinhGBasis,&t)};
 
   // Construct polynomial amplitudes in cos(a)
-  RooPolyVar poly1("poly1","poly1",cosa,RooArgList(RooConst(0.5),RooConst(0.2),RooConst(0.2)),0);
-  RooPolyVar poly2("poly2","poly2",cosa,RooArgList(RooConst(1),RooConst(-0.2),RooConst(3)),0);
+  RooPolyVar poly1("poly1","poly1",cosa,RooArgList(0.5, 0.2, 0.2),0);
+  RooPolyVar poly2("poly2","poly2",cosa,RooArgList(1.0, -0.2, 3.0),0);
 
   // Construct 2D amplitude as uncorrelated product of amp(t)*amp(cosa)
   RooProduct  ampl1("ampl1","amplitude 1",RooArgSet(poly1,*coshGConv));
@@ -4740,10 +4740,10 @@ public:
 
   // Lower end point shape: a Gaussian
   RooRealVar g1mean("g1mean","g1mean",-10) ;
-  RooGaussian g1("g1","g1",x,g1mean,RooConst(2)) ;
+  RooGaussian g1("g1","g1",x,g1mean,2.0) ;
 
   // Upper end point shape: a Polynomial
-  RooPolynomial g2("g2","g2",x,RooArgSet(RooConst(-0.03),RooConst(-0.001))) ;
+  RooPolynomial g2("g2","g2",x,RooArgSet(-0.03,-0.001)) ;
 
 
 
@@ -4869,7 +4869,7 @@ public:
   // ---------------------------------------------
 
   RooRealVar x("x","x",0,20) ;
-  RooPolynomial p("p","p",x,RooArgList(RooConst(0.01),RooConst(-0.01),RooConst(0.0004))) ;
+  RooPolynomial p("p","p",x,RooArgList(0.01,-0.01,0.0004)) ;
 
 
 
@@ -4941,7 +4941,7 @@ public:
 
   // Create a toy pdf for sampling
   RooRealVar x("x","x",0,20) ;
-  RooPolynomial p("p","p",x,RooArgList(RooConst(0.01),RooConst(-0.01),RooConst(0.0004))) ;
+  RooPolynomial p("p","p",x,RooArgList(0.01,-0.01,0.0004)) ;
 
   // Sample 500 events from p
   std::unique_ptr<RooDataSet> data1{p.generate(x,200)};
@@ -4985,7 +4985,7 @@ public:
 
   // Construct a 2D toy pdf for sampleing
   RooRealVar y("y","y",0,20) ;
-  RooPolynomial py("py","py",y,RooArgList(RooConst(0.01),RooConst(0.01),RooConst(-0.0004))) ;
+  RooPolynomial py("py","py",y,RooArgList(0.01,0.01,-0.0004)) ;
   RooProdPdf pxy("pxy","pxy",RooArgSet(p,py)) ;
   std::unique_ptr<RooDataSet> data2{pxy.generate(RooArgSet(x,y),1000)};
 
@@ -5567,7 +5567,7 @@ public:
   RooAddPdf sum("sum","sum",RooArgSet(g,p),f) ;
 
   // Construct constraint on parameter f
-  RooGaussian fconstraint("fconstraint","fconstraint",f,RooConst(0.7),RooConst(0.1)) ;
+  RooGaussian fconstraint("fconstraint","fconstraint",f,0.7,0.1) ;
 
   // Multiply constraint with p.d.f
   RooProdPdf sumc("sumc","sum with constraint",RooArgSet(sum,fconstraint)) ;

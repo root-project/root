@@ -37,7 +37,7 @@ ROOT.RooAbsReal.defaultIntegratorConfig().setEpsRel(1e-6)
 # ------------------------------------------------------------------
 
 x = ROOT.RooRealVar("x", "x", -10, 10)
-landau = ROOT.RooLandau("landau", "landau", x, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(0.1))
+landau = ROOT.RooLandau("landau", "landau", x, 0.0, 0.1)
 
 # Disable analytic integration from demonstration purposes
 landau.forceNumInt(True)

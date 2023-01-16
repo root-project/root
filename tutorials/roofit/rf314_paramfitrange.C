@@ -51,7 +51,7 @@ void rf314_paramfitrange()
    RooDataSet *dall = model.generate(t, 10000);
 
    // Generate a (fake) prototype dataset for acceptance limit values
-   RooDataSet *tmp = RooGaussian("gmin", "gmin", tmin, RooConst(0), RooConst(0.5)).generate(tmin, 5000);
+   RooDataSet *tmp = RooGaussian("gmin", "gmin", tmin, 0.0, 0.5).generate(tmin, 5000);
 
    // Generate dataset with t values that observe (t>tmin)
    RooDataSet *dacc = model.generate(t, ProtoData(*tmp));

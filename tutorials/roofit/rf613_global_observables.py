@@ -80,7 +80,7 @@ mu_obs.setConstant()
 # note: alternatively, one can create a constant with default limits using `RooRealVar("mu_obs", "mu_obs", 1.0)`
 
 # constraint pdf
-constraint = ROOT.RooGaussian("constraint", "constraint", mu_obs, mu, ROOT.RooFit.RooConst(0.2))
+constraint = ROOT.RooGaussian("constraint", "constraint", mu_obs, mu, 0.2)
 
 # full pdf including constraint pdf
 model = ROOT.RooProdPdf("model", "model", [gauss, constraint])

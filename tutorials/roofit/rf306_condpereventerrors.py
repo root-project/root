@@ -31,7 +31,7 @@ decay_gm = ROOT.RooDecay("decay_gm", "decay", dt, tau, gm, type="DoubleSided")
 # ------------------------------------------------------------------------------------------------------
 
 # Use landau pdf to get somewhat realistic distribution with long tail
-pdfDtErr = ROOT.RooLandau("pdfDtErr", "pdfDtErr", dterr, ROOT.RooFit.RooConst(1), ROOT.RooFit.RooConst(0.25))
+pdfDtErr = ROOT.RooLandau("pdfDtErr", "pdfDtErr", dterr, 1.0, 0.25)
 expDataDterr = pdfDtErr.generate({dterr}, 10000)
 
 # Sample data from conditional decay_gm(dt|dterr)

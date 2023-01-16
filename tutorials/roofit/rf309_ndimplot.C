@@ -12,7 +12,6 @@
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
-#include "RooConstVar.h"
 #include "RooGaussian.h"
 #include "RooProdPdf.h"
 #include "TCanvas.h"
@@ -62,7 +61,7 @@ void rf309_ndimplot()
    // Create observables
    RooRealVar z("z", "z", -5, 5);
 
-   RooGaussian gz("gz", "gz", z, RooConst(0), RooConst(2));
+   RooGaussian gz("gz", "gz", z, 0.0, 2.0);
    RooProdPdf model3("model3", "model3", RooArgSet(model, gz));
 
    RooDataSet *data3 = model3.generate(RooArgSet(x, y, z), 10000);

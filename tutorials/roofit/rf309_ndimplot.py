@@ -48,7 +48,7 @@ hh_pdf.SetLineColor(ROOT.kBlue)
 # Create observables
 z = ROOT.RooRealVar("z", "z", -5, 5)
 
-gz = ROOT.RooGaussian("gz", "gz", z, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(2))
+gz = ROOT.RooGaussian("gz", "gz", z, 0.0, 2.0)
 model3 = ROOT.RooProdPdf("model3", "model3", [model, gz])
 
 data3 = model3.generate({x, y, z}, 10000)
