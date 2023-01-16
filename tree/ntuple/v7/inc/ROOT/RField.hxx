@@ -415,8 +415,8 @@ public:
    RClassField& operator =(RClassField&& other) = default;
    ~RClassField() override = default;
 
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumnsImpl() final {}
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void* where) override;
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
@@ -457,6 +457,7 @@ public:
    RCollectionClassField &operator=(RCollectionClassField &&other) = default;
    ~RCollectionClassField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    using Detail::RFieldBase::GenerateValue;
@@ -548,6 +549,7 @@ public:
    RVectorField& operator =(RVectorField&& other) = default;
    ~RVectorField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    using Detail::RFieldBase::GenerateValue;
@@ -591,6 +593,7 @@ public:
    RRVecField &operator=(RRVecField &) = delete;
    ~RRVecField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    using Detail::RFieldBase::GenerateValue;
@@ -630,8 +633,8 @@ public:
    RArrayField& operator =(RArrayField &&other) = default;
    ~RArrayField() override = default;
 
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumnsImpl() final {}
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void *where) override;
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
@@ -669,6 +672,7 @@ public:
    RVariantField& operator =(RVariantField &&other) = default;
    ~RVariantField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    using Detail::RFieldBase::GenerateValue;
@@ -803,6 +807,7 @@ public:
    RCollectionField& operator =(RCollectionField&& other) = default;
    ~RCollectionField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
@@ -887,6 +892,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
@@ -949,6 +955,7 @@ public:
    RField &operator=(RField &&other) = default;
    ~RField() = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    // Field is only used for reading
    void GenerateColumnsImpl() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
    void GenerateColumnsImpl(const RNTupleDescriptor &) final;
@@ -1005,6 +1012,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
@@ -1056,6 +1064,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
@@ -1108,6 +1117,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
@@ -1159,6 +1169,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
@@ -1210,6 +1221,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
@@ -1261,6 +1273,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
@@ -1312,6 +1325,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
@@ -1363,6 +1377,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
@@ -1414,6 +1429,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
@@ -1465,6 +1481,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
@@ -1516,6 +1533,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
@@ -1567,6 +1585,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
@@ -1624,6 +1643,7 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
@@ -1766,6 +1786,8 @@ protected:
    }
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
