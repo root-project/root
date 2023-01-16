@@ -180,6 +180,23 @@ std::tuple<void **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rve
 
 } // anonymous namespace
 
+//------------------------------------------------------------------------------
+
+std::vector<ROOT::Experimental::EColumnType>
+ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations::GetSerializationDefault() const
+{
+   if (fSerializationTypes.empty())
+      return std::vector<EColumnType>();
+   return fSerializationTypes[0];
+}
+
+ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations::TypesList_t
+ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations::GetDeserializeTypes() const
+{
+   TypesList_t result(fSerializationTypes);
+   result.insert(result.end(), fDeserializationExtraTypes.begin(), fDeserializationExtraTypes.end());
+   return result;
+}
 
 //------------------------------------------------------------------------------
 

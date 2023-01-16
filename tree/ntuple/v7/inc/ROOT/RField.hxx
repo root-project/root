@@ -95,6 +95,29 @@ public:
    /// Shorthand for types that are both trivially constructible and destructible
    static constexpr int kTraitTrivialType = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
 
+   /// Some fields have multiple possible column representations, e.g. with or without split encoding.
+   /// All column representations supported for writing also need to be supported for reading. In addition,
+   /// fields can support extra column representations for reading only, e.g. a 64bit integer reading from a
+   /// 32bit column.
+   class RColumnRepresentations {
+   public:
+      using TypesList_t = std::vector<std::vector<EColumnType>>;
+      RColumnRepresentations() = default;
+      RColumnRepresentations(const TypesList_t &serializationTypes, const TypesList_t &deserializationExtraTypes)
+         : fSerializationTypes(serializationTypes), fDeserializationExtraTypes(deserializationExtraTypes)
+      {
+      }
+
+      /// The first column list from fSerializationTypes is the default for writing.
+      std::vector<EColumnType> GetSerializationDefault() const;
+      /// Get the union of fSerializationTypes and fDeserializationExtraTypes
+      TypesList_t GetDeserializeTypes() const;
+
+   private:
+      TypesList_t fSerializationTypes;
+      TypesList_t fDeserializationExtraTypes;
+   };
+
 private:
    /// The field name relative to its parent field
    std::string fName;
