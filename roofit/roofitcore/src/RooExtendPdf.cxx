@@ -57,6 +57,10 @@ RooExtendPdf::RooExtendPdf() : _rangeName(0)
   // Default constructor
 }
 
+RooExtendPdf::RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
+                    RooAbsReal& norm, const char* rangeName)
+    : RooExtendPdf{name, title, pdf, RooAbsReal::Ref{norm}, rangeName} {}
+
 /// Constructor. The ExtendPdf behaves identical to the supplied input pdf,
 /// but adds an extended likelihood term. expectedEvents() will return
 /// `norm` if `rangeName` remains empty. If `rangeName` is not empty,
@@ -69,7 +73,7 @@ RooExtendPdf::RooExtendPdf() : _rangeName(0)
 /// \param[in] rangeName  If given, the number of events denoted by `norm` is interpreted as
 /// the number of events in this range only
 RooExtendPdf::RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
-            RooAbsReal& norm, const char* rangeName) :
+            RooAbsReal::Ref norm, const char* rangeName) :
   RooAbsPdf(name,title),
   _pdf("pdf", "PDF", this, pdf),
   _n("n","Normalization",this,norm),
