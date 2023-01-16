@@ -71,9 +71,13 @@ public:
    RRDFCardinalityField &operator=(RRDFCardinalityField &&other) = default;
    ~RRDFCardinalityField() = default;
 
+   const RColumnRepresentations &GetColumnRepresentations() const final
+   {
+      static RColumnRepresentations representations({{EColumnType::kIndex}}, {{}});
+      return representations;
+   }
    // Field is only used for reading
    void GenerateColumnsImpl() final { assert(false && "Cardinality fields must only be used for reading"); }
-
    void GenerateColumnsImpl(const RNTupleDescriptor &) final
    {
       RColumnModel model(EColumnType::kIndex, true /* isSorted*/);
