@@ -24,7 +24,7 @@ based method). By default, RooVoigtian employs the default (CERNlib)
 algorithm. Select the faster algorithm either in the constructor, or with
 the selectFastAlgorithm() method.
 
-\Note The "width" parameter that determines the Breit-Wigner shape
+\note The "width" parameter that determines the Breit-Wigner shape
       represents the **full width at half maximum (FWHM)** of the
       Breit-Wigner (often referred to as \f$\Gamma\f$ or \f$2\gamma\f$).
 **/

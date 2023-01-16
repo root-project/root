@@ -153,7 +153,7 @@ void RooGrid::resetValues()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Generate a random vector in the specified box and and store its
+/// Generate a random vector in the specified box and store its
 /// coordinates in the x[] array provided, the corresponding bin
 /// indices in the bin[] array, and the volume of this bin in vol.
 /// The box is specified by the array box[] of box integer indices

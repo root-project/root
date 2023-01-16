@@ -21,7 +21,7 @@ public:
 
   /// It makes only sense to use the RooHistConstraint when normalized over the
   /// set of all gammas, in which case it is self-normalized because the used
-  /// TMath::Poisson funciton is normalized.
+  /// TMath::Poisson function is normalized.
   bool selfNormalized() const override { return true; }
 
 protected:

@@ -145,7 +145,7 @@ TEST(RooRealIntegral, IntegrateFuncWithShapeServers)
    EXPECT_FALSE(sigma.isValueServer(*integ1));
    EXPECT_TRUE(sigma.isShapeServer(*integ1)); // sigma should still be shape server!
 
-   // Also check that that the number of servers is right (should be 3 for x,
+   // Also check that the number of servers is right (should be 3 for x,
    // mu, and sigma, and 1 more for the underlying PDF)
    EXPECT_EQ(gaussProj.servers().size(), 4);
    EXPECT_EQ(integ1->servers().size(), 4);
