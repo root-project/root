@@ -22,7 +22,7 @@
 
 RooAbsPdf is the abstract interface for all probability density
 functions. The class provides hybrid analytical/numerical
-normalization for its implementations, error tracing and a MC
+normalization for its implementations, error tracing, and a Monte Carlo
 generator interface.
 
 ### A Minimal PDF Implementation
@@ -37,31 +37,31 @@ return the PDF's value (which does not need to be normalised).
 Although the normalization of a PDF is an integral part of a
 probability density function, normalization is treated separately
 in RooAbsPdf. The reason is that a RooAbsPdf object is more than a
-PDF: it can be a building block for a more complex, composite PDF
+PDF: it can be a building block for a more complex composite PDF
 if any of its variables are functions instead of variables. In
-such cases the normalization of the composite may not be simply the
-integral over the dependents of the top level PDF as these are
+such cases, the normalization of the composite PDF may not simply be
+integral over the dependents of the top-level PDF: these are
 functions with potentially non-trivial Jacobian terms themselves.
 \note Therefore, no explicit attempt should be made to normalize the
 function output in evaluate(). In particular, normalisation constants
 can be omitted to speed up the function evaluations, and included later
-in the integration of the PDF (see below), which is called rarely in
+in the integration of the PDF (see below), which is rarely called in
 comparison to the `evaluate()` function.
 
 In addition, RooAbsPdf objects do not have a static concept of what
-variables are parameters and what variables are dependents (which
+variables are parameters, and what variables are dependents (which
 need to be integrated over for a correct PDF normalization).
 Instead, the choice of normalization is always specified each time a
 normalized value is requested from the PDF via the getVal()
 method.
 
 RooAbsPdf manages the entire normalization logic of each PDF with
-help of a RooRealIntegral object, which coordinates the integration
+the help of a RooRealIntegral object, which coordinates the integration
 of a given choice of normalization. By default, RooRealIntegral will
-perform a fully numeric integration of all dependents. However,
+perform an entirely numeric integration of all dependents. However,
 PDFs can advertise one or more (partial) analytical integrals of
 their function, and these will be used by RooRealIntegral, if it
-determines that this is safe (i.e. no hidden Jacobian terms,
+determines that this is safe (i.e., no hidden Jacobian terms,
 multiplication with other PDFs that have one or more dependents in
 commen etc).
 
@@ -75,7 +75,7 @@ should return the analytical integrals that are supported. `integSet`
 is the set of dependents for which integration is requested. The
 function should copy the subset of dependents it can analytically
 integrate to `anaIntSet`, and return a unique identification code for
-this integration configuration.  If no integration can be
+this integration configuration. If no integration can be
 performed, zero should be returned. Second,
 
 ```
@@ -89,8 +89,8 @@ codes returned by `getAnalyticalIntegral()`, except code zero.
 The integration range for each dependent to be integrated can
 be obtained from the dependent's proxy functions `min()` and
 `max()`. Never call these proxy functions for any proxy not known to
-be a dependent via the integration code.  Doing so may be
-ill-defined, e.g. in case the proxy holds a function, and will
+be a dependent via the integration code. Doing so may be
+ill-defined, e.g., in case the proxy holds a function, and will
 trigger an assert. Integrated category dependents should always be
 summed over all of their states.
 
@@ -119,7 +119,7 @@ function implements the actual generator for the advertised observables.
 The generated dependent values should be stored in the proxy
 objects. For this, the assignment operator can be used (i.e. `xProxy
 = 3.0` ). Never call assign to any proxy not known to be a dependent
-via the generation code.  Doing so may be ill-defined, e.g. in case
+via the generation code. Doing so may be ill-defined, e.g. in case
 the proxy holds a function, and will trigger an assert.
 
 
@@ -427,11 +427,11 @@ double RooAbsPdf::getValV(const RooArgSet* nset) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Analytical integral with normalization (see RooAbsReal::analyticalIntegralWN() for further information)
+/// Analytical integral with normalization (see RooAbsReal::analyticalIntegralWN() for further information).
 ///
-/// This function applies the normalization specified by 'normSet' to the integral returned
+/// This function applies the normalization specified by `normSet` to the integral returned
 /// by RooAbsReal::analyticalIntegral(). The passthrough scenario (code=0) is also changed
-/// to return a normalized answer
+/// to return a normalized answer.
 
 double RooAbsPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
 {
