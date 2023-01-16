@@ -320,9 +320,8 @@ TEST(PageStorageFile, LoadClusters)
    EXPECT_EQ(0U, cluster->GetId());
    EXPECT_EQ(0U, cluster->GetNOnDiskPages());
 
-   auto column = std::unique_ptr<ROOT::Experimental::Detail::RColumn>(
-      ROOT::Experimental::Detail::RColumn::Create<float, ROOT::Experimental::EColumnType::kReal32>(
-         ROOT::Experimental::RColumnModel(ROOT::Experimental::EColumnType::kReal32, false), 0));
+   auto column = ROOT::Experimental::Detail::RColumn::Create<float>(
+      ROOT::Experimental::RColumnModel(ROOT::Experimental::EColumnType::kReal32, false), 0);
    column->Connect(ptId, &source);
    clusterKeys[0].fClusterId = 1;
    clusterKeys[0].fPhysicalColumnSet.insert(colId);

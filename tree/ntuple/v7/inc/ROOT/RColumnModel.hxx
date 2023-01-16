@@ -31,6 +31,11 @@ namespace Experimental {
 
 More complex types, such as classes, get translated into columns of such simple types by the RField.
 New types need to be accounted for in RColumnElementBase::Generate() and RColumnElementBase::GetBitsOnStorage(), too.
+When changed, remember to update
+  - RColumnElement::Generate()
+  - RColumnElement::GetBitsOnStorage()
+  - RColumnElement::GetTypeName()
+  - RNTupleSerializer::[Des|S]erializeColumnType
 */
 // clang-format on
 enum class EColumnType {
