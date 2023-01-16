@@ -340,6 +340,13 @@ ROOT::Experimental::Detail::RFieldBase::EnsureValidFieldName(std::string_view fi
    return RResult<void>::Success();
 }
 
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::Detail::RFieldBase::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations;
+   return representations;
+}
+
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::Detail::RFieldBase::Clone(std::string_view newName) const
 {
