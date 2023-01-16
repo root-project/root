@@ -805,7 +805,7 @@ RooAbsArg* RooTreeDataStore::addColumn(RooAbsArg& newVar, bool adjustRange)
   _varsww.add(*valHolder) ;
 
 
-  // Fill values of of placeholder
+  // Fill values of placeholder
   for (int i=0 ; i<GetEntries() ; i++) {
     get(i) ;
 
