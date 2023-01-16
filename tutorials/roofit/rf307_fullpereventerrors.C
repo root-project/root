@@ -12,7 +12,6 @@
 #include "RooDataSet.h"
 #include "RooGaussian.h"
 #include "RooGaussModel.h"
-#include "RooConstVar.h"
 #include "RooDecay.h"
 #include "RooLandau.h"
 #include "RooProdPdf.h"
@@ -45,7 +44,7 @@ void rf307_fullpereventerrors()
    // -----------------------------------------------------------------
 
    // Use landau pdf to get empirical distribution with long tail
-   RooLandau pdfDtErr("pdfDtErr", "pdfDtErr", dterr, RooConst(1), RooConst(0.25));
+   RooLandau pdfDtErr("pdfDtErr", "pdfDtErr", dterr, 1.0, 0.25);
    RooDataSet *expDataDterr = pdfDtErr.generate(dterr, 10000);
 
    // Construct a histogram pdf to describe the shape of the dtErr distribution

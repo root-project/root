@@ -22,8 +22,8 @@ y = ROOT.RooRealVar("y", "y", -10, 10)
 mx = ROOT.RooRealVar("mx", "mx", 1, -10, 10)
 my = ROOT.RooRealVar("my", "my", 1, -10, 10)
 
-gx = ROOT.RooGaussian("gx", "gx", x, mx, ROOT.RooFit.RooConst(1))
-gy = ROOT.RooGaussian("gy", "gy", y, my, ROOT.RooFit.RooConst(1))
+gx = ROOT.RooGaussian("gx", "gx", x, mx, 1.0)
+gy = ROOT.RooGaussian("gy", "gy", y, my, 1.0)
 
 sig = ROOT.RooProdPdf("sig", "sig", gx, gy)
 

@@ -19,7 +19,7 @@ import ROOT
 x = ROOT.RooRealVar("x", "x", -10, 10)
 
 # Create pdf gaussx(x,-2,3)
-gx = ROOT.RooGaussian("gx", "gx", x, ROOT.RooFit.RooConst(-2), ROOT.RooFit.RooConst(3))
+gx = ROOT.RooGaussian("gx", "gx", x, -2, 3)
 
 # Retrieve raw & normalized values of RooFit pdfs
 # --------------------------------------------------------------------------------------------------
