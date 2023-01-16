@@ -863,7 +863,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
   }
 
 
-  // Fill values of of placeholder
+  // Fill values of placeholder
   const std::size_t numEvt = size();
   newCache->reserve(numEvt);
   for (std::size_t i=0; i < numEvt; i++) {

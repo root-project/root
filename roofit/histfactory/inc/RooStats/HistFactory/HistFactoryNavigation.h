@@ -149,7 +149,7 @@ namespace RooStats {
       /// void PrettyPrintHistogram(TH1* hist);
       void PrintMultiDimHist(TH1* hist, int bin_print_width);
 
-      /// Make a histogram from a funciton
+      /// Make a histogram from a function
       /// Edit so it can take a RooArgSet of parameters
       TH1* MakeHistFromRooFunction( RooAbsReal* func, RooArgList vars, std::string name="Hist" );
 
