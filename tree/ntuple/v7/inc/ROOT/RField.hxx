@@ -156,6 +156,9 @@ protected:
    /// C++ type version cached from the descriptor after a call to `ConnectPageSource()`
    std::uint32_t fOnDiskTypeVersion = kInvalidTypeVersion;
 
+   /// Implementations in derived classes should return a static RColumnRepresentations object. The default
+   /// implementation does not attach any columns to the field.
+   virtual const RColumnRepresentations &GetColumnRepresentations() const;
    /// Creates the backing columns corresponsing to the field type for writing
    virtual void GenerateColumnsImpl() = 0;
    /// Creates the backing columns corresponsing to the field type for reading.
@@ -267,9 +270,6 @@ public:
    virtual size_t GetValueSize() const = 0;
    /// For many types, the alignment requirement is equal to the size; otherwise override.
    virtual size_t GetAlignment() const { return GetValueSize(); }
-   /// Implementations in derived classes should return a static RColumnRepresentations object. The default
-   /// implementation does not attach any columns to the field.
-   virtual const RColumnRepresentations &GetColumnRepresentations() const;
    int GetTraits() const { return fTraits; }
    bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
 
@@ -362,12 +362,12 @@ public:
 class RFieldZero : public Detail::RFieldBase {
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
+   void GenerateColumnsImpl() final {}
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
 
 public:
    RFieldZero() : Detail::RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) { }
 
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void*) override { return Detail::RFieldValue(); }
    Detail::RFieldValue CaptureValue(void*) final { return Detail::RFieldValue(); }
@@ -404,6 +404,8 @@ private:
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+   void GenerateColumnsImpl() final {}
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
@@ -415,8 +417,6 @@ public:
    RClassField& operator =(RClassField&& other) = default;
    ~RClassField() override = default;
 
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void* where) override;
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
@@ -448,6 +448,9 @@ private:
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    std::size_t AppendImpl(const Detail::RFieldValue &value) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
 
@@ -457,9 +460,6 @@ public:
    RCollectionClassField &operator=(RCollectionClassField &&other) = default;
    ~RCollectionClassField() override = default;
 
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void *where) override;
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
@@ -490,6 +490,8 @@ protected:
    std::size_t GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const;
 
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
+   void GenerateColumnsImpl() final {}
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
@@ -520,8 +522,6 @@ public:
    RRecordField& operator =(RRecordField&& other) = default;
    ~RRecordField() override = default;
 
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void* where) override;
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) override;
@@ -540,6 +540,9 @@ private:
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
 
@@ -549,9 +552,6 @@ public:
    RVectorField& operator =(RVectorField&& other) = default;
    ~RVectorField() override = default;
 
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void* where) override;
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
@@ -582,6 +582,9 @@ protected:
    std::size_t fValueSize;
 
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    std::size_t AppendImpl(const Detail::RFieldValue &value) override;
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) override;
 
@@ -593,9 +596,6 @@ public:
    RRVecField &operator=(RRVecField &) = delete;
    ~RRVecField() override = default;
 
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void *where) override;
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) override;
@@ -623,6 +623,8 @@ private:
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+   void GenerateColumnsImpl() final {}
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
@@ -633,8 +635,6 @@ public:
    RArrayField& operator =(RArrayField &&other) = default;
    ~RArrayField() override = default;
 
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void *where) override;
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
@@ -662,6 +662,9 @@ private:
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
 
@@ -672,9 +675,6 @@ public:
    RVariantField& operator =(RVariantField &&other) = default;
    ~RVariantField() override = default;
 
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void *where) override;
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
@@ -796,8 +796,13 @@ class RCollectionField : public ROOT::Experimental::Detail::RFieldBase {
 private:
    /// Save the link to the collection ntuple in order to reset the offset counter when committing the cluster
    std::shared_ptr<RCollectionNTupleWriter> fCollectionNTuple;
+
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
 public:
    static std::string TypeName() { return ""; }
    RCollectionField(std::string_view name,
@@ -806,10 +811,6 @@ public:
    RCollectionField(RCollectionField&& other) = default;
    RCollectionField& operator =(RCollectionField&& other) = default;
    ~RCollectionField() override = default;
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    using Detail::RFieldBase::GenerateValue;
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final {
@@ -881,6 +882,10 @@ protected:
       return std::make_unique<RField>(newName);
    }
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
 public:
    static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t"; }
    explicit RField(std::string_view name)
@@ -891,10 +896,6 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    ClusterSize_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<ClusterSize_t>(globalIndex);
@@ -945,6 +946,11 @@ protected:
       return std::make_unique<RField<RNTupleCardinality>>(newName);
    }
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   // Field is only used for reading
+   void GenerateColumnsImpl() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final;
+
 public:
    static std::string TypeName() { return "ROOT::Experimental::RNTupleCardinality"; }
    explicit RField(std::string_view name)
@@ -954,11 +960,6 @@ public:
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() = default;
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   // Field is only used for reading
-   void GenerateColumnsImpl() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final;
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
@@ -1001,6 +1002,10 @@ protected:
       return std::make_unique<RField>(newName);
    }
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
 public:
    static std::string TypeName() { return "bool"; }
    explicit RField(std::string_view name)
@@ -1011,10 +1016,6 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    bool *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<bool>(globalIndex);
@@ -1053,6 +1054,10 @@ protected:
       return std::make_unique<RField>(newName);
    }
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
 public:
    static std::string TypeName() { return "float"; }
    explicit RField(std::string_view name)
@@ -1063,10 +1068,6 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    float *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<float>(globalIndex);
@@ -1106,6 +1107,10 @@ protected:
       return std::make_unique<RField>(newName);
    }
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
 public:
    static std::string TypeName() { return "double"; }
    explicit RField(std::string_view name)
@@ -1116,10 +1121,6 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    double *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<double>(globalIndex);
@@ -1158,6 +1159,10 @@ protected:
       return std::make_unique<RField>(newName);
    }
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
 public:
    static std::string TypeName() { return "char"; }
    explicit RField(std::string_view name)
@@ -1168,10 +1173,6 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    char *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<char>(globalIndex);
@@ -1210,6 +1211,10 @@ protected:
       return std::make_unique<RField>(newName);
    }
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
 public:
    static std::string TypeName() { return "std::int8_t"; }
    explicit RField(std::string_view name)
@@ -1220,10 +1225,6 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    std::int8_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::int8_t>(globalIndex);
@@ -1262,6 +1263,10 @@ protected:
       return std::make_unique<RField>(newName);
    }
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
 public:
    static std::string TypeName() { return "std::uint8_t"; }
    explicit RField(std::string_view name)
@@ -1272,10 +1277,6 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    std::uint8_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::uint8_t>(globalIndex);
@@ -1314,6 +1315,10 @@ protected:
       return std::make_unique<RField>(newName);
    }
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
 public:
    static std::string TypeName() { return "std::int16_t"; }
    explicit RField(std::string_view name)
@@ -1324,10 +1329,6 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    std::int16_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::int16_t>(globalIndex);
@@ -1366,6 +1367,10 @@ protected:
       return std::make_unique<RField>(newName);
    }
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
 public:
    static std::string TypeName() { return "std::uint16_t"; }
    explicit RField(std::string_view name)
@@ -1376,10 +1381,6 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    std::uint16_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::uint16_t>(globalIndex);
@@ -1418,6 +1419,10 @@ protected:
       return std::make_unique<RField>(newName);
    }
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
 public:
    static std::string TypeName() { return "std::int32_t"; }
    explicit RField(std::string_view name)
@@ -1428,10 +1433,6 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    std::int32_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::int32_t>(globalIndex);
@@ -1470,6 +1471,10 @@ protected:
       return std::make_unique<RField>(newName);
    }
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
 public:
    static std::string TypeName() { return "std::uint32_t"; }
    explicit RField(std::string_view name)
@@ -1480,10 +1485,6 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    std::uint32_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::uint32_t>(globalIndex);
@@ -1522,6 +1523,10 @@ protected:
       return std::make_unique<RField>(newName);
    }
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
 public:
    static std::string TypeName() { return "std::uint64_t"; }
    explicit RField(std::string_view name)
@@ -1532,10 +1537,6 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    std::uint64_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::uint64_t>(globalIndex);
@@ -1574,6 +1575,10 @@ protected:
       return std::make_unique<RField>(newName);
    }
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
 public:
    static std::string TypeName() { return "std::int64_t"; }
    explicit RField(std::string_view name)
@@ -1584,10 +1589,6 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    std::int64_t *Map(NTupleSize_t globalIndex) {
       return fPrincipalColumn->Map<std::int64_t>(globalIndex);
@@ -1628,6 +1629,9 @@ private:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final {
       return std::make_unique<RField>(newName);
    }
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    std::size_t AppendImpl(const ROOT::Experimental::Detail::RFieldValue& value) final;
    void ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex,
                        ROOT::Experimental::Detail::RFieldValue *value) final;
@@ -1642,10 +1646,6 @@ public:
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    using Detail::RFieldBase::GenerateValue;
    template <typename... ArgsT>
