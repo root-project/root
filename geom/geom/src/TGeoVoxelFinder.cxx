@@ -1687,7 +1687,8 @@ void TGeoVoxelFinder::SortAll(Option_t *)
       boundaries[2*id+4*nd] = fBoxes[6*id+5]-fBoxes[6*id+2];
       boundaries[2*id+4*nd+1] = fBoxes[6*id+5]+fBoxes[6*id+2];
    }
-   if (static_cast<size_t>(nmaxslices)*nperslice > static_cast<size_t>(nmaxslices*nperslice)) {
+   auto prod = nmaxslices*nperslice;
+   if (nmaxslices != prod / nperslice) {
       Error("SortAll", "Data type (Int_t) overflow for volume %s", fVolume->GetName());
       return;
    }
