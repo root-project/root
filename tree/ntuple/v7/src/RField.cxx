@@ -554,6 +554,12 @@ void ROOT::Experimental::RFieldZero::AcceptVisitor(Detail::RFieldVisitor &visito
 
 //------------------------------------------------------------------------------
 
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kIndex}}, {{}});
+   return representations;
+}
 
 void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::GenerateColumnsImpl()
 {
@@ -575,6 +581,13 @@ void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::AcceptVisito
 
 //------------------------------------------------------------------------------
 
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kIndex}}, {{}});
+   return representations;
+}
+
 void ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality>::GenerateColumnsImpl(
    const RNTupleDescriptor &desc)
 {
@@ -592,6 +605,13 @@ void ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality>::AcceptV
 }
 
 //------------------------------------------------------------------------------
+
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<char>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kChar}}, {{}});
+   return representations;
+}
 
 void ROOT::Experimental::RField<char>::GenerateColumnsImpl()
 {
@@ -613,6 +633,13 @@ void ROOT::Experimental::RField<char>::AcceptVisitor(Detail::RFieldVisitor &visi
 
 //------------------------------------------------------------------------------
 
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<std::int8_t>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kInt8}}, {{}});
+   return representations;
+}
+
 void ROOT::Experimental::RField<std::int8_t>::GenerateColumnsImpl()
 {
    RColumnModel model(EColumnType::kInt8, false /* isSorted*/);
@@ -632,6 +659,13 @@ void ROOT::Experimental::RField<std::int8_t>::AcceptVisitor(Detail::RFieldVisito
 }
 
 //------------------------------------------------------------------------------
+
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<std::uint8_t>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kInt8}}, {{}});
+   return representations;
+}
 
 void ROOT::Experimental::RField<std::uint8_t>::GenerateColumnsImpl()
 {
@@ -653,6 +687,12 @@ void ROOT::Experimental::RField<std::uint8_t>::AcceptVisitor(Detail::RFieldVisit
 
 //------------------------------------------------------------------------------
 
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<bool>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kBit}}, {{}});
+   return representations;
+}
 
 void ROOT::Experimental::RField<bool>::GenerateColumnsImpl()
 {
@@ -674,6 +714,12 @@ void ROOT::Experimental::RField<bool>::AcceptVisitor(Detail::RFieldVisitor &visi
 
 //------------------------------------------------------------------------------
 
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<float>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kReal32}}, {{}});
+   return representations;
+}
 
 void ROOT::Experimental::RField<float>::GenerateColumnsImpl()
 {
@@ -696,6 +742,13 @@ void ROOT::Experimental::RField<float>::AcceptVisitor(Detail::RFieldVisitor &vis
 
 //------------------------------------------------------------------------------
 
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<double>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kReal64}}, {{}});
+   return representations;
+}
+
 void ROOT::Experimental::RField<double>::GenerateColumnsImpl()
 {
    RColumnModel model(EColumnType::kReal64, false /* isSorted*/);
@@ -715,6 +768,13 @@ void ROOT::Experimental::RField<double>::AcceptVisitor(Detail::RFieldVisitor &vi
 }
 
 //------------------------------------------------------------------------------
+
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<std::int16_t>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kInt16}}, {{}});
+   return representations;
+}
 
 void ROOT::Experimental::RField<std::int16_t>::GenerateColumnsImpl()
 {
@@ -736,6 +796,13 @@ void ROOT::Experimental::RField<std::int16_t>::AcceptVisitor(Detail::RFieldVisit
 
 //------------------------------------------------------------------------------
 
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<std::uint16_t>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kInt16}}, {{}});
+   return representations;
+}
+
 void ROOT::Experimental::RField<std::uint16_t>::GenerateColumnsImpl()
 {
    RColumnModel model(EColumnType::kInt16, false /* isSorted*/);
@@ -755,6 +822,13 @@ void ROOT::Experimental::RField<std::uint16_t>::AcceptVisitor(Detail::RFieldVisi
 }
 
 //------------------------------------------------------------------------------
+
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<std::int32_t>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kInt32}}, {{}});
+   return representations;
+}
 
 void ROOT::Experimental::RField<std::int32_t>::GenerateColumnsImpl()
 {
@@ -776,6 +850,13 @@ void ROOT::Experimental::RField<std::int32_t>::AcceptVisitor(Detail::RFieldVisit
 
 //------------------------------------------------------------------------------
 
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<std::uint32_t>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kInt32}}, {{}});
+   return representations;
+}
+
 void ROOT::Experimental::RField<std::uint32_t>::GenerateColumnsImpl()
 {
    RColumnModel model(EColumnType::kInt32, false /* isSorted*/);
@@ -796,6 +877,13 @@ void ROOT::Experimental::RField<std::uint32_t>::AcceptVisitor(Detail::RFieldVisi
 
 //------------------------------------------------------------------------------
 
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<std::uint64_t>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kInt64}}, {{}});
+   return representations;
+}
+
 void ROOT::Experimental::RField<std::uint64_t>::GenerateColumnsImpl()
 {
    RColumnModel model(EColumnType::kInt64, false /* isSorted*/);
@@ -815,6 +903,13 @@ void ROOT::Experimental::RField<std::uint64_t>::AcceptVisitor(Detail::RFieldVisi
 }
 
 //------------------------------------------------------------------------------
+
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<std::int64_t>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kInt64}}, {{EColumnType::kInt32}});
+   return representations;
+}
 
 void ROOT::Experimental::RField<std::int64_t>::GenerateColumnsImpl()
 {
@@ -852,6 +947,13 @@ void ROOT::Experimental::RField<std::string>::GenerateColumnsImpl()
    RColumnModel modelChars(EColumnType::kChar, false /* isSorted*/);
    fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
       Detail::RColumn::Create<char, EColumnType::kChar>(modelChars, 1)));
+}
+
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<std::string>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kIndex, EColumnType::kChar}}, {{}});
+   return representations;
 }
 
 void ROOT::Experimental::RField<std::string>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -1045,14 +1147,6 @@ void ROOT::Experimental::RClassField::OnConnectPageSource()
    AddReadCallbacksFromIORules(rules, fClass);
 }
 
-void ROOT::Experimental::RClassField::GenerateColumnsImpl()
-{
-}
-
-void ROOT::Experimental::RClassField::GenerateColumnsImpl(const RNTupleDescriptor &)
-{
-}
-
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RClassField::GenerateValue(void* where)
 {
    return Detail::RFieldValue(true /* captureFlag */, this, fClass->New(where));
@@ -1205,6 +1299,13 @@ void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t glob
       collectionStart = collectionStart + count;
       nItemsLeft -= count;
    }
+}
+
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RCollectionClassField::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kIndex}}, {{}});
+   return representations;
 }
 
 void ROOT::Experimental::RCollectionClassField::GenerateColumnsImpl()
@@ -1463,6 +1564,13 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
    }
 }
 
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RVectorField::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kIndex}}, {{}});
+   return representations;
+}
+
 void ROOT::Experimental::RVectorField::GenerateColumnsImpl()
 {
    RColumnModel modelIndex(EColumnType::kIndex, true /* isSorted*/);
@@ -1627,6 +1735,13 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, De
       auto itemValue = fSubFields[0]->CaptureValue(begin + (i * fItemSize));
       fSubFields[0]->Read(collectionStart + i, &itemValue);
    }
+}
+
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RRVecField::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kIndex}}, {{}});
+   return representations;
 }
 
 void ROOT::Experimental::RRVecField::GenerateColumnsImpl()
@@ -1811,6 +1926,13 @@ void ROOT::Experimental::RField<std::vector<bool>>::ReadGlobalImpl(NTupleSize_t 
    }
 }
 
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<std::vector<bool>>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kIndex}}, {{}});
+   return representations;
+}
+
 void ROOT::Experimental::RField<std::vector<bool>>::GenerateColumnsImpl()
 {
    RColumnModel modelIndex(EColumnType::kIndex, true /* isSorted*/);
@@ -1905,14 +2027,6 @@ void ROOT::Experimental::RArrayField::ReadInClusterImpl(const RClusterIndex &clu
       fSubFields[0]->Read(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() * fArrayLength + i),
                           &itemValue);
    }
-}
-
-void ROOT::Experimental::RArrayField::GenerateColumnsImpl()
-{
-}
-
-void ROOT::Experimental::RArrayField::GenerateColumnsImpl(const RNTupleDescriptor &)
-{
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RArrayField::GenerateValue(void *where)
@@ -2045,6 +2159,13 @@ void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex,
    auto itemValue = fSubFields[tag - 1]->GenerateValue(value->GetRawPtr());
    fSubFields[tag - 1]->Read(variantIndex, &itemValue);
    SetTag(value->GetRawPtr(), tag);
+}
+
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RVariantField::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kSwitch}}, {{}});
+   return representations;
 }
 
 void ROOT::Experimental::RVariantField::GenerateColumnsImpl()
@@ -2235,6 +2356,12 @@ ROOT::Experimental::RCollectionField::RCollectionField(
    SetDescription(collectionModel->GetDescription());
 }
 
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RCollectionField::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kIndex}}, {{}});
+   return representations;
+}
 
 void ROOT::Experimental::RCollectionField::GenerateColumnsImpl()
 {
