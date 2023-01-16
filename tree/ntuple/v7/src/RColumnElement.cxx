@@ -23,8 +23,10 @@
 #include <memory>
 #include <utility>
 
+template <>
 std::unique_ptr<ROOT::Experimental::Detail::RColumnElementBase>
-ROOT::Experimental::Detail::RColumnElementBase::Generate(EColumnType type) {
+ROOT::Experimental::Detail::RColumnElementBase::Generate<void>(EColumnType type)
+{
    switch (type) {
    case EColumnType::kReal32:
       return std::make_unique<RColumnElement<float, EColumnType::kReal32>>(nullptr);

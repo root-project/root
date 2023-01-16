@@ -18,6 +18,7 @@
 
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/RConfig.hxx>
+#include <ROOT/RError.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <Byteswap.h>
@@ -28,6 +29,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <typeinfo>
 
 #ifndef R__LITTLE_ENDIAN
 #ifdef R__BYTESWAP
@@ -97,6 +99,8 @@ public:
    RColumnElementBase& operator =(RColumnElementBase&& other) = default;
    virtual ~RColumnElementBase() = default;
 
+   /// If CppT == void, use the default C++ type for the given column type
+   template <typename CppT = void>
    static std::unique_ptr<RColumnElementBase> Generate(EColumnType type);
    static std::size_t GetBitsOnStorage(EColumnType type);
    static std::string GetTypeName(EColumnType type);
@@ -168,9 +172,8 @@ class RColumnElement : public RColumnElementBase {
 public:
    explicit RColumnElement(CppT* value) : RColumnElementBase(value, sizeof(CppT))
    {
-      // Do not allow this template to be instantiated unless there is a specialization. The assert needs to depend
-      // on the template type or else the static_assert will always fire.
-      static_assert(sizeof(CppT) != sizeof(CppT), "No column mapping for this C++ type");
+      throw RException(R__FAIL(std::string("internal error: no column mapping for this C++ type: ") +
+                               typeid(CppT).name() + " --> " + GetTypeName(ColumnT)));
    }
 };
 
@@ -469,6 +472,30 @@ public:
    void Pack(void *dst, void *src, std::size_t count) const final;
    void Unpack(void *dst, void *src, std::size_t count) const final;
 };
+
+template <typename CppT>
+std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(EColumnType type)
+{
+   switch (type) {
+   case EColumnType::kReal32: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32>>(nullptr);
+   case EColumnType::kReal64: return std::make_unique<RColumnElement<CppT, EColumnType::kReal64>>(nullptr);
+   case EColumnType::kChar: return std::make_unique<RColumnElement<CppT, EColumnType::kChar>>(nullptr);
+   case EColumnType::kByte: return std::make_unique<RColumnElement<CppT, EColumnType::kByte>>(nullptr);
+   case EColumnType::kInt8: return std::make_unique<RColumnElement<CppT, EColumnType::kInt8>>(nullptr);
+   case EColumnType::kInt16: return std::make_unique<RColumnElement<CppT, EColumnType::kInt16>>(nullptr);
+   case EColumnType::kInt32: return std::make_unique<RColumnElement<CppT, EColumnType::kInt32>>(nullptr);
+   case EColumnType::kInt64: return std::make_unique<RColumnElement<CppT, EColumnType::kInt64>>(nullptr);
+   case EColumnType::kBit: return std::make_unique<RColumnElement<CppT, EColumnType::kBit>>(nullptr);
+   case EColumnType::kIndex: return std::make_unique<RColumnElement<CppT, EColumnType::kIndex>>(nullptr);
+   case EColumnType::kSwitch: return std::make_unique<RColumnElement<CppT, EColumnType::kSwitch>>(nullptr);
+   default: R__ASSERT(false);
+   }
+   // never here
+   return nullptr;
+}
+
+template <>
+std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate<void>(EColumnType type);
 
 } // namespace Detail
 } // namespace Experimental

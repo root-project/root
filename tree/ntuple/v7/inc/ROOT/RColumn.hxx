@@ -26,6 +26,7 @@
 #include <TError.h>
 
 #include <memory>
+#include <utility>
 
 namespace ROOT {
 namespace Experimental {
@@ -99,11 +100,11 @@ private:
    }
 
 public:
-   template <typename CppT, EColumnType ColumnT>
-   static RColumn *Create(const RColumnModel &model, std::uint32_t index) {
-      R__ASSERT(model.GetType() == ColumnT);
-      auto column = new RColumn(model, index);
-      column->fElement = std::unique_ptr<RColumnElementBase>(new RColumnElement<CppT, ColumnT>(nullptr));
+   template <typename CppT>
+   static std::unique_ptr<RColumn> Create(const RColumnModel &model, std::uint32_t index)
+   {
+      auto column = std::unique_ptr<RColumn>(new RColumn(model, index));
+      column->fElement = RColumnElementBase::Generate<CppT>(model.GetType());
       return column;
    }
 
