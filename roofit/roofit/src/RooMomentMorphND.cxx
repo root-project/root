@@ -37,8 +37,7 @@ ClassImp(RooMomentMorphND);
 
 //_____________________________________________________________________________
 RooMomentMorphND::RooMomentMorphND()
-   : _cacheMgr(this, 10, true, true), _curNormSet(0), _M(0), _MSqr(0), _setting(RooMomentMorphND::Linear),
-     _useHorizMorph(true)
+   : _cacheMgr(this, 10, true, true), _setting(RooMomentMorphND::Linear), _useHorizMorph(true)
 {
    TRACE_CREATE;
 }
@@ -154,10 +153,9 @@ RooMomentMorphND::RooMomentMorphND(const char *name, const char *title, RooAbsRe
 
 //_____________________________________________________________________________
 RooMomentMorphND::RooMomentMorphND(const RooMomentMorphND &other, const char *name)
-   : RooMomentMorphND::Base_t(other, name), _cacheMgr(other._cacheMgr, this), _curNormSet(0),
-     _parList("parList", this, other._parList), _obsList("obsList", this, other._obsList),
-     _referenceGrid(other._referenceGrid), _pdfList("pdfList", this, other._pdfList), _M(0), _MSqr(0),
-     _setting(other._setting), _useHorizMorph(other._useHorizMorph)
+   : RooMomentMorphND::Base_t(other, name), _cacheMgr(other._cacheMgr, this), _parList("parList", this, other._parList),
+     _obsList("obsList", this, other._obsList), _referenceGrid(other._referenceGrid),
+     _pdfList("pdfList", this, other._pdfList), _setting(other._setting), _useHorizMorph(other._useHorizMorph)
 {
    // general initialization
    initialize();
@@ -168,11 +166,6 @@ RooMomentMorphND::RooMomentMorphND(const RooMomentMorphND &other, const char *na
 //_____________________________________________________________________________
 RooMomentMorphND::~RooMomentMorphND()
 {
-   if (_M)
-      delete _M;
-   if (_MSqr)
-      delete _MSqr;
-
    TRACE_DESTROY;
 }
 
@@ -229,8 +222,8 @@ void RooMomentMorphND::initialize()
    }
 
    // Transformation matrix for NonLinear settings
-   _M = new TMatrixD(nPdf, nPdf);
-   _MSqr = new TMatrixD(depth, depth);
+   _M = std::make_unique<TMatrixD>(nPdf, nPdf);
+   _MSqr = std::make_unique<TMatrixD>(depth, depth);
    if (_setting == NonLinear || _setting == NonLinearPosFractions || _setting == NonLinearLinFractions) {
       TMatrixD M(nPdf, nPdf);
 
@@ -286,7 +279,12 @@ RooMomentMorphND::Grid2::Grid2(const RooMomentMorphND::Grid2 &other)
 }
 
 //_____________________________________________________________________________
-RooMomentMorphND::Grid2::~Grid2() {}
+RooMomentMorphND::Grid2::~Grid2()
+{
+   for (RooAbsBinning *binning : _grid) {
+      delete binning;
+   }
+}
 
 //_____________________________________________________________________________
 void RooMomentMorphND::Grid2::addPdf(const RooMomentMorphND::Base_t &pdf, int bin_x)
