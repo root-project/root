@@ -57,7 +57,6 @@
 /// \author Jonas Rembser
 
 #include <RooArgSet.h>
-#include <RooConstVar.h>
 #include <RooDataSet.h>
 #include <RooFitResult.h>
 #include <RooGaussian.h>
@@ -89,7 +88,7 @@ void rf613_global_observables()
    // note: alternatively, one can create a constant with default limits using `RooRealVar("mu_obs", "mu_obs", 1.0)`
 
    // constraint pdf
-   RooGaussian constraint("constraint", "constraint", mu_obs, mu, RooConst(0.2));
+   RooGaussian constraint("constraint", "constraint", mu_obs, mu, 0.2);
 
    // full pdf including constraint pdf
    RooProdPdf model("model", "model", {gauss, constraint});

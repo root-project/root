@@ -12,7 +12,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 #include "RooProdPdf.h"
@@ -50,7 +49,7 @@ void rf604_constraints()
    // -----------------------------------------
 
    // Construct Gaussian constraint pdf on parameter f at 0.8 with resolution of 0.1
-   RooGaussian fconstraint("fconstraint", "fconstraint", f, RooConst(0.8), RooConst(0.2));
+   RooGaussian fconstraint("fconstraint", "fconstraint", f, 0.8, 0.2);
 
    // M E T H O D   1   -   A d d   i n t e r n a l   c o n s t r a i n t   t o   m o d e l
    // -------------------------------------------------------------------------------------
@@ -71,7 +70,7 @@ void rf604_constraints()
    // -------------------------------------------------------------------------------------------------------
 
    // Construct another Gaussian constraint pdf on parameter f at 0.2 with resolution of 0.1
-   RooGaussian fconstext("fconstext", "fconstext", f, RooConst(0.2), RooConst(0.1));
+   RooGaussian fconstext("fconstext", "fconstext", f, 0.2, 0.1);
 
    // Fit with external constraint
    RooFitResult *r3 = model.fitTo(*d, ExternalConstraints(fconstext), Save(), PrintLevel(-1));

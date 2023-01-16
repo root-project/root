@@ -12,7 +12,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooProdPdf.h"
 #include "RooAddPdf.h"
 #include "RooPolynomial.h"
@@ -36,8 +35,8 @@ void rf312_multirangefit()
    RooRealVar mx("mx", "mx", 1, -10, 10);
    RooRealVar my("my", "my", 1, -10, 10);
 
-   RooGaussian gx("gx", "gx", x, mx, RooConst(1));
-   RooGaussian gy("gy", "gy", y, my, RooConst(1));
+   RooGaussian gx("gx", "gx", x, mx, 1.0);
+   RooGaussian gy("gy", "gy", y, my, 1.0);
 
    RooProdPdf sig("sig", "sig", gx, gy);
 
