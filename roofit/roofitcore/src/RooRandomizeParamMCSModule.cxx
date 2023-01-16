@@ -383,7 +383,7 @@ bool RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
                 <<  usiter->_pset
                 << " in range [" << usiter->_lo << "," << usiter->_hi << "], chosen sum value for this sample is " << newVal << endl ;
 
-    // Determine original value of sum and calculate per-component scale factor to obtain new valye for sum
+    // Determine original value of sum and calculate per-component scale factor to obtain new value for sum
     RooAddition sumVal("sumVal","sumVal",usiter->_pset) ;
     double compScaleFactor = newVal/sumVal.getVal() ;
 
@@ -406,7 +406,7 @@ bool RooRandomizeParamMCSModule::processBeforeGen(Int_t /*sampleNum*/)
                 << " with a mean of " << gsiter->_mean << " and a width of " << gsiter->_sigma
                 << ", chosen value for this sample is " << newVal << endl ;
 
-    // Determine original value of sum and calculate per-component scale factor to obtain new valye for sum
+    // Determine original value of sum and calculate per-component scale factor to obtain new value for sum
     RooAddition sumVal("sumVal","sumVal",gsiter->_pset) ;
     double compScaleFactor = newVal/sumVal.getVal() ;
 

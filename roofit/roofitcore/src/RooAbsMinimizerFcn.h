@@ -76,8 +76,8 @@ public:
 
    unsigned int getNDim() const { return _nDim; }
 
-   // In the past, the `getNDim` function was called just `NDim`. The funciton
-   // was renamed to match the code convention (lower case for funciton names),
+   // In the past, the `getNDim` function was called just `NDim`. The function
+   // was renamed to match the code convention (lower case for function names),
    // but we have to keep an overload with the old name to not break existing
    // user code.
    inline unsigned int NDim() const { return getNDim(); }

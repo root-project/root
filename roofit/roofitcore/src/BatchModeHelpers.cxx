@@ -243,7 +243,7 @@ RooFit::BatchModeHelpers::createNLL(std::unique_ptr<RooAbsPdf> &&pdf, RooAbsData
 void RooFit::BatchModeHelpers::logArchitectureInfo(RooFit::BatchModeOption batchMode)
 {
    // We have to exit early if the message stream is not active. Otherwise it's
-   // possible that this funciton skips logging because it thinks it has
+   // possible that this function skips logging because it thinks it has
    // already logged, but actually it didn't.
    if (!RooMsgService::instance().isActive(static_cast<RooAbsArg *>(nullptr), RooFit::Fitting, RooFit::INFO)) {
       return;

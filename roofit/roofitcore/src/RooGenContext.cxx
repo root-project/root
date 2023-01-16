@@ -264,7 +264,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
       if (_otherVars.getSize()>0) {
 
-   cxcoutD(Generation) << "RooGenContext::ctor() prototype data provided, observables are generated numericaly no "
+   cxcoutD(Generation) << "RooGenContext::ctor() prototype data provided, observables are generated numerically no "
                << "analytical estimate of maximum function value provided by model, must determine maximum value through initial sampling space "
                << "of accept/reject observables plus prototype observables: " << otherAndProto << endl ;
 

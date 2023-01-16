@@ -25,7 +25,7 @@ std::string const &tmpPath()
 {
    static const std::string dir{"/tmp/roofit/"};
 
-   // The first time this funciton is used, we will attempt to create the
+   // The first time this function is used, we will attempt to create the
    // directory if it doesn't exist yet.
    static bool isFirstCall = true;
    if (isFirstCall) {

@@ -125,7 +125,7 @@ protected:
 
   TList       _genDataList ;    // List of generated data sample
   TList       _fitResList ;     // List of RooFitResult fit output objects
-  std::unique_ptr<RooDataSet> _genParData;     // List of of generated parameters of each sample
+  std::unique_ptr<RooDataSet> _genParData;     // List of generated parameters of each sample
   std::unique_ptr<RooDataSet> _fitParData;     // Data set of fit parameters of each sample
   RooLinkedList _fitOptList ;   // Fit option command list
   bool      _extendedGen ;    // Add poisson term to number of events to generate?
