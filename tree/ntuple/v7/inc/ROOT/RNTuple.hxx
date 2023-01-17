@@ -68,9 +68,6 @@ enum class ENTupleInfo {
 enum class ENTupleShowFormat {
    kCurrentModelJSON, // prints a single entry/row with the current active model in JSON format.
    kCompleteJSON,  // prints a single entry/row with all the fields in JSON format.
-   kCompleteUnlessCurrentJSON, // prints a single entry/row with all the fields in JSON format,
-                               // unless a model is active in which case it only loads the fields
-                               // in that model.
 };
 
 
@@ -251,7 +248,7 @@ public:
    /// Shows the values of the i-th entry/row, starting with 0 for the first entry. By default,
    /// prints the output in JSON format.
    /// Uses the visitor pattern to traverse through each field of the given entry.
-   void Show(NTupleSize_t index, const ENTupleShowFormat format = ENTupleShowFormat::kCompleteUnlessCurrentJSON,
+   void Show(NTupleSize_t index, const ENTupleShowFormat format = ENTupleShowFormat::kCurrentModelJSON,
              std::ostream &output = std::cout);
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.

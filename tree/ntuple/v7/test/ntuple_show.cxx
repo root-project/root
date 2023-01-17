@@ -450,12 +450,12 @@ TEST(RNTupleShow, CompleteOrCurrentModel)
    auto ntuple2 = RNTupleReader::Open(std::move(model), "f", fileGuard.GetPath());
 
    std::ostringstream os1;
-   ntuple1->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteUnlessCurrentJSON, os1);
+   ntuple1->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os1);
    std::string expected1{"{\n  \"int\": 42,\n  \"float\": 3.14\n}\n"};
    EXPECT_EQ(expected1, os1.str());
 
    std::ostringstream os2;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteUnlessCurrentJSON, os2);
+   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os2);
    std::string expected2{"{\n  \"int\": 42\n}\n"};
    EXPECT_EQ(expected2, os2.str());
 }
