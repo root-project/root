@@ -4037,9 +4037,9 @@ void TSystem::SetBuildDir(const char *build_dir, Bool_t isflat)
 {
    fBuildDir = build_dir;
    if (isflat)
-      fAclicProperties |= (kFlatBuildDir & kBitMask);
+      fAclicProperties |= kFlatBuildDir;
    else
-      fAclicProperties &= ~(kFlatBuildDir & kBitMask);
+      fAclicProperties &= ~kFlatBuildDir;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
