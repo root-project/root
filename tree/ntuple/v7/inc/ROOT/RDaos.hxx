@@ -157,7 +157,6 @@ public:
    struct ROidDkeyPair {
       daos_obj_id_t oid{};
       DistributionKey_t dkey{};
-      ROidDkeyPair() = default;
 
       inline bool operator==(const ROidDkeyPair &other) const
       {
