@@ -301,7 +301,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
                   h->set(0);
                }
                break;
-            case kIsPointer|kBIT_ISSTRING:
+            case 0U|kIsPointer|kBIT_ISSTRING:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
                   //Eventually we'll need to delete this
@@ -310,7 +310,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
                   h->set(0);
                }
                break;
-            case kIsPointer|kBIT_ISTSTRING|kIsClass:
+            case 0U|kIsPointer|kBIT_ISTSTRING|kIsClass:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
                   if (force) delete (TString*)h->ptr();
@@ -347,14 +347,14 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
                   h->set(0);
                }
                break;
-            case kIsPointer|kBIT_ISSTRING:
+            case 0U|kIsPointer|kBIT_ISSTRING:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
                   if (force) delete (std::string*)h->ptr();
                   h->set(0);
                }
                break;
-            case kIsPointer|kBIT_ISTSTRING|kIsClass:
+            case 0U|kIsPointer|kBIT_ISTSTRING|kIsClass:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
                   if (force) delete (TString*)h->ptr();
@@ -403,8 +403,8 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
                   ::new(addr) std::string();
                break;
             case kIsPointer|kIsClass:
-            case kIsPointer|kBIT_ISSTRING:
-            case kIsPointer|kBIT_ISTSTRING|kIsClass:
+            case 0U|kIsPointer|kBIT_ISSTRING:
+            case 0U|kIsPointer|kBIT_ISTSTRING|kIsClass:
                for( i=nCurr; i<left; ++i, addr += fValDiff )
                   *(void**)addr = 0;
                break;
@@ -437,8 +437,8 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
                   ::new(addr) std::string();
                break;
             case kIsPointer|kIsClass:
-            case kIsPointer|kBIT_ISSTRING:
-            case kIsPointer|kBIT_ISTSTRING|kIsClass:
+            case 0U|kIsPointer|kBIT_ISSTRING:
+            case 0U|kIsPointer|kBIT_ISTSTRING|kIsClass:
                for( i=nCurr; i<left; ++i, addr += fValDiff )
                   *(void**)addr = 0;
                break;
@@ -543,9 +543,9 @@ void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)
          DOLOOP( i->read_std_string(b) );
       case kIsPointer|kIsClass:
          DOLOOP( i->read_any_object(fVal,b) );
-      case kIsPointer|kBIT_ISSTRING:
+      case 0U|kIsPointer|kBIT_ISSTRING:
          DOLOOP( i->read_std_string_pointer(b) );
-      case kIsPointer|kBIT_ISTSTRING|kIsClass:
+      case 0U|kIsPointer|kBIT_ISTSTRING|kIsClass:
          DOLOOP( i->read_tstring_pointer(vsn3,b) );
    }
 
@@ -590,9 +590,9 @@ void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)
          DOLOOP( TString(i->c_str()).Streamer(b) );
       case kIsPointer|kIsClass:
          DOLOOP( b.WriteObjectAny(i->ptr(),fVal->fType) );
-      case kBIT_ISSTRING|kIsPointer:
+      case 0U|kBIT_ISSTRING|kIsPointer:
          DOLOOP( i->write_std_string_pointer(b) );
-      case kBIT_ISTSTRING|kIsClass|kIsPointer:
+      case 0U|kBIT_ISTSTRING|kIsClass|kIsPointer:
          DOLOOP( i->write_tstring_pointer(b) );
    }
 #undef DOLOOP
