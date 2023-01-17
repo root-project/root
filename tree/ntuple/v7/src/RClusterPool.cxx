@@ -117,9 +117,14 @@ void ROOT::Experimental::Detail::RClusterPool::ExecReadClusters()
       while (!readItems.empty()) {
          std::vector<RCluster::RKey> clusterKeys;
          std::int64_t bunchId = -1;
-         for (auto &item : readItems) {
-            if (item.fClusterKey.fClusterId == kInvalidDescriptorId)
+         for (unsigned i = 0; i < readItems.size(); ++i) {
+            const auto &item = readItems[i];
+            // `kInvalidDescriptorId` is used as a marker for thread cancellation. Such item causes the
+            // thread to terminate; thus, it must appear last in the queue.
+            if (R__unlikely(item.fClusterKey.fClusterId == kInvalidDescriptorId)) {
+               R__ASSERT(i == (readItems.size() - 1));
                return;
+            }
             if ((bunchId >= 0) && (item.fBunchId != bunchId))
                break;
             bunchId = item.fBunchId;
