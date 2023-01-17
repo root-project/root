@@ -259,51 +259,72 @@ namespace {
   // declarations. This reduces the amount of emitted symbols.
   class ReuseExistingWeakSymbols : public ModulePass {
     static char ID;
+    cling::IncrementalJIT &m_JIT;
 
-    bool runOnGlobal(GlobalValue& GV) {
-      if (GV.isDeclaration())
-        return false; // no change.
-
-      // GV is a definition.
-
+    bool shouldRemoveGlobalDefinition(GlobalValue& GV) {
+      // Existing *weak* symbols can be re-used thanks to ODR.
       llvm::GlobalValue::LinkageTypes LT = GV.getLinkage();
       if (!GV.isDiscardableIfUnused(LT) || !GV.isWeakForLinker(LT))
         return false;
 
-      // Find the symbol in JIT or shared libraries (without auto-loading).
-      std::string Name =  GV.getName().str();
-      if (
+      // Find the symbol as existing, previously compiled symbol in the JIT...
+      if (m_JIT.doesSymbolAlreadyExist(GV.getName()))
+        return true;
+
+      // ...or in shared libraries (without auto-loading).
+      std::string Name = GV.getName().str();
 #if !defined(_WIN32)
-        llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(Name)
+        return llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(Name);
 #else
-        platform::DLSym(Name)
+        return platform::DLSym(Name);
 #endif
-      ) {
+    }
+
+    bool runOnVar(GlobalVariable& GV) {
 #if !defined(_WIN32)
-        // Heuristically, Windows cannot handle cross-library variables; they
-        // must be library-local.
-        if (auto *Var = dyn_cast<GlobalVariable>(&GV)) {
-          Var->setInitializer(nullptr); // make this a declaration
-        } else
-#endif
-        if (auto *Func = dyn_cast<Function>(&GV)) {
-          Func->deleteBody(); // make this a declaration
-        }
+      // Heuristically, Windows cannot handle cross-library variables; they
+      // must be library-local.
+
+      if (GV.isDeclaration())
+        return false; // no change.
+      if (shouldRemoveGlobalDefinition(GV)) {
+        GV.setInitializer(nullptr); // make this a declaration
         return true; // a change!
       }
-      return false;
+#endif
+      return false; // no change.
+    }
+
+    bool runOnFunc(Function& Func) {
+      if (Func.isDeclaration())
+        return false; // no change.
+#ifndef _WIN32
+      // MSVC's stdlib gets symbol issues; i.e. apparently: JIT all or none.
+      if (Func.getInstructionCount() < 50) {
+        // This is a small function. Keep its definition to retain it for
+        // inlining: the cost for JITting it is small, and the likelihood
+        // that the call will be inlined is high.
+        return false;
+      }
+#endif
+      if (shouldRemoveGlobalDefinition(Func)) {
+        Func.deleteBody(); // make this a declaration
+        return true; // a change!
+      }
+      return false; // no change.
     }
 
   public:
-    ReuseExistingWeakSymbols() :
-      ModulePass(ID) {}
+    ReuseExistingWeakSymbols(IncrementalJIT &JIT) :
+      ModulePass(ID), m_JIT(JIT) {}
 
     bool runOnModule(Module &M) override {
       bool ret = false;
+      // FIXME: use SymbolLookupSet, rather than looking up symbol by symbol.
       for (auto &&F: M)
-        ret |= runOnGlobal(F);
+        ret |= runOnFunc(F);
       for (auto &&G: M.globals())
-        ret |= runOnGlobal(G);
+        ret |= runOnVar(G);
       return ret;
     }
   };
@@ -313,8 +334,9 @@ char ReuseExistingWeakSymbols::ID = 0;
 
 
 BackendPasses::BackendPasses(const clang::CodeGenOptions &CGOpts,
-                             llvm::TargetMachine& TM):
+                             IncrementalJIT &JIT, llvm::TargetMachine& TM):
    m_TM(TM),
+   m_JIT(JIT),
    m_CGOpts(CGOpts)
 {}
 
@@ -392,7 +414,7 @@ void BackendPasses::CreatePasses(llvm::Module& M, int OptLevel)
   m_MPM[OptLevel]->add(new KeepLocalGVPass());
   m_MPM[OptLevel]->add(new PreventLocalOptPass());
   m_MPM[OptLevel]->add(new WeakTypeinfoVTablePass());
-  m_MPM[OptLevel]->add(new ReuseExistingWeakSymbols());
+  m_MPM[OptLevel]->add(new ReuseExistingWeakSymbols(m_JIT));
 
   // The function __cuda_module_ctor and __cuda_module_dtor will just generated,
   // if a CUDA fatbinary file exist. Without file path there is no need for the
