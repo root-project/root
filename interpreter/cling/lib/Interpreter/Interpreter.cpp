@@ -463,8 +463,8 @@ namespace cling {
     const char* Attr = "";
 #endif
 
-#if defined(__GLIBCXX__)
-    const char* cxa_atexit_is_noexcept = LangOpts.CPlusPlus ? " noexcept" : "";
+#if defined(__GLIBCXX__ || _LIBCPP_VERSION)
+    const char* cxa_atexit_is_noexcept = noexcept(__cxa_atexit) ? " noexcept" : "";
 #else
     const char* cxa_atexit_is_noexcept = "";
 #endif
