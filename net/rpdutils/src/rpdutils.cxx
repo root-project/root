@@ -419,7 +419,7 @@ static volatile void *rpdmemset(volatile void *dst, int c, int len)
 {
    volatile char *buf;
 
-   for (buf = (volatile char *)dst; len; (buf[--len] = c)) { }
+   for (buf = (volatile char *)dst; len;) { buf[--len] = c; }
    return dst;
 }
 
