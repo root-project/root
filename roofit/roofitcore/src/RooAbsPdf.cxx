@@ -1564,12 +1564,6 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
 ///                                                backend and uses the number given as the number of workers to use in the parallelization. -1 also enables
 ///                                                RooFit's parallel minimization backend, and sets the number of workers to the number of available processes.
 ///                                                0 disables this feature.
-/// <tr><td> `Offset(std::string const& mode)` <td> Likelihood offsetting mode. Can be either:
-///                                                 - `"none"` (default): no offsetting
-///                                                 - `"initial"`: Offset likelihood by initial value (so that starting value of FCN in minuit is zero).
-///                                                    This can improve numeric stability in simultaneous fits with components with large likelihood values.
-///                                                 Note that this named argument only works if combined with `modularL` or `Parallelize`. For non-modular
-///                                                 likelihoods offsetting is enabled on the likelihood itself.
 /// <tr><td> `ParallelGradientOptions(bool enable=true, int orderStrategy=0, int chainFactor=1)`   <td>  **Experimental** Control gradient parallelization settings. The first argument
 ///                                                                                                      only disables or enables gradient parallelization, this is on by default.
 ///                                                                                                      The second argument determines the internal partial derivative calculation
@@ -1593,10 +1587,15 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
 
   RooLinkedList fitCmdList(cmdList) ;
-  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList,"ProjectedObservables,Extended,Range,"
+  std::string nllCmdListString = "ProjectedObservables,Extended,Range,"
       "RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,"
-      "CloneData,GlobalObservables,GlobalObservablesSource,GlobalObservablesTag,OffsetLikelihood,"
-      "BatchMode,IntegrateBins,ModularL");
+      "CloneData,GlobalObservables,GlobalObservablesSource,GlobalObservablesTag,"
+      "BatchMode,IntegrateBins,ModularL";
+
+  if (((RooCmdArg*)cmdList.FindObject("ModularL")) && !((RooCmdArg*)cmdList.FindObject("ModularL"))->getInt(0))
+    nllCmdListString += ",OffsetLikelihood";
+
+  RooLinkedList nllCmdList = pc.filterCmdList(fitCmdList, nllCmdListString.c_str());
 
   // Default-initialized instance of MinimizerConfig to get the default
   // minimizer parameter values.
