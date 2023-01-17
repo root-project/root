@@ -1003,7 +1003,8 @@ void ROOT::Experimental::RClassField::OnConnectPageSource()
    if (!ruleset)
       return;
    auto referencesNonTransientMembers = [klass = fClass](const ROOT::TSchemaRule *rule) {
-      R__ASSERT(rule->GetTarget() != nullptr);
+      if (rule->GetTarget() == nullptr)
+         return false;
       for (auto target : ROOT::Detail::TRangeStaticCast<TObjString>(*rule->GetTarget())) {
          const auto dataMember = klass->GetDataMember(target->GetString());
          if (!dataMember || dataMember->IsPersistent()) {
