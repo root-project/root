@@ -109,6 +109,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFormulaVar.h
     RooFracRemainder.h
     RooFunctor.h
+    RooFuncWrapper.h
     RooGenContext.h
     RooGenericPdf.h
     RooGenFitStudy.h
