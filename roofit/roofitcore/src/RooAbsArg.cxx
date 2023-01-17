@@ -422,12 +422,34 @@ void RooAbsArg::removeServer(RooAbsArg& server, bool force)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Replace 'oldServer' with 'newServer'
+/// Replace 'oldServer' with 'newServer', specifying whether the new server has
+/// value or shape server properties.
+///
+/// \warning This function should not be used! This method is quite unsafe for
+/// many reasons. For once, the new server will be put at the end of the server
+/// list, no matter the position of the original server. This might mess up
+/// code that expects the servers to be in a certain order. Furthermore, the
+/// proxy objects corresponding to the server are not updated, leaving the
+/// object in an invalid state where the servers are out of sync with the
+/// proxies. This can have very bad consequences. Finally, by having to
+/// manually specify the value and shape server properties, it is very easy to
+/// get them wrong.
+///
+/// If you want to safely replace a server, you should use
+/// RooAbsArg::redirectServers(), which replaces the server in-place at the
+/// same position of the server list, keeps the same value and shape server
+/// properties, and also updates the corresponding proxies.
 
 void RooAbsArg::replaceServer(RooAbsArg& oldServer, RooAbsArg& newServer, bool propValue, bool propShape)
 {
+  coutW(LinkStateMgmt) << "replaceServer()"
+      << " is unsafe, because the server list will be out of sync with the proxy objects!"
+      << " If you want to safely replace a server, use RooAbsArg::redirectServers()."
+      << " See the docs to replaceServers() for more info." << std::endl;
+
   Int_t count = _serverList.refCount(&oldServer);
   removeServer(oldServer, true);
+
   addServer(newServer, propValue, propShape, count);
 }
 
@@ -1007,50 +1029,29 @@ bool RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, bool mustRep
   if (newSetOrig.empty() || (newSetOrig.size() == 1 && newSetOrig[0] == this)) return false ;
 
   // Strip any non-matching removal nodes from newSetOrig
-  RooAbsCollection* newSet ;
+  std::unique_ptr<RooArgSet> newSetOwned;
+  RooAbsCollection const* newSet = &newSetOrig;
 
   if (nameChange) {
-    newSet = new RooArgSet ;
-    for (auto arg : newSetOrig) {
+    newSetOwned = std::make_unique<RooArgSet>();
+    for (auto arg : *newSet) {
 
       if (string("REMOVAL_DUMMY")==arg->GetName()) {
 
         if (arg->getAttribute("REMOVE_ALL")) {
-          newSet->add(*arg) ;
+          newSetOwned->add(*arg) ;
         } else if (arg->getAttribute(Form("REMOVE_FROM_%s",getStringAttribute("ORIGNAME")))) {
-          newSet->add(*arg) ;
+          newSetOwned->add(*arg) ;
         }
       } else {
-        newSet->add(*arg) ;
+        newSetOwned->add(*arg) ;
       }
     }
-  } else {
-    newSet = (RooAbsCollection*) &newSetOrig ;
+    newSet = newSetOwned.get();
   }
 
   // Replace current servers with new servers with the same name from the given list
-  bool ret(false) ;
-
-  //Copy original server list to not confuse the iterator while deleting
-  std::vector<RooAbsArg*> origServerList, origServerValue, origServerShape;
-  auto origSize = _serverList.size();
-  origServerList.reserve(origSize);
-  origServerValue.reserve(origSize);
-
-  for (const auto oldServer : _serverList) {
-    origServerList.push_back(oldServer) ;
-
-    // Retrieve server side link state information
-    if (oldServer->_clientListValue.containsByNamePtr(this)) {
-      origServerValue.push_back(oldServer) ;
-    }
-    if (oldServer->_clientListShape.containsByNamePtr(this)) {
-      origServerShape.push_back(oldServer) ;
-    }
-  }
-
-  // Delete all previously registered servers
-  for (auto oldServer : origServerList) {
+  for (auto oldServer : _serverList) {
 
     RooAbsArg * newServer= oldServer->findNewServer(*newSet, nameChange);
 
@@ -1071,20 +1072,28 @@ bool RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, bool mustRep
       continue ;
     }
 
-    auto findByNamePtr = [&oldServer](const RooAbsArg * item) {
-      return oldServer->namePtr() == item->namePtr();
-    };
-    bool propValue = std::any_of(origServerValue.begin(), origServerValue.end(), findByNamePtr);
-    bool propShape = std::any_of(origServerShape.begin(), origServerShape.end(), findByNamePtr);
-
     if (newServer != this) {
-      replaceServer(*oldServer,*newServer,propValue,propShape) ;
+      _serverList.Replace(oldServer, newServer);
+
+      const int clientListRefCount = oldServer->_clientList.Remove(this, true);
+      const int clientListValueRefCount = oldServer->_clientListValue.Remove(this, true);
+      const int clientListShapeRefCount = oldServer->_clientListShape.Remove(this, true);
+
+      newServer->_clientList.Add(this, clientListRefCount);
+      newServer->_clientListValue.Add(this, clientListValueRefCount);
+      newServer->_clientListShape.Add(this, clientListShapeRefCount);
+
+      if (clientListValueRefCount > 0 && newServer->operMode() == ADirty && operMode() != ADirty) {
+        setOperMode(ADirty);
+      }
     }
   }
 
 
   setValueDirty() ;
   setShapeDirty() ;
+
+  bool ret(false) ;
 
   // Process the proxies
   for (int i=0 ; i<numProxies() ; i++) {
@@ -1107,10 +1116,6 @@ bool RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, bool mustRep
     ret |= getCache(i)->redirectServersHook(*newSet,mustReplaceAll,nameChange,isRecursionStep) ;
   }
   ret |= redirectServersHook(*newSet,mustReplaceAll,nameChange,isRecursionStep) ;
-
-  if (nameChange) {
-    delete newSet ;
-  }
 
   return ret ;
 }
