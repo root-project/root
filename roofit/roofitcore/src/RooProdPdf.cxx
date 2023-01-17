@@ -1911,15 +1911,55 @@ RooArgSet* RooProdPdf::findPdfNSet(RooAbsPdf const& pdf) const
 }
 
 
+
+/// Add some full PDFs to the factors of this RooProdPdf.
+void RooProdPdf::addPdfs(RooArgSet const& pdfs)
+{
+   size_t numExtended = (_extendedIndex==-1) ? 0 : 1;
+
+   for(auto arg : pdfs) {
+      RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg);
+      if (!pdf) {
+         continue;
+      }
+      if(pdf->canBeExtended()) {
+         if (_extendedIndex == -1) {
+            _extendedIndex = _pdfList.size();
+         } else {
+            numExtended++;
+         }
+      }
+      _pdfList.add(*pdf);
+      _pdfNSetList.emplace_back(std::make_unique<RooArgSet>("nset"));
+   }
+
+   // Protect against multiple extended terms
+   if (numExtended>1) {
+      coutW(InputArguments) << "RooProdPdf::addPdfs(" << GetName()
+                            << ") WARNING: multiple components with extended terms detected,"
+                            << " product will not be extendible." << endl ;
+      _extendedIndex = -1 ;
+   }
+
+   // Reset cache
+   _cacheMgr.reset() ;
+
+}
+
 /// Remove some PDFs from the factors of this RooProdPdf.
-/// Private implementation detail.
 void RooProdPdf::removePdfs(RooArgSet const& pdfs)
 {
   // Remember what the extended PDF is
   RooAbsArg const* extPdf = _extendedIndex >= 0 ? &_pdfList[_extendedIndex] : nullptr;
 
-  // Actually remove the PDFs
-  _pdfList.remove(pdfs);
+  // Actually remove the PDFs and associated nsets
+  for(size_t i=0;i < _pdfList.size(); i++) {
+     if(pdfs.contains(_pdfList[i])) {
+        _pdfList.remove(_pdfList[i]);
+        _pdfNSetList.erase(_pdfNSetList.begin()+i);
+        i--;
+     }
+  }
 
   // Since we may have removed PDFs from the list, the index of the extended
   // PDF in the list needs to be updated. The new index might also be -1 if the
