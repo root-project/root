@@ -24,7 +24,9 @@ public:
 
   RooExtendPdf() ;
   RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
-          RooAbsReal& norm, const char* rangeName=nullptr) ;
+	       RooAbsReal& norm, const char* rangeName=nullptr) ;
+  RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
+	       double norm, const char* rangeName=nullptr) ;  
   RooExtendPdf(const RooExtendPdf& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooExtendPdf(*this,newname) ; }
   ~RooExtendPdf() override ;

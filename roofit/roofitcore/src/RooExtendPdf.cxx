@@ -69,7 +69,7 @@ RooExtendPdf::RooExtendPdf() : _rangeName(0)
 /// \param[in] rangeName  If given, the number of events denoted by `norm` is interpreted as
 /// the number of events in this range only
 RooExtendPdf::RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
-            RooAbsReal& norm, const char* rangeName) :
+			   RooAbsReal& norm, const char* rangeName) :
   RooAbsPdf(name,title),
   _pdf("pdf", "PDF", this, pdf),
   _n("n","Normalization",this,norm),
@@ -77,6 +77,29 @@ RooExtendPdf::RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
 {
 
   // Copy various setting from pdf
+  setUnit(_pdf->getUnit()) ;
+  setPlotLabel(_pdf->getPlotLabel()) ;
+}
+
+/// Constructor. The ExtendPdf behaves identical to the supplied input pdf,
+/// but adds an extended likelihood term. expectedEvents() will return
+/// `norm` if `rangeName` remains empty. If `rangeName` is not empty,
+/// `norm` will refer to this range, and expectedEvents will return the
+/// total number of events over the full range of the observables.
+/// \param[in] name   Name of the pdf
+/// \param[in] title  Title of the pdf (for plotting)
+/// \param[in] pdf    The pdf to be extended
+/// \param[in] norm   Expected number of events
+/// \param[in] rangeName  If given, the number of events denoted by `norm` is interpreted as
+/// the number of events in this range only
+RooExtendPdf::RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
+			   double norm, const char* rangeName) :
+  RooAbsPdf(name,title),
+  _pdf("pdf", "PDF", this, pdf),
+  _n("n","Normalization",this,*new RooRealVar(TString::Format("%s_norm",name),TString::Format("%s_norm",title),norm),true, false, true),
+  _rangeName(RooNameReg::ptr(rangeName))
+{
+   // Copy various setting from pdf
   setUnit(_pdf->getUnit()) ;
   setPlotLabel(_pdf->getPlotLabel()) ;
 }

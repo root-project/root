@@ -57,6 +57,7 @@ The calculator can generate Asimov datasets from two kinds of PDFs:
 #include "RooUniform.h"
 #include "RooGamma.h"
 #include "RooGaussian.h"
+#include "RooMultiVarGaussian.h"
 #include "RooBifurGauss.h"
 #include "RooLognormal.h"
 #include "RooDataHist.h"
@@ -889,12 +890,12 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
             if (fval*expectedEvents < 0) {
                oocoutW(nullptr,InputArguments)
                    << "AsymptoticCalculator::" << __func__
-                   << "(): Detected a bin with negative expected events! Please check your inputs." << endl;
+                   << "(): Bin " << i << " of " << v->GetName() << " has negative expected events! Please check your inputs." << endl;
             }
             else {
                oocoutW(nullptr,InputArguments)
                    << "AsymptoticCalculator::" << __func__
-                   << "(): Detected a bin with zero expected events- skip it" << endl;
+                   << "(): Bin " << i << " of " << v->GetName() << " has zero expected events - skip it" << endl;
             }
          }
          // have a cut off for overflows ??
@@ -932,11 +933,14 @@ bool AsymptoticCalculator::SetObsToExpected(RooProdPdf &prod, const RooArgSet &o
         if (!a->dependsOn(obs)) continue;
         RooPoisson *pois = 0;
         RooGaussian * gaus = 0;
+        RooMultiVarGaussian * mvgaus = 0;	
         if ((pois = dynamic_cast<RooPoisson *>(a)) != 0) {
             ret &= SetObsToExpected(*pois, obs);
             pois->setNoRounding(true);  //needed since expected value is not an integer
         } else if ((gaus = dynamic_cast<RooGaussian *>(a)) != 0) {
             ret &= SetObsToExpected(*gaus, obs);
+        } else if ((mvgaus = dynamic_cast<RooMultiVarGaussian *>(a)) != 0) {
+            ret &= SetObsToExpected(*mvgaus, obs);	    
         } else {
            // should try to add also lognormal case ?
             RooProdPdf *subprod = dynamic_cast<RooProdPdf *>(a);
@@ -1023,6 +1027,7 @@ RooAbsData * AsymptoticCalculator::GenerateCountingAsimovData(RooAbsPdf & pdf, c
     RooProdPdf *prod = dynamic_cast<RooProdPdf *>(&pdf);
     RooPoisson *pois = 0;
     RooGaussian *gaus = 0;
+    RooMultiVarGaussian *mvgaus = 0;
 
     if (fgPrintLevel > 1)
        std::cout << "generate counting Asimov data for pdf of type " << pdf.ClassName() << std::endl;
@@ -1036,6 +1041,8 @@ RooAbsData * AsymptoticCalculator::GenerateCountingAsimovData(RooAbsPdf & pdf, c
         pois->setNoRounding(true);
     } else if ((gaus = dynamic_cast<RooGaussian *>(&pdf)) != 0) {
         r = SetObsToExpected(*gaus, observables);
+    } else if ((mvgaus = dynamic_cast<RooMultiVarGaussian *>(&pdf)) != 0) {
+        r = SetObsToExpected(*mvgaus, observables);	
     } else {
        oocoutE(nullptr,InputArguments) << "A counting model pdf must be either a RooProdPdf or a RooPoisson or a RooGaussian" << endl;
     }
