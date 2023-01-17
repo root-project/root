@@ -569,7 +569,7 @@ file(GLOB long_running RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${long_running})
 set (multithreaded
      dataframe/df10[2-7]*
      multicore/mp103*
-     tmva/TMVAMultiClass.C
+     tmva/TMVAMulticlass.C
      tmva/TMVA_CNN_Classification.C
      tmva/TMVA_Higgs_Classification.C
      tmva/TMVA_RNN_Classification.C
