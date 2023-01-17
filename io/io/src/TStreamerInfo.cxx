@@ -4394,24 +4394,24 @@ T TStreamerInfo::GetTypedValueAux(Int_t type, void *ladd, Int_t k, Int_t len)
          }
 
          // pointer to an array of basic types  array[n]
-      case kOffsetP + kBool_t:    READ_ARRAY(Bool_t)
-      case kOffsetP + kChar_t:    READ_ARRAY(Char_t)
-      case kOffsetP + kShort_t:   READ_ARRAY(Short_t)
-      case kOffsetP + kInt_t:     READ_ARRAY(Int_t)
-      case kOffsetP + kLong_t:    READ_ARRAY(Long_t)
-      case kOffsetP + kLong64_t:  READ_ARRAY(Long64_t)
-      case kOffsetP + kFloat16_t:
-      case kOffsetP + kFloat_t:   READ_ARRAY(Float_t)
-      case kOffsetP + kDouble32_t:
-      case kOffsetP + kDouble_t:  READ_ARRAY(Double_t)
-      case kOffsetP + kUChar_t:   READ_ARRAY(UChar_t)
-      case kOffsetP + kUShort_t:  READ_ARRAY(UShort_t)
-      case kOffsetP + kUInt_t:    READ_ARRAY(UInt_t)
-      case kOffsetP + kULong_t:   READ_ARRAY(ULong_t)
+      case (unsigned)kOffsetP + kBool_t:    READ_ARRAY(Bool_t)
+      case (unsigned)kOffsetP + kChar_t:    READ_ARRAY(Char_t)
+      case (unsigned)kOffsetP + kShort_t:   READ_ARRAY(Short_t)
+      case (unsigned)kOffsetP + kInt_t:     READ_ARRAY(Int_t)
+      case (unsigned)kOffsetP + kLong_t:    READ_ARRAY(Long_t)
+      case (unsigned)kOffsetP + kLong64_t:  READ_ARRAY(Long64_t)
+      case (unsigned)kOffsetP + kFloat16_t:
+      case (unsigned)kOffsetP + kFloat_t:   READ_ARRAY(Float_t)
+      case (unsigned)kOffsetP + kDouble32_t:
+      case (unsigned)kOffsetP + kDouble_t:  READ_ARRAY(Double_t)
+      case (unsigned)kOffsetP + kUChar_t:   READ_ARRAY(UChar_t)
+      case (unsigned)kOffsetP + kUShort_t:  READ_ARRAY(UShort_t)
+      case (unsigned)kOffsetP + kUInt_t:    READ_ARRAY(UInt_t)
+      case (unsigned)kOffsetP + kULong_t:   READ_ARRAY(ULong_t)
 #if defined(_MSC_VER) && (_MSC_VER <= 1200)
-      case kOffsetP + kULong64_t: READ_ARRAY(Long64_t)
+      case (unsigned)kOffsetP + kULong64_t: READ_ARRAY(Long64_t)
 #else
-      case kOffsetP + kULong64_t: READ_ARRAY(ULong64_t)
+      case (unsigned)kOffsetP + kULong64_t: READ_ARRAY(ULong64_t)
 #endif
 
           // array counter //[n]
