@@ -57,6 +57,9 @@ class RooSTLRefCountList {
     ///Add an object or increase refCount if it is already present. Only compares
     ///pointers to check for existing objects
     void Add(T * obj, std::size_t initialCount = 1) {
+      // Nothing to add because `refCount` would be zero.
+      if(initialCount == 0) return;
+
       auto foundItem = findByPointer(obj);
 
       if (foundItem != _storage.end()) {
@@ -191,11 +194,17 @@ class RooSTLRefCountList {
     ///Decrease ref count of given object. Shrink list if ref count reaches 0.
     ///\param obj Decrease ref count of given object. Compare by pointer.
     ///\param force If true, remove irrespective of ref count.
-    void Remove(const T * obj, bool force = false) {
+    ///Returns by how much the `refCount` for the element to be removed was
+    ///decreased (zero if nothing was removed). If `force == false`, it can
+    ///only be zero or one, if `force == true`, it can be the full `refCount`
+    ///for that element.
+    int Remove(const T * obj, bool force = false) {
       auto item = findByPointer(obj);
 
       if (item != _storage.end()) {
         const std::size_t pos = item - _storage.begin();
+
+        const UInt_t origRefCount = _refCount[pos];
 
         if (force || --_refCount[pos] == 0) {
           //gcc4.x doesn't know how to erase at the position of a const_iterator
@@ -211,8 +220,31 @@ class RooSTLRefCountList {
             // _storage at the beginning of Remove().
             _orderedStorage.erase(std::find(_orderedStorage.begin(), _orderedStorage.end(), obj));
           }
+          return origRefCount;
         }
+        return 1;
       }
+
+      return 0;
+    }
+
+
+    ///Replace an element with a new value, keeping the same `refCount`. Will
+    ///return the `refCount` for that element if the replacement succeeded,
+    ///otherwise returns zero in case the `oldObj` could not be found in the
+    ///collection.
+    int Replace(const T * oldObj, T * newObj) {
+      auto item = findByPointer(oldObj);
+
+      if (item != _storage.end()) {
+        const std::size_t pos = item - _storage.begin();
+        _storage[pos] = newObj;
+        // The content has changed, so the ordered-by-name storage was invalidated.
+        _orderedStorage.clear();
+        return _refCount[pos];
+      }
+
+      return 0;
     }
 
 
