@@ -41,6 +41,8 @@ protected:
 
     const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
     std::unordered_set<std::string> fNeededStdLib = {"vector"};
+    std::unordered_set<std::string> fCustomOpHeaders;
+
     std::string fName="UnnamedModel";
     std::string fGC; //generated code
     bool fUseWeightFile = true;
@@ -66,6 +68,9 @@ public:
          fNeededStdLib.insert(libname);
       }
    }
+   void AddNeededCustomHeader(std::string filename) {
+      fCustomOpHeaders.insert(filename);
+   }
     void GenerateHeaderInfo(std::string& hgname);
     void PrintGenerated(){
       std::cout << fGC;
@@ -81,7 +86,8 @@ public:
     std::string GetFilename(){
       return fName;
     }
-   // virtual ~RModel_Base(){}
+   
+   ~RModel_Base(){}
    ClassDef(RModel_Base,1);
 
 };

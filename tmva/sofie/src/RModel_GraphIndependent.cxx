@@ -61,6 +61,10 @@ namespace SOFIE{
         std::string hgname;
         GenerateHeaderInfo(hgname);
 
+        std::ofstream f;
+        f.open(fName+".dat");
+        f.close();
+
         //Generating Infer function definition for Edge update function
         long next_pos;
         fGC+="\n\nnamespace Edge_Update{\nstruct Session {\n";
@@ -101,7 +105,7 @@ namespace SOFIE{
         fGC += "\n// --- Edge Update ---\n";
         for(int k=0; k<num_edges; ++k){
             fGC+="std::vector<float> Edge_"+std::to_string(k)+"_Update = ";
-            fGC+=edges_update_block->Generate({"input_graph.edge_data.data()+"+std::to_string(k*num_edge_features)});
+            fGC+=edges_update_block->Generate({"input_graph.edge_data.GetData()+"+std::to_string(k*num_edge_features)});
             fGC+="\nstd::copy(Edge_"+std::to_string(k)+"_Update.begin(),Edge_"+std::to_string(k)+"_Update.end(),input_graph.edge_data.begin()+"+std::to_string(k*num_edge_features)+");\n";
         }
 
@@ -109,14 +113,15 @@ namespace SOFIE{
         fGC += "\n// --- Node Update ---\n";
         for(int k=0; k<num_nodes; ++k){
             fGC+="std::vector<float> Node_"+std::to_string(k)+"_Update = ";
-            fGC+=nodes_update_block->Generate({"input_graph.node_data.data()+"+std::to_string(k*num_node_features)});
+            fGC+=nodes_update_block->Generate({"input_graph.node_data.GetData()+"+std::to_string(k*num_node_features)});
             fGC+="\nstd::copy(Node_"+std::to_string(k)+"_Update.begin(),Node_"+std::to_string(k)+"_Update.end(),input_graph.node_data.begin()+"+std::to_string(k*num_node_features)+");\n";
         }
 
         // computing updated global attributes
-        fGC += "\n// --- Global Update ---\n";        
-        fGC += "input_graph.global_data=";
-        fGC += globals_update_block->Generate({"input_graph.global_data.data()"}); 
+        fGC += "\n// --- Global Update ---\n";
+        fGC += "std::vector<float> Global_Data = ";
+        fGC += globals_update_block->Generate({"input_graph.global_data.GetData()"});         
+        fGC += "\nstd::copy(Global_Data.begin(), Global_Data.end(), input_graph.global_data.GetData());"; 
         fGC += "\n";
         
         fGC += ("}\n} //TMVA_SOFIE_" + fName + "\n");

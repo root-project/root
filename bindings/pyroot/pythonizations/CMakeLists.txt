@@ -60,6 +60,7 @@ if(tmva)
         ROOT/_pythonization/_tmva/_crossvalidation.py
         ROOT/_pythonization/_tmva/_dataloader.py
         ROOT/_pythonization/_tmva/_factory.py
+        ROOT/_pythonization/_tmva/_gnn.py
         ROOT/_pythonization/_tmva/__init__.py
         ROOT/_pythonization/_tmva/_rbdt.py
         ROOT/_pythonization/_tmva/_rtensor.py
