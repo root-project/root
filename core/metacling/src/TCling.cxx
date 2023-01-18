@@ -3189,7 +3189,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
       return kTRUE;
 
    //FIXME: We must use the cling::Interpreter::lookupFileOrLibrary iface.
-   const clang::DirectoryLookup *CurDir = nullptr;
+   clang::ConstSearchDirIterator *CurDir = nullptr;
    clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
    clang::HeaderSearch &HS = PP.getHeaderSearchInfo();
    auto FE = HS.LookupFile(file_name.c_str(),

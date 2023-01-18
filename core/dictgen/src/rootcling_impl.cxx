@@ -3892,7 +3892,7 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::HeaderSearch 
          continue;
 
       clang::ModuleMap::KnownHeader SuggestedModule;
-      const clang::DirectoryLookup *CurDir = nullptr;
+      clang::ConstSearchDirIterator *CurDir = nullptr;
       if (auto FE = headerSearch.LookupFile(
                header, clang::SourceLocation(),
                /*isAngled*/ false,

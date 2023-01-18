@@ -3329,7 +3329,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
 
    const FileEntry *headerFE = sourceManager.getFileEntryForID(headerFID);
    while (includeLoc.isValid() && sourceManager.isInSystemHeader(includeLoc)) {
-      const DirectoryLookup *foundDir = nullptr;
+      ConstSearchDirIterator *foundDir = nullptr;
       // use HeaderSearch on the basename, to make sure it takes a header from
       // the include path (e.g. not from /usr/include/bits/)
       assert(headerFE && "Couldn't find FileEntry from FID!");
@@ -3394,7 +3394,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       assert(trailingPart.data() + trailingPart.size()
              == headerFileName.data() + headerFileName.size()
              && "Mismatched partitioning of file name!");
-      const DirectoryLookup* FoundDir = nullptr;
+      ConstSearchDirIterator* FoundDir = nullptr;
       FELong = HdrSearch.LookupFile(trailingPart, SourceLocation(),
                                     true /*isAngled*/, nullptr/*FromDir*/, FoundDir,
                                     ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
@@ -3418,7 +3418,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       assert(trailingPart.data() + trailingPart.size()
              == headerFileName.data() + headerFileName.size()
              && "Mismatched partitioning of file name!");
-      const DirectoryLookup* FoundDir = nullptr;
+      ConstSearchDirIterator* FoundDir = nullptr;
       // Can we find it, and is it the same file as the long version?
       // (or are we back to the previously found spelling, which is fine, too)
       if (HdrSearch.LookupFile(trailingPart, SourceLocation(),
