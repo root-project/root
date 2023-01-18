@@ -848,7 +848,7 @@ double RooAbsPdf::extendedTerm(double sumEntries, double expected, double sumEnt
 /// of this PDF for the given number of observed events.
 ///
 /// This function is a wrapper around
-/// RooAbsPdf::extendedTerm(double observed, const RooArgSet* nset), where the
+/// RooAbsPdf::extendedTerm(double, const RooArgSet*, double, bool), where the
 /// number of observed events and observables to be used as the normalization
 /// set for the pdf is extracted from a RooAbsData.
 ///
@@ -1042,9 +1042,9 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   const bool ext = interpretExtendedCmdArg(*this, pc.getInt("ext")) ;
   Int_t numcpu   = pc.getInt("numcpu") ;
   Int_t numcpu_strategy = pc.getInt("interleave");
-  // strategy 3 works only for RooSimultaneus.
+  // strategy 3 works only for RooSimultaneous.
   if (numcpu_strategy==3 && !this->InheritsFrom("RooSimultaneous") ) {
-     coutW(Minimization) << "Cannot use a NumCpu Strategy = 3 when the pdf is not a RooSimultaneus, "
+     coutW(Minimization) << "Cannot use a NumCpu Strategy = 3 when the pdf is not a RooSimultaneous, "
                             "falling back to default strategy = 0"  << endl;
      numcpu_strategy = 0;
   }
@@ -1628,7 +1628,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     return 0 ;
   }
 
-  // TimingAnalysis works only for RooSimultaneus.
+  // TimingAnalysis works only for RooSimultaneous.
   if (pc.getInt("timingAnalysis") && !this->InheritsFrom("RooSimultaneous") ) {
      coutW(Minimization) << "The timingAnalysis feature was built for minimization with RooSimulteneous "
                             "and is not implemented for other PDF's. Please create a RooSimultenous to "
@@ -2372,8 +2372,7 @@ bool RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const
 /// | `Name(const char* name)`  | Name of the output dataset
 /// | `Verbose(bool flag)`      | Print informational messages during event generation
 /// | `NumEvents(int nevt)`     | Generate specified number of events
-/// | `Extended()`              | The actual number of events generated will be sampled from a Poisson distribution with mu=nevt.
-/// This can be *much* faster for peaked PDFs, but the number of events is not exactly what was requested.
+/// | `Extended()`              | The actual number of events generated will be sampled from a Poisson distribution with mu=nevt. This can be *much* faster for peaked PDFs, but the number of events is not exactly what was requested.
 /// | `ExpectedData()`          | Return a binned dataset _without_ statistical fluctuations (also aliased as Asimov())
 ///
 

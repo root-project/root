@@ -104,7 +104,7 @@ std::unique_ptr<TH2I> HeatmapAnalyzer::analyze(int analyzed_gradient)
       // partial heatmap is the heatmap that will be filled in for the current durations logfile
       std::unique_ptr<TH2I> partial_matrix = std::make_unique<TH2I>("partial_heatmap", "", eval_partitions_names_.size(), 0, 1, tasks_names_.size(), 0, 1);
 
-      // remove unneccesary components (those that are out of range)
+      // remove unnecessary components (those that are out of range)
       for (auto &&el : durations_json.items()) {
          auto beg_interval =
             std::upper_bound(durations_json[el.key()].begin(), durations_json[el.key()].end(), gradient_start_t);

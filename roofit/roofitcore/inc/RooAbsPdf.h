@@ -105,7 +105,7 @@ public:
 
 
   ////////////////////////////////////////////////////////////////////////////////
-  /// As RooAbsPdf::generateBinned(const RooArgSet&, const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&)
+  /// As RooAbsPdf::generateBinned(const RooArgSet&, const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&) const.
   /// \param[in] whatVars set
   /// \param[in] nEvents How many events to generate
   /// \param arg1,arg2,arg3,arg4,arg5 ordered arguments

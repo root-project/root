@@ -136,11 +136,11 @@ Job *JobManager::get_job_object(std::size_t job_object_id)
 /// \return Returns 'true' when removed successfully, 'false' otherwise.
 bool JobManager::remove_job_object(std::size_t job_object_id)
 {
-   bool removed_succesfully = job_objects_.erase(job_object_id) == 1;
+   bool removed_successfully = job_objects_.erase(job_object_id) == 1;
    if (job_objects_.empty()) {
       instance_.reset(nullptr);
    }
-   return removed_succesfully;
+   return removed_successfully;
 }
 
 ProcessManager &JobManager::process_manager() const
