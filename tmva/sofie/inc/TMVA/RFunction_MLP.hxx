@@ -21,17 +21,26 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
+enum class Activation {
+   RELU = 0x0,
+   Invalid = 0x1,
+};
+
 class RFunction_MLP: public RFunction_Update{
     private:
-        Int_t fNumLayers;          // Number of Layers in MLP
-        bool  fUseActivation;       // if True, ReLU is used as activation for every layer of the MLP
-
+        Int_t fNumLayers;           // Number of Layers in MLP
+        Activation fActivationFunction;
+        bool  fActivateFinal;       // if True, fActivationFunction is applied as the activation for the last layer
         std::vector<std::string> fKernelTensors;
         std::vector<std::string> fBiasTensors;
 
     public:
-        RFunction_MLP(FunctionTarget target, Int_t numLayers, bool useActivation, GraphType gType=GraphType::GNN):
-        RFunction_Update(target, gType), fNumLayers(numLayers), fUseActivation(useActivation){}
+        RFunction_MLP(FunctionTarget target, Int_t numLayers, Activation activation_function=Activation::RELU, bool activate_final=false, GraphType gType=GraphType::GNN):
+        RFunction_Update(target, gType), fNumLayers(numLayers), fActivationFunction(activation_function), fActivateFinal(activate_final){
+            if(fActivationFunction == Activation::Invalid){
+                throw std::runtime_error("TMVA SOFIE GNN doesn't currently supports the provided activation function for " + fFuncName + " update.");
+            }
+        }
         
         void Initialize(){
             
@@ -47,24 +56,36 @@ class RFunction_MLP: public RFunction_Update{
             }
 
             std::unique_ptr<ROperator> op_gemm;
-            for(int i=0; i<fNumLayers; ++i){
+            for(int i=0; i<fNumLayers-1; ++i){
                 op_gemm.reset(new ROperator_Gemm<float>(1.0,1.0,0,0,fGemmInput,UTILITY::Clean_name(fKernelTensors[i]),UTILITY::Clean_name(fBiasTensors[i]),fFuncName+"Gemm"+std::to_string(i)));
                 function_block->AddOperator(std::move(op_gemm));
                 fGemmInput = fFuncName+"Gemm"+i;
-                if(fUseActivation){
+                if (fActivationFunction == Activation::RELU){
                     std::unique_ptr<ROperator> op_relu;
                     op_relu.reset(new ROperator_Relu<float>(fFuncName+"Gemm"+std::to_string(i), fFuncName+"Relu"+std::to_string(i)));
                     function_block->AddOperator(std::move(op_relu));
                     fGemmInput = fFuncName+"Relu"+i;
-                }
+
+                }       
             }
+
+            op_gemm.reset(new ROperator_Gemm<float>(1.0,1.0,0,0,fGemmInput,UTILITY::Clean_name(fKernelTensors.back()),UTILITY::Clean_name(fBiasTensors.back()),fFuncName+"Gemm"+std::to_string(fNumLayers)));
+            function_block->AddOperator(std::move(op_gemm));
+            if(fActivateFinal){
+                if (fActivationFunction == Activation::RELU){
+                    std::unique_ptr<ROperator> op_relu;
+                    op_relu.reset(new ROperator_Relu<float>(fFuncName+"Gemm"+std::to_string(fNumLayers), fFuncName+"Relu"+std::to_string(fNumLayers)));
+                    function_block->AddOperator(std::move(op_relu));
+                } 
+            }
+
             function_block->AddBlasRoutines({"Gemm", "Gemv"});  // for Gemm operation
 
             // assuming all the linear layers has a kernel and a bias initialized tensors
-            if(fUseActivation){
-                function_block->AddOutputTensorNameList({fFuncName+"Relu"+std::to_string(fNumLayers-1)});
+            if(fActivateFinal){
+                function_block->AddOutputTensorNameList({fFuncName+"Relu"+std::to_string(fNumLayers)});
             } else{
-                function_block->AddOutputTensorNameList({fFuncName+"Gemm"+std::to_string(fNumLayers-1)});
+                function_block->AddOutputTensorNameList({fFuncName+"Gemm"+std::to_string(fNumLayers)});
             }
         }
 
