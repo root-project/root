@@ -62,7 +62,7 @@ enum class EColumnType {
 /**
 \class ROOT::Experimental::RColumnModel
 \ingroup NTuple
-\brief Holds the static meta-data of a column in a tree
+\brief Holds the static meta-data of an RNTuple column
 */
 // clang-format on
 class RColumnModel {
@@ -72,6 +72,7 @@ private:
 
 public:
    RColumnModel() : fType(EColumnType::kUnknown), fIsSorted(false) {}
+   explicit RColumnModel(EColumnType type) : fType(type), fIsSorted(type == EColumnType::kIndex) {}
    RColumnModel(EColumnType type, bool isSorted) : fType(type), fIsSorted(isSorted) {}
 
    EColumnType GetType() const { return fType; }
