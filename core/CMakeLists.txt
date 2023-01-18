@@ -237,6 +237,11 @@ if (runtime_cxxmodules)
   list(APPEND core_implicit_modules "-mByproduct" "ROOT_Rtypes")
 endif(runtime_cxxmodules)
 
+# These are already part of other modules
+list(REMOVE_ITEM Clib_dict_headers strlcpy.h snprintf.h)
+list(REMOVE_ITEM Foundation_dict_headers ESTLType.h TClassEdit.h ThreadLocalStorage.h ROOT/RStringView.hxx)
+list(REMOVE_ITEM Meta_dict_headers TIsAProxy.h TVirtualIsAProxy.h)
+
 ROOT_GENERATE_DICTIONARY(G__Core
   ${Core_dict_headers}
   ${Clib_dict_headers}
