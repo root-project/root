@@ -4,7 +4,7 @@
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.clog *.log runStaticDataMemberDict.* *.timestamp
 
 #Set the list of target to make while testing
-TEST_TARGETS += fileClose sprintfselect staticConstTest StaticDataMemberDict StaticDataMember \
+TEST_TARGETS += fileClose snprintfselect staticConstTest StaticDataMemberDict StaticDataMember \
     savannah54662 assertBaseMembers missingXFunc
 
 # adjust the location of Rules.mk as needed.
@@ -25,7 +25,7 @@ fileClose : fileClose.log
 
 fileClose.log : fileClose_C.$(DllSuf)
 
-sprintfselect : sprintfselect.log
+snprintfselect : snprintfselect.log
 	$(TestDiff)
 
 staticConstTest : staticConstTest.log

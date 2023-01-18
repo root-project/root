@@ -12,9 +12,9 @@ ROOTTEST_ADD_TEST(runsavannah54662
                   DEPENDS ${COMPILE_MACRO_TEST}
                   LABELS roottest regression cling)
 
-ROOTTEST_ADD_TEST(runsprintfselect
-                  MACRO runsprintfselect.C
-                  OUTREF sprintfselect.ref
+ROOTTEST_ADD_TEST(runsnprintfselect
+                  MACRO runsnprintfselect.C
+                  OUTREF snprintfselect.ref
                   ${WILLFAIL_ON_WIN32}
                   LABELS roottest regression cling)
 

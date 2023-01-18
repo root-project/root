@@ -47,7 +47,7 @@ void write()
     Double_t rand2 = gRandom->Gaus(0, 1);
     Int_t ntrack   = Int_t(600 + 600 *rand1/120.);
     Float_t random = gRandom->Rndm(1);
-    sprintf(etype,"type%d",i/5);
+    snprintf(etype,20,"type%d",i/5);
     event1->SetType(etype);
     event1->SetHeader(i, 200, 960312, random);
     event1->SetNseg(Int_t(10*ntrack+20*rand2));

@@ -42,7 +42,7 @@ void func(const char * name) {
    // delete any pre-existing trees of the same name
 
    char nameCycle[100];
-   sprintf(nameCycle,"%s;*",name);
+   snprintf(nameCycle,100,"%s;*",name);
    g->Delete(nameCycle);
 
    TTree *tree1 = new TTree(name,name);

@@ -14,7 +14,7 @@ void macos(const char* name)
    //open root file for output
    Char_t rtSuff[6]=".root";
    Char_t rootname[200];
-   sprintf(rootname,"%s%s",name,rtSuff);
+   snprintf(rootname,200,"%s%s",name,rtSuff);
    cout << "root file: " << rootname << endl;
    
    TFile *rf=new TFile(rootname,"RECREATE");

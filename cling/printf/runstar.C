@@ -12,7 +12,7 @@ const char *ext = ".cxx";
 char sname[128];
 int i=0;
 while(-1!=num[i]) {
-   sprintf(sname,"%s%d%s",hdr,num[i],ext);
+   snprintf(sname,128,"%s%d%s",hdr,num[i],ext);
    printf("%s\n",sname); //ci(cpp,sname,dfile,macro);
      ++i;
 }
