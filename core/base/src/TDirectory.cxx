@@ -535,7 +535,7 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
 ////////////////////////////////////////////////////////////////////////////////
 /// Change current directory to "this" directory.
 ///
-/// Returns kTRUE in case of success.
+/// Returns kTRUE (it's guaranteed to succeed).
 
 Bool_t TDirectory::cd()
 {
@@ -1353,11 +1353,14 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
 
 void TDirectory::TContext::RegisterCurrentDirectory()
 {
-   // peg the current directly
+   // peg the current directory
    TDirectory *current;
    {
       ROOT::Internal::TSpinLockGuard slg(*GetCurrentDirectoryLock());
       current = TDirectory::CurrentDirectory().load();
+      // Don't peg if there is no current directory or if the current
+      // directory's destruction has already started (in another thread)
+      // and is waiting for this thread to leave the critical section.
       if (!current || !current->IsBuilt())
          return;
       ++(current->fContextPeg);
