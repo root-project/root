@@ -78,11 +78,11 @@ public:
    }
    // Field is only used for reading
    void GenerateColumnsImpl() final { assert(false && "Cardinality fields must only be used for reading"); }
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final
    {
-      RColumnModel model(EColumnType::kIndex, true /* isSorted*/);
-      fColumns.emplace_back(ROOT::Experimental::Detail::RColumn::Create<ClusterSize_t>(model, 0));
-      fPrincipalColumn = fColumns[0].get();
+      auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
+      fColumns.emplace_back(
+         ROOT::Experimental::Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
    }
 
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final

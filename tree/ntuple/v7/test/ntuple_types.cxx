@@ -273,7 +273,8 @@ TEST(RNTuple, Casting)
       auto reader = RNTupleReader::Open(std::move(modelB), "ntuple", fileGuard.GetPath());
       FAIL() << "should not be able to cast int to float";
    } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("not convertible to the requested type"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("On-disk column types"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("cannot be matched"));
    }
 
    auto modelC = RNTupleModel::Create();
@@ -333,7 +334,7 @@ TEST(RNTuple, TClass)
          auto viewKlass = ntuple->GetView<DerivedA>("klass");
          FAIL() << "GetView<a_base_class_of_T> should throw";
       } catch (const RException& err) {
-         EXPECT_THAT(err.what(), testing::HasSubstr("Column missing: column #0 for field a"));
+         EXPECT_THAT(err.what(), testing::HasSubstr("No on-disk column information for for field `klass.:_0.a`"));
       }
    }
 }
