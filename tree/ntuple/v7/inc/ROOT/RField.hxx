@@ -112,9 +112,9 @@ public:
 
       /// The first column list from fSerializationTypes is the default for writing.
       std::vector<EColumnType> GetSerializationDefault() const;
-      TypesList_t GetSerializeTypes() const { return fSerializationTypes; }
+      TypesList_t GetSerializationTypes() const { return fSerializationTypes; }
       /// Get the union of fSerializationTypes and fDeserializationExtraTypes
-      TypesList_t GetDeserializeTypes() const;
+      TypesList_t GetDeserializationTypes() const;
 
    private:
       TypesList_t fSerializationTypes;
@@ -158,7 +158,7 @@ protected:
    std::uint32_t fOnDiskTypeVersion = kInvalidTypeVersion;
    /// If set, the column representation used for serialization; otherwise the default from
    /// GetColumnRepresentations() is used
-   std::unique_ptr<std::vector<EColumnType>> fSerializationTypes;
+   std::unique_ptr<std::vector<EColumnType>> fColumnRepresentative;
 
    /// Implementations in derived classes should return a static RColumnRepresentations object. The default
    /// implementation does not attach any columns to the field.
@@ -339,12 +339,12 @@ public:
    DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
    void SetOnDiskId(DescriptorId_t id) { fOnDiskId = id; }
 
-   /// Returns the fSerializationColumnTypes pointee or, if unset, the field's default representation
-   std::vector<EColumnType> GetSerializationColumnTypes() const;
-   /// Picks a column representation. This can only be done _before_ connecting the field to a page sink.
+   /// Returns the fColumnRepresentative pointee or, if unset, the field's default representative
+   std::vector<EColumnType> GetColumnRepresentative() const;
+   /// Fixes a column representative. This can only be done _before_ connecting the field to a page sink.
    /// Otherwise, or if the provided representation is not in the list of GetColumnRepresentations,
    /// an exception is thrown
-   void SetSerializationTypes(const std::vector<EColumnType> &representation);
+   void SetColumnRepresentative(const std::vector<EColumnType> &representative);
 
    /// Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
    /// can be read or written.  In order to find the field in the page storage, the field's on-disk ID has to be set.
