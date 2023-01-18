@@ -41,7 +41,6 @@ private:
    std::vector<std::string> fInputTensorNames;  //input tensor names using ONNX order
 
    std::vector<std::unique_ptr<ROperator>> fOperators;
-   std::unordered_set<std::string> fCustomOpHeaders;
 
 public:
 
@@ -83,10 +82,6 @@ public:
    // Check if a tensor is initialized
    bool IsInitializedTensor(const std::string& name) const;
    void AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape);
-   
-   void AddNeededCustomHeader(std::string filename) {
-      fCustomOpHeaders.insert(filename);
-   }
    
    void AddInputTensorName(std::string name);
    void AddOutputTensorNameList(std::vector<std::string> outputtensornames);

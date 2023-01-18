@@ -1,7 +1,7 @@
 #ifndef TMVA_SOFIE_SOFIE_COMMON
 #define TMVA_SOFIE_SOFIE_COMMON
 
-// #include "TMVA/RTensor.hxx"
+#include "TMVA/RTensor.hxx"
 // #include "TMVA/Types.h"
 
 #include <stdexcept>
@@ -425,10 +425,60 @@ extern "C" void sgemm_(const char * transa, const char * transb, const int * m, 
 
 
 struct GNN_Data {
-      std::vector<float> node_data;
-      std::vector<float> edge_data;
-      std::vector<float> global_data; 
+      RTensor<float> node_data;
+      RTensor<float> edge_data;
+      RTensor<float> global_data;
+
+      GNN_Data(): node_data(RTensor<float>({})), edge_data(RTensor<float>({})), global_data(RTensor<float>({})){}
 };
+
+template<typename T>
+TMVA::Experimental::RTensor<T> Concatenate( TMVA::Experimental::RTensor<T> & t1,  TMVA::Experimental::RTensor<T> & t2, int axis = 0)
+{
+   // concatenate tensor along axis. Shape must be the same except in the dimension of the concatenated axis
+   if (t1.GetMemoryLayout() != t2.GetMemoryLayout())
+      throw std::runtime_error("TMVA RTensor Concatenate - tensors have different memory layout");
+   auto & shape1 = t1.GetShape();
+   auto & shape2 = t2.GetShape();
+   if (t1.GetSize()/shape1[axis] != t2.GetSize()/shape2[axis])
+      throw std::runtime_error("TMVA RTensor Concatenate - tensors have incompatible shapes");
+   std::vector<size_t> outShape = shape1;
+   outShape[axis] = shape1[axis] + shape2[axis];
+   TMVA::Experimental::RTensor<T> tout(outShape, t1.GetMemoryLayout());
+   if (t1.GetMemoryLayout() == TMVA::Experimental::MemoryLayout::ColumnMajor) {
+      throw std::runtime_error("TMVA RTensor Concatenate is not yet supported for column major tensors");
+   }
+   // if (axis == 0 && t1.GetMemoryLayout() == TMVA::Experimental::MemoryLayout::RowMajor) {
+   //    std::copy(t1.begin(), t1.end(), tout.begin());
+   //    std::copy(t2.begin(), t2.end(), tout.begin()+t1.GetSize());
+   //    return tout;
+   // }
+   // general case (for row major layout)
+   auto & stride1 = t1.GetStrides();
+   auto & stride2 = t2.GetStrides();
+   auto & outStride = tout.GetStrides();
+
+   size_t s1 = (axis > 0) ? stride1[axis-1] : t1.GetSize();  // block size to copy from first tensor
+   size_t s2 = (axis > 0) ? stride2[axis-1] : t2.GetSize();  // block size to copy from second tensor
+   size_t sout = (axis > 0) ? outStride[axis-1] : tout.GetSize();
+   assert(sout == s1+s2 );
+   size_t nb = t1.GetSize()/s1;
+   assert( nb == t2.GetSize()/s2);
+   for (size_t i = 0; i < nb; i++) {
+      std::copy(t1.begin() + i*s1, t1.begin() + (i+1)*s1, tout.begin() + i * sout );
+      std::copy(t2.begin() + i*s2, t2.begin() + (i+1)*s2, tout.begin() + i * sout + s1 );
+   }
+   return tout;
+}
+
+
+inline GNN_Data Concatenate(GNN_Data & data1, GNN_Data & data2, int axis = 0) {
+   GNN_Data out;
+   out.node_data = Concatenate(data1.node_data,data2.node_data, axis);
+   out.edge_data = Concatenate(data1.edge_data,data2.edge_data, axis);
+   out.global_data = Concatenate(data1.global_data,data2.global_data, axis);
+   return out;
+}
 
 }//SOFIE
 }//Experimental

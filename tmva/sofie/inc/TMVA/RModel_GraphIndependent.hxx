@@ -28,6 +28,27 @@ struct GraphIndependent_Init {
 
     std::string filename;
 
+    template <typename T>
+    void createUpdateFunction(T& updateFunction){
+        switch(updateFunction.GetFunctionTarget()){
+            case FunctionTarget::EDGES: {
+                edges_update_block.reset(new T(updateFunction));
+                break;
+            }
+            case FunctionTarget::NODES: {
+                nodes_update_block.reset(new T(updateFunction));
+                break;
+            }
+            case FunctionTarget::GLOBALS: {
+                globals_update_block.reset(new T(updateFunction));
+                break;
+            }
+            default: {
+                throw std::runtime_error("TMVA SOFIE: Invalid Update function supplied for creating GraphIndependent function block.");
+            }
+        }
+    }
+
     ~GraphIndependent_Init(){
         edges_update_block.reset();
         nodes_update_block.reset();
