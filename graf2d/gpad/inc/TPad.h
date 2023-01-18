@@ -386,7 +386,7 @@ public:
    Int_t             NextPaletteColor() override;
 
    void              DrawCollideGrid();
-   Bool_t            PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t &yb) override;
+   Bool_t            PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t &yb, Option_t* option = "lb") override;
 
    virtual void      x3d(Option_t *type=""); // Depreciated
 
