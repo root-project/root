@@ -319,9 +319,9 @@ public:
     case MM_Mips:
     case MM_WinCOFF:
     case MM_XCOFF:
-    case MM_WinCOFFX86:
       return '\0';
     case MM_MachO:
+    case MM_WinCOFFX86:
       return '_';
     }
     llvm_unreachable("invalid mangling mode");
