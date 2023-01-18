@@ -316,21 +316,6 @@ std::vector<std::unique_ptr<RooAbsArg>> unfoldIntegrals(RooAbsArg const &topNode
    return newNodes;
 }
 
-void foldIntegrals(RooAbsArg &topNode, RooArgSet &replacedArgs, RooArgSet &newArgs)
-{
-   assert(replacedArgs.size() == newArgs.size());
-
-   for (std::size_t i = 0; i < replacedArgs.size(); ++i) {
-      replacedArgs[i]->setAttribute((std::string("ORIGNAME:") + newArgs[i]->GetName()).c_str());
-   }
-
-   topNode.recursiveRedirectServers(replacedArgs, false, true);
-
-   for (std::size_t i = 0; i < replacedArgs.size(); ++i) {
-      replacedArgs[i]->setAttribute((std::string("ORIGNAME:") + newArgs[i]->GetName()).c_str(), false);
-   }
-}
-
 } // namespace
 
 /// \class NormalizationIntegralUnfolder
@@ -339,8 +324,7 @@ void foldIntegrals(RooAbsArg &topNode, RooArgSet &replacedArgs, RooArgSet &newAr
 /// A NormalizationIntegralUnfolder takes the top node of a computation graph
 /// and a normalization set for its constructor. The normalization integrals
 /// for the PDFs in that graph will be created, and placed into the computation
-/// graph itself, rewiring the existing RooAbsArgs. When the unfolder goes out
-/// of scope, all changes to the computation graph will be reverted.
+/// graph itself, rewiring the existing RooAbsArgs.
 ///
 /// Note that for evaluation, the original topNode should not be used anymore,
 /// because if it is a pdf there is now a new normalized pdf wrapping it,
@@ -360,13 +344,6 @@ RooFit::NormalizationIntegralUnfolder::NormalizationIntegralUnfolder(RooAbsArg c
 
 RooFit::NormalizationIntegralUnfolder::~NormalizationIntegralUnfolder()
 {
-   // If there was no normalization set to compile the computation graph for,
-   // we also don't need to fold the integrals back in.
-   if (_normSetWasEmpty)
-      return;
-
-   foldIntegrals(*_topNodeWrapper, _replacedArgs, _newArgs);
-
    for (auto &item : _normSets) {
       delete item.second;
    }
