@@ -415,9 +415,19 @@ void ROOT::Experimental::Detail::RFieldBase::Flush() const
 
 std::vector<ROOT::Experimental::EColumnType> ROOT::Experimental::Detail::RFieldBase::GetSerializationColumnTypes() const
 {
-   if (fSerializationColumnTypes)
-      return *fSerializationColumnTypes;
+   if (fSerializationTypes)
+      return *fSerializationTypes;
    return GetColumnRepresentations().GetSerializationDefault();
+}
+
+void ROOT::Experimental::Detail::RFieldBase::SetSerializationTypes(const std::vector<EColumnType> &representation)
+{
+   if (!fColumns.empty())
+      throw RException(R__FAIL("cannot set column representation once field is connected"));
+   auto validTypes = GetColumnRepresentations().GetSerializeTypes();
+   if (std::find(validTypes.begin(), validTypes.end(), representation) == std::end(validTypes))
+      throw RException(R__FAIL("invalid column representation"));
+   fSerializationTypes = std::make_unique<std::vector<EColumnType>>(representation);
 }
 
 std::vector<ROOT::Experimental::EColumnType>

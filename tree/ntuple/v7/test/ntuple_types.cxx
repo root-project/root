@@ -262,6 +262,14 @@ TEST(RNTuple, Casting)
    FileRaii fileGuard("test_ntuple_casting.root");
    auto modelA = RNTupleModel::Create();
    modelA->MakeField<std::int32_t>("myInt", 42);
+   auto fld = ROOT::Experimental::Detail::RFieldBase::Create("field", "float").Unwrap();
+   fld->SetSerializationTypes({EColumnType::kReal32});
+   try {
+      fld->SetSerializationTypes({EColumnType::kBit});
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid column representation"));
+   }
+   modelA->AddField(std::move(fld));
    {
       auto writer = RNTupleWriter::Recreate(std::move(modelA), "ntuple", fileGuard.GetPath());
       writer->Fill();
