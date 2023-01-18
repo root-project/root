@@ -12,6 +12,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
+#include <locale>
 #include <memory>
 
 #include "TROOT.h"
@@ -3067,33 +3068,77 @@ Bool_t TPad::Collide(Int_t i, Int_t j, Int_t w, Int_t h)
 ///
 /// \return `true` if the box could be placed, `false` if not.
 ///
-/// \param[in]  o        pointer to the box to be placed
-/// \param[in]  w        box width to be placed
-/// \param[in]  h        box height to be placed
-/// \param[out] xl       x position of the bottom left corner of the placed box
-/// \param[out] yb       y position of the bottom left corner of the placed box
+/// \param[in]  o               pointer to the box to be placed
+/// \param[in]  w               box width to be placed
+/// \param[in]  h               box height to be placed
+/// \param[out] xl              x position of the bottom left corner of the placed box
+/// \param[out] yb              y position of the bottom left corner of the placed box
+/// \param[in]  option          l=left, r=right, t=top, b=bottom, w=within margins. Order determines
+///                             priority for placement. Default is "lb" (prioritises horizontal over vertical)
 
-Bool_t TPad::PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t &yb)
+Bool_t TPad::PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t &yb, Option_t* option)
 {
    FillCollideGrid(o);
 
    Int_t iw = (int)(fCGnx*w);
    Int_t ih = (int)(fCGny*h);
 
-   Int_t nxmax = fCGnx-iw-1;
-   Int_t nymax = fCGny-ih-1;
+   Int_t nxbeg = 0;
+   Int_t nybeg = 0;
+   Int_t nxend = fCGnx-iw-1;
+   Int_t nyend = fCGny-ih-1;
+   Int_t dx = 1;
+   Int_t dy = 1;
 
-   for (Int_t i = 0; i<nxmax; i++) {
-      for (Int_t j = 0; j<=nymax; j++) {
-         if (Collide(i,j,iw,ih)) {
-            continue;
-         } else {
-            xl = (Double_t)(i)/(Double_t)(fCGnx);
-            yb = (Double_t)(j)/(Double_t)(fCGny);
-            return kTRUE;
+   bool isFirstVertical = false;
+   bool isFirstHorizontal = false;
+
+   for (std::size_t i = 0; option[i] != '\0'; ++i) {
+      char letter = std::tolower(option[i]);
+      if (letter == 'w') {
+         nxbeg += fCGnx*GetLeftMargin();
+         nybeg += fCGny*GetBottomMargin();
+         nxend -= fCGnx*GetRightMargin();
+         nyend -= fCGny*GetTopMargin();
+      } else if (letter == 't' || letter == 'b') {
+         isFirstVertical = !isFirstHorizontal;
+         // go from top to bottom instead of bottom to top
+         dy = letter == 't' ? -1 : 1;
+      } else if (letter == 'l' || letter == 'r') {
+         isFirstHorizontal = !isFirstVertical;
+         // go from right to left instead of left to right
+         dx = letter == 'r' ? -1 : 1;
+      }
+   }
+
+   if(dx < 0) std::swap(nxbeg, nxend);
+   if(dy < 0) std::swap(nybeg, nyend);
+
+   auto attemptPlacement = [&](Int_t i, Int_t j) {
+      if (Collide(i, j, iw, ih)) {
+         return false;
+      } else {
+         xl = (Double_t)(i) / (Double_t)(fCGnx);
+         yb = (Double_t)(j) / (Double_t)(fCGny);
+         return true;
+      }
+   };
+
+   if(!isFirstVertical) {
+      for (Int_t i = nxbeg; i != nxend; i += dx) {
+         for (Int_t j = nybeg; j != nyend; j += dy) {
+            if (attemptPlacement(i, j)) return true;
+         }
+      }
+   } else {
+      // prioritizing vertical over horizontal
+      for (Int_t j = nybeg; j != nyend; j += dy) {
+         for (Int_t i = nxbeg; i != nxend; i += dx) {
+            if (attemptPlacement(i, j)) return true;
          }
       }
    }
+
    return kFALSE;
 }
 
