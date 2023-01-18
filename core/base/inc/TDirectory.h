@@ -107,8 +107,9 @@ can be replaced with the simpler and exception safe:
       // or in the process of being deleted by another thread while this constructor runs.
       TContext(TDirectory *previous, TDirectory *newCurrent) : fDirectory(previous)
       {
-         // Store the user given directory so we can restore it
-         // later and cd to the new directory.
+         // Store the value of `previous` as the directory to return to when
+         // this object is destructed.
+         // Then cd to the `newCurrent` directory.
          if (fDirectory)
             (*fDirectory).RegisterContext(this);
          if (newCurrent)
