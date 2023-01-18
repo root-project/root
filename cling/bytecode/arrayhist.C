@@ -4,7 +4,7 @@ char name[4][50];
 
 for(int i=0; i<4; i++)
 {
-  sprintf(name[i],"hist_array_%d", i);
+  snprintf(name[i],50,"hist_array_%d", i);
 }
 
 
