@@ -623,7 +623,7 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
    if (axmin >= axmax ) {
 
 #ifdef DO_DEBUG
-      std::cout << "No rage given - check if extrapolation is needed " << std::endl;
+      std::cout << "No range given - check if extrapolation is needed " << std::endl;
 #endif
 
       xmin = graph.GetX()[0];
