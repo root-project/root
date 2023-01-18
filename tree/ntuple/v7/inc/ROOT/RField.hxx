@@ -112,6 +112,7 @@ public:
 
       /// The first column list from fSerializationTypes is the default for writing.
       std::vector<EColumnType> GetSerializationDefault() const;
+      TypesList_t GetSerializeTypes() const { return fSerializationTypes; }
       /// Get the union of fSerializationTypes and fDeserializationExtraTypes
       TypesList_t GetDeserializeTypes() const;
 
@@ -157,7 +158,7 @@ protected:
    std::uint32_t fOnDiskTypeVersion = kInvalidTypeVersion;
    /// If set, the column representation used for serialization; otherwise the default from
    /// GetColumnRepresentations() is used
-   std::unique_ptr<std::vector<EColumnType>> fSerializationColumnTypes;
+   std::unique_ptr<std::vector<EColumnType>> fSerializationTypes;
 
    /// Implementations in derived classes should return a static RColumnRepresentations object. The default
    /// implementation does not attach any columns to the field.
@@ -179,9 +180,6 @@ protected:
    virtual void ReadInClusterImpl(const RClusterIndex &clusterIndex, RFieldValue *value) {
       ReadGlobalImpl(fPrincipalColumn->GetGlobalIndex(clusterIndex), value);
    }
-
-   /// Returns the fSerializationColumnTypes pointee or, if unset, the field's default representation
-   std::vector<EColumnType> GetSerializationColumnTypes() const;
 
    /// Returns the on-disk column types found in the provided descriptor for fOnDiskId. Throws an exception if the types
    /// don't match any of the deserialization types from GetColumnRepresentations().
@@ -340,6 +338,13 @@ public:
 
    DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
    void SetOnDiskId(DescriptorId_t id) { fOnDiskId = id; }
+
+   /// Returns the fSerializationColumnTypes pointee or, if unset, the field's default representation
+   std::vector<EColumnType> GetSerializationColumnTypes() const;
+   /// Picks a column representation. This can only be done _before_ connecting the field to a page sink.
+   /// Otherwise, or if the provided representation is not in the list of GetColumnRepresentations,
+   /// an exception is thrown
+   void SetSerializationTypes(const std::vector<EColumnType> &representation);
 
    /// Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
    /// can be read or written.  In order to find the field in the page storage, the field's on-disk ID has to be set.
