@@ -255,7 +255,7 @@ public:
    virtual Int_t    IncrementPaletteColor(Int_t i, TString opt) = 0;
    virtual Int_t    NextPaletteColor() = 0;
 
-   virtual Bool_t   PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t &yb) = 0;
+   virtual Bool_t   PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t &yb, Option_t* opt = "lb") = 0;
 
    virtual TObject *CreateToolTip(const TBox *b, const char *text, Long_t delayms) = 0;
    virtual void     DeleteToolTip(TObject *tip) = 0;
