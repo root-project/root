@@ -1933,6 +1933,38 @@ void RooProdPdf::removePdfs(RooArgSet const& pdfs)
 }
 
 
+namespace {
+
+std::vector<TNamed const*> sortedNamePtrs(RooAbsCollection const& col)
+{
+   std::vector<TNamed const*> ptrs;
+   ptrs.reserve(col.size());
+   for(RooAbsArg* arg : col) {
+     ptrs.push_back(arg->namePtr());
+   }
+   std::sort(ptrs.begin(), ptrs.end());
+   return ptrs;
+}
+
+bool sortedNamePtrsOverlap(std::vector<TNamed const*> const& ptrsA, std::vector<TNamed const*> const& ptrsB)
+{
+   auto pA = ptrsA.begin();
+   auto pB = ptrsB.begin();
+   while (pA != ptrsA.end() && pB != ptrsB.end()) {
+      if (*pA < *pB) {
+          ++pA;
+      } else if (*pB < *pA) {
+          ++pB;
+      } else {
+          return true;
+      }
+   }
+   return false;
+}
+
+} // namespace
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return all parameter constraint p.d.f.s on parameters listed in constrainedParams.
 /// The observables set is required to distinguish unambiguously p.d.f in terms
@@ -1945,18 +1977,30 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
   RooArgSet constraints ;
   RooArgSet pdfParams, conParams ;
 
+  // For the optimized implementation of checking if two collections overlap by name.
+  auto observablesNamePtrs = sortedNamePtrs(observables);
+  auto constrainedParamsNamePtrs = sortedNamePtrs(constrainedParams);
+
   // Loop over PDF components
   for(auto * pdf : static_range_cast<RooAbsPdf*>(_pdfList)) {
     // A constraint term is a p.d.f that does not depend on any of the listed observables
     // but does depends on any of the parameters that should be constrained
     RooArgSet tmp;
     pdf->getParameters(nullptr, tmp);
+    auto tmpNamePtrs = sortedNamePtrs(tmp);
     // Before, there were calls to `pdf->dependsOn()` here, but they were very
     // expensive for large computation graphs! Given that we have to traverse
     // the computation graph with a call to `pdf->getParameters()` anyway, we
     // can just check if the set of all variables operlaps with the observables
     // or constraind parameters.
-    if (!tmp.overlaps(observables) && tmp.overlaps(constrainedParams)) {
+    //
+    // We are using an optimized implementation of overlap checking. Because
+    // the overlap is checked by name, we can check overlap of the
+    // corresponding name pointers. The optimization can't be in
+    // RooAbsCollection itself, because it is crucial that the memory for the
+    // non-tmp name pointers is not reallocated for each pdf.
+    if (!sortedNamePtrsOverlap(tmpNamePtrs, observablesNamePtrs) &&
+        sortedNamePtrsOverlap(tmpNamePtrs, constrainedParamsNamePtrs)) {
       constraints.add(*pdf) ;
       conParams.add(tmp,true) ;
     } else {
