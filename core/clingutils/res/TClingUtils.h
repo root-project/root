@@ -575,10 +575,10 @@ static inline std::string DemangleNameForDlsym(const std::string& name)
 {
    std::string nameForDlsym = name;
 
-#ifdef R__MACOSX
+#if defined(R__MACOSX) || defined(R__WIN32)
    // The JIT gives us a mangled name which has an additional leading underscore
-   // macOS, for instance __ZN8TRandom34RndmEv. However, dlsym requires us to
-   // remove it.
+   // on macOS and Windows, for instance __ZN8TRandom34RndmEv. However, dlsym
+   // requires us to remove it.
    // FIXME: get this information from the DataLayout via getGlobalPrefix()!
    if (nameForDlsym[0] == '_')
       nameForDlsym.erase(0, 1);
