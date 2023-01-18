@@ -191,7 +191,7 @@ ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations::GetSerialization
 }
 
 ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations::TypesList_t
-ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations::GetDeserializeTypes() const
+ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations::GetDeserializationTypes() const
 {
    TypesList_t result(fSerializationTypes);
    result.insert(result.end(), fDeserializationExtraTypes.begin(), fDeserializationExtraTypes.end());
@@ -413,21 +413,21 @@ void ROOT::Experimental::Detail::RFieldBase::Flush() const
    }
 }
 
-std::vector<ROOT::Experimental::EColumnType> ROOT::Experimental::Detail::RFieldBase::GetSerializationColumnTypes() const
+std::vector<ROOT::Experimental::EColumnType> ROOT::Experimental::Detail::RFieldBase::GetColumnRepresentative() const
 {
-   if (fSerializationTypes)
-      return *fSerializationTypes;
+   if (fColumnRepresentative)
+      return *fColumnRepresentative;
    return GetColumnRepresentations().GetSerializationDefault();
 }
 
-void ROOT::Experimental::Detail::RFieldBase::SetSerializationTypes(const std::vector<EColumnType> &representation)
+void ROOT::Experimental::Detail::RFieldBase::SetColumnRepresentative(const std::vector<EColumnType> &representative)
 {
    if (!fColumns.empty())
-      throw RException(R__FAIL("cannot set column representation once field is connected"));
-   auto validTypes = GetColumnRepresentations().GetSerializeTypes();
-   if (std::find(validTypes.begin(), validTypes.end(), representation) == std::end(validTypes))
-      throw RException(R__FAIL("invalid column representation"));
-   fSerializationTypes = std::make_unique<std::vector<EColumnType>>(representation);
+      throw RException(R__FAIL("cannot set column representative once field is connected"));
+   auto validTypes = GetColumnRepresentations().GetSerializationTypes();
+   if (std::find(validTypes.begin(), validTypes.end(), representative) == std::end(validTypes))
+      throw RException(R__FAIL("invalid column representative"));
+   fColumnRepresentative = std::make_unique<std::vector<EColumnType>>(representative);
 }
 
 std::vector<ROOT::Experimental::EColumnType>
@@ -440,7 +440,7 @@ ROOT::Experimental::Detail::RFieldBase::EnsureCompatibleColumnTypes(const RNTupl
    for (const auto &c : desc.GetColumnIterable(fOnDiskId)) {
       onDiskTypes.emplace_back(c.GetModel().GetType());
    }
-   for (const auto &t : GetColumnRepresentations().GetDeserializeTypes()) {
+   for (const auto &t : GetColumnRepresentations().GetDeserializationTypes()) {
       if (t == onDiskTypes)
          return onDiskTypes;
    }
@@ -482,6 +482,9 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink
 void ROOT::Experimental::Detail::RFieldBase::ConnectPageSource(RPageSource &pageSource)
 {
    R__ASSERT(fColumns.empty());
+   if (fColumnRepresentative)
+      throw RException(R__FAIL("fixed column representative only valid when connecting to a page sink"));
+
    {
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
       const RNTupleDescriptor &desc = descriptorGuard.GetRef();
@@ -572,7 +575,7 @@ ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::GetColumnRepresen
 
 void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -619,7 +622,7 @@ ROOT::Experimental::RField<char>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<char>::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<char>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<char>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RField<char>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -644,7 +647,7 @@ ROOT::Experimental::RField<std::int8_t>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<std::int8_t>::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<std::int8_t>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<std::int8_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RField<std::int8_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -669,7 +672,7 @@ ROOT::Experimental::RField<std::uint8_t>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<std::uint8_t>::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<std::uint8_t>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<std::uint8_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RField<std::uint8_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -694,7 +697,7 @@ ROOT::Experimental::RField<bool>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<bool>::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<bool>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<bool>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RField<bool>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -719,7 +722,7 @@ ROOT::Experimental::RField<float>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<float>::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<float>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<float>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RField<float>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -745,7 +748,7 @@ ROOT::Experimental::RField<double>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<double>::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<double>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<double>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RField<double>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -770,7 +773,7 @@ ROOT::Experimental::RField<std::int16_t>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<std::int16_t>::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<std::int16_t>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<std::int16_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RField<std::int16_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -795,7 +798,7 @@ ROOT::Experimental::RField<std::uint16_t>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<std::uint16_t>::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<std::uint16_t>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<std::uint16_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RField<std::uint16_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -820,7 +823,7 @@ ROOT::Experimental::RField<std::int32_t>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<std::int32_t>::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<std::int32_t>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<std::int32_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RField<std::int32_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -845,7 +848,7 @@ ROOT::Experimental::RField<std::uint32_t>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<std::uint32_t>::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<std::uint32_t>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<std::uint32_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RField<std::uint32_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -870,7 +873,7 @@ ROOT::Experimental::RField<std::uint64_t>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<std::uint64_t>::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<std::uint64_t>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<std::uint64_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RField<std::uint64_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -895,7 +898,7 @@ ROOT::Experimental::RField<std::int64_t>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<std::int64_t>::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<std::int64_t>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<std::int64_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RField<std::int64_t>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -920,8 +923,8 @@ ROOT::Experimental::RField<std::string>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<std::string>::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
-   fColumns.emplace_back(Detail::RColumn::Create<char>(RColumnModel(GetSerializationColumnTypes()[1]), 1));
+   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<char>(RColumnModel(GetColumnRepresentative()[1]), 1));
 }
 
 void ROOT::Experimental::RField<std::string>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -1278,7 +1281,7 @@ ROOT::Experimental::RCollectionClassField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RCollectionClassField::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RCollectionClassField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -1539,7 +1542,7 @@ ROOT::Experimental::RVectorField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RVectorField::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RVectorField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -1710,7 +1713,7 @@ ROOT::Experimental::RRVecField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RRVecField::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RRVecField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -1897,7 +1900,7 @@ ROOT::Experimental::RField<std::vector<bool>>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<std::vector<bool>>::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RField<std::vector<bool>>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -2130,7 +2133,7 @@ ROOT::Experimental::RVariantField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RVariantField::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<RColumnSwitch>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<RColumnSwitch>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RVariantField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -2323,7 +2326,7 @@ ROOT::Experimental::RCollectionField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RCollectionField::GenerateColumnsImpl()
 {
-   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetSerializationColumnTypes()[0]), 0));
+   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
 void ROOT::Experimental::RCollectionField::GenerateColumnsImpl(const RNTupleDescriptor &desc)

@@ -263,16 +263,28 @@ TEST(RNTuple, Casting)
    auto modelA = RNTupleModel::Create();
    modelA->MakeField<std::int32_t>("myInt", 42);
    auto fld = ROOT::Experimental::Detail::RFieldBase::Create("field", "float").Unwrap();
-   fld->SetSerializationTypes({EColumnType::kReal32});
+   fld->SetColumnRepresentative({EColumnType::kReal32});
    try {
-      fld->SetSerializationTypes({EColumnType::kBit});
+      fld->SetColumnRepresentative({EColumnType::kBit});
    } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("invalid column representation"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid column representative"));
    }
    modelA->AddField(std::move(fld));
    {
       auto writer = RNTupleWriter::Recreate(std::move(modelA), "ntuple", fileGuard.GetPath());
       writer->Fill();
+   }
+
+   try {
+      auto model = RNTupleModel::Create();
+      auto f = ROOT::Experimental::Detail::RFieldBase::Create("myInt", "std::int32_t").Unwrap();
+      f->SetColumnRepresentative({EColumnType::kInt32});
+      model->AddField(std::move(f));
+      auto reader = RNTupleReader::Open(std::move(model), "ntuple", fileGuard.GetPath());
+      FAIL() << "should not be able fix column representation when model is connected to a page source";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(),
+                  testing::HasSubstr("fixed column representative only valid when connecting to a page sink"));
    }
 
    try {
@@ -675,7 +687,7 @@ TEST(RNTuple, RColumnRepresentations)
    using RColumnRepresentations = ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations;
    RColumnRepresentations colReps1;
    EXPECT_EQ(std::vector<EColumnType>(), colReps1.GetSerializationDefault());
-   EXPECT_EQ(RColumnRepresentations::TypesList_t(), colReps1.GetDeserializeTypes());
+   EXPECT_EQ(RColumnRepresentations::TypesList_t(), colReps1.GetDeserializationTypes());
 
    // TODO(jblomer): replace kMax by kReal64Split
    RColumnRepresentations colReps2({{EColumnType::kReal64}, {EColumnType::kMax}},
@@ -683,5 +695,5 @@ TEST(RNTuple, RColumnRepresentations)
    EXPECT_EQ(std::vector<EColumnType>({EColumnType::kReal64}), colReps2.GetSerializationDefault());
    EXPECT_EQ(RColumnRepresentations::TypesList_t(
                 {{EColumnType::kReal64}, {EColumnType::kMax}, {EColumnType::kReal32}, {EColumnType::kReal16}}),
-             colReps2.GetDeserializeTypes());
+             colReps2.GetDeserializationTypes());
 }
