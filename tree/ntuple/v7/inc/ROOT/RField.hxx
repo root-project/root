@@ -155,6 +155,9 @@ protected:
    std::vector<ReadCallback_t> fReadCallbacks;
    /// C++ type version cached from the descriptor after a call to `ConnectPageSource()`
    std::uint32_t fOnDiskTypeVersion = kInvalidTypeVersion;
+   /// If set, the column representation used for serialization; otherwise the default from
+   /// GetColumnRepresentations() is used
+   std::unique_ptr<std::vector<EColumnType>> fSerializationColumnTypes;
 
    /// Implementations in derived classes should return a static RColumnRepresentations object. The default
    /// implementation does not attach any columns to the field.
@@ -177,10 +180,12 @@ protected:
       ReadGlobalImpl(fPrincipalColumn->GetGlobalIndex(clusterIndex), value);
    }
 
-   /// Throws an exception if the column given by fOnDiskId and the columnIndex in the provided descriptor
-   /// is not of one of the requested types.
-   ROOT::Experimental::EColumnType EnsureColumnType(const std::vector<EColumnType> &requestedTypes,
-                                                    unsigned int columnIndex, const RNTupleDescriptor &desc);
+   /// Returns the fSerializationColumnTypes pointee or, if unset, the field's default representation
+   std::vector<EColumnType> GetSerializationColumnTypes() const;
+
+   /// Returns the on-disk column types found in the provided descriptor for fOnDiskId. Throws an exception if the types
+   /// don't match any of the deserialization types from GetColumnRepresentations().
+   std::vector<ROOT::Experimental::EColumnType> EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc) const;
 
    /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
    /// value object.
