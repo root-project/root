@@ -264,6 +264,15 @@ namespace ROOT {
        /// Note that while Tian et al. add the carry in the first step, we subtract
        /// the carry, in accordance with the Add(Indexed) implementation(s) above.
        /// This is purely an implementation choice that has no impact on performance.
+       ///
+       /// \note Take care when using += (and -=) to add other KahanSums into a zero-initialized
+       ///       KahanSum. The operator behaves correctly in this case, but the result may be slightly
+       ///       off if you expect 0 + x to yield exactly x (where 0 is the zero-initialized KahanSum
+       ///       and x another KahanSum). In particular, x's carry term may get lost. This doesn't
+       ///       just happen with zero-initialized KahanSums; see the SubtractWithABitTooSmallCarry
+       ///       test case in the testKahan unittest for other examples. This behavior is internally
+       ///       consistent: the carry also gets lost if you switch the operands and it also happens with
+       ///       other KahanSum operators.
        template<typename U, unsigned int M>
        KahanSum<T, N>& operator+=(const KahanSum<U, M>& other) {
          U corrected_arg_sum = other.Sum() - (fCarry[0] + other.Carry());
@@ -290,6 +299,16 @@ namespace ROOT {
        KahanSum<T, N> operator-()
        {
           return {-this->fSum[0], -this->fCarry[0]};
+       }
+
+       template<typename U, unsigned int M>
+       bool operator ==(KahanSum<U, M> const& other) const {
+          return (this->Sum() == other.Sum()) && (this->Carry() == other.Carry());
+       }
+
+       template<typename U, unsigned int M>
+       bool operator !=(KahanSum<U, M> const& other) const {
+          return !(*this == other);
        }
 
      private:
