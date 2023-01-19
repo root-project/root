@@ -296,6 +296,20 @@ public:
 };
 
 template <>
+class RColumnElement<double, EColumnType::kSplitReal64> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(double);
+   static constexpr std::size_t kBitsOnStorage = kSize * 8;
+   explicit RColumnElement(double *value) : RColumnElementBase(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+
+   void Pack(void *dst, void *src, std::size_t count) const final;
+   void Unpack(void *dst, void *src, std::size_t count) const final;
+};
+
+template <>
 class RColumnElement<std::int8_t, EColumnType::kInt8> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = true;
@@ -479,6 +493,7 @@ std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(EColumnType typ
    switch (type) {
    case EColumnType::kReal32: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32>>(nullptr);
    case EColumnType::kReal64: return std::make_unique<RColumnElement<CppT, EColumnType::kReal64>>(nullptr);
+   case EColumnType::kSplitReal64: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitReal64>>(nullptr);
    case EColumnType::kChar: return std::make_unique<RColumnElement<CppT, EColumnType::kChar>>(nullptr);
    case EColumnType::kByte: return std::make_unique<RColumnElement<CppT, EColumnType::kByte>>(nullptr);
    case EColumnType::kInt8: return std::make_unique<RColumnElement<CppT, EColumnType::kInt8>>(nullptr);
