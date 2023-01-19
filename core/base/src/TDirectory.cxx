@@ -283,22 +283,28 @@ void TDirectory::CleanTargets()
          fContext = next;
       }
 
+      // Now loop through the set of thread local 'gDirectory' that
+      // have a one point or another pointed to this directory.
       for (auto &ptr : fGDirectories) {
+         // If the thread local gDirectory still point to this directory
+         // we need to reset it using the following sematic:
+         // we fall back to the mother/owner of this directory or gROOTLocal
+         // if there is no parent or nullptr if the current object is gROOTLocal.
          if (ptr->fCurrent.load() == this) {
             TDirectory *next = GetMotherDir();
             if (!next || next == this) {
                if (this == ROOT::Internal::gROOTLocal) { /// in that case next == this.
                   next = nullptr;
                } else {
-                  next = gROOT;
+                  next = ROOT::Internal::gROOTLocal;
                }
             } else {
-               // Don't we need to register that local gDirectory with the
-               // new guy?
                // We can not use 'cd' as this would access the current thread
                // rather than the thread corresponding to that gDirectory.
                next->RegisterGDirectory(ptr);
             }
+            // Actually do the update of the thread local gDirectory
+            // using its object specific lock.
             ROOT::Internal::TSpinLockGuard(ptr->fLock);
             auto This = this;
             ptr->fCurrent.compare_exchange_strong(This, next);
@@ -309,21 +315,14 @@ void TDirectory::CleanTargets()
       // Wait until the TContext is done spinning
       // over the lock.
       while(context->fActiveDestructor);
+      // And now let the TContext destructor finish.
       context->fDirectoryWait = false;
    }
 
-   if (gDirectory == this) {
-      TDirectory *cursav = GetMotherDir();
-      if (cursav && cursav != this) {
-         cursav->cd();
-      } else {
-         if (this == gROOT) {
-            gDirectory = nullptr;
-         } else {
-            gROOT->cd();
-         }
-      }
-   }
+   // Deal with the gROOT case; gROOT does not register the local gDirectories
+   // it is assigned to so the loop over fGDirectories has not done anything.
+   if (this == ROOT::Internal::gROOTLocal && gDirectory == this)
+      gDirectory = nullptr;
 
    // Wait until all register attempts are done.
    while(fContextPeg) {}
