@@ -47,6 +47,9 @@ public:
 
   RooArgList components() { RooArgList tmp(_compRSet) ; tmp.add(_compCSet) ; return tmp ; }
 
+  const RooArgList& realComponents() const { return _compRSet; }
+  const RooArgList& categorialComponents() const { return _compCSet; }
+
   ~RooProduct() override ;
 
   class ProdMap ;
