@@ -157,34 +157,32 @@ void ODRHash::AddTemplateName(TemplateName Name) {
 void ODRHash::AddTemplateArgument(TemplateArgument TA) {
   const auto Kind = TA.getKind();
   ID.AddInteger(Kind);
+
   switch (Kind) {
-  case TemplateArgument::Null:
-    llvm_unreachable("Require valid TemplateArgument");
-  case TemplateArgument::Type:
-    AddQualType(TA.getAsType());
-    break;
-  case TemplateArgument::Declaration:
-    AddDecl(TA.getAsDecl());
-    break;
-  case TemplateArgument::NullPtr:
-    AddQualType(TA.getNullPtrType());
-    break;
-  case TemplateArgument::Integral:
-    TA.getAsIntegral().Profile(ID);
-    AddQualType(TA.getIntegralType());
-    break;
-  case TemplateArgument::Template:
-  case TemplateArgument::TemplateExpansion:
-    AddTemplateName(TA.getAsTemplateOrTemplatePattern());
-    break;
-  case TemplateArgument::Expression:
-    AddStmt(TA.getAsExpr());
-    break;
-  case TemplateArgument::Pack:
-    ID.AddInteger(TA.pack_size());
-    for (auto SubTA : TA.pack_elements())
-      AddTemplateArgument(SubTA);
-    break;
+    case TemplateArgument::Null:
+      llvm_unreachable("Expected valid TemplateArgument");
+    case TemplateArgument::Type:
+      AddQualType(TA.getAsType());
+      break;
+    case TemplateArgument::Declaration:
+      AddDecl(TA.getAsDecl());
+      break;
+    case TemplateArgument::NullPtr:
+    case TemplateArgument::Integral:
+      break;
+    case TemplateArgument::Template:
+    case TemplateArgument::TemplateExpansion:
+      AddTemplateName(TA.getAsTemplateOrTemplatePattern());
+      break;
+    case TemplateArgument::Expression:
+      AddStmt(TA.getAsExpr());
+      break;
+    case TemplateArgument::Pack:
+      ID.AddInteger(TA.pack_size());
+      for (auto SubTA : TA.pack_elements()) {
+        AddTemplateArgument(SubTA);
+      }
+      break;
   }
 }
 
@@ -651,21 +649,6 @@ void ODRHash::AddDecl(const Decl *D) {
     for (const TemplateArgument &TA : List.asArray())
       AddTemplateArgument(TA);
   }
-
-  // If this was a specialization we should take into account its template
-  // arguments. This helps to reduce collisions coming when visiting template
-  // specialization types (eg. when processing type template arguments).
-  ArrayRef<TemplateArgument> Args;
-  if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(D))
-    Args = CTSD->getTemplateArgs().asArray();
-  else if (auto *VTSD = dyn_cast<VarTemplateSpecializationDecl>(D))
-    Args = VTSD->getTemplateArgs().asArray();
-  else if (auto *FD = dyn_cast<FunctionDecl>(D))
-    if (FD->getTemplateSpecializationArgs())
-      Args = FD->getTemplateSpecializationArgs()->asArray();
-
-  for (auto &TA : Args)
-    AddTemplateArgument(TA);
 }
 
 namespace {

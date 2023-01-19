@@ -173,11 +173,11 @@ namespace clang {
       Record.AddSourceLocation(typeParams->getRAngleLoc());
     }
 
-    /// Collect the first declaration from each module file that provides a
-    /// declaration of D.
-    void CollectFirstDeclFromEachModule(const Decl *D, bool IncludeLocal,
-                            llvm::MapVector<ModuleFile*, const Decl*> &Firsts) {
-
+    /// Add to the record the first declaration from each module file that
+    /// provides a declaration of D. The intent is to provide a sufficient
+    /// set such that reloading this set will load all current redeclarations.
+    void AddFirstDeclFromEachModule(const Decl *D, bool IncludeLocal) {
+      llvm::MapVector<ModuleFile*, const Decl*> Firsts;
       // FIXME: We can skip entries that we know are implied by others.
       for (const Decl *R = D->getMostRecentDecl(); R; R = R->getPreviousDecl()) {
         if (R->isFromASTFile())
@@ -185,47 +185,8 @@ namespace clang {
         else if (IncludeLocal)
           Firsts[nullptr] = R;
       }
-    }
-
-    /// Add to the record the first declaration from each module file that
-    /// provides a declaration of D. The intent is to provide a sufficient
-    /// set such that reloading this set will load all current redeclarations.
-    void AddFirstDeclFromEachModule(const Decl *D, bool IncludeLocal) {
-      llvm::MapVector<ModuleFile*, const Decl*> Firsts;
-      CollectFirstDeclFromEachModule(D, IncludeLocal, Firsts);
-
       for (const auto &F : Firsts)
         Record.AddDeclRef(F.second);
-    }
-
-    /// Add to the record the first template specialization from each module
-    /// file that provides a declaration of D. We store the DeclId and an
-    /// ODRHash of the template arguments of D which should provide enough
-    /// information to load D only if the template instantiator needs it.
-    void AddFirstSpecializationDeclFromEachModule(const Decl *D,
-                                                  bool IncludeLocal) {
-      assert(isa<ClassTemplateSpecializationDecl>(D) ||
-             isa<VarTemplateSpecializationDecl>(D) || isa<FunctionDecl>(D) &&
-             "Must not be called with other decls");
-      llvm::MapVector<ModuleFile*, const Decl*> Firsts;
-      CollectFirstDeclFromEachModule(D, IncludeLocal, Firsts);
-
-      for (const auto &F : Firsts) {
-        Record.AddDeclRef(F.second);
-        ArrayRef<TemplateArgument> Args;
-        if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(D))
-          Args = CTSD->getTemplateArgs().asArray();
-        else if (auto *VTSD = dyn_cast<VarTemplateSpecializationDecl>(D))
-          Args = VTSD->getTemplateArgs().asArray();
-        else if (auto *FD = dyn_cast<FunctionDecl>(D))
-          Args = FD->getTemplateSpecializationArgs()->asArray();
-        assert(Args.size());
-        Record.push_back(TemplateArgumentList::ComputeODRHash(Args));
-        bool IsPartialSpecialization
-          = isa<ClassTemplatePartialSpecializationDecl>(D) ||
-          isa<VarTemplatePartialSpecializationDecl>(D);
-        Record.push_back(IsPartialSpecialization);
-      }
     }
 
     /// Get the specialization decl from an entry in the specialization list.
@@ -240,8 +201,7 @@ namespace clang {
     decltype(T::PartialSpecializations) &getPartialSpecializations(T *Common) {
       return Common->PartialSpecializations;
     }
-    MutableArrayRef<FunctionTemplateSpecializationInfo>
-    getPartialSpecializations(FunctionTemplateDecl::Common *) {
+    ArrayRef<Decl> getPartialSpecializations(FunctionTemplateDecl::Common *) {
       return None;
     }
 
@@ -258,11 +218,9 @@ namespace clang {
         assert(!Common->LazySpecializations);
       }
 
-      using LazySpecializationInfo
-        = RedeclarableTemplateDecl::LazySpecializationInfo;
-      ArrayRef<LazySpecializationInfo> LazySpecializations;
+      ArrayRef<DeclID> LazySpecializations;
       if (auto *LS = Common->LazySpecializations)
-        LazySpecializations = llvm::makeArrayRef(LS + 1, LS[0].DeclID);
+        LazySpecializations = llvm::makeArrayRef(LS + 1, LS[0]);
 
       // Add a slot to the record for the number of specializations.
       unsigned I = Record.size();
@@ -278,20 +236,12 @@ namespace clang {
 
       for (auto *D : Specs) {
         assert(D->isCanonicalDecl() && "non-canonical decl in set");
-        AddFirstSpecializationDeclFromEachModule(D, /*IncludeLocal*/true);
+        AddFirstDeclFromEachModule(D, /*IncludeLocal*/true);
       }
-      for (auto &SpecInfo : LazySpecializations) {
-        Record.push_back(SpecInfo.DeclID);
-        Record.push_back(SpecInfo.ODRHash);
-        Record.push_back(SpecInfo.IsPartial);
-      }
+      Record.append(LazySpecializations.begin(), LazySpecializations.end());
 
-      // Update the size entry we added earlier. We linerized the
-      // LazySpecializationInfo members and we need to adjust the size as we
-      // will read them always together.
-      assert ((Record.size() - I - 1) % 3 == 0
-              && "Must be divisible by LazySpecializationInfo count!");
-      Record[I] = (Record.size() - I - 1) / 3;
+      // Update the size entry we added earlier.
+      Record[I] = Record.size() - I - 1;
     }
 
     /// Ensure that this template specialization is associated with the specified
