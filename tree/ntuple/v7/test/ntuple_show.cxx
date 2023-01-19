@@ -556,4 +556,15 @@ TEST(RNTupleShow, CompleteOrCurrentModel)
       + "}\n"};
    // clang-format on
    EXPECT_EQ(expected2, os2.str());
+
+   std::ostringstream os3;
+   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, os3);
+   // clang-format off
+   std::string expected3{std::string("")
+      + "{\n"
+      + "  \"int\": 42,\n"
+      + "  \"float\": 3.14\n"
+      + "}\n"};
+   // clang-format on
+   EXPECT_EQ(expected3, os3.str());
 }
