@@ -290,7 +290,7 @@ void TDirectory::CleanTargets()
          // we need to reset it using the following sematic:
          // we fall back to the mother/owner of this directory or gROOTLocal
          // if there is no parent or nullptr if the current object is gROOTLocal.
-         if (ptr->fCurrent.load() == this) {
+         if (ptr->load() == this) {
             TDirectory *next = GetMotherDir();
             if (!next || next == this) {
                if (this == ROOT::Internal::gROOTLocal) { /// in that case next == this.
@@ -305,9 +305,8 @@ void TDirectory::CleanTargets()
             }
             // Actually do the update of the thread local gDirectory
             // using its object specific lock.
-            ROOT::Internal::TSpinLockGuard(ptr->fLock);
             auto This = this;
-            ptr->fCurrent.compare_exchange_strong(This, next);
+            ptr->compare_exchange_strong(This, next);
          }
       }
    }
@@ -414,15 +413,15 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the (address of) a shared pointer to the struct holding the
 /// actual thread local gDirectory pointer and the atomic_flag for its lock.
-std::shared_ptr<TDirectory::TGDirectory> &TDirectory::GetSharedLocalCurrentDirectory()
+TDirectory::SharedGDirectory_t &TDirectory::GetSharedLocalCurrentDirectory()
 {
-   using shared_ptr_type = std::shared_ptr<TDirectory::TGDirectory>;
+   using shared_ptr_type = TDirectory::SharedGDirectory_t;
 
    // Note in previous implementation every time gDirectory was lookup in
    // a thread, if it was set to nullptr it would be reset to gROOT.  This
    // was unexpected and this routine is not re-introducing this issue.
    thread_local shared_ptr_type currentDirectory =
-      std::make_shared<TDirectory::TGDirectory>(ROOT::Internal::gROOTLocal);
+      std::make_shared<shared_ptr_type::element_type>(ROOT::Internal::gROOTLocal);
 
    return currentDirectory;
 }
@@ -432,7 +431,7 @@ std::shared_ptr<TDirectory::TGDirectory> &TDirectory::GetSharedLocalCurrentDirec
 
 std::atomic<TDirectory*> &TDirectory::CurrentDirectory()
 {
-   return GetSharedLocalCurrentDirectory()->fCurrent;
+   return *GetSharedLocalCurrentDirectory().get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -542,7 +541,7 @@ Bool_t TDirectory::cd()
 
    RegisterGDirectory(thread_local_gdirectory);
 
-   thread_local_gdirectory->fCurrent = this;
+   thread_local_gdirectory->exchange(this);
 
    return kTRUE;
 }
