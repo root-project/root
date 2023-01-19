@@ -43,7 +43,7 @@ protected:
 
    Int_t   fNoAct;            ///< Number of active cells
    Int_t   fLastCe;           ///< Index of the last cell
-   TFoamCell **fCells;        ///< [fNCells] Array of ALL cells
+   TFoamCell **fCells = nullptr; ///< [fNCells] Array of ALL cells
 
    TFoamMaxwt   *fMCMonit;    ///< Monitor of the MC weight for measuring MC efficiency
    Double_t   fMaxWtRej;      ///< Maximum weight in rejection for getting wt=1 events
@@ -138,6 +138,7 @@ public:
    // Inline
 private:
    Double_t Sqr(Double_t x) const { return x*x;}      // Square function
+   TFoamCell* getCell(std::size_t i) const;
 
    ClassDefOverride(TFoam,2);   // General purpose self-adapting Monte Carlo event generator
 };
