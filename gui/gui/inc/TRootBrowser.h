@@ -146,6 +146,7 @@ public:
    void              HandleMenu(Int_t id);
    void              RecursiveReparent(TGPopupMenu *popup);
    void              RemoveTab(Int_t pos, Int_t subpos);
+   TBrowserImp      *GetActBrowser() const { return fActBrowser; }
    void              SetActBrowser(TBrowserImp *b) { fActBrowser = b; }
    void              ShowMenu(TGCompositeFrame *menu);
    void              StartEmbedding(Int_t pos = kRight, Int_t subpos = -1) override;

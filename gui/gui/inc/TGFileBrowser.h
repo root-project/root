@@ -113,6 +113,9 @@ public:
    void        ToggleSort();
    void        Update();
 
+   TGListTree     *GetListTree() const { return fListTree; }
+   TGListTreeItem *GetRootDir() const { return fRootDir; }
+
    ClassDefOverride(TGFileBrowser, 0) // File browser.
 };
 
