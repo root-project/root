@@ -192,6 +192,13 @@ RNTuple is still experimental and is scheduled to become production grade in 202
 
 ## Math Libraries
 
+### KahanSum updates
+
+The `ROOT::Math::KahanSum` class was slightly modified:
+- The behavior of `operator-=` and `operator+=` on a `KahanSum` were not symmetric, leading to slight bit-wise inaccuracies. In fits, where such operations are done a lot of times (e.g. through the offsetting mechanism in RooFit which subtracts a constant `KahanSum` term after each likelihood evaluation), this can add up to significant numerical divergence. An improved algorithm was implemented, based on an algorithm for combining Kahan sums and carry terms (Tian et al. 2012). (PR #11940)
+- The auto-conversion to type `T` and implicit type `T` constructor in `KahanSum` made it hard to debug `KahanSum`, because it is easy to overlook implicit conversions in code, especially in lines where the type of the return value is `auto`. These auto-conversions were removed. Where necessary, they should be replaced with an explicit construction or explicit conversion to double via `Sum()`. (PR #11941)
+- Binary addition and subtraction operators were added, as well as a unary negation operator. (PR #11940)
+- Comparison operators `operator==` and `operator!=` were added.
 
 ## RooFit Libraries
 
