@@ -23,9 +23,6 @@ ClassImp(TFoamCell);
 
 TFoamCell::TFoamCell()
 {
-   fParent  = 0;
-   fDaught0 = 0;
-   fDaught1 = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,9 +35,6 @@ TFoamCell::TFoamCell(Int_t kDim)
       fDim     = kDim;
       fSerial   = 0;
       fStatus   = 1;
-      fParent   = 0;
-      fDaught0  = 0;
-      fDaught1  = 0;
       fXdiv     = 0.0;
       fBest     = 0;
       fVolume   = 0.0;
@@ -52,56 +46,10 @@ TFoamCell::TFoamCell(Int_t kDim)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor (not tested!)
-
-TFoamCell::TFoamCell(TFoamCell &From): TObject(From)
-{
-   Error("TFoamCell", "+++++ NEVER USE Copy constructor for TFoamCell \n");
-   fStatus      = From.fStatus;
-   fParent      = From.fParent;
-   fDaught0     = From.fDaught0;
-   fDaught1     = From.fDaught1;
-   fParentIdx   = From.fParentIdx;
-   fDaught0Idx  = From.fDaught0Idx;
-   fDaught1Idx  = From.fDaught1Idx;
-   fCells       = From.fCells;
-   fXdiv        = From.fXdiv;
-   fBest        = From.fBest;
-   fVolume      = From.fVolume;
-   fIntegral    = From.fIntegral;
-   fDrive       = From.fDrive;
-   fPrimary     = From.fPrimary;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 TFoamCell::~TFoamCell()
 {
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Substitution operator = (never used)
-
-TFoamCell& TFoamCell::operator=(const TFoamCell &From)
-{
-   Info("TFoamCell", "operator=\n ");
-   if (&From == this) return *this;
-   fStatus      = From.fStatus;
-   fParent      = From.fParent;
-   fDaught0     = From.fDaught0;
-   fDaught1     = From.fDaught1;
-   fParentIdx   = From.fParentIdx;
-   fDaught0Idx  = From.fDaught0Idx;
-   fDaught1Idx  = From.fDaught1Idx;
-   fCells       = From.fCells;
-   fXdiv        = From.fXdiv;
-   fBest        = From.fBest;
-   fVolume      = From.fVolume;
-   fIntegral    = From.fIntegral;
-   fDrive       = From.fDrive;
-   fPrimary     = From.fPrimary;
-   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
