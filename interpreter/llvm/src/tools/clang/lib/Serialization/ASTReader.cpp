@@ -7287,23 +7287,14 @@ void ASTReader::CompleteRedeclChain(const Decl *D) {
     }
   }
 
-  RedeclarableTemplateDecl *Template = nullptr;
-  ArrayRef<TemplateArgument> Args;
-  if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(D)) {
-    Template = CTSD->getSpecializedTemplate();
-    Args = CTSD->getTemplateArgs().asArray();
-  } else if (auto *VTSD = dyn_cast<VarTemplateSpecializationDecl>(D)) {
-    Template = VTSD->getSpecializedTemplate();
-    Args = VTSD->getTemplateArgs().asArray();
-  } else if (auto *FD = dyn_cast<FunctionDecl>(D)) {
-    if (auto *Tmplt = FD->getPrimaryTemplate()) {
-      Template = Tmplt;
-      Args = FD->getTemplateSpecializationArgs()->asArray();
-    }
+  if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(D))
+    CTSD->getSpecializedTemplate()->LoadLazySpecializations();
+  if (auto *VTSD = dyn_cast<VarTemplateSpecializationDecl>(D))
+    VTSD->getSpecializedTemplate()->LoadLazySpecializations();
+  if (auto *FD = dyn_cast<FunctionDecl>(D)) {
+    if (auto *Template = FD->getPrimaryTemplate())
+      Template->LoadLazySpecializations();
   }
-
-  if (Template)
-    Template->loadLazySpecializationsImpl(Args);
 }
 
 CXXCtorInitializer **
