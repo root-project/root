@@ -46,10 +46,12 @@ private:
 public:
    TFoamCell();                          // Default Constructor for ROOT streamers
    TFoamCell(Int_t);                     // User Constructor
-   TFoamCell(TFoamCell &);      // Copy Constructor
+   TFoamCell(TFoamCell const&) = delete;      // Copy Constructor
+   TFoamCell(TFoamCell &&) = delete;
    ~TFoamCell() override;                // Destructor
    void  Fill(Int_t, TFoamCell*, TFoamCell*, TFoamCell*);    // Assigns values of attributes
-   TFoamCell&  operator=(const TFoamCell&);   // Substitution operator (never used)
+   TFoamCell&  operator=(const TFoamCell&) = delete;   // Substitution operator (never used)
+   TFoamCell&  operator=(TFoamCell &&) = delete;
    //--------------- Geometry ----------------------------------
    Double_t  GetXdiv() const { return fXdiv;}          // Pointer to Xdiv
    Int_t     GetBest() const { return fBest;}          // Pointer to Best
