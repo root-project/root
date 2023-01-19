@@ -61,6 +61,10 @@ TFoamCell::TFoamCell(TFoamCell &From): TObject(From)
    fParent      = From.fParent;
    fDaught0     = From.fDaught0;
    fDaught1     = From.fDaught1;
+   fParentIdx   = From.fParentIdx;
+   fDaught0Idx  = From.fDaught0Idx;
+   fDaught1Idx  = From.fDaught1Idx;
+   fCells       = From.fCells;
    fXdiv        = From.fXdiv;
    fBest        = From.fBest;
    fVolume      = From.fVolume;
@@ -87,6 +91,10 @@ TFoamCell& TFoamCell::operator=(const TFoamCell &From)
    fParent      = From.fParent;
    fDaught0     = From.fDaught0;
    fDaught1     = From.fDaught1;
+   fParentIdx   = From.fParentIdx;
+   fDaught0Idx  = From.fDaught0Idx;
+   fDaught1Idx  = From.fDaught1Idx;
+   fCells       = From.fCells;
    fXdiv        = From.fXdiv;
    fBest        = From.fBest;
    fVolume      = From.fVolume;
@@ -96,16 +104,15 @@ TFoamCell& TFoamCell::operator=(const TFoamCell &From)
    return *this;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Fills in certain data into newly allocated cell
 
 void TFoamCell::Fill(Int_t Status, TFoamCell *Parent, TFoamCell *Daugh1, TFoamCell *Daugh2)
 {
    fStatus  = Status;
-   fParent  = Parent;
-   fDaught0 = Daugh1;
-   fDaught1 = Daugh2;
+   fParentIdx  = Parent ? Parent->fSerial : -1;
+   fDaught0Idx = Daugh1 ? Daugh1->fSerial : -1;
+   fDaught1Idx = Daugh2 ? Daugh2->fSerial : -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
