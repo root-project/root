@@ -144,23 +144,7 @@ protected:
    mutable TString  fPathBuffer;        //! Buffer for GetPath() function
    TContext        *fContext{nullptr};  //! Pointer to a list of TContext object pointing to this TDirectory
 
-   // Struct to hold the pointer to a thread local gDirectory pointer and
-   // a related atomic_flag to enable locking access to that gDirectory.
-   struct TGDirectory {
-      TGDirectory(TDirectory *in) : fCurrent(in)
-      {
-         // MSVC doesn't support fSpinLock=ATOMIC_FLAG_INIT; in the class definition
-         std::atomic_flag_clear(&fLock);
-      }
-      bool operator==(std::atomic<TDirectory*> *d)
-      {
-         return &fCurrent == d;
-      }
-      std::atomic_flag          fLock;
-      std::atomic<TDirectory *> fCurrent{ nullptr };
-   };
-
-   using SharedGDirectory_t = std::shared_ptr<TDirectory::TGDirectory>;
+   using SharedGDirectory_t = std::shared_ptr<std::atomic<TDirectory *>>;
 
    static SharedGDirectory_t &GetSharedLocalCurrentDirectory();
 
@@ -336,40 +320,40 @@ namespace Internal {
 
       template <typename T>
       explicit operator T*() const {
-         return (T *)fValue->fCurrent.load();
+         return (T *)fValue->load();
       }
 
       operator TDirectory*() const {
-         return fValue->fCurrent.load();
+         return fValue->load();
       }
 
-      operator bool() const { return fValue->fCurrent.load() != nullptr; }
+      operator bool() const { return fValue->load() != nullptr; }
 
       bool operator==(const TDirectory *other) const {
-         return fValue->fCurrent.load() == other;
+         return fValue->load() == other;
       }
 
       bool operator!=(const TDirectory *other) const {
-         return fValue->fCurrent.load() != other;
+         return fValue->load() != other;
       }
 
       bool operator==(TDirectory *other) const {
-         return fValue->fCurrent.load() == other;
+         return fValue->load() == other;
       }
 
       bool operator!=(TDirectory *other) const {
-         return fValue->fCurrent.load() != other;
+         return fValue->load() != other;
       }
 
       TDirectory *operator=(TDirectory *newvalue) {
          if (newvalue) {
             newvalue->RegisterGDirectory(fValue);
          }
-         fValue->fCurrent = newvalue;
+         fValue->exchange(newvalue);
          return newvalue;
       }
 
-      TDirectory *operator->() const { return fValue->fCurrent.load(); }
+      TDirectory *operator->() const { return fValue->load(); }
    };
 } // Internal
 } // ROOT
