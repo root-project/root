@@ -160,32 +160,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& in
   _cutOff(cutOff),
   _pdfList("!pdfs","List of PDFs",this)
 {
-  Int_t numExtended(0) ;
-  for(RooAbsArg * arg : inPdfList) {
-    RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
-    if (!pdf) {
-      coutW(InputArguments) << "RooProdPdf::RooProdPdf(" << GetName() << ") list arg "
-             << arg->GetName() << " is not a PDF, ignored" << endl ;
-      continue ;
-    }
-    _pdfList.add(*pdf) ;
-
-    _pdfNSetList.emplace_back(std::make_unique<RooArgSet>("nset")) ;
-
-    if (pdf->canBeExtended()) {
-      _extendedIndex = _pdfList.index(pdf) ;
-      numExtended++ ;
-    }
-  }
-
-  // Protect against multiple extended terms
-  if (numExtended>1) {
-    coutW(InputArguments) << "RooProdPdf::RooProdPdf(" << GetName()
-           << ") WARNING: multiple components with extended terms detected,"
-           << " product will not be extendible." << endl ;
-    _extendedIndex = -1 ;
-  }
-
+  addPdfs(inPdfList);
   TRACE_CREATE
 }
 
@@ -1913,13 +1888,15 @@ RooArgSet* RooProdPdf::findPdfNSet(RooAbsPdf const& pdf) const
 
 
 /// Add some full PDFs to the factors of this RooProdPdf.
-void RooProdPdf::addPdfs(RooArgSet const& pdfs)
+void RooProdPdf::addPdfs(RooAbsCollection const& pdfs)
 {
    size_t numExtended = (_extendedIndex==-1) ? 0 : 1;
 
    for(auto arg : pdfs) {
       RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg);
       if (!pdf) {
+         coutW(InputArguments) << "RooProdPdf::addPdfs(" << GetName() << ") list arg "
+                               << arg->GetName() << " is not a PDF, ignored" << endl ;
          continue;
       }
       if(pdf->canBeExtended()) {
@@ -1947,7 +1924,7 @@ void RooProdPdf::addPdfs(RooArgSet const& pdfs)
 }
 
 /// Remove some PDFs from the factors of this RooProdPdf.
-void RooProdPdf::removePdfs(RooArgSet const& pdfs)
+void RooProdPdf::removePdfs(RooAbsCollection const& pdfs)
 {
   // Remember what the extended PDF is
   RooAbsArg const* extPdf = _extendedIndex >= 0 ? &_pdfList[_extendedIndex] : nullptr;

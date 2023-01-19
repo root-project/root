@@ -65,8 +65,8 @@ public:
 
   const RooArgList& pdfList() const { return _pdfList ; }
 
-  void addPdfs(RooArgSet const& pdfs);
-  void removePdfs(RooArgSet const& pdfs);
+  void addPdfs(RooAbsCollection const& pdfs);
+  void removePdfs(RooAbsCollection const& pdfs);
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void initGenerator(Int_t code) override ;
