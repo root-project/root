@@ -35,6 +35,7 @@ When changed, remember to update
   - RColumnElement::Generate()
   - RColumnElement::GetBitsOnStorage()
   - RColumnElement::GetTypeName()
+  - RColumnElement template specializations / packing & unpacking
   - RNTupleSerializer::[Des|S]erializeColumnType
 */
 // clang-format on
@@ -49,6 +50,7 @@ enum class EColumnType {
    kChar,
    kBit,
    kReal64,
+   kSplitReal64,
    kReal32,
    kReal16,
    kInt64,

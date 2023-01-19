@@ -1,5 +1,8 @@
 #include "ntuple_test.hxx"
 
+#include <array>
+#include <limits>
+
 TEST(Packing, Bitfield)
 {
    ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit> element(nullptr);
@@ -49,4 +52,26 @@ TEST(Packing, RColumnSwitch)
    element.Unpack(&s2, &out, 1);
    EXPECT_EQ(0xaa, s2.GetIndex());
    EXPECT_EQ(0x55, s2.GetTag());
+}
+
+TEST(Packing, SplitReal64)
+{
+   ROOT::Experimental::Detail::RColumnElement<double, ROOT::Experimental::EColumnType::kSplitReal64> element(nullptr);
+   element.Pack(nullptr, nullptr, 0);
+   element.Unpack(nullptr, nullptr, 0);
+
+   std::array<double, 7> mem{0.0,
+                             42.0,
+                             std::numeric_limits<double>::min(),
+                             std::numeric_limits<double>::max(),
+                             std::numeric_limits<double>::lowest(),
+                             std::numeric_limits<double>::infinity(),
+                             std::numeric_limits<double>::denorm_min()};
+   std::array<double, 7> packed;
+   std::array<double, 7> cmp;
+
+   element.Pack(packed.data(), mem.data(), 7);
+   element.Unpack(cmp.data(), packed.data(), 7);
+
+   EXPECT_EQ(mem, cmp);
 }
