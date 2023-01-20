@@ -76,6 +76,7 @@ const KerasMethodMap mapKerasLayer = {
    {"Softmax", &MakeKerasSoftmax},
    {"tanh", &MakeKerasTanh},
    {"LeakyReLU", &MakeKerasLeakyRelu},
+   {"Dropout",  &MakeKerasDropout}
 
    // For activation layers
    {"ReLU", &MakeKerasReLU},
@@ -699,6 +700,35 @@ std::unique_ptr<ROperator> MakeKerasBinary(PyObject* fLayer){
    return op;
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator object for Keras Dropout Layer
+///
+/// \param[in] fLayer Python Keras layer as a Dictionary object
+/// \return Unique pointer to ROperator object
+///
+/// Dropout will have no effect in inference, so instead an Identity operator
+/// is added to mimic its presence in the Keras model
+std::unique_ptr<ROperator> MakeKerasDropout(PyObject* fLayer)
+{
+      PyObject* fInputs=GetValueFromDict(fLayer,"layerInput");
+      PyObject* fOutputs=GetValueFromDict(fLayer,"layerOutput");
+
+      std::string fLayerDType = PyStringAsString(GetValueFromDict(fLayer,"layerDType"));
+      std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
+      std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
+
+      std::unique_ptr<ROperator> op;
+      switch(ConvertStringToType(fLayerDType)){
+         case ETensorType::FLOAT:
+         op.reset(new ROperator_Identity<float>(fLayerInputName, fLayerOutputName));
+         break;
+         default:
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Identity Operator for mimicking Dropout" 
+                                  "does not yet support input type " + fLayerDType);
+         }
+   return op;
+}
+
 }//INTERNAL
 
 
@@ -809,7 +839,7 @@ RModel Parse(std::string filename){
       fLayerType = PyStringAsString(GetValueFromDict(fLayer,"layerType"));
 
       // Ignoring the input layer for models built using Keras Functional API
-      if(fLayerType == "InputLayer" || fLayerType == "Dropout")
+      if(fLayerType == "InputLayer")
          continue;
 
       // Adding any required routines depending on the Layer types for generating
@@ -821,6 +851,9 @@ RModel Parse(std::string filename){
 
       else if(fLayerType == "Conv1D" || fLayerType == "Conv2D" || fLayerType == "Conv3D")
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
+      
+      else if(fLayerType == "Dropout")
+
       INTERNAL::AddKerasLayer(rmodel,fLayer);
 
    }
