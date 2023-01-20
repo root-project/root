@@ -54,6 +54,7 @@ std::unique_ptr<ROperator> MakeKerasBinary(PyObject *fLayer);       // For insta
 std::unique_ptr<ROperator> MakeKerasSoftmax(PyObject *fLayer);      // For instantiating ROperator for Keras Softmax Layer
 std::unique_ptr<ROperator> MakeKerasTanh(PyObject *fLayer);         // For instantiating ROperator for Keras Tanh Layer
 std::unique_ptr<ROperator> MakeKerasLeakyRelu(PyObject *fLayer);    // For instantiating ROperator for Keras LeakyRelu Layer
+std::unique_ptr<ROperator> MakeKerasIdentity(PyObject *fLayer);     // For instantiating ROperator for Keras Identity Layer
 
 
 // Declaring Internal function for Keras layers which have additional activation attribute
@@ -76,6 +77,8 @@ const KerasMethodMap mapKerasLayer = {
    {"Softmax", &MakeKerasSoftmax},
    {"tanh", &MakeKerasTanh},
    {"LeakyReLU", &MakeKerasLeakyRelu},
+   {"Identity",  &MakeKerasIdentity},
+   {"Dropout",  &MakeKerasIdentity},
 
    // For activation layers
    {"ReLU", &MakeKerasReLU},
@@ -699,6 +702,34 @@ std::unique_ptr<ROperator> MakeKerasBinary(PyObject* fLayer){
    return op;
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator object for Keras Identity and Dropout Layer
+///
+/// \param[in] fLayer Python Keras layer as a Dictionary object
+/// \return Unique pointer to ROperator object
+///
+/// Dropout will have no effect in inference, so instead an Identity operator
+/// is added to mimic its presence in the Keras model
+std::unique_ptr<ROperator> MakeKerasIdentity(PyObject* fLayer)
+{
+      PyObject* fInputs=GetValueFromDict(fLayer,"layerInput");
+      PyObject* fOutputs=GetValueFromDict(fLayer,"layerOutput");
+
+      std::string fLayerDType = PyStringAsString(GetValueFromDict(fLayer,"layerDType"));
+      std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
+      std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
+
+      std::unique_ptr<ROperator> op;
+      switch(ConvertStringToType(fLayerDType)){
+         case ETensorType::FLOAT:
+         op.reset(new ROperator_Identity<float>(fLayerInputName, fLayerOutputName));
+         break;
+         default:
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Identity does not yet support input type " + fLayerDType);
+         }
+   return op;
+}
+
 }//INTERNAL
 
 
@@ -818,9 +849,9 @@ RModel Parse(std::string filename){
          rmodel.AddBlasRoutines({"Gemm", "Gemv"});
       else if (fLayerType == "BatchNormalization")
          rmodel.AddBlasRoutines({"Copy", "Axpy"});
-
       else if(fLayerType == "Conv1D" || fLayerType == "Conv2D" || fLayerType == "Conv3D")
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
+
       INTERNAL::AddKerasLayer(rmodel,fLayer);
 
    }
