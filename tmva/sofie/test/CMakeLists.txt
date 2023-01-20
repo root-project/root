@@ -16,8 +16,26 @@ if (NOT ONNX_MODELS_DIR)
   set(ONNX_MODELS_DIR input_models)
 endif()
 
+#Finding .onnx files to be parsed and creating the appropriate code to
+# parse all file. It is much faster to combine all parsing in a single executable
+# which will avoid initialization time (especially when using ROOT)
+set(CAPTURE_STR "EmitModel( \"@1\", \"@2\");")
+set(ALL_CAPTURES "")
+# Finding .onnx files to be parsed and creating the appropriate command
+file(GLOB ONNX_FILES "${ONNX_MODELS_DIR}/*.onnx")
+foreach(onnx_file ${ONNX_FILES})
+	get_filename_component(fname ${onnx_file} NAME_WE)
+	get_filename_component(fdir ${onnx_file} DIRECTORY)
+  string(REPLACE "@1" ${onnx_file} cap ${CAPTURE_STR})
+  string(REPLACE "@2" ${fname} cap ${cap})
+  list(APPEND ALL_CAPTURES ${cap})
+endforeach()
+string(REPLACE ";" ";\n" EMIT_CAPTURES "${ALL_CAPTURES}")
+configure_file(EmitFromONNX.cxx.in EmitFromONNX_all.cxx @ONLY)
+configure_file(EmitFromRoot.cxx.in EmitFromRoot_all.cxx @ONLY)
+
 add_executable(emitFromONNX
-   EmitFromONNX.cxx
+   EmitFromONNX_all.cxx
 )
 target_include_directories(emitFromONNX PRIVATE
    ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
@@ -37,18 +55,11 @@ target_compile_options(emitFromONNX PRIVATE -Wno-unused-parameter -Wno-array-bou
 add_custom_target(SofieCompileModels_ONNX)
 add_dependencies(SofieCompileModels_ONNX emitFromONNX)
 
-# Finding .onnx files to be compiled and creating the appropriate command
-file(GLOB ONNX_FILES "${ONNX_MODELS_DIR}/*.onnx")
-# Finding .onnx files to be compiled only from ONNX
-file(GLOB ONNX_ONLY_FILES "${ONNX_MODELS_DIR}/onnx/*.onnx")
-foreach(onnx_file ${ONNX_FILES} ${ONNX_ONLY_FILES})
-	get_filename_component(fname ${onnx_file} NAME_WE)
-	get_filename_component(fdir ${onnx_file} DIRECTORY)
-	add_custom_command(TARGET SofieCompileModels_ONNX POST_BUILD
+
+add_custom_command(TARGET SofieCompileModels_ONNX POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
-		USES_TERMINAL
-	)
-endforeach()
+		USES_TERMINAL )
+
 
 # Creating a Google Test
 if (tmva-cpu)  # we need BLAS for compiling the models
@@ -65,8 +76,9 @@ add_dependencies(TestCustomModelsFromONNX SofieCompileModels_ONNX)
 endif()
 
 #For testing serialisation of RModel object
+
 add_executable(emitFromROOT
-   EmitFromRoot.cxx
+   EmitFromRoot_all.cxx
 )
 target_include_directories(emitFromROOT PRIVATE
    ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
@@ -89,16 +101,10 @@ if (runtime_cxxmodules)
 else()
   add_dependencies(SofieCompileModels_ROOT emitFromROOT onepcm)
 endif()
-# Finding .onnx files to be parsed and creating the appropriate command
-file(GLOB ONNX_FILES "${ONNX_MODELS_DIR}/*.onnx")
-foreach(onnx_file ${ONNX_FILES})
-	get_filename_component(fname ${onnx_file} NAME_WE)
-	get_filename_component(fdir ${onnx_file} DIRECTORY)
-	add_custom_command(TARGET SofieCompileModels_ROOT POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromROOT ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
-		USES_TERMINAL
-	)
-endforeach()
+
+add_custom_command(TARGET SofieCompileModels_ROOT POST_BUILD
+COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromROOT
+		USES_TERMINAL )
 
 # Creating a Google Test for Serialisation of RModel
 if (tmva-cpu)

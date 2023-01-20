@@ -12,17 +12,19 @@
 
 using namespace TMVA::Experimental::SOFIE;
 
-int main(int argc, char *argv[]){
-   if (argc < 2) {
-      std::cerr << "ERROR: missing input file\n";
-      return -1;
-   }
+int EmitModel(std::string filename, std::string outname){
 
-   std::string outname=argv[2];
    RModelParser_ONNX parser;
-   RModel model = parser.Parse(argv[1]);
+   RModel model = parser.Parse(filename);
    model.Generate();
    model.OutputGenerated(outname+"_FromONNX.hxx");
 
    return 0;
 }
+
+int main(int argc, char *argv[]){
+
+@EMIT_CAPTURES@ ;
+
+}
+
