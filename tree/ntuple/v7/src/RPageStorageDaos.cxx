@@ -113,8 +113,8 @@ std::pair<uint32_t, uint32_t> DecodeDaosPagePosition(const ROOT::Experimental::R
    return {position, offset};
 }
 
-/// \brief Packs the attribute key of a cage in object storage and the offset to one of its caged pages into a single,
-/// 64-bit address. The offset is kept in the MSb half and defaults to zero, operating normally when caging is disabled.
+/// \brief Packs an attribute key together with an offset within its contents into a single 64-bit address.
+/// The offset is kept in the MSb half and defaults to zero, which is the case when caging is disabled.
 ROOT::Experimental::RNTupleLocatorObject64 EncodeDaosPagePosition(uint64_t position, uint64_t offset = 0)
 {
    uint64_t address = (position & 0xFFFFFFFF) | (offset << 32);
@@ -314,9 +314,9 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
       });
    locators.reserve(nPages);
 
-   uint32_t maxCageSz = fCageSizeLimit;
-   bool useCaging = fCageSizeLimit > 0;
-   std::uint8_t locatorFlags = useCaging ? Internal::EDaosLocatorFlags::kCagedPage : 0;
+   const uint32_t maxCageSz = fCageSizeLimit;
+   const bool useCaging = fCageSizeLimit > 0;
+   const std::uint8_t locatorFlags = useCaging ? Internal::EDaosLocatorFlags::kCagedPage : 0;
 
    DescriptorId_t clusterId = fDescriptorBuilder.GetDescriptor().GetNClusters();
    int64_t payloadSz = 0;
@@ -548,7 +548,7 @@ void ROOT::Experimental::Detail::RPageSourceDaos::LoadSealedPage(DescriptorId_t 
 
    if (pageInfo.fLocator.fReserved & Internal::EDaosLocatorFlags::kCagedPage) {
       throw ROOT::Experimental::RException(
-         R__FAIL("LoadSealedPage: accessing caged pages is only supported in conjunction with cluster cache"));
+         R__FAIL("accessing caged pages is only supported in conjunction with cluster cache"));
    }
 
    const auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
@@ -580,9 +580,8 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(ColumnHandl
 
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
       if (pageInfo.fLocator.fReserved & Internal::EDaosLocatorFlags::kCagedPage) {
-         // Reading a single page contained within a cage without cluster caching (i.e. page buffering) is unsupported
-         // and throws an error. Enable page buffering to access it.
-         throw ROOT::Experimental::RException(R__FAIL("Enable page buffering to access caged pages."));
+         throw ROOT::Experimental::RException(
+            R__FAIL("accessing caged pages is only supported in conjunction with cluster cache"));
       }
 
       directReadBuffer = std::make_unique<unsigned char[]>(bytesOnStorage);
@@ -717,7 +716,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
       auto clusterId = clusterKey.fClusterId;
       // Group page locators by their position in the object store; with caging enabled, this facilitates the
       // processing of cages' requests together into a single IOV to be populated.
-      std::map<std::uint32_t, std::vector<RDaosSealedPageLocator>> onDiskClusterPages;
+      std::unordered_map<std::uint32_t, std::vector<RDaosSealedPageLocator>> onDiskClusterPages;
 
       unsigned clusterBufSz = 0;
       fCounters->fNClusterLoaded.Inc();
