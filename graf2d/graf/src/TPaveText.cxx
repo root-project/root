@@ -682,6 +682,9 @@ void TPaveText::SaveLines(std::ostream &out, const char *name, Bool_t saved)
    Int_t nlines = GetSize();
    if (nlines == 0) return;
 
+   if (!name || !*name)
+      name = "pt";
+
    // Iterate over all lines
    char quote = '"';
    TIter next(fLines);
