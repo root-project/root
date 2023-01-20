@@ -17,7 +17,8 @@ TEST(RPageStorageDaos, Basics)
    auto wrPt = model->MakeField<float>("pt", 42.0);
 
    {
-      RNTupleWriteOptions options;
+      RNTupleWriteOptionsDaos options;
+      options.SetMaxCageSize(0); // Disable caging mechanism.
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple-1", daosUri, options);
       ntuple->Fill();
       ntuple->CommitCluster();
@@ -49,7 +50,8 @@ TEST(RPageStorageDaos, Extended)
    TRandom3 rnd(42);
    double chksumWrite = 0.0;
    {
-      RNTupleWriteOptions options;
+      RNTupleWriteOptionsDaos options;
+      options.SetMaxCageSize(0);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple-2", daosUri, options);
       constexpr unsigned int nEvents = 32000;
       for (unsigned int i = 0; i < nEvents; ++i) {
@@ -102,6 +104,7 @@ TEST(RPageStorageDaos, Options)
       auto wrPt = model->MakeField<float>("pt", 42.0);
 
       RNTupleWriteOptionsDaos options;
+      options.SetMaxCageSize(0);
       options.SetObjectClass("RP_XSF");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple-3", daosUri, options);
       ntuple->Fill();
@@ -121,7 +124,8 @@ TEST(RPageStorageDaos, MultipleNTuplesPerContainer)
 {
    std::string daosUri("daos://" R__DAOS_TEST_POOL "/container-test-4");
 
-   RNTupleWriteOptions options;
+   RNTupleWriteOptionsDaos options;
+   options.SetMaxCageSize(0);
 
    {
       auto modelA = RNTupleModel::Create();
@@ -167,4 +171,58 @@ TEST(RPageStorageDaos, MultipleNTuplesPerContainer)
 
    // Nonexistent ntuple
    EXPECT_THROW(RNTupleReader::Open("ntupleC", daosUri), ROOT::Experimental::RException);
+}
+
+TEST(RPageStorageDaos, CagedPages)
+{
+   std::string daosUri("daos://" R__DAOS_TEST_POOL "/container-test-5");
+   ROOT::EnableImplicitMT();
+
+   auto model = RNTupleModel::Create();
+   auto wrVector = model->MakeField<std::vector<double>>("vector");
+
+   TRandom3 rnd(42);
+   double chksumWrite = 0.0;
+   {
+      RNTupleWriteOptionsDaos options;
+      options.SetMaxCageSize(4 * 64 * 1024);
+      options.SetUseBufferedWrite(true);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", daosUri, options);
+      constexpr unsigned int nEvents = 180000;
+      for (unsigned int i = 0; i < nEvents; ++i) {
+         auto nVec = 1 + floor(rnd.Rndm() * 1000.);
+         wrVector->resize(nVec);
+         for (unsigned int n = 0; n < nVec; ++n) {
+            auto val = 1 + rnd.Rndm() * 1000. - 500.;
+            (*wrVector)[n] = val;
+            chksumWrite += val;
+         }
+         ntuple->Fill();
+      }
+   }
+
+   // Attempt to read all the entries written above as caged pages, with cluster cache turned on.
+   {
+      RNTupleReadOptions options;
+      options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOn);
+      options.SetClusterBunchSize(5);
+      auto ntuple = RNTupleReader::Open("ntuple", daosUri, options);
+      auto rdVector = ntuple->GetModel()->GetDefaultEntry()->Get<std::vector<double>>("vector");
+
+      double chksumRead = 0.0;
+      for (auto entryId : *ntuple) {
+         ntuple->LoadEntry(entryId);
+         for (auto v : *rdVector)
+            chksumRead += v;
+      }
+      EXPECT_EQ(chksumRead, chksumWrite);
+   }
+
+   // Wrongly attempt to read a single caged page when cluster cache is disabled.
+   {
+      RNTupleReadOptions options;
+      options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOff);
+      auto ntuple = RNTupleReader::Open("ntuple", daosUri, options);
+      EXPECT_THROW(ntuple->LoadEntry(1), ROOT::Experimental::RException);
+   }
 }
