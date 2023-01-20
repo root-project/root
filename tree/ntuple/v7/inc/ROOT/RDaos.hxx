@@ -108,23 +108,29 @@ public:
       static constexpr std::size_t kOCNameMaxLength = 64;
    };
 
+   struct RAkeyRequest {
+      AttributeKey_t fAkey{};
+      std::vector<d_iov_t> fIovs{};
+
+      RAkeyRequest(const AttributeKey_t a, const std::vector<d_iov_t> &iovs) : fAkey(a), fIovs(iovs){};
+      RAkeyRequest(const AttributeKey_t a, std::vector<d_iov_t> &&iovs) : fAkey(a), fIovs(std::move(iovs)){};
+   };
+
    /// \brief Contains required information for a single fetch/update operation.
    struct FetchUpdateArgs {
       FetchUpdateArgs() = default;
       FetchUpdateArgs(const FetchUpdateArgs &) = delete;
       FetchUpdateArgs(FetchUpdateArgs &&fua);
-      FetchUpdateArgs(DistributionKey_t d, std::span<const AttributeKey_t> as, std::vector<std::vector<d_iov_t>> &&vs,
-                      bool is_async = false);
+      FetchUpdateArgs(DistributionKey_t d, std::span<RAkeyRequest> rs, bool is_async = false);
       FetchUpdateArgs &operator=(const FetchUpdateArgs &) = delete;
       daos_event_t *GetEventPointer();
 
       /// \brief A `daos_key_t` is a type alias of `d_iov_t`. This type stores a pointer and a length.
       /// In order for `fDistributionKey` to point to memory that we own, `fDkey` holds the distribution key.
-      /// `fAkeys` is a sequential container assumed to remain valid throughout the fetch/update operation.
-      /// `fIovs` holds a vector of IOVs associated with requests for each attribute key in `fAkeys`.
+      /// `fRequests` is a sequential container assumed to remain valid throughout the fetch/update operation, holding a
+      /// list of attribute keys and their associated IOVs.
       DistributionKey_t fDkey{};
-      std::span<const AttributeKey_t> fAkeys{};
-      std::vector<std::vector<d_iov_t>> fIovs{};
+      std::span<RAkeyRequest> fRequests{};
 
       /// \brief The distribution key, as used by the `daos_obj_{fetch,update}` functions.
       daos_key_t fDistributionKey{};
@@ -182,44 +188,41 @@ public:
    /// \brief Describes a read/write operation on multiple objects; see the `ReadV`/`WriteV` functions.
    struct RWOperation {
       RWOperation() = default;
-      RWOperation(daos_obj_id_t o, DistributionKey_t d, std::vector<AttributeKey_t> &&as,
-                  std::vector<std::vector<d_iov_t>> &&vs)
-         : fOid(o), fDistributionKey(d), fAttributeKeys(std::move(as)), fIovVectors(std::move(vs))
+      RWOperation(daos_obj_id_t o, DistributionKey_t d, std::vector<RDaosObject::RAkeyRequest> &&rs)
+         : fOid(o), fDistributionKey(d), fDataRequests(std::move(rs))
       {
-         for (unsigned i = 0; i < fAttributeKeys.size(); i++)
-            fIndices.emplace(fAttributeKeys[i], i);
+         for (unsigned i = 0; i < fDataRequests.size(); i++)
+            fIndices.emplace(fDataRequests[i].fAkey, i);
       };
       RWOperation(ROidDkeyPair &k) : fOid(k.oid), fDistributionKey(k.dkey){};
       daos_obj_id_t fOid{};
       DistributionKey_t fDistributionKey{};
-      std::vector<AttributeKey_t> fAttributeKeys{};
-      std::vector<std::vector<d_iov_t>> fIovVectors{};
+      std::vector<RDaosObject::RAkeyRequest> fDataRequests{};
       std::unordered_map<AttributeKey_t, unsigned> fIndices{};
 
       void Insert(AttributeKey_t attr, const d_iov_t &iov)
       {
-         auto [it, ret] = fIndices.emplace(attr, fAttributeKeys.size());
+         auto [it, ret] = fIndices.emplace(attr, fDataRequests.size());
          unsigned attrIndex = it->second;
 
-         if (attrIndex == fAttributeKeys.size()) {
-            fAttributeKeys.emplace_back(attr);
-            fIovVectors.emplace_back(std::initializer_list<d_iov_t>{iov});
+         if (attrIndex == fDataRequests.size()) {
+            fDataRequests.emplace_back(attr, std::initializer_list<d_iov_t>{iov});
          } else {
-            fIovVectors[attrIndex].emplace_back(iov);
+            fDataRequests[attrIndex].fIovs.emplace_back(iov);
          }
       }
 
       void Insert(AttributeKey_t attr, std::vector<d_iov_t> &iovs)
       {
-         auto [it, ret] = fIndices.emplace(attr, fAttributeKeys.size());
+         auto [it, ret] = fIndices.emplace(attr, fDataRequests.size());
          unsigned attrIndex = it->second;
 
-         if (attrIndex == fAttributeKeys.size()) {
-            fAttributeKeys.emplace_back(attr);
-            fIovVectors.emplace_back(iovs);
+         if (attrIndex == fDataRequests.size()) {
+            fDataRequests.emplace_back(attr, iovs);
          } else {
-            fIovVectors[attrIndex].insert(std::end(fIovVectors[attrIndex]), std::make_move_iterator(std::begin(iovs)),
-                                          std::make_move_iterator(std::end(iovs)));
+            fDataRequests[attrIndex].fIovs.insert(std::end(fDataRequests[attrIndex].fIovs),
+                                                  std::make_move_iterator(std::begin(iovs)),
+                                                  std::make_move_iterator(std::end(iovs)));
          }
       }
    };
