@@ -27,9 +27,6 @@ class RooAbsArg;
 class RooAbsReal;
 class RooAbsCategory;
 class RooAbsData;
-namespace RooFit {
-class NormalizationIntegralUnfolder;
-}
 class RooSimultaneous;
 
 namespace ROOT {
@@ -47,11 +44,10 @@ public:
    //////////////////////////
    // Public member functions
 
-   RooFitDriver(const RooAbsReal &absReal, RooArgSet const &normSet,
-                RooFit::BatchModeOption batchMode = RooFit::BatchModeOption::Cpu);
+   RooFitDriver(const RooAbsReal &absReal, RooFit::BatchModeOption batchMode = RooFit::BatchModeOption::Cpu);
 
    void setData(RooAbsData const &data, std::string const &rangeName = "", RooSimultaneous const *simPdf = nullptr,
-                bool splitRange = false, bool skipZeroWeights = false, bool takeGlobalObservablesFromData = true);
+                bool skipZeroWeights = false, bool takeGlobalObservablesFromData = true);
    void setData(DataSpansMap const &dataSpans);
 
    ~RooFitDriver();
@@ -77,6 +73,7 @@ private:
 
    Detail::BufferManager _bufferManager; // The object managing the different buffers for the intermediate results
 
+   RooAbsReal &_topNode;
    const RooFit::BatchModeOption _batchMode = RooFit::BatchModeOption::Off;
    int _getValInvocations = 0;
    double *_cudaMemDataset = nullptr;
@@ -90,7 +87,6 @@ private:
 
    // used for preserving resources
    std::stack<std::vector<double>> _vectorBuffers;
-   std::unique_ptr<RooFit::NormalizationIntegralUnfolder> _integralUnfolder;
 
    // RAII structures to reset state of computation graph after driver destruction
    std::stack<RooHelpers::ChangeOperModeRAII> _changeOperModeRAIIs;
