@@ -83,7 +83,7 @@ class RResultMap {
               std::vector<std::string> &&keys, ROOT::Detail::RDF::RLoopManager &lm,
               std::shared_ptr<ROOT::Internal::RDF::RActionBase> nominalAction,
               std::shared_ptr<ROOT::Internal::RDF::RActionBase> variedAction)
-      : fKeys{ROOT::Internal::RDF::Union({"nominal"}, keys)}, fLoopManager(&lm),
+      : fKeys{ROOT::Internal::RDF::Union({std::string("nominal")}, keys)}, fLoopManager(&lm),
         fNominalAction(std::move(nominalAction)), fVariedAction(std::move(variedAction))
    {
       R__ASSERT(variedResults.size() == keys.size() && "Keys and values have different sizes!");
