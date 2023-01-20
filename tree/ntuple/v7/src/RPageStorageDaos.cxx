@@ -104,6 +104,8 @@ RDaosURI ParseDaosURI(std::string_view uri)
    return {m[1], m[2]};
 }
 
+/// \brief Unpacks a 64-bit RNTuple page locator address for object stores into a pair of 32-bit values:
+/// the attribute key under which the cage is stored and the offset within that cage to access the page.
 std::pair<uint32_t, uint32_t> DecodeDaosPagePosition(const ROOT::Experimental::RNTupleLocatorObject64 &address)
 {
    auto position = static_cast<uint32_t>(address.fLocation & 0xFFFFFFFF);
@@ -111,6 +113,8 @@ std::pair<uint32_t, uint32_t> DecodeDaosPagePosition(const ROOT::Experimental::R
    return {position, offset};
 }
 
+/// \brief Packs the attribute key of a cage in object storage and the offset to one of its caged pages into a single,
+/// 64-bit address. The offset is kept in the MSb half and defaults to zero, operating normally when caging is disabled.
 ROOT::Experimental::RNTupleLocatorObject64 EncodeDaosPagePosition(uint64_t position, uint64_t offset = 0)
 {
    uint64_t address = (position & 0xFFFFFFFF) | (offset << 32);
@@ -315,45 +319,48 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
    std::uint8_t locatorFlags = useCaging ? Internal::EDaosLocatorFlags::kCagedPage : 0;
 
    DescriptorId_t clusterId = fDescriptorBuilder.GetDescriptor().GetNClusters();
-   int64_t szPayload = 0;
-   std::size_t szCurrentCage;
-   uint32_t cageIdx;
+   int64_t payloadSz = 0;
+   std::size_t positionOffset;
+   uint32_t positionIndex;
 
    /// Aggregate batch of requests by object ID and distribution key, determined by the ntuple-DAOS mapping
    for (auto &range : ranges) {
-      szCurrentCage = 0;
-      cageIdx = useCaging ? fPageId.fetch_add(1) : fPageId.load();
+      positionOffset = 0;
+      /// Under caging, the atomic page counter is fetch-incremented for every column range to get the position of its
+      /// first cage and indicate the next one, also ensuring subsequent pages of different columns do not end up caged
+      /// together. This increment is not necessary in the absence of caging, as each page is trivially caged.
+      positionIndex = useCaging ? fPageId.fetch_add(1) : fPageId.load();
 
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
 
          const RPageStorage::RSealedPage &s = *sealedPageIt;
 
-         if (!useCaging || (szCurrentCage + s.fSize > maxCageSz)) {
-            szCurrentCage = 0;
-            cageIdx = fPageId.fetch_add(1);
+         if (positionOffset + s.fSize > maxCageSz) {
+            positionOffset = 0;
+            positionIndex = fPageId.fetch_add(1);
          }
 
          d_iov_t pageIov;
          d_iov_set(&pageIov, const_cast<void *>(s.fBuffer), s.fSize);
 
          RDaosKey daosKey =
-            GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, range.fPhysicalColumnId, cageIdx);
+            GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, range.fPhysicalColumnId, positionIndex);
          auto odPair = RDaosContainer::ROidDkeyPair{daosKey.fOid, daosKey.fDkey};
          auto [it, ret] = writeRequests.emplace(odPair, RDaosContainer::RWOperation(odPair));
          it->second.Insert(daosKey.fAkey, pageIov);
 
          RNTupleLocator locator;
-         locator.fPosition = EncodeDaosPagePosition(cageIdx, szCurrentCage);
+         locator.fPosition = EncodeDaosPagePosition(positionIndex, positionOffset);
          locator.fBytesOnStorage = s.fSize;
          locator.fType = RNTupleLocator::kTypeDAOS;
          locator.fReserved = locatorFlags;
          locators.push_back(locator);
 
-         szCurrentCage += s.fSize;
-         szPayload += s.fSize;
+         positionOffset += s.fSize;
+         payloadSz += s.fSize;
       }
    }
-   fNBytesCurrentCluster += szPayload;
+   fNBytesCurrentCluster += payloadSz;
 
    {
       RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
@@ -362,7 +369,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
    }
 
    fCounters->fNPageCommitted.Add(nPages);
-   fCounters->fSzWritePayload.Add(szPayload);
+   fCounters->fSzWritePayload.Add(payloadSz);
 
    return locators;
 }
@@ -708,7 +715,9 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
    for (unsigned i = 0; i < clusterKeys.size(); ++i) {
       const auto &clusterKey = clusterKeys[i];
       auto clusterId = clusterKey.fClusterId;
-      std::map<std::uint32_t, std::vector<RDaosSealedPageLocator>> onDiskClusterCages;
+      // Group page locators by their position in the object store; with caging enabled, this facilitates the
+      // processing of cages' requests together into a single IOV to be populated.
+      std::map<std::uint32_t, std::vector<RDaosSealedPageLocator>> onDiskClusterPages;
 
       unsigned clusterBufSz = 0;
       fCounters->fNClusterLoaded.Inc();
@@ -724,7 +733,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
                const auto &pageLocator = pageInfo.fLocator;
                uint32_t position, offset;
                std::tie(position, offset) = DecodeDaosPagePosition(pageLocator.GetPosition<RNTupleLocatorObject64>());
-               auto [itLoc, _] = onDiskClusterCages.emplace(position, std::vector<RDaosSealedPageLocator>());
+               auto [itLoc, _] = onDiskClusterPages.emplace(position, std::vector<RDaosSealedPageLocator>());
 
                itLoc->second.emplace_back(clusterId, physicalColumnId, columnPageCount, position, offset,
                                           pageLocator.fBytesOnStorage);
@@ -742,7 +751,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
       unsigned char *cageBuffer = clusterBuffers[i];
 
       // Fill the cluster page maps and the input dictionary for the RDaosContainer::ReadV() call
-      for (auto &[cageIndex, pageVec] : onDiskClusterCages) {
+      for (auto &[cageIndex, pageVec] : onDiskClusterPages) {
          auto columnId = pageVec[0].fColumnId; // All pages in a cage belong to the same column
          std::size_t cageSz = 0;
 
