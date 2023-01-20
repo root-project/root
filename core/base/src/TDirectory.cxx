@@ -318,11 +318,6 @@ void TDirectory::CleanTargets()
       context->fDirectoryWait = false;
    }
 
-   // Deal with the gROOT case; gROOT does not register the local gDirectories
-   // it is assigned to so the loop over fGDirectories has not done anything.
-   if (this == ROOT::Internal::gROOTLocal && gDirectory == this)
-      gDirectory = nullptr;
-
    // Wait until all register attempts are done.
    while(fContextPeg) {}
 
@@ -1394,8 +1389,6 @@ void TDirectory::RegisterContext(TContext *ctxt) {
 
 void TDirectory::RegisterGDirectory(TDirectory::SharedGDirectory_t &gdirectory_ptr)
 {
-   if (this == ROOT::Internal::gROOTLocal)
-      return;
    ROOT::Internal::TSpinLockGuard slg(fSpinLock);
    if (std::find(fGDirectories.begin(), fGDirectories.end(), gdirectory_ptr) == fGDirectories.end()) {
       fGDirectories.emplace_back(gdirectory_ptr);
