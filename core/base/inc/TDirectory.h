@@ -311,23 +311,31 @@ public:
 
 namespace ROOT {
 namespace Internal {
-   // The objects of type TDirectoryAtomicAdapter should only be used inside the
-   // thread that created them.  The intent is for this to be used (indirectly) solely as
-   // temporary objects.  For example:
-   //
-   // gDirectory = newvalue;
-   // gDirectory->ls();
-   // TDirectory *current = gDirectory;
-   //
-   // Note that:
-   //   auto dir = gDirectory;
-   // currently behaves "unexpectedly" as changing dir will change gDirectory:
-   //   dir = newvalue;
-   // leads to
-   //   gDirectory == newvalue
-   // To prevent this we would need a new mechanism such that the type
-   // used by 'auto' in that case is `TDirectory*` rather than the Internal
-   // type TDirectoryAtomicAdapter.
+   /// \brief Internal class used in the implementation of `gDirectory`
+   /// The objects of type `TDirectoryAtomicAdapter` should only be used inside the
+   /// thread that created them.  The intent is for those objects to be used indirectly
+   /// through the macro `gDirectory` and solely as temporary objects.
+   /// For example:
+   /// ```
+   ///   gDirectory = newvalue;
+   ///   gDirectory->ls();
+   ///   TDirectory *current = gDirectory;
+   /// ```
+   /// Note that:
+   /// ```
+   ///   auto dir = gDirectory;
+   /// ```
+   /// currently behaves "unexpectedly" as changing `dir` will also change `gDirectory`:
+   /// ```
+   ///   dir = newvalue;
+   /// ```
+   /// leads to
+   /// ```
+   ///   gDirectory == newvalue
+   /// ```
+   /// To prevent this we would need a new mechanism such that the type
+   /// used by `auto` in that case is `TDirectory*` rather than the `Internal`
+   /// type `TDirectoryAtomicAdapter`.
    struct TDirectoryAtomicAdapter {
       // The shared pointer's lifetime is that of the thread creating this object
       // (with the default constructor)
