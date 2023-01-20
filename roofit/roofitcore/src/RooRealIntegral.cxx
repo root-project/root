@@ -1159,9 +1159,3 @@ Int_t RooRealIntegral::getCacheAllNumeric()
 {
   return _cacheAllNDim ;
 }
-
-
-std::unique_ptr<RooArgSet> RooRealIntegral::fillNormSetForServer(RooArgSet const& /*normSet*/,
-                                                                 RooAbsArg const& /*server*/) const {
-  return _funcNormSet ? std::make_unique<RooArgSet>(*_funcNormSet) : nullptr;
-}

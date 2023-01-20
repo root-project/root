@@ -1173,3 +1173,84 @@ RooArgSet const& RooSimultaneous::flattenedCatList() const
    }
    return *_indexCatSet;
 }
+
+namespace {
+
+void prefixArgs(RooAbsArg *arg, std::string const &prefix, RooArgSet const &normSet)
+{
+   if (!arg->getStringAttribute("__prefix__")) {
+      arg->SetName((prefix + arg->GetName()).c_str());
+      arg->setStringAttribute("__prefix__", prefix.c_str());
+   }
+   for (RooAbsArg *server : arg->servers()) {
+      if (server->isFundamental() && normSet.find(*server)) {
+         prefixArgs(server, prefix, normSet);
+         server->setAttribute("__obs__");
+      } else if (!server->isFundamental()) {
+         prefixArgs(server, prefix, normSet);
+      }
+   }
+}
+
+} // namespace
+
+std::unique_ptr<RooAbsArg>
+RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
+{
+   RooArgSet params;
+   this->getParameters(&normSet, params);
+
+   std::unique_ptr<RooSimultaneous> newSimPdf{static_cast<RooSimultaneous *>(this->Clone())};
+
+   const char *rangeName = newSimPdf->getStringAttribute("RangeName");
+   bool splitRange = newSimPdf->getAttribute("SplitRange");
+
+   RooArgSet newPdfs;
+   for (auto *cat : static_range_cast<RooAbsCategoryLValue *>(newSimPdf->flattenedCatList())) {
+
+      for (auto const &catState : *cat) {
+         std::string const &catName = catState.first;
+         const std::string prefix = "_" + catName + "_";
+
+         if (RooAbsPdf *pdf = getPdf(catName.c_str())) {
+            const std::string origname = pdf->GetName();
+
+            std::unique_ptr<RooAbsPdf> pdfClone{static_cast<RooAbsPdf *>(pdf->cloneTree())};
+
+            prefixArgs(pdfClone.get(), prefix, normSet);
+
+            auto binnedInfo = RooHelpers::getBinnedL(*pdfClone);
+
+            pdf = binnedInfo.binnedPdf ? binnedInfo.binnedPdf : pdfClone.get();
+
+            if (binnedInfo.isBinnedL) {
+               pdf->setAttribute("BinnedLikelihoodActive");
+            }
+
+            std::unique_ptr<RooArgSet> pdfNormSet(static_cast<RooArgSet *>(
+               std::unique_ptr<RooArgSet>(pdf->getVariables())->selectByAttrib("__obs__", true)));
+
+            if (rangeName) {
+               pdf->setNormRange(RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, catName).c_str());
+            }
+
+            auto *pdfFinal = RooFit::Detail::CompileContext{*pdfNormSet}.compile(*pdf, *newSimPdf, *pdfNormSet);
+            pdfFinal->fixAddCoefNormalization(*pdfNormSet, false);
+
+            pdfClone->SetName((std::string("_") + pdfClone->GetName()).c_str());
+            pdfFinal->addOwnedComponents(std::move(pdfClone));
+
+            pdfFinal->setAttribute(("ORIGNAME:" + origname).c_str());
+            newPdfs.add(*pdfFinal);
+         }
+      }
+   }
+
+   newSimPdf->redirectServers(newPdfs, false, true);
+
+   ctx.compileServers(*newSimPdf, normSet); // to trigger compling also the index category
+
+   newSimPdf->recursiveRedirectServers(params);
+
+   return newSimPdf;
+}

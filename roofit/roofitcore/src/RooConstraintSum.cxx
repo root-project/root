@@ -100,9 +100,21 @@ void RooConstraintSum::computeBatch(cudaStream_t *, double *output, size_t /*siz
    output[0] = sum;
 }
 
+std::unique_ptr<RooAbsArg> RooConstraintSum::compileForNormSet(RooArgSet const & /*normSet*/, RooFit::Detail::CompileContext & ctx) const
+{
+   std::unique_ptr<RooAbsReal> newArg{static_cast<RooAbsReal*>(this->Clone())};
 
-std::unique_ptr<RooArgSet> RooConstraintSum::fillNormSetForServer(RooArgSet const& /*normSet*/, RooAbsArg const& /*server*/) const {
-  return std::make_unique<RooArgSet>(_paramSet);
+   RooArgList serverClones;
+   for (const auto server : newArg->servers()) {
+      RooArgSet nset;
+      server->getObservables(&_paramSet, nset);
+      if (auto serverClone = ctx.compile(*server, *newArg, nset)) {
+         serverClones.add(*serverClone);
+      }
+   }
+   newArg->redirectServers(serverClones, false, true);
+
+   return newArg;
 }
 
 

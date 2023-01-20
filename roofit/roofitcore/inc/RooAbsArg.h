@@ -24,6 +24,7 @@
 #include "RooAbsCache.h"
 #include "RooNameReg.h"
 #include "RooLinkedListIter.h"
+#include <RooFit/Detail/NormalizationHelpers.h>
 #include <RooStringView.h>
 
 #include <deque>
@@ -578,7 +579,7 @@ public:
 
   virtual void applyWeightSquared(bool flag);
 
-  virtual std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server) const;
+  virtual std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const;
 
   virtual bool isCategory() const { return false; }
 

@@ -46,6 +46,7 @@ to the fractions of the various functions. **This requires setting the last argu
 
 #include "RooRealSumPdf.h"
 
+#include "RooNormalizedPdf.h"
 #include "RooRealIntegral.h"
 #include "RooRealProxy.h"
 #include "RooRealVar.h"
@@ -729,4 +730,27 @@ void RooRealSumPdf::printMetaArgs(RooArgList const& funcList, RooArgList const& 
   }
 
   os << " " ;
+}
+
+std::unique_ptr<RooAbsArg> RooRealSumPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const
+{
+   if(normSet.empty() || selfNormalized()) {
+      return RooAbsPdf::compileForNormSet({}, ctx);
+   }
+   std::unique_ptr<RooAbsPdf> pdfClone(static_cast<RooAbsPdf*>(this->Clone()));
+   ctx.compileServers(*pdfClone, {});
+
+   auto depList = new RooArgSet; // INTENTIONAL LEAK FOR NOW!
+   pdfClone->getObservables(&normSet, *depList);
+
+   auto newArg = std::make_unique<RooNormalizedPdf>(*pdfClone, *depList);
+
+   // The direct servers are this pdf and the normalization integral, which
+   // don't need to be compiled further.
+   for(RooAbsArg * server : newArg->servers()) {
+      server->setAttribute("_COMPILED");
+   }
+   newArg->setAttribute("_COMPILED");
+   newArg->addOwnedComponents(std::move(pdfClone));
+   return newArg;
 }
