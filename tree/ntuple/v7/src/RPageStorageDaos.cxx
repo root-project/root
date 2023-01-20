@@ -273,8 +273,9 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(DescriptorId_t p
    }
 
    RNTupleLocator result;
-   result.fPosition = offsetData;
+   result.fPosition = RNTupleLocatorObject64{offsetData};
    result.fBytesOnStorage = sealedPage.fSize;
+   result.fType = RNTupleLocator::kTypeDAOS;
    fCounters->fNPageCommitted.Inc();
    fCounters->fSzWritePayload.Add(sealedPage.fSize);
    fNBytesCurrentCluster += sealedPage.fSize;
@@ -310,8 +311,9 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
          it->second.insert(daosKey.fAkey, pageIov);
 
          RNTupleLocator locator;
-         locator.fPosition = offsetData;
+         locator.fPosition = RNTupleLocatorObject64{offsetData};
          locator.fBytesOnStorage = s.fSize;
+         locator.fType = RNTupleLocator::kTypeDAOS;
          locators.push_back(locator);
 
          szPayload += s.fSize;
@@ -351,8 +353,9 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterGroupImpl(unsigned char 
       daos_obj_id_t{kOidLowPageList, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)}, kDistributionKeyDefault,
       offsetData, kCidMetadata);
    RNTupleLocator result;
-   result.fPosition = offsetData;
+   result.fPosition = RNTupleLocatorObject64{offsetData};
    result.fBytesOnStorage = szPageListZip;
+   result.fType = RNTupleLocator::kTypeDAOS;
    fCounters->fSzWritePayload.Add(szPageListZip);
    return result;
 }
