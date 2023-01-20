@@ -162,40 +162,16 @@ ROOT::Experimental::RNTupleInspector::Create(std::string_view ntupleName, std::s
    auto ntuple = std::unique_ptr<ROOT::Experimental::RNTuple>(
       sourceFile->Get<ROOT::Experimental::RNTuple>(std::string(ntupleName).c_str()));
    if (!ntuple) {
-      throw RException(R__FAIL("cannot read RNTuple " + std::string(ntupleName) + " from " + std::string(sourceFileName)));
+      throw RException(
+         R__FAIL("cannot read RNTuple " + std::string(ntupleName) + " from " + std::string(sourceFileName)));
    }
 
    auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(ntuple->MakePageSource()));
    inspector->fSourceFile = std::move(sourceFile);
 
-   inspector->CollectSizeData();
+   inspector->CollectColumnInfo();
 
    return inspector;
-}
-
-ROOT::Experimental::RNTupleDescriptor *ROOT::Experimental::RNTupleInspector::GetDescriptor()
-{
-   return fDescriptor.get();
-}
-
-int ROOT::Experimental::RNTupleInspector::GetCompressionSettings()
-{
-   return fCompressionSettings;
-}
-
-std::uint64_t ROOT::Experimental::RNTupleInspector::GetOnDiskSize()
-{
-   return fOnDiskSize;
-}
-
-std::uint64_t ROOT::Experimental::RNTupleInspector::GetInMemorySize()
-{
-   return fInMemorySize;
-}
-
-float ROOT::Experimental::RNTupleInspector::GetCompressionFactor()
-{
-   return (float)fInMemorySize / (float)fOnDiskSize;
 }
 
 int ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(std::string_view typeName, bool includeSubFields)
