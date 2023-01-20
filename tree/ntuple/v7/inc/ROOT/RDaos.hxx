@@ -108,6 +108,7 @@ public:
       static constexpr std::size_t kOCNameMaxLength = 64;
    };
 
+   /// \brief Contains an attribute key and the associated IOVs for a single scatter-gather I/O request.
    struct RAkeyRequest {
       AttributeKey_t fAkey{};
       std::vector<d_iov_t> fIovs{};
@@ -127,9 +128,9 @@ public:
 
       /// \brief A `daos_key_t` is a type alias of `d_iov_t`. This type stores a pointer and a length.
       /// In order for `fDistributionKey` to point to memory that we own, `fDkey` holds the distribution key.
-      /// `fRequests` is a sequential container assumed to remain valid throughout the fetch/update operation, holding a
-      /// list of attribute keys and their associated IOVs.
       DistributionKey_t fDkey{};
+      /// \brief `fRequests` is a sequential container assumed to remain valid throughout the fetch/update operation,
+      /// holding a list of `RAkeyRequest`-typed elements.
       std::span<RAkeyRequest> fRequests{};
 
       /// \brief The distribution key, as used by the `daos_obj_{fetch,update}` functions.
@@ -185,7 +186,8 @@ public:
       };
    };
 
-   /// \brief Describes a read/write operation on multiple objects; see the `ReadV`/`WriteV` functions.
+   /// \brief Describes a read/write operation on multiple attribute keys under the same object ID and distribution key,
+   /// see the `ReadV`/`WriteV` functions.
    struct RWOperation {
       RWOperation() = default;
       RWOperation(daos_obj_id_t o, DistributionKey_t d, std::vector<RDaosObject::RAkeyRequest> &&rs)
