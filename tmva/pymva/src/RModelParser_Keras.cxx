@@ -54,7 +54,7 @@ std::unique_ptr<ROperator> MakeKerasBinary(PyObject *fLayer);       // For insta
 std::unique_ptr<ROperator> MakeKerasSoftmax(PyObject *fLayer);      // For instantiating ROperator for Keras Softmax Layer
 std::unique_ptr<ROperator> MakeKerasTanh(PyObject *fLayer);         // For instantiating ROperator for Keras Tanh Layer
 std::unique_ptr<ROperator> MakeKerasLeakyRelu(PyObject *fLayer);    // For instantiating ROperator for Keras LeakyRelu Layer
-std::unique_ptr<ROperator> MakeKerasDropout(PyObject *fLayer);      // For handling Keras Dropout layer by mimicking Identity operator
+std::unique_ptr<ROperator> MakeKerasIdentity(PyObject *fLayer);     // For instantiating ROperator for Keras Identity Layer
 
 
 // Declaring Internal function for Keras layers which have additional activation attribute
@@ -77,7 +77,8 @@ const KerasMethodMap mapKerasLayer = {
    {"Softmax", &MakeKerasSoftmax},
    {"tanh", &MakeKerasTanh},
    {"LeakyReLU", &MakeKerasLeakyRelu},
-   {"Dropout",  &MakeKerasDropout},
+   {"Identity",  &MakeKerasIdentity},
+   {"Dropout",  &MakeKerasIdentity},
 
    // For activation layers
    {"ReLU", &MakeKerasReLU},
@@ -702,14 +703,14 @@ std::unique_ptr<ROperator> MakeKerasBinary(PyObject* fLayer){
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-/// \brief Prepares a ROperator object for Keras Dropout Layer
+/// \brief Prepares a ROperator object for Keras Identity and Dropout Layer
 ///
 /// \param[in] fLayer Python Keras layer as a Dictionary object
 /// \return Unique pointer to ROperator object
 ///
 /// Dropout will have no effect in inference, so instead an Identity operator
 /// is added to mimic its presence in the Keras model
-std::unique_ptr<ROperator> MakeKerasDropout(PyObject* fLayer)
+std::unique_ptr<ROperator> MakeKerasIdentity(PyObject* fLayer)
 {
       PyObject* fInputs=GetValueFromDict(fLayer,"layerInput");
       PyObject* fOutputs=GetValueFromDict(fLayer,"layerOutput");
@@ -724,8 +725,7 @@ std::unique_ptr<ROperator> MakeKerasDropout(PyObject* fLayer)
          op.reset(new ROperator_Identity<float>(fLayerInputName, fLayerOutputName));
          break;
          default:
-         throw std::runtime_error("TMVA::SOFIE - Unsupported - Identity Operator for mimicking Dropout" 
-                                  "does not yet support input type " + fLayerDType);
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Identity does not yet support input type " + fLayerDType);
          }
    return op;
 }
