@@ -35,7 +35,7 @@ public:
 
    RooNLLVarNew(){};
    RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables, bool isExtended,
-                RooFit::OffsetMode offsetMode, bool binnedL = false);
+                RooFit::OffsetMode offsetMode);
    RooNLLVarNew(const RooNLLVarNew &other, const char *name = nullptr);
    TObject *clone(const char *newname) const override { return new RooNLLVarNew(*this, newname); }
 
@@ -48,11 +48,9 @@ public:
    void computeBatch(cudaStream_t *, double *output, size_t nOut, RooFit::Detail::DataMap const &) const override;
    inline bool isReducerNode() const override { return true; }
 
-   RooArgSet prefixArgNames(std::string const &prefix);
+   void setPrefix(std::string const &prefix);
 
    void applyWeightSquared(bool flag) override;
-
-   std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const &normSet, RooAbsArg const &server) const override;
 
    void enableOffsetting(bool) override;
 

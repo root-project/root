@@ -106,12 +106,6 @@ public:
   const RooAbsPdf& pdf() const { return _pdf.arg(); }
   const RooAbsReal& observable() const { return _observable.arg(); }
 
-  std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& /*normSet*/,
-                         RooAbsArg const& /*server*/) const override {
-    // servers are evaluated unnormalized
-    return std::make_unique<RooArgSet>();
-  }
-
 protected:
   double evaluate() const override;
   RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;

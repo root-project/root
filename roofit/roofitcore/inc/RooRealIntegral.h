@@ -81,8 +81,6 @@ public:
   void setAllowComponentSelection(bool allow);
   bool getAllowComponentSelection() const;
 
-  std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server) const override;
-
 protected:
 
   mutable bool _valid = false;

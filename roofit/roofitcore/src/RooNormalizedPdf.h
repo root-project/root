@@ -53,9 +53,9 @@ public:
    }
 
    ExtendMode extendMode() const override { return static_cast<RooAbsPdf &>(*_pdf).extendMode(); }
-   double expectedEvents(const RooArgSet *nset) const override
+   double expectedEvents(const RooArgSet * /*nset*/) const override
    {
-      return static_cast<RooAbsPdf &>(*_pdf).expectedEvents(nset);
+      return static_cast<RooAbsPdf &>(*_pdf).expectedEvents(&_normSet);
    }
 
 protected:
