@@ -535,10 +535,12 @@ void RooProduct::ioStreamerPass2() {
   RooAbsProxy * p0 = getProxy(0);
   if(p0 == nullptr) {
     _proxyList.AddAt(&_compRSet, 0);
+    p0 = &_compRSet;
   }
   RooAbsProxy * p1 = getProxy(1);
   if(p1 == nullptr) {
     _proxyList.AddAt(&_compCSet, 1);
+    p1 = &_compCSet;
   }
 
   // If the proxies in the proxy list still don't correspond to _compRSet and
@@ -566,7 +568,7 @@ void RooProduct::ioStreamerPass2() {
   };
 
   expectProxyIs(0, p0, &_compRSet, "_compRSet");
-  expectProxyIs(1, p1, &_compCSet, "_compSSet");
+  expectProxyIs(1, p1, &_compCSet, "_compCSet");
 }
 
 
