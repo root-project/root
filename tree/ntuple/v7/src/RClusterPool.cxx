@@ -132,6 +132,7 @@ void ROOT::Experimental::Detail::RClusterPool::ExecReadClusters()
          }
 
          auto clusters = fPageSource.LoadClusters(clusterKeys);
+         bool unzipQueueDirty = false;
          for (std::size_t i = 0; i < clusters.size(); ++i) {
             // Meanwhile, the user might have requested clusters outside the look-ahead window, so that we don't
             // need the cluster anymore, in which case we simply discard it right away, before moving it to the pool
@@ -150,10 +151,12 @@ void ROOT::Experimental::Detail::RClusterPool::ExecReadClusters()
                // Hand-over the loaded cluster pages to the unzip thread
                std::unique_lock<std::mutex> lock(fLockUnzipQueue);
                fUnzipQueue.emplace_back(RUnzipItem{std::move(clusters[i]), std::move(readItems[i].fPromise)});
-               fCvHasUnzipWork.notify_one();
+               unzipQueueDirty = true;
             }
          }
          readItems.erase(readItems.begin(), readItems.begin() + clusters.size());
+         if (unzipQueueDirty)
+            fCvHasUnzipWork.notify_one();
       }
    } // while (true)
 }
