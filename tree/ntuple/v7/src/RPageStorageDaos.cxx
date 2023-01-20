@@ -104,6 +104,18 @@ RDaosURI ParseDaosURI(std::string_view uri)
    return {m[1], m[2]};
 }
 
+std::pair<uint32_t, uint32_t> DecodeDaosPagePosition(ROOT::Experimental::RNTupleLocatorObject64 &address)
+{
+   auto position = static_cast<uint32_t>(address.fLocation & 0xFFFFFFFF);
+   auto offset = static_cast<uint32_t>(address.fLocation >> 32);
+   return {position, offset};
+}
+
+ROOT::Experimental::RNTupleLocatorObject64 EncodeDaosPagePosition(uint64_t position, uint64_t offset = 0)
+{
+   uint64_t address = (position & 0xFFFFFFFF) | (offset << 32);
+   return ROOT::Experimental::RNTupleLocatorObject64{address};
+}
 } // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
