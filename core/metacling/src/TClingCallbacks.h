@@ -45,8 +45,6 @@ private:
    bool fIsAutoLoading = false;
    bool fIsAutoLoadingRecursively = false;
    bool fIsAutoParsingSuspended = false;
-   bool fPPOldFlag = false;
-   bool fPPChanged = false;
    bool fIsCodeGening = false;
    bool fIsLoadingModule = false;
    llvm::DenseMap<llvm::StringRef, clang::DeclarationName> m_LoadedModuleFiles;
@@ -75,7 +73,7 @@ public:
    // Preprocessor callbacks used to handle special cases like for example:
    // #include "myMacro.C+"
    //
-   bool FileNotFound(llvm::StringRef FileName, llvm::SmallVectorImpl<char> &RecoveryPath) override;
+   bool FileNotFound(llvm::StringRef FileName) override;
 
    bool LookupObject(clang::LookupResult &R, clang::Scope *S) override;
    bool LookupObject(const clang::DeclContext *DC, clang::DeclarationName Name) override;
