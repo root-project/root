@@ -64,16 +64,17 @@ std::string ROOT::Experimental::Detail::RDaosObject::ObjClassId::ToString() cons
 }
 
 ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(FetchUpdateArgs &&fua)
-   : fDkey(fua.fDkey), fAkeys(fua.fAkeys), fIovs(fua.fIovs), fIods(std::move(fua.fIods)), fSgls(std::move(fua.fSgls)),
-     fEvent(std::move(fua.fEvent))
+   : fDkey(fua.fDkey), fAkeys(fua.fAkeys), fIovs(std::move(fua.fIovs)), fIods(std::move(fua.fIods)),
+     fSgls(std::move(fua.fSgls)), fEvent(std::move(fua.fEvent))
 {
    d_iov_set(&fDistributionKey, &fDkey, sizeof(fDkey));
 }
 
 ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(DistributionKey_t d,
                                                                           std::span<const AttributeKey_t> as,
-                                                                          std::span<d_iov_t> vs, bool is_async)
-   : fDkey(d), fAkeys(as), fIovs(vs)
+                                                                          std::vector<std::vector<d_iov_t>> &&vs,
+                                                                          bool is_async)
+   : fDkey(d), fAkeys(as), fIovs(std::move(vs))
 {
    if (is_async)
       fEvent.emplace();
@@ -85,7 +86,8 @@ ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(Distri
    for (unsigned i = 0; i < fAkeys.size(); ++i) {
       daos_iod_t iod;
       iod.iod_nr = 1;
-      iod.iod_size = fIovs[i].iov_len;
+      iod.iod_size =
+         std::accumulate(fIovs[i].begin(), fIovs[i].end(), 0, [](size_t c, d_iov_t &iov) { return c + iov.iov_len; });
       iod.iod_recxs = nullptr;
       iod.iod_type = DAOS_IOD_SINGLE;
       d_iov_set(&iod.iod_name, const_cast<AttributeKey_t *>(&(fAkeys[i])), sizeof(fAkeys[i]));
@@ -93,8 +95,8 @@ ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(Distri
 
       d_sg_list_t sgl;
       sgl.sg_nr_out = 0;
-      sgl.sg_nr = 1;
-      sgl.sg_iovs = &fIovs[i];
+      sgl.sg_nr = fIovs[i].size();
+      sgl.sg_iovs = fIovs[i].data();
       fSgls.push_back(sgl);
    }
 }
@@ -211,9 +213,9 @@ int ROOT::Experimental::Detail::RDaosContainer::ReadSingleAkey(void *buffer, std
                                                                ObjClassId_t cid)
 {
    AttributeKey_t akeys[] = {akey};
-   d_iov_t iovs[1];
-   d_iov_set(&iovs[0], buffer, length);
-   RDaosObject::FetchUpdateArgs args(dkey, akeys, iovs);
+   std::vector<std::vector<d_iov_t>> vecIovs(1, std::vector<d_iov_t>(1));
+   d_iov_set(&vecIovs[0][0], const_cast<void *>(buffer), length);
+   RDaosObject::FetchUpdateArgs args(dkey, akeys, std::move(vecIovs));
    return RDaosObject(*this, oid, cid.fCid).Fetch(args);
 }
 
@@ -222,9 +224,9 @@ int ROOT::Experimental::Detail::RDaosContainer::WriteSingleAkey(const void *buff
                                                                 AttributeKey_t akey, ObjClassId_t cid)
 {
    AttributeKey_t akeys[] = {akey};
-   d_iov_t iovs[1];
-   d_iov_set(&iovs[0], const_cast<void *>(buffer), length);
-   RDaosObject::FetchUpdateArgs args(dkey, akeys, iovs);
+   std::vector<std::vector<d_iov_t>> vecIovs(1, std::vector<d_iov_t>(1));
+   d_iov_set(&vecIovs[0][0], const_cast<void *>(buffer), length);
+   RDaosObject::FetchUpdateArgs args(dkey, akeys, std::move(vecIovs));
    return RDaosObject(*this, oid, cid.fCid).Update(args);
 }
 
@@ -243,9 +245,10 @@ int ROOT::Experimental::Detail::RDaosContainer::VectorReadWrite(MultiObjectRWOpe
       return ret;
 
    for (auto &[key, batch] : map) {
-      requests.push_back(std::make_tuple(
-         std::make_unique<RDaosObject>(*this, batch.fOid, cid.fCid),
-         RDaosObject::FetchUpdateArgs{batch.fDistributionKey, batch.fAttributeKeys, batch.fIovs, /*is_async=*/true}));
+      requests.push_back(
+         std::make_tuple(std::make_unique<RDaosObject>(*this, batch.fOid, cid.fCid),
+                         RDaosObject::FetchUpdateArgs{batch.fDistributionKey, std::move(batch.fAttributeKeys),
+                                                      std::move(batch.fIovVectors), /*is_async=*/true}));
 
       if ((ret = fPool->fEventQueue->InitializeEvent(std::get<1>(requests.back()).GetEventPointer(), &parent_event)) <
           0)

@@ -340,7 +340,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
             GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, range.fPhysicalColumnId, cageIdx);
          auto odPair = RDaosContainer::ROidDkeyPair{daosKey.fOid, daosKey.fDkey};
          auto [it, ret] = writeRequests.emplace(odPair, RDaosContainer::RWOperation(odPair));
-         it->second.insert(daosKey.fAkey, pageIov);
+         it->second.Insert(daosKey.fAkey, pageIov);
 
          RNTupleLocator locator;
          locator.fPosition = EncodeDaosPagePosition(cageIdx, szCurrentCage);
@@ -765,7 +765,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
          RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, columnId, cageIndex);
          auto odPair = RDaosContainer::ROidDkeyPair{daosKey.fOid, daosKey.fDkey};
          auto [itReq, ret] = readRequests.emplace(odPair, RDaosContainer::RWOperation(odPair));
-         itReq->second.insert(daosKey.fAkey, iov);
+         itReq->second.Insert(daosKey.fAkey, iov);
 
          cageBuffer += cageSz;
       }
