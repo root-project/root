@@ -67,21 +67,43 @@ struct InitializedTensor{
       }
       switch(fType){
          case ETensorType::FLOAT: fSize*=sizeof(float); break;
+         case ETensorType::DOUBLE: fSize*=sizeof(double); break;
+         case ETensorType::INT32: fSize*=sizeof(int32_t); break;
+         case ETensorType::INT64: fSize*=sizeof(int64_t); break;
          default:
           throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " + ConvertTypeToString(fType));
       }
       fPersistentData=(char*)fData.get();
    }
    void CastPersistentToShared(){
-     switch(fType){
-       case ETensorType::FLOAT: {
-      std::shared_ptr<void> tData(malloc(fSize * sizeof(float)), free);
-      std::memcpy(tData.get(), fPersistentData,fSize * sizeof(float));
-      fData=tData;
-      break;
+      switch (fType) {
+      case ETensorType::FLOAT: {
+          std::shared_ptr<void> tData(malloc(fSize * sizeof(float)), free);
+          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(float));
+          fData = tData;
+          break;
+      }
+      case ETensorType::DOUBLE: {
+          std::shared_ptr<void> tData(malloc(fSize * sizeof(double)), free);
+          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(double));
+          fData = tData;
+          break;
+      }
+      case ETensorType::INT32: {
+          std::shared_ptr<void> tData(malloc(fSize * sizeof(int32_t)), free);
+          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(int32_t));
+          fData = tData;
+          break;
+      }
+      case ETensorType::INT64: {
+          std::shared_ptr<void> tData(malloc(fSize * sizeof(int64_t)), free);
+          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(int64_t));
+          fData = tData;
+          break;
       }
       default: {
-          throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " + ConvertTypeToString(fType));
+          throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " +
+                                   ConvertTypeToString(fType));
       }
       }
    }
