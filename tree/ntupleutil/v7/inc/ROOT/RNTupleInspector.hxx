@@ -66,7 +66,7 @@ private:
    RNTupleInspector(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource)
       : fPageSource(std::move(pageSource)){};
 
-   void CollectSizeData();
+   std::vector<DescriptorId_t> GetColumnsForField(DescriptorId_t fieldId);
 
 public:
    RNTupleInspector(const RNTupleInspector &other) = delete;
@@ -100,6 +100,29 @@ public:
 
    /// Get the compression factor of the RNTuple being inspected.
    float GetCompressionFactor();
+
+   /// Get the amount of fields of a given type or class present in the RNTuple.
+   int GetFieldTypeFrequency(std::string className);
+
+   /// Get the amount of columns of a given type present in the RNTuple.
+   int GetColumnTypeFrequency(EColumnType colType);
+
+   /// Get the on-disk, compressed size of a given column.
+   std::uint64_t GetCompressedColumnSize(DescriptorId_t logicalId);
+
+   /// Get the total, uncompressed size of a given column.
+   std::uint64_t GetUncompressedColumnSize(DescriptorId_t logicalId);
+
+   /// Get the on-disk, compressed size of a given field.
+   std::uint64_t GetCompressedFieldSize(DescriptorId_t fieldId);
+   std::uint64_t GetCompressedFieldSize(std::string fieldName);
+
+   /// Get the total, uncompressed size of a given field.
+   std::uint64_t GetUncompressedFieldSize(DescriptorId_t fieldId);
+   std::uint64_t GetUncompressedFieldSize(std::string fieldName);
+
+   /// Get the type of a given column.
+   EColumnType GetColumnType(DescriptorId_t logicalId);
 };
 } // namespace Experimental
 } // namespace ROOT
