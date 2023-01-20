@@ -304,8 +304,8 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
 {
    RDaosContainer::MultiObjectRWOperation_t writeRequests;
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
-   size_t nPages =
-      std::accumulate(ranges.begin(), ranges.end(), 0, [](size_t c, const RPageStorage::RSealedPageGroup &r) {
+   int64_t nPages =
+      std::accumulate(ranges.begin(), ranges.end(), 0, [](int64_t c, const RPageStorage::RSealedPageGroup &r) {
          return c + std::distance(r.fFirst, r.fLast);
       });
    locators.reserve(nPages);
@@ -315,7 +315,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
    std::uint8_t locatorFlags = useCaging ? Internal::EDaosLocatorFlags::kCagedPage : 0;
 
    DescriptorId_t clusterId = fDescriptorBuilder.GetDescriptor().GetNClusters();
-   std::size_t szPayload = 0;
+   int64_t szPayload = 0;
    std::size_t szCurrentCage;
    uint32_t cageIdx;
 
@@ -390,7 +390,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterGroupImpl(unsigned char 
    result.fPosition = RNTupleLocatorObject64{offsetData};
    result.fBytesOnStorage = szPageListZip;
    result.fType = RNTupleLocator::kTypeDAOS;
-   fCounters->fSzWritePayload.Add(szPageListZip);
+   fCounters->fSzWritePayload.Add(static_cast<int64_t>(szPageListZip));
    return result;
 }
 
@@ -686,8 +686,8 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
    struct RDaosSealedPageLocator {
       RDaosSealedPageLocator() = default;
       RDaosSealedPageLocator(DescriptorId_t cl, DescriptorId_t co, NTupleSize_t pg, std::uint64_t po, std::uint64_t o,
-                             std::uint64_t s, std::size_t b)
-         : fClusterId(cl), fColumnId(co), fPageNo(pg), fPosition(po), fCageOffset(o), fSize(s), fBufPos(b)
+                             std::uint64_t s)
+         : fClusterId(cl), fColumnId(co), fPageNo(pg), fPosition(po), fCageOffset(o), fSize(s)
       {
       }
       DescriptorId_t fClusterId = 0;
@@ -696,14 +696,13 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
       std::uint64_t fPosition = 0;
       std::uint64_t fCageOffset = 0;
       std::uint64_t fSize = 0;
-      std::size_t fBufPos = 0;
    };
 
    std::vector<unsigned char *> clusterBuffers(clusterKeys.size());
    std::vector<std::unique_ptr<ROnDiskPageMapHeap>> pageMaps(clusterKeys.size());
    RDaosContainer::MultiObjectRWOperation_t readRequests;
 
-   std::size_t szPayload = 0;
+   int64_t szPayload = 0;
    unsigned nPages = 0;
 
    for (unsigned i = 0; i < clusterKeys.size(); ++i) {
@@ -727,8 +726,8 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
                std::tie(position, offset) = DecodeDaosPagePosition(pageLocator.GetPosition<RNTupleLocatorObject64>());
                auto [itLoc, _] = onDiskClusterCages.emplace(position, std::vector<RDaosSealedPageLocator>());
 
-               itLoc->second.push_back(RDaosSealedPageLocator(clusterId, physicalColumnId, columnPageCount, position,
-                                                              offset, pageLocator.fBytesOnStorage, clusterBufSz));
+               itLoc->second.emplace_back(clusterId, physicalColumnId, columnPageCount, position, offset,
+                                          pageLocator.fBytesOnStorage);
                ++columnPageCount;
                clusterBufSz += pageLocator.fBytesOnStorage;
             }

@@ -48,13 +48,13 @@ struct RDaosEventQueue {
    /// \brief Sets event barrier for a given parent event and waits for the completion of all children launched before
    /// the barrier (must have at least one child).
    /// \return 0 on success; a DAOS error code otherwise (< 0).
-   int WaitOnParentBarrier(daos_event_t *ev_ptr);
+   static int WaitOnParentBarrier(daos_event_t *ev_ptr);
    /// \brief Reserve event in queue, optionally tied to a parent event.
    /// \return 0 on success; a DAOS error code otherwise (< 0).
-   int InitializeEvent(daos_event_t *ev_ptr, daos_event_t *parent_ptr = nullptr);
+   int InitializeEvent(daos_event_t *ev_ptr, daos_event_t *parent_ptr = nullptr) const;
    /// \brief Release event data from queue.
    /// \return 0 on success; a DAOS error code otherwise (< 0).
-   int FinalizeEvent(daos_event_t *ev_ptr);
+   static int FinalizeEvent(daos_event_t *ev_ptr);
 };
 
 class RDaosContainer;
@@ -120,7 +120,7 @@ public:
    struct FetchUpdateArgs {
       FetchUpdateArgs() = default;
       FetchUpdateArgs(const FetchUpdateArgs &) = delete;
-      FetchUpdateArgs(FetchUpdateArgs &&fua);
+      FetchUpdateArgs(FetchUpdateArgs &&fua) noexcept;
       FetchUpdateArgs(DistributionKey_t d, std::span<RAkeyRequest> rs, bool is_async = false);
       FetchUpdateArgs &operator=(const FetchUpdateArgs &) = delete;
       daos_event_t *GetEventPointer();
@@ -194,7 +194,7 @@ public:
          for (unsigned i = 0; i < fDataRequests.size(); i++)
             fIndices.emplace(fDataRequests[i].fAkey, i);
       };
-      RWOperation(ROidDkeyPair &k) : fOid(k.oid), fDistributionKey(k.dkey){};
+      explicit RWOperation(ROidDkeyPair &k) : fOid(k.oid), fDistributionKey(k.dkey){};
       daos_obj_id_t fOid{};
       DistributionKey_t fDistributionKey{};
       std::vector<RDaosObject::RAkeyRequest> fDataRequests{};

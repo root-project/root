@@ -62,9 +62,9 @@ std::string ROOT::Experimental::Detail::RDaosObject::ObjClassId::ToString() cons
    return std::string{name};
 }
 
-ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(FetchUpdateArgs &&fua)
+ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(FetchUpdateArgs &&fua) noexcept
    : fDkey(fua.fDkey), fRequests(fua.fRequests), fIods(std::move(fua.fIods)), fSgls(std::move(fua.fSgls)),
-     fEvent(std::move(fua.fEvent))
+     fEvent(fua.fEvent)
 {
    d_iov_set(&fDistributionKey, &fDkey, sizeof(fDkey));
 }
@@ -144,7 +144,7 @@ ROOT::Experimental::Detail::RDaosEventQueue::~RDaosEventQueue()
    daos_eq_destroy(fQueue, 0);
 }
 
-int ROOT::Experimental::Detail::RDaosEventQueue::InitializeEvent(daos_event_t *ev_ptr, daos_event_t *parent_ptr)
+int ROOT::Experimental::Detail::RDaosEventQueue::InitializeEvent(daos_event_t *ev_ptr, daos_event_t *parent_ptr) const
 {
    return daos_event_init(ev_ptr, fQueue, parent_ptr);
 }
@@ -243,9 +243,9 @@ int ROOT::Experimental::Detail::RDaosContainer::VectorReadWrite(MultiObjectRWOpe
       return ret;
 
    for (auto &[key, batch] : map) {
-      requests.push_back(
-         std::make_tuple(std::make_unique<RDaosObject>(*this, batch.fOid, cid.fCid),
-                         RDaosObject::FetchUpdateArgs{batch.fDistributionKey, batch.fDataRequests, /*is_async=*/true}));
+      requests.emplace_back(
+         std::make_unique<RDaosObject>(*this, batch.fOid, cid.fCid),
+         RDaosObject::FetchUpdateArgs{batch.fDistributionKey, batch.fDataRequests, /*is_async=*/true});
 
       if ((ret = fPool->fEventQueue->InitializeEvent(std::get<1>(requests.back()).GetEventPointer(), &parent_event)) <
           0)
