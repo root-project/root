@@ -809,7 +809,7 @@ RModel Parse(std::string filename){
       fLayerType = PyStringAsString(GetValueFromDict(fLayer,"layerType"));
 
       // Ignoring the input layer for models built using Keras Functional API
-      if(fLayerType == "InputLayer")
+      if(fLayerType == "InputLayer" || fLayerType == "Dropout")
          continue;
 
       // Adding any required routines depending on the Layer types for generating
