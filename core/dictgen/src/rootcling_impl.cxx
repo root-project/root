@@ -3841,8 +3841,8 @@ gOptBareClingSink(llvm::cl::OneOrMore, llvm::cl::Sink,
 /// The names of all header files that are needed by the ModuleGenerator but are
 /// not in the given module will be inserted into the MissingHeader variable.
 /// Returns true iff the PCH was successfully generated.
-static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *module,
-                                  std::vector<std::string> &missingHeaders)
+static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::HeaderSearch &headerSearch,
+                                  clang::Module *module, std::vector<std::array<std::string, 2>> &missingHeaders)
 {
    // Now we collect all header files from the previously collected modules.
    std::vector<clang::Module::Header> moduleHeaders;
@@ -3851,21 +3851,55 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *modul
 
    bool foundAllHeaders = true;
 
+   auto isHeaderInModule = [&moduleHeaders](const std::string &header) {
+      for (const clang::Module::Header &moduleHeader : moduleHeaders)
+         if (header == moduleHeader.NameAsWritten)
+            return true;
+      return false;
+   };
+
    // Go through the list of headers that are required by the ModuleGenerator
    // and check for each header if it's in one of the modules we loaded.
    // If not, make sure we fail at the end and mark the header as missing.
    for (const std::string &header : modGen.GetHeaders()) {
-      bool headerFound = false;
-      for (const clang::Module::Header &moduleHeader : moduleHeaders) {
-         if (header == moduleHeader.NameAsWritten) {
-            headerFound = true;
-            break;
+      if (isHeaderInModule(header))
+         continue;
+
+      clang::ModuleMap::KnownHeader SuggestedModule;
+      const clang::DirectoryLookup *CurDir = nullptr;
+      if (auto FE = headerSearch.LookupFile(
+               header, clang::SourceLocation(),
+               /*isAngled*/ false,
+               /*FromDir*/ 0, CurDir,
+               clang::ArrayRef<std::pair<const clang::FileEntry *, const clang::DirectoryEntry *>>(),
+               /*SearchPath*/ 0,
+               /*RelativePath*/ 0,
+               /*RequestingModule*/ 0, &SuggestedModule,
+               /*IsMapped*/ 0,
+               /*IsFrameworkFound*/ nullptr,
+               /*SkipCache*/ false,
+               /*BuildSystemModule*/ false,
+               /*OpenFile*/ false,
+               /*CacheFail*/ false)) {
+         if (auto OtherModule = SuggestedModule.getModule()) {
+            std::string OtherModuleName;
+            auto TLM = OtherModule->getTopLevelModuleName();
+            if (!TLM.empty())
+               OtherModuleName = TLM.str();
+            else
+               OtherModuleName = OtherModule->Name;
+
+            // Don't complain about headers that are actually in by-products:
+            if (std::find(gOptModuleByproducts.begin(), gOptModuleByproducts.end(), OtherModuleName)
+                != gOptModuleByproducts.end())
+               continue;
+
+            missingHeaders.push_back({header, OtherModuleName});
          }
+      } else {
+         missingHeaders.push_back({header, {}});
       }
-      if (!headerFound) {
-         missingHeaders.push_back(header);
-         foundAllHeaders = false;
-      }
+      foundAllHeaders = false;
    }
    return foundAllHeaders;
 }
@@ -3892,40 +3926,18 @@ static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resour
    // Check if the loaded module covers all headers that were specified
    // by the user on the command line. This is an integrity check to
    // ensure that our used module map is not containing extraneous headers.
-   std::vector<std::string> missingHeaders;
-   if (!ModuleContainsHeaders(modGen, module, missingHeaders)) {
+   std::vector<std::array<std::string, 2>> missingHdrMod;
+   if (!ModuleContainsHeaders(modGen, headerSearch, module, missingHdrMod)) {
       // FIXME: Upgrade this to an error once modules are stable.
       std::stringstream msgStream;
       msgStream << "after creating module \"" << module->Name << "\" ";
       if (!module->PresumedModuleMapFile.empty())
          msgStream << "using modulemap \"" << module->PresumedModuleMapFile << "\" ";
       msgStream << "the following headers are not part of that module:\n";
-      for (auto &H : missingHeaders) {
-         msgStream << "  " << H;
-         clang::ModuleMap::KnownHeader SuggestedModule;
-         const clang::DirectoryLookup *CurDir = nullptr;
-         if (auto FE = headerSearch.LookupFile(
-                H, clang::SourceLocation(),
-                /*isAngled*/ false,
-                /*FromDir*/ 0, CurDir,
-                clang::ArrayRef<std::pair<const clang::FileEntry *, const clang::DirectoryEntry *>>(),
-                /*SearchPath*/ 0,
-                /*RelativePath*/ 0,
-                /*RequestingModule*/ 0, &SuggestedModule,
-                /*IsMapped*/ 0,
-                /*IsFrameworkFound*/ nullptr,
-                /*SkipCache*/ false,
-                /*BuildSystemModule*/ false,
-                /*OpenFile*/ false,
-                /*CacheFail*/ false)) {
-            if (auto OtherModule = SuggestedModule.getModule()) {
-               auto TLM = OtherModule->getTopLevelModuleName();
-               if (!TLM.empty())
-                  msgStream << " (already part of top-level module \"" << TLM.str() << "\")";
-               else
-                  msgStream << " (already part of module \"" << OtherModule->Name << "\")";
-            }
-         }
+      for (auto &H : missingHdrMod) {
+         msgStream << "  " << H[0];
+         if (!H[1].empty())
+            msgStream << " (already part of module \"" << H[1] << "\")";
          msgStream << "\n";
       }
       std::string warningMessage = msgStream.str();
@@ -3949,6 +3961,9 @@ static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resour
 
       ROOT::TMetaUtils::Warning("CheckModuleValid", warningMessage.c_str());
       // We include the missing headers to fix the module for the user.
+      std::vector<std::string> missingHeaders;
+      std::transform(missingHdrMod.begin(), missingHdrMod.end(), missingHeaders.begin(),
+                     [](const std::array<std::string, 2>& HdrMod) { return HdrMod[0];});
       if (!IncludeHeaders(missingHeaders, interpreter)) {
          ROOT::TMetaUtils::Error("CheckModuleValid", "Couldn't include missing module headers for module '%s'!\n",
                                  module->Name.c_str());
