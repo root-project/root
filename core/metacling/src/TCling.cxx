@@ -1559,9 +1559,10 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
       }
    }
 
-   for (const auto &arg: TROOT::AddExtraInterpreterArgs({})) {
-      interpArgs.push_back(arg.c_str());
-   }
+   std::vector<std::string> _empty;
+   auto args = TROOT::AddExtraInterpreterArgs(_empty);
+   for (const auto &arg: args)
+      interpArgs.emplace_back(arg.c_str());
 
    // Add the Rdict module file extension.
    cling::Interpreter::ModuleFileExtensions extensions;
