@@ -16,6 +16,7 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   HEADERS
     RooFit/Detail/DataMap.h
+    RooFit/Detail/NormalizationHelpers.h
     RooFit/Floats.h
     Roo1DTable.h
     RooAbsAnaConvPdf.h
