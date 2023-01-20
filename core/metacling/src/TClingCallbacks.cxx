@@ -280,9 +280,8 @@ bool TClingCallbacks::LibraryLoadingFailed(const std::string& errmessage, const 
 // Preprocessor callbacks used to handle special cases like for example:
 // #include "myMacro.C+"
 //
-bool TClingCallbacks::FileNotFound(llvm::StringRef FileName,
-                                   llvm::SmallVectorImpl<char> &RecoveryPath) {
-   // Method called via Callbacks->FileNotFound(Filename, RecoveryPath)
+bool TClingCallbacks::FileNotFound(llvm::StringRef FileName) {
+   // Method called via Callbacks->FileNotFound(Filename)
    // in Preprocessor::HandleIncludeDirective(), initially allowing to
    // change the include path, and allowing us to compile code via ACLiC
    // when specifying #include "myfile.C+", and suppressing the preprocessor
@@ -331,21 +330,11 @@ bool TClingCallbacks::FileNotFound(llvm::StringRef FileName,
                                                 SemaR.TUScope);
          int retcode = TCling__CompileMacro(fname.c_str(), options.c_str());
          if (retcode) {
-            // compilation was successful, let's remember the original
-            // preprocessor "include not found" error suppression flag
-            if (!fPPChanged)
-               fPPOldFlag = PP.GetSuppressIncludeNotFoundError();
-            PP.SetSuppressIncludeNotFoundError(true);
-            fPPChanged = true;
+            // compilation was successful, tell the preprocess to silently
+            // skip the file
+            return true;
          }
-         return false;
       }
-   }
-   if (fPPChanged) {
-      // restore the original preprocessor "include not found" error
-      // suppression flag
-      PP.SetSuppressIncludeNotFoundError(fPPOldFlag);
-      fPPChanged = false;
    }
    return false;
 }
