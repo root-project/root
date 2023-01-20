@@ -113,17 +113,18 @@ public:
       FetchUpdateArgs() = default;
       FetchUpdateArgs(const FetchUpdateArgs &) = delete;
       FetchUpdateArgs(FetchUpdateArgs &&fua);
-      FetchUpdateArgs(DistributionKey_t d, std::span<const AttributeKey_t> as, std::span<d_iov_t> vs,
+      FetchUpdateArgs(DistributionKey_t d, std::span<const AttributeKey_t> as, std::vector<std::vector<d_iov_t>> &&vs,
                       bool is_async = false);
       FetchUpdateArgs &operator=(const FetchUpdateArgs &) = delete;
       daos_event_t *GetEventPointer();
 
       /// \brief A `daos_key_t` is a type alias of `d_iov_t`. This type stores a pointer and a length.
       /// In order for `fDistributionKey` to point to memory that we own, `fDkey` holds the distribution key.
-      /// `fAkeys` and `fIovs` are sequential containers assumed to remain valid throughout the fetch/update operation.
+      /// `fAkeys` is a sequential container assumed to remain valid throughout the fetch/update operation.
+      /// `fIovs` holds a vector of IOVs associated with requests for each attribute key in `fAkeys`.
       DistributionKey_t fDkey{};
       std::span<const AttributeKey_t> fAkeys{};
-      std::span<d_iov_t> fIovs{};
+      std::vector<std::vector<d_iov_t>> fIovs{};
 
       /// \brief The distribution key, as used by the `daos_obj_{fetch,update}` functions.
       daos_key_t fDistributionKey{};
@@ -181,19 +182,45 @@ public:
    /// \brief Describes a read/write operation on multiple objects; see the `ReadV`/`WriteV` functions.
    struct RWOperation {
       RWOperation() = default;
-      RWOperation(daos_obj_id_t o, DistributionKey_t d, const std::vector<AttributeKey_t> &as,
-                  const std::vector<d_iov_t> &vs)
-         : fOid(o), fDistributionKey(d), fAttributeKeys(as), fIovs(vs){};
+      RWOperation(daos_obj_id_t o, DistributionKey_t d, std::vector<AttributeKey_t> &&as,
+                  std::vector<std::vector<d_iov_t>> &&vs)
+         : fOid(o), fDistributionKey(d), fAttributeKeys(std::move(as)), fIovVectors(std::move(vs))
+      {
+         for (unsigned i = 0; i < fAttributeKeys.size(); i++)
+            fIndices.emplace(fAttributeKeys[i], i);
+      };
       RWOperation(ROidDkeyPair &k) : fOid(k.oid), fDistributionKey(k.dkey){};
       daos_obj_id_t fOid{};
       DistributionKey_t fDistributionKey{};
       std::vector<AttributeKey_t> fAttributeKeys{};
-      std::vector<d_iov_t> fIovs{};
+      std::vector<std::vector<d_iov_t>> fIovVectors{};
+      std::unordered_map<AttributeKey_t, unsigned> fIndices{};
 
-      void insert(AttributeKey_t attr, const d_iov_t &vec)
+      void Insert(AttributeKey_t attr, const d_iov_t &iov)
       {
-         fAttributeKeys.emplace_back(attr);
-         fIovs.emplace_back(vec);
+         auto [it, ret] = fIndices.emplace(attr, fAttributeKeys.size());
+         unsigned attrIndex = it->second;
+
+         if (attrIndex == fAttributeKeys.size()) {
+            fAttributeKeys.emplace_back(attr);
+            fIovVectors.emplace_back(std::initializer_list<d_iov_t>{iov});
+         } else {
+            fIovVectors[attrIndex].emplace_back(iov);
+         }
+      }
+
+      void Insert(AttributeKey_t attr, std::vector<d_iov_t> &iovs)
+      {
+         auto [it, ret] = fIndices.emplace(attr, fAttributeKeys.size());
+         unsigned attrIndex = it->second;
+
+         if (attrIndex == fAttributeKeys.size()) {
+            fAttributeKeys.emplace_back(attr);
+            fIovVectors.emplace_back(iovs);
+         } else {
+            fIovVectors[attrIndex].insert(std::end(fIovVectors[attrIndex]), std::make_move_iterator(std::begin(iovs)),
+                                          std::make_move_iterator(std::end(iovs)));
+         }
       }
    };
 
