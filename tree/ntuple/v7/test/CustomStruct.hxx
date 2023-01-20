@@ -1,6 +1,7 @@
 #ifndef ROOT7_RNTuple_Test_CustomStruct
 #define ROOT7_RNTuple_Test_CustomStruct
 
+#include <cstdint>
 #include <string>
 #include <variant>
 #include <vector>
