@@ -9,5 +9,6 @@
 #pragma link C++ class HitUtil + ;
 #pragma link C++ class TrackUtil + ;
 #pragma link C++ class ComplexStructUtil + ;
+#pragma link C++ class std::vector < BaseUtil> + ;
 
 #endif
