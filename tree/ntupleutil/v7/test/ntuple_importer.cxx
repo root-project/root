@@ -455,3 +455,42 @@ TEST(RNTupleImporter, ComplexClass)
       EXPECT_EQ(reference, *object);
    }
 }
+
+TEST(RNTupleImporter, CollectionProxyClass)
+{
+   int splitlevels[] = {0, 1, 99};
+   for (auto lvl : splitlevels) {
+      FileRaii fileGuard("test_ntuple_importer_collection_proxy_class.root");
+      {
+         std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+         auto tree = std::make_unique<TTree>("tree", "");
+         std::vector<BaseUtil> objectVec;
+         tree->Branch("objectVec", &objectVec, 32000, lvl);
+
+         for (int i = 0; i < 3; ++i) {
+            BaseUtil b;
+            b.base = i;
+            objectVec.emplace_back(b);
+         }
+
+         tree->Fill();
+         tree->Write();
+      }
+
+      auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+      importer->SetIsQuiet(true);
+      importer->SetNTupleName("ntuple");
+      importer->Import();
+
+      auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+      EXPECT_EQ(1U, reader->GetNEntries());
+      auto objectVec = reader->GetModel()->Get<std::vector<BaseUtil>>("objectVec");
+
+      reader->LoadEntry(0);
+      EXPECT_EQ(3, objectVec->size());
+
+      for (int i = 0; i < 3; ++i) {
+         EXPECT_EQ(i, objectVec->at(i).base);
+      }
+   }
+}

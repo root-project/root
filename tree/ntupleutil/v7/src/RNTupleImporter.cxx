@@ -177,8 +177,21 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
          const bool isLeafCountArray = (countleaf != nullptr);
          const bool isFixedSizeArray = (countleaf == nullptr) && (countval > 1);
 
-         std::string fieldName = isLeafList ? l->GetName() : b->GetName();
-         std::string fieldType = isCString ? "std::string" : l->GetTypeName();
+         // The base case for branches with fundamental, single numerical types.
+         // For other types of branches, different field names or types are necessary,
+         // which is determined below.
+         std::string fieldName = b->GetName();
+         std::string fieldType = l->GetTypeName();
+
+         if (isLeafList)
+            fieldName = l->GetName();
+
+         if (isCString)
+            fieldType = "std::string";
+
+         if (isClass)
+            fieldType = b->GetClassName();
+
          if (isFixedSizeArray)
             fieldType = "std::array<" + fieldType + "," + std::to_string(countval) + ">";
 
@@ -236,9 +249,9 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       ib.fBranchName = b->GetName();
       ib.fBranchBuffer = std::make_unique<unsigned char[]>(branchBufferSize);
       if (isClass) {
-         auto klass = TClass::GetClass(firstLeaf->GetTypeName());
+         auto klass = TClass::GetClass(b->GetClassName());
          if (!klass) {
-            return R__FAIL("unable to load class " + std::string(firstLeaf->GetTypeName()) + " for branch " +
+            return R__FAIL("unable to load class " + std::string(b->GetClassName()) + " for branch " +
                            std::string(b->GetName()));
          }
          auto ptrBuf = reinterpret_cast<void **>(ib.fBranchBuffer.get());
