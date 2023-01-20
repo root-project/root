@@ -54,6 +54,7 @@ std::unique_ptr<ROperator> MakeKerasBinary(PyObject *fLayer);       // For insta
 std::unique_ptr<ROperator> MakeKerasSoftmax(PyObject *fLayer);      // For instantiating ROperator for Keras Softmax Layer
 std::unique_ptr<ROperator> MakeKerasTanh(PyObject *fLayer);         // For instantiating ROperator for Keras Tanh Layer
 std::unique_ptr<ROperator> MakeKerasLeakyRelu(PyObject *fLayer);    // For instantiating ROperator for Keras LeakyRelu Layer
+std::unique_ptr<ROperator> MakeKerasDropout(PyObject *fLayer);      // For handling Keras Dropout layer by mimicking Identity operator
 
 
 // Declaring Internal function for Keras layers which have additional activation attribute
@@ -76,7 +77,7 @@ const KerasMethodMap mapKerasLayer = {
    {"Softmax", &MakeKerasSoftmax},
    {"tanh", &MakeKerasTanh},
    {"LeakyReLU", &MakeKerasLeakyRelu},
-   {"Dropout",  &MakeKerasDropout}
+   {"Dropout",  &MakeKerasDropout},
 
    // For activation layers
    {"ReLU", &MakeKerasReLU},
@@ -848,11 +849,8 @@ RModel Parse(std::string filename){
          rmodel.AddBlasRoutines({"Gemm", "Gemv"});
       else if (fLayerType == "BatchNormalization")
          rmodel.AddBlasRoutines({"Copy", "Axpy"});
-
       else if(fLayerType == "Conv1D" || fLayerType == "Conv2D" || fLayerType == "Conv3D")
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
-      
-      else if(fLayerType == "Dropout")
 
       INTERNAL::AddKerasLayer(rmodel,fLayer);
 
