@@ -34,10 +34,10 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
-#include <iostream>
 #include <limits>
 #include <utility>
 #include <regex>
+#include <cassert>
 
 namespace {
 using AttributeKey_t = ROOT::Experimental::Detail::RDaosContainer::AttributeKey_t;
