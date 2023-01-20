@@ -136,6 +136,7 @@ called for each data event.
 
 #include "RooAbsPdf.h"
 
+#include "RooNormalizedPdf.h"
 #include "RooMsgService.h"
 #include "RooDataSet.h"
 #include "RooArgSet.h"
@@ -1121,7 +1122,28 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 
   // Construct BatchModeNLL if requested
   if (batchMode != RooFit::BatchModeOption::Off && batchMode != RooFit::BatchModeOption::Old) {
-    std::unique_ptr<RooAbsPdf> pdfClone = RooHelpers::cloneTreeWithSameParameters(*this, data.get());
+
+    // Set the normalization range. We need to do it now, because it will be
+    // considered in `compileForNormSet`.
+    TString oldNormRange = _normRange;
+    setNormRange(rangeName);
+
+    auto normSet = new RooArgSet; // INTENTIONAL LEAK FOR NOW!
+    getObservables(data.get(), *normSet);
+    normSet->remove(projDeps, true, true);
+
+    this->setAttribute("SplitRange", splitRange);
+    this->setStringAttribute("RangeName", rangeName);
+
+    std::unique_ptr<RooAbsPdf> pdfClone = RooFit::Detail::compileForNormSet(*this, *normSet);
+
+    // reset attributes
+    this->setAttribute("SplitRange", false);
+    this->setStringAttribute("RangeName", nullptr);
+
+    // Reset the normalization range
+    _normRange = oldNormRange;
+
     if (addCoefRangeName) {
        cxcoutI(Fitting) << "RooAbsPdf::fitTo(" << GetName()
                         << ") fixing interpretation of coefficients of any component to range "
@@ -1129,16 +1151,21 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
        pdfClone->fixAddCoefRange(addCoefRangeName, false);
     }
 
+    std::unique_ptr<RooAbsReal> compiledConstr;
+    if(std::unique_ptr<RooAbsReal> constr = createConstr(*this)) {
+       compiledConstr = RooFit::Detail::compileForNormSet(*constr, *data.get());
+       compiledConstr->addOwnedComponents(std::move(constr));
+    }
+
     return RooFit::BatchModeHelpers::createNLL(std::move(pdfClone),
                                                data,
-                                               createConstr(*pdfClone, /*removeConstraintsFromPdf=*/true),
+                                               std::move(compiledConstr),
                                                rangeName ? rangeName : "",
                                                projDeps,
                                                ext,
                                                pc.getDouble("IntegrateBins"),
                                                batchMode,
                                                offset,
-                                               static_cast<bool>(splitRange),
                                                takeGlobalObservablesFromData).release();
   }
 
@@ -3599,4 +3626,26 @@ bool RooAbsPdf::redirectServersHook(const RooAbsCollection & newServerList, bool
   // the right observables anymore. We need to reset it.
   setActiveNormSet(nullptr);
   return RooAbsReal::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursiveStep);
+}
+
+
+std::unique_ptr<RooAbsArg>
+RooAbsPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
+{
+   if (normSet.empty() || selfNormalized()) {
+      return RooAbsReal::compileForNormSet(normSet, ctx);
+   }
+   std::unique_ptr<RooAbsPdf> pdfClone(static_cast<RooAbsPdf *>(this->Clone()));
+   ctx.compileServers(*pdfClone, normSet);
+
+   auto newArg = std::make_unique<RooNormalizedPdf>(*pdfClone, normSet);
+
+   // The direct servers are this pdf and the normalization integral, which
+   // don't need to be compiled further.
+   for (RooAbsArg *server : newArg->servers()) {
+      server->setAttribute("_COMPILED");
+   }
+   newArg->setAttribute("_COMPILED");
+   newArg->addOwnedComponents(std::move(pdfClone));
+   return newArg;
 }

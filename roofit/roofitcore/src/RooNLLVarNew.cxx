@@ -77,10 +77,10 @@ RooRealVar *dummyVar(const char *name)
 \param isExtended Set to true if this is an extended fit
 **/
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables,
-                           bool isExtended, RooFit::OffsetMode offsetMode, bool binnedL)
+                           bool isExtended, RooFit::OffsetMode offsetMode)
    : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{getObs(pdf, observables)},
-     _isExtended{isExtended}, _binnedL{binnedL}, _weightVar{"weightVar", "weightVar", this, *dummyVar(weightVarName),
-                                                            true,        false,       true},
+     _isExtended{isExtended}, _binnedL{pdf.getAttribute("BinnedLikelihoodActive")},
+     _weightVar{"weightVar", "weightVar", this, *dummyVar(weightVarName), true, false, true},
      _weightSquaredVar{weightVarNameSumW2, weightVarNameSumW2, this, *dummyVar("weightSquardVar"), true, false, true},
      _binVolumeVar{"binVolumeVar", "binVolumeVar", this, *dummyVar("_bin_volume"), true, false, true}
 {
@@ -229,54 +229,26 @@ void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_
 
 void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *params, bool /*stripDisconnected*/) const
 {
-   // strip away the observables and weights
-   params->remove(_observables, true, true);
+   // strip away the special variables
    params->remove(RooArgList{*_weightVar, *_weightSquaredVar, *_binVolumeVar}, true, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clones the PDF recursively and prefixes the names of all nodes, except for
-/// parameter nodes. Used for simultaneous fits.
-/// \return A RooArgSet with the new observable args.
+/// Sets the prefix for the special variables of this NLL, like weights or bin
+/// volumes.
 /// \param[in] prefix The prefix to add to the observables and weight names.
-RooArgSet RooNLLVarNew::prefixArgNames(std::string const &prefix)
+void RooNLLVarNew::setPrefix(std::string const &prefix)
 {
    _prefix = prefix;
 
-   std::unique_ptr<RooAbsReal> pdfClone = RooHelpers::cloneTreeWithSameParameters(*_pdf, &_observables);
-
-   redirectServers(RooArgList{*pdfClone});
-
-   RooArgSet parameters;
-   pdfClone->getParameters(&_observables, parameters);
-
-   _observables.clear();
-
-   RooArgSet nodes;
-   pdfClone->treeNodeServerList(&nodes);
-   for (RooAbsArg *arg : nodes) {
-      if (!parameters.find(*arg)) {
-         arg->SetName((prefix + arg->GetName()).c_str());
-         if (dynamic_cast<RooRealVar *>(arg)) {
-            // It's an observable
-            static_cast<RooRealVar *>(arg)->setConstant();
-            _observables.add(*arg);
-            arg->setAttribute("__obs__");
-         }
-      }
-   }
-
-   addOwnedComponents(std::move(pdfClone));
-
    resetWeightVarNames();
-
-   return _observables;
 }
 
 void RooNLLVarNew::resetWeightVarNames()
 {
    _weightVar->SetName((_prefix + weightVarName).c_str());
    _weightSquaredVar->SetName((_prefix + weightVarNameSumW2).c_str());
+   _binVolumeVar->SetName((_prefix + "_bin_volume").c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -284,15 +256,6 @@ void RooNLLVarNew::resetWeightVarNames()
 void RooNLLVarNew::applyWeightSquared(bool flag)
 {
    _weightSquared = flag;
-}
-
-std::unique_ptr<RooArgSet>
-RooNLLVarNew::fillNormSetForServer(RooArgSet const & /*normSet*/, RooAbsArg const & /*server*/) const
-{
-   if (_binnedL) {
-      return std::make_unique<RooArgSet>();
-   }
-   return nullptr;
 }
 
 void RooNLLVarNew::enableOffsetting(bool flag)
