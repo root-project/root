@@ -2962,7 +2962,10 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
                         desArgs.push_back(*I);
                         continue;
                      }
-                     clang::TemplateName templateNameWithNSS ( Ctx.getQualifiedTemplateName(nns, false, templateDecl) );
+                     clang::TemplateName UnderlyingTN(templateDecl);
+                     if (clang::UsingShadowDecl *USD = templateName.getAsUsingShadowDecl())
+                        UnderlyingTN = clang::TemplateName(USD);
+                     clang::TemplateName templateNameWithNSS ( Ctx.getQualifiedTemplateName(nns, false, UnderlyingTN) );
                      desArgs.push_back(clang::TemplateArgument(templateNameWithNSS));
                      mightHaveChanged = true;
                      continue;
