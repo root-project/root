@@ -53,7 +53,7 @@ public:
       std::stringstream out;
       out << "\n//------ IDENTITY\n";
       // just copy the tensor pointers
-      out << SP << SP << "tensor_" << fNY << " = tensor_" << fNX << ";\n";
+      out << SP << SP << "fTensor_" << fNY << ".assign(tensor_" << fNX << ", "<< fNX << "+" << "fTensor_" << fNY <<".size());\n";
       return out.str();
    }
 
