@@ -395,12 +395,8 @@ namespace RooStats {
   
       // Copy snapshots
       if (copySnapshots) {
-        RooFIter itr(oldWS->getSnapshots().fwdIterator());
-        RooArgSet *snap;
-        while ((snap = (RooArgSet *)itr.next())) {
-          RooArgSet *snapClone = (RooArgSet *)snap->snapshot();
-          snapClone->setName(snap->GetName());
-          newWS->getSnapshots().Add(snapClone);
+        for (auto* snap : static_range_cast<RooArgSet const*>(oldWS->getSnapshots())) {
+          newWS->saveSnapshot(snap->GetName(), *snap, /*importValuesdf*/true);
         }
       }
   
