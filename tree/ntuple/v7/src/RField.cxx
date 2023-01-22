@@ -353,6 +353,8 @@ ROOT::Experimental::Detail::RFieldBase::Clone(std::string_view newName) const
    auto clone = CloneImpl(newName);
    clone->fOnDiskId = fOnDiskId;
    clone->fDescription = fDescription;
+   clone->fColumnRepresentative =
+      fColumnRepresentative ? std::make_unique<std::vector<EColumnType>>(*fColumnRepresentative) : nullptr;
    return clone;
 }
 
@@ -742,7 +744,7 @@ void ROOT::Experimental::RField<float>::AcceptVisitor(Detail::RFieldVisitor &vis
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<double>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kReal64}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kReal64}, {EColumnType::kSplitReal64}}, {{}});
    return representations;
 }
 
