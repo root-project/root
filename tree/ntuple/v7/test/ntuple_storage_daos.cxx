@@ -3,7 +3,20 @@
 #include "ROOT/TestSupport.hxx"
 #include <iostream>
 
-TEST(RPageStorageDaos, Basics)
+class RPageStorageDaos : public ::testing::Test {
+public:
+   static constexpr const char fDaosContainerLabels[5][22] = {
+      "test-basics", "test-extended", "test-options", "test-multiple-ntuples", "test-caged-pages",
+   };
+
+   [[nodiscard]] static std::string GetDaosUri(int testIndex)
+   {
+      static const std::string testPoolUriPrefix("daos://" R__DAOS_TEST_POOL "/");
+      return {testPoolUriPrefix + fDaosContainerLabels[testIndex]};
+   }
+};
+
+TEST_F(RPageStorageDaos, Basics)
 {
    ROOT::TestSupport::CheckDiagsRAII diags;
    diags.optionalDiag(kWarning, "in int daos_init()", "This RNTuple build uses libdaos_mock. Use only for testing!");
@@ -11,7 +24,7 @@ TEST(RPageStorageDaos, Basics)
                       "The DAOS backend is experimental and still under development.", false);
    diags.requiredDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 1", false);
 
-   std::string daosUri("daos://" R__DAOS_TEST_POOL "/container-test-1");
+   std::string daosUri = GetDaosUri(0);
    const std::string_view ntupleName("ntuple");
    auto model = RNTupleModel::Create();
    auto wrPt = model->MakeField<float>("pt", 42.0);
@@ -41,9 +54,9 @@ TEST(RPageStorageDaos, Basics)
    EXPECT_EQ(12.0, *rdPt);
 }
 
-TEST(RPageStorageDaos, Extended)
+TEST_F(RPageStorageDaos, Extended)
 {
-   std::string daosUri("daos://" R__DAOS_TEST_POOL "/container-test-2");
+   std::string daosUri = GetDaosUri(1);
    const std::string_view ntupleName("ntuple");
    auto model = RNTupleModel::Create();
    auto wrVector = model->MakeField<std::vector<double>>("vector");
@@ -83,9 +96,9 @@ TEST(RPageStorageDaos, Extended)
    EXPECT_EQ(chksumRead, chksumWrite);
 }
 
-TEST(RPageStorageDaos, Options)
+TEST_F(RPageStorageDaos, Options)
 {
-   std::string daosUri("daos://" R__DAOS_TEST_POOL "/container-test-3");
+   std::string daosUri = GetDaosUri(2);
    const std::string_view ntupleName("ntuple");
    {
       auto model = RNTupleModel::Create();
@@ -121,9 +134,9 @@ TEST(RPageStorageDaos, Options)
    EXPECT_EQ(1U, source.GetNEntries());
 }
 
-TEST(RPageStorageDaos, MultipleNTuplesPerContainer)
+TEST_F(RPageStorageDaos, MultipleNTuplesPerContainer)
 {
-   std::string daosUri("daos://" R__DAOS_TEST_POOL "/container-test-4");
+   std::string daosUri = GetDaosUri(3);
    const std::string_view ntupleName1("ntuple1"), ntupleName2("ntuple2");
 
    RNTupleWriteOptionsDaos options;
@@ -175,9 +188,9 @@ TEST(RPageStorageDaos, MultipleNTuplesPerContainer)
    EXPECT_THROW(RNTupleReader::Open("ntuple3", daosUri), ROOT::Experimental::RException);
 }
 
-TEST(RPageStorageDaos, CagedPages)
+TEST_F(RPageStorageDaos, CagedPages)
 {
-   std::string daosUri("daos://" R__DAOS_TEST_POOL "/container-test-5");
+   std::string daosUri = GetDaosUri(4);
    const std::string_view ntupleName("ntuple");
    ROOT::EnableImplicitMT();
 
