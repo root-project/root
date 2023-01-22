@@ -116,7 +116,7 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
   _compSetN.add(*_compSetOwnedN) ;
 
   _compSetOwnedD = new RooArgSet;
-  other._compSetD.snapshot(*_compSetOwnedN);
+  other._compSetD.snapshot(*_compSetOwnedD);
   _compSetD.add(*_compSetOwnedD) ;
 
   for (RooAbsArg * arg : *_compSetOwnedN) {
