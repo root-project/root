@@ -14,6 +14,17 @@ public:
       static const std::string testPoolUriPrefix("daos://" R__DAOS_TEST_POOL "/");
       return {testPoolUriPrefix + fDaosContainerLabels[testIndex]};
    }
+
+protected:
+   static void TearDownTestSuite()
+   {
+#ifndef R__DAOS_TEST_MOCK
+      const std::string sysCmd("daos cont destroy " R__DAOS_TEST_POOL " ");
+      for (const auto &label : fDaosContainerLabels) {
+         system((sysCmd + label).data());
+      }
+#endif
+   }
 };
 
 TEST_F(RPageStorageDaos, Basics)
