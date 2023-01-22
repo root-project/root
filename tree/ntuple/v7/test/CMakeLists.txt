@@ -53,12 +53,16 @@ ROOT_ADD_GTEST(ntuple_storage ntuple_storage.cxx LIBRARIES ROOTDataFrame ROOTNTu
 ROOT_ADD_GTEST(ntuple_extended ntuple_extended.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 
 if(daos OR daos_mock)
-  # UUID of the DAOS pool used for testing, if not provided (may be any for libdaos_mock).
+  # Label of the DAOS pool used for testing, if not provided (may be any for libdaos_mock).
   if(NOT daos_test_pool)
     set(daos_test_pool ntuple-daos-test-pool)
   endif()
-  set_property(SOURCE ntuple_storage_daos.cxx
-               APPEND PROPERTY COMPILE_DEFINITIONS R__DAOS_TEST_POOL="${daos_test_pool}")
 
   ROOT_ADD_GTEST(ntuple_storage_daos ntuple_storage_daos.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
+  target_compile_definitions(ntuple_storage_daos PRIVATE R__DAOS_TEST_POOL="${daos_test_pool}")
+
+  if(daos_mock)
+    set_property(SOURCE ntuple_storage_daos.cxx
+            APPEND PROPERTY COMPILE_DEFINITIONS R__DAOS_TEST_MOCK=1)
+  endif()
 endif()
