@@ -48,8 +48,8 @@ TEST(RooSimultaneous, SingleChannelCrossCheck)
 
    using AbsRealPtr = std::unique_ptr<RooAbsReal>;
 
-   AbsRealPtr nllDirect{modelConstrained.createNLL(combData)};
-   AbsRealPtr nllSimWrapped{modelSim.createNLL(combData)};
+   AbsRealPtr nllDirect{modelConstrained.createNLL(combData, BatchMode("off"))};
+   AbsRealPtr nllSimWrapped{modelSim.createNLL(combData, BatchMode("off"))};
    AbsRealPtr nllDirectBatch{modelConstrained.createNLL(combData, BatchMode("cpu"))};
    AbsRealPtr nllSimWrappedBatch{modelSim.createNLL(combData, BatchMode("cpu"))};
 
