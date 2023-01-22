@@ -13,6 +13,11 @@ if (roofit_multiprocess)
   set(RooFitMPTestStatisticsSources src/TestStatistics/LikelihoodJob.cxx src/TestStatistics/LikelihoodGradientJob.cxx)
 endif()
 
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   HEADERS
     RooFit/Detail/DataMap.h
@@ -481,6 +486,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     Smatrix
   LINKDEF
     inc/LinkDef.h
+  ${EXTRA_DICT_OPTS}
 )
 
 if (roofit_multiprocess)

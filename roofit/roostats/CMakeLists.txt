@@ -9,6 +9,11 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
   HEADERS
     RooStats/AsymptoticCalculator.h
@@ -136,6 +141,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     Foam
     Graf
     Gpad
+  ${EXTRA_DICT_OPTS}
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

@@ -521,11 +521,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   endif(ARG_MODULE)
 
-  # modules.idx deps
-  get_property(local_modules_idx_deps GLOBAL PROPERTY modules_idx_deps_property)
-  list(APPEND local_modules_idx_deps ${library_target_name})
-  set_property(GLOBAL PROPERTY modules_idx_deps_property "${local_modules_idx_deps}")
-
   #---Set the library output directory-----------------------
   ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
   set(runtime_cxxmodule_dependencies )
@@ -558,10 +553,17 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   endif()
 
+  # modules.idx deps
+  get_property(local_modules_idx_deps GLOBAL PROPERTY modules_idx_deps_property)
   if (ARG_NO_CXXMODULE)
     unset(cpp_module)
     unset(cpp_module_file)
-  endif()
+  else()
+    list(APPEND local_modules_idx_deps ${cpp_module})
+    set_property(GLOBAL PROPERTY modules_idx_deps_property "${local_modules_idx_deps}")
+  endif(ARG_NO_CXXMODULE)
+
+
 
   if(CMAKE_ROOTTEST_NOROOTMAP OR cpp_module_file)
     set(rootmap_name)
@@ -576,6 +578,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
       if (runtime_cxxmodules)
         set(dependent_pcm ${dep}.pcm)
+        # Check if the dependency was not marked with NO_CXXMODULE.
+        if (NOT ${dependent_pcm} IN_LIST local_modules_idx_deps)
+          continue()
+         endif()
       endif()
       set(newargs ${newargs} -m  ${dependent_pcm})
     endforeach()
