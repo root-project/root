@@ -40,6 +40,14 @@ namespace ROOT {
 namespace Experimental {
 namespace Detail {
 
+struct RDaosKey {
+   using DistributionKey_t = std::uint64_t;
+   using AttributeKey_t = std::uint64_t;
+   daos_obj_id_t fOid;
+   DistributionKey_t fDkey;
+   AttributeKey_t fAkey;
+};
+
 struct RDaosEventQueue {
    daos_handle_t fQueue;
    RDaosEventQueue();
@@ -88,8 +96,8 @@ class RDaosObject {
 private:
    daos_handle_t fObjectHandle;
 public:
-   using DistributionKey_t = std::uint64_t;
-   using AttributeKey_t = std::uint64_t;
+   using DistributionKey_t = RDaosKey::DistributionKey_t;
+   using AttributeKey_t = RDaosKey::AttributeKey_t;
    /// \brief Wrap around a `daos_oclass_id_t`. An object class describes the schema of data distribution
    /// and protection.
    struct ObjClassId {
@@ -157,8 +165,8 @@ public:
 class RDaosContainer {
    friend class RDaosObject;
 public:
-   using DistributionKey_t = RDaosObject::DistributionKey_t;
-   using AttributeKey_t = RDaosObject::AttributeKey_t;
+   using DistributionKey_t = RDaosKey::DistributionKey_t;
+   using AttributeKey_t = RDaosKey::AttributeKey_t;
    using ObjClassId_t = RDaosObject::ObjClassId;
 
    /// \brief A pair of <object ID, distribution key> that can be used to issue a fetch/update request for multiple
@@ -228,7 +236,28 @@ public:
       }
    };
 
-   using MultiObjectRWOperation_t = std::unordered_map<ROidDkeyPair, RWOperation, ROidDkeyPair::Hash>;
+   /// \brief Manages request batches for multiple objects. Internally, a dictionary coalesces the requests by their
+   /// co-locality, i.e., their `ROidDkeyPair`. Provides iterator access to the internal data structure.
+   class MultiObjectRWOperation {
+   public:
+      using RequestDict_t =
+         std::unordered_map<RDaosContainer::ROidDkeyPair, RWOperation, RDaosContainer::ROidDkeyPair::Hash>;
+      [[nodiscard]] auto begin() const { return fRequestDict->begin(); }
+      [[nodiscard]] auto end() const { return fRequestDict->end(); }
+      [[nodiscard]] size_t GetSize() const { return fRequestDict->size(); }
+
+      MultiObjectRWOperation() { fRequestDict = std::make_unique<RequestDict_t>(); }
+
+      void Insert(RDaosKey &key, d_iov_t &pageIov) const
+      {
+         auto odPair = RDaosContainer::ROidDkeyPair{key.fOid, key.fDkey};
+         auto [it, ret] = fRequestDict->emplace(odPair, RWOperation(odPair));
+         it->second.Insert(key.fAkey, pageIov);
+      }
+
+   private:
+      std::unique_ptr<RequestDict_t> fRequestDict;
+   };
 
    std::string GetContainerUuid();
 
@@ -241,12 +270,12 @@ private:
 
    /**
      \brief Perform a vector read/write operation on different objects.
-     \param map A `MultiObjectRWOperation_t` that describes read/write operations to perform.
+     \param map A `MultiObjectRWOperation` that describes read/write operations to perform.
      \param cid The `daos_oclass_id_t` used to qualify OIDs.
      \param fn Either `&RDaosObject::Fetch` (read) or `&RDaosObject::Update` (write).
      \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   int VectorReadWrite(MultiObjectRWOperation_t &map, ObjClassId_t cid,
+   int VectorReadWrite(MultiObjectRWOperation &map, ObjClassId_t cid,
                        int (RDaosObject::*fn)(RDaosObject::FetchUpdateArgs &));
 
 public:
@@ -290,24 +319,24 @@ public:
 
    /**
      \brief Perform a vector read operation on multiple objects.
-     \param map A `MultiObjectRWOperation_t` that describes read operations to perform.
+     \param map A `MultiObjectRWOperation` that describes read operations to perform.
      \param cid An object class ID.
      \return Number of operations that could not complete.
      */
-   int ReadV(MultiObjectRWOperation_t &map, ObjClassId_t cid) { return VectorReadWrite(map, cid, &RDaosObject::Fetch); }
-   int ReadV(MultiObjectRWOperation_t &map) { return ReadV(map, fDefaultObjectClass); }
+   int ReadV(MultiObjectRWOperation &map, ObjClassId_t cid) { return VectorReadWrite(map, cid, &RDaosObject::Fetch); }
+   int ReadV(MultiObjectRWOperation &map) { return ReadV(map, fDefaultObjectClass); }
 
    /**
      \brief Perform a vector write operation on multiple objects.
-     \param map A `MultiObjectRWOperation_t` that describes write operations to perform.
+     \param map A `MultiObjectRWOperation` that describes write operations to perform.
      \param cid An object class ID.
      \return Number of operations that could not complete.
      */
-   int WriteV(MultiObjectRWOperation_t &map, ObjClassId_t cid)
+   int WriteV(MultiObjectRWOperation &map, ObjClassId_t cid)
    {
       return VectorReadWrite(map, cid, &RDaosObject::Update);
    }
-   int WriteV(MultiObjectRWOperation_t &map) { return WriteV(map, fDefaultObjectClass); }
+   int WriteV(MultiObjectRWOperation &map) { return WriteV(map, fDefaultObjectClass); }
 };
 
 } // namespace Detail

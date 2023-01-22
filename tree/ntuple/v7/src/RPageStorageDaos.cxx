@@ -42,15 +42,11 @@
 namespace {
 using AttributeKey_t = ROOT::Experimental::Detail::RDaosContainer::AttributeKey_t;
 using DistributionKey_t = ROOT::Experimental::Detail::RDaosContainer::DistributionKey_t;
+using RDaosKey = ROOT::Experimental::Detail::RDaosKey;
 
 /// \brief RNTuple page-DAOS mappings
 enum EDaosMapping { kOidPerCluster, kOidPerPage };
 
-struct RDaosKey {
-   daos_obj_id_t fOid;
-   DistributionKey_t fDkey;
-   AttributeKey_t fAkey;
-};
 
 /// \brief Pre-defined keys for object store. `kDistributionKeyDefault` is the distribution key for metadata and
 /// pagelist values; optionally it can be used for ntuple pages (if under the `kOidPerPage` mapping strategy).
@@ -306,7 +302,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(DescriptorId_t p
 std::vector<ROOT::Experimental::RNTupleLocator>
 ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
 {
-   RDaosContainer::MultiObjectRWOperation_t writeRequests;
+   RDaosContainer::MultiObjectRWOperation writeRequests;
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
    int64_t nPages =
       std::accumulate(ranges.begin(), ranges.end(), 0, [](int64_t c, const RPageStorage::RSealedPageGroup &r) {
@@ -345,9 +341,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
 
          RDaosKey daosKey =
             GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, range.fPhysicalColumnId, positionIndex);
-         auto odPair = RDaosContainer::ROidDkeyPair{daosKey.fOid, daosKey.fDkey};
-         auto [it, ret] = writeRequests.emplace(odPair, RDaosContainer::RWOperation(odPair));
-         it->second.Insert(daosKey.fAkey, pageIov);
+         writeRequests.Insert(daosKey, pageIov);
 
          RNTupleLocator locator;
          locator.fPosition = EncodeDaosPagePosition(positionIndex, positionOffset);
@@ -706,7 +700,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
 
    std::vector<unsigned char *> clusterBuffers(clusterKeys.size());
    std::vector<std::unique_ptr<ROnDiskPageMapHeap>> pageMaps(clusterKeys.size());
-   RDaosContainer::MultiObjectRWOperation_t readRequests;
+   RDaosContainer::MultiObjectRWOperation readRequests;
 
    int64_t szPayload = 0;
    unsigned nPages = 0;
@@ -770,9 +764,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
          d_iov_set(&iov, cageBuffer, cageSz);
 
          RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, columnId, cageIndex);
-         auto odPair = RDaosContainer::ROidDkeyPair{daosKey.fOid, daosKey.fDkey};
-         auto [itReq, ret] = readRequests.emplace(odPair, RDaosContainer::RWOperation(odPair));
-         itReq->second.Insert(daosKey.fAkey, iov);
+         readRequests.Insert(daosKey, iov);
 
          cageBuffer += cageSz;
       }

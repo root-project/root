@@ -228,21 +228,21 @@ int ROOT::Experimental::Detail::RDaosContainer::WriteSingleAkey(const void *buff
    return RDaosObject(*this, oid, cid.fCid).Update(args);
 }
 
-int ROOT::Experimental::Detail::RDaosContainer::VectorReadWrite(MultiObjectRWOperation_t &map, ObjClassId_t cid,
+int ROOT::Experimental::Detail::RDaosContainer::VectorReadWrite(MultiObjectRWOperation &ops, ObjClassId_t cid,
                                                                 int (RDaosObject::*fn)(RDaosObject::FetchUpdateArgs &))
 {
    using request_t = std::tuple<std::unique_ptr<RDaosObject>, RDaosObject::FetchUpdateArgs>;
 
    int ret;
    std::vector<request_t> requests{};
-   requests.reserve(map.size());
+   requests.reserve(ops.GetSize());
 
    // Initialize parent event used for grouping and waiting for completion of all requests
    daos_event_t parent_event{};
    if ((ret = fPool->fEventQueue->InitializeEvent(&parent_event)) < 0)
       return ret;
 
-   for (auto &[key, batch] : map) {
+   for (auto &[key, batch] : ops) {
       requests.emplace_back(
          std::make_unique<RDaosObject>(*this, batch.fOid, cid.fCid),
          RDaosObject::FetchUpdateArgs{batch.fDistributionKey, batch.fDataRequests, /*is_async=*/true});
