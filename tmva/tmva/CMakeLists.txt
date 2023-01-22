@@ -49,6 +49,11 @@ if (imt)
   list(APPEND TMVA_EXTRA_DEPENDENCIES Imt)
 endif(imt)
 
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
   HEADERS
     TMVA/BDTEventWrapper.h
@@ -429,6 +434,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     -writeEmptyRootPCM
   INSTALL_OPTIONS
     ${installoptions}
+  ${EXTRA_DICT_OPTS}
 )
 
 if(MSVC)

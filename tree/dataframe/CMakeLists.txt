@@ -31,6 +31,11 @@ if (imt)
   list(APPEND RDATAFRAME_EXTRA_DEPS Imt)
 endif(imt)
 
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
   HEADERS
     ROOT/RCsvDS.hxx
@@ -130,6 +135,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     RIO
     ROOTVecOps
     ${RDATAFRAME_EXTRA_DEPS}
+  ${EXTRA_DICT_OPTS}
 )
 
 if(arrow)
