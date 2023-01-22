@@ -15,6 +15,11 @@ if(NOT dataframe)
   return()
 endif()
 
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitRDataFrameHelpers
   HEADERS
     RooAbsDataHelper.h
@@ -24,6 +29,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitRDataFrameHelpers
   DEPENDENCIES
     ROOTDataFrame
     RooFitCore
+  ${EXTRA_DICT_OPTS}
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
