@@ -5,6 +5,8 @@
 
 class RPageStorageDaos : public ::testing::Test {
 public:
+   ROOT::TestSupport::CheckDiagsRAII fTestRootDiags;
+
    static constexpr const char fDaosContainerLabels[5][22] = {
       "test-basics", "test-extended", "test-options", "test-multiple-ntuples", "test-caged-pages",
    };
@@ -16,6 +18,16 @@ public:
    }
 
 protected:
+   void SetUp() override
+   {
+      // Initialized at the start of each test to expect diagnostic messages from TestSupport
+      fTestRootDiags.optionalDiag(kWarning, "in int daos_init()",
+                                  "This RNTuple build uses libdaos_mock. Use only for testing!");
+      fTestRootDiags.requiredDiag(kWarning, "ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos",
+                                  "The DAOS backend is experimental and still under development.", false);
+      fTestRootDiags.requiredDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 1", false);
+   }
+
    static void TearDownTestSuite()
    {
 #ifndef R__DAOS_TEST_MOCK
@@ -29,12 +41,6 @@ protected:
 
 TEST_F(RPageStorageDaos, Basics)
 {
-   ROOT::TestSupport::CheckDiagsRAII diags;
-   diags.optionalDiag(kWarning, "in int daos_init()", "This RNTuple build uses libdaos_mock. Use only for testing!");
-   diags.requiredDiag(kWarning, "ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos",
-                      "The DAOS backend is experimental and still under development.", false);
-   diags.requiredDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 1", false);
-
    std::string daosUri = GetDaosUri(0);
    const std::string_view ntupleName("ntuple");
    auto model = RNTupleModel::Create();
