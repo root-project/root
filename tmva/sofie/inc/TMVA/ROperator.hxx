@@ -19,8 +19,8 @@ class ROperator{
 
 
 public:
-   virtual std::vector<std::string> GetBlasRoutines() { return {};}
-   virtual std::vector<std::string> GetStdLibs() { return {};}
+   virtual std::vector<std::string> GetBlasRoutines() { return {}; }
+   virtual std::vector<std::string> GetStdLibs() { return {}; }
    virtual std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>>) = 0;
    virtual std::vector<ETensorType> TypeInference(std::vector<ETensorType>) = 0;
    virtual void Initialize(RModel&) = 0;
@@ -37,9 +37,9 @@ public:
    virtual ~ROperator(){}
 
 protected:
-   
+
    const std::string SP = "   ";    ///< space used to correctly indent the generated C++ code
-   bool fUseSession = false;        ///< flag to identify if using the session class 
+   bool fUseSession = false;        ///< flag to identify if using the session class
 };
 
 

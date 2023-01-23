@@ -119,7 +119,7 @@ public:
 
    /*! \brief Returns the blas routines needed to compile the generated code
     */
-   std::vector<std::string> GetBlasRoutines() override { return {"Gemm", "Axpy"};}
+   std::vector<std::string> GetBlasRoutines() override { return { std::string("Gemm"), std::string("Axpy") }; }
 };
 
 } // namespace SOFIE
