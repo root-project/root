@@ -179,11 +179,13 @@ def main():
             result, shell_log = subprocess_with_log(f"""
                 New-Item -Force -Type directory -Path {workdir}/build
                 New-Item -Force -Type directory -Path {workdir}/install
+                New-Item -Force -Type directory -Path {workdir}/src
             """, shell_log)
         else:
             result, shell_log = subprocess_with_log(f"""
                 mkdir -p '{workdir}/build'
                 mkdir -p '{workdir}/install'
+                mkdir -p '{workdir}/src'
             """, shell_log)
 
         result, shell_log = subprocess_with_log(f"""
