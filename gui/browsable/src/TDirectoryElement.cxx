@@ -181,6 +181,14 @@ public:
    /** Returns full information for current element */
    std::shared_ptr<RElement> GetElement() override;
 
+   std::string GetContent(const std::string &kind) override
+   {
+      if (GetContentKind(kind) == kFileName)
+         return fFileName;
+
+      return ""s;
+   }
+
 };
 
 // ===============================================================================================================
