@@ -191,6 +191,7 @@ def main():
                       {repository} \
                       {workdir}/src
             
+            cd {workdir}/src
             git checkout {base_ref}
             git rebase {base_ref} {head_ref}
         """, shell_log)
