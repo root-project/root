@@ -155,11 +155,9 @@ def main():
             git config user.email 'CI-{yyyy_mm_dd}@root.cern'
             git config user.name 'ROOT Continous Integration'
 
-            git fetch || exit 1
-
-            test "$(git rev-parse HEAD)" = "$(git rev-parse '@{{u}}')" && exit 2
-
-            git merge FETCH_HEAD || exit 1
+            git pull || exit 1
+            
+            git fetch origin {base_ref}:{base_ref}
             
             git rebase {base_ref} {head_ref}
         """, shell_log)
@@ -190,14 +188,14 @@ def main():
             """, shell_log)
 
         result, shell_log = subprocess_with_log(f"""
-            git clone -b {base_ref} '{repository}' '{workdir}/src'
+            git clone -b {head_ref} '{repository}' '{workdir}/src'
             
             cd '{workdir}/src'
             git config user.email 'CI-{yyyy_mm_dd}@root.cern'
             git config user.name 'ROOT Continous Integration'
             
-            git fetch origin {head_ref}:{head_ref}
-            git rebase {head_ref} {base_ref}
+            git fetch origin {base_ref}:{base_ref}
+            git rebase {base_ref} {head_ref}
         """, shell_log)
 
         if result != 0:
