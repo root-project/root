@@ -72,7 +72,8 @@ jobs:
                     --platform    ${{ matrix.image }} \
                     --incremental false \
                     --base_ref    master \
-                    --head_ref    master
+                    --head_ref    master \
+                    --repository  ${{ github.server_url }}/${{github.repository}}
               "
 
       - name: Install root PR
@@ -80,9 +81,20 @@ jobs:
         run: ".github/workflows/rootci-installers/build_root.py \
                     --buildtype      ${{ matrix.config }} \
                     --platform       ${{ matrix.image }} \
+                    --incremental    true \
+                    --base_ref       ${{ github.base_ref }} \
+                    --head_ref       ${{ github.head_ref }} \
+                    --repository     ${{ github.server_url }}/${{github.repository}}
+              "
+
+      - name: Install root workflow dispatch
+        if:   github.event_name == 'workflow_dispatch'
+        run: ".github/workflows/rootci-installers/build_root.py \
+                    --buildtype      ${{ matrix.config }} \
+                    --platform       ${{ matrix.image }} \
                     --incremental    ${{ inputs.incremental }} \
                     --alwaysgenerate ${{ inputs.force_generation }} \
                     --base_ref       ${{ github.base_ref }} \
-                    --head_ref       ${{ github.head_ref }}
+                    --head_ref       ${{ github.head_ref }} \
+                    --repository     ${{ github.server_url }}/${{github.repository}}
               "
-

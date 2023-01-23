@@ -45,6 +45,7 @@ def main():
     yyyy_mm_dd = datetime.datetime.today().strftime('%Y-%m-%d')
 
     # CLI arguments with defaults
+    repository       = 'https://github.com/root-project/root'
     force_generation = False
     platform         = "centos8"
     incremental      = False
@@ -56,7 +57,7 @@ def main():
         args = sys.argv[1:],
         shortopts = '',
         longopts = ["alwaysgenerate=", "platform=", "incremental=", "buildtype=",
-                    "head_ref=", "base_ref="]
+                    "head_ref=", "base_ref=", "repository="]
     )
 
     for opt, val in options:
@@ -72,6 +73,8 @@ def main():
             head_ref = val
         elif opt == "--base_ref":
             base_ref = val
+        elif opt == "--repository":
+            repository = val
     
     if not base_ref or not head_ref:
         sys.exit(1)
@@ -184,14 +187,11 @@ def main():
             """, shell_log)
 
         result, shell_log = subprocess_with_log(f"""
-            git clone -b {base_ref} \
-                      --single-branch \
-                      --depth 1 \
-                      https://github.com/root-project/root.git \
+            git clone --depth 1 \
+                      {repository} \
                       {workdir}/src
             
-            git switch {head_ref}
-            
+            git checkout {base_ref}
             git rebase {base_ref} {head_ref}
         """, shell_log)
 
