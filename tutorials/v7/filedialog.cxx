@@ -48,9 +48,9 @@ void filedialog(int kind = 0)
 
    auto dialog = std::make_shared<RFileDialog>(RFileDialog::kOpenFile, "OpenFile dialog in async mode");
 
-   dialog->SetNameFilters({ "C++ files (*.cxx *.cpp *.c *.C)", "Image files (*.png *.jpg *.jpeg)", "Text files (*.txt)", "Any files (*)" });
+   dialog->SetNameFilters({ "C++ files (*.cxx *.cpp *.c *.C)", "ROOT files (*.root)", "Image files (*.png *.jpg *.jpeg)", "Text files (*.txt)", "Any files (*)" });
 
-   dialog->SetSelectedFilter("C++ files");
+   dialog->SetSelectedFilter("ROOT files");
 
    // use dialog capture to keep reference until file name is selected
    dialog->SetCallback([dialog](const std::string &res) mutable {
