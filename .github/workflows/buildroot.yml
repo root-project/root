@@ -76,7 +76,7 @@ jobs:
               "
 
       - name: Install root PR
-        if:   github.event_name == 'pull_request'
+        if:   github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
         run: ".github/workflows/rootci-installers/build_root.py \
                     --buildtype      ${{ matrix.config }} \
                     --platform       ${{ matrix.image }} \
