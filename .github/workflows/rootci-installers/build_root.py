@@ -87,6 +87,7 @@ def main():
         workdir = '/tmp/workspace'
 
 
+
     # Load CMake options from file
     python_script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -112,10 +113,10 @@ def main():
             Set-Location -LiteralPath {workdir}
         """)
     else:
-        shell_log += shortspaced("""
-            rm -rf {WORKDIR}
-            mkdir -p {WORKDIR}
-            cd {WORKDIR}
+        shell_log += shortspaced(f"""
+            rm -rf {workdir}
+            mkdir -p {workdir}
+            cd {workdir}
         """)
 
 
@@ -151,6 +152,8 @@ def main():
         # Do git pull and check if build is needed
         result, shell_log = subprocess_with_log(f"""
             cd "{workdir}/src" || exit 3
+            git config user.email 'CI-{yyyy_mm_dd}@root.cern'
+            git config user.name 'ROOT Continous Integration'
 
             git fetch || exit 1
 
@@ -179,21 +182,21 @@ def main():
             result, shell_log = subprocess_with_log(f"""
                 New-Item -Force -Type directory -Path {workdir}/build
                 New-Item -Force -Type directory -Path {workdir}/install
-                New-Item -Force -Type directory -Path {workdir}/src
             """, shell_log)
         else:
             result, shell_log = subprocess_with_log(f"""
                 mkdir -p '{workdir}/build'
                 mkdir -p '{workdir}/install'
-                mkdir -p '{workdir}/src'
             """, shell_log)
 
         result, shell_log = subprocess_with_log(f"""
-            cd {workdir}/src
+            git clone -b {base_ref} '{repository}' '{workdir}/src'
             
-            git clone {repository}
+            cd '{workdir}/src'
+            git config user.email 'CI-{yyyy_mm_dd}@root.cern'
+            git config user.name 'ROOT Continous Integration'
             
-            git checkout {base_ref}
+            git fetch origin {head_ref}:{head_ref}
             git rebase {head_ref} {base_ref}
         """, shell_log)
 
