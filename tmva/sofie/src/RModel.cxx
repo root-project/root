@@ -130,7 +130,8 @@ namespace SOFIE{
 
    void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution){
       AddBlasRoutines(op->GetBlasRoutines());
-      for (auto& stdlib : op->GetStdLibs()) {
+      auto libs = op->GetStdLibs();
+      for (auto& stdlib : libs) {
          AddNeededStdLib(stdlib);
       }
       if (order_execution >= 0) {

@@ -126,7 +126,7 @@ template <typename T> class ROperator_RNN final : public ROperator {
 
    /*! \brief Returns the blas routines needed to compile the generated code
     */
-   std::vector<std::string> GetBlasRoutines() { return {"Gemm", "Axpy"};}
+   std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Axpy") }; }
 };
 
 } // namespace SOFIE

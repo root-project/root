@@ -45,11 +45,11 @@ public:
 
    /* Constructor */
    ROperator_BatchNormalization( float epsilon, float momentum, std::size_t training_mode,
-   std::string nameX, std::string nameScale, std::string nameB, 
+   std::string nameX, std::string nameScale, std::string nameB,
    std::string nameMean, std::string nameVar, std::string nameY):
    fepsilon(epsilon), fmomentum(momentum), ftraining_mode(training_mode),
-   fNX(UTILITY::Clean_name(nameX)), fNScale(UTILITY::Clean_name(nameScale)), 
-   fNB(UTILITY::Clean_name(nameB)), fNMean(UTILITY::Clean_name(nameMean)), 
+   fNX(UTILITY::Clean_name(nameX)), fNScale(UTILITY::Clean_name(nameScale)),
+   fNB(UTILITY::Clean_name(nameB)), fNMean(UTILITY::Clean_name(nameMean)),
    fNVar(UTILITY::Clean_name(nameVar)), fNY(UTILITY::Clean_name(nameY))
    {
       if(std::is_same<T, float>::value){
@@ -60,7 +60,7 @@ public:
 		      std::runtime_error("TMVA SOFIE Encountered unsupported type parsing a BatchNormalization operator");
       }
    }
-	
+
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) {
       ETensorType out = input[0];
@@ -79,7 +79,7 @@ public:
          }
       }
 
-      auto ret = input; 
+      auto ret = input;
       return ret;
    }
 
@@ -159,7 +159,7 @@ public:
             }
             //// new_var =1. / sqrt(input_var + fepsilon)
 		    for(size_t i=0; i<n; i++){
-		       new_var[i] = 1./sqrt(new_var[i] + fepsilon);	
+		       new_var[i] = 1./sqrt(new_var[i] + fepsilon);
 		    }
             std::vector<size_t> new_bias_shape = {batchSize,channels,height,width};
             std::shared_ptr<void> new_bias_ptr(new_bias, std::default_delete<float[]>());
@@ -201,7 +201,7 @@ public:
 
       //// blas saxpy (Y = -Bmean + Y)
       out << SP << "float "<<OpName<< "_alpha = -1;\n";
-      out << SP << "BLAS::saxpy_(&" << OpName << "_N, &" << OpName << "_alpha, " << "tensor_" << fNMean << ", &" << OpName << "_incx," 
+      out << SP << "BLAS::saxpy_(&" << OpName << "_N, &" << OpName << "_alpha, " << "tensor_" << fNMean << ", &" << OpName << "_incx,"
          << "tensor_" << fNY <<", &" << OpName << "_incy);\n\n ";
 
       //// Y *= scale*var
@@ -217,7 +217,7 @@ public:
       return out.str();
    }
 
-   std::vector<std::string> GetBlasRoutines() { return {"Copy", "Axpy"};}
+   std::vector<std::string> GetBlasRoutines() { return { std::string("Copy"), std::string("Axpy") }; }
 };
 
 }//SOFIE
