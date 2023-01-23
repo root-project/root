@@ -102,14 +102,14 @@ public:
          fNInputs.push_back(UTILITY::Clean_name(name));
    }
 
-   // type of output given input 
+   // type of output given input
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;
    }
 
    // shape of output tensors given input tensors
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
-      auto ret = std::vector<std::vector<size_t>>(1, input[0]); 
+      auto ret = std::vector<std::vector<size_t>>(1, input[0]);
       return ret;
    }
 
@@ -176,7 +176,7 @@ public:
       return out.str();
    }
 
-   std::vector<std::string> GetStdLibs() {return {"cmath"};}
+   std::vector<std::string> GetStdLibs() {return { std::string("cmath") }; }
 };
 
 }//SOFIE
