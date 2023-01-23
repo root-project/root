@@ -227,7 +227,7 @@ namespace SOFIE{
 
          }
 
-         std::vector<std::string> GetBlasRoutines() { return {"Gemm", "Gemv"};}
+         std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Gemv") }; }
 
    };
 
