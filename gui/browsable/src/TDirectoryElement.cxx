@@ -319,6 +319,14 @@ public:
       return ""s;
    }
 
+   std::string GetContent(const std::string &kind) override
+   {
+      if (GetContentKind(kind) == kFileName)
+         return fFileName;
+
+      return ""s;
+   }
+
 };
 
 // ===============================================================================================================
