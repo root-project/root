@@ -1820,8 +1820,7 @@ T TClingCallFunc::ExecT(void *address)
    }
    cling::Value ret;
    exec_with_valref_return(address, &ret);
-   if (!ret.isValid()) {
-      // Sometimes we are called on a function returning void!
+   if (ret.isVoid()) {
       return 0;
    }
 

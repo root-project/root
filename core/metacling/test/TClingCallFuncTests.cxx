@@ -36,7 +36,22 @@ public:
     return gInterpreter->CallFunc_GetWrapperCode(fmc);
   }
 
+  CallFunc_t * GetCF() const { return fmc; }
 };
+
+// root-project/root#11930
+TEST(TClingCallFunc, Void)
+{
+   gInterpreter->Declare(R"cpp(
+                           void ExecVoid() { }
+                           )cpp");
+
+   CallFuncRAII CfRAII("");
+   CfRAII.SetProtoAndGetWrapper("ExecVoid", "");
+
+   // Should not crash
+   gInterpreter->CallFunc_ExecInt(CfRAII.GetCF(), /*address*/0);
+}
 
 TEST(TClingCallFunc, FunctionWrapper)
 {
