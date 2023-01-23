@@ -13,12 +13,12 @@
 #include "Config.h"
 
 #ifdef XROOFIT_USE_PRAGMA_ONCE
-#pragma once
+# pragma once
 #endif
 #if !defined(XROOFIT_XROOBROWSER_H) || defined(XROOFIT_USE_PRAGMA_ONCE)
-#ifndef XROOFIT_USE_PRAGMA_ONCE
-#define XROOFIT_XROOBROWSER_H
-#endif
+# ifndef XROOFIT_USE_PRAGMA_ONCE
+#  define XROOFIT_XROOBROWSER_H
+# endif
 
 #include "TBrowser.h"
 #include "TQObject.h"

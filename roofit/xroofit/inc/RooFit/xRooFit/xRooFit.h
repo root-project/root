@@ -16,12 +16,12 @@
 // when using the namespace (as happens in the ROOT build of xRooFit) then
 // will effectively use an include guard
 #ifdef XROOFIT_USE_PRAGMA_ONCE
-#pragma once
+# pragma once
 #endif
 #if !defined(XROOFIT_XROOFIT_H) || defined(XROOFIT_USE_PRAGMA_ONCE)
-#ifndef XROOFIT_USE_PRAGMA_ONCE
-#define XROOFIT_XROOFIT_H
-#endif
+# ifndef XROOFIT_USE_PRAGMA_ONCE
+#  define XROOFIT_XROOFIT_H
+# endif
 
 /**
  * This is the main include for the xRooFit project.
