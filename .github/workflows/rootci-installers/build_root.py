@@ -18,7 +18,6 @@ import datetime
 import getopt
 from hashlib import sha1
 import os
-import re
 import shutil
 import sys
 import tarfile
@@ -37,14 +36,15 @@ from build_utils import (
 )
 
 
-WORKDIR = '/tmp/workspace'
 CONTAINER = 'ROOT-build-artifacts'
 DEFAULT_BUILDTYPE = 'Release'
 
 
 def main():
-    # openstack.enable_logging(debug=True)
-    
+    shell_log = ''
+    yyyy_mm_dd = datetime.datetime.today().strftime('%Y-%m-%d')
+
+    # CLI arguments with defaults
     force_generation = False
     platform         = "centos8"
     branch           = "master"
@@ -69,10 +69,16 @@ def main():
         elif opt == "--buildtype":
             buildtype = val
 
-    python_script_dir = os.path.dirname(os.path.abspath(__file__))
-    yyyymmdd = datetime.datetime.today().strftime('%Y-%m-%d')
+    windows = 'windows' in platform
 
-    shell_log = ""
+    if windows:
+        workdir = 'C:/ROOT-CI'
+    else:
+        workdir = '/tmp/workspace'
+
+
+    # Load CMake options from file
+    python_script_dir = os.path.dirname(os.path.abspath(__file__))
 
     options_dict = {
         **load_config(f'{python_script_dir}/buildconfig/global.txt'),
@@ -81,31 +87,43 @@ def main():
     }
     options = cmake_options_from_dict(options_dict)
 
-    option_hash = sha1(options.encode('utf-8')).hexdigest()
-    prefix = f'{platform}/{branch}/{buildtype}/{option_hash}'
 
     # Clean up previous builds
-    if os.path.exists(WORKDIR):
-        shutil.rmtree(WORKDIR)
-    os.makedirs(WORKDIR)
-    os.chdir(WORKDIR)
-    shell_log += shortspaced("""
-        rm -rf {WORKDIR}
-        mkdir -p {WORKDIR}
-        cd {WORKDIR}
-    """)
+    if os.path.exists(workdir):
+        shutil.rmtree(workdir)
 
+    os.makedirs(workdir)
+    os.chdir(workdir)
+
+    if windows:
+        shell_log += shortspaced(f"""
+            Remove-Item -Recurse -Force -Path {workdir}
+            New-Item -Force -Type directory -Path {workdir}
+            Set-Location -LiteralPath {workdir}
+        """)
+    else:
+        shell_log += shortspaced("""
+            rm -rf {WORKDIR}
+            mkdir -p {WORKDIR}
+            cd {WORKDIR}
+        """)
+
+
+    # Attempt openstack connection even on non-incremental builds to upload later
     print("\nEstablishing s3 connection")
+    # openstack.enable_logging(debug=True)
     connection = openstack.connect('envvars')
+
 
     if incremental:
         print("Attempting incremental build")
 
         # Download and extract previous build artifacts
         try:
-
+            option_hash = sha1(options.encode('utf-8')).hexdigest()
+            prefix = f'{platform}/{branch}/{buildtype}/{option_hash}'
             print("\nDownloading")
-            tar_path = download_latest(connection, CONTAINER, prefix, WORKDIR)
+            tar_path = download_latest(connection, CONTAINER, prefix, workdir)
 
             print("\nExtracting archive")
             with tarfile.open(tar_path) as tar:
@@ -114,14 +132,15 @@ def main():
             print_warning(f"failed: {err}")
             incremental = False
         else:
-            shell_log += f"""
-                wget https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path} -x -nH --cut-dirs 3
-            """
+            if windows:
+                shell_log += f"(new-object System.Net.WebClient).DownloadFile('https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path}','{workdir}')"
+            else:
+                shell_log += f"wget https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path} -x -nH --cut-dirs 3"
 
     if incremental:
         # Do git pull and check if build is needed
         result, shell_log = subprocess_with_log(f"""
-            cd "{WORKDIR}/src" || exit 3
+            cd "{workdir}/src" || exit 3
 
             git fetch || exit 1
 
@@ -137,22 +156,30 @@ def main():
             print("Files are unchanged since last build, exiting")
             exit(0)
         elif result == 3:
-            print_warning(f"could not cd {WORKDIR}/src")
+            print_warning(f"could not cd {workdir}/src")
             incremental = False
 
     # Clone and run generation step on non-incremental builds
     if not incremental:
         print("Doing non-incremental build")
 
-        result, shell_log = subprocess_with_log(f"""
-            mkdir -p '{WORKDIR}/build'
-            mkdir -p '{WORKDIR}/install'
+        if windows:
+            result, shell_log = subprocess_with_log(f"""
+                New-Item -Force -Type directory -Path {workdir}/build
+                New-Item -Force -Type directory -Path {workdir}/install
+            """, shell_log)
+        else:
+            result, shell_log = subprocess_with_log(f"""
+                mkdir -p '{workdir}/build'
+                mkdir -p '{workdir}/install'
+            """, shell_log)
 
+        result, shell_log = subprocess_with_log(f"""
             git clone -b {branch} \
                       --single-branch \
                       --depth 1 \
                       https://github.com/root-project/root.git \
-                      {WORKDIR}/src
+                      {workdir}/src
         """, shell_log)
 
         if result != 0:
@@ -161,9 +188,9 @@ def main():
 
     if force_generation or not incremental:
         result, shell_log = subprocess_with_log(f"""
-            cmake -S {WORKDIR}/src \
-                  -B {WORKDIR}/build \
-                  -DCMAKE_INSTALL_PREFIX={WORKDIR}/install \
+            cmake -S {workdir}/src \
+                  -B {workdir}/build \
+                  -DCMAKE_INSTALL_PREFIX={workdir}/install \
                     {options}
         """, shell_log)
 
@@ -171,9 +198,11 @@ def main():
             die(result, "Failed cmake generation step", shell_log)
 
     # Build
+    cpus = os.cpu_count()
+
     result, shell_log = subprocess_with_log(f"""
-        cmake --build {WORKDIR}/build \
-              -- -j"$(getconf _NPROCESSORS_ONLN)"
+        cmake --build {workdir}/build \
+              -- -j"{cpus}"
     """, shell_log)
 
     if result != 0:
@@ -182,9 +211,9 @@ def main():
     # Upload and archive
     if connection:
         print("Archiving build artifacts")
-        new_archive = f"{yyyymmdd}.tar.gz"
+        new_archive = f"{yyyy_mm_dd}.tar.gz"
         try:
-            with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz", compresslevel=4) as targz:
+            with tarfile.open(f"{workdir}/{new_archive}", "x:gz", compresslevel=4) as targz:
                 targz.add("src")
                 targz.add("install")
                 targz.add("build")
@@ -193,7 +222,7 @@ def main():
                 connection=connection,
                 container=CONTAINER,
                 name=f"{prefix}/{new_archive}",
-                path=f"{WORKDIR}/{new_archive}"
+                path=f"{workdir}/{new_archive}"
             )
         except tarfile.TarError as err:
             print_warning(f"could not tar artifacts: {err}")
