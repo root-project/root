@@ -47,14 +47,16 @@ def main():
     # CLI arguments with defaults
     force_generation = False
     platform         = "centos8"
-    branch           = "master"
     incremental      = False
     buildtype        = "Release"
+    head_ref         = None
+    base_ref         = None
 
     options, _ = getopt.getopt(
         args = sys.argv[1:],
         shortopts = '',
-        longopts = ["alwaysgenerate=", "platform=", "branch=", "incremental=", "buildtype="]
+        longopts = ["alwaysgenerate=", "platform=", "incremental=", "buildtype=",
+                    "head_ref=", "base_ref="]
     )
 
     for opt, val in options:
@@ -62,12 +64,17 @@ def main():
             force_generation = val in ('true', '1', 'yes', 'on')
         elif opt == "--platform":
             platform = val
-        elif opt == "--branch":
-            branch = val
         elif opt == "--incremental":
             incremental = val in ('true', '1', 'yes', 'on')
         elif opt == "--buildtype":
             buildtype = val
+        elif opt == "--head_ref":
+            head_ref = val
+        elif opt == "--base_ref":
+            base_ref = val
+    
+    if not base_ref or not head_ref:
+        sys.exit(1)
 
     windows = 'windows' in platform
 
@@ -120,9 +127,9 @@ def main():
 
         # Download and extract previous build artifacts
         try:
-            option_hash = sha1(options.encode('utf-8')).hexdigest()
-            prefix = f'{platform}/{branch}/{buildtype}/{option_hash}'
             print("\nDownloading")
+            option_hash = sha1(options.encode('utf-8')).hexdigest()
+            prefix = f'{platform}/{head_ref}-to-{base_ref}/{buildtype}/{option_hash}'
             tar_path = download_latest(connection, CONTAINER, prefix, workdir)
 
             print("\nExtracting archive")
@@ -147,6 +154,8 @@ def main():
             test "$(git rev-parse HEAD)" = "$(git rev-parse '@{{u}}')" && exit 2
 
             git merge FETCH_HEAD || exit 1
+            
+            git rebase {base_ref} {head_ref}
         """, shell_log)
 
         if result == 1:
@@ -154,7 +163,7 @@ def main():
             incremental = False
         elif result == 2:
             print("Files are unchanged since last build, exiting")
-            exit(0)
+            sys.exit(0)
         elif result == 3:
             print_warning(f"could not cd {workdir}/src")
             incremental = False
@@ -175,11 +184,15 @@ def main():
             """, shell_log)
 
         result, shell_log = subprocess_with_log(f"""
-            git clone -b {branch} \
+            git clone -b {base_ref} \
                       --single-branch \
                       --depth 1 \
                       https://github.com/root-project/root.git \
                       {workdir}/src
+            
+            git switch {head_ref}
+            
+            git rebase {base_ref} {head_ref}
         """, shell_log)
 
         if result != 0:

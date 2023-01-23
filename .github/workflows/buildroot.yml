@@ -60,16 +60,29 @@ jobs:
       - name: Print debug info
         run:  'printf "%s@%s %s\\n" "$(whoami)" "$(hostname)" "$(pwd)"
                ls -Zla .
-               echo ${{ github.event }}
-               echo ${{ github.event_name }}
-               echo ${{ github.head_ref }}
-               echo ${{ github.base_ref }}
+               echo event: ${{ github.event_name }}
+               echo head:  ${{ github.head_ref }}
+               echo base:  ${{ github.base_ref }}
               '
 
       - name: Nightly build
         if:   github.event.schedule == '0 1 * * *'
-        run: ".github/workflows/rootci-installers/build_root.py --buildtype ${{ matrix.config }} --platform ${{ matrix.platform }} --branch master --incremental false"
+        run: ".github/workflows/rootci-installers/build_root.py \
+                    --buildtype   ${{ matrix.config }} \
+                    --platform    ${{ matrix.image }} \
+                    --incremental false \
+                    --base_ref    master \
+                    --head_ref    master
+              "
 
-      - name: Install root
-        run: ".github/workflows/rootci-installers/build_root.py --buildtype ${{ matrix.config }} --platform ${{ matrix.platform }} --branch master --incremental ${{ inputs.incremental }} --alwaysgenerate ${{ inputs.force_generation }}"
+      - name: Install root PR
+        if:   github.event_name == 'pull_request'
+        run: ".github/workflows/rootci-installers/build_root.py \
+                    --buildtype      ${{ matrix.config }} \
+                    --platform       ${{ matrix.image }} \
+                    --incremental    ${{ inputs.incremental }} \
+                    --alwaysgenerate ${{ inputs.force_generation }} \
+                    --base_ref       ${{ github.base_ref }} \
+                    --head_ref       ${{ github.head_ref }}
+              "
 
