@@ -183,19 +183,12 @@ def main():
             result, shell_log = subprocess_with_log(f"""
                 New-Item -Force -Type directory -Path {workdir}/build
                 New-Item -Force -Type directory -Path {workdir}/install
+                Remove-Item -Recurse -Force {workdir}/src
             """, shell_log)
         else:
             result, shell_log = subprocess_with_log(f"""
                 mkdir -p '{workdir}/build'
                 mkdir -p '{workdir}/install'
-            """, shell_log)
-            
-        if windows:
-            result, shell_log = subprocess_with_log(f"""
-                Remove-Item -Recurse -Force {workdir}/src
-            """, shell_log)
-        else:
-            result, shell_log = subprocess_with_log(f"""
                 rm -rf '{workdir}/src'
             """, shell_log)
 
@@ -228,9 +221,14 @@ def main():
     # Build
     cpus = os.cpu_count()
 
-    result, shell_log = subprocess_with_log(f"""
-        cmake --build {workdir}/build -- -j"{cpus}"
-    """, shell_log)
+    if windows:
+        result, shell_log = subprocess_with_log(f"""
+            cmake --build {workdir}/build --config {buildtype}
+        """, shell_log)
+    else:
+        result, shell_log = subprocess_with_log(f"""
+            cmake --build {workdir}/build -- -j"{cpus}"
+        """, shell_log)
 
     if result != 0:
         die(result, "Build step failed", shell_log)
