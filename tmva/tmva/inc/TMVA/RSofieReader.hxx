@@ -154,7 +154,7 @@ public:
       parserCode += "model.OutputGenerated();\n";
 
       //end of parsing code, close the scope and return 1 to indicate a success
-      parserCode += "return 1;\n }\n";
+      parserCode += "return 1;\n}\n";
 
       if (verbose) std::cout << "//ParserCode being executed:\n" << parserCode << std::endl;
 
