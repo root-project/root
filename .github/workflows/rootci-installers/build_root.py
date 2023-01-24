@@ -75,7 +75,7 @@ def main():
             base_ref = val
         elif opt == "--repository":
             repository = val
-    
+
     if not base_ref or not head_ref:
         print_warning("fatal: base_ref or head_ref not specified")
         sys.exit(1)
@@ -140,14 +140,14 @@ def main():
             print("\nExtracting archive")
             with tarfile.open(tar_path) as tar:
                 tar.extractall()
-        except Exception as err:
-            print_warning(f"failed: {err}")
-            incremental = False
-        else:
+
             if windows:
                 shell_log += f"(new-object System.Net.WebClient).DownloadFile('https://s3.cern.ch/swift/v1/{CONTAINER}/{prefix}.tar.gz','{workdir}')"
             else:
                 shell_log += f"wget https://s3.cern.ch/swift/v1/{CONTAINER}/{prefix}.tar.gz -x -nH --cut-dirs 3"
+        except Exception as err:
+            print_warning(f"failed: {err}")
+            incremental = False
 
     if incremental:
         # Do git pull and check if build is needed
@@ -157,8 +157,7 @@ def main():
             git config user.name 'ROOT Continous Integration'
 
             git fetch origin
-            git reset --hard origin/{head_ref}
-            git clean -f
+            git checkout origin/master
             
             git rebase {base_ref} {head_ref}
         """, shell_log)
@@ -190,13 +189,13 @@ def main():
 
         result, shell_log = subprocess_with_log(f"""
             rm -rf '{workdir}/src'
-            git clone -b {head_ref} '{repository}' '{workdir}/src'
+            git clone -b {base_ref} '{repository}' '{workdir}/src'
             
             cd '{workdir}/src'
             git config user.email 'CI-{yyyy_mm_dd}@root.cern'
             git config user.name 'ROOT Continous Integration'
             
-            git fetch origin {base_ref}:{base_ref}
+            git fetch origin {head_ref}:{head_ref}
             git rebase {base_ref} {head_ref}
         """, shell_log)
 
@@ -219,8 +218,7 @@ def main():
     cpus = os.cpu_count()
 
     result, shell_log = subprocess_with_log(f"""
-        cmake --build {workdir}/build \
-              -- -j"{cpus}"
+        cmake --build {workdir}/build -- -j"{cpus}"
     """, shell_log)
 
     if result != 0:
