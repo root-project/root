@@ -157,7 +157,6 @@ def main():
             git config user.name 'ROOT Continous Integration'
 
             git fetch origin
-            git reset --hard origin/{base_ref}
             git reset --hard origin/{head_ref}
             git clean -f
             
