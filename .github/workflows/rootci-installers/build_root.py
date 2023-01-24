@@ -189,6 +189,7 @@ def main():
             """, shell_log)
 
         result, shell_log = subprocess_with_log(f"""
+            rm -rf '{workdir}/src'
             git clone -b {head_ref} '{repository}' '{workdir}/src'
             
             cd '{workdir}/src'
