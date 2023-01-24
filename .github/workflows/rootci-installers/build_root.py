@@ -77,6 +77,7 @@ def main():
             repository = val
     
     if not base_ref or not head_ref:
+        print_warning("fatal: base_ref or head_ref not specified")
         sys.exit(1)
 
     windows = 'windows' in platform
