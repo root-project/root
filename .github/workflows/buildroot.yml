@@ -58,43 +58,43 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Print debug info
-        run:  'printf "%s@%s %s\\n" "$(whoami)" "$(hostname)" "$(pwd)"
-               ls -Zla .
-               echo event: ${{ github.event_name }}
-               echo head:  ${{ github.head_ref }}
-               echo base:  ${{ github.base_ref }}
+        run:  'printf "%s@%s %s\\n" "$(whoami)" "$(hostname)" "$(pwd)";
+               ls -Zla .;
+               echo event: ${{ github.event_name }};
+               echo head:  ${{ github.head_ref }};
+               echo base:  ${{ github.base_ref }};
               '
 
       - name: Nightly build
         if:   github.event.schedule == '0 1 * * *'
-        run: ".github/workflows/rootci-installers/build_root.py \
-                    --buildtype   ${{ matrix.config }} \
-                    --platform    ${{ matrix.image }} \
-                    --incremental false \
-                    --base_ref    master \
-                    --head_ref    master \
+        run: ".github/workflows/rootci-installers/build_root.py
+                    --buildtype   ${{ matrix.config }}
+                    --platform    ${{ matrix.image }}
+                    --incremental false
+                    --base_ref    master
+                    --head_ref    master
                     --repository  ${{ github.server_url }}/${{github.repository}}
               "
 
       - name: Install root PR
         if:   github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
-        run: ".github/workflows/rootci-installers/build_root.py \
-                    --buildtype      ${{ matrix.config }} \
-                    --platform       ${{ matrix.image }} \
-                    --incremental    true \
-                    --base_ref       ${{ github.base_ref }} \
-                    --head_ref       ${{ github.head_ref }} \
+        run: ".github/workflows/rootci-installers/build_root.py
+                    --buildtype      ${{ matrix.config }}
+                    --platform       ${{ matrix.image }}
+                    --incremental    true
+                    --base_ref       ${{ github.base_ref }}
+                    --head_ref       ${{ github.head_ref }}
                     --repository     ${{ github.server_url }}/${{github.repository}}
               "
 
       - name: Install root workflow dispatch
         if:   github.event_name == 'workflow_dispatch'
-        run: ".github/workflows/rootci-installers/build_root.py \
-                    --buildtype      ${{ matrix.config }} \
-                    --platform       ${{ matrix.image }} \
-                    --incremental    ${{ inputs.incremental }} \
-                    --alwaysgenerate ${{ inputs.force_generation }} \
-                    --base_ref       ${{ github.base_ref }} \
-                    --head_ref       ${{ github.head_ref }} \
+        run: ".github/workflows/rootci-installers/build_root.py
+                    --buildtype      ${{ matrix.config }}
+                    --platform       ${{ matrix.image }}
+                    --incremental    ${{ inputs.incremental }}
+                    --alwaysgenerate ${{ inputs.force_generation }}
+                    --base_ref       ${{ github.base_ref }}
+                    --head_ref       ${{ github.head_ref }}
                     --repository     ${{ github.server_url }}/${{github.repository}}
               "
