@@ -5,13 +5,13 @@ on:
   # Enables manual start of workflow
   workflow_dispatch:
     inputs:
-      base_ref:
+      head_ref:
         description: rebase from ...
         type: string
         required: true
         default: master
-      head_ref:
-        description: ... to (can have same value)
+      base_ref:
+        description: ... to ... (can have same value)
         type: string
         required: true
         default: master
