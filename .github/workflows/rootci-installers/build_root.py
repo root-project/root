@@ -156,9 +156,8 @@ def main():
             git config user.email 'CI-{yyyy_mm_dd}@root.cern'
             git config user.name 'ROOT Continous Integration'
 
-            git pull || exit 1
-            
             git fetch origin {base_ref}:{base_ref}
+            git fetch origin {head_ref}:{head_ref}
             
             git rebase {base_ref} {head_ref}
         """, shell_log)
