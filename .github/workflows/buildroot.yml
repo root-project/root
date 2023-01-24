@@ -66,7 +66,7 @@ jobs:
         if:   github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
         run: "python -u .github/workflows/rootci-installers/build_root.py
                     --buildtype      ${{ matrix.config }}
-                    --platform       ${{ matrix.image }}
+                    --platform       windows
                     --incremental    true
                     --base_ref       ${{ github.base_ref }}
                     --head_ref       ${{ github.head_ref }}
@@ -83,6 +83,50 @@ jobs:
                     --base_ref       ${{ inputs.base_ref }}
                     --head_ref       ${{ inputs.head_ref }}
                     --repository     ${{ github.server_url }}/${{github.repository}}
+              "
+
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup mac runner
+        run: 'python3 -m pip install openstacksdk'
+
+      - name: Install root PR
+        if:   github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+        run: ".github/workflows/rootci-installers/build_root.py
+                    --buildtype      Release
+                    --platform       mac
+                    --incremental    true
+                    --base_ref       ${{ github.base_ref }}
+                    --head_ref       ${{ github.head_ref }}
+                    --repository     ${{ github.server_url }}/${{github.repository}}
+              "
+
+      - name: Install root workflow dispatch
+        if:   github.event_name == 'workflow_dispatch'
+        run: ".github/workflows/rootci-installers/build_root.py
+                    --buildtype      Release
+                    --platform       mac
+                    --incremental    ${{ inputs.incremental }}
+                    --alwaysgenerate ${{ inputs.force_generation }}
+                    --base_ref       ${{ inputs.base_ref }}
+                    --head_ref       ${{ inputs.head_ref }}
+                    --repository     ${{ github.server_url }}/${{github.repository}}
+              "
+
+
+      - name: Nightly build
+        if:   github.event.schedule == '0 1 * * *'
+        run: ".github/workflows/rootci-installers/build_root.py
+                    --buildtype   Release
+                    --platform    mac
+                    --incremental false
+                    --base_ref    master
+                    --head_ref    master
+                    --repository  ${{ github.server_url }}/${{github.repository}}
               "
 
   build-linux:
