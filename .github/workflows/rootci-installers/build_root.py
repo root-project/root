@@ -145,9 +145,9 @@ def main():
             incremental = False
         else:
             if windows:
-                shell_log += f"(new-object System.Net.WebClient).DownloadFile('https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path}','{workdir}')"
+                shell_log += f"(new-object System.Net.WebClient).DownloadFile('https://s3.cern.ch/swift/v1/{CONTAINER}/{prefix}.tar.gz','{workdir}')"
             else:
-                shell_log += f"wget https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path} -x -nH --cut-dirs 3"
+                shell_log += f"wget https://s3.cern.ch/swift/v1/{CONTAINER}/{prefix}.tar.gz -x -nH --cut-dirs 3"
 
     if incremental:
         # Do git pull and check if build is needed
