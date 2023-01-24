@@ -64,7 +64,7 @@ jobs:
 
       - name: Install root PR
         if:   github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
-        run: "python .github/workflows/rootci-installers/build_root.py
+        run: "python -u .github/workflows/rootci-installers/build_root.py
                     --buildtype      ${{ matrix.config }}
                     --platform       ${{ matrix.image }}
                     --incremental    true
@@ -75,7 +75,7 @@ jobs:
 
       - name: Install root workflow dispatch
         if:   github.event_name == 'workflow_dispatch'
-        run: "python .github/workflows/rootci-installers/build_root.py
+        run: "python -u .github/workflows/rootci-installers/build_root.py
                     --buildtype      Release
                     --platform       windows
                     --incremental    ${{ inputs.incremental }}
