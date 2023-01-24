@@ -84,6 +84,7 @@ def main():
 
     if windows:
         workdir = 'C:/ROOT-CI'
+        os.environ['COMSPEC'] = 'powershell.exe'
     else:
         workdir = '/tmp/workspace'
 
@@ -188,9 +189,17 @@ def main():
                 mkdir -p '{workdir}/build'
                 mkdir -p '{workdir}/install'
             """, shell_log)
+            
+        if windows:
+            result, shell_log = subprocess_with_log(f"""
+                Remove-Item -Recurse -Force {workdir}/src
+            """, shell_log)
+        else:
+            result, shell_log = subprocess_with_log(f"""
+                rm -rf '{workdir}/src'
+            """, shell_log)
 
         result, shell_log = subprocess_with_log(f"""
-            rm -rf '{workdir}/src'
             git clone -b {base_ref} '{repository}' '{workdir}/src'
             
             cd '{workdir}/src'

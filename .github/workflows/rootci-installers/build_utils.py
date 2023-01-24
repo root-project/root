@@ -39,6 +39,7 @@ def subprocess_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
         start = time.time()
 
     print("\033[0m", end='')
+
     result = subprocess.run(command, shell=True, check=False)
 
     if debug:
