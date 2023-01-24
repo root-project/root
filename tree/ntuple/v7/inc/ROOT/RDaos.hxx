@@ -48,6 +48,22 @@ struct RDaosKey {
    AttributeKey_t fAkey;
 };
 
+struct RDaosIov {
+   d_iov_t fIov{};
+
+   RDaosIov(void *buffer, size_t size) : fIov{buffer, size, size} {}
+   void Set(void *buffer, size_t size) { d_iov_set(&fIov, buffer, size); }
+   [[nodiscard]] d_iov_t Get() const { return fIov; }
+   [[nodiscard]] void *GetBuffer() const { return fIov.iov_buf; }
+   [[nodiscard]] size_t GetBufferSize() const { return fIov.iov_buf_len; }
+};
+
+struct RDaosIovV {
+   std::vector<d_iov_t> fIovs;
+   explicit RDaosIovV(unsigned size) { fIovs.reserve(size); }
+   [[nodiscard]] std::vector<d_iov_t> Get() const { return fIovs; }
+};
+
 struct RDaosEventQueue {
    daos_handle_t fQueue;
    RDaosEventQueue();
@@ -209,29 +225,30 @@ public:
       std::vector<RDaosObject::RAkeyRequest> fDataRequests{};
       std::unordered_map<AttributeKey_t, unsigned> fIndices{};
 
-      void Insert(AttributeKey_t attr, const d_iov_t &iov)
+      void Insert(AttributeKey_t attr, const RDaosIov &iov)
       {
          auto [it, ret] = fIndices.emplace(attr, fDataRequests.size());
          unsigned attrIndex = it->second;
 
          if (attrIndex == fDataRequests.size()) {
-            fDataRequests.emplace_back(attr, std::initializer_list<d_iov_t>{iov});
+            fDataRequests.emplace_back(attr, std::initializer_list<d_iov_t>{iov.Get()});
          } else {
-            fDataRequests[attrIndex].fIovs.emplace_back(iov);
+            fDataRequests[attrIndex].fIovs.emplace_back(iov.Get());
          }
       }
 
-      void Insert(AttributeKey_t attr, std::vector<d_iov_t> &iovs)
+      void Insert(AttributeKey_t attr, RDaosIovV &iovs)
       {
          auto [it, ret] = fIndices.emplace(attr, fDataRequests.size());
          unsigned attrIndex = it->second;
+         auto iovSeq = iovs.Get();
 
          if (attrIndex == fDataRequests.size()) {
-            fDataRequests.emplace_back(attr, iovs);
+            fDataRequests.emplace_back(attr, iovSeq);
          } else {
             fDataRequests[attrIndex].fIovs.insert(std::end(fDataRequests[attrIndex].fIovs),
-                                                  std::make_move_iterator(std::begin(iovs)),
-                                                  std::make_move_iterator(std::end(iovs)));
+                                                  std::make_move_iterator(std::begin(iovSeq)),
+                                                  std::make_move_iterator(std::end(iovSeq)));
          }
       }
    };
@@ -248,7 +265,7 @@ public:
 
       MultiObjectRWOperation() { fRequestDict = std::make_unique<RequestDict_t>(); }
 
-      void Insert(RDaosKey &key, d_iov_t &pageIov) const
+      void Insert(RDaosKey &key, const RDaosIov &pageIov) const
       {
          auto odPair = RDaosContainer::ROidDkeyPair{key.fOid, key.fDkey};
          auto [it, ret] = fRequestDict->emplace(odPair, RWOperation(odPair));

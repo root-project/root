@@ -336,9 +336,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
             positionIndex = fPageId.fetch_add(1);
          }
 
-         d_iov_t pageIov;
-         d_iov_set(&pageIov, const_cast<void *>(s.fBuffer), s.fSize);
-
+         RDaosIov pageIov(const_cast<void *>(s.fBuffer), s.fSize);
          RDaosKey daosKey =
             GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, range.fPhysicalColumnId, positionIndex);
          writeRequests.Insert(daosKey, pageIov);
@@ -760,9 +758,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
          }
 
          // Prepare new read request batched up by object ID and distribution key
-         d_iov_t iov;
-         d_iov_set(&iov, cageBuffer, cageSz);
-
+         RDaosIov iov(cageBuffer, cageSz);
          RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, columnId, cageIndex);
          readRequests.Insert(daosKey, iov);
 
