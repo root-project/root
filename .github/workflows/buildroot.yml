@@ -7,20 +7,24 @@ on:
     inputs:
       base_ref:
         description: rebase from ...
+        type: string
         required: true
         default: master
       head_ref:
         description: ... to (can have same value)
+        type: string
         required: true
         default: master
       incremental:
         description: 'Do incremental build'
-        required: false
-        default: 'true'
+        type: boolean
+        required: true
+        default: true
       force_generation:
         description: 'Incremental build: Make sure generation step is always run'
+        type: boolean
         required: false
-        default: 'false'
+        default: false
 
 
   # Uses workflow from base of pull request which may help prevent execution of unsafe code
