@@ -43,9 +43,49 @@ on:
   schedule:
     - cron: '0 1 * * *'
 
+env:
+  OS_APPLICATION_CREDENTIAL_ID: 'fdbb885970e547a49e3dfc339ce1efa7'
+  OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+  OS_AUTH_TYPE: 'v3applicationcredential'
+  OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+  OS_IDENTITY_API_VERSION: 3
+  OS_INTERFACE: 'public'
+  OS_REGION_NAME: 'cern'
 
 jobs:
-  build:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup windows runner
+        run: 'python -m pip install openstacksdk'
+
+      - name: Install root PR
+        if:   github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+        run: "python .github/workflows/rootci-installers/build_root.py
+                    --buildtype      ${{ matrix.config }}
+                    --platform       ${{ matrix.image }}
+                    --incremental    true
+                    --base_ref       ${{ github.base_ref }}
+                    --head_ref       ${{ github.head_ref }}
+                    --repository     ${{ github.server_url }}/${{github.repository}}
+              "
+
+      - name: Install root workflow dispatch
+        if:   github.event_name == 'workflow_dispatch'
+        run: "python .github/workflows/rootci-installers/build_root.py
+                    --buildtype      Release
+                    --platform       windows
+                    --incremental    ${{ inputs.incremental }}
+                    --alwaysgenerate ${{ inputs.force_generation }}
+                    --base_ref       ${{ inputs.base_ref }}
+                    --head_ref       ${{ inputs.head_ref }}
+                    --repository     ${{ github.server_url }}/${{github.repository}}
+              "
+
+  build-linux:
     strategy:
       matrix:
         image: ["fedora32", "fedora34", "centos8", "ubuntu18", "ubuntu20", "ubuntu22"]
