@@ -156,8 +156,10 @@ def main():
             git config user.email 'CI-{yyyy_mm_dd}@root.cern'
             git config user.name 'ROOT Continous Integration'
 
-            git fetch origin
-            git checkout origin/master
+            git fetch origin/{head_ref}
+            git fetch origin/{base_ref}
+            git checkout origin/{base_ref}
+            git pull --ff-only
             
             git rebase {base_ref} {head_ref}
         """, shell_log)
