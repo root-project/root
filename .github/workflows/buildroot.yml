@@ -26,12 +26,6 @@ on:
         required: false
         default: false
 
-
-  # Uses workflow from base of pull request which may help prevent execution of unsafe code
-  # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target
- 
-  # This workflow has repository read/write access. Read about security considerations
-  # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
   pull_request:
     branches:
       - '**'
