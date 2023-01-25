@@ -136,7 +136,7 @@ jobs:
       image: ghcr.io/olemorud/${{ matrix.image }}:buildready
       options: '--security-opt label=disable'
       env: # S3 storage
-        OS_APPLICATION_CREDENTIAL_ID: 'fdbb885970e547a49e3dfc339ce1efa7'
+        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
         OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
         OS_AUTH_TYPE: 'v3applicationcredential'
         OS_AUTH_URL: 'https://keystone.cern.ch/v3'
