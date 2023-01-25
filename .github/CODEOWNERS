@@ -38,7 +38,7 @@ interpreter/cling/tools/packaging @vgvassilev
 /tmva/ @lmoneta @sitongan
 /tree/ @pcanal
 /tutorials/ @couet
-/tree/dataframe/ @eguiraud
+/tree/dataframe/ @eguiraud @vepadulano
 /tree/readspeed/ @eguiraud
 /tree/ntuple/v7/ @jblomer
 /tree/ntupleutil/v7/ @jblomer
