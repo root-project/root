@@ -1,5 +1,5 @@
 
-name: 'Test'
+name: 'Self-hosted runner test'
 
 on: 
   workflow_dispatch:
