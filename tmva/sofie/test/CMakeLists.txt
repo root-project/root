@@ -53,6 +53,11 @@ target_compile_options(emitFromONNX PRIVATE -Wno-unused-parameter -Wno-array-bou
 add_custom_target(SofieCompileModels_ONNX)
 add_dependencies(SofieCompileModels_ONNX emitFromONNX)
 
+if (runtime_cxxmodules)
+  add_dependencies(SofieCompileModels_ONNX emitFromONNX modules_idx)
+else()
+  add_dependencies(SofieCompileModels_ONNX emitFromONNX onepcm)
+endif()
 
 add_custom_command(TARGET SofieCompileModels_ONNX POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
