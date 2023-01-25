@@ -161,9 +161,8 @@ def main():
             git checkout master
             git branch -D test_{base_ref}
             git branch -D test_{head_ref}
-            git checkout test_{base_ref} origin/{base_ref} || exit 3
-            git checkout test_{head_ref} origin/{head_ref} || exit 4
-            git checkout test_{head_ref} || exit 5
+            git checkout -b test_{base_ref} origin/{base_ref} || exit 3
+            git checkout -b test_{head_ref} origin/{head_ref} || exit 4
             git rebase {base_ref} || exit 6
             
         """, shell_log)
@@ -200,8 +199,8 @@ def main():
             
             git remote add origin '{repository}' || exit 2
             
-            git checkout test_{base_ref} origin/{base_ref} || exit 3
-            git checkout test_{head_ref} origin/{head_ref} || exit 4
+            git checkout -b test_{base_ref} origin/{base_ref} || exit 3
+            git checkout -b test_{head_ref} origin/{head_ref} || exit 4
             
             git rebase test_{base_ref} || exit 5
         """, shell_log)
