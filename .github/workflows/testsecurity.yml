@@ -39,9 +39,9 @@ jobs:
         if:   always()
 
       - name: Attempt illegal write operation
-        run:  'if touch /mnt/test/a; then false; fi'
+        run:  'if touch /mnt/test/a > /dev/null; then false; fi'
         if:   always()
 
       - name: Attempt illegal read operation
-        run:  'if cd /mnt/test/root; then false; fi'
+        run:  'if cd /mnt/test/root > /dev/null; then false; fi'
         if:   always()
