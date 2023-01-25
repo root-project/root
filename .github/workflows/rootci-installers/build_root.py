@@ -156,14 +156,16 @@ def main():
             cd "{workdir}/src" || exit 1
             git config user.email 'CI-{yyyy_mm_dd}@root.cern'
             git config user.name 'ROOT Continous Integration'
-
-            git fetch --all || exit 2
-            git checkout {base_ref} || exit 3
-            git reset --hard origin/{base_ref} || exit 4
-            git checkout {head_ref} || exit 5
-            git reset --hard origin/{head_ref} || exit 6
             
-            git rebase {base_ref} || exit 7
+            git fetch --all || exit 2
+            git checkout master
+            git branch -D test_{base_ref}
+            git branch -D test_{head_ref}
+            git checkout test_{base_ref} origin/{base_ref} || exit 3
+            git checkout test_{head_ref} origin/{head_ref} || exit 4
+            git checkout test_{head_ref} || exit 5
+            git rebase {base_ref} || exit 6
+            
         """, shell_log)
 
         if result == 1:
