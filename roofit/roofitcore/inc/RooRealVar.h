@@ -172,10 +172,7 @@ public:
 
   std::size_t _valueResetCounter = 0; ///<! How many times the value of this variable was reset
 
-  ClassDefOverride(RooRealVar,8) // Real-valued variable
+  ClassDefOverride(RooRealVar,9); // Real-valued variable
 };
-
-
-
 
 #endif
