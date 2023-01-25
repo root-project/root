@@ -182,28 +182,32 @@ def main():
             result, shell_log = subprocess_with_log(f"""
                 New-Item -Force -Type directory -Path {workdir}/build
                 New-Item -Force -Type directory -Path {workdir}/install
-                Remove-Item -Recurse -Force {workdir}/src
+                New-Item -Force -Type directory -Path {workdir}/src
             """, shell_log)
         else:
             result, shell_log = subprocess_with_log(f"""
                 mkdir -p '{workdir}/build'
                 mkdir -p '{workdir}/install'
-                rm -rf '{workdir}/src'
+                mkdir -p '{workdir}/src'
             """, shell_log)
 
         result, shell_log = subprocess_with_log(f"""
-            git clone -b {base_ref} '{repository}' '{workdir}/src'
-            
             cd '{workdir}/src'
+            git init . || exit 1
+            
             git config user.email 'CI-{yyyy_mm_dd}@root.cern'
             git config user.name 'ROOT Continous Integration'
             
-            git fetch origin {head_ref}:{head_ref}
-            git rebase {base_ref} {head_ref}
+            git remote add origin '{repository}' || exit 2
+            
+            git checkout test_{base_ref} origin/{base_ref} || exit 3
+            git checkout test_{head_ref} origin/{head_ref} || exit 4
+            
+            git rebase test_{base_ref} || exit 5
         """, shell_log)
 
         if result != 0:
-            die(result, "Could not clone from git", shell_log)
+            die(result, "Failed to clone/rebase", shell_log)
 
 
     if force_generation or not incremental:
