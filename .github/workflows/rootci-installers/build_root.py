@@ -153,29 +153,24 @@ def main():
     if incremental:
         # Do git pull and check if build is needed
         result, shell_log = subprocess_with_log(f"""
-            cd "{workdir}/src" || exit 3
+            cd "{workdir}/src" || exit 1
             git config user.email 'CI-{yyyy_mm_dd}@root.cern'
             git config user.name 'ROOT Continous Integration'
 
-            git fetch origin {head_ref} || exit 4
-            git fetch origin {base_ref} || exit 4
-            git checkout -b {base_ref} origin/{base_ref} || exit 4
-            git pull --ff-only || exit 4
+            git fetch origin {head_ref} || exit 2
+            git fetch origin {base_ref} || exit 3
+            git checkout {base_ref} || exit 4
+            git reset --hard origin/{base_ref} || exit 5
+            git pull --ff-only || exit 6
             
-            git rebase {base_ref} {head_ref} || exit 4
+            git rebase {base_ref} {head_ref} || exit 7
         """, shell_log)
 
         if result == 1:
-            print_warning("failed to git pull")
+            print_warning('No src directory found, assuming corrupt build artifacts. Doing non-incremental build')
             incremental = False
-        elif result == 2:
-            print("Files are unchanged since last build, exiting")
-            sys.exit(0)
-        elif result == 3:
-            print_warning(f"could not cd {workdir}/src")
-            incremental = False
-        elif result == 4:
-            die(4, "rebase failed", shell_log)
+        elif result != 0:
+            die(result, "rebase failed", shell_log)
 
     # Clone and run generation step on non-incremental builds
     if not incremental:
