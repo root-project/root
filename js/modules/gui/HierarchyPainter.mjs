@@ -558,32 +558,35 @@ function createStreamerInfoContent(lst) {
          _childs : []
       };
 
-      if (entry.fTitle) item._title += '  ' + entry.fTitle;
+      if (entry.fTitle)
+         item._title += '  ' + entry.fTitle;
 
       h._childs.push(item);
 
-      if (typeof entry.fElements == 'undefined') continue;
+      if (typeof entry.fElements == 'undefined')
+         continue;
       for (let l = 0; l < entry.fElements.arr.length; ++l) {
          let elem = entry.fElements.arr[l];
-         if (!elem || !elem.fName) continue;
-         let info = elem.fTypeName + ' ' + elem.fName,
-             title = elem.fTypeName + ' type:' + elem.fType;
+         if (!elem?.fName) continue;
+         let _name = `${elem.fTypeName} ${elem.fName}`,
+             _title = `${elem.fTypeName} type:${elem.fType}`;
          if (elem.fArrayDim === 1)
-            info += '[' + elem.fArrayLength + ']';
+            _name += `[${elem.fArrayLength}]`;
          else
             for (let dim = 0; dim < elem.fArrayDim; ++dim)
-               info += '[' + elem.fMaxIndex[dim] + ']';
+               _name += `[${elem.fMaxIndex[dim]}]`;
          if (elem.fBaseVersion === 4294967295)
-            info += ':-1';
+            _name += ':-1';
          else if (elem.fBaseVersion !== undefined)
-            info += ':' + elem.fBaseVersion;
-         info += ';';
+            _name += `:${elem.fBaseVersion}`;
+         _name += ';';
          if (elem.fTitle)
-            info += ' // ' + elem.fTitle;
+            _name += ` // ${elem.fTitle}`;
 
-         item._childs.push({ _name: info, _title: title, _kind: elem.fTypeName, _icon: (elem.fTypeName == 'BASE') ? 'img_class' : 'img_member' });
+         item._childs.push({ _name, _title, _kind: elem.fTypeName, _icon: (elem.fTypeName == 'BASE') ? 'img_class' : 'img_member' });
       }
-      if (!item._childs.length) delete item._childs;
+      if (!item._childs.length)
+         delete item._childs;
    }
 
    return h;
@@ -1048,10 +1051,14 @@ class HierarchyPainter extends BasePainter {
       if (isStr(arg)) {
          itemname = arg;
       } else if (isObject(arg)) {
-         if ((arg._parent !== undefined) && (arg._name !== undefined) && (arg._kind !== undefined)) item = arg; else
-         if (arg.name !== undefined) itemname = arg.name; else
-         if (arg.arg !== undefined) itemname = arg.arg; else
-         if (arg.item !== undefined) item = arg.item;
+         if ((arg._parent !== undefined) && (arg._name !== undefined) && (arg._kind !== undefined))
+            item = arg;
+         else if (arg.name !== undefined)
+            itemname = arg.name;
+         else if (arg.arg !== undefined)
+            itemname = arg.arg;
+         else if (arg.item !== undefined)
+            item = arg.item;
       }
 
       if (isStr(itemname) && (itemname.indexOf('img:') == 0)) {
@@ -1418,7 +1425,7 @@ class HierarchyPainter extends BasePainter {
    /** @summary Update item node
      * @private */
    updateTreeNode(hitem, d3cont) {
-      if ((d3cont === undefined) || d3cont.empty())  {
+      if ((d3cont === undefined) || d3cont.empty()) {
          d3cont = d3_select(hitem._d3cont ? hitem._d3cont : null);
          let name = this.itemFullName(hitem);
          if (d3cont.empty())

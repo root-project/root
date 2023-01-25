@@ -66,7 +66,7 @@ class TMultiGraphPainter extends ObjectPainter {
       let mgraph = this.getObject(),
           maximum, minimum, logx = false, logy = false,
           time_display = false, time_format = '',
-          rw = {  xmin: 0, xmax: 0, ymin: 0, ymax: 0, first: true };
+          rw = { xmin: 0, xmax: 0, ymin: 0, ymax: 0, first: true };
 
       if (pad) {
          logx = pad.fLogx;

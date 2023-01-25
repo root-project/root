@@ -1,7 +1,7 @@
 import { select as d3_select, pointer as d3_pointer } from '../d3.mjs';
 import { settings, constants, internals, isNodeJs, getPromise, BIT, clTObjString, clTAxis, isObject, isFunc, isStr } from '../core.mjs';
 import { isPlainText, producePlainText, produceLatex, produceMathjax, typesetMathjax } from './latex.mjs';
-import { getElementRect, BasePainter } from './BasePainter.mjs';
+import { getElementRect, BasePainter, makeTranslate } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
 import { TAttFillHandler } from './TAttFillHandler.mjs';
 import { TAttLineHandler } from './TAttLineHandler.mjs';
@@ -767,9 +767,9 @@ class ObjectPainter extends BasePainter {
    /** @summary Fill context menu for the object
      * @private */
    fillContextMenu(menu) {
-      let title = this.getObjectHint();
-      if (this.getObject() && ('_typename' in this.getObject()))
-         title = this.getObject()._typename + '::' + title;
+      let title = this.getObjectHint(), obj = this.getObject();
+      if (obj?._typename)
+         title = obj._typename + '::' + title;
 
       menu.add('header:' + title);
 
@@ -827,8 +827,7 @@ class ObjectPainter extends BasePainter {
       if (!draw_g) draw_g = this.draw_g;
       if (!draw_g || draw_g.empty()) return;
 
-      let font = (font_size === 'font') ? font_face : new FontHandler(font_face, font_size),
-          pp = this.getPadPainter();
+      let font = (font_size === 'font') ? font_face : new FontHandler(font_face, font_size);
 
       draw_g.call(font.func);
 
@@ -838,7 +837,7 @@ class ObjectPainter extends BasePainter {
             .property('text_factor', 0.)
             .property('max_text_width', 0) // keep maximal text width, use it later
             .property('max_font_size', max_font_size)
-            .property('_fast_drawing', pp?._fast_drawing || false);
+            .property('_fast_drawing', this.getPadPainter()?._fast_drawing || false);
 
       if (draw_g.property('_fast_drawing'))
          draw_g.property('_font_too_small', (max_font_size && (max_font_size < 5)) || (font.size < 4));
@@ -950,7 +949,7 @@ class ObjectPainter extends BasePainter {
                arg.y += arg.height / 2;
          }
 
-         arg.dx = arg.dy = 0;
+         let dx = 0, dy = 0;
 
          if (is_txt) {
 
@@ -965,15 +964,16 @@ class ObjectPainter extends BasePainter {
 
             if (arg.plain) {
                txt.attr('text-anchor', arg.align[0]);
-               if (arg.align[1] == 'top')
+               if (arg.align[1] == 'top') {
                   txt.attr('dy', '.8em');
-               else if (arg.align[1] == 'middle') {
-                  if (isNodeJs()) txt.attr('dy', '.4em'); else txt.attr('dominant-baseline', 'middle');
+               } else if (arg.align[1] == 'middle') {
+                  if (isNodeJs()) txt.attr('dy', '.4em');
+                             else txt.attr('dominant-baseline', 'middle');
                }
             } else {
                txt.attr('text-anchor', 'start');
-               arg.dx = ((arg.align[0] == 'middle') ? -0.5 : ((arg.align[0] == 'end') ? -1 : 0)) * arg.box.width;
-               arg.dy = ((arg.align[1] == 'top') ? (arg.top_shift || 1) : (arg.align[1] == 'middle') ? (arg.mid_shift || 0.5) : 0) * arg.box.height;
+               dx = ((arg.align[0] == 'middle') ? -0.5 : ((arg.align[0] == 'end') ? -1 : 0)) * arg.box.width;
+               dy = ((arg.align[1] == 'top') ? (arg.top_shift || 1) : (arg.align[1] == 'middle') ? (arg.mid_shift || 0.5) : 0) * arg.box.height;
             }
 
          } else if (arg.text_rect) {
@@ -983,34 +983,31 @@ class ObjectPainter extends BasePainter {
 
             scale = (f > 0) && (Math.abs(1-f) > 0.01) ? 1/f : 1;
 
-            arg.dx = ((arg.align[0] == 'middle') ? -0.5 : ((arg.align[0] == 'end') ? -1 : 0)) * box.width * scale;
+            dx = ((arg.align[0] == 'middle') ? -0.5 : ((arg.align[0] == 'end') ? -1 : 0)) * box.width * scale;
 
             if (arg.align[1] == 'top')
-               arg.dy = -box.y1*scale;
+               dy = -box.y1*scale;
             else if (arg.align[1] == 'bottom')
-               arg.dy = -box.y2*scale;
+               dy = -box.y2*scale;
             else if (arg.align[1] == 'middle')
-               arg.dy = -0.5*(box.y1 + box.y2)*scale;
+               dy = -0.5*(box.y1 + box.y2)*scale;
          } else {
             console.error('text rect not calcualted - please check code');
          }
 
-         if (!arg.rotate) { arg.x += arg.dx; arg.y += arg.dy; arg.dx = arg.dy = 0; }
+         if (!arg.rotate) { arg.x += dx; arg.y += dy; dx = dy = 0; }
 
          // use translate and then rotate to avoid complex sign calculations
-         let trans = '';
-         if (arg.y)
-            trans = `translate(${Math.round(arg.x)},${Math.round(arg.y)})`;
-         else if (arg.x)
-            trans = `translate(${Math.round(arg.x)})`;
+         let trans = makeTranslate(Math.round(arg.x), Math.round(arg.y)) || '',
+             dtrans = makeTranslate(Math.round(dx), Math.round(dy)),
+             append = arg => { if (trans) trans += ' '; trans += arg; };
+
          if (arg.rotate)
-            trans += ` rotate(${Math.round(arg.rotate)})`;
+            append(`rotate(${Math.round(arg.rotate)})`);
          if (scale !== 1)
-            trans += ` scale(${scale.toFixed(3)})`;
-         if (arg.dy)
-            trans += ` translate(${Math.round(arg.dx)},${Math.round(arg.dy)})`;
-         else if (arg.dx)
-            trans += ` translate(${Math.round(arg.dx)})`;
+            append(`scale(${scale.toFixed(3)})`);
+         if (dtrans)
+            append(dtrans);
          if (trans) txt.attr('transform', trans);
       });
 
@@ -1530,7 +1527,7 @@ function getElementMainPainter(dom) {
   * @return {string} produced JSON string */
 function drawingJSON(dom) {
    let canp = getElementCanvPainter(dom);
-   return canp ? canp.produceJSON() : '';
+   return canp?.produceJSON() || '';
 }
 
 
@@ -1623,4 +1620,4 @@ const EAxisBits = {
 
 export { getElementCanvPainter, getElementMainPainter, drawingJSON,
          selectActivePad, getActivePad, cleanup, resize,
-         ObjectPainter, drawRawText, EAxisBits  };
+         ObjectPainter, drawRawText, EAxisBits };
