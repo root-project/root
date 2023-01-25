@@ -2,46 +2,49 @@
 #include <ROOT/RPageStorageDaos.hxx>
 #include "ROOT/TestSupport.hxx"
 #include <iostream>
+#include <unordered_map>
 
 class RPageStorageDaos : public ::testing::Test {
-public:
-   ROOT::TestSupport::CheckDiagsRAII fTestRootDiags;
-
-   static constexpr const char fDaosContainerLabels[5][22] = {
-      "test-basics", "test-extended", "test-options", "test-multiple-ntuples", "test-caged-pages",
-   };
-
-   [[nodiscard]] static std::string GetDaosUri(int testIndex)
-   {
-      static const std::string testPoolUriPrefix("daos://" R__DAOS_TEST_POOL "/");
-      return {testPoolUriPrefix + fDaosContainerLabels[testIndex]};
-   }
+private:
+   static std::unordered_set<std::string> fContainerLabels;
+   ROOT::TestSupport::CheckDiagsRAII fRootDiags;
 
 protected:
+   /// \brief Stores the test label in a class-wide collection and returns the DAOS URI ("daos://{pool}/{container}").
+   /// The test label serves as the container identifier.
+   static std::string RegisterLabel(std::string_view testLabel)
+   {
+      auto [strIt, _] = fContainerLabels.emplace(testLabel);
+      static const std::string testPoolUriPrefix("daos://" R__DAOS_TEST_POOL "/");
+      return {testPoolUriPrefix + *strIt};
+   }
+
    void SetUp() override
    {
       // Initialized at the start of each test to expect diagnostic messages from TestSupport
-      fTestRootDiags.optionalDiag(kWarning, "in int daos_init()",
-                                  "This RNTuple build uses libdaos_mock. Use only for testing!");
-      fTestRootDiags.requiredDiag(kWarning, "ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos",
-                                  "The DAOS backend is experimental and still under development.", false);
-      fTestRootDiags.requiredDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 1", false);
+      fRootDiags.requiredDiag(kWarning, "ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos",
+                              "The DAOS backend is experimental and still under development.", false);
+      fRootDiags.requiredDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 1", false);
+      fRootDiags.optionalDiag(kWarning, "in int daos_init()",
+                              "This RNTuple build uses libdaos_mock. Use only for testing!");
    }
 
    static void TearDownTestSuite()
    {
 #ifndef R__DAOS_TEST_MOCK
       const std::string sysCmd("daos cont destroy " R__DAOS_TEST_POOL " ");
-      for (const auto &label : fDaosContainerLabels) {
+      for (const auto &label : fContainerLabels) {
          system((sysCmd + label).data());
       }
 #endif
    }
 };
 
+std::unordered_set<std::string> RPageStorageDaos::fContainerLabels{};
+
 TEST_F(RPageStorageDaos, Basics)
 {
-   std::string daosUri = GetDaosUri(0);
+   std::string daosUri = RegisterLabel("ntuple-test-basics");
    const std::string_view ntupleName("ntuple");
    auto model = RNTupleModel::Create();
    auto wrPt = model->MakeField<float>("pt", 42.0);
@@ -73,7 +76,7 @@ TEST_F(RPageStorageDaos, Basics)
 
 TEST_F(RPageStorageDaos, Extended)
 {
-   std::string daosUri = GetDaosUri(1);
+   std::string daosUri = RegisterLabel("ntuple-test-extended");
    const std::string_view ntupleName("ntuple");
    auto model = RNTupleModel::Create();
    auto wrVector = model->MakeField<std::vector<double>>("vector");
@@ -115,7 +118,7 @@ TEST_F(RPageStorageDaos, Extended)
 
 TEST_F(RPageStorageDaos, Options)
 {
-   std::string daosUri = GetDaosUri(2);
+   std::string daosUri = RegisterLabel("ntuple-test-options");
    const std::string_view ntupleName("ntuple");
    {
       auto model = RNTupleModel::Create();
@@ -153,7 +156,7 @@ TEST_F(RPageStorageDaos, Options)
 
 TEST_F(RPageStorageDaos, MultipleNTuplesPerContainer)
 {
-   std::string daosUri = GetDaosUri(3);
+   std::string daosUri = RegisterLabel("ntuple-test-multiple");
    const std::string_view ntupleName1("ntuple1"), ntupleName2("ntuple2");
 
    RNTupleWriteOptionsDaos options;
@@ -207,7 +210,7 @@ TEST_F(RPageStorageDaos, MultipleNTuplesPerContainer)
 
 TEST_F(RPageStorageDaos, CagedPages)
 {
-   std::string daosUri = GetDaosUri(4);
+   std::string daosUri = RegisterLabel("ntuple-test-caged");
    const std::string_view ntupleName("ntuple");
    ROOT::EnableImplicitMT();
 
