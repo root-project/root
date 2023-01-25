@@ -1,5 +1,6 @@
 import { addMethods, settings, isBatchMode } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb, pointer as d3_pointer } from '../d3.mjs';
+import { makeTranslate } from '../base/BasePainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { addDragHandler } from '../gpad/TFramePainter.mjs';
 import { ensureRCanvas } from '../gpad/RCanvasPainter.mjs';
@@ -163,7 +164,7 @@ class RPalettePainter extends RObjectPainter {
           }
 
           // x,y,width,height attributes used for drag functionality
-          this.draw_g.attr('transform',`translate(${palette_x},${palette_y})`);
+          this.draw_g.attr('transform', makeTranslate(palette_x, palette_y));
       }
 
       let g_btns = this.draw_g.select('.colbtns');

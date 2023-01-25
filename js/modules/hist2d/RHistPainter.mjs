@@ -405,7 +405,7 @@ class RHistPainter extends RObjectPainter {
    addInteractivity() {
       // only first painter in list allowed to add interactive functionality to the frame
 
-      let ismain =  this.isMainPainter(),
+      let ismain = this.isMainPainter(),
           second_axis = this.options.second_x || this.options.second_y,
           fp = ismain || second_axis ? this.getFramePainter() : null;
       return fp ? fp.addInteractivity(!ismain && second_axis) : true;

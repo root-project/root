@@ -3,6 +3,7 @@ import { select as d3_select, pointer as d3_pointer,
          drag as d3_drag, timeFormat as d3_timeFormat,
          scaleTime as d3_scaleTime, scaleSymlog as d3_scaleSymlog,
          scaleLog as d3_scaleLog, scaleLinear as d3_scaleLinear } from '../d3.mjs';
+import { makeTranslate } from '../base/BasePainter.mjs';
 import { AxisPainterMethods, chooseTimeFormat } from './TAxisPainter.mjs';
 import { createMenu } from '../gui/menu.mjs';
 import { addDragHandler } from './TFramePainter.mjs';
@@ -242,7 +243,7 @@ class RAxisPainter extends RObjectPainter {
          // avoid black filling by middle-size
          if ((handle.middle.length <= handle.major.length) || (handle.middle.length > gr_range/3.5)) {
             handle.minor = handle.middle = handle.major;
-         } else if ((this.nticks3 > 1) && !this.log)  {
+         } else if ((this.nticks3 > 1) && !this.log) {
             handle.minor = this.produceTicks(handle.middle.length, this.nticks3);
             if ((handle.minor.length <= handle.middle.length) || (handle.minor.length > gr_range/1.7)) handle.minor = handle.middle;
          }
@@ -484,7 +485,7 @@ class RAxisPainter extends RObjectPainter {
                }
 
                new_x = set_x; new_y = set_y; curr_indx = besti;
-               title_g.attr('transform', 'translate(' + Math.round(new_x) + ',' + Math.round(new_y) +  ')');
+               title_g.attr('transform', makeTranslate(new_x, new_y));
 
           }).on('end', evnt => {
                if (!drag_rect) return;
@@ -778,7 +779,7 @@ class RAxisPainter extends RObjectPainter {
                          text: this.fTitle, draw_g: title_g });
       }
 
-      title_g.attr('transform', `translate(${title_shift_x},${title_shift_y})`)
+      title_g.attr('transform', makeTranslate(title_shift_x, title_shift_y))
              .property('basepos', title_basepos)
              .property('shift_x', title_shift_x)
              .property('shift_y', title_shift_y);
@@ -853,7 +854,7 @@ class RAxisPainter extends RObjectPainter {
             axis_g.selectAll('*').remove();
       }
 
-      axis_g.attr('transform', transform || null);
+      axis_g.attr('transform', transform);
 
       this.extractDrawAttributes();
       this.axis_g = axis_g;
@@ -929,7 +930,7 @@ class RAxisPainter extends RObjectPainter {
       else
          axis_g.selectAll('*').remove();
 
-      axis_g.attr('transform', transform || null);
+      axis_g.attr('transform', transform);
 
       if (this.ticksSide == 'invert') side = -side;
 
@@ -977,7 +978,7 @@ class RAxisPainter extends RObjectPainter {
 
       this.standalone = true;  // no need to clean axis container
 
-      let promise = this.drawAxis(this.draw_g, `translate(${pos.x},${pos.y})`);
+      let promise = this.drawAxis(this.draw_g, makeTranslate(pos.x, pos.y));
 
       if (isBatchMode()) return promise;
 

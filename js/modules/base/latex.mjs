@@ -1,5 +1,5 @@
 import { loadScript, settings, isNodeJs, isStr, source_dir } from '../core.mjs';
-import { getElementRect, _loadJSDOM } from './BasePainter.mjs';
+import { getElementRect, _loadJSDOM, makeTranslate } from './BasePainter.mjs';
 import { FontHandler } from './FontHandler.mjs';
 
 
@@ -328,11 +328,8 @@ function parseLatex(node, arg, label, curr) {
    const positionGNode = (pos, x, y, inside_gg) => {
       x = Math.round(x);
       y = Math.round(y);
-      if (y)
-         pos.g.attr('transform',`translate(${x},${y})`);
-      else if (x)
-         pos.g.attr('transform',`translate(${x})`);
 
+      pos.g.attr('transform', makeTranslate(x, y));
       pos.rect.x1 += x;
       pos.rect.x2 += x;
       pos.rect.y1 += y;
@@ -355,10 +352,7 @@ function parseLatex(node, arg, label, curr) {
 
       gg = gg.append('svg:g');
 
-      if (curr.y)
-         gg.attr('transform',`translate(${curr.x},${curr.y})`);
-      else if (curr.x)
-         gg.attr('transform',`translate(${curr.x})`);
+      gg.attr('transform', makeTranslate(curr.x,curr.y));
       return gg;
    };
 
@@ -690,8 +684,8 @@ function parseLatex(node, arg, label, curr) {
                path2.attr('d',`M${2*w+r_width},${r_y1}h${w}v${dy}h${-w}`);
                break;
             case '{}':
-               path1.attr('d',`M${2*w},${r_y1} a${w},${w},0,0,0,${-w},${w} v${dy/2-2*w} a${w},${w},0,0,1,${-w},${w} a${w},${w},0,0,1,${w},${w} v${dy/2-2*w} a${w},${w},0,0,0,${w},${w}`);
-               path2.attr('d',`M${2*w+r_width},${r_y1} a${w},${w},0,0,1,${w},${w} v${dy/2-2*w} a${w},${w},0,0,0,${w},${w} a${w},${w},0,0,0,${-w},${w} v${dy/2-2*w} a${w},${w},0,0,1,${-w},${w}`);
+               path1.attr('d',`M${2*w},${r_y1}a${w},${w},0,0,0,${-w},${w}v${dy/2-2*w}a${w},${w},0,0,1,${-w},${w}a${w},${w},0,0,1,${w},${w}v${dy/2-2*w}a${w},${w},0,0,0,${w},${w}`);
+               path2.attr('d',`M${2*w+r_width},${r_y1}a${w},${w},0,0,1,${w},${w}v${dy/2-2*w}a${w},${w},0,0,0,${w},${w}a${w},${w},0,0,0,${-w},${w}v${dy/2-2*w}a${w},${w},0,0,1,${-w},${w}`);
                break;
             default: // ()
                path1.attr('d',`M${w},${r_y1}a${4*dy},${4*dy},0,0,0,0,${dy}`);
@@ -1312,10 +1306,13 @@ function applyAttributesToMathJax(painter, mj_node, svg, arg, font_size, svg_fac
    else if (arg.align[1] == 'bottom-base')
       arg[ny] += sign.y * (arg.height - mh - arg.valign);
 
-   let trans = `translate(${arg.x},${arg.y})`;
-   if (arg.rotate) trans += ` rotate(${arg.rotate})`;
+   let trans = makeTranslate(arg.x, arg.y) || '';
+   if (arg.rotate) {
+      if (trans) trans += ' ';
+      trans += `rotate(${arg.rotate})`;
+   }
 
-   mj_node.attr('transform', trans).attr('visibility', null);
+   mj_node.attr('transform', trans || null).attr('visibility', null);
 }
 
 /** @summary Produce text with MathJax

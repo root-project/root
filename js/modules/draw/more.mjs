@@ -1,6 +1,6 @@
 import { BIT, isBatchMode, clTLatex, clTMathText, clTPolyLine } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
-import { BasePainter } from '../base/BasePainter.mjs';
+import { BasePainter, makeTranslate } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
@@ -71,7 +71,7 @@ async function drawText() {
          this.moveDrag = function(dx,dy) {
             this.pos_dx += dx;
             this.pos_dy += dy;
-            this.draw_g.attr('transform', `translate(${this.pos_dx},${this.pos_dy})`);
+            this.draw_g.attr('transform', makeTranslate(this.pos_dx, this.pos_dy));
         }
 
       if (!this.moveEnd)
@@ -223,7 +223,7 @@ function drawEllipse() {
 
    this.draw_g
       .append('svg:path')
-      .attr('transform',`translate(${x},${y})`)
+      .attr('transform', makeTranslate(x, y))
       .attr('d', path)
       .call(this.lineatt.func).call(this.fillatt.func);
 }
@@ -240,7 +240,7 @@ function drawPie() {
        rx = this.axisToSvg('x', pie.fX + pie.fRadius) - xc,
        ry = this.axisToSvg('y', pie.fY + pie.fRadius) - yc;
 
-   this.draw_g.attr('transform', `translate(${xc},${yc})`);
+   this.draw_g.attr('transform', makeTranslate(xc, yc));
 
    // Draw the slices
    let nb = pie.fPieSlices.length, total = 0,

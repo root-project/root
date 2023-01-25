@@ -117,7 +117,7 @@ function floatToString(value, fmt, ret_fmt) {
       while ((l<sg.length) && (sg[l] == '0' || sg[l] == '-' || sg[l] == '.')) l++;
 
       let diff = sg.length - l - prec;
-      if (sg.indexOf('.')>l) diff--;
+      if (sg.indexOf('.') > l) diff--;
 
       if (diff != 0) {
          prec -= diff;
@@ -352,9 +352,11 @@ function buildSvgPath(kind, bins, height, ndig) {
       }
 
       if (cminy != cmaxy) {
-         if (cminy != curry) res.path += 'v' + (cminy - curry);
-         res.path += 'v' + (cmaxy - cminy);
-         if (cmaxy != prevy) res.path += 'v' + (prevy - cmaxy);
+         if (cminy != curry)
+            res.path += `v${cminy - curry}`;
+         res.path += `v${cmaxy - cminy}`;
+         if (cmaxy != prevy)
+            res.path += `v${prevy - cmaxy}`;
       }
    }
 
@@ -655,7 +657,7 @@ class BasePainter {
 
 /** @summary Load and initialize JSDOM from nodes
   * @return {Promise} with d3 selection for d3_body
-   * @private */
+  * @private */
 async function _loadJSDOM() {
    return import('jsdom').then(handle => {
 
@@ -669,6 +671,16 @@ async function _loadJSDOM() {
    });
 }
 
+/** @summary Return translate string for transform attribute of some svg element
+  * @return string or null if x and y are zeros
+  * @private */
+function makeTranslate(x,y)
+{
+   if (y) return `translate(${x},${y})`;
+   if (x) return `translate(${x})`;
+   return null;
+}
+
 export { getElementRect, getAbsPosInCanvas,
          DrawOptions, TRandom, floatToString, buildSvgPath, compressSVG,
-         BasePainter, _loadJSDOM };
+         BasePainter, _loadJSDOM, makeTranslate };
