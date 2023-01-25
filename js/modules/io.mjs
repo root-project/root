@@ -339,7 +339,7 @@ const CustomStreamers = {
 
    THashList: clTList,
 
-   TStreamerLoop(buf, elem)  {
+   TStreamerLoop(buf, elem) {
       if (buf.last_read_version > 1) {
          buf.classStreamer(elem, clTStreamerElement);
          elem.fCountVersion = buf.ntou4();
@@ -2061,11 +2061,10 @@ async function R__unzip(arr, tgtsize, noalert, src_shift) {
             return Promise.resolve(null);
          }
 
-         const srcsize = HDRSIZE + ((getCode(curr + 3) & 0xff) | ((getCode(curr + 4) & 0xff) << 8) | ((getCode(curr + 5) & 0xff) << 16));
+         const srcsize = HDRSIZE + ((getCode(curr + 3) & 0xff) | ((getCode(curr + 4) & 0xff) << 8) | ((getCode(curr + 5) & 0xff) << 16)),
+               uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off + CHKSUM, Math.min(arr.byteLength - curr - HDRSIZE - off - CHKSUM, srcsize - HDRSIZE - CHKSUM));
 
-         const uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off + CHKSUM, Math.min(arr.byteLength - curr - HDRSIZE - off - CHKSUM, srcsize - HDRSIZE - CHKSUM));
-
-         if (fmt === 'ZSTD')  {
+         if (fmt === 'ZSTD') {
             const handleZsdt = ZstdCodec => {
 
                return new Promise((resolveFunc, rejectFunc) => {

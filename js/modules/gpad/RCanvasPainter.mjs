@@ -2,6 +2,7 @@ import { settings, create, parse, toJSON, loadScript, registerMethods, isBatchMo
 import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
+import { makeTranslate } from '../base/BasePainter.mjs';
 import { selectActivePad, cleanup, resize, EAxisBits } from '../base/ObjectPainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { RAxisPainter } from './RAxisPainter.mjs';
@@ -702,7 +703,7 @@ function drawRFrameTitle(reason, drag) {
 
    this.createG();
 
-   this.draw_g.attr('transform',`translate(${fx},${Math.round(fy-title_margin-title_height)})`);
+   this.draw_g.attr('transform', makeTranslate(fx, Math.round(fy-title_margin-title_height)));
 
    let arg = { x: title_width/2, y: title_height/2, text: title.fText, latex: 1 };
 

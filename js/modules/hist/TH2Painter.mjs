@@ -3,7 +3,7 @@ import { Vector2, BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, Shap
 import { assignFrame3DMethods, drawBinsLego, drawBinsError3D, drawBinsContour3D, drawBinsSurf3D } from './hist3d.mjs';
 import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
-import { TH2Painter as TH2Painter2D  } from '../hist2d/TH2Painter.mjs';
+import { TH2Painter as TH2Painter2D } from '../hist2d/TH2Painter.mjs';
 
 
 /** @summary Draw TH2Poly histogram as lego

@@ -67,7 +67,7 @@ class RH1Painter extends RHistPainter {
                first = false;
             }
 
-            err =  0;
+            err = 0;
 
             hmin = Math.min(hmin, value - err);
             hmax = Math.max(hmax, value + err);

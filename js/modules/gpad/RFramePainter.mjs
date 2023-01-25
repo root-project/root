@@ -1,6 +1,7 @@
 import { gStyle, settings, create, isBatchMode, isFunc, isStr, clTAxis } from '../core.mjs';
 import { pointer as d3_pointer } from '../d3.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
+import { makeTranslate} from '../base/BasePainter.mjs';
 import { TAxisPainter } from './TAxisPainter.mjs';
 import { RAxisPainter } from './RAxisPainter.mjs';
 import { FrameInteractive } from './TFramePainter.mjs';
@@ -438,14 +439,14 @@ class RFramePainter extends RObjectPainter {
          draw_vertical.disable_ticks = (ticksy <= 0);
 
          let pr1 = draw_horiz.drawAxis(layer, w, h,
-                                   draw_horiz.invert_side ? undefined : `translate(0,${h})`,
+                                   draw_horiz.invert_side ? null : `translate(0,${h})`,
                                    (ticksx > 1) ? -h : 0, disable_x_draw,
                                    undefined, false);
 
-         let pr2 =  draw_vertical.drawAxis(layer, w, h,
-                                      draw_vertical.invert_side ? `translate(${w})` : undefined,
-                                      (ticksy > 1) ? w : 0, disable_y_draw,
-                                      draw_vertical.invert_side ? 0 : this._frame_x, can_adjust_frame);
+         let pr2 = draw_vertical.drawAxis(layer, w, h,
+                                   draw_vertical.invert_side ? `translate(${w})` : null,
+                                   (ticksy > 1) ? w : 0, disable_y_draw,
+                                   draw_vertical.invert_side ? 0 : this._frame_x, can_adjust_frame);
 
          pr = Promise.all([pr1,pr2]).then(() => this.drawGrids());
 
@@ -454,7 +455,7 @@ class RFramePainter extends RObjectPainter {
          let arr = [];
 
          if (ticksx > 0)
-            arr.push(draw_horiz.drawAxis(layer, (sidex > 0) ? `translate(0,${h})` : '', sidex));
+            arr.push(draw_horiz.drawAxis(layer, (sidex > 0) ? `translate(0,${h})` : null, sidex));
 
          if (ticksy > 0)
             arr.push(draw_vertical.drawAxis(layer, (sidey > 0) ? `translate(0,${h})` : `translate(${w},${h})`, sidey));
@@ -462,7 +463,7 @@ class RFramePainter extends RObjectPainter {
          pr = Promise.all(arr).then(() => {
             arr = [];
             if (ticksx > 1)
-               arr.push(draw_horiz.drawAxisOtherPlace(layer, (sidex < 0) ? `translate(0,${h})` : '', -sidex, ticksx == 2));
+               arr.push(draw_horiz.drawAxisOtherPlace(layer, (sidex < 0) ? `translate(0,${h})` : null, -sidex, ticksx == 2));
 
             if (ticksy > 1)
                arr.push(draw_vertical.drawAxisOtherPlace(layer, (sidey < 0) ? `translate(0,${h})` : `translate(${w},${h})`, -sidey, ticksy == 2));
@@ -497,7 +498,7 @@ class RFramePainter extends RObjectPainter {
          this.x2_handle.configureAxis('x2axis', this.x2min, this.x2max, this.scale_x2min, this.scale_x2max, false, [0,w], w, { reverse: false });
          this.x2_handle.assignFrameMembers(this,'x2');
 
-         pr1 = this.x2_handle.drawAxis(layer, '', -1);
+         pr1 = this.x2_handle.drawAxis(layer, null, -1);
       }
 
       if (second_y) {
@@ -516,7 +517,7 @@ class RFramePainter extends RObjectPainter {
          this.y2_handle.configureAxis('y2axis', this.y2min, this.y2max, this.scale_y2min, this.scale_y2max, true, [h,0], -h, { reverse: false });
          this.y2_handle.assignFrameMembers(this,'y2');
 
-         pr2 = this.y2_handle.drawAxis(layer, `translate(${w},${h})`, -1);
+         pr2 = this.y2_handle.drawAxis(layer, makeTranslate(w, h), -1);
       }
 
       return Promise.all([pr1,pr2]);
@@ -699,7 +700,7 @@ class RFramePainter extends RObjectPainter {
          trans = `rotate(-90,${lm},${tm}) translate(${lm-h},${tm})`;
          [w, h] = [h, w];
       } else {
-         trans = `translate(${lm},${tm})`;
+         trans = makeTranslate(lm,tm);
       }
 
       // update values here to let access even when frame is not really updated

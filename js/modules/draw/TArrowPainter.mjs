@@ -12,7 +12,7 @@ class TArrowPainter extends ObjectPainter {
    rotate(angle, x0, y0) {
       let dx = this.wsize * Math.cos(angle), dy = this.wsize * Math.sin(angle), res = '';
       if ((x0 !== undefined) && (y0 !== undefined)) {
-         res =  `M${Math.round(x0-dx)},${Math.round(y0-dy)}`;
+         res = `M${Math.round(x0-dx)},${Math.round(y0-dy)}`;
       } else {
          dx = -dx; dy = -dy;
       }

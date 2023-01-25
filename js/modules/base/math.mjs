@@ -1772,13 +1772,13 @@ function crystalball_integral(x, alpha, n, sigma, mean = 0) {
          // for n=1 the primitive of 1/x is log(x)
          intpow = -A * Math.log( n / abs_alpha ) + A * Math.log( B -z );
       }
-      intgaus =  sqrtpiover2*(1. + erf(abs_alpha*oneoversqrt2));
+      intgaus = sqrtpiover2*(1. + erf(abs_alpha*oneoversqrt2));
    }
    else
    {
       intgaus = normal_cdf_c(z, 1);
       intgaus *= sqrt2pi;
-      intpow  =  0;
+      intpow  = 0;
    }
    return sigma * (intgaus + intpow);
 }
@@ -1954,8 +1954,8 @@ function eff_MidPInterval(total,passed,level,bUpper) {
    // treat special case for 0<passed<1
    // do a linear interpolation of the upper limit values
    if ( passed > 0 && passed < 1) {
-      let p0 =  eff_MidPInterval(total,0.0,level,bUpper);
-      let p1 =  eff_MidPInterval(total,1.0,level,bUpper);
+      let p0 = eff_MidPInterval(total, 0.0, level, bUpper);
+      let p1 = eff_MidPInterval(total, 1.0, level, bUpper);
       p = (p1 - p0) * passed + p0;
       return p;
    }

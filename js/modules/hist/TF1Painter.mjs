@@ -86,7 +86,7 @@ class TF1Painter extends ObjectPainter {
           main = this.getFramePainter(),
           gxmin = 0, gxmax = 0;
 
-      if (main && !ignore_zoom)  {
+      if (main && !ignore_zoom) {
          let gr = main.getGrFuncs(this.second_x, this.second_y);
          gxmin = gr.scale_xmin;
          gxmax = gr.scale_xmax;

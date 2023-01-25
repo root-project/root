@@ -16,7 +16,7 @@ class RH1Painter extends RH1Painter2D {
           zmult = 1 + 2*gStyle.fHistTopMargin,
           pr = Promise.resolve(this);
 
-      if (reason == 'resize')  {
+      if (reason == 'resize') {
          if (is_main && main.resize3D()) main.render3D();
          return pr;
       }

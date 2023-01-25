@@ -1,7 +1,7 @@
 import { gStyle, BIT, settings, create, createHistogram, isBatchMode, isFunc, isStr,
          clTPaveStats, clTCutG, clTF1, clTF2, kNoZoom } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
-import { DrawOptions, buildSvgPath } from '../base/BasePainter.mjs';
+import { DrawOptions, buildSvgPath, makeTranslate } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from './TH1Painter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
@@ -100,7 +100,7 @@ class TGraphPainter extends ObjectPainter {
          if (d.check('0')) { res.Mark = 1; res.Errors = 1; res.OutRange = 1; }
          if (d.check('1')) { if (res.Bar == 1) res.Bar = 2; }
          if (d.check('2')) { res.Rect = 1; res.Errors = 0; }
-         if (d.check('3')) { res.EF = 1; res.Errors = 0;  }
+         if (d.check('3')) { res.EF = 1; res.Errors = 0; }
          if (d.check('4')) { res.EF = 2; res.Errors = 0; }
          if (d.check('5')) { res.Rect = 2; res.Errors = 0; }
          if (d.check('X')) res.Errors = 0;
@@ -173,13 +173,17 @@ class TGraphPainter extends ObjectPainter {
          if (d.empty()) res.Line = 1;
       }
 
-      if (graph._typename == clTGraphErrors) {
+      if (this.matchObjectType(clTGraphErrors)) {
          let len = graph.fEX.length, m = 0;
          for (let k = 0; k < len; ++k)
             m = Math.max(m, graph.fEX[k], graph.fEY[k]);
          if (m < 1e-100)
             res.Errors = 0;
       }
+
+      this._cutg = this.matchObjectType(clTCutG);
+      this._cutg_lastsame = this._cutg && (graph.fNpoints > 3) &&
+                            (graph.fX[0] == graph.fX[graph.fNpoints-1]) && (graph.fY[0] == graph.fY[graph.fNpoints-1]);
 
       if (!res.Axis) {
          // check if axis should be drawn
@@ -219,7 +223,8 @@ class TGraphPainter extends ObjectPainter {
       if (!gr) return;
 
       let kind = 0, npoints = gr.fNpoints;
-      if ((gr._typename === clTCutG) && (npoints > 3)) npoints--;
+      if (this._cutg && this._cutg_lastsame)
+         npoints--;
 
       if (gr._typename == clTGraphErrors)
          kind = 1;
@@ -511,7 +516,10 @@ class TGraphPainter extends ObjectPainter {
       if (options.Line || options.Fill) {
 
          let close_symbol = '';
-         if (graph._typename == clTCutG) options.Fill = 1;
+         if (this._cutg) {
+            close_symbol = 'Z';
+            if (!options.original) options.Fill = 1;
+         }
 
          if (options.Fill) {
             close_symbol = 'Z'; // always close area if we want to fill it
@@ -619,7 +627,7 @@ class TGraphPainter extends ObjectPainter {
                        .enter()
                        .append('svg:g')
                        .attr('class', 'grpoint')
-                       .attr('transform', d => `translate(${d.grx1},${d.gry1})`);
+                       .attr('transform', d => makeTranslate(d.grx1,d.gry1));
       }
 
       if (options.Bar) {
@@ -1237,7 +1245,7 @@ class TGraphPainter extends ObjectPainter {
       this.pos_dy += dy;
 
       if (this.move_binindx === undefined) {
-         this.draw_g.attr('transform', `translate(${this.pos_dx},${this.pos_dy})`);
+         this.draw_g.attr('transform', makeTranslate(this.pos_dx,this.pos_dy));
       } else if (this.move_funcs && this.move_bin) {
          this.move_bin.x = this.move_funcs.revertAxis('x', this.move_x0 + this.pos_dx);
          this.move_bin.y = this.move_funcs.revertAxis('y', this.move_y0 + this.pos_dy);
@@ -1247,27 +1255,40 @@ class TGraphPainter extends ObjectPainter {
 
    /** @summary Complete moving */
    moveEnd(not_changed) {
-      let exec = '';
+      let exec = '', graph = this.getObject(), last = graph?.fNpoints-1;
+
+      const changeBin = bin => {
+         exec += `SetPoint(${bin.indx},${bin.x},${bin.y});;`;
+         graph.fX[bin.indx] = bin.x;
+         graph.fY[bin.indx] = bin.y;
+         if ((bin.indx == 0) && this._cutg_lastsame) {
+            exec += `SetPoint(${last},${bin.x},${bin.y});;`;
+            graph.fX[last] = bin.x;
+            graph.fY[last] = bin.y;
+         }
+      };
 
       if (this.move_binindx === undefined) {
          this.draw_g.attr('transform', null);
 
          if (this.move_funcs && this.bins && !not_changed) {
+
             for (let k = 0; k < this.bins.length; ++k) {
                let bin = this.bins[k];
                bin.x = this.move_funcs.revertAxis('x', this.move_funcs.grx(bin.x) + this.pos_dx);
                bin.y = this.move_funcs.revertAxis('y', this.move_funcs.gry(bin.y) + this.pos_dy);
-               exec += `SetPoint(${bin.indx},${bin.x},${bin.y});;`;
-               if ((bin.indx == 0) && this.matchObjectType(clTCutG))
-                  exec += `SetPoint(${this.getObject().fNpoints-1},${bin.x},${bin.y});;`;
+               changeBin(bin);
             }
-            this.drawGraph();
+            if (graph.$redraw_pad)
+               this.redrawPad();
+            else
+               this.drawGraph();
          }
       } else {
-         exec = `SetPoint(${this.move_bin.indx},${this.move_bin.x},${this.move_bin.y});;`;
-         if ((this.move_bin.indx == 0) && this.matchObjectType(clTCutG))
-            exec += `SetPoint(${this.getObject().fNpoints-1},${this.move_bin.x},${this.move_bin.y});;`;
+         changeBin(this.move_bin);
          delete this.move_binindx;
+         if (graph.$redraw_pad)
+            this.redrawPad();
       }
 
       delete this.move_funcs;

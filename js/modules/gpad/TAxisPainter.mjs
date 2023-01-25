@@ -2,7 +2,7 @@ import { gStyle, settings, constants, isBatchMode, clTGaxis, clTAxis } from '../
 import { select as d3_select, drag as d3_drag, timeFormat as d3_timeFormat,
          scaleTime as d3_scaleTime, scaleSymlog as d3_scaleSymlog,
          scaleLog as d3_scaleLog, scaleLinear as d3_scaleLinear } from '../d3.mjs';
-import { floatToString } from '../base/BasePainter.mjs';
+import { floatToString, makeTranslate } from '../base/BasePainter.mjs';
 import { ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
 import { FontHandler } from '../base/FontHandler.mjs';
 
@@ -589,7 +589,7 @@ class TAxisPainter extends ObjectPainter {
          // avoid black filling by middle-size
          if ((handle.middle.length <= handle.major.length) || (handle.middle.length > gr_range/3.5)) {
             handle.minor = handle.middle = handle.major;
-         } else if ((this.nticks3 > 1) && !this.log)  {
+         } else if ((this.nticks3 > 1) && !this.log) {
             handle.minor = this.produceTicks(handle.middle.length, this.nticks3);
             if ((handle.minor.length <= handle.middle.length) || (handle.minor.length > gr_range/1.7))
                handle.minor = handle.middle;
@@ -714,109 +714,108 @@ class TAxisPainter extends ObjectPainter {
           acc_x, acc_y, new_x, new_y, sign_0, alt_pos, curr_indx,
           drag_move = d3_drag().subject(Object);
 
-      drag_move
-         .on('start', evnt => {
+      drag_move.on('start', evnt => {
 
-            evnt.sourceEvent.preventDefault();
-            evnt.sourceEvent.stopPropagation();
+         evnt.sourceEvent.preventDefault();
+         evnt.sourceEvent.stopPropagation();
 
-            let box = title_g.node().getBBox(), // check that elements visible, request precise value
-                title_length = vertical ? box.height : box.width;
+         let box = title_g.node().getBBox(), // check that elements visible, request precise value
+             title_length = vertical ? box.height : box.width;
 
-            new_x = acc_x = title_g.property('shift_x');
-            new_y = acc_y = title_g.property('shift_y');
+         new_x = acc_x = title_g.property('shift_x');
+         new_y = acc_y = title_g.property('shift_y');
 
-            sign_0 = vertical ? (acc_x > 0) : (acc_y > 0); // sign should remain
+         sign_0 = vertical ? (acc_x > 0) : (acc_y > 0); // sign should remain
 
-            alt_pos = vertical ? [axis_length, axis_length/2, 0] : [0, axis_length/2, axis_length]; // possible positions
-            let off = vertical ? -title_length/2 : title_length/2;
-            if (this.title_align == 'middle') {
-               alt_pos[0] +=  off;
-               alt_pos[2] -=  off;
-            } else if (this.title_align == 'begin') {
-               alt_pos[1] -= off;
-               alt_pos[2] -= 2*off;
-            } else { // end
-               alt_pos[0] += 2*off;
-               alt_pos[1] += off;
-            }
+         alt_pos = vertical ? [axis_length, axis_length/2, 0] : [0, axis_length/2, axis_length]; // possible positions
+         let off = vertical ? -title_length/2 : title_length/2;
+         if (this.title_align == 'middle') {
+            alt_pos[0] += off;
+            alt_pos[2] -= off;
+         } else if (this.title_align == 'begin') {
+            alt_pos[1] -= off;
+            alt_pos[2] -= 2*off;
+         } else { // end
+            alt_pos[0] += 2*off;
+            alt_pos[1] += off;
+         }
 
-            if (this.titleCenter)
-               curr_indx = 1;
-            else if (reverse ^ this.titleOpposite)
-               curr_indx = 0;
-            else
-               curr_indx = 2;
+         if (this.titleCenter)
+            curr_indx = 1;
+         else if (reverse ^ this.titleOpposite)
+            curr_indx = 0;
+         else
+            curr_indx = 2;
 
-            alt_pos[curr_indx] = vertical ? acc_y : acc_x;
+         alt_pos[curr_indx] = vertical ? acc_y : acc_x;
 
-            drag_rect = title_g.append('rect')
-                 .classed('zoom', true)
-                 .attr('x', box.x)
-                 .attr('y', box.y)
-                 .attr('width', box.width)
-                 .attr('height', box.height)
-                 .style('cursor', 'move');
+         drag_rect = title_g.append('rect')
+              .classed('zoom', true)
+              .attr('x', box.x)
+              .attr('y', box.y)
+              .attr('width', box.width)
+              .attr('height', box.height)
+              .style('cursor', 'move');
 //                 .style('pointer-events','none'); // let forward double click to underlying elements
-          }).on('drag', evnt => {
-               if (!drag_rect) return;
+      }).on('drag', evnt => {
+         if (!drag_rect) return;
 
-               evnt.sourceEvent.preventDefault();
-               evnt.sourceEvent.stopPropagation();
+         evnt.sourceEvent.preventDefault();
+         evnt.sourceEvent.stopPropagation();
 
-               acc_x += evnt.dx;
-               acc_y += evnt.dy;
+         acc_x += evnt.dx;
+         acc_y += evnt.dy;
 
-               let set_x, set_y, besti = 0,
-                   p = vertical ? acc_y : acc_x;
+         let set_x, set_y, besti = 0,
+             p = vertical ? acc_y : acc_x;
 
-               for (let i = 1; i < 3; ++i)
-                  if (Math.abs(p - alt_pos[i]) < Math.abs(p - alt_pos[besti])) besti = i;
+         for (let i = 1; i < 3; ++i)
+            if (Math.abs(p - alt_pos[i]) < Math.abs(p - alt_pos[besti])) besti = i;
 
-               if (vertical) {
-                  set_x = acc_x;
-                  set_y = alt_pos[besti];
-               } else {
-                  set_y = acc_y;
-                  set_x = alt_pos[besti];
-               }
+         if (vertical) {
+            set_x = acc_x;
+            set_y = alt_pos[besti];
+         } else {
+            set_y = acc_y;
+            set_x = alt_pos[besti];
+         }
 
-               if (sign_0 === (vertical ? (set_x > 0) : (set_y > 0))) {
-                  new_x = set_x; new_y = set_y; curr_indx = besti;
-                  title_g.attr('transform', `translate(${new_x},${new_y})`);
-               }
+         if (sign_0 === (vertical ? (set_x > 0) : (set_y > 0))) {
+            new_x = set_x; new_y = set_y; curr_indx = besti;
+            title_g.attr('transform', makeTranslate(new_x, new_y));
+         }
 
-          }).on('end', evnt => {
-               if (!drag_rect) return;
+      }).on('end', evnt => {
+         if (!drag_rect) return;
 
-               evnt.sourceEvent.preventDefault();
-               evnt.sourceEvent.stopPropagation();
+         evnt.sourceEvent.preventDefault();
+         evnt.sourceEvent.stopPropagation();
 
-               title_g.property('shift_x', new_x)
-                      .property('shift_y', new_y);
+         title_g.property('shift_x', new_x)
+                .property('shift_y', new_y);
 
-               const axis = this.getObject(), abits = EAxisBits,
-                     set_bit = (bit, on) => { if (axis.TestBit(bit) != on) axis.InvertBit(bit); };
+         const axis = this.getObject(), abits = EAxisBits,
+               set_bit = (bit, on) => { if (axis.TestBit(bit) != on) axis.InvertBit(bit); };
 
-               this.titleOffset = (vertical ? new_x : new_y) / offset_k;
-               axis.fTitleOffset = this.titleOffset / this.titleSize;
+         this.titleOffset = (vertical ? new_x : new_y) / offset_k;
+         axis.fTitleOffset = this.titleOffset / this.titleSize;
 
-               if (curr_indx == 1) {
-                  set_bit(abits.kCenterTitle, true); this.titleCenter = true;
-                  set_bit(abits.kOppositeTitle, false); this.titleOpposite = false;
-               } else if (curr_indx == 0) {
-                  set_bit(abits.kCenterTitle, false); this.titleCenter = false;
-                  set_bit(abits.kOppositeTitle, true); this.titleOpposite = true;
-               } else {
-                  set_bit(abits.kCenterTitle, false); this.titleCenter = false;
-                  set_bit(abits.kOppositeTitle, false); this.titleOpposite = false;
-               }
+         if (curr_indx == 1) {
+            set_bit(abits.kCenterTitle, true); this.titleCenter = true;
+            set_bit(abits.kOppositeTitle, false); this.titleOpposite = false;
+         } else if (curr_indx == 0) {
+            set_bit(abits.kCenterTitle, false); this.titleCenter = false;
+            set_bit(abits.kOppositeTitle, true); this.titleOpposite = true;
+         } else {
+            set_bit(abits.kCenterTitle, false); this.titleCenter = false;
+            set_bit(abits.kOppositeTitle, false); this.titleOpposite = false;
+         }
 
-               this.submitAxisExec(`SetTitleOffset(${axis.fTitleOffset});;SetBit(${abits.kCenterTitle},${this.titleCenter?1:0})`);
+         this.submitAxisExec(`SetTitleOffset(${axis.fTitleOffset});;SetBit(${abits.kCenterTitle},${this.titleCenter?1:0})`);
 
-               drag_rect.remove();
-               drag_rect = null;
-            });
+         drag_rect.remove();
+         drag_rect = null;
+      });
 
       title_g.style('cursor', 'move').call(drag_move);
    }
@@ -1126,7 +1125,7 @@ class TAxisPainter extends ObjectPainter {
             axis_lines += this.vertical ? `M${secondShift},0v${h}` : `M0,${secondShift}h${w}`;
       }
 
-      axis_g.attr('transform', transform || null);
+      axis_g.attr('transform', transform);
 
       let side = 1, ticksPlusMinus = 0;
 
@@ -1247,7 +1246,7 @@ class TAxisPainter extends ObjectPainter {
                   title_shift_x = -1 * Math.round(((side > 0) ? (this.labelsOffset + labelsMaxWidth) : 0) + this.titleFont.size*0.7);
             }
 
-            title_g.attr('transform', `translate(${title_shift_x},${title_shift_y})`)
+            title_g.attr('transform', makeTranslate(title_shift_x, title_shift_y))
                    .property('shift_x', title_shift_x)
                    .property('shift_y', title_shift_y);
          }
@@ -1321,7 +1320,7 @@ class TAxisPainter extends ObjectPainter {
 
       this.createG();
 
-      return this.drawAxis(this.getG(), Math.abs(w), Math.abs(h), `translate(${x1},${y2})`);
+      return this.drawAxis(this.getG(), Math.abs(w), Math.abs(h), makeTranslate(x1, y2) || '');
    }
 
 } // class TAxisPainter

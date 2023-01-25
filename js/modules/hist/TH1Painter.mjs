@@ -21,7 +21,7 @@ class TH1Painter extends TH1Painter2D {
           pr = Promise.resolve(true),
           zmult = 1 + 2*gStyle.fHistTopMargin;
 
-      if (reason == 'resize')  {
+      if (reason == 'resize') {
 
          if (is_main && main.resize3D()) main.render3D();
 

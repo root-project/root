@@ -6,7 +6,7 @@ import { HelveticerRegularJson, Font, WebGLRenderer, WebGLRenderTarget,
          LineSegments, LineDashedMaterial, LineBasicMaterial,
          OrbitControls, Raycaster, SVGRenderer } from '../three.mjs';
 import { browser, settings, constants, internals, isBatchMode, isNodeJs, isObject, isFunc, isStr, getDocument } from '../core.mjs';
-import { getElementRect, getAbsPosInCanvas } from './BasePainter.mjs';
+import { getElementRect, getAbsPosInCanvas, makeTranslate } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from './TAttLineHandler.mjs';
 
@@ -228,7 +228,7 @@ let Handling3DDrawings = {
          if (chld && !chld.$jsroot)
             chld = chld.nextSibling;
 
-         if (chld && chld.$jsroot) {
+         if (chld?.$jsroot) {
             delete chld.painter;
             main.removeChild(chld);
          }
@@ -294,16 +294,16 @@ let Handling3DDrawings = {
      * @private */
    apply3dSize(size, onlyget) {
 
-      if (size.can3d < 0) return d3_select(null);
+      if (size.can3d < 0)
+         return d3_select(null);
 
       let elem;
 
       if (size.can3d > 1) {
 
          elem = this.getLayerSvg(size.clname);
-
-         // elem = layer.select('.' + size.clname);
-         if (onlyget) return elem;
+         if (onlyget)
+            return elem;
 
          let svg = this.getPadSvg();
 
@@ -313,7 +313,7 @@ let Handling3DDrawings = {
             if (elem.empty())
                elem = svg.insert('g', '.primitives_layer').attr('class', size.clname);
 
-            elem.attr('transform', `translate(${size.x},${size.y})`);
+            elem.attr('transform', makeTranslate(size.x,size.y));
 
          } else {
 
@@ -332,7 +332,8 @@ let Handling3DDrawings = {
          let prnt = this.getCanvSvg().node().parentNode;
 
          elem = d3_select(prnt).select('.' + size.clname);
-         if (onlyget) return elem;
+         if (onlyget)
+            return elem;
 
          // force redraw by resize
          this.getCanvSvg().property('redraw_by_resize', true);
@@ -384,7 +385,6 @@ function assign3DHandler(painter) {
   * @param {object} args - different arguments for creating 3D renderer
   * @return {Promise} with renderer object
   * @private */
-
 async function createRender3D(width, height, render3d, args) {
 
    let rc = constants.Render3D, promise, need_workaround = false, doc = getDocument();
@@ -405,7 +405,6 @@ async function createRender3D(width, height, render3d, args) {
          need_workaround = true;
       } else {
          r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
-         // d3_select(r.jsroot_dom).attr('width', width).attr('height', height);
       }
       promise = Promise.resolve(r);
    } else if (isNodeJs()) {
@@ -614,9 +613,11 @@ class TooltipFor3D {
          let rect1 = this.parent.getBoundingClientRect(),
              rect2 = this.canvas.getBoundingClientRect();
 
-         if ((rect1.left !== undefined) && (rect2.left!== undefined)) pos.l += (rect2.left-rect1.left);
+         if ((rect1.left !== undefined) && (rect2.left!== undefined))
+            pos.l += (rect2.left-rect1.left);
 
-         if ((rect1.top !== undefined) && (rect2.top!== undefined)) pos.u += rect2.top-rect1.top;
+         if ((rect1.top !== undefined) && (rect2.top!== undefined))
+            pos.u += rect2.top-rect1.top;
 
          if (pos.l + this.tt.offsetWidth + 3 >= this.parent.offsetWidth)
             pos.l = this.parent.offsetWidth - this.tt.offsetWidth - 3;
@@ -641,8 +642,8 @@ class TooltipFor3D {
          }
       }
 
-      this.tt.style.top = (pos.u + 15) + 'px';
-      this.tt.style.left = (pos.l + 3) + 'px';
+      this.tt.style.top = `${pos.u+15}px`;
+      this.tt.style.left = `${pos.l+3}px`;
    }
 
    /** @summary Show tooltip */
@@ -656,7 +657,8 @@ class TooltipFor3D {
             v = v.line;
          } else {
             let res = v.lines[0];
-            for (let n=1;n<v.lines.length;++n) res+= '<br/>' + v.lines[n];
+            for (let n = 1; n < v.lines.length; ++n)
+               res += '<br/>' + v.lines[n];
             v = res;
          }
       }
@@ -733,7 +735,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
              pos1 = control.painter.get3dZoomCoord(control.mouse_zoom_mesh.point, kind),
              pos2 = control.painter.get3dZoomCoord(control.mouse_zoom_mesh.point2, kind);
 
-         if (pos1 > pos2) { let v = pos1; pos1 = pos2; pos2 = v; }
+         if (pos1 > pos2)
+            [pos1, pos2] = [pos2, pos1];
 
          if ((kind === 'z') && control.mouse_zoom_mesh.object.use_y_for_z) kind = 'y';
 
@@ -1052,7 +1055,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
       // extract mouse position
       this.tmout_mouse = this.getMousePos(evnt, {});
-      this.tmout_ttpos =  this.tooltip ? this.tooltip.extract_pos(evnt) : null;
+      this.tmout_ttpos = this.tooltip ? this.tooltip.extract_pos(evnt) : null;
 
       if (this.tmout_handle) {
          clearTimeout(this.tmout_handle);
@@ -1259,8 +1262,8 @@ function createLineSegments(arr, material, index = undefined, only_geometry = fa
       } else {
          distances = new Float32Array(arr.length/3);
          for (let n = 0; n < arr.length; n += 6) {
-            v1.set(arr[n],arr[n+1],arr[n+2]);
-            v2.set(arr[n+3],arr[n+4],arr[n+5]);
+            v1.set(arr[n], arr[n+1], arr[n+2]);
+            v2.set(arr[n+3], arr[n+4], arr[n+5]);
             distances[n/3] = d;
             d += v2.distanceTo(v1);
             distances[n/3+1] = d;
@@ -1500,13 +1503,13 @@ class PointsCreator {
 function create3DLineMaterial(painter, arg, is_v7 = false) {
    if (!painter || !arg) return null;
 
-   let lcolor, lstyle, lwidth;
+   let color, lstyle, lwidth;
    if (isStr(arg) || is_v7) {
-      lcolor = painter.v7EvalColor(arg+'color', 'black');
+      color = painter.v7EvalColor(arg+'color', 'black');
       lstyle = parseInt(painter.v7EvalAttr(arg+'style', 0));
       lwidth = parseInt(painter.v7EvalAttr(arg+'width', 1));
    } else {
-      lcolor = painter.getColor(arg.fLineColor);
+      color = painter.getColor(arg.fLineColor);
       lstyle = arg.fLineStyle;
       lwidth = arg.fLineWidth;
    }
@@ -1515,9 +1518,9 @@ function create3DLineMaterial(painter, arg, is_v7 = false) {
        dash = style ? style.split(',') : [], material;
 
    if (dash && dash.length >= 2)
-      material = new LineDashedMaterial({ color: lcolor, dashSize: parseInt(dash[0]), gapSize: parseInt(dash[1]) });
+      material = new LineDashedMaterial({ color, dashSize: parseInt(dash[0]), gapSize: parseInt(dash[1]) });
    else
-      material = new LineBasicMaterial({ color: lcolor });
+      material = new LineBasicMaterial({ color });
 
    if (lwidth && (lwidth > 1)) material.linewidth = lwidth;
 

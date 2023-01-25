@@ -1089,6 +1089,7 @@ function drawBinsLego(painter, is_v7 = false) {
          rvertices = [ new Vector3(0, 0, 0), new Vector3(0, 1, 0), new Vector3(1, 1, 0), new Vector3(1, 0, 0) ],
          main = painter.getFramePainter(),
          handle = painter.prepareDraw({ rounding: false, use3d: true, extra: 1 }),
+         test_cutg = painter.options.cutg,
          i1 = handle.i1, i2 = handle.i2, j1 = handle.j1, j2 = handle.j2,
          histo = painter.getHisto(),
          basehisto = histo ? histo.$baseh : null,
@@ -1116,6 +1117,9 @@ function drawBinsLego(painter, is_v7 = false) {
          [binz1, binz2] = [binz2, binz1];
 
       if ((binz1 >= zmax) || (binz2 < zmin)) return false;
+
+      if (test_cutg && !test_cutg.IsInside(histo.fXaxis.GetBinCoord(ii + 0.5),
+                 histo.fYaxis.GetBinCoord(jj + 0.5))) return false;
 
       reduced = (binz2 === zmin) || (binz1 >= binz2);
 
@@ -1440,7 +1444,8 @@ function drawBinsError3D(painter, is_v7 = false) {
          histo = painter.getHisto(),
          handle = painter.prepareDraw({ rounding: false, use3d: true, extra: 1 }),
          zmin = main.z_handle.getScaleMin(),
-         zmax = main.z_handle.getScaleMax();
+         zmax = main.z_handle.getScaleMax(),
+         test_cutg = painter.options.cutg;
    let i, j, bin, binz, binerr, x1, y1, x2, y2, z1, z2,
        nsegments = 0, lpos = null, binindx = null, lindx = 0;
 
@@ -1460,6 +1465,9 @@ function drawBinsError3D(painter, is_v7 = false) {
             binz = histo.getBinContent(i + 1, j + 1);
             if ((binz < zmin) || (binz > zmax)) continue;
             if ((binz === zmin) && check_skip_min()) continue;
+
+            if (test_cutg && !test_cutg.IsInside(histo.fXaxis.GetBinCoord(i + 0.5),
+                 histo.fYaxis.GetBinCoord(j + 0.5))) continue;
 
             // just count number of segments
             if (loop === 0) { nsegments += 3; continue; }

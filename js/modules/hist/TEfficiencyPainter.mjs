@@ -46,7 +46,7 @@ class TEfficiencyPainter extends ObjectPainter {
 
          let aa,bb;
          if(obj.TestBit(kUseWeights)) {
-            let tw =  total, // fTotalHistogram->GetBinContent(bin);
+            let tw = total, // fTotalHistogram->GetBinContent(bin);
                 tw2 = obj.fTotalHistogram.fSumw2 ? obj.fTotalHistogram.fSumw2[bin] : Math.abs(total),
                 pw = passed; // fPassedHistogram->GetBinContent(bin);
 
@@ -54,8 +54,8 @@ class TEfficiencyPainter extends ObjectPainter {
 
             // tw/tw2 renormalize the weights
             let norm = tw/tw2;
-            aa =  pw * norm + alpha;
-            bb =  (tw - pw) * norm + beta;
+            aa = pw * norm + alpha;
+            bb = (tw - pw) * norm + beta;
          } else {
             aa = passed + alpha;
             bb = total - passed + beta;

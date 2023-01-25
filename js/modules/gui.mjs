@@ -73,9 +73,6 @@ function readStyleFromURL(url) {
 
    get_bool('tooltip', 'Tooltip');
 
-   if (d.has('bootstrap') || d.has('bs'))
-      settings.Bootstrap = true;
-
    let mathjax = d.get('mathjax', null), latex = d.get('latex', null);
 
    if ((mathjax !== null) && (mathjax != '0') && (latex === null)) latex = 'math';

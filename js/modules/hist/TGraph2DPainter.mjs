@@ -1,4 +1,4 @@
-import { BIT, settings, createHistogram, kNoZoom } from '../core.mjs';
+import { BIT, settings, createHistogram, kNoZoom, clTGraph2DErrors, clTGraph2DAsymmErrors } from '../core.mjs';
 import { REVISION, Color, LineBasicMaterial } from '../three.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
@@ -24,7 +24,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       res.Color = d.check('COL');
       res.Line = d.check('LINE');
-      res.Error = d.check('ERR') && (this.matchObjectType('TGraph2DErrors') || this.matchObjectType('TGraph2DAsymmErrors'));
+      res.Error = d.check('ERR') && (this.matchObjectType(clTGraph2DErrors) || this.matchObjectType(clTGraph2DAsymmErrors));
       res.Circles = d.check('P0');
       res.Markers = d.check('P');
 
@@ -42,7 +42,7 @@ class TGraph2DPainter extends ObjectPainter {
    /** @summary Create histogram for axes drawing */
    createHistogram() {
       let gr = this.getObject(),
-          asymm = this.matchObjectType('TGraph2DAsymmErrors'),
+          asymm = this.matchObjectType(clTGraph2DAsymmErrors),
           xmin = gr.fX[0], xmax = xmin,
           ymin = gr.fY[0], ymax = ymin,
           zmin = gr.fZ[0], zmax = zmin;
@@ -218,7 +218,7 @@ class TGraph2DPainter extends ObjectPainter {
 
          if (this.options.Error) {
             err = new Float32Array(size*6*3);
-            asymm = this.matchObjectType('TGraph2DAsymmErrors');
+            asymm = this.matchObjectType(clTGraph2DAsymmErrors);
           }
 
          if (this.options.Line)
