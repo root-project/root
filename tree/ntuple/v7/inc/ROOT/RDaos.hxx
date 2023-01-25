@@ -40,10 +40,21 @@ namespace ROOT {
 namespace Experimental {
 namespace Detail {
 
+struct RDaosObjectId {
+   using ObjectIndex_t = std::uint64_t;
+   daos_obj_id_t fData;
+   RDaosObjectId(std::uint64_t ntupleIndex, ObjectIndex_t objectIndex)
+      : fData{static_cast<decltype(daos_obj_id_t::lo)>(objectIndex),
+              static_cast<decltype(daos_obj_id_t::hi)>(ntupleIndex)}
+   {
+   }
+   [[nodiscard]] daos_obj_id_t Get() const { return fData; }
+};
+
 struct RDaosKey {
    using DistributionKey_t = std::uint64_t;
    using AttributeKey_t = std::uint64_t;
-   daos_obj_id_t fOid;
+   RDaosObjectId fOid;
    DistributionKey_t fDkey;
    AttributeKey_t fAkey;
 };
@@ -267,7 +278,7 @@ public:
 
       void Insert(RDaosKey &key, const RDaosIov &pageIov) const
       {
-         auto odPair = RDaosContainer::ROidDkeyPair{key.fOid, key.fDkey};
+         auto odPair = RDaosContainer::ROidDkeyPair{key.fOid.Get(), key.fDkey};
          auto [it, ret] = fRequestDict->emplace(odPair, RWOperation(odPair));
          it->second.Insert(key.fAkey, pageIov);
       }
@@ -306,33 +317,36 @@ public:
      \brief Read data from a single object attribute key to the given buffer.
      \param buffer The address of a buffer that has capacity for at least `length` bytes.
      \param length Length of the buffer.
-     \param oid A 128-bit DAOS object identifier.
+     \param oid A DAOS object identifier.
      \param dkey The distribution key used for this operation.
      \param akey The attribute key used for this operation.
      \param cid An object class ID.
      \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   int ReadSingleAkey(void *buffer, std::size_t length, daos_obj_id_t oid,
-                      DistributionKey_t dkey, AttributeKey_t akey, ObjClassId_t cid);
-   int ReadSingleAkey(void *buffer, std::size_t length, daos_obj_id_t oid,
-                      DistributionKey_t dkey, AttributeKey_t akey)
-   { return ReadSingleAkey(buffer, length, oid, dkey, akey, fDefaultObjectClass); }
+   int ReadSingleAkey(void *buffer, std::size_t length, RDaosObjectId oid, DistributionKey_t dkey, AttributeKey_t akey,
+                      ObjClassId_t cid);
+   int ReadSingleAkey(void *buffer, std::size_t length, RDaosObjectId oid, DistributionKey_t dkey, AttributeKey_t akey)
+   {
+      return ReadSingleAkey(buffer, length, oid, dkey, akey, fDefaultObjectClass);
+   }
 
    /**
      \brief Write the given buffer to a single object attribute key.
      \param buffer The address of the source buffer.
      \param length Length of the buffer.
-     \param oid A 128-bit DAOS object identifier.
+     \param oid A DAOS object identifier.
      \param dkey The distribution key used for this operation.
      \param akey The attribute key used for this operation.
      \param cid An object class ID.
      \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   int WriteSingleAkey(const void *buffer, std::size_t length, daos_obj_id_t oid,
-                       DistributionKey_t dkey, AttributeKey_t akey, ObjClassId_t cid);
-   int WriteSingleAkey(const void *buffer, std::size_t length, daos_obj_id_t oid,
-                       DistributionKey_t dkey, AttributeKey_t akey)
-   { return WriteSingleAkey(buffer, length, oid, dkey, akey, fDefaultObjectClass); }
+   int WriteSingleAkey(const void *buffer, std::size_t length, RDaosObjectId oid, DistributionKey_t dkey,
+                       AttributeKey_t akey, ObjClassId_t cid);
+   int WriteSingleAkey(const void *buffer, std::size_t length, RDaosObjectId oid, DistributionKey_t dkey,
+                       AttributeKey_t akey)
+   {
+      return WriteSingleAkey(buffer, length, oid, dkey, akey, fDefaultObjectClass);
+   }
 
    /**
      \brief Perform a vector read operation on multiple objects.
