@@ -531,7 +531,6 @@ void CodeGenerator::forgetDecl(const GlobalDecl& GD,
   static_cast<CodeGeneratorImpl*>(this)->forgetDecl(GD, MangledName);
 }
 
-
 llvm::Module *CodeGenerator::StartModule(llvm::StringRef ModuleName,
                                          llvm::LLVMContext& C,
                                          const CodeGenOptions& CGO) {

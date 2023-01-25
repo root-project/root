@@ -1460,7 +1460,6 @@ void CodeGenModule::EmitCtorList(CtorList &Fns, const char *GlobalName) {
   // Construct the constructor and destructor arrays.
   ConstantInitBuilder builder(*this);
   auto ctors = builder.beginArray(CtorStructTy);
-
   for (const auto &I : Fns) {
     auto ctor = ctors.beginStruct(CtorStructTy);
     ctor.addInt(Int32Ty, I.Priority);
