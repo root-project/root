@@ -35,6 +35,7 @@
 #include "TEnv.h"
 #include "TError.h"
 #include "TGraph.h"
+#include "TCutG.h"
 #include "TBufferJSON.h"
 #include "TBase64.h"
 #include "TAtt3D.h"
@@ -497,6 +498,20 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          if (palette) hopt.Append(";;use_pad_palette");
 
          paddata.NewPrimitive(obj, hopt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
+
+         if (hist->GetDimension() == 2) {
+            TString opt = iter.GetOption();
+            auto p1 = opt.Index("["), p2 = opt.Index("]");
+            if ((p1 != kNPOS) && (p2 != kNPOS) && p2 > p1 + 1) {
+               TString cutname = opt(p1 + 1, p2 - p1 - 1);
+               TObject *cutg = primitives->FindObject(cutname.Data());
+               if (!cutg || (cutg->IsA() != TCutG::Class())) {
+                  cutg = gROOT->GetListOfSpecials()->FindObject(cutname.Data());
+                  if (cutg && cutg->IsA() == TCutG::Class())
+                     paddata.NewPrimitive(cutg, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, cutg);
+               }
+            }
+         }
 
          // do not extract objects from list of functions - stats and func need to be handled together with hist
          //
