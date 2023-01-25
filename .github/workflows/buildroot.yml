@@ -32,7 +32,7 @@ on:
  
   # This workflow has repository read/write access. Read about security considerations
   # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
-  pull_request_target:
+  pull_request:
     branches:
       - '**'
     paths-ignore:
