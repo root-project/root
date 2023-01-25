@@ -98,7 +98,7 @@ jobs:
         if:   github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
         run: ".github/workflows/rootci-installers/build_root.py
                     --buildtype      Release
-                    --platform       mac
+                    --platform       mac12
                     --incremental    true
                     --base_ref       ${{ github.base_ref }}
                     --head_ref       ${{ github.head_ref }}
@@ -109,7 +109,7 @@ jobs:
         if:   github.event_name == 'workflow_dispatch'
         run: ".github/workflows/rootci-installers/build_root.py
                     --buildtype      Release
-                    --platform       mac
+                    --platform       mac12
                     --incremental    ${{ inputs.incremental }}
                     --alwaysgenerate ${{ inputs.force_generation }}
                     --base_ref       ${{ inputs.base_ref }}
@@ -122,7 +122,7 @@ jobs:
         if:   github.event.schedule == '0 1 * * *'
         run: ".github/workflows/rootci-installers/build_root.py
                     --buildtype   Release
-                    --platform    mac
+                    --platform    mac12
                     --incremental false
                     --base_ref    master
                     --head_ref    master
