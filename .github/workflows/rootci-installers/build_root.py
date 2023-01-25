@@ -157,13 +157,13 @@ def main():
             git config user.email 'CI-{yyyy_mm_dd}@root.cern'
             git config user.name 'ROOT Continous Integration'
 
-            git fetch origin {head_ref} || exit 2
-            git fetch origin {base_ref} || exit 3
-            git checkout {base_ref} || exit 4
-            git reset --hard origin/{base_ref} || exit 5
-            git pull --ff-only || exit 6
+            git fetch --all || exit 2
+            git checkout {base_ref} || exit 3
+            git reset --hard origin/{base_ref} || exit 4
+            git checkout {head_ref} || exit 5
+            git reset --hard origin/{head_ref} || exit 6
             
-            git rebase {base_ref} {head_ref} || exit 7
+            git rebase {base_ref} || exit 7
         """, shell_log)
 
         if result == 1:
