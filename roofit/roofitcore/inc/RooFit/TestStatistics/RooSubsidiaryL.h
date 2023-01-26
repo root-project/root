@@ -36,9 +36,9 @@ public:
       return std::string("Subsidiary PDF set of simultaneous PDF ") + parent_pdf_name_;
    }
 
-   virtual std::string GetInfo() const override { return GetClassName() + "::" + parent_pdf_name_; }
+   std::string GetInfo() const override { return GetClassName() + "::" + parent_pdf_name_; }
 
-   virtual std::string GetClassName() const override { return "RooSubsidiaryL"; };
+   std::string GetClassName() const override { return "RooSubsidiaryL"; }
 
    inline std::size_t numDataEntries() const override
    {
