@@ -196,6 +196,26 @@ RNTuple is still experimental and is scheduled to become production grade in 202
 
 ## Math Libraries
 
+### Fitter class
+
+Some improvements and small fixes to the internal object memory management have been applied to the `ROOT::Fit::Fitter` class.
+- When setting an external FCN (objective function) to the Fitter, the function object is not cloned anymore.
+- A memory leak has been fixed, when using the `GSLMultiFit` class.
+- A bug has been resolved in setting fixed variables when using the linear fitter (via the `TLinearMinimizer` class).
+
+Support for providing the second derivatives (Hessian matrix) from the model function is added to the `Fitter` class and the corresponding function interfaces. The functionality it is then propagated in the implementation of the `FitMethod` classes and it is also added to the `Minimizer` classes for providing a user computed Hessian of the objective functions to the minimizers. Only Minuit2 (see below) has the capabilities of using this external Hessian.
+
+The `GradFunctor` class has been improved by providing a new constructor taking an `std::function` implementing the full gradient calculations instead of the single partial derivative.
+
+The specialized methods for least-square/likelihood functions such as Fumili, Fumili2 and GSLMultiFit have been improved in case of binned likelihood fits, where a better approximation is used than before. This makes these method work better (conerging with less number of function calls) for these types of fits.
+
+### Minuit2
+
+The support for using an External Hessian calculator has been added. The external Hessian can be used for both the initial seeding, using only the diagonal part, if the strategy is equal to 1 (the default value) and in `MnHesse`, after the minimization, to compute the covariance and correlation matrices.
+
+The print log of Minuit2 has been improved, especially when printing vector and matrices with large number of parameters (when the print level = 3).
+
+
 ### KahanSum updates
 
 The `ROOT::Math::KahanSum` class was slightly modified:
@@ -203,6 +223,10 @@ The `ROOT::Math::KahanSum` class was slightly modified:
 - The auto-conversion to type `T` and implicit type `T` constructor in `KahanSum` made it hard to debug `KahanSum`, because it is easy to overlook implicit conversions in code, especially in lines where the type of the return value is `auto`. These auto-conversions were removed. Where necessary, they should be replaced with an explicit construction or explicit conversion to double via `Sum()`. (PR #11941)
 - Binary addition and subtraction operators were added, as well as a unary negation operator. (PR #11940)
 - Comparison operators `operator==` and `operator!=` were added.
+
+### Foam
+
+The usage of `TRef` in the `TFoamCell` class has ben replaced with array indices. This avoids, when generating a large number of toys requiring a re-initialization of `TFoam` an increase in the memory usage caused by `TRef`.
 
 ## RooFit Libraries
 
