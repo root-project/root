@@ -1968,13 +1968,13 @@ R Mean(const RVec<T> &v, const R zero)
 /// Get the greatest element of an RVec
 ///
 /// Example code, at the ROOT prompt:
-/// ~~~~{.cpp}
+/// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
 /// RVecF v {1.f, 2.f, 4.f};
 /// auto v_max = Max(v);
 /// v_max
 /// (float) 4.00000f
-/// ~~~~
+/// ~~~
 template <typename T>
 T Max(const RVec<T> &v)
 {
@@ -1984,13 +1984,13 @@ T Max(const RVec<T> &v)
 /// Get the smallest element of an RVec
 ///
 /// Example code, at the ROOT prompt:
-/// ~~~~{.cpp}
+/// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
 /// RVecF v {1.f, 2.f, 4.f};
 /// auto v_min = Min(v);
 /// v_min
 /// (float) 1.00000f
-/// ~~~~
+/// ~~~
 template <typename T>
 T Min(const RVec<T> &v)
 {
@@ -2002,13 +2002,13 @@ T Min(const RVec<T> &v)
 /// the index corresponding to the first occurrence is returned.
 ///
 /// Example code, at the ROOT prompt:
-/// ~~~~{.cpp}
+/// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
 /// RVecF v {1.f, 2.f, 4.f};
 /// auto v_argmax = ArgMax(v);
 /// v_argmax
 /// // (unsigned long) 2
-/// ~~~~
+/// ~~~
 template <typename T>
 std::size_t ArgMax(const RVec<T> &v)
 {
@@ -2020,13 +2020,13 @@ std::size_t ArgMax(const RVec<T> &v)
 /// the index corresponding to the first occurrence is returned.
 ///
 /// Example code, at the ROOT prompt:
-/// ~~~~{.cpp}
+/// ~~~{.cpp}
 /// using namespace ROOT::VecOps;
 /// RVecF v {1.f, 2.f, 4.f};
 /// auto v_argmin = ArgMin(v);
 /// v_argmin
 /// // (unsigned long) 0
-/// ~~~~
+/// ~~~
 template <typename T>
 std::size_t ArgMin(const RVec<T> &v)
 {
@@ -3039,6 +3039,7 @@ RVec<T> Construct(const RVec<Args_t> &... args)
 /// RVecF v = {1., 2., 3.};
 /// cout << Enumerate(v1) << "\n";
 /// // { 0, 1, 2 }
+/// ~~~
 template <typename T>
 RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
 {
@@ -3057,6 +3058,7 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
 /// using namespace ROOT::VecOps;
 /// cout << Range(3) << "\n";
 /// // { 0, 1, 2 }
+/// ~~~
 inline RVec<std::size_t> Range(std::size_t length)
 {
    RVec<std::size_t> ret;
