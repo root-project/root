@@ -27,6 +27,28 @@ TEST(RNTupleInspector, Name)
    EXPECT_EQ("ntuple", inspector->GetName());
 }
 
+TEST(RNTupleInspector, NEntries)
+{
+   FileRaii fileGuard("test_ntuple_inspector_n_entries.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto nFldInt = model->MakeField<std::int32_t>("i");
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+
+      for (int32_t i = 0; i < 50; ++i) {
+         *nFldInt = i;
+         ntuple->Fill();
+      }
+   }
+
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
+   auto ntuple = file->Get<RNTuple>("ntuple");
+   auto inspector = RNTupleInspector::Create(ntuple).Unwrap();
+
+   EXPECT_EQ(inspector->GetNEntries(), 50);
+}
+
 TEST(RNTupleInspector, CompressionSettings)
 {
    FileRaii fileGuard("test_ntuple_inspector_size_single_int_field.root");

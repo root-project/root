@@ -78,6 +78,9 @@ public:
    /// Get the name of the RNTuple being inspected.
    std::string GetName();
 
+   /// Get the number of entries in the RNTuple being inspected.
+   std::uint64_t GetNEntries();
+
    /// Get the compression settings of the RNTuple being inspected.
    int GetCompressionSettings();
 
