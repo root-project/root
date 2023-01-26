@@ -30,6 +30,7 @@ The following people have contributed to this new version:
  Enrico Guiraud, CERN/SFT,\
  Stephan Hageboeck, CERN/IT,\
  Jonas Hahnfeld, CERN/SFT,\
+ Ahmat Mahamat Hamdan, CERN/SFT,\
  Fernando Hueso-González, University of Valencia,\
  Subham Jyoti, ITER Bhubaneswar,\
  Sergey Linev, GSI,\
@@ -45,6 +46,9 @@ The following people have contributed to this new version:
  Fons Rademakers, CERN/SFT,\
  Jonas Rembser, CERN/SFT,\
  Enric Tejedor Saavedra, CERN/SFT,\
+ Neel Shah, GSOC,\
+ Sanjiban Sengupta, CERN/SFT,\
+ Harshal Shende, GSOC,\
  Garima Singh, Princeton/SFT,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
@@ -320,6 +324,75 @@ The values of the relative and absolute epsilons were inconsistent among the ove
 With this release, the default absolute and relative epsilon is zero to avoid confusion.
 You can change them with `RooNumber::setRangeEpsRel(epsRel)` and `RooNumber::setRangeEpsAbs(epsAbs)`.
 
+## TMVA
+
+### SOFIE : Code generation for fast inference of Deep Learning models
+
+A large number of new features have been added in the TMVA SOFIE library. The list of all operators supported in the `RModel` class is the one provided below for the ONNX parser.
+
+The interface of `RModel::Generate` has been changed to
+```
+RModel::Generate(Options options = Options::kDefault, int batchsize = 1)`
+```
+where `Options` is a new enumeration having 3 different values:
+- `kDefault = 0x0` : default case, a session class is generated and the weights are stored in a separate `.dat` file (in text format).
+- `kNoSession = 0x1` : no session class is generated and the internal intermediate tensors are declared in the global namespace `TMVA_SOFIE_$ModelName`.
+- `kNoWeightFile = 0x2` the weight values are not written in a separate `.dat` file, but they are included in the generated header file.
+
+In addition, the `RModel::Generate` function takes as an additional optional argument the batch size (default is = 1) and the inference code can then be generated for the desired batch size.
+
+#### SOFIE ONNX Parser
+
+The ONNX parser supports now several new ONNX operators. The list of the current supported ONNX operator is the following:
+- Gemm
+- Conv (in 1D,2D and 3D)
+- RNN, GRU, LSTM
+- Relu, Selu, Sigmoid, Softmax, Tanh, LeakyRelu
+- BatchNormalization
+- MaxPool, AveragePool, GlobalAverage
+- ConvTranspose
+- Gather
+- Expand, Reduce
+- Neg, Exp, Sqrt, Reciprocal
+- Add, Sum, Mul, Div
+- Reshape, Flatten, Transpose
+- Squeeze, Unsqueeze, Slice
+- Concat, Reduce
+- Identity
+- Shape
+
+In addition a Custom (user defined) operator is supported. An example of using a Custom operator is the program `tmva/pymva/test/EmitCustomModel.cxx`.
+
+The ONNX parser supports also the fusing of the operators MatMul + Add in a Gemm operator and fusing Conv + Add and ConvTranspose + Add.
+
+#### SOFIE Keras Parser
+
+The Keras parser supports now model with input batch size not defined (e.g `bathsize=-1`), and by default the model is generated with `batchsize=1`.
+The Keras parser supports now in addition to the Dense layer the Conv2D layer, several activation functions (Relu, Selu, Sigmoid, Softmax, Tanh, LeakyRelu) and these other layers: BatchNormalization, Reshape, Convatenate, Add, Subtract, Multiply.
+Models with Dropout layers are supported in case the Dropout is used only during training and not inference.
+
+For model having operators not yet supported in the Keras parser it is then reccomended to convert the Keras model to `ONNX` using the python `tf2onnx` tool.
+
+#### SOFIE PyTorch Parser
+
+If using PyTorch it is recommended to save the model directly in `ONNX` format instad of the native `.pt` format by using the `torch.onnx.export` function of PyTorch. The support for parsing directly `.pt` files is limited to the Gemm, Conv, Relu, Selu, Sigmoid and Transpose operators.
+
+#### SOFIE RDataFrame Integration
+
+The SOFIE inference is now integrated with RDataFrame, where a model can be evaluated on the columns of an input `TTree` with `RDataFrame` using the adapter functor class `SofieFunctor`.
+Examples of using SOFIE with `RDataFrame` are the new tutorials  (in the `tutorials/tmva` directory) `TMVA_SOFIE_RDataFrame.C` or `TMVA_SOFIE_RDataFrame.py`. `TMVA_SOFIE_RDataFrame_JIT.C` is an example where the SOFIE model is generated and compiled at runtime using ROOT Cling and evaluated using RDataFrame.
+
+#### RSofieReader
+
+`RSofieReader` is a new class, which takes as input a model file (in ONNX, Keras, PyTorch or ROOT format) and generates and compiles the C++ code for the inference at run time using the ROOT JITing capabilities of CLING. An example of using this class is the tutorial `TMVA_SOFIE_RSofieReader.C`.
+
+### TMVA Pythonizations
+
+New Pythonizations are available for TMVA allowing to replace the option string passed to several `TMVA` functions such as the `TMVA::Factory` constructor, the `DataLoader::PrepareTrainingAndTestTree` and `Factory::BookMethod` using Python function arguments.
+For example instead of writing an option string `"NTrees=500:BoostType=AdaBoost"` one can use in Python `NTrees=500,BoostType='AdaBoost'`.
+The new tmva tutorials `TMVA_Higgs_Classification.py`, `TMVA_CNN_Classificaion.py` and `TMVA_RNN_Classificaton.py` provide examples of using these new pythonizations.
+
+
 ## 2D Graphics Libraries
 
 - Implement the option "File": The current file name is painted on the bottom right of each plot
@@ -401,6 +474,10 @@ accessing widget via configured ssh tunnel.
 
 
 ## Tutorials
+
+- Several new tutorials have been added in both C++ and Python in the `tutorial/tmva` directory.
+  Tutorials like `TMVA_Higgs_Classification.py` shows the new pythonizations available in TMVA and
+  new `TMVA_SOFIE_...` tutorials show th eusage of SOFIE in both C++ or Python.
 
 
 ## Class Reference Guide
