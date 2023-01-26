@@ -11,9 +11,9 @@
  */
 
 /** \class ROOT::Experimental::RooBrowser
-\ingroup roofit
+\ingroup RooFit
 
- \image html RooBrowser.png
+ \image html RooBrowser.png width=50%
 
 To get started with the RooBrowser, open any ROOT file containing a workspace
  and then create an instance of the `ROOT::Experimental::RooBrowser` just like
