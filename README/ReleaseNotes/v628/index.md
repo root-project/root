@@ -182,12 +182,48 @@ RNTuple is still experimental and is scheduled to become production grade in 202
 ### New features
 
 - Add [`GraphAsymmErrors`](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#acea30792eef607489d498bf6547a00a6) action that fills a TGraphAsymmErrors object.
+- Introduce [`RDatasetSpec`](https://root.cern/doc/master/classROOT_1_1RDF_1_1Experimental_1_1RDatasetSpec.html) as an
+experimental class to specify the input dataset to an RDataFrame.
+- Arbitrary metadata can be associated to the samples in the dataset specified via `RDatasetSpect`. The metadata of each
+sample can then be retrieved during the execution by calling `DefinePerSample`.
+- Users can create an RDataFrame with a dataset specification written in a JSON file via the factory function
+[ROOT::RDF::Experimental::FromSpec](https://root.cern/doc/master/namespaceROOT_1_1RDF_1_1Experimental.html#a7193987f3c1b65c649399656cc6acce8).
 
 ### Notable bug fixes and improvements
 
 - Fix the node counter of [`SaveGraph`](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#ac06a36e745255fb8744b1e0a563074c9), where previously `cling` was getting wrong static initialization.
 - Fix [`Graph`](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a1ca9a94bece4767cac82968910afa02e) action (that fills a TGraph object) to properly handle containers and non-container types.
 - The [`RCsvDS`](https://root.cern.ch/doc/master/classROOT_1_1RDF_1_1RCsvDS.html) class now allows users to specify column types, and can properly read empty entries of csv files.
+- Fixed a bug where the `Display` operation would not show the correct amount of entries requested by the user if called
+together with other operations ([PR](https://github.com/root-project/root/pull/11398)).
+- Requesting variations for `Stats` results with `VariationsFor` is now supported.
+- Factory functions for RDataFrames reading CSV files, RNTuples, Arrow tables, etc. have been renamed in order to
+increase consistency, e.g. `MakeCsvDataFrame` is now `FromCSV`. The old wording is still available but deprecated.
+- The precision of `Sum`s and `Mean`s of single-precision floating point values has been greatly improved by employing
+Kahan summations.
+- The content of [execution logs](https://root.cern/doc/master/classROOT_1_1RDataFrame.html#rdf-logging) from RDataFrame
+has been streamlined in order to make them more useful.
+
+### Distributed RDataFrame
+
+- Add support for systematic variations (e.g. `Vary` and `VariationsFor` operations) in distributed mode.
+- If an instant action (e.g. `Snapshot`) is purposely made lazy by the user, distributed RDataFrame now respects this
+and avoids triggering the computations right away.
+- The algorithm for automatic splitting of the input dataset has been reworked, bringing the startup time cost of
+distributed RDataFrame close to zero.
+- A histogram model (name, title, binning) for the `Histo*D` actions is now required in distributed mode. See the
+[relative PR](https://github.com/root-project/root/pull/10368) for more discussion.
+- The performance of distributed RDataFrame for large computation graphs (>1000 operations) has been greatly improved.
+- If the `npartitions` argument is not set by the user, the default number of tasks created by a distributed RDataFrame
+is equal to the number of cores specified by the user when connecting to the cluster.
+- C++ exceptions (i.e. instances of `std::exception` and derived) are now correctly propagated from the processes of the
+computing nodes to the user side.
+- The minimum `dask` version required to support distributed RDataFrame is 2022.8.1, since a series of critical bugs
+present before that version were hindering the normal execution of the tool. Consequently, the minimum Python version
+needed to include distributed RDataFrame in the ROOT build is Python 3.8. More information in the relative
+[github issue](https://github.com/root-project/root/issues/11515).
+- `Stats` and `StdDev` operations are now available in distributed mode.
+- `GetColumnNames` operation is now available in distributed mode.
 
 ## Histogram Libraries
 
@@ -515,3 +551,25 @@ accessing widget via configured ssh tunnel.
 ## Build, Configuration and Testing Infrastructure
 
 - Building external applications that use ROOT oftentimes fail if there is a mismatch in the C++ standard between ROOT and the application. As of v6.28, suchs builds will issue a warning if the C++ standard does not match ROOT's, i.e. if there is a mismatch in the value of the `__cplusplus` preprocessor macro w.r.t. when ROOT was configured.
+
+## PyROOT
+
+- A `.rootlogon.py` file will be searched both in the current working directory and in the user's home directory. This
+file is the Python equivalent of `rootlogon.C` and can be used to tweak ROOT settings when using PyROOT.
+- A new pythonization for `TFile` now enables its usage as a Python context manager:
+```python
+from ROOT import TFile
+with TFile("file1.root", "recreate") as outfile:
+    hout = ROOT.TH1F(...)
+    outfile.WriteObject(hout, "myhisto")
+```
+- A new pythonization for `TDirectory::TContext` now enables its usage as a Python context manager:
+```python
+with TDirectory.TContext():
+    # Open some file here
+    file = ROOT.TFile(...)
+    # Retrieve contents from the file
+    histo = file.Get("myhisto")
+ 
+# After the 'with' statement, the current directory is restored to ROOT.gROOT
+```
