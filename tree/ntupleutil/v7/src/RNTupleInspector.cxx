@@ -77,6 +77,13 @@ std::string ROOT::Experimental::RNTupleInspector::GetName()
    return descriptorGuard->GetName();
 }
 
+std::uint64_t ROOT::Experimental::RNTupleInspector::GetNEntries()
+{
+   fPageSource->Attach();
+   auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
+   return descriptorGuard->GetNEntries();
+}
+
 int ROOT::Experimental::RNTupleInspector::GetCompressionSettings()
 {
    return fCompressionSettings;
