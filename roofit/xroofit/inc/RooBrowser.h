@@ -10,13 +10,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-/** \class RooBrowser
+/** \class ROOT::Experimental::RooBrowser
 \ingroup roofit
 
  \image html RooBrowser.png
 
 To get started with the RooBrowser, open any ROOT file containing a workspace
- and then create an instance of the ROOT::Experimental::RooBrowser just like
+ and then create an instance of the `ROOT::Experimental::RooBrowser` just like
  creating an instance of a `TBrowser`. A window will be displayed with a navigable
  tree structure on the left that lets you explore the content of the workspaces
  present in the loaded file. Note that additional files, <b>including json workspace files</b>,
