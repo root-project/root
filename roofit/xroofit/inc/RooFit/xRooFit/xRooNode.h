@@ -296,6 +296,10 @@ public:
    std::vector<double> GetBinErrors(int binStart = 1, int binEnd = 0, const xRooNode &fr = "") const;
    std::pair<double, double> IntegralAndError(const xRooNode &fr = "", const char *rangeName = nullptr) const;
 
+   // methods to access default content and error
+   double GetContent() const { return GetBinContent(0); }
+   double GetError() const { return GetBinError(0); }
+
    xRooNLLVar nll(const xRooNode &_data, std::initializer_list<RooCmdArg> nllOpts) const;
    xRooNLLVar nll(const xRooNode &_data, const RooLinkedList &nllOpts) const;
    xRooNLLVar nll(const xRooNode &_data = "") const; // uses xRooFit::createNLLOption for nllOpts

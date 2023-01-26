@@ -29,26 +29,30 @@ BEGIN_XROOFIT_NAMESPACE
 
 void xRooNode::Interactive_Pull()
 {
+   static bool doRestore = false;
    auto select = dynamic_cast<TGraph *>(gPad->GetSelected());
    // if (!select) return;
    int event = gPad->GetEvent();
    if (event == 1) {
+      doRestore = false;
       // if this is one of the 'black' points, color it temporarily
-   } else if (event == 11) {
-      if (!select) {
+   } else if (event == 11 || doRestore) {
+      if (!select || doRestore) {
          // now need to assemble a snapshot corresponding to the current variation
-         auto _h = dynamic_cast<TGraph *>(gPad->GetPrimitive("nominal"))->GetHistogram();
+         auto _h = static_cast<TGraph *>(gPad->GetPrimitive("nominal"))->GetHistogram();
          for (int i = 1; i <= _h->GetNbinsX(); i++) {
             std::string parName = _h->GetXaxis()->GetBinLabel(i);
             // ensure point is back .. sometimes editing mode allows point to drift
-            auto _gr = dynamic_cast<TGraph *>(dynamic_cast<TMultiGraph *>(gPad->GetPrimitive("editables"))
+            auto _gr = static_cast<TGraph *>(static_cast<TMultiGraph *>(gPad->GetPrimitive("editables"))
                                                  ->GetListOfGraphs()
                                                  ->FindObject(parName.c_str()));
-            _gr->SetPoint(0, i - 1, dynamic_cast<TGraph *>(gPad->GetPrimitive("nominal"))->GetPointY(i - 1));
+            _gr->SetPoint(0, i - 1, static_cast<TGraph *>(gPad->GetPrimitive("nominal"))->GetPointY(i - 1));
          }
          gPad->GetMother()->GetMother()->cd();
+         doRestore=false;
          return;
       }
+      doRestore=true;
       // mouse up event, if this was an original point it needs snapping back
       // double _y = select->GetPointY(0);
       TString _name = select->GetName();
@@ -57,26 +61,26 @@ void xRooNode::Interactive_Pull()
          _varyName = TString(_name(_name.Index(";") + 1, _name.Length()));
          _name = _name(0, _name.Index(";"));
       }
-      auto _h = dynamic_cast<TGraph *>(gPad->GetPrimitive("nominal"))->GetHistogram();
+      auto _h = static_cast<TGraph *>(gPad->GetPrimitive("nominal"))->GetHistogram();
       for (int i = 1; i <= _h->GetNbinsX(); i++) {
          if (_name == _h->GetXaxis()->GetBinLabel(i)) {
-            auto _gr = dynamic_cast<TGraph *>(gPad->GetPrimitive("nominal"));
+            auto _gr = static_cast<TGraph *>(gPad->GetPrimitive("nominal"));
             if (_varyName == "") {
                int vNum = 1;
                TGraphAsymmErrors *newPoint = dynamic_cast<TGraphAsymmErrors *>(
                   gPad->GetPrimitive(TString::Format("%s;variation %d", select->GetName(), vNum)));
                while (newPoint && newPoint->GetN() > 0) {
                   vNum++;
-                  newPoint = dynamic_cast<TGraphAsymmErrors *>(
+                  newPoint = static_cast<TGraphAsymmErrors *>(
                      gPad->GetPrimitive(TString::Format("%s;variation %d", select->GetName(), vNum)));
                }
                _varyName = TString::Format("variation %d", vNum);
                if (!newPoint)
-                  newPoint = dynamic_cast<TGraphAsymmErrors *>(
+                  newPoint = static_cast<TGraphAsymmErrors *>(
                      select->Clone(TString::Format("%s;%s", select->GetName(), _varyName.Data())));
                newPoint->SetPointX(0, _gr->GetPointX(i - 1));
-               newPoint->SetMarkerColor(vNum + 1);
-               newPoint->SetLineColor(vNum + 1);
+               newPoint->SetMarkerColor(860 + (vNum-1)*20);
+               newPoint->SetLineColor(newPoint->GetMarkerColor());
                newPoint->SetPointEYlow(0, 0);
                newPoint->SetPointEYhigh(0, 0); // remove errors because currently meaningless!
                newPoint->Draw("z0p");
@@ -85,6 +89,8 @@ void xRooNode::Interactive_Pull()
             } else {
                select->SetPointX(0, _gr->GetPointX(i - 1));
             }
+            static_cast<TGraph *>(static_cast<TMultiGraph *>(gPad->GetPrimitive("editables"))
+                                            ->GetListOfGraphs()->FindObject(_name))->SetPoint(0, i - 1, _gr->GetPointY(i - 1));
             break;
          }
       }
@@ -110,12 +116,13 @@ void xRooNode::Interactive_Pull()
             g->SetTitle(TString::Format("%s=%g", parName.c_str(), _val));
          } else {
             _pars.setRealValue(parName.c_str(),
-                               dynamic_cast<TGraph *>(gPad->GetPrimitive("nominal"))->GetPointY(i - 1) *
+                               static_cast<TGraph *>(gPad->GetPrimitive("nominal"))->GetPointY(i - 1) *
                                      _h->GetBinError(i) +
                                   _h->GetBinContent(i));
          }
       }
       TAttLine bak = *gStyle;
+      TAttFill bak2 = *gStyle;
       gStyle->SetLineStyle(5);
       gStyle->SetLineWidth(2);
       gStyle->SetLineColor(select->GetMarkerColor());
@@ -123,9 +130,10 @@ void xRooNode::Interactive_Pull()
       gPad->GetMother()->GetMother()->cd(1);
       _node->Draw(TString::Format("same overlay%s", _varyName.Data()));
       // TODO: find the drawn variation and set its title equal to a _pars value string
-      (TAttLine &)(*gStyle) = bak;
+      static_cast<TAttLine&>(*gStyle) = bak;
+      static_cast<TAttFill&>(*gStyle) = bak2;
       _pars = *snap;
-      _tmpPad->GetMother()->GetMother()->cd();
+      _tmpPad->GetCanvas()->cd();
    }
 }
 

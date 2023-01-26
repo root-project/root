@@ -4,7 +4,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitXRooFit
         RooFit/xRooFit/xRooNode.h
         RooFit/xRooFit/xRooBrowser.h
         SOURCES
-        src/Banner.cxx
         src/Asymptotics.cxx
         src/xRooBrowser.cxx
         src/xRooFit.cxx

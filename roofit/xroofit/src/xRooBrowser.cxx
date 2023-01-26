@@ -19,12 +19,12 @@
 #include "TEnv.h"
 #include "TFile.h"
 #include "RooWorkspace.h"
-#define protected public
 #include "TRootBrowser.h"
-#undef protected
 #include "TGMenu.h"
 #include "TGFileDialog.h"
 #include "TObjString.h"
+
+#define GETPOPUPMENU(b,m) ((TGPopupMenu*)(*(void**)(((unsigned char*)b) + b->Class()->GetDataMemberOffset(#m))))
 
 BEGIN_XROOFIT_NAMESPACE
 
@@ -61,8 +61,8 @@ xRooBrowser::xRooBrowser(xRooNode *o) : TBrowser("RooBrowser", o, "RooFit Browse
 
    // override file menu event handling so that can intercept "Open"
    if (auto rb = dynamic_cast<TRootBrowser *>(GetBrowserImp())) {
-      rb->Disconnect(rb->fMenuFile, "Activated(Int_t)", rb, "HandleMenu(Int_t)");
-      rb->fMenuFile->Connect("Activated(Int_t)", ClassName(), this, "HandleMenu(Int_t)");
+      rb->Disconnect(GETPOPUPMENU(rb,fMenuFile), "Activated(Int_t)", rb, "HandleMenu(Int_t)");
+      GETPOPUPMENU(rb,fMenuFile)->Connect("Activated(Int_t)", ClassName(), this, "HandleMenu(Int_t)");
    }
 }
 
