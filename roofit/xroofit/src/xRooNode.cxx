@@ -62,12 +62,12 @@
 #include "TRootBrowser.h"
 #include "TGFileBrowser.h"
 
-#define GETWS(a) a->workspace()
-#define GETWSSETS(w) w->sets()
-#define GETWSSNAPSHOTS(w) w->getSnapshots()
-#define GETACTBROWSER(b) b->GetActBrowser()
-#define GETROOTDIR(b) b->GetRootDir()
-#define GETLISTTREE(b) b->GetListTree()
+RooWorkspace* GETWS(RooAbsArg * a) { return a->workspace(); }
+const auto& GETWSSETS(RooWorkspace * w){ return  w->sets(); }
+auto GETWSSNAPSHOTS(RooWorkspace * w){ return  w->getSnapshots(); }
+auto GETACTBROWSER(TRootBrowser * b){ return  b->GetActBrowser(); }
+auto GETROOTDIR(TGFileBrowser * b){ return  b->GetRootDir(); }
+auto GETLISTTREE(TGFileBrowser * b) { return b->GetListTree(); }
 #define GETDMP(o,m) (*(void**)(((unsigned char*)o) + o->Class()->GetDataMemberOffset(#m)))
 
 #endif
@@ -5228,7 +5228,7 @@ xRooNode xRooNode::fitResult(const char *opt) const
                auto fr = std::make_shared<RooFitResult>("");
                fr->SetTitle(TString::Format("%s parameter snapshot", GetName()));
                fr->setFinalParList(*_pars);
-               TMatrixTSym<Double_t> *prevCov = (TMatrixTSym<Double_t>*)(GETDMP(fr.get(),_VM));
+               TMatrixTSym<Double_t> *prevCov = static_cast<TMatrixTSym<Double_t>*>(GETDMP(fr.get(),_VM));
                if (prevCov) {
                   auto cov = _fr->reducedCovarianceMatrix(*_pars);
                   fr->setCovarianceMatrix(cov);
@@ -5264,7 +5264,7 @@ xRooNode xRooNode::fitResult(const char *opt) const
    fr->setFinalParList(*_pars);
 
    TMatrixDSym cov(fr->floatParsFinal().getSize());
-   TMatrixTSym<Double_t> *prevCov = (TMatrixTSym<Double_t>*)(GETDMP(fr.get(),_VM));
+   TMatrixTSym<Double_t> *prevCov = static_cast<TMatrixTSym<Double_t>*>(GETDMP(fr.get(),_VM));
    if (prevCov) {
       for (int i = 0; i < prevCov->GetNcols(); i++) {
          for (int j = 0; j < prevCov->GetNrows(); j++) {
@@ -6014,7 +6014,7 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
       //            fr->setFinalParList(l2);
       //        }
 
-      TMatrixTSym<Double_t> *prevCov = (TMatrixTSym<Double_t>*)(GETDMP(fr,_VM));
+      TMatrixTSym<Double_t> *prevCov = static_cast<TMatrixTSym<Double_t>*>(GETDMP(fr,_VM));
 
       if (!prevCov || size_t(fr->covarianceMatrix().GetNcols()) < fr->floatParsFinal().size()) {
          TMatrixDSym cov(fr->floatParsFinal().getSize());
@@ -6891,7 +6891,7 @@ void xRooNode::Draw(Option_t *opt)
             // no parent to determine constraints from ... prefitError=0 will be the unconstrained ones
             if (prefitError == 0) {
                // uses range of var
-               prefitError = (std::max(std::max(_v->getMax() - _v->getVal(), _v->getVal() - _v->getMin()), 4.) / 4);
+               prefitError = (std::max({_v->getMax() - _v->getVal(), _v->getVal() - _v->getMin(), 4.}) / 4);
                ugraph->SetPoint(ugraph->GetN(), ugraph->GetN(), (_v->getVal() - prefitVal) / prefitError);
                ugraph->SetPointError(ugraph->GetN() - 1, 0, 0, (-_v->getErrorLo()) / prefitError,
                                      (_v->getErrorHi()) / prefitError);
@@ -6908,7 +6908,7 @@ void xRooNode::Draw(Option_t *opt)
          } else {
             // unconstrained (or at least couldn't determine constraint) ... use par range if no prefit error
             if (prefitError == 0) {
-               prefitError = (std::max(std::max(_v->getMax() - _v->getVal(), _v->getVal() - _v->getMin()), 4.) / 4);
+               prefitError = (std::max({_v->getMax() - _v->getVal(), _v->getVal() - _v->getMin(), 4.}) / 4);
             }
             ugraph->SetPoint(ugraph->GetN(), ugraph->GetN(), (_v->getVal() - prefitVal) / prefitError);
             ugraph->SetPointError(ugraph->GetN() - 1, 0, 0, (-_v->getErrorLo()) / prefitError,
@@ -7933,7 +7933,7 @@ std::vector<double> xRooNode::GetBinErrors(int binStart, int binEnd, const xRooN
    //        fr->setFinalParList(l2);
    //    }
 
-   TMatrixTSym<Double_t> *prevCov = (TMatrixTSym<Double_t>*)(GETDMP(fr.get(),_VM));
+   TMatrixTSym<Double_t> *prevCov = static_cast<TMatrixTSym<Double_t>*>(GETDMP(fr.get(),_VM));
 
 
    if (!prevCov || size_t(prevCov->GetNcols()) < fr->floatParsFinal().size()) {
