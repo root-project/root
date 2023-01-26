@@ -228,6 +228,11 @@ The `ROOT::Math::KahanSum` class was slightly modified:
 
 The usage of `TRef` in the `TFoamCell` class has ben replaced with array indices. This avoids, when generating a large number of toys requiring a re-initialization of `TFoam` an increase in the memory usage caused by `TRef`.
 
+### RVec
+
+- a number of new helper functions have been added to [RVec](https://root.cern/doc/master/classROOT_1_1VecOps_1_1RVec.html): [Range](https://root.cern/doc/master/group__vecops.html#ga59cc6e477803f2bfd7dae29e56048cc1), [Product](https://root.cern/doc/master/group__vecops.html#ga25e4c2cf5c82fe56dd6bbc86b2386b69) and Enumerate
+- the [Take](https://root.cern/doc/master/group__vecops.html#gac719439afb1ec9d32a28acdc7aee5948) helper function now allows passing a default value that will be used to fill the output array in case it's longer than the input
+
 ## RooFit Libraries
 
 ### Consistent definition of the default minimizer type for all of RooFit/RooStats
