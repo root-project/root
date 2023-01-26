@@ -10,10 +10,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
+#include "RVersion.h"
+
+#if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
 #define protected public
+#endif
 #include "RooFitResult.h"
 #include "RooNLLVar.h"
+#ifdef protected
 #undef protected
+#endif
 
 #include "xRooFit/xRooFit.h"
 
@@ -40,9 +46,26 @@
 
 #include "Math/GenAlgoOptions.h"
 
+#if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
 #define private public
+#define GETWS(a) a->_myws
+#define GETWSSETS(w) w->_namedSets
+#else
+#define GETWS(a) a->workspace()
+#define GETWSSETS(w) w->sets()
+#endif
 #include "RooWorkspace.h"
+#ifdef private
 #undef private
+#endif
+
+#if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
+#define protected public
+#endif
+#include "RooStats/HypoTestResult.h"
+#ifdef protected
+#undef protected
+#endif
 
 #include "TMultiGraph.h"
 #include "TCanvas.h"
@@ -53,9 +76,6 @@
 #include "TH1D.h"
 #include "TLegend.h"
 
-#define protected public
-#include "RooStats/HypoTestResult.h"
-#undef protected
 
 BEGIN_XROOFIT_NAMESPACE
 
@@ -289,15 +309,16 @@ void xRooNLLVar::reinitialize()
          }
       }
       // before creating, clear away caches if any if pdf is in ws
-      if (fPdf->_myws) {
+      if (GETWS(fPdf)) {
          std::set<std::string> setNames;
-         for (auto &a : static_cast<RooWorkspace *>(fPdf->_myws)->_namedSets) {
+         for (auto &a : GETWSSETS(GETWS(fPdf))) {
             if (TString(a.first.c_str()).BeginsWith("CACHE_")) {
                setNames.insert(a.first);
             }
          }
-         for (auto &a : setNames)
-            fPdf->_myws->removeSet(a.c_str());
+         for (auto &a : setNames) {
+            GETWS(fPdf)->removeSet(a.c_str());
+         }
       }
       std::set<std::string> attribs;
       if (std::shared_ptr<RooAbsReal>::get())
@@ -310,8 +331,8 @@ void xRooNLLVar::reinitialize()
       for (auto &a : attribs)
          std::shared_ptr<RooAbsReal>::get()->setAttribute(a.c_str());
       // create parent on next line to avoid triggering workspace initialization code in constructor of xRooNode
-      if (fPdf->_myws) {
-         xRooNode(*fPdf->_myws, std::make_shared<xRooNode>()).sterilize();
+      if (GETWS(fPdf)) {
+         xRooNode(*GETWS(fPdf), std::make_shared<xRooNode>()).sterilize();
       } // there seems to be a nasty bug somewhere that can make the cache become invalid, so clear it here
       if (oldName != "")
          std::shared_ptr<RooAbsReal>::get()->SetName(oldName);
@@ -341,9 +362,9 @@ xRooNLLVar::generate(bool expected, int seed)
    RooArgList l;
    l.add((fFuncVars) ? *fFuncVars : *std::unique_ptr<RooAbsCollection>(fPdf->getParameters(*fData)));
    fr->setConstParList(l);
-   fr->_constPars->setAttribAll("global", false);
+   const_cast<RooArgList&>(fr->constPars()).setAttribAll("global", false);
    if (fGlobs)
-      std::unique_ptr<RooAbsCollection>(fr->_constPars->selectCommon(*fGlobs))->setAttribAll("global", true);
+      std::unique_ptr<RooAbsCollection>(fr->constPars().selectCommon(*fGlobs))->setAttribAll("global", true);
    return xRooFit::generateFrom(*fPdf, fr, expected, seed);
 }
 
@@ -395,9 +416,9 @@ xRooNLLVar::xRooFitResult xRooNLLVar::minimize(const std::shared_ptr<ROOT::Fit::
 
    // before returning, flag which of the constPars were actually global observables
    if (out) {
-      out->_constPars->setAttribAll("global", false);
+      const_cast<RooArgList&>(out->constPars()).setAttribAll("global", false);
       if (fGlobs)
-         std::unique_ptr<RooAbsCollection>(out->_constPars->selectCommon(*fGlobs))->setAttribAll("global", true);
+         std::unique_ptr<RooAbsCollection>(out->constPars().selectCommon(*fGlobs))->setAttribAll("global", true);
    }
    return xRooFitResult(std::make_shared<xRooNode>(out, fPdf));
 }
@@ -1816,8 +1837,13 @@ RooStats::HypoTestResult xRooNLLVar::xRooHypoPoint::result()
       out.SetNullDetailedOutput(new RooDataSet("nullDetails", "nullDetails", nullDetails));
       out.GetNullDetailedOutput()->add(nullDetails);
    } else {
+#if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
       out.fNullPValue = pNull_asymp().first;
       out.fNullPValueError = pNull_asymp().second;
+#else
+      out.SetNullPValue(pNull_asymp().first);
+      out.SetNullPValueError(pNull_asymp().second);
+#endif
    }
 
    RooArgList altDetails;
@@ -1841,8 +1867,13 @@ RooStats::HypoTestResult xRooNLLVar::xRooHypoPoint::result()
       out.SetAltDetailedOutput(new RooDataSet("altDetails", "altDetails", altDetails));
       out.GetAltDetailedOutput()->add(altDetails);
    } else {
+#if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
       out.fAlternatePValue = pAlt_asymp().first;
       out.fAlternatePValueError = pAlt_asymp().second;
+#else
+      out.SetAltPValue(pAlt_asymp().first);
+      out.SetAltPValueError(pAlt_asymp().second);
+#endif
    }
 
    if (setReadonly) {
