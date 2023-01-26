@@ -4,7 +4,7 @@
 // Author: Vassil Vassilev   9/02/2013
 
 /*************************************************************************
- * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -1393,34 +1393,34 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo *info)
 
 void TClingCallFunc::exec(void *address, void *ret)
 {
-   const FunctionDecl *FD = GetDecl();
-   const unsigned num_args = fArgVals.size();
-
-   // FIXME: Consider the implicit this which is sometimes not passed.
-   if (num_args < GetMinRequiredArguments()) {
-      ::Error("TClingCallFunc::exec",
-              "Not enough arguments provided for %s (%d instead of the minimum %d)",
-              fMethod->Name(),
-              num_args, (int)GetMinRequiredArguments());
-      return;
-   } else if (!isa<CXXMethodDecl>(FD) && num_args > FD->getNumParams()) {
-      ::Error("TClingCallFunc::exec",
-              "Too many arguments provided for %s (%d instead of the minimum %d)",
-              fMethod->Name(),
-              num_args, (int)GetMinRequiredArguments());
-      return;
-   }
-   if (auto CXXMD = dyn_cast<CXXMethodDecl>(FD))
-     if (!address && CXXMD && !CXXMD->isStatic() && !isa<CXXConstructorDecl>(FD)) {
-       ::Error("TClingCallFunc::exec",
-               "The method %s is called without an object.",
-               fMethod->Name());
-       return;
-     }
-
    SmallVector<void *, 8> vp_ary;
+   const unsigned num_args = fArgVals.size();
    {
       R__LOCKGUARD_CLING(gInterpreterMutex);
+      const FunctionDecl *FD = GetDecl();
+
+      // FIXME: Consider the implicit this which is sometimes not passed.
+      if (num_args < GetMinRequiredArguments()) {
+         ::Error("TClingCallFunc::exec",
+                 "Not enough arguments provided for %s (%d instead of the minimum %d)",
+                 fMethod->Name(),
+                 num_args, (int)GetMinRequiredArguments());
+         return;
+      } else if (!isa<CXXMethodDecl>(FD) && num_args > FD->getNumParams()) {
+         ::Error("TClingCallFunc::exec",
+                 "Too many arguments provided for %s (%d instead of the minimum %d)",
+                 fMethod->Name(),
+                 num_args, (int)GetMinRequiredArguments());
+         return;
+      }
+      if (auto CXXMD = dyn_cast<CXXMethodDecl>(FD))
+         if (!address && CXXMD && !CXXMD->isStatic() && !isa<CXXConstructorDecl>(FD)) {
+            ::Error("TClingCallFunc::exec",
+                    "The method %s is called without an object.",
+                    fMethod->Name());
+            return;
+         }
+
 
       //
       //  Convert the arguments from cling::Value to their
@@ -1459,6 +1459,7 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value &ret)
 
    QualType QT;
    if (llvm::isa<CXXConstructorDecl>(FD)) {
+     R__LOCKGUARD_CLING(gInterpreterMutex);
      ASTContext &Context = FD->getASTContext();
      const TypeDecl *TD = dyn_cast<TypeDecl>(GetDeclContext());
      QualType ClassTy(TD->getTypeForDecl(), 0);
