@@ -80,7 +80,7 @@ protected:
 
 public:
    TJSONTree();
-   virtual ~TJSONTree();
+   ~TJSONTree() override;
    TJSONTree(std::istream &is);
    TJSONTree::Node &incache(const TJSONTree::Node &n);
 

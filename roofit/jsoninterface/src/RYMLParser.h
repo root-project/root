@@ -35,33 +35,33 @@ public:
       std::unique_ptr<Impl> node;
 
    public:
-      virtual void writeJSON(std::ostream &os) const override;
-      virtual void writeYML(std::ostream &) const override;
+      void writeJSON(std::ostream &os) const override;
+      void writeYML(std::ostream &) const override;
 
       Node(TRYMLTree *t, const Impl &other);
       Node(const Node &other);
-      virtual Node &operator<<(std::string const &s) override;
-      virtual Node &operator<<(int i) override;
-      virtual Node &operator<<(double d) override;
-      virtual const Node &operator>>(std::string &v) const override;
-      virtual Node &operator[](std::string const &k) override;
-      virtual Node &operator[](size_t pos) override;
-      virtual const Node &operator[](std::string const &k) const override;
-      virtual const Node &operator[](size_t pos) const override;
-      virtual bool is_container() const override;
-      virtual bool is_map() const override;
-      virtual bool is_seq() const override;
-      virtual void set_map() override;
-      virtual void set_seq() override;
-      virtual std::string key() const override;
-      virtual std::string val() const override;
-      virtual bool has_key() const override;
-      virtual bool has_val() const override;
-      virtual bool has_child(std::string const &) const override;
-      virtual Node &append_child() override;
-      virtual size_t num_children() const override;
-      virtual Node &child(size_t pos) override;
-      virtual const Node &child(size_t pos) const override;
+      Node &operator<<(std::string const &s) override;
+      Node &operator<<(int i) override;
+      Node &operator<<(double d) override;
+      const Node &operator>>(std::string &v) const override;
+      Node &operator[](std::string const &k) override;
+      Node &operator[](size_t pos) override;
+      const Node &operator[](std::string const &k) const override;
+      const Node &operator[](size_t pos) const override;
+      bool is_container() const override;
+      bool is_map() const override;
+      bool is_seq() const override;
+      void set_map() override;
+      void set_seq() override;
+      std::string key() const override;
+      std::string val() const override;
+      bool has_key() const override;
+      bool has_val() const override;
+      bool has_child(std::string const &) const override;
+      Node &append_child() override;
+      size_t num_children() const override;
+      Node &child(size_t pos) override;
+      const Node &child(size_t pos) const override;
    };
 
 protected:
@@ -75,9 +75,9 @@ public:
 
 public:
    TRYMLTree();
-   ~TRYMLTree();
+   ~TRYMLTree() override;
    TRYMLTree(std::istream &is);
-   Node &rootnode();
+   Node &rootnode() override;
 };
 
 #endif
