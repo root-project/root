@@ -21,8 +21,8 @@ public:
    RooExpPoly(const char *name, const char *title, RooAbsReal &x);
    RooExpPoly(const char *name, const char *title, RooAbsReal &x, const RooArgList &coefList, int lowestOrder = 1);
 
-   RooExpPoly(const RooExpPoly &other, const char *name = 0);
-   virtual TObject *clone(const char *newname) const override { return new RooExpPoly(*this, newname); }
+   RooExpPoly(const RooExpPoly &other, const char *name = nullptr);
+   TObject *clone(const char *newname) const override { return new RooExpPoly(*this, newname); }
 
    double getLogVal(const RooArgSet *nset) const override;
 
