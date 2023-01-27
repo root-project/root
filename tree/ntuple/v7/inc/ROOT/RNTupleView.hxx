@@ -28,6 +28,82 @@
 
 namespace ROOT {
 namespace Experimental {
+namespace internal {
+
+template <typename Integral, typename DifferenceType = std::make_signed_t<Integral>>
+class RIntegralIterator {
+private:
+   Integral fIndex{};
+
+public:
+   using iterator_category = std::random_access_iterator_tag;
+   using value_type = Integral;
+   using difference_type = DifferenceType;
+   using reference = Integral; // value on purpose
+
+   constexpr RIntegralIterator() = default;
+   constexpr explicit RIntegralIterator(Integral index) : fIndex(index) {}
+
+   constexpr reference operator*() noexcept { return fIndex; }
+
+   constexpr RIntegralIterator operator++(int) noexcept // postfix
+   {
+      auto r = *this;
+      fIndex++;
+      return r;
+   }
+
+   constexpr RIntegralIterator &operator++() noexcept // prefix
+   {
+      ++fIndex;
+      return *this;
+   }
+
+   constexpr RIntegralIterator operator--(int) noexcept // postfix
+   {
+      auto r = *this;
+      fIndex--;
+      return r;
+   }
+
+   constexpr RIntegralIterator &operator--() noexcept // prefix
+   {
+      --fIndex;
+      return *this;
+   }
+
+   constexpr reference operator[](difference_type i) const noexcept { return *(*this + i); }
+
+   constexpr RIntegralIterator &operator+=(difference_type d) noexcept
+   {
+      fIndex += d;
+      return *this;
+   }
+
+   constexpr RIntegralIterator &operator-=(difference_type d) noexcept
+   {
+      fIndex -= d;
+      return *this;
+   }
+
+   friend constexpr RIntegralIterator operator+(RIntegralIterator it, difference_type d) noexcept { return it += d; }
+   friend constexpr RIntegralIterator operator+(difference_type d, RIntegralIterator it) noexcept { return it += d; }
+   friend constexpr RIntegralIterator operator-(RIntegralIterator it, difference_type d) noexcept { return it -= d; }
+
+   friend constexpr difference_type operator-(RIntegralIterator lh, RIntegralIterator rh) noexcept
+   {
+      return static_cast<difference_type>(lh.fIndex) - static_cast<difference_type>(rh.fIndex);
+   }
+
+   friend constexpr bool operator<(RIntegralIterator lh, RIntegralIterator rh) noexcept { return lh.fIndex < rh.fIndex; }
+   friend constexpr bool operator>(RIntegralIterator lh, RIntegralIterator rh) noexcept { return rh < lh; }
+   friend constexpr bool operator<=(RIntegralIterator lh, RIntegralIterator rh) noexcept { return !(lh > rh); }
+   friend constexpr bool operator>=(RIntegralIterator lh, RIntegralIterator rh) noexcept { return !(lh < rh); }
+   friend constexpr bool operator==(RIntegralIterator lh, RIntegralIterator rh) noexcept { return lh.fIndex == rh.fIndex; }
+   friend constexpr bool operator!=(RIntegralIterator lh, RIntegralIterator rh) noexcept { return !(lh == rh); }
+};
+} // namespace internal
+
 
 
 // clang-format off
@@ -42,34 +118,13 @@ private:
    const NTupleSize_t fStart;
    const NTupleSize_t fEnd;
 public:
-   class RIterator {
-   private:
-      NTupleSize_t fIndex = kInvalidNTupleIndex;
-   public:
-      using iterator = RIterator;
-      using iterator_category = std::forward_iterator_tag;
-      using value_type = NTupleSize_t;
-      using difference_type = NTupleSize_t;
-      using pointer = NTupleSize_t*;
-      using reference = NTupleSize_t&;
+   using Iterator = internal::RIntegralIterator<NTupleSize_t>;
 
-      RIterator() = default;
-      explicit RIterator(NTupleSize_t index) : fIndex(index) {}
-      ~RIterator() = default;
+   constexpr RNTupleGlobalRange(NTupleSize_t start, NTupleSize_t end) : fStart(start), fEnd(end) {}
 
-      iterator  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
-      iterator& operator++()    /* prefix */         { ++fIndex; return *this; }
-      reference operator* ()                         { return fIndex; }
-      pointer   operator->()                         { return &fIndex; }
-      bool      operator==(const iterator& rh) const { return fIndex == rh.fIndex; }
-      bool      operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
-   };
-
-   RNTupleGlobalRange(NTupleSize_t start, NTupleSize_t end) : fStart(start), fEnd(end) {}
-   RIterator begin() { return RIterator(fStart); }
-   RIterator end() { return RIterator(fEnd); }
+   constexpr Iterator begin() const noexcept { return Iterator{fStart}; }
+   constexpr Iterator end() const noexcept { return Iterator{fEnd}; }
 };
-
 
 // clang-format off
 /**
@@ -84,35 +139,13 @@ private:
    const ClusterSize_t::ValueType fStart;
    const ClusterSize_t::ValueType fEnd;
 public:
-   class RIterator {
-   private:
-      RClusterIndex fIndex;
-   public:
-      using iterator = RIterator;
-      using iterator_category = std::forward_iterator_tag;
-      using value_type = RClusterIndex;
-      using difference_type = RClusterIndex;
-      using pointer = RClusterIndex*;
-      using reference = RClusterIndex&;
+   using Iterator = internal::RIntegralIterator<RClusterIndex, std::make_unsigned_t<ClusterSize_t::ValueType>>;
 
-      RIterator() = default;
-      explicit RIterator(const RClusterIndex &index) : fIndex(index) {}
-      ~RIterator() = default;
-
-      iterator  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
-      iterator& operator++()    /* prefix */         { fIndex++; return *this; }
-      reference operator* ()                         { return fIndex; }
-      pointer   operator->()                         { return &fIndex; }
-      bool      operator==(const iterator& rh) const { return fIndex == rh.fIndex; }
-      bool      operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
-   };
-
-   RNTupleClusterRange(DescriptorId_t clusterId, ClusterSize_t::ValueType start, ClusterSize_t::ValueType end)
+   constexpr RNTupleClusterRange(DescriptorId_t clusterId, ClusterSize_t::ValueType start, ClusterSize_t::ValueType end)
       : fClusterId(clusterId), fStart(start), fEnd(end) {}
-   RIterator begin() { return RIterator(RClusterIndex(fClusterId, fStart)); }
-   RIterator end() { return RIterator(RClusterIndex(fClusterId, fEnd)); }
+   constexpr Iterator begin() const noexcept { return Iterator{RClusterIndex(fClusterId, fStart)}; }
+   constexpr Iterator end() const noexcept { return Iterator{RClusterIndex(fClusterId, fEnd)}; }
 };
-
 
 namespace Internal {
 

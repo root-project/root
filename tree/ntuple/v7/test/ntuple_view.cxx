@@ -1,5 +1,10 @@
 #include "ntuple_test.hxx"
 
+#include <iterator>
+#if __has_include(<ranges>)
+#include <ranges>
+#endif
+
 TEST(RNTuple, View)
 {
    FileRaii fileGuard("test_ntuple_view.root");
@@ -238,4 +243,136 @@ TEST(RNTuple, MissingViewNames)
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badC' in RNTuple 'myNTuple'"));
    }
+}
+
+TEST(RNTuple, RNTupleGlobalRange)
+{
+#ifdef __cpp_lib_concepts
+   static_require(std::random_access_iterator<RNTupleGlobalRange::Iterator>);
+#endif
+   const RNTupleGlobalRange r(0, 10);
+
+   // semi-regularity of iterator
+   {
+#ifdef __cpp_lib_concepts
+      static_assert(std::semiregular<RNTupleGlobalRange::Iterator>);
+#endif
+
+      RNTupleGlobalRange::Iterator it; // default ctor
+      it = std::begin(r);              // copy assign
+      auto it2 = it;                   // copy ctor
+      EXPECT_EQ(it, it2);
+   }
+
+   // inc, dev, deref, subscript
+   {
+      auto it = std::begin(r);
+      EXPECT_EQ(*it, 0);
+      EXPECT_EQ(*(it++), 0);
+      EXPECT_EQ(*it, 1);
+      EXPECT_EQ(*(++it), 2);
+      EXPECT_EQ(*it, 2);
+      EXPECT_EQ(*(it--), 2);
+      EXPECT_EQ(*it, 1);
+      EXPECT_EQ(*(--it), 0);
+
+      EXPECT_EQ(it[0], 0);
+      EXPECT_EQ(it[5], 5);
+      ++++it;
+      EXPECT_EQ(it[-1], 1);
+   }
+
+   // arithmetic
+   {
+      auto it = std::begin(r);
+
+      it += 4;
+      EXPECT_EQ(*it, 4);
+      it += -2;
+      EXPECT_EQ(*it, 2);
+      it -= 1;
+      EXPECT_EQ(*it, 1);
+      it -= -4;
+      EXPECT_EQ(*it, 5);
+
+      EXPECT_EQ(*(it + 2), 7);
+      EXPECT_EQ(*(it + (-2)), 3);
+      EXPECT_EQ(*(2 + it), 7);
+      EXPECT_EQ(*((-2) + it), 3);
+      EXPECT_EQ(*(it - 2), 3);
+      EXPECT_EQ(*(it - (-2)), 7);
+
+      auto it2 = r.begin() + 2;
+      auto it3 = r.begin() + 7;
+      EXPECT_EQ(it3 - it2, 5);
+      EXPECT_EQ(it2 - it3, -5);
+   }
+
+   // relational
+   {
+      EXPECT_EQ(r.begin(), std::begin(r));
+      EXPECT_EQ(r.end(), std::end(r));
+
+      auto it2 = r.begin() + 2;
+      auto it3 = r.begin() + 3;
+
+      EXPECT_TRUE(it2 == it2);
+      EXPECT_TRUE(it2 != it3);
+      EXPECT_TRUE(it2 < it3);
+      EXPECT_TRUE(it2 <= it2);
+      EXPECT_TRUE(it3 > it2);
+      EXPECT_TRUE(it2 >= it2);
+
+      EXPECT_FALSE(it2 == it3);
+      EXPECT_FALSE(it2 != it2);
+      EXPECT_FALSE(it2 < it2);
+      EXPECT_FALSE(it3 <= it2);
+      EXPECT_FALSE(it2 > it3);
+      EXPECT_FALSE(it2 >= it3);
+   }
+
+   // reachability of end
+   {
+      int i = 0;
+      for (auto it = std::begin(r); it != std::end(r); it++)
+         i++;
+      EXPECT_EQ(i, 10);
+   }
+
+   // range-for
+   {
+      std::vector<NTupleSize_t> values;
+      for (auto i : RNTupleGlobalRange{0, 3})
+         values.push_back(i);
+      EXPECT_THAT(values, testing::ElementsAre(0, 1, 2));
+   }
+
+#ifdef __cpp_lib_ranges
+   static_require(std::random_access_range<ROOT::Experimental::RNTupleGlobalRange>);
+
+   {
+      std::vector<NTupleSize_t> values;
+      for (auto i : ROOT::Experimental::RNTupleGlobalRange{0, 100} | std::views::take(3))
+         values.push_back(i);
+      EXPECT_THAT(values, testing::ElementsAre(0, 1, 2));
+   }
+#endif
+}
+
+TEST(RNTuple, RNTupleClusterRange)
+{
+   // most stuff is already tested via RNTupleGlobalRange, which uses the same infrastructure
+
+#ifdef __cpp_lib_concepts
+   static_require(std::random_access_iterator<RNTupleClusterRange::Iterator>);
+#endif
+
+   std::vector<RClusterIndex> values;
+   for (auto i : RNTupleClusterRange{0xDEADBEEF, 0, 3})
+      values.push_back(i);
+   EXPECT_THAT(values, testing::ElementsAre(RClusterIndex{0xDEADBEEF, 0}, RClusterIndex{0xDEADBEEF, 1}, RClusterIndex{0xDEADBEEF, 2}));
+
+#ifdef __cpp_lib_ranges
+      static_require(std::random_access_range<ROOT::Experimental::RNTupleClusterRange>);
+#endif
 }
