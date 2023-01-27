@@ -13,6 +13,19 @@
 
 #include "gtest/gtest.h"
 
+// Function to get the derivative of pdf wrt var.
+double getNumDerivative(const RooAbsReal &pdf, RooRealVar &var, const RooArgSet &normSet, double eps = 1e-8)
+{
+   double orig = var.getVal();
+   var.setVal(orig + eps);
+   double plus = pdf.getVal(normSet);
+   var.setVal(orig - eps);
+   double minus = pdf.getVal(normSet);
+   var.setVal(orig);
+
+   return (plus - minus) / (2 * eps);
+}
+
 TEST(RooFuncWrapper, GaussianNormalized)
 {
    using namespace RooFit;
@@ -45,4 +58,13 @@ TEST(RooFuncWrapper, GaussianNormalized)
 
    EXPECT_TRUE(paramsMyGauss.hasSameLayout(paramsGauss));
    EXPECT_EQ(paramsMyGauss.size(), paramsGauss.size());
+
+   // Get AD based derivative
+   double dMyGauss[3] = {};
+   gaussFunc.getGradient(dMyGauss);
+
+   // Check if derivatives are equal
+   EXPECT_NEAR(getNumDerivative(gauss, x, normSet), dMyGauss[0], 1e-8);
+   EXPECT_NEAR(getNumDerivative(gauss, mu, normSet), dMyGauss[1], 1e-8);
+   EXPECT_NEAR(getNumDerivative(gauss, sigma, normSet), dMyGauss[2], 1e-8);
 }
