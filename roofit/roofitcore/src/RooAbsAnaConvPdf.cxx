@@ -676,6 +676,27 @@ void RooAbsAnaConvPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
 std::unique_ptr<RooAbsArg>
 RooAbsAnaConvPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
 {
+   // If there is only one component in the linear sum of convolutions, we can
+   // just return that one, normalized.
+   if(_convSet.size() == 1) {
+      if (normSet.empty()) {
+         return _convSet[0].compileForNormSet(normSet, ctx);
+      }
+      std::unique_ptr<RooAbsPdf> pdfClone(static_cast<RooAbsPdf *>(_convSet[0].Clone()));
+      ctx.compileServers(*pdfClone, normSet);
+
+      auto newArg = std::make_unique<RooNormalizedPdf>(*pdfClone, normSet);
+
+      // The direct servers are this pdf and the normalization integral, which
+      // don't need to be compiled further.
+      for (RooAbsArg *server : newArg->servers()) {
+         server->setAttribute("_COMPILED");
+      }
+      newArg->setAttribute("_COMPILED");
+      newArg->addOwnedComponents(std::move(pdfClone));
+      return newArg;
+   }
+
    // Here, we can't use directly the function from the RooAbsPdf base class,
    // because the convolution argument servers need to be evaluated
    // unnormalized, even if they are pdfs.
