@@ -29,6 +29,7 @@ if(cocoa)
   )
 
   target_compile_options(Macosx PRIVATE -ObjC++)
+  target_include_directories(Macosx PRIVATE ../unix/inc)
 
   target_sources(Core PRIVATE $<TARGET_OBJECTS:Macosx>)
 
