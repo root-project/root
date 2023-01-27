@@ -18,44 +18,67 @@ The following people have contributed to this new version:
  Patrick Bos, Netherlands eScience Center,\
  Rene Brun, CERN/SFT,\
  Carsten D. Burgard, TU Dortmund University/ATLAS,\
+ Artem Busorgin,\
  Will Buttinger, RAL/ATLAS,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
  Michel De Cian, EPFL/LHCb,\
+ Hans Dembinski, TU Dortmund,\
+ Simeon Ehrig, HZDR,\
  Mattias Ellert, Uppsala University,\
+ Matthew Feickert, UW Madison/ATLAS,\
+ Markus Frank, CERN/LHCb,\
+ Oliver Freyermuth, U Bonn,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
+ Sayandeep Ghosh, Jadavpur U Calcutta,\
  Konstantin Gizdov, University of Edinburgh/LHCb,\
  Max Goblirsch, CERN/ATLAS,\
+ Stefan Gränitz,\
  Enrico Guiraud, CERN/SFT,\
  Stephan Hageboeck, CERN/IT,\
  Jonas Hahnfeld, CERN/SFT,\
  Ahmat Mahamat Hamdan, CERN/SFT,\
  Fernando Hueso-González, University of Valencia,\
+ Pawan Johnson, Indian Institute of Technology Kharagpur,\
  Subham Jyoti, ITER Bhubaneswar,\
+ Ivan Kabadzhov, CERN/SFT,\
+ Giovanna Lazzari Miotto, CERN/SFT,\
+ Shamrock Lee,\
  Sergey Linev, GSI,\
+ Jerry Ling, Harvard University,\
  Javier Lopez-Gomez, CERN/SFT,\
  Enrico Lusiani, INFN/CMS,\
+ Julia Mathe, CERN/SFT,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
  Nicolas Morange, CNRS/ATLAS,\
+ Alja Mrak Tadel, UCSD/CMS,\
  Axel Naumann, CERN/SFT,\
+ Duncan Ogilvie,\
  Hanna Olvhammar, CERN/SFT,\
  Vincenzo Eduardo Padulano, CERN/SFT and UPV,\
+ Tapasweni Pathak,\
  Danilo Piparo, CERN/SFT,\
+ David Poulton, Wits/SFT,\
  Fons Rademakers, CERN/SFT,\
  Jonas Rembser, CERN/SFT,\
+ Mathias Schmitt,\
+ Neel Shah, VJTI,\
+ Petr Stepanov, Catholic University of America,\
  Enric Tejedor Saavedra, CERN/SFT,\
  Neel Shah, GSOC,\
  Sanjiban Sengupta, CERN/SFT,\
  Harshal Shende, GSOC,\
  Garima Singh, Princeton/SFT,\
+ Surya Somayyajula, UW Madison,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
+ Andrii Verbytskyi, MPP Munich/ATLAS,\
  Wouter Verkerke, NIKHEF/ATLAS,\
+ Frank Winklmeier, U Oregon/ATLAS,\
  Zef Wolffs, NIKHEF/ATLAS,\
- Ivan Kabadzhov, CERN/SFT,\
- David Poulton, Wits/SFT
+ Jun Zhang
 
 ## Deprecation and Removal
 
