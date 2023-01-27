@@ -33,7 +33,7 @@ The following people have contributed to this new version:
  Ahmat Hamdan, GSOC, \
  Fernando Hueso-González, University of Valencia,\
  Ivan Kabadzhov, CERN/SFT,\
- Shamrock Lee (@ShamrockLee),\
+ Yueh-Shun Li, National Central U Taiwan/CMS,\
  Sergey Linev, GSI,\
  Javier Lopez-Gomez, CERN/SFT,\
  Pere Mato, CERN/SFT,\
