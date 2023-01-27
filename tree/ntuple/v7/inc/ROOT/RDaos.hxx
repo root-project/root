@@ -323,11 +323,10 @@ public:
      \param cid An object class ID.
      \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   int ReadSingleAkey(void *buffer, std::size_t length, RDaosObjectId oid, DistributionKey_t dkey, AttributeKey_t akey,
-                      ObjClassId_t cid);
-   int ReadSingleAkey(void *buffer, std::size_t length, RDaosObjectId oid, DistributionKey_t dkey, AttributeKey_t akey)
+   int ReadSingleAkey(void *buffer, std::size_t length, RDaosKey key, ObjClassId_t cid);
+   int ReadSingleAkey(void *buffer, std::size_t length, RDaosKey key)
    {
-      return ReadSingleAkey(buffer, length, oid, dkey, akey, fDefaultObjectClass);
+      return ReadSingleAkey(buffer, length, key, fDefaultObjectClass);
    }
 
    /**
@@ -340,12 +339,10 @@ public:
      \param cid An object class ID.
      \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   int WriteSingleAkey(const void *buffer, std::size_t length, RDaosObjectId oid, DistributionKey_t dkey,
-                       AttributeKey_t akey, ObjClassId_t cid);
-   int WriteSingleAkey(const void *buffer, std::size_t length, RDaosObjectId oid, DistributionKey_t dkey,
-                       AttributeKey_t akey)
+   int WriteSingleAkey(const void *buffer, std::size_t length, RDaosKey key, ObjClassId_t cid);
+   int WriteSingleAkey(const void *buffer, std::size_t length, RDaosKey key)
    {
-      return WriteSingleAkey(buffer, length, oid, dkey, akey, fDefaultObjectClass);
+      return WriteSingleAkey(buffer, length, key, fDefaultObjectClass);
    }
 
    /**

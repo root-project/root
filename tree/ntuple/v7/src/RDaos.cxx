@@ -205,26 +205,24 @@ std::string ROOT::Experimental::Detail::RDaosContainer::GetContainerUuid()
    return std::string(id);
 }
 
-int ROOT::Experimental::Detail::RDaosContainer::ReadSingleAkey(void *buffer, std::size_t length, RDaosObjectId oid,
-                                                               DistributionKey_t dkey, AttributeKey_t akey,
+int ROOT::Experimental::Detail::RDaosContainer::ReadSingleAkey(void *buffer, std::size_t length, RDaosKey key,
                                                                ObjClassId_t cid)
 {
    std::vector<d_iov_t> iovs(1);
    d_iov_set(&iovs[0], const_cast<void *>(buffer), length);
-   RDaosObject::RAkeyRequest requests[] = {{akey, std::move(iovs)}};
-   RDaosObject::FetchUpdateArgs args(dkey, requests);
-   return RDaosObject(*this, oid.Get(), cid.fCid).Fetch(args);
+   RDaosObject::RAkeyRequest requests[] = {{key.fAkey, std::move(iovs)}};
+   RDaosObject::FetchUpdateArgs args(key.fDkey, requests);
+   return RDaosObject(*this, key.fOid.Get(), cid.fCid).Fetch(args);
 }
 
-int ROOT::Experimental::Detail::RDaosContainer::WriteSingleAkey(const void *buffer, std::size_t length,
-                                                                RDaosObjectId oid, DistributionKey_t dkey,
-                                                                AttributeKey_t akey, ObjClassId_t cid)
+int ROOT::Experimental::Detail::RDaosContainer::WriteSingleAkey(const void *buffer, std::size_t length, RDaosKey key,
+                                                                ObjClassId_t cid)
 {
    std::vector<d_iov_t> iovs(1);
    d_iov_set(&iovs[0], const_cast<void *>(buffer), length);
-   RDaosObject::RAkeyRequest requests[] = {{akey, std::move(iovs)}};
-   RDaosObject::FetchUpdateArgs args(dkey, requests);
-   return RDaosObject(*this, oid.Get(), cid.fCid).Update(args);
+   RDaosObject::RAkeyRequest requests[] = {{key.fAkey, std::move(iovs)}};
+   RDaosObject::FetchUpdateArgs args(key.fDkey, requests);
+   return RDaosObject(*this, key.fOid.Get(), cid.fCid).Update(args);
 }
 
 int ROOT::Experimental::Detail::RDaosContainer::VectorReadWrite(MultiObjectRWOperation &ops, ObjClassId_t cid,
