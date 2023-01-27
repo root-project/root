@@ -1012,6 +1012,12 @@ namespace RooStats {
         throw hf_exc();
       }
 
+
+      const std::string attrib = "ORIGNAME:" + ToReplace;
+      const bool oldAttrib = ReplaceWith->getAttribute(attrib.c_str());
+      ReplaceWith->setAttribute(attrib.c_str());
+      RooArgSet newServerSet{*ReplaceWith};
+
       // Now that we have the node we want to replace, we have to
       // get its parent node
 
@@ -1025,13 +1031,14 @@ namespace RooStats {
         if( findChild(client->GetName(), fModel) == nullptr) continue;
 
         // Now, do the replacement:
-        bool valueProp=false;
-        bool shapeProp=false;
-        client->replaceServer( *nodeToReplace, *ReplaceWith, valueProp, shapeProp );
+        client->redirectServers(newServerSet);
         std::cout << "Replaced: " << ToReplace << " with: " << ReplaceWith->GetName()
                 << " in node: " << client->GetName() << std::endl;
 
       }
+
+      // reset temporary attribute for server redirection
+      ReplaceWith->setAttribute(attrib.c_str(), oldAttrib);
 
       return;
 
