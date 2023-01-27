@@ -40,6 +40,11 @@ namespace ROOT {
 namespace Experimental {
 namespace Detail {
 
+std::string inline GetDaosError(int err)
+{
+   return d_errstr(err);
+}
+
 struct RDaosObjectId {
    using ObjectIndex_t = std::uint64_t;
    daos_obj_id_t fData;
@@ -366,7 +371,6 @@ public:
    }
    int WriteV(MultiObjectRWOperation &map) { return WriteV(map, fDefaultObjectClass); }
 };
-
 } // namespace Detail
 
 } // namespace Experimental
