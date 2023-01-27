@@ -677,7 +677,13 @@ void ROOT::Internal::TTreeReaderArrayBase::SetImpl(TBranch* branch, TLeaf* myLea
 
          if (fSetupStatus == kSetupInternalError)
             fSetupStatus = kSetupMatch;
-         if (element->IsA() == TStreamerSTL::Class()){
+         if (element->IsA() == TStreamerSTL::Class()) {
+            if (branchElement->GetType() == 31) {
+               Error("TTreeReaderArrayBase::SetImpl",
+                     "STL Collection nested in a TClonesArray not yet supported");
+               fSetupStatus = kSetupInternalError;
+               return;
+            }
             fImpl = std::make_unique<TSTLReader>();
          }
          else if (element->IsA() == TStreamerObject::Class()){
