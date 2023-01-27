@@ -61,7 +61,15 @@
 //           return R__FAIL("user-facing error messge");
 //        return RResult<void>::Success();
 //     }
-
+//
+// When using RResult<T>, RResult<T>::Unwrap() can be used as a short hand for
+// "give me the wrapped value or, in case of an error, throw". For instance:
+//
+//     int value = FuncThatReturnsRResultOfInt().Unwrap();  // may throw
+//
+// There is no implict operator that converts RResult<T> to T. This is
+// intentional to make it clear in the calling code where an exception may
+// be thrown.
 
 namespace ROOT {
 namespace Experimental {
