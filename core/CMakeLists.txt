@@ -85,6 +85,10 @@ target_include_directories(Core PUBLIC
    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
 )
 
+# Must be first because it defines ROOTStaticSanitizerConfig which needs
+# to be linked into rootcling_stage1 (via ROOT_EXECUTABLE).
+add_subdirectory(sanitizer)
+
 add_subdirectory(rootcling_stage1)
 
 add_subdirectory(base)
@@ -100,7 +104,6 @@ add_subdirectory(metacling)
 add_subdirectory(multiproc)
 add_subdirectory(newdelete)
 add_subdirectory(rint)
-add_subdirectory(sanitizer)
 add_subdirectory(testsupport)
 add_subdirectory(textinput)
 add_subdirectory(thread)
