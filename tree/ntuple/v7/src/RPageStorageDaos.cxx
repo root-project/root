@@ -63,7 +63,7 @@ static constexpr AttributeKey_t kAttributeKeyFooter = 0x4243544b5344422c;
 static constexpr RDaosObjectId::ObjectIndex_t kOidMetadata = -1;
 static constexpr RDaosObjectId::ObjectIndex_t kOidPageList = -2;
 
-static constexpr daos_oclass_id_t kCidMetadata = OC_SX;
+const ROOT::Experimental::Detail::RDaosObject::ObjClassId kCidMetadata("SX");
 
 static constexpr EDaosMapping kDefaultDaosMapping = kOidPerCluster;
 
