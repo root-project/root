@@ -150,6 +150,8 @@ private:
    Detail::RFieldValue fValue;
 
 public:
+   using FieldTypeT = T;
+
    RNTupleView(DescriptorId_t fieldId, Detail::RPageSource *pageSource)
       : fField(pageSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fieldId).GetFieldName()),
         fValue(fField.GenerateValue())
