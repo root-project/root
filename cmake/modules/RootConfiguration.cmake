@@ -837,7 +837,7 @@ else()
   execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh
     ${CMAKE_BINARY_DIR}/ginclude/compiledata.h "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_FLAGS}"
-        "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}" "so"
+        "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_LINKER_FLAGS}" "so"
         "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}")
 endif()
 
