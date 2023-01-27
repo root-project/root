@@ -54,6 +54,66 @@ static void CopyElementsBswap(void *destination, const void *source, std::size_t
       dst[i] = RByteSwap<N>::bswap(src[i]);
    }
 }
+
+/// \brief Re-arranges the bytes of the array of N-byte elements in columnar layout.
+///
+/// Assumes that the elements are stored in little-endian layout. The destination stores
+/// all the first bytes first, then all the second bytes, etc.
+template <std::size_t N>
+static void SplitElementsLE(void *destination, const void *source, std::size_t count)
+{
+   const char *unsplitArray = reinterpret_cast<const char *>(source);
+   char *splitArray = reinterpret_cast<char *>(destination);
+   for (std::size_t i = 0; i < count; ++i) {
+      for (std::size_t b = 0; b < N; ++b) {
+         splitArray[b * count + i] = unsplitArray[N * i + b];
+      }
+   }
+}
+
+/// Reverse of SplitElements. Stores LE values in the destination buffer.
+/// Note that the split version is always splitting on LE values.
+template <std::size_t N>
+static void UnsplitElementsLE(void *destination, const void *source, std::size_t count)
+{
+   const char *splitArray = reinterpret_cast<const char *>(source);
+   char *unsplitArray = reinterpret_cast<char *>(destination);
+   for (std::size_t i = 0; i < count; ++i) {
+      for (std::size_t b = 0; b < N; ++b) {
+         unsplitArray[N * i + b] = splitArray[b * count + i];
+      }
+   }
+}
+
+/// \brief Re-arranges the bytes of the array of N-byte elements in columnar layout.
+///
+/// Assumes that the elements are stored in big-endian layout and byte-swaps them during the splitting.
+/// The destination stores all the first bytes first of the elements in LE layout, then all the second bytes, etc.
+template <std::size_t N>
+static void SplitElementsBE(void *destination, const void *source, std::size_t count)
+{
+   const char *unsplitArray = reinterpret_cast<const char *>(source);
+   char *splitArray = reinterpret_cast<char *>(destination);
+   for (std::size_t i = 0; i < count; ++i) {
+      for (std::size_t b = 0; b < N; ++b) {
+         splitArray[b * count + i] = unsplitArray[N * i + (N - (b + 1))];
+      }
+   }
+}
+
+/// Reverse of SplitElements. Stores BE values in the destination buffer.
+/// Note that the split version is always splitting on LE values.
+template <std::size_t N>
+static void UnsplitElementsBE(void *destination, const void *source, std::size_t count)
+{
+   const char *splitArray = reinterpret_cast<const char *>(source);
+   char *unsplitArray = reinterpret_cast<char *>(destination);
+   for (std::size_t i = 0; i < count; ++i) {
+      for (std::size_t b = 0; b < N; ++b) {
+         unsplitArray[N * i + (N - (b + 1))] = splitArray[b * count + i];
+      }
+   }
+}
 } // anonymous namespace
 
 namespace ROOT {
@@ -162,7 +222,35 @@ public:
       CopyElementsBswap<sizeof(CppT)>(dst, src, count);
 #endif
    }
-};
+}; // class RColumnElementLE
+
+/**
+ * Base class for split columns whose on-storage representation is little-endian.
+ * The implementation of `Pack` and `Unpack` takes care of splitting and, if necessary, byteswap.
+ */
+template <typename CppT>
+class RColumnElementSplitLE : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = false;
+   RColumnElementSplitLE(void *rawContent, std::size_t size) : RColumnElementBase(rawContent, size) {}
+
+   void Pack(void *dst, void *src, std::size_t count) const final
+   {
+#if R__LITTLE_ENDIAN == 1
+      SplitElementsLE<sizeof(CppT)>(dst, src, count);
+#else
+      SplitElementsBE<sizeof(CppT)>(dst, src, count);
+#endif
+   }
+   void Unpack(void *dst, void *src, std::size_t count) const final
+   {
+#if R__LITTLE_ENDIAN == 1
+      UnsplitElementsLE<sizeof(CppT)>(dst, src, count);
+#else
+      UnsplitElementsBE<sizeof(CppT)>(dst, src, count);
+#endif
+   }
+}; // class RColumnElementSplitLE
 
 /**
  * Pairs of C++ type and column type, like float and EColumnType::kReal32
@@ -296,17 +384,13 @@ public:
 };
 
 template <>
-class RColumnElement<double, EColumnType::kSplitReal64> : public RColumnElementBase {
+class RColumnElement<double, EColumnType::kSplitReal64> : public RColumnElementSplitLE<double> {
 public:
-   static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(double);
    static constexpr std::size_t kBitsOnStorage = kSize * 8;
-   explicit RColumnElement(double *value) : RColumnElementBase(value, kSize) {}
+   explicit RColumnElement(double *value) : RColumnElementSplitLE(value, kSize) {}
    bool IsMappable() const final { return kIsMappable; }
    std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
-
-   void Pack(void *dst, void *src, std::size_t count) const final;
-   void Unpack(void *dst, void *src, std::size_t count) const final;
 };
 
 template <>

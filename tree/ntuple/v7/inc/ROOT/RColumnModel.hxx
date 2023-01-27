@@ -36,6 +36,7 @@ When changed, remember to update
   - RColumnElement::GetBitsOnStorage()
   - RColumnElement::GetTypeName()
   - RColumnElement template specializations / packing & unpacking
+  - If necessary, endianess handling for the packing + unit test in ntuple_endian
   - RNTupleSerializer::[Des|S]erializeColumnType
 */
 // clang-format on

@@ -152,40 +152,6 @@ void ROOT::Experimental::Detail::RColumnElement<
    }
 }
 
-void ROOT::Experimental::Detail::RColumnElement<double, ROOT::Experimental::EColumnType::kSplitReal64>::Pack(
-   void *dst, void *src, std::size_t count) const
-{
-   char *unsplitArray = reinterpret_cast<char *>(src);
-   char *splitArray = reinterpret_cast<char *>(dst);
-   for (std::size_t i = 0; i < count; ++i) {
-      splitArray[i] = unsplitArray[8 * i];
-      splitArray[count + i] = unsplitArray[8 * i + 1];
-      splitArray[2 * count + i] = unsplitArray[8 * i + 2];
-      splitArray[3 * count + i] = unsplitArray[8 * i + 3];
-      splitArray[4 * count + i] = unsplitArray[8 * i + 4];
-      splitArray[5 * count + i] = unsplitArray[8 * i + 5];
-      splitArray[6 * count + i] = unsplitArray[8 * i + 6];
-      splitArray[7 * count + i] = unsplitArray[8 * i + 7];
-   }
-}
-
-void ROOT::Experimental::Detail::RColumnElement<double, ROOT::Experimental::EColumnType::kSplitReal64>::Unpack(
-   void *dst, void *src, std::size_t count) const
-{
-   char *splitArray = reinterpret_cast<char *>(src);
-   char *unsplitArray = reinterpret_cast<char *>(dst);
-   for (std::size_t i = 0; i < count; ++i) {
-      unsplitArray[8 * i] = splitArray[i];
-      unsplitArray[8 * i + 1] = splitArray[count + i];
-      unsplitArray[8 * i + 2] = splitArray[2 * count + i];
-      unsplitArray[8 * i + 3] = splitArray[3 * count + i];
-      unsplitArray[8 * i + 4] = splitArray[4 * count + i];
-      unsplitArray[8 * i + 5] = splitArray[5 * count + i];
-      unsplitArray[8 * i + 6] = splitArray[6 * count + i];
-      unsplitArray[8 * i + 7] = splitArray[7 * count + i];
-   }
-}
-
 void ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(
   void *dst, void *src, std::size_t count) const
 {
