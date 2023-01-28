@@ -255,7 +255,9 @@ public:
    ///    fields and the model
    /// 2. An event loop reads every entry from the TTree, applies transformations where necessary, and writes the
    ///    output entry to the RNTuple.
-   RResult<void> Import();
+   /// When lastEntry is a number between 0 - total entries in the source TTree, the event loop will
+   /// stop at lastEntry.
+   RResult<void> Import(int lastEntry);
 }; // class RNTupleImporter
 
 } // namespace Experimental

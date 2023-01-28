@@ -320,7 +320,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
+ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import(int lastEntry = -1)
 {
    if (fDestFile->FindKey(fNTupleName.c_str()) != nullptr)
       return R__FAIL("Key '" + fNTupleName + "' already exists in file " + fDestFileName);
@@ -336,6 +336,9 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
 
    fProgressCallback = fIsQuiet ? nullptr : std::make_unique<RDefaultProgressCallback>();
    auto nEntries = fSourceTree->GetEntries();
+   if(nEntries => lastEntry && lastEntry >= 0){
+       nEntries = lastEntry;
+   }
    for (decltype(nEntries) i = 0; i < nEntries; ++i) {
       fSourceTree->GetEntry(i);
 
