@@ -43,6 +43,7 @@ The following people have contributed to this new version:
  Pawan Johnson, Indian Institute of Technology Kharagpur,\
  Subham Jyoti, ITER Bhubaneswar,\
  Ivan Kabadzhov, CERN/SFT,\
+ Baidyanath Kundu, Princeton/SFT,\
  Giovanna Lazzari Miotto, CERN/SFT,\
  Yueh-Shun Li, National Central U Taiwan/CMS,\
  Sergey Linev, GSI,\
