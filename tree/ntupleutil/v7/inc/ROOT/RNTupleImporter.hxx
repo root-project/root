@@ -124,8 +124,11 @@ private:
       }
       RImportField(const RImportField &other) = delete;
       RImportField(RImportField &&other)
-         : fField(other.fField), fFieldBuffer(other.fFieldBuffer), fOwnsFieldBuffer(other.fOwnsFieldBuffer),
-           fIsInUntypedCollection(other.fIsInUntypedCollection), fIsClass(other.fIsClass)
+         : fField(other.fField),
+           fFieldBuffer(other.fFieldBuffer),
+           fOwnsFieldBuffer(other.fOwnsFieldBuffer),
+           fIsInUntypedCollection(other.fIsInUntypedCollection),
+           fIsClass(other.fIsClass)
       {
          other.fOwnsFieldBuffer = false;
       }
@@ -213,7 +216,10 @@ private:
    std::unique_ptr<TFile> fDestFile;
    RNTupleWriteOptions fWriteOptions;
 
-   /// No standard output, conversely if set to false, schema information and progress is printed
+   /// The maximum number of entries to import. When this value is -1 (default), import all entries.
+   std::int64_t fMaxEntries = -1;
+
+   /// No standard output, conversely if set to false, schema information and progress is printed.
    bool fIsQuiet = false;
    std::unique_ptr<RProgressCallback> fProgressCallback;
 
@@ -246,6 +252,7 @@ public:
    RNTupleWriteOptions GetWriteOptions() const { return fWriteOptions; }
    void SetWriteOptions(RNTupleWriteOptions options) { fWriteOptions = options; }
    void SetNTupleName(const std::string &name) { fNTupleName = name; }
+   void SetMaxEntries(std::uint64_t maxEntries) { fMaxEntries = maxEntries; };
 
    /// Whether or not information and progress is printed to stdout.
    void SetIsQuiet(bool value) { fIsQuiet = value; }

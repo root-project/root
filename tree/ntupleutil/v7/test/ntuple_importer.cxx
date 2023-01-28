@@ -494,3 +494,55 @@ TEST(RNTupleImporter, CollectionProxyClass)
       }
    }
 }
+
+TEST(RNTUpleImporter, MaxEntries)
+{
+   FileRaii fileGuard("test_ntuple_importer_max_entries.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "");
+      Int_t a = 42;
+      // For single-leaf branches, use branch name, not leaf name
+      tree->Branch("a", &a);
+
+      for (int i = 0; i < 5; ++i) {
+         tree->Fill();
+      }
+
+      tree->Write();
+   }
+
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+
+   // Base case, we don't do anything with `SetMaxEntries`.
+   importer->SetIsQuiet(true);
+   importer->SetNTupleName("ntuple1");
+   importer->Import();
+
+   auto reader = RNTupleReader::Open("ntuple1", fileGuard.GetPath());
+   EXPECT_EQ(5U, reader->GetNEntries());
+
+   // We only want to import 3 entries, which should happen.
+   importer->SetMaxEntries(3);
+   importer->SetNTupleName("ntuple2");
+   importer->Import();
+
+   reader = RNTupleReader::Open("ntuple2", fileGuard.GetPath());
+   EXPECT_EQ(3U, reader->GetNEntries());
+
+   // Now we want to import 15 entries, while the original tree only has 5 entries.
+   importer->SetMaxEntries(15);
+   importer->SetNTupleName("ntuple3");
+   importer->Import();
+
+   reader = RNTupleReader::Open("ntuple3", fileGuard.GetPath());
+   EXPECT_EQ(5U, reader->GetNEntries());
+
+   // Negative fMaxEntry values should be ignored.
+   importer->SetMaxEntries(-15);
+   importer->SetNTupleName("ntuple4");
+   importer->Import();
+
+   reader = RNTupleReader::Open("ntuple4", fileGuard.GetPath());
+   EXPECT_EQ(5U, reader->GetNEntries());
+}
