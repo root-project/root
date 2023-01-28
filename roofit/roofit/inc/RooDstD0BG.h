@@ -25,31 +25,27 @@ class RooRealVar;
 
 class RooDstD0BG : public RooAbsPdf {
 public:
-  RooDstD0BG() {} ;
-  RooDstD0BG(const char *name, const char *title,
-        RooAbsReal& _dm, RooAbsReal& _dm0, RooAbsReal& _c,
-        RooAbsReal& _a, RooAbsReal& _b);
+   RooDstD0BG(){};
+   RooDstD0BG(const char *name, const char *title, RooAbsReal &_dm, RooAbsReal &_dm0, RooAbsReal &_c, RooAbsReal &_a,
+              RooAbsReal &_b);
 
-  RooDstD0BG(const RooDstD0BG& other, const char *name=nullptr) ;
-  TObject *clone(const char *newname) const override {
-    return new RooDstD0BG(*this,newname); }
+   RooDstD0BG(const RooDstD0BG &other, const char *name = nullptr);
+   TObject *clone(const char *newname) const override { return new RooDstD0BG(*this, newname); }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
-  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
+   Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char *rangeName = nullptr) const override;
+   double analyticalIntegral(Int_t code, const char *rangeName = nullptr) const override;
 
 protected:
+   RooRealProxy dm;
+   RooRealProxy dm0;
+   RooRealProxy C, A, B;
 
-  RooRealProxy dm ;
-  RooRealProxy dm0 ;
-  RooRealProxy C,A,B ;
-
-  double evaluate() const override;
-  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
-  inline bool canComputeBatchWithCuda() const override { return true; }
+   double evaluate() const override;
+   void computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &) const override;
+   inline bool canComputeBatchWithCuda() const override { return true; }
 
 private:
-
-  ClassDefOverride(RooDstD0BG,1) // D*-D0 mass difference background PDF
+   ClassDefOverride(RooDstD0BG, 1) // D*-D0 mass difference background PDF
 };
 
 #endif
