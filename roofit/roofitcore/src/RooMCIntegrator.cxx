@@ -41,7 +41,6 @@ based on a C version from the 0.9 beta release of the GNU scientific library.
 
 using namespace std;
 
-ClassImp(RooMCIntegrator);
 
 // Register this class with RooNumIntFactory
 
@@ -118,7 +117,7 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
 RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function), _grid(function)
 {
-  const RooArgSet& configSet = config.getConfigSection(ClassName()) ;
+  const RooArgSet& configSet = config.getConfigSection("RooMCIntegrator") ;
   _verbose = (bool) configSet.getCatIndex("verbose",0) ;
   _alpha = configSet.getRealValue("alpha",1.5) ;
   _mode = (SamplingMode) configSet.getCatIndex("samplingMode",Importance) ;
@@ -286,7 +285,7 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
           index += box[i] * sizeOfDim;
           sizeOfDim *= _grid.getNBoxes();
         }
-        coutP(Integration) << "RooMCIntegrator: still working ... iteration "
+        oocoutP(nullptr, Integration) << "RooMCIntegrator: still working ... iteration "
             << it << '/' << iterations << "  box " << index << "/"<< std::pow(_grid.getNBoxes(), _grid.getDimension()) << endl;
         _timer.Start(true);
       }

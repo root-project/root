@@ -37,7 +37,6 @@ and the outer two pieces, if required are calculated using a 1/x transform
 #include "TClass.h"
 
 
-ClassImp(RooImproperIntegrator1D);
 
 // Register this class with RooNumIntConfig
 

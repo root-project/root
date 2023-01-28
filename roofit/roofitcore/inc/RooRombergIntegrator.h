@@ -83,8 +83,6 @@ protected:
    // Numerical integrator workspace
    std::vector<double> _wksp; ///<! Integrator workspace
    std::vector<double> _x;    //! do not persist
-
-   ClassDefOverride(RooRombergIntegrator, 0) // 1-dimensional numerical integration engine
 };
 
 #endif

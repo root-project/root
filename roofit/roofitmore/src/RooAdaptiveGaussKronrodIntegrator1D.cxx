@@ -58,8 +58,6 @@ can be selected to speed up the convergence of these integrals.
 using namespace std ;
 
 
-ClassImp(RooAdaptiveGaussKronrodIntegrator1D);
-
 // --- From GSL_MATH.h -------------------------------------------
 struct gsl_function_struct
 {
@@ -190,7 +188,7 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
    : RooAbsIntegrator(function), _useIntegrandLimits(true), _epsAbs(config.epsRel()), _epsRel(config.epsAbs())
 {
   // Use this form of the constructor to integrate over the function's default range.
-  const RooArgSet& confSet = config.getConfigSection(ClassName()) ;
+  const RooArgSet& confSet = config.getConfigSection("RooAdaptiveGaussKronrodIntegrator1D") ;
   _maxSeg = (Int_t) confSet.getRealValue("maxSeg",100) ;
   _methodKey = confSet.getCatIndex("method",2) ;
 
@@ -212,7 +210,7 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const R
      _xmax(xmax)
 {
   // Use this form of the constructor to integrate over the function's default range.
-  const RooArgSet& confSet = config.getConfigSection(ClassName()) ;
+  const RooArgSet& confSet = config.getConfigSection("RooAdaptiveGaussKronrodIntegrator1D") ;
   _maxSeg = (Int_t) confSet.getRealValue("maxSeg",100) ;
   _methodKey = confSet.getCatIndex("method",2) ;
 
@@ -254,7 +252,7 @@ RooAdaptiveGaussKronrodIntegrator1D::~RooAdaptiveGaussKronrodIntegrator1D()
 bool RooAdaptiveGaussKronrodIntegrator1D::setLimits(double* xmin, double* xmax)
 {
   if(_useIntegrandLimits) {
-    coutE(Integration) << "RooAdaptiveGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << endl;
+    oocoutE(nullptr, Integration) << "RooAdaptiveGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << endl;
     return false;
   }
 
