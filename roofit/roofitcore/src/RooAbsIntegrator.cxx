@@ -31,8 +31,6 @@ functions that implement the RooAbsFunc interface.
 
 using namespace std;
 
-ClassImp(RooAbsIntegrator);
-
 RooAbsIntegrator::RooAbsIntegrator() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,7 +54,7 @@ double RooAbsIntegrator::calculate(const double *yvec)
   double ret = integral(yvec) ;
   integrand()->restoreXVec() ;
 
-  cxcoutD(NumIntegration) << ClassName() << "::calculate(" << _function->getName() << ") number of function calls = " << integrand()->numCall()<<", result  = "<<ret << endl ;
+  oocxcoutD(static_cast<TObject*>(nullptr), NumIntegration) << "RooAbsIntegrator::calculate(" << _function->getName() << ") number of function calls = " << integrand()->numCall()<<", result  = "<<ret << endl ;
   return ret ;
 }
 

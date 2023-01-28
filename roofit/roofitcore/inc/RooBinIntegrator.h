@@ -55,8 +55,6 @@ protected:
   double* xvec(double xx, double yy, double zz) { _x[0] = xx ; _x[1] = yy ; _x[2] = zz ; return _x.data(); }
 
   std::vector<double> _x ; ///<! do not persist
-
-  ClassDefOverride(RooBinIntegrator,0) // 1-dimensional numerical integration engine
 };
 
 #endif

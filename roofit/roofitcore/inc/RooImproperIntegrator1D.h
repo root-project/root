@@ -55,8 +55,6 @@ protected:
   mutable std::unique_ptr<RooRombergIntegrator> _integrator1; ///< Piece integrator 1
   mutable std::unique_ptr<RooRombergIntegrator> _integrator2; ///< Piece integrator 2
   mutable std::unique_ptr<RooRombergIntegrator> _integrator3; ///< Piece integrator 3
-
-  ClassDefOverride(RooImproperIntegrator1D,0) // 1-dimensional improper integration engine
 };
 
 #endif

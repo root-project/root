@@ -19,10 +19,11 @@
 #include "RooAbsFunc.h"
 #include "RooNumIntConfig.h"
 
-class RooAbsIntegrator : public TObject {
+class RooAbsIntegrator {
 public:
   RooAbsIntegrator() ;
   RooAbsIntegrator(const RooAbsFunc& function, bool printEvalCounter=false);
+  virtual ~RooAbsIntegrator() = default;
 
   /// Is integrator in valid state
   inline bool isValid() const {
@@ -59,8 +60,6 @@ protected:
   const RooAbsFunc *_function = nullptr; ///< Pointer to function binding of integrand
   bool _valid = false;                   ///< Is integrator in valid state?
   bool _printEvalCounter = false;        ///< If true print number of function evaluation required for integration
-
-  ClassDefOverride(RooAbsIntegrator,0) // Abstract interface for real-valued function integrators
 };
 
 #endif

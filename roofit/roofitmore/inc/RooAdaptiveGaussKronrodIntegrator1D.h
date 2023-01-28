@@ -68,8 +68,6 @@ protected:
 
   mutable double _xmin;              //! Lower integration bound
   mutable double _xmax;              //! Upper integration bound
-
-  ClassDefOverride(RooAdaptiveGaussKronrodIntegrator1D,0) // 1-dimensional adaptive Gauss-Kronrod numerical integration engine
 };
 
 #endif
