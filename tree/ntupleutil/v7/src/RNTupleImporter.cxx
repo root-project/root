@@ -335,7 +335,13 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
    fModel = nullptr;
 
    fProgressCallback = fIsQuiet ? nullptr : std::make_unique<RDefaultProgressCallback>();
+
    auto nEntries = fSourceTree->GetEntries();
+
+   if (fMaxEntries >= 0 && fMaxEntries < nEntries) {
+      nEntries = fMaxEntries;
+   }
+
    for (decltype(nEntries) i = 0; i < nEntries; ++i) {
       fSourceTree->GetEntry(i);
 
