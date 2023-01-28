@@ -42,8 +42,6 @@ Computes the integral over a binned distribution by summing the bin contents of 
 
 using namespace std;
 
-ClassImp(RooBinIntegrator);
-;
 
 // Register this class with RooNumIntConfig
 

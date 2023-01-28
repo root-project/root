@@ -711,6 +711,7 @@ bool RooRealIntegral::initNumIntegrator() const
 
   // Create appropriate numeric integrator using factory
   bool isBinned = _function->isBinnedDistribution(_intList) ;
+  std::string integratorName = RooNumIntFactory::instance().getIntegratorName(*_numIntegrand,*_iconfig,0,isBinned);
   _numIntEngine = RooNumIntFactory::instance().createIntegrator(*_numIntegrand,*_iconfig,0,isBinned);
 
   if(_numIntEngine == nullptr || !_numIntEngine->isValid()) {
@@ -719,7 +720,7 @@ bool RooRealIntegral::initNumIntegrator() const
   }
 
   cxcoutI(NumIntegration) << "RooRealIntegral::init(" << GetName() << ") using numeric integrator "
-           << _numIntEngine->ClassName() << " to calculate Int" << _intList << std::endl ;
+           << integratorName << " to calculate Int" << _intList << std::endl ;
 
   if (_intList.size()>3) {
     cxcoutI(NumIntegration) << "RooRealIntegral::init(" << GetName() << ") evaluation requires " << _intList.size() << "-D numeric integration step. Evaluation may be slow, sufficient numeric precision for fitting & minimization is not guaranteed" << std::endl ;

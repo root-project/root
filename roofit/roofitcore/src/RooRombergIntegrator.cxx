@@ -230,7 +230,6 @@ std::pair<double, int> integrate1d(std::function<double(double)> func, bool doTr
 } // namespace Detail
 } // namespace RooFit
 
-ClassImp(RooRombergIntegrator);
 
 // Register this class with RooNumIntConfig
 

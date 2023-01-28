@@ -65,8 +65,6 @@ protected:
 
   friend class RooNumIntFactory ;
   static void registerIntegrator(RooNumIntFactory& fact) ;
-
-  ClassDefOverride(RooAdaptiveIntegratorND,0) // N-dimensional adaptive integration (interface to MathCore integrator)
 };
 
 #endif

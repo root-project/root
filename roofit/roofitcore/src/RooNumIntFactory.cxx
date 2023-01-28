@@ -126,23 +126,13 @@ bool RooNumIntFactory::registerPlugin(std::string const &name, Creator const &cr
   return false ;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Construct a numeric integrator instance that operates on function 'func' and is configured
-/// with 'config'. If ndimPreset is greater than zero that number is taken as the dimensionality
-/// of the integration, otherwise it is queried from 'func'. This function iterators over list
-/// of available prototype integrators and returns an clone attached to the given function of
-/// the first class that matches the specifications of the requested integration considering
-/// the number of dimensions, the nature of the limits (open ended vs closed) and the user
-/// preference stated in 'config'
-
-std::unique_ptr<RooAbsIntegrator> RooNumIntFactory::createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndimPreset, bool isBinned) const
+std::string RooNumIntFactory::getIntegratorName(RooAbsFunc& func, const RooNumIntConfig& config, int ndimPreset, bool isBinned) const
 {
   // First determine dimensionality and domain of integrand
-  Int_t ndim = ndimPreset>0 ? ndimPreset : ((Int_t)func.getDimension()) ;
+  int ndim = ndimPreset>0 ? ndimPreset : ((int)func.getDimension()) ;
 
   bool openEnded = false ;
-  Int_t i ;
+  int i ;
   for (i=0 ; i<ndim ; i++) {
     if(RooNumber::isInfinite(func.getMinLimit(i)) ||
        RooNumber::isInfinite(func.getMaxLimit(i))) {
@@ -151,7 +141,7 @@ std::unique_ptr<RooAbsIntegrator> RooNumIntFactory::createIntegrator(RooAbsFunc&
   }
 
   // Find method defined configuration
-  TString method ;
+  std::string method ;
   switch(ndim) {
   case 1:
     method = openEnded ? config.method1DOpen().getCurrentLabel() : config.method1D().getCurrentLabel() ;
@@ -172,10 +162,30 @@ std::unique_ptr<RooAbsIntegrator> RooNumIntFactory::createIntegrator(RooAbsFunc&
   }
 
   // Check that a method was defined for this case
-  if (!method.CompareTo("N/A")) {
-    oocoutE(nullptr,Integration) << "RooNumIntFactory::createIntegrator: No integration method has been defined for "
-                 << (openEnded?"an open ended ":"a ") << ndim << "-dimensional integral" << std::endl ;
-    return nullptr ;
+  if (method == "N/A") {
+    oocoutE(nullptr,Integration) << "RooNumIntFactory: No integration method has been defined for "
+                 << (openEnded?"an open ended ":"a ") << ndim << "-dimensional integral" << std::endl;
+    return {};
+  }
+
+  return method;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a numeric integrator instance that operates on function 'func' and is configured
+/// with 'config'. If ndimPreset is greater than zero that number is taken as the dimensionality
+/// of the integration, otherwise it is queried from 'func'. This function iterators over list
+/// of available prototype integrators and returns an clone attached to the given function of
+/// the first class that matches the specifications of the requested integration considering
+/// the number of dimensions, the nature of the limits (open ended vs closed) and the user
+/// preference stated in 'config'
+
+std::unique_ptr<RooAbsIntegrator> RooNumIntFactory::createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, int ndimPreset, bool isBinned) const
+{
+  std::string method = getIntegratorName(func, config, ndimPreset, isBinned);
+
+  if(method.empty()) {
+    return nullptr;
   }
 
   // Retrieve proto integrator and return clone configured for the requested integration task

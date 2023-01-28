@@ -59,8 +59,6 @@ reached
 
 using namespace std;
 
-ClassImp(RooGaussKronrodIntegrator1D);
-
 /// \cond ROOFIT_INTERNAL
 
 // register integrator class

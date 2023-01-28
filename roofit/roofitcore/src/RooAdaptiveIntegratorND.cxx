@@ -42,8 +42,6 @@ Adaptive one-dimensional numerical integration algorithm.
 
 using namespace std;
 
-ClassImp(RooAdaptiveIntegratorND);
-;
 
 // Register this class with RooNumIntConfig
 
@@ -110,8 +108,8 @@ RooAdaptiveIntegratorND::~RooAdaptiveIntegratorND()
 {
   delete _integrator ;
   if (_nError>_nWarn) {
-    coutW(NumIntegration) << "RooAdaptiveIntegratorND::dtor(" << _intName
-           << ") WARNING: Number of suppressed warningings about integral evaluations where target precision was not reached is " << _nError-_nWarn << endl ;
+    oocoutW(nullptr, NumIntegration) << "RooAdaptiveIntegratorND::dtor(" << _intName
+           << ") WARNING: Number of suppressed warningings about integral evaluations where target precision was not reached is " << _nError-_nWarn << std::endl;
   }
 
 }
@@ -171,11 +169,11 @@ double RooAdaptiveIntegratorND::integral(const double* /*yvec*/)
   if (_integrator->Status()==1) {
     _nError++ ;
     if (_nError<=_nWarn) {
-      coutW(NumIntegration) << "RooAdaptiveIntegratorND::integral(" << integrand()->getName() << ") WARNING: target rel. precision not reached due to nEval limit of "
+      oocoutW(nullptr, NumIntegration) << "RooAdaptiveIntegratorND::integral(" << integrand()->getName() << ") WARNING: target rel. precision not reached due to nEval limit of "
              << _nmax << ", estimated rel. precision is " << Form("%3.1e",_integrator->RelError()) << endl ;
     }
     if (_nError==_nWarn) {
-      coutW(NumIntegration) << "RooAdaptiveIntegratorND::integral(" << integrand()->getName()
+      oocoutW(nullptr, NumIntegration) << "RooAdaptiveIntegratorND::integral(" << integrand()->getName()
              << ") Further warnings on target precision are suppressed conform specification in integrator specification" << endl ;
     }
   }
