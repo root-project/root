@@ -30,16 +30,13 @@ D*-D0 mass difference distributions. It computes
 \f]
 **/
 
-#include "RooDstD0BG.h"
-#include "RooRealVar.h"
-#include "RooRombergIntegrator.h"
-#include "RooAbsFunc.h"
-#include "RooBatchCompute.h"
+#include <RooDstD0BG.h>
 
-#include "TMath.h"
+#include <RooBatchCompute.h>
+
+#include <TMath.h>
 
 #include <cmath>
-using namespace std;
 
 ClassImp(RooDstD0BG);
 
@@ -76,7 +73,7 @@ double RooDstD0BG::evaluate() const
    if (arg <= 0)
       return 0;
    double ratio = dm / dm0;
-   double val = (1 - exp(-arg / C)) * TMath::Power(ratio, A) + B * (ratio - 1);
+   double val = (1 - std::exp(-arg / C)) * TMath::Power(ratio, A) + B * (ratio - 1);
 
    return (val > 0 ? val : 0);
 }
@@ -100,46 +97,46 @@ Int_t RooDstD0BG::getAnalyticalIntegral(RooArgSet & /*allVars*/, RooArgSet & /*a
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double RooDstD0BG::analyticalIntegral(Int_t code, const char *rangeName) const
+double RooDstD0BG::analyticalIntegral(Int_t /*code*/, const char * /*rangeName*/) const
 {
-   switch (code) {
-   case 1: {
-      double min = dm.min(rangeName);
-      double max = dm.max(rangeName);
-      if (max <= dm0)
-         return 0;
-      else if (min < dm0)
-         min = dm0;
-
-      bool doNumerical = false;
-      if (A != 0)
-         doNumerical = true;
-      else if (B < 0) {
-         // If b<0, pdf can be negative at large dm, the integral should
-         // only up to where pdf hits zero. Better solution should be
-         // solve the zero and use it as max.
-         // Here we check this whether pdf(max) < 0. If true, let numerical
-         // integral take care of. ( kind of ugly!)
-         if (1 - exp(-(max - dm0) / C) + B * (max / dm0 - 1) < 0)
-            doNumerical = true;
-      }
-      if (!doNumerical) {
-         return (max - min) + C * exp(dm0 / C) * (exp(-max / C) - exp(-min / C)) +
-                B * (0.5 * (max * max - min * min) / dm0 - (max - min));
-      } else {
-         // In principle the integral for a!=0  can be done analytically.
-         // It involves incomplete Gamma function, TMath::Gamma(a+1,m/c),
-         // which is not defined for a < -1. And the whole expression is
-         // not stable for m/c >> 1.
-         // Do numerical integral
-         RooArgSet vset(dm.arg(), "vset");
-         std::unique_ptr<RooAbsFunc> func{bindVars(vset)};
-         RooRombergIntegrator integrator(*func, min, max);
-         return integrator.integral();
-      }
-   }
-   }
+   // switch (code) {
+   // case 1: {
+   //    double min = dm.min(rangeName);
+   //    double max = dm.max(rangeName);
+   //    if (max <= dm0)
+   //       return 0;
+   //    else if (min < dm0)
+   //       min = dm0;
+   //
+   //    bool doNumerical = false;
+   //    if (A != 0)
+   //       doNumerical = true;
+   //    else if (B < 0) {
+   //       // If b<0, pdf can be negative at large dm, the integral should
+   //       // only up to where pdf hits zero. Better solution should be
+   //       // solve the zero and use it as max.
+   //       // Here we check this whether pdf(max) < 0. If true, let numerical
+   //       // integral take care of. ( kind of ugly!)
+   //       if (1 - exp(-(max - dm0) / C) + B * (max / dm0 - 1) < 0)
+   //          doNumerical = true;
+   //    }
+   //    if (!doNumerical) {
+   //       return (max - min) + C * exp(dm0 / C) * (exp(-max / C) - exp(-min / C)) +
+   //              B * (0.5 * (max * max - min * min) / dm0 - (max - min));
+   //    } else {
+   //       // In principle the integral for a!=0  can be done analytically.
+   //       // It involves incomplete Gamma function, TMath::Gamma(a+1,m/c),
+   //       // which is not defined for a < -1. And the whole expression is
+   //       // not stable for m/c >> 1.
+   //       // Do numerical integral
+   //       RooArgSet vset(dm.arg(),"vset");
+   //       std::unique_ptr<RooAbsFunc> func{bindVars(vset)};
+   //       RooRombergIntegrator integrator(*func,min,max);
+   //       return integrator.integral();
+   //    }
+   // }
+   // }
 
    assert(0);
-   return 0;
+   return 0.0;
 }
