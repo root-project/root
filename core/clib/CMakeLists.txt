@@ -44,6 +44,7 @@ target_include_directories(Clib
 # alternative for strlcpy on linux, see https://github.com/root-project/root/issues/12152
 if(libbsd)
   target_link_libraries(Clib PUBLIC LIBBSD::libbsd)
+  target_link_libraries(Core PUBLIC LIBBSD::libbsd)
 endif()
 
 target_include_directories(Core
@@ -51,6 +52,7 @@ target_include_directories(Core
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
 )
 
-target_sources(Core PRIVATE $<TARGET_OBJECTS:Clib>)
+# link object libraries
+target_link_libraries(Core PRIVATE Clib)
 
 ROOT_INSTALL_HEADERS()

@@ -13,7 +13,6 @@ if(x11)
   ROOT_EXECUTABLE(root
     src/rootx.cxx
     src/rootxx.cxx
-    ../core/clib/src/strlcpy.c
   )
   target_include_directories(root
     PRIVATE
@@ -24,6 +23,7 @@ if(x11)
       ${X11_Xft_LIB}
       ${X11_Xpm_LIB}
       ${X11_LIBRARIES}
+      Clib # for strlcpy/strlcat
   )
 
 if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)

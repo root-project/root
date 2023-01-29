@@ -106,10 +106,10 @@ if (clad)
 endif()
 
 ROOT_LINKER_LIBRARY(Cling
-        $<TARGET_OBJECTS:ClingUtils>
-        $<TARGET_OBJECTS:Dictgen>
-        $<TARGET_OBJECTS:MetaCling>
         LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS} ${CLING_PLUGIN_LINK_LIBS})
+
+# link object libraries
+target_link_libraries(Cling PRIVATE ClingUtils Dictgen MetaCling)
 
 string(TOUPPER "${LLVM_BUILD_TYPE}" THE_BUILD_TYPE)
 if("${THE_BUILD_TYPE}" STREQUAL DEBUG OR "${THE_BUILD_TYPE}" STREQUAL RELWITHDEBINFO)

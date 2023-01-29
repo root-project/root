@@ -23,12 +23,11 @@ if(NOT builtin_clang)
 endif()
 
 ROOT_EXECUTABLE(rootcling_stage1 src/rootcling_stage1.cxx
-                              $<TARGET_OBJECTS:Clib>
-                              $<TARGET_OBJECTS:ClingUtils>
-                              $<TARGET_OBJECTS:Dictgen>
-                              $<TARGET_OBJECTS:Foundation_Stage1>
                               LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${ROOT_ATOMIC_LIBS}
                               NOINSTALL)
+
+# link object libraries
+target_link_libraries(rootcling_stage1 Clib ClingUtils Dictgen Foundation_Stage1)
 
 target_include_directories(rootcling_stage1 PRIVATE
    ${CMAKE_SOURCE_DIR}/core/foundation/inc    # for RConfig.hxx
