@@ -41,6 +41,11 @@ target_include_directories(Clib
     ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/inc # for RConfig.hxx
 )
 
+# alternative for strlcpy on linux, see https://github.com/root-project/root/issues/12152
+if(libbsd)
+  target_link_libraries(Clib PUBLIC LIBBSD::libbsd)
+endif()
+
 target_include_directories(Core
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>

@@ -41,6 +41,7 @@
 #@hasvdt@ R__HAS_VDT    /**/
 #@hasveccore@ R__HAS_VECCORE    /**/
 #@usecxxmodules@ R__USE_CXXMODULES   /**/
+#@uselibbsd@ R__USE_LIBBSD    /**/
 #@uselibc++@ R__USE_LIBCXX    /**/
 #@hasstdstringview@ R__HAS_STD_STRING_VIEW   /**/
 #@cudahasstdstringview@ R__CUDA_HAS_STD_STRING_VIEW   /**/

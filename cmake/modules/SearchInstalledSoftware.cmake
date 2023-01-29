@@ -1664,6 +1664,20 @@ if (vecgeom)
   endif()
 endif()
 
+#---Check for libbsd--------------------------------------------------------------------
+if(libbsd)
+  message(STATUS "Looking for libbsd")
+  find_package(libbsd)
+  if(NOT LIBBSD_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "libbsd not found. Ensure that the installation of libbsd and pkg-config is in the CMAKE_PREFIX_PATH")
+    else()
+      message(STATUS "libbsd not found, switchig off libbsd option. Ensure that the installation of libbsd and pkg-config is in the CMAKE_PREFIX_PATH")
+      set(libbsd OFF CACHE BOOL "Disabled because libbsd not found" FORCE)
+    endif()
+  endif()
+endif()
+
 #---Check for protobuf-------------------------------------------------------------------
 
 if(tmva-sofie)

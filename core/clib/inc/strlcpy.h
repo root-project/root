@@ -11,7 +11,23 @@
 
 #include <ROOT/RConfig.hxx>
 
-#ifndef HAS_STRLCPY
+#ifdef HAS_STRLCPY
+
+#ifdef R__USE_LIBBSD
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <bsd/string.h>
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* R__USE_LIBBSD */
+
+#else
 
 #ifndef WIN32
 #   include <unistd.h>
@@ -29,6 +45,7 @@ size_t strlcat(char *dst, const char *src, size_t siz);
 #ifdef __cplusplus
 }
 #endif
+
 #endif /* HAS_STRLCPY */
 
 #endif /* ROOT_strlcpy */
