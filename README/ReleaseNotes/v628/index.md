@@ -44,7 +44,7 @@ The following people have contributed to this new version:
  Subham Jyoti, ITER Bhubaneswar,\
  Ivan Kabadzhov, CERN/SFT,\
  Giovanna Lazzari Miotto, CERN/SFT,\
- Shamrock Lee,\
+ Yueh-Shun Li, National Central U Taiwan/CMS,\
  Sergey Linev, GSI,\
  Jerry Ling, Harvard University,\
  Javier Lopez-Gomez, CERN/SFT,\
