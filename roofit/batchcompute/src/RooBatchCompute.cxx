@@ -102,7 +102,7 @@ public:
                batches.setNEvents(nEvents - idx * batches.getNEvents());
             }
 
-            int events = batches.getNEvents();
+            std::size_t events = batches.getNEvents();
             batches.setNEvents(bufferSize);
             while (events > bufferSize) {
                _computeFunctions[computer](batches);
@@ -124,7 +124,7 @@ public:
          // Then advance every object but the first to split the work between threads
          Batches batches(output, nEvents, vars, extraArgs, buffer.data());
 
-         int events = batches.getNEvents();
+         std::size_t events = batches.getNEvents();
          batches.setNEvents(bufferSize);
          while (events > bufferSize) {
             _computeFunctions[computer](batches);
