@@ -2034,7 +2034,6 @@ if (builtin_gtest)
     GIT_SHALLOW 1
     GIT_TAG release-1.12.1
     UPDATE_COMMAND ""
-    # TIMEOUT 10
     # # Force separate output paths for debug and release builds to allow easy
     # # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands
     # CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
@@ -2081,18 +2080,11 @@ if (builtin_gtest)
     add_dependencies(${lib} googletest)
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND
         ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL 9)
-      # TODO cmake 3.11
-      #target_compile_options(${lib} INTERFACE -Wno-deprecated-copy)
-      SET_PROPERTY(TARGET ${lib} APPEND PROPERTY INTERFACE_COMPILE_OPTIONS "-Wno-deprecated-copy")
+      target_compile_options(${lib} INTERFACE -Wno-deprecated-copy)
     endif()
   endforeach()
-  # Once we require at least cmake 3.11, target_include_directories will work for imported targets
-  # Because of https://gitlab.kitware.com/cmake/cmake/-/merge_requests/1264
-  # We need this workaround:
-  SET_PROPERTY(TARGET gtest APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${GTEST_INCLUDE_DIR})
-  SET_PROPERTY(TARGET gmock APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${GMOCK_INCLUDE_DIR})
-  #target_include_directories(gtest INTERFACE ${GTEST_INCLUDE_DIR})
-  #target_include_directories(gmock INTERFACE ${GMOCK_INCLUDE_DIR})
+  target_include_directories(gtest INTERFACE ${GTEST_INCLUDE_DIR})
+  target_include_directories(gmock INTERFACE ${GMOCK_INCLUDE_DIR})
 
   set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX})
   set_property(TARGET gtest_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main${CMAKE_STATIC_LIBRARY_SUFFIX})
