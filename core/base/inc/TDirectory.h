@@ -304,7 +304,6 @@ public:
 
    static Bool_t       Cd(const char *path);
    static void         DecodeNameCycle(const char *namecycle, char *name, Short_t &cycle, const size_t namesize = 0);
-   static void         EncodeNameCycle(char *buffer, const char *name, Short_t cycle);
 
    ClassDefOverride(TDirectory,5)  //Describe directory structure in memory
 };
