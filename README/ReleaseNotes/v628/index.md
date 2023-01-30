@@ -12,6 +12,7 @@ For more information, see:
 
 The following people have contributed to this new version:
 
+ Guilherme Amadio, CERN/SFT,\
  Rahul Balasubramanian, NIKHEF/ATLAS,\
  Bertrand Bellenot, CERN/SFT,\
  Jakob Blomer, CERN/SFT,\
