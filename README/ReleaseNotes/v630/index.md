@@ -35,7 +35,9 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 - The RDataFrame factory functions `MakeCsvDataFrame`, `MakeArrowDataFrame`, `MakeNTupleDataFrame` and `MakeSqliteDataFrame` that were deprecated in v6.28 have been removed. Use `FromCSV`, `FromArrow`, `FromRNTuple` or `FromSqlite` instead.
-
+- The TStorage reallocation routine without a size (`TStorage::ReAlloc(void *ovp, size_t size`) and heap
+related routines (`TStorage::AddToHeap`, `TStorage::IsOnHeap`, `TStorage::GetHeapBegin`, `TStorage::GetHeapEnd`)
+that were deprecated in v6.02/00.
 
 ## Core Libraries
 

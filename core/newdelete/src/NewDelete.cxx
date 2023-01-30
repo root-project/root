@@ -376,32 +376,11 @@ void operator delete[](void * /* ptr */, std::size_t, std::align_val_t /* al */)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reallocate (i.e. resize) block of memory.
 
-void *CustomReAlloc1(void *ovp, size_t size)
+void *CustomReAlloc1(void *, size_t )
 {
-   static const char *where = "CustomReAlloc1";
-
-   if (ovp == 0)
-      return ::operator new(size);
-
-   if (!gNewInit)
-      Fatal(where, "space was not allocated via custom new");
-
-   size_t oldsize = storage_size(ovp);
-   if (oldsize == size)
-      return ovp;
-   RemoveStatMagic(ovp, where);
-   void *vp;
-   if (ROOT::Internal::gMmallocDesc)
-      vp = ::mrealloc(ROOT::Internal::gMmallocDesc, RealStart(ovp), RealSize(size));
-   else
-      vp = ::realloc((char*)RealStart(ovp), RealSize(size));
-   if (vp == 0)
-      Fatal(where, gSpaceErr, RealSize(size));
-   if (size > oldsize)
-      MemClearRe(ExtStart(vp), oldsize, size-oldsize);   // NOLINT
-
-   StoreSizeMagic(vp, size, where);   // NOLINT
-   return ExtStart(vp);
+   Fatal("NewDelete::CustomRealloc1",
+         "This should not be used. The TStorage interface using this has been removed.");
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
