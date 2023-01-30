@@ -21,6 +21,11 @@
 #include <RtypesCore.h> // Long64_t
 
 namespace ROOT {
+namespace Detail {
+namespace RDF {
+class RLoopManager;
+}
+} // namespace Detail
 namespace RDF {
 namespace Experimental {
 
@@ -29,6 +34,8 @@ namespace Experimental {
 \brief A dataset specification for RDataFrame.
 */
 class RDatasetSpec {
+   friend class ::ROOT::Detail::RDF::RLoopManager; // for MoveOutDatasetGroups
+
 public:
    struct REntryRange {
       Long64_t fBegin{0};
@@ -43,6 +50,8 @@ private:
    ROOT::TreeUtils::RFriendInfo fFriendInfo;  ///< List of friends
    REntryRange fEntryRange; ///< Start (inclusive) and end (exclusive) entry for the dataset processing
 
+   std::vector<RDatasetGroup> MoveOutDatasetGroups();
+
 public:
    RDatasetSpec() = default;
 
@@ -53,10 +62,6 @@ public:
    const ROOT::TreeUtils::RFriendInfo &GetFriendInfo() const;
    Long64_t GetEntryRangeBegin() const;
    Long64_t GetEntryRangeEnd() const;
-
-   /// \cond HIDDEN_SYMBOLS
-   const std::vector<RDatasetGroup> &GetDatasetGroups() const;
-   /// \endcond
 
    RDatasetSpec &AddGroup(RDatasetGroup datasetGroup);
 

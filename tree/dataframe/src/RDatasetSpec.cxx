@@ -81,9 +81,9 @@ Long64_t RDatasetSpec::GetEntryRangeEnd() const
    return fEntryRange.fEnd;
 }
 
-const std::vector<RDatasetGroup> &RDatasetSpec::GetDatasetGroups() const
+std::vector<RDatasetGroup> RDatasetSpec::MoveOutDatasetGroups()
 {
-   return fDatasetGroups;
+   return std::move(fDatasetGroups);
 }
 
 RDatasetSpec &RDatasetSpec::AddGroup(RDatasetGroup datasetGroup)
