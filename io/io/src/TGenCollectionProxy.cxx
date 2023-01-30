@@ -958,6 +958,12 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
                }
                break;
          }
+         if (!(fProperties & kIsEmulated) && newfValue->fType && !newfValue->fType->IsSyntheticPair()) {
+            if (!newfValue->fType->IsLoaded() && !newfValue->fType->HasInterpreterInfo())
+               Error("TGenCollectionProxy::InitializeEx",
+                     "The TClass for %s used as the value type of the compiled collection proxy %s is not loaded.",
+                     newfValue->fType->GetName(), cl->GetName());
+         }
 
          fPointers = fPointers || (0 != (fVal->fCase&kIsPointer));
          if (fPointers || (0 != (fVal->fProperties&kNeedDelete))) {
