@@ -33,6 +33,10 @@ RDatasetGroup::RDatasetGroup(const std::string &groupName,
                              const RMetaData &metaData)
    : fGroupName(groupName), fMetaData(metaData)
 {
+   // avoid constructing and destructing the helper TChain here if we don't need to
+   if (treeAndFileNameGlobs.empty())
+      return;
+
    TChain chain;
    for (const auto &p : treeAndFileNameGlobs) {
       const auto fullpath = p.second + "/" + p.first;
