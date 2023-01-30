@@ -70,8 +70,6 @@ void REveScene::AddSubscriber(std::unique_ptr<REveClient> &&sub)
 
 void REveScene::RemoveSubscriber(unsigned id)
 {
-   assert(fAcceptingChanges == kFALSE);
-
    auto pred = [&](std::unique_ptr<REveClient> &client) {
       return client->fId == id;
    };
@@ -99,9 +97,11 @@ void REveScene::BeginAcceptingChanges()
 
    if (HasSubscribers()) {
       fAcceptingChanges = kTRUE;
+      /*
       for (auto &&client : fSubscribers) {
          REX::gEve->SceneSubscriberProcessingChanges(client->fId);
       }
+      */
    }
 }
 
@@ -122,15 +122,6 @@ void REveScene::EndAcceptingChanges()
    if ( ! fAcceptingChanges) return;
 
    fAcceptingChanges = kFALSE;
-}
-
-void REveScene::ProcessChanges()
-{
-   if (IsChanged())
-   {
-      StreamRepresentationChanges();
-      SendChangesToSubscribers();
-   }
 }
 
 void REveScene::StreamElements()
@@ -235,9 +226,6 @@ void REveScene::StreamJsonRecurse(REveElement *el, nlohmann::json &jarr)
 
 void REveScene::StreamRepresentationChanges()
 {
-   fOutputJson.clear();
-   fOutputBinary.clear();
-
    fElsWithBinaryData.clear();
    fTotalBinarySize = 0;
 
@@ -327,9 +315,11 @@ void REveScene::StreamRepresentationChanges()
 void REveScene::SendChangesToSubscribers()
 {
    for (auto && client : fSubscribers) {
-      if (gDebug > 0)
-         printf("   sending json, len = %d --> to conn_id = %d\n", (int) fOutputJson.size(), client->fId);
-      client->fWebWindow->Send(client->fId, fOutputJson);
+      if (fOutputJson.size()) {
+         if (gDebug > 0)
+            printf("   sending json, len = %d --> to conn_id = %d\n", (int) fOutputJson.size(), client->fId);
+         client->fWebWindow->Send(client->fId, fOutputJson);
+      }
       if (fTotalBinarySize) {
          if (gDebug > 0)
             printf("   sending binary, len = %d --> to conn_id = %d\n", fTotalBinarySize, client->fId);
@@ -337,6 +327,9 @@ void REveScene::SendChangesToSubscribers()
       }
       REX::gEve->SceneSubscriberWaitingResponse(client->fId);
    }
+   fOutputJson.clear();
+   fOutputBinary.clear();
+   fTotalBinarySize = 0;
 }
 
 Bool_t REveScene::IsChanged() const
@@ -563,22 +556,4 @@ bool REveSceneList::AnyChanges() const
       return true;
    }
    return false;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-//
-// Send an update of element representations
-//
-////////////////////////////////////////////////////////////////////////////////
-
-void REveSceneList::ProcessSceneChanges()
-{
-   if (gDebug > 0)
-      ::Info("REveSceneList::ProcessSceneChanges","processing");
-
-   for (auto &el : fChildren)
-   {
-      ((REveScene*) el)->ProcessChanges();
-   }
 }

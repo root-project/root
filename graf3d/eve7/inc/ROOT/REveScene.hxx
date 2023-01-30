@@ -99,7 +99,6 @@ public:
    void SceneElementChanged(REveElement *element);
    void SceneElementRemoved(ElementId_t id);
    void EndAcceptingChanges();
-   void ProcessChanges();
 
    void StreamElements();
    void StreamJsonRecurse(REveElement *el, nlohmann::json &jobj);
@@ -145,7 +144,6 @@ public:
    // void DestroyElementRenderers(REveElement* element);
    void AcceptChanges(bool);
    bool AnyChanges() const;
-   void ProcessSceneChanges();
 };
 
 } // namespace Experimental

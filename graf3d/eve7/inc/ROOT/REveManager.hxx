@@ -65,7 +65,7 @@ public:
 
    struct Conn
    {
-      enum EConnState {Free, Processing, WaitingResponse };
+      enum EConnState {Free, WaitingResponse };
       unsigned fId{0};
       EConnState   fState{Free};
 
@@ -163,7 +163,9 @@ protected:
 
    void MIRExecThread();
    void ExecuteMIR(std::shared_ptr<MIR> mir);
-   void PublishChanges();
+
+   void StreamSceneChangesToJson();
+   void SendSceneChanges();
 
 public:
    REveManager(); // (Bool_t map_window=kTRUE, Option_t* opt="FI");
