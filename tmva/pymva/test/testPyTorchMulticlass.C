@@ -27,7 +27,7 @@ int testPyTorchMulticlass(){
    // Build model from python file
    std::cout << "Generate PyTorch model..." << std::endl;
    UInt_t ret;
-   ret = gSystem->Exec("python generatePyTorchModelMulticlass.py");
+   ret = gSystem->Exec(TMVA::Python_Executable() + " generatePyTorchModelMulticlass.py");
    if(ret!=0){
        std::cout << "[ERROR] Failed to generate model using python" << std::endl;
        return 1;
