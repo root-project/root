@@ -287,7 +287,7 @@ class AsNumpyResult(object):
                     tmp = numpy.asarray(cpp_reference) # This adopts the memory of the C++ object.
                     self._py_arrays[column] = ndarray(tmp, self._result_ptrs[column])
                 else:
-                    tmp = numpy.empty(len(cpp_reference), dtype=numpy.object)
+                    tmp = numpy.empty(len(cpp_reference), dtype=object)
                     for i, x in enumerate(cpp_reference):
                         tmp[i] = x # This creates only the wrapping of the objects and does not copy.
                     self._py_arrays[column] = ndarray(tmp, self._result_ptrs[column])
