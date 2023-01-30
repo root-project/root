@@ -3,6 +3,10 @@ if (NOT builtin_clang)
   message(WARNING "Due to ROOT-specific patches you need a special version of clang. You cannot use vanilla clang.")
 endif()
 
+#--Set the LLVM version required for ROOT-----------------------------------------------------------
+set(ROOT_LLVM_VERSION_REQUIRED_MAJOR 13)
+set(ROOT_LLVM_VERSION_REQUIRED_MINOR 0)
+
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
 set(LLVM_ENABLE_RTTI ON CACHE BOOL "")
 set(LLVM_APPEND_VC_REV OFF CACHE BOOL "")
@@ -255,7 +259,7 @@ if(builtin_llvm)
 else()
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)
-  find_program(LLVM_CONFIG NAMES "llvm-config" "llvm-config-9")
+  find_program(LLVM_CONFIG NAMES "llvm-config-${ROOT_LLVM_VERSION_REQUIRED_MAJOR}" "llvm-config")
   if(LLVM_CONFIG)
     message(STATUS "Found LLVM_CONFIG as ${LLVM_CONFIG}")
     set(CONFIG_COMMAND ${LLVM_CONFIG}
@@ -358,10 +362,10 @@ else()
   include(VersionFromVCS)
 
   set(PACKAGE_VERSION "${LLVM_PACKAGE_VERSION}")
-  if (${PACKAGE_VERSION} MATCHES "13\\.0(|\\.[0-9]+)")
+  if (${PACKAGE_VERSION} MATCHES "${ROOT_LLVM_VERSION_REQUIRED_MAJOR}\\.${ROOT_LLVM_VERSION_REQUIRED_MINOR}(|\\.[0-9]+)")
     message(STATUS "Using LLVM external library - ${PACKAGE_VERSION}")
   else()
-    message(FATAL_ERROR "LLVM version different from ROOT supported, please try 13.0.x")
+    message(FATAL_ERROR "LLVM version different from ROOT supported, please try ${ROOT_LLVM_VERSION_REQUIRED_MAJOR}.${ROOT_LLVM_VERSION_REQUIRED_MINOR}.x")
   endif()
 
   if (NOT DEFINED LLVM_INCLUDE_TESTS)
