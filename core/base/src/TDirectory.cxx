@@ -1288,8 +1288,14 @@ void TDirectory::EncodeNameCycle(char *buffer, const char *name, Short_t cycle)
 {
    if (cycle == 9999)
       strcpy(buffer, name);
-   else
-      sprintf(buffer, "%s;%d", name, cycle);
+   else {
+      // sizeof(buffer) is unknown, this interface is broken.
+      // It's now also deprecated. Until it's removed, silence sprintf warning
+      // on macOS / Xcode / clang by using an equivalently bad snprintf without
+      // knowledge of sizeof(buffer):
+      size_t unsafeSize = strlen(name) + std::to_string(cycle).length() + 1;
+      snprintf(buffer, unsafeSize, "%s;%d", name, cycle);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
