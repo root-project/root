@@ -278,8 +278,11 @@ void RooMomentMorphFuncND::initialize()
 
 //_____________________________________________________________________________
 RooMomentMorphFuncND::Grid2::Grid2(const RooMomentMorphFuncND::Grid2 &other)
-   : _grid(other._grid), _pdfList(other._pdfList), _pdfMap(other._pdfMap), _nref(other._nref)
+   : _pdfList(other._pdfList), _pdfMap(other._pdfMap), _nref(other._nref)
 {
+   for (unsigned int i = 0; i < other._grid.size(); i++) {
+      _grid.push_back(other._grid[i]->clone());
+   }
 }
 
 //_____________________________________________________________________________
