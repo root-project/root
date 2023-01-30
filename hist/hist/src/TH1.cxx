@@ -2571,51 +2571,99 @@ Double_t *TH1::GetIntegral()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Return a pointer to a histogram containing the cumulative content.
-///  The cumulative can be computed both in the forward (default) or backward
-///  direction; the name of the new histogram is constructed from
-///  the name of this histogram with the suffix "suffix" appended provided
-///  by the user. If not provided a default suffix="_cumulative" is used.
-///
-/// The cumulative distribution is formed by filling each bin of the
-/// resulting histogram with the sum of that bin and all previous
-/// (forward == kTRUE) or following (forward = kFALSE) bins.
-///
-/// Note: while cumulative distributions make sense in one dimension, you
-/// may not be getting what you expect in more than 1D because the concept
-/// of a cumulative distribution is much trickier to define; make sure you
-/// understand the order of summation before you use this method with
-/// histograms of dimension >= 2.
-///
-/// Note 2: By default the cumulative is computed from bin 1 to Nbins
-/// If an axis range is set, values between the minimum and maximum of the range
-/// are set.
-/// Setting an axis range can also be used for including underflow and overflow in
-/// the cumulative (e.g. by setting h->GetXaxis()->SetRange(0, h->GetNbinsX()+1); )
-///
+/**
+ * Return a pointer to the corresponding cumulative histogram.
+ *
+ * The cumulative can be computed both in the forward (default) or backward
+ * direction; the name of the new histogram is constructed from
+ * the name of this histogram with a custom suffix (`suffix`) appended,
+ * which defaults to "_cumulative".
+ *
+ * The cumulative distribution is formed by filling each bin of the
+ * resulting histogram with the sum of all the bins whose indice is
+ * no greater than (forward) or no less than (backward)
+ * that of the target bin. To be exact,
+ * \f[
+ *   S_{i_x, i_y, i_z} =
+ *   \begin{cases}
+ *     \sum_{j_x = 1}^{i_x} \sum_{j_y = 1}^{i_y} \sum_{j_z = 1}^{i_z} a_{j_x, j_y, j_z} & \text{(forward)} \\
+ *     \sum_{j_x = i_x}^{n_x} \sum_{j_y = i_y}^{n_y} \sum_{j_z = i_z}^{n_z} a_{j_x, j_y, j_z} & \text{(backward)}
+ *   \end{cases}
+ * \f]
+ *
+ * The implementation is based on the Inclusion-Exclusion principle. That is,
+ * \f[
+ *   S_{i_x, i_y, i_z} = a_{i_x, i_y, i_z}
+ *     + S_{i_x, i_y, i_z-1} + S_{i_x, i_y-1, i_z} + S_{i_x-1, i_y, i_z}
+ *     - S_{i_x, i_y-1, i_z-1} + S_{i_x-1, i_y-1, i_z} + S_{i_x, i_y, i_z-1}
+ *     + S_{i_x+1, i_y-1, i_z-1}
+ * \f]
+ *
+ * This ensures that the result make sense in higher dimension,
+ * especially in the case of selection efficiency computing.
+ * For example, one can get a histogram (`*h2_eff_pt_eta`) in which each bin represents
+ * the selection efficiency where pt and eta is greater than or equal to the lower edges of the bin
+ * from the 2D histogram of these variables (`*h2_pt_eta`) with the followin code,
+ * ~~~{.cpp}
+ * TH2 *h2_eff_pt_eta = h2_pt_eta->GetCumulative(kFALSE, "_efficiency");
+ * h2_eff_pt_eta->Scale(1. / h2_eff_pt_eta->GetBinContent(1, 1));
+ * ~~~
+ *
+ * Note: By default, the cumulative is computed from bin 1 to Nbins.
+ * If an axis range is set,
+ * values between the minimum and maximum of the range are set.
+ * Setting an axis range can also be used for including underflow and overflow in
+ * the cumulative (e.g. by setting h->GetXaxis()->SetRange(0, h->GetNbinsX()+1); )
+ **/
 
-TH1 *TH1::GetCumulative(Bool_t forward, const char* suffix) const
+TH1 *TH1::GetCumulative(Bool_t forward, const char *suffix) const
 {
    const Int_t firstX = fXaxis.GetFirst();
-   const Int_t lastX  = fXaxis.GetLast();
-   const Int_t firstY = (fDimension > 1) ? fYaxis.GetFirst() : 1;
-   const Int_t lastY = (fDimension > 1) ? fYaxis.GetLast() : 1;
-   const Int_t firstZ = (fDimension > 1) ? fZaxis.GetFirst() : 1;
-   const Int_t lastZ = (fDimension > 1) ? fZaxis.GetLast() : 1;
+   const Int_t lastX = fXaxis.GetLast();
+   const Int_t firstY = (fDimension >= 2) ? fYaxis.GetFirst() : 1;
+   const Int_t lastY = (fDimension >= 2) ? fYaxis.GetLast() : 1;
+   const Int_t firstZ = (fDimension >= 3) ? fZaxis.GetFirst() : 1;
+   const Int_t lastZ = (fDimension >= 3) ? fZaxis.GetLast() : 1;
 
-   TH1* hintegrated = (TH1*) Clone(fName + suffix);
+   TH1 *hintegrated = static_cast<TH1 *>(Clone(fName + suffix));
    hintegrated->Reset();
-   Double_t sum = 0.;
-   Double_t esum = 0;
    if (forward) { // Forward computation
       for (Int_t binz = firstZ; binz <= lastZ; ++binz) {
          for (Int_t biny = firstY; biny <= lastY; ++biny) {
             for (Int_t binx = firstX; binx <= lastX; ++binx) {
                const Int_t bin = hintegrated->GetBin(binx, biny, binz);
-               sum += RetrieveBinContent(bin);
-               hintegrated->AddBinContent(bin, sum);
+               Double_t sum = RetrieveBinContent(bin);
+               if (binz != firstZ)
+                  sum += hintegrated->RetrieveBinContent(hintegrated->GetBin(binx, biny, binz - 1));
+               if (biny != firstY)
+                  sum += hintegrated->RetrieveBinContent(hintegrated->GetBin(binx, biny - 1, binz));
+               if (binx != firstX)
+                  sum += hintegrated->RetrieveBinContent(hintegrated->GetBin(binx - 1, biny, binz));
+               if (binz != firstZ && biny != firstY)
+                  sum -= hintegrated->RetrieveBinContent(hintegrated->GetBin(binx, biny - 1, binz - 1));
+               if (biny != firstY && binx != firstX)
+                  sum -= hintegrated->RetrieveBinContent(hintegrated->GetBin(binx - 1, biny - 1, binz));
+               if (binx != firstX && binz != firstZ)
+                  sum -= hintegrated->RetrieveBinContent(hintegrated->GetBin(binx - 1, biny, binz - 1));
+               if (binz != firstZ && biny != firstY && binx != firstX)
+                  sum += hintegrated->RetrieveBinContent(hintegrated->GetBin(binx - 1, biny - 1, binz - 1));
+               hintegrated->SetBinContent(bin, sum);
                if (fSumw2.fN) {
-                  esum += GetBinErrorSqUnchecked(bin);
+                  Double_t esum = GetBinErrorSqUnchecked(bin);
+                  if (binz != firstZ)
+                     esum += hintegrated->fSumw2.fArray[hintegrated->GetBin(binx, biny, binz - 1)];
+                  if (biny != firstY)
+                     esum += hintegrated->fSumw2.fArray[hintegrated->GetBin(binx, biny - 1, binz)];
+                  if (binx != firstX)
+                     esum += hintegrated->fSumw2.fArray[hintegrated->GetBin(binx - 1, biny, binz)];
+                  if (binz != firstZ && biny != firstY)
+                     esum -= hintegrated->fSumw2.fArray[hintegrated->GetBin(binx, biny - 1, binz - 1)];
+                  if (biny != firstY && binx != firstX)
+                     esum -= hintegrated->fSumw2.fArray[hintegrated->GetBin(binx - 1, biny - 1, binz)];
+                  if (binx != firstX && binz != firstZ)
+                     esum -= hintegrated->fSumw2.fArray[hintegrated->GetBin(binx - 1, biny, binz - 1)];
+                  if (binz != firstZ && biny != firstY && binx != firstX)
+                     esum += hintegrated->fSumw2.fArray[hintegrated->GetBin(binx - 1, biny - 1, binz - 1)];
                   hintegrated->fSumw2.fArray[bin] = esum;
                }
             }
@@ -2626,10 +2674,38 @@ TH1 *TH1::GetCumulative(Bool_t forward, const char* suffix) const
          for (Int_t biny = lastY; biny >= firstY; --biny) {
             for (Int_t binx = lastX; binx >= firstX; --binx) {
                const Int_t bin = hintegrated->GetBin(binx, biny, binz);
-               sum += RetrieveBinContent(bin);
-               hintegrated->AddBinContent(bin, sum);
+               Double_t sum = RetrieveBinContent(bin);
+               if (binz != lastZ)
+                  sum += hintegrated->RetrieveBinContent(hintegrated->GetBin(binx, biny, binz + 1));
+               if (biny != lastY)
+                  sum += hintegrated->RetrieveBinContent(hintegrated->GetBin(binx, biny + 1, binz));
+               if (binx != lastX)
+                  sum += hintegrated->RetrieveBinContent(hintegrated->GetBin(binx + 1, biny, binz));
+               if (binz != lastZ && biny != lastY)
+                  sum -= hintegrated->RetrieveBinContent(hintegrated->GetBin(binx, biny + 1, binz + 1));
+               if (biny != lastY && binx != lastX)
+                  sum -= hintegrated->RetrieveBinContent(hintegrated->GetBin(binx + 1, biny + 1, binz));
+               if (binx != lastX && binz != lastZ)
+                  sum -= hintegrated->RetrieveBinContent(hintegrated->GetBin(binx + 1, biny, binz + 1));
+               if (binz != lastZ && biny != lastY && binx != lastX)
+                  sum += hintegrated->RetrieveBinContent(hintegrated->GetBin(binx + 1, biny + 1, binz + 1));
+               hintegrated->SetBinContent(bin, sum);
                if (fSumw2.fN) {
-                  esum += GetBinErrorSqUnchecked(bin);
+                  Double_t esum = GetBinErrorSqUnchecked(bin);
+                  if (binz != lastZ)
+                     esum += hintegrated->fSumw2.fArray[hintegrated->GetBin(binx, biny, binz + 1)];
+                  if (biny != lastY)
+                     esum += hintegrated->fSumw2.fArray[hintegrated->GetBin(binx, biny + 1, binz)];
+                  if (binx != lastX)
+                     esum += hintegrated->fSumw2.fArray[hintegrated->GetBin(binx + 1, biny, binz)];
+                  if (binz != lastZ && biny != lastY)
+                     esum -= hintegrated->fSumw2.fArray[hintegrated->GetBin(binx, biny + 1, binz + 1)];
+                  if (biny != lastY && binx != lastX)
+                     esum -= hintegrated->fSumw2.fArray[hintegrated->GetBin(binx + 1, biny + 1, binz)];
+                  if (binx != lastX && binz != lastZ)
+                     esum -= hintegrated->fSumw2.fArray[hintegrated->GetBin(binx + 1, biny, binz + 1)];
+                  if (binz != lastZ && biny != lastY && binx != lastX)
+                     esum += hintegrated->fSumw2.fArray[hintegrated->GetBin(binx + 1, biny + 1, binz + 1)];
                   hintegrated->fSumw2.fArray[bin] = esum;
                }
             }
