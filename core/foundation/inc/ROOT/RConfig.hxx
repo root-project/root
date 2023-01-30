@@ -495,12 +495,12 @@
 #define _R_DEPRECATED_REMOVE_NOW(REASON) __attribute__((REMOVE_THIS_NOW))
 #endif
 
-/* USE AS `R__DEPRECATED(6,30, "Not threadsafe; use TFoo::Bar().")`
-   To be removed by 6.30 */
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6,29,0)
-# define _R__DEPRECATED_630(REASON) _R__DEPRECATED_LATER(REASON)
+/* USE AS `R__DEPRECATED(6,32, "Not threadsafe; use TFoo::Bar().")`
+   To be removed by 6.32 */
+#if ROOT_VERSION_CODE <= ROOT_VERSION(6,31,0)
+# define _R__DEPRECATED_632(REASON) _R__DEPRECATED_LATER(REASON)
 #else
-# define _R__DEPRECATED_630(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
+# define _R__DEPRECATED_632(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
 #endif
 
 /* USE AS `R__DEPRECATED(7,00, "Not threadsafe; use TFoo::Bar().")`
