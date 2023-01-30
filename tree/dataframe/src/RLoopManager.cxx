@@ -711,7 +711,7 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
    }
    const std::string &id = fname + "/" + treename;
    fSampleInfos[slot] =
-      fDatasetGroupMap.empty() ? RSampleInfo(id, range) : RSampleInfo(id, range, *fDatasetGroupMap[id]);
+      fDatasetGroupMap.empty() ? RSampleInfo(id, range) : RSampleInfo(id, range, fDatasetGroupMap[id]);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
