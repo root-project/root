@@ -36,7 +36,7 @@ int testPyKerasClassification(){
        std::cout << "[ERROR] Failed to write python code to file" << std::endl;
        return 1;
    }
-   ret = gSystem->Exec("python generateKerasModelClassification.py");
+   ret = gSystem->Exec(TMVA::Python_Executable() + " generateKerasModelClassification.py");
    if(ret!=0){
        std::cout << "[ERROR] Failed to generate model using python" << std::endl;
        return 1;
