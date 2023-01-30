@@ -36,11 +36,19 @@ class RSampleInfo {
    std::string fID;
    std::pair<ULong64_t, ULong64_t> fEntryRange;
 
-   ROOT::RDF::Experimental::RDatasetGroup fDatasetGroup{"", "", ""};
+   const ROOT::RDF::Experimental::RDatasetGroup *fDatasetGroup = nullptr; // non-owning
+
+   void ThrowIfNoDatasetGroup() const
+   {
+      if (fDatasetGroup == nullptr) {
+         const auto msg = "RSampleInfo: dataset group data was requested but no dataset groups are available.";
+         throw std::logic_error(msg);
+      }
+   }
 
 public:
    RSampleInfo(std::string_view id, std::pair<ULong64_t, ULong64_t> entryRange,
-               const ROOT::RDF::Experimental::RDatasetGroup &datasetGroup = {"", "", ""})
+               const ROOT::RDF::Experimental::RDatasetGroup *datasetGroup = nullptr)
       : fID(id), fEntryRange(entryRange), fDatasetGroup(datasetGroup)
    {
    }
@@ -51,15 +59,35 @@ public:
    RSampleInfo &operator=(RSampleInfo &&) = default;
    ~RSampleInfo() = default;
 
-   const std::string &GetGroupName() const { return fDatasetGroup.GetGroupName(); }
+   const std::string &GetGroupName() const
+   {
+      ThrowIfNoDatasetGroup();
+      return fDatasetGroup->GetGroupName();
+   }
 
-   unsigned int GetGroupId() const { return fDatasetGroup.GetGroupId(); }
+   unsigned int GetGroupId() const
+   {
+      ThrowIfNoDatasetGroup();
+      return fDatasetGroup->GetGroupId();
+   }
 
-   int GetI(const std::string &key) const { return fDatasetGroup.GetMetaData().GetI(key); }
+   int GetI(const std::string &key) const
+   {
+      ThrowIfNoDatasetGroup();
+      return fDatasetGroup->GetMetaData().GetI(key);
+   }
 
-   double GetD(const std::string &key) const { return fDatasetGroup.GetMetaData().GetD(key); }
+   double GetD(const std::string &key) const
+   {
+      ThrowIfNoDatasetGroup();
+      return fDatasetGroup->GetMetaData().GetD(key);
+   }
 
-   std::string GetS(const std::string &key) const { return fDatasetGroup.GetMetaData().GetS(key); }
+   std::string GetS(const std::string &key) const
+   {
+      ThrowIfNoDatasetGroup();
+      return fDatasetGroup->GetMetaData().GetS(key);
+   }
 
    /// Check whether the sample name contains the given substring.
    bool Contains(std::string_view substr) const
