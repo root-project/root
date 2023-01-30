@@ -70,6 +70,21 @@ __rooglobal__ void computeArgusBG(BatchesHandle batches)
    }
 }
 
+__rooglobal__ void computeBMixDecay(BatchesHandle batches)
+{
+   Batch coef0 = batches[0];
+   Batch coef1 = batches[1];
+   Batch tagFlav = batches[2];
+   Batch delMistag = batches[3];
+   Batch mixState = batches[4];
+   Batch mistag = batches[5];
+
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      batches._output[i] =
+         coef0[i] * (1.0 - tagFlav[i] * delMistag[0]) + coef1[i] * (mixState[i] * (1.0 - 2.0 * mistag[0]));
+   }
+}
+
 __rooglobal__ void computeBernstein(BatchesHandle batches)
 {
    const int nCoef = batches.getNExtraArgs() - 2;
@@ -601,29 +616,14 @@ __rooglobal__ void computeVoigtian(BatchesHandle batches)
 /// Returns a std::vector of pointers to the compute functions in this file.
 std::vector<void (*)(BatchesHandle)> getFunctions()
 {
-   return {computeAddPdf,
-           computeArgusBG,
-           computeBernstein,
-           computeBifurGauss,
-           computeBreitWigner,
-           computeBukin,
-           computeCBShape,
-           computeChebychev,
-           computeChiSquare,
-           computeDstD0BG,
-           computeExponential,
-           computeGamma,
-           computeGaussian,
-           computeJohnson,
-           computeLandau,
-           computeLognormal,
-           computeNegativeLogarithms,
-           computeNovosibirsk,
-           computePoisson,
-           computePolynomial,
-           computeProdPdf,
-           computeRatio,
-           computeVoigtian};
+   return {computeAddPdf,      computeArgusBG,    computeBMixDecay,
+           computeBernstein,   computeBifurGauss, computeBreitWigner,
+           computeBukin,       computeCBShape,    computeChebychev,
+           computeChiSquare,   computeDstD0BG,    computeExponential,
+           computeGamma,       computeGaussian,   computeJohnson,
+           computeLandau,      computeLognormal,  computeNegativeLogarithms,
+           computeNovosibirsk, computePoisson,    computePolynomial,
+           computeProdPdf,     computeRatio,      computeVoigtian};
 }
 } // End namespace RF_ARCH
 } // End namespace RooBatchCompute
