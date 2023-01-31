@@ -27,6 +27,8 @@ public:
                     const RooArgSet *forceDirect = nullptr);
    ~RooEffGenContext() override;
 
+   void printMultiline(std::ostream &os, Int_t content, bool verbose = false, TString indent = "") const override;
+
 protected:
    void initGenerator(const RooArgSet &theEvent) override;
    void generateEvent(RooArgSet &theEvent, Int_t remaining) override;
