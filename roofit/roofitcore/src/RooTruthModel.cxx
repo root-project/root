@@ -104,31 +104,45 @@ Int_t RooTruthModel::basisCode(const char* name) const
 
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Changes associated bases function to 'inBasis'
 
 void RooTruthModel::changeBasis(RooFormulaVar* inBasis)
 {
-  // Process change basis function. Since we actually
-  // evaluate the basis function object, we need to
-  // adjust our client-server links to the basis function here
+   // Remove client-server link to old basis
+   if (_basis) {
+      if (_basisCode == genericBasis) {
+         // In the case of a generic basis, we evaluate it directly, so the
+         // basis was a direct server.
+         removeServer(*_basis);
+      } else {
+         for (RooAbsArg *basisServer : _basis->servers()) {
+            removeServer(*basisServer);
+         }
+      }
 
-  // Remove client-server link to old basis
-  if (_basis) {
-    removeServer(*_basis) ;
-  }
+      if (_ownBasis) {
+         delete _basis;
+      }
+   }
+   _ownBasis = false;
 
-  // Change basis pointer and update client-server link
-  _basis = inBasis ;
-  if (_basis) {
-    addServer(*_basis,true,false) ;
-  }
+   _basisCode = inBasis ? basisCode(inBasis->GetTitle()) : 0;
 
-  _basisCode = inBasis?basisCode(inBasis->GetTitle()):0 ;
+   // Change basis pointer and update client-server link
+   _basis = inBasis;
+   if (_basis) {
+      if (_basisCode == genericBasis) {
+         // Since we actually evaluate the basis function object, we need to
+         // adjust our client-server links to the basis function here
+         addServer(*_basis, true, false);
+      } else {
+         for (RooAbsArg *basisServer : _basis->servers()) {
+            addServer(*basisServer, true, false);
+         }
+      }
+   }
 }
-
-
 
 
 
