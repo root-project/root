@@ -13,8 +13,9 @@ else()
     set(cxx_visibility_flag "")
 endif()
 
+set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
 ExternalProject_Add(BUILTIN_ZeroMQ
-    URL https://github.com/zeromq/libzmq/archive/7c2df78b49a3aa63e654b3f3526adf71ed091534.tar.gz
+    URL ${lcgpackages}/libzmq-7c2df78b49a3aa63e654b3f3526adf71ed091534.tar.gz
     URL_HASH SHA256=fcc1b0648afa5d92e0ff0e6e93beb28cbbe008a5f98c228ff97144ba6e4a6c3e
     CMAKE_ARGS
         -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
