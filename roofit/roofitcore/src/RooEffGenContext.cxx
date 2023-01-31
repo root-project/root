@@ -12,7 +12,6 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-
 /**
 \file RooEffGenContext.cxx
 \class RooEffGenContext
@@ -38,16 +37,14 @@ ClassImp(RooEffGenContext);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of generator context for RooEffProd products
 
-RooEffGenContext::RooEffGenContext(const RooAbsPdf &model,
-                                   const RooAbsPdf& pdf, const RooAbsReal& eff,
-                                   const RooArgSet &vars,
-                                   const RooDataSet *prototype, const RooArgSet* auxProto,
-                                   bool verbose, const RooArgSet* /*forceDirect*/) :
-   RooAbsGenContext(model, vars, prototype, auxProto, verbose), _maxEff(0.)
+RooEffGenContext::RooEffGenContext(const RooAbsPdf &model, const RooAbsPdf &pdf, const RooAbsReal &eff,
+                                   const RooArgSet &vars, const RooDataSet *prototype, const RooArgSet *auxProto,
+                                   bool verbose, const RooArgSet * /*forceDirect*/)
+   : RooAbsGenContext(model, vars, prototype, auxProto, verbose), _maxEff(0.)
 {
-   RooArgSet x(eff,eff.GetName());
+   RooArgSet x(eff, eff.GetName());
    _cloneSet = static_cast<RooArgSet*>(x.snapshot(true));
-   _eff = dynamic_cast<RooAbsReal*>(_cloneSet->find(eff.GetName()));
+   _eff = dynamic_cast<RooAbsReal *>(_cloneSet->find(eff.GetName()));
    _generator = pdf.genContext(vars, prototype, auxProto, verbose);
    _vars = static_cast<RooArgSet*>(vars.snapshot(true));
 }
@@ -73,9 +70,9 @@ void RooEffGenContext::initGenerator(const RooArgSet &theEvent)
    // Check if PDF supports maximum finding
    Int_t code = _eff->getMaxVal(*_vars);
    if (!code) {
-     _maxEff = 1.;
+      _maxEff = 1.;
    } else {
-     _maxEff = _eff->maxVal(code);
+      _maxEff = _eff->maxVal(code);
    }
 }
 
@@ -91,7 +88,7 @@ void RooEffGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
       double val = _eff->getVal();
       if (val > _maxEff && !_eff->getMaxVal(*_vars)) {
          coutE(Generation) << ClassName() << "::" << GetName()
-              << ":generateEvent: value of efficiency is larger than assumed maximum of 1."  << std::endl;
+                           << ":generateEvent: value of efficiency is larger than assumed maximum of 1." << std::endl;
          continue;
       }
       if (val > RooRandom::uniform() * _maxEff) {
