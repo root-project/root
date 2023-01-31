@@ -96,3 +96,20 @@ void RooEffGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
       }
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Detailed printing interface
+
+void RooEffGenContext::printMultiline(ostream &os, Int_t content, bool verbose, TString indent) const
+{
+   RooAbsGenContext::printMultiline(os, content, verbose, indent);
+   os << indent << "--- RooEffGenContext ---" << endl;
+   os << indent << "Using EFF ";
+   _eff->printStream(os, kName | kArgs | kClassName, kSingleLine, indent);
+   os << indent << "PDF generator" << endl;
+
+   TString indent2(indent);
+   indent2.Append("    ");
+
+   _generator->printMultiline(os, content, verbose, indent2);
+}
