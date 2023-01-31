@@ -78,28 +78,33 @@ RooTruthModel::~RooTruthModel()
 
 Int_t RooTruthModel::basisCode(const char* name) const
 {
-  // Check for optimized basis functions
-  if (!TString("exp(-@0/@1)").CompareTo(name)) return expBasisPlus ;
-  if (!TString("exp(@0/@1)").CompareTo(name)) return expBasisMinus ;
-  if (!TString("exp(-abs(@0)/@1)").CompareTo(name)) return expBasisSum ;
-  if (!TString("exp(-@0/@1)*sin(@0*@2)").CompareTo(name)) return sinBasisPlus ;
-  if (!TString("exp(@0/@1)*sin(@0*@2)").CompareTo(name)) return sinBasisMinus ;
-  if (!TString("exp(-abs(@0)/@1)*sin(@0*@2)").CompareTo(name)) return sinBasisSum ;
-  if (!TString("exp(-@0/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisPlus ;
-  if (!TString("exp(@0/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisMinus ;
-  if (!TString("exp(-abs(@0)/@1)*cos(@0*@2)").CompareTo(name)) return cosBasisSum ;
-  if (!TString("(@0/@1)*exp(-@0/@1)").CompareTo(name)) return linBasisPlus ;
-  if (!TString("(@0/@1)*(@0/@1)*exp(-@0/@1)").CompareTo(name)) return quadBasisPlus ;
-  if (!TString("exp(-@0/@1)*cosh(@0*@2/2)").CompareTo(name)) return coshBasisPlus;
-  if (!TString("exp(@0/@1)*cosh(@0*@2/2)").CompareTo(name)) return coshBasisMinus;
-  if (!TString("exp(-abs(@0)/@1)*cosh(@0*@2/2)").CompareTo(name)) return coshBasisSum;
-  if (!TString("exp(-@0/@1)*sinh(@0*@2/2)").CompareTo(name)) return sinhBasisPlus;
-  if (!TString("exp(@0/@1)*sinh(@0*@2/2)").CompareTo(name)) return sinhBasisMinus;
-  if (!TString("exp(-abs(@0)/@1)*sinh(@0*@2/2)").CompareTo(name)) return sinhBasisSum;
+   std::string str = name;
 
-  // Truth model is delta function, i.e. convolution integral
-  // is basis function, therefore we can handle any basis function
-  return genericBasis ;
+   // Remove whitespaces from the input string
+   str.erase(remove(str.begin(),str.end(),' '),str.end());
+
+   // Check for optimized basis functions
+   if (str == "exp(-@0/@1)") return expBasisPlus ;
+   if (str == "exp(@0/@1)") return expBasisMinus ;
+   if (str == "exp(-abs(@0)/@1)") return expBasisSum ;
+   if (str == "exp(-@0/@1)*sin(@0*@2)") return sinBasisPlus ;
+   if (str == "exp(@0/@1)*sin(@0*@2)") return sinBasisMinus ;
+   if (str == "exp(-abs(@0)/@1)*sin(@0*@2)") return sinBasisSum ;
+   if (str == "exp(-@0/@1)*cos(@0*@2)") return cosBasisPlus ;
+   if (str == "exp(@0/@1)*cos(@0*@2)") return cosBasisMinus ;
+   if (str == "exp(-abs(@0)/@1)*cos(@0*@2)") return cosBasisSum ;
+   if (str == "(@0/@1)*exp(-@0/@1)") return linBasisPlus ;
+   if (str == "(@0/@1)*(@0/@1)*exp(-@0/@1)") return quadBasisPlus ;
+   if (str == "exp(-@0/@1)*cosh(@0*@2/2)") return coshBasisPlus;
+   if (str == "exp(@0/@1)*cosh(@0*@2/2)") return coshBasisMinus;
+   if (str == "exp(-abs(@0)/@1)*cosh(@0*@2/2)") return coshBasisSum;
+   if (str == "exp(-@0/@1)*sinh(@0*@2/2)") return sinhBasisPlus;
+   if (str == "exp(@0/@1)*sinh(@0*@2/2)") return sinhBasisMinus;
+   if (str == "exp(-abs(@0)/@1)*sinh(@0*@2/2)") return sinhBasisSum;
+
+   // Truth model is delta function, i.e. convolution integral is basis
+   // function, therefore we can handle any basis function
+   return genericBasis ;
 }
 
 
