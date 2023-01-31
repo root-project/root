@@ -27,6 +27,7 @@ functions used in D mixing have been hand coded for increased execution speed.
 **/
 
 #include "Riostream.h"
+#include "RooBatchCompute.h"
 #include "RooTruthModel.h"
 #include "RooGenContext.h"
 #include "RooAbsAnaConvPdf.h"
@@ -215,6 +216,76 @@ double RooTruthModel::evaluate() const
   return 0 ;
 }
 
+
+void RooTruthModel::computeBatch(cudaStream_t *stream, double *output, size_t nEvents,
+                                 RooFit::Detail::DataMap const &dataMap) const
+{
+   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+
+   auto xVals = dataMap.at(x);
+
+   // No basis: delta function
+   if (_basisCode == noBasis) {
+      dispatch->compute(stream, RooBatchCompute::DeltaFunction, output, nEvents, {xVals});
+      return;
+   }
+
+   // Generic basis: evaluate basis function object
+   if (_basisCode == genericBasis) {
+      dispatch->compute(stream, RooBatchCompute::Identity, output, nEvents, {dataMap.at(&basis())});
+      return;
+   }
+
+   // Precompiled basis functions
+   const BasisType basisType = static_cast<BasisType>((_basisCode == 0) ? 0 : (_basisCode / 10) + 1);
+
+   // Cast the int from the enum to double because we can only pass doubles to
+   // RooBatchCompute at this point.
+   const double basisSign = static_cast<double>((BasisSign)(_basisCode - 10 * (basisType - 1) - 2));
+
+   auto param1 = static_cast<RooAbsReal const *>(basis().getParameter(1));
+   auto param2 = static_cast<RooAbsReal const *>(basis().getParameter(2));
+   auto param1Vals = param1 ? dataMap.at(param1) : RooSpan<const double>{};
+   auto param2Vals = param2 ? dataMap.at(param2) : RooSpan<const double>{};
+
+   // Return desired basis function
+   switch (basisType) {
+   case expBasis: {
+      dispatch->compute(stream, RooBatchCompute::TruthModelExpBasis, output, nEvents, {xVals, param1Vals}, {basisSign});
+      break;
+   }
+   case sinBasis: {
+      dispatch->compute(stream, RooBatchCompute::TruthModelSinBasis, output, nEvents, {xVals, param1Vals, param2Vals},
+                        {basisSign});
+      break;
+   }
+   case cosBasis: {
+      dispatch->compute(stream, RooBatchCompute::TruthModelCosBasis, output, nEvents, {xVals, param1Vals, param2Vals},
+                        {basisSign});
+      break;
+   }
+   case linBasis: {
+      dispatch->compute(stream, RooBatchCompute::TruthModelLinBasis, output, nEvents, {xVals, param1Vals}, {basisSign});
+      break;
+   }
+   case quadBasis: {
+      dispatch->compute(stream, RooBatchCompute::TruthModelQuadBasis, output, nEvents, {xVals, param1Vals},
+                        {basisSign});
+      break;
+   }
+   case sinhBasis: {
+      dispatch->compute(stream, RooBatchCompute::TruthModelSinhBasis, output, nEvents, {xVals, param1Vals, param2Vals},
+                        {basisSign});
+      break;
+   }
+   case coshBasis: {
+      dispatch->compute(stream, RooBatchCompute::TruthModelCoshBasis, output, nEvents, {xVals, param1Vals, param2Vals},
+                        {basisSign});
+      break;
+   }
+   default: R__ASSERT(0);
+   }
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
