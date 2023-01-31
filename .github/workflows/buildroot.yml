@@ -6,7 +6,8 @@ on:
     - cron: '0 1 * * *'
 
   # PR
-  pull_request_target:
+  # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
+  pull_request:
     branches:
       - '**'
     paths-ignore:
