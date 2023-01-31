@@ -358,9 +358,8 @@ RooAbsGenContext* RooTruthModel::modelGenContext
 (const RooAbsAnaConvPdf& convPdf, const RooArgSet &vars, const RooDataSet *prototype,
  const RooArgSet* auxProto, bool verbose) const
 {
-  RooArgSet forceDirect(convVar()) ;
-  return new RooGenContext(dynamic_cast<const RooAbsPdf&>(convPdf), vars, prototype,
-                           auxProto, verbose, &forceDirect) ;
+   RooArgSet forceDirect(convVar()) ;
+   return new RooGenContext(convPdf, vars, prototype, auxProto, verbose, &forceDirect);
 }
 
 
