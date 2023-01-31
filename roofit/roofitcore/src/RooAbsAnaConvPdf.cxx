@@ -313,8 +313,8 @@ bool RooAbsAnaConvPdf::isDirectGenSafe(const RooAbsArg& arg) const
 
 RooAbsRealLValue* RooAbsAnaConvPdf::convVar()
 {
-  RooResolutionModel* conv = (RooResolutionModel*) _convSet.at(0) ;
-  if (!conv) return 0 ;
+  auto* conv = static_cast<RooResolutionModel*>(_convSet.at(0));
+  if (!conv) return nullptr;
   return &conv->convVar() ;
 }
 
@@ -488,7 +488,7 @@ double RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normS
     double integral(0) ;
     const TNamed *_rangeName = RooNameReg::ptr(rangeName);
     for (auto convArg : _convSet) {
-      auto conv = static_cast<RooResolutionModel*>(convArg);
+      auto conv = static_cast<RooAbsPdf*>(convArg);
       double coef = getCoefNorm(index++,intCoefSet,_rangeName) ;
       //cout << "coefInt[" << index << "] = " << coef << " " ; intCoefSet->Print("1") ;
       if (coef!=0) {
@@ -506,7 +506,7 @@ double RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normS
     double norm(0) ;
     const TNamed *_rangeName = RooNameReg::ptr(rangeName);
     for (auto convArg : _convSet) {
-      auto conv = static_cast<RooResolutionModel*>(convArg);
+      auto conv = static_cast<RooAbsPdf*>(convArg);
 
       double coefInt = getCoefNorm(index,intCoefSet,_rangeName) ;
       //cout << "coefInt[" << index << "] = " << coefInt << "*" << term << " " << (intCoefSet?*intCoefSet:RooArgSet()) << endl ;
@@ -657,7 +657,7 @@ void RooAbsAnaConvPdf::printMultiline(ostream& os, Int_t contents, bool verbose,
   RooAbsPdf::printMultiline(os,contents,verbose,indent);
 
   os << indent << "--- RooAbsAnaConvPdf ---" << endl;
-  for (auto * conv : static_range_cast<RooResolutionModel*>(_convSet)) {
+  for (RooAbsArg * conv : _convSet) {
     conv->printMultiline(os,contents,verbose,indent) ;
   }
 }
