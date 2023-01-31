@@ -16,6 +16,8 @@
 #include "RooFit/MultiProcess/Messenger.h"
 #include "RooFit/MultiProcess/Job.h"
 #include "RooFit/MultiProcess/Queue.h" // complete type for JobManager::queue()
+#include "FIFOQueue.h" // complete type for JobManager::queue()
+#include "PriorityQueue.h" // complete type for JobManager::queue()
 #include "RooFit/MultiProcess/worker.h"
 #include "RooFit/MultiProcess/util.h"
 #include "RooFit/MultiProcess/Config.h"
@@ -66,7 +68,16 @@ bool JobManager::is_instantiated()
 /// you need to run multiple jobs.
 JobManager::JobManager(std::size_t N_workers)
 {
-   queue_ptr_ = std::make_unique<Queue>();
+   switch (Config::Queue::getQueueType()) {
+   case Config::Queue::QueueType::FIFO: {
+      queue_ptr_ = std::make_unique<FIFOQueue>();
+      break;
+   }
+   case Config::Queue::QueueType::Priority: {
+      queue_ptr_ = std::make_unique<PriorityQueue>();
+      break;
+   }
+   }
    process_manager_ptr_ = std::make_unique<ProcessManager>(N_workers);
    messenger_ptr_ = std::make_unique<Messenger>(*process_manager_ptr_);
 }
@@ -125,11 +136,11 @@ Job *JobManager::get_job_object(std::size_t job_object_id)
 /// \return Returns 'true' when removed successfully, 'false' otherwise.
 bool JobManager::remove_job_object(std::size_t job_object_id)
 {
-   bool removed_succesfully = job_objects_.erase(job_object_id) == 1;
+   bool removed_successfully = job_objects_.erase(job_object_id) == 1;
    if (job_objects_.empty()) {
       instance_.reset(nullptr);
    }
-   return removed_succesfully;
+   return removed_successfully;
 }
 
 ProcessManager &JobManager::process_manager() const
@@ -142,9 +153,9 @@ Messenger &JobManager::messenger() const
    return *messenger_ptr_;
 }
 
-Queue &JobManager::queue() const
+Queue *JobManager::queue() const
 {
-   return *queue_ptr_;
+   return queue_ptr_.get();
 }
 
 /// Retrieve results for a Job
@@ -205,7 +216,7 @@ void JobManager::activate()
    activated_ = true;
 
    if (process_manager().is_queue()) {
-      queue().loop();
+      queue()->loop();
       std::_Exit(0);
    }
 

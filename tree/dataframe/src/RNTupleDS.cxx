@@ -37,7 +37,7 @@
 * \ingroup dataframe
 * \brief The RDataSource implementation for RNTuple. It lets RDataFrame read RNTuple data.
 *
-* An RDataFrame that reads RNTuple data can be constructed using MakeNTupleDataFrame().
+* An RDataFrame that reads RNTuple data can be constructed using FromRNTuple().
 *
 * For each column containing an array or a collection, a corresponding column `#colname` is available to access
 * `colname.size()` without reading and deserializing the collection values.
@@ -128,7 +128,7 @@ public:
       : fField(std::move(f)), fValue(fField->GenerateValue()), fLastEntry(-1)
    {
    }
-   virtual ~RNTupleColumnReader() { fField->DestroyValue(fValue); }
+   ~RNTupleColumnReader() { fField->DestroyValue(fValue); }
 
    /// Column readers are created as prototype and then cloned for every slot
    std::unique_ptr<RNTupleColumnReader> Clone()
@@ -356,15 +356,15 @@ void RNTupleDS::SetNSlots(unsigned int nSlots)
 } // namespace Experimental
 } // namespace ROOT
 
-ROOT::RDataFrame ROOT::Experimental::MakeNTupleDataFrame(std::string_view ntupleName, std::string_view fileName)
+ROOT::RDataFrame ROOT::RDF::Experimental::FromRNTuple(std::string_view ntupleName, std::string_view fileName)
 {
    auto pageSource = ROOT::Experimental::Detail::RPageSource::Create(ntupleName, fileName);
-   ROOT::RDataFrame rdf(std::make_unique<RNTupleDS>(std::move(pageSource)));
+   ROOT::RDataFrame rdf(std::make_unique<ROOT::Experimental::RNTupleDS>(std::move(pageSource)));
    return rdf;
 }
 
-ROOT::RDataFrame ROOT::Experimental::MakeNTupleDataFrame(RNTuple *ntuple)
+ROOT::RDataFrame ROOT::RDF::Experimental::FromRNTuple(ROOT::Experimental::RNTuple *ntuple)
 {
-   ROOT::RDataFrame rdf(std::make_unique<RNTupleDS>(ntuple->MakePageSource()));
+   ROOT::RDataFrame rdf(std::make_unique<ROOT::Experimental::RNTupleDS>(ntuple->MakePageSource()));
    return rdf;
 }

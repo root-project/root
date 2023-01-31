@@ -104,7 +104,7 @@ public:
    Bool_t        cd(const char *path = nullptr);
 
    void          Add(const TObject *obj, const char *name = "");
-   void          Update(TObject *obj = 0);
+   void          Update(TObject *obj = nullptr);
    TObject      *Remove(TObject *obj) { return Remove(obj, kTRUE); }
    TObject      *Remove(const char *name) { return Remove(name, kTRUE); }
    void          RemoveAll();

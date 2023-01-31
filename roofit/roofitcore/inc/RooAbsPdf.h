@@ -18,7 +18,7 @@
 
 #include "RooAbsReal.h"
 #include "RooObjCacheManager.h"
-#include "RooCmdArg.h"
+#include "RooGlobalFunc.h"
 #include "RooFit/UniqueId.h"
 
 class RooDataSet;
@@ -32,7 +32,6 @@ class TPaveText;
 class TH1F;
 class TH2F;
 class TList ;
-class RooLinkedList ;
 class RooMinimizer ;
 class RooNumGenConfig ;
 class RooRealIntegral ;
@@ -76,7 +75,7 @@ public:
   class GenSpec {
   public:
     virtual ~GenSpec() ;
-    GenSpec() { _genContext = 0 ; _protoData = 0 ; _init = false ; _extended=false, _nGen=0 ; _randProto = false ; _resampleProto=false ; }
+    GenSpec() { _genContext = nullptr ; _protoData = nullptr ; _init = false ; _extended=false, _nGen=0 ; _randProto = false ; _resampleProto=false ; }
   private:
     GenSpec(RooAbsGenContext* context, const RooArgSet& whatVars, RooDataSet* protoData, Int_t nGen, bool extended,
        bool randProto, bool resampleProto, TString dsetName, bool init=false) ;
@@ -106,7 +105,7 @@ public:
 
 
   ////////////////////////////////////////////////////////////////////////////////
-  /// As RooAbsPdf::generateBinned(const RooArgSet&, const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&)
+  /// As RooAbsPdf::generateBinned(const RooArgSet&, const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&) const.
   /// \param[in] whatVars set
   /// \param[in] nEvents How many events to generate
   /// \param arg1,arg2,arg3,arg4,arg5 ordered arguments
@@ -161,10 +160,14 @@ public:
   void setGeneratorConfig(const RooNumGenConfig& config) ;
 
   // -log(L) fits to binned and unbinned data
-  virtual RooFitResult* fitTo(RooAbsData& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
-                              const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
-                              const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
-  virtual RooFitResult* fitTo(RooAbsData& data, const RooLinkedList& cmdList) ;
+  virtual RooFitResult* fitTo(RooAbsData& data, const RooLinkedList& cmdList={}) ;
+  /// Takes an arbitrary number of RooCmdArg command options and calls
+  /// RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList).
+  template <typename... Args>
+  RooFitResult* fitTo(RooAbsData& data, RooCmdArg const& arg1, Args const&... args)
+  {
+    return fitTo(data, *RooFit::Detail::createCmdList(&arg1, &args...));
+  }
 
   /// Configuration struct for RooAbsPdf::minimizeNLL with all the default
   //values that also should be taked as the default values for
@@ -185,16 +188,26 @@ public:
       int doWarn = 1;
       int doSumW2 = -1;
       int doAsymptotic = -1;
+      int maxCalls = -1;
+      int doOffset = -1;
+      int parallelize = 0;
+      bool enableParallelGradient = true;
+      bool enableParallelDescent = false;
+      bool timingAnalysis = false;
       const RooArgSet* minosSet = nullptr;
       std::string minType;
       std::string minAlg = "minuit";
   };
   std::unique_ptr<RooFitResult> minimizeNLL(RooAbsReal & nll, RooAbsData const& data, MinimizerConfig const& cfg);
 
-  virtual RooAbsReal* createNLL(RooAbsData& data, const RooLinkedList& cmdList) ;
-  virtual RooAbsReal* createNLL(RooAbsData& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
-            const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
-            const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
+  virtual RooAbsReal* createNLL(RooAbsData& data, const RooLinkedList& cmdList={}) ;
+  /// Takes an arbitrary number of RooCmdArg command options and calls
+  /// RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList).
+  template <typename... Args>
+  RooAbsReal* createNLL(RooAbsData& data, RooCmdArg const& arg1, Args const&... args)
+  {
+    return createNLL(data, *RooFit::Detail::createCmdList(&arg1, &args...));
+  }
 
   // Chi^2 fits to histograms
   using RooAbsReal::chi2FitTo ;
@@ -209,11 +222,14 @@ public:
 
 
   // Constraint management
-  virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, RooArgSet& /*constrainedParams*/, bool /*stripDisconnected*/) const {
+  virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, RooArgSet& /*constrainedParams*/,
+                                    bool /*stripDisconnected*/, bool /*removeConstraintsFromPdf*/=false) const
+  {
     // Interface to retrieve constraint terms on this pdf. Default implementation returns null
-    return 0 ;
+    return nullptr ;
   }
-  virtual RooArgSet* getAllConstraints(const RooArgSet& observables, RooArgSet& constrainedParams, bool stripDisconnected=true) const ;
+  RooArgSet* getAllConstraints(const RooArgSet& observables, RooArgSet& constrainedParams,
+                               bool stripDisconnected=true, bool removeConstraintsFromPdf=false) const ;
 
   // Project p.d.f into lower dimensional p.d.f
   virtual RooAbsPdf* createProjection(const RooArgSet& iset) ;
@@ -230,8 +246,6 @@ public:
   double getValV(const RooArgSet* set=nullptr) const override ;
   virtual double getLogVal(const RooArgSet* set=nullptr) const ;
 
-  RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
-  using RooAbsReal::getValues;
   RooSpan<const double> getLogValBatch(std::size_t begin, std::size_t batchSize,
       const RooArgSet* normSet = nullptr) const;
   RooSpan<const double> getLogProbabilities(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
@@ -286,17 +300,17 @@ public:
   static void verboseEval(Int_t stat) ;
   static int verboseEval() ;
 
-  double extendedTerm(double sumEntries, double expected, double sumEntriesW2=0.0) const;
-  double extendedTerm(double sumEntries, RooArgSet const* nset, double sumEntriesW2=0.0) const;
-  double extendedTerm(RooAbsData const& data, bool weightSquared) const;
+  double extendedTerm(double sumEntries, double expected, double sumEntriesW2=0.0, bool doOffset=false) const;
+  double extendedTerm(double sumEntries, RooArgSet const* nset, double sumEntriesW2=0.0, bool doOffset=false) const;
+  double extendedTerm(RooAbsData const& data, bool weightSquared, bool doOffset=false) const;
 
   void setNormRange(const char* rangeName) ;
   const char* normRange() const {
-    return _normRange.Length()>0 ? _normRange.Data() : 0 ;
+    return _normRange.Length()>0 ? _normRange.Data() : nullptr ;
   }
   void setNormRangeOverride(const char* rangeName) ;
 
-  const RooAbsReal* getNormIntegral(const RooArgSet& nset) const { return getNormObj(0,&nset,0) ; }
+  const RooAbsReal* getNormIntegral(const RooArgSet& nset) const { return getNormObj(nullptr,&nset,nullptr) ; }
 
   virtual const RooAbsReal* getNormObj(const RooArgSet* set, const RooArgSet* iset, const TNamed* rangeName=nullptr) const ;
 
@@ -307,6 +321,8 @@ public:
 
   virtual RooAbsGenContext* autoGenContext(const RooArgSet &vars, const RooDataSet* prototype=nullptr, const RooArgSet* auxProto=nullptr,
                   bool verbose=false, bool autoBinned=true, const char* binnedTag="") const ;
+
+  std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
 private:
 
@@ -348,7 +364,7 @@ protected:
   Int_t* randomizeProtoOrder(Int_t nProto,Int_t nGen,bool resample=false) const ;
 
   // This also forces the definition of a copy ctor in derived classes
-  RooAbsPdf(const RooAbsPdf& other, const char* name = 0);
+  RooAbsPdf(const RooAbsPdf& other, const char* name = nullptr);
 
   static Int_t _verboseEval ;
 
@@ -377,7 +393,7 @@ protected:
 
   bool _selectComp ;               ///< Component selection flag for RooAbsPdf::plotCompOn
 
-  RooNumGenConfig* _specGeneratorConfig ; ///<! MC generator configuration specific for this object
+  std::unique_ptr<RooNumGenConfig> _specGeneratorConfig ; ///<! MC generator configuration specific for this object
 
   TString _normRange ; ///< Normalization range
   static TString _normRangeOverride ;

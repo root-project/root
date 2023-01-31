@@ -126,7 +126,7 @@ static void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnName
          InsertBranchName(bNamesReg, bNames, std::string(branchDirectlyFromTree->GetFullName()), friendName,
                           allowDuplicates);
 
-      if (t.GetBranch(subBranchName.c_str()))
+      if (bNamesReg.find(subBranchName) == bNamesReg.end() && t.GetBranch(subBranchName.c_str()))
          InsertBranchName(bNamesReg, bNames, subBranchName, friendName, allowDuplicates);
    }
 }
@@ -366,31 +366,29 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
 }
 
 RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
-   : fBeginEntry(spec.fEntryRange.fBegin), fEndEntry(spec.fEntryRange.fEnd), fNSlots(RDFInternal::GetNSlots()),
+   : fBeginEntry(spec.GetEntryRangeBegin()), fEndEntry(spec.GetEntryRangeEnd()),
+     fDatasetGroups(spec.MoveOutDatasetGroups()), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
      fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
 {
-   auto chain = std::make_shared<TChain>(spec.fTreeNames.size() == 1 ? spec.fTreeNames[0].c_str() : "");
-   if (spec.fTreeNames.size() == 1) {
-      // A TChain has a global name, that is the name of single tree
-      // The global name of the chain is also the name of each tree in the list
-      // of files that make the chain.
-      for (const auto &f : spec.fFileNameGlobs)
-         chain->Add(f.c_str());
-   } else {
-      // Some other times, each different file has its own tree name, we need to
-      // reconstruct the full path to the tree in each file and pass that to
-      for (auto i = 0u; i < spec.fFileNameGlobs.size(); i++) {
-         const auto fullpath = spec.fFileNameGlobs[i] + "?#" + spec.fTreeNames[i];
+   auto chain = std::make_shared<TChain>("");
+   for (auto &group : fDatasetGroups) {
+      const auto &trees = group.GetTreeNames();
+      const auto &files = group.GetFileNameGlobs();
+      for (auto i = 0u; i < files.size(); ++i) {
+         const auto fullpath = files[i] + "/" + trees[i]; // TODO: use ?# once #11483 is solved
          chain->Add(fullpath.c_str());
+         fDatasetGroupMap[fullpath] = &group;
       }
    }
+
    SetTree(std::move(chain));
 
    // Create the friends from the list of friends
-   const auto &friendNames = spec.fFriendInfo.fFriendNames;
-   const auto &friendFileNames = spec.fFriendInfo.fFriendFileNames;
-   const auto &friendChainSubNames = spec.fFriendInfo.fFriendChainSubNames;
+   const auto &friendInfo = spec.GetFriendInfo();
+   const auto &friendNames = friendInfo.fFriendNames;
+   const auto &friendFileNames = friendInfo.fFriendFileNames;
+   const auto &friendChainSubNames = friendInfo.fFriendChainSubNames;
    const auto nFriends = friendNames.size();
 
    for (auto i = 0u; i < nFriends; ++i) {
@@ -410,9 +408,9 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
          }
       } else {
          // Otherwise, the new friend chain needs to be built using the nomenclature
-         // "filename?#treename" as argument to `TChain::Add`
+         // "filename/treename" as argument to `TChain::Add`
          for (auto j = 0u; j < nFileNames; ++j) {
-            frChain->Add((thisFriendFiles[j] + "?#" + thisFriendChainSubNames[j]).c_str());
+            frChain->Add((thisFriendFiles[j] + "/" + thisFriendChainSubNames[j]).c_str());
          }
       }
 
@@ -422,15 +420,6 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
       fFriends.emplace_back(std::move(frChain));
    }
 }
-
-#ifdef R__USE_IMT
-struct RSlotRAII {
-   ROOT::Internal::RSlotStack &fSlotStack;
-   unsigned int fSlot;
-   RSlotRAII(ROOT::Internal::RSlotStack &slotStack) : fSlotStack(slotStack), fSlot(slotStack.GetSlot()) {}
-   ~RSlotRAII() { fSlotStack.ReturnSlot(fSlot); }
-};
-#endif
 
 /// Run event loop with no source files, in parallel.
 void RLoopManager::RunEmptySourceMT()
@@ -455,7 +444,7 @@ void RLoopManager::RunEmptySourceMT()
 
    // Each task will generate a subrange of entries
    auto genFunction = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
-      RSlotRAII slotRAII(slotStack);
+      ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
       auto slot = slotRAII.fSlot;
       RCallCleanUpTask cleanup(*this, slot);
       InitNodeSlots(nullptr, slot);
@@ -510,7 +499,7 @@ void RLoopManager::RunTreeProcessorMT()
    std::atomic<ULong64_t> entryCount(0ull);
 
    tp->Process([this, &slotStack, &entryCount](TTreeReader &r) -> void {
-      RSlotRAII slotRAII(slotStack);
+      ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
       auto slot = slotRAII.fSlot;
       RCallCleanUpTask cleanup(*this, slot, &r);
       InitNodeSlots(&r, slot);
@@ -582,7 +571,7 @@ void RLoopManager::RunTreeReader()
 void RLoopManager::RunDataSource()
 {
    assert(fDataSource != nullptr);
-   fDataSource->CallInitialize();
+   fDataSource->Initialize();
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty() && fNStopsReceived < fNChildren) {
       InitNodeSlots(nullptr, 0u);
@@ -603,10 +592,10 @@ void RLoopManager::RunDataSource()
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      fDataSource->CallFinalizeSlot(0u);
+      fDataSource->FinalizeSlot(0u);
       ranges = fDataSource->GetEntryRanges();
    }
-   fDataSource->CallFinalize();
+   fDataSource->Finalize();
 }
 
 /// Run event loop over data accessed through a DataSource, in parallel.
@@ -619,7 +608,7 @@ void RLoopManager::RunDataSourceMT()
 
    // Each task works on a subrange of entries
    auto runOnRange = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
-      RSlotRAII slotRAII(slotStack);
+      ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
       const auto slot = slotRAII.fSlot;
       InitNodeSlots(nullptr, slot);
       RCallCleanUpTask cleanup(*this, slot);
@@ -637,16 +626,16 @@ void RLoopManager::RunDataSourceMT()
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      fDataSource->CallFinalizeSlot(slot);
+      fDataSource->FinalizeSlot(slot);
    };
 
-   fDataSource->CallInitialize();
+   fDataSource->Initialize();
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty()) {
       pool.Foreach(runOnRange, ranges);
       ranges = fDataSource->GetEntryRanges();
    }
-   fDataSource->CallFinalize();
+   fDataSource->Finalize();
 #endif // not implemented otherwise (never called)
 }
 
@@ -715,14 +704,14 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
    auto *file = tree->GetCurrentFile();
    const std::string fname = file != nullptr ? file->GetName() : "#inmemorytree#";
 
-
    std::pair<Long64_t, Long64_t> range = r.GetEntriesRange();
    R__ASSERT(range.first >= 0);
    if (range.second == -1) {
       range.second = tree->GetEntries(); // convert '-1', i.e. 'until the end', to the actual entry number
    }
-
-   fSampleInfos[slot] = RSampleInfo(fname + "/" + treename, range);
+   const std::string &id = fname + "/" + treename;
+   fSampleInfos[slot] =
+      fDatasetGroupMap.empty() ? RSampleInfo(id, range) : RSampleInfo(id, range, fDatasetGroupMap[id]);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
@@ -823,7 +812,8 @@ void RLoopManager::EvalChildrenCounts()
 
 /// Start the event loop with a different mechanism depending on IMT/no IMT, data source/no data source.
 /// Also perform a few setup and clean-up operations (jit actions if necessary, clear booked actions after the loop...).
-void RLoopManager::Run()
+/// The jitting phase is skipped if the `jit` parameter is `false` (unsafe, use with care).
+void RLoopManager::Run(bool jit)
 {
    // Change value of TTree::GetMaxTreeSize only for this scope. Revert when #6640 will be solved.
    MaxTreeSizeRAII ctxtmts;
@@ -832,7 +822,8 @@ void RLoopManager::Run()
 
    ThrowIfNSlotsChanged(GetNSlots());
 
-   Jit();
+   if (jit)
+      Jit();
 
    InitNodes();
 

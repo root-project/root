@@ -39,7 +39,6 @@ public:
 
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
       std::vector<std::vector<size_t>>  ret;
-      ret[0].push_back(input.size());
       ret[0].push_back(input[0].size());
       return ret;
    }
@@ -52,7 +51,7 @@ public:
       size_t length = ConvertShapeToLength(fShape);
       if (fStart < 0) fStart += length;
       if (fEnd < 0) fEnd += length;
-      fOutput_shape = { size_t(fEnd - fStart) };
+      fOutput_shape = { size_t(fEnd - fStart) + 1};
       model.AddIntermediateTensor(fNY, ETensorType::INT64, fOutput_shape);
    }
 
@@ -64,6 +63,8 @@ public:
       std::stringstream out;
 
       out << "\n//------ Shape\n";
+      // add a dummy statement to avoid warning for unused input
+      out << SP << "(void) tensor_" << fNX << ";\n";
       size_t length = ConvertShapeToLength(fOutput_shape);
       for (size_t id = 0; id < length; id++) {
          out << SP << "tensor_" << fNY << "["<< id << "] = " << fShape[fStart+id] << ";\n";

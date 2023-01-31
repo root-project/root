@@ -94,12 +94,11 @@ protected:
   mutable RooSetProxy _refCoefNorm ;   ///<! Reference observable set for coefficient interpretation
   mutable TNamed* _refCoefRangeName = nullptr;  ///<! Reference range name for coefficient interpretation
 
-  bool _projectCoefs = false;  ///< If true coefficients need to be projected for use in evaluate()
   mutable std::vector<double> _coefCache; ///<! Transiet cache with transformed values of coefficients
 
 
   mutable RooObjCacheManager _projCacheMgr ;  ///<! Manager of cache with coefficient projections and transformations
-  AddCacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=nullptr, const char* rangeName=nullptr) const ;
+  AddCacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=nullptr) const ;
   void updateCoefficients(AddCacheElem& cache, const RooArgSet* nset) const ;
 
   typedef RooArgList* pRooArgList ;
@@ -128,7 +127,7 @@ protected:
 
 private:
 
-  ClassDefOverride(RooAddModel,2) // Resolution model representing a sum of resolution models
+  ClassDefOverride(RooAddModel,3) // Resolution model representing a sum of resolution models
 };
 
 #endif

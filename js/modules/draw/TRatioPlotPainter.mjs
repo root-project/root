@@ -1,4 +1,4 @@
-import { create } from '../core.mjs';
+import { create, clTPad, clTLine, isFunc } from '../core.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 import { drawTLine } from './more.mjs';
@@ -16,7 +16,7 @@ class TRatioPlotPainter extends ObjectPainter {
    setGridsRange(xmin, xmax) {
       let ratio = this.getObject();
       if (xmin === xmax) {
-         let x_handle = this.getPadPainter()?.findPainterFor(ratio.fLowerPad, "lower_pad", "TPad")?.getFramePainter()?.x_handle;
+         let x_handle = this.getPadPainter()?.findPainterFor(ratio.fLowerPad, 'lower_pad', clTPad)?.getFramePainter()?.x_handle;
          if (!x_handle) return;
          xmin = x_handle.full_min;
          xmax = x_handle.full_max;
@@ -29,17 +29,17 @@ class TRatioPlotPainter extends ObjectPainter {
    }
 
    /** @summary Redraw TRatioPlot */
-   redraw() {
+   async redraw() {
       let ratio = this.getObject(),
           pp = this.getPadPainter();
 
-      let top_p = pp.findPainterFor(ratio.fTopPad, "top_pad", "TPad");
+      let top_p = pp.findPainterFor(ratio.fTopPad, 'top_pad', clTPad);
       if (top_p) top_p.disablePadDrawing();
 
-      let up_p = pp.findPainterFor(ratio.fUpperPad, "upper_pad", "TPad"),
+      let up_p = pp.findPainterFor(ratio.fUpperPad, 'upper_pad', clTPad),
           up_main = up_p?.getMainPainter(),
           up_fp = up_p?.getFramePainter(),
-          low_p = pp.findPainterFor(ratio.fLowerPad, "lower_pad", "TPad"),
+          low_p = pp.findPainterFor(ratio.fLowerPad, 'lower_pad', clTPad),
           low_main = low_p?.getMainPainter(),
           low_fp = low_p?.getFramePainter(),
           lbl_size = 20, promise_up = Promise.resolve(true);
@@ -53,7 +53,7 @@ class TRatioPlotPainter extends ObjectPainter {
 
          let h = up_main.getHisto();
          h.fXaxis.fLabelSize = 0; // do not draw X axis labels
-         h.fXaxis.fTitle = ""; // do not draw X axis title
+         h.fXaxis.fTitle = ''; // do not draw X axis title
          h.fYaxis.fLabelSize = lbl_size;
          h.fYaxis.fTitleSize = lbl_size;
 
@@ -89,7 +89,7 @@ class TRatioPlotPainter extends ObjectPainter {
          low_p._ratio_configured = true;
          low_main.options.Axis = 0; // draw both axes
          let h = low_main.getHisto();
-         h.fXaxis.fTitle = "x";
+         h.fXaxis.fTitle = 'x';
          h.fXaxis.fLabelSize = lbl_size;
          h.fXaxis.fTitleSize = lbl_size;
          h.fYaxis.fLabelSize = lbl_size;
@@ -97,7 +97,7 @@ class TRatioPlotPainter extends ObjectPainter {
          low_p.getRootPad().fTicky = 1;
 
          low_p.forEachPainterInPad(objp => {
-            if (typeof objp?.testEditable == 'function')
+            if (isFunc(objp?.testEditable))
                objp.testEditable(false);
          });
 
@@ -110,7 +110,7 @@ class TRatioPlotPainter extends ObjectPainter {
                   if ((line.fY1 == line.fY2) && (Math.abs(line.fY1 - gridy) < 1e-6)) found = true;
                });
                if (!found) {
-                  let line = create("TLine");
+                  let line = create(clTLine);
                   line.fX1 = up_fp.scale_xmin;
                   line.fX2 = up_fp.scale_xmax;
                   line.fY1 = line.fY2 = gridy;
@@ -148,7 +148,7 @@ class TRatioPlotPainter extends ObjectPainter {
    }
 
    /** @summary Draw TRatioPlot */
-   static draw(dom, ratio, opt) {
+   static async draw(dom, ratio, opt) {
       let painter = new TRatioPlotPainter(dom, ratio, opt);
 
       return ensureTCanvas(painter, false).then(() => painter.redraw());
@@ -156,4 +156,4 @@ class TRatioPlotPainter extends ObjectPainter {
 
 } // class TRatioPlotPainter
 
-export { TRatioPlotPainter }
+export { TRatioPlotPainter };

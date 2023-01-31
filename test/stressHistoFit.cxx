@@ -1129,7 +1129,8 @@ void init_structures()
 //    noGraphAlgos.push_back( algoType( "Minuit",      "Migrad",      "GQE0", CompareResult()) );
     noGraphAlgos.push_back( algoType( "Minuit",      "Migrad",      "GQL0", CompareResult()) );
 
-   noGraphErrorAlgos.push_back( algoType( "Fumili",      "Fumili",      "Q0", CompareResult()) );
+    noGraphErrorAlgos.push_back(algoType("Minuit2", "Fumili", "Q0", CompareResult()));
+    //noGraphErrorAlgos.push_back(algoType("Fumili", "Fumili", "Q0", CompareResult()));
 #ifdef R__HAS_MATHMORE
    noGraphErrorAlgos.push_back( algoType( "GSLMultiFit", "",            "Q0", CompareResult()) ); // Not in TGraphError
 #endif

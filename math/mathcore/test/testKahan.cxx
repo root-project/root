@@ -1,6 +1,7 @@
 #include "Math/Util.h"
 #include <vector>
 #include <random>
+#include <cmath>  // std::nextafter, INFINITY
 
 #include "gtest/gtest.h"
 
@@ -81,29 +82,38 @@ TEST(KahanTest, Compensation)
   EXPECT_FLOAT_EQ(result, 1. + 1.E-15) << "Kahan compensation works";
 }
 
+constexpr double smallLower = 1.E-20, smallUpper = 1.E-16;
+
+std::tuple<std::vector<double>, std::vector<double>> generateSummableNumbers()
+{
+   std::default_random_engine engine(12345u);
+   //Should more or less accumulate:
+   std::uniform_real_distribution<double> realLarge(1.E-13, 1.);
+   //None of these should be possible to accumulate:
+   std::uniform_real_distribution<double> realSmall(smallLower, smallUpper);
+
+   std::vector<double> summableNumbers;
+   std::vector<double> allNumbers;
+
+   for (unsigned int i=0; i<1000; ++i) {
+      const double large = realLarge(engine);
+      summableNumbers.push_back(large);
+      allNumbers.push_back(large);
+      for (unsigned int j=0; j<1000; ++j) {
+         const double small = realSmall(engine);
+         allNumbers.push_back(small);
+      }
+   }
+
+   return {summableNumbers, allNumbers};
+}
+
 
 TEST(KahanTest, VectorisableVsLegacy)
 {
-  std::default_random_engine engine(12345u);
-  //Should more or less accumulate:
-  std::uniform_real_distribution<double> realLarge(1.E-13, 1.);
-  //None of these should be possible to accumulate:
-  constexpr double a = 1.E-20, b = 1.E-16;
-  std::uniform_real_distribution<double> realSmall(a, b);
-
-  std::vector<double> summableNumbers;
-  std::vector<double> allNumbers;
-
-  for (unsigned int i=0; i<1000; ++i) {
-    const double large = realLarge(engine);
-    summableNumbers.push_back(large);
-    allNumbers.push_back(large);
-    for (unsigned int j=0; j<1000; ++j) {
-      const double small = realSmall(engine);
-      allNumbers.push_back(small);
-    }
-  }
-
+   std::vector<double> summableNumbers;
+   std::vector<double> allNumbers;
+   std::tie(summableNumbers, allNumbers) = generateSummableNumbers();
 
   // Test that normal summation has catastrophic cancellation, we are actually testing something here:
   const double summableNormal = std::accumulate(summableNumbers.begin(), summableNumbers.end(), 0.);
@@ -119,7 +129,7 @@ TEST(KahanTest, VectorisableVsLegacy)
   EXPECT_FLOAT_EQ(summableNormal, summableLegacy)
       << "Test that legacy Kahan works on numbers summable without errors.";
   // Expect to miss 1.E6 numbers that are on average equal to mean({a,b})
-  constexpr double expectedCancellationError = 1.E6 * 0.5*(a+b);
+  constexpr double expectedCancellationError = 1.E6 * 0.5*(smallLower+smallUpper);
   EXPECT_NEAR(allLegacy-allNormal, expectedCancellationError, expectedCancellationError/100.)
       << "Test that legacy Kahan doesn't miss the numbers that std::accumulate misses.";
 
@@ -184,3 +194,265 @@ TEST(KahanTest, VectorisableVsLegacy)
   EXPECT_FLOAT_EQ(allVecKahan5.Sum(), kahan4AccAll.Sum() + 10.) << "Initial value works.";
 }
 
+// The KahanAddSubtractAssignTest suite tests some edge cases of operator+= and operator-= with another KahanSum as parameter
+
+TEST(KahanAddSubtractAssignTest, BelowFloatPrecision)
+{
+   // When we add something and subsequently subtract the same (and vice versa), we expect to return
+   // to the starting state
+   double large_number = 1e18;
+   double small_number = 1;
+   ROOT::Math::KahanSum<double, 1> sum(large_number);
+   ROOT::Math::KahanSum<double, 1> small_sum(small_number);
+
+   sum += small_sum;
+   EXPECT_EQ(sum.Sum(), large_number);
+   EXPECT_EQ(sum.Carry(), -small_number); // note that the carry stores the remainder of the sum as its negative
+   sum -= small_sum;
+   EXPECT_EQ(sum.Sum(), large_number);
+   EXPECT_EQ(sum.Carry(), 0);
+
+   // the other way around
+   sum -= small_sum;
+   EXPECT_EQ(sum.Sum(), large_number);
+   EXPECT_EQ(sum.Carry(), small_number);
+   sum += small_sum;
+   EXPECT_EQ(sum.Sum(), large_number);
+   EXPECT_EQ(sum.Carry(), 0);
+}
+
+TEST(KahanAddSubtractAssignTest, LargestLargeEnoughCarry)
+{
+   // Check if the largest large enough carry is added to the sum instead of kept in the carry
+   // when it could have been added to the sum
+   double large_number = 1e18;
+   ROOT::Math::KahanSum<double, 1> sum(large_number);
+
+   double largest_large_enough_carry = std::nextafter(large_number, INFINITY) - large_number;
+
+   ROOT::Math::KahanSum<double, 1> large_carry_sum( largest_large_enough_carry);
+
+   sum += large_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number + largest_large_enough_carry);
+   EXPECT_EQ(sum.Carry(), 0);
+   sum -= large_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number);
+   EXPECT_EQ(sum.Carry(), 0);
+
+   // the other way around
+   sum -= large_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number - largest_large_enough_carry);
+   EXPECT_EQ(sum.Carry(), 0);
+   sum += large_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number);
+   EXPECT_EQ(sum.Carry(), 0);
+}
+
+TEST(KahanAddSubtractAssignTest, SmallestLargeEnoughCarry)
+{
+   // Check if the smallest large enough carry is added to the number instead of kept in the
+   // carry when it could have been added to the sum. Unlike test LargestLargeEnoughCarry, in this
+   // case there will also be a non-zero carry.
+   double large_number = 1e18;
+   ROOT::Math::KahanSum<double, 1> sum(large_number);
+
+   double largest_large_enough_carry = std::nextafter(large_number, INFINITY) - large_number;
+   double a_bit_too_small_carry = largest_large_enough_carry / 2;
+   double smallest_large_enough_carry = std::nextafter(a_bit_too_small_carry, INFINITY);
+   // here we check that these are the right numbers:
+   EXPECT_EQ(large_number + largest_large_enough_carry, large_number + smallest_large_enough_carry);
+   EXPECT_GT(large_number + largest_large_enough_carry, large_number);
+
+   ROOT::Math::KahanSum<double, 1> smallest_large_carry_sum(smallest_large_enough_carry);
+
+   sum += smallest_large_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number + smallest_large_enough_carry);
+   // Note: because carry terms are stored negatively, the positive carry value here actually means that
+   // the summed floating point result is higher than the corresponding algebraic result!
+   EXPECT_EQ(sum.Carry(), largest_large_enough_carry - smallest_large_enough_carry);
+   sum -= smallest_large_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number);
+   EXPECT_EQ(sum.Carry(), 0);
+
+   // the other way around
+   sum -= smallest_large_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number - smallest_large_enough_carry);
+   EXPECT_EQ(sum.Carry(), -(largest_large_enough_carry - smallest_large_enough_carry));
+   sum += smallest_large_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number);
+   EXPECT_EQ(sum.Carry(), 0);
+}
+
+TEST(KahanAddSubtractAssignTest, ABitTooSmallCarry)
+{
+   // Check what happens with the value just below the limit of being large enough to influence the normal floating point sum
+   double large_number = 1e18;
+   ROOT::Math::KahanSum<double, 1> sum(large_number);
+
+   double largest_large_enough_carry = std::nextafter(large_number, INFINITY) - large_number;
+   double a_bit_too_small_carry = largest_large_enough_carry / 2;
+
+   ROOT::Math::KahanSum<double, 1> small_carry_sum(a_bit_too_small_carry);
+
+   sum += small_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number);
+   // This time, the stored carry in sum is again negative because it still has to be added. This is
+   // in contrast to the case above where the floating point sum already yielded a higher Sum value,
+   // but in fact should be corrected downwards by the Carry term (which was hence positive in
+   // SmallestLargeEnoughCarry).
+   EXPECT_EQ(sum.Carry(), -a_bit_too_small_carry);
+   sum += small_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number + 2 * a_bit_too_small_carry);
+   EXPECT_EQ(sum.Carry(), 0);
+   sum -= small_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number);
+   EXPECT_EQ(sum.Carry(), -a_bit_too_small_carry);
+   sum -= small_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number);
+   EXPECT_EQ(sum.Carry(), 0);
+
+   // compare to when just adding regular numbers (not KahanSum objects)
+   auto compare_sum {sum};
+   sum += small_carry_sum;
+   compare_sum += a_bit_too_small_carry;
+   EXPECT_EQ(sum.Sum(), compare_sum.Sum());
+   EXPECT_EQ(sum.Carry(), compare_sum.Carry());
+   sum += small_carry_sum;
+   compare_sum += a_bit_too_small_carry;
+   EXPECT_EQ(sum.Sum(), compare_sum.Sum());
+   EXPECT_EQ(sum.Carry(), compare_sum.Carry());
+   // reset state
+   sum -= small_carry_sum;
+   sum -= small_carry_sum;
+
+   // the other way around
+   sum -= small_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number);
+   EXPECT_EQ(sum.Carry(), a_bit_too_small_carry);
+   sum -= small_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number - 2 * a_bit_too_small_carry);
+   EXPECT_EQ(sum.Carry(), 0);
+   sum += small_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number);
+   EXPECT_EQ(sum.Carry(), a_bit_too_small_carry);
+   sum += small_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number);
+   EXPECT_EQ(sum.Carry(), 0);
+}
+
+TEST(KahanAddSubtractAssignTest, SubtractWithABitTooSmallCarry)
+{
+   // Subtract a large value with half of the largest large enough carry, which
+   // is exactly one bit too small to be added to the large number in normal
+   // floating point addition. Compare this (where possible) to behavior of a
+   // regular Kahan sum.
+   double large_number = 1e18;
+   ROOT::Math::KahanSum<double, 1> sum(large_number);
+
+   double largest_large_enough_carry = std::nextafter(large_number, INFINITY) - large_number;
+   double a_bit_too_small_carry = largest_large_enough_carry / 2;
+
+   // note: we initialize the carry with negative sign, meaning it should have been added, but hasn't yet
+   ROOT::Math::KahanSum<double, 1> large_carry_sum(large_number, -a_bit_too_small_carry);
+
+   sum -= large_carry_sum;
+   // The carry completely disappears in this case, never to be seen again:
+   EXPECT_EQ(sum.Sum(), 0);
+   EXPECT_EQ(sum.Carry(), 0);
+   sum += large_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number);
+   // Surprisingly, it also doesn't turn up in the carry after adding it back in:
+   EXPECT_EQ(sum.Carry(), 0);
+
+   // With the terms reversed, it gives the same resulting values as above:
+
+   large_carry_sum -= sum;
+   // This time we also do another sum to compare behavior of += for KahanSum vs double
+   // arguments.
+   ROOT::Math::KahanSum<double, 1> another_large_carry_sum(large_number, -a_bit_too_small_carry);
+   another_large_carry_sum += -large_number;
+   EXPECT_EQ(large_carry_sum.Sum(), 0);
+   EXPECT_EQ(large_carry_sum.Carry(), 0);
+   EXPECT_EQ(another_large_carry_sum.Sum(), 0);
+   EXPECT_EQ(another_large_carry_sum.Carry(), 0);
+   large_carry_sum += sum;
+   another_large_carry_sum += large_number;
+   EXPECT_EQ(large_carry_sum.Sum(), large_number);
+   EXPECT_EQ(another_large_carry_sum.Sum(), large_number);
+   // ... meaning we do not return to the original state after two opposite operations!
+   EXPECT_EQ(large_carry_sum.Carry(), 0);
+   // However, this is expected behavior, because it also happens to the regular
+   // Kahan summation:
+   EXPECT_EQ(another_large_carry_sum.Carry(), large_carry_sum.Carry());
+
+   // the other way around (first + then -) also loses the small carry:
+   ROOT::Math::KahanSum<double, 1> minus_large_carry_sum(-large_number, a_bit_too_small_carry);
+
+   sum += minus_large_carry_sum;
+   EXPECT_EQ(sum.Sum(), 0);
+   EXPECT_EQ(sum.Carry(), 0);
+   sum -= minus_large_carry_sum;
+   EXPECT_EQ(sum.Sum(), large_number);
+   EXPECT_EQ(sum.Carry(), 0);
+}
+
+TEST(KahanAddSubtractAssignTest, XMinusXIsZero)
+{
+   // x - x should always be zero
+   double large_number = 1e18;
+   double small_number = 1;
+   ROOT::Math::KahanSum<double, 1> sum(large_number, -small_number);
+   ROOT::Math::KahanSum<double, 1> sum2(large_number, -small_number);
+
+   auto diff = sum - sum2;
+   EXPECT_EQ(diff.Sum(), 0);
+   EXPECT_EQ(diff.Carry(), 0);
+}
+
+TEST(KahanAddSubtractAssignTest, AddMinusXEqualsSubtractX)
+{
+   // y + (-x) should equal y - x
+   double large_number = 1e18;
+   double small_number = 1;
+   ROOT::Math::KahanSum<double, 1> sum(large_number);
+   ROOT::Math::KahanSum<double, 1> small_sum(small_number);
+
+   auto addMinusX = sum + (-small_sum);
+   auto subtractX = sum - small_sum;
+
+   EXPECT_EQ(addMinusX.Sum(), subtractX.Sum());
+   EXPECT_EQ(addMinusX.Carry(), subtractX.Carry());
+}
+
+TEST(KahanAddSubtractAssignTest, MultipleAccumulators)
+{
+   // Adding and subtracting also works for multiple accumulators, even mixing different N.
+   // It doesn't vectorize, but that's only a performance issue, not a precision issue.
+   ROOT::Math::KahanSum<double, 4> sum4Acc;
+   ROOT::Math::KahanSum<double, 2> sum2Acc;
+
+   std::vector<double> _;
+   std::vector<double> allNumbers;
+   std::tie(_, allNumbers) = generateSummableNumbers();
+
+   sum4Acc.Add(allNumbers);
+   sum2Acc.Add(allNumbers);
+
+   auto total2_4 = sum2Acc + sum4Acc;
+   auto total4_2 = sum4Acc + sum2Acc;
+
+   // note that with different numbers of accumulators we expect floating-point equality,
+   // like in the legacy test above, not exact equality
+   EXPECT_FLOAT_EQ(total2_4.Sum(), total4_2.Sum());
+   EXPECT_NEAR(total2_4.Carry(), total4_2.Carry(), 1e-12);
+
+   auto diff2_4 = sum2Acc - sum4Acc;
+   auto diff4_2 = sum4Acc - sum2Acc;
+
+   // now the result should be (almost) zero
+   EXPECT_NEAR(diff2_4.Sum(), 0, 1e-12);
+   EXPECT_NEAR(diff4_2.Sum(), 0, 1e-12);
+   // the carries as well
+   EXPECT_NEAR(diff2_4.Carry(), 0, 1e-12);
+   EXPECT_NEAR(diff4_2.Carry(), 0, 1e-12);
+}

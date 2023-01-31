@@ -57,7 +57,7 @@ protected:
    virtual void      Build();
 
 public:
-   TGTextEditor(const char *filename = 0, const TGWindow *p = nullptr,
+   TGTextEditor(const char *filename = nullptr, const TGWindow *p = nullptr,
                 UInt_t w = 900, UInt_t h = 600);
    TGTextEditor(TMacro *macro, const TGWindow *p = nullptr, UInt_t w = 0,
                 UInt_t h = 0);
@@ -65,7 +65,7 @@ public:
 
    void           ClearText();
    Bool_t         LoadBuffer(const char *buf) { return fTextEdit->LoadBuffer(buf); }
-   void           LoadFile(const char *fname = 0);
+   void           LoadFile(const char *fname = nullptr);
    void           SaveFile(const char *fname);
    Bool_t         SaveFileAs();
    void           PrintText();

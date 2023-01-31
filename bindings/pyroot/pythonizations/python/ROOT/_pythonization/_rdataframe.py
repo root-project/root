@@ -114,7 +114,7 @@ print(cols["x"], cols["y"]) # the values of the cols dictionary are NumPy arrays
 #### Processing data stored in NumPy arrays
 
 In case you have data in NumPy arrays in Python and you want to process the data with ROOT, you can easily
-create an RDataFrame using `ROOT.RDF.MakeNumpyDataFrame`. The factory function accepts a dictionary where
+create an RDataFrame using `ROOT.RDF.FromNumpy`. The factory function accepts a dictionary where
 the keys are the column names and the values are NumPy arrays, and returns a new RDataFrame with the provided
 columns.
 
@@ -125,7 +125,7 @@ Data is read directly from the arrays: no copies are performed.
 # Read data from NumPy arrays
 # The column names in the RDataFrame are taken from the dictionary keys
 x, y = numpy.array([1, 2, 3]), numpy.array([4, 5, 6])
-df = ROOT.RDF.MakeNumpyDataFrame({"x": x, "y": y})
+df = ROOT.RDF.FromNumpy({"x": x, "y": y})
 
 # Use RDataFrame as usual, e.g. write out a ROOT file
 df.Define("z", "x + y").Snapshot("tree", "file.root")
@@ -420,6 +420,8 @@ def pythonize_rdataframe(klass):
     
     # Pythonization for Filters only to be implemented in Python3
     if sys.version_info >= (3, 7):
-        klass._OriginalFilter =  klass.Filter
-        from ._rdf_pyz import _PyFilter
+        klass._OriginalFilter = klass.Filter
+        klass._OriginalDefine = klass.Define
+        from ._rdf_pyz import _PyFilter, _PyDefine
         klass.Filter = _PyFilter
+        klass.Define = _PyDefine

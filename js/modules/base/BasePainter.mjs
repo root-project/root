@@ -1,5 +1,5 @@
 import { select as d3_select } from '../d3.mjs';
-import { settings, internals, isNodeJs } from '../core.mjs';
+import { settings, internals, isNodeJs, isFunc, isStr } from '../core.mjs';
 
 
 /** @summary Returns visible rect of element
@@ -8,16 +8,16 @@ import { settings, internals, isNodeJs } from '../core.mjs';
   * @desc kind = 'bbox' use getBBox, works only with SVG
   * kind = 'full' - full size of element, using getBoundingClientRect function
   * kind = 'nopadding' - excludes padding area
-  * With node.js can use "width" and "height" attributes when provided in element
+  * With node.js can use 'width' and 'height' attributes when provided in element
   * @private */
 function getElementRect(elem, sizearg) {
    if (isNodeJs() && (sizearg != 'bbox'))
-      return { x: 0, y: 0, width: parseInt(elem.attr("width")), height: parseInt(elem.attr("height")) };
+      return { x: 0, y: 0, width: parseInt(elem.attr('width')), height: parseInt(elem.attr('height')) };
 
    const styleValue = name => {
       let value = elem.style(name);
-      if (!value || (typeof value !== 'string')) return 0;
-      value = parseFloat(value.replace("px", ""));
+      if (!value || !isStr(value)) return 0;
+      value = parseFloat(value.replace('px', ''));
       return !Number.isFinite(value) ? 0 : Math.round(value);
    };
 
@@ -47,11 +47,11 @@ function getElementRect(elem, sizearg) {
 /** @summary Calculate absolute position of provided element in canvas
   * @private */
 function getAbsPosInCanvas(sel, pos) {
-   while (!sel.empty() && !sel.classed('root_canvas') && pos) {
-      let cl = sel.attr("class");
-      if (cl && ((cl.indexOf("root_frame") >= 0) || (cl.indexOf("__root_pad_") >= 0))) {
-         pos.x += sel.property("draw_x") || 0;
-         pos.y += sel.property("draw_y") || 0;
+   while (pos && !sel.empty() && !sel.classed('root_canvas')) {
+      let cl = sel.attr('class');
+      if (cl && ((cl.indexOf('root_frame') >= 0) || (cl.indexOf('__root_pad_') >= 0))) {
+         pos.x += sel.property('draw_x') || 0;
+         pos.y += sel.property('draw_y') || 0;
       }
       sel = d3_select(sel.node().parentNode);
    }
@@ -61,29 +61,29 @@ function getAbsPosInCanvas(sel, pos) {
 
 /** @summary Converts numeric value to string according to specified format.
   * @param {number} value - value to convert
-  * @param {string} [fmt="6.4g"] - format can be like 5.4g or 4.2e or 6.4f
-  * @param {boolean} [ret_fmt] - when true returns array with value and actual format like ["0.1","6.4f"]
-  * @returns {string|Array} - converted value or array with value and actual format
+  * @param {string} [fmt='6.4g'] - format can be like 5.4g or 4.2e or 6.4f
+  * @param {boolean} [ret_fmt] - when true returns array with value and actual format like ['0.1','6.4f']
+  * @return {string|Array} - converted value or array with value and actual format
   * @private */
 function floatToString(value, fmt, ret_fmt) {
-   if (!fmt) fmt = "6.4g";
+   if (!fmt) fmt = '6.4g';
 
    fmt = fmt.trim();
    let len = fmt.length;
    if (len < 2)
-      return ret_fmt ? [value.toFixed(4), "6.4f"] : value.toFixed(4);
+      return ret_fmt ? [value.toFixed(4), '6.4f'] : value.toFixed(4);
    let last = fmt[len-1];
    fmt = fmt.slice(0,len-1);
-   let isexp, prec = fmt.indexOf(".");
+   let isexp, prec = fmt.indexOf('.');
    prec = (prec < 0) ? 4 : parseInt(fmt.slice(prec+1));
    if (!Number.isInteger(prec) || (prec <= 0)) prec = 4;
 
    let significance = false;
-   if ((last=='e') || (last=='E')) { isexp = true; } else
-   if (last=='Q') { isexp = true; significance = true; } else
-   if ((last=='f') || (last=='F')) { isexp = false; } else
-   if (last=='W') { isexp = false; significance = true; } else
-   if ((last=='g') || (last=='G')) {
+   if ((last == 'e') || (last == 'E')) { isexp = true; } else
+   if (last == 'Q') { isexp = true; significance = true; } else
+   if ((last == 'f') || (last == 'F')) { isexp = false; } else
+   if (last == 'W') { isexp = false; significance = true; } else
+   if ((last == 'g') || (last == 'G')) {
       let se = floatToString(value, fmt+'Q', true),
           sg = floatToString(value, fmt+'W', true);
 
@@ -109,7 +109,7 @@ function floatToString(value, fmt, ret_fmt) {
    if (significance) {
 
       // when using fixed representation, one could get 0.0
-      if ((value!=0) && (Number(sg)==0.) && (prec>0)) {
+      if (value && (Number(sg) === 0.) && (prec > 0)) {
          prec = 20; sg = value.toFixed(prec);
       }
 
@@ -117,11 +117,14 @@ function floatToString(value, fmt, ret_fmt) {
       while ((l<sg.length) && (sg[l] == '0' || sg[l] == '-' || sg[l] == '.')) l++;
 
       let diff = sg.length - l - prec;
-      if (sg.indexOf(".")>l) diff--;
+      if (sg.indexOf('.') > l) diff--;
 
       if (diff != 0) {
-         prec-=diff;
-         if (prec<0) prec = 0; else if (prec>20) prec = 20;
+         prec -= diff;
+         if (prec < 0)
+            prec = 0;
+         else if (prec > 20)
+            prec = 20;
          sg = value.toFixed(prec);
       }
    }
@@ -135,14 +138,14 @@ function floatToString(value, fmt, ret_fmt) {
 class DrawOptions {
 
    constructor(opt) {
-      this.opt = opt && (typeof opt == "string") ? opt.toUpperCase().trim() : "";
-      this.part = "";
+      this.opt = isStr(opt) ? opt.toUpperCase().trim() : '';
+      this.part = '';
    }
 
    /** @summary Returns true if remaining options are empty or contain only seperators symbols. */
    empty() {
       if (this.opt.length === 0) return true;
-      return this.opt.replace(/[ ;_,]/g,"").length == 0;
+      return this.opt.replace(/[ ;_,]/g, '').length == 0;
    }
 
    /** @summary Returns remaining part of the draw options. */
@@ -153,7 +156,7 @@ class DrawOptions {
       let pos = this.opt.indexOf(name);
       if (pos < 0) return false;
       this.opt = this.opt.slice(0, pos) + this.opt.slice(pos + name.length);
-      this.part = "";
+      this.part = '';
       if (!postpart) return true;
 
       let pos2 = pos;
@@ -185,7 +188,7 @@ class DrawOptions {
   * @private */
 class TRandom {
    constructor(i) {
-      if (i!==undefined) this.seed(i);
+      if (i !== undefined) this.seed(i);
    }
    /** @summary Seed simple random generator */
    seed(i) {
@@ -211,12 +214,12 @@ class TRandom {
 
 /** @summary Function used to provide svg:path for the smoothed curves.
   * @desc reuse code from d3.js. Used in TH1, TF1 and TGraph painters
-  * @param {string} kind  should contain "bezier" or "line".
-  * If first symbol "L", then it used to continue drawing
+  * @param {string} kind  should contain 'bezier' or 'line'.
+  * If first symbol 'L', then it used to continue drawing
   * @private */
 function buildSvgPath(kind, bins, height, ndig) {
 
-   const smooth = kind.indexOf("bezier") >= 0;
+   const smooth = kind.indexOf('bezier') >= 0;
 
    if (ndig === undefined) ndig = smooth ? 2 : 0;
    if (height === undefined) height = 0;
@@ -255,22 +258,22 @@ function buildSvgPath(kind, bins, height, ndig) {
       }
    };
 
-   let res = { path: "", close: "" }, bin = bins[0], maxy = Math.max(bin.gry, height + 5),
+   let res = { path: '', close: '' }, bin = bins[0], maxy = Math.max(bin.gry, height + 5),
       currx = Math.round(bin.grx), curry = Math.round(bin.gry), dx, dy, npnts = bins.length;
 
    const conv = val => {
       let vvv = Math.round(val);
       if ((ndig == 0) || (vvv === val)) return vvv.toString();
       let str = val.toFixed(ndig);
-      while ((str[str.length - 1] == '0') && (str.lastIndexOf(".") < str.length - 1))
+      while ((str[str.length - 1] == '0') && (str.lastIndexOf('.') < str.length - 1))
          str = str.slice(0, str.length - 1);
       if (str[str.length - 1] == '.')
          str = str.slice(0, str.length - 1);
-      if (str == "-0") str = "0";
+      if (str == '-0') str = '0';
       return str;
    };
 
-   res.path = ((kind[0] == "L") ? "L" : "M") + conv(bin.grx) + "," + conv(bin.gry);
+   res.path = ((kind[0] == 'L') ? 'L' : 'M') + conv(bin.grx) + ',' + conv(bin.gry);
 
    // just calculate all deltas, can be used to build exclusion
    if (smooth || kind.indexOf('calc') >= 0)
@@ -282,7 +285,7 @@ function buildSvgPath(kind, bins, height, ndig) {
       for (let n = 1; n < npnts; ++n) {
          let prev = bin;
          bin = bins[n];
-         if (n > 1) res.path += "S";
+         if (n > 1) res.path += 'S';
          res.path += `${conv(bin.grx - bin.dgrx)},${conv(bin.gry - bin.dgry)},${conv(bin.grx)},${conv(bin.gry)}`;
          maxy = Math.max(maxy, prev.gry);
       }
@@ -292,8 +295,8 @@ function buildSvgPath(kind, bins, height, ndig) {
       let acc_x = 0, acc_y = 0;
 
       const flush = () => {
-         if (acc_x) { res.path += "h" + acc_x; acc_x = 0; }
-         if (acc_y) { res.path += "v" + acc_y; acc_y = 0; }
+         if (acc_x) { res.path += 'h' + acc_x; acc_x = 0; }
+         if (acc_y) { res.path += 'v' + acc_y; acc_y = 0; }
       };
 
       for (let n = 1; n < npnts; ++n) {
@@ -334,24 +337,26 @@ function buildSvgPath(kind, bins, height, ndig) {
          }
 
          if (cminy !== cmaxy) {
-            if (cminy != curry) res.path += "v" + (cminy - curry);
-            res.path += "v" + (cmaxy - cminy);
-            if (cmaxy != prevy) res.path += "v" + (prevy - cmaxy);
+            if (cminy != curry) res.path += 'v' + (cminy - curry);
+            res.path += 'v' + (cmaxy - cminy);
+            if (cmaxy != prevy) res.path += 'v' + (prevy - cmaxy);
             curry = prevy;
          }
          dy = lasty - curry;
          if (dy)
             res.path += `l${dx},${dy}`;
          else
-            res.path += "h" + dx;
+            res.path += 'h' + dx;
          currx = lastx; curry = lasty;
          prevy = cminy = cmaxy = lasty;
       }
 
       if (cminy != cmaxy) {
-         if (cminy != curry) res.path += "v" + (cminy - curry);
-         res.path += "v" + (cmaxy - cminy);
-         if (cmaxy != prevy) res.path += "v" + (prevy - cmaxy);
+         if (cminy != curry)
+            res.path += `v${cminy - curry}`;
+         res.path += `v${cmaxy - cminy}`;
+         if (cmaxy != prevy)
+            res.path += `v${prevy - cmaxy}`;
       }
    }
 
@@ -366,19 +371,19 @@ function buildSvgPath(kind, bins, height, ndig) {
   * @private */
 function compressSVG(svg) {
 
-   svg = svg.replace(/url\(\&quot\;\#(\w+)\&quot\;\)/g, "url(#$1)")        // decode all URL
-            .replace(/ class=\"\w*\"/g, "")                                // remove all classes
-            .replace(/ pad=\"\w*\"/g, "")                                  // remove all pad ids
-            .replace(/ title=\"\"/g, "")                                   // remove all empty titles
-            .replace(/<g objname=\"\w*\" objtype=\"\w*\"/g, "<g")          // remove object ids
-            .replace(/<g transform=\"translate\(\d+\,\d+\)\"><\/g>/g, "")  // remove all empty groups with transform
-            .replace(/<g><\/g>/g, "");                                     // remove all empty groups
+   svg = svg.replace(/url\(\&quot\;\#(\w+)\&quot\;\)/g, 'url(#$1)')        // decode all URL
+            .replace(/ class=\"\w*\"/g, '')                                // remove all classes
+            .replace(/ pad=\"\w*\"/g, '')                                  // remove all pad ids
+            .replace(/ title=\"\"/g, '')                                   // remove all empty titles
+            .replace(/<g objname=\"\w*\" objtype=\"\w*\"/g, '<g')          // remove object ids
+            .replace(/<g transform=\"translate\(\d+\,\d+\)\"><\/g>/g, '')  // remove all empty groups with transform
+            .replace(/<g><\/g>/g, '');                                     // remove all empty groups
 
    // remove all empty frame svgs, typically appears in 3D drawings, maybe should be improved in frame painter itself
-   svg = svg.replace(/<svg x=\"0\" y=\"0\" overflow=\"hidden\" width=\"\d+\" height=\"\d+\" viewBox=\"0 0 \d+ \d+\"><\/svg>/g, "")
+   svg = svg.replace(/<svg x=\"0\" y=\"0\" overflow=\"hidden\" width=\"\d+\" height=\"\d+\" viewBox=\"0 0 \d+ \d+\"><\/svg>/g, '')
 
-   if (svg.indexOf("xlink:href") < 0)
-      svg = svg.replace(/ xmlns:xlink=\"http:\/\/www.w3.org\/1999\/xlink\"/g, "");
+   if (svg.indexOf('xlink:href') < 0)
+      svg = svg.replace(/ xmlns:xlink=\"http:\/\/www.w3.org\/1999\/xlink\"/g, '');
 
    return svg;
 }
@@ -417,16 +422,16 @@ class BasePainter {
    /** @summary Selects main HTML element assigned for drawing
      * @desc if main element was layouted, returns main element inside layout
      * @param {string} [is_direct] - if 'origin' specified, returns original element even if actual drawing moved to some other place
-     * @returns {object} d3.select object for main element for drawing */
+     * @return {object} d3.select object for main element for drawing */
    selectDom(is_direct) {
 
       if (!this.divid) return d3_select(null);
 
       let res = this._selected_main;
       if (!res) {
-         if (typeof this.divid == "string") {
+         if (isStr(this.divid)) {
             let id = this.divid;
-            if (id[0] != '#') id = "#" + id;
+            if (id[0] != '#') id = '#' + id;
             res = d3_select(id);
             if (!res.empty()) this.divid = res.node();
          } else {
@@ -439,12 +444,12 @@ class BasePainter {
 
       let use_enlarge = res.property('use_enlarge'),
           layout = res.property('layout') || 'simple',
-          layout_selector = (layout == 'simple') ? "" : res.property('layout_selector');
+          layout_selector = (layout == 'simple') ? '' : res.property('layout_selector');
 
       if (layout_selector) res = res.select(layout_selector);
 
       // one could redirect here
-      if (!is_direct && !res.empty() && use_enlarge) res = d3_select("#jsroot_enlarge_div");
+      if (!is_direct && !res.empty() && use_enlarge) res = d3_select('#jsroot_enlarge_div');
 
       return res;
    }
@@ -485,11 +490,11 @@ class BasePainter {
    cleanup(keep_origin) {
       this.clearTopPainter();
       let origin = this.selectDom('origin');
-      if (!origin.empty() && !keep_origin) origin.html("");
+      if (!origin.empty() && !keep_origin) origin.html('');
       this.divid = null;
       delete this._selected_main;
 
-      if (typeof this._hpainter?.removePainter === 'function')
+      if (isFunc(this._hpainter?.removePainter))
          this._hpainter.removePainter(this);
 
       delete this._hitemname;
@@ -498,14 +503,14 @@ class BasePainter {
    }
 
    /** @summary Checks if draw elements were resized and drawing should be updated
-     * @returns {boolean} true if resize was detected
+     * @return {boolean} true if resize was detected
      * @protected
      * @abstract */
    checkResize(/* arg */) {}
 
    /** @summary Function checks if geometry of main div was changed.
      * @desc take into account enlarge state, used only in PadPainter class
-     * @returns size of area when main div is drawn
+     * @return size of area when main div is drawn
      * @private */
    testMainResize(check_level, new_size, height_factor) {
 
@@ -516,15 +521,15 @@ class BasePainter {
 
       if (enlarge !== 'on') {
          if (new_size && new_size.width && new_size.height)
-            main_origin.style('width', new_size.width + "px")
-               .style('height', new_size.height + "px");
+            main_origin.style('width', new_size.width + 'px')
+               .style('height', new_size.height + 'px');
       }
 
       let rect_origin = getElementRect(main_origin, true),
          can_resize = main_origin.attr('can_resize'),
          do_resize = false;
 
-      if (can_resize == "height")
+      if (can_resize == 'height')
          if (height_factor && Math.abs(rect_origin.width * height_factor - rect_origin.height) > 0.1 * rect_origin.width) do_resize = true;
 
       if (((rect_origin.height <= lmt) || (rect_origin.width <= lmt)) &&
@@ -577,21 +582,21 @@ class BasePainter {
 
       if ((action === undefined) || (action === 'verify')) return true;
 
-      let state = origin.property('use_enlarge') ? "on" : "off";
+      let state = origin.property('use_enlarge') ? 'on' : 'off';
 
       if (action === 'state') return state;
 
-      if (action === 'toggle') action = (state === "off");
+      if (action === 'toggle') action = (state === 'off');
 
-      let enlarge = d3_select("#jsroot_enlarge_div");
+      let enlarge = d3_select('#jsroot_enlarge_div');
 
-      if ((action === true) && (state !== "on")) {
+      if ((action === true) && (state !== 'on')) {
          if (!enlarge.empty()) return false;
 
          enlarge = d3_select(document.body)
-            .append("div")
-            .attr("id", "jsroot_enlarge_div")
-            .attr("style", "position: fixed; margin: 0px; border: 0px; padding: 0px; left: 1px; right: 1px; top: 1px; bottom: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;");
+            .append('div')
+            .attr('id', 'jsroot_enlarge_div')
+            .attr('style', 'position: fixed; margin: 0px; border: 0px; padding: 0px; left: 1px; right: 1px; top: 1px; bottom: 1px; background: white; opacity: 0.95; z-index: 100; overflow: hidden;');
 
          let rect1 = getElementRect(main),
              rect2 = getElementRect(enlarge);
@@ -612,7 +617,7 @@ class BasePainter {
 
          return true;
       }
-      if ((action === false) && (state !== "off")) {
+      if ((action === false) && (state !== 'off')) {
 
          while (enlarge.node() && enlarge.node().childNodes.length > 0)
             main.node().appendChild(enlarge.node().firstChild);
@@ -629,12 +634,13 @@ class BasePainter {
      * @desc Used by {@link HierarchyPainter}
      * @private */
    setItemName(name, opt, hpainter) {
-      if (typeof name === 'string')
+      if (isStr(name))
          this._hitemname = name;
       else
          delete this._hitemname;
       // only upate draw option, never delete.
-      if (typeof opt === 'string') this._hdrawopt = opt;
+      if (isStr(opt))
+         this._hdrawopt = opt;
 
       this._hpainter = hpainter;
    }
@@ -645,18 +651,18 @@ class BasePainter {
 
    /** @summary Returns assigned item draw option
      * @desc Used with {@link HierarchyPainter} to identify drawn item option */
-   getItemDrawOpt() { return this._hdrawopt ?? ""; }
+   getItemDrawOpt() { return this._hdrawopt ?? ''; }
 
 } // class BasePainter
 
 /** @summary Load and initialize JSDOM from nodes
-  * @returns {Promise} with d3 selection for d3_body
-   * @private */
-function _loadJSDOM() {
-   return import("jsdom").then(handle => {
+  * @return {Promise} with d3 selection for d3_body
+  * @private */
+async function _loadJSDOM() {
+   return import('jsdom').then(handle => {
 
       if (!internals.nodejs_window) {
-         internals.nodejs_window = (new handle.JSDOM("<!DOCTYPE html>hello")).window;
+         internals.nodejs_window = (new handle.JSDOM('<!DOCTYPE html>hello')).window;
          internals.nodejs_document = internals.nodejs_window.document; // used with three.js
          internals.nodejs_body = d3_select(internals.nodejs_document).select('body'); //get d3 handle for body
       }
@@ -665,6 +671,16 @@ function _loadJSDOM() {
    });
 }
 
+/** @summary Return translate string for transform attribute of some svg element
+  * @return string or null if x and y are zeros
+  * @private */
+function makeTranslate(x,y)
+{
+   if (y) return `translate(${x},${y})`;
+   if (x) return `translate(${x})`;
+   return null;
+}
+
 export { getElementRect, getAbsPosInCanvas,
          DrawOptions, TRandom, floatToString, buildSvgPath, compressSVG,
-         BasePainter, _loadJSDOM };
+         BasePainter, _loadJSDOM, makeTranslate };

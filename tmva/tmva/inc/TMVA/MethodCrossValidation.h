@@ -72,7 +72,7 @@ public:
    void WriteMonitoringHistosToFile(void) const;
 
    // calculate the MVA value
-   Double_t GetMvaValue(Double_t *err = 0, Double_t *errUpper = 0);
+   Double_t GetMvaValue(Double_t *err = nullptr, Double_t *errUpper = nullptr);
    const std::vector<Float_t> &GetMulticlassValues();
    const std::vector<Float_t> &GetRegressionValues();
 

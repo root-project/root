@@ -346,7 +346,7 @@ TNode *TGeometry::GetNode(const char *name) const
 {
    TNode *node= (TNode*)GetListOfNodes()->First();
    if (!node) return 0;
-   if (node->TestBit(kNotDeleted))  return node->GetNode(name);
+   if (!ROOT::Detail::HasBeenDeleted(node))  return node->GetNode(name);
    return 0;
 }
 

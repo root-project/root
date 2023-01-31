@@ -208,12 +208,18 @@ RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
 
    if (kind == "local")
       SetBrowserKind(kLocal);
-   else if (kind.empty() || (kind == "native"))
+   else if (kind == "native")
       SetBrowserKind(kNative);
+   else if (kind.empty() || (kind == "dflt") || (kind == "default") || (kind == "browser"))
+      SetBrowserKind(kDefault);
    else if (kind == "firefox")
       SetBrowserKind(kFirefox);
    else if ((kind == "chrome") || (kind == "chromium"))
       SetBrowserKind(kChrome);
+#ifdef _MSC_VER
+   else if ((kind == "edge") || (kind == "msedge"))
+      SetBrowserKind(kEdge);
+#endif
    else if ((kind == "cef") || (kind == "cef3"))
       SetBrowserKind(kCEF);
    else if ((kind == "qt") || (kind == "qt5"))
@@ -222,8 +228,6 @@ RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
       SetBrowserKind(kQt6);
    else if ((kind == "embed") || (kind == "embedded"))
       SetBrowserKind(kEmbedded);
-   else if ((kind == "dflt") || (kind == "default") || (kind == "browser"))
-      SetBrowserKind(kStandard);
    else if (kind == "server")
       SetBrowserKind(kServer);
    else if (kind == "off")
@@ -241,13 +245,14 @@ std::string RWebDisplayArgs::GetBrowserName() const
 {
    switch (GetBrowserKind()) {
       case kChrome: return "chrome";
+      case kEdge: return "edge";
       case kFirefox: return "firefox";
       case kNative: return "native";
       case kCEF: return "cef";
       case kQt5: return "qt5";
       case kQt6: return "qt6";
       case kLocal: return "local";
-      case kStandard: return "default";
+      case kDefault: return "default";
       case kServer: return "server";
       case kEmbedded: return "embed";
       case kOff: return "off";

@@ -65,7 +65,7 @@ protected:
    void          ChangeCursor(Event_t *event);
 
 public:
-   TGDoubleSlider(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1, UInt_t type = 1, Int_t id = -1,
+   TGDoubleSlider(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1, UInt_t type = 1, Int_t id = -1,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground(),
                   Bool_t reversed = kFALSE,

@@ -19,13 +19,12 @@
 #include "llvm/Support/ConvertUTF.h"
 #include "llvm/Support/WindowsError.h"
 #include <fcntl.h>
-#include <io.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
 // These two headers must be included last, and make sure shlobj is required
 // after Windows.h to make sure it picks up our definition of _WIN32_WINNT
-#include "WindowsSupport.h"
+#include "llvm/Support/Windows/WindowsSupport.h"
 #include <shellapi.h>
 #include <shlobj.h>
 
@@ -47,7 +46,7 @@ using namespace llvm;
 using llvm::sys::windows::UTF8ToUTF16;
 using llvm::sys::windows::CurCPToUTF16;
 using llvm::sys::windows::UTF16ToUTF8;
-using llvm::sys::path::widenPath;
+using llvm::sys::windows::widenPath;
 
 static bool is_separator(const wchar_t value) {
   switch (value) {
@@ -61,64 +60,64 @@ static bool is_separator(const wchar_t value) {
 
 namespace llvm {
 namespace sys  {
-namespace path {
+namespace windows {
 
-// Convert a UTF-8 path to UTF-16.  Also, if the absolute equivalent of the
-// path is longer than CreateDirectory can tolerate, make it absolute and
-// prefixed by '\\?\'.
-std::error_code widenPath(const Twine &Path8,
-                          SmallVectorImpl<wchar_t> &Path16) {
-  const size_t MaxDirLen = MAX_PATH - 12; // Must leave room for 8.3 filename.
+// Convert a UTF-8 path to UTF-16. Also, if the absolute equivalent of the path
+// is longer than the limit that the Win32 Unicode File API can tolerate, make
+// it an absolute normalized path prefixed by '\\?\'.
+std::error_code widenPath(const Twine &Path8, SmallVectorImpl<wchar_t> &Path16,
+                          size_t MaxPathLen) {
+  assert(MaxPathLen <= MAX_PATH);
 
-  // Several operations would convert Path8 to SmallString; more efficient to
-  // do it once up front.
-  SmallString<128> Path8Str;
+  // Several operations would convert Path8 to SmallString; more efficient to do
+  // it once up front.
+  SmallString<MAX_PATH> Path8Str;
   Path8.toVector(Path8Str);
 
-  // If we made this path absolute, how much longer would it get?
+  if (std::error_code EC = UTF8ToUTF16(Path8Str, Path16))
+    return EC;
+
+  const bool IsAbsolute = llvm::sys::path::is_absolute(Path8);
   size_t CurPathLen;
-  if (llvm::sys::path::is_absolute(Twine(Path8Str)))
+  if (IsAbsolute)
     CurPathLen = 0; // No contribution from current_path needed.
   else {
-    CurPathLen = ::GetCurrentDirectoryW(0, NULL);
+    CurPathLen = ::GetCurrentDirectoryW(
+        0, NULL); // Returns the size including the null terminator.
     if (CurPathLen == 0)
       return mapWindowsError(::GetLastError());
   }
 
-  // Would the absolute path be longer than our limit?
-  if ((Path8Str.size() + CurPathLen) >= MaxDirLen &&
-      !Path8Str.startswith("\\\\?\\")) {
-    SmallString<2*MAX_PATH> FullPath("\\\\?\\");
-    if (CurPathLen) {
-      SmallString<80> CurPath;
-      if (std::error_code EC = llvm::sys::fs::current_path(CurPath))
-        return EC;
-      FullPath.append(CurPath);
-    }
-    // Traverse the requested path, canonicalizing . and .. (because the \\?\
-    // prefix is documented to treat them as real components).  Ignore
-    // separators, which can be returned from the iterator if the path has a
-    // drive name.  We don't need to call native() on the result since append()
-    // always attaches preferred_separator.
-    for (llvm::sys::path::const_iterator I = llvm::sys::path::begin(Path8Str),
-                                         E = llvm::sys::path::end(Path8Str);
-                                         I != E; ++I) {
-      if (I->size() == 1 && is_separator((*I)[0]))
-        continue;
-      if (I->size() == 1 && *I == ".")
-        continue;
-      if (I->size() == 2 && *I == "..")
-        llvm::sys::path::remove_filename(FullPath);
-      else
-        llvm::sys::path::append(FullPath, *I);
-    }
-    return UTF8ToUTF16(FullPath, Path16);
+  const char *const LongPathPrefix = "\\\\?\\";
+
+  if ((Path16.size() + CurPathLen) < MaxPathLen ||
+      Path8Str.startswith(LongPathPrefix))
+    return std::error_code();
+
+  if (!IsAbsolute) {
+    if (std::error_code EC = llvm::sys::fs::make_absolute(Path8Str))
+      return EC;
   }
 
-  // Just use the caller's original path.
-  return UTF8ToUTF16(Path8Str, Path16);
+  // Remove '.' and '..' because long paths treat these as real path components.
+  llvm::sys::path::native(Path8Str, path::Style::windows);
+  llvm::sys::path::remove_dots(Path8Str, true);
+
+  const StringRef RootName = llvm::sys::path::root_name(Path8Str);
+  assert(!RootName.empty() &&
+         "Root name cannot be empty for an absolute path!");
+
+  SmallString<2 * MAX_PATH> FullPath(LongPathPrefix);
+  if (RootName[1] != ':') { // Check if UNC.
+    FullPath.append("UNC\\");
+    FullPath.append(Path8Str.begin() + 2, Path8Str.end());
+  } else
+    FullPath.append(Path8Str);
+
+  return UTF8ToUTF16(FullPath, Path16);
 }
-} // end namespace path
+
+} // end namespace windows
 
 namespace fs {
 
@@ -227,7 +226,9 @@ std::error_code create_directory(const Twine &path, bool IgnoreExisting,
                                  perms Perms) {
   SmallVector<wchar_t, 128> path_utf16;
 
-  if (std::error_code ec = widenPath(path, path_utf16))
+  // CreateDirectoryW has a lower maximum path length as it must leave room for
+  // an 8.3 filename.
+  if (std::error_code ec = widenPath(path, path_utf16, MAX_PATH - 12))
     return ec;
 
   if (!::CreateDirectoryW(path_utf16.begin(), NULL)) {
@@ -350,13 +351,13 @@ std::error_code is_local(const Twine &path, bool &result) {
 static std::error_code realPathFromHandle(HANDLE H,
                                           SmallVectorImpl<wchar_t> &Buffer) {
   DWORD CountChars = ::GetFinalPathNameByHandleW(
-      H, Buffer.begin(), Buffer.capacity() - 1, FILE_NAME_NORMALIZED);
-  if (CountChars > Buffer.capacity()) {
+      H, Buffer.begin(), Buffer.capacity(), FILE_NAME_NORMALIZED);
+  if (CountChars && CountChars >= Buffer.capacity()) {
     // The buffer wasn't big enough, try again.  In this case the return value
     // *does* indicate the size of the null terminator.
     Buffer.reserve(CountChars);
     CountChars = ::GetFinalPathNameByHandleW(
-        H, Buffer.data(), Buffer.capacity() - 1, FILE_NAME_NORMALIZED);
+        H, Buffer.begin(), Buffer.capacity(), FILE_NAME_NORMALIZED);
   }
   if (CountChars == 0)
     return mapWindowsError(GetLastError());
@@ -371,13 +372,19 @@ static std::error_code realPathFromHandle(HANDLE H,
   if (std::error_code EC = realPathFromHandle(H, Buffer))
     return EC;
 
-  const wchar_t *Data = Buffer.data();
+  // Strip the \\?\ prefix. We don't want it ending up in output, and such
+  // paths don't get canonicalized by file APIs.
+  wchar_t *Data = Buffer.data();
   DWORD CountChars = Buffer.size();
-  if (CountChars >= 4) {
-    if (0 == ::memcmp(Data, L"\\\\?\\", 8)) {
-      CountChars -= 4;
-      Data += 4;
-    }
+  if (CountChars >= 8 && ::memcmp(Data, L"\\\\?\\UNC\\", 16) == 0) {
+    // Convert \\?\UNC\foo\bar to \\foo\bar
+    CountChars -= 6;
+    Data += 6;
+    Data[0] = '\\';
+  } else if (CountChars >= 4 && ::memcmp(Data, L"\\\\?\\", 8) == 0) {
+    // Convert \\?\c:\foo to c:\foo
+    CountChars -= 4;
+    Data += 4;
   }
 
   // Convert the result from UTF-16 to UTF-8.
@@ -395,8 +402,36 @@ std::error_code is_local(int FD, bool &Result) {
 }
 
 static std::error_code setDeleteDisposition(HANDLE Handle, bool Delete) {
+  // Clear the FILE_DISPOSITION_INFO flag first, before checking if it's a
+  // network file. On Windows 7 the function realPathFromHandle() below fails
+  // if the FILE_DISPOSITION_INFO flag was already set to 'DeleteFile = true' by
+  // a prior call.
   FILE_DISPOSITION_INFO Disposition;
-  Disposition.DeleteFile = Delete;
+  Disposition.DeleteFile = false;
+  if (!SetFileInformationByHandle(Handle, FileDispositionInfo, &Disposition,
+                                  sizeof(Disposition)))
+    return mapWindowsError(::GetLastError());
+  if (!Delete)
+    return std::error_code();
+
+  // Check if the file is on a network (non-local) drive. If so, don't
+  // continue when DeleteFile is true, since it prevents opening the file for
+  // writes. Note -- this will leak temporary files on disk, but only when the
+  // target file is on a network drive.
+  SmallVector<wchar_t, 128> FinalPath;
+  if (std::error_code EC = realPathFromHandle(Handle, FinalPath))
+    return EC;
+
+  bool IsLocal;
+  if (std::error_code EC = is_local_internal(FinalPath, IsLocal))
+    return EC;
+
+  if (!IsLocal)
+    return std::error_code();
+
+  // The file is on a local drive, we can safely set FILE_DISPOSITION_INFO's
+  // flag.
+  Disposition.DeleteFile = true;
   if (!SetFileInformationByHandle(Handle, FileDispositionInfo, &Disposition,
                                   sizeof(Disposition)))
     return mapWindowsError(::GetLastError());
@@ -525,11 +560,6 @@ static std::error_code rename_handle(HANDLE FromHandle, const Twine &To) {
   return errc::permission_denied;
 }
 
-static std::error_code rename_fd(int FromFD, const Twine &To) {
-  HANDLE FromHandle = reinterpret_cast<HANDLE>(_get_osfhandle(FromFD));
-  return rename_handle(FromHandle, To);
-}
-
 std::error_code rename(const Twine &From, const Twine &To) {
   // Convert to utf-16.
   SmallVector<wchar_t, 128> WideFrom;
@@ -547,6 +577,11 @@ std::error_code rename(const Twine &From, const Twine &To) {
                       NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (FromHandle)
       break;
+
+    // We don't want to loop if the file doesn't exist.
+    auto EC = mapWindowsError(GetLastError());
+    if (EC == errc::no_such_file_or_directory)
+      return EC;
   }
   if (!FromHandle)
     return mapWindowsError(GetLastError());
@@ -581,6 +616,9 @@ std::error_code access(const Twine &Path, AccessMode Mode) {
   }
 
   if (Mode == AccessMode::Write && (Attributes & FILE_ATTRIBUTE_READONLY))
+    return errc::permission_denied;
+
+  if (Mode == AccessMode::Execute && (Attributes & FILE_ATTRIBUTE_DIRECTORY))
     return errc::permission_denied;
 
   return std::error_code();
@@ -631,7 +669,7 @@ static bool isReservedName(StringRef path) {
 
   // Then compare against the list of ancient reserved names.
   for (size_t i = 0; i < array_lengthof(sReservedNames); ++i) {
-    if (path.equals_lower(sReservedNames[i]))
+    if (path.equals_insensitive(sReservedNames[i]))
       return true;
   }
 
@@ -860,10 +898,10 @@ std::error_code mapped_file_region::init(sys::fs::file_t OrigFileHandle,
 mapped_file_region::mapped_file_region(sys::fs::file_t fd, mapmode mode,
                                        size_t length, uint64_t offset,
                                        std::error_code &ec)
-    : Size(length), Mapping() {
+    : Size(length) {
   ec = init(fd, offset, mode);
   if (ec)
-    Mapping = 0;
+    copyFrom(mapped_file_region());
 }
 
 static bool hasFlushBufferKernelBug() {
@@ -882,7 +920,7 @@ static bool isEXE(StringRef Magic) {
   return false;
 }
 
-mapped_file_region::~mapped_file_region() {
+void mapped_file_region::unmapImpl() {
   if (Mapping) {
 
     bool Exe = isEXE(StringRef((char *)Mapping, Size));
@@ -902,21 +940,6 @@ mapped_file_region::~mapped_file_region() {
 
     ::CloseHandle(FileHandle);
   }
-}
-
-size_t mapped_file_region::size() const {
-  assert(Mapping && "Mapping failed but used anyway!");
-  return Size;
-}
-
-char *mapped_file_region::data() const {
-  assert(Mapping && "Mapping failed but used anyway!");
-  return reinterpret_cast<char*>(Mapping);
-}
-
-const char *mapped_file_region::const_data() const {
-  assert(Mapping && "Mapping failed but used anyway!");
-  return reinterpret_cast<const char*>(Mapping);
 }
 
 int mapped_file_region::alignment() {
@@ -944,9 +967,9 @@ std::error_code detail::directory_iterator_construct(detail::DirIterState &IT,
     return EC;
 
   // Convert path to the format that Windows is happy with.
-  if (PathUTF16.size() > 0 &&
-      !is_separator(PathUTF16[Path.size() - 1]) &&
-      PathUTF16[Path.size() - 1] != L':') {
+  size_t PathUTF16Len = PathUTF16.size();
+  if (PathUTF16Len > 0 && !is_separator(PathUTF16[PathUTF16Len - 1]) &&
+      PathUTF16[PathUTF16Len - 1] != L':') {
     PathUTF16.push_back(L'\\');
     PathUTF16.push_back(L'*');
   } else {
@@ -1040,8 +1063,10 @@ static std::error_code nativeFileToFd(Expected<HANDLE> H, int &ResultFD,
   if (Flags & OF_Append)
     CrtOpenFlags |= _O_APPEND;
 
-  if (Flags & OF_Text)
+  if (Flags & OF_CRLF) {
+    assert(Flags & OF_Text && "Flags set OF_CRLF without OF_Text");
     CrtOpenFlags |= _O_TEXT;
+  }
 
   ResultFD = -1;
   if (!H)
@@ -1217,57 +1242,71 @@ file_t getStdinHandle() { return ::GetStdHandle(STD_INPUT_HANDLE); }
 file_t getStdoutHandle() { return ::GetStdHandle(STD_OUTPUT_HANDLE); }
 file_t getStderrHandle() { return ::GetStdHandle(STD_ERROR_HANDLE); }
 
-std::error_code readNativeFileImpl(file_t FileHandle, char *BufPtr, size_t BytesToRead,
-                                   size_t *BytesRead, OVERLAPPED *Overlap) {
+Expected<size_t> readNativeFileImpl(file_t FileHandle,
+                                    MutableArrayRef<char> Buf,
+                                    OVERLAPPED *Overlap) {
   // ReadFile can only read 2GB at a time. The caller should check the number of
   // bytes and read in a loop until termination.
-  DWORD BytesToRead32 =
-      std::min(size_t(std::numeric_limits<DWORD>::max()), BytesToRead);
-  DWORD BytesRead32 = 0;
-  bool Success =
-      ::ReadFile(FileHandle, BufPtr, BytesToRead32, &BytesRead32, Overlap);
-  *BytesRead = BytesRead32;
-  if (!Success) {
-    DWORD Err = ::GetLastError();
-    // Pipe EOF is not an error.
-    if (Err == ERROR_BROKEN_PIPE)
+  DWORD BytesToRead =
+      std::min(size_t(std::numeric_limits<DWORD>::max()), Buf.size());
+  DWORD BytesRead = 0;
+  if (::ReadFile(FileHandle, Buf.data(), BytesToRead, &BytesRead, Overlap))
+    return BytesRead;
+  DWORD Err = ::GetLastError();
+  // EOF is not an error.
+  if (Err == ERROR_BROKEN_PIPE || Err == ERROR_HANDLE_EOF)
+    return BytesRead;
+  return errorCodeToError(mapWindowsError(Err));
+}
+
+Expected<size_t> readNativeFile(file_t FileHandle, MutableArrayRef<char> Buf) {
+  return readNativeFileImpl(FileHandle, Buf, /*Overlap=*/nullptr);
+}
+
+Expected<size_t> readNativeFileSlice(file_t FileHandle,
+                                     MutableArrayRef<char> Buf,
+                                     uint64_t Offset) {
+  OVERLAPPED Overlapped = {};
+  Overlapped.Offset = uint32_t(Offset);
+  Overlapped.OffsetHigh = uint32_t(Offset >> 32);
+  return readNativeFileImpl(FileHandle, Buf, &Overlapped);
+}
+
+std::error_code tryLockFile(int FD, std::chrono::milliseconds Timeout) {
+  DWORD Flags = LOCKFILE_EXCLUSIVE_LOCK | LOCKFILE_FAIL_IMMEDIATELY;
+  OVERLAPPED OV = {};
+  file_t File = convertFDToNativeFile(FD);
+  auto Start = std::chrono::steady_clock::now();
+  auto End = Start + Timeout;
+  do {
+    if (::LockFileEx(File, Flags, 0, MAXDWORD, MAXDWORD, &OV))
       return std::error_code();
-    return mapWindowsError(Err);
-  }
-  return std::error_code();
-}
-
-std::error_code readNativeFile(file_t FileHandle, MutableArrayRef<char> Buf,
-                               size_t *BytesRead) {
-  return readNativeFileImpl(FileHandle, Buf.data(), Buf.size(), BytesRead,
-                            /*Overlap=*/nullptr);
-}
-
-std::error_code readNativeFileSlice(file_t FileHandle,
-                                    MutableArrayRef<char> Buf, size_t Offset) {
-  char *BufPtr = Buf.data();
-  size_t BytesLeft = Buf.size();
-
-  while (BytesLeft) {
-    uint64_t CurOff = Buf.size() - BytesLeft + Offset;
-    OVERLAPPED Overlapped = {};
-    Overlapped.Offset = uint32_t(CurOff);
-    Overlapped.OffsetHigh = uint32_t(uint64_t(CurOff) >> 32);
-
-    size_t BytesRead = 0;
-    if (auto EC = readNativeFileImpl(FileHandle, BufPtr, BytesLeft, &BytesRead,
-                                     &Overlapped))
-      return EC;
-
-    // Once we reach EOF, zero the remaining bytes in the buffer.
-    if (BytesRead == 0) {
-      memset(BufPtr, 0, BytesLeft);
-      break;
+    DWORD Error = ::GetLastError();
+    if (Error == ERROR_LOCK_VIOLATION) {
+      ::Sleep(1);
+      continue;
     }
-    BytesLeft -= BytesRead;
-    BufPtr += BytesRead;
-  }
-  return std::error_code();
+    return mapWindowsError(Error);
+  } while (std::chrono::steady_clock::now() < End);
+  return mapWindowsError(ERROR_LOCK_VIOLATION);
+}
+
+std::error_code lockFile(int FD) {
+  DWORD Flags = LOCKFILE_EXCLUSIVE_LOCK;
+  OVERLAPPED OV = {};
+  file_t File = convertFDToNativeFile(FD);
+  if (::LockFileEx(File, Flags, 0, MAXDWORD, MAXDWORD, &OV))
+    return std::error_code();
+  DWORD Error = ::GetLastError();
+  return mapWindowsError(Error);
+}
+
+std::error_code unlockFile(int FD) {
+  OVERLAPPED OV = {};
+  file_t File = convertFDToNativeFile(FD);
+  if (::UnlockFileEx(File, 0, MAXDWORD, MAXDWORD, &OV))
+    return std::error_code();
+  return mapWindowsError(::GetLastError());
 }
 
 std::error_code closeFile(file_t &F) {
@@ -1380,6 +1419,16 @@ static bool getKnownFolderPath(KNOWNFOLDERID folderId,
 
 bool home_directory(SmallVectorImpl<char> &result) {
   return getKnownFolderPath(FOLDERID_Profile, result);
+}
+
+bool user_config_directory(SmallVectorImpl<char> &result) {
+  // Either local or roaming appdata may be suitable in some cases, depending
+  // on the data. Local is more conservative, Roaming may not always be correct.
+  return getKnownFolderPath(FOLDERID_LocalAppData, result);
+}
+
+bool cache_directory(SmallVectorImpl<char> &result) {
+  return getKnownFolderPath(FOLDERID_LocalAppData, result);
 }
 
 static bool getTempDirEnvVar(const wchar_t *Var, SmallVectorImpl<char> &Res) {

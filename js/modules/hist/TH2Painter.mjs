@@ -1,8 +1,9 @@
-import { settings, gStyle } from '../core.mjs';
+import { settings, gStyle, clTMultiGraph } from '../core.mjs';
 import { Vector2, BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, ShapeUtils } from '../three.mjs';
 import { assignFrame3DMethods, drawBinsLego, drawBinsError3D, drawBinsContour3D, drawBinsSurf3D } from './hist3d.mjs';
 import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
-import { TH2Painter as TH2Painter2D  } from '../hist2d/TH2Painter.mjs';
+import { THistPainter } from '../hist2d/THistPainter.mjs';
+import { TH2Painter as TH2Painter2D } from '../hist2d/TH2Painter.mjs';
 
 
 /** @summary Draw TH2Poly histogram as lego
@@ -22,7 +23,7 @@ function drawTH2PolyLego(painter) {
 
    let cntr = painter.getContour(true), palette = painter.getHistPalette();
 
-   for (i = 0; i < len; ++ i) {
+   for (i = 0; i < len; ++i) {
       bin = histo.fBins.arr[i];
       if (bin.fContent < axis_zmin) continue;
 
@@ -38,13 +39,13 @@ function drawTH2PolyLego(painter) {
       let all_pnts = [], all_faces = [],
           ngraphs = 1, gr = bin.fPoly, nfaces = 0;
 
-      if (gr._typename=='TMultiGraph') {
+      if (gr._typename == clTMultiGraph) {
          ngraphs = bin.fPoly.fGraphs.arr.length;
          gr = null;
       }
 
       for (let ngr = 0; ngr < ngraphs; ++ngr) {
-         if (!gr || (ngr>0)) gr = bin.fPoly.fGraphs.arr[ngr];
+         if (!gr || (ngr > 0)) gr = bin.fPoly.fGraphs.arr[ngr];
 
          let npnts = gr.fNpoints, x = gr.fX, y = gr.fY;
          while ((npnts>2) && (x[0]===x[npnts-1]) && (y[0]===y[npnts-1])) --npnts;
@@ -56,14 +57,14 @@ function drawTH2PolyLego(painter) {
 
             let lastx, lasty, currx, curry,
                 dist2 = pmain.size_x3d*pmain.size_z3d,
-                dist2limit = (ntry>0) ? 0 : dist2/1e6;
+                dist2limit = (ntry > 0) ? 0 : dist2/1e6;
 
             pnts = []; faces = null;
 
             for (let vert = 0; vert < npnts; ++vert) {
                currx = pmain.grx(x[vert]);
                curry = pmain.gry(y[vert]);
-               if (vert>0)
+               if (vert > 0)
                   dist2 = (currx-lastx)*(currx-lastx) + (curry-lasty)*(curry-lasty);
                if (dist2 > dist2limit) {
                   pnts.push(new Vector2(currx, curry));
@@ -93,15 +94,15 @@ function drawTH2PolyLego(painter) {
 
       let pos = new Float32Array(nfaces*9), indx = 0;
 
-      for (let ngr=0;ngr<all_pnts.length;++ngr) {
+      for (let ngr = 0; ngr < all_pnts.length; ++ngr) {
          let pnts = all_pnts[ngr], faces = all_faces[ngr];
 
-         for (let layer=0;layer<2;++layer) {
+         for (let layer = 0; layer < 2; ++layer) {
             for (let n=0;n<faces.length;++n) {
                let face = faces[n],
                    pnt1 = pnts[face[0]],
-                   pnt2 = pnts[face[(layer===0) ? 2 : 1]],
-                   pnt3 = pnts[face[(layer===0) ? 1 : 2]];
+                   pnt2 = pnts[face[layer === 0 ? 2 : 1]],
+                   pnt3 = pnts[face[layer === 0 ? 1 : 2]];
 
                pos[indx] = pnt1.x;
                pos[indx+1] = pnt1.y;
@@ -121,9 +122,9 @@ function drawTH2PolyLego(painter) {
          }
 
          if (z1>z0) {
-            for (let n=0;n<pnts.length;++n) {
+            for (let n = 0; n < pnts.length; ++n) {
                let pnt1 = pnts[n],
-                   pnt2 = pnts[(n>0) ? n-1 : pnts.length-1];
+                   pnt2 = pnts[n > 0 ? n-1 : pnts.length-1];
 
                pos[indx] = pnt1.x;
                pos[indx+1] = pnt1.y;
@@ -159,12 +160,12 @@ function drawTH2PolyLego(painter) {
       }
 
       let geometry = new BufferGeometry();
-      geometry.setAttribute( 'position', new BufferAttribute( pos, 3 ) );
+      geometry.setAttribute('position', new BufferAttribute(pos, 3));
       geometry.computeVertexNormals();
 
-      let fcolor = painter.fPalette.getColor(colindx);
-      let material = new MeshBasicMaterial({ color: fcolor, vertexColors: false });
-      let mesh = new Mesh(geometry, material);
+      let color = painter.fPalette.getColor(colindx),
+          material = new MeshBasicMaterial({ color, vertexColors: false }),
+          mesh = new Mesh(geometry, material);
 
       pmain.toplevel.add(mesh);
 
@@ -202,7 +203,8 @@ function drawTH2PolyLego(painter) {
   * @private */
 class TH2Painter extends TH2Painter2D {
 
-   draw3D(reason) {
+   /** @summary draw TH2 object in 3D mode */
+   async draw3D(reason) {
 
       this.mode3d = true;
 
@@ -211,7 +213,7 @@ class TH2Painter extends TH2Painter2D {
           histo = this.getHisto(),
           pr = Promise.resolve(true);
 
-      if (reason == "resize") {
+      if (reason == 'resize') {
 
          if (is_main && main.resize3D()) main.render3D();
 
@@ -220,20 +222,22 @@ class TH2Painter extends TH2Painter2D {
          let pad = this.getPadPainter().getRootPad(true),
              zmult = 1 + 2*gStyle.fHistTopMargin;
 
-         this.zmin = pad && pad.fLogz ? this.gminposbin * 0.3 : this.gminbin;
-         this.zmax = this.gmaxbin;
+         if (this.draw_content || (this.gmaxbin != 0)) {
+            this.zmin = pad?.fLogz ? this.gminposbin * 0.3 : this.gminbin;
+            this.zmax = this.gmaxbin;
+         } else {
+            zmult = 1;
+         }
 
-         if (this.options.minimum !== -1111) this.zmin = this.options.minimum;
-         if (this.options.maximum !== -1111) { this.zmax = this.options.maximum; zmult = 1; }
-
-         if (pad && pad.fLogz && (this.zmin <= 0)) this.zmin = this.zmax * 1e-5;
+         if (pad?.fLogz && (this.zmin <= 0))
+            this.zmin = this.zmax * 1e-5;
 
          this.deleteAttr();
 
          if (is_main) {
             assignFrame3DMethods(main);
             pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale).then(() => {
-               main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax);
+               main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax, this);
                main.set3DOptions(this.options);
                main.drawXYZ(main.toplevel, TAxisPainter, { zmult, zoom: settings.Zooming, ndim: 2, draw: this.options.Axis !== -1 });
             });
@@ -268,8 +272,8 @@ class TH2Painter extends TH2Painter2D {
    }
 
    /** @summary draw TH2 object */
-   static draw(dom, histo, opt) {
-      return TH2Painter._drawHist(new TH2Painter(dom, histo), opt);
+   static async draw(dom, histo, opt) {
+      return THistPainter._drawHist(new TH2Painter(dom, histo), opt);
    }
 
 } // class TH2Painter

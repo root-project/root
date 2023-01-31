@@ -30,7 +30,7 @@ public:
   RooBernstein(const char *name, const char *title,
                RooAbsRealLValue& _x, const RooArgList& _coefList) ;
 
-  RooBernstein(const RooBernstein &other, const char *name = 0);
+  RooBernstein(const RooBernstein &other, const char *name = nullptr);
 
   TObject* clone(const char* newname) const override { return new RooBernstein(*this, newname); }
   inline ~RooBernstein() override { }

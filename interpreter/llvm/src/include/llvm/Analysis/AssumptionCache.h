@@ -26,7 +26,7 @@
 
 namespace llvm {
 
-class CallInst;
+class AssumeInst;
 class Function;
 class raw_ostream;
 class Value;
@@ -39,6 +39,21 @@ class Value;
 /// register any new \@llvm.assume calls that they create. Deletions of
 /// \@llvm.assume calls do not require special handling.
 class AssumptionCache {
+public:
+  /// Value of ResultElem::Index indicating that the argument to the call of the
+  /// llvm.assume.
+  enum : unsigned { ExprResultIdx = std::numeric_limits<unsigned>::max() };
+
+  struct ResultElem {
+    WeakVH Assume;
+
+    /// contains either ExprResultIdx or the index of the operand bundle
+    /// containing the knowledge.
+    unsigned Index;
+    operator Value *() const { return Assume; }
+  };
+
+private:
   /// The function for which this cache is handling assumptions.
   ///
   /// We track this to lazily populate our assumptions.
@@ -46,7 +61,7 @@ class AssumptionCache {
 
   /// Vector of weak value handles to calls of the \@llvm.assume
   /// intrinsic.
-  SmallVector<WeakTrackingVH, 4> AssumeHandles;
+  SmallVector<ResultElem, 4> AssumeHandles;
 
   class AffectedValueCallbackVH final : public CallbackVH {
     AssumptionCache *AC;
@@ -66,15 +81,15 @@ class AssumptionCache {
   /// A map of values about which an assumption might be providing
   /// information to the relevant set of assumptions.
   using AffectedValuesMap =
-      DenseMap<AffectedValueCallbackVH, SmallVector<WeakTrackingVH, 1>,
+      DenseMap<AffectedValueCallbackVH, SmallVector<ResultElem, 1>,
                AffectedValueCallbackVH::DMI>;
   AffectedValuesMap AffectedValues;
 
   /// Get the vector of assumptions which affect a value from the cache.
-  SmallVector<WeakTrackingVH, 1> &getOrInsertAffectedValues(Value *V);
+  SmallVector<ResultElem, 1> &getOrInsertAffectedValues(Value *V);
 
-  /// Copy affected values in the cache for OV to be affected values for NV.
-  void copyAffectedValuesInCache(Value *OV, Value *NV);
+  /// Move affected values in the cache for OV to be affected values for NV.
+  void transferAffectedValuesInCache(Value *OV, Value *NV);
 
   /// Flag tracking whether we have scanned the function yet.
   ///
@@ -101,15 +116,15 @@ public:
   ///
   /// The call passed in must be an instruction within this function and must
   /// not already be in the cache.
-  void registerAssumption(CallInst *CI);
+  void registerAssumption(AssumeInst *CI);
 
   /// Remove an \@llvm.assume intrinsic from this function's cache if it has
   /// been added to the cache earlier.
-  void unregisterAssumption(CallInst *CI);
+  void unregisterAssumption(AssumeInst *CI);
 
   /// Update the cache of values being affected by this assumption (i.e.
   /// the values about which this assumption provides information).
-  void updateAffectedValues(CallInst *CI);
+  void updateAffectedValues(AssumeInst *CI);
 
   /// Clear the cache of \@llvm.assume intrinsics for a function.
   ///
@@ -128,20 +143,20 @@ public:
   /// FIXME: We should replace this with pointee_iterator<filter_iterator<...>>
   /// when we can write that to filter out the null values. Then caller code
   /// will become simpler.
-  MutableArrayRef<WeakTrackingVH> assumptions() {
+  MutableArrayRef<ResultElem> assumptions() {
     if (!Scanned)
       scanFunction();
     return AssumeHandles;
   }
 
   /// Access the list of assumptions which affect this value.
-  MutableArrayRef<WeakTrackingVH> assumptionsFor(const Value *V) {
+  MutableArrayRef<ResultElem> assumptionsFor(const Value *V) {
     if (!Scanned)
       scanFunction();
 
     auto AVI = AffectedValues.find_as(const_cast<Value *>(V));
     if (AVI == AffectedValues.end())
-      return MutableArrayRef<WeakTrackingVH>();
+      return MutableArrayRef<ResultElem>();
 
     return AVI->second;
   }
@@ -232,6 +247,21 @@ public:
   }
 
   static char ID; // Pass identification, replacement for typeid
+};
+
+template<> struct simplify_type<AssumptionCache::ResultElem> {
+  using SimpleType = Value *;
+
+  static SimpleType getSimplifiedValue(AssumptionCache::ResultElem &Val) {
+    return Val;
+  }
+};
+template<> struct simplify_type<const AssumptionCache::ResultElem> {
+  using SimpleType = /*const*/ Value *;
+
+  static SimpleType getSimplifiedValue(const AssumptionCache::ResultElem &Val) {
+    return Val;
+  }
 };
 
 } // end namespace llvm

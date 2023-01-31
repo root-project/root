@@ -29,7 +29,7 @@ protected:
    TString      fBlockName;   //Hbook block name
 
 public:
-   THbookBranch() {;}
+   THbookBranch() {}
    THbookBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
    THbookBranch(TBranch *branch, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
    ~THbookBranch() override;

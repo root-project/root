@@ -14,10 +14,14 @@
 #define LLVM_EXECUTIONENGINE_JITLINK_JITLINKMEMORYMANAGER_H
 
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ExecutionEngine/JITLink/JITLinkDylib.h"
 #include "llvm/ExecutionEngine/JITSymbol.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/MSVCErrorWorkarounds.h"
 #include "llvm/Support/Memory.h"
+
 #include <cstdint>
+#include <future>
 
 namespace llvm {
 namespace jitlink {
@@ -33,20 +37,19 @@ public:
   class SegmentRequest {
   public:
     SegmentRequest() = default;
-    SegmentRequest(size_t ContentSize, unsigned ContentAlign,
-                   uint64_t ZeroFillSize, unsigned ZeroFillAlign)
-        : ContentSize(ContentSize), ZeroFillSize(ZeroFillSize),
-          ContentAlign(ContentAlign), ZeroFillAlign(ZeroFillAlign) {}
+    SegmentRequest(uint64_t Alignment, size_t ContentSize,
+                   uint64_t ZeroFillSize)
+        : Alignment(Alignment), ContentSize(ContentSize),
+          ZeroFillSize(ZeroFillSize) {
+      assert(isPowerOf2_32(Alignment) && "Alignment must be power of 2");
+    }
+    uint64_t getAlignment() const { return Alignment; }
     size_t getContentSize() const { return ContentSize; }
-    unsigned getContentAlignment() const { return ContentAlign; }
     uint64_t getZeroFillSize() const { return ZeroFillSize; }
-    unsigned getZeroFillAlignment() const { return ZeroFillAlign; }
-
   private:
+    uint64_t Alignment = 0;
     size_t ContentSize = 0;
     uint64_t ZeroFillSize = 0;
-    unsigned ContentAlign = 0;
-    unsigned ZeroFillAlign = 0;
   };
 
   using SegmentsRequestMap = DenseMap<unsigned, SegmentRequest>;
@@ -75,6 +78,15 @@ public:
     /// working memory.
     virtual void finalizeAsync(FinalizeContinuation OnFinalize) = 0;
 
+    /// Calls finalizeAsync and waits for completion.
+    Error finalize() {
+      std::promise<MSVCPError> FinalizeResultP;
+      auto FinalizeResultF = FinalizeResultP.get_future();
+      finalizeAsync(
+          [&](Error Err) { FinalizeResultP.set_value(std::move(Err)); });
+      return FinalizeResultF.get();
+    }
+
     /// Should deallocate target memory.
     virtual Error deallocate() = 0;
   };
@@ -82,18 +94,28 @@ public:
   virtual ~JITLinkMemoryManager();
 
   /// Create an Allocation object.
+  ///
+  /// The JD argument represents the target JITLinkDylib, and can be used by
+  /// JITLinkMemoryManager implementers to manage per-dylib allocation pools
+  /// (e.g. one pre-reserved address space slab per dylib to ensure that all
+  /// allocations for the dylib are within a certain range). The JD argument
+  /// may be null (representing an allocation not associated with any
+  /// JITDylib.
+  ///
+  /// The request argument describes the segment sizes and permisssions being
+  /// requested.
   virtual Expected<std::unique_ptr<Allocation>>
-  allocate(const SegmentsRequestMap &Request) = 0;
+  allocate(const JITLinkDylib *JD, const SegmentsRequestMap &Request) = 0;
 };
 
 /// A JITLinkMemoryManager that allocates in-process memory.
 class InProcessMemoryManager : public JITLinkMemoryManager {
 public:
   Expected<std::unique_ptr<Allocation>>
-  allocate(const SegmentsRequestMap &Request) override;
+  allocate(const JITLinkDylib *JD, const SegmentsRequestMap &Request) override;
 };
 
 } // end namespace jitlink
 } // end namespace llvm
 
-#endif // LLVM_EXECUTIONENGINE_JITLINK_JITLINK_H
+#endif // LLVM_EXECUTIONENGINE_JITLINK_JITLINKMEMORYMANAGER_H

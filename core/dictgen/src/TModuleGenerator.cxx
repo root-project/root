@@ -116,7 +116,7 @@ TModuleGenerator::GetSourceFileKind(const char *filename) const
       clang::Preprocessor &PP = fCI->getPreprocessor();
       clang::HeaderSearch &HdrSearch = PP.getHeaderSearchInfo();
       const clang::DirectoryLookup *CurDir = nullptr;
-      const clang::FileEntry *hdrFileEntry
+      auto hdrFileEntry
          =  HdrSearch.LookupFile(filename, clang::SourceLocation(),
                                  true /*isAngled*/, nullptr /*FromDir*/, CurDir,
                                  clang::ArrayRef<std::pair<const clang::FileEntry*,
@@ -578,7 +578,7 @@ bool TModuleGenerator::FindHeader(const std::string &hdrName, std::string &hdrFu
    clang::Preprocessor &PP = fCI->getPreprocessor();
    clang::HeaderSearch &HdrSearch = PP.getHeaderSearchInfo();
    const clang::DirectoryLookup *CurDir = nullptr;
-   if (const clang::FileEntry *hdrFileEntry
+   if (auto hdrFileEntry
          =  HdrSearch.LookupFile(hdrName, clang::SourceLocation(),
                                  true /*isAngled*/, nullptr /*FromDir*/, CurDir,
                                  clang::ArrayRef<std::pair<const clang::FileEntry*,
@@ -586,7 +586,7 @@ bool TModuleGenerator::FindHeader(const std::string &hdrName, std::string &hdrFu
                                  nullptr /*SearchPath*/, nullptr /*RelativePath*/,
                                  nullptr /*RequestingModule*/, nullptr/*SuggestedModule*/,
                                  nullptr /*IsMapped*/, nullptr /*IsFrameworkFound*/)) {
-      hdrFullPath = hdrFileEntry->getName();
+      hdrFullPath = hdrFileEntry->getName().str();
       return true;
    }
 

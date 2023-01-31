@@ -1,4 +1,4 @@
-import { create, gStyle } from '../core.mjs';
+import { settings, create, gStyle, isStr, clTF2 } from '../core.mjs';
 import { DrawOptions, buildSvgPath } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from '../hist2d/TH1Painter.mjs';
@@ -9,23 +9,23 @@ function proivdeEvalPar(obj) {
 
    obj._math = jsroot_math;
 
-   let _func = obj.fTitle, isformula = false, pprefix = "[";
-   if (_func === "gaus") _func = "gaus(0)";
-   if (obj.fFormula && typeof obj.fFormula.fFormula == "string") {
-     if (obj.fFormula.fFormula.indexOf("[](double*x,double*p)")==0) {
-        isformula = true; pprefix = "p[";
+   let _func = obj.fTitle, isformula = false, pprefix = '[';
+   if (_func === 'gaus') _func = 'gaus(0)';
+   if (obj.fFormula && isStr(obj.fFormula.fFormula)) {
+     if (obj.fFormula.fFormula.indexOf('[](double*x,double*p)') == 0) {
+        isformula = true; pprefix = 'p[';
         _func = obj.fFormula.fFormula.slice(21);
      } else {
         _func = obj.fFormula.fFormula;
-        pprefix = "[p";
+        pprefix = '[p';
      }
+
      if (obj.fFormula.fClingParameters && obj.fFormula.fParams)
         obj.fFormula.fParams.forEach(pair => {
            let regex = new RegExp(`(\\[${pair.first}\\])`, 'g'),
                parvalue = obj.fFormula.fClingParameters[pair.second];
            _func = _func.replace(regex, (parvalue < 0) ? `(${parvalue})` : parvalue);
         });
-
   }
 
   if ('formulas' in obj)
@@ -47,7 +47,7 @@ function proivdeEvalPar(obj) {
                .replace(/ROOT::Math::/g, 'this._math.');
 
   for (let i = 0; i < obj.fNpar; ++i)
-    _func = _func.replaceAll(pprefix + i + "]", `(${obj.GetParValue(i)})`);
+    _func = _func.replaceAll(pprefix + i + ']', `(${obj.GetParValue(i)})`);
 
   _func = _func.replace(/\b(sin)\b/gi, 'Math.sin')
                .replace(/\b(cos)\b/gi, 'Math.cos')
@@ -59,17 +59,17 @@ function proivdeEvalPar(obj) {
      _func = _func.replaceAll(`x^${n}`, `Math.pow(x,${n})`);
 
   if (isformula) {
-     _func = _func.replace(/x\[0\]/g,"x");
-     if (obj._typename === "TF2") {
-        _func = _func.replace(/x\[1\]/g,"y");
-        obj.evalPar = new Function("x", "y", _func).bind(obj);
+     _func = _func.replace(/x\[0\]/g,'x');
+     if (obj._typename === clTF2) {
+        _func = _func.replace(/x\[1\]/g,'y');
+        obj.evalPar = new Function('x', 'y', _func).bind(obj);
      } else {
-        obj.evalPar = new Function("x", _func).bind(obj);
+        obj.evalPar = new Function('x', _func).bind(obj);
      }
-  } else if (obj._typename === "TF2")
-     obj.evalPar = new Function("x", "y", "return " + _func).bind(obj);
+  } else if (obj._typename === clTF2)
+     obj.evalPar = new Function('x', 'y', 'return ' + _func).bind(obj);
   else
-     obj.evalPar = new Function("x", "return " + _func).bind(obj);
+     obj.evalPar = new Function('x', 'return ' + _func).bind(obj);
 }
 
 /**
@@ -86,7 +86,7 @@ class TF1Painter extends ObjectPainter {
           main = this.getFramePainter(),
           gxmin = 0, gxmax = 0;
 
-      if (main && !ignore_zoom)  {
+      if (main && !ignore_zoom) {
          let gr = main.getGrFuncs(this.second_x, this.second_y);
          gxmin = gr.scale_xmin;
          gxmax = gr.scale_xmax;
@@ -108,27 +108,32 @@ class TF1Painter extends ObjectPainter {
       let np = Math.max(tf1.fNpx, 101),
           dx = (xmax - xmin) / (np - 1),
           res = [], iserror = false,
-          force_use_save = (tf1.fSave.length > 3) && ignore_zoom;
+          has_saved_points = tf1.fSave.length > 3,
+          force_use_save = has_saved_points && (ignore_zoom || settings.PreferSavedPoints);
 
-      if (!force_use_save)
+      if (!force_use_save) {
+         if (!tf1.evalPar)
+            proivdeEvalPar(tf1);
+
          for (let n = 0; n < np; n++) {
-            let xx = xmin + n*dx, yy = 0;
-            if (logx) xx = Math.exp(xx);
+            let x = xmin + n*dx, y = 0;
+            if (logx) x = Math.exp(x);
             try {
-               yy = tf1.evalPar(xx);
+               y = tf1.evalPar(x);
             } catch(err) {
                iserror = true;
             }
 
             if (iserror) break;
 
-            if (Number.isFinite(yy))
-               res.push({ x: xx, y: yy });
+            if (Number.isFinite(y))
+               res.push({ x, y });
          }
+      }
 
       // in the case there were points have saved and we cannot calculate function
       // if we don't have the user's function
-      if ((iserror || ignore_zoom || !res.length) && (tf1.fSave.length > 3)) {
+      if ((iserror || ignore_zoom || !res.length) && has_saved_points) {
 
          np = tf1.fSave.length - 2;
          xmin = tf1.fSave[np];
@@ -145,12 +150,12 @@ class TF1Painter extends ObjectPainter {
          }
 
          for (let n = 0; n < np; ++n) {
-            let xx = use_histo ? tf1.$histo.fXaxis.GetBinCenter(bin+n+1) : xmin + dx*n;
+            let x = use_histo ? tf1.$histo.fXaxis.GetBinCenter(bin+n+1) : xmin + dx*n;
             // check if points need to be displayed at all, keep at least 4-5 points for Bezier curves
-            if ((gxmin !== gxmax) && ((xx + 2*dx < gxmin) || (xx - 2*dx > gxmax))) continue;
-            let yy = tf1.fSave[n];
+            if ((gxmin !== gxmax) && ((x + 2*dx < gxmin) || (x - 2*dx > gxmax))) continue;
+            let y = tf1.fSave[n];
 
-            if (Number.isFinite(yy)) res.push({ x : xx, y : yy });
+            if (Number.isFinite(y)) res.push({ x, y });
          }
       }
 
@@ -163,7 +168,7 @@ class TF1Painter extends ObjectPainter {
       let xmin = 0, xmax = 1, ymin = 0, ymax = 1,
           bins = this.createBins(true);
 
-      if (bins && (bins.length > 0)) {
+      if (bins?.length) {
 
          xmin = xmax = bins[0].x;
          ymin = ymax = bins[0].y;
@@ -179,10 +184,10 @@ class TF1Painter extends ObjectPainter {
          if (ymin < 0.0) ymin *= (1 + gStyle.fHistTopMargin);
       }
 
-      let histo = create("TH1I"),
+      let histo = create('TH1I'),
           tf1 = this.getObject();
 
-      histo.fName = tf1.fName + "_hist";
+      histo.fName = tf1.fName + '_hist';
       histo.fTitle = tf1.fTitle;
 
       histo.fXaxis.fXmin = xmin;
@@ -198,8 +203,9 @@ class TF1Painter extends ObjectPainter {
 
    updateObject(obj /*, opt */) {
       if (!this.matchObjectType(obj)) return false;
-      Object.assign(this.getObject(), obj);
-      proivdeEvalPar(this.getObject());
+      let tf1 = this.getObject();
+      Object.assign(tf1, obj);
+      delete tf1.evalPar;
       return true;
    }
 
@@ -215,7 +221,7 @@ class TF1Painter extends ObjectPainter {
 
       if (cleanup) {
          if (this.draw_g)
-            this.draw_g.select(".tooltip_bin").remove();
+            this.draw_g.select('.tooltip_bin').remove();
          return null;
       }
 
@@ -229,14 +235,14 @@ class TF1Painter extends ObjectPainter {
 
       bin = this.bins[best];
 
-      let gbin = this.draw_g.select(".tooltip_bin"),
+      let gbin = this.draw_g.select('.tooltip_bin'),
           radius = this.lineatt.width + 3;
 
       if (gbin.empty())
-         gbin = this.draw_g.append("svg:circle")
-                           .attr("class","tooltip_bin")
-                           .style("pointer-events","none")
-                           .attr("r", radius)
+         gbin = this.draw_g.append('svg:circle')
+                           .attr('class', 'tooltip_bin')
+                           .style('pointer-events', 'none')
+                           .attr('r', radius)
                            .call(this.lineatt.func)
                            .call(this.fillatt.func);
 
@@ -249,22 +255,22 @@ class TF1Painter extends ObjectPainter {
                   lines: [],
                   exact: (Math.abs(bin.grx - pnt.x) < radius) && (Math.abs(bin.gry - pnt.y) < radius) };
 
-      res.changed = gbin.property("current_bin") !== best;
+      res.changed = gbin.property('current_bin') !== best;
       res.menu = res.exact;
-      res.menu_dist = Math.sqrt((bin.grx-pnt.x)**2 + (bin.gry-pnt.y)**2);
+      res.menu_dist = Math.sqrt((bin.grx - pnt.x)**2 + (bin.gry - pnt.y)**2);
 
       if (res.changed)
-         gbin.attr("cx", bin.grx)
-             .attr("cy", bin.gry)
-             .property("current_bin", best);
+         gbin.attr('cx', bin.grx)
+             .attr('cy', bin.gry)
+             .property('current_bin', best);
 
       let name = this.getObjectHint();
-      if (name.length > 0) res.lines.push(name);
+      if (name) res.lines.push(name);
 
       let pmain = this.getFramePainter(),
           funcs = pmain?.getGrFuncs(this.second_x, this.second_y);
       if (funcs)
-         res.lines.push("x = " + funcs.axisAsText("x",bin.x) + " y = " + funcs.axisAsText("y",bin.y));
+         res.lines.push(`x = ${funcs.axisAsText('x',bin.x)} y = ${funcs.axisAsText('y',bin.y)}`);
 
       return res;
    }
@@ -305,26 +311,26 @@ class TF1Painter extends ObjectPainter {
             if ((h0 > h) || (h0 < 0)) h0 = h;
          }
 
-         let path = buildSvgPath("bezier", this.bins, h0, 2);
+         let path = buildSvgPath('bezier', this.bins, h0, 2);
 
          if (!this.lineatt.empty())
-            this.draw_g.append("svg:path")
-               .attr("class", "line")
-               .attr("d", path.path)
-               .style("fill", "none")
-               .call(this.lineatt.func);
+            this.draw_g.append('svg:path')
+                .attr('class', 'line')
+                .attr('d', path.path)
+                .style('fill', 'none')
+                .call(this.lineatt.func);
 
          if (!this.fillatt.empty())
-            this.draw_g.append("svg:path")
-               .attr("class", "area")
-               .attr("d", path.path + path.close)
-               .call(this.fillatt.func);
+            this.draw_g.append('svg:path')
+                .attr('class', 'area')
+                .attr('d', path.path + path.close)
+                .call(this.fillatt.func);
       }
    }
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
    canZoomInside(axis,min,max) {
-      if (axis!=="x") return false;
+      if (axis !== 'x') return false;
 
       let tf1 = this.getObject();
 
@@ -343,18 +349,16 @@ class TF1Painter extends ObjectPainter {
    }
 
    /** @summary draw TF1 object */
-   static draw(dom, tf1, opt) {
+   static async draw(dom, tf1, opt) {
       let painter = new TF1Painter(dom, tf1, opt),
           d = new DrawOptions(opt),
           has_main = !!painter.getMainPainter(),
-          aopt = "AXIS";
+          aopt = 'AXIS';
       d.check('SAME'); // just ignore same
-      if (d.check('X+')) { aopt += "X+"; painter.second_x = has_main; }
-      if (d.check('Y+')) { aopt += "Y+"; painter.second_y = has_main; }
-      if (d.check('RX')) aopt += "RX";
-      if (d.check('RY')) aopt += "RY";
-
-      proivdeEvalPar(tf1);
+      if (d.check('X+')) { aopt += 'X+'; painter.second_x = has_main; }
+      if (d.check('Y+')) { aopt += 'Y+'; painter.second_y = has_main; }
+      if (d.check('RX')) aopt += 'RX';
+      if (d.check('RY')) aopt += 'RY';
 
       let pr = Promise.resolve(true);
 

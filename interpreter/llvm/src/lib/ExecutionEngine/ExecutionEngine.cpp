@@ -9,6 +9,8 @@
 // This file defines the common interface used by the various execution engine
 // subclasses.
 //
+// FIXME: This file needs to be updated to support scalable vectors
+//
 //===----------------------------------------------------------------------===//
 
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
@@ -32,12 +34,12 @@
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Host.h"
-#include "llvm/Support/MutexGuard.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetMachine.h"
 #include <cmath>
 #include <cstring>
+#include <mutex>
 using namespace llvm;
 
 #define DEBUG_TYPE "jit"
@@ -48,11 +50,6 @@ STATISTIC(NumGlobals  , "Number of global vars initialized");
 ExecutionEngine *(*ExecutionEngine::MCJITCtor)(
     std::unique_ptr<Module> M, std::string *ErrorStr,
     std::shared_ptr<MCJITMemoryManager> MemMgr,
-    std::shared_ptr<LegacyJITSymbolResolver> Resolver,
-    std::unique_ptr<TargetMachine> TM) = nullptr;
-
-ExecutionEngine *(*ExecutionEngine::OrcMCJITReplacementCtor)(
-    std::string *ErrorStr, std::shared_ptr<MCJITMemoryManager> MemMgr,
     std::shared_ptr<LegacyJITSymbolResolver> Resolver,
     std::unique_ptr<TargetMachine> TM) = nullptr;
 
@@ -108,7 +105,7 @@ public:
     Type *ElTy = GV->getValueType();
     size_t GVSize = (size_t)TD.getTypeAllocSize(ElTy);
     void *RawMemory = ::operator new(
-        alignTo(sizeof(GVMemoryBlock), TD.getPreferredAlignment(GV)) + GVSize);
+        alignTo(sizeof(GVMemoryBlock), TD.getPreferredAlign(GV)) + GVSize);
     new(RawMemory) GVMemoryBlock(GV);
     return static_cast<char*>(RawMemory) + sizeof(GVMemoryBlock);
   }
@@ -191,7 +188,7 @@ uint64_t ExecutionEngineState::RemoveMapping(StringRef Name) {
 std::string ExecutionEngine::getMangledName(const GlobalValue *GV) {
   assert(GV->hasName() && "Global must have name.");
 
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
   SmallString<128> FullName;
 
   const DataLayout &DL =
@@ -200,16 +197,16 @@ std::string ExecutionEngine::getMangledName(const GlobalValue *GV) {
       : GV->getParent()->getDataLayout();
 
   Mangler::getNameWithPrefix(FullName, GV->getName(), DL);
-  return FullName.str();
+  return std::string(FullName.str());
 }
 
 void ExecutionEngine::addGlobalMapping(const GlobalValue *GV, void *Addr) {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
   addGlobalMapping(getMangledName(GV), (uint64_t) Addr);
 }
 
 void ExecutionEngine::addGlobalMapping(StringRef Name, uint64_t Addr) {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
 
   assert(!Name.empty() && "Empty GlobalMapping symbol name!");
 
@@ -223,19 +220,19 @@ void ExecutionEngine::addGlobalMapping(StringRef Name, uint64_t Addr) {
     std::string &V = EEState.getGlobalAddressReverseMap()[CurVal];
     assert((!V.empty() || !Name.empty()) &&
            "GlobalMapping already established!");
-    V = Name;
+    V = std::string(Name);
   }
 }
 
 void ExecutionEngine::clearAllGlobalMappings() {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
 
   EEState.getGlobalAddressMap().clear();
   EEState.getGlobalAddressReverseMap().clear();
 }
 
 void ExecutionEngine::clearGlobalMappingsFromModule(Module *M) {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
 
   for (GlobalObject &GO : M->global_objects())
     EEState.RemoveMapping(getMangledName(&GO));
@@ -243,12 +240,12 @@ void ExecutionEngine::clearGlobalMappingsFromModule(Module *M) {
 
 uint64_t ExecutionEngine::updateGlobalMapping(const GlobalValue *GV,
                                               void *Addr) {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
   return updateGlobalMapping(getMangledName(GV), (uint64_t) Addr);
 }
 
 uint64_t ExecutionEngine::updateGlobalMapping(StringRef Name, uint64_t Addr) {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
 
   ExecutionEngineState::GlobalAddressMapTy &Map =
     EEState.getGlobalAddressMap();
@@ -269,13 +266,13 @@ uint64_t ExecutionEngine::updateGlobalMapping(StringRef Name, uint64_t Addr) {
     std::string &V = EEState.getGlobalAddressReverseMap()[CurVal];
     assert((!V.empty() || !Name.empty()) &&
            "GlobalMapping already established!");
-    V = Name;
+    V = std::string(Name);
   }
   return OldVal;
 }
 
 uint64_t ExecutionEngine::getAddressToGlobalIfAvailable(StringRef S) {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
   uint64_t Address = 0;
   ExecutionEngineState::GlobalAddressMapTy::iterator I =
     EEState.getGlobalAddressMap().find(S);
@@ -286,19 +283,19 @@ uint64_t ExecutionEngine::getAddressToGlobalIfAvailable(StringRef S) {
 
 
 void *ExecutionEngine::getPointerToGlobalIfAvailable(StringRef S) {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
   if (void* Address = (void *) getAddressToGlobalIfAvailable(S))
     return Address;
   return nullptr;
 }
 
 void *ExecutionEngine::getPointerToGlobalIfAvailable(const GlobalValue *GV) {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
   return getPointerToGlobalIfAvailable(getMangledName(GV));
 }
 
 const GlobalValue *ExecutionEngine::getGlobalValueAtAddress(void *Addr) {
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
 
   // If we haven't computed the reverse mapping yet, do so first.
   if (EEState.getGlobalAddressReverseMap().empty()) {
@@ -307,8 +304,8 @@ const GlobalValue *ExecutionEngine::getGlobalValueAtAddress(void *Addr) {
            E = EEState.getGlobalAddressMap().end(); I != E; ++I) {
       StringRef Name = I->first();
       uint64_t Addr = I->second;
-      EEState.getGlobalAddressReverseMap().insert(std::make_pair(
-                                                          Addr, Name));
+      EEState.getGlobalAddressReverseMap().insert(
+          std::make_pair(Addr, std::string(Name)));
     }
   }
 
@@ -340,14 +337,14 @@ void *ArgvArray::reset(LLVMContext &C, ExecutionEngine *EE,
   Values.clear();  // Free the old contents.
   Values.reserve(InputArgv.size());
   unsigned PtrSize = EE->getDataLayout().getPointerSize();
-  Array = make_unique<char[]>((InputArgv.size()+1)*PtrSize);
+  Array = std::make_unique<char[]>((InputArgv.size()+1)*PtrSize);
 
   LLVM_DEBUG(dbgs() << "JIT: ARGV = " << (void *)Array.get() << "\n");
   Type *SBytePtr = Type::getInt8PtrTy(C);
 
   for (unsigned i = 0; i != InputArgv.size(); ++i) {
     unsigned Size = InputArgv[i].size()+1;
-    auto Dest = make_unique<char[]>(Size);
+    auto Dest = std::make_unique<char[]>(Size);
     LLVM_DEBUG(dbgs() << "JIT: ARGV[" << i << "] = " << (void *)Dest.get()
                       << "\n");
 
@@ -474,8 +471,7 @@ EngineBuilder::EngineBuilder() : EngineBuilder(nullptr) {}
 
 EngineBuilder::EngineBuilder(std::unique_ptr<Module> M)
     : M(std::move(M)), WhichEngine(EngineKind::Either), ErrorStr(nullptr),
-      OptLevel(CodeGenOpt::Default), MemMgr(nullptr), Resolver(nullptr),
-      UseOrcMCJITReplacement(false) {
+      OptLevel(CodeGenOpt::Default), MemMgr(nullptr), Resolver(nullptr) {
 // IR module verification is enabled by default in debug builds, and disabled
 // by default in release builds.
 #ifndef NDEBUG
@@ -538,12 +534,7 @@ ExecutionEngine *EngineBuilder::create(TargetMachine *TM) {
     }
 
     ExecutionEngine *EE = nullptr;
-    if (ExecutionEngine::OrcMCJITReplacementCtor && UseOrcMCJITReplacement) {
-      EE = ExecutionEngine::OrcMCJITReplacementCtor(ErrorStr, std::move(MemMgr),
-                                                    std::move(Resolver),
-                                                    std::move(TheTM));
-      EE->addModule(std::move(M));
-    } else if (ExecutionEngine::MCJITCtor)
+    if (ExecutionEngine::MCJITCtor)
       EE = ExecutionEngine::MCJITCtor(std::move(M), ErrorStr, std::move(MemMgr),
                                       std::move(Resolver), std::move(TheTM));
 
@@ -575,14 +566,14 @@ void *ExecutionEngine::getPointerToGlobal(const GlobalValue *GV) {
   if (Function *F = const_cast<Function*>(dyn_cast<Function>(GV)))
     return getPointerToFunction(F);
 
-  MutexGuard locked(lock);
+  std::lock_guard<sys::Mutex> locked(lock);
   if (void* P = getPointerToGlobalIfAvailable(GV))
     return P;
 
   // Global variable might have been added since interpreter started.
   if (GlobalVariable *GVar =
           const_cast<GlobalVariable *>(dyn_cast<GlobalVariable>(GV)))
-    EmitGlobalVariable(GVar);
+    emitGlobalVariable(GVar);
   else
     llvm_unreachable("Global hasn't had an address allocated yet!");
 
@@ -624,17 +615,20 @@ GenericValue ExecutionEngine::getConstantValue(const Constant *C) {
         }
       }
       break;
-    case Type::VectorTyID:
-      // if the whole vector is 'undef' just reserve memory for the value.
-      auto* VTy = dyn_cast<VectorType>(C->getType());
-      Type *ElemTy = VTy->getElementType();
-      unsigned int elemNum = VTy->getNumElements();
-      Result.AggregateVal.resize(elemNum);
-      if (ElemTy->isIntegerTy())
-        for (unsigned int i = 0; i < elemNum; ++i)
-          Result.AggregateVal[i].IntVal =
-            APInt(ElemTy->getPrimitiveSizeInBits(), 0);
-      break;
+      case Type::ScalableVectorTyID:
+        report_fatal_error(
+            "Scalable vector support not yet implemented in ExecutionEngine");
+      case Type::FixedVectorTyID:
+        // if the whole vector is 'undef' just reserve memory for the value.
+        auto *VTy = cast<FixedVectorType>(C->getType());
+        Type *ElemTy = VTy->getElementType();
+        unsigned int elemNum = VTy->getNumElements();
+        Result.AggregateVal.resize(elemNum);
+        if (ElemTy->isIntegerTy())
+          for (unsigned int i = 0; i < elemNum; ++i)
+            Result.AggregateVal[i].IntVal =
+                APInt(ElemTy->getPrimitiveSizeInBits(), 0);
+        break;
     }
     return Result;
   }
@@ -914,7 +908,10 @@ GenericValue ExecutionEngine::getConstantValue(const Constant *C) {
     else
       llvm_unreachable("Unknown constant pointer type!");
     break;
-  case Type::VectorTyID: {
+  case Type::ScalableVectorTyID:
+    report_fatal_error(
+        "Scalable vector support not yet implemented in ExecutionEngine");
+  case Type::FixedVectorTyID: {
     unsigned elemNum;
     Type* ElemTy;
     const ConstantDataVector *CDV = dyn_cast<ConstantDataVector>(C);
@@ -925,9 +922,9 @@ GenericValue ExecutionEngine::getConstantValue(const Constant *C) {
         elemNum = CDV->getNumElements();
         ElemTy = CDV->getElementType();
     } else if (CV || CAZ) {
-        VectorType* VTy = dyn_cast<VectorType>(C->getType());
-        elemNum = VTy->getNumElements();
-        ElemTy = VTy->getElementType();
+      auto *VTy = cast<FixedVectorType>(C->getType());
+      elemNum = VTy->getNumElements();
+      ElemTy = VTy->getElementType();
     } else {
         llvm_unreachable("Unknown constant vector type!");
     }
@@ -1006,8 +1003,7 @@ GenericValue ExecutionEngine::getConstantValue(const Constant *C) {
       break;
     }
     llvm_unreachable("Unknown constant pointer type!");
-  }
-  break;
+  } break;
 
   default:
     SmallString<256> Msg;
@@ -1046,7 +1042,8 @@ void ExecutionEngine::StoreValueToMemory(const GenericValue &Val,
 
     *((PointerTy*)Ptr) = Val.PointerVal;
     break;
-  case Type::VectorTyID:
+  case Type::FixedVectorTyID:
+  case Type::ScalableVectorTyID:
     for (unsigned i = 0; i < Val.AggregateVal.size(); ++i) {
       if (cast<VectorType>(Ty)->getElementType()->isDoubleTy())
         *(((double*)Ptr)+i) = Val.AggregateVal[i].DoubleVal;
@@ -1096,8 +1093,11 @@ void ExecutionEngine::LoadValueFromMemory(GenericValue &Result,
     Result.IntVal = APInt(80, y);
     break;
   }
-  case Type::VectorTyID: {
-    auto *VT = cast<VectorType>(Ty);
+  case Type::ScalableVectorTyID:
+    report_fatal_error(
+        "Scalable vector support not yet implemented in ExecutionEngine");
+  case Type::FixedVectorTyID: {
+    auto *VT = cast<FixedVectorType>(Ty);
     Type *ElemT = VT->getElementType();
     const unsigned numElems = VT->getNumElements();
     if (ElemT->isFloatTy()) {
@@ -1200,8 +1200,8 @@ void ExecutionEngine::emitGlobals() {
             GV.hasAppendingLinkage() || !GV.hasName())
           continue;// Ignore external globals and globals with internal linkage.
 
-        const GlobalValue *&GVEntry =
-          LinkedGlobalsMap[std::make_pair(GV.getName(), GV.getType())];
+        const GlobalValue *&GVEntry = LinkedGlobalsMap[std::make_pair(
+            std::string(GV.getName()), GV.getType())];
 
         // If this is the first time we've seen this global, it is the canonical
         // version.
@@ -1228,8 +1228,8 @@ void ExecutionEngine::emitGlobals() {
     for (const auto &GV : M.globals()) {
       // In the multi-module case, see what this global maps to.
       if (!LinkedGlobalsMap.empty()) {
-        if (const GlobalValue *GVEntry =
-              LinkedGlobalsMap[std::make_pair(GV.getName(), GV.getType())]) {
+        if (const GlobalValue *GVEntry = LinkedGlobalsMap[std::make_pair(
+                std::string(GV.getName()), GV.getType())]) {
           // If something else is the canonical global, ignore this one.
           if (GVEntry != &GV) {
             NonCanonicalGlobals.push_back(&GV);
@@ -1243,8 +1243,8 @@ void ExecutionEngine::emitGlobals() {
       } else {
         // External variable reference. Try to use the dynamic loader to
         // get a pointer to it.
-        if (void *SymAddr =
-            sys::DynamicLibrary::SearchForAddressOfSymbol(GV.getName()))
+        if (void *SymAddr = sys::DynamicLibrary::SearchForAddressOfSymbol(
+                std::string(GV.getName())))
           addGlobalMapping(&GV, SymAddr);
         else {
           report_fatal_error("Could not resolve external global address: "
@@ -1258,8 +1258,8 @@ void ExecutionEngine::emitGlobals() {
     if (!NonCanonicalGlobals.empty()) {
       for (unsigned i = 0, e = NonCanonicalGlobals.size(); i != e; ++i) {
         const GlobalValue *GV = NonCanonicalGlobals[i];
-        const GlobalValue *CGV =
-          LinkedGlobalsMap[std::make_pair(GV->getName(), GV->getType())];
+        const GlobalValue *CGV = LinkedGlobalsMap[std::make_pair(
+            std::string(GV->getName()), GV->getType())];
         void *Ptr = getPointerToGlobalIfAvailable(CGV);
         assert(Ptr && "Canonical global wasn't codegen'd!");
         addGlobalMapping(GV, Ptr);
@@ -1271,12 +1271,12 @@ void ExecutionEngine::emitGlobals() {
     for (const auto &GV : M.globals()) {
       if (!GV.isDeclaration()) {
         if (!LinkedGlobalsMap.empty()) {
-          if (const GlobalValue *GVEntry =
-                LinkedGlobalsMap[std::make_pair(GV.getName(), GV.getType())])
+          if (const GlobalValue *GVEntry = LinkedGlobalsMap[std::make_pair(
+                  std::string(GV.getName()), GV.getType())])
             if (GVEntry != &GV)  // Not the canonical variable.
               continue;
         }
-        EmitGlobalVariable(&GV);
+        emitGlobalVariable(&GV);
       }
     }
   }
@@ -1285,7 +1285,7 @@ void ExecutionEngine::emitGlobals() {
 // EmitGlobalVariable - This method emits the specified global variable to the
 // address specified in GlobalAddresses, or allocates new memory if it's not
 // already in the map.
-void ExecutionEngine::EmitGlobalVariable(const GlobalVariable *GV) {
+void ExecutionEngine::emitGlobalVariable(const GlobalVariable *GV) {
   void *GA = getPointerToGlobalIfAvailable(GV);
 
   if (!GA) {

@@ -1235,86 +1235,28 @@ void TGraphAsymmErrors::Print(Option_t *) const
 
 void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
    out << "   " << std::endl;
    static Int_t frameNumber = 3000;
    frameNumber++;
 
-   Int_t i;
-   TString fXName   = TString(GetName()) + Form("_fx%d",frameNumber);
-   TString fYName   = TString(GetName()) + Form("_fy%d",frameNumber);
-   TString fElXName = TString(GetName()) + Form("_felx%d",frameNumber);
-   TString fElYName = TString(GetName()) + Form("_fely%d",frameNumber);
-   TString fEhXName = TString(GetName()) + Form("_fehx%d",frameNumber);
-   TString fEhYName = TString(GetName()) + Form("_fehy%d",frameNumber);
-   out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fX[i] << "," << std::endl;
-   out << "   " << fX[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fY[i] << "," << std::endl;
-   out << "   " << fY[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fElXName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEXlow[i] << "," << std::endl;
-   out << "   " << fEXlow[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fElYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEYlow[i] << "," << std::endl;
-   out << "   " << fEYlow[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fEhXName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEXhigh[i] << "," << std::endl;
-   out << "   " << fEXhigh[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fEhYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fEYhigh[i] << "," << std::endl;
-   out << "   " << fEYhigh[fNpoints-1] << "};" << std::endl;
+   auto fXName   = SaveArray(out, "fx", frameNumber, fX);
+   auto fYName   = SaveArray(out, "fy", frameNumber, fY);
+   auto fElXName = SaveArray(out, "felx", frameNumber, fEXlow);
+   auto fElYName = SaveArray(out, "fely", frameNumber, fEYlow);
+   auto fEhXName = SaveArray(out, "fehx", frameNumber, fEXhigh);
+   auto fEhYName = SaveArray(out, "fehy", frameNumber, fEYhigh);
 
-   if (gROOT->ClassSaved(TGraphAsymmErrors::Class())) out<<"   ";
-   else out << "   TGraphAsymmErrors *";
+   if (gROOT->ClassSaved(TGraphAsymmErrors::Class()))
+      out<<"   ";
+   else
+      out << "   TGraphAsymmErrors *";
    out << "grae = new TGraphAsymmErrors("<< fNpoints << ","
                                     << fXName   << ","  << fYName  << ","
                                     << fElXName  << ","  << fEhXName << ","
                                     << fElYName  << ","  << fEhYName << ");"
                                     << std::endl;
 
-   out << "   grae->SetName(" << quote << GetName() << quote << ");" << std::endl;
-   out << "   grae->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
-
-   SaveFillAttributes(out, "grae", 0, 1001);
-   SaveLineAttributes(out, "grae", 1, 1, 1);
-   SaveMarkerAttributes(out, "grae", 1, 1, 1);
-
-   if (fHistogram) {
-      TString hname = fHistogram->GetName();
-      hname += frameNumber;
-      fHistogram->SetName(Form("Graph_%s",hname.Data()));
-      fHistogram->SavePrimitive(out,"nodraw");
-      out<<"   grae->SetHistogram("<<fHistogram->GetName()<<");"<<std::endl;
-      out<<"   "<<std::endl;
-   }
-
-   // save list of functions
-   TIter next(fFunctions);
-   TObject *obj;
-   while ((obj = next())) {
-      obj->SavePrimitive(out, Form("nodraw #%d\n",++frameNumber));
-      if (obj->InheritsFrom("TPaveStats")) {
-         out << "   grae->GetListOfFunctions()->Add(ptstats);" << std::endl;
-         out << "   ptstats->SetParent(grae->GetListOfFunctions());" << std::endl;
-      } else {
-         TString objname;
-         objname.Form("%s%d",obj->GetName(),frameNumber);
-         if (obj->InheritsFrom("TF1")) {
-            out << "   " << objname << "->SetParent(grae);\n";
-         }
-         out << "   grae->GetListOfFunctions()->Add("
-             << objname << ");" << std::endl;
-      }
-   }
-
-   const char *l = strstr(option,"multigraph");
-   if (l) {
-      out<<"   multigraph->Add(grae,"<<quote<<l+10<<quote<<");"<<std::endl;
-   } else {
-      out<<"   grae->Draw("<<quote<<option<<quote<<");"<<std::endl;
-   }
+   SaveHistogramAndFunctions(out, "grae", frameNumber, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1351,6 +1293,11 @@ void TGraphAsymmErrors::Scale(Double_t c1, Option_t *option)
 
 void TGraphAsymmErrors::SetPointError(Double_t exl, Double_t exh, Double_t eyl, Double_t eyh)
 {
+   if (!gPad) {
+      Error("SetPointError", "Cannot be used without gPad, requires last mouse position");
+      return;
+   }
+
    Int_t px = gPad->GetEventX();
    Int_t py = gPad->GetEventY();
 
@@ -1380,7 +1327,7 @@ void TGraphAsymmErrors::SetPointError(Int_t i, Double_t exl, Double_t exh, Doubl
 {
    if (i < 0) return;
    if (i >= fNpoints) {
-   // re-allocate the object
+      // re-allocate the object
       TGraphAsymmErrors::SetPoint(i,0,0);
    }
    fEXlow[i]  = exl;
@@ -1397,7 +1344,7 @@ void TGraphAsymmErrors::SetPointEXlow(Int_t i, Double_t exl)
 {
    if (i < 0) return;
    if (i >= fNpoints) {
-   // re-allocate the object
+      // re-allocate the object
       TGraphAsymmErrors::SetPoint(i,0,0);
    }
    fEXlow[i]  = exl;
@@ -1411,7 +1358,7 @@ void TGraphAsymmErrors::SetPointEXhigh(Int_t i, Double_t exh)
 {
    if (i < 0) return;
    if (i >= fNpoints) {
-   // re-allocate the object
+      // re-allocate the object
       TGraphAsymmErrors::SetPoint(i,0,0);
    }
    fEXhigh[i]  = exh;

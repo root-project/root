@@ -37,7 +37,7 @@ void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &mo
                                                           unsigned char * /* serializedHeader */,
                                                           std::uint32_t /* length */)
 {
-   fBufferedColumns.resize(fDescriptorBuilder.GetDescriptor().GetNColumns());
+   fBufferedColumns.resize(fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns());
    fInnerModel = model.Clone();
    fInnerSink->Create(*fInnerModel);
 }
@@ -54,8 +54,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
    // element is destroyed. In other words, all buffered page iterators are
    // valid until the return value of DrainBufferedPages() goes out of scope in
    // CommitCluster().
-   RColumnBuf::iterator zipItem =
-      fBufferedColumns.at(columnHandle.fId).BufferPage(columnHandle, bufPage);
+   RColumnBuf::iterator zipItem = fBufferedColumns.at(columnHandle.fPhysicalId).BufferPage(columnHandle, bufPage);
    if (!fTaskScheduler) {
       return RNTupleLocator{};
    }
@@ -64,8 +63,8 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
    // compression buffer.
    zipItem->AllocateSealedPageBuf();
    R__ASSERT(zipItem->fBuf);
-   auto sealedPage = fBufferedColumns.at(columnHandle.fId).RegisterSealedPage();
-   fTaskScheduler->AddTask([this, zipItem, sealedPage, colId = columnHandle.fId] {
+   auto sealedPage = fBufferedColumns.at(columnHandle.fPhysicalId).RegisterSealedPage();
+   fTaskScheduler->AddTask([this, zipItem, sealedPage, colId = columnHandle.fPhysicalId] {
       *sealedPage = SealPage(zipItem->fPage, *fBufferedColumns.at(colId).GetHandle().fColumn->GetElement(),
                              GetWriteOptions().GetCompression(), zipItem->fBuf.get());
       zipItem->fSealedPage = &(*sealedPage);
@@ -77,10 +76,10 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
 }
 
 ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPageImpl(
-   DescriptorId_t columnId, const RSealedPage &sealedPage)
+ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPageImpl(DescriptorId_t physicalColumnId,
+                                                               const RSealedPage &sealedPage)
 {
-   fInnerSink->CommitSealedPage(columnId, sealedPage);
+   fInnerSink->CommitSealedPage(physicalColumnId, sealedPage);
    // we're feeding bad locators to fOpenPageRanges but it should not matter
    // because they never get written out
    return RNTupleLocator{};
@@ -102,7 +101,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
       toCommit.reserve(fBufferedColumns.size());
       for (auto &bufColumn : fBufferedColumns) {
          const auto &sealedPages = bufColumn.GetSealedPages();
-         toCommit.emplace_back(bufColumn.GetHandle().fId, sealedPages.cbegin(), sealedPages.cend());
+         toCommit.emplace_back(bufColumn.GetHandle().fPhysicalId, sealedPages.cbegin(), sealedPages.cend());
       }
       fInnerSink->CommitSealedPageV(toCommit);
 
@@ -124,7 +123,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
       auto drained = bufColumn.DrainBufferedPages();
       for (auto &bufPage : std::get<std::deque<RColumnBuf::RPageZipItem>>(drained)) {
          if (bufPage.IsSealed()) {
-            fInnerSink->CommitSealedPage(bufColumn.GetHandle().fId, *bufPage.fSealedPage);
+            fInnerSink->CommitSealedPage(bufColumn.GetHandle().fPhysicalId, *bufPage.fSealedPage);
          } else {
             fInnerSink->CommitPage(bufColumn.GetHandle(), bufPage.fPage);
          }

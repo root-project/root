@@ -13,6 +13,11 @@
 #include <sstream>
 #include <cmath>
 
+// Backward compatibility for gtest version < 1.10.0
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
+
 using namespace ROOT;
 using namespace ROOT::VecOps;
 using namespace ROOT::Detail::VecOps; // for `IsSmall` and `IsAdopting`
@@ -121,6 +126,21 @@ TEST(VecOps, MoveCtor)
    RVec<int> v1{1, 2, 3};
    RVec<int> v2(std::move(v1));
    EXPECT_EQ(v2.size(), 3u);
+}
+
+// regression test: this used to fail to compile
+TEST(VecOps, MoveOnlyValue)
+{
+   struct MoveOnly {
+      MoveOnly() = default;
+      MoveOnly(const MoveOnly &) = delete;
+      MoveOnly &operator=(const MoveOnly &) = delete;
+      MoveOnly(MoveOnly &&) = default;
+      MoveOnly &operator=(MoveOnly &&) = default;
+   };
+   ROOT::RVec<MoveOnly> v(10);
+   v.resize(20);
+   v[19] = MoveOnly();
 }
 
 TEST(VecOps, Conversion)
@@ -616,6 +636,9 @@ TEST(VecOps, SimpleStatOps)
 
    RVec<double> v1 {42.};
    ASSERT_DOUBLE_EQ(Sum(v1), 42.);
+   ASSERT_DOUBLE_EQ(Sum(v1, 1.5), 43.5);
+   ASSERT_DOUBLE_EQ(Product(v1), 42.);
+   ASSERT_DOUBLE_EQ(Product(v1, 1.5), 63.);
    ASSERT_DOUBLE_EQ(Mean(v1), 42.);
    ASSERT_DOUBLE_EQ(Max(v1), 42.);
    ASSERT_DOUBLE_EQ(Min(v1), 42.);
@@ -626,6 +649,7 @@ TEST(VecOps, SimpleStatOps)
 
    RVec<double> v2 {1., 2., 3.};
    ASSERT_DOUBLE_EQ(Sum(v2), 6.);
+   ASSERT_DOUBLE_EQ(Product(v2), 6.);
    ASSERT_DOUBLE_EQ(Mean(v2), 2.);
    ASSERT_DOUBLE_EQ(Max(v2), 3.);
    ASSERT_DOUBLE_EQ(Min(v2), 1.);
@@ -636,6 +660,7 @@ TEST(VecOps, SimpleStatOps)
 
    RVec<double> v3 {10., 20., 32.};
    ASSERT_DOUBLE_EQ(Sum(v3), 62.);
+   ASSERT_DOUBLE_EQ(Product(v3), 6400.);
    ASSERT_DOUBLE_EQ(Mean(v3), 20.666666666666668);
    ASSERT_DOUBLE_EQ(Max(v3), 32.);
    ASSERT_DOUBLE_EQ(Min(v3), 10.);
@@ -646,6 +671,7 @@ TEST(VecOps, SimpleStatOps)
 
    RVec<int> v4 {2, 3, 1};
    ASSERT_DOUBLE_EQ(Sum(v4), 6.);
+   ASSERT_DOUBLE_EQ(Product(v4), 6.);
    ASSERT_DOUBLE_EQ(Mean(v4), 2.);
    ASSERT_DOUBLE_EQ(Max(v4), 3);
    ASSERT_DOUBLE_EQ(Min(v4), 1);
@@ -656,6 +682,7 @@ TEST(VecOps, SimpleStatOps)
 
    RVec<int> v5 {2, 3, 1, 4};
    ASSERT_DOUBLE_EQ(Sum(v5), 10);
+   ASSERT_DOUBLE_EQ(Product(v5), 24.);
    ASSERT_DOUBLE_EQ(Mean(v5), 2.5);
    ASSERT_DOUBLE_EQ(Max(v5), 4);
    ASSERT_DOUBLE_EQ(Min(v5), 1);
@@ -674,6 +701,13 @@ TEST(VecOps, SimpleStatOps)
    const ROOT::Math::PtEtaPhiMVector lv_mean = Mean(v6, ROOT::Math::PtEtaPhiMVector());
    CheckEqual(lv_sum, lv_sum_ref);
    CheckEqual(lv_mean, lv_mean_ref);
+}
+
+// #11569
+TEST(VecOps, SumOfBools)
+{
+   ROOT::RVecB v{true, true, false};
+   EXPECT_EQ(Sum(v), 2ul);
 }
 
 TEST(VecOps, Any)
@@ -782,6 +816,37 @@ TEST(VecOps, TakeLast)
    auto v2 = Take(v0, 0);
    RVec<int> none{};
    CheckEqual(v2, none);
+}
+
+TEST(VecOps, TakeWithDefault)
+{
+   RVec<int> v0{1, 2, 3};
+
+   auto v1 = Take(v0, {0, 1, 2, 3}, -999);
+   RVec<int> ref{1, 2, 3, -999};
+   CheckEqual(v1, ref);
+}
+
+TEST(VecOps, Enumerate)
+{
+   RVec<int> v0{1, 2, 3};
+   RVec<int> ref{0, 1, 2};
+   CheckEqual(Enumerate(v0), ref);
+}
+
+TEST(VecOps, Range)
+{
+   std::size_t l = 3;
+   RVec<int> ref{0, 1, 2};
+   CheckEqual(Range(l), ref);
+}
+
+TEST(VecOps, RangeBeginEnd)
+{
+   const RVecI ref{1, 2, 3};
+   CheckEqual(Range(1, 4), ref);
+
+   CheckEqual(Range(4, 1), RVecI{});
 }
 
 TEST(VecOps, Drop)

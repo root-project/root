@@ -236,7 +236,7 @@ std::string RegionBase<Tr>::getNameStr() const {
 
     getEntry()->printAsOperand(OS, false);
   } else
-    entryName = getEntry()->getName();
+    entryName = std::string(getEntry()->getName());
 
   if (getExit()) {
     if (getExit()->getName().empty()) {
@@ -244,7 +244,7 @@ std::string RegionBase<Tr>::getNameStr() const {
 
       getExit()->printAsOperand(OS, false);
     } else
-      exitName = getExit()->getName();
+      exitName = std::string(getExit()->getName());
   } else
     exitName = "<Function Return>";
 
@@ -365,7 +365,7 @@ typename Tr::RegionNodeT *RegionBase<Tr>::getBBNode(BlockT *BB) const {
     auto Deconst = const_cast<RegionBase<Tr> *>(this);
     typename BBNodeMapT::value_type V = {
         BB,
-        llvm::make_unique<RegionNodeT>(static_cast<RegionT *>(Deconst), BB)};
+        std::make_unique<RegionNodeT>(static_cast<RegionT *>(Deconst), BB)};
     at = BBNodeMap.insert(std::move(V)).first;
   }
   return at->second.get();
@@ -585,10 +585,8 @@ bool RegionInfoBase<Tr>::isRegion(BlockT *entry, BlockT *exit) const {
   // Exit is the header of a loop that contains the entry. In this case,
   // the dominance frontier must only contain the exit.
   if (!DT->dominates(entry, exit)) {
-    for (typename DST::iterator SI = entrySuccs->begin(),
-                                SE = entrySuccs->end();
-         SI != SE; ++SI) {
-      if (*SI != exit && *SI != entry)
+    for (BlockT *successor : *entrySuccs) {
+      if (successor != exit && successor != entry)
         return false;
     }
 
@@ -724,7 +722,7 @@ void RegionInfoBase<Tr>::findRegionsWithEntry(BlockT *entry,
 
 template <class Tr>
 void RegionInfoBase<Tr>::scanForRegions(FuncT &F, BBtoBBMap *ShortCut) {
-  using FuncPtrT = typename std::add_pointer<FuncT>::type;
+  using FuncPtrT = std::add_pointer_t<FuncT>;
 
   BlockT *entry = GraphTraits<FuncPtrT>::getEntryNode(&F);
   DomTreeNodeT *N = DT->getNode(entry);
@@ -817,8 +815,7 @@ void RegionInfoBase<Tr>::verifyAnalysis() const {
 // Region pass manager support.
 template <class Tr>
 typename Tr::RegionT *RegionInfoBase<Tr>::getRegionFor(BlockT *BB) const {
-  typename BBtoRegionMap::const_iterator I = BBtoRegion.find(BB);
-  return I != BBtoRegion.end() ? I->second : nullptr;
+  return BBtoRegion.lookup(BB);
 }
 
 template <class Tr>
@@ -889,8 +886,7 @@ typename Tr::RegionT *RegionInfoBase<Tr>::getCommonRegion(RegionT *A,
 template <class Tr>
 typename Tr::RegionT *
 RegionInfoBase<Tr>::getCommonRegion(SmallVectorImpl<RegionT *> &Regions) const {
-  RegionT *ret = Regions.back();
-  Regions.pop_back();
+  RegionT *ret = Regions.pop_back_val();
 
   for (RegionT *R : Regions)
     ret = getCommonRegion(ret, R);
@@ -912,7 +908,7 @@ RegionInfoBase<Tr>::getCommonRegion(SmallVectorImpl<BlockT *> &BBs) const {
 
 template <class Tr>
 void RegionInfoBase<Tr>::calculate(FuncT &F) {
-  using FuncPtrT = typename std::add_pointer<FuncT>::type;
+  using FuncPtrT = std::add_pointer_t<FuncT>;
 
   // ShortCut a function where for every BB the exit of the largest region
   // starting with BB is stored. These regions can be threated as single BBS.

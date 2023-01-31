@@ -23,8 +23,7 @@
 
 #include "TPave.h"
 #include "TGaxis.h"
-
-class TH1;
+#include "TH1.h"
 
 class TPaletteAxis : public TPave {
 
@@ -53,14 +52,21 @@ public:
    void  Paint(Option_t *option="") override;
    void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void          SetHistogram(TH1* h) {fH = h;}
-   virtual void  SetLabelColor(Int_t labelcolor) {fAxis.SetLabelColor(labelcolor);} // *MENU*
-   virtual void  SetLabelFont(Int_t labelfont) {fAxis.SetLabelFont(labelfont);} // *MENU*
-   virtual void  SetLabelOffset(Float_t labeloffset) {fAxis.SetLabelOffset(labeloffset);} // *MENU*
-   virtual void  SetLabelSize(Float_t labelsize) {fAxis.SetLabelSize(labelsize);} // *MENU*
-   virtual void  SetTitleOffset(Float_t titleoffset=1) {fAxis.SetTitleOffset(titleoffset);} // *MENU*
-   virtual void  SetTitleSize(Float_t titlesize) {fAxis.SetTitleSize(titlesize);} // *MENU*
-   void  SetLineColor(Color_t linecolor) override {fAxis.SetLineColor(linecolor);} // *MENU*
-   void  SetLineWidth(Width_t linewidth) override {fAxis.SetLineWidth(linewidth);} // *MENU*
+   virtual void  SetNdivisions(Int_t ndiv=10) {if (fH) fH->GetZaxis()->SetNdivisions(ndiv);} // *MENU*
+   virtual void  SetAxisColor(Int_t color=1, Float_t alpha=1) {if (fH) fH->GetZaxis()->SetAxisColor(color,alpha);} // *MENU*
+   virtual void  SetLabelColor(Int_t color=1) {if (fH) fH->GetZaxis()->SetLabelColor(color);} // *MENU*
+   virtual void  SetLabelFont(Int_t font=42) {if (fH) fH->GetZaxis()->SetLabelFont(font);} // *MENU*
+   virtual void  SetLabelOffset(Float_t offset=0.005) {if (fH) fH->GetZaxis()->SetLabelOffset(offset);} // *MENU*
+   virtual void  SetLabelSize(Float_t size=0.035) {if (fH) fH->GetZaxis()->SetLabelSize(size);} // *MENU*
+   virtual void  SetMaxDigits(Float_t maxdigits=5) {if (fH) fH->GetZaxis()->SetMaxDigits(maxdigits);} // *MENU*
+   virtual void  SetTickLength(Float_t length=0.03) {if (fH) fH->GetZaxis()->SetTickLength(length);} // *MENU*
+   virtual void  SetTitleOffset(Float_t offset=1) {if (fH) fH->GetZaxis()->SetTitleOffset(offset);} // *MENU*
+   virtual void  SetTitleSize(Float_t size=0.035) {if (fH) fH->GetZaxis()->SetTitleSize(size);} // *MENU*
+   virtual void  SetTitleColor(Int_t color=1) {if (fH) fH->GetZaxis()->SetTitleColor(color);} // *MENU*
+   virtual void  SetTitleFont(Int_t font=42) {if (fH) fH->GetZaxis()->SetTitleFont(font);} // *MENU*
+   virtual void  SetTitle(const char *title="") {if (fH) fH->GetZaxis()->SetTitle(title);} // *MENU*
+   void  SetLineWidth(Width_t width) override {fAxis.SetLineWidth(width);} // *MENU*
+
    virtual void  UnZoom();  // *MENU*
 
    ClassDefOverride(TPaletteAxis,4)  //class used to display a color palette axis for 2-d plots

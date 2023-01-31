@@ -24,13 +24,19 @@ class RooRealVar;
 class RooLandau : public RooAbsPdf {
 public:
   RooLandau() {} ;
-  RooLandau(const char *name, const char *title, RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma);
+  // Original constructor without RooAbsReal::Ref for backwards compatibility.
+  inline RooLandau(const char *name, const char *title, RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma)
+      : RooLandau{name, title, RooAbsReal::Ref{_x}, RooAbsReal::Ref{_mean}, RooAbsReal::Ref{_sigma}} {}
+  RooLandau(const char *name, const char *title, RooAbsReal::Ref _x, RooAbsReal::Ref _mean, RooAbsReal::Ref _sigma);
   RooLandau(const RooLandau& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooLandau(*this,newname); }
   inline ~RooLandau() override { }
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
+
+  Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char *rangeName = nullptr) const override;
+  double analyticalIntegral(Int_t code, const char *rangeName) const override;
 
 protected:
 

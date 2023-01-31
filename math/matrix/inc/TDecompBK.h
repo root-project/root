@@ -40,7 +40,7 @@ public :
    TDecompBK(Int_t row_lwb,Int_t row_upb);
    TDecompBK(const TMatrixDSym &m,Double_t tol = 0.0);
    TDecompBK(const TDecompBK &another);
-   ~TDecompBK() override {if (fIpiv) delete [] fIpiv; fIpiv = 0; }
+   ~TDecompBK() override {if (fIpiv) delete [] fIpiv; fIpiv = nullptr; }
 
          Int_t     GetNrows  () const override { return fU.GetNrows(); }
          Int_t     GetNcols  () const override { return fU.GetNcols(); }

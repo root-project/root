@@ -186,13 +186,13 @@ public:
 
    // These are more like TEveManager stuff.
    TGListTree*     GetListTree() const;
-   TGListTreeItem* AddToListTree(TEveElement* re, Bool_t open, TGListTree* lt=0);
+   TGListTreeItem* AddToListTree(TEveElement* re, Bool_t open, TGListTree* lt=nullptr);
    void            RemoveFromListTree(TEveElement* element, TGListTree* lt, TGListTreeItem* lti);
 
    TGListTreeItem* AddEvent(TEveEventManager* event);
 
-   void AddElement(TEveElement* element, TEveElement* parent=0);
-   void AddGlobalElement(TEveElement* element, TEveElement* parent=0);
+   void AddElement(TEveElement* element, TEveElement* parent=nullptr);
+   void AddGlobalElement(TEveElement* element, TEveElement* parent=nullptr);
 
    void RemoveElement(TEveElement* element, TEveElement* parent);
    void PreDeleteElement(TEveElement* element);

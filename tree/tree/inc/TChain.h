@@ -142,21 +142,21 @@ public:
    virtual void      SavePrimitive (std::ostream &out, Option_t *option="");
    virtual Long64_t  Scan(const char *varexp="", const char *selection="", Option_t *option="", Long64_t nentries=kMaxEntries, Long64_t firstentry=0); // *MENU*
    virtual void      SetAutoDelete(Bool_t autodel=kTRUE);
-   virtual Int_t     SetBranchAddress(const char *bname,void *add, TBranch **ptr = 0);
+   virtual Int_t     SetBranchAddress(const char *bname,void *add, TBranch **ptr = nullptr);
    virtual Int_t     SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr);
    virtual Int_t     SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t isptr);
-   template <class T> Int_t SetBranchAddress(const char *bname, T **add, TBranch **ptr = 0) {
+   template <class T> Int_t SetBranchAddress(const char *bname, T **add, TBranch **ptr = nullptr) {
      return TTree::SetBranchAddress<T>(bname, add, ptr);
    }
 #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
    // This can only be used when the template overload resolution can distinguish between
    // T* and T**
-   template <class T> Int_t SetBranchAddress(const char *bname, T *add, TBranch **ptr = 0) {
+   template <class T> Int_t SetBranchAddress(const char *bname, T *add, TBranch **ptr = nullptr) {
      return TTree::SetBranchAddress<T>(bname, add, ptr);
    }
 #endif
 
-   virtual void      SetBranchStatus(const char *bname, Bool_t status=1, UInt_t *found=0);
+   virtual void      SetBranchStatus(const char *bname, Bool_t status = 1, UInt_t *found = nullptr);
    virtual Int_t     SetCacheSize(Long64_t cacheSize = -1);
    virtual void      SetDirectory(TDirectory *dir);
    virtual void      SetEntryList(TEntryList *elist, Option_t *opt="");

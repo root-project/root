@@ -144,10 +144,10 @@ namespace TMVA {
       void UpdateEventVal();
 
       // fill binary rule respons for all events (or selected subset)
-      void MakeRuleMap(const std::vector<const TMVA::Event *> *events=0, UInt_t ifirst=0, UInt_t ilast=0);
+      void MakeRuleMap(const std::vector<const TMVA::Event *> *events=nullptr, UInt_t ifirst=0, UInt_t ilast=0);
 
       // clear rule map
-      void ClearRuleMap() { fRuleMap.clear(); fRuleMapEvents=0; }
+      void ClearRuleMap() { fRuleMap.clear(); fRuleMapEvents=nullptr; }
 
       // evaluates the event using the ensemble of rules
       // the following uses fEventCache, that is per event saved in cache

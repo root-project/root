@@ -22,7 +22,7 @@ class TPoint;
 class TBox : public TObject, public TAttLine, public TAttFill, public TAttBBox2D {
 
 private:
-   TObject     *fTip;          ///<! tool tip associated with box
+   TObject     *fTip{nullptr}; ///<! tool tip associated with box
 
 protected:
    Double_t     fX1;           ///< X of 1st point

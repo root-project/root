@@ -140,7 +140,7 @@ public:
 
       typedef double ( * GSLMonteFuncPointer ) ( double *, size_t, void *);
 
-      void SetFunction( GSLMonteFuncPointer f, unsigned int dim, void * p = 0 );
+      void SetFunction( GSLMonteFuncPointer f, unsigned int dim, void * p = nullptr );
 
       // methods using GSLMonteFuncPointer
 
@@ -153,7 +153,7 @@ public:
        @param p pointer to parameter array
        */
 
-      double Integral(const GSLMonteFuncPointer & f, unsigned int dim, double* a, double* b, void * p = 0);
+      double Integral(const GSLMonteFuncPointer & f, unsigned int dim, double* a, double* b, void * p = nullptr);
 
 
       /**

@@ -227,7 +227,7 @@ void THashList::Delete(Option_t *option)
          auto obj = tlk->GetObject();
          // In case somebody else access it.
          tlk->SetObject(nullptr);
-         if (obj && !obj->TestBit(kNotDeleted))
+         if (obj && ROOT::Detail::HasBeenDeleted(obj))
             Error("Delete", "A list is accessing an object (%p) already deleted (list name = %s)",
                   obj, GetName());
          else if (obj && obj->IsOnHeap())
@@ -350,7 +350,7 @@ void THashList::RecursiveRemove(TObject *obj)
    while (lnk.get()) {
       next = lnk->NextSP();
       TObject *ob = lnk->GetObject();
-      if (ob && ob->TestBit(kNotDeleted)) {
+      if (ob && !ROOT::Detail::HasBeenDeleted(ob)) {
          ob->RecursiveRemove(obj);
       }
       lnk = next;

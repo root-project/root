@@ -25,6 +25,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Lex/Preprocessor.h"
+#include "clang/Basic/Builtins.h"
 #include "clang/Basic/FileManager.h"
 #include "clang/Basic/FileSystemStatCache.h"
 #include "clang/Basic/IdentifierTable.h"
@@ -53,9 +54,9 @@
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSwitch.h"
 #include "llvm/Support/Capacity.h"
@@ -112,16 +113,14 @@ Preprocessor::Preprocessor(std::shared_ptr<PreprocessorOptions> PPOpts,
   // We haven't read anything from the external source.
   ReadMacrosFromExternalSource = false;
 
+  BuiltinInfo = std::make_unique<Builtin::Context>();
+
   // "Poison" __VA_ARGS__, __VA_OPT__ which can only appear in the expansion of
   // a macro. They get unpoisoned where it is allowed.
   (Ident__VA_ARGS__ = getIdentifierInfo("__VA_ARGS__"))->setIsPoisoned();
   SetPoisonReason(Ident__VA_ARGS__,diag::ext_pp_bad_vaargs_use);
-  if (getLangOpts().CPlusPlus2a) {
-    (Ident__VA_OPT__ = getIdentifierInfo("__VA_OPT__"))->setIsPoisoned();
-    SetPoisonReason(Ident__VA_OPT__,diag::ext_pp_bad_vaopt_use);
-  } else {
-    Ident__VA_OPT__ = nullptr;
-  }
+  (Ident__VA_OPT__ = getIdentifierInfo("__VA_OPT__"))->setIsPoisoned();
+  SetPoisonReason(Ident__VA_OPT__,diag::ext_pp_bad_vaopt_use);
 
   // Initialize the pragma handlers.
   RegisterBuiltinPragmas();
@@ -158,6 +157,13 @@ Preprocessor::Preprocessor(std::shared_ptr<PreprocessorOptions> PPOpts,
 
   if (this->PPOpts->GeneratePreamble)
     PreambleConditionalStack.startRecording();
+
+  ExcludedConditionalDirectiveSkipMappings =
+      this->PPOpts->ExcludedConditionalDirectiveSkipMappings;
+  if (ExcludedConditionalDirectiveSkipMappings)
+    ExcludedConditionalDirectiveSkipMappings->clear();
+
+  MaxTokens = LangOpts.MaxTokens;
 }
 
 Preprocessor::~Preprocessor() {
@@ -197,7 +203,7 @@ void Preprocessor::Initialize(const TargetInfo &Target,
   this->AuxTarget = AuxTarget;
 
   // Initialize information about built-ins.
-  BuiltinInfo.InitializeTarget(Target, AuxTarget);
+  BuiltinInfo->InitializeTarget(Target, AuxTarget);
   HeaderInfo.setTarget(Target);
 
   // Populate the identifier table with info about keywords for the current language.
@@ -209,7 +215,7 @@ void Preprocessor::InitializeForModelFile() {
 
   // Reset pragmas
   PragmaHandlersBackup = std::move(PragmaHandlers);
-  PragmaHandlers = llvm::make_unique<PragmaNamespace>(StringRef());
+  PragmaHandlers = std::make_unique<PragmaNamespace>(StringRef());
   RegisterBuiltinPragmas();
 
   // Reset PredefinesFileID
@@ -305,7 +311,7 @@ void Preprocessor::PrintStats() {
   llvm::errs() << "    " << NumEnteredSourceFiles << " source files entered.\n";
   llvm::errs() << "    " << MaxIncludeStackDepth << " max include stack depth\n";
   llvm::errs() << "  " << NumIf << " #if/#ifndef/#ifdef.\n";
-  llvm::errs() << "  " << NumElse << " #else/#elif.\n";
+  llvm::errs() << "  " << NumElse << " #else/#elif/#elifdef/#elifndef.\n";
   llvm::errs() << "  " << NumEndif << " #endif.\n";
   llvm::errs() << "  " << NumPragma << " #pragma.\n";
   llvm::errs() << NumSkipped << " #if/#ifndef#ifdef regions skipped\n";
@@ -422,12 +428,10 @@ bool Preprocessor::SetCodeCompletionPoint(const FileEntry *File,
   assert(CompleteLine && CompleteColumn && "Starts from 1:1");
   assert(!CodeCompletionFile && "Already set");
 
-  using llvm::MemoryBuffer;
-
   // Load the actual file's contents.
-  bool Invalid = false;
-  const MemoryBuffer *Buffer = SourceMgr.getMemoryBufferForFile(File, &Invalid);
-  if (Invalid)
+  Optional<llvm::MemoryBufferRef> Buffer =
+      SourceMgr.getMemoryBufferForFileOrNone(File);
+  if (!Buffer)
     return true;
 
   // Find the byte position of the truncation point.
@@ -475,15 +479,15 @@ bool Preprocessor::SetCodeCompletionPoint(const FileEntry *File,
 
 void Preprocessor::CodeCompleteIncludedFile(llvm::StringRef Dir,
                                             bool IsAngled) {
+  setCodeCompletionReached();
   if (CodeComplete)
     CodeComplete->CodeCompleteIncludedFile(Dir, IsAngled);
-  setCodeCompletionReached();
 }
 
 void Preprocessor::CodeCompleteNaturalLanguage() {
+  setCodeCompletionReached();
   if (CodeComplete)
     CodeComplete->CodeCompleteNaturalLanguage();
-  setCodeCompletionReached();
 }
 
 /// getSpelling - This method is used to get the spelling of a token into a
@@ -600,7 +604,7 @@ void Preprocessor::EnterMainSourceFile() {
     // Lookup and save the FileID for the through header. If it isn't found
     // in the search path, it's a fatal error.
     const DirectoryLookup *CurDir;
-    const FileEntry *File = LookupFile(
+    Optional<FileEntryRef> File = LookupFile(
         SourceLocation(), PPOpts->PCHThroughHeader,
         /*isAngled=*/false, /*FromDir=*/nullptr, /*FromFile=*/nullptr, CurDir,
         /*SearchPath=*/nullptr, /*RelativePath=*/nullptr,
@@ -612,7 +616,7 @@ void Preprocessor::EnterMainSourceFile() {
       return;
     }
     setPCHThroughHeaderFileID(
-        SourceMgr.createFileID(File, SourceLocation(), SrcMgr::C_User));
+        SourceMgr.createFileID(*File, SourceLocation(), SrcMgr::C_User));
   }
 
   // Skip tokens from the Predefines and if needed the main file.
@@ -798,9 +802,13 @@ static diag::kind getFutureCompatDiagKind(const IdentifierInfo &II,
     return llvm::StringSwitch<diag::kind>(II.getName())
 #define CXX11_KEYWORD(NAME, FLAGS)                                             \
         .Case(#NAME, diag::warn_cxx11_keyword)
-#define CXX2A_KEYWORD(NAME, FLAGS)                                             \
-        .Case(#NAME, diag::warn_cxx2a_keyword)
+#define CXX20_KEYWORD(NAME, FLAGS)                                             \
+        .Case(#NAME, diag::warn_cxx20_keyword)
 #include "clang/Basic/TokenKinds.def"
+        // char8_t is not modeled as a CXX20_KEYWORD because it's not
+        // unconditionally enabled in C++20 mode. (It can be disabled
+        // by -fno-char8_t.)
+        .Case("char8_t", diag::warn_cxx20_keyword)
         ;
 
   llvm_unreachable(
@@ -935,6 +943,9 @@ void Preprocessor::Lex(Token &Result) {
     }
   } while (!ReturnedToken);
 
+  if (Result.is(tok::unknown) && TheModuleLoader.HadFatalFailure)
+    return;
+
   if (Result.is(tok::code_completion) && Result.getIdentifierInfo()) {
     // Remember the identifier before code completion token.
     setCodeCompletionIdentifierInfo(Result.getIdentifierInfo());
@@ -988,8 +999,14 @@ void Preprocessor::Lex(Token &Result) {
 
   LastTokenWasAt = Result.is(tok::at);
   --LexLevel;
-  if (OnToken && LexLevel == 0 && !Result.getFlag(Token::IsReinjected))
-    OnToken(Result);
+
+  if ((LexLevel == 0 || PreprocessToken) &&
+      !Result.getFlag(Token::IsReinjected)) {
+    if (LexLevel == 0)
+      ++TokenCount;
+    if (OnToken)
+      OnToken(Result);
+  }
 }
 
 /// Lex a header-name token (including one formed from header-name-tokens if
@@ -1166,7 +1183,7 @@ bool Preprocessor::LexAfterModuleImport(Token &Result) {
   // Allocate a holding buffer for a sequence of tokens and introduce it into
   // the token stream.
   auto EnterTokens = [this](ArrayRef<Token> Toks) {
-    auto ToksCopy = llvm::make_unique<Token[]>(Toks.size());
+    auto ToksCopy = std::make_unique<Token[]>(Toks.size());
     std::copy(Toks.begin(), Toks.end(), ToksCopy.get());
     EnterTokenStream(std::move(ToksCopy), Toks.size(),
                      /*DisableMacroExpansion*/ true, /*IsReinject*/ false);
@@ -1229,6 +1246,13 @@ bool Preprocessor::LexAfterModuleImport(Token &Result) {
       Suffix[0].setAnnotationValue(Action.ModuleForHeader);
       // FIXME: Call the moduleImport callback?
       break;
+    case ImportAction::Failure:
+      assert(TheModuleLoader.HadFatalFailure &&
+             "This should be an early exit only to a fatal error");
+      Result.setKind(tok::eof);
+      CurLexer->cutOffLexing();
+      EnterTokens(Suffix);
+      return true;
     }
 
     EnterTokens(Suffix);
@@ -1368,7 +1392,7 @@ bool Preprocessor::FinishLexStringLiteral(Token &Result, std::string &String,
     return false;
   }
 
-  String = Literal.GetString();
+  String = std::string(Literal.GetString());
   return true;
 }
 
@@ -1379,7 +1403,9 @@ bool Preprocessor::parseSimpleIntegerLiteral(Token &Tok, uint64_t &Value) {
   StringRef Spelling = getSpelling(Tok, IntegerBuffer, &NumberInvalid);
   if (NumberInvalid)
     return false;
-  NumericLiteralParser Literal(Spelling, Tok.getLocation(), *this);
+  NumericLiteralParser Literal(Spelling, Tok.getLocation(), getSourceManager(),
+                               getLangOpts(), getTargetInfo(),
+                               getDiagnostics());
   if (Literal.hadError || !Literal.isIntegerLiteral() || Literal.hasUDSuffix())
     return false;
   llvm::APInt APVal(64, 0);
@@ -1421,6 +1447,8 @@ bool Preprocessor::HandleComment(Token &result, SourceRange Comment) {
 ModuleLoader::~ModuleLoader() = default;
 
 CommentHandler::~CommentHandler() = default;
+
+EmptylineHandler::~EmptylineHandler() = default;
 
 CodeCompletionHandler::~CodeCompletionHandler() = default;
 

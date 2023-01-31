@@ -190,7 +190,9 @@ else()
 endif()
 
 set(MSVC_INCLUDE "${MSVC_BASE}/include")
+set(ATLMFC_INCLUDE "${MSVC_BASE}/atlmfc/include")
 set(MSVC_LIB "${MSVC_BASE}/lib")
+set(ATLMFC_LIB "${MSVC_BASE}/atlmfc/lib")
 set(WINSDK_INCLUDE "${WINSDK_BASE}/Include/${WINSDK_VER}")
 set(WINSDK_LIB "${WINSDK_BASE}/Lib/${WINSDK_VER}")
 
@@ -230,6 +232,7 @@ endif()
 set(CMAKE_C_COMPILER "${LLVM_NATIVE_TOOLCHAIN}/bin/clang-cl" CACHE FILEPATH "")
 set(CMAKE_CXX_COMPILER "${LLVM_NATIVE_TOOLCHAIN}/bin/clang-cl" CACHE FILEPATH "")
 set(CMAKE_LINKER "${LLVM_NATIVE_TOOLCHAIN}/bin/lld-link" CACHE FILEPATH "")
+set(CMAKE_AR "${LLVM_NATIVE_TOOLCHAIN}/bin/llvm-lib" CACHE FILEPATH "")
 
 # Even though we're cross-compiling, we need some native tools (e.g. llvm-tblgen), and those
 # native tools have to be built before we can start doing the cross-build.  LLVM supports
@@ -245,7 +248,8 @@ set(CROSS_TOOLCHAIN_FLAGS_NATIVE "${_CTF_NATIVE_DEFAULT}" CACHE STRING "")
 set(COMPILE_FLAGS
     -D_CRT_SECURE_NO_WARNINGS
     --target=${TRIPLE_ARCH}-windows-msvc
-    -fms-compatibility-version=19.11
+    -fms-compatibility-version=19.14
+    -imsvc "${ATLMFC_INCLUDE}"
     -imsvc "${MSVC_INCLUDE}"
     -imsvc "${WINSDK_INCLUDE}/ucrt"
     -imsvc "${WINSDK_INCLUDE}/shared"
@@ -282,6 +286,7 @@ set(LINK_FLAGS
     # Prevent CMake from attempting to invoke mt.exe. It only recognizes the slashed form and not the dashed form.
     /manifest:no
 
+    -libpath:"${ATLMFC_LIB}/${WINSDK_ARCH}"
     -libpath:"${MSVC_LIB}/${WINSDK_ARCH}"
     -libpath:"${WINSDK_LIB}/ucrt/${WINSDK_ARCH}"
     -libpath:"${WINSDK_LIB}/um/${WINSDK_ARCH}")

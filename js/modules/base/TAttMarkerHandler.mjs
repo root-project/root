@@ -1,3 +1,4 @@
+import { isObject } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { getColor } from './colors.mjs';
 
@@ -32,7 +33,7 @@ class TAttMarkerHandler {
       this.scale = 1;
       this.stroke = true;
       this.fill = true;
-      this.marker = "";
+      this.marker = '';
       this.ndig = 0;
       this.used = true;
       this.changed = false;
@@ -49,7 +50,7 @@ class TAttMarkerHandler {
      * @param {number} args.size - marker size
      * @param {number} [args.refsize] - when specified and marker size < 1, marker size will be calculated relative to that size */
    setArgs(args) {
-      if ((typeof args == 'object') && (typeof args.fMarkerStyle == 'number')) args = { attr: args };
+      if (isObject(args) && (typeof args.fMarkerStyle == 'number')) args = { attr: args };
 
       if (args.attr) {
          if (args.color === undefined)
@@ -74,7 +75,7 @@ class TAttMarkerHandler {
      * @desc When drawing many elementary points, created path may depend from previously produced markers.
      * @param {number} x - first coordinate
      * @param {number} y - second coordinate
-     * @returns {string} path string */
+     * @return {string} path string */
    create(x, y) {
       if (!this.optimized)
          return `M${(x + this.x0).toFixed(this.ndig)},${(y + this.y0).toFixed(this.ndig)}${this.marker}`;
@@ -83,14 +84,14 @@ class TAttMarkerHandler {
       let xx = Math.round(x), yy = Math.round(y), mv = `M${xx},${yy}`;
       if (this.lastx !== null) {
          if ((xx == this.lastx) && (yy == this.lasty)) {
-            mv = ""; // pathological case, but let exclude it
+            mv = ''; // pathological case, but let exclude it
          } else {
             let m2 = `m${xx-this.lastx},${yy - this.lasty}`;
             if (m2.length < mv.length) mv = m2;
          }
       }
       this.lastx = xx + 1; this.lasty = yy;
-      return mv + "h1";
+      return mv + 'h1';
    }
 
    /** @summary Returns full size of marker */
@@ -121,7 +122,7 @@ class TAttMarkerHandler {
 
       if ((this.style === 1) || (this.style === 777)) {
          this.fill = false;
-         this.marker = "h1";
+         this.marker = 'h1';
          this.size = 1;
          this.optimized = true;
          this.resetPos();
@@ -150,7 +151,7 @@ class TAttMarkerHandler {
 
       switch (shape) {
          case 1: // dot
-            this.marker = "h1";
+            this.marker = 'h1';
             break;
          case 2: // plus
             this.y0 = -size / 2;
@@ -171,11 +172,11 @@ class TAttMarkerHandler {
             break;
          case 6: // small dot
             this.x0 = -1;
-            this.marker = "a1,1,0,1,0,2,0a1,1,0,1,0,-2,0z";
+            this.marker = 'a1,1,0,1,0,2,0a1,1,0,1,0,-2,0z';
             break;
          case 7: // medium dot
             this.x0 = -1.5;
-            this.marker = "a1.5,1.5,0,1,0,3,0a1.5,1.5,0,1,0,-3,0z";
+            this.marker = 'a1.5,1.5,0,1,0,3,0a1.5,1.5,0,1,0,-3,0z';
             break;
          case 25: // square
             this.x0 = this.y0 = -size / 2;
@@ -252,24 +253,22 @@ class TAttMarkerHandler {
    }
 
    /** @summary get stroke color */
-   getStrokeColor() { return this.stroke ? this.color : "none"; }
+   getStrokeColor() { return this.stroke ? this.color : 'none'; }
 
    /** @summary get fill color */
-   getFillColor() { return this.fill ? this.color : "none"; }
+   getFillColor() { return this.fill ? this.color : 'none'; }
 
    /** @summary returns true if marker attributes will produce empty (invisible) output */
-   empty() {
-      return (this.color === 'none') || (!this.fill && !this.stroke);
-   }
+   empty() { return (this.color === 'none') || (!this.fill && !this.stroke); }
 
    /** @summary Apply marker styles to created element */
    apply(selection) {
-      selection.style('stroke', this.stroke ? this.color : "none")
-               .style('fill', this.fill ? this.color : "none");
+      selection.style('stroke', this.stroke ? this.color : 'none')
+               .style('fill', this.fill ? this.color : 'none');
    }
 
    /** @summary Method used when color or pattern were changed with OpenUi5 widgets.
-    * @private */
+     * @private */
    verifyDirectChange(/* painter */) {
       this.change(this.color, parseInt(this.style), parseFloat(this.size));
    }
@@ -282,8 +281,8 @@ class TAttMarkerHandler {
    createSample(svg, width, height, plain) {
       if (plain) svg = d3_select(svg);
       this.resetPos();
-      svg.append("path")
-         .attr("d", this.create(width / 2, height / 2))
+      svg.append('path')
+         .attr('d', this.create(width / 2, height / 2))
          .call(this.func);
    }
 

@@ -56,7 +56,7 @@ public:
       If a value of dim 0 is passed , the dimension of the function is taken from TF1::GetNdim().
       This works only for 2D and 3D (for TF2 and TF3 objects).
    */
-   TUnuranMultiContDist (TF1 * func = 0, unsigned int dim = 0, bool isLogPdf = false);
+   TUnuranMultiContDist (TF1 * func = nullptr, unsigned int dim = 0, bool isLogPdf = false);
 
 
    /**
@@ -101,7 +101,7 @@ public:
       specify un infinite domain in that coordinate
    */
    void SetDomain(const double *xmin, const double *xmax)  {
-      if (xmin == 0 || xmax == 0) return;
+      if (!xmin || !xmax) return;
       fXmin = std::vector<double>(xmin,xmin+NDim());
       fXmax = std::vector<double>(xmax,xmax+NDim());
    }
@@ -117,14 +117,14 @@ public:
       get the distribution lower domain values. Return a null pointer if domain is not defined
    */
    const double * GetLowerDomain() const {
-      if (fXmin.size() == 0 || (  fXmin.size() != fXmax.size() )  ) return 0;
+      if (fXmin.size() == 0 || (  fXmin.size() != fXmax.size() )  ) return nullptr;
       return &fXmin[0];
    }
    /**
       get the distribution upper domain values. Return a null pointer if domain is not defined
    */
    const double * GetUpperDomain() const {
-      if (fXmax.size() == 0 || (  fXmin.size() != fXmax.size() )  ) return 0;
+      if (fXmax.size() == 0 || (  fXmin.size() != fXmax.size() )  ) return nullptr;
       return &fXmax[0];
    }
 
@@ -133,8 +133,8 @@ public:
       get the mode (vector of coordinate positions of the maxima of the distribution)
       If a mode has not defined return a NULL pointer
    */
-   const double * GetMode( ) const {
-      if (fMode.size() == 0  ) return 0;
+   const double * GetMode() const {
+      if (fMode.size() == 0) return nullptr;
       return &fMode.front();
    }
 
@@ -142,12 +142,12 @@ public:
    /**
       flag to control if given function represent the log of a pdf
    */
-   bool IsLogPdf() const {  return fIsLogPdf; }
+   bool IsLogPdf() const { return fIsLogPdf; }
 
    /**
       evaluate the probability density function, used by UnuRan
    */
-   double Pdf ( const double * x) const;
+   double Pdf (const double * x) const;
 
    /**
        evaluate the gradient vector of  the Pdf. Used by UnuRan

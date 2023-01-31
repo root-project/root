@@ -119,7 +119,7 @@ RooCompositeDataStore::~RooCompositeDataStore()
 }
 
 
-RooAbsDataStore* RooCompositeDataStore::reduce(
+std::unique_ptr<RooAbsDataStore> RooCompositeDataStore::reduce(
         RooStringView name, RooStringView title, const RooArgSet& vars, const RooFormulaVar* cutVar,
         const char* cutRange, std::size_t nStart, std::size_t nStop)
 {
@@ -130,11 +130,11 @@ RooAbsDataStore* RooCompositeDataStore::reduce(
   }
 
   // create an empty RooCompositeDataStore
-  auto * out = new RooCompositeDataStore{name, title, varsNoIndex, *_indexCat, std::map<std::string,RooAbsDataStore*>{}};
+  auto out = std::make_unique<RooCompositeDataStore>(name, title, varsNoIndex, *_indexCat, std::map<std::string,RooAbsDataStore*>{});
 
   // fill it with reduced versions of components
   for (const auto& item : _dataMap) {
-    out->_dataMap[item.first] = item.second->reduce(name, title, varsNoIndex, cutVar, cutRange, nStart, nStop);
+    out->_dataMap[item.first] = item.second->reduce(name, title, varsNoIndex, cutVar, cutRange, nStart, nStop).release();
   }
 
   // indiceate component ownership and return

@@ -55,8 +55,8 @@ using namespace std;
 
 TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
                                          TClingClassInfo* ci)
-   : fInterp(interp), fClassInfo(0), fFirstTime(true), fDescend(false),
-     fDecl(0), fIter(0), fBaseInfo(0), fOffset(0L), fClassInfoOwnership(true)
+   : fInterp(interp), fClassInfo(nullptr), fFirstTime(true), fDescend(false),
+     fDecl(nullptr), fIter(nullptr), fBaseInfo(nullptr), fOffset(0L), fClassInfoOwnership(true)
 {
    // Constructs a base class iterator on ci; ci == 0 means global scope (which
    // is meaningless). The derived class info passed in as ci is copied.
@@ -86,8 +86,8 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
 TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
                                          TClingClassInfo* derived,
                                          TClingClassInfo* base)
-   : fInterp(interp), fClassInfo(0), fFirstTime(true), fDescend(false),
-     fDecl(0), fIter(0), fBaseInfo(0), fOffset(0L), fClassInfoOwnership(false)
+   : fInterp(interp), fClassInfo(nullptr), fFirstTime(true), fDescend(false),
+     fDecl(nullptr), fIter(nullptr), fBaseInfo(nullptr), fOffset(0L), fClassInfoOwnership(false)
 {
    // Constructs a single base class base (no iterator) of derived; derived must be != 0.
    // The derived class info is referenced during the lifetime of the TClingBaseClassInfo.
@@ -123,8 +123,8 @@ TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
 }
 
 TClingBaseClassInfo::TClingBaseClassInfo(const TClingBaseClassInfo& rhs)
-   : fInterp(rhs.fInterp), fClassInfo(0), fFirstTime(rhs.fFirstTime),
-     fDescend(rhs.fDescend), fDecl(rhs.fDecl), fIter(rhs.fIter), fBaseInfo(0),
+   : fInterp(rhs.fInterp), fClassInfo(nullptr), fFirstTime(rhs.fFirstTime),
+     fDescend(rhs.fDescend), fDecl(rhs.fDecl), fIter(rhs.fIter), fBaseInfo(nullptr),
      fIterStack(rhs.fIterStack), fOffset(rhs.fOffset), fClassInfoOwnership(true)
 {
    // Copies a base class info including the base and derived class infos.
@@ -156,7 +156,7 @@ TClingBaseClassInfo& TClingBaseClassInfo::operator=(
 TClingClassInfo *TClingBaseClassInfo::GetBase() const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    return fBaseInfo;
 }
@@ -173,7 +173,7 @@ TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo * fromDerivedCla
    // rootcling can trigger this, too, and without CodeGen we cannot use any
    // offset calculation function.
    if (fInterp->isInSyntaxOnlyMode())
-      return 0;
+      return nullptr;
 
    // Get the dedcls for the two classes.
    const clang::RecordDecl* fromDerivedDecl
@@ -181,14 +181,14 @@ TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo * fromDerivedCla
    if (!fromDerivedDecl) {
       ::Error("TClingBaseClassInfo::GenerateBaseOffsetFunction",
             "Offset of non-class %s is ill-defined!", fromDerivedClass->Name());
-      return 0;
+      return nullptr;
    }
    const clang::RecordDecl* toBaseDecl
       = dyn_cast<clang::RecordDecl>(toBaseClass->GetDecl());
    if (!toBaseDecl) {
       ::Error("TClingBaseClassInfo::GenerateBaseOffsetFunction",
             "Offset of non-class %s is ill-defined!", toBaseClass->Name());
-      return 0;
+      return nullptr;
    }
 
    // Make the wrapper name.
@@ -214,7 +214,7 @@ TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo * fromDerivedCla
                                                   QTtoBase, *fInterp);
       //  Write the wrapper code.
       llvm::raw_string_ostream buf(code);
-      buf << "extern \"C\" long " + wrapper_name + "(void* address, bool isDerivedObject) {\n"
+      buf << "extern \"C\" ptrdiff_t " + wrapper_name + "(void* address, bool isDerivedObject) {\n"
       // If the object is not derived, will downcast to toBase first.
           << "  " << fromDerivedClassName << " *fromDerived;"
           << "  if (isDerivedObject) {"
@@ -226,7 +226,7 @@ TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo * fromDerivedCla
           << "    return -1; \n"
           << "  }\n"
           << "  " << toBase_class_name << " *toBase = fromDerived;\n"
-          << "  return ((long)toBase - (long)fromDerived);\n}\n";
+          << "  return ((intptr_t)toBase - (intptr_t)fromDerived);\n}\n";
    }
 
    // If we have a GV then compileFunction will use it; empty code is enough.
@@ -235,7 +235,7 @@ TClingBaseClassInfo::GenerateBaseOffsetFunction(TClingClassInfo * fromDerivedCla
    if (!f) {
       ::Error("TClingBaseClassInfo::GenerateBaseOffsetFunction",
             "Compilation failed!");
-      return 0;
+      return nullptr;
    }
 
    return (OffsetPtrFunc_t) f;
@@ -286,9 +286,9 @@ int TClingBaseClassInfo::InternalNext(int onlyDirect)
          const clang::RecordDecl *RD = llvm::dyn_cast<clang::RecordDecl>(fDecl);
          const clang::ASTRecordLayout &Layout = Context.getASTRecordLayout(RD);
          int64_t offset = Layout.getBaseClassOffset(Base).getQuantity();
-         fOffset += static_cast<long>(offset);
+         fOffset += static_cast<ptrdiff_t>(offset);
          fIterStack.push_back(std::make_pair(std::make_pair(fDecl, fIter),
-                                             static_cast<long>(offset)));
+                                             static_cast<ptrdiff_t>(offset)));
          fDecl = Base;
          fIter = Base->bases_begin();
       }
@@ -312,7 +312,7 @@ int TClingBaseClassInfo::InternalNext(int onlyDirect)
       if (fIter == llvm::dyn_cast<clang::CXXRecordDecl>(fDecl)->bases_end()) {
          // We have reached the end of the direct bases, all done.
          delete fBaseInfo;
-         fBaseInfo = 0;
+         fBaseInfo = nullptr;
          // Iterator is now invalid.
          return 0;
       }
@@ -566,7 +566,7 @@ void TClingBaseClassInfo::FullName(std::string &output, const ROOT::TMetaUtils::
 const char* TClingBaseClassInfo::Name() const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    return fBaseInfo->Name();
 }
@@ -574,7 +574,7 @@ const char* TClingBaseClassInfo::Name() const
 const char* TClingBaseClassInfo::TmpltName() const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    return fBaseInfo->TmpltName();
 }

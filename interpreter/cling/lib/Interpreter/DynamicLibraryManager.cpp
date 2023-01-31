@@ -16,6 +16,7 @@
 #include "llvm/ADT/StringSet.h"
 #include "llvm/BinaryFormat/Magic.h"
 #include "llvm/Support/DynamicLibrary.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
 
 #include <fstream>
@@ -68,11 +69,11 @@ namespace cling {
   /// Example: substFront("@rpath/abc", "@rpath/", "/tmp") -> "/tmp/abc"
   static std::string substFront(llvm::StringRef original, llvm::StringRef pattern,
                                 llvm::StringRef replacement) {
-    if (!original.startswith_lower(pattern))
+    if (!original.startswith_insensitive(pattern))
       return original.str();
     llvm::SmallString<512> result(replacement);
     result.append(original.drop_front(pattern.size()));
-    return result.str();
+    return result.str().str();
   }
 
   ///\returns substitution of all known linker variables in \c original
@@ -167,7 +168,7 @@ namespace cling {
         if (DEBUG > 7) {
           cling::errs() << " ... Found (in RPATH)!\n";
         }
-        return ThisPath.str();
+        return ThisPath.str().str();
       }
     }
     // m_SearchPaths
@@ -182,7 +183,7 @@ namespace cling {
         if (DEBUG > 7) {
           cling::errs() << " ... Found (in SearchPaths)!\n";
         }
-        return ThisPath.str();
+        return ThisPath.str().str();
       }
     }
     // RUNPATH
@@ -197,7 +198,7 @@ namespace cling {
         if (DEBUG > 7) {
           cling::errs() << " ... Found (in RUNPATH)!\n";
         }
-        return ThisPath.str();
+        return ThisPath.str().str();
       }
     }
 
@@ -306,7 +307,7 @@ namespace cling {
     // Subst all known linker variables ($origin, @rpath, etc.)
 #ifdef __APPLE__
     // On MacOS @rpath is preplaced by all paths in RPATH one by one.
-    if (libStem.startswith_lower("@rpath")) {
+    if (libStem.startswith_insensitive("@rpath")) {
       for (auto& P : RPath) {
         std::string result = substFront(libStem, "@rpath", P);
         if (isSharedLibrary(result))
@@ -400,7 +401,7 @@ namespace cling {
     if (!isLibraryLoaded(canonicalLoadedLib))
       return;
 
-    DyLibHandle dyLibHandle = 0;
+    DyLibHandle dyLibHandle = nullptr;
     for (DyLibs::const_iterator I = m_DyLibs.begin(), E = m_DyLibs.end();
          I != E; ++I) {
       if (I->second == canonicalLoadedLib) {
@@ -441,10 +442,6 @@ namespace cling {
         OS << "[system] ";
       OS << Info.Path.c_str() << "\n";
     }
-  }
-
-  void DynamicLibraryManager::ExposeHiddenSharedLibrarySymbols(void* handle) {
-    llvm::sys::DynamicLibrary::addPermanentLibrary(const_cast<void*>(handle));
   }
 
   bool DynamicLibraryManager::isSharedLibrary(llvm::StringRef libFullPath,

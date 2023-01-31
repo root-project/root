@@ -52,7 +52,7 @@ public:
       Int_t  fValue;    // signal value of a digit (can be direct RGBA color)
       void  *fUserData{nullptr}; // user-data for given digit
 
-      DigitBase_t(Int_t v=0) : fValue(v), fUserData(0) {}
+      DigitBase_t(Int_t v=0) : fValue(v), fUserData(nullptr) {}
    };
 
 protected:
@@ -121,7 +121,7 @@ public:
 
    void   DigitId(TObject* id);
    void   DigitId(Int_t n, TObject* id);
-   
+
    Bool_t GetDetIdsAsSecondaryIndices() const     { return fDetIdsAsSecondaryIndices; }
    void   SetDetIdsAsSecondaryIndices(Bool_t o)   { fDetIdsAsSecondaryIndices = o; }
 
@@ -181,8 +181,8 @@ public:
 
    void    NewShapePicked(int shapeId, Int_t selectionId, bool multi);
 
-   
-   bool    RequiresExtraSelectionData() const override { return true; };
+
+   bool    RequiresExtraSelectionData() const override { return GetAlwaysSecSelect(); };
    void    FillExtraSelectionData(nlohmann::json& j, const std::set<int>& secondary_idcs) const override;
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;

@@ -20,6 +20,8 @@
 #include "RtypesCore.h" // for ULong64_t
 #include "TTree.h"
 
+#include <fstream>           // std::ifstream
+#include <nlohmann/json.hpp> // nlohmann::json::parse
 #include <memory>  // for make_shared, allocator, shared_ptr
 #include <ostream> // ostringstream
 #include <stdexcept>
@@ -303,10 +305,10 @@ d.Foreach([] { static int i = 0; std::cout << i++ << std::endl; }); // silly exa
 ~~~
 This is useful to generate simple datasets on the fly: the contents of each event can be specified with Define() (explained below). For example, we have used this method to generate [Pythia](https://pythia.org/) events and write them to disk in parallel (with the Snapshot action).
 
-For data sources other than TTrees and TChains, RDataFrame objects are constructed using ad-hoc factory functions (see e.g. MakeCsvDataFrame(), MakeSqliteDataFrame(), MakeArrowDataFrame()):
+For data sources other than TTrees and TChains, RDataFrame objects are constructed using ad-hoc factory functions (see e.g. FromCSV(), FromSqlite(), FromArrow()):
 
 ~~~{.cpp}
-auto df = ROOT::RDF::MakeCsvDataFrame("input.csv");
+auto df = ROOT::RDF::FromCSV("input.csv");
 // use df as usual
 ~~~
 
@@ -584,6 +586,31 @@ Actions can be **instant** or **lazy**. Instant actions are executed as soon as 
 executed whenever the object they return is accessed for the first time. As a rule of thumb, actions with a return value
 are lazy, the others are instant.
 
+### Return type of a lazy action
+
+When a lazy action is called, it returns a \link ROOT::RDF::RResultPtr ROOT::RDF::RResultPtr<T>\endlink, where T is the
+type of the result of the action. The final result will be stored in the `RResultPtr` and can be retrieved by
+dereferencing it or via its `GetValue` method.
+
+### Actions that return collections
+
+If the type of the return value of an action is a collection, e.g. `std::vector<int>`, you can iterate its elements
+directly through the wrapping `RResultPtr`:
+
+~~~{.cpp}
+ROOT::RDataFrame df{5};
+auto df1 = df.Define("x", []{ return 42; });
+for (const auto &el: df1.Take<int>("x")){
+   std::cout << "Element: " << el << "\n";
+}
+~~~
+
+~~~{.py}
+df = ROOT.RDataFrame(5).Define("x", "42")
+for el in df.Take[int]("x"):
+    print(f"Element: {el}")
+~~~
+
 \anchor distrdf
 ## Distributed execution
 
@@ -612,12 +639,11 @@ h.Draw()
 ~~~
 
 The main goal of this package is to support running any RDataFrame application distributedly. Nonetheless, not all
-RDataFrame operations currently work with this package. The subset that is currently available is:
+parts of the RDataFrame API currently work with this package. The subset that is currently available is:
 - AsNumpy
 - Count
 - Define
 - DefinePerSample
-- Fill
 - Filter
 - Graph
 - Histo[1,2,3]D
@@ -628,7 +654,12 @@ RDataFrame operations currently work with this package. The subset that is curre
 - Profile[1,2,3]D
 - Redefine
 - Snapshot
+- Stats
+- StdDev
 - Sum
+- Systematic variations: Vary and [VariationsFor](\ref ROOT::RDF::Experimental::VariationsFor).
+- Parallel submission of distributed graphs: [RunGraphs](\ref ROOT::RDF::RunGraphs).
+- Information about the dataframe: GetColumnNames.
 
 with support for more operations coming in the future. Data sources other than TTree and TChain (e.g. CSV, RNTuple) are
 currently not supported.
@@ -1005,9 +1036,6 @@ auto maybeRangedDF = MaybeAddRange(df, true);
 The conversion to ROOT::RDF::RNode is cheap, but it will introduce an extra virtual call during the RDataFrame event
 loop (in most cases, the resulting performance impact should be negligible). Python users can perform the conversion with the helper function `ROOT.RDF.AsRNode`.
 
-As a final note, remember that RDataFrame actions do not return another dataframe, but a \link ROOT::RDF::RResultPtr ROOT::RDF::RResultPtr<T>\endlink, where T is the
-type of the result of the action.
-
 \anchor RDFCollections
 ### Storing RDataFrame objects in collections
 
@@ -1234,7 +1262,7 @@ RDataFrame calls into concrete RDataSource implementations to retrieve informati
 and to advance the readers to the desired data entry.
 Some predefined RDataSources are natively provided by ROOT such as the ROOT::RDF::RCsvDS which allows to read comma separated files:
 ~~~{.cpp}
-auto tdf = ROOT::RDF::MakeCsvDataFrame("MuRun2010B.csv");
+auto tdf = ROOT::RDF::FromCSV("MuRun2010B.csv");
 auto filteredEvents =
    tdf.Filter("Q1 * Q2 == -1")
       .Define("m", "sqrt(pow(E1 + E2, 2) - (pow(px1 + px2, 2) + pow(py1 + py2, 2) + pow(pz1 + pz2, 2)))");
@@ -1242,7 +1270,7 @@ auto h = filteredEvents.Histo1D("m");
 h->Draw();
 ~~~
 
-See also MakeNumpyDataFrame (Python-only), MakeNTupleDataFrame(), MakeArrowDataFrame(), MakeSqliteDataFrame().
+See also FromNumpy (Python-only), FromRNTuple(), FromArrow(), FromSqlite().
 
 \anchor callgraphs
 ### Computation graphs (storing and reusing sets of transformations)
@@ -1359,9 +1387,9 @@ RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob,
 {
    const std::string treeNameInt(treeName);
    const std::string filenameglobInt(filenameglob);
-   auto chain = std::make_shared<TChain>(treeNameInt.c_str());
+   auto chain = std::make_shared<TChain>(treeNameInt.c_str(), "", TChain::kWithoutGlobalRegistration);
    chain->Add(filenameglobInt.c_str());
-   GetProxiedPtr()->SetTree(chain);
+   GetProxiedPtr()->SetTree(std::move(chain));
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1380,10 +1408,10 @@ RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string>
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultColumns))
 {
    std::string treeNameInt(treeName);
-   auto chain = std::make_shared<TChain>(treeNameInt.c_str());
+   auto chain = std::make_shared<TChain>(treeNameInt.c_str(), "", TChain::kWithoutGlobalRegistration);
    for (auto &f : fileglobs)
       chain->Add(f.c_str());
-   GetProxiedPtr()->SetTree(chain);
+   GetProxiedPtr()->SetTree(std::move(chain));
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1442,6 +1470,59 @@ RDataFrame::RDataFrame(ROOT::RDF::Experimental::RDatasetSpec spec)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(std::move(spec)))
 {
 }
+
+namespace RDF {
+namespace Experimental {
+
+ROOT::RDataFrame FromSpec(const std::string &jsonFile)
+{
+   const nlohmann::json fullData = nlohmann::json::parse(std::ifstream(jsonFile));
+   RDatasetSpec spec;
+
+   for (const auto &groups : fullData["groups"]) {
+      std::string tag = groups["tag"];
+      // TODO: if requested in https://github.com/root-project/root/issues/11624
+      // allow union-like types for trees and files, see: https://github.com/nlohmann/json/discussions/3815
+      std::vector<std::string> trees = groups["trees"];
+      std::vector<std::string> files = groups["files"];
+      RMetaData m;
+      for (const auto &metadata : groups["metadata"].items()) {
+         const auto &val = metadata.value();
+         if (val.is_string())
+            m.Add(metadata.key(), val.get<std::string>());
+         else if (val.is_number_integer())
+            m.Add(metadata.key(), val.get<int>());
+         else if (val.is_number_float())
+            m.Add(metadata.key(), val.get<double>());
+         else
+            throw std::logic_error("The metadata keys can only be of type [string|int|double].");
+      }
+      spec.AddGroup(RDatasetGroup{tag, trees, files, m});
+   }
+   if (fullData.contains("friends")) {
+      for (const auto &friends : fullData["friends"].items()) {
+         std::string alias = friends.key();
+         std::vector<std::string> trees = friends.value()["trees"];
+         std::vector<std::string> files = friends.value()["files"];
+         if (files.size() != trees.size() && trees.size() > 1)
+            throw std::runtime_error("Mismatch between trees and files in a friend.");
+         spec.WithGlobalFriends(trees, files, alias);
+      }
+   }
+
+   if (fullData.contains("range")) {
+      std::vector<int> range = fullData["range"];
+
+      if (range.size() == 1)
+         spec.WithGlobalRange({range[0]});
+      else if (range.size() == 2)
+         spec.WithGlobalRange({range[0], range[1]});
+   }
+   return ROOT::RDataFrame(spec);
+}
+
+} // namespace Experimental
+} // namespace RDF
 
 } // namespace ROOT
 

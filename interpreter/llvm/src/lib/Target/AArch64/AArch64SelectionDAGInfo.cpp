@@ -17,7 +17,7 @@ using namespace llvm;
 
 SDValue AArch64SelectionDAGInfo::EmitTargetCodeForMemset(
     SelectionDAG &DAG, const SDLoc &dl, SDValue Chain, SDValue Dst, SDValue Src,
-    SDValue Size, unsigned Align, bool isVolatile,
+    SDValue Size, Align Alignment, bool isVolatile,
     MachinePointerInfo DstPtrInfo) const {
   // Check to see if there is a specialized entry-point for memory zeroing.
   ConstantSDNode *V = dyn_cast<ConstantSDNode>(Src);
@@ -32,7 +32,7 @@ SDValue AArch64SelectionDAGInfo::EmitTargetCodeForMemset(
     const AArch64TargetLowering &TLI = *STI.getTargetLowering();
 
     EVT IntPtr = TLI.getPointerTy(DAG.getDataLayout());
-    Type *IntPtrTy = DAG.getDataLayout().getIntPtrType(*DAG.getContext());
+    Type *IntPtrTy = Type::getInt8PtrTy(*DAG.getContext());
     TargetLowering::ArgListTy Args;
     TargetLowering::ArgListEntry Entry;
     Entry.Node = Dst;
@@ -51,10 +51,6 @@ SDValue AArch64SelectionDAGInfo::EmitTargetCodeForMemset(
     return CallResult.second;
   }
   return SDValue();
-}
-bool AArch64SelectionDAGInfo::generateFMAsInMachineCombiner(
-    CodeGenOpt::Level OptLevel) const {
-  return OptLevel >= CodeGenOpt::Aggressive;
 }
 
 static const int kSetTagLoopThreshold = 176;
@@ -82,7 +78,8 @@ static SDValue EmitUnrolledSetTag(SelectionDAG &DAG, const SDLoc &dl,
   unsigned OffsetScaled = 0;
   while (OffsetScaled < ObjSizeScaled) {
     if (ObjSizeScaled - OffsetScaled >= 2) {
-      SDValue AddrNode = DAG.getMemBasePlusOffset(Ptr, OffsetScaled * 16, dl);
+      SDValue AddrNode =
+          DAG.getMemBasePlusOffset(Ptr, TypeSize::Fixed(OffsetScaled * 16), dl);
       SDValue St = DAG.getMemIntrinsicNode(
           OpCode2, dl, DAG.getVTList(MVT::Other),
           {Chain, TagSrc, AddrNode},
@@ -94,7 +91,8 @@ static SDValue EmitUnrolledSetTag(SelectionDAG &DAG, const SDLoc &dl,
     }
 
     if (ObjSizeScaled - OffsetScaled > 0) {
-      SDValue AddrNode = DAG.getMemBasePlusOffset(Ptr, OffsetScaled * 16, dl);
+      SDValue AddrNode =
+          DAG.getMemBasePlusOffset(Ptr, TypeSize::Fixed(OffsetScaled * 16), dl);
       SDValue St = DAG.getMemIntrinsicNode(
           OpCode1, dl, DAG.getVTList(MVT::Other),
           {Chain, TagSrc, AddrNode},
@@ -117,7 +115,7 @@ SDValue AArch64SelectionDAGInfo::EmitTargetCodeForSetTag(
 
   MachineFunction &MF = DAG.getMachineFunction();
   MachineMemOperand *BaseMemOperand = MF.getMachineMemOperand(
-      DstPtrInfo, MachineMemOperand::MOStore, ObjSize, 16);
+      DstPtrInfo, MachineMemOperand::MOStore, ObjSize, Align(16));
 
   bool UseSetTagRangeLoop =
       kSetTagLoopThreshold >= 0 && (int)ObjSize >= kSetTagLoopThreshold;
@@ -125,21 +123,18 @@ SDValue AArch64SelectionDAGInfo::EmitTargetCodeForSetTag(
     return EmitUnrolledSetTag(DAG, dl, Chain, Addr, ObjSize, BaseMemOperand,
                               ZeroData);
 
-  if (ObjSize % 32 != 0) {
-    SDNode *St1 = DAG.getMachineNode(
-        ZeroData ? AArch64::STZGPostIndex : AArch64::STGPostIndex, dl,
-        {MVT::i64, MVT::Other},
-        {Addr, Addr, DAG.getTargetConstant(1, dl, MVT::i64), Chain});
-    DAG.setNodeMemRefs(cast<MachineSDNode>(St1), {BaseMemOperand});
-    ObjSize -= 16;
-    Addr = SDValue(St1, 0);
-    Chain = SDValue(St1, 1);
-  }
-
   const EVT ResTys[] = {MVT::i64, MVT::i64, MVT::Other};
-  SDValue Ops[] = {DAG.getConstant(ObjSize, dl, MVT::i64), Addr, Chain};
-  SDNode *St = DAG.getMachineNode(
-      ZeroData ? AArch64::STZGloop : AArch64::STGloop, dl, ResTys, Ops);
+
+  unsigned Opcode;
+  if (Addr.getOpcode() == ISD::FrameIndex) {
+    int FI = cast<FrameIndexSDNode>(Addr)->getIndex();
+    Addr = DAG.getTargetFrameIndex(FI, MVT::i64);
+    Opcode = ZeroData ? AArch64::STZGloop : AArch64::STGloop;
+  } else {
+    Opcode = ZeroData ? AArch64::STZGloop_wback : AArch64::STGloop_wback;
+  }
+  SDValue Ops[] = {DAG.getTargetConstant(ObjSize, dl, MVT::i64), Addr, Chain};
+  SDNode *St = DAG.getMachineNode(Opcode, dl, ResTys, Ops);
 
   DAG.setNodeMemRefs(cast<MachineSDNode>(St), {BaseMemOperand});
   return SDValue(St, 2);

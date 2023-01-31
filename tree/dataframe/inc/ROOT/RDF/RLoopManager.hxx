@@ -124,6 +124,12 @@ class RLoopManager : public RNodeBase {
    std::shared_ptr<TTree> fTree{nullptr};
    Long64_t fBeginEntry{0};
    Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
+
+   /// Keys are `fname + "/" + treename` as RSampleInfo::fID; Values are pointers to the corresponding group
+   std::unordered_map<std::string, ROOT::RDF::Experimental::RDatasetGroup *> fDatasetGroupMap;
+   /// Groups need to survive throughout the whole event loop, hence stored as an attribute
+   std::vector<ROOT::RDF::Experimental::RDatasetGroup> fDatasetGroups;
+
    std::vector<std::unique_ptr<TTree>> fFriends; ///< Friends of the fTree. Only used if we constructed fTree ourselves.
    const ColumnNames_t fDefaultColumns;
    const ULong64_t fNEmptyEntries{0};
@@ -176,7 +182,7 @@ public:
    void JitDeclarations();
    void Jit();
    RLoopManager *GetLoopManagerUnchecked() final { return this; }
-   void Run();
+   void Run(bool jit = true);
    const ColumnNames_t &GetDefaultColumnNames() const;
    TTree *GetTree() const;
    ::TDirectory *GetDirectory() const;
@@ -211,7 +217,7 @@ public:
    RColumnReaderBase *GetDatasetColumnReader(unsigned int slot, const std::string &col, const std::type_info &ti) const;
 
    /// End of recursive chain of calls, does nothing
-   void AddFilterName(std::vector<std::string> &) {}
+   void AddFilterName(std::vector<std::string> &) final {}
    /// For each booked filter, returns either the name or "Unnamed Filter"
    std::vector<std::string> GetFiltersNames();
 
@@ -223,7 +229,7 @@ public:
    std::vector<RDFInternal::RActionBase *> GetAllActions() const;
 
    std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>
-   GetGraph(std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap);
+   GetGraph(std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap) final;
 
    const ColumnNames_t &GetBranchNames();
 

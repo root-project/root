@@ -7,7 +7,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/BinaryFormat/Magic.h"
-
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/BinaryFormat/COFF.h"
 #include "llvm/BinaryFormat/ELF.h"
 #include "llvm/BinaryFormat/MachO.h"
@@ -68,6 +69,11 @@ file_magic llvm::identify_magic(StringRef Magic) {
       return file_magic::xcoff_object_32;
     if (startswith(Magic, "\x01\xF7"))
       return file_magic::xcoff_object_64;
+    break;
+
+  case 0x03:
+    if (startswith(Magic, "\x03\xF0\x00"))
+      return file_magic::goff_object;
     break;
 
   case 0xDE: // 0x0B17C0DE = BC wraper
@@ -210,6 +216,11 @@ file_magic llvm::identify_magic(StringRef Magic) {
       return file_magic::coff_object;
     break;
 
+  case 0x2d: // YAML '-'
+    if (startswith(Magic, "--- !tapi") || startswith(Magic, "---\narchs:"))
+      return file_magic::tapi_file;
+    break;
+
   default:
     break;
   }
@@ -217,7 +228,8 @@ file_magic llvm::identify_magic(StringRef Magic) {
 }
 
 std::error_code llvm::identify_magic(const Twine &Path, file_magic &Result) {
-  auto FileOrError = MemoryBuffer::getFile(Path, -1LL, false);
+  auto FileOrError = MemoryBuffer::getFile(Path, /*IsText=*/false,
+                                           /*RequiresNullTerminator=*/false);
   if (!FileOrError)
     return FileOrError.getError();
 

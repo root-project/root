@@ -28,14 +28,14 @@ namespace Math {
 template<class MultiFuncType>
 struct EvaluatorOneDim {
    // evaluate function (in general case no param)
-   static double F (MultiFuncType f, const double * x, const double *  = 0 ) {
+   static double F (MultiFuncType f, const double * x, const double *  = nullptr ) {
       return f( x );
    }
 };
 // specialized for param functions
 template<>
 struct EvaluatorOneDim< const ROOT::Math::IParamMultiFunction &> {
-   static double F ( const ROOT::Math::IParamMultiFunction &  f, const double * x, const double * p = 0 ) {
+   static double F ( const ROOT::Math::IParamMultiFunction &  f, const double * x, const double * p = nullptr ) {
       return f( x, p );
    }
 };
@@ -62,7 +62,7 @@ public:
       Constructor from the function object , pointer to an external array of x values
       and coordinate we want to adapt
    */
-   OneDimMultiFunctionAdapter (MultiFuncType f, const double * x, unsigned int icoord =0, const double * p = 0 ) :
+   OneDimMultiFunctionAdapter (MultiFuncType f, const double * x, unsigned int icoord = 0, const double * p = nullptr ) :
       fFunc(f),
       fX( const_cast<double *>(x) ), // wee need to modify x but then we restore it as before
       fParams(p),
@@ -70,7 +70,7 @@ public:
       fDim(0),
       fOwn(false)
    {
-      assert(fX != 0);
+      assert(fX != nullptr);
    }
    /**
       Constructor from the function object , dimension of the function and
@@ -78,9 +78,9 @@ public:
       The coordinate cached vector is created inside and eventually the values must be passed
       later with the SetX which will copy them
    */
-   OneDimMultiFunctionAdapter (MultiFuncType f, unsigned int dim = 1, unsigned int icoord =0, const double * p = 0 ) :
+   OneDimMultiFunctionAdapter (MultiFuncType f, unsigned int dim = 1, unsigned int icoord = 0, const double *p = nullptr) :
       fFunc(f),
-      fX(0 ),
+      fX(nullptr),
       fParams(p),
       fCoord(icoord),
       fDim(dim),
@@ -224,8 +224,8 @@ public:
       fParams(p),
       fIpar(ipar)
    {
-      assert(fX != 0);
-      assert(fParams != 0);
+      assert(fX != nullptr);
+      assert(fParams != nullptr);
    }
 
    /**
@@ -267,8 +267,6 @@ private:
    unsigned int fIpar;
 
 };
-
-
 
 
 } // end namespace Math

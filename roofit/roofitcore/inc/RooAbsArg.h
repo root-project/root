@@ -24,6 +24,7 @@
 #include "RooAbsCache.h"
 #include "RooNameReg.h"
 #include "RooLinkedListIter.h"
+#include <RooFit/Detail/NormalizationHelpers.h>
 #include <RooStringView.h>
 
 #include <deque>
@@ -80,7 +81,7 @@ public:
   RooAbsArg(const RooAbsArg& other, const char* name=nullptr) ;
   RooAbsArg& operator=(const RooAbsArg& other) = delete;
   virtual TObject* clone(const char* newname=nullptr) const = 0 ;
-  TObject* Clone(const char* newname = 0) const override {
+  TObject* Clone(const char* newname = nullptr) const override {
     return clone(newname && newname[0] != '\0' ? newname : nullptr);
   }
   virtual RooAbsArg* cloneTree(const char* newname=nullptr) const ;
@@ -266,7 +267,9 @@ public:
 
   void addServer(RooAbsArg& server, bool valueProp=true, bool shapeProp=false, std::size_t refCount = 1);
   void addServerList(RooAbsCollection& serverList, bool valueProp=true, bool shapeProp=false) ;
-  void replaceServer(RooAbsArg& oldServer, RooAbsArg& newServer, bool valueProp, bool shapeProp) ;
+  void
+  R__SUGGEST_ALTERNATIVE("This interface is unsafe! Use RooAbsArg::redirectServers()")
+  replaceServer(RooAbsArg& oldServer, RooAbsArg& newServer, bool valueProp, bool shapeProp) ;
   void changeServer(RooAbsArg& server, bool valueProp, bool shapeProp) ;
   void removeServer(RooAbsArg& server, bool force=false) ;
   RooAbsArg *findNewServer(const RooAbsCollection &newSet, bool nameChange) const;
@@ -318,7 +321,7 @@ public:
 
   /// Print the object to the defaultPrintStream().
   /// \param[in] options **V** print verbose. **T** print a tree structure with all children.
-  void Print(Option_t *options= 0) const override {
+  void Print(Option_t *options= nullptr) const override {
     // Printing interface (human readable)
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
@@ -495,7 +498,7 @@ public:
   void setShapeDirty() { setShapeDirty(nullptr); }
 
   const char* aggregateCacheUniqueSuffix() const ;
-  virtual const char* cacheUniqueSuffix() const { return 0 ; }
+  virtual const char* cacheUniqueSuffix() const { return nullptr ; }
 
   void wireAllCaches() ;
 
@@ -549,6 +552,7 @@ public:
   void setProhibitServerRedirect(bool flag) { _prohibitServerRedirect = flag ; }
 
   void setWorkspace(RooWorkspace &ws) { _myws = &ws; }
+  inline RooWorkspace* workspace() const { return _myws; }
 
   RooAbsProxy* getProxy(Int_t index) const ;
   Int_t numProxies() const ;
@@ -577,7 +581,7 @@ public:
 
   virtual void applyWeightSquared(bool flag);
 
-  virtual std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server) const;
+  virtual std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const;
 
   virtual bool isCategory() const { return false; }
 
@@ -622,6 +626,7 @@ private:
 
 
  protected:
+  friend class RooAbsReal;
 
   // Client-Server relation and Proxy management
   friend class RooAbsCollection ;
@@ -717,7 +722,7 @@ private:
 
   mutable bool _prohibitServerRedirect ; //! Prohibit server redirects -- Debugging tool
 
-  mutable RooExpensiveObjectCache* _eocache{nullptr}; // Pointer to global cache manager for any expensive components created by this object
+  mutable RooExpensiveObjectCache* _eocache{nullptr}; //! Pointer to global cache manager for any expensive components created by this object
 
   mutable const TNamed * _namePtr ; //! De-duplicated name pointer. This will be equal for all objects with the same name.
   bool _isConstant ; //! Cached isConstant status
@@ -741,7 +746,7 @@ private:
   static std::stack<RooAbsArg*> _ioReadStack ; // reading stack
   /// \endcond
 
-  ClassDefOverride(RooAbsArg,8) // Abstract variable
+  ClassDefOverride(RooAbsArg,9) // Abstract variable
 };
 
 std::ostream& operator<<(std::ostream& os, const RooAbsArg &arg);

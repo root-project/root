@@ -87,9 +87,9 @@ double RooMath::interpolate(double ya[], Int_t n, double x)
    double den, dif, dift /*,ho,hp,w*/, y, dy;
    double c[20], d[20];
 
-   dif = fabs(x);
+   dif = std::abs(x);
    for (i = 1; i <= n; i++) {
-      if ((dift = fabs(x - itod[i - 1])) < dif) {
+      if ((dift = std::abs(x - itod[i - 1])) < dif) {
          ns = i;
          dif = dift;
       }
@@ -121,9 +121,9 @@ double RooMath::interpolate(double xa[], double ya[], Int_t n, double x)
    double den, dif, dift, ho, hp, w, y, dy;
    double c[20], d[20];
 
-   dif = fabs(x - xa[0]);
+   dif = std::abs(x - xa[0]);
    for (i = 1; i <= n; i++) {
-      if ((dift = fabs(x - xa[i - 1])) < dif) {
+      if ((dift = std::abs(x - xa[i - 1])) < dif) {
          ns = i;
          dif = dift;
       }

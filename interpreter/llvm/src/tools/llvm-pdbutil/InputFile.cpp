@@ -66,12 +66,13 @@ getModuleDebugStream(PDBFile &File, StringRef &ModuleName, uint32_t Index) {
 static inline bool isCodeViewDebugSubsection(object::SectionRef Section,
                                              StringRef Name,
                                              BinaryStreamReader &Reader) {
-  StringRef SectionName;
-  if (Section.getName(SectionName))
+  if (Expected<StringRef> NameOrErr = Section.getName()) {
+    if (*NameOrErr != Name)
+      return false;
+  } else {
+    consumeError(NameOrErr.takeError());
     return false;
-
-  if (SectionName != Name)
-    return false;
+  }
 
   Expected<StringRef> ContentsOrErr = Section.getContents();
   if (!ContentsOrErr) {
@@ -287,7 +288,8 @@ Expected<InputFile> InputFile::open(StringRef Path, bool AllowUnknownFile) {
         formatv("File {0} is not a supported file type", Path),
         inconvertibleErrorCode());
 
-  auto Result = MemoryBuffer::getFile(Path, -1LL, false);
+  auto Result = MemoryBuffer::getFile(Path, /*IsText=*/false,
+                                      /*RequiresNullTerminator=*/false);
   if (!Result)
     return make_error<StringError>(
         formatv("File {0} could not be opened", Path), Result.getError());
@@ -384,7 +386,7 @@ InputFile::getOrCreateTypeCollection(TypeCollectionKind Kind) {
     uint32_t Count = Stream.getNumTypeRecords();
     auto Offsets = Stream.getTypeIndexOffsets();
     Collection =
-        llvm::make_unique<LazyRandomTypeCollection>(Array, Count, Offsets);
+        std::make_unique<LazyRandomTypeCollection>(Array, Count, Offsets);
     return *Collection;
   }
 
@@ -397,11 +399,11 @@ InputFile::getOrCreateTypeCollection(TypeCollectionKind Kind) {
     if (!isDebugTSection(Section, Records))
       continue;
 
-    Types = llvm::make_unique<LazyRandomTypeCollection>(Records, 100);
+    Types = std::make_unique<LazyRandomTypeCollection>(Records, 100);
     return *Types;
   }
 
-  Types = llvm::make_unique<LazyRandomTypeCollection>(100);
+  Types = std::make_unique<LazyRandomTypeCollection>(100);
   return *Types;
 }
 

@@ -187,6 +187,12 @@ RooHistPdf::~RooHistPdf()
 
 }
 
+RooDataHist* RooHistPdf::cloneAndOwnDataHist(const char* newname) {
+   if (_ownedDataHist) return _ownedDataHist.get();
+   _ownedDataHist.reset(static_cast<RooDataHist*>(_dataHist->Clone(newname)));
+   _dataHist = _ownedDataHist.get();
+   return _dataHist;
+}
 
 void RooHistPdf::computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
 
@@ -384,18 +390,30 @@ double RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 
 std::list<double>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
+  return plotSamplingHint(*_dataHist, _pdfObsList, _histObsList, _intOrder, obs, xlo, xhi);
+}
+
+
+std::list<double>* RooHistPdf::plotSamplingHint(RooDataHist const& dataHist,
+                                                RooArgSet const& pdfObsList,
+                                                RooArgSet const& histObsList,
+                                                int intOrder,
+                                                RooAbsRealLValue& obs,
+                                                double xlo,
+                                                double xhi)
+{
   // No hints are required when interpolation is used
-  if (_intOrder>0) {
-    return 0 ;
+  if (intOrder>0) {
+    return nullptr;
   }
 
   // Check that observable is in dataset, if not no hint is generated
   RooAbsArg* dhObs = nullptr;
-  for (unsigned int i=0; i < _pdfObsList.size(); ++i) {
-    RooAbsArg* histObs = _histObsList[i];
-    RooAbsArg* pdfObs = _pdfObsList[i];
+  for (unsigned int i=0; i < pdfObsList.size(); ++i) {
+    RooAbsArg* histObs = histObsList[i];
+    RooAbsArg* pdfObs = pdfObsList[i];
     if (std::string(obs.GetName())==pdfObs->GetName()) {
-      dhObs = _dataHist->get()->find(histObs->GetName()) ;
+      dhObs = dataHist.get()->find(histObs->GetName()) ;
       break;
     }
   }
@@ -410,29 +428,28 @@ std::list<double>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, double xl
 
   // Retrieve position of all bin boundaries
 
-  const RooAbsBinning* binning = lval->getBinningPtr(0) ;
-  double* boundaries = binning->array() ;
+  const RooAbsBinning* binning = lval->getBinningPtr(nullptr);
+  std::span<double> boundaries{binning->array(), static_cast<std::size_t>(binning->numBoundaries())};
 
   auto hint = new std::list<double> ;
 
-  // Widen range slighty
-  xlo = xlo - 0.01*(xhi-xlo) ;
-  xhi = xhi + 0.01*(xhi-xlo) ;
+  const double delta = (xhi-xlo)*1e-8 ;
 
-  double delta = (xhi-xlo)*1e-8 ;
+  // Sample points right next to the plot limits
+  hint->push_back(xlo + delta);
+  hint->push_back(xhi - delta);
 
-  // Construct array with pairs of points positioned epsilon to the left and
-  // right of the bin boundaries
-  for (Int_t i=0 ; i<binning->numBoundaries() ; i++) {
-    if (boundaries[i]>=xlo && boundaries[i]<=xhi) {
-      hint->push_back(boundaries[i]-delta) ;
-      hint->push_back(boundaries[i]+delta) ;
+  // Sample points very close to the left and right of the bin boundaries that
+  // are strictly in between the plot limits.
+  for (const double x : boundaries) {
+    if (x - xlo > delta && xhi - x > delta) {
+      hint->push_back(x - delta);
+      hint->push_back(x + delta);
     }
   }
 
   return hint ;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -509,12 +526,12 @@ double RooHistPdf::maxVal(Int_t code) const
 
 bool RooHistPdf::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2)
 {
-  if (fabs(dh1.sumEntries()-dh2.sumEntries())>1e-8) return false ;
+  if (std::abs(dh1.sumEntries()-dh2.sumEntries())>1e-8) return false ;
   if (dh1.numEntries() != dh2.numEntries()) return false ;
   for (int i=0 ; i < dh1.numEntries() ; i++) {
     dh1.get(i) ;
     dh2.get(i) ;
-    if (fabs(dh1.weight()-dh2.weight())>1e-8) return false ;
+    if (std::abs(dh1.weight()-dh2.weight())>1e-8) return false ;
   }
   return true ;
 }

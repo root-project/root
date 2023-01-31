@@ -1,6 +1,6 @@
-import { BIT, create, createHistogram } from '../core.mjs';
+import { BIT, create, createHistogram, isStr, clTH1, clTH2 } from '../core.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
-import { TGraphPainter } from '../hist2d/TGraphPainter.mjs';
+import { TGraphPainter, clTGraphAsymmErrors } from '../hist2d/TGraphPainter.mjs';
 import { TF1Painter } from '../hist/TF1Painter.mjs';
 import { TH2Painter } from '../hist2d/TH2Painter.mjs';
 import { getTEfficiencyBoundaryFunc } from '../base/math.mjs';
@@ -46,7 +46,7 @@ class TEfficiencyPainter extends ObjectPainter {
 
          let aa,bb;
          if(obj.TestBit(kUseWeights)) {
-            let tw =  total, // fTotalHistogram->GetBinContent(bin);
+            let tw = total, // fTotalHistogram->GetBinContent(bin);
                 tw2 = obj.fTotalHistogram.fSumw2 ? obj.fTotalHistogram.fSumw2[bin] : Math.abs(total),
                 pw = passed; // fPassedHistogram->GetBinContent(bin);
 
@@ -54,8 +54,8 @@ class TEfficiencyPainter extends ObjectPainter {
 
             // tw/tw2 renormalize the weights
             let norm = tw/tw2;
-            aa =  pw * norm + alpha;
-            bb =  (tw - pw) * norm + beta;
+            aa = pw * norm + alpha;
+            bb = (tw - pw) * norm + beta;
          } else {
             aa = passed + alpha;
             bb = total - passed + beta;
@@ -103,8 +103,8 @@ class TEfficiencyPainter extends ObjectPainter {
 
    /** @summary Create graph for the drawing of 1-dim TEfficiency */
    createGraph(/*eff*/) {
-      let gr = create('TGraphAsymmErrors');
-      gr.fName = "eff_graph";
+      let gr = create(clTGraphAsymmErrors);
+      gr.fName = 'eff_graph';
       return gr;
    }
 
@@ -115,7 +115,7 @@ class TEfficiencyPainter extends ObjectPainter {
             hist = createHistogram('TH2F', nbinsx, nbinsy);
       Object.assign(hist.fXaxis, eff.fTotalHistogram.fXaxis);
       Object.assign(hist.fYaxis, eff.fTotalHistogram.fYaxis);
-      hist.fName = "eff_histo";
+      hist.fName = 'eff_histo';
       return hist;
    }
 
@@ -124,7 +124,7 @@ class TEfficiencyPainter extends ObjectPainter {
       const eff = this.getObject(),
             xaxis = eff.fTotalHistogram.fXaxis,
             npoints = xaxis.fNbins,
-            plot0Bins = (opt.indexOf("e0") >= 0);
+            plot0Bins = (opt.indexOf('e0') >= 0);
 
       for (let n = 0, j = 0; n < npoints; ++n) {
          if (!plot0Bins && eff.fTotalHistogram.getBinContent(n+1) === 0) continue;
@@ -175,17 +175,17 @@ class TEfficiencyPainter extends ObjectPainter {
    }
 
    /** @summary Draw TEfficiency object */
-   static draw(dom, eff, opt) {
+   static async draw(dom, eff, opt) {
       if (!eff || !eff.fTotalHistogram)
          return null;
 
-      if (!opt || (typeof opt != 'string')) opt = "";
+      if (!opt || !isStr(opt)) opt = '';
       opt = opt.toLowerCase();
 
       let ndim = 0;
-      if (eff.fTotalHistogram._typename.indexOf("TH1") == 0)
+      if (eff.fTotalHistogram._typename.indexOf(clTH1) == 0)
          ndim = 1;
-      else if (eff.fTotalHistogram._typename.indexOf("TH2") == 0)
+      else if (eff.fTotalHistogram._typename.indexOf(clTH2) == 0)
          ndim = 2;
       else
          return null;
@@ -198,15 +198,15 @@ class TEfficiencyPainter extends ObjectPainter {
       let promise;
 
       if (ndim == 1) {
-         if (!opt) opt = "ap";
-         if ((opt.indexOf("same") < 0) && (opt.indexOf("a") < 0)) opt += "a";
-         if (opt.indexOf("p") < 0) opt += "p";
+         if (!opt) opt = 'ap';
+         if ((opt.indexOf('same') < 0) && (opt.indexOf('a') < 0)) opt += 'a';
+         if (opt.indexOf('p') < 0) opt += 'p';
 
          let gr = painter.createGraph(eff);
          painter.fillGraph(gr, opt);
          promise = TGraphPainter.draw(dom, gr, opt);
       } else {
-         if (!opt) opt = "col";
+         if (!opt) opt = 'col';
          let hist = painter.createHisto(eff);
          painter.fillHisto(hist, opt);
          promise = TH2Painter.draw(dom, hist, opt);

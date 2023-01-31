@@ -30,7 +30,7 @@ public:
   RooChangeTracker(const char *name, const char *title, const RooArgSet& trackSet, bool checkValues=false) ;
   ~RooChangeTracker() override ;
 
-  RooChangeTracker(const RooChangeTracker& other, const char* name = 0);
+  RooChangeTracker(const RooChangeTracker& other, const char* name = nullptr);
   TObject* clone(const char* newname) const override { return new RooChangeTracker(*this, newname); }
 
   bool hasChanged(bool clearState) ;

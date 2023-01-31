@@ -29,7 +29,7 @@ public:
   RooFracRemainder() {}
   RooFracRemainder(const char *name, const char *title, const RooArgSet& sumSet) ;
 
-  RooFracRemainder(const RooFracRemainder& other, const char* name = 0);
+  RooFracRemainder(const RooFracRemainder& other, const char* name = nullptr);
   TObject* clone(const char* newname) const override { return new RooFracRemainder(*this, newname); }
 
 protected:

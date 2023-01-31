@@ -1,33 +1,31 @@
-#include "RooRealVar.h"
-#include "RooConstVar.h"
-#include "RooWorkspace.h"
+// Tests for the RooJSONFactoryWSTool
+// Authors: Carsten D. Burgard, DESY/ATLAS, 12/2021
+//          Jonas Rembser, CERN 12/2022
 
-#include "TROOT.h"
-
+#include <RooFitHS3/JSONIO.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
-#include "gtest/gtest.h"
+#include <RooRealVar.h>
+#include <RooConstVar.h>
+#include <RooWorkspace.h>
+#include <RooGlobalFunc.h>
+#include <RooArgusBG.h>
+#include <RooGaussian.h>
+#include <RooAddPdf.h>
+#include <RooRealVar.h>
+#include <RooSimultaneous.h>
+#include <RooProdPdf.h>
+#include <RooCategory.h>
 
-#include "RooGlobalFunc.h"
+#include <TROOT.h>
 
-// includes for RooArgusBG
-#include "RooArgusBG.h"
-#include "RooGaussian.h"
-#include "RooAddPdf.h"
-
-// includes for SimultaneousGaussians
-#include "RooRealVar.h"
-#include "RooSimultaneous.h"
-#include "RooProdPdf.h"
-#include "RooCategory.h"
-
-
-using namespace RooFit;
+#include <gtest/gtest.h>
 
 TEST(RooFitHS3, RooArgusBG)
 {
-   auto &msg = RooMsgService::instance();
-   msg.setGlobalKillBelow(RooFit::WARNING);
+   using namespace RooFit;
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    // --- Observable ---
    RooRealVar mes("mes", "m_{ES} (GeV)", 5.20, 5.30);
@@ -49,8 +47,8 @@ TEST(RooFitHS3, RooArgusBG)
    RooAddPdf model("model", "g+a", RooArgList(signalModel, background), RooArgList(nsig, nbkg));
 
    auto etcDir = std::string(TROOT::GetEtcDir());
-   RooJSONFactoryWSTool::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
-   RooJSONFactoryWSTool::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
+   RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
+   RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
 
    RooWorkspace work;
    work.import(model);
@@ -64,8 +62,8 @@ TEST(RooFitHS3, SimultaneousGaussians)
 
    // Import keys and factory expressions files for the RooJSONFactoryWSTool.
    auto etcDir = std::string(TROOT::GetEtcDir());
-   RooJSONFactoryWSTool::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
-   RooJSONFactoryWSTool::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
+   RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
+   RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
 
    // Create a test model: RooSimultaneous with Gaussian in one component, and
    // product of two Gaussians in the other.

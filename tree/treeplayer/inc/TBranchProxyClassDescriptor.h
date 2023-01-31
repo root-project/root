@@ -44,7 +44,7 @@ namespace Internal {
 
       void NameToSymbol();
 
-      TBranchProxyClassDescriptor(const TBranchProxyClassDescriptor &b) :TNamed(b){;}
+      TBranchProxyClassDescriptor(const TBranchProxyClassDescriptor &b) :TNamed(b){}
       TBranchProxyClassDescriptor& operator=(const TBranchProxyClassDescriptor&) {return *this;}
 
    public:

@@ -19,6 +19,7 @@
 #include <cstdint>
 
 #include <string>
+#include <variant>
 
 #include <ROOT/RLogger.hxx>
 
@@ -61,6 +62,22 @@ struct RClusterSize {
 };
 using ClusterSize_t = RClusterSize;
 constexpr ClusterSize_t kInvalidClusterIndex(std::uint32_t(-1));
+
+/// Helper type to present an offset column as array of collection sizes. See RField<RNTupleCardinality> for details.
+struct RNTupleCardinality {
+   using ValueType = std::size_t;
+
+   RNTupleCardinality() : fValue(0) {}
+   explicit constexpr RNTupleCardinality(ValueType value) : fValue(value) {}
+   RNTupleCardinality &operator=(const ValueType value)
+   {
+      fValue = value;
+      return *this;
+   }
+   operator ValueType() const { return fValue; }
+
+   ValueType fValue;
+};
 
 /// Holds the index and the tag of a kSwitch column
 class RColumnSwitch {
@@ -108,17 +125,43 @@ public:
    ClusterSize_t::ValueType GetIndex() const { return fIndex; }
 };
 
+/// RNTupleLocator payload that is common for object stores using 64bit location information.
+/// This might not contain the full location of the content. In particular, for page locators this information may be
+/// used in conjunction with the cluster and column ID.
+struct RNTupleLocatorObject64 {
+   std::uint64_t fLocation = 0;
+   bool operator==(const RNTupleLocatorObject64 &other) const { return fLocation == other.fLocation; }
+};
+
 /// Generic information about the physical location of data. Values depend on the concrete storage type.  E.g.,
-/// for a local file fUrl might be unsused and fPosition might be a file offset. Objects on storage can be compressed
+/// for a local file `fPosition` might be a 64bit file offset. Referenced objects on storage can be compressed
 /// and therefore we need to store their actual size.
-/// TODO(jblomer): should move the RNTUpleDescriptor and should be an std::variant
+/// TODO(jblomer): consider moving this to `RNTupleDescriptor`
 struct RNTupleLocator {
-   std::int64_t fPosition = 0;
+   /// Values for the _Type_ field in non-disk locators; see `doc/specifications.md` for details
+   enum ELocatorType : std::uint8_t {
+      kTypeFile = 0x00,
+      kTypeURI = 0x01,
+      kTypeDAOS = 0x02,
+   };
+
+   /// Simple on-disk locators consisting of a 64-bit offset use variant type `uint64_t`; extended locators have
+   /// `fPosition.index()` > 0
+   std::variant<std::uint64_t, std::string, RNTupleLocatorObject64> fPosition;
    std::uint32_t fBytesOnStorage = 0;
-   std::string fUrl;
+   /// For non-disk locators, the value for the _Type_ field. This makes it possible to have different type values even
+   /// if the payload structure is identical.
+   ELocatorType fType = kTypeFile;
+   /// Reserved for use by concrete storage backends
+   std::uint8_t fReserved = 0;
 
    bool operator==(const RNTupleLocator &other) const {
-      return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage && fUrl == other.fUrl;
+      return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage && fType == other.fType;
+   }
+   template <typename T>
+   const T &GetPosition() const
+   {
+      return std::get<T>(fPosition);
    }
 };
 

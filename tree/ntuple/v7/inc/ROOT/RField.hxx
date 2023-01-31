@@ -27,10 +27,12 @@
 #include <ROOT/TypeTraits.hxx>
 
 #include <TGenericClassInfo.h>
+#include <TVirtualCollectionProxy.h>
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <functional>
 #include <iostream>
 #include <iterator>
 #include <memory>
@@ -44,12 +46,19 @@
 class TClass;
 
 namespace ROOT {
+
+class TSchemaRule;
+
 namespace Experimental {
 
 class RCollectionField;
 class RCollectionNTupleWriter;
 class REntry;
 class RNTupleModel;
+
+namespace Internal {
+struct RFieldCallbackInjector;
+} // namespace Internal
 
 namespace Detail {
 
@@ -70,6 +79,21 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 // clang-format on
 class RFieldBase {
    friend class ROOT::Experimental::RCollectionField; // to move the fields from the collection model
+   friend struct ROOT::Experimental::Internal::RFieldCallbackInjector; // used for unit tests
+   using ReadCallback_t = std::function<void(RFieldValue &)>;
+
+public:
+   static constexpr std::uint32_t kInvalidTypeVersion = -1U;
+   /// No constructor needs to be called, i.e. any bit pattern in the allocated memory represents a valid type
+   /// A trivially constructible field has a no-op GenerateValue() implementation
+   static constexpr int kTraitTriviallyConstructible = 0x01;
+   /// The type is cleaned up just by freeing its memory. I.e. DestroyValue() is a no-op.
+   static constexpr int kTraitTriviallyDestructible = 0x02;
+   /// A field of a fundamental type that can be directly mapped via `RField<T>::Map()`, i.e. maps as-is to a single
+   /// column
+   static constexpr int kTraitMappable = 0x04;
+   /// Shorthand for types that are both trivially constructible and destructible
+   static constexpr int kTraitTrivialType = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
 
 private:
    /// The field name relative to its parent field
@@ -80,7 +104,7 @@ private:
    ENTupleStructure fStructure;
    /// For fixed sized arrays, the array length
    std::size_t fNRepetitions;
-   /// A field on a trivial type that maps as-is to a single column
+   /// A field qualifies as simple if it is both mappable and has no post-read callback
    bool fIsSimple;
    /// When the columns are connected to a page source or page sink, the field represents a field id in the
    /// corresponding RNTuple descriptor. This on-disk ID is set in RPageSink::Create() for writing and by
@@ -100,6 +124,12 @@ protected:
    RColumn* fPrincipalColumn;
    /// The columns are connected either to a sink or to a source (not to both); they are owned by the field.
    std::vector<std::unique_ptr<RColumn>> fColumns;
+   /// Properties of the type that allow for optimizations of collections of that type
+   int fTraits = 0;
+   /// List of functions to be called after reading a value
+   std::vector<ReadCallback_t> fReadCallbacks;
+   /// C++ type version cached from the descriptor after a call to `ConnectPageSource()`
+   std::uint32_t fOnDiskTypeVersion = kInvalidTypeVersion;
 
    /// Creates the backing columns corresponsing to the field type for writing
    virtual void GenerateColumnsImpl() = 0;
@@ -123,6 +153,22 @@ protected:
    /// is not of one of the requested types.
    ROOT::Experimental::EColumnType EnsureColumnType(const std::vector<EColumnType> &requestedTypes,
                                                     unsigned int columnIndex, const RNTupleDescriptor &desc);
+
+   /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
+   /// value object.
+   /// Returns an index that can be used to remove the callback.
+   size_t AddReadCallback(ReadCallback_t func);
+   void RemoveReadCallback(size_t idx);
+   /// Called by `ConnectPageSource()` only once connected; derived classes may override this
+   /// as appropriate
+   virtual void OnConnectPageSource() {}
+
+private:
+   void InvokeReadCallbacks(RFieldValue &value)
+   {
+      for (const auto &func : fReadCallbacks)
+         func(value);
+   }
 
 public:
    /// Iterates over the sub tree of fields in depth-first search order
@@ -160,6 +206,8 @@ public:
    };
 
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
+   /// If `isSimple` is `true`, the trait `kTraitMappable` is automatically set on construction. However, the
+   /// field might be demoted to non-simple if a post-read callback is set.
    RFieldBase(std::string_view name, std::string_view type, ENTupleStructure structure, bool isSimple,
               std::size_t nRepetitions = 0);
    RFieldBase(const RFieldBase&) = delete;
@@ -194,11 +242,13 @@ public:
    virtual size_t GetValueSize() const = 0;
    /// For many types, the alignment requirement is equal to the size; otherwise override.
    virtual size_t GetAlignment() const { return GetValueSize(); }
+   int GetTraits() const { return fTraits; }
+   bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
 
    /// Write the given value into columns. The value object has to be of the same type as the field.
    /// Returns the number of uncompressed bytes written.
    std::size_t Append(const RFieldValue& value) {
-      if (!fIsSimple)
+      if (~fTraits & kTraitMappable)
          return AppendImpl(value);
 
       fPrincipalColumn->Append(value.fMappedElement);
@@ -207,20 +257,30 @@ public:
 
    /// Populate a single value with data from the tree, which needs to be of the fitting type.
    /// Reading copies data into the memory wrapped by the ntuple value.
+   /// The fast path is conditioned by the field qualifying as simple, i.e. maps as-is to a single column and has no
+   /// read callback.
    void Read(NTupleSize_t globalIndex, RFieldValue *value) {
-      if (!fIsSimple) {
+      if (fIsSimple)
+         return (void)fPrincipalColumn->Read(globalIndex, &value->fMappedElement);
+
+      if (fTraits & kTraitMappable)
+         fPrincipalColumn->Read(globalIndex, &value->fMappedElement);
+      else
          ReadGlobalImpl(globalIndex, value);
-         return;
-      }
-      fPrincipalColumn->Read(globalIndex, &value->fMappedElement);
+      if (R__unlikely(!fReadCallbacks.empty()))
+         InvokeReadCallbacks(*value);
    }
 
    void Read(const RClusterIndex &clusterIndex, RFieldValue *value) {
-      if (!fIsSimple) {
+      if (fIsSimple)
+         return (void)fPrincipalColumn->Read(clusterIndex, &value->fMappedElement);
+
+      if (fTraits & kTraitMappable)
+         fPrincipalColumn->Read(clusterIndex, &value->fMappedElement);
+      else
          ReadInClusterImpl(clusterIndex, value);
-         return;
-      }
-      fPrincipalColumn->Read(clusterIndex, &value->fMappedElement);
+      if (R__unlikely(!fReadCallbacks.empty()))
+         InvokeReadCallbacks(*value);
    }
 
    /// Ensure that all received items are written from page buffers to the storage.
@@ -232,6 +292,8 @@ public:
    void Attach(std::unique_ptr<Detail::RFieldBase> child);
 
    std::string GetName() const { return fName; }
+   /// Returns the field name and parent field names separated by dots ("grandparent.parent.child")
+   std::string GetQualifiedFieldName() const;
    std::string GetType() const { return fType; }
    ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
@@ -255,6 +317,8 @@ public:
    virtual std::uint32_t GetFieldVersion() const { return 0; }
    /// Indicates an evolution of the C++ type itself
    virtual std::uint32_t GetTypeVersion() const { return 0; }
+   /// Return the C++ type version stored in the field descriptor; only valid after a call to `ConnectPageSource()`
+   std::uint32_t GetOnDiskTypeVersion() const { return fOnDiskTypeVersion; }
 
    RSchemaIterator begin();
    RSchemaIterator end();
@@ -306,12 +370,16 @@ private:
 private:
    RClassField(std::string_view fieldName, std::string_view className, TClass *classp);
    void Attach(std::unique_ptr<Detail::RFieldBase> child, RSubFieldInfo info);
+   /// Register post-read callbacks corresponding to a list of ROOT I/O customization rules. `classp` is used to
+   /// fill the `TVirtualObject` instance passed to the user function.
+   void AddReadCallbacksFromIORules(const std::span<const TSchemaRule *> rules, TClass *classp = nullptr);
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
+   void OnConnectPageSource() final;
 
 public:
    RClassField(std::string_view fieldName, std::string_view className);
@@ -328,7 +396,58 @@ public:
    std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
    size_t GetValueSize() const override;
    size_t GetAlignment() const final { return fMaxAlignment; }
+   std::uint32_t GetTypeVersion() const final;
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
+};
+
+/// The field for a class representing a collection of elements via `TVirtualCollectionProxy`.
+/// Objects of such type behave as collections that can be accessed through the corresponding member functions in
+/// `TVirtualCollectionProxy`. At a bare minimum, the user is required to provide an implementation for the following
+/// functions in `TVirtualCollectionProxy`: `HasPointers()`, `GetProperties()`, `GetValueClass()`, `GetType()`,
+/// `Sizeof()`, `PushProxy()`, `PopProxy()`, `At()`, `Clear()`, and `Insert()`.
+///
+/// The collection proxy for a given class can be set via `TClass::CopyCollectionProxy()`.
+class RCollectionClassField : public Detail::RFieldBase {
+private:
+   /// Chunk size in bytes used in `ReadGlobalImp()`. Items held in the same chunk will be inserted in
+   /// a single `TVirtualCollectionProxy::Insert()` call.
+   static constexpr const std::size_t kReadChunkSize = 64 * 1024;
+   std::unique_ptr<TVirtualCollectionProxy> fProxy;
+   std::size_t fItemSize;
+   ClusterSize_t fNWritten;
+
+   RCollectionClassField(std::string_view fieldName, std::string_view className, TClass *classp);
+
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+   std::size_t AppendImpl(const Detail::RFieldValue &value) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+
+public:
+   RCollectionClassField(std::string_view fieldName, std::string_view className);
+   RCollectionClassField(RCollectionClassField &&other) = default;
+   RCollectionClassField &operator=(RCollectionClassField &&other) = default;
+   ~RCollectionClassField() override = default;
+
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   using Detail::RFieldBase::GenerateValue;
+   Detail::RFieldValue GenerateValue(void *where) override;
+   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
+   Detail::RFieldValue CaptureValue(void *where) override;
+   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
+   size_t GetValueSize() const override { return fProxy->Sizeof(); }
+   size_t GetAlignment() const final { return alignof(std::max_align_t); }
+   void CommitCluster() final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
+   {
+      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
+   }
+   void GetCollectionInfo(const RClusterIndex &clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
+   {
+      fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
+   }
 };
 
 /// The field for an untyped record. The subfields are stored consequitively in a memory block, i.e.
@@ -354,10 +473,12 @@ protected:
                 const std::array<std::size_t, N> &offsets, std::string_view typeName = "")
       : ROOT::Experimental::Detail::RFieldBase(fieldName, typeName, ENTupleStructure::kRecord, false /* isSimple */)
    {
+      fTraits |= kTraitTrivialType;
       for (unsigned i = 0; i < N; ++i) {
          fOffsets.push_back(offsets[i]);
          fMaxAlignment = std::max(fMaxAlignment, itemFields[i]->GetAlignment());
          fSize += GetItemPadding(fSize, itemFields[i]->GetAlignment()) + itemFields[i]->GetValueSize();
+         fTraits &= itemFields[i]->GetTraits();
          Attach(std::move(itemFields[i]));
       }
    }
@@ -540,6 +661,91 @@ public:
    RField(std::string_view name) : RClassField(name, TypeName()) {
       static_assert(std::is_class<T>::value, "no I/O support for this basic C++ type");
    }
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT &&...args)
+   {
+      return Detail::RFieldValue(this, static_cast<T *>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final { return GenerateValue(where, T()); }
+};
+
+template <typename T, typename = void>
+struct HasCollectionProxyMemberType : std::false_type {
+};
+template <typename T>
+struct HasCollectionProxyMemberType<
+   T, typename std::enable_if<std::is_same<typename T::IsCollectionProxy, std::true_type>::value>::type>
+   : std::true_type {
+};
+
+/// The point here is that we can only tell at run time if a class has an associated collection proxy.
+/// For compile time, in the first iteration of this PR we had an extra template argument that acted as a "tag" to
+/// differentiate the RField specialization for classes with an associated collection proxy (inherits
+/// `RCollectionClassField`) from the RField primary template definition (`RClassField`-derived), as in:
+/// ```
+/// auto field = std::make_unique<RField<MyClass>>("klass");
+/// // vs
+/// auto otherField = std::make_unique<RField<MyClass, ROOT::Experimental::TagIsCollectionProxy>>("klass");
+/// ```
+///
+/// That is convenient only for non-nested types, i.e. it doesn't work with, e.g. `RField<std::vector<MyClass>,
+/// ROOT::Experimental::TagIsCollectionProxy>`, as the tag is not forwarded to the instantiation of the inner RField
+/// (that for the value type of the vector).  The following two possible solutions were considered:
+/// - A wrapper type (much like `ntuple/v7/inc/ROOT/RNTupleUtil.hxx:49`), that helps to differentiate both cases.
+/// There we would have:
+/// ```
+/// auto field = std::make_unique<RField<RProxiedCollection<MyClass>>>("klass"); // Using collection proxy
+/// ```
+/// - A helper `IsCollectionProxy<T>` type, that can be used in a similar way to those in the `<type_traits>` header.
+/// We found this more convenient and is the implemented thing below.  Here, classes can be marked as a
+/// collection proxy with either of the following two forms (whichever is more convenient for the user):
+/// ```
+/// template <>
+/// struct IsCollectionProxy<MyClass> : std::true_type {};
+/// ```
+/// or by adding a member type to the class as follows:
+/// ```
+/// class MyClass {
+/// public:
+///    using IsCollectionProxy = std::true_type;
+/// };
+/// ```
+///
+/// Of course, there is another possible solution which is to have a single `RClassField` that implements both
+/// the regular-class and the collection-proxy behaviors, and always chooses appropriately at run time.
+/// We found that less clean and probably has more overhead, as most probably it involves an additional branch + call
+/// in each of the member functions.
+template <typename T, typename = void>
+struct IsCollectionProxy : HasCollectionProxyMemberType<T> {
+};
+
+/// Classes behaving as a collection of elements that can be queried via the `TVirtualCollectionProxy` interface
+/// The use of a collection proxy for a particular class can be enabled via:
+/// ```
+/// namespace ROOT::Experimental {
+///    template <> struct IsCollectionProxy<Classname> : std::true_type {};
+/// }
+/// ```
+/// Alternatively, this can be achieved by adding a member type to the class definition as follows:
+/// ```
+/// class Classname {
+/// public:
+///    using IsCollectionProxy = std::true_type;
+/// };
+/// ```
+template <typename T>
+class RField<T, typename std::enable_if<IsCollectionProxy<T>::value>::type> : public RCollectionClassField {
+public:
+   static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
+   RField(std::string_view name) : RCollectionClassField(name, TypeName())
+   {
+      static_assert(std::is_class<T>::value, "collection proxy unsupported for fundamental types");
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -552,7 +758,6 @@ public:
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, T()); }
 };
-
 
 /// The collection field is only used for writing; when reading, untyped collections are projected to an std::vector
 class RCollectionField : public ROOT::Experimental::Detail::RFieldBase {
@@ -646,7 +851,10 @@ protected:
 public:
    static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits |= kTraitTrivialType;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -692,6 +900,64 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
+/// An artificial field that transforms an RNTuple column that contains the offset of collections into
+/// collection sizes. It is only used for reading, e.g. as projected field or as an artificial field that provides the
+/// "number of" RDF columns for collections (e.g. `R_rdf_sizeof_jets` for a collection named `jets`).
+template <>
+class RField<RNTupleCardinality> : public Detail::RFieldBase {
+protected:
+   std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      return std::make_unique<RField<RNTupleCardinality>>(newName);
+   }
+
+public:
+   static std::string TypeName() { return "ROOT::Experimental::RNTupleCardinality"; }
+   explicit RField(std::string_view name)
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
+   {
+   }
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() = default;
+
+   // Field is only used for reading
+   void GenerateColumnsImpl() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final;
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT &&...args)
+   {
+      return Detail::RFieldValue(this, static_cast<RNTupleCardinality *>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final { return GenerateValue(where, 0); }
+   Detail::RFieldValue CaptureValue(void *where) override
+   {
+      return Detail::RFieldValue(true /* captureFlag */, this, where);
+   }
+   size_t GetValueSize() const final { return sizeof(RNTupleCardinality); }
+
+   /// Get the number of elements of the collection identified by globalIndex
+   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final
+   {
+      RClusterIndex collectionStart;
+      ClusterSize_t size;
+      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
+      *value->Get<RNTupleCardinality>() = size;
+   }
+
+   /// Get the number of elements of the collection identified by clusterIndex
+   void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final
+   {
+      RClusterIndex collectionStart;
+      ClusterSize_t size;
+      fPrincipalColumn->GetCollectionInfo(clusterIndex, &collectionStart, &size);
+      *value->Get<RNTupleCardinality>() = size;
+   }
+
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
 
 template <>
 class RField<bool> : public Detail::RFieldBase {
@@ -703,7 +969,10 @@ protected:
 public:
    static std::string TypeName() { return "bool"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits |= kTraitTrivialType;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -751,7 +1020,10 @@ protected:
 public:
    static std::string TypeName() { return "float"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits |= kTraitTrivialType;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -800,7 +1072,10 @@ protected:
 public:
    static std::string TypeName() { return "double"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits |= kTraitTrivialType;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -848,7 +1123,10 @@ protected:
 public:
    static std::string TypeName() { return "char"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits |= kTraitTrivialType;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -896,7 +1174,10 @@ protected:
 public:
    static std::string TypeName() { return "std::int8_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits |= kTraitTrivialType;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -944,7 +1225,10 @@ protected:
 public:
    static std::string TypeName() { return "std::uint8_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits |= kTraitTrivialType;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -992,7 +1276,10 @@ protected:
 public:
    static std::string TypeName() { return "std::int16_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits |= kTraitTrivialType;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -1040,7 +1327,10 @@ protected:
 public:
    static std::string TypeName() { return "std::uint16_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits |= kTraitTrivialType;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -1088,7 +1378,10 @@ protected:
 public:
    static std::string TypeName() { return "std::int32_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits |= kTraitTrivialType;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -1136,7 +1429,10 @@ protected:
 public:
    static std::string TypeName() { return "std::uint32_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits |= kTraitTrivialType;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -1184,7 +1480,10 @@ protected:
 public:
    static std::string TypeName() { return "std::uint64_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits |= kTraitTrivialType;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -1232,7 +1531,10 @@ protected:
 public:
    static std::string TypeName() { return "std::int64_t"; }
    explicit RField(std::string_view name)
-     : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits |= kTraitTrivialType;
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -1286,8 +1588,10 @@ private:
 public:
    static std::string TypeName() { return "std::string"; }
    explicit RField(std::string_view name)
-      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
-      , fIndex(0), fElemIndex(&fIndex) {}
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */), fIndex(0),
+        fElemIndex(&fIndex)
+   {
+   }
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
@@ -1343,6 +1647,14 @@ public:
    }
 };
 
+template <typename ItemT, std::size_t N>
+class RField<ItemT[N]> : public RField<std::array<ItemT, N>> {
+public:
+   explicit RField(std::string_view name) : RField<std::array<ItemT, N>>(name) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+};
 
 template <typename... ItemTs>
 class RField<std::variant<ItemTs...>> : public RVariantField {

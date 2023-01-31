@@ -31,11 +31,12 @@ protected:
    std::string fTitle;  ///<! title
    unsigned fConnId{0}; ///<! default connection id
 
-   bool fUseRCanvas{false};             ///<!  which canvas should be used
-   bool fCatchWindowShow{true};         ///<! if arbitrary RWebWindow::Show calls should be catched by browser
+   bool fUseRCanvas{false};              ///<!  which canvas should be used
+   bool fCatchWindowShow{true};          ///<! if arbitrary RWebWindow::Show calls should be catched by browser
    std::string fActiveWidgetName;        ///<! name of active widget
    std::vector<std::shared_ptr<RBrowserWidget>> fWidgets; ///<!  all browser widgets
    int fWidgetCnt{0};                                     ///<! counter for created widgets
+   std::string fPromptFileOutput;        ///<! file name for prompt output
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to browser
 
@@ -43,7 +44,7 @@ protected:
 
    std::shared_ptr<RBrowserWidget> AddWidget(const std::string &kind);
    std::shared_ptr<RBrowserWidget> AddCatchedWidget(const std::string &url, const std::string &kind);
-   std::shared_ptr<RBrowserWidget> FindWidget(const std::string &name) const;
+   std::shared_ptr<RBrowserWidget> FindWidget(const std::string &name, const std::string &kind = "") const;
    std::shared_ptr<RBrowserWidget> GetActiveWidget() const { return FindWidget(fActiveWidgetName); }
 
    void CloseTab(const std::string &name);
@@ -88,6 +89,8 @@ public:
 
    /// Is RWebWindow::Show calls catched for embeding of created widgets
    bool GetCatchWindowShow() const { return fCatchWindowShow; }
+
+   bool ActivateWidget(const std::string &title, const std::string &kind = "");
 
 };
 

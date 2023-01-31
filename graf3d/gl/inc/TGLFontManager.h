@@ -52,7 +52,7 @@ protected:
    mutable Int_t    fTrashCount;
 public:
    TGLFont();
-   TGLFont(Int_t size, Int_t font, EMode mode, FTFont *f=0, TGLFontManager *mng=0);
+   TGLFont(Int_t size, Int_t font, EMode mode, FTFont *f=nullptr, TGLFontManager *mng=nullptr);
    TGLFont(const TGLFont& o);            // Not implemented.
    virtual ~TGLFont();
 

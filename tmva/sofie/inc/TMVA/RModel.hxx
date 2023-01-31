@@ -51,6 +51,7 @@ private:
 
    const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
    std::unordered_set<std::string> fNeededStdLib = {"vector"};
+   std::unordered_set<std::string> fCustomOpHeaders;
    bool fUseWeightFile = true;
    bool fUseSession = true;
 
@@ -76,6 +77,8 @@ public:
    void AddInputTensorInfo(std::string input_name, ETensorType type, std::vector<size_t> shape);
    void AddOperator(std::unique_ptr<ROperator> op, int order_execution = -1);
    void AddInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data);
+   // Check if a tensor is initialized
+   bool IsInitializedTensor(const std::string& name) const;
    void AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape);
    void AddBlasRoutines(std::vector<std::string> routines) {
       for (auto &routine : routines) {
@@ -87,8 +90,12 @@ public:
          fNeededStdLib.insert(libname);
       }
    }
+   void AddNeededCustomHeader(std::string filename) {
+      fCustomOpHeaders.insert(filename);
+   }
    void AddInputTensorName(std::string name);
    void AddOutputTensorNameList(std::vector<std::string> outputtensornames);
+   void UpdateOutputTensorList(std::vector<std::string> curr_output_tensor, std::vector<std::string> modify_output_tensor);
    void UpdateInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data);
    std::shared_ptr<void> GetInitializedTensorData(std::string tensor_name);
 
@@ -107,7 +114,9 @@ public:
    }
    void PrintIntermediateTensors();
    void OutputGenerated(std::string filename = "");
-
+   std::vector<std::string> GetOutputTensorNames(){
+      return fOutputTensorNames;
+   }
 
 /*
    template <typename T>
@@ -128,13 +137,8 @@ public:
 
    bool UseSession() const { return fUseSession;}
 
-   ~RModel(){
-      /*
-      for (auto& i: fInitializedTensors){
-         free(i.second.data);
-      }
-      */
-   }
+   ~RModel() {}
+
    ClassDef(RModel,1);
 };
 

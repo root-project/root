@@ -25,7 +25,7 @@ class RooDataHist;
 
 class RooBinnedGenContext : public RooAbsGenContext {
 public:
-  RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
+  RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= nullptr,
                    const RooArgSet* auxProto=nullptr, bool _verbose= false);
   ~RooBinnedGenContext() override;
 
@@ -47,7 +47,7 @@ protected:
   RooBinnedGenContext(const RooBinnedGenContext& other) ;
 
   const RooArgSet* _vars ;
-  RooArgSet* _pdfSet ;          ///<  Set owned all nodes of internal clone of p.d.f
+  RooArgSet _pdfSet ;          ///<  Set owned all nodes of internal clone of p.d.f
   RooAbsPdf *_pdf ;             ///<  Pointer to cloned p.d.f
   RooDataHist* _hist ;          ///< Histogram
   bool _expectedData ;        ///< Asimov?

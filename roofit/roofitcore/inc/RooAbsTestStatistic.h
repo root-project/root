@@ -32,7 +32,6 @@ class RooSimultaneous ;
 class RooRealMPFE ;
 
 class RooAbsTestStatistic ;
-typedef RooAbsTestStatistic* pRooAbsTestStatistic ;
 typedef RooAbsData* pRooAbsData ;
 typedef RooRealMPFE* pRooRealMPFE ;
 
@@ -78,6 +77,12 @@ public:
   double offset() const override { return _offset.Sum() ; }
   virtual double offsetCarry() const { return _offset.Carry(); }
 
+  enum GOFOpMode { SimMaster,MPMaster,Slave } ;
+  GOFOpMode operMode() const {
+     // Return test statistic operation mode of this instance (SimMaster, MPMaster or Slave)
+     return _gofOpMode ;
+  }
+
 protected:
 
   void printCompactTreeHook(std::ostream& os, const char* indent="") override ;
@@ -110,11 +115,6 @@ protected:
 
   RooSetProxy _paramSet ;          ///< Parameters of the test statistic (=parameters of the input function)
 
-  enum GOFOpMode { SimMaster,MPMaster,Slave } ;
-  GOFOpMode operMode() const {
-    // Return test statistic operation mode of this instance (SimMaster, MPMaster or Slave)
-    return _gofOpMode ;
-  }
 
   // Original arguments
   RooAbsReal* _func = nullptr;          ///< Pointer to original input function
@@ -146,9 +146,7 @@ protected:
   Int_t       _extSet = 0;        ///<! Number of designated set to calculated extended term
 
   // Simultaneous mode data
-  Int_t          _nGof = 0    ;   ///< Number of sub-contexts
-  pRooAbsTestStatistic* _gofArray = nullptr;   ///<! Array of sub-contexts representing part of the combined test statistic
-  std::vector<RooFit::MPSplit> _gofSplitMode ; ///<! GOF MP Split mode specified by component (when Auto is active)
+  std::vector<std::unique_ptr<RooAbsTestStatistic>> _gofArray; ///<! Array of sub-contexts representing part of the combined test statistic
 
   // Parallel mode data
   Int_t          _nCPU = 1;            ///<  Number of processors to use in parallel calculation mode
@@ -157,10 +155,10 @@ protected:
   RooFit::MPSplit _mpinterl = RooFit::BulkPartition;  ///< Use interleaving strategy rather than N-wise split for partioning of dataset for multiprocessor-split
   bool         _doOffset = false;                   ///< Apply interval value offset to control numeric precision?
   const bool  _takeGlobalObservablesFromData = false; ///< If the global observable values are taken from data
-  mutable ROOT::Math::KahanSum<double> _offset = 0.0; ///<! Offset as KahanSum to avoid loss of precision
+  mutable ROOT::Math::KahanSum<double> _offset {0.0}; ///<! Offset as KahanSum to avoid loss of precision
   mutable double _evalCarry = 0.0;                  ///<! carry of Kahan sum in evaluatePartition
 
-  ClassDefOverride(RooAbsTestStatistic,3) // Abstract base class for real-valued test statistics
+  ClassDefOverride(RooAbsTestStatistic,0) // Abstract base class for real-valued test statistics
 
 };
 

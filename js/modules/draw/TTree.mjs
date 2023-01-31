@@ -1,15 +1,16 @@
-import { internals, httpRequest, isBatchMode, create, toJSON } from '../core.mjs';
+import { internals, httpRequest, isBatchMode, isFunc, isStr, create, toJSON, clTObjString,
+         clTGraph, clTPolyMarker3D, clTH1, clTH2, clTH3 } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { kTString, kObject, kAnyP } from '../io.mjs';
-import { kClonesNode, kSTLNode, treeDraw, treeIOTest, TDrawSelector } from '../tree.mjs';
+import { kClonesNode, kSTLNode, clTBranchFunc, treeDraw, treeIOTest, TDrawSelector } from '../tree.mjs';
 import { BasePainter } from '../base/BasePainter.mjs';
 import { cleanup, resize, drawRawText, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from '../hist/TH1Painter.mjs';
 import { TH2Painter } from '../hist/TH2Painter.mjs';
 import { TH3Painter } from '../hist/TH3Painter.mjs';
 import { TGraphPainter } from '../hist/TGraphPainter.mjs';
+import { drawPolyMarker3D } from '../draw/TPolyMarker3D.mjs';
 import { showProgress, registerForResize } from '../gui/utils.mjs';
-
 
 /** @summary Show TTree::Draw progress during processing */
 TDrawSelector.prototype.ShowProgress = function(value) {
@@ -25,22 +26,26 @@ TDrawSelector.prototype.ShowProgress = function(value) {
    }
 
    let ndig = 0;
-   if (this.aver_diff <= 0) ndig = 0; else
-      if (this.aver_diff < 0.0001) ndig = 3; else
-         if (this.aver_diff < 0.001) ndig = 2; else
-            if (this.aver_diff < 0.01) ndig = 1;
+   if (this.aver_diff <= 0)
+      ndig = 0;
+   else if (this.aver_diff < 0.0001)
+      ndig = 3;
+   else if (this.aver_diff < 0.001)
+      ndig = 2;
+   else if (this.aver_diff < 0.01)
+      ndig = 1;
 
-   let main_box = document.createElement("p"),
-      text_node = document.createTextNode("TTree draw " + (value * 100).toFixed(ndig) + " %  "),
+   let main_box = document.createElement('p'),
+      text_node = document.createTextNode('TTree draw ' + (value * 100).toFixed(ndig) + ' %  '),
       selector = this;
 
    main_box.appendChild(text_node);
-   main_box.title = "Click on element to break drawing";
+   main_box.title = 'Click on element to break drawing';
 
    main_box.onclick = function() {
       if (++selector._break < 3) {
-         main_box.title = "Tree draw will break after next I/O operation";
-         return text_node.nodeValue = "Breaking ... ";
+         main_box.title = 'Tree draw will break after next I/O operation';
+         return text_node.nodeValue = 'Breaking ... ';
       }
       selector.Abort();
       showProgress();
@@ -52,21 +57,29 @@ TDrawSelector.prototype.ShowProgress = function(value) {
 
 /** @summary Draw result of tree drawing
   * @private */
-function drawTreeDrawResult(dom, obj, opt) {
+async function drawTreeDrawResult(dom, obj, opt) {
 
-   let typ = obj._typename;
+   let typ = obj?._typename;
 
-   if (!typ || (typeof typ !== 'string'))
+   if (!typ || !isStr(typ))
       return Promise.reject(Error(`Object without type cannot be draw with TTree`));
 
-   if (typ.indexOf('TH1') == 0)
+   if (typ.indexOf(clTH1) == 0)
       return TH1Painter.draw(dom, obj, opt);
-   if (typ.indexOf('TH2') == 0)
+   if (typ.indexOf(clTH2) == 0)
       return TH2Painter.draw(dom, obj, opt);
-   if (typ.indexOf('TH3') == 0)
+   if (typ.indexOf(clTH3) == 0)
       return TH3Painter.draw(dom, obj, opt);
-   if (typ.indexOf('TGraph') == 0)
+   if (typ.indexOf(clTGraph) == 0)
       return TGraphPainter.draw(dom, obj, opt);
+   if ((typ == clTPolyMarker3D) && obj.$hist) {
+      return TH3Painter.draw(dom, obj.$hist, opt).then(() => {
+         let p2 = new ObjectPainter(dom, obj, opt);
+         p2.addToPadPrimitives();
+         p2.redraw = drawPolyMarker3D;
+         return p2.redraw();
+      });
+   }
 
    return Promise.reject(Error(`Object of type ${typ} cannot be draw with TTree`));
 }
@@ -74,7 +87,7 @@ function drawTreeDrawResult(dom, obj, opt) {
 
 /** @summary Handle callback function with progress of tree draw
   * @private */
-function treeDrawProgress(obj, final) {
+async function treeDrawProgress(obj, final) {
 
    // no need to update drawing if previous is not yet completed
    if (!final && !this.last_pr)
@@ -84,12 +97,12 @@ function treeDrawProgress(obj, final) {
       if (!final) return;
       if (isBatchMode()) {
          let painter = new BasePainter(this.drawid);
-         painter.selectDom().property("_json_object_", obj);
-         return Promise.resolve(painter);
+         painter.selectDom().property('_json_object_', obj);
+         return painter;
       }
-      if (typeof internals.drawInspector == 'function')
+      if (isFunc(internals.drawInspector))
          return internals.drawInspector(this.drawid, obj);
-      let str = create('TObjString');
+      let str = create(clTObjString);
       str.fString = toJSON(obj,2);
       return drawRawText(this.drawid, str);
    }
@@ -124,7 +137,7 @@ function createTreePlayer(player) {
    player.draw_first = true;
 
    player.configureOnline = function(itemname, url, askey, root_version, expr) {
-      this.setItemName(itemname, "", this);
+      this.setItemName(itemname, '', this);
       this.url = url;
       this.root_version = root_version;
       this.askey = askey;
@@ -141,26 +154,26 @@ function createTreePlayer(player) {
 
       main.select('.treedraw_more').remove(); // remove more button first
 
-      main.select(".treedraw_buttons").node().innerHTML +=
+      main.select('.treedraw_buttons').node().innerHTML +=
           'Cut: <input class="treedraw_cut ui-corner-all ui-widget" style="width:8em;margin-left:5px" title="cut expression"></input>'+
           'Opt: <input class="treedraw_opt ui-corner-all ui-widget" style="width:5em;margin-left:5px" title="histogram draw options"></input>'+
-          `Num: <input class="treedraw_number" type="number" min="0" max="${numentries}" step="1000" style="width:7em;margin-left:5px" title="number of entries to process (default all)"></input>`+
-          `First: <input class="treedraw_first" type="number" min="0" max="${numentries}" step="1000" style="width:7em;margin-left:5px" title="first entry to process (default first)"></input>`+
+          `Num: <input class="treedraw_number" type='number' min="0" max="${numentries}" step="1000" style="width:7em;margin-left:5px" title="number of entries to process (default all)"></input>`+
+          `First: <input class="treedraw_first" type='number' min="0" max="${numentries}" step="1000" style="width:7em;margin-left:5px" title="first entry to process (default first)"></input>`+
           '<button class="treedraw_clear" title="Clear drawing">Clear</button>';
 
-      main.select('.treedraw_exe').on("click", () => this.performDraw());
-      main.select(".treedraw_cut").property("value", args?.parse_cut || "").on("change", () => this.performDraw());
-      main.select(".treedraw_opt").property("value", args?.drawopt || "").on("change", () => this.performDraw());
-      main.select(".treedraw_number").attr("value", args?.numentries || ""); // .on("change", () => this.performDraw());
-      main.select(".treedraw_first").attr("value", args?.firstentry || ""); // .on("change", () => this.performDraw());
-      main.select(".treedraw_clear").on("click", () => cleanup(this.drawid));
+      main.select('.treedraw_exe').on('click', () => this.performDraw());
+      main.select('.treedraw_cut').property('value', args?.parse_cut || '').on('change', () => this.performDraw());
+      main.select('.treedraw_opt').property('value', args?.drawopt || '').on('change', () => this.performDraw());
+      main.select('.treedraw_number').attr('value', args?.numentries || ''); // .on('change', () => this.performDraw());
+      main.select('.treedraw_first').attr('value', args?.firstentry || ''); // .on('change', () => this.performDraw());
+      main.select('.treedraw_clear').on('click', () => cleanup(this.drawid));
    }
 
    player.showPlayer = function(args) {
 
       let main = this.selectDom();
 
-      this.drawid = "jsroot_tree_player_" + internals.id_counter++ + "_draw";
+      this.drawid = 'jsroot_tree_player_' + internals.id_counter++ + '_draw';
 
       let show_extra = args?.parse_cut || args?.numentries || args?.firstentry;
 
@@ -181,26 +194,26 @@ function createTreePlayer(player) {
 
       if (this.local_tree)
          main.select('.treedraw_buttons')
-             .attr("title", "Tree draw player for: " + this.local_tree.fName);
-      main.select('.treedraw_exe').on("click", () => this.performDraw());
+             .attr('title', 'Tree draw player for: ' + this.local_tree.fName);
+      main.select('.treedraw_exe').on('click', () => this.performDraw());
       main.select('.treedraw_varexp')
-          .attr("value", args?.parse_expr || this.draw_expr || "px:py")
-          .on("change", () => this.performDraw());
+          .attr('value', args?.parse_expr || this.draw_expr || 'px:py')
+          .on('change', () => this.performDraw());
       main.select('.treedraw_varexp_info')
-          .attr('title', "Example of valid draw expressions:\n" +
-                         "  px - 1-dim draw\n" +
-                         "  px:py - 2-dim draw\n" +
-                         "  px:py:pz - 3-dim draw\n" +
-                         "  px+py:px-py - use any expressions\n" +
-                         "  px:py>>Graph - create and draw TGraph\n" +
-                         "  px:py>>dump - dump extracted variables\n" +
-                         "  px:py>>h(50,-5,5,50,-5,5) - custom histogram\n" +
-                         "  px:py;hbins:100 - custom number of bins");
+          .attr('title', 'Example of valid draw expressions:\n' +
+                         '  px - 1-dim draw\n' +
+                         '  px:py - 2-dim draw\n' +
+                         '  px:py:pz - 3-dim draw\n' +
+                         '  px+py:px-py - use any expressions\n' +
+                         '  px:py>>Graph - create and draw TGraph\n' +
+                         '  px:py>>dump - dump extracted variables\n' +
+                         '  px:py>>h(50,-5,5,50,-5,5) - custom histogram\n' +
+                         '  px:py;hbins:100 - custom number of bins');
 
       if (show_extra)
          this.showExtraButtons(args);
       else
-         main.select('.treedraw_more').on("click", () => this.showExtraButtons(args));
+         main.select('.treedraw_more').on('click', () => this.showExtraButtons(args));
 
       this.checkResize();
 
@@ -210,9 +223,9 @@ function createTreePlayer(player) {
    player.getValue = function(sel) {
       const elem = this.selectDom().select(sel);
       if (elem.empty()) return;
-      const val = elem.property("value");
+      const val = elem.property('value');
       if (val !== undefined) return val;
-      return elem.attr("value");
+      return elem.attr('value');
    }
 
    player.performLocalDraw = function() {
@@ -226,7 +239,7 @@ function createTreePlayer(player) {
          if (!args.cut) delete args.cut;
 
          args.drawopt = this.getValue('.treedraw_opt');
-         if (args.drawopt === "dump") { args.dump = true; args.drawopt = ""; }
+         if (args.drawopt === 'dump') { args.dump = true; args.drawopt = ''; }
          if (!args.drawopt) delete args.drawopt;
 
          args.numentries = parseInt(this.getValue('.treedraw_number'));
@@ -246,9 +259,9 @@ function createTreePlayer(player) {
    }
 
    player.getDrawOpt = function() {
-      let res = "player",
+      let res = 'player',
           expr = this.getValue('.treedraw_varexp')
-      if (expr) res += ":" + expr;
+      if (expr) res += ':' + expr;
       return res;
    }
 
@@ -260,15 +273,15 @@ function createTreePlayer(player) {
       let frame = this.selectDom(),
           url = this.url + '/exe.json.gz?compact=3&method=Draw',
           expr = this.getValue('.treedraw_varexp'),
-          hname = "h_tree_draw", option = "",
-          pos = expr.indexOf(">>");
+          hname = 'h_tree_draw', option = '',
+          pos = expr.indexOf('>>');
 
       if (pos < 0) {
-         expr += ">>" + hname;
+         expr += '>>' + hname;
       } else {
          hname = expr.slice(pos+2);
-         if (hname[0]=='+') hname = hname.slice(1);
-         let pos2 = hname.indexOf("(");
+         if (hname[0] == '+') hname = hname.slice(1);
+         let pos2 = hname.indexOf('(');
          if (pos2 > 0) hname = hname.slice(0, pos2);
       }
 
@@ -282,8 +295,8 @@ function createTreePlayer(player) {
          url += `&prototype="const char*,const char*,Option_t*,Long64_t,Long64_t"&varexp="${expr}"&selection="${cut}"`;
 
          // provide all optional arguments - default value kMaxEntries not works properly in ROOT6
-         if (nentries=="") nentries = (this.root_version >= 394499) ? "TTree::kMaxEntries": "1000000000"; // kMaxEntries available since ROOT 6.05/03
-         if (firstentry=="") firstentry = "0";
+         if (nentries == '') nentries = (this.root_version >= 394499) ? 'TTree::kMaxEntries': '1000000000'; // kMaxEntries available since ROOT 6.05/03
+         if (firstentry == '') firstentry = '0';
          url += `&option="${option}"&nentries=${nentries}&firstentry=${firstentry}`;
       } else {
          url += `&prototype="Option_t*"&opt="${expr}"`;
@@ -302,7 +315,7 @@ function createTreePlayer(player) {
       if (this.askey) {
          // first let read tree from the file
          this.askey = false;
-         httpRequest(this.url + "/root.json.gz?compact=3", 'text').then(submitDrawRequest);
+         httpRequest(this.url + '/root.json.gz?compact=3', 'text').then(submitDrawRequest);
       } else {
          submitDrawRequest();
       }
@@ -322,7 +335,7 @@ function drawTreePlayer(hpainter, itemname, askey, asleaf) {
 
    let item = hpainter.findItem(itemname),
        top = hpainter.getTopOnlineItem(item),
-       expr = "", leaf_cnt = 0;
+       expr = '', leaf_cnt = 0;
    if (!item || !top) return null;
 
    if (asleaf) {
@@ -349,8 +362,8 @@ function drawTreePlayer(hpainter, itemname, askey, asleaf) {
    if (item._childs && !asleaf)
       for (let n = 0; n < item._childs.length; ++n) {
          let leaf = item._childs[n];
-         if (leaf && leaf._kind && (leaf._kind.indexOf("ROOT.TLeaf") == 0) && (leaf_cnt < 2)) {
-            if (leaf_cnt++ > 0) expr += ":";
+         if (leaf && leaf._kind && (leaf._kind.indexOf('ROOT.TLeaf') == 0) && (leaf_cnt < 2)) {
+            if (leaf_cnt++ > 0) expr += ':';
             expr += leaf._name;
          }
       }
@@ -378,21 +391,21 @@ function drawLeafPlayer(hpainter, itemname) {
   * @desc just envelope for real TTree::Draw method which do the main job
   * Can be also used for the branch and leaf object
   * @private */
-function drawTree(dom, obj, opt) {
+async function drawTree(dom, obj, opt) {
 
    let tree = obj, args = opt;
 
-   if (obj._typename == "TBranchFunc") {
+   if (obj._typename == clTBranchFunc) {
       // fictional object, created only in browser
-      args = { expr: "." + obj.func + "()", branch: obj.branch };
-      if (opt && opt.indexOf("dump")==0)
-         args.expr += ">>" + opt;
+      args = { expr: `.${obj.func}()`, branch: obj.branch };
+      if (opt && opt.indexOf('dump') == 0)
+         args.expr += '>>' + opt;
       else if (opt)
          args.expr += opt;
       tree = obj.branch.$tree;
    } else if (obj.$branch) {
       // this is drawing of the single leaf from the branch
-      args = { expr: "." + obj.fName + (opt || ""), branch: obj.$branch };
+      args = { expr: `.${obj.fName}${opt || ''}`, branch: obj.$branch };
       if ((args.branch.fType === kClonesNode) || (args.branch.fType === kSTLNode)) {
          // special case of size
          args.expr = opt;
@@ -405,19 +418,19 @@ function drawTree(dom, obj, opt) {
 
       // if generic object tried to be drawn without specifying any options, it will be just dump
       if (!opt && obj.fStreamerType && (obj.fStreamerType !== kTString) &&
-          (obj.fStreamerType >= kObject) && (obj.fStreamerType <= kAnyP)) opt = "dump";
+          (obj.fStreamerType >= kObject) && (obj.fStreamerType <= kAnyP)) opt = 'dump';
 
       args = { expr: opt, branch: obj };
       tree = obj.$tree;
    } else {
       if (!args) args = 'player';
-      if (typeof args === 'string') args = { expr: args };
+      if (isStr(args)) args = { expr: args };
    }
 
    if (!tree)
       throw Error('No TTree object available for TTree::Draw');
 
-   if (typeof args.expr == 'string') {
+   if (isStr(args.expr)) {
       let p = args.expr.indexOf('player');
       if (p == 0) {
          args.player = true;
@@ -447,14 +460,14 @@ function drawTree(dom, obj, opt) {
    args.progress = treeDrawProgress.bind(args);
 
    let pr;
-   if (args.expr === "testio") {
+   if (args.expr === 'testio') {
       args.testio = true;
       args.showProgress = showProgress;
       pr = treeIOTest(tree, args);
    } else if (args.expr || args.branch) {
       pr = treeDraw(tree, args);
    } else
-      return Promise.resolve(painter);
+      return painter;
 
    return pr.then(res => args.progress(res, true));
 }

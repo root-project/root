@@ -696,7 +696,7 @@ namespace {
    }
 
    /////////////////////////////////////////////////////////////////////////////
-   /// Resolve a ShellLink (i.e. c:\path\shortcut.lnk) to a real path.
+   /// Resolve a ShellLink (i.e. `c:\path\shortcut.lnk`) to a real path.
 
    static BOOL ResolveShortCut(LPCSTR pszShortcutFile, char *pszPath, int maxbuf)
    {

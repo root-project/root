@@ -40,9 +40,9 @@ protected:
 //    virtual TList* GetSubLists() const {
 //       return fSubLists;
 //    };
-   virtual Bool_t      RemoveSubList(TEntryListArray *e, TTree *tree = 0);
-   virtual Bool_t      RemoveSubListForEntry(Long64_t entry, TTree *tree = 0);
-   virtual TEntryListArray* SetEntry(Long64_t entry, TTree *tree = 0);
+   virtual Bool_t      RemoveSubList(TEntryListArray *e, TTree *tree = nullptr);
+   virtual Bool_t      RemoveSubListForEntry(Long64_t entry, TTree *tree = nullptr);
+   virtual TEntryListArray* SetEntry(Long64_t entry, TTree *tree = nullptr);
 
 
 public:
@@ -57,12 +57,12 @@ public:
 
    virtual void        Add(const TEntryList *elist);
    virtual Int_t       Contains(Long64_t entry, TTree *tree, Long64_t subentry);
-   virtual Int_t       Contains(Long64_t entry, TTree *tree = 0) {
+   virtual Int_t       Contains(Long64_t entry, TTree *tree = nullptr) {
       return TEntryList::Contains(entry, tree);
    };
    virtual Bool_t      Enter(Long64_t entry, TTree *tree, Long64_t subentry);
    virtual Bool_t      Enter(Long64_t entry, const char *treename, const char *filename, Long64_t subentry);
-   virtual Bool_t      Enter(Long64_t entry, TTree *tree = 0) {
+   virtual Bool_t      Enter(Long64_t entry, TTree *tree = nullptr) {
       return Enter(entry, tree, -1);
    };
    virtual Bool_t      Enter(Long64_t entry, const char *treename, const char *filename)
@@ -70,10 +70,10 @@ public:
       return Enter(entry, treename, filename, -1);
    };
 //    virtual Bool_t      Enter(Long64_t entry, TTree *tree, const TEntryList *e);
-   virtual TEntryListArray* GetSubListForEntry(Long64_t entry, TTree *tree = 0);
+   virtual TEntryListArray* GetSubListForEntry(Long64_t entry, TTree *tree = nullptr);
    virtual void        Print(const Option_t* option = "") const;
    virtual Bool_t      Remove(Long64_t entry, TTree *tree, Long64_t subentry);
-   virtual Bool_t      Remove(Long64_t entry, TTree *tree = 0) {
+   virtual Bool_t      Remove(Long64_t entry, TTree *tree = nullptr) {
       return Remove(entry, tree, -1);
    };
    virtual void        Reset();

@@ -9,9 +9,9 @@
 # Keep symbols for JIT resolution
 set(LLVM_NO_DEAD_STRIP 1)
 
+set(LLVM_LINK_COMPONENTS Support)
 if(BUILD_SHARED_LIBS)
   set(LIBS
-    LLVMSupport
 
     clangFrontendTool
 
@@ -25,8 +25,6 @@ if(BUILD_SHARED_LIBS)
   )
 else()
   set(LIBS
-    LLVMSupport
-
     clangASTMatchers
     clangFrontendTool
 
@@ -57,7 +55,7 @@ if(MSVC)
     _Init_thread_footer _Init_thread_header _tls_index
   )
 
-  if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     # new/delete variants needed when linking to static msvc runtime (esp. Debug)
     set(cling_exports ${cling_exports}
       ??2@YAPEAX_K@Z

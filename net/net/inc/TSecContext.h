@@ -60,10 +60,10 @@ public:
 
    TSecContext(const char *url, Int_t meth, Int_t offset,
                const char *id, const char *token,
-               TDatime expdate = kROOTTZERO, void *ctx = 0);
+               TDatime expdate = kROOTTZERO, void *ctx = nullptr);
    TSecContext(const char *user, const char *host, Int_t meth, Int_t offset,
                const char *id, const char *token,
-               TDatime expdate = kROOTTZERO, void *ctx = 0);
+               TDatime expdate = kROOTTZERO, void *ctx = nullptr);
    virtual    ~TSecContext();
 
    void        AddForCleanup(Int_t port, Int_t proto, Int_t type);

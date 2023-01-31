@@ -22,12 +22,16 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
     " Please see README/INSTALL for more information.")
 endif()
 
-set(policy_new CMP0072 CMP0077 CMP0135)
+set(policy_new CMP0072 CMP0076 CMP0077 CMP0079)
 foreach(policy ${policy_new})
   if(POLICY ${policy})
     cmake_policy(SET ${policy} NEW)
   endif()
 endforeach()
+
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
+  cmake_policy(SET CMP0135 OLD)
+endif()
 
 include(cmake/modules/CaptureCommandLine.cmake)
 
@@ -41,6 +45,7 @@ project(ROOT)
 set(ENV{LANG} C)
 
 #---Set paths where to put the libraries, executables and headers------------------------------
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/lib) # prevent mkdir races
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -121,7 +126,7 @@ else()
 endif()
 
 #---Try to download a file to check internet connection-----------------------------------------
-message(STATUS "Checking internet connectivity...")
+message(STATUS "Checking internet connectivity")
 file(DOWNLOAD https://root.cern/files/cmake_connectivity_test.txt ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt
   TIMEOUT 10 STATUS DOWNLOAD_STATUS
 )
@@ -130,13 +135,13 @@ list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
 # Check if download was successful.
 if(${STATUS_CODE} EQUAL 0)
   # Succcess
-  message(STATUS "Yes")
+  message(STATUS "Checking internet connectivity - found")
   # Now let's delete the file
   file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt)
   set(NO_CONNECTION FALSE)
 else()
   # Error
-  message(STATUS "No: will not automatically download external dependencies")
+  message(STATUS "Checking internet connectivity - failed: will not automatically download external dependencies")
   set(NO_CONNECTION TRUE)
 endif()
 
@@ -515,15 +520,18 @@ endif()
 # modules.idx
 if(runtime_cxxmodules)
   ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
+  get_property(modules_idx_deps GLOBAL PROPERTY modules_idx_deps_property)
   add_custom_command(OUTPUT ${library_output_dir}/modules.idx
                      COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
                      COMMAND ${ld_library_path}=${library_output_dir}:$ENV{${ld_library_path}}
                              ROOTIGNOREPREFIX=1 ROOT_HIST=0
                              $<TARGET_FILE:root.exe> -l -q -b
                      WORKING_DIRECTORY ${library_output_dir}
-                     DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts ${modules_idx_deps})
+                     DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts
+                             ${modules_idx_deps})
   add_custom_target(modules_idx ALL DEPENDS ${library_output_dir}/modules.idx)
   add_dependencies(modules_idx ${modules_idx_deps})
+  set_property(TARGET modules_idx PROPERTY modules_idx_file ${library_output_dir}/modules.idx)
   set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${library_output_dir}/modules.timestamp")
 endif()
 
@@ -591,6 +599,10 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
      set(MAN_PATT_EXCL)
   else()
      set(MAN_PATT_EXCL PATTERN xproofd.1 EXCLUDE)
+  endif()
+  if(NOT fortran OR NOT CMAKE_Fortran_COMPILER)
+    set(MAN_PATT_EXCL ${MAN_PATT_EXCL} PATTERN h2root.1 EXCLUDE)
+    set(MAN_PATT_EXCL ${MAN_PATT_EXCL} PATTERN g2root.1 EXCLUDE)
   endif()
   install(DIRECTORY man/    DESTINATION ${CMAKE_INSTALL_MANDIR} ${MAN_PATT_EXCL})
   install(DIRECTORY tutorials/ DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)

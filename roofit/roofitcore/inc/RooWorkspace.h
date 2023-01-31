@@ -86,6 +86,7 @@ public:
   bool renameSet(const char* name, const char* newName) ;
   bool removeSet(const char* name) ;
   const RooArgSet* set(const char* name) ;
+  inline const std::map<std::string,RooArgSet>& sets() const { return _namedSets; }
 
   // Import, load and save parameter value snapshots
   bool saveSnapshot(const char* name, const char* paramNames) ;
@@ -94,7 +95,7 @@ public:
   const RooArgSet* getSnapshot(const char* name) const ;
 
   // Retrieve list of parameter snapshots
-  RooLinkedList getSnapshots(){ return _snapshots; }
+  RooLinkedList const& getSnapshots() const { return _snapshots; }
 
   void merge(const RooWorkspace& /*other*/) {} ;
 
@@ -128,7 +129,7 @@ public:
   std::list<TObject*> allGenericObjects() const ;
 
   bool makeDir() ;
-  bool cd(const char* path = 0) ;
+  bool cd(const char* path = nullptr) ;
 
   bool writeToFile(const char* fileName, bool recreate=true) ;
 
@@ -223,12 +224,12 @@ public:
   class WSDir : public TDirectoryFile {
   public:
     WSDir(const char* name, const char* title, RooWorkspace* wspace) :
-      TDirectoryFile(name,title,"RooWorkspace::WSDir",0),
+      TDirectoryFile(name,title,"RooWorkspace::WSDir",nullptr),
       _wspace(wspace)
       {
       }
 
-    ~WSDir() override { Clear("nodelete") ; } ;
+    ~WSDir() override { Clear("nodelete") ; }
 
 
     void Add(TObject*,bool) override ;

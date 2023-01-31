@@ -37,7 +37,11 @@ using RooFit::TestStatistics::LikelihoodWrapper;
 
 class Environment : public testing::Environment {
 public:
-   void SetUp() override { RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR); }
+   void SetUp() override { _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::ERROR); }
+   void TearDown() override { _changeMsgLvl.reset(); }
+
+private:
+   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
 
 // Previously, we just called AddGlobalTestEnvironment in global namespace, but this caused either a warning about an
@@ -106,7 +110,7 @@ TEST_F(LikelihoodSerialTest, UnbinnedGaussian1D)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1);
+   EXPECT_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodSerialTest, UnbinnedGaussianND)
@@ -122,7 +126,7 @@ TEST_F(LikelihoodSerialTest, UnbinnedGaussianND)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1);
+   EXPECT_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodSerialBinnedDatasetTest, UnbinnedPdf)
@@ -139,7 +143,7 @@ TEST_F(LikelihoodSerialBinnedDatasetTest, UnbinnedPdf)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1);
+   EXPECT_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodSerialBinnedDatasetTest, BinnedManualNLL)
@@ -164,7 +168,7 @@ TEST_F(LikelihoodSerialBinnedDatasetTest, BinnedManualNLL)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1);
+   EXPECT_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodSerialTest, SimBinned)
@@ -211,7 +215,7 @@ TEST_F(LikelihoodSerialTest, SimBinned)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1);
+   EXPECT_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodSerialTest, BinnedConstrained)
@@ -257,7 +261,7 @@ TEST_F(LikelihoodSerialTest, BinnedConstrained)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1);
+   EXPECT_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodSerialTest, SimUnbinned)
@@ -284,7 +288,7 @@ TEST_F(LikelihoodSerialTest, SimUnbinned)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1);
+   EXPECT_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodSerialTest, SimUnbinnedNonExtended)
@@ -317,7 +321,7 @@ TEST_F(LikelihoodSerialTest, SimUnbinnedNonExtended)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_EQ(nll0, nll1);
+   EXPECT_EQ(nll0, nll1.Sum());
 }
 
 class LikelihoodSerialSimBinnedConstrainedTest : public LikelihoodSerialTest {
@@ -384,7 +388,7 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, BasicParameters)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_DOUBLE_EQ(nll0, nll1);
+   EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
 }
 
 TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
@@ -411,8 +415,8 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
    // manually add the offset.
    ROOT::Math::KahanSum<double> nll1 = nll_ts->getResult() + nll_ts->offset();
 
-   EXPECT_DOUBLE_EQ(nll0, nll1);
-   EXPECT_FALSE(nll_ts->offset() == 0);
+   EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
+   EXPECT_FALSE(nll_ts->offset().Sum() == 0);
 
    // also check against RooRealL value
    RooFit::TestStatistics::RooRealL nll_real("real_nll", "RooRealL version", likelihood);
@@ -420,7 +424,7 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
    auto nll2 = nll_real.getVal();
 
    EXPECT_EQ(nll0, nll2);
-   EXPECT_DOUBLE_EQ(nll1, nll2);
+   EXPECT_DOUBLE_EQ(nll1.Sum(), nll2);
 }
 
 TEST_F(LikelihoodSerialTest, BatchedUnbinnedGaussianND)
@@ -430,6 +434,13 @@ TEST_F(LikelihoodSerialTest, BatchedUnbinnedGaussianND)
    bool batch_mode = true;
 
    std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, batch_mode);
+
+   // TODO: the result from the new test statistics is not correct unless the
+   // coefficient normalization set is fixed manually. Probably this works
+   // better when the new test statistics are migrated to the new BatchMode,
+   // and then this line can be deleted.
+   pdf->fixAddCoefNormalization(*data->get(), false);
+
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
    dynamic_cast<RooFit::TestStatistics::RooUnbinnedL *>(likelihood.get())->setUseBatchedEvaluations(true);
    auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
@@ -439,5 +450,5 @@ TEST_F(LikelihoodSerialTest, BatchedUnbinnedGaussianND)
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
 
-   EXPECT_NEAR(nll0, nll1, 1e-14 * nll0);
+   EXPECT_NEAR(nll0, nll1.Sum(), 1e-14 * nll0);
 }

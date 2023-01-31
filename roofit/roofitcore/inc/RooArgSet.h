@@ -158,7 +158,7 @@ public:
   /// `flagReadAtt` and `section` to 0.
   virtual bool readFromStream(std::istream& is, bool compact, bool verbose=false) {
     // I/O streaming interface (machine readable)
-    return readFromStream(is, compact, 0, 0, verbose) ;
+    return readFromStream(is, compact, nullptr, nullptr, verbose) ;
   }
   bool readFromStream(std::istream& is, bool compact, const char* flagReadAtt, const char* section, bool verbose=false) ;
   virtual void writeToStream(std::ostream& os, bool compact, const char* section=nullptr) const;

@@ -57,6 +57,7 @@ public:
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
   double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
 
+  std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
   class PdfCacheElem : public RooAbsCacheElement {
   public:
@@ -86,9 +87,8 @@ public:
   void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
   PdfCacheElem* getCache(const RooArgSet* nset, bool recalculate=true) const ;
-  void clearCacheObject(PdfCacheElem& cache) const ;
 
-  virtual const char* payloadUniqueSuffix() const { return 0 ; }
+  virtual const char* payloadUniqueSuffix() const { return nullptr ; }
 
   friend class PdfCacheElem ;
   virtual const char* binningName() const {

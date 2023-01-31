@@ -623,7 +623,7 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
    if (axmin >= axmax ) {
 
 #ifdef DO_DEBUG
-      std::cout << "No rage given - check if extrapolation is needed " << std::endl;
+      std::cout << "No range given - check if extrapolation is needed " << std::endl;
 #endif
 
       xmin = graph.GetX()[0];
@@ -892,7 +892,7 @@ int HypoTestInverterResult::FindClosestPointIndex(double target, int mode, doubl
      double smallestError = 2; // error must be < 1
      double bestValue = 2;
      for (int i=0; i<ArraySize(); i++) {
-        double dist = fabs(GetYValue(i)-target);
+        double dist = std::abs(GetYValue(i)-target);
         if ( dist <3 *GetYError(i) ) { // less than 1 sigma from target CL
            if (GetYError(i) < smallestError ) {
               smallestError = GetYError(i);
@@ -930,7 +930,7 @@ int HypoTestInverterResult::FindClosestPointIndex(double target, int mode, doubl
   if (mode == 2) return (GetXValue(indx[index1]) < GetXValue(indx[index2])) ? indx[index1] : indx[index2];
   if (mode == 3) return (GetXValue(indx[index1]) > GetXValue(indx[index2])) ? indx[index1] : indx[index2];
   // get smaller point of the two (mode == 1)
-  if (fabs(GetYValue(indx[index1])-target) <= fabs(GetYValue(indx[index2])-target) )
+  if (std::abs(GetYValue(indx[index1])-target) <= std::abs(GetYValue(indx[index2])-target) )
      return indx[index1];
   return indx[index2];
 
@@ -1063,7 +1063,7 @@ double HypoTestInverterResult::CalculateEstimatedError(double target, bool lower
      double errY = GetYError(index);
      if (errY >  0) {
         double m = fct.Derivative( GetXValue(index) );
-        theError = std::min(fabs( GetYError(index) / m), maxX-minX);
+        theError = std::min(std::abs( GetYError(index) / m), maxX-minX);
      }
   }
   else {

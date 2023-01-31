@@ -82,10 +82,10 @@ public:
    Bool_t                DefinePolygon(Int_t nvert, const Double_t *xv, const Double_t *yv);
    virtual void          DefineSection(Int_t snum, Double_t z, Double_t x0=0., Double_t y0=0., Double_t scale=1.);
    virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=nullptr) const;
    virtual void          DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
    virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=nullptr) const;
    virtual void          DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    void                  DrawPolygon(Option_t *option="");
@@ -93,14 +93,14 @@ public:
 //   virtual Int_t         GetByteCount() const {return 60+12*fNz;}
    Int_t                 GetNz() const    {return fNz;}
    Int_t                 GetNvert() const {return fNvert;}
-   Double_t              GetX(Int_t i) const {return (i<fNvert&&i>-1 &&fX!=0) ? fX[i] : -1.0E10;}
-   Double_t              GetY(Int_t i) const {return (i<fNvert&&i>-1 &&fY!=0) ? fY[i] : -1.0E10;}
-   Double_t              GetXOffset(Int_t i) const {return (i<fNz&&i>-1 && fX0!=0) ? fX0[i] : 0.0;}
-   Double_t              GetYOffset(Int_t i) const {return (i<fNz&&i>-1 && fY0!=0) ? fY0[i] : 0.0;}
-   Double_t              GetScale(Int_t i) const {return (i<fNz&&i>-1 && fScale!=0) ? fScale[i] : 1.0;}
+   Double_t              GetX(Int_t i) const {return (i<fNvert&&i>-1 && fX) ? fX[i] : -1.0E10;}
+   Double_t              GetY(Int_t i) const {return (i<fNvert&&i>-1 && fY) ? fY[i] : -1.0E10;}
+   Double_t              GetXOffset(Int_t i) const {return (i<fNz&&i>-1 && fX0) ? fX0[i] : 0.0;}
+   Double_t              GetYOffset(Int_t i) const {return (i<fNz&&i>-1 && fY0) ? fY0[i] : 0.0;}
+   Double_t              GetScale(Int_t i) const {return (i<fNz&&i>-1 && fScale) ? fScale[i] : 1.0;}
    Double_t             *GetZ() const     {return fZ;}
    Double_t              GetZ(Int_t ipl) const;
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}
+   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return nullptr;}
    virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
    virtual Int_t         GetNmeshVertices() const;
    virtual void          InspectShape() const;

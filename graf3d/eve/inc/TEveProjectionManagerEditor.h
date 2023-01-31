@@ -46,7 +46,7 @@ protected:
    TEveGValuator   *fCenterZ;      // center z value widget
 
 public:
-   TEveProjectionManagerEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30, UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
+   TEveProjectionManagerEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30, UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    virtual ~TEveProjectionManagerEditor(){}
 
    virtual void SetModel(TObject* obj);

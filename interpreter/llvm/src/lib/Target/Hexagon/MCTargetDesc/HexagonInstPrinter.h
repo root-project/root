@@ -28,13 +28,14 @@ public:
                               MCRegisterInfo const &MRI)
     : MCInstPrinter(MAI, MII, MRI), MII(MII) {}
 
-  void printInst(MCInst const *MI, raw_ostream &O, StringRef Annot,
-                 const MCSubtargetInfo &STI) override;
+  void printInst(MCInst const *MI, uint64_t Address, StringRef Annot,
+                 const MCSubtargetInfo &STI, raw_ostream &O) override;
   void printRegName(raw_ostream &O, unsigned RegNo) const override;
 
   static char const *getRegisterName(unsigned RegNo);
 
-  void printInstruction(MCInst const *MI, raw_ostream &O);
+  std::pair<const char *, uint64_t> getMnemonic(const MCInst *MI) override;
+  void printInstruction(const MCInst *MI, uint64_t Address, raw_ostream &O);
   void printOperand(MCInst const *MI, unsigned OpNo, raw_ostream &O) const;
   void printBrtarget(MCInst const *MI, unsigned OpNo, raw_ostream &O) const;
 

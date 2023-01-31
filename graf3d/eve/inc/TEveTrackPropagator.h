@@ -237,14 +237,14 @@ protected:
                                TEveVectorD&itsect);
    Bool_t  LineIntersectPlane(const TEveVectorD& p, const TEveVectorD& point, const TEveVectorD& normal,
                               TEveVectorD& itsect);
-   Bool_t  PointOverVertex(const TEveVector4D& v0, const TEveVector4D& v, Double_t* p=0);
+   Bool_t  PointOverVertex(const TEveVector4D& v0, const TEveVector4D& v, Double_t* p = nullptr);
 
    void    ClosestPointFromVertexToLineSegment(const TEveVectorD& v, const TEveVectorD& s, const TEveVectorD& r, Double_t rMagInv, TEveVectorD& c);
    Bool_t  ClosestPointBetweenLines(const TEveVectorD&, const TEveVectorD&, const TEveVectorD&, const TEveVectorD&, TEveVectorD& out);
 
 public:
    TEveTrackPropagator(const char* n="TEveTrackPropagator", const char* t="",
-                       TEveMagField* field=0, Bool_t own_field=kTRUE);
+                       TEveMagField* field=nullptr, Bool_t own_field=kTRUE);
    virtual ~TEveTrackPropagator();
 
    virtual void OnZeroRefCount();

@@ -76,7 +76,8 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include <errno.h>
 #include <sys/stat.h>
 #ifndef WIN32
-#   include <unistd.h>
+#include <unistd.h>
+#include <sys/xattr.h>
 #else
 #   define ssize_t int
 #   include <io.h>
@@ -148,6 +149,11 @@ UInt_t   TFile::fgOpenTimeout = TFile::kEternalTimeout;
 Bool_t   TFile::fgOnlyStaged = kFALSE;
 #ifdef R__USE_IMT
 ROOT::Internal::RConcurrentHashColl TFile::fgTsSIHashes;
+#endif
+
+#ifdef R__MACOSX
+/* On macOS getxattr takes two extra arguments that should be set to 0 */
+#define getxattr(path, name, value, size) getxattr(path, name, value, size, 0u, 0)
 #endif
 
 const Int_t kBEGIN = 100;
@@ -312,6 +318,26 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
 
+   auto zombify = [this] {
+      // error in file opening occurred, make this object a zombie
+      if (fGlobalRegistration) {
+         R__LOCKGUARD(gROOTMutex);
+         gROOT->GetListOfClosedObjects()->Add(this);
+      }
+      MakeZombie();
+      gDirectory = gROOT;
+   };
+
+   fOption = option;
+   if (strlen(fUrl.GetProtocol()) != 0 && strcmp(fUrl.GetProtocol(), "file") != 0 && !fOption.BeginsWith("NET") &&
+       !fOption.BeginsWith("WEB")) {
+      Error("TFile",
+            "please use TFile::Open to access remote files:\n\tauto f = std::unique_ptr<TFile>{TFile::Open(\"%s\")};",
+            fname1);
+      zombify();
+      return;
+   }
+
    // store name without the options as name and title
    TString sfname1 = fname1;
    if (sfname1.Index("?") != kNPOS) {
@@ -344,7 +370,6 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    fVersion      = gROOT->GetVersionInt();  //ROOT version in integer format
    fUnits        = 4;
-   fOption       = option;
    fCacheReadMap = new TMap();
    SetBit(kBinaryFile, kTRUE);
 
@@ -397,7 +422,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    if (!fname1 || !fname1[0]) {
       Error("TFile", "file name is not specified");
-      goto zombie;
+      zombify();
+      return;
    }
 
    // support dumping to /dev/null on UNIX
@@ -423,7 +449,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       fname = fRealName.Data();
    } else {
       Error("TFile", "error expanding path %s", fname1);
-      goto zombie;
+      zombify();
+      return;
    }
 
    // If the user supplied a value to the option take it as the name to set for
@@ -439,7 +466,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
          if (gSystem->Unlink(fname) != 0) {
             SysError("TFile", "could not delete %s (errno: %d)",
                      fname, gSystem->GetErrno());
-            goto zombie;
+            zombify();
+            return;
          }
       }
       recreate = kFALSE;
@@ -448,7 +476,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    }
    if (create && !devnull && !gSystem->AccessPathName(fname, kFileExists)) {
       Error("TFile", "file %s already exists", fname);
-      goto zombie;
+      zombify();
+      return;
    }
    if (update) {
       if (gSystem->AccessPathName(fname, kFileExists)) {
@@ -457,17 +486,20 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       }
       if (update && gSystem->AccessPathName(fname, kWritePermission)) {
          Error("TFile", "no write permission, could not open file %s", fname);
-         goto zombie;
+         zombify();
+         return;
       }
    }
    if (read) {
       if (gSystem->AccessPathName(fname, kFileExists)) {
          Error("TFile", "file %s does not exist", fname);
-         goto zombie;
+         zombify();
+         return;
       }
       if (gSystem->AccessPathName(fname, kReadPermission)) {
          Error("TFile", "no read permission, could not open file %s", fname);
-         goto zombie;
+         zombify();
+         return;
       }
    }
 
@@ -480,7 +512,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 #endif
       if (fD == -1) {
          SysError("TFile", "file %s can not be opened", fname);
-         goto zombie;
+         zombify();
+         return;
       }
       fWritable = kTRUE;
    } else {
@@ -491,7 +524,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 #endif
       if (fD == -1) {
          SysError("TFile", "file %s can not be opened for reading", fname);
-         goto zombie;
+         zombify();
+         return;
       }
       fWritable = kFALSE;
    }
@@ -500,15 +534,6 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    TFile::Init(create);                        // NOLINT: silence clang-tidy warnings
 
    return;
-
-zombie:
-   // error in file opening occurred, make this object a zombie
-   if (fGlobalRegistration) {
-      R__LOCKGUARD(gROOTMutex);
-      gROOT->GetListOfClosedObjects()->Add(this);
-   }
-   MakeZombie();
-   gDirectory = gROOT;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1056,7 +1081,16 @@ void TFile::Draw(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw map of objects in this file.
+/// Draw map of objects in this file. The map drawing is handled by TFileDrawMap.
+/// Once the map is drawn, turn on the TCanvas option "View->Event Statusbar". Then, when
+/// moving the mouse in the canvas, the "Event Status" panels shows the object corresponding
+/// to the mouse position.
+///
+/// Example:
+/// ~~~{.cpp}
+///   auto f = new TFile("myfile.root");
+///   f->DrawMap();
+/// ~~~
 
 void TFile::DrawMap(const char *keys, Option_t *option)
 {
@@ -1474,7 +1508,7 @@ void TFile::MakeFree(Long64_t first, Long64_t last)
 ///     20010404/150443  At:407678    N=86        FreeSegments
 ///     20010404/150443  At:407764    N=1         END
 ///
-/// If the parameter opt contains "forComp", the Date/Time is ommitted
+/// If the parameter opt contains "forComp", the Date/Time is omitted
 /// and the decompressed size is also printed.
 ///
 ///    Record_Adress Logical_Record_Length  Key_Length Object_Record_Length ClassName  CompressionFactor
@@ -4033,6 +4067,29 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
    TString expandedUrl(url);
    gSystem->ExpandPathName(expandedUrl);
 
+#ifdef R__UNIX
+   // If URL is a file on an EOS FUSE mount, attempt redirection to XRootD protocol.
+   if (gEnv->GetValue("TFile.CrossProtocolRedirects", 1) == 1) {
+      TUrl fileurl(expandedUrl, /* default is file */ kTRUE);
+      if (strcmp(fileurl.GetProtocol(), "file") == 0) {
+         ssize_t len = getxattr(fileurl.GetFile(), "eos.url.xroot", nullptr, 0);
+         if (len > 0) {
+            std::string xurl(len, 0);
+            if (getxattr(fileurl.GetFile(), "eos.url.xroot", &xurl[0], len) == len) {
+               if ((f = TFile::Open(xurl.c_str(), options, ftitle, compress, netopt))) {
+                  if (!f->IsZombie()) {
+                     return f;
+                  } else {
+                     delete f;
+                     f = nullptr;
+                  }
+               }
+            }
+         }
+      }
+   }
+#endif
+
    // If a timeout has been specified extract the value and try to apply it (it requires
    // support for asynchronous open, though; the following is completely transparent if
    // such support if not available for the required protocol)
@@ -4048,7 +4105,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
          // Remove from the options field
          sto.Insert(0, "TIMEOUT=");
          opts.ReplaceAll(sto, "");
-         // Asynchrounous open
+         // Asynchronous open
          TFileOpenHandle *fh = TFile::AsyncOpen(expandedUrl, opts, ftitle, compress, netopt);
          // Check the result in steps of 1 millisec
          TFile::EAsyncOpenStatus aos = TFile::kAOSNotAsync;

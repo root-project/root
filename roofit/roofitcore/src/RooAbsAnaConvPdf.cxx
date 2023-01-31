@@ -213,8 +213,8 @@ bool RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel)
     auto conv = static_cast<RooResolutionModel*>(convArg);
 
     // Build new resolution model
-    RooResolutionModel* newConv = newModel.convolution((RooFormulaVar*)&conv->basis(),this) ;
-    if (!newConvSet.add(*newConv)) {
+    std::unique_ptr<RooResolutionModel> newConv{newModel.convolution(const_cast<RooFormulaVar*>(&conv->basis()),this)};
+    if (!newConvSet.addOwned(std::move(newConv))) {
       allOK = false ;
       break ;
     }
@@ -222,20 +222,22 @@ bool RooAbsAnaConvPdf::changeModel(const RooResolutionModel& newModel)
 
   // Check if all convolutions were successfully built
   if (!allOK) {
-    // Delete new basis functions created sofar
-    std::for_each(newConvSet.begin(), newConvSet.end(), [](RooAbsArg* arg){delete arg;});
-
     return true ;
   }
 
   // Replace old convolutions with new set
   _convSet.removeAll() ;
-  _convSet.addOwned(newConvSet) ;
+  _convSet.addOwned(std::move(newConvSet));
 
-  // Update server link by hand, since _model.setArg() below will not do this
-  replaceServer((RooAbsArg&)_model.arg(),(RooAbsArg&)newModel,false,false) ;
+  const std::string attrib = std::string("ORIGNAME:") + _model->GetName();
+  const bool oldAttrib = newModel.getAttribute(attrib.c_str());
+  const_cast<RooResolutionModel&>(newModel).setAttribute(attrib.c_str());
 
-  _model.setArg((RooResolutionModel&)newModel) ;
+  redirectServers(RooArgSet{newModel}, false, true);
+
+  // reset temporary attribute for server redirection
+  const_cast<RooResolutionModel&>(newModel).setAttribute(attrib.c_str(), oldAttrib);
+
   return false ;
 }
 

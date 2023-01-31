@@ -6,11 +6,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <TPieSlice.h>
+#include "TPieSlice.h"
 
-#include <TError.h>
-#include <TVirtualPad.h>
-#include <TPie.h>
+#include "TError.h"
+#include "TVirtualPad.h"
+#include "TPie.h"
+
+#include <iostream>
+#include <cstring>
 
 ClassImp(TPieSlice);
 
@@ -27,7 +30,7 @@ This class describe the property of single
 
 TPieSlice::TPieSlice() : TNamed(), TAttFill(), TAttLine()
 {
-   fPie = 0;
+   fPie = nullptr;
    fValue = 1;
    fRadiusOffset = 0;
    fIsActive = kFALSE;
@@ -79,10 +82,20 @@ Double_t TPieSlice::GetValue() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Do nothing.
+/// Save as C++ macro, used directly from TPie
 
-void TPieSlice::SavePrimitive(std::ostream &/*out*/, Option_t * /*opts*/)
+void TPieSlice::SavePrimitive(std::ostream &out, Option_t *opts)
 {
+   const char *name = opts;
+   if (!name || !*name || strncmp(name, "pie->", 5))
+      return;
+
+   out << "   " << name << "->SetTitle(\"" << GetTitle() << "\");" << std::endl;
+   out << "   " << name << "->SetValue(" << GetValue() << ");" << std::endl;
+   out << "   " << name << "->SetRadiusOffset(" << GetRadiusOffset() << ");" << std::endl;
+
+   SaveFillAttributes(out, name, 0, 1001);
+   SaveLineAttributes(out, name, 1, 1, 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

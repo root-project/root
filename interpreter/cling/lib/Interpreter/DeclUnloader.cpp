@@ -175,8 +175,7 @@ static Decl* handleRedelaration(Decl* D, DeclContext* DC) {
       };
       if (!hasDecl(decls, MostRecentNotThis) && hasDecl(decls, ND)) {
         // The decl was registered in the lookup, update it.
-        Pos->second.HandleRedeclaration(MostRecentNotThis,
-                                        /*IsKnownNewer*/ true);
+        Pos->second.addOrReplaceDecl(MostRecentNotThis);
       }
     }
   }
@@ -248,10 +247,10 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
       for (Globals::iterator I = VisitedGlobals.begin(),
              E = VisitedGlobals.end(); I != E; ++I)
         if (GlobalVariable* GVar = dyn_cast<GlobalVariable>(*I)) {
-          GVar->setInitializer(0);
+          GVar->setInitializer(nullptr);
         }
         else if (GlobalAlias* GA = dyn_cast<GlobalAlias>(*I)) {
-          GA->setAliasee(0);
+          GA->setAliasee(nullptr);
         }
         else {
           Function* F = cast<Function>(*I);
@@ -298,7 +297,7 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
 
         for (unsigned i = 0, e = Inits->getNumOperands(); i != e; ++i) {
           llvm::Value *Operand
-            = Inits->getOperand(i)->stripPointerCastsNoFollowAliases();
+            = Inits->getOperand(i)->stripPointerCasts();
           VisitedGlobals.erase(cast<llvm::GlobalValue>(Operand));
         }
 
@@ -411,48 +410,18 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
     // Make sure we the decl doesn't exist in the lookup tables.
     StoredDeclsMap::iterator Pos = Map->find(ND->getDeclName());
     if (Pos != Map->end()) {
-      // Most decls only have one entry in their list, special case it.
-      if (Pos->second.getAsDecl() == ND) {
-        // This is the only decl, no need to call Pos->second.remove(ND);
-        // as it only sets data to nullptr, just remove the entire entry
+      StoredDeclsList &List = Pos->second;
+      // In some cases clang puts an entry in the list without a decl pointer.
+      // Clean it up.
+      if (List.isNull()) {
         Map->erase(Pos);
+        return;
       }
-      else if (StoredDeclsList::DeclsTy* Vec = Pos->second.getAsVector()) {
-        // Otherwise iterate over the list with entries with the same name.
-        for (NamedDecl* NDi : *Vec) {
-          if (NDi == ND)
-            Pos->second.remove(ND);
-        }
-        if (Vec->empty())
-          Map->erase(Pos);
-      }
-      else if (Pos->second.isNull()) // least common case
+      List.remove(ND);
+      if (List.isNull())
         Map->erase(Pos);
     }
   }
-
-#ifndef NDEBUG
-  // Make sure we the decl doesn't exist in the lookup tables.
-  static void checkDeclIsGone(StoredDeclsMap* Map, NamedDecl* ND) {
-    assert(Map && ND && "checkDeclIsGone recieved NULL value(s)");
-    StoredDeclsMap::iterator Pos = Map->find(ND->getDeclName());
-    if ( Pos != Map->end()) {
-      // Most decls only have one entry in their list, special case it.
-      if (NamedDecl* OldD = Pos->second.getAsDecl())
-        assert(OldD != ND && "Lookup entry still exists.");
-      else if (StoredDeclsList::DeclsTy* Vec = Pos->second.getAsVector()) {
-        // Otherwise iterate over the list with entries with the same name.
-        // TODO: Walk the redeclaration chain if the entry was a redeclaration.
-
-        for (StoredDeclsList::DeclsTy::const_iterator I = Vec->begin(),
-               E = Vec->end(); I != E; ++I)
-          assert(*I != ND && "Lookup entry still exists.");
-      }
-      else
-        assert(Pos->second.isNull() && "!?");
-    }
-  }
-#endif
 
   bool DeclUnloader::VisitNamedDecl(NamedDecl* ND) {
     bool Successful = VisitDecl(ND);
@@ -476,19 +445,16 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
 
     // Cleanup the lookup tables.
     // DeclContexts like EnumDecls don't have lookup maps.
-    if (StoredDeclsMap* Map = DC->getPrimaryContext()->getLookupPtr()) {
+    // FIXME: Remove once we upstream this patch: D119675
+    if (StoredDeclsMap* Map = DC->getPrimaryContext()->getLookupPtr())
       eraseDeclFromMap(Map, ND);
-#ifndef NDEBUG
-      checkDeclIsGone(Map, ND);
-#endif
-    }
 
     return Successful;
   }
 
   bool DeclUnloader::VisitDeclaratorDecl(DeclaratorDecl* DD) {
     // VisitDeclaratorDecl: ValueDecl
-    auto found = std::find(m_Sema->UnusedFileScopedDecls.begin(/*ExtSource*/0,
+    auto found = std::find(m_Sema->UnusedFileScopedDecls.begin(/*ExtSource*/nullptr,
                                                                /*Local*/true),
                            m_Sema->UnusedFileScopedDecls.end(), DD);
     if (found != m_Sema->UnusedFileScopedDecls.end())
@@ -506,7 +472,7 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
     Successful &= VisitNamedDecl(USD);
 
     // Unregister from the using decl that it shadows.
-    USD->getUsingDecl()->removeShadowDecl(USD);
+    USD->getIntroducer()->removeShadowDecl(USD);
 
     return Successful;
   }
@@ -625,13 +591,13 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
         This->getCommonPtr()->Specializations.clear();
 
         //Readd the collected specializations.
-        void* InsertPos = 0;
-        FunctionTemplateSpecializationInfo* FTSI = 0;
+        void* InsertPos = nullptr;
+        FunctionTemplateSpecializationInfo* FTSI = nullptr;
         for (size_t i = 0, e = specializations.size(); i < e; ++i) {
           FTSI = specializations[i]->getTemplateSpecializationInfo();
           assert(FTSI && "Must not be null.");
           // Avoid assertion on add.
-          FTSI->SetNextInBucket(0);
+          FTSI->SetNextInBucket(nullptr);
           This->addSpecialization(FTSI, InsertPos);
         }
 #ifndef NDEBUG
@@ -769,7 +735,7 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
       // Hopefully LSD->isExternCContext() means that it already does exist
       ExternCContextDecl* ECD = m_Sema->Context.getExternCContextDecl();
       StoredDeclsMap* Map = ECD ? ECD->getLookupPtr() : nullptr;
-      
+
       for (Decl* D : LSD->noload_decls()) {
         if (NamedDecl* ND = dyn_cast<NamedDecl>(D)) {
 
@@ -942,7 +908,7 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
     const MacroInfo* MI = MD->getMacroInfo();
 
     // If the macro is not defined, this is a noop undef, just return.
-    if (MI == 0)
+    if (!MI)
       return false;
 
     // Remove the pair from the macros
@@ -1016,13 +982,13 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
       This->getCommonPtr()->Specializations.clear();
 
       //Readd the collected specializations.
-      void* InsertPos = 0;
-      ClassTemplateSpecializationDecl* CTSD = 0;
+      void* InsertPos = nullptr;
+      ClassTemplateSpecializationDecl* CTSD = nullptr;
       for (size_t i = 0, e = specializations.size(); i < e; ++i) {
         CTSD = specializations[i];
         assert(CTSD && "Must not be null.");
         // Avoid assertion on add.
-        CTSD->SetNextInBucket(0);
+        CTSD->SetNextInBucket(nullptr);
         This->AddSpecialization(CTSD, InsertPos);
       }
     }
@@ -1052,13 +1018,13 @@ bool DeclUnloader::VisitRedeclarable(clang::Redeclarable<T>* R, DeclContext* DC)
       This->getPartialSpecializations().clear();
 
       //Readd the collected specializations.
-      void* InsertPos = 0;
-      ClassTemplatePartialSpecializationDecl* CTPSD = 0;
+      void* InsertPos = nullptr;
+      ClassTemplatePartialSpecializationDecl* CTPSD = nullptr;
       for (size_t i = 0, e = specializations.size(); i < e; ++i) {
         CTPSD = specializations[i];
         assert(CTPSD && "Must not be null.");
         // Avoid assertion on add.
-        CTPSD->SetNextInBucket(0);
+        CTPSD->SetNextInBucket(nullptr);
         This->AddPartialSpecialization(CTPSD, InsertPos);
       }
     }

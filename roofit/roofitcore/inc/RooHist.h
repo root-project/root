@@ -28,7 +28,7 @@ class TH1;
 
 class RooHist : public TGraphAsymmErrors, public RooPlotable {
 public:
-  RooHist() ;
+  RooHist() {}
   RooHist(double nominalBinWidth, double nSigma= 1, double xErrorFrac=1.0, double scaleFactor=1.0);
   RooHist(const TH1 &data, double nominalBinWidth= 0, double nSigma= 1, RooAbsData::ErrorType=RooAbsData::Poisson,
      double xErrorFrac=1.0, bool correctForBinWidth=true, double scaleFactor=1.);
@@ -36,7 +36,7 @@ public:
      double xErrorFrac=1.0, bool efficiency=false, double scaleFactor=1.0);
   RooHist(const RooHist& hist1, const RooHist& hist2, double wgt1=1.0, double wgt2=1.0,
      RooAbsData::ErrorType etype=RooAbsData::Poisson, double xErrorFrac=1.0) ;
-  RooHist(const RooAbsReal &f, RooAbsRealLValue &x, double xErrorFrac=1.0, double scaleFactor=1.0, const RooArgSet *normVars = 0, const RooFitResult* fr = 0);
+  RooHist(const RooAbsReal &f, RooAbsRealLValue &x, double xErrorFrac=1.0, double scaleFactor=1.0, const RooArgSet *normVars = nullptr, const RooFitResult* fr = nullptr);
 
   // add a datapoint for a bin with n entries, using a Poisson error
   void addBin(Axis_t binCenter, double n, double binWidth= 0, double xErrorFrac=1.0, double scaleFactor=1.0);
@@ -61,14 +61,15 @@ public:
   void printClassName(std::ostream& os) const override ;
   void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent= "") const override;
 
-  inline void Print(Option_t *options= 0) const override {
+  inline void Print(Option_t *options= nullptr) const override {
     // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
   double getFitRangeNEvt() const override;
   double getFitRangeNEvt(double xlo, double xhi) const override ;
-  double getFitRangeBinW() const override;
+  /// Return (average) bin width of this RooHist.
+  double getFitRangeBinW() const override { return _nominalBinWidth ; }
   inline double getNominalBinWidth() const { return _nominalBinWidth; }
   inline void setRawEntries(double n) { _rawEntries = n ; }
 
@@ -78,7 +79,6 @@ public:
   RooHist* makePullHist(const RooCurve& curve, bool useAverage=false) const
     {return makeResidHist(curve,true,useAverage); }
 
-
   bool isIdentical(const RooHist& other, double tol=1e-6, bool verbose=true) const ;
 
 
@@ -86,13 +86,23 @@ protected:
   void initialize();
   Int_t roundBin(double y);
 
-private:
-  double _nominalBinWidth ; ///< Average bin width
-  double _nSigma ;          ///< Number of 'sigmas' error bars represent
-  double _entries ;         ///< Number of entries in histogram
-  double _rawEntries;       ///< Number of entries in source dataset
+  friend class RooPlot;
 
-  ClassDefOverride(RooHist,1) // 1-dimensional histogram with error bars
+  void fillResidHist(RooHist & residHist, const RooCurve& curve,bool normalize=false, bool useAverage=false) const;
+  std::unique_ptr<RooHist> createEmptyResidHist(const RooCurve& curve, bool normalize=false) const;
+
+private:
+
+  void addPoint(Axis_t binCenter, double y, double yscale, double exlow, double exhigh, double eylow, double eyhigh);
+
+  double _nominalBinWidth = 1.0; ///< Average bin width
+  double _nSigma = 1.0;          ///< Number of 'sigmas' error bars represent
+  double _entries = 0.0;         ///< Number of entries in histogram
+  double _rawEntries = 0.0;      ///< Number of entries in source dataset
+
+  std::vector<double> _originalWeights; ///< The original bin weights that were passed to the `RooHist::addBin` functions before scaling and bin width correction
+
+  ClassDefOverride(RooHist,2) // 1-dimensional histogram with error bars
 };
 
 #endif

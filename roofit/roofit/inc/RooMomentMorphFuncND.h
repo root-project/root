@@ -24,10 +24,14 @@
 #include <map>
 
 class RooChangeTracker;
+class RooRealSumFunc;
 
 class RooMomentMorphFuncND : public RooAbsReal {
 
 public:
+   using Base_t = RooAbsReal;
+   using Sum_t = RooRealSumFunc;
+
    class Grid2 {
    public:
       Grid2(){};
@@ -44,7 +48,7 @@ public:
          _grid.push_back(binning_y.clone());
          _grid.push_back(binning_z.clone());
       };
-      Grid2(const std::vector<RooAbsBinning *> binnings)
+      Grid2(std::vector<RooAbsBinning *> const &binnings)
       {
          for (unsigned int i = 0; i < binnings.size(); i++) {
             _grid.push_back(binnings[i]->clone());
@@ -66,20 +70,22 @@ public:
       mutable std::vector<std::vector<double>> _nref;
       mutable std::vector<int> _nnuis;
 
-      ClassDef(RooMomentMorphFuncND::Grid2, 1)
+      ClassDef(RooMomentMorphFuncND::Grid2, 1);
    };
+
+   using Grid = Grid2;
 
 protected:
    class CacheElem : public RooAbsCacheElement {
    public:
       CacheElem(RooAbsReal &sumFunc, RooChangeTracker &tracker, const RooArgList &flist)
-         : _sumFunc(&sumFunc), _tracker(&tracker)
+         : _sum(&sumFunc), _tracker(&tracker)
       {
          _frac.add(flist);
       };
       ~CacheElem() override;
       RooArgList containedArgs(Action) override;
-      RooAbsReal *_sumFunc;
+      RooAbsReal *_sum;
       RooChangeTracker *_tracker;
       RooArgList _frac;
 
@@ -96,7 +102,7 @@ public:
                         const RooArgList &pdfList, const RooArgList &mrefList, Setting setting);
    RooMomentMorphFuncND(const char *name, const char *title, const RooArgList &parList, const RooArgList &obsList,
                         const Grid2 &referenceGrid, const Setting &setting);
-   RooMomentMorphFuncND(const RooMomentMorphFuncND &other, const char *name = 0);
+   RooMomentMorphFuncND(const RooMomentMorphFuncND &other, const char *name = nullptr);
    RooMomentMorphFuncND(const char *name, const char *title, RooAbsReal &_m, const RooArgList &varList,
                         const RooArgList &pdfList, const TVectorD &mrefpoints, Setting setting);
    ~RooMomentMorphFuncND() override;
@@ -108,7 +114,7 @@ public:
    void useHorizontalMorphing(bool val) { _useHorizMorph = val; }
 
    double evaluate() const override;
-   virtual double getVal(const RooArgSet *set = 0) const;
+   virtual double getVal(const RooArgSet *set = nullptr) const;
 
 protected:
    void initialize();
@@ -118,32 +124,21 @@ protected:
    RooAbsReal *sumFunc(const RooArgSet *nset);
    CacheElem *getCache(const RooArgSet *nset) const;
 
-   template <typename T>
-   struct Digits {
-      typename std::vector<T>::const_iterator begin;
-      typename std::vector<T>::const_iterator end;
-      typename std::vector<T>::const_iterator me;
-   };
-
-   template <typename T>
-   static void cartesian_product(std::vector<std::vector<T>> &out, std::vector<std::vector<T>> &in);
-   template <typename Iterator>
-   static bool next_combination(const Iterator first, Iterator k, const Iterator last);
    void findShape(const std::vector<double> &x) const;
 
    friend class CacheElem;
    friend class Grid2;
 
-   mutable RooObjCacheManager _cacheMgr; ///<! Transient cache manager
-   mutable RooArgSet *_curNormSet;
+   mutable RooObjCacheManager _cacheMgr;     ///<! Transient cache manager
+   mutable RooArgSet *_curNormSet = nullptr; ///<! Transient cache manager
 
    RooListProxy _parList;
    RooSetProxy _obsList;
    mutable Grid2 _referenceGrid;
    RooListProxy _pdfList;
 
-   mutable TMatrixD *_M;
-   mutable TMatrixD *_MSqr;
+   mutable std::unique_ptr<TMatrixD> _M;
+   mutable std::unique_ptr<TMatrixD> _MSqr;
    mutable std::vector<std::vector<double>> _squareVec;
    mutable std::vector<int> _squareIdx;
 
@@ -152,7 +147,7 @@ protected:
 
    inline int sij(const int &i, const int &j) const { return (i * _obsList.getSize() + j); }
 
-   ClassDefOverride(RooMomentMorphFuncND, 2)
+   ClassDefOverride(RooMomentMorphFuncND, 3);
 };
 
 #endif

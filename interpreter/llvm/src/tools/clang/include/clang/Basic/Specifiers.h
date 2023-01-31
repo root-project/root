@@ -29,31 +29,15 @@ namespace clang {
   };
 
   /// Define the kind of constexpr specifier.
-  enum ConstexprSpecKind {
-    CSK_unspecified,
-    CSK_constexpr,
-    CSK_consteval
-  };
+  enum class ConstexprSpecKind { Unspecified, Constexpr, Consteval, Constinit };
 
   /// Specifies the width of a type, e.g., short, long, or long long.
-  enum TypeSpecifierWidth {
-    TSW_unspecified,
-    TSW_short,
-    TSW_long,
-    TSW_longlong
-  };
+  enum class TypeSpecifierWidth { Unspecified, Short, Long, LongLong };
 
   /// Specifies the signedness of a type, e.g., signed or unsigned.
-  enum TypeSpecifierSign {
-    TSS_unspecified,
-    TSS_signed,
-    TSS_unsigned
-  };
+  enum class TypeSpecifierSign { Unspecified, Signed, Unsigned };
 
-  enum TypeSpecifiersPipe {
-    TSP_unspecified,
-    TSP_pipe
-  };
+  enum class TypeSpecifiersPipe { Unspecified, Pipe };
 
   /// Specifies the kind of type.
   enum TypeSpecifierType {
@@ -66,10 +50,12 @@ namespace clang {
     TST_char32,       // C++11 char32_t
     TST_int,
     TST_int128,
+    TST_extint,       // Extended Int types.
     TST_half,         // OpenCL half, ARM NEON __fp16
     TST_Float16,      // C11 extension ISO/IEC TS 18661-3
     TST_Accum,        // ISO/IEC JTC1 SC22 WG14 N1169 Extension
     TST_Fract,
+    TST_BFloat16,
     TST_float,
     TST_double,
     TST_float128,
@@ -103,7 +89,7 @@ namespace clang {
     static_assert(TST_error < 1 << 6, "Type bitfield not wide enough for TST");
     /*DeclSpec::TST*/ unsigned Type  : 6;
     /*DeclSpec::TSS*/ unsigned Sign  : 2;
-    /*DeclSpec::TSW*/ unsigned Width : 2;
+    /*TypeSpecifierWidth*/ unsigned Width : 2;
     unsigned ModeAttr : 1;
   };
 
@@ -119,9 +105,9 @@ namespace clang {
   /// The categorization of expression values, currently following the
   /// C++11 scheme.
   enum ExprValueKind {
-    /// An r-value expression (a pr-value in the C++11 taxonomy)
+    /// A pr-value expression (in the C++11 taxonomy)
     /// produces a temporary value.
-    VK_RValue,
+    VK_PRValue,
 
     /// An l-value expression is a reference to an object with
     /// independent storage.
@@ -152,7 +138,10 @@ namespace clang {
     /// An Objective-C array/dictionary subscripting which reads an
     /// object or writes at the subscripted array/dictionary element via
     /// Objective-C method calls.
-    OK_ObjCSubscript
+    OK_ObjCSubscript,
+
+    /// A matrix component is a single element of a matrix.
+    OK_MatrixComponent
   };
 
   /// The reason why a DeclRefExpr does not constitute an odr-use.
@@ -277,6 +266,7 @@ namespace clang {
     CC_SpirFunction, // default for OpenCL functions on SPIR target
     CC_OpenCLKernel, // inferred for OpenCL kernels
     CC_Swift,        // __attribute__((swiftcall))
+    CC_SwiftAsync,        // __attribute__((swiftasynccall))
     CC_PreserveMost, // __attribute__((preserve_most))
     CC_PreserveAll,  // __attribute__((preserve_all))
     CC_AArch64VectorCall, // __attribute__((aarch64_vector_pcs))
@@ -295,6 +285,7 @@ namespace clang {
     case CC_SpirFunction:
     case CC_OpenCLKernel:
     case CC_Swift:
+    case CC_SwiftAsync:
       return false;
     default:
       return true;
@@ -320,7 +311,12 @@ namespace clang {
     /// unspecified. This captures a (fairly rare) case where we
     /// can't conclude anything about the nullability of the type even
     /// though it has been considered.
-    Unspecified
+    Unspecified,
+    // Generally behaves like Nullable, except when used in a block parameter
+    // that was imported into a swift async method. There, swift will assume
+    // that the parameter can get null even if no error occured. _Nullable
+    // parameters are assumed to only get null on error.
+    NullableResult,
   };
 
   /// Return true if \p L has a weaker nullability annotation than \p R. The
@@ -350,10 +346,38 @@ namespace clang {
     /// This parameter (which must have pointer type) uses the special
     /// Swift context-pointer ABI treatment.  There can be at
     /// most one parameter on a given function that uses this treatment.
-    SwiftContext
+    SwiftContext,
+
+    /// This parameter (which must have pointer type) uses the special
+    /// Swift asynchronous context-pointer ABI treatment.  There can be at
+    /// most one parameter on a given function that uses this treatment.
+    SwiftAsyncContext,
+  };
+
+  /// Assigned inheritance model for a class in the MS C++ ABI. Must match order
+  /// of spellings in MSInheritanceAttr.
+  enum class MSInheritanceModel {
+    Single = 0,
+    Multiple = 1,
+    Virtual = 2,
+    Unspecified = 3,
   };
 
   llvm::StringRef getParameterABISpelling(ParameterABI kind);
+
+  inline llvm::StringRef getAccessSpelling(AccessSpecifier AS) {
+    switch (AS) {
+    case AccessSpecifier::AS_public:
+      return "public";
+    case AccessSpecifier::AS_protected:
+      return "protected";
+    case AccessSpecifier::AS_private:
+      return "private";
+    case AccessSpecifier::AS_none:
+      return {};
+    }
+    llvm_unreachable("Unknown AccessSpecifier");
+  }
 } // end namespace clang
 
 #endif // LLVM_CLANG_BASIC_SPECIFIERS_H

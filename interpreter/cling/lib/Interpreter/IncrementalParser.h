@@ -70,8 +70,9 @@ namespace cling {
     // file ID of the memory buffer
     clang::FileID m_VirtualFileID;
 
-    // The next available unique sourcelocation offset.
-    unsigned m_VirtualFileLocOffset = 1; // skip the system sloc 0.
+    // The next available unique sourcelocation offset. Skip the system sloc 0
+    // and any offset that may actually exist in the virtual file.
+    unsigned m_VirtualFileLocOffset = 100;
 
     // CI owns it
     DeclCollector* m_Consumer;
@@ -173,7 +174,7 @@ namespace cling {
     ///
     const Transaction* getFirstTransaction() const {
       if (m_Transactions.empty())
-        return 0;
+        return nullptr;
       return m_Transactions.front();
     }
 
@@ -181,7 +182,7 @@ namespace cling {
     ///
     Transaction* getLastTransaction() {
       if (m_Transactions.empty())
-        return 0;
+        return nullptr;
       return m_Transactions.back();
     }
 
@@ -189,7 +190,7 @@ namespace cling {
     ///
     const Transaction* getLastTransaction() const {
       if (m_Transactions.empty())
-        return 0;
+        return nullptr;
       return m_Transactions.back();
     }
 

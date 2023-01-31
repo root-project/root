@@ -33,15 +33,24 @@ protected:
    std::unique_ptr<RHolder> fObject;
    TObject *fObj{nullptr};
    std::string fName;
+   bool fHideChilds{false};
 
    bool IsSame(TObject *obj) const { return obj == fObj; }
 
-   virtual bool CheckObject() const;
+   void SetObject(TObject *obj);
+
+   void ForgetObject() const;
+
+   virtual const TObject *CheckObject() const;
+
+   virtual std::string GetMTime() const { return ""; }
+
+   virtual Long64_t GetSize() const { return -1; }
 
 public:
-   TObjectElement(TObject *obj, const std::string &name = "");
+   TObjectElement(TObject *obj, const std::string &name = "", bool _hide_childs = false);
 
-   TObjectElement(std::unique_ptr<RHolder> &obj, const std::string &name = "");
+   TObjectElement(std::unique_ptr<RHolder> &obj, const std::string &name = "", bool _hide_childs = false);
 
    virtual ~TObjectElement() = default;
 
@@ -50,13 +59,16 @@ public:
 
    void SetName(const std::string &name) { fName = name; }
 
+   /** Is flag to hide all potential object childs set */
+   bool IsHideChilds() const { return fHideChilds; }
+
+   /** Set flag to hide all potential object childs */
+   void SetHideChilds(bool on) { fHideChilds = on; }
+
+   bool IsFolder() const override;
+
    /** Title of TObject */
    std::string GetTitle() const override;
-
-   /** Size of TObject */
-   virtual Long64_t GetSize() const { return -1; }
-
-   bool IsFolder() const;
 
    /** Create iterator for childs elements if any */
    std::unique_ptr<RLevelIter> GetChildsIter() override;
@@ -66,11 +78,15 @@ public:
 
    bool IsObject(void *) override;
 
+   bool CheckValid() override;
+
    const TClass *GetClass() const;
 
    EActionKind GetDefaultAction() const override;
 
    bool IsCapable(EActionKind) const override;
+
+   std::unique_ptr<RItem> CreateItem() const override;
 
    static std::unique_ptr<RLevelIter> GetCollectionIter(const TCollection *);
 

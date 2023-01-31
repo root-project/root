@@ -90,9 +90,9 @@ protected:
 
    Float_t fSplitFraction = 0.3; ///< Stores the fraction at which the upper and lower pads meet
 
-   TGraph *fRatioGraph = 0; ///< Stores the lower plot's graph
-   TGraphErrors *fConfidenceInterval1 = 0; ///< Stores the graph for the 1 sigma band
-   TGraphErrors *fConfidenceInterval2 = 0; ///< Stores the graph for the 2 sigma band
+   TGraph *fRatioGraph = nullptr; ///< Stores the lower plot's graph
+   TGraphErrors *fConfidenceInterval1 = nullptr; ///< Stores the graph for the 1 sigma band
+   TGraphErrors *fConfidenceInterval2 = nullptr; ///< Stores the graph for the 2 sigma band
    Color_t fCi1Color = kYellow; ///< Stores the color for the 1 sigma band
    Color_t fCi2Color = kGreen; ///< Stores the color for the 2 sigma band
 

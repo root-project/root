@@ -21,13 +21,14 @@
 #include "THttpServer.h"
 
 #include "TSystem.h"
-#include "TRandom3.h"
 #include "TString.h"
 #include "TApplication.h"
 #include "TTimer.h"
+#include "TRandom.h"
 #include "TROOT.h"
 #include "TEnv.h"
 #include "TExec.h"
+#include "TSocket.h"
 
 #include <thread>
 #include <chrono>
@@ -155,6 +156,43 @@ void RWebWindowsManager::AssignWindowThreadId(RWebWindow &win)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// If ROOT_LISTENER_SOCKET variable is configured,
+/// message will be sent to that unix socket
+
+bool RWebWindowsManager::InformListener(const std::string &msg)
+{
+#ifdef R__WIN32
+   (void) msg;
+   return false;
+
+#else
+
+   const char *fname = gSystem->Getenv("ROOT_LISTENER_SOCKET");
+   if (!fname || !*fname)
+      return false;
+
+   TSocket s(fname);
+   if (!s.IsValid()) {
+      R__LOG_ERROR(WebGUILog()) << "Problem with open listener socket " << fname << ", check ROOT_LISTENER_SOCKET environment variable";
+      return false;
+   }
+
+   int res = s.SendRaw(msg.c_str(), msg.length());
+
+   s.Close();
+
+   if (res > 0) {
+      // workaround to let handle socket by system outside ROOT process
+      gSystem->ProcessEvents();
+      gSystem->Sleep(10);
+   }
+
+   return res > 0;
+#endif
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Creates http server, if required - with real http engine (civetweb)
 /// One could configure concrete HTTP port, which should be used for the server,
 /// provide following entry in rootrc file:
@@ -181,6 +219,14 @@ void RWebWindowsManager::AssignWindowThreadId(RWebWindow &win)
 ///
 ///      WebGui.UseHttps: yes
 ///      WebGui.ServerCert: sertificate_filename.pem
+///
+/// Alternatively, one can specify unix socket to handle requests:
+///
+///      WebGui.UnixSocket: /path/to/unix/socket
+///      WebGui.UnixSocketMode: 0700
+///
+/// Typically one used unix sockets together with server mode like `root --web=server:/tmp/root.socket` and
+/// then redirect it via ssh tunnel (e.g. using `rootssh`) to client node
 ///
 /// All incoming requests processed in THttpServer in timer handler with 10 ms timeout.
 /// One may decrease value to improve latency or increase value to minimize CPU load
@@ -306,9 +352,18 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    bool use_secure = RWebWindowWSHandler::GetBoolEnv("WebGui.UseHttps", 0) == 1;
    const char *ssl_cert = gEnv->GetValue("WebGui.ServerCert", "rootserver.pem");
 
+   const char *unix_socket = gSystem->Getenv("ROOT_WEBGUI_SOCKET");
+   if (!unix_socket || !*unix_socket)
+      unix_socket = gEnv->GetValue("WebGui.UnixSocket", "");
+   const char *unix_socket_mode = gEnv->GetValue("WebGui.UnixSocketMode", "0700");
+   bool use_unix_socket = unix_socket && *unix_socket;
+
+   if (use_unix_socket)
+      fcgi_port = http_port = -1;
+
    int ntry = 100;
 
-   if ((http_port < 0) && (fcgi_port <= 0)) {
+   if ((http_port < 0) && (fcgi_port <= 0) && !use_unix_socket) {
       R__LOG_ERROR(WebGUILog()) << "Not allowed to create HTTP server, check WebGui.HttpPort variable";
       return false;
    }
@@ -330,8 +385,11 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    if (fcgi_port > 0)
       ntry++;
 
+   if (use_unix_socket)
+      ntry++;
+
    while (ntry-- >= 0) {
-      if ((http_port == 0) && (fcgi_port <= 0)) {
+      if ((http_port == 0) && (fcgi_port <= 0) && !use_unix_socket) {
          if ((http_min <= 0) || (http_max <= http_min)) {
             R__LOG_ERROR(WebGUILog()) << "Wrong HTTP range configuration, check WebGui.HttpPortMin/Max variables";
             return false;
@@ -341,26 +399,33 @@ bool RWebWindowsManager::CreateServer(bool with_http)
       }
 
       TString engine, url;
-
       if (fcgi_port > 0) {
          engine.Form("fastcgi:%d?thrds=%d", fcgi_port, fcgi_thrds);
-         if (!fServer->CreateEngine(engine)) return false;
-         if (fcgi_serv && (strlen(fcgi_serv) > 0)) fAddr = fcgi_serv;
-         if (http_port < 0) return true;
+         if (!fServer->CreateEngine(engine))
+            return false;
+         if (fcgi_serv && (strlen(fcgi_serv) > 0))
+            fAddr = fcgi_serv;
+         if (http_port < 0)
+            return true;
          fcgi_port = 0;
-      } else if (http_port > 0) {
-         url = use_secure ? "https://" : "http://";
-         engine.Form("%s:%d?thrds=%d&websocket_timeout=%d", (use_secure ? "https" : "http"), http_port, http_thrds, http_wstmout);
-         if (assign_loopback) {
-            engine.Append("&loopback");
-            url.Append("localhost");
-         } else if (http_bind && (strlen(http_bind) > 0)) {
-            engine.Append("&bind=");
-            engine.Append(http_bind);
-            url.Append(http_bind);
+      } else {
+         if (use_unix_socket) {
+            engine.Form("socket:%s?socket_mode=%s&", unix_socket, unix_socket_mode);
          } else {
-            url.Append("localhost");
+            url = use_secure ? "https://" : "http://";
+            engine.Form("%s:%d?", (use_secure ? "https" : "http"), http_port);
+            if (assign_loopback) {
+               engine.Append("loopback&");
+               url.Append("localhost");
+            } else if (http_bind && (strlen(http_bind) > 0)) {
+               engine.Append(TString::Format("bind=%s&", http_bind));
+               url.Append(http_bind);
+            } else {
+               url.Append("localhost");
+            }
          }
+
+         engine.Append(TString::Format("thrds=%d&websocket_timeout=%d", http_thrds, http_wstmout));
 
          if (http_maxage >= 0)
             engine.Append(TString::Format("&max_age=%d", http_maxage));
@@ -376,11 +441,19 @@ bool RWebWindowsManager::CreateServer(bool with_http)
          }
 
          if (fServer->CreateEngine(engine)) {
-            fAddr = url.Data();
-            fAddr.append(":");
-            fAddr.append(std::to_string(http_port));
+            if (use_unix_socket) {
+               fAddr = "socket://"; // fictional socket URL
+               fAddr.append(unix_socket);
+               // InformListener(std::string("socket:") + unix_socket + "\n");
+            } else if (http_port > 0) {
+               fAddr = url.Data();
+               fAddr.append(":");
+               fAddr.append(std::to_string(http_port));
+               // InformListener(std::string("http:") + std::to_string(http_port) + "\n");
+            }
             return true;
          }
+         use_unix_socket = false;
          http_port = 0;
       }
    }
@@ -546,15 +619,8 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
       return 0;
    }
 
-   std::string key;
-   int ntry = 100000;
-   TRandom3 rnd;
-   rnd.SetSeed();
-
-   do {
-      key = std::to_string(rnd.Integer(0x100000));
-   } while ((--ntry > 0) && win.HasKey(key));
-   if (ntry == 0) {
+   std::string key = win.GenerateKey();
+   if (key.empty()) {
       R__LOG_ERROR(WebGUILog()) << "Fail to create unique key for the window";
       return 0;
    }
@@ -566,8 +632,10 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
       return 0;
    }
 
-   if (args.GetWidth() <= 0) args.SetWidth(win.GetWidth());
-   if (args.GetHeight() <= 0) args.SetHeight(win.GetHeight());
+   if (args.GetWidth() <= 0)
+      args.SetWidth(win.GetWidth());
+   if (args.GetHeight() <= 0)
+      args.SetHeight(win.GetHeight());
 
    bool normal_http = !args.IsLocalDisplay();
    if (!normal_http && (gEnv->GetValue("WebGui.ForceHttp", 0) == 1))
@@ -586,16 +654,26 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
    args.SetUrl(url);
 
    args.AppendUrlOpt(std::string("key=") + key);
-   if (args.IsHeadless()) args.AppendUrlOpt("headless"); // used to create holder request
+   if (args.IsHeadless())
+      args.AppendUrlOpt("headless"); // used to create holder request
    if (!token.empty())
       args.AppendUrlOpt(std::string("token=") + token);
 
-   if (!args.IsHeadless() && (args.GetBrowserKind() == RWebDisplayArgs::kServer) && (RWebWindowWSHandler::GetBoolEnv("WebGui.OnetimeKey") != 1)) {
+   if (!args.IsHeadless() && normal_http) {
+      auto winurl = args.GetUrl();
+      winurl.erase(0, fAddr.length());
+      InformListener(std::string("win:") + winurl);
+   }
+
+   if (!args.IsHeadless() && ((args.GetBrowserKind() == RWebDisplayArgs::kServer) || gROOT->IsWebDisplayBatch()) /*&& (RWebWindowWSHandler::GetBoolEnv("WebGui.OnetimeKey") != 1)*/) {
       std::cout << "New web window: " << args.GetUrl() << std::endl;
       return 0;
    }
 
-#if not(defined(R__MACOSX)) and not(defined(R__WIN32))
+   if (fAddr.compare(0,9,"socket://") == 0)
+      return 0;
+
+#if !defined(R__MACOSX) && !defined(R__WIN32)
    if (args.IsInteractiveBrowser()) {
       const char *varname = "WebGui.CheckRemoteDisplay";
       if (RWebWindowWSHandler::GetBoolEnv(varname, 1) == 1) {
@@ -606,6 +684,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
                "ROOT web-based widget started in the session where DISPLAY set to " << displ << "\n" <<
                "Means web browser will be displayed on remote X11 server which is usually very inefficient\n"
                "One can start ROOT session in server mode like \"root -b --web=server:8877\" and forward http port to display node\n"
+               "Or one can use rootssh script to configure pore forwarding and display web widgets automatically\n"
                "Find more info on https://root.cern/for_developers/root7/#rbrowser\n"
                "This message can be disabled by setting \"" << varname << ": no\" in .rootrc file\n";
          }

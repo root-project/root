@@ -38,7 +38,7 @@ protected:
    static  TGComboBox *BuildTextAlignComboBox(TGFrame *parent, Int_t id);
 
 public:
-   TAttTextEditor(const TGWindow *p = 0,
+   TAttTextEditor(const TGWindow *p = nullptr,
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());

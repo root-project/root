@@ -179,13 +179,13 @@ auto TReshapeLayer<Architecture_t>::Print() const -> void
 template <typename Architecture_t>
 auto TReshapeLayer<Architecture_t>::AddWeightsXMLTo(void *parent) -> void
 {
-   auto layerxml = gTools().xmlengine().NewChild(parent, 0, "ReshapeLayer");
+   auto layerxml = gTools().xmlengine().NewChild(parent, nullptr, "ReshapeLayer");
 
    // write info for reshapelayer
-   gTools().xmlengine().NewAttr(layerxml, 0, "Depth", gTools().StringFromInt(this->GetDepth()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "Height", gTools().StringFromInt(this->GetHeight()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "Width", gTools().StringFromInt(this->GetWidth()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "Flattening", gTools().StringFromInt(this->isFlattening()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "Depth", gTools().StringFromInt(this->GetDepth()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "Height", gTools().StringFromInt(this->GetHeight()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "Width", gTools().StringFromInt(this->GetWidth()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "Flattening", gTools().StringFromInt(this->isFlattening()));
 
 
 }

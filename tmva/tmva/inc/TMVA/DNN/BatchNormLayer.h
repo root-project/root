@@ -389,7 +389,7 @@ void TBatchNormLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 
    // write layer width activation function + weight and bias matrices
 
-   auto layerxml = gTools().xmlengine().NewChild(parent, 0, "BatchNormLayer");
+   auto layerxml = gTools().xmlengine().NewChild(parent, nullptr, "BatchNormLayer");
 
 
    gTools().AddAttr(layerxml, "Momentum", fMomentum);

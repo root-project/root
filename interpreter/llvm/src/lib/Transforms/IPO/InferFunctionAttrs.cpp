@@ -11,31 +11,43 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Utils/BuildLibCalls.h"
+#include "llvm/Transforms/Utils/Local.h"
 using namespace llvm;
 
 #define DEBUG_TYPE "inferattrs"
 
-static bool inferAllPrototypeAttributes(Module &M,
-                                        const TargetLibraryInfo &TLI) {
+static bool inferAllPrototypeAttributes(
+    Module &M, function_ref<TargetLibraryInfo &(Function &)> GetTLI) {
   bool Changed = false;
 
   for (Function &F : M.functions())
     // We only infer things using the prototype and the name; we don't need
-    // definitions.
-    if (F.isDeclaration() && !F.hasOptNone())
-      Changed |= inferLibFuncAttributes(F, TLI);
+    // definitions.  This ensures libfuncs are annotated and also allows our
+    // CGSCC inference to avoid needing to duplicate the inference from other
+    // attribute logic on all calls to declarations (as declarations aren't
+    // explicitly visited by CGSCC passes in the new pass manager.)
+    if (F.isDeclaration() && !F.hasOptNone()) {
+      if (!F.hasFnAttribute(Attribute::NoBuiltin))
+        Changed |= inferLibFuncAttributes(F, GetTLI(F));
+      Changed |= inferAttributesFromOthers(F);
+    }
 
   return Changed;
 }
 
 PreservedAnalyses InferFunctionAttrsPass::run(Module &M,
                                               ModuleAnalysisManager &AM) {
-  auto &TLI = AM.getResult<TargetLibraryAnalysis>(M);
+  FunctionAnalysisManager &FAM =
+      AM.getResult<FunctionAnalysisManagerModuleProxy>(M).getManager();
+  auto GetTLI = [&FAM](Function &F) -> TargetLibraryInfo & {
+    return FAM.getResult<TargetLibraryAnalysis>(F);
+  };
 
-  if (!inferAllPrototypeAttributes(M, TLI))
+  if (!inferAllPrototypeAttributes(M, GetTLI))
     // If we didn't infer anything, preserve all analyses.
     return PreservedAnalyses::all();
 
@@ -60,8 +72,10 @@ struct InferFunctionAttrsLegacyPass : public ModulePass {
     if (skipModule(M))
       return false;
 
-    auto &TLI = getAnalysis<TargetLibraryInfoWrapperPass>().getTLI();
-    return inferAllPrototypeAttributes(M, TLI);
+    auto GetTLI = [this](Function &F) -> TargetLibraryInfo & {
+      return this->getAnalysis<TargetLibraryInfoWrapperPass>().getTLI(F);
+    };
+    return inferAllPrototypeAttributes(M, GetTLI);
   }
 };
 }

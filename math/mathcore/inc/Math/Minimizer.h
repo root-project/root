@@ -25,6 +25,9 @@
 #include <string>
 #include <limits>
 #include <cmath>
+#include <vector>
+#include <functional>
+
 
 
 namespace ROOT {
@@ -122,6 +125,8 @@ public:
       SetFunction(static_cast<const ::ROOT::Math::IMultiGenFunction &> (func));
    }
 
+   /// set the function implementing Hessian computation (re-implemented by Minimizer using it)
+   virtual void SetHessianFunction(std::function<bool(const std::vector<double> &, double *)> ) {}
 
    /// add variables  . Return number of variables successfully added
    template<class VariableIterator>
@@ -251,7 +256,7 @@ public:
    virtual double Edm() const { return -1; }
 
    /// return pointer to gradient values at the minimum
-   virtual const double *  MinGradient() const { return NULL; }
+   virtual const double *  MinGradient() const { return nullptr; }
 
    /// number of function calls to reach the minimum
    virtual unsigned int NCalls() const { return 0; }
@@ -272,7 +277,7 @@ public:
    virtual bool ProvidesError() const { return false; }
 
    /// return errors at the minimum
-   virtual const double * Errors() const { return NULL; }
+   virtual const double * Errors() const { return nullptr; }
 
    /** return covariance matrices element for variables ivar,jvar
        if the variable is fixed the return value is zero

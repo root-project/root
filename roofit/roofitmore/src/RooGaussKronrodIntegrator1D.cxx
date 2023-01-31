@@ -281,7 +281,7 @@ static double rescale_error (double err, const double result_abs, const double r
 static double
 rescale_error (double err, const double result_abs, const double result_asc)
 {
-  err = fabs(err) ;
+  err = std::abs(err) ;
 
   if (result_asc != 0 && err != 0)
       {
@@ -496,11 +496,11 @@ gsl_integration_qng (const gsl_function *f,
   double savfun[21];  /* array of function values which have been computed */
   double res10, res21, res43, res87;    /* 10, 21, 43 and 87 point results */
   double result_kronrod, err ;
-  double resabs; /* approximation to the integral of abs(f) */
-  double resasc; /* approximation to the integral of abs(f-i/(b-a)) */
+  double resabs; /* approximation to the integral of std::abs(f) */
+  double resasc; /* approximation to the integral of std::abs(f-i/(b-a)) */
 
   const double half_length =  0.5 * (b - a);
-  const double abs_half_length = fabs (half_length);
+  const double abs_half_length = std::abs(half_length);
   const double center = 0.5 * (b + a);
   const double f_center = GSL_FN_EVAL(f, center);
 
@@ -519,7 +519,7 @@ gsl_integration_qng (const gsl_function *f,
 
   res10 = 0;
   res21 = w21b[5] * f_center;
-  resabs = w21b[5] * fabs (f_center);
+  resabs = w21b[5] * std::abs(f_center);
 
   for (k = 0; k < 5; k++)
     {
@@ -529,7 +529,7 @@ gsl_integration_qng (const gsl_function *f,
       const double fval = fval1 + fval2;
       res10 += w10[k] * fval;
       res21 += w21a[k] * fval;
-      resabs += w21a[k] * (fabs (fval1) + fabs (fval2));
+      resabs += w21a[k] * (std::abs(fval1) + std::abs(fval2));
       savfun[k] = fval;
       fv1[k] = fval1;
       fv2[k] = fval2;
@@ -542,7 +542,7 @@ gsl_integration_qng (const gsl_function *f,
       const double fval2 = GSL_FN_EVAL(f, center - abscissa);
       const double fval = fval1 + fval2;
       res21 += w21b[k] * fval;
-      resabs += w21b[k] * (fabs (fval1) + fabs (fval2));
+      resabs += w21b[k] * (std::abs(fval1) + std::abs(fval2));
       savfun[k + 5] = fval;
       fv3[k] = fval1;
       fv4[k] = fval2;
@@ -553,13 +553,13 @@ gsl_integration_qng (const gsl_function *f,
   {
     const double mean = 0.5 * res21;
 
-    resasc = w21b[5] * fabs (f_center - mean);
+    resasc = w21b[5] * std::abs(f_center - mean);
 
     for (k = 0; k < 5; k++)
       {
         resasc +=
-          (w21a[k] * (fabs (fv1[k] - mean) + fabs (fv2[k] - mean))
-          + w21b[k] * (fabs (fv3[k] - mean) + fabs (fv4[k] - mean)));
+          (w21a[k] * (std::abs(fv1[k] - mean) + std::abs(fv2[k] - mean))
+          + w21b[k] * (std::abs(fv3[k] - mean) + std::abs(fv4[k] - mean)));
       }
     resasc *= abs_half_length ;
   }
@@ -570,7 +570,7 @@ gsl_integration_qng (const gsl_function *f,
 
   /*   test for convergence. */
 
-  if (err < epsabs || err < epsrel * fabs (result_kronrod))
+  if (err < epsabs || err < epsrel * std::abs(result_kronrod))
     {
       * result = result_kronrod ;
       * abserr = err ;
@@ -601,7 +601,7 @@ gsl_integration_qng (const gsl_function *f,
   result_kronrod = res43 * half_length;
   err = rescale_error ((res43 - res21) * half_length, resabs, resasc);
 
-  if (err < epsabs || err < epsrel * fabs (result_kronrod))
+  if (err < epsabs || err < epsrel * std::abs(result_kronrod))
     {
       * result = result_kronrod ;
       * abserr = err ;
@@ -631,7 +631,7 @@ gsl_integration_qng (const gsl_function *f,
 
   err = rescale_error ((res87 - res43) * half_length, resabs, resasc);
 
-  if (err < epsabs || err < epsrel * fabs (result_kronrod))
+  if (err < epsabs || err < epsrel * std::abs(result_kronrod))
     {
       * result = result_kronrod ;
       * abserr = err ;

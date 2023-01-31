@@ -128,13 +128,13 @@ public:
              Int_t x = 0, Int_t y = 0, UInt_t width = 0, UInt_t height = 0) override;
    void  Merge(const TImage *im, const char *op = "alphablend", Int_t x = 0, Int_t y = 0) override;
    void  Append(const TImage *im, const char * option = "+", const char *color = "#00000000") override;
-   void  Gradient(UInt_t angle = 0, const char *colors = "#FFFFFF #000000", const char *offsets = 0,
+   void  Gradient(UInt_t angle = 0, const char *colors = "#FFFFFF #000000", const char *offsets = nullptr,
                   Int_t x = 0, Int_t y = 0, UInt_t width = 0, UInt_t height = 0) override;
    void  Bevel(Int_t x = 0, Int_t y = 0, UInt_t width = 0, UInt_t height = 0, const char *hi = "#ffdddddd",
                const char *lo = "#ff555555", UShort_t thick = 1, Bool_t pressed = kFALSE) override;
    void  DrawText(Int_t  x = 0, Int_t y = 0, const char *text = "", Int_t size = 12,
-                  const char *color = 0, const char *font = "fixed", EText3DType type = TImage::kPlain,
-                  const char *fore_file = 0, Float_t angle = 0) override;
+                  const char *color = nullptr, const char *font = "fixed", EText3DType type = TImage::kPlain,
+                  const char *fore_file = nullptr, Float_t angle = 0) override;
    void DrawText(TText *text, Int_t x = 0, Int_t y = 0) override;
 
    // Vector graphics
@@ -144,7 +144,7 @@ public:
    void  DrawDashLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2, UInt_t nDash, const char *pDash, const char *col = "#000000", UInt_t thick = 1) override;
    void  DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, const char *col = "#000000", UInt_t thick = 1, Int_t mode = 0) override;
    void  DrawRectangle(UInt_t x, UInt_t y, UInt_t w, UInt_t h, const char *col = "#000000", UInt_t thick = 1) override;
-   void  FillRectangle(const char *col = 0, Int_t x = 0, Int_t y = 0, UInt_t width = 0, UInt_t height = 0) override;
+   void  FillRectangle(const char *col = nullptr, Int_t x = 0, Int_t y = 0, UInt_t width = 0, UInt_t height = 0) override;
    void  DrawPolyLine(UInt_t nn, TPoint *xy, const char *col = "#000000", UInt_t thick = 1, TImage::ECoordMode mode = kCoordModeOrigin) override;
    void  PutPixel(Int_t x, Int_t y, const char *col = "#000000") override;
    void  PolyPoint(UInt_t npt, TPoint *ppt, const char *col = "#000000", TImage::ECoordMode mode = kCoordModeOrigin) override;

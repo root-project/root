@@ -57,8 +57,8 @@ public:
 
 } // end anonymous namespace
 
-/// \return Whether {@code A} occurs before {@code B} in traversal of
-/// {@code Parent}.
+/// \return Whether @c A occurs before @c B in traversal of
+/// @c Parent.
 /// Conceptually a very incomplete/unsound approximation of happens-before
 /// relationship (A is likely to be evaluated before B),
 /// but useful enough in this case.
@@ -203,6 +203,6 @@ void ento::registerRunLoopAutoreleaseLeakChecker(CheckerManager &mgr) {
   mgr.registerChecker<RunLoopAutoreleaseLeakChecker>();
 }
 
-bool ento::shouldRegisterRunLoopAutoreleaseLeakChecker(const LangOptions &LO) {
+bool ento::shouldRegisterRunLoopAutoreleaseLeakChecker(const CheckerManager &mgr) {
   return true;
 }

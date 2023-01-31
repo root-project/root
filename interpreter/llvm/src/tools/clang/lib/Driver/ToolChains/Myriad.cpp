@@ -77,8 +77,9 @@ void tools::SHAVE::Compiler::ConstructJob(Compilation &C, const JobAction &JA,
 
   std::string Exec =
       Args.MakeArgString(getToolChain().GetProgramPath("moviCompile"));
-  C.addCommand(llvm::make_unique<Command>(JA, *this, Args.MakeArgString(Exec),
-                                          CmdArgs, Inputs));
+  C.addCommand(std::make_unique<Command>(JA, *this, ResponseFileSupport::None(),
+                                         Args.MakeArgString(Exec), CmdArgs,
+                                         Inputs, Output));
 }
 
 void tools::SHAVE::Assembler::ConstructJob(Compilation &C, const JobAction &JA,
@@ -112,8 +113,9 @@ void tools::SHAVE::Assembler::ConstructJob(Compilation &C, const JobAction &JA,
 
   std::string Exec =
       Args.MakeArgString(getToolChain().GetProgramPath("moviAsm"));
-  C.addCommand(llvm::make_unique<Command>(JA, *this, Args.MakeArgString(Exec),
-                                          CmdArgs, Inputs));
+  C.addCommand(std::make_unique<Command>(JA, *this, ResponseFileSupport::None(),
+                                         Args.MakeArgString(Exec), CmdArgs,
+                                         Inputs, Output));
 }
 
 void tools::Myriad::Linker::ConstructJob(Compilation &C, const JobAction &JA,
@@ -198,8 +200,9 @@ void tools::Myriad::Linker::ConstructJob(Compilation &C, const JobAction &JA,
 
   std::string Exec =
       Args.MakeArgString(TC.GetProgramPath("sparc-myriad-rtems-ld"));
-  C.addCommand(llvm::make_unique<Command>(JA, *this, Args.MakeArgString(Exec),
-                                          CmdArgs, Inputs));
+  C.addCommand(std::make_unique<Command>(
+      JA, *this, ResponseFileSupport::AtFileCurCP(), Args.MakeArgString(Exec),
+      CmdArgs, Inputs, Output));
 }
 
 MyriadToolChain::MyriadToolChain(const Driver &D, const llvm::Triple &Triple,
@@ -257,7 +260,7 @@ void MyriadToolChain::addLibStdCxxIncludePaths(
   const Multilib &Multilib = GCCInstallation.getMultilib();
   addLibStdCXXIncludePaths(
       LibDir.str() + "/../" + TripleStr.str() + "/include/c++/" + Version.Text,
-      "", TripleStr, "", "", Multilib.includeSuffix(), DriverArgs, CC1Args);
+      TripleStr, Multilib.includeSuffix(), DriverArgs, CC1Args);
 }
 
 // MyriadToolChain handles several triples:

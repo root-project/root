@@ -72,7 +72,7 @@ public:
    /// - GSLSimAn Simulated annealing minimizer from GSL (see ROOT::Math::GSLSimAnMinimizer). It is a stochastic minimization algorithm using only function values and not the gradient.
    /// - Genetic Genetic minimization algorithms (see TMVA::Genetic)
    ///
-   static void SetDefaultMinimizer(const char * type, const char * algo = 0);
+   static void SetDefaultMinimizer(const char *type, const char *algo = nullptr);
 
    /// Set the default level for computing the parameter errors.
    /// For example for 1-sigma parameter errors
@@ -80,7 +80,7 @@ public:
    ///  - up = 0.5 for a negative log-likelihood function
    ///
    /// The value will be used also by Minos when computing the confidence interval
-   static void SetDefaultErrorDef( double up);
+   static void SetDefaultErrorDef(double up);
 
    /// Set the Minimization tolerance.
    /// The Default value for Minuit and Minuit2 is 0.01
@@ -151,7 +151,7 @@ public:
    static ROOT::Math::IOptions * FindDefault(const char * name);
 
    /// Print all the default options including the extra one specific for a given minimizer name.
-   /// If no minimizer name is given, all the extra default options, which have been set and configured will be printed 
+   /// If no minimizer name is given, all the extra default options, which have been set and configured will be printed
    static void PrintDefault(const char * name = nullptr, std::ostream & os = std::cout);
 
 public:

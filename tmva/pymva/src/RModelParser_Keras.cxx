@@ -34,6 +34,7 @@ namespace PyKeras{
 static void(& PyRunString)(TString, PyObject*, PyObject*) = PyMethodBase::PyRunString;
 static const char*(& PyStringAsString)(PyObject*) = PyMethodBase::PyStringAsString;
 static std::vector<size_t>(& GetDataFromTuple)(PyObject*) = PyMethodBase::GetDataFromTuple;
+static PyObject*(& GetValueFromDict)(PyObject*, const char*) = PyMethodBase::GetValueFromDict;
 
 namespace INTERNAL{
 
@@ -50,6 +51,10 @@ std::unique_ptr<ROperator> MakeKerasBatchNorm(PyObject *fLayer);    // For insta
 std::unique_ptr<ROperator> MakeKerasReshape(PyObject *fLayer);      // For instantiating ROperator for Keras Reshape Layer
 std::unique_ptr<ROperator> MakeKerasConcat(PyObject *fLayer);       // For instantiating ROperator for Keras Concat Layer
 std::unique_ptr<ROperator> MakeKerasBinary(PyObject *fLayer);       // For instantiating ROperator for Keras binary operations: Add, Subtract & Multiply.
+std::unique_ptr<ROperator> MakeKerasSoftmax(PyObject *fLayer);      // For instantiating ROperator for Keras Softmax Layer
+std::unique_ptr<ROperator> MakeKerasTanh(PyObject *fLayer);         // For instantiating ROperator for Keras Tanh Layer
+std::unique_ptr<ROperator> MakeKerasLeakyRelu(PyObject *fLayer);    // For instantiating ROperator for Keras LeakyRelu Layer
+std::unique_ptr<ROperator> MakeKerasIdentity(PyObject *fLayer);     // For instantiating ROperator for Keras Identity Layer
 
 
 // Declaring Internal function for Keras layers which have additional activation attribute
@@ -69,6 +74,11 @@ const KerasMethodMap mapKerasLayer = {
    {"Add", &MakeKerasBinary},
    {"Subtract", &MakeKerasBinary},
    {"Multiply", &MakeKerasBinary},
+   {"Softmax", &MakeKerasSoftmax},
+   {"tanh", &MakeKerasTanh},
+   {"LeakyReLU", &MakeKerasLeakyRelu},
+   {"Identity",  &MakeKerasIdentity},
+   {"Dropout",  &MakeKerasIdentity},
 
    // For activation layers
    {"ReLU", &MakeKerasReLU},
@@ -76,7 +86,8 @@ const KerasMethodMap mapKerasLayer = {
    // For layers with activation attributes
    {"relu", &MakeKerasReLU},
    {"selu", &MakeKerasSelu},
-   {"sigmoid", &MakeKerasSigmoid}
+   {"sigmoid", &MakeKerasSigmoid},
+   {"softmax", &MakeKerasSoftmax}
 };
 
 const KerasMethodMapWithActivation mapKerasLayerWithActivation = {
@@ -127,12 +138,12 @@ const KerasMethodMapWithActivation mapKerasLayerWithActivation = {
 ///                   'layerWeight'     : List of weight tensor names of Keras layers
 ///                 }
 void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
-   std::string fLayerType = PyStringAsString(PyDict_GetItemString(fLayer,"layerType"));
+   std::string fLayerType = PyStringAsString(GetValueFromDict(fLayer,"layerType"));
 
    if(fLayerType == "Reshape"){
-      PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
-      std::string fLayerName = PyStringAsString(PyDict_GetItemString(fAttributes,"_name"));
-      PyObject* fPTargetShape = PyDict_GetItemString(fAttributes,"target_shape");
+      PyObject* fAttributes=GetValueFromDict(fLayer,"layerAttributes");
+      std::string fLayerName = PyStringAsString(GetValueFromDict(fAttributes,"_name"));
+      PyObject* fPTargetShape = GetValueFromDict(fAttributes,"target_shape");
       std::vector<size_t>fTargetShape = GetDataFromTuple(fPTargetShape);
       std::shared_ptr<void> fData(malloc(fTargetShape.size() * sizeof(int64_t)), free);
       std::copy(fTargetShape.begin(),fTargetShape.end(),(int64_t*)fData.get());
@@ -149,11 +160,11 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
    //For layers like Dense & Conv which has additional activation attribute
    else if(mapKerasLayerWithActivation.find(fLayerType) != mapKerasLayerWithActivation.end()){
       findLayer = mapKerasLayerWithActivation.find(fLayerType);
-      PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
+      PyObject* fAttributes=GetValueFromDict(fLayer,"layerAttributes");
 
-      std::string fLayerName = PyStringAsString(PyDict_GetItemString(fAttributes,"_name"));
-      
-      PyObject* fPActivation = PyDict_GetItemString(fAttributes,"activation");
+      std::string fLayerName = PyStringAsString(GetValueFromDict(fAttributes,"_name"));
+
+      PyObject* fPActivation = GetValueFromDict(fAttributes,"activation");
       std::string fLayerActivation = PyStringAsString(PyObject_GetAttrString(fPActivation,"__name__"));
 
       if(fLayerActivation == "selu" || fLayerActivation == "sigmoid")
@@ -162,8 +173,8 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
 
       //Checking if additional attribute exixts
       if(fLayerActivation != "linear"){
-         PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
-         PyObject* fInputs = PyDict_GetItemString(fLayer,"layerInput");
+         PyObject* fOutputs = GetValueFromDict(fLayer,"layerOutput");
+         PyObject* fInputs = GetValueFromDict(fLayer,"layerInput");
          std::string fActivationLayerOutput = PyStringAsString(PyList_GetItem(fOutputs,0));
 
          if(fLayerType == "Conv2D"){
@@ -180,7 +191,7 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
          PyDict_SetItemString(fLayer,"layerOutput",fOutputs);
          rmodel.AddOperator((findLayer->second)(fLayer));
 
-         std::string fActivationLayerInput = fLayerName+fLayerType;   
+         std::string fActivationLayerInput = fLayerName+fLayerType;
          if(fLayerType == "Conv2D"){
             std::unique_ptr<ROperator> op_post_transpose;
             op_post_transpose.reset(new ROperator_Transpose<float>({0,2,3,1}, fLayerName+fLayerType, fLayerName+"PostTrans"));
@@ -222,9 +233,9 @@ void AddKerasLayer(RModel& rmodel, PyObject* fLayer){
 /// weight tensors are extracted, and then are passed to instantiate a
 /// ROperator_Gemm object using the required attributes.
 std::unique_ptr<ROperator> MakeKerasDense(PyObject* fLayer){
-      PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
-      PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
-      std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
+      PyObject* fInputs  = GetValueFromDict(fLayer,"layerInput");
+      PyObject* fOutputs = GetValueFromDict(fLayer,"layerOutput");
+      std::string fLayerDType = PyStringAsString(GetValueFromDict(fLayer,"layerDType"));
 
       std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
       std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
@@ -232,7 +243,7 @@ std::unique_ptr<ROperator> MakeKerasDense(PyObject* fLayer){
       // Extracting names of weight tensors
       // The names of Kernel weights and bias weights are found in the list
       // of weight tensors from fLayer.
-      PyObject* fWeightNames  = PyDict_GetItemString(fLayer,"layerWeight");
+      PyObject* fWeightNames  = GetValueFromDict(fLayer,"layerWeight");
       std::string fKernelName = PyStringAsString(PyList_GetItem(fWeightNames,0));
       std::string fBiasName   = PyStringAsString(PyList_GetItem(fWeightNames,1));
 
@@ -264,13 +275,13 @@ std::unique_ptr<ROperator> MakeKerasDense(PyObject* fLayer){
 ///
 /// For Keras's Conv layer, the names of the input tensor, output tensor, and
 /// weight tensors are extracted, along with attributes like dilation_rate,
-/// groups, kernel size, padding, strides. Padding attribute is then 
+/// groups, kernel size, padding, strides. Padding attribute is then
 /// computed for ROperator depending on Keras' attribute parameter.
 std::unique_ptr<ROperator> MakeKerasConv(PyObject* fLayer){
-      PyObject* fAttributes = PyDict_GetItemWithError(fLayer,PyUnicode_FromString("layerAttributes"));
-      PyObject* fInputs  = PyDict_GetItemWithError(fLayer,PyUnicode_FromString("layerInput"));
-      PyObject* fOutputs = PyDict_GetItemWithError(fLayer,PyUnicode_FromString("layerOutput"));
-      std::string fLayerDType = PyStringAsString(PyDict_GetItemWithError(fLayer,PyUnicode_FromString("layerDType")));
+      PyObject* fAttributes = GetValueFromDict(fLayer,"layerAttributes");
+      PyObject* fInputs  = GetValueFromDict(fLayer,"layerInput");
+      PyObject* fOutputs = GetValueFromDict(fLayer,"layerOutput");
+      std::string fLayerDType = PyStringAsString(GetValueFromDict(fLayer,"layerDType"));
 
       std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
       std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
@@ -278,16 +289,16 @@ std::unique_ptr<ROperator> MakeKerasConv(PyObject* fLayer){
       // Extracting names of weight tensors
       // The names of Kernel weights and bias weights are found in the list
       // of weight tensors from fLayer.
-      PyObject* fWeightNames  = PyDict_GetItemWithError(fLayer,PyUnicode_FromString("layerWeight"));
+      PyObject* fWeightNames  = GetValueFromDict(fLayer,"layerWeight");
       std::string fKernelName = PyStringAsString(PyList_GetItem(fWeightNames,0));
       std::string fBiasName   = PyStringAsString(PyList_GetItem(fWeightNames,1));
 
       // Extracting the Conv Node Attributes
-      PyObject* fDilations       = PyDict_GetItemWithError(fAttributes,PyUnicode_FromString("dilation_rate"));
-      PyObject* fGroup           = PyDict_GetItemWithError(fAttributes,PyUnicode_FromString("groups"));
-      PyObject* fKernelShape     = PyDict_GetItemWithError(fAttributes,PyUnicode_FromString("kernel_size"));
-      PyObject* fPads            = PyDict_GetItemWithError(fAttributes,PyUnicode_FromString("padding"));
-      PyObject* fStrides         = PyDict_GetItemWithError(fAttributes,PyUnicode_FromString("strides"));
+      PyObject* fDilations       = GetValueFromDict(fAttributes,"dilation_rate");
+      PyObject* fGroup           = GetValueFromDict(fAttributes,"groups");
+      PyObject* fKernelShape     = GetValueFromDict(fAttributes,"kernel_size");
+      PyObject* fPads            = GetValueFromDict(fAttributes,"padding");
+      PyObject* fStrides         = GetValueFromDict(fAttributes,"strides");
 
       std::vector<size_t> fAttrDilations = GetDataFromTuple(fDilations);
 
@@ -305,7 +316,7 @@ std::unique_ptr<ROperator> MakeKerasConv(PyObject* fLayer){
       }
       else if(fKerasPadding == "same"){
          fAttrAutopad="NOTSET";
-         PyObject* fInputShape  = PyDict_GetItemString(fAttributes,"_batch_input_shape");
+         PyObject* fInputShape  = GetValueFromDict(fAttributes,"_batch_input_shape");
          long inputHeight = PyLong_AsLong(PyTuple_GetItem(fInputShape,1));
          long inputWidth = PyLong_AsLong(PyTuple_GetItem(fInputShape,2));
 
@@ -348,8 +359,8 @@ std::unique_ptr<ROperator> MakeKerasConv(PyObject* fLayer){
 /// For Keras's keras.layers.Activation layer, the activation attribute is
 /// extracted and appropriate function for adding the function is called.
 std::unique_ptr<ROperator> MakeKerasActivation(PyObject* fLayer){
-      PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
-      PyObject* fPActivation = PyDict_GetItemString(fAttributes,"activation");
+      PyObject* fAttributes=GetValueFromDict(fLayer,"layerAttributes");
+      PyObject* fPActivation = GetValueFromDict(fAttributes,"activation");
       std::string fLayerActivation = PyStringAsString(PyObject_GetAttrString(fPActivation,"__name__"));
 
       auto findLayer = mapKerasLayer.find(fLayerActivation);
@@ -367,13 +378,13 @@ std::unique_ptr<ROperator> MakeKerasActivation(PyObject* fLayer){
 /// \return Unique pointer to ROperator object
 ///
 /// For instantiating a ROperator_Relu object, the names of
-/// input & output tensors and the deta-type of the layer are extracted.
+/// input & output tensors and the data-type of the layer are extracted.
 std::unique_ptr<ROperator> MakeKerasReLU(PyObject* fLayer)
 {
-      PyObject* fInputs=PyDict_GetItemString(fLayer,"layerInput");
-      PyObject* fOutputs=PyDict_GetItemString(fLayer,"layerOutput");
+      PyObject* fInputs=GetValueFromDict(fLayer,"layerInput");
+      PyObject* fOutputs=GetValueFromDict(fLayer,"layerOutput");
 
-      std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
+      std::string fLayerDType = PyStringAsString(GetValueFromDict(fLayer,"layerDType"));
       std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
       std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
 
@@ -396,12 +407,12 @@ std::unique_ptr<ROperator> MakeKerasReLU(PyObject* fLayer)
 /// \return Unique pointer to ROperator object
 ///
 /// For instantiating a ROperator_Selu object, the names of
-/// input & output tensors and the deta-type of the layer are extracted.
+/// input & output tensors and the data-type of the layer are extracted.
 std::unique_ptr<ROperator> MakeKerasSelu(PyObject* fLayer){
-      PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
-      PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
+      PyObject* fInputs  = GetValueFromDict(fLayer,"layerInput");
+      PyObject* fOutputs = GetValueFromDict(fLayer,"layerOutput");
 
-      std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
+      std::string fLayerDType = PyStringAsString(GetValueFromDict(fLayer,"layerDType"));
       std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
       std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
 
@@ -424,12 +435,12 @@ std::unique_ptr<ROperator> MakeKerasSelu(PyObject* fLayer){
 /// \return Unique pointer to ROperator object
 ///
 /// For instantiating a ROperator_Sigmoid object, the names of
-/// input & output tensors and the deta-type of the layer are extracted.
+/// input & output tensors and the data-type of the layer are extracted.
 std::unique_ptr<ROperator> MakeKerasSigmoid(PyObject* fLayer){
-      PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
-      PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
+      PyObject* fInputs  = GetValueFromDict(fLayer,"layerInput");
+      PyObject* fOutputs = GetValueFromDict(fLayer,"layerOutput");
 
-      std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
+      std::string fLayerDType = PyStringAsString(GetValueFromDict(fLayer,"layerDType"));
       std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
       std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
 
@@ -437,6 +448,89 @@ std::unique_ptr<ROperator> MakeKerasSigmoid(PyObject* fLayer){
       switch(ConvertStringToType(fLayerDType)){
          case ETensorType::FLOAT:
          op.reset(new ROperator_Sigmoid<float>(fLayerInputName, fLayerOutputName));
+         break;
+         default:
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Sigmoid does not yet support input type " + fLayerDType);
+         }
+   return op;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator object for Keras Softmax activation
+///
+/// \param[in] fLayer Python Keras layer as a Dictionary object
+/// \return Unique pointer to ROperator object
+///
+/// For instantiating a ROperator_Softmax object, the names of
+/// input & output tensors and the data-type of the layer are extracted.
+std::unique_ptr<ROperator> MakeKerasSoftmax(PyObject* fLayer){
+      PyObject* fInputs  = GetValueFromDict(fLayer,"layerInput");
+      PyObject* fOutputs = GetValueFromDict(fLayer,"layerOutput");
+
+      std::string fLayerDType = PyStringAsString(GetValueFromDict(fLayer,"layerDType"));
+      std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
+      std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
+
+      std::unique_ptr<ROperator> op;
+      switch(ConvertStringToType(fLayerDType)){
+         case ETensorType::FLOAT:
+         op.reset(new ROperator_Softmax<float>(/*default axis is -1*/-1,fLayerInputName, fLayerOutputName));
+         break;
+         default:
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Sigmoid does not yet support input type " + fLayerDType);
+         }
+   return op;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator object for Keras Leaky Relu activation
+///
+/// \param[in] fLayer Python Keras layer as a Dictionary object
+/// \return Unique pointer to ROperator object
+///
+/// For instantiating a ROperator_LeakyRelu object, the names of
+/// input & output tensors, the data-type and the alpha attribute of the layer
+/// are extracted.
+std::unique_ptr<ROperator> MakeKerasLeakyRelu(PyObject* fLayer){
+      PyObject* fInputs  = GetValueFromDict(fLayer,"layerInput");
+      PyObject* fOutputs = GetValueFromDict(fLayer,"layerOutput");
+      PyObject* fAttributes=GetValueFromDict(fLayer,"layerAttributes");
+
+      std::string fLayerDType = PyStringAsString(GetValueFromDict(fLayer,"layerDType"));
+      std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
+      std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
+      float fAlpha = (float)PyFloat_AsDouble(GetValueFromDict(fAttributes,"alpha"));
+      std::unique_ptr<ROperator> op;
+      switch(ConvertStringToType(fLayerDType)){
+         case ETensorType::FLOAT:
+         op.reset(new ROperator_LeakyRelu<float>(fAlpha, fLayerInputName, fLayerOutputName));
+         break;
+         default:
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Sigmoid does not yet support input type " + fLayerDType);
+         }
+   return op;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator object for Keras Tanh activation
+///
+/// \param[in] fLayer Python Keras layer as a Dictionary object
+/// \return Unique pointer to ROperator object
+///
+/// For instantiating a ROperator_Tanh object, the names of
+/// input & output tensors and the data-type of the layer are extracted.
+std::unique_ptr<ROperator> MakeKerasTanh(PyObject* fLayer){
+      PyObject* fInputs  = GetValueFromDict(fLayer,"layerInput");
+      PyObject* fOutputs = GetValueFromDict(fLayer,"layerOutput");
+
+      std::string fLayerDType = PyStringAsString(GetValueFromDict(fLayer,"layerDType"));
+      std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
+      std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
+
+      std::unique_ptr<ROperator> op;
+      switch(ConvertStringToType(fLayerDType)){
+         case ETensorType::FLOAT:
+         op.reset(new ROperator_Tanh<float>(fLayerInputName, fLayerOutputName));
          break;
          default:
          throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Sigmoid does not yet support input type " + fLayerDType);
@@ -457,16 +551,16 @@ std::unique_ptr<ROperator> MakeKerasSigmoid(PyObject* fLayer){
 std::unique_ptr<ROperator> MakeKerasPermute(PyObject* fLayer)
 {
       // Extracting required layer information
-      PyObject* fAttributes=PyDict_GetItemString(fLayer,"layerAttributes");
-      PyObject* fInputs=PyDict_GetItemString(fLayer,"layerInput");
-      PyObject* fOutputs=PyDict_GetItemString(fLayer,"layerOutput");
+      PyObject* fAttributes=GetValueFromDict(fLayer,"layerAttributes");
+      PyObject* fInputs=GetValueFromDict(fLayer,"layerInput");
+      PyObject* fOutputs=GetValueFromDict(fLayer,"layerOutput");
 
-      std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
+      std::string fLayerDType = PyStringAsString(GetValueFromDict(fLayer,"layerDType"));
       std::string fLayerInputName      = PyStringAsString(PyList_GetItem(fInputs,0));
       std::string fLayerOutputName     = PyStringAsString(PyList_GetItem(fOutputs,0));
 
       // Extracting the permute dimensions present in Attributes of the Keras layer
-      PyObject* fAttributePermute = PyDict_GetItemString(fAttributes,"dims");
+      PyObject* fAttributePermute = GetValueFromDict(fAttributes,"dims");
       std::vector<int_t>fPermuteDims;
 
       // Building vector of permute dimensions from the Tuple object.
@@ -501,23 +595,23 @@ std::unique_ptr<ROperator> MakeKerasPermute(PyObject* fLayer)
 std::unique_ptr<ROperator> MakeKerasBatchNorm(PyObject* fLayer)
 {
       // Extracting required layer information
-      PyObject* fAttributes = PyDict_GetItemString(fLayer,"layerAttributes");
-      PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
-      PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
-      PyObject* fGamma =  PyDict_GetItemString(fAttributes,"gamma");
-      PyObject* fBeta =  PyDict_GetItemString(fAttributes,"beta");
-      PyObject* fMoving_Mean =  PyDict_GetItemString(fAttributes,"moving_mean");
-      PyObject* fMoving_Var =  PyDict_GetItemString(fAttributes,"moving_variance");
+      PyObject* fAttributes = GetValueFromDict(fLayer,"layerAttributes");
+      PyObject* fInputs  = GetValueFromDict(fLayer,"layerInput");
+      PyObject* fOutputs = GetValueFromDict(fLayer,"layerOutput");
+      PyObject* fGamma =  GetValueFromDict(fAttributes,"gamma");
+      PyObject* fBeta =  GetValueFromDict(fAttributes,"beta");
+      PyObject* fMoving_Mean =  GetValueFromDict(fAttributes,"moving_mean");
+      PyObject* fMoving_Var =  GetValueFromDict(fAttributes,"moving_variance");
 
-      std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
+      std::string fLayerDType = PyStringAsString(GetValueFromDict(fLayer,"layerDType"));
       std::string fNX      = PyStringAsString(PyList_GetItem(fInputs,0));
       std::string fNY     = PyStringAsString(PyList_GetItem(fOutputs,0));
       std::string fNScale  = PyStringAsString(PyObject_GetAttrString(fGamma,"name"));
       std::string fNB  = PyStringAsString(PyObject_GetAttrString(fBeta,"name"));
       std::string fNMean  = PyStringAsString(PyObject_GetAttrString(fMoving_Mean,"name"));
       std::string fNVar  = PyStringAsString(PyObject_GetAttrString(fMoving_Var,"name"));
-      float fEpsilon = (float)PyFloat_AsDouble(PyDict_GetItemString(fAttributes,"epsilon"));
-      float fMomentum = (float)PyFloat_AsDouble(PyDict_GetItemString(fAttributes,"momentum"));
+      float fEpsilon = (float)PyFloat_AsDouble(GetValueFromDict(fAttributes,"epsilon"));
+      float fMomentum = (float)PyFloat_AsDouble(GetValueFromDict(fAttributes,"momentum"));
 
       std::unique_ptr<ROperator> op;
       op.reset(new ROperator_BatchNormalization<float>(fEpsilon, fMomentum, /* training mode */ 0, fNX, fNScale, fNB, fNMean, fNVar, fNY));
@@ -530,16 +624,16 @@ std::unique_ptr<ROperator> MakeKerasBatchNorm(PyObject* fLayer)
 /// \param[in] fLayer Python Keras layer as a Dictionary object
 /// \return Unique pointer to ROperator object
 std::unique_ptr<ROperator> MakeKerasReshape(PyObject* fLayer)
-{      
+{
       // Extracting required layer information
-      PyObject* fAttributes = PyDict_GetItemString(fLayer,"layerAttributes");
-      PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
-      PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
+      PyObject* fAttributes = GetValueFromDict(fLayer,"layerAttributes");
+      PyObject* fInputs  = GetValueFromDict(fLayer,"layerInput");
+      PyObject* fOutputs = GetValueFromDict(fLayer,"layerOutput");
 
-      std::string fLayerName = PyStringAsString(PyDict_GetItemString(fAttributes,"_name"));
+      std::string fLayerName = PyStringAsString(GetValueFromDict(fAttributes,"_name"));
 
       ReshapeOpMode fOpMode = Reshape;
-      std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
+      std::string fLayerDType = PyStringAsString(GetValueFromDict(fLayer,"layerDType"));
       std::string fNameData      = PyStringAsString(PyList_GetItem(fInputs,0));
       std::string fNameOutput    = PyStringAsString(PyList_GetItem(fOutputs,0));
       std::string fNameShape     = fLayerName + "ReshapeAxes";
@@ -555,24 +649,24 @@ std::unique_ptr<ROperator> MakeKerasReshape(PyObject* fLayer)
 /// \return Unique pointer to ROperator object
 std::unique_ptr<ROperator> MakeKerasConcat(PyObject* fLayer)
 {
-      PyObject* fAttributes = PyDict_GetItemString(fLayer,"layerAttributes");
-      PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
-      PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
+      PyObject* fAttributes = GetValueFromDict(fLayer,"layerAttributes");
+      PyObject* fInputs  = GetValueFromDict(fLayer,"layerInput");
+      PyObject* fOutputs = GetValueFromDict(fLayer,"layerOutput");
 
       std::vector<std::string> inputs;
       for(Py_ssize_t i=0; i<PyList_Size(fInputs); ++i){
-         inputs.emplace_back(PyStringAsString(PyList_GetItem(fInputs,i)));      
-      }            
+         inputs.emplace_back(PyStringAsString(PyList_GetItem(fInputs,i)));
+      }
       std::string output  = PyStringAsString(PyList_GetItem(fOutputs,0));
 
-      int axis = (int)PyLong_AsLong(PyDict_GetItemString(fAttributes,"axis"));
+      int axis = (int)PyLong_AsLong(GetValueFromDict(fAttributes,"axis"));
       std::unique_ptr<ROperator> op;
       op.reset(new ROperator_Concat<float>(inputs, axis, 0,  output));
       return op;
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-/// \brief Prepares a ROperator object for Keras binary operations like Add, 
+/// \brief Prepares a ROperator object for Keras binary operations like Add,
 ///        subtract, and multiply.
 ///
 /// \param[in] fLayer Python Keras layer as a Dictionary object
@@ -582,11 +676,11 @@ std::unique_ptr<ROperator> MakeKerasConcat(PyObject* fLayer)
 /// input & output tensors, the data-type of the layer and the operation type
 /// are extracted.
 std::unique_ptr<ROperator> MakeKerasBinary(PyObject* fLayer){
-      PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
-      PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
+      PyObject* fInputs  = GetValueFromDict(fLayer,"layerInput");
+      PyObject* fOutputs = GetValueFromDict(fLayer,"layerOutput");
 
-      std::string fLayerType = PyStringAsString(PyDict_GetItemString(fLayer,"layerType"));
-      std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
+      std::string fLayerType = PyStringAsString(GetValueFromDict(fLayer,"layerType"));
+      std::string fLayerDType = PyStringAsString(GetValueFromDict(fLayer,"layerDType"));
       std::string fX1  = PyStringAsString(PyList_GetItem(fInputs,0));
       std::string fX2  = PyStringAsString(PyList_GetItem(fInputs,1));
       std::string fY   = PyStringAsString(PyList_GetItem(fOutputs,0));
@@ -604,6 +698,34 @@ std::unique_ptr<ROperator> MakeKerasBinary(PyObject* fLayer){
          }
          default:
          throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Sigmoid does not yet support input type " + fLayerDType);
+         }
+   return op;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator object for Keras Identity and Dropout Layer
+///
+/// \param[in] fLayer Python Keras layer as a Dictionary object
+/// \return Unique pointer to ROperator object
+///
+/// Dropout will have no effect in inference, so instead an Identity operator
+/// is added to mimic its presence in the Keras model
+std::unique_ptr<ROperator> MakeKerasIdentity(PyObject* fLayer)
+{
+      PyObject* fInputs=GetValueFromDict(fLayer,"layerInput");
+      PyObject* fOutputs=GetValueFromDict(fLayer,"layerOutput");
+
+      std::string fLayerDType = PyStringAsString(GetValueFromDict(fLayer,"layerDType"));
+      std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
+      std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
+
+      std::unique_ptr<ROperator> op;
+      switch(ConvertStringToType(fLayerDType)){
+         case ETensorType::FLOAT:
+         op.reset(new ROperator_Identity<float>(fLayerInputName, fLayerOutputName));
+         break;
+         default:
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Identity does not yet support input type " + fLayerDType);
          }
    return op;
 }
@@ -706,7 +828,7 @@ RModel Parse(std::string filename){
                "  modelData.append(layerData)",fGlobalNS,fLocalNS);
 
 
-   PyObject* fPModel = PyDict_GetItemString(fLocalNS,"modelData");
+   PyObject* fPModel = GetValueFromDict(fLocalNS,"modelData");
    PyObject *fLayer;
    Py_ssize_t fModelSize = PyList_Size(fPModel);
    std::string fLayerType;
@@ -715,7 +837,7 @@ RModel Parse(std::string filename){
    // for adding the equivalent ROperators into the RModel object.
    for(Py_ssize_t fModelIterator=0;fModelIterator<fModelSize;++fModelIterator){
       fLayer     = PyList_GetItem(fPModel,fModelIterator);
-      fLayerType = PyStringAsString(PyDict_GetItemString(fLayer,"layerType"));
+      fLayerType = PyStringAsString(GetValueFromDict(fLayer,"layerType"));
 
       // Ignoring the input layer for models built using Keras Functional API
       if(fLayerType == "InputLayer")
@@ -725,15 +847,15 @@ RModel Parse(std::string filename){
       // inference code.
       else if(fLayerType == "Dense")
          rmodel.AddBlasRoutines({"Gemm", "Gemv"});
-      else if (fLayerType == "BatchNormalization") 
+      else if (fLayerType == "BatchNormalization")
          rmodel.AddBlasRoutines({"Copy", "Axpy"});
-         
       else if(fLayerType == "Conv1D" || fLayerType == "Conv2D" || fLayerType == "Conv3D")
          rmodel.AddBlasRoutines({"Gemm", "Axpy"});
+
       INTERNAL::AddKerasLayer(rmodel,fLayer);
 
    }
-   
+
    //Extracting model's weights
    //For every initialized tensor, weightProp will have its name and dtype in string
    //and value in numpy array
@@ -749,17 +871,17 @@ RModel Parse(std::string filename){
    PyArrayObject *fWeightTensorValue;
    std::string fWeightName;
    ETensorType fWeightDType;
-   fPWeight = PyDict_GetItemString(fLocalNS,"weight");
+   fPWeight = GetValueFromDict(fLocalNS,"weight");
    std::vector<std::size_t> fWeightTensorShape;
    std::size_t fWeightTensorSize;
 
    // Traversing through all the Weight tensors
    for (Py_ssize_t weightIter = 0; weightIter < PyList_Size(fPWeight); weightIter++){
       fWeightTensor      = PyList_GetItem(fPWeight, weightIter);
-      fWeightName        = PyStringAsString(PyDict_GetItemString(fWeightTensor,"name"));
-      fWeightDType       = ConvertStringToType(PyStringAsString(PyDict_GetItemString(fWeightTensor,"dtype")));
+      fWeightName        = PyStringAsString(GetValueFromDict(fWeightTensor,"name"));
+      fWeightDType       = ConvertStringToType(PyStringAsString(GetValueFromDict(fWeightTensor,"dtype")));
 
-      fWeightTensorValue = (PyArrayObject*)PyDict_GetItemString(fWeightTensor,"value");
+      fWeightTensorValue = (PyArrayObject*)GetValueFromDict(fWeightTensor,"value");
       fWeightTensorSize=1;
       fWeightTensorShape.clear();
 
@@ -793,9 +915,9 @@ RModel Parse(std::string filename){
    PyRunString("for idx in range(len(model.inputs)):\n"
                "  inputTypes.append(model.inputs[idx].dtype.__str__()[9:-2])",fGlobalNS,fLocalNS);
 
-   PyObject* fPInputs       = PyDict_GetItemString(fLocalNS,"inputNames");
-   PyObject* fPInputShapes  = PyDict_GetItemString(fLocalNS,"inputShapes");
-   PyObject* fPInputTypes   = PyDict_GetItemString(fLocalNS,"inputTypes");
+   PyObject* fPInputs       = GetValueFromDict(fLocalNS,"inputNames");
+   PyObject* fPInputShapes  = GetValueFromDict(fLocalNS,"inputShapes");
+   PyObject* fPInputTypes   = GetValueFromDict(fLocalNS,"inputTypes");
 
    std::string fInputName;
    ETensorType fInputDType;
@@ -866,7 +988,7 @@ RModel Parse(std::string filename){
    PyRunString("outputNames=[]",fGlobalNS,fLocalNS);
    PyRunString("for layerName in model.output_names:\n"
                "    outputNames.append(model.get_layer(layerName).output.name)",fGlobalNS,fLocalNS);
-   PyObject* fPOutputs   = PyDict_GetItemString(fLocalNS,"outputNames");
+   PyObject* fPOutputs   = GetValueFromDict(fLocalNS,"outputNames");
    std::vector<std::string> fOutputNames;
    for(Py_ssize_t outputIter = 0; outputIter < PyList_Size(fPOutputs);++outputIter){
          fOutputNames.push_back(PyStringAsString(PyList_GetItem(fPOutputs,outputIter)));

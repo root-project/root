@@ -68,8 +68,8 @@ public:
    /// set the function to minimize
    void SetFunction(const ROOT::Math::IMultiGradFunction & func) override;
 
-   /// set free variable (dummy impl. )
-   bool SetVariable(unsigned int , const std::string & , double , double ) override { return false; }
+   /// set free variable (dummy impl. since there is no need to set variables in the Linear Fitter)
+   bool SetVariable(unsigned int , const std::string & , double , double ) override { return true; }
 
    /// set fixed variable (override if minimizer supports them )
    bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */) override;
@@ -87,7 +87,7 @@ public:
    const double *  X() const override { return &fParams.front(); }
 
    /// return pointer to gradient values at the minimum
-   const double *  MinGradient() const override { return 0; } // not available in Minuit2
+   const double *  MinGradient() const override { return nullptr; } // not available in Minuit2
 
    /// number of function calls to reach the minimum
    unsigned int NCalls() const override { return 0; }
@@ -104,7 +104,7 @@ public:
    bool ProvidesError() const override { return true; }
 
    /// return errors at the minimum
-   const double * Errors() const override { return  (fErrors.empty()) ? 0 : &fErrors.front(); }
+   const double * Errors() const override { return  fErrors.empty() ? nullptr : &fErrors.front(); }
 
    /** return covariance matrices elements
        if the variable is fixed the matrix is zero

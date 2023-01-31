@@ -58,9 +58,9 @@ protected:
    Bool_t       IsDelayed() const;
    void         CreateSections(Int_t inew);
    void         UpdateSections();
-   virtual void CreateEdges() {;}
+   virtual void CreateEdges() {}
 public:
-   TGeoPconEditor(const TGWindow *p = 0,
+   TGeoPconEditor(const TGWindow *p = nullptr,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());

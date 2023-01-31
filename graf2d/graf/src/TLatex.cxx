@@ -1442,7 +1442,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
                // tilde must be drawn separately on screen and on PostScript
                // because an adjustment is required along Y for PostScript.
                TVirtualPS *saveps = gVirtualPS;
-               if (gVirtualPS) gVirtualPS = 0;
+               if (gVirtualPS) gVirtualPS = nullptr;
                Double_t y22 = y2;
                if (gVirtualX->InheritsFrom("TGCocoa")) y2 -= 4.7*sub;
                Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
@@ -2135,7 +2135,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
          }
          gPad->SetBatch(saveb);
       }
-      gVirtualPS = 0;
+      gVirtualPS = nullptr;
    }
 
    if (!gPad->IsBatch()) PaintLatex1( x, y, angle, size, text1);
@@ -2647,21 +2647,20 @@ void TLatex::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    char quote = '"';
 
-   if (gROOT->ClassSaved(TLatex::Class())) {
+   if (gROOT->ClassSaved(TLatex::Class()))
       out<<"   ";
-   } else {
+   else
       out<<"   TLatex *";
-   }
 
    TString s = GetTitle();
+   s.ReplaceSpecialCppChars();
 
-   s.ReplaceAll("\\","\\\\");
-   s.ReplaceAll("\"","\\\"");
-   out<<"   tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<std::endl;
-   if (TestBit(kTextNDC)) out<<"tex->SetNDC();"<<std::endl;
+   out<<"   tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s<<quote<<");"<<std::endl;
+   if (TestBit(kTextNDC))
+      out<<"   tex->SetNDC();"<<std::endl;
 
-   SaveTextAttributes(out,"tex",11,0,1,62,0.05);
-   SaveLineAttributes(out,"tex",1,1,1);
+   SaveTextAttributes(out, "tex", 11, 0, 1, 62, 0.05);
+   SaveLineAttributes(out, "tex", 1, 1, 1);
 
    out<<"   tex->Draw();"<<std::endl;
 }

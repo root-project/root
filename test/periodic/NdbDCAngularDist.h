@@ -11,9 +11,9 @@ protected:
 public:
    NdbDCAngularDist()
       : NdbMF(34, "Data covariances for angular distributions") {}
-   ~NdbDCAngularDist() {}
+   ~NdbDCAngularDist() override {}
 
-   ClassDef(NdbDCAngularDist,1)
+   ClassDefOverride(NdbDCAngularDist,1)
 
 }; // NdbDCAngularDist
 

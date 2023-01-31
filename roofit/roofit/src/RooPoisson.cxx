@@ -26,8 +26,8 @@ ClassImp(RooPoisson);
 /// Constructor
 
 RooPoisson::RooPoisson(const char *name, const char *title,
-             RooAbsReal& _x,
-             RooAbsReal& _mean,
+             RooAbsReal::Ref _x,
+             RooAbsReal::Ref _mean,
              bool noRounding) :
   RooAbsPdf(name,title),
   x("x","x",this,_x),
@@ -87,8 +87,11 @@ double RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code == 1 || code == 2) ;
 
-  if(_protectNegative && mean<0)
-    return exp(-2*mean); // make it fall quickly
+  const double mu = mean; // evaluating the proxy once for less overhead
+
+  if(_protectNegative && mu < 0.0) {
+    return std::exp(-2.0 * mu); // make it fall quickly
+  }
 
   if (code == 1) {
     // Implement integral over x as summation. Add special handling in case
@@ -99,8 +102,11 @@ double RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const
     if (xmax < 0. || xmax < xmin) {
       return 0.;
     }
-    if (!x.hasMax() || RooNumber::isInfinite(xmax)) {
-      //Integrating the full Poisson distribution here
+    const double delta = 100.0 * std::sqrt(mu);
+    // If the limits are more than many standard deviations away from the mean,
+    // we might as well return the integral of the full Poisson distribution to
+    // save computing time.
+    if (xmin < std::max(mu - delta, 0.0) && xmax > mu + delta) {
       return 1.;
     }
 
@@ -111,16 +117,16 @@ double RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const
 
     // Sum from 0 to just before the bin outside of the range.
     if (ixmin == 0) {
-      return ROOT::Math::poisson_cdf(ixmax - 1, mean);
+      return ROOT::Math::poisson_cdf(ixmax - 1, mu);
     }
     else {
       // If necessary, subtract from 0 to the beginning of the range
-      if (ixmin <= mean) {
-        return ROOT::Math::poisson_cdf(ixmax - 1, mean) - ROOT::Math::poisson_cdf(ixmin - 1, mean);
+      if (ixmin <= mu) {
+        return ROOT::Math::poisson_cdf(ixmax - 1, mu) - ROOT::Math::poisson_cdf(ixmin - 1, mu);
       }
       else {
         //Avoid catastrophic cancellation in the high tails:
-        return ROOT::Math::poisson_cdf_c(ixmin - 1, mean) - ROOT::Math::poisson_cdf_c(ixmax - 1, mean);
+        return ROOT::Math::poisson_cdf_c(ixmin - 1, mu) - ROOT::Math::poisson_cdf_c(ixmax - 1, mu);
       }
 
     }
@@ -128,18 +134,15 @@ double RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const
   } else if(code == 2) {
 
     // the integral with respect to the mean is the integral of a gamma distribution
-    double mean_min = mean.min(rangeName);
-    double mean_max = mean.max(rangeName);
 
-    double ix;
-    if(_noRounding) ix = x + 1;
-    else ix = Int_t(TMath::Floor(x)) + 1.0; // negative ix does not need protection (gamma returns 0.0)
+    // negative ix does not need protection (gamma returns 0.0)
+    const double ix = _noRounding ? x + 1 : int(TMath::Floor(x)) + 1.0;
 
-    return ROOT::Math::gamma_cdf(mean_max, ix, 1.0) - ROOT::Math::gamma_cdf(mean_min, ix, 1.0);
+    using ROOT::Math::gamma_cdf;
+    return gamma_cdf(mean.max(rangeName), ix, 1.0) - gamma_cdf(mean.min(rangeName), ix, 1.0);
   }
 
-  return 0;
-
+  return 0.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

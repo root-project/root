@@ -101,46 +101,46 @@ exports.settings = workaround_settings;
   *    - 'hierarchy' hierarchy browser
   *    - 'openui5' OpenUI5 and related functionality
   * @param {Array|string} req - list of required components (as array or string separated by semicolon)
-  * @returns {Promise} with array of requirements (or single element) */
+  * @return {Promise} with array of requirements (or single element) */
 
 function v6_require(need) {
    if (!need)
       return Promise.resolve(null);
 
-   if (typeof need == "string") need = need.split(";");
+   if (typeof need == 'string') need = need.split(';');
 
    need.forEach((name,indx) => {
-      if ((name.indexOf("load:")==0) || (name.indexOf("user:")==0))
+      if ((name.indexOf('load:') == 0) || (name.indexOf('user:') == 0))
          need[indx] = name.slice(5);
-      else if (name == "2d")
-         need[indx] = "painter";
-      else if ((name == "jq2d") || (name == "jq"))
-         need[indx] = "hierarchy";
-      else if (name == "v6")
-         need[indx] = "gpad";
-      else if (name == "v7")
-         need[indx] = "v7gpad";
+      else if (name == '2d')
+         need[indx] = 'painter';
+      else if ((name == 'jq2d') || (name == 'jq'))
+         need[indx] = 'hierarchy';
+      else if (name == 'v6')
+         need[indx] = 'gpad';
+      else if (name == 'v7')
+         need[indx] = 'v7gpad';
    });
 
    let arr = [];
 
    need.forEach(name => {
-      if (name == "hist")
-         arr.push(Promise.all([import("../modules/hist/TH1Painter.mjs"), import("../modules/hist/TH2Painter.mjs"), import("../modules/hist/THStackPainter.mjs")]).then(arr => {
+      if (name == 'hist')
+         arr.push(Promise.all([import('../modules/hist/TH1Painter.mjs'), import('../modules/hist/TH2Painter.mjs'), import('../modules/hist/THStackPainter.mjs')]).then(arr => {
             // copy hist painter objects into JSROOT
             Object.assign(globalThis.JSROOT, arr[0], arr[1], arr[2]);
          }));
-      else if (name == "more")
-         arr.push(import("../modules/draw/more.mjs"));
-      else if (name == "gpad")
-         arr.push(loadPainter().then(() => Promise.all([import("../modules/gpad/TAxisPainter.mjs"), import("../modules/gpad/TPadPainter.mjs"), import("../modules/gpad/TCanvasPainter.mjs")])).then(arr => {
+      else if (name == 'more')
+         arr.push(import('../modules/draw/more.mjs'));
+      else if (name == 'gpad')
+         arr.push(loadPainter().then(() => Promise.all([import('../modules/gpad/TAxisPainter.mjs'), import('../modules/gpad/TPadPainter.mjs'), import('../modules/gpad/TCanvasPainter.mjs')])).then(arr => {
             // copy all classes
             Object.assign(globalThis.JSROOT, arr[0], arr[1], arr[2]);
             if (jsrp) jsrp.ensureTCanvas = arr[2].ensureTCanvas;
             return globalThis.JSROOT;
          }));
-      else if (name == "v7gpad")
-         arr.push(loadPainter().then(() => Promise.all([import("../modules/gpad/RAxisPainter.mjs"), import("../modules/gpad/RPadPainter.mjs"), import("../modules/gpad/RCanvasPainter.mjs")])).then(arr => {
+      else if (name == 'v7gpad')
+         arr.push(loadPainter().then(() => Promise.all([import('../modules/gpad/RAxisPainter.mjs'), import('../modules/gpad/RPadPainter.mjs'), import('../modules/gpad/RCanvasPainter.mjs')])).then(arr => {
             // copy all classes
             Object.assign(globalThis.JSROOT, arr[0], arr[1], arr[2]);
             if (jsrp) jsrp.ensureRCanvas = arr[2].ensureRCanvas;
@@ -148,13 +148,13 @@ function v6_require(need) {
             arr[2].RPadPainter.prototype.getObjectDrawSettings = globalThis.JSROOT.getDrawSettings;
             return globalThis.JSROOT;
          }));
-      else if (name == "io")
-         arr.push(import("../modules/io.mjs"));
-      else if (name == "tree")
-         arr.push(import("../modules/tree.mjs"));
-      else if (name == "geom")
-         arr.push(geo ? Promise.resolve(geo) : loadPainter().then(() => Promise.all([import("../modules/geom/geobase.mjs"),
-            import("../modules/geom/TGeoPainter.mjs"), import("../modules/base/base3d.mjs"), import("../modules/three.mjs")])).then(res => {
+      else if (name == 'io')
+         arr.push(import('../modules/io.mjs'));
+      else if (name == 'tree')
+         arr.push(import('../modules/tree.mjs'));
+      else if (name == 'geom')
+         arr.push(geo ? Promise.resolve(geo) : loadPainter().then(() => Promise.all([import('../modules/geom/geobase.mjs'),
+            import('../modules/geom/TGeoPainter.mjs'), import('../modules/base/base3d.mjs'), import('../modules/three.mjs')])).then(res => {
 
             if (geo) return geo;
 
@@ -173,25 +173,25 @@ function v6_require(need) {
 
             return geo;
          }));
-      else if (name == "math")
-         arr.push(import("../modules/base/math.mjs"));
-      else if (name == "latex")
-         arr.push(import("../modules/base/latex.mjs"));
-      else if (name == "painter")
+      else if (name == 'math')
+         arr.push(import('../modules/base/math.mjs'));
+      else if (name == 'latex')
+         arr.push(import('../modules/base/latex.mjs'));
+      else if (name == 'painter')
          arr.push(loadPainter());
-      else if (name == "hierarchy")
-         arr.push(Promise.all([import("../modules/gui/HierarchyPainter.mjs"), import("../modules/draw/TTree.mjs")]).then(arr => {
+      else if (name == 'hierarchy')
+         arr.push(Promise.all([import('../modules/gui/HierarchyPainter.mjs'), import('../modules/draw/TTree.mjs')]).then(arr => {
             Object.assign(globalThis.JSROOT, arr[0], arr[1]);
             getHPainter = arr[0].getHPainter;
             globalThis.JSROOT.hpainter = getHPainter();
             return globalThis.JSROOT;
          }));
-      else if (name == "openui5")
-         arr.push(import("../modules/gui/utils.mjs").then(handle => handle.loadOpenui5(_openui5args)));
-      else if (name == "interactive")
-         arr.push(import("../modules/gui/utils.mjs").then(handle => { return { addMoveHandler: handle.addMoveHandler }; }));
-      else if (name.indexOf(".js") >= 0)
-         arr.push(import("../modules/core.mjs").then(handle => handle.loadScript(name)));
+      else if (name == 'openui5')
+         arr.push(import('../modules/gui/utils.mjs').then(handle => handle.loadOpenui5(_openui5args)));
+      else if (name == 'interactive')
+         arr.push(import('../modules/gui/utils.mjs').then(handle => { return { addMoveHandler: handle.addMoveHandler }; }));
+      else if (name.indexOf('.js') >= 0)
+         arr.push(import('../modules/core.mjs').then(handle => handle.loadScript(name)));
    });
 
    // need notify calling function when require is completed
@@ -235,14 +235,14 @@ exports.decodeUrl = function(url) {
    }
    res.url = url;
 
-   let p1 = url.indexOf("?");
+   let p1 = url.indexOf('?');
    if (p1 < 0) return res;
    url = decodeURI(url.slice(p1+1));
 
    while (url.length > 0) {
       // try to correctly handle quotes in the URL
       let pos = 0, nq = 0, eq = -1, firstq = -1;
-      while ((pos < url.length) && ((nq!==0) || ((url[pos]!=="&") && (url[pos]!=="#")))) {
+      while ((pos < url.length) && ((nq !== 0) || ((url[pos] !== '&') && (url[pos] !== '#')))) {
          switch (url[pos]) {
             case "'": if (nq >= 0) nq = (nq+1)%2; if (firstq < 0) firstq = pos; break;
             case '"': if (nq <= 0) nq = (nq-1)%2; if (firstq < 0) firstq = pos; break;
@@ -251,10 +251,10 @@ exports.decodeUrl = function(url) {
          pos++;
       }
       if ((eq < 0) && (firstq < 0)) {
-         res.opts[url.slice(0,pos)] = "";
+         res.opts[url.slice(0,pos)] = '';
       } if (eq > 0) {
          let val = url.slice(eq+1, pos);
-         if (((val[0]==="'") || (val[0]==='"')) && (val[0]===val[val.length-1])) val = val.slice(1, val.length-1);
+         if (((val[0] === "'") || (val[0] === '"')) && (val[0] === val[val.length-1])) val = val.slice(1, val.length-1);
          res.opts[url.slice(0,eq)] = val;
       }
       if ((pos >= url.length) || (url[pos] == '#')) break;
@@ -275,14 +275,14 @@ exports.connectWebWindow = function(arg) {
 
    let d = exports.decodeUrl();
 
-   if (d.has("headless") && d.get("key")) {
+   if (d.has('headless') && d.get('key')) {
       let is_chrome = false;
-      if ((typeof document !== "undefined") && (typeof window !== "undefined"))
+      if ((typeof document !== 'undefined') && (typeof window !== 'undefined'))
          is_chrome = (!!window.chrome && !browser.isOpera) || (navigator.userAgent.indexOf('HeadlessChrome') >= 0);
       if (is_chrome) {
-         let element = document.createElement("script");
-         element.setAttribute("type", "text/javascript");
-         element.setAttribute("src", "root_batch_holder.js?key=" + d.get("key"));
+         let element = document.createElement('script');
+         element.setAttribute('type', 'text/javascript');
+         element.setAttribute('src', 'root_batch_holder.js?key=' + d.get('key'));
          document.head.appendChild(element);
          arg.ignore_chrome_batch_holder = true;
       }
@@ -290,9 +290,9 @@ exports.connectWebWindow = function(arg) {
 
    return _sync().then(() => {
 
-      let prereq = "";
+      let prereq = '';
       if (arg.prereq) prereq = arg.prereq;
-      if (arg.prereq2) prereq += ";" + arg.prereq2;
+      if (arg.prereq2) prereq += ';' + arg.prereq2;
 
       if (!prereq) return;
 
@@ -314,7 +314,7 @@ exports.connectWebWindow = function(arg) {
 
 
 // try to define global JSROOT
-if ((typeof globalThis !== "undefined") && !globalThis.JSROOT) {
+if ((typeof globalThis !== 'undefined') && !globalThis.JSROOT) {
 
    globalThis.JSROOT = exports;
 

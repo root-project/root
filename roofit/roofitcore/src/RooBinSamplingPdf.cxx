@@ -161,11 +161,11 @@ double RooBinSamplingPdf::evaluate() const {
 /// Integrate the PDF over all its bins, and return a batch with those values.
 /// \param[in,out] evalData Struct with evaluation data.
 /// \param[in] normSet Normalisation set that's used to evaluate the PDF.
-RooSpan<double> RooBinSamplingPdf::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+void RooBinSamplingPdf::computeBatch(cudaStream_t*, double* output, size_t /*size*/, RooFit::Detail::DataMap const& dataMap) const
+{
   // Retrieve binning, which we need to compute the probabilities
   auto boundaries = binBoundaries();
-  auto xValues = _observable->getValues(evalData, normSet);
-  auto results = evalData.makeBatch(this, xValues.size());
+  auto xValues = dataMap.at(_observable);
 
   // Important: When the integrator samples x, caching of sub-tree values needs to be off.
   RooHelpers::DisableCachingRAII disableCaching(inhibitDirty());
@@ -177,10 +177,8 @@ RooSpan<double> RooBinSamplingPdf::evaluateSpan(RooBatchCompute::RunContext& eva
     const unsigned int bin = std::distance(boundaries.begin(), upperIt) - 1;
     assert(bin < boundaries.size());
 
-    results[i] = integrate(normSet, boundaries[bin], boundaries[bin+1]) / (boundaries[bin+1]-boundaries[bin]);
+    output[i] = integrate(nullptr, boundaries[bin], boundaries[bin+1]) / (boundaries[bin+1]-boundaries[bin]);
   }
-
-  return results;
 }
 
 
@@ -294,7 +292,7 @@ std::unique_ptr<ROOT::Math::IntegratorOneDim>& RooBinSamplingPdf::integrator() c
 /// Binding used by the integrator to evaluate the PDF.
 double RooBinSamplingPdf::operator()(double x) const {
   _observable->setVal(x);
-  return _pdf->getVal();
+  return _pdf;
 }
 
 

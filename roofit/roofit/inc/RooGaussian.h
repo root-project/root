@@ -24,8 +24,12 @@ class RooAbsReal;
 class RooGaussian : public RooAbsPdf {
 public:
   RooGaussian() { };
+  // Original constructor without RooAbsReal::Ref for backwards compatibility.
+  inline RooGaussian(const char *name, const char *title,
+         RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma)
+      : RooGaussian{name, title, RooAbsReal::Ref{_x}, RooAbsReal::Ref{_mean}, RooAbsReal::Ref{_sigma}} {}
   RooGaussian(const char *name, const char *title,
-         RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma);
+         RooAbsReal::Ref _x, RooAbsReal::Ref _mean, RooAbsReal::Ref _sigma);
   RooGaussian(const RooGaussian& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override {
     return new RooGaussian(*this,newname);

@@ -31,10 +31,10 @@ class TSplinePainter extends ObjectPainter {
    eval(knot, x) {
       let dx = x - knot.fX;
 
-      if (knot._typename == "TSplinePoly3")
+      if (knot._typename == 'TSplinePoly3')
          return knot.fY + dx*(knot.fB + dx*(knot.fC + dx*knot.fD));
 
-      if (knot._typename == "TSplinePoly5")
+      if (knot._typename == 'TSplinePoly5')
          return knot.fY + dx*(knot.fB + dx*(knot.fC + dx*(knot.fD + dx*(knot.fE + dx*knot.fF))));
 
       return knot.fY + dx;
@@ -60,8 +60,8 @@ class TSplinePainter extends ObjectPainter {
          }
       } else {
          // Non equidistant knots, binary search
-         while(khig-klow>1) {
-            let khalf = Math.round((klow+khig)/2);
+         while(khig - klow > 1) {
+            let khalf = Math.round((klow + khig)/2);
             if(x > spline.fPoly[khalf].fX) klow = khalf;
                                       else khig = khalf;
          }
@@ -92,9 +92,9 @@ class TSplinePainter extends ObjectPainter {
          if (ymin < 0.0) ymin *= (1 + gStyle.fHistTopMargin);
       }
 
-      let histo = create("TH1I");
+      let histo = create('TH1I');
 
-      histo.fName = spline.fName + "_hist";
+      histo.fName = spline.fName + '_hist';
       histo.fTitle = spline.fTitle;
 
       histo.fXaxis.fXmin = xmin;
@@ -118,7 +118,7 @@ class TSplinePainter extends ObjectPainter {
       if ((pnt === null) || !spline || !funcs) {
          cleanup = true;
       } else {
-         xx = funcs.revertAxis("x", pnt.x);
+         xx = funcs.revertAxis('x', pnt.x);
          indx = this.findX(xx);
          knot = spline.fPoly[indx];
          yy = this.eval(knot, xx);
@@ -135,19 +135,19 @@ class TSplinePainter extends ObjectPainter {
 
       if (cleanup) {
          if (this.draw_g)
-            this.draw_g.select(".tooltip_bin").remove();
+            this.draw_g.select('.tooltip_bin').remove();
          return null;
       }
 
-      let gbin = this.draw_g.select(".tooltip_bin"),
+      let gbin = this.draw_g.select('.tooltip_bin'),
           radius = this.lineatt.width + 3;
 
       if (gbin.empty())
-         gbin = this.draw_g.append("svg:circle")
-                           .attr("class", "tooltip_bin")
-                           .style("pointer-events","none")
-                           .attr("r", radius)
-                           .style("fill", "none")
+         gbin = this.draw_g.append('svg:circle')
+                           .attr('class', 'tooltip_bin')
+                           .style('pointer-events','none')
+                           .attr('r', radius)
+                           .style('fill', 'none')
                            .call(this.lineatt.func);
 
       let res = { name: this.getObject().fName,
@@ -158,27 +158,27 @@ class TSplinePainter extends ObjectPainter {
                   lines: [],
                   exact: (knot !== null) || (Math.abs(funcs.gry(yy) - pnt.y) < radius) };
 
-      res.changed = gbin.property("current_xx") !== xx;
+      res.changed = gbin.property('current_xx') !== xx;
       res.menu = res.exact;
       res.menu_dist = Math.sqrt((res.x-pnt.x)**2 + (res.y-pnt.y)**2);
 
       if (res.changed)
-         gbin.attr("cx", Math.round(res.x))
-             .attr("cy", Math.round(res.y))
-             .property("current_xx", xx);
+         gbin.attr('cx', Math.round(res.x))
+             .attr('cy', Math.round(res.y))
+             .property('current_xx', xx);
 
       let name = this.getObjectHint();
-      if (name.length > 0) res.lines.push(name);
-      res.lines.push("x = " + funcs.axisAsText("x", xx));
-      res.lines.push("y = " + funcs.axisAsText("y", yy));
+      if (name) res.lines.push(name);
+      res.lines.push('x = ' + funcs.axisAsText('x', xx));
+      res.lines.push('y = ' + funcs.axisAsText('y', yy));
       if (knot !== null) {
-         res.lines.push("knot = " + indx);
-         res.lines.push("B = " + floatToString(knot.fB, gStyle.fStatFormat));
-         res.lines.push("C = " + floatToString(knot.fC, gStyle.fStatFormat));
-         res.lines.push("D = " + floatToString(knot.fD, gStyle.fStatFormat));
+         res.lines.push('knot = ' + indx);
+         res.lines.push('B = ' + floatToString(knot.fB, gStyle.fStatFormat));
+         res.lines.push('C = ' + floatToString(knot.fC, gStyle.fStatFormat));
+         res.lines.push('D = ' + floatToString(knot.fD, gStyle.fStatFormat));
          if ((knot.fE !== undefined) && (knot.fF !== undefined)) {
-            res.lines.push("E = " + floatToString(knot.fE, gStyle.fStatFormat));
-            res.lines.push("F = " + floatToString(knot.fF, gStyle.fStatFormat));
+            res.lines.push('E = ' + floatToString(knot.fE, gStyle.fStatFormat));
+            res.lines.push('F = ' + floatToString(knot.fF, gStyle.fStatFormat));
          }
       }
 
@@ -215,14 +215,14 @@ class TSplinePainter extends ObjectPainter {
          }
 
          for (let n = 0; n < npx; ++n) {
-            let xx = xmin + (xmax-xmin)/npx*(n-1);
-            if (pmain.logx) xx = Math.exp(xx);
+            let x = xmin + (xmax-xmin)/npx*(n-1);
+            if (pmain.logx) x = Math.exp(x);
 
-            while ((indx < spline.fNp-1) && (xx > spline.fPoly[indx+1].fX)) ++indx;
+            while ((indx < spline.fNp-1) && (x > spline.fPoly[indx+1].fX)) ++indx;
 
-            let yy = this.eval(spline.fPoly[indx], xx);
+            let y = this.eval(spline.fPoly[indx], x);
 
-            bins.push({ x: xx, y: yy, grx: funcs.grx(xx), gry: funcs.gry(yy) });
+            bins.push({ x, y, grx: funcs.grx(x), gry: funcs.gry(y) });
          }
 
          let h0 = h;  // use maximal frame height for filling
@@ -231,19 +231,19 @@ class TSplinePainter extends ObjectPainter {
             if ((h0 > h) || (h0 < 0)) h0 = h;
          }
 
-         let path = buildSvgPath("bezier", bins, h0, 2);
+         let path = buildSvgPath('bezier', bins, h0, 2);
 
-         this.draw_g.append("svg:path")
-             .attr("class", "line")
-             .attr("d", path.path)
-             .style("fill", "none")
+         this.draw_g.append('svg:path')
+             .attr('class', 'line')
+             .attr('d', path.path)
+             .style('fill', 'none')
              .call(this.lineatt.func);
       }
 
       if (this.options.Mark) {
 
          // for tooltips use markers only if nodes where not created
-         let path = "";
+         let path = '';
 
          this.createAttMarker({ attr: spline });
 
@@ -251,7 +251,7 @@ class TSplinePainter extends ObjectPainter {
 
          this.knot_size = this.markeratt.getFullSize();
 
-         for (let n=0; n<spline.fPoly.length; n++) {
+         for (let n = 0; n < spline.fPoly.length; n++) {
             let knot = spline.fPoly[n],
                 grx = funcs.grx(knot.fX);
             if ((grx > -this.knot_size) && (grx < w + this.knot_size)) {
@@ -263,15 +263,15 @@ class TSplinePainter extends ObjectPainter {
          }
 
          if (path)
-            this.draw_g.append("svg:path")
-                       .attr("d", path)
+            this.draw_g.append('svg:path')
+                       .attr('d', path)
                        .call(this.markeratt.func);
       }
    }
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
    canZoomInside(axis/*,min,max*/) {
-      if (axis!=="x") return false;
+      if (axis !== 'x') return false;
 
       let spline = this.getObject();
       if (!spline) return false;
@@ -293,7 +293,7 @@ class TSplinePainter extends ObjectPainter {
          Line: d.check('L'),
          Curve: d.check('C'),
          Mark: d.check('P'),
-         Hopt: "AXIS",
+         Hopt: 'AXIS',
          second_x: false,
          second_y: false
       });
@@ -301,14 +301,14 @@ class TSplinePainter extends ObjectPainter {
       if (!this.options.Line && !this.options.Curve && !this.options.Mark)
          this.options.Curve = true;
 
-      if (d.check("X+")) { this.options.Hopt += "X+"; this.options.second_x = has_main; }
-      if (d.check("Y+")) { this.options.Hopt += "Y+"; this.options.second_y = has_main; }
+      if (d.check('X+')) { this.options.Hopt += 'X+'; this.options.second_x = has_main; }
+      if (d.check('Y+')) { this.options.Hopt += 'Y+'; this.options.second_y = has_main; }
 
       this.storeDrawOpt(opt);
    }
 
    /** @summary Draw TSpline */
-   static draw(dom, spline, opt) {
+   static async draw(dom, spline, opt) {
       let painter = new TSplinePainter(dom, spline);
       painter.decodeOptions(opt);
 
@@ -331,4 +331,4 @@ class TSplinePainter extends ObjectPainter {
 
 } // class TSplinePainter
 
-export { TSplinePainter }
+export { TSplinePainter };

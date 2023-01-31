@@ -48,6 +48,8 @@ operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameter
    const unsigned int n = st.VariableParameters();
    const MnMachinePrecision &prec = st.Precision();
 
+   print.Info("Computing seed using NumericalGradient calculator");
+
    print.Debug(n, "free parameters, FCN pointer", &fcn);
 
    // initial starting values
@@ -67,7 +69,8 @@ operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameter
       dcovar = 0.;
    } else {
       for (unsigned int i = 0; i < n; i++)
-         mat(i, i) = (std::fabs(dgrad.G2()(i)) > prec.Eps2() ? 1. / dgrad.G2()(i) : 1.);
+         mat(i, i) = (std::fabs(dgrad.G2()(i)) > prec.Eps2() ? 1. / dgrad.G2()(i) :
+          (dgrad.G2()(i) >= 0) ? 1./prec.Eps2() : -1./prec.Eps2());
    }
    MinimumError err(mat, dcovar);
 
@@ -92,10 +95,12 @@ operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameter
 
       MinimumState tmp = MnHesse(stra)(fcn, state, st.Trafo());
 
-      print.Info("run Hesse - new state:", tmp);
+      print.Info("run Hesse - Initial seeding state:", tmp);
 
       return MinimumSeed(tmp, st.Trafo());
    }
+
+   print.Info("Initial state ",state);
 
    return MinimumSeed(state, st.Trafo());
 }
@@ -104,6 +109,18 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
                                         const MnUserParameterState &st, const MnStrategy &stra) const
 {
    MnPrint print("MnSeedGenerator");
+
+   // check gradient (slow: will require more function evaluations)
+   //if (gc.CheckGradient()) {
+   //      //CheckGradient(st,trado,stra,grd)
+   //}
+
+   if (!gc.CanComputeG2()) {
+      Numerical2PGradientCalculator ngc(fcn, st.Trafo(), stra);
+      return this->operator()(fcn, ngc, st, stra);
+   }
+
+   print.Info("Computing seed using analytical (external) gradients");
 
    // find seed (initial point for minimization) using analytical gradient
    unsigned int n = st.VariableParameters();
@@ -116,19 +133,109 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
    double fcnmin = fcn(x);
    MinimumParameters pa(x, fcnmin);
 
-   InitialGradientCalculator igc(fcn, st.Trafo(), stra);
+   // compute function gradient
+   FunctionGradient grad = gc(pa);
+   double dcovar = 0;
+   MnAlgebraicSymMatrix mat(n);
+   // if we can compute Hessian compute it and use it
+   bool computedHessian = false;
+   if (!grad.HasG2()) {
+      assert(gc.CanComputeHessian());
+      MnAlgebraicSymMatrix  hmat(n);
+      bool ret = gc.Hessian(pa, hmat);
+      if (!ret) {
+         print.Error("Cannot compute G2 and Hessian");
+         assert(true);
+      }
+      // update gradient using G2 from Hessian calculation
+      MnAlgebraicVector g2(n);
+      for (unsigned int i = 0; i < n; i++)
+         g2(i) = hmat(i,i);
+      grad = FunctionGradient(grad.Grad(),g2);
+
+      print.Debug("Computed analytical G2",g2);
+
+      // when Hessian has been computed invert to get covariance
+      // we prefer not using full Hessian in strategy 1 since we need to be sure that
+      // is pos-defined. Uncomment following line if want to have seed with the full Hessian
+      //computedHessian = true;
+      if (computedHessian) {
+         mat = MinimumError::InvertMatrix(hmat);
+         print.Info("Use full Hessian as seed");
+         print.Debug("computed Hessian",hmat);
+         print.Debug("computed Error matrix (H^-1)",mat);
+      }
+   }
+   // do this only when we have not computed the Hessian or always ?
+   if (!computedHessian) {
+      // check if minimum state has covariance - if not use computed G2
+      if (st.HasCovariance()) {
+         print.Info("Using existing covariance matrix");
+         for (unsigned int i = 0; i < n; i++)
+            for (unsigned int j = i; j < n; j++)
+               mat(i, j) = st.IntCovariance()(i, j);
+         dcovar = 0.;
+      } else {
+         for (unsigned int i = 0; i < n; i++) {
+            // should not use a cut-off here like 1./prec.Eps()
+            mat(i, i) = (std::fabs(grad.G2()(i)) > prec.Eps2() ? 1. / grad.G2()(i)
+                         : (grad.G2()(i) >= 0)                 ? 1. / prec.Eps2()
+                                                               : -1. / prec.Eps2());
+         }
+         dcovar = 1.;
+      }
+   } else  {
+      print.Info("Computing seed using full Hessian");
+   }
+
+   MinimumError err(mat, dcovar);
+   double edm = VariableMetricEDMEstimator().Estimate(grad, err);
+
+   if (!grad.HasG2()) {
+      print.Error("Cannot compute seed because G2 is not computed");
+   }
+   MinimumState state(pa, err, grad, edm, fcn.NumOfCalls());
+   NegativeG2LineSearch ng2ls;
+   if (ng2ls.HasNegativeG2(grad, prec)) {
+      // do a negative line search - can use current gradient calculator
+      //Numerical2PGradientCalculator ngc(fcn, st.Trafo(), stra);
+      state = ng2ls(fcn, state, gc, prec);
+   }
+
+   // compute Hessian above will not have posdef check as it is done if we call MnHesse
+   if (stra.Strategy() == 2 && !st.HasCovariance() && !computedHessian) {
+      // can calculate full 2nd derivative
+      MinimumState tmpState = MnHesse(stra)(fcn, state, st.Trafo());
+      print.Info("Initial seeding state ",tmpState);
+      return MinimumSeed(tmpState, st.Trafo());
+   }
+
+   print.Info("Initial seeding state ",state);
+
+   return MinimumSeed(state, st.Trafo());
+}
+#if 0
+bool CheckGradient(MinimumState & st, MnUserTransformation & trafo, MnStrategy & stra)
+{
+
+   const MinimumParameters & pa = st.Parameters();
+   const FunctionGradient & grd = st.FunctionGradient();
+
+   // I think one should use Numerical2PGradientCaluclator
+   // since step sizes and G2 of initial gradient are wrong
+   InitialGradientCalculator igc(fcn, trafo, stra);
    FunctionGradient tmp = igc(pa);
-   FunctionGradient grd = gc(pa);
+   // should also use G2 from grd (in case Analyticalgradient can compute Hessian ?)
    FunctionGradient dgrad(grd.Grad(), tmp.G2(), tmp.Gstep());
 
-   if (gc.CheckGradient()) {
+   // do check computing gradient with HessianGradientCalculator which refines the gradient given an initial one
       bool good = true;
-      HessianGradientCalculator hgc(fcn, st.Trafo(), MnStrategy(2));
+      HessianGradientCalculator hgc(fcn, trafo, MnStrategy(2));
       std::pair<FunctionGradient, MnAlgebraicVector> hgrd = hgc.DeltaGradient(pa, dgrad);
       for (unsigned int i = 0; i < n; i++) {
          if (std::fabs(hgrd.first.Grad()(i) - grd.Grad()(i)) > hgrd.second(i)) {
-            int externalParameterIndex = st.Trafo().ExtOfInt(i);
-            const char *parameter_name = st.Trafo().Name(externalParameterIndex);
+            int externalParameterIndex = trafo.ExtOfInt(i);
+            const char *parameter_name = trafo.Name(externalParameterIndex);
             print.Warn("Gradient discrepancy of external Parameter too large:"
                        "parameter_name =",
                        parameter_name, "externalParameterIndex =", externalParameterIndex, "internal =", i);
@@ -141,37 +248,9 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
 
          assert(good);
       }
-   }
-
-   MnAlgebraicSymMatrix mat(n);
-   double dcovar = 1.;
-   if (st.HasCovariance()) {
-      for (unsigned int i = 0; i < n; i++)
-         for (unsigned int j = i; j < n; j++)
-            mat(i, j) = st.IntCovariance()(i, j);
-      dcovar = 0.;
-   } else {
-      for (unsigned int i = 0; i < n; i++)
-         mat(i, i) = (std::fabs(dgrad.G2()(i)) > prec.Eps2() ? 1. / dgrad.G2()(i) : 1.);
-   }
-   MinimumError err(mat, dcovar);
-   double edm = VariableMetricEDMEstimator().Estimate(dgrad, err);
-   MinimumState state(pa, err, dgrad, edm, fcn.NumOfCalls());
-
-   NegativeG2LineSearch ng2ls;
-   if (ng2ls.HasNegativeG2(dgrad, prec)) {
-      Numerical2PGradientCalculator ngc(fcn, st.Trafo(), stra);
-      state = ng2ls(fcn, state, ngc, prec);
-   }
-
-   if (stra.Strategy() == 2 && !st.HasCovariance()) {
-      // calculate full 2nd derivative
-      MinimumState tmpState = MnHesse(stra)(fcn, state, st.Trafo());
-      return MinimumSeed(tmpState, st.Trafo());
-   }
-
-   return MinimumSeed(state, st.Trafo());
+      return good
 }
+#endif
 
 } // namespace Minuit2
 

@@ -81,8 +81,6 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include <sstream>
 #include <set>
 
-using namespace std;
-
 ClassImp(RooAddPdf);
 
 
@@ -114,9 +112,8 @@ void RooAddPdf::finalizeConstruction() {
     if(found != seen.end()) {
       std::stringstream errorMsg;
       errorMsg << "RooAddPdf::RooAddPdf(" << GetName()
-               << ") pdf list contains pdfs with duplicate name \"" << pdf->GetName() << "\"."
-               << std::endl;
-      coutE(InputArguments) << errorMsg.str();
+               << ") pdf list contains pdfs with duplicate name \"" << pdf->GetName() << "\".";
+      coutE(InputArguments) << errorMsg.str() << std::endl;
       throw std::invalid_argument(errorMsg.str().c_str());
     }
     seen.insert(elem);
@@ -158,16 +155,16 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
   if (inPdfList.size()>inCoefList.size()+1 || inPdfList.size()<inCoefList.size()) {
     std::stringstream errorMsg;
     errorMsg << "RooAddPdf::RooAddPdf(" << GetName()
-           << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1." << endl ;
-    coutE(InputArguments) << errorMsg.str();
+             << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1.";
+    coutE(InputArguments) << errorMsg.str() << std::endl;
     throw std::invalid_argument(errorMsg.str().c_str());
   }
 
   if (recursiveFractions && inPdfList.size()!=inCoefList.size()+1) {
     std::stringstream errorMsg;
     errorMsg << "RooAddPdf::RooAddPdf(" << GetName()
-           << "): Recursive fractions option can only be used if Npdf=Ncoef+1." << endl;
-    coutE(InputArguments) << errorMsg.str();
+             << "): Recursive fractions option can only be used if Npdf=Ncoef+1.";
+    coutE(InputArguments) << errorMsg.str() << std::endl;
     throw std::invalid_argument(errorMsg.str());
   }
 
@@ -195,20 +192,20 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
     if (inPdfList.at(i) == nullptr) {
       std::stringstream errorMsg;
       errorMsg << "RooAddPdf::RooAddPdf(" << GetName()
-                 << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1" << endl ;
-      coutE(InputArguments) << errorMsg.str();
+                 << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1";
+      coutE(InputArguments) << errorMsg.str() << std::endl;
       throw std::invalid_argument(errorMsg.str());
     }
     if (!coef) {
       std::stringstream errorMsg;
-      errorMsg << "RooAddPdf::RooAddPdf(" << GetName() << ") coefficient " << (coef ? coef->GetName() : "") << " is not of type RooAbsReal, ignored" << endl ;
-      coutE(InputArguments) << errorMsg.str();
+      errorMsg << "RooAddPdf::RooAddPdf(" << GetName() << ") coefficient " << (coef ? coef->GetName() : "") << " is not of type RooAbsReal, ignored";
+      coutE(InputArguments) << errorMsg.str() << std::endl;
       throw std::invalid_argument(errorMsg.str());
     }
     if (!pdf) {
       std::stringstream errorMsg;
-      errorMsg << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << (pdf ? pdf->GetName() : "") << " is not of type RooAbsPdf, ignored" << endl ;
-      coutE(InputArguments) << errorMsg.str();
+      errorMsg << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << (pdf ? pdf->GetName() : "") << " is not of type RooAbsPdf, ignored";
+      coutE(InputArguments) << errorMsg.str() << std::endl;
       throw std::invalid_argument(errorMsg.str());
     }
     _pdfList.add(*pdf) ;
@@ -221,7 +218,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
     auto pdf = dynamic_cast<RooAbsPdf*>(inPdfList.at(inCoefList.size()));
 
     if (!pdf) {
-      coutE(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() << ") last argument " << inPdfList.at(inCoefList.size())->GetName() << " is not of type RooAbsPdf." << endl ;
+      coutE(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() << ") last argument " << inPdfList.at(inCoefList.size())->GetName() << " is not of type RooAbsPdf." << std::endl;
       throw std::invalid_argument("Last argument for RooAddPdf is not a PDF.");
     }
     _pdfList.add(*pdf) ;
@@ -257,12 +254,18 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
     auto pdf = dynamic_cast<const RooAbsPdf*>(pdfArg);
 
     if (!pdf) {
-      coutE(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << (pdf ? pdf->GetName() : "") << " is not of type RooAbsPdf, ignored" << endl ;
-      continue ;
+      std::stringstream errorMsg;
+      errorMsg << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << (pdf ? pdf->GetName() : "")
+               << " is not of type RooAbsPdf, RooAddPdf constructor call is invalid!";
+      coutE(InputArguments) << errorMsg.str() << std::endl;
+      throw std::invalid_argument(errorMsg.str().c_str());
     }
     if (!pdf->canBeExtended()) {
-      coutE(InputArguments) << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << pdf->GetName() << " is not extendable, ignored" << endl ;
-      continue ;
+      std::stringstream errorMsg;
+      errorMsg << "RooAddPdf::RooAddPdf(" << GetName() << ") pdf " << pdf->GetName()
+               << " is not extendable, RooAddPdf constructor call is invalid!";
+      coutE(InputArguments) << errorMsg.str() << std::endl;
+      throw std::invalid_argument(errorMsg.str().c_str());
     }
     _pdfList.add(*pdf) ;
   }
@@ -278,7 +281,6 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
   RooAbsPdf(other,name),
   _refCoefNorm("!refCoefNorm",this,other._refCoefNorm),
   _refCoefRangeName((TNamed*)other._refCoefRangeName),
-  _projectCoefs(other._projectCoefs),
   _projCacheMgr(other._projCacheMgr,this),
   _codeReg(other._codeReg),
   _pdfList("!pdfs",this,other._pdfList),
@@ -306,10 +308,8 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
 void RooAddPdf::fixCoefNormalization(const RooArgSet& refCoefNorm)
 {
   if (refCoefNorm.empty()) {
-    _projectCoefs = false ;
     return ;
   }
-  _projectCoefs = true ;
 
   _refCoefNorm.removeAll() ;
   _refCoefNorm.add(refCoefNorm) ;
@@ -337,7 +337,6 @@ void RooAddPdf::fixCoefRange(const char* rangeName)
     _projCacheMgr.reset() ;
   }
   _refCoefRangeName = newNamePtr;
-  if (_refCoefRangeName) _projectCoefs = true ;
 }
 
 
@@ -353,19 +352,23 @@ void RooAddPdf::fixCoefRange(const char* rangeName)
 /// - Projection integrals to calculate transformed fraction coefficients when a frozen reference frame is provided
 /// - Projection integrals for similar transformations when a frozen reference range is provided.
 
-AddCacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooArgSet* iset, const char* rangeName) const
+AddCacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooArgSet* iset) const
 {
   // Check if cache already exists
-  auto cache = static_cast<AddCacheElem*>(_projCacheMgr.getObj(nset,iset,0,rangeName));
+  auto cache = static_cast<AddCacheElem*>(_projCacheMgr.getObj(nset,iset,0,normRange()));
   if (cache) {
     return cache ;
   }
 
   //Create new cache
-  cache = new AddCacheElem{*this, _pdfList, _coefList, nset, iset, rangeName,
-                        _projectCoefs, _refCoefNorm, _refCoefRangeName, _verboseEval};
+  cache = new AddCacheElem{*this, _pdfList, _coefList, nset, iset, _refCoefNorm,
+                           _refCoefRangeName ? RooNameReg::str(_refCoefRangeName) : "",
+                           _verboseEval};
+  //std::cout << std::endl;
+  //cache->print();
+  //std::cout << std::endl;
 
-  _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(rangeName)) ;
+  _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(normRange())) ;
 
   return cache;
 }
@@ -393,7 +396,7 @@ void RooAddPdf::updateCoefficients(AddCacheElem& cache, const RooArgSet* nset, b
       _coefCache[i] = static_cast<RooAbsReal const&>(_coefList[i]).getVal(nset);
     }
   }
-  RooAddHelpers::updateCoefficients(*this, _coefCache, _pdfList, _haveLastCoef, cache, nset, _projectCoefs,
+  RooAddHelpers::updateCoefficients(*this, _coefCache, _pdfList, _haveLastCoef, cache, nset,
                                     _refCoefNorm, _allExtendable, _coefErrCount);
 }
 
@@ -473,7 +476,7 @@ double RooAddPdf::getValV(const RooArgSet* normSet) const
     _value = 0.0;
 
     for (unsigned int i=0; i < _pdfList.size(); ++i) {
-      const auto& pdf = static_cast<RooAbsPdf&>(_pdfList[i]);
+      auto& pdf = static_cast<RooAbsPdf&>(_pdfList[i]);
       double snormVal = 1.;
       snormVal = cache->suppNormVal(i);
 
@@ -607,7 +610,7 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
     if (subCode[n]==0 && !allAnalVars2->empty()) {
       coutE(InputArguments) << "RooAddPdf::getAnalyticalIntegral(" << GetName() << ") WARNING: component PDF " << pdf->GetName()
              << "   advertises inconsistent set of integrals (e.g. (X,Y) but not X or Y individually."
-             << "   Distributed analytical integration disabled. Please fix PDF" << endl ;
+             << "   Distributed analytical integration disabled. Please fix PDF" << std::endl ;
       allOK = false ;
     }
     n++ ;
@@ -642,18 +645,20 @@ double RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, con
   RooArgSet* intSet ;
   const std::vector<Int_t>& subCode = _codeReg.retrieve(code-1,intSet) ;
   if (subCode.empty()) {
-    coutE(InputArguments) << "RooAddPdf::analyticalIntegral(" << GetName() << "): ERROR unrecognized integration code, " << code << endl ;
-    assert(0) ;
+    std::stringstream errorMsg;
+    errorMsg << "RooAddPdf::analyticalIntegral(" << GetName() << "): ERROR unrecognized integration code, " << code;
+    coutE(InputArguments) << errorMsg.str() << std::endl;
+    throw std::invalid_argument(errorMsg.str().c_str());
   }
 
-  cxcoutD(Caching) << "RooAddPdf::aiWN(" << GetName() << ") calling getProjCache with nset = " << (normSet?*normSet:RooArgSet()) << endl ;
+  cxcoutD(Caching) << "RooAddPdf::aiWN(" << GetName() << ") calling getProjCache with nset = " << (normSet?*normSet:RooArgSet()) << std::endl ;
 
   if ((normSet==0 || normSet->empty()) && !_refCoefNorm.empty()) {
-//     cout << "WVE integration of RooAddPdf without normalization, but have reference set, using ref set for normalization" << endl ;
+//     cout << "WVE integration of RooAddPdf without normalization, but have reference set, using ref set for normalization" << std::endl ;
     normSet = &_refCoefNorm ;
   }
 
-  AddCacheElem* cache = getProjCache(normSet,intSet,0) ; // WVE rangename here?
+  AddCacheElem* cache = getProjCache(normSet,intSet);
   updateCoefficients(*cache,normSet);
 
   // Calculate the current value of this object
@@ -662,7 +667,7 @@ double RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, con
   // Do running sum of coef/pdf pairs, calculate lastCoef.
   double snormVal ;
 
-  //cout << "ROP::aIWN updateCoefCache with rangeName = " << (rangeName?rangeName:"<null>") << endl ;
+  //cout << "ROP::aIWN updateCoefCache with rangeName = " << (rangeName?rangeName:"<null>") << std::endl ;
   for (std::size_t i = 0; i < _pdfList.size(); ++i ) {
     auto pdf = static_cast<const RooAbsPdf*>(_pdfList.at(i));
 
@@ -691,7 +696,7 @@ double RooAddPdf::expectedEvents(const RooArgSet* nset) const
 {
   double expectedTotal{0.0};
 
-  cxcoutD(Caching) << "RooAddPdf::expectedEvents(" << GetName() << ") calling getProjCache with nset = " << (nset?*nset:RooArgSet()) << endl ;
+  cxcoutD(Caching) << "RooAddPdf::expectedEvents(" << GetName() << ") calling getProjCache with nset = " << (nset?*nset:RooArgSet()) << std::endl ;
   AddCacheElem& cache = *getProjCache(nset) ;
   updateCoefficients(cache, nset);
 

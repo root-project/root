@@ -33,7 +33,7 @@ public:
   RooProduct(const char *name, const char *title, const RooArgList& prodSet) ;
   RooProduct(const char *name, const char *title, RooAbsReal& real1, RooAbsReal& real2) ;
 
-  RooProduct(const RooProduct& other, const char* name = 0);
+  RooProduct(const RooProduct& other, const char *name = nullptr);
 
   void addTerm(RooAbsArg* term);
 
@@ -46,6 +46,9 @@ public:
 
 
   RooArgList components() { RooArgList tmp(_compRSet) ; tmp.add(_compCSet) ; return tmp ; }
+
+  const RooArgList& realComponents() const { return _compRSet; }
+  const RooArgList& categorialComponents() const { return _compCSet; }
 
   ~RooProduct() override ;
 

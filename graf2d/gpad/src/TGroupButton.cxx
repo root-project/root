@@ -103,7 +103,6 @@ void TGroupButton::DisplayColorTable(const char *action, Double_t x0, Double_t y
 
 void TGroupButton::ExecuteAction()
 {
-   TVirtualPad *pad;
    char line[128];
    strlcpy(line,GetMethod(),128);
    char *method = line;
@@ -119,28 +118,28 @@ void TGroupButton::ExecuteAction()
    TObject *obj = canvas->GetRefObject();
    if (!obj) return;
    if (strcmp(method,"PIXELS")) {
-      obj->Execute(method,params);
+      obj->Execute(method, params);
    } else {
       TText *text = (TText*)GetListOfPrimitives()->First();
       Int_t npixels = Int_t((YtoPixel(0) - YtoPixel(1))*text->GetTextSize());
-      Double_t dy;
-      pad = gROOT->GetSelectedPad();
+      Double_t dy = 0;
+      auto pad = gROOT->GetSelectedPad();
       if (!params) return;
-      Int_t nmax = (Int_t)(params-method);
+      Int_t nmax = (Int_t)(params - method);
       if (obj->InheritsFrom("TPaveLabel")) {
          TBox *pl = (TBox*)obj;
-         dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(npixels);
-         snprintf(params,nmax,"%f",dy/(pl->GetY2() - pl->GetY1()));
+         if (pad)
+            dy = (pad->AbsPixeltoY(0) - pad->AbsPixeltoY(npixels))/(pl->GetY2() - pl->GetY1());
+         snprintf(params, nmax, "%f", dy);
+         obj->Execute("SetTextSize",params);
+      } else if (obj->InheritsFrom("TPave")) {
+         if (pad)
+            dy = (pad->AbsPixeltoY(0) - pad->AbsPixeltoY(npixels))/(pad->GetY2() - pad->GetY1());
+         snprintf(params, nmax, "%f", dy);
          obj->Execute("SetTextSize",params);
       } else {
-         if (obj->InheritsFrom("TPave")) {
-            dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(npixels);
-            snprintf(params,nmax,"%f",dy/(pad->GetY2() - pad->GetY1()));
-            obj->Execute("SetTextSize",params);
-         } else {
-            snprintf(params,nmax,"%d",npixels);
-            obj->Execute("SetTextSizePixels",params);
-         }
+         snprintf(params, nmax, "%d", npixels);
+         obj->Execute("SetTextSizePixels", params);
       }
    }
 }
@@ -221,14 +220,14 @@ void TGroupButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 void TGroupButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   TPad *padsav = (TPad*)gPad;
+   TVirtualPad::TContext ctxt(kTRUE);
    char quote = '"';
-   if (gROOT->ClassSaved(TGroupButton::Class())) {
+   if (gROOT->ClassSaved(TGroupButton::Class()))
       out<<"   ";
-   } else {
+   else
       out<<"   TGroupButton *";
-   }
-   out<<"button = new TGroupButton("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
+
+   out<<"grbutton = new TGroupButton("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
       <<quote<<","<<quote<<GetMethod()<<quote
       <<","<<fXlowNDC
       <<","<<fYlowNDC
@@ -236,26 +235,28 @@ void TGroupButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
       <<","<<fYlowNDC+fHNDC
       <<");"<<std::endl;
 
-   SaveFillAttributes(out,"button",0,1001);
-   SaveLineAttributes(out,"button",1,1,1);
-   SaveTextAttributes(out,"button",22,0,1,62,.75);
+   SaveFillAttributes(out, "grbutton", 0, 1001);
+   SaveLineAttributes(out, "grbutton", 1, 1, 1);
+   SaveTextAttributes(out, "grbutton", 22, 0, 1, 62, .75);
 
-   if (GetBorderSize() != 2) {
-      out<<"   button->SetBorderSize("<<GetBorderSize()<<");"<<std::endl;
-   }
-   if (GetBorderMode() != 1) {
-      out<<"   button->SetBorderMode("<<GetBorderMode()<<");"<<std::endl;
-   }
+   if (GetBorderSize() != 2)
+      out<<"   grbutton->SetBorderSize("<<GetBorderSize()<<");"<<std::endl;
 
-   out<<"   button->Draw();"<<std::endl;
-   out<<"   button->cd();"<<std::endl;
+   if (GetBorderMode() != 1)
+      out<<"   grbutton->SetBorderMode("<<GetBorderMode()<<");"<<std::endl;
+
+   out<<"   grbutton->Draw();"<<std::endl;
 
    TIter next(GetListOfPrimitives());
-   TObject *obj = next();  //do not save first primitive
+   next();  //do not save first primitive
 
-   while ((obj = next()))
-         obj->SavePrimitive(out, (Option_t *)next.GetOption());
+   Int_t nprim = 0;
+   while (auto obj = next()) {
+      if (nprim++ == 0)
+         out<<"   grbutton->cd();"<<std::endl;
+      obj->SavePrimitive(out, (Option_t *)next.GetOption());
+   }
 
-   out<<"   "<<padsav->GetName()<<"->cd();"<<std::endl;
-   padsav->cd();
+   if (ctxt.GetSaved() && (nprim > 0))
+      out<<"   "<<ctxt.GetSaved()->GetName()<<"->cd();"<<std::endl;
 }

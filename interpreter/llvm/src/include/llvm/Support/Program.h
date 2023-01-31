@@ -14,10 +14,13 @@
 #define LLVM_SUPPORT_PROGRAM_H
 
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/BitVector.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Config/llvm-config.h"
 #include "llvm/Support/ErrorOr.h"
+#include "llvm/Support/FileSystem.h"
+#include <chrono>
 #include <system_error>
 
 namespace llvm {
@@ -35,7 +38,7 @@ namespace sys {
   typedef unsigned long procid_t; // Must match the type of DWORD on Windows.
   typedef void *process_t;        // Must match the type of HANDLE on Windows.
 #else
-  typedef pid_t procid_t;
+  typedef ::pid_t procid_t;
   typedef procid_t process_t;
 #endif
 
@@ -50,6 +53,13 @@ namespace sys {
     int ReturnCode;
 
     ProcessInfo();
+  };
+
+  /// This struct encapsulates information about a process execution.
+  struct ProcessStatistics {
+    std::chrono::microseconds TotalTime;
+    std::chrono::microseconds UserTime;
+    uint64_t PeakMemory = 0; ///< Maximum resident set size in KiB.
   };
 
   /// Find the first executable file \p Name in \p Paths.
@@ -67,6 +77,12 @@ namespace sys {
   ///   exists. \p Name if \p Name has slashes in it. Otherwise an error.
   ErrorOr<std::string>
   findProgramByName(StringRef Name, ArrayRef<StringRef> Paths = {});
+
+  // These functions change the specified standard stream (stdin or stdout) mode
+  // based on the Flags. They return errc::success if the specified stream was
+  // changed. Otherwise, a platform dependent error is returned.
+  std::error_code ChangeStdinMode(fs::OpenFlags Flags);
+  std::error_code ChangeStdoutMode(fs::OpenFlags Flags);
 
   // These functions change the specified standard stream (stdin or stdout) to
   // binary mode. They return errc::success if the specified stream
@@ -116,10 +132,16 @@ namespace sys {
       ///< string instance in which error messages will be returned. If the
       ///< string is non-empty upon return an error occurred while invoking the
       ///< program.
-      bool *ExecutionFailed = nullptr);
+      bool *ExecutionFailed = nullptr,
+      Optional<ProcessStatistics> *ProcStat = nullptr, ///< If non-zero,
+      /// provides a pointer to a structure in which process execution
+      /// statistics will be stored.
+      BitVector *AffinityMask = nullptr ///< CPUs or processors the new
+                                        /// program shall run on.
+  );
 
   /// Similar to ExecuteAndWait, but returns immediately.
-  /// @returns The \see ProcessInfo of the newly launced process.
+  /// @returns The \see ProcessInfo of the newly launched process.
   /// \note On Microsoft Windows systems, users will need to either call
   /// \see Wait until the process finished execution or win32 CloseHandle() API
   /// on ProcessInfo.ProcessHandle to avoid memory leaks.
@@ -128,7 +150,8 @@ namespace sys {
                             ArrayRef<Optional<StringRef>> Redirects = {},
                             unsigned MemoryLimit = 0,
                             std::string *ErrMsg = nullptr,
-                            bool *ExecutionFailed = nullptr);
+                            bool *ExecutionFailed = nullptr,
+                            BitVector *AffinityMask = nullptr);
 
   /// Return true if the given arguments fit within system-specific
   /// argument length limits.
@@ -182,25 +205,31 @@ namespace sys {
   /// \note Users of this function should always check the ReturnCode member of
   /// the \see ProcessInfo returned from this function.
   ProcessInfo Wait(
-      const ProcessInfo &PI, ///< The child process that should be waited on.
+      const ProcessInfo &PI,  ///< The child process that should be waited on.
       unsigned SecondsToWait, ///< If non-zero, this specifies the amount of
       ///< time to wait for the child process to exit. If the time expires, the
       ///< child is killed and this function returns. If zero, this function
       ///< will perform a non-blocking wait on the child process.
       bool WaitUntilTerminates, ///< If true, ignores \p SecondsToWait and waits
       ///< until child has terminated.
-      std::string *ErrMsg = nullptr ///< If non-zero, provides a pointer to a
+      std::string *ErrMsg = nullptr, ///< If non-zero, provides a pointer to a
       ///< string instance in which error messages will be returned. If the
       ///< string is non-empty upon return an error occurred while invoking the
       ///< program.
-      );
+      Optional<ProcessStatistics> *ProcStat = nullptr ///< If non-zero, provides
+      /// a pointer to a structure in which process execution statistics will be
+      /// stored.
+  );
+
+  /// Print a command argument, and optionally quote it.
+  void printArg(llvm::raw_ostream &OS, StringRef Arg, bool Quote);
 
 #if defined(_WIN32)
   /// Given a list of command line arguments, quote and escape them as necessary
   /// to build a single flat command line appropriate for calling CreateProcess
   /// on
   /// Windows.
-  std::string flattenWindowsCommandLine(ArrayRef<StringRef> Args);
+  ErrorOr<std::wstring> flattenWindowsCommandLine(ArrayRef<StringRef> Args);
 #endif
   }
 }

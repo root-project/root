@@ -43,7 +43,7 @@ protected:
    static TContextMenu *fgContextMenu;
 
 public:
-   TEveGedEditor(TCanvas* canvas=0, UInt_t width=250, UInt_t height=400);
+   TEveGedEditor(TCanvas* canvas=nullptr, UInt_t width=250, UInt_t height=400);
    virtual ~TEveGedEditor();
 
    virtual void CloseWindow();
@@ -54,7 +54,7 @@ public:
    void DisplayObject(TObject* obj);
 
    virtual void SetModel(TVirtualPad* pad, TObject* obj, Int_t event, Bool_t force=kFALSE);
-   virtual void Update(TGedFrame* gframe=0);
+   virtual void Update(TGedFrame* gframe=nullptr);
 
    // --- Statics for extra editors. ---
 
@@ -84,7 +84,7 @@ protected:
    TGTextButton   *fNCButton; // Name/Class button.
 
 public:
-   TEveGedNameFrame(const TGWindow *p=0, Int_t width=140, Int_t height=30,
+   TEveGedNameFrame(const TGWindow *p=nullptr, Int_t width=140, Int_t height=30,
                     UInt_t options=kChildFrame | kHorizontalFrame);
    virtual ~TEveGedNameFrame();
 

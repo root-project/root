@@ -55,8 +55,6 @@ public:
   TObject* clone(const char* newname) const override { return new RooProdPdf(*this,newname) ; }
   ~RooProdPdf() override ;
 
-  bool checkObservables(const RooArgSet* nset) const override ;
-
   bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
   double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
@@ -67,13 +65,17 @@ public:
 
   const RooArgList& pdfList() const { return _pdfList ; }
 
+  void addPdfs(RooAbsCollection const& pdfs);
+  void removePdfs(RooAbsCollection const& pdfs);
+
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void initGenerator(Int_t code) override ;
   void generateEvent(Int_t code) override;
   bool isDirectGenSafe(const RooAbsArg& arg) const override ;
 
   // Constraint management
-  RooArgSet* getConstraints(const RooArgSet& observables, RooArgSet& constrainedParams, bool stripDisconnected) const override ;
+  RooArgSet* getConstraints(const RooArgSet& observables, RooArgSet& constrainedParams,
+                            bool stripDisconnected, bool removeConstraintsFromPdf=false) const override ;
 
   std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
   std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
@@ -96,15 +98,15 @@ public:
 
   void writeCacheToStream(std::ostream& os, RooArgSet const* nset) const;
 
-  std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server) const override;
+  std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
 private:
 
-  double evaluate() const override ;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
-  inline bool canComputeBatchWithCuda() const override { return true; }
+  std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server) const;
 
-  RooAbsReal* makeCondPdfRatioCorr(RooAbsReal& term, const RooArgSet& termNset, const RooArgSet& termImpSet, const char* normRange, const char* refRange) const ;
+  double evaluate() const override ;
+
+  std::unique_ptr<RooAbsReal> makeCondPdfRatioCorr(RooAbsReal& term, const RooArgSet& termNset, const RooArgSet& termImpSet, const char* normRange, const char* refRange) const ;
 
   void getParametersHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/, bool stripDisconnected) const override ;
 
@@ -150,6 +152,9 @@ private:
     void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) override ;
     void writeToStream(std::ostream& os) const ;
   } ;
+
+  std::unique_ptr<CacheElem> createCacheElem(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName=nullptr) const;
+
   mutable RooObjCacheManager _cacheMgr ; //! The cache manager
 
   CacheElem* getCacheElem(RooArgSet const* nset) const ;
@@ -157,29 +162,33 @@ private:
   RooAbsReal* specializeIntegral(RooAbsReal& orig, const char* targetRangeName) const ;
   RooAbsReal* specializeRatio(RooFormulaVar& input, const char* targetRangeName) const ;
   double calculate(const RooProdPdf::CacheElem& cache, bool verbose=false) const ;
+  void calculateBatch(const RooProdPdf::CacheElem& cache, cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const;
 
 
   friend class RooProdGenContext ;
+  friend class RooFixedProdPdf ;
   RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=nullptr,
                                   const RooArgSet *auxProto=nullptr, bool verbose= false) const override ;
 
 
   mutable RooAICRegistry _genCode ; ///<! Registry of composite direct generator codes
 
-  double _cutOff ;       ///<  Cutoff parameter for running product
+  double _cutOff = 0.0;       ///<  Cutoff parameter for running product
   RooListProxy _pdfList ;  ///<  List of PDF components
   std::vector<std::unique_ptr<RooArgSet>> _pdfNSetList ; ///< List of PDF component normalization sets
-  Int_t _extendedIndex ;   ///<  Index of extended PDF (if any)
+  Int_t _extendedIndex = -1; ///<  Index of extended PDF (if any)
 
   void useDefaultGen(bool flag=true) { _useDefaultGen = flag ; }
-  bool _useDefaultGen ; ///< Use default or distributed event generator
+  bool _useDefaultGen = false; ///< Use default or distributed event generator
 
-  mutable TNamed* _refRangeName ; ///< Reference range name for interpretation of conditional products
+  mutable TNamed* _refRangeName = nullptr; ///< Reference range name for interpretation of conditional products
 
-  bool _selfNorm ; ///< Is self-normalized
+  bool _selfNorm = true; ///< Is self-normalized
   RooArgSet _defNormSet ; ///< Default normalization set
 
 private:
+
+
 
   ClassDefOverride(RooProdPdf,6) // PDF representing a product of PDFs
 };

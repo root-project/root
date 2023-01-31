@@ -20,7 +20,7 @@ class MnUserParameterState;
 class MnTraceObject {
 
 public:
-   MnTraceObject(int parNumber = -1) : fUserState(0), fParNumber(parNumber) {}
+   MnTraceObject(int parNumber = -1) : fUserState(nullptr), fParNumber(parNumber) {}
 
    virtual ~MnTraceObject() {}
 

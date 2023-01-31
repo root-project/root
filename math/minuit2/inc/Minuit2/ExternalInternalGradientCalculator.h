@@ -30,8 +30,8 @@ class MnUserTransformation;
 class ExternalInternalGradientCalculator : public AnalyticalGradientCalculator {
 
 public:
-   ExternalInternalGradientCalculator(const FCNGradientBase &fcn, const MnUserTransformation &state)
-      : AnalyticalGradientCalculator(fcn, state)
+   ExternalInternalGradientCalculator(const FCNGradientBase &fcn, const MnUserTransformation &trafo)
+      : AnalyticalGradientCalculator(fcn, trafo)
    {
    }
 

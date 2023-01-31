@@ -1,5 +1,3 @@
-:orphan:
-
 ============================================================
 Kaleidoscope: Extending the Language: User-defined Operators
 ============================================================
@@ -115,7 +113,7 @@ keywords:
         return tok_identifier;
 
 This just adds lexer support for the unary and binary keywords, like we
-did in `previous chapters <LangImpl5.html#lexer-extensions-for-if-then-else>`_. One nice thing
+did in `previous chapters <LangImpl05.html#lexer-extensions-for-if-then-else>`_. One nice thing
 about our current AST, is that we represent binary operators with full
 generalisation by using their ASCII code as the opcode. For our extended
 operators, we'll use this same representation, so we don't need any new
@@ -220,7 +218,7 @@ user-defined operator, we need to parse it:
       if (Kind && ArgNames.size() != Kind)
         return LogErrorP("Invalid number of operands for operator");
 
-      return llvm::make_unique<PrototypeAST>(FnName, std::move(ArgNames), Kind != 0,
+      return std::make_unique<PrototypeAST>(FnName, std::move(ArgNames), Kind != 0,
                                              BinaryPrecedence);
     }
 
@@ -348,7 +346,7 @@ simple: we'll add a new function to do it:
       int Opc = CurTok;
       getNextToken();
       if (auto Operand = ParseUnary())
-        return llvm::make_unique<UnaryExprAST>(Opc, std::move(Operand));
+        return std::make_unique<UnaryExprAST>(Opc, std::move(Operand));
       return nullptr;
     }
 
@@ -749,7 +747,7 @@ the support for user-defined operators. To build this example, use:
 .. code-block:: bash
 
     # Compile
-    clang++ -g toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core mcjit native` -O3 -o toy
+    clang++ -g toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core orcjit native` -O3 -o toy
     # Run
     ./toy
 

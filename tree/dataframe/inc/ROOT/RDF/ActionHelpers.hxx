@@ -171,7 +171,7 @@ public:
 };
 
 class R__CLING_PTRCHECK(off) CountHelper : public RActionImpl<CountHelper> {
-   const std::shared_ptr<ULong64_t> fResultCount;
+   std::shared_ptr<ULong64_t> fResultCount;
    Results<ULong64_t> fCounts;
 
 public:
@@ -201,20 +201,18 @@ public:
    }
 };
 
-template <typename ProxiedVal_t>
-class R__CLING_PTRCHECK(off) ReportHelper : public RActionImpl<ReportHelper<ProxiedVal_t>> {
-   const std::shared_ptr<RCutFlowReport> fReport;
-   // Here we have a weak pointer since we need to keep track of the validity
-   // of the proxied node. It can happen that the user does not trigger the
-   // event loop by looking into the RResultPtr and the chain goes out of scope
-   // before the Finalize method is invoked.
-   std::weak_ptr<ProxiedVal_t> fProxiedWPtr;
+template <typename RNode_t>
+class R__CLING_PTRCHECK(off) ReportHelper : public RActionImpl<ReportHelper<RNode_t>> {
+   std::shared_ptr<RCutFlowReport> fReport;
+   /// Non-owning pointer, never null. As usual, the node is owned by its children nodes (and therefore indirectly by
+   /// the RAction corresponding to this action helper).
+   RNode_t *fNode;
    bool fReturnEmptyReport;
 
 public:
    using ColumnTypes_t = TypeList<>;
-   ReportHelper(const std::shared_ptr<RCutFlowReport> &report, const std::shared_ptr<ProxiedVal_t> &pp, bool emptyRep)
-      : fReport(report), fProxiedWPtr(pp), fReturnEmptyReport(emptyRep){};
+   ReportHelper(const std::shared_ptr<RCutFlowReport> &report, RNode_t *node, bool emptyRep)
+      : fReport(report), fNode(node), fReturnEmptyReport(emptyRep){};
    ReportHelper(ReportHelper &&) = default;
    ReportHelper(const ReportHelper &) = delete;
    void InitTask(TTreeReader *, unsigned int) {}
@@ -222,9 +220,8 @@ public:
    void Initialize() { /* noop */}
    void Finalize()
    {
-      // We need the weak_ptr in order to avoid crashes at tear down
-      if (!fReturnEmptyReport && !fProxiedWPtr.expired())
-         fProxiedWPtr.lock()->Report(*fReport);
+      if (!fReturnEmptyReport)
+         fNode->Report(*fReport);
    }
 
    std::string GetActionName() { return "Report"; }
@@ -247,7 +244,7 @@ class R__CLING_PTRCHECK(off) BufferedFillHelper : public RActionImpl<BufferedFil
 
    std::vector<Buf_t> fBuffers;
    std::vector<Buf_t> fWBuffers;
-   const std::shared_ptr<Hist_t> fResultHist;
+   std::shared_ptr<Hist_t> fResultHist;
    unsigned int fNSlots;
    unsigned int fBufSize;
    /// Histograms containing "snapshots" of partial results. Non-null only if a registered callback requires it.
@@ -580,8 +577,6 @@ public:
    FillTGraphHelper(FillTGraphHelper &&) = default;
    FillTGraphHelper(const FillTGraphHelper &) = delete;
 
-   // The last parameter is always false, as at the moment there is no way to propagate the parameter from the user to
-   // this method
    FillTGraphHelper(const std::shared_ptr<::TGraph> &g, const unsigned int nSlots) : fGraphs(nSlots, nullptr)
    {
       fGraphs[0] = g.get();
@@ -1007,7 +1002,7 @@ extern template class TakeHelper<double, double, std::vector<double>>;
 
 template <typename ResultType>
 class R__CLING_PTRCHECK(off) MinHelper : public RActionImpl<MinHelper<ResultType>> {
-   const std::shared_ptr<ResultType> fResultMin;
+   std::shared_ptr<ResultType> fResultMin;
    Results<ResultType> fMins;
 
 public:
@@ -1063,7 +1058,7 @@ public:
 
 template <typename ResultType>
 class R__CLING_PTRCHECK(off) MaxHelper : public RActionImpl<MaxHelper<ResultType>> {
-   const std::shared_ptr<ResultType> fResultMax;
+   std::shared_ptr<ResultType> fResultMax;
    Results<ResultType> fMaxs;
 
 public:
@@ -1120,8 +1115,9 @@ public:
 
 template <typename ResultType>
 class R__CLING_PTRCHECK(off) SumHelper : public RActionImpl<SumHelper<ResultType>> {
-   const std::shared_ptr<ResultType> fResultSum;
+   std::shared_ptr<ResultType> fResultSum;
    Results<ResultType> fSums;
+   Results<ResultType> fCompensations;
 
    /// Evaluate neutral element for this type and the sum operation.
    /// This is assumed to be any_value - any_value if operator- is defined
@@ -1142,26 +1138,45 @@ public:
    SumHelper(SumHelper &&) = default;
    SumHelper(const SumHelper &) = delete;
    SumHelper(const std::shared_ptr<ResultType> &sumVPtr, const unsigned int nSlots)
-      : fResultSum(sumVPtr), fSums(nSlots, NeutralElement(*sumVPtr, -1))
+      : fResultSum(sumVPtr), fSums(nSlots, NeutralElement(*sumVPtr, -1)),
+        fCompensations(nSlots, NeutralElement(*sumVPtr, -1))
    {
    }
-
    void InitTask(TTreeReader *, unsigned int) {}
-   void Exec(unsigned int slot, ResultType v) { fSums[slot] += v; }
+
+   void Exec(unsigned int slot, ResultType x)
+   {
+      // Kahan Sum:
+      ResultType y = x - fCompensations[slot];
+      ResultType t = fSums[slot] + y;
+      fCompensations[slot] = (t - fSums[slot]) - y;
+      fSums[slot] = t;
+   }
 
    template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
    void Exec(unsigned int slot, const T &vs)
    {
-      for (auto &&v : vs)
-         fSums[slot] += static_cast<ResultType>(v);
+      for (auto &&v : vs) {
+         Exec(slot, v);
+      }
    }
 
    void Initialize() { /* noop */}
 
    void Finalize()
    {
-      for (auto &m : fSums)
-         *fResultSum += m;
+      ResultType sum(NeutralElement(ResultType{}, -1));
+      ResultType compensation(NeutralElement(ResultType{}, -1));
+      ResultType y(NeutralElement(ResultType{}, -1));
+      ResultType t(NeutralElement(ResultType{}, -1));
+      for (auto &m : fSums) {
+         // Kahan Sum:
+         y = m - compensation;
+         t = sum + y;
+         compensation = (t - sum) - y;
+         sum = t;
+      }
+      *fResultSum += sum;
    }
 
    // Helper functions for RMergeableValue
@@ -1183,10 +1198,11 @@ public:
 };
 
 class R__CLING_PTRCHECK(off) MeanHelper : public RActionImpl<MeanHelper> {
-   const std::shared_ptr<double> fResultMean;
+   std::shared_ptr<double> fResultMean;
    std::vector<ULong64_t> fCounts;
    std::vector<double> fSums;
    std::vector<double> fPartialMeans;
+   std::vector<double> fCompensations;
 
 public:
    MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots);
@@ -1199,8 +1215,13 @@ public:
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs) {
-         fSums[slot] += v;
+
          fCounts[slot]++;
+         // Kahan Sum:
+         double y = v - fCompensations[slot];
+         double t = fSums[slot] + y;
+         fCompensations[slot] = (t - fSums[slot]) - y;
+         fSums[slot] = t;
       }
    }
 
@@ -1234,8 +1255,8 @@ extern template void MeanHelper::Exec(unsigned int, const std::vector<unsigned i
 
 class R__CLING_PTRCHECK(off) StdDevHelper : public RActionImpl<StdDevHelper> {
    // Number of subsets of data
-   const unsigned int fNSlots;
-   const std::shared_ptr<double> fResultStdDev;
+   unsigned int fNSlots;
+   std::shared_ptr<double> fResultStdDev;
    // Number of element for each slot
    std::vector<ULong64_t> fCounts;
    // Mean of each slot
@@ -1290,12 +1311,13 @@ template <typename PrevNodeType>
 class R__CLING_PTRCHECK(off) DisplayHelper : public RActionImpl<DisplayHelper<PrevNodeType>> {
 private:
    using Display_t = ROOT::RDF::RDisplay;
-   const std::shared_ptr<Display_t> fDisplayerHelper;
-   const std::shared_ptr<PrevNodeType> fPrevNode;
+   std::shared_ptr<Display_t> fDisplayerHelper;
+   std::shared_ptr<PrevNodeType> fPrevNode;
+   size_t fEntriesToProcess;
 
 public:
-   DisplayHelper(const std::shared_ptr<Display_t> &d, const std::shared_ptr<PrevNodeType> &prevNode)
-      : fDisplayerHelper(d), fPrevNode(prevNode)
+   DisplayHelper(size_t nRows, const std::shared_ptr<Display_t> &d, const std::shared_ptr<PrevNodeType> &prevNode)
+      : fDisplayerHelper(d), fPrevNode(prevNode), fEntriesToProcess(nRows)
    {
    }
    DisplayHelper(DisplayHelper &&) = default;
@@ -1305,8 +1327,17 @@ public:
    template <typename... Columns>
    void Exec(unsigned int, Columns &... columns)
    {
+      if (fEntriesToProcess == 0)
+         return;
+
       fDisplayerHelper->AddRow(columns...);
-      if (!fDisplayerHelper->HasNext()) {
+      --fEntriesToProcess;
+
+      if (fEntriesToProcess == 0) {
+         // No more entries to process. Send a one-time signal that this node
+         // of the graph is done. It is important that the 'StopProcessing'
+         // method is only called once from this helper, otherwise it would seem
+         // like more than one operation has completed its work.
          fPrevNode->StopProcessing();
       }
    }
@@ -1490,15 +1521,15 @@ void ValidateSnapshotOutput(const RSnapshotOptions &opts, const std::string &tre
 /// Helper object for a single-thread Snapshot action
 template <typename... ColTypes>
 class R__CLING_PTRCHECK(off) SnapshotHelper : public RActionImpl<SnapshotHelper<ColTypes...>> {
-   const std::string fFileName;
-   const std::string fDirName;
-   const std::string fTreeName;
-   const RSnapshotOptions fOptions;
+   std::string fFileName;
+   std::string fDirName;
+   std::string fTreeName;
+   RSnapshotOptions fOptions;
    std::unique_ptr<TFile> fOutputFile;
    std::unique_ptr<TTree> fOutputTree; // must be a ptr because TTrees are not copy/move constructible
    bool fBranchAddressesNeedReset{true};
-   const ColumnNames_t fInputBranchNames; // This contains the resolved aliases
-   const ColumnNames_t fOutputBranchNames;
+   ColumnNames_t fInputBranchNames; // This contains the resolved aliases
+   ColumnNames_t fOutputBranchNames;
    TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitTask`)
    // TODO we might be able to unify fBranches, fBranchAddresses and fOutputBranches
    std::vector<TBranch *> fBranches; // Addresses of branches in output, non-null only for the ones holding C arrays
@@ -1520,6 +1551,11 @@ public:
 
    SnapshotHelper(const SnapshotHelper &) = delete;
    SnapshotHelper(SnapshotHelper &&) = default;
+   ~SnapshotHelper()
+   {
+      if (!fTreeName.empty() /*not moved from*/ && !fOutputFile /* did not run */ && fOptions.fLazy)
+         Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+   }
 
    void InitTask(TTreeReader *r, unsigned int /* slot */)
    {
@@ -1616,17 +1652,17 @@ public:
 /// Helper object for a multi-thread Snapshot action
 template <typename... ColTypes>
 class R__CLING_PTRCHECK(off) SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<ColTypes...>> {
-   const unsigned int fNSlots;
+   unsigned int fNSlots;
    std::unique_ptr<ROOT::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
    std::vector<std::shared_ptr<ROOT::TBufferMergerFile>> fOutputFiles;
    std::vector<std::unique_ptr<TTree>> fOutputTrees;
    std::vector<int> fBranchAddressesNeedReset; // vector<bool> does not allow concurrent writing of different elements
-   const std::string fFileName;           // name of the output file name
-   const std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
-   const std::string fTreeName;           // name of output tree
-   const RSnapshotOptions fOptions;       // struct holding options to pass down to TFile and TTree in this action
-   const ColumnNames_t fInputBranchNames; // This contains the resolved aliases
-   const ColumnNames_t fOutputBranchNames;
+   std::string fFileName;           // name of the output file name
+   std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
+   std::string fTreeName;           // name of output tree
+   RSnapshotOptions fOptions;       // struct holding options to pass down to TFile and TTree in this action
+   ColumnNames_t fInputBranchNames; // This contains the resolved aliases
+   ColumnNames_t fOutputBranchNames;
    std::vector<TTree *> fInputTrees; // Current input trees. Set at initialization time (`InitTask`)
    // Addresses of branches in output per slot, non-null only for the ones holding C arrays
    std::vector<std::vector<TBranch *>> fBranches;
@@ -1651,6 +1687,12 @@ public:
    }
    SnapshotHelperMT(const SnapshotHelperMT &) = delete;
    SnapshotHelperMT(SnapshotHelperMT &&) = default;
+   ~SnapshotHelperMT()
+   {
+      if (!fTreeName.empty() /*not moved from*/ && fOptions.fLazy &&
+          std::all_of(fOutputFiles.begin(), fOutputFiles.end(), [](const auto &f) { return !f; }) /* never run */)
+         Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+   }
 
    void InitTask(TTreeReader *r, unsigned int slot)
    {
@@ -1780,7 +1822,7 @@ class R__CLING_PTRCHECK(off) AggregateHelper
    : public RActionImpl<AggregateHelper<Acc, Merge, R, T, U, MustCopyAssign>> {
    Acc fAggregate;
    Merge fMerge;
-   const std::shared_ptr<U> fResult;
+   std::shared_ptr<U> fResult;
    Results<U> fAggregators;
 
 public:

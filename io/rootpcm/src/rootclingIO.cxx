@@ -173,7 +173,7 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
             const char *enumTypeName = dm->GetTypeName();
             auto enumType = TEnum::GetEnum(enumTypeName);
             if (enumType && (!enumType->GetClass() || !enumType->GetClass()->IsLoaded()) &&
-                ((strstr(enumTypeName, "(anonymous)") == nullptr) &&
+                ((strstr(enumTypeName, "(unnamed)") == nullptr) &&
                 std::find(gEnumsToStore.begin(), gEnumsToStore.end(), enumTypeName) == gEnumsToStore.end()))
                gEnumsToStore.emplace_back(enumTypeName);
          }

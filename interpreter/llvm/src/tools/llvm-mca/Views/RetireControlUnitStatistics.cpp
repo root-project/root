@@ -59,7 +59,7 @@ void RetireControlUnitStatistics::printView(raw_ostream &OS) const {
              << "number of cycles where we saw N instructions retired:\n";
   TempStream << "[# retired], [# cycles]\n";
 
-  for (const std::pair<unsigned, unsigned> &Entry : RetiredPerCycle) {
+  for (const std::pair<const unsigned, unsigned> &Entry : RetiredPerCycle) {
     TempStream << " " << Entry.first;
     if (Entry.first < 10)
       TempStream << ",           ";
@@ -71,7 +71,8 @@ void RetireControlUnitStatistics::printView(raw_ostream &OS) const {
   }
 
   unsigned AvgUsage = (double)SumOfUsedEntries / NumCycles;
-  double MaxUsagePercentage = ((double)MaxUsedEntries / TotalROBEntries) * 100.0;
+  double MaxUsagePercentage =
+      ((double)MaxUsedEntries / TotalROBEntries) * 100.0;
   double NormalizedMaxPercentage = floor((MaxUsagePercentage * 10) + 0.5) / 10;
   double AvgUsagePercentage = ((double)AvgUsage / TotalROBEntries) * 100.0;
   double NormalizedAvgPercentage = floor((AvgUsagePercentage * 10) + 0.5) / 10;

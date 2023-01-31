@@ -11,7 +11,6 @@
 
 #include "ASTTransformer.h"
 #include "AutoSynthesizer.h"
-#include "BackendPasses.h"
 #include "CheckEmptyTransactionTransformer.h"
 #include "ClingPragmas.h"
 #include "DeclCollector.h"
@@ -274,7 +273,7 @@ static void HandlePlugins(CompilerInstance& CI,
     PluginASTAction::ActionType PluginActionType = P->getActionType();
     assert(PluginActionType != clang::PluginASTAction::ReplaceAction);
 
-    if (P->ParseArgs(CI, CI.getFrontendOpts().PluginArgs[it->getName()])) {
+    if (P->ParseArgs(CI, CI.getFrontendOpts().PluginArgs[it->getName().str()])) {
       std::unique_ptr<ASTConsumer> PluginConsumer
         = P->CreateASTConsumer(CI, /*InputFile*/ "");
       if (PluginActionType == clang::PluginASTAction::AddBeforeMainAction)
@@ -291,7 +290,7 @@ namespace cling {
       : m_Interpreter(interp) {
     std::unique_ptr<cling::DeclCollector> consumer;
     consumer.reset(m_Consumer = new cling::DeclCollector());
-    m_CI.reset(CIFactory::createCI("", interp->getOptions(), llvmdir,
+    m_CI.reset(CIFactory::createCI("\n", interp->getOptions(), llvmdir,
                                    std::move(consumer), moduleExtensions));
 
     if (!m_CI) {
@@ -359,9 +358,9 @@ namespace cling {
       Transaction* PchT = beginTransaction(CO);
       DiagnosticErrorTrap Trap(Diags);
       m_CI->createPCHExternalASTSource(PCHFileName,
-                                       true /*DisablePCHValidation*/,
+                                       DisableValidationForModuleKind::All,
                                        true /*AllowPCHWithCompilerErrors*/,
-                                       0 /*DeserializationListener*/,
+                                       nullptr /*DeserializationListener*/,
                                        true /*OwnsDeserializationListener*/);
       result.push_back(endTransaction(PchT));
       if (Trap.hasErrorOccurred()) {
@@ -642,6 +641,8 @@ namespace cling {
       Transaction* prevConsumerT = m_Consumer->getTransaction();
       m_Consumer->setTransaction(T);
       Transaction* nestedT = beginTransaction(T->getCompilationOpts());
+      // Process used vtables and generate implicit bodies.
+      getCI()->getSema().DefineUsedVTables();
       // Pull all template instantiations in that came from the consumers.
       getCI()->getSema().PerformPendingInstantiations();
 #ifdef _WIN32
@@ -765,13 +766,13 @@ namespace cling {
 
     if (Transaction* Parent = T.getParent()) {
       Parent->removeNestedTransaction(&T);
-      T.setParent(0);
+      T.setParent(nullptr);
     } else {
       if (&T == m_Transactions.back()) {
         // Remove from the queue
         m_Transactions.pop_back();
         if (!m_Transactions.empty())
-          m_Transactions.back()->setNext(0);
+          m_Transactions.back()->setNext(nullptr);
       } else {
         // If T is not the last transaction it must not be a previous
         // transaction either, but a "disconnected" one, i.e. one that
@@ -864,7 +865,7 @@ namespace cling {
     Preprocessor& PP = m_CI->getPreprocessor();
     if (!PP.getCurrentLexer()) {
        PP.EnterSourceFile(m_CI->getSourceManager().getMainFileID(),
-                          0, SourceLocation());
+             nullptr, SourceLocation());
     }
     assert(PP.isIncrementalProcessingEnabled() && "Not in incremental mode!?");
     PP.enableIncrementalProcessing();
@@ -909,7 +910,7 @@ namespace cling {
     m_MemoryBuffers.push_back(std::make_pair(MBNonOwn, FID));
 
     // NewLoc only used for diags.
-    PP.EnterSourceFile(FID, /*DirLookup*/0, NewLoc);
+    PP.EnterSourceFile(FID, /*DirLookup*/nullptr, NewLoc);
     m_Consumer->getTransaction()->setBufferFID(FID);
 
     DiagnosticsEngine& Diags = getCI()->getDiagnostics();
@@ -917,7 +918,12 @@ namespace cling {
     FilteringDiagConsumer::RAAI RAAITmp(*m_DiagConsumer, CO.IgnorePromptDiags);
 
     DiagnosticErrorTrap Trap(Diags);
+    // FIXME: SavePendingInstantiationsRAII should be obsolvete as
+    // GlobalEagerInstantiationScope and LocalEagerInstantiationScope do the
+    // same thing.
     Sema::SavePendingInstantiationsRAII SavedPendingInstantiations(S);
+    Sema::GlobalEagerInstantiationScope GlobalInstantiations(S, /*Enabled=*/true);
+    Sema::LocalEagerInstantiationScope LocalInstantiations(S);
 
     Parser::DeclGroupPtrTy ADecl;
     while (!m_Parser->ParseTopLevelDecl(ADecl)) {
@@ -945,7 +951,8 @@ namespace cling {
 
       return kSuccess;
     }
-
+    LocalInstantiations.perform();
+    GlobalInstantiations.perform();
 #ifdef _WIN32
     // Microsoft-specific:
     // Late parsed templates can leave unswallowed "macro"-like tokens.

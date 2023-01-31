@@ -56,6 +56,83 @@ Bool_t TObject::fgObjectStat = kTRUE;
 
 ClassImp(TObject);
 
+#if defined(__clang__) || defined (__GNUC__)
+# define ATTRIBUTE_NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
+#else
+# define ATTRIBUTE_NO_SANITIZE_ADDRESS
+#endif
+
+namespace ROOT {
+namespace Internal {
+
+// Return true if delete changes/poisons/taints the memory.
+//
+// Detect whether operator delete taints the memory. If it does, we can not rely
+// on TestBit(kNotDeleted) to check if the memory has been deleted (but in case,
+// like TClonesArray, where we know the destructor will be called but not operator
+// delete, we can still use it to detect the cases where the destructor was called.
+
+ATTRIBUTE_NO_SANITIZE_ADDRESS
+bool DeleteChangesMemoryImpl()
+{
+   static constexpr UInt_t kGoldenUUID = 0x00000021;
+   static constexpr UInt_t kGoldenbits = 0x03000000;
+
+   TObject *o = new TObject;
+   o->SetUniqueID(kGoldenUUID);
+   UInt_t *o_fuid = &(o->fUniqueID);
+   UInt_t *o_fbits = &(o->fBits);
+
+   if (*o_fuid != kGoldenUUID) {
+      Error("CheckingDeleteSideEffects",
+            "fUniqueID is not as expected, we got 0x%.8x instead of 0x%.8x",
+            *o_fuid, kGoldenUUID);
+   }
+   if (*o_fbits != kGoldenbits) {
+      Error("CheckingDeleteSideEffects",
+            "fBits is not as expected, we got 0x%.8x instead of 0x%.8x",
+            *o_fbits, kGoldenbits);
+   }
+   if (gDebug >= 9) {
+      unsigned char *oc = reinterpret_cast<unsigned char *>(o); // for address calculations
+      unsigned char references[sizeof(TObject)];
+      memcpy(references, oc, sizeof(TObject));
+
+      // The effective part of this code (the else statement is just that without
+      // any of the debug statement)
+      delete o;
+
+      // Not using the error logger, as there routine is meant to be called
+      // during library initialization/loading.
+      fprintf(stderr,
+              "DEBUG: Checking before and after delete the content of a TObject with uniqueID 0x21\n");
+      for(size_t i = 0; i < sizeof(TObject); i += 4) {
+        fprintf(stderr, "DEBUG: 0x%.8x vs 0x%.8x\n", *(int*)(references +i), *(int*)(oc + i));
+      }
+   } else
+      delete o;  // the 'if' part is that surrounded by the debug code.
+
+   // Intentionally accessing the deleted memory to check whether it has been changed as
+   // a consequence (side effect) of executing operator delete.  If there no change, we
+   // can guess this is always the case and we can rely on the changes to fBits made
+   // by ~TObject to detect use-after-delete error (and print a message rather than
+   // stop the program with a segmentation fault)
+   if ( *o_fbits != 0x01000000 ) {
+      // operator delete tainted the memory, we can not rely on TestBit(kNotDeleted)
+      return true;
+   }
+   return false;
+}
+
+bool DeleteChangesMemory()
+{
+   static const bool value = DeleteChangesMemoryImpl();
+   if (gDebug >= 9)
+      DeleteChangesMemoryImpl(); // To allow for printing the debug info
+   return value;
+}
+
+}} // ROOT::Detail
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this to obj.
@@ -215,32 +292,31 @@ void TObject::DrawClass() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw a clone of this object in the current selected pad for instance with:
-/// `gROOT->SetSelectedPad(gPad)`.
+/// Draw a clone of this object in the current selected pad with:
+/// `gROOT->SetSelectedPad(c1)`.
+/// If pad was not selected - `gPad` will be used.
 
 TObject *TObject::DrawClone(Option_t *option) const
 {
-   TVirtualPad *pad    = gROOT->GetSelectedPad();
-   TVirtualPad *padsav = gPad;
-   if (pad) pad->cd();
+   TVirtualPad::TContext ctxt(true);
+   auto pad = gROOT->GetSelectedPad();
+   if (pad)
+      pad->cd();
 
    TObject *newobj = Clone();
-   if (!newobj) return nullptr;
+   if (!newobj)
+      return nullptr;
+
+   if (!option || !*option)
+      option = GetDrawOption();
+
    if (pad) {
-      if (option && *option)
-         pad->GetListOfPrimitives()->Add(newobj, option);
-      else
-         pad->GetListOfPrimitives()->Add(newobj, GetDrawOption());
+      pad->GetListOfPrimitives()->Add(newobj, option);
       pad->Modified(kTRUE);
       pad->Update();
-      if (padsav) padsav->cd();
-      return newobj;
-   }
-   if (option && *option)
+   } else {
       newobj->Draw(option);
-   else
-      newobj->Draw(GetDrawOption());
-   if (padsav) padsav->cd();
+   }
 
    return newobj;
 }

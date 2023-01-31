@@ -66,7 +66,7 @@ public:
 
   const char* opcode() const {
     // Return operator code
-    return strlen(GetName()) ? GetName() : 0 ;
+    return strlen(GetName()) ? GetName() : nullptr ;
   }
 
   void setInt(Int_t idx,Int_t value) {
@@ -93,7 +93,7 @@ public:
   }
   /// Return string stored in slot idx
   const char* getString(Int_t idx) const {
-      return (_s[idx].size()>0) ? _s[idx].c_str() : 0 ;
+      return (_s[idx].size()>0) ? _s[idx].c_str() : nullptr ;
   }
   /// Return TObject stored in slot idx
   const TObject* getObject(Int_t idx) const {
@@ -103,12 +103,6 @@ public:
   const RooArgSet* getSet(Int_t idx) const ;
 
   void Print(const char* = "") const override;
-
-  template<class T>
-  static T const& take(T && obj) {
-    getNextSharedData().emplace_back(new T{std::move(obj)});
-    return static_cast<T const&>(*getNextSharedData().back());
-  }
 
   bool procSubArgs() const { return _procSubArgs; }
   bool prefixSubArgs() const { return _prefixSubArgs; }
@@ -127,14 +121,7 @@ private:
   RooLinkedList _argList ; ///< Payload sub-arguments
   bool _prefixSubArgs ;  ///< Prefix sub-arguments with container name?
 
-  using DataCollection = std::vector<std::unique_ptr<TObject>>;
-  std::shared_ptr<DataCollection> _sharedData; ///<!
-
-  // the next RooCmdArg created will take ownership of this data
-  static DataCollection _nextSharedData;
-  static DataCollection &getNextSharedData();
-
-  ClassDefOverride(RooCmdArg,2) // Generic named argument container
+  ClassDefOverride(RooCmdArg,0) // Generic named argument container
 };
 
 #endif

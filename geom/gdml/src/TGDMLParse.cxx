@@ -182,6 +182,14 @@ TGeoVolume *TGDMLParse::GDMLReadFile(const char *filename)
       gdml->FreeDoc(gdmldoc);
       delete gdml;
    }
+   if (fNunitless && gGeoManager->GetDefaultUnits() == TGeoManager::kRootUnits) {
+      Warning("GDMLReadFile",
+              "\x1B[31m Found %d GDML entities missing explicit units, while the default "
+              "units are currently ROOT units [cm, deg]. This can cause unexpected behaviour with respect "
+              "to the GDML schema. To remove this warning, either use explicit units or call the static method "
+              "TGeoManager::SetDefaultUnits(kG4Units) before importing the GDML file \x1B[34m%s \x1B[0m",
+              fNunitless, filename);
+   }
    return fWorld;
 }
 
@@ -587,14 +595,20 @@ XMLNodePointer_t TGDMLParse::MatrixProcess(TXMLEngine *gdml, XMLNodePointer_t no
       valueList.push_back(Value(matrixValue.c_str()));
    }
 
-   TGDMLMatrix *matrix = new TGDMLMatrix(name, valueList.size() / coldim, coldim);
-   matrix->SetMatrixAsString(values.c_str());
-   for (size_t i = 0; i < valueList.size(); ++i)
-      matrix->Set(i / coldim, i % coldim, valueList[i]);
+   // Const Properties in GDML are matrices with size 1 not constants
+   // This gives some ambiguity, but what can one do?
+   if ( coldim == 1 && valueList.size() == 1 )    {
+      gGeoManager->AddProperty(name, valueList[0]);
+   }
+   else  {
+      TGDMLMatrix *matrix = new TGDMLMatrix(name, valueList.size() / coldim, coldim);
+      matrix->SetMatrixAsString(values.c_str());
+      for (size_t i = 0; i < valueList.size(); ++i)
+         matrix->Set(i / coldim, i % coldim, valueList[i]);
 
-   gGeoManager->AddGDMLMatrix(matrix);
-   fmatrices[name.Data()] = matrix;
-
+      gGeoManager->AddGDMLMatrix(matrix);
+      fmatrices[name.Data()] = matrix;
+   }
    return node;
 }
 
@@ -838,6 +852,8 @@ Double_t TGDMLParse::Value(const char *svalue) const
 XMLNodePointer_t TGDMLParse::PosProcess(TXMLEngine *gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
    TString lunit = fDefault_lunit.c_str();
+   bool unitless_l = true;
+
    TString xpos = "0";
    TString ypos = "0";
    TString zpos = "0";
@@ -859,6 +875,7 @@ XMLNodePointer_t TGDMLParse::PosProcess(TXMLEngine *gdml, XMLNodePointer_t node,
          zpos = gdml->GetAttrValue(attr);
       } else if (tempattr == "unit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       }
 
       attr = gdml->GetNextAttr(attr);
@@ -869,6 +886,8 @@ XMLNodePointer_t TGDMLParse::PosProcess(TXMLEngine *gdml, XMLNodePointer_t node,
    }
 
    Double_t retunit = GetScaleVal(lunit);
+   fNunitless += int(unitless_l);
+
    Double_t xline = Value(xpos) * retunit;
    Double_t yline = Value(ypos) * retunit;
    Double_t zline = Value(zpos) * retunit;
@@ -890,6 +909,7 @@ XMLNodePointer_t TGDMLParse::PosProcess(TXMLEngine *gdml, XMLNodePointer_t node,
 XMLNodePointer_t TGDMLParse::RotProcess(TXMLEngine *gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
    TString aunit = fDefault_aunit.c_str();
+   bool unitless_l = true;
    TString xpos = "0";
    TString ypos = "0";
    TString zpos = "0";
@@ -911,6 +931,7 @@ XMLNodePointer_t TGDMLParse::RotProcess(TXMLEngine *gdml, XMLNodePointer_t node,
          zpos = gdml->GetAttrValue(attr);
       } else if (tempattr == "unit") {
          aunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       }
 
       attr = gdml->GetNextAttr(attr);
@@ -921,6 +942,7 @@ XMLNodePointer_t TGDMLParse::RotProcess(TXMLEngine *gdml, XMLNodePointer_t node,
    }
 
    Double_t retunit = GetScaleVal(aunit);
+   fNunitless += int(unitless_l);
 
    Double_t xline = Value(xpos) * retunit;
    Double_t yline = Value(ypos) * retunit;
@@ -2000,6 +2022,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
          TString width = "";
          TString offset = "";
          TString lunit = fDefault_lunit.c_str();
+         bool unitless_l = true;
          reftemp = "";
          local_name = "";
 
@@ -2020,6 +2043,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
                offset = gdml->GetAttrValue(attr);
             } else if (tempattr == "unit") {
                lunit = gdml->GetAttrValue(attr);
+               unitless_l = false;
             }
 
             attr = gdml->GetNextAttr(attr);
@@ -2045,6 +2069,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
 
          Double_t numberline = Value(number);
          Double_t retunit = GetScaleVal(lunit);
+         fNunitless += int(unitless_l);
          Double_t step = Value(width) * retunit;
          Double_t offsetline = Value(offset) * retunit;
 
@@ -2083,6 +2108,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
          TString offset = "";
          TString wunit = fDefault_lunit.c_str();
          TString ounit = fDefault_lunit.c_str();
+         bool unitless_l = true;
          Double_t wvalue = 0;
          Double_t ovalue = 0;
          reftemp = "";
@@ -2129,6 +2155,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
                            wvalue = Value(gdml->GetAttrValue(attr));
                         } else if (tempattr == "unit") {
                            wunit = gdml->GetAttrValue(attr);
+                           unitless_l = false;
                         }
 
                         attr = gdml->GetNextAttr(attr);
@@ -2142,6 +2169,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
                            ovalue = Value(gdml->GetAttrValue(attr));
                         } else if (tempattr == "unit") {
                            ounit = gdml->GetAttrValue(attr);
+                           unitless_l = false;
                         }
                         attr = gdml->GetNextAttr(attr);
                      }
@@ -2175,6 +2203,7 @@ XMLNodePointer_t TGDMLParse::VolProcess(TXMLEngine *gdml, XMLNodePointer_t node)
 
          Double_t retwunit = GetScaleVal(wunit);
          Double_t retounit = GetScaleVal(ounit);
+         fNunitless += int(unitless_l);
 
          Double_t numberline = Value(number);
          Double_t widthline = wvalue * retwunit;
@@ -2529,6 +2558,7 @@ XMLNodePointer_t TGDMLParse::TopProcess(TXMLEngine *gdml, XMLNodePointer_t node)
 XMLNodePointer_t TGDMLParse::Box(TXMLEngine *gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
    TString lunit = fDefault_lunit.c_str();
+   bool unitless_l = true;
    TString xpos = "0";
    TString ypos = "0";
    TString zpos = "0";
@@ -2550,6 +2580,7 @@ XMLNodePointer_t TGDMLParse::Box(TXMLEngine *gdml, XMLNodePointer_t node, XMLAtt
          zpos = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       }
 
       attr = gdml->GetNextAttr(attr);
@@ -2560,6 +2591,7 @@ XMLNodePointer_t TGDMLParse::Box(TXMLEngine *gdml, XMLNodePointer_t node, XMLAtt
       local_name = TString::Format("%s_%s", name.Data(), fCurrentFile);
 
    Double_t retunit = GetScaleVal(lunit);
+   fNunitless += int(unitless_l);
 
    Double_t xline = 0.5 * Value(xpos) * retunit;
    Double_t yline = 0.5 * Value(ypos) * retunit;
@@ -2584,6 +2616,7 @@ XMLNodePointer_t TGDMLParse::Box(TXMLEngine *gdml, XMLNodePointer_t node, XMLAtt
 XMLNodePointer_t TGDMLParse::Ellipsoid(TXMLEngine *gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
    TString lunit = fDefault_lunit.c_str();
+   bool unitless_l = true;
    TString ax = "0";
    TString by = "0";
    TString cz = "0";
@@ -2612,6 +2645,7 @@ XMLNodePointer_t TGDMLParse::Ellipsoid(TXMLEngine *gdml, XMLNodePointer_t node, 
          zcut2 = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       }
 
       attr = gdml->GetNextAttr(attr);
@@ -2622,6 +2656,7 @@ XMLNodePointer_t TGDMLParse::Ellipsoid(TXMLEngine *gdml, XMLNodePointer_t node, 
       local_name = TString::Format("%s_%s", name.Data(), fCurrentFile);
 
    Double_t retunit = GetScaleVal(lunit);
+   fNunitless += int(unitless_l);
 
    Double_t dx = Value(ax) * retunit;
    Double_t dy = Value(by) * retunit;
@@ -2669,6 +2704,7 @@ XMLNodePointer_t TGDMLParse::Ellipsoid(TXMLEngine *gdml, XMLNodePointer_t node, 
 XMLNodePointer_t TGDMLParse::ElCone(TXMLEngine *gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
    TString lunit = fDefault_lunit.c_str();
+   bool unitless_l = true;
    TString dx = "0";
    TString dy = "0";
    TString zmax = "0";
@@ -2693,6 +2729,7 @@ XMLNodePointer_t TGDMLParse::ElCone(TXMLEngine *gdml, XMLNodePointer_t node, XML
          zcut = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       }
 
       attr = gdml->GetNextAttr(attr);
@@ -2705,6 +2742,7 @@ XMLNodePointer_t TGDMLParse::ElCone(TXMLEngine *gdml, XMLNodePointer_t node, XML
    // semiaxises of elliptical cone (elcone) are different then ellipsoid
 
    Double_t retunit = GetScaleVal(lunit);
+   fNunitless += int(unitless_l);
 
    // dxline and dyline are without units because they are as a ration
    Double_t dxratio = Value(dx);
@@ -2745,6 +2783,7 @@ XMLNodePointer_t TGDMLParse::ElCone(TXMLEngine *gdml, XMLNodePointer_t node, XML
 XMLNodePointer_t TGDMLParse::Paraboloid(TXMLEngine *gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
    TString lunit = fDefault_lunit.c_str();
+   bool unitless_l = true;
    TString rlopos = "0";
    TString rhipos = "0";
    TString dzpos = "0";
@@ -2766,6 +2805,7 @@ XMLNodePointer_t TGDMLParse::Paraboloid(TXMLEngine *gdml, XMLNodePointer_t node,
          dzpos = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       }
 
       attr = gdml->GetNextAttr(attr);
@@ -2776,6 +2816,7 @@ XMLNodePointer_t TGDMLParse::Paraboloid(TXMLEngine *gdml, XMLNodePointer_t node,
       local_name = TString::Format("%s_%s", name.Data(), fCurrentFile);
 
    Double_t retunit = GetScaleVal(lunit);
+   fNunitless += int(unitless_l);
 
    Double_t rlo = Value(rlopos) * retunit;
    Double_t rhi = Value(rhipos) * retunit;
@@ -2798,6 +2839,7 @@ XMLNodePointer_t TGDMLParse::Paraboloid(TXMLEngine *gdml, XMLNodePointer_t node,
 XMLNodePointer_t TGDMLParse::Arb8(TXMLEngine *gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
    TString lunit = fDefault_lunit.c_str();
+   bool unitless_l = true;
    TString v1xpos = "0";
    TString v1ypos = "0";
    TString v2xpos = "0";
@@ -2861,6 +2903,7 @@ XMLNodePointer_t TGDMLParse::Arb8(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
          dzpos = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       }
 
       attr = gdml->GetNextAttr(attr);
@@ -2871,6 +2914,7 @@ XMLNodePointer_t TGDMLParse::Arb8(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
       local_name = TString::Format("%s_%s", name.Data(), fCurrentFile);
 
    Double_t retunit = GetScaleVal(lunit);
+   fNunitless += int(unitless_l);
 
    Double_t v1x = Value(v1xpos) * retunit;
    Double_t v1y = Value(v1ypos) * retunit;
@@ -2917,6 +2961,8 @@ XMLNodePointer_t TGDMLParse::Tube(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
 {
    TString lunit = fDefault_lunit.c_str();
    TString aunit = fDefault_aunit.c_str();
+   bool unitless_l = true;
+   bool unitless_a = true;
    TString rmin = "0";
    TString rmax = "0";
    TString z = "0";
@@ -2940,8 +2986,10 @@ XMLNodePointer_t TGDMLParse::Tube(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
          z = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       } else if (tempattr == "aunit") {
          aunit = gdml->GetAttrValue(attr);
+         unitless_a = false;
       } else if (tempattr == "startphi") {
          startphi = gdml->GetAttrValue(attr);
       } else if (tempattr == "deltaphi") {
@@ -2957,6 +3005,7 @@ XMLNodePointer_t TGDMLParse::Tube(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
 
    Double_t retlunit = GetScaleVal(lunit);
    Double_t retaunit = GetScaleVal(aunit);
+   fNunitless += int(unitless_l || unitless_a);
 
    Double_t rminline = Value(rmin) * retlunit;
    Double_t rmaxline = Value(rmax) * retlunit;
@@ -2986,6 +3035,8 @@ XMLNodePointer_t TGDMLParse::CutTube(TXMLEngine *gdml, XMLNodePointer_t node, XM
 {
    TString lunit = fDefault_lunit.c_str();
    TString aunit = fDefault_aunit.c_str();
+   bool unitless_l = true;
+   bool unitless_a = true;
    TString rmin = "0";
    TString rmax = "0";
    TString z = "0";
@@ -3015,8 +3066,10 @@ XMLNodePointer_t TGDMLParse::CutTube(TXMLEngine *gdml, XMLNodePointer_t node, XM
          z = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       } else if (tempattr == "aunit") {
          aunit = gdml->GetAttrValue(attr);
+         unitless_a = false;
       } else if (tempattr == "startphi") {
          startphi = gdml->GetAttrValue(attr);
       } else if (tempattr == "deltaphi") {
@@ -3044,6 +3097,7 @@ XMLNodePointer_t TGDMLParse::CutTube(TXMLEngine *gdml, XMLNodePointer_t node, XM
 
    Double_t retlunit = GetScaleVal(lunit);
    Double_t retaunit = GetScaleVal(aunit);
+   fNunitless += int(unitless_l || unitless_a);
 
    Double_t rminline = Value(rmin) * retlunit;
    Double_t rmaxline = Value(rmax) * retlunit;
@@ -3076,6 +3130,8 @@ XMLNodePointer_t TGDMLParse::Cone(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
 {
    TString lunit = fDefault_lunit.c_str();
    TString aunit = fDefault_aunit.c_str();
+   bool unitless_l = true;
+   bool unitless_a = true;
    TString rmin1 = "0";
    TString rmax1 = "0";
    TString rmin2 = "0";
@@ -3105,8 +3161,10 @@ XMLNodePointer_t TGDMLParse::Cone(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
          z = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       } else if (tempattr == "aunit") {
          aunit = gdml->GetAttrValue(attr);
+         unitless_a = false;
       } else if (tempattr == "startphi") {
          startphi = gdml->GetAttrValue(attr);
       } else if (tempattr == "deltaphi") {
@@ -3122,6 +3180,7 @@ XMLNodePointer_t TGDMLParse::Cone(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
 
    Double_t retlunit = GetScaleVal(lunit);
    Double_t retaunit = GetScaleVal(aunit);
+   fNunitless += int(unitless_l || unitless_a);
 
    Double_t rmin1line = Value(rmin1) * retlunit;
    Double_t rmax1line = Value(rmax1) * retlunit;
@@ -3154,6 +3213,8 @@ XMLNodePointer_t TGDMLParse::Trap(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
 {
    TString lunit = fDefault_lunit.c_str();
    TString aunit = fDefault_aunit.c_str();
+   bool unitless_l = true;
+   bool unitless_a = true;
    TString x1 = "0";
    TString x2 = "0";
    TString x3 = "0";
@@ -3191,8 +3252,10 @@ XMLNodePointer_t TGDMLParse::Trap(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
          z = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       } else if (tempattr == "aunit") {
          aunit = gdml->GetAttrValue(attr);
+         unitless_a = false;
       } else if (tempattr == "phi") {
          phi = gdml->GetAttrValue(attr);
       } else if (tempattr == "theta") {
@@ -3212,6 +3275,7 @@ XMLNodePointer_t TGDMLParse::Trap(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
 
    Double_t retlunit = GetScaleVal(lunit);
    Double_t retaunit = GetScaleVal(aunit);
+   fNunitless += int(unitless_l || unitless_a);
 
    Double_t x1line = Value(x1) * retlunit;
    Double_t x2line = Value(x2) * retlunit;
@@ -3243,6 +3307,7 @@ XMLNodePointer_t TGDMLParse::Trap(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
 XMLNodePointer_t TGDMLParse::Trd(TXMLEngine *gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
    TString lunit = fDefault_lunit.c_str();
+   bool unitless_l = true;
    TString x1 = "0";
    TString x2 = "0";
    TString y1 = "0";
@@ -3270,6 +3335,7 @@ XMLNodePointer_t TGDMLParse::Trd(TXMLEngine *gdml, XMLNodePointer_t node, XMLAtt
          z = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       }
 
       attr = gdml->GetNextAttr(attr);
@@ -3280,6 +3346,7 @@ XMLNodePointer_t TGDMLParse::Trd(TXMLEngine *gdml, XMLNodePointer_t node, XMLAtt
       local_name = TString::Format("%s_%s", name.Data(), fCurrentFile);
 
    Double_t retlunit = GetScaleVal(lunit);
+   fNunitless += int(unitless_l);
 
    Double_t x1line = Value(x1) * retlunit;
    Double_t x2line = Value(x2) * retlunit;
@@ -3306,6 +3373,8 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine *gdml, XMLNodePointer_t node, X
 {
    TString lunit = fDefault_lunit.c_str();
    TString aunit = fDefault_aunit.c_str();
+   bool unitless_l = true;
+   bool unitless_a = true;
    TString rmin = "0";
    TString rmax = "0";
    TString z = "0";
@@ -3323,8 +3392,10 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine *gdml, XMLNodePointer_t node, X
          name = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       } else if (tempattr == "aunit") {
          aunit = gdml->GetAttrValue(attr);
+         unitless_a = false;
       } else if (tempattr == "startphi") {
          startphi = gdml->GetAttrValue(attr);
       } else if (tempattr == "deltaphi") {
@@ -3339,6 +3410,7 @@ XMLNodePointer_t TGDMLParse::Polycone(TXMLEngine *gdml, XMLNodePointer_t node, X
 
    Double_t retlunit = GetScaleVal(lunit);
    Double_t retaunit = GetScaleVal(aunit);
+   fNunitless += int(unitless_l || unitless_a);
 
    // START TO LOOK THRU CHILD (ZPLANE) NODES...
 
@@ -3430,6 +3502,8 @@ XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine *gdml, XMLNodePointer_t node, 
 {
    TString lunit = fDefault_lunit.c_str();
    TString aunit = fDefault_aunit.c_str();
+   bool unitless_l = true;
+   bool unitless_a = true;
    TString rmin = "0";
    TString rmax = "0";
    TString z = "0";
@@ -3448,8 +3522,10 @@ XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine *gdml, XMLNodePointer_t node, 
          name = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       } else if (tempattr == "aunit") {
          aunit = gdml->GetAttrValue(attr);
+         unitless_a = false;
       } else if (tempattr == "startphi") {
          startphi = gdml->GetAttrValue(attr);
       } else if (tempattr == "deltaphi") {
@@ -3467,6 +3543,7 @@ XMLNodePointer_t TGDMLParse::Polyhedra(TXMLEngine *gdml, XMLNodePointer_t node, 
 
    Double_t retlunit = GetScaleVal(lunit);
    Double_t retaunit = GetScaleVal(aunit);
+   fNunitless += int(unitless_l || unitless_a);
 
    // START TO LOOK THRU CHILD (ZPLANE) NODES...
 
@@ -3558,6 +3635,8 @@ XMLNodePointer_t TGDMLParse::Sphere(TXMLEngine *gdml, XMLNodePointer_t node, XML
 {
    TString lunit = fDefault_lunit.c_str();
    TString aunit = fDefault_aunit.c_str();
+   bool unitless_l = true;
+   bool unitless_a = true;
    TString rmin = "0";
    TString rmax = "0";
    TString startphi = "0";
@@ -3579,8 +3658,10 @@ XMLNodePointer_t TGDMLParse::Sphere(TXMLEngine *gdml, XMLNodePointer_t node, XML
          rmax = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       } else if (tempattr == "aunit") {
          aunit = gdml->GetAttrValue(attr);
+         unitless_a = false;
       } else if (tempattr == "startphi") {
          startphi = gdml->GetAttrValue(attr);
       } else if (tempattr == "deltaphi") {
@@ -3600,6 +3681,7 @@ XMLNodePointer_t TGDMLParse::Sphere(TXMLEngine *gdml, XMLNodePointer_t node, XML
 
    Double_t retlunit = GetScaleVal(lunit);
    Double_t retaunit = GetScaleVal(aunit);
+   fNunitless += int(unitless_l || unitless_a);
 
    Double_t rminline = Value(rmin) * retlunit;
    Double_t rmaxline = Value(rmax) * retlunit;
@@ -3627,6 +3709,8 @@ XMLNodePointer_t TGDMLParse::Torus(TXMLEngine *gdml, XMLNodePointer_t node, XMLA
 {
    TString lunit = fDefault_lunit.c_str();
    TString aunit = fDefault_aunit.c_str();
+   bool unitless_l = true;
+   bool unitless_a = true;
    TString rmin = "0";
    TString rmax = "0";
    TString rtor = "0";
@@ -3650,8 +3734,10 @@ XMLNodePointer_t TGDMLParse::Torus(TXMLEngine *gdml, XMLNodePointer_t node, XMLA
          rtor = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       } else if (tempattr == "aunit") {
          aunit = gdml->GetAttrValue(attr);
+         unitless_a = false;
       } else if (tempattr == "startphi") {
          startphi = gdml->GetAttrValue(attr);
       } else if (tempattr == "deltaphi") {
@@ -3667,6 +3753,7 @@ XMLNodePointer_t TGDMLParse::Torus(TXMLEngine *gdml, XMLNodePointer_t node, XMLA
 
    Double_t retlunit = GetScaleVal(lunit);
    Double_t retaunit = GetScaleVal(aunit);
+   fNunitless += int(unitless_l || unitless_a);
 
    Double_t rminline = Value(rmin) * retlunit;
    Double_t rmaxline = Value(rmax) * retlunit;
@@ -3692,6 +3779,8 @@ XMLNodePointer_t TGDMLParse::Hype(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
 {
    TString lunit = fDefault_lunit.c_str();
    TString aunit = fDefault_aunit.c_str();
+   bool unitless_l = true;
+   bool unitless_a = true;
    TString rmin = "0";
    TString rmax = "0";
    TString z = "0";
@@ -3714,8 +3803,10 @@ XMLNodePointer_t TGDMLParse::Hype(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
          z = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       } else if (tempattr == "aunit") {
          aunit = gdml->GetAttrValue(attr);
+         unitless_a = false;
       } else if (tempattr == "inst") {
          inst = gdml->GetAttrValue(attr);
       } else if (tempattr == "outst") {
@@ -3731,6 +3822,7 @@ XMLNodePointer_t TGDMLParse::Hype(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
 
    Double_t retlunit = GetScaleVal(lunit);
    Double_t retaunit = GetScaleVal(aunit);
+   fNunitless += int(unitless_l || unitless_a);
 
    Double_t rminline = Value(rmin) * retlunit;
    Double_t rmaxline = Value(rmax) * retlunit;
@@ -3756,6 +3848,8 @@ XMLNodePointer_t TGDMLParse::Para(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
 {
    TString lunit = fDefault_lunit.c_str();
    TString aunit = fDefault_aunit.c_str();
+   bool unitless_l = true;
+   bool unitless_a = true;
    TString x = "0";
    TString y = "0";
    TString z = "0";
@@ -3780,8 +3874,10 @@ XMLNodePointer_t TGDMLParse::Para(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
          z = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       } else if (tempattr == "aunit") {
          aunit = gdml->GetAttrValue(attr);
+         unitless_a = false;
       } else if (tempattr == "phi") {
          phi = gdml->GetAttrValue(attr);
       } else if (tempattr == "theta") {
@@ -3799,6 +3895,7 @@ XMLNodePointer_t TGDMLParse::Para(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
 
    Double_t retlunit = GetScaleVal(lunit);
    Double_t retaunit = GetScaleVal(aunit);
+   fNunitless += int(unitless_l || unitless_a);
 
    Double_t xline = Value(x) * retlunit;
    Double_t yline = Value(y) * retlunit;
@@ -3825,6 +3922,8 @@ XMLNodePointer_t TGDMLParse::TwistTrap(TXMLEngine *gdml, XMLNodePointer_t node, 
 {
    TString lunit = fDefault_lunit.c_str();
    TString aunit = fDefault_aunit.c_str();
+   bool unitless_l = true;
+   bool unitless_a = true;
    TString x1 = "0";
    TString x2 = "0";
    TString x3 = "0";
@@ -3863,8 +3962,10 @@ XMLNodePointer_t TGDMLParse::TwistTrap(TXMLEngine *gdml, XMLNodePointer_t node, 
          z = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       } else if (tempattr == "aunit") {
          aunit = gdml->GetAttrValue(attr);
+         unitless_a = false;
       } else if (tempattr == "phi") {
          phi = gdml->GetAttrValue(attr);
       } else if (tempattr == "theta") {
@@ -3887,6 +3988,7 @@ XMLNodePointer_t TGDMLParse::TwistTrap(TXMLEngine *gdml, XMLNodePointer_t node, 
 
    Double_t retlunit = GetScaleVal(lunit);
    Double_t retaunit = GetScaleVal(aunit);
+   fNunitless += int(unitless_l || unitless_a);
 
    Double_t x1line = Value(x1) * retlunit;
    Double_t x2line = Value(x2) * retlunit;
@@ -3919,6 +4021,7 @@ XMLNodePointer_t TGDMLParse::TwistTrap(TXMLEngine *gdml, XMLNodePointer_t node, 
 XMLNodePointer_t TGDMLParse::ElTube(TXMLEngine *gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
    TString lunit = fDefault_lunit.c_str();
+   bool unitless_l = true;
    TString xpos = "0";
    TString ypos = "0";
    TString zpos = "0";
@@ -3940,6 +4043,7 @@ XMLNodePointer_t TGDMLParse::ElTube(TXMLEngine *gdml, XMLNodePointer_t node, XML
          zpos = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       }
 
       attr = gdml->GetNextAttr(attr);
@@ -3950,6 +4054,7 @@ XMLNodePointer_t TGDMLParse::ElTube(TXMLEngine *gdml, XMLNodePointer_t node, XML
       local_name = TString::Format("%s_%s", name.Data(), fCurrentFile);
 
    Double_t retunit = GetScaleVal(lunit);
+   fNunitless += int(unitless_l);
 
    Double_t xline = Value(xpos) * retunit;
    Double_t yline = Value(ypos) * retunit;
@@ -3971,6 +4076,7 @@ XMLNodePointer_t TGDMLParse::ElTube(TXMLEngine *gdml, XMLNodePointer_t node, XML
 XMLNodePointer_t TGDMLParse::Orb(TXMLEngine *gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
    TString lunit = fDefault_lunit.c_str();
+   bool unitless_l = true;
    TString r = "0";
    TString name = "";
    TString tempattr;
@@ -3986,6 +4092,7 @@ XMLNodePointer_t TGDMLParse::Orb(TXMLEngine *gdml, XMLNodePointer_t node, XMLAtt
          r = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       }
 
       attr = gdml->GetNextAttr(attr);
@@ -3996,6 +4103,7 @@ XMLNodePointer_t TGDMLParse::Orb(TXMLEngine *gdml, XMLNodePointer_t node, XMLAtt
       local_name = TString::Format("%s_%s", name.Data(), fCurrentFile);
 
    Double_t retunit = GetScaleVal(lunit);
+   fNunitless += int(unitless_l);
 
    Double_t rline = Value(r) * retunit;
 
@@ -4019,7 +4127,7 @@ XMLNodePointer_t TGDMLParse::Orb(TXMLEngine *gdml, XMLNodePointer_t node, XMLAtt
 XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine *gdml, XMLNodePointer_t node, XMLAttrPointer_t attr)
 {
    TString lunit = fDefault_lunit.c_str();
-   //   TString aunit = "rad";
+   bool unitless_l = true;
    TString x = "0";
    TString y = "0";
    TString zorder = "0";
@@ -4039,6 +4147,7 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
          name = gdml->GetAttrValue(attr);
       } else if (tempattr == "lunit") {
          lunit = gdml->GetAttrValue(attr);
+         unitless_l = false;
       }
 
       attr = gdml->GetNextAttr(attr);
@@ -4049,6 +4158,7 @@ XMLNodePointer_t TGDMLParse::Xtru(TXMLEngine *gdml, XMLNodePointer_t node, XMLAt
       local_name = TString::Format("%s_%s", name.Data(), fCurrentFile);
 
    Double_t retlunit = GetScaleVal(lunit);
+   fNunitless += int(unitless_l);
 
    // START TO LOOK THRU CHILD NODES...
 

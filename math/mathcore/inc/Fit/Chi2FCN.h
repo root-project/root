@@ -114,9 +114,9 @@ public:
 
 
    /// i-th chi-square residual
-   virtual double DataElement(const double *x, unsigned int i, double *g) const {
+   virtual double DataElement(const double *x, unsigned int i, double *g, double * h = nullptr, bool fullHessian = false) const {
       if (i==0) this->UpdateNCalls();
-      return FitUtil::Evaluate<T>::EvalChi2Residual(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g, BaseFCN::IsAGradFCN());
+      return FitUtil::Evaluate<T>::EvalChi2Residual(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g, h, BaseFCN::IsAGradFCN(), fullHessian);
    }
 
    // need to be virtual to be instantiated
@@ -125,6 +125,7 @@ public:
       FitUtil::Evaluate<T>::EvalChi2Gradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints,
                                              fExecutionPolicy);
    }
+
 
    /// get type of fit method function
    virtual  typename BaseObjFunction::Type_t Type() const { return BaseObjFunction::kLeastSquare; }

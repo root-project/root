@@ -6,6 +6,8 @@
 #include "KerasReshapeModel.hxx"
 #include "KerasConcatenateModel.hxx"
 #include "KerasBinaryOpModel.hxx"
+#include "KerasActivationsModel.hxx"
+#include "KerasModelWithCustomOp.hxx"
 
 #include <Python.h>
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -152,7 +154,11 @@ TEST(RModelParser_Keras, BATCH_NORM)
     }
 }
 
+#if PY_MAJOR_VERSION >= 3
 TEST(RModelParser_Keras, CONV_VALID)
+#else
+TEST(DISABLED_RModelParser_Keras, CONV_VALID)
+#endif
 {
     constexpr float TOLERANCE = DEFAULT_TOLERANCE;
     float inputConv2D_Valid[]= {1,1,1,1,
@@ -194,7 +200,11 @@ TEST(RModelParser_Keras, CONV_VALID)
     }
 }
 
+#if PY_MAJOR_VERSION >= 3
 TEST(RModelParser_Keras, CONV_SAME)
+#else
+TEST(DISABLED_RModelParser_Keras, CONV_SAME)
+#endif
 {
     constexpr float TOLERANCE = DEFAULT_TOLERANCE;
     float inputConv2D_Same[]= {1,1,1,1,
@@ -326,9 +336,9 @@ TEST(RModelParser_Keras, BINARY_OP)
     float input_BinaryOp_1[]={1,1};
     float input_BinaryOp_2[]={1,1};
 
-    TMVA_SOFIE_KerasModelBinaryOp::Session s("KerasBinaryOpModel.dat");
+    TMVA_SOFIE_KerasModelBinaryOp::Session s; //("KerasBinaryOpModel.dat");
     std::vector<float> outputBinaryOp = s.infer(input_BinaryOp_1,input_BinaryOp_2);
-    
+
     Py_Initialize();
     PyObject* main = PyImport_AddModule("__main__");
     PyObject* fGlobalNS = PyModule_GetDict(main);
@@ -359,5 +369,88 @@ TEST(RModelParser_Keras, BINARY_OP)
     //Testing the actual and expected output tensor values
     for (size_t i = 0; i < outputBinaryOp.size(); ++i) {
       EXPECT_LE(std::abs(outputBinaryOp[i] - pOutputBinaryOp[i]), TOLERANCE);
+    }
+}
+
+TEST(RModelParser_Keras, ACTIVATIONS)
+{
+    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+    float inputActivations[]={1,1,1,1,1,1,1,1};
+    TMVA_SOFIE_KerasModelActivations::Session s("KerasActivationsModel.dat");
+    std::vector<float> outputActivations = s.infer(inputActivations);
+
+    Py_Initialize();
+    PyObject* main = PyImport_AddModule("__main__");
+    PyObject* fGlobalNS = PyModule_GetDict(main);
+    PyObject* fLocalNS = PyDict_New();
+    if (!fGlobalNS) {
+        throw std::runtime_error("Can't init global namespace for Python");
+        }
+    if (!fLocalNS) {
+        throw std::runtime_error("Can't init local namespace for Python");
+        }
+    PyRun_String("import os",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelActivations.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("input=numpy.ones((1,8))",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
+    std::size_t pOutputActivationsSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+
+    //Testing the actual and expected output tensor sizes
+    EXPECT_EQ(outputActivations.size(), pOutputActivationsSize);
+
+    PyArrayObject* pActivationsValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
+    float* pOutputActivations=(float*)PyArray_DATA(pActivationsValues);
+
+    //Testing the actual and expected output tensor values
+    for (size_t i = 0; i < outputActivations.size(); ++i) {
+      EXPECT_LE(std::abs(outputActivations[i] - pOutputActivations[i]), TOLERANCE);
+    }
+}
+
+TEST(RModel, CUSTOM_OP)
+{
+    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+    float input_custom[]={1,1,1,1,1,1,1,1};
+
+    TMVA_SOFIE_KerasModelForCustomOp::Session s("KerasModelWithCustomOp.dat");
+    std::vector<float> outputCustomOp = s.infer(input_custom);
+
+
+    Py_Initialize();
+    PyObject* main = PyImport_AddModule("__main__");
+    PyObject* fGlobalNS = PyModule_GetDict(main);
+    PyObject* fLocalNS = PyDict_New();
+    if (!fGlobalNS) {
+        throw std::runtime_error("Can't init global namespace for Python");
+        }
+    if (!fLocalNS) {
+        throw std::runtime_error("Can't init local namespace for Python");
+        }
+    PyRun_String("import os",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
+
+    PyRun_String("from tensorflow.keras.layers import Lambda",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('KerasModelForCustomOp.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model.add(Lambda(lambda x: x * 2))",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("input=numpy.array([1,1,1,1,1,1,1,1]).reshape(1,8)",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
+    std::size_t pOutputCustomOpSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+
+    //Testing the actual and expected output tensor sizes
+    EXPECT_EQ(outputCustomOp.size(), pOutputCustomOpSize);
+
+    PyArrayObject* pCustomOpValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
+    float* pOutputCustomOp=(float*)PyArray_DATA(pCustomOpValues);
+
+    //Testing the actual and expected output tensor values
+    for (size_t i = 0; i < outputCustomOp.size(); ++i) {
+      EXPECT_LE(std::abs(outputCustomOp[i] - pOutputCustomOp[i]), TOLERANCE);
     }
 }

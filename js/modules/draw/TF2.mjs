@@ -1,4 +1,4 @@
-import { createHistogram, BIT } from '../core.mjs';
+import { createHistogram, BIT, settings } from '../core.mjs';
 import { TH2Painter } from '../hist/TH2Painter.mjs';
 import { proivdeEvalPar } from '../hist/TF1Painter.mjs';
 import { getElementMainPainter } from '../base/ObjectPainter.mjs';
@@ -20,30 +20,38 @@ function createTF2Histogram(func, hist = undefined) {
        iserr = false, isany = false,
        dx = (func.fXmax - func.fXmin) / (use_middle ? npx : (npx-1)),
        dy = (func.fYmax - func.fYmin) / (use_middle ? npy : (npy-1)),
-       extra = use_middle ? 0.5 : 0;
+       extra = use_middle ? 0.5 : 0,
+       use_saved_points = (nsave > 6) && settings.PreferSavedPoints;
 
-   for (let j = 0; j < npy; ++j)
-     for (let i = 0; (i < npx) && !iserr; ++i) {
-         let x = func.fXmin + (i + extra) * dx,
-             y = func.fYmin + (j + extra) * dy,
-             z = 0;
+   if (!use_saved_points) {
+      if (!func.evalPar)
+         proivdeEvalPar(func);
 
-         try {
-            z = func.evalPar(x, y);
-         } catch {
-            iserr = true;
+      for (let j = 0; j < npy; ++j)
+        for (let i = 0; (i < npx) && !iserr; ++i) {
+            let x = func.fXmin + (i + extra) * dx,
+                y = func.fYmin + (j + extra) * dy,
+                z = 0;
+
+            try {
+               z = func.evalPar(x, y);
+            } catch {
+               iserr = true;
+            }
+
+            if (!iserr && Number.isFinite(z)) {
+               if (!hist) hist = createHistogram('TH2F', npx, npy);
+               isany = true;
+               hist.setBinContent(hist.getBin(i+1,j+1), z);
+            }
          }
 
-         if (!iserr && Number.isFinite(z)) {
-            if (!hist) hist = createHistogram("TH2F", npx, npy);
-            isany = true;
-            hist.setBinContent(hist.getBin(i+1,j+1), z);
-         }
-      }
+      if ((iserr || !isany) && (nsave > 6))
+         use_saved_points = true;
+   }
 
-   let use_saved_points = (iserr || !isany) && (nsave > 6);
    if (!use_saved_points && !hist)
-      hist = createHistogram("TH2F", npx, npy);
+      hist = createHistogram('TH2F', npx, npy);
 
    if (!iserr && isany) {
       hist.fXaxis.fXmin = func.fXmin - (use_middle ? 0 : dx/2);
@@ -59,7 +67,7 @@ function createTF2Histogram(func, hist = undefined) {
       dx = (func.fSave[nsave-5] - func.fSave[nsave-6]) / npx;
       dy = (func.fSave[nsave-3] - func.fSave[nsave-4]) / npy;
 
-      if (!hist) hist = createHistogram("TH2F", npx+1, npy+1);
+      if (!hist) hist = createHistogram('TH2F', npx+1, npy+1);
 
       hist.fXaxis.fXmin = func.fSave[nsave-6] - dx/2;
       hist.fXaxis.fXmax = func.fSave[nsave-5] + dx/2;
@@ -72,7 +80,7 @@ function createTF2Histogram(func, hist = undefined) {
             hist.setBinContent(hist.getBin(i+1,j+1), func.fSave[k++]);
    }
 
-   hist.fName = "Func";
+   hist.fName = 'Func';
    hist.fTitle = func.fTitle;
    hist.fMinimum = func.fMinimum;
    hist.fMaximum = func.fMaximum;
@@ -97,26 +105,24 @@ function createTF2Histogram(func, hist = undefined) {
   * @private */
 function drawTF2(dom, func, opt) {
 
-   proivdeEvalPar(func);
-
    let hist = createTF2Histogram(func);
    if (!hist) return;
 
    let d = new DrawOptions(opt);
 
    if (d.empty())
-      opt = "cont3";
-   else if (d.opt === "SAME")
-      opt = "cont2 same";
+      opt = 'cont3';
+   else if (d.opt === 'SAME')
+      opt = 'cont2 same';
    else
       opt = d.opt;
 
    // workaround for old waves.C
-   if (opt == "SAMECOLORZ" || opt == "SAMECOLOR" || opt == "SAMECOLZ") opt = "SAMECOL";
+   if (opt == 'SAMECOLORZ' || opt == 'SAMECOLOR' || opt == 'SAMECOLZ') opt = 'SAMECOL';
 
-   if (opt.indexOf("SAME") == 0)
+   if (opt.indexOf('SAME') == 0)
       if (!getElementMainPainter(dom))
-         opt = "A_ADJUST_FRAME_" + opt.slice(4);
+         opt = 'A_ADJUST_FRAME_' + opt.slice(4);
 
    return TH2Painter.draw(dom, hist, opt).then(hpainter => {
 
@@ -124,7 +130,7 @@ function drawTF2(dom, func, opt) {
 
       hpainter.updateObject = function(obj /*, opt*/) {
          if (!obj || (this.tf2_typename != obj._typename)) return false;
-         proivdeEvalPar(obj);
+         delete obj.evalPar;
          createTF2Histogram(obj, this.getHisto());
          return true;
       };

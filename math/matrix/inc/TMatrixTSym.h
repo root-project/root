@@ -51,7 +51,7 @@ public:
    enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
    enum EMatrixCreatorsOp2 { kPlus,kMinus };
 
-   TMatrixTSym() { fElements = 0; }
+   TMatrixTSym() { fElements = nullptr; }
    explicit TMatrixTSym(Int_t nrows);
    TMatrixTSym(Int_t row_lwb,Int_t row_upb);
    TMatrixTSym(Int_t nrows,const Element *data,Option_t *option="");
@@ -81,16 +81,16 @@ public:
 
    const Element *GetMatrixArray  () const override;
          Element *GetMatrixArray  () override;
-   const Int_t   *GetRowIndexArray() const override { return 0; }
-         Int_t   *GetRowIndexArray() override       { return 0; }
-   const Int_t   *GetColIndexArray() const override { return 0; }
-         Int_t   *GetColIndexArray() override       { return 0; }
+   const Int_t   *GetRowIndexArray() const override { return nullptr; }
+         Int_t   *GetRowIndexArray() override       { return nullptr; }
+   const Int_t   *GetColIndexArray() const override { return nullptr; }
+         Int_t   *GetColIndexArray() override       { return nullptr; }
 
          TMatrixTBase<Element> &SetRowIndexArray(Int_t * /*data*/) override { MayNotUse("SetRowIndexArray(Int_t *)"); return *this; }
          TMatrixTBase<Element> &SetColIndexArray(Int_t * /*data*/) override { MayNotUse("SetColIndexArray(Int_t *)"); return *this; }
 
    void   Clear      (Option_t * /*option*/ ="") override { if (this->fIsOwner) Delete_m(this->fNelems,fElements);
-                                                           else fElements = 0;
+                                                           else fElements = nullptr;
                                                            this->fNelems = 0; }
    Bool_t IsSymmetric() const override { return kTRUE; }
 
@@ -121,8 +121,8 @@ public:
    Double_t      Determinant   () const override;
    void          Determinant   (Double_t &d1,Double_t &d2) const override;
 
-           TMatrixTSym<Element>  &Invert        (Double_t *det=0);
-           TMatrixTSym<Element>  &InvertFast    (Double_t *det=0);
+           TMatrixTSym<Element>  &Invert        (Double_t *det=nullptr);
+           TMatrixTSym<Element>  &InvertFast    (Double_t *det=nullptr);
            TMatrixTSym<Element>  &Transpose     (const TMatrixTSym<Element> &source);
    inline  TMatrixTSym<Element>  &T             () { return this->Transpose(*this); }
            TMatrixTSym<Element>  &Rank1Update   (const TVectorT   <Element> &v,Element alpha=1.0);
@@ -216,7 +216,7 @@ template <class Element> inline Element TMatrixTSym<Element>::operator()(Int_t r
    }
    if (acoln >= this->fNcols || acoln < 0) {
       Error("operator()","Request column(%d) outside matrix range of %d - %d",coln,this->fColLwb,this->fColLwb+this->fNcols);
-      return TMatrixTBase<Element>::NaNValue();      
+      return TMatrixTBase<Element>::NaNValue();
    }
    return (fElements[arown*this->fNcols+acoln]);
 }

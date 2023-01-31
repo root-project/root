@@ -12,7 +12,6 @@
 
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ADT/STLExtras.h"
-#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Config/config.h"
 #include "llvm/Support/Compiler.h"
@@ -30,7 +29,6 @@
 #include <cstdio>
 #include <iterator>
 #include <sys/stat.h>
-#include <system_error>
 
 // <fcntl.h> may provide O_BINARY.
 #if defined(HAVE_FCNTL_H)
@@ -60,10 +58,21 @@
 
 #ifdef _WIN32
 #include "llvm/Support/ConvertUTF.h"
-#include "Windows/WindowsSupport.h"
+#include "llvm/Support/Windows/WindowsSupport.h"
 #endif
 
 using namespace llvm;
+
+constexpr raw_ostream::Colors raw_ostream::BLACK;
+constexpr raw_ostream::Colors raw_ostream::RED;
+constexpr raw_ostream::Colors raw_ostream::GREEN;
+constexpr raw_ostream::Colors raw_ostream::YELLOW;
+constexpr raw_ostream::Colors raw_ostream::BLUE;
+constexpr raw_ostream::Colors raw_ostream::MAGENTA;
+constexpr raw_ostream::Colors raw_ostream::CYAN;
+constexpr raw_ostream::Colors raw_ostream::WHITE;
+constexpr raw_ostream::Colors raw_ostream::SAVEDCOLOR;
+constexpr raw_ostream::Colors raw_ostream::RESET;
 
 raw_ostream::~raw_ostream() {
   // raw_ostream's subclasses should take care to flush the buffer
@@ -71,7 +80,7 @@ raw_ostream::~raw_ostream() {
   assert(OutBufCur == OutBufStart &&
          "raw_ostream destructor called with non-empty buffer!");
 
-  if (BufferMode == InternalBuffer)
+  if (BufferMode == BufferKind::InternalBuffer)
     delete [] OutBufStart;
 }
 
@@ -91,14 +100,14 @@ void raw_ostream::SetBuffered() {
 
 void raw_ostream::SetBufferAndMode(char *BufferStart, size_t Size,
                                    BufferKind Mode) {
-  assert(((Mode == Unbuffered && !BufferStart && Size == 0) ||
-          (Mode != Unbuffered && BufferStart && Size != 0)) &&
+  assert(((Mode == BufferKind::Unbuffered && !BufferStart && Size == 0) ||
+          (Mode != BufferKind::Unbuffered && BufferStart && Size != 0)) &&
          "stream must be unbuffered or have at least one byte");
   // Make sure the current buffer is free of content (we can't flush here; the
   // child buffer management logic will be in write_impl).
   assert(GetNumBytesInBuffer() == 0 && "Current buffer is non-empty!");
 
-  if (BufferMode == InternalBuffer)
+  if (BufferMode == BufferKind::InternalBuffer)
     delete [] OutBufStart;
   OutBufStart = BufferStart;
   OutBufEnd = OutBufStart+Size;
@@ -130,6 +139,14 @@ raw_ostream &raw_ostream::operator<<(long long N) {
 
 raw_ostream &raw_ostream::write_hex(unsigned long long N) {
   llvm::write_hex(*this, N, HexPrintStyle::Lower);
+  return *this;
+}
+
+raw_ostream &raw_ostream::operator<<(Colors C) {
+  if (C == Colors::RESET)
+    resetColor();
+  else
+    changeColor(C);
   return *this;
 }
 
@@ -197,15 +214,15 @@ void raw_ostream::flush_nonempty() {
   assert(OutBufCur > OutBufStart && "Invalid call to flush_nonempty.");
   size_t Length = OutBufCur - OutBufStart;
   OutBufCur = OutBufStart;
-  write_impl(OutBufStart, Length);
+  flush_tied_then_write(OutBufStart, Length);
 }
 
 raw_ostream &raw_ostream::write(unsigned char C) {
   // Group exceptional cases into a single branch.
   if (LLVM_UNLIKELY(OutBufCur >= OutBufEnd)) {
     if (LLVM_UNLIKELY(!OutBufStart)) {
-      if (BufferMode == Unbuffered) {
-        write_impl(reinterpret_cast<char*>(&C), 1);
+      if (BufferMode == BufferKind::Unbuffered) {
+        flush_tied_then_write(reinterpret_cast<char *>(&C), 1);
         return *this;
       }
       // Set up a buffer and start over.
@@ -224,8 +241,8 @@ raw_ostream &raw_ostream::write(const char *Ptr, size_t Size) {
   // Group exceptional cases into a single branch.
   if (LLVM_UNLIKELY(size_t(OutBufEnd - OutBufCur) < Size)) {
     if (LLVM_UNLIKELY(!OutBufStart)) {
-      if (BufferMode == Unbuffered) {
-        write_impl(Ptr, Size);
+      if (BufferMode == BufferKind::Unbuffered) {
+        flush_tied_then_write(Ptr, Size);
         return *this;
       }
       // Set up a buffer and start over.
@@ -241,7 +258,7 @@ raw_ostream &raw_ostream::write(const char *Ptr, size_t Size) {
     if (LLVM_UNLIKELY(OutBufCur == OutBufStart)) {
       assert(NumBytes != 0 && "undefined behavior");
       size_t BytesToWrite = Size - (Size % NumBytes);
-      write_impl(Ptr, BytesToWrite);
+      flush_tied_then_write(Ptr, BytesToWrite);
       size_t BytesRemaining = Size - BytesToWrite;
       if (BytesRemaining > size_t(OutBufEnd - OutBufCur)) {
         // Too much left over to copy into our buffer.
@@ -280,6 +297,12 @@ void raw_ostream::copy_to_buffer(const char *Ptr, size_t Size) {
   }
 
   OutBufCur += Size;
+}
+
+void raw_ostream::flush_tied_then_write(const char *Ptr, size_t Size) {
+  if (TiedStream)
+    TiedStream->flush();
+  write_impl(Ptr, Size);
 }
 
 // Formatted output.
@@ -324,36 +347,33 @@ raw_ostream &raw_ostream::operator<<(const format_object_base &Fmt) {
 }
 
 raw_ostream &raw_ostream::operator<<(const formatv_object_base &Obj) {
-  SmallString<128> S;
   Obj.format(*this);
   return *this;
 }
 
 raw_ostream &raw_ostream::operator<<(const FormattedString &FS) {
-  if (FS.Str.size() >= FS.Width || FS.Justify == FormattedString::JustifyNone) {
-    this->operator<<(FS.Str);
-    return *this;
+  unsigned LeftIndent = 0;
+  unsigned RightIndent = 0;
+  const ssize_t Difference = FS.Width - FS.Str.size();
+  if (Difference > 0) {
+    switch (FS.Justify) {
+    case FormattedString::JustifyNone:
+      break;
+    case FormattedString::JustifyLeft:
+      RightIndent = Difference;
+      break;
+    case FormattedString::JustifyRight:
+      LeftIndent = Difference;
+      break;
+    case FormattedString::JustifyCenter:
+      LeftIndent = Difference / 2;
+      RightIndent = Difference - LeftIndent;
+      break;
+    }
   }
-  const size_t Difference = FS.Width - FS.Str.size();
-  switch (FS.Justify) {
-  case FormattedString::JustifyLeft:
-    this->operator<<(FS.Str);
-    this->indent(Difference);
-    break;
-  case FormattedString::JustifyRight:
-    this->indent(Difference);
-    this->operator<<(FS.Str);
-    break;
-  case FormattedString::JustifyCenter: {
-    int PadAmount = Difference / 2;
-    this->indent(PadAmount);
-    this->operator<<(FS.Str);
-    this->indent(Difference - PadAmount);
-    break;
-  }
-  default:
-    llvm_unreachable("Bad Justification");
-  }
+  indent(LeftIndent);
+  (*this) << FS.Str;
+  indent(RightIndent);
   return *this;
 }
 
@@ -483,6 +503,53 @@ raw_ostream &raw_ostream::write_zeros(unsigned NumZeros) {
   return write_padding<'\0'>(*this, NumZeros);
 }
 
+bool raw_ostream::prepare_colors() {
+  // Colors were explicitly disabled.
+  if (!ColorEnabled)
+    return false;
+
+  // Colors require changing the terminal but this stream is not going to a
+  // terminal.
+  if (sys::Process::ColorNeedsFlush() && !is_displayed())
+    return false;
+
+  if (sys::Process::ColorNeedsFlush())
+    flush();
+
+  return true;
+}
+
+raw_ostream &raw_ostream::changeColor(enum Colors colors, bool bold, bool bg) {
+  if (!prepare_colors())
+    return *this;
+
+  const char *colorcode =
+      (colors == SAVEDCOLOR)
+          ? sys::Process::OutputBold(bg)
+          : sys::Process::OutputColor(static_cast<char>(colors), bold, bg);
+  if (colorcode)
+    write(colorcode, strlen(colorcode));
+  return *this;
+}
+
+raw_ostream &raw_ostream::resetColor() {
+  if (!prepare_colors())
+    return *this;
+
+  if (const char *colorcode = sys::Process::ResetColor())
+    write(colorcode, strlen(colorcode));
+  return *this;
+}
+
+raw_ostream &raw_ostream::reverseColor() {
+  if (!prepare_colors())
+    return *this;
+
+  if (const char *colorcode = sys::Process::OutputReverse())
+    write(colorcode, strlen(colorcode));
+  return *this;
+}
+
 void raw_ostream::anchor() {}
 
 //===----------------------------------------------------------------------===//
@@ -507,10 +574,8 @@ static int getFD(StringRef Filename, std::error_code &EC,
   // the owner of stdout and may set the "binary" flag globally based on Flags.
   if (Filename == "-") {
     EC = std::error_code();
-    // If user requested binary then put stdout into binary mode if
-    // possible.
-    if (!(Flags & sys::fs::OF_Text))
-      sys::ChangeStdoutToBinary();
+    // Change stdout's text/binary mode based on the Flags.
+    sys::ChangeStdoutMode(Flags);
     return STDOUT_FILENO;
   }
 
@@ -551,12 +616,15 @@ raw_fd_ostream::raw_fd_ostream(StringRef Filename, std::error_code &EC,
 
 /// FD is the file descriptor that this writes to.  If ShouldClose is true, this
 /// closes the file when the stream is destroyed.
-raw_fd_ostream::raw_fd_ostream(int fd, bool shouldClose, bool unbuffered)
-    : raw_pwrite_stream(unbuffered), FD(fd), ShouldClose(shouldClose) {
+raw_fd_ostream::raw_fd_ostream(int fd, bool shouldClose, bool unbuffered,
+                               OStreamKind K)
+    : raw_pwrite_stream(unbuffered, K), FD(fd), ShouldClose(shouldClose) {
   if (FD < 0 ) {
     ShouldClose = false;
     return;
   }
+
+  enable_colors(true);
 
   // Do not attempt to close stdout or stderr. We used to try to maintain the
   // property that tools that support writing file to stdout should not also
@@ -773,7 +841,7 @@ size_t raw_fd_ostream::preferred_buffer_size() const {
   // If this is a terminal, don't use buffering. Line buffering
   // would be a more traditional thing to do, but it's not worth
   // the complexity.
-  if (S_ISCHR(statbuf.st_mode) && isatty(FD))
+  if (S_ISCHR(statbuf.st_mode) && is_displayed())
     return 0;
   // Return the preferred block size.
   return statbuf.st_blksize;
@@ -782,54 +850,29 @@ size_t raw_fd_ostream::preferred_buffer_size() const {
 #endif
 }
 
-raw_ostream &raw_fd_ostream::changeColor(enum Colors colors, bool bold,
-                                         bool bg) {
-  if (sys::Process::ColorNeedsFlush())
-    flush();
-  const char *colorcode =
-    (colors == SAVEDCOLOR) ? sys::Process::OutputBold(bg)
-    : sys::Process::OutputColor(colors, bold, bg);
-  if (colorcode) {
-    size_t len = strlen(colorcode);
-    write(colorcode, len);
-    // don't account colors towards output characters
-    pos -= len;
-  }
-  return *this;
-}
-
-raw_ostream &raw_fd_ostream::resetColor() {
-  if (sys::Process::ColorNeedsFlush())
-    flush();
-  const char *colorcode = sys::Process::ResetColor();
-  if (colorcode) {
-    size_t len = strlen(colorcode);
-    write(colorcode, len);
-    // don't account colors towards output characters
-    pos -= len;
-  }
-  return *this;
-}
-
-raw_ostream &raw_fd_ostream::reverseColor() {
-  if (sys::Process::ColorNeedsFlush())
-    flush();
-  const char *colorcode = sys::Process::OutputReverse();
-  if (colorcode) {
-    size_t len = strlen(colorcode);
-    write(colorcode, len);
-    // don't account colors towards output characters
-    pos -= len;
-  }
-  return *this;
-}
-
 bool raw_fd_ostream::is_displayed() const {
   return sys::Process::FileDescriptorIsDisplayed(FD);
 }
 
 bool raw_fd_ostream::has_colors() const {
-  return sys::Process::FileDescriptorHasColors(FD);
+  if (!HasColors)
+    HasColors = sys::Process::FileDescriptorHasColors(FD);
+  return *HasColors;
+}
+
+Expected<sys::fs::FileLocker> raw_fd_ostream::lock() {
+  std::error_code EC = sys::fs::lockFile(FD);
+  if (!EC)
+    return sys::fs::FileLocker(FD);
+  return errorCodeToError(EC);
+}
+
+Expected<sys::fs::FileLocker>
+raw_fd_ostream::tryLockFor(std::chrono::milliseconds Timeout) {
+  std::error_code EC = sys::fs::tryLockFile(FD, Timeout);
+  if (!EC)
+    return sys::fs::FileLocker(FD);
+  return errorCodeToError(EC);
 }
 
 void raw_fd_ostream::anchor() {}
@@ -838,20 +881,16 @@ void raw_fd_ostream::anchor() {}
 //  outs(), errs(), nulls()
 //===----------------------------------------------------------------------===//
 
-/// outs() - This returns a reference to a raw_ostream for standard output.
-/// Use it like: outs() << "foo" << "bar";
-raw_ostream &llvm::outs() {
+raw_fd_ostream &llvm::outs() {
   // Set buffer settings to model stdout behavior.
   std::error_code EC;
-  static raw_fd_ostream S("-", EC, sys::fs::F_None);
+  static raw_fd_ostream S("-", EC, sys::fs::OF_None);
   assert(!EC);
   return S;
 }
 
-/// errs() - This returns a reference to a raw_ostream for standard error.
-/// Use it like: errs() << "foo" << "bar";
-raw_ostream &llvm::errs() {
-  // Set standard error to be unbuffered by default.
+raw_fd_ostream &llvm::errs() {
+  // Set standard error to be unbuffered and tied to outs() by default.
   static raw_fd_ostream S(STDERR_FILENO, false, true);
   return S;
 }
@@ -860,6 +899,37 @@ raw_ostream &llvm::errs() {
 raw_ostream &llvm::nulls() {
   static raw_null_ostream S;
   return S;
+}
+
+//===----------------------------------------------------------------------===//
+// File Streams
+//===----------------------------------------------------------------------===//
+
+raw_fd_stream::raw_fd_stream(StringRef Filename, std::error_code &EC)
+    : raw_fd_ostream(getFD(Filename, EC, sys::fs::CD_CreateAlways,
+                           sys::fs::FA_Write | sys::fs::FA_Read,
+                           sys::fs::OF_None),
+                     true, false, OStreamKind::OK_FDStream) {
+  if (EC)
+    return;
+
+  // Do not support non-seekable files.
+  if (!supportsSeeking())
+    EC = std::make_error_code(std::errc::invalid_argument);
+}
+
+ssize_t raw_fd_stream::read(char *Ptr, size_t Size) {
+  assert(get_fd() >= 0 && "File already closed.");
+  ssize_t Ret = ::read(get_fd(), (void *)Ptr, Size);
+  if (Ret >= 0)
+    inc_pos(Ret);
+  else
+    error_detected(std::error_code(errno, std::generic_category()));
+  return Ret;
+}
+
+bool raw_fd_stream::classof(const raw_ostream *OS) {
+  return OS->get_kind() == OStreamKind::OK_FDStream;
 }
 
 //===----------------------------------------------------------------------===//
@@ -915,3 +985,33 @@ void raw_null_ostream::pwrite_impl(const char *Ptr, size_t Size,
 void raw_pwrite_stream::anchor() {}
 
 void buffer_ostream::anchor() {}
+
+void buffer_unique_ostream::anchor() {}
+
+Error llvm::writeToOutput(StringRef OutputFileName,
+                          std::function<Error(raw_ostream &)> Write) {
+  if (OutputFileName == "-")
+    return Write(outs());
+
+  if (OutputFileName == "/dev/null") {
+    raw_null_ostream Out;
+    return Write(Out);
+  }
+
+  unsigned Mode = sys::fs::all_read | sys::fs::all_write | sys::fs::all_exe;
+  Expected<sys::fs::TempFile> Temp =
+      sys::fs::TempFile::create(OutputFileName + ".temp-stream-%%%%%%", Mode);
+  if (!Temp)
+    return createFileError(OutputFileName, Temp.takeError());
+
+  raw_fd_ostream Out(Temp->FD, false);
+
+  if (Error E = Write(Out)) {
+    if (Error DiscardError = Temp->discard())
+      return joinErrors(std::move(E), std::move(DiscardError));
+    return E;
+  }
+  Out.flush();
+
+  return Temp->keep(OutputFileName);
+}

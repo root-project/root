@@ -69,7 +69,7 @@ protected:
   RooDataHist::ErrorType _etype ;     ///< Error type store in associated RooDataHist
   FuncMode _funcMode ;                ///< Function, P.d.f. or extended p.d.f?
 
-  ClassDefOverride(RooChi2Var,1) // Chi^2 function of p.d.f w.r.t a binned dataset
+  ClassDefOverride(RooChi2Var,0) // Chi^2 function of p.d.f w.r.t a binned dataset
 };
 
 

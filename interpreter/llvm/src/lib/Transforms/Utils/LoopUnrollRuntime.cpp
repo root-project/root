@@ -22,20 +22,21 @@
 
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/Statistic.h"
-#include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/LoopIterator.h"
 #include "llvm/Analysis/ScalarEvolution.h"
-#include "llvm/Analysis/ScalarEvolutionExpander.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Dominators.h"
+#include "llvm/IR/MDBuilder.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/Module.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Utils.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Transforms/Utils/LoopUtils.h"
+#include "llvm/Transforms/Utils/ScalarEvolutionExpander.h"
 #include "llvm/Transforms/Utils/UnrollLoop.h"
 #include <algorithm>
 
@@ -49,6 +50,9 @@ static cl::opt<bool> UnrollRuntimeMultiExit(
     "unroll-runtime-multi-exit", cl::init(false), cl::Hidden,
     cl::desc("Allow runtime unrolling for loops with multiple exits, when "
              "epilog is generated"));
+static cl::opt<bool> UnrollRuntimeOtherExitPredictable(
+    "unroll-runtime-other-exit-predictable", cl::init(false), cl::Hidden,
+    cl::desc("Assume the non latch exit block to be predictable"));
 
 /// Connect the unrolling prolog code to the original loop.
 /// The unrolling prolog code contains code to execute the
@@ -395,9 +399,9 @@ CloneLoopBlocks(Loop *L, Value *NewIter, const bool CreateRemainderLoop,
     }
   }
   if (CreateRemainderLoop) {
-    Loop *NewLoop = NewLoops[L];
-    MDNode *LoopID = NewLoop->getLoopID();
+    Loop *NewLoop = NewLoops[L];  
     assert(NewLoop && "L should have been cloned");
+    MDNode *LoopID = NewLoop->getLoopID();
 
     // Only add loop metadata if the loop is not going to be completely
     // unrolled.
@@ -492,16 +496,49 @@ static bool canProfitablyUnrollMultiExitLoop(
   if (ExitingBlocks.size() > 2)
     return false;
 
+  // Allow unrolling of loops with no non latch exit blocks.
+  if (OtherExits.size() == 0)
+    return true;
+
   // The second heuristic is that L has one exit other than the latchexit and
   // that exit is a deoptimize block. We know that deoptimize blocks are rarely
   // taken, which also implies the branch leading to the deoptimize block is
-  // highly predictable.
+  // highly predictable. When UnrollRuntimeOtherExitPredictable is specified, we
+  // assume the other exit branch is predictable even if it has no deoptimize
+  // call.
   return (OtherExits.size() == 1 &&
-          OtherExits[0]->getTerminatingDeoptimizeCall());
+          (UnrollRuntimeOtherExitPredictable ||
+           OtherExits[0]->getTerminatingDeoptimizeCall()));
   // TODO: These can be fine-tuned further to consider code size or deopt states
   // that are captured by the deoptimize exit block.
   // Also, we can extend this to support more cases, if we actually
   // know of kinds of multiexit loops that would benefit from unrolling.
+}
+
+// Assign the maximum possible trip count as the back edge weight for the
+// remainder loop if the original loop comes with a branch weight.
+static void updateLatchBranchWeightsForRemainderLoop(Loop *OrigLoop,
+                                                     Loop *RemainderLoop,
+                                                     uint64_t UnrollFactor) {
+  uint64_t TrueWeight, FalseWeight;
+  BranchInst *LatchBR =
+      cast<BranchInst>(OrigLoop->getLoopLatch()->getTerminator());
+  if (LatchBR->extractProfMetadata(TrueWeight, FalseWeight)) {
+    uint64_t ExitWeight = LatchBR->getSuccessor(0) == OrigLoop->getHeader()
+                              ? FalseWeight
+                              : TrueWeight;
+    assert(UnrollFactor > 1);
+    uint64_t BackEdgeWeight = (UnrollFactor - 1) * ExitWeight;
+    BasicBlock *Header = RemainderLoop->getHeader();
+    BasicBlock *Latch = RemainderLoop->getLoopLatch();
+    auto *RemainderLatchBR = cast<BranchInst>(Latch->getTerminator());
+    unsigned HeaderIdx = (RemainderLatchBR->getSuccessor(0) == Header ? 0 : 1);
+    MDBuilder MDB(RemainderLatchBR->getContext());
+    MDNode *WeightNode =
+        HeaderIdx ? MDB.createBranchWeights(ExitWeight, BackEdgeWeight)
+                  : MDB.createBranchWeights(BackEdgeWeight, ExitWeight);
+    RemainderLatchBR->setMetadata(LLVMContext::MD_prof, WeightNode);
+  }
 }
 
 /// Insert code in the prolog/epilog code when unrolling a loop with a
@@ -542,13 +579,11 @@ static bool canProfitablyUnrollMultiExitLoop(
 ///        if (extraiters != 0) jump Epil: // Omitted if unroll factor is 2.
 /// EpilExit:
 
-bool llvm::UnrollRuntimeLoopRemainder(Loop *L, unsigned Count,
-                                      bool AllowExpensiveTripCount,
-                                      bool UseEpilogRemainder,
-                                      bool UnrollRemainder, bool ForgetAllSCEV,
-                                      LoopInfo *LI, ScalarEvolution *SE,
-                                      DominatorTree *DT, AssumptionCache *AC,
-                                      bool PreserveLCSSA, Loop **ResultLoop) {
+bool llvm::UnrollRuntimeLoopRemainder(
+    Loop *L, unsigned Count, bool AllowExpensiveTripCount,
+    bool UseEpilogRemainder, bool UnrollRemainder, bool ForgetAllSCEV,
+    LoopInfo *LI, ScalarEvolution *SE, DominatorTree *DT, AssumptionCache *AC,
+    const TargetTransformInfo *TTI, bool PreserveLCSSA, Loop **ResultLoop) {
   LLVM_DEBUG(dbgs() << "Trying runtime unrolling on Loop: \n");
   LLVM_DEBUG(L->dump());
   LLVM_DEBUG(UseEpilogRemainder ? dbgs() << "Using epilog remainder.\n"
@@ -636,7 +671,8 @@ bool llvm::UnrollRuntimeLoopRemainder(Loop *L, unsigned Count,
   const DataLayout &DL = Header->getModule()->getDataLayout();
   SCEVExpander Expander(*SE, DL, "loop-unroll");
   if (!AllowExpensiveTripCount &&
-      Expander.isHighCostExpansion(TripCountSC, L, PreHeaderBR)) {
+      Expander.isHighCostExpansion(TripCountSC, L, SCEVCheapExpansionBudget,
+                                   TTI, PreHeaderBR)) {
     LLVM_DEBUG(dbgs() << "High cost for expanding trip count scev!\n");
     return false;
   }
@@ -788,6 +824,11 @@ bool llvm::UnrollRuntimeLoopRemainder(Loop *L, unsigned Count,
       InsertTop, InsertBot,
       NewPreHeader, NewBlocks, LoopBlocks, VMap, DT, LI);
 
+  // Assign the maximum possible trip count as the back edge weight for the
+  // remainder loop if the original loop comes with a branch weight.
+  if (remainderLoop && !UnrollRemainder)
+    updateLatchBranchWeightsForRemainderLoop(L, remainderLoop, Count);
+
   // Insert the cloned blocks into the function.
   F->getBasicBlockList().splice(InsertBot->getIterator(),
                                 F->getBasicBlockList(),
@@ -848,7 +889,7 @@ bool llvm::UnrollRuntimeLoopRemainder(Loop *L, unsigned Count,
     // dominator of the exit blocks.
     for (auto *BB : L->blocks()) {
       auto *DomNodeBB = DT->getNode(BB);
-      for (auto *DomChild : DomNodeBB->getChildren()) {
+      for (auto *DomChild : DomNodeBB->children()) {
         auto *DomChildBB = DomChild->getBlock();
         if (!L->contains(LI->getLoopFor(DomChildBB)))
           ChildrenToUpdate.push_back(DomChildBB);
@@ -943,12 +984,10 @@ bool llvm::UnrollRuntimeLoopRemainder(Loop *L, unsigned Count,
     LLVM_DEBUG(dbgs() << "Unrolling remainder loop\n");
     UnrollResult =
         UnrollLoop(remainderLoop,
-                   {/*Count*/ Count - 1, /*TripCount*/ Count - 1,
-                    /*Force*/ false, /*AllowRuntime*/ false,
-                    /*AllowExpensiveTripCount*/ false, /*PreserveCondBr*/ true,
-                    /*PreserveOnlyFirst*/ false, /*TripMultiple*/ 1,
-                    /*PeelCount*/ 0, /*UnrollRemainder*/ false, ForgetAllSCEV},
-                   LI, SE, DT, AC, /*ORE*/ nullptr, PreserveLCSSA);
+                   {/*Count*/ Count - 1, /*Force*/ false, /*Runtime*/ false,
+                    /*AllowExpensiveTripCount*/ false,
+                    /*UnrollRemainder*/ false, ForgetAllSCEV},
+                   LI, SE, DT, AC, TTI, /*ORE*/ nullptr, PreserveLCSSA);
   }
 
   if (ResultLoop && UnrollResult != LoopUnrollResult::FullyUnrolled)

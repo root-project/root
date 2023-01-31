@@ -52,96 +52,125 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include <iostream>
 #include <memory>
 
-using namespace std;
-
 ClassImp(RooRealIntegral);
-
 
 namespace {
 
 struct ServerToAdd {
-   ServerToAdd(RooAbsArg * theArg, bool isShape) : arg{theArg}, isShapeServer{isShape} {}
-   RooAbsArg * arg = nullptr;
+   ServerToAdd(RooAbsArg *theArg, bool isShape) : arg{theArg}, isShapeServer{isShape} {}
+   RooAbsArg *arg = nullptr;
    bool isShapeServer = false;
 };
 
-std::vector<ServerToAdd> getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList,
-                                                 RooArgSet const &intDepList, const char *rangeName,
-                                                 RooArgSet &anIntOKDepList)
+void addObservableToServers(RooAbsReal const &function, RooAbsArg &leaf, std::vector<ServerToAdd> &serversToAdd,
+                            const char *rangeName)
+{
+   auto leaflv = dynamic_cast<RooAbsRealLValue *>(&leaf);
+   if (leaflv && leaflv->getBinning(rangeName).isParameterized()) {
+      oocxcoutD(&function, Integration)
+         << function.GetName() << " : Observable " << leaf.GetName()
+         << " has parameterized binning, add value dependence of boundary objects rather than shape of leaf"
+         << std::endl;
+      if (leaflv->getBinning(rangeName).lowBoundFunc()) {
+         serversToAdd.emplace_back(leaflv->getBinning(rangeName).lowBoundFunc(), false);
+      }
+      if (leaflv->getBinning(rangeName).highBoundFunc()) {
+         serversToAdd.emplace_back(leaflv->getBinning(rangeName).highBoundFunc(), false);
+      }
+   } else {
+      oocxcoutD(&function, Integration) << function.GetName() << ": Adding observable " << leaf.GetName()
+                                        << " as shape dependent" << std::endl;
+      serversToAdd.emplace_back(&leaf, true);
+   }
+}
+
+void addParameterToServers(RooAbsReal const &function, RooAbsArg &leaf, std::vector<ServerToAdd> &serversToAdd,
+                           bool isShapeServer)
+{
+   if (!isShapeServer) {
+      oocxcoutD(&function, Integration) << function.GetName() << ": Adding parameter " << leaf.GetName()
+                                        << " as value dependent" << std::endl;
+   } else {
+      oocxcoutD(&function, Integration) << function.GetName() << ": Adding parameter " << leaf.GetName()
+                                        << " as shape dependent" << std::endl;
+   }
+   serversToAdd.emplace_back(&leaf, isShapeServer);
+}
+
+enum class MarkedState { Dependent, Independent, AlreadyAdded };
+
+/// Mark all args that recursively are value clients of "dep".
+void unmarkDepValueClients(RooAbsArg const &dep, RooArgSet const &args, std::vector<MarkedState> &marked)
+{
+   assert(args.size() == marked.size());
+   auto index = args.index(dep);
+   if (index >= 0) {
+      marked[index] = MarkedState::Dependent;
+      for (RooAbsArg *client : dep.valueClients()) {
+         unmarkDepValueClients(*client, args, marked);
+      }
+   }
+}
+
+std::vector<ServerToAdd>
+getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList, const char *rangeName)
 {
    std::vector<ServerToAdd> serversToAdd;
 
+   // Get the full computation graph and sort it topologically
+   RooArgList allArgsList;
+   function.treeNodeServerList(&allArgsList, nullptr, true, true, /*valueOnly=*/false, false);
+   RooArgSet allArgs{allArgsList};
+   allArgs.sortTopologically();
+
+   // Figure out what are all the value servers only
+   RooArgList allValueArgsList;
+   function.treeNodeServerList(&allValueArgsList, nullptr, true, true, /*valueOnly=*/true, false);
+   RooArgSet allValueArgs{allValueArgsList};
+
+   // All "marked" args will be added as value servers to the integral
+   std::vector<MarkedState> marked(allArgs.size(), MarkedState::Independent);
+   marked.back() = MarkedState::Dependent; // We don't want to consider the function itself
+
+   // Mark all args that are (indirect) value servers of the integration
+   // variable or the integration variable itself. If something was marked,
+   // it means the integration variable was in the compute graph and we will
+   // add it to the server list.
+   for (RooAbsArg *dep : depList) {
+      if (RooAbsArg * depInArgs = allArgs.find(dep->GetName())) {
+         unmarkDepValueClients(*depInArgs, allArgs, marked);
+         addObservableToServers(function, *depInArgs, serversToAdd, rangeName);
+      }
+   }
+
+   // We are adding all independent direct servers of the args depending on the
+   // integration variables
+   for (std::size_t i = 0; i < allArgs.size(); ++i) {
+      if(marked[i] == MarkedState::Dependent) {
+         for(RooAbsArg* server : allArgs[i]->servers()) {
+            int index = allArgs.index(server->GetName());
+            if(index >= 0 && marked[index] == MarkedState::Independent) {
+               addParameterToServers(function, *server, serversToAdd, !allValueArgs.find(*server));
+               marked[index] = MarkedState::AlreadyAdded;
+            }
+         }
+      }
+   }
+
+   return serversToAdd;
+}
+
+void fillAnIntOKDepList(RooAbsReal const &function, RooArgSet const &intDepList, RooArgSet &anIntOKDepList)
+{
    for (const auto arg : function.servers()) {
 
       // Dependent or parameter?
       if (!arg->dependsOnValue(intDepList)) {
-
-         if (function.dependsOnValue(*arg)) {
-            serversToAdd.emplace_back(arg, false);
-         }
-
          continue;
-
-      } else {
-
-         // Add final dependents of arg as shape servers
-
+      } else if (!arg->isValueServer(function) && !arg->isShapeServer(function)) {
          // Skip arg if it is neither value or shape server
-         if (!arg->isValueServer(function) && !arg->isShapeServer(function)) {
-            continue;
-         }
-
-         // We keep track separately of all leaves and the leaves that are only
-         // value servers to `arg`, which in this code branch is always a value
-         // server of the original function. With the additional value-only server
-         // list, we can quicky check if a given leaf is also a value server to
-         // the top-level `function`, because if and only if `leaf` is a value
-         // server of `arg` is it also a value server of `function`. The expensive
-         // calls to `function.dependsOnValue(*leaf)` that were used before are
-         // avoided like this.
-         RooArgSet argLeafServers;
-         RooArgSet argLeafValueServers;
-         arg->treeNodeServerList(&argLeafServers, nullptr, false, true, /*valueOnly=*/false, false);
-         arg->treeNodeServerList(&argLeafValueServers, nullptr, false, true, /*valueOnly=*/true, false);
-
-         for (const auto leaf : argLeafServers) {
-
-            if (depList.find(leaf->GetName()) && argLeafValueServers.contains(*leaf)) {
-
-               auto *leaflv = dynamic_cast<RooAbsRealLValue *>(leaf);
-               if (leaflv && leaflv->getBinning(rangeName).isParameterized()) {
-                  oocxcoutD(&function, Integration)
-                     << function.GetName() << " : Observable " << leaf->GetName()
-                     << " has parameterized binning, add value dependence of boundary objects rather than shape of leaf"
-                     << endl;
-                  if (leaflv->getBinning(rangeName).lowBoundFunc()) {
-                     serversToAdd.emplace_back(leaflv->getBinning(rangeName).lowBoundFunc(), false);
-                  }
-                  if (leaflv->getBinning(rangeName).highBoundFunc()) {
-                     serversToAdd.emplace_back(leaflv->getBinning(rangeName).highBoundFunc(), false);
-                  }
-               } else {
-                  oocxcoutD(&function, Integration) << function.GetName() << ": Adding observable " << leaf->GetName()
-                                                    << " of server " << arg->GetName() << " as shape dependent" << endl;
-                  serversToAdd.emplace_back(leaf, true);
-               }
-            } else if (!depList.find(leaf->GetName())) {
-
-               if (argLeafValueServers.contains(*leaf)) {
-                  oocxcoutD(&function, Integration) << function.GetName() << ": Adding parameter " << leaf->GetName()
-                                                    << " of server " << arg->GetName() << " as value dependent" << endl;
-                  serversToAdd.emplace_back(leaf, false);
-               } else {
-                  oocxcoutD(&function, Integration) << function.GetName() << ": Adding parameter " << leaf->GetName()
-                                                    << " of server " << arg->GetName() << " as shape dependent" << endl;
-                  serversToAdd.emplace_back(leaf, true);
-               }
-            }
-         }
+         continue;
       }
-
-      // If this dependent arg is self-normalized, stop here
-      // if (function.selfNormalized()) continue ;
 
       bool depOK(false);
       // Check for integratable AbsRealLValue
@@ -179,14 +208,16 @@ std::vector<ServerToAdd> getValueAndShapeServers(RooAbsReal const &function, Roo
       if (depOK) {
          anIntOKDepList.add(*arg, true);
          oocxcoutI(&function, Integration) << function.GetName() << ": Observable " << arg->GetName()
-                                           << " is suitable for analytical integration (if supported by p.d.f)" << endl;
+                                           << " is suitable for analytical integration (if supported by p.d.f)"
+                                           << std::endl;
       }
    }
-
-   return serversToAdd;
 }
 
 } // namespace
+
+
+using namespace std;
 
 
 Int_t RooRealIntegral::_cacheAllNDim(2) ;
@@ -262,14 +293,12 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
   // Save private copy of funcNormSet, if supplied, excluding factorizing terms
   if (funcNormSet) {
-    _funcNormSet = new RooArgSet ;
+    _funcNormSet = std::make_unique<RooArgSet>();
     for (const auto nArg : *funcNormSet) {
       if (function.dependsOn(*nArg)) {
         _funcNormSet->addClone(*nArg) ;
       }
     }
-  } else {
-    _funcNormSet = 0 ;
   }
 
   //_funcNormSet = funcNormSet ? (RooArgSet*)funcNormSet->snapshot(false) : 0 ;
@@ -408,7 +437,8 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   //      Add all parameters/dependents as value/shape servers     *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-  auto serversToAdd = getValueAndShapeServers(function, depList, intDepList, rangeName, anIntOKDepList);
+  auto serversToAdd = getValueAndShapeServers(function, depList, rangeName);
+  fillAnIntOKDepList(function, intDepList, anIntOKDepList);
   // We will not add the servers just now, because it makes only sense to add
   // them once we have made sure that this integral is not operating in
   // pass-through mode. It will be done at the end of this constructor.
@@ -420,7 +450,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   RooArgSet anIntDepList ;
 
   RooArgSet anaSet{ _anaList, Form("UniqueCloneOf_%s",_anaList.GetName())};
-  _mode = function.getAnalyticalIntegralWN(anIntOKDepList,anaSet,_funcNormSet,RooNameReg::str(_rangeName)) ;
+  _mode = function.getAnalyticalIntegralWN(anIntOKDepList,anaSet,_funcNormSet.get(),RooNameReg::str(_rangeName)) ;
   _anaList.removeAll() ;
   _anaList.add(anaSet);
 
@@ -435,8 +465,8 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
   // WVE kludge: synchronize dset for use in analyticalIntegral
   // LM : I think this is needed only if  _funcNormSet is not an empty set
-  if (_funcNormSet && _funcNormSet->getSize() > 0) {
-    function.getVal(_funcNormSet) ;
+  if (_funcNormSet && !_funcNormSet->empty()) {
+    function.getVal(_funcNormSet.get()) ;
   }
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -663,10 +693,10 @@ bool RooRealIntegral::initNumIntegrator() const
   // Bind the appropriate analytic integral (specified by _mode) of our RooRealVar object to
   // those of its arguments that will be integrated out numerically.
   if(_mode != 0) {
-    _numIntegrand = std::make_unique<RooRealAnalytic>(*_function,_intList,_mode,_funcNormSet,_rangeName);
+    _numIntegrand = std::make_unique<RooRealAnalytic>(*_function,_intList,_mode,funcNormSet(),_rangeName);
   }
   else {
-    _numIntegrand = std::make_unique<RooRealBinding>(*_function,_intList,_funcNormSet,false,_rangeName);
+    _numIntegrand = std::make_unique<RooRealBinding>(*_function,_intList,funcNormSet(),false,_rangeName);
   }
   if(0 == _numIntegrand || !_numIntegrand->isValid()) {
     coutE(Integration) << ClassName() << "::" << GetName() << ": failed to create valid integrand." << std::endl;
@@ -716,7 +746,10 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _rangeName(other._rangeName),
   _cacheNum(false)
 {
- _funcNormSet = other._funcNormSet ? (RooArgSet*)other._funcNormSet->snapshot(false) : 0 ;
+ if(other._funcNormSet) {
+   _funcNormSet = std::make_unique<RooArgSet>();
+   other._funcNormSet->snapshot(*_funcNormSet, false);
+ }
 
  for (const auto arg : other._facList) {
    RooAbsArg* argClone = (RooAbsArg*) arg->Clone() ;
@@ -732,19 +765,12 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 RooRealIntegral::~RooRealIntegral()
-  // Destructor
 {
-  if (_funcNormSet) delete _funcNormSet ;
-
   TRACE_DESTROY
 }
-
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -768,7 +794,7 @@ RooAbsReal* RooRealIntegral::createIntegral(const RooArgSet& iset, const RooArgS
   if (nset && !_funcNormSet) {
     newNormSet = nset ;
   } else if (!nset && _funcNormSet) {
-    newNormSet = _funcNormSet ;
+    newNormSet = _funcNormSet.get();
   } else if (nset && _funcNormSet) {
     tmp = std::make_unique<RooArgSet>();
     tmp->add(*nset) ;
@@ -873,7 +899,7 @@ double RooRealIntegral::evaluate() const
     }
   case Analytic:
     {
-      retVal = _function->analyticalIntegralWN(_mode,_funcNormSet,RooNameReg::str(_rangeName)) / jacobianProduct() ;
+      retVal = _function->analyticalIntegralWN(_mode,_funcNormSet.get(),RooNameReg::str(_rangeName)) / jacobianProduct() ;
       cxcoutD(Tracing) << "RooRealIntegral::evaluate_analytic(" << GetName()
              << ")func = " << _function->ClassName() << "::" << _function->GetName()
              << " raw = " << retVal << " _funcNormSet = " << (_funcNormSet?*_funcNormSet:RooArgSet()) << std::endl ;
@@ -893,7 +919,7 @@ double RooRealIntegral::evaluate() const
       assert(servers().size() == _facList.size() + 1);
 
       //setDirtyInhibit(true) ;
-      retVal= _function->getVal(_funcNormSet) ;
+      retVal= _function->getVal(funcNormSet());
       //setDirtyInhibit(false) ;
       break ;
     }
@@ -906,7 +932,7 @@ double RooRealIntegral::evaluate() const
       // Multiply by fit range for 'real' dependents
       if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
         RooAbsRealLValue* argLV = (RooAbsRealLValue*)arg ;
-        retVal *= (argLV->getMax() - argLV->getMin()) ;
+        retVal *= (argLV->getMax(intRange()) - argLV->getMin(intRange())) ;
       }
       // Multiply by number of states for category dependents
       if (arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
@@ -948,9 +974,9 @@ double RooRealIntegral::jacobianProduct() const
     jacProd *= arg->jacobian() ;
   }
 
-  // Take fabs() here: if jacobian is negative, min and max are swapped and analytical integral
+  // Take std::abs() here: if jacobian is negative, min and max are swapped and analytical integral
   // will be positive, so must multiply with positive jacobian.
-  return fabs(jacProd) ;
+  return std::abs(jacProd) ;
 }
 
 
@@ -989,7 +1015,7 @@ double RooRealIntegral::integrate() const
 {
   if (!_numIntEngine) {
     // Trivial case, fully analytical integration
-    return _function->analyticalIntegralWN(_mode,_funcNormSet,RooNameReg::str(_rangeName)) ;
+    return _function->analyticalIntegralWN(_mode,_funcNormSet.get(),RooNameReg::str(_rangeName)) ;
   } else {
     return _numIntEngine->calculate()  ;
   }
@@ -1135,10 +1161,4 @@ void RooRealIntegral::setCacheAllNumeric(Int_t ndim) {
 Int_t RooRealIntegral::getCacheAllNumeric()
 {
   return _cacheAllNDim ;
-}
-
-
-std::unique_ptr<RooArgSet> RooRealIntegral::fillNormSetForServer(RooArgSet const& /*normSet*/,
-                                                                 RooAbsArg const& /*server*/) const {
-  return _funcNormSet ? std::make_unique<RooArgSet>(*_funcNormSet) : nullptr;
 }

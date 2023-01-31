@@ -86,7 +86,7 @@ public:
 
   virtual double* array() const = 0 ;
 
-  inline void Print(Option_t *options= 0) const override {
+  inline void Print(Option_t *options= nullptr) const override {
     // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
@@ -104,11 +104,11 @@ public:
   }
   /// Return pointer to RooAbsReal parameterized lower bound, if any.
   virtual RooAbsReal* lowBoundFunc() const {
-    return 0 ;
+    return nullptr ;
   }
   /// Return pointer to RooAbsReal parameterized upper bound, if any.
   virtual RooAbsReal* highBoundFunc() const {
-    return 0 ;
+    return nullptr ;
   }
   /// If true (default), the range definition can be shared across clones of a RooRealVar.
   virtual bool isShareable() const {

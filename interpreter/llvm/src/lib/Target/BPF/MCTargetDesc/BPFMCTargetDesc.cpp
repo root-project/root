@@ -46,7 +46,7 @@ static MCRegisterInfo *createBPFMCRegisterInfo(const Triple &TT) {
 
 static MCSubtargetInfo *createBPFMCSubtargetInfo(const Triple &TT,
                                                  StringRef CPU, StringRef FS) {
-  return createBPFMCSubtargetInfoImpl(TT, CPU, FS);
+  return createBPFMCSubtargetInfoImpl(TT, CPU, /*TuneCPU*/ CPU, FS);
 }
 
 static MCStreamer *createBPFMCStreamer(const Triple &T, MCContext &Ctx,
@@ -97,7 +97,7 @@ static MCInstrAnalysis *createBPFInstrAnalysis(const MCInstrInfo *Info) {
   return new BPFMCInstrAnalysis(Info);
 }
 
-extern "C" void LLVMInitializeBPFTargetMC() {
+extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeBPFTargetMC() {
   for (Target *T :
        {&getTheBPFleTarget(), &getTheBPFbeTarget(), &getTheBPFTarget()}) {
     // Register the MC asm info.

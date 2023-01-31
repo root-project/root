@@ -149,7 +149,7 @@ TXMLPlayer::~TXMLPlayer()
 
 TString TXMLPlayer::GetStreamerName(TClass *cl)
 {
-   if (cl == 0)
+   if (!cl)
       return "";
    TString res = cl->GetName();
    res += "_streamer";
@@ -166,7 +166,7 @@ TString TXMLPlayer::GetStreamerName(TClass *cl)
 
 Bool_t TXMLPlayer::ProduceCode(TList *cllist, const char *filename)
 {
-   if ((cllist == 0) || (filename == 0))
+   if (!cllist || !filename)
       return kFALSE;
 
    std::ofstream fh(TString(filename) + ".h");
@@ -185,9 +185,9 @@ Bool_t TXMLPlayer::ProduceCode(TList *cllist, const char *filename)
 
    TObjArray inclfiles;
    TIter iter(cllist);
-   TClass *cl = 0;
-   while ((cl = (TClass *)iter()) != 0) {
-      if (inclfiles.FindObject(cl->GetDeclFileName()) == 0) {
+   TClass *cl = nullptr;
+   while ((cl = (TClass *)iter()) != nullptr) {
+      if (!inclfiles.FindObject(cl->GetDeclFileName())) {
          fs << "#include \"" << cl->GetDeclFileName() << "\"" << std::endl;
          inclfiles.Add(new TNamed(cl->GetDeclFileName(), ""));
       }
@@ -201,7 +201,7 @@ Bool_t TXMLPlayer::ProduceCode(TList *cllist, const char *filename)
 
    iter.Reset();
 
-   while ((cl = (TClass *)iter()) != 0) {
+   while ((cl = (TClass *)iter()) != nullptr) {
 
       fh << "extern void* " << GetStreamerName(cl) << "(" << names_xmlfileclass
          << " &buf, void* ptr = 0, bool checktypes = true);" << std::endl
@@ -221,7 +221,7 @@ Bool_t TXMLPlayer::ProduceCode(TList *cllist, const char *filename)
 
 TString TXMLPlayer::GetMemberTypeName(TDataMember *member)
 {
-   if (member == 0)
+   if (!member)
       return "int";
 
    if (member->IsBasic())
@@ -307,7 +307,7 @@ TString TXMLPlayer::GetBasicTypeReaderMethodName(Int_t type, const char *realnam
    case TVirtualStreamerInfo::kDouble: return "ReadDouble";
    case TVirtualStreamerInfo::kUChar: {
       Bool_t isbool = false;
-      if (realname != 0)
+      if (realname)
          isbool = (TString(realname).Index("bool", 0, TString::kIgnoreCase) >= 0);
       if (isbool)
          return "ReadBool";
@@ -332,15 +332,15 @@ TString TXMLPlayer::GetBasicTypeReaderMethodName(Int_t type, const char *realnam
 
 const char *TXMLPlayer::ElementGetter(TClass *cl, const char *membername, int specials)
 {
-   TClass *membercl = cl ? cl->GetBaseDataMember(membername) : 0;
-   TDataMember *member = membercl ? membercl->GetDataMember(membername) : 0;
-   TMethodCall *mgetter = member ? member->GetterMethod(0) : 0;
+   TClass *membercl = cl ? cl->GetBaseDataMember(membername) : nullptr;
+   TDataMember *member = membercl ? membercl->GetDataMember(membername) : nullptr;
+   TMethodCall *mgetter = member ? member->GetterMethod(nullptr) : nullptr;
 
-   if ((mgetter != 0) && (mgetter->GetMethod()->Property() & kIsPublic)) {
+   if (mgetter && (mgetter->GetMethod()->Property() & kIsPublic)) {
       fGetterName = "obj->";
       fGetterName += mgetter->GetMethodName();
       fGetterName += "()";
-   } else if ((member == 0) || ((member->Property() & kIsPublic) != 0)) {
+   } else if (!member || ((member->Property() & kIsPublic) != 0)) {
       fGetterName = "obj->";
       fGetterName += membername;
    } else {
@@ -365,7 +365,7 @@ const char *TXMLPlayer::ElementGetter(TClass *cl, const char *membername, int sp
       specials = 0;
    }
 
-   if ((specials == 1) && (member != 0)) {
+   if ((specials == 1) && member) {
       TString cast = "(";
       cast += GetMemberTypeName(member);
       if (member->IsaPointer() || (member->GetArrayDim() > 0))
@@ -375,7 +375,7 @@ const char *TXMLPlayer::ElementGetter(TClass *cl, const char *membername, int sp
       fGetterName = cast;
    }
 
-   if ((specials == 2) && (member != 0)) {
+   if ((specials == 2) && member) {
       TString buf = "&(";
       buf += fGetterName;
       buf += ")";
@@ -393,16 +393,16 @@ const char *TXMLPlayer::ElementSetter(TClass *cl, const char *membername, char *
 {
    strcpy(endch, ""); // NOLINT
 
-   TClass *membercl = cl ? cl->GetBaseDataMember(membername) : 0;
-   TDataMember *member = membercl ? membercl->GetDataMember(membername) : 0;
-   TMethodCall *msetter = member ? member->SetterMethod(cl) : 0;
+   TClass *membercl = cl ? cl->GetBaseDataMember(membername) : nullptr;
+   TDataMember *member = membercl ? membercl->GetDataMember(membername) : nullptr;
+   TMethodCall *msetter = member ? member->SetterMethod(cl) : nullptr;
 
-   if ((msetter != 0) && (msetter->GetMethod()->Property() & kIsPublic)) {
+   if (msetter && (msetter->GetMethod()->Property() & kIsPublic)) {
       fSetterName = "obj->";
       fSetterName += msetter->GetMethodName();
       fSetterName += "(";
       strcpy(endch, ")"); // NOLINT
-   } else if ((member == 0) || (member->Property() & kIsPublic) != 0) {
+   } else if (!member || (member->Property() & kIsPublic) != 0) {
       fSetterName = "obj->";
       fSetterName += membername;
       fSetterName += " = ";
@@ -428,11 +428,11 @@ const char *TXMLPlayer::ElementSetter(TClass *cl, const char *membername, char *
 
 void TXMLPlayer::ProduceStreamerSource(std::ostream &fs, TClass *cl, TList *cllist)
 {
-   if (cl == 0)
+   if (!cl)
       return;
    TVirtualStreamerInfo *info = cl->GetStreamerInfo();
    TObjArray *elements = info->GetElements();
-   if (elements == 0)
+   if (!elements)
       return;
 
    fs << "//__________________________________________________________________________" << std::endl;
@@ -444,13 +444,13 @@ void TXMLPlayer::ProduceStreamerSource(std::ostream &fs, TClass *cl, TList *clli
    fs << tab1 << "if (buf.IsReading()) { " << std::endl;
 
    TIter iter(cllist);
-   TClass *c1 = 0;
+   TClass *c1 = nullptr;
    Bool_t firstchild = true;
 
-   while ((c1 = (TClass *)iter()) != 0) {
+   while ((c1 = (TClass *)iter()) != nullptr) {
       if (c1 == cl)
          continue;
-      if (c1->GetListOfBases()->FindObject(cl->GetName()) == 0)
+      if (!c1->GetListOfBases()->FindObject(cl->GetName()))
          continue;
       if (firstchild) {
          fs << tab2 << "if (checktypes) {" << std::endl;
@@ -474,7 +474,7 @@ void TXMLPlayer::ProduceStreamerSource(std::ostream &fs, TClass *cl, TList *clli
    for (n = 0; n <= elements->GetLast(); n++) {
 
       TStreamerElement *el = dynamic_cast<TStreamerElement *>(elements->At(n));
-      if (el == 0)
+      if (!el)
          continue;
 
       Int_t typ = el->GetType();
@@ -499,7 +499,7 @@ void TXMLPlayer::ProduceStreamerSource(std::ostream &fs, TClass *cl, TList *clli
       case TVirtualStreamerInfo::kCounter: {
          char endch[5];
          fs << tab2 << ElementSetter(cl, el->GetName(), endch);
-         fs << "buf." << GetBasicTypeReaderMethodName(el->GetType(), 0) << "(\"" << el->GetName() << "\")" << endch
+         fs << "buf." << GetBasicTypeReaderMethodName(el->GetType(), nullptr) << "(\"" << el->GetName() << "\")" << endch
             << ";" << std::endl;
          continue;
       }
@@ -542,7 +542,7 @@ void TXMLPlayer::ProduceStreamerSource(std::ostream &fs, TClass *cl, TList *clli
       case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kULong64:
       case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kDouble32: {
          TStreamerBasicPointer *elp = dynamic_cast<TStreamerBasicPointer *>(el);
-         if (elp == 0) {
+         if (!elp) {
             std::cout << "fatal error with TStreamerBasicPointer" << std::endl;
             continue;
          }
@@ -624,7 +624,7 @@ void TXMLPlayer::ProduceStreamerSource(std::ostream &fs, TClass *cl, TList *clli
       case TVirtualStreamerInfo::kSTLp + TVirtualStreamerInfo::kOffsetL:
       case TVirtualStreamerInfo::kSTL + TVirtualStreamerInfo::kOffsetL: {
          TStreamerSTL *elstl = dynamic_cast<TStreamerSTL *>(el);
-         if (elstl == 0)
+         if (!elstl)
             break; // to make skip
 
          if (ProduceSTLstreamer(fs, cl, elstl, false))
@@ -648,10 +648,10 @@ void TXMLPlayer::ProduceStreamerSource(std::ostream &fs, TClass *cl, TList *clli
 
    firstchild = true;
    iter.Reset();
-   while ((c1 = (TClass *)iter()) != 0) {
+   while ((c1 = (TClass *)iter()) != nullptr) {
       if (c1 == cl)
          continue;
-      if (c1->GetListOfBases()->FindObject(cl->GetName()) == 0)
+      if (!c1->GetListOfBases()->FindObject(cl->GetName()))
          continue;
       if (firstchild) {
          firstchild = false;
@@ -669,7 +669,7 @@ void TXMLPlayer::ProduceStreamerSource(std::ostream &fs, TClass *cl, TList *clli
    for (n = 0; n <= elements->GetLast(); n++) {
 
       TStreamerElement *el = dynamic_cast<TStreamerElement *>(elements->At(n));
-      if (el == 0)
+      if (!el)
          continue;
 
       Int_t typ = el->GetType();
@@ -738,7 +738,7 @@ void TXMLPlayer::ProduceStreamerSource(std::ostream &fs, TClass *cl, TList *clli
       case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kULong64:
       case TVirtualStreamerInfo::kOffsetP + TVirtualStreamerInfo::kDouble32: {
          TStreamerBasicPointer *elp = dynamic_cast<TStreamerBasicPointer *>(el);
-         if (elp == 0) {
+         if (!elp) {
             std::cout << "fatal error with TStreamerBasicPointer" << std::endl;
             continue;
          }
@@ -806,7 +806,7 @@ void TXMLPlayer::ProduceStreamerSource(std::ostream &fs, TClass *cl, TList *clli
       case TVirtualStreamerInfo::kSTLp:
       case TVirtualStreamerInfo::kSTL: {
          TStreamerSTL *elstl = dynamic_cast<TStreamerSTL *>(el);
-         if (elstl == 0)
+         if (!elstl)
             break; // to make skip
 
          if (ProduceSTLstreamer(fs, cl, elstl, true))
@@ -942,7 +942,7 @@ void TXMLPlayer::WriteSTLarg(std::ostream &fs, const char *accname, int argtyp, 
 
 Bool_t TXMLPlayer::ProduceSTLstreamer(std::ostream &fs, TClass *cl, TStreamerSTL *el, Bool_t isWriting)
 {
-   if ((cl == 0) || (el == 0))
+   if (!cl || !el)
       return false;
 
    TClass *contcl = el->GetClassPointer();
@@ -986,7 +986,7 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(std::ostream &fs, TClass *cl, TStreamerSTL
       for (int n = 0; n < narg; n++) {
          argtype[n] = -1;
          isargptr[n] = false;
-         argcl[n] = 0;
+         argcl[n] = nullptr;
          argtname[n] = "";
 
          TString buf = splitName[n + 1];
@@ -1021,7 +1021,7 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(std::ostream &fs, TClass *cl, TStreamerSTL
             argtype[n] = TVirtualStreamerInfo::kSTLstring;
          else {
             argcl[n] = TClass::GetClass(buf);
-            if (argcl[n] != 0)
+            if (argcl[n])
                argtype[n] = TVirtualStreamerInfo::kObject;
          }
          if (argtype[n] < 0)

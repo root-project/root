@@ -1507,9 +1507,6 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
          height = pic1->GetHeight();
          ypic1 = y;
       } else {
-#ifdef R__HAS_COCOA
-         if (!pic2)//DO NOT MODIFY ytext, it WAS ADJUSTED already!
-#endif
          ytext = y;
          ypic1 = y + (Int_t)((height - pic1->GetHeight()) >> 1);
       }

@@ -132,7 +132,7 @@ namespace TMVA {
       void InitCells();                   // Initialisation of all foam cells
       Int_t CellFill(Int_t, PDEFoamCell*);// Allocates new empty cell and return its index
       virtual void Explore(PDEFoamCell *Cell); // Exploration of the new cell, determine <wt>, wtMax etc.
-      void Varedu(Double_t [], Int_t&, Double_t&,Double_t&); // Determines the best edge, variance reduction
+      void Varedu(Double_t [5], Int_t&, Double_t&,Double_t&); // Determines the best edge, variance reduction
       void MakeAlpha();             // Provides random point inside hyperrectangle
       void Grow();                  // build up foam
       Long_t PeekMax();             // peek cell with max. driver integral
@@ -243,10 +243,10 @@ namespace TMVA {
 
       // project foam to two-dimensional histogram
       virtual TH2D* Project2(Int_t idim1, Int_t idim2, ECellValue cell_value=kValue,
-                             PDEFoamKernelBase *kernel=NULL, UInt_t nbin=50);
+                             PDEFoamKernelBase *kernel=nullptr, UInt_t nbin=50);
 
       // Project one-dimensional foam to a 1-dim histogram
-      TH1D* Draw1Dim(ECellValue cell_value, Int_t nbin, PDEFoamKernelBase *kernel=NULL);
+      TH1D* Draw1Dim(ECellValue cell_value, Int_t nbin, PDEFoamKernelBase *kernel=nullptr);
 
       // Generates C++ code (root macro) for drawing foam with boxes (only 2-dim!)
       void RootPlot2dim( const TString& filename, TString opt,

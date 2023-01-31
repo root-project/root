@@ -84,11 +84,11 @@ class TUnfoldBinning : public TNamed {
       /// maximum numner of axes per distribution
       MAXDIM=32
    };
-   TUnfoldBinning(const char *name=0,Int_t nBins=0,const char *binNames=0); // create a new root node with a given number of unconnected bins
+   TUnfoldBinning(const char *name=nullptr,Int_t nBins=0,const char *binNames=nullptr); // create a new root node with a given number of unconnected bins
    TUnfoldBinning(const TAxis &axis,Int_t includeUnderflow,Int_t includeOverflow); // create a binning scheme with one axis
    TUnfoldBinning *AddBinning
       (TUnfoldBinning *binning); // add a new node to the TUnfoldBinning tree
-   TUnfoldBinning *AddBinning(const char *name,Int_t nBins=0,const char *binNames=0); // add a new node to the TUnfoldBinning tree
+   TUnfoldBinning *AddBinning(const char *name,Int_t nBins=0,const char *binNames=nullptr); // add a new node to the TUnfoldBinning tree
    Bool_t AddAxis(const char *name,Int_t nBins,const Double_t *binBorders,
                 Bool_t hasUnderflow,Bool_t hasOverflow); // add an axis (variable bins) to the distribution associated with this node
    Bool_t AddAxis(const char *name,Int_t nBins,Double_t xMin,Double_t xMax,
@@ -96,7 +96,7 @@ class TUnfoldBinning : public TNamed {
    Bool_t AddAxis(const TAxis &axis,Bool_t includeUnderflow,Bool_t includeOverflow); // add an axis (from TAxis instance) to the distribution associated with this node
    ~TUnfoldBinning(void) override;
    void PrintStream(std::ostream &out,Int_t indent=0,int debug=0) const;
-   void SetBinFactorFunction(Double_t normalisation,TF1 *userFunc=0); // define function to calculate bin factor. Note: the function is not owned by this class
+   void SetBinFactorFunction(Double_t normalisation,TF1 *userFunc=nullptr); // define function to calculate bin factor. Note: the function is not owned by this class
 
    /********************* Navigation **********************/
    /// first daughter node
@@ -112,16 +112,16 @@ class TUnfoldBinning : public TNamed {
    TUnfoldBinning const *GetRootNode(void) const;
 
    /********************* Create THxx histograms **********/
-   Int_t GetTH1xNumberOfBins(Bool_t originalAxisBinning=kTRUE,const char *axisSteering=0) const; // get number of bins of a one-dimensional histogram TH1
-   TH1 *CreateHistogram(const char *histogramName,Bool_t originalAxisBinning=kFALSE,Int_t **binMap=0,const char *histogramTitle=0,const char *axisSteering=0) const; // create histogram and bin map for this node
-   TH2D *CreateErrorMatrixHistogram(const char *histogramName,Bool_t originalAxisBinning,Int_t **binMap=0,const char *histogramTitle=0,const char *axisSteering=0) const; // create histogram and bin map for this node
+   Int_t GetTH1xNumberOfBins(Bool_t originalAxisBinning=kTRUE,const char *axisSteering=nullptr) const; // get number of bins of a one-dimensional histogram TH1
+   TH1 *CreateHistogram(const char *histogramName,Bool_t originalAxisBinning=kFALSE,Int_t **binMap=nullptr,const char *histogramTitle=nullptr,const char *axisSteering=nullptr) const; // create histogram and bin map for this node
+   TH2D *CreateErrorMatrixHistogram(const char *histogramName,Bool_t originalAxisBinning,Int_t **binMap=nullptr,const char *histogramTitle=nullptr,const char *axisSteering=nullptr) const; // create histogram and bin map for this node
    static TH2D *CreateHistogramOfMigrations(TUnfoldBinning const *xAxis,
                                            TUnfoldBinning const *yAxis,
                                            char const *histogramName,
                                            Bool_t originalXAxisBinning=kFALSE,
                                            Bool_t originalYAxisBinning=kFALSE,
-                                           char const *histogramTitle=0); // create 2D histogram with one binning on the x axis and the other binning on the y axis
-   TH1 *ExtractHistogram(const char *histogramName,const TH1 *globalBins,const TH2 *globalBinsEmatrix=0,Bool_t originalAxisBinning=kTRUE,const char *axisSteering=0) const; // extract a distribution from the given set of global bins
+                                           char const *histogramTitle=nullptr); // create 2D histogram with one binning on the x axis and the other binning on the y axis
+   TH1 *ExtractHistogram(const char *histogramName,const TH1 *globalBins,const TH2 *globalBinsEmatrix=nullptr,Bool_t originalAxisBinning=kTRUE,const char *axisSteering=nullptr) const; // extract a distribution from the given set of global bins
    /********************* Create and manipulate bin map ****/
    Int_t *CreateEmptyBinMap(void) const; // create empty bin map
    void SetBinMapEntry(Int_t *binMap,Int_t globalBin,Int_t destBin) const; // change mapping for a given global bin
@@ -134,7 +134,7 @@ class TUnfoldBinning : public TNamed {
    Int_t GetGlobalBinNumber(Double_t x0,Double_t x1,Double_t x2,Double_t x3) const; // get bin number four-dimensional binning
    Int_t GetGlobalBinNumber(Double_t x0,Double_t x1,Double_t x2,Double_t x3,Double_t x4) const; // get bin number five-dimensional binning
    Int_t GetGlobalBinNumber(Double_t x0,Double_t x1,Double_t x2,Double_t x3,Double_t x4,Double_t x5) const; // get bin number six-dimensional binning
-   Int_t GetGlobalBinNumber(const Double_t *x,Int_t *isBelow=0,Int_t *isAbove=0) const; // get bin number, up to 32 dimensional binning 
+   Int_t GetGlobalBinNumber(const Double_t *x,Int_t *isBelow=nullptr,Int_t *isAbove=nullptr) const; // get bin number, up to 32 dimensional binning
    /// first bin of this node
    inline Int_t GetStartBin(void) const { return fFirstBin; }
    /// last+1 bin of this node (includes children)
@@ -181,7 +181,7 @@ class TUnfoldBinning : public TNamed {
    void Initialize(Int_t nBins);
    Int_t UpdateFirstLastBin(Bool_t startWithRootNode=kTRUE); // update fFirstBin and fLastBin
    TUnfoldBinning const *ToAxisBins(Int_t globalBin,Int_t *axisBins) const; // return distribution in which the bin is located
-   Int_t ToGlobalBin(Int_t const *axisBins,Int_t *isBelow=0,Int_t *isAbove=0) const; // return -1 if not inside distribution
+   Int_t ToGlobalBin(Int_t const *axisBins,Int_t *isBelow=nullptr,Int_t *isAbove=nullptr) const; // return -1 if not inside distribution
    TString BuildHistogramTitle(const char *histogramName,const char *histogramTitle,
                                Int_t const *axisList) const; // construct histogram title
    TString BuildHistogramTitle2D(const char *histogramName,const char *histogramTitle,

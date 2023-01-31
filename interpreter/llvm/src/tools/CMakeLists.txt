@@ -9,14 +9,6 @@
 # traversing each directory.
 create_llvm_tool_options()
 
-# Build polly before the tools: the tools link against polly when
-# LINK_POLLY_INTO_TOOLS is set.
-if(WITH_POLLY)
-  add_llvm_external_project(polly)
-else()
-  set(LLVM_TOOL_POLLY_BUILD Off)
-endif()
-
 if(NOT LLVM_BUILD_LLVM_DYLIB AND NOT LLVM_BUILD_LLVM_C_DYLIB)
   set(LLVM_TOOL_LLVM_SHLIB_BUILD Off)
 endif()
@@ -42,13 +34,17 @@ add_llvm_tool_subdirectory(llvm-profdata)
 # Projects supported via LLVM_EXTERNAL_*_SOURCE_DIR need to be explicitly
 # specified.
 add_llvm_external_project(clang)
-add_llvm_external_project(llgo)
 add_llvm_external_project(lld)
 add_llvm_external_project(lldb)
+add_llvm_external_project(mlir)
+# Flang depends on mlir, so place it afterward
+add_llvm_external_project(flang)
 
 # Automatically add remaining sub-directories containing a 'CMakeLists.txt'
 # file as external projects.
 add_llvm_implicit_projects()
+
+add_llvm_external_project(polly)
 
 # Add subprojects specified using LLVM_EXTERNAL_PROJECTS
 foreach(p ${LLVM_EXTERNAL_PROJECTS})

@@ -40,7 +40,7 @@ protected:
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final
    {
       auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
-      return fPageAllocator.NewPage(columnHandle.fId, elementSize, nElements);
+      return fPageAllocator.NewPage(columnHandle.fPhysicalId, elementSize, nElements);
    }
    void ReleasePage(RPage &page) final { fPageAllocator.DeletePage(page); }
 
@@ -344,7 +344,7 @@ TEST(RPageSinkBuf, Basics)
    for (std::size_t i = 0; i < num_columns; i++) {
       const auto &columnPages = cluster0.GetPageRange(i);
       for (const auto &page: columnPages.fPageInfos) {
-         pagePositions.push_back(std::make_pair(i, page.fLocator.fPosition));
+         pagePositions.push_back(std::make_pair(i, page.fLocator.GetPosition<std::uint64_t>()));
       }
    }
 

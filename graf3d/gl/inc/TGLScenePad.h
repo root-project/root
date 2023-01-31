@@ -63,7 +63,7 @@ public:
    void SetPad(TVirtualPad* p) { fPad = p; }
 
    // Histo import and Sub-pad traversal
-   void AddHistoPhysical(TGLLogicalShape* log, const Float_t *histColor = 0);
+   void AddHistoPhysical(TGLLogicalShape* log, const Float_t *histColor = nullptr);
    void SubPadPaint(TVirtualPad* pad);
 
    // PadPaint wrapper for calls from TGLViewer:
@@ -89,9 +89,9 @@ public:
    virtual Bool_t BuildingScene() const { return CurrentLock() == kModifyLock; }
    virtual void   EndScene();
 
-   virtual Int_t  AddObject(const TBuffer3D& buffer, Bool_t* addChildren = 0);
-   virtual Int_t  AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t* addChildren = 0);
-   virtual Bool_t OpenComposite(const TBuffer3D& buffer, Bool_t* addChildren = 0);
+   virtual Int_t  AddObject(const TBuffer3D& buffer, Bool_t* addChildren = nullptr);
+   virtual Int_t  AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t* addChildren = nullptr);
+   virtual Bool_t OpenComposite(const TBuffer3D& buffer, Bool_t* addChildren = nullptr);
    virtual void   CloseComposite();
    virtual void   AddCompositeOp(UInt_t operation);
 

@@ -12,7 +12,7 @@ if(MSVC)
     # Try to remove those lines when upgrading Visual Studio
     string(REPLACE "-Od -Z7" "-O2" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
   endif()
-  if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set_source_files_properties(constructors.cxx COMPILE_FLAGS "/bigobj")
   endif()
 endif()

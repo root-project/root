@@ -2,6 +2,7 @@
 
 ;; Keywords: tools, c
 ;; Package-Requires: ((cl-lib "0.3"))
+;; SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 ;;; Commentary:
 
@@ -55,6 +56,18 @@ of the buffer."
   :type '(choice (string) (const nil))
   :safe #'stringp)
 (make-variable-buffer-local 'clang-format-style)
+
+(defcustom clang-format-fallback-style "none"
+  "Fallback style to pass to clang-format.
+
+This style will be used if clang-format-style is set to \"file\"
+and no .clang-format is found in the directory of the buffer or
+one of parent directories. Set to \"none\" to disable formatting
+in such buffers."
+  :group 'clang-format
+  :type 'string
+  :safe #'stringp)
+(make-variable-buffer-local 'clang-format-fallback-style)
 
 (defun clang-format--extract (xml-node)
   "Extract replacements and cursor information from XML-NODE."
@@ -161,6 +174,7 @@ uses the function `buffer-file-name'."
                                ,@(and assume-file-name
                                       (list "-assume-filename" assume-file-name))
                                ,@(and style (list "-style" style))
+                               "-fallback-style" ,clang-format-fallback-style
                                "-offset" ,(number-to-string file-start)
                                "-length" ,(number-to-string (- file-end file-start))
                                "-cursor" ,(number-to-string cursor))))

@@ -58,7 +58,7 @@ public:
   /// Return dataset with generator parameters for each toy. When constraints are used these
   /// may generally not be the same as the fitted parameters.
   const RooDataSet* genParDataSet() const {
-    return _genParData ;
+    return _genParData.get();
   }
 
   // Plot methods
@@ -106,27 +106,27 @@ protected:
 
   RooAbsData*       _genSample ;       ///< Currently generated sample
   RooAbsPdf*        _genModel ;        ///< Generator model
-  RooAbsGenContext* _genContext ;      ///< Generator context
-  RooArgSet*        _genInitParams ;   ///< List of original generator parameters
-  RooArgSet*        _genParams ;       ///< List of actual generator parameters
+  std::unique_ptr<RooAbsGenContext> _genContext;      ///< Generator context
+  RooArgSet        _genInitParams;   ///< List of original generator parameters
+  RooArgSet        _genParams;       ///< List of actual generator parameters
   const RooDataSet* _genProtoData ;    ///< Generator prototype data set
   RooArgSet         _projDeps ;        ///< List of projected dependents in fit
 
-  RooAbsPdf*        _constrPdf ;        ///< Constraints p.d.f
-  RooAbsGenContext* _constrGenContext ; ///< Generator context for constraints p.d.f
+  std::unique_ptr<RooAbsPdf>        _constrPdf;        ///< Constraints p.d.f
+  std::unique_ptr<RooAbsGenContext> _constrGenContext; ///< Generator context for constraints p.d.f
 
   RooArgSet    _dependents ;    ///< List of dependents
   RooArgSet    _allDependents ; ///< List of generate + prototype dependents
   RooAbsPdf*   _fitModel ;      ///< Fit model
-  RooArgSet*   _fitInitParams ; ///< List of initial values of fit parameters
-  RooArgSet*   _fitParams ;     ///< List of actual fit parameters
-  RooRealVar*  _nllVar ;
-  RooRealVar*  _ngenVar ;
+  RooArgSet   _fitInitParams; ///< List of initial values of fit parameters
+  RooArgSet   _fitParams;     ///< List of actual fit parameters
+  std::unique_ptr<RooRealVar>  _nllVar;
+  std::unique_ptr<RooRealVar>  _ngenVar;
 
   TList       _genDataList ;    // List of generated data sample
   TList       _fitResList ;     // List of RooFitResult fit output objects
-  RooDataSet* _genParData ;     // List of of generated parameters of each sample
-  RooDataSet* _fitParData ;     // Data set of fit parameters of each sample
+  std::unique_ptr<RooDataSet> _genParData;     // List of generated parameters of each sample
+  std::unique_ptr<RooDataSet> _fitParData;     // Data set of fit parameters of each sample
   RooLinkedList _fitOptList ;   // Fit option command list
   bool      _extendedGen ;    // Add poisson term to number of events to generate?
   bool      _binGenData ;     // Bin data between generating and fitting
@@ -135,7 +135,7 @@ protected:
 
   bool      _canAddFitResults ; ///< Allow adding of external fit results?
   bool      _verboseGen       ; ///< Verbose generation?
-  bool      _perExptGenParams ; ///< Do generation parameter change per event?
+  bool      _perExptGenParams = false; ///< Do generation parameter change per event?
   bool      _silence          ; ///< Silent running mode?
 
   std::list<RooAbsMCStudyModule*> _modList ; ///< List of additional study modules ;

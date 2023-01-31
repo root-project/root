@@ -132,8 +132,8 @@ public:
    void     Browse(TBrowser* b) override;
    void     Clear(Option_t *option="") override; // *MENU*
    void     Draw(Option_t * ="d") override { }
-   virtual Double_t Eval(const Double_t *x, const Double_t *coeff=0) const;
-   virtual Double_t EvalError(const Double_t *x, const Double_t *coeff=0) const;
+   virtual Double_t Eval(const Double_t *x, const Double_t *coeff = nullptr) const;
+   virtual Double_t EvalError(const Double_t *x, const Double_t *coeff = nullptr) const;
    virtual void     FindParameterization(Option_t* option=""); // *MENU*
    virtual void     Fit(Option_t *option=""); // *MENU*
 
@@ -186,7 +186,7 @@ public:
 
    static TMultiDimFit* Instance();
    Bool_t   IsFolder()             const override { return kTRUE; }
-   virtual Double_t MakeChi2(const Double_t* coeff=0);
+   virtual Double_t MakeChi2(const Double_t* coeff = nullptr);
    virtual void     MakeCode(const char *functionName="MDF", Option_t *option=""); // *MENU*
    virtual void     MakeHistograms(Option_t* option="A"); // *MENU*
    virtual void     MakeMethod(const Char_t* className="MDF", Option_t* option=""); // *MENU*

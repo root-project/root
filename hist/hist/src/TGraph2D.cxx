@@ -57,12 +57,12 @@ Graphics object made of three arrays X, Y and Z with the same number of points e
 This class has different constructors:
 - With an array's dimension and three arrays x, y, and z:
 ~~~ {.cpp}
-     TGraph2D *g = new TGraph2D(n, x, y, z);
+     auto g = new TGraph2D(n, x, y, z);
 ~~~
    x, y, z arrays can be doubles, floats, or ints.
 - With an array's dimension only:
 ~~~ {.cpp}
-     TGraph2D *g = new TGraph2D(n);
+     auto g = new TGraph2D(n);
 ~~~
    The internal arrays are then filled with `SetPoint()`. The following line
    fills the internal arrays at the position `i` with the values
@@ -72,12 +72,12 @@ This class has different constructors:
 ~~~
 - Without parameters:
 ~~~ {.cpp}
-     TGraph2D *g = new TGraph2D();
+     auto g = new TGraph2D();
 ~~~
    again `SetPoint()` must be used to fill the internal arrays.
 -  From a file:
 ~~~ {.cpp}
-     TGraph2D *g = new TGraph2D("graph.dat");
+     auto g = new TGraph2D("graph.dat");
 ~~~
    Arrays are read from the ASCII file "graph.dat" according to a specifies
    format. The default format is `%%lg %%lg %%lg`
@@ -134,7 +134,7 @@ the GetXaxis GetYaxis and GetZaxis methods. They access the histogram axis creat
 at drawing time only. Therefore they should called after the TGraph2D is drawn:
 
 ~~~ {.cpp}
-     TGraph2D *g = new TGraph2D();
+     auto g = new TGraph2D();
 
      [...]
 
@@ -151,12 +151,12 @@ at drawing time only. Therefore they should called after the TGraph2D is drawn:
 
 Begin_Macro(source)
 {
-   TCanvas *c = new TCanvas("c","Graph2D example",0,0,600,400);
+   auto c = new TCanvas("c","Graph2D example",0,0,600,400);
    Double_t x, y, z, P = 6.;
    Int_t np = 200;
-   TGraph2D *dt = new TGraph2D();
+   auto dt = new TGraph2D();
    dt->SetTitle("Graph title; X axis title; Y axis title; Z axis title");
-   TRandom *r = new TRandom();
+   auto r = new TRandom();
    for (Int_t N=0; N<np; N++) {
       x = 2*P*(r->Rndm(N))-P;
       y = 2*P*(r->Rndm(N))-P;
@@ -165,7 +165,6 @@ Begin_Macro(source)
    }
    gStyle->SetPalette(1);
    dt->Draw("surf1");
-   return c;
 }
 End_Macro
 
@@ -185,7 +184,7 @@ Example showing the PCOL option.
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","Graph2D example",0,0,600,400);
+   auto c = new TCanvas("c","Graph2D example",0,0,600,400);
    Double_t P = 5.;
    Int_t npx  = 20 ;
    Int_t npy  = 20 ;
@@ -195,7 +194,7 @@ Begin_Macro(source)
    Int_t k = 0;
    Double_t dx = (2*P)/npx;
    Double_t dy = (2*P)/npy;
-   TGraph2D *dt = new TGraph2D(npx*npy);
+   auto dt = new TGraph2D(npx*npy);
    dt->SetNpy(41);
    dt->SetNpx(40);
    for (Int_t i=0; i<npx; i++) {
@@ -211,7 +210,6 @@ Begin_Macro(source)
    gStyle->SetPalette(1);
    dt->SetMarkerStyle(20);
    dt->Draw("pcol");
-   return c1;
 }
 End_Macro
 

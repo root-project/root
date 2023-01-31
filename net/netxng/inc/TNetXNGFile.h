@@ -55,10 +55,10 @@ private:
 
 public:
    TNetXNGFile() : TFile(),
-      fFile(0), fUrl(0), fMode(XrdCl::OpenFlags::None), fInitCondVar(0),
+      fFile(nullptr), fUrl(nullptr), fMode(XrdCl::OpenFlags::None), fInitCondVar(nullptr),
       fReadvIorMax(0), fReadvIovMax(0) {}
-   TNetXNGFile(const char *url, const char *lurl, Option_t *mode , const char *title ,
-               Int_t compress , Int_t netopt , Bool_t parallelopen );
+   TNetXNGFile(const char *url, const char *lurl, Option_t *mode, const char *title,
+               Int_t compress, Int_t netopt, Bool_t parallelopen);
    TNetXNGFile(const char *url, Option_t *mode = "", const char *title = "",
                Int_t compress = 1, Int_t netopt = 0, Bool_t parallelopen = kFALSE);
 

@@ -80,10 +80,10 @@ public:
       std::vector<std::unique_ptr<RCluster>> result;
       for (auto key : clusterKeys) {
          fReqsClusterIds.emplace_back(key.fClusterId);
-         fReqsColumns.emplace_back(key.fColumnSet);
+         fReqsColumns.emplace_back(key.fPhysicalColumnSet);
          auto cluster = std::make_unique<RCluster>(key.fClusterId);
          auto pageMap = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMap>();
-         for (auto colId : key.fColumnSet) {
+         for (auto colId : key.fPhysicalColumnSet) {
             pageMap->Register(ROnDiskPage::Key(colId, 0), ROnDiskPage(nullptr, 0));
             cluster->SetColumnAvailable(colId);
          }
@@ -310,7 +310,7 @@ TEST(PageStorageFile, LoadClusters)
       auto descriptorGuard = source.GetSharedDescriptorGuard();
       ptId = descriptorGuard->FindFieldId("pt");
       EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, ptId);
-      colId = descriptorGuard->FindColumnId(ptId, 0);
+      colId = descriptorGuard->FindPhysicalColumnId(ptId, 0);
       EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, colId);
    }
 
@@ -325,7 +325,7 @@ TEST(PageStorageFile, LoadClusters)
          ROOT::Experimental::RColumnModel(ROOT::Experimental::EColumnType::kReal32, false), 0));
    column->Connect(ptId, &source);
    clusterKeys[0].fClusterId = 1;
-   clusterKeys[0].fColumnSet.insert(colId);
+   clusterKeys[0].fPhysicalColumnSet.insert(colId);
    cluster = std::move(source.LoadClusters(clusterKeys)[0]);
    EXPECT_EQ(1U, cluster->GetId());
    EXPECT_EQ(1U, cluster->GetNOnDiskPages());

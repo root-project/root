@@ -258,6 +258,22 @@ namespace ROOT {
                grad[ipar] = DoParameterDerivative(x, p, ipar);
          }
 
+         // Return true if this function provides computation of the Hessian matrix with respect to the parameters
+         virtual bool HasParameterHessian() const { return false;}
+
+         /**
+            Evaluate the all the Hessian (second derivatives matrix) of the function with respect to the parameters at a point x.
+            It is optional to be implemented by the derived classes if needed. If it is not implemented return a false.
+            h must be dimensioned as a n x (n+1)/2 matrix (since it is a symmetric matrix)
+         */
+         virtual bool ParameterHessian(const T * /* x */, const double * /* p */, T * /* h */) const { return false;}
+
+         /**
+            Evaluate all the second derivatives (diagonal ones) of the function with respect to the parameters at a point x.
+            g2 is a vector of dimension npar
+         */
+         virtual bool ParameterG2(const T * /* x */, const double * /* p */, T * /* g2 */) const { return false;}
+
          /**
             Evaluate the partial derivative w.r.t a parameter ipar from values and parameters
           */

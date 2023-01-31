@@ -593,22 +593,24 @@ Int_t TH3::Fill(Double_t x, const char *namey, const char *namez, Double_t w)
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
 
-   // skip computation of the statistics along axis that have labels (can be extended and are aphanumeric)
-   UInt_t labelBitMask = GetAxisLabelStatus();
-   Double_t y = (labelBitMask & TH1::kYaxis) ? 0 : fYaxis.GetBinCenter(biny);
-   Double_t z = (labelBitMask & TH1::kZaxis) ? 0 : fZaxis.GetBinCenter(binz);
    Double_t v = w;
    fTsumw += v;
    fTsumw2 += v * v;
    fTsumwx += v * x;
    fTsumwx2 += v * x * x;
-   fTsumwy += v * y;
-   fTsumwy2 += v * y * y;
-   fTsumwxy += v * x * y;
-   fTsumwz += v * z;
-   fTsumwz2 += v * z * z;
-   fTsumwxz += v * x * z;
-   fTsumwyz += v * y * z;
+   // skip computation of the statistics along axis that have labels (can be extended and are aphanumeric)
+   UInt_t labelBitMask = GetAxisLabelStatus();
+   if (labelBitMask != (TH1::kYaxis | TH1::kZaxis)) {
+      Double_t y = (labelBitMask & TH1::kYaxis) ? 0 : fYaxis.GetBinCenter(biny);
+      Double_t z = (labelBitMask & TH1::kZaxis) ? 0 : fZaxis.GetBinCenter(binz);
+      fTsumwy += v * y;
+      fTsumwy2 += v * y * y;
+      fTsumwxy += v * x * y;
+      fTsumwz += v * z;
+      fTsumwz2 += v * z * z;
+      fTsumwxz += v * x * z;
+      fTsumwyz += v * y * z;
+   }
    return bin;
 }
 
@@ -647,20 +649,22 @@ Int_t TH3::Fill(const char * namex, Double_t y, Double_t z, Double_t w)
       if (!GetStatOverflowsBehaviour())
          return -1;
    }
-   UInt_t labelBitMask = GetAxisLabelStatus();
-   Double_t x = (labelBitMask & TH1::kXaxis) ? 0 : fXaxis.GetBinCenter(binx);
    Double_t v = w;
    fTsumw += v;
    fTsumw2 += v * v;
-   fTsumwx += v * x;
-   fTsumwx2 += v * x * x;
    fTsumwy += v * y;
    fTsumwy2 += v * y * y;
-   fTsumwxy += v * x * y;
    fTsumwz += v * z;
    fTsumwz2 += v * z * z;
-   fTsumwxz += v * x * z;
    fTsumwyz += v * y * z;
+   // skip computation for x axis : for only one axis no need to use bit mask
+   if (!fXaxis.CanExtend() || !fXaxis.IsAlphanumeric()) {
+      Double_t x = fXaxis.GetBinCenter(binx);
+      fTsumwx += v * x;
+      fTsumwx2 += v * x * x;
+      fTsumwxy += v * x * y;
+      fTsumwxz += v * x * z;
+   }
    return bin;
 }
 
@@ -692,20 +696,23 @@ Int_t TH3::Fill(Double_t x, const char *namey, Double_t z, Double_t w)
    if (binz == 0 || binz > fZaxis.GetNbins()) {
       if (!GetStatOverflowsBehaviour()) return -1;
    }
-   UInt_t labelBitMask = GetAxisLabelStatus();
-   Double_t y = (labelBitMask & TH1::kYaxis) ? 0 : fYaxis.GetBinCenter(biny);
    Double_t v = w;
    fTsumw   += v;
    fTsumw2  += v*v;
    fTsumwx  += v*x;
    fTsumwx2 += v*x*x;
-   fTsumwy  += v*y;
-   fTsumwy2 += v*y*y;
-   fTsumwxy += v*x*y;
    fTsumwz  += v*z;
    fTsumwz2 += v*z*z;
    fTsumwxz += v*x*z;
-   fTsumwyz += v*y*z;
+   // skip computation for y axis : for only one axis no need to use bit mask
+   if (!fYaxis.CanExtend() || !fYaxis.IsAlphanumeric()) {
+      Double_t y = fYaxis.GetBinCenter(biny);
+      fTsumwy  += v*y;
+      fTsumwy2 += v*y*y;
+      fTsumwxy += v*x*y;
+      fTsumwyz += v*y*z;
+   }
+
    return bin;
 }
 
@@ -738,8 +745,7 @@ Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
       if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
-   UInt_t labelBitMask = GetAxisLabelStatus();
-   Double_t z = (labelBitMask & TH1::kZaxis) ? 0 : fZaxis.GetBinCenter(binz);
+
    Double_t v = w;
    fTsumw   += v;
    fTsumw2  += v*v;
@@ -748,10 +754,15 @@ Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
    fTsumwy  += v*y;
    fTsumwy2 += v*y*y;
    fTsumwxy += v*x*y;
-   fTsumwz  += v*z;
-   fTsumwz2 += v*z*z;
-   fTsumwxz += v*x*z;
-   fTsumwyz += v*y*z;
+
+   // skip computation for z axis : for only one axis no need to use bit mask
+   if (!fZaxis.CanExtend() || !fZaxis.IsAlphanumeric()) {
+      Double_t z = fZaxis.GetBinCenter(binz);
+      fTsumwz  += v*z;
+      fTsumwz2 += v*z*z;
+      fTsumwxz += v*x*z;
+      fTsumwyz += v*y*z;
+   }
    return bin;
 }
 
@@ -1818,15 +1829,12 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, int imin1, int imax
    // draw in current pad
    if (h1 && opt.Contains("d")) {
       opt.Remove(opt.First("d"),1);
-      TVirtualPad *padsav = gPad;
-      TVirtualPad *pad = gROOT->GetSelectedPad();
-      if (pad) pad->cd();
+      TVirtualPad::TContext ctxt(gROOT->GetSelectedPad(), true, true);
       if (!gPad || !gPad->FindObject(h1)) {
          h1->Draw(opt);
       } else {
          h1->Paint(opt);
       }
-      if (padsav) padsav->cd();
    }
 
    return h1;
@@ -2465,15 +2473,12 @@ TH1 *TH3::Project3D(Option_t *option) const
    // draw in current pad
    if (h && opt.Contains("d")) {
       opt.Remove(opt.First("d"),1);
-      TVirtualPad *padsav = gPad;
-      TVirtualPad *pad = gROOT->GetSelectedPad();
-      if (pad) pad->cd();
+      TVirtualPad::TContext ctxt(gROOT->GetSelectedPad(), true, true);
       if (!gPad || !gPad->FindObject(h)) {
          h->Draw(opt);
       } else {
          h->Paint(opt);
       }
-      if (padsav) padsav->cd();
    }
 
    return h;

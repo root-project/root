@@ -121,7 +121,7 @@ EvaluateExpr(cling::Interpreter &interp, const Expr *E, cling::Value &V)
    Policy.AnonymousTagLocations = false;
    string buf;
    raw_string_ostream out(buf);
-   E->printPretty(out, /*Helper=*/0, Policy, /*Indentation=*/0);
+   E->printPretty(out, /*Helper=*/nullptr, Policy, /*Indentation=*/0);
    out << ';'; // no value printing
    out.flush();
    // Evaluate() will set V to invalid if evaluation fails.
@@ -501,7 +501,7 @@ int TClingCallFunc::get_wrapper_code(std::string &wrapper_name, std::string &wra
    //  instantiate and codegen this function.
    //
    bool needInstantiation = false;
-   const FunctionDecl *Definition = 0;
+   const FunctionDecl *Definition = nullptr;
    if (!FD->isDefined(Definition)) {
       FunctionDecl::TemplatedKind TK = FD->getTemplatedKind();
       switch (TK) {
@@ -997,7 +997,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
    string wrapper_name;
    string wrapper;
 
-   if (get_wrapper_code(wrapper_name, wrapper) == 0) return 0;
+   if (get_wrapper_code(wrapper_name, wrapper) == 0) return nullptr;
 
    //fprintf(stderr, "%s\n", wrapper.c_str());
    //
@@ -1442,7 +1442,7 @@ void TClingCallFunc::exec(void *address, void *ret)
                num_args, (int)GetMinRequiredArguments());
          return;
       }
-      if (address == 0 && dyn_cast<CXXMethodDecl>(FD)
+      if (address == nullptr && dyn_cast<CXXMethodDecl>(FD)
           && !(dyn_cast<CXXMethodDecl>(FD))->isStatic()
           && !dyn_cast<CXXConstructorDecl>(FD)) {
          ::Error("TClingCallFunc::exec",
@@ -1580,7 +1580,7 @@ TClingCallFunc::InitRetAndExecBuiltin(QualType QT, const clang::BuiltinType *BT,
    switch (BT->getKind()) {
       case BuiltinType::Void: {
          ret = cling::Value::Create<void>(QT.getAsOpaquePtr(), *fInterp);
-         return [this](void* address, cling::Value& ret) { exec(address, 0); };
+         return [this](void* address, cling::Value& ret) { exec(address, nullptr); };
          break;
       }
 
@@ -1753,7 +1753,7 @@ TClingCallFunc::InitRetAndExec(const clang::FunctionDecl *FD, cling::Value &ret)
 void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret)
 {
    if (!ret) {
-      exec(address, 0);
+      exec(address, nullptr);
       return;
    }
    std::function<void(void*, cling::Value&)> execFunc;
@@ -1802,7 +1802,7 @@ void TClingCallFunc::Exec(void *address, TInterpreterValue *interpVal/*=0*/)
       return;
    }
    if (!interpVal) {
-      exec(address, 0);
+      exec(address, nullptr);
       return;
    }
    cling::Value *val = reinterpret_cast<cling::Value *>(interpVal->GetValAddr());
@@ -1820,8 +1820,7 @@ T TClingCallFunc::ExecT(void *address)
    }
    cling::Value ret;
    exec_with_valref_return(address, &ret);
-   if (!ret.isValid()) {
-      // Sometimes we are called on a function returning void!
+   if (ret.isVoid()) {
       return 0;
    }
 
@@ -1901,7 +1900,7 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info,
             "Called with no wrapper, not implemented!");
       return nullptr;
    }
-   void *obj = 0;
+   void *obj = nullptr;
    (*wrapper)(&obj, address, nary);
    return obj;
 }
@@ -1914,7 +1913,7 @@ void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /
       return;
    }
 
-   tcling_callfunc_dtor_Wrapper_t wrapper = 0;
+   tcling_callfunc_dtor_Wrapper_t wrapper = nullptr;
    {
       R__LOCKGUARD_CLING(gInterpreterMutex);
       const Decl *D = info->GetDecl();
@@ -1942,7 +1941,7 @@ TClingCallFunc::FactoryMethod() const
 void TClingCallFunc::Init()
 {
    fMethod.reset();
-   fWrapper = 0;
+   fWrapper = nullptr;
    fDecl = nullptr;
    fMinRequiredArguments = -1;
    ResetArg();
@@ -1963,7 +1962,7 @@ void TClingCallFunc::Init(std::unique_ptr<TClingMethodInfo> minfo)
 void *TClingCallFunc::InterfaceMethod()
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    if (!fWrapper) {
       const Decl *decl = GetFunctionOrShadowDecl();

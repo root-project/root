@@ -47,7 +47,7 @@ public:
 
    typedef  ROOT::Math::Delaunay2D::Triangles Triangles;
 
-   TGraphDelaunay2D(TGraph2D *g = 0);
+   TGraphDelaunay2D(TGraph2D *g = nullptr);
 
    Double_t  ComputeZ(Double_t x, Double_t y) { return fDelaunay.Interpolate(x,y); }
    void      FindAllTriangles() { fDelaunay.FindAllTriangles(); }

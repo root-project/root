@@ -623,7 +623,7 @@ TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
 
 TH1::~TH1()
 {
-   if (!TestBit(kNotDeleted)) {
+   if (ROOT::Detail::HasBeenDeleted(this)) {
       return;
    }
    delete[] fIntegral;
@@ -644,7 +644,7 @@ TH1::~TH1()
       //and may have been already deleted.
       while ((obj  = fFunctions->First())) {
          while(fFunctions->Remove(obj)) { }
-         if (!obj->TestBit(kNotDeleted)) {
+         if (ROOT::Detail::HasBeenDeleted(obj)) {
             break;
          }
          delete obj;
@@ -2616,7 +2616,7 @@ TH1 *TH1::GetCumulative(Bool_t forward, const char* suffix) const
                hintegrated->AddBinContent(bin, sum);
                if (fSumw2.fN) {
                   esum += GetBinErrorSqUnchecked(bin);
-                  fSumw2.fArray[bin] = esum;
+                  hintegrated->fSumw2.fArray[bin] = esum;
                }
             }
          }
@@ -2630,7 +2630,7 @@ TH1 *TH1::GetCumulative(Bool_t forward, const char* suffix) const
                hintegrated->AddBinContent(bin, sum);
                if (fSumw2.fN) {
                   esum += GetBinErrorSqUnchecked(bin);
-                  fSumw2.fArray[bin] = esum;
+                  hintegrated->fSumw2.fArray[bin] = esum;
                }
             }
          }
@@ -4212,7 +4212,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// calling the following functions:
 ///
 /// ~~~ {.cpp}
-///      TVirtualFitter::Fitter(myhist)->SetFCN(MyFittingFunction)
+///      TVirtualFitter::Fitter(myhist)->SetFCN(MyFittingFunction);
 /// ~~~
 ///
 /// where MyFittingFunction is of type:
@@ -4232,9 +4232,9 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///
 /// If the bin errors are not known, one should use the fit option "W", which gives a weight=1 for each bin (it is an unweighted least-square
 /// fit). When using option "WW" the empty bins will be also considered in the chi-square fit with an error of 1.
-/// Note that in this fitting case (option "W" or "WW ) the resulting fitted parameter errors
+/// Note that in this fitting case (option "W" or "WW") the resulting fitted parameter errors
 /// are corrected by the obtained chi2 value using this scaling expression:
-///`errorp *= sqrt(chisquare/(ndf-1))` as it is done when fitting a TGraph with
+/// `errorp *= sqrt(chisquare/(ndf-1))` as it is done when fitting a TGraph with
 /// no point errors.
 ///
 /// #### Excluding points
@@ -4251,7 +4251,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///
 /// ~~~ {.cpp}
 ///     h.Fit("myFunction", "0"); // fit, store function but do not draw
-///     h.Draw(); function is not drawn
+///     h.Draw(); // function is not drawn
 ///     h.GetFunction("myFunction")->ResetBit(TF1::kNotDraw);
 ///     h.Draw();  // function is visible again
 /// ~~~
@@ -7335,11 +7335,10 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
    }
 
    // save list of functions
-   TObjOptLink *lnk = (TObjOptLink*)fFunctions->FirstLink();
-   TObject *obj;
+   auto lnk = fFunctions->FirstLink();
    static Int_t funcNumber = 0;
    while (lnk) {
-      obj = lnk->GetObject();
+      auto obj = lnk->GetObject();
       obj->SavePrimitive(out, TString::Format("nodraw #%d\n",++funcNumber).Data());
       if (obj->InheritsFrom(TF1::Class())) {
          TString fname;
@@ -7358,7 +7357,7 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
             <<obj->GetName()
             <<","<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
       }
-      lnk = (TObjOptLink*)lnk->Next();
+      lnk = lnk->Next();
    }
 
    // save attributes

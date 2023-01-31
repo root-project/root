@@ -105,7 +105,7 @@ void REveDataProxyBuilderBase::Build()
                {
                   REveProjectionManager *pmgr = projectedProduct->GetManager();
                   Float_t oldDepth = pmgr->GetCurrentDepth();
-                  pmgr->SetCurrentDepth(m_layer);
+                  pmgr->SetCurrentDepth(m_collection->GetLayer());
                   Int_t cnt = 0;
                   REveElement *projectedProductAsElement = projectedProduct->GetProjectedAsElement();
                   // printf("projectedProduct children %d, product children %d\n", projectedProductAsElement->NumChildren(), product->NumChildren());

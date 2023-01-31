@@ -411,6 +411,10 @@ TEST(RNTupleModel, GetField)
    EXPECT_EQ(m->GetField("cs.v1")->GetType(), "std::vector<float>");
    EXPECT_EQ(m->GetField("nonexistent"), nullptr);
    EXPECT_EQ(m->GetField(""), nullptr);
+   EXPECT_EQ("", m->GetFieldZero()->GetQualifiedFieldName());
+   EXPECT_EQ("x", m->GetField("x")->GetQualifiedFieldName());
+   EXPECT_EQ("cs", m->GetField("cs")->GetQualifiedFieldName());
+   EXPECT_EQ("cs.v1", m->GetField("cs.v1")->GetQualifiedFieldName());
 }
 
 TEST(RNTuple, EmptyString)
@@ -638,4 +642,62 @@ TEST(RNTuple, BareEntry)
    EXPECT_EQ(1.0, *ntuple->GetModel()->GetDefaultEntry()->Get<float>("pt"));
    ntuple->LoadEntry(1);
    EXPECT_EQ(2.0, *ntuple->GetModel()->GetDefaultEntry()->Get<float>("pt"));
+}
+
+namespace ROOT::Experimental::Internal {
+struct RFieldCallbackInjector {
+   template <typename FieldT>
+   static void Inject(FieldT &field, ROOT::Experimental::Detail::RFieldBase::ReadCallback_t func)
+   {
+      field.AddReadCallback(func);
+   }
+};
+} // namespace ROOT::Experimental::Internal
+namespace {
+static unsigned gNCallReadCallback = 0;
+}
+
+TEST(RNTuple, ReadCallback)
+{
+   using RFieldCallbackInjector = ROOT::Experimental::Internal::RFieldCallbackInjector;
+
+   FileRaii fileGuard("test_ntuple_readcb.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldI32 = model->MakeField<std::int32_t>("i32", 0);
+      auto fieldKlass = model->MakeField<CustomStruct>("klass");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      fieldKlass->a = 42.0;
+      fieldKlass->s = "abc";
+      ntuple->Fill();
+      *fieldI32 = 1;
+      fieldKlass->a = 24.0;
+      ntuple->Fill();
+   }
+
+   auto model = RNTupleModel::Create();
+   auto fieldI32 = std::make_unique<RField<std::int32_t>>("i32");
+   auto fieldKlass = std::make_unique<RField<CustomStruct>>("klass");
+   RFieldCallbackInjector::Inject(*fieldI32, [](RFieldValue &value) {
+      static std::int32_t expected = 0;
+      EXPECT_EQ(*value.Get<std::int32_t>(), expected++);
+      gNCallReadCallback++;
+   });
+   RFieldCallbackInjector::Inject(*fieldI32, [](RFieldValue &) { gNCallReadCallback++; });
+   RFieldCallbackInjector::Inject(*fieldKlass, [](RFieldValue &value) {
+      auto typedValue = value.Get<CustomStruct>();
+      typedValue->a = 1337.0; // should change the value on the default entry
+      gNCallReadCallback++;
+   });
+   model->AddField(std::move(fieldI32));
+   model->AddField(std::move(fieldKlass));
+
+   auto ntuple = RNTupleReader::Open(std::move(model), "f", fileGuard.GetPath());
+   auto rdKlass = ntuple->GetModel()->GetDefaultEntry()->Get<CustomStruct>("klass");
+   EXPECT_EQ(2U, ntuple->GetNEntries());
+   ntuple->LoadEntry(0);
+   EXPECT_EQ(1337.0, rdKlass->a);
+   ntuple->LoadEntry(1);
+   EXPECT_EQ(1337.0, rdKlass->a);
+   EXPECT_EQ(6U, gNCallReadCallback);
 }

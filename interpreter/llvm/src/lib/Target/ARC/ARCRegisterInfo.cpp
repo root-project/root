@@ -22,9 +22,9 @@
 #include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/RegisterScavenging.h"
+#include "llvm/CodeGen/TargetFrameLowering.h"
 #include "llvm/IR/Function.h"
 #include "llvm/Support/Debug.h"
-#include "llvm/CodeGen/TargetFrameLowering.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Target/TargetOptions.h"
 
@@ -128,7 +128,7 @@ static void ReplaceFrameIndex(MachineBasicBlock::iterator II,
 ARCRegisterInfo::ARCRegisterInfo() : ARCGenRegisterInfo(ARC::BLINK) {}
 
 bool ARCRegisterInfo::needsFrameMoves(const MachineFunction &MF) {
-  return MF.getMMI().hasDebugInfo() || MF.getFunction().needsUnwindTableEntry();
+  return MF.needsFrameMoves();
 }
 
 const MCPhysReg *
@@ -149,11 +149,6 @@ BitVector ARCRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
 }
 
 bool ARCRegisterInfo::requiresRegisterScavenging(
-    const MachineFunction &MF) const {
-  return true;
-}
-
-bool ARCRegisterInfo::trackLivenessAfterRegAlloc(
     const MachineFunction &MF) const {
   return true;
 }
@@ -206,7 +201,7 @@ void ARCRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   LLVM_DEBUG(dbgs() << "Offset             : " << Offset << "\n"
                     << "<--------->\n");
 
-  unsigned Reg = MI.getOperand(0).getReg();
+  Register Reg = MI.getOperand(0).getReg();
   assert(ARC::GPR32RegClass.contains(Reg) && "Unexpected register operand");
 
   if (!TFI->hasFP(MF)) {

@@ -127,7 +127,7 @@ public:
    void Draw(const Option_t* option = "") override;
 
    Double_t operator()(Double_t x) const;
-   Double_t operator()(const Double_t* x, const Double_t* p=0) const;  // Needed for creating TF1
+   Double_t operator()(const Double_t* x, const Double_t* p = nullptr) const;  // Needed for creating TF1
 
    Double_t GetValue(Double_t x) const { return (*this)(x); }
    Double_t GetError(Double_t x) const;
@@ -279,7 +279,7 @@ private:
    void SetMean();
    void SetSigma(Double_t R);
    void SetKernel();
-   void SetKernelFunction(KernelFunction_Ptr kernfunc = 0);
+   void SetKernelFunction(KernelFunction_Ptr kernfunc = nullptr);
    void SetOptions(const Option_t* option, Double_t rho);
    void CheckOptions(Bool_t isUserDefinedKernel = kFALSE);
    void GetOptions(std::string optionType, std::string option);

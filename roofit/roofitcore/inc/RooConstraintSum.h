@@ -30,22 +30,10 @@ public:
   RooConstraintSum() {}
   RooConstraintSum(const char *name, const char *title, const RooArgSet& constraintSet, const RooArgSet& paramSet, bool takeGlobalObservablesFromData=false) ;
 
-  RooConstraintSum(const RooConstraintSum& other, const char* name = 0);
+  RooConstraintSum(const RooConstraintSum& other, const char* name = nullptr);
   TObject* clone(const char* newname) const override { return new RooConstraintSum(*this, newname); }
 
   const RooArgList& list() { return _set1 ; }
-
-  static std::unique_ptr<RooAbsReal> createConstraintTerm(
-        std::string const& name,
-        RooAbsPdf const& pdf,
-        RooAbsData const& data,
-        RooArgSet const* constrainedParameters,
-        RooArgSet const* externalConstraints,
-        RooArgSet const* globalObservables,
-        const char* globalObservablesTag,
-        bool takeGlobalObservablesFromData,
-        bool cloneConstraints,
-        RooWorkspace * workspace);
 
   bool setData(RooAbsData const& data, bool cloneData=true);
   /// \copydoc setData(RooAbsData const&, bool)
@@ -55,7 +43,7 @@ public:
 
   void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
-  std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server) const override;
+  std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
 protected:
 

@@ -75,7 +75,7 @@ many times.
 The following very simple macro shows how to build and fill a `TH2Poly`:
 ~~~ {.cpp}
 {
-    TH2Poly *h2p = new TH2Poly();
+    auto h2p = new TH2Poly();
 
     Double_t x1[] = {0, 5, 6};
     Double_t y1[] = {0, 0, 5};
@@ -1560,13 +1560,13 @@ Bool_t TH2PolyBin::IsInside(Double_t x, Double_t y) const
    return in;
 }
 
-////////////////////////////////////////////////////////////////////////
-/// RE-implement dummy functions to avoid users calling the
-/// corresponding implementations in TH1 or TH2
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// RE-implement dummy functions to avoid users calling the
+// corresponding implementations in TH1 or TH2
+////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Performs the operation: this = this + c1*f1. NOT IMPLEMENTED for TH2Poly
+/// NOT IMPLEMENTED for TH2Poly
 Bool_t TH2Poly::Add(TF1 *, Double_t, Option_t *)
 {
    Error("Add","Not implement for TH2Poly");
@@ -1574,7 +1574,7 @@ Bool_t TH2Poly::Add(TF1 *, Double_t, Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Replace contents of this histogram by the addition of h1 and h2. NOT IMPLEMENTED for TH2Poly
+/// NOT IMPLEMENTED for TH2Poly
 Bool_t TH2Poly::Add(const TH1 *, const TH1 *, Double_t, Double_t)
 {
    Error("Add","Not implement for TH2Poly");
@@ -1582,7 +1582,7 @@ Bool_t TH2Poly::Add(const TH1 *, const TH1 *, Double_t, Double_t)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Performs the operation: this = this / c1*f1. NOT IMPLEMENTED for TH2Poly
+/// NOT IMPLEMENTED for TH2Poly
 Bool_t TH2Poly::Divide(TF1 *, Double_t)
 {
    Error("Divide","Not implement for TH2Poly");

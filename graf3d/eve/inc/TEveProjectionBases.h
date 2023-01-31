@@ -63,7 +63,7 @@ public:
 
    virtual void AddProjectedsToSet(std::set<TEveElement*>& set);
 
-   virtual void PropagateVizParams(TEveElement* el=0);
+   virtual void PropagateVizParams(TEveElement* el=nullptr);
    virtual void PropagateRenderState(Bool_t rnr_self, Bool_t rnr_children);
    virtual void PropagateMainColor(Color_t color, Color_t old_color);
    virtual void PropagateMainTransparency(Char_t t, Char_t old_t);

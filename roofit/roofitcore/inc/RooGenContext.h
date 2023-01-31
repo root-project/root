@@ -29,7 +29,7 @@ class RooAbsNumGenerator ;
 
 class RooGenContext : public RooAbsGenContext {
 public:
-  RooGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
+  RooGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= nullptr,
       const RooArgSet* auxProto=nullptr, bool verbose=false, const RooArgSet* forceDirect=nullptr);
   ~RooGenContext() override;
 

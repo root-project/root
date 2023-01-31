@@ -37,7 +37,7 @@ public:
    void     Copy(TObject &f12) const override;
    TF1     *DrawCopy(Option_t *option="") const override;
    Double_t Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0) const override;
-   Double_t EvalPar(const Double_t *x, const Double_t *params=0) override;
+   Double_t EvalPar(const Double_t *x, const Double_t *params=nullptr) override;
 
 #ifdef R__HAS_VECCORE
    using TF1::Eval;    // to not hide the vectorized version

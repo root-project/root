@@ -1,12 +1,12 @@
 import { select as d3_select } from '../d3.mjs';
-import { gStyle } from '../core.mjs';
+import { gStyle, isStr } from '../core.mjs';
 import { getColor, findColor } from './colors.mjs';
 
 
 const root_line_styles = [
-      "", "", "3,3", "1,2",
-      "3,4,1,4", "5,3,1,3", "5,3,1,3,1,3,1,3", "5,5",
-      "5,3,1,3,1,3", "20,5", "20,10,1,10", "1,3"];
+      '', '', '3,3', '1,2',
+      '3,4,1,4', '5,3,1,3', '5,3,1,3,1,3,1,3', '5,5',
+      '5,3,1,3,1,3', '20,5', '20,10,1,10', '1,3'];
 
 /**
   * @summary Handle for line attributes
@@ -27,7 +27,7 @@ class TAttLineHandler {
    /** @summary Set line attributes.
      * @param {object} args - specify attributes by different ways
      * @param {object} args.attr - TAttLine object with appropriate data members or
-     * @param {string} args.color - color in html like rgb(255,0,0) or "red" or "#ff0000"
+     * @param {string} args.color - color in html like rgb(255,0,0) or 'red' or '#ff0000'
      * @param {number} args.style - line style number
      * @param {number} args.width - line width */
    setArgs(args) {
@@ -36,7 +36,7 @@ class TAttLineHandler {
          args.color = args.color0 || (args.painter ? args.painter.getColor(this.color_index) : getColor(this.color_index));
          if (args.width === undefined) args.width = args.attr.fLineWidth;
          if (args.style === undefined) args.style = args.attr.fLineStyle;
-      } else if (typeof args.color == 'string') {
+      } else if (isStr(args.color)) {
          if ((args.color !== 'none') && !args.width) args.width = 1;
       } else if (typeof args.color == 'number') {
          this.color_index = args.color;
@@ -109,12 +109,12 @@ class TAttLineHandler {
          selection.style('stroke', null)
                   .style('stroke-width', null)
                   .style('stroke-dasharray', null)
-                  .attr("rx", null).attr("ry", null);
+                  .attr('rx', null).attr('ry', null);
       else
          selection.style('stroke', this.color)
                   .style('stroke-width', this.width)
                   .style('stroke-dasharray', this.pattern)
-                  .attr("rx", this.rx || null).attr("ry", this.ry || null);
+                  .attr('rx', this.rx || null).attr('ry', this.ry || null);
    }
 
    /** @summary Change line attributes */
@@ -133,11 +133,17 @@ class TAttLineHandler {
       this.changed = true;
    }
 
+   /** @summary Method used when color or pattern were changed with OpenUi5 widgets.
+     * @private */
+   verifyDirectChange(/* painter */) {
+      this.change(this.color, parseInt(this.width), parseInt(this.style));
+   }
+
    /** @summary Create sample element inside primitive SVG - used in context menu */
    createSample(svg, width, height, plain) {
       if (plain) svg = d3_select(svg);
-      svg.append("path")
-         .attr("d", `M0,${height/2}h${width}`)
+      svg.append('path')
+         .attr('d', `M0,${height/2}h${width}`)
          .call(this.func);
    }
 

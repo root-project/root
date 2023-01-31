@@ -28,15 +28,15 @@ namespace clang {
     // Size of each of the diagnostic categories.
     enum {
       DIAG_SIZE_COMMON        =  300,
-      DIAG_SIZE_DRIVER        =  200,
+      DIAG_SIZE_DRIVER        =  250,
       DIAG_SIZE_FRONTEND      =  150,
       DIAG_SIZE_SERIALIZATION =  120,
       DIAG_SIZE_LEX           =  400,
       DIAG_SIZE_PARSE         =  600,
-      DIAG_SIZE_AST           =  200,
+      DIAG_SIZE_AST           =  250,
       DIAG_SIZE_COMMENT       =  100,
       DIAG_SIZE_CROSSTU       =  100,
-      DIAG_SIZE_SEMA          = 4000,
+      DIAG_SIZE_SEMA          = 4500,
       DIAG_SIZE_ANALYSIS      =  100,
       DIAG_SIZE_REFACTORING   = 1000,
     };
@@ -64,8 +64,9 @@ namespace clang {
 
     // Get typedefs for common diagnostics.
     enum {
-#define DIAG(ENUM,FLAGS,DEFAULT_MAPPING,DESC,GROUP,\
-             SFINAE,CATEGORY,NOWERROR,SHOWINSYSHEADER) ENUM,
+#define DIAG(ENUM, FLAGS, DEFAULT_MAPPING, DESC, GROUP, SFINAE, CATEGORY,      \
+             NOWERROR, SHOWINSYSHEADER, DEFFERABLE)                            \
+  ENUM,
 #define COMMONSTART
 #include "clang/Basic/DiagnosticCommonKinds.inc"
       NUM_BUILTIN_COMMON_DIAGNOSTICS
@@ -279,6 +280,13 @@ public:
   /// errors, such as those errors that involve C++ access control,
   /// are not SFINAE errors.
   static SFINAEResponse getDiagnosticSFINAEResponse(unsigned DiagID);
+
+  /// Whether the diagnostic message can be deferred.
+  ///
+  /// For single source offloading languages, a diagnostic message occurred
+  /// in a device host function may be deferred until the function is sure
+  /// to be emitted.
+  static bool isDeferrable(unsigned DiagID);
 
   /// Get the string of all diagnostic flags.
   ///

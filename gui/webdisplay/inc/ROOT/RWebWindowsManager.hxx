@@ -72,6 +72,8 @@ private:
 
    void AssignWindowThreadId(RWebWindow &win);
 
+   bool InformListener(const std::string &msg);
+
 public:
    RWebWindowsManager();
 

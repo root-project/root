@@ -20,7 +20,6 @@
 #include "TNamed.h"
 #include "RooArgSet.h"
 #include "RooPrintable.h"
-#include "RooFactoryWSTool.h"
 
 #include <vector>
 #include <string>
@@ -28,13 +27,14 @@
 class RooAbsReal;
 class RooAbsPdf;
 
-class RooClassFactory : public TNamed, public RooPrintable {
+// RooFit class code and instance factory
+class RooClassFactory {
 
 public:
 
   // Constructors, assignment etc
   RooClassFactory() ;
-  ~RooClassFactory() override ;
+  ~RooClassFactory() ;
 
   static RooAbsReal* makeFunctionInstance(const char* className, const char* name, const char* expression, const RooArgList& vars, const char* intExpression=nullptr) ;
   static RooAbsReal* makeFunctionInstance(const char* name, const char* expression, const RooArgList& vars, const char* intExpression=nullptr) ;
@@ -52,18 +52,11 @@ public:
   static bool makeClass(const char* className, const char* name, const char* realArgNames=nullptr, const char* catArgNames=nullptr,
            const char* expression="1.0", bool hasAnaInt=false, bool hasIntGen=false, const char* intExpression=nullptr) ;
 
-  class ClassFacIFace : public RooFactoryWSTool::IFace {
-  public:
-    std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) override ;
-  } ;
-
 protected:
 
 
 
   RooClassFactory(const RooClassFactory&) ;
-
-  ClassDefOverride(RooClassFactory,0) // RooFit class code and instance factory
 } ;
 
 #endif

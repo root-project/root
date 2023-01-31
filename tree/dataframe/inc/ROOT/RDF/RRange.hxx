@@ -71,12 +71,12 @@ public:
             fLastResult = false;
          } else {
             // apply range filter logic, cache the result
-            ++fNProcessedEntries;
-            if (fNProcessedEntries <= fStart || (fStop > 0 && fNProcessedEntries > fStop) ||
-                (fStride != 1 && fNProcessedEntries % fStride != 0))
+            if (fNProcessedEntries < fStart || (fStop > 0 && fNProcessedEntries >= fStop) ||
+                (fStride != 1 && (fNProcessedEntries - fStart) % fStride != 0))
                fLastResult = false;
             else
                fLastResult = true;
+            ++fNProcessedEntries;
             if (fNProcessedEntries == fStop) {
                fHasStopped = true;
                fPrevNode.StopProcessing();
@@ -109,9 +109,9 @@ public:
    }
 
    /// This function must be defined by all nodes, but only the filters will add their name
-   void AddFilterName(std::vector<std::string> &filters) { fPrevNode.AddFilterName(filters); }
+   void AddFilterName(std::vector<std::string> &filters) final { fPrevNode.AddFilterName(filters); }
    std::shared_ptr<RDFGraphDrawing::GraphNode>
-   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap)
+   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) final
    {
       // TODO: Ranges node have no information about custom columns, hence it is not possible now
       // if defines have been used before.

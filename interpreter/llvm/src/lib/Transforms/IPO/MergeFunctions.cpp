@@ -95,7 +95,6 @@
 #include "llvm/IR/Argument.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/BasicBlock.h"
-#include "llvm/IR/CallSite.h"
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DebugInfoMetadata.h"
@@ -115,12 +114,14 @@
 #include "llvm/IR/Value.h"
 #include "llvm/IR/ValueHandle.h"
 #include "llvm/IR/ValueMap.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/IPO.h"
+#include "llvm/Transforms/IPO/MergeFunctions.h"
 #include "llvm/Transforms/Utils/FunctionComparator.h"
 #include <algorithm>
 #include <cassert>
@@ -195,16 +196,12 @@ public:
 /// by considering all pointer types to be equivalent. Once identified,
 /// MergeFunctions will fold them by replacing a call to one to a call to a
 /// bitcast of the other.
-class MergeFunctions : public ModulePass {
+class MergeFunctions {
 public:
-  static char ID;
-
-  MergeFunctions()
-    : ModulePass(ID), FnTree(FunctionNodeCmp(&GlobalNumbers)) {
-    initializeMergeFunctionsPass(*PassRegistry::getPassRegistry());
+  MergeFunctions() : FnTree(FunctionNodeCmp(&GlobalNumbers)) {
   }
 
-  bool runOnModule(Module &M) override;
+  bool runOnModule(Module &M);
 
 private:
   // The function comparison operator is provided here so that FunctionNodes do
@@ -297,14 +294,39 @@ private:
   DenseMap<AssertingVH<Function>, FnTreeType::iterator> FNodesInTree;
 };
 
+class MergeFunctionsLegacyPass : public ModulePass {
+public:
+  static char ID;
+
+  MergeFunctionsLegacyPass(): ModulePass(ID) {
+    initializeMergeFunctionsLegacyPassPass(*PassRegistry::getPassRegistry());
+  }
+
+  bool runOnModule(Module &M) override {
+    if (skipModule(M))
+      return false;
+
+    MergeFunctions MF;
+    return MF.runOnModule(M);
+  }
+};
+
 } // end anonymous namespace
 
-char MergeFunctions::ID = 0;
-
-INITIALIZE_PASS(MergeFunctions, "mergefunc", "Merge Functions", false, false)
+char MergeFunctionsLegacyPass::ID = 0;
+INITIALIZE_PASS(MergeFunctionsLegacyPass, "mergefunc",
+                "Merge Functions", false, false)
 
 ModulePass *llvm::createMergeFunctionsPass() {
-  return new MergeFunctions();
+  return new MergeFunctionsLegacyPass();
+}
+
+PreservedAnalyses MergeFunctionsPass::run(Module &M,
+                                          ModuleAnalysisManager &AM) {
+  MergeFunctions MF;
+  if (!MF.runOnModule(M))
+    return PreservedAnalyses::all();
+  return PreservedAnalyses::none();
 }
 
 #ifndef NDEBUG
@@ -386,9 +408,6 @@ static bool isEligibleForMerging(Function &F) {
 }
 
 bool MergeFunctions::runOnModule(Module &M) {
-  if (skipModule(M))
-    return false;
-
   bool Changed = false;
 
   // All functions in the module, ordered by hash. Functions with a unique
@@ -447,31 +466,13 @@ void MergeFunctions::replaceDirectCallers(Function *Old, Function *New) {
   for (auto UI = Old->use_begin(), UE = Old->use_end(); UI != UE;) {
     Use *U = &*UI;
     ++UI;
-    CallSite CS(U->getUser());
-    if (CS && CS.isCallee(U)) {
-      // Transfer the called function's attributes to the call site. Due to the
-      // bitcast we will 'lose' ABI changing attributes because the 'called
-      // function' is no longer a Function* but the bitcast. Code that looks up
-      // the attributes from the called function will fail.
-
-      // FIXME: This is not actually true, at least not anymore. The callsite
-      // will always have the same ABI affecting attributes as the callee,
-      // because otherwise the original input has UB. Note that Old and New
-      // always have matching ABI, so no attributes need to be changed.
-      // Transferring other attributes may help other optimizations, but that
-      // should be done uniformly and not in this ad-hoc way.
-      auto &Context = New->getContext();
-      auto NewPAL = New->getAttributes();
-      SmallVector<AttributeSet, 4> NewArgAttrs;
-      for (unsigned argIdx = 0; argIdx < CS.arg_size(); argIdx++)
-        NewArgAttrs.push_back(NewPAL.getParamAttributes(argIdx));
-      // Don't transfer attributes from the function to the callee. Function
-      // attributes typically aren't relevant to the calling convention or ABI.
-      CS.setAttributes(AttributeList::get(Context, /*FnAttrs=*/AttributeSet(),
-                                          NewPAL.getRetAttributes(),
-                                          NewArgAttrs));
-
-      remove(CS.getInstruction()->getFunction());
+    CallBase *CB = dyn_cast<CallBase>(U->getUser());
+    if (CB && CB->isCallee(U)) {
+      // Do not copy attributes from the called function to the call-site.
+      // Function comparison ensures that the attributes are the same up to
+      // type congruences in byval(), in which case we need to keep the byval
+      // type of the call-site, not the callee function.
+      remove(CB->getFunction());
       U->set(BitcastNew);
     }
   }
@@ -528,10 +529,9 @@ void MergeFunctions::eraseInstsUnrelatedToPDI(
 // Reduce G to its entry block.
 void MergeFunctions::eraseTail(Function *G) {
   std::vector<BasicBlock *> WorklistBB;
-  for (Function::iterator BBI = std::next(G->begin()), BBE = G->end();
-       BBI != BBE; ++BBI) {
-    BBI->dropAllReferences();
-    WorklistBB.push_back(&*BBI);
+  for (BasicBlock &BB : drop_begin(*G)) {
+    BB.dropAllReferences();
+    WorklistBB.push_back(&BB);
   }
   while (!WorklistBB.empty()) {
     BasicBlock *BB = WorklistBB.back();
@@ -584,7 +584,7 @@ void MergeFunctions::filterInstsUnrelatedToPDI(
           for (User *U : AI->users()) {
             if (StoreInst *SI = dyn_cast<StoreInst>(U)) {
               if (Value *Arg = SI->getValueOperand()) {
-                if (dyn_cast<Argument>(Arg)) {
+                if (isa<Argument>(Arg)) {
                   LLVM_DEBUG(dbgs() << "  Include: ");
                   LLVM_DEBUG(AI->print(dbgs()));
                   LLVM_DEBUG(dbgs() << "\n");
@@ -633,18 +633,15 @@ void MergeFunctions::filterInstsUnrelatedToPDI(
   LLVM_DEBUG(
       dbgs()
       << " Report parameter debug info related/related instructions: {\n");
-  for (BasicBlock::iterator BI = GEntryBlock->begin(), BE = GEntryBlock->end();
-       BI != BE; ++BI) {
-
-    Instruction *I = &*BI;
-    if (PDIRelated.find(I) == PDIRelated.end()) {
+  for (Instruction &I : *GEntryBlock) {
+    if (PDIRelated.find(&I) == PDIRelated.end()) {
       LLVM_DEBUG(dbgs() << "  !PDIRelated: ");
-      LLVM_DEBUG(I->print(dbgs()));
+      LLVM_DEBUG(I.print(dbgs()));
       LLVM_DEBUG(dbgs() << "\n");
-      PDIUnrelatedWL.push_back(I);
+      PDIUnrelatedWL.push_back(&I);
     } else {
       LLVM_DEBUG(dbgs() << "   PDIRelated: ");
-      LLVM_DEBUG(I->print(dbgs()));
+      LLVM_DEBUG(I.print(dbgs()));
       LLVM_DEBUG(dbgs() << "\n");
     }
   }
@@ -712,7 +709,10 @@ void MergeFunctions::writeThunk(Function *F, Function *G) {
 
   CallInst *CI = Builder.CreateCall(F, Args);
   ReturnInst *RI = nullptr;
-  CI->setTailCall();
+  bool isSwiftTailCall = F->getCallingConv() == CallingConv::SwiftTail &&
+                         G->getCallingConv() == CallingConv::SwiftTail;
+  CI->setTailCallKind(isSwiftTailCall ? llvm::CallInst::TCK_MustTail
+                                      : llvm::CallInst::TCK_Tail);
   CI->setCallingConv(F->getCallingConv());
   CI->setAttributes(F->getAttributes());
   if (H->getReturnType()->isVoidTy()) {
@@ -724,8 +724,10 @@ void MergeFunctions::writeThunk(Function *F, Function *G) {
   if (MergeFunctionsPDI) {
     DISubprogram *DIS = G->getSubprogram();
     if (DIS) {
-      DebugLoc CIDbgLoc = DebugLoc::get(DIS->getScopeLine(), 0, DIS);
-      DebugLoc RIDbgLoc = DebugLoc::get(DIS->getScopeLine(), 0, DIS);
+      DebugLoc CIDbgLoc =
+          DILocation::get(DIS->getContext(), DIS->getScopeLine(), 0, DIS);
+      DebugLoc RIDbgLoc =
+          DILocation::get(DIS->getContext(), DIS->getScopeLine(), 0, DIS);
       CI->setDebugLoc(CIDbgLoc);
       RI->setDebugLoc(RIDbgLoc);
     } else {
@@ -765,11 +767,10 @@ static bool canCreateAliasFor(Function *F) {
 void MergeFunctions::writeAlias(Function *F, Function *G) {
   Constant *BitcastF = ConstantExpr::getBitCast(F, G->getType());
   PointerType *PtrType = G->getType();
-  auto *GA = GlobalAlias::create(
-      PtrType->getElementType(), PtrType->getAddressSpace(),
-      G->getLinkage(), "", BitcastF, G->getParent());
+  auto *GA = GlobalAlias::create(G->getValueType(), PtrType->getAddressSpace(),
+                                 G->getLinkage(), "", BitcastF, G->getParent());
 
-  F->setAlignment(std::max(F->getAlignment(), G->getAlignment()));
+  F->setAlignment(MaybeAlign(std::max(F->getAlignment(), G->getAlignment())));
   GA->takeName(G);
   GA->setVisibility(G->getVisibility());
   GA->setUnnamedAddr(GlobalValue::UnnamedAddr::Global);
@@ -816,7 +817,7 @@ void MergeFunctions::mergeTwoFunctions(Function *F, Function *G) {
     removeUsers(F);
     F->replaceAllUsesWith(NewF);
 
-    unsigned MaxAlignment = std::max(G->getAlignment(), NewF->getAlignment());
+    MaybeAlign MaxAlignment(std::max(G->getAlignment(), NewF->getAlignment()));
 
     writeThunkOrAlias(F, G);
     writeThunkOrAlias(F, NewF);

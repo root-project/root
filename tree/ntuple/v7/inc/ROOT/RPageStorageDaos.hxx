@@ -27,10 +27,18 @@
 #include <cstdio>
 #include <memory>
 #include <string>
+#include <optional>
 
 namespace ROOT {
-
 namespace Experimental {
+
+namespace Internal {
+enum EDaosLocatorFlags {
+   // Indicates that the referenced page is "caged", i.e. it is stored in a larger blob that contains multiple pages.
+   kCagedPage = 0x01,
+};
+}
+
 namespace Detail {
 
 class RCluster;
@@ -39,6 +47,8 @@ class RPageAllocatorHeap;
 class RPagePool;
 class RDaosPool;
 class RDaosContainer;
+
+using ntuple_index_t = std::uint32_t;
 
 // clang-format off
 /**
@@ -81,11 +91,52 @@ struct RDaosNTupleAnchor {
 
 // clang-format off
 /**
+\class ROOT::Experimental::Detail::RDaosContainerNTupleLocator
+\ingroup NTuple
+\brief Helper structure concentrating the functionality required to locate an ntuple within a DAOS container.
+It includes a hashing function that converts the RNTuple's name into a 32-bit identifier; this value is used to index
+the subspace for the ntuple among all objects in the container. A zero-value hash value is reserved for storing any
+future metadata related to container-wide management; a zero-index ntuple is thus disallowed and remapped to "1".
+Once the index is computed, `InitNTupleDescriptorBuilder()` can be called to return a partially-filled builder with
+the ntuple's anchor, header and footer, lacking only pagelists. Upon that call, a copy of the anchor is stored in `fAnchor`.
+*/
+// clang-format on
+struct RDaosContainerNTupleLocator {
+   std::string fName{};
+   ntuple_index_t fIndex{};
+   std::optional<ROOT::Experimental::Detail::RDaosNTupleAnchor> fAnchor;
+   static const ntuple_index_t kReservedIndex = 0;
+
+   RDaosContainerNTupleLocator() = default;
+   explicit RDaosContainerNTupleLocator(const std::string &ntupleName) : fName(ntupleName), fIndex(Hash(ntupleName)){};
+
+   bool IsValid() { return fAnchor.has_value() && fAnchor->fNBytesHeader; }
+   [[nodiscard]] ntuple_index_t GetIndex() const { return fIndex; };
+   static ntuple_index_t Hash(const std::string &ntupleName)
+   {
+      // Convert string to numeric representation via `std::hash`.
+      std::size_t h = std::hash<std::string>{}(ntupleName);
+      // Fold `std::size_t` bits into 32-bit using `boost::hash_combine()` algorithm and magic number.
+      auto seed = static_cast<uint32_t>(h >> 32);
+      seed ^= static_cast<uint32_t>(h & 0xffffffff) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+      auto hash = static_cast<ntuple_index_t>(seed);
+      return (hash == kReservedIndex) ? kReservedIndex + 1 : hash;
+   }
+
+   int InitNTupleDescriptorBuilder(RDaosContainer &cont, RNTupleDecompressor &decompressor,
+                                   RNTupleDescriptorBuilder &builder);
+
+   static std::pair<RDaosContainerNTupleLocator, RNTupleDescriptorBuilder>
+   LocateNTuple(RDaosContainer &cont, const std::string &ntupleName, RNTupleDecompressor &decompressor);
+};
+
+// clang-format off
+/**
 \class ROOT::Experimental::Detail::RPageSinkDaos
 \ingroup NTuple
 \brief Storage provider that writes ntuple pages to into a DAOS container
 
-Currently, an object is allocated for ntuple metadata (anchor/header/footer). 
+Currently, an object is allocated for ntuple metadata (anchor/header/footer).
 Objects can correspond to pages or clusters of pages depending on the RNTuple-DAOS mapping strategy.
 */
 // clang-format on
@@ -108,11 +159,14 @@ private:
    std::uint64_t fNBytesCurrentCluster{0};
 
    RDaosNTupleAnchor fNTupleAnchor;
+   ntuple_index_t fNTupleIndex{0};
+   uint32_t fCageSizeLimit{};
 
 protected:
    void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) final;
    RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
-   RNTupleLocator CommitSealedPageImpl(DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage) final;
+   RNTupleLocator
+   CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) final;
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
@@ -129,7 +183,6 @@ public:
    void ReleasePage(RPage &page) final;
 };
 
-
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPageAllocatorDaos
@@ -140,9 +193,8 @@ public:
 class RPageAllocatorDaos {
 public:
    static RPage NewPage(ColumnId_t columnId, void *mem, std::size_t elementSize, std::size_t nElements);
-   static void DeletePage(const RPage& page);
+   static void DeletePage(const RPage &page);
 };
-
 
 // clang-format off
 /**
@@ -163,6 +215,8 @@ private:
       std::uint64_t fColumnOffset = 0;
    };
 
+   ntuple_index_t fNTupleIndex{0};
+
    /// Populated pages might be shared; the memory buffer is managed by the RPageAllocatorDaos
    std::unique_ptr<RPageAllocatorDaos> fPageAllocator;
    // TODO: the page pool should probably be handled by the base class.
@@ -176,6 +230,8 @@ private:
    std::string fURI;
    /// The cluster pool asynchronously preloads the next few clusters
    std::unique_ptr<RClusterPool> fClusterPool;
+
+   RNTupleDescriptorBuilder fDescriptorBuilder;
 
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
                                  ClusterSize_t::ValueType idxInCluster);
@@ -195,8 +251,8 @@ public:
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
    void ReleasePage(RPage &page) final;
 
-   void LoadSealedPage(DescriptorId_t columnId, const RClusterIndex &clusterIndex,
-                       RSealedPage &sealedPage) final;
+   void
+   LoadSealedPage(DescriptorId_t physicalColumnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
 

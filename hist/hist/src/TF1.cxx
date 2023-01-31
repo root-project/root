@@ -265,7 +265,7 @@ The following types of functions can be created:
 
 Begin_Macro(source)
 {
-   TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10);
+   auto fa1 = new TF1("fa1","sin(x)/x",0,10);
    fa1->Draw();
 }
 End_Macro
@@ -275,7 +275,7 @@ End_Macro
 
 Begin_Macro(source)
 {
-   TF1 *fa2 = new TF1("fa2","TMath::DiLog(x)",0,10);
+   auto fa2 = new TF1("fa2","TMath::DiLog(x)",0,10);
    fa2->Draw();
 }
 End_Macro
@@ -285,7 +285,7 @@ End_Macro
 ~~~~{.cpp}
 Double_t myFunc(double x) { return x+sin(x); }
 ....
-TF1 *fa3 = new TF1("fa3","myFunc(x)",-3,5);
+auto fa3 = new TF1("fa3","myFunc(x)",-3,5);
 fa3->Draw();
 ~~~~
 
@@ -298,7 +298,7 @@ fa3->Draw();
 
 
 ~~~~{.cpp}
-TF1 *fa = new TF1("fa","[0]*x*sin([1]*x)",-3,3);
+auto fa = new TF1("fa","[0]*x*sin([1]*x)",-3,3);
 ~~~~
 
 This creates a function of variable x with 2 parameters. The parameters must be initialized via:
@@ -318,7 +318,7 @@ Parameters may be given a name:
 * Example b:
 
 ~~~~{.cpp}
-    TF1 *fb = new TF1("fb","gaus(0)*expo(3)",0,10);
+    auto fb = new TF1("fb","gaus(0)*expo(3)",0,10);
 ~~~~
 
 
@@ -326,20 +326,11 @@ Parameters may be given a name:
 
 #### Case 2: inline expression using TMath functions with parameters
 
-~~~~{.cpp}
-   TF1 *fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10);
-   fb2->SetParameters(0.2,1.3);
-   fb2->Draw();
-~~~~
-
-
-
-Begin_Macro
+Begin_Macro(source)
 {
-    TCanvas *c = new TCanvas("c","c",0,0,500,300);
-    TF1 *fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10);
-    fb2->SetParameters(0.2,1.3); fb2->Draw();
-    return c;
+    auto fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10);
+    fb2->SetParameters(0.2,1.3);
+    fb2->Draw();
 }
 End_Macro
 
@@ -375,14 +366,14 @@ Consider the macro myfunc.C below:
    }
    void myfunc()
    {
-      TF1 *f1 = new TF1("myfunc",myfunction,0,10,2);
+      auto f1 = new TF1("myfunc",myfunction,0,10,2);
       f1->SetParameters(2,1);
       f1->SetParNames("constant","coefficient");
       f1->Draw();
    }
    void myfit()
    {
-      TH1F *h1=new TH1F("h1","test",100,0,10);
+      auto h1 = new TH1F("h1","test",100,0,10);
       h1->FillRandom("myfunc",20000);
       TF1 *f1 = (TF1 *)gROOT->GetFunction("myfunc");
       f1->SetParameters(800,1);
@@ -408,17 +399,17 @@ Example:
 
 ~~~~{.cpp}
 {
-      TF1 *fcos = new TF1 ("fcos", "[0]*cos(x)", 0., 10.);
+      auto fcos = new TF1 ("fcos", "[0]*cos(x)", 0., 10.);
       fcos->SetParNames( "cos");
       fcos->SetParameter( 0, 1.1);
 
-      TF1 *fsin = new TF1 ("fsin", "[0]*sin(x)", 0., 10.);
+      auto fsin = new TF1 ("fsin", "[0]*sin(x)", 0., 10.);
       fsin->SetParNames( "sin");
       fsin->SetParameter( 0, 2.1);
 
-      TF1 *fsincos = new TF1 ("fsc", "fcos+fsin");
+      auto fsincos = new TF1 ("fsc", "fcos+fsin");
 
-      TF1 *fs2 = new TF1 ("fs2", "fsc+fsc");
+      auto fs2 = new TF1 ("fs2", "fsc+fsc");
 }
 ~~~~
 
@@ -443,7 +434,7 @@ class  MyFunctionObject {
 {
     ....
    MyFunctionObject fobj;
-   TF1 * f = new TF1("f",fobj,0,1,npar);    // create TF1 class.
+   auto f = new TF1("f",fobj,0,1,npar);    // create TF1 class.
    .....
 }
 ~~~~
@@ -455,8 +446,8 @@ As above the lambda must have the right signature but can capture whatever we wa
 a TF1 from the TGraph::Eval function as shown below where we use as function parameter the graph normalization.
 
 ~~~~{.cpp}
-TGraph * g = new TGraph(npointx, xvec, yvec);
-TF1 * f = new TF1("f",[&](double*x, double *p){ return p[0]*g->Eval(x[0]); }, xmin, xmax, 1);
+auto g = new TGraph(npointx, xvec, yvec);
+auto f = new TF1("f",[&](double*x, double *p){ return p[0]*g->Eval(x[0]); }, xmin, xmax, 1);
 ~~~~
 
 
@@ -477,8 +468,8 @@ class  MyFunction {
 };
 {
     ....
-   MyFunction * fptr = new MyFunction(....);  // create the user function class
-   TF1 * f = new TF1("f",fptr,&MyFunction::Evaluate,0,1,npar,"MyFunction","Evaluate");   // create TF1 class.
+   MyFunction *fptr = new MyFunction(....);  // create the user function class
+   auto f = new TF1("f",fptr,&MyFunction::Evaluate,0,1,npar,"MyFunction","Evaluate");   // create TF1 class.
 
    .....
 }
@@ -1394,13 +1385,10 @@ TF1 *TF1::DrawCopy(Option_t *option) const
 
 TObject *TF1::DrawDerivative(Option_t *option)
 {
-   TVirtualPad *pad = gROOT->GetSelectedPad();
-   TVirtualPad *padsav = gPad;
-   if (pad) pad->cd();
+   TVirtualPad::TContext ctxt(gROOT->GetSelectedPad(), true, true);
 
    TGraph *gr = new TGraph(this, "d");
    gr->Draw(option);
-   if (padsav) padsav->cd();
    return gr;
 }
 
@@ -1419,13 +1407,10 @@ TObject *TF1::DrawDerivative(Option_t *option)
 
 TObject *TF1::DrawIntegral(Option_t *option)
 {
-   TVirtualPad *pad = gROOT->GetSelectedPad();
-   TVirtualPad *padsav = gPad;
-   if (pad) pad->cd();
+   TVirtualPad::TContext ctxt(gROOT->GetSelectedPad(), true, true);
 
    TGraph *gr = new TGraph(this, "i");
    gr->Draw(option);
-   if (padsav) padsav->cd();
    return gr;
 }
 
@@ -3321,42 +3306,11 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (TestBit(kNotDraw)) {
       out << "   " << f1Name.Data() << "->SetBit(TF1::kNotDraw);" << std::endl;
    }
-   if (GetFillColor() != 0) {
-      if (GetFillColor() > 228) {
-         TColor::SaveColor(out, GetFillColor());
-         out << "   " << f1Name.Data() << "->SetFillColor(ci);" << std::endl;
-      } else
-         out << "   " << f1Name.Data() << "->SetFillColor(" << GetFillColor() << ");" << std::endl;
-   }
-   if (GetFillStyle() != 1001) {
-      out << "   " << f1Name.Data() << "->SetFillStyle(" << GetFillStyle() << ");" << std::endl;
-   }
-   if (GetMarkerColor() != 1) {
-      if (GetMarkerColor() > 228) {
-         TColor::SaveColor(out, GetMarkerColor());
-         out << "   " << f1Name.Data() << "->SetMarkerColor(ci);" << std::endl;
-      } else
-         out << "   " << f1Name.Data() << "->SetMarkerColor(" << GetMarkerColor() << ");" << std::endl;
-   }
-   if (GetMarkerStyle() != 1) {
-      out << "   " << f1Name.Data() << "->SetMarkerStyle(" << GetMarkerStyle() << ");" << std::endl;
-   }
-   if (GetMarkerSize() != 1) {
-      out << "   " << f1Name.Data() << "->SetMarkerSize(" << GetMarkerSize() << ");" << std::endl;
-   }
-   if (GetLineColor() != 1) {
-      if (GetLineColor() > 228) {
-         TColor::SaveColor(out, GetLineColor());
-         out << "   " << f1Name.Data() << "->SetLineColor(ci);" << std::endl;
-      } else
-         out << "   " << f1Name.Data() << "->SetLineColor(" << GetLineColor() << ");" << std::endl;
-   }
-   if (GetLineWidth() != 4) {
-      out << "   " << f1Name.Data() << "->SetLineWidth(" << GetLineWidth() << ");" << std::endl;
-   }
-   if (GetLineStyle() != 1) {
-      out << "   " << f1Name.Data() << "->SetLineStyle(" << GetLineStyle() << ");" << std::endl;
-   }
+
+   SaveFillAttributes(out, f1Name.Data(), 0, 1001);
+   SaveMarkerAttributes(out, f1Name.Data(), 1, 1, 1);
+   SaveLineAttributes(out, f1Name.Data(), 1, 1, 4);
+
    if (GetChisquare() != 0) {
       out << "   " << f1Name.Data() << "->SetChisquare(" << GetChisquare() << ");" << std::endl;
       out << "   " << f1Name.Data() << "->SetNDF(" << GetNDF() << ");" << std::endl;

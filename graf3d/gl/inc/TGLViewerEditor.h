@@ -17,7 +17,7 @@
 #include "TGedFrame.h"
 
 #include "TGLUtil.h"
- 
+
 class TGCheckButton;
 class TGNumberEntry;
 class TGButtonGroup;
@@ -91,7 +91,7 @@ private:
    //'Extras' tab.
    TGCheckButton    *fRotateSceneOn;
    TGNumberEntry    *fSceneRotDt;
-   
+
    TGNumberEntry    *fARotDt,     *fARotWPhi;
    TGNumberEntry    *fARotATheta, *fARotWTheta;
    TGNumberEntry    *fARotADolly, *fARotWDolly;
@@ -120,7 +120,7 @@ private:
    void UpdateReferencePosState();
 
 public:
-   TGLViewerEditor(const TGWindow *p=0, Int_t width=140, Int_t height=30,
+   TGLViewerEditor(const TGWindow *p=nullptr, Int_t width=140, Int_t height=30,
                    UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    ~TGLViewerEditor();
 

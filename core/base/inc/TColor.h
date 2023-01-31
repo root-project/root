@@ -94,7 +94,7 @@ public:
    static void    Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b);
    static void    Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b);
    static const char *PixelAsHexString(ULong_t pixel);
-   static void    SaveColor(std::ostream &out, Int_t ci);
+   static Bool_t  SaveColor(std::ostream &out, Int_t ci);
    static void    SetColorThreshold(Float_t t);
    static Bool_t  DefinedColors();
    static void    InvertPalette();
@@ -125,6 +125,7 @@ public:
                        kStarryNight=102,     kSunset=103,      kTemperatureMap=104,
                        kThermometer=105,     kValentine=106,   kVisibleSpectrum=107,
                        kWaterMelon=108,      kCool=109,        kCopper=110,
-                       kGistEarth=111,       kViridis=112,     kCividis=113};
+                       kGistEarth=111,       kViridis=112,     kCividis=113,
+                       kRainbow=kRainBow,    kDarkRainbow=kDarkRainBow};
 #endif
 

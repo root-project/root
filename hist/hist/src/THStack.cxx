@@ -79,27 +79,26 @@ Example;
 
 Begin_Macro(source)
 {
-   THStack *hs = new THStack("hs","");
-   TH1F *h1 = new TH1F("h1","test hstack",10,-4,4);
+   auto hs = new THStack("hs","");
+   auto h1 = new TH1F("h1","test hstack",10,-4,4);
    h1->FillRandom("gaus",20000);
    h1->SetFillColor(kRed);
    hs->Add(h1);
-   TH1F *h2 = new TH1F("h2","test hstack",10,-4,4);
+   auto h2 = new TH1F("h2","test hstack",10,-4,4);
    h2->FillRandom("gaus",15000);
    h2->SetFillColor(kBlue);
    hs->Add(h2);
-   TH1F *h3 = new TH1F("h3","test hstack",10,-4,4);
+   auto h3 = new TH1F("h3","test hstack",10,-4,4);
    h3->FillRandom("gaus",10000);
    h3->SetFillColor(kGreen);
    hs->Add(h3);
-   TCanvas *cs = new TCanvas("cs","cs",10,10,700,900);
+   auto cs = new TCanvas("cs","cs",10,10,700,900);
    TText T; T.SetTextFont(42); T.SetTextAlign(21);
    cs->Divide(2,2);
    cs->cd(1); hs->Draw(); T.DrawTextNDC(.5,.95,"Default drawing option");
    cs->cd(2); hs->Draw("nostack"); T.DrawTextNDC(.5,.95,"Option \"nostack\"");
    cs->cd(3); hs->Draw("nostackb"); T.DrawTextNDC(.5,.95,"Option \"nostackb\"");
    cs->cd(4); hs->Draw("lego1"); T.DrawTextNDC(.5,.95,"Option \"lego1\"");
-   return cs;
 }
 End_Macro
 
@@ -698,7 +697,15 @@ void THStack::Modified()
 ////////////////////////////////////////////////////////////////////////////////
 /// [Paint the list of histograms.](#HS00)
 
-void THStack::Paint(Option_t *choptin)
+void THStack::Paint(Option_t *chopt)
+{
+   BuildAndPaint(chopt, kTRUE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create all additional objects and stack (if specified)
+
+void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
 {
    if (!fHists) return;
    if (!fHists->GetSize()) return;
@@ -717,7 +724,6 @@ void THStack::Paint(Option_t *choptin)
       if (l3) memcpy(l3,"   ",3);
       TString ws = option;
       if (ws.IsWhitespace()) strncpy(option,"\0",1);
-      TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
       TH1* hAti;
       TH1* hsAti;
       Int_t nhists = fHists->GetSize();
@@ -735,7 +741,6 @@ void THStack::Paint(Option_t *choptin)
             if (l2) hsAti->SetLineColor(ic);
             if (l3) hsAti->SetMarkerColor(ic);
          }
-         lnk = (TObjOptLink*)lnk->Next();
       }
    }
 
@@ -770,15 +775,13 @@ void THStack::Paint(Option_t *choptin)
          if (((nx*ny)-nx) >= npads) ny--;
          padsav->Divide(nx,ny);
 
-         TH1 *h;
          Int_t i = 0;
-         TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
+         auto lnk = fHists->FirstLink();
          while (lnk) {
             i++;
             padsav->cd(i);
-            h = (TH1*)lnk->GetObject();
-            h->Draw(lnk->GetOption());
-            lnk = (TObjOptLink*)lnk->Next();
+            lnk->GetObject()->Draw(lnk->GetOption());
+            lnk = lnk->Next();
          }
          padsav->cd();
       }
@@ -891,36 +894,35 @@ void THStack::Paint(Option_t *choptin)
    }
 
    // Copy the axis labels if needed.
-   TH1 *hfirst;
-   TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
-   hfirst = (TH1*)lnk->GetObject();
+   TH1 *hfirst = (TH1*)fHists->First();
    THashList* labels = hfirst->GetXaxis()->GetLabels();
    if (labels) {
       TIter iL(labels);
-      TObjString* lb;
       Int_t ilab = 1;
-      while ((lb=(TObjString*)iL())) {
+      while (auto lb=(TObjString*)iL()) {
          fHistogram->GetXaxis()->SetBinLabel(ilab,lb->String().Data());
          ilab++;
       }
    }
 
-   // Set fHistogram attributes and pain it.
+   // Set fHistogram attributes and paint it.
    if (!lsame) {
       fHistogram->SetLineWidth(0);
-      fHistogram->Paint(loption.Data());
+      if (paint)
+         fHistogram->Paint(loption.Data());
    }
 
-   if (fHistogram->GetDimension() > 1) SetDrawOption(loption.Data());
-   if (loption.Index("lego")>=0) return;
+   if (fHistogram->GetDimension() > 1)
+      SetDrawOption(loption.Data());
+   if (loption.Index("lego")>=0)
+      return;
 
    char noption[32];
    strlcpy(noption,loption.Data(),32);
    Int_t nhists = fHists->GetSize();
    if (nostack || candle || violin) {
-      lnk = (TObjOptLink*)fHists->FirstLink();
-      TH1* hAti;
-      Double_t bo=0.03;
+      auto lnk = fHists->FirstLink();
+      Double_t bo = 0.03;
       Double_t bw = (1.-(2*bo))/nhists;
       for (Int_t i=0;i<nhists;i++) {
          if (strstr(lnk->GetOption(),"same")) {
@@ -933,7 +935,7 @@ void THStack::Paint(Option_t *choptin)
             else if (candle && (indivOpt.Contains("candle") || indivOpt.Contains("violin"))) loption.Form("%ssame",lnk->GetOption());
             else          loption.Form("%ssame%s",noption,lnk->GetOption());
          }
-         hAti = (TH1F*)(fHists->At(i));
+         TH1* hAti = (TH1*) fHists->At(i);
          if (nostackb) {
             hAti->SetBarWidth(bw);
             hAti->SetBarOffset(bo);
@@ -946,12 +948,12 @@ void THStack::Paint(Option_t *choptin)
             hAti->SetBarWidth(candleSpace);
             hAti->SetBarOffset(candleOffset);
          }
-         hAti->Paint(loption.Data());
-         lnk = (TObjOptLink*)lnk->Next();
+         if (paint)
+            hAti->Paint(loption.Data());
+         lnk = lnk->Next();
       }
    } else {
-      lnk = (TObjOptLink*)fHists->LastLink();
-      TH1 *h1;
+      auto lnk = fHists->LastLink();
       Int_t h1col, h1fill;
       for (Int_t i=0;i<nhists;i++) {
          if (strstr(lnk->GetOption(),"same")) {
@@ -959,15 +961,15 @@ void THStack::Paint(Option_t *choptin)
          } else {
             loption.Form("%ssame%s",noption,lnk->GetOption());
          }
-         h1 = (TH1*)fStack->At(nhists-i-1);
-         if (i>0 && lclear) {
+         TH1 *h1 = (TH1*) fStack->At(nhists-i-1);
+         if ((i > 0) && lclear && paint) {
             // Erase before drawing the histogram
             h1col  = h1->GetFillColor();
             h1fill = h1->GetFillStyle();
             h1->SetFillColor(10);
             h1->SetFillStyle(1001);
             h1->Paint(loption.Data());
-            static TClassRef clTFrame = TClass::GetClass("TFrame",kFALSE);
+            static TClassRef clTFrame = TClass::GetClass("TFrame", kFALSE);
             TAttFill *frameFill = (TAttFill*)clTFrame->DynamicCast(TAttFill::Class(),gPad->GetFrame());
             if (frameFill) {
                h1->SetFillColor(frameFill->GetFillColor());
@@ -977,14 +979,16 @@ void THStack::Paint(Option_t *choptin)
             h1->SetFillColor(h1col);
             h1->SetFillStyle(h1fill);
          }
-         h1->Paint(loption.Data());
-         lnk = (TObjOptLink*)lnk->Prev();
+         if (paint)
+            h1->Paint(loption.Data());
+         lnk = lnk->Prev();
       }
    }
 
    opt.ReplaceAll("nostack","");
    opt.ReplaceAll("candle","");
-   if (!lsame && !opt.Contains("a")) fHistogram->Paint("axissame");
+   if (!lsame && !opt.Contains("a") && paint)
+      fHistogram->Paint("axissame");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1038,29 +1042,27 @@ void THStack::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (fHistogram) {
       frameNumber++;
       TString hname = fHistogram->GetName();
-      hname += "_stack_";
-      hname += frameNumber;
-      fHistogram->SetName(hname.Data());
+      fHistogram->SetName(TString::Format("%s_stack_%d", hname.Data(), frameNumber).Data());
       fHistogram->SavePrimitive(out,"nodraw");
       out<<"   "<<GetName()<<"->SetHistogram("<<fHistogram->GetName()<<");"<<std::endl;
       out<<"   "<<std::endl;
+      fHistogram->SetName(hname.Data()); // restore histogram name
    }
 
    if (fHists) {
-      TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
+      auto lnk = fHists->FirstLink();
       Int_t hcount = 0;
       while (lnk) {
-         TH1 *h = (TH1*)lnk->GetObject();
+         auto h = (TH1 *) lnk->GetObject();
          TString hname = h->GetName();
-         hname += TString::Format("_stack_%d",++hcount);
-         h->SetName(hname.Data());
+         h->SetName(TString::Format("%s_stack_%d", hname.Data(), ++hcount).Data());
          h->SavePrimitive(out,"nodraw");
          out<<"   "<<GetName()<<"->Add("<<h->GetName()<<","<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
-         lnk = (TObjOptLink*)lnk->Next();
+         lnk = lnk->Next();
+         h->SetName(hname.Data()); // restore histogram name
       }
    }
-   out<<"   "<<GetName()<<"->Draw("
-      <<quote<<option<<quote<<");"<<std::endl;
+   out<<"   "<<GetName()<<"->Draw("<<quote<<option<<quote<<");"<<std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

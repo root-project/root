@@ -28,7 +28,7 @@ class HypoTestInverterResult : public SimpleInterval {
 public:
 
    /// default constructor
-   explicit HypoTestInverterResult(const char* name = 0);
+   explicit HypoTestInverterResult(const char *name = nullptr);
 
    /// constructor
    HypoTestInverterResult( const char* name,
@@ -209,7 +209,6 @@ protected:
 
    friend class HypoTestInverter;
    friend class HypoTestInverterPlot;
-   friend class HypoTestInverterOriginal;
 
    ClassDefOverride(HypoTestInverterResult,5)  // HypoTestInverterResult class
 };

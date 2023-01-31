@@ -223,7 +223,7 @@ void RooBDecay::generateEvent(Int_t code)
 
     double dgt = _dgamma*t/2;
     double dmt = _dm*t;
-    double ft = fabs(t);
+    double ft = std::abs(t);
     double f = exp(-ft/_tau)*(_f0*cosh(dgt)+_f1*sinh(dgt)+_f2*cos(dmt)+_f3*sin(dmt));
     if(f < 0) {
       cout << "RooBDecay::generateEvent(" << GetName() << ") ERROR: PDF value less than zero" << endl;

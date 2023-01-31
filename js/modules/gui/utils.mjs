@@ -1,7 +1,8 @@
-import { settings, gStyle, isBatchMode, isNodeJs, source_dir, atob_func, btoa_func } from '../core.mjs';
-import { select as d3_select, pointer as d3_pointer, drag as d3_drag } from '../d3.mjs';
+import { settings, gStyle, isBatchMode, isNodeJs, isObject, isFunc, isStr, source_dir, atob_func, btoa_func } from '../core.mjs';
+import { select as d3_select, pointer as d3_pointer, drag as d3_drag, color as d3_color } from '../d3.mjs';
 import { BasePainter } from '../base/BasePainter.mjs';
 import { resize } from '../base/ObjectPainter.mjs';
+import { getRootColors } from '../base/colors.mjs';
 
 
 /** @summary Display progress message in the left bottom corner.
@@ -12,36 +13,36 @@ import { resize } from '../base/ObjectPainter.mjs';
   * @private */
 function showProgress(msg, tmout) {
    if (isBatchMode() || (typeof document === 'undefined')) return;
-   let id = "jsroot_progressbox",
-       box = d3_select("#" + id);
+   let id = 'jsroot_progressbox',
+       box = d3_select('#' + id);
 
    if (!settings.ProgressBox)
       return box.remove();
 
    if ((arguments.length == 0) || !msg) {
-      if ((tmout !== -1) || (!box.empty() && box.property("with_timeout"))) box.remove();
+      if ((tmout !== -1) || (!box.empty() && box.property('with_timeout'))) box.remove();
       return;
    }
 
    if (box.empty()) {
       box = d3_select(document.body)
-              .append("div").attr("id", id)
-              .attr("style", "position: fixed; min-width: 100px; height: auto; overflow: visible; z-index: 101; border: 1px solid #999; background: #F8F8F8; left: 10px; bottom: 10px;");
-      box.append("p");
+              .append('div').attr('id', id)
+              .attr('style', 'position: fixed; min-width: 100px; height: auto; overflow: visible; z-index: 101; border: 1px solid #999; background: #F8F8F8; left: 10px; bottom: 10px;');
+      box.append('p');
    }
 
-   box.property("with_timeout", false);
+   box.property('with_timeout', false);
 
-   if (typeof msg === "string") {
-      box.select("p").html(msg);
+   if (isStr(msg)) {
+      box.select('p').html(msg);
    } else {
-      box.html("");
+      box.html('');
       box.node().appendChild(msg);
    }
-   injectStyle("#jsroot_progressbox p { font-size: 10px; margin-left: 10px; margin-right: 10px; margin-top: 3px; margin-bottom: 3px; }", box.node());
+   injectStyle('#jsroot_progressbox p { font-size: 10px; margin-left: 10px; margin-right: 10px; margin-top: 3px; margin-bottom: 3px; }', box.node());
 
    if (Number.isFinite(tmout) && (tmout > 0)) {
-      box.property("with_timeout", true);
+      box.property('with_timeout', true);
       setTimeout(() => showProgress('', -1), tmout);
    }
 }
@@ -60,7 +61,7 @@ function closeCurrentWindow() {
 function tryOpenOpenUI(sources, args) {
    if (!sources || (sources.length == 0)) {
       if (args.rejectFunc) {
-         args.rejectFunc(Error("openui5 was not possible to load"));
+         args.rejectFunc(Error('openui5 was not possible to load'));
          args.rejectFunc = null;
       }
       return;
@@ -69,18 +70,18 @@ function tryOpenOpenUI(sources, args) {
    // where to take openui5 sources
    let src = sources.shift();
 
-   if ((src.indexOf("roothandler") == 0) && (src.indexOf("://") < 0))
-      src = src.replace(/\:\//g,"://");
+   if ((src.indexOf('roothandler') == 0) && (src.indexOf('://') < 0))
+      src = src.replace(/\:\//g, '://');
 
-   let element = document.createElement("script");
-   element.setAttribute('type', "text/javascript");
-   element.setAttribute('id', "sap-ui-bootstrap");
+   let element = document.createElement('script');
+   element.setAttribute('type', 'text/javascript');
+   element.setAttribute('id', 'sap-ui-bootstrap');
    // use nojQuery while we are already load jquery and jquery-ui, later one can use directly sap-ui-core.js
 
    // this is location of openui5 scripts when working with THttpServer or when scripts are installed inside JSROOT
-   element.setAttribute('src', src + "resources/sap-ui-core.js"); // latest openui5 version
+   element.setAttribute('src', src + 'resources/sap-ui-core.js'); // latest openui5 version
 
-   element.setAttribute('data-sap-ui-libs', args.openui5libs ?? "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.commons");
+   element.setAttribute('data-sap-ui-libs', args.openui5libs ?? 'sap.m, sap.ui.layout, sap.ui.unified, sap.ui.commons');
 
    element.setAttribute('data-sap-ui-theme', args.openui5theme || 'sap_belize');
    element.setAttribute('data-sap-ui-compatVersion', 'edge');
@@ -88,7 +89,7 @@ function tryOpenOpenUI(sources, args) {
 
    element.setAttribute('data-sap-ui-preload', 'async'); // '' to disable Component-preload.js
 
-   element.setAttribute('data-sap-ui-evt-oninit', "completeUI5Loading()");
+   element.setAttribute('data-sap-ui-evt-oninit', 'completeUI5Loading()');
 
    element.onerror = function() {
       // remove failed element
@@ -98,7 +99,7 @@ function tryOpenOpenUI(sources, args) {
    }
 
    element.onload = function() {
-      console.log('Load openui5 from ' + src);
+      console.log(`Load openui5 from ${src}`);
    }
 
    document.head.appendChild(element);
@@ -107,33 +108,33 @@ function tryOpenOpenUI(sources, args) {
 
 // return Promise let loader wait before dependent source will be invoked
 
-function loadOpenui5(args) {
+async function loadOpenui5(args) {
    // very simple - openui5 was loaded before and will be used as is
    if (typeof sap == 'object')
-      return Promise.resolve(sap);
+      return sap;
 
    if (!args) args = {};
 
-   let rootui5sys = source_dir.replace(/jsrootsys/g, "rootui5sys");
+   let rootui5sys = source_dir.replace(/jsrootsys/g, 'rootui5sys');
 
    if (rootui5sys == source_dir) {
       // if jsrootsys location not detected, try to guess it
-      if (window.location.port && (window.location.pathname.indexOf("/win") >= 0) && (!args.openui5src || args.openui5src == 'nojsroot' || args.openui5src == 'jsroot'))
-         rootui5sys = window.location.origin + window.location.pathname + "../rootui5sys/";
+      if (window.location.port && (window.location.pathname.indexOf('/win') >= 0) && (!args.openui5src || args.openui5src == 'nojsroot' || args.openui5src == 'jsroot'))
+         rootui5sys = window.location.origin + window.location.pathname + '../rootui5sys/';
       else
          rootui5sys = undefined;
    }
 
    let openui5_sources = [],
-       openui5_dflt = "https://openui5.hana.ondemand.com/1.98.0/",
-       openui5_root = rootui5sys ? rootui5sys + "distribution/" : "";
+       openui5_dflt = 'https://openui5.hana.ondemand.com/1.98.0/',
+       openui5_root = rootui5sys ? rootui5sys + 'distribution/' : '';
 
-   if (typeof args.openui5src == 'string') {
+   if (isStr(args.openui5src)) {
       switch (args.openui5src) {
-         case "nodefault": openui5_dflt = ""; break;
-         case "default": openui5_sources.push(openui5_dflt); openui5_dflt = ""; break;
-         case "nojsroot": /* openui5_root = ""; */ break;
-         case "jsroot": openui5_sources.push(openui5_root); openui5_root = ""; break;
+         case 'nodefault': openui5_dflt = ''; break;
+         case 'default': openui5_sources.push(openui5_dflt); openui5_dflt = ''; break;
+         case 'nojsroot': /* openui5_root = ''; */ break;
+         case 'jsroot': openui5_sources.push(openui5_root); openui5_root = ''; break;
          default: openui5_sources.push(args.openui5src); break;
       }
    }
@@ -181,47 +182,47 @@ const ToolbarIcons = {
          'M483.885,273.275H28.782c-15.708,0-28.451,12.731-28.451,28.452c0,15.707,12.744,28.451,28.451,28.451H483.88   c15.707,0,28.451-12.744,28.451-28.451C512.337,286.007,499.599,273.275,483.885,273.275z' +
          'M256.065,409.704H30.492c-15.708,0-28.451,12.731-28.451,28.451c0,15.707,12.744,28.451,28.451,28.451h225.585   c15.707,0,28.451-12.744,28.451-28.451C284.516,422.436,271.785,409.704,256.065,409.704z'
    },
-   circle: { path: "M256,256 m-150,0 a150,150 0 1,0 300,0 a150,150 0 1,0 -300,0" },
-   three_circles: { path: "M256,85 m-70,0 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0  M256,255 m-70,0 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0  M256,425 m-70,0 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0 " },
-   diamand: { path: "M256,0L384,256L256,511L128,256z" },
-   rect: { path: "M80,80h352v352h-352z" },
-   cross: { path: "M80,40l176,176l176,-176l40,40l-176,176l176,176l-40,40l-176,-176l-176,176l-40,-40l176,-176l-176,-176z" },
-   vrgoggles: { size: "245.82 141.73", path: 'M175.56,111.37c-22.52,0-40.77-18.84-40.77-42.07S153,27.24,175.56,27.24s40.77,18.84,40.77,42.07S198.08,111.37,175.56,111.37ZM26.84,69.31c0-23.23,18.25-42.07,40.77-42.07s40.77,18.84,40.77,42.07-18.26,42.07-40.77,42.07S26.84,92.54,26.84,69.31ZM27.27,0C11.54,0,0,12.34,0,28.58V110.9c0,16.24,11.54,30.83,27.27,30.83H99.57c2.17,0,4.19-1.83,5.4-3.7L116.47,118a8,8,0,0,1,12.52-.18l11.51,20.34c1.2,1.86,3.22,3.61,5.39,3.61h72.29c15.74,0,27.63-14.6,27.63-30.83V28.58C245.82,12.34,233.93,0,218.19,0H27.27Z' },
+   circle: { path: 'M256,256 m-150,0 a150,150 0 1,0 300,0 a150,150 0 1,0 -300,0' },
+   three_circles: { path: 'M256,85 m-70,0 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0  M256,255 m-70,0 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0  M256,425 m-70,0 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0 ' },
+   diamand: { path: 'M256,0L384,256L256,511L128,256z' },
+   rect: { path: 'M80,80h352v352h-352z' },
+   cross: { path: 'M80,40l176,176l176,-176l40,40l-176,176l176,176l-40,40l-176,-176l-176,176l-40,-40l176,-176l-176,-176z' },
+   vrgoggles: { size: '245.82 141.73', path: 'M175.56,111.37c-22.52,0-40.77-18.84-40.77-42.07S153,27.24,175.56,27.24s40.77,18.84,40.77,42.07S198.08,111.37,175.56,111.37ZM26.84,69.31c0-23.23,18.25-42.07,40.77-42.07s40.77,18.84,40.77,42.07-18.26,42.07-40.77,42.07S26.84,92.54,26.84,69.31ZM27.27,0C11.54,0,0,12.34,0,28.58V110.9c0,16.24,11.54,30.83,27.27,30.83H99.57c2.17,0,4.19-1.83,5.4-3.7L116.47,118a8,8,0,0,1,12.52-.18l11.51,20.34c1.2,1.86,3.22,3.61,5.39,3.61h72.29c15.74,0,27.63-14.6,27.63-30.83V28.58C245.82,12.34,233.93,0,218.19,0H27.27Z' },
    th2colorz: { recs: [{ x: 128, y: 486, w: 256, h: 26, f: 'rgb(38,62,168)' }, { y: 461, f: 'rgb(22,82,205)' }, { y: 435, f: 'rgb(16,100,220)' }, { y: 410, f: 'rgb(18,114,217)' }, { y: 384, f: 'rgb(20,129,214)' }, { y: 358, f: 'rgb(14,143,209)' }, { y: 333, f: 'rgb(9,157,204)' }, { y: 307, f: 'rgb(13,167,195)' }, { y: 282, f: 'rgb(30,175,179)' }, { y: 256, f: 'rgb(46,183,164)' }, { y: 230, f: 'rgb(82,186,146)' }, { y: 205, f: 'rgb(116,189,129)' }, { y: 179, f: 'rgb(149,190,113)' }, { y: 154, f: 'rgb(179,189,101)' }, { y: 128, f: 'rgb(209,187,89)' }, { y: 102, f: 'rgb(226,192,75)' }, { y: 77, f: 'rgb(244,198,59)' }, { y: 51, f: 'rgb(253,210,43)' }, { y: 26, f: 'rgb(251,230,29)' }, { y: 0, f: 'rgb(249,249,15)' }] },
    th2color: { recs: [{x:0,y:256,w:13,h:39,f:'rgb(38,62,168)'},{x:13,y:371,w:39,h:39},{y:294,h:39},{y:256,h:39},{y:218,h:39},{x:51,y:410,w:39,h:39},{y:371,h:39},{y:333,h:39},{y:294},{y:256,h:39},{y:218,h:39},{y:179,h:39},{y:141,h:39},{y:102,h:39},{y:64},{x:90,y:448,w:39,h:39},{y:410},{y:371,h:39},{y:333,h:39,f:'rgb(22,82,205)'},{y:294},{y:256,h:39,f:'rgb(16,100,220)'},{y:218,h:39},{y:179,h:39,f:'rgb(22,82,205)'},{y:141,h:39},{y:102,h:39,f:'rgb(38,62,168)'},{y:64},{y:0,h:27},{x:128,y:448,w:39,h:39},{y:410},{y:371,h:39},{y:333,h:39,f:'rgb(22,82,205)'},{y:294,f:'rgb(20,129,214)'},{y:256,h:39,f:'rgb(9,157,204)'},{y:218,h:39,f:'rgb(14,143,209)'},{y:179,h:39,f:'rgb(20,129,214)'},{y:141,h:39,f:'rgb(16,100,220)'},{y:102,h:39,f:'rgb(22,82,205)'},{y:64,f:'rgb(38,62,168)'},{y:26,h:39},{y:0,h:27},{x:166,y:486,h:14},{y:448,h:39},{y:410},{y:371,h:39,f:'rgb(22,82,205)'},{y:333,h:39,f:'rgb(20,129,214)'},{y:294,f:'rgb(82,186,146)'},{y:256,h:39,f:'rgb(179,189,101)'},{y:218,h:39,f:'rgb(116,189,129)'},{y:179,h:39,f:'rgb(82,186,146)'},{y:141,h:39,f:'rgb(14,143,209)'},{y:102,h:39,f:'rgb(16,100,220)'},{y:64,f:'rgb(38,62,168)'},{y:26,h:39},{x:205,y:486,w:39,h:14},{y:448,h:39},{y:410},{y:371,h:39,f:'rgb(16,100,220)'},{y:333,h:39,f:'rgb(9,157,204)'},{y:294,f:'rgb(149,190,113)'},{y:256,h:39,f:'rgb(244,198,59)'},{y:218,h:39},{y:179,h:39,f:'rgb(226,192,75)'},{y:141,h:39,f:'rgb(13,167,195)'},{y:102,h:39,f:'rgb(18,114,217)'},{y:64,f:'rgb(22,82,205)'},{y:26,h:39,f:'rgb(38,62,168)'},{x:243,y:448,w:39,h:39},{y:410},{y:371,h:39,f:'rgb(18,114,217)'},{y:333,h:39,f:'rgb(30,175,179)'},{y:294,f:'rgb(209,187,89)'},{y:256,h:39,f:'rgb(251,230,29)'},{y:218,h:39,f:'rgb(249,249,15)'},{y:179,h:39,f:'rgb(226,192,75)'},{y:141,h:39,f:'rgb(30,175,179)'},{y:102,h:39,f:'rgb(18,114,217)'},{y:64,f:'rgb(38,62,168)'},{y:26,h:39},{x:282,y:448,h:39},{y:410},{y:371,h:39,f:'rgb(18,114,217)'},{y:333,h:39,f:'rgb(14,143,209)'},{y:294,f:'rgb(149,190,113)'},{y:256,h:39,f:'rgb(226,192,75)'},{y:218,h:39,f:'rgb(244,198,59)'},{y:179,h:39,f:'rgb(149,190,113)'},{y:141,h:39,f:'rgb(9,157,204)'},{y:102,h:39,f:'rgb(18,114,217)'},{y:64,f:'rgb(38,62,168)'},{y:26,h:39},{x:320,y:448,w:39,h:39},{y:410},{y:371,h:39,f:'rgb(22,82,205)'},{y:333,h:39,f:'rgb(20,129,214)'},{y:294,f:'rgb(46,183,164)'},{y:256,h:39},{y:218,h:39,f:'rgb(82,186,146)'},{y:179,h:39,f:'rgb(9,157,204)'},{y:141,h:39,f:'rgb(20,129,214)'},{y:102,h:39,f:'rgb(16,100,220)'},{y:64,f:'rgb(38,62,168)'},{y:26,h:39},{x:358,y:448,h:39},{y:410},{y:371,h:39,f:'rgb(22,82,205)'},{y:333,h:39},{y:294,f:'rgb(16,100,220)'},{y:256,h:39,f:'rgb(20,129,214)'},{y:218,h:39,f:'rgb(14,143,209)'},{y:179,h:39,f:'rgb(18,114,217)'},{y:141,h:39,f:'rgb(22,82,205)'},{y:102,h:39,f:'rgb(38,62,168)'},{y:64},{y:26,h:39},{x:397,y:448,w:39,h:39},{y:371,h:39},{y:333,h:39},{y:294,f:'rgb(22,82,205)'},{y:256,h:39},{y:218,h:39},{y:179,h:39,f:'rgb(38,62,168)'},{y:141,h:39},{y:102,h:39},{y:64},{y:26,h:39},{x:435,y:410,h:39},{y:371,h:39},{y:333,h:39},{y:294},{y:256,h:39},{y:218,h:39},{y:179,h:39},{y:141,h:39},{y:102,h:39},{y:64},{x:474,y:256,h:39},{y:179,h:39}] },
    th2draw3d: {
-      path: "M172.768,0H51.726C23.202,0,0.002,23.194,0.002,51.712v89.918c0,28.512,23.2,51.718,51.724,51.718h121.042   c28.518,0,51.724-23.2,51.724-51.718V51.712C224.486,23.194,201.286,0,172.768,0z M177.512,141.63c0,2.611-2.124,4.745-4.75,4.745   H51.726c-2.626,0-4.751-2.134-4.751-4.745V51.712c0-2.614,2.125-4.739,4.751-4.739h121.042c2.62,0,4.75,2.125,4.75,4.739 L177.512,141.63L177.512,141.63z "+
-            "M460.293,0H339.237c-28.521,0-51.721,23.194-51.721,51.712v89.918c0,28.512,23.2,51.718,51.721,51.718h121.045   c28.521,0,51.721-23.2,51.721-51.718V51.712C512.002,23.194,488.802,0,460.293,0z M465.03,141.63c0,2.611-2.122,4.745-4.748,4.745   H339.237c-2.614,0-4.747-2.128-4.747-4.745V51.712c0-2.614,2.133-4.739,4.747-4.739h121.045c2.626,0,4.748,2.125,4.748,4.739 V141.63z "+
-            "M172.768,256.149H51.726c-28.524,0-51.724,23.205-51.724,51.726v89.915c0,28.504,23.2,51.715,51.724,51.715h121.042   c28.518,0,51.724-23.199,51.724-51.715v-89.915C224.486,279.354,201.286,256.149,172.768,256.149z M177.512,397.784   c0,2.615-2.124,4.736-4.75,4.736H51.726c-2.626-0.006-4.751-2.121-4.751-4.736v-89.909c0-2.626,2.125-4.753,4.751-4.753h121.042 c2.62,0,4.75,2.116,4.75,4.753L177.512,397.784L177.512,397.784z "+
-            "M460.293,256.149H339.237c-28.521,0-51.721,23.199-51.721,51.726v89.915c0,28.504,23.2,51.715,51.721,51.715h121.045   c28.521,0,51.721-23.199,51.721-51.715v-89.915C512.002,279.354,488.802,256.149,460.293,256.149z M465.03,397.784   c0,2.615-2.122,4.736-4.748,4.736H339.237c-2.614,0-4.747-2.121-4.747-4.736v-89.909c0-2.626,2.121-4.753,4.747-4.753h121.045 c2.615,0,4.748,2.116,4.748,4.753V397.784z"
+      path: 'M172.768,0H51.726C23.202,0,0.002,23.194,0.002,51.712v89.918c0,28.512,23.2,51.718,51.724,51.718h121.042   c28.518,0,51.724-23.2,51.724-51.718V51.712C224.486,23.194,201.286,0,172.768,0z M177.512,141.63c0,2.611-2.124,4.745-4.75,4.745   H51.726c-2.626,0-4.751-2.134-4.751-4.745V51.712c0-2.614,2.125-4.739,4.751-4.739h121.042c2.62,0,4.75,2.125,4.75,4.739 L177.512,141.63L177.512,141.63z '+
+            'M460.293,0H339.237c-28.521,0-51.721,23.194-51.721,51.712v89.918c0,28.512,23.2,51.718,51.721,51.718h121.045   c28.521,0,51.721-23.2,51.721-51.718V51.712C512.002,23.194,488.802,0,460.293,0z M465.03,141.63c0,2.611-2.122,4.745-4.748,4.745   H339.237c-2.614,0-4.747-2.128-4.747-4.745V51.712c0-2.614,2.133-4.739,4.747-4.739h121.045c2.626,0,4.748,2.125,4.748,4.739 V141.63z '+
+            'M172.768,256.149H51.726c-28.524,0-51.724,23.205-51.724,51.726v89.915c0,28.504,23.2,51.715,51.724,51.715h121.042   c28.518,0,51.724-23.199,51.724-51.715v-89.915C224.486,279.354,201.286,256.149,172.768,256.149z M177.512,397.784   c0,2.615-2.124,4.736-4.75,4.736H51.726c-2.626-0.006-4.751-2.121-4.751-4.736v-89.909c0-2.626,2.125-4.753,4.751-4.753h121.042 c2.62,0,4.75,2.116,4.75,4.753L177.512,397.784L177.512,397.784z '+
+            'M460.293,256.149H339.237c-28.521,0-51.721,23.199-51.721,51.726v89.915c0,28.504,23.2,51.715,51.721,51.715h121.045   c28.521,0,51.721-23.199,51.721-51.715v-89.915C512.002,279.354,488.802,256.149,460.293,256.149z M465.03,397.784   c0,2.615-2.122,4.736-4.748,4.736H339.237c-2.614,0-4.747-2.121-4.747-4.736v-89.909c0-2.626,2.121-4.753,4.747-4.753h121.045 c2.615,0,4.748,2.116,4.748,4.753V397.784z'
    },
 
    createSVG(group, btn, size, title) {
       injectStyle('.jsroot_svg_toolbar_btn { fill: steelblue; cursor: pointer; opacity: 0.3; } .jsroot_svg_toolbar_btn:hover { opacity: 1.0; }', group.node());
 
-      let svg = group.append("svg:svg")
-                     .attr("class", "jsroot_svg_toolbar_btn")
-                     .attr("width", size + "px")
-                     .attr("height", size + "px")
-                     .attr("viewBox", "0 0 512 512")
-                     .style("overflow", "hidden");
+      let svg = group.append('svg:svg')
+                     .attr('class', 'jsroot_svg_toolbar_btn')
+                     .attr('width', size + 'px')
+                     .attr('height', size + 'px')
+                     .attr('viewBox', '0 0 512 512')
+                     .style('overflow', 'hidden');
 
       if ('recs' in btn) {
          let rec = {};
          for (let n = 0; n < btn.recs.length; ++n) {
             Object.assign(rec, btn.recs[n]);
-            svg.append('rect').attr("x", rec.x).attr("y", rec.y)
-               .attr("width", rec.w).attr("height", rec.h)
-               .style("fill", rec.f);
+            svg.append('rect').attr('x', rec.x).attr('y', rec.y)
+               .attr('width', rec.w).attr('height', rec.h)
+               .style('fill', rec.f);
          }
       } else {
          svg.append('svg:path').attr('d', btn.path);
       }
 
       //  special rect to correctly get mouse events for whole button area
-      svg.append("svg:rect").attr("x", 0).attr("y", 0).attr("width", 512).attr("height", 512)
-         .style('opacity', 0).style('fill', "none").style("pointer-events", "visibleFill")
-         .append("svg:title").text(title);
+      svg.append('svg:rect').attr('x', 0).attr('y', 0).attr('width', 512).attr('height', 512)
+         .style('opacity', 0).style('fill', 'none').style('pointer-events', 'visibleFill')
+         .append('svg:title').text(title);
 
       return svg;
    }
@@ -248,15 +249,15 @@ function registerForResize(handle, delay) {
       myInterval = null;
 
       document.body.style.cursor = 'wait';
-      if (typeof handle == 'function')
+      if (isFunc(handle))
          handle();
-      else if (handle && (typeof handle == 'object') && (typeof handle.checkResize == 'function')) {
+      else if (isFunc(handle?.checkResize)) {
          handle.checkResize();
       } else {
          let node = new BasePainter(handle).selectDom();
          if (!node.empty()) {
             let mdi = node.property('mdi');
-            if (mdi && typeof mdi.checkMDIResize == 'function') {
+            if (isFunc(mdi?.checkMDIResize)) {
                mdi.checkMDIResize();
             } else {
                resize(node.node());
@@ -288,24 +289,24 @@ function addMoveHandler(painter, enabled) {
    if (!settings.MoveResize || isBatchMode() || !painter.draw_g) return;
 
    if (!enabled) {
-      if (painter.draw_g.property("assigned_move")) {
+      if (painter.draw_g.property('assigned_move')) {
          let drag_move = d3_drag().subject(Object);
-         drag_move.on("start", null).on("drag", null).on("end", null);
+         drag_move.on('start', null).on('drag', null).on('end', null);
          painter.draw_g
-               .style("cursor", null)
-               .property("assigned_move", null)
+               .style('cursor', null)
+               .property('assigned_move', null)
                .call(drag_move);
       }
       return;
    }
 
-   if (painter.draw_g.property("assigned_move")) return;
+   if (painter.draw_g.property('assigned_move')) return;
 
    let drag_move = d3_drag().subject(Object),
       not_changed = true, move_disabled = false;
 
    drag_move
-      .on("start", function(evnt) {
+      .on('start', function(evnt) {
          move_disabled = this.moveEnabled ? !this.moveEnabled() : false;
          if (move_disabled) return;
          if (detectRightButton(evnt.sourceEvent)) return;
@@ -315,14 +316,14 @@ function addMoveHandler(painter, enabled) {
          not_changed = true;
          if (this.moveStart)
             this.moveStart(pos[0], pos[1]);
-      }.bind(painter)).on("drag", function(evnt) {
+      }.bind(painter)).on('drag', function(evnt) {
          if (move_disabled) return;
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
          not_changed = false;
          if (this.moveDrag)
             this.moveDrag(evnt.dx, evnt.dy);
-      }.bind(painter)).on("end", function(evnt) {
+      }.bind(painter)).on('end', function(evnt) {
          if (move_disabled) return;
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
@@ -332,8 +333,8 @@ function addMoveHandler(painter, enabled) {
       }.bind(painter));
 
    painter.draw_g
-          .style("cursor", "move")
-          .property("assigned_move", true)
+          .style('cursor', 'move')
+          .property('assigned_move', true)
           .call(drag_move);
 }
 
@@ -346,7 +347,7 @@ function injectStyle(code, node, tag) {
 
    let styles = (node || document).getElementsByTagName('style');
    for (let n = 0; n < styles.length; ++n) {
-      if (tag && styles[n].getAttribute("tag") == tag) {
+      if (tag && styles[n].getAttribute('tag') == tag) {
          styles[n].innerHTML = code;
          return true;
       }
@@ -355,8 +356,8 @@ function injectStyle(code, node, tag) {
          return true;
    }
 
-   let element = document.createElement("style");
-   if (tag) element.setAttribute("tag", tag);
+   let element = document.createElement('style');
+   if (tag) element.setAttribute('tag', tag);
    element.innerHTML = code;
    (node || document.head).appendChild(element);
    return true;
@@ -367,17 +368,17 @@ function injectStyle(code, node, tag) {
 function selectgStyle(name) {
    gStyle.fName = name;
    switch (name) {
-      case "Modern": Object.assign(gStyle, {
+      case 'Modern': Object.assign(gStyle, {
          fFrameBorderMode: 0, fFrameFillColor: 0, fCanvasBorderMode: 0,
          fCanvasColor: 0, fPadBorderMode: 0, fPadColor: 0, fStatColor: 0,
          fTitleAlign: 23, fTitleX: 0.5, fTitleBorderSize: 0, fTitleColor: 0, fTitleStyle: 0,
          fOptStat: 1111, fStatY: 0.935,
          fLegendBorderSize: 1, fLegendFont: 42, fLegendTextSize: 0, fLegendFillColor: 0 }); break;
-      case "Plain": Object.assign(gStyle, {
+      case 'Plain': Object.assign(gStyle, {
          fFrameBorderMode: 0, fCanvasBorderMode: 0, fPadBorderMode: 0,
          fPadColor: 0, fCanvasColor: 0,
          fTitleColor: 0, fTitleBorderSize: 0, fStatColor: 0, fStatBorderSize: 1, fLegendBorderSize: 1 }); break;
-      case "Bold": Object.assign(gStyle, {
+      case 'Bold': Object.assign(gStyle, {
          fCanvasColor: 10, fCanvasBorderMode: 0,
          fFrameLineWidth: 3, fFrameFillColor: 10,
          fPadColor: 10, fPadTickX: 1, fPadTickY: 1, fPadBottomMargin: 0.15, fPadLeftMargin: 0.15,
@@ -386,7 +387,7 @@ function selectgStyle(name) {
 }
 
 function saveCookie(obj, expires, name) {
-   let arg = (expires <= 0) ? "" : btoa_func(JSON.stringify(obj)),
+   let arg = (expires <= 0) ? '' : btoa_func(JSON.stringify(obj)),
        d = new Date();
    d.setTime((expires <= 0) ? 0 : d.getTime() + expires*24*60*60*1000);
    document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
@@ -396,7 +397,7 @@ function readCookie(name) {
    if (typeof document == 'undefined') return null;
    let decodedCookie = decodeURIComponent(document.cookie),
        ca = decodedCookie.split(';');
-   name += "=";
+   name += '=';
    for(let i = 0; i < ca.length; i++) {
       let c = ca[i];
       while (c.charAt(0) == ' ')
@@ -404,7 +405,7 @@ function readCookie(name) {
       if (c.indexOf(name) == 0) {
          let s = JSON.parse(atob_func(c.substring(name.length, c.length)));
 
-         return (s && typeof s == 'object') ? s : null;
+         return isObject(s) ? s : null;
       }
    }
    return null;
@@ -414,7 +415,7 @@ function readCookie(name) {
   * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
   * @param {String} name - cookie parameter name
   * @private */
-function saveSettings(expires = 365, name = "jsroot_settings") {
+function saveSettings(expires = 365, name = 'jsroot_settings') {
    saveCookie(settings, expires, name);
 }
 
@@ -422,7 +423,7 @@ function saveSettings(expires = 365, name = "jsroot_settings") {
   * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
   * @param {String} name - cookie parameter name
   * @private */
-function readSettings(only_check = false, name = "jsroot_settings") {
+function readSettings(only_check = false, name = 'jsroot_settings') {
    let s = readCookie(name);
    if (!s) return false;
    if (!only_check)
@@ -434,7 +435,7 @@ function readSettings(only_check = false, name = "jsroot_settings") {
   * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
   * @param {String} name - cookie parameter name
   * @private */
-function saveStyle(expires = 365, name = "jsroot_style") {
+function saveStyle(expires = 365, name = 'jsroot_style') {
    saveCookie(gStyle, expires, name);
 }
 
@@ -442,7 +443,7 @@ function saveStyle(expires = 365, name = "jsroot_style") {
   * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
   * @param {String} name - cookie parameter name
   * @private */
-function readStyle(only_check = false, name = "jsroot_style") {
+function readStyle(only_check = false, name = 'jsroot_style') {
    let s = readCookie(name);
    if (!s) return false;
    if (!only_check)
@@ -458,7 +459,7 @@ let _saveFileFunc = null;
   * @private */
 
 function getBinFileContent(content) {
-   const svg_prefix = "data:image/svg+xml;charset=utf-8,";
+   const svg_prefix = 'data:image/svg+xml;charset=utf-8,';
 
    if (content.indexOf(svg_prefix) == 0)
       return decodeURIComponent(content.slice(svg_prefix.length));
@@ -476,11 +477,10 @@ function getBinFileContent(content) {
 
 /** @summary Function store content as file with filename
   * @private */
-function saveFile(filename, content) {
-
-   if (typeof _saveFileFunc == 'function') {
+async function saveFile(filename, content) {
+   if (isFunc(_saveFileFunc))
       return _saveFileFunc(filename, getBinFileContent(content));
-   } else if (isNodeJs()) {
+   if (isNodeJs()) {
       return import('fs').then(fs => {
          fs.writeFileSync(filename, getBinFileContent(content));
          return true;
@@ -492,11 +492,11 @@ function saveFile(filename, content) {
       document.body.appendChild(a);
 
       return new Promise(resolve => {
-         a.addEventListener("click", () => { a.parentNode.removeChild(a); resolve(true); });
+         a.addEventListener('click', () => { a.parentNode.removeChild(a); resolve(true); });
          a.click();
       });
    }
-   return Promise.resolve(false);
+   return false;
 }
 
 /** @summary Function store content as file with filename
@@ -505,7 +505,39 @@ function setSaveFile(func) {
    _saveFileFunc = func;
 }
 
+/** @summary Produce exec string for WebCanas to set color value
+  * @desc Color can be id or string, but should belong to list of known colors
+  * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
+  * @private */
+function getColorExec(col, method) {
+   let id = -1, arr = getRootColors();
+   if (isStr(col)) {
+      if (!col || (col == 'none')) {
+         id = 0;
+      } else {
+         for (let k = 1; k < arr.length; ++k)
+            if (arr[k] == col) { id = k; break; }
+      }
+      if ((id < 0) && (col.indexOf('rgb') == 0))
+         id = 9999;
+   } else if (Number.isInteger(col) && arr[col]) {
+      id = col;
+      col = arr[id];
+   }
+
+   if (id < 0) return '';
+
+   // for higher color numbers ensure that such color exists
+   if (id >= 50) {
+      let c = d3_color(col);
+      id = `TColor::GetColor(${c.r},${c.g},${c.b})`;
+    }
+
+   return `exec:${method}(${id})`;
+}
+
+
 export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize,
          detectRightButton, addMoveHandler, injectStyle,
          selectgStyle, saveSettings, readSettings, saveStyle, readStyle,
-         saveFile, setSaveFile, getBinFileContent };
+         saveFile, setSaveFile, getBinFileContent, getColorExec };

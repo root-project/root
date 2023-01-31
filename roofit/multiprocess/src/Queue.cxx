@@ -14,7 +14,6 @@
 #include "RooFit/MultiProcess/Queue.h"
 #include "RooFit/MultiProcess/JobManager.h"
 #include "RooFit/MultiProcess/ProcessManager.h"
-#include "RooFit/MultiProcess/Job.h" // complete Job object for JobManager::get_job_object()
 #include "RooFit/MultiProcess/util.h"
 
 namespace RooFit {
@@ -39,36 +38,6 @@ namespace MultiProcess {
  * ZeroMQ socket from master to workers, which would distribute tasks in a
  * round-robin fashion, which, indeed, does not do load balancing).
  */
-
-/// Have a worker ask for a task-message from the queue
-///
-/// \param[out] job_task JobTask reference to put the Job ID and the task index into.
-/// \return true if a task was popped from the queue successfully, false if the queue was empty.
-bool Queue::pop(JobTask &job_task)
-{
-   if (queue_.empty()) {
-      return false;
-   } else {
-      job_task = queue_.front();
-      queue_.pop();
-      return true;
-   }
-}
-
-/// Enqueue a task
-///
-/// \param[in] job_task JobTask object that contains the Job ID and the task index.
-void Queue::add(JobTask job_task)
-{
-   if (JobManager::instance()->process_manager().is_master()) {
-      JobManager::instance()->messenger().send_from_master_to_queue(M2Q::enqueue, job_task.job_id, job_task.state_id,
-                                                                    job_task.task_id);
-   } else if (JobManager::instance()->process_manager().is_queue()) {
-      queue_.push(job_task);
-   } else {
-      throw std::logic_error("calling Communicator::to_master_queue from slave process");
-   }
-}
 
 /// Helper function for 'Queue::loop()'
 void Queue::process_master_message(M2Q message)

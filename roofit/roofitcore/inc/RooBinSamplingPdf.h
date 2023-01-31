@@ -32,7 +32,7 @@ public:
   RooBinSamplingPdf(const char *name, const char *title, RooAbsRealLValue& observable, RooAbsPdf& inputPdf,
       double epsilon = 1.E-4);
 
-  RooBinSamplingPdf(const RooBinSamplingPdf& other, const char* name = 0);
+  RooBinSamplingPdf(const RooBinSamplingPdf& other, const char* name = nullptr);
 
   TObject* clone(const char* newname) const override {
     return new RooBinSamplingPdf(*this, newname);
@@ -62,7 +62,7 @@ public:
   }
 
   /// Forwards to the PDF's implementation.
-  bool selfNormalized() const override { return _pdf->selfNormalized(); }
+  bool selfNormalized() const override { return true; }
 
   /// Forwards to the PDF's implementation.
   RooAbsReal* createIntegral(const RooArgSet& iset,
@@ -106,15 +106,10 @@ public:
   const RooAbsPdf& pdf() const { return _pdf.arg(); }
   const RooAbsReal& observable() const { return _observable.arg(); }
 
-  std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& /*normSet*/,
-                         RooAbsArg const& /*server*/) const override {
-    // servers are evaluated unnormalized
-    return std::make_unique<RooArgSet>();
-  }
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
 protected:
   double evaluate() const override;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
   RooSpan<const double> binBoundaries() const;
 
 private:

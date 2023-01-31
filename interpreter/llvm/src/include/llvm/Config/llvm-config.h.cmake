@@ -17,9 +17,6 @@
 /* Define if LLVM_ENABLE_DUMP is enabled */
 #cmakedefine LLVM_ENABLE_DUMP
 
-/* Define if we link Polly to the tools */
-#cmakedefine LINK_POLLY_INTO_TOOLS
-
 /* Target triple LLVM will generate code for by default */
 #cmakedefine LLVM_DEFAULT_TARGET_TRIPLE "${LLVM_DEFAULT_TARGET_TRIPLE}"
 
@@ -81,5 +78,27 @@
  * PrintStatistics() or PrintStatisticsJSON()
  */
 #cmakedefine01 LLVM_FORCE_ENABLE_STATS
+
+/* Define if we have z3 and want to build it */
+#cmakedefine LLVM_WITH_Z3 ${LLVM_WITH_Z3}
+
+/* Define if LLVM was built with a dependency to the libtensorflow dynamic library */
+#cmakedefine LLVM_HAVE_TF_API
+
+/* Define if LLVM was built with a dependency to the tensorflow compiler */
+#cmakedefine LLVM_HAVE_TF_AOT
+
+/* Define to 1 if you have the <sysexits.h> header file. */
+#cmakedefine HAVE_SYSEXITS_H ${HAVE_SYSEXITS_H}
+
+/* Define to 1 to enable the experimental new pass manager by default */
+#cmakedefine01 LLVM_ENABLE_NEW_PASS_MANAGER
+
+/* Define if the xar_open() function is supported on this platform. */
+#cmakedefine LLVM_HAVE_LIBXAR ${LLVM_HAVE_LIBXAR}
+
+/* Whether Timers signpost passes in Xcode Instruments */
+#cmakedefine01 LLVM_SUPPORT_XCODE_SIGNPOSTS
+
 
 #endif

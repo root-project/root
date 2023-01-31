@@ -15,12 +15,11 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_MCA_DISPATCH_STAGE_H
-#define LLVM_MCA_DISPATCH_STAGE_H
+#ifndef LLVM_MCA_STAGES_DISPATCHSTAGE_H
+#define LLVM_MCA_STAGES_DISPATCHSTAGE_H
 
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCSubtargetInfo.h"
-#include "llvm/MCA/HWEventListener.h"
 #include "llvm/MCA/HardwareUnits/RegisterFile.h"
 #include "llvm/MCA/HardwareUnits/RetireControlUnit.h"
 #include "llvm/MCA/Instruction.h"
@@ -85,4 +84,4 @@ public:
 } // namespace mca
 } // namespace llvm
 
-#endif // LLVM_MCA_DISPATCH_STAGE_H
+#endif // LLVM_MCA_STAGES_DISPATCHSTAGE_H

@@ -189,7 +189,7 @@ public:
       return std::make_unique<RDFDetail::RMergeableVariationsBase>(std::move(keys), std::move(values));
    }
 
-   [[noreturn]] std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&)
+   [[noreturn]] std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&) final
    {
       throw std::logic_error("Cannot produce a varied action from a varied action.");
    }

@@ -43,7 +43,7 @@ public:
   // Constructors, assignment etc.
   RooFitResult(const char* name=nullptr, const char* title=nullptr) ;
   RooFitResult(const RooFitResult& other) ;
-  TObject* Clone(const char* newname = 0) const override {
+  TObject* Clone(const char* newname = nullptr) const override {
     RooFitResult* r =  new RooFitResult(*this) ;
     if (newname && *newname) r->SetName(newname) ;
     return r ;
@@ -63,7 +63,7 @@ public:
   void printArgs(std::ostream& os) const override ;
   void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override ;
 
-  inline void Print(Option_t *options= 0) const override {
+  inline void Print(Option_t *options= nullptr) const override {
     // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
@@ -157,11 +157,8 @@ public:
   void SetName(const char *name) override ;
   void SetNameTitle(const char *name, const char* title) override ;
 
-protected:
 
-  friend class RooAbsPdf ;
-  friend class RooMinuit ;
-  friend class RooMinimizer ;
+
   void setCovarianceMatrix(TMatrixDSym& V) ;
   void setConstParList(const RooArgList& list) ;
   void setInitParList(const RooArgList& list) ;
@@ -171,12 +168,14 @@ protected:
   inline void setStatus(Int_t val) { _status = val ; }
   inline void setCovQual(Int_t val) { _covQual = val ; }
   inline void setNumInvalidNLL(Int_t val) { _numBadNLL=val ; }
-  void fillCorrMatrix() ;
+  void setStatusHistory(std::vector<std::pair<std::string,int> >& hist) { _statusHistory = hist ; }
   void fillCorrMatrix(const std::vector<double>& globalCC, const TMatrixDSym& corrs, const TMatrixDSym& covs) ;
+
+protected:
+
+  void fillCorrMatrix() ;
   void fillLegacyCorrMatrix() const ;
   void fillPrefitCorrMatrix();
-  void setStatusHistory(std::vector<std::pair<std::string,int> >& hist) { _statusHistory = hist ; }
-
   double correlation(Int_t row, Int_t col) const;
   double covariance(Int_t row, Int_t col) const;
 

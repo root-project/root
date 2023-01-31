@@ -107,6 +107,8 @@ SUPPORTED_OPERATIONS: Dict[str, Union[Action, InstantAction, Transformation]] = 
     "Profile3D": Action,
     "Redefine": Transformation,
     "Snapshot": Snapshot,
+    "Stats": Action,
+    "StdDev": Action,
     "Sum": Action,
     "VariationsFor": VariationsFor,
     "Vary": Transformation

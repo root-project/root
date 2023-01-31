@@ -44,7 +44,7 @@ protected:
    void                 Init();
 
 public:
-   TStructNodeEditor(TList* colors, const TGWindow *p = 0, Int_t width = 140, Int_t height = 30,
+   TStructNodeEditor(TList* colors, const TGWindow *p = nullptr, Int_t width = 140, Int_t height = 30,
       UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground());
    ~TStructNodeEditor();
 

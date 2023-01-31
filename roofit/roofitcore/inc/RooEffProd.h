@@ -13,13 +13,13 @@
 #define ROO_EFF_PROD
 
 #include "RooAbsPdf.h"
-#include "RooAbsReal.h"
 #include "RooRealProxy.h"
 #include "RooObjCacheManager.h"
 
 class RooEffProd: public RooAbsPdf {
 public:
   // Constructors, assignment etc
+  RooEffProd() {}
   RooEffProd(const char *name, const char *title, RooAbsPdf& pdf, RooAbsReal& efficiency);
   RooEffProd(const RooEffProd& other, const char* name=nullptr);
 

@@ -48,7 +48,7 @@ namespace Internal {
    class TBranchProxyHelper {
    public:
       TString fName;
-      TBranchProxyHelper(const char *left,const char *right = 0) :
+      TBranchProxyHelper(const char *left, const char *right = nullptr) :
          fName() {
          if (left) {
             fName = left;
@@ -58,7 +58,7 @@ namespace Internal {
             fName += right;
          }
       }
-      operator const char*() { return fName.Data(); };
+      operator const char*() { return fName.Data(); }
    };
 
    class TTreeReaderValueBase;
@@ -111,9 +111,9 @@ namespace Detail {
       virtual void Print();
 
       TBranchProxy();
-      TBranchProxy(Internal::TBranchProxyDirector* boss, const char* top, const char* name = 0);
+      TBranchProxy(Internal::TBranchProxyDirector* boss, const char* top, const char* name = nullptr);
       TBranchProxy(Internal::TBranchProxyDirector* boss, const char *top, const char *name, const char *membername);
-      TBranchProxy(Internal::TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername, const char* top = 0, const char* name = 0);
+      TBranchProxy(Internal::TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername, const char* top = nullptr, const char* name = nullptr);
       TBranchProxy(Internal::TBranchProxyDirector* boss, TBranch* branch, const char* membername);
       TBranchProxy(Internal::TBranchProxyDirector* boss, const char* branchname, TBranch* branch, const char* membername);
       virtual ~TBranchProxy();
@@ -140,7 +140,7 @@ namespace Detail {
       }
 
       Bool_t Read() {
-         if (R__unlikely(fDirector==0)) return false;
+         if (R__unlikely(fDirector == nullptr)) return false;
 
          auto treeEntry = fDirector->GetReadEntry();
          if (treeEntry != fRead) {
@@ -350,7 +350,7 @@ private:
 public:
 
       Bool_t ReadEntries() {
-         if (R__unlikely(fDirector==0)) return false;
+         if (R__unlikely(fDirector == nullptr)) return false;
 
          auto treeEntry = fDirector->GetReadEntry();
          if (treeEntry != fRead) {
@@ -387,12 +387,12 @@ public:
       }
 
       TClass *GetClass() {
-         if (fDirector==0) return 0;
+         if (!fDirector) return nullptr;
 
          if (fDirector->GetReadEntry() != fRead) {
             if (!IsInitialized()) {
                if (!Setup()) {
-                  return 0;
+                  return nullptr;
                }
             }
          }
@@ -419,7 +419,7 @@ public:
          }
          if (IsaPointer()) {
             if (fWhere) return *(void**)fWhere;
-            else return 0;
+            else return nullptr;
          } else {
             return fWhere;
          }
@@ -437,7 +437,7 @@ public:
             TClonesArray *tca;
             tca = (TClonesArray*)GetStart();
 
-            if (!tca || tca->GetLast()<(Int_t)i) return 0;
+            if (!tca || tca->GetLast()<(Int_t)i) return nullptr;
 
             location = (char*)tca->At(i);
 
@@ -455,13 +455,13 @@ public:
             TClonesArray *tca;
             tca = (TClonesArray*)tcaloc;
 
-            if (tca->GetLast()<(Int_t)i) return 0;
+            if (tca->GetLast()<(Int_t)i) return nullptr;
 
             location = (char*)tca->At(i);
          }
 
          if (location) location += fOffset;
-         else return 0;
+         else return nullptr;
 
          if (IsaPointer()) {
             return *(void**)(location);
@@ -476,11 +476,11 @@ public:
          // that Setup() has been called.  Assumes the object containing this data
          // member is held in STL Collection.
 
-         char *location=0;
+         char *location = nullptr;
 
          if (fCollection) {
 
-            if (fCollection->Size()<i) return 0;
+            if (fCollection->Size()<i) return nullptr;
 
             location = (char*)fCollection->At(i);
 
@@ -499,13 +499,13 @@ public:
             //TClonesArray *tca;
             //tca = (TClonesArray*)tcaloc;
 
-            //if (tca->GetLast()<i) return 0;
+            //if (tca->GetLast()<i) return nullptr;
 
             //location = (char*)tca->At(i);
          }
 
          if (location) location += fOffset;
-         else return 0;
+         else return nullptr;
 
          if (IsaPointer()) {
             return *(void**)(location);
@@ -605,7 +605,7 @@ namespace Internal {
       ~TClaProxy() override = default;
 
       const TClonesArray* GetPtr() {
-         if (!Read()) return 0;
+         if (!Read()) return nullptr;
          return (TClonesArray*)GetStart();
       }
 
@@ -618,7 +618,7 @@ namespace Internal {
 
       void *GetAddressOfElement(UInt_t i) final {
          if (!Read()) return nullptr;
-         if (fWhere==0) return nullptr;
+         if (!fWhere) return nullptr;
          return GetClaStart(i);
       }
 
@@ -647,7 +647,7 @@ namespace Internal {
       ~TStlProxy() override = default;
 
       TVirtualCollectionProxy* GetPtr() {
-         if (!Read()) return 0;
+         if (!Read()) return nullptr;
          return GetCollection();
       }
 
@@ -658,7 +658,7 @@ namespace Internal {
 
       void *GetAddressOfElement(UInt_t i) final {
          if (!Read()) return nullptr;
-         if (fWhere==0) return nullptr;
+         if (!fWhere) return nullptr;
          return GetStlStart(i);
       }
 

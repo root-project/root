@@ -111,10 +111,11 @@ std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RCanvas::Create
 
 void ROOT::Experimental::RCanvas::Show(const std::string &where)
 {
-   fShown = true;
+   // Do not display canvas in batch mode
+   if (gROOT->IsWebDisplayBatch())
+      return;
 
-   // workaround - in jupyter do not create any painters yet
-   if (gROOT->GetWebDisplay() == "jupyter") return;
+   fShown = true;
 
    if (fPainter) {
       bool isany = (fPainter->NumDisplays() > 0);

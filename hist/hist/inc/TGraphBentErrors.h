@@ -53,16 +53,16 @@ public:
    TGraphBentErrors(Int_t n);
    TGraphBentErrors(Int_t n,
                     const Float_t *x, const Float_t *y,
-                    const Float_t *exl=0, const Float_t *exh=0,
-                    const Float_t *eyl=0, const Float_t *eyh=0,
-                    const Float_t *exld=0, const Float_t *exhd=0,
-                    const Float_t *eyld=0, const Float_t *eyhd=0);
+                    const Float_t *exl=nullptr, const Float_t *exh=nullptr,
+                    const Float_t *eyl=nullptr, const Float_t *eyh=nullptr,
+                    const Float_t *exld=nullptr, const Float_t *exhd=nullptr,
+                    const Float_t *eyld=nullptr, const Float_t *eyhd=nullptr);
    TGraphBentErrors(Int_t n,
                     const Double_t *x, const Double_t *y,
-                    const Double_t *exl=0, const Double_t *exh=0,
-                    const Double_t *eyl=0, const Double_t *eyh=0,
-                    const Double_t *exld=0, const Double_t *exhd=0,
-                    const Double_t *eyld=0, const Double_t *eyhd=0);
+                    const Double_t *exl=nullptr, const Double_t *exh=nullptr,
+                    const Double_t *eyl=nullptr, const Double_t *eyh=nullptr,
+                    const Double_t *exld=nullptr, const Double_t *exhd=nullptr,
+                    const Double_t *eyld=nullptr, const Double_t *eyhd=nullptr);
    TGraphBentErrors(const TGraphBentErrors &gr);
    ~TGraphBentErrors() override;
    void    Apply(TF1 *f) override;

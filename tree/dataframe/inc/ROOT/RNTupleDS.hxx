@@ -93,10 +93,15 @@ protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
 
-RDataFrame MakeNTupleDataFrame(std::string_view ntupleName, std::string_view fileName);
-RDataFrame MakeNTupleDataFrame(RNTuple *ntuple);
-
 } // ns Experimental
+
+namespace RDF {
+namespace Experimental {
+RDataFrame FromRNTuple(std::string_view ntupleName, std::string_view fileName);
+RDataFrame FromRNTuple(ROOT::Experimental::RNTuple *ntuple);
+} // namespace Experimental
+} // namespace RDF
+
 } // ns ROOT
 
 #endif

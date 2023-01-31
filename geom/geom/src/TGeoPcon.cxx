@@ -1274,14 +1274,13 @@ void TGeoPcon::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
    out << "   phi1  = " << fPhi1 << ";" << std::endl;
    out << "   dphi  = " << fDphi << ";" << std::endl;
    out << "   nz    = " << fNz << ";" << std::endl;
-   out << "   TGeoPcon *pcon = new TGeoPcon(\"" << GetName() << "\",phi1,dphi,nz);" << std::endl;
+   out << "   auto " << GetPointerName() << " = new TGeoPcon(\"" << GetName() << "\", phi1, dphi, nz);" << std::endl;
    for (Int_t i=0; i<fNz; i++) {
       out << "      z     = " << fZ[i] << ";" << std::endl;
       out << "      rmin  = " << fRmin[i] << ";" << std::endl;
       out << "      rmax  = " << fRmax[i] << ";" << std::endl;
-      out << "   pcon->DefineSection(" << i << ", z,rmin,rmax);" << std::endl;
+      out << "   " << GetPointerName() << "->DefineSection(" << i << ", z,rmin,rmax);" << std::endl;
    }
-   out << "   TGeoShape *" << GetPointerName() << " = pcon;" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 

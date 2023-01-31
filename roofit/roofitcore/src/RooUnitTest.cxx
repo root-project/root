@@ -28,7 +28,7 @@ Object          | function
 ----------------|------------
    RooPlot      | regPlot()
    RooFitResult | regResult()
-   double     | regValue()
+   double       | regValue()
    RooTable     | regTable()
    TH1/2/3      | regTH()
    RooWorkspace | regWS()
@@ -79,7 +79,13 @@ void RooUnitTest::regPlot(RooPlot* frame, const char* refName)
   if (_refFile) {
     string refNameStr(refName) ;
     frame->SetName(refName) ;
-    _regPlots.push_back(make_pair(frame,refNameStr)) ;
+    // Since ROOT 6.28, the RooPlot doesn't clone the plot variable by default
+    // anymore. This is a problem for registering the RooPlots, because they
+    // need to survive without dangling pointers even after the RooUnitTest is
+    // done. For that reason, we ask the RooPlot to create an internal plot
+    // variable clone for itself.
+    frame->createInternalPlotVarClone();
+    _regPlots.emplace_back(frame,refNameStr);
   } else {
     delete frame ;
   }
@@ -197,7 +203,7 @@ bool RooUnitTest::areTHidentical(TH1* htest, TH1* href)
     }
 
     for (Int_t i=0 ; i<ntest ; i++) {
-      if (fabs(htest->GetBinContent(i)-href->GetBinContent(i))>htol()) {
+      if (std::abs(htest->GetBinContent(i)-href->GetBinContent(i))>htol()) {
         if(_verb >= 0) std::cout << "htest[" << i << "] = " << htest->GetBinContent(i) << " href[" << i << "] = " << href->GetBinContent(i) << endl;
       }
     }
@@ -398,7 +404,7 @@ bool RooUnitTest::runCompTests()
    cout << "comparing value " << iter3->first << " to benchmark " << iter3->second << " = " << (double)(*ref) << endl ;
       }
 
-      if (fabs(iter3->first - (double)(*ref))>vtol() ) {
+      if (std::abs(iter3->first - (double)(*ref))>vtol() ) {
         if(_verb >= 0) cout << "RooUnitTest ERROR: comparison of value " << iter3->first <<   " fails comparison with reference " << ref->GetName() << endl ;
         ret = false ;
       }

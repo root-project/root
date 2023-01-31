@@ -124,7 +124,7 @@ namespace TMVA {
       DecisionTreeNode (Node* p, char pos);
 
       // copy constructor
-      DecisionTreeNode (const DecisionTreeNode &n, DecisionTreeNode* parent = NULL);
+      DecisionTreeNode (const DecisionTreeNode &n, DecisionTreeNode* parent = nullptr);
 
       // destructor
       virtual ~DecisionTreeNode();

@@ -1,7 +1,9 @@
 #ifndef ROOT7_RNTuple_Test_CustomStruct
 #define ROOT7_RNTuple_Test_CustomStruct
 
+#include <cstdint>
 #include <string>
+#include <variant>
 #include <vector>
 
 /**
@@ -32,6 +34,11 @@ struct DerivedB : public DerivedA {
 struct DerivedC : public DerivedA, public DerivedA2 {
    int c_i{};
    DerivedA2 c_a2;
+};
+
+struct StructWithArrays {
+   unsigned char c[4];
+   float f[2];
 };
 
 struct EmptyBase {
@@ -88,6 +95,63 @@ struct StructWithEnums : BaseOfStructWithEnums {
    enum class DeclEC { E1, E2, E42 = 137 };
    int a = E42;
    int b = static_cast<int>(DeclEC::E42);
+};
+
+/// A class that behaves as a collection accessed through the `TVirtualCollectionProxy` interface
+template <typename T>
+struct StructUsingCollectionProxy {
+   using ValueType = T;
+   std::vector<T> v; //! do not accidentally store via RClassField
+};
+
+/// Classes to exercise field traits
+struct TrivialTraitsBase {
+   int a;
+};
+
+struct TrivialTraits : TrivialTraitsBase {
+   float b;
+};
+
+struct TransientTraits : TrivialTraitsBase {
+   float b; //! transient member
+};
+
+struct VariantTraitsBase {
+   std::variant<int, float> a;
+};
+
+struct VariantTraits : VariantTraitsBase {
+};
+
+struct StringTraits : VariantTraitsBase {
+   std::string s;
+};
+
+struct ConstructorTraits : TrivialTraitsBase {
+   ConstructorTraits() {}
+};
+
+struct DestructorTraits : TrivialTraitsBase {
+   ~DestructorTraits() {}
+};
+
+struct StructWithIORulesBase {
+   float a;
+   float b; //! transient member
+};
+
+struct StructWithTransientString {
+   char chars[4];
+   std::string str; //! transient member
+};
+
+struct StructWithIORules : StructWithIORulesBase {
+   StructWithTransientString s;
+   float c = 0.0f; //! transient member
+
+   StructWithIORules() = default;
+   StructWithIORules(float _a, char _c[4]) : StructWithIORulesBase{_a, 0.0f}, s{{_c[0], _c[1], _c[2], _c[3]}, {}} {}
 };
 
 #endif

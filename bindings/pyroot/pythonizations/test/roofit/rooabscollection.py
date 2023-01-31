@@ -142,8 +142,19 @@ class TestRooAbsCollection(unittest.TestCase):
         s2 = ROOT.RooArgSet()
         s3 = ROOT.RooArgSet()
 
-        s2.addClone(s1) # addClone(const RooAbsCollection& list)
-        s3.addClone(x) # addClone(const RooAbsArg& var)
+        s2.addClone(s1)  # addClone(const RooAbsCollection& list)
+        s3.addClone(x)  # addClone(const RooAbsArg& var)
+
+    def test_rooargset_iter(self):
+        """STL sequence iterator injected in RooAbsCollection, inherited by RooArgSet"""
+        # ROOT-10606
+
+        varA = ROOT.RooRealVar("a", "a", 0.0)
+        varB = ROOT.RooRealVar("b", "b", 1.0)
+        varSet = ROOT.RooArgSet(varA, varB)
+        for var in varSet:
+            var.getVal()
+
 
 if __name__ == "__main__":
     unittest.main()

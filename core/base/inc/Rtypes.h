@@ -284,11 +284,11 @@ private:                                                                        
          ++recurseBlocker;                                                                                      \
          return ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency;                   \
       }                                                                                                         \
-      return false; /* unreacheable */                                                                          \
+      return false; /* unreachable */                                                                           \
    } /** \endcond */                                                                                            \
                                                                                                                 \
 public:                                                                                                         \
-   /** \return Version of this class */ static Version_t Class_Version() { return id; }                         \
+   /** \return Version of this class */ static constexpr Version_t Class_Version() { return id; }               \
    /** \return TClass describing current object */ virtual_keyword TClass *IsA() const overrd                   \
    { return name::Class(); }                                                                                    \
    /** \cond HIDDEN_SYMBOLS */ virtual_keyword void ShowMembers(TMemberInspector &insp) const overrd            \
@@ -397,7 +397,7 @@ public:                                                                         
 // ClassImpT  corresponds to ClassImp
 
 
-/// This ClassDefT is stricly redundant and is kept only for
+/// This ClassDefT is strictly redundant and is kept only for
 /// backward compatibility. \deprecated
 #define ClassDefT(name,id)                          \
    _ClassDefOutline_(name,id,virtual,)              \

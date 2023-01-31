@@ -121,6 +121,11 @@ def FeatureTinyEncoding   : SubtargetFeature<"tinyencoding",
                                   "The device has Tiny core specific "
                                   "instruction encodings">;
 
+// The device has CPU registers mapped in data address space
+def FeatureMMR : SubtargetFeature<"memmappedregs", "m_hasMemMappedGPR",
+                                  "true", "The device has CPU registers "
+                                  "mapped in data address space">;
+
 class ELFArch<string name>  : SubtargetFeature<"", "ELFArch",
                                     !strconcat("ELF::",name), "">;
 
@@ -152,7 +157,7 @@ def ELFArchXMEGA7  : ELFArch<"EF_AVR_ARCH_XMEGA7">;
 // device should have.
 def FamilyAVR0           : Family<"avr0", []>;
 
-def FamilyAVR1           : Family<"avr1", [FamilyAVR0, FeatureLPM]>;
+def FamilyAVR1           : Family<"avr1", [FamilyAVR0, FeatureLPM, FeatureMMR]>;
 
 def FamilyAVR2           : Family<"avr2",
                                  [FamilyAVR1, FeatureIJMPCALL, FeatureADDSUBIW,
@@ -193,8 +198,11 @@ def FamilyTiny           : Family<"avrtiny",
                                   FeatureTinyEncoding]>;
 
 def FamilyXMEGA          : Family<"xmega",
-                                 [FamilyAVR51, FeatureEIJMPCALL, FeatureSPMX,
-                                  FeatureDES]>;
+                                 [FamilyAVR0, FeatureLPM, FeatureIJMPCALL, FeatureADDSUBIW,
+                                  FeatureSRAM, FeatureJMPCALL, FeatureMultiplication,
+                                  FeatureMOVW, FeatureLPMX, FeatureSPM,
+                                  FeatureBREAK, FeatureEIJMPCALL, FeatureSPMX,
+                                  FeatureDES, FeatureELPM, FeatureELPMX]>;
 
 def FamilyXMEGAU         : Family<"xmegau",
                                   [FamilyXMEGA, FeatureRMW]>;
@@ -208,7 +216,7 @@ def FeatureSetSpecial    : FeatureSet<"special",
                                        FeatureLPM, FeatureLPMX, FeatureELPM,
                                        FeatureELPMX, FeatureSPM, FeatureSPMX,
                                        FeatureDES, FeatureRMW,
-                                       FeatureMultiplication, FeatureBREAK]>;
+                                       FeatureMultiplication, FeatureBREAK, FeatureMMR]>;
 
 //===---------------------------------------------------------------------===//
 // AVR microcontrollers supported.
@@ -278,8 +286,10 @@ def : Device<"attiny45",           FamilyAVR25, ELFArchAVR25>;
 def : Device<"attiny85",           FamilyAVR25, ELFArchAVR25>;
 def : Device<"attiny261",          FamilyAVR25, ELFArchAVR25>;
 def : Device<"attiny261a",         FamilyAVR25, ELFArchAVR25>;
+def : Device<"attiny441",          FamilyAVR25, ELFArchAVR25>;
 def : Device<"attiny461",          FamilyAVR25, ELFArchAVR25>;
 def : Device<"attiny461a",         FamilyAVR25, ELFArchAVR25>;
+def : Device<"attiny841",          FamilyAVR25, ELFArchAVR25>;
 def : Device<"attiny861",          FamilyAVR25, ELFArchAVR25>;
 def : Device<"attiny861a",         FamilyAVR25, ELFArchAVR25>;
 def : Device<"attiny87",           FamilyAVR25, ELFArchAVR25>;
@@ -299,19 +309,23 @@ def : Device<"atmega8u2",          FamilyAVR35, ELFArchAVR35>;
 def : Device<"atmega16u2",         FamilyAVR35, ELFArchAVR35>;
 def : Device<"atmega32u2",         FamilyAVR35, ELFArchAVR35>;
 def : Device<"attiny1634",         FamilyAVR35, ELFArchAVR35>;
-def : Device<"atmega8",            FamilyAVR4,  ELFArchAVR4>; // FIXME: family may be wrong
+def : Device<"atmega8",            FamilyAVR2,  ELFArchAVR4,
+             [FeatureMultiplication, FeatureMOVW, FeatureLPMX, FeatureSPM]>;
 def : Device<"ata6289",            FamilyAVR4,  ELFArchAVR4>;
-def : Device<"atmega8a",           FamilyAVR4,  ELFArchAVR4>;
+def : Device<"atmega8a",           FamilyAVR2,  ELFArchAVR4,
+             [FeatureMultiplication, FeatureMOVW, FeatureLPMX, FeatureSPM]>;
 def : Device<"ata6285",            FamilyAVR4,  ELFArchAVR4>;
 def : Device<"ata6286",            FamilyAVR4,  ELFArchAVR4>;
 def : Device<"atmega48",           FamilyAVR4,  ELFArchAVR4>;
 def : Device<"atmega48a",          FamilyAVR4,  ELFArchAVR4>;
 def : Device<"atmega48pa",         FamilyAVR4,  ELFArchAVR4>;
+def : Device<"atmega48pb",         FamilyAVR4,  ELFArchAVR4>;
 def : Device<"atmega48p",          FamilyAVR4,  ELFArchAVR4>;
 def : Device<"atmega88",           FamilyAVR4,  ELFArchAVR4>;
 def : Device<"atmega88a",          FamilyAVR4,  ELFArchAVR4>;
 def : Device<"atmega88p",          FamilyAVR4,  ELFArchAVR4>;
 def : Device<"atmega88pa",         FamilyAVR4,  ELFArchAVR4>;
+def : Device<"atmega88pb",         FamilyAVR4,  ELFArchAVR4>;
 def : Device<"atmega8515",         FamilyAVR2,  ELFArchAVR4,
              [FeatureMultiplication, FeatureMOVW, FeatureLPMX, FeatureSPM]>;
 def : Device<"atmega8535",         FamilyAVR2,  ELFArchAVR4,
@@ -343,6 +357,7 @@ def : Device<"atmega168",          FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega168a",         FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega168p",         FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega168pa",        FamilyAVR5,  ELFArchAVR5>;
+def : Device<"atmega168pb",        FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega169",          FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega169a",         FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega169p",         FamilyAVR5,  ELFArchAVR5>;
@@ -353,6 +368,7 @@ def : Device<"atmega323",          FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega324a",         FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega324p",         FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega324pa",        FamilyAVR5,  ELFArchAVR5>;
+def : Device<"atmega324pb",        FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega325",          FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega325a",         FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega325p",         FamilyAVR5,  ELFArchAVR5>;
@@ -363,6 +379,7 @@ def : Device<"atmega3250p",        FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega3250pa",       FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega328",          FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega328p",         FamilyAVR5,  ELFArchAVR5>;
+def : Device<"atmega328pb",        FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega329",          FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega329a",         FamilyAVR5,  ELFArchAVR5>;
 def : Device<"atmega329p",         FamilyAVR5,  ELFArchAVR5>;
@@ -443,9 +460,9 @@ def : Device<"atxmega32a4",        FamilyXMEGA, ELFArchXMEGA2>;
 def : Device<"atxmega32a4u",       FamilyXMEGAU, ELFArchXMEGA2>;
 def : Device<"atxmega32c4",        FamilyXMEGAU, ELFArchXMEGA2>;
 def : Device<"atxmega32d4",        FamilyXMEGA, ELFArchXMEGA2>;
-def : Device<"atxmega32e5",        FamilyXMEGA, ELFArchXMEGA2>;
-def : Device<"atxmega16e5",        FamilyXMEGA, ELFArchXMEGA2>;
-def : Device<"atxmega8e5",         FamilyXMEGA, ELFArchXMEGA2>;
+def : Device<"atxmega32e5",        FamilyXMEGAU, ELFArchXMEGA2>;
+def : Device<"atxmega16e5",        FamilyXMEGAU, ELFArchXMEGA2>;
+def : Device<"atxmega8e5",         FamilyXMEGAU, ELFArchXMEGA2>;
 def : Device<"atxmega32x1",        FamilyXMEGA, ELFArchXMEGA2>;
 def : Device<"atxmega64a3",        FamilyXMEGA, ELFArchXMEGA4>;
 def : Device<"atxmega64a3u",       FamilyXMEGAU, ELFArchXMEGA4>;

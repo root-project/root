@@ -36,7 +36,7 @@ protected:
    TGPicture(const char *name, Bool_t scaled = kFALSE):
       fName(name), fScaled(scaled), fPic(kNone), fMask(kNone), fAttributes()
    {
-      fAttributes.fPixels = 0;
+      fAttributes.fPixels = nullptr;
       SetRefCount(1);
    }
 

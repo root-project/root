@@ -31,7 +31,7 @@ void rf705_linearmorph()
 
    // Lower end point shape: a Gaussian
    RooRealVar g1mean("g1mean", "g1mean", -10);
-   RooGaussian g1("g1", "g1", x, g1mean, RooConst(2));
+   RooGaussian g1("g1", "g1", x, g1mean, 2.0);
 
    // Upper end point shape: a Polynomial
    RooPolynomial g2("g2", "g2", x, RooArgSet(-0.03, -0.001));

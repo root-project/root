@@ -34,13 +34,13 @@ private:
    TVirtualPS& operator=(const TVirtualPS&) = delete;
 
 protected:
-   Int_t        fNByte;           //Number of bytes written in the file (PDF)
-   Int_t        fLenBuffer;       //Buffer length
-   Int_t        fSizBuffer;       //Buffer size
-   Bool_t       fPrinted;         //True when a page must be printed
-   std::ofstream    *fStream;          //File stream identifier
-   char        *fBuffer;          //File buffer
-   const char  *fImplicitCREsc;   //Escape symbol before enforced new line
+   Int_t          fNByte{0};                // Number of bytes written in the file (PDF)
+   Int_t          fLenBuffer{0};            // Buffer length
+   Int_t          fSizBuffer{0};            // Buffer size
+   Bool_t         fPrinted{kFALSE};         // True when a page must be printed
+   std::ofstream *fStream{nullptr};         // File stream identifier
+   char          *fBuffer{nullptr};         // File buffer
+   const char    *fImplicitCREsc{nullptr};  // Escape symbol before enforced new line
 
 public:
    TVirtualPS();

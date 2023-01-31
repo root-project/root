@@ -76,7 +76,7 @@ double RooCBShape::evaluate() const {
   double t = (m-m0)/sigma;
   if (alpha < 0) t = -t;
 
-  double absAlpha = fabs((double)alpha);
+  double absAlpha = std::abs((double)alpha);
 
   if (t >= -absAlpha) {
     return exp(-0.5*t*t);
@@ -119,10 +119,10 @@ double RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
   double result = 0.0;
   bool useLog = false;
 
-  if( fabs(n-1.0) < 1.0e-05 )
+  if( std::abs(n-1.0) < 1.0e-05 )
     useLog = true;
 
-  double sig = fabs((double)sigma);
+  double sig = std::abs((double)sigma);
 
   double tmin = (m.min(rangeName)-m0)/sig;
   double tmax = (m.max(rangeName)-m0)/sig;
@@ -133,7 +133,7 @@ double RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
     tmax = -tmp;
   }
 
-  double absAlpha = fabs((double)alpha);
+  double absAlpha = std::abs((double)alpha);
 
   if( tmin >= -absAlpha ) {
     result += sig*sqrtPiOver2*(   ApproxErf(tmax/sqrt2)

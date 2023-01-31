@@ -21,6 +21,7 @@
 #include "THttpServer.h"
 #include "THttpWSEngine.h"
 #include "TUrl.h"
+#include "TSystem.h"
 
 //////////////////////////////////////////////////////////////////////////
 /// TCivetwebWSEngine
@@ -480,7 +481,8 @@ Int_t TCivetweb::ProcessLog(const char *message)
 /// @param args string with civetweb server configuration
 ///
 /// As main argument, http port should be specified like "8090".
-/// Or one can provide combination of ipaddress and portnumber like 127.0.0.1:8090
+/// Or one can provide combination of ipaddress and portnumber like "127.0.0.1:8090"
+/// Or one can specify unix socket name like "x/tmp/root.socket"
 /// Extra parameters like in URL string could be specified after '?' mark:
 ///
 ///     thrds=N               - there N is number of threads used by the civetweb (default is 10)
@@ -495,6 +497,7 @@ Int_t TCivetweb::ProcessLog(const char *message)
 ///     debug                 - enable debug mode, server always returns html page with request info
 ///     log=filename          - configure civetweb log file
 ///     max_age=value         - configures "Cache-Control: max_age=value" http header for all file-related requests, default 3600
+///     socket_mode=value     - configures unix socket mode, default is 0700
 ///     nocache               - try to fully disable cache control for file requests
 ///     winsymlinks=no        - do not resolve symbolic links on file system (Windows only), default true
 ///     dirlisting=no         - enable/disable directory listing for browsing filesystem (default no)
@@ -518,16 +521,21 @@ Bool_t TCivetweb::Create(const char *args)
            log_file,
            ssl_cert,
            max_age;
-   Bool_t use_ws = kTRUE;
+   Int_t socket_mode = 0700;
+   bool use_ws = kTRUE, is_socket = false;
 
    // extract arguments
    if (args && *args) {
 
       // first extract port number
       sport = "";
-      while ((*args != 0) && (*args != '?') && (*args != '/'))
+
+      is_socket = *args == 'x';
+
+      while ((*args != 0) && (*args != '?') && (is_socket || (*args != '/')))
          sport.Append(*args++);
-      if (IsSecured() && (sport.Index("s")==kNPOS)) sport.Append("s");
+      if (IsSecured() && (sport.Index("s") == kNPOS) && !is_socket)
+         sport.Append("s");
 
       // than search for extra parameters
       while ((*args != 0) && (*args != '?'))
@@ -582,6 +590,10 @@ Bool_t TCivetweb::Create(const char *args)
             const char *dls = url.GetValueFromOptions("dirlisting");
             if (dls && (!strcmp(dls,"no") || !strcmp(dls,"yes")))
                dir_listening = dls;
+
+            const char *smode = url.GetValueFromOptions("socket_mode");
+            if (smode)
+               socket_mode = std::stoi(smode, nullptr, *smode=='0' ? 8 : 10);
 
             if (url.HasOption("loopback") && (sport.Index(":") == kNPOS))
                sport = TString("127.0.0.1:") + sport;
@@ -655,6 +667,10 @@ Bool_t TCivetweb::Create(const char *args)
 
    options[op++] = nullptr;
 
+   // try to remove socket file - if any
+   if (is_socket && !sport.Contains(","))
+      gSystem->Unlink(sport.Data()+1);
+
    // Start the web server.
    fCtx = mg_start(&fCallbacks, this, options);
 
@@ -666,6 +682,10 @@ Bool_t TCivetweb::Create(const char *args)
    if (use_ws)
       mg_set_websocket_handler(fCtx, "**root.websocket$", websocket_connect_handler,
                                websocket_ready_handler, websocket_data_handler, websocket_close_handler, nullptr);
+
+   // try to remove socket file - if any
+   if (is_socket && !sport.Contains(","))
+      gSystem->Chmod(sport.Data()+1, socket_mode);
 
    return kTRUE;
 }

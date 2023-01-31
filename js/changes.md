@@ -1,8 +1,34 @@
 # JSROOT changelog
 
 ## Changes in dev
-1. Force MathJax rendering when `\` symbol is found (#243)
-2. Fix - use alfa channel for TColor when intended
+1. Upgrade d3.js to v7.8.0
+2. Upgrade three.js to r148
+3. Support "[cutg]" draw option for TH2
+
+
+## Changes in 7.3.0
+1. Mark methods returning `Promise` as **async**
+2. Upgrade three.js to r146
+3. Fix several bugs in `csg.mjs`, improve geometry clipping
+4. Provide `settings.PreferSavedPoints` to exclude function evaluation when there are saved points
+5. Add more interactive features with `TWebCanvas`
+6. 3-dimensional `TTree::Draw()` now produces `TPolyMarker3D` by default
+7. Force MathJax rendering when `\` symbol is found (#243)
+8. Support `TButton` class
+9. Remove `localfile` url option, only interactively one can open file selection dialog
+10. Fix - show correct bin index in `TH2` tooltips
+11. Fix - interactive move/resize on touch devices
+12. Fix - correctly handle axis zooming on lego plots
+13. Fix - histogram statistics calculation with negative bins
+14. Base version for ROOT 6.28 release
+
+
+## Changes in 7.2.1
+1. Fix - prevent glitch when enabling projection via context menu
+2. Fix - `multi.json` request parsing
+3. Fix - decoding of multipart message (#250)
+4. Fix - use alpha channel for TColor when intended
+5. Backport `settings.PreferSavedPoints` only for `TF1`
 
 
 ## Changes in 7.2.0
@@ -118,6 +144,7 @@
 12. Fix logic how "ndiv" parameter of TAxis is handled, showing really the configured number of ticks
 13. Fix problem with curved TGraph drawings (#218)
 14. Fix problems with TGraph drawing updates
+15. Base version for ROOT 6.26 release
 
 
 ## Changes in 6.2.2

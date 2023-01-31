@@ -179,7 +179,10 @@ function(REFLEX_GENERATE_DICTIONARY dictionary)
 
   IF(TARGET ${dictionary})
     LIST(APPEND include_dirs $<TARGET_PROPERTY:${dictionary},INCLUDE_DIRECTORIES>)
-    LIST(APPEND definitions $<TARGET_PROPERTY:${dictionary},COMPILE_DEFINITIONS>)
+    # The COMPILE_DEFINITIONS list might contain empty elements. These are
+    # removed with the FILTER generator expression, excluding elements that
+    # match the ^$ regexp (only matches empty strings).
+    LIST(APPEND definitions "$<FILTER:$<TARGET_PROPERTY:${dictionary},COMPILE_DEFINITIONS>,EXCLUDE,^$>")
   ENDIF()
 
   add_custom_command(
@@ -519,8 +522,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif(ARG_MODULE)
 
   # modules.idx deps
-  list(APPEND modules_idx_deps ${library_target_name})
-  set(modules_idx_deps ${modules_idx_deps} CACHE INTERNAL "modules_idx_deps")
+  get_property(local_modules_idx_deps GLOBAL PROPERTY modules_idx_deps_property)
+  list(APPEND local_modules_idx_deps ${library_target_name})
+  set_property(GLOBAL PROPERTY modules_idx_deps_property "${local_modules_idx_deps}")
 
   #---Set the library output directory-----------------------
   ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
@@ -1074,7 +1078,7 @@ function(ROOT_OBJECT_LIBRARY library)
   endif()
 
   #--- Fill the property OBJECTS with all the object files
-  #    This is needed becuase the generator expression $<TARGET_OBJECTS:target>
+  #    This is needed because the generator expression $<TARGET_OBJECTS:target>
   #    does not get expanded when used in custom command dependencies
   get_target_property(sources ${library} SOURCES)
   foreach(s ${sources})
@@ -1686,7 +1690,7 @@ function(ROOT_ADD_TEST test)
 
   set_property(TEST ${test} APPEND PROPERTY ENVIRONMENT ROOT_HIST=0)
 
-  #- Handle TIMOUT and DEPENDS arguments
+  #- Handle TIMEOUT and DEPENDS arguments
   if(ARG_TIMEOUT)
     set_property(TEST ${test} PROPERTY TIMEOUT ${ARG_TIMEOUT})
   endif()

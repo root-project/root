@@ -53,7 +53,7 @@ namespace TMVA{
                     TString methName = "BDT", Int_t itree = 0 );
       virtual ~StatDialogBDT() {
          TMVA::DecisionTreeNode::SetIsTraining(false);
-         fThis = 0;
+         fThis = nullptr;
          fMain->CloseWindow();
          fMain->Cleanup();
          if(gROOT->GetListOfCanvases()->FindObject(fCanvas))
@@ -95,7 +95,7 @@ namespace TMVA{
    public:
 
       // static function for external deletion
-      static void Delete() { if (fThis != 0) { delete fThis; fThis = 0; } }
+      static void Delete() { if (fThis) { delete fThis; fThis = nullptr; } }
 
       // slots
       void SetItree(); //*SIGNAL*

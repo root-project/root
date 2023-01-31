@@ -59,7 +59,7 @@ public:
    std::string Generate(std::string OpName){
       OpName = "op_" + OpName;
       if (fShape.empty()) {
-         throw std::runtime_error("TMVA SOFIE Transpose Leaky Relu called to Generate without being initialized first");
+         throw std::runtime_error("TMVA SOFIE Operator Leaky Relu called to Generate without being initialized first");
       }
       std::stringstream out;
       size_t length = ConvertShapeToLength(fShape);
@@ -68,7 +68,7 @@ public:
 
       out << "\n//------ LEAKY RELU\n";
       out << SP << "for (int id = 0; id < " << length << " ; id++){\n";
-      out << SP << SP << "tensor_" << fNY << "[id] = ((tensor_" << fNX << "[id] > 0 )? tensor_" << fNX << "[id] : "<< OpName << "_alpha * tensor_"<< fNX<<"[id]);\n";
+      out << SP << SP << "tensor_" << fNY << "[id] = ((tensor_" << fNX << "[id] >= 0 )? tensor_" << fNX << "[id] : "<< OpName << "_alpha * tensor_"<< fNX<<"[id]);\n";
       out << SP << "}\n";
       return out.str();
    }

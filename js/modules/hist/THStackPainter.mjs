@@ -1,9 +1,8 @@
-import { clone, create, createHistogram, gStyle } from '../core.mjs';
+import { clone, create, createHistogram, isFunc, gStyle, clTList, clTH2, kNoZoom } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
-import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from './TH1Painter.mjs';
 import { TH2Painter } from './TH2Painter.mjs';
-import { EAxisBits } from '../gpad/TAxisPainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 
 
@@ -39,7 +38,7 @@ class THStackPainter extends ObjectPainter {
       if (!stack.fHists) return false;
       let nhists = stack.fHists.arr.length;
       if (nhists <= 0) return false;
-      let lst = create("TList");
+      let lst = create(clTList);
       lst.Add(clone(stack.fHists.arr[0]), stack.fHists.opt[0]);
       for (let i = 1; i < nhists; ++i) {
          let hnext = clone(stack.fHists.arr[i]),
@@ -66,18 +65,18 @@ class THStackPainter extends ObjectPainter {
 
    /** @summary Returns stack min/max values */
    getMinMax(iserr) {
-      let res = { min: 0, max: 0 },
+      let min = 0, max = 0,
           stack = this.getObject(),
           pad = this.getPadPainter().getRootPad(true);
 
       const getHistMinMax = (hist, witherr) => {
          let res = { min: 0, max: 0 },
              domin = true, domax = true;
-         if (hist.fMinimum !== -1111) {
+         if (hist.fMinimum !== kNoZoom) {
             res.min = hist.fMinimum;
             domin = false;
          }
-         if (hist.fMaximum !== -1111) {
+         if (hist.fMaximum !== kNoZoom) {
             res.max = hist.fMaximum;
             domax = false;
          }
@@ -91,7 +90,7 @@ class THStackPainter extends ObjectPainter {
             i2 = hist.fXaxis.fLast;
          }
 
-         if (hist._typename.indexOf("TH2")===0) {
+         if (hist._typename.indexOf(clTH2) === 0) {
             j2 = hist.fYaxis.fNbins;
             if (hist.fYaxis.TestBit(EAxisBits.kAxisRange)) {
                j1 = hist.fYaxis.fFirst;
@@ -114,44 +113,65 @@ class THStackPainter extends ObjectPainter {
          for (let i = 0; i < stack.fHists.arr.length; ++i) {
             let resh = getHistMinMax(stack.fHists.arr[i], iserr);
             if (i == 0) {
-               res = resh;
+               min = resh.min; max = resh.max;
              } else {
-               res.min = Math.min(res.min, resh.min);
-               res.max = Math.max(res.max, resh.max);
+               min = Math.min(min, resh.min);
+               max = Math.max(max, resh.max);
             }
          }
       } else {
-         res.min = getHistMinMax(stack.fStack.arr[0], iserr).min;
-         res.max = getHistMinMax(stack.fStack.arr[stack.fStack.arr.length-1], iserr).max;
+         min = getHistMinMax(stack.fStack.arr[0], iserr).min;
+         max = getHistMinMax(stack.fStack.arr[stack.fStack.arr.length-1], iserr).max;
       }
 
-      if (stack.fMaximum != -1111) res.max = stack.fMaximum;
-      res.max *= (1 + gStyle.fHistTopMargin);
-      if (stack.fMinimum != -1111) res.min = stack.fMinimum;
+      const adjustRange = () => {
+         if (pad && (this.options.ndim == 1 ? pad.fLogy : pad.fLogz)) {
+            if (max <= 0) max = 1;
+            if (min <= 0) min = 1e-4*max;
+            let kmin = 1/(1 + 0.5*Math.log10(max / min)),
+                kmax = 1 + 0.2*Math.log10(max / min);
+            min *= kmin;
+            max *= kmax;
+         } else if ((min > 0) && (min < 0.05*max)) {
+            min = 0;
+         }
+      };
 
-      if (pad && (this.options.ndim == 1 ? pad.fLogy : pad.fLogz)) {
-         if (res.max<=0) res.max = 1;
-         if (res.min<=0) res.min = 1e-4*res.max;
-         let kmin = 1/(1 + 0.5*Math.log10(res.max / res.min)),
-             kmax = 1 + 0.2*Math.log10(res.max / res.min);
-         res.min *= kmin;
-         res.max *= kmax;
-      } else {
-         if ((res.min>0) && (res.min < 0.05*res.max)) res.min = 0;
+      max *= (1 + gStyle.fHistTopMargin);
+
+      adjustRange();
+
+      let max0 = max, min0 = min, zoomed = false;
+
+      if (stack.fMaximum != kNoZoom) {
+         max = stack.fMaximum*(1 + gStyle.fHistTopMargin);
+         max0 = Math.max(max, max0);
+         zoomed = true;
       }
 
-      return res;
+      if (stack.fMinimum != kNoZoom) {
+         min = stack.fMinimum;
+         min0 = Math.min(min, min0);
+         zoomed = true;
+      }
+
+      if (zoomed)
+         adjustRange();
+      else
+         min = max = kNoZoom;
+
+      return { min, max, min0, max0, zoomed, hopt: `hmin:${min0};hmax:${max0};minimum:${min};maximum:${max}` };
    }
 
    /** @summary Draw next stack histogram */
-   drawNextHisto(indx, pad_painter) {
+   async drawNextHisto(indx, pad_painter) {
 
       let stack = this.getObject(),
           hlst = this.options.nostack ? stack.fHists : stack.fStack,
-          nhists = (hlst && hlst.arr) ? hlst.arr.length : 0;
+          nhists = hlst?.arr?.length || 0;
 
       if (indx >= nhists)
-         return Promise.resolve(this);
+         return this;
 
       let rindx = this.options.horder ? indx : nhists-indx-1,
           hist = hlst.arr[rindx],
@@ -160,11 +180,11 @@ class THStackPainter extends ObjectPainter {
       if (hopt.toUpperCase().indexOf(this.options.hopt) < 0)
          hopt += ' ' + this.options.hopt;
       if (this.options.draw_errors && !hopt)
-         hopt = "E";
+         hopt = 'E';
 
       if (this.options._pfc || this.options._plc || this.options._pmc) {
          let mp = this.getMainPainter();
-         if (typeof mp?.createAutoColor == 'function') {
+         if (isFunc(mp?.createAutoColor)) {
             let icolor = mp.createAutoColor(nhists);
             if (this.options._pfc) hist.fFillColor = icolor;
             if (this.options._plc) hist.fLineColor = icolor;
@@ -172,11 +192,11 @@ class THStackPainter extends ObjectPainter {
          }
       }
 
-      // handling of "pads" draw option
+      // handling of 'pads' draw option
       if (pad_painter) {
          let subpad_painter = pad_painter.getSubPadPainter(indx+1);
          if (!subpad_painter)
-            return Promise.resolve(this);
+            return this;
 
          let prev_name = subpad_painter.selectCurrentPad(subpad_painter.this_pad_name);
 
@@ -192,7 +212,7 @@ class THStackPainter extends ObjectPainter {
       if ((rindx > 0) && !this.options.nostack)
          hist.$baseh = hlst.arr[rindx - 1];
 
-      return this.hdraw_func(this.getDom(), hist, hopt + " same nostat").then(subp => {
+      return this.hdraw_func(this.getDom(), hist, hopt + ' same nostat').then(subp => {
           this.painters.push(subp);
           return this.drawNextHisto(indx+1, pad_painter);
       });
@@ -201,21 +221,23 @@ class THStackPainter extends ObjectPainter {
    /** @summary Decode draw options of THStack painter */
    decodeOptions(opt) {
       if (!this.options) this.options = {};
-      Object.assign(this.options, { ndim: 1, nostack: false, same: false, horder: true, has_errors: false, draw_errors: false, hopt: "" });
+      Object.assign(this.options, { ndim: 1, nostack: false, same: false, horder: true, has_errors: false, draw_errors: false, hopt: '' });
 
       let stack = this.getObject(),
           hist = stack.fHistogram || (stack.fHists ? stack.fHists.arr[0] : null) || (stack.fStack ? stack.fStack.arr[0] : null);
 
       const hasErrors = hist => {
          if (hist.fSumw2 && (hist.fSumw2.length > 0))
-            for (let n = 0;n < hist.fSumw2.length; ++n)
+            for (let n = 0; n < hist.fSumw2.length; ++n)
                if (hist.fSumw2[n] > 0) return true;
          return false;
       };
 
-      if (hist && (hist._typename.indexOf("TH2")==0)) this.options.ndim = 2;
+      if (hist && (hist._typename.indexOf(clTH2) == 0))
+         this.options.ndim = 2;
 
-      if ((this.options.ndim == 2) && !opt) opt = "lego1";
+      if ((this.options.ndim == 2) && !opt)
+         opt = 'lego1';
 
       if (stack.fHists && !this.options.nostack)
          for (let k = 0; k < stack.fHists.arr.length; ++k)
@@ -225,27 +247,28 @@ class THStackPainter extends ObjectPainter {
 
       let d = new DrawOptions(opt);
 
-      this.options.nostack = d.check("NOSTACK");
-      if (d.check("STACK")) this.options.nostack = false;
-      this.options.same = d.check("SAME");
+      this.options.nostack = d.check('NOSTACK');
+      if (d.check('STACK')) this.options.nostack = false;
+      this.options.same = d.check('SAME');
 
-      d.check("NOCLEAR"); // ignore noclear option
+      d.check('NOCLEAR'); // ignore noclear option
 
-      this.options._pfc = d.check("PFC");
-      this.options._plc = d.check("PLC");
-      this.options._pmc = d.check("PMC");
+      this.options._pfc = d.check('PFC');
+      this.options._plc = d.check('PLC');
+      this.options._pmc = d.check('PMC');
 
-      this.options.pads = d.check("PADS");
+      this.options.pads = d.check('PADS');
       if (this.options.pads) this.options.nostack = true;
 
       this.options.hopt = d.remain(); // use remaining draw options for histogram draw
 
-      let dolego = d.check("LEGO");
+      let dolego = d.check('LEGO');
 
-      this.options.errors = d.check("E");
+      this.options.errors = d.check('E');
 
       // if any histogram appears with pre-calculated errors, use E for all histograms
-      if (!this.options.nostack && this.options.has_errors && !dolego && !d.check("HIST") && (this.options.hopt.indexOf("E")<0)) this.options.draw_errors = true;
+      if (!this.options.nostack && this.options.has_errors && !dolego && !d.check('HIST') && (this.options.hopt.indexOf('E') < 0))
+         this.options.draw_errors = true;
 
       this.options.horder = this.options.nostack || dolego;
    }
@@ -256,20 +279,20 @@ class THStackPainter extends ObjectPainter {
           numhistos = histos ? histos.arr.length : 0;
 
       if (!numhistos) {
-         let histo = createHistogram("TH1I", 100);
+         let histo = createHistogram('TH1I', 100);
          histo.fTitle = stack.fTitle;
          return histo;
       }
 
       let h0 = histos.arr[0],
-          histo = createHistogram((this.options.ndim==1) ? "TH1I" : "TH2I", h0.fXaxis.fNbins, h0.fYaxis.fNbins);
-      histo.fName = "axis_hist";
+          histo = createHistogram((this.options.ndim == 1) ? 'TH1I' : 'TH2I', h0.fXaxis.fNbins, h0.fYaxis.fNbins);
+      histo.fName = 'axis_hist';
       Object.assign(histo.fXaxis, h0.fXaxis);
       if (this.options.ndim==2)
          Object.assign(histo.fYaxis, h0.fYaxis);
 
       // this code is not exists in ROOT painter, can be skipped?
-      for (let n=1;n<numhistos;++n) {
+      for (let n = 1; n < numhistos; ++n) {
          let h = histos.arr[n];
 
          if (!histo.fXaxis.fLabels) {
@@ -297,6 +320,8 @@ class THStackPainter extends ObjectPainter {
       stack.fHists = obj.fHists;
       stack.fStack = obj.fStack;
       stack.fTitle = obj.fTitle;
+      stack.fMinimum = obj.fMinimum;
+      stack.fMaximum = obj.fMaximum;
 
       if (!this.options.nostack)
          this.options.nostack = !this.buildStack(stack);
@@ -306,17 +331,21 @@ class THStackPainter extends ObjectPainter {
          if (!src)
             src = stack.fHistogram = this.createHistogram(stack);
 
-         this.firstpainter.updateObject(src);
-
          let mm = this.getMinMax(this.options.errors || this.options.draw_errors);
 
          this.firstpainter.options.minimum = mm.min;
          this.firstpainter.options.maximum = mm.max;
+         this.firstpainter._checked_zooming = false; // force to check 3d zooming
 
          if (this.options.ndim == 1) {
-            this.firstpainter.ymin = mm.min;
-            this.firstpainter.ymax = mm.max;
+            this.firstpainter.ymin = mm.min0;
+            this.firstpainter.ymax = mm.max0;
+         } else {
+            this.firstpainter.zmin = mm.min0;
+            this.firstpainter.zmax = mm.max0;
          }
+
+         this.firstpainter.updateObject(src);
       }
 
       // and now update histograms
@@ -348,7 +377,7 @@ class THStackPainter extends ObjectPainter {
    }
 
    /** @summary draw THStack object */
-   static draw(dom, stack, opt) {
+   static async draw(dom, stack, opt) {
       if (!stack.fHists || !stack.fHists.arr)
          return null; // drawing not needed
 
@@ -380,20 +409,23 @@ class THStackPainter extends ObjectPainter {
 
          if (painter.options.same) return;
 
-         if (!stack.fHistogram)
+         let no_histogram = !stack.fHistogram;
+
+         if (no_histogram)
              stack.fHistogram = painter.createHistogram(stack);
 
          let mm = painter.getMinMax(painter.options.errors || painter.options.draw_errors),
-             hopt = painter.options.hopt + " axis";
-
-         if (mm) hopt += ";minimum:" + mm.min + ";maximum:" + mm.max;
+             hopt = painter.options.hopt + ';axis;' + mm.hopt;
 
          return painter.hdraw_func(dom, stack.fHistogram, hopt).then(subp => {
+            painter.addToPadPrimitives();
             painter.firstpainter = subp;
+            subp.$secondary = 'hist'; // mark histogram painter as secondary
+            if (!no_histogram) painter.$primary = true; // mark stack as provider for histogram
          });
       }).then(() => skip_drawing ? painter : painter.drawNextHisto(0, pad_painter));
    }
 
 } // class THStackPainter
 
-export { THStackPainter }
+export { THStackPainter };

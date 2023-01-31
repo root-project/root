@@ -24,7 +24,7 @@
 
 #include <ROOT/RCanvas.hxx>
 #include <ROOT/TObjectDrawable.hxx>
-#include <ROOT/REveGeomViewer.hxx>
+#include <ROOT/RGeomViewer.hxx>
 
 #include <QMessageBox>
 

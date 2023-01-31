@@ -11,6 +11,11 @@
 
 #include <gtest/gtest.h>
 
+// Backward compatibility for gtest version < 1.10.0
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
+
 #include <algorithm> // std::min
 #include <memory>
 #include <mutex>
@@ -27,7 +32,7 @@ struct RDFSampleCallback : ::testing::TestWithParam<bool> {
          ROOT::EnableImplicitMT();
    }
 
-   ~RDFSampleCallback()
+   ~RDFSampleCallback() override
    {
       if (GetParam())
          ROOT::DisableImplicitMT();

@@ -329,7 +329,19 @@ void TDirectoryFile::BuildDirectoryFile(TFile* motherFile, TDirectory* motherDir
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change current directory to "this" directory.
-/// Using path one can
+///
+/// Returns kTRUE in case of success.
+
+Bool_t TDirectoryFile::cd()
+{
+   Bool_t ok = TDirectory::cd();
+   if (ok)
+      TFile::CurrentFile() = fFile;
+   return ok;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change current directory the directory described by the path if given one.
 /// change the current directory to "path". The absolute path syntax is:
 ///
 ///     file.root:/dir1/dir2
@@ -341,7 +353,8 @@ void TDirectoryFile::BuildDirectoryFile(TFile* motherFile, TDirectory* motherDir
 Bool_t TDirectoryFile::cd(const char *path)
 {
    Bool_t ok = TDirectory::cd(path);
-   if (ok) TFile::CurrentFile() = fFile;
+   if (ok)
+      TFile::CurrentFile() = fFile;
    return ok;
 }
 

@@ -16,6 +16,7 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   HEADERS
     RooFit/Detail/DataMap.h
+    RooFit/Detail/NormalizationHelpers.h
     RooFit/Floats.h
     Roo1DTable.h
     RooAbsAnaConvPdf.h
@@ -37,7 +38,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooAbsLValue.h
     RooAbsMCStudyModule.h
     RooAbsMoment.h
-    RooAbsNumGenerator.h
     RooAbsOptTestStatistic.h
     RooAbsPdf.h
     RooAbsProxy.h
@@ -49,7 +49,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooAbsString.h
     RooAbsStudy.h
     RooAbsTestStatistic.h
-    RooAcceptReject.h
     RooAdaptiveIntegratorND.h
     RooAddGenContext.h
     RooAddition.h
@@ -107,15 +106,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFirstMoment.h
     RooFit.h
     RooFitResult.h
-    RooFoamGenerator.h
     RooFormula.h
     RooFormulaVar.h
     RooFracRemainder.h
     RooFunctor.h
+    RooFuncWrapper.h
     RooGenContext.h
     RooGenericPdf.h
     RooGenFitStudy.h
-    RooGenFunction.h
     RooGenProdProj.h
     RooGlobalFunc.h
     RooGrid.h
@@ -142,10 +140,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooMCStudy.h
     RooMinimizer.h
     RooMoment.h
-    RooMPSentinel.h
     RooMsgService.h
     RooMultiCategory.h
-    RooMultiGenFunction.h
     RooMultiVarGaussian.h
     RooNameReg.h
     RooNLLVar.h
@@ -155,7 +151,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooNumConvolution.h
     RooNumConvPdf.h
     RooNumGenConfig.h
-    RooNumGenFactory.h
     RooNumIntConfig.h
     RooNumIntFactory.h
     RooNumRunningInt.h
@@ -198,11 +193,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooSecondMoment.h
     RooSegmentedIntegrator1D.h
     RooSegmentedIntegrator2D.h
-    RooSentinel.h
     RooSetProxy.h
     RooSharedProperties.h
     RooSimGenContext.h
-    RooSimPdfBuilder.h
     RooSimSplitGenContext.h
     RooSimultaneous.h
     RooSimWSTool.h
@@ -232,7 +225,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooBinWidthFunction.h
     RooFitLegacy/RooCatTypeLegacy.h
     RooFitLegacy/RooCategorySharedProperties.h
-    RooFitLegacy/RooMinuit.h
     RooFitLegacy/RooTreeData.h
     RooFit/TestStatistics/LikelihoodGradientWrapper.h
     RooFit/TestStatistics/LikelihoodWrapper.h
@@ -246,6 +238,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFit/TestStatistics/buildLikelihood.h
     RunContext.h
   SOURCES
+    src/ConstraintHelpers.cxx
     src/BatchModeHelpers.cxx
     src/BatchModeDataHelpers.cxx
     src/CUDAHelpers.cxx
@@ -349,10 +342,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooGenContext.cxx
     src/RooGenericPdf.cxx
     src/RooGenFitStudy.cxx
-    src/RooGenFunction.cxx
     src/RooGenProdProj.cxx
     src/RooGlobalFunc.cxx
-    src/RooGradMinimizerFcn.cxx
     src/RooGrid.cxx
     src/RooHist.cxx
     src/RooHistError.cxx
@@ -376,10 +367,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooMinimizer.cxx
     src/RooMinimizerFcn.cxx
     src/RooMoment.cxx
-    src/RooMPSentinel.cxx
     src/RooMsgService.cxx
     src/RooMultiCategory.cxx
-    src/RooMultiGenFunction.cxx
     src/RooMultiVarGaussian.cxx
     src/RooNameReg.cxx
     src/RooFitDriver.cxx
@@ -435,7 +424,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooSentinel.cxx
     src/RooSharedProperties.cxx
     src/RooSimGenContext.cxx
-    src/RooSimPdfBuilder.cxx
     src/RooSimSplitGenContext.cxx
     src/RooSimultaneous.cxx
     src/RooSimWSTool.cxx
@@ -461,7 +449,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooBinSamplingPdf.cxx
     src/RooBinWidthFunction.cxx
     src/RooFitLegacy/RooCatTypeLegacy.cxx
-    src/RooFitLegacy/RooMinuit.cxx
     src/RunContext.cxx
     src/TestStatistics/ConstantTermsOptimizer.cxx
     src/TestStatistics/LikelihoodGradientWrapper.cxx

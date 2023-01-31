@@ -150,6 +150,7 @@ def main():
         if result != 0:
             die(result, "Failed to pull", shell_log)
 
+
     # First: fetch, build and upload base branch. Skipped if existing artifacts
     # are up to date with upstream
     #
@@ -172,7 +173,6 @@ def main():
     """, shell_log)
 
     print("::endgroup::")
-
     if result not in (0, 123):
         die(result, f"Failed to pull {base_ref}", shell_log)
 
@@ -190,7 +190,10 @@ def main():
                 archive_and_upload(yyyy_mm_dd, workdir, connection, compressionlevel, s3_prefix)
             except Exception as err:
                 warning("failed to archive/upload artifacts: ", err)
+
             print("::endgroup::")
+
+        print(f"Successfully built branch {base_ref}")
 
     if not rebase:
         print(f"Successfully built {base_ref}!")
@@ -199,16 +202,17 @@ def main():
 
     shell_log = rebase_and_build(base_ref, head_ref, buildtype, workdir, shell_log)
 
-
     try:
         if "pull" in head_ref:
             name = "pr-" + head_ref.split('/')[-2]
         else:
             name = head_ref
         test_prefix = f'to-test/{name}/{platform}/{buildtype}/{option_hash}'
+
         archive_and_upload(f"{yyyy_mm_dd}", workdir, connection, compressionlevel, test_prefix)
     except Exception as err:
         warning("failed to archive/upload artifacts: ", err)
+
 
 
     print_shell_log(shell_log)
@@ -216,6 +220,7 @@ def main():
 
 def archive_and_upload(archive_name, workdir, connection, compressionlevel, prefix):
     print("::group::Archive and upload changes to test in different workflow")
+
     new_archive = f"{archive_name}.tar.gz"
 
     with tarfile.open(f"{workdir}/{new_archive}", "x:gz", compresslevel=compressionlevel) as targz:
@@ -234,6 +239,7 @@ def archive_and_upload(archive_name, workdir, connection, compressionlevel, pref
 
 def build_base(base_ref, incremental, workdir, options, buildtype, shell_log) -> str:
     print("::group::Build base branch")
+
 
     if not incremental:
         result, shell_log = subprocess_with_log(f"""

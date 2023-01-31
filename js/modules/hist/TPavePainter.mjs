@@ -1,7 +1,9 @@
-import { gStyle, browser, settings, clone, create, isBatchMode } from '../core.mjs';
+import { gStyle, browser, settings, clone, create, isBatchMode, isObject, isFunc, isStr,
+         clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTDiamond, clTLegend, clTLegendEntry, clTPaletteAxis,
+         clTText, clTLatex, clTLine, clTBox } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb, pointer as d3_pointer } from '../d3.mjs';
 import { Prob } from '../base/math.mjs';
-import { floatToString } from '../base/BasePainter.mjs';
+import { floatToString, makeTranslate } from '../base/BasePainter.mjs';
 import { getElementMainPainter, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
@@ -28,14 +30,15 @@ class TPavePainter extends ObjectPainter {
       this.UseTextColor = false; // indicates if text color used, enabled menu entry
    }
 
-   /** @summary Draw pave and content */
-   drawPave(arg) {
+   /** @summary Draw pave and content
+     * @return {Promise} */
+   async drawPave(arg) {
 
       this.UseTextColor = false;
 
       if (!this.Enabled) {
          this.removeG();
-         return Promise.resolve(this);
+         return this;
       }
 
       let pt = this.getObject(), opt = pt.fOption.toUpperCase(),
@@ -46,7 +49,7 @@ class TPavePainter extends ObjectPainter {
          pt.fInit = 1;
          let pad = pp.getRootPad(true);
 
-         if ((pt._typename == "TPaletteAxis") && !pt.fX1 && !pt.fX2 && !pt.fY1 && !pt.fY2) {
+         if ((pt._typename == clTPaletteAxis) && !pt.fX1 && !pt.fX2 && !pt.fY1 && !pt.fY2) {
             if (fp) {
                pt.fX1NDC = fp.fX2NDC + 0.01;
                pt.fX2NDC = Math.min(0.96, fp.fX2NDC + 0.06);
@@ -58,10 +61,10 @@ class TPavePainter extends ObjectPainter {
                pt.fY1NDC = 0.1;
                pt.fY2NDC = 0.9;
             }
-         } else if (opt.indexOf("NDC") >= 0) {
+         } else if (opt.indexOf('NDC') >= 0) {
             pt.fX1NDC = pt.fX1; pt.fX2NDC = pt.fX2;
             pt.fY1NDC = pt.fY1; pt.fY2NDC = pt.fY2;
-         } else if (pad && (pad.fX1 == 0) && (pad.fX2 == 1) && (pad.fY1 == 0) && (pad.fY2 == 1) && (typeof arg == "string") && (arg.indexOf('postpone') >= 0)) {
+         } else if (pad && (pad.fX1 == 0) && (pad.fX2 == 1) && (pad.fY1 == 0) && (pad.fY2 == 1) && isStr(arg) && (arg.indexOf('postpone') >= 0)) {
             // special case when pad not yet initialized
             pt.fInit = 0; // do not init until axes drawn
             pt.fX1NDC = pt.fY1NDC = 0.99;
@@ -85,7 +88,7 @@ class TPavePainter extends ObjectPainter {
             pt.fX2NDC = pt.fY2NDC = 0.9;
          }
 
-         if ((pt.fX1NDC == pt.fX2NDC) && (pt.fY1NDC == pt.fY2NDC) && (pt._typename == "TLegend")) {
+         if ((pt.fX1NDC == pt.fX2NDC) && (pt.fY1NDC == pt.fY2NDC) && (pt._typename == clTLegend)) {
             pt.fX1NDC = Math.max(pad ? pad.fLeftMargin : 0, pt.fX2NDC - 0.3);
             pt.fX2NDC = Math.min(pt.fX1NDC + 0.3, pad ? 1 - pad.fRightMargin : 1);
             let h0 = Math.max(pt.fPrimitives ? pt.fPrimitives.arr.length*0.05 : 0, 0.2);
@@ -95,11 +98,11 @@ class TPavePainter extends ObjectPainter {
       }
 
       // fill stats before drawing to have coordinates early
-      if (this.isStats() && !this.NoFillStats && !(pp && pp._fast_drawing)) {
+      if (this.isStats() && !this.NoFillStats && !pp?._fast_drawing) {
 
          let main = pt.$main_painter || this.getMainPainter();
 
-         if (typeof main?.fillStatistic == 'function') {
+         if (isFunc(main?.fillStatistic)) {
 
             let dostat = parseInt(pt.fOptStat), dofit = parseInt(pt.fOptFit);
             if (!Number.isInteger(dostat)) dostat = gStyle.fOptStat;
@@ -118,8 +121,8 @@ class TPavePainter extends ObjectPainter {
 
       let pad_rect = pp.getPadRect(),
           brd = pt.fBorderSize,
-          dx = (opt.indexOf("L") >= 0) ? -1 : ((opt.indexOf("R") >= 0) ? 1 : 0),
-          dy = (opt.indexOf("T") >= 0) ? -1 : ((opt.indexOf("B") >= 0) ? 1 : 0);
+          dx = (opt.indexOf('L') >= 0) ? -1 : ((opt.indexOf('R') >= 0) ? 1 : 0),
+          dy = (opt.indexOf('T') >= 0) ? -1 : ((opt.indexOf('B') >= 0) ? 1 : 0);
 
       // container used to recalculate coordinates
       this.createG();
@@ -129,64 +132,64 @@ class TPavePainter extends ObjectPainter {
       let width = Math.round((pt.fX2NDC - pt.fX1NDC) * pad_rect.width),
           height = Math.round((pt.fY2NDC - pt.fY1NDC) * pad_rect.height);
 
-      this.draw_g.attr("transform", `translate(${this._pave_x},${this._pave_y})`);
+      this.draw_g.attr('transform', makeTranslate(this._pave_x, this._pave_y));
 
       this.createAttLine({ attr: pt, width: (brd > 0) ? pt.fLineWidth : 0 });
 
       this.createAttFill({ attr: pt });
 
-      if (pt._typename == "TDiamond") {
+      if (pt._typename == clTDiamond) {
          let h2 = Math.round(height/2), w2 = Math.round(width/2),
              dpath = `l${w2},${-h2}l${w2},${h2}l${-w2},${h2}z`;
 
          if ((brd > 1) && (pt.fShadowColor > 0) && (dx || dy) && !this.fillatt.empty())
-            this.draw_g.append("svg:path")
-                 .attr("d","M0,"+(h2+brd) + dpath)
-                 .style("fill", this.getColor(pt.fShadowColor))
-                 .style("stroke", this.getColor(pt.fShadowColor))
-                 .style("stroke-width", "1px");
+            this.draw_g.append('svg:path')
+                 .attr('d','M0,'+(h2+brd) + dpath)
+                 .style('fill', this.getColor(pt.fShadowColor))
+                 .style('stroke', this.getColor(pt.fShadowColor))
+                 .style('stroke-width', '1px');
 
-         this.draw_g.append("svg:path")
-             .attr("d", "M0,"+h2 +dpath)
+         this.draw_g.append('svg:path')
+             .attr('d', 'M0,'+h2 +dpath)
              .call(this.fillatt.func)
              .call(this.lineatt.func);
 
-         let text_g = this.draw_g.append("svg:g")
-                                 .attr("transform", `translate(${Math.round(width/4)},${Math.round(height/4)})`);
+         let text_g = this.draw_g.append('svg:g')
+                                 .attr('transform', makeTranslate(Math.round(width/4),Math.round(height/4)));
 
          return this.drawPaveText(w2, h2, arg, text_g);
       }
 
       // add shadow decoration before main rect
       if ((brd > 1) && (pt.fShadowColor > 0) && !pt.fNpaves && (dx || dy)) {
-         let spath = "", scol = this.getColor(pt.fShadowColor);
+         let spath = '', scol = this.getColor(pt.fShadowColor);
          if (this.fillatt.empty()) {
             if ((dx < 0) && (dy < 0))
                spath = `M0,0v${height-brd}h${-brd}v${-height}h${width}v${brd}`;
-            else // ((dx<0) && (dy>0))
+            else // ((dx < 0) && (dy > 0))
                spath = `M0,${height}v${brd-height}h${-brd}v${height}h${width}v${-brd}`;
          } else {
             // when main is filled, one also can use fill for shadow to avoid complexity
             spath = `M${dx*brd},${dy*brd}v${height}h${width}v${-height}`;
          }
-         this.draw_g.append("svg:path")
-                    .attr("d", spath + "z")
-                    .style("fill", scol)
-                    .style("stroke", scol)
-                    .style("stroke-width", "1px");
+         this.draw_g.append('svg:path')
+                    .attr('d', spath + 'z')
+                    .style('fill', scol)
+                    .style('stroke', scol)
+                    .style('stroke-width', '1px');
       }
 
       if (pt.fNpaves)
-         for (let n = pt.fNpaves-1; n>0; --n)
-            this.draw_g.append("svg:path")
-               .attr("d", `M${dx*4*n},${dy*4*n}h${width}v${height}h${-width}z`)
+         for (let n = pt.fNpaves-1; n > 0; --n)
+            this.draw_g.append('svg:path')
+               .attr('d', `M${dx*4*n},${dy*4*n}h${width}v${height}h${-width}z`)
                .call(this.fillatt.func)
                .call(this.lineatt.func);
 
       let rect;
       if (!isBatchMode() || !this.fillatt.empty() || !this.lineatt.empty())
-           rect = this.draw_g.append("svg:path")
-                      .attr("d", `M0,0H${width}V${height}H0Z`)
+           rect = this.draw_g.append('svg:path')
+                      .attr('d', `M0,0H${width}V${height}H0Z`)
                       .call(this.fillatt.func)
                       .call(this.lineatt.func);
 
@@ -194,22 +197,22 @@ class TPavePainter extends ObjectPainter {
 
       return promise.then(() => {
 
-         if (isBatchMode() || (pt._typename === "TPave")) return this;
+         if (isBatchMode() || (pt._typename === clTPave)) return this;
 
          // here all kind of interactive settings
          if (rect)
-            rect.style("pointer-events", "visibleFill")
-                .on("mouseenter", () => this.showObjectStatus());
+            rect.style('pointer-events', 'visibleFill')
+                .on('mouseenter', () => this.showObjectStatus());
 
          addDragHandler(this, { obj: pt, x: this._pave_x, y: this._pave_y, width, height,
                                 minwidth: 10, minheight: 20, canselect: true,
-                        redraw: () => { this.moved_interactive = true; this.interactiveRedraw(false, "pave_moved"); this.drawPave(); },
+                        redraw: () => { this.moved_interactive = true; this.interactiveRedraw(false, 'pave_moved'); this.drawPave(); },
                         ctxmenu: browser.touches && settings.ContextMenu && this.UseContextMenu });
 
          if (this.UseContextMenu && settings.ContextMenu)
-             this.draw_g.on("contextmenu", evnt => this.paveContextMenu(evnt));
+             this.draw_g.on('contextmenu', evnt => this.paveContextMenu(evnt));
 
-         if (pt._typename == "TPaletteAxis")
+         if (pt._typename == clTPaletteAxis)
             this.interactivePaletteAxis(width, height);
 
          return this;
@@ -218,15 +221,20 @@ class TPavePainter extends ObjectPainter {
 
    /** @summary Fill option object used in TWebCanvas */
    fillWebObjectOptions(res) {
-      if (!res) {
-         if (!this.snapid) return null;
-         res = { _typename: "TWebObjectOptions", snapid: this.snapid.toString(), opt: this.getDrawOpt(), fcust: "", fopt: [] };
-      }
 
       let pave = this.getObject();
 
-      if (pave && pave.fInit) {
-         res.fcust = "pave";
+      if (!res) {
+         let snapid = this.snapid;
+         if (!snapid && this._hist_painter?.snapid && pave?.fName)
+            snapid = this._hist_painter.snapid + '#func_' + pave.fName;
+
+         if (!snapid) return null;
+         res = { _typename: 'TWebObjectOptions', snapid: snapid.toString(), opt: this.getDrawOpt(), fcust: '', fopt: [] };
+      }
+
+      if (pave?.fInit) {
+         res.fcust = 'pave';
          res.fopt = [pave.fX1NDC, pave.fY1NDC, pave.fX2NDC, pave.fY2NDC];
       }
 
@@ -234,10 +242,10 @@ class TPavePainter extends ObjectPainter {
    }
 
    /** @summary draw TPaveLabel object */
-   drawPaveLabel(width, height) {
+   async drawPaveLabel(width, height) {
       let pave = this.getObject();
       if (!pave.fLabel || !pave.fLabel.trim())
-         return Promise.resolve(this);
+         return this;
 
       this.UseTextColor = true;
 
@@ -258,7 +266,7 @@ class TPavePainter extends ObjectPainter {
       // now draw TLine and TBox objects
       for (let j = 0; j < pt.fLines.arr.length; ++j) {
          let entry = pt.fLines.arr[j];
-         if ((entry._typename == "TText") || (entry._typename == "TLatex"))
+         if ((entry._typename == clTText) || (entry._typename == clTLatex))
             lines.push(entry.fTitle);
       }
 
@@ -270,7 +278,7 @@ class TPavePainter extends ObjectPainter {
          if (j > 0) maxlen = Math.max(maxlen, line.length);
          if ((j == 0) || (line.indexOf('|') < 0)) continue;
          if (first_stat === 0) first_stat = j;
-         let parts = line.split("|");
+         let parts = line.split('|');
          if (parts.length > num_cols)
             num_cols = parts.length;
       }
@@ -290,25 +298,25 @@ class TPavePainter extends ObjectPainter {
          this.UseTextColor = true;
 
          if (first_stat && (j >= first_stat)) {
-            let parts = lines[j].split("|");
+            let parts = lines[j].split('|');
             for (let n = 0; n < parts.length; ++n)
-               this.drawText({ align: "middle", x: width * n / num_cols, y, latex: 0,
+               this.drawText({ align: 'middle', x: width * n / num_cols, y, latex: 0,
                                width: width/num_cols, height: stepy, text: parts[n], color });
          } else if (lines[j].indexOf('=') < 0) {
             if (j == 0) {
                has_head = true;
                let max_hlen = Math.max(maxlen, Math.round((width-2*margin_x)/stepy/0.65));
                if (lines[j].length > max_hlen + 5)
-                  lines[j] = lines[j].slice(0,max_hlen+2) + "...";
+                  lines[j] = lines[j].slice(0,max_hlen+2) + '...';
             }
-            this.drawText({ align: (j == 0) ? "middle" : "start", x: margin_x, y,
+            this.drawText({ align: (j == 0) ? 'middle' : 'start', x: margin_x, y,
                             width: width-2*margin_x, height: stepy, text: lines[j], color });
          } else {
-            let parts = lines[j].split("="), args = [];
+            let parts = lines[j].split('='), args = [];
 
             for (let n = 0; n < 2; ++n) {
                let arg = {
-                  align: (n == 0) ? "start" : "end", x: margin_x, y,
+                  align: (n == 0) ? 'start' : 'end', x: margin_x, y,
                   width: width-2*margin_x, height: stepy, text: parts[n], color,
                   _expected_width: width-2*margin_x, _args: args,
                   post_process(painter) {
@@ -324,7 +332,7 @@ class TPavePainter extends ObjectPainter {
          }
       }
 
-      let lpath = "";
+      let lpath = '';
 
       if ((pt.fBorderSize > 0) && has_head)
          lpath += `M0,${Math.round(stepy)}h${width}`;
@@ -336,9 +344,9 @@ class TPavePainter extends ObjectPainter {
             lpath += `M${Math.round(width / num_cols * (ncol + 1))},${Math.round(first_stat * stepy)}V${height}`;
       }
 
-      if (lpath) this.draw_g.append("svg:path").attr("d",lpath).call(this.lineatt.func);
+      if (lpath) this.draw_g.append('svg:path').attr('d',lpath).call(this.lineatt.func);
 
-      // this.draw_g.classed("most_upper_primitives", true); // this primitive will remain on top of list
+      // this.draw_g.classed('most_upper_primitives', true); // this primitive will remain on top of list
 
       return this.finishTextDrawing(undefined, (nlines > 1));
    }
@@ -371,26 +379,26 @@ class TPavePainter extends ObjectPainter {
          let entry = arr[nline], texty = nline*stepy;
 
          switch(entry._typename) {
-            case 'TText':
-            case 'TLatex':
+            case clTText:
+            case clTLatex:
                if (!entry.fTitle || !entry.fTitle.trim()) continue;
 
                if (entry.fX || entry.fY) {
                   // individual positioning
                   let x = entry.fX ? entry.fX*width : margin_x,
                       y = entry.fY ? (1 - entry.fY)*height : texty,
-                      color = entry.fTextColor ? this.getColor(entry.fTextColor) : "";
+                      color = entry.fTextColor ? this.getColor(entry.fTextColor) : '';
                   if (!color) {
                      color = tcolor;
                      this.UseTextColor = true;
                   }
 
-                  let sub_g = text_g.append("svg:g");
+                  let sub_g = text_g.append('svg:g');
 
                   this.startTextDrawing(pt.fTextFont, (entry.fTextSize || pt.fTextSize) * pad_height, sub_g);
 
                   this.drawText({ align: entry.fTextAlign || pt.fTextAlign, x, y, text: entry.fTitle, color,
-                                  latex: (entry._typename == "TText") ? 0 : 1,  draw_g: sub_g, fast });
+                                  latex: (entry._typename == clTText) ? 0 : 1,  draw_g: sub_g, fast });
 
                   promises.push(this.finishTextDrawing(sub_g));
                } else {
@@ -410,7 +418,7 @@ class TPavePainter extends ObjectPainter {
 
                   arg.align = entry.fTextAlign || pt.fTextAlign;
                   arg.draw_g = text_g;
-                  arg.latex = (entry._typename == "TText" ? 0 : 1);
+                  arg.latex = (entry._typename == clTText ? 0 : 1);
                   arg.text = entry.fTitle;
                   arg.fast = fast;
                   if (!arg.color) { this.UseTextColor = true; arg.color = tcolor; }
@@ -418,25 +426,25 @@ class TPavePainter extends ObjectPainter {
                }
                break;
 
-            case 'TLine':
+            case clTLine:
                let lx1 = entry.fX1 ? Math.round(entry.fX1*width) : 0,
                    lx2 = entry.fX2 ? Math.round(entry.fX2*width) : width,
                    ly1 = entry.fY1 ? Math.round((1 - entry.fY1)*height) : Math.round(texty + stepy*0.5),
                    ly2 = entry.fY2 ? Math.round((1 - entry.fY2)*height) : Math.round(texty + stepy*0.5),
                    lineatt = new TAttLineHandler(entry);
-               text_g.append("svg:path")
-                     .attr("d", `M${lx1},${ly1}L${lx2},${ly2}`)
+               text_g.append('svg:path')
+                     .attr('d', `M${lx1},${ly1}L${lx2},${ly2}`)
                      .call(lineatt.func);
                break;
 
-            case 'TBox':
+            case clTBox:
                let bx1 = entry.fX1 ? Math.round(entry.fX1*width) : 0,
                    bx2 = entry.fX2 ? Math.round(entry.fX2*width) : width,
                    by1 = entry.fY1 ? Math.round((1 - entry.fY1)*height) : Math.round(texty),
                    by2 = entry.fY2 ? Math.round((1 - entry.fY2)*height) : Math.round(texty + stepy),
                    fillatt = this.createAttFill(entry);
-               text_g.append("svg:path")
-                     .attr("d", `M${bx1},${by1}H${bx2}V${by2}H${bx1}Z`)
+               text_g.append('svg:path')
+                     .attr('d', `M${bx1},${by1}H${bx2}V${by2}H${bx1}Z`)
                      .call(fillatt.func);
                break;
          }
@@ -450,10 +458,10 @@ class TPavePainter extends ObjectPainter {
              y = Math.round(-height*0.02),
              w = Math.round(width*0.5),
              h = Math.round(height*0.04),
-             lbl_g = text_g.append("svg:g");
+             lbl_g = text_g.append('svg:g');
 
-         lbl_g.append("svg:path")
-               .attr("d", `M${x},${y}h${w}v${h}h${-w}z`)
+         lbl_g.append('svg:path')
+               .attr('d', `M${x},${y}h${w}v${h}h${-w}z`)
                .call(this.fillatt.func)
                .call(this.lineatt.func);
 
@@ -470,20 +478,20 @@ class TPavePainter extends ObjectPainter {
    }
 
    /** @summary Method used to convert value to string according specified format
-     * @desc format can be like 5.4g or 4.2e or 6.4f or "stat" or "fit" or "entries" */
+     * @desc format can be like 5.4g or 4.2e or 6.4f or 'stat' or 'fit' or 'entries' */
    format(value, fmt) {
-      if (!fmt) fmt = "stat";
+      if (!fmt) fmt = 'stat';
 
       let pave = this.getObject();
 
       switch(fmt) {
-         case "stat" : fmt = pave.fStatFormat || gStyle.fStatFormat; break;
-         case "fit": fmt = pave.fFitFormat || gStyle.fFitFormat; break;
-         case "entries": if ((Math.abs(value) < 1e9) && (Math.round(value) == value)) return value.toFixed(0); fmt = "14.7g"; break;
-         case "last": fmt = this.lastformat; break;
+         case 'stat' : fmt = pave.fStatFormat || gStyle.fStatFormat; break;
+         case 'fit': fmt = pave.fFitFormat || gStyle.fFitFormat; break;
+         case 'entries': if ((Math.abs(value) < 1e9) && (Math.round(value) == value)) return value.toFixed(0); fmt = '14.7g'; break;
+         case 'last': fmt = this.lastformat; break;
       }
 
-      let res = floatToString(value, fmt || "6.4g", true);
+      let res = floatToString(value, fmt || '6.4g', true);
 
       this.lastformat = res[1];
 
@@ -504,7 +512,7 @@ class TPavePainter extends ObjectPainter {
          while ((nrows-1)*ncols >= nlines) nrows--;
       }
 
-      const isEmpty = entry => !entry.fObject && !entry.fOption && (!entry.fLabel || (entry.fLabel == " "));
+      const isEmpty = entry => !entry.fObject && !entry.fOption && (!entry.fLabel || (entry.fLabel == ' '));
 
       if (ncols == 1)
          for (let ii = 0; ii < nlines; ++ii)
@@ -533,7 +541,7 @@ class TPavePainter extends ObjectPainter {
 
          if (isEmpty(leg)) continue; // let discard empty entry
 
-         if (ncols==1) ++i; else i = ii;
+         if (ncols == 1) ++i; else i = ii;
 
          let lopt = leg.fOption.toLowerCase(),
              icol = i % ncols, irow = (i - icol) / ncols,
@@ -551,7 +559,7 @@ class TPavePainter extends ObjectPainter {
                draw_error = lopt.indexOf('e') != -1,
                draw_marker = lopt.indexOf('p') != -1;
 
-         if ((mo !== null) && (typeof mo == 'object')) {
+         if (isObject(mo)) {
             if ('fLineColor' in mo) o_line = mo;
             if ('fFillColor' in mo) o_fill = mo;
             if ('fMarkerColor' in mo) o_marker = mo;
@@ -571,8 +579,8 @@ class TPavePainter extends ObjectPainter {
                 isany = true;
                // box total height is yspace*0.7
                // define x,y as the center of the symbol for this entry
-               let rect = this.draw_g.append("svg:path")
-                              .attr("d", `M${x0 + padding_x},${Math.round(pos_y+step_y*0.1)}v${Math.round(step_y*0.8)}h${tpos_x-2*padding_x-x0}v${-Math.round(step_y*0.8)}z`)
+               let rect = this.draw_g.append('svg:path')
+                              .attr('d', `M${x0 + padding_x},${Math.round(pos_y+step_y*0.1)}v${Math.round(step_y*0.8)}h${tpos_x-2*padding_x-x0}v${-Math.round(step_y*0.8)}z`)
                               .call(fillatt.func);
                 if (lineatt)
                    rect.call(lineatt.func);
@@ -584,12 +592,12 @@ class TPavePainter extends ObjectPainter {
             let lineatt = painter?.lineatt || new TAttLineHandler(o_line);
             if (!lineatt.empty()) {
                isany = true;
-               this.draw_g.append("svg:path")
-                  .attr("d", `M${x0 + padding_x},${mid_y}H${tpos_x - padding_x}`)
+               this.draw_g.append('svg:path')
+                  .attr('d', `M${x0 + padding_x},${mid_y}H${tpos_x - padding_x}`)
                   .call(lineatt.func);
                if (draw_error)
-                  this.draw_g.append("svg:path")
-                      .attr("d", `M${mid_x},${Math.round(pos_y+step_y*0.1)}V${Math.round(pos_y+step_y*0.9)}`)
+                  this.draw_g.append('svg:path')
+                      .attr('d', `M${mid_x},${Math.round(pos_y+step_y*0.1)}V${Math.round(pos_y+step_y*0.9)}`)
                       .call(lineatt.func);
             }
          }
@@ -600,21 +608,21 @@ class TPavePainter extends ObjectPainter {
             if (!marker.empty()) {
                isany = true;
                this.draw_g
-                   .append("svg:path")
-                   .attr("d", marker.create((x0 + tpos_x)/2, mid_y))
+                   .append('svg:path')
+                   .attr('d', marker.create((x0 + tpos_x)/2, mid_y))
                    .call(marker.func);
             }
          }
 
          // special case - nothing draw, try to show rect with line attributes
          if (!isany && painter?.lineatt && !painter.lineatt.empty())
-            this.draw_g.append("svg:path")
-                       .attr("d", `M${x0 + padding_x},${Math.round(pos_y+step_y*0.1)}v${Math.round(step_y*0.8)}h${tpos_x-2*padding_x-x0}v${-Math.round(step_y*0.8)}z`)
-                       .style("fill", "none")
+            this.draw_g.append('svg:path')
+                       .attr('d', `M${x0 + padding_x},${Math.round(pos_y+step_y*0.1)}v${Math.round(step_y*0.8)}h${tpos_x-2*padding_x-x0}v${-Math.round(step_y*0.8)}z`)
+                       .style('fill', 'none')
                        .call(painter.lineatt.func);
 
          let pos_x = tpos_x;
-         if (lopt.length > 0)
+         if (lopt)
             any_opt = true;
          else if (!any_opt)
             pos_x = x0 + padding_x;
@@ -632,9 +640,9 @@ class TPavePainter extends ObjectPainter {
 
       let palette = this.getObject(),
           axis = palette.fAxis,
-          can_move = (typeof arg == "string") && (arg.indexOf('can_move') >= 0),
-          postpone_draw = (typeof arg == "string") && (arg.indexOf('postpone') >= 0),
-          cjust = (typeof arg == "string") && (arg.indexOf('cjust') >= 0),
+          can_move = isStr(arg) && (arg.indexOf('can_move') >= 0),
+          postpone_draw = isStr(arg) && (arg.indexOf('postpone') >= 0),
+          cjust = isStr(arg) && (arg.indexOf('cjust') >= 0),
           pp = this.getPadPainter(),
           width = pp.getPadWidth(),
           height = pp.getPadHeight(),
@@ -644,7 +652,7 @@ class TPavePainter extends ObjectPainter {
           zmin = 0, zmax = 100, gzmin, gzmax,
           contour = main.fContour,
           levels = contour ? contour.getLevels() : null,
-          draw_palette = main.fPalette, axis_transform = "";
+          draw_palette = main.fPalette, axis_transform = '';
 
       this._palette_vertical = (palette.fX2NDC - palette.fX1NDC) < (palette.fY2NDC - palette.fY1NDC);
 
@@ -663,15 +671,15 @@ class TPavePainter extends ObjectPainter {
          }
          //zmin = Math.min(levels[0], framep.zmin);
          //zmax = Math.max(levels[levels.length-1], framep.zmax);
-      } else if ((main.gmaxbin!==undefined) && (main.gminbin!==undefined)) {
+      } else if ((main.gmaxbin !== undefined) && (main.gminbin !== undefined)) {
          // this is case of TH2 (needs only for size adjustment)
          zmin = main.gminbin; zmax = main.gmaxbin;
-      } else if ((main.hmin!==undefined) && (main.hmax!==undefined)) {
+      } else if ((main.hmin !== undefined) && (main.hmax !== undefined)) {
          // this is case of TH1
          zmin = main.hmin; zmax = main.hmax;
       }
 
-      this.draw_g.selectAll("rect").style("fill", 'white');
+      this.draw_g.selectAll('rect').style('fill', 'white');
 
       if ((gzmin === undefined) || (gzmax === undefined) || (gzmin == gzmax)) {
          gzmin = zmin; gzmax = zmax;
@@ -679,19 +687,19 @@ class TPavePainter extends ObjectPainter {
 
       if (this._palette_vertical) {
          this._swap_side = palette.fX2NDC < 0.5;
-         this.z_handle.configureAxis("zaxis", gzmin, gzmax, zmin, zmax, true, [0, s_height], { log: pad ? pad.fLogz : 0, fixed_ticks: cjust ? levels : null, maxTickSize: Math.round(s_width*0.7), swap_side: this._swap_side });
-         axis_transform = this._swap_side ? "" : `translate(${s_width})`;
+         this.z_handle.configureAxis('zaxis', gzmin, gzmax, zmin, zmax, true, [0, s_height], { log: pad ? pad.fLogz : 0, fixed_ticks: cjust ? levels : null, maxTickSize: Math.round(s_width*0.7), swap_side: this._swap_side });
+         axis_transform = this._swap_side ? null : `translate(${s_width})`;
       } else {
          this._swap_side = palette.fY1NDC > 0.5;
-         this.z_handle.configureAxis("zaxis", gzmin, gzmax, zmin, zmax, false, [0, s_width], { log: pad ? pad.fLogz : 0, fixed_ticks: cjust ? levels : null, maxTickSize: Math.round(s_height*0.7), swap_side: this._swap_side });
-         axis_transform = this._swap_side ? "" : `translate(0,${s_height})`;
+         this.z_handle.configureAxis('zaxis', gzmin, gzmax, zmin, zmax, false, [0, s_width], { log: pad ? pad.fLogz : 0, fixed_ticks: cjust ? levels : null, maxTickSize: Math.round(s_height*0.7), swap_side: this._swap_side });
+         axis_transform = this._swap_side ? null : `translate(0,${s_height})`;
       }
 
       if (!contour || !draw_palette || postpone_draw)
          // we need such rect to correctly calculate size
-         this.draw_g.append("svg:path")
-                    .attr("d", `M0,0H${s_width}V${s_height}H0Z`)
-                    .style("fill", 'white');
+         this.draw_g.append('svg:path')
+                    .attr('d', `M0,0H${s_width}V${s_height}H0Z`)
+                    .style('fill', 'white');
       else
          for (let i = 0; i < levels.length-1; ++i) {
             let z0 = Math.round(this.z_handle.gr(levels[i])),
@@ -727,21 +735,21 @@ class TPavePainter extends ObjectPainter {
             let col = contour.getPaletteColor(draw_palette, lvl);
             if (!col) continue;
 
-            let r = this.draw_g.append("svg:path")
-                       .attr("d", d)
-                       .style("fill", col)
-                       .property("fill0", col)
-                       .property("fill1", d3_rgb(col).darker(0.5).formatHex());
+            let r = this.draw_g.append('svg:path')
+                       .attr('d', d)
+                       .style('fill', col)
+                       .property('fill0', col)
+                       .property('fill1', d3_rgb(col).darker(0.5).formatHex());
 
             if (this.isTooltipAllowed())
                r.on('mouseover', function() {
-                  d3_select(this).transition().duration(100).style("fill", d3_select(this).property('fill1'));
+                  d3_select(this).transition().duration(100).style('fill', d3_select(this).property('fill1'));
                }).on('mouseout', function() {
-                  d3_select(this).transition().duration(100).style("fill", d3_select(this).property('fill0'));
-               }).append("svg:title").text(levels[i].toFixed(2) + " - " + levels[i+1].toFixed(2));
+                  d3_select(this).transition().duration(100).style('fill', d3_select(this).property('fill0'));
+               }).append('svg:title').text(levels[i].toFixed(2) + ' - ' + levels[i+1].toFixed(2));
 
             if (settings.Zooming)
-               r.on("dblclick", () => this.getFramePainter().unzoom("z"));
+               r.on('dblclick', () => this.getFramePainter().unzoom('z'));
          }
 
       return this.z_handle.drawAxis(this.draw_g, s_width, s_height, axis_transform).then(() => {
@@ -754,7 +762,7 @@ class TPavePainter extends ObjectPainter {
 
                if (shift > 0) {
                   this._pave_x -= shift;
-                  this.draw_g.attr("transform", `translate(${this._pave_x},${this._pave_y})`);
+                  this.draw_g.attr('transform', makeTranslate(this._pave_x, this._pave_y));
                   palette.fX1NDC -= shift/width;
                   palette.fX2NDC -= shift/width;
                }
@@ -762,7 +770,7 @@ class TPavePainter extends ObjectPainter {
                let shift = Math.round((1.05 - gStyle.fTitleY)*height) - rect.y;
                if (shift > 0) {
                   this._pave_y += shift;
-                  this.draw_g.attr("transform", `translate(${this._pave_x},${this._pave_y})`);
+                  this.draw_g.attr('transform', makeTranslate(this._pave_x, this._pave_y));
                   palette.fY1NDC -= shift/height;
                   palette.fY2NDC -= shift/height;
                }
@@ -785,26 +793,26 @@ class TPavePainter extends ObjectPainter {
          let m = d3_pointer(evnt, this.draw_g.node());
          if (this._palette_vertical) {
             sel2 = Math.min(Math.max(m[1], 0), s_height);
-            zoom_rect.attr("y", Math.min(sel1, sel2))
-                     .attr("height", Math.abs(sel2-sel1));
+            zoom_rect.attr('y', Math.min(sel1, sel2))
+                     .attr('height', Math.abs(sel2-sel1));
          } else {
             sel2 = Math.min(Math.max(m[0], 0), s_width);
-            zoom_rect.attr("x", Math.min(sel1, sel2))
-                     .attr("width", Math.abs(sel2-sel1));
+            zoom_rect.attr('x', Math.min(sel1, sel2))
+                     .attr('width', Math.abs(sel2-sel1));
          }
       }, endRectSel = evnt => {
          if (!doing_zoom) return;
 
          evnt.preventDefault();
-         d3_select(window).on("mousemove.colzoomRect", null)
-                          .on("mouseup.colzoomRect", null);
+         d3_select(window).on('mousemove.colzoomRect', null)
+                          .on('mouseup.colzoomRect', null);
          zoom_rect.remove();
          zoom_rect = null;
          doing_zoom = false;
 
          let z = this.z_handle.gr, z1 = z.invert(sel1), z2 = z.invert(sel2);
 
-         this.getFramePainter().zoom("z", Math.min(z1, z2), Math.max(z1, z2));
+         this.getFramePainter().zoom('z', Math.min(z1, z2), Math.max(z1, z2));
       }, startRectSel = evnt => {
          // ignore when touch selection is activated
          if (doing_zoom) return;
@@ -815,38 +823,38 @@ class TPavePainter extends ObjectPainter {
 
          let origin = d3_pointer(evnt, this.draw_g.node());
 
-         zoom_rect = this.draw_g.append("svg:rect").attr("class", "zoom").attr("id", "colzoomRect");
+         zoom_rect = this.draw_g.append('svg:rect').attr('class', 'zoom').attr('id', 'colzoomRect');
 
          if (this._palette_vertical) {
             sel1 = sel2 = origin[1];
-            zoom_rect.attr("x", "0")
-                     .attr("width", s_width)
-                     .attr("y", sel1)
-                     .attr("height", 1);
+            zoom_rect.attr('x', '0')
+                     .attr('width', s_width)
+                     .attr('y', sel1)
+                     .attr('height', 1);
          } else {
             sel1 = sel2 = origin[0];
-            zoom_rect.attr("x", sel1)
-                     .attr("width", 1)
-                     .attr("y", 0)
-                     .attr("height", s_height);
+            zoom_rect.attr('x', sel1)
+                     .attr('width', 1)
+                     .attr('y', 0)
+                     .attr('height', s_height);
          }
 
-         d3_select(window).on("mousemove.colzoomRect", moveRectSel)
-                          .on("mouseup.colzoomRect", endRectSel, true);
+         d3_select(window).on('mousemove.colzoomRect', moveRectSel)
+                          .on('mouseup.colzoomRect', endRectSel, true);
       };
 
       if (settings.Zooming)
-         this.draw_g.selectAll(".axis_zoom")
-                    .on("mousedown", startRectSel)
-                    .on("dblclick", () => this.getFramePainter().unzoom("z"));
+         this.draw_g.selectAll('.axis_zoom')
+                    .on('mousedown', startRectSel)
+                    .on('dblclick', () => this.getFramePainter().unzoom('z'));
 
       if (settings.ZoomWheel)
-         this.draw_g.on("wheel", evnt => {
+         this.draw_g.on('wheel', evnt => {
             let pos = d3_pointer(evnt, this.draw_g.node()),
                 coord = this._palette_vertical ? (1 - pos[1] / s_height) : pos[0] / s_width,
                 item = this.z_handle.analyzeWheelEvent(evnt, coord);
             if (item && item.changed)
-               this.getFramePainter().zoom("z", item.min, item.max);
+               this.getFramePainter().zoom('z', item.min, item.max);
          });
    }
 
@@ -854,45 +862,45 @@ class TPavePainter extends ObjectPainter {
    fillContextMenu(menu) {
       let pave = this.getObject();
 
-      menu.add("header: " + pave._typename + "::" + pave.fName);
+      menu.add('header: ' + pave._typename + '::' + pave.fName);
       if (this.isStats()) {
-         menu.add("Default position", function() {
+         menu.add('Default position', function() {
             pave.fX2NDC = gStyle.fStatX;
             pave.fX1NDC = pave.fX2NDC - gStyle.fStatW;
             pave.fY2NDC = gStyle.fStatY;
             pave.fY1NDC = pave.fY2NDC - gStyle.fStatH;
             pave.fInit = 1;
-            this.interactiveRedraw(true, "pave_moved")
+            this.interactiveRedraw(true, 'pave_moved')
          });
 
-         menu.add("Save to gStyle", () => {
+         menu.add('Save to gStyle', () => {
             gStyle.fStatX = pave.fX2NDC;
             gStyle.fStatW = pave.fX2NDC - pave.fX1NDC;
             gStyle.fStatY = pave.fY2NDC;
             gStyle.fStatH = pave.fY2NDC - pave.fY1NDC;
-            if (this.fillatt) this.fillatt.saveToStyle("fStatColor", "fStatStyle");
+            if (this.fillatt) this.fillatt.saveToStyle('fStatColor', 'fStatStyle');
             gStyle.fStatTextColor = pave.fTextColor;
             gStyle.fStatFontSize = pave.fTextSize;
             gStyle.fStatFont = pave.fTextFont;
-         }, "Store stats position and graphical attributes to gStyle");
+         }, 'Store stats position and graphical attributes to gStyle');
 
-         menu.add("SetStatFormat", () => {
-            menu.input("Enter StatFormat", pave.fStatFormat).then(fmt => {
+         menu.add('SetStatFormat', () => {
+            menu.input('Enter StatFormat', pave.fStatFormat).then(fmt => {
                if (!fmt) return;
                pave.fStatFormat = fmt;
                this.interactiveRedraw(true, `exec:SetStatFormat("${fmt}")`);
             });
          });
-         menu.add("SetFitFormat", () => {
-            menu.input("Enter FitFormat", pave.fFitFormat).then(fmt => {
+         menu.add('SetFitFormat', () => {
+            menu.input('Enter FitFormat', pave.fFitFormat).then(fmt => {
                if (!fmt) return;
                pave.fFitFormat = fmt;
                this.interactiveRedraw(true, `exec:SetFitFormat("${fmt}")`);
             });
          });
-         menu.add("separator");
-         menu.add("sub:SetOptStat", () => {
-            menu.input("Enter OptStat", pave.fOptStat, "int").then(fmt => {
+         menu.add('separator');
+         menu.add('sub:SetOptStat', () => {
+            menu.input('Enter OptStat', pave.fOptStat, 'int').then(fmt => {
                pave.fOptStat = fmt;
                this.interactiveRedraw(true, `exec:SetOptStat(${fmt}`);
             });
@@ -914,48 +922,48 @@ class TPavePainter extends ObjectPainter {
             });
          }
 
-         AddStatOpt(0, "Histogram name");
-         AddStatOpt(1, "Entries");
-         AddStatOpt(2, "Mean");
-         AddStatOpt(3, "Std Dev");
-         AddStatOpt(4, "Underflow");
-         AddStatOpt(5, "Overflow");
-         AddStatOpt(6, "Integral");
-         AddStatOpt(7, "Skewness");
-         AddStatOpt(8, "Kurtosis");
-         menu.add("endsub:");
+         AddStatOpt(0, 'Histogram name');
+         AddStatOpt(1, 'Entries');
+         AddStatOpt(2, 'Mean');
+         AddStatOpt(3, 'Std Dev');
+         AddStatOpt(4, 'Underflow');
+         AddStatOpt(5, 'Overflow');
+         AddStatOpt(6, 'Integral');
+         AddStatOpt(7, 'Skewness');
+         AddStatOpt(8, 'Kurtosis');
+         menu.add('endsub:');
 
-         menu.add("sub:SetOptFit", () => {
-            menu.input("Enter OptStat", pave.fOptFit, "int").then(fmt => {
+         menu.add('sub:SetOptFit', () => {
+            menu.input('Enter OptStat', pave.fOptFit, 'int').then(fmt => {
                pave.fOptFit = fmt;
                this.interactiveRedraw(true, `exec:SetOptFit(${fmt})`);
             });
          });
-         AddStatOpt(10, "Fit parameters");
-         AddStatOpt(11, "Par errors");
-         AddStatOpt(12, "Chi square / NDF");
-         AddStatOpt(13, "Probability");
-         menu.add("endsub:");
+         AddStatOpt(10, 'Fit parameters');
+         AddStatOpt(11, 'Par errors');
+         AddStatOpt(12, 'Chi square / NDF');
+         AddStatOpt(13, 'Probability');
+         menu.add('endsub:');
 
-         menu.add("separator");
-      } else if (pave.fName === "title") {
-         menu.add("Default position", function() {
+         menu.add('separator');
+      } else if (pave.fName === 'title') {
+         menu.add('Default position', function() {
             pave.fX1NDC = gStyle.fTitleW > 0 ? gStyle.fTitleX - gStyle.fTitleW/2 : gStyle.fPadLeftMargin;
             pave.fY1NDC = gStyle.fTitleY - Math.min(gStyle.fTitleFontSize*1.1, 0.06);
             pave.fX2NDC = gStyle.fTitleW > 0 ? gStyle.fTitleX + gStyle.fTitleW/2 : 1 - gStyle.fPadRightMargin;
             pave.fY2NDC = gStyle.fTitleY;
             pave.fInit = 1;
-            this.interactiveRedraw(true, "pave_moved");
+            this.interactiveRedraw(true, 'pave_moved');
          });
 
-         menu.add("Save to gStyle", function() {
+         menu.add('Save to gStyle', function() {
             gStyle.fTitleX = (pave.fX2NDC + pave.fX1NDC)/2;
             gStyle.fTitleY = pave.fY2NDC;
-            if (this.fillatt) this.fillatt.saveToStyle("fTitleColor", "fTitleStyle");
+            if (this.fillatt) this.fillatt.saveToStyle('fTitleColor', 'fTitleStyle');
             gStyle.fTitleTextColor = pave.fTextColor;
             gStyle.fTitleFontSize = pave.fTextSize;
             gStyle.fTitleFont = pave.fTextFont;
-         }, "Store title position and graphical attributes to gStyle");
+         }, 'Store title position and graphical attributes to gStyle');
       }
 
       if (this.UseTextColor)
@@ -973,8 +981,8 @@ class TPavePainter extends ObjectPainter {
    paveContextMenu(evnt) {
       if (this.z_handle) {
          let fp = this.getFramePainter();
-         if (typeof fp?.showContextMenu == 'function')
-             fp.showContextMenu("z", evnt);
+         if (isFunc(fp?.showContextMenu))
+             fp.showContextMenu('z', evnt);
          return;
       }
 
@@ -983,13 +991,18 @@ class TPavePainter extends ObjectPainter {
 
       createMenu(evnt, this).then(menu => {
          this.fillContextMenu(menu);
-         return this.fillObjectExecMenu(menu, "title");
+         return this.fillObjectExecMenu(menu, this.isTitle() ? 'title' : undefined);
        }).then(menu => menu.show());
    }
 
    /** @summary Returns true when stat box is drawn */
    isStats() {
-      return this.matchObjectType('TPaveStats');
+      return this.matchObjectType(clTPaveStats);
+   }
+
+   /** @summary Returns true when title is drawn */
+   isTitle() {
+      return this.matchObjectType(clTPaveText) && (this.getObject()?.fName == 'title');
    }
 
    /** @summary Clear text in the pave */
@@ -1012,24 +1025,24 @@ class TPavePainter extends ObjectPainter {
           print_fprob   = Math.floor(dofit/1000) % 10;
 
       if (print_fchi2 > 0)
-         this.addText("#chi^2 / ndf = " + this.format(f1.fChisquare,"fit") + " / " + f1.fNDF);
+         this.addText('#chi^2 / ndf = ' + this.format(f1.fChisquare,'fit') + ' / ' + f1.fNDF);
       if (print_fprob > 0)
-         this.addText("Prob = "  + this.format(Prob(f1.fChisquare, f1.fNDF)));
+         this.addText('Prob = '  + this.format(Prob(f1.fChisquare, f1.fNDF)));
       if (print_fval > 0)
          for(let n = 0; n < f1.GetNumPars(); ++n) {
             let parname = f1.GetParName(n), parvalue = f1.GetParValue(n), parerr = f1.GetParError(n);
 
-            parvalue = (parvalue===undefined) ? "<not avail>" : this.format(Number(parvalue),"fit");
+            parvalue = (parvalue === undefined) ? '<not avail>' : this.format(Number(parvalue),'fit');
             if (parerr !== undefined) {
-               parerr = this.format(parerr,"last");
-               if ((Number(parerr)===0) && (f1.GetParError(n) != 0))
-                  parerr = this.format(f1.GetParError(n),"4.2g");
+               parerr = this.format(parerr,'last');
+               if ((Number(parerr) === 0) && (f1.GetParError(n) != 0))
+                  parerr = this.format(f1.GetParError(n),'4.2g');
             }
 
             if ((print_ferrors > 0) && parerr)
-               this.addText(parname + " = " + parvalue + " #pm " + parerr);
+               this.addText(`${parname} = ${parvalue} #pm ${parerr}`);
             else
-               this.addText(parname + " = " + parvalue);
+               this.addText(`${parname} = ${parvalue}`);
          }
 
       return true;
@@ -1074,21 +1087,21 @@ class TPavePainter extends ObjectPainter {
       pave.fBorderSize = obj.fBorderSize;
 
       switch (obj._typename) {
-         case 'TPaveText':
+         case clTPaveText:
             pave.fLines = clone(obj.fLines);
             return true;
-         case 'TPavesText':
+         case clTPavesText:
             pave.fLines = clone(obj.fLines);
             pave.fNpaves = obj.fNpaves;
             return true;
-         case 'TPaveLabel':
+         case clTPaveLabel:
             pave.fLabel = obj.fLabel;
             return true;
-         case 'TPaveStats':
+         case clTPaveStats:
             pave.fOptStat = obj.fOptStat;
             pave.fOptFit = obj.fOptFit;
             return true;
-         case 'TLegend':
+         case clTLegend:
             let oldprim = pave.fPrimitives;
             pave.fPrimitives = obj.fPrimitives;
             pave.fNColumns = obj.fNColumns;
@@ -1103,7 +1116,7 @@ class TPavePainter extends ObjectPainter {
                }
             }
             return true;
-         case 'TPaletteAxis':
+         case clTPaletteAxis:
             pave.fBorderSize = 1;
             pave.fShadowColor = 0;
             return true;
@@ -1113,7 +1126,7 @@ class TPavePainter extends ObjectPainter {
    }
 
    /** @summary redraw pave object */
-   redraw() {
+   async redraw() {
       return this.drawPave();
    }
 
@@ -1130,29 +1143,31 @@ class TPavePainter extends ObjectPainter {
    /** @summary Returns true if object is supported */
    static canDraw(obj) {
       let typ = obj?._typename;
-      return typ == "TPave" || typ == "TPaveLabel" || typ == "TPaveStats" || typ == "TPaveText"
-             || typ == "TPavesText" || typ == "TDiamond" || typ == "TLegend" || typ == "TPaletteAxis";
+      return typ == clTPave || typ == clTPaveLabel || typ == clTPaveStats || typ == clTPaveText ||
+             typ == clTPavesText || typ == clTDiamond || typ == clTLegend || typ == clTPaletteAxis;
    }
 
    /** @summary Draw TPave */
-   static draw(dom, pave, opt) {
+   static async draw(dom, pave, opt) {
       let painter = new TPavePainter(dom, pave);
 
       return ensureTCanvas(painter, false).then(() => {
 
-         if ((pave.fName === "title") && (pave._typename === "TPaveText")) {
-            let tpainter = painter.getPadPainter().findPainterFor(null, "title");
+         if ((pave.fName === 'title') && (pave._typename === clTPaveText)) {
+            let tpainter = painter.getPadPainter().findPainterFor(null, 'title');
             if (tpainter && (tpainter !== painter)) {
                tpainter.removeFromPadPrimitives();
                tpainter.cleanup();
-            } else if ((opt == "postitle") || painter.isDummyPos(pave)) {
+            } else if ((opt == 'postitle') || painter.isDummyPos(pave)) {
                let st = gStyle, fp = painter.getFramePainter();
                if (st && fp) {
                   let midx = st.fTitleX, y2 = st.fTitleY, w = st.fTitleW, h = st.fTitleH;
+
                   if (!h) h = (y2-fp.fY2NDC)*0.7;
                   if (!w) w = fp.fX2NDC - fp.fX1NDC;
                   if (!Number.isFinite(h) || (h <= 0)) h = 0.06;
                   if (!Number.isFinite(w) || (w <= 0)) w = 0.44;
+
                   pave.fX1NDC = midx - w/2;
                   pave.fY1NDC = y2 - h;
                   pave.fX2NDC = midx + w/2;
@@ -1160,13 +1175,13 @@ class TPavePainter extends ObjectPainter {
                   pave.fInit = 1;
                }
             }
-         } else if (pave._typename === "TPaletteAxis") {
+         } else if (pave._typename === clTPaletteAxis) {
             pave.fBorderSize = 1;
             pave.fShadowColor = 0;
 
             // check some default values of TGaxis object, otherwise axis will not be drawn
             if (pave.fAxis) {
-               if (!pave.fAxis.fChopt) pave.fAxis.fChopt = "+";
+               if (!pave.fAxis.fChopt) pave.fAxis.fChopt = '+';
                if (!pave.fAxis.fNdiv) pave.fAxis.fNdiv = 12;
                if (!pave.fAxis.fLabelOffset) pave.fAxis.fLabelOffset = 0.005;
             }
@@ -1177,25 +1192,25 @@ class TPavePainter extends ObjectPainter {
             painter.UseContextMenu = true;
          }
 
-         painter.NoFillStats = (opt == "nofillstats");
+         painter.NoFillStats = (opt == 'nofillstats');
 
          switch (pave._typename) {
-            case "TPaveLabel":
+            case clTPaveLabel:
                painter.paveDrawFunc = painter.drawPaveLabel;
                break;
-            case "TPaveStats":
+            case clTPaveStats:
                painter.paveDrawFunc = painter.drawPaveStats;
                painter.$secondary = true; // indicates that painter created from others
                break;
-            case "TPaveText":
-            case "TPavesText":
-            case "TDiamond":
+            case clTPaveText:
+            case clTPavesText:
+            case clTDiamond:
                painter.paveDrawFunc = painter.drawPaveText;
                break;
-            case "TLegend":
+            case clTLegend:
                painter.paveDrawFunc = painter.drawLegend;
                break;
-            case "TPaletteAxis":
+            case clTPaletteAxis:
                painter.paveDrawFunc = painter.drawPaletteAxis;
                break;
          }
@@ -1208,16 +1223,17 @@ class TPavePainter extends ObjectPainter {
 
 /** @summary Produce and draw TLegend object for the specified dom
   * @desc Should be called when all other objects are painted
-  * Invoked when item "$legend" specified in url string
-  * @returns {Object} Promise with TLegend painter
+  * Invoked when item '$legend' specified in url string
+  * @return {Promise} with TLegend painter
   * @private */
-function produceLegend(dom, opt) {
+async function produceLegend(dom, opt) {
    let main_painter = getElementMainPainter(dom),
        pp = main_painter ? main_painter.getPadPainter() : null,
        pad = pp?.getRootPad(true);
-   if (!pad) return Promise.resolve(null);
 
-   let leg = create("TLegend");
+   if (!pad) return null;
+
+   let leg = create(clTLegend);
 
    for (let k = 0; k < pp.painters.length; ++k) {
       let painter = pp.painters[k],
@@ -1225,23 +1241,27 @@ function produceLegend(dom, opt) {
 
       if (!obj) continue;
 
-      let entry = create("TLegendEntry");
+      let entry = create(clTLegendEntry);
       entry.fObject = obj;
-      entry.fLabel = (opt == "all") ? obj.fName : painter.getItemName();
-      entry.fOption = "";
+      entry.fLabel = (opt == 'all') ? obj.fName : painter.getItemName();
+      entry.fOption = '';
       if (!entry.fLabel) continue;
 
-      if (painter.lineatt && painter.lineatt.used) entry.fOption+="l";
-      if (painter.fillatt && painter.fillatt.used) entry.fOption+="f";
-      if (painter.markeratt && painter.markeratt.used) entry.fOption+="m";
-      if (!entry.fOption) entry.fOption = "l";
+      if (painter.lineatt?.used)
+         entry.fOption += 'l';
+      if (painter.fillatt?.used)
+         entry.fOption += 'f';
+      if (painter.markeratt?.used)
+         entry.fOption += 'm';
+      if (!entry.fOption)
+         entry.fOption = 'l';
 
       leg.fPrimitives.Add(entry);
    }
 
    // no entries - no need to draw legend
    let szx = 0.4, szy = leg.fPrimitives.arr.length;
-   if (!szy) return Promise.resolve(null);
+   if (!szy) return null;
    if (szy > 8) szy = 8;
    szy *= 0.1;
 

@@ -177,7 +177,7 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooA
 }
 
 
-RooAbsDataStore* RooTreeDataStore::reduce(RooStringView name, RooStringView title,
+std::unique_ptr<RooAbsDataStore> RooTreeDataStore::reduce(RooStringView name, RooStringView title,
                         const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
                         std::size_t nStart, std::size_t nStop) {
   RooArgSet tmp(vars) ;
@@ -185,7 +185,7 @@ RooAbsDataStore* RooTreeDataStore::reduce(RooStringView name, RooStringView titl
     tmp.add(*_wgtVar) ;
   }
   const char* wgtVarName = _wgtVar ? _wgtVar->GetName() : nullptr;
-  return new RooTreeDataStore(name, title, *this, tmp, cutVar, cutRange, nStart, nStop, wgtVarName);
+  return std::make_unique<RooTreeDataStore>(name, title, *this, tmp, cutVar, cutRange, nStart, nStop, wgtVarName);
 }
 
 
@@ -375,11 +375,12 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
   tClone->SetDirectory(t->GetDirectory());
 
   // Clone list of variables
-  std::unique_ptr<RooArgSet> sourceArgSet( _varsww.snapshot(false) );
+  RooArgSet sourceArgSet;
+  _varsww.snapshot(sourceArgSet, false);
 
   // Check that we have the branches:
   bool missingBranches = false;
-  for (const auto var : *sourceArgSet) {
+  for (const auto var : sourceArgSet) {
      if (!tClone->GetBranch(var->GetName())) {
         missingBranches = true;
         coutE(InputArguments) << "Didn't find a branch in Tree '" << tClone->GetName() << "' to read variable '"
@@ -394,7 +395,7 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
   }
 
   // Attach args in cloned list to cloned source tree
-  for (const auto sourceArg : *sourceArgSet) {
+  for (const auto sourceArg : sourceArgSet) {
     sourceArg->attachToTree(*tClone,_defTreeBufSize) ;
   }
 
@@ -402,7 +403,7 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
   std::unique_ptr<RooFormulaVar> selectClone;
   if (select) {
     selectClone.reset( static_cast<RooFormulaVar*>(select->cloneTree()) );
-    selectClone->recursiveRedirectServers(*sourceArgSet) ;
+    selectClone->recursiveRedirectServers(sourceArgSet) ;
     selectClone->setOperMode(RooAbsArg::ADirty,true) ;
   }
 
@@ -416,9 +417,9 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
 
     // Copy from source to destination
     bool allOK(true) ;
-    for (unsigned int j=0; j < sourceArgSet->size(); ++j) {
+    for (unsigned int j=0; j < sourceArgSet.size(); ++j) {
       auto destArg = _varsww[j];
-      const auto sourceArg = (*sourceArgSet)[j];
+      const auto sourceArg = sourceArgSet[j];
 
       destArg->copyCache(sourceArg) ;
       sourceArg->copyCache(destArg) ;
@@ -426,8 +427,15 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
         numInvalid++ ;
         allOK=false ;
         if (numInvalid < 5) {
-          coutI(DataHandling) << "RooTreeDataStore::loadValues(" << GetName() << ") Skipping event #" << i << " because " << destArg->GetName()
-              << " cannot accommodate the value " << static_cast<RooAbsReal*>(sourceArg)->getVal() << std::endl;
+          auto& log = coutI(DataHandling);
+          log << "RooTreeDataStore::loadValues(" << GetName() << ") Skipping event #" << i << " because " << destArg->GetName()
+              << " cannot accommodate the value ";
+          if(sourceArg->isCategory()) {
+            log << static_cast<RooAbsCategory*>(sourceArg)->getCurrentIndex();
+          } else {
+            log << static_cast<RooAbsReal*>(sourceArg)->getVal();
+          }
+          log << std::endl;
         } else if (numInvalid == 5) {
           coutI(DataHandling) << "RooTreeDataStore::loadValues(" << GetName() << ") Skipping ..." << std::endl;
         }
@@ -798,7 +806,7 @@ RooAbsArg* RooTreeDataStore::addColumn(RooAbsArg& newVar, bool adjustRange)
   _varsww.add(*valHolder) ;
 
 
-  // Fill values of of placeholder
+  // Fill values of placeholder
   for (int i=0 ; i<GetEntries() ; i++) {
     get(i) ;
 

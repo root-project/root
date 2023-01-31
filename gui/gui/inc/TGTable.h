@@ -124,7 +124,7 @@ protected:
 
 public:
    TGTable(const TGWindow *p = nullptr, Int_t id = 0,
-           TVirtualTableInterface *interface = 0, UInt_t nrows = 50,
+           TVirtualTableInterface *interface = nullptr, UInt_t nrows = 50,
            UInt_t ncolumns = 20);
    virtual ~TGTable();
 

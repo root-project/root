@@ -1,4 +1,4 @@
-<!--  file used in batch mode to produce images with headless chrome -->
+<!-- file used in batch mode to produce canvas images with headless chrome or firefox -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,20 +36,20 @@
    }
 
    JSROOT.draw("drawing", globalThis.main_object, "").then(painter => {
-      document.getElementById("data").remove();
-      if (kind == "draw")
+      document.getElementById('data').remove();
+      if (kind == 'draw')
          return complete();
 
       painter.produceImage(true, kind).then(res => {
 
-         let elem = document.getElementById("drawing");
-         elem.removeAttribute("style");
-         if (kind == "svg") {
+         let elem = document.getElementById('drawing');
+         elem.removeAttribute('style');
+         if (kind == 'svg') {
             elem.innerHTML = res;
          } else {
-            elem.innerHTML = "";
-            let img = document.createElement("img");
-            img.setAttribute("src", res);
+            elem.innerHTML = '';
+            let img = document.createElement('img');
+            img.setAttribute('src', res);
             elem.appendChild(img);
          }
 
@@ -59,4 +59,3 @@
 </script>
 
 </html>
-

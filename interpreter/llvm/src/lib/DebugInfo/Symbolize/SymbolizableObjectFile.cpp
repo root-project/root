@@ -12,54 +12,42 @@
 
 #include "SymbolizableObjectFile.h"
 #include "llvm/ADT/STLExtras.h"
-#include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/BinaryFormat/COFF.h"
 #include "llvm/DebugInfo/DWARF/DWARFContext.h"
-#include "llvm/DebugInfo/Symbolize/SymbolizableModule.h"
 #include "llvm/Object/COFF.h"
+#include "llvm/Object/ELFObjectFile.h"
 #include "llvm/Object/ObjectFile.h"
 #include "llvm/Object/SymbolSize.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/DataExtractor.h"
-#include "llvm/Support/Error.h"
 #include <algorithm>
-#include <cstdint>
-#include <memory>
-#include <string>
-#include <system_error>
-#include <utility>
-#include <vector>
 
 using namespace llvm;
 using namespace object;
 using namespace symbolize;
 
-static DILineInfoSpecifier
-getDILineInfoSpecifier(FunctionNameKind FNKind) {
-  return DILineInfoSpecifier(
-      DILineInfoSpecifier::FileLineInfoKind::AbsoluteFilePath, FNKind);
-}
-
-ErrorOr<std::unique_ptr<SymbolizableObjectFile>>
+Expected<std::unique_ptr<SymbolizableObjectFile>>
 SymbolizableObjectFile::create(const object::ObjectFile *Obj,
-                               std::unique_ptr<DIContext> DICtx) {
+                               std::unique_ptr<DIContext> DICtx,
+                               bool UntagAddresses) {
   assert(DICtx);
   std::unique_ptr<SymbolizableObjectFile> res(
-      new SymbolizableObjectFile(Obj, std::move(DICtx)));
+      new SymbolizableObjectFile(Obj, std::move(DICtx), UntagAddresses));
   std::unique_ptr<DataExtractor> OpdExtractor;
   uint64_t OpdAddress = 0;
   // Find the .opd (function descriptor) section if any, for big-endian
   // PowerPC64 ELF.
   if (Obj->getArch() == Triple::ppc64) {
     for (section_iterator Section : Obj->sections()) {
-      StringRef Name;
-      if (auto EC = Section->getName(Name))
-        return EC;
-      if (Name == ".opd") {
+      Expected<StringRef> NameOrErr = Section->getName();
+      if (!NameOrErr)
+        return NameOrErr.takeError();
+
+      if (*NameOrErr == ".opd") {
         Expected<StringRef> E = Section->getContents();
         if (!E)
-          return errorToErrorCode(E.takeError());
+          return E.takeError();
         OpdExtractor.reset(new DataExtractor(*E, Obj->isLittleEndian(),
                                              Obj->getBytesInAddress()));
         OpdAddress = Section->getAddress();
@@ -70,41 +58,40 @@ SymbolizableObjectFile::create(const object::ObjectFile *Obj,
   std::vector<std::pair<SymbolRef, uint64_t>> Symbols =
       computeSymbolSizes(*Obj);
   for (auto &P : Symbols)
-    res->addSymbol(P.first, P.second, OpdExtractor.get(), OpdAddress);
+    if (Error E =
+            res->addSymbol(P.first, P.second, OpdExtractor.get(), OpdAddress))
+      return std::move(E);
 
   // If this is a COFF object and we didn't find any symbols, try the export
   // table.
   if (Symbols.empty()) {
     if (auto *CoffObj = dyn_cast<COFFObjectFile>(Obj))
-      if (auto EC = res->addCoffExportSymbols(CoffObj))
-        return EC;
+      if (Error E = res->addCoffExportSymbols(CoffObj))
+        return std::move(E);
   }
 
-  std::vector<std::pair<SymbolDesc, StringRef>> &Fs = res->Functions,
-                                                &Os = res->Objects;
-  auto Uniquify = [](std::vector<std::pair<SymbolDesc, StringRef>> &S) {
-    // Sort by (Addr,Size,Name). If several SymbolDescs share the same Addr,
-    // pick the one with the largest Size. This helps us avoid symbols with no
-    // size information (Size=0).
-    llvm::sort(S);
-    auto I = S.begin(), E = S.end(), J = S.begin();
-    while (I != E) {
-      auto OI = I;
-      while (++I != E && OI->first.Addr == I->first.Addr) {
-      }
-      *J++ = I[-1];
+  std::vector<SymbolDesc> &SS = res->Symbols;
+  // Sort by (Addr,Size,Name). If several SymbolDescs share the same Addr,
+  // pick the one with the largest Size. This helps us avoid symbols with no
+  // size information (Size=0).
+  llvm::stable_sort(SS);
+  auto I = SS.begin(), E = SS.end(), J = SS.begin();
+  while (I != E) {
+    auto OI = I;
+    while (++I != E && OI->Addr == I->Addr) {
     }
-    S.erase(J, S.end());
-  };
-  Uniquify(Fs);
-  Uniquify(Os);
+    *J++ = I[-1];
+  }
+  SS.erase(J, SS.end());
 
   return std::move(res);
 }
 
 SymbolizableObjectFile::SymbolizableObjectFile(const ObjectFile *Obj,
-                                               std::unique_ptr<DIContext> DICtx)
-    : Module(Obj), DebugInfoContext(std::move(DICtx)) {}
+                                               std::unique_ptr<DIContext> DICtx,
+                                               bool UntagAddresses)
+    : Module(Obj), DebugInfoContext(std::move(DICtx)),
+      UntagAddresses(UntagAddresses) {}
 
 namespace {
 
@@ -119,7 +106,7 @@ struct OffsetNamePair {
 
 } // end anonymous namespace
 
-std::error_code SymbolizableObjectFile::addCoffExportSymbols(
+Error SymbolizableObjectFile::addCoffExportSymbols(
     const COFFObjectFile *CoffObj) {
   // Get all export names and offsets.
   std::vector<OffsetNamePair> ExportSyms;
@@ -133,7 +120,7 @@ std::error_code SymbolizableObjectFile::addCoffExportSymbols(
     ExportSyms.push_back(OffsetNamePair{Offset, Name});
   }
   if (ExportSyms.empty())
-    return std::error_code();
+    return Error::success();
 
   // Sort by ascending offset.
   array_pod_sort(ExportSyms.begin(), ExportSyms.end());
@@ -147,31 +134,66 @@ std::error_code SymbolizableObjectFile::addCoffExportSymbols(
     uint32_t NextOffset = I != E ? I->Offset : Export.Offset + 1;
     uint64_t SymbolStart = ImageBase + Export.Offset;
     uint64_t SymbolSize = NextOffset - Export.Offset;
-    SymbolDesc SD = {SymbolStart, SymbolSize};
-    Functions.emplace_back(SD, Export.Name);
+    Symbols.push_back({SymbolStart, SymbolSize, Export.Name, 0});
   }
-  return std::error_code();
+  return Error::success();
 }
 
-std::error_code SymbolizableObjectFile::addSymbol(const SymbolRef &Symbol,
-                                                  uint64_t SymbolSize,
-                                                  DataExtractor *OpdExtractor,
-                                                  uint64_t OpdAddress) {
+Error SymbolizableObjectFile::addSymbol(const SymbolRef &Symbol,
+                                        uint64_t SymbolSize,
+                                        DataExtractor *OpdExtractor,
+                                        uint64_t OpdAddress) {
   // Avoid adding symbols from an unknown/undefined section.
-  const ObjectFile *Obj = Symbol.getObject();
+  const ObjectFile &Obj = *Symbol.getObject();
+  Expected<StringRef> SymbolNameOrErr = Symbol.getName();
+  if (!SymbolNameOrErr)
+    return SymbolNameOrErr.takeError();
+  StringRef SymbolName = *SymbolNameOrErr;
+
+  uint32_t ELFSymIdx =
+      Obj.isELF() ? ELFSymbolRef(Symbol).getRawDataRefImpl().d.b : 0;
   Expected<section_iterator> Sec = Symbol.getSection();
-  if (!Sec || (Obj && Obj->section_end() == *Sec))
-    return std::error_code();
+  if (!Sec || Obj.section_end() == *Sec) {
+    if (Obj.isELF()) {
+      // Store the (index, filename) pair for a file symbol.
+      ELFSymbolRef ESym(Symbol);
+      if (ESym.getELFType() == ELF::STT_FILE)
+        FileSymbols.emplace_back(ELFSymIdx, SymbolName);
+    }
+    return Error::success();
+  }
+
   Expected<SymbolRef::Type> SymbolTypeOrErr = Symbol.getType();
   if (!SymbolTypeOrErr)
-    return errorToErrorCode(SymbolTypeOrErr.takeError());
+    return SymbolTypeOrErr.takeError();
   SymbolRef::Type SymbolType = *SymbolTypeOrErr;
-  if (SymbolType != SymbolRef::ST_Function && SymbolType != SymbolRef::ST_Data)
-    return std::error_code();
+  if (Obj.isELF()) {
+    // Allow function and data symbols. Additionally allow STT_NONE, which are
+    // common for functions defined in assembly.
+    uint8_t Type = ELFSymbolRef(Symbol).getELFType();
+    if (Type != ELF::STT_NOTYPE && Type != ELF::STT_FUNC &&
+        Type != ELF::STT_OBJECT && Type != ELF::STT_GNU_IFUNC)
+      return Error::success();
+    // Some STT_NOTYPE symbols are not desired. This excludes STT_SECTION and
+    // ARM mapping symbols.
+    uint32_t Flags = cantFail(Symbol.getFlags());
+    if (Flags & SymbolRef::SF_FormatSpecific)
+      return Error::success();
+  } else if (SymbolType != SymbolRef::ST_Function &&
+             SymbolType != SymbolRef::ST_Data) {
+    return Error::success();
+  }
+
   Expected<uint64_t> SymbolAddressOrErr = Symbol.getAddress();
   if (!SymbolAddressOrErr)
-    return errorToErrorCode(SymbolAddressOrErr.takeError());
+    return SymbolAddressOrErr.takeError();
   uint64_t SymbolAddress = *SymbolAddressOrErr;
+  if (UntagAddresses) {
+    // For kernel addresses, bits 56-63 need to be set, so we sign extend bit 55
+    // into bits 56-63 instead of masking them out.
+    SymbolAddress &= (1ull << 56) - 1;
+    SymbolAddress = (int64_t(SymbolAddress) << 8) >> 8;
+  }
   if (OpdExtractor) {
     // For big-endian PowerPC64 ELF, symbols in the .opd section refer to
     // function descriptors. The first word of the descriptor is a pointer to
@@ -179,24 +201,17 @@ std::error_code SymbolizableObjectFile::addSymbol(const SymbolRef &Symbol,
     // For the purposes of symbolization, pretend the symbol's address is that
     // of the function's code, not the descriptor.
     uint64_t OpdOffset = SymbolAddress - OpdAddress;
-    uint32_t OpdOffset32 = OpdOffset;
-    if (OpdOffset == OpdOffset32 &&
-        OpdExtractor->isValidOffsetForAddress(OpdOffset32))
-      SymbolAddress = OpdExtractor->getAddress(&OpdOffset32);
+    if (OpdExtractor->isValidOffsetForAddress(OpdOffset))
+      SymbolAddress = OpdExtractor->getAddress(&OpdOffset);
   }
-  Expected<StringRef> SymbolNameOrErr = Symbol.getName();
-  if (!SymbolNameOrErr)
-    return errorToErrorCode(SymbolNameOrErr.takeError());
-  StringRef SymbolName = *SymbolNameOrErr;
   // Mach-O symbol table names have leading underscore, skip it.
   if (Module->isMachO() && !SymbolName.empty() && SymbolName[0] == '_')
     SymbolName = SymbolName.drop_front();
-  // FIXME: If a function has alias, there are two entries in symbol table
-  // with same address size. Make sure we choose the correct one.
-  auto &M = SymbolType == SymbolRef::ST_Function ? Functions : Objects;
-  SymbolDesc SD = { SymbolAddress, SymbolSize };
-  M.emplace_back(SD, SymbolName);
-  return std::error_code();
+
+  if (Obj.isELF() && ELFSymbolRef(Symbol).getBinding() != ELF::STB_LOCAL)
+    ELFSymIdx = 0;
+  Symbols.push_back({SymbolAddress, SymbolSize, SymbolName, ELFSymIdx});
+  return Error::success();
 }
 
 // Return true if this is a 32-bit x86 PE COFF module.
@@ -211,23 +226,32 @@ uint64_t SymbolizableObjectFile::getModulePreferredBase() const {
   return 0;
 }
 
-bool SymbolizableObjectFile::getNameFromSymbolTable(SymbolRef::Type Type,
-                                                    uint64_t Address,
-                                                    std::string &Name,
-                                                    uint64_t &Addr,
-                                                    uint64_t &Size) const {
-  const auto &Symbols = Type == SymbolRef::ST_Function ? Functions : Objects;
-  std::pair<SymbolDesc, StringRef> SD{{Address, UINT64_C(-1)}, StringRef()};
+bool SymbolizableObjectFile::getNameFromSymbolTable(
+    uint64_t Address, std::string &Name, uint64_t &Addr, uint64_t &Size,
+    std::string &FileName) const {
+  SymbolDesc SD{Address, UINT64_C(-1), StringRef(), 0};
   auto SymbolIterator = llvm::upper_bound(Symbols, SD);
   if (SymbolIterator == Symbols.begin())
     return false;
   --SymbolIterator;
-  if (SymbolIterator->first.Size != 0 &&
-      SymbolIterator->first.Addr + SymbolIterator->first.Size <= Address)
+  if (SymbolIterator->Size != 0 &&
+      SymbolIterator->Addr + SymbolIterator->Size <= Address)
     return false;
-  Name = SymbolIterator->second.str();
-  Addr = SymbolIterator->first.Addr;
-  Size = SymbolIterator->first.Size;
+  Name = SymbolIterator->Name.str();
+  Addr = SymbolIterator->Addr;
+  Size = SymbolIterator->Size;
+
+  if (SymbolIterator->ELFLocalSymIdx != 0) {
+    // If this is an ELF local symbol, find the STT_FILE symbol preceding
+    // SymbolIterator to get the filename. The ELF spec requires the STT_FILE
+    // symbol (if present) precedes the other STB_LOCAL symbols for the file.
+    assert(Module->isELF());
+    auto It = llvm::upper_bound(
+        FileSymbols,
+        std::make_pair(SymbolIterator->ELFLocalSymIdx, StringRef()));
+    if (It != FileSymbols.begin())
+      FileName = It[-1].second.str();
+  }
   return true;
 }
 
@@ -243,47 +267,54 @@ bool SymbolizableObjectFile::shouldOverrideWithSymbolTable(
 
 DILineInfo
 SymbolizableObjectFile::symbolizeCode(object::SectionedAddress ModuleOffset,
-                                      FunctionNameKind FNKind,
+                                      DILineInfoSpecifier LineInfoSpecifier,
                                       bool UseSymbolTable) const {
   if (ModuleOffset.SectionIndex == object::SectionedAddress::UndefSection)
     ModuleOffset.SectionIndex =
         getModuleSectionIndexForAddress(ModuleOffset.Address);
-  DILineInfo LineInfo = DebugInfoContext->getLineInfoForAddress(
-      ModuleOffset, getDILineInfoSpecifier(FNKind));
+  DILineInfo LineInfo =
+      DebugInfoContext->getLineInfoForAddress(ModuleOffset, LineInfoSpecifier);
 
   // Override function name from symbol table if necessary.
-  if (shouldOverrideWithSymbolTable(FNKind, UseSymbolTable)) {
-    std::string FunctionName;
+  if (shouldOverrideWithSymbolTable(LineInfoSpecifier.FNKind, UseSymbolTable)) {
+    std::string FunctionName, FileName;
     uint64_t Start, Size;
-    if (getNameFromSymbolTable(SymbolRef::ST_Function, ModuleOffset.Address,
-                               FunctionName, Start, Size)) {
+    if (getNameFromSymbolTable(ModuleOffset.Address, FunctionName, Start, Size,
+                               FileName)) {
       LineInfo.FunctionName = FunctionName;
+      LineInfo.StartAddress = Start;
+      if (LineInfo.FileName == DILineInfo::BadString && !FileName.empty())
+        LineInfo.FileName = FileName;
     }
   }
   return LineInfo;
 }
 
 DIInliningInfo SymbolizableObjectFile::symbolizeInlinedCode(
-    object::SectionedAddress ModuleOffset, FunctionNameKind FNKind,
-    bool UseSymbolTable) const {
+    object::SectionedAddress ModuleOffset,
+    DILineInfoSpecifier LineInfoSpecifier, bool UseSymbolTable) const {
   if (ModuleOffset.SectionIndex == object::SectionedAddress::UndefSection)
     ModuleOffset.SectionIndex =
         getModuleSectionIndexForAddress(ModuleOffset.Address);
   DIInliningInfo InlinedContext = DebugInfoContext->getInliningInfoForAddress(
-      ModuleOffset, getDILineInfoSpecifier(FNKind));
+      ModuleOffset, LineInfoSpecifier);
 
   // Make sure there is at least one frame in context.
   if (InlinedContext.getNumberOfFrames() == 0)
     InlinedContext.addFrame(DILineInfo());
 
   // Override the function name in lower frame with name from symbol table.
-  if (shouldOverrideWithSymbolTable(FNKind, UseSymbolTable)) {
-    std::string FunctionName;
+  if (shouldOverrideWithSymbolTable(LineInfoSpecifier.FNKind, UseSymbolTable)) {
+    std::string FunctionName, FileName;
     uint64_t Start, Size;
-    if (getNameFromSymbolTable(SymbolRef::ST_Function, ModuleOffset.Address,
-                               FunctionName, Start, Size)) {
-      InlinedContext.getMutableFrame(InlinedContext.getNumberOfFrames() - 1)
-          ->FunctionName = FunctionName;
+    if (getNameFromSymbolTable(ModuleOffset.Address, FunctionName, Start, Size,
+                               FileName)) {
+      DILineInfo *LI = InlinedContext.getMutableFrame(
+          InlinedContext.getNumberOfFrames() - 1);
+      LI->FunctionName = FunctionName;
+      LI->StartAddress = Start;
+      if (LI->FileName == DILineInfo::BadString && !FileName.empty())
+        LI->FileName = FileName;
     }
   }
 
@@ -293,8 +324,9 @@ DIInliningInfo SymbolizableObjectFile::symbolizeInlinedCode(
 DIGlobal SymbolizableObjectFile::symbolizeData(
     object::SectionedAddress ModuleOffset) const {
   DIGlobal Res;
-  getNameFromSymbolTable(SymbolRef::ST_Data, ModuleOffset.Address, Res.Name,
-                         Res.Start, Res.Size);
+  std::string FileName;
+  getNameFromSymbolTable(ModuleOffset.Address, Res.Name, Res.Start, Res.Size,
+                         FileName);
   return Res;
 }
 

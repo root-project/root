@@ -17,11 +17,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "AggressiveAntiDepBreaker.h"
-#include "AntiDepBreaker.h"
-#include "CriticalAntiDepBreaker.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
+#include "llvm/CodeGen/AntiDepBreaker.h"
 #include "llvm/CodeGen/LatencyPriorityQueue.h"
 #include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
@@ -38,6 +36,7 @@
 #include "llvm/CodeGen/TargetRegisterInfo.h"
 #include "llvm/CodeGen/TargetSubtargetInfo.h"
 #include "llvm/Config/llvm-config.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -77,7 +76,7 @@ AntiDepBreaker::~AntiDepBreaker() { }
 
 namespace {
   class PostRAScheduler : public MachineFunctionPass {
-    const TargetInstrInfo *TII;
+    const TargetInstrInfo *TII = nullptr;
     RegisterClassInfo RegClassInfo;
 
   public:
@@ -219,11 +218,11 @@ SchedulePostRATDList::SchedulePostRATDList(
   assert((AntiDepMode == TargetSubtargetInfo::ANTIDEP_NONE ||
           MRI.tracksLiveness()) &&
          "Live-ins must be accurate for anti-dependency breaking");
-  AntiDepBreak =
-    ((AntiDepMode == TargetSubtargetInfo::ANTIDEP_ALL) ?
-     (AntiDepBreaker *)new AggressiveAntiDepBreaker(MF, RCI, CriticalPathRCs) :
-     ((AntiDepMode == TargetSubtargetInfo::ANTIDEP_CRITICAL) ?
-      (AntiDepBreaker *)new CriticalAntiDepBreaker(MF, RCI) : nullptr));
+  AntiDepBreak = ((AntiDepMode == TargetSubtargetInfo::ANTIDEP_ALL)
+                      ? createAggressiveAntiDepBreaker(MF, RCI, CriticalPathRCs)
+                      : ((AntiDepMode == TargetSubtargetInfo::ANTIDEP_CRITICAL)
+                             ? createCriticalAntiDepBreaker(MF, RCI)
+                             : nullptr));
 }
 
 SchedulePostRATDList::~SchedulePostRATDList() {

@@ -20,8 +20,16 @@ sap.ui.define([
             this.websocket.send("PANEL_READY"); // confirm panel creation, only then GUI can send commands
          }
 
+         // assign several core methods which are used like: parse, toJSON, source_dir
+         this.jsroot = data?.jsroot;
+
          // TODO: use more specific API between Canvas and Panel
          this.masterPanel = data?.masterPanel;
+
+         // let correctly reload Panel
+         if (!this.masterPanel && this.websocket)
+            this.websocket.addReloadKeyHandler();
+
 
          if (typeof this.onPanelInit == "function")
             this.onPanelInit();

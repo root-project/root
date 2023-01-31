@@ -422,12 +422,34 @@ void RooAbsArg::removeServer(RooAbsArg& server, bool force)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Replace 'oldServer' with 'newServer'
+/// Replace 'oldServer' with 'newServer', specifying whether the new server has
+/// value or shape server properties.
+///
+/// \warning This function should not be used! This method is quite unsafe for
+/// many reasons. For once, the new server will be put at the end of the server
+/// list, no matter the position of the original server. This might mess up
+/// code that expects the servers to be in a certain order. Furthermore, the
+/// proxy objects corresponding to the server are not updated, leaving the
+/// object in an invalid state where the servers are out of sync with the
+/// proxies. This can have very bad consequences. Finally, by having to
+/// manually specify the value and shape server properties, it is very easy to
+/// get them wrong.
+///
+/// If you want to safely replace a server, you should use
+/// RooAbsArg::redirectServers(), which replaces the server in-place at the
+/// same position of the server list, keeps the same value and shape server
+/// properties, and also updates the corresponding proxies.
 
 void RooAbsArg::replaceServer(RooAbsArg& oldServer, RooAbsArg& newServer, bool propValue, bool propShape)
 {
+  coutW(LinkStateMgmt) << "replaceServer()"
+      << " is unsafe, because the server list will be out of sync with the proxy objects!"
+      << " If you want to safely replace a server, use RooAbsArg::redirectServers()."
+      << " See the docs to replaceServers() for more info." << std::endl;
+
   Int_t count = _serverList.refCount(&oldServer);
   removeServer(oldServer, true);
+
   addServer(newServer, propValue, propShape, count);
 }
 
@@ -1000,53 +1022,36 @@ bool RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, bool mustRep
 {
   // Trivial case, no servers
   if (_serverList.empty()) return false ;
-  if (newSetOrig.empty()) return false ;
+
+  // We don't need to do anything if there are no new servers or if the only
+  // new server is this RooAbsArg itself. And by returning early, we avoid
+  // potentially annoying side effects of the redirectServersHook.
+  if (newSetOrig.empty() || (newSetOrig.size() == 1 && newSetOrig[0] == this)) return false ;
 
   // Strip any non-matching removal nodes from newSetOrig
-  RooAbsCollection* newSet ;
+  std::unique_ptr<RooArgSet> newSetOwned;
+  RooAbsCollection const* newSet = &newSetOrig;
 
   if (nameChange) {
-    newSet = new RooArgSet ;
-    for (auto arg : newSetOrig) {
+    newSetOwned = std::make_unique<RooArgSet>();
+    for (auto arg : *newSet) {
 
       if (string("REMOVAL_DUMMY")==arg->GetName()) {
 
         if (arg->getAttribute("REMOVE_ALL")) {
-          newSet->add(*arg) ;
+          newSetOwned->add(*arg) ;
         } else if (arg->getAttribute(Form("REMOVE_FROM_%s",getStringAttribute("ORIGNAME")))) {
-          newSet->add(*arg) ;
+          newSetOwned->add(*arg) ;
         }
       } else {
-        newSet->add(*arg) ;
+        newSetOwned->add(*arg) ;
       }
     }
-  } else {
-    newSet = (RooAbsCollection*) &newSetOrig ;
+    newSet = newSetOwned.get();
   }
 
   // Replace current servers with new servers with the same name from the given list
-  bool ret(false) ;
-
-  //Copy original server list to not confuse the iterator while deleting
-  std::vector<RooAbsArg*> origServerList, origServerValue, origServerShape;
-  auto origSize = _serverList.size();
-  origServerList.reserve(origSize);
-  origServerValue.reserve(origSize);
-
-  for (const auto oldServer : _serverList) {
-    origServerList.push_back(oldServer) ;
-
-    // Retrieve server side link state information
-    if (oldServer->_clientListValue.containsByNamePtr(this)) {
-      origServerValue.push_back(oldServer) ;
-    }
-    if (oldServer->_clientListShape.containsByNamePtr(this)) {
-      origServerShape.push_back(oldServer) ;
-    }
-  }
-
-  // Delete all previously registered servers
-  for (auto oldServer : origServerList) {
+  for (auto oldServer : _serverList) {
 
     RooAbsArg * newServer= oldServer->findNewServer(*newSet, nameChange);
 
@@ -1057,27 +1062,38 @@ bool RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, bool mustRep
 
     if (!newServer) {
       if (mustReplaceAll) {
-        coutE(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
-                    << " (" << (void*)oldServer << ") not redirected" << (nameChange?"[nameChange]":"") << endl ;
-        ret = true ;
+        std::stringstream ss;
+        ss << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
+           << " (" << (void*)oldServer << ") not redirected" << (nameChange?"[nameChange]":"");
+        const std::string errorMsg = ss.str();
+        coutE(LinkStateMgmt) << errorMsg << std::endl;
+        throw std::runtime_error(errorMsg);
       }
       continue ;
     }
 
-    auto findByNamePtr = [&oldServer](const RooAbsArg * item) {
-      return oldServer->namePtr() == item->namePtr();
-    };
-    bool propValue = std::any_of(origServerValue.begin(), origServerValue.end(), findByNamePtr);
-    bool propShape = std::any_of(origServerShape.begin(), origServerShape.end(), findByNamePtr);
-
     if (newServer != this) {
-      replaceServer(*oldServer,*newServer,propValue,propShape) ;
+      _serverList.Replace(oldServer, newServer);
+
+      const int clientListRefCount = oldServer->_clientList.Remove(this, true);
+      const int clientListValueRefCount = oldServer->_clientListValue.Remove(this, true);
+      const int clientListShapeRefCount = oldServer->_clientListShape.Remove(this, true);
+
+      newServer->_clientList.Add(this, clientListRefCount);
+      newServer->_clientListValue.Add(this, clientListValueRefCount);
+      newServer->_clientListShape.Add(this, clientListShapeRefCount);
+
+      if (clientListValueRefCount > 0 && newServer->operMode() == ADirty && operMode() != ADirty) {
+        setOperMode(ADirty);
+      }
     }
   }
 
 
   setValueDirty() ;
   setShapeDirty() ;
+
+  bool ret(false) ;
 
   // Process the proxies
   for (int i=0 ; i<numProxies() ; i++) {
@@ -1100,10 +1116,6 @@ bool RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, bool mustRep
     ret |= getCache(i)->redirectServersHook(*newSet,mustReplaceAll,nameChange,isRecursionStep) ;
   }
   ret |= redirectServersHook(*newSet,mustReplaceAll,nameChange,isRecursionStep) ;
-
-  if (nameChange) {
-    delete newSet ;
-  }
 
   return ret ;
 }
@@ -1153,50 +1165,64 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, bool nameCha
 }
 
 
+namespace {
+
+bool recursiveRedirectServersImpl(RooAbsArg *arg, RooAbsCollection const &newSet, bool mustReplaceAll, bool nameChange,
+                                  bool recurseInNewSet, std::set<RooAbsArg const *> &callStack)
+{
+   // Cyclic recursion protection
+   {
+      auto it = callStack.lower_bound(arg);
+      if (it != callStack.end() && arg == *it) {
+         return false;
+      }
+      callStack.insert(it, arg);
+   }
+
+   // Do not recurse into newset if not so specified
+   // if (!recurseInNewSet && newSet.contains(*arg)) {
+   //    return false;
+   // }
+
+   // Apply the redirectServers function recursively on all branch nodes in this argument tree.
+   bool ret(false);
+
+   oocxcoutD(arg, LinkStateMgmt) << "RooAbsArg::recursiveRedirectServers(" << arg << "," << arg->GetName()
+                                 << ") newSet = " << newSet << " mustReplaceAll = " << (mustReplaceAll ? "T" : "F")
+                                 << " nameChange = " << (nameChange ? "T" : "F")
+                                 << " recurseInNewSet = " << (recurseInNewSet ? "T" : "F") << endl;
+
+   // Do redirect on self (identify operation as recursion step)
+   ret |= arg->redirectServers(newSet, mustReplaceAll, nameChange, true);
+
+   // Do redirect on servers
+   for (const auto server : arg->servers()) {
+      ret |= recursiveRedirectServersImpl(server, newSet, mustReplaceAll, nameChange, recurseInNewSet, callStack);
+   }
+
+   callStack.erase(arg);
+   return ret;
+}
+
+} // namespace
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Recursively replace all servers with the new servers in `newSet`.
-/// This substitutes objects that we receive values from (also indirectly through other objects) with new objects that have the same name.
+/// This substitutes objects that we receive values from (also indirectly
+/// through other objects) with new objects that have the same name.
 ///
 /// *Copied from redirectServers:*
 ///
 /// \copydetails RooAbsArg::redirectServers
 /// \param newSet Roo collection
 /// \param recurseInNewSet be recursive
-bool RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, bool mustReplaceAll, bool nameChange, bool recurseInNewSet)
+bool RooAbsArg::recursiveRedirectServers(RooAbsCollection const &newSet, bool mustReplaceAll, bool nameChange,
+                                         bool recurseInNewSet)
 {
-  // Cyclic recursion protection
-  static std::set<const RooAbsArg*> callStack;
-  {
-    std::set<const RooAbsArg*>::iterator it = callStack.lower_bound(this);
-    if (it != callStack.end() && this == *it) {
-      return false;
-    } else {
-      callStack.insert(it, this);
-    }
-  }
+   // For cyclic recursion protection
+   std::set<const RooAbsArg *> callStack;
 
-  // Do not recurse into newset if not so specified
-//   if (!recurseInNewSet && newSet.contains(*this)) {
-//     return false ;
-//   }
-
-
-  // Apply the redirectServers function recursively on all branch nodes in this argument tree.
-  bool ret(false) ;
-
-  cxcoutD(LinkStateMgmt) << "RooAbsArg::recursiveRedirectServers(" << this << "," << GetName() << ") newSet = " << newSet << " mustReplaceAll = "
-          << (mustReplaceAll?"T":"F") << " nameChange = " << (nameChange?"T":"F") << " recurseInNewSet = " << (recurseInNewSet?"T":"F") << endl ;
-
-  // Do redirect on self (identify operation as recursion step)
-  ret |= redirectServers(newSet,mustReplaceAll,nameChange,true) ;
-
-  // Do redirect on servers
-  for (const auto server : _serverList){
-    ret |= server->recursiveRedirectServers(newSet,mustReplaceAll,nameChange,recurseInNewSet) ;
-  }
-
-  callStack.erase(this);
-  return ret ;
+   return recursiveRedirectServersImpl(this, newSet, mustReplaceAll, nameChange, recurseInNewSet, callStack);
 }
 
 
@@ -2470,15 +2496,10 @@ void RooAbsArg::applyWeightSquared(bool flag) {
 }
 
 
-/// Fills a RooArgSet to be used as the normalization set for a server, given a
-/// normalization set for this RooAbsArg. If the output is a `nullptr`, it
-/// means that the normalization set doesn't change.
-///
-/// \param[in] normSet The normalization set for this RooAbsArg.
-/// \param[in] server A server of this RooAbsArg that we determine the
-///            normalization set for.
-/// \param[out] serverNormSet Output parameter. Normalization set for the
-///             server.
-std::unique_ptr<RooArgSet> RooAbsArg::fillNormSetForServer(RooArgSet const& /*normSet*/, RooAbsArg const& /*server*/) const {
-   return nullptr;
+std::unique_ptr<RooAbsArg> RooAbsArg::compileForNormSet(RooArgSet const & normSet, RooFit::Detail::CompileContext & ctx) const
+{
+   auto newArg = std::unique_ptr<RooAbsArg>{static_cast<RooAbsArg *>(Clone())};
+   newArg->setAttribute("_COMPILED");
+   ctx.compileServers(*newArg, normSet);
+   return newArg;
 }

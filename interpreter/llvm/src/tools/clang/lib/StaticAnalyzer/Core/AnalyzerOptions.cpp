@@ -30,25 +30,6 @@ using namespace clang;
 using namespace ento;
 using namespace llvm;
 
-std::vector<StringRef>
-AnalyzerOptions::getRegisteredCheckers(bool IncludeExperimental /* = false */) {
-  static const StringRef StaticAnalyzerChecks[] = {
-#define GET_CHECKERS
-#define CHECKER(FULLNAME, CLASS, HELPTEXT, DOC_URI, IS_HIDDEN)                 \
-  FULLNAME,
-#include "clang/StaticAnalyzer/Checkers/Checkers.inc"
-#undef CHECKER
-#undef GET_CHECKERS
-  };
-  std::vector<StringRef> Result;
-  for (StringRef CheckName : StaticAnalyzerChecks) {
-    if (!CheckName.startswith("debug.") &&
-        (IncludeExperimental || !CheckName.startswith("alpha.")))
-      Result.push_back(CheckName);
-  }
-  return Result;
-}
-
 void AnalyzerOptions::printFormattedEntry(
     llvm::raw_ostream &Out,
     std::pair<StringRef, StringRef> EntryDescPair,
@@ -59,7 +40,7 @@ void AnalyzerOptions::printFormattedEntry(
   const size_t PadForDesc = InitialPad + EntryWidth;
 
   FOut.PadToColumn(InitialPad) << EntryDescPair.first;
-  // If the buffer's length is greater then PadForDesc, print a newline.
+  // If the buffer's length is greater than PadForDesc, print a newline.
   if (FOut.getColumn() > PadForDesc)
     FOut << '\n';
 

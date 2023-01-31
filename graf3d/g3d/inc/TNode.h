@@ -53,11 +53,11 @@ public:
    TNode(const char *name, const char *title, const char *shapename, Double_t x=0, Double_t y=0, Double_t z=0,
          const char *matrixname="", Option_t *option="");
    TNode(const char *name, const char *title, TShape *shape, Double_t x=0, Double_t y=0, Double_t z=0,
-         TRotMatrix *matrix=0, Option_t *option="");
+         TRotMatrix *matrix=nullptr, Option_t *option="");
    virtual ~TNode();
    virtual void        Browse(TBrowser *b);
    virtual void        BuildListOfNodes();
-   virtual void        cd(const char *path=0); // *MENU*
+   virtual void        cd(const char *path=nullptr); // *MENU*
    virtual Int_t       DistancetoPrimitive(Int_t px, Int_t py);
    virtual void        Draw(Option_t *option=""); // *MENU*
    virtual void        DrawOnly(Option_t *option="");
@@ -82,7 +82,7 @@ public:
    virtual void        Master2Local(const Float_t *master, Float_t *local);
    virtual void        Paint(Option_t *option="");
    virtual void        RecursiveRemove(TObject *obj);
-   virtual void        SetMatrix(TRotMatrix *matrix=0) {fMatrix = matrix;}
+   virtual void        SetMatrix(TRotMatrix *matrix=nullptr) {fMatrix = matrix;}
    virtual void        SetName(const char *name);
    virtual void        SetParent(TNode *parent);
    virtual void        SetNameTitle(const char *name, const char *title);

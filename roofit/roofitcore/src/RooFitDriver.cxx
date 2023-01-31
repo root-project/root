@@ -26,7 +26,7 @@ of data transfers. An instance of this class is created every time
 RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 **/
 
-#include <RooFitDriver.h>
+#include "RooFitDriver.h"
 
 #include <RooAbsCategory.h>
 #include <RooAbsData.h>
@@ -34,13 +34,15 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooRealVar.h>
 #include <RooArgList.h>
 #include <RooBatchCompute.h>
+#include <RooHelpers.h>
 #include <RooMsgService.h>
 #include <RooBatchCompute/Initialisation.h>
-#include <RooFit/BatchModeDataHelpers.h>
-#include <RooFit/BatchModeHelpers.h>
-#include <RooFit/CUDAHelpers.h>
+#include "RooFit/BatchModeDataHelpers.h"
+#include "RooFit/BatchModeHelpers.h"
+#include "RooFit/CUDAHelpers.h"
+#include <RooSimultaneous.h>
 
-#include "NormalizationHelpers.h"
+#include <TList.h>
 
 #include <iomanip>
 #include <numeric>
@@ -112,13 +114,11 @@ struct NodeInfo {
 ///
 /// \param[in] absReal The RooAbsReal object that sits on top of the
 ///            computation graph that we want to evaluate.
-/// \param[in] normSet Normalization set for the evaluation
 /// \param[in] batchMode The computation mode, accepted values are
 ///            `RooBatchCompute::Cpu` and `RooBatchCompute::Cuda`.
-RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooArgSet const &normSet, RooFit::BatchModeOption batchMode)
-   : _batchMode{batchMode}
+RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooFit::BatchModeOption batchMode)
+   : _topNode{const_cast<RooAbsReal &>(absReal)}, _batchMode{batchMode}
 {
-   _integralUnfolder = std::make_unique<RooFit::NormalizationIntegralUnfolder>(absReal, normSet);
 
    // Initialize RooBatchCompute
    RooBatchCompute::init();
@@ -191,11 +191,57 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooArgSet const &normSet, 
    }
 }
 
-void RooFitDriver::setData(RooAbsData const &data, std::string_view rangeName,
-                           RooAbsCategory const *indexCatForSplitting, bool skipZeroWeights)
+void RooFitDriver::setData(RooAbsData const &data, std::string const &rangeName, RooSimultaneous const *simPdf,
+                           bool skipZeroWeights, bool takeGlobalObservablesFromData)
 {
-   setData(RooFit::BatchModeDataHelpers::getDataSpans(data, rangeName, indexCatForSplitting, _vectorBuffers,
-                                                      skipZeroWeights));
+   std::vector<std::pair<std::string, RooAbsData const *>> datas;
+   std::vector<bool> isBinnedL;
+   bool splitRange = false;
+
+   if (simPdf) {
+      _splittedDataSets.clear();
+      std::unique_ptr<TList> splits{data.split(*simPdf, true)};
+      for (auto *d : static_range_cast<RooAbsData *>(*splits)) {
+         RooAbsPdf *simComponent = simPdf->getPdf(d->GetName());
+         // If there is no PDF for that component, we also don't need to fill the data
+         if (!simComponent) {
+            continue;
+         }
+         datas.emplace_back(std::string("_") + d->GetName() + "_", d);
+         isBinnedL.emplace_back(simComponent->getAttribute("BinnedLikelihoodActive"));
+         // The dataset need to be kept alive because the datamap points to their content
+         _splittedDataSets.emplace_back(d);
+      }
+      splitRange = simPdf->getAttribute("SplitRange");
+   } else {
+      datas.emplace_back("", &data);
+      isBinnedL.emplace_back(false);
+   }
+
+   DataSpansMap dataSpans;
+
+   std::stack<std::vector<double>>{}.swap(_vectorBuffers);
+
+   for (std::size_t iData = 0; iData < datas.size(); ++iData) {
+      auto const &toAdd = datas[iData];
+      DataSpansMap spans = RooFit::BatchModeDataHelpers::getDataSpans(
+         *toAdd.second, RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, toAdd.second->GetName()),
+         toAdd.first, _vectorBuffers, skipZeroWeights && !isBinnedL[iData]);
+      for (auto const &item : spans) {
+         dataSpans.insert(item);
+      }
+   }
+
+   if (takeGlobalObservablesFromData && data.getGlobalObservables()) {
+      _vectorBuffers.emplace();
+      auto &buffer = _vectorBuffers.top();
+      buffer.reserve(data.getGlobalObservables()->size());
+      for (auto *arg : static_range_cast<RooRealVar const *>(*data.getGlobalObservables())) {
+         buffer.push_back(arg->getVal());
+         dataSpans[arg] = RooSpan<const double>{&buffer.back(), 1};
+      }
+   }
+   setData(dataSpans);
 }
 
 void RooFitDriver::setData(DataSpansMap const &dataSpans)
@@ -205,6 +251,10 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
    // map and set the node info accordingly.
    std::size_t totalSize = 0;
    for (auto &info : _nodes) {
+      if (info.buffer) {
+         delete info.buffer;
+         info.buffer = nullptr;
+      }
       auto found = dataSpans.find(info.absArg->namePtr());
       if (found != dataSpans.end()) {
          _dataMapCPU.at(info.absArg) = found->second;
@@ -212,6 +262,10 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
          info.fromDataset = true;
          info.isDirty = false;
          totalSize += info.outputSize;
+      } else {
+         info.outputSize = 1;
+         info.fromDataset = false;
+         info.isDirty = true;
       }
    }
 
@@ -745,7 +799,63 @@ void RooFitDriver::setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode)
 
 RooAbsReal &RooFitDriver::topNode() const
 {
-   return static_cast<RooAbsReal &>(_integralUnfolder->arg());
+   return _topNode;
+}
+
+void RooFitDriver::print(std::ostream &os) const
+{
+   std::cout << "--- RooFit BatchMode evaluation ---\n";
+
+   std::vector<int> widths{9, 37, 20, 9, 10, 20};
+
+   auto printElement = [&](int iCol, auto const &t) {
+      const char separator = ' ';
+      os << separator << std::left << std::setw(widths[iCol]) << std::setfill(separator) << t;
+      os << "|";
+   };
+
+   auto printHorizontalRow = [&]() {
+      int n = 0;
+      for (int w : widths) {
+         n += w + 2;
+      }
+      for (int i = 0; i < n; i++) {
+         os << '-';
+      }
+      os << "|\n";
+   };
+
+   printHorizontalRow();
+
+   os << "|";
+   printElement(0, "Index");
+   printElement(1, "Name");
+   printElement(2, "Class");
+   printElement(3, "Size");
+   printElement(4, "From Data");
+   printElement(5, "1st value");
+   std::cout << "\n";
+
+   printHorizontalRow();
+
+   for (std::size_t iNode = 0; iNode < _nodes.size(); ++iNode) {
+      auto &nodeInfo = _nodes[iNode];
+      RooAbsArg *node = nodeInfo.absArg;
+
+      auto span = _dataMapCPU.at(node);
+
+      os << "|";
+      printElement(0, iNode);
+      printElement(1, node->GetName());
+      printElement(2, node->ClassName());
+      printElement(3, nodeInfo.outputSize);
+      printElement(4, nodeInfo.fromDataset);
+      printElement(5, span[0]);
+
+      std::cout << "\n";
+   }
+
+   printHorizontalRow();
 }
 
 } // namespace Experimental

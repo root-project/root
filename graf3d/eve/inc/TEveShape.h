@@ -82,7 +82,7 @@ public:
 
    // ----------------------------------------------------------------
 
-   static Int_t  FindConvexHull(const vVector2_t& pin, vVector2_t& pout, TEveElement* caller=0);
+   static Int_t  FindConvexHull(const vVector2_t& pin, vVector2_t& pout, TEveElement* caller=nullptr);
 
    static Bool_t IsBoxOrientationConsistentEv(const TEveVector box[8]);
    static Bool_t IsBoxOrientationConsistentFv(const Float_t    box[8][3]);

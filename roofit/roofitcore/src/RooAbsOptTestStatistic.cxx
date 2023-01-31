@@ -61,6 +61,8 @@ parallelized calculation of test statistics.
 #include "RooVectorDataStore.h"
 #include "RooBinSamplingPdf.h"
 
+#include "ROOT/StringUtils.hxx"
+
 using namespace std;
 
 ClassImp(RooAbsOptTestStatistic);
@@ -159,7 +161,11 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
     _funcObsSet = 0 ;
     _funcCloneSet = 0 ;
     _funcClone = 0 ;
-    _normSet = other._normSet ? ((RooArgSet*) other._normSet->snapshot()) : 0 ;
+    _normSet = nullptr;
+    if(other._normSet) {
+      _normSet = new RooArgSet;
+      other._normSet->snapshot(*_normSet);
+    }
     _projDeps = 0 ;
     _origFunc = 0 ;
     _origData = 0 ;
@@ -185,7 +191,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // ******************************************************************
 
   // Clone FUNC
-  _funcClone = static_cast<RooAbsReal*>(real.cloneTree());
+  _funcClone = RooHelpers::cloneTreeWithSameParameters(real, indata.get()).release();
   _funcCloneSet = 0 ;
 
   // Attach FUNC to data set
@@ -194,10 +200,6 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   if (_funcClone->getAttribute("BinnedLikelihood")) {
     _funcClone->setAttribute("BinnedLikelihoodActive") ;
   }
-
-  // Reattach FUNC to original parameters
-  RooArgSet* origParams = (RooArgSet*) real.getParameters(indata) ;
-  _funcClone->recursiveRedirectServers(*origParams) ;
 
   // Mark all projected dependents as such
   if (projDeps.getSize()>0) {
@@ -213,22 +215,18 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   RooProdPdf* pdfWithCons = dynamic_cast<RooProdPdf*>(_funcClone) ;
   if (pdfWithCons) {
 
-    RooArgSet* connPars = pdfWithCons->getConnectedParameters(*indata.get()) ;
+    std::unique_ptr<RooArgSet> connPars{pdfWithCons->getConnectedParameters(*indata.get())};
     // Add connected parameters as servers
-    _paramSet.removeAll() ;
     _paramSet.add(*connPars) ;
-    delete connPars ;
 
   } else {
     // Add parameters as servers
-    _paramSet.add(*origParams) ;
+    _funcClone->getParameters(indata.get(), _paramSet);
   }
 
-
-  delete origParams ;
-
   // Store normalization set
-  _normSet = (RooArgSet*) indata.get()->snapshot(false) ;
+  _normSet = new RooArgSet;
+  indata.get()->snapshot(*_normSet, false);
 
   // Expand list of observables with any observables used in parameterized ranges.
   // This NEEDS to be a counting loop since we are inserting during the loop.
@@ -290,62 +288,29 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // ******************************************************************
 
   std::unique_ptr<RooArgSet> origObsSet( real.getObservables(indata) );
-  RooArgSet* dataObsSet = (RooArgSet*) _dataClone->get() ;
   if (rangeName && strlen(rangeName)) {
     cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") constructing test statistic for sub-range named " << rangeName << endl ;
 
-    bool observablesKnowRange = false;
-    // Adjust FUNC normalization ranges to requested fitRange, store original ranges for RooAddPdf coefficient interpretation
+    if(auto pdfClone = dynamic_cast<RooAbsPdf*>(_funcClone)) {
+       pdfClone->setNormRange(rangeName);
+    }
+
+    // Print warnings if the requested ranges are not available for the observable
     for (const auto arg : *_funcObsSet) {
 
-      RooRealVar* realObs = dynamic_cast<RooRealVar*>(arg) ;
-      if (realObs) {
+      if (auto realObs = dynamic_cast<RooRealVar*>(arg)) {
 
-        auto transferRangeAndBinning = [&](RooRealVar & toVar, const char* toName, const char* fromName) {
-          toVar.setRange(toName, realObs->getMin(fromName),realObs->getMax(fromName));
-          // If the realObs also has a binning with a name matching the
-          // rangeName, it will be set as the default binning. If `fromName` is
-          // a nullptr to signify taking the default binning from `realObs`,
-          // don't check if it exists as there is always a default binning.
-          if(!fromName || realObs->hasBinning(fromName)) {
-            toVar.setBinning(realObs->getBinning(fromName), toName);
-          }
-        };
-
-        observablesKnowRange |= realObs->hasRange(rangeName);
-
-        // If no explicit range is given for RooAddPdf coefficients, create explicit named range equivalent to original observables range
-        if (!(addCoefRangeName && strlen(addCoefRangeName))) {
-          transferRangeAndBinning(*realObs, Form("NormalizationRangeFor%s",rangeName), nullptr);
-        }
-
-        // Adjust range of function observable to those of given named range
-        transferRangeAndBinning(*realObs, nullptr, rangeName);
-
-        // Adjust range of data observable to those of given named range
-        RooRealVar* dataObs = (RooRealVar*) dataObsSet->find(realObs->GetName()) ;
-        transferRangeAndBinning(*dataObs, nullptr, rangeName);
-
-        // Keep track of list of fit ranges in string attribute fit range of original p.d.f.
-        if (!_splitRange) {
-          const std::string fitRangeName = std::string("fit_") + GetName();
-          const char* origAttrib = real.getStringAttribute("fitrange") ;
-          std::string newAttr = origAttrib ? origAttrib : "";
-
-          if (newAttr.find(fitRangeName) == std::string::npos) {
-            newAttr += (newAttr.empty() ? "" : ",") + fitRangeName;
-          }
-          real.setStringAttribute("fitrange", newAttr.c_str());
-          RooRealVar* origObs = (RooRealVar*) origObsSet->find(arg->GetName()) ;
-          if (origObs) {
-            transferRangeAndBinning(*origObs, fitRangeName.c_str(), rangeName);
+        auto tokens = ROOT::Split(rangeName, ",");
+        for(std::string const& token : tokens) {
+          if(!realObs->hasRange(token.c_str())) {
+             std::stringstream errMsg;
+             errMsg << "The observable \"" << realObs->GetName() << "\" doesn't define the requested range \""
+                    << token << "\". Replacing it with the default range." << std::endl;
+             coutI(Fitting) << errMsg.str() << std::endl;
           }
         }
       }
     }
-
-    if (!observablesKnowRange)
-      coutW(Fitting) << "None of the fit observables seem to know the range '" << rangeName << "'. This means that the full range will be used." << std::endl;
   }
 
 
@@ -366,10 +331,6 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
       cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName()
                  << ") fixing interpretation of coefficients of any RooAddPdf component to range " << addCoefRangeName << endl ;
       _funcClone->fixAddCoefRange(addCoefRangeName,false) ;
-    } else {
-      cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName()
-              << ") fixing interpretation of coefficients of any RooAddPdf to full domain of observables " << endl ;
-      _funcClone->fixAddCoefRange(Form("NormalizationRangeFor%s",rangeName),false) ;
     }
   }
 
@@ -388,7 +349,8 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // Remove projected dependents from normalization set
   if (projDeps.getSize()>0) {
 
-    _projDeps = (RooArgSet*) projDeps.snapshot(false) ;
+    _projDeps = new RooArgSet;
+    projDeps.snapshot(*_projDeps, false) ;
 
     //RooArgSet* tobedel = (RooArgSet*) _normSet->selectCommon(*_projDeps) ;
     _normSet->remove(*_projDeps,true,true) ;
@@ -859,3 +821,4 @@ void RooAbsOptTestStatistic::setUpBinSampling() {
 const char* RooAbsOptTestStatistic::cacheUniqueSuffix() const {
    return Form("_%lx", _dataClone->uniqueId().value()) ;
 }
+

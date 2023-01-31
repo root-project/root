@@ -49,6 +49,10 @@ public:
     return *_dataHist ;
   }
 
+  /// Replaces underlying RooDataHist with a clone, which is now owned, and returns the clone.
+  /// If the underlying RooDataHist is already owned, then that is returned instead of being cloned.
+  RooDataHist* cloneAndOwnDataHist(const char* newname="");
+
   void setInterpolationOrder(Int_t order) {
     // Set histogram interpolation order
     _intOrder = order ;
@@ -57,20 +61,6 @@ public:
     // Return histogram interpolation order
     return _intOrder ;
   }
-
-  static Int_t getAnalyticalIntegral(RooArgSet& allVars,
-                                     RooArgSet& analVars,
-                                     const char* rangeName,
-                                     RooArgSet const& histObsList,
-                                     RooSetProxy const& pdfObsList,
-                                     Int_t intOrder) ;
-
-  static double analyticalIntegral(Int_t code,
-                                     const char* rangeName,
-                                     RooArgSet const& histObsList,
-                                     RooSetProxy const& pdfObsList,
-                                     RooDataHist& dataHist,
-                                     bool histFuncMode) ;
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
@@ -124,6 +114,32 @@ protected:
   bool _cdfBoundaries = false;                 ///< Use boundary conditions for CDFs.
   mutable double _totVolume = 0.0;             ///<! Total volume of space (product of ranges of observables)
   bool _unitNorm  = false;                     ///< Assume contents is unit normalized (for use as pdf cache)
+
+private:
+
+  friend class RooHistFunc;
+
+  static Int_t getAnalyticalIntegral(RooArgSet& allVars,
+                                     RooArgSet& analVars,
+                                     const char* rangeName,
+                                     RooArgSet const& histObsList,
+                                     RooSetProxy const& pdfObsList,
+                                     Int_t intOrder) ;
+
+  static double analyticalIntegral(Int_t code,
+                                   const char* rangeName,
+                                   RooArgSet const& histObsList,
+                                   RooSetProxy const& pdfObsList,
+                                   RooDataHist& dataHist,
+                                   bool histFuncMode) ;
+
+  static std::list<double>* plotSamplingHint(RooDataHist const& dataHist,
+                                             RooArgSet const& pdfObsList,
+                                             RooArgSet const& histObsList,
+                                             int intOrder,
+                                             RooAbsRealLValue& obs,
+                                             double xlo,
+                                             double xhi);
 
   ClassDefOverride(RooHistPdf,4) // Histogram based PDF
 };

@@ -16,15 +16,15 @@
 #ifndef LLVM_CODEGEN_RESOURCEPRIORITYQUEUE_H
 #define LLVM_CODEGEN_RESOURCEPRIORITYQUEUE_H
 
-#include "llvm/CodeGen/DFAPacketizer.h"
 #include "llvm/CodeGen/ScheduleDAG.h"
-#include "llvm/CodeGen/SelectionDAGISel.h"
-#include "llvm/CodeGen/TargetInstrInfo.h"
-#include "llvm/CodeGen/TargetRegisterInfo.h"
-#include "llvm/MC/MCInstrItineraries.h"
 
 namespace llvm {
+  class DFAPacketizer;
+  class InstrItineraryData;
   class ResourcePriorityQueue;
+  class SelectionDAGISel;
+  class TargetInstrInfo;
+  class TargetRegisterInfo;
 
   /// Sorting functions for the Available queue.
   struct resource_sort {
@@ -107,7 +107,6 @@ namespace llvm {
     /// InitNumRegDefsLeft - Determine the # of regs defined by this node.
     ///
     void initNumRegDefsLeft(SUnit *SU);
-    void updateNumRegDefsLeft(SUnit *SU);
     int regPressureDelta(SUnit *SU, bool RawPressure = false);
     int rawRegPressureDelta (SUnit *SU, unsigned RCId);
 

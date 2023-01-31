@@ -78,8 +78,9 @@ void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) 
   RooDataHist& cacheHist = *cache.hist() ;
 
   // Make deep clone of self in non-caching mde and attach to dataset observables
-  RooArgSet* cloneSet = (RooArgSet*) RooArgSet(*this).snapshot(true) ;
-  RooAbsSelfCachedPdf* clone2 = (RooAbsSelfCachedPdf*) cloneSet->find(GetName()) ;
+  RooArgSet cloneSet;
+  RooArgSet(*this).snapshot(cloneSet, true) ;
+  auto clone2 = static_cast<RooAbsSelfCachedPdf*>(cloneSet.find(GetName()));
   clone2->disableCache(true) ;
   clone2->attachDataSet(cacheHist) ;
 
@@ -91,8 +92,6 @@ void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) 
   }
 
   cache.pdf()->setUnitNorm(true) ;
-
-  delete cloneSet ;
 }
 
 

@@ -218,7 +218,7 @@ public:
    TGHScrollBar *GetHScrollbar() const { return fHScrollbar; }
    TGVScrollBar *GetVScrollbar() const { return fVScrollbar; }
 
-   virtual void  AddFrame(TGFrame *f, TGLayoutHints *l = 0);
+   virtual void  AddFrame(TGFrame *f, TGLayoutHints *l = nullptr);
    virtual void  SetContainer(TGFrame *f) { fVport->SetContainer(f); }
    void          MapSubwindows() override;
    void          DrawBorder() override;

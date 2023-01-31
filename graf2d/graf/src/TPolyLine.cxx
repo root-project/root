@@ -44,29 +44,21 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// PolyLine default constructor.
 
-TPolyLine::TPolyLine(): TObject()
+TPolyLine::TPolyLine()
 {
-   fN = 0;
-   fX = nullptr;
-   fY = nullptr;
-   fLastPoint = -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// PolyLine normal constructor without initialisation.
-/// Allocates n points.  The option string is ignored.
+/// Allocates n points.
 
 TPolyLine::TPolyLine(Int_t n, Option_t *option)
       :TObject(), TAttLine(), TAttFill()
 {
    fOption = option;
-   fLastPoint = -1;
-   if (n <= 0) {
-      fN = 0;
-      fLastPoint = -1;
-      fX = fY = nullptr;
+   if (n <= 0)
       return;
-   }
+
    fN = n;
    fX = new Double_t[fN];
    fY = new Double_t[fN];
@@ -75,48 +67,43 @@ TPolyLine::TPolyLine(Int_t n, Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// PolyLine normal constructor (single precision).
 /// Makes n points with (x, y) coordinates from x and y.
-/// The option string is ignored.
 
 TPolyLine::TPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
       :TObject(), TAttLine(), TAttFill()
 {
    fOption = option;
-   fLastPoint = -1;
-   if (n <= 0) {
-      fN = 0;
-      fLastPoint = -1;
-      fX = fY = 0;
+   if (n <= 0)
       return;
-   }
+
    fN = n;
    fX = new Double_t[fN];
    fY = new Double_t[fN];
    if (!x || !y) return;
-   for (Int_t i=0; i<fN;i++) { fX[i] = x[i]; fY[i] = y[i];}
+   for (Int_t i = 0; i < fN; i++) {
+      fX[i] = x[i];
+      fY[i] = y[i];
+   }
    fLastPoint = fN-1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// PolyLine normal constructor (double precision).
 /// Makes n points with (x, y) coordinates from x and y.
-/// The option string is ignored.
 
 TPolyLine::TPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       :TObject(), TAttLine(), TAttFill()
 {
    fOption = option;
-   fLastPoint = -1;
-   if (n <= 0) {
-      fN = 0;
-      fLastPoint = -1;
-      fX = fY = nullptr;
+   if (n <= 0)
       return;
-   }
    fN = n;
    fX = new Double_t[fN];
    fY = new Double_t[fN];
    if (!x || !y) return;
-   for (Int_t i=0; i<fN;i++) { fX[i] = x[i]; fY[i] = y[i];}
+   for (Int_t i=0; i<fN;i++) {
+      fX[i] = x[i];
+      fY[i] = y[i];
+   }
    fLastPoint = fN-1;
 }
 
@@ -144,10 +131,6 @@ TPolyLine::~TPolyLine()
 
 TPolyLine::TPolyLine(const TPolyLine &polyline) : TObject(polyline), TAttLine(polyline), TAttFill(polyline)
 {
-   fN = 0;
-   fX = nullptr;
-   fY = nullptr;
-   fLastPoint = -1;
    polyline.TPolyLine::Copy(*this);
 }
 
@@ -597,22 +580,20 @@ void TPolyLine::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    char quote = '"';
    out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TPolyLine::Class())) {
+   if (gROOT->ClassSaved(TPolyLine::Class()))
       out<<"   ";
-   } else {
-      out<<"   Double_t *dum = 0;"<<std::endl;
+   else
       out<<"   TPolyLine *";
-   }
-   out<<"pline = new TPolyLine("<<fN<<",dum,dum,"<<quote<<fOption<<quote<<");"<<std::endl;
 
-   SaveFillAttributes(out,"pline",0,1001);
-   SaveLineAttributes(out,"pline",1,1,1);
+   out<<"pline = new TPolyLine("<<fN<<","<<quote<<fOption<<quote<<");"<<std::endl;
 
-   for (Int_t i=0;i<Size();i++) {
+   SaveFillAttributes(out, "pline", 0, 1001);
+   SaveLineAttributes(out, "pline", 1, 1, 1);
+
+   for (Int_t i=0;i<Size();i++)
       out<<"   pline->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<std::endl;
-   }
-   out<<"   pline->Draw("
-      <<quote<<option<<quote<<");"<<std::endl;
+
+   out<<"   pline->Draw("<<quote<<option<<quote<<");"<<std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -664,7 +645,7 @@ void TPolyLine::SetPoint(Int_t n, Double_t x, Double_t y)
    }
    fX[n] = x;
    fY[n] = y;
-   fLastPoint = TMath::Max(fLastPoint,n);
+   fLastPoint = TMath::Max(fLastPoint, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

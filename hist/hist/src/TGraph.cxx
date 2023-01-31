@@ -80,6 +80,7 @@ Begin_Macro(source)
      y[i] = 10*sin(x[i]+0.2);
    }
    auto g = new TGraph(n,x,y);
+   g->SetTitle("Graph title;X title;Y title");
    g->Draw("AC*");
 }
 End_Macro
@@ -93,6 +94,7 @@ Begin_Macro(source)
 {
    double y[6] = {3, 8, 1, 10, 5, 7};
    auto g = new TGraph(6,y);
+   g->SetTitle("A Graph with default X points");
    g->Draw();
 }
 End_Macro
@@ -595,7 +597,7 @@ Double_t** TGraph::AllocateArrays(Int_t Narrays, Int_t arraySize)
    Double_t **newarrays = new Double_t*[Narrays];
    if (!arraySize) {
       for (Int_t i = 0; i < Narrays; ++i)
-         newarrays[i] = 0;
+         newarrays[i] = nullptr;
    } else {
       for (Int_t i = 0; i < Narrays; ++i)
          newarrays[i] = new Double_t[arraySize];
@@ -1059,9 +1061,8 @@ void TGraph::Expand(Int_t newsize, Int_t step)
 
 Double_t **TGraph::ExpandAndCopy(Int_t size, Int_t iend)
 {
-   if (size <= fMaxSize) {
-      return 0;
-   }
+   if (size <= fMaxSize)
+      return nullptr;
    Double_t **newarrays = Allocate(2 * size);
    CopyPoints(newarrays, 0, iend, 0);
    return newarrays;
@@ -1082,8 +1083,7 @@ void TGraph::FillZero(Int_t begin, Int_t end, Bool_t)
 
 TObject *TGraph::FindObject(const char *name) const
 {
-   if (fFunctions) return fFunctions->FindObject(name);
-   return 0;
+   return fFunctions ? fFunctions->FindObject(name) : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1091,8 +1091,7 @@ TObject *TGraph::FindObject(const char *name) const
 
 TObject *TGraph::FindObject(const TObject *obj) const
 {
-   if (fFunctions) return fFunctions->FindObject(obj);
-   return 0;
+   return fFunctions ? fFunctions->FindObject(obj) : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1550,9 +1549,8 @@ Double_t TGraph::GetPointY(Int_t i) const
 
 TAxis *TGraph::GetXaxis() const
 {
-   TH1 *h = GetHistogram();
-   if (!h) return 0;
-   return h->GetXaxis();
+   auto h = GetHistogram();
+   return h ? h->GetXaxis() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1560,9 +1558,8 @@ TAxis *TGraph::GetXaxis() const
 
 TAxis *TGraph::GetYaxis() const
 {
-   TH1 *h = GetHistogram();
-   if (!h) return 0;
-   return h->GetYaxis();
+   auto h = GetHistogram();
+   return h ? h->GetYaxis() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1571,11 +1568,15 @@ TAxis *TGraph::GetYaxis() const
 
 char *TGraph::GetObjectInfo(Int_t px, Int_t py) const
 {
+   if (!gPad) {
+      Error("GetObjectInfo", "Cannot be used without gPad");
+      return nullptr;
+   }
+
    // localize point
    Int_t ipoint = -2;
-   Int_t i;
    // start with a small window (in case the mouse is very close to one point)
-   for (i = 0; i < fNpoints; i++) {
+   for (Int_t i = 0; i < fNpoints; i++) {
       Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
       Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
 
@@ -1681,6 +1682,11 @@ void TGraph::InitPolynom(Double_t xmin, Double_t xmax)
 
 Int_t TGraph::InsertPoint()
 {
+   if (!gPad) {
+      Error("InsertPoint", "Cannot be used without gPad, requires last mouse position");
+      return -1;
+   }
+
    Int_t px = gPad->GetEventX();
    Int_t py = gPad->GetEventY();
 
@@ -2001,7 +2007,8 @@ void TGraph::Print(Option_t *) const
 void TGraph::RecursiveRemove(TObject *obj)
 {
    if (fFunctions) {
-      if (!fFunctions->TestBit(kInvalidObject)) fFunctions->RecursiveRemove(obj);
+      if (!fFunctions->TestBit(kInvalidObject))
+         fFunctions->RecursiveRemove(obj);
    }
    if (fHistogram == obj)
       fHistogram = nullptr;
@@ -2009,17 +2016,22 @@ void TGraph::RecursiveRemove(TObject *obj)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete point close to the mouse position
+/// Returns index of removed point (or -1 if nothing was changed)
 
 Int_t TGraph::RemovePoint()
 {
+   if (!gPad) {
+      Error("RemovePoint", "Cannot be used without gPad, requires last mouse position");
+      return -1;
+   }
+
    Int_t px = gPad->GetEventX();
    Int_t py = gPad->GetEventY();
 
    //localize point to be deleted
    Int_t ipoint = -2;
-   Int_t i;
    // start with a small window (in case the mouse is very close to one point)
-   for (i = 0; i < fNpoints; i++) {
+   for (Int_t i = 0; i < fNpoints; i++) {
       Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
       Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
       if (dpx * dpx + dpy * dpy < 100) {
@@ -2032,11 +2044,12 @@ Int_t TGraph::RemovePoint()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete point number ipoint
+/// Returns index of removed point (or -1 if nothing was changed)
 
 Int_t TGraph::RemovePoint(Int_t ipoint)
 {
-   if (ipoint < 0) return -1;
-   if (ipoint >= fNpoints) return -1;
+   if ((ipoint < 0) || (ipoint >= fNpoints))
+      return -1;
 
    Double_t **ps = ShrinkAndCopy(fNpoints - 1, ipoint);
    CopyAndRelease(ps, ipoint + 1, fNpoints--, ipoint);
@@ -2115,78 +2128,109 @@ void TGraph::SaveAs(const char *filename, Option_t *option) const
 
 void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
    out << "   " << std::endl;
    static Int_t frameNumber = 0;
    frameNumber++;
 
+   TString fXName, fYName;
+
    if (fNpoints >= 1) {
-      Int_t i;
-      TString fXName = TString(GetName()) + Form("_fx%d",frameNumber);
-      TString fYName = TString(GetName()) + Form("_fy%d",frameNumber);
-      out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
-      for (i = 0; i < fNpoints-1; i++) out << "   " << fX[i] << "," << std::endl;
-      out << "   " << fX[fNpoints-1] << "};" << std::endl;
-      out << "   Double_t " << fYName << "[" << fNpoints << "] = {" << std::endl;
-      for (i = 0; i < fNpoints-1; i++) out << "   " << fY[i] << "," << std::endl;
-      out << "   " << fY[fNpoints-1] << "};" << std::endl;
-      if (gROOT->ClassSaved(TGraph::Class())) out << "   ";
-      else out << "   TGraph *";
-      out << "graph = new TGraph(" << fNpoints << "," << fXName << "," << fYName << ");" << std::endl;
-   } else {
-      if (gROOT->ClassSaved(TGraph::Class())) out << "   ";
-      else out << "   TGraph *";
-      out << "graph = new TGraph();" << std::endl;
+      fXName = SaveArray(out, "fx", frameNumber, fX);
+      fYName = SaveArray(out, "fy", frameNumber, fY);
    }
 
-   out << "   graph->SetName(" << quote << GetName() << quote << ");" << std::endl;
-   out << "   graph->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
+   if (gROOT->ClassSaved(TGraph::Class()))
+      out << "   ";
+   else
+      out << "   TGraph *";
 
-   SaveFillAttributes(out, "graph", 0, 1001);
-   SaveLineAttributes(out, "graph", 1, 1, 1);
-   SaveMarkerAttributes(out, "graph", 1, 1, 1);
+   if (fNpoints >= 1)
+      out << "graph = new TGraph(" << fNpoints << "," << fXName << "," << fYName << ");" << std::endl;
+   else
+      out << "graph = new TGraph();" << std::endl;
+
+   SaveHistogramAndFunctions(out, "graph", frameNumber, option);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save array as C++ code
+/// Returns name of created array
+
+TString TGraph::SaveArray(std::ostream &out, const char *suffix, Int_t frameNumber, Double_t *arr)
+{
+   const char *name = GetName();
+   if (!name || !*name)
+      name = "Graph";
+   TString arrname = TString::Format("%s_%s%d", name, suffix, frameNumber);
+
+   out << "   Double_t " << arrname << "[" << fNpoints << "] = { ";
+   for (Int_t i = 0; i < fNpoints-1; i++) {
+      out << arr[i] << ",";
+      if (i && (i % 16 == 0))
+         out << std::endl << "   ";
+      else
+         out << " ";
+   }
+   out << arr[fNpoints-1] << " };" << std::endl;
+
+   return arrname;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save histogram and list of functions of TGraph as C++ statement
+/// Used in all TGraph-derived classes
+
+void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, Int_t &frameNumber, Option_t *option)
+{
+   char quote = '"';
+
+   out << "   "<<varname<<"->SetName(" << quote << GetName() << quote << ");" << std::endl;
+   out << "   "<<varname<<"->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
+
+   SaveFillAttributes(out, varname, 0, 1001);
+   SaveLineAttributes(out, varname, 1, 1, 1);
+   SaveMarkerAttributes(out, varname, 1, 1, 1);
 
    if (fHistogram) {
       TString hname = fHistogram->GetName();
-      hname += frameNumber;
-      fHistogram->SetName(Form("Graph_%s", hname.Data()));
+      fHistogram->SetName(TString::Format("Graph_%s%d", hname.Data(), frameNumber).Data());
       fHistogram->SavePrimitive(out, "nodraw");
-      out << "   graph->SetHistogram(" << fHistogram->GetName() << ");" << std::endl;
+      out << "   "<<varname<<"->SetHistogram(" << fHistogram->GetName() << ");" << std::endl;
       out << "   " << std::endl;
+      fHistogram->SetName(hname.Data());
    }
 
    // save list of functions
    TIter next(fFunctions);
-   TObject *obj;
-   while ((obj = next())) {
-      obj->SavePrimitive(out, Form("nodraw #%d\n",++frameNumber));
+   while (auto obj = next()) {
+      obj->SavePrimitive(out, TString::Format("nodraw #%d\n", ++frameNumber).Data());
       if (obj->InheritsFrom("TPaveStats")) {
-         out << "   graph->GetListOfFunctions()->Add(ptstats);" << std::endl;
-         out << "   ptstats->SetParent(graph->GetListOfFunctions());" << std::endl;
+         out << "   "<<varname<<"->GetListOfFunctions()->Add(ptstats);" << std::endl;
+         out << "   ptstats->SetParent("<<varname<<"->GetListOfFunctions());" << std::endl;
       } else {
-         TString objname;
-         objname.Form("%s%d",obj->GetName(),frameNumber);
+         auto objname = TString::Format("%s%d",obj->GetName(), frameNumber);
          if (obj->InheritsFrom("TF1")) {
-            out << "   " << objname << "->SetParent(graph);\n";
+            out << "   " << objname << "->SetParent("<<varname<<");\n";
          }
-         out << "   graph->GetListOfFunctions()->Add("
-             << objname << ");" << std::endl;
+         out << "   "<<varname<<"->GetListOfFunctions()->Add(" << objname << ");" << std::endl;
       }
    }
 
    const char *soption = option ? option : "";
    const char *l = strstr(soption, "multigraph");
    if (l) {
-      out << "   multigraph->Add(graph," << quote << l + 10 << quote << ");" << std::endl;
+      out << "   multigraph->Add("<<varname<<"," << quote << l + 10 << quote << ");" << std::endl;
       return;
    }
    l = strstr(soption, "th2poly");
    if (l) {
-      out << "   " << l + 7 << "->AddBin(graph);" << std::endl;
+      out << "   " << l + 7 << "->AddBin("<<varname<<");" << std::endl;
       return;
    }
-   out << "   graph->Draw(" << quote << soption << quote << ");" << std::endl;
+   out << "   "<<varname<<"->Draw(" << quote << soption << quote << ");" << std::endl;
+
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Multiply the values of a TGraph by a constant c1.
@@ -2391,9 +2435,9 @@ void TGraph::SetStats(Bool_t stats)
 
 Double_t **TGraph::ShrinkAndCopy(Int_t size, Int_t oend)
 {
-   if (size * 2 > fMaxSize || !fMaxSize) {
-      return 0;
-   }
+   if (size * 2 > fMaxSize || !fMaxSize)
+      return nullptr;
+
    Double_t **newarrays = Allocate(size);
    CopyPoints(newarrays, 0, oend, 0);
    return newarrays;

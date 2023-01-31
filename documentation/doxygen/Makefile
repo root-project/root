@@ -2,7 +2,7 @@
 .PHONY: filter folders mathjax js images doxygen replaceCollaborationDiagrams
 
 OS=$(shell uname)
-ifeq ($(UNAME), Darwin)
+ifeq ($(OS), Darwin)
    export DOXYGEN_LDD := otool -L
    NJOB ?= $(shell sysctl -n hw.ncpu)
 else

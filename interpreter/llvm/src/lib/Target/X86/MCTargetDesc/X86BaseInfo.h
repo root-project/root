@@ -55,13 +55,18 @@ namespace X86 {
   /// The constants to describe instr prefixes if there are
   enum IPREFIXES {
     IP_NO_PREFIX = 0,
-    IP_HAS_OP_SIZE = 1,
-    IP_HAS_AD_SIZE = 2,
-    IP_HAS_REPEAT_NE = 4,
-    IP_HAS_REPEAT = 8,
-    IP_HAS_LOCK = 16,
-    IP_HAS_NOTRACK = 32,
-    IP_USE_VEX3 = 64,
+    IP_HAS_OP_SIZE =   1U << 0,
+    IP_HAS_AD_SIZE =   1U << 1,
+    IP_HAS_REPEAT_NE = 1U << 2,
+    IP_HAS_REPEAT =    1U << 3,
+    IP_HAS_LOCK =      1U << 4,
+    IP_HAS_NOTRACK =   1U << 5,
+    IP_USE_VEX =       1U << 6,
+    IP_USE_VEX2 =      1U << 7,
+    IP_USE_VEX3 =      1U << 8,
+    IP_USE_EVEX =      1U << 9,
+    IP_USE_DISP8 =     1U << 10,
+    IP_USE_DISP32 =    1U << 11,
   };
 
   enum OperandType : unsigned {
@@ -91,7 +96,7 @@ namespace X86 {
     COND_G = 15,
     LAST_VALID_COND = COND_G,
 
-    // Artificial condition codes. These are used by AnalyzeBranch
+    // Artificial condition codes. These are used by analyzeBranch
     // to indicate a block terminated with two conditional branches that together
     // form a compound condition. They occur in code using FCMP_OEQ or FCMP_UNE,
     // which can't be represented on x86 with a single condition. These
@@ -101,6 +106,296 @@ namespace X86 {
 
     COND_INVALID
   };
+
+  // The classification for the first instruction in macro fusion.
+  enum class FirstMacroFusionInstKind {
+    // TEST
+    Test,
+    // CMP
+    Cmp,
+    // AND
+    And,
+    // FIXME: Zen 3 support branch fusion for OR/XOR.
+    // ADD, SUB
+    AddSub,
+    // INC, DEC
+    IncDec,
+    // Not valid as a first macro fusion instruction
+    Invalid
+  };
+
+  enum class SecondMacroFusionInstKind {
+    // JA, JB and variants.
+    AB,
+    // JE, JL, JG and variants.
+    ELG,
+    // JS, JP, JO and variants
+    SPO,
+    // Not a fusible jump.
+    Invalid,
+  };
+
+  /// \returns the type of the first instruction in macro-fusion.
+  inline FirstMacroFusionInstKind
+  classifyFirstOpcodeInMacroFusion(unsigned Opcode) {
+    switch (Opcode) {
+    default:
+      return FirstMacroFusionInstKind::Invalid;
+    // TEST
+    case X86::TEST16i16:
+    case X86::TEST16mr:
+    case X86::TEST16ri:
+    case X86::TEST16rr:
+    case X86::TEST32i32:
+    case X86::TEST32mr:
+    case X86::TEST32ri:
+    case X86::TEST32rr:
+    case X86::TEST64i32:
+    case X86::TEST64mr:
+    case X86::TEST64ri32:
+    case X86::TEST64rr:
+    case X86::TEST8i8:
+    case X86::TEST8mr:
+    case X86::TEST8ri:
+    case X86::TEST8rr:
+      return FirstMacroFusionInstKind::Test;
+    case X86::AND16i16:
+    case X86::AND16ri:
+    case X86::AND16ri8:
+    case X86::AND16rm:
+    case X86::AND16rr:
+    case X86::AND16rr_REV:
+    case X86::AND32i32:
+    case X86::AND32ri:
+    case X86::AND32ri8:
+    case X86::AND32rm:
+    case X86::AND32rr:
+    case X86::AND32rr_REV:
+    case X86::AND64i32:
+    case X86::AND64ri32:
+    case X86::AND64ri8:
+    case X86::AND64rm:
+    case X86::AND64rr:
+    case X86::AND64rr_REV:
+    case X86::AND8i8:
+    case X86::AND8ri:
+    case X86::AND8ri8:
+    case X86::AND8rm:
+    case X86::AND8rr:
+    case X86::AND8rr_REV:
+      return FirstMacroFusionInstKind::And;
+    // FIXME: Zen 3 support branch fusion for OR/XOR.
+    // CMP
+    case X86::CMP16i16:
+    case X86::CMP16mr:
+    case X86::CMP16ri:
+    case X86::CMP16ri8:
+    case X86::CMP16rm:
+    case X86::CMP16rr:
+    case X86::CMP16rr_REV:
+    case X86::CMP32i32:
+    case X86::CMP32mr:
+    case X86::CMP32ri:
+    case X86::CMP32ri8:
+    case X86::CMP32rm:
+    case X86::CMP32rr:
+    case X86::CMP32rr_REV:
+    case X86::CMP64i32:
+    case X86::CMP64mr:
+    case X86::CMP64ri32:
+    case X86::CMP64ri8:
+    case X86::CMP64rm:
+    case X86::CMP64rr:
+    case X86::CMP64rr_REV:
+    case X86::CMP8i8:
+    case X86::CMP8mr:
+    case X86::CMP8ri:
+    case X86::CMP8ri8:
+    case X86::CMP8rm:
+    case X86::CMP8rr:
+    case X86::CMP8rr_REV:
+      return FirstMacroFusionInstKind::Cmp;
+    // ADD
+    case X86::ADD16i16:
+    case X86::ADD16ri:
+    case X86::ADD16ri8:
+    case X86::ADD16rm:
+    case X86::ADD16rr:
+    case X86::ADD16rr_REV:
+    case X86::ADD32i32:
+    case X86::ADD32ri:
+    case X86::ADD32ri8:
+    case X86::ADD32rm:
+    case X86::ADD32rr:
+    case X86::ADD32rr_REV:
+    case X86::ADD64i32:
+    case X86::ADD64ri32:
+    case X86::ADD64ri8:
+    case X86::ADD64rm:
+    case X86::ADD64rr:
+    case X86::ADD64rr_REV:
+    case X86::ADD8i8:
+    case X86::ADD8ri:
+    case X86::ADD8ri8:
+    case X86::ADD8rm:
+    case X86::ADD8rr:
+    case X86::ADD8rr_REV:
+    // SUB
+    case X86::SUB16i16:
+    case X86::SUB16ri:
+    case X86::SUB16ri8:
+    case X86::SUB16rm:
+    case X86::SUB16rr:
+    case X86::SUB16rr_REV:
+    case X86::SUB32i32:
+    case X86::SUB32ri:
+    case X86::SUB32ri8:
+    case X86::SUB32rm:
+    case X86::SUB32rr:
+    case X86::SUB32rr_REV:
+    case X86::SUB64i32:
+    case X86::SUB64ri32:
+    case X86::SUB64ri8:
+    case X86::SUB64rm:
+    case X86::SUB64rr:
+    case X86::SUB64rr_REV:
+    case X86::SUB8i8:
+    case X86::SUB8ri:
+    case X86::SUB8ri8:
+    case X86::SUB8rm:
+    case X86::SUB8rr:
+    case X86::SUB8rr_REV:
+      return FirstMacroFusionInstKind::AddSub;
+    // INC
+    case X86::INC16r:
+    case X86::INC16r_alt:
+    case X86::INC32r:
+    case X86::INC32r_alt:
+    case X86::INC64r:
+    case X86::INC8r:
+    // DEC
+    case X86::DEC16r:
+    case X86::DEC16r_alt:
+    case X86::DEC32r:
+    case X86::DEC32r_alt:
+    case X86::DEC64r:
+    case X86::DEC8r:
+      return FirstMacroFusionInstKind::IncDec;
+    }
+  }
+
+  /// \returns the type of the second instruction in macro-fusion.
+  inline SecondMacroFusionInstKind
+  classifySecondCondCodeInMacroFusion(X86::CondCode CC) {
+    if (CC == X86::COND_INVALID)
+      return SecondMacroFusionInstKind::Invalid;
+
+    switch (CC) {
+    default:
+      return SecondMacroFusionInstKind::Invalid;
+    // JE,JZ
+    case X86::COND_E:
+    // JNE,JNZ
+    case X86::COND_NE:
+    // JL,JNGE
+    case X86::COND_L:
+    // JLE,JNG
+    case X86::COND_LE:
+    // JG,JNLE
+    case X86::COND_G:
+    // JGE,JNL
+    case X86::COND_GE:
+      return SecondMacroFusionInstKind::ELG;
+    // JB,JC
+    case X86::COND_B:
+    // JNA,JBE
+    case X86::COND_BE:
+    // JA,JNBE
+    case X86::COND_A:
+    // JAE,JNC,JNB
+    case X86::COND_AE:
+      return SecondMacroFusionInstKind::AB;
+    // JS
+    case X86::COND_S:
+    // JNS
+    case X86::COND_NS:
+    // JP,JPE
+    case X86::COND_P:
+    // JNP,JPO
+    case X86::COND_NP:
+    // JO
+    case X86::COND_O:
+    // JNO
+    case X86::COND_NO:
+      return SecondMacroFusionInstKind::SPO;
+    }
+  }
+
+  /// \param FirstKind kind of the first instruction in macro fusion.
+  /// \param SecondKind kind of the second instruction in macro fusion.
+  ///
+  /// \returns true if the two instruction can be macro fused.
+  inline bool isMacroFused(FirstMacroFusionInstKind FirstKind,
+                           SecondMacroFusionInstKind SecondKind) {
+    switch (FirstKind) {
+    case X86::FirstMacroFusionInstKind::Test:
+    case X86::FirstMacroFusionInstKind::And:
+      return true;
+    case X86::FirstMacroFusionInstKind::Cmp:
+    case X86::FirstMacroFusionInstKind::AddSub:
+      return SecondKind == X86::SecondMacroFusionInstKind::AB ||
+             SecondKind == X86::SecondMacroFusionInstKind::ELG;
+    case X86::FirstMacroFusionInstKind::IncDec:
+      return SecondKind == X86::SecondMacroFusionInstKind::ELG;
+    case X86::FirstMacroFusionInstKind::Invalid:
+      return false;
+    }
+    llvm_unreachable("unknown fusion type");
+  }
+
+  /// Defines the possible values of the branch boundary alignment mask.
+  enum AlignBranchBoundaryKind : uint8_t {
+    AlignBranchNone = 0,
+    AlignBranchFused = 1U << 0,
+    AlignBranchJcc = 1U << 1,
+    AlignBranchJmp = 1U << 2,
+    AlignBranchCall = 1U << 3,
+    AlignBranchRet = 1U << 4,
+    AlignBranchIndirect = 1U << 5
+  };
+
+  /// Defines the encoding values for segment override prefix.
+  enum EncodingOfSegmentOverridePrefix : uint8_t {
+    CS_Encoding = 0x2E,
+    DS_Encoding = 0x3E,
+    ES_Encoding = 0x26,
+    FS_Encoding = 0x64,
+    GS_Encoding = 0x65,
+    SS_Encoding = 0x36
+  };
+
+  /// Given a segment register, return the encoding of the segment override
+  /// prefix for it.
+  inline EncodingOfSegmentOverridePrefix
+  getSegmentOverridePrefixForReg(unsigned Reg) {
+    switch (Reg) {
+    default:
+      llvm_unreachable("Unknown segment register!");
+    case X86::CS:
+      return CS_Encoding;
+    case X86::DS:
+      return DS_Encoding;
+    case X86::ES:
+      return ES_Encoding;
+    case X86::FS:
+      return FS_Encoding;
+    case X86::GS:
+      return GS_Encoding;
+    case X86::SS:
+      return SS_Encoding;
+    }
+  }
+
 } // end namespace X86;
 
 /// X86II - This namespace holds all of the target specific flags that
@@ -326,90 +621,107 @@ namespace X86II {
     /// in the lower 4 bits of the opcode.
     AddCCFrm = 9,
 
+    /// PrefixByte - This form is used for instructions that represent a prefix
+    /// byte like data16 or rep.
+    PrefixByte = 10,
+
     /// MRM[0-7][rm] - These forms are used to represent instructions that use
     /// a Mod/RM byte, and use the middle field to hold extended opcode
     /// information.  In the intel manual these are represented as /0, /1, ...
     ///
 
+    // Instructions operate on a register Reg/Opcode operand not the r/m field.
+    MRMr0 = 21,
+
+    /// MRMSrcMem - But force to use the SIB field.
+    MRMSrcMemFSIB  = 22,
+
+    /// MRMDestMem - But force to use the SIB field.
+    MRMDestMemFSIB = 23,
+
     /// MRMDestMem - This form is used for instructions that use the Mod/RM byte
     /// to specify a destination, which in this case is memory.
     ///
-    MRMDestMem     = 32,
+    MRMDestMem     = 24,
 
     /// MRMSrcMem - This form is used for instructions that use the Mod/RM byte
     /// to specify a source, which in this case is memory.
     ///
-    MRMSrcMem      = 33,
+    MRMSrcMem      = 25,
 
     /// MRMSrcMem4VOp3 - This form is used for instructions that encode
     /// operand 3 with VEX.VVVV and load from memory.
     ///
-    MRMSrcMem4VOp3 = 34,
+    MRMSrcMem4VOp3 = 26,
 
     /// MRMSrcMemOp4 - This form is used for instructions that use the Mod/RM
     /// byte to specify the fourth source, which in this case is memory.
     ///
-    MRMSrcMemOp4   = 35,
+    MRMSrcMemOp4   = 27,
 
     /// MRMSrcMemCC - This form is used for instructions that use the Mod/RM
     /// byte to specify the operands and also encodes a condition code.
     ///
-    MRMSrcMemCC    = 36,
+    MRMSrcMemCC    = 28,
 
     /// MRMXm - This form is used for instructions that use the Mod/RM byte
     /// to specify a memory source, but doesn't use the middle field. And has
     /// a condition code.
     ///
-    MRMXmCC = 38,
+    MRMXmCC = 30,
 
     /// MRMXm - This form is used for instructions that use the Mod/RM byte
     /// to specify a memory source, but doesn't use the middle field.
     ///
-    MRMXm = 39,
+    MRMXm = 31,
 
     // Next, instructions that operate on a memory r/m operand...
-    MRM0m = 40,  MRM1m = 41,  MRM2m = 42,  MRM3m = 43, // Format /0 /1 /2 /3
-    MRM4m = 44,  MRM5m = 45,  MRM6m = 46,  MRM7m = 47, // Format /4 /5 /6 /7
+    MRM0m = 32,  MRM1m = 33,  MRM2m = 34,  MRM3m = 35, // Format /0 /1 /2 /3
+    MRM4m = 36,  MRM5m = 37,  MRM6m = 38,  MRM7m = 39, // Format /4 /5 /6 /7
 
     /// MRMDestReg - This form is used for instructions that use the Mod/RM byte
     /// to specify a destination, which in this case is a register.
     ///
-    MRMDestReg     = 48,
+    MRMDestReg     = 40,
 
     /// MRMSrcReg - This form is used for instructions that use the Mod/RM byte
     /// to specify a source, which in this case is a register.
     ///
-    MRMSrcReg      = 49,
+    MRMSrcReg      = 41,
 
     /// MRMSrcReg4VOp3 - This form is used for instructions that encode
     /// operand 3 with VEX.VVVV and do not load from memory.
     ///
-    MRMSrcReg4VOp3 = 50,
+    MRMSrcReg4VOp3 = 42,
 
     /// MRMSrcRegOp4 - This form is used for instructions that use the Mod/RM
     /// byte to specify the fourth source, which in this case is a register.
     ///
-    MRMSrcRegOp4   = 51,
+    MRMSrcRegOp4   = 43,
 
     /// MRMSrcRegCC - This form is used for instructions that use the Mod/RM
     /// byte to specify the operands and also encodes a condition code
     ///
-    MRMSrcRegCC    = 52,
+    MRMSrcRegCC    = 44,
 
     /// MRMXCCr - This form is used for instructions that use the Mod/RM byte
     /// to specify a register source, but doesn't use the middle field. And has
     /// a condition code.
     ///
-    MRMXrCC = 54,
+    MRMXrCC = 46,
 
     /// MRMXr - This form is used for instructions that use the Mod/RM byte
     /// to specify a register source, but doesn't use the middle field.
     ///
-    MRMXr = 55,
+    MRMXr = 47,
 
     // Instructions that operate on a register r/m operand...
-    MRM0r = 56,  MRM1r = 57,  MRM2r = 58,  MRM3r = 59, // Format /0 /1 /2 /3
-    MRM4r = 60,  MRM5r = 61,  MRM6r = 62,  MRM7r = 63, // Format /4 /5 /6 /7
+    MRM0r = 48,  MRM1r = 49,  MRM2r = 50,  MRM3r = 51, // Format /0 /1 /2 /3
+    MRM4r = 52,  MRM5r = 53,  MRM6r = 54,  MRM7r = 55, // Format /4 /5 /6 /7
+
+    // Instructions that operate that have mod=11 and an opcode but ignore r/m.
+    MRM0X = 56,  MRM1X = 57,  MRM2X = 58,  MRM3X = 59, // Format /0 /1 /2 /3
+    MRM4X = 60,  MRM5X = 61,  MRM6X = 62,  MRM7X = 63, // Format /4 /5 /6 /7
 
     /// MRM_XX - A mod/rm byte of exactly 0xXX.
     MRM_C0 = 64,  MRM_C1 = 65,  MRM_C2 = 66,  MRM_C3 = 67,
@@ -642,12 +954,25 @@ namespace X86II {
 
     // NOTRACK prefix
     NoTrackShift = EVEX_RCShift + 1,
-    NOTRACK = 1ULL << NoTrackShift
+    NOTRACK = 1ULL << NoTrackShift,
+
+    // Force VEX encoding
+    ExplicitVEXShift = NoTrackShift + 1,
+    ExplicitVEXPrefix = 1ULL << ExplicitVEXShift
   };
 
-  // getBaseOpcodeFor - This function returns the "base" X86 opcode for the
-  // specified machine instruction.
-  //
+  /// \returns true if the instruction with given opcode is a prefix.
+  inline bool isPrefix(uint64_t TSFlags) {
+    return (TSFlags & X86II::FormMask) == PrefixByte;
+  }
+
+  /// \returns true if the instruction with given opcode is a pseudo.
+  inline bool isPseudo(uint64_t TSFlags) {
+    return (TSFlags & X86II::FormMask) == Pseudo;
+  }
+
+  /// \returns the "base" X86 opcode for the specified machine
+  /// instruction.
   inline uint8_t getBaseOpcodeFor(uint64_t TSFlags) {
     return TSFlags >> X86II::OpcodeShift;
   }
@@ -656,8 +981,8 @@ namespace X86II {
     return (TSFlags & X86II::ImmMask) != 0;
   }
 
-  /// getSizeOfImm - Decode the "size of immediate" field from the TSFlags field
-  /// of the specified instruction.
+  /// Decode the "size of immediate" field from the TSFlags field of the 
+  /// specified instruction.
   inline unsigned getSizeOfImm(uint64_t TSFlags) {
     switch (TSFlags & X86II::ImmMask) {
     default: llvm_unreachable("Unknown immediate size");
@@ -673,9 +998,9 @@ namespace X86II {
     }
   }
 
-  /// isImmPCRel - Return true if the immediate of the specified instruction's
-  /// TSFlags indicates that it is pc relative.
-  inline unsigned isImmPCRel(uint64_t TSFlags) {
+  /// \returns true if the immediate of the specified instruction's TSFlags
+  /// indicates that it is pc relative.
+  inline bool isImmPCRel(uint64_t TSFlags) {
     switch (TSFlags & X86II::ImmMask) {
     default: llvm_unreachable("Unknown immediate size");
     case X86II::Imm8PCRel:
@@ -692,9 +1017,9 @@ namespace X86II {
     }
   }
 
-  /// isImmSigned - Return true if the immediate of the specified instruction's
+  /// \returns true if the immediate of the specified instruction's
   /// TSFlags indicates that it is signed.
-  inline unsigned isImmSigned(uint64_t TSFlags) {
+  inline bool isImmSigned(uint64_t TSFlags) {
     switch (TSFlags & X86II::ImmMask) {
     default: llvm_unreachable("Unknown immediate signedness");
     case X86II::Imm32S:
@@ -711,8 +1036,8 @@ namespace X86II {
     }
   }
 
-  /// getOperandBias - compute whether all of the def operands are repeated
-  ///                  in the uses and therefore should be skipped.
+  /// Compute whether all of the def operands are repeated in the uses and
+  /// therefore should be skipped.
   /// This determines the start of the unique operand list. We need to determine
   /// if all of the defs have a corresponding tied operand in the uses.
   /// Unfortunately, the tied operand information is encoded in the uses not
@@ -750,8 +1075,8 @@ namespace X86II {
     }
   }
 
-  /// getMemoryOperandNo - The function returns the MCInst operand # for the
-  /// first field of the memory operand.  If the instruction doesn't have a
+  /// The function returns the MCInst operand # for the first field of the
+  /// memory operand.  If the instruction doesn't have a
   /// memory operand, this returns -1.
   ///
   /// Note that this ignores tied operands.  If there is a tied register which
@@ -774,10 +1099,13 @@ namespace X86II {
     case X86II::RawFrmDst:
     case X86II::RawFrmDstSrc:
     case X86II::AddCCFrm:
+    case X86II::PrefixByte:
       return -1;
     case X86II::MRMDestMem:
+    case X86II::MRMDestMemFSIB:
       return 0;
     case X86II::MRMSrcMem:
+    case X86II::MRMSrcMemFSIB:
       // Start from 1, skip any registers encoded in VEX_VVVV or I8IMM, or a
       // mask register.
       return 1 + HasVEX_4V + HasEVEX_K;
@@ -797,11 +1125,17 @@ namespace X86II {
     case X86II::MRMSrcRegOp4:
     case X86II::MRMSrcRegCC:
     case X86II::MRMXrCC:
+    case X86II::MRMr0:
     case X86II::MRMXr:
     case X86II::MRM0r: case X86II::MRM1r:
     case X86II::MRM2r: case X86II::MRM3r:
     case X86II::MRM4r: case X86II::MRM5r:
     case X86II::MRM6r: case X86II::MRM7r:
+      return -1;
+    case X86II::MRM0X: case X86II::MRM1X:
+    case X86II::MRM2X: case X86II::MRM3X:
+    case X86II::MRM4X: case X86II::MRM5X:
+    case X86II::MRM6X: case X86II::MRM7X:
       return -1;
     case X86II::MRMXmCC:
     case X86II::MRMXm:
@@ -837,8 +1171,8 @@ namespace X86II {
     }
   }
 
-  /// isX86_64ExtendedReg - Is the MachineOperand a x86-64 extended (r8 or
-  /// higher) register?  e.g. r8, xmm8, xmm13, etc.
+  /// \returns true if the MachineOperand is a x86-64 extended (r8 or
+  /// higher) register,  e.g. r8, xmm8, xmm13, etc.
   inline bool isX86_64ExtendedReg(unsigned RegNo) {
     if ((RegNo >= X86::XMM8 && RegNo <= X86::XMM31) ||
         (RegNo >= X86::YMM8 && RegNo <= X86::YMM31) ||
@@ -864,8 +1198,8 @@ namespace X86II {
     return false;
   }
 
-  /// is32ExtendedReg - Is the MemoryOperand a 32 extended (zmm16 or higher)
-  /// registers? e.g. zmm21, etc.
+  /// \returns true if the MemoryOperand is a 32 extended (zmm16 or higher)
+  /// registers, e.g. zmm21, etc.
   static inline bool is32ExtendedReg(unsigned RegNo) {
     return ((RegNo >= X86::XMM16 && RegNo <= X86::XMM31) ||
             (RegNo >= X86::YMM16 && RegNo <= X86::YMM31) ||
@@ -878,12 +1212,12 @@ namespace X86II {
             reg == X86::SIL || reg == X86::DIL);
   }
 
-  /// isKMasked - Is this a masked instruction.
+  /// \returns true if this is a masked instruction.
   inline bool isKMasked(uint64_t TSFlags) {
     return (TSFlags & X86II::EVEX_K) != 0;
   }
 
-  /// isKMergedMasked - Is this a merge masked instruction.
+  /// \returns true if this is a merge masked instruction.
   inline bool isKMergeMasked(uint64_t TSFlags) {
     return isKMasked(TSFlags) && (TSFlags & X86II::EVEX_Z) == 0;
   }

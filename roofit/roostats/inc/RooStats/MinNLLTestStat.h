@@ -49,13 +49,13 @@ Internally it operates by delegating to a MinNLLTestStat object.
    public:
      MinNLLTestStat() {
         // Proof constructor. Do not use.
-   fProflts = 0;
+        fProflts = nullptr;
      }
      MinNLLTestStat(RooAbsPdf& pdf) {
-   fProflts = new ProfileLikelihoodTestStat(pdf);
+        fProflts = new ProfileLikelihoodTestStat(pdf);
      }
 
-     MinNLLTestStat(const MinNLLTestStat& rhs) : TestStatistic(rhs), fProflts(0) {
+     MinNLLTestStat(const MinNLLTestStat& rhs) : TestStatistic(rhs), fProflts(nullptr) {
         RooAbsPdf * pdf = rhs.fProflts->GetPdf();
         if (pdf)  fProflts = new ProfileLikelihoodTestStat(*pdf);
      }

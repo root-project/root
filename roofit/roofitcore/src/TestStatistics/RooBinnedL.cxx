@@ -94,7 +94,7 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
    ROOT::Math::KahanSum<double> result;
 
    // Do not reevaluate likelihood if parameters nor event range have changed
-   if (!paramTracker_->hasChanged(true) && bins == lastSection_ && (cachedResult_ != 0)) return cachedResult_;
+   if (!paramTracker_->hasChanged(true) && bins == lastSection_ && (cachedResult_.Sum() != 0 || cachedResult_.Carry() != 0)) return cachedResult_;
 
 //   data->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?false:true));
    // TODO: check when we might need _projDeps (it seems to be mostly empty); ties in with TODO below
@@ -120,7 +120,7 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
          oocoutI(nullptr, Minimization)
             << "Observed " << N << " events in bin " << i << " with zero event yield" << std::endl;
 
-      } else if (fabs(mu) < 1e-10 && fabs(N) < 1e-10) {
+      } else if (std::abs(mu) < 1e-10 && std::abs(N) < 1e-10) {
 
          // Special handling of this case since log(Poisson(0,0)=0 but can't be calculated with usual log-formula
          // since log(mu)=0. No update of result is required since term=0.
@@ -137,7 +137,7 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
    // If part of simultaneous PDF normalize probability over
    // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
    if (sim_count_ > 1) {
-      result += sumWeight * log(1.0 * sim_count_);
+      result += sumWeight.Sum() * log(1.0 * sim_count_);
    }
 
    // At the end of the first full calculation, wire the caches

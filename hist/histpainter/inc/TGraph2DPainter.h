@@ -65,7 +65,7 @@ protected:
    TGraph2D *fGraph2D;            ///<! Pointer to the TGraph2D in fDelaunay
 
    void FindTriangles();
-   void PaintLevels(Int_t *v, Double_t *x, Double_t *y, Int_t nblev=0, Double_t *glev=0);
+   void PaintLevels(Int_t *v, Double_t *x, Double_t *y, Int_t nblev = 0, Double_t *glev = nullptr);
    void PaintPolyMarker0(Int_t n, Double_t *x, Double_t *y);
 
    void PaintTriangles_old(Option_t *option);

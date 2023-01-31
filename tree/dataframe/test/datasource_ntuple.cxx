@@ -64,7 +64,7 @@ TEST_F(RNTupleDSTest, ColTypeNames)
 
 TEST_F(RNTupleDSTest, CardinalityColumn)
 {
-   auto df = ROOT::Experimental::MakeNTupleDataFrame(fNtplName, fFileName);
+   auto df = ROOT::RDF::Experimental::FromRNTuple(fNtplName, fFileName);
 
    // Check that the special column #<collection> works without jitting...
    auto identity = [](std::size_t sz) { return sz; };
@@ -87,7 +87,7 @@ TEST_F(RNTupleDSTest, CardinalityColumn)
 }
 
 void ReadTest(const std::string &name, const std::string &fname) {
-   auto df = ROOT::Experimental::MakeNTupleDataFrame(name, fname);
+   auto df = ROOT::RDF::Experimental::FromRNTuple(name, fname);
 
    auto count = df.Count();
    auto sumpt = df.Sum<float>("pt");

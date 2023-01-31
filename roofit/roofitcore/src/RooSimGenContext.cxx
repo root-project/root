@@ -61,49 +61,28 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
   RooAbsGenContext(model,vars,prototype,auxProto,verbose), _pdf(&model), _protoData(0)
 {
   // Determine if we are requested to generate the index category
-  RooAbsCategory *idxCat = (RooAbsCategory*) model._indexCat.absArg() ;
+  RooAbsCategoryLValue const& idxCat = model.indexCat();
   RooArgSet pdfVars(vars) ;
 
   RooArgSet allPdfVars(pdfVars) ;
   if (prototype) allPdfVars.add(*prototype->get(),true) ;
 
-  if (!idxCat->isDerived()) {
-    pdfVars.remove(*idxCat,true,true) ;
-    bool doGenIdx = allPdfVars.find(idxCat->GetName())?true:false ;
+  RooArgSet catsAmongAllVars;
+  allPdfVars.selectCommon(model.flattenedCatList(), catsAmongAllVars);
 
-    if (!doGenIdx) {
+  if(catsAmongAllVars.size() != model.flattenedCatList().size()) {
       oocoutE(_pdf,Generation) << "RooSimGenContext::ctor(" << GetName() << ") ERROR: This context must"
-                << " generate the index category" << endl ;
+                << " generate all components of the index category" << endl ;
       _isValid = false ;
       _numPdf = 0 ;
       _haveIdxProto = false ;
       return ;
-    }
-  } else {
-    bool anyServer(false), allServers(true) ;
-    for(RooAbsArg* server : idxCat->servers()) {
-      if (vars.find(server->GetName())) {
-   anyServer=true ;
-   pdfVars.remove(*server,true,true) ;
-      } else {
-   allServers=false ;
-      }
-    }
-
-    if (anyServer && !allServers) {
-      oocoutE(_pdf,Generation) << "RooSimGenContext::ctor(" << GetName() << ") ERROR: This context must"
-                << " generate all components of a derived index category" << endl ;
-      _isValid = false ;
-      _numPdf = 0 ;
-      _haveIdxProto = false ;
-      return ;
-    }
   }
 
   // We must either have the prototype or extended likelihood to determined
   // the relative fractions of the components
   _haveIdxProto = prototype ? true : false ;
-  _idxCatName = idxCat->GetName() ;
+  _idxCatName = idxCat.GetName() ;
   if (!_haveIdxProto && !model.canBeExtended()) {
     oocoutE(_pdf,Generation) << "RooSimGenContext::ctor(" << GetName() << ") ERROR: Need either extended mode"
               << " or prototype data to calculate number of events per category" << endl ;
@@ -129,7 +108,7 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
     // Name the context after the associated state and add to list
     cx->SetName(proxy->name()) ;
     _gcList.push_back(cx) ;
-    _gcIndex.push_back(idxCat->lookupIndex(proxy->name()));
+    _gcIndex.push_back(idxCat.lookupIndex(proxy->name()));
 
     // Fill fraction threshold array
     _fracThresh[i] = _fracThresh[i-1] + (_haveIdxProto?0:pdf->expectedEvents(&allPdfVars)) ;
@@ -144,13 +123,14 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
 
 
   // Clone the index category
-  _idxCatSet = (RooArgSet*) RooArgSet(model._indexCat.arg()).snapshot(true) ;
+  _idxCatSet = new RooArgSet;
+  RooArgSet(model.indexCat()).snapshot(*_idxCatSet, true);
   if (!_idxCatSet) {
     oocoutE(_pdf,Generation) << "RooSimGenContext::RooSimGenContext(" << GetName() << ") Couldn't deep-clone index category, abort," << endl ;
     throw std::string("RooSimGenContext::RooSimGenContext() Couldn't deep-clone index category, abort") ;
   }
 
-  _idxCat = (RooAbsCategoryLValue*) _idxCatSet->find(model._indexCat.arg().GetName()) ;
+  _idxCat = static_cast<RooAbsCategoryLValue*>(_idxCatSet->find(model.indexCat().GetName()));
 }
 
 
@@ -176,7 +156,7 @@ RooSimGenContext::~RooSimGenContext()
 void RooSimGenContext::attach(const RooArgSet& args)
 {
   if (_idxCat->isDerived()) {
-    _idxCat->recursiveRedirectServers(args,true) ;
+    _idxCat->recursiveRedirectServers(args) ;
   }
 
   // Forward initGenerator call to all components
@@ -194,7 +174,7 @@ void RooSimGenContext::initGenerator(const RooArgSet &theEvent)
 {
   // Attach the index category clone to the event
   if (_idxCat->isDerived()) {
-    _idxCat->recursiveRedirectServers(theEvent,true) ;
+    _idxCat->recursiveRedirectServers(theEvent) ;
   } else {
     _idxCat = (RooAbsCategoryLValue*) theEvent.find(_idxCat->GetName()) ;
   }

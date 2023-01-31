@@ -367,38 +367,11 @@ void RooPlot::SetDirectory(TDirectory *dir) {
 
 void RooPlot::updateNormVars(const RooArgSet &vars)
 {
-  if(0 == _normVars) _normVars= (RooArgSet*) vars.snapshot(true);
+  if(_normVars == nullptr) {
+    _normVars = new RooArgSet;
+    vars.snapshot(*_normVars, true);
+  }
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// A plot object is a frame without any bin contents of its own so this
-/// method always returns zero.
-
-Stat_t RooPlot::GetBinContent(Int_t /*i*/) const {
-  return 0;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// A plot object is a frame without any bin contents of its own so this
-/// method always returns zero.
-
-Stat_t RooPlot::GetBinContent(Int_t, Int_t) const
-{
-  return 0;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// A plot object is a frame without any bin contents of its own so this
-/// method always returns zero.
-
-Stat_t RooPlot::GetBinContent(Int_t, Int_t, Int_t) const
-{
-  return 0;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -612,7 +585,7 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, bool refreshNorm)
     if (dynamic_cast<const RooHist*>(rp)) corFac = _normBinWidth/rp->getFitRangeBinW() ;
 
 
-    if (fabs(rp->getFitRangeNEvt()/corFac-_normNumEvts)>1e-6) {
+    if (std::abs(rp->getFitRangeNEvt()/corFac-_normNumEvts)>1e-6) {
       coutI(Plotting) << "RooPlot::updateFitRangeNorm: New event count of " << rp->getFitRangeNEvt()/corFac
             << " will supercede previous event count of " << _normNumEvts << " for normalization of PDF projections" << endl ;
     }
@@ -1142,26 +1115,62 @@ double RooPlot::chiSquare(const char* curvename, const char* histname, int nFitP
 /// Otherwise, the curve is evaluated at the bin centres, which is not accurate for strongly curved distributions.
 RooHist* RooPlot::residHist(const char* histname, const char* curvename, bool normalize, bool useAverage) const
 {
-  // Find curve object
-  RooCurve* curve = (RooCurve*) findObject(curvename,RooCurve::Class()) ;
-  if (!curve) {
-    coutE(InputArguments) << "RooPlot::residHist(" << GetName() << ") cannot find curve" << endl ;
-    return 0 ;
+  // Find all curve objects with the name "curvename" or the name of the last
+  // plotted curve (there might be multiple in the case of multi-range fits).
+  std::vector<RooCurve *> curves;
+
+  for(auto it = _items.rbegin(); it != _items.rend(); ++it) {
+    TObject &obj = *it->first;
+    if(obj.IsA() == RooCurve::Class()) {
+      // If no curvename was passed, we take by default the last curve and all
+      // other curves that have the same name
+      if((!curvename || curvename[0] == '\0') || std::string(curvename) == obj.GetName()) {
+        curvename = obj.GetName();
+        curves.push_back(static_cast<RooCurve*>(&obj));
+      }
+    }
+  }
+
+  if (curves.empty()) {
+    coutE(InputArguments) << "RooPlot::residHist(" << GetName() << ") cannot find curve" << std::endl;
+    return nullptr;
   }
 
   // Find histogram object
-  RooHist* hist = (RooHist*) findObject(histname,RooHist::Class()) ;
+  auto hist = static_cast<RooHist*>(findObject(histname,RooHist::Class()));
   if (!hist) {
-    coutE(InputArguments) << "RooPlot::residHist(" << GetName() << ") cannot find histogram" << endl ;
-    return 0 ;
+    coutE(InputArguments) << "RooPlot::residHist(" << GetName() << ") cannot find histogram" << std::endl;
+    return nullptr;
   }
 
-  auto residhist = hist->makeResidHist(*curve,normalize,useAverage);
-  residhist->GetHistogram()->GetXaxis()->SetRangeUser(_hist->GetXaxis()->GetXmin(), _hist->GetXaxis()->GetXmax());
-  residhist->GetHistogram()->GetXaxis()->SetTitle(_hist->GetXaxis()->GetTitle());
-  residhist->GetHistogram()->GetYaxis()->SetTitle(normalize ? "(Data - curve) / #sigma_{data}" : "Data - curve");
+  auto residHist = hist->createEmptyResidHist(*curves.front(), normalize);
 
-  return residhist;
+  // We consider all curves with the same name as long as the ranges don't
+  // overlap, to create also the full residual plot in multi-range fits.
+  std::vector<std::pair<double, double>> coveredRanges;
+  for(RooCurve * curve : curves) {
+    const double xmin = curve->GetPointX(0);
+    const double xmax = curve->GetPointX(curve->GetN() - 1);
+
+    for(auto const& prevRange : coveredRanges) {
+      const double pxmin = prevRange.first;
+      const double pxmax = prevRange.second;
+      // If either xmin or xmax is within any previous range, the ranges
+      // overloap and it makes to sense to also consider this curve for the
+      // residuals (i.e., they can't come from a multi-range fit).
+      if((pxmax > xmin && pxmin <= xmin) || (pxmax > xmax && pxmin <= xmax)) {
+        continue;
+      }
+    }
+
+    coveredRanges.emplace_back(xmin, xmax);
+
+    hist->fillResidHist(*residHist, *curve, normalize, useAverage);
+  }
+  residHist->GetHistogram()->GetXaxis()->SetRangeUser(_hist->GetXaxis()->GetXmin(), _hist->GetXaxis()->GetXmax());
+  residHist->GetHistogram()->GetXaxis()->SetTitle(_hist->GetXaxis()->GetTitle());
+  residHist->GetHistogram()->GetYaxis()->SetTitle(normalize ? "(Data - curve) / #sigma_{data}" : "Data - curve");
+  return residHist.release();
 }
 
 
@@ -1430,4 +1439,18 @@ void RooPlot::fillItemsFromTList(RooPlot::Items & items, TList const& tlist) {
   for(TObject * obj : tlist) {
     items.emplace_back(obj, obj->GetOption());
   }
+}
+
+/// Replaces the pointer to the plot variable with a pointer to a clone of the
+/// plot variable that is owned by this RooPlot. The RooPlot references the
+/// plotted variable by non-owning pointer by default since ROOT 6.28, which
+/// resulted in a big speedup when plotting complicated pdfs that are expensive
+/// to clone. However, going back to an owned clone is useful in rare cases.
+/// For example in the RooUnitTest, where the registered plots need to live
+/// longer than the scope of the unit test.
+void RooPlot::createInternalPlotVarClone() {
+  // If the plot variable is already cloned, we don't need to do anything.
+  if(_plotVarSet) return;
+  _plotVarSet = static_cast<RooArgSet*>(RooArgSet(*_plotVar).snapshot());
+  _plotVar = static_cast<RooAbsRealLValue*>(_plotVarSet->find(_plotVar->GetName()));
 }

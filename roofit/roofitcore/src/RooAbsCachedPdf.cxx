@@ -33,6 +33,7 @@ for changes to trigger a refilling of the cache histogram.
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
 #include "RooExpensiveObjectCache.h"
+#include "RooNormalizedPdf.h"
 
 ClassImp(RooAbsCachedPdf);
 
@@ -101,16 +102,6 @@ RooDataHist* RooAbsCachedPdf::getCacheHist(const RooArgSet* nset) const
   PdfCacheElem* cache = getCache(nset) ;
   return cache ? cache->hist() : nullptr;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Mark all bins of given cache as unitialized (value -1)
-
-void RooAbsCachedPdf::clearCacheObject(PdfCacheElem& cache) const
-{
-  cache.hist()->setAllWeights(-1) ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -410,4 +401,26 @@ void RooAbsCachedPdf::computeBatch(cudaStream_t* stream, double* output, size_t 
 {
   auto * cachePdf = getCachePdf(_normSet);
   cachePdf->computeBatch(stream, output, nEvents, dataMap);
+}
+
+
+std::unique_ptr<RooAbsArg>
+RooAbsCachedPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
+{
+   if (normSet.empty()) {
+      return RooAbsPdf::compileForNormSet(normSet, ctx);
+   }
+   std::unique_ptr<RooAbsPdf> pdfClone(static_cast<RooAbsPdf *>(this->Clone()));
+   ctx.compileServers(*pdfClone, {});
+
+   auto newArg = std::make_unique<RooNormalizedPdf>(*pdfClone, normSet);
+
+   // The direct servers are this pdf and the normalization integral, which
+   // don't need to be compiled further.
+   for (RooAbsArg *server : newArg->servers()) {
+      server->setAttribute("_COMPILED");
+   }
+   newArg->setAttribute("_COMPILED");
+   newArg->addOwnedComponents(std::move(pdfClone));
+   return newArg;
 }

@@ -22,6 +22,7 @@
 
 #include <daos.h>
 
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
@@ -47,13 +48,13 @@ struct RDaosEventQueue {
    /// \brief Sets event barrier for a given parent event and waits for the completion of all children launched before
    /// the barrier (must have at least one child).
    /// \return 0 on success; a DAOS error code otherwise (< 0).
-   int WaitOnParentBarrier(daos_event_t *ev_ptr);
+   static int WaitOnParentBarrier(daos_event_t *ev_ptr);
    /// \brief Reserve event in queue, optionally tied to a parent event.
    /// \return 0 on success; a DAOS error code otherwise (< 0).
-   int InitializeEvent(daos_event_t *ev_ptr, daos_event_t *parent_ptr = nullptr);
+   int InitializeEvent(daos_event_t *ev_ptr, daos_event_t *parent_ptr = nullptr) const;
    /// \brief Release event data from queue.
    /// \return 0 on success; a DAOS error code otherwise (< 0).
-   int FinalizeEvent(daos_event_t *ev_ptr);
+   static int FinalizeEvent(daos_event_t *ev_ptr);
 };
 
 class RDaosContainer;
@@ -107,22 +108,30 @@ public:
       static constexpr std::size_t kOCNameMaxLength = 64;
    };
 
+   /// \brief Contains an attribute key and the associated IOVs for a single scatter-gather I/O request.
+   struct RAkeyRequest {
+      AttributeKey_t fAkey{};
+      std::vector<d_iov_t> fIovs{};
+
+      RAkeyRequest(const AttributeKey_t a, const std::vector<d_iov_t> &iovs) : fAkey(a), fIovs(iovs){};
+      RAkeyRequest(const AttributeKey_t a, std::vector<d_iov_t> &&iovs) : fAkey(a), fIovs(std::move(iovs)){};
+   };
+
    /// \brief Contains required information for a single fetch/update operation.
    struct FetchUpdateArgs {
       FetchUpdateArgs() = default;
       FetchUpdateArgs(const FetchUpdateArgs &) = delete;
-      FetchUpdateArgs(FetchUpdateArgs &&fua);
-      FetchUpdateArgs(DistributionKey_t d, std::span<const AttributeKey_t> as, std::span<d_iov_t> vs,
-                      bool is_async = false);
+      FetchUpdateArgs(FetchUpdateArgs &&fua) noexcept;
+      FetchUpdateArgs(DistributionKey_t d, std::span<RAkeyRequest> rs, bool is_async = false);
       FetchUpdateArgs &operator=(const FetchUpdateArgs &) = delete;
       daos_event_t *GetEventPointer();
 
       /// \brief A `daos_key_t` is a type alias of `d_iov_t`. This type stores a pointer and a length.
       /// In order for `fDistributionKey` to point to memory that we own, `fDkey` holds the distribution key.
-      /// `fAkeys` and `fIovs` are sequential containers assumed to remain valid throughout the fetch/update operation.
       DistributionKey_t fDkey{};
-      std::span<const AttributeKey_t> fAkeys{};
-      std::span<d_iov_t> fIovs{};
+      /// \brief `fRequests` is a sequential container assumed to remain valid throughout the fetch/update operation,
+      /// holding a list of `RAkeyRequest`-typed elements.
+      std::span<RAkeyRequest> fRequests{};
 
       /// \brief The distribution key, as used by the `daos_obj_{fetch,update}` functions.
       daos_key_t fDistributionKey{};
@@ -177,22 +186,46 @@ public:
       };
    };
 
-   /// \brief Describes a read/write operation on multiple objects; see the `ReadV`/`WriteV` functions.
+   /// \brief Describes a read/write operation on multiple attribute keys under the same object ID and distribution key,
+   /// see the `ReadV`/`WriteV` functions.
    struct RWOperation {
       RWOperation() = default;
-      RWOperation(daos_obj_id_t o, DistributionKey_t d, const std::vector<AttributeKey_t> &as,
-                  const std::vector<d_iov_t> &vs)
-         : fOid(o), fDistributionKey(d), fAttributeKeys(as), fIovs(vs){};
-      RWOperation(ROidDkeyPair &k) : fOid(k.oid), fDistributionKey(k.dkey){};
+      RWOperation(daos_obj_id_t o, DistributionKey_t d, std::vector<RDaosObject::RAkeyRequest> &&rs)
+         : fOid(o), fDistributionKey(d), fDataRequests(std::move(rs))
+      {
+         for (unsigned i = 0; i < fDataRequests.size(); i++)
+            fIndices.emplace(fDataRequests[i].fAkey, i);
+      };
+      explicit RWOperation(ROidDkeyPair &k) : fOid(k.oid), fDistributionKey(k.dkey){};
       daos_obj_id_t fOid{};
       DistributionKey_t fDistributionKey{};
-      std::vector<AttributeKey_t> fAttributeKeys{};
-      std::vector<d_iov_t> fIovs{};
+      std::vector<RDaosObject::RAkeyRequest> fDataRequests{};
+      std::unordered_map<AttributeKey_t, unsigned> fIndices{};
 
-      void insert(AttributeKey_t attr, const d_iov_t &vec)
+      void Insert(AttributeKey_t attr, const d_iov_t &iov)
       {
-         fAttributeKeys.emplace_back(attr);
-         fIovs.emplace_back(vec);
+         auto [it, ret] = fIndices.emplace(attr, fDataRequests.size());
+         unsigned attrIndex = it->second;
+
+         if (attrIndex == fDataRequests.size()) {
+            fDataRequests.emplace_back(attr, std::initializer_list<d_iov_t>{iov});
+         } else {
+            fDataRequests[attrIndex].fIovs.emplace_back(iov);
+         }
+      }
+
+      void Insert(AttributeKey_t attr, std::vector<d_iov_t> &iovs)
+      {
+         auto [it, ret] = fIndices.emplace(attr, fDataRequests.size());
+         unsigned attrIndex = it->second;
+
+         if (attrIndex == fDataRequests.size()) {
+            fDataRequests.emplace_back(attr, iovs);
+         } else {
+            fDataRequests[attrIndex].fIovs.insert(std::end(fDataRequests[attrIndex].fIovs),
+                                                  std::make_move_iterator(std::begin(iovs)),
+                                                  std::make_move_iterator(std::end(iovs)));
+         }
       }
    };
 

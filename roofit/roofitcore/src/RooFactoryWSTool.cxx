@@ -115,7 +115,6 @@ static Int_t init()
   // Miscellaneous
   RooFactoryWSTool::registerSpecial("dataobs",iface) ;
   RooFactoryWSTool::registerSpecial("set",iface) ;
-  RooFactoryWSTool::registerSpecial("lagrangianmorph",iface) ;
 
   (void) dummy;
   return 0 ;
@@ -381,7 +380,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
     Int_t i(0) ;
     list<string>::iterator ti = ca.first.begin() ; ++ti ; ++ti ;
     for (vector<string>::iterator ai = _args.begin() ; ai != _args.end() ; ++ai,++ti,++i) {
-      if ((*ti)=="RooAbsReal&" || (*ti)=="const RooAbsReal&") {
+      if ((*ti)=="RooAbsReal&" || (*ti)=="const RooAbsReal&" || (*ti)=="RooAbsReal::Ref") {
    RooFactoryWSTool::as_FUNC(i) ;
    cintExpr += Form(",RooFactoryWSTool::as_FUNC(%d)",i) ;
       } else if ((*ti)=="RooAbsArg&" || (*ti)=="const RooAbsArg&") {
@@ -2015,60 +2014,6 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     // prod::name[a,b,c]
     ft.prodfunc(instName,pargs) ;
 
-  } else if (cl == "lagrangianmorph") {
-    // Perform syntax check. Warn about any meta parameters other than the ones needed
-    const std::array<std::string,4> funcArgs{{"fileName","observableName","couplings","folders"}};
-    map<string,string> mapped_inputs;
-
-    for (unsigned int i=1 ; i<pargv.size() ; i++) {
-      if (pargv[i].find("$fileName(")!=0 &&
-        pargv[i].find("$observableName(")!=0 &&
-        pargv[i].find("$couplings(")!=0 &&
-        pargv[i].find("$folders(")!=0 &&
-        pargv[i].find("$NewPhysics(")!=0) {
-        throw string(Form("%s::create() ERROR: unknown token %s encountered",instName, pargv[i].c_str())) ;
-      }
-    }
-
-    char pargsmorph[BUFFER_SIZE];
-    pargsmorph[0] = 0;
-
-    for (unsigned int i=0 ; i<pargv.size() ; i++) {
-      if (pargv[i].find("$NewPhysics(")==0) {
-        vector<string> subargs = ft.splitFunctionArgs(pargv[i].c_str()) ;
-        for(const auto& subarg: subargs) {
-          char buf[BUFFER_SIZE];
-          strlcpy(buf, subarg.c_str(), BUFFER_SIZE);
-          char *save;
-          char *tok = R__STRTOK_R(buf, "=", &save);
-          vector<string> parts;
-          while (tok) {
-            parts.push_back(string(tok));
-            tok = R__STRTOK_R(0, "=", &save);
-          }
-          if (parts.size() == 2){
-            ft.ws().arg(parts[0].c_str())->setAttribute("NewPhysics",atoi(parts[1].c_str()));
-          }
-          else throw string(Form("%s::create() ERROR: unknown token %s encountered, check input provided for %s",instName,subarg.c_str(), pargv[i].c_str()));
-        }
-      }
-      else {
-        vector<string> subargs = ft.splitFunctionArgs(pargv[i].c_str()) ;
-        if (subargs.size()==1){
-          string expr = ft.processExpression(subargs[0].c_str());
-          for(auto const& param : funcArgs){
-            if(pargv[i].find(param)!=string::npos) mapped_inputs[param]=subargs[0];
-          }
-        }
-        else throw string(Form("Incorrect number of arguments in %s, have %d, expect 1",pargv[i].c_str(),(Int_t)subargs.size())) ;
-      }
-    }
-    for(auto const& param : funcArgs){
-      if(strlen(pargsmorph) > 0) strlcat(pargsmorph, ",", BUFFER_SIZE);
-      strlcat(pargsmorph, mapped_inputs[param].c_str(),BUFFER_SIZE);
-    }
-    ft.createArg("RooLagrangianMorphFunc",instName, pargsmorph);
-
   } else if (cl=="expr") {
 
     // expr::name['expr',var,var,...]
@@ -2117,7 +2062,7 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
       throw string(
         Form("taylorexpand::%s, requires max. 6 arguments, has %d arguments", instName, (Int_t)pargv.size()));
 
-    auto taylor = RooPolyFunc::taylorExpand(instName, instName, func, observables, observablesValue, order, eps1, eps2);
+    auto taylor = RooPolyFunc::taylorExpand(instName, instName, func, observables, order, {observablesValue}, eps1, eps2);
     if (ft.ws().import(*taylor, Silence())) ft.logError();
 
    } else if (cl=="nconv") {

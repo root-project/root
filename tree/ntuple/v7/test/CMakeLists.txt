@@ -33,9 +33,12 @@ ROOT_ADD_GTEST(ntuple_metrics ntuple_metrics.cxx LIBRARIES ROOTDataFrame ROOTNTu
 ROOT_ADD_GTEST(ntuple_packing ntuple_packing.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 ROOT_ADD_GTEST(ntuple_pages ntuple_pages.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 ROOT_ADD_GTEST(ntuple_print ntuple_print.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
+ROOT_ADD_GTEST(ntuple_project ntuple_project.cxx LIBRARIES ROOTDataFrame ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_rdf ntuple_rdf.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 ROOT_ADD_GTEST(ntuple_serialize ntuple_serialize.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
-ROOT_ADD_GTEST(ntuple_types ntuple_types.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
+if(NOT MSVC OR ${LLVM_VERSION} VERSION_LESS 13.0.0 OR llvm13_broken_tests)
+  ROOT_ADD_GTEST(ntuple_types ntuple_types.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
+endif()
 ROOT_ADD_GTEST(ntuple_view ntuple_view.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 ROOT_ADD_GTEST(ntuple_zip ntuple_zip.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 
@@ -50,12 +53,16 @@ ROOT_ADD_GTEST(ntuple_storage ntuple_storage.cxx LIBRARIES ROOTDataFrame ROOTNTu
 ROOT_ADD_GTEST(ntuple_extended ntuple_extended.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 
 if(daos OR daos_mock)
-  # UUID of the DAOS pool used for testing, if not provided (may be any for libdaos_mock).
+  # Label of the DAOS pool used for testing, if not provided (may be any for libdaos_mock).
   if(NOT daos_test_pool)
     set(daos_test_pool ntuple-daos-test-pool)
   endif()
-  set_property(SOURCE ntuple_storage_daos.cxx
-               APPEND PROPERTY COMPILE_DEFINITIONS R__DAOS_TEST_POOL="${daos_test_pool}")
 
   ROOT_ADD_GTEST(ntuple_storage_daos ntuple_storage_daos.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
+  target_compile_definitions(ntuple_storage_daos PRIVATE R__DAOS_TEST_POOL="${daos_test_pool}")
+
+  if(daos_mock)
+    set_property(SOURCE ntuple_storage_daos.cxx
+            APPEND PROPERTY COMPILE_DEFINITIONS R__DAOS_TEST_MOCK=1)
+  endif()
 endif()

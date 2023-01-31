@@ -11,8 +11,8 @@
 
 project(pymva-tests)
 
-set(Libraries Core MathCore TMVA PyMVA)
-include_directories(${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS})
+set(Libraries Core MathCore TMVA PyMVA ROOTTMVASofie)
+include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS})
 
 # Look for needed python modules
 find_python_module(torch QUIET)
@@ -45,9 +45,6 @@ if(PY_TORCH_FOUND)
    # Test RModelParser_PyTorch
    add_executable(emitFromPyTorch
                   EmitFromPyTorch.cxx
-                  ${CMAKE_SOURCE_DIR}/tmva/pymva/src/RModelParser_PyTorch.cxx
-                  ${CMAKE_SOURCE_DIR}/tmva/sofie/src/RModel.cxx
-                  ${CMAKE_SOURCE_DIR}/tmva/sofie/src/SOFIE_common.cxx
                  )
    target_link_libraries(emitFromPyTorch ${PYTHON_LIBRARIES} ${Libraries})
 if(APPLE)
@@ -57,8 +54,6 @@ endif()
    target_include_directories(emitFromPyTorch PRIVATE
                               ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
                               ${CMAKE_SOURCE_DIR}/tmva/inc
-                              ${CMAKE_SOURCE_DIR}/core/foundation/inc
-                              ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
                )
    set_target_properties(emitFromPyTorch PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
    add_custom_target(SofieCompileModels_PyTorch)
@@ -79,14 +74,21 @@ endif()
          blas
          ${PYTHON_LIBRARIES}
          INCLUDE_DIRS
+         SYSTEM
+         ${PYTHON_INCLUDE_DIRS_Development_Main}
+         ${NUMPY_INCLUDE_DIRS}
          ${CMAKE_CURRENT_BINARY_DIR}
       )
+      if(APPLE)
+      target_link_options(TestRModelParserPyTorch PRIVATE ${PYTHON_LINK_OPTIONS_Development_Main})
+      endif()
       add_dependencies(TestRModelParserPyTorch SofieCompileModels_PyTorch)
    endif()
 endif(PY_TORCH_FOUND)
 
 if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))
    configure_file(generateKerasModels.py generateKerasModels.py COPYONLY)
+   configure_file(scale_by_2_op.hxx scale_by_2_op.hxx COPYONLY)
 
    # Test PyKeras: Binary classification
    ROOT_EXECUTABLE(testPyKerasClassification testPyKerasClassification.C
@@ -106,9 +108,6 @@ if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOU
    # Test RModelParser_Keras
    add_executable(emitFromKeras
                  EmitFromKeras.cxx
-                 ${CMAKE_SOURCE_DIR}/tmva/pymva/src/RModelParser_Keras.cxx
-                 ${CMAKE_SOURCE_DIR}/tmva/sofie/src/RModel.cxx
-                 ${CMAKE_SOURCE_DIR}/tmva/sofie/src/SOFIE_common.cxx
                  )
    target_link_libraries(emitFromKeras ${PYTHON_LIBRARIES} ${Libraries})
 if(APPLE)
@@ -118,8 +117,6 @@ endif()
    target_include_directories(emitFromKeras PRIVATE
                  ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
                  ${CMAKE_SOURCE_DIR}/tmva/inc
-                 ${CMAKE_SOURCE_DIR}/core/foundation/inc
-                 ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
                )
    set_target_properties(emitFromKeras PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
    add_custom_target(SofieCompileModels_Keras)
@@ -128,15 +125,48 @@ endif()
 		COMMAND ./emitFromKeras
 		USES_TERMINAL
 	)
+
+   # Testing SOFIE Custom Operator functionality
+   add_executable(emitCustomModel
+                  EmitCustomModel.cxx
+                  ${CMAKE_SOURCE_DIR}/tmva/pymva/src/RModelParser_Keras.cxx
+                  ${CMAKE_SOURCE_DIR}/tmva/sofie/src/RModel.cxx
+                  ${CMAKE_SOURCE_DIR}/tmva/sofie/src/SOFIE_common.cxx
+   )
+   target_link_libraries(emitCustomModel ${PYTHON_LIBRARIES} ${Libraries})
+   if(APPLE)
+      target_link_options(emitCustomModel PRIVATE ${PYTHON_LINK_OPTIONS_Development_Main})
+   endif()
+   target_include_directories(emitCustomModel PRIVATE
+                              ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
+                              ${CMAKE_SOURCE_DIR}/tmva/inc
+                              ${CMAKE_SOURCE_DIR}/core/foundation/inc
+                              ${CMAKE_BINARY_DIR}/ginclude   # this is for RConfigure.h
+   )
+   set_target_properties(emitCustomModel PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+   add_custom_target(SofieCustomModel)
+   add_dependencies(SofieCustomModel emitCustomModel)
+   add_custom_command(TARGET SofieCustomModel POST_BUILD
+      COMMAND ./emitCustomModel
+      USES_TERMINAL
+   )
+
    ROOT_ADD_GTEST(TestRModelParserKeras TestRModelParserKeras.C
     LIBRARIES
     ROOTTMVASofie
     blas
     ${PYTHON_LIBRARIES}
     INCLUDE_DIRS
+    SYSTEM
+    ${PYTHON_INCLUDE_DIRS_Development_Main}
+    ${NUMPY_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR}
    )
-   add_dependencies(TestRModelParserKeras SofieCompileModels_Keras)
+   if(APPLE)
+   target_link_options(TestRModelParserKeras PRIVATE ${PYTHON_LINK_OPTIONS_Development_Main})
+   endif()
+   add_dependencies(TestRModelParserKeras SofieCompileModels_Keras SofieCustomModel)
+
 endif((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))
 
 if(PY_SKLEARN_FOUND)

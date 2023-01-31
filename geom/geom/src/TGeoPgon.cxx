@@ -1926,14 +1926,13 @@ void TGeoPgon::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
    out << "   dphi    = " << fDphi << ";" << std::endl;
    out << "   nedges = " << fNedges << ";" << std::endl;
    out << "   nz      = " << fNz << ";" << std::endl;
-   out << "   TGeoPgon *pgon = new TGeoPgon(\"" << GetName() << "\",phi1,dphi,nedges,nz);" << std::endl;
+   out << "   auto " << GetPointerName() << " = new TGeoPgon(\"" << GetName() << "\", phi1, dphi, nedges, nz);" << std::endl;
    for (Int_t i = 0; i < fNz; i++) {
       out << "      z     = " << fZ[i] << ";" << std::endl;
       out << "      rmin  = " << fRmin[i] << ";" << std::endl;
       out << "      rmax  = " << fRmax[i] << ";" << std::endl;
-      out << "   pgon->DefineSection(" << i << ", z,rmin,rmax);" << std::endl;
+      out << "   " << GetPointerName() << "->DefineSection(" << i << ", z, rmin, rmax);" << std::endl;
    }
-   out << "   TGeoShape *" << GetPointerName() << " = pgon;" << std::endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 

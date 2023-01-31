@@ -1,6 +1,8 @@
 #include "TMVA/SOFIE_common.hxx"
 #include<cctype>
 #include <sstream>
+#include <iostream>
+#include <stdexcept>
 
 namespace TMVA{
 namespace Experimental{
@@ -95,114 +97,186 @@ static inline void copy_vector_data(int_t no_of_copies, int_t input_size, T* inp
 }
 }
 
-template <typename T>
-T* UTILITY::Unidirectional_broadcast(const T* original_data, const std::vector<size_t> original_shape, const std::vector<size_t> target_shape)
-{
-
-      int original_length = 1;
-      int target_length = 1;
-      for (size_t i = 0; i < original_shape.size(); i++){
-         original_length *= original_shape[i];
+bool UTILITY::AreSameShape(const std::vector<size_t>& shapeA, const std::vector<size_t>& shapeB) {
+   if (shapeA.size() != shapeB.size()) {
+      return false;
+   }
+   for (size_t dim = 0; dim < shapeA.size(); dim++) {
+      if (shapeA[dim] != shapeB[dim]) {
+         return false;
       }
-      for (size_t i = 0; i < target_shape.size(); i++){
-         target_length *= target_shape[i];
-      }
-      if (original_shape.size() > target_shape.size())  {
-         std::string  targetShape = "target : " + ConvertShapeToString(target_shape);
-         std::string  originalShape = "original : " + ConvertShapeToString(original_shape);
-         throw std::runtime_error(
-            "TMVA::SOFIE Error in Broadcasting Tensor : original array has more dimensions than target shape," + originalShape + ", " + targetShape);
-      }
-      // if shape's sizes are different prepend 1 to get tensor with same shape size
-      // since the broadcast is unidirectional we can only prepend
-      std::vector<size_t> current_shape(original_shape);
-      auto it = current_shape.begin();
-      while (current_shape.size() < target_shape.size()) {
-         it = current_shape.insert(it, 1);
-      }
-      // this code below will work
-      // when shape are not equal e.g. (3,4,5,6) and (3) and we add 1 in all missing positions
-      // since broadcasting is uni-directional we do not use it
-      // std::vector<size_t> current_shape(target_shape.size(),1);
-      // for (size_t i = 0; i < original_shape.size(); i++) {
-      //    for (size_t j = 0; j < target_shape.size(); j++) {
-      //       if (target_shape[j] == original_shape[i])
-      //          current_shape[j] = original_shape[i];
-      //    }
-      // }
-
-      T* new_datavector = new T[target_length];
-      std::memcpy(new_datavector, original_data, original_length * sizeof(T));
-
-      for (int dim = (int) target_shape.size() - 1; dim >= 0; dim--){
-         if (current_shape[dim] != target_shape[dim]){
-            if (current_shape[dim] != 1) {
-               std::string targetShape = "target : " + ConvertShapeToString(target_shape);
-               std::string originalShape = "original : " + ConvertShapeToString(current_shape);
-               throw std::runtime_error ("TMVA::SOFIE Error in Broadcasting Tensor at least one dimension to be broadcast of the original array is not 1, " + originalShape + ", " + targetShape);
-            }
-            int_t group_size = 1;
-            int_t no_of_groups = 1;
-            int_t no_of_copies = target_shape[dim];
-
-            for (size_t i = dim + 1; i < target_shape.size(); i++){
-               group_size *= current_shape[i];
-            }
-            for (int i = 0; i < dim; i++){
-               no_of_groups *= current_shape[i];
-            }
-
-            for (int curr_group = no_of_groups - 1; curr_group >= 0; curr_group--){
-               copy_vector_data<T>(no_of_copies, group_size, new_datavector + curr_group * group_size,new_datavector + curr_group * group_size * no_of_copies);
-            }
-
-            current_shape[dim] = target_shape[dim];
-         }
-      }
-      return new_datavector;
+   }
+   return true;
 }
 
-
-
-std::vector<size_t>  UTILITY::Multidirectional_broadcast(std::vector<size_t> input1_shape, std::vector<size_t> input2_shape)
+std::vector<size_t>  UTILITY::MultidirectionalBroadcastShape(std::vector<std::vector<size_t>> shape)
 {
-   std::vector<size_t> input_shape = (input1_shape.size() > input2_shape.size())?input1_shape:input2_shape;
-   std::vector<size_t> output_shape(input_shape);
-   
-   if(input1_shape.size() < input2_shape.size()){
-   // Check if input1_shape.size() < input2_shape.size() we insert in the shape vector values of 1 at the beginning of the tensor until input1_shape.size() == input2_shape.size()
-      auto it = input1_shape.begin();
-      while (input1_shape.size() < input2_shape.size()) {
-         it = input1_shape.insert(it, 1);
+   if (shape.size() < 2) {
+      throw
+         std::runtime_error("TMVA::SOFIE - MultidirectionalBroadcastShape requires at least 2 input shapes.");
+   }
+   // Number of input shapes to broadcast
+   size_t n = shape.size();
+   // Size of the output shape
+   size_t targetSize = shape[0].size();
+   for (size_t i = 1; i < n; i++) {
+      targetSize = std::max(targetSize, shape[i].size());
+   }
+   // Check if they have the same size
+   bool sameSize = true;
+   for (size_t i = 0; i < n; i++) {
+      if (shape[i].size() != targetSize) {
+         sameSize = false;
+         break;
       }
    }
-   else if(input2_shape.size() < input1_shape.size()){
-   // Check if input2_shape.size() < input1_shape.size() we insert in the shape vector values of 1 at the beginning of the tensor until input1_shape.size() == input2_shape.size()
-      auto it = input2_shape.begin();
-      while (input2_shape.size() < input1_shape.size()) {
-         it = input2_shape.insert(it, 1);
-      }
-   }
-      //check if both the input have same shape, nothing to do directly return the output_shape as the same shape.
-   if(input1_shape.size() == input2_shape.size()){
-      if(input1_shape != input2_shape){
-         //Check the shape values, if input1[i] not equal to input2[i] we have the result shape equal to input1[i] if input2[i] = 1 or viceversa
-         for(size_t j = 0; j < input1_shape.size() ; j++){
-            if(input1_shape[j] == input2_shape[j]){
-               output_shape[j] = input1_shape[j];
-            }
-            else if(input1_shape[j] > input2_shape[j] && input2_shape[j] == 1){
-               output_shape[j] = input1_shape[j];
-            }
-            else if(input2_shape[j] > input1_shape[j] && input1_shape[j] == 1){
-               output_shape[j] = input2_shape[j];
+   if (sameSize) {
+      // Check if they have the same shape
+      bool sameShape = true;
+      for (size_t i = 1; i < n; i++) {
+         for (size_t dim = 0; dim < shape[0].size(); dim++) {
+            if (shape[i][dim] != shape[0][dim]) {
+               sameShape = false;
+               break;
             }
          }
+         if (!sameShape) {
+            break;
+         }
       }
-
+      if (sameShape) {
+         return shape[0];
+      } else {
+         // Set the target shape
+         std::vector<size_t> targetShape(targetSize, 1);
+         for (size_t i = 0; i < n; i++) {
+            for (size_t dim = 0; dim < targetSize; dim++) {
+               targetShape[dim] = std::max(targetShape[dim], shape[i][dim]);
+            }
+         }
+         // Check if the input shapes are broadcastable to targetShape
+         bool broadcastable = true;
+         for (size_t i = 0; i < n; i++) {
+            for (size_t dim = 0; dim < targetSize; dim++) {
+               if (shape[i][dim] != 1 && targetShape[dim] != 1 && shape[i][dim] != targetShape[dim]) {
+                  broadcastable = false;
+                  break;
+               }
+               if (!broadcastable) {
+                  break;
+               }
+            }
+         }
+         // They have the same shape and they are broadcastable to targetShape
+         if (broadcastable) {
+            return targetShape;
+         } else {
+            std::stringstream ss;
+            ss << "TMVA::SOFIE - Error multidirectional broadcasting shapes ";
+            for (size_t i = 0; i < n; i++) {
+               ss << ConvertShapeToString(shape[i]);
+               if (n > 2 && i < n - 2) {
+                  ss << ", ";
+               } else if ( n >=2 && i == n - 2) {
+                  ss << " and ";
+               }
+            }
+            ss << " to the same shape.";
+            throw
+               std::runtime_error(ss.str());
+         }
+      } // end sameShape
+   } // end sameSize
+   // Prepend the ith shape with ones
+   for (size_t i = 0; i < n; i++) {
+      if (shape[i].size() < targetSize) {
+         std::vector<size_t> newShape(targetSize, 1);
+         size_t offset = targetSize - shape[i].size();
+         std::copy(shape[i].begin(), shape[i].end(), newShape.begin() + offset);
+         shape[i] = newShape;
+      }
    }
-   return output_shape;
+   // Set the target shape
+   std::vector<size_t> targetShape(targetSize, 1);
+   for (size_t i = 0; i < n; i++) {
+      for (size_t dim = 0; dim < targetSize; dim++) {
+         targetShape[dim] = std::max(targetShape[dim], shape[i][dim]);
+      }
+   }
+   // Check if the shapes are broadcastable to targetShape
+   bool broadcastable = true;
+   for (size_t i = 0; i < n; i++) {
+      for (size_t dim = 0; dim < targetSize; dim++) {
+         if (shape[i][dim] != targetShape[dim] && shape[i][dim] != 1 && targetShape[dim] != 1) {
+            broadcastable = false;
+            break;
+         }
+      }
+      if (!broadcastable) {
+         break;
+      }
+   }
+   if (broadcastable) {
+      return targetShape;
+   } else {
+      std::stringstream ss;
+      ss << "TMVA::SOFIE - Error multidirectional broadcasting shapes ";
+      for (size_t i = 0; i < n; i++) {
+         ss << ConvertShapeToString(shape[i]);
+         if (n > 2 && i < n - 2) {
+            ss << ", ";
+         } else if ( n >=2 && i == n - 2) {
+            ss << " and ";
+         }
+      }
+      ss << " to the same shape.";
+      throw
+         std::runtime_error(ss.str());
+   }
+}
 
+std::vector<size_t>  UTILITY::UnidirectionalBroadcastShape(std::vector<size_t> shapeA, std::vector<size_t> shapeB)
+{
+   size_t sizeA = shapeA.size();
+   size_t sizeB = shapeB.size();
+   // Check if A and B have the same shape
+   if (UTILITY::AreSameShape(shapeA, shapeB)){
+      return shapeA;
+   }
+   // Find the common shape of A and B
+   size_t size = std::max(sizeA, sizeB);
+   if (sizeA < size) {
+      std::vector<size_t> newShapeA(size, 1);
+      size_t offset = size - sizeA;
+      std::copy(shapeA.begin(), shapeA.end(), newShapeA.begin() + offset);
+      shapeA = std::move(newShapeA);
+   }
+   if (sizeB < size) {
+      std::vector<size_t> newShapeB(size, 1);
+      size_t offset = size - sizeB;
+      std::copy(shapeB.begin(), shapeB.end(), newShapeB.begin() + offset);
+      shapeB = std::move(newShapeB);
+   }
+   bool broadcastable = true;
+   for (size_t i = 0; i < size; i++) {
+      if (shapeA[i] != shapeB[i] && shapeA[i] != 1 && shapeB[i] != 1) {
+         broadcastable = false;
+         break;
+      }
+   }
+   if (broadcastable) {
+      // The output shape is max(outShape, targetShape)
+      std::vector<size_t> targetShape(size, 1);
+      for (size_t i = 0; i < size; i++) {
+         targetShape[i] = std::max(shapeA[i], shapeB[i]);
+      }
+      return targetShape;
+   } else {
+      throw
+         std::runtime_error("TMVA::SOFIE - Error unidirectional broadcasting tensors of shape "
+            + ConvertShapeToString(shapeA) + " and " + ConvertShapeToString(shapeB)
+            + " to a common shape.");
+   }
 }
 
 std::string UTILITY::Clean_name(std::string input_tensor_name){
@@ -210,8 +284,6 @@ std::string UTILITY::Clean_name(std::string input_tensor_name){
    s.erase(std::remove_if(s.begin(), s.end(), []( char const& c ) -> bool { return !std::isalnum(c); } ), s.end());
    return s;
 }
-
-template float* UTILITY::Unidirectional_broadcast(const float* original_data, const std::vector<size_t> original_shape, const std::vector<size_t> target_shape);
 
 std::vector<size_t> UTILITY::ComputeStrideFromShape(const std::vector<size_t> & shape) {
    // assume row major layout

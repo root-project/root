@@ -22,13 +22,13 @@ public:
    RooCrystalBall(const char *name, const char *title, RooAbsReal &x, RooAbsReal &x0, RooAbsReal &sigmaLR,
                   RooAbsReal &alpha, RooAbsReal &n, bool doubleSided = false);
 
-   RooCrystalBall(const RooCrystalBall &other, const char *name = 0);
+   RooCrystalBall(const RooCrystalBall &other, const char *name = nullptr);
    TObject *clone(const char *newname) const override { return new RooCrystalBall(*this, newname); }
 
    inline ~RooCrystalBall() override {}
 
-   Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char *rangeName = 0) const override;
-   double analyticalIntegral(Int_t code, const char *rangeName = 0) const override;
+   Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char *rangeName = nullptr) const override;
+   double analyticalIntegral(Int_t code, const char *rangeName = nullptr) const override;
 
    // Optimized accept/reject generator support
    Int_t getMaxVal(const RooArgSet &vars) const override;

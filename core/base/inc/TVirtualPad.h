@@ -56,6 +56,20 @@ protected:
    void  *GetSender() override { return this; }  //used to set gTQSender
 
 public:
+
+   /** small helper class to store/restore gPad context in TPad methods */
+   class TContext {
+       Bool_t fInteractive{kFALSE};
+       TVirtualPad *fSaved{nullptr};
+   public:
+       TContext(Bool_t _interactive = kFALSE);
+       TContext(TVirtualPad *gpad, Bool_t interactive = kFALSE, Bool_t not_null = kFALSE);
+       ~TContext();
+       auto IsInteractive() const { return fInteractive; }
+       auto GetSaved() const { return fSaved; }
+   };
+
+
    TVirtualPad();
    TVirtualPad(const char *name, const char *title, Double_t xlow,
                Double_t ylow, Double_t xup, Double_t yup,
@@ -241,7 +255,7 @@ public:
    virtual Int_t    IncrementPaletteColor(Int_t i, TString opt) = 0;
    virtual Int_t    NextPaletteColor() = 0;
 
-   virtual Bool_t   PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t &yb) = 0;
+   virtual Bool_t   PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t &yb, Option_t* opt = "lb") = 0;
 
    virtual TObject *CreateToolTip(const TBox *b, const char *text, Long_t delayms) = 0;
    virtual void     DeleteToolTip(TObject *tip) = 0;

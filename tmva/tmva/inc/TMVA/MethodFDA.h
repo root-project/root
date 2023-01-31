@@ -85,7 +85,7 @@ namespace TMVA {
       void ReadWeightsFromXML   ( void* wghtnode );
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
 
       virtual const std::vector<Float_t>& GetRegressionValues();
       virtual const std::vector<Float_t>& GetMulticlassValues();
@@ -93,7 +93,7 @@ namespace TMVA {
       void Init( void );
 
       // ranking of input variables
-      const Ranking* CreateRanking() { return 0; }
+      const Ranking* CreateRanking() { return nullptr; }
 
       Double_t EstimatorFunction( std::vector<Double_t>& );
 

@@ -55,7 +55,7 @@ public:
    }
 
    // re-implement data element
-   virtual double DataElement(const double *  x, unsigned i, double * g = 0) const  {
+   virtual double DataElement(const double *  x, unsigned i, double * g = nullptr, double * = nullptr, bool = false) const  {
       // transform from x internal to x external
       const double * xExt = fTransform->Transformation(x);
       if ( g == 0) return fFunc.DataElement( xExt, i );
@@ -175,6 +175,12 @@ public:
 
    void FdF (const double * x, double & f, double * g) const override {
       f = fChi2->DataElement(x,fIndex,g);
+      // for likelihood fits need to rescale g ??
+      // if (fChi2->Type() == Func::kPoissonLikelihood) {
+      //    f *= -1;
+      //    for (unsigned int i = 0; i < NDim(); i++)
+      //       g[i] *= -1.; // /= f;
+      // }
    }
 
 

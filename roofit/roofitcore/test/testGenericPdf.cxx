@@ -2,9 +2,9 @@
 // Authors: Stephan Hageboeck, CERN  05/2019
 //          Jonas Rembser, CERN 06/2022
 
-#include <RooExponential.h>
 #include <RooRealVar.h>
 #include <RooGenericPdf.h>
+#include <RooHelpers.h>
 #include <RooWorkspace.h>
 
 #include <gtest/gtest.h>
@@ -36,7 +36,10 @@ TEST(GenericPdf, CrashWhenRunningJohnson)
 }
 
 // ROOT-10411
-TEST(GenericPdf, CrashWhenRenamingArguments) {
+TEST(GenericPdf, CrashWhenRenamingArguments)
+{
+  RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
   RooRealVar var("var", "var", 0.1, 0, 1);
   RooRealVar par("par", "par", 0.5, 0, 1);
   RooGenericPdf genPdf("genPdf", "var*(par + 1)", RooArgSet(var, par));
@@ -57,11 +60,15 @@ TEST(GenericPdf, CrashWhenRenamingArguments) {
 }
 
 // ROOT-5101: Identity PDF affects normalization
-TEST(GenericPdf, IdentidyPdfNormalization) {
-  RooRealVar x{"x", "x", 0.0, 100.0};
-  RooRealVar s{"s", "s", -0.5, -10.0,  0.0};
+TEST(GenericPdf, IdentidyPdfNormalization)
+{
+  RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
-  RooExponential exp{"exp", "exp", x, s};
+  RooWorkspace ws;
+  ws.factory("Exponential::exp(x[0.0, 100.0], s[-0.5, -10.0,  0.0])");
+
+  RooRealVar& x = *ws.var("x");
+  RooAbsPdf& exp = *ws.pdf("exp");
 
   // This RooGenericPdf should behave exactly the same as the exponential, only
   // that the integration will be done numerically.

@@ -9,9 +9,13 @@
 #ifndef LLVM_CLANG_LEX_PREPROCESSOROPTIONS_H_
 #define LLVM_CLANG_LEX_PREPROCESSOROPTIONS_H_
 
+#include "clang/Basic/BitmaskEnum.h"
 #include "clang/Basic/LLVM.h"
+#include "clang/Lex/PreprocessorExcludedConditionalDirectiveSkipMapping.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSet.h"
+#include <functional>
+#include <map>
 #include <memory>
 #include <set>
 #include <string>
@@ -35,6 +39,24 @@ enum ObjCXXARCStandardLibraryKind {
 
   /// libstdc++
   ARCXX_libstdcxx
+};
+
+/// Whether to disable the normal validation performed on precompiled
+/// headers and module files when they are loaded.
+enum class DisableValidationForModuleKind {
+  /// Perform validation, don't disable it.
+  None = 0,
+
+  /// Disable validation for a precompiled header and the modules it depends on.
+  PCH = 0x1,
+
+  /// Disable validation for module files.
+  Module = 0x2,
+
+  /// Disable validation for all kinds.
+  All = PCH | Module,
+
+  LLVM_MARK_AS_BITMASK_ENUM(Module)
 };
 
 /// PreprocessorOptions - This class is used for passing the various options
@@ -76,12 +98,17 @@ public:
   /// Headers that will be converted to chained PCHs in memory.
   std::vector<std::string> ChainedIncludes;
 
-  /// When true, disables most of the normal validation performed on
-  /// precompiled headers.
-  bool DisablePCHValidation = false;
+  /// Whether to disable most of the normal validation performed on
+  /// precompiled headers and module files.
+  DisableValidationForModuleKind DisablePCHOrModuleValidation =
+      DisableValidationForModuleKind::None;
 
   /// When true, a PCH with compiler errors will not be rejected.
   bool AllowPCHWithCompilerErrors = false;
+
+  /// When true, a PCH with modules cache path different to the current
+  /// compilation will not be rejected.
+  bool AllowPCHWithDifferentModulesCachePath = false;
 
   /// Dump declarations that are deserialized from PCH, for testing.
   bool DumpDeserializedPCHDecls = false;
@@ -142,6 +169,9 @@ public:
   /// compiler invocation and its buffers will be reused.
   bool RetainRemappedFileBuffers = false;
 
+  /// When enabled, excluded conditional blocks retain in the main file.
+  bool RetainExcludedConditionalBlocks = false;
+
   /// The Objective-C++ ARC standard library that we should support,
   /// by providing appropriate definitions to retrofit the standard library
   /// with support for lifetime-qualified pointers.
@@ -169,18 +199,36 @@ public:
   /// build it again.
   std::shared_ptr<FailedModulesSet> FailedModules;
 
+  /// Contains the currently active skipped range mappings for skipping excluded
+  /// conditional directives.
+  ///
+  /// The pointer is passed to the Preprocessor when it's constructed. The
+  /// pointer is unowned, the client is responsible for its lifetime.
+  ExcludedPreprocessorDirectiveSkipMapping
+      *ExcludedConditionalDirectiveSkipMappings = nullptr;
+
+  /// Set up preprocessor for RunAnalysis action.
+  bool SetUpStaticAnalyzer = false;
+
+  /// Prevents intended crashes when using #pragma clang __debug. For testing.
+  bool DisablePragmaDebugCrash = false;
+
 public:
   PreprocessorOptions() : PrecompiledPreambleBytes(0, false) {}
 
-  void addMacroDef(StringRef Name) { Macros.emplace_back(Name, false); }
-  void addMacroUndef(StringRef Name) { Macros.emplace_back(Name, true); }
+  void addMacroDef(StringRef Name) {
+    Macros.emplace_back(std::string(Name), false);
+  }
+  void addMacroUndef(StringRef Name) {
+    Macros.emplace_back(std::string(Name), true);
+  }
 
   void addRemappedFile(StringRef From, StringRef To) {
-    RemappedFiles.emplace_back(From, To);
+    RemappedFiles.emplace_back(std::string(From), std::string(To));
   }
 
   void addRemappedFile(StringRef From, llvm::MemoryBuffer *To) {
-    RemappedFileBuffers.emplace_back(From, To);
+    RemappedFileBuffers.emplace_back(std::string(From), To);
   }
 
   void clearRemappedFiles() {
@@ -201,6 +249,7 @@ public:
     RetainRemappedFileBuffers = true;
     PrecompiledPreambleBytes.first = 0;
     PrecompiledPreambleBytes.second = false;
+    RetainExcludedConditionalBlocks = false;
   }
 };
 

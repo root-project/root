@@ -382,7 +382,7 @@ loop_entry:
    }
    // handle every exception
    catch (...) {
-      Warning("Run", "handle uncaugth exception, terminating");
+      Warning("Run", "handle uncaught exception, terminating");
    }
 
 loop_end:
@@ -719,6 +719,7 @@ int TSystem::GetPid()
 void TSystem::Exit(int, Bool_t)
 {
    AbstractMethod("Exit");
+   throw; // unreachable
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -727,6 +728,7 @@ void TSystem::Exit(int, Bool_t)
 void TSystem::Abort(int)
 {
    AbstractMethod("Abort");
+   throw; // unreachable
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1012,14 +1014,15 @@ const char *TSystem::DirName(const char *pathname)
 
    R__LOCKGUARD2(gSystemMutex);
 
-   static Ssiz_t len = 0;
-   static char *buf = nullptr;
+   TTHREAD_TLS(Ssiz_t) len = 0;
+   TTHREAD_TLS(char*) buf = nullptr;
    if (res.Length() >= len) {
       if (buf) delete [] buf;
       len = res.Length() + 50;
       buf = new char [len];
    }
-   strncpy(buf, res.Data(), len);
+   if (buf)
+      strncpy(buf, res.Data(), len);
    return buf;
 }
 
@@ -2065,41 +2068,33 @@ void TSystem::ListSymbols(const char *, const char *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// List all loaded shared libraries. Regexp is a wildcard expression,
-/// see TRegexp::MakeWildcard.
+/// List the loaded shared libraries.
+/// `regexp` is a regular expression allowing to filter the list.
+///
+/// Examples:
+///
+/// The following line lists all the libraries currently loaded:
+/// ~~~ {.cpp}
+///  gSystem->ListLibraries()
+/// ~~~
+///
+/// The following line lists all the libraries currently loaded having "RIO" in their names:
+/// ~~~ {.cpp}
+///  gSystem->ListLibraries(".*RIO.*")
+/// ~~~
 
-void TSystem::ListLibraries(const char *regexp)
-{
-   TString libs = GetLibraries(regexp);
-   TRegexp separator("[^ \\t\\s]+");
-   TString s;
-   Ssiz_t start = 0, index = 0, end = 0;
-   int i = 0;
-
-   Printf(" ");
-   Printf("Loaded shared libraries");
-   Printf("=======================");
-
-   while ((start < libs.Length()) && (index != kNPOS)) {
-      index = libs.Index(separator, &end, start);
-      if (index >= 0) {
-         s = libs(index, end);
-         if (s.BeginsWith("-")) {
-            if (s.BeginsWith("-l")) {
-               Printf("%s", s.Data());
-               i++;
-            }
-         } else {
-            Printf("%s", s.Data());
-            i++;
-         }
-      }
-      start += end+1;
+void TSystem::ListLibraries(const char *regexp) {
+   if (!(regexp && regexp[0]))
+      regexp = ".*";
+   TRegexp pat(regexp, kFALSE);
+   TString libs(GetLibraries());
+   TString tok;
+   Ssiz_t from = 0, ext;
+   while (libs.Tokenize(tok, from, " ")) {
+      if ((tok.Index(pat, &ext) != 0) || (ext != tok.Length()))
+         continue;
+      std::cout << tok << "\n";
    }
-
-   Printf("-----------------------");
-   Printf("%d libraries loaded", i);
-   Printf("=======================");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3762,11 +3757,17 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    // ======= Build the library
    if (result) {
-      if (verboseLevel>3 && withInfo) {
+      TString cmdAllowUnresolved = cmd;
+#ifdef R__MACOSX
+      // Allow linking to succeed despite the missing symbols.
+      cmdAllowUnresolved.ReplaceAll("-dynamiclib", "-dynamiclib -Wl,-w -Wl,-undefined,dynamic_lookup");
+#endif
+      if (verboseLevel > 3 && withInfo) {
          ::Info("ACLiC","compiling the dictionary and script files");
-         if (verboseLevel>4)  ::Info("ACLiC", "%s", cmd.Data());
+         if (verboseLevel>4)
+            ::Info("ACLiC", "%s", cmdAllowUnresolved.Data());
       }
-      Int_t success = ExecAndReport(cmd);
+      Int_t success = ExecAndReport(cmdAllowUnresolved);
       if (!success) {
          if (produceRootmap) {
             gSystem->Unlink(libmapfilename);
@@ -3795,6 +3796,11 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
          TString relink_cmd = cmd.Strip(TString::kTrailing, ';');
          relink_cmd += depLibsFullPaths;
+         if (verboseLevel > 3 && withInfo) {
+            ::Info("ACLiC", "relinking against all dependencies");
+            if (verboseLevel > 4)
+               ::Info("ACLiC", "%s", relink_cmd.Data());
+         }
          result = ExecAndReport(relink_cmd);
       }
 

@@ -23,7 +23,7 @@ namespace RooStats {
   public:
 
      /// default constructors
-    explicit PointSetInterval(const char* name = 0);
+    explicit PointSetInterval(const char *name = nullptr);
 
     /// constructor from name and data set specifying the interval points
     PointSetInterval(const char* name, RooAbsData&);
@@ -41,9 +41,9 @@ namespace RooStats {
     /// return the confidence level for the interval
     double ConfidenceLevel() const override {return fConfidenceLevel;}
 
-    /// Method to return lower limit on a given parameter
-    ///  double LowerLimit(RooRealVar& param) ; // could provide, but misleading?
-    ///      double UpperLimit(RooRealVar& param) ; // could provide, but misleading?
+    // Method to return lower limit on a given parameter
+    // double LowerLimit(RooRealVar& param) ; // could provide, but misleading?
+    // double UpperLimit(RooRealVar& param) ; // could provide, but misleading?
 
     /// return a cloned list with the parameter of interest
     RooArgSet* GetParameters() const override;

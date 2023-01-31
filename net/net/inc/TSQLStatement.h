@@ -84,7 +84,7 @@ public:
    virtual Long64_t    GetLong64(Int_t) { return 0; }
    virtual ULong64_t   GetULong64(Int_t) { return 0; }
    virtual Double_t    GetDouble(Int_t) { return 0.; }
-   virtual const char *GetString(Int_t) { return 0; }
+   virtual const char *GetString(Int_t) { return nullptr; }
    virtual Bool_t      GetBinary(Int_t, void* &, Long_t&) { return kFALSE; }
    virtual Bool_t      GetLargeObject(Int_t col, void* &mem, Long_t& size) { return GetBinary(col, mem, size); }
 

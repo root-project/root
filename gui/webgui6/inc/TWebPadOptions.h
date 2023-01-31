@@ -34,13 +34,15 @@ class TWebPadOptions {
 public:
    std::string snapid;                        ///< id of pad
    bool active{false};                        ///< if pad selected as active
+   int cw{0}, ch{0};                          ///< canvas width and height in pixels
    int logx{0}, logy{0}, logz{0};             ///< pad log properties
    int gridx{0}, gridy{0};                    ///< pad grid properties
    int tickx{0}, ticky{0};                    ///< pad ticks properties
    float mleft{0}, mright{0}, mtop{0}, mbottom{0}; ///< frame margins
+   float xlow{0}, ylow{0}, xup{0}, yup{0};    ///< pad coordinate in ndex
    bool ranges{false};                        ///< if true, pad has ranges
    double px1{0}, py1{0}, px2{0}, py2{0};     ///< pad range
-   double ux1{0}, uy1{0}, ux2{0}, uy2{0};     ///< pad axis range
+   double ux1{0}, ux2{0}, uy1{0}, uy2{0}, uz1{0}, uz2{0};  ///< frame axis range - real ranges
    unsigned bits{0};                          ///< canvas status bits like tool editor
    double zx1{0}, zx2{0}, zy1{0}, zy2{0}, zz1{0}, zz2{0}; ///< zooming ranges
    std::vector<TWebObjectOptions> primitives; ///< drawing options for primitives

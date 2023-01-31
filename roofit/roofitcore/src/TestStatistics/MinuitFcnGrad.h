@@ -34,13 +34,12 @@ class MinuitFcnGrad : public ROOT::Math::IMultiGradFunction, public RooAbsMinimi
 public:
    MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &_likelihood, RooMinimizer *context,
                  std::vector<ROOT::Fit::ParameterSettings> &parameters, LikelihoodMode likelihoodMode,
-                 LikelihoodGradientMode likelihoodGradientMode, bool verbose = false);
+                 LikelihoodGradientMode likelihoodGradientMode);
 
    inline ROOT::Math::IMultiGradFunction *Clone() const override { return new MinuitFcnGrad(*this); }
 
    /// Overridden from RooAbsMinimizerFcn to include gradient strategy synchronization.
-   bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings, bool optConst,
-                      bool verbose = false) override;
+   bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) override;
 
    // used inside Minuit:
    inline bool returnsInMinuit2ParameterSpace() const override { return gradient->usesMinuitInternalValues(); }
@@ -48,10 +47,13 @@ public:
    inline void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override
    {
       likelihood->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
+      if (likelihood != likelihood_in_gradient) {
+         likelihood_in_gradient->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
+      }
    }
 
-   bool fit(ROOT::Fit::Fitter& fitter) const override { return fitter.FitFCN(*this); };
-   ROOT::Math::IMultiGenFunction* getMultiGenFcn() override { return this; };
+   bool fit(ROOT::Fit::Fitter &fitter) const override { return fitter.FitFCN(*this); };
+   ROOT::Math::IMultiGenFunction *getMultiGenFcn() override { return this; };
 
 private:
    /// IMultiGradFunction override necessary for Minuit
@@ -70,7 +72,13 @@ public:
 
    inline std::string getFunctionTitle() const override { return likelihood->GetTitle(); }
 
-   inline void setOffsetting(bool flag) override { likelihood->enableOffsetting(flag); }
+   inline void setOffsetting(bool flag) override
+   {
+      likelihood->enableOffsetting(flag);
+      if (likelihood != likelihood_in_gradient) {
+         likelihood_in_gradient->enableOffsetting(flag);
+      }
+   }
 
 private:
    /// This override should not be used in this class, so it throws.

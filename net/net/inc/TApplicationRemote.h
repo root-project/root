@@ -83,7 +83,7 @@ private:
 
    Int_t         Broadcast(const TMessage &mess);
    Int_t         Broadcast(const char *mess, Int_t kind = kMESS_STRING, Int_t type = kRRT_Undef);
-   Int_t         Broadcast(Int_t kind, Int_t type = kRRT_Undef) { return Broadcast(0, kind, type); }
+   Int_t         Broadcast(Int_t kind, Int_t type = kRRT_Undef) { return Broadcast(nullptr, kind, type); }
    Int_t         BroadcastObject(const TObject *obj, Int_t kind = kMESS_OBJECT);
    Int_t         BroadcastRaw(const void *buffer, Int_t length);
    Bool_t        CheckFile(const char *file, Long_t modtime);
@@ -93,7 +93,7 @@ private:
    void          RecvLogFile(Int_t size);
 
 public:
-   TApplicationRemote(const char *url, Int_t debug = 0, const char *script = 0);
+   TApplicationRemote(const char *url, Int_t debug = 0, const char *script = nullptr);
    virtual ~TApplicationRemote();
 
    void          Browse(TBrowser *b) override;

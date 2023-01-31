@@ -57,6 +57,15 @@ TApplicationImp *TGuiFactory::CreateApplicationImp(const char *classname, int *a
 
 TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, UInt_t width, UInt_t height)
 {
+   if (gROOT->IsWebDisplay()) {
+      auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
+
+      if (ph && ph->LoadPlugin() != -1) {
+         auto imp = (TCanvasImp *) ph->ExecPlugin(6, c, title, 0, 0, width, height);
+         if (imp) return imp;
+      }
+   }
+
    return new TCanvasImp(c, title, width, height);
 }
 
@@ -65,6 +74,15 @@ TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, UInt_t w
 
 TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
+   if (gROOT->IsWebDisplay()) {
+       auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
+
+       if (ph && ph->LoadPlugin() != -1) {
+          auto imp = (TCanvasImp *) ph->ExecPlugin(6, c, title, x, y, width, height);
+          if (imp) return imp;
+       }
+    }
+
    return new TCanvasImp(c, title, x, y, width, height);
 }
 
@@ -73,9 +91,15 @@ TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, Int_t x,
 
 TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height, Option_t *opt)
 {
-   TString webclass = "ROOT::Experimental::RWebBrowserImp";
-   if ((gROOT->GetWebDisplay() == "server") && (webclass == gEnv->GetValue("Browser.Name", "---"))) {
-      TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp", webclass);
+   const char *browserName = nullptr;
+
+   if (gROOT->IsWebDisplay() && !gROOT->IsWebDisplayBatch())
+      browserName = "ROOT::Experimental::RWebBrowserImp";
+   else if (!gROOT->IsBatch())
+      browserName = gEnv->GetValue("Browser.Name", "");
+
+   if (browserName && *browserName) {
+      auto ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp", browserName);
 
       if (ph && ph->LoadPlugin() != -1) {
          TBrowserImp *imp = (TBrowserImp *)ph->ExecPlugin(5, b, title, width, height, opt);
@@ -91,9 +115,15 @@ TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, UInt_
 
 TBrowserImp *TGuiFactory::CreateBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt)
 {
-   TString webclass = "ROOT::Experimental::RWebBrowserImp";
-   if ((gROOT->GetWebDisplay() == "server") && (webclass == gEnv->GetValue("Browser.Name", "---"))) {
-      TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp", webclass);
+   const char *browserName = nullptr;
+
+   if (gROOT->IsWebDisplay() && !gROOT->IsWebDisplayBatch())
+      browserName = "ROOT::Experimental::RWebBrowserImp";
+   else if (!gROOT->IsBatch())
+      browserName = gEnv->GetValue("Browser.Name", "");
+
+   if (browserName && *browserName) {
+      auto ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp", browserName);
 
       if (ph && ph->LoadPlugin() != -1) {
          TBrowserImp *imp = (TBrowserImp *)ph->ExecPlugin(7, b, title, x, y, width, height, opt);
@@ -117,6 +147,15 @@ TContextMenuImp *TGuiFactory::CreateContextMenuImp(TContextMenu *c, const char *
 
 TControlBarImp *TGuiFactory::CreateControlBarImp(TControlBar *c, const char *title)
 {
+   if (gROOT->IsWebDisplay()) {
+      auto ph = gROOT->GetPluginManager()->FindHandler("TControlBarImp", "TWebControlBar");
+
+      if (ph && ph->LoadPlugin() != -1) {
+         auto imp = (TControlBarImp *) ph->ExecPlugin(4, c, title, 0, 0);
+         if (imp) return imp;
+      }
+   }
+
    return new TControlBarImp(c, title);
 }
 
@@ -125,6 +164,15 @@ TControlBarImp *TGuiFactory::CreateControlBarImp(TControlBar *c, const char *tit
 
 TControlBarImp *TGuiFactory::CreateControlBarImp(TControlBar *c, const char *title, Int_t x, Int_t y)
 {
+   if (gROOT->IsWebDisplay()) {
+      auto ph = gROOT->GetPluginManager()->FindHandler("TControlBarImp", "TWebControlBar");
+
+      if (ph && ph->LoadPlugin() != -1) {
+         auto imp = (TControlBarImp *) ph->ExecPlugin(4, c, title, x, y);
+         if (imp) return imp;
+      }
+   }
+
    return new TControlBarImp(c, title, x, y);
 }
 
@@ -133,10 +181,9 @@ TControlBarImp *TGuiFactory::CreateControlBarImp(TControlBar *c, const char *tit
 
 TInspectorImp *TGuiFactory::CreateInspectorImp(const TObject *obj, UInt_t width, UInt_t height)
 {
-   if (gROOT->IsBatch()) {
+   if (gROOT->IsBatch())
       return new TInspectorImp(obj, width, height);
-   }
 
-   gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject*)0x%zx);", (size_t)obj));
+   gROOT->ProcessLine(TString::Format("TInspectCanvas::Inspector((TObject*)0x%zx);", (size_t)obj).Data());
    return nullptr;
 }

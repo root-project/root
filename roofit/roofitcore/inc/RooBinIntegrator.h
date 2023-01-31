@@ -31,7 +31,7 @@ public:
   // Constructors, assignment etc
   RooBinIntegrator() ;
 
-  RooBinIntegrator(const RooAbsFunc& function) ;
+  RooBinIntegrator(const RooAbsFunc& function, int numBins=100) ;
   RooBinIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) ;
 
   RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;

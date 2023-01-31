@@ -156,7 +156,7 @@ bool R__SetClonesArrayTFormulaUpdater(Updater_t func) {
 /// Internal Utility routine to correctly release the memory for an object
 static inline void R__ReleaseMemory(TClass *cl, TObject *obj)
 {
-   if (obj && obj->TestBit(TObject::kNotDeleted)) {
+   if (obj && ! obj->IsDestructed()) {
       // -- The TObject destructor has not been called.
       cl->Destructor(obj);
    } else {
@@ -366,7 +366,7 @@ void TClonesArray::Compress()
 TObject *TClonesArray::ConstructedAt(Int_t idx)
 {
    TObject *obj = (*this)[idx];
-   if ( obj && obj->TestBit(TObject::kNotDeleted) ) {
+   if ( obj && ! obj->IsDestructed() ) {
       return obj;
    }
    return (fClass) ? static_cast<TObject*>(fClass->New(obj)) : nullptr;
@@ -388,7 +388,7 @@ TObject *TClonesArray::ConstructedAt(Int_t idx)
 TObject *TClonesArray::ConstructedAt(Int_t idx, Option_t *clear_options)
 {
    TObject *obj = (*this)[idx];
-   if ( obj && obj->TestBit(TObject::kNotDeleted) ) {
+   if ( obj && !obj->IsDestructed() ) {
       obj->Clear(clear_options);
       return obj;
    }
@@ -444,13 +444,13 @@ void TClonesArray::Delete(Option_t *)
       // In case of emulated class, we can not use the delete operator
       // directly, it would use the wrong destructor.
       for (Int_t i = 0; i < fSize; i++) {
-         if (fCont[i] && fCont[i]->TestBit(kNotDeleted)) {
+         if (fCont[i] && ! fCont[i]->IsDestructed()) {
             fClass->Destructor(fCont[i],kTRUE);
          }
       }
    } else {
       for (Int_t i = 0; i < fSize; i++) {
-         if (fCont[i] && fCont[i]->TestBit(kNotDeleted)) {
+         if (fCont[i] && ! fCont[i]->IsDestructed()) {
             fCont[i]->~TObject();
          }
       }
@@ -516,7 +516,7 @@ void TClonesArray::ExpandCreate(Int_t n)
    for (i = 0; i < n; i++) {
       if (!fKeep->fCont[i]) {
          fKeep->fCont[i] = (TObject*)fClass->New();
-      } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
+      } else if (fKeep->fCont[i]->IsDestructed()) {
          // The object has been deleted (or never initialized)
          fClass->New(fKeep->fCont[i]);
       }
@@ -553,7 +553,7 @@ void TClonesArray::ExpandCreateFast(Int_t n)
    for (i = 0; i < n; i++) {
       if (i >= oldSize || !fKeep->fCont[i]) {
          fKeep->fCont[i] = (TObject*)fClass->New();
-      } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
+      } else if (fKeep->fCont[i]->IsDestructed()) {
          // The object has been deleted (or never initialized)
          fClass->New(fKeep->fCont[i]);
       }
@@ -575,7 +575,7 @@ TObject *TClonesArray::RemoveAt(Int_t idx)
 
    int i = idx-fLowerBound;
 
-   if (fCont[i] && fCont[i]->TestBit(kNotDeleted)) {
+   if (fCont[i] && ! fCont[i]->IsDestructed()) {
       fCont[i]->~TObject();
    }
 
@@ -601,7 +601,7 @@ TObject *TClonesArray::Remove(TObject *obj)
 
    if (i == -1) return nullptr;
 
-   if (fCont[i] && fCont[i]->TestBit(kNotDeleted)) {
+   if (fCont[i] && ! fCont[i]->IsDestructed()) {
       fCont[i]->~TObject();
    }
 
@@ -627,7 +627,7 @@ void TClonesArray::RemoveRange(Int_t idx1, Int_t idx2)
    Bool_t change = kFALSE;
    for (TObject **obj = fCont+idx1; obj <= fCont+idx2; obj++) {
       if (!*obj) continue;
-      if ((*obj)->TestBit(kNotDeleted)) {
+      if (!(*obj)->IsDestructed()) {
          (*obj)->~TObject();
       }
       *obj = nullptr;
@@ -801,7 +801,7 @@ void TClonesArray::Streamer(TBuffer &b)
          for (Int_t i = 0; i < nobjects; i++) {
             if (!fKeep->fCont[i]) {
                fKeep->fCont[i] = (TObject*)fClass->New();
-            } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
+            } else if (fKeep->fCont[i]->IsDestructed()) {
                // The object has been deleted (or never initialized)
                fClass->New(fKeep->fCont[i]);
             }
@@ -836,7 +836,7 @@ void TClonesArray::Streamer(TBuffer &b)
             if (nch) {
                if (!fKeep->fCont[i])
                   fKeep->fCont[i] = (TObject*)fClass->New();
-               else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
+               else if (fKeep->fCont[i]->IsDestructed()) {
                   // The object has been deleted (or never initialized)
                   fClass->New(fKeep->fCont[i]);
                }
@@ -922,7 +922,7 @@ TObject *&TClonesArray::operator[](Int_t idx)
       fKeep->fCont[idx] = (TObject*) TStorage::ObjectAlloc(fClass->Size());
       // Reset the bit so that:
       //    obj = myClonesArray[i];
-      //    obj->TestBit(TObject::kNotDeleted)
+      //    ! obj->IsDestructed()
       // will behave correctly.
       // TObject::kNotDeleted is one of the higher bit that is not settable via the public
       // interface. But luckily we are its friend.

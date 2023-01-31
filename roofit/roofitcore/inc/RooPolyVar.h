@@ -33,7 +33,7 @@ public:
   RooPolyVar(const char *name, const char *title,
       RooAbsReal& _x, const RooArgList& _coefList, Int_t lowestOrder=0) ;
 
-  RooPolyVar(const RooPolyVar& other, const char* name = 0);
+  RooPolyVar(const RooPolyVar& other, const char *name = nullptr);
   TObject* clone(const char* newname) const override { return new RooPolyVar(*this, newname); }
   ~RooPolyVar() override ;
 

@@ -151,7 +151,7 @@ public:
    Bool_t         ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
    virtual void   ScrollHeader(Int_t pos);
    void           SetContainer(TGFrame *f) override;
-   virtual void   AdjustHeaders() { fJustChanged = kTRUE; LayoutHeader(0); }
+   virtual void   AdjustHeaders() { fJustChanged = kTRUE; LayoutHeader(nullptr); }
    virtual void   SetHeaders(Int_t ncolumns);
    virtual void   SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx);
    virtual void   SetDefaultHeaders();

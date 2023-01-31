@@ -47,7 +47,7 @@ private:
    static SrvClup_t fgSrvAuthClupHook;
    static UChar_t fgAcceptOpt;     // Default accept options
 
-   TServerSocket() : fSecContexts(0) { }
+   TServerSocket() : fSecContexts(nullptr) {}
    TServerSocket(const TServerSocket &);
    void operator=(const TServerSocket &);
    Bool_t Authenticate(TSocket *);

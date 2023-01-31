@@ -25,10 +25,16 @@ class StringRef;
 class ModuleSummaryIndex;
 class ModulePass;
 class Pass;
-class Function;
 class BasicBlock;
 class GlobalValue;
 class raw_ostream;
+
+//===----------------------------------------------------------------------===//
+//
+// This pass adds !annotation metadata to entries in the
+// @llvm.global.annotations global constant.
+//
+ModulePass *createAnnotation2MetadataLegacyPass();
 
 //===----------------------------------------------------------------------===//
 //
@@ -84,10 +90,12 @@ ModulePass *createEliminateAvailableExternallyPass();
 //===----------------------------------------------------------------------===//
 /// createGVExtractionPass - If deleteFn is true, this pass deletes
 /// the specified global values. Otherwise, it deletes as much of the module as
-/// possible, except for the global values specified.
+/// possible, except for the global values specified. If keepConstInit is true,
+/// the initializers of global constants are not deleted even if they are
+/// unused.
 ///
 ModulePass *createGVExtractionPass(std::vector<GlobalValue*>& GVs, bool
-                                   deleteFn = false);
+                                  deleteFn = false, bool keepConstInit = false);
 
 //===----------------------------------------------------------------------===//
 /// This pass performs iterative function importing from other modules.
@@ -151,10 +159,8 @@ ModulePass *createDeadArgHackingPass();
 Pass *createArgumentPromotionPass(unsigned maxElements = 3);
 
 //===----------------------------------------------------------------------===//
-/// createIPConstantPropagationPass - This pass propagates constants from call
-/// sites into the bodies of functions.
-///
-ModulePass *createIPConstantPropagationPass();
+/// createOpenMPOptLegacyPass - OpenMP specific optimizations.
+Pass *createOpenMPOptCGSCCLegacyPass();
 
 //===----------------------------------------------------------------------===//
 /// createIPSCCPPass - This pass propagates constants from call sites into the
@@ -162,6 +168,11 @@ ModulePass *createIPConstantPropagationPass();
 /// in the process.
 ///
 ModulePass *createIPSCCPPass();
+
+//===----------------------------------------------------------------------===//
+/// createFunctionSpecializationPass - This pass propagates constants from call
+/// sites to the specialized version of the callee function.
+ModulePass *createFunctionSpecializationPass();
 
 //===----------------------------------------------------------------------===//
 //
@@ -210,6 +221,11 @@ ModulePass *createMergeFunctionsPass();
 ModulePass *createHotColdSplittingPass();
 
 //===----------------------------------------------------------------------===//
+/// createIROutlinerPass - This pass finds similar code regions and factors
+/// those regions out into functions.
+ModulePass *createIROutlinerPass();
+
+//===----------------------------------------------------------------------===//
 /// createPartialInliningPass - This pass inlines parts of functions.
 ///
 ModulePass *createPartialInliningPass();
@@ -236,12 +252,15 @@ enum class PassSummaryAction {
 /// The behavior depends on the summary arguments:
 /// - If ExportSummary is non-null, this pass will export type identifiers to
 ///   the given summary.
-/// - Otherwise, if ImportSummary is non-null, this pass will import type
-///   identifiers from the given summary.
-/// - Otherwise it does neither.
-/// It is invalid for both ExportSummary and ImportSummary to be non-null.
+/// - If ImportSummary is non-null, this pass will import type identifiers from
+///   the given summary.
+/// - Otherwise, if both are null and DropTypeTests is true, all type test
+///   assume sequences will be removed from the IR.
+/// It is invalid for both ExportSummary and ImportSummary to be non-null
+/// unless DropTypeTests is true.
 ModulePass *createLowerTypeTestsPass(ModuleSummaryIndex *ExportSummary,
-                                     const ModuleSummaryIndex *ImportSummary);
+                                     const ModuleSummaryIndex *ImportSummary,
+                                     bool DropTypeTests = false);
 
 /// This pass export CFI checks for use by external modules.
 ModulePass *createCrossDSOCFIPass();

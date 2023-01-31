@@ -22,4 +22,8 @@ if(vecgeom)
   add_subdirectory(vecgeom)
 endif()
 
+if(webgui AND root7)
+  add_subdirectory(webviewer)
+endif()
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)

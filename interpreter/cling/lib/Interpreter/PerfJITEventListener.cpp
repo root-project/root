@@ -105,7 +105,8 @@ namespace {
         continue;
 
       std::lock_guard<std::mutex> lock(m_Mutex);
-      fprintf(m_Perfmap, "%" PRIx64 " %" PRIx64 " %s\n", address, size, Name->data());
+      fprintf(m_Perfmap, "%" PRIx64 " %" PRIx64 " %s\n", address, size,
+              Name->data());
     }
 
     fflush(m_Perfmap);

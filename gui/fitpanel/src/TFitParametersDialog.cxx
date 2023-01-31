@@ -890,10 +890,7 @@ void TFitParametersDialog::DoParMaxLimit()
 void TFitParametersDialog::DrawFunction()
 {
    if ( !fFpad ) return;
-   TVirtualPad *save = 0;
-   save = gPad;
-   gPad = fFpad;
-   gPad->cd();
+   TVirtualPad::TContext ctxt(fFpad, kTRUE);
 
    Style_t st = fFunc->GetLineStyle();
    fFunc->SetLineStyle(2);
@@ -909,7 +906,6 @@ void TFitParametersDialog::DrawFunction()
    fHasChanges = kFALSE;
 
    fFunc->SetLineStyle(st);
-   if (save) gPad = save;
    *fRetCode = kFPDBounded;
 }
 

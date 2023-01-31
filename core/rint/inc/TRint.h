@@ -48,7 +48,7 @@ private:
    Longptr_t ProcessLineNr(const char* filestem, const char *line, Int_t *error = nullptr);
 
 public:
-   TRint(const char *appClassName, Int_t *argc, char **argv, void *options = 0, Int_t numOptions = 0,
+   TRint(const char *appClassName, Int_t *argc, char **argv, void *options = nullptr, Int_t numOptions = 0,
          Bool_t noLogo = kFALSE, Bool_t exitOnUnknownArgs = kFALSE);
    virtual             ~TRint();
    virtual char       *GetPrompt();

@@ -121,7 +121,7 @@ public:
       return THnBase::GetBinContent(idx);
    }
    /// Get the content of bin, and set its index if idx is != 0.
-   Double_t GetBinContent(Long64_t bin, Int_t* idx = 0) const override {
+   Double_t GetBinContent(Long64_t bin, Int_t* idx = nullptr) const override {
       if (idx) {
          const TNDArray& arr = GetArray();
          Long64_t prevCellSize = arr.GetNbins();

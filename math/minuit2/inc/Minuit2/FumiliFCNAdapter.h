@@ -76,7 +76,7 @@ private:
 template <class Function>
 void FumiliFCNAdapter<Function>::EvaluateAll(const std::vector<double> &v)
 {
-   MnPrint print("FumiliFCNAdaptor");
+   MnPrint print("FumiliFCNAdapter");
 
    // typedef FumiliFCNAdapter::Function Function;
 
@@ -97,14 +97,16 @@ void FumiliFCNAdapter<Function>::EvaluateAll(const std::vector<double> &v)
    unsigned int ndata = fFunc.NPoints();
 
    std::vector<double> gf(npar);
+   std::vector<double> h(hess.size());
 
    // loop on the data points
 
-   // assume for now least-square
+   // if FCN is of type least-square
    if (fFunc.Type() == Function::kLeastSquare) {
+      print.Debug("Chi2 FCN: Evaluate gradient and Hessian");
 
       for (unsigned int i = 0; i < ndata; ++i) {
-         // calculate data element and gradient
+         // calculate data element and gradient (no need to compute Hessian)
          double fval = fFunc.DataElement(&v.front(), i, &gf[0]);
 
          for (unsigned int j = 0; j < npar; ++j) {
@@ -116,23 +118,37 @@ void FumiliFCNAdapter<Function>::EvaluateAll(const std::vector<double> &v)
          }
       }
    } else if (fFunc.Type() == Function::kLogLikelihood) {
-
+      print.Debug("LogLikelihood FCN: Evaluate gradient and Hessian");
       for (unsigned int i = 0; i < ndata; ++i) {
 
-         // calculate data element and gradient
+         // calculate data element and gradient: returns derivative of log(pdf)
          fFunc.DataElement(&v.front(), i, &gf[0]);
 
          for (unsigned int j = 0; j < npar; ++j) {
             double gfj = gf[j];
-            grad[j] -= gfj;
+            grad[j] -= gfj; // need a minus sign since is a NLL
             for (unsigned int k = j; k < npar; ++k) {
                int idx = j + k * (k + 1) / 2;
                hess[idx] += gfj * gf[k];
             }
          }
       }
+   } else if (fFunc.Type() == Function::kPoissonLikelihood) {
+      print.Debug("Poisson Likelihood FCN: Evaluate gradient and Hessian");
+      // for Poisson need Hessian computed in DataElement since one needs the bin expected value ad bin observed value
+     for (unsigned int i = 0; i < ndata; ++i) {
+         // calculate data element and gradient
+         fFunc.DataElement(&v.front(), i, gf.data(), h.data());
+         for (size_t j = 0; j < npar; ++j) {
+            grad[j] += gf[j];
+            for (unsigned int k = j; k < npar; ++k) {
+               int idx = j + k * (k + 1) / 2;
+               hess[idx] += h[idx];
+            }
+         }
+     }
    } else {
-      print.Error("Type of fit method is not supported, it must be chi2 or log-likelihood");
+      print.Error("Type of fit method is not supported, it must be chi2 or log-likelihood or Poisson Likelihood");
    }
 }
 

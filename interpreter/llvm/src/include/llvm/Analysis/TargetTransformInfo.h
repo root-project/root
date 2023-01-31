@@ -21,31 +21,38 @@
 #ifndef LLVM_ANALYSIS_TARGETTRANSFORMINFO_H
 #define LLVM_ANALYSIS_TARGETTRANSFORMINFO_H
 
-#include "llvm/ADT/Optional.h"
+#include "llvm/Analysis/IVDescriptors.h"
+#include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/Operator.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/AtomicOrdering.h"
+#include "llvm/Support/BranchProbability.h"
 #include "llvm/Support/DataTypes.h"
-#include "llvm/Analysis/LoopInfo.h"
-#include "llvm/Analysis/ScalarEvolution.h"
-#include "llvm/IR/Dominators.h"
-#include "llvm/Analysis/AssumptionCache.h"
+#include "llvm/Support/InstructionCost.h"
 #include <functional>
 
 namespace llvm {
 
 namespace Intrinsic {
-enum ID : unsigned;
+typedef unsigned ID;
 }
 
 class AssumptionCache;
+class BlockFrequencyInfo;
+class DominatorTree;
 class BranchInst;
+class CallBase;
+class ExtractElementInst;
 class Function;
 class GlobalValue;
+class InstCombiner;
 class IntrinsicInst;
 class LoadInst;
+class LoopAccessInfo;
 class Loop;
+class LoopInfo;
+class ProfileSummaryInfo;
 class SCEV;
 class ScalarEvolution;
 class StoreInst;
@@ -54,6 +61,9 @@ class TargetLibraryInfo;
 class Type;
 class User;
 class Value;
+class VPIntrinsic;
+struct KnownBits;
+template <typename T> class Optional;
 
 /// Information about a load/store intrinsic defined by the target.
 struct MemIntrinsicInfo {
@@ -75,7 +85,8 @@ struct MemIntrinsicInfo {
 
   bool isUnordered() const {
     return (Ordering == AtomicOrdering::NotAtomic ||
-            Ordering == AtomicOrdering::Unordered) && !IsVolatile;
+            Ordering == AtomicOrdering::Unordered) &&
+           !IsVolatile;
   }
 };
 
@@ -102,6 +113,54 @@ struct HardwareLoopInfo {
                                bool ForceHardwareLoopPHI = false);
   bool canAnalyze(LoopInfo &LI);
 };
+
+class IntrinsicCostAttributes {
+  const IntrinsicInst *II = nullptr;
+  Type *RetTy = nullptr;
+  Intrinsic::ID IID;
+  SmallVector<Type *, 4> ParamTys;
+  SmallVector<const Value *, 4> Arguments;
+  FastMathFlags FMF;
+  // If ScalarizationCost is UINT_MAX, the cost of scalarizing the
+  // arguments and the return value will be computed based on types.
+  InstructionCost ScalarizationCost = InstructionCost::getInvalid();
+
+public:
+  IntrinsicCostAttributes(
+      Intrinsic::ID Id, const CallBase &CI,
+      InstructionCost ScalarCost = InstructionCost::getInvalid());
+
+  IntrinsicCostAttributes(
+      Intrinsic::ID Id, Type *RTy, ArrayRef<Type *> Tys,
+      FastMathFlags Flags = FastMathFlags(), const IntrinsicInst *I = nullptr,
+      InstructionCost ScalarCost = InstructionCost::getInvalid());
+
+  IntrinsicCostAttributes(Intrinsic::ID Id, Type *RTy,
+                          ArrayRef<const Value *> Args);
+
+  IntrinsicCostAttributes(
+      Intrinsic::ID Id, Type *RTy, ArrayRef<const Value *> Args,
+      ArrayRef<Type *> Tys, FastMathFlags Flags = FastMathFlags(),
+      const IntrinsicInst *I = nullptr,
+      InstructionCost ScalarCost = InstructionCost::getInvalid());
+
+  Intrinsic::ID getID() const { return IID; }
+  const IntrinsicInst *getInst() const { return II; }
+  Type *getReturnType() const { return RetTy; }
+  FastMathFlags getFlags() const { return FMF; }
+  InstructionCost getScalarizationCost() const { return ScalarizationCost; }
+  const SmallVectorImpl<const Value *> &getArgs() const { return Arguments; }
+  const SmallVectorImpl<Type *> &getArgTypes() const { return ParamTys; }
+
+  bool isTypeBasedOnly() const {
+    return Arguments.empty();
+  }
+
+  bool skipScalarizationCost() const { return ScalarizationCost.isValid(); }
+};
+
+class TargetTransformInfo;
+typedef TargetTransformInfo TTI;
 
 /// This pass provides access to the codegen interfaces that are needed
 /// for IR-level transformations.
@@ -151,7 +210,8 @@ public:
   enum TargetCostKind {
     TCK_RecipThroughput, ///< Reciprocal throughput.
     TCK_Latency,         ///< The latency of instruction.
-    TCK_CodeSize         ///< Instruction code size.
+    TCK_CodeSize,        ///< Instruction code size.
+    TCK_SizeAndLatency   ///< The weighted sum of size and latency.
   };
 
   /// Query the cost of a specified instruction.
@@ -161,18 +221,22 @@ public:
   ///
   /// Note, this method does not cache the cost calculation and it
   /// can be expensive in some cases.
-  int getInstructionCost(const Instruction *I, enum TargetCostKind kind) const {
-    switch (kind){
+  InstructionCost getInstructionCost(const Instruction *I,
+                                     enum TargetCostKind kind) const {
+    InstructionCost Cost;
+    switch (kind) {
     case TCK_RecipThroughput:
-      return getInstructionThroughput(I);
-
+      Cost = getInstructionThroughput(I);
+      break;
     case TCK_Latency:
-      return getInstructionLatency(I);
-
+      Cost = getInstructionLatency(I);
+      break;
     case TCK_CodeSize:
-      return getUserCost(I);
+    case TCK_SizeAndLatency:
+      Cost = getUserCost(I, kind);
+      break;
     }
-    llvm_unreachable("Unknown instruction cost kind");
+    return Cost;
   }
 
   /// Underlying constants for 'cost' values in this interface.
@@ -199,61 +263,11 @@ public:
     TCC_Expensive = 4 ///< The cost of a 'div' instruction on x86.
   };
 
-  /// Estimate the cost of a specific operation when lowered.
-  ///
-  /// Note that this is designed to work on an arbitrary synthetic opcode, and
-  /// thus work for hypothetical queries before an instruction has even been
-  /// formed. However, this does *not* work for GEPs, and must not be called
-  /// for a GEP instruction. Instead, use the dedicated getGEPCost interface as
-  /// analyzing a GEP's cost required more information.
-  ///
-  /// Typically only the result type is required, and the operand type can be
-  /// omitted. However, if the opcode is one of the cast instructions, the
-  /// operand type is required.
-  ///
-  /// The returned cost is defined in terms of \c TargetCostConstants, see its
-  /// comments for a detailed explanation of the cost values.
-  int getOperationCost(unsigned Opcode, Type *Ty, Type *OpTy = nullptr) const;
-
   /// Estimate the cost of a GEP operation when lowered.
-  ///
-  /// The contract for this function is the same as \c getOperationCost except
-  /// that it supports an interface that provides extra information specific to
-  /// the GEP operation.
-  int getGEPCost(Type *PointeeType, const Value *Ptr,
-                 ArrayRef<const Value *> Operands) const;
-
-  /// Estimate the cost of a EXT operation when lowered.
-  ///
-  /// The contract for this function is the same as \c getOperationCost except
-  /// that it supports an interface that provides extra information specific to
-  /// the EXT operation.
-  int getExtCost(const Instruction *I, const Value *Src) const;
-
-  /// Estimate the cost of a function call when lowered.
-  ///
-  /// The contract for this is the same as \c getOperationCost except that it
-  /// supports an interface that provides extra information specific to call
-  /// instructions.
-  ///
-  /// This is the most basic query for estimating call cost: it only knows the
-  /// function type and (potentially) the number of arguments at the call site.
-  /// The latter is only interesting for varargs function types.
-  int getCallCost(FunctionType *FTy, int NumArgs = -1,
-                  const User *U = nullptr) const;
-
-  /// Estimate the cost of calling a specific function when lowered.
-  ///
-  /// This overload adds the ability to reason about the particular function
-  /// being called in the event it is a library call with special lowering.
-  int getCallCost(const Function *F, int NumArgs = -1,
-                  const User *U = nullptr) const;
-
-  /// Estimate the cost of calling a specific function when lowered.
-  ///
-  /// This overload allows specifying a set of candidate argument values.
-  int getCallCost(const Function *F, ArrayRef<const Value *> Arguments,
-                  const User *U = nullptr) const;
+  InstructionCost
+  getGEPCost(Type *PointeeType, const Value *Ptr,
+             ArrayRef<const Value *> Operands,
+             TargetCostKind CostKind = TCK_SizeAndLatency) const;
 
   /// \returns A value by which our inlining threshold should be multiplied.
   /// This is primarily used to bump up the inlining threshold wholesale on
@@ -263,54 +277,37 @@ public:
   /// individual classes of instructions would be better.
   unsigned getInliningThresholdMultiplier() const;
 
+  /// \returns A value to be added to the inlining threshold.
+  unsigned adjustInliningThreshold(const CallBase *CB) const;
+
   /// \returns Vector bonus in percent.
   ///
   /// Vector bonuses: We want to more aggressively inline vector-dense kernels
   /// and apply this bonus based on the percentage of vector instructions. A
-  /// bonus is applied if the vector instructions exceed 50% and half that amount
-  /// is applied if it exceeds 10%. Note that these bonuses are some what
+  /// bonus is applied if the vector instructions exceed 50% and half that
+  /// amount is applied if it exceeds 10%. Note that these bonuses are some what
   /// arbitrary and evolved over time by accident as much as because they are
   /// principled bonuses.
   /// FIXME: It would be nice to base the bonus values on something more
   /// scientific. A target may has no bonus on vector instructions.
   int getInlinerVectorBonusPercent() const;
 
-  /// Estimate the cost of an intrinsic when lowered.
-  ///
-  /// Mirrors the \c getCallCost method but uses an intrinsic identifier.
-  int getIntrinsicCost(Intrinsic::ID IID, Type *RetTy,
-                       ArrayRef<Type *> ParamTys,
-                       const User *U = nullptr) const;
-
-  /// Estimate the cost of an intrinsic when lowered.
-  ///
-  /// Mirrors the \c getCallCost method but uses an intrinsic identifier.
-  int getIntrinsicCost(Intrinsic::ID IID, Type *RetTy,
-                       ArrayRef<const Value *> Arguments,
-                       const User *U = nullptr) const;
-
   /// \return the expected cost of a memcpy, which could e.g. depend on the
   /// source/destination type and alignment and the number of bytes copied.
-  int getMemcpyCost(const Instruction *I) const;
+  InstructionCost getMemcpyCost(const Instruction *I) const;
 
   /// \return The estimated number of case clusters when lowering \p 'SI'.
   /// \p JTSize Set a jump table size only when \p SI is suitable for a jump
   /// table.
   unsigned getEstimatedNumberOfCaseClusters(const SwitchInst &SI,
-                                            unsigned &JTSize) const;
+                                            unsigned &JTSize,
+                                            ProfileSummaryInfo *PSI,
+                                            BlockFrequencyInfo *BFI) const;
 
   /// Estimate the cost of a given IR user when lowered.
   ///
   /// This can estimate the cost of either a ConstantExpr or Instruction when
-  /// lowered. It has two primary advantages over the \c getOperationCost and
-  /// \c getGEPCost above, and one significant disadvantage: it can only be
-  /// used when the IR construct has already been formed.
-  ///
-  /// The advantages are that it can inspect the SSA use graph to reason more
-  /// accurately about the cost. For example, all-constant-GEPs can often be
-  /// folded into a load or other instruction, but if they are used in some
-  /// other context they may not be folded. This routine can distinguish such
-  /// cases.
+  /// lowered.
   ///
   /// \p Operands is a list of operands which can be a result of transformations
   /// of the current operands. The number of the operands on the list must equal
@@ -320,15 +317,19 @@ public:
   ///
   /// The returned cost is defined in terms of \c TargetCostConstants, see its
   /// comments for a detailed explanation of the cost values.
-  int getUserCost(const User *U, ArrayRef<const Value *> Operands) const;
+  InstructionCost getUserCost(const User *U, ArrayRef<const Value *> Operands,
+                              TargetCostKind CostKind) const;
 
   /// This is a helper function which calls the two-argument getUserCost
   /// with \p Operands which are the current operands U has.
-  int getUserCost(const User *U) const {
-    SmallVector<const Value *, 4> Operands(U->value_op_begin(),
-                                           U->value_op_end());
-    return getUserCost(U, Operands);
+  InstructionCost getUserCost(const User *U, TargetCostKind CostKind) const {
+    SmallVector<const Value *, 4> Operands(U->operand_values());
+    return getUserCost(U, Operands, CostKind);
   }
+
+  /// If a branch or a select condition is skewed in one direction by more than
+  /// this factor, it is very likely to be predicted correctly.
+  BranchProbability getPredictableBranchThreshold() const;
 
   /// Return true if branch divergence exists.
   ///
@@ -337,12 +338,16 @@ public:
   /// branches.
   bool hasBranchDivergence() const;
 
+  /// Return true if the target prefers to use GPU divergence analysis to
+  /// replace the legacy version.
+  bool useGPUDivergenceAnalysis() const;
+
   /// Returns whether V is a source of divergence.
   ///
   /// This function provides the target-dependent information for
-  /// the target-independent LegacyDivergenceAnalysis. LegacyDivergenceAnalysis first
-  /// builds the dependency graph, and then runs the reachability algorithm
-  /// starting with the sources of divergence.
+  /// the target-independent LegacyDivergenceAnalysis. LegacyDivergenceAnalysis
+  /// first builds the dependency graph, and then runs the reachability
+  /// algorithm starting with the sources of divergence.
   bool isSourceOfDivergence(const Value *V) const;
 
   // Returns true for the target specific
@@ -367,6 +372,25 @@ public:
   /// \returns ~0u if the target does not have such a flat address space to
   /// optimize away.
   unsigned getFlatAddressSpace() const;
+
+  /// Return any intrinsic address operand indexes which may be rewritten if
+  /// they use a flat address space pointer.
+  ///
+  /// \returns true if the intrinsic was handled.
+  bool collectFlatAddressOperands(SmallVectorImpl<int> &OpIndexes,
+                                  Intrinsic::ID IID) const;
+
+  bool isNoopAddrSpaceCast(unsigned FromAS, unsigned ToAS) const;
+
+  unsigned getAssumedAddrSpace(const Value *V) const;
+
+  /// Rewrite intrinsic call \p II such that \p OldV will be replaced with \p
+  /// NewV, which has a different address space. This should happen for every
+  /// operand index that collectFlatAddressOperands returned for the intrinsic.
+  /// \returns nullptr if the intrinsic was not handled. Otherwise, returns the
+  /// new value (which may be the original \p II with modified operands).
+  Value *rewriteIntrinsicWithAddressSpace(IntrinsicInst *II, Value *OldV,
+                                          Value *NewV) const;
 
   /// Test whether calls to a function lower to actual program function
   /// calls.
@@ -431,11 +455,6 @@ public:
     /// transformation will select an unrolling factor based on the current cost
     /// threshold and other factors.
     unsigned Count;
-    /// A forced peeling factor (the number of bodied of the original loop
-    /// that should be peeled off before the loop body). When set to 0, the
-    /// unrolling transformation will select a peeling factor based on profile
-    /// information and other factors.
-    unsigned PeelCount;
     /// Default unroll count for loops with run-time trip count.
     unsigned DefaultUnrollRuntimeCount;
     // Set the maximum unrolling factor. The unrolling factor may be selected
@@ -469,8 +488,6 @@ public:
     bool Force;
     /// Allow using trip count upper bound to unroll loops.
     bool UpperBound;
-    /// Allow peeling off loop iterations for loops with low dynamic tripcount.
-    bool AllowPeeling;
     /// Allow unrolling of all the iterations of the runtime loop remainder.
     bool UnrollRemainder;
     /// Allow unroll and jam. Used to enable unroll and jam for the target.
@@ -480,6 +497,9 @@ public:
     /// This value is used in the same manner to limit the size of the inner
     /// loop.
     unsigned UnrollAndJamInnerLoopThreshold;
+    /// Don't allow loop unrolling to simulate more than this number of
+    /// iterations when checking full unroll profitability
+    unsigned MaxIterationsCountToAnalyze;
   };
 
   /// Get target-customized preferences for the generic loop unrolling
@@ -491,10 +511,65 @@ public:
   /// Query the target whether it would be profitable to convert the given loop
   /// into a hardware loop.
   bool isHardwareLoopProfitable(Loop *L, ScalarEvolution &SE,
-                                AssumptionCache &AC,
-                                TargetLibraryInfo *LibInfo,
+                                AssumptionCache &AC, TargetLibraryInfo *LibInfo,
                                 HardwareLoopInfo &HWLoopInfo) const;
 
+  /// Query the target whether it would be prefered to create a predicated
+  /// vector loop, which can avoid the need to emit a scalar epilogue loop.
+  bool preferPredicateOverEpilogue(Loop *L, LoopInfo *LI, ScalarEvolution &SE,
+                                   AssumptionCache &AC, TargetLibraryInfo *TLI,
+                                   DominatorTree *DT,
+                                   const LoopAccessInfo *LAI) const;
+
+  /// Query the target whether lowering of the llvm.get.active.lane.mask
+  /// intrinsic is supported.
+  bool emitGetActiveLaneMask() const;
+
+  // Parameters that control the loop peeling transformation
+  struct PeelingPreferences {
+    /// A forced peeling factor (the number of bodied of the original loop
+    /// that should be peeled off before the loop body). When set to 0, the
+    /// a peeling factor based on profile information and other factors.
+    unsigned PeelCount;
+    /// Allow peeling off loop iterations.
+    bool AllowPeeling;
+    /// Allow peeling off loop iterations for loop nests.
+    bool AllowLoopNestsPeeling;
+    /// Allow peeling basing on profile. Uses to enable peeling off all
+    /// iterations basing on provided profile.
+    /// If the value is true the peeling cost model can decide to peel only
+    /// some iterations and in this case it will set this to false.
+    bool PeelProfiledIterations;
+  };
+
+  /// Get target-customized preferences for the generic loop peeling
+  /// transformation. The caller will initialize \p PP with the current
+  /// target-independent defaults with information from \p L and \p SE.
+  void getPeelingPreferences(Loop *L, ScalarEvolution &SE,
+                             PeelingPreferences &PP) const;
+
+  /// Targets can implement their own combinations for target-specific
+  /// intrinsics. This function will be called from the InstCombine pass every
+  /// time a target-specific intrinsic is encountered.
+  ///
+  /// \returns None to not do anything target specific or a value that will be
+  /// returned from the InstCombiner. It is possible to return null and stop
+  /// further processing of the intrinsic by returning nullptr.
+  Optional<Instruction *> instCombineIntrinsic(InstCombiner &IC,
+                                               IntrinsicInst &II) const;
+  /// Can be used to implement target-specific instruction combining.
+  /// \see instCombineIntrinsic
+  Optional<Value *>
+  simplifyDemandedUseBitsIntrinsic(InstCombiner &IC, IntrinsicInst &II,
+                                   APInt DemandedMask, KnownBits &Known,
+                                   bool &KnownBitsComputed) const;
+  /// Can be used to implement target-specific instruction combining.
+  /// \see instCombineIntrinsic
+  Optional<Value *> simplifyDemandedVectorEltsIntrinsic(
+      InstCombiner &IC, IntrinsicInst &II, APInt DemandedElts, APInt &UndefElts,
+      APInt &UndefElts2, APInt &UndefElts3,
+      std::function<void(Instruction *, unsigned, APInt, APInt &)>
+          SimplifyAndSetOp) const;
   /// @}
 
   /// \name Scalar Target Information
@@ -536,6 +611,14 @@ public:
   bool isLSRCostLess(TargetTransformInfo::LSRCost &C1,
                      TargetTransformInfo::LSRCost &C2) const;
 
+  /// Return true if LSR major cost is number of registers. Targets which
+  /// implement their own isLSRCostLess and unset number of registers as major
+  /// cost should return false, otherwise return true.
+  bool isNumRegsMajorCostOfLSR() const;
+
+  /// \returns true if LSR should not optimize a chain that includes \p I.
+  bool isProfitableLSRChainElement(Instruction *I) const;
+
   /// Return true if the target can fuse a compare and branch.
   /// Loop-strength-reduction (LSR) uses that knowledge to adjust its cost
   /// calculation for the instructions in a loop.
@@ -547,28 +630,30 @@ public:
                   DominatorTree *DT, AssumptionCache *AC,
                   TargetLibraryInfo *LibInfo) const;
 
-  /// \return True is LSR should make efforts to create/preserve post-inc
-  /// addressing mode expressions.
-  bool shouldFavorPostInc() const;
+  enum AddressingModeKind {
+    AMK_PreIndexed,
+    AMK_PostIndexed,
+    AMK_None
+  };
 
-  /// Return true if LSR should make efforts to generate indexed addressing
-  /// modes that operate across loop iterations.
-  bool shouldFavorBackedgeIndex(const Loop *L) const;
+  /// Return the preferred addressing mode LSR should make efforts to generate.
+  AddressingModeKind getPreferredAddressingMode(const Loop *L,
+                                                ScalarEvolution *SE) const;
 
-  /// Return true if the target supports masked load.
-  bool isLegalMaskedStore(Type *DataType) const;
   /// Return true if the target supports masked store.
-  bool isLegalMaskedLoad(Type *DataType) const;
+  bool isLegalMaskedStore(Type *DataType, Align Alignment) const;
+  /// Return true if the target supports masked load.
+  bool isLegalMaskedLoad(Type *DataType, Align Alignment) const;
 
   /// Return true if the target supports nontemporal store.
-  bool isLegalNTStore(Type *DataType, unsigned Alignment) const;
+  bool isLegalNTStore(Type *DataType, Align Alignment) const;
   /// Return true if the target supports nontemporal load.
-  bool isLegalNTLoad(Type *DataType, unsigned Alignment) const;
+  bool isLegalNTLoad(Type *DataType, Align Alignment) const;
 
   /// Return true if the target supports masked scatter.
-  bool isLegalMaskedScatter(Type *DataType) const;
+  bool isLegalMaskedScatter(Type *DataType, Align Alignment) const;
   /// Return true if the target supports masked gather.
-  bool isLegalMaskedGather(Type *DataType) const;
+  bool isLegalMaskedGather(Type *DataType, Align Alignment) const;
 
   /// Return true if the target supports masked compress store.
   bool isLegalMaskedCompressStore(Type *DataType) const;
@@ -598,9 +683,10 @@ public:
   /// If the AM is supported, the return value must be >= 0.
   /// If the AM is not supported, it returns a negative value.
   /// TODO: Handle pre/postinc as well.
-  int getScalingFactorCost(Type *Ty, GlobalValue *BaseGV, int64_t BaseOffset,
-                           bool HasBaseReg, int64_t Scale,
-                           unsigned AddrSpace = 0) const;
+  InstructionCost getScalingFactorCost(Type *Ty, GlobalValue *BaseGV,
+                                       int64_t BaseOffset, bool HasBaseReg,
+                                       int64_t Scale,
+                                       unsigned AddrSpace = 0) const;
 
   /// Return true if the loop strength reduce pass should make
   /// Instruction* based TTI queries to isLegalAddressingMode(). This is
@@ -622,11 +708,8 @@ public:
   /// Return true if this type is legal.
   bool isTypeLegal(Type *Ty) const;
 
-  /// Returns the target's jmp_buf alignment in bytes.
-  unsigned getJumpBufAlignment() const;
-
-  /// Returns the target's jmp_buf size in bytes.
-  unsigned getJumpBufSize() const;
+  /// Returns the estimated number of registers required to represent \p Ty.
+  InstructionCost getRegUsageForType(Type *Ty) const;
 
   /// Return true if switches should be turned into lookup tables for the
   /// target.
@@ -636,14 +719,25 @@ public:
   /// containing this constant value for the target.
   bool shouldBuildLookupTablesForConstant(Constant *C) const;
 
+  /// Return true if lookup tables should be turned into relative lookup tables.
+  bool shouldBuildRelLookupTables() const;
+
   /// Return true if the input function which is cold at all call sites,
   ///  should use coldcc calling convention.
   bool useColdCCForColdCall(Function &F) const;
 
-  unsigned getScalarizationOverhead(Type *Ty, bool Insert, bool Extract) const;
+  /// Estimate the overhead of scalarizing an instruction. Insert and Extract
+  /// are set if the demanded result elements need to be inserted and/or
+  /// extracted from vectors.
+  InstructionCost getScalarizationOverhead(VectorType *Ty,
+                                           const APInt &DemandedElts,
+                                           bool Insert, bool Extract) const;
 
-  unsigned getOperandsScalarizationOverhead(ArrayRef<const Value *> Args,
-                                            unsigned VF) const;
+  /// Estimate the overhead of scalarizing an instructions unique
+  /// non-constant operands. The (potentially vector) types to use for each of
+  /// argument are passes via Tys.
+  InstructionCost getOperandsScalarizationOverhead(ArrayRef<const Value *> Args,
+                                                   ArrayRef<Type *> Tys) const;
 
   /// If target has efficient vector element load/store instructions, it can
   /// return true here so that insertion/extraction costs are not added to
@@ -701,9 +795,9 @@ public:
   bool isFPVectorizationPotentiallyUnsafe() const;
 
   /// Determine if the target supports unaligned memory accesses.
-  bool allowsMisalignedMemoryAccesses(LLVMContext &Context,
-                                      unsigned BitWidth, unsigned AddressSpace = 0,
-                                      unsigned Alignment = 1,
+  bool allowsMisalignedMemoryAccesses(LLVMContext &Context, unsigned BitWidth,
+                                      unsigned AddressSpace = 0,
+                                      Align Alignment = Align(1),
                                       bool *Fast = nullptr) const;
 
   /// Return hardware support for population count.
@@ -720,19 +814,23 @@ public:
 
   /// Return the expected cost of supporting the floating point operation
   /// of the specified type.
-  int getFPOpCost(Type *Ty) const;
+  InstructionCost getFPOpCost(Type *Ty) const;
 
   /// Return the expected cost of materializing for the given integer
   /// immediate of the specified type.
-  int getIntImmCost(const APInt &Imm, Type *Ty) const;
+  InstructionCost getIntImmCost(const APInt &Imm, Type *Ty,
+                                TargetCostKind CostKind) const;
 
   /// Return the expected cost of materialization for the given integer
   /// immediate of the specified type for a given instruction. The cost can be
   /// zero if the immediate can be folded into the specified instruction.
-  int getIntImmCost(unsigned Opc, unsigned Idx, const APInt &Imm,
-                    Type *Ty) const;
-  int getIntImmCost(Intrinsic::ID IID, unsigned Idx, const APInt &Imm,
-                    Type *Ty) const;
+  InstructionCost getIntImmCostInst(unsigned Opc, unsigned Idx,
+                                    const APInt &Imm, Type *Ty,
+                                    TargetCostKind CostKind,
+                                    Instruction *Inst = nullptr) const;
+  InstructionCost getIntImmCostIntrin(Intrinsic::ID IID, unsigned Idx,
+                                      const APInt &Imm, Type *Ty,
+                                      TargetCostKind CostKind) const;
 
   /// Return the expected cost for the given integer when optimising
   /// for size. This is different than the other integer immediate cost
@@ -741,8 +839,8 @@ public:
   /// with another such as Thumb. This return value is used as a penalty when
   /// the total costs for a constant is calculated (the bigger the cost, the
   /// more beneficial constant hoisting is).
-  int getIntImmCodeSizeCost(unsigned Opc, unsigned Idx, const APInt &Imm,
-                            Type *Ty) const;
+  InstructionCost getIntImmCodeSizeCost(unsigned Opc, unsigned Idx,
+                                        const APInt &Imm, Type *Ty) const;
   /// @}
 
   /// \name Vector Target Information
@@ -750,18 +848,21 @@ public:
 
   /// The various kinds of shuffle patterns for vector queries.
   enum ShuffleKind {
-    SK_Broadcast,       ///< Broadcast element 0 to all other elements.
-    SK_Reverse,         ///< Reverse the order of the vector.
-    SK_Select,          ///< Selects elements from the corresponding lane of
-                        ///< either source operand. This is equivalent to a
-                        ///< vector select with a constant condition operand.
-    SK_Transpose,       ///< Transpose two vectors.
-    SK_InsertSubvector, ///< InsertSubvector. Index indicates start offset.
-    SK_ExtractSubvector,///< ExtractSubvector Index indicates start offset.
-    SK_PermuteTwoSrc,   ///< Merge elements from two source vectors into one
-                        ///< with any shuffle mask.
-    SK_PermuteSingleSrc ///< Shuffle elements of single source vector with any
-                        ///< shuffle mask.
+    SK_Broadcast,        ///< Broadcast element 0 to all other elements.
+    SK_Reverse,          ///< Reverse the order of the vector.
+    SK_Select,           ///< Selects elements from the corresponding lane of
+                         ///< either source operand. This is equivalent to a
+                         ///< vector select with a constant condition operand.
+    SK_Transpose,        ///< Transpose two vectors.
+    SK_InsertSubvector,  ///< InsertSubvector. Index indicates start offset.
+    SK_ExtractSubvector, ///< ExtractSubvector Index indicates start offset.
+    SK_PermuteTwoSrc,    ///< Merge elements from two source vectors into one
+                         ///< with any shuffle mask.
+    SK_PermuteSingleSrc, ///< Shuffle elements of single source vector with any
+                         ///< shuffle mask.
+    SK_Splice            ///< Concatenates elements from the first input vector
+                         ///< with elements of the second input vector. Returning
+                         ///< a vector of the same type as the input vectors.
   };
 
   /// Additional information about an operand's possible values.
@@ -775,16 +876,36 @@ public:
   /// Additional properties of an operand's values.
   enum OperandValueProperties { OP_None = 0, OP_PowerOf2 = 1 };
 
-  /// \return The number of scalar or vector registers that the target has.
-  /// If 'Vectors' is true, it returns the number of vector registers. If it is
-  /// set to false, it returns the number of scalar registers.
-  unsigned getNumberOfRegisters(bool Vector) const;
+  /// \return the number of registers in the target-provided register class.
+  unsigned getNumberOfRegisters(unsigned ClassID) const;
+
+  /// \return the target-provided register class ID for the provided type,
+  /// accounting for type promotion and other type-legalization techniques that
+  /// the target might apply. However, it specifically does not account for the
+  /// scalarization or splitting of vector types. Should a vector type require
+  /// scalarization or splitting into multiple underlying vector registers, that
+  /// type should be mapped to a register class containing no registers.
+  /// Specifically, this is designed to provide a simple, high-level view of the
+  /// register allocation later performed by the backend. These register classes
+  /// don't necessarily map onto the register classes used by the backend.
+  /// FIXME: It's not currently possible to determine how many registers
+  /// are used by the provided type.
+  unsigned getRegisterClassForType(bool Vector, Type *Ty = nullptr) const;
+
+  /// \return the target-provided register class name
+  const char *getRegisterClassName(unsigned ClassID) const;
+
+  enum RegisterKind { RGK_Scalar, RGK_FixedWidthVector, RGK_ScalableVector };
 
   /// \return The width of the largest scalar or vector register type.
-  unsigned getRegisterBitWidth(bool Vector) const;
+  TypeSize getRegisterBitWidth(RegisterKind K) const;
 
   /// \return The width of the smallest vector register type.
   unsigned getMinVectorRegisterBitWidth() const;
+
+  /// \return The maximum value of vscale if the target specifies an
+  ///  architectural maximum vector length, and None otherwise.
+  Optional<unsigned> getMaxVScale() const;
 
   /// \return True if the vectorization factor should be chosen to
   /// make the vector of the smallest element type match the size of a
@@ -792,12 +913,18 @@ public:
   /// creating vectors that span multiple vector registers.
   /// If false, the vectorization factor will be chosen based on the
   /// size of the widest element type.
-  bool shouldMaximizeVectorBandwidth(bool OptSize) const;
+  bool shouldMaximizeVectorBandwidth() const;
 
   /// \return The minimum vectorization factor for types of given element
   /// bit width, or 0 if there is no minimum VF. The returned value only
   /// applies when shouldMaximizeVectorBandwidth returns true.
-  unsigned getMinimumVF(unsigned ElemWidth) const;
+  /// If IsScalable is true, the returned ElementCount must be a scalable VF.
+  ElementCount getMinimumVF(unsigned ElemWidth, bool IsScalable) const;
+
+  /// \return The maximum vectorization factor for types of given element
+  /// bit width and opcode, or 0 if there is no maximum VF.
+  /// Currently only used by the SLP vectorizer.
+  unsigned getMaximumVF(unsigned ElemWidth, unsigned Opcode) const;
 
   /// \return True if it should be considered for address type promotion.
   /// \p AllowPromotionWithoutCommonHeader Set true if promoting \p I is
@@ -810,8 +937,8 @@ public:
 
   /// The possible cache levels
   enum class CacheLevel {
-    L1D,   // The L1 data cache
-    L2D,   // The L2 data cache
+    L1D, // The L1 data cache
+    L2D, // The L2 data cache
 
     // We currently do not model L3 caches, as their sizes differ widely between
     // microarchitectures. Also, we currently do not have a use for L3 cache
@@ -819,24 +946,44 @@ public:
   };
 
   /// \return The size of the cache level in bytes, if available.
-  llvm::Optional<unsigned> getCacheSize(CacheLevel Level) const;
+  Optional<unsigned> getCacheSize(CacheLevel Level) const;
 
   /// \return The associativity of the cache level, if available.
-  llvm::Optional<unsigned> getCacheAssociativity(CacheLevel Level) const;
+  Optional<unsigned> getCacheAssociativity(CacheLevel Level) const;
 
-  /// \return How much before a load we should place the prefetch instruction.
-  /// This is currently measured in number of instructions.
+  /// \return How much before a load we should place the prefetch
+  /// instruction.  This is currently measured in number of
+  /// instructions.
   unsigned getPrefetchDistance() const;
 
-  /// \return Some HW prefetchers can handle accesses up to a certain constant
-  /// stride.  This is the minimum stride in bytes where it makes sense to start
-  /// adding SW prefetches.  The default is 1, i.e. prefetch with any stride.
-  unsigned getMinPrefetchStride() const;
+  /// Some HW prefetchers can handle accesses up to a certain constant stride.
+  /// Sometimes prefetching is beneficial even below the HW prefetcher limit,
+  /// and the arguments provided are meant to serve as a basis for deciding this
+  /// for a particular loop.
+  ///
+  /// \param NumMemAccesses        Number of memory accesses in the loop.
+  /// \param NumStridedMemAccesses Number of the memory accesses that
+  ///                              ScalarEvolution could find a known stride
+  ///                              for.
+  /// \param NumPrefetches         Number of software prefetches that will be
+  ///                              emitted as determined by the addresses
+  ///                              involved and the cache line size.
+  /// \param HasCall               True if the loop contains a call.
+  ///
+  /// \return This is the minimum stride in bytes where it makes sense to start
+  ///         adding SW prefetches. The default is 1, i.e. prefetch with any
+  ///         stride.
+  unsigned getMinPrefetchStride(unsigned NumMemAccesses,
+                                unsigned NumStridedMemAccesses,
+                                unsigned NumPrefetches, bool HasCall) const;
 
-  /// \return The maximum number of iterations to prefetch ahead.  If the
-  /// required number of iterations is more than this number, no prefetching is
-  /// performed.
+  /// \return The maximum number of iterations to prefetch ahead.  If
+  /// the required number of iterations is more than this number, no
+  /// prefetching is performed.
   unsigned getMaxPrefetchIterationsAhead() const;
+
+  /// \return True if prefetching should also be done for writes.
+  bool enableWritePrefetching() const;
 
   /// \return The maximum interleave factor that any transform should try to
   /// perform for this target. This number depends on the level of parallelism
@@ -844,7 +991,7 @@ public:
   unsigned getMaxInterleaveFactor(unsigned VF) const;
 
   /// Collect properties of V used in cost analysis, e.g. OP_PowerOf2.
-  static OperandValueKind getOperandInfo(Value *V,
+  static OperandValueKind getOperandInfo(const Value *V,
                                          OperandValueProperties &OpProps);
 
   /// This is an approximation of reciprocal throughput of a math/logic op.
@@ -861,53 +1008,113 @@ public:
   /// \p Args is an optional argument which holds the instruction operands
   /// values so the TTI can analyze those values searching for special
   /// cases or optimizations based on those values.
-  int getArithmeticInstrCost(
-      unsigned Opcode, Type *Ty, OperandValueKind Opd1Info = OK_AnyValue,
+  /// \p CxtI is the optional original context instruction, if one exists, to
+  /// provide even more information.
+  InstructionCost getArithmeticInstrCost(
+      unsigned Opcode, Type *Ty,
+      TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput,
+      OperandValueKind Opd1Info = OK_AnyValue,
       OperandValueKind Opd2Info = OK_AnyValue,
       OperandValueProperties Opd1PropInfo = OP_None,
       OperandValueProperties Opd2PropInfo = OP_None,
-      ArrayRef<const Value *> Args = ArrayRef<const Value *>()) const;
+      ArrayRef<const Value *> Args = ArrayRef<const Value *>(),
+      const Instruction *CxtI = nullptr) const;
 
   /// \return The cost of a shuffle instruction of kind Kind and of type Tp.
+  /// The exact mask may be passed as Mask, or else the array will be empty.
   /// The index and subtype parameters are used by the subvector insertion and
   /// extraction shuffle kinds to show the insert/extract point and the type of
   /// the subvector being inserted/extracted.
   /// NOTE: For subvector extractions Tp represents the source type.
-  int getShuffleCost(ShuffleKind Kind, Type *Tp, int Index = 0,
-                     Type *SubTp = nullptr) const;
+  InstructionCost getShuffleCost(ShuffleKind Kind, VectorType *Tp,
+                                 ArrayRef<int> Mask = None, int Index = 0,
+                                 VectorType *SubTp = nullptr) const;
+
+  /// Represents a hint about the context in which a cast is used.
+  ///
+  /// For zext/sext, the context of the cast is the operand, which must be a
+  /// load of some kind. For trunc, the context is of the cast is the single
+  /// user of the instruction, which must be a store of some kind.
+  ///
+  /// This enum allows the vectorizer to give getCastInstrCost an idea of the
+  /// type of cast it's dealing with, as not every cast is equal. For instance,
+  /// the zext of a load may be free, but the zext of an interleaving load can
+  //// be (very) expensive!
+  ///
+  /// See \c getCastContextHint to compute a CastContextHint from a cast
+  /// Instruction*. Callers can use it if they don't need to override the
+  /// context and just want it to be calculated from the instruction.
+  ///
+  /// FIXME: This handles the types of load/store that the vectorizer can
+  /// produce, which are the cases where the context instruction is most
+  /// likely to be incorrect. There are other situations where that can happen
+  /// too, which might be handled here but in the long run a more general
+  /// solution of costing multiple instructions at the same times may be better.
+  enum class CastContextHint : uint8_t {
+    None,          ///< The cast is not used with a load/store of any kind.
+    Normal,        ///< The cast is used with a normal load/store.
+    Masked,        ///< The cast is used with a masked load/store.
+    GatherScatter, ///< The cast is used with a gather/scatter.
+    Interleave,    ///< The cast is used with an interleaved load/store.
+    Reversed,      ///< The cast is used with a reversed load/store.
+  };
+
+  /// Calculates a CastContextHint from \p I.
+  /// This should be used by callers of getCastInstrCost if they wish to
+  /// determine the context from some instruction.
+  /// \returns the CastContextHint for ZExt/SExt/Trunc, None if \p I is nullptr,
+  /// or if it's another type of cast.
+  static CastContextHint getCastContextHint(const Instruction *I);
 
   /// \return The expected cost of cast instructions, such as bitcast, trunc,
   /// zext, etc. If there is an existing instruction that holds Opcode, it
   /// may be passed in the 'I' parameter.
-  int getCastInstrCost(unsigned Opcode, Type *Dst, Type *Src,
-                       const Instruction *I = nullptr) const;
+  InstructionCost
+  getCastInstrCost(unsigned Opcode, Type *Dst, Type *Src,
+                   TTI::CastContextHint CCH,
+                   TTI::TargetCostKind CostKind = TTI::TCK_SizeAndLatency,
+                   const Instruction *I = nullptr) const;
 
   /// \return The expected cost of a sign- or zero-extended vector extract. Use
   /// -1 to indicate that there is no information about the index value.
-  int getExtractWithExtendCost(unsigned Opcode, Type *Dst, VectorType *VecTy,
-                               unsigned Index = -1) const;
+  InstructionCost getExtractWithExtendCost(unsigned Opcode, Type *Dst,
+                                           VectorType *VecTy,
+                                           unsigned Index = -1) const;
 
   /// \return The expected cost of control-flow related instructions such as
-  /// Phi, Ret, Br.
-  int getCFInstrCost(unsigned Opcode) const;
+  /// Phi, Ret, Br, Switch.
+  InstructionCost
+  getCFInstrCost(unsigned Opcode,
+                 TTI::TargetCostKind CostKind = TTI::TCK_SizeAndLatency,
+                 const Instruction *I = nullptr) const;
 
   /// \returns The expected cost of compare and select instructions. If there
   /// is an existing instruction that holds Opcode, it may be passed in the
-  /// 'I' parameter.
-  int getCmpSelInstrCost(unsigned Opcode, Type *ValTy,
-                 Type *CondTy = nullptr, const Instruction *I = nullptr) const;
+  /// 'I' parameter. The \p VecPred parameter can be used to indicate the select
+  /// is using a compare with the specified predicate as condition. When vector
+  /// types are passed, \p VecPred must be used for all lanes.
+  InstructionCost
+  getCmpSelInstrCost(unsigned Opcode, Type *ValTy, Type *CondTy = nullptr,
+                     CmpInst::Predicate VecPred = CmpInst::BAD_ICMP_PREDICATE,
+                     TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput,
+                     const Instruction *I = nullptr) const;
 
   /// \return The expected cost of vector Insert and Extract.
   /// Use -1 to indicate that there is no information on the index value.
-  int getVectorInstrCost(unsigned Opcode, Type *Val, unsigned Index = -1) const;
+  InstructionCost getVectorInstrCost(unsigned Opcode, Type *Val,
+                                     unsigned Index = -1) const;
 
   /// \return The cost of Load and Store instructions.
-  int getMemoryOpCost(unsigned Opcode, Type *Src, unsigned Alignment,
-                      unsigned AddressSpace, const Instruction *I = nullptr) const;
+  InstructionCost
+  getMemoryOpCost(unsigned Opcode, Type *Src, Align Alignment,
+                  unsigned AddressSpace,
+                  TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput,
+                  const Instruction *I = nullptr) const;
 
   /// \return The cost of masked Load and Store instructions.
-  int getMaskedMemoryOpCost(unsigned Opcode, Type *Src, unsigned Alignment,
-                            unsigned AddressSpace) const;
+  InstructionCost getMaskedMemoryOpCost(
+      unsigned Opcode, Type *Src, Align Alignment, unsigned AddressSpace,
+      TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput) const;
 
   /// \return The cost of Gather or Scatter operation
   /// \p Opcode - is a type of memory access Load or Store
@@ -916,8 +1123,12 @@ public:
   /// \p VariableMask - true when the memory access is predicated with a mask
   ///                   that is not a compile-time constant
   /// \p Alignment - alignment of single element
-  int getGatherScatterOpCost(unsigned Opcode, Type *DataTy, Value *Ptr,
-                             bool VariableMask, unsigned Alignment) const;
+  /// \p I - the optional original context instruction, if one exists, e.g. the
+  ///        load/store to transform or the call to the gather/scatter intrinsic
+  InstructionCost getGatherScatterOpCost(
+      unsigned Opcode, Type *DataTy, const Value *Ptr, bool VariableMask,
+      Align Alignment, TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput,
+      const Instruction *I = nullptr) const;
 
   /// \return The cost of the interleaved memory operation.
   /// \p Opcode is the memory operation code
@@ -929,46 +1140,70 @@ public:
   /// \p AddressSpace is address space of the pointer.
   /// \p UseMaskForCond indicates if the memory access is predicated.
   /// \p UseMaskForGaps indicates if gaps should be masked.
-  int getInterleavedMemoryOpCost(unsigned Opcode, Type *VecTy, unsigned Factor,
-                                 ArrayRef<unsigned> Indices, unsigned Alignment,
-                                 unsigned AddressSpace,
-                                 bool UseMaskForCond = false,
-                                 bool UseMaskForGaps = false) const;
+  InstructionCost getInterleavedMemoryOpCost(
+      unsigned Opcode, Type *VecTy, unsigned Factor, ArrayRef<unsigned> Indices,
+      Align Alignment, unsigned AddressSpace,
+      TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput,
+      bool UseMaskForCond = false, bool UseMaskForGaps = false) const;
 
-  /// Calculate the cost of performing a vector reduction.
+  /// A helper function to determine the type of reduction algorithm used
+  /// for a given \p Opcode and set of FastMathFlags \p FMF.
+  static bool requiresOrderedReduction(Optional<FastMathFlags> FMF) {
+    return FMF != None && !(*FMF).allowReassoc();
+  }
+
+  /// Calculate the cost of vector reduction intrinsics.
   ///
   /// This is the cost of reducing the vector value of type \p Ty to a scalar
-  /// value using the operation denoted by \p Opcode. The form of the reduction
-  /// can either be a pairwise reduction or a reduction that splits the vector
-  /// at every reduction level.
+  /// value using the operation denoted by \p Opcode. The FastMathFlags
+  /// parameter \p FMF indicates what type of reduction we are performing:
+  ///   1. Tree-wise. This is the typical 'fast' reduction performed that
+  ///   involves successively splitting a vector into half and doing the
+  ///   operation on the pair of halves until you have a scalar value. For
+  ///   example:
+  ///     (v0, v1, v2, v3)
+  ///     ((v0+v2), (v1+v3), undef, undef)
+  ///     ((v0+v2+v1+v3), undef, undef, undef)
+  ///   This is the default behaviour for integer operations, whereas for
+  ///   floating point we only do this if \p FMF indicates that
+  ///   reassociation is allowed.
+  ///   2. Ordered. For a vector with N elements this involves performing N
+  ///   operations in lane order, starting with an initial scalar value, i.e.
+  ///     result = InitVal + v0
+  ///     result = result + v1
+  ///     result = result + v2
+  ///     result = result + v3
+  ///   This is only the case for FP operations and when reassociation is not
+  ///   allowed.
   ///
-  /// Pairwise:
-  ///  (v0, v1, v2, v3)
-  ///  ((v0+v1), (v2+v3), undef, undef)
-  /// Split:
-  ///  (v0, v1, v2, v3)
-  ///  ((v0+v2), (v1+v3), undef, undef)
-  int getArithmeticReductionCost(unsigned Opcode, Type *Ty,
-                                 bool IsPairwiseForm) const;
-  int getMinMaxReductionCost(Type *Ty, Type *CondTy, bool IsPairwiseForm,
-                             bool IsUnsigned) const;
+  InstructionCost getArithmeticReductionCost(
+      unsigned Opcode, VectorType *Ty, Optional<FastMathFlags> FMF,
+      TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput) const;
+
+  InstructionCost getMinMaxReductionCost(
+      VectorType *Ty, VectorType *CondTy, bool IsUnsigned,
+      TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput) const;
+
+  /// Calculate the cost of an extended reduction pattern, similar to
+  /// getArithmeticReductionCost of an Add reduction with an extension and
+  /// optional multiply. This is the cost of as:
+  /// ResTy vecreduce.add(ext(Ty A)), or if IsMLA flag is set then:
+  /// ResTy vecreduce.add(mul(ext(Ty A), ext(Ty B)). The reduction happens
+  /// on a VectorType with ResTy elements and Ty lanes.
+  InstructionCost getExtendedAddReductionCost(
+      bool IsMLA, bool IsUnsigned, Type *ResTy, VectorType *Ty,
+      TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput) const;
 
   /// \returns The cost of Intrinsic instructions. Analyses the real arguments.
   /// Three cases are handled: 1. scalar instruction 2. vector instruction
-  /// 3. scalar instruction which is to be vectorized with VF.
-  int getIntrinsicInstrCost(Intrinsic::ID ID, Type *RetTy,
-                            ArrayRef<Value *> Args, FastMathFlags FMF,
-                            unsigned VF = 1) const;
-
-  /// \returns The cost of Intrinsic instructions. Types analysis only.
-  /// If ScalarizationCostPassed is UINT_MAX, the cost of scalarizing the
-  /// arguments and the return value will be computed based on types.
-  int getIntrinsicInstrCost(Intrinsic::ID ID, Type *RetTy,
-                            ArrayRef<Type *> Tys, FastMathFlags FMF,
-                            unsigned ScalarizationCostPassed = UINT_MAX) const;
+  /// 3. scalar instruction which is to be vectorized.
+  InstructionCost getIntrinsicInstrCost(const IntrinsicCostAttributes &ICA,
+                                        TTI::TargetCostKind CostKind) const;
 
   /// \returns The cost of Call instructions.
-  int getCallInstrCost(Function *F, Type *RetTy, ArrayRef<Type *> Tys) const;
+  InstructionCost getCallInstrCost(
+      Function *F, Type *RetTy, ArrayRef<Type *> Tys,
+      TTI::TargetCostKind CostKind = TTI::TCK_SizeAndLatency) const;
 
   /// \returns The number of pieces into which the provided type must be
   /// split during legalization. Zero is returned when the answer is unknown.
@@ -981,15 +1216,16 @@ public:
   /// The 'SE' parameter holds pointer for the scalar evolution object which
   /// is used in order to get the Ptr step value in case of constant stride.
   /// The 'Ptr' parameter holds SCEV of the access pointer.
-  int getAddressComputationCost(Type *Ty, ScalarEvolution *SE = nullptr,
-                                const SCEV *Ptr = nullptr) const;
+  InstructionCost getAddressComputationCost(Type *Ty,
+                                            ScalarEvolution *SE = nullptr,
+                                            const SCEV *Ptr = nullptr) const;
 
   /// \returns The cost, if any, of keeping values of the given types alive
   /// over a callsite.
   ///
   /// Some types may require the use of register classes that do not have
   /// any callee-saved registers, so would require a spill and fill.
-  unsigned getCostOfKeepingLiveOverCall(ArrayRef<Type *> Tys) const;
+  InstructionCost getCostOfKeepingLiveOverCall(ArrayRef<Type *> Tys) const;
 
   /// \returns True if the intrinsic is a supported memory intrinsic.  Info
   /// will contain additional information - whether the intrinsic may write
@@ -1010,6 +1246,7 @@ public:
 
   /// \returns The type to use in a loop expansion of a memcpy call.
   Type *getMemcpyLoopLoweringType(LLVMContext &Context, Value *Length,
+                                  unsigned SrcAddrSpace, unsigned DestAddrSpace,
                                   unsigned SrcAlign, unsigned DestAlign) const;
 
   /// \param[out] OpsOut The operand types to copy RemainingBytes of memory.
@@ -1018,11 +1255,10 @@ public:
   /// Calculates the operand types to use when copying \p RemainingBytes of
   /// memory, where source and destination alignments are \p SrcAlign and
   /// \p DestAlign respectively.
-  void getMemcpyLoopResidualLoweringType(SmallVectorImpl<Type *> &OpsOut,
-                                         LLVMContext &Context,
-                                         unsigned RemainingBytes,
-                                         unsigned SrcAlign,
-                                         unsigned DestAlign) const;
+  void getMemcpyLoopResidualLoweringType(
+      SmallVectorImpl<Type *> &OpsOut, LLVMContext &Context,
+      unsigned RemainingBytes, unsigned SrcAddrSpace, unsigned DestAddrSpace,
+      unsigned SrcAlign, unsigned DestAlign) const;
 
   /// \returns True if the two functions have compatible attributes for inlining
   /// purposes.
@@ -1039,11 +1275,11 @@ public:
 
   /// The type of load/store indexing.
   enum MemIndexedMode {
-    MIM_Unindexed,  ///< No indexing.
-    MIM_PreInc,     ///< Pre-incrementing.
-    MIM_PreDec,     ///< Pre-decrementing.
-    MIM_PostInc,    ///< Post-incrementing.
-    MIM_PostDec     ///< Post-decrementing.
+    MIM_Unindexed, ///< No indexing.
+    MIM_PreInc,    ///< Pre-incrementing.
+    MIM_PreDec,    ///< Pre-decrementing.
+    MIM_PostInc,   ///< Post-incrementing.
+    MIM_PostDec    ///< Post-decrementing.
   };
 
   /// \returns True if the specified indexed load for the given type is legal.
@@ -1063,14 +1299,19 @@ public:
   bool isLegalToVectorizeStore(StoreInst *SI) const;
 
   /// \returns True if it is legal to vectorize the given load chain.
-  bool isLegalToVectorizeLoadChain(unsigned ChainSizeInBytes,
-                                   unsigned Alignment,
+  bool isLegalToVectorizeLoadChain(unsigned ChainSizeInBytes, Align Alignment,
                                    unsigned AddrSpace) const;
 
   /// \returns True if it is legal to vectorize the given store chain.
-  bool isLegalToVectorizeStoreChain(unsigned ChainSizeInBytes,
-                                    unsigned Alignment,
+  bool isLegalToVectorizeStoreChain(unsigned ChainSizeInBytes, Align Alignment,
                                     unsigned AddrSpace) const;
+
+  /// \returns True if it is legal to vectorize the given reduction kind.
+  bool isLegalToVectorizeReduction(const RecurrenceDescriptor &RdxDesc,
+                                   ElementCount VF) const;
+
+  /// \returns True if the given type is supported for scalable vectors
+  bool isElementTypeLegalForScalableVector(Type *Ty) const;
 
   /// \returns The new vector factor value if the target doesn't support \p
   /// SizeInBytes loads or has a better vector factor.
@@ -1092,10 +1333,23 @@ public:
     bool NoNaN;    ///< If op is an fp min/max, whether NaNs may be present.
   };
 
-  /// \returns True if the target wants to handle the given reduction idiom in
-  /// the intrinsics form instead of the shuffle form.
-  bool useReductionIntrinsic(unsigned Opcode, Type *Ty,
+  /// \returns True if the target prefers reductions in loop.
+  bool preferInLoopReduction(unsigned Opcode, Type *Ty,
                              ReductionFlags Flags) const;
+
+  /// \returns True if the target prefers reductions select kept in the loop
+  /// when tail folding. i.e.
+  /// loop:
+  ///   p = phi (0, s)
+  ///   a = add (p, x)
+  ///   s = select (mask, a, p)
+  /// vecreduce.add(s)
+  ///
+  /// As opposed to the normal scheme of p = phi (0, a) which allows the select
+  /// to be pulled out of the loop. If the select(.., add, ..) can be predicated
+  /// by the target, this can lead to cleaner code generation.
+  bool preferPredicatedReductionSelect(unsigned Opcode, Type *Ty,
+                                       ReductionFlags Flags) const;
 
   /// \returns True if the target wants to expand the given reduction intrinsic
   /// into a shuffle sequence.
@@ -1105,16 +1359,60 @@ public:
   /// to a stack reload.
   unsigned getGISelRematGlobalCost() const;
 
+  /// \returns True if the target supports scalable vectors.
+  bool supportsScalableVectors() const;
+
+  /// \name Vector Predication Information
+  /// @{
+  /// Whether the target supports the %evl parameter of VP intrinsic efficiently
+  /// in hardware. (see LLVM Language Reference - "Vector Predication
+  /// Intrinsics") Use of %evl is discouraged when that is not the case.
+  bool hasActiveVectorLength() const;
+
+  struct VPLegalization {
+    enum VPTransform {
+      // keep the predicating parameter
+      Legal = 0,
+      // where legal, discard the predicate parameter
+      Discard = 1,
+      // transform into something else that is also predicating
+      Convert = 2
+    };
+
+    // How to transform the EVL parameter.
+    // Legal:   keep the EVL parameter as it is.
+    // Discard: Ignore the EVL parameter where it is safe to do so.
+    // Convert: Fold the EVL into the mask parameter.
+    VPTransform EVLParamStrategy;
+
+    // How to transform the operator.
+    // Legal:   The target supports this operator.
+    // Convert: Convert this to a non-VP operation.
+    // The 'Discard' strategy is invalid.
+    VPTransform OpStrategy;
+
+    bool shouldDoNothing() const {
+      return (EVLParamStrategy == Legal) && (OpStrategy == Legal);
+    }
+    VPLegalization(VPTransform EVLParamStrategy, VPTransform OpStrategy)
+        : EVLParamStrategy(EVLParamStrategy), OpStrategy(OpStrategy) {}
+  };
+
+  /// \returns How the target needs this vector-predicated operation to be
+  /// transformed.
+  VPLegalization getVPLegalizationStrategy(const VPIntrinsic &PI) const;
+  /// @}
+
   /// @}
 
 private:
   /// Estimate the latency of specified instruction.
   /// Returns 1 as the default value.
-  int getInstructionLatency(const Instruction *I) const;
+  InstructionCost getInstructionLatency(const Instruction *I) const;
 
   /// Returns the expected throughput cost of the instruction.
   /// Returns -1 if the cost is unknown.
-  int getInstructionThroughput(const Instruction *I) const;
+  InstructionCost getInstructionThroughput(const Instruction *I) const;
 
   /// The abstract base class used to type erase specific TTI
   /// implementations.
@@ -1131,80 +1429,106 @@ class TargetTransformInfo::Concept {
 public:
   virtual ~Concept() = 0;
   virtual const DataLayout &getDataLayout() const = 0;
-  virtual int getOperationCost(unsigned Opcode, Type *Ty, Type *OpTy) = 0;
-  virtual int getGEPCost(Type *PointeeType, const Value *Ptr,
-                         ArrayRef<const Value *> Operands) = 0;
-  virtual int getExtCost(const Instruction *I, const Value *Src) = 0;
-  virtual int getCallCost(FunctionType *FTy, int NumArgs, const User *U) = 0;
-  virtual int getCallCost(const Function *F, int NumArgs, const User *U) = 0;
-  virtual int getCallCost(const Function *F,
-                          ArrayRef<const Value *> Arguments, const User *U) = 0;
+  virtual InstructionCost getGEPCost(Type *PointeeType, const Value *Ptr,
+                                     ArrayRef<const Value *> Operands,
+                                     TTI::TargetCostKind CostKind) = 0;
   virtual unsigned getInliningThresholdMultiplier() = 0;
+  virtual unsigned adjustInliningThreshold(const CallBase *CB) = 0;
   virtual int getInlinerVectorBonusPercent() = 0;
-  virtual int getIntrinsicCost(Intrinsic::ID IID, Type *RetTy,
-                               ArrayRef<Type *> ParamTys, const User *U) = 0;
-  virtual int getIntrinsicCost(Intrinsic::ID IID, Type *RetTy,
-                               ArrayRef<const Value *> Arguments,
-                               const User *U) = 0;
-  virtual int getMemcpyCost(const Instruction *I) = 0;
-  virtual unsigned getEstimatedNumberOfCaseClusters(const SwitchInst &SI,
-                                                    unsigned &JTSize) = 0;
-  virtual int
-  getUserCost(const User *U, ArrayRef<const Value *> Operands) = 0;
+  virtual InstructionCost getMemcpyCost(const Instruction *I) = 0;
+  virtual unsigned
+  getEstimatedNumberOfCaseClusters(const SwitchInst &SI, unsigned &JTSize,
+                                   ProfileSummaryInfo *PSI,
+                                   BlockFrequencyInfo *BFI) = 0;
+  virtual InstructionCost getUserCost(const User *U,
+                                      ArrayRef<const Value *> Operands,
+                                      TargetCostKind CostKind) = 0;
+  virtual BranchProbability getPredictableBranchThreshold() = 0;
   virtual bool hasBranchDivergence() = 0;
+  virtual bool useGPUDivergenceAnalysis() = 0;
   virtual bool isSourceOfDivergence(const Value *V) = 0;
   virtual bool isAlwaysUniform(const Value *V) = 0;
   virtual unsigned getFlatAddressSpace() = 0;
+  virtual bool collectFlatAddressOperands(SmallVectorImpl<int> &OpIndexes,
+                                          Intrinsic::ID IID) const = 0;
+  virtual bool isNoopAddrSpaceCast(unsigned FromAS, unsigned ToAS) const = 0;
+  virtual unsigned getAssumedAddrSpace(const Value *V) const = 0;
+  virtual Value *rewriteIntrinsicWithAddressSpace(IntrinsicInst *II,
+                                                  Value *OldV,
+                                                  Value *NewV) const = 0;
   virtual bool isLoweredToCall(const Function *F) = 0;
   virtual void getUnrollingPreferences(Loop *L, ScalarEvolution &,
                                        UnrollingPreferences &UP) = 0;
+  virtual void getPeelingPreferences(Loop *L, ScalarEvolution &SE,
+                                     PeelingPreferences &PP) = 0;
   virtual bool isHardwareLoopProfitable(Loop *L, ScalarEvolution &SE,
                                         AssumptionCache &AC,
                                         TargetLibraryInfo *LibInfo,
                                         HardwareLoopInfo &HWLoopInfo) = 0;
+  virtual bool
+  preferPredicateOverEpilogue(Loop *L, LoopInfo *LI, ScalarEvolution &SE,
+                              AssumptionCache &AC, TargetLibraryInfo *TLI,
+                              DominatorTree *DT, const LoopAccessInfo *LAI) = 0;
+  virtual bool emitGetActiveLaneMask() = 0;
+  virtual Optional<Instruction *> instCombineIntrinsic(InstCombiner &IC,
+                                                       IntrinsicInst &II) = 0;
+  virtual Optional<Value *>
+  simplifyDemandedUseBitsIntrinsic(InstCombiner &IC, IntrinsicInst &II,
+                                   APInt DemandedMask, KnownBits &Known,
+                                   bool &KnownBitsComputed) = 0;
+  virtual Optional<Value *> simplifyDemandedVectorEltsIntrinsic(
+      InstCombiner &IC, IntrinsicInst &II, APInt DemandedElts, APInt &UndefElts,
+      APInt &UndefElts2, APInt &UndefElts3,
+      std::function<void(Instruction *, unsigned, APInt, APInt &)>
+          SimplifyAndSetOp) = 0;
   virtual bool isLegalAddImmediate(int64_t Imm) = 0;
   virtual bool isLegalICmpImmediate(int64_t Imm) = 0;
   virtual bool isLegalAddressingMode(Type *Ty, GlobalValue *BaseGV,
                                      int64_t BaseOffset, bool HasBaseReg,
-                                     int64_t Scale,
-                                     unsigned AddrSpace,
+                                     int64_t Scale, unsigned AddrSpace,
                                      Instruction *I) = 0;
   virtual bool isLSRCostLess(TargetTransformInfo::LSRCost &C1,
                              TargetTransformInfo::LSRCost &C2) = 0;
+  virtual bool isNumRegsMajorCostOfLSR() = 0;
+  virtual bool isProfitableLSRChainElement(Instruction *I) = 0;
   virtual bool canMacroFuseCmp() = 0;
   virtual bool canSaveCmp(Loop *L, BranchInst **BI, ScalarEvolution *SE,
                           LoopInfo *LI, DominatorTree *DT, AssumptionCache *AC,
                           TargetLibraryInfo *LibInfo) = 0;
-  virtual bool shouldFavorPostInc() const = 0;
-  virtual bool shouldFavorBackedgeIndex(const Loop *L) const = 0;
-  virtual bool isLegalMaskedStore(Type *DataType) = 0;
-  virtual bool isLegalMaskedLoad(Type *DataType) = 0;
-  virtual bool isLegalNTStore(Type *DataType, unsigned Alignment) = 0;
-  virtual bool isLegalNTLoad(Type *DataType, unsigned Alignment) = 0;
-  virtual bool isLegalMaskedScatter(Type *DataType) = 0;
-  virtual bool isLegalMaskedGather(Type *DataType) = 0;
+  virtual AddressingModeKind
+    getPreferredAddressingMode(const Loop *L, ScalarEvolution *SE) const = 0;
+  virtual bool isLegalMaskedStore(Type *DataType, Align Alignment) = 0;
+  virtual bool isLegalMaskedLoad(Type *DataType, Align Alignment) = 0;
+  virtual bool isLegalNTStore(Type *DataType, Align Alignment) = 0;
+  virtual bool isLegalNTLoad(Type *DataType, Align Alignment) = 0;
+  virtual bool isLegalMaskedScatter(Type *DataType, Align Alignment) = 0;
+  virtual bool isLegalMaskedGather(Type *DataType, Align Alignment) = 0;
   virtual bool isLegalMaskedCompressStore(Type *DataType) = 0;
   virtual bool isLegalMaskedExpandLoad(Type *DataType) = 0;
   virtual bool hasDivRemOp(Type *DataType, bool IsSigned) = 0;
   virtual bool hasVolatileVariant(Instruction *I, unsigned AddrSpace) = 0;
   virtual bool prefersVectorizedAddressing() = 0;
-  virtual int getScalingFactorCost(Type *Ty, GlobalValue *BaseGV,
-                                   int64_t BaseOffset, bool HasBaseReg,
-                                   int64_t Scale, unsigned AddrSpace) = 0;
+  virtual InstructionCost getScalingFactorCost(Type *Ty, GlobalValue *BaseGV,
+                                               int64_t BaseOffset,
+                                               bool HasBaseReg, int64_t Scale,
+                                               unsigned AddrSpace) = 0;
   virtual bool LSRWithInstrQueries() = 0;
   virtual bool isTruncateFree(Type *Ty1, Type *Ty2) = 0;
   virtual bool isProfitableToHoist(Instruction *I) = 0;
   virtual bool useAA() = 0;
   virtual bool isTypeLegal(Type *Ty) = 0;
-  virtual unsigned getJumpBufAlignment() = 0;
-  virtual unsigned getJumpBufSize() = 0;
+  virtual InstructionCost getRegUsageForType(Type *Ty) = 0;
   virtual bool shouldBuildLookupTables() = 0;
   virtual bool shouldBuildLookupTablesForConstant(Constant *C) = 0;
+  virtual bool shouldBuildRelLookupTables() = 0;
   virtual bool useColdCCForColdCall(Function &F) = 0;
-  virtual unsigned
-  getScalarizationOverhead(Type *Ty, bool Insert, bool Extract) = 0;
-  virtual unsigned getOperandsScalarizationOverhead(ArrayRef<const Value *> Args,
-                                                    unsigned VF) = 0;
+  virtual InstructionCost getScalarizationOverhead(VectorType *Ty,
+                                                   const APInt &DemandedElts,
+                                                   bool Insert,
+                                                   bool Extract) = 0;
+  virtual InstructionCost
+  getOperandsScalarizationOverhead(ArrayRef<const Value *> Args,
+                                   ArrayRef<Type *> Tys) = 0;
   virtual bool supportsEfficientVectorElementLoadStore() = 0;
   virtual bool enableAggressiveInterleaving(bool LoopHasReductions) = 0;
   virtual MemCmpExpansionOptions
@@ -1215,118 +1539,180 @@ public:
   virtual bool allowsMisalignedMemoryAccesses(LLVMContext &Context,
                                               unsigned BitWidth,
                                               unsigned AddressSpace,
-                                              unsigned Alignment,
+                                              Align Alignment,
                                               bool *Fast) = 0;
   virtual PopcntSupportKind getPopcntSupport(unsigned IntTyWidthInBit) = 0;
   virtual bool haveFastSqrt(Type *Ty) = 0;
   virtual bool isFCmpOrdCheaperThanFCmpZero(Type *Ty) = 0;
-  virtual int getFPOpCost(Type *Ty) = 0;
-  virtual int getIntImmCodeSizeCost(unsigned Opc, unsigned Idx, const APInt &Imm,
-                                    Type *Ty) = 0;
-  virtual int getIntImmCost(const APInt &Imm, Type *Ty) = 0;
-  virtual int getIntImmCost(unsigned Opc, unsigned Idx, const APInt &Imm,
-                            Type *Ty) = 0;
-  virtual int getIntImmCost(Intrinsic::ID IID, unsigned Idx, const APInt &Imm,
-                            Type *Ty) = 0;
-  virtual unsigned getNumberOfRegisters(bool Vector) = 0;
-  virtual unsigned getRegisterBitWidth(bool Vector) const = 0;
-  virtual unsigned getMinVectorRegisterBitWidth() = 0;
-  virtual bool shouldMaximizeVectorBandwidth(bool OptSize) const = 0;
-  virtual unsigned getMinimumVF(unsigned ElemWidth) const = 0;
+  virtual InstructionCost getFPOpCost(Type *Ty) = 0;
+  virtual InstructionCost getIntImmCodeSizeCost(unsigned Opc, unsigned Idx,
+                                                const APInt &Imm, Type *Ty) = 0;
+  virtual InstructionCost getIntImmCost(const APInt &Imm, Type *Ty,
+                                        TargetCostKind CostKind) = 0;
+  virtual InstructionCost getIntImmCostInst(unsigned Opc, unsigned Idx,
+                                            const APInt &Imm, Type *Ty,
+                                            TargetCostKind CostKind,
+                                            Instruction *Inst = nullptr) = 0;
+  virtual InstructionCost getIntImmCostIntrin(Intrinsic::ID IID, unsigned Idx,
+                                              const APInt &Imm, Type *Ty,
+                                              TargetCostKind CostKind) = 0;
+  virtual unsigned getNumberOfRegisters(unsigned ClassID) const = 0;
+  virtual unsigned getRegisterClassForType(bool Vector,
+                                           Type *Ty = nullptr) const = 0;
+  virtual const char *getRegisterClassName(unsigned ClassID) const = 0;
+  virtual TypeSize getRegisterBitWidth(RegisterKind K) const = 0;
+  virtual unsigned getMinVectorRegisterBitWidth() const = 0;
+  virtual Optional<unsigned> getMaxVScale() const = 0;
+  virtual bool shouldMaximizeVectorBandwidth() const = 0;
+  virtual ElementCount getMinimumVF(unsigned ElemWidth,
+                                    bool IsScalable) const = 0;
+  virtual unsigned getMaximumVF(unsigned ElemWidth, unsigned Opcode) const = 0;
   virtual bool shouldConsiderAddressTypePromotion(
       const Instruction &I, bool &AllowPromotionWithoutCommonHeader) = 0;
-  virtual unsigned getCacheLineSize() = 0;
-  virtual llvm::Optional<unsigned> getCacheSize(CacheLevel Level) = 0;
-  virtual llvm::Optional<unsigned> getCacheAssociativity(CacheLevel Level) = 0;
-  virtual unsigned getPrefetchDistance() = 0;
-  virtual unsigned getMinPrefetchStride() = 0;
-  virtual unsigned getMaxPrefetchIterationsAhead() = 0;
+  virtual unsigned getCacheLineSize() const = 0;
+  virtual Optional<unsigned> getCacheSize(CacheLevel Level) const = 0;
+  virtual Optional<unsigned> getCacheAssociativity(CacheLevel Level) const = 0;
+
+  /// \return How much before a load we should place the prefetch
+  /// instruction.  This is currently measured in number of
+  /// instructions.
+  virtual unsigned getPrefetchDistance() const = 0;
+
+  /// \return Some HW prefetchers can handle accesses up to a certain
+  /// constant stride.  This is the minimum stride in bytes where it
+  /// makes sense to start adding SW prefetches.  The default is 1,
+  /// i.e. prefetch with any stride.  Sometimes prefetching is beneficial
+  /// even below the HW prefetcher limit, and the arguments provided are
+  /// meant to serve as a basis for deciding this for a particular loop.
+  virtual unsigned getMinPrefetchStride(unsigned NumMemAccesses,
+                                        unsigned NumStridedMemAccesses,
+                                        unsigned NumPrefetches,
+                                        bool HasCall) const = 0;
+
+  /// \return The maximum number of iterations to prefetch ahead.  If
+  /// the required number of iterations is more than this number, no
+  /// prefetching is performed.
+  virtual unsigned getMaxPrefetchIterationsAhead() const = 0;
+
+  /// \return True if prefetching should also be done for writes.
+  virtual bool enableWritePrefetching() const = 0;
+
   virtual unsigned getMaxInterleaveFactor(unsigned VF) = 0;
-  virtual unsigned
-  getArithmeticInstrCost(unsigned Opcode, Type *Ty, OperandValueKind Opd1Info,
-                         OperandValueKind Opd2Info,
-                         OperandValueProperties Opd1PropInfo,
-                         OperandValueProperties Opd2PropInfo,
-                         ArrayRef<const Value *> Args) = 0;
-  virtual int getShuffleCost(ShuffleKind Kind, Type *Tp, int Index,
-                             Type *SubTp) = 0;
-  virtual int getCastInstrCost(unsigned Opcode, Type *Dst, Type *Src,
-                               const Instruction *I) = 0;
-  virtual int getExtractWithExtendCost(unsigned Opcode, Type *Dst,
-                                       VectorType *VecTy, unsigned Index) = 0;
-  virtual int getCFInstrCost(unsigned Opcode) = 0;
-  virtual int getCmpSelInstrCost(unsigned Opcode, Type *ValTy,
-                                Type *CondTy, const Instruction *I) = 0;
-  virtual int getVectorInstrCost(unsigned Opcode, Type *Val,
-                                 unsigned Index) = 0;
-  virtual int getMemoryOpCost(unsigned Opcode, Type *Src, unsigned Alignment,
-                              unsigned AddressSpace, const Instruction *I) = 0;
-  virtual int getMaskedMemoryOpCost(unsigned Opcode, Type *Src,
-                                    unsigned Alignment,
-                                    unsigned AddressSpace) = 0;
-  virtual int getGatherScatterOpCost(unsigned Opcode, Type *DataTy,
-                                     Value *Ptr, bool VariableMask,
-                                     unsigned Alignment) = 0;
-  virtual int getInterleavedMemoryOpCost(unsigned Opcode, Type *VecTy,
-                                         unsigned Factor,
-                                         ArrayRef<unsigned> Indices,
-                                         unsigned Alignment,
-                                         unsigned AddressSpace,
-                                         bool UseMaskForCond = false,
-                                         bool UseMaskForGaps = false) = 0;
-  virtual int getArithmeticReductionCost(unsigned Opcode, Type *Ty,
-                                         bool IsPairwiseForm) = 0;
-  virtual int getMinMaxReductionCost(Type *Ty, Type *CondTy,
-                                     bool IsPairwiseForm, bool IsUnsigned) = 0;
-  virtual int getIntrinsicInstrCost(Intrinsic::ID ID, Type *RetTy,
-                      ArrayRef<Type *> Tys, FastMathFlags FMF,
-                      unsigned ScalarizationCostPassed) = 0;
-  virtual int getIntrinsicInstrCost(Intrinsic::ID ID, Type *RetTy,
-         ArrayRef<Value *> Args, FastMathFlags FMF, unsigned VF) = 0;
-  virtual int getCallInstrCost(Function *F, Type *RetTy,
-                               ArrayRef<Type *> Tys) = 0;
+  virtual InstructionCost getArithmeticInstrCost(
+      unsigned Opcode, Type *Ty, TTI::TargetCostKind CostKind,
+      OperandValueKind Opd1Info, OperandValueKind Opd2Info,
+      OperandValueProperties Opd1PropInfo, OperandValueProperties Opd2PropInfo,
+      ArrayRef<const Value *> Args, const Instruction *CxtI = nullptr) = 0;
+  virtual InstructionCost getShuffleCost(ShuffleKind Kind, VectorType *Tp,
+                                         ArrayRef<int> Mask, int Index,
+                                         VectorType *SubTp) = 0;
+  virtual InstructionCost getCastInstrCost(unsigned Opcode, Type *Dst,
+                                           Type *Src, CastContextHint CCH,
+                                           TTI::TargetCostKind CostKind,
+                                           const Instruction *I) = 0;
+  virtual InstructionCost getExtractWithExtendCost(unsigned Opcode, Type *Dst,
+                                                   VectorType *VecTy,
+                                                   unsigned Index) = 0;
+  virtual InstructionCost getCFInstrCost(unsigned Opcode,
+                                         TTI::TargetCostKind CostKind,
+                                         const Instruction *I = nullptr) = 0;
+  virtual InstructionCost getCmpSelInstrCost(unsigned Opcode, Type *ValTy,
+                                             Type *CondTy,
+                                             CmpInst::Predicate VecPred,
+                                             TTI::TargetCostKind CostKind,
+                                             const Instruction *I) = 0;
+  virtual InstructionCost getVectorInstrCost(unsigned Opcode, Type *Val,
+                                             unsigned Index) = 0;
+  virtual InstructionCost getMemoryOpCost(unsigned Opcode, Type *Src,
+                                          Align Alignment,
+                                          unsigned AddressSpace,
+                                          TTI::TargetCostKind CostKind,
+                                          const Instruction *I) = 0;
+  virtual InstructionCost
+  getMaskedMemoryOpCost(unsigned Opcode, Type *Src, Align Alignment,
+                        unsigned AddressSpace,
+                        TTI::TargetCostKind CostKind) = 0;
+  virtual InstructionCost
+  getGatherScatterOpCost(unsigned Opcode, Type *DataTy, const Value *Ptr,
+                         bool VariableMask, Align Alignment,
+                         TTI::TargetCostKind CostKind,
+                         const Instruction *I = nullptr) = 0;
+
+  virtual InstructionCost getInterleavedMemoryOpCost(
+      unsigned Opcode, Type *VecTy, unsigned Factor, ArrayRef<unsigned> Indices,
+      Align Alignment, unsigned AddressSpace, TTI::TargetCostKind CostKind,
+      bool UseMaskForCond = false, bool UseMaskForGaps = false) = 0;
+  virtual InstructionCost
+  getArithmeticReductionCost(unsigned Opcode, VectorType *Ty,
+                             Optional<FastMathFlags> FMF,
+                             TTI::TargetCostKind CostKind) = 0;
+  virtual InstructionCost
+  getMinMaxReductionCost(VectorType *Ty, VectorType *CondTy, bool IsUnsigned,
+                         TTI::TargetCostKind CostKind) = 0;
+  virtual InstructionCost getExtendedAddReductionCost(
+      bool IsMLA, bool IsUnsigned, Type *ResTy, VectorType *Ty,
+      TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput) = 0;
+  virtual InstructionCost
+  getIntrinsicInstrCost(const IntrinsicCostAttributes &ICA,
+                        TTI::TargetCostKind CostKind) = 0;
+  virtual InstructionCost getCallInstrCost(Function *F, Type *RetTy,
+                                           ArrayRef<Type *> Tys,
+                                           TTI::TargetCostKind CostKind) = 0;
   virtual unsigned getNumberOfParts(Type *Tp) = 0;
-  virtual int getAddressComputationCost(Type *Ty, ScalarEvolution *SE,
-                                        const SCEV *Ptr) = 0;
-  virtual unsigned getCostOfKeepingLiveOverCall(ArrayRef<Type *> Tys) = 0;
+  virtual InstructionCost
+  getAddressComputationCost(Type *Ty, ScalarEvolution *SE, const SCEV *Ptr) = 0;
+  virtual InstructionCost
+  getCostOfKeepingLiveOverCall(ArrayRef<Type *> Tys) = 0;
   virtual bool getTgtMemIntrinsic(IntrinsicInst *Inst,
                                   MemIntrinsicInfo &Info) = 0;
   virtual unsigned getAtomicMemIntrinsicMaxElementSize() const = 0;
   virtual Value *getOrCreateResultFromMemIntrinsic(IntrinsicInst *Inst,
                                                    Type *ExpectedType) = 0;
   virtual Type *getMemcpyLoopLoweringType(LLVMContext &Context, Value *Length,
+                                          unsigned SrcAddrSpace,
+                                          unsigned DestAddrSpace,
                                           unsigned SrcAlign,
                                           unsigned DestAlign) const = 0;
   virtual void getMemcpyLoopResidualLoweringType(
       SmallVectorImpl<Type *> &OpsOut, LLVMContext &Context,
-      unsigned RemainingBytes, unsigned SrcAlign, unsigned DestAlign) const = 0;
+      unsigned RemainingBytes, unsigned SrcAddrSpace, unsigned DestAddrSpace,
+      unsigned SrcAlign, unsigned DestAlign) const = 0;
   virtual bool areInlineCompatible(const Function *Caller,
                                    const Function *Callee) const = 0;
   virtual bool
   areFunctionArgsABICompatible(const Function *Caller, const Function *Callee,
                                SmallPtrSetImpl<Argument *> &Args) const = 0;
   virtual bool isIndexedLoadLegal(MemIndexedMode Mode, Type *Ty) const = 0;
-  virtual bool isIndexedStoreLegal(MemIndexedMode Mode,Type *Ty) const = 0;
+  virtual bool isIndexedStoreLegal(MemIndexedMode Mode, Type *Ty) const = 0;
   virtual unsigned getLoadStoreVecRegBitWidth(unsigned AddrSpace) const = 0;
   virtual bool isLegalToVectorizeLoad(LoadInst *LI) const = 0;
   virtual bool isLegalToVectorizeStore(StoreInst *SI) const = 0;
   virtual bool isLegalToVectorizeLoadChain(unsigned ChainSizeInBytes,
-                                           unsigned Alignment,
+                                           Align Alignment,
                                            unsigned AddrSpace) const = 0;
   virtual bool isLegalToVectorizeStoreChain(unsigned ChainSizeInBytes,
-                                            unsigned Alignment,
+                                            Align Alignment,
                                             unsigned AddrSpace) const = 0;
+  virtual bool isLegalToVectorizeReduction(const RecurrenceDescriptor &RdxDesc,
+                                           ElementCount VF) const = 0;
+  virtual bool isElementTypeLegalForScalableVector(Type *Ty) const = 0;
   virtual unsigned getLoadVectorFactor(unsigned VF, unsigned LoadSize,
                                        unsigned ChainSizeInBytes,
                                        VectorType *VecTy) const = 0;
   virtual unsigned getStoreVectorFactor(unsigned VF, unsigned StoreSize,
                                         unsigned ChainSizeInBytes,
                                         VectorType *VecTy) const = 0;
-  virtual bool useReductionIntrinsic(unsigned Opcode, Type *Ty,
+  virtual bool preferInLoopReduction(unsigned Opcode, Type *Ty,
                                      ReductionFlags) const = 0;
+  virtual bool preferPredicatedReductionSelect(unsigned Opcode, Type *Ty,
+                                               ReductionFlags) const = 0;
   virtual bool shouldExpandReduction(const IntrinsicInst *II) const = 0;
   virtual unsigned getGISelRematGlobalCost() const = 0;
-  virtual int getInstructionLatency(const Instruction *I) = 0;
+  virtual bool supportsScalableVectors() const = 0;
+  virtual bool hasActiveVectorLength() const = 0;
+  virtual InstructionCost getInstructionLatency(const Instruction *I) = 0;
+  virtual VPLegalization
+  getVPLegalizationStrategy(const VPIntrinsic &PI) const = 0;
 };
 
 template <typename T>
@@ -1341,48 +1727,35 @@ public:
     return Impl.getDataLayout();
   }
 
-  int getOperationCost(unsigned Opcode, Type *Ty, Type *OpTy) override {
-    return Impl.getOperationCost(Opcode, Ty, OpTy);
-  }
-  int getGEPCost(Type *PointeeType, const Value *Ptr,
-                 ArrayRef<const Value *> Operands) override {
+  InstructionCost
+  getGEPCost(Type *PointeeType, const Value *Ptr,
+             ArrayRef<const Value *> Operands,
+             enum TargetTransformInfo::TargetCostKind CostKind) override {
     return Impl.getGEPCost(PointeeType, Ptr, Operands);
-  }
-  int getExtCost(const Instruction *I, const Value *Src) override {
-    return Impl.getExtCost(I, Src);
-  }
-  int getCallCost(FunctionType *FTy, int NumArgs, const User *U) override {
-    return Impl.getCallCost(FTy, NumArgs, U);
-  }
-  int getCallCost(const Function *F, int NumArgs, const User *U) override {
-    return Impl.getCallCost(F, NumArgs, U);
-  }
-  int getCallCost(const Function *F,
-                  ArrayRef<const Value *> Arguments, const User *U) override {
-    return Impl.getCallCost(F, Arguments, U);
   }
   unsigned getInliningThresholdMultiplier() override {
     return Impl.getInliningThresholdMultiplier();
   }
+  unsigned adjustInliningThreshold(const CallBase *CB) override {
+    return Impl.adjustInliningThreshold(CB);
+  }
   int getInlinerVectorBonusPercent() override {
     return Impl.getInlinerVectorBonusPercent();
   }
-  int getIntrinsicCost(Intrinsic::ID IID, Type *RetTy,
-                       ArrayRef<Type *> ParamTys, const User *U = nullptr) override {
-    return Impl.getIntrinsicCost(IID, RetTy, ParamTys, U);
-  }
-  int getIntrinsicCost(Intrinsic::ID IID, Type *RetTy,
-                       ArrayRef<const Value *> Arguments,
-                       const User *U = nullptr) override {
-    return Impl.getIntrinsicCost(IID, RetTy, Arguments, U);
-  }
-  int getMemcpyCost(const Instruction *I) override {
+  InstructionCost getMemcpyCost(const Instruction *I) override {
     return Impl.getMemcpyCost(I);
   }
-  int getUserCost(const User *U, ArrayRef<const Value *> Operands) override {
-    return Impl.getUserCost(U, Operands);
+  InstructionCost getUserCost(const User *U, ArrayRef<const Value *> Operands,
+                              TargetCostKind CostKind) override {
+    return Impl.getUserCost(U, Operands, CostKind);
+  }
+  BranchProbability getPredictableBranchThreshold() override {
+    return Impl.getPredictableBranchThreshold();
   }
   bool hasBranchDivergence() override { return Impl.hasBranchDivergence(); }
+  bool useGPUDivergenceAnalysis() override {
+    return Impl.useGPUDivergenceAnalysis();
+  }
   bool isSourceOfDivergence(const Value *V) override {
     return Impl.isSourceOfDivergence(V);
   }
@@ -1391,8 +1764,24 @@ public:
     return Impl.isAlwaysUniform(V);
   }
 
-  unsigned getFlatAddressSpace() override {
-    return Impl.getFlatAddressSpace();
+  unsigned getFlatAddressSpace() override { return Impl.getFlatAddressSpace(); }
+
+  bool collectFlatAddressOperands(SmallVectorImpl<int> &OpIndexes,
+                                  Intrinsic::ID IID) const override {
+    return Impl.collectFlatAddressOperands(OpIndexes, IID);
+  }
+
+  bool isNoopAddrSpaceCast(unsigned FromAS, unsigned ToAS) const override {
+    return Impl.isNoopAddrSpaceCast(FromAS, ToAS);
+  }
+
+  unsigned getAssumedAddrSpace(const Value *V) const override {
+    return Impl.getAssumedAddrSpace(V);
+  }
+
+  Value *rewriteIntrinsicWithAddressSpace(IntrinsicInst *II, Value *OldV,
+                                          Value *NewV) const override {
+    return Impl.rewriteIntrinsicWithAddressSpace(II, OldV, NewV);
   }
 
   bool isLoweredToCall(const Function *F) override {
@@ -1402,11 +1791,43 @@ public:
                                UnrollingPreferences &UP) override {
     return Impl.getUnrollingPreferences(L, SE, UP);
   }
+  void getPeelingPreferences(Loop *L, ScalarEvolution &SE,
+                             PeelingPreferences &PP) override {
+    return Impl.getPeelingPreferences(L, SE, PP);
+  }
   bool isHardwareLoopProfitable(Loop *L, ScalarEvolution &SE,
-                                AssumptionCache &AC,
-                                TargetLibraryInfo *LibInfo,
+                                AssumptionCache &AC, TargetLibraryInfo *LibInfo,
                                 HardwareLoopInfo &HWLoopInfo) override {
     return Impl.isHardwareLoopProfitable(L, SE, AC, LibInfo, HWLoopInfo);
+  }
+  bool preferPredicateOverEpilogue(Loop *L, LoopInfo *LI, ScalarEvolution &SE,
+                                   AssumptionCache &AC, TargetLibraryInfo *TLI,
+                                   DominatorTree *DT,
+                                   const LoopAccessInfo *LAI) override {
+    return Impl.preferPredicateOverEpilogue(L, LI, SE, AC, TLI, DT, LAI);
+  }
+  bool emitGetActiveLaneMask() override {
+    return Impl.emitGetActiveLaneMask();
+  }
+  Optional<Instruction *> instCombineIntrinsic(InstCombiner &IC,
+                                               IntrinsicInst &II) override {
+    return Impl.instCombineIntrinsic(IC, II);
+  }
+  Optional<Value *>
+  simplifyDemandedUseBitsIntrinsic(InstCombiner &IC, IntrinsicInst &II,
+                                   APInt DemandedMask, KnownBits &Known,
+                                   bool &KnownBitsComputed) override {
+    return Impl.simplifyDemandedUseBitsIntrinsic(IC, II, DemandedMask, Known,
+                                                 KnownBitsComputed);
+  }
+  Optional<Value *> simplifyDemandedVectorEltsIntrinsic(
+      InstCombiner &IC, IntrinsicInst &II, APInt DemandedElts, APInt &UndefElts,
+      APInt &UndefElts2, APInt &UndefElts3,
+      std::function<void(Instruction *, unsigned, APInt, APInt &)>
+          SimplifyAndSetOp) override {
+    return Impl.simplifyDemandedVectorEltsIntrinsic(
+        IC, II, DemandedElts, UndefElts, UndefElts2, UndefElts3,
+        SimplifyAndSetOp);
   }
   bool isLegalAddImmediate(int64_t Imm) override {
     return Impl.isLegalAddImmediate(Imm);
@@ -1415,48 +1836,49 @@ public:
     return Impl.isLegalICmpImmediate(Imm);
   }
   bool isLegalAddressingMode(Type *Ty, GlobalValue *BaseGV, int64_t BaseOffset,
-                             bool HasBaseReg, int64_t Scale,
-                             unsigned AddrSpace,
+                             bool HasBaseReg, int64_t Scale, unsigned AddrSpace,
                              Instruction *I) override {
-    return Impl.isLegalAddressingMode(Ty, BaseGV, BaseOffset, HasBaseReg,
-                                      Scale, AddrSpace, I);
+    return Impl.isLegalAddressingMode(Ty, BaseGV, BaseOffset, HasBaseReg, Scale,
+                                      AddrSpace, I);
   }
   bool isLSRCostLess(TargetTransformInfo::LSRCost &C1,
                      TargetTransformInfo::LSRCost &C2) override {
     return Impl.isLSRCostLess(C1, C2);
   }
-  bool canMacroFuseCmp() override {
-    return Impl.canMacroFuseCmp();
+  bool isNumRegsMajorCostOfLSR() override {
+    return Impl.isNumRegsMajorCostOfLSR();
   }
-  bool canSaveCmp(Loop *L, BranchInst **BI,
-                        ScalarEvolution *SE,
-                        LoopInfo *LI, DominatorTree *DT, AssumptionCache *AC,
-                        TargetLibraryInfo *LibInfo) override {
+  bool isProfitableLSRChainElement(Instruction *I) override {
+    return Impl.isProfitableLSRChainElement(I);
+  }
+  bool canMacroFuseCmp() override { return Impl.canMacroFuseCmp(); }
+  bool canSaveCmp(Loop *L, BranchInst **BI, ScalarEvolution *SE, LoopInfo *LI,
+                  DominatorTree *DT, AssumptionCache *AC,
+                  TargetLibraryInfo *LibInfo) override {
     return Impl.canSaveCmp(L, BI, SE, LI, DT, AC, LibInfo);
   }
-  bool shouldFavorPostInc() const override {
-    return Impl.shouldFavorPostInc();
+  AddressingModeKind
+    getPreferredAddressingMode(const Loop *L,
+                               ScalarEvolution *SE) const override {
+    return Impl.getPreferredAddressingMode(L, SE);
   }
-  bool shouldFavorBackedgeIndex(const Loop *L) const override {
-    return Impl.shouldFavorBackedgeIndex(L);
+  bool isLegalMaskedStore(Type *DataType, Align Alignment) override {
+    return Impl.isLegalMaskedStore(DataType, Alignment);
   }
-  bool isLegalMaskedStore(Type *DataType) override {
-    return Impl.isLegalMaskedStore(DataType);
+  bool isLegalMaskedLoad(Type *DataType, Align Alignment) override {
+    return Impl.isLegalMaskedLoad(DataType, Alignment);
   }
-  bool isLegalMaskedLoad(Type *DataType) override {
-    return Impl.isLegalMaskedLoad(DataType);
-  }
-  bool isLegalNTStore(Type *DataType, unsigned Alignment) override {
+  bool isLegalNTStore(Type *DataType, Align Alignment) override {
     return Impl.isLegalNTStore(DataType, Alignment);
   }
-  bool isLegalNTLoad(Type *DataType, unsigned Alignment) override {
+  bool isLegalNTLoad(Type *DataType, Align Alignment) override {
     return Impl.isLegalNTLoad(DataType, Alignment);
   }
-  bool isLegalMaskedScatter(Type *DataType) override {
-    return Impl.isLegalMaskedScatter(DataType);
+  bool isLegalMaskedScatter(Type *DataType, Align Alignment) override {
+    return Impl.isLegalMaskedScatter(DataType, Alignment);
   }
-  bool isLegalMaskedGather(Type *DataType) override {
-    return Impl.isLegalMaskedGather(DataType);
+  bool isLegalMaskedGather(Type *DataType, Align Alignment) override {
+    return Impl.isLegalMaskedGather(DataType, Alignment);
   }
   bool isLegalMaskedCompressStore(Type *DataType) override {
     return Impl.isLegalMaskedCompressStore(DataType);
@@ -1473,15 +1895,14 @@ public:
   bool prefersVectorizedAddressing() override {
     return Impl.prefersVectorizedAddressing();
   }
-  int getScalingFactorCost(Type *Ty, GlobalValue *BaseGV, int64_t BaseOffset,
-                           bool HasBaseReg, int64_t Scale,
-                           unsigned AddrSpace) override {
-    return Impl.getScalingFactorCost(Ty, BaseGV, BaseOffset, HasBaseReg,
-                                     Scale, AddrSpace);
+  InstructionCost getScalingFactorCost(Type *Ty, GlobalValue *BaseGV,
+                                       int64_t BaseOffset, bool HasBaseReg,
+                                       int64_t Scale,
+                                       unsigned AddrSpace) override {
+    return Impl.getScalingFactorCost(Ty, BaseGV, BaseOffset, HasBaseReg, Scale,
+                                     AddrSpace);
   }
-  bool LSRWithInstrQueries() override {
-    return Impl.LSRWithInstrQueries();
-  }
+  bool LSRWithInstrQueries() override { return Impl.LSRWithInstrQueries(); }
   bool isTruncateFree(Type *Ty1, Type *Ty2) override {
     return Impl.isTruncateFree(Ty1, Ty2);
   }
@@ -1490,25 +1911,31 @@ public:
   }
   bool useAA() override { return Impl.useAA(); }
   bool isTypeLegal(Type *Ty) override { return Impl.isTypeLegal(Ty); }
-  unsigned getJumpBufAlignment() override { return Impl.getJumpBufAlignment(); }
-  unsigned getJumpBufSize() override { return Impl.getJumpBufSize(); }
+  InstructionCost getRegUsageForType(Type *Ty) override {
+    return Impl.getRegUsageForType(Ty);
+  }
   bool shouldBuildLookupTables() override {
     return Impl.shouldBuildLookupTables();
   }
   bool shouldBuildLookupTablesForConstant(Constant *C) override {
     return Impl.shouldBuildLookupTablesForConstant(C);
   }
+  bool shouldBuildRelLookupTables() override {
+    return Impl.shouldBuildRelLookupTables();
+  }
   bool useColdCCForColdCall(Function &F) override {
     return Impl.useColdCCForColdCall(F);
   }
 
-  unsigned getScalarizationOverhead(Type *Ty, bool Insert,
-                                    bool Extract) override {
-    return Impl.getScalarizationOverhead(Ty, Insert, Extract);
+  InstructionCost getScalarizationOverhead(VectorType *Ty,
+                                           const APInt &DemandedElts,
+                                           bool Insert, bool Extract) override {
+    return Impl.getScalarizationOverhead(Ty, DemandedElts, Insert, Extract);
   }
-  unsigned getOperandsScalarizationOverhead(ArrayRef<const Value *> Args,
-                                            unsigned VF) override {
-    return Impl.getOperandsScalarizationOverhead(Args, VF);
+  InstructionCost
+  getOperandsScalarizationOverhead(ArrayRef<const Value *> Args,
+                                   ArrayRef<Type *> Tys) override {
+    return Impl.getOperandsScalarizationOverhead(Args, Tys);
   }
 
   bool supportsEfficientVectorElementLoadStore() override {
@@ -1531,9 +1958,9 @@ public:
   bool isFPVectorizationPotentiallyUnsafe() override {
     return Impl.isFPVectorizationPotentiallyUnsafe();
   }
-  bool allowsMisalignedMemoryAccesses(LLVMContext &Context,
-                                      unsigned BitWidth, unsigned AddressSpace,
-                                      unsigned Alignment, bool *Fast) override {
+  bool allowsMisalignedMemoryAccesses(LLVMContext &Context, unsigned BitWidth,
+                                      unsigned AddressSpace, Align Alignment,
+                                      bool *Fast) override {
     return Impl.allowsMisalignedMemoryAccesses(Context, BitWidth, AddressSpace,
                                                Alignment, Fast);
   }
@@ -1546,148 +1973,211 @@ public:
     return Impl.isFCmpOrdCheaperThanFCmpZero(Ty);
   }
 
-  int getFPOpCost(Type *Ty) override { return Impl.getFPOpCost(Ty); }
+  InstructionCost getFPOpCost(Type *Ty) override {
+    return Impl.getFPOpCost(Ty);
+  }
 
-  int getIntImmCodeSizeCost(unsigned Opc, unsigned Idx, const APInt &Imm,
-                            Type *Ty) override {
+  InstructionCost getIntImmCodeSizeCost(unsigned Opc, unsigned Idx,
+                                        const APInt &Imm, Type *Ty) override {
     return Impl.getIntImmCodeSizeCost(Opc, Idx, Imm, Ty);
   }
-  int getIntImmCost(const APInt &Imm, Type *Ty) override {
-    return Impl.getIntImmCost(Imm, Ty);
+  InstructionCost getIntImmCost(const APInt &Imm, Type *Ty,
+                                TargetCostKind CostKind) override {
+    return Impl.getIntImmCost(Imm, Ty, CostKind);
   }
-  int getIntImmCost(unsigned Opc, unsigned Idx, const APInt &Imm,
-                    Type *Ty) override {
-    return Impl.getIntImmCost(Opc, Idx, Imm, Ty);
+  InstructionCost getIntImmCostInst(unsigned Opc, unsigned Idx,
+                                    const APInt &Imm, Type *Ty,
+                                    TargetCostKind CostKind,
+                                    Instruction *Inst = nullptr) override {
+    return Impl.getIntImmCostInst(Opc, Idx, Imm, Ty, CostKind, Inst);
   }
-  int getIntImmCost(Intrinsic::ID IID, unsigned Idx, const APInt &Imm,
-                    Type *Ty) override {
-    return Impl.getIntImmCost(IID, Idx, Imm, Ty);
+  InstructionCost getIntImmCostIntrin(Intrinsic::ID IID, unsigned Idx,
+                                      const APInt &Imm, Type *Ty,
+                                      TargetCostKind CostKind) override {
+    return Impl.getIntImmCostIntrin(IID, Idx, Imm, Ty, CostKind);
   }
-  unsigned getNumberOfRegisters(bool Vector) override {
-    return Impl.getNumberOfRegisters(Vector);
+  unsigned getNumberOfRegisters(unsigned ClassID) const override {
+    return Impl.getNumberOfRegisters(ClassID);
   }
-  unsigned getRegisterBitWidth(bool Vector) const override {
-    return Impl.getRegisterBitWidth(Vector);
+  unsigned getRegisterClassForType(bool Vector,
+                                   Type *Ty = nullptr) const override {
+    return Impl.getRegisterClassForType(Vector, Ty);
   }
-  unsigned getMinVectorRegisterBitWidth() override {
+  const char *getRegisterClassName(unsigned ClassID) const override {
+    return Impl.getRegisterClassName(ClassID);
+  }
+  TypeSize getRegisterBitWidth(RegisterKind K) const override {
+    return Impl.getRegisterBitWidth(K);
+  }
+  unsigned getMinVectorRegisterBitWidth() const override {
     return Impl.getMinVectorRegisterBitWidth();
   }
-  bool shouldMaximizeVectorBandwidth(bool OptSize) const override {
-    return Impl.shouldMaximizeVectorBandwidth(OptSize);
+  Optional<unsigned> getMaxVScale() const override {
+    return Impl.getMaxVScale();
   }
-  unsigned getMinimumVF(unsigned ElemWidth) const override {
-    return Impl.getMinimumVF(ElemWidth);
+  bool shouldMaximizeVectorBandwidth() const override {
+    return Impl.shouldMaximizeVectorBandwidth();
+  }
+  ElementCount getMinimumVF(unsigned ElemWidth,
+                            bool IsScalable) const override {
+    return Impl.getMinimumVF(ElemWidth, IsScalable);
+  }
+  unsigned getMaximumVF(unsigned ElemWidth, unsigned Opcode) const override {
+    return Impl.getMaximumVF(ElemWidth, Opcode);
   }
   bool shouldConsiderAddressTypePromotion(
       const Instruction &I, bool &AllowPromotionWithoutCommonHeader) override {
     return Impl.shouldConsiderAddressTypePromotion(
         I, AllowPromotionWithoutCommonHeader);
   }
-  unsigned getCacheLineSize() override {
-    return Impl.getCacheLineSize();
-  }
-  llvm::Optional<unsigned> getCacheSize(CacheLevel Level) override {
+  unsigned getCacheLineSize() const override { return Impl.getCacheLineSize(); }
+  Optional<unsigned> getCacheSize(CacheLevel Level) const override {
     return Impl.getCacheSize(Level);
   }
-  llvm::Optional<unsigned> getCacheAssociativity(CacheLevel Level) override {
+  Optional<unsigned> getCacheAssociativity(CacheLevel Level) const override {
     return Impl.getCacheAssociativity(Level);
   }
-  unsigned getPrefetchDistance() override { return Impl.getPrefetchDistance(); }
-  unsigned getMinPrefetchStride() override {
-    return Impl.getMinPrefetchStride();
+
+  /// Return the preferred prefetch distance in terms of instructions.
+  ///
+  unsigned getPrefetchDistance() const override {
+    return Impl.getPrefetchDistance();
   }
-  unsigned getMaxPrefetchIterationsAhead() override {
+
+  /// Return the minimum stride necessary to trigger software
+  /// prefetching.
+  ///
+  unsigned getMinPrefetchStride(unsigned NumMemAccesses,
+                                unsigned NumStridedMemAccesses,
+                                unsigned NumPrefetches,
+                                bool HasCall) const override {
+    return Impl.getMinPrefetchStride(NumMemAccesses, NumStridedMemAccesses,
+                                     NumPrefetches, HasCall);
+  }
+
+  /// Return the maximum prefetch distance in terms of loop
+  /// iterations.
+  ///
+  unsigned getMaxPrefetchIterationsAhead() const override {
     return Impl.getMaxPrefetchIterationsAhead();
   }
+
+  /// \return True if prefetching should also be done for writes.
+  bool enableWritePrefetching() const override {
+    return Impl.enableWritePrefetching();
+  }
+
   unsigned getMaxInterleaveFactor(unsigned VF) override {
     return Impl.getMaxInterleaveFactor(VF);
   }
   unsigned getEstimatedNumberOfCaseClusters(const SwitchInst &SI,
-                                            unsigned &JTSize) override {
-    return Impl.getEstimatedNumberOfCaseClusters(SI, JTSize);
+                                            unsigned &JTSize,
+                                            ProfileSummaryInfo *PSI,
+                                            BlockFrequencyInfo *BFI) override {
+    return Impl.getEstimatedNumberOfCaseClusters(SI, JTSize, PSI, BFI);
   }
-  unsigned
-  getArithmeticInstrCost(unsigned Opcode, Type *Ty, OperandValueKind Opd1Info,
-                         OperandValueKind Opd2Info,
-                         OperandValueProperties Opd1PropInfo,
-                         OperandValueProperties Opd2PropInfo,
-                         ArrayRef<const Value *> Args) override {
-    return Impl.getArithmeticInstrCost(Opcode, Ty, Opd1Info, Opd2Info,
-                                       Opd1PropInfo, Opd2PropInfo, Args);
+  InstructionCost getArithmeticInstrCost(
+      unsigned Opcode, Type *Ty, TTI::TargetCostKind CostKind,
+      OperandValueKind Opd1Info, OperandValueKind Opd2Info,
+      OperandValueProperties Opd1PropInfo, OperandValueProperties Opd2PropInfo,
+      ArrayRef<const Value *> Args,
+      const Instruction *CxtI = nullptr) override {
+    return Impl.getArithmeticInstrCost(Opcode, Ty, CostKind, Opd1Info, Opd2Info,
+                                       Opd1PropInfo, Opd2PropInfo, Args, CxtI);
   }
-  int getShuffleCost(ShuffleKind Kind, Type *Tp, int Index,
-                     Type *SubTp) override {
-    return Impl.getShuffleCost(Kind, Tp, Index, SubTp);
+  InstructionCost getShuffleCost(ShuffleKind Kind, VectorType *Tp,
+                                 ArrayRef<int> Mask, int Index,
+                                 VectorType *SubTp) override {
+    return Impl.getShuffleCost(Kind, Tp, Mask, Index, SubTp);
   }
-  int getCastInstrCost(unsigned Opcode, Type *Dst, Type *Src,
-                       const Instruction *I) override {
-    return Impl.getCastInstrCost(Opcode, Dst, Src, I);
+  InstructionCost getCastInstrCost(unsigned Opcode, Type *Dst, Type *Src,
+                                   CastContextHint CCH,
+                                   TTI::TargetCostKind CostKind,
+                                   const Instruction *I) override {
+    return Impl.getCastInstrCost(Opcode, Dst, Src, CCH, CostKind, I);
   }
-  int getExtractWithExtendCost(unsigned Opcode, Type *Dst, VectorType *VecTy,
-                               unsigned Index) override {
+  InstructionCost getExtractWithExtendCost(unsigned Opcode, Type *Dst,
+                                           VectorType *VecTy,
+                                           unsigned Index) override {
     return Impl.getExtractWithExtendCost(Opcode, Dst, VecTy, Index);
   }
-  int getCFInstrCost(unsigned Opcode) override {
-    return Impl.getCFInstrCost(Opcode);
+  InstructionCost getCFInstrCost(unsigned Opcode, TTI::TargetCostKind CostKind,
+                                 const Instruction *I = nullptr) override {
+    return Impl.getCFInstrCost(Opcode, CostKind, I);
   }
-  int getCmpSelInstrCost(unsigned Opcode, Type *ValTy, Type *CondTy,
-                         const Instruction *I) override {
-    return Impl.getCmpSelInstrCost(Opcode, ValTy, CondTy, I);
+  InstructionCost getCmpSelInstrCost(unsigned Opcode, Type *ValTy, Type *CondTy,
+                                     CmpInst::Predicate VecPred,
+                                     TTI::TargetCostKind CostKind,
+                                     const Instruction *I) override {
+    return Impl.getCmpSelInstrCost(Opcode, ValTy, CondTy, VecPred, CostKind, I);
   }
-  int getVectorInstrCost(unsigned Opcode, Type *Val, unsigned Index) override {
+  InstructionCost getVectorInstrCost(unsigned Opcode, Type *Val,
+                                     unsigned Index) override {
     return Impl.getVectorInstrCost(Opcode, Val, Index);
   }
-  int getMemoryOpCost(unsigned Opcode, Type *Src, unsigned Alignment,
-                      unsigned AddressSpace, const Instruction *I) override {
-    return Impl.getMemoryOpCost(Opcode, Src, Alignment, AddressSpace, I);
+  InstructionCost getMemoryOpCost(unsigned Opcode, Type *Src, Align Alignment,
+                                  unsigned AddressSpace,
+                                  TTI::TargetCostKind CostKind,
+                                  const Instruction *I) override {
+    return Impl.getMemoryOpCost(Opcode, Src, Alignment, AddressSpace,
+                                CostKind, I);
   }
-  int getMaskedMemoryOpCost(unsigned Opcode, Type *Src, unsigned Alignment,
-                            unsigned AddressSpace) override {
-    return Impl.getMaskedMemoryOpCost(Opcode, Src, Alignment, AddressSpace);
+  InstructionCost getMaskedMemoryOpCost(unsigned Opcode, Type *Src,
+                                        Align Alignment, unsigned AddressSpace,
+                                        TTI::TargetCostKind CostKind) override {
+    return Impl.getMaskedMemoryOpCost(Opcode, Src, Alignment, AddressSpace,
+                                      CostKind);
   }
-  int getGatherScatterOpCost(unsigned Opcode, Type *DataTy,
-                             Value *Ptr, bool VariableMask,
-                             unsigned Alignment) override {
+  InstructionCost
+  getGatherScatterOpCost(unsigned Opcode, Type *DataTy, const Value *Ptr,
+                         bool VariableMask, Align Alignment,
+                         TTI::TargetCostKind CostKind,
+                         const Instruction *I = nullptr) override {
     return Impl.getGatherScatterOpCost(Opcode, DataTy, Ptr, VariableMask,
-                                       Alignment);
+                                       Alignment, CostKind, I);
   }
-  int getInterleavedMemoryOpCost(unsigned Opcode, Type *VecTy, unsigned Factor,
-                                 ArrayRef<unsigned> Indices, unsigned Alignment,
-                                 unsigned AddressSpace, bool UseMaskForCond,
-                                 bool UseMaskForGaps) override {
+  InstructionCost getInterleavedMemoryOpCost(
+      unsigned Opcode, Type *VecTy, unsigned Factor, ArrayRef<unsigned> Indices,
+      Align Alignment, unsigned AddressSpace, TTI::TargetCostKind CostKind,
+      bool UseMaskForCond, bool UseMaskForGaps) override {
     return Impl.getInterleavedMemoryOpCost(Opcode, VecTy, Factor, Indices,
-                                           Alignment, AddressSpace,
+                                           Alignment, AddressSpace, CostKind,
                                            UseMaskForCond, UseMaskForGaps);
   }
-  int getArithmeticReductionCost(unsigned Opcode, Type *Ty,
-                                 bool IsPairwiseForm) override {
-    return Impl.getArithmeticReductionCost(Opcode, Ty, IsPairwiseForm);
+  InstructionCost
+  getArithmeticReductionCost(unsigned Opcode, VectorType *Ty,
+                             Optional<FastMathFlags> FMF,
+                             TTI::TargetCostKind CostKind) override {
+    return Impl.getArithmeticReductionCost(Opcode, Ty, FMF, CostKind);
   }
-  int getMinMaxReductionCost(Type *Ty, Type *CondTy,
-                             bool IsPairwiseForm, bool IsUnsigned) override {
-    return Impl.getMinMaxReductionCost(Ty, CondTy, IsPairwiseForm, IsUnsigned);
-   }
-  int getIntrinsicInstrCost(Intrinsic::ID ID, Type *RetTy, ArrayRef<Type *> Tys,
-               FastMathFlags FMF, unsigned ScalarizationCostPassed) override {
-    return Impl.getIntrinsicInstrCost(ID, RetTy, Tys, FMF,
-                                      ScalarizationCostPassed);
+  InstructionCost
+  getMinMaxReductionCost(VectorType *Ty, VectorType *CondTy, bool IsUnsigned,
+                         TTI::TargetCostKind CostKind) override {
+    return Impl.getMinMaxReductionCost(Ty, CondTy, IsUnsigned, CostKind);
   }
-  int getIntrinsicInstrCost(Intrinsic::ID ID, Type *RetTy,
-       ArrayRef<Value *> Args, FastMathFlags FMF, unsigned VF) override {
-    return Impl.getIntrinsicInstrCost(ID, RetTy, Args, FMF, VF);
+  InstructionCost getExtendedAddReductionCost(
+      bool IsMLA, bool IsUnsigned, Type *ResTy, VectorType *Ty,
+      TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput) override {
+    return Impl.getExtendedAddReductionCost(IsMLA, IsUnsigned, ResTy, Ty,
+                                            CostKind);
   }
-  int getCallInstrCost(Function *F, Type *RetTy,
-                       ArrayRef<Type *> Tys) override {
-    return Impl.getCallInstrCost(F, RetTy, Tys);
+  InstructionCost getIntrinsicInstrCost(const IntrinsicCostAttributes &ICA,
+                                        TTI::TargetCostKind CostKind) override {
+    return Impl.getIntrinsicInstrCost(ICA, CostKind);
+  }
+  InstructionCost getCallInstrCost(Function *F, Type *RetTy,
+                                   ArrayRef<Type *> Tys,
+                                   TTI::TargetCostKind CostKind) override {
+    return Impl.getCallInstrCost(F, RetTy, Tys, CostKind);
   }
   unsigned getNumberOfParts(Type *Tp) override {
     return Impl.getNumberOfParts(Tp);
   }
-  int getAddressComputationCost(Type *Ty, ScalarEvolution *SE,
-                                const SCEV *Ptr) override {
+  InstructionCost getAddressComputationCost(Type *Ty, ScalarEvolution *SE,
+                                            const SCEV *Ptr) override {
     return Impl.getAddressComputationCost(Ty, SE, Ptr);
   }
-  unsigned getCostOfKeepingLiveOverCall(ArrayRef<Type *> Tys) override {
+  InstructionCost getCostOfKeepingLiveOverCall(ArrayRef<Type *> Tys) override {
     return Impl.getCostOfKeepingLiveOverCall(Tys);
   }
   bool getTgtMemIntrinsic(IntrinsicInst *Inst,
@@ -1702,16 +2192,18 @@ public:
     return Impl.getOrCreateResultFromMemIntrinsic(Inst, ExpectedType);
   }
   Type *getMemcpyLoopLoweringType(LLVMContext &Context, Value *Length,
+                                  unsigned SrcAddrSpace, unsigned DestAddrSpace,
                                   unsigned SrcAlign,
                                   unsigned DestAlign) const override {
-    return Impl.getMemcpyLoopLoweringType(Context, Length, SrcAlign, DestAlign);
+    return Impl.getMemcpyLoopLoweringType(Context, Length, SrcAddrSpace,
+                                          DestAddrSpace, SrcAlign, DestAlign);
   }
-  void getMemcpyLoopResidualLoweringType(SmallVectorImpl<Type *> &OpsOut,
-                                         LLVMContext &Context,
-                                         unsigned RemainingBytes,
-                                         unsigned SrcAlign,
-                                         unsigned DestAlign) const override {
+  void getMemcpyLoopResidualLoweringType(
+      SmallVectorImpl<Type *> &OpsOut, LLVMContext &Context,
+      unsigned RemainingBytes, unsigned SrcAddrSpace, unsigned DestAddrSpace,
+      unsigned SrcAlign, unsigned DestAlign) const override {
     Impl.getMemcpyLoopResidualLoweringType(OpsOut, Context, RemainingBytes,
+                                           SrcAddrSpace, DestAddrSpace,
                                            SrcAlign, DestAlign);
   }
   bool areInlineCompatible(const Function *Caller,
@@ -1738,17 +2230,22 @@ public:
   bool isLegalToVectorizeStore(StoreInst *SI) const override {
     return Impl.isLegalToVectorizeStore(SI);
   }
-  bool isLegalToVectorizeLoadChain(unsigned ChainSizeInBytes,
-                                   unsigned Alignment,
+  bool isLegalToVectorizeLoadChain(unsigned ChainSizeInBytes, Align Alignment,
                                    unsigned AddrSpace) const override {
     return Impl.isLegalToVectorizeLoadChain(ChainSizeInBytes, Alignment,
                                             AddrSpace);
   }
-  bool isLegalToVectorizeStoreChain(unsigned ChainSizeInBytes,
-                                    unsigned Alignment,
+  bool isLegalToVectorizeStoreChain(unsigned ChainSizeInBytes, Align Alignment,
                                     unsigned AddrSpace) const override {
     return Impl.isLegalToVectorizeStoreChain(ChainSizeInBytes, Alignment,
                                              AddrSpace);
+  }
+  bool isLegalToVectorizeReduction(const RecurrenceDescriptor &RdxDesc,
+                                   ElementCount VF) const override {
+    return Impl.isLegalToVectorizeReduction(RdxDesc, VF);
+  }
+  bool isElementTypeLegalForScalableVector(Type *Ty) const override {
+    return Impl.isElementTypeLegalForScalableVector(Ty);
   }
   unsigned getLoadVectorFactor(unsigned VF, unsigned LoadSize,
                                unsigned ChainSizeInBytes,
@@ -1760,9 +2257,13 @@ public:
                                 VectorType *VecTy) const override {
     return Impl.getStoreVectorFactor(VF, StoreSize, ChainSizeInBytes, VecTy);
   }
-  bool useReductionIntrinsic(unsigned Opcode, Type *Ty,
+  bool preferInLoopReduction(unsigned Opcode, Type *Ty,
                              ReductionFlags Flags) const override {
-    return Impl.useReductionIntrinsic(Opcode, Ty, Flags);
+    return Impl.preferInLoopReduction(Opcode, Ty, Flags);
+  }
+  bool preferPredicatedReductionSelect(unsigned Opcode, Type *Ty,
+                                       ReductionFlags Flags) const override {
+    return Impl.preferPredicatedReductionSelect(Opcode, Ty, Flags);
   }
   bool shouldExpandReduction(const IntrinsicInst *II) const override {
     return Impl.shouldExpandReduction(II);
@@ -1772,8 +2273,21 @@ public:
     return Impl.getGISelRematGlobalCost();
   }
 
-  int getInstructionLatency(const Instruction *I) override {
+  bool supportsScalableVectors() const override {
+    return Impl.supportsScalableVectors();
+  }
+
+  bool hasActiveVectorLength() const override {
+    return Impl.hasActiveVectorLength();
+  }
+
+  InstructionCost getInstructionLatency(const Instruction *I) override {
     return Impl.getInstructionLatency(I);
+  }
+
+  VPLegalization
+  getVPLegalizationStrategy(const VPIntrinsic &PI) const override {
+    return Impl.getVPLegalizationStrategy(PI);
   }
 };
 
@@ -1874,6 +2388,6 @@ public:
 /// clients.
 ImmutablePass *createTargetTransformInfoWrapperPass(TargetIRAnalysis TIRA);
 
-} // End llvm namespace
+} // namespace llvm
 
 #endif

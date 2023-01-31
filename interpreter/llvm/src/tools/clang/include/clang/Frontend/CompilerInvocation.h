@@ -14,14 +14,16 @@
 #include "clang/Basic/FileSystemOptions.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/LangOptions.h"
+#include "clang/Basic/LangStandard.h"
 #include "clang/Frontend/DependencyOutputOptions.h"
 #include "clang/Frontend/FrontendOptions.h"
-#include "clang/Frontend/LangStandard.h"
 #include "clang/Frontend/MigratorOptions.h"
 #include "clang/Frontend/PreprocessorOutputOptions.h"
 #include "clang/StaticAnalyzer/Core/AnalyzerOptions.h"
 #include "llvm/ADT/IntrusiveRefCntPtr.h"
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/Support/VirtualFileSystem.h"
+
 #include <memory>
 #include <string>
 
@@ -59,10 +61,17 @@ class TargetOptions;
 /// report the error(s).
 bool ParseDiagnosticArgs(DiagnosticOptions &Opts, llvm::opt::ArgList &Args,
                          DiagnosticsEngine *Diags = nullptr,
-                         bool DefaultDiagColor = true,
-                         bool DefaultShowOpt = true);
+                         bool DefaultDiagColor = true);
 
-class CompilerInvocationBase {
+/// The base class of CompilerInvocation with reference semantics.
+///
+/// This class stores option objects behind reference-counted pointers. This is
+/// useful for clients that want to keep some option object around even after
+/// CompilerInvocation gets destroyed, without making a copy.
+///
+/// This is a separate class so that we can implement the copy constructor and
+/// assignment here and leave them defaulted in the rest of CompilerInvocation.
+class CompilerInvocationRefBase {
 public:
   /// Options controlling the language variant.
   std::shared_ptr<LangOptions> LangOpts;
@@ -79,10 +88,15 @@ public:
   /// Options controlling the preprocessor (aside from \#include handling).
   std::shared_ptr<PreprocessorOptions> PreprocessorOpts;
 
-  CompilerInvocationBase();
-  CompilerInvocationBase(const CompilerInvocationBase &X);
-  CompilerInvocationBase &operator=(const CompilerInvocationBase &) = delete;
-  ~CompilerInvocationBase();
+  /// Options controlling the static analyzer.
+  AnalyzerOptionsRef AnalyzerOpts;
+
+  CompilerInvocationRefBase();
+  CompilerInvocationRefBase(const CompilerInvocationRefBase &X);
+  CompilerInvocationRefBase(CompilerInvocationRefBase &&X);
+  CompilerInvocationRefBase &operator=(CompilerInvocationRefBase X);
+  CompilerInvocationRefBase &operator=(CompilerInvocationRefBase &&X);
+  ~CompilerInvocationRefBase();
 
   LangOptions *getLangOpts() { return LangOpts.get(); }
   const LangOptions *getLangOpts() const { return LangOpts.get(); }
@@ -111,21 +125,13 @@ public:
   const PreprocessorOptions &getPreprocessorOpts() const {
     return *PreprocessorOpts;
   }
+
+  AnalyzerOptionsRef getAnalyzerOpts() const { return AnalyzerOpts; }
 };
 
-namespace vfs {
-  class FileSystem;
-}
-
-/// Helper class for holding the data necessary to invoke the compiler.
-///
-/// This class is designed to represent an abstract "invocation" of the
-/// compiler, including data such as the include paths, the code generation
-/// options, the warning flags, and so on.
-class CompilerInvocation : public CompilerInvocationBase {
-  /// Options controlling the static analyzer.
-  AnalyzerOptionsRef AnalyzerOpts;
-
+/// The base class of CompilerInvocation with value semantics.
+class CompilerInvocationValueBase {
+protected:
   MigratorOptions MigratorOpts;
 
   /// Options controlling IRgen and the backend.
@@ -144,59 +150,9 @@ class CompilerInvocation : public CompilerInvocationBase {
   PreprocessorOutputOptions PreprocessorOutputOpts;
 
   /// List of overlay files
-  IntrusiveRefCntPtr<llvm::vfs::OverlayFileSystem> Overlay;
+  IntrusiveRefCntPtr<llvm::vfs::OverlayFileSystem> Overlay = new llvm::vfs::OverlayFileSystem(llvm::vfs::getRealFileSystem());
 
 public:
-  CompilerInvocation() : AnalyzerOpts(new AnalyzerOptions()),
-    Overlay(new llvm::vfs::OverlayFileSystem(llvm::vfs::getRealFileSystem())) {}
-
-  /// @name Utility Methods
-  /// @{
-
-  /// Create a compiler invocation from a list of input options.
-  /// \returns true on success.
-  ///
-  /// \param [out] Res - The resulting invocation.
-  /// \param ArgBegin - The first element in the argument vector.
-  /// \param ArgEnd - The last element in the argument vector.
-  /// \param Diags - The diagnostic engine to use for errors.
-  static bool CreateFromArgs(CompilerInvocation &Res,
-                             const char* const *ArgBegin,
-                             const char* const *ArgEnd,
-                             DiagnosticsEngine &Diags);
-
-  /// Get the directory where the compiler headers
-  /// reside, relative to the compiler binary (found by the passed in
-  /// arguments).
-  ///
-  /// \param Argv0 - The program path (from argv[0]), for finding the builtin
-  /// compiler path.
-  /// \param MainAddr - The address of main (or some other function in the main
-  /// executable), for finding the builtin compiler path.
-  static std::string GetResourcesPath(const char *Argv0, void *MainAddr);
-
-  /// Set language defaults for the given input language and
-  /// language standard in the given LangOptions object.
-  ///
-  /// \param Opts - The LangOptions object to set up.
-  /// \param IK - The input language.
-  /// \param T - The target triple.
-  /// \param PPOpts - The PreprocessorOptions affected.
-  /// \param LangStd - The input language standard.
-  static void setLangDefaults(LangOptions &Opts, InputKind IK,
-                   const llvm::Triple &T, PreprocessorOptions &PPOpts,
-                   LangStandard::Kind LangStd = LangStandard::lang_unspecified);
-
-  /// Retrieve a module hash string that is suitable for uniquely
-  /// identifying the conditions under which the module was built.
-  std::string getModuleHash() const;
-
-  /// @}
-  /// @name Option Subgroups
-  /// @{
-
-  AnalyzerOptionsRef getAnalyzerOpts() const { return AnalyzerOpts; }
-
   MigratorOptions &getMigratorOpts() { return MigratorOpts; }
   const MigratorOptions &getMigratorOpts() const { return MigratorOpts; }
 
@@ -239,8 +195,106 @@ public:
   const PreprocessorOutputOptions &getPreprocessorOutputOpts() const {
     return PreprocessorOutputOpts;
   }
+};
 
-  /// @}
+/// Helper class for holding the data necessary to invoke the compiler.
+///
+/// This class is designed to represent an abstract "invocation" of the
+/// compiler, including data such as the include paths, the code generation
+/// options, the warning flags, and so on.
+class CompilerInvocation : public CompilerInvocationRefBase,
+                           public CompilerInvocationValueBase {
+public:
+  /// Create a compiler invocation from a list of input options.
+  /// \returns true on success.
+  ///
+  /// \returns false if an error was encountered while parsing the arguments
+  /// and attempts to recover and continue parsing the rest of the arguments.
+  /// The recovery is best-effort and only guarantees that \p Res will end up in
+  /// one of the vaild-to-access (albeit arbitrary) states.
+  ///
+  /// \param [out] Res - The resulting invocation.
+  /// \param [in] CommandLineArgs - Array of argument strings, this must not
+  /// contain "-cc1".
+  static bool CreateFromArgs(CompilerInvocation &Res,
+                             ArrayRef<const char *> CommandLineArgs,
+                             DiagnosticsEngine &Diags,
+                             const char *Argv0 = nullptr);
+
+  /// Get the directory where the compiler headers
+  /// reside, relative to the compiler binary (found by the passed in
+  /// arguments).
+  ///
+  /// \param Argv0 - The program path (from argv[0]), for finding the builtin
+  /// compiler path.
+  /// \param MainAddr - The address of main (or some other function in the main
+  /// executable), for finding the builtin compiler path.
+  static std::string GetResourcesPath(const char *Argv0, void *MainAddr);
+
+  /// Set language defaults for the given input language and
+  /// language standard in the given LangOptions object.
+  ///
+  /// \param Opts - The LangOptions object to set up.
+  /// \param IK - The input language.
+  /// \param T - The target triple.
+  /// \param Includes - The affected list of included files.
+  /// \param LangStd - The input language standard.
+  static void
+  setLangDefaults(LangOptions &Opts, InputKind IK, const llvm::Triple &T,
+                  std::vector<std::string> &Includes,
+                  LangStandard::Kind LangStd = LangStandard::lang_unspecified);
+
+  /// Retrieve a module hash string that is suitable for uniquely
+  /// identifying the conditions under which the module was built.
+  std::string getModuleHash() const;
+
+  using StringAllocator = llvm::function_ref<const char *(const llvm::Twine &)>;
+  /// Generate a cc1-compatible command line arguments from this instance.
+  ///
+  /// \param [out] Args - The generated arguments. Note that the caller is
+  /// responsible for inserting the path to the clang executable and "-cc1" if
+  /// desired.
+  /// \param SA - A function that given a Twine can allocate storage for a given
+  /// command line argument and return a pointer to the newly allocated string.
+  /// The returned pointer is what gets appended to Args.
+  void generateCC1CommandLine(llvm::SmallVectorImpl<const char *> &Args,
+                              StringAllocator SA) const;
+
+private:
+  static bool CreateFromArgsImpl(CompilerInvocation &Res,
+                                 ArrayRef<const char *> CommandLineArgs,
+                                 DiagnosticsEngine &Diags, const char *Argv0);
+
+  /// Generate command line options from DiagnosticOptions.
+  static void GenerateDiagnosticArgs(const DiagnosticOptions &Opts,
+                                     SmallVectorImpl<const char *> &Args,
+                                     StringAllocator SA, bool DefaultDiagColor);
+
+  /// Parse command line options that map to LangOptions.
+  static bool ParseLangArgs(LangOptions &Opts, llvm::opt::ArgList &Args,
+                            InputKind IK, const llvm::Triple &T,
+                            std::vector<std::string> &Includes,
+                            DiagnosticsEngine &Diags);
+
+  /// Generate command line options from LangOptions.
+  static void GenerateLangArgs(const LangOptions &Opts,
+                               SmallVectorImpl<const char *> &Args,
+                               StringAllocator SA, const llvm::Triple &T,
+                               InputKind IK);
+
+  /// Parse command line options that map to CodeGenOptions.
+  static bool ParseCodeGenArgs(CodeGenOptions &Opts, llvm::opt::ArgList &Args,
+                               InputKind IK, DiagnosticsEngine &Diags,
+                               const llvm::Triple &T,
+                               const std::string &OutputFile,
+                               const LangOptions &LangOptsRef);
+
+  // Generate command line options from CodeGenOptions.
+  static void GenerateCodeGenArgs(const CodeGenOptions &Opts,
+                                  SmallVectorImpl<const char *> &Args,
+                                  StringAllocator SA, const llvm::Triple &T,
+                                  const std::string &OutputFile,
+                                  const LangOptions *LangOpts);
 };
 
 IntrusiveRefCntPtr<llvm::vfs::FileSystem>

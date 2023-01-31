@@ -35,8 +35,6 @@ class RooLinkedList ;
 class RooNumIntConfig ;
 class RooDataHist ;
 class RooFunctor ;
-class RooGenFunction ;
-class RooMultiGenFunction ;
 class RooFitResult ;
 class RooAbsMoment ;
 class RooDerivative ;
@@ -62,6 +60,21 @@ class TH3F;
 class RooAbsReal : public RooAbsArg {
 public:
   using value_type = double;
+
+  /// A RooAbsReal::Ref can be constructed from a `RooAbsReal&` or a `double`
+  /// that will be implicitly converted to a RooConstVar&. The RooAbsReal::Ref
+  /// can be used as a replacement for `RooAbsReal&`. With this type
+  /// definition, you can write RooFit interfaces that accept both RooAbsReal,
+  /// or simply a number that will be implicitly converted to a RooConstVar&.
+  class Ref {
+  public:
+     inline Ref(RooAbsReal &ref) : _ref{ref} {}
+     Ref(double val);
+     inline operator RooAbsReal &() const { return _ref; }
+
+  private:
+     RooAbsReal &_ref;
+  };
 
   // Constructors, assignment etc
   RooAbsReal() ;
@@ -210,11 +223,11 @@ public:
 
   /// Create integral over observables in iset in range named rangeName.
   RooAbsReal* createIntegral(const RooArgSet& iset, const char* rangeName) const {
-    return createIntegral(iset,0,0,rangeName) ;
+    return createIntegral(iset,nullptr,nullptr,rangeName) ;
   }
   /// Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const char* rangeName=nullptr) const {
-    return createIntegral(iset,&nset,0,rangeName) ;
+    return createIntegral(iset,&nset,nullptr,rangeName) ;
   }
   /// Create integral over observables in iset in range named rangeName with integrand normalized over observables in nset while
   /// using specified configuration for any numeric integration.
@@ -223,7 +236,7 @@ public:
   }
   /// Create integral over observables in iset in range named rangeName using specified configuration for any numeric integration.
   RooAbsReal* createIntegral(const RooArgSet& iset, const RooNumIntConfig& cfg, const char* rangeName=nullptr) const {
-    return createIntegral(iset,0,&cfg,rangeName) ;
+    return createIntegral(iset,nullptr,&cfg,rangeName) ;
   }
   virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=nullptr, const RooNumIntConfig* cfg=nullptr, const char* rangeName=nullptr) const ;
 
@@ -286,7 +299,7 @@ public:
 
   // Fill an existing histogram
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars,
-           double scaleFactor= 1, const RooArgSet *projectedVars= 0, bool scaling=true,
+           double scaleFactor= 1, const RooArgSet *projectedVars= nullptr, bool scaling=true,
            const RooArgSet* condObs=nullptr, bool setError=true) const;
 
   // Create 1,2, and 3D histograms from and fill it
@@ -343,9 +356,6 @@ public:
   virtual std::list<double>* binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const;
   virtual std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const;
 
-  RooGenFunction* iGenFunction(RooRealVar& x, const RooArgSet& nset=RooArgSet()) ;
-  RooMultiGenFunction* iGenFunction(const RooArgSet& observables, const RooArgSet& nset=RooArgSet()) ;
-
   RooFunctor* functor(const RooArgList& obs, const RooArgList& pars=RooArgList(), const RooArgSet& nset=RooArgSet()) const ;
   TF1* asTF(const RooArgList& obs, const RooArgList& pars=RooArgList(), const RooArgSet& nset=RooArgSet()) const ;
 
@@ -365,7 +375,7 @@ public:
 
   virtual bool setData(RooAbsData& /*data*/, bool /*cloneData*/=true) { return true ; }
 
-  virtual void enableOffsetting(bool) {} ;
+  virtual void enableOffsetting(bool);
   virtual bool isOffsetting() const { return false ; }
   virtual double offset() const { return 0 ; }
 
@@ -385,10 +395,16 @@ protected:
   TString integralNameSuffix(const RooArgSet& iset, const RooArgSet* nset=nullptr, const char* rangeName=nullptr, bool omitEmpty=false) const ;
 
 
-  bool isSelectedComp() const ;
+
 
 
  public:
+  bool isSelectedComp() const ;
+  void selectComp(bool flag) {
+     // If flag is true, only selected component will be included in evaluates of RooAddPdf components
+     _selectComp = flag ;
+  }
+
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
   const RooAbsReal *createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
                      RooArgSet *&cloneSet, const char* rangeName=nullptr, const RooArgSet* condObs=nullptr) const;
@@ -485,10 +501,10 @@ protected:
   RooNumIntConfig* _specIntegratorConfig ; // Numeric integrator configuration specific for this object
 
   struct PlotOpt {
-   PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(0), binProjData(false), projSet(0), precision(1e-3),
-               shiftToZero(false),projDataSet(0),normRangeName(0),rangeLo(0),rangeHi(0),postRangeFracScale(false),wmode(RooCurve::Extended),
-               projectionRangeName(0),curveInvisible(false), curveName(0),addToCurveName(0),addToWgtSelf(1.),addToWgtOther(1.),
-               numCPU(1),interleave(RooFit::Interleave),curveNameSuffix(""), numee(10), eeval(0), doeeval(false), progress(false), errorFR(0) {} ;
+   PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(nullptr), binProjData(false), projSet(nullptr), precision(1e-3),
+               shiftToZero(false),projDataSet(nullptr),normRangeName(nullptr),rangeLo(0),rangeHi(0),postRangeFracScale(false),wmode(RooCurve::Extended),
+               projectionRangeName(nullptr),curveInvisible(false), curveName(nullptr),addToCurveName(nullptr),addToWgtSelf(1.),addToWgtOther(1.),
+               numCPU(1),interleave(RooFit::Interleave),curveNameSuffix(""), numee(10), eeval(0), doeeval(false), progress(false), errorFR(nullptr) {}
    Option_t* drawOptions ;
    double scaleFactor ;
    ScaleType stype ;
@@ -550,10 +566,7 @@ protected:
   friend class RooAddHelpers ;
   friend class RooAddPdf ;
   friend class RooAddModel ;
-  void selectComp(bool flag) {
-    // If flag is true, only selected component will be included in evaluates of RooAddPdf components
-    _selectComp = flag ;
-  }
+
   static void globalSelectComp(bool flag) ;
   bool _selectComp ;               //! Component selection flag for RooAbsPdf::plotCompOn
   static bool _globalSelectComp ;  // Global activation switch for component selection

@@ -42,7 +42,7 @@ public:
   RooAbsDataStore* clone(const char* newname=nullptr) const override { return new RooCompositeDataStore(*this,newname) ; }
   RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=nullptr) const override { return new RooCompositeDataStore(*this,vars,newname) ; }
 
-  RooAbsDataStore* reduce(RooStringView name, RooStringView title,
+  std::unique_ptr<RooAbsDataStore> reduce(RooStringView name, RooStringView title,
                           const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
                           std::size_t nStart, std::size_t nStop) override;
 
@@ -91,7 +91,7 @@ public:
 
   // Constant term  optimizer interface
   void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=nullptr, bool skipZeroWeights=false) override ;
-  const RooAbsArg* cacheOwner() override { return 0 ; }
+  const RooAbsArg* cacheOwner() override { return nullptr ; }
   void setArgStatus(const RooArgSet& set, bool active) override ;
   void resetCache() override ;
 

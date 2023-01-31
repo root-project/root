@@ -471,7 +471,7 @@ Bool_t TRecorderReplaying::Initialize(TRecorder *r, Bool_t showMouseCursor,
       f->Close();
    }
 
-   gPad = 0;
+   gPad = nullptr;
    // Starts replaying
    fTimer->Connect("Timeout()","TRecorderReplaying",this,"ReplayRealtime()");
    fTimer->Start(0);

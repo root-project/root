@@ -398,7 +398,7 @@ Bool_t TRootSnifferFull::ProduceImage(Int_t kind, const std::string &path, const
       }
 
       Bool_t isbatch = gROOT->IsBatch();
-      TVirtualPad *save_gPad = gPad;
+      TVirtualPad::TContext ctxt(false);
 
       if (!isbatch)
          gROOT->SetBatch(kTRUE);
@@ -410,7 +410,6 @@ Bool_t TRootSnifferFull::ProduceImage(Int_t kind, const std::string &path, const
 
       if (!isbatch)
          gROOT->SetBatch(kFALSE);
-      gPad = save_gPad;
 
    } else {
       delete img;

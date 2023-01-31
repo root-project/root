@@ -47,7 +47,7 @@ public:
 
   void printMultiline(std::ostream &os, Int_t content, bool verbose, TString indent= "") const override;
 
-  inline void Print(Option_t *options= 0) const override {
+  inline void Print(Option_t *options= nullptr) const override {
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
   StyleOption defaultPrintStyle(Option_t* opt) const override ;

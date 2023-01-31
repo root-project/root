@@ -531,23 +531,44 @@ void RooProduct::ioStreamerPass2() {
   // If the proxy data members are evolved by schema evolution, the proxy list
   // that references them will contain null pointers because the evolved
   // members are only created after the proxy list. That's why we have to set
-  // them manually in that case. But to make sure we don't overwrite valid
-  // proxies, an exception will be thrown if the proxy list constains
-  // unexpected values.
+  // them manually in that case.
   RooAbsProxy * p0 = getProxy(0);
-  if(p0 != &_compRSet) {
-    if(p0) {
-      throw std::runtime_error("RooProduct::ioStreamerPass2(): the first proxy unexpectedly wasn't the compRSet!");
-    }
+  if(p0 == nullptr) {
     _proxyList.AddAt(&_compRSet, 0);
+    p0 = &_compRSet;
   }
   RooAbsProxy * p1 = getProxy(1);
-  if(p1 != &_compCSet) {
-    if(p1) {
-      throw std::runtime_error("RooProduct::ioStreamerPass2(): the second proxy unexpectedly wasn't the compCSet!");
-    }
+  if(p1 == nullptr) {
     _proxyList.AddAt(&_compCSet, 1);
+    p1 = &_compCSet;
   }
+
+  // If the proxies in the proxy list still don't correspond to _compRSet and
+  // _compCSet, it's time to print errors. And try to recover.
+  auto expectProxyIs = [this](std::size_t idx, RooAbsProxy * proxyInArg, RooListProxy * ourProxy, const char* memberName) {
+    if(proxyInArg != ourProxy) {
+      // From experience, it's rather the members of the RooProduct that is
+      // still correct in these inconsistent cases. That's why we try to
+      // recover by setting the proxy in the _proxyList to be equal to the
+      // member proxy. But that might be wrong, so it's important to warn the
+      // user anyway.
+      _proxyList.RemoveAt(idx);
+      _proxyList.AddAt(ourProxy, idx);
+      std::stringstream ss;
+      ss << "Problem when reading RooProduct instance \"" << GetName() << "\"!\n"
+         << "     _proxyList[" << idx << "] was expected to be equal to " << memberName << ", but it's not.\n"
+         << "         - proxyList[" << idx << "] : ";
+      proxyInArg->print(ss, true);
+      ss << "\n          - " << memberName << "   : " ;
+      ourProxy->print(ss, true);
+      ss << "\n    RooFit will resolve this inconsistency by making _proxyList[" << idx << "] point to " << memberName
+         << ".";
+      coutW(LinkStateMgmt) << ss.str() << std::endl;
+    }
+  };
+
+  expectProxyIs(0, p0, &_compRSet, "_compRSet");
+  expectProxyIs(1, p1, &_compCSet, "_compCSet");
 }
 
 

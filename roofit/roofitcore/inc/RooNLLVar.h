@@ -61,6 +61,10 @@ public:
     _batchEvaluations = on;
   }
 
+  void enableBinOffsetting(bool on = true) {
+    _doBinOffset = on;
+  }
+
   using ComputeResult = std::pair<ROOT::Math::KahanSum<double>, double>;
 
   static RooNLLVar::ComputeResult computeBatchedFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone,
@@ -69,7 +73,7 @@ public:
                                                  std::size_t firstEvent, std::size_t lastEvent);
   static RooNLLVar::ComputeResult computeScalarFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone, RooArgSet *normSet,
                                                 bool weightSq, std::size_t stepSize, std::size_t firstEvent,
-                                                std::size_t lastEvent);
+                                                std::size_t lastEvent, bool doBinOffset=false);
 
 protected:
 
@@ -84,6 +88,7 @@ private:
 
   bool _extended{false};
   bool _batchEvaluations{false};
+  bool _doBinOffset{false};
   bool _weightSq{false}; ///< Apply weights squared?
   mutable bool _first{true}; ///<!
   ROOT::Math::KahanSum<double> _offsetSaveW2{0.0}; ///<!
@@ -92,7 +97,7 @@ private:
   mutable RooRealSumPdf* _binnedPdf{nullptr}; ///<!
   mutable std::unique_ptr<RooBatchCompute::RunContext> _evalData; ///<! Struct to store function evaluation workspaces.
 
-  ClassDefOverride(RooNLLVar,3) // Function representing (extended) -log(L) of p.d.f and dataset
+  ClassDefOverride(RooNLLVar,0) // Function representing (extended) -log(L) of p.d.f and dataset
 };
 
 #endif

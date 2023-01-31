@@ -66,7 +66,7 @@ protected:
 public:
    TGFontDialog(const TGWindow *parent = nullptr, const TGWindow *t = nullptr,
                 FontProp_t *fontProp = nullptr, const TString &sample = "",
-                char **fontList = 0, Bool_t wait = kTRUE);
+                char **fontList = nullptr, Bool_t wait = kTRUE);
    virtual ~TGFontDialog();
 
    virtual void SetFont(TGFont *font);

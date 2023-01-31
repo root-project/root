@@ -61,7 +61,7 @@ void EmitInstrDocs(RecordKeeper &RK, raw_ostream &OS) {
   unsigned VariantCount = Target.getAsmParserVariantCount();
 
   // Page title.
-  std::string Title = Target.getName();
+  std::string Title = std::string(Target.getName());
   Title += " Instructions";
   writeTitle(Title, OS);
   OS << "\n";
@@ -138,15 +138,12 @@ void EmitInstrDocs(RecordKeeper &RK, raw_ostream &OS) {
     FLAG(isConvergent)
     FLAG(hasNoSchedulingInfo)
     FLAG(variadicOpsAreDefs)
+    FLAG(isAuthenticated)
     if (!FlagStrings.empty()) {
       OS << "Flags: ";
-      bool IsFirst = true;
-      for (auto FlagString : FlagStrings) {
-        if (!IsFirst)
-          OS << ", ";
-        OS << "``" << FlagString << "``";
-        IsFirst = false;
-      }
+      ListSeparator LS;
+      for (auto FlagString : FlagStrings)
+        OS << LS << "``" << FlagString << "``";
       OS << "\n\n";
     }
 
@@ -191,26 +188,18 @@ void EmitInstrDocs(RecordKeeper &RK, raw_ostream &OS) {
     // Implicit definitions.
     if (!II->ImplicitDefs.empty()) {
       OS << "Implicit defs: ";
-      bool IsFirst = true;
-      for (Record *Def : II->ImplicitDefs) {
-        if (!IsFirst)
-          OS << ", ";
-        OS << "``" << Def->getName() << "``";
-        IsFirst = false;
-      }
+      ListSeparator LS;
+      for (Record *Def : II->ImplicitDefs)
+        OS << LS << "``" << Def->getName() << "``";
       OS << "\n\n";
     }
 
     // Implicit uses.
     if (!II->ImplicitUses.empty()) {
       OS << "Implicit uses: ";
-      bool IsFirst = true;
-      for (Record *Use : II->ImplicitUses) {
-        if (!IsFirst)
-          OS << ", ";
-        OS << "``" << Use->getName() << "``";
-        IsFirst = false;
-      }
+      ListSeparator LS;
+      for (Record *Use : II->ImplicitUses)
+        OS << LS << "``" << Use->getName() << "``";
       OS << "\n\n";
     }
 
@@ -219,16 +208,12 @@ void EmitInstrDocs(RecordKeeper &RK, raw_ostream &OS) {
         II->TheDef->getValueAsListOfDefs("Predicates");
     if (!Predicates.empty()) {
       OS << "Predicates: ";
-      bool IsFirst = true;
-      for (Record *P : Predicates) {
-        if (!IsFirst)
-          OS << ", ";
-        OS << "``" << P->getName() << "``";
-        IsFirst = false;
-      }
+      ListSeparator LS;
+      for (Record *P : Predicates)
+        OS << LS << "``" << P->getName() << "``";
       OS << "\n\n";
     }
   }
 }
 
-} // end llvm namespace
+} // end namespace llvm

@@ -176,7 +176,7 @@ public:
                       ExistingTypeCheck_t existingTypeCheck,
                       AutoParse_t autoParse,
                       bool *shuttingDownPtr,
-                      const int *pgDebug = 0);
+                      const int *pgDebug = nullptr);
    virtual ~TClingLookupHelper() { /* we're not owner */ }
 
    bool ExistingTypeCheck(const std::string &tname, std::string &result) override;
@@ -371,16 +371,13 @@ EIOCtorCategory CheckIOConstructor(const clang::CXXRecordDecl*, const char *, co
 const clang::FunctionDecl* ClassInfo__HasMethod(const clang::DeclContext *cl, char const*, const cling::Interpreter& interp);
 
 //______________________________________________________________________________
-void CreateNameTypeMap(clang::CXXRecordDecl const&, std::map<std::string, ROOT::Internal::TSchemaType>&);
-
-//______________________________________________________________________________
 int ElementStreamer(std::ostream& finalString,
                     const clang::NamedDecl &forcontext,
                     const clang::QualType &qti,
                     const char *t,
                     int rwmode,
                     const cling::Interpreter &interp,
-                    const char *tcl=0);
+                    const char *tcl = nullptr);
 
 //______________________________________________________________________________
 bool IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base, const clang::CXXRecordDecl *context,const cling::Interpreter &interp);
@@ -573,6 +570,24 @@ std::string GetModuleFileName(const char* moduleName);
 void GetCppName(std::string &output, const char *input);
 
 //______________________________________________________________________________
+// Demangle the input symbol name for dlsym.
+static inline std::string DemangleNameForDlsym(const std::string& name)
+{
+   std::string nameForDlsym = name;
+
+#if defined(R__MACOSX) || defined(R__WIN32)
+   // The JIT gives us a mangled name which has an additional leading underscore
+   // on macOS and Windows, for instance __ZN8TRandom34RndmEv. However, dlsym
+   // requires us to remove it.
+   // FIXME: get this information from the DataLayout via getGlobalPrefix()!
+   if (nameForDlsym[0] == '_')
+      nameForDlsym.erase(0, 1);
+#endif //R__MACOSX
+
+   return nameForDlsym;
+}
+
+//______________________________________________________________________________
 // Return the type with all parts fully qualified (most typedefs),
 // including template arguments, appended to name.
 void GetFullyQualifiedTypeName(std::string &name, const clang::QualType &type, const cling::Interpreter &interpreter);
@@ -621,7 +636,7 @@ std::pair<std::string,clang::QualType> GetNameTypeForIO(const clang::QualType& t
 
 //______________________________________________________________________________
 // Returns comment in a meaningful way
-llvm::StringRef GetComment(const clang::Decl &decl, clang::SourceLocation *loc = 0);
+llvm::StringRef GetComment(const clang::Decl &decl, clang::SourceLocation *loc = nullptr);
 
 //______________________________________________________________________________
 // Returns true if class def macro exists
@@ -755,7 +770,7 @@ inline void LevelPrint(bool prefix, int level, const char *location, const char 
    if (level < GetErrorIgnoreLevel())
       return;
 
-   const char *type = 0;
+   const char *type = nullptr;
 
    if (level >= ROOT::TMetaUtils::kInfo)
       type = "Info";

@@ -11,9 +11,9 @@ protected:
 public:
    NdbDCEnergyDist()
       : NdbMF(35, "Data covariances for energy distributions") {}
-   ~NdbDCEnergyDist() {}
+   ~NdbDCEnergyDist() override {}
 
-   ClassDef(NdbDCEnergyDist,1)
+   ClassDefOverride(NdbDCEnergyDist,1)
 
 }; // NdbDCEnergyDist
 

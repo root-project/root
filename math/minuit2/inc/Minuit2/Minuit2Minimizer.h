@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <string>
+#include <functional>
 
 namespace ROOT {
 
@@ -88,8 +89,11 @@ public:
    /// set the function to minimize
    void SetFunction(const ROOT::Math::IMultiGenFunction &func) override;
 
-   /// set gradient the function to minimize
+   /// set the function to minimize using an interface with gradient computation capabilities
    void SetFunction(const ROOT::Math::IMultiGradFunction &func) override;
+
+   /// set the function implementing Hessian computation
+   void SetHessianFunction(std::function<bool(const std::vector<double> &, double *)> hfunc) override;
 
    /// set free variable
    bool SetVariable(unsigned int ivar, const std::string &name, double val, double step) override;
@@ -156,7 +160,7 @@ public:
    const double *X() const override { return &fValues.front(); }
 
    /// return pointer to gradient values at the minimum
-   const double *MinGradient() const override { return 0; } // not available in Minuit2
+   const double *MinGradient() const override { return nullptr; } // not available in Minuit2
 
    /// number of function calls to reach the minimum
    unsigned int NCalls() const override { return fState.NFcn(); }

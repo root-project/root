@@ -241,9 +241,9 @@ public:
       kCarbon12     = BIT(13),
       kCarbon14     = BIT(14)
    };
-   TGeoDecayChannel() : fDecay(0), fDiso(0), fBranchingRatio(0), fQvalue(0), fParent(0), fDaughter(0) {}
+   TGeoDecayChannel() : fDecay(0), fDiso(0), fBranchingRatio(0), fQvalue(0), fParent(nullptr), fDaughter(nullptr) {}
    TGeoDecayChannel(Int_t decay, Int_t diso, Double_t branchingRatio, Double_t qValue)
-                  : fDecay(decay), fDiso(diso), fBranchingRatio(branchingRatio), fQvalue(qValue), fParent(0), fDaughter(0) {}
+                  : fDecay(decay), fDiso(diso), fBranchingRatio(branchingRatio), fQvalue(qValue), fParent(nullptr), fDaughter(nullptr) {}
    TGeoDecayChannel(const TGeoDecayChannel &dc) : TObject(dc),fDecay(dc.fDecay),fDiso(dc.fDiso),fBranchingRatio(dc.fBranchingRatio),
                                                   fQvalue(dc.fQvalue),fParent(dc.fParent),fDaughter(dc.fDaughter) {}
    virtual ~TGeoDecayChannel() {}
@@ -294,7 +294,7 @@ private:
    Double_t                 fTmax;            // Maximum value of the time interval
    BtCoef_t                *fCoeff;           //[fNcoeff] Array of coefficients
 public:
-   TGeoBatemanSol() : TObject(), TAttLine(), TAttFill(), TAttMarker(), fElem(NULL), fElemTop(NULL), fCsize(0), fNcoeff(0), fFactor(1.), fTmin(0.), fTmax(0), fCoeff(NULL) {}
+   TGeoBatemanSol() : TObject(), TAttLine(), TAttFill(), TAttMarker(), fElem(nullptr), fElemTop(nullptr), fCsize(0), fNcoeff(0), fFactor(1.), fTmin(0.), fTmax(0), fCoeff(nullptr) {}
    TGeoBatemanSol(TGeoElementRN *elem);
    TGeoBatemanSol(const TObjArray *chain);
    TGeoBatemanSol(const TGeoBatemanSol& other);
@@ -336,7 +336,7 @@ private:
    Double_t                 fRatio;          // Current ratio
 
 protected:
-   TGeoElemIter() : fTop(0), fElem(0), fBranch(0), fLevel(0), fLimitRatio(0), fRatio(0) {}
+   TGeoElemIter() : fTop(nullptr), fElem(nullptr), fBranch(nullptr), fLevel(0), fLimitRatio(0), fRatio(0) {}
    TGeoElementRN           *Down(Int_t ibranch);
    TGeoElementRN           *Up();
 

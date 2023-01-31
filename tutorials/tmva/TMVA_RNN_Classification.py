@@ -165,7 +165,7 @@ if 0 <= use_type < 3:
 useGPU = True  # use GPU for TMVA if available
 
 useGPU = ROOT.gSystem.GetFromPipe("root-config --has-tmva-gpu") == "yes"
-useTMVA_RNN = ROOT.gSystem.GetFromPipe("root-config --has-tmva-cpu") == "yes"
+useTMVA_RNN = ROOT.gSystem.GetFromPipe("root-config --has-tmva-cpu") == "yes" or useGPU
 
 if useTMVA_RNN:
     ROOT.Warning(
@@ -186,15 +186,19 @@ else:
 
 num_threads = 0  # use by default all threads
 # do enable MT running
-if num_threads >= 0:
-    ROOT.EnableImplicitMT(num_threads)
-    if num_threads > 0:
-        ROOT.gSystem.Setenv("OMP_NUM_THREADS", str(num_threads))
+if ROOT.gSystem.GetFromPipe("root-config --has-imt") == "yes":
+    if num_threads >= 0:
+        ROOT.EnableImplicitMT(num_threads)
+        if num_threads > 0:
+            ROOT.gSystem.Setenv("OMP_NUM_THREADS", str(num_threads))
+    else:
+        ROOT.gSystem.Setenv("OMP_NUM_THREADS", "1")
+
+
+    print("Running with nthreads  = {}".format(ROOT.GetThreadPoolSize()))
+
 else:
-    ROOT.gSystem.Setenv("OMP_NUM_THREADS", "1")
-
-
-print("Running with nthreads  = {}".format(ROOT.GetThreadPoolSize()))
+    print("Running in serail mode since ROOT does not support MT")
 
 inputFileName = "time_data_t10_d30.root"
 
@@ -342,7 +346,7 @@ if useTMVA_RNN:
             InputLayout=str(ntime) + "|" + str(ninput),
             Layout=rnnLayout,
             TrainingStrategy=trainingString1,
-            Architecture=archString,
+            Architecture=archString
         )
 
 
@@ -371,7 +375,7 @@ if useTMVA_DNN:
         RandomSeed=0,
         InputLayout="1|1|" + str(ntime * ninput),
         Layout="DENSE|64|TANH,DENSE|TANH|64,DENSE|TANH|64,LINEAR",
-        TrainingStrategy=trainingString1,
+        TrainingStrategy=trainingString1
     )
 
 

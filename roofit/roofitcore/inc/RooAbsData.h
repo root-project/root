@@ -25,7 +25,6 @@
 #include "RooFit/UniqueId.h"
 #include "RooFit/Detail/DataMap.h"
 
-#include <ROOT/RConfig.hxx> // R__DEPRECATED
 #include "TNamed.h"
 
 #include <map>
@@ -65,7 +64,7 @@ public:
   // Constructors, factory methods etc.
   RooAbsData() ;
   RooAbsData(RooStringView name, RooStringView title, const RooArgSet& vars, RooAbsDataStore* store=nullptr) ;
-  RooAbsData(const RooAbsData& other, const char* newname = 0) ;
+  RooAbsData(const RooAbsData& other, const char* newname = nullptr) ;
 
   RooAbsData& operator=(const RooAbsData& other);
   ~RooAbsData() override ;
@@ -79,8 +78,8 @@ public:
   RooAbsData* reduce(const RooArgSet& varSubset, const char* cut=nullptr) ;
   RooAbsData* reduce(const RooArgSet& varSubset, const RooFormulaVar& cutVar) ;
 
-  RooAbsDataStore* store() { return _dstore ; }
-  const RooAbsDataStore* store() const { return _dstore ; }
+  RooAbsDataStore* store() { return _dstore.get(); }
+  const RooAbsDataStore* store() const { return _dstore.get(); }
   const TTree* tree() const ;
   TTree *GetClonedTree() const;
 
@@ -181,8 +180,8 @@ public:
 
   // WVE --- This needs to be public to avoid CINT problems
   struct PlotOpt {
-   PlotOpt() : cuts(""), drawOptions("P"), bins(0), etype(RooAbsData::Poisson), cutRange(0), histName(0), histInvisible(false),
-              addToHistName(0),addToWgtSelf(1.),addToWgtOther(1.),xErrorSize(1),refreshFrameNorm(false),correctForBinWidth(true),
+   PlotOpt() : cuts(""), drawOptions("P"), bins(nullptr), etype(RooAbsData::Poisson), cutRange(nullptr), histName(nullptr), histInvisible(false),
+              addToHistName(nullptr),addToWgtSelf(1.),addToWgtOther(1.),xErrorSize(1),refreshFrameNorm(false),correctForBinWidth(true),
               scaleFactor(1.) {} ;
    const char* cuts ;
    Option_t* drawOptions ;
@@ -216,17 +215,11 @@ public:
                        const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
                        const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
                        const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;
-  // Developer note: the `binArgX` parameter has no default `none` value,
-  // because then the signature would be ambiguous with the deprecated bin
-  // integer overload below. When the deprecated overload is removed, a default
-  // value must be set (tutorial failures will remind us to do that).
   TH1 *createHistogram(const char* varNameList,
-                       const RooCmdArg& binArgX, const RooCmdArg& binArgY=RooCmdArg::none(),
+                       const RooCmdArg& binArgX=RooCmdArg::none(), const RooCmdArg& binArgY=RooCmdArg::none(),
                        const RooCmdArg& binArgZ=RooCmdArg::none()) const;
   /// Create and fill a ROOT histogram TH1,TH2 or TH3 with the values of this dataset.
   TH1 *createHistogram(const char *name, const RooAbsRealLValue& xvar, const RooLinkedList& argList) const ;
-  TH1 *createHistogram(const char* varNameList, Int_t xbins=0, Int_t ybins=0, Int_t zbins=0) const
-      R__DEPRECATED(6, 30, "Use the overload of RooAbsData::createHistogram that takes RooFit command arguments.");
   TH2F* createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, const char* cuts="",
          const char *name= "hist") const;
   TH2F* createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, int nx, int ny,
@@ -236,7 +229,7 @@ public:
   virtual TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "", const char* cutRange=nullptr) const;
 
   // Printing interface (human readable)
-  inline void Print(Option_t *options= 0) const override {
+  inline void Print(Option_t *options= nullptr) const override {
     // Print contents on stdout
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
@@ -362,7 +355,7 @@ protected:
   RooArgSet _vars;         ///< Dimensions of this data set
   RooArgSet _cachedVars ;  ///<! External variables cached with this data set
 
-  RooAbsDataStore* _dstore = nullptr; ///< Data storage implementation
+  std::unique_ptr<RooAbsDataStore> _dstore; ///< Data storage implementation
 
   std::map<std::string,RooAbsData*> _ownedComponents ; ///< Owned external components
 
@@ -375,7 +368,7 @@ private:
 
   const RooFit::UniqueId<RooAbsData> _uniqueId; ///<!
 
-   ClassDefOverride(RooAbsData, 6) // Abstract data collection
+   ClassDefOverride(RooAbsData, 7) // Abstract data collection
 };
 
 #endif

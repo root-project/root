@@ -65,7 +65,7 @@ public:
    // methods
    virtual void     CheckBoundaryErrors(Int_t ntracks=1000000, Double_t radius=-1.);
    virtual void     CheckBoundaryReference(Int_t icheck=-1);
-   void             CheckGeometryFull(Bool_t checkoverlaps=kTRUE, Bool_t checkcrossings=kTRUE, Int_t nrays=10000, const Double_t *vertex=NULL);
+   void             CheckGeometryFull(Bool_t checkoverlaps=kTRUE, Bool_t checkcrossings=kTRUE, Int_t nrays=10000, const Double_t *vertex=nullptr);
    void             CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const;
    void             CheckOverlaps(const TGeoVolume *vol, Double_t ovlp=0.1, Option_t *option="");
    void             CheckOverlapsBySampling(TGeoVolume *vol, Double_t ovlp=0.1, Int_t npoints=1000000) const;
@@ -77,14 +77,14 @@ public:
                             Double_t rmin=0., Double_t rmax=9999999, Option_t *option="");
    void             PrintOverlaps() const;
    void             RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option);
-   void             RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz, const char *target_vol=0, Bool_t check_norm=kFALSE);
+   void             RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz, const char *target_vol=nullptr, Bool_t check_norm=kFALSE);
    TGeoOverlap     *MakeCheckOverlap(const char *name, TGeoVolume *vol1, TGeoVolume *vol2, TGeoMatrix *mat1, TGeoMatrix *mat2, Bool_t isovlp, Double_t ovlp);
-   void             OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch=0, Bool_t last=kFALSE, Bool_t refresh=kFALSE, const char *msg="");
+   void             OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch=nullptr, Bool_t last=kFALSE, Bool_t refresh=kFALSE, const char *msg="");
    TGeoNode        *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path);
    void             ShapeDistances(TGeoShape *shape, Int_t nsamples, Option_t *option);
    void             ShapeSafety(TGeoShape *shape, Int_t nsamples, Option_t *option);
    void             ShapeNormal(TGeoShape *shape, Int_t nsamples, Option_t *option);
-   Double_t        *ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double_t dirz, Double_t *array, Int_t &nelem, Int_t &dim, Double_t *enpoint=0) const;
+   Double_t        *ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double_t dirz, Double_t *array, Int_t &nelem, Int_t &dim, Double_t *enpoint=nullptr) const;
    void             SetSelectedNode(TGeoNode *node) {fSelectedNode=node;}
    void             SetNmeshPoints(Int_t npoints=1000);
    void             Test(Int_t npoints, Option_t *option);

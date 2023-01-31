@@ -15,11 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Support/TrigramIndex.h"
-#include "llvm/ADT/SmallVector.h"
-
 #include <set>
-#include <string>
-#include <unordered_map>
 
 using namespace llvm;
 
@@ -29,7 +25,7 @@ static bool isAdvancedMetachar(unsigned Char) {
   return strchr(RegexAdvancedMetachars, Char) != nullptr;
 }
 
-void TrigramIndex::insert(std::string Regex) {
+void TrigramIndex::insert(const std::string &Regex) {
   if (Defeated) return;
   std::set<unsigned> Was;
   unsigned Cnt = 0;

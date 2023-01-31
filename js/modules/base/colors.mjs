@@ -1,3 +1,5 @@
+import { clTColor } from '../core.mjs';
+
 /** @summary Covert value between 0 and 1 into hex, used for colors coding
   * @private */
 function toHex(num,scale) {
@@ -47,10 +49,10 @@ function getRootColors() {
 /** @summary Produces rgb code for TColor object
   * @private */
 function getRGBfromTColor(col) {
-   if (!col || (col._typename != 'TColor')) return null;
+   if (col?._typename != clTColor) return null;
 
    let rgb = '#' + toHex(col.fRed) + toHex(col.fGreen) + toHex(col.fBlue);
-   if ((col.fAlpha !==undefined) && (col.fAlpha !== 1.))
+   if ((col.fAlpha !== undefined) && (col.fAlpha !== 1.))
       rgb += toHex(col.fAlpha);
 
    switch (rgb) {
@@ -83,7 +85,7 @@ function extendRootColors(jsarr, objarr) {
       rgb_array = [];
       for (let n = 0; n < objarr.arr.length; ++n) {
          let col = objarr.arr[n];
-         if (!col || (col._typename != 'TColor')) continue;
+         if (col?._typename != clTColor) continue;
 
          if ((col.fNumber >= 0) && (col.fNumber <= 10000))
             rgb_array[col.fNumber] = getRGBfromTColor(col);
@@ -107,14 +109,14 @@ function adoptRootColors(objarr) {
 
 /** @summary Return ROOT color by index
   * @desc Color numbering corresponds typical ROOT colors
-  * @returns {String} with RGB color code or existing color name like 'cyan'
+  * @return {String} with RGB color code or existing color name like 'cyan'
   * @private */
 function getColor(indx) {
    return gbl_colors_list[indx];
 }
 
 /** @summary Search for specified color in the list of colors
-  * @returns Color index or -1 if fails
+  * @return Color index or -1 if fails
   * @private */
 function findColor(name) {
    if (!name) return -1;
@@ -127,7 +129,7 @@ function findColor(name) {
 /** @summary Add new color
   * @param {string} rgb - color name or just string with rgb value
   * @param {array} [lst] - optional colors list, to which add colors
-  * @returns {number} index of new color
+  * @return {number} index of new color
   * @private */
 function addColor(rgb, lst) {
    if (!lst) lst = gbl_colors_list;
@@ -169,6 +171,5 @@ class ColorPalette {
 
 createRootColors();
 
-export { ColorPalette, getColor, findColor, addColor, adoptRootColors, getRootColors, extendRootColors, getRGBfromTColor, createRootColors, toHex };
-
-
+export { ColorPalette, getColor, findColor, addColor, adoptRootColors,
+         getRootColors, extendRootColors, getRGBfromTColor, createRootColors, toHex };

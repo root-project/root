@@ -55,7 +55,7 @@ public:
                const std::vector<std::string> &prevVariations, const std::string &variation = "nominal");
    RFilterBase &operator=(const RFilterBase &) = delete;
 
-   virtual ~RFilterBase();
+   ~RFilterBase() override;
 
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    bool HasName() const;

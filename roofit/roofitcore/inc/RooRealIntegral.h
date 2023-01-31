@@ -54,7 +54,7 @@ public:
   const RooArgSet& anaIntVars() const { return _anaList ; }
 
   RooArgSet intVars() const { RooArgSet tmp(_sumList) ; tmp.add(_intList) ; tmp.add(_anaList) ; tmp.add(_facList) ; return tmp ; }
-  const char* intRange() { return _rangeName ? _rangeName->GetName() : 0 ; }
+  const char* intRange() const { return _rangeName ? _rangeName->GetName() : nullptr ; }
   const RooAbsReal& integrand() const { return *_function; }
 
   void setCacheNumeric(bool flag) {
@@ -80,8 +80,6 @@ public:
 
   void setAllowComponentSelection(bool allow);
   bool getAllowComponentSelection() const;
-
-  std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server) const override;
 
 protected:
 
@@ -109,6 +107,13 @@ protected:
   bool redirectServersHook(const RooAbsCollection& newServerList,
                  bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
 
+  // Internal function to get the normalization set for the integrated
+  // function. By default, we will take the normalization set from the function
+  // proxy, but _funcNormSet will be used if it is set.
+  inline RooArgSet const* funcNormSet() const {
+    return _funcNormSet ? _funcNormSet.get() : _function.nset();
+  }
+
   // Function pointer and integrands list
   mutable RooSetProxy _sumList ; ///< Set of discrete observable over which is summed numerically
   mutable RooSetProxy _intList ; ///< Set of continuous observables over which is integrated numerically
@@ -118,7 +123,7 @@ protected:
 
   mutable RooArgSet   _facListOwned ;  ///< Owned components in _facList
   RooRealProxy       _function ;     ///<Function being integration
-  RooArgSet*      _funcNormSet = nullptr;     ///< Optional normalization set passed to function
+  std::unique_ptr<RooArgSet> _funcNormSet; ///< Optional normalization set passed to function
 
   mutable RooArgSet       _saveInt ; ///<! do not persist
   mutable RooArgSet       _saveSum ; ///<! do not persist
@@ -141,7 +146,7 @@ protected:
   bool _cacheNum = false;           ///< Cache integral if numeric
   static Int_t _cacheAllNDim ; ///<! Cache all integrals with given numeric dimension
 
-  ClassDefOverride(RooRealIntegral,3) // Real-valued function representing an integral over a RooAbsReal object
+  ClassDefOverride(RooRealIntegral,4) // Real-valued function representing an integral over a RooAbsReal object
 };
 
 #endif

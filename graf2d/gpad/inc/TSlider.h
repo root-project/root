@@ -17,10 +17,10 @@
 class TSlider : public TPad {
 
 protected:
-   Double_t      fMinimum;      ///< Slider minimum value in [0,1]
-   Double_t      fMaximum;      ///< Slider maximum value in [0,1]
-   TObject      *fObject;       ///<!Pointer to associated object
-   TString       fMethod;       ///< command to be executed when slider is changed
+   Double_t      fMinimum{0};      ///< Slider minimum value in [0,1]
+   Double_t      fMaximum{1};      ///< Slider maximum value in [0,1]
+   TObject      *fObject{nullptr}; ///<!Pointer to associated object
+   TString       fMethod;          ///< command to be executed when slider is changed
 
 private:
    TSlider(const TSlider &) = delete;
@@ -28,13 +28,12 @@ private:
 
 public:
    TSlider();
-   TSlider(const char *name, const char *title, Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, Color_t color=16, Short_t bordersize=2, Short_t bordermode =-1);
+   TSlider(const char *name, const char *title, Double_t x1, Double_t y1, Double_t x2, Double_t y2, Color_t color=16, Short_t bordersize=2, Short_t bordermode =-1);
    virtual ~TSlider();
    TObject      *GetObject()  const { return fObject; }
    Double_t      GetMinimum() const { return fMinimum; }
    Double_t      GetMaximum() const { return fMaximum; }
    virtual const char *GetMethod() const { return fMethod.Data(); }
-   void          Paint(Option_t *option = "") override;
    void          SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void  SetMethod(const char *method) { fMethod = method; } // *MENU*
    void          SetObject(TObject *obj = nullptr) { fObject = obj; }

@@ -52,10 +52,10 @@ private:
 
    TFTP(): fHost(), fUser(), fPort(0), fParallel(0), fWindowSize(0),
       fProtocol(0), fLastBlock(0), fBlockSize(0), fMode(0),
-      fRestartAt(0), fCurrentFile(), fSocket(0), fBytesWrite(0),
+      fRestartAt(0), fCurrentFile(), fSocket(nullptr), fBytesWrite(0),
       fBytesRead(0), fDir(kFALSE) { }
-   TFTP(const TFTP &);              // not implemented
-   void   operator=(const TFTP &);  // idem
+   TFTP(const TFTP &) = delete;
+   void   operator=(const TFTP &) = delete;
    void   Init(const char *url, Int_t parallel, Int_t wsize);
    void   PrintError(const char *where, Int_t err) const;
    Int_t  Recv(Int_t &status, EMessageTypes &kind) const;
@@ -108,8 +108,8 @@ public:
    TSocket *GetSocket() const { return fSocket; }
 
    // standard ftp equivalents...
-   void put(const char *file, const char *remoteName = 0) { PutFile(file, remoteName); }
-   void get(const char *file, const char *localName = 0) { GetFile(file, localName); }
+   void put(const char *file, const char *remoteName = nullptr) { PutFile(file, remoteName); }
+   void get(const char *file, const char *localName = nullptr) { GetFile(file, localName); }
    void cd(const char *dir) const { ChangeDirectory(dir); }
    void mkdir(const char *dir) const { MakeDirectory(dir); }
    void rmdir(const char *dir) const { DeleteDirectory(dir); }

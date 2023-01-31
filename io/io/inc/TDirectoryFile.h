@@ -69,7 +69,8 @@ public:
           TObject    *CloneObject(const TObject *obj, Bool_t autoadd = kTRUE) override;
           void        Close(Option_t *option="") override;
           void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
-          Bool_t      cd(const char *path = nullptr) override;
+          Bool_t      cd() override;
+          Bool_t      cd(const char *path) override;
           void        Delete(const char *namecycle="") override;
           void        FillBuffer(char *&buffer) override;
           TKey       *FindKey(const char *keyname) const override;

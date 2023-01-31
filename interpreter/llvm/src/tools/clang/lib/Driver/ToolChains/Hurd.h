@@ -26,16 +26,23 @@ public:
   void
   AddClangSystemIncludeArgs(const llvm::opt::ArgList &DriverArgs,
                             llvm::opt::ArgStringList &CC1Args) const override;
+  void
+  addLibStdCxxIncludePaths(const llvm::opt::ArgList &DriverArgs,
+                           llvm::opt::ArgStringList &CC1Args) const override;
 
-  virtual std::string computeSysRoot() const;
+  std::string getDynamicLinker(const llvm::opt::ArgList &Args) const override;
 
-  virtual std::string getDynamicLinker(const llvm::opt::ArgList &Args) const;
+  void addExtraOpts(llvm::opt::ArgStringList &CmdArgs) const override;
 
   std::vector<std::string> ExtraOpts;
 
 protected:
   Tool *buildAssembler() const override;
   Tool *buildLinker() const override;
+
+  std::string getMultiarchTriple(const Driver &D,
+                                 const llvm::Triple &TargetTriple,
+                                 StringRef SysRoot) const override;
 };
 
 } // end namespace toolchains

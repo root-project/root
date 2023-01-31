@@ -23,7 +23,7 @@ class FontHandler {
 
    /** @summary constructor */
    constructor(fontIndex, size, scale, name, style, weight) {
-      this.name = "Arial";
+      this.name = 'Arial';
       this.style = null;
       this.weight = null;
 
@@ -38,15 +38,15 @@ class FontHandler {
       if (fontIndex !== null) {
 
          let indx = Math.floor(fontIndex / 10),
-             fontName = root_fonts[indx] || "Arial";
+             fontName = root_fonts[indx] || 'Arial';
 
-         while (fontName.length > 0) {
+         while (fontName) {
             if (fontName[0] === 'b')
-               this.weight = "bold";
+               this.weight = 'bold';
             else if (fontName[0] === 'i')
-               this.style = "italic";
+               this.style = 'italic';
             else if (fontName[0] === 'o')
-               this.style = "oblique";
+               this.style = 'oblique';
             else
                break;
             fontName = fontName.slice(1);
@@ -65,7 +65,7 @@ class FontHandler {
          this.isSymbol = this.name;
          this.name = "Times New Roman";
       } else {
-         this.isSymbol = "";
+         this.isSymbol = '';
       }
 
       this.func = this.setFont.bind(this);
@@ -131,7 +131,7 @@ class FontHandler {
 
    /** @summary Returns font name */
    getFontName() {
-      return this.isSymbol || this.name || "none";
+      return this.isSymbol || this.name || 'none';
    }
 
 } // class FontHandler

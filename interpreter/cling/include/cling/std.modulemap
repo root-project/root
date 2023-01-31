@@ -273,6 +273,7 @@ module "std" [system] {
   }
   module "regex" {
     export *
+    export vector
     header "regex"
   }
   module "scoped_allocator" {
@@ -311,7 +312,7 @@ module "std" [system] {
     requires cplusplus17
 
     export *
-    textual header "string_view"
+    header "string_view"
   }
 //  module "string.h" {
 //    export *

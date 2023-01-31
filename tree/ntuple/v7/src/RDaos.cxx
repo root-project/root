@@ -55,7 +55,6 @@ std::string ROOT::Experimental::Detail::RDaosPool::GetPoolUuid()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
 std::string ROOT::Experimental::Detail::RDaosObject::ObjClassId::ToString() const
 {
    char name[kOCNameMaxLength + 1] = {};
@@ -63,38 +62,38 @@ std::string ROOT::Experimental::Detail::RDaosObject::ObjClassId::ToString() cons
    return std::string{name};
 }
 
-ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(FetchUpdateArgs &&fua)
-   : fDkey(fua.fDkey), fAkeys(fua.fAkeys), fIovs(fua.fIovs), fIods(std::move(fua.fIods)), fSgls(std::move(fua.fSgls)),
-     fEvent(std::move(fua.fEvent))
+ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(FetchUpdateArgs &&fua) noexcept
+   : fDkey(fua.fDkey), fRequests(fua.fRequests), fIods(std::move(fua.fIods)), fSgls(std::move(fua.fSgls)),
+     fEvent(fua.fEvent)
 {
    d_iov_set(&fDistributionKey, &fDkey, sizeof(fDkey));
 }
 
 ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(DistributionKey_t d,
-                                                                          std::span<const AttributeKey_t> as,
-                                                                          std::span<d_iov_t> vs, bool is_async)
-   : fDkey(d), fAkeys(as), fIovs(vs)
+                                                                          std::span<RAkeyRequest> rs, bool is_async)
+   : fDkey(d), fRequests(rs)
 {
    if (is_async)
       fEvent.emplace();
 
-   fSgls.reserve(fAkeys.size());
-   fIods.reserve(fAkeys.size());
+   fSgls.reserve(fRequests.size());
+   fIods.reserve(fRequests.size());
    d_iov_set(&fDistributionKey, &fDkey, sizeof(fDkey));
 
-   for (unsigned i = 0; i < fAkeys.size(); ++i) {
+   for (auto &r : fRequests) {
       daos_iod_t iod;
       iod.iod_nr = 1;
-      iod.iod_size = fIovs[i].iov_len;
+      iod.iod_size =
+         std::accumulate(r.fIovs.begin(), r.fIovs.end(), 0, [](size_t c, d_iov_t &iov) { return c + iov.iov_len; });
       iod.iod_recxs = nullptr;
       iod.iod_type = DAOS_IOD_SINGLE;
-      d_iov_set(&iod.iod_name, const_cast<AttributeKey_t *>(&(fAkeys[i])), sizeof(fAkeys[i]));
+      d_iov_set(&iod.iod_name, const_cast<AttributeKey_t *>(&r.fAkey), sizeof(r.fAkey));
       fIods.push_back(iod);
 
       d_sg_list_t sgl;
       sgl.sg_nr_out = 0;
-      sgl.sg_nr = 1;
-      sgl.sg_iovs = &fIovs[i];
+      sgl.sg_nr = r.fIovs.size();
+      sgl.sg_iovs = r.fIovs.data();
       fSgls.push_back(sgl);
    }
 }
@@ -104,8 +103,7 @@ daos_event_t *ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::GetEvent
    return fEvent ? &(fEvent.value()) : nullptr;
 }
 
-ROOT::Experimental::Detail::RDaosObject::RDaosObject(RDaosContainer &container, daos_obj_id_t oid,
-                                                     ObjClassId cid)
+ROOT::Experimental::Detail::RDaosObject::RDaosObject(RDaosContainer &container, daos_obj_id_t oid, ObjClassId cid)
 {
    if (!cid.IsUnknown())
       daos_obj_generate_oid(container.fContainerHandle, &oid, DAOS_OT_MULTI_UINT64, cid.fCid,
@@ -123,13 +121,13 @@ ROOT::Experimental::Detail::RDaosObject::~RDaosObject()
 int ROOT::Experimental::Detail::RDaosObject::Fetch(FetchUpdateArgs &args)
 {
    return daos_obj_fetch(fObjectHandle, DAOS_TX_NONE, DAOS_COND_DKEY_FETCH | DAOS_COND_AKEY_FETCH,
-                         &args.fDistributionKey, args.fAkeys.size(), args.fIods.data(), args.fSgls.data(), nullptr,
+                         &args.fDistributionKey, args.fIods.size(), args.fIods.data(), args.fSgls.data(), nullptr,
                          args.GetEventPointer());
 }
 
 int ROOT::Experimental::Detail::RDaosObject::Update(FetchUpdateArgs &args)
 {
-   return daos_obj_update(fObjectHandle, DAOS_TX_NONE, 0, &args.fDistributionKey, args.fAkeys.size(), args.fIods.data(),
+   return daos_obj_update(fObjectHandle, DAOS_TX_NONE, 0, &args.fDistributionKey, args.fIods.size(), args.fIods.data(),
                           args.fSgls.data(), args.GetEventPointer());
 }
 
@@ -146,7 +144,7 @@ ROOT::Experimental::Detail::RDaosEventQueue::~RDaosEventQueue()
    daos_eq_destroy(fQueue, 0);
 }
 
-int ROOT::Experimental::Detail::RDaosEventQueue::InitializeEvent(daos_event_t *ev_ptr, daos_event_t *parent_ptr)
+int ROOT::Experimental::Detail::RDaosEventQueue::InitializeEvent(daos_event_t *ev_ptr, daos_event_t *parent_ptr) const
 {
    return daos_event_init(ev_ptr, fQueue, parent_ptr);
 }
@@ -195,7 +193,8 @@ ROOT::Experimental::Detail::RDaosContainer::RDaosContainer(std::shared_ptr<RDaos
    uuid_copy(fContainerUuid, containerInfo.ci_uuid);
 }
 
-ROOT::Experimental::Detail::RDaosContainer::~RDaosContainer() {
+ROOT::Experimental::Detail::RDaosContainer::~RDaosContainer()
+{
    daos_cont_close(fContainerHandle, nullptr);
 }
 
@@ -210,10 +209,10 @@ int ROOT::Experimental::Detail::RDaosContainer::ReadSingleAkey(void *buffer, std
                                                                DistributionKey_t dkey, AttributeKey_t akey,
                                                                ObjClassId_t cid)
 {
-   AttributeKey_t akeys[] = {akey};
-   d_iov_t iovs[1];
-   d_iov_set(&iovs[0], buffer, length);
-   RDaosObject::FetchUpdateArgs args(dkey, akeys, iovs);
+   std::vector<d_iov_t> iovs(1);
+   d_iov_set(&iovs[0], const_cast<void *>(buffer), length);
+   RDaosObject::RAkeyRequest requests[] = {{akey, std::move(iovs)}};
+   RDaosObject::FetchUpdateArgs args(dkey, requests);
    return RDaosObject(*this, oid, cid.fCid).Fetch(args);
 }
 
@@ -221,10 +220,11 @@ int ROOT::Experimental::Detail::RDaosContainer::WriteSingleAkey(const void *buff
                                                                 daos_obj_id_t oid, DistributionKey_t dkey,
                                                                 AttributeKey_t akey, ObjClassId_t cid)
 {
-   AttributeKey_t akeys[] = {akey};
-   d_iov_t iovs[1];
+
+   std::vector<d_iov_t> iovs(1);
    d_iov_set(&iovs[0], const_cast<void *>(buffer), length);
-   RDaosObject::FetchUpdateArgs args(dkey, akeys, iovs);
+   RDaosObject::RAkeyRequest requests[] = {{akey, std::move(iovs)}};
+   RDaosObject::FetchUpdateArgs args(dkey, requests);
    return RDaosObject(*this, oid, cid.fCid).Update(args);
 }
 
@@ -243,9 +243,9 @@ int ROOT::Experimental::Detail::RDaosContainer::VectorReadWrite(MultiObjectRWOpe
       return ret;
 
    for (auto &[key, batch] : map) {
-      requests.push_back(std::make_tuple(
+      requests.emplace_back(
          std::make_unique<RDaosObject>(*this, batch.fOid, cid.fCid),
-         RDaosObject::FetchUpdateArgs{batch.fDistributionKey, batch.fAttributeKeys, batch.fIovs, /*is_async=*/true}));
+         RDaosObject::FetchUpdateArgs{batch.fDistributionKey, batch.fDataRequests, /*is_async=*/true});
 
       if ((ret = fPool->fEventQueue->InitializeEvent(std::get<1>(requests.back()).GetEventPointer(), &parent_event)) <
           0)

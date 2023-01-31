@@ -40,6 +40,7 @@ To not break old code, the old RooCatType interfaces are still available. Whenev
 the following replacements should be used:
 - lookupType() \f$ \rightarrow \f$ lookupName() / lookupIndex()
 - typeIterator() \f$ \rightarrow \f$ range-based for loop / begin() / end()
+- isValidIndex(Int_t index) \f$ \rightarrow \f$ hasIndex()
 - isValid(const RooCatType&) \f$ \rightarrow \f$ hasIndex() / hasLabel()
 **/
 
@@ -561,17 +562,10 @@ void RooAbsCategory::copyCache(const RooAbsArg *source, bool /*valueOnly*/, bool
    auto other = static_cast<const RooAbsCategory*>(source);
    assert(dynamic_cast<const RooAbsCategory*>(source));
 
-   value_type tmp = other->_treeReadBuffer ? *other->_treeReadBuffer : other->_currentIndex;
-   // Lookup cat state from other-index because label is missing
-   if (hasIndex(tmp)) {
-     _currentIndex = tmp;
-     if (setValDirty) {
-       setValueDirty();
-     }
-   } else {
-     coutE(DataHandling) << "RooAbsCategory::copyCache(" << GetName() << ") ERROR: index of source arg "
-         << source->GetName() << " is invalid (" << other->_currentIndex
-         << "), value not updated" << endl;
+   _currentIndex = other->_treeReadBuffer ? *other->_treeReadBuffer : other->_currentIndex;
+
+   if (setValDirty) {
+     setValueDirty();
    }
 }
 
@@ -671,7 +665,7 @@ bool RooAbsCategory::isSignType(bool mustHaveZero) const
   if (mustHaveZero && theStateNames.size() != 3) return false;
 
   for (const auto& type : theStateNames) {
-    if (abs(type.second)>1)
+    if (std::abs(type.second)>1)
       return false;
   }
 

@@ -30,9 +30,9 @@ protected:
 
 public:
    TPolygon(Int_t n, Float_t *x, Float_t *y);
-   virtual ~TPolygon() { fPad->GetListOfPrimitives()->Remove(this); }
+   ~TPolygon() override { fPad->GetListOfPrimitives()->Remove(this); }
 
-   virtual void Paint(Option_t *option="");
+   void Paint(Option_t *option="") override;
 
    TPad  *GetPad() { return fPad; }
 };
@@ -43,7 +43,7 @@ class ClockPoints : public TPoints {
 
 public:
    ClockPoints(Coord_t x=0, Coord_t y=0) : TPoints(x,y) { }
-   ~ClockPoints() { }
+   ~ClockPoints() override { }
 
    void SetXY(Coord_t x, Coord_t y) { SetX(x); SetY(y); }
 
@@ -80,7 +80,7 @@ protected:
 
 public:
    ClockHand(Int_t n, Float_t *x, Float_t *y);
-   virtual ~ClockHand() { }
+   ~ClockHand() override { }
 
    UInt_t GetTime()    { fgTime->Set(); return fgTime->GetTime(); }
    UInt_t GetHour()    { return  GetTime()/10000; }
@@ -103,9 +103,9 @@ private:
 public:
    MinuteHand(Int_t n=3, Float_t *x=fgMinuteHandX, Float_t *y=fgMinuteHandY)
       : ClockHand(n,x,y) { }
-   ~MinuteHand() { }
+   ~MinuteHand() override { }
 
-   Float_t GetHandAngle() { return 6.*(GetMinute()+ GetSecond()/60.); }
+   Float_t GetHandAngle() override { return 6.*(GetMinute()+ GetSecond()/60.); }
 };
 
 
@@ -119,9 +119,9 @@ private:
 public:
    HourHand(Int_t n=3, Float_t *x=fgHourHandX, Float_t *y=fgHourHandY)
       : ClockHand(n,x,y) { }
-   ~HourHand() { }
+   ~HourHand() override { }
 
-   Float_t GetHandAngle() { return 30.*(GetHour()%12 + GetMinute()/60.); }
+   Float_t GetHandAngle() override { return 30.*(GetHour()%12 + GetMinute()/60.); }
 };
 
 
@@ -133,14 +133,14 @@ private:
    static Float_t fgSecondHandY[];
 
 protected:
-   UInt_t GetTimeValue() { return GetSecond(); }   // used to update every second
+   UInt_t GetTimeValue() override { return GetSecond(); }   // used to update every second
 
 public:
    SecondHand(Int_t n=4, Float_t *x=fgSecondHandX, Float_t *y=fgSecondHandY)
       : ClockHand(n,x,y) { }
-   ~SecondHand() { }
+   ~SecondHand() override { }
 
-   Float_t GetHandAngle() { return  6.*GetSecond(); }
+   Float_t GetHandAngle() override { return  6.*GetSecond(); }
 };
 
 
@@ -155,13 +155,13 @@ private:
 
 public:
    Aclock(Int_t csize=100);
-   virtual ~Aclock();
+   ~Aclock() override;
 
-   virtual Bool_t Notify();
-   void   Paint(Option_t *option);
+   Bool_t Notify() override;
+   void   Paint(Option_t *option) override;
    void   Animate();
 
-   ClassDef(Aclock,0)  // analog clock = xclock
+   ClassDefOverride(Aclock,0)  // analog clock = xclock
 };
 
 #endif   // ACLOCK

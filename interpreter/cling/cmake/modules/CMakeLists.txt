@@ -2,7 +2,7 @@
 # link against them. LLVM calls its version of this file LLVMExports.cmake, but
 # the usual CMake convention seems to be ${Project}Targets.cmake.
 set(CLING_INSTALL_PACKAGE_DIR lib${LLVM_LIBDIR_SUFFIX}/cmake/cling)
-set(cling_cmake_builddir "${CMAKE_BINARY_DIR}/${CLING_INSTALL_PACKAGE_DIR}")
+set(cling_cmake_builddir "${LLVM_BINARY_DIR}/${CLING_INSTALL_PACKAGE_DIR}")
 
 # Keep this in sync with llvm/cmake/CMakeLists.txt!
 set(LLVM_INSTALL_PACKAGE_DIR lib${LLVM_LIBDIR_SUFFIX}/cmake/llvm)
@@ -53,11 +53,8 @@ set(CLING_CONFIG_CMAKE_DIR)
 set(CLING_CONFIG_EXPORTS_FILE)
 
 if (NOT LLVM_INSTALL_TOOLCHAIN_ONLY)
-  get_property(cling_has_exports GLOBAL PROPERTY CLING_HAS_EXPORTS)
-  if(cling_has_exports)
-    install(EXPORT ClingTargets DESTINATION ${CLING_INSTALL_PACKAGE_DIR}
-            COMPONENT cling-cmake-exports)
-  endif()
+  install(EXPORT ClingTargets DESTINATION ${CLING_INSTALL_PACKAGE_DIR}
+    COMPONENT cling-cmake-exports)
 
   install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/ClingConfig.cmake

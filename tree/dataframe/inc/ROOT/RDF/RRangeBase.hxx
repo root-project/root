@@ -50,11 +50,9 @@ public:
               const unsigned int nSlots, const std::vector<std::string> &prevVariations);
 
    RRangeBase &operator=(const RRangeBase &) = delete;
-   virtual ~RRangeBase();
+   ~RRangeBase() override;
 
    void InitNode() { ResetCounters(); }
-   virtual std::shared_ptr<RDFGraphDrawing::GraphNode>
-   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) = 0;
 };
 
 } // ns RDF

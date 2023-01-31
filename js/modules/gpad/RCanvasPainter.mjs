@@ -1,8 +1,9 @@
-import { settings, create, parse, registerMethods, isBatchMode } from '../core.mjs';
+import { settings, create, parse, toJSON, loadScript, registerMethods, isBatchMode, isFunc, isStr } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
-import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons } from '../gui/utils.mjs';
+import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
-import { selectActivePad, cleanup, resize } from '../base/ObjectPainter.mjs';
+import { makeTranslate } from '../base/BasePainter.mjs';
+import { selectActivePad, cleanup, resize, EAxisBits } from '../base/ObjectPainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { RAxisPainter } from './RAxisPainter.mjs';
 import { RFramePainter } from './RFramePainter.mjs';
@@ -42,7 +43,7 @@ class RCanvasPainter extends RPadPainter {
    /** @summary Returns layout kind */
    getLayoutKind() {
       let origin = this.selectDom('origin'),
-         layout = origin.empty() ? "" : origin.property('layout');
+         layout = origin.empty() ? '' : origin.property('layout');
       return layout || 'simple';
    }
 
@@ -58,11 +59,11 @@ class RCanvasPainter extends RPadPainter {
    }
 
    /** @summary Changes layout
-     * @returns {Promise} indicating when finished */
-   changeLayout(layout_kind, mainid) {
+     * @return {Promise} indicating when finished */
+   async changeLayout(layout_kind, mainid) {
       let current = this.getLayoutKind();
       if (current == layout_kind)
-         return Promise.resolve(true);
+         return true;
 
       let origin = this.selectDom('origin'),
           sidebar = origin.select('.side_panel'),
@@ -71,10 +72,11 @@ class RCanvasPainter extends RPadPainter {
       while (main.node().firstChild)
          lst.push(main.node().removeChild(main.node().firstChild));
 
-      if (!sidebar.empty()) cleanup(sidebar.node());
+      if (!sidebar.empty())
+         cleanup(sidebar.node());
 
-      this.setLayoutKind("simple"); // restore defaults
-      origin.html(""); // cleanup origin
+      this.setLayoutKind('simple'); // restore defaults
+      origin.html(''); // cleanup origin
 
       if (layout_kind == 'simple') {
          main = origin;
@@ -85,19 +87,19 @@ class RCanvasPainter extends RPadPainter {
          let grid = new GridDisplay(origin.node(), layout_kind);
 
          if (mainid == undefined)
-            mainid = (layout_kind.indexOf("vert") == 0) ? 0 : 1;
+            mainid = (layout_kind.indexOf('vert') == 0) ? 0 : 1;
 
          main = d3_select(grid.getGridFrame(mainid));
          sidebar = d3_select(grid.getGridFrame(1 - mainid));
 
-         main.classed("central_panel", true).style('position', 'relative');
-         sidebar.classed("side_panel", true).style('position', 'relative');
+         main.classed('central_panel', true).style('position', 'relative');
+         sidebar.classed('side_panel', true).style('position', 'relative');
 
          // now append all childs to the new main
          for (let k = 0; k < lst.length; ++k)
             main.node().appendChild(lst[k]);
 
-         this.setLayoutKind(layout_kind, ".central_panel");
+         this.setLayoutKind(layout_kind, '.central_panel');
 
          // remove reference to MDIDisplay, solves resize problem
          origin.property('mdi', null);
@@ -105,29 +107,29 @@ class RCanvasPainter extends RPadPainter {
 
       // resize main drawing and let draw extras
       resize(main.node());
-      return Promise.resolve(true);
+      return true;
    }
 
    /** @summary Toggle projection
-     * @returns {Promise} indicating when ready
+     * @return {Promise} indicating when ready
      * @private */
-   toggleProjection(kind) {
+   async toggleProjection(kind) {
       delete this.proj_painter;
 
       if (kind) this.proj_painter = 1; // just indicator that drawing can be preformed
 
-      if (this.showUI5ProjectionArea)
+      if (isFunc(this.showUI5ProjectionArea))
          return this.showUI5ProjectionArea(kind);
 
       let layout = 'simple', mainid;
 
       switch(kind) {
-         case "X":
-         case "bottom": layout = 'vert2_31'; mainid = 0; break;
-         case "Y":
-         case "left": layout = 'horiz2_13'; mainid = 1; break;
-         case "top": layout = 'vert2_13'; mainid = 1; break;
-         case "right": layout = 'horiz2_31'; mainid = 0; break;
+         case 'X':
+         case 'bottom': layout = 'vert2_31'; mainid = 0; break;
+         case 'Y':
+         case 'left': layout = 'horiz2_13'; mainid = 1; break;
+         case 'top': layout = 'vert2_13'; mainid = 1; break;
+         case 'right': layout = 'horiz2_31'; mainid = 0; break;
       }
 
       return this.changeLayout(layout, mainid);
@@ -135,16 +137,16 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Draw projection for specified histogram
      * @private */
-   drawProjection( /*kind,hist*/) {
+   async drawProjection( /*kind,hist*/) {
       // dummy for the moment
+      return false;
    }
 
    /** @summary Draw in side panel
      * @private */
-   drawInSidePanel(canv, opt) {
-      let side = this.selectDom('origin').select(".side_panel");
-      if (side.empty()) return Promise.resolve(null);
-      return this.drawObject(side.node(), canv, opt);
+   async drawInSidePanel(canv, opt) {
+      let side = this.selectDom('origin').select('.side_panel');
+      return side.empty() ?  null : this.drawObject(side.node(), canv, opt);
    }
 
    /** @summary Checks if canvas shown inside ui5 widget
@@ -152,7 +154,7 @@ class RCanvasPainter extends RPadPainter {
      * @private */
    testUI5() {
       if (!this.use_openui) return false;
-      console.warn("full ui5 should be used - not loaded yet? Please check!!");
+      console.warn('full ui5 should be used - not loaded yet? Please check!!');
       return true;
    }
 
@@ -166,23 +168,27 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Function called when canvas menu item Save is called */
    saveCanvasAsFile(fname) {
-      let pnt = fname.indexOf(".");
+      let pnt = fname.indexOf('.');
       this.createImage(fname.slice(pnt+1))
-          .then(res => { console.log('save', fname, res.length); this.sendWebsocket("SAVE:" + fname + ":" + res); });
+          .then(res => { console.log('save', fname, res.length); this.sendWebsocket('SAVE:' + fname + ':' + res); });
    }
 
    /** @summary Send command to server to save canvas with specified name
      * @desc Should be only used in web-based canvas
      * @private */
    sendSaveCommand(fname) {
-      this.sendWebsocket("PRODUCE:" + fname);
+      this.sendWebsocket('PRODUCE:' + fname);
    }
 
    /** @summary Send message via web socket
      * @private */
-   sendWebsocket(msg, chid) {
-      if (this._websocket)
-         this._websocket.send(msg, chid);
+   sendWebsocket(msg) {
+      if (this._websocket?.canSend()) {
+         this._websocket.send(msg);
+         return true;
+      }
+
+      return false;
    }
 
    /** @summary Close websocket connection to canvas
@@ -220,41 +226,41 @@ class RCanvasPainter extends RPadPainter {
    /** @summary Hanler for websocket message
      * @private */
    onWebsocketMsg(handle, msg) {
-      console.log("GET_MSG " + msg.slice(0,30));
+      console.log('GET_MSG ' + msg.slice(0,30));
 
-      if (msg == "CLOSE") {
+      if (msg == 'CLOSE') {
          this.onWebsocketClosed();
          this.closeWebsocket(true);
-      } else if (msg.slice(0,5)=='SNAP:') {
+      } else if (msg.slice(0,5) == 'SNAP:') {
          msg = msg.slice(5);
-         let p1 = msg.indexOf(":"),
+         let p1 = msg.indexOf(':'),
              snapid = msg.slice(0,p1),
              snap = parse(msg.slice(p1+1));
          this.syncDraw(true)
              .then(() => this.redrawPadSnap(snap))
              .then(() => {
-                 handle.send("SNAPDONE:" + snapid); // send ready message back when drawing completed
+                 handle.send('SNAPDONE:' + snapid); // send ready message back when drawing completed
                  this.confirmDraw();
               });
-      } else if (msg.slice(0,4)=='JSON') {
+      } else if (msg.slice(0,4) == 'JSON') {
          let obj = parse(msg.slice(4));
-         // console.log("get JSON ", msg.length-4, obj._typename);
+         // console.log('get JSON ', msg.length-4, obj._typename);
          this.redrawObject(obj);
-      } else if (msg.slice(0,9)=="REPL_REQ:") {
+      } else if (msg.slice(0,9) == 'REPL_REQ:') {
          this.processDrawableReply(msg.slice(9));
-      } else if (msg.slice(0,4)=='CMD:') {
+      } else if (msg.slice(0,4) == 'CMD:') {
          msg = msg.slice(4);
-         let p1 = msg.indexOf(":"),
+         let p1 = msg.indexOf(':'),
              cmdid = msg.slice(0,p1),
              cmd = msg.slice(p1+1),
-             reply = "REPLY:" + cmdid + ":";
-         if ((cmd == "SVG") || (cmd == "PNG") || (cmd == "JPEG")) {
+             reply = 'REPLY:' + cmdid + ':';
+         if ((cmd == 'SVG') || (cmd == 'PNG') || (cmd == 'JPEG')) {
             this.createImage(cmd.toLowerCase())
                 .then(res => handle.send(reply + res));
-         } else if (cmd.indexOf("ADDPANEL:") == 0) {
+         } else if (cmd.indexOf('ADDPANEL:') == 0) {
             let relative_path = cmd.slice(9);
-            if (!this.showUI5Panel) {
-               handle.send(reply + "false");
+            if (!isFunc(this.showUI5Panel)) {
+               handle.send(reply + 'false');
             } else {
 
                let conn = new WebWindowHandle(handle.kind);
@@ -267,26 +273,26 @@ class RCanvasPainter extends RPadPainter {
                   },
 
                   onWebsocketMsg(panel_handle, msg) {
-                     let panel_name = (msg.indexOf("SHOWPANEL:")==0) ? msg.slice(10) : "";
+                     let panel_name = (msg.indexOf('SHOWPANEL:') == 0) ? msg.slice(10) : '';
                      this.cpainter.showUI5Panel(panel_name, panel_handle)
-                                  .then(res => handle.send(reply + (res ? "true" : "false")));
+                                  .then(res => handle.send(reply + (res ? 'true' : 'false')));
                   },
 
                   onWebsocketClosed() {
                      // if connection failed,
-                     handle.send(reply + "false");
+                     handle.send(reply + 'false');
                   },
 
                   onWebsocketError() {
                      // if connection failed,
-                     handle.send(reply + "false");
+                     handle.send(reply + 'false');
                   }
 
                });
 
                let addr = handle.href;
-               if (relative_path.indexOf("../")==0) {
-                  let ddd = addr.lastIndexOf("/",addr.length-2);
+               if (relative_path.indexOf('../') == 0) {
+                  let ddd = addr.lastIndexOf('/',addr.length-2);
                   addr = addr.slice(0,ddd) + relative_path.slice(2);
                } else {
                   addr += relative_path;
@@ -298,16 +304,16 @@ class RCanvasPainter extends RPadPainter {
             console.log('Unrecognized command ' + cmd);
             handle.send(reply);
          }
-      } else if ((msg.slice(0,7)=='DXPROJ:') || (msg.slice(0,7)=='DYPROJ:')) {
+      } else if ((msg.slice(0,7) == 'DXPROJ:') || (msg.slice(0,7) == 'DYPROJ:')) {
          let kind = msg[1],
              hist = parse(msg.slice(7));
          this.drawProjection(kind, hist);
-      } else if (msg.slice(0,5)=='SHOW:') {
+      } else if (msg.slice(0,5) == 'SHOW:') {
          let that = msg.slice(5),
              on = that[that.length-1] == '1';
          this.showSection(that.slice(0,that.length-2), on);
       } else {
-         console.log("unrecognized msg len:" + msg.length + " msg:" + msg.slice(0,20));
+         console.log(`unrecognized msg len: ${msg.length} msg: ${msg.slice(0,30)}`);
       }
    }
 
@@ -315,7 +321,7 @@ class RCanvasPainter extends RPadPainter {
    submitDrawableRequest(kind, req, painter, method) {
 
       if (!this._websocket || !req || !req._typename ||
-          !painter.snapid || (typeof painter.snapid != "string")) return null;
+          !painter.snapid || !isStr(painter.snapid)) return null;
 
       if (kind && method) {
          // if kind specified - check if such request already was submitted
@@ -358,17 +364,17 @@ class RCanvasPainter extends RPadPainter {
 
       // console.log('Sending request ', msg.slice(0,60));
 
-      this.sendWebsocket("REQ:" + msg);
+      this.sendWebsocket('REQ:' + msg);
       return req;
    }
 
    /** @summary Submit menu request
      * @private */
-   submitMenuRequest(painter, menukind, reqid) {
+   async submitMenuRequest(painter, menukind, reqid) {
       return new Promise(resolveFunc => {
-         this.submitDrawableRequest("", {
-            _typename: "ROOT::Experimental::RDrawableMenuRequest",
-            menukind: menukind || "",
+         this.submitDrawableRequest('', {
+            _typename: 'ROOT::Experimental::RDrawableMenuRequest',
+            menukind: menukind || '',
             menureqid: reqid, // used to identify menu request
          }, painter, resolveFunc);
       });
@@ -379,20 +385,20 @@ class RCanvasPainter extends RPadPainter {
       // snapid is intentionally ignored - only painter.snapid has to be used
       if (!this._websocket) return;
 
-      if (subelem && (typeof subelem == 'string')) {
+      if (subelem && isStr(subelem)) {
          let len = subelem.length;
-         if ((len > 2) && (subelem.indexOf("#x") == len - 2)) subelem = "x"; else
-         if ((len > 2) && (subelem.indexOf("#y") == len - 2)) subelem = "y"; else
-         if ((len > 2) && (subelem.indexOf("#z") == len - 2)) subelem = "z";
+         if ((len > 2) && (subelem.indexOf('#x') == len - 2)) subelem = 'x'; else
+         if ((len > 2) && (subelem.indexOf('#y') == len - 2)) subelem = 'y'; else
+         if ((len > 2) && (subelem.indexOf('#z') == len - 2)) subelem = 'z';
 
-         if ((subelem == "x") || (subelem == "y") || (subelem == "z"))
-            exec = subelem + "axis#" + exec;
+         if ((subelem == 'x') || (subelem == 'y') || (subelem == 'z'))
+            exec = subelem + 'axis#' + exec;
          else
             return console.log(`not recoginzed subelem ${subelem} in SubmitExec`);
        }
 
-      this.submitDrawableRequest("", {
-         _typename: "ROOT::Experimental::RDrawableExecRequest",
+      this.submitDrawableRequest('', {
+         _typename: 'ROOT::Experimental::RDrawableExecRequest',
          exec: exec
       }, painter);
    }
@@ -422,15 +428,15 @@ class RCanvasPainter extends RPadPainter {
    }
 
    /** @summary Show specified section in canvas */
-   showSection(that, on) {
+   async showSection(that, on) {
       switch(that) {
-         case "Menu": break;
-         case "StatusBar": break;
-         case "Editor": break;
-         case "ToolBar": break;
-         case "ToolTips": this.setTooltipAllowed(on); break;
+         case 'Menu': break;
+         case 'StatusBar': break;
+         case 'Editor': break;
+         case 'ToolBar': break;
+         case 'ToolTips': this.setTooltipAllowed(on); break;
       }
-      return Promise.resolve(true);
+      return true;
    }
 
    /** @summary Method informs that something was changed in the canvas
@@ -438,39 +444,39 @@ class RCanvasPainter extends RPadPainter {
      * @private */
    processChanges(kind, painter, subelem) {
       // check if we could send at least one message more - for some meaningful actions
-      if (!this._websocket || !this._websocket.canSend(2) || (typeof kind !== "string")) return;
+      if (!this._websocket || !this._websocket.canSend(2) || !isStr(kind)) return;
 
-      let msg = "";
+      let msg = '';
       if (!painter) painter = this;
       switch (kind) {
-         case "sbits":
-            console.log("Status bits in RCanvas are changed - that to do?");
+         case 'sbits':
+            console.log('Status bits in RCanvas are changed - that to do?');
             break;
-         case "frame": // when moving frame
-         case "zoom":  // when changing zoom inside frame
-            console.log("Frame moved or zoom is changed - that to do?");
+         case 'frame': // when moving frame
+         case 'zoom':  // when changing zoom inside frame
+            console.log('Frame moved or zoom is changed - that to do?');
             break;
-         case "pave_moved":
+         case 'pave_moved':
             console.log('TPave is moved inside RCanvas - that to do?');
             break;
          default:
-            if ((kind.slice(0,5) == "exec:") && painter?.snapid) {
+            if ((kind.slice(0,5) == 'exec:') && painter?.snapid) {
                this.submitExec(painter, kind.slice(5), subelem);
             } else {
-               console.log("UNPROCESSED CHANGES", kind);
+               console.log('UNPROCESSED CHANGES', kind);
             }
       }
 
       if (msg) {
-         console.log("RCanvas::processChanges want to send  " + msg.length + "  " + msg.slice(0,40));
+         console.log('RCanvas::processChanges want to send  ' + msg.length + '  ' + msg.slice(0,40));
       }
    }
 
    /** @summary Handle pad button click event
      * @private */
    clickPadButton(funcname, evnt) {
-      if (funcname == "ToggleGed") return this.activateGed(this, null, "toggle");
-      if (funcname == "ToggleStatus") return this.activateStatusBar("toggle");
+      if (funcname == 'ToggleGed') return this.activateGed(this, null, 'toggle');
+      if (funcname == 'ToggleStatus') return this.activateStatusBar('toggle');
       super.clickPadButton(funcname, evnt);
    }
 
@@ -492,7 +498,17 @@ class RCanvasPainter extends RPadPainter {
       else
          getHPainter()?.createStatusLine(23, state);
 
-      this.processChanges("sbits", this);
+      this.processChanges('sbits', this);
+   }
+
+   /** @summary Show online canvas status
+     * @private */
+   showCanvasStatus(...msgs) {
+      if (this.testUI5()) return;
+
+      let br = this.brlayout || getHPainter()?.brlayout;
+
+      br?.showStatus(...msgs);
    }
 
    /** @summary Returns true if GED is present on the canvas */
@@ -513,63 +529,69 @@ class RCanvasPainter extends RPadPainter {
          this.ged_view.destroy();
          delete this.ged_view;
       }
-      this.brlayout?.deleteContent();
+      this.brlayout?.deleteContent(true);
+      this.processChanges('sbits', this);
+   }
 
-      this.processChanges("sbits", this);
+   /** @summary Get view data for ui5 panel
+     * @private */
+   getUi5PanelData(/* panel_name */) {
+      return { jsroot: { settings, create, parse, toJSON, loadScript, EAxisBits, getColorExec } };
    }
 
    /** @summary Function used to activate GED
-     * @returns {Promise} when GED is there
+     * @return {Promise} when GED is there
      * @private */
-   activateGed(objpainter, kind, mode) {
+   async activateGed(objpainter, kind, mode) {
       if (this.testUI5() || !this.brlayout)
-         return Promise.resolve(false);
+         return false;
 
       if (this.brlayout.hasContent()) {
-         if ((mode === "toggle") || (mode === false))
+         if ((mode === 'toggle') || (mode === false))
             this.removeGed();
          else
             objpainter?.getPadPainter()?.selectObjectPainter(objpainter);
 
-         return Promise.resolve(true);
+         return true;
       }
 
       if (mode === false)
-         return Promise.resolve(false);
+         return false;
 
       let btns = this.brlayout.createBrowserBtns();
 
-      ToolbarIcons.createSVG(btns, ToolbarIcons.diamand, 15, "toggle fix-pos mode")
-                  .style("margin","3px").on("click", () => this.brlayout.toggleKind('fix'));
+      ToolbarIcons.createSVG(btns, ToolbarIcons.diamand, 15, 'toggle fix-pos mode')
+                  .style('margin','3px').on('click', () => this.brlayout.toggleKind('fix'));
 
-      ToolbarIcons.createSVG(btns, ToolbarIcons.circle, 15, "toggle float mode")
-                  .style("margin","3px").on("click", () => this.brlayout.toggleKind('float'));
+      ToolbarIcons.createSVG(btns, ToolbarIcons.circle, 15, 'toggle float mode')
+                  .style('margin','3px').on('click', () => this.brlayout.toggleKind('float'));
 
-      ToolbarIcons.createSVG(btns, ToolbarIcons.cross, 15, "delete GED")
-                  .style("margin","3px").on("click", () => this.removeGed());
+      ToolbarIcons.createSVG(btns, ToolbarIcons.cross, 15, 'delete GED')
+                  .style('margin','3px').on('click', () => this.removeGed());
 
       // be aware, that jsroot_browser_hierarchy required for flexible layout that element use full browser area
       this.brlayout.setBrowserContent("<div class='jsroot_browser_hierarchy' id='ged_placeholder'>Loading GED ...</div>");
-      this.brlayout.setBrowserTitle("GED");
-      this.brlayout.toggleBrowserKind(kind || "float");
+      this.brlayout.setBrowserTitle('GED');
+      this.brlayout.toggleBrowserKind(kind || 'float');
 
       return new Promise(resolveFunc => {
 
          loadOpenui5.then(sap => {
 
-            d3_select("#ged_placeholder").text("");
+            d3_select('#ged_placeholder').text('');
 
-            sap.ui.define(["sap/ui/model/json/JSONModel", "sap/ui/core/mvc/XMLView"], (JSONModel,XMLView) => {
+            sap.ui.define(['sap/ui/model/json/JSONModel', 'sap/ui/core/mvc/XMLView'], (JSONModel,XMLView) => {
 
                let oModel = new JSONModel({ handle: null });
 
                XMLView.create({
-                  viewName: "rootui5.canv.view.Ged"
+                  viewName: 'rootui5.canv.view.Ged',
+                  viewData: this.getUi5PanelData('Ged')
                }).then(oGed => {
 
                   oGed.setModel(oModel);
 
-                  oGed.placeAt("ged_placeholder");
+                  oGed.placeAt('ged_placeholder');
 
                   this.ged_view = oGed;
 
@@ -578,7 +600,7 @@ class RCanvasPainter extends RPadPainter {
 
                   objpainter?.getPadPainter()?.selectObjectPainter(objpainter);
 
-                  this.processChanges("sbits", this);
+                  this.processChanges('sbits', this);
 
                   resolveFunc(true);
                });
@@ -591,14 +613,14 @@ class RCanvasPainter extends RPadPainter {
      * @private */
    produceJSON() {
       console.error('RCanvasPainter.produceJSON not yet implemented');
-      return "";
+      return '';
    }
 
    /** @summary draw RCanvas object */
-   static draw(dom, can /*, opt */) {
+   static async draw(dom, can /*, opt */) {
       let nocanvas = !can;
       if (nocanvas)
-         can = create("ROOT::Experimental::TCanvas");
+         can = create('ROOT::Experimental::RCanvas');
 
       let painter = new RCanvasPainter(dom, can);
       painter.normal_canvas = !nocanvas;
@@ -631,10 +653,10 @@ function drawRPadSnapshot(dom, snap /*, opt*/) {
 
 /** @summary Ensure RCanvas and RFrame for the painter object
   * @param {Object} painter  - painter object to process
-  * @param {string|boolean} frame_kind  - false for no frame or "3d" for special 3D mode
+  * @param {string|boolean} frame_kind  - false for no frame or '3d' for special 3D mode
   * @desc Assigns DOM, creates and draw RCanvas and RFrame if necessary, add painter to pad list of painters
-  * @returns {Promise} for ready */
-function ensureRCanvas(painter, frame_kind) {
+  * @return {Promise} for ready */
+async function ensureRCanvas(painter, frame_kind) {
    if (!painter)
       return Promise.reject(Error('Painter not provided in ensureRCanvas'));
 
@@ -642,8 +664,8 @@ function ensureRCanvas(painter, frame_kind) {
    let pr = painter.getCanvSvg().empty() ? RCanvasPainter.draw(painter.getDom(), null /* , noframe */) : Promise.resolve(true);
 
    return pr.then(() => {
-      if ((frame_kind !== false) && painter.getFrameSvg().select(".main_layer").empty())
-         return RFramePainter.draw(painter.getDom(), null, (typeof frame_kind === "string") ? frame_kind : "");
+      if ((frame_kind !== false) && painter.getFrameSvg().select('.main_layer').empty())
+         return RFramePainter.draw(painter.getDom(), null, isStr(frame_kind) ? frame_kind : '');
    }).then(() => {
       painter.addToPadPrimitives();
       return painter;
@@ -665,23 +687,23 @@ function drawRFrameTitle(reason, drag) {
        // fh           = rect.height,
        ph           = this.getPadPainter().getPadHeight(),
        title        = this.getObject(),
-       title_margin = this.v7EvalLength("margin", ph, 0.02),
+       title_margin = this.v7EvalLength('margin', ph, 0.02),
        title_width  = fw,
-       title_height = this.v7EvalLength("height", ph, 0.05),
-       textFont     = this.v7EvalFont("text", { size: 0.07, color: "black", align: 22 });
+       title_height = this.v7EvalLength('height', ph, 0.05),
+       textFont     = this.v7EvalFont('text', { size: 0.07, color: 'black', align: 22 });
 
    if (reason == 'drag') {
       title_height = drag.height;
       title_margin = fy - drag.y - drag.height;
       let changes = {};
-      this.v7AttrChange(changes, "margin", title_margin / ph);
-      this.v7AttrChange(changes, "height", title_height / ph);
+      this.v7AttrChange(changes, 'margin', title_margin / ph);
+      this.v7AttrChange(changes, 'height', title_height / ph);
       this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
    }
 
    this.createG();
 
-   this.draw_g.attr("transform",`translate(${fx},${Math.round(fy-title_margin-title_height)})`);
+   this.draw_g.attr('transform', makeTranslate(fx, Math.round(fy-title_margin-title_height)));
 
    let arg = { x: title_width/2, y: title_height/2, text: title.fText, latex: 1 };
 
@@ -698,10 +720,10 @@ function drawRFrameTitle(reason, drag) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-registerMethods("ROOT::Experimental::RPalette", {
+registerMethods('ROOT::Experimental::RPalette', {
 
    extractRColor(rcolor) {
-     return rcolor.fColor || "black";
+     return rcolor.fColor || 'black';
    },
 
    getColor(indx) {
@@ -728,7 +750,7 @@ registerMethods("ROOT::Experimental::RPalette", {
 
    getContourColor(zc) {
       let zindx = this.getContourIndex(zc);
-      return (zindx < 0) ? "" : this.getColor(zindx);
+      return (zindx < 0) ? '' : this.getColor(zindx);
    },
 
    getContour() {
@@ -765,7 +787,7 @@ registerMethods("ROOT::Experimental::RPalette", {
 
          let entry = this.fColors[indx];
 
-         if ((Math.abs(entry.fOrdinal - value)<0.0001) || (indx == this.fColors.length - 1)) {
+         if ((Math.abs(entry.fOrdinal - value) < 0.0001) || (indx == this.fColors.length - 1)) {
             arr.push(this.extractRColor(entry.fColor));
             continue;
          }
@@ -783,8 +805,8 @@ registerMethods("ROOT::Experimental::RPalette", {
    getColorOrdinal(value) {
       // extract color with ordinal value between 0 and 1
       if (!this.fColors)
-         return "black";
-      if ((typeof value != "number") || (value < 0))
+         return 'black';
+      if ((typeof value != 'number') || (value < 0))
          value = 0;
       else if (value > 1)
          value = 1;
@@ -821,7 +843,7 @@ registerMethods("ROOT::Experimental::RPalette", {
       if (logz) {
          if (this.colzmax <= 0) this.colzmax = 1.;
          if (this.colzmin <= 0)
-            if ((zminpositive===undefined) || (zminpositive <= 0))
+            if ((zminpositive === undefined) || (zminpositive <= 0))
                this.colzmin = 0.0001*this.colzmax;
             else
                this.colzmin = ((zminpositive < 3) || (zminpositive>100)) ? 0.3*zminpositive : 1;
@@ -857,14 +879,14 @@ function drawRFont() {
    let font   = this.getObject(),
        svg    = this.getCanvSvg(),
        defs   = svg.select('.canvas_defs'),
-       clname = "custom_font_" + font.fFamily+font.fWeight+font.fStyle;
+       clname = 'custom_font_' + font.fFamily+font.fWeight+font.fStyle;
 
    if (defs.empty())
-      defs = svg.insert("svg:defs", ":first-child").attr("class", "canvas_defs");
+      defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
 
-   let entry = defs.select("." + clname);
+   let entry = defs.select('.' + clname);
    if (entry.empty())
-      entry = defs.append("style").attr("type", "text/css").attr("class", clname);
+      entry = defs.append('style').attr('type', 'text/css').attr('class', clname);
 
    entry.text(`@font-face { font-family: "${font.fFamily}"; font-weight: ${font.fWeight ? font.fWeight : "normal"}; font-style: ${font.fStyle ? font.fStyle : "normal"}; src: ${font.fSrc}; }`);
 
@@ -888,7 +910,7 @@ function drawRAxis(dom, obj, opt) {
   * @private */
 function drawRFrame(dom, obj, opt) {
    let p = new RFramePainter(dom, obj);
-   if (opt == "3d") p.mode3d = true;
+   if (opt == '3d') p.mode3d = true;
    return ensureRCanvas(p, false).then(() => p.redraw());
 }
 

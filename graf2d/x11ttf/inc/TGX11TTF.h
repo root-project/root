@@ -46,32 +46,32 @@ public:
    TGX11TTF(const TGX11 &org);
    virtual ~TGX11TTF() { }
 
-   Bool_t Init(void *display);
+   Bool_t Init(void *display) override;
    void   DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                   const char *text, ETextMode mode);
+                   const char *text, ETextMode mode) override;
    void   DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                   const wchar_t *text, ETextMode mode);
-   void   SetTextFont(Font_t fontnumber);
-   Int_t  SetTextFont(char *fontname, ETextSetMode mode);
-   void   SetTextSize(Float_t textsize);
+                   const wchar_t *text, ETextMode mode) override;
+   void   SetTextFont(Font_t fontnumber) override;
+   Int_t  SetTextFont(char *fontname, ETextSetMode mode) override;
+   void   SetTextSize(Float_t textsize) override;
 
 #ifdef R__HAS_XFT
    //---- Methods used text/fonts handling via Xft -----
    //void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
-   FontStruct_t LoadQueryFont(const char *font_name);
-   void         DeleteFont(FontStruct_t fs);
-   void         DeleteGC(GContext_t gc);
-   void         DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y, const char *s, Int_t len);
-   Int_t        TextWidth(FontStruct_t font, const char *s, Int_t len);
-   void         GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &max_descent);
-   FontH_t      GetFontHandle(FontStruct_t fs);
-   FontStruct_t GetGCFont(GContext_t gc);
-   void         MapGCFont(GContext_t gc, FontStruct_t font);
+   FontStruct_t LoadQueryFont(const char *font_name) override;
+   void         DeleteFont(FontStruct_t fs) override;
+   void         DeleteGC(GContext_t gc) override;
+   void         DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y, const char *s, Int_t len) override;
+   Int_t        TextWidth(FontStruct_t font, const char *s, Int_t len) override;
+   void         GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &max_descent) override;
+   FontH_t      GetFontHandle(FontStruct_t fs) override;
+   FontStruct_t GetGCFont(GContext_t gc) override;
+   void         MapGCFont(GContext_t gc, FontStruct_t font) override;
 #endif
 
    static void  Activate();
 
-   ClassDef(TGX11TTF,0)  //Interface to X11 + TTF font handling
+   ClassDefOverride(TGX11TTF,0)  //Interface to X11 + TTF font handling
 };
 
 #endif

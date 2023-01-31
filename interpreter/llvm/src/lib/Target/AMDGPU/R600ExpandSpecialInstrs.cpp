@@ -14,21 +14,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "AMDGPU.h"
-#include "AMDGPUSubtarget.h"
-#include "R600Defines.h"
-#include "R600InstrInfo.h"
-#include "R600RegisterInfo.h"
-#include "llvm/CodeGen/MachineBasicBlock.h"
-#include "llvm/CodeGen/MachineFunction.h"
 #include "MCTargetDesc/AMDGPUMCTargetDesc.h"
-#include "llvm/CodeGen/MachineFunctionPass.h"
-#include "llvm/CodeGen/MachineInstr.h"
-#include "llvm/CodeGen/MachineInstrBuilder.h"
-#include "llvm/CodeGen/MachineOperand.h"
-#include "llvm/Pass.h"
-#include <cassert>
-#include <cstdint>
-#include <iterator>
+#include "R600Defines.h"
+#include "R600Subtarget.h"
 
 using namespace llvm;
 
@@ -135,7 +123,7 @@ bool R600ExpandSpecialInstrsPass::runOnMachineFunction(MachineFunction &MF) {
 
         const R600RegisterInfo &TRI = TII->getRegisterInfo();
 
-        unsigned DstReg = MI.getOperand(0).getReg();
+        Register DstReg = MI.getOperand(0).getReg();
         unsigned DstBase = TRI.getEncodingValue(DstReg) & HW_REG_MASK;
 
         for (unsigned Chan = 0; Chan < 4; ++Chan) {
@@ -155,12 +143,12 @@ bool R600ExpandSpecialInstrsPass::runOnMachineFunction(MachineFunction &MF) {
           unsigned Opcode = BMI->getOpcode();
           // While not strictly necessary from hw point of view, we force
           // all src operands of a dot4 inst to belong to the same slot.
-          unsigned Src0 = BMI->getOperand(
-              TII->getOperandIdx(Opcode, R600::OpName::src0))
-              .getReg();
-          unsigned Src1 = BMI->getOperand(
-              TII->getOperandIdx(Opcode, R600::OpName::src1))
-              .getReg();
+          Register Src0 =
+              BMI->getOperand(TII->getOperandIdx(Opcode, R600::OpName::src0))
+                  .getReg();
+          Register Src1 =
+              BMI->getOperand(TII->getOperandIdx(Opcode, R600::OpName::src1))
+                  .getReg();
           (void) Src0;
           (void) Src1;
           if ((TRI.getEncodingValue(Src0) & 0xff) < 127 &&
@@ -205,10 +193,10 @@ bool R600ExpandSpecialInstrsPass::runOnMachineFunction(MachineFunction &MF) {
       // T0_Z = CUBE T1_X, T1_Z
       // T0_W = CUBE T1_Y, T1_Z
       for (unsigned Chan = 0; Chan < 4; Chan++) {
-        unsigned DstReg = MI.getOperand(
-                            TII->getOperandIdx(MI, R600::OpName::dst)).getReg();
-        unsigned Src0 = MI.getOperand(
-                           TII->getOperandIdx(MI, R600::OpName::src0)).getReg();
+        Register DstReg =
+            MI.getOperand(TII->getOperandIdx(MI, R600::OpName::dst)).getReg();
+        Register Src0 =
+            MI.getOperand(TII->getOperandIdx(MI, R600::OpName::src0)).getReg();
         unsigned Src1 = 0;
 
         // Determine the correct source registers
@@ -219,13 +207,13 @@ bool R600ExpandSpecialInstrsPass::runOnMachineFunction(MachineFunction &MF) {
           }
         }
         if (IsReduction) {
-          unsigned SubRegIndex = AMDGPURegisterInfo::getSubRegFromChannel(Chan);
+          unsigned SubRegIndex = R600RegisterInfo::getSubRegFromChannel(Chan);
           Src0 = TRI.getSubReg(Src0, SubRegIndex);
           Src1 = TRI.getSubReg(Src1, SubRegIndex);
         } else if (IsCube) {
           static const int CubeSrcSwz[] = {2, 2, 0, 1};
-          unsigned SubRegIndex0 = AMDGPURegisterInfo::getSubRegFromChannel(CubeSrcSwz[Chan]);
-          unsigned SubRegIndex1 = AMDGPURegisterInfo::getSubRegFromChannel(CubeSrcSwz[3 - Chan]);
+          unsigned SubRegIndex0 = R600RegisterInfo::getSubRegFromChannel(CubeSrcSwz[Chan]);
+          unsigned SubRegIndex1 = R600RegisterInfo::getSubRegFromChannel(CubeSrcSwz[3 - Chan]);
           Src1 = TRI.getSubReg(Src0, SubRegIndex1);
           Src0 = TRI.getSubReg(Src0, SubRegIndex0);
         }
@@ -234,7 +222,7 @@ bool R600ExpandSpecialInstrsPass::runOnMachineFunction(MachineFunction &MF) {
         bool Mask = false;
         bool NotLast = true;
         if (IsCube) {
-          unsigned SubRegIndex = AMDGPURegisterInfo::getSubRegFromChannel(Chan);
+          unsigned SubRegIndex = R600RegisterInfo::getSubRegFromChannel(Chan);
           DstReg = TRI.getSubReg(DstReg, SubRegIndex);
         } else {
           // Mask the write if the original instruction does not write to

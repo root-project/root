@@ -14,7 +14,6 @@
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/ADT/iterator_range.h"
 #include "llvm/DebugInfo/CodeView/CVRecord.h"
 #include "llvm/DebugInfo/CodeView/CodeView.h"
 #include "llvm/DebugInfo/CodeView/GUID.h"
@@ -32,15 +31,10 @@ using support::little32_t;
 using support::ulittle16_t;
 using support::ulittle32_t;
 
-using CVType = CVRecord<TypeLeafKind>;
-using RemappedType = RemappedRecord<TypeLeafKind>;
-
 struct CVMemberRecord {
   TypeLeafKind Kind;
   ArrayRef<uint8_t> Data;
 };
-using CVTypeArray = VarStreamArray<CVType>;
-using CVTypeRange = iterator_range<CVTypeArray::Iterator>;
 
 /// Equvalent to CV_fldattr_t in cvinfo.h.
 struct MemberAttributes {
@@ -144,7 +138,7 @@ public:
   ModifierOptions getModifiers() const { return Modifiers; }
 
   TypeIndex ModifiedType;
-  ModifierOptions Modifiers;
+  ModifierOptions Modifiers = ModifierOptions::None;
 };
 
 // LF_PROCEDURE
@@ -168,7 +162,7 @@ public:
   TypeIndex ReturnType;
   CallingConvention CallConv;
   FunctionOptions Options;
-  uint16_t ParameterCount;
+  uint16_t ParameterCount = 0;
   TypeIndex ArgumentList;
 };
 
@@ -202,9 +196,9 @@ public:
   TypeIndex ThisType;
   CallingConvention CallConv;
   FunctionOptions Options;
-  uint16_t ParameterCount;
+  uint16_t ParameterCount = 0;
   TypeIndex ArgumentList;
-  int32_t ThisPointerAdjustment;
+  int32_t ThisPointerAdjustment = 0;
 };
 
 // LF_LABEL
@@ -351,7 +345,7 @@ public:
   }
 
   TypeIndex ReferentType;
-  uint32_t Attrs;
+  uint32_t Attrs = 0;
   Optional<MemberPointerInfo> MemberInfo;
 
   void setAttrs(PointerKind PK, PointerMode PM, PointerOptions PO,
@@ -414,7 +408,7 @@ public:
 
   TypeIndex ElementType;
   TypeIndex IndexType;
-  uint64_t Size;
+  uint64_t Size = 0;
   StringRef Name;
 };
 
@@ -459,7 +453,7 @@ public:
   StringRef getName() const { return Name; }
   StringRef getUniqueName() const { return UniqueName; }
 
-  uint16_t MemberCount;
+  uint16_t MemberCount = 0;
   ClassOptions Options;
   TypeIndex FieldList;
   StringRef Name;
@@ -496,7 +490,7 @@ public:
 
   TypeIndex DerivationList;
   TypeIndex VTableShape;
-  uint64_t Size;
+  uint64_t Size = 0;
 };
 
 // LF_UNION
@@ -517,7 +511,7 @@ struct UnionRecord : public TagRecord {
 
   uint64_t getSize() const { return Size; }
 
-  uint64_t Size;
+  uint64_t Size = 0;
 };
 
 // LF_ENUM
@@ -550,8 +544,8 @@ public:
   uint8_t getBitSize() const { return BitSize; }
 
   TypeIndex Type;
-  uint8_t BitSize;
-  uint8_t BitOffset;
+  uint8_t BitSize = 0;
+  uint8_t BitOffset = 0;
 };
 
 // LF_VTSHAPE
@@ -592,7 +586,7 @@ public:
   StringRef getName() const { return Name; }
 
   GUID Guid;
-  uint32_t Age;
+  uint32_t Age = 0;
   StringRef Name;
 };
 
@@ -644,7 +638,7 @@ public:
 
   TypeIndex UDT;
   TypeIndex SourceFile;
-  uint32_t LineNumber;
+  uint32_t LineNumber = 0;
 };
 
 // LF_UDT_MOD_SRC_LINE
@@ -664,8 +658,8 @@ public:
 
   TypeIndex UDT;
   TypeIndex SourceFile;
-  uint32_t LineNumber;
-  uint16_t Module;
+  uint32_t LineNumber = 0;
+  uint16_t Module = 0;
 };
 
 // LF_BUILDINFO
@@ -703,7 +697,7 @@ public:
       : TypeRecord(TypeRecordKind::VFTable), CompleteClass(CompleteClass),
         OverriddenVFTable(OverriddenVFTable), VFPtrOffset(VFPtrOffset) {
     MethodNames.push_back(Name);
-    MethodNames.insert(MethodNames.end(), Methods.begin(), Methods.end());
+    llvm::append_range(MethodNames, Methods);
   }
 
   TypeIndex getCompleteClass() const { return CompleteClass; }
@@ -717,7 +711,7 @@ public:
 
   TypeIndex CompleteClass;
   TypeIndex OverriddenVFTable;
-  uint32_t VFPtrOffset;
+  uint32_t VFPtrOffset = 0;
   std::vector<StringRef> MethodNames;
 };
 
@@ -749,7 +743,7 @@ public:
 
   TypeIndex Type;
   MemberAttributes Attrs;
-  int32_t VFTableOffset;
+  int32_t VFTableOffset = 0;
   StringRef Name;
 };
 
@@ -780,7 +774,7 @@ public:
   TypeIndex getMethodList() const { return MethodList; }
   StringRef getName() const { return Name; }
 
-  uint16_t NumOverloads;
+  uint16_t NumOverloads = 0;
   TypeIndex MethodList;
   StringRef Name;
 };
@@ -806,7 +800,7 @@ public:
 
   MemberAttributes Attrs;
   TypeIndex Type;
-  uint64_t FieldOffset;
+  uint64_t FieldOffset = 0;
   StringRef Name;
 };
 
@@ -883,7 +877,7 @@ public:
 
   MemberAttributes Attrs;
   TypeIndex Type;
-  uint64_t Offset;
+  uint64_t Offset = 0;
 };
 
 // LF_VBCLASS, LF_IVBCLASS
@@ -911,8 +905,8 @@ public:
   MemberAttributes Attrs;
   TypeIndex BaseType;
   TypeIndex VBPtrType;
-  uint64_t VBPtrOffset;
-  uint64_t VTableIndex;
+  uint64_t VBPtrOffset = 0;
+  uint64_t VTableIndex = 0;
 };
 
 /// LF_INDEX - Used to chain two large LF_FIELDLIST or LF_METHODLIST records
@@ -941,9 +935,9 @@ public:
   uint32_t getSignature() const { return Signature; }
   StringRef getPrecompFilePath() const { return PrecompFilePath; }
 
-  uint32_t StartTypeIndex;
-  uint32_t TypesCount;
-  uint32_t Signature;
+  uint32_t StartTypeIndex = 0;
+  uint32_t TypesCount = 0;
+  uint32_t Signature = 0;
   StringRef PrecompFilePath;
 };
 
@@ -955,7 +949,7 @@ public:
 
   uint32_t getSignature() const { return Signature; }
 
-  uint32_t Signature;
+  uint32_t Signature = 0;
 };
 
 } // end namespace codeview

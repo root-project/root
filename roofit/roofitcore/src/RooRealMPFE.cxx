@@ -57,20 +57,42 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 #include "RooAbsCategory.h"
 #include "RooRealVar.h"
 #include "RooCategory.h"
-#include "RooMPSentinel.h"
 #include "RooMsgService.h"
 #include "RooNLLVar.h"
 #include "RooTrace.h"
 
+#include "Rtypes.h"
 #include "TSystem.h"
 
-RooMPSentinel RooRealMPFE::_sentinel ;
+
+class RooRealMPFE ;
+
+// RooMPSentinel is a singleton class that keeps track of all
+// parellel execution processes for goodness-of-fit calculations.
+// The primary task of RooMPSentinel is to terminate all server processes
+// when the main ROOT process is exiting.
+struct RooMPSentinel {
+
+  static RooMPSentinel& instance();
+
+  ~RooMPSentinel();
+
+  void add(RooRealMPFE& mpfe) ;
+  void remove(RooRealMPFE& mpfe) ;
+
+  RooArgSet _mpfeSet ;
+};
+
+RooMPSentinel& RooMPSentinel::instance() {
+  static RooMPSentinel inst;
+  return inst;
+}
+
 
 using namespace std;
 using namespace RooFit;
 
 ClassImp(RooRealMPFE);
-  ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,7 +118,7 @@ RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, b
   _inlineMode = true;
 #endif
   initVars() ;
-  _sentinel.add(*this) ;
+  RooMPSentinel::instance().add(*this) ;
 
 }
 
@@ -122,7 +144,7 @@ RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) :
   _retrieveDispatched(false), _evalCarry(other._evalCarry)
 {
   initVars() ;
-  _sentinel.add(*this) ;
+  RooMPSentinel::instance().add(*this) ;
 }
 
 
@@ -133,7 +155,7 @@ RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) :
 RooRealMPFE::~RooRealMPFE()
 {
   if (_state==Client) standby();
-  _sentinel.remove(*this);
+  RooMPSentinel::instance().remove(*this);
 }
 
 
@@ -741,4 +763,35 @@ void RooRealMPFE::enableOffsetting(bool flag)
 }
 
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Terminate all parallel processes still registered with
+/// the sentinel
+
+RooMPSentinel::~RooMPSentinel()
+{
+  for(auto * mpfe : static_range_cast<RooRealMPFE*>(_mpfeSet)) {
+    mpfe->standby() ;
+  }
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Register given multi-processor front-end object with the sentinel
+
+void RooMPSentinel::add(RooRealMPFE& mpfe)
+{
+  _mpfeSet.add(mpfe,true) ;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Remove given multi-processor front-end object from the sentinel
+
+void RooMPSentinel::remove(RooRealMPFE& mpfe)
+{
+  _mpfeSet.remove(mpfe,true) ;
+}
 

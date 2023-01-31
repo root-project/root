@@ -182,6 +182,7 @@ Begin_Macro(source)
    }
    auto gr = new TGraph(n,x,y);
    gr->SetFillColor(38);
+   gr->SetTitle(" ");
    c47->cd(1); gr->Draw("AB");
    c47->cd(2); gr->Draw("AB1");
 }
@@ -253,6 +254,7 @@ Begin_Macro(source)
    double ex[] = {0.1, 0.2, 0.3, 0.4, 0.5};
    double ey[] = {1, 0.5, 1, 0.5, 1};
    auto ge = new TGraphErrors(5, x, y, ex, ey);
+   ge->SetTitle("A graph with errors");
    ge->Draw("ap");
 }
 End_Macro
@@ -283,6 +285,7 @@ Begin_Macro(source)
    double ex[] = {0.1, 0.2, 0.3, 0.4, 0.5};
    double ey[] = {1, 0.5, 1, 0.5, 1};
    auto ge = new TGraphErrors(5, x, y, ex, ey);
+   ge->SetTitle("Errors as a band");
    ge->SetFillColor(4);
    ge->SetFillStyle(3010);
    ge->Draw("a3");
@@ -303,6 +306,7 @@ Begin_Macro(source)
    double ex[] = {0.1, 0.2, 0.3, 0.4, 0.5};
    double ey[] = {1, 0.5, 1, 0.5, 1};
    auto ge = new TGraphErrors(5, x, y, ex, ey);
+   ge->SetTitle("Errors as a smooth band");
    ge->SetFillColor(6);
    ge->SetFillStyle(3005);
    ge->Draw("a4");
@@ -372,6 +376,7 @@ Begin_Macro(source)
    double aeyl[] = {1, 0.5, 1, 0.5, 1};
    double aeyh[] = {0.5, 1, 0.5, 1, 0.5};
    auto gae = new TGraphAsymmErrors(5, ax, ay, aexl, aexh, aeyl, aeyh);
+   gae->SetTitle("Not symmetric errors");
    gae->SetFillColor(2);
    gae->SetFillStyle(3001);
    gae->Draw("a2");
@@ -401,7 +406,7 @@ Begin_Macro(source)
    Double_t exhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
    Double_t eyhd[n] = {.0,.0,.0,.0,.0,.0,.0,.0,.05,.0};
    auto gr = new TGraphBentErrors(n,x,y,exl,exh,eyl,eyh,exld,exhd,eyld,eyhd);
-   gr->SetTitle("TGraphBentErrors Example");
+   gr->SetTitle("A graph with bend errors");
    gr->SetMarkerColor(4);
    gr->SetMarkerStyle(21);
    gr->Draw("ALP");
@@ -4137,7 +4142,6 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
 
 void TGraphPainter::PaintGraphSimple(TGraph *theGraph, Option_t *option)
 {
-
    if (strstr(option,"H") || strstr(option,"h")) {
       PaintGrapHist(theGraph, theGraph->GetN(), theGraph->GetX(), theGraph->GetY(), option);
    } else {
@@ -4150,21 +4154,18 @@ void TGraphPainter::PaintGraphSimple(TGraph *theGraph, Option_t *option)
    // the fit function).
    TList *functions = theGraph->GetListOfFunctions();
    if (!functions) return;
-   TObjOptLink *lnk = (TObjOptLink*)functions->FirstLink();
-   TObject *obj;
+   auto lnk = functions->FirstLink();
 
    while (lnk) {
-      obj = lnk->GetObject();
-      TVirtualPad *padsave = gPad;
+      auto obj = lnk->GetObject();
+      TVirtualPad::TContext ctxt(true);
       if (obj->InheritsFrom(TF1::Class())) {
          if (obj->TestBit(TF1::kNotDraw) == 0) obj->Paint("lsame");
       } else  {
          obj->Paint(lnk->GetOption());
       }
-      lnk = (TObjOptLink*)lnk->Next();
-      padsave->cd();
+      lnk = lnk->Next();
    }
-   return;
 }
 
 

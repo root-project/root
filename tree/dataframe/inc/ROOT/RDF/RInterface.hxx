@@ -2435,7 +2435,7 @@ public:
       using Helper_t = RDFInternal::ReportHelper<Proxied>;
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
 
-      auto action = std::make_unique<Action_t>(Helper_t(rep, fProxiedPtr, returnEmptyReport), ColumnNames_t({}),
+      auto action = std::make_unique<Action_t>(Helper_t(rep, fProxiedPtr.get(), returnEmptyReport), ColumnNames_t({}),
                                                fProxiedPtr, RDFInternal::RColumnRegister(fColRegister));
 
       return MakeResultPtr(rep, *fLoopManager, std::move(action));
@@ -2643,17 +2643,16 @@ public:
    /// d2->Print();
    /// ~~~
    template <typename... ColumnTypes>
-   RResultPtr<RDisplay>
-   Display(const ColumnNames_t &columnList, int nRows = 5, size_t nMaxCollectionElements = 10)
+   RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, size_t nRows = 5, size_t nMaxCollectionElements = 10)
    {
       CheckIMTDisabled("Display");
       auto newCols = columnList;
       newCols.insert(newCols.begin(), "rdfentry_"); // Artificially insert first column
-      auto displayer = std::make_shared<RDFInternal::RDisplay>(newCols, GetColumnTypeNamesList(newCols), nRows,
-                                                               nMaxCollectionElements);
+      auto displayer = std::make_shared<RDisplay>(newCols, GetColumnTypeNamesList(newCols), nMaxCollectionElements);
+      using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<RDisplay>>;
       // Need to add ULong64_t type corresponding to the first column rdfentry_
-      return CreateAction<RDFInternal::ActionTags::Display, ULong64_t, ColumnTypes...>(std::move(newCols), displayer,
-                                                                                       displayer, fProxiedPtr);
+      return CreateAction<RDFInternal::ActionTags::Display, ULong64_t, ColumnTypes...>(
+         std::move(newCols), displayer, std::make_shared<displayHelperArgs_t>(nRows, displayer), fProxiedPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2667,16 +2666,16 @@ public:
    /// See the previous overloads for further details.
    ///
    /// Invoked when no types are specified to Display
-   RResultPtr<RDisplay>
-   Display(const ColumnNames_t &columnList, int nRows = 5, size_t nMaxCollectionElements = 10)
+   RResultPtr<RDisplay> Display(const ColumnNames_t &columnList, size_t nRows = 5, size_t nMaxCollectionElements = 10)
    {
       CheckIMTDisabled("Display");
       auto newCols = columnList;
       newCols.insert(newCols.begin(), "rdfentry_"); // Artificially insert first column
-      auto displayer = std::make_shared<RDFInternal::RDisplay>(newCols, GetColumnTypeNamesList(newCols), nRows,
-                                                               nMaxCollectionElements);
+      auto displayer = std::make_shared<RDisplay>(newCols, GetColumnTypeNamesList(newCols), nMaxCollectionElements);
+      using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<RDisplay>>;
       return CreateAction<RDFInternal::ActionTags::Display, RDFDetail::RInferredType>(
-         std::move(newCols), displayer, displayer, fProxiedPtr, columnList.size() + 1);
+         std::move(newCols), displayer, std::make_shared<displayHelperArgs_t>(nRows, displayer), fProxiedPtr,
+         columnList.size() + 1);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -2690,7 +2689,7 @@ public:
    /// is empty, all columns are selected.
    /// See the previous overloads for further details.
    RResultPtr<RDisplay>
-   Display(std::string_view columnNameRegexp = "", int nRows = 5, size_t nMaxCollectionElements = 10)
+   Display(std::string_view columnNameRegexp = "", size_t nRows = 5, size_t nMaxCollectionElements = 10)
    {
       const auto columnNames = GetColumnNames();
       const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Display");
@@ -2705,8 +2704,8 @@ public:
    /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// See the previous overloads for further details.
-   RResultPtr<RDisplay> Display(std::initializer_list<std::string> columnList, int nRows = 5,
-                                size_t nMaxCollectionElements = 10)
+   RResultPtr<RDisplay>
+   Display(std::initializer_list<std::string> columnList, size_t nRows = 5, size_t nMaxCollectionElements = 10)
    {
       ColumnNames_t selectedColumns(columnList);
       return Display(selectedColumns, nRows, nMaxCollectionElements);
@@ -2780,6 +2779,7 @@ private:
       const auto columnListWithoutSizeColumns = RDFInternal::FilterArraySizeColNames(columnList, "Snapshot");
 
       RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columnListWithoutSizeColumns.size());
+      // validCols has aliases resolved, while columnListWithoutSizeColumns still has aliases in it.
       const auto validCols = GetValidatedColumnNames(columnListWithoutSizeColumns.size(), columnListWithoutSizeColumns);
       RDFInternal::CheckForDuplicateSnapshotColumns(validCols);
       CheckAndFillDSColumns(validCols, TTraits::TypeList<ColumnTypes...>());
@@ -2792,8 +2792,11 @@ private:
          std::string(filename), std::string(dirname), std::string(treename), columnListWithoutSizeColumns, options});
 
       ::TDirectory::TContext ctxt;
-      auto newRDF = std::make_shared<ROOT::RDataFrame>(fullTreeName, filename, validCols);
+      auto newRDF =
+         std::make_shared<ROOT::RDataFrame>(fullTreeName, filename, /*defaultColumns=*/columnListWithoutSizeColumns);
 
+      // The Snapshot helper will use validCols (with aliases resolved) as input columns, and
+      // columnListWithoutSizeColumns (still with aliases in it, passed through snapHelperArgs) as output column names.
       auto resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, ColumnTypes...>(validCols, newRDF, snapHelperArgs,
                                                                                     fProxiedPtr);
 

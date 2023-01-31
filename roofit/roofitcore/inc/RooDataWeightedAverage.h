@@ -51,7 +51,7 @@ protected:
   bool _showProgress ; ///< Show progress indication during evaluation if true
   double evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override ;
 
-  ClassDefOverride(RooDataWeightedAverage,1) // Optimized calculator of data weighted average of a RooAbsReal
+  ClassDefOverride(RooDataWeightedAverage,0) // Optimized calculator of data weighted average of a RooAbsReal
 };
 
 #endif

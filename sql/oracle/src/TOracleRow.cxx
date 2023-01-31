@@ -107,8 +107,8 @@ void TOracleRow::GetRowData()
    if (!fResult || !fFieldInfo || (fFieldCount<=0)) return;
 
    fFieldsBuffer = new char* [fFieldCount];
-   for (int n=0;n<fFieldCount;n++)
-     fFieldsBuffer[n] = 0;
+   for (int n = 0; n < fFieldCount; n++)
+      fFieldsBuffer[n] = nullptr;
 
    std::string res;
 

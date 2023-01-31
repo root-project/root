@@ -53,6 +53,17 @@ public:
       return GradientParameterSpace::External;
    };
 
+   /// return second derivatives (diagonal of the Hessian matrix)
+   virtual std::vector<double> G2(const std::vector<double> &) const { return std::vector<double>();}
+
+   /// return Hessian
+   virtual std::vector<double> Hessian(const std::vector<double> &) const { return std::vector<double>();}
+
+   virtual bool HasHessian() const { return false; }
+
+   virtual bool HasG2() const { return false; }
+
+
 };
 
 } // namespace Minuit2

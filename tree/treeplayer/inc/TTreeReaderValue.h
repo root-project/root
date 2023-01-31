@@ -113,7 +113,7 @@ Base class of TTreeReaderValue.
 
       Detail::TBranchProxy* GetProxy() const { return fProxy; }
 
-      void MarkTreeReaderUnavailable() { fTreeReader = 0; fSetupStatus = kSetupTreeDestructed; }
+      void MarkTreeReaderUnavailable() { fTreeReader = nullptr; fSetupStatus = kSetupTreeDestructed; }
 
       /// Stringify the template argument.
       static std::string GetElementTypeName(const std::type_info& ti);

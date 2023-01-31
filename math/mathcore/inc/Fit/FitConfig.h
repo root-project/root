@@ -111,7 +111,7 @@ public:
       // set the parameters values from the function
       unsigned int npar = func.NPar();
       const double *begin = func.Parameters();
-      if (begin == 0) {
+      if (!begin) {
          fSettings = std::vector<ParameterSettings>(npar);
          return;
       }
@@ -137,12 +137,12 @@ public:
    /**
       set the parameter settings from number of parameters and a vector of values and optionally step values. If there are not existing or number of parameters does not match existing one, create a new parameter setting list.
    */
-   void SetParamsSettings(unsigned int npar, const double * params, const double * vstep = 0);
+   void SetParamsSettings(unsigned int npar, const double * params, const double * vstep = nullptr);
 
    /*
      Set the parameter settings from a vector of parameter settings
    */
-   void SetParamsSettings (const std::vector<ROOT::Fit::ParameterSettings>& pars ) {
+   void SetParamsSettings (const std::vector<ROOT::Fit::ParameterSettings>& pars) {
       fSettings = pars;
    }
 
@@ -178,7 +178,7 @@ public:
    /**
       set minimizer type
    */
-   void SetMinimizer(const char * type, const char * algo = 0) {
+   void SetMinimizer(const char *type, const char *algo = nullptr) {
       if (type) fMinimizerOpts.SetMinimizerType(type);
       if (algo) fMinimizerOpts.SetMinimizerAlgorithm(algo);
    }
@@ -248,7 +248,7 @@ public:
    /**
       static function to control default minimizer type and algorithm
    */
-   static void SetDefaultMinimizer(const char * type, const char * algo = 0);
+   static void SetDefaultMinimizer(const char *type, const char *algo = nullptr);
 
 
 

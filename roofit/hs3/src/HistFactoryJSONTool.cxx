@@ -12,20 +12,14 @@
 
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 #include <RooFitHS3/HistFactoryJSONTool.h>
+#include <RooFit/Detail/JSONInterface.h>
 
 #include "RooStats/HistFactory/Measurement.h"
 #include "RooStats/HistFactory/Channel.h"
 #include "RooStats/HistFactory/Sample.h"
 
-#ifdef ROOFIT_HS3_WITH_RYML
-#include "RYMLParser.h"
-typedef TRYMLTree tree_t;
-#else
-#include "JSONParser.h"
-typedef TJSONTree tree_t;
-#endif
-
-using RooFit::Experimental::JSONNode;
+using RooFit::Detail::JSONNode;
+using RooFit::Detail::JSONTree;
 
 namespace {
 
@@ -35,7 +29,6 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &s)
                                            "obs_z_" + sample.GetChannelName()};
 
    s.set_map();
-   s["type"] << "hist-sample";
 
    if (sample.GetOverallSysList().size() > 0) {
       auto &overallSys = s["overallSystematics"];
@@ -162,8 +155,9 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    auto &ch = sim["channels"];
    ch.set_map();
    for (const auto &c : measurement.GetChannels()) {
-      auto &thisch = ch[c.GetName()];
-      exportChannel(c, thisch);
+      auto pdfName = std::string("model_") + c.GetName();
+      ch[c.GetName()] << pdfName;
+      exportChannel(c, pdflist[pdfName]);
    }
 
    // the variables
@@ -228,9 +222,8 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
 
 void RooStats::HistFactory::JSONTool::PrintJSON(std::ostream &os)
 {
-   tree_t p;
-   auto &n = p.rootnode();
-   n.set_map();
+   std::unique_ptr<RooFit::Detail::JSONTree> tree = RooJSONFactoryWSTool::createNewJSONTree();
+   auto &n = tree->rootnode();
    exportMeasurement(_measurement, n);
    n.writeJSON(os);
 }

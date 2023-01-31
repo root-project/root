@@ -1696,8 +1696,9 @@ void TGraphMultiErrors::Print(Option_t *) const
 
 void TGraphMultiErrors::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   char quote = '"';
    out << "   " << std::endl;
+   static Int_t frameNumber = 5000;
+   frameNumber++;
 
    if (gROOT->ClassSaved(TGraphMultiErrors::Class()))
       out << "   ";
@@ -1705,16 +1706,10 @@ void TGraphMultiErrors::SavePrimitive(std::ostream &out, Option_t *option)
       out << "   TGraphMultiErrors* ";
 
    out << "tgme = new TGraphMultiErrors(" << fNpoints << ", " << fNYErrors << ");" << std::endl;
-   out << "   tgme->SetName(" << quote << GetName() << quote << ");" << std::endl;
-   out << "   tgme->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
-
-   SaveFillAttributes(out, "tgme", 0, 1001);
-   SaveLineAttributes(out, "tgme", 1, 1, 1);
-   SaveMarkerAttributes(out, "tgme", 1, 1, 1);
 
    for (Int_t j = 0; j < fNYErrors; j++) {
-      fAttFill[j].SaveFillAttributes(out, Form("tgme->GetAttFill(%d)", j), 0, 1001);
-      fAttLine[j].SaveLineAttributes(out, Form("tgme->GetAttLine(%d)", j), 1, 1, 1);
+      fAttFill[j].SaveFillAttributes(out, TString::Format("tgme->GetAttFill(%d)", j).Data(), 0, 1001);
+      fAttLine[j].SaveLineAttributes(out, TString::Format("tgme->GetAttLine(%d)", j).Data(), 1, 1, 1);
    }
 
    for (Int_t i = 0; i < fNpoints; i++) {
@@ -1726,34 +1721,7 @@ void TGraphMultiErrors::SavePrimitive(std::ostream &out, Option_t *option)
              << std::endl;
    }
 
-   static Int_t frameNumber = 0;
-   if (fHistogram) {
-      frameNumber++;
-      TString hname = fHistogram->GetName();
-      hname += frameNumber;
-      fHistogram->SetName(Form("Graph_%s", hname.Data()));
-      fHistogram->SavePrimitive(out, "nodraw");
-      out << "   tgme->SetHistogram(" << fHistogram->GetName() << ");" << std::endl;
-      out << "   " << std::endl;
-   }
-
-   // save list of functions
-   TIter next(fFunctions);
-   TObject *obj;
-   while ((obj = next())) {
-      obj->SavePrimitive(out, "nodraw");
-      if (obj->InheritsFrom("TPaveStats")) {
-         out << "   tgme->GetListOfFunctions()->Add(ptstats);" << std::endl;
-         out << "   ptstats->SetParent(tgme->GetListOfFunctions());" << std::endl;
-      } else
-         out << "   tgme->GetListOfFunctions()->Add(" << obj->GetName() << ");" << std::endl;
-   }
-
-   const char *l = strstr(option, "multigraph");
-   if (l)
-      out << "   multigraph->Add(tgme, " << quote << l + 10 << quote << ");" << std::endl;
-   else
-      out << "   tgme->Draw(" << quote << option << quote << ");" << std::endl;
+   SaveHistogramAndFunctions(out, "tgme", frameNumber, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1793,14 +1761,18 @@ void TGraphMultiErrors::Scale(Double_t c1, Option_t *option)
 void TGraphMultiErrors::SetPointError(Double_t exL, Double_t exH, Double_t eyL1, Double_t eyH1, Double_t eyL2,
                                       Double_t eyH2, Double_t eyL3, Double_t eyH3)
 {
+   if (!gPad) {
+      Error("SetPointError", "Cannot be used without gPad, requires last mouse position");
+      return;
+   }
+
    Int_t px = gPad->GetEventX();
    Int_t py = gPad->GetEventY();
 
    // localize point to be deleted
    Int_t ipoint = -2;
-   Int_t i;
    // start with a small window (in case the mouse is very close to one point)
-   for (i = 0; i < fNpoints; i++) {
+   for (Int_t i = 0; i < fNpoints; i++) {
       Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
       Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
 

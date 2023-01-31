@@ -1,5 +1,9 @@
 #include "ntuple_test.hxx"
+#include "SimpleCollectionProxy.hxx"
+#include "ROOT/TestSupport.hxx"
 #include "TInterpreter.h"
+
+#include <cstring>
 
 TEST(RNTuple, TypeName) {
    EXPECT_STREQ("float", ROOT::Experimental::RField<float>::TypeName().c_str());
@@ -35,6 +39,58 @@ TEST(RNTuple, CreateField)
    EXPECT_EQ(alignof(std::uint32_t), record.GetAlignment());
    // Check that trailing padding is added after `u8` to comply with the alignment requirements of uint32_t
    EXPECT_EQ(sizeof(std::uint32_t) + alignof(std::uint32_t), record.GetValueSize());
+}
+
+TEST(RNTuple, ArrayField)
+{
+   auto field = RFieldBase::Create("test", "int32_t[10]").Unwrap();
+   EXPECT_EQ((10 * sizeof(int32_t)), field->GetValueSize());
+   EXPECT_EQ(alignof(int32_t[10]), field->GetAlignment());
+   auto otherField = RFieldBase::Create("test", "std::vector<float[3]   > [10 ]  ").Unwrap();
+   EXPECT_EQ((10 * sizeof(std::vector<float[3]>)), otherField->GetValueSize());
+
+   // Malformed type names
+   EXPECT_THROW(RFieldBase::Create("test", "unsigned int[]").Unwrap(), ROOT::Experimental::RException);
+   EXPECT_THROW(RFieldBase::Create("test", "unsigned int [[2").Unwrap(), ROOT::Experimental::RException);
+   EXPECT_THROW(RFieldBase::Create("test", "unsigned[2] int[10]").Unwrap(), ROOT::Experimental::RException);
+
+   // Multi-dimensional arrays are not currently supported
+   EXPECT_THROW(RFieldBase::Create("test", "int32_t[10][11]").Unwrap(), ROOT::Experimental::RException);
+
+   unsigned char charArray[] = {0x00, 0x01, 0x02, 0x03};
+
+   FileRaii fileGuard("test_ntuple_rfield_array.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto struct_field = model->MakeField<StructWithArrays>("struct");
+      model->AddField(std::make_unique<RField<float[2]>>("array1"));
+      model->AddField(RFieldBase::Create("array2", "unsigned char[4]").Unwrap());
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      auto array1_field = ntuple->GetModel()->GetDefaultEntry()->Get<float[2]>("array1");
+      auto array2_field = ntuple->GetModel()->GetDefaultEntry()->Get<unsigned char[4]>("array2");
+      for (int i = 0; i < 2; i++) {
+         new (struct_field.get()) StructWithArrays({{'n', 't', 'p', 'l'}, {1.0, 42.0}});
+         new (array1_field) float[2]{0.0f, static_cast<float>(i)};
+         memcpy(array2_field, charArray, sizeof(charArray));
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(2, ntuple->GetNEntries());
+   auto viewStruct = ntuple->GetView<StructWithArrays>("struct");
+   auto viewArray1 = ntuple->GetView<float[2]>("array1");
+   auto viewArray2 = ntuple->GetView<unsigned char[4]>("array2");
+   for (auto i : ntuple->GetEntryRange()) {
+      EXPECT_EQ(0, memcmp(viewStruct(i).c, "ntpl", 4));
+      EXPECT_EQ(1.0f, viewStruct(i).f[0]);
+      EXPECT_EQ(42.0f, viewStruct(i).f[1]);
+
+      float fs[] = {0.0f, static_cast<float>(i)};
+      EXPECT_EQ(0, memcmp(viewArray1(i), fs, sizeof(fs)));
+      EXPECT_EQ(0, memcmp(viewArray2(i), charArray, sizeof(charArray)));
+   }
 }
 
 TEST(RNTuple, StdPair)
@@ -394,6 +450,127 @@ TEST(RNTuple, TClassTemplatedBase)
    }
 }
 
+TEST(RNTuple, TVirtualCollectionProxy)
+{
+   SimpleCollectionProxy<StructUsingCollectionProxy<char>> proxyC;
+   SimpleCollectionProxy<StructUsingCollectionProxy<float>> proxyF;
+   SimpleCollectionProxy<StructUsingCollectionProxy<CustomStruct>> proxyS;
+   SimpleCollectionProxy<StructUsingCollectionProxy<StructUsingCollectionProxy<float>>> proxyNested;
+
+   // `RCollectionClassField` instantiated but no collection proxy set (yet)
+   EXPECT_THROW(RField<StructUsingCollectionProxy<float>>("hasTraitButNoCollectionProxySet"),
+                ROOT::Experimental::RException);
+
+   auto klassC = TClass::GetClass("StructUsingCollectionProxy<char>");
+   klassC->CopyCollectionProxy(proxyC);
+   auto klassF = TClass::GetClass("StructUsingCollectionProxy<float>");
+   klassF->CopyCollectionProxy(proxyF);
+   auto klassS = TClass::GetClass("StructUsingCollectionProxy<CustomStruct>");
+   klassS->CopyCollectionProxy(proxyS);
+   auto klassNested = TClass::GetClass("StructUsingCollectionProxy<StructUsingCollectionProxy<float>>");
+   klassNested->CopyCollectionProxy(proxyNested);
+
+   // `RClassField` instantiated (due to intentionally missing `IsCollectionProxy<T>` trait) but a collection proxy is
+   // set
+   auto klassI = TClass::GetClass("StructUsingCollectionProxy<int>");
+   klassI->CopyCollectionProxy(SimpleCollectionProxy<StructUsingCollectionProxy<int>>{});
+   EXPECT_THROW(RField<StructUsingCollectionProxy<int>>("noTraitButCollectionProxySet"),
+                ROOT::Experimental::RException);
+
+   auto field = RField<StructUsingCollectionProxy<float>>("c");
+   EXPECT_EQ(sizeof(StructUsingCollectionProxy<float>), field.GetValueSize());
+
+   StructUsingCollectionProxy<float> proxiedVecF;
+   for (unsigned i = 0; i < 10; ++i) {
+      proxiedVecF.v.push_back(static_cast<float>(i));
+   }
+
+   FileRaii fileGuard("test_ntuple_tvirtualcollectionproxy.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("C", "StructUsingCollectionProxy<char>").Unwrap());
+      model->AddField(RFieldBase::Create("F", "StructUsingCollectionProxy<float>").Unwrap());
+      model->AddField(RFieldBase::Create("S", "StructUsingCollectionProxy<CustomStruct>").Unwrap());
+      auto fieldVproxyF = model->MakeField<std::vector<StructUsingCollectionProxy<float>>>("VproxyF");
+      auto fieldNested = model->MakeField<StructUsingCollectionProxy<StructUsingCollectionProxy<float>>>("nested");
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      auto fieldC = ntuple->GetModel()->GetDefaultEntry()->Get<StructUsingCollectionProxy<char>>("C");
+      auto fieldF = ntuple->GetModel()->GetDefaultEntry()->Get<StructUsingCollectionProxy<float>>("F");
+      auto fieldS = ntuple->GetModel()->GetDefaultEntry()->Get<StructUsingCollectionProxy<CustomStruct>>("S");
+      for (unsigned i = 0; i < 1000; ++i) {
+         if ((i % 100) == 0) {
+            fieldC->v.clear();
+            fieldF->v.clear();
+            fieldS->v.clear();
+         }
+         fieldC->v.push_back(42);
+         fieldF->v.push_back(static_cast<float>(i % 100));
+
+         std::vector<float> v1;
+         for (unsigned j = 0, nItems = (i % 10); j < nItems; ++j) {
+            v1.push_back(static_cast<float>(j));
+         }
+         fieldS->v.push_back(CustomStruct{
+            /*a=*/static_cast<float>(i % 100),
+            /*v1=*/std::move(v1),
+            /*v2=*/std::vector<std::vector<float>>{{static_cast<float>(i % 100)}, {static_cast<float>((i % 100) + 1)}},
+            /*s=*/"hello" + std::to_string(i % 100)});
+
+         fieldVproxyF->push_back(proxiedVecF);
+         fieldNested->v.push_back(proxiedVecF);
+         ntuple->Fill();
+      }
+   }
+
+   {
+      auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+      EXPECT_EQ(1000U, ntuple->GetNEntries());
+      auto viewC = ntuple->GetView<StructUsingCollectionProxy<char>>("C");
+      auto viewF = ntuple->GetView<StructUsingCollectionProxy<float>>("F");
+      auto viewS = ntuple->GetView<StructUsingCollectionProxy<CustomStruct>>("S");
+      auto viewVproxyF = ntuple->GetView<std::vector<StructUsingCollectionProxy<float>>>("VproxyF");
+      auto viewNested = ntuple->GetView<StructUsingCollectionProxy<StructUsingCollectionProxy<float>>>("nested");
+      for (auto i : ntuple->GetEntryRange()) {
+         auto &collC = viewC(i);
+         auto &collF = viewF(i);
+         auto &collS = viewS(i);
+         auto &collVproxyF = viewVproxyF(i);
+         auto &collNested = viewNested(i);
+
+         EXPECT_EQ((i % 100) + 1, collC.v.size());
+         for (unsigned j = 0; j < collC.v.size(); ++j) {
+            EXPECT_EQ(42, collC.v[j]);
+         }
+         EXPECT_EQ((i % 100) + 1, collF.v.size());
+         for (unsigned j = 0; j < collF.v.size(); ++j) {
+            EXPECT_EQ(static_cast<float>(j), collF.v[j]);
+         }
+
+         EXPECT_EQ((i % 100) + 1, collS.v.size());
+         for (unsigned j = 0; j < collS.v.size(); ++j) {
+            const auto &item = collS.v[j];
+            EXPECT_EQ(static_cast<float>(j), item.a);
+            for (unsigned k = 0; k < item.v1.size(); ++k) {
+               EXPECT_EQ(static_cast<float>(k), item.v1[k]);
+            }
+            EXPECT_EQ(static_cast<float>(j), item.v2[0][0]);
+            EXPECT_EQ(static_cast<float>(j + 1), item.v2[1][0]);
+            EXPECT_EQ("hello" + std::to_string(j), item.s);
+         }
+
+         EXPECT_EQ(i + 1, collVproxyF.size());
+         for (unsigned j = 0; j < collVproxyF.size(); ++j) {
+            EXPECT_EQ(proxiedVecF.v, collVproxyF[i].v);
+         }
+         EXPECT_EQ(i + 1, collNested.v.size());
+         for (unsigned j = 0; j < collNested.v.size(); ++j) {
+            EXPECT_EQ(proxiedVecF.v, collNested.v[i].v);
+         }
+      }
+   }
+}
+
 TEST(RNTuple, Enums)
 {
    FileRaii fileGuard("test_ntuple_enums.ntuple");
@@ -410,4 +587,76 @@ TEST(RNTuple, Enums)
    auto viewKlass = ntuple->GetView<StructWithEnums>("klass");
    EXPECT_EQ(42, viewKlass(0).a);
    EXPECT_EQ(137, viewKlass(0).b);
+}
+
+TEST(RNTuple, Traits)
+{
+   EXPECT_EQ(RFieldBase::kTraitTrivialType | RFieldBase::kTraitMappable, RField<float>("f").GetTraits());
+   EXPECT_EQ(RFieldBase::kTraitTrivialType | RFieldBase::kTraitMappable, RField<bool>("f").GetTraits());
+   EXPECT_EQ(RFieldBase::kTraitTrivialType | RFieldBase::kTraitMappable, RField<int>("f").GetTraits());
+   EXPECT_EQ(0, RField<std::string>("f").GetTraits());
+   EXPECT_EQ(0, RField<std::vector<float>>("f").GetTraits());
+   EXPECT_EQ(0, RField<std::vector<bool>>("f").GetTraits());
+   EXPECT_EQ(0, RField<ROOT::RVec<float>>("f").GetTraits());
+   EXPECT_EQ(0, RField<ROOT::RVec<bool>>("f").GetTraits());
+   auto f1 = RField<std::pair<float, std::string>>("f");
+   EXPECT_EQ(0, f1.GetTraits());
+   auto f2 = RField<std::pair<float, int>>("f");
+   EXPECT_EQ(RFieldBase::kTraitTrivialType, f2.GetTraits());
+   auto f3 = RField<std::variant<float, std::string>>("f");
+   EXPECT_EQ(0, f3.GetTraits());
+   auto f4 = RField<std::variant<float, int>>("f");
+   EXPECT_EQ(RFieldBase::kTraitTriviallyDestructible, f4.GetTraits());
+   auto f5 = RField<std::tuple<float, std::string>>("f");
+   EXPECT_EQ(0, f5.GetTraits());
+   auto f6 = RField<std::tuple<float, int>>("f");
+   EXPECT_EQ(RFieldBase::kTraitTrivialType, f6.GetTraits());
+   auto f7 = RField<std::tuple<float, std::variant<int, float>>>("f");
+   EXPECT_EQ(RFieldBase::kTraitTriviallyDestructible, f7.GetTraits());
+   auto f8 = RField<std::array<float, 3>>("f");
+   EXPECT_EQ(RFieldBase::kTraitTrivialType, f8.GetTraits());
+   auto f9 = RField<std::array<std::string, 3>>("f");
+   EXPECT_EQ(0, f9.GetTraits());
+
+   EXPECT_EQ(RFieldBase::kTraitTrivialType, RField<TrivialTraits>("f").GetTraits());
+   EXPECT_EQ(0, RField<TransientTraits>("f").GetTraits());
+   EXPECT_EQ(RFieldBase::kTraitTriviallyDestructible, RField<VariantTraits>("f").GetTraits());
+   EXPECT_EQ(0, RField<StringTraits>("f").GetTraits());
+   EXPECT_EQ(RFieldBase::kTraitTriviallyDestructible, RField<ConstructorTraits>("f").GetTraits());
+   EXPECT_EQ(RFieldBase::kTraitTriviallyConstructible, RField<DestructorTraits>("f").GetTraits());
+}
+
+TEST(RNTuple, TClassReadRules)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kWarning, "[ROOT.NTuple]", "ignoring I/O customization rule with non-transient member: a", false);
+   diags.requiredDiag(kWarning, "ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile",
+                      "The RNTuple file format will change.", false);
+   diags.requiredDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 1", false);
+
+   FileRaii fileGuard("test_ntuple_tclassrules.ntuple");
+   char c[4] = {'R', 'O', 'O', 'T'};
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldKlass = model->MakeField<StructWithIORules>("klass");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      for (int i = 0; i < 20; i++) {
+         *fieldKlass = StructWithIORules{/*a=*/static_cast<float>(i), /*chars=*/c};
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   EXPECT_EQ(20U, ntuple->GetNEntries());
+   auto viewKlass = ntuple->GetView<StructWithIORules>("klass");
+   for (auto i : ntuple->GetEntryRange()) {
+      float fi = static_cast<float>(i);
+      EXPECT_EQ(fi, viewKlass(i).a);
+      EXPECT_TRUE(0 == memcmp(c, viewKlass(i).s.chars, sizeof(c)));
+
+      // The following values are set from a read rule; see CustomStructLinkDef.h
+      EXPECT_EQ(fi + 1.0f, viewKlass(i).b);
+      EXPECT_EQ(viewKlass(i).a + viewKlass(i).b, viewKlass(i).c);
+      EXPECT_EQ("ROOT", viewKlass(i).s.str);
+   }
 }

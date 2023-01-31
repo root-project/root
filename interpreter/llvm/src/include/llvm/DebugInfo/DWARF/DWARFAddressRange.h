@@ -17,6 +17,7 @@
 namespace llvm {
 
 class raw_ostream;
+class DWARFObject;
 
 struct DWARFAddressRange {
   uint64_t LowPC;
@@ -26,7 +27,9 @@ struct DWARFAddressRange {
   DWARFAddressRange() = default;
 
   /// Used for unit testing.
-  DWARFAddressRange(uint64_t LowPC, uint64_t HighPC, uint64_t SectionIndex = 0)
+  DWARFAddressRange(
+      uint64_t LowPC, uint64_t HighPC,
+      uint64_t SectionIndex = object::SectionedAddress::UndefSection)
       : LowPC(LowPC), HighPC(HighPC), SectionIndex(SectionIndex) {}
 
   /// Returns true if LowPC is smaller or equal to HighPC. This accounts for
@@ -42,13 +45,36 @@ struct DWARFAddressRange {
     return LowPC < RHS.HighPC && RHS.LowPC < HighPC;
   }
 
-  void dump(raw_ostream &OS, uint32_t AddressSize,
-            DIDumpOptions DumpOpts = {}) const;
+  /// Union two address ranges if they intersect.
+  ///
+  /// This function will union two address ranges if they intersect by
+  /// modifying this range to be the union of both ranges. If the two ranges
+  /// don't intersect this range will be left alone.
+  ///
+  /// \param RHS Another address range to combine with.
+  ///
+  /// \returns false if the ranges don't intersect, true if they do and the
+  /// ranges were combined.
+  bool merge(const DWARFAddressRange &RHS) {
+    if (!intersects(RHS))
+      return false;
+    LowPC = std::min<uint64_t>(LowPC, RHS.LowPC);
+    HighPC = std::max<uint64_t>(HighPC, RHS.HighPC);
+    return true;
+  }
+
+  void dump(raw_ostream &OS, uint32_t AddressSize, DIDumpOptions DumpOpts = {},
+            const DWARFObject *Obj = nullptr) const;
 };
 
-static inline bool operator<(const DWARFAddressRange &LHS,
-                             const DWARFAddressRange &RHS) {
+inline bool operator<(const DWARFAddressRange &LHS,
+                      const DWARFAddressRange &RHS) {
   return std::tie(LHS.LowPC, LHS.HighPC) < std::tie(RHS.LowPC, RHS.HighPC);
+}
+
+inline bool operator==(const DWARFAddressRange &LHS,
+                       const DWARFAddressRange &RHS) {
+  return std::tie(LHS.LowPC, LHS.HighPC) == std::tie(RHS.LowPC, RHS.HighPC);
 }
 
 raw_ostream &operator<<(raw_ostream &OS, const DWARFAddressRange &R);

@@ -13,9 +13,10 @@
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "cling/Utils/Output.h"
 #include "textinput/Callbacks.h"
-#include "textinput/TextInput.h"
+#include "textinput/History.h"
 #include "textinput/StreamReader.h"
 #include "textinput/TerminalDisplay.h"
+#include "textinput/TextInput.h"
 
 #include "llvm/ADT/SmallString.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -31,7 +32,7 @@ namespace {
   ///
   class UITabCompletion : public textinput::TabCompletion {
     const cling::Interpreter& m_ParentInterpreter;
-  
+
   public:
     UITabCompletion(const cling::Interpreter& Parent) :
                     m_ParentInterpreter(Parent) {}
@@ -66,6 +67,45 @@ namespace {
 
     textinput::TextInput* operator -> () { return &m_Input; }
   };
+
+  llvm::SmallString<512> GetHistoryFilePath() {
+    if (getenv("CLING_NOHISTORY")) {
+      return {};
+    }
+
+    if (const char* HistFileEnvvar = std::getenv("CLING_HISTFILE")) {
+      return llvm::StringRef{HistFileEnvvar};
+    }
+
+    // History file search order according to XDG Base Directory Specification:
+    //
+    // ${XDG_STATE_HOME}/cling/history
+    // ~/.local/state/cling/history
+    // ~/.cling_history
+    const char* StateHome = std::getenv("XDG_STATE_HOME");
+
+    if (!StateHome) {
+      StateHome = "~/.local/state";
+    }
+
+    llvm::SmallString<512> FilePath;
+
+    if (!llvm::sys::fs::real_path(StateHome, FilePath, true)) {
+      // If xdg state home directory exists then create cling subdirectory if
+      // the latter does not exist.
+      if (llvm::sys::fs::is_directory(FilePath) &&
+          !llvm::sys::fs::create_directory(FilePath += "/cling")) {
+        return FilePath += "/history";
+      }
+    }
+
+    if (llvm::sys::path::home_directory(FilePath)) {
+      return FilePath += "/.cling_history";
+    }
+
+    cling::errs() << "Failed to create command history file\n";
+    return {};
+  }
 }
 
 namespace cling {
@@ -82,20 +122,24 @@ namespace cling {
       PrintLogo();
     }
 
-    llvm::SmallString<512> histfilePath;
-    if (!getenv("CLING_NOHISTORY")) {
-      // History file is $HOME/.cling_history
-      if (llvm::sys::path::home_directory(histfilePath))
-        llvm::sys::path::append(histfilePath, ".cling_history");
-    }
+    auto histfilePath{GetHistoryFilePath()};
 
+    const auto Completion =
+        std::make_unique<UITabCompletion>(m_MetaProcessor->getInterpreter());
     TextInputHolder TI(histfilePath);
 
-    // Inform text input about the code complete consumer
-    // TextInput owns the TabCompletion.
-    UITabCompletion* Completion =
-                      new UITabCompletion(m_MetaProcessor->getInterpreter());
-    TI->SetCompletion(Completion);
+    TI->SetCompletion(Completion.get());
+
+    if (const char* HistSizeEnvvar = std::getenv("CLING_HISTSIZE")) {
+      const size_t HistSize = std::strtoull(HistSizeEnvvar, nullptr, 0);
+
+      // std::strtoull() returns 0 if the parsing fails.
+      // zero HistSize will disable history logging to file.
+      // refer to textinput::History::AppendToFile()
+      TI->SetHistoryMaxDepth(HistSize);
+      TI->SetHistoryPruneLength(
+          static_cast<size_t>(textinput::History::kPruneLengthDefault));
+    }
 
     bool Done = false;
     std::string Line;

@@ -33,7 +33,7 @@ public:
                       const RooArgList &pdfList, const RooArgList &mrefList, Setting setting = NonLinearPosFractions);
    RooMomentMorphFunc(const char *name, const char *title, RooAbsReal &_m, const RooArgList &varList,
                       const RooArgList &pdfList, const TVectorD &mrefpoints, Setting setting = NonLinearPosFractions);
-   RooMomentMorphFunc(const RooMomentMorphFunc &other, const char *name = 0);
+   RooMomentMorphFunc(const RooMomentMorphFunc &other, const char *name = nullptr);
    TObject *clone(const char *newname) const override { return new RooMomentMorphFunc(*this, newname); }
    ~RooMomentMorphFunc() override;
 
@@ -47,7 +47,7 @@ public:
       return true;
    }
 
-   virtual double getVal(const RooArgSet *set = 0) const;
+   virtual double getVal(const RooArgSet *set = nullptr) const;
    RooAbsReal *sumFunc(const RooArgSet *nset);
    const RooAbsReal *sumFunc(const RooArgSet *nset) const;
 

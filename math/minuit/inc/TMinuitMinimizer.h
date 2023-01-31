@@ -43,7 +43,7 @@ namespace ROOT {
 
 
 /**
-   TMinuitMinimizer class: 
+   TMinuitMinimizer class:
    ROOT::Math::Minimizer implementation based on TMinuit
 
    @ingroup TMinuit
@@ -138,7 +138,7 @@ public:
    const double *  X() const override { return &fParams.front(); }
 
    /// return pointer to gradient values at the minimum
-   const double *  MinGradient() const override { return 0; } // not available in Minuit2
+   const double *  MinGradient() const override { return nullptr; } // not available in Minuit2
 
    /// number of function calls to reach the minimum
    unsigned int NCalls() const override;
@@ -238,7 +238,7 @@ public:
    void SuppressMinuitWarnings(bool nowarn=true);
 
    /// set debug mode. Return true if setting was successfull
-   bool SetDebug(bool on = true); 
+   bool SetDebug(bool on = true);
 
 protected:
 

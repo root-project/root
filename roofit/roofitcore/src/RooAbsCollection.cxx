@@ -1567,8 +1567,7 @@ void RooAbsCollection::sort(bool reverse) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sort collection topologically: the servers of any RooAbsArg will be before
-/// that RooAbsArg in the collection. Will throw an exception if servers
-/// are missing in the collection.
+/// that RooAbsArg in the collection.
 
 void RooAbsCollection::sortTopologically() {
    std::unordered_set<TNamed const *> seenArgs;
@@ -1579,16 +1578,12 @@ void RooAbsCollection::sortTopologically() {
          if (seenArgs.find(server->namePtr()) == seenArgs.end()) {
             auto found = std::find_if(_list.begin(), _list.end(),
                                       [server](RooAbsArg *elem) { return elem->namePtr() == server->namePtr(); });
-            if (found == _list.end()) {
-               std::stringstream ss;
-               ss << "RooAbsArg \"" << arg->GetName() << "\" depends on \"" << server->GetName()
-                  << "\", but this arg is missing in the collection!";
-               throw std::runtime_error(ss.str());
+            if (found != _list.end()) {
+               _list.erase(found);
+               _list.insert(_list.begin() + iArg, server);
+               movedArg = true;
+               break;
             }
-            _list.erase(found);
-            _list.insert(_list.begin() + iArg, server);
-            movedArg = true;
-            break;
          }
       }
       if (movedArg) {
