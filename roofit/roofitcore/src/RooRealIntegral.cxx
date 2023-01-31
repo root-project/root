@@ -945,7 +945,7 @@ double RooRealIntegral::evaluate() const
 
   if (dologD(Tracing)) {
     cxcoutD(Tracing) << "RooRealIntegral::evaluate(" << GetName() << ") anaInt = " << _anaList << " numInt = " << _intList << _sumList << " mode = " ;
-    switch(_mode) {
+    switch(_intOperMode) {
     case Hybrid: ccoutD(Tracing) << "Hybrid" ; break ;
     case Analytic: ccoutD(Tracing) << "Analytic" ; break ;
     case PassThrough: ccoutD(Tracing) << "PassThrough" ; break ;
