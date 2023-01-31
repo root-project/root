@@ -48,10 +48,12 @@ enum Computer {
    CBShape,
    Chebychev,
    ChiSquare,
+   DeltaFunction,
    DstD0BG,
    Exponential,
    Gamma,
    Gaussian,
+   Identity,
    Johnson,
    Landau,
    Lognormal,
@@ -61,6 +63,13 @@ enum Computer {
    Polynomial,
    ProdPdf,
    Ratio,
+   TruthModelExpBasis,
+   TruthModelSinBasis,
+   TruthModelCosBasis,
+   TruthModelLinBasis,
+   TruthModelQuadBasis,
+   TruthModelSinhBasis,
+   TruthModelCoshBasis,
    Voigtian
 };
 
