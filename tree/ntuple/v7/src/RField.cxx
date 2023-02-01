@@ -352,8 +352,8 @@ ROOT::Experimental::Detail::RFieldBase::Clone(std::string_view newName) const
    auto clone = CloneImpl(newName);
    clone->fOnDiskId = fOnDiskId;
    clone->fDescription = fDescription;
-   clone->fColumnRepresentative =
-      fColumnRepresentative ? std::make_unique<ColumnRepresentation_t>(*fColumnRepresentative) : nullptr;
+   // We can just copy the pointer because fColumnRepresentative points into a static structure
+   clone->fColumnRepresentative = fColumnRepresentative;
    return clone;
 }
 
@@ -414,7 +414,7 @@ void ROOT::Experimental::Detail::RFieldBase::Flush() const
    }
 }
 
-ROOT::Experimental::Detail::RFieldBase::ColumnRepresentation_t
+const ROOT::Experimental::Detail::RFieldBase::ColumnRepresentation_t &
 ROOT::Experimental::Detail::RFieldBase::GetColumnRepresentative() const
 {
    if (fColumnRepresentative)
@@ -426,13 +426,14 @@ void ROOT::Experimental::Detail::RFieldBase::SetColumnRepresentative(const Colum
 {
    if (!fColumns.empty())
       throw RException(R__FAIL("cannot set column representative once field is connected"));
-   auto validTypes = GetColumnRepresentations().GetSerializationTypes();
-   if (std::find(validTypes.begin(), validTypes.end(), representative) == std::end(validTypes))
+   const auto &validTypes = GetColumnRepresentations().GetSerializationTypes();
+   auto itRepresentative = std::find(validTypes.begin(), validTypes.end(), representative);
+   if (itRepresentative == std::end(validTypes))
       throw RException(R__FAIL("invalid column representative"));
-   fColumnRepresentative = std::make_unique<ColumnRepresentation_t>(representative);
+   fColumnRepresentative = &(*itRepresentative);
 }
 
-ROOT::Experimental::Detail::RFieldBase::ColumnRepresentation_t
+const ROOT::Experimental::Detail::RFieldBase::ColumnRepresentation_t &
 ROOT::Experimental::Detail::RFieldBase::EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc) const
 {
    if (fOnDiskId == kInvalidDescriptorId)
@@ -444,7 +445,7 @@ ROOT::Experimental::Detail::RFieldBase::EnsureCompatibleColumnTypes(const RNTupl
    }
    for (const auto &t : GetColumnRepresentations().GetDeserializationTypes()) {
       if (t == onDiskTypes)
-         return onDiskTypes;
+         return t;
    }
 
    std::string columnTypeNames;
