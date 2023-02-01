@@ -95,6 +95,8 @@ public:
    /// Shorthand for types that are both trivially constructible and destructible
    static constexpr int kTraitTrivialType = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
 
+   using ColumnRepresentation_t = std::vector<EColumnType>;
+
    /// Some fields have multiple possible column representations, e.g. with or without split encoding.
    /// All column representations supported for writing also need to be supported for reading. In addition,
    /// fields can support extra column representations for reading only, e.g. a 64bit integer reading from a
@@ -103,7 +105,7 @@ public:
    /// i.e. for the example above, the unpacking of 32bit ints to 64bit pages must be implemented in RColumnElement.hxx
    class RColumnRepresentations {
    public:
-      using TypesList_t = std::vector<std::vector<EColumnType>>;
+      using TypesList_t = std::vector<ColumnRepresentation_t>;
       RColumnRepresentations() = default;
       RColumnRepresentations(const TypesList_t &serializationTypes, const TypesList_t &deserializationExtraTypes)
          : fSerializationTypes(serializationTypes), fDeserializationExtraTypes(deserializationExtraTypes)
@@ -111,7 +113,7 @@ public:
       }
 
       /// The first column list from fSerializationTypes is the default for writing.
-      std::vector<EColumnType> GetSerializationDefault() const;
+      ColumnRepresentation_t GetSerializationDefault() const;
       TypesList_t GetSerializationTypes() const { return fSerializationTypes; }
       /// Get the union of fSerializationTypes and fDeserializationExtraTypes
       TypesList_t GetDeserializationTypes() const;
@@ -158,7 +160,7 @@ protected:
    std::uint32_t fOnDiskTypeVersion = kInvalidTypeVersion;
    /// If set, the column representation used for serialization; otherwise the default from
    /// GetColumnRepresentations() is used
-   std::unique_ptr<std::vector<EColumnType>> fColumnRepresentative;
+   std::unique_ptr<ColumnRepresentation_t> fColumnRepresentative;
 
    /// Implementations in derived classes should return a static RColumnRepresentations object. The default
    /// implementation does not attach any columns to the field.
@@ -183,7 +185,7 @@ protected:
 
    /// Returns the on-disk column types found in the provided descriptor for fOnDiskId. Throws an exception if the types
    /// don't match any of the deserialization types from GetColumnRepresentations().
-   std::vector<ROOT::Experimental::EColumnType> EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc) const;
+   ColumnRepresentation_t EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc) const;
 
    /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
    /// value object.
@@ -340,11 +342,11 @@ public:
    void SetOnDiskId(DescriptorId_t id) { fOnDiskId = id; }
 
    /// Returns the fColumnRepresentative pointee or, if unset, the field's default representative
-   std::vector<EColumnType> GetColumnRepresentative() const;
+   ColumnRepresentation_t GetColumnRepresentative() const;
    /// Fixes a column representative. This can only be done _before_ connecting the field to a page sink.
    /// Otherwise, or if the provided representation is not in the list of GetColumnRepresentations,
    /// an exception is thrown
-   void SetColumnRepresentative(const std::vector<EColumnType> &representative);
+   void SetColumnRepresentative(const ColumnRepresentation_t &representative);
 
    /// Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
    /// can be read or written.  In order to find the field in the page storage, the field's on-disk ID has to be set.

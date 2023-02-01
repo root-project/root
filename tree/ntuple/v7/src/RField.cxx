@@ -182,11 +182,11 @@ std::tuple<void **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rve
 
 //------------------------------------------------------------------------------
 
-std::vector<ROOT::Experimental::EColumnType>
+ROOT::Experimental::Detail::RFieldBase::ColumnRepresentation_t
 ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations::GetSerializationDefault() const
 {
    if (fSerializationTypes.empty())
-      return std::vector<EColumnType>();
+      return ColumnRepresentation_t();
    return fSerializationTypes[0];
 }
 
@@ -354,7 +354,7 @@ ROOT::Experimental::Detail::RFieldBase::Clone(std::string_view newName) const
    clone->fOnDiskId = fOnDiskId;
    clone->fDescription = fDescription;
    clone->fColumnRepresentative =
-      fColumnRepresentative ? std::make_unique<std::vector<EColumnType>>(*fColumnRepresentative) : nullptr;
+      fColumnRepresentative ? std::make_unique<ColumnRepresentation_t>(*fColumnRepresentative) : nullptr;
    return clone;
 }
 
@@ -415,30 +415,31 @@ void ROOT::Experimental::Detail::RFieldBase::Flush() const
    }
 }
 
-std::vector<ROOT::Experimental::EColumnType> ROOT::Experimental::Detail::RFieldBase::GetColumnRepresentative() const
+ROOT::Experimental::Detail::RFieldBase::ColumnRepresentation_t
+ROOT::Experimental::Detail::RFieldBase::GetColumnRepresentative() const
 {
    if (fColumnRepresentative)
       return *fColumnRepresentative;
    return GetColumnRepresentations().GetSerializationDefault();
 }
 
-void ROOT::Experimental::Detail::RFieldBase::SetColumnRepresentative(const std::vector<EColumnType> &representative)
+void ROOT::Experimental::Detail::RFieldBase::SetColumnRepresentative(const ColumnRepresentation_t &representative)
 {
    if (!fColumns.empty())
       throw RException(R__FAIL("cannot set column representative once field is connected"));
    auto validTypes = GetColumnRepresentations().GetSerializationTypes();
    if (std::find(validTypes.begin(), validTypes.end(), representative) == std::end(validTypes))
       throw RException(R__FAIL("invalid column representative"));
-   fColumnRepresentative = std::make_unique<std::vector<EColumnType>>(representative);
+   fColumnRepresentative = std::make_unique<ColumnRepresentation_t>(representative);
 }
 
-std::vector<ROOT::Experimental::EColumnType>
+ROOT::Experimental::Detail::RFieldBase::ColumnRepresentation_t
 ROOT::Experimental::Detail::RFieldBase::EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc) const
 {
    if (fOnDiskId == kInvalidDescriptorId)
       throw RException(R__FAIL("No on-disk column information for for field `" + GetQualifiedFieldName() + "`"));
 
-   std::vector<ROOT::Experimental::EColumnType> onDiskTypes;
+   ColumnRepresentation_t onDiskTypes;
    for (const auto &c : desc.GetColumnIterable(fOnDiskId)) {
       onDiskTypes.emplace_back(c.GetModel().GetType());
    }
