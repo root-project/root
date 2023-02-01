@@ -80,6 +80,8 @@ Please use their non-experimental counterparts `ROOT::TBufferMerger` and `ROOT::
 - The `RooSimPdfBuilder` that was deprecated in ROOT 5.20 and replaced by the `RooSimWSTool` is removed.
 - The RDataFrame factory functions `MakeNumpyDataFrame`, `MakeCsvDataFrame`, `MakeArrowDataFrame`, `MakeNTupleDataFrame` and `MakeSqliteDataFrame` are now deprecated in favor of `FromNumpy`, `FromCSV`, `FromArrow`, `FromRNTuple` and `FromSqlite` respectively.
 
+- The build option `alien` has been removed.
+- The build options `gfal`, `gsl_shared`, `jemalloc`, `monalisa`, `pyroot_legacy`, `tcmalloc`, and `xproofd` have been deprecated. Please complain with root-dev@cern.ch should you still need one!
 
 ## rootreadspeed
 
