@@ -26,8 +26,6 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
-#include <cwchar>
-
 using namespace TMVA;
 
 namespace TMVA {
@@ -243,40 +241,6 @@ void PyMethodBase::PyFinalize()
    if(fMain) Py_DECREF(fMain);//objects fGlobalNS and fLocalNS will be free here
    if (fGlobalNS) Py_DECREF(fGlobalNS);
    Py_Finalize();
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Set program name for Python interpeter
-///
-/// \param[in] name Program name
-
-void PyMethodBase::PySetProgramName(TString name)
-{
-   #if PY_MAJOR_VERSION < 3
-   Py_SetProgramName(const_cast<char*>(name.Data()));
-   #else
-   Py_SetProgramName((wchar_t *)name.Data());
-   #endif
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-
-size_t mystrlen(const char* s) { return strlen(s); }
-
-///////////////////////////////////////////////////////////////////////////////
-
-size_t mystrlen(const wchar_t* s) { return wcslen(s); }
-
-///////////////////////////////////////////////////////////////////////////////
-/// Get program name from Python interpreter
-///
-/// \return Program name
-
-TString PyMethodBase::Py_GetProgramName()
-{
-   auto progName = ::Py_GetProgramName();
-   return std::string(progName, progName + mystrlen(progName));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
