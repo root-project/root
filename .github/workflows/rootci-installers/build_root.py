@@ -121,7 +121,6 @@ def main():
         print("Attempting incremental build")
 
         try:
-            print("\nDownloading")
             tar_path, shell_log = download_latest(connection, S3CONTAINER, s3_prefix, workdir, shell_log)
 
             print("\nExtracting archive")
@@ -138,12 +137,11 @@ def main():
         print("::endgroup::")
 
 
-    print("Doing non-incremental build")
-
     print("::group::Pull base branch")
+
     # Add remote on non incremental builds
     if not incremental:
-        print("::group::Pull base branch")
+        print("Doing non-incremental build")
 
         result, shell_log = subprocess_with_log(f"""
             git clone --branch {base_ref} --single-branch {repository} "{workdir}/src"
@@ -186,33 +184,32 @@ def main():
         if not re.match(release_branches, base_ref):
             warning("{base_ref} is not a release branch, skipping artifact upload")
         else:
-            print("::group::Upload base branch")
+            print(f"Archiving build artifacts of {base_ref}")
+
             try:
-                print(f"Archiving build artifacts of {base_ref}")
                 archive_and_upload(yyyy_mm_dd, workdir, connection, compressionlevel, s3_prefix)
             except Exception as err:
                 warning("failed to archive/upload artifacts: ", err)
 
-            print("::endgroup::")
-
-        print(f"Successfully built branch {base_ref}")
-
     if not rebase:
         print(f"Successfully built {base_ref}!")
+        print("::group::Printing script to replicate build")
         print_shell_log(shell_log)
+        print("::endgroup::")
         sys.exit(0)
 
     shell_log = rebase_and_build(base_ref, head_ref, buildtype, workdir, shell_log)
 
-    try:
-        if "pull" in head_ref:
-            name = "pr-" + head_ref.split('/')[-2]
-        else:
-            name = head_ref
-        test_prefix = f'to-test/{name}/{platform}/{buildtype}/{option_hash}'
+    if "pull" in head_ref:
+        name = "pr-" + head_ref.split('/')[-2]
+    else:
+        name = head_ref
+    test_prefix = f'to-test/{name}/{platform}/{buildtype}/{option_hash}'
 
+    try:
         archive_and_upload(f"{yyyy_mm_dd}", workdir, connection, compressionlevel, test_prefix)
     except Exception as err:
+        print("::endgroup::")
         warning("failed to archive/upload artifacts: ", err)
 
 
@@ -221,9 +218,8 @@ def main():
 
 
 def archive_and_upload(archive_name, workdir, connection, compressionlevel, prefix):
-    print("::group::Archive and upload changes to test in different workflow")
-
     new_archive = f"{archive_name}.tar.gz"
+    print(f"::group::Archive and upload {prefix}/{archive_name}")
 
     with tarfile.open(f"{workdir}/{new_archive}", "x:gz", compresslevel=compressionlevel) as targz:
         targz.add("src")
