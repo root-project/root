@@ -347,7 +347,7 @@ RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
      fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
      fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots),
-     fAllTrueMasks(fNSlots, {fMaxEventsPerBulk})
+     fAllTrueMasks(fNSlots, {fMaxEventsPerBulk}), fUniqueRDFEntry(fNSlots, -1ll)
 {
 }
 
@@ -358,7 +358,8 @@ RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
      fNewSampleNotifier(fNSlots),
      fSampleInfos(fNSlots),
      fDatasetColumnReaders(fNSlots),
-     fAllTrueMasks(fNSlots, {fMaxEventsPerBulk})
+     fAllTrueMasks(fNSlots, {fMaxEventsPerBulk}),
+     fUniqueRDFEntry(fNSlots, -1ll)
 {
 }
 
@@ -366,7 +367,7 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
    : fDefaultColumns(defaultBranches), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
      fDataSource(std::move(ds)), fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots),
-     fAllTrueMasks(fNSlots, {fMaxEventsPerBulk})
+     fAllTrueMasks(fNSlots, {fMaxEventsPerBulk}), fUniqueRDFEntry(fNSlots, -1ll)
 {
    fDataSource->SetNSlots(fNSlots);
 }
@@ -380,7 +381,8 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
      fNewSampleNotifier(fNSlots),
      fSampleInfos(fNSlots),
      fDatasetColumnReaders(fNSlots),
-     fAllTrueMasks(fNSlots, {fMaxEventsPerBulk})
+     fAllTrueMasks(fNSlots, {fMaxEventsPerBulk}),
+     fUniqueRDFEntry(fNSlots, -1ll)
 {
    auto chain = std::make_shared<TChain>("");
    for (auto &sample : fSamples) {
@@ -444,6 +446,7 @@ void RLoopManager::RunEmptySourceMT()
          ULong64_t currEntry = range.first;
          std::size_t bulkSize = std::min(ULong64_t(fMaxEventsPerBulk), range.second - currEntry);
          while (currEntry != range.second) {
+            fUniqueRDFEntry[slot] = currEntry;
             RunAndCheckFilters(slot, currEntry, bulkSize);
             currEntry += bulkSize;
             bulkSize = std::min(ULong64_t(fMaxEventsPerBulk), range.second - currEntry);
@@ -472,6 +475,7 @@ void RLoopManager::RunEmptySource()
       UpdateSampleInfo(/*slot*/ 0, fEmptyEntryRange);
       ULong64_t currEntry = 0;
       while (currEntry != fEmptyEntryRange.second && fNStopsReceived < fNChildren) {
+         fUniqueRDFEntry[0] = currEntry;
          std::size_t bulkSize = std::min(ULong64_t(fMaxEventsPerBulk), fEmptyEntryRange.second - currEntry);
          RunAndCheckFilters(/*slot*/ 0, currEntry, bulkSize);
          currEntry += bulkSize;
@@ -494,9 +498,11 @@ void RLoopManager::RunTreeProcessorMT()
                 ? std::make_unique<ROOT::TTreeProcessorMT>(*fTree, fNSlots, std::make_pair(fBeginEntry, fEndEntry))
                 : std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList, fNSlots);
 
-   std::atomic<ULong64_t> entryCount(0ull);
+   // An entry count that provides unique entry numbers across threads, albeit out-of-sync with the TTree/TChain
+   // global entry number. Used to set RLoopManager::fUniqueRDFEntry, see also GetUniqueRDFEntry().
+   std::atomic<Long64_t> uniqueEntry(0ll);
 
-   tp->Process([this, &slotStack, &entryCount](TTreeReader &r) -> void {
+   tp->Process([this, &slotStack, &uniqueEntry](TTreeReader &r) -> void {
       ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
       auto slot = slotRAII.fSlot;
       RCallCleanUpTask cleanup(*this, slot, &r);
@@ -504,14 +510,15 @@ void RLoopManager::RunTreeProcessorMT()
       R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing(TreeDatasetLogInfo(r, slot));
       const auto entryRange = r.GetEntriesRange(); // we trust TTreeProcessorMT to call SetEntriesRange
       const auto nEntries = entryRange.second - entryRange.first;
-      auto count = entryCount.fetch_add(nEntries);
+      fUniqueRDFEntry[slot] = uniqueEntry.fetch_add(nEntries);
       try {
          // recursive call to check filters and conditionally execute actions
          while (r.Next()) {
             if (fNewSampleNotifier.CheckFlag(slot)) {
                UpdateSampleInfo(slot, r);
             }
-            RunAndCheckFilters(slot, count++, /*bulkSize*/1u);
+            RunAndCheckFilters(slot, fUniqueRDFEntry[slot], /*bulkSize*/1u);
+            ++fUniqueRDFEntry[slot];
          }
       } catch (...) {
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
@@ -552,7 +559,8 @@ void RLoopManager::RunTreeReader()
          if (fNewSampleNotifier.CheckFlag(0)) {
             UpdateSampleInfo(/*slot*/0, r);
          }
-         RunAndCheckFilters(0, r.GetCurrentEntry(), /*bulkSize*/ 1u);
+         fUniqueRDFEntry[0] = r.GetCurrentEntry();
+         RunAndCheckFilters(0, fUniqueRDFEntry[0], /*bulkSize*/ 1u);
       }
    } catch (...) {
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";
@@ -582,6 +590,7 @@ void RLoopManager::RunDataSource()
             R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, 0u});
             for (auto entry = start; entry < end && fNStopsReceived < fNChildren; ++entry) {
                if (fDataSource->SetEntry(0u, entry)) {
+                  fUniqueRDFEntry[0] = entry;
                   RunAndCheckFilters(0u, entry, /*bulkSize*/1u);
                }
             }
@@ -617,6 +626,7 @@ void RLoopManager::RunDataSourceMT()
       try {
          for (auto entry = start; entry < end; ++entry) {
             if (fDataSource->SetEntry(slot, entry)) {
+               fUniqueRDFEntry[slot] = entry;
                RunAndCheckFilters(slot, entry, /*bulkSize*/1u);
             }
          }

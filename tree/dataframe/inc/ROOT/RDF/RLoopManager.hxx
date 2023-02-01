@@ -162,6 +162,9 @@ class RLoopManager : public RNodeBase {
    /// One masked entry range per processing slot. All elements are always true, while the range changes.
    std::vector<RDFInternal::RMaskedEntryRange> fAllTrueMasks;
 
+   /// See GetUniqueRDFEntry().
+   std::vector<Long64_t> fUniqueRDFEntry;
+
    void RunEmptySourceMT();
    void RunEmptySource();
    void RunTreeProcessorMT();
@@ -223,6 +226,11 @@ public:
    RColumnReaderBase *AddTreeColumnReader(unsigned int slot, const std::string &col,
                                           std::unique_ptr<RColumnReaderBase> &&reader, const std::type_info &ti);
    RColumnReaderBase *GetDatasetColumnReader(unsigned int slot, const std::string &col, const std::type_info &ti) const;
+   /// Return a unique entry number for a given processing slot.
+   /// The entry number is guaranteed to be unique across the whole (possibly multi-thread) event loop.
+   /// This is what rdfentry_ and the input entry to DefineSlotEntry lambdas will be equal to, and it will
+   /// only differ from the actual event loop (e.g. TTree/TChain) global entry number in multi-thread event loops.
+   Long64_t GetUniqueRDFEntry(unsigned int slot) const { return fUniqueRDFEntry[slot]; }
 
    /// End of recursive chain of calls, does nothing
    void AddFilterName(std::vector<std::string> &) final {}

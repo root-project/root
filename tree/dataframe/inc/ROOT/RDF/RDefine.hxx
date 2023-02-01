@@ -141,9 +141,10 @@ public:
                     [&requestedMask, bulkSize](auto *v) { v->Load(requestedMask, bulkSize); });
 
       auto &results = fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()];
+      const auto rdfentry_start = fLoopManager->GetUniqueRDFEntry(slot);
       for (std::size_t i = 0ul; i < bulkSize; ++i) {
          if (requestedMask[i] && !valueMask[i]) { // we don't have a value for this entry yet
-            results[i] = EvalExpr(slot, i, valueMask.FirstEntry() + i, ColumnTypes_t{}, TypeInd_t{}, ExtraArgsTag{});
+            results[i] = EvalExpr(slot, i, rdfentry_start + i, ColumnTypes_t{}, TypeInd_t{}, ExtraArgsTag{});
             valueMask[i] = true;
          }
       }
