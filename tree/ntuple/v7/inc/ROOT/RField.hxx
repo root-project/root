@@ -156,9 +156,9 @@ protected:
    std::vector<ReadCallback_t> fReadCallbacks;
    /// C++ type version cached from the descriptor after a call to `ConnectPageSource()`
    std::uint32_t fOnDiskTypeVersion = kInvalidTypeVersion;
-   /// If set, the column representation used for serialization; otherwise the default from
-   /// GetColumnRepresentations() is used
-   std::unique_ptr<ColumnRepresentation_t> fColumnRepresentative;
+   /// Points into the static vector GetColumnRepresentations().GetSerializationTypes() when SetColumnRepresentative
+   /// is called.  Otherwise GetColumnRepresentative returns the default representation.
+   const ColumnRepresentation_t *fColumnRepresentative = nullptr;
 
    /// Implementations in derived classes should return a static RColumnRepresentations object. The default
    /// implementation does not attach any columns to the field.
@@ -183,7 +183,7 @@ protected:
 
    /// Returns the on-disk column types found in the provided descriptor for fOnDiskId. Throws an exception if the types
    /// don't match any of the deserialization types from GetColumnRepresentations().
-   ColumnRepresentation_t EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc) const;
+   const ColumnRepresentation_t &EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc) const;
 
    /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
    /// value object.
@@ -340,7 +340,7 @@ public:
    void SetOnDiskId(DescriptorId_t id) { fOnDiskId = id; }
 
    /// Returns the fColumnRepresentative pointee or, if unset, the field's default representative
-   ColumnRepresentation_t GetColumnRepresentative() const;
+   const ColumnRepresentation_t &GetColumnRepresentative() const;
    /// Fixes a column representative. This can only be done _before_ connecting the field to a page sink.
    /// Otherwise, or if the provided representation is not in the list of GetColumnRepresentations,
    /// an exception is thrown
