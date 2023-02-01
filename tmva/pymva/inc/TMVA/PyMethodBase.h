@@ -83,8 +83,6 @@ namespace TMVA {
       static void PyInitialize();
       static int  PyIsInitialized();
       static void PyFinalize();
-      static void PySetProgramName(TString name);
-      static TString Py_GetProgramName();
 
       PyObject *Eval(TString code); // required to parse booking options from string to pyobjects
       static void Serialize(TString file,PyObject *classifier);
