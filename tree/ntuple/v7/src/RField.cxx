@@ -182,20 +182,19 @@ std::tuple<void **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rve
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::Detail::RFieldBase::ColumnRepresentation_t
-ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations::GetSerializationDefault() const
+ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations::RColumnRepresentations()
 {
-   if (fSerializationTypes.empty())
-      return ColumnRepresentation_t();
-   return fSerializationTypes[0];
+   // A single representations with an empty set of columns
+   fSerializationTypes.emplace_back(ColumnRepresentation_t());
+   fDeserializationTypes.emplace_back(ColumnRepresentation_t());
 }
 
-ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations::TypesList_t
-ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations::GetDeserializationTypes() const
+ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations::RColumnRepresentations(
+   const TypesList_t &serializationTypes, const TypesList_t &deserializationExtraTypes)
+   : fSerializationTypes(serializationTypes), fDeserializationTypes(serializationTypes)
 {
-   TypesList_t result(fSerializationTypes);
-   result.insert(result.end(), fDeserializationExtraTypes.begin(), fDeserializationExtraTypes.end());
-   return result;
+   fDeserializationTypes.insert(fDeserializationTypes.end(),
+                                deserializationExtraTypes.begin(), deserializationExtraTypes.end());
 }
 
 //------------------------------------------------------------------------------

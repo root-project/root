@@ -106,21 +106,19 @@ public:
    class RColumnRepresentations {
    public:
       using TypesList_t = std::vector<ColumnRepresentation_t>;
-      RColumnRepresentations() = default;
-      RColumnRepresentations(const TypesList_t &serializationTypes, const TypesList_t &deserializationExtraTypes)
-         : fSerializationTypes(serializationTypes), fDeserializationExtraTypes(deserializationExtraTypes)
-      {
-      }
+      RColumnRepresentations();
+      RColumnRepresentations(const TypesList_t &serializationTypes, const TypesList_t &deserializationExtraTypes);
 
       /// The first column list from fSerializationTypes is the default for writing.
-      ColumnRepresentation_t GetSerializationDefault() const;
-      TypesList_t GetSerializationTypes() const { return fSerializationTypes; }
-      /// Get the union of fSerializationTypes and fDeserializationExtraTypes
-      TypesList_t GetDeserializationTypes() const;
+      const ColumnRepresentation_t &GetSerializationDefault() const { return fSerializationTypes[0]; }
+      const TypesList_t &GetSerializationTypes() const { return fSerializationTypes; }
+      const TypesList_t &GetDeserializationTypes() const { return fDeserializationTypes; }
 
    private:
       TypesList_t fSerializationTypes;
-      TypesList_t fDeserializationExtraTypes;
+      /// The union of the serialization types and the deserialization extra types.  Duplicates the serialization types
+      /// list but the benenfit is that GetDeserializationTypes does not need to compile the list.
+      TypesList_t fDeserializationTypes;
    };
 
 private:
