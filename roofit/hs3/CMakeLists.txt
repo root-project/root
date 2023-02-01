@@ -15,6 +15,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
     RooFitHS3/RooJSONFactoryWSTool.h
     RooFitHS3/HistFactoryJSONTool.h
   SOURCES
+    src/Domains.cxx
     src/JSONIO.cxx
     src/RooJSONFactoryWSTool.cxx
     src/HistFactoryJSONTool.cxx

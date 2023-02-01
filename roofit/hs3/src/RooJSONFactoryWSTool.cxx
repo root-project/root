@@ -26,6 +26,8 @@
 #include <RooDataHist.h>
 #include <RooStats/ModelConfig.h>
 
+#include "Domains.h"
+
 #include "TROOT.h"
 #include "TH1.h"
 
@@ -98,6 +100,8 @@ tool.writedoc("hs3.tex")
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;
 
+using RooFit::JSONIO::Detail::Domains;
+
 namespace {
 bool isNumber(const std::string &str)
 {
@@ -110,6 +114,10 @@ bool isNumber(const std::string &str)
    return true;
 }
 } // namespace
+
+RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
+
+RooJSONFactoryWSTool::~RooJSONFactoryWSTool() {}
 
 RooFit::Detail::JSONNode &RooJSONFactoryWSTool::orootnode()
 {
@@ -521,18 +529,13 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &n)
       var["const"] << true;
    } else if (rrv) {
       var["value"] << rrv->getVal();
-      if (!RooNumber::isInfinite(rrv->getMin())) {
-         var["min"] << rrv->getMin();
-      }
-      if (!RooNumber::isInfinite(rrv->getMax())) {
-         var["max"] << rrv->getMax();
-      }
       if (rrv->isConstant()) {
          var["const"] << rrv->isConstant();
       }
       if (rrv->numBins() != 100) {
          var["nbins"] << rrv->numBins();
       }
+      _domains->readVariable(*rrv);
    }
    RooJSONFactoryWSTool::exportAttributes(v, var);
 }
@@ -1141,10 +1144,7 @@ void RooJSONFactoryWSTool::configureVariable(const JSONNode &p, RooRealVar &v)
 {
    if (p.has_child("value"))
       v.setVal(p["value"].val_double());
-   if (p.has_child("min"))
-      v.setMin(p["min"].val_double());
-   if (p.has_child("max"))
-      v.setMax(p["max"].val_double());
+   _domains->writeVariable(v);
    if (p.has_child("nbins"))
       v.setBins(p["nbins"].val_int());
    if (p.has_child("relErr"))
@@ -1199,6 +1199,8 @@ std::string RooJSONFactoryWSTool::name(const JSONNode &n)
 
 void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 {
+   _domains = std::make_unique<Domains>();
+
    // export all ModelConfig objects and attached Pdfs
    std::vector<RooStats::ModelConfig *> mcs;
    std::vector<RooAbsPdf *> toplevel;
@@ -1297,6 +1299,8 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
          dict["ModelConfig"] << std::string(pdf->GetName()) + "_modelConfig";
       }
    }
+   _domains->writeJSON(n["domains"]);
+   _domains.reset();
    _rootnode_output = nullptr;
 }
 
@@ -1388,6 +1392,9 @@ bool RooJSONFactoryWSTool::exportYML(std::string const &filename)
 
 void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
 {
+   _domains = std::make_unique<Domains>();
+   _domains->readJSON(n["domains"]);
+
    _rootnode_input = &n;
    gROOT->ProcessLine("using namespace RooStats::HistFactory;");
    this->importDependants(n);
@@ -1420,6 +1427,7 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
    _workspace.loadSnapshot("fromJSON");
 
    _rootnode_input = nullptr;
+   _domains.reset();
 }
 
 bool RooJSONFactoryWSTool::importJSON(std::istream &is)
