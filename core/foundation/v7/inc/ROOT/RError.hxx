@@ -62,7 +62,7 @@
 //        return RResult<void>::Success();
 //     }
 //
-// When using RResult<T>, RResult<T>::Unwrap() can be used as a short hand for
+// RResult<T>::Unwrap() can be used as a short hand for
 // "give me the wrapped value or, in case of an error, throw". For instance:
 //
 //     int value = FuncThatReturnsRResultOfInt().Unwrap();  // may throw
