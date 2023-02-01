@@ -650,9 +650,9 @@ void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
       fNewSampleNotifier.UnsetFlag(slot);
    }
 
-   for (auto &actionPtr : fBookedActions)
+   for (auto *actionPtr : fBookedActions)
       actionPtr->Run(slot, entry);
-   for (auto &namedFilterPtr : fBookedNamedFilters)
+   for (auto *namedFilterPtr : fBookedNamedFilters)
       namedFilterPtr->CheckFilters(slot, entry);
    for (auto &callback : fCallbacks)
       callback(slot);
@@ -664,13 +664,13 @@ void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 void RLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
 {
    SetupSampleCallbacks(r, slot);
-   for (auto &ptr : fBookedActions)
+   for (auto *ptr : fBookedActions)
       ptr->InitSlot(r, slot);
-   for (auto &ptr : fBookedFilters)
+   for (auto *ptr : fBookedFilters)
       ptr->InitSlot(r, slot);
-   for (auto &ptr : fBookedDefines)
+   for (auto *ptr : fBookedDefines)
       ptr->InitSlot(r, slot);
-   for (auto &ptr : fBookedVariations)
+   for (auto *ptr : fBookedVariations)
       ptr->InitSlot(r, slot);
 
    for (auto &callback : fCallbacksOnce)
@@ -721,11 +721,11 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
 void RLoopManager::InitNodes()
 {
    EvalChildrenCounts();
-   for (auto &filter : fBookedFilters)
+   for (auto *filter : fBookedFilters)
       filter->InitNode();
-   for (auto &range : fBookedRanges)
+   for (auto *range : fBookedRanges)
       range->InitNode();
-   for (auto &ptr : fBookedActions)
+   for (auto *ptr : fBookedActions)
       ptr->Initialize();
 }
 
@@ -735,7 +735,7 @@ void RLoopManager::CleanUpNodes()
    fMustRunNamedFilters = false;
 
    // forget RActions and detach TResultProxies
-   for (auto &ptr : fBookedActions)
+   for (auto *ptr : fBookedActions)
       ptr->Finalize();
 
    fRunActions.insert(fRunActions.begin(), fBookedActions.begin(), fBookedActions.end());
@@ -744,9 +744,9 @@ void RLoopManager::CleanUpNodes()
    // reset children counts
    fNChildren = 0;
    fNStopsReceived = 0;
-   for (auto &ptr : fBookedFilters)
+   for (auto *ptr : fBookedFilters)
       ptr->ResetChildrenCount();
-   for (auto &ptr : fBookedRanges)
+   for (auto *ptr : fBookedRanges)
       ptr->ResetChildrenCount();
 
    fCallbacks.clear();
@@ -759,11 +759,11 @@ void RLoopManager::CleanUpTask(TTreeReader *r, unsigned int slot)
 {
    if (r != nullptr)
       fNewSampleNotifier.GetChainNotifyLink(slot).RemoveLink(*r->GetTree());
-   for (auto &ptr : fBookedActions)
+   for (auto *ptr : fBookedActions)
       ptr->FinalizeSlot(slot);
-   for (auto &ptr : fBookedFilters)
+   for (auto *ptr : fBookedFilters)
       ptr->FinalizeSlot(slot);
-   for (auto &ptr : fBookedDefines)
+   for (auto *ptr : fBookedDefines)
       ptr->FinalizeSlot(slot);
 
    if (fLoopType == ELoopType::kROOTFiles || fLoopType == ELoopType::kROOTFilesMT) {
@@ -804,9 +804,9 @@ void RLoopManager::Jit()
 /// the event loop so the graph branch they belong to must count as active even if it does not end in an action.
 void RLoopManager::EvalChildrenCounts()
 {
-   for (auto &actionPtr : fBookedActions)
+   for (auto *actionPtr : fBookedActions)
       actionPtr->TriggerChildrenCount();
-   for (auto &namedFilterPtr : fBookedNamedFilters)
+   for (auto *namedFilterPtr : fBookedNamedFilters)
       namedFilterPtr->TriggerChildrenCount();
 }
 
@@ -926,7 +926,7 @@ bool RLoopManager::CheckFilters(unsigned int, Long64_t)
 /// Call `FillReport` on all booked filters
 void RLoopManager::Report(ROOT::RDF::RCutFlowReport &rep) const
 {
-   for (const auto &fPtr : fBookedNamedFilters)
+   for (const auto *fPtr : fBookedNamedFilters)
       fPtr->FillReport(rep);
 }
 
@@ -956,7 +956,7 @@ void RLoopManager::RegisterCallback(ULong64_t everyNEvents, std::function<void(u
 std::vector<std::string> RLoopManager::GetFiltersNames()
 {
    std::vector<std::string> filters;
-   for (auto &filter : fBookedFilters) {
+   for (auto *filter : fBookedFilters) {
       auto name = (filter->HasName() ? filter->GetName() : "Unnamed Filter");
       filters.push_back(name);
    }
