@@ -9,22 +9,18 @@
 # @author Jonas Rembser, CERN
 ############################################################################
 
-if(roofit_hs3_ryml)
-  # If RapidYAML can be found on the system, we will use RapidYAML instead of
-  # nlohmann-json. Like this we can also convert to yaml.
+# If RapidYAML can be found on the system, we will also compile the RapidYAML backend besides the
+# nlohmann-json backend. Like this we can also convert to yaml.
 
-  message(STATUS "Looking for RapidYAML (used by RooFit)")
-  find_package(ryml)
-  if(${RYML_FOUND})
-    message(STATUS "RapidYAML found, compiling RooFit JSON Interface with RapidYAML parser")
-    set(ParserSource src/RYMLParser.cxx)
-    add_compile_definitions(ROOFIT_WITH_RYML)
-  else()
-    set(ParserSource src/JSONParser.cxx)
-    message(STATUS "RapidYAML not found, compiling RooFit with nlohmann-json parser")
-  endif()
+message(STATUS "Looking for RapidYAML (used by RooFit)")
+find_package(ryml)
+if(${RYML_FOUND})
+  message(STATUS "RapidYAML found, compiling also RooFit JSON Interface with RapidYAML parser")
+  set(ParserSources src/JSONParser.cxx src/RYMLParser.cxx)
+  add_compile_definitions(ROOFIT_WITH_RYML)
 else()
-  set(ParserSource src/JSONParser.cxx)
+  set(ParserSources src/JSONParser.cxx)
+  message(STATUS "RapidYAML not found, only compiling RooFit with nlohmann-json parser")
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitJSONInterface
@@ -32,21 +28,21 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitJSONInterface
     RooFit/Detail/JSONInterface.h
   SOURCES
     src/JSONInterface.cxx
-    ${ParserSource}
+    ${ParserSources}
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LIBRARIES
     Core
 )
 
-if((roofit_hs3_ryml) AND (${RYML_FOUND}))
+if(${RYML_FOUND})
   target_include_directories(RooFitJSONInterface PRIVATE ${RYML_INCLUDE_DIRS})
   target_link_libraries(RooFitJSONInterface PRIVATE -lc4core -lryml)
   target_link_directories(RooFitJSONInterface PRIVATE ${RYML_LIB_DIR})
+endif()
+
+if(builtin_nlohmannjson)
+  target_include_directories(RooFitJSONInterface PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
 else()
-  if(builtin_nlohmannjson)
-    target_include_directories(RooFitJSONInterface PRIVATE ${CMAKE_SOURCE_DIR}/builtins)
-  else()
-    target_link_libraries(RooFitJSONInterface PUBLIC nlohmann_json::nlohmann_json)
-  endif()
+  target_link_libraries(RooFitJSONInterface PUBLIC nlohmann_json::nlohmann_json)
 endif()
