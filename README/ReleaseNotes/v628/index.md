@@ -1,10 +1,10 @@
 % ROOT Version 6.28 Release Notes
-% 2022-01-05
+% 2023-02-01
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.28/00 is scheduled for release in May 2022.
+ROOT version 6.28/00 is scheduled for release in February 2023.
 
 For more information, see:
 
@@ -104,6 +104,7 @@ Please use their non-experimental counterparts `ROOT::TBufferMerger` and `ROOT::
 - The `HybridCalculatorOriginal` and `HypoTestInverterOriginal` classes in RooStats that were deprecated for a very long time aleady are removed. Please use `HybridCalculator` and `HypoTestInverter`.
 - The `RooSimPdfBuilder` that was deprecated in ROOT 5.20 and replaced by the `RooSimWSTool` is removed.
 - The RDataFrame factory functions `MakeNumpyDataFrame`, `MakeCsvDataFrame`, `MakeArrowDataFrame`, `MakeNTupleDataFrame` and `MakeSqliteDataFrame` are now deprecated in favor of `FromNumpy`, `FromCSV`, `FromArrow`, `FromRNTuple` and `FromSqlite` respectively.
+- `TDirectory::EncodeNameCycle()` is deprecated; it cannot be used safely. Use `name + ';' + std::to_string(cycle)` instead.
 
 
 ## rootreadspeed
@@ -121,6 +122,13 @@ $ rootreadspeed --files <local-folder>/File1.root xrootd://<url-folder>/File2.ro
 ## Core Libraries
 
 ### Interpreter
+
+llvm and clang have been upgraded to version 13.
+C++20 support will be provided as part of this release (not yet available for 6.28/00).
+cling has been upgraded to use llvm's new just-in-time compilation engive ORCv2.
+
+Cling's pointer validity check is now turned only in interactive mode.
+This improves performance for jitted code.
 
 #### Support for profiling/debugging interpreted/JITted code
 
@@ -256,6 +264,8 @@ needed to include distributed RDataFrame in the ROOT build is Python 3.8. More i
 ![TGraph2DAsymmErrors](TGraph2DAsymmErrors.png)
 
 ## Math Libraries
+
+- `TLorentzVector` can now convert to `ROOT::Math::PxPyPzEVector`.
 
 ### Fitter class
 
@@ -557,6 +567,8 @@ accessing widget via configured ssh tunnel.
 
 ## Language Bindings
 
+Python 3.11 is now supported.
+
 
 ## JavaScript ROOT
 
@@ -575,7 +587,10 @@ accessing widget via configured ssh tunnel.
 
 ## Build, Configuration and Testing Infrastructure
 
+- On macOS, CMake version 3.19 or later is required.
 - Building external applications that use ROOT oftentimes fail if there is a mismatch in the C++ standard between ROOT and the application. As of v6.28, suchs builds will issue a warning if the C++ standard does not match ROOT's, i.e. if there is a mismatch in the value of the `__cplusplus` preprocessor macro w.r.t. when ROOT was configured.
+- Builtin packages have been upgraded to davix 0.8.1, Vc 1.4.3, vdt 0.4.4, xrootd 5.4.1, gtest v1.12.1
+- Builtin xrootd is now built with openssl3 support.
 
 ## PyROOT
 
