@@ -19,14 +19,13 @@ ParserFuncSignature ParseGather = [](RModelParser_ONNX &parser, const onnx::Node
 
    ETensorType indices_type = ETensorType::UNDEFINED;
    auto indices_name = nodeproto.input(1);
+   // indices_type can be an initialized tensor, no need to emit an error if it is not registered
    if (parser.IsRegisteredTensorType(indices_name)) {
       indices_type = parser.GetTensorType(indices_name);
-   } else {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser Gather op has indices tensor" + indices_name + " but its type is not yet registered");
-   }
-   if (indices_type != ETensorType::INT64 && indices_type != ETensorType::INT32) {
-      throw
-         std::runtime_error("TMVA::SOFIE ONNX Parser Gather op Indices tensor type not supported.");
+      if (indices_type != ETensorType::INT64 && indices_type != ETensorType::INT32) {
+         throw
+            std::runtime_error("TMVA::SOFIE ONNX Parser Gather op Indices tensor type not supported.");
+      }
    }
 
    std::unique_ptr<ROperator> op;
