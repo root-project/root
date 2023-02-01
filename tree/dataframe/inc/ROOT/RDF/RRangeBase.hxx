@@ -43,8 +43,6 @@ protected:
    const unsigned int fNSlots; ///< Number of thread slots used by this node, inherited from parent node.
    std::unordered_map<std::string, std::shared_ptr<RRangeBase>> fVariedRanges;
 
-   void ResetCounters();
-
 public:
    RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
               const unsigned int nSlots, const std::vector<std::string> &prevVariations);
@@ -52,7 +50,7 @@ public:
    RRangeBase &operator=(const RRangeBase &) = delete;
    ~RRangeBase() override;
 
-   void InitNode() { ResetCounters(); }
+   void InitNode();
 };
 
 } // ns RDF

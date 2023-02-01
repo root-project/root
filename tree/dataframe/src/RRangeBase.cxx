@@ -19,7 +19,7 @@ RRangeBase::RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int s
 {
 }
 
-void RRangeBase::ResetCounters()
+void RRangeBase::InitNode()
 {
    fLastCheckedEntry = -1;
    fNProcessedEntries = 0;
