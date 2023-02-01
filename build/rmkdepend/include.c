@@ -300,7 +300,7 @@ struct inclist *inc_path(char *file, char *include, boolean dot) {
    if (!found)
       for (pp = includedirs; *pp; pp++) {
          int retlen = snprintf(path, BUFSIZ, "%s/%s", *pp, include);
-         if (retlen <= 0 || BUFSIZ <= retlen) {
+         if (retlen <= 0 || BUFSIZ < retlen) {
             warning1("\t%s/%s too long\n", *pp, include);
             continue;
          }
