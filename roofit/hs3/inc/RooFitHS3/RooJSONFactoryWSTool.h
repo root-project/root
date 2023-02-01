@@ -30,6 +30,11 @@ class RooRealVar;
 class RooWorkspace;
 
 namespace RooFit {
+namespace JSONIO {
+namespace Detail {
+class Domains;
+}
+} // namespace JSONIO
 namespace Detail {
 class JSONNode;
 class JSONTree;
@@ -48,7 +53,10 @@ public:
    template <class T>
    T *request(const std::string &objname, const std::string &requestAuthor);
 
-   RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
+   RooJSONFactoryWSTool(RooWorkspace &ws);
+
+   ~RooJSONFactoryWSTool();
+
    RooWorkspace *workspace() { return &_workspace; }
 
    static void error(const char *s) { throw std::runtime_error(s); }
@@ -194,5 +202,8 @@ private:
    const RooFit::Detail::JSONNode *_rootnode_input = nullptr;
    RooFit::Detail::JSONNode *_rootnode_output = nullptr;
    RooWorkspace &_workspace;
+
+   // objects to represent intermediate information
+   std::unique_ptr<RooFit::JSONIO::Detail::Domains> _domains;
 };
 #endif
