@@ -4638,22 +4638,18 @@ public:
   RooRealVar t("t","time",-1.,15.);
   RooRealVar cosa("cosa","cos(alpha)",-1.,1.);
 
-  // Use RooTruthModel to obtain compiled implementation of sinh/cosh modulated decay functions
-  RooRealVar tau("tau","#tau",1.5);
+  RooRealVar tau("tau", "#tau", 1.5);
   RooRealVar deltaGamma("deltaGamma","deltaGamma", 0.3);
-  RooTruthModel tm("tm","tm",t) ;
-  RooFormulaVar coshGBasis("coshGBasis","exp(-@0/ @1)*cosh(@0*@2/2)",RooArgList(t,tau,deltaGamma));
-  RooFormulaVar sinhGBasis("sinhGBasis","exp(-@0/ @1)*sinh(@0*@2/2)",RooArgList(t,tau,deltaGamma));
-  std::unique_ptr<RooAbsReal> coshGConv{tm.convolution(&coshGBasis,&t)};
-  std::unique_ptr<RooAbsReal> sinhGConv{tm.convolution(&sinhGBasis,&t)};
+  RooFormulaVar coshG("coshGBasis","exp(-@0/ @1)*cosh(@0*@2/2)", {t,tau,deltaGamma});
+  RooFormulaVar sinhG("sinhGBasis","exp(-@0/ @1)*sinh(@0*@2/2)", {t,tau,deltaGamma});
 
   // Construct polynomial amplitudes in cos(a)
   RooPolyVar poly1("poly1","poly1",cosa,RooArgList(RooConst(0.5),RooConst(0.2),RooConst(0.2)),0);
   RooPolyVar poly2("poly2","poly2",cosa,RooArgList(RooConst(1),RooConst(-0.2),RooConst(3)),0);
 
   // Construct 2D amplitude as uncorrelated product of amp(t)*amp(cosa)
-  RooProduct  ampl1("ampl1","amplitude 1",RooArgSet(poly1,*coshGConv));
-  RooProduct  ampl2("ampl2","amplitude 2",RooArgSet(poly2,*sinhGConv));
+  RooProduct  ampl1("ampl1","amplitude 1", {poly1, coshG});
+  RooProduct  ampl2("ampl2","amplitude 2", {poly2, sinhG});
 
 
 
