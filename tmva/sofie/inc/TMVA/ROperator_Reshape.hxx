@@ -101,9 +101,13 @@ public:
          // assume no axis is provided - remove all axes with value equal to 1
          auto output_shape = input[0];
          if (input.size() == 1) {
-            for (size_t i = 0; i < output_shape.size(); i++) {
+            size_t i = 0;
+            while (i < output_shape.size()) {
                if (output_shape[i] == 1 ) {
                   output_shape.erase(output_shape.begin() + i);
+               }
+               else {
+                  i++;
                }
             }
          } else if (input.size() == 2) {

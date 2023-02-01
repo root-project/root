@@ -35,7 +35,7 @@ private:
 public:
    ROperator_Gather(){}
    ROperator_Gather(int64_t attrAxis, std::string nameX, std::string nameIndices, std::string nameY):
-      fAttrAxis(attrAxis), fNX(UTILITY::Clean_name(nameX)), fNIndices(nameIndices), fNY(UTILITY::Clean_name(nameY)) {
+      fAttrAxis(attrAxis), fNX(UTILITY::Clean_name(nameX)), fNIndices(UTILITY::Clean_name(nameIndices)), fNY(UTILITY::Clean_name(nameY)) {
    }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
@@ -66,6 +66,7 @@ public:
          fAttrAxis = fAttrAxis + int64_t(r);
       }
       // Indices of size q
+      // empty fShapeIndices is a scalar value for the indices
       size_t indicesLength = ConvertShapeToLength(fShapeIndices);
       fIndices = std::vector<int64_t>(indicesData, indicesData + indicesLength);
       for (size_t i = 0; i < indicesLength; i++) {

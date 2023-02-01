@@ -22,7 +22,8 @@ ParserFuncSignature ParseReshape = [](RModelParser_ONNX &parser, const onnx::Nod
    // it is not present for Flatten, Squeeze and Unsquueze
    auto input_name = nodeproto.input(0);
    // for squeeze is optional ?
-   auto shape_name = (opMode == Reshape || opMode == Unsqueeze) ? nodeproto.input(1) : "";
+   auto shape_name = ((nodeproto.input_size() > 1) && ( opMode == Reshape || opMode == Unsqueeze || opMode == Squeeze) )
+      ? nodeproto.input(1) : "";
    if (parser.IsRegisteredTensorType(input_name)) {
       input_type = parser.GetTensorType(input_name);
    } else {

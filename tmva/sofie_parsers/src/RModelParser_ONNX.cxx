@@ -271,7 +271,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
       if (initializer_names.find(graph.input(i).name()) != initializer_names.end())
          continue;
 
-      // input datanode is not a weight node (has no initializer)
+      // input data node is not a weight node (has no initializer)
       const onnx::ValueInfoProto &valueinfoproto = graph.input(i);
       std::string input_name = valueinfoproto.name();
 
@@ -326,12 +326,13 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
 
    for (int i = 0; i < graph.initializer_size(); i++) {
       onnx::TensorProto *tensorproto = const_cast<onnx::TensorProto *>(&graph.initializer(i));
-      std::vector<std::size_t> fShape;
+      std::vector<std::size_t> shape;
       std::size_t fLength = 1;
       for (int j = 0; j < tensorproto->dims_size(); j++) {
-         fShape.push_back(tensorproto->dims(j));
+         shape.push_back(tensorproto->dims(j));
          fLength *= tensorproto->dims(j);
       }
+      // in case of scalars keep an empty shape but with length =1
 
       std::string input_name = graph.initializer(i).name();
 
@@ -351,7 +352,8 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
                                                                static_cast<float *>(data.get()));
          }
 
-         rmodel.AddInitializedTensor(input_name, ETensorType::FLOAT, fShape, data);
+         if (verbose) std::cout << "add FLOAT initialized tensor" << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
+         rmodel.AddInitializedTensor(input_name, ETensorType::FLOAT, shape, data);
          allInitializedTensors[input_name] = i;
          break;
       }
@@ -366,7 +368,8 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
                                                                static_cast<int64_t *>(data.get()));
          }
 
-         rmodel.AddInitializedTensor(input_name, ETensorType::INT64, fShape, data);
+         if (verbose) std::cout << "add INT64 initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
+         rmodel.AddInitializedTensor(input_name, ETensorType::INT64, shape, data);
          allInitializedTensors[input_name] = i;
          break;
       }
