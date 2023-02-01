@@ -77,7 +77,6 @@ endfunction()
 #   The default value can be changed as many times as we wish before calling ROOT_APPLY_OPTIONS()
 #--------------------------------------------------------------------------------------------------
 
-ROOT_BUILD_OPTION(alien OFF "Enable support for AliEn (requires libgapiUI from ALICE, deprecated)")
 ROOT_BUILD_OPTION(arrow OFF "Enable support for Apache Arrow")
 ROOT_BUILD_OPTION(asimage ON "Enable support for image processing via libAfterImage")
 ROOT_BUILD_OPTION(asserts OFF "Enable asserts (defaults to ON for CMAKE_BUILD_TYPE=Debug and/or dev=ON)")
@@ -416,7 +415,7 @@ if(webgui)
 endif()
 
 #---Removed options------------------------------------------------------------
-foreach(opt afdsmgrd afs bonjour castor chirp geocad glite globus hdfs ios
+foreach(opt afdsmgrd afs alien bonjour castor chirp geocad glite globus hdfs ios
             krb5 ldap memstat qt qtgsi rfio ruby sapdb srp table python vmc)
   if(${opt})
     message(FATAL_ERROR ">>> Option '${opt}' is no longer supported in ROOT ${ROOT_VERSION}.")
@@ -424,7 +423,7 @@ foreach(opt afdsmgrd afs bonjour castor chirp geocad glite globus hdfs ios
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt alien)
+foreach(opt)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()
