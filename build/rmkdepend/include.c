@@ -299,11 +299,11 @@ struct inclist *inc_path(char *file, char *include, boolean dot) {
     */
    if (!found)
       for (pp = includedirs; *pp; pp++) {
-         if (strlen(*pp) + strlen(include) + 2 > sizeof(path)) {
+         int retlen = snprintf(path, BUFSIZ, "%s/%s", *pp, include);
+         if (retlen <= 0 || BUFSIZ < retlen) {
             warning1("\t%s/%s too long\n", *pp, include);
             continue;
          }
-         snprintf(path, BUFSIZ, "%s/%s", *pp, include);
          remove_dotdot(path);
 #ifdef _WIN32
          if (stat(path, &st) == 0 && (st.st_mode & S_IFREG)) {
