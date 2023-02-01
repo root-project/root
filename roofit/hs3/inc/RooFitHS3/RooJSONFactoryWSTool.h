@@ -40,6 +40,9 @@ class JSONNode;
 class JSONTree;
 } // namespace Detail
 } // namespace RooFit
+namespace RooStats {
+class ModelConfig;
+}
 
 class TH1;
 class TClass;
@@ -183,7 +186,6 @@ private:
    void importPdfs(const RooFit::Detail::JSONNode &n);
    void importVariables(const RooFit::Detail::JSONNode &n);
    void importVariable(const RooFit::Detail::JSONNode &n);
-   void configureVariable(const RooFit::Detail::JSONNode &p, RooRealVar &v);
    void importDependants(const RooFit::Detail::JSONNode &n);
 
    void configureToplevelPdf(const RooFit::Detail::JSONNode &n, RooAbsPdf &pdf);
@@ -197,6 +199,9 @@ private:
 
    void exportAllObjects(RooFit::Detail::JSONNode &n);
    void exportDependants(const RooAbsArg *source);
+   void exportModelConfig(RooFit::Detail::JSONNode &node, RooAbsPdf const &pdf, RooStats::ModelConfig const *mc);
+
+   void tagVariables(RooFit::Detail::JSONNode &rootnode, RooArgSet const *args, const char *tag);
 
    // member variables
    const RooFit::Detail::JSONNode *_rootnode_input = nullptr;
