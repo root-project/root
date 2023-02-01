@@ -18,23 +18,18 @@ import ROOT
 t = ROOT.RooRealVar("t", "time", -1.0, 15.0)
 cosa = ROOT.RooRealVar("cosa", "cos(alpha)", -1.0, 1.0)
 
-# Use ROOT.RooTruthModel to obtain compiled implementation of sinh/cosh
-# modulated decay functions
 tau = ROOT.RooRealVar("tau", "#tau", 1.5)
 deltaGamma = ROOT.RooRealVar("deltaGamma", "deltaGamma", 0.3)
-tm = ROOT.RooTruthModel("tm", "tm", t)
-coshGBasis = ROOT.RooFormulaVar("coshGBasis", "exp(-@0/ @1)*cosh(@0*@2/2)", [t, tau, deltaGamma])
-sinhGBasis = ROOT.RooFormulaVar("sinhGBasis", "exp(-@0/ @1)*sinh(@0*@2/2)", [t, tau, deltaGamma])
-coshGConv = tm.convolution(coshGBasis, t)
-sinhGConv = tm.convolution(sinhGBasis, t)
+coshG = ROOT.RooFormulaVar("coshGBasis", "exp(-@0/ @1)*cosh(@0*@2/2)", [t, tau, deltaGamma])
+sinhG = ROOT.RooFormulaVar("sinhGBasis", "exp(-@0/ @1)*sinh(@0*@2/2)", [t, tau, deltaGamma])
 
 # Construct polynomial amplitudes in cos(a)
 poly1 = ROOT.RooPolyVar("poly1", "poly1", cosa, [0.5, 0.2, 0.2], 0)
 poly2 = ROOT.RooPolyVar("poly2", "poly2", cosa, [1.0, -0.2, 3.0], 0)
 
 # Construct 2D amplitude as uncorrelated product of amp(t)*amp(cosa)
-ampl1 = ROOT.RooProduct("ampl1", "amplitude 1", [poly1, coshGConv])
-ampl2 = ROOT.RooProduct("ampl2", "amplitude 2", [poly2, sinhGConv])
+ampl1 = ROOT.RooProduct("ampl1", "amplitude 1", [poly1, coshG])
+ampl2 = ROOT.RooProduct("ampl2", "amplitude 2", [poly2, sinhG])
 
 # Construct amplitude sum pdf
 # -----------------------------------------------------
