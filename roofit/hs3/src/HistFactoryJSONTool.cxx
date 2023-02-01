@@ -363,23 +363,16 @@ void RooStats::HistFactory::JSONTool::PrintJSON(std::string const &filename)
    this->PrintJSON(out);
 }
 
-#ifdef ROOFIT_HS3_WITH_RYML
 void RooStats::HistFactory::JSONTool::PrintYAML(std::ostream &os)
 {
-   TRYMLTree p;
-   auto &n = p.rootnode();
+   std::unique_ptr<RooFit::Detail::JSONTree> tree = RooJSONFactoryWSTool::createNewJSONTree();
+   auto &n = tree->rootnode();
    n.set_map();
    RooFit::JSONIO::Detail::Domains domains;
    exportMeasurement(_measurement, n, domains);
    domains.writeJSON(n["domains"]);
    n.writeYML(os);
 }
-#else
-void RooStats::HistFactory::JSONTool::PrintYAML(std::ostream & /*os*/)
-{
-   std::cerr << "YAML export only support with rapidyaml!" << std::endl;
-}
-#endif
 
 void RooStats::HistFactory::JSONTool::PrintYAML(std::string const &filename)
 {

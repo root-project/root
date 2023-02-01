@@ -12,12 +12,9 @@
 
 #include <RooFit/Detail/JSONInterface.h>
 
+#include "JSONParser.h"
 #ifdef ROOFIT_WITH_RYML
 #include "RYMLParser.h"
-using Tree_t = TRYMLTree;
-#else
-#include "JSONParser.h"
-using Tree_t = TJSONTree;
 #endif
 
 namespace {
@@ -71,12 +68,69 @@ std::ostream &operator<<(std::ostream &os, JSONNode const &s)
 
 std::unique_ptr<JSONTree> JSONTree::create()
 {
-   return std::make_unique<Tree_t>();
+   if (getBackendEnum() == Backend::Ryml) {
+#ifdef ROOFIT_WITH_RYML
+      return std::make_unique<TRYMLTree>();
+#else
+      throw std::runtime_error(
+         "Requesting JSON tree with rapidyaml backend, but rapidyaml could not be found by ROOT when it was compiled.");
+#endif
+   }
+   return std::make_unique<TJSONTree>();
 }
 
 std::unique_ptr<JSONTree> JSONTree::create(std::istream &is)
 {
-   return std::make_unique<Tree_t>(is);
+   if (getBackendEnum() == Backend::Ryml) {
+#ifdef ROOFIT_WITH_RYML
+      return std::make_unique<TRYMLTree>(is);
+#else
+      throw std::runtime_error(
+         "Requesting JSON tree with rapidyaml backend, but rapidyaml could not be found by ROOT when it was compiled.");
+#endif
+   }
+   return std::make_unique<TJSONTree>(is);
+}
+
+/// Check if ROOT was compiled with support for a certain JSON backend library.
+/// \param[in] name Name of the backend.
+bool JSONTree::hasBackend(std::string const &name)
+{
+   if (name == "rapidyaml") {
+#ifdef ROOFIT_WITH_RYML
+      return true;
+#else
+      return false;
+#endif
+   }
+   if (name == "nlohmann-json")
+      return true;
+   return false;
+}
+
+JSONTree::Backend &JSONTree::getBackendEnum()
+{
+   static Backend backend = Backend::NlohmannJson;
+   return backend;
+}
+
+/// Returns the name of the library that serves as the backend for the JSON
+/// interface, which is either `"nlohmann-json"` or `"rapidyaml"`.
+/// \return Backend name as a string.
+std::string JSONTree::getBackend()
+{
+   return getBackendEnum() == Backend::Ryml ? "rapidyaml" : "nlohmann-json";
+}
+
+/// Set the library that serves as the backend for the JSON interface. Note that the `"rapidyaml"` backend is only
+/// supported if rapidyaml was found on the system when ROOT was compiled. \param[in] name Name of the backend, can be
+/// either `"nlohmann-json"` or `"rapidyaml"`.
+void JSONTree::setBackend(std::string const &name)
+{
+   if (name == "rapidyaml")
+      getBackendEnum() = Backend::Ryml;
+   if (name == "nlohmann-json")
+      getBackendEnum() = Backend::NlohmannJson;
 }
 
 } // namespace Detail

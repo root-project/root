@@ -165,7 +165,6 @@ ROOT_BUILD_OPTION(qt6web OFF "Enable support for Qt6 web-based display (requires
 ROOT_BUILD_OPTION(r OFF "Enable support for R bindings (requires R, Rcpp, and RInside)")
 ROOT_BUILD_OPTION(roofit ON "Build the advanced fitting package RooFit, and RooStats for statistical tests. If xml is available, also build HistFactory.")
 ROOT_BUILD_OPTION(roofit_multiprocess OFF "Build RooFit::MultiProcess and multi-process RooFit::TestStatistics classes (requires ZeroMQ with zmq_ppoll and cppzmq).")
-ROOT_BUILD_OPTION(roofit_hs3_ryml OFF "Try to find RapidYML on the system and use it for RooFit JSON/YAML convertes")
 ROOT_BUILD_OPTION(webgui ON "Build Web-based UI components of ROOT (requires C++17 standard or higher)")
 ROOT_BUILD_OPTION(root7 ON "Build ROOT 7 components of ROOT (requires C++17 standard or higher)")
 ROOT_BUILD_OPTION(rpath ON "Link libraries with built-in RPATH (run-time search path)")
