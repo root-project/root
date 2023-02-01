@@ -108,7 +108,9 @@ def main():
     s3_prefix = f'{platform}/{base_ref}/{buildtype}/{option_hash}'
 
     print("\nEstablishing s3 connection")
-    connection = openstack.connect('envvars')
+
+    connection = openstack.connect(cloud=None) # Will look for /etc/openstack/clouds.yaml
+
     # without openstack we can't run test workflow, might as well give up here ¯\_(ツ)_/¯
     if not connection:
         die(msg="Could not connect to OpenStack")

@@ -50,13 +50,6 @@ on:
         default: true
 
 env:
-  OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
-  OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
-  OS_AUTH_TYPE: 'v3applicationcredential'
-  OS_AUTH_URL: 'https://keystone.cern.ch/v3'
-  OS_IDENTITY_API_VERSION: 3
-  OS_INTERFACE: 'public'
-  OS_REGION_NAME: 'cern'
   PYTHONUNBUFFERED: true
 
 jobs:
@@ -72,15 +65,9 @@ jobs:
 
     container:
       image: ghcr.io/olemorud/${{ matrix.image }}:buildready
-      options: '--security-opt label=disable'
+      options: '--security-opt label=disable
+                -v /home/rootci/clouds.yaml:/etc/openstack/clouds.yaml:ro'
       env: # S3 storage
-        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
-        OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
-        OS_AUTH_TYPE: 'v3applicationcredential'
-        OS_AUTH_URL: 'https://keystone.cern.ch/v3'
-        OS_IDENTITY_API_VERSION: 3
-        OS_INTERFACE: 'public'
-        OS_REGION_NAME: 'cern'
         PYTHONUNBUFFERED: true
     
     steps:
