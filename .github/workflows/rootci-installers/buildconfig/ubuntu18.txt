@@ -79,7 +79,6 @@ qt5web=On
 qt6web=Off
 r=On
 roofit=On
-roofit_hs3_ryml=Off
 roofit_multiprocess=On
 roottest=ON
 runtime_cxxmodules=Off

@@ -86,7 +86,6 @@ qt5web=OFF
 qt6web=OFF
 r=OFF
 roofit=OFF
-roofit_hs3_ryml=OFF
 roofit_multiprocess=OFF
 root7=OFF
 rootbench=OFF
