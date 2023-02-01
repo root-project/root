@@ -27,7 +27,6 @@ class GraphNode;
 
 namespace Detail {
 namespace RDF {
-namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
 class RLoopManager;
 
