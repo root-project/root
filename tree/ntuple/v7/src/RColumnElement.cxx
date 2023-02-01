@@ -58,6 +58,9 @@ ROOT::Experimental::Detail::RColumnElementBase::Generate<void>(EColumnType type)
    return nullptr;
 }
 
+template std::unique_ptr<ROOT::Experimental::Detail::RColumnElementBase>
+ROOT::Experimental::Detail::RColumnElementBase::Generate<void>(EColumnType type);
+
 std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(EColumnType type) {
    switch (type) {
    case EColumnType::kReal32:
