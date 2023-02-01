@@ -18,6 +18,8 @@
 #include "RooStats/HistFactory/Channel.h"
 #include "RooStats/HistFactory/Sample.h"
 
+#include "Domains.h"
+
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;
 
@@ -91,7 +93,8 @@ void exportChannel(const RooStats::HistFactory::Channel &c, JSONNode &ch)
    }
 }
 
-void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode &n)
+void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode &n,
+                       RooFit::JSONIO::Detail::Domains &domains)
 {
    using namespace RooStats::HistFactory;
 
@@ -166,8 +169,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
                auto &v = varlist[norm.GetName()];
                v.set_map();
                v["value"] << norm.GetVal();
-               v["min"] << norm.GetLow();
-               v["max"] << norm.GetHigh();
+               domains.readVariable(norm.GetName().c_str(), norm.GetLow(), norm.GetHigh());
             }
          }
          for (const auto &sys : s.GetOverallSysList()) {
@@ -177,8 +179,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
                auto &v = varlist[parname];
                v.set_map();
                v["value"] << 0.;
-               v["min"] << -5.;
-               v["max"] << 5.;
+               domains.readVariable(parname.c_str(), -5., 5.);
             }
          }
       }
@@ -220,7 +221,9 @@ void RooStats::HistFactory::JSONTool::PrintJSON(std::ostream &os)
 {
    std::unique_ptr<RooFit::Detail::JSONTree> tree = RooJSONFactoryWSTool::createNewJSONTree();
    auto &n = tree->rootnode();
-   exportMeasurement(_measurement, n);
+   RooFit::JSONIO::Detail::Domains domains;
+   exportMeasurement(_measurement, n, domains);
+   domains.writeJSON(n["domains"]);
    n.writeJSON(os);
 }
 void RooStats::HistFactory::JSONTool::PrintJSON(std::string const &filename)
@@ -235,7 +238,9 @@ void RooStats::HistFactory::JSONTool::PrintYAML(std::ostream &os)
    TRYMLTree p;
    auto &n = p.rootnode();
    n.set_map();
-   exportMeasurement(_measurement, n);
+   RooFit::JSONIO::Detail::Domains domains;
+   exportMeasurement(_measurement, n, domains);
+   domains.writeJSON(n["domains"]);
    n.writeYML(os);
 }
 #else
