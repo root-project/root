@@ -126,7 +126,7 @@ int TMVACrossValidation(bool useRandomSplitting = false)
 
    // DataLoader definitions; We declare variables in the tree so that TMVA can
    // find them. For more information see TMVAClassification tutorial.
-   TMVA::DataLoader *dataloader = new TMVA::DataLoader("dataset");
+   TMVA::DataLoader *dataloader = new TMVA::DataLoader("datasetcv");
 
    // Data variables
    dataloader->AddVariable("x", 'F');
