@@ -508,6 +508,26 @@ public:
 };
 
 template <>
+class RColumnElement<std::int64_t, EColumnType::kSplitInt64> : public RColumnElementSplitLE<std::int64_t> {
+public:
+   static constexpr std::size_t kSize = sizeof(std::int64_t);
+   static constexpr std::size_t kBitsOnStorage = kSize * 8;
+   explicit RColumnElement(std::int64_t *value) : RColumnElementSplitLE(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+};
+
+template <>
+class RColumnElement<std::uint64_t, EColumnType::kSplitInt64> : public RColumnElementSplitLE<std::uint64_t> {
+public:
+   static constexpr std::size_t kSize = sizeof(std::uint64_t);
+   static constexpr std::size_t kBitsOnStorage = kSize * 8;
+   explicit RColumnElement(std::uint64_t *value) : RColumnElementSplitLE(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+};
+
+template <>
 class RColumnElement<ClusterSize_t, EColumnType::kIndex> : public RColumnElementLE<ClusterSize_t::ValueType> {
 public:
    static constexpr std::size_t kSize = sizeof(ROOT::Experimental::ClusterSize_t);
@@ -585,19 +605,20 @@ template <typename CppT>
 std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(EColumnType type)
 {
    switch (type) {
-   case EColumnType::kReal32: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32>>(nullptr);
-   case EColumnType::kSplitReal32: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitReal32>>(nullptr);
-   case EColumnType::kReal64: return std::make_unique<RColumnElement<CppT, EColumnType::kReal64>>(nullptr);
-   case EColumnType::kSplitReal64: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitReal64>>(nullptr);
-   case EColumnType::kChar: return std::make_unique<RColumnElement<CppT, EColumnType::kChar>>(nullptr);
-   case EColumnType::kByte: return std::make_unique<RColumnElement<CppT, EColumnType::kByte>>(nullptr);
-   case EColumnType::kInt8: return std::make_unique<RColumnElement<CppT, EColumnType::kInt8>>(nullptr);
-   case EColumnType::kInt16: return std::make_unique<RColumnElement<CppT, EColumnType::kInt16>>(nullptr);
-   case EColumnType::kInt32: return std::make_unique<RColumnElement<CppT, EColumnType::kInt32>>(nullptr);
-   case EColumnType::kInt64: return std::make_unique<RColumnElement<CppT, EColumnType::kInt64>>(nullptr);
-   case EColumnType::kBit: return std::make_unique<RColumnElement<CppT, EColumnType::kBit>>(nullptr);
    case EColumnType::kIndex: return std::make_unique<RColumnElement<CppT, EColumnType::kIndex>>(nullptr);
    case EColumnType::kSwitch: return std::make_unique<RColumnElement<CppT, EColumnType::kSwitch>>(nullptr);
+   case EColumnType::kByte: return std::make_unique<RColumnElement<CppT, EColumnType::kByte>>(nullptr);
+   case EColumnType::kChar: return std::make_unique<RColumnElement<CppT, EColumnType::kChar>>(nullptr);
+   case EColumnType::kBit: return std::make_unique<RColumnElement<CppT, EColumnType::kBit>>(nullptr);
+   case EColumnType::kReal64: return std::make_unique<RColumnElement<CppT, EColumnType::kReal64>>(nullptr);
+   case EColumnType::kReal32: return std::make_unique<RColumnElement<CppT, EColumnType::kReal32>>(nullptr);
+   case EColumnType::kInt64: return std::make_unique<RColumnElement<CppT, EColumnType::kInt64>>(nullptr);
+   case EColumnType::kInt32: return std::make_unique<RColumnElement<CppT, EColumnType::kInt32>>(nullptr);
+   case EColumnType::kInt16: return std::make_unique<RColumnElement<CppT, EColumnType::kInt16>>(nullptr);
+   case EColumnType::kInt8: return std::make_unique<RColumnElement<CppT, EColumnType::kInt8>>(nullptr);
+   case EColumnType::kSplitReal64: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitReal64>>(nullptr);
+   case EColumnType::kSplitReal32: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitReal32>>(nullptr);
+   case EColumnType::kSplitInt64: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitInt64>>(nullptr);
    default: R__ASSERT(false);
    }
    // never here
