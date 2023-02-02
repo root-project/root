@@ -508,33 +508,21 @@ std::uint16_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnTy
 {
    using EColumnType = ROOT::Experimental::EColumnType;
    switch (type) {
-      case EColumnType::kIndex:
-         return SerializeUInt16(0x02, buffer);
-      case EColumnType::kSwitch:
-         return SerializeUInt16(0x03, buffer);
-      case EColumnType::kByte:
-         return SerializeUInt16(0x04, buffer);
-      case EColumnType::kChar:
-         return SerializeUInt16(0x05, buffer);
-      case EColumnType::kBit:
-         return SerializeUInt16(0x06, buffer);
-      case EColumnType::kReal64:
-         return SerializeUInt16(0x07, buffer);
-      case EColumnType::kReal32:
-         return SerializeUInt16(0x08, buffer);
-      case EColumnType::kReal16:
-         return SerializeUInt16(0x09, buffer);
-      case EColumnType::kInt64:
-         return SerializeUInt16(0x0A, buffer);
-      case EColumnType::kInt32:
-         return SerializeUInt16(0x0B, buffer);
-      case EColumnType::kInt16:
-         return SerializeUInt16(0x0C, buffer);
-      case EColumnType::kInt8:
-         return SerializeUInt16(0x0D, buffer);
-      case EColumnType::kSplitReal64: return SerializeUInt16(0x10, buffer);
-      default:
-         throw RException(R__FAIL("ROOT bug: unexpected column type"));
+   case EColumnType::kIndex: return SerializeUInt16(0x02, buffer);
+   case EColumnType::kSwitch: return SerializeUInt16(0x03, buffer);
+   case EColumnType::kByte: return SerializeUInt16(0x04, buffer);
+   case EColumnType::kChar: return SerializeUInt16(0x05, buffer);
+   case EColumnType::kBit: return SerializeUInt16(0x06, buffer);
+   case EColumnType::kReal64: return SerializeUInt16(0x07, buffer);
+   case EColumnType::kReal32: return SerializeUInt16(0x08, buffer);
+   case EColumnType::kReal16: return SerializeUInt16(0x09, buffer);
+   case EColumnType::kInt64: return SerializeUInt16(0x0A, buffer);
+   case EColumnType::kInt32: return SerializeUInt16(0x0B, buffer);
+   case EColumnType::kInt16: return SerializeUInt16(0x0C, buffer);
+   case EColumnType::kInt8: return SerializeUInt16(0x0D, buffer);
+   case EColumnType::kSplitReal64: return SerializeUInt16(0x10, buffer);
+   case EColumnType::kSplitReal32: return SerializeUInt16(0x11, buffer);
+   default: throw RException(R__FAIL("ROOT bug: unexpected column type"));
    }
 }
 
@@ -546,45 +534,21 @@ RResult<std::uint16_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    std::uint16_t onDiskType;
    auto result = DeserializeUInt16(buffer, onDiskType);
    switch (onDiskType) {
-      case 0x02:
-         type = EColumnType::kIndex;
-         break;
-      case 0x03:
-         type = EColumnType::kSwitch;
-         break;
-      case 0x04:
-         type = EColumnType::kByte;
-         break;
-      case 0x05:
-         type = EColumnType::kChar;
-         break;
-      case 0x06:
-         type = EColumnType::kBit;
-         break;
-      case 0x07:
-         type = EColumnType::kReal64;
-         break;
-      case 0x08:
-         type = EColumnType::kReal32;
-         break;
-      case 0x09:
-         type = EColumnType::kReal16;
-         break;
-      case 0x0A:
-         type = EColumnType::kInt64;
-         break;
-      case 0x0B:
-         type = EColumnType::kInt32;
-         break;
-      case 0x0C:
-         type = EColumnType::kInt16;
-         break;
-      case 0x0D:
-         type = EColumnType::kInt8;
-         break;
-      case 0x10: type = EColumnType::kSplitReal64; break;
-      default:
-         return R__FAIL("unexpected on-disk column type");
+   case 0x02: type = EColumnType::kIndex; break;
+   case 0x03: type = EColumnType::kSwitch; break;
+   case 0x04: type = EColumnType::kByte; break;
+   case 0x05: type = EColumnType::kChar; break;
+   case 0x06: type = EColumnType::kBit; break;
+   case 0x07: type = EColumnType::kReal64; break;
+   case 0x08: type = EColumnType::kReal32; break;
+   case 0x09: type = EColumnType::kReal16; break;
+   case 0x0A: type = EColumnType::kInt64; break;
+   case 0x0B: type = EColumnType::kInt32; break;
+   case 0x0C: type = EColumnType::kInt16; break;
+   case 0x0D: type = EColumnType::kInt8; break;
+   case 0x10: type = EColumnType::kSplitReal64; break;
+   case 0x11: type = EColumnType::kSplitReal32; break;
+   default: return R__FAIL("unexpected on-disk column type");
    }
    return result;
 }

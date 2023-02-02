@@ -719,7 +719,7 @@ void ROOT::Experimental::RField<bool>::AcceptVisitor(Detail::RFieldVisitor &visi
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<float>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kReal32}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kReal32}, {EColumnType::kSplitReal32}}, {{}});
    return representations;
 }
 
