@@ -417,11 +417,9 @@ public:
       if (!p.has_child("data")) {
          RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
-      RooArgSet varlist;
-      RooJSONFactoryWSTool::getObservables(ws, p["data"], name, varlist);
       RooDataHist *dh = dynamic_cast<RooDataHist *>(ws.embeddedData(name));
       if (!dh) {
-         auto dhForImport = RooJSONFactoryWSTool::readBinnedData(ws, p["data"], name, varlist);
+         auto dhForImport = RooJSONFactoryWSTool::readBinnedData(p["data"], name);
          ws.import(*dhForImport, RooFit::Silence(true), RooFit::Embedded());
          dh = static_cast<RooDataHist *>(ws.embeddedData(dhForImport->GetName()));
       }
@@ -459,11 +457,9 @@ public:
       if (!p.has_child("data")) {
          RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
-      RooArgSet varlist;
-      tool->getObservables(*tool->workspace(), p["data"], name, varlist);
       RooDataHist *dh = dynamic_cast<RooDataHist *>(tool->workspace()->embeddedData(name));
       if (!dh) {
-         auto dhForImport = tool->readBinnedData(*tool->workspace(), p["data"], name, varlist);
+         auto dhForImport = tool->readBinnedData(p["data"], name);
          tool->workspace()->import(*dhForImport, RooFit::Silence(true), RooFit::Embedded());
          dh = static_cast<RooDataHist *>(tool->workspace()->embeddedData(dhForImport->GetName()));
       }
