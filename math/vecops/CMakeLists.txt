@@ -33,13 +33,6 @@ elseif(vdt)
   target_link_libraries(ROOTVecOps PUBLIC ${VDT_LIBRARIES})
 endif()
 
-if(MSVC)
-  target_compile_options(ROOTVecOps PRIVATE -O2 /fp:fast)
-  target_compile_definitions(ROOTVecOps PRIVATE _USE_MATH_DEFINES)
-else()
-  target_compile_options(ROOTVecOps PRIVATE -O3 -ffast-math)
-endif()
-
 include(CheckCXXSymbolExists)
 check_symbol_exists(m __sqrt_finite HAVE_FINITE_MATH)
 if(NOT HAVE_FINITE_MATH AND NOT MSVC)
