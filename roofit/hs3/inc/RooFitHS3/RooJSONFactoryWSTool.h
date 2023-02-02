@@ -108,8 +108,8 @@ public:
                                const TH1 *errH = nullptr, bool writeObservables = true, bool writeErrors = true);
    static void writeObservables(const TH1 &h, RooFit::Detail::JSONNode &n, const std::vector<std::string> &varnames);
 
-   static std::unique_ptr<RooDataHist> readBinnedData(RooWorkspace &ws, const RooFit::Detail::JSONNode &n,
-                                                      const std::string &namecomp, RooArgList observables);
+   static std::unique_ptr<RooDataHist> readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp);
+   static std::unique_ptr<RooDataHist> readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgList varlist);
 
    static void
    getObservables(RooWorkspace &ws, const RooFit::Detail::JSONNode &n, const std::string &obsnamecomp, RooArgSet &out);
