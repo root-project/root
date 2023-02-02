@@ -4375,12 +4375,6 @@ TFileOpenHandle *TFile::AsyncOpen(const char *url, Option_t *option,
             notfound = kFALSE;
          }
       }
-      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
-         !strcmp(h->GetClass(),"TAlienFile") && h->LoadPlugin() == 0) {
-         f = (TFile*) h->ExecPlugin(5, name.Data(), option, ftitle, compress, kTRUE);
-         notfound = kFALSE;
-      }
-
    }
 
    if (rediroutput) {
