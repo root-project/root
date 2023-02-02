@@ -200,7 +200,7 @@ bool importHistSample(RooWorkspace &ws, Scope const &scope, const JSONNode &p)
       auto getBinnedData = [&](std::string const &binnedDataName) -> RooDataHist & {
          auto *dh = dynamic_cast<RooDataHist *>(ws.embeddedData(binnedDataName));
          if (!dh) {
-            auto dhForImport = RooJSONFactoryWSTool::readBinnedData(ws, p["data"], binnedDataName, varlist);
+            auto dhForImport = RooJSONFactoryWSTool::readBinnedData(p["data"], binnedDataName, varlist);
             ws.import(*dhForImport, RooFit::Silence(true), RooFit::Embedded());
             dh = static_cast<RooDataHist *>(ws.embeddedData(dhForImport->GetName()));
          }
