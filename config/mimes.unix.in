@@ -390,13 +390,3 @@ action = ->Browse()
 pattern = TMacro
 icon = tmacro_s.xpm tmacro_t.xpm
 action =
-
-[alien/file]
-pattern = TAlienDirectoryEntry
-icon = rootdb_s.xpm rootdb_t.xpm
-action = ->Browse()
-
-[alien/file]
-pattern = TAlienFile
-icon = rootdb_s.xpm rootdb_t.xpm
-action = ->Browse()

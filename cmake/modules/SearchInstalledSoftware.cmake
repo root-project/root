@@ -1050,24 +1050,6 @@ if(xrootd AND NOT builtin_xrootd AND builtin_openssl)
   endif()
 endif()
 
-#---Alien support----------------------------------------------------------------
-if(alien)
-  find_package(Alien)
-  if(NOT ALIEN_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR " Alien API not found and is required."
-        " Set the variable ALIEN_DIR to point to your Alien installation,"
-        " or include the installation of Alien in the CMAKE_PREFIX_PATH.")
-    else()
-      message(STATUS " Alien API not found."
-        " Set variable ALIEN_DIR to point to your Alien installation,"
-        " or include the installation of Alien in the CMAKE_PREFIX_PATH."
-        " For the time being switching OFF 'alien' option")
-      set(alien OFF CACHE BOOL "Disabled because Alien API not found (${alien_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for Apache Arrow
 if(arrow)
   find_package(Arrow)
