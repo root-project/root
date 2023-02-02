@@ -218,7 +218,7 @@ RNTuple is still experimental and is scheduled to become production grade in 202
 - Add [`GraphAsymmErrors`](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#acea30792eef607489d498bf6547a00a6) action that fills a TGraphAsymmErrors object.
 - Introduce [`RDatasetSpec`](https://root.cern/doc/master/classROOT_1_1RDF_1_1Experimental_1_1RDatasetSpec.html) as an
 experimental class to specify the input dataset to an RDataFrame.
-- Arbitrary metadata can be associated to the samples in the dataset specified via `RDatasetSpect`. The metadata of each
+- Arbitrary metadata can be associated to the samples in the dataset specified via `RDatasetSpec`. The metadata of each
 sample can then be retrieved during the execution by calling `DefinePerSample`.
 - Users can create an RDataFrame with a dataset specification written in a JSON file via the factory function
 [ROOT::RDF::Experimental::FromSpec](https://root.cern/doc/master/namespaceROOT_1_1RDF_1_1Experimental.html#a7193987f3c1b65c649399656cc6acce8).
@@ -262,7 +262,6 @@ needed to include distributed RDataFrame in the ROOT build is Python 3.8. More i
 ## Histogram Libraries
 
 - Implement `TGraph::SavesAs()` for .csv, .tsv and .txt for text output separated by comma, tab, and space, respectively.
-- 
 - New class `TGraph2DAsymmErrors` to create TGraph2D with asymmetric errors.
 ![TGraph2DAsymmErrors](TGraph2DAsymmErrors.png)
 
