@@ -115,7 +115,7 @@ This version adds the new `rootreadspeed` CLI tool. This tool can be used to hel
 
 To see help information, install and source a recent enough version of ROOT, and run the command `rootreadspeed --help` in your terminal.
 
-### Example usage of the tool:
+### Example usage of the tool
 
 ```console
 $ rootreadspeed --files <local-folder>/File1.root xrootd://<url-folder>/File2.root --trees Events --all-branches --threads 8
@@ -164,6 +164,8 @@ root [] .help edit
 
 ## I/O Libraries
 
+- Significantly speed up concurrent opening of `TFile` by `TTreeProcessorMT`.
+
 ### Faster reading from EOS
 
 A new cross-protocol redirection has been added to allow files on EOS mounts to be opened
@@ -176,9 +178,7 @@ the file is opened using the plain file path as before. This feature is controll
 pre-existing configuration option `TFile.CrossProtocolRedirects` and is enabled by default.
 It can be disabled by setting `TFile.CrossProtocolRedirects` to `0` in `rootrc`.
 
-## TTree Libraries
-
-## RNTuple
+### RNTuple
 ROOT's experimental successor of TTree has seen many updates during the last few months. Specifically, v6.28 includes the following changes:
 
 - Complete support for big-endian architectures (PR [#10402](https://github.com/root-project/root/pull/10402)).
@@ -188,7 +188,7 @@ ROOT's experimental successor of TTree has seen many updates during the last few
 - Support for C array fields whose type is of the form `T[N]`. Note that only single-dimension arrays are currently supported.
 
 - Improvements to the ROOT file embedding (PR [#10558](https://github.com/root-project/root/pull/10558)). In particular, a `RNTupleReader` or `RDataFrame` object can be created from a `TFile` instance as follows
-```
+```C++
 auto f = TFile::Open("data.root");
 auto ntpl = f->Get<ROOT::Experimental::RNTuple>("Events");
 
@@ -262,6 +262,8 @@ needed to include distributed RDataFrame in the ROOT build is Python 3.8. More i
 
 ## Histogram Libraries
 
+- Implement `TGraph::SavesAs()` for .csv, .tsv and .txt for text output separated by comma, tab, and space, respectively.
+- 
 - New class `TGraph2DAsymmErrors` to create TGraph2D with asymmetric errors.
 ![TGraph2DAsymmErrors](TGraph2DAsymmErrors.png)
 
@@ -272,6 +274,7 @@ needed to include distributed RDataFrame in the ROOT build is Python 3.8. More i
 ### Fitter class
 
 Some improvements and small fixes to the internal object memory management have been applied to the `ROOT::Fit::Fitter` class.
+
 - When setting an external FCN (objective function) to the Fitter, the function object is not cloned anymore.
 - A memory leak has been fixed, when using the `GSLMultiFit` class.
 - A bug has been resolved in setting fixed variables when using the linear fitter (via the `TLinearMinimizer` class).
@@ -292,6 +295,7 @@ The print log of Minuit2 has been improved, especially when printing vector and 
 ### KahanSum updates
 
 The `ROOT::Math::KahanSum` class was slightly modified:
+
 - The behavior of `operator-=` and `operator+=` on a `KahanSum` were not symmetric, leading to slight bit-wise inaccuracies. In fits, where such operations are done a lot of times (e.g. through the offsetting mechanism in RooFit which subtracts a constant `KahanSum` term after each likelihood evaluation), this can add up to significant numerical divergence. An improved algorithm was implemented, based on an algorithm for combining Kahan sums and carry terms (Tian et al. 2012). (PR #11940)
 - The auto-conversion to type `T` and implicit type `T` constructor in `KahanSum` made it hard to debug `KahanSum`, because it is easy to overlook implicit conversions in code, especially in lines where the type of the return value is `auto`. These auto-conversions were removed. Where necessary, they should be replaced with an explicit construction or explicit conversion to double via `Sum()`. (PR #11941)
 - Binary addition and subtraction operators were added, as well as a unary negation operator. (PR #11940)
@@ -437,6 +441,7 @@ The interface of `RModel::Generate` has been changed to
 RModel::Generate(Options options = Options::kDefault, int batchsize = 1)`
 ```
 where `Options` is a new enumeration having 3 different values:
+
 - `kDefault = 0x0` : default case, a session class is generated and the weights are stored in a separate `.dat` file (in text format).
 - `kNoSession = 0x1` : no session class is generated and the internal intermediate tensors are declared in the global namespace `TMVA_SOFIE_$ModelName`.
 - `kNoWeightFile = 0x2` the weight values are not written in a separate `.dat` file, but they are included in the generated header file.
@@ -445,7 +450,8 @@ In addition, the `RModel::Generate` function takes as an additional optional arg
 
 #### SOFIE ONNX Parser
 
-The ONNX parser supports now several new ONNX operators. The list of the current supported ONNX operator is the following:
+The ONNX parser supports now several new ONNX operators. The list of the current supported ONNX operators is the following:
+
 - Gemm
 - Conv (in 1D,2D and 3D)
 - RNN, GRU, LSTM
@@ -503,7 +509,7 @@ The new tmva tutorials `TMVA_Higgs_Classification.py`, `TMVA_CNN_Classificaion.p
 - In matplolib one can use the "Default X-Points" feature to plot X/Y graphs: If one doesn't
   specify the points in the x-axis, they will get the default values 0, 1, 2, 3, (etc. depending
   on the length of the y-points). The matplotlib script will be:
-```
+```Python
    import matplotlib.pyplot as plt
    import numpy as np
    points = np.array([3, 8, 1, 10, 5, 7])
@@ -511,7 +517,7 @@ The new tmva tutorials `TMVA_Higgs_Classification.py`, `TMVA_CNN_Classificaion.p
    plt. show()
 ```
 It is now possible to do the same with the ROOT TGraph:
-```
+```C++
    double y[6] = {3, 8, 1, 10, 5, 7};
    auto g = new TGraph(6,y);
    g->Draw();
@@ -521,11 +527,13 @@ So, if we take the same example as above, and leave out the x-points, the diagra
 
 ## 3D Graphics Libraries
 
+- REve / Eve7 now uses `RenderCore` to visualize 3D objects in JavaScript, replacing the use of `Three.js`.
+
 
 ## Geometry Libraries
 
 - Support with web geometry viewer image production in batch mode. Just do:
-```
+```C++
    ROOT::Experimental::RGeomViewer viewer(geom);
    viewer.SaveImage("rootgeom.jpeg", 800, 600);
 ```
@@ -534,6 +542,8 @@ creates png or jpeg image out of it.
 
 
 ## Database Libraries
+
+- Postgres headers are now included privately, removing the need to make them available at runtime.
 
 
 ## Networking Libraries
@@ -560,18 +570,6 @@ unix socket with strict 0700 mode is used. When ROOT running on remote node want
 new web widget, script will automatically start web browser on local node with appropriate URL,
 accessing widget via configured ssh tunnel.
 
-
-## Montecarlo Libraries
-
-
-## PROOF Libraries
-
-
-## Language Bindings
-
-Python 3.11 is now supported.
-
-
 ## JavaScript ROOT
 
 - Major JSROOT upgrade to version 7, using ES6 modules and classes
@@ -586,6 +584,8 @@ Python 3.11 is now supported.
 
 ## Class Reference Guide
 
+- Switch to faster mathjax 3.
+- Enable QtCreator Help Generator.
 
 ## Build, Configuration and Testing Infrastructure
 
@@ -593,6 +593,8 @@ Python 3.11 is now supported.
 - Building external applications that use ROOT oftentimes fail if there is a mismatch in the C++ standard between ROOT and the application. As of v6.28, suchs builds will issue a warning if the C++ standard does not match ROOT's, i.e. if there is a mismatch in the value of the `__cplusplus` preprocessor macro w.r.t. when ROOT was configured.
 - Builtin packages have been upgraded to davix 0.8.1, Vc 1.4.3, vdt 0.4.4, xrootd 5.4.1, gtest v1.12.1
 - Builtin xrootd is now built with openssl3 support.
+- GCC 11, clang 15, and Xcode 4.2 are now supported.
+- Large parts of ROOT have been updated to use `override`.
 
 ## PyROOT
 
@@ -615,3 +617,6 @@ with TDirectory.TContext():
  
 # After the 'with' statement, the current directory is restored to ROOT.gROOT
 ```
+- Python 3.11 is now supported.
+- PyROOT (cppyy, actually) was interfering with the batch mode setting; it now leaves this to ROOT.
+- PyROOT now shows `std::vector` contents at the prompt.
