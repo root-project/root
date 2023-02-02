@@ -241,6 +241,39 @@ TEST(RNTuple, UInt16_t)
    ASSERT_EQ("std::uint16_t", RFieldBase::Create("myUShort", "UShort_t").Unwrap()->GetType());
 }
 
+TEST(RNTuple, Float)
+{
+   FileRaii fileGuard("test_ntuple_float.root");
+
+   auto model = RNTupleModel::Create();
+
+   auto f1 = std::make_unique<RField<float>>("f1");
+   f1->SetColumnRepresentative({ROOT::Experimental::EColumnType::kReal32});
+   model->AddField(std::move(f1));
+
+   auto f2 = std::make_unique<RField<float>>("f2");
+   f2->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitReal32});
+   model->AddField(std::move(f2));
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      auto e = writer->CreateEntry();
+      *e->Get<float>("f1") = 1.0;
+      *e->Get<float>("f2") = 2.0;
+      writer->Fill(*e);
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   const auto *desc = reader->GetDescriptor();
+   EXPECT_EQ(ROOT::Experimental::EColumnType::kReal32,
+             (*desc->GetColumnIterable(desc->FindFieldId("f1")).begin()).GetModel().GetType());
+   EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitReal32,
+             (*desc->GetColumnIterable(desc->FindFieldId("f2")).begin()).GetModel().GetType());
+   reader->LoadEntry(0);
+   EXPECT_FLOAT_EQ(1.0, *reader->GetModel()->GetDefaultEntry()->Get<float>("f1"));
+   EXPECT_FLOAT_EQ(2.0, *reader->GetModel()->GetDefaultEntry()->Get<float>("f2"));
+}
+
 TEST(RNTuple, Double)
 {
    FileRaii fileGuard("double.root");
