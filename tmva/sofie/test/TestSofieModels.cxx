@@ -11,6 +11,7 @@
 #include "TMVA/RModelParser_ONNX.hxx"
 
 #include  "gtest/gtest.h"
+#define USE_ONNXSIM
 
 bool verbose = true;
 int sessionId = 0;
@@ -136,7 +137,8 @@ void TestConv( std::string type, int nbatches, bool useBN = false, int ngroups =
    printf("executing %s\n", command.c_str());
    gSystem->Exec(command.c_str());
 
-   // some model needs some semplifications
+   // some model needs some simplifications
+#ifdef USE_ONNXSIM
    if (usePool == 2) {
       printf("simplify onnx model using onnxsim tool \n");
       std::string cmd = "python3 -m onnxsim " + modelName + ".onnx " + modelName + ".onnx";
@@ -147,6 +149,7 @@ void TestConv( std::string type, int nbatches, bool useBN = false, int ngroups =
          return;
       }
    }
+#endif
 
 
    ExecuteSofieParser(modelName);
@@ -203,6 +206,7 @@ void TestRecurrent(std::string type, int nbatches, int inputSize = 5, int seqSiz
    printf("executing %s\n", command.c_str());
    gSystem->Exec(command.c_str());
    // need to simplify obtained recurrent ONNX model
+#ifdef USE_ONNXSIM
    printf("simplify onnx model using onnxsim tool \n");
    std::string cmd = "python3 -m onnxsim " + modelName + ".onnx " + modelName + ".onnx";
    int ret = gSystem->Exec(cmd.c_str());
@@ -211,6 +215,7 @@ void TestRecurrent(std::string type, int nbatches, int inputSize = 5, int seqSiz
       GTEST_SKIP();
       return;
    }
+#endif
 
    ExecuteSofieParser(modelName);
 

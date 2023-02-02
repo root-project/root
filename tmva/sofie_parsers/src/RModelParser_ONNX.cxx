@@ -352,7 +352,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
                                                                static_cast<float *>(data.get()));
          }
 
-         if (verbose) std::cout << "add FLOAT initialized tensor" << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
+         if (verbose) std::cout << "add FLOAT initialized tensor " << input_name << " shape " << ConvertShapeToString(shape) << std::endl;
          rmodel.AddInitializedTensor(input_name, ETensorType::FLOAT, shape, data);
          allInitializedTensors[input_name] = i;
          break;
@@ -388,8 +388,8 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
             std::cout << graph.node(i).input(j);
             if (j < graph.node(i).input_size() - 1)
                std::cout << ", ";
-            std::cout << " }" << std::endl;
          }
+         std::cout << " }" << std::endl;
       }
    }
 
@@ -438,8 +438,8 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
             continue;
          }
          if (verbose)
-            std::cout << "\tadd node " << graph.node(i).op_type() << " with input " << graph.node(i).input(0)
-                      << " order " << i << std::endl;
+            std::cout << "\tadd node " << graph.node(i).op_type() << " order " << i << std::endl;
+
          nodesOrder.push_back(i);
          foundNodes[i] = true;
          // register the outputs
@@ -464,8 +464,8 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
             std::cout << graph.node(i).input(j);
             if (j < graph.node(i).input_size() - 1)
                std::cout << ", ";
-            std::cout << " }" << std::endl;
          }
+         std::cout << " }" << std::endl;
       }
    }
 
@@ -479,6 +479,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
       if (verbose) {
          std::cout << "\t" << i << "  " << nodesOrder[i] << " parsing operator " << op_type << std::endl;
       }
+
       std::unique_ptr<ROperator> op = ParseOperator(i, graph, nodesOrder);
       if (!op) {
          if (verbose) {
