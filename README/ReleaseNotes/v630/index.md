@@ -51,6 +51,13 @@ The following people have contributed to this new version:
 
 ## Math Libraries
 
+### Behavior change of `TMath::AreEqualAbs()`
+
+The `TMath::AreEqualAbs()` compares two numbers for equality within a certain absolute range.
+So far, it would tell you that `inf != inf` if you define `inf` as `std::numeric_limits<double>::infinity()`, which is inconsistent with the regular `==` operator.
+
+This is unexpected, because one would expect that if two numbers are considered exactly equal, they would also be considered equal within any range. 
+Therefore, the behavior of `TMath::AreEqualAbs()` was changed to return always `true` if the `==` comparision would return `true`.
 
 ## RooFit Libraries
 
@@ -86,6 +93,14 @@ RooFunctor functor{pdf, observables, {}, normSet};
 ROOT::Math::Functor func4{functor, static_cast<unsigned int>(functor.nObs())};
 // Functor takes by reference, so the RooFunctor also needs to stay alive.
 ```
+
+### Define infinity as `std::numeric_limits<double>::infinity()`
+
+RooFit has its internal representation of infinity in `RooNumber::infinity()`, which was `1e30` before.
+
+Now, it is defined as `std::numeric_limits<double>::infinity()`, to be consistent with the C++ standard library and other code.
+
+This change also affects the `RooNumber::isInfinite()` function.
 
 ## 2D Graphics Libraries
 
