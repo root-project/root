@@ -536,7 +536,7 @@ STATIC_EXECUTE(
    registerImporter<RooBinSamplingPdfFactory>("binsampling", false);
    registerImporter<RooAddPdfFactory>("pdfsum", false);
    registerImporter<RooHistFuncFactory>("histogram", false);
-   registerImporter<RooHistFuncFactory>("histogramPdf", false);
+   registerImporter<RooHistPdfFactory>("histogramPdf", false);
    registerImporter<RooSimultaneousFactory>("simultaneous", false);
    registerImporter<RooBinWidthFunctionFactory>("binwidth", false);
    registerImporter<RooRealSumPdfFactory>("sumpdf", false);
