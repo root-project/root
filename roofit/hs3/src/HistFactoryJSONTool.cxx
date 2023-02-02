@@ -103,9 +103,6 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
          throw std::runtime_error("unable to export histograms, please call CollectHistograms first");
    }
 
-   auto &pdflist = n["pdfs"];
-   pdflist.set_map();
-
    // collect information
    std::map<std::string, RooStats::HistFactory::Constraint::Type> constraints;
    std::map<std::string, NormFactor> normfactors;
@@ -140,22 +137,45 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       }
    }
 
+   auto &pdflist = n["pdfs"];
+   pdflist.set_map();
+
+   auto &likelihoodlist = n["likelihoods"];
+   likelihoodlist.set_map();
+
+   auto &analysislist = n["analyses"];
+   analysislist.set_map();
+
+   auto &analysisNode = analysislist[measurement.GetName()];
+   analysisNode.set_map();
+   analysisNode["InterpolationScheme"] << measurement.GetInterpolationScheme();
+   auto &analysisDomains = analysisNode["domains"];
+   analysisDomains.set_seq();
+   analysisDomains.append_child() << "default_domain";
+
+   auto &analysisPois = analysisNode["pois"];
+   analysisPois.set_seq();
+
+   auto &analysisObservables = analysisNode["observables"];
+   analysisObservables.set_seq();
+
+   for (const auto &poi : measurement.GetPOIList()) {
+      analysisPois.append_child() << poi;
+   }
+
+   auto &likelihoods = analysisNode["likelihoods"];
+   likelihoods.set_seq();
+
    // the simpdf
-   auto &sim = pdflist[measurement.GetName()];
-   sim.set_map();
-   sim["type"] << "simultaneous";
-   sim["index"] << "channelCat";
-   auto &simdict = sim["dict"];
-   simdict.set_map();
-   simdict["InterpolationScheme"] << measurement.GetInterpolationScheme();
-   auto &simtags = sim["tags"];
-   simtags.set_seq();
-   simtags.append_child() << "toplevel";
-   auto &ch = sim["channels"];
-   ch.set_map();
    for (const auto &c : measurement.GetChannels()) {
+
+      auto &likelihoodNode = likelihoodlist[c.GetName()];
       auto pdfName = std::string("model_") + c.GetName();
-      ch[c.GetName()] << pdfName;
+      likelihoodNode.set_map();
+
+      likelihoodNode["dist"] << pdfName;
+      likelihoodNode["obs"] << std::string("obsData_") + c.GetName();
+      likelihoods.append_child() << c.GetName();
       exportChannel(c, pdflist[pdfName]);
    }
 
@@ -193,25 +213,23 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       varlist[parname]["const"] << true;
    }
 
-   for (const auto &poi : measurement.GetPOIList()) {
-      if (!varlist[poi].has_child("tags")) {
-         auto &tags = varlist[poi]["tags"];
-         tags.set_seq();
-      }
-      varlist[poi]["tags"].append_child() << "poi";
-   }
-
    // the data
    auto &datalist = n["data"];
    datalist.set_map();
-   auto &obsdata = datalist["obsData"];
-   obsdata.set_map();
-   obsdata["index"] << "channelCat";
+   // auto &obsdata = datalist["obsData"];
+   // obsdata.set_map();
+   // obsdata["index"] << "channelCat";
    for (const auto &c : measurement.GetChannels()) {
       const std::vector<std::string> obsnames{"obs_x_" + c.GetName(), "obs_y_" + c.GetName(), "obs_z_" + c.GetName()};
 
-      auto &chdata = obsdata[c.GetName()];
-      RooJSONFactoryWSTool::exportHistogram(*c.GetData().GetHisto(), chdata, obsnames);
+      for (int i = 0; i < c.GetData().GetHisto()->GetDimension(); ++i) {
+         analysisObservables.append_child() << obsnames[i];
+      }
+
+      // auto &chdata = obsdata[c.GetName()];
+      // RooJSONFactoryWSTool::exportHistogram(*c.GetData().GetHisto(), chdata, obsnames);
+      RooJSONFactoryWSTool::exportHistogram(*c.GetData().GetHisto(), datalist[std::string("obsData_") + c.GetName()],
+                                            obsnames);
    }
 }
 
