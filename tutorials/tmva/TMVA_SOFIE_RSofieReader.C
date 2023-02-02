@@ -44,14 +44,16 @@ void TMVA_SOFIE_RSofieReader(){
 
    ROOT::RDataFrame df1("sig_tree", inputFile);
 
-   auto h1 = df1.Define("DNN_Value", Compute<7, float>(model),
+   auto h1 = df1.Define("DNN_Values", Compute<7, float>(model),
                             {"m_jj", "m_jjj", "m_lv", "m_jlv", "m_bb", "m_wbb", "m_wwbb"})
-                .Histo1D({"h_sig", "", 100, 0, 1}, "DNN_Value");
+                  .Define("y","DNN_Values[0]")
+                  .Histo1D({"h_sig", "", 100, 0, 1}, "y");
 
    ROOT::RDataFrame df2("bkg_tree", inputFile);
-   auto h2 = df2.Define("DNN_Value", Compute<7, float>(model),
+   auto h2 = df2.Define("DNN_Values", Compute<7, float>(model),
                             {"m_jj", "m_jjj", "m_lv", "m_jlv", "m_bb", "m_wbb", "m_wwbb"})
-                .Histo1D({"h_bkg", "", 100, 0, 1}, "DNN_Value");
+                  .Define("y","DNN_Values[0]")
+                  .Histo1D({"h_bkg", "", 100, 0, 1}, "y");
 
    h1->SetLineColor(kRed);
    h2->SetLineColor(kBlue);
