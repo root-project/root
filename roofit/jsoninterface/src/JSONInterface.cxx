@@ -75,14 +75,9 @@ int JSONNode::val_t<int>() const
    return val_int();
 }
 template <>
-float JSONNode::val_t<float>() const
-{
-   return val_float();
-}
-template <>
 double JSONNode::val_t<double>() const
 {
-   return val_float();
+   return val_double();
 }
 template <>
 bool JSONNode::val_t<bool>() const

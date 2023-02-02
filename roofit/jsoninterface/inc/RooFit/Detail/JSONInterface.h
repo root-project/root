@@ -97,7 +97,7 @@ public:
    virtual std::string key() const = 0;
    virtual std::string val() const = 0;
    virtual int val_int() const { return atoi(this->val().c_str()); }
-   virtual float val_float() const { return atof(this->val().c_str()); }
+   virtual double val_double() const { return std::stod(this->val()); }
    virtual bool val_bool() const { return atoi(this->val().c_str()); }
    template <class T>
    T val_t() const;
