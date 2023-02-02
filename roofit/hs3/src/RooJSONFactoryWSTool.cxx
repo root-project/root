@@ -224,14 +224,14 @@ RooJSONFactoryWSTool::Var::Var(const JSONNode &val)
       if (!val.has_child("min"))
          this->min = 0;
       else
-         this->min = val["min"].val_float();
+         this->min = val["min"].val_double();
       if (!val.has_child("max"))
          this->max = 1;
       else
-         this->max = val["max"].val_float();
+         this->max = val["max"].val_double();
    } else if (val.is_seq()) {
       for (size_t i = 0; i < val.num_children(); ++i) {
-         this->bounds.push_back(val[i].val_float());
+         this->bounds.push_back(val[i].val_double());
       }
       this->nbins = this->bounds.size();
       this->min = this->bounds[0];
@@ -852,9 +852,9 @@ std::map<std::string, std::unique_ptr<RooAbsData>> RooJSONFactoryWSTool::loadDat
             }
             for (size_t j = 0; j < point.num_children(); ++j) {
                auto *v = static_cast<RooRealVar *>(varlist.at(j));
-               v->setVal(point[j].val_float());
+               v->setVal(point[j].val_double());
             }
-            data->add(vars, weights[i].val_float());
+            data->add(vars, weights[i].val_double());
          }
          dataMap[name] = std::move(data);
       } else if (p.has_child("index")) {
@@ -1045,7 +1045,7 @@ std::unique_ptr<RooDataHist> RooJSONFactoryWSTool::readBinnedData(RooWorkspace &
          RooRealVar *v = (RooRealVar *)(varlist.at(i));
          v->setBin(bins[ibin][i]);
       }
-      dh->add(varlist, counts[ibin].val_float());
+      dh->add(varlist, counts[ibin].val_double());
    }
    // re-enable dirty flag propagation
    for (size_t i = 0; i < varlist.size(); ++i) {
@@ -1182,17 +1182,17 @@ void RooJSONFactoryWSTool::importVariable(const JSONNode &p)
 void RooJSONFactoryWSTool::configureVariable(const JSONNode &p, RooRealVar &v)
 {
    if (p.has_child("value"))
-      v.setVal(p["value"].val_float());
+      v.setVal(p["value"].val_double());
    if (p.has_child("min"))
-      v.setMin(p["min"].val_float());
+      v.setMin(p["min"].val_double());
    if (p.has_child("max"))
-      v.setMax(p["max"].val_float());
+      v.setMax(p["max"].val_double());
    if (p.has_child("nbins"))
       v.setBins(p["nbins"].val_int());
    if (p.has_child("relErr"))
-      v.setError(v.getVal() * p["relErr"].val_float());
+      v.setError(v.getVal() * p["relErr"].val_double());
    if (p.has_child("err"))
-      v.setError(p["err"].val_float());
+      v.setError(p["err"].val_double());
    if (p.has_child("const"))
       v.setConstant(p["const"].val_bool());
    else

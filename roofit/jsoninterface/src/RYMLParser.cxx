@@ -171,7 +171,7 @@ TRYMLTree::Node &TRYMLTree::Node::operator<<(int i)
 
 TRYMLTree::Node &TRYMLTree::Node::operator<<(double d)
 {
-   // write an float to this node
+   // write a double to this node
    node->get() << d;
    return *this;
 }
