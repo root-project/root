@@ -949,7 +949,7 @@ Bool_t TChain::GetBranchStatus(const char* branchname) const
 
 TTree::TClusterIterator TChain::GetClusterIterator(Long64_t /* firstentry */)
 {
-   Fatal("GetClusterIterator","Not support for TChain object");
+   Fatal("GetClusterIterator","TChain objects are not supported");
    return TTree::GetClusterIterator(-1);
 }
 
