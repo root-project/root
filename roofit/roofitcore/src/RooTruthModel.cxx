@@ -371,8 +371,22 @@ double RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) cons
       double result(0) ;
       if (tau==0) return 0 ;
       double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      if (basisSign != Minus) result += exp(-xmax/tau)*(-1/tau*sin(dm*xmax) - dm*cos(dm*xmax)) + dm;  // fixed FMV 08/29/03
-      if (basisSign != Plus)  result -= exp( xmin/tau)*(-1/tau*sin(dm*(-xmin)) - dm*cos(dm*(-xmin))) + dm ;  // fixed FMV 08/29/03
+      if (basisSign != Minus) {
+         double term = exp(-xmax/tau);
+         // We only multiply with the sine term if the coefficient is non zero,
+         // i.e. if xmax was not infinity. Otherwise, we are evaluating the
+         // sine of infinity, whic is NAN! Same applies to the other terms
+         // below.
+         if(term > 0.0) term *= -1/tau*sin(dm*xmax) - dm*cos(dm*xmax);
+         term += dm;
+         result += term;
+      }
+      if (basisSign != Plus) {
+         double term = exp(xmin/tau);
+         if (term > 0.0) term *= -1/tau*sin(dm*(-xmin)) - dm*cos(dm*(-xmin));
+         term += dm;
+         result -= term;
+      }
       return result / (1/(tau*tau) + dm*dm) ;
     }
   case cosBasis:
@@ -380,8 +394,18 @@ double RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) cons
       double result(0) ;
       if (tau==0) return 1 ;
       double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      if (basisSign != Minus) result += exp(-xmax/tau)*(-1/tau*cos(dm*xmax) + dm*sin(dm*xmax)) + 1/tau ;
-      if (basisSign != Plus)  result += exp( xmin/tau)*(-1/tau*cos(dm*(-xmin)) + dm*sin(dm*(-xmin))) + 1/tau ; // fixed FMV 08/29/03
+      if (basisSign != Minus) {
+         double term = exp(-xmax/tau);
+         if(term > 0.0) term *= -1/tau*cos(dm*xmax) + dm*sin(dm*xmax);
+         term += 1/tau;
+         result += term;
+      }
+      if (basisSign != Plus) {
+         double term = exp( xmin/tau);
+         if(term > 0.0) term *= -1/tau*cos(dm*(-xmin)) + dm*sin(dm*(-xmin));
+         term += 1/tau;
+         result += term;
+      }
       return result / (1/(tau*tau) + dm*dm) ;
     }
   case linBasis:
