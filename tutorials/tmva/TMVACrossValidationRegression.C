@@ -107,7 +107,7 @@ int TMVACrossValidationRegression()
    TString infileName("./files/tmva_reg_example.root");
    TFile * inputFile = getDataFile(infileName);
 
-   TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
+   TMVA::DataLoader *dataloader=new TMVA::DataLoader("datasetcvreg");
 
    dataloader->AddVariable("var1", "Variable 1", "units", 'F');
    dataloader->AddVariable("var2", "Variable 2", "units", 'F');

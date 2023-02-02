@@ -147,7 +147,7 @@ void TMVARegression( TString myMethodList = "" )
                                                "!V:!Silent:Color:DrawProgressBar:AnalysisType=Regression" );
 
 
-   TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
+   TMVA::DataLoader *dataloader=new TMVA::DataLoader("datasetreg");
    // If you wish to modify default settings
    // (please check "src/Config.h" to see all available global options)
    //

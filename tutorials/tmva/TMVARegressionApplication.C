@@ -116,7 +116,7 @@ void TMVARegressionApplication( TString myMethodList = "" )
 
    // --- Book the MVA methods
 
-   TString dir    = "dataset/weights/";
+   TString dir    = "datasetreg/weights/";
    TString prefix = "TMVARegression";
 
    // Book method(s)
