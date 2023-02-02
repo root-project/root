@@ -522,8 +522,6 @@ It is now possible to do the same with the ROOT TGraph:
    g->Draw();
 ```
 
-So, if we take the same example as above, and leave out the x-points, the diagram will look like this:
-
 ## 3D Graphics Libraries
 
 - REve / Eve7 now uses `RenderCore` to visualize 3D objects in JavaScript, replacing the use of `Three.js`.
