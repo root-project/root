@@ -347,17 +347,21 @@ double RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) cons
   //cout << " calling RooTruthModel::analyticalIntegral with basisType " << basisType << endl;
 
   double tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+
+  const double xmin = x.min(rangeName);
+  const double xmax = x.max(rangeName);
+
   switch (basisType) {
   case expBasis:
     {
       // WVE fixed for ranges
       double result(0) ;
       if (tau==0) return 1 ;
-      if ((basisSign != Minus) && (x.max(rangeName)>0)) {
-   result += tau*(-exp(-x.max(rangeName)/tau) -  -exp(-max(0.,x.min(rangeName))/tau) ) ; // plus and both
+      if ((basisSign != Minus) && (xmax>0)) {
+   result += tau*(-exp(-xmax/tau) -  -exp(-max(0.,xmin)/tau) ) ; // plus and both
       }
-      if ((basisSign != Plus) && (x.min(rangeName)<0)) {
-   result -= tau*(-exp(-max(0.,x.min(rangeName))/tau)) - -tau*exp(-x.max(rangeName)/tau) ;   // minus and both
+      if ((basisSign != Plus) && (xmin<0)) {
+   result -= tau*(-exp(-max(0.,xmin)/tau)) - -tau*exp(-xmax/tau) ;   // minus and both
       }
 
       return result ;
@@ -367,8 +371,8 @@ double RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) cons
       double result(0) ;
       if (tau==0) return 0 ;
       double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      if (basisSign != Minus) result += exp(-x.max(rangeName)/tau)*(-1/tau*sin(dm*x.max(rangeName)) - dm*cos(dm*x.max(rangeName))) + dm;  // fixed FMV 08/29/03
-      if (basisSign != Plus)  result -= exp( x.min(rangeName)/tau)*(-1/tau*sin(dm*(-x.min(rangeName))) - dm*cos(dm*(-x.min(rangeName)))) + dm ;  // fixed FMV 08/29/03
+      if (basisSign != Minus) result += exp(-xmax/tau)*(-1/tau*sin(dm*xmax) - dm*cos(dm*xmax)) + dm;  // fixed FMV 08/29/03
+      if (basisSign != Plus)  result -= exp( xmin/tau)*(-1/tau*sin(dm*(-xmin)) - dm*cos(dm*(-xmin))) + dm ;  // fixed FMV 08/29/03
       return result / (1/(tau*tau) + dm*dm) ;
     }
   case cosBasis:
@@ -376,20 +380,20 @@ double RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) cons
       double result(0) ;
       if (tau==0) return 1 ;
       double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      if (basisSign != Minus) result += exp(-x.max(rangeName)/tau)*(-1/tau*cos(dm*x.max(rangeName)) + dm*sin(dm*x.max(rangeName))) + 1/tau ;
-      if (basisSign != Plus)  result += exp( x.min(rangeName)/tau)*(-1/tau*cos(dm*(-x.min(rangeName))) + dm*sin(dm*(-x.min(rangeName)))) + 1/tau ; // fixed FMV 08/29/03
+      if (basisSign != Minus) result += exp(-xmax/tau)*(-1/tau*cos(dm*xmax) + dm*sin(dm*xmax)) + 1/tau ;
+      if (basisSign != Plus)  result += exp( xmin/tau)*(-1/tau*cos(dm*(-xmin)) + dm*sin(dm*(-xmin))) + 1/tau ; // fixed FMV 08/29/03
       return result / (1/(tau*tau) + dm*dm) ;
     }
   case linBasis:
     {
       if (tau==0) return 0 ;
-      double t_max = x.max(rangeName)/tau ;
+      double t_max = xmax/tau ;
       return tau*( 1 - (1 + t_max)*exp(-t_max) ) ;
     }
   case quadBasis:
     {
       if (tau==0) return 0 ;
-      double t_max = x.max(rangeName)/tau ;
+      double t_max = xmax/tau ;
       return tau*( 2 - (2 + (2 + t_max)*t_max)*exp(-t_max) ) ;
     }
   case sinhBasis:
@@ -399,8 +403,8 @@ double RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) cons
       double dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
       double taup = 2*tau/(2-tau*dg);
       double taum = 2*tau/(2+tau*dg);
-      if (basisSign != Minus) result += 0.5*( taup*(1-exp(-x.max(rangeName)/taup)) - taum*(1-exp(-x.max(rangeName)/taum)) ) ;
-      if (basisSign != Plus)  result -= 0.5*( taup*(1-exp( x.min(rangeName)/taup)) - taum*(1-exp( x.min(rangeName)/taum)) ) ;
+      if (basisSign != Minus) result += 0.5*( taup*(1-exp(-xmax/taup)) - taum*(1-exp(-xmax/taum)) ) ;
+      if (basisSign != Plus)  result -= 0.5*( taup*(1-exp( xmin/taup)) - taum*(1-exp( xmin/taum)) ) ;
       return result ;
     }
   case coshBasis:
@@ -410,8 +414,8 @@ double RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) cons
       double dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
       double taup = 2*tau/(2-tau*dg);
       double taum = 2*tau/(2+tau*dg);
-      if (basisSign != Minus) result += 0.5*( taup*(1-exp(-x.max(rangeName)/taup)) + taum*(1-exp(-x.max(rangeName)/taum)) ) ;
-      if (basisSign != Plus)  result += 0.5*( taup*(1-exp( x.min(rangeName)/taup)) + taum*(1-exp( x.min(rangeName)/taum)) ) ;
+      if (basisSign != Minus) result += 0.5*( taup*(1-exp(-xmax/taup)) + taum*(1-exp(-xmax/taum)) ) ;
+      if (basisSign != Plus)  result += 0.5*( taup*(1-exp( xmin/taup)) + taum*(1-exp( xmin/taum)) ) ;
       return result ;
     }
   default:
