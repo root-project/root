@@ -129,8 +129,7 @@ llvm and clang have been upgraded to version 13.
 C++20 support will be provided as part of this release (not yet available for 6.28/00).
 cling has been upgraded to use llvm's new just-in-time compilation engive ORCv2.
 
-Cling's pointer validity check is now turned only in interactive mode.
-This improves performance for jitted code.
+Cling checks pointer validity now only in interactive mode, improving performance for jitted code in batch systems.
 
 #### Support for profiling/debugging interpreted/JITted code
 
