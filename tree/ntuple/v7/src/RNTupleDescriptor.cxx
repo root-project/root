@@ -364,6 +364,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleDescriptor> ROOT::Experimental::RNTup
    clone->fOnDiskHeaderSize = fOnDiskHeaderSize;
    clone->fOnDiskFooterSize = fOnDiskFooterSize;
    clone->fNEntries = fNEntries;
+   clone->fNPhysicalColumns = fNPhysicalColumns;
    clone->fGeneration = fGeneration;
    for (const auto &d : fFieldDescriptors)
       clone->fFieldDescriptors.emplace(d.first, d.second.Clone());
