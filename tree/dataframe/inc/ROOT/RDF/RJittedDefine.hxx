@@ -63,6 +63,8 @@ public:
    void FinalizeSlot(unsigned int slot) final;
    void MakeVariations(const std::vector<std::string> &variations) final;
    RDefineBase &GetVariedDefine(const std::string &variationName) final;
+   std::size_t GetTypeSize() const final;
+   bool IsDefinePerSample() const final;
 };
 
 } // ns RDF

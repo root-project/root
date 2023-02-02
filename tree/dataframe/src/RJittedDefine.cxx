@@ -68,3 +68,15 @@ RDefineBase &RJittedDefine::GetVariedDefine(const std::string &variationName)
    assert(fConcreteDefine != nullptr);
    return fConcreteDefine->GetVariedDefine(variationName);
 }
+
+std::size_t RJittedDefine::GetTypeSize() const
+{
+   assert(fConcreteDefine != nullptr);
+   return fConcreteDefine->GetTypeSize();
+}
+
+bool RJittedDefine::IsDefinePerSample() const
+{
+   assert(fConcreteDefine != nullptr);
+   return fConcreteDefine->IsDefinePerSample();
+}

@@ -195,6 +195,10 @@ public:
 
       return *(it->second);
    }
+
+   std::size_t GetTypeSize() const final { return sizeof(ret_type); }
+
+   bool IsDefinePerSample() const final { return false; }
 };
 
 } // ns RDF

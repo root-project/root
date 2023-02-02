@@ -35,13 +35,17 @@ class R__CLING_PTRCHECK(off) RDefineReader final : public ROOT::Detail::RDF::RCo
    /// The slot this value belongs to.
    unsigned int fSlot = std::numeric_limits<unsigned int>::max();
 
-   void *GetImpl(std::size_t offset) final { return static_cast<char *>(fValuePtr) + offset; }
+   /// Step size (in bytes) between one value and the next in a bulk.
+   std::size_t fValueStep;
+
+   void *GetImpl(std::size_t offset) final { return static_cast<char *>(fValuePtr) + offset*fValueStep; }
 
    void LoadImpl(const RMaskedEntryRange &mask, std::size_t bulkSize) final { fDefine.Update(fSlot, mask, bulkSize); }
 
 public:
    RDefineReader(unsigned int slot, RDFDetail::RDefineBase &define)
-      : fDefine(define), fValuePtr(define.GetValuePtr(slot)), fSlot(slot)
+      : fDefine(define), fValuePtr(define.GetValuePtr(slot)), fSlot(slot),
+        fValueStep(fDefine.IsDefinePerSample() ? 0 : fDefine.GetTypeSize())
    {
    }
 };

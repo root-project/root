@@ -78,6 +78,10 @@ public:
 
    /// Return a clone of this Define that works with values in the variationName "universe".
    virtual RDefineBase &GetVariedDefine(const std::string &variationName) = 0;
+
+   virtual std::size_t GetTypeSize() const = 0;
+
+   virtual bool IsDefinePerSample() const = 0;
 };
 
 } // ns RDF

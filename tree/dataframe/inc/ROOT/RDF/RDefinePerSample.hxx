@@ -83,6 +83,10 @@ public:
       R__ASSERT(false && "This should never be called");
       return *this;
    }
+
+   std::size_t GetTypeSize() const final { return sizeof(RetType_t); }
+
+   bool IsDefinePerSample() const final { return true; }
 };
 
 } // namespace RDF
