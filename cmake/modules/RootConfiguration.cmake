@@ -225,11 +225,6 @@ set(gfallibdir ${GFAL_LIBRARY_DIR})
 set(gfallib ${GFAL_LIBRARY})
 set(gfalincdir ${GFAL_INCLUDE_DIR})
 
-set(buildalien ${value${alien}})
-set(alienlibdir ${ALIEN_LIBRARY_DIR})
-set(alienlib ${ALIEN_LIBRARY})
-set(alienincdir ${ALIEN_INCLUDE_DIR})
-
 set(buildarrow ${value${arrow}})
 set(arrowlibdir ${ARROW_LIBRARY_DIR})
 set(arrowlib ${ARROW_LIBRARY})

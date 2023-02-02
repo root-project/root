@@ -15,10 +15,6 @@ if(netx)
   add_subdirectory(netx)
 endif()
 
-if(alien)
-  add_subdirectory(alien)
-endif()
-
 if(monalisa)
   add_subdirectory(monalisa)
 endif()

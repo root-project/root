@@ -395,13 +395,3 @@ action =
 pattern = *.root.lnk
 icon = rootdblnk_s.xpm rootdblnk_t.xpm
 action = TFile *ftmp = new TFile("%s")
-
-[alien/file]
-pattern = TAlienDirectoryEntry
-icon = rootdb_s.xpm rootdb_t.xpm
-action = ->Browse()
-
-[alien/file]
-pattern = TAlienFile
-icon = rootdb_s.xpm rootdb_t.xpm
-action = ->Browse()

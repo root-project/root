@@ -357,7 +357,6 @@ Class holding info about the file being opened
 class TFileOpenHandle : public TNamed {
 
 friend class TFile;
-friend class TAlienFile;
 
 private:
    TString  fOpt;            ///< Options
