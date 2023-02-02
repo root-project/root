@@ -40,7 +40,7 @@ namespace TMVA {
    private:
       std::map<TString,int> fHistoryMap;
       std::vector<IterationRecord*> fHistoryData;
-   
+
    };
 
 } // namespace TMVA

@@ -126,7 +126,7 @@ TXMLFile::TXMLFile(const char *filename, Option_t *option, const char *title, In
    gDirectory = nullptr;
    SetName(filename);
    SetTitle(title);
-   TDirectoryFile::Build(this, 0);
+   TDirectoryFile::Build(this, nullptr);
 
    fD = -1;
    fFile = this;
@@ -140,7 +140,7 @@ TXMLFile::TXMLFile(const char *filename, Option_t *option, const char *title, In
    fSum2Buffer = 0;
    fBytesRead = 0;
    fBytesWrite = 0;
-   fClassIndex = 0;
+   fClassIndex = nullptr;
    fSeekInfo = 0;
    fNbytesInfo = 0;
    fProcessIDs = nullptr;
@@ -770,7 +770,9 @@ void TXMLFile::StoreStreamerElement(XMLNodePointer_t infonode, TStreamerElement 
 
    XMLNodePointer_t node = fXML->NewChild(infonode, nullptr, cl->GetName());
 
-   char sbuf[100], namebuf[100];
+   constexpr std::size_t bufferSize = 100;
+   char sbuf[bufferSize];
+   char namebuf[bufferSize];
 
    fXML->NewAttr(node, nullptr, "name", elem->GetName());
    if (strlen(elem->GetTitle()) > 0)
@@ -789,16 +791,16 @@ void TXMLFile::StoreStreamerElement(XMLNodePointer_t infonode, TStreamerElement 
       fXML->NewIntAttr(node, "numdim", elem->GetArrayDim());
 
       for (int ndim = 0; ndim < elem->GetArrayDim(); ndim++) {
-         sprintf(namebuf, "dim%d", ndim);
+         snprintf(namebuf, bufferSize, "dim%d", ndim);
          fXML->NewIntAttr(node, namebuf, elem->GetMaxIndex(ndim));
       }
    }
 
    if (cl == TStreamerBase::Class()) {
       TStreamerBase *base = (TStreamerBase *)elem;
-      sprintf(sbuf, "%d", base->GetBaseVersion());
+      snprintf(sbuf, bufferSize, "%d", base->GetBaseVersion());
       fXML->NewAttr(node, nullptr, "baseversion", sbuf);
-      sprintf(sbuf, "%d", base->GetBaseCheckSum());
+      snprintf(sbuf, bufferSize, "%d", base->GetBaseCheckSum());
       fXML->NewAttr(node, nullptr, "basechecksum", sbuf);
    } else if (cl == TStreamerBasicPointer::Class()) {
       TStreamerBasicPointer *bptr = (TStreamerBasicPointer *)elem;
@@ -869,7 +871,7 @@ void TXMLFile::ReadStreamerElement(XMLNodePointer_t node, TStreamerInfo *info)
       int numdim = fXML->GetIntAttr(node, "numdim");
       elem->SetArrayDim(numdim);
       for (int ndim = 0; ndim < numdim; ndim++) {
-         sprintf(namebuf, "dim%d", ndim);
+         snprintf(namebuf, 100, "dim%d", ndim);
          int maxi = fXML->GetIntAttr(node, namebuf);
          elem->SetMaxIndex(ndim, maxi);
       }
@@ -890,20 +892,20 @@ void TXMLFile::ReadStreamerElement(XMLNodePointer_t node, TStreamerInfo *info)
 /// TXMLSetup::kSpecialized = 2
 ///    This is default layout of the file, when xml nodes names class names and data member
 ///    names are used. For instance:
-///          <TAttLine version="1">
-///            <fLineColor v="1"/>
-///            <fLineStyle v="1"/>
-///            <fLineWidth v="1"/>
-///          </TAttLine>
+///          `<TAttLine version="1">`
+///            `<fLineColor v="1"/>`
+///            `<fLineStyle v="1"/>`
+///            `<fLineWidth v="1"/>`
+///          `</TAttLine>`
 ///
 /// TXMLSetup::kGeneralized = 3
 ///    For this layout all nodes name does not depend from class definitions.
 ///    The same class looks like
-///          <Class name="TAttLine" version="1">
-///            <Member name="fLineColor" v="1"/>
-///            <Member name="fLineStyle" v="1"/>
-///            <Member name="fLineWidth" v="1"/>
-///          </Member>
+///          `<Class name="TAttLine" version="1">`
+///            `<Member name="fLineColor" v="1"/>`
+///            `<Member name="fLineStyle" v="1"/>`
+///            `<Member name="fLineWidth" v="1"/>`
+///          `</Member>`
 ///
 
 void TXMLFile::SetXmlLayout(EXMLLayout layout)
@@ -939,11 +941,11 @@ void TXMLFile::SetUsedDtd(Bool_t use)
 /// Specify usage of namespaces in xml file
 /// In current implementation every instrumented class in file gets its unique namespace,
 /// which is equal to name of class and refer to root documentation page like
-/// <TAttPad xmlns:TAttPad="http://root.cern.ch/root/htmldoc/TAttPad.html" version="3">
+/// `<TAttPad xmlns:TAttPad="http://root.cern.ch/root/htmldoc/TAttPad.html" version="3">`
 /// And xml node for class member gets its name as combination of class name and member name
-///            <TAttPad:fLeftMargin v="0.100000"/>
-///            <TAttPad:fRightMargin v="0.100000"/>
-///            <TAttPad:fBottomMargin v="0.100000"/>
+///            `<TAttPad:fLeftMargin v="0.100000"/>`
+///            `<TAttPad:fRightMargin v="0.100000"/>`
+///            `<TAttPad:fBottomMargin v="0.100000"/>`
 ///            and so on
 /// Usage of namespace increase size of xml file, but makes file more readable
 /// and allows to produce DTD in the case, when in several classes data member has same name

@@ -10,6 +10,7 @@
 #define LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_PS4CPU_H
 
 #include "Gnu.h"
+#include "clang/Basic/LangOptions.h"
 #include "clang/Driver/Tool.h"
 #include "clang/Driver/ToolChain.h"
 
@@ -26,8 +27,7 @@ void addSanitizerArgs(const ToolChain &TC, llvm::opt::ArgStringList &CmdArgs);
 
 class LLVM_LIBRARY_VISIBILITY Assemble : public Tool {
 public:
-  Assemble(const ToolChain &TC)
-      : Tool("PS4cpu::Assemble", "assembler", TC, RF_Full) {}
+  Assemble(const ToolChain &TC) : Tool("PS4cpu::Assemble", "assembler", TC) {}
 
   bool hasIntegratedCPP() const override { return false; }
 
@@ -40,7 +40,7 @@ public:
 
 class LLVM_LIBRARY_VISIBILITY Link : public Tool {
 public:
-  Link(const ToolChain &TC) : Tool("PS4cpu::Link", "linker", TC, RF_Full) {}
+  Link(const ToolChain &TC) : Tool("PS4cpu::Link", "linker", TC) {}
 
   bool hasIntegratedCPP() const override { return false; }
   bool isLinkJob() const override { return true; }
@@ -74,8 +74,9 @@ public:
   bool HasNativeLLVMSupport() const override;
   bool isPICDefault() const override;
 
-  unsigned GetDefaultStackProtectorLevel(bool KernelOrKext) const override {
-    return 2; // SSPStrong
+  LangOptions::StackProtectorMode
+  GetDefaultStackProtectorLevel(bool KernelOrKext) const override {
+    return LangOptions::SSPStrong;
   }
 
   llvm::DebuggerKind getDefaultDebuggerTuning() const override {
@@ -83,6 +84,24 @@ public:
   }
 
   SanitizerMask getSupportedSanitizers() const override;
+
+  // PS4 toolchain uses legacy thin LTO API, which is not
+  // capable of unit splitting.
+  bool canSplitThinLTOUnit() const override { return false; }
+
+  void addClangTargetOptions(
+    const llvm::opt::ArgList &DriverArgs,
+    llvm::opt::ArgStringList &CC1Args,
+    Action::OffloadKind DeviceOffloadingKind) const override;
+
+  llvm::DenormalMode getDefaultDenormalModeForType(
+      const llvm::opt::ArgList &DriverArgs, const JobAction &JA,
+      const llvm::fltSemantics *FPType) const override {
+    // DAZ and FTZ are on by default.
+    return llvm::DenormalMode::getPreserveSign();
+  }
+
+  bool useRelaxRelocations() const override { return true; }
 
 protected:
   Tool *buildAssembler() const override;

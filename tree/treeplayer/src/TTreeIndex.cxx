@@ -177,8 +177,27 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
          fMajorFormula->UpdateFormulaLeaves();
          fMinorFormula->UpdateFormulaLeaves();
       }
-      tmp_major[i] = (Long64_t) fMajorFormula->EvalInstance<LongDouble_t>();
-      tmp_minor[i] = (Long64_t) fMinorFormula->EvalInstance<LongDouble_t>();
+      auto GetAndRangeCheck = [this](bool isMajor, Long64_t entry) {
+         LongDouble_t ret = (isMajor ? fMajorFormula : fMinorFormula)->EvalInstance<LongDouble_t>();
+         // Check whether the value (vs significant bits) of ldRet can represent
+         // the full precision of the returned value. If we return 10^60, the
+         // value fits into a long double, but if sizeof(long double) ==
+         // sizeof(double) it cannot store the ones: the value returned by
+         // EvalInstance() only stores the higher bits.
+         LongDouble_t retCloserToZero = ret;
+         if (ret > 0)
+            retCloserToZero -= 1;
+         else
+            retCloserToZero += 1;
+         if (retCloserToZero == ret) {
+            Warning("TTreeIndex",
+                    "In tree entry %lld, %s value %s=%Lf possibly out of range for internal `long double`", entry,
+                    isMajor ? "major" : "minor", isMajor ? fMajorName.Data() : fMinorName.Data(), ret);
+         }
+         return ret;
+      };
+      tmp_major[i] = GetAndRangeCheck(true, i);
+      tmp_minor[i] = GetAndRangeCheck(false, i);
    }
    fIndex = new Long64_t[fN];
    for(i = 0; i < fN; i++) { fIndex[i] = i; }

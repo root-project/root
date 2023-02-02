@@ -37,7 +37,7 @@ namespace ROOT {
 
 //___________________________________________________________________________________
 /**
-   class containg the result of the fit and all the related information
+   class containing the result of the fit and all the related information
    (fitted parameter values, error, covariance matrix and minimizer result information)
    Contains a pointer also to the fitted (model) function, modified with the fit parameter values.
    When the fit is valid, it is constructed from a  Minimizer and a model function pointer
@@ -61,21 +61,12 @@ public:
    */
    FitResult (const FitConfig & fconfig);
 
-
-   /**
-      Copy constructor.
-   */
-   FitResult(const FitResult & rhs);
-
-   /**
-      Assignment operator
-   */
-   FitResult & operator = (const FitResult & rhs);
+   // default copy constructor and assignment can be used
 
    /**
       Destructor
    */
-   virtual ~FitResult ();
+   virtual ~FitResult () {}
 
 
 public:
@@ -85,7 +76,7 @@ public:
       Run also Minos if requested from the configuration
     */
    void FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, const FitConfig & fconfig,  const std::shared_ptr<IModelFunction> & f,
-              bool isValid, unsigned int sizeOfData = 0, bool binFit = true, const ROOT::Math::IMultiGenFunction * chi2func = 0, unsigned int ncalls = 0);
+              bool isValid, unsigned int sizeOfData = 0, bool binFit = true, const ROOT::Math::IMultiGenFunction *chi2func = nullptr, unsigned int ncalls = 0);
 
 
    /**
@@ -103,12 +94,12 @@ public:
 
    /**
        True if fit successful, otherwise false.
-       A fit is considered successful if the minimizer succeded in finding the
+       A fit is considered successful if the minimizer succeeded in finding the
        minimum. It could happen that subsequent operations like error analysis (e.g. Minos)
        failed. In that case the status can be still true if the original minimization algorithm
        succeeded in finding the minimum.
        One can query in that case the minimizer return status using Status().
-       It is responability to the Minimizer class to tag a found minimum as valid or not
+       It is responsibility to the Minimizer class to tag a found minimum as valid or not
        and to produce also a status code.
    */
    bool IsValid() const { return fValid; }
@@ -168,7 +159,7 @@ public:
    /// parameter errors (return st::vector)
    const std::vector<double> & Errors() const { return fErrors; }
    /// parameter errors (return const pointer)
-   const double * GetErrors() const { return (fErrors.empty()) ? 0 : &fErrors.front(); }
+   const double * GetErrors() const { return fErrors.empty() ? nullptr : &fErrors.front(); }
 
    /// parameter values (return std::vector)
    const std::vector<double> & Parameters() const { return fParams; }
@@ -264,10 +255,10 @@ public:
       stride1 indicates the stride in the coordinate space while stride2 the stride in dimension space.
       For 1-dim points : stride1=1, stride2=1
       for multi-dim points arranged as (x0,x1,...,xN,y0,....yN)          stride1=1      stride2=n
-      for multi-dim points arraged  as (x0,y0,..,x1,y1,...,xN,yN,..)     stride1=ndim,  stride2=1
+      for multi-dim points arranged  as (x0,y0,..,x1,y1,...,xN,yN,..)     stride1=ndim,  stride2=1
 
       the confidence interval are returned in the array ci
-      cl is the desired confidedence interval value
+      cl is the desired confidence interval value
       norm is a flag to control if the intervals need to be normalized to the chi2/ndf value
       The intervals can be corrected optionally using the chi2/ndf value of the fit if a chi2 fit is performed.
       This has changed since ROOT 6.14, before the interval were corrected by default.
@@ -278,7 +269,7 @@ public:
       evaluate confidence interval for the point specified in the passed data sets
       the confidence interval are returned in the array ci
       cl is the desired confidence interval value.
-      This method is mantained for backward compatibility and will be deprecated
+      This method is maintained for backward compatibility and will be deprecated
    */
    void GetConfidenceIntervals(const BinData & data, double * ci, double cl=0.95, bool norm = false ) const;
 
@@ -305,10 +296,10 @@ public:
    ///normalize errors using chi2/ndf for chi2 fits
    void NormalizeErrors();
 
-   /// flag to chek if errors are normalized
+   /// flag to check if errors are normalized
    bool NormalizedErrors() const { return fNormalized; }
 
-   /// print the result and optionaly covariance matrix and correlations
+   /// print the result and optionally covariance matrix and correlations
    void Print(std::ostream & os, bool covmat = false) const;
 
    ///print error matrix and correlations
@@ -341,30 +332,30 @@ protected:
    friend class Fitter;
 
 
-   bool fValid;             // flag for indicating valid fit
-   bool fNormalized;        // flag for indicating is errors are normalized
-   unsigned int fNFree;     // number of fit free parameters (total parameters are in size of parameter vector)
-   unsigned int fNdf;       // number of degree of freedom
-   unsigned int fNCalls;    // number of function calls
-   int fStatus;             // minimizer status code
-   int fCovStatus;          // covariance matrix status code
-   double fVal;             // minimum function value
-   double fEdm;             // expected distance from mimimum
-   double fChi2;            // fit chi2 value (different than fval in case of chi2 fits)
-   std::shared_ptr<ROOT::Math::Minimizer> fMinimizer; //! minimizer object used for fitting
-   std::shared_ptr<ROOT::Math::IMultiGenFunction> fObjFunc; //! objective function used for fitting
-   std::shared_ptr<IModelFunction> fFitFunc; //! model function resulting  from the fit.
-   std::shared_ptr<FitData>    fFitData; //! data set used in the fit
-   std::map<unsigned int, bool>           fFixedParams; // list of fixed parameters
-   std::map<unsigned int, unsigned int>   fBoundParams; // list of limited parameters
-   std::vector<std::pair<double,double> >  fParamBounds; // parameter bounds
-   std::vector<double>         fParams;  // parameter values. Size is total number of parameters
-   std::vector<double>         fErrors;  // errors
-   std::vector<double>         fCovMatrix;  // covariance matrix (size is npar*(npar+1)/2) where npar is total parameters
-   std::vector<double>         fGlobalCC;   // global Correlation coefficient
-   std::map<unsigned int, std::pair<double,double> > fMinosErrors;   // map contains the two Minos errors
-   std::string fMinimType;              // string indicating type of minimizer
-   std::vector<std::string> fParNames;  // parameter names (only with FCN only fits, when fFitFunc=0)
+   bool fValid;             ///< flag for indicating valid fit
+   bool fNormalized;        ///< flag for indicating is errors are normalized
+   unsigned int fNFree;     ///< number of fit free parameters (total parameters are in size of parameter vector)
+   unsigned int fNdf;       ///< number of degree of freedom
+   unsigned int fNCalls;    ///< number of function calls
+   int fStatus;             ///< minimizer status code
+   int fCovStatus;          ///< covariance matrix status code
+   double fVal;             ///< minimum function value
+   double fEdm;             ///< expected distance from minimum
+   double fChi2;            ///< fit chi2 value (different than fval in case of chi2 fits)
+   std::shared_ptr<ROOT::Math::Minimizer> fMinimizer;       ///<! minimizer object used for fitting
+   std::shared_ptr<ROOT::Math::IMultiGenFunction> fObjFunc; ///<! objective function used for fitting
+   std::shared_ptr<IModelFunction> fFitFunc;                ///<! model function resulting  from the fit.
+   std::shared_ptr<FitData>    fFitData;                    ///<! data set used in the fit
+   std::map<unsigned int, bool>           fFixedParams;     ///< list of fixed parameters
+   std::map<unsigned int, unsigned int>   fBoundParams;     ///< list of limited parameters
+   std::vector<std::pair<double,double> >  fParamBounds;    ///< parameter bounds
+   std::vector<double>         fParams;    ///< parameter values. Size is total number of parameters
+   std::vector<double>         fErrors;    ///< errors
+   std::vector<double>         fCovMatrix; ///< covariance matrix (size is npar*(npar+1)/2) where npar is total parameters
+   std::vector<double>         fGlobalCC;  ///< global Correlation coefficient
+   std::map<unsigned int, std::pair<double,double> > fMinosErrors; ///< map contains the two Minos errors
+   std::string fMinimType;              ///< string indicating type of minimizer
+   std::vector<std::string> fParNames;  ///< parameter names (only with FCN only fits, when fFitFunc=0)
 
 };
 

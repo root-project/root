@@ -13,7 +13,7 @@
 ## \macro_output
 ## \macro_code
 ##
-## \authors Juan Fernando Jaramillo Botero
+## \authors Juan Fernando, Jaramillo Botero
 
 from ROOT import TPrincipal, gRandom, TBrowser, vector
 

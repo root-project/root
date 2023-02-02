@@ -41,20 +41,20 @@ namespace RooStats {
       /// be overridden by calling one of the Set...() methods.
       MCMCCalculator(RooAbsData& data, const ModelConfig& model);
 
-      virtual ~MCMCCalculator() {}
+      ~MCMCCalculator() override {}
 
       /// Main interface to get a ConfInterval
-      virtual MCMCInterval* GetInterval() const;
+      MCMCInterval* GetInterval() const override;
 
       /// Get the size of the test (eg. rate of Type I error)
-      virtual Double_t Size() const {return fSize;}
+      double Size() const override {return fSize;}
       /// Get the Confidence level for the test
-      virtual Double_t ConfidenceLevel() const {return 1.-fSize;}
+      double ConfidenceLevel() const override {return 1.-fSize;}
 
-      virtual void SetModel(const ModelConfig & model);
+      void SetModel(const ModelConfig & model) override;
 
       /// Set the DataSet if not already there
-      virtual void SetData(RooAbsData& data) { fData = &data; }
+      void SetData(RooAbsData& data) override { fData = &data; }
 
       /// Set the Pdf if not already there
       virtual void SetPdf(RooAbsPdf& pdf) { fPdf = &pdf; }
@@ -81,10 +81,10 @@ namespace RooStats {
       virtual void SetGlobalObservables(const RooArgSet& set) {fGlobalObs.removeAll(); fGlobalObs.add(set);}
 
       /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      virtual void SetTestSize(Double_t size) {fSize = size;}
+      void SetTestSize(double size) override {fSize = size;}
 
       /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-      virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;}
+      void SetConfidenceLevel(double cl) override {fSize = 1.-cl;}
 
       /// set the proposal function for suggesting new points for the MCMC
       virtual void SetProposalFunction(ProposalFunction& proposalFunction)
@@ -105,9 +105,9 @@ namespace RooStats {
       virtual void SetAxes(RooArgList& axes)
       { fAxes = &axes; }
       /// set whether to use kernel estimation to determine the interval
-      virtual void SetUseKeys(Bool_t useKeys) { fUseKeys = useKeys; }
+      virtual void SetUseKeys(bool useKeys) { fUseKeys = useKeys; }
       /// set whether to use sparse histogram (if using histogram at all)
-      virtual void SetUseSparseHist(Bool_t useSparseHist)
+      virtual void SetUseSparseHist(bool useSparseHist)
       { fUseSparseHist = useSparseHist; }
 
       /// set what type of interval to have the MCMCInterval represent
@@ -118,7 +118,7 @@ namespace RooStats {
       /// MCMCInterval to find a tail-fraction interval.
       /// Note: that `a' must be in the range 0 <= a <= 1
       /// or the user will be notified of the error
-      virtual void SetLeftSideTailFraction(Double_t a);
+      virtual void SetLeftSideTailFraction(double a);
 
       /// Set the desired level of confidence-level accuracy  for Keys interval
       /// determination.
@@ -130,7 +130,7 @@ namespace RooStats {
       /// Any value of this "epsilon" > 0 is considered acceptable, though it is
       /// advisable to not use a value too small, because the integration of the
       /// Keys PDF sometimes does not have extremely high accuracy.
-      virtual void SetKeysConfidenceAccuracy(Double_t epsilon)
+      virtual void SetKeysConfidenceAccuracy(double epsilon)
       {
          if (epsilon < 0)
             coutE(InputArguments) << "MCMCInterval::SetEpsilon will not allow "
@@ -153,7 +153,7 @@ namespace RooStats {
       /// satisfy this condition:
       ///
       /// TMath::Abs(a - b) < TMath::Abs(delta * (a + b)/2)
-      virtual void SetKeysTerminationThreshold(Double_t delta)
+      virtual void SetKeysTerminationThreshold(double delta)
       {
          if (delta < 0.)
             coutE(InputArguments) << "MCMCInterval::SetDelta will not allow "
@@ -164,46 +164,45 @@ namespace RooStats {
 
    protected:
 
-      Double_t fSize;   // size of the test (eg. specified rate of Type I error)
-      RooArgSet   fPOI;        // parameters of interest for interval
-      RooArgSet   fNuisParams; // nuisance parameters for interval (not really used)
-      RooArgSet   fChainParams; // parameters to store in the chain (if not specified they are all of them )
-      RooArgSet   fConditionalObs; // conditional observables
-      RooArgSet   fGlobalObs;     // global observables
-      mutable ProposalFunction* fPropFunc; // Proposal function for MCMC integration
-      RooAbsPdf * fPdf;        // pointer to common PDF (owned by the workspace)
-      RooAbsPdf * fPriorPdf;   // pointer to prior  PDF (owned by the workspace)
-      RooAbsData * fData;     // pointer to the data (owned by the workspace)
-      Int_t fNumIters; // number of iterations to run metropolis algorithm
-      Int_t fNumBurnInSteps; // number of iterations to discard as burn-in, starting from the first
-      Int_t fNumBins; // set the number of bins to create for each
-                      // axis when constructing the interval
-      RooArgList * fAxes; // which variables to put on each axis
-      Bool_t fUseKeys; // whether to use kernel estimation to determine interval
-      Bool_t fUseSparseHist; // whether to use sparse histogram (if using hist at all)
-      Double_t fLeftSideTF; // left side tail-fraction for interval
-      Double_t fEpsilon; // acceptable error for Keys interval determination
+      double fSize;              ///< size of the test (eg. specified rate of Type I error)
+      RooArgSet   fPOI;            ///< parameters of interest for interval
+      RooArgSet   fNuisParams;     ///< nuisance parameters for interval (not really used)
+      RooArgSet   fChainParams;    ///< parameters to store in the chain (if not specified they are all of them )
+      RooArgSet   fConditionalObs; ///< conditional observables
+      RooArgSet   fGlobalObs;      ///< global observables
+      mutable ProposalFunction* fPropFunc; ///< Proposal function for MCMC integration
+      RooAbsPdf * fPdf;      ///< pointer to common PDF (owned by the workspace)
+      RooAbsPdf * fPriorPdf; ///< pointer to prior  PDF (owned by the workspace)
+      RooAbsData * fData;    ///< pointer to the data (owned by the workspace)
+      Int_t fNumIters;       ///< number of iterations to run metropolis algorithm
+      Int_t fNumBurnInSteps; ///< number of iterations to discard as burn-in, starting from the first
+      Int_t fNumBins;        ///< set the number of bins to create for each
+                             ///< axis when constructing the interval
+      RooArgList * fAxes;    ///< which variables to put on each axis
+      bool fUseKeys;       ///< whether to use kernel estimation to determine interval
+      bool fUseSparseHist; ///< whether to use sparse histogram (if using hist at all)
+      double fLeftSideTF;  ///< left side tail-fraction for interval
+      double fEpsilon;     ///< acceptable error for Keys interval determination
 
-      Double_t fDelta; // acceptable error for Keys cutoffs being equal
-                       // topCutoff (a) considered == bottomCutoff (b) iff
-                       // (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2));
-                       // Theoretically, the Abs is not needed here, but
-                       // floating-point arithmetic does not always work
-                       // perfectly, and the Abs doesn't hurt
+      double fDelta; ///< acceptable error for Keys cutoffs being equal
+                       ///< topCutoff (a) considered == bottomCutoff (b) iff
+                       ///< (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2));
+                       ///< Theoretically, the Abs is not needed here, but
+                       ///< floating-point arithmetic does not always work
+                       ///< perfectly, and the Abs doesn't hurt
       enum MCMCInterval::IntervalType fIntervalType; // type of interval to find
 
       void SetupBasicUsage();
-      void SetBins(const RooAbsCollection& coll, Int_t numBins) const
+      void SetBins(const RooAbsCollection &coll, Int_t numBins) const
       {
-         TIterator* it = coll.createIterator();
-         RooAbsArg* r;
-         while ((r = (RooAbsArg*)it->Next()) != NULL)
-            if (dynamic_cast<RooRealVar*>(r))
-               ((RooRealVar*)r)->setBins(numBins);
-         delete it;
+         for (auto *r : dynamic_range_cast<RooRealVar *>(coll)){
+            if (r) {
+               r->setBins(numBins);
+            }
+         }
       }
 
-      ClassDef(MCMCCalculator,4) // Markov Chain Monte Carlo calculator for Bayesian credible intervals
+      ClassDefOverride(MCMCCalculator,4) // Markov Chain Monte Carlo calculator for Bayesian credible intervals
    };
 }
 

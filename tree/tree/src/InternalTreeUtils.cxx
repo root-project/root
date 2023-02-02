@@ -7,19 +7,69 @@
  *************************************************************************/
 
 #include "ROOT/InternalTreeUtils.hxx"
-#include "TTree.h"
+#include "TBranch.h" // Usage of TBranch in ClearMustCleanupBits
 #include "TChain.h"
+#include "TCollection.h" // TRangeStaticCast
 #include "TFile.h"
 #include "TFriendElement.h"
+#include "TTree.h"
 
 #include <utility> // std::pair
 #include <vector>
 #include <stdexcept> // std::runtime_error
 #include <string>
 
+// Recursively get the top level branches from the specified tree and all of its attached friends.
+static void GetTopLevelBranchNamesImpl(TTree &t, std::unordered_set<std::string> &bNamesReg, std::vector<std::string> &bNames,
+                                       std::unordered_set<TTree *> &analysedTrees, const std::string friendName = "")
+{
+   if (!analysedTrees.insert(&t).second) {
+      return;
+   }
+
+   auto branches = t.GetListOfBranches();
+   if (branches) {
+      for (auto branchObj : *branches) {
+         const auto name = branchObj->GetName();
+         if (bNamesReg.insert(name).second) {
+            bNames.emplace_back(name);
+         } else if (!friendName.empty()) {
+            // If this is a friend and the branch name has already been inserted, it might be because the friend
+            // has a branch with the same name as a branch in the main tree. Let's add it as <friendname>.<branchname>.
+            const auto longName = friendName + "." + name;
+            if (bNamesReg.insert(longName).second)
+               bNames.emplace_back(longName);
+         }
+      }
+   }
+
+   auto friendTrees = t.GetListOfFriends();
+
+   if (!friendTrees)
+      return;
+
+   for (auto friendTreeObj : *friendTrees) {
+      auto friendElement = static_cast<TFriendElement *>(friendTreeObj);
+      auto friendTree = friendElement->GetTree();
+      const std::string frName(friendElement->GetName()); // this gets us the TTree name or the friend alias if any
+      GetTopLevelBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees, frName);
+   }
+}
+
 namespace ROOT {
 namespace Internal {
 namespace TreeUtils {
+
+///////////////////////////////////////////////////////////////////////////////
+/// Get all the top-level branches names, including the ones of the friend trees
+std::vector<std::string> GetTopLevelBranchNames(TTree &t)
+{
+   std::unordered_set<std::string> bNamesSet;
+   std::vector<std::string> bNames;
+   std::unordered_set<TTree *> analysedTrees;
+   GetTopLevelBranchNamesImpl(t, bNamesSet, bNames, analysedTrees);
+   return bNames;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \fn std::vector<std::string> GetFileNamesFromTree(const TTree &tree)
@@ -81,22 +131,23 @@ std::vector<std::string> GetFileNamesFromTree(const TTree &tree)
 /// position `i` represent the `i`-th friend of the input tree. If this friend
 /// is a TTree, the `i`-th element of each of the three vectors will contain
 /// respectively:
+///
 /// - A pair with the name and alias of the tree (the alias might not be
 ///   present, in which case it will be just an empty string).
 /// - A vector with a single string representing the path to current file where
 ///   the tree is stored.
 /// - An empty vector.
-/// .
+///
 /// If the `i`-th friend is a TChain instead, the `i`-th element of each of the
 /// three vectors will contain respectively:
 /// - A pair with the name and alias of the chain (if present, both might be
 ///   empty strings).
 /// - A vector with all the paths to the files contained in the chain.
-/// - A vector with all the the names of the trees making up the chain,
+/// - A vector with all the names of the trees making up the chain,
 ///   associated with the file names of the previous vector.
-RFriendInfo GetFriendInfo(const TTree &tree)
+ROOT::TreeUtils::RFriendInfo GetFriendInfo(const TTree &tree)
 {
-   std::vector<NameAlias> friendNames;
+   std::vector<std::pair<std::string, std::string>> friendNames;
    std::vector<std::vector<std::string>> friendFileNames;
    std::vector<std::vector<std::string>> friendChainSubNames;
 
@@ -108,7 +159,7 @@ RFriendInfo GetFriendInfo(const TTree &tree)
    // loaded here if we used tree.GetTree()->GetListOfFriends().
    const auto *friends = tree.GetListOfFriends();
    if (!friends)
-      return RFriendInfo();
+      return ROOT::TreeUtils::RFriendInfo();
 
    for (auto fr : *friends) {
       // Can't pass fr as const TObject* because TFriendElement::GetTree is not const.
@@ -169,7 +220,8 @@ RFriendInfo GetFriendInfo(const TTree &tree)
       }
    }
 
-   return RFriendInfo{std::move(friendNames), std::move(friendFileNames), std::move(friendChainSubNames)};
+   return ROOT::TreeUtils::RFriendInfo{std::move(friendNames), std::move(friendFileNames),
+                                       std::move(friendChainSubNames)};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -210,8 +262,8 @@ std::vector<std::string> GetTreeFullPaths(const TTree &tree)
       if (dynamic_cast<const TFile *>(treeDir)) {
          return {tree.GetName()};
       }
-      std::string fullPath = treeDir->GetPath();           // e.g. "file.root:/dir"
-      fullPath = fullPath.substr(fullPath.find(":/") + 1); // e.g. "/dir"
+      std::string fullPath = treeDir->GetPath();            // e.g. "file.root:/dir"
+      fullPath = fullPath.substr(fullPath.rfind(":/") + 1); // e.g. "/dir"
       fullPath += "/";
       fullPath += tree.GetName(); // e.g. "/dir/tree"
       return {fullPath};
@@ -219,6 +271,39 @@ std::vector<std::string> GetTreeFullPaths(const TTree &tree)
 
    // We do our best and return the name of the tree
    return {tree.GetName()};
+}
+
+/// Reset the kMustCleanup bit of a TObjArray of TBranch objects (e.g. returned by TTree::GetListOfBranches).
+///
+/// In some rare cases, all branches in a TTree can have their kMustCleanup bit set, which causes a large amount
+/// of contention at teardown due to concurrent calls to RecursiveRemove (which needs to take the global lock).
+/// This helper function checks the first branch of the array and if it has the kMustCleanup bit set, it resets
+/// it for all branches in the array, recursively going through sub-branches and leaves.
+void ClearMustCleanupBits(TObjArray &branches)
+{
+   if (branches.GetEntries() == 0 || branches.At(0)->TestBit(kMustCleanup) == false)
+      return; // we assume either no branches have the bit set, or all do. we never encountered an hybrid case
+
+   for (auto *branch : ROOT::Detail::TRangeStaticCast<TBranch>(branches)) {
+      branch->ResetBit(kMustCleanup);
+      TObjArray *subBranches = branch->GetListOfBranches();
+      ClearMustCleanupBits(*subBranches);
+      TObjArray *leaves = branch->GetListOfLeaves();
+      if (leaves->GetEntries() > 0 && leaves->At(0)->TestBit(kMustCleanup) == true) {
+         for (TObject *leaf : *leaves)
+            leaf->ResetBit(kMustCleanup);
+      }
+   }
+}
+
+/// \brief Create a TChain object with options that avoid common causes of thread contention.
+///
+/// In particular, set its kWithoutGlobalRegistration mode and reset its kMustCleanup bit.
+std::unique_ptr<TChain> MakeChainForMT(const std::string &name, const std::string &title)
+{
+   auto c = std::make_unique<TChain>(name.c_str(), title.c_str(), TChain::kWithoutGlobalRegistration);
+   c->ResetBit(TObject::kMustCleanup);
+   return c;
 }
 
 } // namespace TreeUtils

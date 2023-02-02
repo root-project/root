@@ -47,7 +47,7 @@ ClassImp(TRootSecContext);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor for SecContext object.
-/// User and host from url = user@host .
+/// User and host from url = `user@host` .
 
 TRootSecContext::TRootSecContext(const char *url, Int_t meth, Int_t offset,
                                  const char *id, const char *token,
@@ -185,7 +185,7 @@ Bool_t TRootSecContext::CleanupSecContext(Bool_t all)
 ////////////////////////////////////////////////////////////////////////////////
 /// If opt is "F" (default) print object content.
 /// If opt is "<number>" print in special form for calls within THostAuth
-/// with cardinality <number>
+/// with cardinality "<number>"
 /// If opt is "S" prints short in-line form for calls within TFTP,
 /// TSlave, TProof ...
 

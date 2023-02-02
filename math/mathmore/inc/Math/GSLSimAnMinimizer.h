@@ -83,7 +83,7 @@ namespace ROOT {
       /**
          Destructor (no operations)
       */
-      virtual ~GSLSimAnMinimizer();
+      ~GSLSimAnMinimizer() override;
 
    private:
       // usually copying is non trivial, so we make this unaccessible
@@ -105,10 +105,10 @@ namespace ROOT {
 
    public:
       /// method to perform the minimization
-      virtual bool Minimize();
+      bool Minimize() override;
 
       /// number of calls
-      unsigned int NCalls() const;
+      unsigned int NCalls() const override;
 
       /// Get current minimizer option parameteres
       const GSLSimAnParams &MinimizerParameters() const { return fSolver.Params(); }

@@ -83,7 +83,7 @@ public:
    /**
       Constructor with a generator instance and given level of log output
    */
-   TUnuran (TRandom * r = 0, unsigned int log = 0);
+   TUnuran (TRandom * r = nullptr, unsigned int log = 0);
 
 
    /**
@@ -127,8 +127,8 @@ public:
       For the list of available method for 1D cont. distribution see the
       <A href="http://statmath.wu-wien.ac.at/unuran/doc/unuran.html#Methods_005ffor_005fCONT">UnuRan doc</A>.
       A re-initialization is needed whenever distribution parameters have been changed.
-      Note that the method string can contain in addition to the method name all the specific method 
-      parameters specified using the UNURAN method string API. 
+      Note that the method string can contain in addition to the method name all the specific method
+      parameters specified using the UNURAN method string API.
       For example a valid string can be `"method=arou; max_segments=1000; max_sqhratio = 0.9"`
    */
    bool Init(const TUnuranContDist & distr, const std::string & method = "auto");
@@ -188,7 +188,7 @@ public:
    bool InitBinomial(unsigned int ntot, double prob, const std::string & method = "dstd");
 
    /**
-      Reinitialize UNURAN by changing the distribution parameters but mantaining same distribution and method.
+      Reinitialize UNURAN by changing the distribution parameters but maintaining same distribution and method.
       It is implemented now only for predefined discrete distributions like the poisson or the binomial
    */
    bool ReInitDiscrDist(unsigned int npar, double * params);
@@ -239,7 +239,7 @@ public:
 
    /**
       Return the dimension of unuran generator method.
-      For 1D method returns 1 and for the multi-dimensional case 
+      For 1D method returns 1 and for the multi-dimensional case
       must be equal to the distribution dimension.
    */
    int GetDimension() const;
@@ -249,17 +249,17 @@ public:
       See documentation of `unuran_distr_get_type` for the possible
       types of distributions.
    */
-   int GetDistType() const; 
+   int GetDistType() const;
 
-   /// Return true for a univariate continous distribution.
-   bool IsDistCont() const; 
-   /// Return true for a multivariate continous distribution.
-   bool IsDistMultiCont() const;  
+   /// Return true for a univariate continuous distribution.
+   bool IsDistCont() const;
+   /// Return true for a multivariate continuous distribution.
+   bool IsDistMultiCont() const;
     /// Return true for a discrete distribution.
-   bool IsDistDiscrete() const; 
+   bool IsDistDiscrete() const;
     /// Return true for an empirical distribution.
-   bool IsDistEmpirical() const; 
-   
+   bool IsDistEmpirical() const;
+
 
 
    /**

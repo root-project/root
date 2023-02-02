@@ -71,8 +71,6 @@ X86MCAsmInfoDarwin::X86MCAsmInfoDarwin(const Triple &T) {
   // (actually, must, since otherwise the non-extern relocations we produce
   // overwhelm ld64's tiny little mind and it fails).
   DwarfFDESymbolsUseAbsDiff = true;
-
-  UseIntegratedAssembler = true;
 }
 
 X86_64MCAsmInfoDarwin::X86_64MCAsmInfoDarwin(const Triple &Triple)
@@ -83,7 +81,7 @@ void X86ELFMCAsmInfo::anchor() { }
 
 X86ELFMCAsmInfo::X86ELFMCAsmInfo(const Triple &T) {
   bool is64Bit = T.getArch() == Triple::x86_64;
-  bool isX32 = T.getEnvironment() == Triple::GNUX32;
+  bool isX32 = T.isX32();
 
   // For ELF, x86-64 pointer size depends on the ABI.
   // For x86-64 without the x32 ABI, pointer size is 8. For x86 and for x86-64
@@ -102,10 +100,6 @@ X86ELFMCAsmInfo::X86ELFMCAsmInfo(const Triple &T) {
 
   // Exceptions handling
   ExceptionsType = ExceptionHandling::DwarfCFI;
-
-  // Always enable the integrated assembler by default.
-  // Clang also enabled it when the OS is Solaris but that is redundant here.
-  UseIntegratedAssembler = true;
 }
 
 const MCExpr *
@@ -141,8 +135,19 @@ X86MCAsmInfoMicrosoft::X86MCAsmInfoMicrosoft(const Triple &Triple) {
   TextAlignFillValue = 0x90;
 
   AllowAtInName = true;
+}
 
-  UseIntegratedAssembler = true;
+void X86MCAsmInfoMicrosoftMASM::anchor() { }
+
+X86MCAsmInfoMicrosoftMASM::X86MCAsmInfoMicrosoftMASM(const Triple &Triple)
+    : X86MCAsmInfoMicrosoft(Triple) {
+  DollarIsPC = true;
+  SeparatorString = "\n";
+  CommentString = ";";
+  AllowAdditionalComments = false;
+  AllowQuestionAtStartOfIdentifier = true;
+  AllowDollarAtStartOfIdentifier = true;
+  AllowAtAtStartOfIdentifier = true;
 }
 
 void X86MCAsmInfoGNUCOFF::anchor() { }
@@ -163,5 +168,5 @@ X86MCAsmInfoGNUCOFF::X86MCAsmInfoGNUCOFF(const Triple &Triple) {
 
   TextAlignFillValue = 0x90;
 
-  UseIntegratedAssembler = true;
+  AllowAtInName = true;
 }

@@ -24,10 +24,10 @@ public:
   enum RooTruthBasis { noBasis=0, expBasisMinus= 1, expBasisSum= 2, expBasisPlus= 3,
                                   sinBasisMinus=11, sinBasisSum=12, sinBasisPlus=13,
                                   cosBasisMinus=21, cosBasisSum=22, cosBasisPlus=23,
-		                                                    linBasisPlus=33,
-		                                                   quadBasisPlus=43,
-				  coshBasisMinus=51,coshBasisSum=52,coshBasisPlus=53,
- 	  			  sinhBasisMinus=61,sinhBasisSum=62,sinhBasisPlus=63,
+                                                          linBasisPlus=33,
+                                                         quadBasisPlus=43,
+              coshBasisMinus=51,coshBasisSum=52,coshBasisPlus=53,
+                 sinhBasisMinus=61,sinhBasisSum=62,sinhBasisPlus=63,
                        genericBasis=100 } ;
 
   enum BasisType { none=0, expBasis=1, sinBasis=2, cosBasis=3,
@@ -37,27 +37,30 @@ public:
   // Constructors, assignment etc
   inline RooTruthModel() { }
   RooTruthModel(const char *name, const char *title, RooAbsRealLValue& x) ;
-  RooTruthModel(const RooTruthModel& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooTruthModel(*this,newname) ; }
-  virtual ~RooTruthModel();
-  
-  virtual Int_t basisCode(const char* name) const ;
+  RooTruthModel(const RooTruthModel& other, const char* name=nullptr);
+  TObject* clone(const char* newname) const override { return new RooTruthModel(*this,newname) ; }
+  ~RooTruthModel() override;
 
-  virtual RooAbsGenContext* modelGenContext(const RooAbsAnaConvPdf& convPdf, const RooArgSet &vars,
-                                            const RooDataSet *prototype=0, const RooArgSet* auxProto=0,
-                                            Bool_t verbose= kFALSE) const;
+  Int_t basisCode(const char* name) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void generateEvent(Int_t code);
+  RooAbsGenContext* modelGenContext(const RooAbsAnaConvPdf& convPdf, const RooArgSet &vars,
+                                            const RooDataSet *prototype=nullptr, const RooArgSet* auxProto=nullptr,
+                                            bool verbose= false) const override;
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
+  void generateEvent(Int_t code) override;
+
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
+
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
 protected:
-  virtual Double_t evaluate() const ;
-  virtual void changeBasis(RooFormulaVar* basis) ;
+  double evaluate() const override ;
+  void changeBasis(RooFormulaVar* basis) override ;
 
-  ClassDef(RooTruthModel,1) // Truth resolution model (delta function)
+  ClassDefOverride(RooTruthModel,1) // Truth resolution model (delta function)
 };
 
 #endif

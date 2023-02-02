@@ -37,7 +37,7 @@ ClassImp(TGVFileSplitter);
 /// Create a splitter.
 
 TGSplitter::TGSplitter(const TGWindow *p, UInt_t w, UInt_t h,
-                       UInt_t options, ULong_t back) :
+                       UInt_t options, Pixel_t back) :
    TGFrame(p, w, h, options, back),
    fDragging        (kFALSE),
    fExternalHandler (kFALSE),
@@ -67,7 +67,7 @@ void TGSplitter::Moved(Int_t delta)
 /// Create a vertical splitter.
 
 TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h,
-              UInt_t options, ULong_t back) : TGSplitter(p, w, h, options, back)
+              UInt_t options, Pixel_t back) : TGSplitter(p, w, h, options, back)
 {
    fSplitCursor = kNone;
    fSplitterPic = fClient->GetPicture("splitterv.xpm");
@@ -262,7 +262,7 @@ void TGVSplitter::DrawBorder()
 /// Create a horizontal splitter.
 
 TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h,
-              UInt_t options, ULong_t back) : TGSplitter(p, w, h, options, back)
+              UInt_t options, Pixel_t back) : TGSplitter(p, w, h, options, back)
 {
    fSplitCursor = kNone;
    fSplitterPic = 0;

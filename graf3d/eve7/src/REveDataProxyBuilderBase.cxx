@@ -105,7 +105,7 @@ void REveDataProxyBuilderBase::Build()
                {
                   REveProjectionManager *pmgr = projectedProduct->GetManager();
                   Float_t oldDepth = pmgr->GetCurrentDepth();
-                  pmgr->SetCurrentDepth(m_layer);
+                  pmgr->SetCurrentDepth(m_collection->GetLayer());
                   Int_t cnt = 0;
                   REveElement *projectedProductAsElement = projectedProduct->GetProjectedAsElement();
                   // printf("projectedProduct children %d, product children %d\n", projectedProductAsElement->NumChildren(), product->NumChildren());
@@ -197,11 +197,11 @@ REveDataProxyBuilderBase::LocalModelChanges(int, REveElement*, const REveViewCon
 //------------------------------------------------------------------------------
 
 void
-REveDataProxyBuilderBase::FillImpliedSelected( REveElement::Set_t& impSet)
+REveDataProxyBuilderBase::FillImpliedSelected( REveElement::Set_t& impSet, const std::set<int> &sec_idcs)
 {
    for (auto &prod: m_products)
    {
-      FillImpliedSelected(impSet, prod);
+      FillImpliedSelected(impSet, sec_idcs, prod);
    }
 }
 

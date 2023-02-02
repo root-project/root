@@ -28,13 +28,13 @@ class RooMoment : public RooAbsMoment {
 public:
 
   RooMoment() ;
-  RooMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, Int_t order=1, Bool_t central=kFALSE, Bool_t takeRoot=kFALSE) ;
-  RooMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Int_t order=1, Bool_t central=kFALSE, Bool_t takeRoot=kFALSE,
-	    Bool_t intNSet=kFALSE) ;
-  virtual ~RooMoment() ;
+  RooMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, Int_t order=1, bool central=false, bool takeRoot=false) ;
+  RooMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Int_t order=1, bool central=false, bool takeRoot=false,
+       bool intNSet=false) ;
+  ~RooMoment() override ;
 
-  RooMoment(const RooMoment& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooMoment(*this, newname); }
+  RooMoment(const RooMoment& other, const char *name = nullptr);
+  TObject* clone(const char* newname) const override { return new RooMoment(*this, newname); }
 
   const RooAbsReal& xF() { return _xf.arg() ; }
   const RooAbsReal& ixF() { return _ixf.arg() ; }
@@ -42,12 +42,12 @@ public:
 
 protected:
 
-  RooRealProxy _xf ;                     // X*F 
-  RooRealProxy _ixf ;                    // Int(X*F(X))dx ;
-  RooRealProxy _if ;                     // Int(F(x))dx ;
-  Double_t evaluate() const;
+  RooRealProxy _xf ;                     ///< X*F
+  RooRealProxy _ixf ;                    ///< Int(X*F(X))dx ;
+  RooRealProxy _if ;                     ///< Int(F(x))dx ;
+  double evaluate() const override;
 
-  ClassDef(RooMoment,1) // Representation of moment in a RooAbsReal in a given RooRealVar
+  ClassDefOverride(RooMoment,1) // Representation of moment in a RooAbsReal in a given RooRealVar
 };
 
 #endif

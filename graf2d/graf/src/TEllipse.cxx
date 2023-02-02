@@ -101,7 +101,7 @@ TEllipse::TEllipse(const TEllipse &ellipse) : TObject(ellipse), TAttLine(ellipse
    fPhimax = 360;
    fTheta  = 0;
 
-   ((TEllipse&)ellipse).Copy(*this);
+   ellipse.TEllipse::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

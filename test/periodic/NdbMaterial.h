@@ -77,10 +77,10 @@ public:
       eBoilingPoint   = elem.eBoilingPoint;
    }
 
-   ~NdbMaterial() {}
+   ~NdbMaterial() override {}
 
    // --- Virtual functions ---
-   Int_t Compare(const TObject *o) const
+   Int_t Compare(const TObject *o) const override
       { return ((eId==((NdbMaterial*)o)->eId)? 0 :
             (eId > ((NdbMaterial*)o)->eId)? 1 : -1 ); }
 
@@ -99,7 +99,7 @@ public:
    inline Float_t MeltingPoint()   const { return eMeltingPoint; }
    inline Float_t BoilingPoint()   const { return eBoilingPoint; }
 
-   ClassDef(NdbMaterial,1)
+   ClassDefOverride(NdbMaterial,1)
 
 }; // NdbMaterial
 

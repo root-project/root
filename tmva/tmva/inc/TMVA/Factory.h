@@ -87,7 +87,7 @@ namespace TMVA {
       // no default  constructor
       Factory( TString theJobName, TFile* theTargetFile, TString theOption = "" );
 
-      // contructor to work without file
+      // constructor to work without file
       Factory( TString theJobName, TString theOption = "" );
 
       // default destructor
@@ -103,7 +103,7 @@ namespace TMVA {
                               TString /*methodTitle*/,
                               TString /*methodOption*/,
                               TMVA::Types::EMVA /*theComposite*/,
-                              TString /*compositeOption = ""*/ ) { return 0; }
+                              TString /*compositeOption = ""*/ ) { return nullptr; }
 
       // optimize all booked methods (well, if desired by the method)
       std::map<TString,Double_t> OptimizeAllMethods                 (TString fomType="ROCIntegral", TString fitType="FitGA");
@@ -140,7 +140,7 @@ namespace TMVA {
       // classifiers are printed
       virtual void MakeClass(const TString& datasetname , const TString& methodTitle = "" ) const;
 
-      // prints classifier-specific hepl messages, dedicated to
+      // prints classifier-specific help messages, dedicated to
       // help with the optimisation and configuration options tuning.
       // If no classifier name is given, help messages for all booked
       // classifiers are printed
@@ -202,24 +202,24 @@ namespace TMVA {
 
       // data members
 
-      TFile*                             fgTargetFile;     //! ROOT output file
+      TFile*                             fgTargetFile;     ///<! ROOT output file
 
 
-      std::vector<TMVA::VariableTransformBase*> fDefaultTrfs;     //! list of transformations on default DataSet
+      std::vector<TMVA::VariableTransformBase*> fDefaultTrfs;     ///<! list of transformations on default DataSet
 
       // cd to local directory
-      TString                                   fOptions;         //! option string given by construction (presently only "V")
-      TString                                   fTransformations; //! list of transformations to test
-      Bool_t                                    fVerbose;         //! verbose mode
-      TString                                   fVerboseLevel;    //! verbosity level, controls granularity of logging
-      Bool_t                                    fCorrelations;    //! enable to calculate corelations
-      Bool_t                                    fROC;             //! enable to calculate ROC values
-      Bool_t                                    fSilentFile;      //! used in contructor wihtout file
+      TString                                   fOptions;         ///<! option string given by construction (presently only "V")
+      TString                                   fTransformations; ///<! list of transformations to test
+      Bool_t                                    fVerbose;         ///<! verbose mode
+      TString                                   fVerboseLevel;    ///<! verbosity level, controls granularity of logging
+      Bool_t                                    fCorrelations;    ///<! enable to calculate correlations
+      Bool_t                                    fROC;             ///<! enable to calculate ROC values
+      Bool_t                                    fSilentFile;      ///<! used in constructor without file
 
-      TString                                   fJobName;         //! jobname, used as extension in weight file names
+      TString                                   fJobName;         ///<! jobname, used as extension in weight file names
 
-      Types::EAnalysisType                      fAnalysisType;    //! the training type
-      Bool_t                                    fModelPersistence;//! option to save the trained model in xml file or using serialization
+      Types::EAnalysisType                      fAnalysisType;    ///<! the training type
+      Bool_t                                    fModelPersistence;///<! option to save the trained model in xml file or using serialization
 
 
    protected:

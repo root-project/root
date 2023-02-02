@@ -156,7 +156,7 @@ public:
    /*! Read the information and the weights about the layer from XML node. */
    virtual void ReadWeightsFromXML(void *parent) = 0;
 
-   /*! Set Dropout probability. Reimplemented for layesrs supporting droput */
+   /*! Set Dropout probability. Reimplemented for layers supporting droput */
    virtual void SetDropoutProbability(Scalar_t ) {}
 
    /*! Getters */
@@ -478,7 +478,7 @@ template <typename Arch>
 void VGeneralLayer<Architecture_t>::CopyParameters(const VGeneralLayer<Arch> &layer)
 {
    //assert(!std::is_same<Arch, Architecture_t>::value);
-   // copy weights from a different arhcitecture- default generic implementation
+   // copy weights from a different architecture- default generic implementation
    Architecture_t::CopyDiffArch(this->GetWeights(), layer.GetWeights());
    Architecture_t::CopyDiffArch(this->GetBiases(), layer.GetBiases());
 
@@ -521,10 +521,10 @@ template <typename Architecture_t>
 auto VGeneralLayer<Architecture_t>::WriteMatrixToXML(void * node, const char * name, const Matrix_t & matrix) -> void
 {
    auto xmlengine = gTools().xmlengine();
-   void* matnode = xmlengine.NewChild(node, 0, name);
+   void* matnode = xmlengine.NewChild(node, nullptr, name);
 
-   xmlengine.NewAttr(matnode,0,"Rows", gTools().StringFromInt(matrix.GetNrows()) );
-   xmlengine.NewAttr(matnode,0,"Columns", gTools().StringFromInt(matrix.GetNcols()) );
+   xmlengine.NewAttr(matnode,nullptr,"Rows", gTools().StringFromInt(matrix.GetNrows()) );
+   xmlengine.NewAttr(matnode,nullptr,"Columns", gTools().StringFromInt(matrix.GetNcols()) );
    std::stringstream s;
    s.precision( std::numeric_limits<Scalar_t>::digits10 );
    size_t nrows = matrix.GetNrows();

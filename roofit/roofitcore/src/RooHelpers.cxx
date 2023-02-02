@@ -14,16 +14,21 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#include "RooHelpers.h"
-#include "RooAbsPdf.h"
-#include "RooAbsData.h"
-#include "RooDataHist.h"
-#include "RooDataSet.h"
-#include "RooAbsRealLValue.h"
-#include "RooArgList.h"
+#include <RooHelpers.h>
 
-#include "ROOT/StringUtils.hxx"
-#include "TClass.h"
+#include <RooAbsCategory.h>
+#include <RooAbsData.h>
+#include <RooAbsPdf.h>
+#include <RooAbsRealLValue.h>
+#include <RooArgList.h>
+#include <RooDataHist.h>
+#include <RooDataSet.h>
+#include <RooSimultaneous.h>
+#include <RooProdPdf.h>
+#include <RooRealSumPdf.h>
+
+#include <ROOT/StringUtils.hxx>
+#include <TClass.h>
 
 namespace RooHelpers {
 
@@ -138,7 +143,7 @@ void checkRangeOfParameters(const RooAbsReal* callingClass, std::initializer_lis
         rangeMsg << "inf" << closeBr;
 
       oocoutW(callingClass, InputArguments) << "The parameter '" << par->GetName() << "' with range [" << par->getMin("") << ", "
-          << par->getMax() << "] of the " << callingClass->IsA()->GetName() << " '" << callingClass->GetName()
+          << par->getMax() << "] of the " << callingClass->ClassName() << " '" << callingClass->GetName()
           << "' exceeds the safe range of " << rangeMsg.str() << ". Advise to limit its range."
           << (!extraMessage.empty() ? "\n" : "") << extraMessage << std::endl;
     }
@@ -178,48 +183,28 @@ std::pair<double, double> getRangeOrBinningInterval(RooAbsArg const* arg, const 
 
 
 /// Check if there is any overlap when a list of ranges is applied to a set of observables.
-/// \param[in] arg RooAbsCollection with the observables to check for overlap.
-/// \param[in] rangeName The names of the ranges.
-bool checkIfRangesOverlap(RooAbsPdf const& pdf, RooAbsData const& data, std::vector<std::string> const& rangeNames) {
-
-  auto observables = *pdf.getObservables(data);
-
-  auto getLimits = [&](RooAbsRealLValue const& rlv, const char* rangeName) {
-    
-    // RooDataHistCase
-    if(dynamic_cast<RooDataHist const*>(&data)) {
-      if (auto binning = rlv.getBinningPtr(rangeName)) {
-        return getBinningInterval(*binning);
-      } else {
-        // default binning if range is not defined
-        return getBinningInterval(*rlv.getBinningPtr(nullptr));
-      }
-    }
-
-    // RooDataSet and other cases
-    if (rlv.hasRange(rangeName)) {
-      return std::pair<double, double>{rlv.getMin(rangeName), rlv.getMax(rangeName)};
-    }
-    // default range if range with given name is not defined
-    return std::pair<double, double>{rlv.getMin(), rlv.getMax()};
-  };
-
-  auto nObs = observables.size();
-  auto nRanges = rangeNames.size();
-
+/// \param[in] observables The observables to check for overlap
+/// \param[in] rangeNames The names of the ranges.
+bool checkIfRangesOverlap(RooArgSet const& observables, std::vector<std::string> const& rangeNames)
+{
   // cache the range limits in a flat vector
   std::vector<std::pair<double,double>> limits;
-  limits.reserve(nRanges * nObs);
+  limits.reserve(rangeNames.size() * observables.size());
 
   for (auto const& range : rangeNames) {
     for (auto const& obs : observables) {
-      auto rlv = dynamic_cast<RooAbsRealLValue const*>(obs);
-      if(!rlv) {
-        throw std::logic_error("Classes that represent observables are expected to inherit from RooAbsRealLValue!");
+      if(dynamic_cast<RooAbsCategory const*>(obs)) {
+        // Nothing to be done for category observables
+      } else if(auto * rlv = dynamic_cast<RooAbsRealLValue const*>(obs)) {
+        limits.emplace_back(rlv->getMin(range.c_str()), rlv->getMax(range.c_str()));
+      } else {
+        throw std::logic_error("Classes that represent observables are expected to inherit from RooAbsRealLValue or RooAbsCategory!");
       }
-      limits.push_back(getLimits(*rlv, range.c_str()));
     }
   }
+
+  auto nRanges = rangeNames.size();
+  auto nObs = limits.size() / nRanges; // number of observables that are not categories
 
   // loop over pairs of ranges
   for(size_t ir1 = 0; ir1 < nRanges; ++ir1) {
@@ -244,7 +229,7 @@ bool checkIfRangesOverlap(RooAbsPdf const& pdf, RooAbsData const& data, std::vec
 
 
 /// Create a string with all sorted names of RooArgSet elements separated by colons.
-/// \param[in] arg argSet The input RooArgSet.
+/// \param[in] argSet The input RooArgSet.
 std::string getColonSeparatedNameString(RooArgSet const& argSet) {
 
   RooArgList tmp(argSet);
@@ -264,8 +249,8 @@ std::string getColonSeparatedNameString(RooArgSet const& argSet) {
 
 /// Construct a RooArgSet of objects in a RooArgSet whose names match to those
 /// in the names string.
-/// \param[in] arg argSet The input RooArgSet.
-/// \param[in] arg names The names of the objects to select in a colon-separated string.
+/// \param[in] argSet The input RooArgSet.
+/// \param[in] names The names of the objects to select in a colon-separated string.
 RooArgSet selectFromArgSet(RooArgSet const& argSet, std::string const& names) {
   RooArgSet output;
   for(auto const& name : ROOT::Split(names, ":")) {
@@ -274,5 +259,40 @@ RooArgSet selectFromArgSet(RooArgSet const& argSet, std::string const& names) {
   return output;
 }
 
+
+std::string getRangeNameForSimComponent(std::string const& rangeName, bool splitRange, std::string const& catName)
+{
+   if (splitRange && !rangeName.empty()) {
+      std::string out;
+      auto tokens = ROOT::Split(rangeName, ",");
+      for(std::string const& token : tokens) {
+         out += token + "_" + catName + ",";
+      }
+      out.pop_back(); // to remove the last comma
+      return out;
+   }
+
+   return rangeName;
+}
+
+BinnedLOutput getBinnedL(RooAbsPdf &pdf)
+{
+   if (pdf.getAttribute("BinnedLikelihood") && pdf.IsA()->InheritsFrom(RooRealSumPdf::Class())) {
+      // Simplest case: top-level of component is a RooRealSumPdf
+      return {&pdf, true};
+   } else if (pdf.IsA()->InheritsFrom(RooProdPdf::Class())) {
+      // Default case: top-level pdf is a product of RooRealSumPdf and other pdfs
+      for (RooAbsArg *component : static_cast<RooProdPdf &>(pdf).pdfList()) {
+         if (component->getAttribute("BinnedLikelihood") && component->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
+            return {static_cast<RooAbsPdf *>(component), true};
+         }
+         if (component->getAttribute("MAIN_MEASUREMENT")) {
+           // not really a binned pdf, but this prevents a (potentially) long list of subsidiary measurements to be passed to the slave calculator
+           return {static_cast<RooAbsPdf *>(component), false};
+         }
+      }
+   }
+   return {nullptr, false};
+}
 
 }

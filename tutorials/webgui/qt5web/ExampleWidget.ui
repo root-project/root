@@ -63,6 +63,13 @@
                     </widget>
                   </item>
                   <item>
+                    <widget class="QPushButton" name="GeoCanvasBtn" >
+                      <property name="text" >
+                        <string>TGeo in TCanvas</string>
+                      </property>
+                    </widget>
+                  </item>
+                  <item>
                     <widget class="QPushButton" name="ExitBtn" >
                       <property name="text" >
                         <string>Exit</string>
@@ -183,6 +190,12 @@
       <signal>clicked()</signal>
       <receiver>ExampleWidget</receiver>
       <slot>CmsButton_clicked()</slot>
+    </connection>
+    <connection>
+      <sender>GeoCanvasBtn</sender>
+      <signal>clicked()</signal>
+      <receiver>ExampleWidget</receiver>
+      <slot>GeoCanvasButton_clicked()</slot>
     </connection>
     <connection>
       <sender>ExitBtn</sender>

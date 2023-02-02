@@ -13,12 +13,9 @@
 #ifndef ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTETYPES_H
 #define ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTETYPES_H
 
-#include <RooBatchCompute/DataKey.h>
 #include <RooSpan.h>
 
-#include <map>
 #include <vector>
-
 
 #ifdef __CUDACC__
 #define __roodevice__ __device__
@@ -36,14 +33,11 @@ namespace RooBatchCompute {
 
 struct RunContext;
 
-// We have to use map instead of unordered_map because the unordered_maps from
-// nvcc and gcc are not compatible sometimes.
-typedef std::map<DataKey, RooSpan<const double>> DataMap;
-typedef std::vector<DataKey> VarVector;
+typedef std::vector<RooSpan<const double>> VarVector;
 typedef std::vector<double> ArgVector;
 typedef double *__restrict RestrictArr;
 typedef const double *__restrict InputArr;
 
-}
+} // namespace RooBatchCompute
 
 #endif

@@ -19,13 +19,11 @@
 \class RooConvIntegrandBinding
 \ingroup Roofitcore
 
-Implementation of RooAbsFunc that represent the the integrand
+Implementation of RooAbsFunc that represent the integrand
 of a generic (numeric) convolution A (x) B so that it can be
 passed to a numeric integrator. This is a utility class for
 RooNumConvPdf
 **/
-
-#include "RooFit.h"
 
 #include "RooConvIntegrandBinding.h"
 #include "RooAbsReal.h"
@@ -43,34 +41,34 @@ ClassImp(RooConvIntegrandBinding);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooConvIntegrandBinding::RooConvIntegrandBinding(const RooAbsReal& func, const RooAbsReal& model, 
-				       RooAbsReal& xprime, RooAbsReal& x, 
-				       const RooArgSet* nset, Bool_t clipInvalid) :
+RooConvIntegrandBinding::RooConvIntegrandBinding(const RooAbsReal& func, const RooAbsReal& model,
+                   RooAbsReal& xprime, RooAbsReal& x,
+                   const RooArgSet* nset, bool clipInvalid) :
 
   RooAbsFunc(2), _func(&func), _model(&model), _vars(0), _nset(nset), _clipInvalid(clipInvalid)
 {
-  // Constructor where func and model 
+  // Constructor where func and model
   //
   // 'func'  = func(xprime)
   // 'model' = model(xprime)
-  // 
-  // and 
+  //
+  // and
 
-  // 'xprime' is the RRV that should be connected to func and model 
+  // 'xprime' is the RRV that should be connected to func and model
   //          (i.e. the variable that will be integrated over)
   // 'x'      is RRV that represents the value at which the convolution is calculated
   //          (this variable should _not_ be connected to func and model)
   //
-  // this function returns RCBB[x',x] = f[x']*g[x-x'], i.e. the substiturion g[x'] --> g[x-x'] 
+  // this function returns RCBB[x',x] = f[x']*g[x-x'], i.e. the substiturion g[x'] --> g[x-x']
   // is taken care internally
-  // 
+  //
   // The integral of this binding over its 1st arg yields the convolution (f (x) g)[x]
   //
-        
+
   // allocate memory
   _vars= new RooAbsRealLValue*[2];
   if(0 == _vars) {
-    _valid= kFALSE;
+    _valid= false;
     return;
   }
 
@@ -79,17 +77,17 @@ RooConvIntegrandBinding::RooConvIntegrandBinding(const RooAbsReal& func, const R
   if(0 == _vars[0]) {
     oocoutE(&func,InputArguments) << "RooConvIntegrandBinding: cannot bind to ";
     xprime.Print("1");
-    _valid= kFALSE;
+    _valid= false;
   }
 
   _vars[1]= dynamic_cast<RooAbsRealLValue*>(&x);
   if(0 == _vars[1]) {
     oocoutE(&func,InputArguments) << "RooConvIntegrandBinding: cannot bind to ";
     x.Print("1");
-    _valid= kFALSE;
+    _valid= false;
   }
 
-  _xvecValid = kTRUE ;
+  _xvecValid = true ;
 }
 
 
@@ -97,7 +95,7 @@ RooConvIntegrandBinding::RooConvIntegrandBinding(const RooAbsReal& func, const R
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooConvIntegrandBinding::~RooConvIntegrandBinding() 
+RooConvIntegrandBinding::~RooConvIntegrandBinding()
 {
   if(0 != _vars) delete[] _vars;
 }
@@ -106,24 +104,24 @@ RooConvIntegrandBinding::~RooConvIntegrandBinding()
 ////////////////////////////////////////////////////////////////////////////////
 /// Load external input values
 
-void RooConvIntegrandBinding::loadValues(const Double_t xvector[], Bool_t clipInvalid) const 
+void RooConvIntegrandBinding::loadValues(const double xvector[], bool clipInvalid) const
 {
-  _xvecValid = kTRUE ;
+  _xvecValid = true ;
   for(UInt_t index= 0; index < _dimension; index++) {
     if (clipInvalid && !_vars[index]->isValidReal(xvector[index])) {
-      _xvecValid = kFALSE ;
+      _xvecValid = false ;
     } else {
       //cout << "RooConvBasBinding::loadValues[" << index << "] loading value " << xvector[index] << endl ;
       _vars[index]->setVal(xvector[index]);
     }
   }
-}  
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate self at given parameter values
 
-Double_t RooConvIntegrandBinding::operator()(const Double_t xvector[]) const 
+double RooConvIntegrandBinding::operator()(const double xvector[]) const
 {
   assert(isValid());
   _ncall++ ;
@@ -132,15 +130,15 @@ Double_t RooConvIntegrandBinding::operator()(const Double_t xvector[]) const
   loadValues(xvector);
   if (!_xvecValid) return 0 ;
   //cout << "RooConvIntegrandBinding::operator(): evaluating f(x') at x' = " << xvector[0] << endl ;
-  Double_t f_xp = _func->getVal(_nset) ;
+  double f_xp = _func->getVal(_nset) ;
 
   // Next evaluate model at x-x'
-  const Double_t xvec_tmp[2] = { xvector[1]-xvector[0] , xvector[1] } ;
-  loadValues(xvec_tmp,kTRUE);
+  const double xvec_tmp[2] = { xvector[1]-xvector[0] , xvector[1] } ;
+  loadValues(xvec_tmp,true);
   if (!_xvecValid) return 0 ;
-  Double_t g_xmxp = _model->getVal(_nset) ;
+  double g_xmxp = _model->getVal(_nset) ;
 
-  //cout << "RooConvIntegrandBinding::operator(): evaluating g(x-x') at x-x' = " << _vars[0]->getVal() << " = " << g_xmxp << endl ; 
+  //cout << "RooConvIntegrandBinding::operator(): evaluating g(x-x') at x-x' = " << _vars[0]->getVal() << " = " << g_xmxp << endl ;
   //cout << "RooConvIntegrandBinding::operator(): return value = " << f_xp << " * " << g_xmxp << " = " << f_xp*g_xmxp << endl ;
 
   //cout << "_vars[0] = " << _vars[0]->getVal() << " _vars[1] = " << _vars[1]->getVal() << endl ;
@@ -151,9 +149,9 @@ Double_t RooConvIntegrandBinding::operator()(const Double_t xvector[]) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retrieve lower limit of i-th observable 
+/// Retrieve lower limit of i-th observable
 
-Double_t RooConvIntegrandBinding::getMinLimit(UInt_t index) const 
+double RooConvIntegrandBinding::getMinLimit(UInt_t index) const
 {
   assert(isValid());
   return _vars[index]->getMin();
@@ -161,9 +159,9 @@ Double_t RooConvIntegrandBinding::getMinLimit(UInt_t index) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retrieve upper limit of i-th observable 
+/// Retrieve upper limit of i-th observable
 
-Double_t RooConvIntegrandBinding::getMaxLimit(UInt_t index) const 
+double RooConvIntegrandBinding::getMaxLimit(UInt_t index) const
 {
   assert(isValid());
   return _vars[index]->getMax();

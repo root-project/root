@@ -308,8 +308,8 @@ void TDataSetManagerFile::InitLocalCache()
 ////////////////////////////////////////////////////////////////////////////////
 /// Parse the input string and set the init bits accordingly
 /// Format is
-///    dir:<datasetdir> [mss:<mss-url>] [opt:<base-options>]
-/// The <datasetdir> is mandatory.
+///    dir:`<datasetdir>` [mss:`<mss-url>`] [opt:`<base-options>`]
+/// The `<datasetdir>` is mandatory.
 /// See TDataSetManager::ParseInitOpts for the available
 /// base options.
 /// The base options are already initialized by the base constructor
@@ -345,7 +345,7 @@ void TDataSetManagerFile::ParseInitOpts(const char *ins)
 /// Returns path of the indicated dataset. The extension is '.root' for all files
 /// except for 'dsName==ls' which have extension '.txt'.
 /// If 'local' is kTRUE the local cache path is returned instead in the form
-/// <cachedir>/<group>.<user>.<dsName>.<ext>.
+/// `<cachedir>`/`<group>`.`<user>`.`<dsName>`.`<ext>`.
 /// NB: contains a static TString for result, so copy result before using twice.
 
 const char *TDataSetManagerFile::GetDataSetPath(const char *group,
@@ -374,7 +374,7 @@ const char *TDataSetManagerFile::GetDataSetPath(const char *group,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save into the <datasetdir>/kDataSet_DataSetList file the name of the updated
+/// Save into the `<datasetdir>/kDataSet_DataSetList` file the name of the updated
 /// or created or modified dataset. For still existing datasets, fill the
 /// modification date in seconds anf the checksum.
 /// Returns 0 on success, -1 on error
@@ -713,18 +713,18 @@ Bool_t TDataSetManagerFile::BrowseDataSets(const char *group, const char *user,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// General purpose call to go through the existing datasets.
-/// If <user> is 0 or "*", act on all datasets for the given <group>.
-/// If <group> is 0 or "*", act on all datasets.
-/// If <dsName> is defined, only the information about the specified dataset
+/// If `<user>` is 0 or "*", act on all datasets for the given `<group>`.
+/// If `<group>` is 0 or "*", act on all datasets.
+/// If `<dsName>` is defined, only the information about the specified dataset
 /// is processed.
 /// Action depends on option; available options:
 ///
 ///    kExport         Return a TMap object containing all the information about
 ///                    datasets in the form:
-///                    { <group>, <map of users> }
+///                    { `<group>`, `<map of users>` }
 ///                                     |
-///                             { <map of datasets>, <dataset>}
-///                    (<dataset> are TFileCollection objects)
+///                             { `<map of datasets>`, `<dataset>`}
+///                    (`<dataset>` are TFileCollection objects)
 ///    kShowDefault    as kExport with in addition a default selection including
 ///                    the datasets from the current user, the ones from the group
 ///                    and the common ones
@@ -1006,7 +1006,7 @@ Int_t TDataSetManagerFile::FillLsDataSet(const char *group, const char *user,
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// Returns the dataset <dsName> of user <user> in group <group> .
+/// Returns the dataset `<dsName>` of user `<user>` in group `<group>`.
 /// If checksum is non-zero, it will contain the pointer to a TMD5 sum object
 /// with the checksum of the file, has to be deleted by the user.
 /// If option has the bi kReadShort set, the shortobject is read, that does not
@@ -1722,7 +1722,7 @@ Int_t TDataSetManagerFile::RegisterDataSet(const char *uri,
    return ((success) ? 0 : -1);
 }
 ////////////////////////////////////////////////////////////////////////////////
-/// Scans the dataset indicated by <uri> and returns the number of missing files.
+/// Scans the dataset indicated by `<uri>` and returns the number of missing files.
 /// Returns -1 if any failure occurs, >= 0 on success.
 /// For more details, see documentation of
 /// ScanDataSet(TFileCollection *dataset, const char *option)
@@ -1839,11 +1839,11 @@ Int_t TDataSetManagerFile::ScanDataSet(const char *group, const char *user,
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// Returns all datasets for the <group> and <user> specified by <uri>.
-/// If <user> is 0, it returns all datasets for the given <group>.
-/// If <group> is 0, it returns all datasets.
+/// Returns all datasets for the `<group>` and `<user>` specified by `<uri>`.
+/// If `<user>` is 0, it returns all datasets for the given `<group>`.
+/// If `<group>` is 0, it returns all datasets.
 /// The returned TMap contains:
-///    <group> --> <map of users> --> <map of datasets> --> <dataset> (TFileCollection)
+///    `<group>` --> `<map of users>` --> `<map of datasets>` --> `<dataset>` (TFileCollection)
 ///
 /// The unsigned int 'option' is forwarded to GetDataSet and BrowseDataSet.
 /// Available options (to be .or.ed):

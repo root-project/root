@@ -83,7 +83,7 @@ private:
 
    Int_t         Broadcast(const TMessage &mess);
    Int_t         Broadcast(const char *mess, Int_t kind = kMESS_STRING, Int_t type = kRRT_Undef);
-   Int_t         Broadcast(Int_t kind, Int_t type = kRRT_Undef) { return Broadcast(0, kind, type); }
+   Int_t         Broadcast(Int_t kind, Int_t type = kRRT_Undef) { return Broadcast(nullptr, kind, type); }
    Int_t         BroadcastObject(const TObject *obj, Int_t kind = kMESS_OBJECT);
    Int_t         BroadcastRaw(const void *buffer, Int_t length);
    Bool_t        CheckFile(const char *file, Long_t modtime);
@@ -93,28 +93,28 @@ private:
    void          RecvLogFile(Int_t size);
 
 public:
-   TApplicationRemote(const char *url, Int_t debug = 0, const char *script = 0);
+   TApplicationRemote(const char *url, Int_t debug = 0, const char *script = nullptr);
    virtual ~TApplicationRemote();
 
-   virtual void  Browse(TBrowser *b);
-   Bool_t        IsFolder() const { return kTRUE; }
-   const char   *ApplicationName() const { return fName; }
-   Longptr_t     ProcessLine(const char *line, Bool_t /*sync*/ = kFALSE, Int_t *error = 0);
+   void          Browse(TBrowser *b) override;
+   Bool_t        IsFolder() const override { return kTRUE; }
+   const char   *ApplicationName() const override { return fName; }
+   Longptr_t     ProcessLine(const char *line, Bool_t /*sync*/ = kFALSE, Int_t *error = nullptr) override;
 
    Int_t         SendFile(const char *file, Int_t opt = kAscii,
-                          const char *rfile = 0);
+                          const char *rfile = nullptr);
    Int_t         SendObject(const TObject *obj);
 
    void          Interrupt(Int_t type = kRRI_Hard);
    Bool_t        IsValid() const { return (fSocket) ? kTRUE : kFALSE; }
 
-   void          Print(Option_t *option="") const;
+   void          Print(Option_t *option="") const override;
 
-   void          Terminate(Int_t status = 0);
+   void          Terminate(Int_t status = 0) override;
 
    static void   SetPortParam(Int_t lower = -1, Int_t upper = -1, Int_t attempts = -1);
 
-   ClassDef(TApplicationRemote,0)  //Remote Application Interface
+   ClassDefOverride(TApplicationRemote,0)  //Remote Application Interface
 };
 
 //
@@ -126,7 +126,7 @@ private:
 public:
    TARInterruptHandler(TApplicationRemote *r)
       : TSignalHandler(kSigInterrupt, kFALSE), fApplicationRemote(r) { }
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 #endif

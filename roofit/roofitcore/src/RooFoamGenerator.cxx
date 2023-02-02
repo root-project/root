@@ -35,8 +35,6 @@ Access those using:
 \see rf902_numgenconfig.C
 **/
 
-
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooFoamGenerator.h"
@@ -47,10 +45,7 @@ Access those using:
 #include "RooRandom.h"
 #include "RooErrorHandler.h"
 
-#include "TString.h"
-#include "TIterator.h"
 #include "RooMsgService.h"
-#include "TClass.h"
 #include "TFoam.h"
 #include "RooTFoamBinding.h"
 #include "RooNumGenFactory.h"
@@ -59,9 +54,6 @@ Access those using:
 #include <assert.h>
 
 using namespace std;
-
-ClassImp(RooFoamGenerator);
-  ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,11 +78,11 @@ void RooFoamGenerator::registerSampler(RooNumGenFactory& fact)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooFoamGenerator::RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, Bool_t verbose, const RooAbsReal* maxFuncVal) :
+RooFoamGenerator::RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, bool verbose, const RooAbsReal* maxFuncVal) :
   RooAbsNumGenerator(func,genVars,verbose,maxFuncVal)
 {
   _binding = new RooTFoamBinding(*_funcClone,_realVars) ;
- 
+
   _tfoam = new TFoam("TFOAM") ;
   _tfoam->SetkDim(_realVars.getSize()) ;
   _tfoam->SetRho(_binding) ;
@@ -106,10 +98,10 @@ RooFoamGenerator::RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genV
   _tfoam->SetChat((Int_t)config.getConfigSection("RooFoamGenerator").getRealValue("chatLevel")) ;
   _tfoam->Initialize() ;
 
-  _vec = new Double_t[_realVars.getSize()] ;
-  _xmin  = new Double_t[_realVars.getSize()] ;
-  _range = new Double_t[_realVars.getSize()] ;
-  
+  _vec = new double[_realVars.getSize()] ;
+  _xmin  = new double[_realVars.getSize()] ;
+  _range = new double[_realVars.getSize()] ;
+
   Int_t i(0) ;
   for (const auto arg : _realVars) {
     auto var = static_cast<const RooRealVar*>(arg);
@@ -123,7 +115,7 @@ RooFoamGenerator::RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genV
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooFoamGenerator::~RooFoamGenerator() 
+RooFoamGenerator::~RooFoamGenerator()
 {
   delete[] _vec ;
   delete[] _xmin ;
@@ -137,14 +129,14 @@ RooFoamGenerator::~RooFoamGenerator()
 ////////////////////////////////////////////////////////////////////////////////
 /// are we actually generating anything? (the cache always contains at least our function value)
 
-const RooArgSet *RooFoamGenerator::generateEvent(UInt_t /*remaining*/, Double_t& /*resampleRatio*/) 
+const RooArgSet *RooFoamGenerator::generateEvent(UInt_t /*remaining*/, double& /*resampleRatio*/)
 {
   const RooArgSet *event= _cache->get();
   if(event->getSize() == 1) return event;
 
   _tfoam->MakeEvent() ;
   _tfoam->GetMCvect(_vec) ;
-  
+
   // Transfer contents to dataset
   Int_t i(0) ;
   for (auto arg : _realVars) {
@@ -153,4 +145,9 @@ const RooArgSet *RooFoamGenerator::generateEvent(UInt_t /*remaining*/, Double_t&
     i++ ;
   }
   return &_realVars ;
+}
+
+std::string const& RooFoamGenerator::generatorName() const {
+   static const std::string name = "RooFoamGenerator";
+   return name;
 }

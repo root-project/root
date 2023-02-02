@@ -57,7 +57,7 @@ public:
    TFileMergeInfo(TDirectory *outputfile) : fOutputDirectory(outputfile) {}
    virtual ~TFileMergeInfo() { delete fUserData; } ;
 
-   void Reset() { fIsFirst = kTRUE; delete fUserData; fUserData = 0; }
+   void Reset() { fIsFirst = kTRUE; delete fUserData; fUserData = nullptr; }
 
    ClassDef(TFileMergeInfo, 0);
 };

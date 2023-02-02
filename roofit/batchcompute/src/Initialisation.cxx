@@ -37,17 +37,25 @@ void loadWithErrorChecking(const std::string &libName)
                              " was loaded before RooFit initialisation began.");
 }
 
+} // end anonymous namespace
+
+namespace RooBatchCompute {
+
 /// Inspect hardware capabilities, and load the optimal library for RooFit computations.
-void loadComputeLibrary()
+void init()
 {
+   // Check if the library was not initialised already
+   static bool isInitialised = false;
+   if (isInitialised)
+      return;
+   isInitialised = true;
+
    const std::string userChoice = gEnv->GetValue("RooFit.BatchCompute", "auto");
 #ifdef R__RF_ARCHITECTURE_SPECIFIC_LIBS
 #ifdef R__HAS_CUDA
-   TString libcudart{"libcudart"};
-   if (gSystem->FindDynamicLibrary(libcudart, true))
-      gSystem->Load("libRooBatchCompute_CUDA");
-   if (RooBatchCompute::dispatchCUDA)
-      RooBatchCompute::dispatchCUDA->init();
+   if(gSystem->Load("libRooBatchCompute_CUDA") != 0) {
+      RooBatchCompute::dispatchCUDA = nullptr;
+   }
 #endif // R__HAS_CUDA
 
    __builtin_cpu_init();
@@ -83,10 +91,5 @@ void loadComputeLibrary()
    if (RooBatchCompute::dispatchCPU == nullptr)
       loadWithErrorChecking("libRooBatchCompute_GENERIC");
 }
-} // end anonymous namespace
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/// A RAII that performs RooFit's static initialisation.
-static struct RooBatchComputeInitialiser {
-   RooBatchComputeInitialiser() { loadComputeLibrary(); }
-} __RooBatchComputeInitialiser;
+} // namespace RooBatchCompute

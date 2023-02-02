@@ -111,7 +111,7 @@ public:
    virtual TGeoElement     *GetElement(Int_t i) const;
    virtual void             GetElementProp(Double_t &a, Double_t &z, Double_t &w, Int_t i=0);
    TGeoElement             *GetBaseElement() const {return fElement;}
-   char                    *GetPointerName() const;
+   const char              *GetPointerName() const;
    virtual Double_t         GetRadLen() const  {return fRadLen;}
    virtual Double_t         GetIntLen() const  {return fIntLen;}
    Int_t                    GetIndex();

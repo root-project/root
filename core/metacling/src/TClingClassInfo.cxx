@@ -70,21 +70,20 @@ static std::string FullyQualifiedName(const Decl *decl) {
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, Bool_t all)
    : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(all),
-     fIsIter(true), fType(0), fOffsetCache(0)
+     fIsIter(true), fOffsetCache(0)
 {
    TranslationUnitDecl *TU =
       interp->getCI()->getASTContext().getTranslationUnitDecl();
    fFirstTime = true;
    SetDecl(TU);
-   fType = 0;
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name, bool intantiateTemplate /* = true */)
    : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE), fIsIter(false),
-     fType(0), fTitle(""), fOffsetCache(0)
+     fOffsetCache(0)
 {
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
-   const Type *type = 0;
+   const Type *type = nullptr;
    const Decl *decl = lh.findScope(name,
                                    gDebug > 5 ? cling::LookupHelper::WithDiagnostics
                                    : cling::LookupHelper::NoDiagnostics,
@@ -116,7 +115,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name, b
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
                                  const Type &tag)
    : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE),
-     fIsIter(false), fType(0), fTitle(""), fOffsetCache(0)
+     fIsIter(false), fOffsetCache(0)
 {
    Init(tag);
 }
@@ -124,7 +123,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
                                  const Decl *D)
    : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE),
-     fIsIter(false), fType(0), fTitle(""), fOffsetCache(0)
+     fIsIter(false), fOffsetCache(0)
 {
    Init(D);
 }
@@ -134,7 +133,7 @@ void TClingClassInfo::AddBaseOffsetValue(const clang::Decl* decl, ptrdiff_t offs
    // Add the offset value from this class to the non-virtual base class
    // determined by the parameter decl.
 
-   OffsetPtrFunc_t executableFunc = 0;
+   OffsetPtrFunc_t executableFunc = nullptr;
    std::unique_lock<std::mutex> lock(fOffsetCacheMutex);
    fOffsetCache[decl] = std::make_pair(offset, executableFunc);
 }
@@ -211,7 +210,7 @@ void TClingClassInfo::Delete(void *arena, const ROOT::TMetaUtils::TNormalizedCtx
             FullyQualifiedName(GetDecl()).c_str());
       return;
    }
-   TClingCallFunc cf(fInterp,normCtxt);
+   TClingCallFunc cf(fInterp);
    cf.ExecDestructor(this, arena, /*nary=*/0, /*withFree=*/true);
 }
 
@@ -231,7 +230,7 @@ void TClingClassInfo::DeleteArray(void *arena, bool dtorOnly, const ROOT::TMetaU
       Error("DeleteArray", "Placement delete of an array is unsupported!\n");
       return;
    }
-   TClingCallFunc cf(fInterp,normCtxt);
+   TClingCallFunc cf(fInterp);
    cf.ExecDestructor(this, arena, /*nary=*/1, /*withFree=*/true);
 }
 
@@ -242,7 +241,7 @@ void TClingClassInfo::Destruct(void *arena, const ROOT::TMetaUtils::TNormalizedC
    if (!IsLoaded()) {
       return;
    }
-   TClingCallFunc cf(fInterp,normCtxt);
+   TClingCallFunc cf(fInterp);
    cf.ExecDestructor(this, arena, /*nary=*/0, /*withFree=*/false);
 }
 
@@ -251,7 +250,7 @@ const FunctionTemplateDecl *TClingClassInfo::GetFunctionTemplate(const char *fna
    // Return any method or function in this scope with the name 'fname'.
 
    if (!IsLoaded()) {
-      return 0;
+      return nullptr;
    }
 
    if (fType) {
@@ -273,7 +272,7 @@ const FunctionTemplateDecl *TClingClassInfo::GetFunctionTemplate(const char *fna
                                 gDebug > 5 ? cling::LookupHelper::WithDiagnostics
                                 : cling::LookupHelper::NoDiagnostics, false);
    if (fd) return fd->getCanonicalDecl();
-   return 0;
+   return nullptr;
 }
 
 const clang::ValueDecl *TClingClassInfo::GetDataMember(const char *name) const
@@ -287,7 +286,7 @@ const clang::ValueDecl *TClingClassInfo::GetDataMember(const char *name) const
                           gDebug > 5 ? cling::LookupHelper::WithDiagnostics
                           : cling::LookupHelper::NoDiagnostics);
    if (vd) return llvm::dyn_cast<ValueDecl>(vd->getCanonicalDecl());
-   else return 0;
+   else return nullptr;
 }
 
 TClingMethodInfo TClingClassInfo::GetMethod(const char *fname) const
@@ -574,7 +573,7 @@ int TClingClassInfo::GetMethodNArg(const char *method, const char *proto,
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   TClingMethodInfo mi = GetMethod(method, proto, objectIsConst, 0, mode);
+   TClingMethodInfo mi = GetMethod(method, proto, objectIsConst, nullptr, mode);
    int clang_val = -1;
    if (mi.IsValid()) {
       unsigned num_params = mi.GetTargetFunctionDecl()->getNumParams();
@@ -727,7 +726,7 @@ void TClingClassInfo::Init(const char *name)
    fIsIter = false;
    fIter = DeclContext::decl_iterator();
    SetDecl(nullptr);
-   fType = 0;
+   fType = nullptr;
    fIterStack.clear();
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    SetDecl(lh.findScope(name, gDebug > 5 ? cling::LookupHelper::WithDiagnostics
@@ -756,7 +755,7 @@ void TClingClassInfo::Init(const Decl* decl)
    fIsIter = false;
    fIter = DeclContext::decl_iterator();
    SetDecl(decl);
-   fType = 0;
+   fType = nullptr;
    fIterStack.clear();
 }
 
@@ -815,6 +814,7 @@ bool TClingClassInfo::IsBase(const char *name) const
 
 bool TClingClassInfo::IsEnum(cling::Interpreter *interp, const char *name)
 {
+   R__LOCKGUARD(gInterpreterMutex);
    // Note: This is a static member function.
    TClingClassInfo info(interp, name);
    if (info.IsValid() && (info.Property() & kIsEnum)) {
@@ -834,7 +834,7 @@ EDataType TClingClassInfo::GetUnderlyingType() const
 {
    if (!IsValid())
       return kNumDataTypes;
-   if (GetDecl() == 0)
+   if (GetDecl() == nullptr)
       return kNumDataTypes;
 
    if (auto ED = llvm::dyn_cast<EnumDecl>(GetDecl())) {
@@ -887,7 +887,7 @@ bool TClingClassInfo::IsLoaded() const
    if (!IsValid()) {
       return false;
    }
-   if (GetDecl() == 0) {
+   if (GetDecl() == nullptr) {
       return false;
    }
 
@@ -900,7 +900,7 @@ bool TClingClassInfo::IsLoaded() const
       }
    } else {
       const TagDecl *TD = llvm::dyn_cast<TagDecl>(GetDecl());
-      if (TD && TD->getDefinition() == 0) {
+      if (TD && TD->getDefinition() == nullptr) {
          return false;
       }
    }
@@ -1003,7 +1003,7 @@ int TClingClassInfo::InternalNext()
          if (!*fIter) {
             // We have reached the end of the translation unit, all done.
             SetDecl(nullptr);
-            fType = 0;
+            fType = nullptr;
             return 0;
          }
       }
@@ -1037,7 +1037,7 @@ int TClingClassInfo::InternalNext()
          }
          // Iterator is now valid.
          SetDecl(*fIter);
-         fType = 0;
+         fType = nullptr;
          if (GetDecl()) {
             if (GetDecl()->isInvalidDecl()) {
                Warning("TClingClassInfo::Next()","Reached an invalid decl.");
@@ -1093,7 +1093,7 @@ void *TClingClassInfo::New(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) co
       }
    } // End of Lock section.
    void* obj = nullptr;
-   TClingCallFunc cf(fInterp,normCtxt);
+   TClingCallFunc cf(fInterp);
    obj = cf.ExecDefaultConstructor(this, kind, type_name,
                                    /*address=*/nullptr, /*nary=*/0);
    if (!obj) {
@@ -1143,7 +1143,7 @@ void *TClingClassInfo::New(int n, const ROOT::TMetaUtils::TNormalizedCtxt &normC
       }
    } // End of Lock section.
    void* obj = nullptr;
-   TClingCallFunc cf(fInterp,normCtxt);
+   TClingCallFunc cf(fInterp);
    obj = cf.ExecDefaultConstructor(this, kind, type_name,
                                    /*address=*/nullptr, /*nary=*/(unsigned long)n);
    if (!obj) {
@@ -1194,7 +1194,7 @@ void *TClingClassInfo::New(int n, void *arena, const ROOT::TMetaUtils::TNormaliz
       }
    } // End of Lock section
    void* obj = nullptr;
-   TClingCallFunc cf(fInterp,normCtxt);
+   TClingCallFunc cf(fInterp);
    // Note: This will always return arena.
    obj = cf.ExecDefaultConstructor(this, kind, type_name,
                                    /*address=*/arena, /*nary=*/(unsigned long)n);
@@ -1239,7 +1239,7 @@ void *TClingClassInfo::New(void *arena, const ROOT::TMetaUtils::TNormalizedCtxt 
       }
    } // End of Locked section.
    void* obj = nullptr;
-   TClingCallFunc cf(fInterp,normCtxt);
+   TClingCallFunc cf(fInterp);
    // Note: This will always return arena.
    obj = cf.ExecDefaultConstructor(this, kind, type_name,
                                     /*address=*/arena, /*nary=*/0);
@@ -1360,10 +1360,10 @@ Longptr_t TClingClassInfo::Tagnum() const
 const char *TClingClassInfo::FileName()
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    if (fDeclFileName.empty())
-     fDeclFileName = ROOT::TMetaUtils::GetFileName(*GetDecl(), *fInterp);
+      fDeclFileName = ROOT::TMetaUtils::GetFileName(*GetDecl(), *fInterp);
    return fDeclFileName.c_str();
 }
 
@@ -1392,7 +1392,7 @@ void TClingClassInfo::FullName(std::string &output, const ROOT::TMetaUtils::TNor
 const char *TClingClassInfo::Title()
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    // NOTE: We cannot cache the result, since we are really an iterator.
    // Try to get the comment either from the annotation or the header
@@ -1424,7 +1424,7 @@ const char *TClingClassInfo::Title()
    const CXXRecordDecl *CRD =
       llvm::dyn_cast<CXXRecordDecl>(GetDecl());
    if (CRD && !CRD->isFromASTFile()) {
-      fTitle = ROOT::TMetaUtils::GetClassComment(*CRD,0,*fInterp).str();
+      fTitle = ROOT::TMetaUtils::GetClassComment(*CRD,nullptr,*fInterp).str();
    }
    return fTitle.c_str();
 }
@@ -1432,7 +1432,7 @@ const char *TClingClassInfo::Title()
 const char *TClingClassInfo::TmpltName() const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
 
    R__LOCKGUARD(gInterpreterMutex);
@@ -1446,4 +1446,3 @@ const char *TClingClassInfo::TmpltName() const
    }
    return buf.c_str();  // NOLINT
 }
-

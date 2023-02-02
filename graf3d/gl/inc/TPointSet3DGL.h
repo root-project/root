@@ -22,7 +22,7 @@ class TPointSet3DGL : public TGLObject
 public:
    TPointSet3DGL() : TGLObject() {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
+   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
    virtual void   SetBBox();
    virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
 

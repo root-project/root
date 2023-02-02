@@ -1,8 +1,10 @@
 #include "llvm/Support/DebugCounter.h"
+
+#include "DebugOptions.h"
+
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Format.h"
 #include "llvm/Support/ManagedStatic.h"
-#include "llvm/Support/Options.h"
 
 using namespace llvm;
 
@@ -32,7 +34,7 @@ private:
     // width, so we do the same.
     Option::printHelpStr(HelpStr, GlobalWidth, ArgStr.size() + 6);
     const auto &CounterInstance = DebugCounter::instance();
-    for (auto Name : CounterInstance) {
+    for (const auto &Name : CounterInstance) {
       const auto Info =
           CounterInstance.getCounterInfo(CounterInstance.getCounterId(Name));
       size_t NumSpaces = GlobalWidth - Info.first.size() - 8;
@@ -41,17 +43,29 @@ private:
     }
   }
 };
+
+struct CreateDebugCounterOption {
+  static void *call() {
+    return new DebugCounterList(
+        "debug-counter", cl::Hidden,
+        cl::desc("Comma separated list of debug counter skip and count"),
+        cl::CommaSeparated, cl::ZeroOrMore,
+        cl::location(DebugCounter::instance()));
+  }
+};
 } // namespace
 
-// Create our command line option.
-static DebugCounterList DebugCounterOption(
-    "debug-counter", cl::Hidden,
-    cl::desc("Comma separated list of debug counter skip and count"),
-    cl::CommaSeparated, cl::ZeroOrMore, cl::location(DebugCounter::instance()));
+static ManagedStatic<DebugCounterList, CreateDebugCounterOption>
+    DebugCounterOption;
+static bool PrintDebugCounter;
 
-static cl::opt<bool> PrintDebugCounter(
-    "print-debug-counter", cl::Hidden, cl::init(false), cl::Optional,
-    cl::desc("Print out debug counter info after all counters accumulated"));
+void llvm::initDebugCounterOptions() {
+  *DebugCounterOption;
+  static cl::opt<bool, true> RegisterPrintDebugCounter(
+      "print-debug-counter", cl::Hidden, cl::location(PrintDebugCounter),
+      cl::init(false), cl::Optional,
+      cl::desc("Print out debug counter info after all counters accumulated"));
+}
 
 static ManagedStatic<DebugCounter> DC;
 
@@ -86,7 +100,7 @@ void DebugCounter::push_back(const std::string &Val) {
   // add it to the counter values.
   if (CounterPair.first.endswith("-skip")) {
     auto CounterName = CounterPair.first.drop_back(5);
-    unsigned CounterID = getCounterId(CounterName);
+    unsigned CounterID = getCounterId(std::string(CounterName));
     if (!CounterID) {
       errs() << "DebugCounter Error: " << CounterName
              << " is not a registered counter\n";
@@ -99,7 +113,7 @@ void DebugCounter::push_back(const std::string &Val) {
     Counter.IsSet = true;
   } else if (CounterPair.first.endswith("-count")) {
     auto CounterName = CounterPair.first.drop_back(6);
-    unsigned CounterID = getCounterId(CounterName);
+    unsigned CounterID = getCounterId(std::string(CounterName));
     if (!CounterID) {
       errs() << "DebugCounter Error: " << CounterName
              << " is not a registered counter\n";
@@ -119,12 +133,12 @@ void DebugCounter::push_back(const std::string &Val) {
 void DebugCounter::print(raw_ostream &OS) const {
   SmallVector<StringRef, 16> CounterNames(RegisteredCounters.begin(),
                                           RegisteredCounters.end());
-  sort(CounterNames.begin(), CounterNames.end());
+  sort(CounterNames);
 
   auto &Us = instance();
   OS << "Counters and values:\n";
   for (auto &CounterName : CounterNames) {
-    unsigned CounterID = getCounterId(CounterName);
+    unsigned CounterID = getCounterId(std::string(CounterName));
     OS << left_justify(RegisteredCounters[CounterID], 32) << ": {"
        << Us.Counters[CounterID].Count << "," << Us.Counters[CounterID].Skip
        << "," << Us.Counters[CounterID].StopAfter << "}\n";

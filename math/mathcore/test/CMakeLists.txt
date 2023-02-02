@@ -14,6 +14,7 @@ set(TestSource
     testTMath.cxx
     testBinarySearch.cxx
     testSortOrder.cxx
+    stressGoFTest.cxx
     stressTMath.cxx
     stressTF1.cxx
     testIntegration.cxx
@@ -40,7 +41,6 @@ set(TestSource
     fit/testLogLExecPolicy.cxx )
 
 if(mathmore)
-  list(APPEND TestSource stressGoFTest.cxx)
   list(APPEND Libraries MathMore)
 endif()
 
@@ -49,6 +49,10 @@ if(minuit2)
   list(APPEND Libraries Minuit2)
 endif()
 
+if(r)
+ add_definitions(-DROOT_HAS_R)
+ list(APPEND Libraries RInterface)
+endif()
 
 #---Build and add all the defined test in the list---------------
 foreach(file ${TestSource})

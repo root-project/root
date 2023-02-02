@@ -25,7 +25,6 @@ Plain Gaussian p.d.f
 #include "RooHelpers.h"
 #include "RooMath.h"
 #include "RooRandom.h"
-#include "RunContext.h"
 
 #include <vector>
 
@@ -34,14 +33,14 @@ ClassImp(RooGaussian);
 ////////////////////////////////////////////////////////////////////////////////
 
 RooGaussian::RooGaussian(const char *name, const char *title,
-          RooAbsReal& _x, RooAbsReal& _mean,
-          RooAbsReal& _sigma) :
+          RooAbsReal::Ref _x, RooAbsReal::Ref _mean,
+          RooAbsReal::Ref _sigma) :
   RooAbsPdf(name,title),
   x("x","Observable",this,_x),
   mean("mean","Mean",this,_mean),
   sigma("sigma","Width",this,_sigma)
 {
-  RooHelpers::checkRangeOfParameters(this, {&_sigma}, 0);
+  RooHelpers::checkRangeOfParameters(this, {&static_cast<RooAbsReal&>(_sigma)}, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +53,7 @@ RooGaussian::RooGaussian(const RooGaussian& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooGaussian::evaluate() const
+double RooGaussian::evaluate() const
 {
   const double arg = x - mean;
   const double sig = sigma;
@@ -63,11 +62,12 @@ Double_t RooGaussian::evaluate() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of Gaussian distribution.  
-void RooGaussian::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+/// Compute multiple values of Gaussian distribution.
+void RooGaussian::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Gaussian, output, nEvents, dataMap, {&*x,&*mean,&*sigma,&*_norm});
+  dispatch->compute(stream, RooBatchCompute::Gaussian, output, nEvents,
+          {dataMap.at(x), dataMap.at(mean), dataMap.at(sigma)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -81,7 +81,7 @@ Int_t RooGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   assert(code==1 || code==2);
 
@@ -119,7 +119,7 @@ Double_t RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) cons
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+Int_t RooGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;
   if (matchArgs(directVars,generateVars,mean)) return 2 ;
@@ -131,7 +131,7 @@ Int_t RooGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generate
 void RooGaussian::generateEvent(Int_t code)
 {
   assert(code==1 || code==2) ;
-  Double_t xgen ;
+  double xgen ;
   if(code==1){
     while(1) {
       xgen = RooRandom::randomGenerator()->Gaus(mean,sigma);

@@ -89,12 +89,12 @@ public:
    virtual void   BeginScene();
    virtual Bool_t BuildingScene()    const { return fBuildingScene; }
    virtual void   EndScene();
-   virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = 0);
-   virtual Int_t  AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren = 0);
+   virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = nullptr);
+   virtual Int_t  AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren = nullptr);
 
    // Composite shapes not supported on this viewer currently - ignore.
    // Will result in a set of component shapes
-   virtual Bool_t OpenComposite(const TBuffer3D & /*buffer*/, Bool_t * =0) { return kTRUE; }
+   virtual Bool_t OpenComposite(const TBuffer3D & /*buffer*/, Bool_t * = nullptr) { return kTRUE; }
    virtual void   CloseComposite() {};
    virtual void   AddCompositeOp(UInt_t /*operation*/) {};
 

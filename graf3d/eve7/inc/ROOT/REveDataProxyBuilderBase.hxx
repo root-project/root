@@ -56,7 +56,7 @@ public:
    virtual REveElement* CreateProduct(const std::string& viewType, const REveViewContext*);
    //  void removePerViewProduct(const REveViewContext* vc);
 
-   void FillImpliedSelected(REveElement::Set_t& impSet);
+   void FillImpliedSelected(REveElement::Set_t& impSet, const std::set<int>&);
    void ModelChanges(const REveDataCollection::Ids_t&);
    void CollectionChanged(const REveDataCollection*);
 
@@ -80,7 +80,7 @@ protected:
    virtual void BuildProductViewType(const REveDataCollection* iItem, REveElement* product, const std::string& viewType, const REveViewContext*);
 
    virtual void ModelChanges(const REveDataCollection::Ids_t&, Product*) = 0;
-   virtual void FillImpliedSelected( REveElement::Set_t& /*impSet*/, Product*) {};
+   virtual void FillImpliedSelected( REveElement::Set_t& /*impSet*/, const std::set<int>&, Product*) {};
    virtual void LocalModelChanges(int idx, REveElement* el, const REveViewContext* ctx);
 
    virtual void ScaleProduct(REveElement*, const std::string&) {};
@@ -93,7 +93,6 @@ protected:
 private:
    REveDataCollection *m_collection{nullptr};
 
-   float                 m_layer{0.};
    bool                  m_haveWindow{false};
    bool                  m_modelsChanged{false};
 };

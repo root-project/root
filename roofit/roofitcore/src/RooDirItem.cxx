@@ -24,12 +24,8 @@ to ROOT directories. Concrete classes inherit the appendToDir and removeToDir
 methods that can be used to safely attach and detach one self from a TDirectory
 **/
 
-#include "RooFit.h"
-
 #include <iostream>
-#include "TList.h"
 #include "TDirectoryFile.h"
-#include "TString.h"
 #include "RooDirItem.h"
 
 using namespace std;
@@ -40,19 +36,19 @@ ClassImp(RooDirItem);
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove object from directory it was added to
 
-void RooDirItem::removeFromDir(TObject* obj) 
+void RooDirItem::removeFromDir(TObject* obj)
 {
   if (_dir) {
     _dir->GetList()->Remove(obj) ;
   }
-} 
+}
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Append object to directory. If forceMemoryResident is
 /// true, nothing happens.
-void RooDirItem::appendToDir(TObject* obj, Bool_t forceMemoryResident) 
+void RooDirItem::appendToDir(TObject* obj, bool forceMemoryResident)
 {
   if (forceMemoryResident) {
     // If we are not going into a file, appending to a directory

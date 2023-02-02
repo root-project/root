@@ -49,8 +49,17 @@ class TestRooDataSetNumpy(unittest.TestCase):
         w = data.addColumn(wFunc)
         wdata = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data, data.get(), "", w.GetName())
 
-        self.assertEqual(set(wdata.to_numpy().keys()), {"x", "cat"})
-        self.assertEqual(set(wdata.to_numpy(compute_derived_weight=True).keys()), {"x", "cat", "w"})
+        self.assertEqual(set(wdata.to_numpy().keys()), {"x", "cat", "w"})
+
+    def _check_value_equality(self, data, np_data):
+        vars_in_data = data.get()
+        x_in_data = vars_in_data["x"]
+        cat_in_data = vars_in_data["cat"]
+
+        for i in range(data.numEntries()):
+            data.get(i)
+            np.testing.assert_almost_equal(np_data["x"][i], x_in_data.getVal(), decimal=10)
+            self.assertEqual(np_data["cat"][i], cat_in_data.getIndex())
 
     def test_to_numpy_and_from_numpy(self):
         """Test exporting to numpy and then importing back a non-weighted dataset."""
@@ -71,6 +80,9 @@ class TestRooDataSetNumpy(unittest.TestCase):
             self.assertEqual(np_data[key][0], np_data_2[key][0])
             self.assertEqual(np_data[key][-1], np_data_2[key][-1])
 
+        self._check_value_equality(data, np_data)
+        self._check_value_equality(data, np_data_2)
+
     def test_to_numpy_and_from_numpy_weighted(self):
         """Test exporting to numpy and then importing back a weighted dataset."""
 
@@ -86,7 +98,7 @@ class TestRooDataSetNumpy(unittest.TestCase):
         # Instruct dataset wdata to use w as event weight and not observable
         wdata = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data, data.get(), "", w.GetName())
 
-        np_data = wdata.to_numpy(compute_derived_weight=True)
+        np_data = wdata.to_numpy()
 
         wdata_2 = ROOT.RooDataSet.from_numpy(np_data, (x, cat, wvar), name="wdata_2", title="wdata_2", weight_name="w")
 
@@ -99,6 +111,37 @@ class TestRooDataSetNumpy(unittest.TestCase):
             self.assertEqual(len(np_data[key]), len(np_data_2[key]))
             self.assertEqual(np_data[key][0], np_data_2[key][0])
             self.assertEqual(np_data[key][-1], np_data_2[key][-1])
+
+        self._check_value_equality(data, np_data)
+        self._check_value_equality(data, np_data_2)
+
+    def test_ignoring_out_of_range(self):
+        """Test that rows with out-of-range values are skipped, both for
+        real-valued columns and categories.
+        """
+
+        n_events = 100
+        # Dataset with "x" randomly distributed between -3 and 3, and "cat"
+        # being either -1, 0, or +1.
+        data = {
+            "x": np.random.rand(n_events) * 6.0 - 3.0,
+            "cat": np.random.randint(3, size=n_events) - 1,
+        }
+
+        # The RooFit variable "x" is only defined from -1 to 2, and the
+        # category doesn't have the 0-state.
+        x = ROOT.RooRealVar("x", "x", 0.0, -2.0, 2.0)
+        cat = ROOT.RooCategory("cat", "cat")
+        cat.defineType("minus", -1)
+        cat.defineType("plus", +1)
+
+        in_x_range = (data["x"] <= x.getMax()) & (data["x"] >= x.getMin())
+        in_cat_range = (data["cat"] == -1) | (data["cat"] == +1)
+        n_in_range = np.sum(in_x_range & in_cat_range)
+
+        dataset_numpy = ROOT.RooDataSet.from_numpy(data, {x, cat}, name="dataSetNumpy")
+
+        self.assertEqual(dataset_numpy.numEntries(), n_in_range)
 
 
 if __name__ == "__main__":

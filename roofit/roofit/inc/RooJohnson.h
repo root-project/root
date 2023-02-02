@@ -32,16 +32,16 @@ public:
 
   RooJohnson(const RooJohnson& other, const char* newName = nullptr);
 
-  virtual ~RooJohnson() = default;
+  ~RooJohnson() override = default;
 
   TObject* clone(const char* newname) const override {
     return new RooJohnson(*this,newname);
   }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
 
 private:
@@ -56,8 +56,8 @@ private:
 
   double _massThreshold{-1.E300};
 
-  Double_t evaluate() const override;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  double evaluate() const override;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
   ClassDefOverride(RooJohnson,1)

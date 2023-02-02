@@ -69,7 +69,7 @@ public:
     * through the network.
     */
    ///@{
-   /** Matrix-multiply \p input with the transpose of \pweights and
+   /** Matrix-multiply \p input with the transpose of \p weights and
     *  write the results into \p output. */
 
    static void MultiplyTranspose(TMatrixT<Scalar_t> &output,
@@ -118,8 +118,8 @@ public:
 
    /** Backward pass for LSTM Network */
    static Matrix_t & LSTMLayerBackward(TMatrixT<Scalar_t> & state_gradients_backward,
-			                              TMatrixT<Scalar_t> & cell_gradients_backward,
-			                              TMatrixT<Scalar_t> & input_weight_gradients,
+                                          TMatrixT<Scalar_t> & cell_gradients_backward,
+                                          TMatrixT<Scalar_t> & input_weight_gradients,
                                        TMatrixT<Scalar_t> & forget_weight_gradients,
                                        TMatrixT<Scalar_t> & candidate_weight_gradients,
                                        TMatrixT<Scalar_t> & output_weight_gradients,
@@ -218,7 +218,7 @@ public:
 
    /** @name Activation Functions
     * For each activation function, the low-level interface contains two routines.
-    * One that applies the acitvation function to a matrix and one that evaluate
+    * One that applies the activation function to a matrix and one that evaluate
     * the derivatives of the activation function at the elements of a given matrix
     * and writes the results into the result matrix.
     */
@@ -319,7 +319,7 @@ public:
     * For each regularization type two functions are required, one named
     * <tt><Type>Regularization</tt> that evaluates the corresponding
     * regularization functional for a given weight matrix and the
-    * <tt>Add<Type>RegularizationGradients</tt>, that adds the regularization
+    * <tt>Add`<Type>`RegularizationGradients</tt>, that adds the regularization
     * component in the gradients to the provided matrix.
     */
    ///@{
@@ -362,8 +362,8 @@ public:
    // return static instance of random generator used for initialization
    // if generator does not exist it is created the first time with a random seed (e.g. seed = 0)
    static TRandom & GetRandomGenerator();
-   // set random seed for the static geenrator
-   // if the static geneerator does not exists it is created
+   // set random seed for the static generator
+   // if the static generator does not exists it is created
    static void SetRandomSeed(size_t seed);
 
 
@@ -513,7 +513,7 @@ public:
    ///@{
 
    /** Perform the complete backward propagation step in a Max Pooling Layer. Based on the
-    *  winning idices stored in the index matrix, it just forwards the actiovation
+    *  winning indices stored in the index matrix, it just forwards the activation
     *  gradients to the previous layer. */
    static void MaxPoolLayerBackward(TMatrixT<AReal> &activationGradientsBackward,
                                     const TMatrixT<AReal> &activationGradients,
@@ -544,7 +544,7 @@ public:
    /** Transforms each row of \p B to a matrix and stores it in the tensor \p B. */
    static void Deflatten(std::vector<TMatrixT<AReal>> &A, const TMatrixT<Scalar_t> &B, size_t index, size_t nRows,
                          size_t nCols);
-   /** Rearrage data accoring to time fill B x T x D out with T x B x D matrix in*/
+   /** Rearrage data according to time fill B x T x D out with T x B x D matrix in*/
    static void Rearrange(std::vector<TMatrixT<AReal>> &out, const std::vector<TMatrixT<AReal>> &in);
 
    ///@}
@@ -554,7 +554,7 @@ public:
    // Additional Arithmetic Functions
    //____________________________________________________________________________
 
-   /** Sum columns of (m x n) matrixx \p A and write the results into the first
+   /** Sum columns of (m x n) matrix \p A and write the results into the first
     * m elements in \p A.
     */
    static void SumColumns(TMatrixT<AReal> &B, const TMatrixT<AReal> &A);
@@ -616,7 +616,7 @@ public:
                 TMatrixT<AReal> &VBiasError, TMatrixT<AReal> &HBiasError,
                 AReal learningRate, size_t fBatchSize);
 
-   // Softmax functions redifined
+   // Softmax functions redefined
    static void SoftmaxAE(TMatrixT<AReal> & A);
 
 

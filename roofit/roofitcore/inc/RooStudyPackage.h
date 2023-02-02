@@ -35,11 +35,11 @@ public:
   RooStudyPackage(RooWorkspace& w) ;
   RooStudyPackage(const RooStudyPackage&) ;
   void addStudy(RooAbsStudy& study) ;
-  TObject* Clone(const char* /*newname*/="") const { return new RooStudyPackage(*this) ; }
-  
+  TObject* Clone(const char* /*newname*/="") const override { return new RooStudyPackage(*this) ; }
+
   RooWorkspace& wspace() { return *_ws ; }
   std::list<RooAbsStudy*>& studies() { return _studies ; }
-    
+
   void driver(Int_t nExperiments) ;
 
   Int_t initRandom() ;
@@ -47,7 +47,7 @@ public:
   void runOne() ;
   void run(Int_t nExperiments) ;
   void finalize() ;
-  
+
   void exportData(TList* olist, Int_t seqno) ;
 
   static void processFile(const char* infile, Int_t nexp) ;
@@ -55,10 +55,10 @@ public:
 protected:
 
   RooWorkspace* _ws ;
-  std::list<RooAbsStudy*> _studies ; 
+  std::list<RooAbsStudy*> _studies ;
 
-	
-  ClassDef(RooStudyPackage,1) // A general purpose workspace oriented parallelizing study manager
+
+  ClassDefOverride(RooStudyPackage,1) // A general purpose workspace oriented parallelizing study manager
 } ;
 
 

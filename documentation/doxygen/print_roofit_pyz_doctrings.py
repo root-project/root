@@ -84,7 +84,7 @@ def write_pyroot_block_for_class(klass):
     print("")
 
 
-def write_pyroot_block_for_member_func(func):
+def write_pyroot_block_for_function(func):
 
     if func.__doc__ is None or not hasattr(func, "_cpp_signature"):
         return
@@ -180,7 +180,10 @@ def print_pyroot_blocks_for_cpp_docs():
 
         for func_name in func_names:
             func = getattr(python_klass, func_name)
-            write_pyroot_block_for_member_func(func)
+            write_pyroot_block_for_function(func)
+
+    for python_function in _roofit.python_roofit_functions:
+        write_pyroot_block_for_function(python_function)
 
 
 if __name__ == "__main__":

@@ -71,7 +71,7 @@ auto testSum()
 }
 
 /** Test the data loader by loading identical input and output data, running it
- *  through an identity neural network and computing the the mean squared error,
+ *  through an identity neural network and computing the mean squared error,
  *  should obviously be zero. */
 //______________________________________________________________________________
 template <typename Architecture_t>

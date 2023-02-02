@@ -60,11 +60,7 @@ extern char slotab[];
 struct filepointer *currentfile;
 struct inclist  *currentinc;
 
-int
-cppsetup(line, filep, inc)
-register char *line;
-register struct filepointer *filep;
-register struct inclist  *inc;
+int cppsetup(register char *line, register struct filepointer *filep, register struct inclist *inc)
 {
    register char *p, savec;
    static boolean setupdone = FALSE;
@@ -97,8 +93,7 @@ register struct inclist  *inc;
    return(value);
 }
 
-struct symtab **lookup(symbol)
-         char *symbol;
+struct symtab **lookup(char *symbol)
 {
    static struct symtab    *undefined;
    struct symtab   **sp;
@@ -111,16 +106,13 @@ struct symtab **lookup(symbol)
    return (sp);
 }
 
-pperror(tag, x0, x1, x2, x3, x4)
-int tag, x0, x1, x2, x3, x4;
+void pperror(int tag, int x0, int x1, int x2, int x3, int x4)
 {
    warning("\"%s\", line %d: ", currentinc->i_file, currentfile->f_line);
    warning(x0, x1, x2, x3, x4);
 }
 
-
-yyerror(s)
-register char *s;
+void yyerror(register char *s)
 {
    fatalerr("Fatal error: %s\n", s);
 }
@@ -133,11 +125,7 @@ struct _parse_data {
    const char *line;
 };
 
-static const char *
-my_if_errors(ip, cp, expecting)
-IfParser *ip;
-const char *cp;
-const char *expecting;
+static const char *my_if_errors(IfParser *ip, const char *cp, const char *expecting)
 {
    struct _parse_data *pd = (struct _parse_data *) ip->data;
    int lineno = pd->filep->f_line;
@@ -165,11 +153,7 @@ const char *expecting;
 
 #define MAXNAMELEN 256
 
-static struct symtab **
-         lookup_variable(ip, var, len)
-         IfParser *ip;
-const char *var;
-int len;
+static struct symtab **lookup_variable(IfParser *ip, const char *var, int len)
 {
    char tmpbuf[MAXNAMELEN + 1];
    struct _parse_data *pd = (struct _parse_data *) ip->data;
@@ -182,12 +166,7 @@ int len;
    return isdefined(tmpbuf, pd->inc, NULL);
 }
 
-
-static int
-my_eval_defined(ip, var, len)
-IfParser *ip;
-const char *var;
-int len;
+static int my_eval_defined(IfParser *ip, const char *var, int len)
 {
    if (lookup_variable(ip, var, len))
       return 1;
@@ -197,11 +176,7 @@ int len;
 
 #define isvarfirstletter(ccc) (isalpha(ccc) || (ccc) == '_')
 
-static long
-my_eval_variable(ip, var, len)
-IfParser *ip;
-const char *var;
-int len;
+static long my_eval_variable(IfParser *ip, const char *var, int len)
 {
    struct symtab **s;
 
@@ -218,11 +193,7 @@ int len;
    return strtol(var, NULL, 0);
 }
 
-
-int cppsetup(line, filep, inc)
-register char *line;
-register struct filepointer *filep;
-register struct inclist  *inc;
+int cppsetup(register char *line, register struct filepointer *filep, register struct inclist *inc)
 {
    IfParser ip;
    struct _parse_data pd;

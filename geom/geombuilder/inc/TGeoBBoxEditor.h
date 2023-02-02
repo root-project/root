@@ -51,7 +51,7 @@ protected:
    Bool_t       IsDelayed() const;
 
 public:
-   TGeoBBoxEditor(const TGWindow *p = 0,
+   TGeoBBoxEditor(const TGWindow *p = nullptr,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());

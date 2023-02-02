@@ -26,6 +26,7 @@
 
 #include <vector>
 #include <utility>
+#include <memory>
 
 
 class TH1;
@@ -49,47 +50,47 @@ struct THistRenderingRegion
 class THistPainter : public TVirtualHistPainter {
 
 protected:
-   TH1                  *fH;                 ///< Pointer to histogram to paint
-   TAxis                *fXaxis;             ///< Pointer to X axis
-   TAxis                *fYaxis;             ///< Pointer to Y axis
-   TAxis                *fZaxis;             ///< Pointer to Z axis
-   TList                *fFunctions;         ///< Pointer to histogram list of functions
-   TPainter3dAlgorithms *fLego;              ///< Pointer to a TPainter3dAlgorithms object
-   TGraph2DPainter      *fGraph2DPainter;    ///< Pointer to a TGraph2DPainter object
-   TPie                 *fPie;               ///< Pointer to a TPie in case of option PIE
-   Double_t             *fXbuf;              ///< X buffer coordinates
-   Double_t             *fYbuf;              ///< Y buffer coordinates
-   Int_t                 fNcuts;             ///< Number of graphical cuts
-   Int_t                 fCutsOpt[kMaxCuts]; ///< Sign of each cut
-   TCutG                *fCuts[kMaxCuts];    ///< Pointers to graphical cuts
-   TList                *fStack;             ///< Pointer to stack of histograms (if any)
-   Int_t                 fShowProjection;    ///< True if a projection must be drawn
-   TString               fShowOption;        ///< Option to draw the projection
-   Int_t                 fXHighlightBin;     ///< X highlight bin
-   Int_t                 fYHighlightBin;     ///< Y highlight bin
-   TF3                  *fCurrentF3;         ///< Current TF3 function
+   TH1                  *fH;                      ///< Pointer to histogram to paint
+   TAxis                *fXaxis;                  ///< Pointer to X axis
+   TAxis                *fYaxis;                  ///< Pointer to Y axis
+   TAxis                *fZaxis;                  ///< Pointer to Z axis
+   TList                *fFunctions;              ///< Pointer to histogram list of functions
+   std::unique_ptr<TPainter3dAlgorithms> fLego;   ///< Pointer to a TPainter3dAlgorithms object
+   std::unique_ptr<TGraph2DPainter> fGraph2DPainter; ///< Pointer to a TGraph2DPainter object
+   std::unique_ptr<TPie> fPie;                    ///< Pointer to a TPie in case of option PIE
+   std::vector<Double_t> fXbuf;                   ///< X buffer coordinates
+   std::vector<Double_t> fYbuf;                   ///< Y buffer coordinates
+   Int_t                 fNcuts;                  ///< Number of graphical cuts
+   Int_t                 fCutsOpt[kMaxCuts];      ///< Sign of each cut
+   TCutG                *fCuts[kMaxCuts];         ///< Pointers to graphical cuts
+   TList                *fStack;                  ///< Pointer to stack of histograms (if any)
+   Int_t                 fShowProjection;         ///< True if a projection must be drawn
+   TString               fShowOption;             ///< Option to draw the projection
+   Int_t                 fXHighlightBin;          ///< X highlight bin
+   Int_t                 fYHighlightBin;          ///< Y highlight bin
+   TF3                  *fCurrentF3;              ///< Current TF3 function
 
 private:
    mutable TString fObjectInfo;
 
 public:
    THistPainter();
-   virtual ~THistPainter();
+   ~THistPainter() override;
    virtual void       DefineColorLevels(Int_t ndivz);
-   virtual Int_t      DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void       DrawPanel();
-   virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   virtual TList     *GetContourList(Double_t contour) const;
-   virtual char      *GetObjectInfo(Int_t px, Int_t py) const;
-   virtual TList     *GetStack() const {return fStack;}
+   Int_t      DistancetoPrimitive(Int_t px, Int_t py) override;
+   void       DrawPanel() override;
+   void       ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   TList     *GetContourList(Double_t contour) const override;
+   char      *GetObjectInfo(Int_t px, Int_t py) const override;
+   TList     *GetStack() const override {return fStack;}
    virtual Int_t      GetXHighlightBin() const { return fXHighlightBin; }
    virtual Int_t      GetYHighlightBin() const { return fYHighlightBin; }
    virtual void       HighlightBin(Int_t px, Int_t py);
-   virtual Bool_t     IsInside(Int_t x, Int_t y);
-   virtual Bool_t     IsInside(Double_t x, Double_t y);
+   Bool_t     IsInside(Int_t x, Int_t y) override;
+   Bool_t     IsInside(Double_t x, Double_t y) override;
    virtual Int_t      MakeChopt(Option_t *option);
-   virtual Int_t      MakeCuts(char *cutsopt);
-   virtual void       Paint(Option_t *option="");
+   Int_t      MakeCuts(char *cutsopt) override;
+   void       Paint(Option_t *option="") override;
    virtual void       PaintArrows(Option_t *option);
    virtual void       PaintAxis(Bool_t drawGridOnly=kFALSE);
    virtual void       PaintBar(Option_t *option);
@@ -124,7 +125,7 @@ public:
    virtual void       PaintLegoAxis(TGaxis *axis, Double_t ang);
    virtual void       PaintPalette();
    virtual void       PaintScatterPlot(Option_t *option);
-   virtual void       PaintStat(Int_t dostat, TF1 *fit);
+   void       PaintStat(Int_t dostat, TF1 *fit) override;
    virtual void       PaintStat2(Int_t dostat, TF1 *fit);
    virtual void       PaintStat3(Int_t dostat, TF1 *fit);
    virtual void       PaintSurface(Option_t *option);
@@ -133,17 +134,17 @@ public:
    virtual void       PaintText(Option_t *option);
    virtual void       PaintTitle();
    virtual void       PaintTF3();
-   virtual void       ProcessMessage(const char *mess, const TObject *obj);
+   void       ProcessMessage(const char *mess, const TObject *obj) override;
    static  Int_t      ProjectAitoff2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
    static  Int_t      ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
    static  Int_t      ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
    static  Int_t      ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
    virtual void       RecalculateRange();
-   virtual void       RecursiveRemove(TObject *) {;}
-   virtual void       SetHighlight();
-   virtual void       SetHistogram(TH1 *h);
-   virtual void       SetStack(TList *stack) {fStack = stack;}
-   virtual void       SetShowProjection(const char *option,Int_t nbins);
+   void       RecursiveRemove(TObject *) override {}
+   void       SetHighlight() override;
+   void       SetHistogram(TH1 *h) override;
+   void       SetStack(TList *stack) override {fStack = stack;}
+   void       SetShowProjection(const char *option,Int_t nbins) override;
    virtual void       ShowProjectionX(Int_t px, Int_t py);
    virtual void       ShowProjectionY(Int_t px, Int_t py);
    virtual void       ShowProjection3(Int_t px, Int_t py);
@@ -152,7 +153,7 @@ public:
    static const char *GetBestFormat(Double_t v, Double_t e, const char *f);
    static void        PaintSpecialObjects(const TObject *obj, Option_t *option);
 
-   ClassDef(THistPainter,0)  //Helper class to draw histograms
+   ClassDefOverride(THistPainter,0)  //Helper class to draw histograms
 };
 
 #endif

@@ -7,13 +7,16 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/ExecutionEngine/Orc/ExecutionUtils.h"
-
+#include "llvm/ExecutionEngine/Orc/Layer.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/Module.h"
+#include "llvm/Object/MachOUniversal.h"
+#include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Target/TargetMachine.h"
+#include <string>
 
 namespace llvm {
 namespace orc {
@@ -67,7 +70,7 @@ CtorDtorIterator::Element CtorDtorIterator::operator*() const {
     }
   }
 
-  ConstantInt *Priority = dyn_cast<ConstantInt>(CS->getOperand(0));
+  auto *Priority = cast<ConstantInt>(CS->getOperand(0));
   Value *Data = CS->getNumOperands() == 3 ? CS->getOperand(2) : nullptr;
   if (Data && !isa<GlobalValue>(Data))
     Data = nullptr;
@@ -86,15 +89,35 @@ iterator_range<CtorDtorIterator> getDestructors(const Module &M) {
                     CtorDtorIterator(DtorsList, true));
 }
 
+bool StaticInitGVIterator::isStaticInitGlobal(GlobalValue &GV) {
+  if (GV.isDeclaration())
+    return false;
+
+  if (GV.hasName() && (GV.getName() == "llvm.global_ctors" ||
+                       GV.getName() == "llvm.global_dtors"))
+    return true;
+
+  if (ObjFmt == Triple::MachO) {
+    // FIXME: These section checks are too strict: We should match first and
+    // second word split by comma.
+    if (GV.hasSection() &&
+        (GV.getSection().startswith("__DATA,__objc_classlist") ||
+         GV.getSection().startswith("__DATA,__objc_selrefs")))
+      return true;
+  }
+
+  return false;
+}
+
 void CtorDtorRunner::add(iterator_range<CtorDtorIterator> CtorDtors) {
-  if (empty(CtorDtors))
+  if (CtorDtors.empty())
     return;
 
   MangleAndInterner Mangle(
       JD.getExecutionSession(),
       (*CtorDtors.begin()).Func->getParent()->getDataLayout());
 
-  for (const auto &CtorDtor : CtorDtors) {
+  for (auto CtorDtor : CtorDtors) {
     assert(CtorDtor.Func && CtorDtor.Func->hasName() &&
            "Ctor/Dtor function must be named to be runnable under the JIT");
 
@@ -117,19 +140,17 @@ void CtorDtorRunner::add(iterator_range<CtorDtorIterator> CtorDtors) {
 Error CtorDtorRunner::run() {
   using CtorDtorTy = void (*)();
 
-  SymbolNameSet Names;
-
-  for (auto &KV : CtorDtorsByPriority) {
-    for (auto &Name : KV.second) {
-      auto Added = Names.insert(Name).second;
-      (void)Added;
-      assert(Added && "Ctor/Dtor names clashed");
-    }
-  }
+  SymbolLookupSet LookupSet;
+  for (auto &KV : CtorDtorsByPriority)
+    for (auto &Name : KV.second)
+      LookupSet.add(Name);
+  assert(!LookupSet.containsDuplicates() &&
+         "Ctor/Dtor list contains duplicates");
 
   auto &ES = JD.getExecutionSession();
-  if (auto CtorDtorMap =
-          ES.lookup(JITDylibSearchList({{&JD, true}}), std::move(Names))) {
+  if (auto CtorDtorMap = ES.lookup(
+          makeJITDylibSearchOrder(&JD, JITDylibLookupFlags::MatchAllSymbols),
+          std::move(LookupSet))) {
     for (auto &KV : CtorDtorsByPriority) {
       for (auto &Name : KV.second) {
         assert(CtorDtorMap->count(Name) && "No entry for Name");
@@ -173,31 +194,56 @@ Error LocalCXXRuntimeOverrides::enable(JITDylib &JD,
   return JD.define(absoluteSymbols(std::move(RuntimeInterposes)));
 }
 
+void ItaniumCXAAtExitSupport::registerAtExit(void (*F)(void *), void *Ctx,
+                                             void *DSOHandle) {
+  std::lock_guard<std::mutex> Lock(AtExitsMutex);
+  AtExitRecords[DSOHandle].push_back({F, Ctx});
+}
+
+void ItaniumCXAAtExitSupport::runAtExits(void *DSOHandle) {
+  std::vector<AtExitRecord> AtExitsToRun;
+
+  {
+    std::lock_guard<std::mutex> Lock(AtExitsMutex);
+    auto I = AtExitRecords.find(DSOHandle);
+    if (I != AtExitRecords.end()) {
+      AtExitsToRun = std::move(I->second);
+      AtExitRecords.erase(I);
+    }
+  }
+
+  while (!AtExitsToRun.empty()) {
+    AtExitsToRun.back().F(AtExitsToRun.back().Ctx);
+    AtExitsToRun.pop_back();
+  }
+}
+
 DynamicLibrarySearchGenerator::DynamicLibrarySearchGenerator(
     sys::DynamicLibrary Dylib, char GlobalPrefix, SymbolPredicate Allow)
     : Dylib(std::move(Dylib)), Allow(std::move(Allow)),
       GlobalPrefix(GlobalPrefix) {}
 
-Expected<DynamicLibrarySearchGenerator>
+Expected<std::unique_ptr<DynamicLibrarySearchGenerator>>
 DynamicLibrarySearchGenerator::Load(const char *FileName, char GlobalPrefix,
                                     SymbolPredicate Allow) {
   std::string ErrMsg;
   auto Lib = sys::DynamicLibrary::getPermanentLibrary(FileName, &ErrMsg);
   if (!Lib.isValid())
     return make_error<StringError>(std::move(ErrMsg), inconvertibleErrorCode());
-  return DynamicLibrarySearchGenerator(std::move(Lib), GlobalPrefix,
-                                       std::move(Allow));
+  return std::make_unique<DynamicLibrarySearchGenerator>(
+      std::move(Lib), GlobalPrefix, std::move(Allow));
 }
 
-Expected<SymbolNameSet>
-DynamicLibrarySearchGenerator::operator()(JITDylib &JD,
-                                          const SymbolNameSet &Names) {
-  orc::SymbolNameSet Added;
+Error DynamicLibrarySearchGenerator::tryToGenerate(
+    LookupState &LS, LookupKind K, JITDylib &JD,
+    JITDylibLookupFlags JDLookupFlags, const SymbolLookupSet &Symbols) {
   orc::SymbolMap NewSymbols;
 
   bool HasGlobalPrefix = (GlobalPrefix != '\0');
 
-  for (auto &Name : Names) {
+  for (auto &KV : Symbols) {
+    auto &Name = KV.first;
+
     if ((*Name).empty())
       continue;
 
@@ -210,21 +256,132 @@ DynamicLibrarySearchGenerator::operator()(JITDylib &JD,
     std::string Tmp((*Name).data() + HasGlobalPrefix,
                     (*Name).size() - HasGlobalPrefix);
     if (void *Addr = Dylib.getAddressOfSymbol(Tmp.c_str())) {
-      Added.insert(Name);
       NewSymbols[Name] = JITEvaluatedSymbol(
           static_cast<JITTargetAddress>(reinterpret_cast<uintptr_t>(Addr)),
           JITSymbolFlags::Exported);
     }
   }
 
-  // Add any new symbols to JD. Since the generator is only called for symbols
-  // that are not already defined, this will never trigger a duplicate
-  // definition error, so we can wrap this call in a 'cantFail'.
-  if (!NewSymbols.empty())
-    cantFail(JD.define(absoluteSymbols(std::move(NewSymbols))));
+  if (NewSymbols.empty())
+    return Error::success();
 
-  return Added;
+  return JD.define(absoluteSymbols(std::move(NewSymbols)));
 }
+
+Expected<std::unique_ptr<StaticLibraryDefinitionGenerator>>
+StaticLibraryDefinitionGenerator::Load(ObjectLayer &L, const char *FileName) {
+  auto ArchiveBuffer = errorOrToExpected(MemoryBuffer::getFile(FileName));
+
+  if (!ArchiveBuffer)
+    return ArchiveBuffer.takeError();
+
+  return Create(L, std::move(*ArchiveBuffer));
+}
+
+Expected<std::unique_ptr<StaticLibraryDefinitionGenerator>>
+StaticLibraryDefinitionGenerator::Load(ObjectLayer &L, const char *FileName,
+                                       const Triple &TT) {
+  auto B = object::createBinary(FileName);
+  if (!B)
+    return B.takeError();
+
+  // If this is a regular archive then create an instance from it.
+  if (isa<object::Archive>(B->getBinary()))
+    return Create(L, std::move(B->takeBinary().second));
+
+  // If this is a universal binary then search for a slice matching the given
+  // Triple.
+  if (auto *UB = cast<object::MachOUniversalBinary>(B->getBinary())) {
+    for (const auto &Obj : UB->objects()) {
+      auto ObjTT = Obj.getTriple();
+      if (ObjTT.getArch() == TT.getArch() &&
+          ObjTT.getSubArch() == TT.getSubArch() &&
+          (TT.getVendor() == Triple::UnknownVendor ||
+           ObjTT.getVendor() == TT.getVendor())) {
+        // We found a match. Create an instance from a buffer covering this
+        // slice.
+        auto SliceBuffer = MemoryBuffer::getFileSlice(FileName, Obj.getSize(),
+                                                      Obj.getOffset());
+        if (!SliceBuffer)
+          return make_error<StringError>(
+              Twine("Could not create buffer for ") + TT.str() + " slice of " +
+                  FileName + ": [ " + formatv("{0:x}", Obj.getOffset()) +
+                  " .. " + formatv("{0:x}", Obj.getOffset() + Obj.getSize()) +
+                  ": " + SliceBuffer.getError().message(),
+              SliceBuffer.getError());
+        return Create(L, std::move(*SliceBuffer));
+      }
+    }
+
+    return make_error<StringError>(Twine("Universal binary ") + FileName +
+                                       " does not contain a slice for " +
+                                       TT.str(),
+                                   inconvertibleErrorCode());
+  }
+
+  return make_error<StringError>(Twine("Unrecognized file type for ") +
+                                     FileName,
+                                 inconvertibleErrorCode());
+}
+
+Expected<std::unique_ptr<StaticLibraryDefinitionGenerator>>
+StaticLibraryDefinitionGenerator::Create(
+    ObjectLayer &L, std::unique_ptr<MemoryBuffer> ArchiveBuffer) {
+  Error Err = Error::success();
+
+  std::unique_ptr<StaticLibraryDefinitionGenerator> ADG(
+      new StaticLibraryDefinitionGenerator(L, std::move(ArchiveBuffer), Err));
+
+  if (Err)
+    return std::move(Err);
+
+  return std::move(ADG);
+}
+
+Error StaticLibraryDefinitionGenerator::tryToGenerate(
+    LookupState &LS, LookupKind K, JITDylib &JD,
+    JITDylibLookupFlags JDLookupFlags, const SymbolLookupSet &Symbols) {
+
+  // Don't materialize symbols from static archives unless this is a static
+  // lookup.
+  if (K != LookupKind::Static)
+    return Error::success();
+
+  // Bail out early if we've already freed the archive.
+  if (!Archive)
+    return Error::success();
+
+  DenseSet<std::pair<StringRef, StringRef>> ChildBufferInfos;
+
+  for (const auto &KV : Symbols) {
+    const auto &Name = KV.first;
+    auto Child = Archive->findSym(*Name);
+    if (!Child)
+      return Child.takeError();
+    if (*Child == None)
+      continue;
+    auto ChildBuffer = (*Child)->getMemoryBufferRef();
+    if (!ChildBuffer)
+      return ChildBuffer.takeError();
+    ChildBufferInfos.insert(
+        {ChildBuffer->getBuffer(), ChildBuffer->getBufferIdentifier()});
+  }
+
+  for (auto ChildBufferInfo : ChildBufferInfos) {
+    MemoryBufferRef ChildBufferRef(ChildBufferInfo.first,
+                                   ChildBufferInfo.second);
+
+    if (auto Err = L.add(JD, MemoryBuffer::getMemBuffer(ChildBufferRef, false)))
+      return Err;
+  }
+
+  return Error::success();
+}
+
+StaticLibraryDefinitionGenerator::StaticLibraryDefinitionGenerator(
+    ObjectLayer &L, std::unique_ptr<MemoryBuffer> ArchiveBuffer, Error &Err)
+    : L(L), ArchiveBuffer(std::move(ArchiveBuffer)),
+      Archive(std::make_unique<object::Archive>(*this->ArchiveBuffer, Err)) {}
 
 } // End namespace orc.
 } // End namespace llvm.

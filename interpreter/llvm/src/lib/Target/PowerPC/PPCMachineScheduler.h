@@ -23,8 +23,9 @@ public:
   PPCPreRASchedStrategy(const MachineSchedContext *C) :
     GenericScheduler(C) {}
 protected:
-  void tryCandidate(SchedCandidate &Cand, SchedCandidate &TryCand,
+  bool tryCandidate(SchedCandidate &Cand, SchedCandidate &TryCand,
                     SchedBoundary *Zone) const override;
+
 private:
   bool biasAddiLoadCandidate(SchedCandidate &Cand,
                              SchedCandidate &TryCand,
@@ -42,6 +43,9 @@ protected:
   SUnit *pickNode(bool &IsTopNode) override;
   void enterMBB(MachineBasicBlock *MBB) override;
   void leaveMBB() override;
+
+  bool tryCandidate(SchedCandidate &Cand, SchedCandidate &TryCand) override;
+  bool biasAddiCandidate(SchedCandidate &Cand, SchedCandidate &TryCand) const;
 };
 
 } // end namespace llvm

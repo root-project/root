@@ -44,28 +44,28 @@ private:
    TMethodCall            *fGetterMethod;    //methodcall for state getter in case this is a *TOGGLE method
    TMethodCall            *fSetterMethod;    //methodcall for state setter in case this is a *TOGGLE method
 
-   void                    CreateSignature();
+   void                    CreateSignature() override;
    void                    SetMenuItem(const char *docstring);    //Must not be virtual. Used in constructor.
 public:
-                           TMethod(MethodInfo_t *info = 0, TClass *cl = 0);
-                           TMethod(const TMethod &org);
+   TMethod(MethodInfo_t *info = nullptr, TClass *cl = nullptr);
+   TMethod(const TMethod &org);
+   virtual ~TMethod();
    TMethod&                operator=(const TMethod &rhs);
-   virtual                ~TMethod();
-   virtual TObject        *Clone(const char *newname="") const;
+   TObject                *Clone(const char *newname="") const override;
    TClass                 *GetClass() const { return fClass; }
    EMenuItemKind           IsMenuItem() const { return fMenuItem; }
-   virtual Bool_t          IsValid();
+   Bool_t                  IsValid() override;
    virtual const char     *GetCommentString();
    virtual const char     *Getter() const { return fGetter; }
    virtual TMethodCall    *GetterMethod();
    virtual TMethodCall    *SetterMethod();
    virtual TDataMember    *FindDataMember();
    virtual TList          *GetListOfMethodArgs();
-   virtual void            SetMenuItem(EMenuItemKind menuItem) {fMenuItem=menuItem;}
+   virtual void            SetMenuItem(EMenuItemKind menuItem) { fMenuItem = menuItem; }
 
-   virtual Bool_t          Update(MethodInfo_t *info);
+   Bool_t                  Update(MethodInfo_t *info) override;
 
-   ClassDef(TMethod,0)  //Dictionary for a class member function (method)
+   ClassDefOverride(TMethod,0)  //Dictionary for a class member function (method)
 };
 
 #endif

@@ -59,7 +59,6 @@ public:
    static constexpr std::uint32_t kReleaseCandidateTag    = 1;
 
    static constexpr std::uint16_t kFlagRepetitiveField = 0x01;
-   static constexpr std::uint16_t kFlagAliasField      = 0x02;
 
    static constexpr std::uint32_t kFlagSortAscColumn     = 0x01;
    static constexpr std::uint32_t kFlagSortDesColumn     = 0x02;
@@ -85,54 +84,65 @@ public:
    };
 
    /// The serialization context is used for the piecewise serialization of a descriptor.  During header serialization,
-   /// the mapping of in-memory field and column IDs to physical IDs is built so that it can be used for the
+   /// the mapping of in-memory field and column IDs to on-disk IDs is built so that it can be used for the
    /// footer serialization in a second step.
    class RContext {
    private:
       std::uint32_t fHeaderSize = 0;
       std::uint32_t fHeaderCrc32 = 0;
-      std::vector<RClusterGroup> fClusterGroups;
-      std::map<DescriptorId_t, DescriptorId_t> fMem2PhysFieldIDs;
-      std::map<DescriptorId_t, DescriptorId_t> fMem2PhysColumnIDs;
-      std::map<DescriptorId_t, DescriptorId_t> fMem2PhysClusterIDs;
-      std::vector<DescriptorId_t> fPhys2MemFieldIDs;
-      std::vector<DescriptorId_t> fPhys2MemColumnIDs;
-      std::vector<DescriptorId_t> fPhys2MemClusterIDs;
+      std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskFieldIDs;
+      std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskColumnIDs;
+      std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskClusterIDs;
+      std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskClusterGroupIDs;
+      std::vector<DescriptorId_t> fOnDisk2MemFieldIDs;
+      std::vector<DescriptorId_t> fOnDisk2MemColumnIDs;
+      std::vector<DescriptorId_t> fOnDisk2MemClusterIDs;
+      std::vector<DescriptorId_t> fOnDisk2MemClusterGroupIDs;
+
    public:
       void SetHeaderSize(std::uint32_t size) { fHeaderSize = size; }
       std::uint32_t GetHeaderSize() const { return fHeaderSize; }
       void SetHeaderCRC32(std::uint32_t crc32) { fHeaderCrc32 = crc32; }
       std::uint32_t GetHeaderCRC32() const { return fHeaderCrc32; }
-      void AddClusterGroup(std::uint32_t nClusters, const REnvelopeLink &pageListEnvelope) {
-         fClusterGroups.push_back({nClusters, pageListEnvelope});
-      }
-      const std::vector<RClusterGroup> &GetClusterGroups() const {
-         return fClusterGroups;
-      }
       DescriptorId_t MapFieldId(DescriptorId_t memId) {
-         auto physId = fPhys2MemFieldIDs.size();
-         fMem2PhysFieldIDs[memId] = physId;
-         fPhys2MemFieldIDs.push_back(memId);
-         return physId;
+         auto onDiskId = fOnDisk2MemFieldIDs.size();
+         fMem2OnDiskFieldIDs[memId] = onDiskId;
+         fOnDisk2MemFieldIDs.push_back(memId);
+         return onDiskId;
       }
       DescriptorId_t MapColumnId(DescriptorId_t memId) {
-         auto physId = fPhys2MemColumnIDs.size();
-         fMem2PhysColumnIDs[memId] = physId;
-         fPhys2MemColumnIDs.push_back(memId);
-         return physId;
+         auto onDiskId = fOnDisk2MemColumnIDs.size();
+         fMem2OnDiskColumnIDs[memId] = onDiskId;
+         fOnDisk2MemColumnIDs.push_back(memId);
+         return onDiskId;
       }
       DescriptorId_t MapClusterId(DescriptorId_t memId) {
-         auto physId = fPhys2MemClusterIDs.size();
-         fMem2PhysClusterIDs[memId] = physId;
-         fPhys2MemClusterIDs.push_back(memId);
-         return physId;
+         auto onDiskId = fOnDisk2MemClusterIDs.size();
+         fMem2OnDiskClusterIDs[memId] = onDiskId;
+         fOnDisk2MemClusterIDs.push_back(memId);
+         return onDiskId;
       }
-      DescriptorId_t GetPhysFieldId(DescriptorId_t memId) const { return fMem2PhysFieldIDs.at(memId); }
-      DescriptorId_t GetPhysColumnId(DescriptorId_t memId) const { return fMem2PhysColumnIDs.at(memId); }
-      DescriptorId_t GetPhysClusterId(DescriptorId_t memId) const { return fMem2PhysClusterIDs.at(memId); }
-      DescriptorId_t GetMemFieldId(DescriptorId_t physId) const { return fPhys2MemFieldIDs[physId]; }
-      DescriptorId_t GetMemColumnId(DescriptorId_t physId) const { return fPhys2MemColumnIDs[physId]; }
-      DescriptorId_t GetMemClusterId(DescriptorId_t physId) const { return fPhys2MemClusterIDs[physId]; }
+      DescriptorId_t MapClusterGroupId(DescriptorId_t memId)
+      {
+         auto onDiskId = fOnDisk2MemClusterGroupIDs.size();
+         fMem2OnDiskClusterGroupIDs[memId] = onDiskId;
+         fOnDisk2MemClusterGroupIDs.push_back(memId);
+         return onDiskId;
+      }
+      DescriptorId_t GetOnDiskFieldId(DescriptorId_t memId) const { return fMem2OnDiskFieldIDs.at(memId); }
+      DescriptorId_t GetOnDiskColumnId(DescriptorId_t memId) const { return fMem2OnDiskColumnIDs.at(memId); }
+      DescriptorId_t GetOnDiskClusterId(DescriptorId_t memId) const { return fMem2OnDiskClusterIDs.at(memId); }
+      DescriptorId_t GetOnDiskClusterGroupId(DescriptorId_t memId) const
+      {
+         return fMem2OnDiskClusterGroupIDs.at(memId);
+      }
+      DescriptorId_t GetMemFieldId(DescriptorId_t onDiskId) const { return fOnDisk2MemFieldIDs[onDiskId]; }
+      DescriptorId_t GetMemColumnId(DescriptorId_t onDiskId) const { return fOnDisk2MemColumnIDs[onDiskId]; }
+      DescriptorId_t GetMemClusterId(DescriptorId_t onDiskId) const { return fOnDisk2MemClusterIDs[onDiskId]; }
+      DescriptorId_t GetMemClusterGroupId(DescriptorId_t onDiskId) const
+      {
+         return fOnDisk2MemClusterGroupIDs[onDiskId];
+      }
    };
 
    /// Writes a CRC32 checksum of the byte range given by data and length.
@@ -215,6 +225,7 @@ public:
    static RResult<void> DeserializeFooterV1(const void *buffer,
                                             std::uint32_t bufSize,
                                             RNTupleDescriptorBuilder &descBuilder);
+   // The clusters vector must be initialized with the cluster summaries corresponding to the page list
    static RResult<void> DeserializePageListV1(const void *buffer,
                                               std::uint32_t bufSize,
                                               std::vector<RClusterDescriptorBuilder> &clusters);

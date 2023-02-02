@@ -30,16 +30,16 @@ class THnSparse;
 class THnSparseArrayChunk: public TObject {
  private:
 
-   THnSparseArrayChunk(const THnSparseArrayChunk&); // Not implemented
-   THnSparseArrayChunk& operator=(const THnSparseArrayChunk&); // Not implemented
+   THnSparseArrayChunk(const THnSparseArrayChunk&) = delete;
+   THnSparseArrayChunk& operator=(const THnSparseArrayChunk&) = delete;
 
  public:
    THnSparseArrayChunk():
-      fCoordinateAllocationSize(-1), fSingleCoordinateSize(0), fCoordinatesSize(0), fCoordinates(0),
-      fContent(0), fSumw2(0) {}
+      fCoordinateAllocationSize(-1), fSingleCoordinateSize(0), fCoordinatesSize(0), fCoordinates(nullptr),
+      fContent(nullptr), fSumw2(nullptr) {}
 
    THnSparseArrayChunk(Int_t coordsize, bool errors, TArray* cont);
-   virtual ~THnSparseArrayChunk();
+   ~THnSparseArrayChunk() override;
 
    Int_t    fCoordinateAllocationSize; ///<! Size of the allocated coordinate buffer; -1 means none or fCoordinatesSize
    Int_t    fSingleCoordinateSize;     ///<  Size of a single bin coordinate
@@ -52,7 +52,7 @@ class THnSparseArrayChunk: public TObject {
    void AddBinContent(Int_t idx, Double_t v = 1.) {
       fContent->SetAt(v + fContent->GetAt(idx), idx);
       if (fSumw2)
-         fSumw2->SetAt(v * v+ fSumw2->GetAt(idx), idx);
+         fSumw2->SetAt(v * v + fSumw2->GetAt(idx), idx);
    }
    void Sumw2();
    Int_t GetEntries() const { return fCoordinatesSize / fSingleCoordinateSize; }
@@ -64,7 +64,7 @@ class THnSparseArrayChunk: public TObject {
       return fSingleCoordinateSize <= 8 ||
          !memcmp(fCoordinates + idx * fSingleCoordinateSize, idxbuf, fSingleCoordinateSize); }
 
-   ClassDef(THnSparseArrayChunk, 1); // chunks of linearized bins
+   ClassDefOverride(THnSparseArrayChunk, 1); // chunks of linearized bins
 };
 #endif // ROOT_THnSparse_Internal
 

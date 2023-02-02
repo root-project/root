@@ -43,7 +43,7 @@ private:
 
 public:
    TStyleDialog(TStyleManager *sm, TStyle *cur, Int_t mode,
-                  TVirtualPad *currentPad = 0);
+                  TVirtualPad *currentPad = nullptr);
    virtual ~TStyleDialog();
 
    void DoCloseWindow();                  // SLOT

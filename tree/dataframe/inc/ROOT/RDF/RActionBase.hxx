@@ -47,11 +47,14 @@ private:
    const unsigned int fNSlots; ///< Number of thread slots used by this node.
    bool fHasRun = false;
    const ColumnNames_t fColumnNames;
+   /// List of systematic variations that affect the result of this action ("nominal" excluded).
+   std::vector<std::string> fVariations;
 
    RColumnRegister fColRegister;
 
 public:
-   RActionBase(RLoopManager *lm, const ColumnNames_t &colNames, const RColumnRegister &colRegister);
+   RActionBase(RLoopManager *lm, const ColumnNames_t &colNames, const RColumnRegister &colRegister,
+               const std::vector<std::string> &prevVariations);
    RActionBase(const RActionBase &) = delete;
    RActionBase &operator=(const RActionBase &) = delete;
    virtual ~RActionBase();
@@ -84,6 +87,10 @@ public:
    virtual std::unique_ptr<RMergeableValueBase> GetMergeableValue() const = 0;
 
    virtual ROOT::RDF::SampleCallback_t GetSampleCallback() = 0;
+
+   const std::vector<std::string> &GetVariations() const { return fVariations; }
+
+   virtual std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&results) = 0;
 };
 } // namespace RDF
 } // namespace Internal

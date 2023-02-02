@@ -596,13 +596,11 @@ void MethodDL::ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
    TObjArray *subStrings = layerString.Tokenize(delim);
    TIter nextToken(subStrings);
    TObjString *token = (TObjString *)nextToken();
-   int idxToken = 0;
 
    // loop on the tokens
    // order of sepcifying width and activation function is not relevant
    // both  100|TANH and TANH|100 are valid cases
    for (; token != nullptr; token = (TObjString *)nextToken()) {
-      idxToken++;
       // try a match with the activation function
       TString strActFnc(token->GetString());
       // if first token defines the layer type- skip it

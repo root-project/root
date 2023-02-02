@@ -12,28 +12,28 @@
 /** \class TVectorT
     \ingroup Matrix
 
- TVectorT
+TVectorT
 
- Template class of Vectors in the linear algebra package.
+Template class of Vectors in the linear algebra package.
 
- See \ref MatrixPage for the documentation of the linear algebra package
+See the \ref Matrix page for the documentation of the linear algebra package
 
- Unless otherwise specified, vector indices always start with 0,
- spanning up to the specified limit-1.
+Unless otherwise specified, vector indices always start with 0,
+spanning up to the specified limit-1.
 
- For (n) vectors where n <= kSizeMax (5 currently) storage space is
- available on the stack, thus avoiding expensive allocation/
- deallocation of heap space . However, this introduces of course
- kSizeMax overhead for each vector object . If this is an issue
- recompile with a new appropriate value (>=0) for kSizeMax
+For (n) vectors where n <= kSizeMax (5 currently) storage space is
+available on the stack, thus avoiding expensive allocation/
+deallocation of heap space . However, this introduces of course
+kSizeMax overhead for each vector object . If this is an issue
+recompile with a new appropriate value (>=0) for kSizeMax
 
- Another way to assign and store vector data is through Use
- see for instance stressLinear.cxx file .
+Another way to assign and store vector data is through Use
+see for instance stressLinear.cxx file .
 
- Note that Constructors/assignments exists for all different matrix
- views
+Note that Constructors/assignments exists for all different matrix
+views
 
- For usage examples see $ROOTSYS/test/stressLinear.cxx
+For usage examples see `$ROOTSYS/test/stressLinear.cxx`
 
 */
 

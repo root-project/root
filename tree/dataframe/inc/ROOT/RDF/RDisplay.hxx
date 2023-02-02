@@ -18,7 +18,6 @@
 
 #include <vector>
 #include <string>
-#include <iostream>
 #include <sstream>
 
 namespace ROOT {
@@ -87,8 +86,6 @@ private:
    size_t fCurrentRow = 0;    ///< Row that is being filled
    size_t fNextRow = 1;       ///< Next row to be filled.
    size_t fCurrentColumn = 0; ///< Column that is being filled.
-
-   size_t fEntries; ///< Number of events to process for each column (i.e. number of rows).
 
    size_t fNMaxCollectionElements = 10; // threshold on number of elements in collections to be Print()
 
@@ -224,13 +221,7 @@ private:
             AddToRow(fRepresentations[i]);
          }
       }
-      // This row has been parsed
-      fEntries--;
    }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// If the number of required rows has been parsed, returns false.
-   bool HasNext() { return fEntries > 0; }
 
    void EnsureCurrentColumnWidth(size_t w);
 
@@ -239,8 +230,8 @@ public:
    /// Creates an RDisplay to print the event values
    /// \param[in] columnNames Columns to print
    /// \param[in] types The type of each column
-   /// \param[in] entries How many events per column (row) must be processed.
-   RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries, size_t nMaxCollectionElements);
+   /// \param[in] nMaxCollectionElements Number of maximum elements in collection.
+   RDisplay(const VecStr_t &columnNames, const VecStr_t &types, size_t nMaxCollectionElements);
 
    ////////////////////////////////////////////////////////////////////////////
    /// Prints the representation to the standard output

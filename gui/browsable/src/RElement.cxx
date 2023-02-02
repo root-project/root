@@ -9,7 +9,9 @@
 #include <ROOT/Browsable/RElement.hxx>
 
 #include <ROOT/Browsable/RLevelIter.hxx>
+#include <ROOT/Browsable/RItem.hxx>
 #include <ROOT/RLogger.hxx>
+
 #include "TBufferJSON.h"
 
 using namespace ROOT::Experimental::Browsable;
@@ -95,6 +97,17 @@ std::string RElement::GetContent(const std::string &kind)
    return ""s;
 }
 
+
+/////////////////////////////////////////////////////////////////////
+/// Returns item with element description
+
+std::unique_ptr<RItem> RElement::CreateItem() const
+{
+   auto item = std::make_unique<RItem>(GetName());
+   item->SetTitle(GetTitle());
+   return item;
+}
+
 /////////////////////////////////////////////////////////////////////
 /// Parse string path to produce RElementPath_t
 /// One should avoid to use string pathes as much as possible
@@ -158,7 +171,7 @@ std::string RElement::GetPathAsString(const RElementPath_t &path)
 
 /////////////////////////////////////////////////////////////////////
 /// Extract index from name
-/// Index coded by client with ###<indx>$$$ suffix
+/// Index coded by client with `###<indx>$$$` suffix
 /// Such coding used by browser to identify element by index
 
 int RElement::ExtractItemIndex(std::string &name)

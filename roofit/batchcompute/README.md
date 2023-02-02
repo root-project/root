@@ -8,23 +8,23 @@ While fitting, a significant amount of time and processing power is spent on com
 As of ROOT v6.26, RooBatchComputes also provides multithread and [CUDA](https://en.wikipedia.org/wiki/CUDA) instances of the computation functions, resulting in even greater improvements for fitting times.
 
 ### How to use
-This library is an internal component of RooFit, as a results users are not supposed to actively interact with it. Instead, they can benefit from significantly faster times for fitting by calling `fitTo()` and providing a `BatchMode(RooBatchCompute::Cpu)` or a `BatchMode(RooBatchCompute::Cuda)` option. 
+This library is an internal component of RooFit, so users are not supposed to actively interact with it. Instead, they can benefit from significantly faster times for fitting by calling `fitTo()` and providing a `BatchMode("cpu")` or a `BatchMode("cuda")` option. 
 ```c++
-  // fit using the most efficient library that the computer's cpu can support
+  // fit using the most efficient library that the computer's CPU can support
   RooMyPDF.fitTo(data, BatchMode("cpu")); 
   
-  // fit using the cuda library along with the most efficient library that the computer's cpu can support
+  // fit using the CUDA library along with the most efficient library that the computer's CPU can support
   RooMyPDF.fitTo(data, BatchMode("cuda")); 
 ```
-**Note: In case the system does not support vector instructions, the `RooBatchCompute::Cpu` option is guaranteed to work properly by using a generic cpu library. In contrast, users must first make sure that their system supports cuda in order to use the `RooBatchCompute::Cuda` option. If this is not the case, an exemption will be thrown.**
+**Note: In case the system does not support vector instructions, the `RooBatchCompute::Cpu` option is guaranteed to work properly by using a generic CPU library. In contrast, users must first make sure that their system supports CUDA in order to use the `RooBatchCompute::Cuda` option. If this is not the case, an exception will be thrown.**
 
-If `RooBatchCompute::Cuda` is selected, RooFit will launch CUDA kernels for computing possibilities and potentially other intense computations. At the same time, the most efficent cpu library loaded will also handle parts of the computations in parallel with the GPU (or potentially, if it's faster all of them), thus gaining full advantage of the available hardware. For this purpose `RooFitDriver`, a newly created RooFit class (in roofitcore) takes over the task of analyzing the computations and assigning each to the correct piece of hardware, taking into consideration the performance boost or penalty that may arise with every method of computing.
+If `"cuda"` is selected, RooFit will launch CUDA kernels for computing likelihoods and potentially other intense computations. At the same time, the most efficent CPU library loaded will also handle parts of the computations in parallel with the GPU (or potentially, if it's faster, all of them), thus gaining full advantage of the available hardware. For this purpose `RooFitDriver`, a newly created RooFit class (in roofitcore) takes over the task of analyzing the computations and assigning each to the correct piece of hardware, taking into consideration the performance boost or penalty that may arise with every method of computing.
 
 #### Multithread computations
-The CPU instance of the computing library can furthermore execute multithread computations. This also applies for computations handled by the CPU in the `RooBatchCompute::Cuda` mode. To use them, one needs to set the desired number of parallel tasks before calling `fitTo()` as shown below:
+The CPU instance of the computing library can furthermore execute multithread computations. This also applies for computations handled by the CPU in the `"cuda"` mode. To use them, one needs to set the desired number of parallel tasks before calling `fitTo()` as shown below:
 ```c++
   ROOT::EnableImplicitMT(nThreads);
-  RooMyPDF.fitTo(data, BatchMode(RooBatchCompute::Cpu)); // can also use RooBatchCompute::Cuda
+  RooMyPDF.fitTo(data, BatchMode("cuda")); // can also use "cuda"
 ```
 
 ### User-made PDFs

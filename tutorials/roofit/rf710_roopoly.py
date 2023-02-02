@@ -1,5 +1,14 @@
-## \file## \ingroup tutorial_roofit## \notebook##Taylor expansion of RooFit functions using the taylorExpand function
-#### \macro_code#### \date November 2021## \authors Rahul Balasubramanian
+## \file
+## \ingroup tutorial_roofit
+## \notebook
+## Taylor expansion of RooFit functions using the taylorExpand function
+##
+## \macro_image
+## \macro_output
+## \macro_code
+##
+## \date November 2021
+## \author Rahul Balasubramanian
 
 import ROOT
 
@@ -19,18 +28,18 @@ f.addTerm(+5, x, 2)
 f.addTerm(+5, x, 1)
 f.addTerm(-6, x, 0)
 
-f = ROOT.RooFormulaVar("f", "f", "pow(@0,4) -5 * pow(@0,3) +5 * pow(@0,2) + 5 * pow(@0,1) - 6", ROOT.RooArgList(x))
+f = ROOT.RooFormulaVar("f", "f", "pow(@0,4) -5 * pow(@0,3) +5 * pow(@0,2) + 5 * pow(@0,1) - 6", [x])
 # taylor expand around x0 = 0
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 x0 = 2.0
-taylor_o1 = ROOT.RooPolyFunc.taylorExpand("taylorfunc_o1", "taylor expansion order 1", f, ROOT.RooArgSet(x), x0, 1)
-taylor_o2 = ROOT.RooPolyFunc.taylorExpand("taylorfunc_o2", "taylor expansion order 2", f, ROOT.RooArgSet(x), x0, 2)
+taylor_o1 = ROOT.RooPolyFunc.taylorExpand("taylorfunc_o1", "taylor expansion order 1", f, [x], 1, [x0])
+taylor_o2 = ROOT.RooPolyFunc.taylorExpand("taylorfunc_o2", "taylor expansion order 2", f, [x], 2, [x0])
 frame = x.frame(Title="x^{4} - 5x^{3} + 5x^{2} + 5x - 6")
 c = ROOT.TCanvas("c", "c", 400, 400)
 
 f.plotOn(frame, Name="f")
-taylor_o1.plotOn(frame, Name="taylor_o1", LineColor=ROOT.kRed, LineStyle=ROOT.kDashed)
-taylor_o2.plotOn(frame, Name="taylor_o2", LineColor=ROOT.kRed - 9, LineStyle=ROOT.kDotted)
+taylor_o1.plotOn(frame, Name="taylor_o1", LineColor="kRed", LineStyle="kDashed")
+taylor_o2.plotOn(frame, Name="taylor_o2", LineColor="kRed - 9", LineStyle="kDotted")
 
 c.cd()
 frame.SetMinimum(-8.0)
@@ -48,4 +57,4 @@ legend.AddEntry("f", "Polynomial of fourth order", "L")
 legend.Draw()
 
 c.Draw()
-c.SaveAs("rf710_roopoly.pdf")
+c.SaveAs("rf710_roopoly.png")

@@ -112,7 +112,10 @@ namespace SOFIE{
          }
          fShapeA = model.GetTensorShape(fNA);
          if (fShapeA.size() != 2){
-            throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNA +
+            if (fShapeA.size() == 1)
+               fShapeA = {1,fShapeA[0]};
+            else
+               throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNA +
                                      " is not of 2 dimensions: A " +  ConvertShapeToString(fShapeA));
          }
          fShapeB = model.GetTensorShape(fNB);
@@ -123,12 +126,11 @@ namespace SOFIE{
          if (fNC != ""){
             fShapeC = model.GetTensorShape(fNC);
             fNC2 = fNC;
-            bool broadcast_needed = false;
-
-            // broadcast is not needed if fShapeY[0] == 1 i.e. C and Y have same length
-            if (ConvertShapeToLength(fShapeC) != ConvertShapeToLength(fShapeY)) {
-               broadcast_needed = true;
-            }
+            bool broadcast_needed = !UTILITY::AreSameShape(fShapeC, fShapeY);
+            // For Gemm broadcasting is not needed if fShapeY[0] == 1 i.e. C and Y have same length
+            //if (fShapeY[0] == 1 && ConvertShapeToLength(fShapeC) != ConvertShapeToLength(fShapeY)) {
+            //   broadcast_needed = false;
+            //}
 
             // std::cout << "doing broadcast " << broadcast_needed << " use session " << model.UseSession() <<
             //    " shape C " << ConvertShapeToString(fShapeC) << " shape Y " << ConvertShapeToString(fShapeY)
@@ -137,11 +139,11 @@ namespace SOFIE{
             if (broadcast_needed) {
                if (!model.UseSession()) {
                   auto original_data = model.GetInitializedTensorData(fNC);
+                  auto targetShape = UTILITY::UnidirectionalBroadcastShape(fShapeC, fShapeY);
                   if (fType == "float") {
-
-                     std::shared_ptr<void> new_data_ptr(UTILITY::Unidirectional_broadcast<float>(
-                                                           static_cast<float *>(original_data.get()), fShapeC, fShapeY),
-                                                        std::default_delete<float[]>());
+                     std::shared_ptr<void> new_data_ptr(UTILITY::UnidirectionalBroadcast<float>(
+                        static_cast<float *>(original_data.get()), fShapeC, targetShape),
+                        std::default_delete<float[]>());
 
                      model.UpdateInitializedTensor(fNC, model.GetTensorType(fNC), fShapeY, new_data_ptr);
                      fShapeC = fShapeY;
@@ -168,18 +170,15 @@ namespace SOFIE{
          std::stringstream out;
          // generate initialization code for broadcasting of bias tensor
          if (fShapeC.size() != fShapeY.size() && fNC != fNC2) {
+            auto targetShape = UTILITY::UnidirectionalBroadcastShape(fShapeC, fShapeY);
             // include a separate scope to avoid defining unique operator temp variables
-            out << "   {\n";
-            out << "      std::vector<size_t> oldShape = " << ConvertShapeToString(fShapeC) << ";\n";
-            out << "      std::vector<size_t> newShape = " << ConvertShapeToString(fShapeY) << ";\n";
-            std::string original_bias_tensor = "tensor_" + fNC;
-            std::string new_bias_tensor = "tensor_" + fNC2;
-            out << "      float * newData_ptr = TMVA::Experimental::SOFIE::UTILITY::Unidirectional_broadcast<float>("
-                << original_bias_tensor << ", oldShape, newShape);\n";
-            int length = TMVA::Experimental::SOFIE::ConvertShapeToLength(fShapeY); // output size
-            out << "      std::copy(newData_ptr, newData_ptr + " << length << ", " << new_bias_tensor << ");\n";
-            out << "      delete [] newData_ptr;\n";
-            out << "   }\n";
+            out << SP << "{\n";
+            out << "      float * data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_"
+               << fNC << "," << ConvertShapeToString(fShapeC) << ", " << ConvertShapeToString(targetShape) << ");\n";
+            size_t length = TMVA::Experimental::SOFIE::ConvertShapeToLength(fShapeY); // output size
+            out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNC2 << ");\n";
+            out << SP << SP << "delete [] data;\n";
+            out << SP << "}\n";
          }
          return out.str();
       }
@@ -207,9 +206,15 @@ namespace SOFIE{
          if (fNC != ""){
             size_t length = ConvertShapeToLength(fShapeY);
             if (fNC2 == fNC)
-               // case broadcasting was not needed or done otside of session
+               // case broadcasting was not needed or done outside of session
                assert(length == ConvertShapeToLength(fShapeC));
             out << SP << "std::copy(" << "tensor_" << fNC2 << ", " << "tensor_" << fNC2 << " + " << length << ", " << "tensor_" << fNY << ");\n";
+         } else {
+            //in this case fAttrBeta needs to be equal to zero otherwise second time we run we will use
+            // the previous result
+            if (fAttrBeta != 0) {
+               throw std::runtime_error("TMVA SOFIE Gemm Op : Bias tensor is not present but beta value in Gemm is not zero");
+            }
          }
          if (fType == "float"){
             out << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
@@ -222,7 +227,7 @@ namespace SOFIE{
 
          }
 
-
+         std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Gemv") }; }
 
    };
 

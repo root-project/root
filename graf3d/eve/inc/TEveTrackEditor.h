@@ -40,7 +40,7 @@ protected:
    TEveTrack                      *fM;
    TGTextButton                   *fRSEditor;
 public:
-   TEveTrackEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
+   TEveTrackEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30,
                    UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    virtual ~TEveTrackEditor() {}
 
@@ -76,7 +76,7 @@ protected:
    TEveTrackPropagatorSubEditor      *fRSSubEditor;
 
 public:
-   TEveTrackListEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
+   TEveTrackListEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30,
                        UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
    virtual ~TEveTrackListEditor() {}
 

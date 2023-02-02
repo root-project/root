@@ -74,7 +74,7 @@ static PyMethodDef gPyROOTMethods[] = {
    {(char *)"AsRVec", (PyCFunction)PyROOT::AsRVec, METH_O, (char *)"Get object with array interface as RVec"},
 #ifdef R__HAS_DATAFRAME
    {(char *)"AsRTensor", (PyCFunction)PyROOT::AsRTensor, METH_O, (char *)"Get object with array interface as RTensor"},
-   {(char *)"MakeNumpyDataFrame", (PyCFunction)PyROOT::MakeNumpyDataFrame, METH_O,
+   {(char *)"MakeNumpyDataFrame", (PyCFunction)PyROOT::MakeNumpyDataFrameImpl, METH_O,
     (char *)"Make RDataFrame from dictionary of numpy arrays"},
 #endif
    {(char *)"InitApplication", (PyCFunction)PyROOT::RPyROOTApplication::InitApplication, METH_VARARGS,

@@ -610,12 +610,12 @@ public:
    void     OnListTreeDoubleClicked(TGListTreeItem *entry, Int_t btn);
    void     QueryResultReady(char *query);
    void     DeleteQuery();
-   void     ReadConfiguration(const char *filename = 0);
+   void     ReadConfiguration(const char *filename = nullptr);
    void     ResetSession();
    void     UpdateListOfProofs();
    void     UpdateListOfSessions();
    void     UpdateListOfPackages();
-   void     WriteConfiguration(const char *filename = 0);
+   void     WriteConfiguration(const char *filename = nullptr);
    void     SetBusy(Bool_t busy = kTRUE) { fBusy = busy; }
    void     SetChangePic(Bool_t change) { fChangePic = change;}
    void     SetLogWindow(TSessionLogView *log) { fLogWindow = log; }

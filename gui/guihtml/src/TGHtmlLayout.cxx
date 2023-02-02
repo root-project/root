@@ -67,8 +67,8 @@ void TGHtmlLayoutContext::Reset()
 ///
 /// If the "bottom" parameter is non-negative, then this margin will
 /// automatically expire for all text that is placed below the y-coordinate
-/// given by "bottom". This feature is used for <IMG ALIGN=left> and <IMG
-/// ALIGN=right> kinds of markup. It allows text to flow around an image.
+/// given by "bottom". This feature is used for `<IMG ALIGN=left>` and
+/// `<IMG ALIGN=right>` kinds of markup. It allows text to flow around an image.
 ///
 /// If "bottom" is negative, then the margin stays in force until it is
 /// explicitly canceled by a call to PopMargin().
@@ -146,8 +146,8 @@ void TGHtmlLayoutContext::PopMargin(SHtmlMargin_t **ppMargin, int tag)
 /// that is less than the value "y". "y" is the Y-coordinate of
 /// the top edge the next line of text to by positioned. What this
 /// function does is check to see if we have cleared any obstacles
-/// (an obstacle is an <IMG ALIGN=left> or <IMG ALIGN=right>) and
-/// expands the margins if we have.
+/// (an obstacle is an `<IMG ALIGN=left>` or `<IMG ALIGN=right>`)
+/// and expands the margins if we have.
 
 void TGHtmlLayoutContext::PopExpiredMargins(SHtmlMargin_t **ppMarginStack, int y)
 {
@@ -190,8 +190,8 @@ void TGHtmlLayoutContext::ClearMarginStack(SHtmlMargin_t **ppMargin)
 /// The "x" coordinates of all elements are set assuming that the line
 /// begins at 0. The calling routine should adjust these coordinates
 /// to position the line horizontally. (The FixLine() procedure does
-/// this.)  Note that the "x" coordinate of <li> elements will be negative.
-/// Text within <dt>..</dt> might also have a negative "x" coordinate.
+/// this.)  Note that the "x" coordinate of `<li>` elements will be negative.
+/// Text within `<dt>..</dt>` might also have a negative "x" coordinate.
 /// But in no case will the x coordinate every be less than "minX".
 ///
 /// p_start     - First token on new line
@@ -821,8 +821,8 @@ int TGHtml::NextMarkupType(TGHtmlElement *p)
 /// Break markup is any kind of markup that might force a line-break. This
 /// routine handles a single element of break markup and returns a pointer
 /// to the first element past that markup. If p doesn't point to break
-/// markup, then p is returned. If p is an incomplete table (a <TABLE>
-/// that lacks a </TABLE>), then NULL is returned.
+/// markup, then p is returned. If p is an incomplete table (a `<TABLE>`
+/// that lacks a `</TABLE>`), then `NULL` is returned.
 
 TGHtmlElement *TGHtmlLayoutContext::DoBreakMarkup(TGHtmlElement *p)
 {

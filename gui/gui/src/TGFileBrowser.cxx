@@ -656,7 +656,7 @@ void TGFileBrowser::Update()
    TGListTreeItem *curr = fListTree->GetSelected(); // GetCurrent() ??
    if (curr) {
       TObject *obj = (TObject *) curr->GetUserData();
-      if (obj && !obj->TestBit(kNotDeleted)) {
+      if (obj && ROOT::Detail::HasBeenDeleted(obj)) {
          // if the item to be deleted has a filter,
          // delete its entry in the map
          if (CheckFiltered(curr))
@@ -665,7 +665,7 @@ void TGFileBrowser::Update()
          curr = 0;
          obj = 0;
       }
-      else if (obj && obj->TestBit(kNotDeleted) &&
+      else if (obj && !ROOT::Detail::HasBeenDeleted(obj) &&
                obj->InheritsFrom("TObjString") && curr->GetParent()) {
          fListTree->GetPathnameFromItem(curr->GetParent(), path);
          if (strlen(path) > 1) {

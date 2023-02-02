@@ -6,11 +6,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_DEBUGINFO_DWARFDEBUGARANGES_H
-#define LLVM_DEBUGINFO_DWARFDEBUGARANGES_H
+#ifndef LLVM_DEBUGINFO_DWARF_DWARFDEBUGARANGES_H
+#define LLVM_DEBUGINFO_DWARF_DWARFDEBUGARANGES_H
 
 #include "llvm/ADT/DenseSet.h"
-#include "llvm/Support/DataExtractor.h"
+#include "llvm/DebugInfo/DWARF/DWARFDataExtractor.h"
 #include <cstdint>
 #include <vector>
 
@@ -21,19 +21,19 @@ class DWARFContext;
 class DWARFDebugAranges {
 public:
   void generate(DWARFContext *CTX);
-  uint32_t findAddress(uint64_t Address) const;
+  uint64_t findAddress(uint64_t Address) const;
 
 private:
   void clear();
-  void extract(DataExtractor DebugArangesData);
+  void extract(DWARFDataExtractor DebugArangesData,
+               function_ref<void(Error)> RecoverableErrorHandler);
 
   /// Call appendRange multiple times and then call construct.
-  void appendRange(uint32_t CUOffset, uint64_t LowPC, uint64_t HighPC);
+  void appendRange(uint64_t CUOffset, uint64_t LowPC, uint64_t HighPC);
   void construct();
 
   struct Range {
-    explicit Range(uint64_t LowPC = -1ULL, uint64_t HighPC = -1ULL,
-                   uint32_t CUOffset = -1U)
+    explicit Range(uint64_t LowPC, uint64_t HighPC, uint64_t CUOffset)
       : LowPC(LowPC), Length(HighPC - LowPC), CUOffset(CUOffset) {}
 
     void setHighPC(uint64_t HighPC) {
@@ -54,16 +54,16 @@ private:
     }
 
     uint64_t LowPC; /// Start of address range.
-    uint32_t Length; /// End of address range (not including this address).
-    uint32_t CUOffset; /// Offset of the compile unit or die.
+    uint64_t Length; /// End of address range (not including this address).
+    uint64_t CUOffset; /// Offset of the compile unit or die.
   };
 
   struct RangeEndpoint {
     uint64_t Address;
-    uint32_t CUOffset;
+    uint64_t CUOffset;
     bool IsRangeStart;
 
-    RangeEndpoint(uint64_t Address, uint32_t CUOffset, bool IsRangeStart)
+    RangeEndpoint(uint64_t Address, uint64_t CUOffset, bool IsRangeStart)
         : Address(Address), CUOffset(CUOffset), IsRangeStart(IsRangeStart) {}
 
     bool operator<(const RangeEndpoint &Other) const {
@@ -76,9 +76,9 @@ private:
 
   std::vector<RangeEndpoint> Endpoints;
   RangeColl Aranges;
-  DenseSet<uint32_t> ParsedCUOffsets;
+  DenseSet<uint64_t> ParsedCUOffsets;
 };
 
 } // end namespace llvm
 
-#endif // LLVM_DEBUGINFO_DWARFDEBUGARANGES_H
+#endif // LLVM_DEBUGINFO_DWARF_DWARFDEBUGARANGES_H

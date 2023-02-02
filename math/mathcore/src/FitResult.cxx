@@ -217,61 +217,6 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
 
 }
 
-FitResult::~FitResult() {
-   // destructor. FitResult manages the fit Function pointer
-   //if (fFitFunc) delete fFitFunc;
-}
-
-FitResult::FitResult(const FitResult &rhs) :
-   fFitFunc(0)
-{
-   // Implementation of copy constructor
-   (*this) = rhs;
-}
-
-FitResult & FitResult::operator = (const FitResult &rhs) {
-   // Implementation of assignment operator.
-   if (this == &rhs) return *this;  // time saving self-test
-
-   // Manages the fitted function
-   // if (fFitFunc) delete fFitFunc;
-   // fFitFunc = 0;
-   // if (rhs.fFitFunc != 0 ) {
-   //    fFitFunc = dynamic_cast<IModelFunction *>( (rhs.fFitFunc)->Clone() );
-   //    assert(fFitFunc != 0);
-   // }
-
-   // copy all other data members
-   fValid = rhs.fValid;
-   fNormalized = rhs.fNormalized;
-   fNFree = rhs.fNFree;
-   fNdf = rhs.fNdf;
-   fNCalls = rhs.fNCalls;
-   fCovStatus = rhs.fCovStatus;
-   fStatus = rhs.fStatus;
-   fVal = rhs.fVal;
-   fEdm = rhs.fEdm;
-   fChi2 = rhs.fChi2;
-   fMinimizer = rhs.fMinimizer;
-   fObjFunc = rhs.fObjFunc;
-   fFitFunc = rhs.fFitFunc;
-
-   fFixedParams = rhs.fFixedParams;
-   fBoundParams = rhs.fBoundParams;
-   fParamBounds = rhs.fParamBounds;
-   fParams = rhs.fParams;
-   fErrors = rhs.fErrors;
-   fCovMatrix = rhs.fCovMatrix;
-   fGlobalCC = rhs.fGlobalCC;
-   fMinosErrors = rhs.fMinosErrors;
-
-   fMinimType = rhs.fMinimType;
-   fParNames = rhs.fParNames;
-
-   return *this;
-
-}
-
 bool FitResult::Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, const ROOT::Fit::FitConfig & fconfig, bool isValid, unsigned int ncalls) {
    // update fit result with new status from minimizer
    // ncalls if it is not zero is used instead of value from minimizer

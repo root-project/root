@@ -39,11 +39,11 @@ class SinVariableTransformation : public MinimizerVariableTransformation {
 
 public:
 
-   virtual ~SinVariableTransformation() {}
+   ~SinVariableTransformation() override {}
 
-   double Int2ext(double value, double lower, double upper) const;
-   double Ext2int(double value, double lower, double upper) const;
-   double DInt2Ext(double value, double lower, double upper) const;
+   double Int2ext(double value, double lower, double upper) const override;
+   double Ext2int(double value, double lower, double upper) const override;
+   double DInt2Ext(double value, double lower, double upper) const override;
 
 private:
 
@@ -58,11 +58,11 @@ private:
 class SqrtLowVariableTransformation : public  MinimizerVariableTransformation {
 public:
 
-   virtual ~SqrtLowVariableTransformation() {}
+   ~SqrtLowVariableTransformation() override {}
 
-   double Int2ext(double value, double lower, double upper) const;
-   double Ext2int(double value, double lower, double upper) const;
-   double DInt2Ext(double value, double lower, double upper) const;
+   double Int2ext(double value, double lower, double upper) const override;
+   double Ext2int(double value, double lower, double upper) const override;
+   double DInt2Ext(double value, double lower, double upper) const override;
 
 };
 
@@ -74,11 +74,11 @@ public:
 class SqrtUpVariableTransformation : public  MinimizerVariableTransformation {
 public:
 
-   virtual ~SqrtUpVariableTransformation() {}
+   ~SqrtUpVariableTransformation() override {}
 
-   double Int2ext(double value, double lower, double upper) const;
-   double Ext2int(double value, double lower, double upper) const;
-   double DInt2Ext(double value, double lower, double upper) const;
+   double Int2ext(double value, double lower, double upper) const override;
+   double Ext2int(double value, double lower, double upper) const override;
+   double DInt2Ext(double value, double lower, double upper) const override;
 
 };
 

@@ -23,7 +23,7 @@
 #include <memory>
 #include <new> // std::hardware_destructive_interference_size
 #include <string>
-#include <type_traits> // std::decay
+#include <type_traits> // std::decay, std::false_type
 #include <vector>
 
 class TTree;
@@ -221,9 +221,10 @@ constexpr std::size_t CacheLineStep() {
    return (kCacheLineSize + sizeof(T) - 1) / sizeof(T);
 }
 
-void CheckDefineType(RDefineBase &define, const std::type_info &tid);
+void CheckReaderTypeMatches(const std::type_info &colType, const std::type_info &requestedType,
+                            const std::string &colName);
 
-// TODO in C++17 this could be a lambda within FillParHelper::Exec
+// TODO in C++17 this could be a lambda within FillHelper::Exec
 template <typename T>
 constexpr std::size_t FindIdxTrue(const T &arr)
 {
@@ -256,6 +257,31 @@ template <class B1, class... Bn>
 struct Disjunction<B1, Bn...> : std::conditional_t<bool(B1::value), B1, Disjunction<Bn...>> {
 };
 #endif
+
+bool IsStrInVec(const std::string &str, const std::vector<std::string> &vec);
+
+// clang-format off
+template <typename>
+struct IsRVec : std::false_type {};
+
+template <typename T>
+struct IsRVec<ROOT::VecOps::RVec<T>> : std::true_type {};
+// clang-format on
+
+/// Return a vector with all elements of v1 and v2 and duplicates removed.
+/// Precondition: each of v1 and v2 must not have duplicate elements.
+template <typename T>
+std::vector<T> Union(const std::vector<T> &v1, const std::vector<T> &v2)
+{
+   std::vector<T> res = v1;
+
+   // Add the variations coming from the input columns
+   for (const auto &e : v2)
+      if (std::find(v1.begin(), v1.end(), e) == v1.end())
+         res.emplace_back(e);
+
+   return res;
+}
 
 } // end NS RDF
 } // end NS Internal

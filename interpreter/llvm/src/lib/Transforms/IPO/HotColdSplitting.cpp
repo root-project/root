@@ -25,10 +25,10 @@
 ///
 //===----------------------------------------------------------------------===//
 
+#include "llvm/Transforms/IPO/HotColdSplitting.h"
 #include "llvm/ADT/PostOrderIterator.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
-#include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/BlockFrequencyInfo.h"
 #include "llvm/Analysis/BranchProbabilityInfo.h"
 #include "llvm/Analysis/CFG.h"
@@ -38,7 +38,6 @@
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CFG.h"
-#include "llvm/IR/CallSite.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/Dominators.h"
@@ -53,13 +52,14 @@
 #include "llvm/IR/Use.h"
 #include "llvm/IR/User.h"
 #include "llvm/IR/Value.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/BlockFrequency.h"
 #include "llvm/Support/BranchProbability.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/IPO.h"
-#include "llvm/Transforms/IPO/HotColdSplitting.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Cloning.h"
@@ -67,7 +67,9 @@
 #include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Transforms/Utils/ValueMapper.h"
 #include <algorithm>
+#include <limits>
 #include <cassert>
+#include <string>
 
 #define DEBUG_TYPE "hotcoldsplit"
 
@@ -76,21 +78,30 @@ STATISTIC(NumColdRegionsOutlined, "Number of cold regions outlined.");
 
 using namespace llvm;
 
-static cl::opt<bool> EnableStaticAnalyis("hot-cold-static-analysis",
-                              cl::init(true), cl::Hidden);
+static cl::opt<bool> EnableStaticAnalysis("hot-cold-static-analysis",
+                                          cl::init(true), cl::Hidden);
 
 static cl::opt<int>
     SplittingThreshold("hotcoldsplit-threshold", cl::init(2), cl::Hidden,
                        cl::desc("Base penalty for splitting cold code (as a "
                                 "multiple of TCC_Basic)"));
 
+static cl::opt<bool> EnableColdSection(
+    "enable-cold-section", cl::init(false), cl::Hidden,
+    cl::desc("Enable placement of extracted cold functions"
+             " into a separate section after hot-cold splitting."));
+
+static cl::opt<std::string>
+    ColdSectionName("hotcoldsplit-cold-section-name", cl::init("__llvm_cold"),
+                    cl::Hidden,
+                    cl::desc("Name for the section containing cold functions "
+                             "extracted by hot-cold splitting."));
+
+static cl::opt<int> MaxParametersForSplit(
+    "hotcoldsplit-max-params", cl::init(4), cl::Hidden,
+    cl::desc("Maximum number of parameters for a split function"));
+
 namespace {
-
-/// A sequence of basic blocks.
-///
-/// A 0-sized SmallVector is slightly cheaper to move than a std::vector.
-using BlockSequence = SmallVector<BasicBlock *, 0>;
-
 // Same as blockEndsInUnreachable in CodeGen/BranchFolding.cpp. Do not modify
 // this function unless you modify the MBB version as well.
 //
@@ -114,8 +125,8 @@ bool unlikelyExecuted(BasicBlock &BB) {
   // The block is cold if it calls/invokes a cold function. However, do not
   // mark sanitizer traps as cold.
   for (Instruction &I : BB)
-    if (auto CS = CallSite(&I))
-      if (CS.hasFnAttr(Attribute::Cold) && !CS->getMetadata("nosanitize"))
+    if (auto *CB = dyn_cast<CallBase>(&I))
+      if (CB->hasFnAttr(Attribute::Cold) && !CB->getMetadata("nosanitize"))
         return true;
 
   // The block is cold if it has an unreachable terminator, unless it's
@@ -139,9 +150,10 @@ static bool mayExtractBlock(const BasicBlock &BB) {
   //
   // Resumes that are not reachable from a cleanup landing pad are considered to
   // be unreachable. It’s not safe to split them out either.
+  if (BB.hasAddressTaken() || BB.isEHPad())
+    return false;
   auto Term = BB.getTerminator();
-  return !BB.hasAddressTaken() && !BB.isEHPad() && !isa<InvokeInst>(Term) &&
-         !isa<ResumeInst>(Term);
+  return !isa<InvokeInst>(Term) && !isa<ResumeInst>(Term);
 }
 
 /// Mark \p F cold. Based on this assumption, also optimize it for minimum size.
@@ -168,31 +180,6 @@ static bool markFunctionCold(Function &F, bool UpdateEntryCount = false) {
 
   return Changed;
 }
-
-class HotColdSplitting {
-public:
-  HotColdSplitting(ProfileSummaryInfo *ProfSI,
-                   function_ref<BlockFrequencyInfo *(Function &)> GBFI,
-                   function_ref<TargetTransformInfo &(Function &)> GTTI,
-                   std::function<OptimizationRemarkEmitter &(Function &)> *GORE,
-                   function_ref<AssumptionCache *(Function &)> LAC)
-      : PSI(ProfSI), GetBFI(GBFI), GetTTI(GTTI), GetORE(GORE), LookupAC(LAC) {}
-  bool run(Module &M);
-
-private:
-  bool isFunctionCold(const Function &F) const;
-  bool shouldOutlineFrom(const Function &F) const;
-  bool outlineColdRegions(Function &F, bool HasProfileSummary);
-  Function *extractColdRegion(const BlockSequence &Region, DominatorTree &DT,
-                              BlockFrequencyInfo *BFI, TargetTransformInfo &TTI,
-                              OptimizationRemarkEmitter &ORE,
-                              AssumptionCache *AC, unsigned Count);
-  ProfileSummaryInfo *PSI;
-  function_ref<BlockFrequencyInfo *(Function &)> GetBFI;
-  function_ref<TargetTransformInfo &(Function &)> GetTTI;
-  std::function<OptimizationRemarkEmitter &(Function &)> *GetORE;
-  function_ref<AssumptionCache *(Function &)> LookupAC;
-};
 
 class HotColdSplittingLegacyPass : public ModulePass {
 public:
@@ -236,6 +223,11 @@ bool HotColdSplitting::shouldOutlineFrom(const Function &F) const {
   if (F.hasFnAttribute(Attribute::NoInline))
     return false;
 
+  // A function marked `noreturn` may contain unreachable terminators: these
+  // should not be considered cold, as the function may be a trampoline.
+  if (F.hasFnAttribute(Attribute::NoReturn))
+    return false;
+
   if (F.hasFnAttribute(Attribute::SanitizeAddress) ||
       F.hasFnAttribute(Attribute::SanitizeHWAddress) ||
       F.hasFnAttribute(Attribute::SanitizeThread) ||
@@ -246,11 +238,11 @@ bool HotColdSplitting::shouldOutlineFrom(const Function &F) const {
 }
 
 /// Get the benefit score of outlining \p Region.
-static int getOutliningBenefit(ArrayRef<BasicBlock *> Region,
-                               TargetTransformInfo &TTI) {
+static InstructionCost getOutliningBenefit(ArrayRef<BasicBlock *> Region,
+                                           TargetTransformInfo &TTI) {
   // Sum up the code size costs of non-terminator instructions. Tight coupling
   // with \ref getOutliningPenalty is needed to model the costs of terminators.
-  int Benefit = 0;
+  InstructionCost Benefit = 0;
   for (BasicBlock *BB : Region)
     for (Instruction &I : BB->instructionsWithoutDebug())
       if (&I != BB->getTerminator())
@@ -271,18 +263,6 @@ static int getOutliningPenalty(ArrayRef<BasicBlock *> Region,
   if (SplittingThreshold <= 0)
     return Penalty;
 
-  // The typical code size cost for materializing an argument for the outlined
-  // call.
-  LLVM_DEBUG(dbgs() << "Applying penalty for: " << NumInputs << " inputs\n");
-  const int CostForArgMaterialization = TargetTransformInfo::TCC_Basic;
-  Penalty += CostForArgMaterialization * NumInputs;
-
-  // The typical code size cost for an output alloca, its associated store, and
-  // its associated reload.
-  LLVM_DEBUG(dbgs() << "Applying penalty for: " << NumOutputs << " outputs\n");
-  const int CostForRegionOutput = 3 * TargetTransformInfo::TCC_Basic;
-  Penalty += CostForRegionOutput * NumOutputs;
-
   // Find the number of distinct exit blocks for the region. Use a conservative
   // check to determine whether control returns from the region.
   bool NoBlocksReturn = true;
@@ -296,12 +276,54 @@ static int getOutliningPenalty(ArrayRef<BasicBlock *> Region,
     }
 
     for (BasicBlock *SuccBB : successors(BB)) {
-      if (find(Region, SuccBB) == Region.end()) {
+      if (!is_contained(Region, SuccBB)) {
         NoBlocksReturn = false;
         SuccsOutsideRegion.insert(SuccBB);
       }
     }
   }
+
+  // Count the number of phis in exit blocks with >= 2 incoming values from the
+  // outlining region. These phis are split (\ref severSplitPHINodesOfExits),
+  // and new outputs are created to supply the split phis. CodeExtractor can't
+  // report these new outputs until extraction begins, but it's important to
+  // factor the cost of the outputs into the cost calculation.
+  unsigned NumSplitExitPhis = 0;
+  for (BasicBlock *ExitBB : SuccsOutsideRegion) {
+    for (PHINode &PN : ExitBB->phis()) {
+      // Find all incoming values from the outlining region.
+      int NumIncomingVals = 0;
+      for (unsigned i = 0; i < PN.getNumIncomingValues(); ++i)
+        if (find(Region, PN.getIncomingBlock(i)) != Region.end()) {
+          ++NumIncomingVals;
+          if (NumIncomingVals > 1) {
+            ++NumSplitExitPhis;
+            break;
+          }
+        }
+    }
+  }
+
+  // Apply a penalty for calling the split function. Factor in the cost of
+  // materializing all of the parameters.
+  int NumOutputsAndSplitPhis = NumOutputs + NumSplitExitPhis;
+  int NumParams = NumInputs + NumOutputsAndSplitPhis;
+  if (NumParams > MaxParametersForSplit) {
+    LLVM_DEBUG(dbgs() << NumInputs << " inputs and " << NumOutputsAndSplitPhis
+                      << " outputs exceeds parameter limit ("
+                      << MaxParametersForSplit << ")\n");
+    return std::numeric_limits<int>::max();
+  }
+  const int CostForArgMaterialization = 2 * TargetTransformInfo::TCC_Basic;
+  LLVM_DEBUG(dbgs() << "Applying penalty for: " << NumParams << " params\n");
+  Penalty += CostForArgMaterialization * NumParams;
+
+  // Apply the typical code size cost for an output alloca and its associated
+  // reload in the caller. Also penalize the associated store in the callee.
+  LLVM_DEBUG(dbgs() << "Applying penalty for: " << NumOutputsAndSplitPhis
+                    << " outputs/split phis\n");
+  const int CostForRegionOutput = 3 * TargetTransformInfo::TCC_Basic;
+  Penalty += CostForRegionOutput * NumOutputsAndSplitPhis;
 
   // Apply a `noreturn` bonus.
   if (NoBlocksReturn) {
@@ -312,7 +334,7 @@ static int getOutliningPenalty(ArrayRef<BasicBlock *> Region,
 
   // Apply a penalty for having more than one successor outside of the region.
   // This penalty accounts for the switch needed in the caller.
-  if (!SuccsOutsideRegion.empty()) {
+  if (SuccsOutsideRegion.size() > 1) {
     LLVM_DEBUG(dbgs() << "Applying penalty for: " << SuccsOutsideRegion.size()
                       << " non-region successors\n");
     Penalty += (SuccsOutsideRegion.size() - 1) * TargetTransformInfo::TCC_Basic;
@@ -321,13 +343,10 @@ static int getOutliningPenalty(ArrayRef<BasicBlock *> Region,
   return Penalty;
 }
 
-Function *HotColdSplitting::extractColdRegion(const BlockSequence &Region,
-                                              DominatorTree &DT,
-                                              BlockFrequencyInfo *BFI,
-                                              TargetTransformInfo &TTI,
-                                              OptimizationRemarkEmitter &ORE,
-                                              AssumptionCache *AC,
-                                              unsigned Count) {
+Function *HotColdSplitting::extractColdRegion(
+    const BlockSequence &Region, const CodeExtractorAnalysisCache &CEAC,
+    DominatorTree &DT, BlockFrequencyInfo *BFI, TargetTransformInfo &TTI,
+    OptimizationRemarkEmitter &ORE, AssumptionCache *AC, unsigned Count) {
   assert(!Region.empty());
 
   // TODO: Pass BFI and BPI to update profile information.
@@ -340,25 +359,31 @@ Function *HotColdSplitting::extractColdRegion(const BlockSequence &Region,
   // splitting.
   SetVector<Value *> Inputs, Outputs, Sinks;
   CE.findInputsOutputs(Inputs, Outputs, Sinks);
-  int OutliningBenefit = getOutliningBenefit(Region, TTI);
+  InstructionCost OutliningBenefit = getOutliningBenefit(Region, TTI);
   int OutliningPenalty =
       getOutliningPenalty(Region, Inputs.size(), Outputs.size());
   LLVM_DEBUG(dbgs() << "Split profitability: benefit = " << OutliningBenefit
                     << ", penalty = " << OutliningPenalty << "\n");
-  if (OutliningBenefit <= OutliningPenalty)
+  if (!OutliningBenefit.isValid() || OutliningBenefit <= OutliningPenalty)
     return nullptr;
 
   Function *OrigF = Region[0]->getParent();
-  if (Function *OutF = CE.extractCodeRegion()) {
+  if (Function *OutF = CE.extractCodeRegion(CEAC)) {
     User *U = *OutF->user_begin();
     CallInst *CI = cast<CallInst>(U);
-    CallSite CS(CI);
     NumColdRegionsOutlined++;
     if (TTI.useColdCCForColdCall(*OutF)) {
       OutF->setCallingConv(CallingConv::Cold);
-      CS.setCallingConv(CallingConv::Cold);
+      CI->setCallingConv(CallingConv::Cold);
     }
     CI->setIsNoInline();
+
+    if (EnableColdSection)
+      OutF->setSection(ColdSectionName);
+    else {
+      if (OrigF->hasSection())
+        OutF->setSection(OrigF->getSection());
+    }
 
     markFunctionCold(*OutF, BFI != nullptr);
 
@@ -482,6 +507,10 @@ public:
     // first have predecessors within the extraction region.
     if (mayExtractBlock(SinkBB)) {
       addBlockToRegion(&SinkBB, SinkScore);
+      if (pred_empty(&SinkBB)) {
+        ColdRegion->EntireFunctionCold = true;
+        return Regions;
+      }
     } else {
       Regions.emplace_back();
       ColdRegion = &Regions.back();
@@ -597,7 +626,7 @@ bool HotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummary) {
       continue;
 
     bool Cold = (BFI && PSI->isColdBlock(BB, BFI)) ||
-                (EnableStaticAnalyis && unlikelyExecuted(*BB));
+                (EnableStaticAnalysis && unlikelyExecuted(*BB));
     if (!Cold)
       continue;
 
@@ -607,9 +636,9 @@ bool HotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummary) {
     });
 
     if (!DT)
-      DT = make_unique<DominatorTree>(F);
+      DT = std::make_unique<DominatorTree>(F);
     if (!PDT)
-      PDT = make_unique<PostDominatorTree>(F);
+      PDT = std::make_unique<PostDominatorTree>(F);
 
     auto Regions = OutliningRegion::create(*BB, *DT, *PDT);
     for (OutliningRegion &Region : Regions) {
@@ -637,9 +666,14 @@ bool HotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummary) {
     }
   }
 
+  if (OutliningWorklist.empty())
+    return Changed;
+
   // Outline single-entry cold regions, splitting up larger regions as needed.
   unsigned OutlinedFunctionID = 1;
-  while (!OutliningWorklist.empty()) {
+  // Cache and recycle the CodeExtractor analysis to avoid O(n^2) compile-time.
+  CodeExtractorAnalysisCache CEAC(F);
+  do {
     OutliningRegion Region = OutliningWorklist.pop_back_val();
     assert(!Region.empty() && "Empty outlining region in worklist");
     do {
@@ -650,14 +684,14 @@ bool HotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummary) {
           BB->dump();
       });
 
-      Function *Outlined = extractColdRegion(SubRegion, *DT, BFI, TTI, ORE, AC,
-                                             OutlinedFunctionID);
+      Function *Outlined = extractColdRegion(SubRegion, CEAC, *DT, BFI, TTI,
+                                             ORE, AC, OutlinedFunctionID);
       if (Outlined) {
         ++OutlinedFunctionID;
         Changed = true;
       }
     } while (!Region.empty());
-  }
+  } while (!OutliningWorklist.empty());
 
   return Changed;
 }
@@ -665,9 +699,7 @@ bool HotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummary) {
 bool HotColdSplitting::run(Module &M) {
   bool Changed = false;
   bool HasProfileSummary = (M.getProfileSummary(/* IsCS */ false) != nullptr);
-  for (auto It = M.begin(), End = M.end(); It != End; ++It) {
-    Function &F = *It;
-
+  for (Function &F : M) {
     // Do not touch declarations.
     if (F.isDeclaration())
       continue;

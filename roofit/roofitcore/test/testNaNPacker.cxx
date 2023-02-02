@@ -3,6 +3,7 @@
 #include "RooNaNPacker.h"
 #include "RooRealVar.h"
 #include "RooGenericPdf.h"
+#include "RooHelpers.h"
 #include "RooMinimizer.h"
 #include "RooFitResult.h"
 #include "RooDataSet.h"
@@ -100,9 +101,10 @@ TEST(RooNaNPacker, FitSimpleLinear) {
   std::unique_ptr<RooDataSet> data(pdf.generate(x, 1000));
   std::unique_ptr<RooAbsReal> nll(pdf.createNLL(*data));
 
-  ASSERT_FALSE(std::isnan(pdf.getVal(RooArgSet(x))));
+  RooArgSet normSet{x};
+  ASSERT_FALSE(std::isnan(pdf.getVal(normSet)));
   a1.setVal(-9.);
-  ASSERT_TRUE(std::isnan(pdf.getVal(RooArgSet(x))));
+  ASSERT_TRUE(std::isnan(pdf.getVal(normSet)));
 
   RooMinimizer minim(*nll);
   minim.setPrintLevel(-1);
@@ -120,7 +122,7 @@ TEST(RooNaNPacker, FitSimpleLinear) {
 /// The minimiser needs to recover from that.
 /// Test also that when recovery with NaN packing is switched off, the minimiser fails to recover.
 TEST(RooNaNPacker, FitParabola) {
-  RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING); // We don't need integration messages
+  RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING); // We don't need integration messages
 
   RooRealVar x("x", "x", -10, 10);
   RooRealVar a1("a1", "a1", 12., -10., 20.);
@@ -189,7 +191,7 @@ TEST(RooNaNPacker, FitAddPdf_DegenerateCoeff) {
   RooGenericPdf pdf3("gen3", "x*x*x+1", RooArgSet(x));
   RooAddPdf pdf("sum", "a1*gen1 + a2*gen2 + (1-a1-a2)*gen3", RooArgList(pdf1, pdf2, pdf3), RooArgList(a1, a2));
   std::unique_ptr<RooDataSet> data(pdf.generate(x, 2000));
-  auto nll = pdf.createNLL(*data);
+  std::unique_ptr<RooAbsReal> nll{pdf.createNLL(*data)};
 
   RooArgSet params(a1, a2);
   RooArgSet paramsInit;

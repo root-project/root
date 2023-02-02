@@ -37,7 +37,7 @@ public:
    };
    // This replaces the dummy constructor to make sure that I/O can be
    // performed while the user is only allowed to use the static maker
-   TGeoBranchArray(TRootIOCtor*) : TObject(), fLevel(0), fMaxLevel(0), fMatrix(), fArray(0) { fRealArray[0] = nullptr; }
+   TGeoBranchArray(TRootIOCtor*) : TObject(), fLevel(0), fMaxLevel(0), fMatrix(), fArray(nullptr) { fRealArray[0] = nullptr; }
 
    // The static maker to be use to create an instance of the branch array
    static TGeoBranchArray *MakeInstance(size_t maxlevel);

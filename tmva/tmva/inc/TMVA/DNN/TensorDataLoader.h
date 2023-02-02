@@ -127,7 +127,7 @@ public:
  * the user to iterate over the batches in one epoch.
  *
  * \tparam Data_t The input data type.
- * \tparam Architecture_t The achitecture class of the underlying architecture.
+ * \tparam Architecture_t The architecture class of the underlying architecture.
  */
 template <typename Data_t, typename Architecture_t>
 class TTensorDataLoader {
@@ -139,10 +139,10 @@ private:
    using Shape_t = typename Architecture_t::Tensor_t::Shape_t;
    using BatchIterator_t = TTensorBatchIterator<Data_t, Architecture_t>;
 
-   const Data_t &fData; ///< The data that should be loaded in the batches.
+   const Data_t &fData;     ///< The data that should be loaded in the batches.
    size_t fNSamples;        ///< The total number of samples in the dataset.
    size_t fBatchSize;       ///< The size of a batch.
-   Shape_t    fInputLayout;  // the input data layout  (does not include batch size)
+   Shape_t    fInputLayout; ///< The input data layout  (does not include batch size)
    size_t fBatchDepth;      ///< The number of matrices in the tensor.
    size_t fBatchHeight;     ///< The number od rows in each matrix.
    size_t fBatchWidth;      ///< The number of columns in each matrix.
@@ -170,10 +170,10 @@ public:
     *  the architecture-specific backend. */
    void CopyTensorInput(HostBuffer_t &buffer, IndexIterator_t begin);
    /** Copy output matrix into the given host buffer. Function to be specialized
-    * by the architecture-spcific backend. */
+    * by the architecture-specific backend. */
    void CopyTensorOutput(HostBuffer_t &buffer, IndexIterator_t begin);
    /** Copy weight matrix into the given host buffer. Function to be specialized
-    * by the architecture-spcific backend. */
+    * by the architecture-specific backend. */
    void CopyTensorWeights(HostBuffer_t &buffer, IndexIterator_t begin);
 
    BatchIterator_t begin() { return TTensorBatchIterator<Data_t, Architecture_t>(*this); }

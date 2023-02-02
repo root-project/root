@@ -25,6 +25,8 @@ class PredicateControl {
   list<Predicate> GPRPredicates = [];
   // Predicates for the PTR size such as IsPTR64bit
   list<Predicate> PTRPredicates = [];
+  // Predicates for a symbol's size such as hasSym32.
+  list<Predicate> SYMPredicates = [];
   // Predicates for the FGR size and layout such as IsFP64bit
   list<Predicate> FGRPredicates = [];
   // Predicates for the instruction group membership such as ISA's.
@@ -38,6 +40,7 @@ class PredicateControl {
   list<Predicate> Predicates = !listconcat(EncodingPredicates,
                                            GPRPredicates,
                                            PTRPredicates,
+                                           SYMPredicates,
                                            FGRPredicates,
                                            InsnPredicates,
                                            HardFloatPredicate,
@@ -49,22 +52,6 @@ class PredicateControl {
 class AdditionalRequires<list<Predicate> preds> {
   list<Predicate> AdditionalPredicates = preds;
 }
-
-//===----------------------------------------------------------------------===//
-// Register File, Calling Conv, Instruction Descriptions
-//===----------------------------------------------------------------------===//
-
-include "MipsRegisterInfo.td"
-include "MipsSchedule.td"
-include "MipsInstrInfo.td"
-include "MipsCallingConv.td"
-include "MipsRegisterBanks.td"
-
-// Avoid forward declaration issues.
-include "MipsScheduleP5600.td"
-include "MipsScheduleGeneric.td"
-
-def MipsInstrInfo : InstrInfo;
 
 //===----------------------------------------------------------------------===//
 // Mips Subtarget features                                                    //
@@ -174,6 +161,8 @@ def FeatureDSPR3
     : SubtargetFeature<"dspr3", "HasDSPR3", "true", "Mips DSP-R3 ASE",
                        [ FeatureDSP, FeatureDSPR2 ]>;
 
+def FeatureMips3D : SubtargetFeature<"mips3d", "Has3D", "true", "Mips 3D ASE">;
+
 def FeatureMSA : SubtargetFeature<"msa", "HasMSA", "true", "Mips MSA ASE">;
 
 def FeatureEVA : SubtargetFeature<"eva", "HasEVA", "true", "Mips EVA ASE">;
@@ -189,27 +178,52 @@ def FeatureGINV : SubtargetFeature<"ginv", "HasGINV", "true",
 def FeatureMicroMips  : SubtargetFeature<"micromips", "InMicroMipsMode", "true",
                                          "microMips mode">;
 
-def FeatureCnMips     : SubtargetFeature<"cnmips", "HasCnMips",
-                                "true", "Octeon cnMIPS Support",
-                                [FeatureMips64r2]>;
+def FeatureCnMips : SubtargetFeature<"cnmips", "HasCnMips",
+                                     "true", "Octeon cnMIPS Support",
+                                     [FeatureMips64r2]>;
+
+def FeatureCnMipsP : SubtargetFeature<"cnmipsp", "HasCnMipsP",
+                                      "true", "Octeon+ cnMIPS Support",
+                                      [FeatureCnMips]>;
 
 def FeatureUseTCCInDIV : SubtargetFeature<
                                "use-tcc-in-div",
                                "UseTCCInDIV", "false",
                                "Force the assembler to use trapping">;
 
-def FeatureMadd4 : SubtargetFeature<"nomadd4", "DisableMadd4", "true",
-                                    "Disable 4-operand madd.fmt and related instructions">;
+def FeatureNoMadd4
+    : SubtargetFeature<"nomadd4", "DisableMadd4", "true",
+                       "Disable 4-operand madd.fmt and related instructions">;
 
 def FeatureMT : SubtargetFeature<"mt", "HasMT", "true", "Mips MT ASE">;
 
 def FeatureLongCalls : SubtargetFeature<"long-calls", "UseLongCalls", "true",
                                         "Disable use of the jal instruction">;
 
+def FeatureXGOT
+    : SubtargetFeature<"xgot", "UseXGOT", "true", "Assume 32-bit GOT">;
+
 def FeatureUseIndirectJumpsHazard : SubtargetFeature<"use-indirect-jump-hazard",
                                                     "UseIndirectJumpsHazard",
                                                     "true", "Use indirect jump"
                         " guards to prevent certain speculation based attacks">;
+
+//===----------------------------------------------------------------------===//
+// Register File, Calling Conv, Instruction Descriptions
+//===----------------------------------------------------------------------===//
+
+include "MipsRegisterInfo.td"
+include "MipsSchedule.td"
+include "MipsInstrInfo.td"
+include "MipsCallingConv.td"
+include "MipsRegisterBanks.td"
+
+// Avoid forward declaration issues.
+include "MipsScheduleP5600.td"
+include "MipsScheduleGeneric.td"
+
+def MipsInstrInfo : InstrInfo;
+
 //===----------------------------------------------------------------------===//
 // Mips processors supported.
 //===----------------------------------------------------------------------===//
@@ -221,6 +235,7 @@ def ImplP5600 : SubtargetFeature<"p5600", "ProcImpl",
 class Proc<string Name, list<SubtargetFeature> Features>
  : ProcessorModel<Name, MipsGenericModel, Features>;
 
+def : Proc<"generic", [FeatureMips32]>;
 def : Proc<"mips1", [FeatureMips1]>;
 def : Proc<"mips2", [FeatureMips2]>;
 def : Proc<"mips32", [FeatureMips32]>;
@@ -238,6 +253,7 @@ def : Proc<"mips64r3", [FeatureMips64r3]>;
 def : Proc<"mips64r5", [FeatureMips64r5]>;
 def : Proc<"mips64r6", [FeatureMips64r6]>;
 def : Proc<"octeon", [FeatureMips64r2, FeatureCnMips]>;
+def : Proc<"octeon+", [FeatureMips64r2, FeatureCnMips, FeatureCnMipsP]>;
 def : ProcessorModel<"p5600", MipsP5600Model, [ImplP5600]>;
 
 def MipsAsmParser : AsmParser {
@@ -257,3 +273,9 @@ def Mips : Target {
   let AssemblyParserVariants = [MipsAsmParserVariant];
   let AllowRegisterRenaming = 1;
 }
+
+//===----------------------------------------------------------------------===//
+// Pfm Counters
+//===----------------------------------------------------------------------===//
+
+include "MipsPfmCounters.td"

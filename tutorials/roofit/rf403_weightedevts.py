@@ -9,8 +9,7 @@
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C version)
 
 from __future__ import print_function
 import ROOT
@@ -86,10 +85,10 @@ r_ml_wgt_corr = p2.fitTo(wdata, Save=True, SumW2Error=True)
 # ---------------------------------------------------------------
 
 # Construct plot frame
-frame = x.frame(ROOT.RooFit.Title("Unbinned ML fit, chi^2 fit to weighted data"))
+frame = x.frame(Title="Unbinned ML fit, chi^2 fit to weighted data")
 
 # Plot data using sum-of-weights-squared error rather than Poisson errors
-wdata.plotOn(frame, ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2))
+wdata.plotOn(frame, DataError="SumW2")
 
 # Overlay result of 2nd order polynomial fit to weighted data
 p2.plotOn(frame)
@@ -123,7 +122,7 @@ binnedData.Print("v")
 # NB: Within the usual approximations of a chi2 fit, chi2 fit to weighted
 # data using sum-of-weights-squared errors does give correct error
 # estimates
-chi2 = ROOT.RooChi2Var("chi2", "chi2", p2, binnedData, ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2))
+chi2 = p2.createChi2(binnedData, ROOT.RooFit.DataError("SumW2"))
 m = ROOT.RooMinimizer(chi2)
 m.migrad()
 m.hesse()

@@ -46,9 +46,7 @@
 #include <string>
 #include <thread>
 #include <utility>
-#if __cplusplus >= 201703L
 #include <variant>
-#endif
 #include <vector>
 
 using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
@@ -60,6 +58,8 @@ using NTupleSize_t = ROOT::Experimental::NTupleSize_t;
 using RColumnModel = ROOT::Experimental::RColumnModel;
 using RClusterIndex = ROOT::Experimental::RClusterIndex;
 using RClusterDescriptorBuilder = ROOT::Experimental::RClusterDescriptorBuilder;
+using RClusterGroupDescriptorBuilder = ROOT::Experimental::RClusterGroupDescriptorBuilder;
+using RColumnDescriptorBuilder = ROOT::Experimental::RColumnDescriptorBuilder;
 using RFieldDescriptorBuilder = ROOT::Experimental::RFieldDescriptorBuilder;
 using RException = ROOT::Experimental::RException;
 template <class T>
@@ -69,6 +69,7 @@ using RFieldDescriptor = ROOT::Experimental::RFieldDescriptor;
 using RFieldMerger = ROOT::Experimental::RFieldMerger;
 using RFieldValue = ROOT::Experimental::Detail::RFieldValue;
 using RNTupleLocator = ROOT::Experimental::RNTupleLocator;
+using RNTupleLocatorObject64 = ROOT::Experimental::RNTupleLocatorObject64;
 using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
 using RNTuple = ROOT::Experimental::RNTuple;
 using RNTupleAtomicCounter = ROOT::Experimental::Detail::RNTupleAtomicCounter;

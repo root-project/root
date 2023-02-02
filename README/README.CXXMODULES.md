@@ -218,7 +218,7 @@ implementation searches in the database if this is a known entity.
 Line #1 does not require a definition and the forward declaration consumed at
 startup is sufficient. Parsing of `Foo.h` is not required. This comes at a cost
 of having some non-trivial patches in clang to merge default function arguments
-and default template arguments. The design of the the ROOTMAP infrastructure
+and default template arguments. The design of the ROOTMAP infrastructure
 requires the default arguments to be attached to more than one declaration which
 is not allowed by standard C++. The behavior of line #1 is equivalent to:
 ```cpp

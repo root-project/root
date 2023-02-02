@@ -24,8 +24,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     ROOT/REveGeoPolyShape.hxx
     ROOT/REveGeoShapeExtract.hxx
     ROOT/REveGeoShape.hxx
-    ROOT/REveGeomData.hxx
-    ROOT/REveGeomViewer.hxx
     ROOT/REveGluTess.hxx
     ROOT/REveJetCone.hxx
     ROOT/REveEllipsoid.hxx
@@ -88,8 +86,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     src/REveGeoPolyShape.cxx
     src/REveGeoShape.cxx
     src/REveGeoShapeExtract.cxx
-    src/REveGeomData.cxx
-    src/REveGeomViewer.cxx
     src/REveGluTess.cxx
     src/REveJetCone.cxx
     src/REveEllipsoid.cxx

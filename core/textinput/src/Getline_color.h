@@ -23,14 +23,14 @@ namespace ROOT {
       TextInputColorizer();
       virtual ~TextInputColorizer();
       void ProcessTextChange(textinput::EditorRange& Modification,
-                             textinput::Text& input);
+                             textinput::Text& input) override;
 
-      void ProcessPromptChange(textinput::Text& prompt);
+      void ProcessPromptChange(textinput::Text& prompt) override;
 
       void ProcessCursorChange(size_t Cursor, textinput::Text& input,
-                               textinput::Range& DisplayR);
-      bool GetColor(char type, textinput::Color& Col);
-      char GetInfoColor() const { return (char) kColorTabComp; }
+                               textinput::Range& DisplayR) override;
+      bool GetColor(char type, textinput::Color& Col) override;
+      char GetInfoColor() const override { return (char) kColorTabComp; }
 
 
       void SetColors(const char* colorType, const char* colorTabComp,

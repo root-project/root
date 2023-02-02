@@ -29,10 +29,10 @@ class SimplexBuilder : public MinimumBuilder {
 public:
    SimplexBuilder() {}
 
-   ~SimplexBuilder() {}
+   ~SimplexBuilder() override {}
 
-   virtual FunctionMinimum Minimum(const MnFcn &, const GradientCalculator &, const MinimumSeed &, const MnStrategy &,
-                                   unsigned int, double) const;
+   FunctionMinimum Minimum(const MnFcn &, const GradientCalculator &, const MinimumSeed &, const MnStrategy &,
+                                   unsigned int, double) const override;
 
 private:
 };

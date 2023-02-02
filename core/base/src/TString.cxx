@@ -126,6 +126,11 @@ TString::TString(const std::string &s)
 
 TString::TString(const char *cs, Ssiz_t n)
 {
+   if (!cs) {
+      Error("TString::TString", "NULL input string!");
+      Zero();
+      return;
+   }
    if (n < 0) {
       Error("TString::TString", "Negative length!");
       Zero();
@@ -257,6 +262,10 @@ char *TString::Init(Ssiz_t capacity, Ssiz_t nchar)
    if (nchar < 0) {
       Error("*TString::Init", "Negative length!");
       nchar = 0;
+   }
+   if (nchar > capacity) {
+      Error("TString::Init", "capacity is smaller than nchar (%d > %d)", nchar, capacity);
+      nchar = capacity;
    }
    if (capacity > MaxSize()) {
       Error("TString::Init", "capacity too large (%d, max = %d)", capacity, MaxSize());
@@ -1026,7 +1035,7 @@ TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const char *cs, Ssiz_t n2)
    Ssiz_t capac = Capacity();
    char *p = GetPointer();
 
-   if (capac - len + n1 >= n2) {
+   if (capac >= tot) {
       if (n1 != n2) {
          if (rem) {
             if (n1 > n2) {
@@ -1084,6 +1093,18 @@ TString& TString::ReplaceAll(const char *s1, Ssiz_t ls1, const char *s2,
    }
    return *this;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Find special characters which are typically used in `printf()` calls
+/// and replace them by appropriate escape sequences. Result can be
+/// stored as string argument in ROOT macros. The content of TString will be changed!
+
+TString &TString::ReplaceSpecialCppChars()
+{
+   return ReplaceAll("\\","\\\\").ReplaceAll("\"","\\\"");
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove char c at begin and/or end of string (like Strip()) but

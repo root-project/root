@@ -34,42 +34,38 @@ namespace RooStats {
 
       NumEventsTestStat is a simple implementation of the TestStatistic interface used for simple number counting.
       It should probably support simple cuts as well.
-      
+
       \ingroup Roostats
    */
 
   class NumEventsTestStat : public TestStatistic{
 
    public:
-     NumEventsTestStat() : fPdf(0) { }
+     NumEventsTestStat() : fPdf(nullptr) { }
      NumEventsTestStat(RooAbsPdf& pdf) {
        fPdf = &pdf;
      }
-     virtual ~NumEventsTestStat() {
+     ~NumEventsTestStat() override {
        //       delete fRand;
        //       delete fTestStatistic;
      }
-    
+
      // Main interface to evaluate the test statistic on a dataset
-     virtual Double_t Evaluate(RooAbsData& data, RooArgSet& /*paramsOfInterest*/)  {       
-      
+     double Evaluate(RooAbsData& data, RooArgSet& /*paramsOfInterest*/) override  {
+
          if(data.isWeighted()) {
             return data.sumEntries();
          }
- 
+
          // if no pdf is given in the constructor, we assume by default it can be extended
          if (!fPdf || fPdf->canBeExtended()) {
             return data.numEntries();
-         } 
-          
-         // data is not weighted as pdf cannot be extended 
-         if(data.numEntries() == 1) { 
+         }
 
-            const RooArgSet *obsSet = data.get(0);
-            RooLinkedListIter iter = obsSet->iterator();
-
-            RooRealVar *obs = NULL; Double_t numEvents = 0.0;
-            while((obs = (RooRealVar *)iter.Next()) != NULL) {
+         // data is not weighted as pdf cannot be extended
+         if(data.numEntries() == 1) {
+            double numEvents = 0.0;
+            for (auto const *obs : static_range_cast<RooRealVar *>(*data.get(0))) {
                numEvents += obs->getValV();
             }
             return numEvents;
@@ -80,16 +76,16 @@ namespace RooStats {
      }
 
       // Get the TestStatistic
-      virtual const RooAbsArg* GetTestStatistic()  const {return fPdf;}  
+      virtual const RooAbsArg* GetTestStatistic()  const {return fPdf;}
 
-      virtual const TString GetVarName() const {return "Number of events";}
-    
-      
+      const TString GetVarName() const override {return "Number of events";}
+
+
    private:
       RooAbsPdf* fPdf;
 
    protected:
-      ClassDef(NumEventsTestStat,1)   
+      ClassDefOverride(NumEventsTestStat,1)
    };
 
 }

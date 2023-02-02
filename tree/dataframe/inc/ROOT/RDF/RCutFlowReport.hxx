@@ -11,8 +11,8 @@
 #ifndef ROOT_RCUTFLOWREPORT
 #define ROOT_RCUTFLOWREPORT
 
+#include "ROOT/RStringView.hxx"
 #include "RtypesCore.h"
-#include "TString.h"
 
 #include <string>
 #include <vector>

@@ -24,8 +24,6 @@ but no binning. It it used to store named ranges created by
 the RooRealVar::setRange() method
 **/
 
-#include "RooFit.h"
-
 #include "RooNumber.h"
 #include "RooMsgService.h"
 #include "Riostream.h"
@@ -34,7 +32,7 @@ the RooRealVar::setRange() method
 
 using namespace std;
 
-ClassImp(RooRangeBinning); 
+ClassImp(RooRangeBinning);
 ;
 
 
@@ -54,7 +52,7 @@ RooRangeBinning::RooRangeBinning(const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct binning with range [xmin,xmax] with no binning substructure
 
-RooRangeBinning::RooRangeBinning(Double_t xmin, Double_t xmax, const char* name) :
+RooRangeBinning::RooRangeBinning(double xmin, double xmax, const char* name) :
   RooAbsBinning(name)
 {
   _range[0] = xmin ;
@@ -76,9 +74,9 @@ RooRangeBinning::RooRangeBinning(const RooRangeBinning& other, const char* name)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor 
+/// Destructor
 
-RooRangeBinning::~RooRangeBinning() 
+RooRangeBinning::~RooRangeBinning()
 {
 }
 
@@ -87,10 +85,10 @@ RooRangeBinning::~RooRangeBinning()
 ////////////////////////////////////////////////////////////////////////////////
 /// Change limits of the binning to [xlo,xhi]
 
-void RooRangeBinning::setRange(Double_t xlo, Double_t xhi) 
+void RooRangeBinning::setRange(double xlo, double xhi)
 {
   if (xlo>xhi) {
-    oocoutE((TObject*)0,InputArguments) << "RooRangeBinning::setRange: ERROR low bound > high bound" << endl ;
+    oocoutE(nullptr,InputArguments) << "RooRangeBinning::setRange: ERROR low bound > high bound" << endl ;
     return ;
   }
 

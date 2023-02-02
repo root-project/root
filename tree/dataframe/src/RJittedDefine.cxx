@@ -9,16 +9,12 @@
  *************************************************************************/
 
 #include <ROOT/RDF/RJittedDefine.hxx>
-#include <ROOT/RDF/RLoopManager.hxx>
 
 #include <cassert>
 
 using namespace ROOT::Detail::RDF;
 
-RJittedDefine::~RJittedDefine()
-{
-   fLoopManager->Deregister(this);
-}
+RJittedDefine::~RJittedDefine() {}
 
 void RJittedDefine::InitSlot(TTreeReader *r, unsigned int slot)
 {
@@ -34,8 +30,13 @@ void *RJittedDefine::GetValuePtr(unsigned int slot)
 
 const std::type_info &RJittedDefine::GetTypeId() const
 {
-   assert(fConcreteDefine != nullptr);
-   return fConcreteDefine->GetTypeId();
+   if (fConcreteDefine)
+      return fConcreteDefine->GetTypeId();
+   else if (fTypeId)
+      return *fTypeId;
+   else
+      throw std::runtime_error("RDataFrame: Type info was requested for a Defined column type, but could not be "
+                               "retrieved. This should never happen, please report this as a bug.");
 }
 
 void RJittedDefine::Update(unsigned int slot, Long64_t entry)
@@ -54,4 +55,16 @@ void RJittedDefine::FinalizeSlot(unsigned int slot)
 {
    assert(fConcreteDefine != nullptr);
    fConcreteDefine->FinalizeSlot(slot);
+}
+
+void RJittedDefine::MakeVariations(const std::vector<std::string> &variations)
+{
+   assert(fConcreteDefine != nullptr);
+   return fConcreteDefine->MakeVariations(variations);
+}
+
+RDefineBase &RJittedDefine::GetVariedDefine(const std::string &variationName)
+{
+   assert(fConcreteDefine != nullptr);
+   return fConcreteDefine->GetVariedDefine(variationName);
 }

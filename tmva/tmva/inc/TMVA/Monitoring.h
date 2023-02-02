@@ -24,13 +24,13 @@ namespace TMVA
       /* }     */
 
       Monitoring ()
-         : fCanvas (NULL)
+         : fCanvas (nullptr)
          {
-         }    
+         }
 
-      ~Monitoring () 
-         { 
-            delete fCanvas; 
+      ~Monitoring ()
+         {
+            delete fCanvas;
             //            delete fApplication;
          }
 
@@ -115,8 +115,8 @@ namespace TMVA
 
    inline bool Monitoring::exists (std::string histoName)
       {
-         TH1F* dummy1D (NULL);
-         TH2F* dummy2D (NULL);
+         TH1F* dummy1D = nullptr;
+         TH2F* dummy2D = nullptr;
          return exists (dummy1D, histoName) || exists (dummy2D, histoName);
       }
 
@@ -131,13 +131,13 @@ namespace TMVA
 
    inline void Monitoring::create (std::string histoName, int bins, double min, double max)
    {
-      TH1F* dummy (NULL);
+      TH1F* dummy = nullptr;
       getHistogram (dummy, histoName, bins, min, max);
    }
 
    inline void Monitoring::create (std::string histoName, int bins, double min, double max, int bins2, double min2, double max2)
    {
-      TH2F* dummy (NULL);
+      TH2F* dummy = nullptr;
       getHistogram (dummy, histoName, bins, min, max, bins2, min2, max2);
    }
 
@@ -168,14 +168,14 @@ namespace TMVA
 
    inline void Monitoring::addPoint (std::string histoName, double x)
    {
-      TH1F* dummy (NULL);
+      TH1F* dummy = nullptr;
       TH1F* hist = getHistogram (dummy, histoName, 100, 0, 1);
       hist->Fill (x);
    }
 
    inline void Monitoring::addPoint (std::string histoName, double x, double y)
    {
-      TH2F* dummy (NULL);
+      TH2F* dummy = nullptr;
       TH2F* hist = getHistogram (dummy, histoName, 100, 0, 1, 100, 0, 1);
       hist->Fill (x, y);
    }
@@ -187,8 +187,8 @@ namespace TMVA
          return;
 
       //    std::cout << "clear histo which exists " << histoName << std::endl;
-      TH1F* hist1D (NULL);
-      TH2F* hist2D (NULL);
+      TH1F* hist1D = nullptr;
+      TH2F* hist2D = nullptr;
       if (exists (hist1D, histoName))
          {
             hist1D = getHistogram (hist1D, histoName, 100, 0,1);
@@ -211,7 +211,7 @@ namespace TMVA
       auto it1D = m_histos1D.find (histoName);
       if (it1D != m_histos1D.end ())
          {
-            TH1F* dummy (NULL);
+            TH1F* dummy = nullptr;
             TH1F* histogram = getHistogram (dummy, histoName);
             //        histogram->SetBit (TH1::kCanRebin);
             histogram->SetLineColor (color);
@@ -225,7 +225,7 @@ namespace TMVA
       auto it2D = m_histos2D.find (histoName);
       if (it2D != m_histos2D.end ())
          {
-            TH2F* dummy (NULL);
+            TH2F* dummy = nullptr;
             TH2F* histogram = getHistogram (dummy, histoName);
             //        histogram->SetBit (TH1::kCanRebin);
             histogram->SetLineColor (color);

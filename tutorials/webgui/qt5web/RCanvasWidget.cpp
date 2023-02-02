@@ -41,7 +41,7 @@ RCanvasWidget::RCanvasWidget(QWidget *parent) : QWidget(parent)
    }
 
    fView->resize(width(), height());
-   fCanvas->SetSize({ (ROOT::Experimental::RPadLength::Pixel) width(), (ROOT::Experimental::RPadLength::Pixel) height() });
+   fCanvas->SetSize(width(), height());
 }
 
 RCanvasWidget::~RCanvasWidget()
@@ -53,5 +53,5 @@ RCanvasWidget::~RCanvasWidget()
 void RCanvasWidget::resizeEvent(QResizeEvent *event)
 {
    fView->resize(width(), height());
-   fCanvas->SetSize({ (ROOT::Experimental::RPadLength::Pixel) width(), (ROOT::Experimental::RPadLength::Pixel) height() });
+   fCanvas->SetSize(width(), height());
 }

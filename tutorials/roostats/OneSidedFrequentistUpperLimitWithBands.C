@@ -102,7 +102,7 @@
 /// \macro_output
 /// \macro_code
 ///
-/// \authors Kyle Cranmer Haichen Wang Daniel Whiteson
+/// \authors Kyle Cranmer, Haichen Wang, Daniel Whiteson
 
 #include "TFile.h"
 #include "TROOT.h"
@@ -150,10 +150,6 @@ void OneSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
       bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
       // if file does not exists generate with histfactory
       if (!fileExist) {
-#ifdef _WIN32
-         cout << "HistFactory file cannot be generated on Windows - exit" << endl;
-         return;
-#endif
          // Normally this would be run on the command line
          cout << "will run standard hist2workspace example" << endl;
          gROOT->ProcessLine(".! prepareHistFactory .");
@@ -369,23 +365,18 @@ void OneSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
       } else {
 
          // try fix for sim pdf
-         TIterator *iter = simPdf->indexCat().typeIterator();
-         RooCatType *tt = NULL;
-         while ((tt = (RooCatType *)iter->Next())) {
+         for (auto const& tt : simPdf->indexCat()) {
+            auto const& catName = tt.first;
 
             // Get pdf associated with state from simpdf
-            RooAbsPdf *pdftmp = simPdf->getPdf(tt->GetName());
+            RooAbsPdf *pdftmp = simPdf->getPdf(catName.c_str());
 
             // Generate only global variables defined by the pdf associated with this state
-            RooArgSet *globtmp = pdftmp->getObservables(*mc->GetGlobalObservables());
-            RooDataSet *tmp = pdftmp->generate(*globtmp, 1);
+            std::unique_ptr<RooArgSet> globtmp{pdftmp->getObservables(*mc->GetGlobalObservables())};
+            std::unique_ptr<RooDataSet> tmp{pdftmp->generate(*globtmp, 1)};
 
             // Transfer values to output placeholder
-            *globtmp = *tmp->get(0);
-
-            // Cleanup
-            delete globtmp;
-            delete tmp;
+            globtmp->assign(*tmp->get(0));
          }
       }
 

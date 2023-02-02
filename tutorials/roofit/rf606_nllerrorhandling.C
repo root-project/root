@@ -13,7 +13,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooArgusBG.h"
-#include "RooNLLVar.h"
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "RooPlot.h"
@@ -61,7 +60,7 @@ void rf606_nllerrorhandling()
 
    // Perform another fit. In this configuration only the number of errors per
    // likelihood evaluation is shown, if it is greater than zero. The
-   // EvalErrorWall(kFALSE) arguments disables the default error handling strategy
+   // EvalErrorWall(false) arguments disables the default error handling strategy
    // and will cause the actual (problematic) value of the likelihood to be passed
    // to MINUIT.
    //
@@ -71,13 +70,13 @@ void rf606_nllerrorhandling()
    // illustrated in the second plot
 
    m0.setError(0.1);
-   argus.fitTo(*data, PrintEvalErrors(0), EvalErrorWall(kFALSE));
+   argus.fitTo(*data, PrintEvalErrors(0), EvalErrorWall(false));
 
    // P l o t   l i k e l i h o o d   a s   f u n c t i o n   o f   m 0
    // ------------------------------------------------------------------
 
    // Construct likelihood function of model and data
-   RooNLLVar nll("nll", "nll", argus, *data);
+   std::unique_ptr<RooAbsReal> nll{argus.createNLL(*data)};
 
    // Plot likelihood in m0 in range that includes problematic values
    // In this configuration no messages are printed for likelihood evaluation errors,
@@ -85,7 +84,7 @@ void rf606_nllerrorhandling()
    // on the curve will be set to the value given in EvalErrorValue().
 
    RooPlot *frame2 = m0.frame(Range(5.288, 5.293), Title("-log(L) scan vs m0, problematic regions masked"));
-   nll.plotOn(frame2, PrintEvalErrors(-1), ShiftToZero(), EvalErrorValue(nll.getVal() + 10), LineColor(kRed));
+   nll->plotOn(frame2, PrintEvalErrors(-1), ShiftToZero(), EvalErrorValue(nll->getVal() + 10), LineColor(kRed));
    frame2->SetMaximum(15);
    frame2->SetMinimum(0);
 

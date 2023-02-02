@@ -13,6 +13,11 @@
 #include "RooFit/TestStatistics/LikelihoodGradientWrapper.h"
 #include "RooMinimizer.h"
 
+// including derived classes for factory method
+#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#include "LikelihoodGradientJob.h"
+#endif // R__HAS_ROOFIT_MULTIPROCESS
+
 namespace RooFit {
 namespace TestStatistics {
 
@@ -29,8 +34,10 @@ namespace TestStatistics {
 
 /*
  * \param[in] likelihood Shared pointer to the likelihood that must be evaluated
- * \param[in] calculation_is_clean Shared pointer to the object that keeps track of what has been evaluated for the current parameter set provided by Minuit. This information can be used by different calculators, so must be shared between them.
- * \param[in] minimizer Raw pointer to the minimizer that owns the MinuitFcnGrad object that owns this wrapper object.
+ * \param[in] calculation_is_clean Shared pointer to the object that keeps track of what has been evaluated for the
+ * current parameter set provided by Minuit. This information can be used by different calculators, so must be shared
+ * between them. \param[in] minimizer Raw pointer to the minimizer that owns the MinuitFcnGrad object that owns this
+ * wrapper object.
  */
 LikelihoodGradientWrapper::LikelihoodGradientWrapper(std::shared_ptr<RooAbsL> likelihood,
                                                      std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean,
@@ -50,8 +57,39 @@ void LikelihoodGradientWrapper::synchronizeParameterSettings(
    synchronizeParameterSettings(minimizer_->getMultiGenFcn(), parameter_settings);
 }
 
-void LikelihoodGradientWrapper::updateMinuitInternalParameterValues(const std::vector<double>& /*minuit_internal_x*/) {}
-void LikelihoodGradientWrapper::updateMinuitExternalParameterValues(const std::vector<double>& /*minuit_external_x*/) {}
+void LikelihoodGradientWrapper::updateMinuitInternalParameterValues(const std::vector<double> & /*minuit_internal_x*/)
+{
+}
+void LikelihoodGradientWrapper::updateMinuitExternalParameterValues(const std::vector<double> & /*minuit_external_x*/)
+{
+}
+
+/// Factory method.
+std::unique_ptr<LikelihoodGradientWrapper>
+LikelihoodGradientWrapper::create(LikelihoodGradientMode likelihoodGradientMode, std::shared_ptr<RooAbsL> likelihood,
+                                  std::shared_ptr<WrapperCalculationCleanFlags> calculationIsClean, std::size_t nDim,
+                                  RooMinimizer *minimizer)
+{
+   switch (likelihoodGradientMode) {
+   case LikelihoodGradientMode::multiprocess: {
+#ifdef R__HAS_ROOFIT_MULTIPROCESS
+      return std::make_unique<LikelihoodGradientJob>(std::move(likelihood), std::move(calculationIsClean), nDim,
+                                                     minimizer);
+#else
+      (void) likelihood;
+      (void) calculationIsClean;
+      (void) nDim;
+      (void) minimizer;
+      throw std::runtime_error("MinuitFcnGrad ctor with LikelihoodGradientMode::multiprocess is not available in this "
+                               "build without RooFit::Multiprocess!");
+#endif
+      break;
+   }
+   default: {
+      throw std::logic_error("In MinuitFcnGrad constructor: likelihoodGradientMode has an unsupported value!");
+   }
+   }
+}
 
 } // namespace TestStatistics
 } // namespace RooFit

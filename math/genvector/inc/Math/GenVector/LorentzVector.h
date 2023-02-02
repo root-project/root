@@ -32,7 +32,7 @@ namespace ROOT {
   namespace Math {
 
 //__________________________________________________________________________________________
-/** \ingroup GenVector
+/** @ingroup GenVector
 
 Class describing a generic LorentzVector in the 4D space-time,
 using the specified coordinate system for the spatial vector part.
@@ -52,7 +52,7 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
 - ROOT::Math::XYZTVector based on x,y,z,t coordinates (cartesian) in double precision (same as PxPyPzEVector)
 - ROOT::Math::XYZTVectorF based on x,y,z,t coordinates (cartesian) in float precision (same as PxPyPzEVector but float)
 
-More details about the GenVector package can be found \ref GenVector "here".
+@sa Overview of the @ref GenVector "physics vector library"
 */
 
     template< class CoordSystem >
@@ -97,7 +97,11 @@ More details about the GenVector package can be found \ref GenVector "here".
           Construct from a foreign 4D vector type, for example, HepLorentzVector
           Precondition: v must implement methods x(), y(), z(), and t()
        */
-       template<class ForeignLorentzVector>
+       template<class ForeignLorentzVector,
+                typename = decltype(std::declval<ForeignLorentzVector>().x()
+                                    + std::declval<ForeignLorentzVector>().y()
+                                    + std::declval<ForeignLorentzVector>().z()
+                                    + std::declval<ForeignLorentzVector>().t())>
        explicit LorentzVector( const ForeignLorentzVector & v) :
           fCoordinates(PxPyPzE4D<Scalar>( v.x(), v.y(), v.z(), v.t()  ) ) { }
 
@@ -132,7 +136,11 @@ More details about the GenVector package can be found \ref GenVector "here".
           assignment from any other Lorentz vector  implementing
           x(), y(), z() and t()
        */
-       template<class ForeignLorentzVector>
+       template<class ForeignLorentzVector,
+                typename = decltype(std::declval<ForeignLorentzVector>().x()
+                                    + std::declval<ForeignLorentzVector>().y()
+                                    + std::declval<ForeignLorentzVector>().z()
+                                    + std::declval<ForeignLorentzVector>().t())>
        LorentzVector & operator = ( const ForeignLorentzVector & v) {
           SetXYZT( v.x(), v.y(), v.z(), v.t() );
           return *this;

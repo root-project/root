@@ -26,6 +26,9 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_decorator pythonization_decorator.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py PYTHON_DEPS numpy)
 
+# STL vector pythonizations
+ROOT_ADD_PYUNITTEST(pyroot_pyz_stl_vector stl_vector.py)
+
 # TObject and subclasses pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_contains tobject_contains.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_comparisonops tobject_comparisonops.py)
@@ -33,11 +36,15 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_comparisonops tobject_comparisonops.py)
 # TClass pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tclass_dynamiccast tclass_dynamiccast.py)
 
+# TContext pythonizations
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tcontext_contextmanager tcontext_contextmanager.py)
+
 # TDirectory and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tdirectory_attrsyntax tdirectory_attrsyntax.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tdirectoryfile_attrsyntax_get tdirectoryfile_attrsyntax_get.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tfile_attrsyntax_get_writeobject_open tfile_attrsyntax_get_writeobject_open.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tfile_constructor tfile_constructor.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tfile_context_manager tfile_context_manager.py)
 
 # TTree and subclasses pythonizations
 file(COPY TreeHelper.h DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
@@ -103,14 +110,26 @@ endif()
 # RDataFrame and subclasses pythonizations
 if (dataframe)
     if(NOT MSVC OR win_broken_tests)
-        ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy rdataframe_asnumpy.py PYTHON_DEPS numpy)
         ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_makenumpy rdataframe_makenumpy.py PYTHON_DEPS numpy)
     endif()
+    if(NOT MSVC OR win_broken_tests OR CMAKE_CXX_STANDARD GREATER 14)
+        if(NOT MSVC OR ${LLVM_VERSION} VERSION_LESS 13.0.0 OR llvm13_broken_tests)
+            ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy rdataframe_asnumpy.py PYTHON_DEPS numpy)
+        endif()
+        ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_histo_profile rdataframe_histo_profile.py)
+    endif()
+endif()
+
+# RDFDescription pythonization
+if (dataframe)
+    ROOT_ADD_PYUNITTEST(pyroot_rdfdescription rdfdescription.py)
 endif()
 
 # RTensor pythonizations
 if (dataframe AND tmva)
-    ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)
+    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
+        ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)
+    endif()
 endif()
 
 # Passing Python callables to ROOT.TF
@@ -118,11 +137,16 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tf_pycallables tf_pycallables.py)
 
 if(roofit)
   # RooAbsCollection and subclasses pythonizations
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabscollection roofit/rooabscollection.py)
+  if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
+    ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabscollection roofit/rooabscollection.py)
+  endif()
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooarglist roofit/rooarglist.py)
 
   # RooDataHist pythonisations
   ROOT_ADD_PYUNITTEST(pyroot_roofit_roodatahist_ploton roofit/roodatahist_ploton.py)
+
+  # RooDataSet pythonisations
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset roofit/roodataset.py)
 
   # RooWorkspace pythonizations
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooworkspace roofit/rooworkspace.py)
@@ -131,22 +155,35 @@ if(roofit)
 
   ROOT_ADD_PYUNITTEST(pyroot_roofit_roolinkedlist roofit/roolinkedlist.py)
 
-  # NumPy compatibility
   if(NOT MSVC OR win_broken_tests)
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset_numpy roofit/roodataset_numpy.py)
+    # Test pythonizations for the RooFitHS3 package, which is not built on Windows.
+    ROOT_ADD_PYUNITTEST(pyroot_roofit_roojsonfactorywstool roofit/roojsonfactorywstool.py)
+
+    # Other pythonizations that fail on Windows for unknown reasons
+    ROOT_ADD_PYUNITTEST(pyroot_roofit_rooglobalfunc roofit/rooglobalfunc.py)
+    ROOT_ADD_PYUNITTEST(pyroot_roofit_roosimultaneous roofit/roosimultaneous.py)
   endif()
+
+  # NumPy compatibility
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset_numpy roofit/roodataset_numpy.py PYTHON_DEPS numpy)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodatahist_numpy roofit/roodatahist_numpy.py PYTHON_DEPS numpy)
 
 endif()
 
 if (dataframe)
-    if(NOT MSVC OR win_broken_tests)
+    if(NOT MSVC OR win_broken_tests OR CMAKE_CXX_STANDARD GREATER 14)
         # std::string_view backport in CPyCppyy
         ROOT_ADD_PYUNITTEST(pyroot_string_view_backport string_view_backport.py)
-
+    endif()
+    if(NOT MSVC OR win_broken_tests)
         if(NOT (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY2} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 2) AND NOT
             (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3))
             # Test wrapping Python callables for use in C++ using numba
             ROOT_ADD_PYUNITTEST(pyroot_numbadeclare numbadeclare.py PYTHON_DEPS numba)
+            if(PYTHON_VERSION_STRING_Development_Main VERSION_GREATER_EQUAL 3.7)
+                ROOT_ADD_PYUNITTEST(pyroot_rdf_filter_pyz rdf_filter_pyz.py PYTHON_DEPS numba)
+                ROOT_ADD_PYUNITTEST(pyroot_rdf_define_pyz rdf_define_pyz.py PYTHON_DEPS numba)
+            endif()
         endif()
     endif()
 endif()

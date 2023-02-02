@@ -33,28 +33,28 @@ namespace TMath {
 // Fundamental constants
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \f[ \pi\f]
+/// \f$ \pi\f$
 constexpr Double_t Pi()
 {
    return 3.14159265358979323846;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \f[ 2\pi\f]
+/// \f$ 2\pi\f$
 constexpr Double_t TwoPi()
 {
    return 2.0 * Pi();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \f[ \frac{\pi}{2} \f]
+/// \f$ \frac{\pi}{2} \f$
 constexpr Double_t PiOver2()
 {
    return Pi() / 2.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \f[ \frac{\pi}{4} \f]
+/// \f$ \frac{\pi}{4} \f$
 constexpr Double_t PiOver4()
 {
    return Pi() / 4.0;
@@ -68,31 +68,28 @@ constexpr Double_t InvPi()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Conversion from radian to degree:
-/// \f[ \frac{180}{\pi} \f]
+/// Conversion from radian to degree: \f$ \frac{180}{\pi} \f$
 constexpr Double_t RadToDeg()
 {
    return 180.0 / Pi();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Conversion from degree to radian:
-/// \f[ \frac{\pi}{180} \f]
+/// Conversion from degree to radian: \f$ \frac{\pi}{180} \f$
 constexpr Double_t DegToRad()
 {
    return Pi() / 180.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \f[ \sqrt{2} \f]
+/// \f$ \sqrt{2} \f$
 constexpr Double_t Sqrt2()
 {
    return 1.4142135623730950488016887242097;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Base of natural log:
-///  \f[ e \f]
+/// Base of natural log: \f$ e \f$
 constexpr Double_t E()
 {
    return 2.71828182845904523536;
@@ -187,8 +184,7 @@ constexpr Double_t GnUncertainty()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Planck's constant in \f$ J s \f$
-/// \f[ h \f]
+/// Planck's constant in \f$ J s \f$: \f$ h \f$
 constexpr Double_t H()
 {
    return 6.62607015e-34;
@@ -205,14 +201,13 @@ constexpr Double_t Hcgs()
 /// Planck's constant uncertainty.
 constexpr Double_t HUncertainty()
 {
-   // Planck constant is exact according to 2019 redefinition 
+   // Planck constant is exact according to 2019 redefinition
    // (https://en.wikipedia.org/wiki/2019_redefinition_of_the_SI_base_units)
    return 0.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \f$ \hbar \f$ in \f$ J s \f$
-/// \f[ \hbar = \frac{h}{2\pi} \f]
+/// \f$ \hbar \f$ in \f$ J s \f$: \f$ \hbar = \frac{h}{2\pi} \f$
 constexpr Double_t Hbar()
 {
    return 1.054571817e-34;
@@ -248,8 +243,7 @@ constexpr Double_t HCcgs()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Boltzmann's constant in \f$ J K^{-1} \f$
-/// \f[ k \f]
+/// Boltzmann's constant in \f$ J K^{-1} \f$: \f$ k \f$
 constexpr Double_t K()
 {
    return 1.380649e-23;
@@ -266,14 +260,13 @@ constexpr Double_t Kcgs()
 /// Boltzmann's constant uncertainty.
 constexpr Double_t KUncertainty()
 {
-   // constant is exact according to 2019 redefinition 
+   // constant is exact according to 2019 redefinition
    // (https://en.wikipedia.org/wiki/2019_redefinition_of_the_SI_base_units)
    return 0.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Stefan-Boltzmann constant in \f$ W m^{-2} K^{-4}\f$
-/// \f[ \sigma \f]
+/// Stefan-Boltzmann constant in \f$ W m^{-2} K^{-4}\f$: \f$ \sigma \f$
 constexpr Double_t Sigma()
 {
    return 5.670373e-8;
@@ -297,7 +290,7 @@ constexpr Double_t Na()
 /// Avogadro constant (Avogadro's Number) uncertainty.
 constexpr Double_t NaUncertainty()
 {
-   // constant is exact according to 2019 redefinition 
+   // constant is exact according to 2019 redefinition
    // (https://en.wikipedia.org/wiki/2019_redefinition_of_the_SI_base_units)
    return 0.0;
 }
@@ -352,7 +345,7 @@ constexpr Double_t Qe()
 /// Elementary charge uncertainty.
 constexpr Double_t QeUncertainty()
 {
-   // constant is exact according to 2019 redefinition 
+   // constant is exact according to 2019 redefinition
    // (https://en.wikipedia.org/wiki/2019_redefinition_of_the_SI_base_units)
    return 0.0;
 }
@@ -418,17 +411,18 @@ struct Limits {
    };
 
    // Some integer math
-   Long_t   Hypot(Long_t x, Long_t y);     // sqrt(px*px + py*py)
+   Long_t   Hypot(Long_t x, Long_t y);
 
-   // Comparing floating points
+   /// Comparing floating points.
+   /// Returns `kTRUE` if the absolute difference between `af` and `bf` is less than `epsilon`.
    inline Bool_t AreEqualAbs(Double_t af, Double_t bf, Double_t epsilon) {
-      //return kTRUE if absolute difference between af and bf is less than epsilon
       return TMath::Abs(af-bf) < epsilon ||
              TMath::Abs(af - bf) < Limits<Double_t>::Min(); // handle 0 < 0 case
 
    }
+   /// Comparing floating points.
+   /// Returns `kTRUE` if the relative difference between `af` and `bf` is less than `relPrec`.
    inline Bool_t AreEqualRel(Double_t af, Double_t bf, Double_t relPrec) {
-      //return kTRUE if relative difference between af and bf is less than relPrec
       return TMath::Abs(af - bf) <= 0.5 * relPrec * (TMath::Abs(af) + TMath::Abs(bf)) ||
              TMath::Abs(af - bf) < Limits<Double_t>::Min(); // handle denormals
    }
@@ -460,7 +454,7 @@ struct Limits {
 
    //Sample quantiles
    void      Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Double_t *prob,
-                       Bool_t isSorted=kTRUE, Int_t *index = 0, Int_t type=7);
+                       Bool_t isSorted=kTRUE, Int_t *index = nullptr, Int_t type=7);
 
    // IsInside
    template <typename T> Bool_t IsInside(T xp, T yp, Int_t np, T *x, T *y);
@@ -488,6 +482,7 @@ struct Limits {
    Double_t Binomial(Int_t n,Int_t k);  // Calculate the binomial coefficient n over k
    Double_t BinomialI(Double_t p, Int_t n, Int_t k);
    Double_t BreitWigner(Double_t x, Double_t mean=0, Double_t gamma=1);
+   Double_t BreitWignerRelativistic(Double_t x, Double_t median=0, Double_t gamma=1);
    Double_t CauchyDist(Double_t x, Double_t t=0, Double_t s=1);
    Double_t ChisquareQuantile(Double_t p, Double_t ndf);
    Double_t FDist(Double_t F, Double_t N, Double_t M);
@@ -527,9 +522,9 @@ struct Limits {
    template <typename Iterator> Double_t RMS(Iterator first, Iterator last);
    template <typename Iterator, typename WeightIterator> Double_t RMS(Iterator first, Iterator last, WeightIterator wfirst);
 
-   template <typename T> Double_t StdDev(Long64_t n, const T *a, const Double_t * w = 0) { return RMS<T>(n,a,w); }
-   template <typename Iterator> Double_t StdDev(Iterator first, Iterator last) { return RMS<Iterator>(first,last); }
-   template <typename Iterator, typename WeightIterator> Double_t StdDev(Iterator first, Iterator last, WeightIterator wfirst) { return RMS<Iterator,WeightIterator>(first,last,wfirst); }
+   template <typename T> Double_t StdDev(Long64_t n, const T *a, const Double_t * w = 0) { return RMS<T>(n,a,w); } /// Same as RMS
+   template <typename Iterator> Double_t StdDev(Iterator first, Iterator last) { return RMS<Iterator>(first,last); } /// Same as RMS
+   template <typename Iterator, typename WeightIterator> Double_t StdDev(Iterator first, Iterator last, WeightIterator wfirst) { return RMS<Iterator,WeightIterator>(first,last,wfirst); } /// Same as RMS
 
    template <typename T> Double_t Median(Long64_t n, const T *a,  const Double_t *w=0, Long64_t *work=0);
 
@@ -546,12 +541,12 @@ struct Limits {
    Double_t BetaIncomplete(Double_t x, Double_t a, Double_t b);
 
    // Bessel functions
-   Double_t BesselI(Int_t n,Double_t x);  /// integer order modified Bessel function I_n(x)
-   Double_t BesselK(Int_t n,Double_t x);  /// integer order modified Bessel function K_n(x)
-   Double_t BesselI0(Double_t x);         /// modified Bessel function I_0(x)
-   Double_t BesselK0(Double_t x);         /// modified Bessel function K_0(x)
-   Double_t BesselI1(Double_t x);         /// modified Bessel function I_1(x)
-   Double_t BesselK1(Double_t x);         /// modified Bessel function K_1(x)
+   Double_t BesselI(Int_t n,Double_t x);  /// Integer order modified Bessel function I_n(x)
+   Double_t BesselK(Int_t n,Double_t x);  /// Integer order modified Bessel function K_n(x)
+   Double_t BesselI0(Double_t x);         /// Modified Bessel function I_0(x)
+   Double_t BesselK0(Double_t x);         /// Modified Bessel function K_0(x)
+   Double_t BesselI1(Double_t x);         /// Modified Bessel function I_1(x)
+   Double_t BesselK1(Double_t x);         /// Modified Bessel function K_1(x)
    Double_t BesselJ0(Double_t x);         /// Bessel function J0(x) for any real x
    Double_t BesselJ1(Double_t x);         /// Bessel function J1(x) for any real x
    Double_t BesselY0(Double_t x);         /// Bessel function Y0(x) for positive x
@@ -586,46 +581,66 @@ struct Limits {
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the sine of an angle of `x` radians.
+
 inline Double_t TMath::Sin(Double_t x)
    { return sin(x); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the cosine of an angle of `x` radians.
+
 inline Double_t TMath::Cos(Double_t x)
    { return cos(x); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the tangent of an angle of `x` radians.
+
 inline Double_t TMath::Tan(Double_t x)
    { return tan(x); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the hyperbolic sine of `x.
+
 inline Double_t TMath::SinH(Double_t x)
    { return sinh(x); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the hyperbolic cosine of `x`.
+
 inline Double_t TMath::CosH(Double_t x)
    { return cosh(x); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the hyperbolic tangent of `x`.
+
 inline Double_t TMath::TanH(Double_t x)
    { return tanh(x); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the principal value of the arc sine of `x`, expressed in radians.
+
 inline Double_t TMath::ASin(Double_t x)
-   { 
+   {
      return asin(x);
    }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the principal value of the arc cosine of `x`, expressed in radians.
+
 inline Double_t TMath::ACos(Double_t x)
-   { 
+   {
      return acos(x);
    }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the principal value of the arc tangent of `x`, expressed in radians.
+
 inline Double_t TMath::ATan(Double_t x)
    { return atan(x); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the principal value of the arc tangent of `y/x`, expressed in radians.
+
 inline Double_t TMath::ATan2(Double_t y, Double_t x)
    { if (x != 0) return  atan2(y, x);
      if (y == 0) return  0;
@@ -634,31 +649,44 @@ inline Double_t TMath::ATan2(Double_t y, Double_t x)
    }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns `x*x`.
+
 inline Double_t TMath::Sq(Double_t x)
    { return x*x; }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the square root of x.
+
 inline Double_t TMath::Sqrt(Double_t x)
    { return sqrt(x); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Rounds `x` upward, returning the smallest integral value that is not less than `x`.
+
 inline Double_t TMath::Ceil(Double_t x)
    { return ceil(x); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the nearest integer of `TMath::Ceil(x)`.
+
 inline Int_t TMath::CeilNint(Double_t x)
    { return TMath::Nint(ceil(x)); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Rounds `x` downward, returning the largest integral value that is not greater than `x`.
+
 inline Double_t TMath::Floor(Double_t x)
    { return floor(x); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the nearest integer of `TMath::Floor(x)`.
+
 inline Int_t TMath::FloorNint(Double_t x)
    { return TMath::Nint(floor(x)); }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Round to nearest integer. Rounds half integers to the nearest even integer.
+
 template<typename T>
 inline Int_t TMath::Nint(T x)
 {
@@ -674,30 +702,44 @@ inline Int_t TMath::Nint(T x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the base-e exponential function of x, which is e raised to the power `x`.
+
 inline Double_t TMath::Exp(Double_t x)
    { return exp(x); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the result of multiplying `x` (the significant) by 2 raised to the power of `exp` (the exponent).
+
 inline Double_t TMath::Ldexp(Double_t x, Int_t exp)
    { return ldexp(x, exp); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns `x` raised to the power `y`.
+
 inline LongDouble_t TMath::Power(LongDouble_t x, LongDouble_t y)
    { return std::pow(x,y); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns `x` raised to the power `y`.
+
 inline LongDouble_t TMath::Power(LongDouble_t x, Long64_t y)
    { return std::pow(x,(LongDouble_t)y); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns `x` raised to the power `y`.
+
 inline LongDouble_t TMath::Power(Long64_t x, Long64_t y)
    { return std::pow(x,y); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns `x` raised to the power `y`.
+
 inline Double_t TMath::Power(Double_t x, Double_t y)
    { return pow(x, y); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns `x` raised to the power `y`.
+
 inline Double_t TMath::Power(Double_t x, Int_t y) {
 #ifdef R__ANSISTREAM
    return std::pow(x, y);
@@ -707,10 +749,14 @@ inline Double_t TMath::Power(Double_t x, Int_t y) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the natural logarithm of `x`.
+
 inline Double_t TMath::Log(Double_t x)
    { return log(x); }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the common (base-10) logarithm of `x`.
+
 inline Double_t TMath::Log10(Double_t x)
    { return log10(x); }
 
@@ -718,6 +764,7 @@ inline Double_t TMath::Log10(Double_t x)
 /// Check if it is finite with a mask in order to be consistent in presence of
 /// fast math.
 /// Inspired from the CMSSW FWCore/Utilities package
+
 inline Int_t TMath::Finite(Double_t x)
 #if defined(R__FAST_MATH)
 
@@ -747,6 +794,7 @@ inline Int_t TMath::Finite(Double_t x)
 /// Check if it is finite with a mask in order to be consistent in presence of
 /// fast math.
 /// Inspired from the CMSSW FWCore/Utilities package
+
 inline Int_t TMath::Finite(Float_t x)
 #if defined(R__FAST_MATH)
 
@@ -847,40 +895,46 @@ namespace Math {
 // Wrapper to numeric_limits
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns a quiet NaN as [defined by IEEE 754](http://en.wikipedia.org/wiki/NaN#Quiet_NaN)
+/// Returns a quiet NaN as [defined by IEEE 754](http://en.wikipedia.org/wiki/NaN#Quiet_NaN).
+
 inline Double_t TMath::QuietNaN() {
 
    return std::numeric_limits<Double_t>::quiet_NaN();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns a signaling NaN as defined by IEEE 754](http://en.wikipedia.org/wiki/NaN#Signaling_NaN)
+/// Returns a signaling NaN as defined by IEEE 754](http://en.wikipedia.org/wiki/NaN#Signaling_NaN).
+
 inline Double_t TMath::SignalingNaN() {
    return std::numeric_limits<Double_t>::signaling_NaN();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns an infinity as defined by the IEEE standard
+/// Returns an infinity as defined by the IEEE standard.
+
 inline Double_t TMath::Infinity() {
    return std::numeric_limits<Double_t>::infinity();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns maximum representation for type T
+/// Returns maximum representation for type T.
+
 template<typename T>
 inline T TMath::Limits<T>::Min() {
    return (std::numeric_limits<T>::min)();    //N.B. use this signature to avoid class with macro min() on Windows
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns minimum double representation
+/// Returns minimum double representation.
+
 template<typename T>
 inline T TMath::Limits<T>::Max() {
    return (std::numeric_limits<T>::max)();  //N.B. use this signature to avoid class with macro max() on Windows
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns minimum double representation
+/// Returns minimum double representation.
+
 template<typename T>
 inline T TMath::Limits<T>::Epsilon() {
    return std::numeric_limits<T>::epsilon();
@@ -890,34 +944,38 @@ inline T TMath::Limits<T>::Epsilon() {
 // Advanced.
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate the Normalized Cross Product of two vectors
+/// Calculates the Normalized Cross Product of two vectors.
+
 template <typename T> inline T TMath::NormCross(const T v1[3],const T v2[3],T out[3])
 {
    return Normalize(Cross(v1,v2,out));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return minimum of array a of length n.
+/// Returns minimum of array a of length n.
+
 template <typename T>
 T TMath::MinElement(Long64_t n, const T *a) {
    return *std::min_element(a,a+n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return maximum of array a of length n.
+/// Returns maximum of array a of length n.
+
 template <typename T>
 T TMath::MaxElement(Long64_t n, const T *a) {
    return *std::max_element(a,a+n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return index of array with the minimum element.
+/// Returns index of array with the minimum element.
 /// If more than one element is minimum returns first found.
 ///
 /// Implement here since this one is found to be faster (mainly on 64 bit machines)
 /// than stl generic implementation.
 /// When performing the comparison,  the STL implementation needs to de-reference both the array iterator
 /// and the iterator pointing to the resulting minimum location
+
 template <typename T>
 Long64_t TMath::LocMin(Long64_t n, const T *a) {
    if  (n <= 0 || !a) return -1;
@@ -933,8 +991,9 @@ Long64_t TMath::LocMin(Long64_t n, const T *a) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return index of array with the minimum element.
+/// Returns index of array with the minimum element.
 /// If more than one element is minimum returns first found.
+
 template <typename Iterator>
 Iterator TMath::LocMin(Iterator first, Iterator last) {
 
@@ -942,10 +1001,11 @@ Iterator TMath::LocMin(Iterator first, Iterator last) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return index of array with the maximum element.
+/// Returns index of array with the maximum element.
 /// If more than one element is maximum returns first found.
 ///
 /// Implement here since it is faster (see comment in LocMin function)
+
 template <typename T>
 Long64_t TMath::LocMax(Long64_t n, const T *a) {
    if  (n <= 0 || !a) return -1;
@@ -961,8 +1021,9 @@ Long64_t TMath::LocMax(Long64_t n, const T *a) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return index of array with the maximum element.
+/// Returns index of array with the maximum element.
 /// If more than one element is maximum returns first found.
+
 template <typename Iterator>
 Iterator TMath::LocMax(Iterator first, Iterator last)
 {
@@ -971,7 +1032,8 @@ Iterator TMath::LocMax(Iterator first, Iterator last)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the weighted mean of an array defined by the iterators.
+/// Returns the weighted mean of an array defined by the iterators.
+
 template <typename Iterator>
 Double_t TMath::Mean(Iterator first, Iterator last)
 {
@@ -988,9 +1050,10 @@ Double_t TMath::Mean(Iterator first, Iterator last)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the weighted mean of an array defined by the first and
+/// Returns the weighted mean of an array defined by the first and
 /// last iterators. The w iterator should point to the first element
 /// of a vector of weights of the same size as the main array.
+
 template <typename Iterator, typename WeightIterator>
 Double_t TMath::Mean(Iterator first, Iterator last, WeightIterator w)
 {
@@ -1018,7 +1081,8 @@ Double_t TMath::Mean(Iterator first, Iterator last, WeightIterator w)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the weighted mean of an array a with length n.
+/// Returns the weighted mean of an array a with length n.
+
 template <typename T>
 Double_t TMath::Mean(Long64_t n, const T *a, const Double_t *w)
 {
@@ -1030,8 +1094,9 @@ Double_t TMath::Mean(Long64_t n, const T *a, const Double_t *w)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the geometric mean of an array defined by the iterators.
+/// Returns the geometric mean of an array defined by the iterators.
 /// \f[ GeomMean = (\prod_{i=0}^{n-1} |a[i]|)^{1/n} \f]
+
 template <typename Iterator>
 Double_t TMath::GeomMean(Iterator first, Iterator last)
 {
@@ -1049,8 +1114,9 @@ Double_t TMath::GeomMean(Iterator first, Iterator last)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the geometric mean of an array a of size n.
+/// Returns the geometric mean of an array a of size n.
 /// \f[ GeomMean = (\prod_{i=0}^{n-1} |a[i]|)^{1/n} \f]
+
 template <typename T>
 Double_t TMath::GeomMean(Long64_t n, const T *a)
 {
@@ -1058,13 +1124,14 @@ Double_t TMath::GeomMean(Long64_t n, const T *a)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the Standard Deviation of an array defined by the iterators.
+/// Returns the Standard Deviation of an array defined by the iterators.
 /// Note that this function returns the sigma(standard deviation) and
 /// not the root mean square of the array.
 ///
 /// Use the two pass algorithm, which is slower (! a factor of 2) but much more
 /// precise.  Since we have a vector the 2 pass algorithm is still faster than the
 /// Welford algorithm. (See also ROOT-5545)
+
 template <typename Iterator>
 Double_t TMath::RMS(Iterator first, Iterator last)
 {
@@ -1084,11 +1151,12 @@ Double_t TMath::RMS(Iterator first, Iterator last)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the weighted Standard Deviation of an array defined by the iterators.
+/// Returns the weighted Standard Deviation of an array defined by the iterators.
 /// Note that this function returns the sigma(standard deviation) and
 /// not the root mean square of the array.
 ///
 /// As in the unweighted case use the two pass algorithm
+
 template <typename Iterator, typename WeightIterator>
 Double_t TMath::RMS(Iterator first, Iterator last, WeightIterator w)
 {
@@ -1110,9 +1178,10 @@ Double_t TMath::RMS(Iterator first, Iterator last, WeightIterator w)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the Standard Deviation of an array a with length n.
+/// Returns the Standard Deviation of an array a with length n.
 /// Note that this function returns the sigma(standard deviation) and
 /// not the root mean square of the array.
+
 template <typename T>
 Double_t TMath::RMS(Long64_t n, const T *a, const Double_t * w)
 {
@@ -1120,8 +1189,9 @@ Double_t TMath::RMS(Long64_t n, const T *a, const Double_t * w)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate the Cross Product of two vectors:
+/// Calculates the Cross Product of two vectors:
 ///         out = [v1 x v2]
+
 template <typename T> T *TMath::Cross(const T v1[3],const T v2[3], T out[3])
 {
    out[0] = v1[1] * v2[2] - v1[2] * v2[1];
@@ -1132,10 +1202,11 @@ template <typename T> T *TMath::Cross(const T v1[3],const T v2[3], T out[3])
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate a normal vector of a plane.
+/// Calculates a normal vector of a plane.
 ///
 /// \param[in]  p1, p2,p3     3 3D points belonged the plane to define it.
 /// \param[out] normal        Pointer to 3D normal vector (normalized)
+
 template <typename T> T * TMath::Normal2Plane(const T p1[3],const T p2[3],const T p3[3], T normal[3])
 {
    T v1[3], v2[3];
@@ -1156,6 +1227,7 @@ template <typename T> T * TMath::Normal2Plane(const T p1[3],const T p2[3],const 
 /// Function which returns kTRUE if point xp,yp lies inside the
 /// polygon defined by the np points in arrays x and y, kFALSE otherwise.
 /// Note that the polygon may be open or closed.
+
 template <typename T> Bool_t TMath::IsInside(T xp, T yp, Int_t np, T *x, T *y)
 {
    Int_t i, j = np-1 ;
@@ -1174,7 +1246,7 @@ template <typename T> Bool_t TMath::IsInside(T xp, T yp, Int_t np, T *x, T *y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the median of the array a where each entry i has weight w[i] .
+/// Returns the median of the array a where each entry i has weight w[i] .
 /// Both arrays have a length of at least n . The median is a number obtained
 /// from the sorted array a through
 ///
@@ -1194,6 +1266,7 @@ template <typename T> Bool_t TMath::IsInside(T xp, T yp, Int_t np, T *x, T *y)
 /// If work is supplied, it is used to store the sorting index and assumed to be
 /// >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
 /// or on the heap for n >= kWorkMax .
+
 template <typename T> Double_t TMath::Median(Long64_t n, const T *a,  const Double_t *w, Long64_t *work)
 {
 
@@ -1279,6 +1352,7 @@ template <typename T> Double_t TMath::Median(Long64_t n, const T *a,  const Doub
 /// implemented by Anna Khreshuk.
 ///
 /// See also the declarations at the top of this file
+
 template <class Element, typename Size>
 Element TMath::KOrdStat(Size n, const Element *a, Size k, Size *work)
 {

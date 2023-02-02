@@ -329,7 +329,19 @@ void TDirectoryFile::BuildDirectoryFile(TFile* motherFile, TDirectory* motherDir
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change current directory to "this" directory.
-/// Using path one can
+///
+/// Returns kTRUE in case of success.
+
+Bool_t TDirectoryFile::cd()
+{
+   Bool_t ok = TDirectory::cd();
+   if (ok)
+      TFile::CurrentFile() = fFile;
+   return ok;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change current directory the directory described by the path if given one.
 /// change the current directory to "path". The absolute path syntax is:
 ///
 ///     file.root:/dir1/dir2
@@ -341,7 +353,8 @@ void TDirectoryFile::BuildDirectoryFile(TFile* motherFile, TDirectory* motherDir
 Bool_t TDirectoryFile::cd(const char *path)
 {
    Bool_t ok = TDirectory::cd(path);
-   if (ok) TFile::CurrentFile() = fFile;
+   if (ok)
+      TFile::CurrentFile() = fFile;
    return ok;
 }
 
@@ -1149,11 +1162,11 @@ TKey *TDirectoryFile::GetKey(const char *name, Short_t cycle) const
 /// Indentation is used to identify the directory tree
 /// Subdirectories are listed first, then objects in memory, then objects on the file
 ///
-/// The option can has the following format: <b>[-d |-m][<regexp>]</b>
+/// The option can has the following format: <b>`[-d |-m][<regexp>]`</b>
 /// Options:
 ///   - -d: only list objects in the file
 ///   - -m: only list objects in memory
-///  The <regexp> will be used to match the name of the objects.
+///  The `<regexp>` will be used to match the name of the objects.
 ///  By default memory and disk objects are listed.
 
 void TDirectoryFile::ls(Option_t *option) const

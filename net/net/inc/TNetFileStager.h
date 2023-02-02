@@ -37,15 +37,15 @@ public:
    TNetFileStager(const char *stager = "");
    virtual ~TNetFileStager();
 
-   Bool_t  IsStaged(const char *path);
-   Int_t   Locate(const char *path, TString &endpath);
-   Bool_t  Matches(const char *s);
+   Bool_t  IsStaged(const char *path) override;
+   Int_t   Locate(const char *path, TString &endpath) override;
+   Bool_t  Matches(const char *s) override;
 
-   Bool_t  IsValid() const { return (fSystem ? kTRUE : kFALSE); }
+   Bool_t  IsValid() const override { return fSystem ? kTRUE : kFALSE; }
 
-   void    Print(Option_t *option = "") const;
+   void    Print(Option_t *option = "") const override;
 
-   ClassDef(TNetFileStager,0)  // Implementation for a 'rootd' backend
+   ClassDefOverride(TNetFileStager,0)  // Implementation for a 'rootd' backend
 };
 
 #endif

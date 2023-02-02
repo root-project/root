@@ -232,6 +232,13 @@ public:
     return {Set.end()};
   }
 
+  /// Check if the SmallSet contains the given element.
+  bool contains(const T &V) const {
+    if (isSmall())
+      return vfind(V) != Vector.end();
+    return Set.find(V) != Set.end();
+  }
+
 private:
   bool isSmall() const { return Set.empty(); }
 
@@ -247,6 +254,31 @@ private:
 /// SmallPtrSet for performance.
 template <typename PointeeType, unsigned N>
 class SmallSet<PointeeType*, N> : public SmallPtrSet<PointeeType*, N> {};
+
+/// Equality comparison for SmallSet.
+///
+/// Iterates over elements of LHS confirming that each element is also a member
+/// of RHS, and that RHS contains no additional values.
+/// Equivalent to N calls to RHS.count.
+/// For small-set mode amortized complexity is O(N^2)
+/// For large-set mode amortized complexity is linear, worst case is O(N^2) (if
+/// every hash collides).
+template <typename T, unsigned LN, unsigned RN, typename C>
+bool operator==(const SmallSet<T, LN, C> &LHS, const SmallSet<T, RN, C> &RHS) {
+  if (LHS.size() != RHS.size())
+    return false;
+
+  // All elements in LHS must also be in RHS
+  return all_of(LHS, [&RHS](const T &E) { return RHS.count(E); });
+}
+
+/// Inequality comparison for SmallSet.
+///
+/// Equivalent to !(LHS == RHS). See operator== for performance notes.
+template <typename T, unsigned LN, unsigned RN, typename C>
+bool operator!=(const SmallSet<T, LN, C> &LHS, const SmallSet<T, RN, C> &RHS) {
+  return !(LHS == RHS);
+}
 
 } // end namespace llvm
 

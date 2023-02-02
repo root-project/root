@@ -27,8 +27,6 @@ a constrained split
 **/
 
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include <math.h>
 
@@ -44,17 +42,6 @@ using namespace std;
 ClassImp(RooFracRemainder);
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooFracRemainder::RooFracRemainder()
-{
-  _setIter1 = _set1.createIterator() ;
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with given set of input fractions. All arguments in sumSet must be of type RooAbsReal.
 
@@ -62,64 +49,39 @@ RooFracRemainder::RooFracRemainder(const char* name, const char* title, const Ro
   RooAbsReal(name, title),
   _set1("set1","First set of components",this)
 {
-  _setIter1 = _set1.createIterator() ;
-
-  TIterator* inputIter = sumSet.createIterator() ;
-  RooAbsArg* comp ;
-  while((comp = (RooAbsArg*)inputIter->Next())) {
+  for(RooAbsArg * comp : sumSet) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
-      coutE(InputArguments) << "RooFracRemainder::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
-			    << " is not of type RooAbsReal" << endl ;
+      coutE(InputArguments) << "RooFracRemainder::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
+             << " is not of type RooAbsReal" << endl ;
       RooErrorHandler::softAbort() ;
     }
     _set1.add(*comp) ;
   }
-
-  delete inputIter ;
 }
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
 RooFracRemainder::RooFracRemainder(const RooFracRemainder& other, const char* name) :
-  RooAbsReal(other, name), 
+  RooAbsReal(other, name),
   _set1("set1",this,other._set1)
 {
-  _setIter1 = _set1.createIterator() ;
-  
   // Member _ownedList is intentionally not copy-constructed -- ownership is not transferred
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooFracRemainder::~RooFracRemainder() 
-{
-  if (_setIter1) delete _setIter1 ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate value
 
-Double_t RooFracRemainder::evaluate() const 
+double RooFracRemainder::evaluate() const
 {
-  Double_t sum(1);
-  RooAbsReal* comp ;
+  double sum(1);
   const RooArgSet* nset = _set1.nset() ;
 
-  _setIter1->Reset() ;
-
-  while((comp=(RooAbsReal*)_setIter1->Next())) {
+  for (auto * comp : static_range_cast<RooAbsReal*>(_set1)) {
     sum -= comp->getVal(nset) ;
   }
-    
+
   return sum ;
 }
-

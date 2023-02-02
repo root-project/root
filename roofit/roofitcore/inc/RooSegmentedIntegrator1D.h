@@ -26,41 +26,41 @@ public:
   // Constructors, assignment etc
   RooSegmentedIntegrator1D() ;
   RooSegmentedIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
-  RooSegmentedIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, const RooNumIntConfig& config) ;
+  RooSegmentedIntegrator1D(const RooAbsFunc& function, double xmin, double xmax, const RooNumIntConfig& config) ;
 
-  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const ;
-  virtual ~RooSegmentedIntegrator1D();
+  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
+  ~RooSegmentedIntegrator1D() override;
 
-  virtual Bool_t checkLimits() const;
-  virtual Double_t integral(const Double_t *yvec=0) ;
+  bool checkLimits() const override;
+  double integral(const double *yvec=nullptr) override ;
 
   using RooAbsIntegrator::setLimits ;
-  Bool_t setLimits(Double_t *xmin, Double_t *xmax);
-  virtual Bool_t setUseIntegrandLimits(Bool_t flag) { _useIntegrandLimits = flag ; return kTRUE ; } 
+  bool setLimits(double *xmin, double *xmax) override;
+  bool setUseIntegrandLimits(bool flag) override { _useIntegrandLimits = flag ; return true ; }
 
-  virtual Bool_t canIntegrate1D() const { return kTRUE ; }
-  virtual Bool_t canIntegrate2D() const { return kFALSE ; }
-  virtual Bool_t canIntegrateND() const { return kFALSE ; }
-  virtual Bool_t canIntegrateOpenEnded() const { return kFALSE ; }
+  bool canIntegrate1D() const override { return true ; }
+  bool canIntegrate2D() const override { return false ; }
+  bool canIntegrateND() const override { return false ; }
+  bool canIntegrateOpenEnded() const override { return false ; }
 
 protected:
 
   friend class RooNumIntFactory ;
-  static void registerIntegrator(RooNumIntFactory& fact) ;	
+  static void registerIntegrator(RooNumIntFactory& fact) ;
 
-  mutable Double_t _xmin ;
-  mutable Double_t _xmax ;
-  mutable Double_t _range ;
-  Bool_t _valid ;
-  Int_t _nseg ; // Number of segments 
-  Bool_t _useIntegrandLimits ;
+  mutable double _xmin ;
+  mutable double _xmax ;
+  mutable double _range ;
+  bool _valid ;
+  Int_t _nseg ; // Number of segments
+  bool _useIntegrandLimits ;
 
-  RooNumIntConfig _config ;  
-  RooIntegrator1D** _array ; // Array of segment integrators
+  RooNumIntConfig _config ;
+  RooIntegrator1D** _array ; ///< Array of segment integrators
 
-  Bool_t initialize();
+  bool initialize();
 
-  ClassDef(RooSegmentedIntegrator1D,0) // 1-dimensional piece-wise numerical integration engine
+  ClassDefOverride(RooSegmentedIntegrator1D,0) // 1-dimensional piece-wise numerical integration engine
 };
 
 #endif

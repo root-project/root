@@ -41,6 +41,8 @@ namespace Math {
     but in this case m2 must alwasy be less than P2 to preserve a positive value of E2
 
     @ingroup GenVector
+
+    @sa Overview of the @ref GenVector "physics vector library"
 */
 
 template <class ScalarType = double>

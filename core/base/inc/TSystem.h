@@ -257,9 +257,9 @@ R__EXTERN TVirtualMutex *gSystemMutex;
 class TProcessEventTimer : public TTimer {
 public:
    TProcessEventTimer(Long_t delay);
-   Bool_t Notify() { return kTRUE; }
+   Bool_t Notify() override { return kTRUE; }
    Bool_t ProcessEvents();
-   ClassDef(TProcessEventTimer,0)  // Process pending events at fixed time intervals
+   ClassDefOverride(TProcessEventTimer,0)  // Process pending events at fixed time intervals
 };
 
 
@@ -401,10 +401,11 @@ public:
    virtual FILE           *OpenPipe(const char *command, const char *mode);
    virtual int             ClosePipe(FILE *pipe);
    virtual TString         GetFromPipe(const char *command);
-   virtual void            Exit(int code, Bool_t mode = kTRUE);
-   virtual void            Abort(int code = 0);
    virtual int             GetPid();
    virtual void            StackTrace();
+
+   [[ noreturn ]] virtual void Exit(int code, Bool_t mode = kTRUE);
+   [[ noreturn ]] virtual void Abort(int code = 0);
 
    //---- Directories
    virtual int             MakeDirectory(const char *name);
@@ -450,7 +451,7 @@ public:
    virtual const char     *UnixPathName(const char *unixpathname);
    virtual const char     *FindFile(const char *search, TString& file, EAccessMode mode = kFileExists);
    virtual char           *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
-   virtual TList          *GetVolumes(Option_t *) const { return 0; }
+   virtual TList          *GetVolumes(Option_t *) const { return nullptr; }
 
    //---- Users & Groups
    virtual Int_t           GetUid(const char *user = nullptr);
@@ -553,7 +554,7 @@ public:
    virtual TString         SplitAclicMode(const char *filename, TString &mode, TString &args, TString &io) const;
    virtual void            CleanCompiledMacros();
 
-   ClassDef(TSystem,0)  //ABC defining a generic interface to the OS
+   ClassDefOverride(TSystem,0)  //ABC defining a generic interface to the OS
 };
 
 R__EXTERN TSystem *gSystem;

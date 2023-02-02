@@ -25,10 +25,10 @@ Each message has a message level RooFit::MsgLevel (DEBUG,INFO,PROGRESS,WARNING,E
 an source object, and a RooFit::MsgTopic.
 RooMsgService allows to filter and redirect messages into streams
 according to message level, topic, (base) class of originating object, name of originating
-object and based on attribute labels attached to individual objects. 
+object and based on attribute labels attached to individual objects.
 The current default configuration creates streams for all messages at WARNING level
 or higher (e.g. ERROR and FATAL) and for all INFO message on topics Generation,Plotting,
-Integration and Minimization and redirects them to stdout. Users can create additional streams 
+Integration and Minimization and redirects them to stdout. Users can create additional streams
 for logging of e.g. DEBUG messages on particular topics or objects and/or redirect streams to
 C++ streams or files.
 
@@ -77,7 +77,7 @@ Int_t RooMsgService::_debugCount = 0;
 /// and mapping of topic codes to topic names
 /// Install default message streams.
 
-RooMsgService::RooMsgService() 
+RooMsgService::RooMsgService()
 {
   _devnull = new ofstream("/dev/null") ;
 
@@ -111,8 +111,8 @@ RooMsgService::RooMsgService()
 
 
 void RooMsgService::reset() {
-  _silentMode = kFALSE ;
-  _showPid = kFALSE ;
+  _silentMode = false ;
+  _showPid = false ;
   _globMinLevel = DEBUG ;
   _lastMsgLevel = DEBUG ;
 
@@ -136,7 +136,7 @@ void RooMsgService::reset() {
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooMsgService::~RooMsgService() 
+RooMsgService::~RooMsgService()
 {
   // Delete all ostreams we own ;
   map<string,ostream*>::iterator iter = _files.begin() ;
@@ -156,16 +156,16 @@ RooMsgService::~RooMsgService()
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns true if any debug level stream is active
 
-Bool_t RooMsgService::anyDebug() 
-{ 
-  return instance()._debugCount>0 ; 
+bool RooMsgService::anyDebug()
+{
+  return instance()._debugCount>0 ;
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooWorkspace* RooMsgService::debugWorkspace() 
+RooWorkspace* RooMsgService::debugWorkspace()
 {
   if (!_debugWorkspace) {
     _debugWorkspace = new RooWorkspace("wdebug") ;
@@ -182,7 +182,7 @@ RooWorkspace* RooMsgService::debugWorkspace()
 /// This method accepts the following arguments to configure the stream:
 /// <table>
 /// <tr><th> Output Style options <th>
-/// <tr><td> Prefix(Bool_t flag=kTRUE) <td> Prefix all messages in this stream with Topic/Originator information
+/// <tr><td> Prefix(bool flag=true) <td> Prefix all messages in this stream with Topic/Originator information
 /// <tr><th> Filtering options <th>
 /// <tr><td> Topic()                   <td> Restrict stream to messages on given topic
 /// <tr><td> ObjectName(const char*)   <td> Restrict stream to messages from object with given name
@@ -195,19 +195,19 @@ RooWorkspace* RooMsgService::debugWorkspace()
 /// </table>
 /// The return value is the unique ID of the defined stream.
 
-Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, 
-    	      			               const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6) 
+Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
+                                    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6)
 {
 
   // Aggregate all arguments in a list
   RooLinkedList l ;
-  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;  
+  l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;
   l.Add((TObject*)&arg3) ;  l.Add((TObject*)&arg4) ;
-  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
+  l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;
 
   // Define configuration for this method
   RooCmdConfig pc(Form("RooMsgService::addReportingStream(%s)",GetName())) ;
-  pc.defineInt("prefix","Prefix",0,kTRUE) ;
+  pc.defineInt("prefix","Prefix",0,true) ;
   pc.defineInt("color","Color",0,static_cast<Int_t>(kBlack)) ;
   pc.defineInt("topic","Topic",0,0xFFFFF) ;
   pc.defineString("objName","ObjectName",0,"") ;
@@ -218,9 +218,9 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
   pc.defineObject("outStream","OutputStream",0,0) ;
   pc.defineMutex("OutputFile","OutputStream") ;
 
-  // Process & check varargs 
+  // Process & check varargs
   pc.process(l) ;
-  if (!pc.ok(kTRUE)) {
+  if (!pc.ok(true)) {
     return -1 ;
   }
 
@@ -231,7 +231,7 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
   const char* baseClassName =  pc.getString("baseClassName") ;
   const char* tagName =  pc.getString("tagName") ;
   const char* outFile = pc.getString("outFile") ;
-  Bool_t prefix = pc.getInt("prefix") ;
+  bool prefix = pc.getInt("prefix") ;
   Color_t color = static_cast<Color_t>(pc.getInt("color")) ;
   auto wrapper = static_cast<RooHelpers::WrapIntoTObject<ostream>*>(pc.getObject("outStream"));
   ostream* os = nullptr;
@@ -245,7 +245,7 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
   StreamConfig newStream ;
 
   // Store configuration info
-  newStream.active = kTRUE ;
+  newStream.active = true ;
   newStream.minLevel = level ;
   newStream.topic = topic ;
   newStream.objectName = (objName ? objName : "" ) ;
@@ -256,7 +256,7 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
   newStream.prefix = prefix ;
   newStream.universal = (newStream.objectName=="" && newStream.className=="" && newStream.baseClassName=="" && newStream.tagName=="") ;
 
-  // Update debug stream count 
+  // Update debug stream count
   if (level==DEBUG) {
     _debugCount++ ;
   }
@@ -278,11 +278,11 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
       os2 = new ofstream(outFile) ;
 
       if (!*os2) {
-	cout << "RooMsgService::addReportingStream ERROR: cannot open output log file " << outFile << " reverting stream to stdout" << endl ;
-	delete os2 ;
-	newStream.os = &cout ;
+   cout << "RooMsgService::addReportingStream ERROR: cannot open output log file " << outFile << " reverting stream to stdout" << endl ;
+   delete os2 ;
+   newStream.os = &cout ;
       } else {
-	newStream.os = os2 ;
+   newStream.os = os2 ;
       }
 
     } else {
@@ -290,7 +290,7 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
       newStream.os = os2 ;
     }
 
-        
+
   } else {
 
     // To stdout
@@ -311,12 +311,12 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete stream with given unique ID code
 
-void RooMsgService::deleteStream(Int_t id) 
+void RooMsgService::deleteStream(Int_t id)
 {
   vector<StreamConfig>::iterator iter = _streams.begin() ;
   iter += id ;
 
-  // Update debug stream count 
+  // Update debug stream count
   if (iter->minLevel==DEBUG) {
     _debugCount-- ;
   }
@@ -329,14 +329,14 @@ void RooMsgService::deleteStream(Int_t id)
 ////////////////////////////////////////////////////////////////////////////////
 /// (De)Activate stream with given unique ID
 
-void RooMsgService::setStreamStatus(Int_t id, Bool_t flag) 
+void RooMsgService::setStreamStatus(Int_t id, bool flag)
 {
   if (id<0 || id>=static_cast<Int_t>(_streams.size())) {
     cout << "RooMsgService::setStreamStatus() ERROR: invalid stream ID " << id << endl ;
     return ;
   }
 
-  // Update debug stream count 
+  // Update debug stream count
   if (_streams[id].minLevel==DEBUG) {
     _debugCount += flag ? 1 : -1 ;
   }
@@ -349,11 +349,11 @@ void RooMsgService::setStreamStatus(Int_t id, Bool_t flag)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get activation status of stream with given unique ID
 
-Bool_t RooMsgService::getStreamStatus(Int_t id) const 
+bool RooMsgService::getStreamStatus(Int_t id) const
 {
   if (id<0 || id>= static_cast<Int_t>(_streams.size())) {
     cout << "RooMsgService::getStreamStatus() ERROR: invalid stream ID " << id << endl ;
-    return kFALSE ;
+    return false ;
   }
   return _streams[id].active ;
 }
@@ -361,7 +361,7 @@ Bool_t RooMsgService::getStreamStatus(Int_t id) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return reference to singleton instance 
+/// Return reference to singleton instance
 
 RooMsgService& RooMsgService::instance()
 {
@@ -374,7 +374,7 @@ RooMsgService& RooMsgService::instance()
 ////////////////////////////////////////////////////////////////////////////////
 /// Save current state of message service
 
-void RooMsgService::saveState() 
+void RooMsgService::saveState()
 {
   _streamsSaved.push(_streams) ;
 }
@@ -384,7 +384,7 @@ void RooMsgService::saveState()
 ////////////////////////////////////////////////////////////////////////////////
 /// Restore last saved state of message service
 
-void RooMsgService::restoreState() 
+void RooMsgService::restoreState()
 {
   _streams = _streamsSaved.top() ;
   _streamsSaved.pop() ;
@@ -393,18 +393,18 @@ void RooMsgService::restoreState()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if logging is active for given object/topic/RooFit::MsgLevel combination
+/// Check if logging is active for given object/topic/RooFit::%MsgLevel combination
 
-Bool_t RooMsgService::isActive(const RooAbsArg* self, RooFit::MsgTopic topic, RooFit::MsgLevel level) 
+bool RooMsgService::isActive(const RooAbsArg* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
 {
   return (activeStream(self,topic,level)>=0) ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if logging is active for given object/topic/RooFit::MsgLevel combination
+/// Check if logging is active for given object/topic/RooFit::%MsgLevel combination
 
-Bool_t RooMsgService::isActive(const TObject* self, RooFit::MsgTopic topic, RooFit::MsgLevel level) 
+bool RooMsgService::isActive(const TObject* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
 {
   return (activeStream(self,topic,level)>=0) ;
 }
@@ -413,7 +413,7 @@ Bool_t RooMsgService::isActive(const TObject* self, RooFit::MsgTopic topic, RooF
 ////////////////////////////////////////////////////////////////////////////////
 /// Find appropriate logging stream for message from given object with given topic and message level
 
-Int_t RooMsgService::activeStream(const RooAbsArg* self, RooFit::MsgTopic topic, RooFit::MsgLevel level) 
+Int_t RooMsgService::activeStream(const RooAbsArg* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
 {
   if (level<_globMinLevel) return -1 ;
   for (UInt_t i=0 ; i<_streams.size() ; i++) {
@@ -428,7 +428,7 @@ Int_t RooMsgService::activeStream(const RooAbsArg* self, RooFit::MsgTopic topic,
 ////////////////////////////////////////////////////////////////////////////////
 /// Find appropriate logging stream for message from given object with given topic and message level
 
-Int_t RooMsgService::activeStream(const TObject* self, RooFit::MsgTopic topic, RooFit::MsgLevel level) 
+Int_t RooMsgService::activeStream(const TObject* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
 {
   if (level<_globMinLevel) return -1 ;
   for (UInt_t i=0 ; i<_streams.size() ; i++) {
@@ -443,39 +443,41 @@ Int_t RooMsgService::activeStream(const TObject* self, RooFit::MsgTopic topic, R
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine if message from given object at given level on given topic is logged
 
-Bool_t RooMsgService::StreamConfig::match(RooFit::MsgLevel level, RooFit::MsgTopic top, const RooAbsArg* obj) 
+bool RooMsgService::StreamConfig::match(RooFit::MsgLevel level, RooFit::MsgTopic top, const RooAbsArg* obj)
 {
-  if (!active) return kFALSE ;
-  if (level<minLevel) return kFALSE ;
-  if (!(topic&top)) return kFALSE ;
+  if (!active) return false ;
+  if (level<minLevel) return false ;
+  if (!(topic&top)) return false ;
 
-  if (universal) return kTRUE ;
+  if (universal) return true ;
 
-  if (objectName.size()>0 && objectName != obj->GetName()) return kFALSE ;
-  if (className.size()>0 && className != obj->IsA()->GetName()) return kFALSE ;
-  if (baseClassName.size()>0 && !obj->IsA()->InheritsFrom(baseClassName.c_str())) return kFALSE ;
-  if (tagName.size()>0 && !obj->getAttribute(tagName.c_str())) return kFALSE ;
-  
-  return kTRUE ;
+  if (!obj) return false;
+  if (objectName.size()>0 && objectName != obj->GetName()) return false ;
+  if (className.size()>0 && className != obj->ClassName()) return false ;
+  if (baseClassName.size()>0 && !obj->IsA()->InheritsFrom(baseClassName.c_str())) return false ;
+  if (tagName.size()>0 && !obj->getAttribute(tagName.c_str())) return false ;
+
+  return true ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine if message from given object at given level on given topic is logged
 
-Bool_t RooMsgService::StreamConfig::match(RooFit::MsgLevel level, RooFit::MsgTopic top, const TObject* obj) 
+bool RooMsgService::StreamConfig::match(RooFit::MsgLevel level, RooFit::MsgTopic top, const TObject* obj)
 {
-  if (!active) return kFALSE ;
-  if (level<minLevel) return kFALSE ;
-  if (!(topic&top)) return kFALSE ;
+  if (!active) return false ;
+  if (level<minLevel) return false ;
+  if (!(topic&top)) return false ;
 
-  if (universal) return kTRUE ;
-  
-  if (objectName.size()>0 && objectName != obj->GetName()) return kFALSE ;
-  if (className.size()>0 && className != obj->IsA()->GetName()) return kFALSE ;
-  if (baseClassName.size()>0 && !obj->IsA()->InheritsFrom(baseClassName.c_str())) return kFALSE ;
-  
-  return kTRUE ;
+  if (universal) return true ;
+
+  if (!obj) return false;
+  if (objectName.size()>0 && objectName != obj->GetName()) return false ;
+  if (className.size()>0 && className != obj->ClassName()) return false ;
+  if (baseClassName.size()>0 && !obj->IsA()->InheritsFrom(baseClassName.c_str())) return false ;
+
+  return true ;
 }
 
 
@@ -484,7 +486,7 @@ Bool_t RooMsgService::StreamConfig::match(RooFit::MsgLevel level, RooFit::MsgTop
 /// Log error message associated with RooAbsArg object self at given level and topic. If skipPrefix
 /// is true the standard RooMsgService prefix is not added.
 
-ostream& RooMsgService::log(const RooAbsArg* self, RooFit::MsgLevel level, RooFit::MsgTopic topic, Bool_t skipPrefix) 
+ostream& RooMsgService::log(const RooAbsArg* self, RooFit::MsgLevel level, RooFit::MsgTopic topic, bool skipPrefix)
 {
   if (level>=ERROR) {
     _errorCount++ ;
@@ -505,7 +507,7 @@ ostream& RooMsgService::log(const RooAbsArg* self, RooFit::MsgLevel level, RooFi
     (*_streams[as].os) << endl ;
   }
   _lastMsgLevel=level ;
-    
+
   if (_streams[as].prefix && !skipPrefix) {
     if (_showPid) {
       (*_streams[as].os) << "pid" << gSystem->GetPid() << " " ;
@@ -521,7 +523,7 @@ ostream& RooMsgService::log(const RooAbsArg* self, RooFit::MsgLevel level, RooFi
 /// Log error message associated with TObject object self at given level and topic. If skipPrefix
 /// is true the standard RooMsgService prefix is not added.
 
-ostream& RooMsgService::log(const TObject* self, RooFit::MsgLevel level, RooFit::MsgTopic topic, Bool_t skipPrefix) 
+ostream& RooMsgService::log(const TObject* self, RooFit::MsgLevel level, RooFit::MsgTopic topic, bool skipPrefix)
 {
   if (level>=ERROR) {
     _errorCount++ ;
@@ -535,7 +537,7 @@ ostream& RooMsgService::log(const TObject* self, RooFit::MsgLevel level, RooFit:
 
   // Flush any previous messages
   (*_streams[as].os).flush() ;
-    
+
   if (_streams[as].prefix && !skipPrefix) {
     if (_showPid) {
       (*_streams[as].os) << "pid" << gSystem->GetPid() << " " ;
@@ -551,11 +553,11 @@ ostream& RooMsgService::log(const TObject* self, RooFit::MsgLevel level, RooFit:
 /// Print configuration of message service. If "v" option is given also
 /// inactive streams are listed
 
-void RooMsgService::Print(Option_t *options) const 
+void RooMsgService::Print(Option_t *options) const
 {
-  Bool_t activeOnly = kTRUE ;
+  bool activeOnly = true ;
   if (TString(options).Contains("V") || TString(options).Contains("v")) {
-    activeOnly = kFALSE ;
+    activeOnly = false ;
   }
 
   cout << (activeOnly?"Active Message streams":"All Message streams") << endl ;
@@ -566,23 +568,23 @@ void RooMsgService::Print(Option_t *options) const
       continue ;
     }
 
-    
+
     map<int,string>::const_iterator is = _levelNames.find(_streams[i].minLevel) ;
     cout << "[" << i << "] MinLevel = " << is->second ;
 
     cout << " Topic = " ;
-    if (_streams[i].topic != 0xFFFFF) {      
+    if (_streams[i].topic != 0xFFFFF) {
       map<int,string>::const_iterator iter = _topicNames.begin() ;
       while(iter!=_topicNames.end()) {
-	if (iter->first & _streams[i].topic) {
-	  cout << iter->second << " " ;
-	}
-	++iter ;
+   if (iter->first & _streams[i].topic) {
+     cout << iter->second << " " ;
+   }
+   ++iter ;
       }
     } else {
       cout << " Any " ;
     }
-    
+
 
     if (_streams[i].objectName.size()>0) {
       cout << " ObjectName = " << _streams[i].objectName ;
@@ -596,13 +598,13 @@ void RooMsgService::Print(Option_t *options) const
     if (_streams[i].tagName.size()>0) {
       cout << " TagLabel = " << _streams[i].tagName ;
     }
-    
+
     // Postfix status when printing all
     if (!activeOnly && !_streams[i].active) {
       cout << " (NOT ACTIVE)"  ;
     }
-    
-    cout << endl ; 
+
+    cout << endl ;
   }
-  
+
 }

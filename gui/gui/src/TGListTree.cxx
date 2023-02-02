@@ -342,7 +342,7 @@ void TGListTreeItemStd::SetPictures(const TGPicture *opened, const TGPicture *cl
 /// Create a list tree widget.
 
 TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
-                       ULong_t back) :
+                       Pixel_t back) :
    TGContainer(p, w, h, options, back)
 {
    fMsgWindow   = p;
@@ -406,7 +406,7 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a list tree widget.
 
-TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
+TGListTree::TGListTree(TGCanvas *p,UInt_t options,Pixel_t back) :
    TGContainer(p, options, back)
 {
    fMsgWindow   = p;
@@ -1507,9 +1507,6 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
          height = pic1->GetHeight();
          ypic1 = y;
       } else {
-#ifdef R__HAS_COCOA
-         if (!pic2)//DO NOT MODIFY ytext, it WAS ADJUSTED already!
-#endif
          ytext = y;
          ypic1 = y + (Int_t)((height - pic1->GetHeight()) >> 1);
       }

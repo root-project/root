@@ -17,11 +17,6 @@
 
 #include <TRObject.h>
 
-#ifndef Rcpp_hpp
-#include <Rcpp.h>
-#endif
-
-
 namespace ROOT {
    namespace R {
 

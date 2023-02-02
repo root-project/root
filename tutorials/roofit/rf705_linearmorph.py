@@ -9,8 +9,7 @@
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C version)
 
 
 import ROOT
@@ -24,7 +23,7 @@ x = ROOT.RooRealVar("x", "x", -20, 20)
 
 # Lower end point shape: a Gaussian
 g1mean = ROOT.RooRealVar("g1mean", "g1mean", -10)
-g1 = ROOT.RooGaussian("g1", "g1", x, g1mean, ROOT.RooFit.RooConst(2))
+g1 = ROOT.RooGaussian("g1", "g1", x, g1mean, 2.0)
 
 # Upper end point shape: a Polynomial
 g2 = ROOT.RooPolynomial("g2", "g2", x, [-0.03, -0.001])
@@ -99,7 +98,7 @@ lmorph.plotOn(frame2)
 frame3 = alpha.frame(Bins=100, Range=(0.1, 0.9))
 
 # Make 2D pdf of histogram
-nll = ROOT.RooNLLVar("nll", "nll", lmorph, data)
+nll = lmorph.createNLL(data)
 nll.plotOn(frame3, ShiftToZero=True)
 
 lmorph.setCacheAlpha(False)

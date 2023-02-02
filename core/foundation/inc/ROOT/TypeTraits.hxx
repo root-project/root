@@ -193,6 +193,14 @@ struct HasBeginAndEnd {
    static constexpr bool const value = Check<T>(0);
 };
 
+/// An adapter for std::invoke_result that falls back to std::result_of if the former is not available.
+template <typename F, typename... Args>
+#ifdef __cpp_lib_is_invocable
+using InvokeResult_t = std::invoke_result_t<F, Args...>;
+#else
+using InvokeResult_t = std::result_of_t<F(Args...)>;
+#endif
+
 } // ns TypeTraits
 } // ns ROOT
 #endif // ROOT_TTypeTraits

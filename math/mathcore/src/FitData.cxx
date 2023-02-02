@@ -220,8 +220,9 @@ namespace ROOT {
          fWrapped = rhs.fWrapped;
          fOptions = rhs.fOptions;
          fRange = rhs.fRange;
-         fDim = rhs.fDim;
          fMaxPoints = rhs.fMaxPoints;
+         fNPoints = rhs.fNPoints;
+         fDim = rhs.fDim;
 
          if (fWrapped) {
             fCoords.clear();

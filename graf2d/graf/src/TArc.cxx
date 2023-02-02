@@ -55,7 +55,7 @@ TArc::TArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_t phimax)
 
 TArc::TArc(const TArc &arc) : TEllipse(arc)
 {
-   ((TArc&)arc).Copy(*this);
+   arc.TArc::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

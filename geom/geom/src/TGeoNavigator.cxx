@@ -1122,8 +1122,6 @@ TGeoNode *TGeoNavigator::FindNextDaughterBoundary(Double_t *point, Double_t *dir
 
 TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsafe)
 {
-   static Int_t icount = 0;
-   icount++;
    Int_t iact = 3;
    Int_t idebug = TGeoManager::GetVerboseLevel();
    Int_t nextindex;

@@ -15,7 +15,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolyVar.h"
 #include "RooProdPdf.h"
 #include "RooPlot.h"
@@ -46,7 +45,7 @@ void rf305_condcorrprod()
    // -----------------------------------------------------------
 
    // Create gaussy(y,0,5)
-   RooGaussian gaussy("gaussy", "Gaussian in y", y, RooConst(0), RooConst(3));
+   RooGaussian gaussy("gaussy", "Gaussian in y", y, 0.0, 3.0);
 
    // C r e a t e   p r o d u c t   g x ( x | y ) * g y ( y )
    // -------------------------------------------------------

@@ -588,7 +588,7 @@ public:
 
    /**
       return a slice of therow as a vector starting at the colum value col0 until col0+N,
-      where N is the size of the vector (SubVector::kSize )
+      where N is the size of the vector (SVector::kSize )
       Condition  col0+N <= D2
    */
    template <class SubVector>
@@ -596,7 +596,7 @@ public:
 
    /**
       return a slice of the column as a vector starting at the row value row0 until row0+Dsub.
-      where N is the size of the vector (SubVector::kSize )
+      where N is the size of the vector (SVector::kSize )
       Condition  row0+N <= D1
    */
    template <class SubVector>
@@ -618,7 +618,7 @@ public:
 
    /**
       Set the diagonal elements from a Vector
-      Require that vector implements ::kSize since a check (statically) is done on
+      Require that vector implements SVector::kSize since a check (statically) is done on
       diagonal size == vector size
    */
    template <class Vector>

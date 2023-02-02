@@ -1,4 +1,4 @@
-/// \file FoundationUtilsTests.h
+/// \file
 ///
 /// \brief The file contain unit tests which test the ROOT::FoundationUtils
 ///

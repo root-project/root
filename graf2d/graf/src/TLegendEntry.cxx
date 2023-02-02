@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdio.h>
+#include <cstdio>
 
 #include "TLegendEntry.h"
 #include "TVirtualPad.h"
@@ -29,7 +29,7 @@ Storage class for one entry of a TLegend.
 
 TLegendEntry::TLegendEntry(): TAttText(), TAttLine(), TAttFill(), TAttMarker()
 {
-   fObject = 0;
+   fObject = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,7 +51,7 @@ TLegendEntry::TLegendEntry(): TAttText(), TAttLine(), TAttFill(), TAttMarker()
 TLegendEntry::TLegendEntry(const TObject* obj, const char* label, Option_t* option )
              :TAttText(0,0,0,0,0), TAttLine(1,1,1), TAttFill(0,0), TAttMarker(1,21,1)
 {
-   fObject = 0;
+   fObject = nullptr;
    if ( !label && obj ) fLabel = obj->GetTitle();
    else                 fLabel = label;
    fOption = option;
@@ -61,9 +61,9 @@ TLegendEntry::TLegendEntry(const TObject* obj, const char* label, Option_t* opti
 ////////////////////////////////////////////////////////////////////////////////
 /// TLegendEntry copy constructor
 
-TLegendEntry::TLegendEntry( const TLegendEntry &entry ) : TObject(entry), TAttText(entry), TAttLine(entry), TAttFill(entry), TAttMarker(entry)
+TLegendEntry::TLegendEntry(const TLegendEntry &entry) : TObject(entry), TAttText(entry), TAttLine(entry), TAttFill(entry), TAttMarker(entry)
 {
-   ((TLegendEntry&)entry).Copy(*this);
+   entry.TLegendEntry::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,7 +71,7 @@ TLegendEntry::TLegendEntry( const TLegendEntry &entry ) : TObject(entry), TAttTe
 
 TLegendEntry::~TLegendEntry()
 {
-   fObject = 0;
+   fObject = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -146,10 +146,9 @@ void TLegendEntry::SetObject(TObject* obj )
 ////////////////////////////////////////////////////////////////////////////////
 /// (re)set the obj pointed to by this entry
 
-void TLegendEntry::SetObject( const char* objectName)
+void TLegendEntry::SetObject(const char* objectName)
 {
-   TObject* obj = 0;
-   TList* padprimitives = gPad->GetListOfPrimitives();
-   if (padprimitives) obj = padprimitives->FindObject( objectName );
-   if (obj) SetObject( obj );
+   TList *padprimitives = gPad ? gPad->GetListOfPrimitives() : nullptr;
+   TObject *obj = padprimitives ? padprimitives->FindObject(objectName) : nullptr;
+   if (obj) SetObject(obj);
 }

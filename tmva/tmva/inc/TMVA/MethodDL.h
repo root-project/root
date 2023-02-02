@@ -174,7 +174,7 @@ private:
 
    // cudnn implementation needs this format
    /** Contains the batch size (no. of images in the batch), input depth (no. channels)
-    *  and furhter input dimensios of the data (image height, width ...)*/
+    *  and further input dimensions of the data (image height, width ...)*/
    std::vector<size_t> fInputShape;
 
    // The size of the batch, i.e. the number of images that are contained in the batch, is either set to be the depth
@@ -195,7 +195,7 @@ private:
    TString fErrorStrategy;              ///< The string defining the error strategy for training
    TString fTrainingStrategyString;     ///< The string defining the training strategy
    TString fWeightInitializationString; ///< The string defining the weight initialization method
-   TString fArchitectureString;         ///< The string defining the architecure: CPU or GPU
+   TString fArchitectureString;         ///< The string defining the architecture: CPU or GPU
    TString fNumValidationString;        ///< The string defining the number (or percentage) of training data used for validation
    bool fResume;
    bool fBuildNet;                     ///< Flag to control whether to build fNet, the stored network used for the evaluation
@@ -238,7 +238,7 @@ public:
    /*! Methods for training the deep learning network */
    void Train();
 
-   Double_t GetMvaValue(Double_t *err = 0, Double_t *errUpper = 0);
+   Double_t GetMvaValue(Double_t *err = nullptr, Double_t *errUpper = nullptr);
    virtual const std::vector<Float_t>& GetRegressionValues();
    virtual const std::vector<Float_t>& GetMulticlassValues();
 

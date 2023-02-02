@@ -146,26 +146,18 @@ void REveGeoShape::BuildRenderData()
 {
    if (!fShape) return;
 
-   REveGeoPolyShape *egps = nullptr;
-   std::unique_ptr<REveGeoPolyShape> tmp_egps;
+   fRenderData = std::make_unique<REveRenderData>("makeEveGeoShape");
+   REveElement::BuildRenderData();
 
    if (fCompositeShape) {
-
-      egps = dynamic_cast<REveGeoPolyShape *>(fShape);
-
+      REveGeoPolyShape* egps = dynamic_cast<REveGeoPolyShape *>(fShape);
+      egps->FillRenderData(*fRenderData);
    } else {
-
-      tmp_egps = std::make_unique<REveGeoPolyShape>();
-
+      REveGeoManagerHolder gmgr(fgGeoManager);
+      std::unique_ptr<REveGeoPolyShape> tmp_egps = std::make_unique<REveGeoPolyShape>();
       tmp_egps->BuildFromShape(fShape, fNSegments);
-
-      egps = tmp_egps.get();
+      tmp_egps->FillRenderData(*fRenderData);
    }
-
-   fRenderData = std::make_unique<REveRenderData>("makeEveGeoShape");
-
-   REveElement::BuildRenderData();
-   egps->FillRenderData(*fRenderData);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -43,7 +43,6 @@
 #include "RooStats/MetropolisHastings.h"
 #include "RooStats/MarkovChain.h"
 #include "RooStats/MCMCInterval.h"
-#include "TIterator.h"
 #include "RooStats/UniformProposal.h"
 #include "RooStats/PdfProposal.h"
 #include "RooProdPdf.h"
@@ -67,8 +66,8 @@ MCMCCalculator::MCMCCalculator() :
    fNumIters = 0;
    fNumBurnInSteps = 0;
    fNumBins = 0;
-   fUseKeys = kFALSE;
-   fUseSparseHist = kFALSE;
+   fUseKeys = false;
+   fUseSparseHist = false;
    fSize = -1;
    fIntervalType = MCMCInterval::kShortest;
    fLeftSideTF = -1;
@@ -120,8 +119,8 @@ void MCMCCalculator::SetupBasicUsage()
    fNumIters = 10000;
    fNumBurnInSteps = 40;
    fNumBins = 50;
-   fUseKeys = kFALSE;
-   fUseSparseHist = kFALSE;
+   fUseKeys = false;
+   fUseSparseHist = false;
    SetTestSize(0.05);
    fIntervalType = MCMCInterval::kShortest;
    fLeftSideTF = -1;
@@ -131,7 +130,7 @@ void MCMCCalculator::SetupBasicUsage()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMCCalculator::SetLeftSideTailFraction(Double_t a)
+void MCMCCalculator::SetLeftSideTailFraction(double a)
 {
    if (a < 0 || a > 1) {
       coutE(InputArguments) << "MCMCCalculator::SetLeftSideTailFraction: "
@@ -151,12 +150,12 @@ MCMCInterval* MCMCCalculator::GetInterval() const
 {
 
    if (!fData || !fPdf   ) return 0;
-   if (fPOI.getSize() == 0) return 0;
+   if (fPOI.empty()) return 0;
 
    if (fSize < 0) {
       coutE(InputArguments) << "MCMCCalculator::GetInterval: "
-         << "Test size/Confidence level not set.  Returning NULL." << endl;
-      return NULL;
+         << "Test size/Confidence level not set.  Returning nullptr." << endl;
+      return nullptr;
    }
 
    // if a proposal function has not been specified create a default one
@@ -182,7 +181,7 @@ MCMCInterval* MCMCCalculator::GetInterval() const
       SetBins(fPOI, fNumBins);
       if (dynamic_cast<PdfProposal*>(fPropFunc)) {
          RooArgSet* proposalVars = ((PdfProposal*)fPropFunc)->GetPdf()->
-                                               getParameters((RooAbsData*)NULL);
+                                               getParameters((RooAbsData*)nullptr);
          SetBins(*proposalVars, fNumBins);
       }
    }
@@ -200,7 +199,7 @@ MCMCInterval* MCMCCalculator::GetInterval() const
 
    TString name = TString("MCMCInterval_") + TString(GetName() );
    MCMCInterval* interval = new MCMCInterval(name, fPOI, *chain);
-   if (fAxes != NULL)
+   if (fAxes != nullptr)
       interval->SetAxes(*fAxes);
    if (fNumBurnInSteps > 0)
       interval->SetNumBurnInSteps(fNumBurnInSteps);

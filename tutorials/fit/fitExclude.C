@@ -9,12 +9,12 @@
 ///
 /// \author Rene Brun
 
-#include "TH1.h"
-#include "TF1.h"
-#include "TList.h"
+#include <TH1.h>
+#include <TF1.h>
+#include <TROOT.h>
 
-Bool_t reject;
-Double_t fline(Double_t *x, Double_t *par)
+bool reject;
+double fline(double *x, double *par)
 {
     if (reject && x[0] > 2.5 && x[0] < 3.5) {
       TF1::RejectPoint();
@@ -33,9 +33,9 @@ void fitExclude() {
    TF1 *fl = new TF1("fl",fline,0,5,2);
    fl->SetParameters(2,-1);
    //fit only the linear background excluding the signal area
-   reject = kTRUE;
+   reject = true;
    h->Fit(fl,"0");
-   reject = kFALSE;
+   reject = false;
    //store 2 separate functions for visualization
    TF1 *fleft = new TF1("fleft",fline,0,2.5,2);
    fleft->SetParameters(fl->GetParameters());

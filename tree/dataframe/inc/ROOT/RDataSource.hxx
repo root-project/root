@@ -13,9 +13,7 @@
 
 #include "RDF/RColumnReaderBase.hxx"
 #include "ROOT/RStringView.hxx"
-#include "ROOT/RConfig.hxx" // R__DEPRECATED
 #include "RtypesCore.h" // ULong64_t
-#include "TError.h" // Warning
 #include "TString.h"
 
 #include <algorithm> // std::transform
@@ -62,7 +60,7 @@ class TTypedPointerHolder final : public TPointerHolder {
 public:
    TTypedPointerHolder(T *ptr) : TPointerHolder((void *)ptr) {}
 
-   virtual TPointerHolder *GetDeepCopy()
+   TPointerHolder *GetDeepCopy() final
    {
       const auto typedPtr = static_cast<T *>(fPointer);
       return new TTypedPointerHolder(new T(*typedPtr));
@@ -104,6 +102,9 @@ RDataSource implementations must support running multiple event-loops consecutiv
  - \b GetEntryRanges() will be called several times, including during an event loop, as additional ranges are needed.  It will not be called concurrently.
  - \b Initialize() and \b Finalize() are called once per event-loop,  right before starting and right after finishing.
  - \b InitSlot(), \b SetEntry(), and \b FinalizeSlot() can be called concurrently from multiple threads, multiple times per event-loop.
+
+ Advanced users that plan to implement a custom RDataSource can check out existing implementations, e.g. RCsvDS or RNTupleDS.
+ See the inheritance diagram below for the full list of existing concrete implementations.
 */
 class RDataSource {
    // clang-format on
@@ -197,30 +198,6 @@ public:
    // clang-format on
    virtual void Initialize() {}
 
-   /// \cond
-   // Unused deprecated struct, it's here to remind us to remove the deprecated spellings Initialise, Finalise and
-   // FinaliseSlot. PR that removes the deprecated code: https://github.com/root-project/root/pull/9521 .
-   struct R__DEPRECATED(6, 30,
-                        "Use Initialize, Finalize and FinalizeSlot instead of the corresponding british spellings.")
-      NeverUsedJustAReminder {
-   };
-
-   virtual void Initialise() { throw 0; }
-
-   void CallInitialize()
-   {
-      try {
-         Initialise();
-      } catch (int) {
-         // `Initialise()` was not overridden and threw, the data source uses the new spelling: good!
-         Initialize();
-         return;
-      }
-      Warning("RDataSource::Initialise",
-              "Initialise is deprecated. Please rename it to \"Initialize\" (with a z).");
-   }
-   /// \endcond
-
    // clang-format off
    /// \brief Convenience method called at the start of the data processing associated to a slot.
    /// \param[in] slot The data processing slot wihch needs to be initialized
@@ -236,43 +213,11 @@ public:
    // clang-format on
    virtual void FinalizeSlot(unsigned int /*slot*/) {}
 
-   /// \cond
-   virtual void FinaliseSlot(unsigned int) { throw 0; }
-
-   void CallFinalizeSlot(unsigned int slot)
-   {
-      try {
-         FinaliseSlot(slot);
-      } catch (int) {
-         FinalizeSlot(slot);
-         return;
-      }
-      Warning("RDataSource::FinaliseSlot",
-              "FinaliseSlot is deprecated. Please implement FinalizeSlot (with a z) instead of FinaliseSlot.");
-   }
-   /// \endcond
-
    // clang-format off
    /// \brief Convenience method called after concluding an event-loop.
    /// See Initialize for more details.
    // clang-format on
    virtual void Finalize() {}
-
-   /// \cond
-   virtual void Finalise() { throw 0; }
-
-   void CallFinalize()
-   {
-      try {
-         Finalise();
-      } catch (int) {
-         Finalize();
-         return;
-      }
-      Warning("RDataSource::Finalise",
-              "Finalise is deprecated. Please implement Finalize (with a z) instead of Finalise.");
-   }
-   /// \endcond
 
    /// \brief Return a string representation of the datasource type.
    /// The returned string will be used by ROOT::RDF::SaveGraph() to represent

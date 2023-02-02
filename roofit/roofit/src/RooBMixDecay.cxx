@@ -22,14 +22,13 @@ the decay of B mesons with the effects of B0/B0bar mixing.
 This function can be analytically convolved with any RooResolutionModel implementation
 **/
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include "TMath.h"
 #include "RooRealVar.h"
 #include "RooBMixDecay.h"
 #include "RooRealIntegral.h"
 #include "RooRandom.h"
+#include "RooBatchCompute.h"
 
 using namespace std;
 
@@ -103,7 +102,7 @@ RooBMixDecay::~RooBMixDecay()
 ////////////////////////////////////////////////////////////////////////////////
 /// Comp with tFit MC: must be (1 - tagFlav*...)
 
-Double_t RooBMixDecay::coefficient(Int_t basisIndex) const
+double RooBMixDecay::coefficient(Int_t basisIndex) const
 {
   if (basisIndex==_basisExp) {
     return (1 - _tagFlav*_delMistag) ;
@@ -114,6 +113,15 @@ Double_t RooBMixDecay::coefficient(Int_t basisIndex) const
   }
 
   return 0 ;
+}
+
+void RooBMixDecay::computeBatch(cudaStream_t *stream, double *output, size_t nEvents,
+                                RooFit::Detail::DataMap const &dataMap) const
+{
+   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+   dispatch->compute(stream, RooBatchCompute::BMixDecay, output, nEvents,
+                     {dataMap.at(&_convSet[0]), dataMap.at(&_convSet[1]), dataMap.at(_tagFlav), dataMap.at(_delMistag),
+                      dataMap.at(_mixState), dataMap.at(_mistag)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -133,7 +141,7 @@ Int_t RooBMixDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const
+double RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const
 {
   switch(code) {
     // No integration
@@ -178,7 +186,7 @@ Double_t RooBMixDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, cons
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooBMixDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
+Int_t RooBMixDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK) const
 {
   if (staticInitOK) {
     if (matchArgs(directVars,generateVars,_t,_mixState,_tagFlav)) return 4 ;
@@ -198,27 +206,27 @@ void RooBMixDecay::initGenerator(Int_t code)
   case 2:
     {
       // Calculate the fraction of B0bar events to generate
-      Double_t sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_tagFlav.arg())).getVal() ;
+      double sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_tagFlav.arg())).getVal() ;
       _tagFlav = 1 ; // B0
-      Double_t flavInt = RooRealIntegral("flavInt","flav integral",*this,RooArgSet(_t.arg())).getVal() ;
+      double flavInt = RooRealIntegral("flavInt","flav integral",*this,RooArgSet(_t.arg())).getVal() ;
       _genFlavFrac = flavInt/sumInt ;
       break ;
     }
   case 3:
     {
       // Calculate the fraction of mixed events to generate
-      Double_t sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_mixState.arg())).getVal() ;
+      double sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_mixState.arg())).getVal() ;
       _mixState = -1 ; // mixed
-      Double_t mixInt = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg())).getVal() ;
+      double mixInt = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg())).getVal() ;
       _genMixFrac = mixInt/sumInt ;
       break ;
     }
   case 4:
     {
       // Calculate the fraction of mixed events to generate
-      Double_t sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_mixState.arg(),_tagFlav.arg())).getVal() ;
+      double sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_mixState.arg(),_tagFlav.arg())).getVal() ;
       _mixState = -1 ; // mixed
-      Double_t mixInt = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg(),_tagFlav.arg())).getVal() ;
+      double mixInt = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg(),_tagFlav.arg())).getVal() ;
       _genMixFrac = mixInt/sumInt ;
 
       // Calculate the fraction of B0bar tags for mixed and unmixed
@@ -242,23 +250,23 @@ void RooBMixDecay::generateEvent(Int_t code)
   switch(code) {
   case 2:
     {
-      Double_t rand = RooRandom::uniform() ;
+      double rand = RooRandom::uniform() ;
       _tagFlav = (Int_t) ((rand<=_genFlavFrac) ?  1 : -1) ;
       break ;
     }
   case 3:
     {
-      Double_t rand = RooRandom::uniform() ;
+      double rand = RooRandom::uniform() ;
       _mixState = (Int_t) ((rand<=_genMixFrac) ? -1 : 1) ;
       break ;
     }
   case 4:
     {
-      Double_t rand = RooRandom::uniform() ;
+      double rand = RooRandom::uniform() ;
       _mixState = (Int_t) ((rand<=_genMixFrac) ? -1 : 1) ;
 
       rand = RooRandom::uniform() ;
-      Double_t genFlavFrac = (_mixState==-1) ? _genFlavFracMix : _genFlavFracUnmix ;
+      double genFlavFrac = (_mixState==-1) ? _genFlavFracMix : _genFlavFracUnmix ;
       _tagFlav = (Int_t) ((rand<=genFlavFrac) ?  1 : -1) ;
       break ;
     }
@@ -266,8 +274,8 @@ void RooBMixDecay::generateEvent(Int_t code)
 
   // Generate delta-t dependent
   while(1) {
-    Double_t rand = RooRandom::uniform() ;
-    Double_t tval(0) ;
+    double rand = RooRandom::uniform() ;
+    double tval(0) ;
 
     switch(_type) {
     case SingleSided:
@@ -282,10 +290,10 @@ void RooBMixDecay::generateEvent(Int_t code)
     }
 
     // Accept event if T is in generated range
-    Double_t dil = 1-2.*_mistag ;
-    Double_t maxAcceptProb = 1 + TMath::Abs(_delMistag) + TMath::Abs(dil) ;
-    Double_t acceptProb = (1-_tagFlav*_delMistag) + _mixState*dil*cos(_dm*tval);
-    Bool_t mixAccept = maxAcceptProb*RooRandom::uniform() < acceptProb ? kTRUE : kFALSE ;
+    double dil = 1-2.*_mistag ;
+    double maxAcceptProb = 1 + TMath::Abs(_delMistag) + TMath::Abs(dil) ;
+    double acceptProb = (1-_tagFlav*_delMistag) + _mixState*dil*cos(_dm*tval);
+    bool mixAccept = maxAcceptProb*RooRandom::uniform() < acceptProb ? true : false ;
 
     if (tval<_t.max() && tval>_t.min() && mixAccept) {
       _t = tval ;

@@ -16,7 +16,6 @@
 
 namespace llvm {
 class BasicBlock;
-class BasicBlockPass;
 class Pass;
 
 //===----------------------------------------------------------------------===//
@@ -138,6 +137,12 @@ bool vectorizeBasicBlock(Pass *P, BasicBlock &BB,
 // operations.
 //
 Pass *createLoadStoreVectorizerPass();
+
+//===----------------------------------------------------------------------===//
+//
+// Optimize partial vector operations using target cost models.
+//
+Pass *createVectorCombinePass();
 
 } // End llvm namespace
 

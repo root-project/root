@@ -33,7 +33,7 @@ public:
    TListOfTypes();
 
    using THashTable::FindObject;
-   virtual TObject   *FindObject(const char *name) const;
+   TObject *FindObject(const char *name) const override;
 
    TDataType *FindType(const char *name) const;
 };

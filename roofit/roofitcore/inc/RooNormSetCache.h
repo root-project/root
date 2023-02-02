@@ -16,89 +16,84 @@
 #ifndef ROO_NORMSET_CACHE
 #define ROO_NORMSET_CACHE
 
+#include <RooArgSet.h>
+
 #include <vector>
 #include <map>
 #include <string>
 
-#include "Rtypes.h"
-
-class RooAbsArg;
-class RooArgSet;
-
-typedef RooArgSet* pRooArgSet ;
-
 class RooNormSetCache {
-protected:
-  typedef std::pair<const RooArgSet*, const RooArgSet*> Pair;
-  struct PairCmp {
-      inline bool operator()(const Pair& a, const Pair& b) const
-      {
-	  if (a.first < b.first) return true;
-	  if (b.first < a.first) return false;
-	  return a.second < b.second;
-      }
+private:
+  class Pair {
+  public:
+    using Value_t = RooFit::UniqueId<RooArgSet>::Value_t;
+    Pair(const RooArgSet* set1, const RooArgSet* set2)
+      : _pair{RooFit::getUniqueId(set1), RooFit::getUniqueId(set2)} {}
+   bool operator==(Pair const &other) const { return _pair == other._pair; }
+   bool operator<(Pair const &other) const { return _pair < other._pair; }
+
+   Value_t const& first() const { return _pair.first; }
+   Value_t const& second() const { return _pair.second; }
+  private:
+    std::pair<Value_t,Value_t> _pair;
   };
+
   typedef std::vector<Pair> PairVectType;
-  typedef std::map<Pair, ULong_t> PairIdxMapType;
+  typedef std::map<Pair, std::size_t> PairIdxMapType;
 
 public:
-  RooNormSetCache(ULong_t max = 32);
-  virtual ~RooNormSetCache();
+  RooNormSetCache(std::size_t max = 32) : _max(max) {}
 
-  void add(const RooArgSet* set1, const RooArgSet* set2 = 0);
+  void add(const RooArgSet* set1, const RooArgSet* set2 = nullptr);
 
-  inline Int_t index(const RooArgSet* set1, const RooArgSet* set2 = 0,
-      const TNamed* set2RangeName = 0)
+  inline int index(const RooArgSet* set1, const RooArgSet* set2 = nullptr,
+      const TNamed* set2RangeName = nullptr)
   {
     // Match range name first
     if (set2RangeName != _set2RangeName) return -1;
     const Pair pair(set1, set2);
     PairIdxMapType::const_iterator it = _pairToIdx.lower_bound(pair);
-    if (_pairToIdx.end() != it &&
-	!PairCmp()(it->first, pair) && !PairCmp()(pair, it->first))
+    if (_pairToIdx.end() != it && it->first == pair) {
       return it->second;
+    }
     return -1;
   }
 
-  inline Bool_t contains(const RooArgSet* set1, const RooArgSet* set2 = 0,
-      const TNamed* set2RangeName = 0)
+  inline bool contains(const RooArgSet* set1, const RooArgSet* set2 = nullptr,
+      const TNamed* set2RangeName = nullptr)
   { return (index(set1,set2,set2RangeName) >= 0); }
 
-  inline Bool_t containsSet1(const RooArgSet* set1)
+  inline bool containsSet1(const RooArgSet* set1)
   {
     const Pair pair(set1, (const RooArgSet*)0);
     PairIdxMapType::const_iterator it = _pairToIdx.lower_bound(pair);
-    if (_pairToIdx.end() != it && it->first.first == set1)
-      return kTRUE;
-    return kFALSE;
+    if (_pairToIdx.end() != it && it->first.first() == (RooNormSetCache::Pair::Value_t)RooFit::getUniqueId(set1))
+      return true;
+    return false;
   }
 
-  const RooArgSet* lastSet1() const { return _pairs.empty()?0:_pairs.back().first; }
-  const RooArgSet* lastSet2() const { return _pairs.empty()?0:_pairs.back().second; }
   const std::string& nameSet1() const { return _name1; }
   const std::string& nameSet2() const { return _name2; }
 
-  Bool_t autoCache(const RooAbsArg* self, const RooArgSet* set1,
-      const RooArgSet* set2 = 0, const TNamed* set2RangeName = 0,
-      Bool_t autoRefill = kTRUE);
-    
+  bool autoCache(const RooAbsArg* self, const RooArgSet* set1,
+      const RooArgSet* set2 = nullptr, const TNamed* set2RangeName = nullptr,
+      bool autoRefill = true);
+
   void clear();
-  Int_t entries() const { return _pairs.size(); }
+  std::size_t entries() const { return _pairs.size(); }
 
   void initialize(const RooNormSetCache& other) { clear(); *this = other; }
 
-protected:
+private:
 
-  PairVectType _pairs; //!
-  PairIdxMapType _pairToIdx; //!
-  ULong_t _max; //!
-  ULong_t _next; //!
+  PairVectType _pairs; ///<!
+  PairIdxMapType _pairToIdx; ///<!
+  std::size_t _max; ///<!
+  std::size_t _next = 0; ///<!
 
-  std::string _name1;   //!
-  std::string _name2;   //!
-  TNamed*    _set2RangeName; //!
-
-  ClassDef(RooNormSetCache, 0) // Management tool for tracking sets of similar integration/normalization sets
+  std::string _name1;   ///<!
+  std::string _name2;   ///<!
+  TNamed*    _set2RangeName = nullptr; ///<!
 };
 
-#endif 
+#endif

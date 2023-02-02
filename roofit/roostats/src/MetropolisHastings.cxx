@@ -49,7 +49,6 @@ uniformly over their intervals before construction of the MarkovChain begins.
 
 #include "Rtypes.h"
 #include "RooRealVar.h"
-#include "RooNLLVar.h"
 #include "RooGlobalFunc.h"
 #include "RooDataSet.h"
 #include "RooArgSet.h"
@@ -57,7 +56,6 @@ uniformly over their intervals before construction of the MarkovChain begins.
 #include "RooMsgService.h"
 #include "RooRandom.h"
 #include "TMath.h"
-#include "TFile.h"
 
 ClassImp(RooStats::MetropolisHastings);
 
@@ -70,8 +68,8 @@ using namespace std;
 MetropolisHastings::MetropolisHastings()
 {
    // default constructor
-   fFunction = NULL;
-   fPropFunc = NULL;
+   fFunction = nullptr;
+   fPropFunc = nullptr;
    fNumIters = 0;
    fNumBurnInSteps = 0;
    fSign = kSignUnset;
@@ -96,19 +94,19 @@ MetropolisHastings::MetropolisHastings(RooAbsReal& function, const RooArgSet& pa
 
 MarkovChain* MetropolisHastings::ConstructChain()
 {
-   if (fParameters.getSize() == 0 || !fPropFunc || !fFunction) {
+   if (fParameters.empty() || !fPropFunc || !fFunction) {
       coutE(Eval) << "Critical members unintialized: parameters, proposal " <<
                      " function, or (log) likelihood function" << endl;
-         return NULL;
+         return nullptr;
    }
    if (fSign == kSignUnset || fType == kTypeUnset) {
       coutE(Eval) << "Please set type and sign of your function using "
          << "MetropolisHastings::SetType() and MetropolisHastings::SetSign()" <<
          endl;
-      return NULL;
+      return nullptr;
    }
 
-   if (fChainParams.getSize() == 0) fChainParams.add(fParameters);
+   if (fChainParams.empty()) fChainParams.add(fParameters);
 
    RooArgSet x;
    RooArgSet xPrime;
@@ -122,7 +120,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
    chain->SetParameters(fChainParams);
 
    Int_t weight = 0;
-   Double_t xL = 0.0, xPrimeL = 0.0, a = 0.0;
+   double xL = 0.0, xPrimeL = 0.0, a = 0.0;
 
    // ibucur: i think the user should have the possibility to display all the message
    //    levels should they want to; maybe a setPrintLevel would be appropriate
@@ -215,8 +213,8 @@ MarkovChain* MetropolisHastings::ConstructChain()
       //a = xL / xPrimeL;
 
       if (!hadEvalError && !fPropFunc->IsSymmetric(xPrime, x)) {
-         Double_t xPrimePD = fPropFunc->GetProposalDensity(xPrime, x);
-         Double_t xPD      = fPropFunc->GetProposalDensity(x, xPrime);
+         double xPrimePD = fPropFunc->GetProposalDensity(xPrime, x);
+         double xPD      = fPropFunc->GetProposalDensity(x, xPrime);
          if (fType == kRegular)
             a *= xPD / xPrimePD;
          else
@@ -228,7 +226,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
 
          // add the current point with the current weight
          if (weight != 0.0)
-            chain->Add(x, CalcNLL(xL), (Double_t)weight);
+            chain->Add(x, CalcNLL(xL), (double)weight);
 
          // reset the weight and go to xPrime
          weight = 1;
@@ -242,7 +240,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
 
    // make sure to add the last point
    if (weight != 0.0)
-      chain->Add(x, CalcNLL(xL), (Double_t)weight);
+      chain->Add(x, CalcNLL(xL), (double)weight);
    ooccoutP((TObject *)0, Generation) << endl;
 
    RooMsgService::instance().setGlobalKillBelow(oldMsgLevel);
@@ -261,18 +259,18 @@ MarkovChain* MetropolisHastings::ConstructChain()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t MetropolisHastings::ShouldTakeStep(Double_t a)
+bool MetropolisHastings::ShouldTakeStep(double a)
 {
    if ((fType == kLog && a <= 0.0) || (fType == kRegular && a >= 1.0)) {
       // The proposed point has a higher likelihood than the
       // current point, so we should go there
-      return kTRUE;
+      return true;
    }
    else {
       // generate numbers on a log distribution to decide
       // whether to go to xPrime or stay at x
-      //Double_t rand = fGen.Uniform(1.0);
-      Double_t rand = RooRandom::uniform();
+      //double rand = fGen.Uniform(1.0);
+      double rand = RooRandom::uniform();
       if (fType == kLog) {
          rand = TMath::Log(rand);
          // kbelasco: should this be changed to just (-rand > a) for logical
@@ -280,7 +278,7 @@ Bool_t MetropolisHastings::ShouldTakeStep(Double_t a)
          if (-1.0 * rand >= a)
             // we chose to go to the new proposed point
             // even though it has a lower likelihood than the current one
-            return kTRUE;
+            return true;
       } else {
          // fType must be kRegular
          // kbelasco: ensure that we never visit a point where PDF == 0
@@ -288,15 +286,15 @@ Bool_t MetropolisHastings::ShouldTakeStep(Double_t a)
          if (rand < a)
             // we chose to go to the new proposed point
             // even though it has a lower likelihood than the current one
-            return kTRUE;
+            return true;
       }
-      return kFALSE;
+      return false;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t MetropolisHastings::CalcNLL(Double_t xL)
+double MetropolisHastings::CalcNLL(double xL)
 {
    if (fType == kLog) {
       if (fSign == kNegative)

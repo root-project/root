@@ -67,6 +67,9 @@ class ImportLoadLibs(unittest.TestCase):
             'libnss_.*',
             'ld.*',
             'libffi',
+            # AddressSanitizer runtime and ROOT configuration
+            'libclang_rt.asan-.*',
+            'libROOTSanitizerConfig',
             ]
 
     # Verbose mode of the test

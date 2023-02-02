@@ -381,10 +381,9 @@ void TAttText::SaveTextAttributes(std::ostream &out, const char *name, Int_t ali
       out<<"   "<<name<<"->SetTextAlign("<<fTextAlign<<");"<<std::endl;
    }
    if (fTextColor != coldef) {
-      if (fTextColor > 228) {
-         TColor::SaveColor(out, fTextColor);
+      if (TColor::SaveColor(out, fTextColor))
          out<<"   "<<name<<"->SetTextColor(ci);" << std::endl;
-      } else
+      else
          out<<"   "<<name<<"->SetTextColor("<<fTextColor<<");"<<std::endl;
    }
    if (fTextFont != fondef) {

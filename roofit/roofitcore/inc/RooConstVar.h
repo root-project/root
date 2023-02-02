@@ -27,22 +27,22 @@ class RooConstVar final : public RooAbsReal {
 public:
   // Constructors, assignment etc
   RooConstVar() { }
-  RooConstVar(const char *name, const char *title, Double_t value);
-  RooConstVar(const RooConstVar& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooConstVar(*this,newname); }
-  virtual ~RooConstVar() = default;
+  RooConstVar(const char *name, const char *title, double value);
+  RooConstVar(const RooConstVar& other, const char* name=nullptr);
+  TObject* clone(const char* newname) const override { return new RooConstVar(*this,newname); }
+  ~RooConstVar() override = default;
 
   /// Return (constant) value.
-  virtual Double_t getValV(const RooArgSet*) const {
+  double getValV(const RooArgSet*) const override {
     return _value;
   }
 
-  RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet*) const;
+  RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet*) const override;
 
-  void writeToStream(std::ostream& os, Bool_t compact) const ;
+  void writeToStream(std::ostream& os, bool compact) const override ;
 
   /// Returns false, as the value of the constant doesn't depend on other objects.
-  virtual Bool_t isDerived() const { 
+  bool isDerived() const override {
     return false;
   }
 
@@ -56,11 +56,11 @@ public:
 
 protected:
 
-  Double_t evaluate() const {
+  double evaluate() const override {
     return _value;
   }
 
-  ClassDef(RooConstVar,2) // Constant RooAbsReal value object
+  ClassDefOverride(RooConstVar,2) // Constant RooAbsReal value object
 };
 
 #endif

@@ -127,9 +127,7 @@ static int gRedDiv, gGreenDiv, gBlueDiv, gRedShift, gGreenShift, gBlueShift;
 
 
 
-static void sort(list1, numPolys)
-polygon **list1;
-int numPolys;
+static void sort(polygon **list1, int numPolys)
 /*****************************************************************************
    Specialized quick sort for painter algorithm.
 *****************************************************************************/
@@ -276,9 +274,7 @@ point **Point, **lastPoint;
 
 
 
-static void Rotate(points1, cx, cy, cz, sx, sy, sz)
-anglePoint *points1;
-double cx, cy, cz, sx, sy, sz;
+static void Rotate(anglePoint *points1, double cx, double cy, double cz, double sx, double sy, double sz)
 /******************************************************************************
    Rotate about Z, X, then Y, for two points.
 ******************************************************************************/
@@ -306,8 +302,7 @@ double x, y, z, t;
 
 
 
-static double DotProduct(x1, Y1, x2, y2)
-double x1, Y1, x2, y2;
+static double DotProduct(double x1, double Y1, double x2, double y2)
 /******************************************************************************
    Dot product (calculate the cosine of the angle between two vectors).
 ******************************************************************************/
@@ -335,9 +330,7 @@ double temp;
 
 
 
-static void CalculateAngles(X, Y, Z, X1, Y1, Z1)
-double *X, *Y, *Z;
-double X1, Y1, Z1;
+static void CalculateAngles(double *X, double *Y, double *Z, double X1, double Y1, double Z1)
 /******************************************************************************
    Calculate what the result of the angle changes of X1, Y1, and Z1 are
    in my weird coordinate system.
@@ -371,9 +364,7 @@ anglePoint points1[2];
 
 
 
-static void DrawLogo(g, x, y)
-Ginfo *g;
-int x, y;
+static void DrawLogo(Ginfo *g, int x, int y)
 /******************************************************************************
    Display the Logo.
 ******************************************************************************/
@@ -483,8 +474,7 @@ int hUnit, vUnit;
 
 
 
-static void DisplayMenu(g)
-Ginfo *g;
+static void DisplayMenu(Ginfo *g)
 /******************************************************************************
    Display the help menu.
 ******************************************************************************/
@@ -549,9 +539,7 @@ int x = 5, y = 5;
 
 
 
-static void ResetPurpleRectangle(XL, YL, XH, YH, g)
-int XL, YL, XH, YH;
-Ginfo *g;
+static void ResetPurpleRectangle(int XL, int YL, int XH, int YH, Ginfo *g)
 /******************************************************************************
    Reset the vertices of the purple rectangle.
 ******************************************************************************/
@@ -592,8 +580,7 @@ Ginfo *g;
 
 
 
-static void OneBitSetColors(g)
-Ginfo *g;
+static void OneBitSetColors(Ginfo *g)
 /******************************************************************************
    Set up color information/stipples for a one bit display.
 ******************************************************************************/
@@ -623,8 +610,7 @@ int numColors;
 
 
 
-static void EightBitSetColors(g)
-Ginfo *g;
+static void EightBitSetColors(Ginfo *g)
 /******************************************************************************
    Set up color information/stipples for a eight bit display.
 ******************************************************************************/
@@ -865,8 +851,7 @@ XColor c;
 }
 
 
-static void TrueColorSetColors(g)
-Ginfo *g;
+static void TrueColorSetColors(Ginfo *g)
 /******************************************************************************
    Set up color information/stipples for TrueColor displays.
 ******************************************************************************/
@@ -930,10 +915,7 @@ int numColors;
 char title[80];
 Atom wm_protocols[2];
 
-static void InitDisplay(o, g, parent)
-Oinfo *o;
-Ginfo *g;
-Window parent;
+static void InitDisplay(Oinfo *o, Ginfo *g, Window parent)
 /******************************************************************************
    Set up an X window and our colormap.  We rely on X's own error handling and
    reporting for most bad X calls because X buffers requests.
@@ -1295,12 +1277,7 @@ static int CheckEvent(Display *display, XEvent *event, char *arg)
 
 
 
-static void GetInput(xevent, pointerX, pointerY, command, same, g)
-XEvent *xevent;
-int *pointerX, *pointerY;
-char *command;
-int *same;
-Ginfo *g;
+static void GetInput(XEvent *xevent, int *pointerX, int *pointerY, char *command, int *same, Ginfo *g)
 /******************************************************************************
    Get an interesting event and update the user input information.
 
@@ -1465,11 +1442,7 @@ char string[TMPSTRLEN];
 
 float deltaMove = 0;
 
-static
-int UpdatePosition(event, o, g)
-XEvent *event;
-Oinfo *o;
-Ginfo *g;
+static int UpdatePosition(XEvent *event, Oinfo *o, Ginfo *g)
 /******************************************************************************
    Update the scene position information using user input.
 
@@ -1654,10 +1627,7 @@ double X, Y, Z;
 
 
 
-static int clipSegment(pX, pY, qX, qY, Pclip, Qclip, H, V)
-float *pX, *pY, *qX, *qY;
-int Pclip, Qclip;
-float H,V;
+static int clipSegment(float *pX, float *pY, float *qX, float *qY, int Pclip, int Qclip, float H, float V)
 /******************************************************************************
    Calculate the portion of the projected line segment that is visible.
 ******************************************************************************/
@@ -1866,9 +1836,7 @@ register float PX, PY, QX, QY, dx, dy;
 
 
 
-static void clip(o, g)
-Oinfo *o;
-Ginfo *g;
+static void clip(Oinfo *o, Ginfo *g)
 /******************************************************************************
    Clip a list of segments.
 ******************************************************************************/
@@ -2217,9 +2185,7 @@ long *redCol;
 
 
 
-static void rotate(o, g)
-Oinfo *o;
-Ginfo *g;
+static void rotate(Oinfo *o, Ginfo *g)
 /******************************************************************************
    Rotate, project, and set the clipping flags for a list of points.
 ******************************************************************************/
@@ -2413,13 +2379,7 @@ register short  RX, BX;
 
 
 
-static void DrawSegments(display, win, gc, segs1, numSegs, g)
-Display *display;
-Window win;
-GC gc;
-XSegment segs1[];
-int numSegs;
-Ginfo *g;
+static void DrawSegments(Display *display, Window win, GC gc, XSegment segs1[], int numSegs, Ginfo *g)
 /******************************************************************************
    Thanks to Mark Cook for the suggestion to pay attention the the
    maximum request size of the X server!
@@ -2444,10 +2404,7 @@ int requestSize, evenAmount, remainder1, index1;
 
 
 
-static void DrawLines(o, g, mode)
-Oinfo *o;
-Ginfo *g;
-int mode;
+static void DrawLines(Oinfo *o, Ginfo *g, int mode)
 /******************************************************************************
    Draw lines for the three display modes.
 ******************************************************************************/
@@ -2522,10 +2479,7 @@ int lastChange, index1;
 
 
 
-static void DrawHiddenLines(o, g, mode)
-Oinfo *o;
-Ginfo *g;
-int mode;
+static void DrawHiddenLines(Oinfo *o, Ginfo *g, int mode)
 /******************************************************************************
    Draw polygon outlines using painter algorithm for the three display modes.
 ******************************************************************************/
@@ -2674,10 +2628,7 @@ _XPoint points1[512], *XPointPtr;
 
 
 
-static void DrawPolys(o, g, mode)
-Oinfo *o;
-Ginfo *g;
-int mode;
+static void DrawPolys(Oinfo *o, Ginfo *g, int mode)
 /******************************************************************************
    Draw polygons using painter algorithm for the three display modes.
 ******************************************************************************/
@@ -2872,9 +2823,7 @@ static void BeginImage(Oinfo *o, Ginfo *g)
 
 
 
-static void DrawObject(o, g)
-Oinfo *o;
-Ginfo *g;
+static void DrawObject(Oinfo *o, Ginfo *g)
 /******************************************************************************
    Draw an x3d objext to the screen.  Be sure to draw the objects back to
    front when calling this function.
@@ -2945,9 +2894,7 @@ Ginfo *g;
 
 
 
-static void EndImage(o, g)
-Oinfo *o;
-Ginfo *g;
+static void EndImage(Oinfo *o, Ginfo *g)
 /******************************************************************************
    Finish drawing x3d objects.
 ******************************************************************************/
@@ -3104,13 +3051,7 @@ void MakePolygonArray()
 * main procedure                                                             *
 *                                                                            *
 ******************************************************************************/
-unsigned long
-x3d_main(longitude, latitude, psi, string, parent)
-float   *longitude;
-float   *latitude;
-float   *psi;
-char    *string;
-Window   parent;
+unsigned long x3d_main(float *longitude, float *latitude, float *psi, char *string, Window parent)
 {
     Ginfo *g = NULL;
     Oinfo *o = NULL;

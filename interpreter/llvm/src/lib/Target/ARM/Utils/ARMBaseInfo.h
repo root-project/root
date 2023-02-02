@@ -64,6 +64,25 @@ inline static CondCodes getOppositeCondition(CondCodes CC) {
   case LE: return GT;
   }
 }
+
+/// getSwappedCondition - assume the flags are set by MI(a,b), return
+/// the condition code if we modify the instructions such that flags are
+/// set by MI(b,a).
+inline static ARMCC::CondCodes getSwappedCondition(ARMCC::CondCodes CC) {
+  switch (CC) {
+  default: return ARMCC::AL;
+  case ARMCC::EQ: return ARMCC::EQ;
+  case ARMCC::NE: return ARMCC::NE;
+  case ARMCC::HS: return ARMCC::LS;
+  case ARMCC::LO: return ARMCC::HI;
+  case ARMCC::HI: return ARMCC::LO;
+  case ARMCC::LS: return ARMCC::HS;
+  case ARMCC::GE: return ARMCC::LE;
+  case ARMCC::LT: return ARMCC::GT;
+  case ARMCC::GT: return ARMCC::LT;
+  case ARMCC::LE: return ARMCC::GE;
+  }
+}
 } // end namespace ARMCC
 
 namespace ARMVCC {
@@ -72,7 +91,41 @@ namespace ARMVCC {
     Then,
     Else
   };
-}
+} // namespace ARMVCC
+
+namespace ARM {
+  /// Mask values for IT and VPT Blocks, to be used by MCOperands.
+  /// Note that this is different from the "real" encoding used by the
+  /// instructions. In this encoding, the lowest set bit indicates the end of
+  /// the encoding, and above that, "1" indicates an else, while "0" indicates
+  /// a then.
+  ///   Tx = x100
+  ///   Txy = xy10
+  ///   Txyz = xyz1
+  enum class PredBlockMask {
+    T = 0b1000,
+    TT = 0b0100,
+    TE = 0b1100,
+    TTT = 0b0010,
+    TTE = 0b0110,
+    TEE = 0b1110,
+    TET = 0b1010,
+    TTTT = 0b0001,
+    TTTE = 0b0011,
+    TTEE = 0b0111,
+    TTET = 0b0101,
+    TEEE = 0b1111,
+    TEET = 0b1101,
+    TETT = 0b1001,
+    TETE = 0b1011
+  };
+} // namespace ARM
+
+// Expands a PredBlockMask by adding an E or a T at the end, depending on Kind.
+// e.g ExpandPredBlockMask(T, Then) = TT, ExpandPredBlockMask(TT, Else) = TTE,
+// and so on.
+ARM::PredBlockMask expandPredBlockMask(ARM::PredBlockMask BlockMask,
+                                       ARMVCC::VPTCodes Kind);
 
 inline static const char *ARMVPTPredToString(ARMVCC::VPTCodes CC) {
   switch (CC) {

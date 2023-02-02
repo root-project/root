@@ -26,7 +26,7 @@ protected:
    TImage           *fImage;   ///< image
    TString           fPath;    ///< directory of image
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
 private:
    TGIcon(const TGIcon &) = delete;
@@ -49,15 +49,15 @@ public:
    virtual void SetImage(TImage *img);
    virtual void SetImagePath(const char *path);
 
-   virtual void Resize(UInt_t w = 0, UInt_t h = 0);
-   virtual void Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
-   virtual void MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0);
-   virtual void ChangeBackgroundColor() { }
+   void Resize(UInt_t w = 0, UInt_t h = 0) override;
+   void Resize(TGDimension size) override { Resize(size.fWidth, size.fHeight); }
+   void MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0) override;
+   virtual void ChangeBackgroundColor() {}
 
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   TGDimension GetDefaultSize() const override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGIcon,0)  // Icon GUI class
+   ClassDefOverride(TGIcon,0)  // Icon GUI class
 };
 
 #endif

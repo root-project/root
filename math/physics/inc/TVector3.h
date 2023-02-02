@@ -37,7 +37,7 @@ public:
    TVector3(const TVector3 &);
    // The copy constructor.
 
-   virtual ~TVector3() {};
+   ~TVector3() override {};
    // Destructor
 
    Double_t operator () (int) const;
@@ -178,14 +178,14 @@ public:
 
    inline TVector2 XYvector() const;
 
-   void Print(Option_t* option="") const;
+   void Print(Option_t* option="") const override;
 
 private:
 
    Double_t fX, fY, fZ;
    // The components.
 
-   ClassDef(TVector3,3) // A 3D physics vector
+   ClassDefOverride(TVector3,3) // A 3D physics vector
 
    // make TLorentzVector a friend class
    friend class TLorentzVector;

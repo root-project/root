@@ -16,7 +16,11 @@
 ///
 /// \author Rene Brun
 
-#include "TMinuit.h"
+#include <TCanvas.h>
+#include <TGraph.h>
+#include <TH1F.h>
+#include <TMinuit.h>
+#include <TVirtualFitter.h>
 
 void fitcont()
 {

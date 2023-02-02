@@ -13,6 +13,10 @@
 #include <RooFit/TestStatistics/RooSumL.h>
 #include <RooAbsData.h>
 #include <RooFit/TestStatistics/RooSubsidiaryL.h>
+#ifdef R__HAS_ROOFIT_MULTIPROCESS
+#include "RooFit/MultiProcess/ProcessTimer.h"
+#include "RooFit/MultiProcess/Config.h"
+#endif
 
 #include <algorithm> // min, max
 
@@ -92,7 +96,13 @@ RooSumL::evaluatePartition(Section events, std::size_t components_begin, std::si
 
    // from RooAbsOptTestStatistic::combinedValue (which is virtual, so could be different for non-RooNLLVar!):
    for (std::size_t ix = components_begin; ix < components_end; ++ix) {
+#ifdef R__HAS_ROOFIT_MULTIPROCESS
+      if (RooFit::MultiProcess::Config::getTimingAnalysis()) RooFit::MultiProcess::ProcessTimer::start_timer("worker:eval_partition:" + components_[ix]->GetClassName() + ":" + components_[ix]->GetName());
+#endif
       ret += components_[ix]->evaluatePartition(events, 0, 0);
+#ifdef R__HAS_ROOFIT_MULTIPROCESS
+      if (RooFit::MultiProcess::Config::getTimingAnalysis()) RooFit::MultiProcess::ProcessTimer::end_timer("worker:eval_partition:" + components_[ix]->GetClassName() + ":" + components_[ix]->GetName());
+#endif
    }
 
    return ret;
@@ -107,7 +117,7 @@ ROOT::Math::KahanSum<double> RooSumL::getSubsidiaryValue()
          return (*component)->evaluatePartition({0, 1}, 0, 0);
       }
    }
-   return {};
+   return ROOT::Math::KahanSum<double>{};
 }
 
 void RooSumL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)

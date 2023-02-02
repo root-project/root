@@ -42,7 +42,7 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Example code which illustrates how to use ROOT trees and ntuples.
 
-\defgroup tutorial_dataframe Data Frame tutorials
+\defgroup tutorial_dataframe Dataframe tutorials
 \ingroup Tutorials
 \brief These examples show various features of [RDataFrame](classROOT_1_1RDataFrame.html): ROOT's declarative analysis interface.
 

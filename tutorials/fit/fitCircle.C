@@ -26,7 +26,7 @@
 #include <Math/Functor.h>
 
 //____________________________________________________________________
-void fitCircle(Int_t n=10000) {
+void fitCircle(int n=10000) {
    //generates n points around a circle and fit them
    TCanvas *c1 = new TCanvas("c1","c1",600,600);
    c1->SetGrid();
@@ -34,8 +34,8 @@ void fitCircle(Int_t n=10000) {
    if (n> 999) gr->SetMarkerStyle(1);
    else        gr->SetMarkerStyle(3);
    TRandom3 r;
-   Double_t x,y;
-   for (Int_t i=0;i<n;i++) {
+   double x,y;
+   for (int i=0;i<n;i++) {
       r.Circle(x,y,r.Gaus(4,0.3));
       gr->SetPoint(i,x,y);
    }
@@ -43,17 +43,17 @@ void fitCircle(Int_t n=10000) {
    gr->Draw("p");
 
 
-   auto chi2Function = [&](const Double_t *par) {
+   auto chi2Function = [&](const double *par) {
       //minimisation function computing the sum of squares of residuals
       // looping at the graph points
-      Int_t np = gr->GetN();
-      Double_t f = 0;
-      Double_t *x = gr->GetX();
-      Double_t *y = gr->GetY();
-      for (Int_t i=0;i<np;i++) {
-         Double_t u = x[i] - par[0];
-         Double_t v = y[i] - par[1];
-         Double_t dr = par[2] - std::sqrt(u*u+v*v);
+      int np = gr->GetN();
+      double f = 0;
+      double *x = gr->GetX();
+      double *y = gr->GetY();
+      for (int i=0;i<np;i++) {
+         double u = x[i] - par[0];
+         double v = y[i] - par[1];
+         double dr = par[2] - std::sqrt(u*u+v*v);
          f += dr*dr;
       }
       return f;

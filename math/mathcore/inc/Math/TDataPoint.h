@@ -49,8 +49,8 @@ public:
    void         SetWeight(float fWeight) {m_fWeight = fWeight;}
 
 private:
-   value_type   m_vCoordinates[K]; //coordinates
-   value_type   m_fWeight;          //weight at this point
+   value_type   m_vCoordinates[K]; ///< coordinates
+   value_type   m_fWeight;         ///< weight at this point
 };
 
 // some typedef definitions

@@ -37,9 +37,11 @@ class RRawFile;
 
 namespace Experimental {
 
+namespace Internal {
+
 // clang-format off
 /**
-\class ROOT::Experimental::RNTuple
+\class ROOT::Experimental::Internal::RFileNTupleAnchor
 \ingroup NTuple
 \brief Entry point for an RNTuple in a ROOT file
 
@@ -48,15 +50,26 @@ Only the RNTuple key will be listed in the list of keys. Like TBaskets, the page
 Byte offset references in the RNTuple header and footer reference directly the data part of page records,
 skipping the TFile key part.
 
-While the class is central to anchoring an RNTuple in a TFile, it is an internal detail not exposed to users.
-Note that there is no user-facing RNTuple class but RNTupleReader and RNTupleWriter.
+In the list of keys, this object appears as "ROOT::Experimental::RNTuple".
+
+The RNTuple object is the user-facing representation of an RNTuple data set in a ROOT file.
+The RFileNTupleAnchor is the low-level entry point of an RNTuple in a ROOT file used by the page storage layer.
+
+The ROOT::Experimental::RNTuple object has the same on-disk layout as the RFileNTupleAnchor.
+It only adds methods and transient members. Reading and writing RNTuple anchors with TFile and the minifile writer
+is thus fully interoperable (same on-disk information).
+TODO(jblomer): Remove unneeded fChecksum, fVersion, fSize, fReserved once ROOT::Experimental::RNTuple moves out of
+the experimental namespace.
 */
 // clang-format on
-struct RNTuple {
+struct RFileNTupleAnchor {
+   /// The ROOT streamer info checksum. Older RNTuple versions used class version 0 and a serialized checksum,
+   /// now we use class version 3 and "promote" the checksum as a class member
+   std::int32_t fChecksum = 0;
    /// Allows for evolving the struct in future versions
    std::uint32_t fVersion = 0;
    /// Allows for skipping the struct
-   std::uint32_t fSize = sizeof(RNTuple);
+   std::uint32_t fSize = sizeof(RFileNTupleAnchor);
    /// The file offset of the header excluding the TKey part
    std::uint64_t fSeekHeader = 0;
    /// The size of the compressed ntuple header
@@ -71,26 +84,7 @@ struct RNTuple {
    std::uint32_t fLenFooter = 0;
    /// Currently unused, reserved for later use
    std::uint64_t fReserved = 0;
-
-   /// The canonical, member-wise equality test
-   bool operator ==(const RNTuple &other) const {
-      return fVersion == other.fVersion &&
-         fSize == other.fSize &&
-         fSeekHeader == other.fSeekHeader &&
-         fNBytesHeader == other.fNBytesHeader &&
-         fLenHeader == other.fLenHeader &&
-         fSeekFooter == other.fSeekFooter &&
-         fNBytesFooter == other.fNBytesFooter &&
-         fLenFooter == other.fLenFooter &&
-         fReserved == other.fReserved;
-   }
-
-   // RNTuple implements the hadd MergeFile interface
-   /// Merge this NTuple with the input list entries
-   Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
 };
-
-namespace Internal {
 
 /// Holds status information of an open ROOT file during writing
 struct RTFileControlBlock;
@@ -112,16 +106,16 @@ private:
    /// Indicates whether the file is a TFile container or an RNTuple bare file
    bool fIsBare = false;
    /// Used when the file container turns out to be a bare file
-   RResult<RNTuple> GetNTupleBare(std::string_view ntupleName);
+   RResult<RFileNTupleAnchor> GetNTupleBare(std::string_view ntupleName);
    /// Used when the file turns out to be a TFile container
-   RResult<RNTuple> GetNTupleProper(std::string_view ntupleName);
+   RResult<RFileNTupleAnchor> GetNTupleProper(std::string_view ntupleName);
 
 public:
    RMiniFileReader() = default;
    /// Uses the given raw file to read byte ranges
    explicit RMiniFileReader(ROOT::Internal::RRawFile *rawFile);
    /// Extracts header and footer location for the RNTuple identified by ntupleName
-   RResult<RNTuple> GetNTuple(std::string_view ntupleName);
+   RResult<RFileNTupleAnchor> GetNTuple(std::string_view ntupleName);
    /// Reads a given byte range from the file into the provided memory buffer
    void ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset);
 };
@@ -190,12 +184,20 @@ private:
    /// The file name without parent directory; only required when writing with a C file stream
    std::string fFileName;
    /// Header and footer location of the ntuple, written on Commit()
-   RNTuple fNTupleAnchor;
+   RFileNTupleAnchor fNTupleAnchor;
 
    explicit RNTupleFileWriter(std::string_view name);
 
-   /// For a TFile container written by a C file stream, write the records that constitute an empty file
+   /// For a TFile container written by a C file stream, write the header and TFile object
    void WriteTFileSkeleton(int defaultCompression);
+   /// The only key that will be visible in file->ls()
+   void WriteTFileNTupleKey();
+   /// Write the TList with the RNTuple key
+   void WriteTFileKeysList();
+   /// Write the compressed streamer info record with the description of the RNTuple class
+   void WriteTFileStreamerInfo();
+   /// Last record in the file
+   void WriteTFileFreeList();
    /// For a bare file, which is necessarily written by a C file stream, write file header
    void WriteBareFileSkeleton(int defaultCompression);
 

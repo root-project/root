@@ -61,6 +61,18 @@ class RooWorkspace(object):
         """
         return getattr(self, "import")(*args, **kwargs)
 
+    def __setattr__(self, name, value):
+        # Many people pythonized the RooWorkspace themselves, by adding a new
+        # attribute `_import` that calls getattr(self, "import") under the
+        # hood. However, `_import` is now the reference to the original cppyy
+        # overload, and resetting it with a wrapper around `import` would cause
+        # infinite recursions! We prevent resetting any import-related function
+        # here, which results in a clearer error to the user than an infinite
+        # call stack involving the internal pythonization code.
+        if name in ["_import", "import", "Import"]:
+            raise AttributeError("Resetting the \"" + name + "\" attribute of a RooWorkspace is not allowed!")
+        object.__setattr__(self, name, value)
+
 
 def RooWorkspace_import(self, *args, **kwargs):
     r"""The RooWorkspace::import function can't be used in PyROOT because `import` is a reserved python keyword.

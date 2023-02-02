@@ -53,8 +53,7 @@ public:
    /// It does not really represent a data element; it simply
    /// returns the entry number (or -1 once the end of the tree
    /// is reached).
-   class Iterator_t:
-      public std::iterator<std::input_iterator_tag, const Long64_t, Long64_t> {
+   class Iterator_t {
    private:
       Long64_t fEntry; ///< Entry number of the tree referenced by this iterator; -1 is invalid.
       TTreeReader* fReader; ///< The reader we select the entries on.
@@ -63,6 +62,13 @@ public:
       bool IsValid() const { return fEntry >= 0; }
 
    public:
+      using iterator_category = std::input_iterator_tag;
+      using value_type = const Long64_t;
+      using difference_type = Long64_t;
+      using pointer = const Long64_t *;
+      using const_pointer = const Long64_t *;
+      using reference = const Long64_t &;
+
       /// Default-initialize the iterator as "past the end".
       Iterator_t(): fEntry(-1), fReader(nullptr) {}
 
@@ -202,11 +208,6 @@ public:
    /// \return the `entry`'s read status, i.e. whether the entry is available.
    EEntryStatus SetLocalEntry(Long64_t entry) { return SetEntryBase(entry, kTRUE); }
 
-   ///  Set the begin and end entry numbers
-   ///
-   /// \param beginEntry The first entry that `Next()` will load.
-   /// \param endEntry The entry that `Next()` will return `kFALSE` on (i.e. not
-   ///   load anymore).
    EEntryStatus SetEntriesRange(Long64_t beginEntry, Long64_t endEntry);
 
    ///  Get the begin and end entry numbers
@@ -283,7 +284,7 @@ private:
    enum EStatusBits {
       kBitIsChain = BIT(14), ///< our tree is a chain
       kBitHaveWarnedAboutEntryListAttachedToTTree = BIT(15), ///< the tree had a TEntryList and we have warned about that
-      kBitSetEntryBaseCallingLoadTree = BIT(16) ///< SetEntryBase is in the process of calling TChain/TTree::LoadTree.
+      kBitSetEntryBaseCallingLoadTree = BIT(16) ///< SetEntryBase is in the process of calling TChain/TTree::%LoadTree.
    };
 
    TTree* fTree = nullptr; ///< tree that's read

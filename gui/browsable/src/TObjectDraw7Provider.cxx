@@ -26,12 +26,6 @@ public:
          auto tobj = obj->get_shared<TObject>();
          if (!tobj) return false;
 
-         if (subpad->NumPrimitives() > 0) {
-            subpad->Wipe();
-            subpad->GetCanvas()->Modified();
-            subpad->GetCanvas()->Update(true);
-         }
-
          subpad->Draw<ROOT::Experimental::TObjectDrawable>(tobj, opt);
          subpad->GetCanvas()->Update(true);
          return true;

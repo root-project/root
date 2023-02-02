@@ -40,7 +40,8 @@ public:
       kLinked = BIT(11) // Used when the TNotifyLink is connected to a TTree.
    };
 
-   void Clear(Option_t * /*option*/ ="") {
+   void Clear(Option_t * /*option*/ ="") override
+   {
       auto current = this;
       do {
          auto next = dynamic_cast<TNotifyLinkBase*>(fNext);
@@ -52,7 +53,8 @@ public:
    }
 
    template <class Notifier>
-   void PrependLink(Notifier &notifier) {
+   void PrependLink(Notifier &notifier)
+   {
       SetBit(kLinked);
 
       fNext = notifier.GetNotify();
@@ -63,7 +65,8 @@ public:
    }
 
    template <class Notifier>
-   void RemoveLink(Notifier &notifier) {
+   void RemoveLink(Notifier &notifier)
+   {
       ResetBit(kLinked);
 
       if (notifier.GetNotify() == this) {
@@ -79,11 +82,12 @@ public:
       fNext = nullptr;
    }
 
-   Bool_t IsLinked() {
+   Bool_t IsLinked()
+   {
       return TestBit(kLinked);
    }
 
-   ClassDef(TNotifyLinkBase, 0);
+   ClassDefOverride(TNotifyLinkBase, 0);
 };
 
 template <class Type>

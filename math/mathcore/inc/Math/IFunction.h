@@ -96,7 +96,7 @@ namespace ROOT {
 
 #ifdef LATER
          /**
-            Template method to eveluate the function using the begin of an iterator
+            Template method to evaluate the function using the begin of an iterator
             User is responsible to provide correct size for the iterator
          */
          template <class Iterator>
@@ -202,12 +202,12 @@ namespace ROOT {
 
       public:
 
-         /// virual destructor
+         /// virtual destructor
          virtual ~IGradientMultiDimTempl() {}
 
          /**
              Evaluate all the vector of function derivatives (gradient)  at a point x.
-             Derived classes must re-implement if it is more efficient than evaluting one at a time
+             Derived classes must re-implement if it is more efficient than evaluating one at a time
          */
          virtual void Gradient(const T *x, T *grad) const = 0;
 
@@ -353,7 +353,7 @@ namespace ROOT {
 
          /**
             Evaluate all the vector of function derivatives (gradient)  at a point x.
-            Derived classes must re-implement it if more efficient than evaluting one at a time
+            Derived classes must re-implement it if more efficient than evaluating one at a time
          */
          virtual void Gradient(const T *x, T *grad) const
          {
@@ -418,7 +418,7 @@ namespace ROOT {
          /**
              Virtual Destructor (no operations)
          */
-         virtual ~IGradientFunctionOneDim() {}
+         ~IGradientFunctionOneDim() override {}
 
 
          /**
@@ -428,7 +428,7 @@ namespace ROOT {
              evaluate value and derivative at the same time
 
          */
-         virtual void FdF(double x, double &f, double &df) const
+         void FdF(double x, double &f, double &df) const override
          {
             f = operator()(x);
             df = Derivative(x);

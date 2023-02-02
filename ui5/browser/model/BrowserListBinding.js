@@ -3,7 +3,7 @@ sap.ui.define([
 ], function(JSONListBinding) {
     "use strict";
 
-    var hRootListBinding = JSONListBinding.extend("rootui5.browser.model.BrowserListBinding", {
+    let hRootListBinding = JSONListBinding.extend("rootui5.browser.model.BrowserListBinding", {
 
         // called by the TreeTable to know the amount of entries
         getLength: function() {
@@ -13,12 +13,11 @@ sap.ui.define([
         // function is called by the TreeTable when requesting the data to display
         getNodes: function(iStartIndex, iLength, iThreshold) {
 
-           var args = { begin: iStartIndex, end: iStartIndex + iLength, threshold: iThreshold },
-               nodes = this.getModel().buildFlatNodes(args);
+           let args = { begin: iStartIndex, end: iStartIndex + iLength, threshold: iThreshold },
+               nodes = this.getModel().buildFlatNodes(args),
+               aNodes = [];
 
-           var aNodes = [];
-
-           for (var i = args.begin; i < args.end; i++)
+           for (let i = args.begin; i < args.end; i++)
               aNodes.push(nodes && nodes[i] ? nodes[i] : null);
 
            return aNodes;
@@ -36,16 +35,19 @@ sap.ui.define([
         },
 
         isExpanded: function(iIndex) {
-            var elem = this.getModel().getElementByIndex(iIndex);
-            var res = elem ? !!elem.expanded : false;
+            let elem = this.getModel().getElementByIndex(iIndex);
 
-            return res;
+            return elem ? !!elem.expanded : false;
         },
 
         expand: function(iIndex) {
+           if (this.getModel().toggleNode(iIndex, true))
+              this.checkUpdate(true);
         },
 
         collapse: function(iIndex) {
+           if (this.getModel().toggleNode(iIndex, false))
+              this.checkUpdate(true);
         },
 
         collapseToLevel: function(lvl) {
@@ -58,12 +60,7 @@ sap.ui.define([
 
         // called by the TreeTable when a node is expanded/collapsed
         toggleIndex: function(iIndex) {
-            // console.log("root.model.hListBinding#toggleIndex(" + iIndex + ")");
-
-            if (this.getModel().toggleNode(iIndex))
-               this.checkUpdate(true);
-
-            // QUESTION: why one should call checkUpdate?, should it be done automatically always?
+            // was used before
         },
 
         getSelectedIndex: function() {

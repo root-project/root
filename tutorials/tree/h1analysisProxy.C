@@ -42,7 +42,7 @@
 /// ~~~{.cpp}
 ///       h42->MakeProxy("h1sel","h1analysisProxy.C");
 /// ~~~
-/// This produces one file: h1sel.h which does a #include "h1analysProxy.C"
+/// This produces one file: h1sel.h which does a `#include "h1analysProxy.C"`
 /// The h1sel class is derived from the Root class TSelector and can then
 /// be used as:
 /// ~~~{.cpp}

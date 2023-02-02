@@ -11,9 +11,9 @@ protected:
 public:
    NdbPhotonEnergyDist()
       : NdbMF(15, "Energy distributions for photon production") {}
-   ~NdbPhotonEnergyDist() {}
+   ~NdbPhotonEnergyDist() override {}
 
-   ClassDef(NdbPhotonEnergyDist,1)
+   ClassDefOverride(NdbPhotonEnergyDist,1)
 }; // NdbPhotonEnergyDist
 
 #endif

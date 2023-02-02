@@ -11,6 +11,8 @@
 
 #include <ROOT/Browsable/RItem.hxx>
 
+class TObject;
+
 namespace ROOT {
 namespace Experimental {
 namespace Browsable {

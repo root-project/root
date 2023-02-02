@@ -166,12 +166,10 @@ void LikelihoodIntervalPlot::SetPlotParameters(const RooArgSet *params)
 
 void LikelihoodIntervalPlot::Draw(const Option_t *options)
 {
-   TIter it = fParamsPlot->createIterator();
    // we need to check if parameters to plot is different than parameters of interval
    RooArgSet* intervalParams = fInterval->GetParameters();
-   RooAbsArg * arg = 0;
    RooArgSet extraParams;
-   while((arg=(RooAbsArg*)it.Next())) {
+   for (auto const *arg : *fParamsPlot) {
       if (!intervalParams->contains(*arg) ) {
          ccoutE(InputArguments) << "Parameter " << arg->GetName() << "is not in the list of LikelihoodInterval parameters "
                                 << " - do not use for plotting " << std::endl;
@@ -203,8 +201,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
       newProfile = oldProfile;
    }
 
-   it.Reset();
-   RooRealVar *myparam = (RooRealVar*) it.Next();
+   auto *myparam = static_cast<RooRealVar*>((*fParamsPlot)[0]);
 
    // do a dummy evaluation around minimum to be sure profile has right minimum
    if (fInterval->GetBestFitParameters() ) {
@@ -234,8 +231,8 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 
       if (nPoints <=0) nPoints = 100; // default in 1D
 
-      const Double_t xcont_min = fInterval->LowerLimit(*myparam);
-      const Double_t xcont_max = fInterval->UpperLimit(*myparam);
+      const double xcont_min = fInterval->LowerLimit(*myparam);
+      const double xcont_max = fInterval->UpperLimit(*myparam);
 
       RooRealVar* myarg = (RooRealVar *) newProfile->getVariables()->find(myparam->GetName());
       double x1 = myarg->getMin();
@@ -327,8 +324,8 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 
 
       //myarg->setVal(xcont_max);
-      //const Double_t Yat_Xmax = newProfile->getVal();
-      Double_t Yat_Xmax = 0.5*ROOT::Math::chisquared_quantile(fInterval->ConfidenceLevel(),1);
+      //const double Yat_Xmax = newProfile->getVal();
+      double Yat_Xmax = 0.5*ROOT::Math::chisquared_quantile(fInterval->ConfidenceLevel(),1);
 
       TLine *Yline_cutoff = new TLine(x1,Yat_Xmax,x2,Yat_Xmax);
       TLine *Yline_min = new TLine(xcont_min,0.,xcont_min,Yat_Xmax);
@@ -374,9 +371,9 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
       opt.ReplaceAll("minuit","");
       opt.ReplaceAll("hist","");
 
-      RooRealVar *myparamY = (RooRealVar*)it.Next();
+      auto *myparamY = static_cast<RooRealVar*>((*fParamsPlot)[1]);
 
-      Double_t cont_level = ROOT::Math::chisquared_quantile(fInterval->ConfidenceLevel(),fNdimPlot); // level for -2log LR
+      double cont_level = ROOT::Math::chisquared_quantile(fInterval->ConfidenceLevel(),fNdimPlot); // level for -2log LR
       cont_level = cont_level/2; // since we are plotting -log LR
 
       RooArgList params(*newProfile->getVariables());
@@ -415,7 +412,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          newProfile->fillHistogram(hist2D, RooArgList(*myparam,*myparamY), 1, 0, false, 0, false);
 
          hist2D->SetTitle(title);
-         hist2D->SetStats(kFALSE);
+         hist2D->SetStats(false);
 
          //need many color levels for drawing with option colz
          if (plotHist) {
@@ -483,14 +480,14 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 
             // in case of option CONT4 I need to re-make the Pad
             if (tmpOpt.Contains("cont4")) {
-               Double_t bm = gPad->GetBottomMargin();
-               Double_t lm = gPad->GetLeftMargin();
-               Double_t rm = gPad->GetRightMargin();
-               Double_t tm = gPad->GetTopMargin();
-               Double_t x1 = hist2D->GetXaxis()->GetXmin();
-               Double_t y1 = hist2D->GetYaxis()->GetXmin();
-               Double_t x2 = hist2D->GetXaxis()->GetXmax();
-               Double_t y2 = hist2D->GetYaxis()->GetXmax();
+               double bm = gPad->GetBottomMargin();
+               double lm = gPad->GetLeftMargin();
+               double rm = gPad->GetRightMargin();
+               double tm = gPad->GetTopMargin();
+               double x1 = hist2D->GetXaxis()->GetXmin();
+               double y1 = hist2D->GetYaxis()->GetXmin();
+               double x2 = hist2D->GetXaxis()->GetXmax();
+               double y2 = hist2D->GetYaxis()->GetXmax();
 
                TPad *null=new TPad("null","null",0,0,1,1);
                null->SetFillStyle(0);
@@ -511,9 +508,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
                for (int icont = 0; icont < ncontours; ++icont) {
                   TList *  contourList = (TList*)contours->At(icont);
                   if (contourList && contourList->GetSize() > 0) {
-                     TIterator * itgr = contourList->MakeIterator();
-                     TGraph * gr = 0;
-                     while( (gr = dynamic_cast<TGraph*>(itgr->Next()) ) ){
+                     for(auto * gr : static_range_cast<TGraph*>(*contourList)) {
                         if (fLineColor) gr->SetLineColor(fLineColor);
                         gr->SetLineStyle(kDashed);
                         gr->SetLineWidth(3);
@@ -524,7 +519,6 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
                         else
                            gr->Draw("L");
                      }
-                     delete itgr;
                   }
                }
             }

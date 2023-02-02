@@ -125,7 +125,7 @@ Each option item may have one of the following forms:
 
         "TextValue" = Text Label"
 
-~~~
+~~~ {.cpp}
 
 One can specify values as Integers or Enums - when data field is an
 Integer, Float or Enum type; as texts - for char (more precisely:
@@ -315,6 +315,7 @@ TDataMember& TDataMember::operator=(const TDataMember& dm)
       fSTLCont=dm.fSTLCont;
       fProperty=dm.fProperty;
       fArrayDim = dm.fArrayDim;
+      delete [] fArrayMaxIndex;
       fArrayMaxIndex = dm.fArrayDim ? new Int_t[dm.fArrayDim] : nullptr;
       for(Int_t d = 0; d < fArrayDim; ++d)
          fArrayMaxIndex[d] = dm.fArrayMaxIndex[d];

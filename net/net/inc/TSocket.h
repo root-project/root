@@ -81,9 +81,9 @@ protected:
    static Int_t  fgClientProtocol; // client "protocol" version
 
    TSocket() : fAddress(), fBytesRecv(0), fBytesSent(0), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal),
-               fLocalAddress(), fRemoteProtocol(), fSecContext(0), fService(),
+               fLocalAddress(), fRemoteProtocol(), fSecContext(nullptr), fService(),
                fServType(kSOCKD), fSocket(-1), fTcpWindowSize(0), fUrl(),
-               fBitsInfo(), fUUIDs(0), fLastUsageMtx(0), fLastUsage() { }
+               fBitsInfo(), fUUIDs(nullptr), fLastUsageMtx(nullptr), fLastUsage() {}
 
    Bool_t       Authenticate(const char *user);
    void         SetDescriptor(Int_t desc) { fSocket = desc; }
@@ -94,8 +94,8 @@ protected:
    void         MarkBrokenConnection();
 
 private:
-   TSocket&      operator=(const TSocket &);  // not implemented
-   Option_t     *GetOption() const { return TObject::GetOption(); }
+   TSocket&      operator=(const TSocket &) = delete;
+   Option_t     *GetOption() const override { return TObject::GetOption(); }
 
 public:
    TSocket(TInetAddress address, const char *service, Int_t tcpwindowsize = -1);
@@ -127,7 +127,7 @@ public:
    TSecContext          *GetSecContext() const { return fSecContext; }
    Int_t                 GetTcpWindowSize() const { return fTcpWindowSize; }
    TTimeStamp            GetLastUsage() { R__LOCKGUARD2(fLastUsageMtx); return fLastUsage; }
-   const char           *GetUrl() const { return fUrl; }
+   const char           *GetUrl() const { return fUrl.Data(); }
    virtual Bool_t        IsAuthenticated() const { return fSecContext ? kTRUE : kFALSE; }
    virtual Bool_t        IsValid() const { return fSocket < 0 ? kFALSE : kTRUE; }
    virtual Int_t         Recv(TMessage *&mess);
@@ -163,12 +163,12 @@ public:
 
    static TSocket       *CreateAuthSocket(const char *user, const char *host,
                                           Int_t port, Int_t size = 0,
-                                          Int_t tcpwindowsize = -1, TSocket *s = 0, Int_t *err = 0);
+                                          Int_t tcpwindowsize = -1, TSocket *s = nullptr, Int_t *err = nullptr);
    static TSocket       *CreateAuthSocket(const char *url, Int_t size = 0,
-                                          Int_t tcpwindowsize = -1, TSocket *s = 0, Int_t *err = 0);
+                                          Int_t tcpwindowsize = -1, TSocket *s = nullptr, Int_t *err = nullptr);
    static void           NetError(const char *where, Int_t error);
 
-   ClassDef(TSocket,0)  //This class implements client sockets
+   ClassDefOverride(TSocket,0)  //This class implements client sockets
 };
 
 //______________________________________________________________________________

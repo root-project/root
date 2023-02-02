@@ -26,7 +26,8 @@ import os
 # Create a ROOT dataframe for each dataset
 # Note that we load the filenames from the external json file placed in the same folder than this script.
 path = "root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22"
-files = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "df106_HiggsToFourLeptons.json")))
+files = json.load(open(os.path.join(ROOT.gROOT.GetTutorialsDir(), "dataframe/df106_HiggsToFourLeptons.json")))
+
 processes = files.keys()
 df = {}
 xsecs = {}

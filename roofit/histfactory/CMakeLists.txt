@@ -9,24 +9,24 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-if(mathmore OR ROOT_mathmore_FOUND)
-  set(ROOT_MATHMORE_LIBRARY MathMore)
+# The ConfigParser can create HistFactory models from XML files. It uses TXML,
+# so we won't build it if the xml build option is OFF.
+if (xml)
+    set(HISTFACTORY_XML_HEADERS RooStats/HistFactory/ConfigParser.h)
+    set(HISTFACTORY_XML_SOURCES src/ConfigParser.cxx)
+    set(HISTFACTORY_XML_LIBRARIES XMLParser)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
   HEADERS
     RooStats/HistFactory/Asimov.h
     RooStats/HistFactory/Channel.h
-    RooStats/HistFactory/ConfigParser.h
     RooStats/HistFactory/Data.h
-    RooStats/HistFactory/EstimateSummary.h
     RooStats/HistFactory/FlexibleInterpVar.h
     RooStats/HistFactory/HistFactoryException.h
     RooStats/HistFactory/HistFactoryModelUtils.h
     RooStats/HistFactory/HistFactoryNavigation.h
-    RooStats/HistFactory/HistFactorySimultaneous.h
     RooStats/HistFactory/HistoToWorkspaceFactoryFast.h
-    RooStats/HistFactory/HistoToWorkspaceFactory.h
     RooStats/HistFactory/HistRef.h
     RooStats/HistFactory/LinInterpVar.h
     RooStats/HistFactory/MakeModelAndMeasurementsFast.h
@@ -37,23 +37,17 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     RooStats/HistFactory/RooBarlowBeestonLL.h
     RooStats/HistFactory/Sample.h
     RooStats/HistFactory/Systematics.h
+    ${HISTFACTORY_XML_HEADERS}
   SOURCES
     src/Asimov.cxx
     src/Channel.cxx
-    src/ConfigParser.cxx
     src/Data.cxx
-    src/EstimateSummary.cxx
     src/FlexibleInterpVar.cxx
-    src/Helper.cxx
-    src/Helper.h
     src/HistFactoryModelUtils.cxx
     src/HistFactoryNavigation.cxx
-    src/HistFactorySimultaneous.cxx
-    src/HistoToWorkspaceFactory.cxx
     src/HistoToWorkspaceFactoryFast.cxx
     src/HistRef.cxx
     src/LinInterpVar.cxx
-    src/MakeModelAndMeasurements.cxx
     src/MakeModelAndMeasurementsFast.cxx
     src/Measurement.cxx
     src/ParamHistFunc.cxx
@@ -62,10 +56,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     src/RooBarlowBeestonLL.cxx
     src/Sample.cxx
     src/Systematics.cxx
+    ${HISTFACTORY_XML_SOURCES}
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LIBRARIES
     RooBatchCompute
+    ${HISTFACTORY_XML_LIBRARIES}
   DEPENDENCIES
     RooFit
     RooFitCore
@@ -77,7 +73,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     Graf
     Gpad
     RooStats
-    XMLParser
 )
 
 # For recent clang, this can facilitate auto-vectorisation.
@@ -86,25 +81,26 @@ if(NOT MSVC)
   target_compile_options(HistFactory PUBLIC -fno-math-errno)
 endif()
 
-ROOT_EXECUTABLE(hist2workspace
-  MakeModelAndMeasurements.cxx
-  hist2workspace.cxx
-  LIBRARIES
-    HistFactory
-    RooStats
-    RooFit
-    RooFitCore
-    RIO
-)
+# The hist2workspace executable uses the HistFactory::ConfigParser to read the
+# XML model specification. The ConfigParser is only built when xml is ON, so we
+# can't build hist2workspace without xml.
+if(xml)
+  ROOT_EXECUTABLE(hist2workspace hist2workspace.cxx LIBRARIES HistFactory)
 
-#---Createhist2workspaceCommandLineOptions------------------------------------------------------------------
-generateHeader(hist2workspace
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/hist2workspace-argparse.py
-  ${CMAKE_BINARY_DIR}/ginclude/hist2workspaceCommandLineOptionsHelp.h
-)
+  #---Createhist2workspaceCommandLineOptions------------------------------------------------------------------
+  generateHeader(hist2workspace
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/hist2workspace-argparse.py
+    ${CMAKE_BINARY_DIR}/ginclude/hist2workspaceCommandLineOptionsHelp.h
+  )
+endif()
 
-file(COPY config/prepareHistFactory DESTINATION  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/prepareHistFactory
+if(MSVC)
+  set(prepareHistFactory_script prepareHistFactory.bat)
+else()
+  set(prepareHistFactory_script prepareHistFactory)
+endif()
+file(COPY config/${prepareHistFactory_script} DESTINATION  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${prepareHistFactory_script}
                 PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
                             GROUP_EXECUTE GROUP_READ
                             WORLD_EXECUTE WORLD_READ

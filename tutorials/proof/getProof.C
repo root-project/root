@@ -14,7 +14,7 @@
 ///     'nwrks'    Number of workers to be started. []
 ///     'dir'      Directory to be used for the files and working areas []. When starting a new
 ///                instance of the daemon this directory is cleaned with 'rm -fr'. If 'dir'
-///                is null, the default is used: '/tmp/<user>/.getproof'
+///                is null, the default is used: `/tmp/<user>/.getproof`
 ///     'opt'      Defines what to do if an existing xrootd uses the same ports; possible
 ///                options are: "ask", ask the user; "force", kill the xrootd and start
 ///                a new one; if any other string is specified the existing xrootd will be

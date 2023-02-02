@@ -26,8 +26,8 @@
 #include "TInterpreter.h"
 
 extern "C" {
-   int (* Gl_in_key)(int ch) = 0;
-   int (* Gl_beep_hook)() = 0;
+   int (* Gl_in_key)(int ch) = nullptr;
+   int (* Gl_beep_hook)() = nullptr;
 }
 
 
@@ -46,7 +46,7 @@ namespace {
       // Returns false on error
       bool Complete(Text& line /*in+out*/, size_t& cursor /*in+out*/,
                     EditorRange& r /*out*/,
-                    std::vector<std::string>& displayCompletions /*out*/) {
+                    std::vector<std::string>& displayCompletions /*out*/) override {
          strlcpy(fLineBuf, line.GetText().c_str(), fgLineBufSize);
          int cursorInt = (int) cursor;
          std::stringstream sstr;
@@ -98,7 +98,7 @@ namespace {
       // Returns false on error
       bool Complete(Text& line /*in+out*/, size_t& cursor /*in+out*/,
                     EditorRange& r /*out*/,
-                    std::vector<std::string>& completions /*out*/) {
+                    std::vector<std::string>& completions /*out*/) override {
          gInterpreter->CodeComplete(line.GetText(), cursor, completions);
          // FIXME: handle single completion by completing "line"
          // FIXME: adjust r's update range, for now:
@@ -208,24 +208,23 @@ Gl_histadd(const char* buf) {
 /* Wrapper around textinput.
  * Modes: -1 = init, 0 = line mode, 1 = one char at a time mode, 2 = cleanup, 3 = clear input line
  */
-const char*
-Getlinem(EGetLineMode mode, const char* prompt) {
+const char *Getlinem(EGetLineMode mode, const char* prompt) {
 
    if (mode == kClear) {
       TextInputHolder::getHolder().TakeInput(true);
-      return 0;
+      return nullptr;
    }
 
    if (mode == kCleanUp) {
       TextInputHolder::get().ReleaseInputOutput();
-      return 0;
+      return nullptr;
    }
 
    if (mode == kOneChar) {
       // Check first display: if !TTY, read full line.
       const textinput::Display* disp
          = TextInputHolder::get().GetContext()->GetDisplays()[0];
-      const textinput::TerminalDisplay* tdisp = 0;
+      const textinput::TerminalDisplay* tdisp = nullptr;
       if (disp) tdisp = dynamic_cast<const textinput::TerminalDisplay*>(disp);
       if (tdisp && !tdisp->IsTTY()) {
          mode = kLine1;
@@ -239,7 +238,7 @@ Getlinem(EGetLineMode mode, const char* prompt) {
       // Trigger attach:
       TextInputHolder::get().Redraw();
       if (mode == kInit) {
-         return 0;
+         return nullptr;
       }
       TextInputHolder::get().SetBlockingUntilEOL();
    } else {
@@ -264,7 +263,7 @@ Getlinem(EGetLineMode mode, const char* prompt) {
       return "";
    }
 
-   return NULL;
+   return nullptr;
 }
 
 const char*

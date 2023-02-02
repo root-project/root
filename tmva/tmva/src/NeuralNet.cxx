@@ -454,7 +454,6 @@ namespace TMVA
             }
 
             m_significances.push_back (bestSignificance);
-            static size_t testCycle = 0;
 
             clear ("OutputSig");
             clear ("OutputBkg");
@@ -467,8 +466,6 @@ namespace TMVA
             }
 
        
-            ++testCycle;
-
             if (fMonitoring)
             {
                 plot ("ROC", "", 2, kRed);

@@ -41,7 +41,7 @@ Unit quaternions are a subset of the quaternions set.
 
  A rotation of angle \f$ f \f$ around a given axis, is represented by a unit quaternion Q :
  - The axis of the rotation is given by the vector part of Q.
- - The ratio between the magnitude of the vector part and the real part of Q equals tan(\frac{f}{2}).
+ - The ratio between the magnitude of the vector part and the real part of Q equals \f$ tan(\frac{f}{2}) \f$.
 
  In other words : \f$ Q = Q|_r + Q|_V = cos(\frac{f}{2}) + sin(\frac{f}{2}) \f$.
  (where u is a unit vector // to the rotation axis,

@@ -68,7 +68,7 @@ enum class ERegularization
     kL2   = '2'
     };
 
-/* Enum represnting the initialization method used for this layer. */
+/* Enum representing the initialization method used for this layer. */
 enum class EInitialization {
     kGauss    = 'G',
     kUniform  = 'U',

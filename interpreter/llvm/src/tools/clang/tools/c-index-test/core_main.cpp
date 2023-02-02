@@ -6,29 +6,32 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "clang/AST/Mangle.h"
 #include "clang/Basic/LangOptions.h"
 #include "clang/CodeGen/ObjectFilePCHContainerOperations.h"
 #include "clang/Frontend/ASTUnit.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/CompilerInvocation.h"
 #include "clang/Frontend/FrontendAction.h"
-#include "clang/Index/IndexingAction.h"
 #include "clang/Index/IndexDataConsumer.h"
+#include "clang/Index/IndexingAction.h"
 #include "clang/Index/USRGeneration.h"
-#include "clang/Index/CodegenNameGenerator.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Serialization/ASTReader.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/FileSystem.h"
-#include "llvm/Support/Signals.h"
-#include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/PrettyStackTrace.h"
+#include "llvm/Support/Program.h"
+#include "llvm/Support/Signals.h"
+#include "llvm/Support/StringSaver.h"
+#include "llvm/Support/raw_ostream.h"
 
 using namespace clang;
 using namespace clang::index;
 using namespace llvm;
 
 extern "C" int indextest_core_main(int argc, const char **argv);
+extern "C" int indextest_perform_shell_execution(const char *command_line);
 
 namespace {
 
@@ -60,6 +63,9 @@ DumpModuleImports("dump-imported-module-files",
 static cl::opt<bool>
 IncludeLocals("include-locals", cl::desc("Print local symbols"));
 
+static cl::opt<bool> IgnoreMacros("ignore-macros",
+                                  cl::desc("Skip indexing macros"));
+
 static cl::opt<std::string>
 ModuleFilePath("module-file",
                cl::desc("Path to module file to print symbols from"));
@@ -79,7 +85,7 @@ namespace {
 
 class PrintIndexDataConsumer : public IndexDataConsumer {
   raw_ostream &OS;
-  std::unique_ptr<CodegenNameGenerator> CGNameGen;
+  std::unique_ptr<ASTNameGenerator> ASTNameGen;
   std::shared_ptr<Preprocessor> PP;
 
 public:
@@ -87,16 +93,16 @@ public:
   }
 
   void initialize(ASTContext &Ctx) override {
-    CGNameGen.reset(new CodegenNameGenerator(Ctx));
+    ASTNameGen.reset(new ASTNameGenerator(Ctx));
   }
 
   void setPreprocessor(std::shared_ptr<Preprocessor> PP) override {
     this->PP = std::move(PP);
   }
 
-  bool handleDeclOccurence(const Decl *D, SymbolRoleSet Roles,
-                           ArrayRef<SymbolRelation> Relations,
-                           SourceLocation Loc, ASTNodeInfo ASTNode) override {
+  bool handleDeclOccurrence(const Decl *D, SymbolRoleSet Roles,
+                            ArrayRef<SymbolRelation> Relations,
+                            SourceLocation Loc, ASTNodeInfo ASTNode) override {
     ASTContext &Ctx = D->getASTContext();
     SourceManager &SM = Ctx.getSourceManager();
 
@@ -112,7 +118,7 @@ public:
     printSymbolNameAndUSR(D, Ctx, OS);
     OS << " | ";
 
-    if (CGNameGen->writeName(D, OS))
+    if (ASTNameGen->writeName(D, OS))
       OS << "<no-cgname>";
     OS << " | ";
 
@@ -132,9 +138,9 @@ public:
     return true;
   }
 
-  bool handleModuleOccurence(const ImportDecl *ImportD,
-                             const clang::Module *Mod,
-                             SymbolRoleSet Roles, SourceLocation Loc) override {
+  bool handleModuleOccurrence(const ImportDecl *ImportD,
+                              const clang::Module *Mod, SymbolRoleSet Roles,
+                              SourceLocation Loc) override {
     ASTContext &Ctx = ImportD->getASTContext();
     SourceManager &SM = Ctx.getSourceManager();
 
@@ -156,8 +162,8 @@ public:
     return true;
   }
 
-  bool handleMacroOccurence(const IdentifierInfo *Name, const MacroInfo *MI,
-                            SymbolRoleSet Roles, SourceLocation Loc) override {
+  bool handleMacroOccurrence(const IdentifierInfo *Name, const MacroInfo *MI,
+                             SymbolRoleSet Roles, SourceLocation Loc) override {
     assert(PP);
     SourceManager &SM = PP->getSourceManager();
 
@@ -207,7 +213,8 @@ static void dumpModuleFileInputs(serialization::ModuleFile &Mod,
 
 static bool printSourceSymbols(const char *Executable,
                                ArrayRef<const char *> Args,
-                               bool dumpModuleImports, bool indexLocals) {
+                               bool dumpModuleImports, bool indexLocals,
+                               bool ignoreMacros) {
   SmallVector<const char *, 4> ArgsWithProgName;
   ArgsWithProgName.push_back(Executable);
   ArgsWithProgName.append(Args.begin(), Args.end());
@@ -221,9 +228,10 @@ static bool printSourceSymbols(const char *Executable,
   auto DataConsumer = std::make_shared<PrintIndexDataConsumer>(OS);
   IndexingOptions IndexOpts;
   IndexOpts.IndexFunctionLocals = indexLocals;
-  std::unique_ptr<FrontendAction> IndexAction;
-  IndexAction = createIndexingAction(DataConsumer, IndexOpts,
-                                     /*WrappedAction=*/nullptr);
+  IndexOpts.IndexMacros = !ignoreMacros;
+  IndexOpts.IndexMacrosInPreprocessor = !ignoreMacros;
+  std::unique_ptr<FrontendAction> IndexAction =
+      createIndexingAction(DataConsumer, IndexOpts);
 
   auto PCHContainerOps = std::make_shared<PCHContainerOperations>();
   std::unique_ptr<ASTUnit> Unit(ASTUnit::LoadFromCompilerInvocationAction(
@@ -251,7 +259,7 @@ static bool printSourceSymbolsFromModule(StringRef modulePath,
   FileSystemOptions FileSystemOpts;
   auto pchContOps = std::make_shared<PCHContainerOperations>();
   // Register the support for object-file-wrapped Clang modules.
-  pchContOps->registerReader(llvm::make_unique<ObjectFilePCHContainerReader>());
+  pchContOps->registerReader(std::make_unique<ObjectFilePCHContainerReader>());
   auto pchRdr = pchContOps->getReaderOrNull(format);
   if (!pchRdr) {
     errs() << "unknown module format: " << format << '\n';
@@ -261,11 +269,10 @@ static bool printSourceSymbolsFromModule(StringRef modulePath,
   IntrusiveRefCntPtr<DiagnosticsEngine> Diags =
       CompilerInstance::createDiagnostics(new DiagnosticOptions());
   std::unique_ptr<ASTUnit> AU = ASTUnit::LoadFromASTFile(
-      modulePath, *pchRdr, ASTUnit::LoadASTOnly, Diags,
+      std::string(modulePath), *pchRdr, ASTUnit::LoadASTOnly, Diags,
       FileSystemOpts, /*UseDebugInfo=*/false,
-      /*OnlyLocalDecls=*/true, None,
-      CaptureDiagsKind::None,
-      /*AllowPCHWithCompilerErrors=*/true,
+      /*OnlyLocalDecls=*/true, CaptureDiagsKind::None,
+      /*AllowASTWithCompilerErrors=*/true,
       /*UserFilesAreVolatile=*/false);
   if (!AU) {
     errs() << "failed to create TU for: " << modulePath << '\n';
@@ -356,8 +363,26 @@ int indextest_core_main(int argc, const char **argv) {
     }
     return printSourceSymbols(Executable.c_str(), CompArgs,
                               options::DumpModuleImports,
-                              options::IncludeLocals);
+                              options::IncludeLocals, options::IgnoreMacros);
   }
 
   return 0;
+}
+
+//===----------------------------------------------------------------------===//
+// Utility functions
+//===----------------------------------------------------------------------===//
+
+int indextest_perform_shell_execution(const char *command_line) {
+  BumpPtrAllocator Alloc;
+  llvm::StringSaver Saver(Alloc);
+  SmallVector<const char *, 4> Args;
+  llvm::cl::TokenizeGNUCommandLine(command_line, Saver, Args);
+  auto Program = llvm::sys::findProgramByName(Args[0]);
+  if (std::error_code ec = Program.getError()) {
+    llvm::errs() << "command not found: " << Args[0] << "\n";
+    return ec.value();
+  }
+  SmallVector<StringRef, 8> execArgs(Args.begin(), Args.end());
+  return llvm::sys::ExecuteAndWait(*Program, execArgs);
 }

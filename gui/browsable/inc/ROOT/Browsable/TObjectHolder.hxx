@@ -24,8 +24,9 @@ namespace Browsable {
 */
 
 class TObjectHolder : public RHolder {
-   TObject* fObj{nullptr};   ///<! plain holder without IO
-   bool fOwner;              ///<! is TObject owner
+   TObject *fObj{nullptr};   ///<! plain holder without IO
+   void *fAdjusted{nullptr}; ///<! pointer on real class returned by fObj->IsA()
+   bool fOwner{false};       ///<! is TObject owner
 protected:
    void *AccessObject() final { return fOwner ? nullptr : fObj; }
    void *TakeObject() final;
@@ -34,9 +35,15 @@ protected:
 public:
    TObjectHolder(TObject *obj, bool owner = false)
    {
-      fObj = obj;
+      fAdjusted = fObj = obj;
       fOwner = owner;
-      if (fOwner) ClearROOTOwnership(fObj);
+      if (fOwner && fObj)
+         ClearROOTOwnership(fObj);
+      if (fAdjusted) {
+         auto offset = fObj->IsA()->GetBaseClassOffset(TObject::Class());
+         if (offset > 0)
+            fAdjusted = (char *) fAdjusted - offset;
+      }
    }
 
    virtual ~TObjectHolder()
@@ -45,7 +52,7 @@ public:
    }
 
    const TClass *GetClass() const final { return fObj ? fObj->IsA() : nullptr; }
-   const void *GetObject() const final { return fObj; }
+   const void *GetObject() const final { return fAdjusted; }
 };
 
 

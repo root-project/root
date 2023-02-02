@@ -19,8 +19,8 @@ namespace Minuit2 {
 MnUserCovariance MnCovarianceSqueeze::operator()(const MnUserCovariance &cov, unsigned int n) const
 {
    // squeeze MnUserCovariance class
-   // MnUserCovariance contasins the error matrix. Need to invert first to get the hessian, then
-   // after having squuezed the hessian, need to invert again to get the new error matrix
+   // MnUserCovariance contains the error matrix. Need to invert first to get the hessian, then
+   // after having squeezed the hessian, need to invert again to get the new error matrix
    assert(cov.Nrow() > 0);
    assert(n < cov.Nrow());
 
@@ -67,15 +67,19 @@ MinimumError MnCovarianceSqueeze::operator()(const MinimumError &err, unsigned i
 
    MnPrint print("MnCovarianceSqueeze");
 
-   // squueze the minimum error class
+   // squeeze the minimum error class
    // Remove index-row on the Hessian matrix and the get the new correct error matrix
    // (inverse of new Hessian)
-   MnAlgebraicSymMatrix hess = err.Hessian();
+   int ifail1 = 0;
+   MnAlgebraicSymMatrix hess = MinimumError::InvertMatrix(err.InvHessian(), ifail1);
    MnAlgebraicSymMatrix squeezed = (*this)(hess, n);
-   int ifail = Invert(squeezed);
-   if (ifail != 0) {
+   int ifail2 = Invert(squeezed);
+   if (ifail1 != 0 && ifail2 == 0){
       print.Warn("MinimumError inversion fails; return diagonal matrix.");
-
+      return MinimumError(squeezed, MinimumError::MnInvertFailed);
+   }
+   if (ifail2 != 0) {
+      print.Warn("MinimumError back-inversion fails; return diagonal matrix.");
       MnAlgebraicSymMatrix tmp(squeezed.Nrow());
       for (unsigned int i = 0; i < squeezed.Nrow(); i++) {
          tmp(i, i) = 1. / squeezed(i, i);
@@ -88,7 +92,7 @@ MinimumError MnCovarianceSqueeze::operator()(const MinimumError &err, unsigned i
 
 MnAlgebraicSymMatrix MnCovarianceSqueeze::operator()(const MnAlgebraicSymMatrix &hess, unsigned int n) const
 {
-   // squueze a symmetrix matrix (remove entire row and column n)
+   // squeeze a symmetric matrix (remove entire row and column n)
    assert(hess.Nrow() > 0);
    assert(n < hess.Nrow());
 

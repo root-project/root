@@ -1309,9 +1309,9 @@ int XrdProofdProofServMgr::DoDirectivePutEnv(char *val, XrdOucStream *cfg, bool)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process 'putrc' directives.
 /// Syntax:
-///    xpd.putrc  [u:<usr1>,<usr2>,...] [g:<grp1>,<grp2>,...]
+///    xpd.putrc  [u:`<usr1>`,`<usr2>`,...] [g:`<grp1>`,`<grp2>`,...]
 ///               [s:[svnmin][-][svnmax]] [v:[vermin][-][vermax]] RcVarName RcVarValue
-/// NB: <usr1>,... and <grp1>,... may contain the wild card '*'
+/// NB: `<usr1>`,... and `<grp1>`,... may contain the wild card '*'
 
 int XrdProofdProofServMgr::DoDirectivePutRc(char *val, XrdOucStream *cfg, bool)
 {
@@ -3902,7 +3902,7 @@ int XrdProofdProofServMgr::CreateProofServRootRc(XrdProofdProtocol *p,
 ////////////////////////////////////////////////////////////////////////////////
 /// Cleanup (kill) all 'proofserv' processes which lost control from their
 /// creator or controller daemon. We rely here on the information in the admin
-/// path(s) (<xrd_admin>/.xproof.<port>).
+/// path(s) (`<xrd_admin>`/.xproof.`<port>`).
 /// This is called regurarly by the cron job to avoid having proofservs around.
 /// Return number of process killed or -1 in case of any error.
 
@@ -4717,7 +4717,7 @@ int XrdProofdProofServMgr::CurrentSessions(bool recalculate)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Resolve some keywords in 's'
-///    <logfileroot>, <user>, <rootsys>
+///    `<logfileroot>`, `<user>`, `<rootsys>`
 
 void XrdProofdProofServMgr::ResolveKeywords(XrdOucString &s, ProofServEnv_t *in)
 {

@@ -26,7 +26,7 @@
 
 using namespace RooFit;
 
-TH1 *makeTH1(const char *name, Double_t mean, Double_t sigma);
+TH1 *makeTH1(const char *name, double mean, double sigma);
 TTree *makeTTree();
 
 void rf401_importttreethx()
@@ -108,7 +108,7 @@ void rf401_importttreethx()
    dsABC->Print();
 }
 
-TH1 *makeTH1(const char *name, Double_t mean, Double_t sigma)
+TH1 *makeTH1(const char *name, double mean, double sigma)
 {
    // Create ROOT TH1 filled with a Gaussian distribution
 
@@ -124,9 +124,9 @@ TTree *makeTTree()
    // Create ROOT TTree filled with a Gaussian distribution in x and a uniform distribution in y
 
    TTree *tree = new TTree("tree", "tree");
-   Double_t *px = new Double_t;
-   Double_t *py = new Double_t;
-   Double_t *pz = new Double_t;
+   double *px = new double;
+   double *py = new double;
+   double *pz = new double;
    Int_t *pi = new Int_t;
    tree->Branch("x", px, "x/D");
    tree->Branch("y", py, "y/D");

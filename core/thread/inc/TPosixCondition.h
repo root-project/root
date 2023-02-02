@@ -44,12 +44,12 @@ public:
    TPosixCondition(TMutexImp *m);
    virtual ~TPosixCondition();
 
-   Int_t  Wait();
-   Int_t  TimedWait(ULong_t secs, ULong_t nanoSecs = 0);
-   Int_t  Signal();
-   Int_t  Broadcast();
+   Int_t  Wait() override;
+   Int_t  TimedWait(ULong_t secs, ULong_t nanoSecs = 0) override;
+   Int_t  Signal() override;
+   Int_t  Broadcast() override;
 
-   ClassDef(TPosixCondition,0)   // Posix condition variable
+   ClassDefOverride(TPosixCondition,0)   // Posix condition variable
 };
 
 #endif

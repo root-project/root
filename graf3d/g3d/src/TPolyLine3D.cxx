@@ -99,9 +99,6 @@ option `L`.
 
 TPolyLine3D::TPolyLine3D()
 {
-   fN = 0;
-   fP = 0;
-   fLastPoint = -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,12 +109,8 @@ TPolyLine3D::TPolyLine3D(Int_t n, Option_t *option)
 {
    fOption = option;
    SetBit(kCanDelete);
-   fLastPoint = -1;
-   if (n <= 0) {
-      fN = 0;
-      fP = 0;
+   if (n <= 0)
       return;
-   }
 
    fN = n;
    fP = new Float_t[3*fN];
@@ -132,12 +125,8 @@ TPolyLine3D::TPolyLine3D(Int_t n, Float_t const* p, Option_t *option)
 {
    fOption = option;
    SetBit(kCanDelete);
-   fLastPoint = -1;
-   if (n <= 0) {
-      fN = 0;
-      fP = 0;
+   if (n <= 0)
       return;
-   }
 
    fN = n;
    fP = new Float_t[3*fN];
@@ -155,12 +144,8 @@ TPolyLine3D::TPolyLine3D(Int_t n, Double_t const* p, Option_t *option)
 {
    fOption = option;
    SetBit(kCanDelete);
-   fLastPoint = -1;
-   if (n <= 0) {
-      fN = 0;
-      fP = 0;
+   if (n <= 0)
       return;
-   }
 
    fN = n;
    fP = new Float_t[3*fN];
@@ -178,12 +163,8 @@ TPolyLine3D::TPolyLine3D(Int_t n, Float_t const* x, Float_t const* y, Float_t co
 {
    fOption = option;
    SetBit(kCanDelete);
-   fLastPoint = -1;
-   if (n <= 0) {
-      fN = 0;
-      fP = 0;
+   if (n <= 0)
       return;
-   }
 
    fN = n;
    fP = new Float_t[3*fN];
@@ -206,12 +187,8 @@ TPolyLine3D::TPolyLine3D(Int_t n, Double_t const* x, Double_t const* y, Double_t
 {
    fOption = option;
    SetBit(kCanDelete);
-   fLastPoint = -1;
-   if (n <= 0) {
-      fN = 0;
-      fP = 0;
+   if (n <= 0)
       return;
-   }
 
    fN = n;
    fP = new Float_t[3*fN];
@@ -230,15 +207,8 @@ TPolyLine3D::TPolyLine3D(Int_t n, Double_t const* x, Double_t const* y, Double_t
 
 TPolyLine3D& TPolyLine3D::operator=(const TPolyLine3D& pl)
 {
-   if(this!=&pl) {
-      TObject::operator=(pl);
-      TAttLine::operator=(pl);
-      TAtt3D::operator=(pl);
-      fN=pl.fN;
-      fP=pl.fP;
-      fOption=pl.fOption;
-      fLastPoint=pl.fLastPoint;
-   }
+   if(this != &pl)
+      pl.TPolyLine3D::Copy(*this);
    return *this;
 }
 
@@ -255,10 +225,7 @@ TPolyLine3D::~TPolyLine3D()
 
 TPolyLine3D::TPolyLine3D(const TPolyLine3D &polyline) : TObject(polyline), TAttLine(polyline), TAtt3D(polyline)
 {
-   fP         = 0;
-   fLastPoint = 0;
-   fN         = 0;
-   ((TPolyLine3D&)polyline).TPolyLine3D::Copy(*this);
+   polyline.TPolyLine3D::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -266,19 +233,21 @@ TPolyLine3D::TPolyLine3D(const TPolyLine3D &polyline) : TObject(polyline), TAttL
 
 void TPolyLine3D::Copy(TObject &obj) const
 {
+   auto &tgt = static_cast<TPolyLine3D &>(obj);
    TObject::Copy(obj);
-   TAttLine::Copy(((TPolyLine3D&)obj));
-   ((TPolyLine3D&)obj).fN = fN;
-   if (((TPolyLine3D&)obj).fP)
-      delete [] ((TPolyLine3D&)obj).fP;
+   TAttLine::Copy(tgt);
+   tgt.fN = fN;
+   if (tgt.fP)
+      delete [] tgt.fP;
    if (fN > 0) {
-      ((TPolyLine3D&)obj).fP = new Float_t[3*fN];
-      for (Int_t i=0; i<3*fN;i++)  {((TPolyLine3D&)obj).fP[i] = fP[i];}
+      tgt.fP = new Float_t[3*fN];
+      for (Int_t i=0; i<3*fN;i++)
+         tgt.fP[i] = fP[i];
    } else {
-      ((TPolyLine3D&)obj).fP = 0;
+      tgt.fP = nullptr;
    }
-   ((TPolyLine3D&)obj).fOption = fOption;
-   ((TPolyLine3D&)obj).fLastPoint = fLastPoint;
+   tgt.fOption = fOption;
+   tgt.fLastPoint = fLastPoint;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -655,7 +624,7 @@ void TPolyLine3D::SetPolyLine(Int_t n, Option_t *option)
       fN = 0;
       fLastPoint = -1;
       delete [] fP;
-      fP = 0;
+      fP = nullptr;
       return;
    }
    fN = n;
@@ -676,7 +645,7 @@ void TPolyLine3D::SetPolyLine(Int_t n, Float_t *p, Option_t *option)
       fN = 0;
       fLastPoint = -1;
       delete [] fP;
-      fP = 0;
+      fP = nullptr;
       return;
    }
    fN = n;
@@ -705,7 +674,7 @@ void TPolyLine3D::SetPolyLine(Int_t n, Double_t *p, Option_t *option)
       fN = 0;
       fLastPoint = -1;
       delete [] fP;
-      fP = 0;
+      fP = nullptr;
       return;
    }
    fN = n;

@@ -64,7 +64,7 @@ RooFunctorBinding::RooFunctorBinding(const char *name, const char *title, const 
            << ") does not match dimensionality of function (" << ftor.NDim() << ")" << endl ;
     throw string("RooFunctor::ctor ERROR") ;
   }
-  x = new Double_t[func->NDim()] ;
+  x = new double[func->NDim()] ;
   vars.add(v) ;
 }
 
@@ -75,7 +75,7 @@ RooFunctorBinding::RooFunctorBinding(const RooFunctorBinding& other, const char*
   vars("vars",this,other.vars)
 {
   // Copy constructor
-  x = new Double_t[func->NDim()] ;
+  x = new double[func->NDim()] ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,7 +93,7 @@ void RooFunctorBinding::printArgs(ostream& os) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Double_t RooFunctorBinding::evaluate() const {
+double RooFunctorBinding::evaluate() const {
     // Return value of embedded function using value of referenced variable x
     for (int i=0 ; i<vars.getSize() ; i++) {
       x[i] = ((RooAbsReal*)vars.at(i))->getVal() ;
@@ -119,7 +119,7 @@ RooFunctorPdfBinding::RooFunctorPdfBinding(const char *name, const char *title, 
            << ") does not match dimensionality of function (" << ftor.NDim() << ")" << endl ;
     throw string("RooFunctor::ctor ERROR") ;
   }
-  x = new Double_t[func->NDim()] ;
+  x = new double[func->NDim()] ;
   vars.add(v) ;
 }
 
@@ -130,7 +130,7 @@ RooFunctorPdfBinding::RooFunctorPdfBinding(const RooFunctorPdfBinding& other, co
   vars("vars",this,other.vars)
 {
   // Copy constructor
-  x = new Double_t[func->NDim()] ;
+  x = new double[func->NDim()] ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -148,7 +148,7 @@ void RooFunctorPdfBinding::printArgs(ostream& os) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-Double_t RooFunctorPdfBinding::evaluate() const {
+double RooFunctorPdfBinding::evaluate() const {
     // Return value of embedded function using value of referenced variable x
     for (int i=0 ; i<vars.getSize() ; i++) {
       x[i] = ((RooAbsReal*)vars.at(i))->getVal() ;

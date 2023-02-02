@@ -39,7 +39,7 @@ protected:
 public:
    // constructors
    TGeoMedium();
-   TGeoMedium(const char *name, Int_t numed, const TGeoMaterial *mat, Double_t *params=0);
+   TGeoMedium(const char *name, Int_t numed, const TGeoMaterial *mat, Double_t *params=nullptr);
    TGeoMedium(const char *name, Int_t numed, Int_t imat, Int_t isvol, Int_t ifield,
               Double_t fieldm, Double_t tmaxfd, Double_t stemax, Double_t deemax, Double_t epsil, Double_t stmin);
    virtual ~TGeoMedium();
@@ -48,7 +48,7 @@ public:
    Int_t                    GetId()   const     {return fId;}
    Double_t                 GetParam(Int_t i) const {return fParams[i];}
    void                     SetParam(Int_t i, Double_t val)   {fParams[i] = val;}
-   char                    *GetPointerName() const;
+   const char              *GetPointerName() const;
    TGeoMaterial            *GetMaterial() const {return fMaterial;}
    virtual void             SavePrimitive(std::ostream &out, Option_t *option = "");
    void                     SetId(Int_t id)     {fId = id;}

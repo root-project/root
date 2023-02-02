@@ -36,12 +36,6 @@ public:
          auto h1 = DrawField(dynamic_cast<RFieldHolder*> (obj.get()));
          if (!h1) return false;
 
-         if (subpad->NumPrimitives() > 0) {
-            subpad->Wipe();
-            subpad->GetCanvas()->Modified();
-            subpad->GetCanvas()->Update(true);
-         }
-
          std::shared_ptr<TH1> shared;
          shared.reset(h1);
 

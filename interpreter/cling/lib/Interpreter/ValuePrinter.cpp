@@ -114,8 +114,12 @@ static std::string printQualType(clang::ASTContext& Ctx, clang::QualType QT) {
   const QualType QTNonRef = QT.getNonReferenceType();
 
   PrintingPolicy Policy(Ctx.getPrintingPolicy());
+  // Print the Allocator in STL containers, for instance.
+  Policy.SuppressDefaultTemplateArgs = false;
   // DefinitionShadower: do not prepend `__cling_N5xxx::` to qualified names
   Policy.SuppressUnwrittenScope = true;
+  // Print 'a<b<c> >' rather than 'a<b<c>>'.
+  Policy.SplitTemplateClosers = true;
   class LocalPrintingPolicyRAII {
   public:
     LocalPrintingPolicyRAII(ASTContext& Ctx, PrintingPolicy& PPol)
@@ -173,7 +177,7 @@ static std::string printAddress(const void* Ptr, const char Prfx = 0) {
   Strm << Ptr;
   if (!utils::isAddressValid(Ptr))
     Strm << kInvalidAddr;
-  return Strm.str();
+  return Strm.str().str();
 }
 
 } // anonymous namespace
@@ -217,7 +221,7 @@ namespace cling {
     else
       Strm << Val;
     Strm << "'";
-    return Strm.str();
+    return Strm.str().str();
   }
 
   CLING_LIB_EXPORT
@@ -240,56 +244,56 @@ namespace cling {
   std::string printValue(const short *val) {
     cling::smallstream strm;
     strm << *val;
-    return strm.str();
+    return strm.str().str();
   }
 
   CLING_LIB_EXPORT
   std::string printValue(const unsigned short *val) {
     cling::smallstream strm;
     strm << *val;
-    return strm.str();
+    return strm.str().str();
   }
 
   CLING_LIB_EXPORT
   std::string printValue(const int *val) {
     cling::smallstream strm;
     strm << *val;
-    return strm.str();
+    return strm.str().str();
   }
 
   CLING_LIB_EXPORT
   std::string printValue(const unsigned int *val) {
     cling::smallstream strm;
     strm << *val;
-    return strm.str();
+    return strm.str().str();
   }
 
   CLING_LIB_EXPORT
   std::string printValue(const long *val) {
     cling::smallstream strm;
     strm << *val;
-    return strm.str();
+    return strm.str().str();
   }
 
   CLING_LIB_EXPORT
   std::string printValue(const unsigned long *val) {
     cling::smallstream strm;
     strm << *val;
-    return strm.str();
+    return strm.str().str();
   }
 
   CLING_LIB_EXPORT
   std::string printValue(const long long *val) {
     cling::smallstream strm;
     strm << *val;
-    return strm.str();
+    return strm.str().str();
   }
 
   CLING_LIB_EXPORT
   std::string printValue(const unsigned long long *val) {
     cling::smallstream strm;
     strm << *val;
-    return strm.str();
+    return strm.str().str();
   }
 
   // Reals
@@ -297,14 +301,14 @@ namespace cling {
   std::string printValue(const float *val) {
     cling::smallstream strm;
     strm << llvm::format("%#.6g", *val) << 'f';
-    return strm.str();
+    return strm.str().str();
   }
 
   CLING_LIB_EXPORT
   std::string printValue(const double *val) {
     cling::smallstream strm;
     strm << llvm::format("%#.8g", *val);
-    return strm.str();
+    return strm.str().str();
   }
 
   CLING_LIB_EXPORT
@@ -312,7 +316,7 @@ namespace cling {
     cling::smallstream strm;
     strm << llvm::format("%#.8Lg", *val) << 'L';
     //strm << llvm::format("%Le", *val) << 'L';
-    return strm.str();
+    return strm.str().str();
   }
 
   // Char pointers
@@ -340,7 +344,7 @@ namespace cling {
     if (!IsValid) {
       cling::smallstream Strm;
       Strm << static_cast<const void*>(Start) << kInvalidAddr;
-      return Strm.str();
+      return Strm.str().str();
     }
 
     if (*Start == 0)
@@ -354,7 +358,7 @@ namespace cling {
       Strm << *Start++;
     Strm << "\"";
 
-    return Strm.str();
+    return Strm.str().str();
   }
 
   CLING_LIB_EXPORT
@@ -554,7 +558,7 @@ namespace cling {
     llvm::raw_svector_ostream Strm(Buf);
     Strm << Prefix << "'\\" << Esc
          << llvm::format_hex_no_prefix(unsigned(*Src), sizeof(T)*2) << "'";
-    return Strm.str();
+    return Strm.str().str();
   }
 
   CLING_LIB_EXPORT
@@ -621,6 +625,15 @@ static const char* BuildAndEmitVPWrapperBody(cling::Interpreter &Interp,
                                           R.begin(),
                                           R.end());
 
+  // For `auto foo = bar;` decls, we are interested in the deduced type, i.e.
+  // AutoType 0x55e5ac848030 'int *' sugar
+  // `-PointerType 0x55e5ac847f70 'int *' << this type
+  //   `-BuiltinType 0x55e5ab517420 'int'
+  if (auto AT = llvm::dyn_cast<clang::AutoType>(QT.getTypePtr())) {
+    if (AT->isDeduced())
+      QT = AT->getDeducedType();
+  }
+
   if (auto PT = llvm::dyn_cast<clang::PointerType>(QT.getTypePtr())) {
     // Normalize `X*` to `const void*`, invoke `printValue(const void**)`,
     // unless it's a character string.
@@ -629,9 +642,7 @@ static const char* BuildAndEmitVPWrapperBody(cling::Interpreter &Interp,
         && !Ctx.hasSameType(QTPointeeUnqual, Ctx.WCharTy)
         && !Ctx.hasSameType(QTPointeeUnqual, Ctx.Char16Ty)
         && !Ctx.hasSameType(QTPointeeUnqual, Ctx.Char32Ty)) {
-      QT = Ctx.VoidTy;
-      QT.addConst();
-      QT = Ctx.getPointerType(QT);
+      QT = Ctx.getPointerType(Ctx.VoidTy.withConst());
     }
   } else if (auto RTy
              = llvm::dyn_cast<clang::ReferenceType>(QT.getTypePtr())) {
@@ -765,8 +776,8 @@ static std::string printEnumValue(const Value &V) {
     }
   }
   enumString << " : " << printQualType(C, ED->getIntegerType()) << " "
-    << ValAsAPSInt.toString(/*Radix = */10);
-  return enumString.str();
+             << toString(ValAsAPSInt, /*Radix = */10);
+  return enumString.str().str();
 }
 
 static std::string printFunctionValue(const Value &V, const void *ptr,
@@ -777,7 +788,7 @@ static std::string printFunctionValue(const Value &V, const void *ptr,
   Interpreter &Interp = *const_cast<Interpreter *>(V.getInterpreter());
   const Transaction *T = Interp.getLastWrapperTransaction();
   if (!T)
-    return o.str();
+    return o.str().str();
 
   if (clang::FunctionDecl *WrapperFD = T->getWrapperFD()) {
     clang::ASTContext &C = V.getASTContext();
@@ -846,7 +857,7 @@ static std::string printFunctionValue(const Value &V, const void *ptr,
       o << '\n';
     }
   }
-  return o.str();
+  return o.str().str();
 }
 
 static std::string printStringType(const Value &V, const clang::Type* Type) {
@@ -965,7 +976,7 @@ namespace cling {
     } else
       strm << "<<<invalid>>> " << printAddress(value, '@');
 
-    return strm.str();
+    return strm.str().str();
   }
 
   namespace valuePrinterInternal {

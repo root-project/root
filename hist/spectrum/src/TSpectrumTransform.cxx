@@ -55,15 +55,13 @@ TSpectrumTransform::TSpectrumTransform()
 
 TSpectrumTransform::TSpectrumTransform(Int_t size):TNamed("SpectrumTransform", "Miroslav Morhac transformer")
 {
-   Int_t j,n;
+   Int_t n;
    if (size <= 0){
       Error ("TSpectrumTransform","Invalid length, must be > than 0");
       return;
    }
-   j = 0;
    n = 1;
    for (; n < size;) {
-      j += 1;
       n = n * 2;
    }
    if (n != size){

@@ -29,6 +29,12 @@ ROOT_OBJECT_LIBRARY(Dictgen
 
 add_dependencies(Dictgen CLING)
 
+if(NOT builtin_cling)
+  # FIXME: Resolve this once the ClangTargets.cmake allows us to specify the
+  # targets we need.
+  add_dependencies(Dictgen clang-tablegen-targets)
+endif()
+
 target_include_directories(Dictgen PRIVATE
   ${CMAKE_SOURCE_DIR}/core/dictgen/src
   ${CMAKE_SOURCE_DIR}/core/dictgen/res

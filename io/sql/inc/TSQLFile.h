@@ -72,7 +72,7 @@ protected:
    Bool_t IsReadAccess();
 
    // generic sql functions
-   TSQLResult *SQLQuery(const char *cmd, Int_t flag = 0, Bool_t *res = 0);
+   TSQLResult *SQLQuery(const char *cmd, Int_t flag = 0, Bool_t *res = nullptr);
    Bool_t SQLCanStatement();
    TSQLStatement *SQLStatement(const char *cmd, Int_t bufsize = 1000);
    void SQLDeleteStatement(TSQLStatement *stmt);
@@ -91,7 +91,7 @@ protected:
    Bool_t UpdateKeyData(TKeySQL *key);
    TKeySQL *FindSQLKey(TDirectory *dir, Long64_t keyid);
    Long64_t DefineNextKeyId();
-   Int_t StreamKeysForDirectory(TDirectory *dir, Bool_t doupdate, Long64_t specialkeyid = -1, TKeySQL **specialkey = 0);
+   Int_t StreamKeysForDirectory(TDirectory *dir, Bool_t doupdate, Long64_t specialkeyid = -1, TKeySQL **specialkey = nullptr);
 
    // handling SQL class info structures
    TSQLClassInfo *FindSQLClassInfo(const char *clname, Int_t version);
@@ -124,7 +124,7 @@ protected:
    TSQLStatement *GetBlobClassDataStmt(Long64_t objid, TSQLClassInfo *sqlinfo);
    Long64_t StoreObjectInTables(Long64_t keyid, const void *obj, const TClass *cl);
    Bool_t WriteSpecialObject(Long64_t keyid, TObject *obj, const char *name, const char *title);
-   TObject *ReadSpecialObject(Long64_t keyid, TObject *obj = 0);
+   TObject *ReadSpecialObject(Long64_t keyid, TObject *obj = nullptr);
 
    // sql specific types
    const char *SQLCompatibleType(Int_t typ) const;

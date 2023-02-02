@@ -40,7 +40,7 @@ public:
    RDisplayHistStat() = default;
    RDisplayHistStat(const RDrawable &dr, unsigned mask, const std::vector<std::string> &entries, const std::vector<std::string> &lines) :
          RIndirectDisplayItem(dr), fShowMask(mask), fEntries(entries), fLines(lines) {}
-   virtual ~RDisplayHistStat() = default;
+   ~RDisplayHistStat() override = default;
 
    unsigned GetShowMask() const { return fShowMask; }
    const std::vector<std::string> &GetEntries() const { return fEntries; }
@@ -79,7 +79,7 @@ public:
       std::vector<std::string> &GetLines() { return lines; }
       void SetMask(unsigned _mask) { mask = _mask; }
       // virtual destructor - required to pin vtable
-      virtual ~RReply() = default;
+      ~RReply() override = default;
    };
 
    class RRequest : public RDrawableRequest {

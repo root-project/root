@@ -29,11 +29,11 @@ using namespace llvm;
 
 InlineAsm::InlineAsm(FunctionType *FTy, const std::string &asmString,
                      const std::string &constraints, bool hasSideEffects,
-                     bool isAlignStack, AsmDialect asmDialect)
+                     bool isAlignStack, AsmDialect asmDialect, bool canThrow)
     : Value(PointerType::getUnqual(FTy), Value::InlineAsmVal),
       AsmString(asmString), Constraints(constraints), FTy(FTy),
       HasSideEffects(hasSideEffects), IsAlignStack(isAlignStack),
-      Dialect(asmDialect) {
+      Dialect(asmDialect), CanThrow(canThrow) {
   // Do various checks on the constraint string and type.
   assert(Verify(getFunctionType(), constraints) &&
          "Function type not legal for constraints!");
@@ -41,9 +41,10 @@ InlineAsm::InlineAsm(FunctionType *FTy, const std::string &asmString,
 
 InlineAsm *InlineAsm::get(FunctionType *FTy, StringRef AsmString,
                           StringRef Constraints, bool hasSideEffects,
-                          bool isAlignStack, AsmDialect asmDialect) {
+                          bool isAlignStack, AsmDialect asmDialect,
+                          bool canThrow) {
   InlineAsmKeyType Key(AsmString, Constraints, FTy, hasSideEffects,
-                       isAlignStack, asmDialect);
+                       isAlignStack, asmDialect, canThrow);
   LLVMContextImpl *pImpl = FTy->getContext().pImpl;
   return pImpl->InlineAsms.getOrCreate(PointerType::getUnqual(FTy), Key);
 }
@@ -136,14 +137,14 @@ bool InlineAsm::ConstraintInfo::Parse(StringRef Str,
       // Find the end of the register name.
       StringRef::iterator ConstraintEnd = std::find(I+1, E, '}');
       if (ConstraintEnd == E) return true;  // "{foo"
-      pCodes->push_back(StringRef(I, ConstraintEnd+1 - I));
+      pCodes->push_back(std::string(StringRef(I, ConstraintEnd + 1 - I)));
       I = ConstraintEnd+1;
     } else if (isdigit(static_cast<unsigned char>(*I))) { // Matching Constraint
       // Maximal munch numbers.
       StringRef::iterator NumStart = I;
       while (I != E && isdigit(static_cast<unsigned char>(*I)))
         ++I;
-      pCodes->push_back(StringRef(NumStart, I - NumStart));
+      pCodes->push_back(std::string(StringRef(NumStart, I - NumStart)));
       unsigned N = atoi(pCodes->back().c_str());
       // Check that this is a valid matching constraint!
       if (N >= ConstraintsSoFar.size() || ConstraintsSoFar[N].Type != isOutput||
@@ -179,11 +180,21 @@ bool InlineAsm::ConstraintInfo::Parse(StringRef Str,
     } else if (*I == '^') {
       // Multi-letter constraint
       // FIXME: For now assuming these are 2-character constraints.
-      pCodes->push_back(StringRef(I+1, 2));
+      pCodes->push_back(std::string(StringRef(I + 1, 2)));
       I += 3;
+    } else if (*I == '@') {
+      // Multi-letter constraint
+      ++I;
+      unsigned char C = static_cast<unsigned char>(*I);
+      assert(isdigit(C) && "Expected a digit!");
+      int N = C - '0';
+      assert(N > 0 && "Found a zero letter constraint!");
+      ++I;
+      pCodes->push_back(std::string(StringRef(I, N)));
+      I += N;
     } else {
       // Single letter constraint.
-      pCodes->push_back(StringRef(I, 1));
+      pCodes->push_back(std::string(StringRef(I, 1)));
       ++I;
     }
   }

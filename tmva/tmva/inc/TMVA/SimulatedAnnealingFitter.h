@@ -71,18 +71,18 @@ namespace TMVA {
 
       void DeclareOptions();
 
-      Int_t              fMaxCalls;                // max number of FCN calls
-      Double_t           fInitialTemperature;      // initial temperature (depends on FCN)
-      Double_t           fMinTemperature;          // minimum temperature before SA quit
-      Double_t           fEps;                     // relative required FCN accuracy at minimum
-      TString            fKernelTemperatureS;      // string just to set fKernelTemperature
-      Double_t           fTemperatureScale;        // how fast temperature change
-      Double_t           fAdaptiveSpeed;           // how fast temperature change in adaptive (in adaptive two variables describe
-                                                   // the change of temperature, but fAdaptiveSpeed should be 1.0 and its not
-                                                   // recommended to change it)
-      Double_t           fTemperatureAdaptiveStep; // used to calculate InitialTemperature if fUseDefaultTemperature
-      Bool_t             fUseDefaultScale;         // if TRUE, SA calculates its own TemperatureScale
-      Bool_t             fUseDefaultTemperature;   // if TRUE, SA calculates its own InitialTemperature (MinTemperautre)
+      Int_t              fMaxCalls;                ///< max number of FCN calls
+      Double_t           fInitialTemperature;      ///< initial temperature (depends on FCN)
+      Double_t           fMinTemperature;          ///< minimum temperature before SA quit
+      Double_t           fEps;                     ///< relative required FCN accuracy at minimum
+      TString            fKernelTemperatureS;      ///< string just to set fKernelTemperature
+      Double_t           fTemperatureScale;        ///< how fast temperature change
+      Double_t           fAdaptiveSpeed;           ///< how fast temperature change in adaptive (in adaptive two variables describe
+                                                   /// the change of temperature, but fAdaptiveSpeed should be 1.0 and its not
+                                                   /// recommended to change it)
+      Double_t           fTemperatureAdaptiveStep; ///< used to calculate InitialTemperature if fUseDefaultTemperature
+      Bool_t             fUseDefaultScale;         ///< if TRUE, SA calculates its own TemperatureScale
+      Bool_t             fUseDefaultTemperature;   ///< if TRUE, SA calculates its own InitialTemperature (MinTemperautre)
 
       ClassDef(SimulatedAnnealingFitter,0); // Fitter using a Simulated Annealing Algorithm
    };

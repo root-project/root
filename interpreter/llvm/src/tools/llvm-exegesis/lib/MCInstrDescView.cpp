@@ -17,10 +17,7 @@
 namespace llvm {
 namespace exegesis {
 
-unsigned Variable::getIndex() const {
-  assert(Index >= 0 && "Index must be set");
-  return Index;
-}
+unsigned Variable::getIndex() const { return *Index; }
 
 unsigned Variable::getPrimaryOperandIndex() const {
   assert(!TiedOperands.empty());
@@ -36,10 +33,7 @@ bool Variable::hasTiedOperands() const {
   return TiedOperands.size() > 1;
 }
 
-unsigned Operand::getIndex() const {
-  assert(Index >= 0 && "Index must be set");
-  return Index;
-}
+unsigned Operand::getIndex() const { return *Index; }
 
 bool Operand::isExplicit() const { return Info; }
 
@@ -53,31 +47,23 @@ bool Operand::isUse() const { return !IsDef; }
 
 bool Operand::isReg() const { return Tracker; }
 
-bool Operand::isTied() const { return TiedToIndex >= 0; }
+bool Operand::isTied() const { return TiedToIndex.hasValue(); }
 
-bool Operand::isVariable() const { return VariableIndex >= 0; }
+bool Operand::isVariable() const { return VariableIndex.hasValue(); }
 
 bool Operand::isMemory() const {
   return isExplicit() &&
-         getExplicitOperandInfo().OperandType == llvm::MCOI::OPERAND_MEMORY;
+         getExplicitOperandInfo().OperandType == MCOI::OPERAND_MEMORY;
 }
 
 bool Operand::isImmediate() const {
   return isExplicit() &&
-         getExplicitOperandInfo().OperandType == llvm::MCOI::OPERAND_IMMEDIATE;
+         getExplicitOperandInfo().OperandType == MCOI::OPERAND_IMMEDIATE;
 }
 
-unsigned Operand::getTiedToIndex() const {
-  assert(isTied() && "Operand must be tied to get the tied index");
-  assert(TiedToIndex >= 0 && "TiedToIndex must be set");
-  return TiedToIndex;
-}
+unsigned Operand::getTiedToIndex() const { return *TiedToIndex; }
 
-unsigned Operand::getVariableIndex() const {
-  assert(isVariable() && "Operand must be variable to get the Variable index");
-  assert(VariableIndex >= 0 && "VariableIndex must be set");
-  return VariableIndex;
-}
+unsigned Operand::getVariableIndex() const { return *VariableIndex; }
 
 unsigned Operand::getImplicitReg() const {
   assert(ImplicitReg);
@@ -89,16 +75,41 @@ const RegisterAliasingTracker &Operand::getRegisterAliasing() const {
   return *Tracker;
 }
 
-const llvm::MCOperandInfo &Operand::getExplicitOperandInfo() const {
+const MCOperandInfo &Operand::getExplicitOperandInfo() const {
   assert(Info);
   return *Info;
 }
 
-Instruction::Instruction(const llvm::MCInstrInfo &InstrInfo,
-                         const RegisterAliasingTrackerCache &RATC,
-                         unsigned Opcode)
-    : Description(&InstrInfo.get(Opcode)), Name(InstrInfo.getName(Opcode)) {
+const BitVector *BitVectorCache::getUnique(BitVector &&BV) const {
+  for (const auto &Entry : Cache)
+    if (*Entry == BV)
+      return Entry.get();
+  Cache.push_back(std::make_unique<BitVector>());
+  auto &Entry = Cache.back();
+  Entry->swap(BV);
+  return Entry.get();
+}
+
+Instruction::Instruction(const MCInstrDesc *Description, StringRef Name,
+                         SmallVector<Operand, 8> Operands,
+                         SmallVector<Variable, 4> Variables,
+                         const BitVector *ImplDefRegs,
+                         const BitVector *ImplUseRegs,
+                         const BitVector *AllDefRegs,
+                         const BitVector *AllUseRegs)
+    : Description(*Description), Name(Name), Operands(std::move(Operands)),
+      Variables(std::move(Variables)), ImplDefRegs(*ImplDefRegs),
+      ImplUseRegs(*ImplUseRegs), AllDefRegs(*AllDefRegs),
+      AllUseRegs(*AllUseRegs) {}
+
+std::unique_ptr<Instruction>
+Instruction::create(const MCInstrInfo &InstrInfo,
+                    const RegisterAliasingTrackerCache &RATC,
+                    const BitVectorCache &BVC, unsigned Opcode) {
+  const llvm::MCInstrDesc *const Description = &InstrInfo.get(Opcode);
   unsigned OpIndex = 0;
+  SmallVector<Operand, 8> Operands;
+  SmallVector<Variable, 4> Variables;
   for (; OpIndex < Description->getNumOperands(); ++OpIndex) {
     const auto &OpInfo = Description->opInfo_begin()[OpIndex];
     Operand Operand;
@@ -107,12 +118,17 @@ Instruction::Instruction(const llvm::MCInstrInfo &InstrInfo,
     // TODO(gchatelet): Handle isLookupPtrRegClass.
     if (OpInfo.RegClass >= 0)
       Operand.Tracker = &RATC.getRegisterClass(OpInfo.RegClass);
-    Operand.TiedToIndex =
-        Description->getOperandConstraint(OpIndex, llvm::MCOI::TIED_TO);
+    int TiedToIndex = Description->getOperandConstraint(OpIndex, MCOI::TIED_TO);
+    assert((TiedToIndex == -1 ||
+            (0 <= TiedToIndex &&
+             TiedToIndex < std::numeric_limits<uint8_t>::max())) &&
+           "Unknown Operand Constraint");
+    if (TiedToIndex >= 0)
+      Operand.TiedToIndex = TiedToIndex;
     Operand.Info = &OpInfo;
     Operands.push_back(Operand);
   }
-  for (const llvm::MCPhysReg *MCPhysReg = Description->getImplicitDefs();
+  for (const MCPhysReg *MCPhysReg = Description->getImplicitDefs();
        MCPhysReg && *MCPhysReg; ++MCPhysReg, ++OpIndex) {
     Operand Operand;
     Operand.Index = OpIndex;
@@ -121,7 +137,7 @@ Instruction::Instruction(const llvm::MCInstrInfo &InstrInfo,
     Operand.ImplicitReg = MCPhysReg;
     Operands.push_back(Operand);
   }
-  for (const llvm::MCPhysReg *MCPhysReg = Description->getImplicitUses();
+  for (const MCPhysReg *MCPhysReg = Description->getImplicitUses();
        MCPhysReg && *MCPhysReg; ++MCPhysReg, ++OpIndex) {
     Operand Operand;
     Operand.Index = OpIndex;
@@ -130,28 +146,29 @@ Instruction::Instruction(const llvm::MCInstrInfo &InstrInfo,
     Operand.ImplicitReg = MCPhysReg;
     Operands.push_back(Operand);
   }
-  // Assigning Variables to non tied explicit operands.
   Variables.reserve(Operands.size()); // Variables.size() <= Operands.size()
+  // Assigning Variables to non tied explicit operands.
   for (auto &Op : Operands)
     if (Op.isExplicit() && !Op.isTied()) {
       const size_t VariableIndex = Variables.size();
+      assert(VariableIndex < std::numeric_limits<uint8_t>::max());
       Op.VariableIndex = VariableIndex;
       Variables.emplace_back();
       Variables.back().Index = VariableIndex;
     }
   // Assigning Variables to tied operands.
   for (auto &Op : Operands)
-    if (Op.isTied())
+    if (Op.isExplicit() && Op.isTied())
       Op.VariableIndex = Operands[Op.getTiedToIndex()].getVariableIndex();
   // Assigning Operands to Variables.
   for (auto &Op : Operands)
     if (Op.isVariable())
       Variables[Op.getVariableIndex()].TiedOperands.push_back(Op.getIndex());
   // Processing Aliasing.
-  ImplDefRegs = RATC.emptyRegisters();
-  ImplUseRegs = RATC.emptyRegisters();
-  AllDefRegs = RATC.emptyRegisters();
-  AllUseRegs = RATC.emptyRegisters();
+  BitVector ImplDefRegs = RATC.emptyRegisters();
+  BitVector ImplUseRegs = RATC.emptyRegisters();
+  BitVector AllDefRegs = RATC.emptyRegisters();
+  BitVector AllUseRegs = RATC.emptyRegisters();
   for (const auto &Op : Operands) {
     if (Op.isReg()) {
       const auto &AliasingBits = Op.getRegisterAliasing().aliasedBits();
@@ -165,6 +182,13 @@ Instruction::Instruction(const llvm::MCInstrInfo &InstrInfo,
         ImplUseRegs |= AliasingBits;
     }
   }
+  // Can't use make_unique because constructor is private.
+  return std::unique_ptr<Instruction>(new Instruction(
+      Description, InstrInfo.getName(Opcode), std::move(Operands),
+      std::move(Variables), BVC.getUnique(std::move(ImplDefRegs)),
+      BVC.getUnique(std::move(ImplUseRegs)),
+      BVC.getUnique(std::move(AllDefRegs)),
+      BVC.getUnique(std::move(AllUseRegs))));
 }
 
 const Operand &Instruction::getPrimaryOperand(const Variable &Var) const {
@@ -183,33 +207,49 @@ bool Instruction::hasAliasingImplicitRegisters() const {
   return ImplDefRegs.anyCommon(ImplUseRegs);
 }
 
-bool Instruction::hasAliasingImplicitRegistersThrough(
-    const Instruction &OtherInstr) const {
-  return ImplDefRegs.anyCommon(OtherInstr.ImplUseRegs) &&
-         OtherInstr.ImplDefRegs.anyCommon(ImplUseRegs);
+// Returns true if there are registers that are both in `A` and `B` but not in
+// `Forbidden`.
+static bool anyCommonExcludingForbidden(const BitVector &A, const BitVector &B,
+                                        const BitVector &Forbidden) {
+  assert(A.size() == B.size() && B.size() == Forbidden.size());
+  const auto Size = A.size();
+  for (int AIndex = A.find_first(); AIndex != -1;) {
+    const int BIndex = B.find_first_in(AIndex, Size);
+    if (BIndex == -1)
+      return false;
+    if (AIndex == BIndex && !Forbidden.test(AIndex))
+      return true;
+    AIndex = A.find_first_in(BIndex + 1, Size);
+  }
+  return false;
 }
 
 bool Instruction::hasAliasingRegistersThrough(
-    const Instruction &OtherInstr) const {
-  return AllDefRegs.anyCommon(OtherInstr.AllUseRegs) &&
-         OtherInstr.AllDefRegs.anyCommon(AllUseRegs);
+    const Instruction &OtherInstr, const BitVector &ForbiddenRegisters) const {
+  return anyCommonExcludingForbidden(AllDefRegs, OtherInstr.AllUseRegs,
+                                     ForbiddenRegisters) &&
+         anyCommonExcludingForbidden(OtherInstr.AllDefRegs, AllUseRegs,
+                                     ForbiddenRegisters);
 }
 
 bool Instruction::hasTiedRegisters() const {
-  return llvm::any_of(
-      Variables, [](const Variable &Var) { return Var.hasTiedOperands(); });
+  return any_of(Variables,
+                [](const Variable &Var) { return Var.hasTiedOperands(); });
 }
 
-bool Instruction::hasAliasingRegisters() const {
-  return AllDefRegs.anyCommon(AllUseRegs);
+bool Instruction::hasAliasingRegisters(
+    const BitVector &ForbiddenRegisters) const {
+  return anyCommonExcludingForbidden(AllDefRegs, AllUseRegs,
+                                     ForbiddenRegisters);
 }
 
 bool Instruction::hasOneUseOrOneDef() const {
   return AllDefRegs.count() || AllUseRegs.count();
 }
 
-void Instruction::dump(const llvm::MCRegisterInfo &RegInfo,
-                       llvm::raw_ostream &Stream) const {
+void Instruction::dump(const MCRegisterInfo &RegInfo,
+                       const RegisterAliasingTrackerCache &RATC,
+                       raw_ostream &Stream) const {
   Stream << "- " << Name << "\n";
   for (const auto &Op : Operands) {
     Stream << "- Op" << Op.getIndex();
@@ -257,18 +297,18 @@ void Instruction::dump(const llvm::MCRegisterInfo &RegInfo,
     Stream << "- hasAliasingImplicitRegisters (execution is always serial)\n";
   if (hasTiedRegisters())
     Stream << "- hasTiedRegisters (execution is always serial)\n";
-  if (hasAliasingRegisters())
+  if (hasAliasingRegisters(RATC.emptyRegisters()))
     Stream << "- hasAliasingRegisters\n";
 }
 
-InstructionsCache::InstructionsCache(const llvm::MCInstrInfo &InstrInfo,
+InstructionsCache::InstructionsCache(const MCInstrInfo &InstrInfo,
                                      const RegisterAliasingTrackerCache &RATC)
-    : InstrInfo(InstrInfo), RATC(RATC) {}
+    : InstrInfo(InstrInfo), RATC(RATC), BVC() {}
 
 const Instruction &InstructionsCache::getInstr(unsigned Opcode) const {
   auto &Found = Instructions[Opcode];
   if (!Found)
-    Found.reset(new Instruction(InstrInfo, RATC, Opcode));
+    Found = Instruction::create(InstrInfo, RATC, BVC, Opcode);
   return *Found;
 }
 
@@ -282,9 +322,10 @@ operator==(const AliasingRegisterOperands &Other) const {
   return std::tie(Defs, Uses) == std::tie(Other.Defs, Other.Uses);
 }
 
-static void addOperandIfAlias(
-    const llvm::MCPhysReg Reg, bool SelectDef, llvm::ArrayRef<Operand> Operands,
-    llvm::SmallVectorImpl<RegisterOperandAssignment> &OperandValues) {
+static void
+addOperandIfAlias(const MCPhysReg Reg, bool SelectDef,
+                  ArrayRef<Operand> Operands,
+                  SmallVectorImpl<RegisterOperandAssignment> &OperandValues) {
   for (const auto &Op : Operands) {
     if (Op.isReg() && Op.isDef() == SelectDef) {
       const int SourceReg = Op.getRegisterAliasing().getOrigin(Reg);
@@ -298,13 +339,13 @@ bool AliasingRegisterOperands::hasImplicitAliasing() const {
   const auto HasImplicit = [](const RegisterOperandAssignment &ROV) {
     return ROV.Op->isImplicit();
   };
-  return llvm::any_of(Defs, HasImplicit) && llvm::any_of(Uses, HasImplicit);
+  return any_of(Defs, HasImplicit) && any_of(Uses, HasImplicit);
 }
 
 bool AliasingConfigurations::empty() const { return Configurations.empty(); }
 
 bool AliasingConfigurations::hasImplicitAliasing() const {
-  return llvm::any_of(Configurations, [](const AliasingRegisterOperands &ARO) {
+  return any_of(Configurations, [](const AliasingRegisterOperands &ARO) {
     return ARO.hasImplicitAliasing();
   });
 }
@@ -314,36 +355,38 @@ AliasingConfigurations::AliasingConfigurations(
   if (UseInstruction.AllUseRegs.anyCommon(DefInstruction.AllDefRegs)) {
     auto CommonRegisters = UseInstruction.AllUseRegs;
     CommonRegisters &= DefInstruction.AllDefRegs;
-    for (const llvm::MCPhysReg Reg : CommonRegisters.set_bits()) {
+    for (const MCPhysReg Reg : CommonRegisters.set_bits()) {
       AliasingRegisterOperands ARO;
       addOperandIfAlias(Reg, true, DefInstruction.Operands, ARO.Defs);
       addOperandIfAlias(Reg, false, UseInstruction.Operands, ARO.Uses);
       if (!ARO.Defs.empty() && !ARO.Uses.empty() &&
-          !llvm::is_contained(Configurations, ARO))
+          !is_contained(Configurations, ARO))
         Configurations.push_back(std::move(ARO));
     }
   }
 }
 
-void DumpMCOperand(const llvm::MCRegisterInfo &MCRegisterInfo,
-                   const llvm::MCOperand &Op, llvm::raw_ostream &OS) {
+void DumpMCOperand(const MCRegisterInfo &MCRegisterInfo, const MCOperand &Op,
+                   raw_ostream &OS) {
   if (!Op.isValid())
     OS << "Invalid";
   else if (Op.isReg())
     OS << MCRegisterInfo.getName(Op.getReg());
   else if (Op.isImm())
     OS << Op.getImm();
-  else if (Op.isFPImm())
-    OS << Op.getFPImm();
+  else if (Op.isDFPImm())
+    OS << bit_cast<double>(Op.getDFPImm());
+  else if (Op.isSFPImm())
+    OS << bit_cast<float>(Op.getSFPImm());
   else if (Op.isExpr())
     OS << "Expr";
   else if (Op.isInst())
     OS << "SubInst";
 }
 
-void DumpMCInst(const llvm::MCRegisterInfo &MCRegisterInfo,
-                const llvm::MCInstrInfo &MCInstrInfo,
-                const llvm::MCInst &MCInst, llvm::raw_ostream &OS) {
+void DumpMCInst(const MCRegisterInfo &MCRegisterInfo,
+                const MCInstrInfo &MCInstrInfo, const MCInst &MCInst,
+                raw_ostream &OS) {
   OS << MCInstrInfo.getName(MCInst.getOpcode());
   for (unsigned I = 0, E = MCInst.getNumOperands(); I < E; ++I) {
     if (I > 0)

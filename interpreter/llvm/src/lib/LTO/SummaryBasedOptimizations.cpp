@@ -15,14 +15,17 @@
 #include "llvm/LTO/SummaryBasedOptimizations.h"
 #include "llvm/Analysis/SyntheticCountsUtils.h"
 #include "llvm/IR/ModuleSummaryIndex.h"
+#include "llvm/Support/CommandLine.h"
 
 using namespace llvm;
 
-cl::opt<bool> ThinLTOSynthesizeEntryCounts(
+static cl::opt<bool> ThinLTOSynthesizeEntryCounts(
     "thinlto-synthesize-entry-counts", cl::init(false), cl::Hidden,
     cl::desc("Synthesize entry counts based on the summary"));
 
+namespace llvm {
 extern cl::opt<int> InitialSyntheticCount;
+}
 
 static void initializeCounts(ModuleSummaryIndex &Index) {
   auto Root = Index.calculateCallGraphRoot();

@@ -32,11 +32,12 @@ void df003_profiles()
    fill_tree(treeName, fileName);
 
    // We read the tree from the file and create a RDataFrame.
-   ROOT::RDataFrame d(treeName, fileName, {"px", "py", "pz"});
+   ROOT::RDataFrame d(treeName, fileName);
 
    // Create the profiles
-   auto hprof1d = d.Profile1D({"hprof1d", "Profile of py versus px", 64, -4, 4});
-   auto hprof2d = d.Profile2D({"hprof2d", "Profile of pz versus px and py", 40, -4, 4, 40, -4, 4, 0, 20});
+   auto hprof1d = d.Profile1D({"hprof1d", "Profile of py versus px", 64, -4, 4}, "px", "py");
+   auto hprof2d =
+      d.Profile2D({"hprof2d", "Profile of pz versus px and py", 40, -4, 4, 40, -4, 4, 0, 20}, "px", "py", "pz");
 
    // And Draw
    auto c1 = new TCanvas("c1", "Profile histogram example", 200, 10, 700, 500);

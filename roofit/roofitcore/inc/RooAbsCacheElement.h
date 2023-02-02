@@ -26,11 +26,11 @@ class RooArgList ;
 class RooAbsCacheElement {
 
 public:
-  RooAbsCacheElement() : _owner(0) {
+  RooAbsCacheElement() : _owner(nullptr) {
     // Default constructor
   } ;
-  virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
-				     Bool_t /*nameChange*/, Bool_t /*isRecursive*/)  ;
+  virtual bool redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/,
+                 bool /*nameChange*/, bool /*isRecursive*/)  ;
   virtual void printCompactTreeHook(std::ostream&, const char *, Int_t curElem, Int_t totElem) ;
   virtual ~RooAbsCacheElement() {
     // Destructor
@@ -43,18 +43,18 @@ public:
   virtual void optimizeCacheMode(const RooArgSet& obs, RooArgSet& optNodes, RooLinkedList& processedNodes)  ;
   virtual void findConstantNodes(const RooArgSet& obs, RooArgSet& cacheList, RooLinkedList& processedNodes) ;
 
-  void setOwner(RooAbsArg* owner) { 
+  void setOwner(RooAbsArg* owner) {
     // Store pointer to owner
-    _owner = owner ; 
+    _owner = owner ;
   }
-  
+
 protected:
 
-  RooAbsArg* _owner ; //! Pointer to owning RooAbsArg
+  RooAbsArg* _owner ; ///<! Pointer to owning RooAbsArg
 
   ClassDef(RooAbsCacheElement,1) // Base class for cache elements
 
 } ;
 
 
-#endif 
+#endif

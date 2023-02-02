@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  03/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,14 +11,19 @@
 #ifndef ROOT_RLOOPMANAGER
 #define ROOT_RLOOPMANAGER
 
+#include "ROOT/InternalTreeUtils.hxx" // RNoCleanupNotifier
+#include "ROOT/RDF/RColumnReaderBase.hxx"
+#include "ROOT/RDF/RDatasetSpec.hxx"
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "ROOT/RDF/RNewSampleNotifier.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
 
 #include <functional>
+#include <limits>
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 // forward declarations
@@ -36,8 +41,9 @@ namespace Internal {
 namespace RDF {
 std::vector<std::string> GetBranchNames(TTree &t, bool allowDuplicates = true);
 
-class RActionBase;
 class GraphNode;
+class RActionBase;
+class RVariationBase;
 
 namespace GraphDrawing {
 class GraphCreatorHelper;
@@ -83,9 +89,11 @@ public:
    }
 };
 
-} // ns RDF
-} // ns Internal
+} // namespace RDF
+} // namespace Internal
+} // namespace ROOT
 
+namespace ROOT {
 namespace Detail {
 namespace RDF {
 namespace RDFInternal = ROOT::Internal::RDF;
@@ -109,10 +117,20 @@ class RLoopManager : public RNodeBase {
    std::vector<RFilterBase *> fBookedNamedFilters; ///< Contains a subset of fBookedFilters, i.e. only the named filters
    std::vector<RRangeBase *> fBookedRanges;
    std::vector<RDefineBase *> fBookedDefines;
+   std::vector<RDFInternal::RVariationBase *> fBookedVariations;
 
    /// Shared pointer to the input TTree. It does not delete the pointee if the TTree/TChain was passed directly as an
    /// argument to RDataFrame's ctor (in which case we let users retain ownership).
    std::shared_ptr<TTree> fTree{nullptr};
+   Long64_t fBeginEntry{0};
+   Long64_t fEndEntry{std::numeric_limits<Long64_t>::max()};
+
+   /// Keys are `fname + "/" + treename` as RSampleInfo::fID; Values are pointers to the corresponding group
+   std::unordered_map<std::string, ROOT::RDF::Experimental::RDatasetGroup *> fDatasetGroupMap;
+   /// Groups need to survive throughout the whole event loop, hence stored as an attribute
+   std::vector<ROOT::RDF::Experimental::RDatasetGroup> fDatasetGroups;
+
+   std::vector<std::unique_ptr<TTree>> fFriends; ///< Friends of the fTree. Only used if we constructed fTree ourselves.
    const ColumnNames_t fDefaultColumns;
    const ULong64_t fNEmptyEntries{0};
    const unsigned int fNSlots{1};
@@ -122,19 +140,21 @@ class RLoopManager : public RNodeBase {
    std::vector<RDFInternal::RCallback> fCallbacks;         ///< Registered callbacks
    /// Registered callbacks to invoke just once before running the loop
    std::vector<RDFInternal::ROneTimeCallback> fCallbacksOnce;
-   /// Registered callbacks to call at the beginning of each "data block"
-   std::vector<ROOT::RDF::SampleCallback_t> fSampleCallbacks;
+   /// Registered callbacks to call at the beginning of each "data block".
+   /// The key is the pointer of the corresponding node in the computation graph (a RDefinePerSample or a RAction).
+   std::unordered_map<void *, ROOT::RDF::SampleCallback_t> fSampleCallbacks;
    RDFInternal::RNewSampleNotifier fNewSampleNotifier;
    std::vector<ROOT::RDF::RSampleInfo> fSampleInfos;
    unsigned int fNRuns{0}; ///< Number of event loops run
 
-   /// Registry of per-slot value pointers for booked data-source columns
-   std::map<std::string, std::vector<void *>> fDSValuePtrMap;
+   /// Readers for TTree/RDataSource columns (one per slot), shared by all nodes in the computation graph.
+   std::vector<std::unordered_map<std::string, std::unique_ptr<RColumnReaderBase>>> fDatasetColumnReaders;
 
    /// Cache of the tree/chain branch names. Never access directy, always use GetBranchNames().
    ColumnNames_t fValidBranchNames;
 
-   void CheckIndexedFriends();
+   ROOT::Internal::TreeUtils::RNoCleanupNotifier fNoCleanupNotifier;
+
    void RunEmptySourceMT();
    void RunEmptySource();
    void RunTreeProcessorMT();
@@ -155,43 +175,49 @@ public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
    RLoopManager(ULong64_t nEmptyEntries);
    RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches);
+   RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec);
    RLoopManager(const RLoopManager &) = delete;
    RLoopManager &operator=(const RLoopManager &) = delete;
 
    void JitDeclarations();
    void Jit();
    RLoopManager *GetLoopManagerUnchecked() final { return this; }
-   void Run();
+   void Run(bool jit = true);
    const ColumnNames_t &GetDefaultColumnNames() const;
    TTree *GetTree() const;
    ::TDirectory *GetDirectory() const;
    ULong64_t GetNEmptyEntries() const { return fNEmptyEntries; }
    RDataSource *GetDataSource() const { return fDataSource.get(); }
-   void Book(RDFInternal::RActionBase *actionPtr);
+   void Register(RDFInternal::RActionBase *actionPtr);
    void Deregister(RDFInternal::RActionBase *actionPtr);
-   void Book(RFilterBase *filterPtr);
+   void Register(RFilterBase *filterPtr);
    void Deregister(RFilterBase *filterPtr);
-   void Book(RRangeBase *rangePtr);
+   void Register(RRangeBase *rangePtr);
    void Deregister(RRangeBase *rangePtr);
-   void Book(RDefineBase *definePtr);
+   void Register(RDefineBase *definePtr);
    void Deregister(RDefineBase *definePtr);
+   void Register(RDFInternal::RVariationBase *varPtr);
+   void Deregister(RDFInternal::RVariationBase *varPtr);
    bool CheckFilters(unsigned int, Long64_t) final;
    unsigned int GetNSlots() const { return fNSlots; }
    void Report(ROOT::RDF::RCutFlowReport &rep) const final;
    /// End of recursive chain of calls, does nothing
    void PartialReport(ROOT::RDF::RCutFlowReport &) const final {}
-   void SetTree(const std::shared_ptr<TTree> &tree) { fTree = tree; }
+   void SetTree(std::shared_ptr<TTree> tree);
    void IncrChildrenCount() final { ++fNChildren; }
    void StopProcessing() final { ++fNStopsReceived; }
    void ToJitExec(const std::string &) const;
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
    unsigned int GetNRuns() const { return fNRuns; }
-   bool HasDSValuePtrs(const std::string &col) const;
-   const std::map<std::string, std::vector<void *>> &GetDSValuePtrs() const { return fDSValuePtrMap; }
-   void AddDSValuePtrs(const std::string &col, const std::vector<void *> ptrs);
+   bool HasDataSourceColumnReaders(const std::string &col, const std::type_info &ti) const;
+   void AddDataSourceColumnReaders(const std::string &col, std::vector<std::unique_ptr<RColumnReaderBase>> &&readers,
+                                   const std::type_info &ti);
+   RColumnReaderBase *AddTreeColumnReader(unsigned int slot, const std::string &col,
+                                          std::unique_ptr<RColumnReaderBase> &&reader, const std::type_info &ti);
+   RColumnReaderBase *GetDatasetColumnReader(unsigned int slot, const std::string &col, const std::type_info &ti) const;
 
    /// End of recursive chain of calls, does nothing
-   void AddFilterName(std::vector<std::string> &) {}
+   void AddFilterName(std::vector<std::string> &) final {}
    /// For each booked filter, returns either the name or "Unnamed Filter"
    std::vector<std::string> GetFiltersNames();
 
@@ -203,15 +229,15 @@ public:
    std::vector<RDFInternal::RActionBase *> GetAllActions() const;
 
    std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>
-   GetGraph(std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap);
+   GetGraph(std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap) final;
 
    const ColumnNames_t &GetBranchNames();
 
-   void AddSampleCallback(ROOT::RDF::SampleCallback_t &&callback);
+   void AddSampleCallback(void *nodePtr, ROOT::RDF::SampleCallback_t &&callback);
 };
 
 } // ns RDF
 } // ns Detail
-} // ns ROOT
+} // namespace ROOT
 
 #endif

@@ -13,7 +13,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 #include "RooProdPdf.h"
@@ -34,9 +33,9 @@ void rf603_multicpu()
    RooRealVar z("z", "z", -5, 5);
 
    // Create signal pdf gauss(x)*gauss(y)*gauss(z)
-   RooGaussian gx("gx", "gx", x, RooConst(0), RooConst(1));
-   RooGaussian gy("gy", "gy", y, RooConst(0), RooConst(1));
-   RooGaussian gz("gz", "gz", z, RooConst(0), RooConst(1));
+   RooGaussian gx("gx", "gx", x, 0.0, 1.0);
+   RooGaussian gy("gy", "gy", y, 0.0, 1.0);
+   RooGaussian gz("gz", "gz", z, 0.0, 1.0);
    RooProdPdf sig("sig", "sig", RooArgSet(gx, gy, gz));
 
    // Create background pdf poly(x)*poly(y)*poly(z)
@@ -60,7 +59,7 @@ void rf603_multicpu()
    // it back to MINUIT.
 
    // Use four processes and time results both in wall time and CPU time
-   model.fitTo(*data, NumCPU(4), Timer(kTRUE));
+   model.fitTo(*data, NumCPU(4), Timer(true));
 
    // P a r a l l e l   M C   p r o j e c t i o n s
    // ----------------------------------------------

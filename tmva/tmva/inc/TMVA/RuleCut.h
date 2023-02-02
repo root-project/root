@@ -41,7 +41,7 @@ namespace TMVA {
       RuleCut( const std::vector< const TMVA::Node * > & nodes );
 
       // copy constructor
-   RuleCut( const RuleCut & other ) : fLogger(0) { Copy( other ); }
+      RuleCut( const RuleCut & other ) : fLogger(nullptr) { Copy( other ); }
 
       // empty constructor
       RuleCut();
@@ -133,7 +133,7 @@ inline Bool_t TMVA::RuleCut::EvalEvent( const Event &eve )
       minOK = (fCutDoMin[nc] ? (val>fCutMin[nc]):kTRUE); // min cut ok
       cutOK = (minOK ? ((fCutDoMax[nc] ? (val<fCutMax[nc]):kTRUE)) : kFALSE); // cut ok
       nc++;
-      done = ((!cutOK) || (nc==fSelector.size())); // done if 
+      done = ((!cutOK) || (nc==fSelector.size())); // done if
    }
    //   return ( cutOK ? 1.0: 0.0 );
    return cutOK;

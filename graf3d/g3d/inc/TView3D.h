@@ -140,31 +140,31 @@ public:
    virtual void      MoveViewCommand(Char_t chCode, Int_t count=1);
    virtual void      MoveWindow(Char_t option);
 
-   virtual void      AdjustScales(TVirtualPad *pad=0);
-   virtual void      Centered3DImages(TVirtualPad *pad=0);
+   virtual void      AdjustScales(TVirtualPad *pad = nullptr);
+   virtual void      Centered3DImages(TVirtualPad *pad = nullptr);
    virtual void      Centered();                       // *MENU*
-   virtual void      FrontView(TVirtualPad *pad=0);
+   virtual void      FrontView(TVirtualPad *pad = nullptr);
    virtual void      Front();                          // *MENU*
 
    virtual void      ZoomIn(); // *MENU*
    virtual void      ZoomOut(); // *MENU*
-   virtual void      ZoomView(TVirtualPad *pad=0, Double_t zoomFactor = 1.25 );
-   virtual void      UnzoomView(TVirtualPad *pad=0,Double_t unZoomFactor = 1.25);
+   virtual void      ZoomView(TVirtualPad *pad = nullptr, Double_t zoomFactor = 1.25 );
+   virtual void      UnzoomView(TVirtualPad *pad = nullptr,Double_t unZoomFactor = 1.25);
 
-   virtual void      RotateView(Double_t phi, Double_t theta, TVirtualPad *pad=0);
-   virtual void      SideView(TVirtualPad *pad=0);
+   virtual void      RotateView(Double_t phi, Double_t theta, TVirtualPad *pad = nullptr);
+   virtual void      SideView(TVirtualPad *pad = nullptr);
    virtual void      Side();                          // *MENU*
-   virtual void      TopView(TVirtualPad *pad=0);
+   virtual void      TopView(TVirtualPad *pad = nullptr);
    virtual void      Top();                           // *MENU*
 
-   virtual void      ToggleRulers(TVirtualPad *pad=0);
+   virtual void      ToggleRulers(TVirtualPad *pad = nullptr);
    virtual void      ShowAxis();                      // *MENU*
-   virtual void      ToggleZoom(TVirtualPad *pad=0);
+   virtual void      ToggleZoom(TVirtualPad *pad = nullptr);
    virtual void      ZoomMove();                      // *MENU*
    virtual void      Zoom();                          // *MENU*
    virtual void      UnZoom();                        // *MENU*
 
-   static  void      AdjustPad(TVirtualPad *pad=0);
+   static  void      AdjustPad(TVirtualPad *pad = nullptr);
 
    ClassDef(TView3D,3);  //3-D View
 };

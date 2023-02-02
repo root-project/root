@@ -15,6 +15,8 @@
 #pragma link C++ class TMVA::MethodPyGTB+;
 #pragma link C++ class TMVA::MethodPyKeras+;
 #pragma link C++ class TMVA::MethodPyTorch+;
+#pragma link C++ namespace TMVA::Experimental::SOFIE::PyKeras;
 #pragma link C++ function TMVA::Experimental::SOFIE::PyKeras::Parse+;
+#pragma link C++ namespace TMVA::Experimental::SOFIE::PyTorch;
 #pragma link C++ function TMVA::Experimental::SOFIE::PyTorch::Parse+;
 #endif

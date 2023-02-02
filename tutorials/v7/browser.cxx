@@ -5,8 +5,7 @@
 ///
 /// \date 2019-05-29
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
-/// \author Bertrand Bellenot <Bertrand.Bellenot@cern.ch>
-/// \author Sergey Linev <S.Linev@gsi.de>
+/// \authors Bertrand Bellenot <Bertrand.Bellenot@cern.ch>, Sergey Linev <S.Linev@gsi.de>
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *

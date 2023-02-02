@@ -57,9 +57,7 @@ enum demangling_styles current_demangling_style = gnu_demangling;
 
 static char cplus_markers[] = { CPLUS_MARKER, '.', '$', '\0' };
 
-void
-set_cplus_marker_for_demangling (ch)
-int ch;
+void set_cplus_marker_for_demangling(int ch)
 {
    cplus_markers[0] = ch;
 }
@@ -284,9 +282,7 @@ string_prepends (string *, string *);
  Trying to consume something that isn't a count results in
  no consumption of input and a return of 0. */
 
-static int
-consume_count (type)
-const char **type;
+static int consume_count(const char **type)
 {
    int count = 0;
 
@@ -299,11 +295,7 @@ const char **type;
    return (count);
 }
 
-int
-cplus_demangle_opname (opname, result, options)
-char *opname;
-char *result;
-int options;
+int cplus_demangle_opname(char *opname, char *result, int options)
 {
    int len, i, len1, ret;
    string type;
@@ -428,10 +420,7 @@ int options;
  If OPTIONS & DMGL_ANSI == 1, return the ANSI name;
  if OPTIONS & DMGL_ANSI == 0, return the old GNU name.  */
 
-char *
-cplus_mangle_opname (opname, options)
-char *opname;
-int options;
+char *cplus_mangle_opname(char *opname, int options)
 {
    int i;
    int len;
@@ -450,10 +439,7 @@ int options;
 /* check to see whether MANGLED can match TEXT in the first TEXT_LEN
  characters. */
 
-int cplus_match (mangled, text, text_len)
-const char *mangled;
-char *text;
-int text_len;
+int cplus_match(const char *mangled, char *text, int text_len)
 {
    if (strncmp (mangled, text, text_len) != 0) {
       return(0); /* cannot match either */
@@ -490,10 +476,7 @@ int text_len;
  the compilation system, are presumed to have already been stripped from
  MANGLED.  */
 
-char *
-cplus_demangle (mangled, options)
-const char *mangled;
-int options;
+char *cplus_demangle(const char *mangled, int options)
 {
    string decl;
    int success = 0;
@@ -543,11 +526,7 @@ int options;
    return (demangled);
 }
 
-static char *
-mop_up (work, declp, success)
-struct work_stuff *work;
-string *declp;
-int success;
+static char *mop_up(struct work_stuff *work, string *declp, int success)
 {
    char *demangled = NULL;
 
@@ -605,11 +584,7 @@ int success;
  argument list.
  */
 
-static int
-demangle_signature (work, mangled, declp)
-struct work_stuff *work;
-const char **mangled;
-string *declp;
+static int demangle_signature(struct work_stuff *work, const char **mangled, string *declp)
 {
    int success = 1;
    int func_done = 0;
@@ -816,12 +791,7 @@ string *declp;
 
 #endif
 
-static int
-demangle_template (work, mangled, tname, trawname)
-struct work_stuff *work;
-const char **mangled;
-string *tname;
-string *trawname;
+static int demangle_template(struct work_stuff *work, const char **mangled, string *tname, string *trawname)
 {
    int i;
    int is_pointer;
@@ -1048,12 +1018,7 @@ string *trawname;
    return (success);
 }
 
-static int
-arm_pt (work, mangled, n, anchor, args)
-struct work_stuff *work;
-const char *mangled;
-int n;
-const char **anchor, **args;
+static int arm_pt(struct work_stuff *work, const char *mangled, int n, const char **anchor, const char **args)
 {
    /* ARM template? */
    if (ARM_DEMANGLING && (*anchor = strstr(mangled, "__pt__")))
@@ -1070,12 +1035,7 @@ const char **anchor, **args;
    return 0;
 }
 
-static void
-demangle_arm_pt (work, mangled, n, declp)
-struct work_stuff *work;
-const char **mangled;
-int n;
-string *declp;
+static void demangle_arm_pt(struct work_stuff *work, const char **mangled, int n, string *declp)
 {
    const char *p;
    const char *args;
@@ -1106,11 +1066,7 @@ string *declp;
    *mangled += n;
 }
 
-static int
-demangle_class_name (work, mangled, declp)
-struct work_stuff *work;
-const char **mangled;
-string *declp;
+static int demangle_class_name(struct work_stuff *work, const char **mangled, string *declp)
 {
    int n;
    int success = 0;
@@ -1160,11 +1116,7 @@ string *declp;
 
  */
 
-static int
-demangle_class (work, mangled, declp)
-struct work_stuff *work;
-const char **mangled;
-string *declp;
+static int demangle_class(struct work_stuff *work, const char **mangled, string *declp)
 {
    int success = 0;
    string class_name;
@@ -1224,11 +1176,7 @@ string *declp;
  Returns 1 on success, 0 otherwise.
  */
 
-static int
-demangle_prefix (work, mangled, declp)
-struct work_stuff *work;
-const char **mangled;
-string *declp;
+static int demangle_prefix(struct work_stuff *work, const char **mangled, string *declp)
 {
    int success = 1;
    const char *scan;
@@ -1408,11 +1356,7 @@ string *declp;
  __thunk_4__$_7ostream (virtual function thunk)
  */
 
-static int
-gnu_special (work, mangled, declp)
-struct work_stuff *work;
-const char **mangled;
-string *declp;
+static int gnu_special(struct work_stuff *work, const char **mangled, string *declp)
 {
    int n;
    int success = 1;
@@ -1649,13 +1593,7 @@ arm_special (struct work_stuff *work, const char **mangled, string *declp)
 
  */
 
-static int
-demangle_qualified (work, mangled, result, isfuncname, append)
-struct work_stuff *work;
-const char **mangled;
-string *result;
-int isfuncname;
-int append;
+static int demangle_qualified(struct work_stuff *work, const char **mangled, string *result, int isfuncname, int append)
 {
    int qualifiers = 0;
    int namelength = 0;
@@ -1799,10 +1737,7 @@ int append;
  Return 0 if no conversion is performed, 1 if a string is converted.
  */
 
-static int
-get_count (type, count)
-const char **type;
-int *count;
+static int get_count(const char **type, int *count)
 {
    const char *p;
    int n;
@@ -1838,11 +1773,7 @@ int *count;
 
 /* result will be initialised here; it will be freed on failure */
 
-static int
-do_type (work, mangled, result)
-struct work_stuff *work;
-const char **mangled;
-string *result;
+static int do_type(struct work_stuff *work, const char **mangled, string *result)
 {
    int n;
    int done;
@@ -2070,11 +2001,7 @@ string *result;
 
  */
 
-static int
-demangle_fund_type (work, mangled, result)
-struct work_stuff *work;
-const char **mangled;
-string *result;
+static int demangle_fund_type(struct work_stuff *work, const char **mangled, string *result)
 {
    int done = 0;
    int success = 1;
@@ -2217,11 +2144,7 @@ string *result;
 
 /* `result' will be initialized in do_type; it will be freed on failure */
 
-static int
-do_arg (work, mangled, result)
-struct work_stuff *work;
-const char **mangled;
-string *result;
+static int do_arg(struct work_stuff *work, const char **mangled, string *result)
 {
    const char *start = *mangled;
 
@@ -2236,11 +2159,7 @@ string *result;
    }
 }
 
-static void
-remember_type (work, start, len)
-struct work_stuff *work;
-const char *start;
-int len;
+static void remember_type(struct work_stuff *work, const char *start, int len)
 {
    char *tem;
 
@@ -2268,9 +2187,7 @@ int len;
 
 /* Forget the remembered types, but not the type vector itself. */
 
-static void
-forget_types (work)
-struct work_stuff *work;
+static void forget_types(struct work_stuff *work)
 {
    int i;
 
@@ -2327,11 +2244,7 @@ struct work_stuff *work;
 
  */
 
-static int
-demangle_args (work, mangled, declp)
-struct work_stuff *work;
-const char **mangled;
-string *declp;
+static int demangle_args(struct work_stuff *work, const char **mangled, string *declp)
 {
    string arg;
    int need_comma = 0;
@@ -2455,12 +2368,7 @@ string *declp;
    return (1);
 }
 
-static void
-demangle_function_name (work, mangled, declp, scan)
-struct work_stuff *work;
-const char **mangled;
-string *declp;
-const char *scan;
+static void demangle_function_name(struct work_stuff *work, const char **mangled, string *declp, const char *scan)
 {
    int i;
    int len;
@@ -2607,10 +2515,7 @@ const char *scan;
 
 /* a mini string-handling package */
 
-static void
-string_need (s, n)
-string *s;
-int n;
+static void string_need(string *s, int n)
 {
    int tem;
 
@@ -2634,9 +2539,7 @@ int n;
    }
 }
 
-static void
-string_delete (s)
-string *s;
+static void string_delete(string *s)
 {
    if (s->b != NULL)
    {
@@ -2645,16 +2548,12 @@ string *s;
    }
 }
 
-static void
-string_init (s)
-string *s;
+static void string_init(string *s)
 {
    s->b = s->p = s->e = NULL;
 }
 
-static void
-string_clear (s)
-string *s;
+static void string_clear(string *s)
 {
    s->p = s->b;
 }
@@ -2670,10 +2569,7 @@ string *s;
 
 #endif
 
-static void
-string_append (p, s)
-string *p;
-const char *s;
+static void string_append(string *p, const char *s)
 {
    int n;
    if (s == NULL || *s == '\0')
@@ -2684,9 +2580,7 @@ const char *s;
    p->p += n;
 }
 
-static void
-string_appends (p, s)
-string *p, *s;
+static void string_appends(string *p, string *s)
 {
    int n;
 
@@ -2699,11 +2593,7 @@ string *p, *s;
    }
 }
 
-static void
-string_appendn (p, s, n)
-string *p;
-const char *s;
-int n;
+static void string_appendn(string *p, const char *s, int n)
 {
    if (n != 0)
    {
@@ -2713,10 +2603,7 @@ int n;
    }
 }
 
-static void
-string_prepend (p, s)
-string *p;
-const char *s;
+static void string_prepend(string *p, const char *s)
 {
    if (s != NULL && *s != '\0')
    {
@@ -2724,9 +2611,7 @@ const char *s;
    }
 }
 
-static void
-string_prepends (p, s)
-string *p, *s;
+static void string_prepends(string *p, string *s)
 {
    if (s->b != s->p)
    {
@@ -2734,11 +2619,7 @@ string *p, *s;
    }
 }
 
-static void
-string_prependn (p, s, n)
-string *p;
-const char *s;
-int n;
+static void string_prependn(string *p, const char *s, int n)
 {
    char *q;
 
@@ -2761,9 +2642,7 @@ int n;
 
 #ifdef MAIN
 
-static void
-demangle_it (mangled_name)
-char *mangled_name;
+static void demangle_it(chat *mangled_name)
 {
    char *result;
 
@@ -2784,10 +2663,7 @@ char *mangled_name;
 static char *program_name;
 extern char *program_version;
 
-static void
-usage (stream, status)
-FILE *stream;
-int status;
+static void usage(FILE *stream, int status)
 {
    fprintf (stream, "\
             Usage: %s [-_] [-n] [-s {gnu,lucid,arm}] [--strip-underscores]\n\
@@ -2814,10 +2690,7 @@ static struct option long_options[] = {
    {0, no_argument, 0, 0}
 };
 
-int
-main (argc, argv)
-int argc;
-char **argv;
+int main(int argc, char **argv)
 {
    char *result;
    int c;

@@ -28,7 +28,6 @@ converge as quickly as other proposal functions.
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
-#include "TIterator.h"
 
 using namespace std;
 
@@ -52,7 +51,7 @@ void UniformProposal::Propose(RooArgSet& xPrime, RooArgSet& /* x */)
 /// points x1 and x2 - that is, whether the probability of reaching x2
 /// from x1 is equal to the probability of reaching x1 from x2
 
-Bool_t UniformProposal::IsSymmetric(RooArgSet& /* x1 */ , RooArgSet& /* x2 */)
+bool UniformProposal::IsSymmetric(RooArgSet& /* x1 */ , RooArgSet& /* x2 */)
 {
    return true;
 }
@@ -61,17 +60,14 @@ Bool_t UniformProposal::IsSymmetric(RooArgSet& /* x1 */ , RooArgSet& /* x2 */)
 /// Return the probability of proposing the point x1 given the starting
 /// point x2
 
-Double_t UniformProposal::GetProposalDensity(RooArgSet& /* x1 */,
+double UniformProposal::GetProposalDensity(RooArgSet& /* x1 */,
                                               RooArgSet& x2)
 {
    // For a uniform proposal, all points have equal probability and the
    // value of the proposal density function is:
    // 1 / (N-dimensional volume of interval)
-   Double_t volume = 1.0;
-   TIterator* it = x2.createIterator();
-   RooRealVar* var;
-   while ((var = (RooRealVar*)it->Next()) != NULL)
+   double volume = 1.0;
+   for (auto const *var : static_range_cast<RooRealVar *> (x2))
       volume *= (var->getMax() - var->getMin());
-   delete it;
    return 1.0 / volume;
 }

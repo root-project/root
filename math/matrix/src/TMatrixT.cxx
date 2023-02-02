@@ -12,11 +12,11 @@
 /** \class TMatrixT
     \ingroup Matrix
 
- TMatrixT
+TMatrixT
 
- Template class of a general matrix in the linear algebra package
+Template class of a general matrix in the linear algebra package
 
- See \ref MatrixPage for the documentation of the linear algebra package
+See the \ref Matrix page for the documentation of the linear algebra package
 
 */
 

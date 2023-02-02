@@ -8,10 +8,9 @@ cmake_minimum_required(VERSION 3.1)
 
 if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
   project(Minuit2 LANGUAGES CXX)
+  option(minuit2_mpi "Enable support for MPI in Minuit2")
+  option(minuit2_omp "Enable support for OpenMP in Minuit2")
 endif(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
-
-option(minuit2_mpi "Enable support for MPI in Minuit2")
-option(minuit2_omp "Enable support for OpenMP in Minuit2")
 
 # This package can be built separately
 # or as part of ROOT.
@@ -82,6 +81,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/MnLineSearch.h
       Minuit2/MnMachinePrecision.h
       Minuit2/MnMatrix.h
+      Minuit2/MnMatrixfwd.h
       Minuit2/MnMigrad.h
       Minuit2/MnMinimize.h
       Minuit2/MnMinos.h

@@ -32,39 +32,39 @@ public:
          RooAbsReal& _pdf1,
          RooAbsReal& _pdf2,
            RooAbsReal& _x,
-         RooAbsReal& _alpha, Bool_t cacheAlpha=kFALSE);
-  RooIntegralMorph(const RooIntegralMorph& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooIntegralMorph(*this,newname); }
-  inline virtual ~RooIntegralMorph() { }
+         RooAbsReal& _alpha, bool cacheAlpha=false);
+  RooIntegralMorph(const RooIntegralMorph& other, const char* name=nullptr) ;
+  TObject* clone(const char* newname) const override { return new RooIntegralMorph(*this,newname); }
+  inline ~RooIntegralMorph() override { }
 
-  Bool_t selfNormalized() const {
+  bool selfNormalized() const override {
     // P.d.f is self normalized
-    return kTRUE ;
+    return true ;
   }
-  void setCacheAlpha(Bool_t flag) {
+  void setCacheAlpha(bool flag) {
     // Activate caching of p.d.f. shape for all values of alpha as well
     _cacheMgr.sterilize() ; _cacheAlpha = flag ;
   }
-  Bool_t cacheAlpha() const {
+  bool cacheAlpha() const {
     // If true caching of p.d.f for all alpha values is active
     return _cacheAlpha ;
   }
 
-  virtual void preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const ;
+  void preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const override ;
 
   class MorphCacheElem : public RooAbsCachedPdf::PdfCacheElem {
   public:
     MorphCacheElem(RooIntegralMorph& self, const RooArgSet* nset) ;
-    ~MorphCacheElem() ;
+    ~MorphCacheElem() override ;
     void calculate(TIterator* iter) ;
-    virtual RooArgList containedArgs(Action) ;
+    RooArgList containedArgs(Action) override ;
 
   protected:
 
     void findRange() ;
-    Double_t calcX(Double_t y, Bool_t& ok) ;
-    Int_t binX(Double_t x) ;
-    void fillGap(Int_t ixlo, Int_t ixhi,Double_t splitPoint=0.5) ;
+    double calcX(double y, bool& ok) ;
+    Int_t binX(double x) ;
+    void fillGap(Int_t ixlo, Int_t ixhi,double splitPoint=0.5) ;
     void interpolateGap(Int_t ixlo, Int_t ixhi) ;
 
     RooIntegralMorph* _self ; //
@@ -80,37 +80,37 @@ public:
     RooBrentRootFinder* _rf1 ; // ROOT finder on CDF1
     RooBrentRootFinder* _rf2 ; // ROOT finder of CDF2 ;
 
-    std::vector<Double_t> _yatX ; //
-    std::vector<Double_t> _calcX; //
+    std::vector<double> _yatX ; //
+    std::vector<double> _calcX; //
     Int_t _yatXmin, _yatXmax ;
     Int_t _ccounter ;
 
-    Double_t _ycutoff ;
+    double _ycutoff ;
 
   } ;
 
 protected:
 
   friend class MorphCacheElem ;
-  virtual PdfCacheElem* createCache(const RooArgSet* nset) const ;
-  virtual const char* inputBaseName() const ;
-  virtual RooArgSet* actualObservables(const RooArgSet& nset) const ;
-  virtual RooArgSet* actualParameters(const RooArgSet& nset) const ;
-  virtual void fillCacheObject(PdfCacheElem& cache) const ;
+  PdfCacheElem* createCache(const RooArgSet* nset) const override ;
+  const char* inputBaseName() const override ;
+  RooArgSet* actualObservables(const RooArgSet& nset) const override ;
+  RooArgSet* actualParameters(const RooArgSet& nset) const override ;
+  void fillCacheObject(PdfCacheElem& cache) const override ;
 
   RooRealProxy pdf1 ; // First input shape
   RooRealProxy pdf2 ; // Second input shape
   RooRealProxy x ;    // Observable
   RooRealProxy alpha ; // Interpolation parameter
-  Bool_t _cacheAlpha ; // If true, both (x,alpha) are cached
+  bool _cacheAlpha ; // If true, both (x,alpha) are cached
   mutable MorphCacheElem* _cache ; // Current morph cache element in use
 
 
-  Double_t evaluate() const ;
+  double evaluate() const override ;
 
 private:
 
-  ClassDef(RooIntegralMorph,1) // Linear shape interpolation operator p.d.f
+  ClassDefOverride(RooIntegralMorph,1) // Linear shape interpolation operator p.d.f
 };
 
 #endif

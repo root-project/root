@@ -227,7 +227,7 @@ void THashList::Delete(Option_t *option)
          auto obj = tlk->GetObject();
          // In case somebody else access it.
          tlk->SetObject(nullptr);
-         if (obj && !obj->TestBit(kNotDeleted))
+         if (obj && ROOT::Detail::HasBeenDeleted(obj))
             Error("Delete", "A list is accessing an object (%p) already deleted (list name = %s)",
                   obj, GetName());
          else if (obj && obj->IsOnHeap())
@@ -247,9 +247,9 @@ void THashList::Delete(Option_t *option)
       // not, they are supposed to be deleted, so we can as well unregister
       // them from their directory, even if they are stack-based:
       TIter iRemDir(&removeDirectory);
-      TObject* dirRem = 0;
+      TObject* dirRem = nullptr;
       while ((dirRem = iRemDir())) {
-            (*dirRem->IsA()->GetDirectoryAutoAdd())(dirRem, 0);
+            (*dirRem->IsA()->GetDirectoryAutoAdd())(dirRem, nullptr);
       }
       Changed();
    }
@@ -350,7 +350,7 @@ void THashList::RecursiveRemove(TObject *obj)
    while (lnk.get()) {
       next = lnk->NextSP();
       TObject *ob = lnk->GetObject();
-      if (ob && ob->TestBit(kNotDeleted)) {
+      if (ob && !ROOT::Detail::HasBeenDeleted(ob)) {
          ob->RecursiveRemove(obj);
       }
       lnk = next;
@@ -378,7 +378,7 @@ void THashList::Rehash(Int_t newCapacity)
 TObject *THashList::Remove(TObject *obj)
 {
    R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
-   if (!obj || !fTable->FindObject(obj)) return 0;
+   if (!obj || !fTable->FindObject(obj)) return nullptr;
 
    R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
    TList::Remove(obj);
@@ -390,7 +390,7 @@ TObject *THashList::Remove(TObject *obj)
 
 TObject *THashList::Remove(TObjLink *lnk)
 {
-   if (!lnk) return 0;
+   if (!lnk) return nullptr;
 
    R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
    TObject *obj = lnk->GetObject();
@@ -406,8 +406,8 @@ TObject *THashList::Remove(TObjLink *lnk)
 /// Note: To test whether the usage is enabled do:
 ///    collection->TestBit(TCollection::kUseRWLock);
 
-bool THashList::UseRWLock()
+bool THashList::UseRWLock(Bool_t enable)
 {
-   fTable->UseRWLock();
-   return TCollection::UseRWLock();
+   fTable->UseRWLock(enable);
+   return TCollection::UseRWLock(enable);
 }

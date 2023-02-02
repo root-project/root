@@ -81,9 +81,9 @@ public:
    Bool_t         IsAsync() const { return !fSync; }
    Bool_t         IsInterruptingSyscalls() const { return fIntSyscalls; }
    Bool_t         IsRunning();
-   virtual Bool_t Notify();
-   void           Add() { TurnOn(); }
-   void           Remove() { TurnOff(); }
+   Bool_t         Notify() override;
+   void           Add() override { TurnOn(); }
+   void           Remove() override { TurnOff(); }
    void           Reset();
    void           SetCommand(const char *command);
    void           SetObject(TObject *object);
@@ -99,7 +99,7 @@ public:
    static void    SingleShot(Int_t milliSec, const char *receiver_class,
                              void *receiver, const char *method);
 
-   ClassDef(TTimer,0)  //Handle timer event
+   ClassDefOverride(TTimer,0)  //Handle timer event
 };
 
 #endif

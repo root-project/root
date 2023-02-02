@@ -13,6 +13,7 @@ import inspect
 import pkgutil
 import re
 import sys
+import traceback
 
 import cppyy
 gbl_namespace = cppyy.gbl
@@ -225,10 +226,17 @@ def _invoke(user_pythonizor, npars, klass, fqn):
         fqn (string): fully-qualified name of the class to be pythonized.
     '''
 
-    if npars == 1:
-        user_pythonizor(klass)
-    else:
-        user_pythonizor(klass, fqn)
+    try:
+        if npars == 1:
+            user_pythonizor(klass)
+        else:
+            user_pythonizor(klass, fqn)
+    except Exception as e:
+        print('Error pythonizing class {}:'.format(fqn))
+        traceback.print_exc()
+        # Propagate the error so that the class lookup that triggered this
+        # pythonization fails too and the application stops
+        raise RuntimeError
 
 def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
     '''
@@ -337,7 +345,7 @@ def _register_pythonizations():
     Registers the ROOT pythonizations with cppyy for lazy injection.
     '''
 
-    exclude = [ '_rdf_utils' ]
+    exclude = [ '_rdf_utils', '_rdf_pyz', '_rdf_conversion_maps' ]
     for _, module_name, _ in  pkgutil.walk_packages(__path__):
         if module_name not in exclude:
             importlib.import_module(__name__ + '.' + module_name)

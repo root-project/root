@@ -58,14 +58,14 @@ static TUnfoldBinningXML *ImportXML(const TXMLDocument *document,const char *nam
    static void WriteDTD(std::ostream &out); // write DTD to stream
 
    /// construct a new binning scheme, for use with the root streamer
-   TUnfoldBinningXML (const char *name=0,Int_t nBins=0,const char *binNames=0)
+   TUnfoldBinningXML (const char *name=nullptr,Int_t nBins=0,const char *binNames=nullptr)
       : TUnfoldBinning (name,nBins,binNames) { }
  protected:
    static TUnfoldBinningXML *ImportXMLNode(TXMLNode *node); // import the given node as binning scheme
    void AddAxisXML(TXMLNode *node); // import axis information
 protected:
 
-   ClassDef(TUnfoldBinningXML, TUnfold_CLASS_VERSION) //Complex binning schemes for TUnfoldDensity
+   ClassDefOverride(TUnfoldBinningXML, TUnfold_CLASS_VERSION) //Complex binning schemes for TUnfoldDensity
 };
 
 #endif

@@ -74,7 +74,7 @@ x_arr = np.random.normal(-1.0, 1.0, (n_events,))
 # Import the data to a RooDataSet, passing a dictionary of arrays and the
 # corresponding RooRealVars just like you would pass to the RooDataSet
 # constructor.
-data = ROOT.RooDataSet.from_numpy({"x": x_arr}, ROOT.RooArgSet(x))
+data = ROOT.RooDataSet.from_numpy({"x": x_arr}, [x])
 
 # Let's fit the Gaussian to the data. The mean is updated accordingly.
 fit_result = gauss.fitTo(data, PrintLevel=-1, Save=True)
@@ -89,3 +89,70 @@ gauss.plotOn(xframe)
 c = ROOT.TCanvas("rf409_NumPyPandasToRooFit", "rf409_NumPyPandasToRooFit", 800, 400)
 xframe.Draw()
 c.SaveAs("rf409_NumPyPandasToRooFit.png")
+
+
+# Exporting a RooDataHist to NumPy arrays for histogram counts and bin edges
+# --------------------------------------------------------------------------
+
+
+def print_histogram_output(histogram_output):
+    counts, bin_edges = histogram_output
+    print(np.array(counts, dtype=int))
+    print(bin_edges[0])
+
+
+# Create a binned clone of the dataset to show RooDataHist to NumPy export.
+datahist = data.binnedClone()
+
+# You can also export a RooDataHist to numpy arrays with
+# RooDataHist.to_numpy(). As output, you will get a multidimensional array with
+# the histogram counts and a list of arrays with bin edges. This is comparable
+# to the ouput of numpy.histogram (or numpy.histogramdd for the
+# multidimensional case).
+counts, bin_edges = datahist.to_numpy()
+
+print("Counts and bin edges from RooDataHist.to_numpy:")
+print_histogram_output((counts, bin_edges))
+
+# Let's compare the ouput to the counts and bin edges we get with
+# numpy.histogramdd when we pass it the original samples:
+print("Counts and bin edges from np.histogram:")
+print_histogram_output(np.histogramdd([x_arr], bins=[x.bins()]))
+
+# The array values should be the same!
+
+
+# Importing a RooDataHist from NumPy arrays with histogram counts and bin edges
+# -----------------------------------------------------------------------------
+
+# There is also a `RooDataHist.from_numpy` function, again with an interface
+# inspired by `numpy.histogramdd`. You need to pass at least the histogram
+# counts and the list of variables. The binning is optional: the default
+# binning of the RooRealVars is used if not explicitly specified.
+datahist_new_1 = ROOT.RooDataHist.from_numpy(counts, [x])
+
+print("RooDataHist imported with default binning and exported back to numpy:")
+print_histogram_output(datahist_new_1.to_numpy())
+
+
+# It's also possible to pass custom bin edges to `RooDataHist.from_numpy`, just
+# like you pass them to `numpy.histogramdd` when you get the counts to fill the
+# RooDataHist with:
+bins = [np.linspace(-10, 10, 21)]
+counts, _ = np.histogramdd([x_arr], bins=bins)
+datahist_new_2 = ROOT.RooDataHist.from_numpy(counts, [x], bins=bins)
+
+print("RooDataHist imported with linspace binning and exported back to numpy:")
+print_histogram_output(datahist_new_2.to_numpy())
+
+# Alternatively, you can specify only the number of bins and the range if your
+# binning is uniform. This is preferred over passing the full list of bin
+# edges, because RooFit will know that the binning is uniform and do some
+# optimizations.
+bins = [20]
+ranges = [(-10, 10)]
+counts, _ = np.histogramdd([x_arr], bins=bins, range=ranges)
+datahist_new_3 = ROOT.RooDataHist.from_numpy(counts, [x], bins=bins, ranges=ranges)
+
+print("RooDataHist imported with uniform binning and exported back to numpy:")
+print_histogram_output(datahist_new_3.to_numpy())

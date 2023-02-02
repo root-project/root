@@ -65,7 +65,7 @@ public:
 
    ParametricFunction(int nparams) : par(nparams) {}
 
-   virtual ~ParametricFunction() {}
+   ~ParametricFunction() override {}
 
    /**
 
@@ -115,7 +115,7 @@ public:
 
    */
 
-   virtual double operator()(const std::vector<double> &x) const = 0;
+   double operator()(const std::vector<double> &x) const override = 0;
 
    /**
 

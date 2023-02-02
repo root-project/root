@@ -18,7 +18,7 @@
 
 namespace ROOT {
 namespace Experimental {
-class REveGeomViewer;
+class RGeomViewer;
 }
 }
 
@@ -32,7 +32,7 @@ protected:
 
    QWebEngineView *fView{nullptr};  ///< qt webwidget to show
 
-   std::shared_ptr<ROOT::Experimental::REveGeomViewer> fGeomViewer;
+   std::shared_ptr<ROOT::Experimental::RGeomViewer> fGeomViewer;
 
 public:
    RGeomViewerWidget(QWidget *parent = nullptr);

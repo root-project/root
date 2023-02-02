@@ -153,7 +153,7 @@ void TGProgressBar::SetBarType(EBarType type)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set progress bar color.
 
-void TGProgressBar::SetBarColor(ULong_t color)
+void TGProgressBar::SetBarColor(Pixel_t color)
 {
    fBarColorGC.SetForeground(color);
 

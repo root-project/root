@@ -81,7 +81,7 @@ public:
    void      WaitFinishPrefetch();
    Bool_t    IsPrefetchFinished() const { return fPrefetchFinished; }
 
-   ClassDef(TFilePrefetch, 0);  // File block prefetcher
+   ClassDefOverride(TFilePrefetch, 0);  // File block prefetcher
 };
 
 #endif

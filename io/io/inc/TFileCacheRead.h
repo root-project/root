@@ -102,7 +102,7 @@ public:
    virtual Bool_t      IsLearning() const {return kFALSE;}
    virtual Int_t       LearnBranch(TBranch * /*b*/, Bool_t /*subbranches*/ = kFALSE) { return 0; }
    virtual void        Prefetch(Long64_t pos, Int_t len);
-   virtual void        Print(Option_t *option="") const;
+           void        Print(Option_t *option="") const override;
    virtual Int_t       ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &loc);
    virtual Int_t       ReadBufferExtNormal(char *buf, Long64_t pos, Int_t len, Int_t &loc);
    virtual Int_t       ReadBufferExtPrefetch(char *buf, Long64_t pos, Int_t len, Int_t &loc);
@@ -116,7 +116,7 @@ public:
    virtual TFilePrefetch* GetPrefetchObj();
    virtual void        WaitFinishPrefetch();                  //Gracefully join the prefetching thread
 
-   ClassDef(TFileCacheRead,2)  //TFile cache when reading
+   ClassDefOverride(TFileCacheRead,2)  //TFile cache when reading
 };
 
 #endif

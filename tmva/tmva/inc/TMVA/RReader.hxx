@@ -41,7 +41,7 @@ inline XMLConfig ParseXMLConfig(const std::string &filename)
    // Parse XML file and find root node
    TXMLEngine xml;
    auto xmldoc = xml.ParseFile(filename.c_str());
-   if (xmldoc == 0) {
+   if (!xmldoc) {
       std::stringstream ss;
       ss << "Failed to open TMVA XML file "
          << filename << ".";
@@ -109,7 +109,9 @@ inline XMLConfig ParseXMLConfig(const std::string &filename)
 
 } // namespace Internal
 
-/// TMVA::Reader legacy interface
+/// A replacement for the TMVA::Reader legacy interface.
+/// Performs inference for TMVA models stored as XML files.
+/// For neural network inference consider using [SOFIE](https://github.com/root-project/root/blob/master/tmva/sofie/README.md) instead.
 class RReader {
 private:
    std::unique_ptr<Reader> fReader;

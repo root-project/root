@@ -55,9 +55,9 @@ Int_t TSeqCollection::GetLast() const
 
 Int_t TSeqCollection::ObjCompare(TObject *a, TObject *b)
 {
-   if (a == 0 && b == 0) return 0;
-   if (a == 0) return 1;
-   if (b == 0) return -1;
+   if (!a && !b) return 0;
+   if (!a) return 1;
+   if (!b) return -1;
    return a->Compare(b);
 }
 
@@ -198,10 +198,10 @@ Long64_t TSeqCollection::Merge(TCollection *list)
    TObject *object;
    TObject *objtomerge;
    TObject *collcrt;
-   TSeqCollection *templist = 0;
+   TSeqCollection *templist = nullptr;
    TMethodCall callEnv;
    Int_t indobj = 0;
-   TSeqCollection *notmergeable = 0;
+   TSeqCollection *notmergeable = nullptr;
    Bool_t mergeable = kTRUE;
    while ((object = nextobject())) {   // loop objects in this collection
       mergeable = kTRUE;
@@ -219,7 +219,7 @@ Long64_t TSeqCollection::Merge(TCollection *list)
          // Make sure original objects are not deleted; some containers, e.g. TSelectorList, maybe owners
          templist->SetOwner(kFALSE);
       } else {
-         templist = 0;
+         templist = nullptr;
       }
       nextlist.Reset();
       Int_t indcoll = 0;
@@ -282,8 +282,8 @@ Long64_t TSeqCollection::Merge(TCollection *list)
    // Add the non-mergeable objects, if any
    if (notmergeable && notmergeable->GetSize() > 0) {
       TIter nxnm(notmergeable);
-      TObject *onm = 0;
-      while ((onm = nxnm())) { Add(onm->Clone()); }
+      while (auto onm = nxnm())
+         Add(onm->Clone());
       SafeDelete(notmergeable);
    }
 

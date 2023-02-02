@@ -28,14 +28,14 @@ namespace Math {
 template<class MultiFuncType>
 struct EvaluatorOneDim {
    // evaluate function (in general case no param)
-   static double F (MultiFuncType f, const double * x, const double *  = 0 ) {
+   static double F (MultiFuncType f, const double * x, const double *  = nullptr ) {
       return f( x );
    }
 };
 // specialized for param functions
 template<>
 struct EvaluatorOneDim< const ROOT::Math::IParamMultiFunction &> {
-   static double F ( const ROOT::Math::IParamMultiFunction &  f, const double * x, const double * p = 0 ) {
+   static double F ( const ROOT::Math::IParamMultiFunction &  f, const double * x, const double * p = nullptr ) {
       return f( x, p );
    }
 };
@@ -47,7 +47,7 @@ struct EvaluatorOneDim< const ROOT::Math::IParamMultiFunction &> {
    Given a f(x1,x2,x3,....xn) transforms in a f( x_i) given the coordinate intex i and the vector x[]
    of the coordinates.
    It provides the possibility to copy and own the data array of the coordinates or to maintain internally a pointer to an external array
-   for being more efficient. In this last case the user must garantee the life of the given passed pointer
+   for being more efficient. In this last case the user must guarantee the life of the given passed pointer
 
    @ingroup  GenFunc
 
@@ -62,7 +62,7 @@ public:
       Constructor from the function object , pointer to an external array of x values
       and coordinate we want to adapt
    */
-   OneDimMultiFunctionAdapter (MultiFuncType f, const double * x, unsigned int icoord =0, const double * p = 0 ) :
+   OneDimMultiFunctionAdapter (MultiFuncType f, const double * x, unsigned int icoord = 0, const double * p = nullptr ) :
       fFunc(f),
       fX( const_cast<double *>(x) ), // wee need to modify x but then we restore it as before
       fParams(p),
@@ -70,7 +70,7 @@ public:
       fDim(0),
       fOwn(false)
    {
-      assert(fX != 0);
+      assert(fX != nullptr);
    }
    /**
       Constructor from the function object , dimension of the function and
@@ -78,9 +78,9 @@ public:
       The coordinate cached vector is created inside and eventually the values must be passed
       later with the SetX which will copy them
    */
-   OneDimMultiFunctionAdapter (MultiFuncType f, unsigned int dim = 1, unsigned int icoord =0, const double * p = 0 ) :
+   OneDimMultiFunctionAdapter (MultiFuncType f, unsigned int dim = 1, unsigned int icoord = 0, const double *p = nullptr) :
       fFunc(f),
-      fX(0 ),
+      fX(nullptr),
       fParams(p),
       fCoord(icoord),
       fDim(dim),
@@ -92,12 +92,12 @@ public:
    /**
       Destructor (no operations)
    */
-   virtual ~OneDimMultiFunctionAdapter ()  { if (fOwn && fX) delete [] fX; }
+   ~OneDimMultiFunctionAdapter () override  { if (fOwn && fX) delete [] fX; }
 
    /**
       clone
    */
-   virtual OneDimMultiFunctionAdapter * Clone( ) const {
+   OneDimMultiFunctionAdapter * Clone( ) const override {
       if (fOwn) {
          OneDimMultiFunctionAdapter * f =  new OneDimMultiFunctionAdapter( fFunc, fDim, fCoord, fParams);
          std::copy(fX, fX+fDim, f->fX);
@@ -166,7 +166,7 @@ private:
       evaluate function at the  values x[] given in the constructor and
       as function of  the coordinate fCoord.
    */
-   double DoEval(double x) const {
+   double DoEval(double x) const override {
       if (fOwn) {
          fX[fCoord] = x;
          return EvaluatorOneDim<MultiFuncType>::F( fFunc, fX, fParams );
@@ -198,7 +198,7 @@ private:
 
 
 /**
-   OneDimParamFunctionAdapter class to wrap a multi-dim parameteric function in
+   OneDimParamFunctionAdapter class to wrap a multi-dim parametric function in
    one dimensional one.
    Given a f(x[],p1,...pn) transforms in a f( p_i) given the param index i and the vectors x[] and p[]
    of the coordinates and parameters
@@ -224,19 +224,19 @@ public:
       fParams(p),
       fIpar(ipar)
    {
-      assert(fX != 0);
-      assert(fParams != 0);
+      assert(fX != nullptr);
+      assert(fParams != nullptr);
    }
 
    /**
       Destructor (no operations)
    */
-   ~OneDimParamFunctionAdapter ()  {}
+   ~OneDimParamFunctionAdapter () override  {}
 
    /**
       clone
    */
-   virtual OneDimParamFunctionAdapter * Clone( ) const {
+   OneDimParamFunctionAdapter * Clone( ) const override {
       return new OneDimParamFunctionAdapter(fFunc, fX, fParams, fIpar);
    }
 
@@ -248,7 +248,7 @@ private:
       evaluate function at the  values x[] given in the constructor and
       as function of  the coordinate fCoord.
    */
-   double DoEval(double x) const {
+   double DoEval(double x) const override {
       // HACK: use const_cast to modify the function values x[] and restore afterwards the original ones
       double * p = const_cast<double *>(fParams);
       double pprev = fParams[fIpar]; // keep original value to restore in fX
@@ -267,8 +267,6 @@ private:
    unsigned int fIpar;
 
 };
-
-
 
 
 } // end namespace Math

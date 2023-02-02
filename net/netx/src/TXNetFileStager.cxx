@@ -219,7 +219,7 @@ Int_t TXNetFileStager::Locate(const char *path, TString &eurl)
 /// If addDummyUrl is kTRUE, in case file is not staged or redirector is
 /// identical to endpoint URL, a dummy URL is prepended, respectively:
 /// "noop://redir" and "noop://none".
-/// If the collection contains URLs with "anchors" (i.e., #fileName.root),
+/// If the collection contains URLs with "anchors" (i.e., #%fileName.root),
 /// they are ignored by xrootd.
 /// The Locate() command preserves anchors, but needs single paths to be full
 /// URLs beginning with root://.

@@ -1,0 +1,29 @@
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/CPPMethod.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/CPPMethod.cxx
+index 2189348594..fcf549de56 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/CPPMethod.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/CPPMethod.cxx
+@@ -272,7 +272,7 @@ void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
+             PyErr_Format(errtype, "%s =>\n    %s: %s",
+                 CPyCppyy_PyText_AsString(doc), cname, details.c_str());
+         }
+-    } else {
++    } else if (evalue) {
+         Py_XDECREF(((CPPExcInstance*)evalue)->fTopMessage);
+         if (msg) {
+             ((CPPExcInstance*)evalue)->fTopMessage = CPyCppyy_PyText_FromFormat(\
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/LowLevelViews.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/LowLevelViews.cxx
+index 319ece96d8..e119774de9 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/LowLevelViews.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/LowLevelViews.cxx
+@@ -21,7 +21,10 @@ static CPyCppyy::LowLevelView* ll_new(PyTypeObject* subtype, PyObject*, PyObject
+ {
+ // Create a new low level ptr type
+     CPyCppyy::LowLevelView* pyobj = (CPyCppyy::LowLevelView*)subtype->tp_alloc(subtype, 0);
+-    if (!pyobj) PyErr_Print();
++    if (!pyobj) {
++        PyErr_Print();
++        return nullptr;
++    }
+     memset(&pyobj->fBufInfo, 0, sizeof(Py_buffer));
+     pyobj->fBuf = nullptr;
+     pyobj->fConverter = nullptr;

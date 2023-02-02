@@ -19,12 +19,11 @@
 \class RooSegmentedIntegrator2D
 \ingroup Roofitcore
 
-RooSegmentedIntegrator2D implements an adaptive one-dimensional 
+RooSegmentedIntegrator2D implements an adaptive one-dimensional
 numerical integration algorithm.
 **/
 
 
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "TClass.h"
@@ -72,19 +71,19 @@ RooSegmentedIntegrator2D::RooSegmentedIntegrator2D() :
 RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,config)))),config)
 {
-} 
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor integral on given function binding, with given configuration and
 /// explicit definition of integration range
 
-RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
-				 Double_t ymin, Double_t ymax,
-				 const RooNumIntConfig& config) :
+RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, double xmin, double xmax,
+             double ymin, double ymax,
+             const RooNumIntConfig& config) :
   RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,ymin,ymax,config)))),xmin,xmax,config)
 {
-} 
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -100,7 +99,7 @@ RooAbsIntegrator* RooSegmentedIntegrator2D::clone(const RooAbsFunc& function, co
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D() 
+RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D()
 {
   delete _xint ;
   delete _xIntegrator ;
@@ -109,10 +108,10 @@ RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check that our integration range is finite and otherwise return kFALSE.
+/// Check that our integration range is finite and otherwise return false.
 /// Update the limits from the integrand if requested.
 
-Bool_t RooSegmentedIntegrator2D::checkLimits() const 
+bool RooSegmentedIntegrator2D::checkLimits() const
 {
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
@@ -121,14 +120,14 @@ Bool_t RooSegmentedIntegrator2D::checkLimits() const
   }
   _range= _xmax - _xmin;
   if(_range <= 0) {
-    oocoutE((TObject*)0,InputArguments) << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
-    return kFALSE;
+    oocoutE(nullptr,InputArguments) << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
+    return false;
   }
-  Bool_t ret =  (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;
+  bool ret =  (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? false : true;
 
   // Adjust component integrators, if already created
   if (_array && ret) {
-    Double_t segSize = (_xmax - _xmin) / _nseg ;
+    double segSize = (_xmax - _xmin) / _nseg ;
     Int_t i ;
     for (i=0 ; i<_nseg ; i++) {
       _array[i]->setLimits(_xmin+i*segSize,_xmin+(i+1)*segSize) ;

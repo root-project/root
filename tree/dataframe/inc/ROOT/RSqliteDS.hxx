@@ -16,7 +16,6 @@
 #include "ROOT/RStringView.hxx"
 
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -37,7 +36,7 @@ struct RSqliteDSDataSet;
 
 The RSqliteDS is able to feed an RDataFrame with data from a SQlite SELECT query. One can use it like
 
-    auto rdf = ROOT::RDF::MakeSqliteDataFrame("/path/to/file.sqlite", "select name from table");
+    auto rdf = ROOT::RDF::FromSqlite("/path/to/file.sqlite", "select name from table");
     auto h = rdf.Define("lName", "name.length()").Histo1D("lName");
 
 The data source has to provide column types for all the columns. Determining column types in SQlite is tricky
@@ -113,7 +112,7 @@ protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
 
-RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query);
+RDataFrame FromSqlite(std::string_view fileName, std::string_view query);
 
 } // namespace RDF
 

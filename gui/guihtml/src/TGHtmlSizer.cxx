@@ -195,7 +195,7 @@ static int *GetCoords(const char *str, int *nptr)
 /// This routine adds information to the input texts that doesn't change
 /// when the display is resized or when new fonts are selected, etc.
 /// Mostly this means adding style attributes.  But other constant
-/// information (such as numbering on <li> and images used for <IMG>)
+/// information (such as numbering on `<li>` and images used for `<IMG>`)
 /// is also obtained.  The key is that this routine is only called
 /// once, where the sizer and layout routines can be called many times.
 ///
@@ -205,8 +205,8 @@ static int *GetCoords(const char *str, int *nptr)
 ///
 /// In addition to adding style, this routine will invoke methods
 /// needed to acquire information about a markup. The IsVisitied()
-/// method is called for each <a> and the GetImage() is called
-/// for each <IMG> or for each <LI> that has a SRC= field.
+/// method is called for each `<a>` and the GetImage() is called
+/// for each `<IMG>` or for each `<LI>` that has a `SRC=` field.
 ///
 /// When a markup is inserted or deleted from the token list, the
 /// style routine must be completely rerun from the beginning.  So

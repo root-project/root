@@ -80,7 +80,7 @@ public:
    const char *GetColumn(Int_t n);
    Bool_t IsNumeric(Int_t n);
 
-   ClassDef(TSQLTableData, 1); // Collection of columns data for single SQL table
+   ClassDefOverride(TSQLTableData, 1); // Collection of columns data for single SQL table
 };
 
 //______________________________________________________________________
@@ -130,7 +130,7 @@ public:
    void SetStreamerElement(const TStreamerElement *elem, Int_t number);
    void SetCustomClass(const TClass *cl, Version_t version);
    void SetCustomElement(TStreamerElement *elem);
-   void SetValue(const char *value, const char *tname = 0);
+   void SetValue(const char *value, const char *tname = nullptr);
    void SetArrayIndex(Int_t indx, Int_t cnt = 1);
    void SetArray(Int_t sz = -1);
    void ChangeValueOnly(const char *value);
@@ -150,7 +150,7 @@ public:
 
    void Add(TSQLStructure *child);
    void AddVersion(const TClass *cl, Int_t version = -100);
-   void AddValue(const char *value, const char *tname = 0);
+   void AddValue(const char *value, const char *tname = nullptr);
    void ChildArrayIndex(Int_t index, Int_t cnt = 1);
 
    // this is part specially for reading of sql tables
@@ -161,7 +161,7 @@ public:
    void AddObjectData(TSQLObjectData *objdata);
    TSQLObjectData *GetObjectData(Bool_t search = false);
 
-   virtual void Print(Option_t *option = "") const;
+   void Print(Option_t *option = "") const override;
    void PrintLevel(Int_t level) const;
 
    Bool_t ConvertToTables(TSQLFile *f, Long64_t keyid, TObjArray *cmds);
@@ -207,7 +207,7 @@ public:
 
    enum ESQLIdType { kIdTable = 0, kIdRawTable = 1, kIdColumn = 2 };
 
-   ClassDef(TSQLStructure, 1); // Table/structure description used internally by TBufferSQL.
+   ClassDefOverride(TSQLStructure, 1); // Table/structure description used internally by TBufferSQL.
 };
 
 // text constants, used in SQL I/O

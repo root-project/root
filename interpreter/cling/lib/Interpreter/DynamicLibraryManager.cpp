@@ -16,8 +16,10 @@
 #include "llvm/ADT/StringSet.h"
 #include "llvm/BinaryFormat/Magic.h"
 #include "llvm/Support/DynamicLibrary.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
 
+#include <fstream>
 #include <system_error>
 #include <sys/stat.h>
 
@@ -67,11 +69,11 @@ namespace cling {
   /// Example: substFront("@rpath/abc", "@rpath/", "/tmp") -> "/tmp/abc"
   static std::string substFront(llvm::StringRef original, llvm::StringRef pattern,
                                 llvm::StringRef replacement) {
-    if (!original.startswith_lower(pattern))
+    if (!original.startswith_insensitive(pattern))
       return original.str();
     llvm::SmallString<512> result(replacement);
     result.append(original.drop_front(pattern.size()));
-    return result.str();
+    return result.str().str();
   }
 
   ///\returns substitution of all known linker variables in \c original
@@ -166,7 +168,7 @@ namespace cling {
         if (DEBUG > 7) {
           cling::errs() << " ... Found (in RPATH)!\n";
         }
-        return ThisPath.str();
+        return ThisPath.str().str();
       }
     }
     // m_SearchPaths
@@ -181,7 +183,7 @@ namespace cling {
         if (DEBUG > 7) {
           cling::errs() << " ... Found (in SearchPaths)!\n";
         }
-        return ThisPath.str();
+        return ThisPath.str().str();
       }
     }
     // RUNPATH
@@ -196,7 +198,7 @@ namespace cling {
         if (DEBUG > 7) {
           cling::errs() << " ... Found (in RUNPATH)!\n";
         }
-        return ThisPath.str();
+        return ThisPath.str().str();
       }
     }
 
@@ -305,7 +307,7 @@ namespace cling {
     // Subst all known linker variables ($origin, @rpath, etc.)
 #ifdef __APPLE__
     // On MacOS @rpath is preplaced by all paths in RPATH one by one.
-    if (libStem.startswith_lower("@rpath")) {
+    if (libStem.startswith_insensitive("@rpath")) {
       for (auto& P : RPath) {
         std::string result = substFront(libStem, "@rpath", P);
         if (isSharedLibrary(result))
@@ -355,11 +357,12 @@ namespace cling {
         (resolved ? "resolved" : "not-resolved") << "\n";
     }
 
-    std::string lResolved;
-    const std::string& canonicalLoadedLib = resolved ? libStem.str() : lResolved;
-    if (!resolved) {
-      lResolved = lookupLibrary(libStem);
-      if (lResolved.empty())
+    std::string canonicalLoadedLib;
+    if (resolved) {
+      canonicalLoadedLib = libStem.str();
+    } else {
+      canonicalLoadedLib = lookupLibrary(libStem);
+      if (canonicalLoadedLib.empty())
         return kLoadLibNotFound;
     }
 
@@ -398,7 +401,7 @@ namespace cling {
     if (!isLibraryLoaded(canonicalLoadedLib))
       return;
 
-    DyLibHandle dyLibHandle = 0;
+    DyLibHandle dyLibHandle = nullptr;
     for (DyLibs::const_iterator I = m_DyLibs.begin(), E = m_DyLibs.end();
          I != E; ++I) {
       if (I->second == canonicalLoadedLib) {
@@ -441,10 +444,6 @@ namespace cling {
     }
   }
 
-  void DynamicLibraryManager::ExposeHiddenSharedLibrarySymbols(void* handle) {
-    llvm::sys::DynamicLibrary::addPermanentLibrary(const_cast<void*>(handle));
-  }
-
   bool DynamicLibraryManager::isSharedLibrary(llvm::StringRef libFullPath,
                                               bool* exists /*=0*/) {
     using namespace llvm;
@@ -458,12 +457,26 @@ namespace cling {
       return false;
     }
 
-    file_magic Magic;
-    const std::error_code Error = identify_magic(libFullPath, Magic);
-    if (exists)
-      *exists = !Error;
+    // Do not use the identify_magic overload taking a path: It will open the
+    // file and then mmap its contents, possibly causing bus errors when another
+    // process truncates the file while we are trying to read it. Instead just
+    // read the first 1024 bytes, which should be enough for identify_magic to
+    // do its work.
+    // TODO: Fix the code upstream and consider going back to calling the
+    // convenience function after a future LLVM upgrade.
+    std::ifstream in(libFullPath.str(), std::ios::binary);
+    char header[1024] = {0};
+    in.read(header, sizeof(header));
+    if (in.fail()) {
+      if (exists)
+        *exists = false;
+      return false;
+    }
 
-    bool result = !Error &&
+    StringRef headerStr(header, in.gcount());
+    file_magic Magic = identify_magic(headerStr);
+
+    bool result =
 #ifdef __APPLE__
       (Magic == file_magic::macho_fixed_virtual_memory_shared_lib
        || Magic == file_magic::macho_dynamically_linked_shared_lib

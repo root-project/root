@@ -39,7 +39,7 @@ TGeoElement *element2 = table->FindElement("Copper");
 ~~~
 
 Materials made of single elements can be defined by their atomic mass
-(`A`), charge (`Z`) and density (`rh`o). One can also create a material
+(`A`), charge (`Z`) and density (`rho`). One can also create a material
 by specifying the element that it is made of. Optionally the radiation
 and absorption lengths can be also provided; otherwise they can be
 computed on-demand [`G3`]. The class representing them is
@@ -60,7 +60,7 @@ TGeoMaterial(const char* name, Double_t a, Double_t z,
 Any material or derived class is automatically indexed after creation.
 The assigned index is corresponding to the last entry in the list of
 materials owned by TGeoManager class. This can be changed using
-the TGeoMaterial`::SetIndex()` method, however it is not
+the `TGeoMaterial::SetIndex()` method, however it is not
 recommended while using the geometry package interfaced with a transport
 MC. Radiation and absorption lengths can be set using:
 

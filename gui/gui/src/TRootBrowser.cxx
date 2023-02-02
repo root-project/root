@@ -552,10 +552,10 @@ void TRootBrowser::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
 /// Execute a macro and embed the created frame in the tab "pos"
 /// and tab element "subpos".
 
-Long_t TRootBrowser::ExecPlugin(const char *name, const char *fname,
-                                const char *cmd, Int_t pos, Int_t subpos)
+Longptr_t TRootBrowser::ExecPlugin(const char *name, const char *fname,
+                                   const char *cmd, Int_t pos, Int_t subpos)
 {
-   Long_t retval = 0;
+   Longptr_t retval = 0;
    TBrowserPlugin *p;
    TString command, pname;
    if (cmd && strlen(cmd)) {

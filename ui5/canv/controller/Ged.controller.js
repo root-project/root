@@ -12,21 +12,34 @@ sap.ui.define([
 
       gedFragments : [],
 
-      onInit : function() {
-         console.log('init GED editor');
-         var model = new JSONModel({ SelectedClass: "none" });
+      onInit() {
+         let model = new JSONModel({ SelectedClass: "none" });
          this.getView().setModel(model);
+
+         let data = this.getView().getViewData();
+         this.jsroot = data?.jsroot;
       },
 
-      onExit : function() {
-         console.log('exit GED editor');
+      onExit() {
          this.cleanupGed();
-
       },
 
-      cleanupGed : function() {
-         console.log('Clenup GED editor');
+      /** @summary Produce exec string for WebCanas to set color value
+        * @desc Color can be id or string, but should belong to list of known colors
+        * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color will be created on server side
+        * @private */
+      getColorExec(painter, col, method) {
+         return this.jsroot?.getColorExec(col, method) || `exec:${method}(1)`;
+      },
 
+      /** @summary Returns EAxisBits member
+        * @private */
+      getAxisBit(name) {
+         return this.jsroot?.EAxisBits ? this.jsroot?.EAxisBits[name] : 1 ;
+      },
+
+
+      cleanupGed() {
          // empty fragments
          this.getView().byId("ged_page").removeAllContent();
 
@@ -42,7 +55,7 @@ sap.ui.define([
 
       },
 
-      addFragment : function(page, kind, model) {
+      addFragment(page, kind, model) {
          let fragm = this.gedFragments[kind];
 
          if (!fragm)
@@ -66,36 +79,9 @@ sap.ui.define([
          page.addContent(fragm);
       },
 
-     /** @summary Produce exec string for WebCanas to set color value
-       * @desc Color can be id or string, but should belong to list of known colors
-       * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color will be created on server side
-       * @private */
-      getColorExec: function(painter, col, method) {
-         let id = -1, arr = JSROOT.Painter.root_colors;
-         if (typeof col == "string") {
-            if (!col || (col == "none")) id = 0; else
-               for (let k = 1; k < arr.length; ++k)
-                  if (arr[k] == col) { id = k; break; }
-            if ((id < 0) && (col.indexOf("rgb") == 0)) id = 9999;
-         } else if (Number.isInteger(col) && arr[col]) {
-            id = col;
-            col = arr[id];
-         }
-
-         if (id < 0) return "";
-
-         if (id >= 50) {
-            // for higher color numbers ensure that such color exists
-            let c = d3.color(col);
-            id = "TColor::GetColor(" + c.r + "," + c.g + "," + c.b + ")";
-         }
-
-         return "exec:" + method + "(" + id + ")";
-      },
-
       /// function called when user changes model property
       /// data object includes _kind, _painter and _handle (optionally)
-      modelPropertyChange : function(evnt, data) {
+      modelPropertyChange(evnt, data) {
          let pars = evnt.getParameters();
          console.log('Model property changes', pars.path, pars.value, data._kind);
 
@@ -115,18 +101,25 @@ sap.ui.define([
          }
 
          if (obj) {
-            if ((data._kind === "TAttLine") && (obj.fLineColor!==undefined) && (obj.fLineStyle!==undefined) && (obj.fLineWidth!==undefined)) {
-               if (item == "attline/width")
-                  exec = "exec:SetLineWidth(" + pars.value + ")";
-               else if (item == "attline/style")
-                  exec = "exec:SetLineStyle(" + pars.value + ")";
-               else if (item == "attline/color")
-                  exec = this.getColorExec(data._painter, pars.value, "SetLineColor");
-            } else if ((data._kind === "TAttFill") && (obj.fFillColor!==undefined) && (obj.fFillStyle!==undefined))  {
-               if (item == "attfill/pattern")
-                  exec = "exec:SetFillStyle(" + pars.value + ")";
-               else if (item == "attfill/color")
-                  exec = this.getColorExec(data._painter, pars.value, "SetFillColor");
+            if ((data._kind === 'TAttLine') && (obj.fLineColor !== undefined) && (obj.fLineStyle !== undefined) && (obj.fLineWidth !== undefined)) {
+               if (item == 'attline/width')
+                  exec = `exec:SetLineWidth(${pars.value})`;
+               else if (item == 'attline/style')
+                  exec = `exec:SetLineStyle(${pars.value})`;
+               else if (item == 'attline/color')
+                  exec = this.getColorExec(data._painter, pars.value, 'SetLineColor');
+            } else if ((data._kind === 'TAttFill') && (obj.fFillColor !== undefined) && (obj.fFillStyle !== undefined)) {
+               if (item == 'attfill/pattern')
+                  exec = `exec:SetFillStyle(${pars.value})`;
+               else if (item == 'attfill/color')
+                  exec = this.getColorExec(data._painter, pars.value, 'SetFillColor');
+            } else if ((data._kind === 'TAttMarker') && (obj.fMarkerColor !== undefined) && (obj.fMarkerStyle !== undefined) && (obj.fMarkerSize !== undefined)) {
+               if (item == 'attmark/size')
+                  exec = `exec:SetMarkerSize(${pars.value})`;
+               else if (item == 'attmark/style')
+                  exec = `exec:SetMarkerStyle(${pars.value})`;
+               else if (item == 'attmark/color')
+                  exec = this.getColorExec(data._painter, pars.value, 'SetMarkerColor');
             }
          }
 
@@ -136,18 +129,17 @@ sap.ui.define([
             this.currentPadPainter.redraw();
       },
 
-
-      getAxisHandle: function() {
+      getAxisHandle() {
          if (this.currentPainter)
             switch (this.currentPlace) {
                case "xaxis": return this.currentPainter.x_handle;
                case "yaxis": return this.currentPainter.y_handle;
                case "zaxis": return this.currentPainter.z_handle;
             }
-         return null
+         return null;
       },
 
-      setAxisModel : function(model) {
+      setAxisModel(model) {
          let obj =  this.currentPainter.getObject(this.currentPlace),
              painter = this.getAxisHandle();
 
@@ -156,17 +148,17 @@ sap.ui.define([
              axis: obj,
              axiscolor: painter.lineatt.color,
              color_label: this.currentPadPainter.getColor(obj.fLabelColor),
-             center_label: obj.TestBit(JSROOT.EAxisBits.kCenterLabels),
-             vert_label: obj.TestBit(JSROOT.EAxisBits.kLabelsVert),
+             center_label: obj.TestBit(this.getAxisBit('kCenterLabels')),
+             vert_label: obj.TestBit(this.getAxisBit('kLabelsVert')),
              color_title: this.currentPadPainter.getColor(obj.fTitleColor),
-             center_title: obj.TestBit(JSROOT.EAxisBits.kCenterTitle),
-             rotate_title: obj.TestBit(JSROOT.EAxisBits.kRotateTitle),
+             center_title: obj.TestBit(this.getAxisBit('kCenterTitle')),
+             rotate_title: obj.TestBit(this.getAxisBit('kRotateTitle')),
          };
 
          model.setData(data);
       },
 
-      processAxisModelChange: function(evnt, data) {
+      processAxisModelChange(evnt /*, data */) {
          let pars = evnt.getParameters(),
              item = pars.path.substr(1),
              exec = "",
@@ -178,7 +170,8 @@ sap.ui.define([
 
          if (!this.currentPadPainter || !axis) return;
 
-         if ((typeof kind == 'string') && (kind.indexOf("axis")==1)) kind = kind.substr(0,1);
+         if ((typeof kind == 'string') && (kind.indexOf("axis")==1))
+            kind = kind.slice(0,1);
 
          console.log(`Change axis ${kind} item ${item} value ${pars.value}`);
 
@@ -195,11 +188,11 @@ sap.ui.define([
                exec = this.getColorExec(painter, pars.value, "SetLabelColor");
                break;
             case "center_label":
-               axis.InvertBit(JSROOT.EAxisBits.kCenterLabels);
+               axis.InvertBit(this.getAxisBit('kCenterLabels'));
                exec = `exec:CenterLabels(${pars.value ? true : false})`;
                break;
             case "vert_label":
-               axis.InvertBit(JSROOT.EAxisBits.kLabelsVert);
+               axis.InvertBit(this.getAxisBit('kLabelsVert'));
                exec = `exec:SetBit(TAxis::kLabelsVert,${pars.value ? true : false})`;
                break;
             case "axis/fLabelOffset":
@@ -213,11 +206,11 @@ sap.ui.define([
                exec = this.getColorExec(painter, pars.value, "SetTitleColor");
                break;
             case "center_title":
-               axis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
+               axis.InvertBit(this.getAxisBit('kCenterTitle'));
                exec = `exec:CenterTitle(${pars.value ? true : false})`;
                break;
             case "rotate_title":
-               axis.InvertBit(JSROOT.EAxisBits.kRotateTitle);
+               axis.InvertBit(this.getAxisBit('kRotateTitle'));
                exec = `exec:RotateTitle(${pars.value ? true : false})`;
                break;
             case "axis/fTickLength":
@@ -234,15 +227,14 @@ sap.ui.define([
          // TAxis belongs to main painter like TH1, therefore submit commands there
          let main = this.currentPainter.getMainPainter(true);
 
-         if (main && main.snapid) {
-            console.log('Invoke interactive redraw ', main.snapid, kind)
+         if (main?.snapid) {
             main.interactiveRedraw("pad", exec, kind);
          } else {
             this.currentPadPainter.redraw();
          }
       },
 
-      setRAxisModel: function(model) {
+      setRAxisModel(model) {
          let handle = this.getAxisHandle();
          if (!handle) return;
 
@@ -283,7 +275,7 @@ sap.ui.define([
          }
       },
 
-      processHistModelChange : function(evnt, data) {
+      processHistModelChange(evnt, data) {
          // let pars = evnt.getParameters();
          let opts = data.options;
 
@@ -304,7 +296,7 @@ sap.ui.define([
       },
 
 
-      onObjectSelect : function(padpainter, painter, place) {
+      onObjectSelect(padpainter, painter, place) {
 
          if ((this.currentPainter === painter) && (place === this.currentPlace)) return;
 
@@ -391,7 +383,7 @@ sap.ui.define([
          }
       },
 
-      onObjectRedraw : function(padpainter, painter) {
+      onObjectRedraw(padpainter, painter) {
          if ((this.currentPadPainter !== padpainter) || (this.currentPainter !== painter)) return;
 
          // console.log('GED sees selected object redraw');
@@ -411,12 +403,12 @@ sap.ui.define([
             }
       },
 
-      onPadRedraw : function(padpainter) {
+      onPadRedraw(padpainter) {
          if (this.currentPadPainter === padpainter)
             this.onObjectRedraw(this.currentPadPainter, this.currentPainter);
       },
 
-      padEventsReceiver : function(evnt) {
+      padEventsReceiver(evnt) {
          if (!evnt) return;
 
          if (evnt.what == "select")

@@ -11,20 +11,23 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_SUPPORT_AARCH64TARGETPARSERCOMMON_H
-#define LLVM_SUPPORT_AARCH64TARGETPARSERCOMMON_H
+#ifndef LLVM_SUPPORT_AARCH64TARGETPARSER_H
+#define LLVM_SUPPORT_AARCH64TARGETPARSER_H
 
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/ADT/Triple.h"
 #include "llvm/Support/ARMTargetParser.h"
 #include <vector>
 
 // FIXME:This should be made into class design,to avoid dupplication.
 namespace llvm {
+
+class Triple;
+
 namespace AArch64 {
 
 // Arch extension modifiers for CPUs.
-enum ArchExtKind : unsigned {
+enum ArchExtKind : uint64_t {
   AEK_INVALID =     0,
   AEK_NONE =        1,
   AEK_CRC =         1 << 1,
@@ -54,6 +57,18 @@ enum ArchExtKind : unsigned {
   AEK_SVE2SM4 =     1 << 25,
   AEK_SVE2SHA3 =    1 << 26,
   AEK_SVE2BITPERM = 1 << 27,
+  AEK_TME =         1 << 28,
+  AEK_BF16 =        1 << 29,
+  AEK_I8MM =        1 << 30,
+  AEK_F32MM =       1ULL << 31,
+  AEK_F64MM =       1ULL << 32,
+  AEK_LS64 =        1ULL << 33,
+  AEK_BRBE =        1ULL << 34,
+  AEK_PAUTH =       1ULL << 35,
+  AEK_FLAGM =       1ULL << 36,
+  AEK_SME =         1ULL << 37,
+  AEK_SMEF64 =      1ULL << 38,
+  AEK_SMEI64 =      1ULL << 39,
 };
 
 enum class ArchKind {
@@ -96,7 +111,7 @@ const ArchKind ArchKinds[] = {
 };
 
 // FIXME: These should be moved to TargetTuple once it exists
-bool getExtensionFeatures(unsigned Extensions,
+bool getExtensionFeatures(uint64_t Extensions,
                           std::vector<StringRef> &Features);
 bool getArchFeatures(ArchKind AK, std::vector<StringRef> &Features);
 
@@ -109,7 +124,7 @@ StringRef getArchExtFeature(StringRef ArchExt);
 
 // Information by Name
 unsigned getDefaultFPU(StringRef CPU, ArchKind AK);
-unsigned getDefaultExtensions(StringRef CPU, ArchKind AK);
+uint64_t getDefaultExtensions(StringRef CPU, ArchKind AK);
 StringRef getDefaultCPU(StringRef Arch);
 ArchKind getCPUArchKind(StringRef CPU);
 
@@ -121,6 +136,15 @@ ArchKind parseCPUArch(StringRef CPU);
 void fillValidCPUArchList(SmallVectorImpl<StringRef> &Values);
 
 bool isX18ReservedByDefault(const Triple &TT);
+
+struct ParsedBranchProtection {
+  StringRef Scope;
+  StringRef Key;
+  bool BranchTargetEnforcement;
+};
+
+bool parseBranchProtection(StringRef Spec, ParsedBranchProtection &PBP,
+                           StringRef &Err);
 
 } // namespace AArch64
 } // namespace llvm

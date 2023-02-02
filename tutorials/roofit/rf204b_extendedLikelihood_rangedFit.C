@@ -1,30 +1,22 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-/// This macro demonstrates how to set up a fit in two ranges
-/// such that it does not only fit the shapes in each region, but also
-/// takes into account the relative normalization of the two.
+/// This macro demonstrates how to set up a fit in two ranges for plain
+/// likelihoods and extended likelihoods.
 ///
 /// ### 1. Shape fits (plain likelihood)
 ///
-/// If you perform a fit in two ranges in RooFit, e.g. `pdf->fitTo(data,Range("Range1,Range2"))`
-/// it will construct a simple simultaneous fit of the two regions.
+/// If you fit a non-extended pdf in two ranges, e.g. `pdf->fitTo(data,Range("Range1,Range2"))`,
+/// it will fit the shapes in the two selected ranges and also take into account the relative
+/// predicted yields in those ranges.
 ///
-/// In case the pdf is not extended, i.e., a shape fit, it will only fit the shapes in the
-/// two selected ranges, and not take into account the relative predicted yields in those ranges.
-///
-/// In certain models (like exponential decays) and configurations (e.g. narrow ranges that are far apart),
-/// the relative normalization of the ranges may carry much more information about the function parameters
-/// than the shape of the distribution inside those ranges. Therefore, it is important to take that into
-/// account.
-///
-/// This is particularly important for cases where the 2-range fit is meant to be representative of
-/// a full-range fit, but with a blinded signal region inside it.
+/// This is useful for example to represent a full-range fit, but with a
+/// blinded signal region inside it.
 ///
 ///
 /// ### 2. Shape+rate fits (extended likelihood)
 ///
-/// Also if your pdf is already extended, i.e. measuring both the distribution in the observable as well
+/// If your pdf is extended, i.e. measuring both the distribution in the observable as well
 /// as the event count in the fitted region, some intervention is needed to make fits in ranges
 /// work in a way that corresponds to intuition.
 ///
@@ -61,11 +53,13 @@
 #include "RooDataSet.h"
 #include "RooPlot.h"
 #include "RooExtendPdf.h"
+#include "RooFitResult.h"
+
 #include "TCanvas.h"
-using namespace RooFit;
 
 void rf204b_extendedLikelihood_rangedFit()
 {
+ using namespace RooFit;
 
  // PART 1: Background-only fits
  // ----------------------------
@@ -81,7 +75,7 @@ void rf204b_extendedLikelihood_rangedFit()
 
  x.setRange("FULL",10,100);
 
- RooDataSet* data = model.generate(x, 10000);
+ std::unique_ptr<RooDataSet> data{model.generate(x, 10000)};
 
  // Construct an extended pdf, which measures the event count N **on the full range**.
  // If the actual domain of x that is fitted is identical to FULL, this has no affect.
@@ -102,7 +96,7 @@ void rf204b_extendedLikelihood_rangedFit()
 
 
  // It can be instructive to fit the above model to either the LEFT or RIGHT range. `N` should approximately converge to the expected number
- // of events in the full range. One may try to leave out `"FULL"` in the constructor, o the the interpretation of `N` changes.
+ // of events in the full range. One may try to leave out `"FULL"` in the constructor, or the interpretation of `N` changes.
  extmodel.fitTo(*data, Range("LEFT"), PrintLevel(-1));
  N.Print();
 
@@ -116,35 +110,31 @@ void rf204b_extendedLikelihood_rangedFit()
  //       \cdot \mathrm{Poisson} \left( N_\mathrm{obs}^\mathrm{LEFT}  | N_\mathrm{exp} / \mathrm{frac LEFT} \right)
  //       \cdot \mathrm{Poisson} \left( N_\mathrm{obs}^\mathrm{RIGHT} | N_\mathrm{exp} / \mathrm{frac RIGHT} \right)
  // \f]
- // that will introduce additional sensitivity of the likelihood to the slope parameter alpha of the exponential model through the `frac_LEFT` and `frac_RIGHT` integrals.
- //
- // In the extreme case of an exponential function and a fit in narrow LEFT and RIGHT ranges, this sensitivity may actually be larger
- // than from the shapes.
- //
- // This is also nicely demonstrated in the example below where the uncertainty on alpha is almost 5x smaller if the extended term is included.
 
 
  TCanvas* c = new TCanvas("c", "c", 2100, 700);
  c->Divide(3);
  c->cd(1);
 
- RooFitResult* r = model.fitTo(*data, Range("LEFT,RIGHT"), Save());
+ std::unique_ptr<RooFitResult> r{model.fitTo(*data, Range("LEFT,RIGHT"), PrintLevel(-1), Save())};
+ r->Print();
 
  RooPlot* frame = x.frame();
  data->plotOn(frame);
  model.plotOn(frame, VisualizeError(*r));
  model.plotOn(frame);
- model.paramOn(frame, Label("Bkg fit. Large errors since\nnormalisation ignored"));
+ model.paramOn(frame, Label("Non-extended fit"));
  frame->Draw();
 
  c->cd(2);
 
- RooFitResult* r2 = extmodel.fitTo(*data, Range("LEFT,RIGHT"), Save());
+ std::unique_ptr<RooFitResult> r2{extmodel.fitTo(*data, Range("LEFT,RIGHT"), PrintLevel(-1), Save())};
+ r2->Print();
  RooPlot* frame2 = x.frame();
  data->plotOn(frame2);
  extmodel.plotOn(frame2);
  extmodel.plotOn(frame2, VisualizeError(*r2));
- extmodel.paramOn(frame2, Label("Bkg fit. Normalisation\nincluded"), Layout(0.4,0.95));
+ extmodel.paramOn(frame2, Label("Extended fit"), Layout(0.4,0.95));
  frame2->Draw();
 
  // PART 2: Extending with RooAddPdf
@@ -165,7 +155,7 @@ void rf204b_extendedLikelihood_rangedFit()
  RooRealVar width("width", "Width of signal model", 5.);
  RooGaussian sig("sig", "Signal model", x, mean, width);
 
- RooAddPdf modelsum("modelsum", "NSig*signal + NBkg*background", RooArgSet(sig, model), RooArgSet(Nsig, Nbkg));
+ RooAddPdf modelsum("modelsum", "NSig*signal + NBkg*background", {sig, model}, {Nsig, Nbkg});
 
  // This model will automatically insert the correction factor for the reinterpretation of Nsig and Nnbkg in the full ranges.
  //
@@ -175,7 +165,8 @@ void rf204b_extendedLikelihood_rangedFit()
  // [#1] INFO:Fitting -- RooAbsOptTestStatistic::ctor(nll_modelsum_modelsumData_RIGHT) fixing interpretation of coefficients of any RooAddPdf to full domain of observables
  // ```
 
- RooFitResult* r3 = modelsum.fitTo(*data, Range("LEFT,RIGHT"), Save());
+ std::unique_ptr<RooFitResult> r3{modelsum.fitTo(*data, Range("LEFT,RIGHT"), PrintLevel(-1), Save())};
+ r3->Print();
 
  RooPlot* frame3 = x.frame();
  data->plotOn(frame3);

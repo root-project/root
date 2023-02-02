@@ -9,6 +9,10 @@
 ///
 /// \author Rene Brun
 
+#include <TF1.h>
+#include <TFile.h>
+#include <TH1F.h>
+
 TH1F *background;
 void histgen() {
    //generate the histogram background and save it to a file
@@ -21,7 +25,7 @@ void histgen() {
    TFile f("background.root","recreate");
    //save the background histogram
    h.Write();
-   //superimpose a gaussian signal to the background histogram
+   //superimpose a Gaussian signal to the background histogram
    TF1 f2("f2","gaus",0,10);
    f2.SetParameters(1,6,0.5);
    h.FillRandom("f2",2000);
@@ -29,12 +33,12 @@ void histgen() {
    h.Write();
 }
 
-Double_t ftotal(Double_t *x, Double_t *par) {
-   Double_t xx = x[0];
-   Int_t bin = background->GetXaxis()->FindBin(xx);
-   Double_t br = par[3]*background->GetBinContent(bin);
-   Double_t arg = (xx-par[1])/par[2];
-   Double_t sr = par[0]*TMath::Exp(-0.5*arg*arg);
+double ftotal(double *x, double *par) {
+   double xx = x[0];
+   int bin = background->GetXaxis()->FindBin(xx);
+   double br = par[3]*background->GetBinContent(bin);
+   double arg = (xx-par[1])/par[2];
+   double sr = par[0]*TMath::Exp(-0.5*arg*arg);
    return sr + br;
 }
 void fithist() {
@@ -47,7 +51,7 @@ void fithist() {
    TH1F *result = (TH1F*)f->Get("result");
 
    TF1 *ftot = new TF1("ftot",ftotal,0,10,4);
-   Double_t norm = result->GetMaximum();
+   double norm = result->GetMaximum();
    ftot->SetParameters(0.5*norm,5,.2,norm);
    ftot->SetParLimits(0,.3*norm,norm);
 

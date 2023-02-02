@@ -37,6 +37,7 @@ namespace Math {
 
       @ingroup GenVector
 
+      @sa Overview of the @ref GenVector "physics vector library"
    */
 class AxisAngle {
 

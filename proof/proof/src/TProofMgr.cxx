@@ -425,7 +425,7 @@ TProof *TProofMgr::CreateSession(const char *cfg,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Checks if 'url' refers to the same 'user@host:port' entity as the URL
+/// Checks if 'url' refers to the same `user@host:port` entity as the URL
 /// in memory
 
 Bool_t TProofMgr::MatchUrl(const char *url)

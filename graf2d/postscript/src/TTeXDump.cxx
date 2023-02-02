@@ -84,7 +84,7 @@ corresponding pdf file `simple.pdf`.
 
 TTeXDump::TTeXDump() : TVirtualPS()
 {
-   fStream       = 0;
+   fStream       = nullptr;
    fType         = 0;
    gVirtualPS    = this;
    fBoundingBox  = kFALSE;
@@ -109,7 +109,7 @@ TTeXDump::TTeXDump() : TVirtualPS()
 
 TTeXDump::TTeXDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 {
-   fStream       = 0;
+   fStream       = nullptr;
    fType         = 0;
    gVirtualPS    = this;
    fBoundingBox  = kFALSE;
@@ -156,9 +156,9 @@ void TTeXDump::Open(const char *fname, Int_t wtype)
 
    // Open OS file
    fStream   = new std::ofstream(fname,std::ios::out);
-   if (fStream == 0 || !fStream->good()) {
+   if (!fStream || !fStream->good()) {
       printf("ERROR in TTeXDump::Open: Cannot open file:%s\n",fname);
-      if (fStream == 0) return;
+      if (!fStream) return;
    }
 
    gVirtualPS = this;
@@ -213,9 +213,9 @@ void TTeXDump::Close(Option_t *)
    }
 
    // Close file stream
-   if (fStream) { fStream->close(); delete fStream; fStream = 0;}
+   if (fStream) { fStream->close(); delete fStream; fStream = nullptr;}
 
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -239,7 +239,7 @@ void TTeXDump::On()
 
 void TTeXDump::Off()
 {
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -103,7 +103,7 @@ static inline PyObject* PyROOT_PyBool_FromInt( Int_t b ) {
 PyObject* PyROOT::TBoolExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct python bool return value
+// execute `method` with argument `self, ctxt`, construct python bool return value
    Bool_t retval = GILCallB( method, self, ctxt );
    PyObject* result = retval ? Py_True : Py_False;
    Py_INCREF( result );
@@ -111,7 +111,7 @@ PyObject* PyROOT::TBoolExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct python bool return value
+/// execute `method` with argument `self, ctxt`, construct python bool return value
 
 PyObject* PyROOT::TBoolConstRefExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -130,7 +130,7 @@ PyObject* PyROOT::TCharExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct python string return value
+/// execute `method` with argument `self, ctxt`, construct python string return value
 /// with the single char
 
 PyObject* PyROOT::TCharConstRefExecutor::Execute(
@@ -140,7 +140,7 @@ PyObject* PyROOT::TCharConstRefExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, args>, construct python string return value
+/// execute `method` with argument `self, args`, construct python string return value
 /// with the single char
 
 PyObject* PyROOT::TUCharExecutor::Execute(
@@ -150,7 +150,7 @@ PyObject* PyROOT::TUCharExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct python string return value
+/// execute `method` with argument `self, ctxt`, construct python string return value
 ///  with the single char from the pointer return
 
 PyObject* PyROOT::TUCharConstRefExecutor::Execute(
@@ -160,7 +160,7 @@ PyObject* PyROOT::TUCharConstRefExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct python int return value
+/// execute `method` with argument `self, ctxt`, construct python int return value
 
 PyObject* PyROOT::TIntExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -169,7 +169,7 @@ PyObject* PyROOT::TIntExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct python int return value
+/// execute `method` with argument `self, ctxt`, construct python int return value
 
 PyObject* PyROOT::TShortExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -178,7 +178,7 @@ PyObject* PyROOT::TShortExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct python long return value
+/// execute `method` with argument `self, ctxt`, construct python long return value
 
 PyObject* PyROOT::TLongExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -187,7 +187,7 @@ PyObject* PyROOT::TLongExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct python unsigned long return value
+/// execute `method` with argument `self, ctxt`, construct python unsigned long return value
 
 PyObject* PyROOT::TULongExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -196,7 +196,7 @@ PyObject* PyROOT::TULongExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct python long long return value
+/// execute `method` with argument `self, ctxt`, construct python long long return value
 
 PyObject* PyROOT::TLongLongExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -206,7 +206,7 @@ PyObject* PyROOT::TLongLongExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct python unsigned long long return value
+/// execute `method` with argument `self, ctxt`, construct python unsigned long long return value
 
 PyObject* PyROOT::TULongLongExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -216,7 +216,7 @@ PyObject* PyROOT::TULongLongExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct python float return value
+/// execute `method` with argument `self, ctxt`, construct python float return value
 
 PyObject* PyROOT::TFloatExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -225,7 +225,7 @@ PyObject* PyROOT::TFloatExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct python float return value
+/// execute `method` with argument `self, ctxt`, construct python float return value
 
 PyObject* PyROOT::TDoubleExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -234,7 +234,7 @@ PyObject* PyROOT::TDoubleExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct python float return value
+/// execute `method` with argument `self, ctxt`, construct python float return value
 
 PyObject* PyROOT::TLongDoubleExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -294,7 +294,7 @@ PYROOT_IMPLEMENT_BASIC_REFEXECUTOR(
    LongDouble, LongDouble_t, LongDouble_t, PyFloat_FromDouble, PyFloat_AsDouble )
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, return python string return value
+/// execute `method` with argument `self, ctxt`, return python string return value
 
 PyObject* PyROOT::TSTLStringRefExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -316,7 +316,7 @@ PyObject* PyROOT::TSTLStringRefExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, return None
+/// execute `method` with argument `self, ctxt`, return None
 
 PyObject* PyROOT::TVoidExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -327,7 +327,7 @@ PyObject* PyROOT::TVoidExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct python string return value
+/// execute `method` with argument `self, ctxt`, construct python string return value
 
 PyObject* PyROOT::TCStringExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -346,7 +346,7 @@ PyObject* PyROOT::TCStringExecutor::Execute(
 PyObject* PyROOT::TVoidArrayExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct python long return value
+// execute `method` with argument `self, ctxt`, construct python long return value
    Long_t* result = (Long_t*)GILCallR( method, self, ctxt );
    if ( ! result ) {
       Py_INCREF( gNullPtrObject );
@@ -381,7 +381,7 @@ PYROOT_IMPLEMENT_ARRAY_EXECUTOR( Double, Double_t )
 PyObject* PyROOT::TSTLStringExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct python string return value
+// execute `method` with argument `self, ctxt`, construct python string return value
 
    static Cppyy::TCppScope_t sSTLStringScope = Cppyy::GetScope( "std::string" );
    std::string* result = (std::string*)GILCallO( method, self, ctxt, sSTLStringScope );
@@ -398,7 +398,7 @@ PyObject* PyROOT::TSTLStringExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct python proxy object return value
+/// execute `method` with argument `self, ctxt`, construct python proxy object return value
 
 PyObject* PyROOT::TTGlobalExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -407,7 +407,7 @@ PyObject* PyROOT::TTGlobalExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct python proxy object return value
+/// execute `method` with argument `self, ctxt`, construct python proxy object return value
 
 PyObject* PyROOT::TCppObjectExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -484,7 +484,7 @@ PyObject* PyROOT::TCppObjectRefExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct python ROOT object return ptr value
+/// execute `method` with argument `self, ctxt`, construct python ROOT object return ptr value
 
 PyObject* PyROOT::TCppObjectPtrPtrExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -493,7 +493,7 @@ PyObject* PyROOT::TCppObjectPtrPtrExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct python ROOT object (ignoring ref) return ptr value
+/// execute `method` with argument `self, ctxt`, construct python ROOT object (ignoring ref) return ptr value
 
 PyObject* PyROOT::TCppObjectPtrRefExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -606,7 +606,7 @@ PyObject* PyROOT::TCppObjectBySmartPtrRefExecutor::Execute(
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, construct TTupleOfInstances from return value
+/// execute `method` with argument `self, ctxt`, construct TTupleOfInstances from return value
 
 PyObject* PyROOT::TCppObjectArrayExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
@@ -625,7 +625,7 @@ PyObject* PyROOT::TConstructorExecutor::Execute(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// execute <method> with argument <self, ctxt>, return python object
+/// execute `method` with argument `self, ctxt`, return python object
 
 PyObject* PyROOT::TPyObjectExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )

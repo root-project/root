@@ -32,8 +32,6 @@ CLING_LIB_EXPORT
 void* cling_runtime_internal_throwIfInvalidPointer(void* Interp, void* Expr,
                                                    const void* Arg) {
 
-  const clang::Expr* const E = (const clang::Expr*)Expr;
-
 #if defined(__APPLE__) && defined(__arm64__)
   // See https://github.com/root-project/root/issues/7541 and
   // https://bugs.llvm.org/show_bug.cgi?id=49692 :
@@ -42,6 +40,8 @@ void* cling_runtime_internal_throwIfInvalidPointer(void* Interp, void* Expr,
   (void)Interp;
   (void)Expr;
 #else
+  const clang::Expr* const E = (const clang::Expr*)Expr;
+
   // The isValidAddress function return true even when the pointer is
   // null thus the checks have to be done before returning successfully from the
   // function in this specific order.
@@ -112,7 +112,11 @@ namespace cling {
   void CompilationException::throwingHandler(void * /*user_data*/,
                                              const std::string& reason,
                                              bool /*gen_crash_diag*/) {
-#ifndef _MSC_VER
+    // See https://github.com/root-project/root/issues/7541 and
+    // https://bugs.llvm.org/show_bug.cgi?id=49692 :
+    // We cannot catch exceptions that traverse JITted code on M1, so let's throw less.
+    // This might still better than `terminate`...
+#if !defined(_MSC_VER) && (!defined(__APPLE__) || !defined(__arm64__))
     throw cling::CompilationException(reason);
 #endif
   }

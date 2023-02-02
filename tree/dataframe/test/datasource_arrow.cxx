@@ -11,6 +11,7 @@
 #include <arrow/memory_pool.h>
 #include <arrow/record_batch.h>
 #include <arrow/table.h>
+#include <arrow/testing/builder.h>
 #include <arrow/testing/gtest_util.h>
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
@@ -177,8 +178,6 @@ TEST(RArrowDS, SetNSlotsTwice)
 }
 #endif
 
-#ifdef R__B64
-
 TEST(RArrowDS, FromARDF)
 {
    std::unique_ptr<RDataSource> tds(new RArrowDS(createTestTable(), {}));
@@ -250,5 +249,3 @@ TEST(RArrowDS, FromARDFWithJittingMT)
 }
 
 #endif // R__USE_IMT
-
-#endif // R__B64

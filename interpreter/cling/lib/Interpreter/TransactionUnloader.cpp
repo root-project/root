@@ -35,13 +35,23 @@ namespace cling {
 
       if (Call == Transaction::kCCIHandleVTable)
         continue;
+
+      // The documentation for `ASTConsumer::HandleCXXImplicitFunctionInstantiation()`
+      // states that implicit function instantiations come through both
+      // `HandleCXXImplicitFunctionInstantiation` (before the body is intantiated)
+      // and `HandleTopLevelDecl` (after).
+      // Therefore, the same decl is duplicated in the transaction differing in the ConsumerCallInfo. `UnloadDecl()` should be called only once.
+      if (Call == Transaction::kCCIHandleCXXImplicitFunctionInstantiation)
+        continue;
+
       // The non templated classes come through HandleTopLevelDecl and
       // HandleTagDeclDefinition, this is why we need to filter.
-      if (Call == Transaction::kCCIHandleTagDeclDefinition)
-      if (const CXXRecordDecl* D
-        = dyn_cast<CXXRecordDecl>(DGR.getSingleDecl()))
-      if (D->getTemplateSpecializationKind() == TSK_Undeclared)
-        continue;
+      if (Call == Transaction::kCCIHandleTagDeclDefinition) {
+        if (const CXXRecordDecl* D
+            = dyn_cast<CXXRecordDecl>(DGR.getSingleDecl()))
+          if (D->getTemplateSpecializationKind() == TSK_Undeclared)
+            continue;
+      }
 
       if (Call == Transaction::kCCINone)
         m_Interp->unload(*(*T->rnested_begin()));
@@ -96,19 +106,37 @@ namespace cling {
     return Successful;
   }
 
+#ifndef NDEBUG
+  static bool isPracticallyEmptyModule(const llvm::Module* M) {
+    return M->empty() && M->global_empty() && M->alias_empty();
+  }
+#endif
+
   bool TransactionUnloader::RevertTransaction(Transaction* T) {
 
     bool Successful = true;
-    if (getExecutor() && T->getModule()) {
-      Successful = getExecutor()->unloadModule(T->getModule()) && Successful;
+    if (getExecutor()) {
+      if (T->getState() == Transaction::kCommitted && !T->isNestedTransaction()) {
+        if (const llvm::Module *CompiledM = T->getCompiledModule())
+          Successful = unloadModule(const_cast<llvm::Module*>(CompiledM)) &&
+            Successful;
+        else
+          assert((!T->getModule() || isPracticallyEmptyModule(T->getModule()))
+                 && "Must have already compiled this module");
+      }
+
+      // getExecutor()->unloadModule() will free globals - so first run
+      // this->unloadModule().
+      if (llvm::Error Err = getExecutor()->unloadModule(*T)) {
+        llvm::logAllUnhandledErrors(std::move(Err), llvm::errs(), "Unload: ");
+        Successful = false;
+      }
 
       // Cleanup the module from unused global values.
       // if (T->getModule()) {
       //   llvm::ModulePass* globalDCE = llvm::createGlobalDCEPass();
       //   globalDCE->runOnModule(*T->getModule());
       // }
-
-      Successful = unloadModule(T->getModule()) && Successful;
     }
 
     // Clean up the pending instantiations

@@ -152,7 +152,7 @@ void ping(int nclients = 1, int test_mode = 0)
    // provide blocking method to let run
    if (batch_mode) {
       const int run_limit = 200;
-      const double fullrun_time = 40., startup_time = 15.;
+      const double fullrun_time = 100., startup_time = 70.;
       start_tm = firstmsg_tm = std::chrono::high_resolution_clock::now();
       window->WaitFor([=](double tm) { return (current_counter >= run_limit) || (tm > fullrun_time) || ((current_counter == 0) && (tm > startup_time))  ? 1 : 0; });
       stop_tm = std::chrono::high_resolution_clock::now();

@@ -10,7 +10,7 @@
 /// The two tags where used the THtml version to generate images from ROOT code.
 /// The generated picture is inlined exactly at the place where the macro is
 /// defined. The Macro can be defined in two way:
-///  - by direct in-lining of the the C++ code
+///  - by direct in-lining of the C++ code
 ///  - by a reference to a C++ file
 /// The tag `Begin_Macro` can have the parameter `(source)`. The directive becomes:
 /// `Begin_Macro(source)`. This parameter allows to show the macro's code in addition.
@@ -76,6 +76,7 @@
 #include <string>
 #include <cstring>
 #include <iostream>
+#include <fstream>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <memory>
@@ -159,6 +160,7 @@ int main(int argc, char *argv[])
 
    // Open the input file name.
    f = fopen(gFileName.c_str(),"r");
+   if (!f) return 1;
 
    if (gFileName.find("tutorials") != string::npos) FilterTutorial();
    else                                             FilterClass();
@@ -195,19 +197,24 @@ void FilterClass()
             if (m) {
                fclose(m);
                m = 0;
-               ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true,false)\""
-                                              , StringFormat("%s_%3.3d.C", gClassName.c_str(), gMacroID).c_str()
-                                              , StringFormat("%s_%3.3d.%s", gClassName.c_str(), gImageID, gImageType.c_str()).c_str()
-                                              , gOutDir.c_str()));
+               ExecuteCommand(
+                  StringFormat("root -l -b -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true,false)\"",
+                               StringFormat("%s_%3.3d.C", gClassName.c_str(), gMacroID).c_str(),
+                               StringFormat("%s_%3.3d.%s", gClassName.c_str(), gImageID, gImageType.c_str()).c_str(),
+                               gOutDir.c_str()));
                ExecuteCommand(StringFormat("rm %s_%3.3d.C", gClassName.c_str(), gMacroID));
             }
             int ImageSize = 300;
             FILE *f = fopen("ImagesSizes.dat", "r");
-            fscanf(f, "%d", &ImageSize);
+            if (!f) return;
+            if (fscanf(f, "%d", &ImageSize) == 1) {
+               ReplaceAll(gImageWidth, "IMAGESIZE", StringFormat("%d", ImageSize));
+               ReplaceAll(gLineString, "End_Macro",
+                          StringFormat("\\image html pict1_%s_%3.3d.%s %s", gClassName.c_str(), gImageID,
+                                       gImageType.c_str(), gImageWidth.c_str()));
+            }
             fclose(f);
             remove("ImagesSizes.dat");
-            ReplaceAll(gImageWidth,"IMAGESIZE",StringFormat("%d",ImageSize));
-            ReplaceAll(gLineString,"End_Macro", StringFormat("\\image html pict1_%s_%3.3d.%s %s", gClassName.c_str(), gImageID, gImageType.c_str(), gImageWidth.c_str()));
          }
 
          if (gInMacro) {
@@ -297,6 +304,12 @@ void FilterClass()
 
 void FilterTutorial()
 {
+   // Use these to write out work that should be run in parallel after doxygen is done:
+   // This executes python <work>
+   std::ofstream worklist_py("tutorialWorklist_py", ios_base::app);
+   // This executes root <work>
+   std::ofstream worklist_root("tutorialWorklist_root", ios_base::app);
+
    // File for inline macros.
    FILE *m = 0;
 
@@ -336,7 +349,11 @@ void FilterTutorial()
             ReplaceAll(image_name, " ", "");
             ReplaceAll(image_name, "///\\macro_image(", "");
             ReplaceAll(image_name, ")\n", "");
-            ExecuteCommand(StringFormat("root -l -b -q %s", gFileName.c_str()));
+            if (gPython) {
+               ExecuteCommand(StringFormat("%s %s", gPythonExec.c_str(), gFileName.c_str()));
+            } else {
+               ExecuteCommand(StringFormat("root -l -b -q %s", gFileName.c_str()));
+            }
             ExecuteCommand(StringFormat("mv %s %s/html", image_name.c_str(), gOutDir.c_str()));
             ReplaceAll(gLineString, "macro_image (", "image html ");
             ReplaceAll(gLineString, ")", "");
@@ -345,16 +362,17 @@ void FilterTutorial()
             IN = gImageName;
             int i = IN.find(".");
             IN.erase(i,IN.length());
-            ExecuteCommand(StringFormat("root -l -b -q \"MakeTCanvasJS.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                         gFileName.c_str(), IN.c_str(), gOutDir.c_str()));
+            ExecuteCommand(StringFormat("root -l -b -q \"MakeTCanvasJS.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d)\"",
+                                         gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));
             ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
          } else if (rcanvas_js) {
             string IN;
             IN = gImageName;
             int i = IN.find(".");
             IN.erase(i,IN.length());
-            ExecuteCommand(StringFormat("root -l -b -q --web=batch \"MakeRCanvasJS.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                          gFileName.c_str(), IN.c_str(), gOutDir.c_str()));
+            ExecuteCommand(StringFormat(
+               "root -l -b -q --web=batch \"MakeRCanvasJS.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d)\"",
+               gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));
             ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
          } else {
             if (gPython) {
@@ -369,11 +387,13 @@ void FilterTutorial()
                }
             } else {
                if (nobatch) {
-                  ExecuteCommand(StringFormat("root -l -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                               gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+                  ExecuteCommand(
+                     StringFormat("root -l -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                                  gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
                } else {
-                  ExecuteCommand(StringFormat("root -l -b -q \"makeimage.C(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                               gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+                  ExecuteCommand(
+                     StringFormat("root -l -b -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
+                                  gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
                }
             }
             ReplaceAll(gLineString, "\\macro_image", ImagesList(gImageName));
@@ -390,16 +410,16 @@ void FilterTutorial()
 
       // notebook found
       if (gLineString.find("\\notebook") != string::npos) {
-         ExecuteCommand(StringFormat("%s converttonotebook.py %s %s/notebooks/",
-                                          gPythonExec.c_str(),
-                                          gFileName.c_str(), gOutDir.c_str()));
+         // Notebooks are generated in dedicated step:
+         worklist_py << "converttonotebook.py " << gFileName << " " << gOutDir << "/notebooks/" << std::endl;
+
          if (gPython){
              gLineString = "## ";
          }
          else{
              gLineString = "/// ";
          }
-         gLineString += StringFormat( "\\htmlonly <a href=\"https://nbviewer.jupyter.org/url/root.cern/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src= notebook.gif alt=\"View in nbviewer\" style=\"height:1em\" ></a> <a href=\"https://cern.ch/swanserver/cgi-bin/go?projurl=https://root.cern/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src=\"https://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png\"  alt=\"Open in SWAN\" style=\"height:1em\" ></a> \\endhtmlonly \n", gMacroName.c_str() , gMacroName.c_str());
+         gLineString += StringFormat( "\\htmlonly <a href=\"https://nbviewer.jupyter.org/url/root.cern/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src= notebook.gif alt=\"View in nbviewer\" style=\"height:1.5em\" ></a> <a href=\"https://cern.ch/swanserver/cgi-bin/go?projurl=https://root.cern/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src=\"https://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png\"  alt=\"Open in SWAN\" style=\"height:1.5em\" ></a> <br/>\\endhtmlonly \n", gMacroName.c_str() , gMacroName.c_str());
       }
 
       // \macro_output found
@@ -481,7 +501,7 @@ void ExecuteMacro()
    gMacroName = gLineString.substr(i1,i2-i1+1);
 
    // Build the ROOT command to be executed.
-   gLineString.insert(0, StringFormat("root -l -b -q \"makeimage.C(\\\""));
+   gLineString.insert(0, StringFormat("root -l -b -q \"makeimage.C+O(\\\""));
    size_t l = gLineString.length();
    gLineString.replace(l-1,1,StringFormat("\\\",\\\"%s\\\",\\\"%s\\\",true,false)\"", gImageName.c_str(), gOutDir.c_str()));
 
@@ -499,10 +519,11 @@ void ExecuteMacro()
 void ExecuteCommand(string command)
 {
    int o = dup(fileno(stdout));
-   freopen(gOutputName.c_str(),"a",stdout);
-   system(command.c_str());
-   dup2(o,fileno(stdout));
-   close(o);
+   if (freopen(gOutputName.c_str(), "a", stdout) != nullptr) {
+      int i = system(command.c_str());
+      dup2(o, fileno(stdout));
+      close(o);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -512,7 +533,9 @@ int NumberOfImages()
 {
    int ImageNum;
    FILE *f = fopen("NumberOfImages.dat", "r");
-   fscanf(f, "%d", &ImageNum);
+   if (!f) return 0;
+   if (fscanf(f, "%d", &ImageNum) != 1)
+      ImageNum = 0;
    fclose(f);
    remove("NumberOfImages.dat");
    return ImageNum;
@@ -565,26 +588,30 @@ string ImagesList(string& name) {
 
    // evaluate the size of the output string
    char evalstring[300];
-   sprintf(&evalstring[0]," \n/// \\image html pict%d_%s width=%d",N,name.c_str(),10000);
+   snprintf(&evalstring[0], 300, " \n/// \\image html pict%d_%s width=%d", N, name.c_str(), 10000);
    int evallen = (int)strlen(evalstring);
 
    // allocate the output string
-   char *val = (char *) malloc(sizeof(char)*evallen*N);
-
+   int vallen = sizeof(char) * evallen * N;
+   char *val = (char *)malloc(vallen);
    int len = 0;
 
    int ImageSize = 300;
    FILE *f = fopen("ImagesSizes.dat", "r");
+   if (!f) return "";
 
    for (int i = 1; i <= N; i++){
-      fscanf(f, "%d", &ImageSize);
-      if (i>1) {
-         if (gPython) sprintf(&val[len]," \n## \\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
-         else         sprintf(&val[len]," \n/// \\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
-      } else {
-         sprintf(&val[len],"\\image html pict%d_%s width=%d",i,name.c_str(),ImageSize);
+      if (fscanf(f, "%d", &ImageSize) == 1) {
+         if (i > 1) {
+            if (gPython)
+               snprintf(&val[len], vallen, " \n## \\image html pict%d_%s width=%d", i, name.c_str(), ImageSize);
+            else
+               snprintf(&val[len], vallen, " \n/// \\image html pict%d_%s width=%d", i, name.c_str(), ImageSize);
+         } else {
+            snprintf(&val[len], vallen, "\\image html pict%d_%s width=%d", i, name.c_str(), ImageSize);
+         }
+         len = (int)strlen(val);
       }
-      len = (int)strlen(val);
    }
 
    fclose(f);

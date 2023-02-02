@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "clang/AST/Attr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/Driver/DriverDiagnostic.h"
 #include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
@@ -103,7 +104,7 @@ private:
       "basic_ios",
       "future",
       "optional",
-      "packaged_task"
+      "packaged_task",
       "promise",
       "shared_future",
       "shared_lock",
@@ -169,9 +170,9 @@ private:
       // in the first place.
     }
 
-    std::shared_ptr<PathDiagnosticPiece> VisitNode(const ExplodedNode *N,
-                                                   BugReporterContext &BRC,
-                                                   BugReport &BR) override;
+    PathDiagnosticPieceRef VisitNode(const ExplodedNode *N,
+                                     BugReporterContext &BRC,
+                                     PathSensitiveBugReport &BR) override;
 
   private:
     const MoveChecker &Chk;
@@ -201,7 +202,7 @@ public:
   };
 
 private:
-  mutable std::unique_ptr<BugType> BT;
+  BugType BT{this, "Use-after-move", categories::CXXMoveSemantics};
 
   // Check if the given form of potential misuse of a given object
   // should be reported. If so, get it reported. The callback from which
@@ -270,9 +271,10 @@ static const MemRegion *unwrapRValueReferenceIndirection(const MemRegion *MR) {
   return MR;
 }
 
-std::shared_ptr<PathDiagnosticPiece>
+PathDiagnosticPieceRef
 MoveChecker::MovedBugVisitor::VisitNode(const ExplodedNode *N,
-                                        BugReporterContext &BRC, BugReport &BR) {
+                                        BugReporterContext &BRC,
+                                        PathSensitiveBugReport &BR) {
   // We need only the last move of the reported object's region.
   // The visitor walks the ExplodedGraph backwards.
   if (Found)
@@ -288,7 +290,7 @@ MoveChecker::MovedBugVisitor::VisitNode(const ExplodedNode *N,
     return nullptr;
 
   // Retrieve the associated statement.
-  const Stmt *S = PathDiagnosticLocation::getStmt(N);
+  const Stmt *S = N->getStmtForDiagnostics();
   if (!S)
     return nullptr;
   Found = true;
@@ -391,16 +393,11 @@ ExplodedNode *MoveChecker::reportBug(const MemRegion *Region,
                                      MisuseKind MK) const {
   if (ExplodedNode *N = misuseCausesCrash(MK) ? C.generateErrorNode()
                                               : C.generateNonFatalErrorNode()) {
-
-    if (!BT)
-      BT.reset(new BugType(this, "Use-after-move",
-                           "C++ move semantics"));
-
     // Uniqueing report to the same object.
     PathDiagnosticLocation LocUsedForUniqueing;
     const ExplodedNode *MoveNode = getMoveLocation(N, Region, C);
 
-    if (const Stmt *MoveStmt = PathDiagnosticLocation::getStmt(MoveNode))
+    if (const Stmt *MoveStmt = MoveNode->getStmtForDiagnostics())
       LocUsedForUniqueing = PathDiagnosticLocation::createBegin(
           MoveStmt, C.getSourceManager(), MoveNode->getLocationContext());
 
@@ -428,10 +425,10 @@ ExplodedNode *MoveChecker::reportBug(const MemRegion *Region,
         break;
     }
 
-    auto R =
-        llvm::make_unique<BugReport>(*BT, OS.str(), N, LocUsedForUniqueing,
-                                     MoveNode->getLocationContext()->getDecl());
-    R->addVisitor(llvm::make_unique<MovedBugVisitor>(*this, Region, RD, MK));
+    auto R = std::make_unique<PathSensitiveBugReport>(
+        BT, OS.str(), N, LocUsedForUniqueing,
+        MoveNode->getLocationContext()->getDecl());
+    R->addVisitor(std::make_unique<MovedBugVisitor>(*this, Region, RD, MK));
     C.emitReport(std::move(R));
     return N;
   }
@@ -475,7 +472,7 @@ void MoveChecker::checkPostCall(const CallEvent &Call,
   const MemRegion *BaseRegion = ArgRegion->getBaseRegion();
   // Skip temp objects because of their short lifetime.
   if (BaseRegion->getAs<CXXTempObjectRegion>() ||
-      AFC->getArgExpr(0)->isRValue())
+      AFC->getArgExpr(0)->isPRValue())
     return;
   // If it has already been reported do not need to modify the state.
 
@@ -578,7 +575,7 @@ void MoveChecker::explainObject(llvm::raw_ostream &OS, const MemRegion *MR,
   if (const auto DR =
           dyn_cast_or_null<DeclRegion>(unwrapRValueReferenceIndirection(MR))) {
     const auto *RegionDecl = cast<NamedDecl>(DR->getDecl());
-    OS << " '" << RegionDecl->getNameAsString() << "'";
+    OS << " '" << RegionDecl->getDeclName() << "'";
   }
 
   ObjectKind OK = classifyObject(MR, RD);
@@ -684,7 +681,7 @@ void MoveChecker::checkDeadSymbols(SymbolReaper &SymReaper,
                                    CheckerContext &C) const {
   ProgramStateRef State = C.getState();
   TrackedRegionMapTy TrackedRegions = State->get<TrackedRegionMap>();
-  for (TrackedRegionMapTy::value_type E : TrackedRegions) {
+  for (auto E : TrackedRegions) {
     const MemRegion *Region = E.first;
     bool IsRegDead = !SymReaper.isLiveRegion(Region);
 
@@ -755,6 +752,6 @@ void ento::registerMoveChecker(CheckerManager &mgr) {
       mgr.getAnalyzerOptions().getCheckerStringOption(chk, "WarnOn"), mgr);
 }
 
-bool ento::shouldRegisterMoveChecker(const LangOptions &LO) {
+bool ento::shouldRegisterMoveChecker(const CheckerManager &mgr) {
   return true;
 }

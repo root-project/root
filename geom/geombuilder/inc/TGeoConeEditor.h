@@ -54,7 +54,7 @@ protected:
    Bool_t       IsDelayed() const;
 
 public:
-   TGeoConeEditor(const TGWindow *p = 0,
+   TGeoConeEditor(const TGWindow *p = nullptr,
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
@@ -91,7 +91,7 @@ protected:
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
 
 public:
-   TGeoConeSegEditor(const TGWindow *p = 0,
+   TGeoConeSegEditor(const TGWindow *p = nullptr,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());

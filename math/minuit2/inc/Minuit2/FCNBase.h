@@ -45,7 +45,7 @@ Interface (abstract class) defining the function to be minimized, which has to b
 class FCNBase : public GenericFunction {
 
 public:
-   virtual ~FCNBase() {}
+   ~FCNBase() override {}
 
    /**
 
@@ -69,7 +69,7 @@ public:
 
    */
 
-   virtual double operator()(const std::vector<double> &v) const = 0;
+   double operator()(const std::vector<double> &v) const override = 0;
 
    /**
 

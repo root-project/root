@@ -28,11 +28,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TClingMethodInfo.h"
-#include "TClingClassInfo.h"
 #include "TClingUtils.h"
+#include "TClingMethodInfo.h"
 #include "TInterpreter.h"
-#include <string>
 
 #include "cling/Interpreter/Value.h"
 
@@ -51,6 +49,7 @@ class Interpreter;
 }
 
 class TClingClassInfo;
+class TClingMethodInfo;
 class TInterpreterValue;
 
 typedef void (*tcling_callfunc_Wrapper_t)(void*, int, void**, void*);
@@ -63,8 +62,6 @@ private:
 
    /// Cling interpreter, we do *not* own.
    cling::Interpreter* fInterp;
-   /// ROOT normalized context for that interpreter
-   const ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt;
    /// Current method, we own.
    std::unique_ptr<TClingMethodInfo> fMethod;
    /// Decl for the method
@@ -75,9 +72,6 @@ private:
    tcling_callfunc_Wrapper_t fWrapper;
    /// Stored function arguments, we own.
    mutable llvm::SmallVector<cling::Value, 8> fArgVals;
-   /// If true, do not limit number of function arguments to declared number.
-   bool fIgnoreExtraArgs : 1;
-   bool fReturnIsRecordType : 1;
 
 private:
    enum EReferenceType {
@@ -155,23 +149,21 @@ public:
 
    ~TClingCallFunc() = default;
 
-   explicit TClingCallFunc(cling::Interpreter *interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
-      : fInterp(interp), fNormCtxt(normCtxt), fWrapper(0), fIgnoreExtraArgs(false), fReturnIsRecordType(false)
+   explicit TClingCallFunc(cling::Interpreter *interp)
+      : fInterp(interp), fWrapper(0)
    {
       fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(interp));
    }
 
-   explicit TClingCallFunc(const TClingMethodInfo &minfo, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
-   : fInterp(minfo.GetInterpreter()), fNormCtxt(normCtxt), fWrapper(0), fIgnoreExtraArgs(false),
-     fReturnIsRecordType(false)
+   explicit TClingCallFunc(const TClingMethodInfo &minfo)
+   : fInterp(minfo.GetInterpreter()), fWrapper(0)
 
    {
       fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(minfo));
    }
 
    TClingCallFunc(const TClingCallFunc &rhs)
-      : fInterp(rhs.fInterp), fNormCtxt(rhs.fNormCtxt), fWrapper(rhs.fWrapper), fArgVals(rhs.fArgVals),
-        fIgnoreExtraArgs(rhs.fIgnoreExtraArgs), fReturnIsRecordType(rhs.fReturnIsRecordType)
+      : fInterp(rhs.fInterp), fWrapper(rhs.fWrapper), fArgVals(rhs.fArgVals)
    {
       fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(*rhs.fMethod));
    }
@@ -194,7 +186,7 @@ public:
    long long ExecInt64(void* address);
    double ExecDouble(void* address);
    TClingMethodInfo* FactoryMethod() const;
-   void IgnoreExtraArgs(bool ignore) { fIgnoreExtraArgs = ignore; }
+   void IgnoreExtraArgs(bool ignore) { /*FIXME Remove that interface */ }
    void Init();
    void Init(const TClingMethodInfo&);
    void Init(std::unique_ptr<TClingMethodInfo>);

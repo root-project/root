@@ -471,7 +471,7 @@ Bool_t TRecorderReplaying::Initialize(TRecorder *r, Bool_t showMouseCursor,
       f->Close();
    }
 
-   gPad = 0;
+   gPad = nullptr;
    // Starts replaying
    fTimer->Connect("Timeout()","TRecorderReplaying",this,"ReplayRealtime()");
    fTimer->Start(0);
@@ -1283,7 +1283,6 @@ Bool_t TRecorderRecording::StartRecording()
       TIter nextwindow (gClient->GetListOfWindows());
       TGWindow *twin;
       Window_t  twin2;
-      Int_t cnt = 0;
       while ((twin = (TGWindow*) nextwindow())) {
          twin2 = (Window_t) twin->GetId();
          if (IsFiltered(twin2)) {
@@ -1294,7 +1293,6 @@ Bool_t TRecorderRecording::StartRecording()
          else if (twin != gClient->GetRoot()) {
             RegisterWindow(twin2);
          }
-         cnt++;
       }
       //Info("TRecorderRecording::StartRecording", "Previous Canvases");
    }

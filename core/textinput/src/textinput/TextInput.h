@@ -42,7 +42,7 @@ namespace textinput {
     };
 
     TextInput(Reader& reader, Display& display,
-              const char* histFile = 0);
+              const char* histFile = nullptr);
     ~TextInput();
 
     // Getters
@@ -84,6 +84,8 @@ namespace textinput {
     void ReleaseInputOutput() const;
 
     // History interface
+    void SetHistoryMaxDepth(size_t maxDepth) const;
+    void SetHistoryPruneLength(size_t pruneLength) const;
     bool IsAutoHistAddEnabled() const { return fAutoHistAdd; }
     void EnableAutoHistAdd(bool enable = true) { fAutoHistAdd = enable; }
     void AddHistoryLine(const char* line);

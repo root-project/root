@@ -55,7 +55,11 @@ public:
    };
 
    static std::string GetClassIcon(const ClassArg &, bool = false);
+   static std::string GetClassDrawOption(const ClassArg &);
+   static bool SetClassDrawOption(const ClassArg &, const std::string &);
+
    static bool CanHaveChilds(const ClassArg &);
+   static bool NotShowChilds(const ClassArg &);
    static bool CanDraw6(const ClassArg &);
    static bool CanDraw7(const ClassArg &);
 
@@ -82,7 +86,8 @@ protected:
                       const std::string &iconname,
                       const std::string &browselib = "",
                       const std::string &draw6lib = "",
-                      const std::string &draw7lib = "");
+                      const std::string &draw7lib = "",
+                      const std::string &drawopt = "");
    void RegisterNTupleFunc(BrowseNTupleFunc_t func);
 
 private:
@@ -94,7 +99,7 @@ private:
    struct StructClass {
       RProvider *provider{nullptr};
       bool can_have_childs{false};
-      std::string iconname, browselib, draw6lib, draw7lib;
+      std::string iconname, browselib, draw6lib, draw7lib, drawopt;
       bool dummy() const { return !provider; }
    };
 
@@ -111,7 +116,7 @@ private:
    static Draw7Map_t &GetDraw7Map();
    static BrowseNTupleFunc_t gNTupleFunc;
 
-   static const StructClass &GetClassEntry(const ClassArg &);
+   static StructClass &GetClassEntry(const ClassArg &);
 
    template<class Map_t>
    void CleanThis(Map_t &fmap)

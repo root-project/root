@@ -74,7 +74,7 @@ void rf505_asciicfg()
 
    // Print the list of parameters that were not read from Section3
    cout << "The following parameters of the were _not_ read from Section3: "
-        << (*params->selectByAttrib("READ", kFALSE)) << endl;
+        << (*params->selectByAttrib("READ", false)) << endl;
 
    // Read parameters from section 'Section4' of file, which contains
    // 'include file' statement of rf505_asciicfg_example.txt

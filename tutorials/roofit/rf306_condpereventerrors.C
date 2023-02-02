@@ -14,7 +14,6 @@
 #include "RooDataSet.h"
 #include "RooGaussian.h"
 #include "RooGaussModel.h"
-#include "RooConstVar.h"
 #include "RooDecay.h"
 #include "RooLandau.h"
 #include "RooPlot.h"
@@ -45,7 +44,7 @@ void rf306_condpereventerrors()
    // ------------------------------------------------------------------------------------------------------
 
    // Use landau pdf to get somewhat realistic distribution with long tail
-   RooLandau pdfDtErr("pdfDtErr", "pdfDtErr", dterr, RooConst(1), RooConst(0.25));
+   RooLandau pdfDtErr("pdfDtErr", "pdfDtErr", dterr, 1.0, 0.25);
    RooDataSet *expDataDterr = pdfDtErr.generate(dterr, 10000);
 
    // S a m p l e   d a t a   f r o m   c o n d i t i o n a l   d e c a y _ g m ( d t | d t e r r )
@@ -82,8 +81,8 @@ void rf306_condpereventerrors()
    //
    // Instead of integrating out dterr, make a weighted average of curves
    // at values dterr_i as given in the external dataset.
-   // (The kTRUE argument bins the data before projection to speed up the process)
-   decay_gm.plotOn(frame2, ProjWData(*expDataDterr, kTRUE));
+   // (The true argument bins the data before projection to speed up the process)
+   decay_gm.plotOn(frame2, ProjWData(*expDataDterr, true));
 
    // Draw all frames on canvas
    TCanvas *c = new TCanvas("rf306_condpereventerrors", "rf306_condperventerrors", 1200, 400);

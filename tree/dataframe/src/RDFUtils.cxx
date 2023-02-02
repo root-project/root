@@ -219,22 +219,17 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
 /// column created by Define. Throws if type name deduction fails.
 /// Note that for fixed- or variable-sized c-style arrays the returned type name will be RVec<T>.
 /// vector2rvec specifies whether typename 'std::vector<T>' should be converted to 'RVec<T>' or returned as is
-/// customColID is only used if isDefine is true, and must correspond to the custom column's unique identifier
-/// returned by its `GetID()` method.
 std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, RDataSource *ds, RDefineBase *define,
                                       bool vector2rvec)
 {
    std::string colType;
 
    // must check defines first: we want Redefines to have precedence over everything else
-   if (colType.empty() && define) {
+   if (define) {
       colType = define->GetTypeName();
-   }
-
-   if (ds && ds->HasColumn(colName))
+   } else if (ds && ds->HasColumn(colName)) {
       colType = ds->GetTypeName(colName);
-
-   if (colType.empty() && tree) {
+   } else if (tree) {
       colType = GetBranchOrLeafTypeName(*tree, colName);
       if (vector2rvec && TClassEdit::IsSTLCont(colType) == ROOT::ESTLType::kSTLvector) {
          std::vector<std::string> split;
@@ -386,31 +381,30 @@ unsigned int GetColumnWidth(const std::vector<std::string>& names, const unsigne
    return columnWidth;
 }
 
-void CheckDefineType(RDefineBase &define, const std::type_info &tid)
+void CheckReaderTypeMatches(const std::type_info &colType, const std::type_info &requestedType,
+                            const std::string &colName)
 {
-   const auto &colTId = define.GetTypeId();
-
    // Here we compare names and not typeinfos since they may come from two different contexts: a compiled
    // and a jitted one.
-   const auto diffTypes = (0 != std::strcmp(colTId.name(), tid.name()));
+   const auto diffTypes = (0 != std::strcmp(colType.name(), requestedType.name()));
    auto inheritedType = [&]() {
-      auto colTClass = TClass::GetClass(colTId);
-      return colTClass && colTClass->InheritsFrom(TClass::GetClass(tid));
+      auto colTClass = TClass::GetClass(colType);
+      return colTClass && colTClass->InheritsFrom(TClass::GetClass(requestedType));
    };
 
    if (diffTypes && !inheritedType()) {
-      const auto tName = TypeID2TypeName(tid);
-      const auto colTypeName = TypeID2TypeName(colTId);
-      std::string errMsg = "RDefineReader: column \"" + define.GetName() + "\" is being used as ";
+      const auto tName = TypeID2TypeName(requestedType);
+      const auto colTypeName = TypeID2TypeName(colType);
+      std::string errMsg = "RDataFrame: type mismatch: column \"" + colName + "\" is being used as ";
       if (tName.empty()) {
-         errMsg += tid.name();
+         errMsg += requestedType.name();
          errMsg += " (extracted from type info)";
       } else {
          errMsg += tName;
       }
-      errMsg += " but defined column has type ";
+      errMsg += " but the Define or Vary node advertises it as ";
       if (colTypeName.empty()) {
-         auto &id = colTId;
+         auto &id = colType;
          errMsg += id.name();
          errMsg += " (extracted from type info)";
       } else {
@@ -418,6 +412,11 @@ void CheckDefineType(RDefineBase &define, const std::type_info &tid)
       }
       throw std::runtime_error(errMsg);
    }
+}
+
+bool IsStrInVec(const std::string &str, const std::vector<std::string> &vec)
+{
+   return std::find(vec.cbegin(), vec.cend(), str) != vec.cend();
 }
 
 } // end NS RDF

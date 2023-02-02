@@ -58,13 +58,15 @@ public:
 
    RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions()) {
       ROOT::Experimental::RNTupleDescriptorBuilder descBuilder;
-      descBuilder.AddCluster(0, 0, ClusterSize_t(1));
-      descBuilder.AddCluster(1, 1, ClusterSize_t(1));
-      descBuilder.AddCluster(2, 2, ClusterSize_t(1));
-      descBuilder.AddCluster(3, 3, ClusterSize_t(1));
-      descBuilder.AddCluster(4, 4, ClusterSize_t(1));
-      descBuilder.AddCluster(5, 5, ClusterSize_t(1));
-      fDescriptor = descBuilder.MoveDescriptor();
+      for (unsigned i = 0; i <= 5; ++i) {
+         descBuilder.AddClusterSummary(i, i, 1);
+      }
+      auto descriptorGuard = GetExclDescriptorGuard();
+      descriptorGuard.MoveIn(descBuilder.MoveDescriptor());
+      for (unsigned i = 0; i <= 5; ++i) {
+         descriptorGuard->AddClusterDetails(
+            ROOT::Experimental::RClusterDescriptorBuilder(i, i, 1).MoveDescriptor().Unwrap());
+      }
    }
    std::unique_ptr<RPageSource> Clone() const final { return nullptr; }
    RPage PopulatePage(ColumnHandle_t, ROOT::Experimental::NTupleSize_t) final { return RPage(); }
@@ -78,10 +80,10 @@ public:
       std::vector<std::unique_ptr<RCluster>> result;
       for (auto key : clusterKeys) {
          fReqsClusterIds.emplace_back(key.fClusterId);
-         fReqsColumns.emplace_back(key.fColumnSet);
+         fReqsColumns.emplace_back(key.fPhysicalColumnSet);
          auto cluster = std::make_unique<RCluster>(key.fClusterId);
          auto pageMap = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMap>();
-         for (auto colId : key.fColumnSet) {
+         for (auto colId : key.fPhysicalColumnSet) {
             pageMap->Register(ROnDiskPage::Key(colId, 0), ROnDiskPage(nullptr, 0));
             cluster->SetColumnAvailable(colId);
          }
@@ -211,6 +213,7 @@ TEST(ClusterPool, GetClusterBasics)
    RPageSourceMock p1;
    RClusterPool c1(p1, 1);
    c1.GetCluster(3, {0});
+   c1.WaitForInFlightClusters();
    ASSERT_EQ(2U, p1.fReqsClusterIds.size());
    EXPECT_EQ(3U, p1.fReqsClusterIds[0]);
    EXPECT_EQ(4U, p1.fReqsClusterIds[1]);
@@ -265,11 +268,13 @@ TEST(ClusterPool, GetClusterIncrementally)
    RPageSourceMock p1;
    RClusterPool c1(p1, 1);
    c1.GetCluster(3, {0});
+   c1.WaitForInFlightClusters();
    ASSERT_EQ(2U, p1.fReqsClusterIds.size());
    EXPECT_EQ(3U, p1.fReqsClusterIds[0]);
    EXPECT_EQ(RCluster::ColumnSet_t({0}), p1.fReqsColumns[0]);
 
    c1.GetCluster(3, {1});
+   c1.WaitForInFlightClusters();
    ASSERT_EQ(4U, p1.fReqsClusterIds.size());
    EXPECT_EQ(3U, p1.fReqsClusterIds[2]);
    EXPECT_EQ(RCluster::ColumnSet_t({1}), p1.fReqsColumns[2]);
@@ -299,10 +304,15 @@ TEST(PageStorageFile, LoadClusters)
       "myNTuple", fileGuard.GetPath(), ROOT::Experimental::RNTupleReadOptions());
    source.Attach();
 
-   auto ptId = source.GetDescriptor().FindFieldId("pt");
-   EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, ptId);
-   auto colId = source.GetDescriptor().FindColumnId(ptId, 0);
-   EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, colId);
+   ROOT::Experimental::DescriptorId_t ptId;
+   ROOT::Experimental::DescriptorId_t colId;
+   {
+      auto descriptorGuard = source.GetSharedDescriptorGuard();
+      ptId = descriptorGuard->FindFieldId("pt");
+      EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, ptId);
+      colId = descriptorGuard->FindPhysicalColumnId(ptId, 0);
+      EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, colId);
+   }
 
    std::vector<ROOT::Experimental::Detail::RCluster::RKey> clusterKeys;
    clusterKeys.push_back({0, {}});
@@ -315,7 +325,7 @@ TEST(PageStorageFile, LoadClusters)
          ROOT::Experimental::RColumnModel(ROOT::Experimental::EColumnType::kReal32, false), 0));
    column->Connect(ptId, &source);
    clusterKeys[0].fClusterId = 1;
-   clusterKeys[0].fColumnSet.insert(colId);
+   clusterKeys[0].fPhysicalColumnSet.insert(colId);
    cluster = std::move(source.LoadClusters(clusterKeys)[0]);
    EXPECT_EQ(1U, cluster->GetId());
    EXPECT_EQ(1U, cluster->GetNOnDiskPages());

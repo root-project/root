@@ -264,11 +264,11 @@ public:
       fElementBuffer.CopyFrom(hostBuffer);
    }
 
-   // have this tensor representatrions
-   // 2-dimensional tensors  :  NW   where N is batch size W is the feature size . Memory layout should be columnwise in this case
-   // 3 -dimensional tensor  : represnetation is NHWC  , tensor should be columnwise storage
-   // 4 -dimensional tensor :   representation is NCHW  ande tensor should be row wose
-   // a rowmajor tensor with dimension less than trhee should not exist but in case consider as a N, (CHW) for 2d, N, C, (HW) for 3d
+   // have this tensor representations
+   // 2-dimensional tensors  :  NW   where N is batch size W is the feature size . Memory layout should be column wise in this case
+   // 3 -dimensional tensor  : representation is NHWC  , tensor should be column wise storage
+   // 4 -dimensional tensor :   representation is NCHW  ande tensor should be row wise
+   // a rowmajor tensor with dimension less than three should not exist but in case consider as a N, (CHW) for 2d, N, C, (HW) for 3d
    // a columnmajor tensor for dimension >=4 should not exist but in case consider as a N,H,W,C  (i.e. with shape C,W,H,N)
 
    size_t GetFirstSize() const {
@@ -328,7 +328,7 @@ public:
       return TCudaMatrix<AFloat>();
    }
 
-   // for backeard compatibility with old tensor
+   // for backward compatibility with old tensor
    TCudaMatrix<AFloat> operator[](size_t i) const {
       //assert(GetLayout() == MemoryLayout::ColumnMajor );
       return At(i).GetMatrix();
@@ -359,7 +359,7 @@ public:
    void SetTensorDescriptor();
 
    // return slice of tensor
-   // return slices in the first dimension (if row wise) or last dimension if colun wise
+   // return slices in the first dimension (if row wise) or last dimension if column wise
    // so single event slides
    TCudaTensor<AFloat> At(size_t i) const {
       Shape_t sliced_shape = (GetLayout() == MemoryLayout::RowMajor)
@@ -408,7 +408,7 @@ public:
 
     TCudaDeviceReference<AFloat> operator()(size_t i, size_t j, size_t k, size_t l) const
    {
-      // for rowsise
+      // for row wise
       //assert(GetLayout() == MemoryLayout::RowMajor);
       assert( fNDim == 4); // || ( k==0 && fNDim == 2 ) );
 

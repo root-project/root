@@ -40,9 +40,9 @@ private:
   uint64_t CurrentRegionCount;
 
 public:
-  CodeGenPGO(CodeGenModule &CGM)
-      : CGM(CGM), NumValueSites({{0}}), NumRegionCounters(0), FunctionHash(0),
-        CurrentRegionCount(0) {}
+  CodeGenPGO(CodeGenModule &CGModule)
+      : CGM(CGModule), FuncNameVar(nullptr), NumValueSites({{0}}),
+        NumRegionCounters(0), FunctionHash(0), CurrentRegionCount(0) {}
 
   /// Whether or not we have PGO region data for the current function. This is
   /// false both when we have no data at all and when our data has been
@@ -59,7 +59,7 @@ public:
 
   /// Check if an execution count is known for a given statement. If so, return
   /// true and put the value in Count; else return false.
-  Optional<uint64_t> getStmtCount(const Stmt *S) {
+  Optional<uint64_t> getStmtCount(const Stmt *S) const {
     if (!StmtCountMap)
       return None;
     auto I = StmtCountMap->find(S);
@@ -87,6 +87,10 @@ public:
   // Insert instrumentation or attach profile metadata at value sites
   void valueProfile(CGBuilderTy &Builder, uint32_t ValueKind,
                     llvm::Instruction *ValueSite, llvm::Value *ValuePtr);
+
+  // Set a module flag indicating if value profiling is enabled.
+  void setValueProfilingFlag(llvm::Module &M);
+
 private:
   void setFuncName(llvm::Function *Fn);
   void setFuncName(StringRef Name, llvm::GlobalValue::LinkageTypes Linkage);

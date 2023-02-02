@@ -74,8 +74,8 @@ namespace ROOT {
 class TProcessID : public TNamed {
 
 private:
-   TProcessID(const TProcessID &ref);            // TProcessID are not copiable.
-   TProcessID& operator=(const TProcessID &ref); // TProcessID are not copiable.
+   TProcessID(const TProcessID &ref) = delete;
+   TProcessID& operator=(const TProcessID &ref) = delete;
 
 protected:
    std::atomic_int    fCount;                           //!Reference count to this object (from TFile)
@@ -92,14 +92,14 @@ public:
    TProcessID();
    virtual ~TProcessID();
    void             CheckInit();
-   virtual void     Clear(Option_t *option="");
+   void             Clear(Option_t *option="") override;
    Int_t            DecrementCount();
    Int_t            IncrementCount();
    Int_t            GetCount() const {return fCount;}
    TObjArray       *GetObjects() const {return fObjects;}
    TObject         *GetObjectWithID(UInt_t uid);
-   void             PutObjectWithID(TObject *obj, UInt_t uid=0);
-   virtual void     RecursiveRemove(TObject *obj);
+   void             PutObjectWithID(TObject *obj, UInt_t uid = 0);
+   void             RecursiveRemove(TObject *obj) override;
 
    static TProcessID  *AddProcessID();
    static UInt_t       AssignID(TObject *obj);
@@ -115,7 +115,7 @@ public:
    static  Bool_t      IsValid(TProcessID *pid);
    static  void        SetObjectCount(UInt_t number);
 
-   ClassDef(TProcessID,1)  //Process Unique Identifier in time and space
+   ClassDefOverride(TProcessID,1)  //Process Unique Identifier in time and space
 };
 
 #endif

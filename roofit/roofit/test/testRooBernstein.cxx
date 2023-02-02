@@ -32,8 +32,8 @@ void IntegrationChecker(double a0, double a1, double a2, double a3)
   RooBernstein bern("bern", "bernstein PDF", x, RooArgList(c0, c1, c2, c3));
   RooBernstein bernNumInt(bern);
   // Set normalization range
-  bern.selectNormalizationRange("FULL",kTRUE);
-  bernNumInt.selectNormalizationRange("FULL",kTRUE);
+  bern.selectNormalizationRange("FULL",true);
+  bernNumInt.selectNormalizationRange("FULL",true);
 
   RooNumIntConfig intConfig(*RooAbsReal::defaultIntegratorConfig());
   intConfig.setEpsAbs(1.E-15);
@@ -55,8 +55,8 @@ void IntegrationChecker(double a0, double a1, double a2, double a3)
   auto numInt_full = bern.createIntegral(x, "FULL");
 
   // closure
-  EXPECT_LT(fabs(int_full->getVal() - int_range1->getVal() - int_range2->getVal() - int_range3->getVal()), 1e-10);
-  EXPECT_LT(fabs(numInt_full->getVal() - numInt_range1->getVal() - numInt_range2->getVal() - numInt_range3->getVal()), 1e-10);
+  EXPECT_LT(std::abs(int_full->getVal() - int_range1->getVal() - int_range2->getVal() - int_range3->getVal()), 1e-10);
+  EXPECT_LT(std::abs(numInt_full->getVal() - numInt_range1->getVal() - numInt_range2->getVal() - numInt_range3->getVal()), 1e-10);
 
   // comparision with polynomial
   double accAnaVsNum = 1.;
@@ -64,7 +64,7 @@ void IntegrationChecker(double a0, double a1, double a2, double a3)
       accAnaVsNum/100.*numInt_range1->getVal())
   << "Analytical vs numerical integral"
   << " within " << accAnaVsNum << "%. ";
-  
+
   EXPECT_NEAR(int_range1->getVal(), numInt_range1->getVal(),
       accAnaVsNum/100.*numInt_range2->getVal())
   << "Analytical vs numerical integral"

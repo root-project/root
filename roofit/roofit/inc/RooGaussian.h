@@ -24,19 +24,32 @@ class RooAbsReal;
 class RooGaussian : public RooAbsPdf {
 public:
   RooGaussian() { };
+  // Original constructor without RooAbsReal::Ref for backwards compatibility.
+  inline RooGaussian(const char *name, const char *title,
+         RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma)
+      : RooGaussian{name, title, RooAbsReal::Ref{_x}, RooAbsReal::Ref{_mean}, RooAbsReal::Ref{_sigma}} {}
   RooGaussian(const char *name, const char *title,
-         RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma);
-  RooGaussian(const RooGaussian& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const override {
+         RooAbsReal::Ref _x, RooAbsReal::Ref _mean, RooAbsReal::Ref _sigma);
+  RooGaussian(const RooGaussian& other, const char* name=nullptr);
+  TObject* clone(const char* newname) const override {
     return new RooGaussian(*this,newname);
   }
-  inline virtual ~RooGaussian() { }
+  inline ~RooGaussian() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
+
+  /// Get the x variable.
+  RooAbsReal const& getX() const { return x.arg(); }
+
+  /// Get the mean parameter.
+  RooAbsReal const& getMean() const { return mean.arg(); }
+
+  /// Get the sigma parameter.
+  RooAbsReal const& getSigma() const { return sigma.arg(); }
 
 protected:
 
@@ -44,8 +57,8 @@ protected:
   RooRealProxy mean ;
   RooRealProxy sigma ;
 
-  Double_t evaluate() const override;
-  void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const override;
+  double evaluate() const override;
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
 private:

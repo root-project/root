@@ -33,19 +33,19 @@ ClassImp(RooConstVar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with value
-RooConstVar::RooConstVar(const char *name, const char *title, Double_t value) : 
+RooConstVar::RooConstVar(const char *name, const char *title, double value) :
   RooAbsReal(name,title)
 {
   _fast = true;
   _value = value;
-  setAttribute("Constant",kTRUE) ;
+  setAttribute("Constant",true) ;
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
-RooConstVar::RooConstVar(const RooConstVar& other, const char* name) : 
+RooConstVar::RooConstVar(const RooConstVar& other, const char* name) :
   RooAbsReal(other, name)
 {
   _fast = true;
@@ -66,7 +66,7 @@ RooSpan<const double> RooConstVar::getValues(RooBatchCompute::RunContext& evalDa
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object contents to stream
 
-void RooConstVar::writeToStream(ostream& os, Bool_t /*compact*/) const
+void RooConstVar::writeToStream(ostream& os, bool /*compact*/) const
 {
   os << _value ;
 }

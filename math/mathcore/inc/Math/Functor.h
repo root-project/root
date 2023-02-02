@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <functional>
+#include <vector>
 
 namespace ROOT {
 
@@ -32,7 +33,7 @@ namespace Math {
    Internal classes for implementing Functor and Functor1D classes
    @ingroup GenFunc
  */
-   
+
 /**
    FunctorImpl is a base class for the functor
    handler implementation class.
@@ -137,45 +138,44 @@ private :
 
 /**
    Functor Handler class for gradient functions where both callable objects are provided for the function
-   evaluation (type Func) and for the gradient (type GradFunc) .
+   evaluation (type Func) and for the derivative (type DerivFunc) .
    It can be created from any function implementing the correct signature
    corresponding to the requested type
    In the case of one dimension the function evaluation object and the derivative function object must implement
    double operator() (double x).
    In the case of multi-dimension the function evaluation object must implement
-   double operator() (const double * x) and the gradient function object must implement
+   double operator() (const double * x) and the derivative function object must implement
    double operator() (const double * x, int icoord)
 
    @ingroup  Functor_int
 */
-template<class ParentFunctor, class Func, class GradFunc  >
-class FunctorGradHandler : public ParentFunctor::Impl {
+template<class ParentFunctor, class Func, class DerivFunc  >
+class FunctorDerivHandler : public ParentFunctor::Impl {
 
    typedef typename ParentFunctor::Impl ImplFunc;
    typedef typename ImplFunc::BaseFunc BaseFunc;
-   //typedef typename ParentFunctor::Dim Dim;
 
 public:
 
    // constructor for 1d functions
-   FunctorGradHandler(const Func & fun, const GradFunc & gfun) :
+   FunctorDerivHandler(const Func & fun, const DerivFunc & gfun) :
       fDim(1),
       fFunc(fun),
-      fGradFunc(gfun)
+      fDerivFunc(gfun)
    {}
 
 
    // constructor for multi-dimensional functions
-   FunctorGradHandler(unsigned int dim, const Func & fun, const GradFunc & gfun) :
+   FunctorDerivHandler(unsigned int dim, const Func & fun, const DerivFunc & gfun) :
       fDim(dim),
       fFunc(fun),
-      fGradFunc( gfun )
+      fDerivFunc( gfun )
    {}
 
-   virtual ~FunctorGradHandler() {}
+   virtual ~FunctorDerivHandler() {}
 
    // clone of the function handler (use copy-ctor)
-   ImplFunc * Copy() const { return new FunctorGradHandler(*this); }
+   ImplFunc * Copy() const { return new FunctorDerivHandler(*this); }
 
    // clone of the function handler (use copy-ctor)
 #ifdef _MSC_VER
@@ -204,20 +204,92 @@ private :
    }
 
    inline double DoDerivative (double x) const {
-      return fGradFunc(x);
+      return fDerivFunc(x);
    }
 
    inline double DoDerivative (const double * x, unsigned int icoord ) const {
-      return fGradFunc(x, icoord);
+      return fDerivFunc(x, icoord);
    }
 
 
    unsigned int fDim;
    mutable Func fFunc;
-   mutable GradFunc fGradFunc;
+   mutable DerivFunc fDerivFunc;
 
 };
 
+/**
+   Functor Handler class for gradient functions where both callable objects are provided for the function
+   evaluation (type Func) and for the gradient (type GradFunc) .
+   It can be created from any function implementing the correct signature
+   corresponding to the requested type
+   The function evaluation (Func)
+   In the case of multi-dimension the function evaluation object must implement
+   double operator() (const double * x) and the gradient function object must implement
+   double operator() (const double * x, int icoord)
+
+   @ingroup  Functor_int
+*/
+template<class ParentFunctor >
+class FunctorGradHandler : public ParentFunctor::Impl {
+
+   // we don't need to template this class and just use std::function
+
+   typedef typename ParentFunctor::Impl ImplFunc;
+   typedef typename ImplFunc::BaseFunc BaseFunc;
+
+public:
+
+// constructor for multi-dimensional functions
+   FunctorGradHandler(unsigned int dim, std::function<double(const double *)>  fun, std::function<void(const double *, double*)> gfun) :
+      fDim(dim),
+      fFunc(fun),
+      fGradFunc( gfun )
+   {}
+
+   virtual ~FunctorGradHandler() {}
+
+   // clone of the function handler (use copy-ctor)
+   ImplFunc * Copy() const { return new FunctorGradHandler(*this); }
+
+   // clone of the function handler (use copy-ctor)
+#ifdef _MSC_VER
+   // FIXME: this is a work-around for a a problem with how the compiler
+   // generates the covariant virtual function "Clone". To address the
+   // issue just use the original return type of the virtual base class.
+   // Try to remove this #ifdef when updating Visual Studio
+   typename ParentFunctor::ImplBase* Clone() const { return Copy(); }
+#else
+   BaseFunc * Clone() const { return Copy(); }
+#endif
+
+   // constructor for multi-dimensional functions
+   unsigned int NDim() const {
+      return fDim;
+   }
+
+   void Gradient(const double *x, double *g) const {
+         fGradFunc(x,g);
+   }
+
+private :
+
+   inline double DoEval (const double * x) const {
+      return fFunc(x);
+   }
+
+   inline double DoDerivative (const double * x, unsigned int icoord ) const {
+      std::vector<double> g(fDim);
+      fGradFunc(x, g.data());
+      return g[icoord];
+   }
+
+private:
+
+   unsigned int fDim;
+   mutable std::function<double(const double *)> fFunc;
+   mutable std::function<void(const double *, double*)> fGradFunc;
+};
 
 /**
    Functor Handler to Wrap pointers to member functions
@@ -387,7 +459,7 @@ private :
    It is used to wrap in a very simple and convenient way multi-dimensional function objects.
    It can wrap all the following types:
    <ul>
-   <li> any C++ callable object implemention double operator()( const double *  )
+   <li> any C++ callable object implementation double operator()( const double *  )
    <li> a free C function of type double ()(const double * )
    <li> an std::function of type std::function<double (double const *)>
    <li> a member function with the correct signature like Foo::Eval(const double * ).
@@ -434,14 +506,14 @@ public:
    /**
         specialized constructor from a std::function of multi-dimension
         with the right signature (double operator()(double const *x)
-        This specialized constructor is introduced in order to use the Functor class in 
-        Python passing Python user defined functions 
+        This specialized constructor is introduced in order to use the Functor class in
+        Python passing Python user defined functions
       */
    //template <typename Func>
    Functor(const std::function<double(double const *)> &f, unsigned int dim)
       : fImpl(new FunctorHandler<Functor, std::function<double(double const *)> >(dim, f) )
    {}
-  
+
    /**
       Destructor (no operations)
    */
@@ -492,7 +564,7 @@ private :
    Functor1D class for one-dimensional functions.
    It is used to wrap in a very simple and convenient way:
    <ul>
-   <li> any C++ callable object implemention double operator()( double  )
+   <li> any C++ callable object implementation double operator()( double  )
    <li> a free C function of type double ()(double )
    <li> a member function with the correct signature like Foo::Eval(double ).
        In this case one pass the object pointer and a pointer to the member function (&Foo::Eval)
@@ -553,7 +625,7 @@ public:
       Copy constructor for Functor based on ROOT::Math::IGenFunction
    */
    Functor1D(const Functor1D & rhs) :
-      // strange that this is required eventhough ImplBase is an abstract class
+      // strange that this is required even though ImplBase is an abstract class
       ImplBase()
    {
       if (rhs.fImpl)
@@ -592,9 +664,10 @@ private :
         double Derivative(const double *, int icoord) for the partial derivatives
     <li>from an object implementing any member function like Foo::XXX(const double *) for the function evaluation
         and any member function like Foo::XXX(const double *, int icoord) for the partial derivatives
-    <li>from an function object implementing
+    <li>from two function objects implementing
         double operator()( const double * ) for the function evaluation and another function object implementing
         double operator() (const double *, int icoord) for the partial derivatives
+    <li>from two function objects
    </ol>
    The function dimension is required when constructing the functor.
 
@@ -635,27 +708,42 @@ public:
 
    /**
       construct for Gradient Functions of multi-dimension
-      Func gives the function evaluatiion, GradFunc the partial derivatives
+      Func gives the function evaluation, GradFunc the partial derivatives
       The function dimension is  required
     */
    template <typename Func, typename GradFunc>
    GradFunctor(const Func & f, const GradFunc & g, int dim  ) :
-      fImpl(new FunctorGradHandler<GradFunctor,Func,GradFunc>(dim, f, g) )
+      fImpl(new FunctorDerivHandler<GradFunctor,Func,GradFunc>(dim, f, g) )
    { }
 
    /**
-      specialized constructor from 2 std::functions 
-      with the right signature (the first one implementing double operator()(double const *x) 
+      specialized constructor from 2 std::functions
+      with the right signature (the first one implementing double operator()(double const *x)
       for the function evaluation and the second one implementing double operator()(double const *x, unsigned int icoord)
       for the function partial derivatives.
       This specialized constructor is introduced in order to use the Functor class in
       Python passing Python user defined functions
     */
    // template <typename Func>
-   GradFunctor(const std::function<double(double const *)> &f, 
-           const std::function<double(double const *, unsigned int)> &g, unsigned int dim)
-      : fImpl(new FunctorGradHandler<GradFunctor, std::function<double(double const *)>,
+   GradFunctor(const std::function<double(double const *)> &f,
+               const std::function<double(double const *, unsigned int)> &g, unsigned int dim)
+      : fImpl(new FunctorDerivHandler<GradFunctor, std::function<double(double const *)>,
                                      std::function<double(double const *, unsigned int)> >(dim, f, g))
+   {}
+
+   /**
+    * @brief Construct a new GradFunctor object using 2 std::function,
+    *        one for the function evaluation and one for the Gradient
+    *        Note the difference with the constructor above where partial derivative function
+    *        is used as input
+    *
+    * @param f  : function object computing the function value
+    * @param dim : number of function dimension
+    * @param g   : function object computing the function gradient
+    */
+   GradFunctor(const std::function<double(double const *)> &f, int dim,
+               const std::function<void(double const *, double *)> &g)
+      : fImpl(new FunctorGradHandler<GradFunctor>(dim, f, g))
    {}
 
    /**
@@ -689,6 +777,10 @@ public:
 
    // for multi-dimensional functions
    unsigned int NDim() const { return fImpl->NDim(); }
+
+   void Gradient(const double *x, double *g) const {
+      fImpl->Gradient(x,g);
+   }
 
 private :
 
@@ -769,18 +861,18 @@ public:
     */
    template <typename Func, typename GradFunc>
    GradFunctor1D(const Func & f, const GradFunc & g ) :
-      fImpl(new FunctorGradHandler<GradFunctor1D,Func, GradFunc>(f, g) )
+      fImpl(new FunctorDerivHandler<GradFunctor1D,Func, GradFunc>(f, g) )
    {}
 
    /**
      specialized constructor from 2 std::function objects
-     implementing double operator()(double x). The first one for the function evaluation 
+     implementing double operator()(double x). The first one for the function evaluation
      and the second one implementing the function derivative.
      This specialized constructor is introduced in order to use the class in
      Python passing Python user defined functions
    */
    GradFunctor1D(const std::function<double(double)> &f, const std::function<double(double)> &g )
-      : fImpl(new FunctorGradHandler<GradFunctor1D, std::function<double(double)>, std::function<double(double)> >(f, g))
+      : fImpl(new FunctorDerivHandler<GradFunctor1D, std::function<double(double)>, std::function<double(double)> >(f, g))
    {}
 
    /**
@@ -793,7 +885,7 @@ public:
       Copy constructor for Functor based on ROOT::Math::IGradFunction
    */
    GradFunctor1D(const GradFunctor1D & rhs) :
-      // strange that this is required eventhough Impl is an abstract class
+      // strange that this is required even though Impl is an abstract class
       ImplBase()
    {
       if (rhs.fImpl)

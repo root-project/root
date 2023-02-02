@@ -2567,17 +2567,11 @@ would execute the following statements:
 
 ``` {.cpp}
 root[] .x tutorials/hist/draw2dopt.C
+root[] auto p1 = surfopt->GetPad(1);  // get the first pad
+root[] auto p2 = lego->GetPad(2);     // get the second pad
+root[] auto p3 = contours->GetPad(3); // get the third pad
+root[] auto p4 = c2h->GetPad(4);      // get the forth pad
 root[] TCanvas c1("c1","Copy Paste",200,200,800,600);
-root[] surfaces->cd(1); // get the first pad
-root[] TPad *p1 = gPad;
-root[] lego->cd(2);// get the next pad
-root[] TPad *p2 = gPad;
-root[] cont->cd(3);// get the next pad
-root[] TPad *p3 = gPad;
-root[] c2h->cd(4);// get the next pad
-root[] TPad *p4 = gPad;
-root[] // to draw the four clones
-root[] c1->cd();
 root[] p1->DrawClone();
 root[] p2->DrawClone();
 root[] p3->DrawClone();
@@ -2585,8 +2579,8 @@ root[] p4->DrawClone();
 ```
 
 Note that the pad is copied to the new canvas in the same location as in
-the old canvas. For example if you were to copy the third pad of `surf`
-to the top left corner of the target canvas you would have to reset the
+the old canvas. For example if you were to copy the third pad of `surfopt`
+canvas to the top left corner of the target canvas you would have to reset the
 coordinates of the cloned pad.
 
 ## Legends

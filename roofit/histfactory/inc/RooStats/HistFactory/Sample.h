@@ -35,36 +35,35 @@ public:
   Sample& operator=(const Sample& other);
   /// constructor from name, file and path. Name of the histogram should not include the path
   Sample(std::string Name, std::string HistoName, std::string InputFile, std::string HistoPath="");
-  ~Sample();
 
   void Print(std::ostream& = std::cout) const;
-  void PrintXML( std::ofstream& xml );
+  void PrintXML( std::ofstream& xml ) const;
   void writeToFile( std::string FileName, std::string DirName );
 
   const TH1* GetHisto() const;
   // set histogram for this sample
   void SetHisto( TH1* histo ) { fhNominal = histo; fHistoName=histo->GetName(); }
-  void SetValue( Double_t Val ) ;
+  void SetValue( double Val ) ;
 
   // Some helper functions
-  // Note that histogram name should not include the path of the histogram in the file.  
-  // This has to be given separatly 
+  // Note that histogram name should not include the path of the histogram in the file.
+  // This has to be given separately
 
   void ActivateStatError();
   void ActivateStatError( std::string HistoName, std::string InputFile, std::string HistoPath="" );
 
-  void AddOverallSys( std::string Name, Double_t Low, Double_t High );
+  void AddOverallSys( std::string Name, double Low, double High );
   void AddOverallSys( const OverallSys& Sys );
 
-  void AddNormFactor( std::string Name, Double_t Val, Double_t Low, Double_t High, bool Const=false );
+  void AddNormFactor( std::string const& Name, double Val, double Low, double High );
   void AddNormFactor( const NormFactor& Factor );
 
   void AddHistoSys(    std::string Name, std::string HistoNameLow,  std::string HistoFileLow,  std::string HistoPathLow,
-		                         std::string HistoNameHigh, std::string HistoFileHigh, std::string HistoPathHigh );
+                               std::string HistoNameHigh, std::string HistoFileHigh, std::string HistoPathHigh );
   void AddHistoSys( const HistoSys& Sys );
 
-  void AddHistoFactor( std::string Name, std::string HistoNameLow,  std::string HistoFileLow,  std::string HistoPathLow,  
-		       std::string HistoNameHigh, std::string HistoFileHigh, std::string HistoPathHigh );
+  void AddHistoFactor( std::string Name, std::string HistoNameLow,  std::string HistoFileLow,  std::string HistoPathLow,
+             std::string HistoNameHigh, std::string HistoFileHigh, std::string HistoPathHigh );
   void AddHistoFactor( const HistoFactor& Factor );
 
   void AddShapeFactor( std::string Name );
@@ -119,11 +118,11 @@ public:
   const std::vector< RooStats::HistFactory::HistoFactor >& GetHistoFactorList() const { return fHistoFactorList; }
   const std::vector< RooStats::HistFactory::ShapeSys >&    GetShapeSysList()    const { return fShapeSysList; }
   const std::vector< RooStats::HistFactory::ShapeFactor >& GetShapeFactorList() const { return fShapeFactorList; }
-  
 
-  bool HasStatError() const { return fStatErrorActivate; }  
+
+  bool HasStatError() const { return fStatErrorActivate; }
   RooStats::HistFactory::StatError& GetStatError() { return fStatError; }
-  const RooStats::HistFactory::StatError& GetStatError() const { return fStatError; }  
+  const RooStats::HistFactory::StatError& GetStatError() const { return fStatError; }
   void SetStatError( RooStats::HistFactory::StatError Error ) {
     fStatError = std::move(Error);
   }
@@ -161,7 +160,7 @@ protected:
 
   /// The Nominal Shape
   HistRef fhNominal;
-  TH1* fhCountingHist;
+  std::unique_ptr<TH1> fhCountingHist;
 
 };
 

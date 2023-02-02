@@ -6,12 +6,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_DEBUGINFO_PDB_RAW_PDBFILEBUILDER_H
-#define LLVM_DEBUGINFO_PDB_RAW_PDBFILEBUILDER_H
+#ifndef LLVM_DEBUGINFO_PDB_NATIVE_PDBFILEBUILDER_H
+#define LLVM_DEBUGINFO_PDB_NATIVE_PDBFILEBUILDER_H
 
 #include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/BitVector.h"
 #include "llvm/ADT/Optional.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/DebugInfo/PDB/Native/NamedStreamMap.h"
 #include "llvm/DebugInfo/PDB/Native/PDBFile.h"
 #include "llvm/DebugInfo/PDB/Native/PDBStringTableBuilder.h"
@@ -21,9 +21,7 @@
 #include "llvm/Support/Endian.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/MemoryBuffer.h"
-
 #include <memory>
-#include <vector>
 
 namespace llvm {
 namespace msf {
@@ -80,7 +78,6 @@ private:
   Error finalizeMsfLayout();
   Expected<uint32_t> allocateNamedStream(StringRef Name, uint32_t Size);
 
-  void commitFpm(WritableBinaryStream &MsfBuffer, const msf::MSFLayout &Layout);
   void commitInjectedSources(WritableBinaryStream &MsfBuffer,
                              const msf::MSFLayout &Layout);
   void commitSrcHeaderBlock(WritableBinaryStream &MsfBuffer,

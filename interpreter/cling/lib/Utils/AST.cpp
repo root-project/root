@@ -30,7 +30,7 @@ namespace {
   static D* LookupResult2Decl(clang::LookupResult& R)
   {
     if (R.empty())
-      return 0;
+      return nullptr;
 
     R.resolveKind();
 
@@ -84,41 +84,21 @@ namespace utils {
     if (!mangleCtx->shouldMangleDeclName(D)) {
       IdentifierInfo *II = D->getIdentifier();
       assert(II && "Attempt to mangle unnamed decl.");
-      mangledName = II->getName();
+      mangledName = II->getName().str();
       return;
     }
 
     llvm::raw_string_ostream RawStr(mangledName);
-    switch(D->getKind()) {
-    case Decl::CXXConstructor:
-      //Ctor_Complete,          // Complete object ctor
-      //Ctor_Base,              // Base object ctor
-      //Ctor_CompleteAllocating // Complete object allocating ctor (unused)
-      mangleCtx->mangleCXXCtor(cast<CXXConstructorDecl>(D),
-                               GD.getCtorType(), RawStr);
-      break;
 
-    case Decl::CXXDestructor:
-      //Dtor_Deleting, // Deleting dtor
-      //Dtor_Complete, // Complete object dtor
-      //Dtor_Base      // Base object dtor
 #if defined(_WIN32)
-      // MicrosoftMangle.cpp:954 calls llvm_unreachable when mangling Dtor_Comdat
-      if (GD.getDtorType() == Dtor_Comdat) {
-        if (const IdentifierInfo* II = D->getIdentifier())
-          RawStr << II->getName();
-      } else
+    // MicrosoftMangle.cpp:954 calls llvm_unreachable when mangling Dtor_Comdat
+    if (isa<CXXDestructorDecl>(GD.getDecl()) &&
+        GD.getDtorType() == Dtor_Comdat) {
+      if (const IdentifierInfo* II = D->getIdentifier())
+        RawStr << II->getName();
+    } else
 #endif
-      {
-        mangleCtx->mangleCXXDtor(cast<CXXDestructorDecl>(D),
-                                 GD.getDtorType(), RawStr);
-      }
-      break;
-
-    default :
-      mangleCtx->mangleName(D, RawStr);
-      break;
-    }
+      mangleCtx->mangleName(GD, RawStr);
     RawStr.flush();
   }
 
@@ -132,7 +112,7 @@ namespace utils {
     if (FoundAt)
       *FoundAt = -1;
 
-    Expr* result = 0;
+    Expr* result = nullptr;
     if (CompoundStmt* CS = dyn_cast<CompoundStmt>(FD->getBody())) {
       ArrayRef<Stmt*> Stmts
         = llvm::makeArrayRef(CS->body_begin(), CS->size());
@@ -146,7 +126,7 @@ namespace utils {
         *FoundAt = indexOfLastExpr;
 
       if (indexOfLastExpr < 0)
-        return 0;
+        return nullptr;
 
       if ( (result = dyn_cast<Expr>(Stmts[indexOfLastExpr])) )
         return result;
@@ -216,7 +196,7 @@ namespace utils {
   GetFullyQualifiedTemplateName(const ASTContext& Ctx, TemplateName &tname) {
 
     bool changed = false;
-    NestedNameSpecifier *NNS = 0;
+    NestedNameSpecifier *NNS = nullptr;
 
     TemplateDecl *argtdecl = tname.getAsTemplateDecl();
     QualifiedTemplateName *qtname = tname.getAsQualifiedTemplateName();
@@ -228,7 +208,7 @@ namespace utils {
         changed = true;
         NNS = qNNS;
       } else {
-        NNS = 0;
+        NNS = nullptr;
       }
     } else {
       NNS = CreateNestedNameSpecifierForScopeOf(Ctx, argtdecl, true);
@@ -382,7 +362,7 @@ namespace utils {
 
     if (const Type *type = scope->getAsType()) {
       // Find decl context.
-      const TagDecl* TD = 0;
+      const TagDecl* TD = nullptr;
       if (const TagType* tagdecltype = dyn_cast<TagType>(type)) {
         TD = tagdecltype->getDecl();
       } else {
@@ -411,7 +391,7 @@ namespace utils {
                                     NestedNameSpecifier *original_prefix,
                              const Transform::Config& TypeConfig) {
     // We have to also desugar the prefix.
-    NestedNameSpecifier* prefix = 0;
+    NestedNameSpecifier* prefix = nullptr;
     if (declContext) {
       // We had a scope prefix as input, let see if it is still
       // the same as the scope of the result and if it is, then
@@ -422,7 +402,7 @@ namespace utils {
         const NamespaceDecl *new_ns =dyn_cast<NamespaceDecl>(declContext);
         if (new_ns) {
           new_ns = new_ns->getCanonicalDecl();
-          NamespaceDecl *old_ns = 0;
+          NamespaceDecl *old_ns = nullptr;
           if (original_prefix) {
             original_prefix->getAsNamespace();
             if (NamespaceAliasDecl *alias =
@@ -571,7 +551,7 @@ namespace utils {
         desugared = etype->getNamedType();
       } else {
 
-        Decl* decl = 0;
+        Decl* decl = nullptr;
         const TypedefType* typedeftype =
           dyn_cast_or_null<TypedefType>(&(*desugared));
         if (typedeftype) {
@@ -596,7 +576,7 @@ namespace utils {
             outer_scope = SelectPrefix(Ctx,decl->getDeclContext(),
                                        outer_scope,TypeConfig);
           } else {
-            outer_scope = 0;
+            outer_scope = nullptr;
           }
         } else if (outer_scope) {
           outer_scope = GetPartiallyDesugaredNNS(Ctx, outer_scope, TypeConfig);
@@ -695,7 +675,7 @@ namespace utils {
 
     if (Analyze::IsStdClass(Template)) {
       static const char *stls[] =  //container names
-        {"vector","list","deque","map","multimap","set","multiset",0};
+        {"vector","list","deque","map","multimap","set","multiset",nullptr};
       static unsigned int values[] =       //number of default arg.
         {1,1,1,2,2,2,2};
       StringRef name = Template.getName();
@@ -1002,6 +982,7 @@ namespace utils {
         if (newQT == arr->getElementType()) return QT;
         QT = Ctx.getConstantArrayType (newQT,
                                        arr->getSize(),
+                                       arr->getSizeExpr(),
                                        arr->getSizeModifier(),
                                        arr->getIndexTypeCVRQualifiers());
 
@@ -1059,7 +1040,7 @@ namespace utils {
     // NOTE: however we problably want to add the std::vector typedefs
     // to the list of things to skip!
 
-    NestedNameSpecifier* original_prefix = 0;
+    NestedNameSpecifier* original_prefix = nullptr;
     Qualifiers prefix_qualifiers;
     const ElaboratedType* etype_input
       = dyn_cast<ElaboratedType>(QT.getTypePtr());
@@ -1077,7 +1058,7 @@ namespace utils {
           prefix_qualifiers = QT.getLocalQualifiers();
           QT = QualType(etype_input->getNamedType().getTypePtr(),0);
         } else {
-          original_prefix = 0;
+          original_prefix = nullptr;
         }
       }
     }
@@ -1122,7 +1103,7 @@ namespace utils {
                                            fullyQualifyTmpltArg);
     }
 
-    NestedNameSpecifier* prefix = 0;
+    NestedNameSpecifier* prefix = nullptr;
     const ElaboratedType* etype
       = dyn_cast<ElaboratedType>(QT.getTypePtr());
     if (etype) {
@@ -1137,7 +1118,7 @@ namespace utils {
       // in which case we want to add it ... but we can't really preserve
       // the typedef in this case ...
 
-      Decl *decl = 0;
+      Decl *decl = nullptr;
       const TypedefType* typedeftype =
         dyn_cast_or_null<TypedefType>(QT.getTypePtr());
       if (typedeftype) {
@@ -1166,7 +1147,7 @@ namespace utils {
                 // Same type, use the original spelling
                 prefix
                   = GetPartiallyDesugaredNNS(Ctx, original_prefix, TypeConfig);
-                outer = 0; // Cancel the later creation.
+                outer = nullptr; // Cancel the later creation.
               }
             } else {
               const NamespaceDecl *old_ns = original_prefix->getAsNamespace();
@@ -1184,7 +1165,7 @@ namespace utils {
                 // This is the same namespace, use the original prefix
                 // as a starting point.
                 prefix = GetFullyQualifiedNameSpecifier(Ctx,original_prefix);
-                outer = 0; // Cancel the later creation.
+                outer = nullptr; // Cancel the later creation.
               }
             }
           } else { // if (!original_prefix)
@@ -1430,14 +1411,14 @@ namespace utils {
       if (const clang::TagDecl* TD = dyn_cast<clang::TagDecl>(Within)) {
         if (!TD->getDefinition()) {
           // No definition, no lookup result.
-          return 0;
+          return nullptr;
         }
       }
       S->LookupQualifiedName(R, const_cast<DeclContext*>(Within));
     }
 
     if (R.empty())
-      return 0;
+      return nullptr;
 
     R.resolveKind();
 
@@ -1546,7 +1527,7 @@ namespace utils {
         return TypeName::CreateNestedNameSpecifier(Ctx, TD, FullyQualified);
       }
     }
-    return 0;
+    return nullptr;
   }
 
   static NestedNameSpecifier*
@@ -1557,9 +1538,9 @@ namespace utils {
     // Create a nested name specifier for the declaring context of the type.
 
     if (!TypePtr)
-      return 0;
+      return nullptr;
 
-    Decl *decl = 0;
+    Decl *decl = nullptr;
     if (const TypedefType* typedeftype = llvm::dyn_cast<TypedefType>(TypePtr)) {
       decl = typedeftype->getDecl();
     } else {
@@ -1571,7 +1552,7 @@ namespace utils {
     }
 
     if (!decl)
-      return 0;
+      return nullptr;
 
     return CreateNestedNameSpecifierForScopeOf(Ctx, decl, FullyQualified);
   }
@@ -1583,7 +1564,7 @@ namespace utils {
       // Ignore inline namespace;
       Namesp = dyn_cast_or_null<NamespaceDecl>(Namesp->getDeclContext());
     }
-    if (!Namesp) return 0;
+    if (!Namesp) return nullptr;
 
     bool FullyQualified = true; // doesn't matter, DeclContexts are namespaces
     return NestedNameSpecifier::Create(Ctx, CreateOuterNNS(Ctx, Namesp,
@@ -1668,7 +1649,7 @@ namespace utils {
       QT = Ctx.getQualifiedType(QT, quals);
     }
 
-    NestedNameSpecifier* prefix = 0;
+    NestedNameSpecifier* prefix = nullptr;
     Qualifiers prefix_qualifiers;
     if (const ElaboratedType* etype_input
         = llvm::dyn_cast<ElaboratedType>(QT.getTypePtr())) {
@@ -1682,9 +1663,9 @@ namespace utils {
             && !(ns && ns->isAnonymousNamespace())) {
           prefix_qualifiers = QT.getLocalQualifiers();
           prefix = GetFullyQualifiedNameSpecifier(Ctx, prefix);
-          QT = QualType(etype_input->getNamedType().getTypePtr(),0);
+          QT = QualType(etype_input->getNamedType().getTypePtr(), 0);
         } else {
-          prefix = 0;
+          prefix = nullptr;
         }
       }
     } else {

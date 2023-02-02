@@ -32,6 +32,7 @@
 #include "TException.h"
 #include "TEnv.h"
 #include "TApplication.h"
+#include "TBrowser.h"
 #include "TWin32SplashThread.h"
 #include "Win32Constants.h"
 #include "TInterpreter.h"
@@ -695,7 +696,7 @@ namespace {
    }
 
    /////////////////////////////////////////////////////////////////////////////
-   /// Resolve a ShellLink (i.e. c:\path\shortcut.lnk) to a real path.
+   /// Resolve a ShellLink (i.e. `c:\path\shortcut.lnk`) to a real path.
 
    static BOOL ResolveShortCut(LPCSTR pszShortcutFile, char *pszPath, int maxbuf)
    {
@@ -1981,13 +1982,13 @@ __inline BOOL DBL_BSLASH(LPCTSTR psz)
 /// Returns TRUE if the given string is a UNC path.
 ///
 /// TRUE
-///      "\\foo\bar"
-///      "\\foo"         <- careful
-///      "\\"
+///      `\\foo\bar`
+///      `\\foo`         <- careful
+///      `\\`
 /// FALSE
-///      "\foo"
-///      "foo"
-///      "c:\foo"
+///      `\foo`
+///      `foo"`
+///      `c:\foo`
 
 BOOL PathIsUNC(LPCTSTR pszPath)
 {
@@ -2460,7 +2461,7 @@ Bool_t TWinNTSystem::IsAbsoluteFileName(const char *dir)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert a pathname to a unix pathname. E.g. form \user\root to /user/root.
+/// Convert a pathname to a unix pathname. E.g. from `\user\root` to `/user/root`.
 /// General rules for applications creating names for directories and files or
 /// processing names supplied by the user include the following:
 ///
@@ -3874,11 +3875,10 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
             TBrowser *b;
             TIter next(gROOT->GetListOfBrowsers());
             while ((b = (TBrowser*) next()))
-               gROOT->ProcessLine(TString::Format("\
-                  if (((TBrowser*)0x%zx)->GetBrowserImp() &&\
-                      ((TBrowser*)0x%zx)->GetBrowserImp()->GetMainFrame()) \
-                     ((TBrowser*)0x%zx)->GetBrowserImp()->GetMainFrame()->CloseWindow();\
-                  else delete (TBrowser*)0x%zx", (size_t)b, (size_t)b, (size_t)b, (size_t)b));
+               if (b->GetBrowserImp() && b->GetBrowserImp()->GetMainFrame())
+                  gROOT->ProcessLine(TString::Format("\
+                     (((TBrowser*)0x%zx)->GetBrowserImp()->GetMainFrame()->CloseWindow();",
+                     (intptr_t)b));
          }
       }
    }

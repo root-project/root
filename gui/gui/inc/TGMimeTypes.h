@@ -39,7 +39,7 @@ private:
    TRegexp  *fReg;        ///< pattern regular expression
 
 public:
-   TGMime() : fReg(0) {}
+   TGMime() : fReg(nullptr) {}
    ~TGMime();
 };
 
@@ -63,12 +63,12 @@ public:
    void   SaveMimes();
    Bool_t HasChanged() const { return fChanged; }
    void   AddType(const char *type, const char *pat, const char *icon, const char *sicon, const char *action);
-   void   Print(Option_t *option="") const;
+   void   Print(Option_t *option="") const override;
    Bool_t GetAction(const char *filename, char *action);
    Bool_t GetType(const char *filename, char *type);
    const TGPicture *GetIcon(const char *filename, Bool_t small_icon);
 
-   ClassDef(TGMimeTypes,0)  // Pool of mime type objects
+   ClassDefOverride(TGMimeTypes,0)  // Pool of mime type objects
 };
 
 #endif

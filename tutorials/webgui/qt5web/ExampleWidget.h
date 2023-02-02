@@ -32,6 +32,8 @@ class ExampleWidget : public QWidget, public Ui::ExampleWidget
 
       void CreateDummyGeometry();
 
+      void DrawGeometryInCanvas();
+
    public:
 
       ExampleWidget(QWidget *parent = nullptr, const char* name = nullptr);
@@ -42,8 +44,8 @@ class ExampleWidget : public QWidget, public Ui::ExampleWidget
 
       void InfoButton_clicked();
       void CmsButton_clicked();
+      void GeoCanvasButton_clicked();
       void ExitButton_clicked();
-
 };
 
 #endif

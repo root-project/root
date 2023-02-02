@@ -36,8 +36,6 @@
 ///
 ///
 
-#include "RooFit.h"
-
 #include <cmath>
 
 #include "TClass.h"
@@ -50,38 +48,38 @@
 #include "RooMsgService.h"
 
 
-
-using namespace std;
-
 ClassImp(RooLinearVar);
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with RooAbsRealLValue variable and RooAbsReal slope and offset
 
-RooLinearVar::RooLinearVar(const char *name, const char *title, RooAbsRealLValue& variable, 
-			   const RooAbsReal& slope, const RooAbsReal& offs, const char *unit) :
-  RooAbsRealLValue(name, title, unit), 
+RooLinearVar::RooLinearVar(const char *name, const char *title, RooAbsRealLValue& variable,
+            const RooAbsReal& slope, const RooAbsReal& offs, const char *unit) :
+  RooAbsRealLValue(name, title, unit),
   _binning(variable.getBinning(),slope.getVal(),offs.getVal()),
-  _var("var","variable",this,variable,kTRUE,kTRUE),
+  _var("var","variable",this,variable,true,true),
   _slope("slope","slope",this,(RooAbsReal&)slope),
   _offset("offset","offset",this,(RooAbsReal&)offs)
 {
   // Slope and offset may not depend on variable
   if (slope.dependsOnValue(variable) || offs.dependsOnValue(variable)) {
-    coutE(InputArguments) << "RooLinearVar::RooLinearVar(" << GetName() 
-			  << "): ERROR, slope(" << slope.GetName() << ") and offset(" 
-			  << offs.GetName() << ") may not depend on variable(" 
-			  << variable.GetName() << ")" << endl ;
-    assert(0) ;
+    std::stringstream ss;
+    ss << "RooLinearVar::RooLinearVar(" << GetName()
+       << "): ERROR, slope(" << slope.GetName() << ") and offset("
+       << offs.GetName() << ") may not depend on variable("
+       << variable.GetName() << ")";
+    const std::string errMsg = ss.str();
+    coutE(InputArguments) << errMsg << std::endl;
+    throw std::invalid_argument(errMsg);
   }
 
   // Initial plot range and number of bins from dependent variable
 //   setPlotRange(variable.getPlotMin()*_slope + _offset,
 //                variable.getPlotMax()*_slope + _offset) ;
 //   setPlotBins(variable.getPlotBins()) ;
-	       
-}  
+
+}
 
 
 
@@ -89,7 +87,7 @@ RooLinearVar::RooLinearVar(const char *name, const char *title, RooAbsRealLValue
 /// Copy constructor
 
 RooLinearVar::RooLinearVar(const RooLinearVar& other, const char* name) :
-  RooAbsRealLValue(other,name), 
+  RooAbsRealLValue(other,name),
   _binning(other._binning),
   _var("var",this,other._var),
   _slope("slope",this,other._slope),
@@ -102,7 +100,7 @@ RooLinearVar::RooLinearVar(const RooLinearVar& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooLinearVar::~RooLinearVar() 
+RooLinearVar::~RooLinearVar()
 {
   _altBinning.Delete() ;
 }
@@ -110,9 +108,9 @@ RooLinearVar::~RooLinearVar()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate current value of this object  
+/// Calculate current value of this object
 
-Double_t RooLinearVar::evaluate() const
+double RooLinearVar::evaluate() const
 {
   return _offset + _var * _slope ;
 }
@@ -123,18 +121,18 @@ Double_t RooLinearVar::evaluate() const
 /// Assign given value to linear transformation: sets input variable to (value-offset)/slope
 /// If slope is zerom an error message is printed and no assignment is made
 
-void RooLinearVar::setVal(Double_t value) 
+void RooLinearVar::setVal(double value)
 {
   //cout << "RooLinearVar::setVal(" << GetName() << "): new value = " << value << endl ;
 
   // Prevent DIV0 problems
   if (_slope == 0.) {
-    coutE(Eval) << "RooLinearVar::setVal(" << GetName() << "): ERROR: slope is zero, cannot invert relation" << endl ;
+    coutE(Eval) << "RooLinearVar::setVal(" << GetName() << "): ERROR: slope is zero, cannot invert relation" << std::endl ;
     return ;
   }
 
   // Invert formula 'value = offset + slope*var'
-  ((RooRealVar&)_var.arg()).setVal((value - _offset) / _slope) ;
+  _var->setVal((value - _offset) / _slope) ;
 
 }
 
@@ -144,25 +142,23 @@ void RooLinearVar::setVal(Double_t value)
 /// Returns true if Jacobian term associated with current
 /// expression tree is indeed constant.
 
-Bool_t RooLinearVar::isJacobianOK(const RooArgSet& depList) const
+bool RooLinearVar::isJacobianOK(const RooArgSet& depList) const
 {
-  if (!((RooAbsRealLValue&)_var.arg()).isJacobianOK(depList)) {
-    return kFALSE ;
+  if (!_var->isJacobianOK(depList)) {
+    return false ;
   }
 
   // Check if jacobian has no real-valued dependents
-  RooAbsArg* arg ;
-  TIter dIter = depList.createIterator() ;
-  while ((arg=(RooAbsArg*)dIter.Next())) {
+  for(RooAbsArg* arg : depList) {
     if (arg->IsA()->InheritsFrom(RooAbsReal::Class())) {
-      if (_slope.arg().dependsOnValue(*arg)) {
-// 	cout << "RooLinearVar::isJacobianOK(" << GetName() << ") return kFALSE because slope depends on value of " << arg->GetName() << endl ;
-	return kFALSE ;
+      if (_slope->dependsOnValue(*arg)) {
+//    cout << "RooLinearVar::isJacobianOK(" << GetName() << ") return false because slope depends on value of " << arg->GetName() << endl ;
+   return false ;
       }
     }
   }
-  //   cout << "RooLinearVar::isJacobianOK(" << GetName() << ") return kTRUE" << endl ;
-  return kTRUE ;
+  //   cout << "RooLinearVar::isJacobianOK(" << GetName() << ") return true" << endl ;
+  return true ;
 }
 
 
@@ -170,9 +166,9 @@ Bool_t RooLinearVar::isJacobianOK(const RooArgSet& depList) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return value of Jacobian associated with the transformation
 
-Double_t RooLinearVar::jacobian() const 
+double RooLinearVar::jacobian() const
 {
-  return _slope*((RooAbsRealLValue&)_var.arg()).jacobian() ;
+  return _slope*_var->jacobian() ;
 }
 
 
@@ -180,9 +176,9 @@ Double_t RooLinearVar::jacobian() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object contents from stream
 
-Bool_t RooLinearVar::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose*/) 
+bool RooLinearVar::readFromStream(std::istream& /*is*/, bool /*compact*/, bool /*verbose*/)
 {
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -190,12 +186,12 @@ Bool_t RooLinearVar::readFromStream(istream& /*is*/, Bool_t /*compact*/, Bool_t 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object contents to stream
 
-void RooLinearVar::writeToStream(ostream& os, Bool_t compact) const
+void RooLinearVar::writeToStream(std::ostream& os, bool compact) const
 {
   if (compact) {
     os << getVal() ;
   } else {
-    os << _slope.arg().GetName() << " * " << _var.arg().GetName() << " + " << _offset.arg().GetName() ;
+    os << _slope->GetName() << " * " << _var->GetName() << " + " << _offset->GetName() ;
   }
 }
 
@@ -207,29 +203,29 @@ void RooLinearVar::writeToStream(ostream& os, Bool_t compact) const
 /// binning exists on the input variable, it will also exist on this linear transformation,
 /// and a binning adaptor object is created on the fly.
 
- RooAbsBinning& RooLinearVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) 
+ RooAbsBinning& RooLinearVar::getBinning(const char* name, bool verbose, bool createOnTheFly)
 {
   // Normalization binning
   if (name==0) {
-    _binning.updateInput(((RooAbsRealLValue&)_var.arg()).getBinning(),_slope,_offset) ;
+    _binning.updateInput(_var->getBinning(),_slope,_offset) ;
     return _binning ;
-  } 
+  }
 
   // Alternative named range binnings, look for existing translator binning first
-  RooLinTransBinning* altBinning = (RooLinTransBinning*) _altBinning.FindObject(name) ;
+  auto* altBinning = static_cast<RooLinTransBinning*>(_altBinning.FindObject(name));
   if (altBinning) {
-    altBinning->updateInput(((RooAbsRealLValue&)_var.arg()).getBinning(name,verbose),_slope,_offset) ;
+    altBinning->updateInput(_var->getBinning(name,verbose),_slope,_offset) ;
     return *altBinning ;
   }
 
   // If binning is not found return default binning, if creation is not requested
-  if (!_var.arg().hasRange(name) && !createOnTheFly) {
+  if (!_var->hasRange(name) && !createOnTheFly) {
     return _binning ;
   }
 
   // Create translator binning on the fly
-  RooAbsBinning& sourceBinning = ((RooAbsRealLValue&)_var.arg()).getBinning(name,verbose) ;
-  RooLinTransBinning* transBinning = new RooLinTransBinning(sourceBinning,_slope,_offset) ;
+  RooAbsBinning& sourceBinning = _var->getBinning(name,verbose) ;
+  auto* transBinning = new RooLinTransBinning(sourceBinning,_slope,_offset) ;
   _altBinning.Add(transBinning) ;
 
   return *transBinning ;
@@ -239,7 +235,7 @@ void RooLinearVar::writeToStream(ostream& os, Bool_t compact) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Const version of getBinning()
 
-const RooAbsBinning& RooLinearVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) const
+const RooAbsBinning& RooLinearVar::getBinning(const char* name, bool verbose, bool createOnTheFly) const
 {
   return const_cast<RooLinearVar*>(this)->getBinning(name,verbose,createOnTheFly) ;
 }
@@ -252,11 +248,8 @@ std::list<std::string> RooLinearVar::getBinningNames() const
 {
   std::list<std::string> binningNames(1, "");
 
-  RooFIter iter = _altBinning.fwdIterator();
-  const RooAbsArg* binning = 0;
-  while((binning = iter.next())) {
-    const char* name = binning->GetName();
-    binningNames.push_back(name);
+  for (TObject const* binning : _altBinning) {
+    binningNames.push_back(binning->GetName());
   }
 
   return binningNames;
@@ -267,7 +260,7 @@ std::list<std::string> RooLinearVar::getBinningNames() const
 /// exists on the input variable, it will also exists on this linear
 /// transformation.
 
-Bool_t RooLinearVar::hasBinning(const char* name) const 
+bool RooLinearVar::hasBinning(const char* name) const
 {
-  return ((RooAbsRealLValue&)_var.arg()).hasBinning(name) ;
+  return _var->hasBinning(name) ;
 }

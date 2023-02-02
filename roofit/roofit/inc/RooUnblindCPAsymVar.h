@@ -32,19 +32,19 @@ public:
          const char *blindString, RooAbsReal& cpasym);
   RooUnblindCPAsymVar(const char *name, const char *title,
             const char *blindString, RooAbsReal& cpasym, RooAbsCategory& blindState);
-  RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooUnblindCPAsymVar(*this,newname); }
-  virtual ~RooUnblindCPAsymVar();
+  RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other, const char* name=nullptr);
+  TObject* clone(const char* newname) const override { return new RooUnblindCPAsymVar(*this,newname); }
+  ~RooUnblindCPAsymVar() override;
 
 protected:
 
   // Function evaluation
-  virtual Double_t evaluate() const ;
+  double evaluate() const override ;
 
   RooRealProxy _asym ;
   RooBlindTools _blindEngine ;
 
-  ClassDef(RooUnblindCPAsymVar,1) // CP-Asymmetry unblinding transformation
+  ClassDefOverride(RooUnblindCPAsymVar,1) // CP-Asymmetry unblinding transformation
 };
 
 #endif

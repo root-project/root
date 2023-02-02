@@ -12,13 +12,14 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_MACHINEOUTLINER_H
-#define LLVM_MACHINEOUTLINER_H
+#ifndef LLVM_CODEGEN_MACHINEOUTLINER_H
+#define LLVM_CODEGEN_MACHINEOUTLINER_H
 
+#include "llvm/CodeGen/LivePhysRegs.h"
 #include "llvm/CodeGen/LiveRegUnits.h"
 #include "llvm/CodeGen/MachineFunction.h"
+#include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/TargetRegisterInfo.h"
-#include "llvm/CodeGen/LivePhysRegs.h"
 
 namespace llvm {
 namespace outliner {
@@ -37,10 +38,10 @@ enum InstrType { Legal, LegalTerminator, Illegal, Invisible };
 struct Candidate {
 private:
   /// The start index of this \p Candidate in the instruction list.
-  unsigned StartIdx;
+  unsigned StartIdx = 0;
 
   /// The number of instructions in this \p Candidate.
-  unsigned Len;
+  unsigned Len = 0;
 
   // The first instruction in this \p Candidate.
   MachineBasicBlock::iterator FirstInst;
@@ -49,20 +50,20 @@ private:
   MachineBasicBlock::iterator LastInst;
 
   // The basic block that contains this Candidate.
-  MachineBasicBlock *MBB;
+  MachineBasicBlock *MBB = nullptr;
 
   /// Cost of calling an outlined function from this point as defined by the
   /// target.
-  unsigned CallOverhead;
+  unsigned CallOverhead = 0;
 
 public:
   /// The index of this \p Candidate's \p OutlinedFunction in the list of
   /// \p OutlinedFunctions.
-  unsigned FunctionIdx;
+  unsigned FunctionIdx = 0;
 
   /// Identifier denoting the instructions to emit to call an outlined function
   /// from this point. Defined by the target.
-  unsigned CallConstructionID;
+  unsigned CallConstructionID = 0;
 
   /// Contains physical register liveness information for the MBB containing
   /// this \p Candidate.

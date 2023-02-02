@@ -19,7 +19,7 @@
 //                                                                      //
 // TF1Data                                                                 //
 //                                                                      //
-// Dummy class with same structure of v5::TF1 objects 
+// Dummy class with same structure of v5::TF1 objects
 // used only for reading the old files                                   //
 //////////////////////////////////////////////////////////////////////////
 
@@ -32,7 +32,7 @@
 
 namespace ROOT {
 
-   namespace v5 { 
+   namespace v5 {
 
 struct TF1Data : public ROOT::v5::TFormula, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -54,10 +54,10 @@ struct TF1Data : public ROOT::v5::TFormula, public TAttLine, public TAttFill, pu
 
 
    TF1Data();
-   virtual   ~TF1Data();
-   void Streamer(TBuffer &b, Int_t version, UInt_t start, UInt_t count, const TClass *onfile_class = 0);
-   
-   ClassDef(TF1Data,7)  //The Parametric 1-D function data structure  of v5::TF1
+     ~TF1Data() override;
+   void Streamer(TBuffer &b, Int_t version, UInt_t start, UInt_t count, const TClass *onfile_class = nullptr);
+
+   ClassDefOverride(TF1Data,7)  //The Parametric 1-D function data structure  of v5::TF1
 };
 
    }  // end namespace v5

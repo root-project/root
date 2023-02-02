@@ -264,7 +264,7 @@ const char *TXMLSetup::GetElItemName(TStreamerElement *el)
 
 TClass *TXMLSetup::XmlDefineClass(const char *xmlClassName)
 {
-   if (strchr(xmlClassName, '_') == 0)
+   if (!strchr(xmlClassName, '_'))
       return TClass::GetClass(xmlClassName);
 
    TIter iter(gROOT->GetListOfClasses());

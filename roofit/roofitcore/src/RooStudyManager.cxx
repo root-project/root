@@ -25,8 +25,6 @@ repeated applications of generate-and-fit operations on a workspace
 **/
 
 
-
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooStudyManager.h"
@@ -71,7 +69,7 @@ RooStudyManager::RooStudyManager(RooWorkspace& w, RooAbsStudy& study)
 RooStudyManager::RooStudyManager(const char* studyPackFileName)
 {
   string pwd = gDirectory->GetName() ;
-  TFile *f = new TFile(studyPackFileName) ;
+  std::unique_ptr<TFile> f{TFile::Open(studyPackFileName, "READ")};
   _pkg = dynamic_cast<RooStudyPackage*>(f->Get("studypack")) ;
   gDirectory->cd(Form("%s:",pwd.c_str())) ;
 }
@@ -100,7 +98,7 @@ void RooStudyManager::run(Int_t nExperiments)
 ////////////////////////////////////////////////////////////////////////////////
 /// Open PROOF-Lite session
 
-void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, Bool_t showGui)
+void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, bool showGui)
 {
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") opening PROOF session" << endl ;
   void* p = (void*) gROOT->ProcessLineFast(Form("TProof::Open(\"%s\")",proofHost)) ;
@@ -157,7 +155,7 @@ void RooStudyManager::closeProof(Option_t *option)
       gROOT->ProcessLineFast("delete gProof ;") ;
     }
   } else {
-    ooccoutI((TObject*)NULL,Generation) << "RooStudyManager: No global Proof objects. No connections closed." << endl ;
+    ooccoutI(nullptr,Generation) << "RooStudyManager: No global Proof objects. No connections closed." << endl ;
   }
 }
 
@@ -165,7 +163,7 @@ void RooStudyManager::closeProof(Option_t *option)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob, Bool_t unifiedInput=kFALSE)
+void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob, bool unifiedInput=false)
 {
   TFile f(Form("study_data_%s.root",studyName),"RECREATE") ;
   _pkg->Write("studypack") ;
@@ -186,28 +184,28 @@ void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob,
     // Write remainder of deriver script
     ofstream bdr2 (Form("study_driver_%s.sh",studyName),ios::app) ;
     bdr2 << "EOR" << endl
-	 << "fi" << endl
-	 << "root -l -b <<EOR" << endl
-	 << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
-	 << ".q" << endl
-	 << "EOR" << endl ;
+    << "fi" << endl
+    << "root -l -b <<EOR" << endl
+    << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
+    << ".q" << endl
+    << "EOR" << endl ;
     // Remove binary input file
     gSystem->Unlink(Form("study_data_%s.root",studyName)) ;
 
     coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '" << Form("study_driver_%s.sh",studyName) << "," << endl
-			<< "     input data files is embedded in driver script" << endl ;
+         << "     input data files is embedded in driver script" << endl ;
 
   } else {
 
     ofstream bdr(Form("study_driver_%s.sh",studyName)) ;
     bdr << "#!/bin/sh" << endl
-	<< "root -l -b <<EOR" << endl
-	<< Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
-	<< ".q" << endl
-	<< "EOR" << endl ;
+   << "root -l -b <<EOR" << endl
+   << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
+   << ".q" << endl
+   << "EOR" << endl ;
 
     coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '" << Form("study_driver_%s.sh",studyName) << "," << endl
-			<< "     input data file is " << Form("study_data_%s.root",studyName) << endl ;
+         << "     input data file is " << Form("study_data_%s.root",studyName) << endl ;
 
   }
 }
@@ -228,17 +226,10 @@ void RooStudyManager::processBatchOutput(const char* filePat)
     coutP(DataHandling) << "RooStudyManager::processBatchOutput() now reading file " << *iter << endl ;
     TFile f(iter->c_str()) ;
 
-    TList* list = f.GetListOfKeys() ;
-    TIterator* kiter = list->MakeIterator();
-
-    TObject* obj ;
-    TKey* key ;
-    while((key=(TKey*)kiter->Next())) {
-      obj = f.Get(key->GetName()) ;
-      TObject* clone = obj->Clone(obj->GetName()) ;
-      olist.Add(clone) ;
+    for(auto * key : static_range_cast<TKey*>(*f.GetListOfKeys())) {
+      TObject * obj = f.Get(key->GetName()) ;
+      olist.Add(obj->Clone(obj->GetName())) ;
     }
-    delete kiter ;
   }
   aggregateData(&olist) ;
   olist.Delete() ;
@@ -308,7 +299,7 @@ void RooStudyManager::expandWildCardSpec(const char* name, list<string>& result)
    if (dir) {
       //create a TList to store the file names (not yet sorted)
       TList l;
-      TRegexp re(basename,kTRUE);
+      TRegexp re(basename,true);
       const char *file;
       while ((file = gSystem->GetDirEntry(dir))) {
          if (!strcmp(file,".") || !strcmp(file,"..")) continue;

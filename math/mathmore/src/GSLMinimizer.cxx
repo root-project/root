@@ -110,10 +110,13 @@ void GSLMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) {
 
 
 unsigned int GSLMinimizer::NCalls() const {
-   // return numbr of function calls
-   // if method support
+   // return number of function calls
+   // if original function does not support gradient it is wrapped in MultiNumGradFuction
+   // and we have NCalls available
    const ROOT::Math::MultiNumGradFunction * fnumgrad = dynamic_cast<const ROOT::Math::MultiNumGradFunction *>(ObjFunction());
    if (fnumgrad) return fnumgrad->NCalls();
+   // if original function implement gradient, we can get NumCalls a=only if it is a
+   // FitMethodGradFunction
    const ROOT::Math::FitMethodGradFunction * ffitmethod = dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(ObjFunction());
    if (ffitmethod) return ffitmethod->NCalls();
    // not supported in the other case
@@ -145,18 +148,17 @@ bool GSLMinimizer::Minimize() {
    std::vector<double> startValues;
    std::vector<double> steps(StepSizes(), StepSizes()+npar);
 
-   MinimTransformFunction * trFunc  =  CreateTransformation(startValues);
+   std::unique_ptr<MinimTransformFunction>  trFunc( CreateTransformation(startValues));
    if (trFunc) {
-      function = trFunc;
       // need to transform also  the steps
       trFunc->InvStepTransformation(X(), StepSizes(), &steps[0]);
       steps.resize(trFunc->NDim());
    }
 
-   // in case all parameters are free - just evaluate the function
+    // in case all parameters are free - just evaluate the function
    if (NFree() == 0) {
       MATH_INFO_MSG("GSLMinimizer::Minimize","There are no free parameter - just compute the function value");
-      double fval = (*function)((double*)0);   // no need to pass parameters
+      double fval = (*function)((double*)0);   // no need to pass parameters or used transformed function
       SetFinalValues(&startValues[0]);
       SetMinValue(fval);
       fStatus = 0;
@@ -173,9 +175,8 @@ bool GSLMinimizer::Minimize() {
       return false;
    }
 
-
    // set parameters in internal GSL minimization class
-   fGSLMultiMin->Set(*function, &startValues.front(), stepSize, fLSTolerance );
+   fGSLMultiMin->Set( (trFunc) ? *trFunc : *function, &startValues.front(), stepSize, fLSTolerance );
 
 
    int debugLevel = PrintLevel();
@@ -212,7 +213,7 @@ bool GSLMinimizer::Minimize() {
             std::cout << "            Parameter Values : ";
             const double * xtmp = fGSLMultiMin->X();
             std::cout << std::endl;
-            if (trFunc != 0 ) {
+            if (trFunc) {
                xtmp  = trFunc->Transformation(xtmp);
             }
             for (unsigned int i = 0; i < NDim(); ++i) {
@@ -235,7 +236,7 @@ bool GSLMinimizer::Minimize() {
    // save state with values and function value
    double * x = fGSLMultiMin->X();
    if (x == 0) return false;
-   SetFinalValues(x);
+   SetFinalValues(x, trFunc.get());
 
    double minVal =  fGSLMultiMin->Minimum();
    SetMinValue(minVal);
@@ -275,7 +276,6 @@ bool GSLMinimizer::Minimize() {
                for (unsigned int i = 0; i < NDim(); ++i)
                   std::cout << VariableName(i) << "\t  = " << X()[i] << std::endl;
                std::cout << "FVAL         = " << MinValue() << std::endl;
-//      std::cout << "Edm   = " << fState.Edm() << std::endl;
                std::cout << "Niterations  = " << iter << std::endl;
             }
          }

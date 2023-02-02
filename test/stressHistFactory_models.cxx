@@ -55,7 +55,7 @@ void buildAPI_XML_TestModel(TString prefix)
 
   // add background2 sample to signal region
   HistFactory::Sample Background2("background2","background2","HistFactory_input.root","API_vs_XML/SignalRegion/");
-  Background2.SetNormalizeByTheory(kFALSE);
+  Background2.SetNormalizeByTheory(false);
   Background2.AddNormFactor("bkg",1,0,20);
   Background2.AddOverallSys("bkg_unc",0.9,1.2);
   Background2.AddShapeSys("bkg2_shape_unc",HistFactory::Constraint::Gaussian,"bkg2_shape_unc","HistFactory_input.root","API_vs_XML/SignalRegion/");
@@ -67,7 +67,7 @@ void buildAPI_XML_TestModel(TString prefix)
 
   // add background sample to sideband region
   HistFactory::Sample Background3("background","unitHist","HistFactory_input.root","API_vs_XML/SidebandRegion/");
-  Background3.SetNormalizeByTheory(kFALSE);
+  Background3.SetNormalizeByTheory(false);
   Background3.AddNormFactor("bkg",1,0,20);
   Background3.AddNormFactor("tau",10,0.0,1000.0);
   SidebandRegion.AddSample(Background3);

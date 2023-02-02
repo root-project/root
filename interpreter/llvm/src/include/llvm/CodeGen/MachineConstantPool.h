@@ -17,6 +17,7 @@
 
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/MC/SectionKind.h"
+#include "llvm/Support/Alignment.h"
 #include <climits>
 #include <vector>
 
@@ -40,12 +41,12 @@ public:
   explicit MachineConstantPoolValue(Type *ty) : Ty(ty) {}
   virtual ~MachineConstantPoolValue() = default;
 
-  /// getType - get type of this MachineConstantPoolValue.
-  ///
   Type *getType() const { return Ty; }
 
+  virtual unsigned getSizeInBytes(const DataLayout &DL) const;
+
   virtual int getExistingMachineCPValue(MachineConstantPool *CP,
-                                        unsigned Alignment) = 0;
+                                        Align Alignment) = 0;
 
   virtual void addSelectionDAGCSEId(FoldingSetNodeID &ID) = 0;
 
@@ -71,33 +72,29 @@ public:
     MachineConstantPoolValue *MachineCPVal;
   } Val;
 
-  /// The required alignment for this entry. The top bit is set when Val is
-  /// a target specific MachineConstantPoolValue.
-  unsigned Alignment;
+  /// The required alignment for this entry.
+  Align Alignment;
 
-  MachineConstantPoolEntry(const Constant *V, unsigned A)
-    : Alignment(A) {
+  bool IsMachineConstantPoolEntry;
+
+  MachineConstantPoolEntry(const Constant *V, Align A)
+      : Alignment(A), IsMachineConstantPoolEntry(false) {
     Val.ConstVal = V;
   }
 
-  MachineConstantPoolEntry(MachineConstantPoolValue *V, unsigned A)
-      : Alignment(A) {
+  MachineConstantPoolEntry(MachineConstantPoolValue *V, Align A)
+      : Alignment(A), IsMachineConstantPoolEntry(true) {
     Val.MachineCPVal = V;
-    Alignment |= 1U << (sizeof(unsigned) * CHAR_BIT - 1);
   }
 
   /// isMachineConstantPoolEntry - Return true if the MachineConstantPoolEntry
   /// is indeed a target specific constantpool entry, not a wrapper over a
   /// Constant.
-  bool isMachineConstantPoolEntry() const {
-    return (int)Alignment < 0;
-  }
+  bool isMachineConstantPoolEntry() const { return IsMachineConstantPoolEntry; }
 
-  int getAlignment() const {
-    return Alignment & ~(1 << (sizeof(unsigned) * CHAR_BIT - 1));
-  }
+  Align getAlign() const { return Alignment; }
 
-  Type *getType() const;
+  unsigned getSizeInBytes(const DataLayout &DL) const;
 
   /// This method classifies the entry according to whether or not it may
   /// generate a relocation entry.  This must be conservative, so if it might
@@ -118,7 +115,7 @@ public:
 /// address of the function constant pool values.
 /// The machine constant pool.
 class MachineConstantPool {
-  unsigned PoolAlignment;       ///< The alignment for the pool.
+  Align PoolAlignment; ///< The alignment for the pool.
   std::vector<MachineConstantPoolEntry> Constants; ///< The pool of constants.
   /// MachineConstantPoolValues that use an existing MachineConstantPoolEntry.
   DenseSet<MachineConstantPoolValue*> MachineCPVsSharingEntries;
@@ -132,16 +129,15 @@ public:
       : PoolAlignment(1), DL(DL) {}
   ~MachineConstantPool();
 
-  /// getConstantPoolAlignment - Return the alignment required by
-  /// the whole constant pool, of which the first element must be aligned.
-  unsigned getConstantPoolAlignment() const { return PoolAlignment; }
+  /// Return the alignment required by the whole constant pool, of which the
+  /// first element must be aligned.
+  Align getConstantPoolAlign() const { return PoolAlignment; }
 
   /// getConstantPoolIndex - Create a new entry in the constant pool or return
   /// an existing one.  User must specify the minimum required alignment for
   /// the object.
-  unsigned getConstantPoolIndex(const Constant *C, unsigned Alignment);
-  unsigned getConstantPoolIndex(MachineConstantPoolValue *V,
-                                unsigned Alignment);
+  unsigned getConstantPoolIndex(const Constant *C, Align Alignment);
+  unsigned getConstantPoolIndex(MachineConstantPoolValue *V, Align Alignment);
 
   /// isEmpty - Return true if this constant pool contains no constants.
   bool isEmpty() const { return Constants.empty(); }

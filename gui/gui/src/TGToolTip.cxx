@@ -21,7 +21,7 @@
 **************************************************************************/
 
 
-/** \classTGToolTip
+/** \class TGToolTip
     \ingroup guiwidgets
 
 A tooltip can be a one or multiple lines help text that is displayed
@@ -58,7 +58,7 @@ private:
    TGToolTip   *fTip;  // tooltip
 public:
    TTipDelayTimer(TGToolTip *tip, Long_t ms) : TTimer(ms, kTRUE) { fTip = tip; }
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,7 +236,7 @@ void TGToolTip::Show(Int_t x, Int_t y)
    MapWindow();
    RaiseWindow();
 
-   Long_t args[2];
+   Longptr_t args[2];
    args[0] = x;
    args[1] = y;
 

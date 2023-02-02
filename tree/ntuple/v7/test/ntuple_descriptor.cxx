@@ -67,6 +67,70 @@ TEST(RNTupleDescriptorBuilder, CatchBadLinks)
    }
 }
 
+TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
+{
+   RNTupleDescriptorBuilder descBuilder;
+   descBuilder.AddField(
+      RFieldDescriptorBuilder().FieldId(0).Structure(ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(1)
+                           .FieldName("field")
+                           .TypeName("int32_t")
+                           .Structure(ENTupleStructure::kLeaf)
+                           .MakeDescriptor()
+                           .Unwrap());
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(2)
+                           .FieldName("fieldAlias")
+                           .TypeName("int32_t")
+                           .Structure(ENTupleStructure::kLeaf)
+                           .MakeDescriptor()
+                           .Unwrap());
+   descBuilder.AddFieldLink(0, 1);
+   descBuilder.AddFieldLink(0, 2);
+   RColumnModel colModel(EColumnType::kInt32, false);
+   RColumnDescriptorBuilder colBuilder1;
+   colBuilder1.LogicalColumnId(0).PhysicalColumnId(0).Model(colModel).FieldId(1).Index(0);
+   descBuilder.AddColumn(colBuilder1.MakeDescriptor().Unwrap()).ThrowOnError();
+
+   RColumnDescriptorBuilder colBuilder2;
+   colBuilder2.LogicalColumnId(1).PhysicalColumnId(0).Model(colModel).FieldId(42).Index(0);
+   try {
+      descBuilder.AddColumn(colBuilder2.MakeDescriptor().Unwrap()).ThrowOnError();
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("doesn't exist"));
+   }
+
+   RColumnDescriptorBuilder colBuilder3;
+   colBuilder3.LogicalColumnId(0).PhysicalColumnId(0).Model(colModel).FieldId(2).Index(0);
+   try {
+      descBuilder.AddColumn(colBuilder3.MakeDescriptor().Unwrap()).ThrowOnError();
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("column index clash"));
+   }
+
+   RColumnDescriptorBuilder colBuilder4;
+   colBuilder4.LogicalColumnId(1).PhysicalColumnId(0).Model(colModel).FieldId(2).Index(1);
+   try {
+      descBuilder.AddColumn(colBuilder4.MakeDescriptor().Unwrap()).ThrowOnError();
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("out of bounds column index"));
+   }
+
+   RColumnDescriptorBuilder colBuilder5;
+   RColumnModel falseModel(EColumnType::kInt64, false);
+   colBuilder5.LogicalColumnId(1).PhysicalColumnId(0).Model(falseModel).FieldId(2).Index(0);
+   try {
+      descBuilder.AddColumn(colBuilder5.MakeDescriptor().Unwrap()).ThrowOnError();
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("alias column type mismatch"));
+   }
+
+   RColumnDescriptorBuilder colBuilder6;
+   colBuilder6.LogicalColumnId(1).PhysicalColumnId(0).Model(colModel).FieldId(2).Index(0);
+   descBuilder.AddColumn(colBuilder6.MakeDescriptor().Unwrap()).ThrowOnError();
+}
+
 TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
 {
    RNTupleDescriptorBuilder descBuilder;
@@ -94,14 +158,14 @@ TEST(RNTupleDescriptor, QualifiedFieldName)
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto &desc = ntuple->GetDescriptor();
-   EXPECT_TRUE(desc.GetQualifiedFieldName(desc.GetFieldZeroId()).empty());
-   auto fldIdInts = desc.FindFieldId("ints");
-   EXPECT_STREQ("ints", desc.GetQualifiedFieldName(fldIdInts).c_str());
-   auto fldIdJets = desc.FindFieldId("jets");
-   auto fldIdInner = desc.FindFieldId("_0", fldIdJets);
-   EXPECT_STREQ("jets", desc.GetQualifiedFieldName(fldIdJets).c_str());
-   EXPECT_STREQ("jets._0", desc.GetQualifiedFieldName(fldIdInner).c_str());
+   const auto desc = ntuple->GetDescriptor();
+   EXPECT_TRUE(desc->GetQualifiedFieldName(desc->GetFieldZeroId()).empty());
+   auto fldIdInts = desc->FindFieldId("ints");
+   EXPECT_STREQ("ints", desc->GetQualifiedFieldName(fldIdInts).c_str());
+   auto fldIdJets = desc->FindFieldId("jets");
+   auto fldIdInner = desc->FindFieldId("_0", fldIdJets);
+   EXPECT_STREQ("jets", desc->GetQualifiedFieldName(fldIdJets).c_str());
+   EXPECT_STREQ("jets._0", desc->GetQualifiedFieldName(fldIdInner).c_str());
 }
 
 TEST(RFieldDescriptorIterable, IterateOverFieldNames)
@@ -122,7 +186,7 @@ TEST(RFieldDescriptorIterable, IterateOverFieldNames)
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    // iterate over top-level fields
    std::vector<std::string> names{};
-   for (auto& f: ntuple->GetDescriptor().GetTopLevelFields()) {
+   for (auto &f : ntuple->GetDescriptor()->GetTopLevelFields()) {
       names.push_back(f.GetFieldName());
    }
    ASSERT_EQ(names.size(), 4);
@@ -131,18 +195,18 @@ TEST(RFieldDescriptorIterable, IterateOverFieldNames)
    EXPECT_EQ(names[2], std::string("bool_vec_vec"));
    EXPECT_EQ(names[3], std::string("ints"));
 
-   const auto& ntuple_desc = ntuple->GetDescriptor();
-   auto top_level_fields = ntuple_desc.GetTopLevelFields();
+   const auto ntuple_desc = ntuple->GetDescriptor();
+   auto top_level_fields = ntuple_desc->GetTopLevelFields();
 
    // iterate over child field ranges
    const auto& float_vec_desc = *top_level_fields.begin();
    EXPECT_EQ(float_vec_desc.GetFieldName(), std::string("jets"));
-   auto float_vec_child_range = ntuple_desc.GetFieldIterable(float_vec_desc);
+   auto float_vec_child_range = ntuple_desc->GetFieldIterable(float_vec_desc);
    std::vector<std::string> child_names{};
    for (auto& child_field: float_vec_child_range) {
       child_names.push_back(child_field.GetFieldName());
       // check the empty range
-      auto float_child_range = ntuple_desc.GetFieldIterable(child_field);
+      auto float_child_range = ntuple_desc->GetFieldIterable(child_field);
       EXPECT_EQ(float_child_range.begin(), float_child_range.end());
    }
    ASSERT_EQ(child_names.size(), 1);
@@ -155,7 +219,7 @@ TEST(RFieldDescriptorIterable, IterateOverFieldNames)
    EXPECT_EQ(bool_vec_vec_desc.GetFieldName(), std::string("bool_vec_vec"));
 
    child_names.clear();
-   for (auto& child_field: ntuple_desc.GetFieldIterable(bool_vec_vec_desc)) {
+   for (auto &child_field : ntuple_desc->GetFieldIterable(bool_vec_vec_desc)) {
       child_names.push_back(child_field.GetFieldName());
    }
    ASSERT_EQ(child_names.size(), 1);
@@ -178,14 +242,13 @@ TEST(RFieldDescriptorIterable, SortByLambda)
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto& ntuple_desc = ntuple->GetDescriptor();
+   const auto ntuple_desc = ntuple->GetDescriptor();
    auto alpha_order = [&](auto lhs, auto rhs) {
-      return ntuple_desc.GetFieldDescriptor(lhs).GetFieldName()
-         < ntuple_desc.GetFieldDescriptor(rhs).GetFieldName();
+      return ntuple_desc->GetFieldDescriptor(lhs).GetFieldName() < ntuple_desc->GetFieldDescriptor(rhs).GetFieldName();
    };
 
    std::vector<std::string> sorted_names = {};
-   for (auto& f: ntuple_desc.GetTopLevelFields(alpha_order)) {
+   for (auto &f : ntuple_desc->GetTopLevelFields(alpha_order)) {
       sorted_names.push_back(f.GetFieldName());
    }
    ASSERT_EQ(sorted_names.size(), 4);
@@ -196,9 +259,7 @@ TEST(RFieldDescriptorIterable, SortByLambda)
 
    // reverse alphabetical
    sorted_names.clear();
-   for (auto& f: ntuple_desc.GetTopLevelFields(
-      [&](auto lhs, auto rhs) { return !alpha_order(lhs, rhs); }))
-   {
+   for (auto &f : ntuple_desc->GetTopLevelFields([&](auto lhs, auto rhs) { return !alpha_order(lhs, rhs); })) {
       sorted_names.push_back(f.GetFieldName());
    }
    ASSERT_EQ(sorted_names.size(), 4);
@@ -209,11 +270,10 @@ TEST(RFieldDescriptorIterable, SortByLambda)
 
    // alphabetical by type name
    std::vector<std::string> sorted_by_typename = {};
-   for (auto& f: ntuple_desc.GetTopLevelFields(
-      [&](auto lhs, auto rhs) {
-         return ntuple_desc.GetFieldDescriptor(lhs).GetTypeName()
-            < ntuple_desc.GetFieldDescriptor(rhs).GetTypeName(); }))
-   {
+   for (auto &f : ntuple_desc->GetTopLevelFields([&](auto lhs, auto rhs) {
+           return ntuple_desc->GetFieldDescriptor(lhs).GetTypeName() <
+                  ntuple_desc->GetFieldDescriptor(rhs).GetTypeName();
+        })) {
       sorted_by_typename.push_back(f.GetFieldName());
    }
    // int32_t, vector<bool>, vector<float>, vector<vector<bool>
@@ -239,26 +299,26 @@ TEST(RColumnDescriptorIterable, IterateOverColumns)
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto &desc = ntuple->GetDescriptor();
+   const auto desc = ntuple->GetDescriptor();
 
    // No column attached to the zero field
    unsigned int counter = 0;
-   for (const auto &c : desc.GetColumnIterable(desc.GetFieldZeroId())) {
+   for (const auto &c : desc->GetColumnIterable(desc->GetFieldZeroId())) {
       (void)c;
       counter++;
    }
    EXPECT_EQ(0u, counter);
 
-   const auto tagId = desc.FindFieldId("tag");
-   for (const auto &c : desc.GetColumnIterable(tagId)) {
+   const auto tagId = desc->FindFieldId("tag");
+   for (const auto &c : desc->GetColumnIterable(tagId)) {
       EXPECT_EQ(tagId, c.GetFieldId());
       EXPECT_EQ(counter, c.GetIndex());
       counter++;
    }
    EXPECT_EQ(2, counter);
 
-   const auto jetsId = desc.FindFieldId("jets");
-   for (const auto &c : desc.GetColumnIterable(desc.FindFieldId("jets"))) {
+   const auto jetsId = desc->FindFieldId("jets");
+   for (const auto &c : desc->GetColumnIterable(desc->FindFieldId("jets"))) {
       EXPECT_EQ(jetsId, c.GetFieldId());
       counter++;
    }
@@ -284,9 +344,30 @@ TEST(RClusterDescriptor, GetBytesOnStorage)
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto &desc = ntuple->GetDescriptor();
+   const auto desc = ntuple->GetDescriptor();
 
-   auto clusterID = desc.FindClusterId(0, 0);
+   auto clusterID = desc->FindClusterId(0, 0);
    ASSERT_NE(ROOT::Experimental::kInvalidDescriptorId, clusterID);
-   EXPECT_EQ(4 + 8 + 4 + 3, desc.GetClusterDescriptor(clusterID).GetBytesOnStorage());
+   EXPECT_EQ(4 + 8 + 4 + 3, desc->GetClusterDescriptor(clusterID).GetBytesOnStorage());
+}
+
+TEST(RNTupleDescriptor, Clone)
+{
+   auto model = RNTupleModel::Create();
+   auto floats = model->MakeField<std::vector<float>>("jets");
+   auto bools = model->MakeField<std::string>("tag");
+
+   FileRaii fileGuard("test_ntuple_descriptor_clone.root");
+   {
+      RNTupleWriter ntuple(std::move(model),
+                           std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), RNTupleWriteOptions()));
+      ntuple.Fill();
+      ntuple.CommitCluster(true /* commitClusterGroup */);
+      ntuple.Fill();
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   const auto desc = ntuple->GetDescriptor();
+   auto clone = desc->Clone();
+   EXPECT_EQ(*desc, *clone);
 }

@@ -30,8 +30,11 @@ class RLogChannel;
 /// Log channel for Browser diagnostics.
 RLogChannel &BrowserLog();
 
+class RBrowserDataCleanup;
 
 class RBrowserData {
+
+   friend class RBrowserDataCleanup;
 
    std::shared_ptr<Browsable::RElement> fTopElement;    ///<! top element
 
@@ -46,17 +49,18 @@ class RBrowserData {
    std::vector<const Browsable::RItem *> fLastSortedItems;   ///<! sorted child items, used in requests
    std::string fLastSortMethod;                          ///<! last sort method
    bool fLastSortReverse{false};                         ///<! last request reverse order
+   std::unique_ptr<RBrowserDataCleanup> fCleanupHandle;  ///<! cleanup handle for RecursiveRemove
 
    void ResetLastRequestData(bool with_element);
 
    bool ProcessBrowserRequest(const RBrowserRequest &request, RBrowserReply &reply);
 
 public:
-   RBrowserData() = default;
+   RBrowserData();
 
-   RBrowserData(std::shared_ptr<Browsable::RElement> elem) { SetTopElement(elem); }
+   RBrowserData(std::shared_ptr<Browsable::RElement> elem) : RBrowserData()  { SetTopElement(elem); }
 
-   virtual ~RBrowserData() = default;
+   virtual ~RBrowserData();
 
    void SetTopElement(std::shared_ptr<Browsable::RElement> elem);
 
@@ -75,6 +79,11 @@ public:
    std::shared_ptr<Browsable::RElement> GetSubElement(const Browsable::RElementPath_t &path);
 
    void ClearCache();
+
+   bool RemoveFromCache(void *obj);
+
+   bool RemoveFromCache(const Browsable::RElementPath_t &path);
+
 };
 
 

@@ -45,7 +45,6 @@
 #include "RooRealVar.h"
 #include "RooGaussian.h"
 #include "RooMinimizer.h"
-#include "RooChi2Var.h"
 #include "RooGlobalFunc.h"
 #include "RooFitResult.h"
 #include "RooProdPdf.h"
@@ -517,10 +516,7 @@ int  FitUsingRooFit(TH1 * hist, TF1 * func) {
       assert(pdf != 0);
 #define USE_CHI2_FIT
 #ifdef USE_CHI2_FIT
-      RooChi2Var chi2("chi2","chi2",*pdf,data) ;
-      RooMinimizer m(chi2) ;
-      m.setPrintLevel(-1);
-      m.fit("mh") ;
+      pdf->chi2FitTo(data, RooFit::PrintLevel(-1));
 #else
       pdf->fitTo(data);
 #endif
@@ -556,13 +552,13 @@ int  FitUsingRooFit(TTree * tree, TF1 * func) {
 
 
       RooRealVar mean("mean","Mean of Gaussian",iniPar[0], -100,100) ;
-      RooRealVar sigma("sigma","Width of Gaussian",iniPar[1], -100, 100) ;
+      RooRealVar sigma("sigma","Width of Gaussian",iniPar[1], 0.01, 100) ;
 
       RooGaussian pdfx("gaussx","gauss(x,mean,sigma)",x,mean,sigma);
 
       // for 2d data
       RooRealVar meany("meanx","Mean of Gaussian",iniPar[2], -100,100) ;
-      RooRealVar sigmay("sigmay","Width of Gaussian",iniPar[3], -100, 100) ;
+      RooRealVar sigmay("sigmay","Width of Gaussian",iniPar[3], 0.01, 100) ;
       RooGaussian pdfy("gaussy","gauss(y,meanx,sigmay)",y,meany,sigmay);
 
       RooProdPdf pdf("gausxy","gausxy",RooArgSet(pdfx,pdfy) );
@@ -643,7 +639,7 @@ int  FitUsingRooFit2(TTree * tree) {
 
 
          m[j] = new RooRealVar(mname.c_str(),mname.c_str(),iniPar[2*j],-100,100) ;
-         s[j] = new RooRealVar(sname.c_str(),sname.c_str(),iniPar[2*j+1],-100,100) ;
+         s[j] = new RooRealVar(sname.c_str(),sname.c_str(),iniPar[2*j+1],0.01,100) ;
 
          std::string gname = "g_" + ROOT::Math::Util::ToString(j);
          g[j] = new RooGaussian(gname.c_str(),"gauss(x,mean,sigma)",*x[j],*m[j],*s[j]);

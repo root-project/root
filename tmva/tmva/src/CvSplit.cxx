@@ -137,7 +137,7 @@ void TMVA::CvSplit::RecombineKFoldDataSet(DataSetInfo &dsi, Types::ETreeType tt)
 ///
 
 TMVA::CvSplitKFoldsExpr::CvSplitKFoldsExpr(DataSetInfo &dsi, TString expr)
-   : fDsi(dsi), fIdxFormulaParNumFolds(std::numeric_limits<UInt_t>::max()), fSplitFormula("", expr),
+   : fDsi(dsi), fIdxFormulaParNumFolds(std::numeric_limits<Int_t>::max()), fSplitFormula("", expr),
      fParValues(fSplitFormula.GetNpar())
 {
    if (!fSplitFormula.IsValid()) {
@@ -234,7 +234,7 @@ UInt_t TMVA::CvSplitKFoldsExpr::GetSpectatorIndexForName(DataSetInfo &dsi, TStri
 /// \param[in] splitExpr Expression used to split data into folds. If `""` a
 ///                      random assignment will be done. Otherwise the
 ///                      expression is fed into a TFormula and evaluated per
-///                      event. The resulting value is the the fold assignment.
+///                      event. The resulting value is the fold assignment.
 /// \param[in] seed Used only when using random splitting (i.e. when
 ///                 `splitExpr` is `""`). Seed is used to initialise the random
 ///                 number generator when assigning events to folds.
@@ -313,6 +313,7 @@ std::vector<UInt_t> TMVA::CvSplitKFolds::GetEventIndexToFoldMapping(UInt_t nEntr
 /// \brief Split sets for into k-folds
 /// \param[in] oldSet Original, unsplit, events
 /// \param[in] numFolds Number of folds to split data into
+/// \param[in] numClasses number of classes to stratify into
 ///
 
 std::vector<std::vector<TMVA::Event *>>

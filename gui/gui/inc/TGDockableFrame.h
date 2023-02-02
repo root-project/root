@@ -31,16 +31,16 @@ protected:
    ULong_t    fNormBg;     ///< normal background color
    ULong_t    fHiBg;       ///< highlighted background color
 
-   virtual void DrawBorder();
-   virtual void DoRedraw();
+   void DrawBorder() override;
+   void DoRedraw() override;
 
 public:
    TGDockButton(const TGCompositeFrame *p = nullptr, Int_t id = 1);
    virtual ~TGDockButton();
 
-   virtual Bool_t HandleCrossing(Event_t *event);
+   Bool_t HandleCrossing(Event_t *event) override;
 
-   ClassDef(TGDockButton,0)  // Dock button
+   ClassDefOverride(TGDockButton,0)  // Dock button
 };
 
 
@@ -48,14 +48,14 @@ class TGDockHideButton : public TGDockButton {
 protected:
    Int_t     fAspectRatio;   ///< triangle orientation
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
 public:
    TGDockHideButton(const TGCompositeFrame *p = nullptr);
 
    void SetAspectRatio(Int_t a) { fAspectRatio = a; DoRedraw(); }
 
-   ClassDef(TGDockHideButton,0)  // Hide dock button
+   ClassDefOverride(TGDockHideButton,0)  // Hide dock button
 };
 
 
@@ -69,13 +69,13 @@ protected:
    TGDockableFrame    *fDockable;   ///< orignal dockable frame
 
 public:
-   TGUndockedFrame(const TGWindow *p = 0, TGDockableFrame *dockable = 0);
+   TGUndockedFrame(const TGWindow *p = nullptr, TGDockableFrame *dockable = nullptr);
    virtual ~TGUndockedFrame();
 
    void FixSize();
-   void CloseWindow();
+   void CloseWindow() override;
 
-   ClassDef(TGUndockedFrame,0)  // Undocked frame
+   ClassDefOverride(TGUndockedFrame,0)  // Undocked frame
 };
 
 
@@ -106,9 +106,9 @@ public:
                    UInt_t options = kHorizontalFrame);
    virtual ~TGDockableFrame();
 
-   virtual void AddFrame(TGFrame *f, TGLayoutHints *hints);
+   void AddFrame(TGFrame *f, TGLayoutHints *hints) override;
 
-   virtual Bool_t ProcessMessage(Longptr_t, Longptr_t, Longptr_t);
+   Bool_t ProcessMessage(Longptr_t, Longptr_t, Longptr_t) override;
    virtual void Docked() { Emit("Docked()"); }        //*SIGNAL*
    virtual void Undocked() { Emit("Undocked()"); }    //*SIGNAL*
 
@@ -123,9 +123,9 @@ public:
    void   EnableHide(Bool_t onoff);
    Bool_t EnableHide() const { return fEnableHide; }
 
-   void SetWindowName(const char *name);
+   void SetWindowName(const char *name) override;
 
-   Bool_t IsUndocked() const { return (fFrame != 0); }
+   Bool_t IsUndocked() const { return fFrame != nullptr; }
    Bool_t IsHidden() const { return fHidden; }
 
    Bool_t IsFixedSize() const { return  fFixedSize; }
@@ -134,9 +134,9 @@ public:
    TGCompositeFrame *GetContainer() const { return fContainer; }
    TGUndockedFrame  *GetUndocked() const { return fFrame; }
 
-   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
+   void      SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGDockableFrame,0)  // Dockable widget
+   ClassDefOverride(TGDockableFrame,0)  // Dockable widget
 };
 
 #endif

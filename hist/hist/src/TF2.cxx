@@ -39,7 +39,7 @@ The following types of functions can be created:
 
 Begin_Macro (source)
 {
-    TF2 *f2 = new TF2("f2","sin(x)*sin(y)/(x*y)",0,5,0,5);
+    auto f2 = new TF2("f2","sin(x)*sin(y)/(x*y)",0,5,0,5);
     f2->Draw();
 }
 End_Macro
@@ -58,7 +58,7 @@ Double_t func(Double_t *val, Double_t *par)
 
 void fplot()
 {
-   TF2 *f = new TF2("f",func,-1,1,-1,1);
+   auto f = new TF2("f",func,-1,1,-1,1);
    f->Draw("surf1");
 }
 ~~~~
@@ -184,9 +184,8 @@ TF2::TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
 
 TF2& TF2::operator=(const TF2 &rhs)
 {
-   if (this != &rhs) {
-      rhs.Copy(*this);
-   }
+   if (this != &rhs)
+      rhs.TF2::Copy(*this);
    return *this;
 }
 
@@ -202,7 +201,7 @@ TF2::~TF2()
 
 TF2::TF2(const TF2 &f2) : TF1()
 {
-   ((TF2&)f2).Copy(*this);
+   f2.TF2::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -855,48 +854,15 @@ void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out<<GetName()<<" = new TF2("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<GetNpar()<<");"<<std::endl;
    }
 
-   if (GetFillColor() != 0) {
-      if (GetFillColor() > 228) {
-         TColor::SaveColor(out, GetFillColor());
-         out<<"   "<<GetName()<<"->SetFillColor(ci);" << std::endl;
-      } else
-         out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<std::endl;
-   }
-   if (GetFillStyle() != 1001) {
-      out<<"   "<<GetName()<<"->SetFillStyle("<<GetFillStyle()<<");"<<std::endl;
-   }
-   if (GetMarkerColor() != 1) {
-      if (GetMarkerColor() > 228) {
-         TColor::SaveColor(out, GetMarkerColor());
-         out<<"   "<<GetName()<<"->SetMarkerColor(ci);" << std::endl;
-      } else
-         out<<"   "<<GetName()<<"->SetMarkerColor("<<GetMarkerColor()<<");"<<std::endl;
-   }
-   if (GetMarkerStyle() != 1) {
-      out<<"   "<<GetName()<<"->SetMarkerStyle("<<GetMarkerStyle()<<");"<<std::endl;
-   }
-   if (GetMarkerSize() != 1) {
-      out<<"   "<<GetName()<<"->SetMarkerSize("<<GetMarkerSize()<<");"<<std::endl;
-   }
-   if (GetLineColor() != 1) {
-      if (GetLineColor() > 228) {
-         TColor::SaveColor(out, GetLineColor());
-         out<<"   "<<GetName()<<"->SetLineColor(ci);" << std::endl;
-      } else
-         out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<std::endl;
-   }
-   if (GetLineWidth() != 4) {
-      out<<"   "<<GetName()<<"->SetLineWidth("<<GetLineWidth()<<");"<<std::endl;
-   }
-   if (GetLineStyle() != 1) {
-      out<<"   "<<GetName()<<"->SetLineStyle("<<GetLineStyle()<<");"<<std::endl;
-   }
-   if (GetNpx() != 100) {
+   SaveFillAttributes(out, GetName(), 0, 1001);
+   SaveMarkerAttributes(out, GetName(), 1, 1, 1);
+   SaveLineAttributes(out, GetName(), 1, 1, 4);
+
+   if (GetNpx() != 100)
       out<<"   "<<GetName()<<"->SetNpx("<<GetNpx()<<");"<<std::endl;
-   }
-   if (GetChisquare() != 0) {
+   if (GetChisquare() != 0)
       out<<"   "<<GetName()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
-   }
+
    Double_t parmin, parmax;
    for (Int_t i=0;i<GetNpar();i++) {
       out<<"   "<<GetName()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
@@ -904,8 +870,7 @@ void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       GetParLimits(i,parmin,parmax);
       out<<"   "<<GetName()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
    }
-   out<<"   "<<GetName()<<"->Draw("
-      <<quote<<option<<quote<<");"<<std::endl;
+   out<<"   "<<GetName()<<"->Draw("<<quote<<option<<quote<<");"<<std::endl;
 }
 
 

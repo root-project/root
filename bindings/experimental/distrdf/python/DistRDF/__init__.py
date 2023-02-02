@@ -1,14 +1,15 @@
-# @author Vincenzo Eduardo Padulano
+#  @author Vincenzo Eduardo Padulano
 #  @author Enric Tejedor
 #  @date 2021-02
 
 ################################################################################
-# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.                      #
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.                      #
 # All rights reserved.                                                         #
 #                                                                              #
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
+from __future__ import annotations
 
 import logging
 import sys
@@ -16,7 +17,12 @@ import types
 
 import concurrent.futures
 
+from typing import TYPE_CHECKING
+
 from DistRDF.Backends import build_backends_submodules
+
+if TYPE_CHECKING:
+    from DistRDF.Proxy import ActionProxy, VariationsProxy
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +106,8 @@ def RunGraphs(proxies):
 
 
     """
+    # Import here to avoid circular dependencies in main module
+    from DistRDF.Proxy import execute_graph
 
     if not proxies:
         raise ValueError("The list of result pointers passed to RunGraphs is empty.")
@@ -110,8 +118,16 @@ def RunGraphs(proxies):
     # Submit all computation graphs concurrently from multiple Python threads.
     # The submission is not computationally intensive
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(uniqueproxies)) as executor:
-        futures = [executor.submit(proxy.execute_graph) for proxy in uniqueproxies]
+        futures = [executor.submit(execute_graph, proxy.proxied_node) for proxy in uniqueproxies]
         concurrent.futures.wait(futures)
+
+
+def VariationsFor(actionproxy: ActionProxy) -> VariationsProxy:
+    """
+    Equivalent of ROOT.RDF.Experimental.VariationsFor in distributed mode.
+    """
+    # similar to resPtr.fActionPtr->MakeVariedAction()
+    return actionproxy.create_variations()
 
 
 def create_distributed_module(parentmodule):
@@ -136,6 +152,7 @@ def create_distributed_module(parentmodule):
     distributed.initialize = initialize
     distributed.create_logger = create_logger
     distributed.RunGraphs = RunGraphs
+    distributed.VariationsFor = VariationsFor
 
     # Set non-optimized default mode
     distributed.optimized = False

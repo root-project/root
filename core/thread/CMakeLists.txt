@@ -33,7 +33,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
     TAtomicCount.h
     TCondition.h
     TConditionImp.h
-    ThreadLocalStorage.h
     TMutex.h
     TMutexImp.h
     TRWLock.h
@@ -70,12 +69,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
   INSTALL_OPTIONS ${installoptions}
 )
 
+target_include_directories(Core PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+)
+
 target_link_libraries(Thread PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 
-target_include_directories(Thread PRIVATE
-   ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_SOURCE_DIR}/core/clib/inc
-   ${CMAKE_BINARY_DIR}/ginclude
+target_include_directories(Thread PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
 )
 
 # keep include directory for ROOT/RSha256.hxx private

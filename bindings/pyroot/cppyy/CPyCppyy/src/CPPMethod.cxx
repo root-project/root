@@ -272,7 +272,7 @@ void CPyCppyy::CPPMethod::SetPyError_(PyObject* msg)
             PyErr_Format(errtype, "%s =>\n    %s: %s",
                 CPyCppyy_PyText_AsString(doc), cname, details.c_str());
         }
-    } else {
+    } else if (evalue) {
         Py_XDECREF(((CPPExcInstance*)evalue)->fTopMessage);
         if (msg) {
             ((CPPExcInstance*)evalue)->fTopMessage = CPyCppyy_PyText_FromFormat(\
@@ -580,7 +580,7 @@ PyObject* CPyCppyy::CPPMethod::ProcessKeywords(PyObject* self, PyObject* args, P
 // set all values to zero to be able to check them later (this also guarantees normal
 // cleanup by the tuple deallocation)
     for (Py_ssize_t i = 0; i < nArgs+nKeys; ++i)
-        PyTuple_SET_ITEM(newArgs, i, nullptr);
+        PyTuple_SET_ITEM(newArgs, i, static_cast<PyObject*>(nullptr));
 
 // next, insert the keyword values
     PyObject *key, *value;

@@ -1,7 +1,6 @@
 // @(#)root/oracle:$Id$
 // Author: Sergey Linev   6/02/2006
 
-
 /*************************************************************************
  * Copyright (C) 1995-2006, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -28,15 +27,13 @@
 
 ClassImp(TOracleStatement);
 
-using namespace oracle::occi;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor of TOracleStatement class
 /// On creation time specifies buffer length, which should be
 /// used in data fetching or data inserting
 
-TOracleStatement::TOracleStatement(Environment* env, Connection* conn, Statement* stmt, Int_t niter, Bool_t errout) :
+TOracleStatement::TOracleStatement(oracle::occi::Environment* env, oracle::occi::Connection* conn, oracle::occi::Statement* stmt, Int_t niter, Bool_t errout) :
    TSQLStatement(errout),
    fEnv(env),
    fConn(conn),
@@ -88,7 +85,7 @@ void TOracleStatement::Close(Option_t *)
 #define CheckStatement(method, res)                     \
    {                                                    \
       ClearError();                                     \
-      if (fStmt==0) {                                   \
+      if (!fStmt) {                                   \
          SetError(-1,"Statement is not correctly initialized",method); \
          return res;                                    \
       }                                                 \
@@ -117,7 +114,7 @@ void TOracleStatement::Close(Option_t *)
          SetError(-1,"There is no result set for statement", method); \
          return defres;                                 \
       }                                                 \
-      if ((npar<0) || (npar>=fBufferSize)) {                                     \
+      if ((npar < 0) || (npar >= fBufferSize)) {        \
          TString errmsg("Invalid parameter number ");   \
          errmsg+= npar;                                 \
          SetError(-1,errmsg.Data(),method);             \
@@ -175,7 +172,7 @@ Bool_t TOracleStatement::Process()
       }
 
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "Process");
    }
 
@@ -192,7 +189,7 @@ Int_t TOracleStatement::GetNumAffectedRows()
 
    try {
       return fStmt->getUpdateCount();
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetNumAffectedRows");
    }
    return -1;
@@ -220,10 +217,10 @@ Bool_t TOracleStatement::SetNull(Int_t npar)
    CheckSetPar("SetNull");
 
    try {
-      fStmt->setNull(npar+1, OCCIINT);
+      fStmt->setNull(npar+1, oracle::occi::OCCIINT);
 
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetNull");
    }
 
@@ -242,7 +239,7 @@ Bool_t TOracleStatement::SetInt(Int_t npar, Int_t value)
       fStmt->setInt(npar+1, value);
 
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetInt");
    }
 
@@ -259,7 +256,7 @@ Bool_t TOracleStatement::SetUInt(Int_t npar, UInt_t value)
    try {
       fStmt->setUInt(npar+1, value);
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetUInt");
    }
 
@@ -274,9 +271,9 @@ Bool_t TOracleStatement::SetLong(Int_t npar, Long_t value)
    CheckSetPar("SetLong");
 
    try {
-      fStmt->setNumber(npar+1, Number(value));
+      fStmt->setNumber(npar+1, oracle::occi::Number(value));
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetLong");
    }
    return kFALSE;
@@ -290,9 +287,9 @@ Bool_t TOracleStatement::SetLong64(Int_t npar, Long64_t value)
    CheckSetPar("SetLong64");
 
    try {
-      fStmt->setNumber(npar+1, Number((long double)value));
+      fStmt->setNumber(npar+1, oracle::occi::Number((long double)value));
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetLong64");
    }
    return kFALSE;
@@ -306,9 +303,9 @@ Bool_t TOracleStatement::SetULong64(Int_t npar, ULong64_t value)
    CheckSetPar("SetULong64");
 
    try {
-      fStmt->setNumber(npar+1, Number((long double)value));
+      fStmt->setNumber(npar+1, oracle::occi::Number((long double)value));
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetULong64");
    }
    return kFALSE;
@@ -324,7 +321,7 @@ Bool_t TOracleStatement::SetDouble(Int_t npar, Double_t value)
    try {
       fStmt->setDouble(npar+1, value);
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetDouble");
    }
    return kFALSE;
@@ -347,7 +344,7 @@ Bool_t TOracleStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 
       fStmt->setString(npar+1, value);
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetString");
    }
    return kFALSE;
@@ -366,13 +363,13 @@ Bool_t TOracleStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t ma
       if (fIterCounter==1)
          fStmt->setMaxParamSize(npar+1, maxsize);
 
-      Bytes buf((unsigned char*) mem, size);
+      oracle::occi::Bytes buf((unsigned char*) mem, size);
 
       fStmt->setBytes(npar+1, buf);
 
       return kTRUE;
 
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetBinary");
    }
    return kFALSE;
@@ -386,14 +383,14 @@ Bool_t TOracleStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
    CheckSetPar("SetDate");
 
    try {
-      Date tm = fStmt->getDate(npar+1);
+      oracle::occi::Date tm = fStmt->getDate(npar+1);
       int o_year;
       unsigned int o_month, o_day, o_hour, o_minute, o_second;
       tm.getDate(o_year, o_month, o_day, o_hour, o_minute, o_second);
       tm.setDate(year, month, day, o_hour, o_minute, o_second);
       fStmt->setDate(npar+1, tm);
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetDate");
    }
 
@@ -408,14 +405,14 @@ Bool_t TOracleStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
    CheckSetPar("SetTime");
 
    try {
-      Date tm = fStmt->getDate(npar+1);
+      oracle::occi::Date tm = fStmt->getDate(npar+1);
       int o_year;
       unsigned int o_month, o_day, o_hour, o_minute, o_second;
       tm.getDate(o_year, o_month, o_day, o_hour, o_minute, o_second);
       tm.setDate(o_year, o_month, o_day, hour, min, sec);
       fStmt->setDate(npar+1, tm);
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetTime");
    }
 
@@ -430,10 +427,10 @@ Bool_t TOracleStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t da
    CheckSetPar("SetDatime");
 
    try {
-      Date tm(fEnv, year, month, day, hour, min, sec);
+      oracle::occi::Date tm(fEnv, year, month, day, hour, min, sec);
       fStmt->setDate(npar+1, tm);
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetDatime");
    }
 
@@ -448,10 +445,10 @@ Bool_t TOracleStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t
    CheckSetPar("SetTimestamp");
 
    try {
-      Timestamp tm(fEnv, year, month, day, hour, min, sec, frac);
+      oracle::occi::Timestamp tm(fEnv, year, month, day, hour, min, sec, frac);
       fStmt->setTimestamp(npar+1, tm);
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetTimestamp");
    }
 
@@ -468,7 +465,7 @@ Bool_t TOracleStatement::SetVInt(Int_t npar, const std::vector<Int_t> value, con
    try {
       setVector(fStmt, npar+1, value, schemaName, typeName);
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetVInt");
    }
 
@@ -485,7 +482,7 @@ Bool_t TOracleStatement::SetVUInt(Int_t npar, const std::vector<UInt_t> value, c
    try {
       setVector(fStmt, npar+1, value, schemaName, typeName);
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetVUInt");
    }
 
@@ -500,15 +497,15 @@ Bool_t TOracleStatement::SetVLong(Int_t npar, const std::vector<Long_t> value, c
    CheckSetPar("SetVLong");
 
    try {
-      std::vector<Number> nvec;
+      std::vector<oracle::occi::Number> nvec;
       for (std::vector<Long_t>::const_iterator it = value.begin();
            it != value.end();
            ++it) {
-         nvec.push_back(Number(*it));
+         nvec.push_back(oracle::occi::Number(*it));
       }
       setVector(fStmt, npar+1, nvec, schemaName, typeName);
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetVLong");
    }
    return kFALSE;
@@ -522,15 +519,15 @@ Bool_t TOracleStatement::SetVLong64(Int_t npar, const std::vector<Long64_t> valu
    CheckSetPar("SetVLong64");
 
    try {
-      std::vector<Number> nvec;
+      std::vector<oracle::occi::Number> nvec;
       for (std::vector<Long64_t>::const_iterator it = value.begin();
            it != value.end();
            ++it) {
-        nvec.push_back(Number((long double)*it));
+        nvec.push_back(oracle::occi::Number((long double)*it));
       }
       setVector(fStmt, npar+1, nvec, schemaName, typeName);
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetVLong64");
    }
    return kFALSE;
@@ -544,15 +541,15 @@ Bool_t TOracleStatement::SetVULong64(Int_t npar, std::vector<ULong64_t> value, c
    CheckSetPar("SetVULong64");
 
    try {
-      std::vector<Number> nvec;
+      std::vector<oracle::occi::Number> nvec;
       for (std::vector<ULong64_t>::const_iterator it = value.begin();
            it != value.end();
            ++it) {
-        nvec.push_back(Number((long double)*it));
+        nvec.push_back(oracle::occi::Number((long double)*it));
       }
       setVector(fStmt, npar+1, nvec, schemaName, typeName);
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetVULong64");
    }
    return kFALSE;
@@ -568,7 +565,7 @@ Bool_t TOracleStatement::SetVDouble(Int_t npar, const std::vector<Double_t> valu
    try {
       setVector(fStmt, npar+1, value, schemaName, typeName);
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetVDouble");
    }
    return kFALSE;
@@ -583,7 +580,7 @@ Bool_t TOracleStatement::NextIteration()
 
    try {
       fWorkingMode=1;
-      // if number of iterations achievs limit, execute it and continue to fill
+      // if number of iterations achieves limit, execute it and continue to fill
       if ((fIterCounter % fNumIterations == 0) && (fIterCounter>0)) {
          fStmt->executeUpdate();
       }
@@ -595,7 +592,7 @@ Bool_t TOracleStatement::NextIteration()
       fIterCounter++;
 
       return kTRUE;
-   } catch (SQLException &oraex)  {
+   } catch (oracle::occi::SQLException &oraex)  {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "NextIteration");
    }
    return kFALSE;
@@ -610,16 +607,16 @@ Bool_t TOracleStatement::StoreResult()
    CheckStatement("StoreResult", kFALSE);
 
    try {
-      if (fStmt->status() == Statement::RESULT_SET_AVAILABLE) {
+      if (fStmt->status() == oracle::occi::Statement::RESULT_SET_AVAILABLE) {
          fResult      = fStmt->getResultSet();
-         fFieldInfo   = (fResult==0) ? 0 : new std::vector<MetaData>(fResult->getColumnListMetaData());
-         Int_t count  = (fFieldInfo==0) ? 0 : fFieldInfo->size();
+         fFieldInfo   = !fResult ? nullptr : new std::vector<oracle::occi::MetaData>(fResult->getColumnListMetaData());
+         Int_t count  = !fFieldInfo ? 0 : fFieldInfo->size();
          SetBufferSize(count);
-         if ((fResult!=0) && (count>0)) fWorkingMode = 2;
+         if (fResult && (count > 0)) fWorkingMode = 2;
 
          return IsResultSet();
       }
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "StoreResult");
    }
    return kFALSE;
@@ -627,7 +624,7 @@ Bool_t TOracleStatement::StoreResult()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Defines maximum size for field which must be used for read or write operation
-/// Some Oracle types as LONG (long binary continer) requires this call
+/// Some Oracle types as LONG (long binary container) requires this call
 /// before any data can be read from database. Call it once before first call to NextResultRow()
 
 Bool_t TOracleStatement::SetMaxFieldSize(Int_t nfield, Long_t maxsize)
@@ -640,7 +637,7 @@ Bool_t TOracleStatement::SetMaxFieldSize(Int_t nfield, Long_t maxsize)
       else
          fStmt->setMaxParamSize(nfield+1, maxsize);
       return kTRUE;
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "SetMaxFieldSize");
    }
 
@@ -660,12 +657,12 @@ Int_t TOracleStatement::GetNumFields()
 
 const char* TOracleStatement::GetFieldName(Int_t npar)
 {
-   CheckGetField("GetFieldName", 0);
+   CheckGetField("GetFieldName", nullptr);
 
    if (!IsResultSet() || (npar<0) || (npar>=fBufferSize)) return nullptr;
 
    if (fBuffer[npar].namebuf.empty())
-      fBuffer[npar].namebuf = (*fFieldInfo)[npar].getString(MetaData::ATTR_NAME);
+      fBuffer[npar].namebuf = (*fFieldInfo)[npar].getString(oracle::occi::MetaData::ATTR_NAME);
 
    return fBuffer[npar].namebuf.empty() ? nullptr : fBuffer[npar].namebuf.c_str();
 }
@@ -678,12 +675,10 @@ Bool_t TOracleStatement::NextResultRow()
 {
    ClearError();
 
-   if (fResult==0) {
+   if (!fResult) {
       SetError(-1,"There is no result set for statement", "NextResultRow");
       return kFALSE;
    }
-
-   if (fResult==0) return kFALSE;
 
    try {
       for (int n=0;n<fBufferSize;n++) {
@@ -699,7 +694,7 @@ Bool_t TOracleStatement::NextResultRow()
          return kFALSE;
       }
       return kTRUE;
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "NextResultRow");
 
       if (oraex.getErrorCode()==32108)
@@ -719,7 +714,7 @@ Bool_t TOracleStatement::IsNull(Int_t npar)
 
    try {
       return fResult->isNull(npar+1);
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "IsNull");
    }
 
@@ -738,7 +733,7 @@ Int_t TOracleStatement::GetInt(Int_t npar)
    try {
       if (!fResult->isNull(npar+1))
         res = fResult->getInt(npar+1);
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetInt");
    }
 
@@ -757,7 +752,7 @@ UInt_t TOracleStatement::GetUInt(Int_t npar)
    try {
       if (!fResult->isNull(npar+1))
         res = fResult->getUInt(npar+1);
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetUInt");
    }
 
@@ -777,7 +772,7 @@ Long_t TOracleStatement::GetLong(Int_t npar)
    try {
       if (!fResult->isNull(npar+1))
         res = (Long_t) fResult->getNumber(npar+1);
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetLong");
    }
 
@@ -796,7 +791,7 @@ Long64_t TOracleStatement::GetLong64(Int_t npar)
    try {
       if (!fResult->isNull(npar+1))
         res = (Long64_t) (long double) fResult->getNumber(npar+1);
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetLong64");
    }
 
@@ -815,7 +810,7 @@ ULong64_t TOracleStatement::GetULong64(Int_t npar)
    try {
       if (!fResult->isNull(npar+1))
         res = (ULong64_t) (long double) fResult->getNumber(npar+1);
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetULong64");
    }
 
@@ -834,7 +829,7 @@ Double_t TOracleStatement::GetDouble(Int_t npar)
    try {
       if (!fResult->isNull(npar+1))
         res = fResult->getDouble(npar+1);
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetDouble");
    }
 
@@ -846,22 +841,22 @@ Double_t TOracleStatement::GetDouble(Int_t npar)
 
 const char* TOracleStatement::GetString(Int_t npar)
 {
-   CheckGetField("GetString", 0);
+   CheckGetField("GetString", nullptr);
 
    if (fBuffer[npar].membuf)
       return (const char *) fBuffer[npar].membuf;
 
    try {
-      if (fResult->isNull(npar+1)) return 0;
+      if (fResult->isNull(npar+1)) return nullptr;
 
-      int datatype = (*fFieldInfo)[npar].getInt(MetaData::ATTR_DATA_TYPE);
+      int datatype = (*fFieldInfo)[npar].getInt(oracle::occi::MetaData::ATTR_DATA_TYPE);
 
       std::string res;
 
       switch (datatype) {
         case SQLT_NUM: { // oracle numeric NUMBER
-           int prec = (*fFieldInfo)[npar].getInt(MetaData::ATTR_PRECISION);
-           int scale = (*fFieldInfo)[npar].getInt(MetaData::ATTR_SCALE);
+           int prec = (*fFieldInfo)[npar].getInt(oracle::occi::MetaData::ATTR_PRECISION);
+           int scale = (*fFieldInfo)[npar].getInt(oracle::occi::MetaData::ATTR_SCALE);
 
            if ((scale == 0) || (prec == 0)) {
               res = fResult->getString(npar+1);
@@ -902,11 +897,11 @@ const char* TOracleStatement::GetString(Int_t npar)
 
       return (const char *)fBuffer[npar].membuf;
 
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetString");
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -917,7 +912,7 @@ const char* TOracleStatement::GetString(Int_t npar)
 
 Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 {
-   mem = 0;
+   mem = nullptr;
    size = 0;
 
    CheckGetField("GetBinary", kFALSE);
@@ -931,11 +926,11 @@ Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
    try {
       if (fResult->isNull(npar+1)) return kTRUE;
 
-      int datatype = (*fFieldInfo)[npar].getInt(MetaData::ATTR_DATA_TYPE);
+      int datatype = (*fFieldInfo)[npar].getInt(oracle::occi::MetaData::ATTR_DATA_TYPE);
 
       switch (datatype) {
          case SQLT_LNG: {
-            Bytes parbytes = fResult->getBytes(npar+1);
+            oracle::occi::Bytes parbytes = fResult->getBytes(npar+1);
 
             size = parbytes.length();
 
@@ -953,7 +948,7 @@ Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
          }
 
          case SQLT_BLOB: {
-            Blob parblob = fResult->getBlob(npar+1);
+            oracle::occi::Blob parblob = fResult->getBlob(npar+1);
 
             size = parblob.length();
 
@@ -971,7 +966,7 @@ Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
          }
 
          case SQLT_CLOB: {
-            Clob parclob = fResult->getClob(npar+1);
+            oracle::occi::Clob parclob = fResult->getClob(npar+1);
 
             size = parclob.length();
 
@@ -991,7 +986,7 @@ Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
          case SQLT_BFILEE:
          case SQLT_CFILEE: {
 
-            Bfile parbfile = fResult->getBfile(npar+1);
+            oracle::occi::Bfile parbfile = fResult->getBfile(npar+1);
 
             size = parbfile.length();
 
@@ -1016,7 +1011,7 @@ Bool_t TOracleStatement::GetBinary(Int_t npar, void* &mem, Long_t& size)
 
       return kTRUE;
 
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetBinary");
    }
 
@@ -1053,11 +1048,11 @@ Bool_t TOracleStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t&
 
    try {
       if (!fResult->isNull(npar+1)) {
-         int datatype = (*fFieldInfo)[npar].getInt(MetaData::ATTR_DATA_TYPE);
+         int datatype = (*fFieldInfo)[npar].getInt(oracle::occi::MetaData::ATTR_DATA_TYPE);
 
          if (datatype!=SQLT_DAT) return kFALSE;
 
-         Date tm = fResult->getDate(npar+1);
+         oracle::occi::Date tm = fResult->getDate(npar+1);
          int o_year;
          unsigned int o_month, o_day, o_hour, o_minute, o_second;
          tm.getDate(o_year, o_month, o_day, o_hour, o_minute, o_second);
@@ -1069,7 +1064,7 @@ Bool_t TOracleStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t&
          sec = (Int_t) o_second;
          return kTRUE;
       }
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetDatime");
    }
 
@@ -1085,13 +1080,13 @@ Bool_t TOracleStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int
 
    try {
       if (!fResult->isNull(npar+1)) {
-         int datatype = (*fFieldInfo)[npar].getInt(MetaData::ATTR_DATA_TYPE);
+         int datatype = (*fFieldInfo)[npar].getInt(oracle::occi::MetaData::ATTR_DATA_TYPE);
 
          if ((datatype!=SQLT_TIMESTAMP) &&
              (datatype!=SQLT_TIMESTAMP_TZ) &&
              (datatype!=SQLT_TIMESTAMP_LTZ)) return kFALSE;
 
-         Timestamp tm = fResult->getTimestamp(npar+1);
+         oracle::occi::Timestamp tm = fResult->getTimestamp(npar+1);
          int o_year;
          unsigned int o_month, o_day, o_hour, o_minute, o_second, o_frac;
          tm.getDate(o_year, o_month, o_day);
@@ -1105,7 +1100,7 @@ Bool_t TOracleStatement::GetTimestamp(Int_t npar, Int_t& year, Int_t& month, Int
          frac = (Int_t) o_frac;
          return kTRUE;
       }
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetTimestamp");
    }
 
@@ -1122,7 +1117,7 @@ Bool_t TOracleStatement::GetVInt(Int_t npar, std::vector<Int_t> &value)
       if (!fResult->isNull(npar+1))
          getVector(fResult, npar+1, value);
       return kTRUE;
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetVInt");
    }
    return kFALSE;
@@ -1138,7 +1133,7 @@ Bool_t TOracleStatement::GetVUInt(Int_t npar, std::vector<UInt_t> &value)
       if (!fResult->isNull(npar+1))
          getVector(fResult, npar+1, value);
       return kTRUE;
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetVUInt");
    }
    return kFALSE;
@@ -1152,16 +1147,16 @@ Bool_t TOracleStatement::GetVLong(Int_t npar, std::vector<Long_t> &value)
 {
    CheckGetField("GetVLong", kFALSE);
    try {
-      std::vector<Number> res;
+      std::vector<oracle::occi::Number> res;
       if (!fResult->isNull(npar+1))
          getVector(fResult, npar+1, res);
-      for (std::vector<Number>::const_iterator it = res.begin();
+      for (std::vector<oracle::occi::Number>::const_iterator it = res.begin();
            it != res.end();
            ++it ) {
          value.push_back((Long_t)*it);
       }
       return kTRUE;
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetVLong");
    }
    return kFALSE;
@@ -1174,16 +1169,16 @@ Bool_t TOracleStatement::GetVLong64(Int_t npar, std::vector<Long64_t> &value)
 {
    CheckGetField("GetVLong64", kFALSE);
    try {
-      std::vector<Number> res;
+      std::vector<oracle::occi::Number> res;
       if (!fResult->isNull(npar+1))
          getVector(fResult, npar+1, res);
-      for (std::vector<Number>::const_iterator it = res.begin();
+      for (std::vector<oracle::occi::Number>::const_iterator it = res.begin();
            it != res.end();
            ++it ) {
          value.push_back((Long_t)*it);
       }
       return kTRUE;
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetVLong64");
    }
    return kFALSE;
@@ -1196,16 +1191,16 @@ Bool_t TOracleStatement::GetVULong64(Int_t npar, std::vector<ULong64_t> &value)
 {
    CheckGetField("GetVULong64", kFALSE);
    try {
-      std::vector<Number> res;
+      std::vector<oracle::occi::Number> res;
       if (!fResult->isNull(npar+1))
          getVector(fResult, npar+1, res);
-      for (std::vector<Number>::const_iterator it = res.begin();
+      for (std::vector<oracle::occi::Number>::const_iterator it = res.begin();
            it != res.end();
            ++it ) {
         value.push_back((Long_t)(long double)*it);
       }
       return kTRUE;
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetVULong64");
    }
    return kFALSE;
@@ -1221,7 +1216,7 @@ Bool_t TOracleStatement::GetVDouble(Int_t npar, std::vector<Double_t> &value)
       if (!fResult->isNull(npar+1))
          getVector(fResult, npar+1, value);
       return kTRUE;
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), "GetVDouble");
    }
    return kFALSE;

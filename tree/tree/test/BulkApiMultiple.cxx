@@ -24,7 +24,7 @@ public:
 protected:
    virtual void SetUp()
    {
-      auto hfile = new TFile(fFileName.c_str(), "RECREATE", "TTree float and double micro benchmark ROOT file");
+      auto hfile = std::make_unique<TFile>(fFileName.c_str(), "RECREATE", "TTree float and double micro benchmark ROOT file");
       hfile->SetCompressionLevel(0); // No compression at all.
 
       // Otherwise, we keep with the current ROOT defaults.
@@ -68,13 +68,10 @@ protected:
          ll ++;
          c ++;
       }
-      hfile = tree->GetCurrentFile();
       hfile->Write();
       //tree->Print();
       printf("Successful write of all events.\n");
       hfile->Close();
-
-      delete hfile;
    }
 };
 
@@ -124,7 +121,7 @@ bool compare(T value, T expected)
 template <typename T>
 void SimpleBulkReadFunc(const char *filename, const char *treename, const char *branchname, T initialvalue)
 {
-   auto hfile = TFile::Open(filename);
+   std::unique_ptr<TFile> hfile{ TFile::Open(filename) };
    printf("Starting read of file %s.\n", filename);
    TStopwatch sw;
 
@@ -157,7 +154,6 @@ void SimpleBulkReadFunc(const char *filename, const char *treename, const char *
    EXPECT_EQ(evt_idx, BulkApiMultipleTest::fEventCount);
    printf("GetBulkEntries: Successful read of all events in %s.\n", treename);
    printf("GetBulkEntries: Total elapsed time (seconds) for bulk APIs: %.2f\n", sw.RealTime());
-   delete hfile;
 }
 
 TEST_F(BulkApiMultipleTest, simpleReadF)
@@ -198,7 +194,7 @@ TEST_F(BulkApiMultipleTest, simpleReadC)
 template <typename T>
 void SimpleSerializedReadFunc(const char *filename, const char *treename, const char *branchname, T initialvalue)
 {
-   auto hfile = TFile::Open(filename);
+   std::unique_ptr<TFile> hfile{ TFile::Open(filename) };
    printf("Starting read of file %s.\n", filename);
    TStopwatch sw;
 
@@ -237,7 +233,6 @@ void SimpleSerializedReadFunc(const char *filename, const char *treename, const 
    EXPECT_EQ(BulkApiMultipleTest::fEventCount, evt_idx);
    printf("GetBulkEntries: Successful read of all events in %s.\n", treename);
    printf("GetBulkEntries: Total elapsed time (seconds) for bulk APIs: %.2f\n", sw.RealTime());
-   delete hfile;
 }
 
 TEST_F(BulkApiMultipleTest, simpleSerializedReadF)
@@ -278,13 +273,13 @@ TEST_F(BulkApiMultipleTest, simpleSerializedReadC)
 
 TEST_F(BulkApiMultipleTest, stdRead)
 {
-   auto hfile = TFile::Open(fFileName.c_str());
+   std::unique_ptr<TFile> hfile{ TFile::Open(fFileName.c_str()) };
    printf("Starting read of file %s.\n", fFileName.c_str());
    TStopwatch sw;
 
    printf("Using standard read APIs.\n");
    // Read via standard APIs.
-   TTreeReader myReader("T", hfile);
+   TTreeReader myReader("T", hfile.get());
    TTreeReaderValue<float> myF(myReader, "myFloat");
    TTreeReaderValue<double> myG(myReader, "myDouble");
    Long64_t idx = 0;
@@ -302,7 +297,6 @@ TEST_F(BulkApiMultipleTest, stdRead)
       increment(idx, idx_g);
       idx++;
    }
-   delete hfile;
    sw.Stop();
    printf("TTreeReader: Successful read of all events.\n");
    printf("TTreeReader: Total elapsed time (seconds) for standard APIs: %.2f\n", sw.RealTime());
@@ -310,12 +304,12 @@ TEST_F(BulkApiMultipleTest, stdRead)
 
 TEST_F(BulkApiMultipleTest, fastRead)
 {
-   auto hfile = TFile::Open(fFileName.c_str());
+   std::unique_ptr<TFile> hfile{ TFile::Open(fFileName.c_str()) };
    printf("Starting read of file %s.\n", fFileName.c_str());
    TStopwatch sw;
 
    printf("Using TTreeReaderFast.\n");
-   ROOT::Experimental::TTreeReaderFast myReader("T", hfile);
+   ROOT::Experimental::TTreeReaderFast myReader("T", hfile.get());
    ROOT::Experimental::TTreeReaderValueFast<float> myF(myReader, "myFloat");
    ROOT::Experimental::TTreeReaderValueFast<double> myG(myReader, "myDouble");
    myReader.SetEntry(0);

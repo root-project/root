@@ -67,7 +67,8 @@ void *joiner(void *)
 void closed(Int_t id)
 {
    // kill the thread matching the canvas being closed
-   t[id]->Kill();
+   if (t[id])
+      t[id]->Kill();
    // and set the canvas pointer to 0
    c[id] = 0;
 }
@@ -142,11 +143,11 @@ void threadsh1()
    t[4]->Join();
    TThread::Ps();
 
-   delete t[0];
-   delete t[1];
-   delete t[2];
-   delete t[3];
-   delete t[4];
+   delete t[0]; t[0] = nullptr; // Prevents after deletion access.
+   delete t[1]; t[1] = nullptr;
+   delete t[2]; t[2] = nullptr;
+   delete t[3]; t[3] = nullptr;
+   delete t[4]; t[4] = nullptr;
 
    delete rng[0];
    delete rng[1];

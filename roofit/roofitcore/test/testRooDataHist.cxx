@@ -1,15 +1,17 @@
 // Tests for the RooDataHist
 // Authors: Stephan Hageboeck, CERN  01/2019
-//          Jonas Rembser, CERN 02/2020
+//          Jonas Rembser, CERN 02/2021
 
 #include "RooDataHist.h"
 #include "RooGlobalFunc.h"
 #include "RooRealVar.h"
 #include "RooHelpers.h"
 #include "RooCategory.h"
-#include "RunContext.h"
 #include "RooHistFunc.h"
 #include "RooHistPdf.h"
+#include "RooAbsArg.h"
+#include "RooDataSet.h"
+#include "RooRandom.h"
 
 #include "TH1D.h"
 #include "TH2D.h"
@@ -17,6 +19,11 @@
 #include "TFile.h"
 
 #include "gtest/gtest.h"
+
+// Backward compatibility for gtest version < 1.10.0
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
 
 #include <algorithm>
 #include <memory>
@@ -84,11 +91,13 @@ TEST(RooDataHist, UnWeightedEntries)
   ASSERT_EQ(dataHist.sumEntries(), 20 * targetBinContent);
 
   x.setVal(0.);
-  RooArgSet* coordsAtZero = dataHist.get(coordinates)->snapshot();
+  RooArgSet coordsAtZero;
+  dataHist.get(coordinates)->snapshot(coordsAtZero);
   x.setVal(0.9);
-  RooArgSet* coordsAtPoint9 = dataHist.get(coordinates)->snapshot();
-  EXPECT_EQ(static_cast<RooRealVar*>(coordsAtZero->find(x))->getVal(),
-            static_cast<RooRealVar*>(coordsAtPoint9->find(x))->getVal());
+  RooArgSet coordsAtPoint9;
+  dataHist.get(coordinates)->snapshot(coordsAtPoint9);
+  EXPECT_EQ(static_cast<RooRealVar*>(coordsAtZero.find(x))->getVal(),
+            static_cast<RooRealVar*>(coordsAtPoint9.find(x))->getVal());
 
   const double weight = dataHist.weight();
   EXPECT_EQ(weight, targetBinContent);
@@ -116,10 +125,11 @@ TEST(RooDataHist, UnWeightedEntries)
   }
 
 
-  RooArgSet* coordsAt10 = dataHist.get(10)->snapshot();
+  RooArgSet coordsAt10;
+  dataHist.get(10)->snapshot(coordsAt10);
   const double weightBin10 = dataHist.weight();
 
-  EXPECT_NEAR(static_cast<RooRealVar*>(coordsAt10->find(x))->getVal(), 0.5, 1.E-1);
+  EXPECT_NEAR(static_cast<RooRealVar*>(coordsAt10.find(x))->getVal(), 0.5, 1.E-1);
   EXPECT_EQ(weight, weightBin10);
 }
 
@@ -143,7 +153,7 @@ TEST(RooDataHist, WeightedEntries)
   EXPECT_EQ(dataHist.sumEntries(), 20 * targetBinContent);
 
   x.setVal(0.);
-  dataHist.get(coordinates)->snapshot();
+  dataHist.get(coordinates);
   const double weight = dataHist.weight();
   ASSERT_EQ(weight, targetBinContent);
 
@@ -173,10 +183,11 @@ TEST(RooDataHist, WeightedEntries)
   }
 
 
-  RooArgSet* coordsAt10 = dataHist.get(10)->snapshot();
+  RooArgSet coordsAt10;
+  dataHist.get(10)->snapshot(coordsAt10);
   const double weightBin10 = dataHist.weight();
 
-  EXPECT_NEAR(static_cast<RooRealVar*>(coordsAt10->find(x))->getVal(), 0.5, 1.E-1);
+  EXPECT_NEAR(static_cast<RooRealVar*>(coordsAt10.find(x))->getVal(), 0.5, 1.E-1);
   EXPECT_EQ(weight, weightBin10);
 }
 
@@ -186,16 +197,16 @@ public:
     TFile file(GetParam(), "READ");
     ASSERT_TRUE(file.IsOpen());
 
-    file.GetObject("dataHist", legacy);
+    legacy = std::unique_ptr<RooDataHist>{file.Get<RooDataHist>("dataHist")};
     ASSERT_NE(legacy, nullptr);
   }
 
   void TearDown() override {
-    delete legacy;
+    legacy.reset();
   }
 
 protected:
-  RooDataHist* legacy{nullptr};
+  std::unique_ptr<RooDataHist> legacy;
 };
 
 TEST_P(RooDataHistIO, ReadLegacy) {
@@ -204,16 +215,17 @@ TEST_P(RooDataHistIO, ReadLegacy) {
 
   constexpr double targetBinContent = 20.;
 
-  RooArgSet* legacyVals = dataHist.get(10)->snapshot();
-  EXPECT_EQ(static_cast<RooAbsReal*>(legacyVals->find("x"))->getVal(),
+  RooArgSet legacyVals;
+  dataHist.get(10)->snapshot(legacyVals);
+  EXPECT_EQ(static_cast<RooAbsReal*>(legacyVals.find("x"))->getVal(),
       static_cast<RooAbsReal*>(dataHist.get(10)->find("x"))->getVal());
 
 
   EXPECT_EQ(dataHist.numEntries(), 20);
   EXPECT_EQ(dataHist.sumEntries(), 20 * targetBinContent);
 
-  static_cast<RooRealVar*>(legacyVals->find("x"))->setVal(0.);
-  dataHist.get(*legacyVals); // trigger side effect for weight below.
+  static_cast<RooRealVar*>(legacyVals.find("x"))->setVal(0.);
+  dataHist.get(legacyVals); // trigger side effect for weight below.
   const double weight = dataHist.weight();
   ASSERT_EQ(weight, targetBinContent);
 
@@ -242,10 +254,11 @@ TEST_P(RooDataHistIO, ReadLegacy) {
   }
 
 
-  RooArgSet* coordsAt10 = dataHist.get(10)->snapshot();
+  RooArgSet coordsAt10;
+  dataHist.get(10)->snapshot(coordsAt10);
   const double weightBin10 = dataHist.weight();
 
-  EXPECT_NEAR(static_cast<RooRealVar*>(coordsAt10->find("x"))->getVal(), 0.5, 1.E-1);
+  EXPECT_NEAR(static_cast<RooRealVar*>(coordsAt10.find("x"))->getVal(), 0.5, 1.E-1);
   EXPECT_EQ(weight, weightBin10);
 }
 
@@ -281,14 +294,11 @@ TEST(RooDataHist, BatchDataAccess) {
   ASSERT_STREQ(xp->GetName(), "x");
   ASSERT_STREQ(yp->GetName(), "y");
 
-  RooBatchCompute::RunContext evalDataShort{};
-  dataHist.getBatches(evalDataShort, 0, 100);
-  RooBatchCompute::RunContext evalData{};
-  dataHist.getBatches(evalData, 0, numEntries);
+  auto evalData = dataHist.getBatches(0, numEntries);
 
-  auto xBatchShort = xp->getValues(evalDataShort);
-  auto xBatch = xp->getValues(evalData);
-  auto yBatch = yp->getValues(evalData);
+  auto xBatchShort = dataHist.getBatches(0, 100)[xp];
+  auto xBatch = evalData[xp];
+  auto yBatch = evalData[yp];
 
   ASSERT_FALSE(xBatchShort.empty());
   ASSERT_FALSE(xBatch.empty());
@@ -338,13 +348,8 @@ TEST(RooDataHist, BatchDataAccessWithCategories) {
   ASSERT_STREQ(catp->GetName(), "cat");
   ASSERT_STREQ(xp->GetName(), "x");
 
-  RooBatchCompute::RunContext evalDataShort{};
-  dataHist.getBatches(evalDataShort, 0, 10);
-  RooBatchCompute::RunContext evalData{};
-  dataHist.getBatches(evalData, 0, numEntries);
-
-  auto xBatchShort = xp->getValues(evalDataShort);
-  auto xBatch      = xp->getValues(evalData);
+  auto xBatchShort = dataHist.getBatches(0, 10)[xp];
+  auto xBatch      = dataHist.getBatches(0, numEntries)[xp];
 
   ASSERT_FALSE(xBatchShort.empty());
   ASSERT_FALSE(xBatch.empty());
@@ -376,8 +381,6 @@ TEST(RooDataHist, BatchDataAccessWithCategoriesAndFitRange) {
   RooDataHist dataHist("dataHist", "Data histogram with batch access",
       RooArgSet(x), RooFit::Index(cat), RooFit::Import("catX", *histoX), RooFit::Import("catY", *histoY));
 
-  dataHist.cacheValidEntries();
-
   const std::size_t numEntries = (std::size_t)dataHist.numEntries();
   ASSERT_EQ(numEntries, 26ul);
 
@@ -389,13 +392,8 @@ TEST(RooDataHist, BatchDataAccessWithCategoriesAndFitRange) {
   ASSERT_STREQ(catp->GetName(), "cat");
   ASSERT_STREQ(xp->GetName(), "x");
 
-  RooBatchCompute::RunContext evalDataShort{};
-  dataHist.getBatches(evalDataShort, 0, 10);
-  RooBatchCompute::RunContext evalData{};
-  dataHist.getBatches(evalData, 0, numEntries);
-
-  auto xBatchShort = xp->getValues(evalDataShort);
-  auto xBatch      = xp->getValues(evalData);
+  auto xBatchShort = dataHist.getBatches(0, 10)[xp];
+  auto xBatch      = dataHist.getBatches(0, numEntries)[xp];
 
   ASSERT_FALSE(xBatchShort.empty());
   ASSERT_FALSE(xBatch.empty());
@@ -414,60 +412,6 @@ TEST(RooDataHist, BatchDataAccessWithCategoriesAndFitRange) {
   ASSERT_FALSE(weights.empty());
   ASSERT_EQ(weights.size(), numEntries);
   EXPECT_TRUE(std::none_of(weights.begin(), weights.end(), [](double arg){return arg == 0.;}));
-}
-
-
-TEST(RooDataHist, BatchDataAccessWithCategoriesAndFitRangeWithMasking) {
-  RooRealVar x("x", "x", 0, -10, 10);
-  RooCategory cat("cat", "category");
-
-  auto histoX = std::make_unique<TH1D>("xHist", "xHist", 20, -10., 10.);
-  auto histoY = std::make_unique<TH1D>("yHist", "yHist", 20, -10., 10.);
-  fillHist(histoX.get(), 0.2);
-  fillHist(histoY.get(), 0.3);
-
-  RooDataHist dataHist("dataHist", "Data histogram with batch access",
-      RooArgSet(x), RooFit::Index(cat), RooFit::Import("catX", *histoX), RooFit::Import("catY", *histoY));
-
-  const RooArgSet& vars = *dataHist.get();
-  auto catp = dynamic_cast<RooCategory*>(vars[0ul]);
-  auto xp = dynamic_cast<RooRealVar*>(vars[1]);
-  ASSERT_NE(catp, nullptr);
-  ASSERT_NE(xp, nullptr);
-  ASSERT_STREQ(catp->GetName(), "cat");
-  ASSERT_STREQ(xp->GetName(), "x");
-
-  xp->setRange(-8., 5.);
-  dataHist.cacheValidEntries();
-
-  const std::size_t numEntries = (std::size_t)dataHist.numEntries();
-  ASSERT_EQ(numEntries, 40ul);
-
-  RooBatchCompute::RunContext evalDataShort{};
-  dataHist.getBatches(evalDataShort, 0, 10);
-  RooBatchCompute::RunContext evalData{};
-  dataHist.getBatches(evalData, 0, numEntries);
-
-  auto xBatchShort = xp->getValues(evalDataShort);
-  auto xBatch      = xp->getValues(evalData);
-
-  ASSERT_FALSE(xBatchShort.empty());
-  ASSERT_FALSE(xBatch.empty());
-
-  EXPECT_EQ(xBatchShort.size(), 10ul);
-  EXPECT_EQ(xBatch.size(), numEntries);
-
-  EXPECT_EQ(xBatch[15], histoX->GetXaxis()->GetBinCenter(15+1));
-  EXPECT_EQ(xBatch[35], histoX->GetXaxis()->GetBinCenter(15+1));
-
-  auto weights = dataHist.getWeightBatch(0, numEntries);
-  ASSERT_FALSE(weights.empty());
-  ASSERT_EQ(weights.size(), numEntries);
-  EXPECT_TRUE(std::any_of(weights.begin(), weights.end(), [](double arg){return arg == 0.;}));
-
-  for (unsigned int i=0; i < numEntries; ++i) {
-    EXPECT_TRUE((-8. < xBatch[i] && xBatch[i] < 5.) || weights[i] == 0.);
-  }
 }
 
 double integrate(RooAbsReal &absReal, const RooArgSet &iset, const RooArgSet &nset, const char *rangeName = 0)
@@ -703,3 +647,136 @@ TEST(RooDataHist, Interpolation2DSimple)
       }
    }
 }
+
+
+/// GitHub issue #8015
+/// Take binning from input RooDataHists when building a combined RooDataHist.
+TEST(RooDataHist, CombinedRooDataHistBinning)
+{
+   using namespace RooFit;
+
+   TH1D hh1{"h1", "h1", 40, -3, 3};
+   hh1.FillRandom("gaus");
+   TH1D hh2{"h2", "h2", 40, -3, 3};
+   hh2.FillRandom("gaus");
+
+   // Declare observable x
+   RooRealVar x("x", "x", -3, 3);
+
+   // Create category observable c that serves as index for the ROOT histograms
+   RooCategory c("c", "c", {{"SampleA", 0}, {"SampleB", 1}});
+
+   RooDataHist dh1("dh1", "dh1", x, &hh1);
+   RooDataHist dh2("dh2", "dh1", x, &hh2);
+
+   // Create combined RooDataHist via intermediate RooDataHists
+   RooDataHist dhComb1("dhComb1", "dhComb1", x, Index(c), Import("SampleA", dh1),
+                       Import("SampleB", dh2));
+
+   // Create combined RooDataHist directly from the TH1Ds
+   RooDataHist dhComb2{"dhComb2", "dhComb2", x, Index(c), Import("SampleA", hh1),
+                       Import("SampleB", hh2)};
+
+   // In both cases the number of bins should be 40 + 40 = 80
+   EXPECT_EQ(dhComb1.numEntries(), 80);
+   EXPECT_EQ(dhComb2.numEntries(), 80);
+}
+
+
+
+class WeightsTest : public testing::TestWithParam<std::tuple<int, bool, bool, bool>> {
+   void SetUp() override
+   {
+      _interpolationOrder = std::get<0>(GetParam());
+      _correctForBinSize = std::get<1>(GetParam());
+      _cdfBoundaries = std::get<2>(GetParam());
+      _isUniform = std::get<3>(GetParam());
+   }
+
+   void TearDown() override {}
+
+protected:
+   int _interpolationOrder = 0;
+   bool _correctForBinSize = false;
+   bool _cdfBoundaries = false;
+   bool _isUniform = false;
+};
+
+TEST_P(WeightsTest, VectorizedWeights)
+{
+  // Change local message level to suppress unnecessary info
+  RooHelpers::LocalChangeMsgLevel chmsglvl1{RooFit::WARNING, 0u, RooFit::DataHandling, true};
+  RooHelpers::LocalChangeMsgLevel chmsglvl2{RooFit::WARNING, 0u, RooFit::Fitting, true};
+
+  const double xMin = -1;
+  const double xMax = 1;
+  const std::size_t nBins = 100;
+
+  TH1D h1;
+  if (_isUniform) {
+    h1 = TH1D("h1", "h1", nBins, xMin, xMax);
+  }
+  else {
+    std::vector<double> boundaries(nBins + 1);
+    for(std::size_t i = 0; i < boundaries.size(); ++i) {
+      boundaries[i] = ((xMax - xMin) / nBins) * i + xMin;
+    }
+    h1 = TH1D("h1", "h1", nBins, boundaries.data());
+  }
+
+  h1.FillRandom("gaus");
+
+  RooRealVar x("x", "x", 0, xMin, xMax);
+  RooDataHist dh{"dh", "dh", x, &h1};
+
+  std::unique_ptr<RooAbsReal> absReal;
+  if (_correctForBinSize) {
+    auto histPdf = std::make_unique<RooHistPdf>("histPdf", "histPdf", x, dh, _interpolationOrder);
+    histPdf->setCdfBoundaries(_cdfBoundaries);
+    absReal = std::move(histPdf);
+  } else {
+    auto histFunc = std::make_unique<RooHistFunc>("histPdf", "histPdf", x, dh, _interpolationOrder);
+    histFunc->setCdfBoundaries(_cdfBoundaries);
+    absReal = std::move(histFunc);
+  }
+
+  // Fill 10 000 random x values
+  std::size_t nVals = 10000;
+  std::vector<double> xVals(nVals);
+  RooDataSet data{"data", "data", x};
+
+  for (std::size_t i = 0; i < nVals; ++i) {
+    xVals[i] = xMin + RooRandom::uniform() * (xMax - xMin);
+    x.setVal(xVals[i]);
+    data.add(x);
+  }
+
+  std::vector<double> weightsGetVal(nVals);
+  for (std::size_t i = 0; i < nVals; ++i) {
+    x.setVal(xVals[i]);
+    weightsGetVal[i] = absReal->getVal(x);
+  }
+  x.setVal(0.0);
+
+  auto weightsGetValues = absReal->getValues(data);
+
+  for (std::size_t i = 0; i < nVals; ++i) {
+    EXPECT_NEAR(weightsGetVal[i], weightsGetValues[i], 1e-6);
+  }
+}
+
+INSTANTIATE_TEST_SUITE_P(RooDataHist, WeightsTest,
+                         testing::Combine(
+                            testing::Values(0, 1, 2), // interpolation order
+                            testing::Values(false, true), // RooHistPdf or RooHistFunc?
+                            testing::Values(false, true), // CDF boundary mode
+                            testing::Values(false, true) // uniform bins or not
+                         ),
+                         [](testing::TestParamInfo<WeightsTest::ParamType> const &paramInfo) {
+                            std::stringstream ss;
+                            ss << (std::get<1>(paramInfo.param) ? "RooHistFunc" : "RooHistPdf");
+                            ss << "IntOrder" << std::get<0>(paramInfo.param);
+                            ss << (std::get<2>(paramInfo.param) ? "CDF" : "");
+                            ss << (std::get<3>(paramInfo.param) ? "UniformBins" : "");
+                            return ss.str();
+                         });

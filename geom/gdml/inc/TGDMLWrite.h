@@ -67,7 +67,6 @@ public:
       //        if "n" then there is no suffix, but uniqness of names
       //        is not secured.
       TGDMLWrite *writer = new TGDMLWrite;
-      writer->SetFltPrecision(TGeoManager::GetExportPrecision());
       writer->WriteGDMLfile(geomanager, filename, option);
       delete writer;
    }
@@ -82,6 +81,8 @@ public:
       kfastButUglySufix = 2
    };
    void SetNamingSpeed(ENamingType naming);
+   // Ignore dummy material instance, which causes trouble reading GDML in Geant4
+   void SetIgnoreDummyMaterial(bool value);
    void SetG4Compatibility(Bool_t G4Compatible) {
       fgG4Compatibility = G4Compatible;
    };
@@ -122,10 +123,12 @@ private:
    //Data members
    static TGDMLWrite *fgGDMLWrite;                         //pointer to gdml writer
    Int_t  fgNamingSpeed;                                   //input option for volume and solid naming
+   Int_t fIgnoreDummyMaterial;                             // Flag to ignore TGeo's dummy material
    Bool_t fgG4Compatibility;                               //input option for Geant4 compatibility
    XMLDocPointer_t  fGdmlFile;                             //pointer storing xml file
    TString fDefault_lunit;                                 //Default unit of length (depends on ROOT unit system)
    TString fTopVolumeName;                                 //name of top volume
+   TGeoVolume *fTopVolume = nullptr;                       //top volume of the tree being written
    TXMLEngine *fGdmlE;                                     //xml engine pointer
 
    XMLNodePointer_t fDefineNode;                           //main <define> node...
@@ -213,7 +216,7 @@ private:
    //II. Utility methods
    Xyz GetXYZangles(const Double_t * rotationMatrix);
    //nodes to create position, rotation and similar types first-position/rotation...
-   XMLNodePointer_t CreatePositionN(const char * name, Xyz position, const char * type = "position", const char * unit = "cm");
+   XMLNodePointer_t CreatePositionN(const char * name, Xyz position, const char * type, const char * unit);
    XMLNodePointer_t CreateRotationN(const char * name, Xyz rotation, const char * type = "rotation", const char * unit = "deg");
    XMLNodePointer_t CreateMatrixN(TGDMLMatrix const *matrix);
    XMLNodePointer_t CreateConstantN(const char *name, Double_t value);

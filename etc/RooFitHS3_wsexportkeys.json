@@ -14,6 +14,13 @@
             "mean": "mean"
         }
     },
+    "RooExponential": {
+        "type": "Exponential",
+        "proxies": {
+            "x": "x",
+            "c": "c"
+        }
+    },    
     "RooProduct": {
         "type": "prod",
         "proxies": {
@@ -34,13 +41,6 @@
             "paramSet": "parameters"
         }
     },
-    "RooRealSumPdf": {
-        "type": "sumpdf",
-        "proxies": {
-            "funcList": "samples",
-            "coefList": "coefficients"
-        }
-    },
     "RooAddPdf": {
         "type": "pdfsum",
         "proxies": {
@@ -49,6 +49,19 @@
             "coefficients": "coefficients"
         }
     },
+    "RooAddition": {
+        "type": "sum",
+        "proxies": {
+            "set": "summands"
+        }
+    },
+    "RooBernstein": {
+        "type": "BernsteinPolynomial",
+        "proxies": {
+            "coefList": "coefficients",
+            "x": "x"	    
+        }
+    },        
     "RooArgusBG": {
         "type": "ARGUS",
         "proxies": {
@@ -56,6 +69,25 @@
             "m0": "resonance",
             "c": "slope",
             "p": "power"
+        }
+    },
+    "RooCBShape": {
+        "type": "CrystalBallShape",
+        "proxies": {
+            "alpha": "alpha",
+            "m": "m",
+            "m0": "m0",
+            "n": "n",
+            "sigma": "sigma"
+        }
+    },
+    "RooBifurGauss": {
+        "type": "BifurkatedGaussian",
+        "proxies": {
+            "x": "x",
+            "mean": "mean",
+            "sigmaL": "sigmaL",
+            "sigmaR": "sigmaR"	    
         }
     }
 }

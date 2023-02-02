@@ -31,37 +31,33 @@ public:
   RooFunctor(const RooFunctor&) ;
   virtual ~RooFunctor() ;
 
-  Int_t nObs() const { 
+  Int_t nObs() const {
     // Number of observables
-    return _nobs ; 
+    return _nobs ;
   }
-  Int_t nPar() const { 
+  Int_t nPar() const {
     // Number of parameters;
     return _npar ;
   }
 
-  //Int_t numCall() const { return _binding->numCall() ; }
-  //void resetNumCall() const { _binding->resetNumCall() ; }
+  double operator()(double x) const { return eval(x) ; }
+  double operator()(const double* x, const double* p) const { return eval(x,p) ; }
+  double operator()(const double* x) const { return eval(x) ; }
 
-  
-  Double_t operator()(Double_t x) const { return eval(x) ; }
-  Double_t operator()(const Double_t* x, const Double_t* p) const { return eval(x,p) ; }
-  Double_t operator()(const Double_t* x) const { return eval(x) ; }
+  double eval(const double* /*x*/, const double* /*p*/) const ;
+  double eval(const double* /*x*/) const ;
+  double eval(double  /*x*/) const ;
 
-  Double_t eval(const Double_t* /*x*/, const Double_t* /*p*/) const ;
-  Double_t eval(const Double_t* /*x*/) const ;
-  Double_t eval(Double_t  /*x*/) const ;
-  
   RooAbsFunc& binding() { return *_binding ; }
 
 protected:
 
-  Bool_t          _ownBinding ; // Do we own the binding function 
-  RooArgSet       _nset ; // Normalization observables
-  RooAbsFunc*     _binding ; // Function binding
-  Double_t*       _x ; //! Transfer array ;
-  Int_t           _npar ; //! Number of parameters ;
-  Int_t           _nobs ; //! Number of observables ;
+  bool          _ownBinding ; ///< Do we own the binding function
+  RooArgSet       _nset ;       ///< Normalization observables
+  RooAbsFunc*     _binding ;    ///< Function binding
+  double*       _x ;          ///<! Transfer array ;
+  Int_t           _npar ;       ///<! Number of parameters ;
+  Int_t           _nobs ;       ///<! Number of observables ;
 
   ClassDef(RooFunctor,0) // Export RooAbsReal as functor
 };

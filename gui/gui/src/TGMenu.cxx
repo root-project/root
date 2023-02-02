@@ -100,7 +100,7 @@ private:
    TGPopupMenu   *fPopup;   // popup menu
 public:
    TPopupDelayTimer(TGPopupMenu *p, Long_t ms) : TTimer(ms, kTRUE) { fPopup = p; }
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

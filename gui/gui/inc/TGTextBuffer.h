@@ -12,9 +12,7 @@
 #ifndef ROOT_TGTextBuffer
 #define ROOT_TGTextBuffer
 
-
 #include "TString.h"
-
 
 class TGTextBuffer {
 

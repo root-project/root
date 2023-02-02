@@ -60,10 +60,10 @@ public:
     *  the architecture-specific backend. */
    void CopyInput(TMatrixT<AReal> &matrix, IndexIterator_t begin);
    /** Copy output matrix into the given host buffer. Function to be specialized
-    * by the architecture-spcific backend. */
+    * by the architecture-specific backend. */
    void CopyOutput(TMatrixT<AReal> &matrix, IndexIterator_t begin);
    /** Copy weight matrix into the given host buffer. Function to be specialized
-    * by the architecture-spcific backend. */
+    * by the architecture-specific backend. */
    void CopyWeights(TMatrixT<AReal> &matrix, IndexIterator_t begin);
 
    BatchIterator_t begin() { return BatchIterator_t(*this); }

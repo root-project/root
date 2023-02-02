@@ -25,20 +25,20 @@ public:
   RooInt() : _value(0) {} ;
   RooInt(Int_t value) : TNamed(), _value(value) {} ;
   RooInt(const RooInt& other) : TNamed(other), _value(other._value) {}
-  virtual ~RooInt() {} ;
+  ~RooInt() override {} ;
 
-  // Double_t cast operator 
+  // double cast operator
   inline operator Int_t() const { return _value ; }
   RooInt& operator=(Int_t value) { _value = value ; return *this ; }
 
   // Sorting interface ;
-  Int_t Compare(const TObject* other) const ;
-  virtual Bool_t IsSortable() const { return kTRUE ; }
+  Int_t Compare(const TObject* other) const override ;
+  bool IsSortable() const override { return true ; }
 
 protected:
 
-  Int_t _value ; // Payload
-  ClassDef(RooInt,1) // Container class for Int_t
+  Int_t _value ; ///< Payload
+  ClassDefOverride(RooInt,1) // Container class for Int_t
 };
 
 #endif

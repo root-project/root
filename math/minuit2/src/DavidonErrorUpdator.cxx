@@ -28,6 +28,7 @@ DavidonErrorUpdator::Update(const MinimumState &s0, const MinimumParameters &p1,
    // update of the covarianze matrix (Davidon formula, see Tutorial, par. 4.8 pag 26)
    // in case of delgam > gvg (PHI > 1) use rank one formula
    // see  par 4.10 pag 30
+   // ( Tutorial: https://seal.web.cern.ch/seal/documents/minuit/mntutorial.pdf )
 
    MnPrint print("DavidonErrorUpdator");
 
@@ -41,12 +42,39 @@ DavidonErrorUpdator::Update(const MinimumState &s0, const MinimumParameters &p1,
    print.Debug("\ndx", dx, "\ndg", dg, "\ndelgam", delgam, "gvg", gvg);
 
    if (delgam == 0) {
-      print.Warn("delgam = 0 : cannot update - return same matrix");
+      print.Warn("delgam = 0 : cannot update - return same matrix (details in info log)");
+      print.Info("Explanation:\n"
+                 "   The distance from the minimum cannot be estimated, since at two\n"
+                 "   different points s0 and p1, the function gradient projected onto\n"
+                 "   the difference of s0 and p1 is zero, where:\n"
+                 " * s0: ", s0.Vec(), "\n"
+                 " * p1: ", p1.Vec(), "\n"
+                 " * gradient at s0: ", s0.Gradient().Vec(), "\n"
+                 " * gradient at p1: ", g1.Vec(), "\n"
+                 "   To understand whether this hints to an issue in the minimized function,\n"
+                 "   the minimized function can be plotted along points between s0 and p1 to\n"
+                 "   look for unexpected behavior.");
       return s0.Error();
    }
 
    if (delgam < 0) {
-      print.Warn("delgam < 0 : first derivatives increasing along search line");
+      print.Warn("delgam < 0 : first derivatives increasing along search line (details in info log)");
+      print.Info("Explanation:\n"
+                 "   The distance from the minimum cannot be estimated, since the minimized\n"
+                 "   function seems not to be strictly convex in the space probed by the fit.\n"
+                 "   That is expected if the starting parameters are e.g. close to a local maximum\n"
+                 "   of the minimized function. If this function is expected to be fully convex\n"
+                 "   in the probed range or Minuit is already close to the function minimum, this\n"
+                 "   may hint to numerical or analytical issues with the minimized function.\n"
+                 "   This was found by projecting the difference of gradients at two points, s0 and p1,\n"
+                 "   onto the direction given by the difference of s0 and p1, where:\n"
+                 " * s0: ", s0.Vec(), "\n"
+                 " * p1: ", p1.Vec(), "\n"
+                 " * gradient at s0: ", s0.Gradient().Vec(), "\n"
+                 " * gradient at p1: ", g1.Vec(), "\n"
+                 "   To understand whether this hints to an issue in the minimized function,\n"
+                 "   the minimized function can be plotted along points between s0 and p1 to\n"
+                 "   look for unexpected behavior.");
    }
 
    if (gvg <= 0) {

@@ -180,14 +180,14 @@ void stress_allocation()
 //                Test uniform element operations
 //
 class SinAction : public TElementActionD {
-  void Operation(Double_t &element) const { element = TMath::Sin(element); }
+  void Operation(Double_t &element) const override { element = TMath::Sin(element); }
   public:
     SinAction() { }
 };
 
 class CosAction : public TElementPosActionD {
   Double_t factor;
-  void Operation(Double_t &element) const { element = TMath::Cos(factor*fI); }
+  void Operation(Double_t &element) const override { element = TMath::Cos(factor*fI); }
   public:
     CosAction() { }
     CosAction(Int_t no_elems): factor(2*TMath::Pi()/no_elems) { }

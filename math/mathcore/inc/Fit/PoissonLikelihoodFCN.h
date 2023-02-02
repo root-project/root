@@ -71,7 +71,7 @@ public:
       Constructor from unbin data set and model function (pdf) managed by the users
    */
    PoissonLikelihoodFCN (const BinData & data, const IModelFunction & func, int weight = 0, bool extended = true, const ::ROOT::EExecutionPolicy &executionPolicy = ::ROOT::EExecutionPolicy::kSequential ) :
-      BaseFCN(std::shared_ptr<BinData>(const_cast<BinData*>(&data), DummyDeleter<BinData>()), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
+      BaseFCN(std::make_shared<BinData>(data), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
       fIsExtended(extended),
       fWeight(weight),
       fNEffPoints(0),
@@ -118,9 +118,9 @@ public:
    virtual unsigned int NFitPoints() const { return fNEffPoints; }
 
    /// i-th likelihood element and its gradient
-   virtual double DataElement(const double * x, unsigned int i, double * g) const {
+   virtual double DataElement(const double * x, unsigned int i, double * g, double * h, bool fullHessian) const {
       if (i==0) this->UpdateNCalls();
-      return FitUtil::Evaluate<typename BaseFCN::T>::EvalPoissonBinPdf(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
+      return FitUtil::Evaluate<T>::EvalPoissonBinPdf(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g, h, BaseFCN::IsAGradFCN(), fullHessian);
    }
 
    /// evaluate gradient
@@ -131,8 +131,34 @@ public:
                                                                       fNEffPoints, fExecutionPolicy);
    }
 
+   /**
+    * Computes the full Hessian. Return false if Hessian is not supported
+    */
+   // virtual bool Hessian(const double * x, double * hess) const {
+   //    //return full Hessian
+   //    unsigned int np = NPoints();
+   //    unsigned int ndim = NDim();
+   //    unsigned int nh = ndim*(ndim+1)/2;
+   //    for (unsigned int k = 0; k < nh;  ++k) {
+   //       hess[k] = 0;
+   //    }
+   //    std::vector<double> g(np);  // gradient of the residual (y-f)/sigma
+   //    std::vector<double> h(nh);  // hessian of residual
+   //    for (unsigned int i = 0; i < np; i++) {
+   //       double f = DataElement(x,i,g,h,true);
+   //       if (f == std::numeric_limits<double>::quiet_NaN() ) return false;
+   //       for (unsigned int j = 0; j < np; j++) {
+   //          for (unsigned int k = 0; k <=j; k++) {
+   //             unsigned int index = j + k * (k + 1) / 2;
+   //             h[index] += 2. * ( g[j]*g[k] + f * h[index]*h[index] );
+   //          }
+   //       }
+   //    }
+   //    return true;
+   // }
+
    /// get type of fit method function
-   virtual  typename BaseObjFunction::Type_t Type() const { return BaseObjFunction::kLogLikelihood; }
+   virtual  typename BaseObjFunction::Type_t Type() const { return BaseObjFunction::kPoissonLikelihood; }
 
    bool IsWeighted() const { return (fWeight != 0); }
 
@@ -174,14 +200,14 @@ private:
 
       //data member
 
-   bool fIsExtended; // flag to indicate if is extended (when false is a Multinomial lieklihood), default is true
-   int fWeight;  // flag to indicate if needs to evaluate using weight or weight squared (default weight = 0)
+   bool fIsExtended; ///< flag to indicate if is extended (when false is a Multinomial likelihood), default is true
+   int fWeight;  ///< flag to indicate if needs to evaluate using weight or weight squared (default weight = 0)
 
-   mutable unsigned int fNEffPoints;  // number of effective points used in the fit
+   mutable unsigned int fNEffPoints;  ///< number of effective points used in the fit
 
-   mutable std::vector<double> fGrad; // for derivatives
+   mutable std::vector<double> fGrad; ///< for derivatives
 
-   ::ROOT::EExecutionPolicy fExecutionPolicy; // Execution policy
+   ::ROOT::EExecutionPolicy fExecutionPolicy; ///< Execution policy
 };
 
       // define useful typedef's

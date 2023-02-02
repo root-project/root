@@ -20,22 +20,19 @@
 \ingroup Roofitcore
 
 RooAbsCategoryLValue is the common abstract base class for objects that represent a
-discrete value that can be set from the outside, *i.e.* that may appear on the left
+discrete value that can be set from the outside, i.e. that may appear on the left
 hand side of an assignment ("*lvalue*").
 
 Each implementation must provide the functions setIndex()/setLabel() to allow direct modification
 of the value. RooAbsCategoryLValue may be derived, but its functional relation
 to other RooAbsArgs must be invertible.
-**/
+*/
 
 #include "RooAbsCategoryLValue.h"
 
-#include "RooFit.h"
 #include "RooArgSet.h"
 #include "RooRandom.h"
 #include "RooMsgService.h"
-
-#include "TString.h"
 
 using namespace std;
 
@@ -46,11 +43,11 @@ ClassImp(RooAbsCategoryLValue);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooAbsCategoryLValue::RooAbsCategoryLValue(const char *name, const char *title) : 
+RooAbsCategoryLValue::RooAbsCategoryLValue(const char *name, const char *title) :
   RooAbsCategory(name,title)
 {
-  setValueDirty() ;  
-  setShapeDirty() ;  
+  setValueDirty() ;
+  setShapeDirty() ;
 }
 
 
@@ -77,9 +74,9 @@ RooAbsCategoryLValue::~RooAbsCategoryLValue()
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator from integer index number
 
-RooAbsArg& RooAbsCategoryLValue::operator=(Int_t index) 
+RooAbsArg& RooAbsCategoryLValue::operator=(int index)
 {
-  setIndex(index,kTRUE) ;
+  setIndex(index,true) ;
   return *this ;
 }
 
@@ -88,7 +85,7 @@ RooAbsArg& RooAbsCategoryLValue::operator=(Int_t index)
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator from string pointer
 
-RooAbsArg& RooAbsCategoryLValue::operator=(const char *label) 
+RooAbsArg& RooAbsCategoryLValue::operator=(const char *label)
 {
   setLabel(label) ;
   return *this ;
@@ -100,7 +97,7 @@ RooAbsArg& RooAbsCategoryLValue::operator=(const char *label)
 /// Assignment from another RooAbsCategory. This will use the *state name*
 /// of the other object to set the corresponding state. This is less efficient
 /// then directly assigning the state index.
-RooAbsArg& RooAbsCategoryLValue::operator=(const RooAbsCategory& other) 
+RooAbsArg& RooAbsCategoryLValue::operator=(const RooAbsCategory& other)
 {
   if (&other==this) return *this ;
 
@@ -121,7 +118,7 @@ RooAbsArg& RooAbsCategoryLValue::operator=(const RooAbsCategory& other)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set our state to our `n`th defined type.
 /// \return true in case of an error.
-Bool_t RooAbsCategoryLValue::setOrdinal(UInt_t n)
+bool RooAbsCategoryLValue::setOrdinal(UInt_t n)
 {
   return setIndex(getOrdinal(n).second, true);
 }
@@ -134,7 +131,7 @@ Bool_t RooAbsCategoryLValue::setOrdinal(UInt_t n)
 /// cache is clean(valid) before this function is called, e.g. by
 /// calling syncCache() on the source.
 
-void RooAbsCategoryLValue::copyCache(const RooAbsArg* source, Bool_t valueOnly, Bool_t setValDirty) 
+void RooAbsCategoryLValue::copyCache(const RooAbsArg* source, bool valueOnly, bool setValDirty)
 {
   RooAbsCategory::copyCache(source,valueOnly,setValDirty) ;
 
@@ -147,7 +144,7 @@ void RooAbsCategoryLValue::copyCache(const RooAbsArg* source, Bool_t valueOnly, 
 ////////////////////////////////////////////////////////////////////////////////
 /// Randomize current value.
 /// If the result is not in the range, the randomisation is repeated.
-void RooAbsCategoryLValue::randomize(const char* rangeName) 
+void RooAbsCategoryLValue::randomize(const char* rangeName)
 {
   const auto& theStateNames = stateNames();
 
@@ -174,12 +171,12 @@ void RooAbsCategoryLValue::randomize(const char* rangeName)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set category to i-th fit bin, which is the i-th registered state.
 
-void RooAbsCategoryLValue::setBin(Int_t ibin, const char* rangeName) 
+void RooAbsCategoryLValue::setBin(Int_t ibin, const char* rangeName)
 {
   // Check validity of ibin
   if (ibin<0 || ibin>=numBins(rangeName)) {
     coutE(InputArguments) << "RooAbsCategoryLValue::setBin(" << GetName() << ") ERROR: bin index " << ibin
-			  << " is out of range (0," << numBins(rangeName)-1 << ")" << endl ;
+           << " is out of range (0," << numBins(rangeName)-1 << ")" << endl ;
     return ;
   }
 

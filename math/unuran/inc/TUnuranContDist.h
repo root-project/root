@@ -35,7 +35,7 @@ class TF1;
    function of the distribution. Optionally the derivative of the pdf can also be passed.
 
    It provides a method to set the domain of the distribution ( SetDomain ) which will correspond to the range
-   of the generated random numbers. By default the domain is (-inf, + inf), indipendently of the
+   of the generated random numbers. By default the domain is (-inf, + inf), independently of the
    range set in the TF1 class used to construct the distribution.
 
    In addition, some UNURAN methods requires extra information (cdf function, distribution mode,
@@ -55,32 +55,32 @@ public:
       representing the derivative of the pdf. The flag isLogPdf can be used to pass instead of the pdf
       (and its derivative) the log (and the derivative of the log) of the pdf.
       By default the distribution has not domain set (it is defined between [-inf,+inf], no mode, no pdf area and no
-      cdf explicity defined. UnuRan, if needed, can compute some of this quantities, but the user if they know them can
+      cdf explicitly defined. UnuRan, if needed, can compute some of this quantities, but the user if they know them can
       set them in order to speed up the algorithm. For example in case of the Cdf, if the user has not set it, a numerical
       integration algorithm is used to estimate the Cdf from the Pdf.
    */
-   explicit TUnuranContDist (TF1 * pdf = 0, TF1 * deriv = 0, bool isLogPdf = false );
+   explicit TUnuranContDist (TF1 * pdf = nullptr, TF1 * deriv = nullptr, bool isLogPdf = false );
    /**
-      Constructor as above but with the possibility to pass also the Cdf. 
-       In case an algorithm requiring only the Cdf (no Pdf), one can use this contructor passing nullptr for Pdf and derivative of 
+      Constructor as above but with the possibility to pass also the Cdf.
+       In case an algorithm requiring only the Cdf (no Pdf), one can use this constructor passing nullptr for Pdf and derivative of
        the Pdf
-   */ 
+   */
    TUnuranContDist (TF1 * pdf, TF1 * deriv, TF1 * cdf, bool isLogPdf = false );
    /**
       Constructor as before but from a generic function object interface for one-dim functions
    */
-   explicit TUnuranContDist (const ROOT::Math::IGenFunction & pdf, const ROOT::Math::IGenFunction * dpdf = 0, bool isLogPdf = false, bool copyFunc = false);
+   explicit TUnuranContDist (const ROOT::Math::IGenFunction & pdf, const ROOT::Math::IGenFunction * dpdf = nullptr, bool isLogPdf = false, bool copyFunc = false);
    /**
       Constructor as before from pointers to generic function object interface for one-dim functions
       which can be use for all algorithms including those requiring only the Cdf
     */
-   TUnuranContDist (const ROOT::Math::IGenFunction * pdf, const ROOT::Math::IGenFunction * dpdf, 
+   TUnuranContDist (const ROOT::Math::IGenFunction * pdf, const ROOT::Math::IGenFunction * dpdf,
    const ROOT::Math::IGenFunction * cdf, bool isLogPdf = false, bool copyFunc = false );
 
    /**
       Destructor
    */
-   virtual ~TUnuranContDist ();
+   ~TUnuranContDist () override;
 
 
    /**
@@ -96,7 +96,7 @@ public:
    /**
       Clone (required by base class)
     */
-   virtual TUnuranContDist * Clone() const { return new TUnuranContDist(*this); }
+   TUnuranContDist * Clone() const override { return new TUnuranContDist(*this); }
 
 
    /**
@@ -145,7 +145,7 @@ public:
    /**
       check if a cdf function is provided for the distribution
     */
-   bool HasCdf() const { return fCdf != 0; }
+   bool HasCdf() const { return fCdf != nullptr; }
 
    /**
       check if distribution has a pre-computed mode
@@ -196,24 +196,24 @@ protected:
 private:
 
 
-   const ROOT::Math::IGenFunction * fPdf;         // pointer to the pdf
-   const ROOT::Math::IGenFunction * fDPdf;       //pointer to the derivative of the pdf
-   const ROOT::Math::IGenFunction * fCdf;       //pointer to the cdf (cumulative dist.)
+   const ROOT::Math::IGenFunction * fPdf;       ///< pointer to the pdf
+   const ROOT::Math::IGenFunction * fDPdf;      ///< pointer to the derivative of the pdf
+   const ROOT::Math::IGenFunction * fCdf;       ///< pointer to the cdf (cumulative dist.)
 
-   double fXmin;            //lower value of the domain
-   double fXmax;            //upper value of the domain
-   double fMode;            //mode of the distribution
-   double fArea;            //area below pdf
+   double fXmin;            ///< lower value of the domain
+   double fXmax;            ///< upper value of the domain
+   double fMode;            ///< mode of the distribution
+   double fArea;            ///< area below pdf
 
    // flags
-   bool  fIsLogPdf;         //flag to control if function pointer represent log of pdf
-   bool  fHasDomain;        //flag to control if distribution has a defined domain (otherwise is [-inf,+inf]
-   bool  fHasMode;          //flag to control if distribution has a pre-computed mode
-   bool  fHasArea;          //flag to control if distribution has a pre-computed area below the pdf
-   bool  fOwnFunc;          // flag to indicate if class manages the function pointers
-   //mutable double fX[1];         //! cached vector for using TF1::EvalPar
+   bool  fIsLogPdf;         ///< flag to control if function pointer represent log of pdf
+   bool  fHasDomain;        ///< flag to control if distribution has a defined domain (otherwise is [-inf,+inf]
+   bool  fHasMode;          ///< flag to control if distribution has a pre-computed mode
+   bool  fHasArea;          ///< flag to control if distribution has a pre-computed area below the pdf
+   bool  fOwnFunc;          ///< flag to indicate if class manages the function pointers
+   //mutable double fX[1];  ///<! cached vector for using TF1::EvalPar
 
-   ClassDef(TUnuranContDist,1)  //Wrapper class for one dimensional continuous distribution
+   ClassDefOverride(TUnuranContDist,1)  //Wrapper class for one dimensional continuous distribution
 
 
 };

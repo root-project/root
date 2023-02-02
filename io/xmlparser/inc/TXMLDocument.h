@@ -37,7 +37,7 @@ public:
    const char *Encoding() const;
    const char *URL() const;
 
-   ClassDef(TXMLDocument,0)  // XML document created by the DOM parser
+   ClassDefOverride(TXMLDocument,0)  // XML document created by the DOM parser
 };
 
 #endif

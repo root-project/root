@@ -100,6 +100,14 @@ public:
     virtual llvm::Optional<MatcherCtor>
     lookupMatcherCtor(StringRef MatcherName) = 0;
 
+    virtual bool isBuilderMatcher(MatcherCtor) const = 0;
+
+    virtual ASTNodeKind nodeMatcherType(MatcherCtor) const = 0;
+
+    virtual internal::MatcherDescriptorPtr
+    buildMatcherCtor(MatcherCtor, SourceRange NameRange,
+                     ArrayRef<ParserValue> Args, Diagnostics *Error) const = 0;
+
     /// Compute the list of completion types for \p Context.
     ///
     /// Each element of \p Context represents a matcher invocation, going from
@@ -142,6 +150,15 @@ public:
     std::vector<ArgKind> getAcceptedCompletionTypes(
         llvm::ArrayRef<std::pair<MatcherCtor, unsigned>> Context) override;
 
+    bool isBuilderMatcher(MatcherCtor Ctor) const override;
+
+    ASTNodeKind nodeMatcherType(MatcherCtor) const override;
+
+    internal::MatcherDescriptorPtr
+    buildMatcherCtor(MatcherCtor, SourceRange NameRange,
+                     ArrayRef<ParserValue> Args,
+                     Diagnostics *Error) const override;
+
     std::vector<MatcherCompletion>
     getMatcherCompletions(llvm::ArrayRef<ArgKind> AcceptedTypes) override;
   };
@@ -164,16 +181,14 @@ public:
   ///   description of the error.
   ///   The caller takes ownership of the DynTypedMatcher object returned.
   static llvm::Optional<DynTypedMatcher>
-  parseMatcherExpression(StringRef MatcherCode, Sema *S,
-                         const NamedValueMap *NamedValues,
-                         Diagnostics *Error);
+  parseMatcherExpression(StringRef &MatcherCode, Sema *S,
+                         const NamedValueMap *NamedValues, Diagnostics *Error);
   static llvm::Optional<DynTypedMatcher>
-  parseMatcherExpression(StringRef MatcherCode, Sema *S,
-                         Diagnostics *Error) {
+  parseMatcherExpression(StringRef &MatcherCode, Sema *S, Diagnostics *Error) {
     return parseMatcherExpression(MatcherCode, S, nullptr, Error);
   }
   static llvm::Optional<DynTypedMatcher>
-  parseMatcherExpression(StringRef MatcherCode, Diagnostics *Error) {
+  parseMatcherExpression(StringRef &MatcherCode, Diagnostics *Error) {
     return parseMatcherExpression(MatcherCode, nullptr, Error);
   }
 
@@ -189,14 +204,14 @@ public:
   /// \param NamedValues A map of precomputed named values.  This provides
   ///   the dictionary for the <NamedValue> rule of the grammar.
   ///   If null, it is ignored.
-  static bool parseExpression(StringRef Code, Sema *S,
+  static bool parseExpression(StringRef &Code, Sema *S,
                               const NamedValueMap *NamedValues,
                               VariantValue *Value, Diagnostics *Error);
-  static bool parseExpression(StringRef Code, Sema *S,
-                              VariantValue *Value, Diagnostics *Error) {
+  static bool parseExpression(StringRef &Code, Sema *S, VariantValue *Value,
+                              Diagnostics *Error) {
     return parseExpression(Code, S, nullptr, Value, Error);
   }
-  static bool parseExpression(StringRef Code, VariantValue *Value,
+  static bool parseExpression(StringRef &Code, VariantValue *Value,
                               Diagnostics *Error) {
     return parseExpression(Code, nullptr, Value, Error);
   }
@@ -213,14 +228,14 @@ public:
   /// \return The list of completions, which may be empty if there are no
   /// available completions or if an error occurred.
   static std::vector<MatcherCompletion>
-  completeExpression(StringRef Code, unsigned CompletionOffset, Sema *S,
+  completeExpression(StringRef &Code, unsigned CompletionOffset, Sema *S,
                      const NamedValueMap *NamedValues);
   static std::vector<MatcherCompletion>
-  completeExpression(StringRef Code, unsigned CompletionOffset, Sema *S) {
+  completeExpression(StringRef &Code, unsigned CompletionOffset, Sema *S) {
     return completeExpression(Code, CompletionOffset, S, nullptr);
   }
   static std::vector<MatcherCompletion>
-  completeExpression(StringRef Code, unsigned CompletionOffset) {
+  completeExpression(StringRef &Code, unsigned CompletionOffset) {
     return completeExpression(Code, CompletionOffset, nullptr);
   }
 
@@ -235,7 +250,11 @@ private:
 
   bool parseBindID(std::string &BindID);
   bool parseExpressionImpl(VariantValue *Value);
+  bool parseMatcherBuilder(MatcherCtor Ctor, const TokenInfo &NameToken,
+                           const TokenInfo &OpenToken, VariantValue *Value);
   bool parseMatcherExpressionImpl(const TokenInfo &NameToken,
+                                  const TokenInfo &OpenToken,
+                                  llvm::Optional<MatcherCtor> Ctor,
                                   VariantValue *Value);
   bool parseIdentifierPrefixImpl(VariantValue *Value);
 

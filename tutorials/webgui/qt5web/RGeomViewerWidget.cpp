@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/REveGeomViewer.hxx>
+#include <ROOT/RGeomViewer.hxx>
 #include <ROOT/RWebDisplayArgs.hxx>
 #include "RGeomViewerWidget.h"
 
@@ -26,7 +26,7 @@ RGeomViewerWidget::RGeomViewerWidget(QWidget *parent) : QWidget(parent)
 
    setAcceptDrops(true);
 
-   fGeomViewer = std::make_shared<ROOT::Experimental::REveGeomViewer>();
+   fGeomViewer = std::make_shared<ROOT::Experimental::RGeomViewer>();
 
    fGeomViewer->SetShowHierarchy(false);
 

@@ -242,9 +242,13 @@ void MinimizerOptions::PrintDefault(const char * name, std::ostream & os) {
    MinimizerOptions tmp;
    tmp.Print(os);
    if (!tmp.ExtraOptions() ) {
-      IOptions * opt = FindDefault(name);
-      os << "Specific options for "  << name << std::endl;
-      if (opt) opt->Print(os);
+      if (name) {
+         IOptions * opt = FindDefault(name);
+         os << "Specific options for "  << name << std::endl;
+         if (opt) opt->Print(os);
+      } else { 
+         GenAlgoOptions::PrintAllDefault(os);
+      }
    }
 }
 

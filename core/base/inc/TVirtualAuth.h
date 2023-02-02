@@ -27,8 +27,8 @@ class TSocket;
 class TVirtualAuth {
 
 public:
-   TVirtualAuth() { }
-   virtual ~TVirtualAuth() { }
+   TVirtualAuth() {}
+   virtual ~TVirtualAuth() {}
 
    virtual TSecContext *Authenticate(TSocket *, const char *host,
                                      const char *user, Option_t *options) = 0;

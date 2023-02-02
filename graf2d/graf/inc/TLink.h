@@ -12,23 +12,22 @@
 #ifndef ROOT_TLink
 #define ROOT_TLink
 
-
 #include "TText.h"
 
 class TLink : public TText {
 
 protected:
 
-   void   *fLink;           ///< pointer to object
+   void   *fLink{nullptr};     ///< pointer to object
 
 public:
    enum EStatusBits { kIsStarStar = BIT(2) };
    TLink();
    TLink(Double_t x, Double_t y, void *pointer);
    virtual ~TLink();
-   virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
 
-   ClassDef(TLink,0)  //Link: hypertext link to an object
+   ClassDefOverride(TLink,0)  //Link: hypertext link to an object
 };
 
 #endif

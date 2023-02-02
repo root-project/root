@@ -21,6 +21,9 @@
 #include "THnBase.h"
 #include "TMath.h"
 
+/// Add a new file to this chain.
+///
+/// \param fileName path of the file to add
 void THnChain::AddFile(const char* fileName)
 {
    fFiles.emplace_back(fileName);
@@ -43,6 +46,16 @@ void THnChain::AddFile(const char* fileName)
    }
 }
 
+/// Get an axis from the histogram.
+///
+/// \param i index of the axis to retrieve
+///
+/// This function requires that a file containing the histogram was
+/// already added with `AddFile`.
+///
+/// Properties set on the axis returned by `GetAxis` are propagated to all
+/// histograms in the chain, so it can e.g. be used to set ranges for
+/// projections.
 TAxis* THnChain::GetAxis(Int_t i) const
 {
    if (i < 0 || i >= static_cast<Int_t>(fAxes.size())) {
@@ -52,6 +65,9 @@ TAxis* THnChain::GetAxis(Int_t i) const
    return fAxes[i];
 }
 
+/// Projects all histograms in the chain.
+///
+/// See `THnBase::Projection` for parameters and their semantics.
 TObject* THnChain::ProjectionAny(Int_t ndim, const Int_t* dim, Option_t* option) const
 {
    if (ndim <= 0) {
@@ -115,6 +131,9 @@ TObject* THnChain::ProjectionAny(Int_t ndim, const Int_t* dim, Option_t* option)
    return h_merged;
 }
 
+/// Retrieve a histogram from a file.
+///
+/// \param fileName path of the file to read.
 THnBase* THnChain::ReadHistogram(const char* fileName) const
 {
    TDirectory::TContext ctxt(gDirectory);
@@ -132,6 +151,9 @@ THnBase* THnChain::ReadHistogram(const char* fileName) const
    return hs;
 }
 
+/// Copy the properties of all axes to a histogram.
+///
+/// \param hs histogram whose axes should be updated
 void THnChain::SetupAxes(THnBase& hs) const
 {
    const Int_t naxes = fAxes.size();
@@ -142,6 +164,10 @@ void THnChain::SetupAxes(THnBase& hs) const
    }
 }
 
+/// Ensure a histogram has axes similar to the ones we expect.
+///
+/// \param h histogram to verify
+/// \param axes expected set of axes
 bool THnChain::CheckConsistency(const THnBase& h, const std::vector<TAxis*>& axes)
 {
    // We would prefer to directly use `TH1::CheckEqualAxes` here;
@@ -192,6 +218,7 @@ bool THnChain::CheckConsistency(const THnBase& h, const std::vector<TAxis*>& axe
    return true;
 }
 
+/// See `THnBase::Projection` for the intended behavior.
 TH1* THnChain::Projection(Int_t xDim, Option_t* option) const
 {
    // Forwards to `THnBase::Projection()`.
@@ -199,6 +226,7 @@ TH1* THnChain::Projection(Int_t xDim, Option_t* option) const
    return static_cast<TH1*>(ProjectionAny(1, dim, option));
 }
 
+/// See `THnBase::Projection` for the intended behavior.
 TH2* THnChain::Projection(Int_t yDim, Int_t xDim, Option_t* option) const
 {
    // Forwards to `THnBase::Projection()`.
@@ -206,6 +234,7 @@ TH2* THnChain::Projection(Int_t yDim, Int_t xDim, Option_t* option) const
    return static_cast<TH2*>(ProjectionAny(2, dim, option));
 }
 
+/// See `THnBase::Projection` for the intended behavior.
 TH3* THnChain::Projection(Int_t xDim, Int_t yDim, Int_t zDim, Option_t* option) const
 {
    // Forwards to `THnBase::Projection()`.
@@ -213,6 +242,7 @@ TH3* THnChain::Projection(Int_t xDim, Int_t yDim, Int_t zDim, Option_t* option) 
    return static_cast<TH3*>(ProjectionAny(3, dim, option));
 }
 
+/// See `THnBase::Projection` for the intended behavior.
 THnBase* THnChain::ProjectionND(Int_t ndim, const Int_t* dim, Option_t* option) const
 {
    // Forwards to `THnBase::ProjectionND()`.

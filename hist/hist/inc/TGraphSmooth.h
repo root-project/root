@@ -51,13 +51,13 @@ public :
    TGraphSmooth();
    TGraphSmooth(const char *name);
 //      TGraphSmooth(const TGraphSmooth &smoothReg);   //??
-   virtual ~TGraphSmooth();
+   ~TGraphSmooth() override;
 
-   TGraph         *Approx(TGraph *grin, Option_t *option="linear", Int_t nout=50, Double_t *xout=0,
+   TGraph         *Approx(TGraph *grin, Option_t *option="linear", Int_t nout=50, Double_t *xout=nullptr,
                           Double_t yleft=0, Double_t yright=0, Int_t rule=0, Double_t f=0, Option_t *ties="mean");
-   TGraph         *SmoothKern(TGraph *grin, Option_t *option="normal", Double_t bandwidth=0.5, Int_t nout=100, Double_t *xout=0);
+   TGraph         *SmoothKern(TGraph *grin, Option_t *option="normal", Double_t bandwidth=0.5, Int_t nout=100, Double_t *xout=nullptr);
    TGraph         *SmoothLowess(TGraph *grin, Option_t *option="",Double_t span=0.67, Int_t iter = 3, Double_t delta = 0);
-   TGraph         *SmoothSuper(TGraph *grin, Option_t *option="", Double_t bass = 0, Double_t span=0, Bool_t isPeriodic = kFALSE, Double_t *w=0);
+   TGraph         *SmoothSuper(TGraph *grin, Option_t *option="", Double_t bass = 0, Double_t span=0, Bool_t isPeriodic = kFALSE, Double_t *w=nullptr);
 
    void            Approxin(TGraph *grin, Int_t iKind, Double_t &Ylow, Double_t &Yhigh, Int_t rule, Int_t iTies);
    void            Smoothin(TGraph *grin);
@@ -75,7 +75,7 @@ public :
    static void     BDRsmooth(Int_t n, Double_t *x, Double_t *y, Double_t *w,
                              Double_t span, Int_t iper, Double_t vsmlsq, Double_t *smo, Double_t *acvr);
 
-   ClassDef(TGraphSmooth,1) //Graph Smoother
+   ClassDefOverride(TGraphSmooth,1) //Graph Smoother
 };
 
 #endif

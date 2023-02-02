@@ -27,50 +27,47 @@ will return the name of the last clicked button.
 
 ~~~ {.cpp}
 {
-   gROOT->Reset("a");
+   // run macro from tutorials directory of ROOT!
    TControlBar bar("vertical");
    bar.AddButton("Help to run demos",".x demoshelp.C",
                  "Explains how to run the demos");
-   bar.AddButton("framework",        ".x framework.C",
+   bar.AddButton("framework",        ".x graphics/framework.C",
                  "An Example of Object Oriented User Interface");
    bar.AddButton("hsimple",          ".x hsimple.C",
                  "An Example Creating Histograms/Ntuples on File");
-   bar.AddButton("hsum",             ".x hsum.C",
+   bar.AddButton("hsum",             ".x hist/hsum.C",
                  "Filling histograms and some graphics options");
-   bar.AddButton("canvas",           ".x canvas.C",
+   bar.AddButton("canvas",           ".x graphics/canvas.C",
                  "Canvas and Pad Management");
-   bar.AddButton("formula1",         ".x formula1.C",
+   bar.AddButton("formula1",         ".x graphics/formula1.C",
                  "Simple Formula and Functions");
-   bar.AddButton("fillrandom",       ".x fillrandom.C",
+   bar.AddButton("fillrandom",       ".x hist/fillrandom.C",
                  "Histograms with Random Numbers from a Function");
-   bar.AddButton("fit1",             ".x fit1.C",
+   bar.AddButton("fit1",             ".x fit/fit1.C",
                  "A Simple Fitting Example");
-   bar.AddButton("h1draw",           ".x h1draw.C",
-                 "Drawing Options for 1D Histograms");
-   bar.AddButton("graph",            ".x graph.C",
+   bar.AddButton("draw2dopt",        ".x hist/draw2dopt.C",
+                 "Drawing Options for 2D Histograms");
+   bar.AddButton("graph",            ".x graphs/graph.C",
                  "Examples of a simple graph");
-   bar.AddButton("tornado",          ".x tornado.C",
+   bar.AddButton("tornado",          ".x graphics/tornado.C",
                  "Examples of 3-D PolyMarkers");
-   bar.AddButton("shapes",           ".x shapes.C",
+   bar.AddButton("shapes",           ".x geom/shapes.C",
                  "The Geometry Shapes");
-   bar.AddButton("atlasna49",        ".x atlasna49.C",
-                 "Creating and Viewing Geometries");
-   bar.AddButton("file_layout",      ".x file.C",
+   bar.AddButton("file_layout",      ".x io/file.C",
                  "The ROOT file format");
-   bar.AddButton("tree_layout",      ".x tree.C",
+   bar.AddButton("tree_layout",      ".x tree/tree.C",
                  "The Tree Data Structure");
-   bar.AddButton("ntuple1",          ".x ntuple1.C",
+   bar.AddButton("ntuple1",          ".x tree/ntuple1.C",
                  "Ntuples and Selections");
-   bar.AddButton("run benchmarks",   ".x benchmarks.C",
+   bar.AddButton("run benchmarks",   ".x legacy/benchmarks.C",
                  "Runs all the ROOT benchmarks");
-   bar.AddButton("rootmarks",        ".x rootmarks.C",
+   bar.AddButton("rootmarks",        ".x legacy/rootmarks.C",
                  "Prints an estimated ROOTMARKS for your machine");
-   bar.AddButton("edit_hsimple",     ".!ved hsimple.C &",
+   bar.AddButton("edit_hsimple",     ".!vi hsimple.C &",
                  "Invokes the text editor on file hsimple.C");
-   bar.AddButton("Close Bar",        "gROOT.Reset(\"a\")",
+   bar.AddButton("Close Bar",        "bar.Hide()",
                  "Close ControlBar");
    bar.Show();
-   gROOT->SaveContext();
 }
 ~~~
 \image html gpad_controlbar.png
@@ -82,6 +79,7 @@ will return the name of the last clicked button.
 #include "TGuiFactory.h"
 #include "TList.h"
 #include "TStyle.h"
+#include "TROOT.h"
 
 
 ClassImp(TControlBar);
@@ -91,10 +89,6 @@ ClassImp(TControlBar);
 
 TControlBar::TControlBar() : TControlBarButton()
 {
-   fControlBarImp = 0;
-   fOrientation   = 0;
-   fButtons       = 0;
-   fNoroc         = 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,8 +123,8 @@ TControlBar::~TControlBar()
    if( fButtons )
       fButtons->Delete();
 
-   fButtons       = 0;
-   fControlBarImp = 0;
+   fButtons       = nullptr;
+   fControlBarImp = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -212,12 +206,14 @@ void TControlBar::Initialize(Int_t x, Int_t y)
    // TApplication::NeedGraphicsLibs() has been called by a
    // library static initializer.
    if (gApplication)
-      gApplication->InitializeGraphics();
+      gApplication->InitializeGraphics(gROOT->IsWebDisplay());
+
+   auto factory = gROOT->IsWebDisplay() ? gBatchGuiFactory : gGuiFactory;
 
    if (x == -999) {
-      fControlBarImp = gGuiFactory->CreateControlBarImp( this, GetName() );
+      fControlBarImp = factory->CreateControlBarImp( this, GetName() );
    } else {
-      fControlBarImp = gGuiFactory->CreateControlBarImp( this, GetName(), x, y );
+      fControlBarImp = factory->CreateControlBarImp( this, GetName(), x, y );
    }
 
    fButtons       = new TList();

@@ -23,14 +23,14 @@ public:
   RooQuasiRandomGenerator();
   virtual ~RooQuasiRandomGenerator();
   void reset();
-  Bool_t generate(UInt_t dimension, Double_t vector[]);
+  bool generate(UInt_t dimension, double vector[]);
   enum { MaxDimension = 12 , NBits = 31 , MaxDegree = 50 , MaxPrimitiveDegree = 5 };
 protected:
   void calculateCoefs(UInt_t dimension);
   void calculateV(const int px[], int px_degree,
-		  int pb[], int * pb_degree, int v[], int maxv);
+        int pb[], int * pb_degree, int v[], int maxv);
   void polyMultiply(const int pa[], int pa_degree, const int pb[],
-		    int pb_degree, int pc[], int  * pc_degree);
+          int pb_degree, int pc[], int  * pc_degree);
   // Z_2 field operations
   inline Int_t add(Int_t x, Int_t y) const { return (x+y)%2; }
   inline Int_t mul(Int_t x, Int_t y) const { return (x*y)%2; }
@@ -39,7 +39,7 @@ private:
   Int_t *_nextq;
   Int_t _sequenceCount;
 
-  static Bool_t _coefsCalculated;
+  static bool _coefsCalculated;
   static Int_t _cj[NBits][MaxDimension];
   static const Int_t _primitivePoly[MaxDimension+1][MaxPrimitiveDegree+1];
   static const Int_t _polyDegree[MaxDimension+1];

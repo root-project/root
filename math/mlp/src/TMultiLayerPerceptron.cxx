@@ -1690,7 +1690,7 @@ Bool_t TMultiLayerPerceptron::LoadWeights(Option_t * filename)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the Neural Net for a given set of input parameters
-/// #parameters must equal #input neurons
+/// #%parameters must equal #%input neurons
 
 Double_t TMultiLayerPerceptron::Evaluate(Int_t index, Double_t *params) const
 {

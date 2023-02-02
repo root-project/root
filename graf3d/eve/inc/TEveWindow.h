@@ -239,7 +239,7 @@ public:
    virtual void            PostDock();
 
    virtual Bool_t          CanMakeNewSlots() const { return kFALSE; }
-   virtual TEveWindowSlot* NewSlot() { return 0; }
+   virtual TEveWindowSlot* NewSlot() { return nullptr; }
 
    void PopulateEmptyFrame(TEveCompositeFrame* ef);
 
@@ -273,8 +273,8 @@ public:
    // Static helper functions for common window management scenarios.
 
    static TEveWindowSlot* CreateDefaultWindowSlot();
-   static TEveWindowSlot* CreateWindowMainFrame(TEveWindow* eve_parent=0);
-   static TEveWindowSlot* CreateWindowInTab(TGTab* tab, TEveWindow* eve_parent=0);
+   static TEveWindowSlot* CreateWindowMainFrame(TEveWindow* eve_parent=nullptr);
+   static TEveWindowSlot* CreateWindowInTab(TGTab* tab, TEveWindow* eve_parent=nullptr);
 
    static void            SwapWindows(TEveWindow* w1, TEveWindow* w2);
 
@@ -319,10 +319,10 @@ public:
    TEveWindowPack*   MakePack(); // *MENU*
    TEveWindowTab*    MakeTab();  // *MENU*
 
-   TEveWindowFrame*  MakeFrame(TGFrame* frame=0);
+   TEveWindowFrame*  MakeFrame(TGFrame* frame=nullptr);
 
    TGCompositeFrame* StartEmbedding();
-   TEveWindowFrame*  StopEmbedding(const char* name=0);
+   TEveWindowFrame*  StopEmbedding(const char* name=nullptr);
 
    ClassDef(TEveWindowSlot, 0); // An unoccupied eve-window slot.
 };

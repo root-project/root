@@ -254,6 +254,12 @@ void ROOT::Experimental::RPrintValueVisitor::VisitUInt64Field(const RField<std::
    fOutput << *fValue.Get<std::uint64_t>();
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitCardinalityField(const RField<RNTupleCardinality> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << static_cast<std::size_t>(*fValue.Get<RNTupleCardinality>());
+}
 
 void ROOT::Experimental::RPrintValueVisitor::VisitArrayField(const RArrayField &field)
 {
@@ -320,6 +326,10 @@ void ROOT::Experimental::RPrintValueVisitor::VisitRecordField(const RRecordField
    fOutput << "}";
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitCollectionClassField(const RCollectionClassField &field)
+{
+   PrintCollection(field);
+}
 
 void ROOT::Experimental::RPrintValueVisitor::VisitVectorField(const RVectorField &field)
 {
@@ -332,6 +342,10 @@ void ROOT::Experimental::RPrintValueVisitor::VisitVectorBoolField(const RField<s
    PrintCollection(field);
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitRVecField(const RRVecField &field)
+{
+   PrintCollection(field);
+}
 
 //---------------------------- RNTupleFormatter --------------------------------
 

@@ -162,6 +162,10 @@ class RFieldProvider : public RProvider {
       void VisitUInt32Field(const RField<std::uint32_t> &field) final { FillHistogram(field); }
       void VisitUInt64Field(const RField<std::uint64_t> &field) final { FillHistogram(field); }
       void VisitUInt8Field(const RField<std::uint8_t> &field) final { FillHistogram(field); }
+      void VisitCardinalityField(const RField<ROOT::Experimental::RNTupleCardinality> &field) final
+      {
+         FillHistogram(field);
+      }
    }; // class RDrawVisitor
 
 public:
@@ -174,8 +178,11 @@ public:
       auto ntplSource = holder->GetNtplSource();
       std::string name = holder->GetParentName();
 
-      const auto &desc = ntplSource->GetDescriptor();
-      auto field = desc.GetFieldDescriptor(holder->GetId()).CreateField(desc);
+      std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> field;
+      {
+         auto descriptorGuard = ntplSource->GetSharedDescriptorGuard();
+         field = descriptorGuard->GetFieldDescriptor(holder->GetId()).CreateField(descriptorGuard.GetRef());
+      }
       name.append(field->GetName());
 
       RDrawVisitor drawVisitor(ntplSource);

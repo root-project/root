@@ -37,8 +37,11 @@ void fit1() {
    //
    TString dir = gROOT->GetTutorialDir();
    dir.Append("/fit/");
-   TFile *file = TFile::Open("fillrandom.root");
-   if (!file) {
+   TFile *file = nullptr;
+   if (!gSystem->AccessPathName("fillrandom.root")) {
+      // file exists
+      file = TFile::Open("fillrandom.root");
+   } else {
       gROOT->ProcessLine(Form(".x %s../hist/fillrandom.C(0)",dir.Data()));
       file = TFile::Open("fillrandom.root");
       if (!file) return;

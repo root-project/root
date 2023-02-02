@@ -28,43 +28,43 @@ namespace RooBatchCompute{ struct RunContext; }
 
 class RooRealBinding : public RooAbsFunc {
 public:
-  RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset=0, Bool_t clipInvalid=kFALSE, const TNamed* rangeName=0);
-  RooRealBinding(const RooRealBinding& other, const RooArgSet* nset=0) ;
-  virtual ~RooRealBinding();
+  RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset=nullptr, bool clipInvalid=false, const TNamed* rangeName=nullptr);
+  RooRealBinding(const RooRealBinding& other, const RooArgSet* nset=nullptr) ;
+  ~RooRealBinding() override;
 
-  virtual Double_t operator()(const Double_t xvector[]) const;
+  double operator()(const double xvector[]) const override;
   virtual RooSpan<const double> getValues(std::vector<RooSpan<const double>> coordinates) const;
   RooSpan<const double> getValuesOfBoundFunction(RooBatchCompute::RunContext& evalData) const;
-  virtual Double_t getMinLimit(UInt_t dimension) const;
-  virtual Double_t getMaxLimit(UInt_t dimension) const;
+  double getMinLimit(UInt_t dimension) const override;
+  double getMaxLimit(UInt_t dimension) const override;
 
-  virtual void saveXVec() const ;
-  virtual void restoreXVec() const ;
+  void saveXVec() const override ;
+  void restoreXVec() const override ;
 
-  virtual const char* getName() const ; 
+  const char* getName() const override ;
 
-  virtual std::list<Double_t>* binBoundaries(Int_t) const ;
+  std::list<double>* binBoundaries(Int_t) const override ;
   /// Return a pointer to the observable that defines the `i`-th dimension of the function.
   RooAbsRealLValue* observable(unsigned int i) const { return i < _vars.size() ? _vars[i] : nullptr; }
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
 
 protected:
 
-  void loadValues(const Double_t xvector[]) const;
+  void loadValues(const double xvector[]) const;
   const RooAbsReal *_func;
-  std::vector<RooAbsRealLValue*> _vars; // Non-owned pointers to variables
+  std::vector<RooAbsRealLValue*> _vars; ///< Non-owned pointers to variables
   const RooArgSet *_nset;
-  mutable Bool_t _xvecValid;
-  Bool_t _clipInvalid ;
-  mutable Double_t* _xsave ;
-  const TNamed* _rangeName ; //!
-  
-  mutable std::vector<RooAbsReal*> _compList ; //!
-  mutable std::vector<Double_t>    _compSave ; //!
-  mutable Double_t _funcSave ; //!
-  mutable std::unique_ptr<RooBatchCompute::RunContext> _evalData; /// Memory for batch evaluations
-  
-  ClassDef(RooRealBinding,0) // Function binding to RooAbsReal object
+  mutable bool _xvecValid;
+  bool _clipInvalid ;
+  mutable double* _xsave ;
+  const TNamed* _rangeName ; ///<!
+
+  mutable std::vector<RooAbsReal*> _compList ; ///<!
+  mutable std::vector<double>    _compSave ; ///<!
+  mutable double _funcSave ; ///<!
+  mutable std::unique_ptr<RooBatchCompute::RunContext> _evalData; ///< Memory for batch evaluations
+
+  ClassDefOverride(RooRealBinding,0) // Function binding to RooAbsReal object
 };
 
 #endif

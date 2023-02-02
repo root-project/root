@@ -40,7 +40,7 @@ protected:
    GContext_t    fNormGC;       ///< text drawing graphics context
    FontStruct_t  fFontStruct;   ///< font used to draw position text
 
-   virtual void DoRedraw() = 0;
+   virtual void DoRedraw() override = 0;
 
    static const TGFont *fgDefaultFont;
    static TGGC         *fgDefaultGC;
@@ -83,21 +83,21 @@ public:
    virtual void SetBarColor(Pixel_t color);
    void         SetBarColor(const char *color="blue");
    virtual void Reset();                                 //*MENU*
-   virtual void SetForegroundColor(Pixel_t pixel);
+   void         SetForegroundColor(Pixel_t pixel) override;
 
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void         SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGProgressBar,0)  // Progress bar abstract base class
+   ClassDefOverride(TGProgressBar,0)  // Progress bar abstract base class
 };
 
 
 class TGHProgressBar : public TGProgressBar {
 
 protected:
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
 public:
-   TGHProgressBar(const TGWindow *p = 0,
+   TGHProgressBar(const TGWindow *p = nullptr,
                   UInt_t w = 4, UInt_t h = kProgressBarTextWidth,
                   Pixel_t back = GetWhitePixel(),
                   Pixel_t barcolor = GetDefaultSelectedBackground(),
@@ -107,25 +107,25 @@ public:
    TGHProgressBar(const TGWindow *p, EBarType type, UInt_t w);
    virtual ~TGHProgressBar() { }
 
-   virtual TGDimension GetDefaultSize() const
-                     { return TGDimension(fWidth, fBarWidth); }
+   TGDimension GetDefaultSize() const override
+               { return TGDimension(fWidth, fBarWidth); }
 
    void ShowPosition(Bool_t set = kTRUE, Bool_t percent = kTRUE,
                      const char *format = "%.2f");
 
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGHProgressBar,0)  // Horizontal progress bar widget
+   ClassDefOverride(TGHProgressBar,0)  // Horizontal progress bar widget
 };
 
 
 class TGVProgressBar : public TGProgressBar {
 
 protected:
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
 public:
-   TGVProgressBar(const TGWindow *p = 0,
+   TGVProgressBar(const TGWindow *p = nullptr,
                   UInt_t w = kProgressBarTextWidth, UInt_t h = 4,
                   Pixel_t back = GetWhitePixel(),
                   Pixel_t barcolor = GetDefaultSelectedBackground(),
@@ -135,13 +135,13 @@ public:
    TGVProgressBar(const TGWindow *p, EBarType type, UInt_t h);
    virtual ~TGVProgressBar() { }
 
-   virtual TGDimension GetDefaultSize() const
-                     { return TGDimension(fBarWidth, fHeight); }
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
-   void ShowPos(Bool_t) { }
-   void Percent(Bool_t) { }
+   TGDimension GetDefaultSize() const override
+                { return TGDimension(fBarWidth, fHeight); }
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void ShowPos(Bool_t) override { }
+   void Percent(Bool_t) override { }
 
-   ClassDef(TGVProgressBar,0)  // Vertical progress bar widget
+   ClassDefOverride(TGVProgressBar,0)  // Vertical progress bar widget
 };
 
 #endif

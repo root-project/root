@@ -30,9 +30,9 @@ public:
    {
    }
 
-   ~MnUserFcn() {}
+   ~MnUserFcn() override {}
 
-   virtual double operator()(const MnAlgebraicVector &) const;
+   double operator()(const MnAlgebraicVector &) const override;
 
 private:
    const MnUserTransformation &fTransform;

@@ -25,7 +25,7 @@ processes to write to a single file.
 
 Begin_Macro (source)
 {
-   Int_t n_collectors = 2
+   Int_t n_collectors = 2;
    TMPIFile *newfile = new TMPIFile("mpi_output.root", "RECREATE", n_collectors);
 
    if (newfile->IsCollector())

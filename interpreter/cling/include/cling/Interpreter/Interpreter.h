@@ -29,6 +29,9 @@ namespace llvm {
   class StringRef;
   class Type;
   template <typename T> class SmallVectorImpl;
+  namespace orc {
+    class DefinitionGenerator;
+  }
 }
 
 namespace clang {
@@ -141,6 +144,26 @@ namespace cling {
       kNumExeResults
     };
 
+    ///\brief Flags that provide additional information about the context in
+    /// which parsing occurs. These flags can be bitwise-OR'ed together.
+    enum InputFlags {
+      ///\brief Input comes from an external file
+      kInputFromFile = 0x01,
+      ///\brief If `kInputFromFile == 1`, whether `Interpreter::process()` is
+      /// called once per line
+      kIFFLineByLine = 0x02
+    };
+
+    ///\brief A RAII object that temporarily sets `Interpreter::m_InputFlags`
+    /// and restores it on destruction.
+    struct InputFlagsRAII {
+      Interpreter &m_Interp;
+      unsigned m_OldFlags;
+      InputFlagsRAII(Interpreter &I, unsigned F)
+        : m_Interp(I), m_OldFlags(I.m_InputFlags) { I.m_InputFlags = F; }
+      ~InputFlagsRAII() { m_Interp.m_InputFlags = m_OldFlags; }
+    };
+
   public:
     using ModuleFileExtensions =
         std::vector<std::shared_ptr<clang::ModuleFileExtension>>;
@@ -190,6 +213,10 @@ namespace cling {
     ///
     bool m_RawInputEnabled;
 
+    ///\brief Flags that provide additional information about the context in
+    /// which parsing occurs (see `InputFlags`).
+    unsigned m_InputFlags{};
+
     ///\brief Configuration bits that can be changed at runtime. This allows the
     /// user to enable/disable specific interpreter extensions.
     cling::runtime::RuntimeOptions m_RuntimeOptions;
@@ -228,7 +255,7 @@ namespace cling {
     ///
     CompilationResult DeclareInternal(const std::string& input,
                                       const CompilationOptions& CO,
-                                      Transaction** T = 0) const;
+                                      Transaction** T = nullptr) const;
 
     ///\brief Worker function, building block for interpreter's public
     /// interfaces.
@@ -245,8 +272,8 @@ namespace cling {
     ///
     CompilationResult EvaluateInternal(const std::string& input,
                                        CompilationOptions CO,
-                                       Value* V = 0,
-                                       Transaction** T = 0,
+                                       Value* V = nullptr,
+                                       Transaction** T = nullptr,
                                        size_t wrapPoint = 0);
 
     ///\brief Worker function to code complete after all the mechanism
@@ -285,11 +312,7 @@ namespace cling {
     ///\returns The result of the execution.
     ///
     ExecutionResult RunFunction(const clang::FunctionDecl* FD,
-                                Value* res = 0);
-
-    ///\brief Forwards to cling::IncrementalExecutor::addSymbol.
-    ///
-    bool addSymbol(const char* symbolName,  void* symbolAddress);
+                                Value* res = nullptr);
 
     ///\brief Compile the function definition and return its Decl.
     ///
@@ -321,7 +344,8 @@ namespace cling {
     /// constructors. parentInterp might be nullptr.
     ///
     Interpreter(int argc, const char* const* argv, const char* llvmdir,
-                const ModuleFileExtensions& moduleExtensions, bool noRuntime,
+                const ModuleFileExtensions& moduleExtensions,
+                void *extraLibHandle, bool noRuntime,
                 const Interpreter* parentInterp);
 
   public:
@@ -330,13 +354,14 @@ namespace cling {
     ///\param[in] argc - no. of args.
     ///\param[in] argv - arguments passed when driver is invoked.
     ///\param[in] llvmdir - ???
+    ///\param[in] extraLibHandle - resolve symbols also from this dylib
     ///\param[in] noRuntime - flag to control the presence of runtime universe
     ///
-    Interpreter(int argc, const char* const* argv, const char* llvmdir = 0,
+    Interpreter(int argc, const char* const* argv, const char* llvmdir = nullptr,
                 const ModuleFileExtensions& moduleExtensions = {},
-                bool noRuntime = false)
-        : Interpreter(argc, argv, llvmdir, moduleExtensions, noRuntime,
-                      nullptr) {}
+                void *extraLibHandle = nullptr, bool noRuntime = false)
+        : Interpreter(argc, argv, llvmdir, moduleExtensions, extraLibHandle,
+                      noRuntime, nullptr) {}
 
     ///\brief Constructor for child Interpreter.
     /// If the parent Interpreter has a replacement DiagnosticConsumer, it is
@@ -345,12 +370,13 @@ namespace cling {
     ///\param[in] argc - no. of args.
     ///\param[in] argv - arguments passed when driver is invoked.
     ///\param[in] llvmdir - ???
+    ///\param[in] extraLibHandle - resolve symbols also from this dylib
     ///\param[in] noRuntime - flag to control the presence of runtime universe
     ///
     Interpreter(const Interpreter& parentInterpreter, int argc,
-                const char* const* argv, const char* llvmdir = 0,
+                const char* const* argv, const char* llvmdir = nullptr,
                 const ModuleFileExtensions& moduleExtensions = {},
-                bool noRuntime = true);
+                void *extraLibHandle = nullptr, bool noRuntime = true);
 
     virtual ~Interpreter();
 
@@ -495,8 +521,8 @@ namespace cling {
     ///
     ///\returns Whether the operation was fully successful.
     ///
-    CompilationResult process(const std::string& input, Value* V = 0,
-                              Transaction** T = 0,
+    CompilationResult process(const std::string& input, Value* V = nullptr,
+                              Transaction** T = nullptr,
                               bool disableValuePrinting = false);
 
     ///\brief Parses input line, which doesn't contain statements. No code
@@ -511,7 +537,7 @@ namespace cling {
     ///\returns Whether the operation was fully successful.
     ///
     CompilationResult parse(const std::string& input,
-                            Transaction** T = 0) const;
+                            Transaction** T = nullptr) const;
     /// Loads a C++ Module with a given name by synthesizing an Import decl.
     /// This routine checks if there is a modulemap in the current directory
     /// and loads it.
@@ -568,7 +594,7 @@ namespace cling {
     ///
     ///\returns Whether the operation was fully successful.
     ///
-    CompilationResult declare(const std::string& input, Transaction** T = 0);
+    CompilationResult declare(const std::string& input, Transaction** T = nullptr);
 
     ///\brief Compiles input line, which contains only expressions.
     ///
@@ -597,7 +623,7 @@ namespace cling {
     ///
     ///\returns Whether the operation was fully successful.
     ///
-    CompilationResult echo(const std::string& input, Value* V = 0);
+    CompilationResult echo(const std::string& input, Value* V = nullptr);
 
     ///\brief Compiles input line and runs.
     ///
@@ -647,7 +673,7 @@ namespace cling {
     ///\returns result of the compilation.
     ///
     CompilationResult loadHeader(const std::string& filename,
-                                 Transaction** T = 0);
+                                 Transaction** T = nullptr);
 
     ///\brief Loads header file or shared library.
     ///
@@ -659,7 +685,7 @@ namespace cling {
     ///
     CompilationResult loadFile(const std::string& filename,
                                bool allowSharedLib = true,
-                               Transaction** T = 0);
+                               Transaction** T = nullptr);
 
     ///\brief Unloads (forgets) a transaction from AST and JITed symbols.
     ///
@@ -690,6 +716,9 @@ namespace cling {
     bool isRawInputEnabled() const { return m_RawInputEnabled; }
     void enableRawInput(bool raw = true) { m_RawInputEnabled = raw; }
 
+    unsigned getInputFlags() const { return m_InputFlags; }
+    void setInputFlags(unsigned value) { m_InputFlags = value; }
+
     int getDefaultOptLevel() const { return m_OptLevel; }
     void setDefaultOptLevel(int optLevel) { m_OptLevel = optLevel; }
 
@@ -712,8 +741,9 @@ namespace cling {
     ///\brief Create suitable default compilation options.
     CompilationOptions makeDefaultCompilationOpts() const;
 
-    //FIXME: This must be in InterpreterCallbacks.
-    void installLazyFunctionCreator(void* (*fp)(const std::string&));
+    /// Register a DefinitionGenerator to dynamically provide symbols for
+    /// generated code that are not already available within the process.
+    void addGenerator(std::unique_ptr<llvm::orc::DefinitionGenerator> G);
 
     //FIXME: Lets the IncrementalParser run static inits on transaction
     // completed. Find a better way.
@@ -780,7 +810,7 @@ namespace cling {
     ///\param[in]  D       - the global's Decl to find
     ///\param[out] fromJIT - whether the symbol was JITted.
     void* getAddressOfGlobal(const clang::GlobalDecl& D,
-                             bool* fromJIT = 0) const;
+                             bool* fromJIT = nullptr) const;
 
     ///\brief Gets the address of an existing global and whether it was JITted.
     ///
@@ -790,7 +820,7 @@ namespace cling {
     ///\param[in]  SymName - the name of the global to search
     ///\param[out] fromJIT - whether the symbol was JITted.
     ///
-    void* getAddressOfGlobal(llvm::StringRef SymName, bool* fromJIT = 0) const;
+    void* getAddressOfGlobal(llvm::StringRef SymName, bool* fromJIT = nullptr) const;
 
     ///\brief Get a given macro definition by name.
     ///
@@ -830,7 +860,7 @@ namespace cling {
                         clang::ASTContext& Ctx,
                         llvm::raw_ostream& out,
                         bool enableMacros = false,
-                        llvm::raw_ostream* logs = 0,
+                        llvm::raw_ostream* logs = nullptr,
                         IgnoreFilesFunc_t ignoreFiles =
                           [](const clang::PresumedLoc&) { return false;}) const;
 

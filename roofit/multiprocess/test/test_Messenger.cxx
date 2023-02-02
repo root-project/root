@@ -28,7 +28,7 @@ TEST(TestMPMessenger, Connections)
       // on master, we have to handle SIGCHLD
       memset(&sa, '\0', sizeof(sa));
       sa.sa_handler = handle_sigchld;
-      if (sigaction(SIGCHLD, &sa, NULL) < 0) {
+      if (sigaction(SIGCHLD, &sa, nullptr) < 0) {
          std::perror("sigaction failed");
          std::exit(1);
       }
@@ -49,7 +49,7 @@ TEST(TestMPMessenger, Connections)
       // clean up signal management modifications
       sigprocmask(SIG_SETMASK, &messenger.ppoll_sigmask, nullptr);
       sa.sa_handler = SIG_DFL;
-      if (sigaction(SIGCHLD, &sa, NULL) < 0) {
+      if (sigaction(SIGCHLD, &sa, nullptr) < 0) {
          std::perror("sigaction failed");
          std::exit(1);
       }
@@ -69,7 +69,7 @@ TEST(TestMPMessenger, ConnectionsManualExit)
       // on master, we have to handle SIGCHLD
       memset(&sa, '\0', sizeof(sa));
       sa.sa_handler = handle_sigchld;
-      if (sigaction(SIGCHLD, &sa, NULL) < 0) {
+      if (sigaction(SIGCHLD, &sa, nullptr) < 0) {
          std::perror("sigaction failed");
          std::exit(1);
       }
@@ -98,7 +98,7 @@ TEST(TestMPMessenger, ConnectionsManualExit)
       // clean up signal management modifications
       sigprocmask(SIG_SETMASK, &messenger.ppoll_sigmask, nullptr);
       sa.sa_handler = SIG_DFL;
-      if (sigaction(SIGCHLD, &sa, NULL) < 0) {
+      if (sigaction(SIGCHLD, &sa, nullptr) < 0) {
          std::perror("sigaction failed");
          std::exit(1);
       }

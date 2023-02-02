@@ -36,29 +36,29 @@ public:
    TLeafO(TBranch *parent, const char *name, const char *type);
    virtual ~TLeafO();
 
-   virtual void    Export(TClonesArray *list, Int_t n);
-   virtual void    FillBasket(TBuffer &b);
-   virtual DeserializeType GetDeserializeType() const { return DeserializeType::kZeroCopy; }
-   virtual Int_t   GetMaximum() const {return fMaximum;}
-   virtual Int_t   GetMinimum() const {return fMinimum;}
-   const char     *GetTypeName() const;
-   Double_t        GetValue(Int_t i=0) const;
-   virtual void   *GetValuePointer() const {return fValue;}
-   virtual Bool_t  IncludeRange(TLeaf *);
-   virtual void    Import(TClonesArray *list, Int_t n);
-   virtual void    PrintValue(Int_t i=0) const;
-   virtual void    ReadBasket(TBuffer &b);
-   virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
-   virtual void    ReadValue(std::istream& s, Char_t delim = ' ');
-   virtual void    SetAddress(void *add=0);
+   void            Export(TClonesArray *list, Int_t n) override;
+   void            FillBasket(TBuffer &b) override;
+   DeserializeType GetDeserializeType() const override { return DeserializeType::kZeroCopy; }
+   Int_t           GetMaximum() const override {return fMaximum;}
+   Int_t           GetMinimum() const override {return fMinimum;}
+   const char     *GetTypeName() const override;
+   Double_t        GetValue(Int_t i=0) const override;
+   void           *GetValuePointer() const override { return fValue; }
+   Bool_t          IncludeRange(TLeaf *) override;
+   void            Import(TClonesArray *list, Int_t n) override;
+   void            PrintValue(Int_t i=0) const override;
+   void            ReadBasket(TBuffer &b) override;
+   void            ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n) override;
+   void            ReadValue(std::istream& s, Char_t delim = ' ') override;
+   void            SetAddress(void *add=nullptr) override;
    virtual void    SetMaximum(Bool_t max) { fMaximum = max; }
    virtual void    SetMinimum(Bool_t min) { fMinimum = min; }
 
    // Deserialize N events from an input buffer.  Since chars are stored unchanged, there
    // is nothing to do here but return true if we don't have variable-length arrays.
-   virtual bool    ReadBasketFast(TBuffer&, Long64_t) { return true; }
+   bool            ReadBasketFast(TBuffer&, Long64_t) override { return true; }
 
-   ClassDef(TLeafO,1);  //A TLeaf for an 8 bit Integer data type.
+   ClassDefOverride(TLeafO,1);  //A TLeaf for an 8 bit Integer data type.
 };
 
 inline Double_t TLeafO::GetValue(Int_t i) const { return fValue[i]; }

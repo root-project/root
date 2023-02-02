@@ -80,10 +80,8 @@ private:
    RNTupleDescriptorBuilder fBuilder;
    DescriptorId_t fNextId = 1;  ///< 0 is reserved for the friend zero field
 
-   void AddVirtualField(std::size_t originIdx,
-                        const RFieldDescriptor &originField,
-                        DescriptorId_t virtualParent,
-                        const std::string &virtualName);
+   void AddVirtualField(const RNTupleDescriptor &originDesc, std::size_t originIdx, const RFieldDescriptor &originField,
+                        DescriptorId_t virtualParent, const std::string &virtualName);
 
 protected:
    RNTupleDescriptor AttachImpl() final;
@@ -101,7 +99,8 @@ public:
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
    void ReleasePage(RPage &page) final;
 
-   void LoadSealedPage(DescriptorId_t columnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage) final;
+   void
+   LoadSealedPage(DescriptorId_t physicalColumnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
 

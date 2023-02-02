@@ -52,7 +52,7 @@ RooEfficiency::RooEfficiency(const char *name, const char *title, const RooAbsRe
   _cat("cat","Signal/Background category",this,(RooAbsCategory&)cat),
   _effFunc("effFunc","Efficiency modeling function",this,(RooAbsReal&)effFunc),
   _sigCatName(sigCatName)
-{  
+{
 }
 
 
@@ -60,7 +60,7 @@ RooEfficiency::RooEfficiency(const char *name, const char *title, const RooAbsRe
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooEfficiency::RooEfficiency(const RooEfficiency& other, const char* name) : 
+RooEfficiency::RooEfficiency(const RooEfficiency& other, const char* name) :
   RooAbsPdf(other, name),
   _cat("cat",this,other._cat),
   _effFunc("effFunc",this,other._effFunc),
@@ -73,7 +73,7 @@ RooEfficiency::RooEfficiency(const RooEfficiency& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooEfficiency::~RooEfficiency() 
+RooEfficiency::~RooEfficiency()
 {
 }
 
@@ -83,9 +83,9 @@ RooEfficiency::~RooEfficiency()
 /// Calculate the raw value of this p.d.f which is the effFunc
 /// value if cat==1 and it is (1-effFunc) if cat==0
 
-Double_t RooEfficiency::evaluate() const
+double RooEfficiency::evaluate() const
 {
-  Double_t effFuncVal = _effFunc ;
+  double effFuncVal = _effFunc ;
 
   // Truncate efficiency function in range 0.0-1.0
   if (_effFunc>1) {
@@ -107,7 +107,7 @@ Double_t RooEfficiency::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooEfficiency::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
+Int_t RooEfficiency::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
   if (matchArgs(allVars,analVars,_cat)) return 1 ;
   return 0 ;
@@ -117,7 +117,7 @@ Int_t RooEfficiency::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooEfficiency::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
+double RooEfficiency::analyticalIntegral(Int_t code, const char* /*rangeName*/) const
 {
   R__ASSERT(code==1) ;
   return 1.0 ;

@@ -1,6 +1,5 @@
 sap.ui.define([
    'sap/ui/core/mvc/Controller',
-   'sap/ui/core/Component',
    'sap/ui/core/UIComponent',
    'sap/ui/model/json/JSONModel',
    'sap/ui/model/Sorter',
@@ -14,7 +13,7 @@ sap.ui.define([
    "sap/ui/layout/HorizontalLayout",
    "sap/ui/table/Column",
    "sap/m/MessageBox"
-], function (Controller,Component, UIComponent, JSONModel, Sorter,
+], function (Controller, UIComponent, JSONModel, Sorter,
    mColumn, mColumnListItem, mInput, mLabel, mButton,
    FormattedText, VerticalLayout, HorizontalLayout, tableColumn, MessageBox) {
 
@@ -23,7 +22,7 @@ sap.ui.define([
    return Controller.extend("rootui5.eve7.controller.EveTable", {
 
       onInit: function () {
-         var viewData = this.getView().getViewData();
+         let viewData = this.getView().getViewData();
          if (viewData) {
             this.setupManagerAndViewType(viewData.eveViewerId, viewData.mgr);
          }
@@ -33,10 +32,8 @@ sap.ui.define([
       },
       onTableObjectMatched: function (oEvent) {
          let args = oEvent.getParameter("arguments");
-         this.setupManagerAndViewType(JSROOT.$eve7tmp.eveViewerId, JSROOT.$eve7tmp.mgr );
-         delete JSROOT.$eve7tmp;
-
-         this.checkViewReady();
+         this.setupManagerAndViewType(EVE.$eve7tmp.eveViewerId, EVE.$eve7tmp.mgr);
+         delete EVE.$eve7tmp;
       },
       setupManagerAndViewType: function(eveViewerId, mgr)
       {
@@ -46,18 +43,21 @@ sap.ui.define([
          this.mgr = mgr;
          this.eveViewerId = eveViewerId;
 
-         var rh = this.mgr.handle.getUserArgs("TableRowHeight");
+         this.table = this.getView().byId("table");
+
+
+         let rh = this.mgr.handle.getUserArgs("TableRowHeight");
          if (rh && (rh > 0))
             this.getView().byId("table").setRowHeight(rh);
 
          this.bindTableColumns = true;
-         var element = this.mgr.GetElement(this.eveViewerId);
+         let element = this.mgr.GetElement(this.eveViewerId);
          // loop over scene and add dependency
-         for (var k = 0; k < element.childs.length; ++k) {
-            var scene = element.childs[k];
-            this.mgr.RegisterSceneReceiver(scene.fSceneId, this);
-            this.onSceneCreate();
-         }
+         for (let k = 0; k < element.childs.length; ++k) {
+            let scene = element.childs[k];
+            this.mgr.RegisterSceneReceiver(scene.fSceneId, this)
+         };
+         this.onSceneCreate();
 
          // attach to changes in 'Collection' scene
          let sceneList = this.mgr.childs[0].childs[2].childs;
@@ -66,21 +66,21 @@ sap.ui.define([
                this.mgr.RegisterSceneReceiver(sceneList[i].fElementId, this);
          }
 
-         let table = this.getView().byId("table");
+         let table = this.table;
          let pthis = this;
          table.attachRowSelectionChange(function (d) {
             if (pthis.mgr.busyProcessingChanges)
                return;
 
             let idx = d.getParameter("rowIndex");
-            var oData = table.getContextByIndex(idx);
+            let oData = table.getContextByIndex(idx);
             if (oData) {
                let ui = oData.getPath().substring(6);
                // console.log("idx =", idx, "path idx = ", ui);
 
                let itemList = pthis.collection.childs[0];
                let secIdcs = [ui];
-               let fcall = "ProcessSelectionStr(" + pthis.mgr.global_selection_id + `, false, true`;
+               let fcall = "ProcessSelectionStr(" + pthis.mgr.global_selection_id + ", " + pthis.multiSelect + ", true";
                fcall += ", \" " + secIdcs.join(", ") + " \"";
                fcall += ")";
                pthis.mgr.SendMIR(fcall, itemList.fElementId, itemList._typename);
@@ -89,21 +89,33 @@ sap.ui.define([
                // console.log("attachRowSelectionChange no path ", oData);
             }
          });
-         this.table = table;
+
+
+         if (table._enableLegacyMultiSelection) {
+            table._enableLegacyMultiSelection();
+         }
+         else {
+            console.error("Ctrl modifier not supported !")
+         }
+
+         // listen to Ctrl key events
+         this.multiSelect = false;
+         window.addEventListener('keydown', function(event) { if (event.ctrlKey) pthis.multiSelect = true; });
+         window.addEventListener('keyup',   function(event) { if (event.key == 'Control') pthis.multiSelect = false; });
       },
 
       sortTable: function (e) {
-         // var colId = col.getId();
-         var col = e.mParameters.column;
-         var bDescending = (e.mParameters.sortOrder == sap.ui.core.SortOrder.Descending);
-         var sv = bDescending;
+         // let colId = col.getId();
+         let col = e.mParameters.column;
+         let bDescending = (e.mParameters.sortOrder == sap.ui.core.SortOrder.Descending);
+         let sv = bDescending;
 
-         var oSorter0 = new Sorter({
+         let oSorter0 = new Sorter({
             path: "Filtered",
             descending: true
          });
 
-         var oSorter1 = new Sorter({
+         let oSorter1 = new Sorter({
             path: col.mProperties.sortProperty,
             descending: sv
          });
@@ -129,8 +141,8 @@ sap.ui.define([
                if (value1 > value2) return 1;
             };
          }
-         var oTable = this.getView().byId("table");
-         var oItemsBinding = oTable.getBinding("rows");
+         let oTable = this.getView().byId("table");
+         let oItemsBinding = oTable.getBinding("rows");
          // Do one-level sort on Filtered entry
          if (col.mProperties.sortProperty === "Filtered")
             oItemsBinding.sort([oSorter1]);
@@ -156,7 +168,7 @@ sap.ui.define([
             oTable.sortMap = new Map();
 
          for (let r = 0; r < nr; ++r) {
-            var oData = oTable.getContextByIndex(r);
+            let oData = oTable.getContextByIndex(r);
             let unsortedIdx = oData.sPath.substring(6);
             oTable.sortMap[unsortedIdx] = r;
          }
@@ -164,9 +176,9 @@ sap.ui.define([
 
       locateEveTable: function () {
          this.eveTable = 0;
-         var element = this.mgr.GetElement(this.eveViewerId);
-         var sceneInfo = element.childs[0];
-         var scene = this.mgr.GetElement(sceneInfo.fSceneId);
+         let element = this.mgr.GetElement(this.eveViewerId);
+         let sceneInfo = element.childs[0];
+         let scene = this.mgr.GetElement(sceneInfo.fSceneId);
          // console.log(">>>table scene", scene);
          if (scene.childs[0]._typename == "ROOT::Experimental::REveTableViewInfo") {
             // presume table view manger is first child of table scene
@@ -175,8 +187,8 @@ sap.ui.define([
 
          this.collection = this.mgr.GetElement(this.viewInfo.fDisplayedCollection);
          // loop over products
-         for (var i = 1; i < scene.childs.length; ++i) {
-            var product = scene.childs[i];
+         for (let i = 1; i < scene.childs.length; ++i) {
+            let product = scene.childs[i];
             if (product.childs && product.childs.length && product.childs[0].fCollectionId == this.viewInfo.fDisplayedCollection) {
                // console.log("table found  ",product.childs[0] );
                this.eveTable = product.childs[0];
@@ -193,50 +205,39 @@ sap.ui.define([
          if (!(this.eveTable && this.eveTable.body))
             return;
 
-         var oTable = this.getView().byId("table");
+         let oTable = this.getView().byId("table");
 
          // row definition
-         var rowData = this.eveTable.body;
-
-         // parse to float -- AMT in future data should be streamed as floats
-         for (var r = 0; r < rowData.length; r++) {
-            var xr = rowData[r];
-            for (var xri = 0; xri < xr.length; xri++) {
-               var nv = parseFloat(xr[i]);
-               if (!isNaN(nv)) {
-                  rowData[r][ri] = nv;
-               }
-            }
-         }
+         let rowData = this.eveTable.body;
 
          let itemList = this.collection.childs[0].items;
          for (var i = 0; i < itemList.length; i++) {
-            rowData[i].Name = this.collection.fName + " " + i;
+            rowData[i].Idx = i;
             rowData[i].Filtered = itemList[i].fFiltered === true ? 0 : 1;
          }
 
          if (this.bindTableColumns) {
             // column definition
-            var columnData = [];
+            let columnData = [];
 
-            columnData.push({ columnName: "Name" });
+            columnData.push({ columnName: "Idx" });
             columnData.push({ columnName: "Filtered" });
 
-            var eveColumns = this.eveTable.childs;
-            for (var i = 0; i < eveColumns.length; i++) {
-               var cname = eveColumns[i].fName;
+            let eveColumns = this.eveTable.childs;
+            for (let i = 0; i < eveColumns.length; i++) {
+               let cname = eveColumns[i].fName;
                columnData.push({ columnName: cname });
             }
 
             // table model
-            var oModel = new JSONModel();
+            let oModel = new JSONModel();
             oModel.setData({
                rows: rowData,
                columns: columnData
             });
             oTable.setModel(oModel);
 
-            var pthis = this;
+            let pthis = this;
             oTable.bindAggregation("columns", "/columns", function (sId, oContext) {
                return new tableColumn(sId, {
                   label: "{columnName}",
@@ -255,7 +256,7 @@ sap.ui.define([
             });
 
             // bind the Table items to the data collection
-            var oBinding = oTable.bindRows({
+            let oBinding = oTable.bindRows({
                path: "/rows",
                sorter: [
                   new Sorter({
@@ -275,30 +276,30 @@ sap.ui.define([
             this.bindTableColumns = false;
          }
          else {
-            var model = oTable.getModel();
-            var data = model.getData();
+            let model = oTable.getModel();
+            let data = model.getData();
             model.setData({ "rows": rowData, "columns": data.columns });
          }
          this.updateSortMap();
       },
 
       buildTableHeader: function () {
-         var oModel = new JSONModel();
-         var collection = this.mgr.GetElement(this.eveTable.fCollectionId);
-         var clist = this.mgr.GetElement(collection.fMotherId);
+         let oModel = new JSONModel();
+         let collection = this.mgr.GetElement(this.eveTable.fCollectionId);
+         let clist = this.mgr.GetElement(collection.fMotherId);
 
-         var mData = {
+         let mData = {
             "itemx": [
             ]
          };
 
-         for (var i = 0; i < clist.childs.length; i++) {
+         for (let i = 0; i < clist.childs.length; i++) {
             mData.itemx.push({ "text": clist.childs[i].fName, "key": clist.childs[i].fName, "collectionEveId": clist.childs[i].fElementId });
          }
          oModel.setData(mData);
          this.getView().setModel(oModel, "collections");
 
-         var combo = this.getView().byId("ccombo");
+         let combo = this.getView().byId("ccombo");
          combo.setSelectedKey(collection.fName);
          combo.data("controller", this);
       },
@@ -317,11 +318,12 @@ sap.ui.define([
          this.locateEveTable();
          this.buildTableHeader();
          this.buildTableBody(true);
+         this.UpdateSelection(false);
       },
 
       UpdateMgr: function (mgr) {
-         var elem = mgr.map[this.eveViewerId];
-         var scene = mgr.map[elem.fMotherId];
+         let elem = mgr.map[this.eveViewerId];
+         let scene = mgr.map[elem.fMotherId];
          this.mgr = mgr;
       },
 
@@ -334,7 +336,7 @@ sap.ui.define([
       },
 
       toggleTableEdit: function () {
-         var header = this.getView().byId("header");
+         let header = this.getView().byId("header");
          if (!this.editor) {
             this.editor = new VerticalLayout("tableEdit", { "width": "100%" });
 
@@ -342,8 +344,8 @@ sap.ui.define([
 
             // expression row
             {
-               var collection = this.mgr.GetElement(this.eveTable.fCollectionId);
-               var exprIn = new mInput("inputExp", {
+               let collection = this.mgr.GetElement(this.eveTable.fCollectionId);
+               let exprIn = new mInput("inputExp", {
                   placeholder: "Start expression with \"i.\" to access object",
                   showValueHelp: true,
                   showTableSuggestionValueHelp: false,
@@ -354,18 +356,18 @@ sap.ui.define([
                      MessageBox.alert("Write any valid expression.\n Using \"i.\" convetion to access an object in collection. Below is an example:\ni.GetPdgCode() + 2");
                   },
                   suggestionItemSelected: function (oEvent) {
-                     var oItem = oEvent.getParameter("selectedRow");
+                     let oItem = oEvent.getParameter("selectedRow");
                      // fill in title if empty
-                     var it = sap.ui.getCore().byId("titleEx");
+                     let it = sap.ui.getCore().byId("titleEx");
                      if ((it.getValue() && it.getValue().length) == false) {
-                        var v = oItem.getCells()[0].getText().substring(2);
-                        var t = v.split("(");
+                        let v = oItem.getCells()[0].getText().substring(2);
+                        let t = v.split("(");
                         it.setValue(t[0]);
                      }
                      //fill in precision if empty
-                     var ip = sap.ui.getCore().byId("precisionEx");
+                     let ip = sap.ui.getCore().byId("precisionEx");
                      if ((ip.getValue() && ip.getValue().length) == false) {
-                        var p = oItem.getCells()[1].getText();
+                        let p = oItem.getCells()[1].getText();
                         if (p.startsWith("Int") || p.startsWith("int"))
                            ip.setValue("0");
                         else
@@ -405,10 +407,7 @@ sap.ui.define([
                   ]
                }).addStyleClass("inputRight");
 
-
-               exprIn.setModel(oModel);
-
-               var oTableItemTemplate = new mColumnListItem({
+               let oTableItemTemplate = new mColumnListItem({
                   type: "Active",
                   vAlign: "Middle",
                   cells: [
@@ -423,8 +422,8 @@ sap.ui.define([
                      })
                   ]
                });
-               var oModel = new JSONModel();
-               var oSuggestionData = this.eveTable.fPublicFunctions;
+               let oModel = new JSONModel();
+               let oSuggestionData = this.eveTable.fPublicFunctions;
                oModel.setData(oSuggestionData);
                exprIn.setModel(oModel);
                exprIn.bindAggregation("suggestionRows", "/", oTableItemTemplate);
@@ -434,12 +433,12 @@ sap.ui.define([
 
             // title & prec
             {
-               var hl = new HorizontalLayout({ "width": "100%" });
-               var titleIn = new mInput("titleEx", { placeholder: "Title", tooltip: "column title" });
+               let hl = new HorizontalLayout({ "width": "100%" });
+               let titleIn = new mInput("titleEx", { placeholder: "Title", tooltip: "column title" });
                titleIn.setWidth("100%");
                hl.addContent(titleIn);
 
-               var precIn = new mInput("precisionEx", { placeholder: "Precision", type: sap.m.InputType.Number, constraints: { minimum: "0", maximum: "9" } });
+               let precIn = new mInput("precisionEx", { placeholder: "Precision", type: sap.m.InputType.Number, constraints: { minimum: "0", maximum: "9" } });
                precIn.setWidth("100%");
                hl.addContent(precIn);
 
@@ -448,8 +447,8 @@ sap.ui.define([
 
             //  button actions
             {
-               var ll = new HorizontalLayout();
-               var addBut = new mButton("AddCol", { text: "Add", press: this.addColumn });
+               let ll = new HorizontalLayout();
+               let addBut = new mButton("AddCol", { text: "Add", press: this.addColumn });
                addBut.data("controller", this);
                ll.addContent(addBut);
                this.editor.visible = true;
@@ -459,7 +458,7 @@ sap.ui.define([
          }
 
          if (this.editor.visible) {
-            var x = header.getContent().pop();
+            let x = header.getContent().pop();
             header.removeContent(x);
             this.editor.visible = false;
          }
@@ -470,15 +469,15 @@ sap.ui.define([
       },
 
       addColumn: function (event) {
-         var pthis = this.data("controller");
-         var ws = pthis.editor.getContent();
+         let pthis = this.data("controller");
+         let ws = pthis.editor.getContent();
 
-         var expr = ws[0].getProperty("value");
+         let expr = ws[0].getProperty("value");
          if (!expr) {
             alert("need a new column expression");
          }
-         var hl = ws[1].getContent();
-         var title = hl[0].getProperty("value");
+         let hl = ws[1].getContent();
+         let title = hl[0].getProperty("value");
          if (!title) {
             title = expr;
          }
@@ -493,11 +492,11 @@ sap.ui.define([
 
       collectionChanged: function (oEvent) {
          // console.log("collectionChanged ", oEvent.getSource());
-         var model = oEvent.oSource.getSelectedItem().getBindingContext("collections");
-         var path = model.getPath();
-         var entry = model.getProperty(path);
-         var coll = entry.collectionEveId;
-         var mng = this.viewInfo;
+         let model = oEvent.oSource.getSelectedItem().getBindingContext("collections");
+         let path = model.getPath();
+         let entry = model.getProperty(path);
+         let coll = entry.collectionEveId;
+         let mng = this.viewInfo;
 
          this.mgr.SendMIR("SetDisplayedCollection(" + coll + ")", mng.fElementId, mng._typename);
       },
@@ -514,35 +513,47 @@ sap.ui.define([
             this.locateEveTable();
             this.buildTableHeader();
             this.buildTableBody();
+            this.UpdateSelection(false);
             this.refreshTable = false;
          }
       },
 
       elementRemoved: function (elId) {
-         var el = this.mgr.GetElement(elId);
+         let el = this.mgr.GetElement(elId);
       },
 
-      SelectElement: function (selection_obj, element_id, sec_idcs) {
-         let table = this.getView().byId("table");
-         if (selection_obj.fElementId == this.mgr.global_selection_id) {
+      SelectElement: function (selection_obj, element_id, sec_idcs)
+      {
+         if (this.mgr.global_selection_id == selection_obj.fElementId
+            && element_id == this.collection.childs[0].fElementId)
+            this.UpdateSelection(true);
+      },
+
+      UnselectElement: function (selection_obj, element_id)
+      {
+         if (this.mgr.global_selection_id == selection_obj.fElementId
+            && element_id == this.collection.childs[0].fElementId)
+            this.UpdateSelection(true);
+      },
+
+      UpdateSelection: function(curList)
+      {
+         this.table.clearSelection();
+
+         // select rows
+         let sel = this.mgr.GetElement(this.mgr.global_selection_id);
+         let sel_list = curList ? sel.sel_list : sel.prev_sel_list;
+         for (let i = 0; i < sel_list.length; ++i) {
+            let element_id = sel_list[i].primary;
             if (element_id == this.collection.childs[0].fElementId) {
-               table.clearSelection();
+               let sec_idcs = sel_list[i].sec_idcs;
                for (let i = 0; i < sec_idcs.length; i++) {
                   let si = sec_idcs[i];
                   let ui = si;
-
                   if (this.table.sortMap) ui = this.table.sortMap[si];
-                  table.addSelectionInterval(ui, ui);
+                  this.table.addSelectionInterval(ui, ui);
                }
-               this.buildTableBody();
             }
-         }
-      },
-
-
-      UnselectElement: function (selection_obj, element_id) {
-         if (selection_obj.fElementId == this.mgr.global_selection_id) {
-            this.table.clearSelection();
          }
       }
    });

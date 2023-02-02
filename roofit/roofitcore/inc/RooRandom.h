@@ -28,20 +28,20 @@ public:
 
   static TRandom *randomGenerator();
   static void setRandomGenerator(TRandom* gen);
-  static Double_t uniform(TRandom *generator= randomGenerator());
-  static void uniform(UInt_t dimension, Double_t vector[], TRandom *generator= randomGenerator());
+  static double uniform(TRandom *generator= randomGenerator());
+  static void uniform(UInt_t dimension, double vector[], TRandom *generator= randomGenerator());
   static UInt_t integer(UInt_t max, TRandom *generator= randomGenerator());
-  static Double_t gaussian(TRandom *generator= randomGenerator());
+  static double gaussian(TRandom *generator= randomGenerator());
 
   static RooQuasiRandomGenerator *quasiGenerator();
-  static Bool_t quasi(UInt_t dimension, Double_t vector[],
-		      RooQuasiRandomGenerator *generator= quasiGenerator());
+  static bool quasi(UInt_t dimension, double vector[],
+            RooQuasiRandomGenerator *generator= quasiGenerator());
 
 private:
   RooRandom();
 
-  static TRandom* _theGenerator; // random number generator
-  static RooQuasiRandomGenerator* _theQuasiGenerator; // quasi random number sequence generator
+  static TRandom* _theGenerator; ///< random number generator
+  static RooQuasiRandomGenerator* _theQuasiGenerator; ///< quasi random number sequence generator
 
   // free resources when library is unloaded
   struct Guard { ~Guard(); };

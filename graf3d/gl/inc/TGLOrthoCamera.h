@@ -70,7 +70,7 @@ public:
    using   TGLCamera::Truck;
    virtual Bool_t Truck(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
    virtual Bool_t Rotate(Int_t xDelta, Int_t yDelta, Bool_t mod1, Bool_t mod2);
-   virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = 0) const;
+   virtual void   Apply(const TGLBoundingBox & sceneBox, const TGLRect * pickRect = nullptr) const;
 
    // External scripting control
    //   void Configure(Double_t left, Double_t right, Double_t top, Double_t bottom);

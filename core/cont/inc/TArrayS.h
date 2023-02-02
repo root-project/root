@@ -42,17 +42,17 @@ public:
    void           Copy(TArrayS &array) const {array.Set(fN,fArray);}
    const Short_t *GetArray() const { return fArray; }
    Short_t       *GetArray() { return fArray; }
-   Double_t       GetAt(Int_t i) const { return At(i); }
+   Double_t       GetAt(Int_t i) const override { return At(i); }
    Stat_t         GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
    void           Reset()             {memset(fArray, 0,fN*sizeof(Short_t));}
    void           Reset(Short_t val)  {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
-   void           Set(Int_t n);
+   void           Set(Int_t n) override;
    void           Set(Int_t n, const Short_t *array);
-   void           SetAt(Double_t v, Int_t i) { AddAt((Short_t)v, i); }
+   void           SetAt(Double_t v, Int_t i) override { AddAt((Short_t)v, i); }
    Short_t       &operator[](Int_t i);
    Short_t        operator[](Int_t i) const;
 
-   ClassDef(TArrayS,1)  //Array of shorts
+   ClassDefOverride(TArrayS,1)  //Array of shorts
 };
 
 #if defined R__TEMPLATE_OVERLOAD_BUG

@@ -24,10 +24,9 @@
 #include "TMath.h"
 #include "TVector3.h"
 #include "TRotation.h"
-
+#include "Math/Vector4D.h"
 
 class TLorentzRotation;
-
 
 class TLorentzVector : public TObject {
 
@@ -58,7 +57,7 @@ public:
    TLorentzVector(const TLorentzVector & lorentzvector);
    // Copy constructor.
 
-   virtual ~TLorentzVector(){};
+   ~TLorentzVector() override{};
    // Destructor
 
    // inline operator TVector3 () const;
@@ -257,9 +256,13 @@ public:
    TLorentzVector & Transform(const TLorentzRotation &);
    // Transformation with HepLorenzRotation.
 
-   virtual void        Print(Option_t *option="") const;
+   operator ROOT::Math::PxPyPzEVector() const {
+      return {Px(), Py(), Pz(), E()};
+   }
 
-   ClassDef(TLorentzVector,4) // A four vector with (-,-,-,+) metric
+   void        Print(Option_t *option="") const override;
+
+   ClassDefOverride(TLorentzVector,4) // A four vector with (-,-,-,+) metric
 };
 
 

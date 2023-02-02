@@ -47,6 +47,7 @@ All page sink classes need to support the common options.
 */
 // clang-format on
 class RNTupleWriteOptions {
+protected:
    int fCompression{RCompressionSetting::EDefaults::kUseAnalysis};
    ENTupleContainerFormat fContainerFormat{ENTupleContainerFormat::kTFile};
    /// Approximation of the target compressed cluster size
@@ -67,7 +68,7 @@ public:
 
    int GetCompression() const { return fCompression; }
    void SetCompression(int val) { fCompression = val; }
-   void SetCompression(RCompressionSetting::EAlgorithm algorithm, int compressionLevel) {
+   void SetCompression(RCompressionSetting::EAlgorithm::EValues algorithm, int compressionLevel) {
       fCompression = CompressionSettings(algorithm, compressionLevel);
    }
 
@@ -95,10 +96,14 @@ public:
 */
 // clang-format on
 class RNTupleWriteOptionsDaos : public RNTupleWriteOptions {
-  std::string fObjectClass{"SX"};
+   std::string fObjectClass{"SX"};
+   /// The maximum cage size is set to the equivalent of 16 uncompressed pages - 1MiB by default. Empirically, such a
+   /// cage size yields acceptable results in throughput and page granularity for most use cases. A `fMaxCageSize` of 0
+   /// disables the caging mechanism.
+   uint32_t fMaxCageSize = 16 * RNTupleWriteOptions::fApproxUnzippedPageSize;
 
 public:
-   virtual ~RNTupleWriteOptionsDaos() = default;
+   ~RNTupleWriteOptionsDaos() override = default;
    std::unique_ptr<RNTupleWriteOptions> Clone() const override
    { return std::make_unique<RNTupleWriteOptionsDaos>(*this); }
 
@@ -107,6 +112,12 @@ public:
    /// `OC_xxx` constant defined in `daos_obj_class.h` may be used here without
    /// the OC_ prefix.
    void SetObjectClass(const std::string &val) { fObjectClass = val; }
+
+   uint32_t GetMaxCageSize() const { return fMaxCageSize; }
+   /// Set the upper bound for page concatenation into cages, in bytes. It is assumed
+   /// that cage size will be no smaller than the approximate uncompressed page size.
+   /// To disable page concatenation, set this value to 0.
+   void SetMaxCageSize(uint32_t cageSz) { fMaxCageSize = cageSz; }
 };
 
 // clang-format off

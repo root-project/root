@@ -672,6 +672,19 @@ Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
 
 }
 
+Bool_t TEntryList::Enter(Long64_t localentry, const char *treename, const char *filename)
+{
+   SetTree(treename, filename);
+   if (fCurrent) {
+      if (fCurrent->Enter(localentry)) {
+         if (fLists)
+            fN++;
+         return 1;
+      }
+   }
+   return 0;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 /// \brief Enter all entries in a range in the TEntryList.
 /// \param[in] start starting entry to enter.
@@ -739,7 +752,7 @@ Bool_t TEntryList::Remove(Long64_t entry, TTree *tree)
 /// Return the number of the entry \#index of this TEntryList in the TTree or TChain
 /// See also Next().
 
-Long64_t TEntryList::GetEntry(Int_t index)
+Long64_t TEntryList::GetEntry(Long64_t index)
 {
 
    if ((index>=fN) || (index<0)) {
@@ -815,7 +828,7 @@ Long64_t TEntryList::GetEntry(Int_t index)
 /// Return the index of "index"-th non-zero entry in the TTree or TChain
 /// and the # of the corresponding tree in the chain
 
-Long64_t TEntryList::GetEntryAndTree(Int_t index, Int_t &treenum)
+Long64_t TEntryList::GetEntryAndTree(Long64_t index, Int_t &treenum)
 {
 //If shift is true, then when the requested entry is found in an entry list,
 //for which there is no corresponding tree in the chain, this list is not

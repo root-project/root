@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_pyroot
 ## \notebook -nodraw
-## This tutorial shows how to use the @pythonization decorator to add extra
+## This tutorial shows how to use the `@pythonization` decorator to add extra
 ## behaviour to C++ user classes that are used from Python via PyROOT.
 ##
 ## \macro_code

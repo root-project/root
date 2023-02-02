@@ -120,7 +120,7 @@ struct Func {
 };
 struct Func3 : public Func {
    Func3(FreeFunc3 f) : fFunc(f) {};
-   double operator() (double x, double a, double b) const {
+   double operator() (double x, double a, double b) const override {
       return fFunc(x,a,b);
    }
    FreeFunc3 fFunc;
@@ -128,7 +128,7 @@ struct Func3 : public Func {
 
 struct Func4 : public Func {
    Func4(FreeFunc4 f) : fFunc(f) {};
-   double operator() (double x, double a, double b) const {
+   double operator() (double x, double a, double b) const override {
       return fFunc(x,a,b,0.);
    }
    FreeFunc4 fFunc;
@@ -162,11 +162,11 @@ public:
 
 
 
-   unsigned int NPar() const { return NPAR; }
-   const double * Parameters() const { return fParams; }
-   ROOT::Math::IGenFunction * Clone() const { return new StatFunction(*fPdf,*fCdf,*fQuant); }
+   unsigned int NPar() const override { return NPAR; }
+   const double * Parameters() const override { return fParams; }
+   ROOT::Math::IGenFunction * Clone() const override { return new StatFunction(*fPdf,*fCdf,*fQuant); }
 
-   void SetParameters(const double * p) { std::copy(p,p+NPAR,fParams); }
+   void SetParameters(const double * p) override { std::copy(p,p+NPAR,fParams); }
 
    void SetParameters(double p0, double p1) { *fParams = p0; *(fParams+1) = p1; }
 
@@ -208,7 +208,7 @@ public:
 
 private:
 
-   double DoEvalPar(double x, const double * ) const {
+   double DoEvalPar(double x, const double * ) const override {
       // use esplicity cached param values
       return (*fPdf)(x, *fParams, *(fParams+1));
    }
@@ -436,7 +436,7 @@ int testGammaFunction(int n = 100) {
    dist.SetScaleInv(10000); // few tests fail here
    // vary shape of gamma parameter
    for (int i =1; i <= 5; ++i) {
-      double k = std::pow(2.,double(i-1));
+      double k = std::pow(2.,i-1);
       double theta = 2./double(i);
       dist.SetParameters(k,theta);
       if (k <=1 )

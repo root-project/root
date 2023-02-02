@@ -190,7 +190,7 @@ void TProofOutputFile::Init(const char *path, const char *dsname)
       }
       // Save the raw directory
       fRawDir = dirPath;
-      // Make sure the the path exists
+      // Make sure the path exists
       if (AssertDir(dirPath) != 0)
          Error("Init", "problems asserting path '%s'", dirPath.Data());
       // Take into account local server settings

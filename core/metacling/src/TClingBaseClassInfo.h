@@ -51,8 +51,8 @@ private:
    const clang::Decl            *fDecl; // Current class whose bases we are iterating through, we do *not* own.
    clang::CXXRecordDecl::base_class_const_iterator fIter; // Current iterator.
    TClingClassInfo              *fBaseInfo; // Base class our iterator is currently pointing at, we own.
-   std::vector<std::pair<std::pair<const clang::Decl*, clang::CXXRecordDecl::base_class_const_iterator>, long> > fIterStack; // Iterator stack.
-   long                          fOffset; // Offset of the current base, fDecl, in the most-derived class.
+   std::vector<std::pair<std::pair<const clang::Decl*, clang::CXXRecordDecl::base_class_const_iterator>, ptrdiff_t> > fIterStack; // Iterator stack.
+   ptrdiff_t                     fOffset; // Offset of the current base, fDecl, in the most-derived class.
    bool                          fClassInfoOwnership; // We created the fClassInfo and we need to delete it in the constructor.
 
 public:

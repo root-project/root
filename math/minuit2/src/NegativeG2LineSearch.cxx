@@ -38,17 +38,28 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
    if (!negG2)
       return st;
 
+   print.Info("Doing a NegativeG2LineSearch since one of the G2 component is negative");
+
    unsigned int n = st.Parameters().Vec().size();
    FunctionGradient dgrad = st.Gradient();
    MinimumParameters pa = st.Parameters();
    bool iterate = false;
    unsigned int iter = 0;
+   // in case of analytical gradients we don't have step sizes
+   bool hasGStep = !dgrad.IsAnalytical();
+   print.Debug("Gradient ", dgrad.Vec(), "G2",dgrad.G2());
+   MnAlgebraicSymMatrix mat(n);
+   // gradient present in the state must have G2 otherwise something is wrong
+   //assert(dgrad.HasG2());
+   if (!dgrad.HasG2()) {
+      print.Error("Input gradient to NG2LS must have G2 already computed");
+      return st;
+   }
+   bool computeHessian = false;
+
    do {
       iterate = false;
       for (unsigned int i = 0; i < n; i++) {
-
-         print.Debug("negative G2 - iter", iter, "param", i, pa.Vec()(i), "grad2", dgrad.G2()(i), "grad",
-                     dgrad.Vec()(i), "grad step", dgrad.Gstep()(i), "step size", pa.Dirin()(i));
 
          if (dgrad.G2()(i) <= 0) {
 
@@ -62,17 +73,17 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
             MnLineSearch lsearch;
 
             if (dgrad.Vec()(i) < 0)
-               step(i) = dgrad.Gstep()(i); //*dgrad.Vec()(i);
+               step(i) = (hasGStep) ? dgrad.Gstep()(i) : 1;
             else
-               step(i) = -dgrad.Gstep()(i); // *dgrad.Vec()(i);
+               step(i) = (hasGStep) ? -dgrad.Gstep()(i) : -1;
 
             double gdel = step(i) * dgrad.Vec()(i);
 
             // if using sec derivative information
             // double g2del = step(i)*step(i) * dgrad.G2()(i);
 
-            print.Debug("step(i)", step(i), "gdel", gdel);
-            //            std::cout << " g2del " << g2del << std::endl;
+            print.Debug("Iter", iter, "param", i, pa.Vec()(i), "grad2", dgrad.G2()(i), "grad",
+                        dgrad.Vec()(i), "grad step", step(i), " gdel ", gdel);
 
             MnParabolaPoint pp = lsearch(fcn, pa, step, gdel, prec);
 
@@ -82,9 +93,24 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
             pa = MinimumParameters(pa.Vec() + step, pp.Y());
 
             dgrad = gc(pa, dgrad);
+            // re-compute also G2 if needed
+            if (!dgrad.HasG2()) {
+               computeHessian = true;
+               print.Debug("Compute  Hessian at the new point", pa.Vec());
+               bool ret = gc.Hessian(pa,mat);
+               if (!ret) {
+                  print.Error("Cannot compute Hessian");
+                  assert(false);
+                  return st;
+               }
+               MnAlgebraicVector g2(n);
+               for (unsigned int j = 0; j < n; j++)
+                  g2(j) = mat(j,j);
+               dgrad = FunctionGradient(dgrad.Grad(), g2);
+            }
 
-            print.Debug("Line search - iter", iter, "param", i, pa.Vec()(i), "step", step(i), "new grad2",
-                        dgrad.G2()(i), "new grad", dgrad.Vec()(i), "grad step", dgrad.Gstep()(i));
+            print.Debug("New result after Line search - iter", iter, "param", i, pa.Vec()(i), "step", step(i), "new grad2",
+                        dgrad.G2()(i), "new grad", dgrad.Vec()(i));
 
             iterate = true;
             break;
@@ -92,9 +118,14 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
       }
    } while (iter++ < 2 * n && iterate);
 
-   MnAlgebraicSymMatrix mat(n);
-   for (unsigned int i = 0; i < n; i++)
-      mat(i, i) = (std::fabs(dgrad.G2()(i)) > prec.Eps2() ? 1. / dgrad.G2()(i) : 1.);
+   // for the case where we did not compute Hessian
+   if (!computeHessian) {
+      print.Info("Approximate covariance using only G2");
+      for (unsigned int i = 0; i < n; i++) {
+         mat(i, i) = (std::fabs(dgrad.G2()(i)) > prec.Eps2() ? 1. / dgrad.G2()(i) :
+           (dgrad.G2()(i) >= 0) ? 1./prec.Eps2() : -1./prec.Eps2());
+      }
+   }
 
    MinimumError err(mat, 1.);
    double edm = VariableMetricEDMEstimator().Estimate(dgrad, err);
@@ -108,7 +139,7 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
 
 bool NegativeG2LineSearch::HasNegativeG2(const FunctionGradient &grad, const MnMachinePrecision & /*prec */) const
 {
-   // check if function gradient has any component which is neegative
+   // check if function gradient has any component which is negative
 
    for (unsigned int i = 0; i < grad.Vec().size(); i++)
 

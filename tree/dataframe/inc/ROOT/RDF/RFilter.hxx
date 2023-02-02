@@ -24,6 +24,7 @@
 #include <cassert>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility> // std::index_sequence
 #include <vector>
 
@@ -51,41 +52,47 @@ namespace Detail {
 namespace RDF {
 using namespace ROOT::TypeTraits;
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
+class RJittedFilter;
 
-template <typename FilterF, typename PrevDataFrame>
+template <typename FilterF, typename PrevNodeRaw>
 class R__CLING_PTRCHECK(off) RFilter final : public RFilterBase {
    using ColumnTypes_t = typename CallableTraits<FilterF>::arg_types;
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
+   // If the PrevNode is a RJittedFilter, treat it as a more generic RFilterBase: when dealing with systematic
+   // variations we'll have a RJittedFilter node for the nominal case but other "universes" will use concrete filters,
+   // so we normalize the "previous node type" to the base type RFilterBase.
+   using PrevNode_t = std::conditional_t<std::is_same<PrevNodeRaw, RJittedFilter>::value, RFilterBase, PrevNodeRaw>;
 
    FilterF fFilter;
    /// Column readers per slot and per input column
-   std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
-   const std::shared_ptr<PrevDataFrame> fPrevDataPtr;
-   PrevDataFrame &fPrevData;
+   std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValues;
+   const std::shared_ptr<PrevNode_t> fPrevNodePtr;
+   PrevNode_t &fPrevNode;
 
 public:
-   RFilter(FilterF f, const ROOT::RDF::ColumnNames_t &columns, std::shared_ptr<PrevDataFrame> pd,
-           const RDFInternal::RColumnRegister &colRegister, std::string_view name = "")
+   RFilter(FilterF f, const ROOT::RDF::ColumnNames_t &columns, std::shared_ptr<PrevNode_t> pd,
+           const RDFInternal::RColumnRegister &colRegister, std::string_view name = "",
+           const std::string &variationName = "nominal")
       : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots(), colRegister,
-                    columns),
-        fFilter(std::move(f)), fValues(pd->GetLoopManagerUnchecked()->GetNSlots()), fPrevDataPtr(std::move(pd)),
-        fPrevData(*fPrevDataPtr)
+                    columns, pd->GetVariations(), variationName),
+        fFilter(std::move(f)), fValues(pd->GetLoopManagerUnchecked()->GetNSlots()), fPrevNodePtr(std::move(pd)),
+        fPrevNode(*fPrevNodePtr)
    {
+      fLoopManager->Register(this);
    }
 
    RFilter(const RFilter &) = delete;
    RFilter &operator=(const RFilter &) = delete;
    ~RFilter() {
-      // must Deregister objects from the RLoopManager here, before the fPrevDataFrame data member is destroyed:
-      // otherwise if fPrevDataFrame is the RLoopManager, it will be destroyed before the calls to Deregister happen.
-      fColRegister.Clear(); // triggers RDefine deregistration
+      // must Deregister objects from the RLoopManager here, before the fPrevNode data member is destroyed:
+      // otherwise if fPrevNode is the RLoopManager, it will be destroyed before the calls to Deregister happen.
       fLoopManager->Deregister(this);
    }
 
    bool CheckFilters(unsigned int slot, Long64_t entry) final
    {
       if (entry != fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()]) {
-         if (!fPrevData.CheckFilters(slot, entry)) {
+         if (!fPrevNode.CheckFilters(slot, entry)) {
             // a filter upstream returned false, cache the result
             fLastResult[slot * RDFInternal::CacheLineStep<int>()] = false;
          } else {
@@ -103,17 +110,16 @@ public:
    template <typename... ColTypes, std::size_t... S>
    bool CheckFilterHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
-      // silence "unused parameter" warnings in gcc
+      return fFilter(fValues[slot][S]->template Get<ColTypes>(entry)...);
+      // avoid unused parameter warnings (gcc 12.1)
       (void)slot;
       (void)entry;
-      return fFilter(fValues[slot][S]->template Get<ColTypes>(entry)...);
    }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
-                                           fLoopManager->GetDataSource()};
-      fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
+      RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), *fLoopManager};
+      fValues[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
       fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
    }
 
@@ -122,7 +128,7 @@ public:
 
    void PartialReport(ROOT::RDF::RCutFlowReport &rep) const final
    {
-      fPrevData.PartialReport(rep);
+      fPrevNode.PartialReport(rep);
       FillReport(rep);
    }
 
@@ -130,7 +136,7 @@ public:
    {
       ++fNStopsReceived;
       if (fNStopsReceived == fNChildren)
-         fPrevData.StopProcessing();
+         fPrevNode.StopProcessing();
    }
 
    void IncrChildrenCount() final
@@ -138,42 +144,38 @@ public:
       ++fNChildren;
       // propagate "children activation" upstream. named filters do the propagation via `TriggerChildrenCount`.
       if (fNChildren == 1 && fName.empty())
-         fPrevData.IncrChildrenCount();
+         fPrevNode.IncrChildrenCount();
    }
 
    void TriggerChildrenCount() final
    {
       assert(!fName.empty()); // this method is to only be called on named filters
-      fPrevData.IncrChildrenCount();
+      fPrevNode.IncrChildrenCount();
    }
 
-   void AddFilterName(std::vector<std::string> &filters)
+   void AddFilterName(std::vector<std::string> &filters) final
    {
-      fPrevData.AddFilterName(filters);
+      fPrevNode.AddFilterName(filters);
       auto name = (HasName() ? fName : "Unnamed Filter");
       filters.push_back(name);
    }
 
    /// Clean-up operations to be performed at the end of a task.
-   void FinalizeSlot(unsigned int slot) final
-   {
-      for (auto &v : fValues[slot])
-         v.reset();
-   }
+   void FinalizeSlot(unsigned int slot) final { fValues[slot].fill(nullptr); }
 
    std::shared_ptr<RDFGraphDrawing::GraphNode>
-   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap)
+   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) final
    {
       // Recursively call for the previous node.
-      auto prevNode = fPrevData.GetGraph(visitedMap);
-      auto prevColumns = prevNode->GetDefinedColumns();
+      auto prevNode = fPrevNode.GetGraph(visitedMap);
+      const auto &prevColumns = prevNode->GetDefinedColumns();
 
       auto thisNode = RDFGraphDrawing::CreateFilterNode(this, visitedMap);
 
       /* If the returned node is not new, there is no need to perform any other operation.
        * This is a likely scenario when building the entire graph in which branches share
        * some nodes. */
-      if (!thisNode->GetIsNew()) {
+      if (!thisNode->IsNew()) {
          return thisNode;
       }
 
@@ -184,6 +186,33 @@ public:
 
       upmostNode->SetPrevNode(prevNode);
       return thisNode;
+   }
+
+   /// Return a clone of this Filter that works with values in the variationName "universe".
+   std::shared_ptr<RNodeBase> GetVariedFilter(const std::string &variationName) final
+   {
+      // nobody should ask for a varied filter for the nominal variation: they can just
+      // use the nominal filter!
+      assert(variationName != "nominal");
+      // nobody should ask for a varied filter for a variation on which this filter does not depend:
+      // they can just use the nominal filter.
+      assert(RDFInternal::IsStrInVec(variationName, fVariations));
+
+      auto it = fVariedFilters.find(variationName);
+      if (it != fVariedFilters.end())
+         return it->second;
+
+      auto prevNode = fPrevNodePtr;
+      if (static_cast<RNodeBase *>(fPrevNodePtr.get()) != static_cast<RNodeBase *>(fLoopManager) &&
+          RDFInternal::IsStrInVec(variationName, prevNode->GetVariations()))
+         prevNode = std::static_pointer_cast<PrevNode_t>(prevNode->GetVariedFilter(variationName));
+
+      // the varied filters get a copy of the callable object.
+      // TODO document this
+      auto variedFilter = std::unique_ptr<RFilterBase>(
+         new RFilter(fFilter, fColumnNames, std::move(prevNode), fColRegister, fName, variationName));
+      auto e = fVariedFilters.insert({variationName, std::move(variedFilter)});
+      return e.first->second;
    }
 };
 

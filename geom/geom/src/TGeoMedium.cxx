@@ -124,11 +124,11 @@ TGeoMedium::~TGeoMedium()
 ////////////////////////////////////////////////////////////////////////////////
 /// Provide a pointer name containing uid.
 
-char *TGeoMedium::GetPointerName() const
+const char *TGeoMedium::GetPointerName() const
 {
    static TString name;
-   name = TString::Format("pMed%d", GetUniqueID());
-   return (char*)name.Data();
+   name.Form("pMed%d", GetUniqueID());
+   return name.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -149,6 +149,6 @@ void TGeoMedium::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << "   par[6]  = " << fParams[6] << "; // epsil" << std::endl;
    out << "   par[7]  = " << fParams[7] << "; // stmin" << std::endl;
 
-   out << "   " << GetPointerName() << " = new TGeoMedium(\"" << GetName() << "\", numed," << fMaterial->GetPointerName() << ", par);" << std::endl;
+   out << "   auto " << GetPointerName() << " = new TGeoMedium(\"" << GetName() << "\", numed, " << fMaterial->GetPointerName() << ", par);" << std::endl;
    SetBit(TGeoMedium::kMedSavePrimitive);
 }

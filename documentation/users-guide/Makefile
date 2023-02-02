@@ -1,12 +1,14 @@
 OUTDIR=output
 
-MDFILES=ROOTUsersGuide.md Preface.md Introduction.md GettingStarted.md \
+MDFILES1=Preface.md Introduction.md GettingStarted.md \
 	Histograms.md Graphs.md FittingHistograms.md ALittleC++.md Cling.md \
 	ObjectOwnership.md Graphics.md FoldersTasks.md InputOutput.md \
 	Trees.md MathLibraries.md LinearAlgebra.md AddingaClass.md \
 	CollectionClasses.md PhysicsVectors.md Geometry.md PythonRuby.md \
 	TutorialsandTests.md ExampleAnalysis.md Networking.md Threads.md \
 	PROOF.md WritingGUI.md SignalSlot.md HTMLDoc.md InstallandBuild.md
+
+MDFILES=ROOTUsersGuide.md $(MDFILES1)
 
 HTMLFILES=$(addprefix $(OUTDIR)/,$(MDFILES:.md=.html))
 PDFFILES=$(addprefix $(OUTDIR)/,$(MDFILES:.md=.pdf))
@@ -15,6 +17,7 @@ LATEXA4PREFIX=ROOTUsersGuideA4
 LATEXLETTERPREFIX=ROOTUsersGuideLetter
 
 OPTIONS=-s -f markdown+smart --toc --toc-depth=2 --top-level-division=chapter --number-sections
+OPTIONS2=-s -f markdown+smart --toc --toc-depth=1 --top-level-division=chapter --number-sections
 
 OPTIONSHTML=-H css/github.css --mathjax
 OPTIONSEPUB=--mathml
@@ -27,7 +30,7 @@ OPTIONSPDF=--variable=geometry:a4paper -V geometry:margin=1.5cm
 all: pdfa4 pdfletter html epub pdf_chapters html_chapters
 
 $(LATEXA4PREFIX).tex: $(MDFILES)
-	pandoc $(OPTIONS) $(OPTIONSLATEXA4) -t latex $(MDFILES) \
+	pandoc $(OPTIONS) $(OPTIONSLATEXA4) -t latex ROOTUsersGuide.md warning.md $(MDFILES1) \
 	-o $(LATEXA4PREFIX).tex
 
 # on OSX pdflatex returns 1 even in case of success !?
@@ -42,7 +45,7 @@ pdfa4: $(LATEXA4PREFIX).tex $(LATEXA4PREFIX).ind
 	pdflatex -interaction=batchmode -output-directory=$(OUTDIR) $(LATEXA4PREFIX).tex || true
 
 $(LATEXLETTERPREFIX).tex: $(MDFILES)
-	pandoc $(OPTIONS) $(OPTIONSLATEXLETTER) -t latex $(MDFILES) \
+	pandoc $(OPTIONS) $(OPTIONSLATEXLETTER) -t latex ROOTUsersGuide.md warning.md $(MDFILES1) \
 	-o $(LATEXLETTERPREFIX).tex
 
 $(LATEXLETTERPREFIX).toc: $(LATEXLETTERPREFIX).tex
@@ -59,26 +62,27 @@ html: $(MDFILES)
 	@mkdir -p $(OUTDIR)
 	@mkdir -p $(OUTDIR)/pictures
 	@cp -r pictures/* $(OUTDIR)/pictures
-	pandoc --quiet $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILES) \
+	pandoc --quiet $(OPTIONS2) $(OPTIONSHTML) -t html ROOTUsersGuide.md warning.md $(MDFILES1) \
 	-o $(OUTDIR)/ROOTUsersGuide.html
 
 epub: $(MDFILES) metadata.xml title.txt
 	@mkdir -p $(OUTDIR)
 	pandoc $(OPTIONS) $(OPTIONSEPUB) --epub-metadata=metadata.xml \
-	title.txt $(MDFILES) -o $(OUTDIR)/ROOTUsersGuide.epub
+	title.txt ROOTUsersGuide.md warning.md $(MDFILES1) -o $(OUTDIR)/ROOTUsersGuide.epub
 
 # --number-offset unfortunately not supported in PDF output :(
 $(OUTDIR)/%.pdf: %.md
 	@mkdir -p $(OUTDIR)
 	@echo Generating PDF chapter: $@
-	@pandoc $(OPTIONS) $(OPTIONSPDF) $^ -o $@
+	@pandoc $(OPTIONS) $(OPTIONSPDF) warning.md $^ -o $@
 
 pdf_chapters: $(PDFFILES)
 
 $(OUTDIR)/%.html: %.md
 	@mkdir -p $(OUTDIR)
 	@echo Generating HTML chapter: $@
-	@echo % Chapter: $^ | sed -e "s/.md//" | sed -e "s/and/ and /" > $@.txt
+	@echo % Chapter: $^ | sed -e "s/.md//" | sed -e "s/and/ and /" | sed -e "s/[A-Z]/ &/g" >> $@.txt
+	@cat warning.md >> $@.txt
 	@( OFFSET=$$( for F in $(MDFILES) ; do echo $$F ; done | \
 	   grep -n "^$^$$" | head -n1 | cut -d: -f1 ) && \
 	   OFFSET=`expr $$OFFSET - 1` && \

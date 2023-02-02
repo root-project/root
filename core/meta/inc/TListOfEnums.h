@@ -65,11 +65,14 @@ protected:
    TEnum  *Get(DeclId_t id, const char *name);
 
 public:
-   TListOfEnums(TClass *cl = 0);
+   TListOfEnums(TClass *cl = nullptr);
    ~TListOfEnums() override;
 
    TEnum     *Find(DeclId_t id) const;
    virtual TEnum *GetObject(const char*) const;
+
+   TObject  *FindObject(const char*) const override;
+   using THashList::FindObject;
 
    void Clear(Option_t *option) override;
    void Delete(Option_t *option="") override;

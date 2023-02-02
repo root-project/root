@@ -163,7 +163,7 @@ namespace textinput {
                     fContext->GetDisplays().end(),
                     [](Display *D) { return D->NotifyWindowChange(); });
     } else if (Cmd.isCtrlD()) {
-      fContext->SetLine(".q"), Redraw();
+      fContext->SetLine(".q\n"), Redraw();
       fLastReadResult = kRREOF;
       return;
     } else {
@@ -336,6 +336,16 @@ namespace textinput {
     // Resize signal was emitted, tell the displays.
     std::for_each(fContext->GetDisplays().begin(), fContext->GetDisplays().end(),
                   [](Display *D) { return D->NotifyWindowChange(); });
+  }
+
+  void TextInput::SetHistoryMaxDepth(size_t maxDepth) const
+  {
+     fContext->GetHistory()->SetMaxDepth(maxDepth);
+  }
+
+  void TextInput::SetHistoryPruneLength(size_t pruneLength) const
+  {
+     fContext->GetHistory()->SetPruneLength(pruneLength);
   }
 
   void

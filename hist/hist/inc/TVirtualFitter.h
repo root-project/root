@@ -57,10 +57,10 @@ protected:
 
 public:
    TVirtualFitter();
-   virtual ~TVirtualFitter();
+   ~TVirtualFitter() override;
    virtual Double_t  Chisquare(Int_t npar, Double_t *params) const  = 0;
 
-   virtual void      Clear(Option_t *option="") = 0;
+   void      Clear(Option_t *option="") override = 0;
    virtual Int_t     ExecuteCommand(const char *command, Double_t *args, Int_t nargs) = 0;
    virtual void      FixParameter(Int_t ipar) = 0;
    virtual void      GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl=0.95);
@@ -117,7 +117,7 @@ public:
    static void      SetErrorDef(Double_t errdef=1);
    static void      SetPrecision(Double_t prec=1e-6);
 
-   ClassDef(TVirtualFitter,0)  //Abstract interface for fitting
+   ClassDefOverride(TVirtualFitter,0)  //Abstract interface for fitting
 };
 
 #endif

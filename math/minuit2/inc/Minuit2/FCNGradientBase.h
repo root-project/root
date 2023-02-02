@@ -38,7 +38,7 @@ enum class GradientParameterSpace {
 class FCNGradientBase : public FCNBase {
 
 public:
-   virtual ~FCNGradientBase() {}
+   ~FCNGradientBase() override {}
 
    virtual std::vector<double> Gradient(const std::vector<double> &) const = 0;
    virtual std::vector<double> GradientWithPrevResult(const std::vector<double> &parameters, double * /*previous_grad*/,
@@ -52,6 +52,17 @@ public:
    virtual GradientParameterSpace gradParameterSpace() const {
       return GradientParameterSpace::External;
    };
+
+   /// return second derivatives (diagonal of the Hessian matrix)
+   virtual std::vector<double> G2(const std::vector<double> &) const { return std::vector<double>();}
+
+   /// return Hessian
+   virtual std::vector<double> Hessian(const std::vector<double> &) const { return std::vector<double>();}
+
+   virtual bool HasHessian() const { return false; }
+
+   virtual bool HasG2() const { return false; }
+
 
 };
 

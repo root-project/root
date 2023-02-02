@@ -132,7 +132,7 @@ public:
    };
    TSpectrum2Fit(void); //default constructor
    TSpectrum2Fit(Int_t numberPeaks);
-   virtual ~TSpectrum2Fit();
+   ~TSpectrum2Fit() override;
    //auxiliary functions for 2. parameter fit functions
 protected:
    Double_t            Deramp2(Double_t x,Double_t y,Double_t x0,Double_t y0,Double_t sigmax,Double_t sigmay,Double_t ro,Double_t txy,Double_t sxy,Double_t bx,Double_t by);
@@ -187,7 +187,7 @@ public:
    void                SetPeakParameters(Double_t sigmaX, Bool_t fixSigmaX, Double_t sigmaY, Bool_t fixSigmaY, Double_t ro, Bool_t fixRo, const Double_t *positionInitX, const Bool_t *fixPositionX, const Double_t *positionInitY, const Bool_t *fixPositionY, const Double_t *positionInitX1, const Bool_t *fixPositionX1, const Double_t *positionInitY1, const Bool_t *fixPositionY1, const Double_t *ampInit, const Bool_t *fixAmp, const Double_t *ampInitX1, const Bool_t *fixAmpX1, const Double_t *ampInitY1, const Bool_t *fixAmpY1);
    void                SetTailParameters(Double_t tInitXY, Bool_t fixTxy, Double_t tInitX, Bool_t fixTx, Double_t tInitY, Bool_t fixTy, Double_t bInitX, Bool_t fixBx, Double_t bInitY, Bool_t fixBy, Double_t sInitXY, Bool_t fixSxy, Double_t sInitX, Bool_t fixSx, Double_t sInitY, Bool_t fixSy);
 
-   ClassDef(TSpectrum2Fit,1)  //Spectrum2 Fitter using algorithm without matrix inversion and conjugate gradient method for symmetrical matrices (Stiefel-Hestens method)
+   ClassDefOverride(TSpectrum2Fit,1)  //Spectrum2 Fitter using algorithm without matrix inversion and conjugate gradient method for symmetrical matrices (Stiefel-Hestens method)
 };
 
 #endif

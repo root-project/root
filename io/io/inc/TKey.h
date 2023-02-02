@@ -51,12 +51,11 @@ protected:
    UShort_t    fPidOffset;   ///<!Offset to be added to the pid index in this key/buffer.  This is actually saved in the high bits of fSeekPdir
    TDirectory *fMotherDir;   ///<!pointer to mother directory
 
-   virtual Int_t    Read(const char *name) { return TObject::Read(name); }
-   virtual void     Create(Int_t nbytes, TFile* f = 0);
+           Int_t    Read(const char *name) override { return TObject::Read(name); }
+   virtual void     Create(Int_t nbytes, TFile* f = nullptr);
            void     Build(TDirectory* motherDir, const char* classname, Long64_t filepos);
            void     Reset(); // Currently only for the use of TBasket.
-   virtual Int_t    WriteFileKeepBuffer(TFile *f = 0);
-
+   virtual Int_t    WriteFileKeepBuffer(TFile *f = nullptr);
 
  public:
    TKey();
@@ -66,16 +65,16 @@ protected:
    TKey(const TString &name, const TString &title, const TClass *cl, Int_t nbytes, TDirectory* motherDir);
    TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir);
    TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir);
-   TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir = 0);
+   TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir = nullptr);
    virtual ~TKey();
 
-   virtual void        Browse(TBrowser *b);
-   virtual void        Delete(Option_t *option="");
+           void        Browse(TBrowser *b) override;
+           void        Delete(Option_t *option="") override;
    virtual void        DeleteBuffer();
-   virtual void        FillBuffer(char *&buffer);
+           void        FillBuffer(char *&buffer) override;
    virtual const char *GetClassName() const {return fClassName.Data();}
-   virtual const char *GetIconName() const;
-   virtual const char *GetTitle() const;
+           const char *GetIconName() const override;
+           const char *GetTitle() const override;
    virtual char       *GetBuffer() const {return fBuffer+fKeylen;}
            TBuffer    *GetBufferRef() const {return fBufferRef;}
            Short_t     GetCycle() const;
@@ -90,11 +89,11 @@ protected:
    virtual Long64_t    GetSeekKey() const  {return fSeekKey;}
    virtual Long64_t    GetSeekPdir() const {return fSeekPdir;}
    virtual void        IncrementPidOffset(UShort_t offset);
-           Bool_t      IsFolder() const;
+           Bool_t      IsFolder() const override;
    virtual void        Keep();
    virtual void        ls(Bool_t current) const;
-   virtual void        ls(Option_t *option="") const;
-   virtual void        Print(Option_t *option="") const;
+           void        ls(Option_t *option="") const override;
+           void        Print(Option_t *option="") const override;
    virtual Int_t       Read(TObject *obj);
    virtual TObject    *ReadObj();
    virtual TObject    *ReadObjWithBuffer(char *bufferRead);
@@ -111,10 +110,10 @@ protected:
    virtual void        SetBuffer() { DeleteBuffer(); fBuffer = new char[fNbytes];}
    virtual void        SetParent(const TObject *parent);
            void        SetMotherDir(TDirectory* dir) { fMotherDir = dir; }
-   virtual Int_t       Sizeof() const;
-   virtual Int_t       WriteFile(Int_t cycle=1, TFile* f = 0);
+           Int_t       Sizeof() const override;
+   virtual Int_t       WriteFile(Int_t cycle = 1, TFile* f = nullptr);
 
-   ClassDef(TKey,4); //Header description of a logical record on file.
+   ClassDefOverride(TKey,4); //Header description of a logical record on file.
 };
 
 #endif

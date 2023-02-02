@@ -22,12 +22,6 @@ public:
       if (!hist)
          return false;
 
-      if (subpad->NumPrimitives() > 0) {
-         subpad->Wipe();
-         subpad->GetCanvas()->Modified();
-         subpad->GetCanvas()->Update(true);
-      }
-
       std::shared_ptr<TH1> shared;
       shared.reset(hist);
 

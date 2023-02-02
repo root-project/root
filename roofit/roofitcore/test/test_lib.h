@@ -65,7 +65,7 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_ev
   std::vector<double> mean(n), sigma(n);
   for (unsigned ix = 0; ix < n; ++ix) {
     mean[ix] = RooRandom::randomGenerator()->Gaus(0, 2);
-    sigma[ix] = 0.1 + abs(RooRandom::randomGenerator()->Gaus(0, 2));
+    sigma[ix] = 0.1 + std::abs(RooRandom::randomGenerator()->Gaus(0, 2));
   }
 
   // create gaussians and also the observables and parameters they depend on
@@ -75,7 +75,7 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_ev
        << "(x" << ix << "[-10,10],"
        << "m" << ix << "[" << mean[ix] << ",-10,10],"
        << "s" << ix << "[" << sigma[ix] << ",0.1,10])";
-    w.factory(os.str().c_str());
+    w.factory(os.str());
   }
 
   // create uniform background signals on each observable
@@ -83,7 +83,7 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_ev
     {
       std::ostringstream os;
       os << "Uniform::u" << ix << "(x" << ix << ")";
-      w.factory(os.str().c_str());
+      w.factory(os.str());
     }
 
     // gather the observables in a list for data generation below
@@ -138,7 +138,7 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &w, unsigned int n, unsigned long N_ev
     {
       std::ostringstream os;
       os << "s" << ix;
-      dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->setVal(0.1 + abs(RooRandom::randomGenerator()->Gaus(0, 2)));
+      dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->setVal(0.1 + std::abs(RooRandom::randomGenerator()->Gaus(0, 2)));
     }
   }
 

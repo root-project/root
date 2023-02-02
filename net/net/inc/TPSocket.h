@@ -45,10 +45,10 @@ private:
    char      **fReadPtr;         // pointer to read buffer for specified socket
 
    TPSocket(TSocket *pSockets[], Int_t size);
-   TPSocket(const TPSocket &);        // not implemented
-   void operator=(const TPSocket &);  // idem
-   void Init(Int_t tcpwindowsize, TSocket *sock = 0);
-   Option_t *GetOption() const { return TObject::GetOption(); }
+   TPSocket(const TPSocket &) = delete;
+   void operator=(const TPSocket &) = delete;
+   void Init(Int_t tcpwindowsize, TSocket *sock = nullptr);
+   Option_t *GetOption() const override { return TObject::GetOption(); }
 
 public:
    TPSocket(TInetAddress address, const char *service, Int_t size,
@@ -61,28 +61,28 @@ public:
    TPSocket(const char *host, Int_t port, Int_t size, TSocket *sock);
    virtual ~TPSocket();
 
-   void          Close(Option_t *opt="");
-   Int_t         GetDescriptor() const;
-   TInetAddress  GetLocalInetAddress();
+   void          Close(Option_t *opt="") override;
+   Int_t         GetDescriptor() const override;
+   TInetAddress  GetLocalInetAddress() override;
 
-   Int_t   Send(const TMessage &mess);
-   Int_t   Send(Int_t kind) { return TSocket::Send(kind); }
-   Int_t   Send(Int_t status, Int_t kind) { return TSocket::Send(status, kind); }
-   Int_t   Send(const char *mess, Int_t kind = kMESS_STRING) { return TSocket::Send(mess, kind); }
-   Int_t   SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt);
-   Int_t   Recv(TMessage *&mess);
-   Int_t   Recv(Int_t &status, Int_t &kind) { return TSocket::Recv(status, kind); }
-   Int_t   Recv(char *mess, Int_t max) { return TSocket::Recv(mess, max); }
-   Int_t   Recv(char *mess, Int_t max, Int_t &kind) { return TSocket::Recv(mess, max, kind); }
-   Int_t   RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt);
+   Int_t   Send(const TMessage &mess) override;
+   Int_t   Send(Int_t kind) override { return TSocket::Send(kind); }
+   Int_t   Send(Int_t status, Int_t kind) override { return TSocket::Send(status, kind); }
+   Int_t   Send(const char *mess, Int_t kind = kMESS_STRING) override { return TSocket::Send(mess, kind); }
+   Int_t   SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt) override;
+   Int_t   Recv(TMessage *&mess) override;
+   Int_t   Recv(Int_t &status, Int_t &kind) override { return TSocket::Recv(status, kind); }
+   Int_t   Recv(char *mess, Int_t max) override { return TSocket::Recv(mess, max); }
+   Int_t   Recv(char *mess, Int_t max, Int_t &kind) override { return TSocket::Recv(mess, max, kind); }
+   Int_t   RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt) override;
 
-   Bool_t  IsValid() const { return fSockets ? kTRUE : kFALSE; }
+   Bool_t  IsValid() const override { return fSockets ? kTRUE : kFALSE; }
    Int_t   GetErrorCode() const;
-   Int_t   SetOption(ESockOptions opt, Int_t val);
-   Int_t   GetOption(ESockOptions opt, Int_t &val);
+   Int_t   SetOption(ESockOptions opt, Int_t val) override;
+   Int_t   GetOption(ESockOptions opt, Int_t &val) override;
    Int_t   GetSize() const { return fSize; }
 
-   ClassDef(TPSocket,0)  // Parallel client socket
+   ClassDefOverride(TPSocket,0)  // Parallel client socket
 };
 
 #endif

@@ -26,7 +26,7 @@ ROOT_EXECUTABLE(rootcling_stage1 src/rootcling_stage1.cxx
                               $<TARGET_OBJECTS:ClingUtils>
                               $<TARGET_OBJECTS:Dictgen>
                               $<TARGET_OBJECTS:Foundation_Stage1>
-                              LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
+                              LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${ROOT_ATOMIC_LIBS}
                               NOINSTALL)
 
 target_include_directories(rootcling_stage1 PRIVATE

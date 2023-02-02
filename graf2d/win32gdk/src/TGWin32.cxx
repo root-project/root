@@ -384,6 +384,38 @@ static Int_t _lookup_string(Event_t * event, char *buf, Int_t buflen)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+inline void SplitLong(Longptr_t ll, Longptr_t &i1, Longptr_t &i2)
+{
+   union {
+      Longptr_t l;
+      Int_t i[2];
+   } conv;
+
+   conv.l = 0L;
+   conv.i[0] = 0;
+   conv.i[1] = 0;
+
+   conv.l = ll;
+   i1 = conv.i[0];
+   i2 = conv.i[1];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+inline void AsmLong(Longptr_t i1, Longptr_t i2, Longptr_t &ll)
+{
+   union {
+      Longptr_t l;
+      Int_t i[2];
+   } conv;
+
+   conv.i[0] = (Int_t)i1;
+   conv.i[1] = (Int_t)i2;
+   ll = conv.l;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Make sure the child window is visible.
 
 static BOOL CALLBACK EnumChildProc(HWND hwndChild, LPARAM lParam)
@@ -1731,7 +1763,7 @@ void TGWin32::DrawFillArea(int n, TPoint *xyt)
 /// x1,y1        : begin of line
 /// x2,y2        : end of line
 
-void TGWin32::DrawLine(int x1, int y1, int x2, int y2)
+void TGWin32::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
    if (!fWindows) return;
 
@@ -2027,7 +2059,7 @@ void TGWin32::GetRGB(int index, float &r, float &g, float &b)
 /// ih          : text height
 /// mess        : message
 
-void TGWin32::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
+void TGWin32::GetTextExtent(UInt_t &w, UInt_t &h, char *mess)
 {
    TTF::SetTextFont(gTextFont);
    TTF::SetTextSize(fTextSize);
@@ -2050,7 +2082,7 @@ Window_t TGWin32::GetWindowID(int wid)
 /// x    : x new window position
 /// y    : y new window position
 
-void TGWin32::MoveWindow(int wid, int x, int y)
+void TGWin32::MoveWindow(Int_t wid, Int_t x, Int_t y)
 {
    if (!fWindows) return;
 
@@ -2227,7 +2259,7 @@ Int_t TGWin32::InitWindow(ULongptr_t win)
 /// iy       : Y coordinate of pointer
 /// (both coordinates are relative to the origin of the root window)
 
-void TGWin32::QueryPointer(int &ix, int &iy)
+void TGWin32::QueryPointer(Int_t &ix, Int_t &iy)
 {
    //GdkModifierType mask;
    //GdkWindow *retw = gdk_window_get_pointer((GdkWindow *) gCws->window,
@@ -2687,7 +2719,7 @@ void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
                                        w, h, gdk_visual_get_best_depth());
       }
       for (i = 0; i < kMAXGC; i++) {
-         gdk_gc_set_clip_mask(gGClist[i], None);
+         gdk_gc_set_clip_mask(gGClist[i], (GdkBitmap *)None);
       }
       SetColor(gGCpxmp, 0);
       gdk_win32_draw_rectangle(gTws->buffer, gGCpxmp, 1, 0, 0, w, h);
@@ -2752,7 +2784,7 @@ int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
 ////////////////////////////////////////////////////////////////////////////////
 /// Resize the current window if necessary.
 
-void TGWin32::ResizeWindow(int wid)
+void TGWin32::ResizeWindow(Int_t wid)
 {
    int i;
    int xval = 0, yval = 0;
@@ -2960,7 +2992,7 @@ void TGWin32::SetColor(GdkGC *gc, int ci)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the cursor.
 
-void TGWin32::SetCursor(int wid, ECursor cursor)
+void TGWin32::SetCursor(Int_t wid, ECursor cursor)
 {
    if (!fWindows) return;
 
@@ -3052,7 +3084,7 @@ void TGWin32::SetDoubleBufferON()
       SetColor(gGCpxmp, 1);
    }
    for (int i = 0; i < kMAXGC; i++) {
-      gdk_gc_set_clip_mask(gGClist[i], None);
+      gdk_gc_set_clip_mask(gGClist[i], (GdkBitmap *)None);
    }
    gTws->double_buffer = 1;
    gTws->drawing = gTws->buffer;
@@ -4416,9 +4448,9 @@ Int_t TGWin32::WriteGIF(char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw image.
 
-void TGWin32::PutImage(int offset, int itran, int x0, int y0, int nx,
-                       int ny, int xmin, int ymin, int xmax, int ymax,
-                       unsigned char *image, Drawable_t wid)
+void TGWin32::PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
+                       Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
+                       UChar_t *image, Drawable_t wid)
 {
    const int MAX_SEGMENT = 20;
    int i, n, x, y, xcur, x1, x2, y1, y2;
@@ -6000,10 +6032,15 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
             xev.client.message_type = (GdkAtom) ev.fHandle;
             xev.client.data_format = ev.fFormat;
             xev.client.data.l[0] = ev.fUser[0];
-            xev.client.data.l[1] = ev.fUser[1];
-            xev.client.data.l[2] = ev.fUser[2];
-            xev.client.data.l[3] = ev.fUser[3];
-            xev.client.data.l[4] = ev.fUser[4];
+            if (sizeof(ev.fUser[0]) > 4) {
+               SplitLong(ev.fUser[1], xev.client.data.l[1], xev.client.data.l[3]);
+               SplitLong(ev.fUser[2], xev.client.data.l[2], xev.client.data.l[4]);
+            } else {
+               xev.client.data.l[1] = ev.fUser[1];
+               xev.client.data.l[2] = ev.fUser[2];
+               xev.client.data.l[3] = ev.fUser[3];
+               xev.client.data.l[4] = ev.fUser[4];
+            }
          }
       }
       if (ev.fType == kMotionNotify) {
@@ -6105,10 +6142,15 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          ev.fFormat = 32;
          ev.fHandle = gWM_DELETE_WINDOW;
          ev.fUser[0] = (Longptr_t) gWM_DELETE_WINDOW;
-         ev.fUser[1] = 0; //xev.client.data.l[1];
-         ev.fUser[2] = 0; //xev.client.data.l[2];
-         ev.fUser[3] = 0; //xev.client.data.l[3];
-         ev.fUser[4] = 0; //xev.client.data.l[4];
+         if (sizeof(ev.fUser[0]) > 4) {
+            AsmLong(xev.client.data.l[1], xev.client.data.l[3], ev.fUser[1]);
+            AsmLong(xev.client.data.l[2], xev.client.data.l[4], ev.fUser[2]);
+         } else {
+            ev.fUser[1] = 0; // xev.client.data.l[1];
+            ev.fUser[2] = 0; // xev.client.data.l[2];
+            ev.fUser[3] = 0; // xev.client.data.l[3];
+            ev.fUser[4] = 0; // xev.client.data.l[4];
+         }
       }
       if (xev.type == GDK_DESTROY) {
          ev.fType = kDestroyNotify;
@@ -6206,10 +6248,15 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          ev.fHandle = xev.client.message_type;
          ev.fFormat = xev.client.data_format;
          ev.fUser[0] = xev.client.data.l[0];
-         ev.fUser[1] = xev.client.data.l[1];
-         ev.fUser[2] = xev.client.data.l[2];
-         ev.fUser[3] = xev.client.data.l[3];
-         ev.fUser[4] = xev.client.data.l[4];
+         if (sizeof(ev.fUser[0]) > 4) {
+            AsmLong(xev.client.data.l[1], xev.client.data.l[3], ev.fUser[1]);
+            AsmLong(xev.client.data.l[2], xev.client.data.l[4], ev.fUser[2]);
+         } else {
+            ev.fUser[1] = xev.client.data.l[1];
+            ev.fUser[2] = xev.client.data.l[2];
+            ev.fUser[3] = xev.client.data.l[3];
+            ev.fUser[4] = xev.client.data.l[4];
+         }
       }
       if (ev.fType == kSelectionClear) {
          ev.fWindow = (Window_t) xev.selection.window;
@@ -7284,7 +7331,7 @@ void TGWin32::DeleteImage(Drawable_t img)
 /// x, y, width, height - position of bitmap
 /// returns a pointer on bitmap bits array
 /// in format:
-/// b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+/// b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ...
 ///
 /// Pixels are numbered from left to right and from top to bottom.
 /// By default all pixels from the whole drawable are returned.

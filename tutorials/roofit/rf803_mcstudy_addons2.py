@@ -42,15 +42,10 @@ model = ROOT.RooAddPdf("model", "model", [sig, bkg], [nsig, nbkg])
 # Create manager
 # ---------------------------
 
-# Configure manager to perform binned extended likelihood fits (Binned(), ROOT.RooFit.Extended()) on data generated
-# with a Poisson fluctuation on Nobs (Extended())
+# Configure manager to perform binned extended likelihood fits (Binned=True, Extended=True) on data generated
+# with a Poisson fluctuation on Nobs (Extended=True)
 mcs = ROOT.RooMCStudy(
-    model,
-    {mjjj},
-    ROOT.RooFit.Binned(),
-    ROOT.RooFit.Silence(),
-    ROOT.RooFit.Extended(ROOT.kTRUE),
-    ROOT.RooFit.FitOptions(ROOT.RooFit.Extended(ROOT.kTRUE), ROOT.RooFit.PrintEvalErrors(-1)),
+    model, {mjjj}, Binned=True, Silence=True, Extended=True, FitOptions={"Extended": True, "PrintEvalErrors": -1}
 )
 
 # Customize manager
@@ -86,10 +81,11 @@ mcs.addModule(sigModule)
 mcs.generateAndFit(500)
 
 # Make some plots
-dll_vs_ngen = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "ngen,dll_nullhypo_nsig", -40, -40)
-z_vs_ngen = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "ngen,significance_nullhypo_nsig", -40, -40)
-errnsig_vs_ngen = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "ngen,nsigerr", -40, -40)
-errnsig_vs_nsig = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "nsig,nsigerr", -40, -40)
+binning = ROOT.RooFit.AutoBinning(40)
+dll_vs_ngen = mcs.fitParDataSet().createHistogram("ngen,dll_nullhypo_nsig", binning, binning)
+z_vs_ngen = mcs.fitParDataSet().createHistogram("ngen,significance_nullhypo_nsig", binning, binning)
+errnsig_vs_ngen = mcs.fitParDataSet().createHistogram("ngen,nsigerr", binning, binning)
+errnsig_vs_nsig = mcs.fitParDataSet().createHistogram("nsig,nsigerr", binning, binning)
 
 # Draw plots on canvas
 c = ROOT.TCanvas("rf803_mcstudy_addons2", "rf802_mcstudy_addons2", 800, 800)

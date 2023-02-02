@@ -50,14 +50,14 @@ namespace TMVA {
        ~HyperParameterOptimisationResult();
 
        std::vector<std::map<TString,Double_t> > fFoldParameters;
-       
+
        std::vector<Float_t> GetROCValues(){return fROCs;}
        Float_t GetROCAverage(){return fROCAVG;}
        TMultiGraph *GetROCCurves(Bool_t fLegend=kTRUE);
 
-       void Print() const ;       
+       void Print() const ;
 //        TCanvas* Draw(const TString name="HyperParameterOptimisation") const;
-       
+
        std::vector<Double_t> GetSigValues(){return fSigs;}
        std::vector<Double_t> GetSepValues(){return fSeps;}
        std::vector<Double_t> GetEff01Values(){return fEff01s;}
@@ -69,40 +69,40 @@ namespace TMVA {
        std::vector<Double_t> GetTrainEff30Values(){return fTrainEff30s;}
 
    };
-    
+
    class HyperParameterOptimisation : public Envelope {
    public:
 
        HyperParameterOptimisation(DataLoader *dataloader);
        ~HyperParameterOptimisation();
-       
+
        void SetFitter(TString fitType){fFitType=fitType;}
        TString GetFiiter(){return fFitType;}
-       
-       
+
+
        //Figure of Merit (FOM) default Separation
        void SetFOMType(TString ftype){fFomType=ftype;}
        TString GetFOMType(){return fFitType;}
-       
+
        void SetNumFolds(UInt_t folds);
        UInt_t GetNumFolds(){return fNumFolds;}
-       
+
        virtual void Evaluate();
        const HyperParameterOptimisationResult& GetResults() const {return fResults;}
-       
-       
+
+
    private:
-       TString                           fFomType;     //!
-       TString                           fFitType;     //!
-       UInt_t                            fNumFolds;    //!
-       Bool_t                            fFoldStatus;  //!
-       HyperParameterOptimisationResult  fResults;     //!
-       std::unique_ptr<Factory>          fClassifier;  //!
+       TString                           fFomType;     ///<!
+       TString                           fFitType;     ///<!
+       UInt_t                            fNumFolds;    ///<!
+       Bool_t                            fFoldStatus;  ///<!
+       HyperParameterOptimisationResult  fResults;     ///<!
+       std::unique_ptr<Factory>          fClassifier;  ///<!
 
    public:
-       ClassDef(HyperParameterOptimisation,0);  
+       ClassDef(HyperParameterOptimisation,0);
    };
-} 
+}
 
 
 #endif

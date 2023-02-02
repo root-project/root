@@ -25,7 +25,6 @@
 #include "RooUniform.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
-#include "TIterator.h"
 #include "RooMultiVarGaussian.h"
 #include "RooConstVar.h"
 #include "TString.h"
@@ -42,10 +41,10 @@ using namespace RooFit;
 using namespace RooStats;
 using namespace std;
 
-//static const Double_t DEFAULT_UNI_FRAC = 0.10;
-static const Double_t DEFAULT_CLUES_FRAC = 0.20;
-//static const Double_t SIGMA_RANGE_DIVISOR = 6;
-static const Double_t SIGMA_RANGE_DIVISOR = 5;
+//static const double DEFAULT_UNI_FRAC = 0.10;
+static const double DEFAULT_CLUES_FRAC = 0.20;
+//static const double SIGMA_RANGE_DIVISOR = 6;
+static const double SIGMA_RANGE_DIVISOR = 5;
 //static const Int_t DEFAULT_CACHE_SIZE = 100;
 //static const Option_t* CLUES_OPTIONS = "a";
 
@@ -54,37 +53,37 @@ static const Double_t SIGMA_RANGE_DIVISOR = 5;
 ProposalHelper::ProposalHelper()
 {
    fPdfProp = new PdfProposal();
-   fVars = NULL;
-   fOwnsPdfProp = kTRUE;
-   fOwnsPdf = kFALSE;
-   fOwnsCluesPdf = kFALSE;
-   fOwnsVars = kFALSE;
-   fUseUpdates = kFALSE;
-   fPdf = NULL;
+   fVars = nullptr;
+   fOwnsPdfProp = true;
+   fOwnsPdf = false;
+   fOwnsCluesPdf = false;
+   fOwnsVars = false;
+   fUseUpdates = false;
+   fPdf = nullptr;
    fSigmaRangeDivisor = SIGMA_RANGE_DIVISOR;
-   fCluesPdf = NULL;
-   fUniformPdf = NULL;
-   fClues = NULL;
-   fCovMatrix = NULL;
+   fCluesPdf = nullptr;
+   fUniformPdf = nullptr;
+   fClues = nullptr;
+   fCovMatrix = nullptr;
    fCluesFrac = -1;
    fUniFrac = -1;
    fCacheSize = -1;
-   fCluesOptions = NULL;
+   fCluesOptions = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 ProposalFunction* ProposalHelper::GetProposalFunction()
 {
-   if (fPdf == NULL)
+   if (fPdf == nullptr)
       CreatePdf();
    // kbelasco: check here for memory leaks: does RooAddPdf make copies or
    // take ownership of components, coeffs
    RooArgList* components = new RooArgList();
    RooArgList* coeffs = new RooArgList();
-   if (fCluesPdf == NULL)
+   if (fCluesPdf == nullptr)
       CreateCluesPdf();
-   if (fCluesPdf != NULL) {
+   if (fCluesPdf != nullptr) {
       if (fCluesFrac < 0)
          fCluesFrac = DEFAULT_CLUES_FRAC;
       printf("added clues from dataset %s with fraction %g\n",
@@ -101,10 +100,10 @@ ProposalFunction* ProposalHelper::GetProposalFunction()
    RooAddPdf* addPdf = new RooAddPdf("proposalFunction", "Proposal Density",
          *components, *coeffs);
    fPdfProp->SetPdf(*addPdf);
-   fPdfProp->SetOwnsPdf(kTRUE);
+   fPdfProp->SetOwnsPdf(true);
    if (fCacheSize > 0)
       fPdfProp->SetCacheSize(fCacheSize);
-   fOwnsPdfProp = kFALSE;
+   fOwnsPdfProp = false;
    return fPdfProp;
 }
 
@@ -115,31 +114,28 @@ void ProposalHelper::CreatePdf()
    // kbelasco: check here for memory leaks:
    // does RooMultiVarGaussian make copies of xVec and muVec?
    // or should we delete them?
-   if (fVars == NULL) {
+   if (fVars == nullptr) {
       coutE(InputArguments) << "ProposalHelper::CreatePdf(): " <<
          "Variables to create proposal function for are not set." << endl;
       return;
    }
    RooArgList* xVec = new RooArgList();
    RooArgList* muVec = new RooArgList();
-   TIterator* it = fVars->createIterator();
-   RooRealVar* r;
-   RooRealVar* clone;
-   while ((r = (RooRealVar*)it->Next()) != NULL) {
+   RooRealVar* clone; 
+   for (auto *r : static_range_cast<RooRealVar *> (*fVars)){
       xVec->add(*r);
       TString cloneName = TString::Format("%s%s", "mu__", r->GetName());
-      clone = (RooRealVar*)r->clone(cloneName.Data());
+      clone = static_cast<RooRealVar*>(r->clone(cloneName.Data()));
       muVec->add(*clone);
       if (fUseUpdates)
          fPdfProp->AddMapping(*clone, *r);
    }
-   if (fCovMatrix == NULL)
+   if (fCovMatrix == nullptr)
       CreateCovMatrix(*xVec);
    fPdf = new RooMultiVarGaussian("mvg", "MVG Proposal", *xVec, *muVec,
                                   *fCovMatrix);
    delete xVec;
    delete muVec;
-   delete it;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -151,7 +147,7 @@ void ProposalHelper::CreateCovMatrix(RooArgList& xVec)
    RooRealVar* r;
    for (Int_t i = 0; i < size; i++) {
       r = (RooRealVar*)xVec.at(i);
-      Double_t range = r->getMax() - r->getMin();
+      double range = r->getMax() - r->getMin();
       (*fCovMatrix)(i,i) = range / fSigmaRangeDivisor;
    }
 }
@@ -160,8 +156,8 @@ void ProposalHelper::CreateCovMatrix(RooArgList& xVec)
 
 void ProposalHelper::CreateCluesPdf()
 {
-   if (fClues != NULL) {
-      if (fCluesOptions == NULL)
+   if (fClues != nullptr) {
+      if (fCluesOptions == nullptr)
          fCluesPdf = new RooNDKeysPdf("cluesPdf", "Clues PDF", *fVars, *fClues);
       else
          fCluesPdf = new RooNDKeysPdf("cluesPdf", "Clues PDF", *fVars, *fClues,

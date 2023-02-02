@@ -918,7 +918,7 @@ Int_t TGeoVolume::Export(const char *filename, const char *name, Option_t *optio
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Actualize matrix of node indexed <inode>
+/// Actualize matrix of node indexed `<inode>`
 
 void TGeoVolume::cd(Int_t inode) const
 {
@@ -929,26 +929,26 @@ void TGeoVolume::cd(Int_t inode) const
 /// Add a TGeoNode to the list of nodes. This is the usual method for adding
 /// daughters inside the container volume.
 
-void TGeoVolume::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t * /*option*/)
+TGeoNode *TGeoVolume::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t * /*option*/)
 {
    TGeoMatrix *matrix = mat;
    if (matrix==0) matrix = gGeoIdentity;
    else           matrix->RegisterYourself();
    if (!vol) {
       Error("AddNode", "Volume is NULL");
-      return;
+      return 0;
    }
    if (!vol->IsValid()) {
       Error("AddNode", "Won't add node with invalid shape");
       printf("### invalid volume was : %s\n", vol->GetName());
-      return;
+      return 0;
    }
    if (!fNodes) fNodes = new TObjArray();
 
    if (fFinder) {
       // volume already divided.
       Error("AddNode", "Cannot add node %s_%i into divided volume %s", vol->GetName(), copy_no, GetName());
-      return;
+      return 0;
    }
 
    TGeoNodeMatrix *node = 0;
@@ -962,6 +962,7 @@ void TGeoVolume::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option
    node->SetNumber(copy_no);
    fRefCount++;
    vol->Grab();
+   return node;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1456,7 +1457,7 @@ void TGeoVolume::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << "   new TGeoManager(\"" << fGeoManager->GetName() << "\", \"" << fGeoManager->GetTitle() << "\");" << std::endl << std::endl;
 //      if (mustDraw) out << "   Bool_t mustDraw = kTRUE;" << std::endl;
 //      else          out << "   Bool_t mustDraw = kFALSE;" << std::endl;
-      out << "   Double_t dx,dy,dz;" << std::endl;
+      out << "   Double_t dx, dy, dz;" << std::endl;
       out << "   Double_t dx1, dx2, dy1, dy2;" << std::endl;
       out << "   Double_t vert[20], par[20];" << std::endl;
       out << "   Double_t theta, phi, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2;" << std::endl;
@@ -1464,19 +1465,18 @@ void TGeoVolume::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << "   Double_t origin[3];" << std::endl;
       out << "   Double_t rmin, rmax, rmin1, rmax1, rmin2, rmax2;" << std::endl;
       out << "   Double_t r, rlo, rhi;" << std::endl;
-      out << "   Double_t phi1, phi2;" << std::endl;
-      out << "   Double_t a,b;" << std::endl;
+      out << "   Double_t a, b;" << std::endl;
       out << "   Double_t point[3], norm[3];" << std::endl;
       out << "   Double_t rin, stin, rout, stout;" << std::endl;
       out << "   Double_t thx, phx, thy, phy, thz, phz;" << std::endl;
       out << "   Double_t alpha, theta1, theta2, phi1, phi2, dphi;" << std::endl;
       out << "   Double_t tr[3], rot[9];" << std::endl;
       out << "   Double_t z, density, radl, absl, w;" << std::endl;
-      out << "   Double_t lx,ly,lz,tx,ty,tz;" << std::endl;
+      out << "   Double_t lx, ly, lz, tx, ty, tz;" << std::endl;
       out << "   Double_t xvert[50], yvert[50];" << std::endl;
-      out << "   Double_t zsect,x0,y0,scale0;" << std::endl;
+      out << "   Double_t zsect, x0, y0, scale0;" << std::endl;
       out << "   Int_t nel, numed, nz, nedges, nvert;" << std::endl;
-      out << "   TGeoBoolNode *pBoolNode = 0;" << std::endl << std::endl;
+      out << "   TGeoBoolNode *pBoolNode = nullptr;" << std::endl << std::endl;
       // first save materials/media
       out << "   // MATERIALS, MIXTURES AND TRACKING MEDIA" << std::endl;
       SavePrimitive(out, "m");
@@ -1505,16 +1505,14 @@ void TGeoVolume::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       if (!IsAssembly()) {
          fShape->SavePrimitive(out,option);
          out << "   // Volume: " << GetName() << std::endl;
-         if (fMedium) out << "   " << GetPointerName() << " = new TGeoVolume(\"" << GetName() << "\"," << fShape->GetPointerName() << ", "<< fMedium->GetPointerName() << ");" << std::endl;
-         else out << "   " << GetPointerName() << " = new TGeoVolume(\"" << GetName() << "\"," << fShape->GetPointerName() <<  ");" << std::endl;
-
+         out << "   TGeoVolume *" << GetPointerName() << " = new TGeoVolume(\"" << GetName() << "\"," << fShape->GetPointerName();
+         if (fMedium) out << ", " << fMedium->GetPointerName();
+         out << ");" << std::endl;
       } else {
          out << "   // Assembly: " << GetName() << std::endl;
          out << "   " << GetPointerName() << " = new TGeoVolumeAssembly(\"" << GetName() << "\"" << ");" << std::endl;
       }
-      if (fLineColor != 1) out << "   " << GetPointerName() << "->SetLineColor(" << fLineColor << ");" << std::endl;
-      if (fLineWidth != 1) out << "   " << GetPointerName() << "->SetLineWidth(" << fLineWidth << ");" << std::endl;
-      if (fLineStyle != 1) out << "   " << GetPointerName() << "->SetLineStyle(" << fLineStyle << ");" << std::endl;
+      SaveLineAttributes(out, GetPointerName(), 1, 1, 1);
       if (!IsVisible() && !IsAssembly()) out << "   " << GetPointerName() << "->SetVisibility(kFALSE);" << std::endl;
       if (!IsVisibleDaughters()) out << "   " << GetPointerName() << "->VisibleDaughters(kFALSE);" << std::endl;
       if (IsVisContainers()) out << "   " << GetPointerName() << "->SetVisContainers(kTRUE);" << std::endl;
@@ -1557,9 +1555,8 @@ void TGeoVolume::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
          out << "   TGeoVolume *" << dvol->GetPointerName() << " = ";
          out << GetPointerName() << "->Divide(\"" << dvol->GetName() << "\", ";
          fFinder->SavePrimitive(out,option);
-         if (fMedium != dvol->GetMedium()) {
+         if (fMedium != dvol->GetMedium())
             out << ", " << dvol->GetMedium()->GetId();
-         }
          out << ");" << std::endl;
          dvol->SavePrimitive(out,"d");
          return;
@@ -1674,11 +1671,11 @@ Bool_t TGeoVolume::GetOptimalVoxels() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Provide a pointer name containing uid.
 
-char *TGeoVolume::GetPointerName() const
+const char *TGeoVolume::GetPointerName() const
 {
    static TString name;
-   name = TString::Format("p%s_%zx", GetName(), (size_t)this);
-   return (char*)name.Data();
+   name.Form("p%s_%zx", GetName(), (size_t)this);
+   return name.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2452,9 +2449,9 @@ void TGeoVolumeMulti::AddVolume(TGeoVolume *vol)
 /// Add a new node to the list of nodes. This is the usual method for adding
 /// daughters inside the container volume.
 
-void TGeoVolumeMulti::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
+TGeoNode *TGeoVolumeMulti::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
-   TGeoVolume::AddNode(vol, copy_no, mat, option);
+   TGeoNode *n = TGeoVolume::AddNode(vol, copy_no, mat, option);
    Int_t nvolumes = fVolumes->GetEntriesFast();
    TGeoVolume *volume = 0;
    for (Int_t ivo=0; ivo<nvolumes; ivo++) {
@@ -2465,7 +2462,8 @@ void TGeoVolumeMulti::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, O
       volume->SetVisibility(IsVisible());
       volume->AddNode(vol, copy_no, mat, option);
    }
-//   printf("--- vmulti %s : node %s added to %i components\n", GetName(), vol->GetName(), nvolumes);
+   //   printf("--- vmulti %s : node %s added to %i components\n", GetName(), vol->GetName(), nvolumes);
+   return n;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2802,11 +2800,12 @@ TGeoVolumeAssembly::~TGeoVolumeAssembly()
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a component to the assembly.
 
-void TGeoVolumeAssembly::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
+TGeoNode *TGeoVolumeAssembly::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
-   TGeoVolume::AddNode(vol,copy_no,mat,option);
-//   ((TGeoShapeAssembly*)fShape)->RecomputeBoxLast();
+   TGeoNode *node = TGeoVolume::AddNode(vol, copy_no, mat, option);
+   //   ((TGeoShapeAssembly*)fShape)->RecomputeBoxLast();
    ((TGeoShapeAssembly*)fShape)->NeedsBBoxRecompute();
+   return node;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -25,6 +25,7 @@
 #include "TBase64.h"
 
 #include <fstream>
+#include <iostream>
 #include <memory>
 #include <regex>
 
@@ -71,7 +72,7 @@ std::unique_ptr<RWebDisplayHandle::Creator> &RWebDisplayHandle::FindCreator(cons
    if (search == m.end()) {
 
       if (libname == "ChromeCreator") {
-         m.emplace(name, std::make_unique<ChromeCreator>());
+         m.emplace(name, std::make_unique<ChromeCreator>(name == "edge"));
       } else if (libname == "FirefoxCreator") {
          m.emplace(name, std::make_unique<FirefoxCreator>());
       } else if (libname == "BrowserCreator") {
@@ -213,6 +214,11 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
    if (url.empty())
       return nullptr;
 
+   if(args.GetBrowserKind() == RWebDisplayArgs::kServer) {
+      std::cout << "New web window: " << url << std::endl;
+      return std::make_unique<RWebBrowserHandle>(url, "", "");
+   }
+
    std::string exec;
    if (args.IsBatchMode())
       exec = fBatchExec;
@@ -285,7 +291,7 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 
       // use UnixPathName to simplify handling of backslashes
       exec = "wmic process call create '"s + gSystem->UnixPathName(fProg.c_str()) + exec + "' | find \"ProcessId\" "s;
-      std::string process_id = gSystem->GetFromPipe(exec.c_str());
+      std::string process_id = gSystem->GetFromPipe(exec.c_str()).Data();
       std::stringstream ss(process_id);
       std::string tmp;
       char c;
@@ -368,12 +374,19 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserCreator(true)
+RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(true)
 {
-   TestProg(gEnv->GetValue("WebGui.Chrome", ""));
+   fEdge = _edge;
+
+   fEnvPrefix = fEdge ? "WebGui.Edge" : "WebGui.Chrome";
+
+   TestProg(gEnv->GetValue(fEnvPrefix.c_str(), ""));
 
 #ifdef _MSC_VER
-   TestProg("\\Google\\Chrome\\Application\\chrome.exe", true);
+   if (fEdge)
+      TestProg("\\Microsoft\\Edge\\Application\\msedge.exe", true);
+   else
+      TestProg("\\Google\\Chrome\\Application\\chrome.exe", true);
 #endif
 #ifdef R__MACOSX
    TestProg("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
@@ -385,13 +398,13 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserCreator(true)
 #endif
 
 #ifdef _MSC_VER
-   fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "$prog --headless $geometry $url");
-   fHeadlessExec = gEnv->GetValue("WebGui.ChromeHeadless", "$prog --headless --disable-gpu $geometry $url &");
-   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --new-window --app=$url &"); // & in windows mean usage of spawn
+   fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless $geometry $url");
+   fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless --disable-gpu $geometry $url &");
+   fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=$url &"); // & in windows mean usage of spawn
 #else
-   fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
-   fHeadlessExec = gEnv->GetValue("WebGui.ChromeHeadless", "fork: --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
-   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --new-window --app=\'$url\' &");
+   fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
+   fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "fork: --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
+   fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=\'$url\' &");
 #endif
 }
 
@@ -433,7 +446,7 @@ std::string RWebDisplayHandle::ChromeCreator::MakeProfile(std::string &exec, boo
    if (exec.find("$profile") == std::string::npos)
       return rmdir;
 
-   const char *chrome_profile = gEnv->GetValue("WebGui.ChromeProfile", "");
+   const char *chrome_profile = gEnv->GetValue((fEnvPrefix + "Profile").c_str(), "");
    if (chrome_profile && *chrome_profile) {
       profile_arg = chrome_profile;
    } else {
@@ -577,17 +590,27 @@ std::unique_ptr<RWebDisplayHandle> RWebDisplayHandle::Display(const RWebDisplayA
       return handle;
    }
 
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kNative) || (args.GetBrowserKind() == RWebDisplayArgs::kChrome)) {
+   bool handleAsNative = (args.GetBrowserKind() == RWebDisplayArgs::kNative) ||
+                         (args.IsHeadless() && (args.GetBrowserKind() == RWebDisplayArgs::kDefault));
+
+#ifdef _MSC_VER
+   if (handleAsNative || (args.GetBrowserKind() == RWebDisplayArgs::kEdge)) {
+      if (try_creator(FindCreator("edge", "ChromeCreator")))
+         return handle;
+   }
+#endif
+
+   if (handleAsNative || (args.GetBrowserKind() == RWebDisplayArgs::kChrome)) {
       if (try_creator(FindCreator("chrome", "ChromeCreator")))
          return handle;
    }
 
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kNative) || (args.GetBrowserKind() == RWebDisplayArgs::kFirefox)) {
+   if (handleAsNative || (args.GetBrowserKind() == RWebDisplayArgs::kFirefox)) {
       if (try_creator(FindCreator("firefox", "FirefoxCreator")))
          return handle;
    }
 
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kChrome) || (args.GetBrowserKind() == RWebDisplayArgs::kFirefox)) {
+   if (handleAsNative || (args.GetBrowserKind() == RWebDisplayArgs::kChrome) || (args.GetBrowserKind() == RWebDisplayArgs::kFirefox) || (args.GetBrowserKind() == RWebDisplayArgs::kEdge)) {
       // R__LOG_ERROR(WebGUILog()) << "Neither Chrome nor Firefox browser cannot be started to provide display";
       return handle;
    }
@@ -631,7 +654,7 @@ bool RWebDisplayHandle::DisplayUrl(const std::string &url)
 /// Produce image file using JSON data as source
 /// Invokes JSROOT drawing functionality in headless browser - Google Chrome or Mozilla Firefox
 
-bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string &json, int width, int height)
+bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string &json, int width, int height, const char *batch_file)
 {
    if (json.empty())
       return false;
@@ -682,7 +705,10 @@ bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string
    else
       return false;
 
-   TString origin = TROOT::GetDataDir() + "/js/files/canv_batch.htm";
+   if (!batch_file || !*batch_file)
+      batch_file = "/js/files/canv_batch.htm";
+
+   TString origin = TROOT::GetDataDir() + batch_file;
    if (gSystem->ExpandPathName(origin)) {
       R__LOG_ERROR(WebGUILog()) << "Fail to find " << origin;
       return false;

@@ -17,13 +17,13 @@
 
 class TGraphQQ : public TGraph{
 protected:
-   Int_t     fNy0;    ///< size of the fY0 dataset
-   Double_t  fXq1;    ///< x1 coordinate of the interquartile line
-   Double_t  fXq2;    ///< x2 coordinate of the interquartile line
-   Double_t  fYq1;    ///< y1 coordinate of the interquartile line
-   Double_t  fYq2;    ///< y2 coordinate of the interquartile line
-   Double_t *fY0;     ///<! second dataset, if specified
-   TF1      *fF;      ///< theoretical density function, if specified
+   Int_t     fNy0{0};      ///< size of the fY0 dataset
+   Double_t  fXq1{0.};     ///< x1 coordinate of the interquartile line
+   Double_t  fXq2{0.};     ///< x2 coordinate of the interquartile line
+   Double_t  fYq1{0.};     ///< y1 coordinate of the interquartile line
+   Double_t  fYq2{0.};     ///< y2 coordinate of the interquartile line
+   Double_t *fY0{nullptr}; ///<! second dataset, if specified
+   TF1      *fF{nullptr};  ///< theoretical density function, if specified
 
    void      Quartiles();
    void      MakeQuantiles();
@@ -43,7 +43,7 @@ public:
    Double_t  GetYq2() const {return fYq2;}
    TF1      *GetF()   const {return fF;}
 
-   ClassDef(TGraphQQ, 1); // to create and to draw quantile-quantile plots
+   ClassDefOverride(TGraphQQ, 1); // to create and to draw quantile-quantile plots
 };
 
 #endif

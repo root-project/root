@@ -73,7 +73,7 @@ enum ERotation3DMatrixIndex {
 
 DisplacementVector3D< Cartesian3D<double> >
 AxisAngle::
-operator() (const DisplacementVector3D< Cartesian3D<double> > & v) const
+operator() (const XYZVector & v) const
 {
    Scalar c = std::cos(fAngle);
    Scalar s = std::sin(fAngle);

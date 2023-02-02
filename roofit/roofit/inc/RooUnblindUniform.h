@@ -25,20 +25,20 @@ public:
   // Constructors, assignment etc
   RooUnblindUniform() ;
   RooUnblindUniform(const char *name, const char *title,
-            const char *blindString, Double_t scale, RooAbsReal& blindValue);
-  RooUnblindUniform(const RooUnblindUniform& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooUnblindUniform(*this,newname); }
-  virtual ~RooUnblindUniform();
+            const char *blindString, double scale, RooAbsReal& blindValue);
+  RooUnblindUniform(const RooUnblindUniform& other, const char* name=nullptr);
+  TObject* clone(const char* newname) const override { return new RooUnblindUniform(*this,newname); }
+  ~RooUnblindUniform() override;
 
 protected:
 
   // Function evaluation
-  virtual Double_t evaluate() const ;
+  double evaluate() const override ;
 
   RooRealProxy _value ;
   RooBlindTools _blindEngine ;
 
-  ClassDef(RooUnblindUniform,1) // Uniform unblinding transformation
+  ClassDefOverride(RooUnblindUniform,1) // Uniform unblinding transformation
 };
 
 #endif

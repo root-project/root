@@ -24,18 +24,18 @@ constexpr auto epsilon = 0.001;
 
 TEST(RSqliteDS, Basics)
 {
-   auto rdf = MakeSqliteDataFrame(fileName0, query0);
+   auto rdf = ROOT::RDF::FromSqlite(fileName0, query0);
    EXPECT_EQ(1, *rdf.Min("fint"));
    EXPECT_EQ(2, *rdf.Max("fint"));
 
-   EXPECT_THROW(MakeSqliteDataFrame(fileName0, ""), std::runtime_error);
-   EXPECT_THROW(MakeSqliteDataFrame("", query0), std::runtime_error);
+   EXPECT_THROW(ROOT::RDF::FromSqlite(fileName0, ""), std::runtime_error);
+   EXPECT_THROW(ROOT::RDF::FromSqlite("", query0), std::runtime_error);
 }
 
 TEST(RSqliteDS, Snapshot)
 {
    // Use query 3 to avoid storing a void * in the root file
-   auto rdf = MakeSqliteDataFrame(fileName0, query3);
+   auto rdf = ROOT::RDF::FromSqlite(fileName0, query3);
 
    constexpr auto fname = "datasource_sqlite_snapshot.root";
    auto rdf_root = rdf.Snapshot("tree", fname);
@@ -203,7 +203,7 @@ TEST(RSqliteDS, IMT)
    ROOT::EnableImplicitMT(nSlots);
 
    ROOT::TestSupport::CheckDiagsRAII diagRAII{kWarning, "SetNSlots", "Currently the SQlite data source faces performance degradation in multi-threaded mode. Consider turning off IMT."};
-   auto rdf = MakeSqliteDataFrame(fileName0, query0);
+   auto rdf = ROOT::RDF::FromSqlite(fileName0, query0);
    EXPECT_EQ(3, *rdf.Sum("fint"));
    EXPECT_NEAR(3.0, *rdf.Sum("freal"), epsilon);
    auto sum_text = *rdf.Reduce([](std::string a, std::string b) { return a + b; }, "ftext");
@@ -228,14 +228,14 @@ TEST(RSqliteDS, IMT)
 
 TEST(RSqliteDS, Davix)
 {
-   (void)url1; // silence -Wunused-const-variable
 #ifdef R__HAS_DAVIX
-   auto rdf = MakeSqliteDataFrame(url0, query0);
+   auto rdf = ROOT::RDF::FromSqlite(url0, query0);
    EXPECT_EQ(1, *rdf.Min("fint"));
    EXPECT_EQ(2, *rdf.Max("fint"));
 
-   EXPECT_THROW(MakeSqliteDataFrame(url1, query0), std::runtime_error);
+   EXPECT_THROW(ROOT::RDF::FromSqlite(url1, query0), std::runtime_error);
 #else
-   EXPECT_THROW(MakeSqliteDataFrame(url0, query0), std::runtime_error);
+   EXPECT_THROW(ROOT::RDF::FromSqlite(url0, query0), std::runtime_error);
+   (void)url1; // silence -Wunused-const-variable
 #endif
 }

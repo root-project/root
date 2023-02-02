@@ -1731,7 +1731,7 @@ Bool_t TGMainFrame::HandleClientMessage(Event_t *event)
    if ((event->fFormat == 32) && ((Atom_t)event->fUser[0] == gWM_DELETE_WINDOW) &&
        (event->fHandle != gROOT_MESSAGE)) {
       Emit("CloseWindow()");
-      if (TestBit(kNotDeleted) && !TestBit(kDontCallClose))
+      if (!ROOT::Detail::HasBeenDeleted(this) && !TestBit(kDontCallClose))
          CloseWindow();
    }
    return kTRUE;
@@ -1830,9 +1830,11 @@ const TGPicture *TGMainFrame::SetIconPixmap(const char *iconName)
 /// builtin to the source code.
 ///
 /// For example,
+/// \code{.cpp}
 ///    #include "/home/root/icons/bld_rgb.xpm"
 ///    //bld_rgb.xpm contains char *bld_rgb[] array
 ///    main_frame->SetIconPixmap(bld_rgb);
+/// \endcode
 
 void TGMainFrame::SetIconPixmap(char **xpm_array)
 {
@@ -2959,7 +2961,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 
    TGMainFrame::SavePrimitive(out, option);
 
-   if (strlen(fClassName) || strlen(fResourceName)) {
+   if (fClassName.Length() || fResourceName.Length()) {
       out << "   " << GetName() << "->SetClassHints(" << quote << fClassName
           << quote << "," << quote << fResourceName << quote << ");" << std::endl;
    }
@@ -3126,14 +3128,14 @@ void TGMainFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    SavePrimitiveSubframes(out, option);
 
-   if (strlen(fWindowName)) {
+   if (fWindowName.Length()) {
       out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
           << quote << ");" << std::endl;
    }
-   if (strlen(fIconName)) {
+   if (fIconName.Length()) {
       out <<"   "<<GetName()<< "->SetIconName("<<quote<<GetIconName()<<quote<<");"<<std::endl;
    }
-   if (strlen(fIconPixmap)) {
+   if (fIconPixmap.Length()) {
       out << "   " << GetName() << "->SetIconPixmap(" << quote << GetIconPixmap()
           << quote << ");" << std::endl;
    }
@@ -3475,7 +3477,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
    TGTransientFrame::SavePrimitive(out, option);
 
-   if (strlen(fClassName) || strlen(fResourceName)) {
+   if (fClassName.Length() || fResourceName.Length()) {
       out<<"   "<<GetName()<< "->SetClassHints("<<quote<<fClassName<<quote
                                             <<"," <<quote<<fResourceName<<quote
                                             <<");"<<std::endl;
@@ -3635,14 +3637,14 @@ void TGTransientFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
 
    SavePrimitiveSubframes(out, option);
 
-   if (strlen(fWindowName)) {
+   if (fWindowName.Length()) {
       out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
           << quote << ");" << std::endl;
    }
-   if (strlen(fIconName)) {
+   if (fIconName.Length()) {
       out <<"   "<<GetName()<< "->SetIconName("<<quote<<GetIconName()<<quote<<");"<<std::endl;
    }
-   if (strlen(fIconPixmap)) {
+   if (fIconPixmap.Length()) {
       out << "   " << GetName() << "->SetIconPixmap(" << quote << GetIconPixmap()
           << quote << ");" << std::endl;
    }

@@ -25,7 +25,7 @@ public:
    virtual ~TVirtualGeoConverter();
 
    virtual void       ConvertGeometry() {}
-   static  TVirtualGeoConverter *Instance(TGeoManager *geom=0);
+   static  TVirtualGeoConverter *Instance(TGeoManager *geom=nullptr);
    static void        SetConverter(const TVirtualGeoConverter *conv);
    void               SetGeometry(TGeoManager *geom) { fGeom = geom; }
 

@@ -23,7 +23,6 @@ Lightweight interface adaptor that binds a RooAbsPdf to TFOAM
 **/
 
 
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooTFoamBinding.h"
@@ -47,14 +46,14 @@ ClassImp(RooTFoamBinding);
 RooTFoamBinding::RooTFoamBinding(const RooAbsReal& pdf, const RooArgSet& observables)
 {
   _nset.add(observables) ;
-  _binding = new RooRealBinding(pdf,observables,&_nset,kFALSE,0) ;
+  _binding = new RooRealBinding(pdf,observables,&_nset,false,0) ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooTFoamBinding::~RooTFoamBinding() 
+RooTFoamBinding::~RooTFoamBinding()
 {
   delete _binding ;
 }
@@ -63,13 +62,13 @@ RooTFoamBinding::~RooTFoamBinding()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooTFoamBinding::Density(Int_t ndim, Double_t *xvec) 
+double RooTFoamBinding::Density(Int_t ndim, double *xvec)
 {
-  Double_t x[10] ;
-  for (int i=0 ; i<ndim ; i++) {    
+  double x[10] ;
+  for (int i=0 ; i<ndim ; i++) {
     x[i] = xvec[i]*(_binding->getMaxLimit(i)-_binding->getMinLimit(i)) + _binding->getMinLimit(i) ;
     //cout << "RTFB::Density xvec[" << i << "] = " << xvec[i] << " x[i] = " << x[i] << endl ;
   }
-  Double_t ret = (*_binding)(x) ;  
+  double ret = (*_binding)(x) ;
   return ret<0?0:ret ;
 }

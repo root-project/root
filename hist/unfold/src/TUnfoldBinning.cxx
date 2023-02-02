@@ -836,7 +836,7 @@ TH2D *TUnfoldBinning::CreateErrorMatrixHistogram
 /// \param[in] yAxis binning scheme for the y axis
 /// \param[in] histogramName name of the histogram which is created
 /// \param[in] originalXAxisBinning preserve x-axis bin widths if possible
-/// \param[in] originalXAxisBinning preserve y-axis bin widths if possible
+/// \param[in] originalYAxisBinning preserve y-axis bin widths if possible
 /// \param[in] histogramTitle if is non-zero, it is taken as histogram title
 ///                     otherwise, the title is created automatically
 ///
@@ -894,8 +894,8 @@ TH2D *TUnfoldBinning::CreateHistogramOfMigrations
 ///    dimensional with all bins mapped on one axis,
 ///    bin centers equal to bin numbers
 /// \param[in] axisSteering see method CreateHistogram()
-/// \param[out] axisBins[3] number of bins on the THxx axes
-/// \param[out] axisList[3] TUnfoldBinning axis number corresponding
+/// \param[out] axisBins [3] number of bins on the THxx axes
+/// \param[out] axisList [3] TUnfoldBinning axis number corresponding
 /// to the THxx axis
 ///
 /// returns 1-3 dimension of THxx or 0 for 1-dim THxx with equidistant bins
@@ -950,8 +950,8 @@ const TUnfoldBinning *TUnfoldBinning::GetNonemptyNode(void) const
 /// \param[in] maxDim maximum dimension of the THxx (0 or 1..3)
 ///              maxDim==0 is used to indicate that the histogram should
 ///              1-dimensional with all bins mapped on one axis
-/// \param[out] axisBins[3] number of bins on the THxx axes
-/// \param[out] axisList[3] TUnfoldBinning axis numbers
+/// \param[out] axisBins [3] number of bins on the THxx axes
+/// \param[out] axisList [3] TUnfoldBinning axis numbers
 ///              corresponding to the THxx axis
 /// \param[in] axisSteering  see method CreateHistogram()
 /// and projection
@@ -1190,7 +1190,7 @@ Int_t TUnfoldBinning::FillBinMapRecursive
 /// \param[in] hist the histogram representing this node (used if nDim>0)
 /// \param[in] startBin start bin in the bin map
 /// \param[in] nDim number of dimensions to resolve
-/// \param[in] axisList[3] TUnfoldBinning axis numbers corresponding
+/// \param[in] axisList [3] TUnfoldBinning axis numbers corresponding
 /// to the axes of <b>hist</b>
 /// \param[in] axisSteering see documentation of CreateHistogram()
 /// \param[out] binMap the bin map to fill

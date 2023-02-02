@@ -541,7 +541,6 @@ void TMVA::VariableNormalizeTransform::PrintTransformation( std::ostream& /* o *
          Log() << kINFO << "Transformation for all classes based on these ranges:" << Endl;
       else
          Log() << kINFO << "Transformation for class " << icls << " based on these ranges:" << Endl;
-      UInt_t iinp = 0;
       for( ItVarTypeIdxConst itGet = fGet.begin(), itGetEnd = fGet.end(); itGet != itGetEnd; ++itGet ){
          Char_t type = (*itGet).first;
          UInt_t idx  = (*itGet).second;
@@ -549,7 +548,6 @@ void TMVA::VariableNormalizeTransform::PrintTransformation( std::ostream& /* o *
          TString typeString = (type=='v'?"Variable: ": (type=='t'?"Target : ":"Spectator : ") );
          Log() << typeString.Data() << std::setw(20) << fMin[icls][idx] << std::setw(20) << fMax[icls][idx] << Endl;
 
-         ++iinp;
       }
    }
 }

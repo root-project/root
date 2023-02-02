@@ -35,7 +35,7 @@ namespace RooStats {
     LikelihoodIntervalPlot(LikelihoodInterval* theInterval);
 
     /// Destructor of SamplingDistribution
-    virtual ~LikelihoodIntervalPlot();
+    ~LikelihoodIntervalPlot() override;
 
 
     /// returned plotted object (RooPlot or histograms)
@@ -61,42 +61,42 @@ namespace RooStats {
     void SetFillStyle(const Style_t style) {fFillStyle = style;}
     /// set the fill contour color
     void SetContourColor(const Color_t color) {fColor = color;}
-    void SetMaximum(const Double_t theMaximum) {fMaximum = theMaximum;}
+    void SetMaximum(const double theMaximum) {fMaximum = theMaximum;}
     void SetNPoints(Int_t np) { fNPoints = np; }
 
 
     /// draw the likelihood interval or contour
     /// for the 1D case a RooPlot is drawn by default of the profiled Log-Likelihood ratio
-    /// if option "TF1" is used the objects is drawn using a TF1 scanning the LL function in a
-    /// grid of the setetd points (by default
+    /// if option "TF1" is used the objects are drawn using a TF1 scanning the LL function in a
+    /// grid of the set points (by default
     /// the TF1 can be costumized by setting maximum and the number of points to scan
-    void Draw(const Option_t *options=0);
+    void Draw(const Option_t *options=nullptr) override;
 
   private:
 
-    Color_t fColor;         /// color for the contour (for 2D) or function (in 1D)
-    Style_t fFillStyle;     /// fill style for contours
-    Color_t fLineColor;     /// line color for the interval (1D) or for other contours (2D)
+    Color_t fColor;      ///< color for the contour (for 2D) or function (in 1D)
+    Style_t fFillStyle;  ///< fill style for contours
+    Color_t fLineColor;  ///< line color for the interval (1D) or for other contours (2D)
     Int_t fNdimPlot;
-    Int_t fNPoints; /// number of points used to scan the PL
+    Int_t fNPoints;      ///< number of points used to scan the PL
 
-    Double_t fMaximum;   /// function maximum
+    double fMaximum;   ///< function maximum
     // ranges for plots
-    Double_t fXmin;
-    Double_t fXmax;
-    Double_t fYmin;
-    Double_t fYmax;
-    Double_t fPrecision;  /// RooCurve precision
+    double fXmin;
+    double fXmax;
+    double fYmin;
+    double fYmax;
+    double fPrecision; ///< RooCurve precision
 
     LikelihoodInterval *fInterval;
 
     RooArgSet *fParamsPlot;
-    TObject * fPlotObject;    /// plotted object
+    TObject * fPlotObject; ///< plotted object
 
 
   protected:
 
-    ClassDef(LikelihoodIntervalPlot,2)  /// Class containing the results of the IntervalCalculator
+    ClassDefOverride(LikelihoodIntervalPlot,2)  // Class containing the results of the IntervalCalculator
   };
 }
 

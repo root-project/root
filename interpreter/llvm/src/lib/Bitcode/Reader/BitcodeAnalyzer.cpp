@@ -130,11 +130,12 @@ static Optional<const char *> GetCodeName(unsigned CodeID, unsigned BlockID,
       STRINGIFY_CODE(MODULE_CODE, DATALAYOUT)
       STRINGIFY_CODE(MODULE_CODE, ASM)
       STRINGIFY_CODE(MODULE_CODE, SECTIONNAME)
-      STRINGIFY_CODE(MODULE_CODE, DEPLIB) // FIXME: Remove in 4.0
+      STRINGIFY_CODE(MODULE_CODE, DEPLIB) // Deprecated, present in old bitcode
       STRINGIFY_CODE(MODULE_CODE, GLOBALVAR)
       STRINGIFY_CODE(MODULE_CODE, FUNCTION)
       STRINGIFY_CODE(MODULE_CODE, ALIAS)
       STRINGIFY_CODE(MODULE_CODE, GCNAME)
+      STRINGIFY_CODE(MODULE_CODE, COMDAT)
       STRINGIFY_CODE(MODULE_CODE, VSTOFFSET)
       STRINGIFY_CODE(MODULE_CODE, METADATA_VALUES_UNUSED)
       STRINGIFY_CODE(MODULE_CODE, SOURCE_FILENAME)
@@ -176,16 +177,20 @@ static Optional<const char *> GetCodeName(unsigned CodeID, unsigned BlockID,
       STRINGIFY_CODE(TYPE_CODE, OPAQUE)
       STRINGIFY_CODE(TYPE_CODE, INTEGER)
       STRINGIFY_CODE(TYPE_CODE, POINTER)
+      STRINGIFY_CODE(TYPE_CODE, HALF)
       STRINGIFY_CODE(TYPE_CODE, ARRAY)
       STRINGIFY_CODE(TYPE_CODE, VECTOR)
       STRINGIFY_CODE(TYPE_CODE, X86_FP80)
       STRINGIFY_CODE(TYPE_CODE, FP128)
       STRINGIFY_CODE(TYPE_CODE, PPC_FP128)
       STRINGIFY_CODE(TYPE_CODE, METADATA)
+      STRINGIFY_CODE(TYPE_CODE, X86_MMX)
       STRINGIFY_CODE(TYPE_CODE, STRUCT_ANON)
       STRINGIFY_CODE(TYPE_CODE, STRUCT_NAME)
       STRINGIFY_CODE(TYPE_CODE, STRUCT_NAMED)
       STRINGIFY_CODE(TYPE_CODE, FUNCTION)
+      STRINGIFY_CODE(TYPE_CODE, TOKEN)
+      STRINGIFY_CODE(TYPE_CODE, BFLOAT)
     }
 
   case bitc::CONSTANTS_BLOCK_ID:
@@ -213,6 +218,7 @@ static Optional<const char *> GetCodeName(unsigned CodeID, unsigned BlockID,
       STRINGIFY_CODE(CST_CODE, INLINEASM)
       STRINGIFY_CODE(CST_CODE, CE_SHUFVEC_EX)
       STRINGIFY_CODE(CST_CODE, CE_UNOP)
+      STRINGIFY_CODE(CST_CODE, DSO_LOCAL_EQUIVALENT)
     case bitc::CST_CODE_BLOCKADDRESS:
       return "CST_CODE_BLOCKADDRESS";
       STRINGIFY_CODE(CST_CODE, DATA)
@@ -305,6 +311,8 @@ static Optional<const char *> GetCodeName(unsigned CodeID, unsigned BlockID,
       STRINGIFY_CODE(FS, CFI_FUNCTION_DECLS)
       STRINGIFY_CODE(FS, TYPE_ID)
       STRINGIFY_CODE(FS, TYPE_ID_METADATA)
+      STRINGIFY_CODE(FS, BLOCK_COUNT)
+      STRINGIFY_CODE(FS, PARAM_ACCESS)
     }
   case bitc::METADATA_ATTACHMENT_ID:
     switch (CodeID) {
@@ -354,6 +362,7 @@ static Optional<const char *> GetCodeName(unsigned CodeID, unsigned BlockID,
       STRINGIFY_CODE(METADATA, GLOBAL_VAR_EXPR)
       STRINGIFY_CODE(METADATA, INDEX_OFFSET)
       STRINGIFY_CODE(METADATA, INDEX)
+      STRINGIFY_CODE(METADATA, ARG_LIST)
     }
   case bitc::METADATA_KIND_BLOCK_ID:
     switch (CodeID) {
@@ -434,6 +443,13 @@ static Expected<CurStreamTypeType> ReadSignature(BitstreamCursor &Stream) {
       return std::move(Err);
     if (Signature[2] == 'A' && Signature[3] == 'G')
       return ClangSerializedDiagnosticsBitstream;
+  } else if (Signature[0] == 'R' && Signature[1] == 'M') {
+    if (Error Err = tryRead(Signature[2], 8))
+      return std::move(Err);
+    if (Error Err = tryRead(Signature[3], 8))
+      return std::move(Err);
+    if (Signature[2] == 'R' && Signature[3] == 'K')
+      return LLVMBitstreamRemarks;
   } else {
     if (Error Err = tryRead(Signature[2], 4))
       return std::move(Err);
@@ -626,6 +642,9 @@ void BitcodeAnalyzer::printStats(BCDumpOptions O,
     break;
   case ClangSerializedDiagnosticsBitstream:
     O.OS << "Clang Serialized Diagnostics\n";
+    break;
+  case LLVMBitstreamRemarks:
+    O.OS << "LLVM Remarks\n";
     break;
   }
   O.OS << "  # Toplevel Blocks: " << NumTopBlocks << "\n";
@@ -900,17 +919,14 @@ Error BitcodeAnalyzer::parseBlock(unsigned BlockID, unsigned IndentLevel,
             Hasher.update(ArrayRef<uint8_t>(Ptr, BlockSize));
             Hash = Hasher.result();
           }
-          SmallString<20> RecordedHash;
-          RecordedHash.resize(20);
+          std::array<char, 20> RecordedHash;
           int Pos = 0;
           for (auto &Val : Record) {
             assert(!(Val >> 32) && "Unexpected high bits set");
-            RecordedHash[Pos++] = (Val >> 24) & 0xFF;
-            RecordedHash[Pos++] = (Val >> 16) & 0xFF;
-            RecordedHash[Pos++] = (Val >> 8) & 0xFF;
-            RecordedHash[Pos++] = (Val >> 0) & 0xFF;
+            support::endian::write32be(&RecordedHash[Pos], Val);
+            Pos += 4;
           }
-          if (Hash == RecordedHash)
+          if (Hash == StringRef(RecordedHash.data(), RecordedHash.size()))
             O->OS << " (match)";
           else
             O->OS << " (!mismatch!)";

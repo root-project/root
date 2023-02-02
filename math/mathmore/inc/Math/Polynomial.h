@@ -97,7 +97,7 @@ public:
    Polynomial(double a, double b, double c, double d, double e);
 
 
-   virtual ~Polynomial() {}
+   ~Polynomial() override {}
 
    // use default copy-ctor and assignment operators
 
@@ -134,14 +134,14 @@ public:
    unsigned int Order() const { return fOrder; }
 
 
-   IGenFunction * Clone() const;
+   IGenFunction * Clone() const override;
 
    /**
        Optimized method to evaluate at the same time the function value and derivative at a point x.
        Implement the interface specified bby ROOT::Math::IGradientOneDim.
        In the case of polynomial there is no advantage to compute both at the same time
    */
-   void FdF (double x, double & f, double & df) const {
+   void FdF (double x, double & f, double & df) const override {
       f = (*this)(x);
       df = Derivative(x);
    }
@@ -149,11 +149,11 @@ public:
 
 private:
 
-   double DoEvalPar ( double x, const double * p ) const ;
+   double DoEvalPar ( double x, const double * p ) const override ;
 
-   double DoDerivative (double x) const ;
+   double DoDerivative (double x) const override ;
 
-   double DoParameterDerivative(double x, const double * p, unsigned int ipar) const;
+   double DoParameterDerivative(double x, const double * p, unsigned int ipar) const override;
 
 
    // cache order = number of params - 1)

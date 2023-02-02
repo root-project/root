@@ -53,8 +53,8 @@ protected:
    Bool_t                 fBranchChecked;
    TSQLTableInfo         *fTableInfo;
 
-   void                   CheckBasket(TBranch * tb);
-   Bool_t                 CheckBranch(TBranch * tb);
+   void                   CheckBasket(TBranch *tb);
+   Bool_t                 CheckBranch(TBranch *tb);
    Bool_t                 CheckTable(const TString &table) const;
    void                   CreateBranches();
    std::vector<Int_t>    *GetColumnIndice(TBranch *branch);
@@ -63,35 +63,35 @@ protected:
    TString                ConvertTypeName(const TString& typeName );
    virtual void           CreateBranch(const TString& branchName,const TString &typeName);
    Bool_t                 CreateTable(const TString& table);
-   virtual TBasket       *CreateBasket(TBranch * br);
+   TBasket               *CreateBasket(TBranch * br) override;
 
-   virtual TBranch *BranchImp(const char *branchname, const char *classname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel);
-   virtual TBranch *BranchImp(const char *branchname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel);
+   TBranch               *BranchImp(const char *branchname, const char *classname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel) override;
+   TBranch               *BranchImp(const char *branchname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel) override;
 
 public:
    TTreeSQL(TSQLServer * server, TString DB, const TString& table);
-
-   virtual Int_t          Branch(TCollection *list, Int_t bufsize=32000, Int_t splitlevel=99, const char *name="");
-   virtual Int_t          Branch(TList *list, Int_t bufsize=32000, Int_t splitlevel=99);
-   virtual Int_t          Branch(const char *folder, Int_t bufsize=32000, Int_t splitlevel=99);
-   virtual TBranch       *Bronch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99);
-   virtual TBranch       *BranchOld(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=1);
-   virtual TBranch       *Branch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99);
-
-   virtual TBranch       *Branch(const char *name, void *address, const char *leaflist, Int_t bufsize);
-
-   virtual Int_t          Fill();
-   virtual Int_t          GetEntry(Long64_t entry=0, Int_t getall=0);
-   virtual Long64_t       GetEntries()    const;
-   virtual Long64_t       GetEntries(const char *sel) { return TTree::GetEntries(sel); }
-   virtual Long64_t       GetEntriesFast()const;
-           TString        GetTableName(){ return fTable; }
-   virtual Long64_t       LoadTree(Long64_t entry);
-   virtual Long64_t       PrepEntry(Long64_t entry);
-           void           Refresh();
-
    virtual ~TTreeSQL();
-   ClassDef(TTreeSQL,2);  // TTree Implementation read and write to a SQL database.
+
+   Int_t                  Branch(TCollection *list, Int_t bufsize=32000, Int_t splitlevel=99, const char *name="") override;
+   Int_t                  Branch(TList *list, Int_t bufsize=32000, Int_t splitlevel=99) override;
+   Int_t                  Branch(const char *folder, Int_t bufsize=32000, Int_t splitlevel=99) override;
+   TBranch               *Bronch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99) override;
+   TBranch               *BranchOld(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=1) override;
+   TBranch               *Branch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99) override;
+
+   TBranch               *Branch(const char *name, void *address, const char *leaflist, Int_t bufsize) override;
+
+   virtual Int_t          Fill() override;
+   virtual Int_t          GetEntry(Long64_t entry=0, Int_t getall=0) override;
+   virtual Long64_t       GetEntries() const override;
+   Long64_t               GetEntries(const char *sel) override { return TTree::GetEntries(sel); }
+   Long64_t               GetEntriesFast()const override;
+   TString                GetTableName(){ return fTable; }
+   virtual Long64_t       LoadTree(Long64_t entry) override;
+   virtual Long64_t       PrepEntry(Long64_t entry);
+   void                   Refresh() override;
+
+   ClassDefOverride(TTreeSQL,2);  // TTree Implementation read and write to a SQL database.
 };
 
 

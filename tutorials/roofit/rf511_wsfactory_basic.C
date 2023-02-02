@@ -21,7 +21,7 @@
 #include "TAxis.h"
 using namespace RooFit;
 
-void rf511_wsfactory_basic(Bool_t compact = kFALSE)
+void rf511_wsfactory_basic(bool compact = false)
 {
    RooWorkspace *w = new RooWorkspace("w");
 
@@ -59,7 +59,7 @@ void rf511_wsfactory_basic(Bool_t compact = kFALSE)
    //
    // P.d.f. constructor arguments may by any type of RooAbsArg, but also
    //
-   // Double_t --> converted to RooConst(...)
+   // double --> converted to RooConst(...)
    // {a,b,c} --> converted to RooArgSet() or RooArgList() depending on required ctor arg
    // dataset name --> converted to RooAbsData reference for any dataset residing in the workspace
    // enum --> Any enum label that belongs to an enum defined in the (base) class

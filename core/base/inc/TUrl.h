@@ -88,14 +88,14 @@ public:
    void        SetPort(Int_t port) { fPort = port; fUrl = ""; }
    void        SetUrl(const char *url, Bool_t defaultIsFile = kFALSE);
 
-   Bool_t      IsSortable() const { return kTRUE; }
-   Int_t       Compare(const TObject *obj) const;
+   Bool_t      IsSortable() const override { return kTRUE; }
+   Int_t       Compare(const TObject *obj) const override;
 
-   void        Print(Option_t *option="") const;
+   void        Print(Option_t *option="") const override;
 
    static TObjArray *GetSpecialProtocols();
 
-   ClassDef(TUrl,1)  //Represents an URL
+   ClassDefOverride(TUrl,1)  //Represents an URL
 };
 
 #endif

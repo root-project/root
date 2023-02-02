@@ -416,7 +416,8 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long
    // list's number of entries, unless it's a TChain and "max entries" is
    // uninitialized (i.e. TTree::kMaxEntries).
    if (beginEntry >= GetEntries(false) && !(IsChain() && GetEntries(false) == TTree::kMaxEntries)) {
-      Error("SetEntriesRange()", "first entry out of range 0..%lld", GetEntries(false));
+      Error("SetEntriesRange()", "Start entry (%lld) must be lower than the available entries (%lld).", beginEntry,
+            GetEntries(false));
       return kEntryNotFound;
    }
 
@@ -460,7 +461,7 @@ void TTreeReader::Restart() {
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the number of entries of the TEntryList if one is provided, else
 /// of the TTree / TChain, independent of a range set by SetEntriesRange()
-/// by calling TTree/TChain::GetEntriesFast.
+/// by calling TTree/TChain::%GetEntriesFast.
 
 
 Long64_t TTreeReader::GetEntries() const {

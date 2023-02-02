@@ -9,8 +9,7 @@
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C version)
 
 
 import ROOT
@@ -72,7 +71,7 @@ argus.fitTo(data, PrintEvalErrors=0, EvalErrorWall=False)
 # ------------------------------------------------------------------
 
 # Construct likelihood function of model and data
-nll = ROOT.RooNLLVar("nll", "nll", argus, data)
+nll = argus.createNLL(data)
 
 # Plot likelihood in m0 in range that includes problematic values
 # In self configuration no messages are printed for likelihood evaluation errors,

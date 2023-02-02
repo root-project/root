@@ -23,7 +23,7 @@ Numeric 1-dimensional convolution operator PDF. This class can convolve any PDF
 with any other PDF using a straightforward numeric calculation of the
 convolution integral
 This class should be used as last resort as numeric convolution calculated
-this way is computationally intensive and prone to stability fitting problems. 
+this way is computationally intensive and prone to stability fitting problems.
 <b>The preferred way to compute numeric convolutions is RooFFTConvPdf</b>,
 which calculates convolutions using Fourier Transforms (requires external free
 FFTW3 package)
@@ -55,13 +55,10 @@ The default numeric precision is 1e-7, i.e. the global default for
 numeric integration but you should experiment with this value to
 see if it is sufficient for example by studying the number of function
 calls that MINUIT needs to fit your function as function of the
-convolution precision. 
+convolution precision.
 **/
 
-#include "RooFit.h"
-
 #include "Riostream.h"
-#include "TH2F.h"
 #include "RooNumConvPdf.h"
 #include "RooArgList.h"
 #include "RooRealVar.h"
@@ -83,26 +80,20 @@ ClassImp(RooNumConvPdf);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooNumConvPdf::RooNumConvPdf() :
-  _init(kFALSE),
-  _conv(0)
-{  
-}
+RooNumConvPdf::RooNumConvPdf() {}
 
 
 
 
 //_____________________________________________________________________________R
-RooNumConvPdf::RooNumConvPdf(const char *name, const char *title, RooRealVar& convVar, RooAbsPdf& inPdf, RooAbsPdf& resmodel) : 
-  RooAbsPdf(name,title), 
-  _init(kFALSE),
-  _conv(0),
+RooNumConvPdf::RooNumConvPdf(const char *name, const char *title, RooRealVar& convVar, RooAbsPdf& inPdf, RooAbsPdf& resmodel) :
+  RooAbsPdf(name,title),
   _origVar("!origVar","Original Convolution variable",this,convVar),
   _origPdf("!origPdf","Original Input PDF",this,inPdf),
   _origModel("!origModel","Original Resolution model",this,resmodel)
 {
   // Constructor of convolution operator PDF
-  // 
+  //
   // convVar  :  convolution variable (on which both pdf and resmodel should depend)
   // pdf      :  input 'physics' pdf
   // resmodel :  input 'resultion' pdf
@@ -117,19 +108,16 @@ RooNumConvPdf::RooNumConvPdf(const char *name, const char *title, RooRealVar& co
 /// Copy constructor
 
 RooNumConvPdf::RooNumConvPdf(const RooNumConvPdf& other, const char* name) :
-  RooAbsPdf(other,name), 
-  _init(kFALSE),
+  RooAbsPdf(other,name),
   _origVar("!origVar",this,other._origVar),
   _origPdf("!origPdf",this,other._origPdf),
   _origModel("!origModel",this,other._origModel)
 {
   // Make temporary clone of original convolution to preserve configuration information
   // This information will be propagated to a newly create convolution in a subsequent
-  // call to initialize() 
+  // call to initialize()
   if (other._conv) {
-    _conv = new RooNumConvolution(*other._conv,Form("%s_CONV",name?name:GetName())) ;
-  } else {
-    _conv = 0 ;
+    _conv = std::make_unique<RooNumConvolution>(*other._conv,Form("%s_CONV",name?name:GetName())) ;
   }
 }
 
@@ -138,19 +126,14 @@ RooNumConvPdf::RooNumConvPdf(const RooNumConvPdf& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooNumConvPdf::~RooNumConvPdf() 
-{
-  if (_init) {
-    delete _conv ;
-  }
-}
+RooNumConvPdf::~RooNumConvPdf() {}
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of p.d.f
 
-Double_t RooNumConvPdf::evaluate() const
+double RooNumConvPdf::evaluate() const
 {
   if (!_init) initialize() ;
 
@@ -165,18 +148,13 @@ Double_t RooNumConvPdf::evaluate() const
 void RooNumConvPdf::initialize() const
 {
   // Save pointer to any prototype convolution object (only present if this object is made through
-  // a copy constructor) 
-  RooNumConvolution* protoConv = _conv ;
+  // a copy constructor)
+  RooNumConvolution* protoConv = _conv.get();
 
   // Optionally pass along configuration data from prototype object
-  _conv = new RooNumConvolution(Form("%s_CONV",GetName()),GetTitle(),var(),pdf(),model(),protoConv) ;
+  _conv = std::make_unique<RooNumConvolution>(Form("%s_CONV",GetName()),GetTitle(),var(),pdf(),model(),protoConv) ;
 
-  // Delete prototype object now
-  if (protoConv) {
-    delete protoConv ;  
-  }
-
-  _init = kTRUE ;
+  _init = true ;
 }
 
 
@@ -187,29 +165,29 @@ void RooNumConvPdf::initialize() const
 /// that uses a smearing algorithm. Otherwise return a standard accept/reject sampling
 /// context on the convoluted shape.
 
-RooAbsGenContext* RooNumConvPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
-					    const RooArgSet* auxProto, Bool_t verbose) const 
+RooAbsGenContext* RooNumConvPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype,
+                   const RooArgSet* auxProto, bool verbose) const
 {
   if (!_init) initialize() ;
 
   // Check if physics PDF and resolution model can both directly generate the convolution variable
-  RooArgSet* modelDep = _conv->model().getObservables(&vars) ;
-  modelDep->remove(_conv->var(),kTRUE,kTRUE) ;
-  Int_t numAddDep = modelDep->getSize() ;
-  delete modelDep ;
+  RooArgSet modelDep;
+  _conv->model().getObservables(&vars, modelDep);
+  modelDep.remove(_conv->var(),true,true) ;
+  Int_t numAddDep = modelDep.getSize() ;
 
   RooArgSet dummy ;
-  Bool_t pdfCanDir = (((RooAbsPdf&)_conv->pdf()).getGenerator(_conv->var(),dummy) != 0 && \
-		      ((RooAbsPdf&)_conv->pdf()).isDirectGenSafe(_conv->var())) ;
-  Bool_t resCanDir = (((RooAbsPdf&)_conv->model()).getGenerator(_conv->var(),dummy) !=0  && 
-		      ((RooAbsPdf&)_conv->model()).isDirectGenSafe(_conv->var())) ;
+  bool pdfCanDir = (((RooAbsPdf&)_conv->pdf()).getGenerator(_conv->var(),dummy) != 0 && \
+            ((RooAbsPdf&)_conv->pdf()).isDirectGenSafe(_conv->var())) ;
+  bool resCanDir = (((RooAbsPdf&)_conv->model()).getGenerator(_conv->var(),dummy) !=0  &&
+            ((RooAbsPdf&)_conv->model()).isDirectGenSafe(_conv->var())) ;
 
   if (numAddDep>0 || !pdfCanDir || !resCanDir) {
     // Any resolution model with more dependents than the convolution variable
     // or pdf or resmodel do not support direct generation
     return new RooGenContext(*this,vars,prototype,auxProto,verbose) ;
-  } 
-  
+  }
+
   // Any other resolution model: use specialized generator context
   return new RooConvGenContext(*this,vars,prototype,auxProto,verbose) ;
 }
@@ -220,7 +198,7 @@ RooAbsGenContext* RooNumConvPdf::genContext(const RooArgSet &vars, const RooData
 /// Customized printing of arguments of a RooNumConvPdf to more intuitively reflect the contents of the
 /// product operator construction
 
-void RooNumConvPdf::printMetaArgs(ostream& os) const 
+void RooNumConvPdf::printMetaArgs(ostream& os) const
 {
   os << _origPdf.arg().GetName() << "(" << _origVar.arg().GetName() << ") (*) " << _origModel.arg().GetName() << "(" << _origVar.arg().GetName() << ") " ;
 }

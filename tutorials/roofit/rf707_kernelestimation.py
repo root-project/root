@@ -73,7 +73,7 @@ kest4 = ROOT.RooNDKeysPdf("kest4", "kest4", [x, y], data2, "am")
 kest5 = ROOT.RooNDKeysPdf("kest5", "kest5", [x, y], data2, "am", 2)
 
 # Create a histogram of the data
-hh_data = ROOT.RooAbsData.createHistogram(data2, "hh_data", x, Binning=10, YVar=dict(var=y, Binning=10))
+hh_data = data2.createHistogram("hh_data", x, Binning=10, YVar=dict(var=y, Binning=10))
 
 # Create histogram of the 2d kernel estimation pdfs
 hh_pdf = kest4.createHistogram("hh_pdf", x, Binning=25, YVar=dict(var=y, Binning=25))

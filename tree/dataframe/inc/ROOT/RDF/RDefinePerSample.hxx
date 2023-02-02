@@ -39,13 +39,18 @@ class R__CLING_PTRCHECK(off) RDefinePerSample final : public RDefineBase {
 
 public:
    RDefinePerSample(std::string_view name, std::string_view type, F expression, RLoopManager &lm)
-      : RDefineBase(name, type, /*colRegister*/ {}, lm, /*columnNames*/ {}), fExpression(std::move(expression)),
-        fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<RetType_t>())
+      : RDefineBase(name, type, RDFInternal::RColumnRegister{nullptr}, lm, /*columnNames*/ {}),
+        fExpression(std::move(expression)), fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<RetType_t>())
    {
+      fLoopManager->Register(this);
+      auto callUpdate = [this](unsigned int slot, const ROOT::RDF::RSampleInfo &id) { this->Update(slot, id); };
+      fLoopManager->AddSampleCallback(this, std::move(callUpdate));
    }
 
    RDefinePerSample(const RDefinePerSample &) = delete;
    RDefinePerSample &operator=(const RDefinePerSample &) = delete;
+
+   ~RDefinePerSample() { fLoopManager->Deregister(this); }
 
    /// Return the (type-erased) address of the Define'd value for the given processing slot.
    void *GetValuePtr(unsigned int slot) final
@@ -64,10 +69,20 @@ public:
       fLastResults[slot * RDFInternal::CacheLineStep<RetType_t>()] = fExpression(slot, id);
    }
 
-   const std::type_info &GetTypeId() const { return typeid(RetType_t); }
+   const std::type_info &GetTypeId() const final { return typeid(RetType_t); }
 
    void InitSlot(TTreeReader *, unsigned int) final {}
+
    void FinalizeSlot(unsigned int) final {}
+
+   // No-op for RDefinePerSample: it never depends on systematic variations
+   void MakeVariations(const std::vector<std::string> &) final {}
+
+   RDefineBase &GetVariedDefine(const std::string &) final
+   {
+      R__ASSERT(false && "This should never be called");
+      return *this;
+   }
 };
 
 } // namespace RDF

@@ -24,8 +24,6 @@ advantage of its internal normalization and axis range adjustment features. The
 most useful implementation of RooPlotable are RooHist and RooCurve.
 **/
 
-#include "RooFit.h"
-
 #include "RooPlotable.h"
 #include "TObject.h"
 #include "Riostream.h"
@@ -39,7 +37,7 @@ ClassImp(RooPlotable);
 ////////////////////////////////////////////////////////////////////////////////
 /// Print detailed information
 
-void RooPlotable::printMultiline(ostream& os, Int_t /*content*/, Bool_t /*verbose*/, TString indent) const {
+void RooPlotable::printMultiline(ostream& os, Int_t /*content*/, bool /*verbose*/, TString indent) const {
   os << indent << "--- RooPlotable ---" << endl;
   os << indent << "  y-axis min = " << getYAxisMin() << endl
      << indent << "  y-axis max = " << getYAxisMax() << endl

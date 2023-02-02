@@ -50,7 +50,7 @@ protected:
    }
 
 public:
-   TGLObject() : TGLLogicalShape(0), fMultiColor(kFALSE) {}
+   TGLObject() : TGLLogicalShape(nullptr), fMultiColor(kFALSE) {}
    virtual ~TGLObject() {}
 
    virtual Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const;
@@ -63,7 +63,7 @@ public:
    virtual void   UpdateBoundingBox();
 
    // TGLObject virtuals
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0) = 0;
+   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) = 0;
    virtual void   SetBBox() = 0;
    // Abstract method from TGLLogicalShape:
    // virtual void DirectDraw(TGLRnrCtx & rnrCtx) const = 0;

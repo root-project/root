@@ -14,6 +14,8 @@
 #define ROOT_Math_FitMethodFunction
 
 #include "Math/IFunction.h"
+#include <vector>
+#include <limits>
 
 // #ifndef ROOT_Math_IParamFunctionfwd
 // #include "Math/IParamFunctionfwd.h"
@@ -28,7 +30,7 @@ namespace ROOT {
    FitMethodFunction class
    Interface for objective functions (like chi2 and likelihood used in the fit)
    In addition to normal function interface provide interface for calculating each
-   data contrinution to the function which is required by some algorithm (like Fumili)
+   data contribution to the function which is required by some algorithm (like Fumili)
 
    @ingroup  FitMethodFunc
 */
@@ -40,8 +42,8 @@ public:
 
    typedef  typename FunctionType::BaseFunc BaseFunction;
 
-   /// enumeration specyfing the possible fit method types
-   enum Type_t { kUndefined , kLeastSquare, kLogLikelihood };
+   /// enumeration specifying the possible fit method types
+   enum Type_t { kUndefined , kLeastSquare, kLogLikelihood, kPoissonLikelihood };
 
 
    BasicFitMethodFunction(int dim, int npoint) :
@@ -64,10 +66,42 @@ public:
       method returning the data i-th contribution to the fit objective function
       For example the residual for the least square functions or the pdf element for the
       likelihood functions.
-      Estimating eventually also the gradient of the data element if the passed pointer  is not null
+      Estimating also the gradient of the data element if the passed pointer  is not null
+      and the Hessian. The flag fullHessian is set when one needs to compute the full Hessian (not the approximated one)
+      and should be used when the full second derivatives of the model functions are available
     */
-   virtual double DataElement(const double *x, unsigned int i, double *g = 0) const = 0;
+   virtual double DataElement(const double *x, unsigned int i, double *g = nullptr, double *h = nullptr, bool fullHessian = false) const = 0;
 
+   // flag to indicate if full Hessian computation is supported
+   virtual bool HasHessian() const { return false;}
+
+   /**
+    * Computes the full Hessian. Return false if Hessian is not supported
+    */
+   virtual bool Hessian(const double * x, double * hess) const {
+      //return full Hessian of  the objective function which is Sum(F(i))
+      unsigned int np = NPoints();
+      unsigned int ndim = NDim();
+      unsigned int nh = ndim*(ndim+1)/2;
+      for (unsigned int k = 0; k < nh;  ++k) {
+         hess[k] = 0;
+      }
+      std::vector<double> g(np);  // gradient of the F(i)
+      std::vector<double> h(nh);  // hessian of F(i)
+      for (unsigned int i = 0; i < np; i++) {
+         double f = DataElement(x,i,g.data(),h.data(),true);
+         if (f == std::numeric_limits<double>::quiet_NaN() ) return false;
+         for (unsigned int j = 0; j < nh; j++) {
+            hess[j] += h[j];
+         }
+      }
+      return true;
+   }
+
+   /**
+    * Computes the Second derivatives. Return false if this is not supported
+    */
+   virtual bool G2(const double * , double * ) const { return false; }
 
    /**
       return the number of data points used in evaluating the function
@@ -80,7 +114,7 @@ public:
    virtual Type_t Type() const { return kUndefined; }
 
    /**
-      return the total number of function calls (overrided if needed)
+      return the total number of function calls (override if needed)
     */
    virtual unsigned int NCalls() const { return fNCalls; }
 
@@ -95,12 +129,12 @@ public:
    virtual void ResetNCalls() { fNCalls = 0; }
 
 
-
-public:
-
-
-protected:
-
+   /**
+      Static function to indicate if a function is supporting gradient
+   */
+   static bool IsAGradFCN() {
+     return false;
+  }
 
 private:
 
@@ -111,29 +145,18 @@ private:
 
 };
 
-      // define the normal and gradient function
-      typedef BasicFitMethodFunction<ROOT::Math::IMultiGenFunction>  FitMethodFunction;
-      typedef BasicFitMethodFunction<ROOT::Math::IMultiGradFunction> FitMethodGradFunction;
+template<>
+inline bool BasicFitMethodFunction<ROOT::Math::IMultiGradFunction>::IsAGradFCN() {
+   return true;
+}
+
+// define the normal and gradient function
+typedef BasicFitMethodFunction<ROOT::Math::IMultiGenFunction>  FitMethodFunction;
+typedef BasicFitMethodFunction<ROOT::Math::IMultiGradFunction> FitMethodGradFunction;
 
 
-      // useful template definition to use these interface in
-      // generic programming
-      // (comment them out since they are not used anymore)
-/*
-      template<class FunType>
-      struct ParamFunctionTrait {
-         typedef  IParamMultiFunction PFType;
-      };
 
-      // specialization for the gradient param functions
-      template<>
-      struct ParamFunctionTrait<ROOT::Math::IMultiGradFunction>  {
-         typedef  IParamMultiGradFunction PFType;
-      };
-*/
-
-
-   } // end namespace Math
+} // end namespace Math
 
 } // end namespace ROOT
 

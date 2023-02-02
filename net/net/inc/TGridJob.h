@@ -40,11 +40,11 @@ public:
    virtual TString GetJobID() { return fJobID; }
 
    virtual TGridJobStatus *GetJobStatus() const = 0;
-   virtual Int_t           GetOutputSandbox(const char *localpath, Option_t *opt = 0);
+   virtual Int_t           GetOutputSandbox(const char *localpath, Option_t *opt = nullptr);
 
    virtual Bool_t          Resubmit() = 0;
    virtual Bool_t          Cancel () = 0;
-   ClassDef(TGridJob,1)  // ABC defining interface to a GRID job
+   ClassDefOverride(TGridJob,1)  // ABC defining interface to a GRID job
 };
 
 #endif

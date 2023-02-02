@@ -23,7 +23,7 @@
 #include <string>
 
 /**
-   @defgroup ParamFunc Parameteric Function Evaluation Interfaces.
+   @defgroup ParamFunc Parametric Function Evaluation Interfaces.
    Interfaces classes for evaluation of parametric functions
    @ingroup CppFunctions
 */
@@ -38,7 +38,7 @@ namespace ROOT {
       /**
           Documentation for the abstract class IBaseParam.
           It defines the interface for dealing with the function parameters
-          This is used only for internal convinience, to avoid redefining the Parameter API
+          This is used only for internal convenience, to avoid redefining the Parameter API
           for the one and the multi-dim functions.
           Concrete class should derive from ROOT::Math::IParamFunction and not from this class.
 
@@ -91,7 +91,7 @@ namespace ROOT {
 
 //___________________________________________________________________
       /**
-         IParamFunction interface (abstract class) describing multi-dimensional parameteric functions
+         IParamFunction interface (abstract class) describing multi-dimensional parametric functions
          It is a derived class from ROOT::Math::IBaseFunctionMultiDim and
          ROOT::Math::IBaseParam
 
@@ -197,7 +197,7 @@ namespace ROOT {
          /**
             Implement the ROOT::Math::IBaseFunctionOneDim interface DoEval(x) using the cached parameter values
          */
-         virtual double DoEval(double x) const
+         double DoEval(double x) const override
          {
             return DoEvalPar(x, Parameters());
          }
@@ -232,7 +232,7 @@ namespace ROOT {
          /**
             Virtual Destructor (no operations)
          */
-         virtual ~IParametricGradFunctionMultiDimTempl()  {}
+         ~IParametricGradFunctionMultiDimTempl() override  {}
 
 
          /* Reimplementation instead of using BaseParamFunc::operator();
@@ -257,6 +257,22 @@ namespace ROOT {
             for (unsigned int ipar  = 0; ipar < npar; ++ipar)
                grad[ipar] = DoParameterDerivative(x, p, ipar);
          }
+
+         // Return true if this function provides computation of the Hessian matrix with respect to the parameters
+         virtual bool HasParameterHessian() const { return false;}
+
+         /**
+            Evaluate the all the Hessian (second derivatives matrix) of the function with respect to the parameters at a point x.
+            It is optional to be implemented by the derived classes if needed. If it is not implemented return a false.
+            h must be dimensioned as a n x (n+1)/2 matrix (since it is a symmetric matrix)
+         */
+         virtual bool ParameterHessian(const T * /* x */, const double * /* p */, T * /* h */) const { return false;}
+
+         /**
+            Evaluate all the second derivatives (diagonal ones) of the function with respect to the parameters at a point x.
+            g2 is a vector of dimension npar
+         */
+         virtual bool ParameterG2(const T * /* x */, const double * /* p */, T * /* g2 */) const { return false;}
 
          /**
             Evaluate the partial derivative w.r.t a parameter ipar from values and parameters
@@ -284,8 +300,8 @@ namespace ROOT {
             Evaluate the partial derivative w.r.t a parameter ipar , to be implemented by the derived classes
           */
          virtual T DoParameterDerivative(const T *x, const double *p, unsigned int ipar) const = 0;
-         virtual T DoEvalPar(const T *x, const double *p) const = 0;
-         virtual T DoEval(const T *x) const
+         virtual T DoEvalPar(const T *x, const double *p) const override = 0;
+         virtual T DoEval(const T *x) const override
          {
             return DoEvalPar(x, Parameters());
          }
@@ -320,7 +336,7 @@ namespace ROOT {
          /**
             Virtual Destructor (no operations)
          */
-         virtual ~IParametricGradFunctionOneDim()  {}
+         ~IParametricGradFunctionOneDim() override  {}
 
 
          using BaseParamFunc::operator();

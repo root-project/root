@@ -27,7 +27,7 @@ class TGLOutput {
 public:
    enum EFormat { kEPS_SIMPLE, kEPS_BSP, kPDF_SIMPLE, kPDF_BSP };
    static Bool_t Capture(TGLViewer & viewer, EFormat format,
-                         const char * filePath = 0);
+                         const char * filePath = nullptr);
 
    static void   StartEmbeddedPS();//gl to ps in pad, "embedded" does not mean eps format here
    static void   CloseEmbeddedPS();

@@ -55,29 +55,29 @@ private:
 
 public:
    TNetXNGFile() : TFile(),
-      fFile(0), fUrl(0), fMode(XrdCl::OpenFlags::None), fInitCondVar(0),
+      fFile(nullptr), fUrl(nullptr), fMode(XrdCl::OpenFlags::None), fInitCondVar(nullptr),
       fReadvIorMax(0), fReadvIovMax(0) {}
-   TNetXNGFile(const char *url, const char *lurl, Option_t *mode , const char *title ,
-               Int_t compress , Int_t netopt , Bool_t parallelopen );
+   TNetXNGFile(const char *url, const char *lurl, Option_t *mode, const char *title,
+               Int_t compress, Int_t netopt, Bool_t parallelopen);
    TNetXNGFile(const char *url, Option_t *mode = "", const char *title = "",
                Int_t compress = 1, Int_t netopt = 0, Bool_t parallelopen = kFALSE);
 
    virtual ~TNetXNGFile();
 
-   virtual void     Init(Bool_t create);
-   virtual void     Close(const Option_t *option = "");
-   virtual void     Seek(Long64_t offset, ERelativeTo position = kBeg);
+   void     Init(Bool_t create) override;
+   void     Close(const Option_t *option = "") override;
+   void     Seek(Long64_t offset, ERelativeTo position = kBeg) override;
    virtual void     SetAsyncOpenStatus(EAsyncOpenStatus status);
-   virtual Long64_t GetSize() const;
-   virtual Int_t    ReOpen(Option_t *modestr);
-   virtual Bool_t   IsOpen() const;
-   virtual Bool_t   WriteBuffer(const char *buffer, Int_t length);
-   virtual void     Flush();
-   virtual Bool_t   ReadBuffer(char *buffer, Int_t length);
-   virtual Bool_t   ReadBuffer(char *buffer, Long64_t position, Int_t length);
-   virtual Bool_t   ReadBuffers(char *buffer, Long64_t *position, Int_t *length,
-                                Int_t nbuffs);
-   virtual TString  GetNewUrl() { return fNewUrl; }
+   Long64_t GetSize() const override;
+   Int_t    ReOpen(Option_t *modestr) override;
+   Bool_t   IsOpen() const override;
+   Bool_t   WriteBuffer(const char *buffer, Int_t length) override;
+   void     Flush() override;
+   Bool_t   ReadBuffer(char *buffer, Int_t length) override;
+   Bool_t   ReadBuffer(char *buffer, Long64_t position, Int_t length) override;
+   Bool_t   ReadBuffers(char *buffer, Long64_t *position, Int_t *length,
+                        Int_t nbuffs) override;
+   TString  GetNewUrl() override { return fNewUrl; }
 
 private:
    virtual Bool_t IsUseable() const;
@@ -89,7 +89,7 @@ private:
    TNetXNGFile(const TNetXNGFile &other);             // Not implemented
    TNetXNGFile &operator =(const TNetXNGFile &other); // Not implemented
 
-   ClassDef(TNetXNGFile, 0)   // ROOT class definition
+   ClassDefOverride(TNetXNGFile, 0)   // ROOT class definition
 };
 
 #endif // ROOT_TNetXNGFile

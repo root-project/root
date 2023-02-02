@@ -48,18 +48,16 @@ target_include_directories(MetaCling SYSTEM PRIVATE
 
 target_include_directories(MetaCling PRIVATE
    ${CLING_INCLUDE_DIRS}
-   ${CMAKE_SOURCE_DIR}/core/metacling/res
-   ${CMAKE_SOURCE_DIR}/core/clingutils/res
-   ${CMAKE_SOURCE_DIR}/core/foundation/res
-   ${CMAKE_SOURCE_DIR}/core/zip/inc
-   ${CMAKE_SOURCE_DIR}/core/clib/res
    ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_SOURCE_DIR}/core/meta/inc
    ${CMAKE_SOURCE_DIR}/core/clib/inc
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_SOURCE_DIR}/core/thread/inc
+   ${CMAKE_SOURCE_DIR}/core/clingutils/res
    ${CMAKE_SOURCE_DIR}/core/cont/inc
-   ${CMAKE_SOURCE_DIR}/core/gui/inc
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc
+   ${CMAKE_SOURCE_DIR}/core/foundation/res
+   ${CMAKE_SOURCE_DIR}/core/meta/inc
+   ${CMAKE_SOURCE_DIR}/core/metacling/res
+   ${CMAKE_SOURCE_DIR}/core/thread/inc
+   ${CMAKE_SOURCE_DIR}/core/zip/inc
    ${CMAKE_SOURCE_DIR}/io/io/inc
    ${CMAKE_BINARY_DIR}/ginclude
 )
@@ -128,7 +126,13 @@ if(MSVC)
       __std_terminate
       cling_runtime_internal_throwIfInvalidPointer
   )
-  if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+  if(CMAKE_CXX_STANDARD GREATER 14)
+    set(cling_exports ${cling_exports}
+      _Smtx_lock_shared
+      _Smtx_unlock_shared
+    )
+  endif()
+  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(cling_exports ${cling_exports}
       ??2@YAPEAX_K@Z
       ??3@YAXPEAX@Z
@@ -144,6 +148,8 @@ if(MSVC)
       ??$?6U?$char_traits@D@std@@@std@@YAAEAV?$basic_ostream@DU?$char_traits@D@std@@@0@AEAV10@D@Z
       ??$?6U?$char_traits@D@std@@@std@@YAAEAV?$basic_ostream@DU?$char_traits@D@std@@@0@AEAV10@PEBD@Z
       ??$endl@DU?$char_traits@D@std@@@std@@YAAEAV?$basic_ostream@DU?$char_traits@D@std@@@0@AEAV10@@Z
+      ??0LifetimeHandler@internal@runtime@cling@@QEAA@PEAVDynamicExprInfo@123@PEAVDeclContext@clang@@PEBDPEAVInterpreter@3@@Z
+      ??1LifetimeHandler@internal@runtime@cling@@QEAA@XZ
       ?_Facet_Register@std@@YAXPEAV_Facet_base@1@@Z
     )
     if($<CONFIG:Debug>)
@@ -165,6 +171,8 @@ if(MSVC)
       ??$?6U?$char_traits@D@std@@@std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@D@Z
       ??$?6U?$char_traits@D@std@@@std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@PBD@Z
       ??$endl@DU?$char_traits@D@std@@@std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@@Z
+      ??0LifetimeHandler@internal@runtime@cling@@QAE@PAVDynamicExprInfo@123@PAVDeclContext@clang@@PBDPAVInterpreter@3@@Z
+      ??1LifetimeHandler@internal@runtime@cling@@QAE@XZ
       ?_Facet_Register@std@@YAXPAV_Facet_base@1@@Z
     )
     if(MSVC_VERSION LESS 1914)
@@ -180,7 +188,7 @@ if(MSVC)
 endif()
 
 if(APPLE)
-  target_link_libraries(Cling PUBLIC -Wl,-bind_at_load -Wl,-undefined -Wl,dynamic_lookup)
+  target_link_libraries(Cling PUBLIC -Wl,-w -Wl,-bind_at_load -Wl,-undefined,dynamic_lookup)
 elseif(NOT MSVC)
   target_link_libraries(Cling PUBLIC -Wl,--unresolved-symbols=ignore-in-object-files)
 endif()

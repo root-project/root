@@ -28,21 +28,21 @@ class TControlBar : public TControlBarButton {
 friend class  TControlBarImp;
 
 private:
-   virtual void   Create();
+   void           Create() override;
    void           Initialize(Int_t x, Int_t y);
 
 protected:
 
-   TControlBarImp *fControlBarImp;  ///< system specific implementation
-   Int_t           fOrientation;    ///< orientation
-   TList          *fButtons;        ///< list of buttons
-   Int_t           fNoroc;          ///< number of rows or columns
+   TControlBarImp *fControlBarImp{nullptr};  ///< system specific implementation
+   Int_t           fOrientation{0};          ///< orientation
+   TList          *fButtons{nullptr};        ///< list of buttons
+   Int_t           fNoroc{1};                ///< number of rows or columns
 
 public:
    enum { kVertical = 1, kHorizontal = 2 };
 
    TControlBar();
-   TControlBar(const char *orientation, const char *title="");
+   TControlBar(const char *orientation, const char *title = "");
    TControlBar(const char *orientation, const char *title, Int_t x, Int_t y);
    virtual ~TControlBar();
 
@@ -69,7 +69,7 @@ public:
    void            SetButtonWidth(UInt_t width);
    void            Show();
 
-   ClassDef(TControlBar,0) //Control bar
+   ClassDefOverride(TControlBar,0) //Control bar
 };
 
 #endif

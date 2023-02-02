@@ -4,7 +4,7 @@
 ///
 /// This tutorial demonstrates how TSQLServer can be used to create a
 /// connection with a SQlite3 database. It accesses the Sqlite data base.
-/// Download from https://root.cern/download/root_download_stats.sqlite
+/// Download from https://root.cern/files/root_download_stats.sqlite
 /// The world map is hold by a TH2Poly histogram which, after filling, will show
 /// the world wide dispersion of ROOT's users.
 /// To histogram filling, is done having as input parameters

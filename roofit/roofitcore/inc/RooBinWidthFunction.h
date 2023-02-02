@@ -25,7 +25,13 @@
 namespace BatchHelpers { struct RunContext; }
 
 class RooBinWidthFunction : public RooAbsReal {
-public:
+  static bool _enabled;
+  
+public:  
+  static void enableClass();
+  static void disableClass();
+  static bool isClassEnabled();    
+   
   /// Create an empty instance.
   RooBinWidthFunction() :
     _histFunc("HistFuncForBinWidth", "Handle to a RooHistFunc, whose bin volumes should be returned.", this,
@@ -47,10 +53,10 @@ public:
     _histFunc("HistFuncForBinWidth", this, other._histFunc),
     _divideByBinWidth(other._divideByBinWidth) { }
 
-  virtual ~RooBinWidthFunction() { }
+  ~RooBinWidthFunction() override { }
 
   /// Copy the object and return as TObject*.
-  virtual TObject* clone(const char* newname = nullptr) const override {
+  TObject* clone(const char* newname = nullptr) const override {
     return new RooBinWidthFunction(*this, newname);
   }
 
@@ -60,16 +66,18 @@ public:
     return _histFunc->isBinnedDistribution(obs);
   }
   /// Return bin boundaries of internal RooHistFunc.
-  std::list<Double_t>* binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
+  std::list<double>* binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const override {
     return _histFunc->binBoundaries(obs, xlo, xhi);
   }
   /// Return plotSamplingHint of internal RooHistFunc.
-  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override {
     return _histFunc->plotSamplingHint(obs, xlo, xhi);
   }
 
+  bool divideByBinWidth() const { return _divideByBinWidth; }
+  const RooHistFunc& histFunc() const { return (*_histFunc); }
   double evaluate() const override;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
 private:
   RooTemplateProxy<const RooHistFunc> _histFunc;

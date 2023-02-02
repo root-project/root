@@ -12,14 +12,14 @@
 /** \class TMatrixTBase
     \ingroup Matrix
 
-    TMatrixTBase
+TMatrixTBase
 
-    Template of base class in the linear algebra package.
+Template of base class in the linear algebra package.
 
-    See \ref MatrixPage for the documentation of the linear algebra package.
+See the \ref Matrix page for the documentation of the linear algebra package
 
-    Matrix properties are stored here, however the data storage is part
-    of the derived classes
+Matrix properties are stored here, however the data storage is part
+of the derived classes
 */
 
 #include "TMatrixTBase.h"

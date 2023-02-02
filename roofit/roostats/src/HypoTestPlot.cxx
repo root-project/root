@@ -33,7 +33,7 @@ HypoTestPlot::HypoTestPlot(HypoTestResult& result, Int_t bins, Option_t* opt) :
 {
    ApplyResult(result, opt);
 }
-HypoTestPlot::HypoTestPlot(HypoTestResult& result, Int_t bins, Double_t min, Double_t max, Option_t* opt) :
+HypoTestPlot::HypoTestPlot(HypoTestResult& result, Int_t bins, double min, double max, Option_t* opt) :
    SamplingDistPlot(bins,min,max),
    fHypoTestResult(&result)
 {
@@ -61,7 +61,7 @@ void HypoTestPlot::ApplyResult(HypoTestResult& result, Option_t* opt) {
    }
 
    if(result.HasTestStatisticData()) {
-      Double_t theMin(0.), theMax(0.), theYMax(0.);
+      double theMin(0.), theMax(0.), theYMax(0.);
       GetAbsoluteInterval(theMin, theMax, theYMax);
 
       AddLine(result.GetTestStatisticData(), 0, result.GetTestStatisticData(), theYMax*0.66, "test statistic data");

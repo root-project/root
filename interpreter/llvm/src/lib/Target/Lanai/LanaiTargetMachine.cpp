@@ -30,7 +30,7 @@ namespace llvm {
 void initializeLanaiMemAluCombinerPass(PassRegistry &);
 } // namespace llvm
 
-extern "C" void LLVMInitializeLanaiTarget() {
+extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeLanaiTarget() {
   // Register the target.
   RegisterTargetMachine<LanaiTargetMachine> registered_target(
       getTheLanaiTarget());
@@ -48,9 +48,7 @@ static std::string computeDataLayout() {
 }
 
 static Reloc::Model getEffectiveRelocModel(Optional<Reloc::Model> RM) {
-  if (!RM.hasValue())
-    return Reloc::PIC_;
-  return *RM;
+  return RM.getValueOr(Reloc::PIC_);
 }
 
 LanaiTargetMachine::LanaiTargetMachine(const Target &T, const Triple &TT,

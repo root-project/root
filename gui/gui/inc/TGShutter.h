@@ -17,13 +17,10 @@
 #include "TGCanvas.h"
 #include "TGWidget.h"
 
-
 class TGButton;
 class TGCanvas;
 class TTimer;
 class TList;
-
-
 
 class TGShutterItem : public TGVerticalFrame, public TGWidget {
 
@@ -48,9 +45,9 @@ public:
    TGFrame  *GetContainer() const { return fCanvas->GetContainer(); }
    virtual void Selected()  { Emit(" Selected()"); } //*SIGNAL*
 
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGShutterItem,0)  // Shutter widget item
+   ClassDefOverride(TGShutterItem,0)  // Shutter widget item
 };
 
 
@@ -81,24 +78,24 @@ public:
    virtual TGShutterItem *AddPage(const char *item = "Page"); //*MENU*
    virtual void   RemovePage();                    //*MENU*
    virtual void   RenamePage(const char *name);    //*MENU*
-   virtual Bool_t HandleTimer(TTimer *t);
-   virtual void   Layout();
-   virtual void   SetLayoutManager(TGLayoutManager*) { }
+           Bool_t HandleTimer(TTimer *t) override;
+           void   Layout() override;
+           void   SetLayoutManager(TGLayoutManager*) override { }
    TGShutterItem *GetSelectedItem() const { return fSelectedItem; }
    TGShutterItem *GetItem(const char *name);
    virtual void   SetSelectedItem(TGShutterItem *item);
    virtual void   SetSelectedItem(const char *name);
    virtual void   EnableItem(const char *name, Bool_t on = kTRUE);
 
-   virtual TGDimension GetDefaultSize() const;
+   TGDimension    GetDefaultSize() const override;
    virtual void        SetDefaultSize(UInt_t w, UInt_t h);
 
-   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
+   void           SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   virtual Bool_t ProcessMessage(Longptr_t cmd, Longptr_t parm1, Longptr_t parm2);
+   Bool_t         ProcessMessage(Longptr_t cmd, Longptr_t parm1, Longptr_t parm2) override;
    virtual void   Selected(TGShutterItem *item) { Emit(" Selected(TGShutterItem*)", item); } //*SIGNAL*
 
-   ClassDef(TGShutter,0)  // Shutter widget
+   ClassDefOverride(TGShutter,0)  // Shutter widget
 };
 
 #endif

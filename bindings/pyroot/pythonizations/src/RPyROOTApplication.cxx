@@ -146,8 +146,7 @@ void PyROOT::RPyROOTApplication::InitROOTMessageCallback()
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Initialize an RPyROOTApplication.
 /// \param[in] self Always null, since this is a module function.
-/// \param[in] ignoreCmdLineOpts True if Python command line options should
-///            be ignored.
+/// \param[in] args [0] Boolean that tells whether to ignore the command line options.
 PyObject *PyROOT::RPyROOTApplication::InitApplication(PyObject * /*self*/, PyObject *args)
 {
    int argc = PyTuple_GET_SIZE(args);

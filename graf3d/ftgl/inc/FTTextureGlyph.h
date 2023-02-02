@@ -46,7 +46,7 @@ class FTGL_EXPORT FTTextureGlyph : public FTGlyph
          * @param pen   The current pen position.
          * @return      The advance distance for this glyph.
          */
-        virtual const FTPoint& Render( const FTPoint& pen);
+        virtual const FTPoint& Render( const FTPoint& pen) override;
 
         /**
          * Reset the currently active texture to zero to get into a known state before

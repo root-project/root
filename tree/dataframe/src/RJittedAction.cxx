@@ -8,19 +8,64 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RDF/RColumnRegister.hxx"
-#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RJittedAction.hxx"
 // Avoid error: invalid application of ‘sizeof’ to incomplete type in RJittedAction::GetMergeableValue
 #include "ROOT/RDF/RMergeableValue.hxx"
-#include "TError.h"
 
 #include <cassert>
+#include <memory>
 
 using ROOT::Internal::RDF::RJittedAction;
 using ROOT::Detail::RDF::RLoopManager;
 
-RJittedAction::RJittedAction(RLoopManager &lm) : RActionBase(&lm, {}, ROOT::Internal::RDF::RColumnRegister{}) {}
+// fwd decls
+class TTreeReader;
+namespace ROOT {
+namespace Detail {
+namespace RDF {
+class RLoopManager;
+}
+} // namespace Detail
+} // namespace ROOT
+namespace ROOT {
+namespace Detail {
+namespace RDF {
+class RLoopManager;
+}
+} // namespace Detail
+} // namespace ROOT
+namespace ROOT {
+namespace Detail {
+namespace RDF {
+class RMergeableValueBase;
+}
+} // namespace Detail
+} // namespace ROOT
+namespace ROOT {
+namespace Internal {
+namespace RDF {
+class RColumnRegister;
+}
+} // namespace Internal
+} // namespace ROOT
+namespace ROOT {
+namespace Internal {
+namespace RDF {
+namespace GraphDrawing {
+class GraphNode;
+}
+} // namespace RDF
+} // namespace Internal
+} // namespace ROOT
+
+RJittedAction::RJittedAction(RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columns,
+                             const ROOT::Internal::RDF::RColumnRegister &colRegister,
+                             const std::vector<std::string> &prevVariations)
+   : RActionBase(&lm, columns, colRegister, prevVariations)
+{
+}
+
+RJittedAction::~RJittedAction() {}
 
 void RJittedAction::Run(unsigned int slot, Long64_t entry)
 {
@@ -101,4 +146,10 @@ ROOT::RDF::SampleCallback_t RJittedAction::GetSampleCallback()
 {
    assert(fConcreteAction != nullptr);
    return fConcreteAction->GetSampleCallback();
+}
+
+std::unique_ptr<ROOT::Internal::RDF::RActionBase> RJittedAction::MakeVariedAction(std::vector<void *> &&results)
+{
+   assert(fConcreteAction != nullptr);
+   return fConcreteAction->MakeVariedAction(std::move(results));
 }

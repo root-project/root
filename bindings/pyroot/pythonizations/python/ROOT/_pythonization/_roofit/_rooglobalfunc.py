@@ -55,7 +55,7 @@ _style_map = {"-": "kSolid", "--": "kDashed", ":": "kDotted", "-.": "kDashDotted
 
 
 @cpp_signature(
-    "FitOptions(const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),"
+    "RooFit::FitOptions(const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),"
     "const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),"
     "const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;"
 )
@@ -71,7 +71,7 @@ def FitOptions(*args, **kwargs):
 
 
 @cpp_signature(
-    "Format(const char* what, const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),"
+    "RooFit::Format(const char* what, const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),"
     "const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),"
     "const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),"
     "const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;"
@@ -91,7 +91,7 @@ def Format(*args, **kwargs):
 
 
 @cpp_signature(
-    "Frame(const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),"
+    "RooFit::Frame(const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),"
     "const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),"
     "const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none()) ;"
 )
@@ -107,7 +107,7 @@ def Frame(*args, **kwargs):
 
 
 @cpp_signature(
-    "MultiArg(const RooCmdArg& arg1, const RooCmdArg& arg2,"
+    "RooFit::MultiArg(const RooCmdArg& arg1, const RooCmdArg& arg2,"
     "const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),"
     "const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),"
     "const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;"
@@ -123,7 +123,7 @@ def MultiArg(*args, **kwargs):
     return RooFit._MultiArg(*args, **kwargs)
 
 
-@cpp_signature("YVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;")
+@cpp_signature("RooFit::YVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;")
 def YVar(*args, **kwargs):
     r"""The YVar() function is pythonized with the command argument pythonization.
     The keywords must correspond to the CmdArg of the function.
@@ -138,7 +138,7 @@ def YVar(*args, **kwargs):
     return RooFit._YVar(*args, **kwargs)
 
 
-@cpp_signature("ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;")
+@cpp_signature("RooFit::ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;")
 def ZVar(*args, **kwargs):
     r"""The ZVar() function is pythonized with the command argument pythonization.
     The keywords must correspond to the CmdArg of the function.
@@ -153,7 +153,7 @@ def ZVar(*args, **kwargs):
     return RooFit._ZVar(*args, **kwargs)
 
 
-@cpp_signature("Slice(std::map<RooCategory*, std::string> const&) ;")
+@cpp_signature("RooFit::Slice(std::map<RooCategory*, std::string> const&) ;")
 def Slice(*args, **kwargs):
     r"""The Slice function is pythonized for converting python dict to std::map.
     The keywords must correspond to the CmdArg of the function.
@@ -172,9 +172,9 @@ def Slice(*args, **kwargs):
 
 @cpp_signature(
     [
-        "Import(const std::map<std::string,RooDataSet*>& ) ;",
-        "Import(const std::map<std::string,TH1*>&) ;",
-        "Import(const std::map<std::string,RooDataHist*>&) ;",
+        "RooFit::Import(const std::map<std::string,RooDataSet*>& ) ;",
+        "RooFit::Import(const std::map<std::string,TH1*>&) ;",
+        "RooFit::Import(const std::map<std::string,RooDataHist*>&) ;",
     ]
 )
 def Import(*args, **kwargs):
@@ -193,7 +193,7 @@ def Import(*args, **kwargs):
     return RooFit._Import(*args, **kwargs)
 
 
-@cpp_signature("Link(const std::map<std::string,RooAbsData*>&) ;")
+@cpp_signature("RooFit::Link(const std::map<std::string,RooAbsData*>&) ;")
 def Link(*args, **kwargs):
     r"""The Link function is pythonized for converting python dict to std::map.
     The keywords must correspond to the CmdArg of the function.
@@ -205,36 +205,57 @@ def Link(*args, **kwargs):
     if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], dict):
         args = list(args)
         args[0] = _dict_to_std_map(args[0], {"std::string": "RooAbsData*"})
-        return RooFit._Import(args[0])
+        return RooFit._Link(args[0])
 
     return RooFit._Link(*args, **kwargs)
 
 
-@cpp_signature("LineColor(Color_t color) ;")
+@cpp_signature("RooFit::LineColor(Color_t color) ;")
 def LineColor(color):
-    # Redefinition of `LineColor` for matplotlib conventions and string arguments.
+    r"""The `color` argument doesn't necessarily have to be a ROOT color enum value, like `ROOT.kRed`.
+    Here is what you can also do in PyROOT:
+
+      1. Pass a string with the enum value name instead, e.g.:
+    ~~~ {.py}
+    pdf.plotOn(frame, LineColor="kRed")
+    ~~~
+      2. Pass a string with the corresponding single-character color code following the matplotlib convention:
+    ~~~ {.py}
+    pdf.plotOn(frame, LineColor="r")
+    ~~~
+      3. Pass a string with the enum value name instead followed by some manipulation of the enum value:
+    ~~~ {.py}
+    pdf.plotOn(frame, LineColor="kRed+1")
+    ~~~
+    """
     from cppyy.gbl import RooFit
 
     return RooFit._LineColor(_string_to_root_attribute(color, _color_map))
 
 
-@cpp_signature("FillColor(Color_t color) ;")
+@cpp_signature("RooFit::FillColor(Color_t color) ;")
 def FillColor(color):
     # Redefinition of `FillColor` for matplotlib conventions and string arguments.
     from cppyy.gbl import RooFit
 
     return RooFit._FillColor(_string_to_root_attribute(color, _color_map))
 
+# Copy the docstring from LineColor.
+FillColor.__doc__ = LineColor.__doc__
 
-@cpp_signature("MarkerColor(Color_t color) ;")
+
+@cpp_signature("RooFit::MarkerColor(Color_t color) ;")
 def MarkerColor(color):
     # Redefinition of `MarkerColor` for matplotlib conventions and string arguments.
     from cppyy.gbl import RooFit
 
     return RooFit._MarkerColor(_string_to_root_attribute(color, _color_map))
 
+# Copy the docstring from LineColor.
+MarkerColor.__doc__ = LineColor.__doc__
 
-@cpp_signature("LineStyle(Style_t style) ;")
+
+@cpp_signature("RooFit::LineStyle(Style_t style) ;")
 def LineStyle(style):
     # Redefinition of `LineStyle` for matplotlib conventions and string arguments.
     from cppyy.gbl import RooFit
@@ -242,7 +263,7 @@ def LineStyle(style):
     return RooFit._LineStyle(_string_to_root_attribute(style, _style_map))
 
 
-@cpp_signature("FillStyle(Style_t style) ;")
+@cpp_signature("RooFit::FillStyle(Style_t style) ;")
 def FillStyle(style):
     # Redefinition of `FillStyle` for matplotlib conventions and string arguments.
     from cppyy.gbl import RooFit
@@ -250,9 +271,51 @@ def FillStyle(style):
     return RooFit._FillStyle(_string_to_root_attribute(style, {}))
 
 
-@cpp_signature("MarkerStyle(Style_t style) ;")
+@cpp_signature("RooFit::MarkerStyle(Style_t style) ;")
 def MarkerStyle(style):
     # Redefinition of `MarkerStyle` for matplotlib conventions and string arguments.
     from cppyy.gbl import RooFit
 
     return RooFit._MarkerStyle(_string_to_root_attribute(style, {}))
+
+
+@cpp_signature("RooFit::DataError(Int_t) ;")
+def DataError(etype):
+    r"""Instead of passing an enum value to this function, you can pass a
+    string with the name of that enum value, for example:
+
+    ~~~ {.py}
+        data.plotOn(frame, DataError="SumW2")
+        # instead of DataError=ROOT.RooAbsData.SumW2
+    ~~~
+
+    If you want to use the `"None"` enum value to disable error plotting, you
+    can also pass `None` directly instead of passing a string:
+
+    ~~~ {.py}
+        data.plotOn(frame, DataError=None)
+        # instead of DataError="None"
+    ~~~
+    """
+    # Redefinition of `DataError` to also accept `str` or `NoneType` to get the
+    # corresponding enum values from RooAbsData.DataError.
+    from cppyy.gbl import RooFit
+
+    # One of the possible enum values is "None", and we want the user to be
+    # able to pass None also as a NoneType for convenience.
+    if etype is None:
+        etype = "None"
+
+    if isinstance(etype, str):
+        try:
+            import ROOT
+            etype = getattr(ROOT.RooAbsData.ErrorType, etype)
+        except AttributeError as error:
+            raise ValueError(
+                'Unsupported error type type passed to DataError().'
+                + ' Supported decay types are : "Poisson", "SumW2", "Auto", "Expected", and None.'
+            )
+        except Exception as exception:
+            raise exception
+
+    return RooFit._DataError(etype)

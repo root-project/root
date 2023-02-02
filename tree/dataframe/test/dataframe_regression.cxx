@@ -4,10 +4,16 @@
 #include "TROOT.h"
 #include "TVector3.h"
 #include "TSystem.h"
+#include "Math/Vector4D.h"
 
 #include <algorithm>
 
 #include "gtest/gtest.h"
+
+// Backward compatibility for gtest version < 1.10.0
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
 
 // Fixture for all tests in this file. If parameter is true, run with implicit MT, else run sequentially
 class RDFRegressionTests : public ::testing::TestWithParam<bool> {
@@ -17,7 +23,7 @@ protected:
       if (GetParam())
          ROOT::EnableImplicitMT(NSLOTS);
    }
-   ~RDFRegressionTests()
+   ~RDFRegressionTests() override
    {
       if (GetParam())
          ROOT::DisableImplicitMT();
@@ -38,6 +44,30 @@ void FillTree(const char *filename, const char *treeName, int nevents = 0)
    }
    t.Write();
    f.Close();
+}
+
+// https://github.com/root-project/root/issues/11207
+TEST(RDFRegressionTests, AliasAndSubBranches)
+{
+   TTree t("t", "t");
+   // In order to reproduce the problem at #11207, we need to create a TTree with branch
+   // "topbranch.something" where `something` must _not_ be a data member of the type
+   // of "topbranch" (otherwise things "happen" to work due to the order in which we do substitutions in RDF, see
+   // below).
+   std::vector<ROOT::Math::XYZTVector> objs{{}, {}};
+
+   t.Branch("topbranch", &objs);
+   t.Fill();
+   t.Fill();
+   t.Fill();
+
+   auto df = ROOT::RDataFrame(t).Alias("alias", "topbranch");
+   // Here, before the fix for #11207 we transformed `"alias.fCoordinates.fX.size() == 2"` into
+   // `[](std::vector<XYZTVector> &var0) { return var0.fCoordinates.fX.size() == 2; }`, which is not valid C++
+   // (std::vector does not have a fCoordinates data member). Now the string expression is correctly expanded to
+   // `[](RVec<typeof(XYZTVector{}.fCoordinates.fX)> &var0) { return var0.size() == 2; }`
+   auto entryCount = df.Filter("alias.fCoordinates.fX.size() == 2").Count();
+   EXPECT_EQ(*entryCount, 3);
 }
 
 TEST_P(RDFRegressionTests, MultipleTriggerRun)
@@ -216,6 +246,37 @@ TEST_P(RDFRegressionTests, PolymorphicTBranchObject)
 
    gSystem->Unlink(snap_fname.c_str());
    gSystem->Unlink(filename.c_str());
+}
+
+// #11222
+TEST_P(RDFRegressionTests, UseAfterDeleteOfSampleCallbacks)
+{
+   struct MyHelper : ROOT::Detail::RDF::RActionImpl<MyHelper> {
+      using Result_t = int;
+      std::shared_ptr<int> fResult;
+      bool fThisWasDeleted = false;
+
+      MyHelper() : fResult(std::make_shared<int>()) {}
+      ~MyHelper() override { fThisWasDeleted = true; }
+      void Initialize() {}
+      void InitTask(TTreeReader *, unsigned int) {}
+      void Exec(unsigned int) {}
+      void Finalize() {}
+      std::shared_ptr<Result_t> GetResultPtr() const { return fResult; }
+      std::string GetActionName() const { return "MyHelper"; }
+      ROOT::RDF::SampleCallback_t GetSampleCallback() final
+      {
+         // in a well-behaved program, this won't ever even be called as the RResultPtr returned
+         // by the Book call below goes immediately out of scope, removing the action from the computation graph
+         return [this](unsigned int, const ROOT::RDF::RSampleInfo &) { EXPECT_FALSE(fThisWasDeleted); };
+      }
+   };
+
+   ROOT::RDataFrame df(10);
+   // Book custom action and immediately deregister it (because the RResultPtr goes out of scope)
+   df.Book<>(MyHelper{}, {});
+   // trigger an event loop that will invoke registered sample callbacks (in a well-behaved program, none should run)
+   df.Count().GetValue();
 }
 
 // run single-thread tests

@@ -18,7 +18,7 @@ namespace Minuit2 {
 class Quad8F : public FCNBase {
 
 public:
-   double operator()(const std::vector<double> &par) const
+   double operator()(const std::vector<double> &par) const override
    {
 
       double x = par[0];
@@ -34,7 +34,7 @@ public:
               (1. / 70.) * (21 * x0 * x0 + 20 * y0 * y0 + 19 * z0 * z0 - 14 * x0 * z0 - 20 * y0 * z0) + w0 * w0);
    }
 
-   double Up() const { return 1.; }
+   double Up() const override { return 1.; }
 
 private:
 };

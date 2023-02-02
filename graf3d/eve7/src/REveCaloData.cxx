@@ -155,7 +155,7 @@ void REveCaloData::ProcessSelection(vCellId_t& sel_cells, UInt_t selectionId, Bo
 /// Populate set impSelSet with derived / dependant elements.
 ///
 
-void REveCaloData::FillImpliedSelectedSet(Set_t& impSelSet)
+void REveCaloData::FillImpliedSelectedSet(Set_t& impSelSet, const std::set<int>&)
 {
    // printf("REveCaloData::FillImpliedSelectedSet\n");
    for (auto &n : fNieces)

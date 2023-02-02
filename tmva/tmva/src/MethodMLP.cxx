@@ -175,21 +175,21 @@ void TMVA::MethodMLP::Init()
 ///
 /// know options:
 ///
-///  - TrainingMethod  <string>     Training method
+///  - TrainingMethod  `<string>`     Training method
 ///        available values are:
-///       - BP   Back-Propagation <default>
+///       - BP   Back-Propagation `<default>`
 ///       - GA   Genetic Algorithm (takes a LONG time)
 ///
-///  - LearningRate    <float>      NN learning rate parameter
-///  - DecayRate       <float>      Decay rate for learning parameter
-///  - TestRate        <int>        Test for overtraining performed at each #th epochs
+///  - LearningRate    `<float>`      NN learning rate parameter
+///  - DecayRate       `<float>`      Decay rate for learning parameter
+///  - TestRate        `<int>`        Test for overtraining performed at each #%th epochs
 ///
-///  - BPMode          <string>     Back-propagation learning mode
+///  - BPMode          `<string>`     Back-propagation learning mode
 ///      available values are:
-///       - sequential <default>
+///       - sequential `<default>`
 ///       - batch
 ///
-///  - BatchSize       <int>        Batch size: number of events/batch, only set if in Batch Mode,
+///  - BatchSize       `<int>`        Batch size: number of events/batch, only set if in Batch Mode,
 ///       - -1 for BatchSize=number_of_events
 
 void TMVA::MethodMLP::DeclareOptions()

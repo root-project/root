@@ -22,16 +22,22 @@
 class RooArgusBG : public RooAbsPdf {
 public:
   RooArgusBG() {} ;
+  // One of the original constructors without RooAbsReal::Ref for backwards compatibility.
+  inline RooArgusBG(const char *name, const char *title,
+        RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c, RooAbsReal& _p)
+      : RooArgusBG{name, title, RooAbsReal::Ref{_m}, RooAbsReal::Ref{_m0}, RooAbsReal::Ref{_c}, RooAbsReal::Ref{_p}} {}
+  // One of the original constructors without RooAbsReal::Ref for backwards compatibility.
+  inline RooArgusBG(const char *name, const char *title,
+        RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c)
+      : RooArgusBG{name, title, RooAbsReal::Ref{_m}, RooAbsReal::Ref{_m0}, RooAbsReal::Ref{_c}} {}
   RooArgusBG(const char *name, const char *title,
-        RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c);
-  RooArgusBG(const char *name, const char *title,
-        RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c, RooAbsReal& _p);
-  RooArgusBG(const RooArgusBG& other,const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooArgusBG(*this,newname); }
-  inline virtual ~RooArgusBG() { }
+        RooAbsReal::Ref _m, RooAbsReal::Ref _m0, RooAbsReal::Ref _c, RooAbsReal::Ref _p=0.5);
+  RooArgusBG(const RooArgusBG& other,const char* name=nullptr) ;
+  TObject* clone(const char* newname) const override { return new RooArgusBG(*this,newname); }
+  inline ~RooArgusBG() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
 protected:
   RooRealProxy m ;
@@ -39,15 +45,15 @@ protected:
   RooRealProxy c ;
   RooRealProxy p ;
 
-  Double_t evaluate() const ;
-  void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
-  inline bool canComputeBatchWithCuda() const { return true; }
+  double evaluate() const override ;
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
 
 //   void initGenerator();
 
 private:
-  ClassDef(RooArgusBG,1) // Argus background shape PDF
+  ClassDefOverride(RooArgusBG,1) // Argus background shape PDF
 };
 
 #endif

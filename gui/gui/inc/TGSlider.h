@@ -63,38 +63,29 @@ public:
             UInt_t options = kChildFrame,
             Pixel_t back = GetDefaultFrameBackground());
 
-   virtual ~TGSlider() { }
+   virtual ~TGSlider() {}
 
-   virtual Bool_t HandleButton(Event_t *event) = 0;
-   virtual Bool_t HandleConfigureNotify(Event_t* event) = 0;
-   virtual Bool_t HandleMotion(Event_t *event) = 0;
+   Bool_t HandleButton(Event_t *event) override = 0;
+   Bool_t HandleConfigureNotify(Event_t* event) override = 0;
+   Bool_t HandleMotion(Event_t *event) override = 0;
 
    virtual void  SetEnabled(Bool_t flag = kTRUE) { SetState( flag ); }              //*TOGGLE* *GETTER=IsEnabled
    virtual void  SetState(Bool_t state);
    virtual void  SetScale(Int_t scale) { fScale = scale; }                          //*MENU*
-   virtual void  SetRange(Int_t min, Int_t max) {
-                    if (max > min) { fVmin = min; fVmax = max; }
-                    else Warning("SetRange", "Incorrect range boundaries [%d,%d]", min, max);
-                 } //*MENU*
-   virtual void  SetPosition(Int_t pos) {
-                    if ((pos >= fVmin) && (pos <= fVmax)) { fPos = pos; fClient->NeedRedraw(this); }
-                    else Warning("SetPosition", "The position (%d) is out of range [%d,%d]", pos, fVmin, fVmax);
-                 } //*MENU*
+   virtual void  SetRange(Int_t min, Int_t max);                                    //*MENU*
+   virtual void  SetPosition(Int_t pos);                                            //*MENU*
    virtual Int_t GetPosition() const { return fPos; }
    virtual Int_t GetMinPosition() const { return fVmin; }
    virtual Int_t GetMaxPosition() const { return fVmax; }
    virtual Int_t GetScale() const { return fScale; }
-   virtual void  MapSubwindows() { TGWindow::MapSubwindows(); }
-   virtual void  ChangeSliderPic(const char *name) {
-                    if (fSliderPic) fClient->FreePicture(fSliderPic);
-                    fSliderPic = fClient->GetPicture(name);
-                 }
+           void  MapSubwindows() override { TGWindow::MapSubwindows(); }
+   virtual void  ChangeSliderPic(const char *name);
 
    virtual void  PositionChanged(Int_t pos) { Emit("PositionChanged(Int_t)", pos); } // *SIGNAL*
    virtual void  Pressed() { Emit("Pressed()"); }    // *SIGNAL*
    virtual void  Released() { Emit("Released()"); }  // *SIGNAL*
 
-   ClassDef(TGSlider,0)  // Slider widget abstract base class
+   ClassDefOverride(TGSlider,0)  // Slider widget abstract base class
 };
 
 
@@ -103,7 +94,7 @@ class TGVSlider : public TGSlider {
 protected:
    Int_t   fYp;      ///< vertical slider y position in pixel coordinates
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
 public:
    TGVSlider(const TGWindow *p = nullptr, UInt_t h = 40,
@@ -112,16 +103,16 @@ public:
              Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGVSlider();
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleConfigureNotify(Event_t* event);
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual TGDimension GetDefaultSize() const
-                     { return TGDimension(kSliderWidth, fHeight); }
-   virtual void   Resize(UInt_t w, UInt_t h) { TGFrame::Resize(w, h ? h+16 : fHeight + 16); }
-   virtual void   Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
-   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleConfigureNotify(Event_t* event) override;
+   Bool_t HandleMotion(Event_t *event) override;
+   TGDimension GetDefaultSize() const override
+                { return TGDimension(kSliderWidth, fHeight); }
+   void   Resize(UInt_t w, UInt_t h) override { TGFrame::Resize(w, h ? h+16 : fHeight + 16); }
+   void   Resize(TGDimension size) override { Resize(size.fWidth, size.fHeight); }
+   void   SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGVSlider,0)  // Vertical slider widget
+   ClassDefOverride(TGVSlider,0)  // Vertical slider widget
 };
 
 
@@ -130,25 +121,25 @@ class TGHSlider : public TGSlider {
 protected:
    Int_t       fXp;     ///< horizontal slider x position in pixel coordinates
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
 public:
-   TGHSlider(const TGWindow *p = 0, UInt_t w = 40,
+   TGHSlider(const TGWindow *p = nullptr, UInt_t w = 40,
              UInt_t type = kSlider1 | kScaleBoth, Int_t id = -1,
              UInt_t options = kHorizontalFrame,
              Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGHSlider();
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleConfigureNotify(Event_t* event);
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual TGDimension GetDefaultSize() const
-                     { return TGDimension(fWidth, kSliderHeight); }
-   virtual void   Resize(UInt_t w, UInt_t h) { TGFrame::Resize(w ? w+16 : fWidth + 16, h); }
-   virtual void   Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
-   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleConfigureNotify(Event_t* event) override;
+   Bool_t HandleMotion(Event_t *event) override;
+   TGDimension GetDefaultSize() const override
+          { return TGDimension(fWidth, kSliderHeight); }
+   void   Resize(UInt_t w, UInt_t h) override { TGFrame::Resize(w ? w+16 : fWidth + 16, h); }
+   void   Resize(TGDimension size) override { Resize(size.fWidth, size.fHeight); }
+   void   SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGHSlider,0)  // Horizontal slider widget
+   ClassDefOverride(TGHSlider,0)  // Horizontal slider widget
 };
 
 #endif

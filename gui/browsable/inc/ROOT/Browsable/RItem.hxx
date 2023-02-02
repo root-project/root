@@ -28,6 +28,7 @@ protected:
    std::string icon;     ///< icon associated with item
    std::string title;    ///< item title
    std::string fsize;    ///< item size
+   std::string mtime;    ///< modification time
    bool checked{false};  ///< is checked, not yet used
    bool expanded{false}; ///< is expanded
 public:
@@ -41,6 +42,8 @@ public:
    const std::string &GetIcon() const { return icon; }
    const std::string &GetTitle() const { return title; }
    const std::string &GetSize() const { return fsize; }
+   const std::string &GetMTime() const { return mtime; }
+
    virtual bool IsFolder() const { return nchilds != 0; }
    virtual bool IsHidden() const { return false; }
 
@@ -51,10 +54,11 @@ public:
    void SetTitle(const std::string &_title) { title = _title; }
    void SetIcon(const std::string &_icon) { icon = _icon; }
    void SetSize(const std::string &_size) { fsize = _size; }
+   void SetMTime(const std::string &_mtime) { mtime = _mtime; }
 
    void SetSize(Long64_t _size)
    {
-      if (_size > 1024) {
+      if (_size > 4096) {
          Long64_t _ksize = _size / 1024;
          if (_ksize > 1024) {
             // 3.7MB is more informative than just 3MB
@@ -74,7 +78,6 @@ public:
       return GetName() < b->GetName();
    }
 };
-
 
 } // namespace Browsable
 } // namespace Experimental

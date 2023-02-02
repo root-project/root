@@ -4009,7 +4009,7 @@ Int_t PT_POFDataset(void *, RunTimes &tt)
    // Clean-up any existing dataset with that name
    if (gProof->ExistsDataSet(dsname)) gProof->RemoveDataSet(dsname);
 
-   // Ask for registration of the dataset (the default is the the TFileCollection is return
+   // Ask for registration of the dataset (the default is the TFileCollection is return
    // without registration; the name of the TFileCollection is the name of the dataset
    gProof->SetParameter("SimpleNtuple.root", dsname);
 

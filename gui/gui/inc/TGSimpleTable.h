@@ -13,20 +13,14 @@
 
 #include "TGTable.h"
 
-class TObjArray;
-
 class TGSimpleTable : public TGTable {
-
-private:
-
-protected:
 
 public:
    TGSimpleTable(TGWindow *p, Int_t id, Double_t **data,
                  UInt_t nrows, UInt_t ncolumns);
    virtual ~TGSimpleTable();
 
-   ClassDef(TGSimpleTable, 0) // A simple table that owns it's interface.
+   ClassDefOverride(TGSimpleTable, 0) // A simple table that owns it's interface.
 };
 
 #endif

@@ -31,19 +31,19 @@ class ModelConfig final : public TNamed, public RooWorkspaceHandle {
 
 public:
 
-   ModelConfig(RooWorkspace * ws = 0) :
+   ModelConfig(RooWorkspace * ws = nullptr) :
       TNamed()
    {
       if(ws) SetWS(*ws);
    }
 
-   ModelConfig(const char* name, RooWorkspace *ws = 0) :
+   ModelConfig(const char* name, RooWorkspace *ws = nullptr) :
       TNamed(name, name)
    {
       if(ws) SetWS(*ws);
    }
 
-   ModelConfig(const char* name, const char* title, RooWorkspace *ws = 0) :
+   ModelConfig(const char* name, const char* title, RooWorkspace *ws = nullptr) :
       TNamed(name, title)
    {
       if(ws) SetWS(*ws);
@@ -51,39 +51,39 @@ public:
 
 
    /// clone
-   virtual ModelConfig * Clone(const char * name = "") const override {
+   ModelConfig * Clone(const char * name = "") const override {
       ModelConfig * mc =  new ModelConfig(*this);
       if(strcmp(name,"")==0)
-   mc->SetName(this->GetName());
+         mc->SetName(this->GetName());
       else
-   mc->SetName(name);
+         mc->SetName(name);
       return mc;
    }
 
    /// Set a workspace that owns all the necessary components for the analysis.
-   virtual void SetWS(RooWorkspace & ws) override;
+   void SetWS(RooWorkspace & ws) override;
    //// alias for SetWS(...)
    virtual void SetWorkspace(RooWorkspace & ws) { SetWS(ws); }
 
    /// Remove the existing reference to a workspace and replace it with this new one.
-   virtual void ReplaceWS(RooWorkspace *ws) override {
+   void ReplaceWS(RooWorkspace *ws) override {
      fRefWS = nullptr;
      SetWS(*ws);
    }
 
-   /// Set the proto DataSet, add to the the workspace if not already there
+   /// Set the proto DataSet, add to the workspace if not already there
    virtual void SetProtoData(RooAbsData & data) {
       ImportDataInWS(data);
       SetProtoData( data.GetName() );
    }
 
-   /// Set the Pdf, add to the the workspace if not already there
+   /// Set the Pdf, add to the workspace if not already there
    virtual void SetPdf(const RooAbsPdf& pdf) {
       ImportPdfInWS(pdf);
       SetPdf( pdf.GetName() );
    }
 
-   /// Set the Prior Pdf, add to the the workspace if not already there
+   /// Set the Prior Pdf, add to the workspace if not already there
    virtual void SetPriorPdf(const RooAbsPdf& pdf) {
       ImportPdfInWS(pdf);
       SetPriorPdf( pdf.GetName() );
@@ -174,12 +174,9 @@ public:
      if (!SetHasOnlyParameters(set,"ModelConfig::SetGlobalObservables")) return ;
 
       // make global observables constant
-      RooFIter iter = set.fwdIterator();
-      RooAbsArg *arg = iter.next();
-      while(arg != NULL) {
-         arg->setAttribute("Constant", kTRUE);
-         arg = iter.next();
-      }
+     for (auto *arg : set){
+         arg->setAttribute("Constant", true);
+     }
 
       fGlobalObsName=std::string(GetName()) + "_GlobalObservables";
       DefineSetInWS(fGlobalObsName.c_str(), set);
@@ -230,34 +227,34 @@ public:
    /* getter methods */
 
 
-   /// get model PDF (return NULL if pdf has not been specified or does not exist)
-   RooAbsPdf * GetPdf() const { return (GetWS()) ? GetWS()->pdf(fPdfName.c_str()) : 0;   }
+   /// get model PDF (return nullptr if pdf has not been specified or does not exist)
+   RooAbsPdf * GetPdf() const { return (GetWS()) ? GetWS()->pdf(fPdfName.c_str()) : nullptr;   }
 
-   /// get RooArgSet containing the parameter of interest (return NULL if not existing)
-   const RooArgSet * GetParametersOfInterest() const { return (GetWS()) ? GetWS()->set(fPOIName.c_str()) : 0; }
+   /// get RooArgSet containing the parameter of interest (return nullptr if not existing)
+   const RooArgSet * GetParametersOfInterest() const { return (GetWS()) ? GetWS()->set(fPOIName.c_str()) : nullptr; }
 
-   /// get RooArgSet containing the nuisance parameters (return NULL if not existing)
-   const RooArgSet * GetNuisanceParameters() const { return (GetWS()) ? GetWS()->set(fNuisParamsName.c_str()) : 0; }
+   /// get RooArgSet containing the nuisance parameters (return nullptr if not existing)
+   const RooArgSet * GetNuisanceParameters() const { return (GetWS()) ? GetWS()->set(fNuisParamsName.c_str()) : nullptr; }
 
-   /// get RooArgSet containing the constraint parameters (return NULL if not existing)
-   const RooArgSet * GetConstraintParameters() const { return (GetWS()) ? GetWS()->set(fConstrParamsName.c_str()) : 0; }
+   /// get RooArgSet containing the constraint parameters (return nullptr if not existing)
+   const RooArgSet * GetConstraintParameters() const { return (GetWS()) ? GetWS()->set(fConstrParamsName.c_str()) : nullptr; }
 
-   /// get parameters prior pdf  (return NULL if not existing)
-   RooAbsPdf * GetPriorPdf() const { return (GetWS()) ? GetWS()->pdf(fPriorPdfName.c_str()) : 0; }
+   /// get parameters prior pdf  (return nullptr if not existing)
+   RooAbsPdf * GetPriorPdf() const { return (GetWS()) ? GetWS()->pdf(fPriorPdfName.c_str()) : nullptr; }
 
-   /// get RooArgSet for observables  (return NULL if not existing)
-   const RooArgSet * GetObservables() const { return (GetWS()) ? GetWS()->set(fObservablesName.c_str()) : 0; }
+   /// get RooArgSet for observables  (return nullptr if not existing)
+   const RooArgSet * GetObservables() const { return (GetWS()) ? GetWS()->set(fObservablesName.c_str()) : nullptr; }
 
-   /// get RooArgSet for conditional observables  (return NULL if not existing)
-   const RooArgSet * GetConditionalObservables() const { return (GetWS()) ? GetWS()->set(fConditionalObsName.c_str()) : 0; }
+   /// get RooArgSet for conditional observables  (return nullptr if not existing)
+   const RooArgSet * GetConditionalObservables() const { return (GetWS()) ? GetWS()->set(fConditionalObsName.c_str()) : nullptr; }
 
-   /// get RooArgSet for global observables  (return NULL if not existing)
-   const RooArgSet * GetGlobalObservables() const { return (GetWS()) ? GetWS()->set(fGlobalObsName.c_str()) : 0; }
+   /// get RooArgSet for global observables  (return nullptr if not existing)
+   const RooArgSet * GetGlobalObservables() const { return (GetWS()) ? GetWS()->set(fGlobalObsName.c_str()) : nullptr; }
 
-   /// get Proto data set (return NULL if not existing)
-   RooAbsData * GetProtoData()  const {  return (GetWS()) ? GetWS()->data(fProtoDataName.c_str()) : 0; }
+   /// get Proto data set (return nullptr if not existing)
+   RooAbsData * GetProtoData()  const {  return (GetWS()) ? GetWS()->data(fProtoDataName.c_str()) : nullptr; }
 
-   /// get RooArgSet for parameters for a particular hypothesis  (return NULL if not existing)
+   /// get RooArgSet for parameters for a particular hypothesis  (return nullptr if not existing)
    const RooArgSet * GetSnapshot() const;
 
    void LoadSnapshot() const;
@@ -269,12 +266,12 @@ public:
    void GuessObsAndNuisance(const RooAbsData& data, bool printModelConfig = true);
 
    /// overload the print method
-   virtual void Print(Option_t* option = "") const override;
+   void Print(Option_t* option = "") const override;
 
 protected:
 
    /// helper function to check that content of a given set is exclusively parameters
-   Bool_t SetHasOnlyParameters(const RooArgSet& set, const char* errorMsgPrefix=0) ;
+   bool SetHasOnlyParameters(const RooArgSet& set, const char* errorMsgPrefix=nullptr) ;
 
    /// helper functions to define a set in the WS
    void DefineSetInWS(const char* name, const RooArgSet& set);
@@ -285,27 +282,27 @@ protected:
    /// internal function to import data in WS
    void ImportDataInWS(RooAbsData & data);
 
-   TRef fRefWS;  /// WS reference used in the file
+   TRef fRefWS;                     ///< WS reference used in the file
 
-   std::string fWSName;  /// name of the WS
+   std::string fWSName;             ///< name of the WS
 
-   std::string fPdfName; /// name of  PDF in workspace
-   std::string fDataName; /// name of data set in workspace
-   std::string fPOIName; /// name for RooArgSet specifying parameters of interest
+   std::string fPdfName;            ///< name of  PDF in workspace
+   std::string fDataName;           ///< name of data set in workspace
+   std::string fPOIName;            ///< name for RooArgSet specifying parameters of interest
 
-   std::string fNuisParamsName; /// name for RooArgSet specifying nuisance parameters
-   std::string fConstrParamsName; /// name for RooArgSet specifying constrained parameters
-   std::string fPriorPdfName; /// name for RooAbsPdf specifying a prior on the parameters
+   std::string fNuisParamsName;     ///< name for RooArgSet specifying nuisance parameters
+   std::string fConstrParamsName;   ///< name for RooArgSet specifying constrained parameters
+   std::string fPriorPdfName;       ///< name for RooAbsPdf specifying a prior on the parameters
 
-   std::string fConditionalObsName; /// name for RooArgSet specifying conditional observables
-   std::string fGlobalObsName; /// name for RooArgSet specifying global observables
-   std::string fProtoDataName; /// name for RooArgSet specifying dataset that should be used as proto-data
+   std::string fConditionalObsName; ///< name for RooArgSet specifying conditional observables
+   std::string fGlobalObsName;      ///< name for RooArgSet specifying global observables
+   std::string fProtoDataName;      ///< name for RooArgSet specifying dataset that should be used as proto-data
 
-   std::string fSnapshotName; /// name for RooArgSet that specifies a particular hypothesis
+   std::string fSnapshotName;       ///< name for RooArgSet that specifies a particular hypothesis
 
-   std::string fObservablesName; /// name for RooArgSet specifying observable parameters.
+   std::string fObservablesName;    ///< name for RooArgSet specifying observable parameters.
 
-   ClassDefOverride(ModelConfig,5) /// A class that holds configuration information for a model using a workspace as a store
+   ClassDefOverride(ModelConfig,5)  ///< A class that holds configuration information for a model using a workspace as a store
 
 };
 

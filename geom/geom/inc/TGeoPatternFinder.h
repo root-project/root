@@ -77,7 +77,7 @@ public:
    virtual TGeoMatrix* CreateMatrix() const = 0;
    virtual void        cd(Int_t /*idiv*/) {}
    virtual TGeoNode   *CdNext();
-   virtual TGeoNode   *FindNode(Double_t * /*point*/, const Double_t * /*dir*/=0) {return 0;}
+   virtual TGeoNode   *FindNode(Double_t * /*point*/, const Double_t * /*dir*/=nullptr) {return nullptr;}
    virtual Int_t       GetByteCount() const {return 36;}
    Int_t               GetCurrent();//      {return fCurrent;}
    Int_t               GetDivIndex()     {return fDivIndex;}
@@ -130,7 +130,7 @@ public:
    // methods
    virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=nullptr);
    virtual Double_t    FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext);
    virtual Int_t       GetDivAxis()      {return 1;}
    virtual Bool_t      IsOnBoundary(const Double_t *point) const;
@@ -163,7 +163,7 @@ public:
    // methods
    virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=nullptr);
    virtual Double_t    FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext);
    virtual Int_t       GetDivAxis()      {return 2;}
    virtual Bool_t      IsOnBoundary(const Double_t *point) const;
@@ -196,7 +196,7 @@ public:
    // methods
    virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=nullptr);
    virtual Double_t    FindNextBoundary(Double_t *point, Double_t *dir, Int_t &indnext);
    virtual Int_t       GetDivAxis()      {return 3;}
    virtual Bool_t      IsOnBoundary(const Double_t *point) const;
@@ -230,7 +230,7 @@ public:
    // methods
    virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=nullptr);
    virtual Int_t       GetDivAxis()      {return 1;}
    virtual Bool_t      IsOnBoundary(const Double_t *point) const;
    virtual
@@ -266,7 +266,7 @@ public:
    // methods
    virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=nullptr);
    virtual Int_t       GetDivAxis()      {return 2;}
    virtual Bool_t      IsOnBoundary(const Double_t *point) const;
    virtual
@@ -303,7 +303,7 @@ public:
    // methods
    virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=nullptr);
    virtual Int_t       GetDivAxis()      {return 3;}
    virtual Bool_t      IsOnBoundary(const Double_t *point) const;
    virtual
@@ -342,7 +342,7 @@ public:
    Double_t            GetTxz() const {return fTxz;}
    Double_t            GetTyz() const {return fTyz;}
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=nullptr);
    virtual Int_t       GetDivAxis()      {return 3;}
    virtual Bool_t      IsOnBoundary(const Double_t *point) const;
    virtual
@@ -375,7 +375,7 @@ public:
    // methods
    virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=nullptr);
    virtual Int_t       GetDivAxis()      {return 1;}
    virtual Bool_t      IsOnBoundary(const Double_t *point) const;
    virtual
@@ -416,7 +416,7 @@ public:
    // methods
    virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=nullptr);
    virtual Int_t       GetDivAxis()      {return 2;}
    virtual Bool_t      IsOnBoundary(const Double_t *point) const;
    virtual
@@ -448,7 +448,7 @@ public:
    // methods
    virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=nullptr);
    virtual Int_t       GetDivAxis()      {return 1;}
    virtual
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
@@ -479,7 +479,7 @@ public:
    // methods
    virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=nullptr);
    virtual Int_t       GetDivAxis()      {return 3;}
    virtual
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
@@ -515,7 +515,7 @@ public:
    // methods
    virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=nullptr);
    virtual Int_t       GetDivAxis()      {return 2;}
    virtual Bool_t      IsOnBoundary(const Double_t *point) const;
    virtual
@@ -552,10 +552,10 @@ public:
    // destructor
    virtual ~TGeoPatternHoneycomb();
    // methods
-   TGeoPatternFinder  *MakeCopy(Bool_t) {return 0;}
+   TGeoPatternFinder  *MakeCopy(Bool_t) {return nullptr;}
    virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
-   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0);
+   virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=nullptr);
    virtual void        UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const;
 
    ClassDef(TGeoPatternHoneycomb, 1)             // pattern for honeycomb divisions

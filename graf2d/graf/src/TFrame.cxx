@@ -43,7 +43,7 @@ TFrame::TFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
 
 TFrame::TFrame(const TFrame &frame) : TWbox(frame)
 {
-   ((TFrame&)frame).Copy(*this);
+   frame.TFrame::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

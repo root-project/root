@@ -1,4 +1,4 @@
-add_llvm_library(LLVMIRReader
+add_llvm_component_library(LLVMIRReader
   IRReader.cpp
 
   ADDITIONAL_HEADER_DIRS
@@ -6,4 +6,10 @@ add_llvm_library(LLVMIRReader
 
   DEPENDS
   intrinsics_gen
+
+  LINK_COMPONENTS
+  AsmParser
+  BitReader
+  Core
+  Support
   )

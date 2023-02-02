@@ -14,17 +14,13 @@ endif()
 
 ROOT_LINKER_LIBRARY(Imt
     src/base.cxx
+    src/RSlotStack.cxx
     src/TExecutor.cxx
     src/TTaskGroup.cxx
   DEPENDENCIES
     ${MULTIPROC_LIB}
   BUILTINS
     TBB
-)
-
-target_include_directories(Clib PRIVATE
-   ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_BINARY_DIR}/ginclude
 )
 
 target_link_libraries(Imt PRIVATE Thread INTERFACE Core)
@@ -34,6 +30,7 @@ if(imt)
     ROOT/TFuture.hxx
     ROOT/TTaskGroup.hxx
     ROOT/RTaskArena.hxx
+    ROOT/RSlotStack.hxx
     ROOT/TExecutor.hxx
     ROOT/TThreadExecutor.hxx
     LINKDEF

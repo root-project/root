@@ -87,8 +87,6 @@ TNode::TNode(const char *name, const char *title, const char *shapename, Double_
    Color_t lcolor = 16;
    SetLineColor(lcolor);
 #endif
-   static Int_t counter = 0;
-   counter++;
    fX      = x;
    fY      = y;
    fZ      = z;
@@ -384,7 +382,7 @@ TNode *TNode::GetNode(const char *name) const
    TObjLink *lnk = fNodes->FirstLink();
    while (lnk) {
       node = (TNode *)lnk->GetObject();
-      if (node->TestBit(kNotDeleted)) {
+      if (!ROOT::Detail::HasBeenDeleted(node)) {
          nodefound = node->GetNode(name);
          if (nodefound) return nodefound;
       }

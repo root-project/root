@@ -364,7 +364,7 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err, Double_t* errUpper )
    }
 
    UInt_t count_all = 0;
-   Double_t weight_all = 0, weight_sig = 0, weight_bac = 0;
+   Double_t weight_all = 0, weight_sig = 0;
 
    for (kNN::List::const_iterator lit = rlist.begin(); lit != rlist.end(); ++lit) {
 
@@ -393,8 +393,6 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err, Double_t* errUpper )
          else          ++weight_sig;
       }
       else if (node.GetEvent().GetType() == 2) { // background type = 2
-         if (fUseWeight) weight_bac += evweight;
-         else          ++weight_bac;
       }
       else {
          Log() << kFATAL << "Unknown type for training event" << Endl;

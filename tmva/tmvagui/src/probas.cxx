@@ -54,7 +54,8 @@ void TMVA::probas(TString dataset, TString fin , Bool_t useTMVAStyle  )
    }
    TIter next(&methods);
    TKey *key, *hkey;
-   char fname[200];
+   constexpr std::size_t fnameSize = 200;
+   char fname[fnameSize];
    TH1* sig(0);
    TH1* bgd(0);
    
@@ -139,7 +140,7 @@ void TMVA::probas(TString dataset, TString fin , Bool_t useTMVAStyle  )
                      // create new canvas
                      cout << "--- Book canvas no: " << countCanvas << endl;
                      char cn[20];
-                     sprintf( cn, "canvas%d", countCanvas+1 );
+                     snprintf( cn, 20, "canvas%d", countCanvas+1 );
                      c = new TCanvas( cn, Form("TMVA Output Fit Variables %s",methodTitle.Data()), 
                                       countCanvas*50+200, countCanvas*20, width, width*0.78 ); 
             
@@ -209,7 +210,7 @@ void TMVA::probas(TString dataset, TString fin , Bool_t useTMVAStyle  )
                      // save canvas to file
                      c->Update();
                      TMVAGlob::plot_logo();
-                     sprintf( fname, "%s/plots/mva_pdf_%s_c%i",dataset.Data(), methodTitle.Data(), countCanvas+1 );
+                     snprintf( fname, fnameSize, "%s/plots/mva_pdf_%s_c%i",dataset.Data(), methodTitle.Data(), countCanvas+1 );
                      if (Save_Images) TMVAGlob::imgconv( c, fname );
                      countCanvas++;
                   }

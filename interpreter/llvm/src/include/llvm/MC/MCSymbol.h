@@ -16,6 +16,7 @@
 #include "llvm/ADT/PointerIntPair.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCFragment.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
@@ -27,7 +28,6 @@ namespace llvm {
 
 class MCAsmInfo;
 class MCContext;
-class MCExpr;
 class MCSection;
 class raw_ostream;
 
@@ -46,6 +46,7 @@ protected:
     SymbolKindUnset,
     SymbolKindCOFF,
     SymbolKindELF,
+    SymbolKindGOFF,
     SymbolKindMachO,
     SymbolKindWasm,
     SymbolKindXCOFF,
@@ -94,7 +95,8 @@ protected:
 
   mutable unsigned IsRegistered : 1;
 
-  /// This symbol is visible outside this translation unit.
+  /// True if this symbol is visible outside this translation unit. Note: ELF
+  /// uses binding instead of this bit.
   mutable unsigned IsExternal : 1;
 
   /// This symbol is private extern.
@@ -178,14 +180,6 @@ private:
     llvm_unreachable("Constructor throws?");
   }
 
-  MCSection *getSectionPtr() const {
-    if (MCFragment *F = getFragment()) {
-      assert(F != AbsolutePseudoFragment);
-      return F->getParent();
-    }
-    return nullptr;
-  }
-
   /// Get a reference to the name field.  Requires that we have a name
   const StringMapEntry<bool> *&getNameEntryPtr() {
     assert(FragmentAndHasName.getInt() && "Name is required");
@@ -267,7 +261,7 @@ public:
   /// Get the section associated with a defined, non-absolute symbol.
   MCSection &getSection() const {
     assert(isInSection() && "Invalid accessor!");
-    return *getSectionPtr();
+    return *getFragment()->getParent();
   }
 
   /// Mark the symbol as defined in the fragment \p F.
@@ -282,6 +276,8 @@ public:
   bool isELF() const { return Kind == SymbolKindELF; }
 
   bool isCOFF() const { return Kind == SymbolKindCOFF; }
+
+  bool isGOFF() const { return Kind == SymbolKindGOFF; }
 
   bool isMachO() const { return Kind == SymbolKindMachO; }
 

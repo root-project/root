@@ -41,7 +41,7 @@ h1f.FillRandom("sqroot",10000)
 h1f.Draw()
 c1.Update()
 
-f = ROOT.TFile("fillrandom.root","RECREATE")
+f = ROOT.TFile("fillrandom-py.root","RECREATE")
 form1.Write()
 sqroot.Write()
 h1f.Write()

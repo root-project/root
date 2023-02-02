@@ -36,9 +36,9 @@ public:
 
    virtual void   SetFrame(TGFrame *frame, Bool_t prev) = 0;
 
-   virtual Bool_t HandleButton(Event_t *event) = 0;
-   virtual Bool_t HandleMotion(Event_t *event) = 0;
-   virtual Bool_t HandleCrossing(Event_t *event) = 0;
+   virtual Bool_t HandleButton(Event_t *event) override = 0;
+   virtual Bool_t HandleMotion(Event_t *event) override = 0;
+   virtual Bool_t HandleCrossing(Event_t *event) override = 0;
 
    void DragStarted();      // *SIGNAL*
    void Moved(Int_t delta); // *SIGNAL*
@@ -46,7 +46,7 @@ public:
    Bool_t GetExternalHandler() const { return fExternalHandler; }
    void SetExternalHandler(Bool_t x) { fExternalHandler = x; }
 
-   ClassDef(TGSplitter,0)  //A frame splitter abstract base class
+   ClassDefOverride(TGSplitter,0)  //A frame splitter abstract base class
 };
 
 
@@ -72,18 +72,18 @@ public:
    TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external);
    virtual ~TGVSplitter();
 
-   virtual void   DrawBorder();
-   virtual void   SetFrame(TGFrame *frame, Bool_t left);
+   void           DrawBorder() override;
+   void           SetFrame(TGFrame *frame, Bool_t left) override;
    const TGFrame *GetFrame() const { return fFrame; }
    Bool_t         GetLeft() const { return fLeft; }
    Bool_t         IsLeft() const { return fLeft; }
-   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
+   void           SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual Bool_t HandleCrossing(Event_t *event);
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
+   Bool_t HandleCrossing(Event_t *event) override;
 
-   ClassDef(TGVSplitter,0)  //A vertical frame splitter
+   ClassDefOverride(TGVSplitter,0)  //A vertical frame splitter
 };
 
 
@@ -109,18 +109,18 @@ public:
    TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external);
    virtual ~TGHSplitter();
 
-   virtual void   DrawBorder();
-   virtual void   SetFrame(TGFrame *frame, Bool_t above);
+   void           DrawBorder() override;
+   void           SetFrame(TGFrame *frame, Bool_t above) override;
    const TGFrame *GetFrame() const { return fFrame; }
    Bool_t         GetAbove() const { return fAbove; }
    Bool_t         IsAbove() const { return fAbove; }
-   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
+   void   SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual Bool_t HandleCrossing(Event_t *event);
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
+   Bool_t HandleCrossing(Event_t *event) override;
 
-   ClassDef(TGHSplitter,0)  //A horizontal frame splitter
+   ClassDefOverride(TGHSplitter,0)  //A horizontal frame splitter
 };
 
 class TGVFileSplitter : public TGVSplitter {
@@ -135,10 +135,10 @@ public:
                Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGVFileSplitter();
 
-   virtual Bool_t HandleDoubleClick(Event_t *);
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
+   Bool_t HandleDoubleClick(Event_t *) override;
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
+   void   SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    void LayoutHeader(TGFrame *f);  //*SIGNAL*
    void LayoutListView();  //*SIGNAL*
@@ -146,7 +146,7 @@ public:
    void ButtonReleased();  //*SIGNAL*
    void DoubleClicked(TGVFileSplitter* frame);  //*SIGNAL*
 
-   ClassDef(TGVFileSplitter,0)  //A vertical file frame splitter
+   ClassDefOverride(TGVFileSplitter,0)  //A vertical file frame splitter
 };
 
 

@@ -85,15 +85,15 @@ public:
    {
    }
 
-   virtual ~MnFumiliMinimize() {}
+   ~MnFumiliMinimize() override {}
 
-   FumiliMinimizer &Minimizer() { return fMinimizer; }
-   const FumiliMinimizer &Minimizer() const { return fMinimizer; }
+   FumiliMinimizer &Minimizer() override { return fMinimizer; }
+   const FumiliMinimizer &Minimizer() const override { return fMinimizer; }
 
-   const FumiliFCNBase &Fcnbase() const { return fFCN; }
+   const FumiliFCNBase &Fcnbase() const override { return fFCN; }
 
    /// overwrite Minimize to use FumiliFCNBase
-   virtual FunctionMinimum operator()(unsigned int = 0, double = 0.1);
+   FunctionMinimum operator()(unsigned int = 0, double = 0.1) override;
 
 private:
    FumiliMinimizer fMinimizer;

@@ -172,9 +172,9 @@ public:
       return ExecPluginImpl(params...);
    }
 
-   void        Print(Option_t *opt = "") const;
+   void        Print(Option_t *opt = "") const override;
 
-   ClassDef(TPluginHandler,3)  // Handler for plugin libraries
+   ClassDefOverride(TPluginHandler,3)  // Handler for plugin libraries
 };
 
 
@@ -190,23 +190,23 @@ private:
    void   LoadHandlerMacros(const char *path);
 
 public:
-   TPluginManager() : fHandlers(0), fBasesLoaded(0), fReadingDirs(kFALSE) { }
+   TPluginManager() : fHandlers(nullptr), fBasesLoaded(nullptr), fReadingDirs(kFALSE) { }
    ~TPluginManager();
 
    void   LoadHandlersFromEnv(TEnv *env);
-   void   LoadHandlersFromPluginDirs(const char *base = 0);
+   void   LoadHandlersFromPluginDirs(const char *base = nullptr);
    void   AddHandler(const char *base, const char *regexp,
                      const char *className, const char *pluginName,
-                     const char *ctor = 0, const char *origin = 0);
-   void   RemoveHandler(const char *base, const char *regexp = 0);
+                     const char *ctor = nullptr, const char *origin = nullptr);
+   void   RemoveHandler(const char *base, const char *regexp = nullptr);
 
-   TPluginHandler *FindHandler(const char *base, const char *uri = 0);
+   TPluginHandler *FindHandler(const char *base, const char *uri = nullptr);
 
-   void   Print(Option_t *opt = "") const;
-   Int_t  WritePluginMacros(const char *dir, const char *plugin = 0) const;
-   Int_t  WritePluginRecords(const char *envFile, const char *plugin = 0) const;
+   void   Print(Option_t *opt = "") const override;
+   Int_t  WritePluginMacros(const char *dir, const char *plugin = nullptr) const;
+   Int_t  WritePluginRecords(const char *envFile, const char *plugin = nullptr) const;
 
-   ClassDef(TPluginManager,1)  // Manager for plugin handlers
+   ClassDefOverride(TPluginManager,1)  // Manager for plugin handlers
 };
 
 R__EXTERN TPluginManager *gPluginMgr;

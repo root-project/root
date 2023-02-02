@@ -21,11 +21,9 @@
 
 A RooRefCountList is a RooLinkedList that keeps a reference counter
 with each added node. Multiple Add()s of the same object will increase
-the counter instead of adding multiple copies. Remove() decrements the 
+the counter instead of adding multiple copies. Remove() decrements the
 reference count until zero, when the object is actually removed.
 **/
-
-#include "RooFit.h"
 
 #include "RooRefCountList.h"
 
@@ -43,8 +41,8 @@ ClassImp(RooRefCountList);
 /// Default constructor construct lists with initial hash table size of 17
 
 RooRefCountList::RooRefCountList()
-  : RooLinkedList(0) 
-{ 
+  : RooLinkedList(0)
+{
 }
 
 
@@ -53,18 +51,18 @@ RooRefCountList::RooRefCountList()
 /// Add object to list with given reference count increment
 /// List takes ownership of object.
 
-void RooRefCountList::Add(TObject* obj, Int_t count) 
+void RooRefCountList::Add(TObject* obj, Int_t count)
 {
   // Check if we already have it
   TObject* listObj = FindObject(obj) ;
   if (!listObj) {
-    // Add to list with reference count 
+    // Add to list with reference count
     RooLinkedList::Add(obj, count) ;
     //cout << "RooRefCountList::AddLast(" << obj << ") adding object" << endl ;
   } else {
     RooLinkedListElem* link = findLink(obj) ;
     if(link) {
-      while(count--) link->incRefCount() ;    
+      while(count--) link->incRefCount() ;
     }
     //cout << "RooRefCountList::AddLast(" << obj << ") incremented reference count to " << link->refCount() << endl ;
   }
@@ -74,10 +72,10 @@ void RooRefCountList::Add(TObject* obj, Int_t count)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove object from list and if reference count 
+/// Remove object from list and if reference count
 /// reaches zero delete object itself as well.
 
-Bool_t RooRefCountList::Remove(TObject* obj) 
+bool RooRefCountList::Remove(TObject* obj)
 {
   RooLinkedListElem* link = findLink(obj) ;
   if (!link) {
@@ -98,7 +96,7 @@ Bool_t RooRefCountList::Remove(TObject* obj)
 /// Remove object from list and delete object itself
 /// regardless of reference count
 
-Bool_t RooRefCountList::RemoveAll(TObject* obj)
+bool RooRefCountList::RemoveAll(TObject* obj)
 {
   return RooLinkedList::Remove(obj) ;
 }

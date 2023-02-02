@@ -22,6 +22,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
+#include "llvm/ExecutionEngine/MCJIT.h"
 #include "llvm/IR/Argument.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Constants.h"
@@ -256,10 +257,11 @@ void* callFunc( void* param )
 
 int main() {
   InitializeNativeTarget();
+  LLVMInitializeNativeAsmPrinter();
   LLVMContext Context;
 
   // Create some module to put our function into it.
-  std::unique_ptr<Module> Owner = make_unique<Module>("test", Context);
+  std::unique_ptr<Module> Owner = std::make_unique<Module>("test", Context);
   Module *M = Owner.get();
 
   Function* add1F = createAdd1( M );

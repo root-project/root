@@ -38,7 +38,7 @@ namespace ROOT {
 
 //___________________________________________________________________________________
 /**
-   Chi2FCN class for binnned fits using the least square methods
+   Chi2FCN class for binned fits using the least square methods
 
    @ingroup  FitMethodFunc
 */
@@ -68,11 +68,10 @@ public:
    { }
 
    /**
-      Same Constructor from data set (binned ) and model function but now managed by the user
-      we clone the function but not the data
+      Same Constructor from data set (binned ) and model function cloning the function and the data
    */
    Chi2FCN ( const BinData & data, const IModelFunction & func, const ::ROOT::EExecutionPolicy &executionPolicy = ::ROOT::EExecutionPolicy::kSequential) :
-      BaseFCN(std::shared_ptr<BinData>(const_cast<BinData*>(&data), DummyDeleter<BinData>()), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
+      BaseFCN(std::make_shared<BinData>(data), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
       fNEffPoints(0),
       fGrad ( std::vector<double> ( func.NPar() ) ),
       fExecutionPolicy(executionPolicy)
@@ -115,9 +114,9 @@ public:
 
 
    /// i-th chi-square residual
-   virtual double DataElement(const double *x, unsigned int i, double *g) const {
+   virtual double DataElement(const double *x, unsigned int i, double *g, double * h = nullptr, bool fullHessian = false) const {
       if (i==0) this->UpdateNCalls();
-      return FitUtil::Evaluate<T>::EvalChi2Residual(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
+      return FitUtil::Evaluate<T>::EvalChi2Residual(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g, h, BaseFCN::IsAGradFCN(), fullHessian);
    }
 
    // need to be virtual to be instantiated
@@ -126,6 +125,7 @@ public:
       FitUtil::Evaluate<T>::EvalChi2Gradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints,
                                              fExecutionPolicy);
    }
+
 
    /// get type of fit method function
    virtual  typename BaseObjFunction::Type_t Type() const { return BaseObjFunction::kLeastSquare; }
@@ -156,9 +156,9 @@ private:
    }
 
 
-   mutable unsigned int fNEffPoints;  // number of effective points used in the fit
+   mutable unsigned int fNEffPoints;  ///< number of effective points used in the fit
 
-   mutable std::vector<double> fGrad; // for derivatives
+   mutable std::vector<double> fGrad; ///< for derivatives
    ::ROOT::EExecutionPolicy fExecutionPolicy;
 
 };

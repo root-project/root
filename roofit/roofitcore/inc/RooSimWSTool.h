@@ -20,7 +20,7 @@
 #include "Rtypes.h"
 #include "RooWorkspace.h"
 #include "RooCmdArg.h"
-#include "RooFactoryWSTool.h"
+
 #include <list>
 #include <map>
 #include <string>
@@ -34,78 +34,73 @@ class RooCatType;
 class RooSimultaneous;
 
 
-class RooSimWSTool : public TNamed, public RooPrintable {
+// Workspace oriented tool for customized cloning of p.d.f. into a simultaneous p.d.f
+class RooSimWSTool {
 
 public:
 
   // Constructors, assignment etc
   RooSimWSTool(RooWorkspace& ws) ;
-  virtual ~RooSimWSTool() ;
+  ~RooSimWSTool() ;
 
   class BuildConfig ;
   class MultiBuildConfig ;
   class SplitRule ;
-  
+
   class ObjBuildConfig ;
   class ObjSplitRule ;
-  
-  RooSimultaneous* build(const char* simPdfName, const char* protoPdfName, 
-			 const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
-			 const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-			 const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
 
-  RooSimultaneous* build(const char* simPdfName,BuildConfig& bc, Bool_t verbose=kTRUE) ;
+  RooSimultaneous* build(const char* simPdfName, const char* protoPdfName,
+          const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
+          const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
+          const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
 
-  class SimWSIFace : public RooFactoryWSTool::IFace {
-  public:
-    virtual ~SimWSIFace() {} ;
-    std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) ;
-  } ;
+  RooSimultaneous* build(const char* simPdfName,BuildConfig& bc, bool verbose=true) ;
 
-  
+
 protected:
 
   RooSimWSTool(const RooSimWSTool&) ;
 
-  ObjBuildConfig* validateConfig(BuildConfig& bc) ;
-  RooSimultaneous* executeBuild(const char* simPdfName,ObjBuildConfig& obc, Bool_t verbose=kTRUE) ;
+  std::unique_ptr<ObjBuildConfig> validateConfig(BuildConfig& bc) ;
+  RooSimultaneous* executeBuild(const char* simPdfName,ObjBuildConfig& obc, bool verbose=true) ;
   std::string makeSplitName(const RooArgSet& splitCatSet) ;
 
   RooWorkspace* _ws ;
 
-  ClassDef(RooSimWSTool,0) // Workspace oriented tool for customized cloning of p.d.f. into a simultaneous p.d.f
 } ;
 
 
+// Split rule specification for prototype p.d.f
 class RooSimWSTool::SplitRule : public TNamed {
 public:
    SplitRule(const char* pdfName="") : TNamed(pdfName,pdfName) {} ;
-   virtual ~SplitRule() {} ;
+   ~SplitRule() override {} ;
    void splitParameter(const char* paramList, const char* categoryList) ;
    void splitParameterConstrained(const char* paramNameList, const char* categoryNameList, const char* remainderStateName) ;
-   
+
 protected:
-   
+
    friend class RooSimWSTool ;
    friend class BuildConfig ;
    friend class MultiBuildConfig ;
    void configure(const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
                   const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
                   const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
-   
+
    std::list<std::string>                                             _miStateNameList ;
    std::map<std::string, std::pair<std::list<std::string>,std::string> > _paramSplitMap  ; //<paramName,<std::list<splitCatSet>,remainderStateName>>
-   ClassDef(SplitRule,0) // Split rule specification for prototype p.d.f
 } ;
 
 
+// Build configuration object for RooSimWSTool
 class RooSimWSTool::BuildConfig
 {
  public:
   BuildConfig(const char* pdfName, SplitRule& sr) ;
   BuildConfig(const char* pdfName, const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
-	      const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-	      const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
+         const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
+         const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
 
   BuildConfig(const RooArgSet& legacyBuildConfig) ;
 
@@ -122,51 +117,47 @@ class RooSimWSTool::BuildConfig
 
   void internalAddPdf(const char* pdfName, const char* miStateList, SplitRule& sr) ;
 
-  ClassDef(BuildConfig,0) // Build configuration object for RooSimWSTool
  } ;
 
 
+// Build configuration object for RooSimWSTool with multiple prototype p.d.f.
 class RooSimWSTool::MultiBuildConfig : public RooSimWSTool::BuildConfig
 {
  public:
   MultiBuildConfig(const char* masterIndexCat)  ;
-  virtual ~MultiBuildConfig() {} ;
+  ~MultiBuildConfig() override {} ;
   void addPdf(const char* miStateList, const char* pdfName, SplitRule& sr) ;
-  void addPdf(const char* miStateList, const char* pdfName, 
-	      const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
-	      const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-	      const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
+  void addPdf(const char* miStateList, const char* pdfName,
+         const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),
+         const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
+         const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
 
  protected:
   friend class RooSimWSTool ;
 
-  ClassDef(MultiBuildConfig,0) // Build configuration object for RooSimWSTool with multiple prototype p.d.f.
  } ;
 
 
-  
-
-
-
+// Validated RooSimWSTool split rule
 class RooSimWSTool::ObjSplitRule {
 public:
-  ObjSplitRule() {} ;  
-  virtual ~ObjSplitRule() ;  
-  
+  ObjSplitRule() {} ;
+  virtual ~ObjSplitRule() ;
+
 protected:
   friend class RooSimWSTool ;
   friend class RooSimWSTool::ObjBuildConfig ;
-  std::list<const RooCatType*>                            _miStateList ; 
+  std::list<const RooCatType*>                            _miStateList ;
   std::map<RooAbsArg*, std::pair<RooArgSet,std::string> > _paramSplitMap  ; //<paramName,<std::list<splitCatSet>,remainderStateName>>
-  ClassDef(ObjSplitRule,0) // Validated RooSimWSTool split rule
  } ;
 
 
+// Validated RooSimWSTool build configuration
 class RooSimWSTool::ObjBuildConfig
 {
  public:
-  ObjBuildConfig() : _masterCat(0) {} ;
-  virtual ~ObjBuildConfig() {} ;
+  ObjBuildConfig() : _masterCat(nullptr) {}
+  virtual ~ObjBuildConfig() {}
   void print() ;
 
  protected:
@@ -177,7 +168,6 @@ class RooSimWSTool::ObjBuildConfig
   RooArgSet    _usedSplitCats ;
   RooCmdArg _conflProtocol ;
 
-  ClassDef(ObjBuildConfig,0) // Validated RooSimWSTool build configuration
  } ;
 
 #endif

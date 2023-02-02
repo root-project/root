@@ -50,6 +50,8 @@ namespace ROOT {
      like global or local coordinate systems.
 
      @ingroup GenVector
+
+     @sa Overview of the @ref GenVector "physics vector library"
     */
 
     template <class CoordSystem, class Tag = DefaultCoordinateSystemTag >

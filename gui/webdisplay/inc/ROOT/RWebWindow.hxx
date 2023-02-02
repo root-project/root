@@ -70,6 +70,7 @@ private:
       unsigned fConnId{0};                 ///<! connection id (unique inside the window)
       bool fHeadlessMode{false};           ///<! indicate if connection represent batch job
       std::string fKey;                    ///<! key value supplied to the window (when exists)
+      int fKeyUsed{0};                     ///<! key value used to verify connection
       std::unique_ptr<RWebDisplayHandle> fDisplayHandle;  ///<! handle assigned with started web display (when exists)
       std::shared_ptr<THttpCallArg> fHold; ///<! request used to hold headless browser
       timestamp_t fSendStamp;              ///<! last server operation, always used from window thread
@@ -95,6 +96,18 @@ private:
       ~WebConn();
 
       void ResetStamps() { fSendStamp = fRecvStamp = std::chrono::system_clock::now(); }
+
+      void ResetData()
+      {
+         fActive = false;
+         fWSId = 0;
+         fReady = 0;
+         fDoingSend = false;
+         fSendCredits = 0;
+         fClientCredits = 0;
+         while (!fQueue.empty())
+            fQueue.pop();
+      }
    };
 
    enum EQueueEntryKind { kind_None, kind_Connect, kind_Data, kind_Disconnect };
@@ -110,13 +123,13 @@ private:
    using ConnectionsList_t = std::vector<std::shared_ptr<WebConn>>;
 
    std::shared_ptr<RWebWindowsManager> fMgr;        ///<! display manager
-   std::shared_ptr<RWebWindow> fMaster;             ///<! master window where this window is embeded
+   std::shared_ptr<RWebWindow> fMaster;             ///<! master window where this window is embedded
    unsigned fMasterConnId{0};                       ///<! master connection id
    int fMasterChannel{-1};                          ///<! channel id in the master window
    std::string fDefaultPage;                        ///<! HTML page (or file name) returned when window URL is opened
    std::string fPanelName;                          ///<! panel name which should be shown in the window
    unsigned fId{0};                                 ///<! unique identifier
-   bool fUseServerThreads{false};                       ///<! indicates that server thread is using, no special window thread
+   bool fUseServerThreads{false};                   ///<! indicates that server thread is using, no special window thread
    bool fProcessMT{false};                          ///<! if window event processing performed in dedicated thread
    bool fSendMT{false};                             ///<! true is special threads should be used for sending data
    std::shared_ptr<RWebWindowWSHandler> fWSHandler; ///<! specialize websocket handler for all incoming connections
@@ -163,6 +176,8 @@ private:
 
    std::shared_ptr<WebConn> RemoveConnection(unsigned wsid);
 
+   std::shared_ptr<WebConn> _FindConnWithKey(const std::string &key) const;
+
    std::string _MakeSendHeader(std::shared_ptr<WebConn> &conn, bool txt, const std::string &data, int chid);
 
    void ProvideQueueEntry(unsigned connid, EQueueEntryKind kind, std::string &&arg);
@@ -176,6 +191,8 @@ private:
    void CheckDataToSend(bool only_once = false);
 
    bool HasKey(const std::string &key) const;
+
+   std::string GenerateKey() const;
 
    void CheckPendingConnections();
 

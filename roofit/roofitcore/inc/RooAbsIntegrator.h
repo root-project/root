@@ -22,53 +22,54 @@
 class RooAbsIntegrator : public TObject {
 public:
   RooAbsIntegrator() ;
-  RooAbsIntegrator(const RooAbsFunc& function, Bool_t printEvalCounter=kFALSE);
-  inline virtual ~RooAbsIntegrator() { 
-    // Destructor
+  RooAbsIntegrator(const RooAbsFunc& function, bool printEvalCounter=false);
+  /// Destructor
+  inline ~RooAbsIntegrator() override {
   }
   virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const = 0 ;
-  
-  inline Bool_t isValid() const { 
-    // Is integrator in valid state
-    return _valid; 
+
+  /// Is integrator in valid state
+  inline bool isValid() const {
+    return _valid;
   }
 
-  inline Double_t integrand(const Double_t x[]) const { 
-    // Return value of integrand at given observable values
-    return (*_function)(x); 
-  }
-  inline const RooAbsFunc *integrand() const { 
-    // Return integrand function binding
-    return _function; 
+  /// Return value of integrand at given observable values
+  inline double integrand(const double x[]) const {
+    return (*_function)(x);
   }
 
-  inline virtual Bool_t checkLimits() const { 
-    // If true, finite limits are required on the observable range
-    return kTRUE; 
+  /// Return integrand function binding
+  inline const RooAbsFunc *integrand() const {
+    return _function;
   }
 
-  Double_t calculate(const Double_t *yvec=0) ;
-  virtual Double_t integral(const Double_t *yvec=0)=0 ;
+  /// If true, finite limits are required on the observable range
+  inline virtual bool checkLimits() const {
+    return true;
+  }
 
-  virtual Bool_t canIntegrate1D() const = 0 ;
-  virtual Bool_t canIntegrate2D() const = 0 ;
-  virtual Bool_t canIntegrateND() const = 0 ;
-  virtual Bool_t canIntegrateOpenEnded() const = 0 ;
+  double calculate(const double *yvec=nullptr) ;
+  virtual double integral(const double *yvec=nullptr)=0 ;
 
-  Bool_t printEvalCounter() const { return _printEvalCounter ; }
-  void setPrintEvalCounter(Bool_t value) { _printEvalCounter = value ; }
+  virtual bool canIntegrate1D() const = 0 ;
+  virtual bool canIntegrate2D() const = 0 ;
+  virtual bool canIntegrateND() const = 0 ;
+  virtual bool canIntegrateOpenEnded() const = 0 ;
 
-  virtual Bool_t setLimits(Double_t*, Double_t*) { return kFALSE ; }
-  virtual Bool_t setLimits(Double_t xmin, Double_t xmax) ;
-  virtual Bool_t setUseIntegrandLimits(Bool_t flag) ;
+  bool printEvalCounter() const { return _printEvalCounter ; }
+  void setPrintEvalCounter(bool value) { _printEvalCounter = value ; }
+
+  virtual bool setLimits(double*, double*) { return false ; }
+  virtual bool setLimits(double xmin, double xmax) ;
+  virtual bool setUseIntegrandLimits(bool flag) ;
 
 protected:
 
-  const RooAbsFunc *_function; // Pointer to function binding of integrand
-  Bool_t _valid;               // Is integrator in valid state?
-  Bool_t _printEvalCounter ;   // If true print number of function evaluation required for integration
+  const RooAbsFunc *_function; ///< Pointer to function binding of integrand
+  bool _valid;               ///< Is integrator in valid state?
+  bool _printEvalCounter ;   ///< If true print number of function evaluation required for integration
 
-  ClassDef(RooAbsIntegrator,0) // Abstract interface for real-valued function integrators
+  ClassDefOverride(RooAbsIntegrator,0) // Abstract interface for real-valued function integrators
 };
 
 #endif

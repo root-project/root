@@ -301,7 +301,7 @@ Int_t  TGeoManager::fgNumThreads      = 0;
 UInt_t TGeoManager::fgExportPrecision = 17;
 TGeoManager::EDefaultUnits TGeoManager::fgDefaultUnits = TGeoManager::kRootUnits;
 TGeoManager::ThreadsMap_t *TGeoManager::fgThreadId = 0;
-static Bool_t gGeometryLocked = kTRUE;
+static Bool_t gGeometryLocked = kFALSE;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -1216,9 +1216,9 @@ TGeoMedium *TGeoManager::Medium(const char *name, Int_t numed, Int_t nmat, Int_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a node called <name_nr> pointing to the volume called <name>
-/// as daughter of the volume called <mother> (gspos). The relative matrix is
-/// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
+/// Create a node called `<name_nr>` pointing to the volume called `<name>`
+/// as daughter of the volume called `<mother>` (gspos). The relative matrix is
+/// made of : a translation (x,y,z) and a rotation matrix named `<matIROT>`.
 /// In case npar>0, create the volume to be positioned in mother, according
 /// its actual parameters (gsposp).
 ///  - NAME   Volume name
@@ -1238,9 +1238,9 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a node called <name_nr> pointing to the volume called <name>
-/// as daughter of the volume called <mother> (gspos). The relative matrix is
-/// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
+/// Create a node called `<name_nr>` pointing to the volume called `<name>`
+/// as daughter of the volume called `<mother>` (gspos). The relative matrix is
+/// made of : a translation (x,y,z) and a rotation matrix named `<matIROT>`.
 /// In case npar>0, create the volume to be positioned in mother, according
 /// its actual parameters (gsposp).
 ///  - NAME   Volume name
@@ -1396,7 +1396,9 @@ void TGeoManager::CloseGeometry(Option_t *option)
       // Create a geometry navigator if not present
       if (!GetCurrentNavigator()) fCurrentNavigator = AddNavigator();
       nnavigators = GetListOfNavigators()->GetEntriesFast();
-      Voxelize("ALL");
+      if (!opt.Contains("nv")) {
+         Voxelize("ALL");
+      }
       CountLevels();
       for (Int_t i=0; i<nnavigators; i++) {
          nav = (TGeoNavigator*)GetListOfNavigators()->At(i);
@@ -1433,8 +1435,17 @@ void TGeoManager::CloseGeometry(Option_t *option)
    fNLevel = fMasterVolume->CountNodes(1,3)+1;
    if (fNLevel<30) fNLevel = 100;
 
-//   BuildIdArray();
-   Voxelize("ALL");
+   //   BuildIdArray();
+   // avoid voxelization if requested to speed up geometry startup
+   if (!opt.Contains("nv")) {
+      Voxelize("ALL");
+   } else {
+      TGeoVolume *vol;
+      TIter next(fVolumes);
+      while ((vol = (TGeoVolume *)next())) {
+         vol->SortNodes();
+      }
+   }
    if (fgVerboseLevel>0) Info("CloseGeometry","Building cache...");
    CountLevels();
    for (Int_t i=0; i<nnavigators; i++) {
@@ -1622,9 +1633,8 @@ void TGeoManager::CountLevels()
 //            node->ResetBit(BIT(ibit)); // cannot overwrite old crap for reproducibility
          }
       }
-      if (node->GetVolume()->GetVoxels()) {
-         if (node->GetNdaughters()>maxnodes) maxnodes = node->GetNdaughters();
-      }
+      if (node->GetNdaughters() > maxnodes)
+         maxnodes = node->GetNdaughters();
       if (next.GetLevel()>maxlevel) maxlevel = next.GetLevel();
       if (node->GetVolume()->GetShape()->IsA()==TGeoXtru::Class()) {
          TGeoXtru *xtru = (TGeoXtru*)node->GetVolume()->GetShape();
@@ -3820,13 +3830,13 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
 {
    if (fgLock) {
       ::Warning("TGeoManager::Import", "TGeoMananager in lock mode. NOT IMPORTING new geometry");
-      return NULL;
+      return nullptr;
    }
    if (!filename) return 0;
    if (fgVerboseLevel>0) ::Info("TGeoManager::Import","Reading geometry from file: %s",filename);
 
    if (gGeoManager) delete gGeoManager;
-   gGeoManager = 0;
+   gGeoManager = nullptr;
 
    if (strstr(filename,".gdml")) {
       // import from a gdml file
@@ -3834,8 +3844,10 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
       TString cmd = TString::Format("TGDMLParse::StartGDML(\"%s\")", filename);
       TGeoVolume* world = (TGeoVolume*)gROOT->ProcessLineFast(cmd);
 
-      if(world == 0) {
-         ::Error("TGeoManager::Import", "Cannot open file");
+      if(world == nullptr) {
+         delete gGeoManager;
+         gGeoManager = nullptr;
+         ::Error("TGeoManager::Import", "Cannot read file %s", filename);
       }
       else {
          gGeoManager->SetTopVolume(world);
@@ -3847,12 +3859,12 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
       TDirectory::TContext ctxt;
       // in case a web file is specified, use the cacheread option to cache
       // this file in the cache directory
-      TFile *f = 0;
+      TFile *f = nullptr;
       if (strstr(filename,"http")) f = TFile::Open(filename,"CACHEREAD");
       else                         f = TFile::Open(filename);
       if (!f || f->IsZombie()) {
          ::Error("TGeoManager::Import", "Cannot open file");
-         return 0;
+         return nullptr;
       }
       if (name && strlen(name) > 0) {
          gGeoManager = (TGeoManager*)f->Get(name);
@@ -4022,12 +4034,13 @@ TGeoManager::EDefaultUnits TGeoManager::GetDefaultUnits()
 void TGeoManager::SetDefaultUnits(EDefaultUnits new_value)
 {
    if ( fgDefaultUnits == new_value )   {
+      gGeometryLocked = true;
       return;
    }
    else if ( gGeometryLocked )    {
       ::Fatal("TGeoManager","The system of units may only be changed once, \n"
-	      "BEFORE any elements and materials are created! \n"
-	      "Alternatively unlock the default units at own risk.");
+          "BEFORE any elements and materials are created! \n"
+          "Alternatively unlock the default units at own risk.");
    }
    else if ( new_value == kG4Units )   {
       ::Info("TGeoManager","Changing system of units to Geant4 units (mm, ns, MeV).");
@@ -4037,3 +4050,14 @@ void TGeoManager::SetDefaultUnits(EDefaultUnits new_value)
    }
    fgDefaultUnits = new_value;
 }
+
+void TGeoManager::SetExportPrecision(UInt_t prec)
+{
+   fgExportPrecision = prec;
+}
+
+UInt_t TGeoManager::GetExportPrecision()
+{
+   return fgExportPrecision;
+}
+

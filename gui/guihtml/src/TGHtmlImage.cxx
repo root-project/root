@@ -156,8 +156,8 @@ void TGHtml::ImageChanged(TGHtmlImage *pImage, int newWidth, int newHeight)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Given an <IMG> markup, find or create an appropriate TGHtmlImage
-/// object and return a pointer to that object. NULL might be returned.
+/// Given an `<IMG>` markup, find or create an appropriate TGHtmlImage
+/// object and return a pointer to that object. `NULL` might be returned.
 
 TGHtmlImage *TGHtml::GetImage(TGHtmlImageMarkup *p)
 {
@@ -362,7 +362,7 @@ const char *TGHtml::GetPctWidth(TGHtmlElement *p, char *opt, char *ret)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This routine searchs for an image beneath the coordinates x,y
-/// and returns the token number of the the image, or -1 if no
+/// and returns the token number of the image, or -1 if no
 /// image found.
 
 int TGHtml::GetImageAt(int x, int y)

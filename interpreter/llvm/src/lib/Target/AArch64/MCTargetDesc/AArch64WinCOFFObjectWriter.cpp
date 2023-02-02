@@ -6,11 +6,13 @@
 //
 //===---------------------------------------------------------------------===//
 
+#include "AArch64MCTargetDesc.h"
 #include "MCTargetDesc/AArch64FixupKinds.h"
 #include "MCTargetDesc/AArch64MCExpr.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/BinaryFormat/COFF.h"
 #include "llvm/MC/MCAsmBackend.h"
+#include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCFixup.h"
 #include "llvm/MC/MCFixupKindInfo.h"
@@ -44,15 +46,54 @@ public:
 unsigned AArch64WinCOFFObjectWriter::getRelocType(
     MCContext &Ctx, const MCValue &Target, const MCFixup &Fixup,
     bool IsCrossSection, const MCAsmBackend &MAB) const {
+  unsigned FixupKind = Fixup.getKind();
+  if (IsCrossSection) {
+    // IMAGE_REL_ARM64_REL64 does not exist. We treat FK_Data_8 as FK_PCRel_4 so
+    // that .xword a-b can lower to IMAGE_REL_ARM64_REL32. This allows generic
+    // instrumentation to not bother with the COFF limitation. A negative value
+    // needs attention.
+    if (FixupKind != FK_Data_4 && FixupKind != FK_Data_8) {
+      Ctx.reportError(Fixup.getLoc(), "Cannot represent this expression");
+      return COFF::IMAGE_REL_ARM64_ADDR32;
+    }
+    FixupKind = FK_PCRel_4;
+  }
+
   auto Modifier = Target.isAbsolute() ? MCSymbolRefExpr::VK_None
                                       : Target.getSymA()->getKind();
   const MCExpr *Expr = Fixup.getValue();
 
-  switch (static_cast<unsigned>(Fixup.getKind())) {
-  default: {
-    const MCFixupKindInfo &Info = MAB.getFixupKindInfo(Fixup.getKind());
-    report_fatal_error(Twine("unsupported relocation type: ") + Info.Name);
+  if (const AArch64MCExpr *A64E = dyn_cast<AArch64MCExpr>(Expr)) {
+    AArch64MCExpr::VariantKind RefKind = A64E->getKind();
+    switch (AArch64MCExpr::getSymbolLoc(RefKind)) {
+    case AArch64MCExpr::VK_ABS:
+    case AArch64MCExpr::VK_SECREL:
+      // Supported
+      break;
+    default:
+      Ctx.reportError(Fixup.getLoc(), "relocation variant " +
+                                          A64E->getVariantKindName() +
+                                          " unsupported on COFF targets");
+      return COFF::IMAGE_REL_ARM64_ABSOLUTE; // Dummy return value
+    }
   }
+
+  switch (FixupKind) {
+  default: {
+    if (const AArch64MCExpr *A64E = dyn_cast<AArch64MCExpr>(Expr)) {
+      Ctx.reportError(Fixup.getLoc(), "relocation type " +
+                                          A64E->getVariantKindName() +
+                                          " unsupported on COFF targets");
+    } else {
+      const MCFixupKindInfo &Info = MAB.getFixupKindInfo(Fixup.getKind());
+      Ctx.reportError(Fixup.getLoc(), Twine("relocation type ") + Info.Name +
+                                          " unsupported on COFF targets");
+    }
+    return COFF::IMAGE_REL_ARM64_ABSOLUTE; // Dummy return value
+  }
+
+  case FK_PCRel_4:
+    return COFF::IMAGE_REL_ARM64_REL32;
 
   case FK_Data_4:
     switch (Modifier) {
@@ -117,10 +158,6 @@ bool AArch64WinCOFFObjectWriter::recordRelocation(const MCFixup &Fixup) const {
   return true;
 }
 
-namespace llvm {
-
-std::unique_ptr<MCObjectTargetWriter> createAArch64WinCOFFObjectWriter() {
-  return llvm::make_unique<AArch64WinCOFFObjectWriter>();
+std::unique_ptr<MCObjectTargetWriter> llvm::createAArch64WinCOFFObjectWriter() {
+  return std::make_unique<AArch64WinCOFFObjectWriter>();
 }
-
-} // end namespace llvm

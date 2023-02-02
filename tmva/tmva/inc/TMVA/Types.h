@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$   
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -17,9 +17,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -67,7 +67,7 @@ namespace TMVA {
 
    //Variable Importance type
    enum VIType {kShort=0,kAll=1,kRandom=2};
-   
+
    class Types {
 
    public:
@@ -132,7 +132,7 @@ namespace TMVA {
       };
 
       enum ESBType {
-         kSignal = 0,  // Never change this number - it is elsewhere assumed to be zero !
+         kSignal = 0,  ///< Never change this number - it is elsewhere assumed to be zero !
          kBackground,
          kSBBoth,
          kMaxSBType,
@@ -142,9 +142,9 @@ namespace TMVA {
       enum ETreeType {
          kTraining = 0,
          kTesting,
-         kMaxTreeType,  // also used as temporary storage for trees not yet assigned for testing;training... 
-         kValidation,   // these are placeholders... currently not used, but could be moved "forward" if
-         kTrainingOriginal     // ever needed 
+         kMaxTreeType,  ///< also used as temporary storage for trees not yet assigned for testing;training...
+         kValidation,   ///< these are placeholders... currently not used, but could be moved "forward" if
+         kTrainingOriginal     ///< ever needed
       };
 
       enum EBoostStage {
@@ -177,8 +177,8 @@ namespace TMVA {
 
    private:
 
-      std::map<TString, TMVA::Types::EMVA> fStr2type; // types-to-text map
-      mutable MsgLogger* fLogger;   // message logger
+      std::map<TString, TMVA::Types::EMVA> fStr2type; ///< types-to-text map
+      mutable MsgLogger* fLogger;   ///< message logger
       MsgLogger& Log() const { return *fLogger; }
 
    };

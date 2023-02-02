@@ -26,7 +26,7 @@ namespace RooStats {
                         const RooAbsData &data,
                         const ModelConfig &altModel,
                         const ModelConfig &nullModel,
-                        TestStatSampler* sampler=0
+                        TestStatSampler* sampler=nullptr
       ) :
          HypoTestCalculatorGeneric(data, altModel, nullModel, sampler),
          fPriorNuisanceNull(MakeNuisancePdf(nullModel, "PriorNuisanceNull")),
@@ -40,7 +40,7 @@ namespace RooStats {
       {
       }
 
-      ~HybridCalculator() {
+      ~HybridCalculator() override {
          if(!fPriorNuisanceNullExternal) delete fPriorNuisanceNull;
          if(!fPriorNuisanceAltExternal) delete fPriorNuisanceAlt;
       }
@@ -49,27 +49,27 @@ namespace RooStats {
       /// Override the distribution used for marginalizing nuisance parameters that is inferred from ModelConfig
       virtual void ForcePriorNuisanceNull(RooAbsPdf& priorNuisance) {
          if(!fPriorNuisanceNullExternal) delete fPriorNuisanceNull;
-         fPriorNuisanceNull = &priorNuisance; 
+         fPriorNuisanceNull = &priorNuisance;
          fPriorNuisanceNullExternal = true;
       }
       virtual void ForcePriorNuisanceAlt(RooAbsPdf& priorNuisance) {
          if(!fPriorNuisanceAltExternal) delete fPriorNuisanceAlt;
-         fPriorNuisanceAlt = &priorNuisance; 
+         fPriorNuisanceAlt = &priorNuisance;
          fPriorNuisanceAltExternal = true;
       }
 
-      virtual void SetNullModel(const ModelConfig &nullModel) {
+      void SetNullModel(const ModelConfig &nullModel) override {
          fNullModel = &nullModel;
          if(!fPriorNuisanceNullExternal) delete fPriorNuisanceNull;
          fPriorNuisanceNull = MakeNuisancePdf(nullModel, "PriorNuisanceNull");
          fPriorNuisanceAltExternal = false;
       }
 
-      virtual void SetAlternateModel(const ModelConfig &altModel) {
+      void SetAlternateModel(const ModelConfig &altModel) override {
          fAltModel = &altModel;
          if(!fPriorNuisanceAltExternal) delete fPriorNuisanceAlt;
          fPriorNuisanceAlt = MakeNuisancePdf(altModel, "PriorNuisanceAlt");
-         fPriorNuisanceAltExternal = false; 
+         fPriorNuisanceAltExternal = false;
       }
 
       /// set number of toys
@@ -80,13 +80,13 @@ namespace RooStats {
 
    protected:
       /// check whether all input is consistent
-      int CheckHook(void) const;
+      int CheckHook(void) const override;
 
       /// configure TestStatSampler for the Null run
-      int PreNullHook(RooArgSet* /*parameterPoint*/, double obsTestStat) const;
+      int PreNullHook(RooArgSet* /*parameterPoint*/, double obsTestStat) const override;
 
       /// configure TestStatSampler for the Alt run
-      int PreAltHook(RooArgSet* /*parameterPoint*/, double obsTestStat) const;
+      int PreAltHook(RooArgSet* /*parameterPoint*/, double obsTestStat) const override;
 
    protected:
       RooAbsPdf *fPriorNuisanceNull;
@@ -94,8 +94,8 @@ namespace RooStats {
 
       // these flags tell us if the nuisance pdfs came from an external resource (via ForcePriorNuisance)
       // or were created internally and should be deleted
-      Bool_t fPriorNuisanceNullExternal;
-      Bool_t fPriorNuisanceAltExternal;
+      bool fPriorNuisanceNullExternal;
+      bool fPriorNuisanceAltExternal;
 
       // different number of toys for null and alt
       int fNToysNull;
@@ -106,7 +106,7 @@ namespace RooStats {
       int fNToysAltTail;
 
    protected:
-      ClassDef(HybridCalculator,2)
+      ClassDefOverride(HybridCalculator,2)
    };
 }
 

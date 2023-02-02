@@ -14,7 +14,10 @@
 #include "RooFit/MultiProcess/ProcessManager.h"
 #include "RooFit/MultiProcess/JobManager.h"
 #include "RooFit/MultiProcess/util.h"
+#include "RooFit/MultiProcess/ProcessTimer.h"
+#include "RooFit/MultiProcess/Config.h"
 
+#include <thread>
 #include <cstring>    // for strsignal
 #include <sys/wait.h> // for wait
 #include <iostream>
@@ -109,11 +112,19 @@ void ProcessManager::initialize_processes(bool cpu_pinning)
 {
    // Initialize processes;
    // ... first workers:
+
+   // Setup process timer master and assign pid_t 999
+   if (RooFit::MultiProcess::Config::getTimingAnalysis()) ProcessTimer::setup(999);
+
    worker_pids_.resize(N_workers_);
    pid_t child_pid{};
    for (std::size_t ix = 0; ix < N_workers_; ++ix) {
       child_pid = fork_and_handle_errors();
       if (!child_pid) { // we're on the worker
+         // Setup process timer, do not overwrite begin time, this keeps timing
+         // synced between worker and master processes. The forked process keeps
+         // the master process' begin time
+         if (RooFit::MultiProcess::Config::getTimingAnalysis()) ProcessTimer::setup(ix, false);
          is_worker_ = true;
          worker_id_ = ix;
          break;
@@ -138,7 +149,7 @@ void ProcessManager::initialize_processes(bool cpu_pinning)
       memset(&sa, '\0', sizeof(sa));
       sa.sa_handler = ProcessManager::handle_sigterm;
 
-      if (sigaction(SIGTERM, &sa, NULL) < 0) {
+      if (sigaction(SIGTERM, &sa, nullptr) < 0) {
          std::perror("sigaction failed");
          std::exit(1);
       }
@@ -255,6 +266,9 @@ int chill_wait()
 void ProcessManager::shutdown_processes()
 {
    if (is_master()) {
+      if (RooFit::MultiProcess::Config::getTimingAnalysis()) ProcessTimer::write_file();
+      // Give children some time to write to file
+      if (RooFit::MultiProcess::Config::getTimingAnalysis()) std::this_thread::sleep_for(std::chrono::seconds(2));
       // terminate all children
       std::unordered_set<pid_t> children;
       children.insert(queue_pid_);

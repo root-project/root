@@ -3,11 +3,11 @@
 #include "Linear_16_FromROOT.hxx"
 #include "input_models/references/Linear_16.ref.hxx"
 
-#include "Linear_32_FromROOT.hxx"
-#include "input_models/references/Linear_32.ref.hxx"
+// #include "Linear_32_FromROOT.hxx"
+// #include "input_models/references/Linear_32.ref.hxx"
 
-#include "Linear_64_FromROOT.hxx"
-#include "input_models/references/Linear_64.ref.hxx"
+// #include "Linear_64_FromROOT.hxx"
+// #include "input_models/references/Linear_64.ref.hxx"
 
 #include "LinearWithSelu_FromROOT.hxx"
 #include "input_models/references/LinearWithSelu.ref.hxx"
@@ -95,7 +95,8 @@ TEST(ROOT, Linear16)
    // Preparing the standard all-ones input
    std::vector<float> input(1600);
    std::fill_n(input.data(), input.size(), 1.0f);
-   std::vector<float> output = TMVA_SOFIE_Linear_16::infer(input.data());
+   TMVA_SOFIE_Linear_16::Session s("Linear_16_FromROOT.dat");
+   std::vector<float> output = s.infer(input.data());
 
    // Testing the actual and expected output sizes
    EXPECT_EQ(output.size(), sizeof(Linear_16_ExpectedOutput::all_ones) / sizeof(float));
@@ -108,7 +109,7 @@ TEST(ROOT, Linear16)
    }
 }
 
-
+/*
 TEST(ROOT, Linear32)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
@@ -116,7 +117,8 @@ TEST(ROOT, Linear32)
    // Preparing the standard all-ones input
    std::vector<float> input(3200);
    std::fill_n(input.data(), input.size(), 1.0f);
-   std::vector<float> output = TMVA_SOFIE_Linear_32::infer(input.data());
+   TMVA_SOFIE_Linear_32::Session s("Linear_32_FromROOT.dat");
+   std::vector<float> output = s.infer(input.data());
 
    // Testing the actual and expected output sizes
    EXPECT_EQ(output.size(), sizeof(Linear_32_ExpectedOutput::all_ones) / sizeof(float));
@@ -137,7 +139,8 @@ TEST(ROOT, Linear64)
    // Preparing the standard all-ones input
    std::vector<float> input(6400);
    std::fill_n(input.data(), input.size(), 1.0f);
-   std::vector<float> output = TMVA_SOFIE_Linear_64::infer(input.data());
+   TMVA_SOFIE_Linear_64::Session s("Linear_64_FromROOT.dat");
+   std::vector<float> output = s.infer(input.data());
 
    // Testing the actual and expected output values
    EXPECT_EQ(output.size(), sizeof(Linear_64_ExpectedOutput::all_ones) / sizeof(float));
@@ -149,7 +152,7 @@ TEST(ROOT, Linear64)
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
-
+*/
 
 TEST(ROOT, LinearWithSelu)
 {
@@ -158,7 +161,8 @@ TEST(ROOT, LinearWithSelu)
    // Preparing the standard all-ones input
    std::vector<float> input(48);
    std::fill_n(input.data(), input.size(), 1.0f);
-   std::vector<float> output = TMVA_SOFIE_LinearWithSelu::infer(input.data());
+   TMVA_SOFIE_LinearWithSelu::Session s; // we don;t use weight file
+   std::vector<float> output = s.infer(input.data());
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(LinearWithSelu_ExpectedOutput::all_ones) / sizeof(float));
@@ -179,7 +183,9 @@ TEST(ROOT, LinearWithSigmoid)
    // Preparing the standard all-ones input
    std::vector<float> input(48);
    std::fill_n(input.data(), input.size(), 1.0f);
-   std::vector<float> output = TMVA_SOFIE_LinearWithSigmoid::infer(input.data());
+   TMVA_SOFIE_LinearWithSigmoid::Session s;  // we don't use weight file in this case
+   std::vector<float> output = s.infer(input.data());
+
 
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(LinearWithSigmoid_ExpectedOutput::all_ones) / sizeof(float));

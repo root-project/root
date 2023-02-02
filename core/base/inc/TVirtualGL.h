@@ -70,6 +70,8 @@ public:
 class TGLManager : public TNamed {
 public:
    TGLManager();
+   TGLManager(const TGLManager &) = delete;
+   TGLManager &operator = (const TGLManager &) = delete;
 
    //index returned can be used as a result of gVirtualX->InitWindow
    virtual Int_t    InitGLWindow(Window_t winID) = 0;
@@ -115,11 +117,7 @@ public:
 
    static TGLManager *&Instance();
 
-private:
-   TGLManager(const TGLManager &);
-   TGLManager &operator = (const TGLManager &);
-
-   ClassDef(TGLManager, 0)// Interface for OpenGL manager
+   ClassDefOverride(TGLManager, 0)// Interface for OpenGL manager
 };
 
 namespace Rgl {

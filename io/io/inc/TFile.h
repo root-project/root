@@ -113,6 +113,8 @@ protected:
    TList           *fInfoCache{nullptr};      ///<!Cached list of the streamer infos in this file
    TList           *fOpenPhases{nullptr};     ///<!Time info about open phases
 
+   bool             fGlobalRegistration = true; ///<! if true, bypass use of global lists
+
 #ifdef R__USE_IMT
    std::mutex                                 fWriteMutex;  ///<!Lock for writing baskets / keys into the file.
    static ROOT::Internal::RConcurrentHashColl fgTsSIHashes; ///<!TS Set of hashes built from read streamer infos
@@ -271,7 +273,7 @@ public:
    virtual Int_t       Recover();
    virtual Int_t       ReOpen(Option_t *mode);
    virtual void        Seek(Long64_t offset, ERelativeTo pos = kBeg);
-   virtual void        SetCacheRead(TFileCacheRead *cache, TObject* tree = 0, ECacheAction action = kDisconnect);
+   virtual void        SetCacheRead(TFileCacheRead *cache, TObject *tree = nullptr, ECacheAction action = kDisconnect);
    virtual void        SetCacheWrite(TFileCacheWrite *cache);
    virtual void        SetCompressionAlgorithm(Int_t algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
    virtual void        SetCompressionLevel(Int_t level = ROOT::RCompressionSetting::ELevel::kUseMin);

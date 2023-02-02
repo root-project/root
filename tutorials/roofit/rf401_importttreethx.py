@@ -10,8 +10,7 @@
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C version)
 
 import ROOT
 from array import array
@@ -118,14 +117,6 @@ dsC = ds2.reduce({x, y}, "z>5")
 
 # Create a dataset that imports contents of all the above datasets mapped
 # by index category c
-dsABC = ROOT.RooDataSet(
-    "dsABC",
-    "dsABC",
-    {x, y},
-    ROOT.RooFit.Import("SampleA", dsA),
-    ROOT.RooFit.Import("SampleB", dsB),
-    Index=c,
-    Import=("SampleC", dsC),
-)
+dsABC = ROOT.RooDataSet("dsABC", "dsABC", {x, y}, Index=c, Import={"SampleA": dsA, "SampleB": dsB, "SampleC": dsC})
 
 dsABC.Print()

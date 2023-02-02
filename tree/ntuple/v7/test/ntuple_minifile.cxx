@@ -1,5 +1,27 @@
 #include "ntuple_test.hxx"
 
+namespace ROOT {
+namespace Experimental {
+namespace Internal {
+bool IsEqual(const ROOT::Experimental::Internal::RFileNTupleAnchor &a,
+             const ROOT::Experimental::Internal::RFileNTupleAnchor &b)
+{
+   return a.fVersion == b.fVersion && a.fSize == b.fSize && a.fSeekHeader == b.fSeekHeader &&
+          a.fNBytesHeader == b.fNBytesHeader && a.fLenHeader == b.fLenHeader && a.fSeekFooter == b.fSeekFooter &&
+          a.fNBytesFooter == b.fNBytesFooter && a.fLenFooter == b.fLenFooter && a.fReserved == b.fReserved;
+}
+
+struct RNTupleTester {
+   ROOT::Experimental::RNTuple fNtpl;
+
+   explicit RNTupleTester(const ROOT::Experimental::RNTuple &ntpl) : fNtpl(ntpl) {}
+   Internal::RFileNTupleAnchor GetAnchor() const { return fNtpl.GetAnchor(); }
+};
+
+} // namespace Internal
+} // namespace Experimental
+} // namespace ROOT
+
 TEST(MiniFile, Raw)
 {
    FileRaii fileGuard("test_ntuple_minifile_raw.ntuple");
@@ -60,8 +82,8 @@ TEST(MiniFile, Stream)
 
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
    ASSERT_TRUE(file);
-   auto k = std::unique_ptr<RNTuple>(file->Get<RNTuple>("MyNTuple"));
-   EXPECT_EQ(ntuple, *k);
+   auto k = std::unique_ptr<ROOT::Experimental::RNTuple>(file->Get<ROOT::Experimental::RNTuple>("MyNTuple"));
+   EXPECT_TRUE(IsEqual(ntuple, ROOT::Experimental::Internal::RNTupleTester(*k).GetAnchor()));
 }
 
 
@@ -164,9 +186,9 @@ TEST(MiniFile, Failures)
 
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
-   RNTuple ntuple;
+   ROOT::Experimental::Internal::RFileNTupleAnchor anchor;
    try {
-      ntuple = reader.GetNTuple("No such RNTuple").Inspect();
+      anchor = reader.GetNTuple("No such RNTuple").Inspect();
       FAIL() << "bad RNTuple names should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named 'No such RNTuple' in file '" + fileGuard.GetPath()));

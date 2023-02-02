@@ -11,19 +11,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_CODEGEN_TARGETLOWERINGOBJECTFILE_H
-#define LLVM_CODEGEN_TARGETLOWERINGOBJECTFILE_H
+#ifndef LLVM_TARGET_TARGETLOWERINGOBJECTFILE_H
+#define LLVM_TARGET_TARGETLOWERINGOBJECTFILE_H
 
-#include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/StringRef.h"
-#include "llvm/IR/Module.h"
 #include "llvm/MC/MCObjectFileInfo.h"
-#include "llvm/MC/SectionKind.h"
 #include <cstdint>
 
 namespace llvm {
 
+class Constant;
+class DataLayout;
+class Function;
+class GlobalObject;
 class GlobalValue;
+class MachineBasicBlock;
 class MachineModuleInfo;
 class Mangler;
 class MCContext;
@@ -33,11 +34,13 @@ class MCSymbol;
 class MCSymbolRefExpr;
 class MCStreamer;
 class MCValue;
+class Module;
+class SectionKind;
+class StringRef;
 class TargetMachine;
+class DSOLocalEquivalent;
 
 class TargetLoweringObjectFile : public MCObjectFileInfo {
-  MCContext *Ctx = nullptr;
-
   /// Name-mangler for global names.
   Mangler *Mang = nullptr;
 
@@ -45,6 +48,7 @@ protected:
   bool SupportIndirectSymViaGOTPCRel = false;
   bool SupportGOTPCRelWithOffset = true;
   bool SupportDebugThreadLocalLocation = true;
+  bool SupportDSOLocalEquivalentLowering = false;
 
   /// PersonalityEncoding, LSDAEncoding, TTypeEncoding - Some encoding values
   /// for EH.
@@ -59,6 +63,8 @@ protected:
   /// This section contains the static destructor pointer list.
   MCSection *StaticDtorSection = nullptr;
 
+  const TargetMachine *TM = nullptr;
+
 public:
   TargetLoweringObjectFile() = default;
   TargetLoweringObjectFile(const TargetLoweringObjectFile &) = delete;
@@ -66,7 +72,6 @@ public:
   operator=(const TargetLoweringObjectFile &) = delete;
   virtual ~TargetLoweringObjectFile();
 
-  MCContext &getContext() const { return *Ctx; }
   Mangler &getMangler() const { return *Mang; }
 
   /// This method must be called before any actual lowering is done.  This
@@ -80,15 +85,26 @@ public:
   /// Emit the module-level metadata that the platform cares about.
   virtual void emitModuleMetadata(MCStreamer &Streamer, Module &M) const {}
 
+  /// Emit Call Graph Profile metadata.
+  void emitCGProfileMetadata(MCStreamer &Streamer, Module &M) const;
+
   /// Get the module-level metadata that the platform cares about.
   virtual void getModuleMetadata(Module &M) {}
 
   /// Given a constant with the SectionKind, return a section that it should be
   /// placed in.
   virtual MCSection *getSectionForConstant(const DataLayout &DL,
-                                           SectionKind Kind,
-                                           const Constant *C,
-                                           unsigned &Align) const;
+                                           SectionKind Kind, const Constant *C,
+                                           Align &Alignment) const;
+
+  virtual MCSection *
+  getSectionForMachineBasicBlock(const Function &F,
+                                 const MachineBasicBlock &MBB,
+                                 const TargetMachine &TM) const;
+
+  virtual MCSection *
+  getUniqueSectionForFunction(const Function &F,
+                              const TargetMachine &TM) const;
 
   /// Classify the specified global variable into a set of target independent
   /// categories embodied in SectionKind.
@@ -105,9 +121,7 @@ public:
   /// variable or function definition. This should not be passed external (or
   /// available externally) globals.
   MCSection *SectionForGlobal(const GlobalObject *GO,
-                              const TargetMachine &TM) const {
-    return SectionForGlobal(GO, getKindForGlobal(GO, TM), TM);
-  }
+                              const TargetMachine &TM) const;
 
   virtual void getNameWithPrefix(SmallVectorImpl<char> &OutName,
                                  const GlobalValue *GV,
@@ -115,6 +129,10 @@ public:
 
   virtual MCSection *getSectionForJumpTable(const Function &F,
                                             const TargetMachine &TM) const;
+  virtual MCSection *getSectionForLSDA(const Function &, const MCSymbol &,
+                                       const TargetMachine &) const {
+    return LSDASection;
+  }
 
   virtual bool shouldPutJumpTableInFunctionSection(bool UsesLabelDifference,
                                                    const Function &F) const;
@@ -148,7 +166,7 @@ public:
   unsigned getPersonalityEncoding() const { return PersonalityEncoding; }
   unsigned getLSDAEncoding() const { return LSDAEncoding; }
   unsigned getTTypeEncoding() const { return TTypeEncoding; }
-  unsigned getCallSiteEncoding() const { return CallSiteEncoding; }
+  unsigned getCallSiteEncoding() const;
 
   const MCExpr *getTTypeReference(const MCSymbolRefExpr *Sym, unsigned Encoding,
                                   MCStreamer &Streamer) const;
@@ -173,6 +191,17 @@ public:
     return nullptr;
   }
 
+  /// Target supports a native lowering of a dso_local_equivalent constant
+  /// without needing to replace it with equivalent IR.
+  bool supportDSOLocalEquivalentLowering() const {
+    return SupportDSOLocalEquivalentLowering;
+  }
+
+  virtual const MCExpr *lowerDSOLocalEquivalent(const DSOLocalEquivalent *Equiv,
+                                                const TargetMachine &TM) const {
+    return nullptr;
+  }
+
   /// Target supports replacing a data "PC"-relative access to a symbol
   /// through another symbol, by accessing the later via a GOT entry instead?
   bool supportIndirectSymViaGOTPCRel() const {
@@ -191,7 +220,8 @@ public:
   }
 
   /// Get the target specific PC relative GOT entry relocation
-  virtual const MCExpr *getIndirectSymViaGOTPCRel(const MCSymbol *Sym,
+  virtual const MCExpr *getIndirectSymViaGOTPCRel(const GlobalValue *GV,
+                                                  const MCSymbol *Sym,
                                                   const MCValue &MV,
                                                   int64_t Offset,
                                                   MachineModuleInfo *MMI,
@@ -199,15 +229,48 @@ public:
     return nullptr;
   }
 
-  virtual void emitLinkerFlagsForGlobal(raw_ostream &OS,
-                                        const GlobalValue *GV) const {}
-
-  virtual void emitLinkerFlagsForUsed(raw_ostream &OS,
-                                      const GlobalValue *GV) const {}
-
   /// If supported, return the section to use for the llvm.commandline
   /// metadata. Otherwise, return nullptr.
   virtual MCSection *getSectionForCommandLines() const {
+    return nullptr;
+  }
+
+  /// On targets that use separate function descriptor symbols, return a section
+  /// for the descriptor given its symbol. Use only with defined functions.
+  virtual MCSection *
+  getSectionForFunctionDescriptor(const Function *F,
+                                  const TargetMachine &TM) const {
+    return nullptr;
+  }
+
+  /// On targets that support TOC entries, return a section for the entry given
+  /// the symbol it refers to.
+  /// TODO: Implement this interface for existing ELF targets.
+  virtual MCSection *getSectionForTOCEntry(const MCSymbol *S,
+                                           const TargetMachine &TM) const {
+    return nullptr;
+  }
+
+  /// On targets that associate external references with a section, return such
+  /// a section for the given external global.
+  virtual MCSection *
+  getSectionForExternalReference(const GlobalObject *GO,
+                                 const TargetMachine &TM) const {
+    return nullptr;
+  }
+
+  /// Targets that have a special convention for their symbols could use
+  /// this hook to return a specialized symbol.
+  virtual MCSymbol *getTargetSymbol(const GlobalValue *GV,
+                                    const TargetMachine &TM) const {
+    return nullptr;
+  }
+
+  /// If supported, return the function entry point symbol.
+  /// Otherwise, returns nulltpr.
+  /// Func must be a function or an alias which has a function as base object.
+  virtual MCSymbol *getFunctionEntryPointSymbol(const GlobalValue *Func,
+                                                const TargetMachine &TM) const {
     return nullptr;
   }
 
@@ -219,4 +282,4 @@ protected:
 
 } // end namespace llvm
 
-#endif // LLVM_CODEGEN_TARGETLOWERINGOBJECTFILE_H
+#endif // LLVM_TARGET_TARGETLOWERINGOBJECTFILE_H

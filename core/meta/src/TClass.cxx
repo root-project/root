@@ -190,13 +190,13 @@ TClass::TDeclNameRegistry::TDeclNameRegistry(Int_t verbLevel): fVerbLevel(verbLe
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Extract this part of the name
-/// 1. Templates ns::ns2::,,,::THISPART<...
-/// 2. Namespaces,classes ns::ns2::,,,::THISPART
+/// 1. Templates `ns::%ns2::,,,::%THISPART<...`
+/// 2. Namespaces,classes `ns::%ns2::,,,::%THISPART`
 
 void TClass::TDeclNameRegistry::AddQualifiedName(const char *name)
 {
    // Sanity check
-   auto strLen = strlen(name);
+   auto strLen = name ? strlen(name) : 0;
    if (strLen == 0) return;
    // find <. If none, put end of string
    const char* endCharPtr = strchr(name, '<');
@@ -557,7 +557,7 @@ public:
    TDumpMembers(bool noAddr): fNoAddr(noAddr) { }
 
    using TMemberInspector::Inspect;
-   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
+   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient) override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -761,7 +761,7 @@ public:
       fRealDataClass = cl;
    }
    using TMemberInspector::Inspect;
-   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
+   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient) override;
 
 };
 
@@ -903,13 +903,15 @@ public:
    Int_t     fCount;
    TBrowser *fBrowser;
 
-   TAutoInspector(TBrowser *b) {
+   TAutoInspector(TBrowser *b)
+   {
       // main constructor.
-      fBrowser = b; fCount = 0; }
-   virtual ~TAutoInspector() { }
+      fBrowser = b; fCount = 0;
+   }
+   virtual ~TAutoInspector() {}
    using TMemberInspector::Inspect;
-   virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
-   virtual Bool_t IsTreatingNonAccessibleTypes() {return kFALSE;}
+   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient) override;
+   Bool_t IsTreatingNonAccessibleTypes() override { return kFALSE; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1344,7 +1346,15 @@ void TClass::ForceReload (TClass* oldcl)
    while ((info = (TVirtualStreamerInfo*)next())) {
       info->Clear("build");
       info->SetClass(this);
-      fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
+      if (IsSyntheticPair()) {
+         // Some pair's StreamerInfo were inappropriately marked as versioned
+         info->SetClassVersion(1);
+         // There is already a TStreamerInfo put there by the synthetic
+         // creation.
+         fStreamerInfo->Add(info);
+      } else {
+         fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
+      }
    }
    oldcl->fStreamerInfo->Clear();
 
@@ -1387,6 +1397,9 @@ void TClass::Init(const char *name, Version_t cversion,
    fStreamerInfo   = new TObjArray(fClassVersion+2+10,-1); // +10 to read new data by old
    fProperty       = -1;
    fClassProperty  = 0;
+   const bool ispair = TClassEdit::IsStdPair(fName);
+   if (ispair)
+      SetBit(kIsForeign);
 
    ResetInstanceCount();
 
@@ -1529,9 +1542,9 @@ void TClass::Init(const char *name, Version_t cversion,
                     fName.Data());
          }
       } else {
-         // In this case we initialised this TClass instance starting from the fwd declared state
-         // and we know we have no dictionary: no need to warn
-         ::Warning("TClass::Init", "no dictionary for class %s is available", fName.Data());
+         const bool ispairbase = TClassEdit::IsStdPairBase(fName.Data()) && !IsFromRootCling();
+         if (!ispairbase)
+            ::Warning("TClass::Init", "no dictionary for class %s is available", fName.Data());
       }
    }
 
@@ -2284,9 +2297,8 @@ Bool_t TClass::CanSplitBaseAllow()
 
    // Look at inheritance tree
    while (lnk) {
-      TClass     *c;
       TBaseClass *base = (TBaseClass*) lnk->GetObject();
-      c = base->GetClassPointer();
+      TClass *c = base->GetClassPointer();
       if(!c) {
          // If there is a missing base class, we can't split the immediate
          // derived class.
@@ -2452,7 +2464,8 @@ TObject *TClass::Clone(const char *new_name) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy the argument.
+/// Replaces the collection proxy for this class. The provided object is cloned
+/// and the copy is then owned by `TClass`.
 
 void TClass::CopyCollectionProxy(const TVirtualCollectionProxy &orig)
 {
@@ -2475,11 +2488,11 @@ void TClass::Draw(Option_t *option)
 {
    if (!HasInterpreterInfo()) return;
 
-   TVirtualPad *padsav = gPad;
+   TVirtualPad::TContext ctxt(kTRUE);
 
    // Should we create a new canvas?
-   TString opt=option;
-   if (!padsav || !opt.Contains("same")) {
+   TString opt = option;
+   if (!ctxt.GetSaved() || !opt.Contains("same")) {
       TVirtualPad *padclass = (TVirtualPad*)(gROOT->GetListOfCanvases())->FindObject("R__class");
       if (!padclass) {
          gROOT->ProcessLine("new TCanvas(\"R__class\",\"class\",20,20,1000,750);");
@@ -2488,9 +2501,8 @@ void TClass::Draw(Option_t *option)
       }
    }
 
-   if (gPad) gPad->DrawClassObject(this,option);
-
-   if (padsav) padsav->cd();
+   if (gPad)
+      gPad->DrawClassObject(this,option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2558,7 +2570,7 @@ char *TClass::EscapeChars(const char *text) const
    static const UInt_t maxsize = 255;
    static char name[maxsize+2]; //One extra if last char needs to be escaped
 
-   UInt_t nch = strlen(text);
+   UInt_t nch = text ? strlen(text) : 0;
    UInt_t icur = 0;
    for (UInt_t i = 0; i < nch && icur < maxsize; ++i, ++icur) {
       if (text[i] == '\"' || text[i] == '[' || text[i] == '~' ||
@@ -2575,7 +2587,7 @@ char *TClass::EscapeChars(const char *text) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return a pointer the the real class of the object.
+/// Return a pointer to the real class of the object.
 /// This is equivalent to object->IsA() when the class has a ClassDef.
 /// It is REQUIRED that object is coming from a proper pointer to the
 /// class represented by 'this'.
@@ -2594,7 +2606,8 @@ char *TClass::EscapeChars(const char *text) const
 
 TClass *TClass::GetActualClass(const void *object) const
 {
-   if (object==nullptr) return (TClass*)this;
+   if (!object)
+      return (TClass*)this;
    if (fIsA) {
       return (*fIsA)(object); // ROOT::IsA((ThisClass*)object);
    } else if (fGlobalIsA) {
@@ -2962,6 +2975,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
    if (!name || !name[0]) return nullptr;
 
    if (strstr(name, "(anonymous)")) return nullptr;
+   if (strstr(name, "(unnamed)")) return nullptr;
    if (strncmp(name,"class ",6)==0) name += 6;
    if (strncmp(name,"struct ",7)==0) name += 7;
 
@@ -3117,11 +3131,33 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
    // TClass if we have one.
    if (cl) return cl;
 
-   if (ispair &&  hint_pair_offset && hint_pair_size) {
-      auto pairinfo = TVirtualStreamerInfo::Factory()->GenerateInfoForPair(normalizedName, silent, hint_pair_offset, hint_pair_size);
-      //return pairinfo ? pairinfo->GetClass() : nullptr;
-      if (pairinfo)
-         return pairinfo->GetClass();
+   if (ispair) {
+      if (hint_pair_offset && hint_pair_size) {
+         auto pairinfo = TVirtualStreamerInfo::Factory()->GenerateInfoForPair(normalizedName, silent, hint_pair_offset, hint_pair_size);
+         // Fall-through to allow TClass to be created when known by the interpreter
+         // This is used in the case where TStreamerInfo can not handle them.
+         if (pairinfo)
+            return pairinfo->GetClass();
+      } else {
+         //  Check if we have an STL container that might provide it.
+         static const size_t slen = strlen("pair");
+         static const char *associativeContainer[] = { "map", "unordered_map", "multimap",
+            "unordered_multimap", "set", "unordered_set", "multiset", "unordered_multiset" };
+         for(auto contname : associativeContainer) {
+            std::string collname = contname;
+            collname.append( normalizedName.c_str() + slen );
+            TClass *collcl = TClass::GetClass(collname.c_str(), false, silent);
+            if (!collcl)
+               collcl = LoadClassDefault(collname.c_str(), silent);
+            if (collcl) {
+               auto p = collcl->GetCollectionProxy();
+               if (p)
+                  cl = p->GetValueClass();
+               if (cl)
+                  return cl;
+            }
+         }
+      }
    } else if (TClassEdit::IsSTLCont( normalizedName.c_str() )) {
 
       return gInterpreter->GenerateTClass(normalizedName.c_str(), kTRUE, silent);
@@ -3525,53 +3561,6 @@ TRealData* TClass::GetRealData(const char* name) const
       return rd;
    }
 
-   // Strip the first component, it may be the name of
-   // the branch (old TBranchElement code), and try again.
-   std::string firstDotName(givenName.substr(firstDot + 1));
-
-   // New attempt starting after the first "." if any,
-   // this allows for the case that the first component
-   // may have been a branch name (for TBranchElement).
-   rd = (TRealData*) fRealData->FindObject(firstDotName.c_str());
-   if (rd) {
-      return rd;
-   }
-
-   // New attempt starting after the first "." if any,
-   // but this time try ignoring the array dimensions.
-   // Again, we are allowing for the case that the first
-   // component may have been a branch name (for TBranchElement).
-   std::string::size_type firstDotBracket = firstDotName.find_first_of("[");
-   if (firstDotBracket != std::string::npos) {
-      // -- We are looking for an array data member.
-      std::string nameNoDim(firstDotName.substr(0, firstDotBracket));
-      TObjLink* lnk = fRealData->FirstLink();
-      while (lnk) {
-         TObject* obj = lnk->GetObject();
-         std::string objName(obj->GetName());
-         std::string::size_type pos = objName.find_first_of("[");
-         // Only match arrays to arrays for now.
-         if (pos != std::string::npos) {
-            objName.erase(pos);
-            if (objName == nameNoDim) {
-               return static_cast<TRealData*>(obj);
-            }
-         }
-         lnk = lnk->Next();
-      }
-   }
-
-   // New attempt starting after the first "." if any,
-   // but this time check for a pointer type.  Again, we
-   // are allowing for the case that the first component
-   // may have been a branch name (for TBranchElement).
-   ptrname.str("");
-   ptrname << "*" << firstDotName;
-   rd = (TRealData*) fRealData->FindObject(ptrname.str().c_str());
-   if (rd) {
-      return rd;
-   }
-
    // Last attempt in case a member has been changed from
    // a static array to a pointer, for example the member
    // was arr[20] and is now *arr.
@@ -3583,13 +3572,20 @@ TRealData* TClass::GetRealData(const char* name) const
    // FIXME: What about checking after the first dot as well?
    //
    std::string::size_type bracket = starname.str().find_first_of("[");
-   if (bracket == std::string::npos) {
-      return nullptr;
+   if (bracket != std::string::npos) {
+      rd = (TRealData*) fRealData->FindObject(starname.str().substr(0, bracket).c_str());
+      if (rd) {
+         return rd;
+      }
    }
-   rd = (TRealData*) fRealData->FindObject(starname.str().substr(0, bracket).c_str());
-   if (rd) {
+
+   // Strip the first component, it may be the name of
+   // the branch (old TBranchElement code), and try again.
+   std::string firstDotName(givenName.substr(firstDot + 1));
+
+   rd = GetRealData(firstDotName.c_str());
+   if (rd)
       return rd;
-   }
 
    // Not found;
    return nullptr;
@@ -4630,7 +4626,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfoImpl(Int_t version, Bool_t silent) 
    //          user requested the emulated streamerInfo for an abstract
    //          base class, even though we have a dictionary for it.
 
-   if ((version < -1) || (version >= fStreamerInfo->GetSize())) {
+   if ((version < -1) || (version >= (fStreamerInfo->GetSize()-1))) {
       Error("GetStreamerInfo", "class: %s, attempting to access a wrong version: %d", GetName(), version);
       // FIXME: Shouldn't we go to -1 here, or better just abort?
       version = fClassVersion;
@@ -5421,7 +5417,7 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       // There is no dictionary at all, so this is an emulated
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
-      fCollectionProxy->Destructor(p, dtorOnly);
+      GetCollectionProxy()->Destructor(p, dtorOnly);
    } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
@@ -5547,7 +5543,7 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
       // There is no dictionary at all, so this is an emulated
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
-      fCollectionProxy->DeleteArray(ary, dtorOnly);
+      GetCollectionProxy()->DeleteArray(ary, dtorOnly);
    } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
@@ -5940,6 +5936,8 @@ Bool_t  TClass::IsTObject() const
 Bool_t  TClass::IsForeign() const
 {
    if (fProperty==(-1)) Property();
+   // If the property are not set and the class is a pair, hard code that
+   // it is a unversioned/Foreign class.
    return TestBit(kIsForeign);
 }
 
@@ -6006,6 +6004,45 @@ void TClass::PostLoadCheck()
             }
             info->CompareContent(this,nullptr,kTRUE,kTRUE,nullptr);
             SetBit(kWarned);
+         }
+      }
+   }
+   if (fCollectionProxy) {
+      // Update the related pair's TClass if it has already been created.
+      size_t noffset = 0;
+      if (strncmp(GetName(), "map<", 4) == 0)
+         noffset = 3;
+      else if (strncmp(GetName(), "multimap<", 9) == 0)
+         noffset = 8;
+      else if (strncmp(GetName(), "unordered_map<", 14) == 0)
+         noffset = 13;
+      else if (strncmp(GetName(), "unordered_multimap<", 19) == 0)
+         noffset = 18;
+      if (noffset) {
+         std::string pairname("pair");
+         pairname.append(GetName() + noffset);
+         auto pcl = TClass::GetClass(pairname.c_str(), false, false);
+         if ( pcl && !pcl->IsLoaded() && !pcl->IsSyntheticPair() )
+         {
+            TInterpreter::SuspendAutoLoadingRAII autoloadOff(gInterpreter);
+
+            fCollectionProxy->Reset();
+            TIter nextClass(gROOT->GetListOfClasses());
+            while (auto acl = (TClass*)nextClass()) {
+               if (acl == this) continue;
+               if (acl->fCollectionProxy && acl->fCollectionProxy->GetValueClass() == pcl) {
+                  acl->fCollectionProxy->Reset();
+               }
+            }
+
+            TIter next(pcl->GetStreamerInfos());
+            while (auto info = (TVirtualStreamerInfo*)next()) {
+               if (info->IsBuilt()) {
+                  info->Clear("build");
+                  info->BuildOld();
+               }
+            }
+            fCollectionProxy->GetValueClass();
          }
       }
    }
@@ -6329,7 +6366,7 @@ TVirtualStreamerInfo *TClass::SetStreamerInfo(Int_t /*version*/, const char * /*
 
 /*
    TDataMember *dm;
-   Int_t nch = strlen(info);
+   Int_t nch = info ? strlen(info) : 0;
    Bool_t update = kTRUE;
    if (nch != 0) {
       //decode strings like "TObject;TAttLine;fA;fB;Int_t i,j,k;"
@@ -7275,6 +7312,10 @@ void TClass::RemoveStreamerInfo(Int_t slot)
       R__LOCKGUARD(gInterpreterMutex);
       TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)fStreamerInfo->At(slot);
       fStreamerInfo->RemoveAt(fClassVersion);
+      if (fLastReadInfo.load() == info)
+         fLastReadInfo = nullptr;
+      if (fCurrentInfo.load() == info)
+         fCurrentInfo = nullptr;
       delete info;
       if (fState == kEmulated && fStreamerInfo->GetEntries() == 0) {
          fState = kForwardDeclared;

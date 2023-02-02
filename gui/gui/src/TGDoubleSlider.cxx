@@ -90,7 +90,7 @@ ClassImp(TGDoubleHSlider);
 /// Slider constructor.
 
 TGDoubleSlider::TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
-                               UInt_t options, ULong_t back,
+                               UInt_t options, Pixel_t back,
                                Bool_t reversed, Bool_t mark_ends)
    : TGFrame(p, w, h, options, back)
 {
@@ -211,13 +211,13 @@ void TGDoubleSlider::ChangeCursor(Event_t *event)
    // constrain to the slider width
    if (xy > hw/2-7 && xy < hw/2+7 && fMove != 3) {
       // if the mouse pointer is in the top resizing zone,
-      // and we are not already moving the the bottom side,
+      // and we are not already moving the bottom side,
       // set the cursor shape as TopSide
       if ((yx <= (relMax - relMin) / 4 + relMin) &&
           (yx >= relMin) && (fMove != 2))
          gVirtualX->SetCursor(fId, minCur);
       // if the mouse pointer is in the bottom resizing zone,
-      // and we are not already moving the the top side,
+      // and we are not already moving the top side,
       // set the cursor shape as BottomSide
       else if ((yx >= (relMax - relMin) / 4 * 3 + relMin) &&
                (yx <= relMax) && (fMove != 1))

@@ -9,13 +9,14 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
+from __future__ import annotations
 
 import pkgutil
 import types
 import importlib
 
 
-def build_backends_submodules(parentmodule):
+def build_backends_submodules(parentmodule: types.ModuleType) -> types.ModuleType:
     """
     Helper function to create the submodules of the backends.
     """

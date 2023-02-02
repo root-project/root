@@ -30,7 +30,7 @@ use a TTree as internal storage mechanism
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print class name of dataset
-void RooAbsDataStore::printClassName(std::ostream& os) const { os << IsA()->GetName() ; }
+void RooAbsDataStore::printClassName(std::ostream& os) const { os << ClassName() ; }
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +40,7 @@ void RooAbsDataStore::printArgs(std::ostream& os) const  { _vars.printValue(os);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Detailed printing interface
-void RooAbsDataStore::printMultiline(std::ostream& os, Int_t /*content*/, Bool_t verbose, TString indent) const
+void RooAbsDataStore::printMultiline(std::ostream& os, Int_t /*content*/, bool verbose, TString indent) const
 {
   os << indent << "DataStore " << GetName() << " (" << GetTitle() << ")" << std::endl ;
   os << indent << "  Contains " << numEntries() << " entries" << std::endl;
@@ -55,4 +55,14 @@ void RooAbsDataStore::printMultiline(std::ostream& os, Int_t /*content*/, Bool_t
   if(verbose && !_cachedVars.empty()) {
     os << indent << "  Caches " << _cachedVars << std::endl ;
   }
+}
+
+
+RooArgSet* RooAbsDataStore::addColumns(const RooArgList& varList)
+{
+  auto * holderSet = new RooArgSet{};
+  for(RooAbsArg * var : varList) {
+    holderSet->add(*addColumn(*var));
+  }
+  return holderSet;
 }

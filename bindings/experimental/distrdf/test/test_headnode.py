@@ -11,7 +11,7 @@ def create_dummy_headnode(*args):
     """Create dummy head node instance needed in the test"""
     # Pass None as `npartitions`. The tests will modify this member
     # according to needs
-    return get_headnode(None, *args)
+    return get_headnode(None, None, *args)
 
 
 class DataFrameConstructorTests(unittest.TestCase):
@@ -163,6 +163,7 @@ class DataFrameConstructorTests(unittest.TestCase):
         self.assertIsInstance(hn_2.defaultbranches, type(reqd_branches_vec))
         self.assertIsInstance(hn_4.defaultbranches, type(reqd_branches_vec))
 
+
 class NumEntriesTest(unittest.TestCase):
     """'get_num_entries' returns the number of entries in the input dataset"""
 
@@ -237,4 +238,29 @@ class NumEntriesTest(unittest.TestCase):
         self.assertEqual(hn.tree.GetEntries(), 4)
 
         f.Close()
+        os.remove(filename)
+
+
+class InternalDataFrameTests(unittest.TestCase):
+    """The HeadNode stores an internal RDataFrame for certain information"""
+
+    def test_getcolumnnames(self):
+        treename = "tree"
+        filename = "test_distrdf_getcolumnnames.root"
+        f = ROOT.TFile(filename, "recreate")
+        tree = ROOT.TTree(treename, "test")
+        x = array("i", [0])
+        tree.Branch("myColumn", x, "myColumn/I")
+
+        for i in range(3):
+            x[0] = i
+            tree.Fill()
+
+        f.Write()
+        f.Close()
+
+        hn = create_dummy_headnode(treename, filename)
+        cn_vec = hn.GetColumnNames()
+        self.assertListEqual([str(col) for col in cn_vec], ["myColumn"])
+
         os.remove(filename)

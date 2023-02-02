@@ -28,22 +28,22 @@ TF1 *fitFcn;
 TH1 *histo;
 
 // Quadratic background function
-Double_t background(Double_t *x, Double_t *par) {
+double background(double *x, double *par) {
    return par[0] + par[1]*x[0] + par[2]*x[0]*x[0];
 }
 
 // Lorenzian Peak function
-Double_t lorentzianPeak(Double_t *x, Double_t *par) {
+double lorentzianPeak(double *x, double *par) {
    return (0.5*par[0]*par[1]/TMath::Pi()) /
    TMath::Max( 1.e-10,(x[0]-par[2])*(x[0]-par[2]) + .25*par[1]*par[1]);
 }
 
 // Sum of background and peak function
-Double_t fitFunction(Double_t *x, Double_t *par) {
+double fitFunction(double *x, double *par) {
   return background(x,par) + lorentzianPeak(x,&par[3]);
 }
 
-bool DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
+bool DoFit(const char* fitter, TVirtualPad *pad, int npass) {
    printf("\n*********************************************************************************\n");
    printf("\t %s \n",fitter);
    printf("*********************************************************************************\n");
@@ -66,11 +66,11 @@ bool DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
    // fill histogram many times
    // every time increase its statistics and re-use previous fitted
    // parameter values as starting point
-   for (Int_t pass=0;pass<npass;pass++) {
+   for (int pass=0;pass<npass;pass++) {
       if (pass%100 == 0) printf("pass : %d\n",pass);
       else printf(".");
       if (pass == 0)fitFcn->SetParameters(1,1,1,6,.03,1);
-      for (Int_t i=0;i<5000;i++) {
+      for (int i=0;i<5000;i++) {
          histo->Fill(fitFcn->GetRandom());
       }
       int iret = histo->Fit(fitFcn,"Q0");
@@ -88,7 +88,7 @@ bool DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
    gPad->SetFillColor(kYellow-10);
 
 
-   Double_t cputime = timer.CpuTime();
+   double cputime = timer.CpuTime();
    printf("%s, npass=%d  : RT=%7.3f s, Cpu=%7.3f s\n",fitter,npass,timer.RealTime(),cputime);
    TPaveLabel *p = new TPaveLabel(0.45,0.7,0.88,0.8,Form("%s CPU= %g s",fitter,cputime),"brNDC");
    p->Draw();
@@ -98,8 +98,8 @@ bool DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
    return ok;
 }
 
-int minuit2FitBench(Int_t npass=20) {
-   TH1::AddDirectory(kFALSE);
+int minuit2FitBench(int npass=20) {
+   TH1::AddDirectory(false);
    TCanvas *c1 = new TCanvas("FitBench","Fitting Demo",10,10,900,900);
    c1->Divide(2,2);
    c1->SetFillColor(kYellow-9);

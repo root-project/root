@@ -105,9 +105,9 @@ private:
 
 private:
    UInt_t fSeed;
-   TString fSplitExprString; //! Expression used to split data into folds. Should output values between 0 and numFolds.
+   TString fSplitExprString; ///<! Expression used to split data into folds. Should output values between 0 and numFolds.
    std::unique_ptr<CvSplitKFoldsExpr> fSplitExpr;
-   Bool_t fStratified; // If true, use stratified split. (Balance class presence in each fold).
+   Bool_t fStratified; ///< If true, use stratified split. (Balance class presence in each fold).
 
    // Used for CrossValidation with random splits (not using the
    // CVSplitKFoldsExpr functionality) to communicate Event to fold mapping.

@@ -55,19 +55,27 @@ sap.ui.define([
      },
 
      _setSVG: function() {
-        var dom = this.$();
+        let dom = this.$();
         if (!dom) return;
 
-        var w = dom.innerWidth(), h = dom.innerHeight();
+        let w = dom.innerWidth(), h = dom.innerHeight();
         dom.empty();
 
-        var svg = d3.select(dom.get(0)).append("svg").attr("width", w).attr("height",h).attr("viewBox","0 0 " + w + " " + h);
+        let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("width", w);
+        svg.setAttribute("height", h);
+        svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
 
-        var attr = this.getProperty("svgsample");
-        if (attr && (typeof attr == "object") && (typeof attr.createSample == "function"))
-           attr.createSample(svg,w,h);
-        else
-           svg.append("text").text("none");
+        dom.get(0).appendChild(svg);
+
+        let attr = this.getProperty("svgsample");
+        if (attr && (typeof attr == "object") && (typeof attr.createSample == "function")) {
+           attr.createSample(svg, w, h, true);
+        } else {
+           let txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+           svg.appendChild(txt);
+           txt.innerHTML = "none";
+        }
      },
 
      onResize: function() {

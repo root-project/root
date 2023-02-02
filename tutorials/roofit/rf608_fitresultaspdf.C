@@ -105,9 +105,9 @@ void rf608_fitresultaspdf()
    hh_mean_frac->Draw("surf3");
 
    // Draw the distributions of parameter points sampled from the pdf
-   TH1 *tmp1 = d->createHistogram("mean,sigma_g2", 50, 50);
-   TH1 *tmp2 = d->createHistogram("sigma_g2,frac", 50, 50);
-   TH1 *tmp3 = d->createHistogram("mean,frac", 50, 50);
+   TH1 *tmp1 = d->createHistogram("mean,sigma_g2", Binning(50), Binning(50));
+   TH1 *tmp2 = d->createHistogram("sigma_g2,frac", Binning(50), Binning(50));
+   TH1 *tmp3 = d->createHistogram("mean,frac", Binning(50), Binning(50));
 
    c2->cd(4);
    gPad->SetLeftMargin(0.15);

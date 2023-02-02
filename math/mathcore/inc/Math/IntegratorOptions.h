@@ -117,9 +117,9 @@ public:
 
    /// constructor using the default options
    /// can pass a pointer to extra options (N.B. pointer will be managed by the class)
-   IntegratorOneDimOptions(IOptions * extraOpts = 0);
+   IntegratorOneDimOptions(IOptions * extraOpts = nullptr);
 
-   virtual ~IntegratorOneDimOptions() {}
+   ~IntegratorOneDimOptions() override {}
 
    /// copy constructor
    IntegratorOneDimOptions(const IntegratorOneDimOptions & rhs) :
@@ -143,7 +143,7 @@ public:
    unsigned int NPoints() const { return fNCalls; }
 
    /// name of 1D integrator
-   std::string  Integrator() const;
+   std::string  Integrator() const override;
 
    /// type of the integrator (return the enumeration type)
    IntegrationOneDim::Type IntegratorType() const { return (IntegrationOneDim::Type) fIntegType; }
@@ -176,7 +176,7 @@ public:
    static ROOT::Math::IOptions * FindDefault(const char * name);
 
    /// print only the specified default options
-   static void PrintDefault(const char * name = 0, std::ostream & os = std::cout);
+   static void PrintDefault(const char * name = nullptr, std::ostream & os = std::cout);
 
 
 private:
@@ -198,9 +198,9 @@ public:
 
    /// constructor using the default options
    /// can pass a pointer to extra options (N.B. pointer will be managed by the class)
-   IntegratorMultiDimOptions(IOptions * extraOpts = 0);
+   IntegratorMultiDimOptions(IOptions * extraOpts = nullptr);
 
-   virtual ~IntegratorMultiDimOptions() {}
+   ~IntegratorMultiDimOptions() override {}
 
    /// copy constructor
    IntegratorMultiDimOptions(const IntegratorMultiDimOptions & rhs) :
@@ -222,7 +222,7 @@ public:
    unsigned int NCalls() const { return fNCalls; }
 
    /// name of multi-dim integrator
-   std::string  Integrator() const;
+   std::string  Integrator() const override;
 
    /// type of the integrator (return the enumeration type)
    IntegrationMultiDim::Type IntegratorType() const { return (IntegrationMultiDim::Type) fIntegType; }
@@ -255,7 +255,7 @@ public:
    static ROOT::Math::IOptions * FindDefault(const char * name);
 
    /// print only the specified default options
-   static void PrintDefault(const char * name = 0, std::ostream & os = std::cout);
+   static void PrintDefault(const char *name = nullptr, std::ostream & os = std::cout);
 
 
 private:

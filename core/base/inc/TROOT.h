@@ -21,7 +21,7 @@
 // The single instance of TROOT is accessible via the global gROOT.     //
 // Using the gROOT pointer one has access to basically every object     //
 // created in a ROOT based program. The TROOT object is essentially a   //
-// "dispatcher" with several lists pointing to the ROOT main objects.   //
+// container of several lists pointing to the main ROOT objects.        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -80,8 +80,8 @@ namespace Internal {
 } } // End ROOT::Internal
 
 namespace ROOT {
-   // Enable support for multi-threading within the ROOT code,
-   // in particular, enables the global mutex to make ROOT thread safe/aware.
+   /// \brief Enable support for multi-threading within the ROOT code
+   /// in particular, enables the global mutex to make ROOT thread safe/aware.
    void EnableThreadSafety();
    /// \brief Enable ROOT's implicit multi-threading for all objects and methods that provide an internal
    /// parallelisation mechanism.
@@ -97,10 +97,10 @@ friend class TCling;
 friend TROOT *ROOT::Internal::GetROOT2();
 
 private:
-   Int_t           fLineIsProcessing;     //To synchronize multi-threads
+   Int_t           fLineIsProcessing;       ///< To synchronize multi-threads
 
-   static Int_t    fgDirLevel;            //Indentation level for ls()
-   static Bool_t   fgRootInit;            //Singleton initialization flag
+   static Int_t    fgDirLevel;              ///< Indentation level for ls()
+   static Bool_t   fgRootInit;              ///< Singleton initialization flag
 
    TROOT(const TROOT&) = delete;
    TROOT& operator=(const TROOT&) = delete;
@@ -108,73 +108,73 @@ private:
 protected:
    typedef std::atomic<TListOfEnums*> AListOfEnums_t;
 
-   TString         fConfigOptions;        //ROOT ./configure set build options
-   TString         fConfigFeatures;       //ROOT ./configure detected build features
-   TString         fVersion;              //ROOT version (from CMZ VERSQQ) ex 0.05/01
-   Int_t           fVersionInt;           //ROOT version in integer format (501)
-   Int_t           fVersionCode;          //ROOT version code as used in RVersion.h
-   Int_t           fVersionDate;          //Date of ROOT version (ex 951226)
-   Int_t           fVersionTime;          //Time of ROOT version (ex 1152)
-   Int_t           fBuiltDate;            //Date of ROOT built
-   Int_t           fBuiltTime;            //Time of ROOT built
-   TString         fGitCommit;            //Git commit SHA1 of built
-   TString         fGitBranch;            //Git branch
-   TString         fGitDate;              //Date and time when make was run
-   Int_t           fTimer;                //Timer flag
-   std::atomic<TApplication*> fApplication;  //Pointer to current application
-   TInterpreter    *fInterpreter;         //Command interpreter
-   Bool_t          fBatch;                //True if session without graphics
-   TString         fWebDisplay;           //If not empty it defines where web graphics should be rendered (cef, qt5, browser...)
-   Bool_t          fIsWebDisplay;         //True if session with graphics on web
-   Bool_t          fIsWebDisplayBatch;    //True if session with graphics on web and batch mode
-   Bool_t          fEditHistograms;       //True if histograms can be edited with the mouse
-   Bool_t          fFromPopUp;            //True if command executed from a popup menu
-   Bool_t          fMustClean;            //True if object destructor scans canvases
-   Bool_t          fForceStyle;           //Force setting of current style when reading objects
-   Bool_t          fInterrupt;            //True if macro should be interrupted
-   Bool_t          fEscape;               //True if ESC has been pressed
-   Bool_t          fExecutingMacro;       //True while executing a TMacro
-   Int_t           fEditorMode;           //Current Editor mode
-   const TObject   *fPrimitive;           //Currently selected primitive
-   TVirtualPad     *fSelectPad;           //Currently selected pad
-   TCollection     *fClasses;             //List of classes definition
-   TCollection     *fTypes;               //List of data types definition
-   TListOfFunctionTemplates *fFuncTemplate; //List of global function templates
-   TListOfDataMembers*fGlobals;             //List of global variables
-   TListOfFunctions*fGlobalFunctions;     //List of global functions
-   TSeqCollection  *fClosedObjects;       //List of closed objects from the list of files and sockets, so we can delete them if neededCl.
-   TSeqCollection  *fFiles;               //List of files
-   TSeqCollection  *fMappedFiles;         //List of memory mapped files
-   TSeqCollection  *fSockets;             //List of network sockets
-   TSeqCollection  *fCanvases;            //List of canvases
-   TSeqCollection  *fStyles;              //List of styles
-   TCollection     *fFunctions;           //List of analytic functions
-   TSeqCollection  *fTasks;               //List of tasks
-   TSeqCollection  *fColors;              //List of colors
-   TSeqCollection  *fGeometries;          //List of geometries
-   TSeqCollection  *fBrowsers;            //List of browsers
-   TSeqCollection  *fSpecials;            //List of special objects
-   TSeqCollection  *fCleanups;            //List of recursiveRemove collections
-   TSeqCollection  *fMessageHandlers;     //List of message handlers
-   TSeqCollection  *fStreamerInfo;        //List of active StreamerInfo classes
-   TCollection     *fClassGenerators;     //List of user defined class generators;
-   TSeqCollection  *fSecContexts;         //List of security contexts (TSecContext)
-   TSeqCollection  *fProofs;              //List of proof sessions
-   TSeqCollection  *fClipboard;           //List of clipboard objects
-   TSeqCollection  *fDataSets;            //List of data sets (TDSet or TChain)
-   AListOfEnums_t   fEnums;               //List of enum types
-   TProcessUUID    *fUUIDs;               //Pointer to TProcessID managing TUUIDs
-   TFolder         *fRootFolder;          //top level folder //root
-   TList           *fBrowsables;          //List of browsables
-   TPluginManager  *fPluginManager;       //Keeps track of plugin library handlers
-   TString         fCutClassName;         //Name of default CutG class in graphics editor
-   TString         fDefCanvasName;        //Name of default canvas
+   TString         fConfigOptions;          ///< ROOT ./configure set build options
+   TString         fConfigFeatures;         ///< ROOT ./configure detected build features
+   TString         fVersion;                ///< ROOT version (from CMZ VERSQQ) ex 0.05/01
+   Int_t           fVersionInt;             ///< ROOT version in integer format (501)
+   Int_t           fVersionCode;            ///< ROOT version code as used in RVersion.h
+   Int_t           fVersionDate;            ///< Date of ROOT version (ex 951226)
+   Int_t           fVersionTime;            ///< Time of ROOT version (ex 1152)
+   Int_t           fBuiltDate;              ///< Date of ROOT built
+   Int_t           fBuiltTime;              ///< Time of ROOT built
+   TString         fGitCommit;              ///< Git commit SHA1 of built
+   TString         fGitBranch;              ///< Git branch
+   TString         fGitDate;                ///< Date and time when make was run
+   Int_t           fTimer;                  ///< Timer flag
+   std::atomic<TApplication*> fApplication; ///< Pointer to current application
+   TInterpreter    *fInterpreter;           ///< Command interpreter
+   Bool_t          fBatch;                  ///< True if session without graphics
+   TString         fWebDisplay;             ///< If not empty it defines where web graphics should be rendered (cef, qt5, browser...)
+   Bool_t          fIsWebDisplay;           ///< True if session with graphics on web
+   Bool_t          fIsWebDisplayBatch;      ///< True if session with graphics on web and batch mode
+   Bool_t          fEditHistograms;         ///< True if histograms can be edited with the mouse
+   Bool_t          fFromPopUp;              ///< True if command executed from a popup menu
+   Bool_t          fMustClean;              ///< True if object destructor scans canvases
+   Bool_t          fForceStyle;             ///< Force setting of current style when reading objects
+   Bool_t          fInterrupt;              ///< True if macro should be interrupted
+   Bool_t          fEscape;                 ///< True if ESC has been pressed
+   Bool_t          fExecutingMacro;         ///< True while executing a TMacro
+   Int_t           fEditorMode;             ///< Current Editor mode
+   const TObject   *fPrimitive;             ///< Currently selected primitive
+   TVirtualPad     *fSelectPad;             ///< Currently selected pad
+   TCollection     *fClasses;               ///< List of classes definition
+   TCollection     *fTypes;                 ///< List of data types definition
+   TListOfFunctionTemplates *fFuncTemplate; ///< List of global function templates
+   TListOfDataMembers*fGlobals;             ///< List of global variables
+   TListOfFunctions*fGlobalFunctions;       ///< List of global functions
+   TSeqCollection  *fClosedObjects;         ///< List of closed objects from the list of files and sockets, so we can delete them if neededCl.
+   TSeqCollection  *fFiles;                 ///< List of files
+   TSeqCollection  *fMappedFiles;           ///< List of memory mapped files
+   TSeqCollection  *fSockets;               ///< List of network sockets
+   TSeqCollection  *fCanvases;              ///< List of canvases
+   TSeqCollection  *fStyles;                ///< List of styles
+   TCollection     *fFunctions;             ///< List of analytic functions
+   TSeqCollection  *fTasks;                 ///< List of tasks
+   TSeqCollection  *fColors;                ///< List of colors
+   TSeqCollection  *fGeometries;            ///< List of geometries
+   TSeqCollection  *fBrowsers;              ///< List of browsers
+   TSeqCollection  *fSpecials;              ///< List of special objects
+   TSeqCollection  *fCleanups;              ///< List of recursiveRemove collections
+   TSeqCollection  *fMessageHandlers;       ///< List of message handlers
+   TSeqCollection  *fStreamerInfo;          ///< List of active StreamerInfo classes
+   TCollection     *fClassGenerators;       ///< List of user defined class generators;
+   TSeqCollection  *fSecContexts;           ///< List of security contexts (TSecContext)
+   TSeqCollection  *fProofs;                ///< List of proof sessions
+   TSeqCollection  *fClipboard;             ///< List of clipboard objects
+   TSeqCollection  *fDataSets;              ///< List of data sets (TDSet or TChain)
+   AListOfEnums_t   fEnums;                 ///< List of enum types
+   TProcessUUID    *fUUIDs;                 ///< Pointer to TProcessID managing TUUIDs
+   TFolder         *fRootFolder;            ///< top level folder //root
+   TList           *fBrowsables;            ///< List of browsables
+   TPluginManager  *fPluginManager;         ///< Keeps track of plugin library handlers
+   TString         fCutClassName;           ///< Name of default CutG class in graphics editor
+   TString         fDefCanvasName;          ///< Name of default canvas
 
-                  TROOT();                //Only used by Dictionary
-   void           InitSystem();           //Operating System interface
-   void           InitThreads();          //Initialize threads library
-   void           InitInterpreter();      //Initialize interpreter (cling)
-   void           ReadGitInfo();          //Read Git commit SHA1 and branch name
+                  TROOT();                  ///< Only used by Dictionary
+   void           InitSystem();             ///< Operating System interface
+   void           InitThreads();            ///< Initialize threads library
+   void           InitInterpreter();        ///< Initialize interpreter (cling)
+   void           ReadGitInfo();            ///< Read Git commit SHA1 and branch name
    void          *operator new(size_t l) { return TObject::operator new(l); }
    void          *operator new(size_t l, void *ptr) { return TObject::operator new(l,ptr); }
 
@@ -186,19 +186,19 @@ public:
 
    typedef std::vector<std::pair<std::string, int> > FwdDeclArgsToKeepCollection_t;
 
-                     TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc = 0);
+                     TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc = nullptr);
    virtual           ~TROOT();
    void              AddClass(TClass *cl);
    void              AddClassGenerator(TClassGenerator *gen);
-   virtual void      Append(TObject *obj, Bool_t replace = kFALSE);
-   void              Browse(TBrowser *b);
+   void              Append(TObject *obj, Bool_t replace = kFALSE) override;
+   void              Browse(TBrowser *b) override;
    Bool_t            ClassSaved(TClass *cl);
    void              CloseFiles();
    void              EndOfProcessCleanups();
-   virtual TObject  *FindObject(const char *name) const;
-   virtual TObject  *FindObject(const TObject *obj) const;
-   virtual TObject  *FindObjectAny(const char *name) const;
-   virtual TObject  *FindObjectAnyFile(const char *name) const;
+   TObject          *FindObject(const char *name) const override;
+   TObject          *FindObject(const TObject *obj) const override;
+   TObject          *FindObjectAny(const char *name) const override;
+   TObject          *FindObjectAnyFile(const char *name) const override;
    TObject          *FindSpecialObject(const char *name, void *&where);
    const char       *FindObjectClassName(const char *name) const;
    const char       *FindObjectPathName(const TObject *obj) const;
@@ -257,15 +257,15 @@ public:
    TCollection      *GetListOfFunctionTemplates();
    TList            *GetListOfBrowsables() const { return fBrowsables; }
    TDataType        *GetType(const char *name, Bool_t load = kFALSE) const;
-   TFile            *GetFile() const { if (gDirectory != this) return gDirectory->GetFile(); else return 0;}
+   TFile            *GetFile() const override { if (gDirectory && gDirectory != this) return gDirectory->GetFile(); else return nullptr;}
    TFile            *GetFile(const char *name) const;
    TFunctionTemplate*GetFunctionTemplate(const char *name);
    TStyle           *GetStyle(const char *name) const;
    TObject          *GetFunction(const char *name) const;
    TGlobal          *GetGlobal(const char *name, Bool_t load = kFALSE) const;
    TGlobal          *GetGlobal(const TObject *obj, Bool_t load = kFALSE) const;
-   TFunction        *GetGlobalFunction(const char *name, const char *params = 0, Bool_t load = kFALSE);
-   TFunction        *GetGlobalFunctionWithPrototype(const char *name, const char *proto = 0, Bool_t load = kFALSE);
+   TFunction        *GetGlobalFunction(const char *name, const char *params = nullptr, Bool_t load = kFALSE);
+   TFunction        *GetGlobalFunctionWithPrototype(const char *name, const char *proto = nullptr, Bool_t load = kFALSE);
    TObject          *GetGeometry(const char *name) const;
    const TObject    *GetSelectedPrimitive() const { return fPrimitive; }
    TVirtualPad      *GetSelectedPad() const { return fSelectPad; }
@@ -274,11 +274,11 @@ public:
    TFolder          *GetRootFolder() const { return fRootFolder; }
    TProcessUUID     *GetUUIDs() const { return fUUIDs; }
    const TString    &GetWebDisplay() const { return fWebDisplay; }
-   void              Idle(UInt_t idleTimeInSec, const char *command = 0);
+   void              Idle(UInt_t idleTimeInSec, const char *command = nullptr);
    Int_t             IgnoreInclude(const char *fname, const char *expandedfname);
    Bool_t            IsBatch() const { return fBatch; }
    Bool_t            IsExecutingMacro() const { return fExecutingMacro; }
-   Bool_t            IsFolder() const { return kTRUE; }
+   Bool_t            IsFolder() const override { return kTRUE; }
    Bool_t            IsInterrupted() const { return fInterrupt; }
    Bool_t            IsEscaped() const { return fEscape; }
    Bool_t            IsLineProcessing() const { return fLineIsProcessing ? kTRUE : kFALSE; }
@@ -286,19 +286,19 @@ public:
    Bool_t            IsRootFile(const char *filename) const;
    Bool_t            IsWebDisplay() const { return fIsWebDisplay; }
    Bool_t            IsWebDisplayBatch() const { return fIsWebDisplayBatch; }
-   void              ls(Option_t *option = "") const;
+   void              ls(Option_t *option = "") const override;
    Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
    TClass           *LoadClass(const char *name, Bool_t silent = kFALSE) const;
-   Int_t             LoadMacro(const char *filename, Int_t *error = 0, Bool_t check = kFALSE);
-   Longptr_t         Macro(const char *filename, Int_t *error = 0, Bool_t padUpdate = kTRUE);
+   Int_t             LoadMacro(const char *filename, Int_t *error = nullptr, Bool_t check = kFALSE);
+   Longptr_t         Macro(const char *filename, Int_t *error = nullptr, Bool_t padUpdate = kTRUE);
    TCanvas          *MakeDefCanvas() const;
    void              Message(Int_t id, const TObject *obj);
    Bool_t            MustClean() const { return fMustClean; }
-   Longptr_t         ProcessLine(const char *line, Int_t *error = 0);
-   Longptr_t         ProcessLineSync(const char *line, Int_t *error = 0);
-   Longptr_t         ProcessLineFast(const char *line, Int_t *error = 0);
+   Longptr_t         ProcessLine(const char *line, Int_t *error = nullptr);
+   Longptr_t         ProcessLineSync(const char *line, Int_t *error = nullptr);
+   Longptr_t         ProcessLineFast(const char *line, Int_t *error = nullptr);
    Bool_t            ReadingObject() const;
-   void              RecursiveRemove(TObject *obj);
+   void              RecursiveRemove(TObject *obj) override;
    void              RefreshBrowsers();
    static void       RegisterModule(const char* modulename,
                                     const char** headers,
@@ -309,13 +309,14 @@ public:
                                     const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                                     const char** classesHeaders,
                                     bool hasCxxModule = false);
-   TObject          *Remove(TObject*);
+   TObject          *Remove(TObject*) override;
    void              RemoveClass(TClass *);
    void              Reset(Option_t *option="");
    void              SaveContext();
    void              SetApplication(TApplication *app) { fApplication = app; }
-   void              SetBatch(Bool_t batch = kTRUE) { fBatch = batch; }
-   void              SetWebDisplay(const char *webdisplay);
+   /// Set the "Batch mode".  If the argument evaluates to `true`, the session does not use interactive graphics.
+   void              SetBatch(Bool_t batch = kTRUE) { fIsWebDisplayBatch = fBatch = batch; }
+   void              SetWebDisplay(const char *webdisplay = "");
    void              SetCutClassName(const char *name = "TCutG");
    void              SetDefCanvasName(const char *name = "c1") { fDefCanvasName = name; }
    void              SetEditHistograms(Bool_t flag = kTRUE) { fEditHistograms = flag; }
@@ -367,7 +368,7 @@ public:
    static const char *GetTutorialsDir();
    static void ShutDown();
 
-   ClassDef(TROOT,0)  //Top level (or root) structure for all classes
+   ClassDefOverride(TROOT,0)  //Top level (or root) structure for all classes
 };
 
 

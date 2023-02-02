@@ -109,159 +109,228 @@ namespace TMath {
 
 //---- Even/odd ----------------------------------------------------------------
 
+/// Returns `true` if `a` is even.
 inline Bool_t TMath::Even(Long_t a)
    { return ! (a & 1); }
 
+/// Returns `true` if `a` is odd.
 inline Bool_t TMath::Odd(Long_t a)
    { return (a & 1); }
 
 //---- Abs ---------------------------------------------------------------------
 
+/// Returns the absolute value of parameter `Short_t d`.
 inline Short_t TMath::Abs(Short_t d)
 { return (d >= 0) ? d : Short_t(-d);  }
 
+/// Returns the absolute value of parameter `Int_t d`.
 inline Int_t TMath::Abs(Int_t d)
 { return std::abs(d); }
 
+/// Returns the absolute value of parameter `Long_t d`.
 inline Long_t TMath::Abs(Long_t d)
 { return std::labs(d); }
 
+/// Returns the absolute value of parameter `Long64_t d`.
 inline Long64_t TMath::Abs(Long64_t d)
 { return std::llabs(d); }
 
+/// Returns the absolute value of parameter `Float_t d`.
 inline Float_t TMath::Abs(Float_t d)
 { return std::abs(d); }
 
+/// Returns the absolute value of parameter `Double_t d`.
 inline Double_t TMath::Abs(Double_t d)
 { return std::abs(d); }
 
+/// Returns the absolute value of parameter `LongDouble_t d`.
 inline LongDouble_t TMath::Abs(LongDouble_t d)
 { return std::abs(d); }
 
 
 //---- Sign Bit--------------------------------------------------------------------
 
+/// Returns whether the sign of `Integer a` is negative.
 template<typename Integer>
 inline Bool_t TMath::SignBit( Integer a)
    { return (a < 0); }
 
+/// Returns whether the sign of `Float_t a` is negative.
 inline Bool_t TMath::SignBit(Float_t a)
    { return std::signbit(a);  }
 
+/// Returns whether the sign of `Double_t a` is negative.
 inline Bool_t TMath::SignBit(Double_t a)
    { return std::signbit(a);  }
 
+/// Returns whether the sign of `LongDouble_t a` is negative.
 inline Bool_t TMath::SignBit(LongDouble_t a)
    { return std::signbit(a);  }
 
 
 //---- Sign --------------------------------------------------------------------
 
+/// Returns a value with the magnitude of `a` and the sign of `b`.
 template<typename T1, typename T2>
 inline T1 TMath::Sign( T1 a, T2 b)
    { return (SignBit(b)) ? - Abs(a) : Abs(a); }
 
+/// Returns a value with the magnitude of `a` and the sign of `b`.
+/// `a`and `b` are `Short_t`.
 inline Float_t TMath::Sign(Float_t a, Float_t b)
    { return std::copysign(a,b);  }
 
+/// Returns a value with the magnitude of `a` and the sign of `b`.
+/// `a`and `b` are `Double_t`.
 inline Double_t TMath::Sign(Double_t a, Double_t b)
    { return std::copysign(a,b);  }
 
+/// Returns a value with the magnitude of `a` and the sign of `b`.
+/// `a`and `b` are `LongDouble_t`.
 inline LongDouble_t TMath::Sign(LongDouble_t a, LongDouble_t b)
    { return std::copysign(a,b);  }
 
 
 //---- Min ---------------------------------------------------------------------
 
+/// Returns the smallest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `Short_t`.
 inline Short_t TMath::Min(Short_t a, Short_t b)
    { return a <= b ? a : b; }
 
+/// Returns the smallest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `UShort_t`.
 inline UShort_t TMath::Min(UShort_t a, UShort_t b)
    { return a <= b ? a : b; }
 
+/// Returns the smallest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `Int_t`.
 inline Int_t TMath::Min(Int_t a, Int_t b)
    { return a <= b ? a : b; }
 
+/// Returns the smallest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `Short_t`.
 inline UInt_t TMath::Min(UInt_t a, UInt_t b)
    { return a <= b ? a : b; }
 
+/// Returns the smallest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `Long_t`.
 inline Long_t TMath::Min(Long_t a, Long_t b)
    { return a <= b ? a : b; }
 
+/// Returns the smallest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `ULong_t`.
 inline ULong_t TMath::Min(ULong_t a, ULong_t b)
    { return a <= b ? a : b; }
 
+/// Returns the smallest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `Long64_t`.
 inline Long64_t TMath::Min(Long64_t a, Long64_t b)
    { return a <= b ? a : b; }
 
+/// Returns the smallest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `ULong64_t`.
 inline ULong64_t TMath::Min(ULong64_t a, ULong64_t b)
    { return a <= b ? a : b; }
 
+/// Returns the smallest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `Float_t`.
 inline Float_t TMath::Min(Float_t a, Float_t b)
    { return a <= b ? a : b; }
 
+/// Returns the smallest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `Double_t`.
 inline Double_t TMath::Min(Double_t a, Double_t b)
    { return a <= b ? a : b; }
 
 //---- Max ---------------------------------------------------------------------
 
+/// Returns the largest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `Short_t`.
 inline Short_t TMath::Max(Short_t a, Short_t b)
    { return a >= b ? a : b; }
 
+/// Returns the largest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `UShort_t`.
 inline UShort_t TMath::Max(UShort_t a, UShort_t b)
    { return a >= b ? a : b; }
 
+/// Returns the largest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `Int_t`.
 inline Int_t TMath::Max(Int_t a, Int_t b)
    { return a >= b ? a : b; }
 
+/// Returns the largest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `UInt_t`.
 inline UInt_t TMath::Max(UInt_t a, UInt_t b)
    { return a >= b ? a : b; }
 
+/// Returns the largest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `Long_t`.
 inline Long_t TMath::Max(Long_t a, Long_t b)
    { return a >= b ? a : b; }
 
+/// Returns the largest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `ULong_t`.
 inline ULong_t TMath::Max(ULong_t a, ULong_t b)
    { return a >= b ? a : b; }
 
+/// Returns the largest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `Long64_t`.
 inline Long64_t TMath::Max(Long64_t a, Long64_t b)
    { return a >= b ? a : b; }
 
+/// Returns the largest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `ULong64_t`.
 inline ULong64_t TMath::Max(ULong64_t a, ULong64_t b)
    { return a >= b ? a : b; }
 
+/// Returns the largest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `Float_t`.
 inline Float_t TMath::Max(Float_t a, Float_t b)
    { return a >= b ? a : b; }
 
+/// Returns the largest of `a` and `b`. If both are equivalent, `a` is returned.
+/// `a`and `b` are `Double_t`.
 inline Double_t TMath::Max(Double_t a, Double_t b)
    { return a >= b ? a : b; }
 
 //---- Range -------------------------------------------------------------------
 
+/// Returns `x` if `lb < x < up`, `lb` if `x < lb` and `ub` if `x > ub`.
+/// `lb`, `ub` and `x` are `Short_t`.
 inline Short_t TMath::Range(Short_t lb, Short_t ub, Short_t x)
    { return x < lb ? lb : (x > ub ? ub : x); }
 
+/// Returns `x` if `lb < x < up`, `lb` if `x < lb` and `ub` if `x > ub`.
+/// `lb`, `ub` and `x` are `Int_t`.
 inline Int_t TMath::Range(Int_t lb, Int_t ub, Int_t x)
    { return x < lb ? lb : (x > ub ? ub : x); }
 
+/// Returns `x` if `lb < x < up`, `lb` if `x < lb` and `ub` if `x > ub`.
+/// `lb`, `ub` and `x` are `Long_t`.
 inline Long_t TMath::Range(Long_t lb, Long_t ub, Long_t x)
    { return x < lb ? lb : (x > ub ? ub : x); }
 
+/// Returns `x` if `lb < x < up`, `lb` if `x < lb` and `ub` if `x > ub`.
+/// `lb`, `ub` and `x` are `ULong_t`.
 inline ULong_t TMath::Range(ULong_t lb, ULong_t ub, ULong_t x)
    { return x < lb ? lb : (x > ub ? ub : x); }
 
+/// Returns `x` if `lb < x < up`, `lb` if `x < lb` and `ub` if `x > ub`.
+/// `lb`, `ub` and `x` are `Double_t`.
 inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
    { return x < lb ? lb : (x > ub ? ub : x); }
 
+/// Binary search in an array defined by its iterators.
+///
+/// The values in the iterators range are supposed to be sorted
+/// prior to this call.  If match is found, function returns
+/// position of element.  If no match found, function gives nearest
+/// element smaller than value.
 template <typename Iterator, typename Element>
 Iterator TMath::BinarySearch(Iterator first, Iterator last, Element value)
 {
-   // Binary search in an array defined by its iterators.
-   //
-   // The values in the iterators range are supposed to be sorted
-   // prior to this call.  If match is found, function returns
-   // position of element.  If no match found, function gives nearest
-   // element smaller than value.
-
    Iterator pind;
    pind = std::lower_bound(first, last, value);
    if ( (pind != last) && (*pind == value) )
@@ -270,15 +339,13 @@ Iterator TMath::BinarySearch(Iterator first, Iterator last, Element value)
       return ( pind - 1);
 }
 
-
+/// Binary search in an array of n values to locate value.
+///
+/// Array is supposed  to be sorted prior to this call.
+/// If match is found, function returns position of element.
+/// If no match found, function gives nearest element smaller than value.
 template <typename T> Long64_t TMath::BinarySearch(Long64_t n, const T  *array, T value)
 {
-   // Binary search in an array of n values to locate value.
-   //
-   // Array is supposed  to be sorted prior to this call.
-   // If match is found, function returns position of element.
-   // If no match found, function gives nearest element smaller than value.
-
    const T* pind;
    pind = std::lower_bound(array, array + n, value);
    if ( (pind != array + n) && (*pind == value) )
@@ -287,14 +354,13 @@ template <typename T> Long64_t TMath::BinarySearch(Long64_t n, const T  *array, 
       return ( pind - array - 1);
 }
 
+/// Binary search in an array of n values to locate value.
+///
+/// Array is supposed  to be sorted prior to this call.
+/// If match is found, function returns position of element.
+/// If no match found, function gives nearest element smaller than value.
 template <typename T> Long64_t TMath::BinarySearch(Long64_t n, const T **array, T value)
 {
-   // Binary search in an array of n values to locate value.
-   //
-   // Array is supposed  to be sorted prior to this call.
-   // If match is found, function returns position of element.
-   // If no match found, function gives nearest element smaller than value.
-
    const T* pind;
    pind = std::lower_bound(*array, *array + n, value);
    if ( (pind != *array + n) && (*pind == value) )
@@ -329,17 +395,16 @@ struct CompareAsc {
    T fData;
 };
 
+/// Sort the n1 elements of the Short_t array defined by its
+/// iterators.  In output the array index contains the indices of
+/// the sorted array.  If down is false sort in increasing order
+/// (default is decreasing order).
+///
+/// NOTE that the array index must be created with a length bigger
+/// or equal than the main array before calling this function.
 template <typename Iterator, typename IndexIterator>
 void TMath::SortItr(Iterator first, Iterator last, IndexIterator index, Bool_t down)
 {
-   // Sort the n1 elements of the Short_t array defined by its
-   // iterators.  In output the array index contains the indices of
-   // the sorted array.  If down is false sort in increasing order
-   // (default is decreasing order).
-
-   // NOTE that the array index must be created with a length bigger
-   // or equal than the main array before calling this function.
-
    int i = 0;
 
    IndexIterator cindex = index;
@@ -355,17 +420,16 @@ void TMath::SortItr(Iterator first, Iterator last, IndexIterator index, Bool_t d
       std::sort(index, cindex, CompareAsc<Iterator>(first) );
 }
 
+/// Sort the n elements of the  array a of generic templated type Element.
+/// In output the array index of type Index contains the indices of the sorted array.
+/// If down is false sort in increasing order (default is decreasing order).
+///
+/// NOTE that the array index must be created with a length >= n
+/// before calling this function.
+/// NOTE also that the size type for n must be the same type used for the index array
+/// (templated type Index)
 template <typename Element, typename Index> void TMath::Sort(Index n, const Element* a, Index* index, Bool_t down)
 {
-   // Sort the n elements of the  array a of generic templated type Element.
-   // In output the array index of type Index contains the indices of the sorted array.
-   // If down is false sort in increasing order (default is decreasing order).
-
-   // NOTE that the array index must be created with a length >= n
-   // before calling this function.
-   // NOTE also that the size type for n must be the same type used for the index array
-   // (templated type Index)
-
    for(Index i = 0; i < n; i++) { index[i] = i; }
    if ( down )
       std::sort(index, index + n, CompareDesc<const Element*>(a) );

@@ -404,6 +404,8 @@ TEST(TTreeReaderBasic, EntryListAndEntryRange)
    EXPECT_TRUE(r.Next());
    EXPECT_EQ(*rv, 8);
    EXPECT_FALSE(r.Next());
+
+   t.SetEntryList(nullptr);
 }
 
 TEST(TTreeReaderBasic, TChainWithSubEntryListsAndEntryRange)

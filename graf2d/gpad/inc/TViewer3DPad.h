@@ -23,26 +23,26 @@ private:
 
    // Non-copyable
    TViewer3DPad(const TViewer3DPad &) = delete;
-   TViewer3DPad & operator = (const TViewer3DPad &) = delete;
+   TViewer3DPad &operator=(const TViewer3DPad &) = delete;
 
 public:
    TViewer3DPad(TVirtualPad & pad) : fPad(pad), fBuilding(kFALSE) {};
    ~TViewer3DPad() {};
 
-   virtual Bool_t PreferLocalFrame() const;
-   virtual void   BeginScene();
-   virtual Bool_t BuildingScene() const { return fBuilding; }
-   virtual void   EndScene();
-   virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t *addChildren = nullptr);
-   virtual Int_t  AddObject(UInt_t placedID, const TBuffer3D &buffer, Bool_t *addChildren = nullptr);
+   Bool_t PreferLocalFrame() const override;
+   void   BeginScene() override;
+   Bool_t BuildingScene() const override { return fBuilding; }
+   void   EndScene() override;
+   Int_t  AddObject(const TBuffer3D & buffer, Bool_t *addChildren = nullptr) override;
+   Int_t  AddObject(UInt_t placedID, const TBuffer3D &buffer, Bool_t *addChildren = nullptr) override;
 
    // Composite shapes not supported on this viewer currently - ignore.
    // Will result in a set of individual component shapes
-   virtual Bool_t OpenComposite(const TBuffer3D & buffer, Bool_t *addChildren = nullptr);
-   virtual void   CloseComposite();
-   virtual void   AddCompositeOp(UInt_t operation);
+   Bool_t OpenComposite(const TBuffer3D & buffer, Bool_t *addChildren = nullptr) override;
+   void   CloseComposite() override;
+   void   AddCompositeOp(UInt_t operation) override;
 
-   ClassDef(TViewer3DPad,0)  //A 3D Viewer painter for TPads
+   ClassDefOverride(TViewer3DPad,0)  //A 3D Viewer painter for TPads
 };
 
 #endif

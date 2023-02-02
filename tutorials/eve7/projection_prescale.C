@@ -63,7 +63,7 @@ void makeProjectedViewsAndScene(REX::REveProjection::EPType_e type, bool scale)
    auto rphiView = eveMng->SpawnNewViewer("Projected View", "");
    rphiView->AddScene(rPhiGeomScene);
    rphiView->AddScene(rPhiEventScene);
-   rphiView->SetCameraType(REveViewer::kCameraOrthoXOY);
+   rphiView->SetCameraType(REX::REveViewer::kCameraOrthoXOY);
 
    for (auto &ie : eveMng->GetGlobalScene()->RefChildren())
       mngRhoPhi->ImportElements(ie, rPhiGeomScene);
@@ -84,7 +84,7 @@ TGeoNode* getNodeFromPath( TGeoNode* top, std::string path)
 }
 
 
-void projection_prescale(std::string type = "RhPhi")
+void projection_prescale(std::string type = "RPhi")
 {
    eveMng = REX::REveManager::Create();
 

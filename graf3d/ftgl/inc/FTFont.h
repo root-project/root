@@ -122,7 +122,7 @@ class FTGL_EXPORT FTFont
          *
          * @param depth  The extrusion distance.
          */
-        virtual void Depth( float /*depth*/){}
+        virtual void Depth(float /* depth */){}
 
         /**
          * Enable or disable the use of Display Lists inside FTGL

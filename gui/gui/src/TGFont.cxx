@@ -1367,7 +1367,7 @@ void TGTextLayout::ToPostscript(TString *result) const
             // Postscript as part of this sequence.
 
                // coverity[secure_coding]
-               sprintf(buf + used, "\\%03o", c);
+               snprintf(buf + used, MAXUSE + 10 - used, "\\%03o", c);
                used += 4;
             } else {
                buf[used++] = c;
@@ -1446,7 +1446,7 @@ LayoutChunk_t *TGFont::NewChunk(TGTextLayout *layout, Int_t *maxPtr,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a string of characters on the screen. DrawCharsExp() expands
-/// control characters that occur in the string to \X or \xXX sequences.
+/// control characters that occur in the string to \\X or \\xXX sequences.
 /// DrawChars() just draws the strings.
 ///
 /// dst      -- Window or pixmap in which to draw.

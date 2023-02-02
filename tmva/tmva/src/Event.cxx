@@ -260,8 +260,16 @@ Float_t TMVA::Event::GetValue( UInt_t ivar ) const
 
 Float_t TMVA::Event::GetSpectator( UInt_t ivar) const
 {
-   if (fDynamic) return *(fValuesDynamic->at(GetNVariables()+ivar));
-   else          return fSpectators.at(ivar);
+   if (fDynamic) { 
+      if (fSpectatorTypes[ivar] == 'F')
+         return *(fValuesDynamic->at(GetNVariables()+ivar));
+      else if (fSpectatorTypes[ivar] == 'I')
+         return *(reinterpret_cast<int *>(fValuesDynamic->at(GetNVariables() + ivar)));
+      else {
+         throw std::runtime_error("Spectator variable has an invalid type ");
+      }
+   } else
+      return fSpectators.at(ivar);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

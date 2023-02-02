@@ -15,11 +15,13 @@
 
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/CodeGen/Passes.h"
-#include "llvm/CodeGen/TargetLowering.h"
 #include "llvm/CodeGen/TargetPassConfig.h"
+#include "llvm/IR/Constants.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
+#include "llvm/Target/TargetMachine.h"
 
 using namespace llvm;
 
@@ -42,6 +44,7 @@ private:
                                     GlobalVariable *to) {
     to->setLinkage(from->getLinkage());
     to->setVisibility(from->getVisibility());
+    to->setDSOLocal(from->isDSOLocal());
     if (from->hasComdat()) {
       to->setComdat(M.getOrInsertComdat(to->getName()));
       to->getComdat()->setSelectionKind(from->getComdat()->getSelectionKind());
@@ -126,12 +129,7 @@ bool LowerEmuTLS::addEmuTlsVar(Module &M, const GlobalVariable *GV) {
     return true;
 
   Type *GVType = GV->getValueType();
-  unsigned GVAlignment = GV->getAlignment();
-  if (!GVAlignment) {
-    // When LLVM IL declares a variable without alignment, use
-    // the ABI default alignment for the type.
-    GVAlignment = DL.getABITypeAlignment(GVType);
-  }
+  Align GVAlignment = DL.getValueOrABITypeAlignment(GV->getAlign(), GVType);
 
   // Define "__emutls_t.*" if there is InitValue
   GlobalVariable *EmuTlsTmplVar = nullptr;
@@ -149,15 +147,13 @@ bool LowerEmuTLS::addEmuTlsVar(Module &M, const GlobalVariable *GV) {
   // Define "__emutls_v.*" with initializer and alignment.
   Constant *ElementValues[4] = {
       ConstantInt::get(WordType, DL.getTypeStoreSize(GVType)),
-      ConstantInt::get(WordType, GVAlignment),
-      NullPtr, EmuTlsTmplVar ? EmuTlsTmplVar : NullPtr
-  };
+      ConstantInt::get(WordType, GVAlignment.value()), NullPtr,
+      EmuTlsTmplVar ? EmuTlsTmplVar : NullPtr};
   ArrayRef<Constant*> ElementValueArray(ElementValues, 4);
   EmuTlsVar->setInitializer(
       ConstantStruct::get(EmuTlsVarType, ElementValueArray));
-  unsigned MaxAlignment = std::max(
-      DL.getABITypeAlignment(WordType),
-      DL.getABITypeAlignment(VoidPtrType));
+  Align MaxAlignment =
+      std::max(DL.getABITypeAlign(WordType), DL.getABITypeAlign(VoidPtrType));
   EmuTlsVar->setAlignment(MaxAlignment);
   return true;
 }

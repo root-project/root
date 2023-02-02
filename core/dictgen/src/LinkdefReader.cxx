@@ -571,9 +571,7 @@ bool LinkdefReader::ProcessOperators(std::string &pattern)
    int pos = -1;
    int pos1 = -1, pos2 = -1;
    int open_br = 0, close_br = 0;
-   int i = 0;
    while (true) {
-      i++;
       pos = pattern.find(" ", pos + 1);
       pos1 = pattern.find("<", pos1 + 1);
       pos2 = pattern.find(">", pos2 + 1);
@@ -737,7 +735,7 @@ public:
 
    void HandlePragma(clang::Preprocessor &PP,
                      clang::PragmaIntroducer Introducer,
-                     clang::Token &tok) {
+                     clang::Token &tok) override {
       // Handle a #pragma found by the Preprocessor.
 
       // check whether we care about the pragma - we are a named handler,
@@ -770,7 +768,7 @@ public:
       } else {
          llvm::StringRef include(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
 
-         if (!fOwner.AddInclude(include)) {
+         if (!fOwner.AddInclude(include.str())) {
             Error("", tok);
          }
       }
@@ -786,7 +784,7 @@ public:
 
    void HandlePragma(clang::Preprocessor &PP,
                      clang::PragmaIntroducer Introducer,
-                     clang::Token &tok) {
+                     clang::Token &tok) override {
       // Handle a #pragma found by the Preprocessor.
 
       // check whether we care about the pragma - we are a named handler,
@@ -845,7 +843,7 @@ public:
 
    void HandlePragma(clang::Preprocessor &PP,
                      clang::PragmaIntroducer Introducer,
-                     clang::Token &tok) {
+                     clang::Token &tok) override {
       // Handle a #pragma found by the Preprocessor.
 
       // check whether we care about the pragma - we are a named handler,
@@ -928,7 +926,7 @@ public:
       } else {
          llvm::StringRef identifier(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
 
-         if (!fOwner.AddRule(type, identifier, linkOn, false, options.get())) {
+         if (!fOwner.AddRule(type.str(), identifier.str(), linkOn, false, options.get())) {
             Error(type.data(), tok, false);
          }
       }
@@ -950,7 +948,7 @@ public:
 
    void HandlePragma(clang::Preprocessor &PP,
                      clang::PragmaIntroducer Introducer,
-                     clang::Token &tok) {
+                     clang::Token &tok) override {
       // Handle a #pragma found by the Preprocessor.
 
       // check whether we care about the pragma - we are a named handler,
@@ -987,7 +985,7 @@ public:
 
       llvm::StringRef identifier(start, fSourceManager.getCharacterData(end.getLocation()) - start + end.getLength());
 
-      if (!fOwner.AddRule("class", identifier, true, true)) {
+      if (!fOwner.AddRule("class", identifier.str(), true, true)) {
          Error("", tok);
       }
 

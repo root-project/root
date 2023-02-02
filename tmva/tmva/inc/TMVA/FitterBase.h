@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$ 
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -17,8 +17,8 @@
  *      Helge Voss       <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany     *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -52,7 +52,7 @@ namespace TMVA {
 
    public:
 
-      FitterBase( IFitterTarget& target, const TString& name, const std::vector<TMVA::Interval*> ranges, 
+      FitterBase( IFitterTarget& target, const TString& name, const std::vector<TMVA::Interval*> ranges,
                   const TString& theOption );
 
       virtual ~FitterBase() {}
@@ -86,7 +86,7 @@ namespace TMVA {
       Int_t                               fNpars;        // number of parameters
 
       mutable MsgLogger*                  fLogger;       // message logger
-      MsgLogger& Log() const { return *fLogger; }    
+      MsgLogger& Log() const { return *fLogger; }
 
       TString                             fClassName;    // remove TMVA:: from TObject name
 

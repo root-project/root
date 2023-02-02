@@ -45,7 +45,7 @@
 #include "llvm/CodeGen/TargetInstrInfo.h"
 #include "llvm/CodeGen/TargetRegisterInfo.h"
 #include "llvm/IR/Constants.h"
-#include "llvm/PassSupport.h"
+#include "llvm/Pass.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
@@ -136,11 +136,10 @@ bool HexagonPeephole::runOnMachineFunction(MachineFunction &MF) {
         assert(MI.getNumOperands() == 2);
         MachineOperand &Dst = MI.getOperand(0);
         MachineOperand &Src = MI.getOperand(1);
-        unsigned DstReg = Dst.getReg();
-        unsigned SrcReg = Src.getReg();
+        Register DstReg = Dst.getReg();
+        Register SrcReg = Src.getReg();
         // Just handle virtual registers.
-        if (TargetRegisterInfo::isVirtualRegister(DstReg) &&
-            TargetRegisterInfo::isVirtualRegister(SrcReg)) {
+        if (DstReg.isVirtual() && SrcReg.isVirtual()) {
           // Map the following:
           // %170 = SXTW %166
           // PeepholeMap[170] = %166
@@ -157,8 +156,8 @@ bool HexagonPeephole::runOnMachineFunction(MachineFunction &MF) {
         MachineOperand &Src2 = MI.getOperand(2);
         if (Src1.getImm() != 0)
           continue;
-        unsigned DstReg = Dst.getReg();
-        unsigned SrcReg = Src2.getReg();
+        Register DstReg = Dst.getReg();
+        Register SrcReg = Src2.getReg();
         PeepholeMap[DstReg] = SrcReg;
       }
 
@@ -174,8 +173,8 @@ bool HexagonPeephole::runOnMachineFunction(MachineFunction &MF) {
         MachineOperand &Src2 = MI.getOperand(2);
         if (Src2.getImm() != 32)
           continue;
-        unsigned DstReg = Dst.getReg();
-        unsigned SrcReg = Src1.getReg();
+        Register DstReg = Dst.getReg();
+        Register SrcReg = Src1.getReg();
         PeepholeDoubleRegsMap[DstReg] =
           std::make_pair(*&SrcReg, Hexagon::isub_hi);
       }
@@ -185,11 +184,10 @@ bool HexagonPeephole::runOnMachineFunction(MachineFunction &MF) {
         assert(MI.getNumOperands() == 2);
         MachineOperand &Dst = MI.getOperand(0);
         MachineOperand &Src = MI.getOperand(1);
-        unsigned DstReg = Dst.getReg();
-        unsigned SrcReg = Src.getReg();
+        Register DstReg = Dst.getReg();
+        Register SrcReg = Src.getReg();
         // Just handle virtual registers.
-        if (TargetRegisterInfo::isVirtualRegister(DstReg) &&
-            TargetRegisterInfo::isVirtualRegister(SrcReg)) {
+        if (DstReg.isVirtual() && SrcReg.isVirtual()) {
           // Map the following:
           // %170 = NOT_xx %166
           // PeepholeMap[170] = %166
@@ -208,10 +206,9 @@ bool HexagonPeephole::runOnMachineFunction(MachineFunction &MF) {
         if (Src.getSubReg() != Hexagon::isub_lo)
           continue;
 
-        unsigned DstReg = Dst.getReg();
-        unsigned SrcReg = Src.getReg();
-        if (TargetRegisterInfo::isVirtualRegister(DstReg) &&
-            TargetRegisterInfo::isVirtualRegister(SrcReg)) {
+        Register DstReg = Dst.getReg();
+        Register SrcReg = Src.getReg();
+        if (DstReg.isVirtual() && SrcReg.isVirtual()) {
           // Try to find in the map.
           if (unsigned PeepholeSrc = PeepholeMap.lookup(SrcReg)) {
             // Change the 1st operand.
@@ -237,12 +234,12 @@ bool HexagonPeephole::runOnMachineFunction(MachineFunction &MF) {
         bool Done = false;
         if (QII->isPredicated(MI)) {
           MachineOperand &Op0 = MI.getOperand(0);
-          unsigned Reg0 = Op0.getReg();
+          Register Reg0 = Op0.getReg();
           const TargetRegisterClass *RC0 = MRI->getRegClass(Reg0);
           if (RC0->getID() == Hexagon::PredRegsRegClassID) {
             // Handle instructions that have a prediate register in op0
             // (most cases of predicable instructions).
-            if (TargetRegisterInfo::isVirtualRegister(Reg0)) {
+            if (Reg0.isVirtual()) {
               // Try to find in the map.
               if (unsigned PeepholeSrc = PeepholeMap.lookup(Reg0)) {
                 // Change the 1st operand and, flip the opcode.
@@ -275,7 +272,7 @@ bool HexagonPeephole::runOnMachineFunction(MachineFunction &MF) {
               break;
           }
           if (NewOp) {
-            unsigned PSrc = MI.getOperand(PR).getReg();
+            Register PSrc = MI.getOperand(PR).getReg();
             if (unsigned POrig = PeepholeMap.lookup(PSrc)) {
               BuildMI(*MBB, MI.getIterator(), MI.getDebugLoc(),
                       QII->get(NewOp), MI.getOperand(0).getReg())

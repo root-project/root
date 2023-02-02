@@ -20,7 +20,6 @@
 #include "TNamed.h"
 #include "RooArgSet.h"
 #include "RooPrintable.h"
-#include "RooFactoryWSTool.h"
 
 #include <vector>
 #include <string>
@@ -28,42 +27,36 @@
 class RooAbsReal;
 class RooAbsPdf;
 
-class RooClassFactory : public TNamed, public RooPrintable {
+// RooFit class code and instance factory
+class RooClassFactory {
 
 public:
 
   // Constructors, assignment etc
   RooClassFactory() ;
-  virtual ~RooClassFactory() ;
+  ~RooClassFactory() ;
 
-  static RooAbsReal* makeFunctionInstance(const char* className, const char* name, const char* expression, const RooArgList& vars, const char* intExpression=0) ;
-  static RooAbsReal* makeFunctionInstance(const char* name, const char* expression, const RooArgList& vars, const char* intExpression=0) ;
+  static RooAbsReal* makeFunctionInstance(const char* className, const char* name, const char* expression, const RooArgList& vars, const char* intExpression=nullptr) ;
+  static RooAbsReal* makeFunctionInstance(const char* name, const char* expression, const RooArgList& vars, const char* intExpression=nullptr) ;
 
-  static RooAbsPdf* makePdfInstance(const char* className, const char* name, const char* expression, const RooArgList& vars, const char* intExpression=0) ;
-  static RooAbsPdf* makePdfInstance(const char* name, const char* expression, const RooArgList& vars, const char* intExpression=0) ;
+  static RooAbsPdf* makePdfInstance(const char* className, const char* name, const char* expression, const RooArgList& vars, const char* intExpression=nullptr) ;
+  static RooAbsPdf* makePdfInstance(const char* name, const char* expression, const RooArgList& vars, const char* intExpression=nullptr) ;
 
-  static Bool_t makeAndCompilePdf(const char* name, const char* expression, const RooArgList& vars, const char* intExpression=0) ;
-  static Bool_t makeAndCompileFunction(const char* name, const char* expression, const RooArgList& args, const char* intExpression=0) ;
+  static bool makeAndCompilePdf(const char* name, const char* expression, const RooArgList& vars, const char* intExpression=nullptr) ;
+  static bool makeAndCompileFunction(const char* name, const char* expression, const RooArgList& args, const char* intExpression=nullptr) ;
 
-  static Bool_t makePdf(const char* name, const char* realArgNames=0, const char* catArgNames=0, 
-			const char* expression="1.0", Bool_t hasAnaInt=kFALSE, Bool_t hasIntGen=kFALSE, const char* intExpression=0) ;
-  static Bool_t makeFunction(const char* name, const char* realArgNames=0, const char* catArgNames=0, 
-			     const char* expression="1.0", Bool_t hasAnaInt=kFALSE, const char* intExpression=0) ;
-  static Bool_t makeClass(const char* className, const char* name, const char* realArgNames=0, const char* catArgNames=0, 
-			  const char* expression="1.0", Bool_t hasAnaInt=kFALSE, Bool_t hasIntGen=kFALSE, const char* intExpression=0) ;
+  static bool makePdf(const char* name, const char* realArgNames=nullptr, const char* catArgNames=nullptr,
+         const char* expression="1.0", bool hasAnaInt=false, bool hasIntGen=false, const char* intExpression=nullptr) ;
+  static bool makeFunction(const char* name, const char* realArgNames=nullptr, const char* catArgNames=nullptr,
+              const char* expression="1.0", bool hasAnaInt=false, const char* intExpression=nullptr) ;
+  static bool makeClass(const char* className, const char* name, const char* realArgNames=nullptr, const char* catArgNames=nullptr,
+           const char* expression="1.0", bool hasAnaInt=false, bool hasIntGen=false, const char* intExpression=nullptr) ;
 
-  class ClassFacIFace : public RooFactoryWSTool::IFace {
-  public:
-    std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) ;
-  } ;
-  
 protected:
 
 
-  
-  RooClassFactory(const RooClassFactory&) ;
 
-  ClassDef(RooClassFactory,0) // RooFit class code and instance factory 
+  RooClassFactory(const RooClassFactory&) ;
 } ;
 
 #endif

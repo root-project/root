@@ -11,10 +11,13 @@
 #include "Minuit2/MnUserParameterState.h"
 #include "Minuit2/MnUserFcn.h"
 #include "Minuit2/FCNBase.h"
+#include "Minuit2/FCNGradientBase.h"
 #include "Minuit2/MnPosDef.h"
 #include "Minuit2/HessianGradientCalculator.h"
 #include "Minuit2/Numerical2PGradientCalculator.h"
 #include "Minuit2/InitialGradientCalculator.h"
+#include "Minuit2/AnalyticalGradientCalculator.h"
+#include "Minuit2/ExternalInternalGradientCalculator.h"
 #include "Minuit2/MinimumState.h"
 #include "Minuit2/VariableMetricEDMEstimator.h"
 #include "Minuit2/FunctionMinimum.h"
@@ -70,13 +73,20 @@ MnHesse::operator()(const FCNBase &fcn, const MnUserParameterState &state, unsig
    for (unsigned int i = 0; i < n; i++)
       x(i) = state.IntParameters()[i];
    double amin = mfcn(x);
-   Numerical2PGradientCalculator gc(mfcn, state.Trafo(), fStrategy);
    MinimumParameters par(x, amin);
+   // check if we can use analytical gradient
+   auto * gradFCN = dynamic_cast<const FCNGradientBase *>(&(fcn));
+   if (gradFCN) {
+      // no need to compute gradient here
+      MinimumState tmp = ComputeAnalytical(*gradFCN, MinimumState(par, MinimumError(MnAlgebraicSymMatrix(n), 1.), FunctionGradient(n),
+        state.Edm(), state.NFcn()), state.Trafo());
+      return MnUserParameterState(tmp, fcn.Up(), state.Trafo());
+   }
+   // case of numerical gradient
+   Numerical2PGradientCalculator gc(mfcn, state.Trafo(), fStrategy);
    FunctionGradient gra = gc(par);
-   MinimumState tmp =
-      (*this)(mfcn, MinimumState(par, MinimumError(MnAlgebraicSymMatrix(n), 1.), gra, state.Edm(), state.NFcn()),
+   MinimumState tmp = ComputeNumerical(mfcn, MinimumState(par, MinimumError(MnAlgebraicSymMatrix(n), 1.), gra, state.Edm(), state.NFcn()),
               state.Trafo(), maxcalls);
-
    return MnUserParameterState(tmp, fcn.Up(), state.Trafo());
 }
 
@@ -91,6 +101,91 @@ void MnHesse::operator()(const FCNBase &fcn, FunctionMinimum &min, unsigned int 
 }
 
 MinimumState MnHesse::operator()(const MnFcn &mfcn, const MinimumState &st, const MnUserTransformation &trafo,
+                                 unsigned int maxcalls) const
+{
+   // check first if we have an analytical gradient
+   if (st.Gradient().IsAnalytical()) {
+      // check if we can compute analytical Hessian
+      auto * gradFCN = dynamic_cast<const FCNGradientBase *>(&(mfcn.Fcn()));
+      if (gradFCN && gradFCN->HasHessian()) {
+         return ComputeAnalytical(*gradFCN, st, trafo);
+      }
+   }
+   // case of numerical computation or only analytical first derivatives
+   return ComputeNumerical(mfcn, st, trafo, maxcalls);
+}
+MinimumState MnHesse::ComputeAnalytical(const FCNGradientBase & fcn, const MinimumState &st, const MnUserTransformation &trafo) const
+{
+   unsigned int n = st.Parameters().Vec().size();
+   MnAlgebraicSymMatrix vhmat(n);
+
+   MnPrint print("MnHesse");
+
+   const MnMachinePrecision &prec = trafo.Precision();
+
+   std::unique_ptr<AnalyticalGradientCalculator> hc;
+   if (fcn.gradParameterSpace() == GradientParameterSpace::Internal) {
+      hc = std::unique_ptr<AnalyticalGradientCalculator> (new ExternalInternalGradientCalculator(fcn,trafo));
+   }  else {
+      hc = std::make_unique<AnalyticalGradientCalculator>(fcn,trafo);
+   }
+
+   bool ret = hc->Hessian(st.Parameters(), vhmat);
+   if (!ret) {
+      print.Error("Error computing analytical Hessian. MnHesse fails and will return a null matrix");
+      return MinimumState(st.Parameters(), MinimumError(vhmat, MinimumError::MnHesseFailed), st.Gradient(), st.Edm(),
+                             st.NFcn());
+   }
+   MnAlgebraicVector g2(n);
+   for (unsigned int i = 0; i < n; i++)
+      g2(i) = vhmat(i,i);
+
+   // update Function gradient with new G2 found
+   FunctionGradient gr(st.Gradient().Grad(), g2);
+
+   // verify if matrix pos-def (still 2nd derivative)
+   print.Debug("Original error matrix", vhmat);
+
+   MinimumError tmpErr = MnPosDef()(MinimumError(vhmat, 1.), prec);
+   vhmat = tmpErr.InvHessian();
+
+   print.Debug("PosDef error matrix", vhmat);
+
+   int ifail = Invert(vhmat);
+   if (ifail != 0) {
+
+      print.Warn("Matrix inversion fails; will return diagonal matrix");
+
+      MnAlgebraicSymMatrix tmpsym(vhmat.Nrow());
+      for (unsigned int j = 0; j < n; j++) {
+         tmpsym(j,j) = 1. / g2(j);
+      }
+
+      return MinimumState(st.Parameters(), MinimumError(tmpsym, MinimumError::MnInvertFailed), gr, st.Edm(), st.NFcn());
+   }
+
+   VariableMetricEDMEstimator estim;
+
+   // if matrix is made pos def returns anyway edm
+   if (tmpErr.IsMadePosDef()) {
+      MinimumError err(vhmat, MinimumError::MnMadePosDef);
+      double edm = estim.Estimate(gr, err);
+      return MinimumState(st.Parameters(), err, gr, edm, st.NFcn());
+   }
+
+   // calculate edm for good errors
+   MinimumError err(vhmat, 0.);
+   // this use only grad values
+   double edm = estim.Estimate(gr, err);
+
+   print.Debug("Hessian is ACCURATE. New state:", "\n  First derivative:", st.Gradient().Grad(),
+                "\n  Covariance matrix:", vhmat, "\n  Edm:", edm);
+
+   return MinimumState(st.Parameters(), err, gr, edm, st.NFcn());
+}
+
+
+MinimumState MnHesse::ComputeNumerical(const MnFcn &mfcn, const MinimumState &st, const MnUserTransformation &trafo,
                                  unsigned int maxcalls) const
 {
    // internal interface from MinimumState and MnUserTransformation
@@ -118,11 +213,14 @@ MinimumState MnHesse::operator()(const MnFcn &mfcn, const MinimumState &st, cons
    // case gradient is not numeric (could be analytical or from FumiliGradientCalculator)
 
    if (st.Gradient().IsAnalytical()) {
+      print.Info("Using analytical gradient but a numerical Hessian calculator - it could be not optimal");
       Numerical2PGradientCalculator igc(mfcn, trafo, fStrategy);
+      // should we check here if numerical gradient is compatible with analytical one ?
       FunctionGradient tmp = igc(st.Parameters());
       gst = tmp.Gstep();
       dirin = tmp.Gstep();
       g2 = tmp.G2();
+      print.Warn("Analytical calculator ",grd," numerical ",tmp.Grad()," g2 ",g2);
    }
 
    MnAlgebraicVector x = st.Parameters().Vec();
@@ -218,8 +316,8 @@ MinimumState MnHesse::operator()(const MnFcn &mfcn, const MinimumState &st, cons
             vhmat(j, j) = tmp < prec.Eps2() ? 1. : tmp;
          }
 
-         return MinimumState(st.Parameters(), MinimumError(vhmat, MinimumError::MnHesseFailed), st.Gradient(), st.Edm(),
-                             mfcn.NumOfCalls());
+         return MinimumState(st.Parameters(), MinimumError(vhmat, MinimumError::MnReachedCallLimit), st.Gradient(),
+                             st.Edm(), mfcn.NumOfCalls());
       }
    }
 

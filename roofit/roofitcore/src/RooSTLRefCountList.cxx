@@ -32,9 +32,8 @@ RooSTLRefCountList<RooAbsArg> convert(const RooRefCountList& old) {
   RooSTLRefCountList<RooAbsArg> newList;
   newList.reserve(old.GetSize());
 
-  auto it = old.fwdIterator();
-  for (RooAbsArg * elm = it.next(); elm != nullptr; elm = it.next()) {
-    newList.Add(elm, old.refCount(elm));
+  for(TObject * elm : old) {
+    newList.Add(static_cast<RooAbsArg*>(elm), old.refCount(elm));
   }
 
   return newList;

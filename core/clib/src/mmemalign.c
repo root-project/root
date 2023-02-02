@@ -21,11 +21,7 @@ Boston, MA 02111-1307, USA.  */
 
 #include "mmprivate.h"
 
-PTR
-mmemalign (md, alignment, size)
-  PTR md;
-  size_t alignment;
-  size_t size;
+PTR mmemalign(PTR md, size_t alignment, size_t size)
 {
    PTR result;
    unsigned long int adj;

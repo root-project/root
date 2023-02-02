@@ -31,7 +31,7 @@ protected:
 
 public:
    TRandom(UInt_t seed=65539);
-   virtual ~TRandom();
+   ~TRandom() override;
    virtual  Int_t    Binomial(Int_t ntot, Double_t prob);
    virtual  Double_t BreitWigner(Double_t mean=0, Double_t gamma=1);
    virtual  void     Circle(Double_t &x, Double_t &y, Double_t r);
@@ -46,7 +46,7 @@ public:
    virtual  void     Rannor(Double_t &a, Double_t &b);
    virtual  void     ReadRandom(const char *filename);
    virtual  void     SetSeed(ULong_t seed=0);
-   virtual  Double_t Rndm();
+    Double_t Rndm() override;
    // keep for backward compatibility
    virtual  Double_t Rndm(Int_t ) { return Rndm(); }
    virtual  void     RndmArray(Int_t n, Float_t *array);
@@ -56,7 +56,7 @@ public:
    virtual  Double_t Uniform(Double_t x1, Double_t x2);
    virtual  void     WriteRandom(const char *filename) const;
 
-   ClassDef(TRandom,3)  //Simple Random number generator (periodicity = 10**9)
+   ClassDefOverride(TRandom,3)  //Simple Random number generator (periodicity = 10**9)
 };
 
 R__EXTERN TRandom *gRandom;

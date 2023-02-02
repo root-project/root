@@ -33,14 +33,14 @@ namespace RooStats{
 
   public:
 
-    ~SPlot();
+    ~SPlot() override;
     SPlot();
     SPlot(const SPlot &other);
     SPlot(const char* name, const char* title);
     SPlot(const char* name, const char* title, const RooDataSet &data);
     SPlot(const char* name, const char* title,RooDataSet& data, RooAbsPdf* pdf,
      const RooArgList &yieldsList,const RooArgSet &projDeps=RooArgSet(),
-     bool useWeights=kTRUE, bool copyDataSet = kFALSE, const char* newName = "",
+     bool useWeights=true, bool copyDataSet = false, const char* newName = "",
      const RooCmdArg& fitToarg5=RooCmdArg::none(),
      const RooCmdArg& fitToarg6=RooCmdArg::none(),
      const RooCmdArg& fitToarg7=RooCmdArg::none(),
@@ -55,17 +55,17 @@ namespace RooStats{
     Int_t GetNumSWeightVars() const;
 
     void AddSWeight(RooAbsPdf* pdf, const RooArgList &yieldsTmp,
-          const RooArgSet &projDeps=RooArgSet(), bool includeWeights=kTRUE,
+          const RooArgSet &projDeps=RooArgSet(), bool includeWeights=true,
           const RooCmdArg& fitToarg5=RooCmdArg::none(),
           const RooCmdArg& fitToarg6=RooCmdArg::none(),
           const RooCmdArg& fitToarg7=RooCmdArg::none(),
           const RooCmdArg& fitToarg8=RooCmdArg::none());
 
-    Double_t GetSumOfEventSWeight(Int_t numEvent) const;
+    double GetSumOfEventSWeight(Int_t numEvent) const;
 
-    Double_t GetYieldFromSWeight(const char* sVariable) const;
+    double GetYieldFromSWeight(const char* sVariable) const;
 
-    Double_t GetSWeight(Int_t numEvent, const char* sVariable) const;
+    double GetSWeight(Int_t numEvent, const char* sVariable) const;
 
 
 
@@ -81,7 +81,7 @@ namespace RooStats{
 
     RooDataSet* fSData;
 
-    ClassDef(SPlot,1)   // Class used for making sPlots
+    ClassDefOverride(SPlot,1)   // Class used for making sPlots
 
 
       };

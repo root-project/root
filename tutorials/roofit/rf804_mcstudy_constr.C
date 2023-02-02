@@ -13,7 +13,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 #include "RooProdPdf.h"
@@ -45,7 +44,7 @@ void rf804_mcstudy_constr()
    RooAddPdf sum("sum", "sum", RooArgSet(g, p), f);
 
    // Construct constraint on parameter f
-   RooGaussian fconstraint("fconstraint", "fconstraint", f, RooConst(0.7), RooConst(0.1));
+   RooGaussian fconstraint("fconstraint", "fconstraint", f, 0.7, 0.1);
 
    // Multiply constraint with pdf
    RooProdPdf sumc("sumc", "sum with constraint", RooArgSet(sum, fconstraint));
@@ -62,7 +61,7 @@ void rf804_mcstudy_constr()
    mcs.generateAndFit(500, 2000);
 
    // Make plot of distribution of generated value of f parameter
-   TH1 *h_f_gen = mcs.fitParDataSet().createHistogram("f_gen", -40);
+   TH1 *h_f_gen = mcs.fitParDataSet().createHistogram("f_gen", AutoBinning(40));
 
    // Make plot of distribution of fitted value of f parameter
    RooPlot *frame1 = mcs.plotParam(f, Bins(40));

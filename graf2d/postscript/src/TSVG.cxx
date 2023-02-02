@@ -80,7 +80,7 @@ using the file extension `.svgz`.
 
 TSVG::TSVG() : TVirtualPS()
 {
-   fStream      = 0;
+   fStream      = nullptr;
    fType        = 0;
    gVirtualPS   = this;
    fBoundingBox = kFALSE;
@@ -102,7 +102,7 @@ TSVG::TSVG() : TVirtualPS()
 
 TSVG::TSVG(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 {
-   fStream = 0;
+   fStream = nullptr;
    SetTitle("SVG");
    Open(fname, wtype);
 }
@@ -138,9 +138,9 @@ void TSVG::Open(const char *fname, Int_t wtype)
 
    // Open OS file
    fStream   = new std::ofstream(fname,std::ios::out);
-   if (fStream == 0 || !fStream->good()) {
+   if (!fStream || !fStream->good()) {
       printf("ERROR in TSVG::Open: Cannot open file:%s\n",fname);
-      if (fStream == 0) return;
+      if (!fStream) return;
    }
 
    gVirtualPS = this;
@@ -176,9 +176,9 @@ void TSVG::Close(Option_t *)
    PrintStr("</svg>@");
 
    // Close file stream
-   if (fStream) { fStream->close(); delete fStream; fStream = 0;}
+   if (fStream) { fStream->close(); delete fStream; fStream = nullptr;}
 
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,7 +202,7 @@ void TSVG::On()
 
 void TSVG::Off()
 {
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1502,8 +1502,8 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the SVG file. The main task of the function is to output the
-/// SVG header file which consist in <title>, <desc> and <defs>. The
-/// HeaderPS provided by the user program is written in the <defs> part.
+/// SVG header file which consist in `<title>`, `<desc>` and `<defs>`. The
+/// HeaderPS provided by the user program is written in the `<defs>` part.
 
 void TSVG::Initialize()
 {
@@ -1558,7 +1558,7 @@ void TSVG::MovePS(Double_t ix, Double_t iy)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Start the SVG page. This function initialize the pad conversion
-/// coefficients and output the <svg> directive which is close later in the
+/// coefficients and output the `<svg>` directive which is close later in the
 /// the function Close.
 
 void TSVG::NewPage()

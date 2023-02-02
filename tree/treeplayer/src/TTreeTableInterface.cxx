@@ -205,7 +205,6 @@ void TTreeTableInterface::InitEntries()
    UInt_t ui = 0;
    Int_t i = 0;
 
-   Long64_t notSkipped = 0;
    Int_t tnumber = -1;
    Long64_t entry = fFirstEntry;
    Int_t entriesToDisplay = fNEntries;
@@ -251,7 +250,6 @@ void TTreeTableInterface::InitEntries()
       }
       if (!skip){
          entrylist->Enter(entry);
-         notSkipped++;
          entriesToDisplay--;
          entry++;
       }

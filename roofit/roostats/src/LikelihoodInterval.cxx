@@ -65,12 +65,6 @@
 #include <functional>
 #include <ctype.h>   // need to use c version of toupper defined here
 
-/*
-// for debugging
-#include "RooNLLVar.h"
-#include "RooDataSet.h"
-#include "RooAbsData.h"
-*/
 
 ClassImp(RooStats::LikelihoodInterval); ;
 
@@ -114,7 +108,7 @@ LikelihoodInterval::~LikelihoodInterval()
 /// This is the main method to satisfy the RooStats::ConfInterval interface.
 /// It returns true if the parameter point is in the interval.
 
-Bool_t LikelihoodInterval::IsInInterval(const RooArgSet &parameterPoint) const
+bool LikelihoodInterval::IsInInterval(const RooArgSet &parameterPoint) const
 {
    RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
    RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
@@ -170,7 +164,7 @@ RooArgSet* LikelihoodInterval::GetParameters() const
 ////////////////////////////////////////////////////////////////////////////////
 /// check that the parameters are correct
 
-Bool_t LikelihoodInterval::CheckParameters(const RooArgSet &parameterPoint) const
+bool LikelihoodInterval::CheckParameters(const RooArgSet &parameterPoint) const
 {
   if (parameterPoint.getSize() != fParameters.getSize() ) {
     std::cout << "size is wrong, parameters don't match" << std::endl;
@@ -191,7 +185,7 @@ Bool_t LikelihoodInterval::CheckParameters(const RooArgSet &parameterPoint) cons
 /// and is true if calculation is successful
 /// in case of error return also a lower limit value of zero
 
-Double_t LikelihoodInterval::LowerLimit(const RooRealVar& param, bool & status)
+double LikelihoodInterval::LowerLimit(const RooRealVar& param, bool & status)
 {
    double lower = 0;
    double upper = 0;
@@ -205,7 +199,7 @@ Double_t LikelihoodInterval::LowerLimit(const RooRealVar& param, bool & status)
 /// and is true if calculation is successful
 /// in case of error return also a lower limit value of zero
 
-Double_t LikelihoodInterval::UpperLimit(const RooRealVar& param, bool & status)
+double LikelihoodInterval::UpperLimit(const RooRealVar& param, bool & status)
 {
    double lower = 0;
    double upper = 0;
@@ -257,7 +251,7 @@ bool LikelihoodInterval::CreateMinimizer() {
    // now do binding of NLL with a functor for Minimizer
    if (config.useLikelihoodOffset) {
       ccoutI(InputArguments) << "LikelihoodInterval: using nll offset - set all RooAbsReal to hide the offset  " << std::endl;
-      RooAbsReal::setHideOffset(kFALSE); // need to keep this false
+      RooAbsReal::setHideOffset(false); // need to keep this false
    }
    fFunctor = std::make_shared<RooFunctor>(nll, RooArgSet(), params);
 
@@ -375,7 +369,7 @@ bool LikelihoodInterval::FindLimits(const RooRealVar & param, double &lower, dou
 }
 
 
-Int_t LikelihoodInterval::GetContourPoints(const RooRealVar & paramX, const RooRealVar & paramY, Double_t * x, Double_t *y, Int_t npoints ) {
+Int_t LikelihoodInterval::GetContourPoints(const RooRealVar & paramX, const RooRealVar & paramY, double * x, double *y, Int_t npoints ) {
    // use Minuit to find the contour of the likelihood function at the desired CL
 
    // check the parameters

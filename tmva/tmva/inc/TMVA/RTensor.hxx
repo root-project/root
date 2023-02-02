@@ -187,7 +187,7 @@ public:
    /// \param[in] shape Shape vector
    /// \param[in] layout Memory layout
    RTensor(Value_t *data, Shape_t shape, MemoryLayout layout = MemoryLayout::RowMajor)
-      : fShape(shape), fLayout(layout), fData(data), fContainer(NULL)
+      : fShape(shape), fLayout(layout), fData(data), fContainer(nullptr)
    {
       fSize = Internal::GetSizeFromShape(shape);
       fStrides = Internal::ComputeStridesFromShape(shape, layout);
@@ -199,7 +199,7 @@ public:
    /// \param[in] strides Strides vector
    /// \param[in] layout Memory layout
    RTensor(Value_t *data, Shape_t shape, Shape_t strides, MemoryLayout layout = MemoryLayout::RowMajor)
-      : fShape(shape), fStrides(strides), fLayout(layout), fData(data), fContainer(NULL)
+      : fShape(shape), fStrides(strides), fLayout(layout), fData(data), fContainer(nullptr)
    {
       fSize = Internal::GetSizeFromShape(shape);
    }
@@ -246,7 +246,7 @@ public:
    std::shared_ptr<Container_t> GetContainer() { return fContainer; }
    const std::shared_ptr<Container_t> GetContainer() const { return fContainer; }
    MemoryLayout GetMemoryLayout() const { return fLayout; }
-   bool IsView() const { return fContainer == NULL; }
+   bool IsView() const { return fContainer == nullptr; }
    bool IsOwner() const { return !IsView(); }
 
    // Copy
@@ -257,15 +257,19 @@ public:
    RTensor<Value_t, Container_t> Squeeze() const;
    RTensor<Value_t, Container_t> ExpandDims(int idx) const;
    RTensor<Value_t, Container_t> Reshape(const Shape_t &shape) const;
-   RTensor<Value_t, Container_t> Slice(const Slice_t &slice); 
+   RTensor<Value_t, Container_t> Slice(const Slice_t &slice);
 
    // Iterator class
-   class Iterator : public std::iterator<std::random_access_iterator_tag, Value_t> {
+   class Iterator {
    private:
       RTensor<Value_t, Container_t>& fTensor;
       Index_t::value_type fGlobalIndex;
    public:
-      using difference_type = typename std::iterator<std::random_access_iterator_tag, Value_t>::difference_type;
+      using iterator_category = std::random_access_iterator_tag;
+      using value_type = Value_t;
+      using difference_type = std::ptrdiff_t;
+      using pointer = Value_t *;
+      using reference = Value_t &;
 
       Iterator(RTensor<Value_t, Container_t>& x, typename Index_t::value_type idx) : fTensor(x), fGlobalIndex(idx) {}
       Iterator& operator++() { fGlobalIndex++; return *this; }

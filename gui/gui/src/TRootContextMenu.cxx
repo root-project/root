@@ -728,7 +728,7 @@ Bool_t TRootContextMenu::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_
                   const char *args = fDialog->GetParameters();
                   GetContextMenu()->Execute((char *)args);
                   delete fDialog;
-                  fDialog = 0;
+                  fDialog = nullptr;
                }
                if (parm1 == 2) {
                   const char *args = fDialog->GetParameters();
@@ -736,7 +736,7 @@ Bool_t TRootContextMenu::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_
                }
                if (parm1 == 3) {
                   delete fDialog;
-                  fDialog = 0;
+                  fDialog = nullptr;
                }
                if (parm1 == 4) {
                   OnlineHelp();
@@ -757,7 +757,7 @@ Bool_t TRootContextMenu::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_
                   const char *args = fDialog->GetParameters();
                   GetContextMenu()->Execute((char *)args);
                   delete fDialog;
-                  fDialog = 0;
+                  fDialog = nullptr;
                }
                break;
 

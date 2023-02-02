@@ -7,8 +7,7 @@
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C version)
 
 import ROOT
 from array import array
@@ -57,8 +56,7 @@ dh = ROOT.RooDataHist("dh", "dh", [x], Import=hh)
 
 # Plot and fit a RooDataHist
 # ---------------------------------------------------
-# Make plot of binned dataset showing Poisson error bars (ROOT.RooFit
-# default)
+# Make plot of binned dataset showing Poisson error bars (RooFit default)
 frame = x.frame(Title="Imported ROOT.TH1 with Poisson error bars")
 dh.plotOn(frame)
 
@@ -76,7 +74,7 @@ gauss.plotOn(frame)
 # but e.g. is a sum of weighted events) you can data with symmetric 'sum-of-weights' error instead
 # (same error bars as shown by ROOT)
 frame2 = x.frame(Title="Imported ROOT.TH1 with internal errors")
-dh.plotOn(frame2, DataError=ROOT.RooAbsData.SumW2)
+dh.plotOn(frame2, DataError="SumW2")
 gauss.plotOn(frame2)
 
 # Please note that error bars shown (Poisson or SumW2) are for visualization only, the are NOT used
@@ -103,7 +101,7 @@ y = ROOT.RooRealVar("y", "y", -10, 10)
 # and RRV y defines a range [-10,10] this means that the ROOT.RooDataSet
 # below will have less entries than the ROOT.TTree 'tree'
 
-ds = ROOT.RooDataSet("ds", "ds", {x, y}, ROOT.RooFit.Import(tree))
+ds = ROOT.RooDataSet("ds", "ds", {x, y}, Import=tree)
 
 # Use ascii import/export for datasets
 # ------------------------------------------------------------------------------------

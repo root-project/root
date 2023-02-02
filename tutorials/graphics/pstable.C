@@ -7,7 +7,7 @@
 ///
 /// \author Olivier Couet
 
-void table(Float_t x1, Float_t x2, Float_t yrange, TText *t, const char **symbol, Bool_t octal);
+void table(Float_t x1, Float_t x2, Float_t yrange, TText &t, const char **symbol, Bool_t octal);
 
 void pstable()
 {
@@ -55,18 +55,18 @@ void pstable()
    TCanvas *c1 = new TCanvas("c1","c1",200,10,w,h);
    c1->Range(0,0,xrange,yrange);
 
-   TText *t = new TText(0,0,"a");
-   t->SetTextSize(0.02);
-   t->SetTextFont(62);
-   t->SetTextAlign(22);
+   TText t(0,0,"a");
+   t.SetTextSize(0.02);
+   t.SetTextFont(62);
+   t.SetTextAlign(22);
 
    table(0.5,0.5*xrange-0.5,yrange,t,symbol1,0);
    table(0.5*xrange+0.5,xrange-0.5,yrange,t,symbol2,0);
-   TText *tlabel = new TText(0,0,"a");
-   tlabel->SetTextFont(72);
-   tlabel->SetTextSize(0.018);
-   tlabel->SetTextAlign(22);
-   tlabel->DrawText(0.5*xrange,1.3,
+   TText tlabel(0,0,"a");
+   tlabel.SetTextFont(72);
+   tlabel.SetTextSize(0.018);
+   tlabel.SetTextAlign(22);
+   tlabel.DrawText(0.5*xrange,1.3,
       "Input characters are standard keyboard characters");
    c1->Modified();
    c1->Update();
@@ -77,7 +77,7 @@ void pstable()
 
    table(0.5,0.5*xrange-0.5,yrange,t,symbol3,1);
    table(0.5*xrange+0.5,xrange-0.5,yrange,t,symbol4,1);
-   tlabel->DrawText(0.5*xrange,1.3,
+   tlabel.DrawText(0.5*xrange,1.3,
       "Input characters using backslash and octal numbers");
    c2->Modified();
    c2->Update();
@@ -87,13 +87,13 @@ void pstable()
    c3->Range(0,0,xrange,yrange);
 
    table(0.5,0.5*xrange-0.5,yrange,t,symbol5,1);
-   tlabel->DrawText(0.5*xrange,1.3,
+   tlabel.DrawText(0.5*xrange,1.3,
       "Input characters using backslash and octal numbers");
    c3->Modified();
    c3->Update();
    c3->Print("pstable3.ps");
 }
-void table(Float_t x1, Float_t x2, Float_t yrange, TText *t,
+void table(Float_t x1, Float_t x2, Float_t yrange, TText &t,
    const char **symbol, Bool_t octal)
 {
    Int_t i;
@@ -112,25 +112,25 @@ void table(Float_t x1, Float_t x2, Float_t yrange, TText *t,
    Float_t xc2 = xc1 + dx;
    Float_t xc3 = xc2 + dx;
    Float_t xc4 = xc3 + dx;
-   TLine *line = new TLine();
-   line->DrawLine(x1,y1,x1,y2);
-   line->DrawLine(x1,y1,x2,y1);
-   line->DrawLine(x1,y2,x2,y2);
-   line->DrawLine(x2,y1,x2,y2);
-   line->DrawLine(x1,y2-1,x2,y2-1);
-   line->DrawLine(x1+  dx,y1,x1+  dx,y2);
-   line->DrawLine(x1+2*dx,y1,x1+2*dx,y2);
-   line->DrawLine(x1+3*dx,y1,x1+3*dx,y2);
-   line->DrawLine(x1+4*dx,y1,x1+4*dx,y2);
-   TText *tit = new TText(0,0,"a");
-   tit->SetTextSize(0.015);
-   tit->SetTextFont(72);
-   tit->SetTextAlign(22);
-   tit->DrawText(xc0,y2-0.6,"Input");
-   tit->DrawText(xc1,y2-0.6,"Roman");
-   tit->DrawText(xc2,y2-0.6,"Greek");
-   tit->DrawText(xc3,y2-0.6,"Special");
-   tit->DrawText(xc4,y2-0.6,"Zapf");
+   TLine line;
+   line.DrawLine(x1,y1,x1,y2);
+   line.DrawLine(x1,y1,x2,y1);
+   line.DrawLine(x1,y2,x2,y2);
+   line.DrawLine(x2,y1,x2,y2);
+   line.DrawLine(x1,y2-1,x2,y2-1);
+   line.DrawLine(x1+  dx,y1,x1+  dx,y2);
+   line.DrawLine(x1+2*dx,y1,x1+2*dx,y2);
+   line.DrawLine(x1+3*dx,y1,x1+3*dx,y2);
+   line.DrawLine(x1+4*dx,y1,x1+4*dx,y2);
+   TText tit(0,0,"a");
+   tit.SetTextSize(0.015);
+   tit.SetTextFont(72);
+   tit.SetTextAlign(22);
+   tit.DrawText(xc0,y2-0.6,"Input");
+   tit.DrawText(xc1,y2-0.6,"Roman");
+   tit.DrawText(xc2,y2-0.6,"Greek");
+   tit.DrawText(xc3,y2-0.6,"Special");
+   tit.DrawText(xc4,y2-0.6,"Zapf");
    char text[12];
    for (i=0;i<n;i++) {
       if (octal) {
@@ -139,15 +139,15 @@ void table(Float_t x1, Float_t x2, Float_t yrange, TText *t,
       } else {
          strcpy(text,symbol[i]);
       }
-      t->DrawText(xc0,y,text);
+      t.DrawText(xc0,y,text);
       sprintf(text,"%s",symbol[i]);
-      t->DrawText(xc1,y,text);
+      t.DrawText(xc1,y,text);
       sprintf(text,"`%s",symbol[i]);
-      t->DrawText(xc2,y,text);
+      t.DrawText(xc2,y,text);
       sprintf(text,"'%s",symbol[i]);
-      t->DrawText(xc3,y,text);
+      t.DrawText(xc3,y,text);
       sprintf(text,"~%s",symbol[i]);
-      t->DrawText(xc4,y,text);
+      t.DrawText(xc4,y,text);
       y -= dy;
    }
 }

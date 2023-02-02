@@ -48,7 +48,7 @@ void StatusPrint(const Int_t id, const TString &title, const Int_t status, const
 ////////////////////////////////////////////////////////////////////////////////
 /// width of lines when printing test results
 
-Int_t stressHistFactory(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t allTests, Bool_t oneTest, Int_t testNumber, Bool_t dryRun)
+Int_t stressHistFactory(const char* refFile, bool writeRef, Int_t verbose, bool allTests, bool oneTest, Int_t testNumber, bool dryRun)
 {
    const Int_t lineWidth = 120;
 
@@ -134,15 +134,11 @@ Int_t stressHistFactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
 
 
    //Print table with results
-   Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
+   bool UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
    cout << setw(lineWidth) << setfill('*') << "" << endl;
    if (UNIX) {
       TString sp = gSystem->GetFromPipe("uname -a");
       cout << "* SYS: " << sp << endl;
-      if (strstr(gSystem->GetBuildNode(), "Linux")) {
-         sp = gSystem->GetFromPipe("lsb_release -d -s");
-         cout << "* SYS: " << sp << endl;
-      }
       if (strstr(gSystem->GetBuildNode(), "Darwin")) {
          sp  = gSystem->GetFromPipe("sw_vers -productVersion");
          sp += " Mac OS X ";
@@ -184,14 +180,14 @@ Int_t stressHistFactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
 
 int main(int argc, const char *argv[])
 {
-   Bool_t doWrite     = kFALSE;
+   bool doWrite     = false;
    Int_t  verbose     =      0;
-   Bool_t allTests    = kFALSE;
-   Bool_t oneTest     = kFALSE;
+   bool allTests    = false;
+   bool oneTest     = false;
    Int_t testNumber   =      0;
-   Bool_t dryRun      = kFALSE;
+   bool dryRun      = false;
 
-   string refFileName = "$ROOTSYS/test/stressHistFactory_ref.root" ;
+   string refFileName = "stressHistFactory_ref.root" ;
 
 
    // Parse command line arguments
@@ -203,10 +199,10 @@ int main(int argc, const char *argv[])
          refFileName = argv[++i] ;
       } else if (arg == "-w") {
          cout << "stressHistFactory: running in writing mode to update reference file" << endl ;
-         doWrite = kTRUE ;
+         doWrite = true ;
       } else if (arg == "-mc") {
          cout << "stressHistFactory: running in memcheck mode, no regression tests are performed" << endl;
-         dryRun = kTRUE;
+         dryRun = true;
       } else if (arg == "-v") {
          cout << "stressHistFactory: running in verbose mode" << endl;
          verbose = 1;
@@ -215,10 +211,10 @@ int main(int argc, const char *argv[])
          verbose = 2;
       } else if (arg == "-a") {
          cout << "stressHistFactory: deploying full suite of tests" << endl;
-         allTests = kTRUE;
+         allTests = true;
       } else if (arg == "-n") {
          cout << "stressHistFactory: running single test" << endl;
-         oneTest = kTRUE;
+         oneTest = true;
          testNumber = atoi(argv[++i]);
       } else if (arg == "-d") {
          cout << "stressHistFactory: setting gDebug to " << argv[i + 1] << endl;
@@ -248,14 +244,14 @@ int main(int argc, const char *argv[])
 
 Int_t stressHistFactory()
 {
-   Bool_t doWrite     = kFALSE;
+   bool doWrite     = false;
    Int_t  verbose     =      0;
-   Bool_t allTests    = kFALSE;
-   Bool_t oneTest     = kFALSE;
+   bool allTests    = false;
+   bool oneTest     = false;
    Int_t testNumber   =      0;
-   Bool_t dryRun      = kFALSE;
+   bool dryRun      = false;
 
-   string refFileName = "$ROOTSYS/test/stressHistFactory_ref.root" ;
+   string refFileName = "stressHistFactory_ref.root" ;
    return stressHistFactory(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun);
 }
 

@@ -21,20 +21,20 @@ namespace RooStats {
       Heaviside(const char *name, const char *title,
             RooAbsReal& _x,
             RooAbsReal& _c);
-      Heaviside(const Heaviside& other, const char* name=0) ;
-      virtual TObject* clone(const char* newname) const { return new Heaviside(*this,newname); }
-      inline virtual ~Heaviside() { }
+      Heaviside(const Heaviside& other, const char* name=nullptr) ;
+      TObject* clone(const char* newname) const override { return new Heaviside(*this,newname); }
+      inline ~Heaviside() override { }
 
    protected:
 
       RooRealProxy x ;
       RooRealProxy c ;
 
-      Double_t evaluate() const ;
+      double evaluate() const override ;
 
    private:
 
-      ClassDef(Heaviside,1) // Your description goes here...
+      ClassDefOverride(Heaviside,1) // Your description goes here...
    };
 }
 

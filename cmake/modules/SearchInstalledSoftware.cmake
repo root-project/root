@@ -6,6 +6,7 @@
 
 #---Check for installed packages depending on the build options/components enabled --
 include(CheckCXXSourceCompiles)
+include(CheckIncludeFileCXX)
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
@@ -70,15 +71,38 @@ endif()
 if(NOT builtin_nlohmannjson)
   message(STATUS "Looking for nlohmann/json.hpp")
   if(fail-on-missing)
-    find_package(nlohmann_json REQUIRED)
+    find_package(nlohmann_json 3.9 REQUIRED)
   else()
-    find_package(nlohmann_json QUIET)
+    find_package(nlohmann_json 3.9 QUIET)
     if(nlohmann_json_FOUND)
       get_target_property(_nlohmann_json_incl nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
       message(STATUS "Found nlohmann/json.hpp in ${_nlohmann_json_incl} (found version ${nlohmann_json_VERSION})")
     else()
       message(STATUS "nlohmann/json.hpp not found. Switching on builtin_nlohmannjson option")
       set(builtin_nlohmannjson ON CACHE BOOL "Enabled because nlohmann/json.hpp not found" FORCE)
+    endif()
+
+    # If we found an external nlohmann_json with a version greater than 3.11,
+    # check that it has the json_fwd.hpp header.
+    if(nlohmann_json_FOUND AND nlohmann_json_VERSION VERSION_GREATER_EQUAL 3.11)
+      set(_old_CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
+      set(_old_CMAKE_REQUIRED_QUIET ${CMAKE_REQUIRED_QUIET})
+
+      set(CMAKE_REQUIRED_LIBRARIES nlohmann_json::nlohmann_json)
+      set(CMAKE_REQUIRED_QUIET TRUE)
+      check_include_file_cxx("nlohmann/json_fwd.hpp" _nlohmann_json_fwd_hpp)
+      if(NOT _nlohmann_json_fwd_hpp)
+        set(_msg "Could not find nlohmann/json_fwd.hpp, which is required for versions greater than 3.11.")
+        if(nlohmann_json_VERSION VERSION_LESS 3.11.2)
+          set(_msg "${_msg} Please upgrade to at least version 3.11.2.")
+        else()
+          set(_msg "${_msg} It is installed by default, so your installation is incomplete!")
+        endif()
+        message(FATAL_ERROR "${_msg}")
+      endif()
+
+      set(CMAKE_REQUIRED_LIBRARIES ${_old_CMAKE_REQUIRED_LIBRARIES})
+      set(CMAKE_REQUIRED_QUIET ${_old_CMAKE_REQUIRED_QUIET})
     endif()
   endif()
 endif()
@@ -119,7 +143,7 @@ if(NOT builtin_freetype)
 endif()
 
 if(builtin_freetype)
-  set(freetype_version 2.6.1)
+  set(freetype_version 2.12.1)
   message(STATUS "Building freetype version ${freetype_version} included in ROOT itself")
   set(FREETYPE_LIBRARY ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
@@ -131,7 +155,7 @@ if(builtin_freetype)
     ExternalProject_Add(
       FREETYPE
       URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
-      URL_HASH SHA256=0a3c7dfbda6da1e8fce29232e8e96d987ababbbf71ebc8c75659e4132c367014
+      URL_HASH SHA256=efe71fd4b8246f1b0b1b9bfca13cfff1c9ad85930340c27df469733bbb620938
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
       BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${freetypebuild}
@@ -146,16 +170,17 @@ if(builtin_freetype)
     if(CMAKE_SYSTEM_NAME STREQUAL AIX)
       set(_freetype_zlib --without-zlib)
     endif()
+    set(_freetype_brotli "--with-brotli=no")
     if(CMAKE_OSX_SYSROOT)
       set(_freetype_cc "${_freetype_cc} -isysroot ${CMAKE_OSX_SYSROOT}")
     endif()
     ExternalProject_Add(
       FREETYPE
       URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
-      URL_HASH SHA256=0a3c7dfbda6da1e8fce29232e8e96d987ababbbf71ebc8c75659e4132c367014
+      URL_HASH SHA256=efe71fd4b8246f1b0b1b9bfca13cfff1c9ad85930340c27df469733bbb620938
       CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic
                          --disable-shared --with-png=no --with-bzip2=no
-                         --with-harfbuzz=no ${_freetype_zlib}
+                         --with-harfbuzz=no ${_freetype_brotli} ${_freetype_zlib}
                           "CC=${_freetype_cc}" CFLAGS=${_freetype_cflags}
       INSTALL_COMMAND ""
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
@@ -214,7 +239,7 @@ if(builtin_lzma)
   message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
   if(WIN32)
     set(LIBLZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
-    if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
       set(LZMA_URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win64.tar.gz)
       set(LZMA_URL_HASH SHA256=76ba7cdff547141f6d6810c8600a9d782feca343debde378fc8f6a307cbfd1d2)
     else()
@@ -1045,6 +1070,16 @@ if(arrow)
       message(STATUS "For the time being switching OFF 'arrow' option")
       set(arrow OFF CACHE BOOL "Disabled because Apache Arrow API not found (${arrow_description})" FORCE)
     endif()
+  else()
+    if(${ARROW_VERSION} VERSION_GREATER_EQUAL 10.0.0 AND CMAKE_CXX_STANDARD LESS 17)
+      if(fail-on-missing)
+        message(FATAL_ERROR "The Apache Arrow version found on the system (${ARROW_VERSION}) requires at least CMAKE_CXX_STANDARD=17")
+      else()
+        message(STATUS "The Apache Arrow version found on the system (${ARROW_VERSION}) requires at least CMAKE_CXX_STANDARD=17")
+        message(STATUS "For the time being switching OFF 'arrow' option")
+        set(arrow OFF CACHE BOOL "Disabled because Apache Arrow Version ${ARROW_VERSION} requires CMAKE_CXX_STANDARD=17)" FORCE)
+      endif()
+    endif()
   endif()
 
 endif()
@@ -1166,6 +1201,7 @@ if(builtin_davix)
   else()
     list(APPEND ROOT_BUILTINS Davix)
     add_subdirectory(builtins/davix)
+    set(davix ON CACHE BOOL "Enabled because builtin_davix is enabled)" FORCE)
   endif()
 endif()
 
@@ -1306,7 +1342,7 @@ if(builtin_tbb)
   endif()
   if(MSVC)
     set(vsdir "vs2013")
-    if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
       set(tbb_arch x64)
     else()
       set(tbb_arch Win32)
@@ -1406,7 +1442,7 @@ if(vc AND NOT Vc_FOUND AND NO_CONNECTION)
 endif()
 
 if(vc AND NOT Vc_FOUND)
-  set(Vc_VERSION "1.4.1")
+  set(Vc_VERSION "1.4.3")
   set(Vc_PROJECT "Vc-${Vc_VERSION}")
   set(Vc_SRC_URI "${lcgpackages}/${Vc_PROJECT}.tar.gz")
   set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/externals")
@@ -1414,14 +1450,9 @@ if(vc AND NOT Vc_FOUND)
   set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
   set(Vc_LIBRARY "${Vc_ROOTDIR}/lib/${Vc_LIBNAME}")
 
-  if(UNIX)
-    set(VC_PATCH_COMMAND patch -p1 < ${CMAKE_SOURCE_DIR}/cmake/patches/vc-deprecated-and-bit-scan-forward.patch)
-  endif()
-
   ExternalProject_Add(VC
     URL     ${Vc_SRC_URI}
-    URL_HASH SHA256=68e609a735326dc3625e98bd85258e1329fb2a26ce17f32c432723b750a4119f
-    PATCH_COMMAND ${VC_PATCH_COMMAND}
+    URL_HASH SHA256=988ea0053f3fbf17544ca776a2749c097b3139089408b0286fa4e9e8513e037f
     BUILD_IN_SOURCE 0
     BUILD_BYPRODUCTS ${Vc_LIBRARY}
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
@@ -1604,13 +1635,13 @@ if(vdt OR builtin_vdt)
     endif()
   endif()
   if(builtin_vdt)
-    set(vdt_version 0.4.3)
+    set(vdt_version 0.4.4)
     set(VDT_FOUND True)
     set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
       VDT
       URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
-      URL_HASH SHA256=705674612ebb5c182b65a8f61f4d173eb7fe7cdeee2235b402541a492e08ace1
+      URL_HASH SHA256=8b1664b45ec82042152f89d171dd962aea9bb35ac53c8eebb35df1cb9c34e498
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS
         -DSSE=OFF # breaks on ARM without this
@@ -1643,7 +1674,7 @@ endif()
 #---Check for VecGeom--------------------------------------------------------------------
 if (vecgeom)
   message(STATUS "Looking for VecGeom")
-  find_package(VecGeom ${VecGeom_FIND_VERSION} CONFIG QUIET)
+  find_package(VecGeom 1.2 CONFIG)
   if(builtin_veccore)
     message(WARNING "ROOT must be built against the VecCore installation that was used to build VecGeom; builtin_veccore cannot be used. Option VecGeom will be disabled.")
     set(vecgeom OFF CACHE BOOL "Disabled because non-builtin VecGeom specified but its VecCore cannot be found" FORCE)
@@ -1659,6 +1690,8 @@ if (vecgeom)
       message(STATUS "              For the time being switching OFF 'vecgeom' option")
       set(vecgeom OFF CACHE BOOL "Disabled because VecGeom not found (${vecgeom_description})" FORCE)
     endif()
+  else()
+    message(STATUS "   Found VecGeom " ${VecGeom_VERSION})
   endif()
 endif()
 
@@ -1860,15 +1893,6 @@ if (mpi)
   endif()
 endif()
 
-if(testing AND NO_CONNECTION)
-  if(fail-on-missing)
-    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'testing' option or the 'fail-on-missing' to automatically disable options requiring internet access")
-  else()
-    message(STATUS "No internet connection, disabling 'testing' option")
-    set(testing OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-  endif()
-endif()
-
 #---Check for ZeroMQ when building RooFit::MultiProcess--------------------------------------------
 
 if (roofit_multiprocess)
@@ -1894,6 +1918,10 @@ if (roofit_multiprocess)
       if(NOT ZeroMQ_FOUND)
         message(STATUS "ZeroMQ not found. Switching on builtin_zeromq option")
         set(builtin_zeromq ON CACHE BOOL "Enabled because ZeroMQ not found (${builtin_zeromq_description})" FORCE)
+        # If the ZeroMQ system version is too old, we can't use the system C++
+        # headers either (note that find_package(ZeroMQ) not only checks if the
+        # library exists, but also if it's a recent version with zmq_ppoll).
+        set(builtin_cppzmq ON CACHE BOOL "Enabled because ZeroMQ not found (${builtin_cppzmq_description})" FORCE)
       endif()
     endif()
 
@@ -1938,8 +1966,41 @@ if (roofit_multiprocess)
   target_compile_definitions(cppzmq INTERFACE ZMQ_NO_EXPORT)
 endif (roofit_multiprocess)
 
-#---Download googletest--------------------------------------------------------------
+#---Check for googletest---------------------------------------------------------------
 if (testing)
+  if (NOT builtin_gtest)
+    if(fail-on-missing)
+      find_package(GTest REQUIRED)
+    else()
+      find_package(GTest)
+      if(NOT GTEST_FOUND)
+        if(NO_CONNECTION)
+          if(fail-on-missing)
+            message(FATAL_ERROR "No internet connection and GTest was not found. Please check your connection, or either disable the 'testing' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+          else()
+            message(STATUS "GTest not found, and no internet connection. Disabing the 'testing' option.")
+            set(testing OFF CACHE BOOL "Disabled because testing requested and GTest not found (${builtin_gtest_description}) and there is no internet connection" FORCE)
+          endif()
+        else()
+          message(STATUS "GTest not found, switching ON 'builtin_gtest' option.")
+          set(builtin_gtest ON CACHE BOOL "Enabled because testing requested and GTest not found (${builtin_gtest_description})" FORCE)
+        endif()
+      endif()
+    endif()
+  else()
+    if(NO_CONNECTION)
+      if(fail-on-missing)
+        message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'testing' option or the 'builtin_gtest' option or the 'fail-on-missing' option to automatically disable options requiring internet access")
+      else()
+        message(STATUS "No internet connection, disabling the 'testing' and 'builtin_gtest' options")
+        set(testing OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+        set(builtin_gtest OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+      endif()
+    endif()
+  endif()
+endif()
+
+if (builtin_gtest)
   # FIXME: Remove our version of gtest in roottest. We can reuse this one.
   # Add googletest
   # http://stackoverflow.com/questions/9689183/cmake-googletest
@@ -1971,7 +2032,7 @@ if (testing)
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
     GIT_SHALLOW 1
-    GIT_TAG release-1.11.0
+    GIT_TAG release-1.12.1
     UPDATE_COMMAND ""
     # TIMEOUT 10
     # # Force separate output paths for debug and release builds to allow easy
@@ -2051,7 +2112,7 @@ endif()
 
 #------------------------------------------------------------------------------------
 if(webgui)
-  if(NOT "$ENV{OPENUI5DIR}" STREQUAL "" AND EXISTS "$ENV{OPENUI5DIR}/resources/sap-ui-core-nojQuery.js")
+  if(NOT "$ENV{OPENUI5DIR}" STREQUAL "" AND EXISTS "$ENV{OPENUI5DIR}/resources/sap-ui-core.js")
      # create symbolic link on existing openui5 installation
      # should be used only for debug purposes to be able try different openui5 version
      # cannot be used for installation purposes
@@ -2064,7 +2125,7 @@ if(webgui)
       ExternalProject_Add(
         OPENUI5
         URL ${CMAKE_SOURCE_DIR}/builtins/openui5/openui5.tar.gz
-        URL_HASH SHA256=f40910aae22afb80f0d1a0ff07577ff8073896dd4415e4c64a125b7c29b89b0e
+        URL_HASH SHA256=cc6791ac9c064c3e3f8281870063c549fa5e3f1252095ccc5d542c33db9cf8b2
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
@@ -2074,8 +2135,8 @@ if(webgui)
     else()
       ExternalProject_Add(
         OPENUI5
-        URL https://github.com/SAP/openui5/releases/download/1.82.2/openui5-runtime-1.82.2.zip
-        URL_HASH SHA256=b405fa6a3a3621879e8efe80eb193c1071f2bdf37a8ecc8c057194a09635eaff
+        URL https://github.com/SAP/openui5/releases/download/1.98.0/openui5-runtime-1.98.0.zip
+        URL_HASH SHA256=3d3db9ba001141019aae2cdf6eb6d34d655a3652308e03a335794f1231d21d2f
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
@@ -2085,6 +2146,17 @@ if(webgui)
     endif()
     install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/distribution/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/distribution/ COMPONENT libraries FILES_MATCHING PATTERN "*")
   endif()
+  ExternalProject_Add(
+    RENDERCORE
+    URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore.tar.gz
+    URL_HASH SHA256=a0b1cc0d4e8d739b113ace87e33de77572cf019772899549cb082088943513e1
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/eve7/rcore
+    TIMEOUT 600
+  )
+  install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/eve7/rcore/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/eve7/rcore/ COMPONENT libraries FILES_MATCHING PATTERN "*")
 endif()
 
 #------------------------------------------------------------------------------------
@@ -2145,10 +2217,10 @@ if(test_distrdf_dask)
   message(STATUS "Looking for Dask")
 
   if(fail-on-missing)
-    find_package(Dask 2020.12 REQUIRED)
+    find_package(Dask 2022.08.1 REQUIRED)
   else()
 
-    find_package(Dask 2020.12)
+    find_package(Dask 2022.08.1)
     if(NOT Dask_FOUND)
       message(STATUS "Switching OFF 'test_distrdf_dask' option")
       set(test_distrdf_dask OFF CACHE BOOL "Disabled because Dask not found" FORCE)

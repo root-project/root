@@ -102,7 +102,7 @@ private:
    void           Constructor();
    void           SetComment(const char *txt = nullptr)
                      { fComment[0] = 0; if (txt) { strncpy(fComment, txt, 99); fComment[99] = 0; } }
-   void           DoError(Int_t level, const char *location, const char *fmt, va_list va) const;
+   void           DoError(Int_t level, const char *location, const char *fmt, va_list va) const override;
    void           ErrorHandler(int level, const char *location, const char *fmt, va_list ap) const;
    static void    Init();
    static void   *Function(void *ptr);
@@ -124,7 +124,7 @@ public:
    Int_t            Kill();
    Int_t            Run(void *arg = nullptr, const int affinity = -1);
    void             SetPriority(EPriority pri);
-   void             Delete(Option_t *option="") { TObject::Delete(option); }
+   void             Delete(Option_t *option="") override { TObject::Delete(option); }
    EPriority        GetPriority() const { return fPriority; }
    EState           GetState() const { return fState; }
    Long_t           GetId() const { return fId; }
@@ -177,7 +177,7 @@ public:
    ;
    static void      XAction();
 
-   ClassDef(TThread,0)  // Thread class
+   ClassDefOverride(TThread,0)  // Thread class
 };
 
 
@@ -206,7 +206,7 @@ public:
    // can not exit and have its caller react to the other TTimer's actions (like the request
    // to stop the event loop) until there is another type of event.
    TThreadTimer(Long_t ms = kItimerResolution + 10);
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 #endif

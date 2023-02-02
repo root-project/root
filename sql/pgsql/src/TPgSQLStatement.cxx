@@ -1,4 +1,4 @@
-   // @(#)root/pgsql:$Id$
+// @(#)root/pgsql:$Id$
 // Author: Dennis Box (dbox@fnal.gov)  3/12/2007
 
 /*************************************************************************
@@ -33,6 +33,7 @@
                         || ((x) == PGRES_COMMAND_OK) \
                         || ((x) == PGRES_TUPLES_OK))
 
+#include <libpq-fe.h>
 
 ClassImp(TPgSQLStatement);
 
@@ -110,7 +111,7 @@ void TPgSQLStatement::Close(Option_t *)
 #define CheckStmt(method, res)                          \
    {                                                    \
       ClearError();                                     \
-      if (fStmt==0) {                                   \
+      if (!fStmt) {                                     \
          SetError(-1,"Statement handle is 0",method);   \
          return res;                                    \
       }                                                 \
@@ -250,7 +251,7 @@ Int_t TPgSQLStatement::GetNumFields()
 
 const char* TPgSQLStatement::GetFieldName(Int_t nfield)
 {
-   if (!IsResultSetMode() || (nfield<0) || (nfield>=fNumBuffers)) return 0;
+   if (!IsResultSetMode() || (nfield < 0) || (nfield >= fNumBuffers)) return nullptr;
 
    return fFieldName[nfield];
 }
@@ -260,13 +261,13 @@ const char* TPgSQLStatement::GetFieldName(Int_t nfield)
 
 Bool_t TPgSQLStatement::NextResultRow()
 {
-   if ((fStmt==0) || !IsResultSetMode()) return kFALSE;
+   if (!fStmt || !IsResultSetMode()) return kFALSE;
 
-   Bool_t res=kTRUE;
+   Bool_t res = kTRUE;
 
    fIterationCount++;
    if (fIterationCount>=fNumResultRows)
-     res=kFALSE;
+     res = kFALSE;
    return res;
 }
 
@@ -279,7 +280,7 @@ Bool_t TPgSQLStatement::NextIteration()
 {
    ClearError();
 
-   if (!IsSetParsMode() || (fBind==0)) {
+   if (!IsSetParsMode() || !fBind) {
       SetError(-1,"Cannot call for that statement","NextIteration");
       return kFALSE;
    }

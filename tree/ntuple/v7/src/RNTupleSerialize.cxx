@@ -32,11 +32,11 @@ using RResult = ROOT::Experimental::RResult<T>;
 
 
 namespace {
+using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
 
-std::uint32_t SerializeFieldV1(
-   const ROOT::Experimental::RFieldDescriptor &fieldDesc, ROOT::Experimental::DescriptorId_t physParentId, void *buffer)
+std::uint32_t SerializeFieldV1(const ROOT::Experimental::RFieldDescriptor &fieldDesc,
+                               ROOT::Experimental::DescriptorId_t onDiskParentId, void *buffer)
 {
-   using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
@@ -46,7 +46,7 @@ std::uint32_t SerializeFieldV1(
 
    pos += RNTupleSerializer::SerializeUInt32(fieldDesc.GetFieldVersion(), *where);
    pos += RNTupleSerializer::SerializeUInt32(fieldDesc.GetTypeVersion(), *where);
-   pos += RNTupleSerializer::SerializeUInt32(physParentId, *where);
+   pos += RNTupleSerializer::SerializeUInt32(onDiskParentId, *where);
    pos += RNTupleSerializer::SerializeFieldStructure(fieldDesc.GetStructure(), *where);
    if (fieldDesc.GetNRepetitions() > 0) {
       pos += RNTupleSerializer::SerializeUInt16(RNTupleSerializer::kFlagRepetitiveField, *where);
@@ -65,7 +65,6 @@ std::uint32_t SerializeFieldV1(
    return size;
 }
 
-
 std::uint32_t SerializeFieldTree(
    const ROOT::Experimental::RNTupleDescriptor &desc,
    ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
@@ -82,9 +81,9 @@ std::uint32_t SerializeFieldTree(
       idQueue.pop_front();
 
       for (const auto &f : desc.GetFieldIterable(parentId)) {
-         auto physFieldId = context.MapFieldId(f.GetId());
-         auto physParentId = (parentId == desc.GetFieldZeroId()) ? physFieldId : context.GetPhysFieldId(parentId);
-         pos += SerializeFieldV1(f, physParentId, *where);
+         auto onDiskFieldId = context.MapFieldId(f.GetId());
+         auto onDiskParentId = (parentId == desc.GetFieldZeroId()) ? onDiskFieldId : context.GetOnDiskFieldId(parentId);
+         pos += SerializeFieldV1(f, onDiskParentId, *where);
          idQueue.push_back(f.GetId());
       }
    }
@@ -97,7 +96,6 @@ RResult<std::uint32_t> DeserializeFieldV1(
    std::uint32_t bufSize,
    ROOT::Experimental::RFieldDescriptorBuilder &fieldDesc)
 {
-   using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
    using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
 
    auto base = reinterpret_cast<const unsigned char *>(buffer);
@@ -169,7 +167,6 @@ std::uint32_t SerializeColumnListV1(
    ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
    void *buffer)
 {
-   using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
    using RColumnElementBase = ROOT::Experimental::Detail::RColumnElementBase;
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
@@ -183,13 +180,16 @@ std::uint32_t SerializeColumnListV1(
       idQueue.pop_front();
 
       for (const auto &c : desc.GetColumnIterable(parentId)) {
+         if (c.IsAliasColumn())
+            continue;
+
          auto frame = pos;
          pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
 
          auto type = c.GetModel().GetType();
          pos += RNTupleSerializer::SerializeColumnType(type, *where);
          pos += RNTupleSerializer::SerializeUInt16(RColumnElementBase::GetBitsOnStorage(type), *where);
-         pos += RNTupleSerializer::SerializeUInt32(context.GetPhysFieldId(c.GetFieldId()), *where);
+         pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskFieldId(c.GetFieldId()), *where);
          std::uint32_t flags = 0;
          // TODO(jblomer): add support for descending columns in the column model
          if (c.GetModel().GetIsSorted())
@@ -201,7 +201,7 @@ std::uint32_t SerializeColumnListV1(
 
          pos += RNTupleSerializer::SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
-         context.MapColumnId(c.GetId());
+         context.MapColumnId(c.GetLogicalId());
       }
 
       for (const auto &f : desc.GetFieldIterable(parentId))
@@ -216,7 +216,6 @@ RResult<std::uint32_t> DeserializeColumnV1(
    std::uint32_t bufSize,
    ROOT::Experimental::RColumnDescriptorBuilder &columnDesc)
 {
-   using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
    using EColumnType = ROOT::Experimental::EColumnType;
 
    auto base = reinterpret_cast<const unsigned char *>(buffer);
@@ -251,6 +250,98 @@ RResult<std::uint32_t> DeserializeColumnV1(
 
    const bool isSorted = (flags & (RNTupleSerializer::kFlagSortAscColumn | RNTupleSerializer::kFlagSortDesColumn));
    columnDesc.FieldId(fieldId).Model({type, isSorted});
+
+   return frameSize;
+}
+
+std::uint32_t SerializeLocatorPayloadURI(const ROOT::Experimental::RNTupleLocator &locator, unsigned char *buffer)
+{
+   const auto &uri = locator.GetPosition<std::string>();
+   if (uri.length() >= (1 << 16))
+      throw ROOT::Experimental::RException(R__FAIL("locator too large"));
+   if (buffer)
+      memcpy(buffer, uri.data(), uri.length());
+   return uri.length();
+}
+
+void DeserializeLocatorPayloadURI(const unsigned char *buffer, std::uint32_t payloadSize,
+                                  ROOT::Experimental::RNTupleLocator &locator)
+{
+   locator.fBytesOnStorage = 0;
+   auto &uri = locator.fPosition.emplace<std::string>();
+   uri.resize(payloadSize);
+   memcpy(uri.data(), buffer, payloadSize);
+}
+
+std::uint32_t SerializeLocatorPayloadObject64(const ROOT::Experimental::RNTupleLocator &locator, unsigned char *buffer)
+{
+   const auto &data = locator.GetPosition<ROOT::Experimental::RNTupleLocatorObject64>();
+   if (buffer) {
+      RNTupleSerializer::SerializeUInt32(locator.fBytesOnStorage, buffer);
+      RNTupleSerializer::SerializeUInt64(data.fLocation, buffer + sizeof(std::uint32_t));
+   }
+   return sizeof(std::uint32_t) + sizeof(std::uint64_t);
+}
+
+void DeserializeLocatorPayloadObject64(const unsigned char *buffer, ROOT::Experimental::RNTupleLocator &locator)
+{
+   auto &data = locator.fPosition.emplace<ROOT::Experimental::RNTupleLocatorObject64>();
+   RNTupleSerializer::DeserializeUInt32(buffer, locator.fBytesOnStorage);
+   RNTupleSerializer::DeserializeUInt64(buffer + sizeof(std::uint32_t), data.fLocation);
+}
+
+std::uint32_t SerializeAliasColumnList(const ROOT::Experimental::RNTupleDescriptor &desc,
+                                       ROOT::Experimental::Internal::RNTupleSerializer::RContext &context, void *buffer)
+{
+   auto base = reinterpret_cast<unsigned char *>(buffer);
+   auto pos = base;
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
+
+   std::deque<ROOT::Experimental::DescriptorId_t> idQueue{desc.GetFieldZeroId()};
+
+   while (!idQueue.empty()) {
+      auto parentId = idQueue.front();
+      idQueue.pop_front();
+      for (const auto &c : desc.GetColumnIterable(parentId)) {
+         if (!c.IsAliasColumn())
+            continue;
+
+         auto frame = pos;
+         pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
+
+         pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskColumnId(c.GetPhysicalId()), *where);
+         pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskFieldId(c.GetFieldId()), *where);
+
+         pos += RNTupleSerializer::SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
+
+         context.MapColumnId(c.GetLogicalId());
+      }
+
+      for (const auto &f : desc.GetFieldIterable(parentId))
+         idQueue.push_back(f.GetId());
+   }
+
+   return pos - base;
+}
+
+RResult<std::uint32_t> DeserializeAliasColumn(const void *buffer, std::uint32_t bufSize,
+                                              std::uint32_t &physicalColumnId, std::uint32_t &fieldId)
+{
+   auto base = reinterpret_cast<const unsigned char *>(buffer);
+   auto bytes = base;
+   std::uint32_t frameSize;
+   auto fnFrameSizeLeft = [&]() { return frameSize - static_cast<std::uint32_t>(bytes - base); };
+   auto result = RNTupleSerializer::DeserializeFrameHeader(bytes, bufSize, frameSize);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+
+   if (fnFrameSizeLeft() < 2 * sizeof(std::uint32_t)) {
+      return R__FAIL("alias column record frame too short");
+   }
+
+   bytes += RNTupleSerializer::DeserializeUInt32(bytes, physicalColumnId);
+   bytes += RNTupleSerializer::DeserializeUInt32(bytes, fieldId);
 
    return frameSize;
 }
@@ -739,23 +830,26 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(
    const RNTupleLocator &locator, void *buffer)
 {
    std::uint32_t size = 0;
-   if (!locator.fUrl.empty()) {
-      if (locator.fUrl.length() >= (1 << 24))
+   if (locator.fType == RNTupleLocator::kTypeFile) {
+      if (static_cast<std::int32_t>(locator.fBytesOnStorage) < 0)
          throw RException(R__FAIL("locator too large"));
-      std::int32_t head = locator.fUrl.length();
-      head |= 0x02 << 24;
-      head = -head;
-      size += SerializeInt32(head, buffer);
-      if (buffer)
-         memcpy(reinterpret_cast<unsigned char *>(buffer) + size, locator.fUrl.data(), locator.fUrl.length());
-      size += locator.fUrl.length();
+      size += SerializeUInt32(locator.fBytesOnStorage, buffer);
+      size += SerializeUInt64(locator.GetPosition<std::uint64_t>(),
+                              buffer ? reinterpret_cast<unsigned char *>(buffer) + size : nullptr);
       return size;
    }
 
-   if (static_cast<std::int32_t>(locator.fBytesOnStorage) < 0)
-      throw RException(R__FAIL("locator too large"));
-   size += SerializeUInt32(locator.fBytesOnStorage, buffer);
-   size += SerializeUInt64(locator.fPosition, buffer ? reinterpret_cast<unsigned char *>(buffer) + size : nullptr);
+   auto payloadp = buffer ? reinterpret_cast<unsigned char *>(buffer) + sizeof(std::int32_t) : nullptr;
+   switch (locator.fType) {
+   case RNTupleLocator::kTypeURI: size += SerializeLocatorPayloadURI(locator, payloadp); break;
+   case RNTupleLocator::kTypeDAOS: size += SerializeLocatorPayloadObject64(locator, payloadp); break;
+   default: throw RException(R__FAIL("locator has unknown type"));
+   }
+   std::int32_t head = sizeof(std::int32_t) + size;
+   head |= locator.fReserved << 16;
+   head |= static_cast<int>(locator.fType & 0x7F) << 24;
+   head = -head;
+   size += RNTupleSerializer::SerializeInt32(head, buffer);
    return size;
 }
 
@@ -772,25 +866,25 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    bufSize -= sizeof(std::int32_t);
    if (head < 0) {
       head = -head;
-      int type = head >> 24;
-      if (type != 0x02)
-         return R__FAIL("unsupported locator type: " + std::to_string(type));
-      std::uint32_t locatorSize = static_cast<std::uint32_t>(head) & 0x00FFFFFF;
-      if (bufSize < locatorSize)
+      const int type = head >> 24;
+      const std::uint32_t payloadSize = (static_cast<std::uint32_t>(head) & 0x0000FFFF) - sizeof(std::int32_t);
+      if (bufSize < payloadSize)
          return R__FAIL("too short locator");
-      locator.fBytesOnStorage = 0;
-      locator.fPosition = 0;
-      locator.fUrl.resize(locatorSize);
-      memcpy(&locator.fUrl[0], bytes, locatorSize);
-      bytes += locatorSize;
+      locator.fType = static_cast<RNTupleLocator::ELocatorType>(type);
+      locator.fReserved = static_cast<std::uint32_t>(head >> 16) & 0xFF;
+      switch (type) {
+      case RNTupleLocator::kTypeURI: DeserializeLocatorPayloadURI(bytes, payloadSize, locator); break;
+      case RNTupleLocator::kTypeDAOS: DeserializeLocatorPayloadObject64(bytes, locator); break;
+      default: return R__FAIL("unsupported locator type: " + std::to_string(type));
+      }
+      bytes += payloadSize;
    } else {
       if (bufSize < sizeof(std::uint64_t))
          return R__FAIL("too short locator");
-      std::uint64_t offset;
+      auto &offset = locator.fPosition.emplace<std::uint64_t>();
+      locator.fType = RNTupleLocator::kTypeFile;
       bytes += DeserializeUInt64(bytes, offset);
-      locator.fUrl.clear();
       locator.fBytesOnStorage = head;
-      locator.fPosition = offset;
    }
 
    return bytes - reinterpret_cast<const unsigned char *>(buffer);
@@ -946,13 +1040,14 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    frame = pos;
-   pos += SerializeListFramePreamble(desc.GetNColumns(), *where);
+   pos += SerializeListFramePreamble(desc.GetNPhysicalColumns(), *where);
    pos += SerializeColumnListV1(desc, context, *where);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
-   // We don't use alias columns yet
    frame = pos;
-   pos += SerializeListFramePreamble(0, *where);
+   auto nAliasColumns = desc.GetNLogicalColumns() - desc.GetNPhysicalColumns();
+   pos += SerializeListFramePreamble(nAliasColumns, *where);
+   pos += SerializeAliasColumnList(desc, context, *where);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    // We don't use extra type information yet
@@ -983,14 +1078,14 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList
    for (auto clusterId : physClusterIDs) {
       const auto &clusterDesc = desc.GetClusterDescriptor(context.GetMemClusterId(clusterId));
       // Get an ordered set of physical column ids
-      std::set<DescriptorId_t> physColumnIds;
+      std::set<DescriptorId_t> onDiskColumnIds;
       for (auto column : clusterDesc.GetColumnIds())
-         physColumnIds.insert(context.GetPhysColumnId(column));
+         onDiskColumnIds.insert(context.GetOnDiskColumnId(column));
 
       auto outerFrame = pos;
-      pos += SerializeListFramePreamble(physColumnIds.size(), *where);
-      for (auto physId : physColumnIds) {
-         auto memId = context.GetMemColumnId(physId);
+      pos += SerializeListFramePreamble(onDiskColumnIds.size(), *where);
+      for (auto onDiskId : onDiskColumnIds) {
+         auto memId = context.GetMemColumnId(onDiskId);
          const auto &columnRange = clusterDesc.GetColumnRange(memId);
          const auto &pageRange = clusterDesc.GetPageRange(memId);
 
@@ -1039,23 +1134,34 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    // Cluster summaries
-   const auto nClusters = desc.GetNClusters();
+   const auto nClusterGroups = desc.GetNClusterGroups();
+   unsigned int nClusters = 0;
+   for (const auto &cgDesc : desc.GetClusterGroupIterable())
+      nClusters += cgDesc.GetNClusters();
    frame = pos;
    pos += SerializeListFramePreamble(nClusters, *where);
-   for (unsigned int i = 0; i < nClusters; ++i) {
-      const auto &clusterDesc = desc.GetClusterDescriptor(context.GetMemClusterId(i));
-      RClusterSummary summary{clusterDesc.GetFirstEntryIndex(), clusterDesc.GetNEntries(), -1};
-      pos += SerializeClusterSummary(summary, *where);
+   for (unsigned int i = 0; i < nClusterGroups; ++i) {
+      const auto &cgDesc = desc.GetClusterGroupDescriptor(context.GetMemClusterGroupId(i));
+      const auto nClustersInGroup = cgDesc.GetNClusters();
+      const auto &clusterIds = cgDesc.GetClusterIds();
+      for (unsigned int j = 0; j < nClustersInGroup; ++j) {
+         const auto &clusterDesc = desc.GetClusterDescriptor(clusterIds[j]);
+         RClusterSummary summary{clusterDesc.GetFirstEntryIndex(), clusterDesc.GetNEntries(), -1};
+         pos += SerializeClusterSummary(summary, *where);
+      }
    }
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    // Cluster groups
-   const auto &clusterGroups = context.GetClusterGroups();
-   const auto nClusterGroups = clusterGroups.size();
    frame = pos;
    pos += SerializeListFramePreamble(nClusterGroups, *where);
    for (unsigned int i = 0; i < nClusterGroups; ++i) {
-      pos += SerializeClusterGroup(clusterGroups[i], *where);
+      const auto &cgDesc = desc.GetClusterGroupDescriptor(context.GetMemClusterGroupId(i));
+      RClusterGroup clusterGroup;
+      clusterGroup.fNClusters = cgDesc.GetNClusters();
+      clusterGroup.fPageListEnvelopeLink.fUnzippedSize = cgDesc.GetPageListLength();
+      clusterGroup.fPageListEnvelopeLink.fLocator = cgDesc.GetPageListLocator();
+      pos += SerializeClusterGroup(clusterGroup, *where);
    }
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
@@ -1174,7 +1280,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
          idx = maxIdx->second + 1;
       maxIndexes[fieldId] = idx;
 
-      auto columnDesc = columnBuilder.Index(idx).ColumnId(columnId).MakeDescriptor();
+      auto columnDesc = columnBuilder.Index(idx).LogicalColumnId(columnId).PhysicalColumnId(columnId).MakeDescriptor();
       if (!columnDesc)
          return R__FORWARD_ERROR(columnDesc);
       auto resVoid = descBuilder.AddColumn(columnDesc.Unwrap());
@@ -1189,17 +1295,41 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   if (nAliasColumns > 0)
-      R__LOG_WARNING(NTupleLog()) << "Alias columns are still unsupported! ";
+   for (std::uint32_t i = 0; i < nAliasColumns; ++i) {
+      std::uint32_t physicalId;
+      std::uint32_t fieldId;
+      result = DeserializeAliasColumn(bytes, fnFrameSizeLeft(), physicalId, fieldId);
+      if (!result)
+         return R__FORWARD_ERROR(result);
+      bytes += result.Unwrap();
+
+      RColumnDescriptorBuilder columnBuilder;
+      columnBuilder.LogicalColumnId(nColumns + i).PhysicalColumnId(physicalId).FieldId(fieldId);
+      columnBuilder.Model(descBuilder.GetDescriptor().GetColumnDescriptor(physicalId).GetModel());
+
+      std::uint32_t idx = 0;
+      auto maxIdx = maxIndexes.find(fieldId);
+      if (maxIdx != maxIndexes.end())
+         idx = maxIdx->second + 1;
+      maxIndexes[fieldId] = idx;
+
+      auto aliasColumnDesc = columnBuilder.Index(idx).MakeDescriptor();
+      if (!aliasColumnDesc)
+         return R__FORWARD_ERROR(aliasColumnDesc);
+      auto resVoid = descBuilder.AddColumn(aliasColumnDesc.Unwrap());
+      if (!resVoid)
+         return R__FORWARD_ERROR(resVoid);
+   }
+   bytes = frame + frameSize;
 
    std::uint32_t nTypeInfo;
    frame = bytes;
    result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nTypeInfo);
    if (!result)
       return R__FORWARD_ERROR(result);
-   bytes += result.Unwrap();
    if (nTypeInfo > 0)
       R__LOG_WARNING(NTupleLog()) << "Extra type information is still unsupported! ";
+   bytes = frame + frameSize;
 
    return RResult<void>::Success();
 }
@@ -1270,7 +1400,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
       bytes += result.Unwrap();
       if (clusterSummary.fColumnGroupID >= 0)
          return R__FAIL("sharded clusters are still unsupported");
-      descBuilder.AddClusterSummary(clusterSummary);
+      descBuilder.AddClusterSummary(clusterId, clusterSummary.fFirstEntry, clusterSummary.fNEntries);
    }
    bytes = frame + frameSize;
 
@@ -1280,13 +1410,23 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
+   std::uint64_t clusterId = 0;
    for (std::uint32_t groupId = 0; groupId < nClusterGroups; ++groupId) {
       RClusterGroup clusterGroup;
       result = DeserializeClusterGroup(bytes, fnFrameSizeLeft(), clusterGroup);
       if (!result)
          return R__FORWARD_ERROR(result);
       bytes += result.Unwrap();
-      descBuilder.AddClusterGroup(clusterGroup);
+
+      descBuilder.AddToOnDiskFooterSize(clusterGroup.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
+      RClusterGroupDescriptorBuilder clusterGroupBuilder;
+      clusterGroupBuilder.ClusterGroupId(groupId)
+         .PageListLocator(clusterGroup.fPageListEnvelopeLink.fLocator)
+         .PageListLength(clusterGroup.fPageListEnvelopeLink.fUnzippedSize);
+      for (std::uint64_t i = 0; i < clusterGroup.fNClusters; ++i)
+         clusterGroupBuilder.AddCluster(clusterId + i);
+      clusterId += clusterGroup.fNClusters;
+      descBuilder.AddClusterGroup(std::move(clusterGroupBuilder));
    }
    bytes = frame + frameSize;
 
@@ -1326,12 +1466,13 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
 
+   if (nClusters != clusters.size())
+      return R__FAIL("mismatch of page list and cluster summaries");
+
    for (std::uint32_t i = 0; i < nClusters; ++i) {
       std::uint32_t outerFrameSize;
       auto outerFrame = bytes;
       auto fnOuterFrameSizeLeft = [&]() { return outerFrameSize - (bytes - outerFrame); };
-
-      RClusterDescriptorBuilder clusterBuilder;
 
       std::uint32_t nColumns;
       result = DeserializeFrameHeader(bytes, fnTopMostFrameSizeLeft(), outerFrameSize, nColumns);
@@ -1351,7 +1492,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
          bytes += result.Unwrap();
 
          RClusterDescriptor::RPageRange pageRange;
-         pageRange.fColumnId = j;
+         pageRange.fPhysicalColumnId = j;
          for (std::uint32_t k = 0; k < nPages; ++k) {
             if (fnInnerFrameSizeLeft() < static_cast<int>(sizeof(std::uint32_t)))
                return R__FAIL("inner frame too short");
@@ -1372,11 +1513,10 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
          std::uint32_t compressionSettings;
          bytes += DeserializeUInt32(bytes, compressionSettings);
 
-         clusterBuilder.CommitColumnRange(j, columnOffset, compressionSettings, pageRange);
+         clusters[i].CommitColumnRange(j, columnOffset, compressionSettings, pageRange);
          bytes = innerFrame + innerFrameSize;
       }
 
-      clusters.emplace_back(std::move(clusterBuilder));
       bytes = outerFrame + outerFrameSize;
    }
 

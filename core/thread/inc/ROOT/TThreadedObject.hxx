@@ -158,7 +158,8 @@ namespace ROOT {
 
       /// Construct the TThreadedObject with initSlots empty slots and the "model" of the thread private objects.
       /// \param initSlots Set the initial number of slots of the TThreadedObject.
-      /// \tparam ARGS Arguments of the constructor of T
+      /// \tparam ARGS Arguments' class type of the constructor of T
+      /// \param args variadic arguments
       ///
       /// This form of the constructor is useful to manually pre-set the content of a given number of slots
       /// when used in combination with TThreadedObject::SetAtSlot().

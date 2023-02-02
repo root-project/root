@@ -19,7 +19,7 @@
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
- **********************************************************************************/ 
+ **********************************************************************************/
 
 #ifndef ROOT_TMVA_TActivationRadial
 #define ROOT_TMVA_TActivationRadial
@@ -37,9 +37,9 @@
 #include "TMVA/TActivation.h"
 
 namespace TMVA {
-  
+
    class TActivationRadial : public TActivation {
-    
+
    public:
       TActivationRadial() {}
       ~TActivationRadial() {}

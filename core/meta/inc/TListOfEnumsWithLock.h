@@ -37,7 +37,7 @@ private:
 
 public:
 
-   TListOfEnumsWithLock(TClass *cl = 0);
+   TListOfEnumsWithLock(TClass *cl = nullptr);
    ~TListOfEnumsWithLock() override;
 
    TEnum *GetObject(const char*) const override;
@@ -95,9 +95,9 @@ class TListOfEnumsWithLockIter : public TListIter
 
    using TListIter::operator=;
 
-   TObject *Next();
+   TObject *Next() override;
 
-   ClassDef(TListOfEnumsWithLockIter,0)
+   ClassDefOverride(TListOfEnumsWithLockIter,0)
 };
 
 #endif // ROOT_TListOfEnumsWithLock

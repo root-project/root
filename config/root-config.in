@@ -11,35 +11,35 @@ if [ `uname` = "AIX" ]; then
 fi
 
 # work around readlink versions not having -f option
-fullpath1=`$readlink $0`
+fullpath1=`$readlink "$0"`
 if [ "$?" -ne "0" ]; then
-   fullpath1=$0
+   fullpath1="$0"
 else
-   if [ ${fullpath1##/} = $fullpath1 ] && [ ${fullpath1##~} = $fullpath1 ]; then
+   if [ "${fullpath1##/}" = "$fullpath1" ] && [ "${fullpath1##~}" = "$fullpath1" ]; then
       # relative path, prepend directory where executable was found
-      lpath=`dirname $0`
-      fullpath1=$lpath/$fullpath1
+      lpath=`dirname "$0"`
+      fullpath1="$lpath/$fullpath1"
    fi
 fi
-progdir=`dirname $fullpath1`
+progdir=`dirname "$fullpath1"`
 runningdir=`pwd`
-if [ ${progdir##/} != $progdir ] || [ ${progdir##~} != $progdir ]; then
+if [ "${progdir##/}" != "$progdir" ] || [ "${progdir##~}" != "$progdir" ]; then
    # absolute path
-   fullpath=$progdir
+   fullpath="$progdir"
 else
    # relative path
-   if [ $progdir != "." ]; then
-      fullpath=$runningdir/$progdir
+   if [ "$progdir" != "." ]; then
+      fullpath="$runningdir/$progdir"
    else
-      fullpath=$runningdir
+      fullpath="$runningdir"
    fi
 fi
 # work around readlink versions not having -f option
-fullpath1=`$readlink $fullpath`
+fullpath1=`$readlink "$fullpath"`
 if [ "$?" -ne "0" ]; then
-   fullpath1=$fullpath
+   fullpath1="$fullpath"
 fi
-ROOTSYS=`dirname $fullpath1`
+ROOTSYS=`dirname "$fullpath1"`
 
 arch=@architecture@
 platform=@platform@
@@ -550,8 +550,8 @@ while test $# -gt 0; do
       ;;
     --version)
       ### Output the version number.  If RVersion.h can not be found, give up.
-      if test -r ${incdir}/RVersion.h; then
-         out="$out `sed -n 's,.*ROOT_RELEASE *\"\(.*\)\".*,\1,p' < ${incdir}/RVersion.h`"
+      if test -r "${incdir}/RVersion.h"; then
+         out="$out `sed -n 's,.*ROOT_RELEASE *\"\(.*\)\".*,\1,p' < \"${incdir}/RVersion.h\"`"
       else
          echo "cannot read ${incdir}/RVersion.h"
          exit 1
@@ -559,8 +559,8 @@ while test $# -gt 0; do
       ;;
     --git-revision)
       ### Output the git revision number.  If RGitCommit.h can not be found, give up.
-      if test -r ${incdir}/RGitCommit.h; then
-         out="$out `sed -n 's,.*ROOT_GIT_COMMIT *\"\(.*\)\".*,\1,p' < ${incdir}/RGitCommit.h`"
+      if test -r "${incdir}/RGitCommit.h"; then
+         out="$out `sed -n 's,.*ROOT_GIT_COMMIT *\"\(.*\)\".*,\1,p' < \"${incdir}/RGitCommit.h\"`"
       else
          echo "cannot read ${incdir}/RGitCommit.h"
          exit 1
@@ -577,7 +577,7 @@ while test $# -gt 0; do
       ;;
     --cflags)
       ### Output the compiler flags
-      if test ${incdir} != /usr/include; then
+      if test "${incdir}" != "/usr/include"; then
          ### In case we're on a Win32 system, we need to expand the
          ### path to a backslash seperated path
          if test "$platform" = "win32"; then

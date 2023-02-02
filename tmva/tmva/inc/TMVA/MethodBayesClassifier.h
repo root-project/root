@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$    
+// @(#)root/tmva $Id$
 // Author: Abhishek Narain
 
 /**********************************************************************************
@@ -45,16 +45,16 @@ namespace TMVA {
 
    public:
 
-      MethodBayesClassifier( const TString& jobName, 
-                             const TString& methodTitle, 
+      MethodBayesClassifier( const TString& jobName,
+                             const TString& methodTitle,
                              DataSetInfo& theData,
                              const TString& theOption = "");
-      
-      MethodBayesClassifier( DataSetInfo& theData, 
+
+      MethodBayesClassifier( DataSetInfo& theData,
                              const TString& theWeightFile);
-      
+
       virtual ~MethodBayesClassifier( void );
-    
+
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
       // training method
@@ -70,12 +70,12 @@ namespace TMVA {
       void ReadWeightsFromXML   ( void* /*wghtnode*/ ) {}
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
 
       void Init( void );
 
       // ranking of input variables
-      const Ranking* CreateRanking() { return 0; }
+      const Ranking* CreateRanking() { return nullptr; }
 
    protected:
 
@@ -91,7 +91,7 @@ namespace TMVA {
       void DeclareOptions();
       void ProcessOptions();
 
-      ClassDef(MethodBayesClassifier,0);  // Friedman's BayesClassifier method 
+      ClassDef(MethodBayesClassifier,0);  // Friedman's BayesClassifier method
    };
 
 } // namespace TMVA

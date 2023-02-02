@@ -27,7 +27,7 @@
 #include "RooPlot.h"
 using namespace RooFit;
 
-void rf702_efficiencyfit_2D(Bool_t flat = kFALSE)
+void rf702_efficiencyfit_2D(bool flat = false)
 {
    // C o n s t r u c t   e f f i c i e n c y   f u n c t i o n   e ( x , y )
    // -----------------------------------------------------------------------

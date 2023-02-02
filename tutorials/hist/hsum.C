@@ -10,7 +10,8 @@
 ///
 /// \author Rene Brun
 
-void hsum() {
+void hsum()
+{
    TCanvas *c1 = new TCanvas("c1","The HSUM example",200,10,600,400);
    c1->SetGrid();
 
@@ -27,7 +28,7 @@ void hsum() {
    main->SetFillColor(16);
    s1->SetFillColor(42);
    s2->SetFillColor(46);
-   TSlider *slider = 0;
+   TSlider *slider = nullptr;
 
    // Fill histograms randomly
    gRandom->SetSeed();
@@ -54,13 +55,12 @@ void hsum() {
                "test",4.2,0,4.6,total->GetMaximum(),38);
             slider->SetFillColor(46);
          }
-         if (slider) slider->SetRange(0,Float_t(i)/10000.);
+         if (slider) slider->SetRange(0., 1.*i/10000.);
          c1->Modified();
          c1->Update();
       }
    }
-   slider->SetRange(0,1);
-   total->Draw("sameaxis"); // to redraw axis hidden by the fill area
+   slider->SetRange(0., 1.);
    c1->Modified();
    gBenchmark->Show("hsum");
 }

@@ -22,7 +22,6 @@
 Class RooNumber implements numeric constants used by RooFit
 **/
 
-#include "RooFit.h"
 #include "RooNumber.h"
 
 using namespace std;
@@ -33,12 +32,12 @@ ClassImp(RooNumber);
 #ifdef HAS_NUMERIC_LIMITS
 
 #include <numeric_limits.h>
-Double_t RooNumber::_Infinity= numeric_limits<Double_t>::infinity();
+double RooNumber::_Infinity= numeric_limits<double>::infinity();
 #else
 
 // This assumes a well behaved IEEE-754 floating point implementation.
 // The next line may generate a compiler warning that can be ignored.
-Double_t RooNumber::_Infinity= 1.0e30 ;  //1./0.;
+double RooNumber::_Infinity= 1.0e30 ;  //1./0.;
 
 #endif
 
@@ -46,16 +45,28 @@ Double_t RooNumber::_Infinity= 1.0e30 ;  //1./0.;
 ////////////////////////////////////////////////////////////////////////////////
 /// Return internal infinity representation
 
-Double_t RooNumber::infinity() 
+double RooNumber::infinity()
 {
   return _Infinity ;
+}
+
+
+double& RooNumber::staticRangeEpsRel() {
+  static double epsRel = 0.0;
+  return epsRel;
+}
+
+
+double& RooNumber::staticRangeEpsAbs() {
+  static double epsAbs = 0.0;
+  return epsAbs;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if x is infinite by RooNumBer internal specification
 
-Int_t RooNumber::isInfinite(Double_t x) 
+Int_t RooNumber::isInfinite(double x)
 {
   return (x >= +_Infinity) ? +1 : ((x <= -_Infinity) ? -1 : 0);
 }

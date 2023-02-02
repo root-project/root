@@ -156,7 +156,7 @@ bool R__SetClonesArrayTFormulaUpdater(Updater_t func) {
 /// Internal Utility routine to correctly release the memory for an object
 static inline void R__ReleaseMemory(TClass *cl, TObject *obj)
 {
-   if (obj && obj->TestBit(TObject::kNotDeleted)) {
+   if (obj && ! obj->IsDestructed()) {
       // -- The TObject destructor has not been called.
       cl->Destructor(obj);
    } else {
@@ -176,8 +176,8 @@ static inline void R__ReleaseMemory(TClass *cl, TObject *obj)
 
 TClonesArray::TClonesArray() : TObjArray()
 {
-   fClass      = 0;
-   fKeep       = 0;
+   fClass      = nullptr;
+   fKeep       = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -192,7 +192,7 @@ TClonesArray::TClonesArray() : TObjArray()
 
 TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s)
 {
-   fKeep = 0;
+   fKeep = nullptr;
    SetClass(classname,s);
 }
 
@@ -208,7 +208,7 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
 
 TClonesArray::TClonesArray(const TClass *cl, Int_t s, Bool_t) : TObjArray(s)
 {
-   fKeep = 0;
+   fKeep = nullptr;
    SetClass(cl,s);
 }
 
@@ -339,7 +339,7 @@ void TClonesArray::Compress()
 
    Int_t jf = 0;
    for ( ; j < fSize; j++) {
-      fCont[j] = 0;
+      fCont[j] = nullptr;
       fKeep->fCont[j] = tmp[jf];
       jf++;
    }
@@ -366,10 +366,10 @@ void TClonesArray::Compress()
 TObject *TClonesArray::ConstructedAt(Int_t idx)
 {
    TObject *obj = (*this)[idx];
-   if ( obj && obj->TestBit(TObject::kNotDeleted) ) {
+   if ( obj && ! obj->IsDestructed() ) {
       return obj;
    }
-   return (fClass) ? static_cast<TObject*>(fClass->New(obj)) : 0;
+   return (fClass) ? static_cast<TObject*>(fClass->New(obj)) : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -388,11 +388,11 @@ TObject *TClonesArray::ConstructedAt(Int_t idx)
 TObject *TClonesArray::ConstructedAt(Int_t idx, Option_t *clear_options)
 {
    TObject *obj = (*this)[idx];
-   if ( obj && obj->TestBit(TObject::kNotDeleted) ) {
+   if ( obj && !obj->IsDestructed() ) {
       obj->Clear(clear_options);
       return obj;
    }
-   return (fClass) ? static_cast<TObject*>(fClass->New(obj)) : 0;
+   return (fClass) ? static_cast<TObject*>(fClass->New(obj)) : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -444,13 +444,13 @@ void TClonesArray::Delete(Option_t *)
       // In case of emulated class, we can not use the delete operator
       // directly, it would use the wrong destructor.
       for (Int_t i = 0; i < fSize; i++) {
-         if (fCont[i] && fCont[i]->TestBit(kNotDeleted)) {
+         if (fCont[i] && ! fCont[i]->IsDestructed()) {
             fClass->Destructor(fCont[i],kTRUE);
          }
       }
    } else {
       for (Int_t i = 0; i < fSize; i++) {
-         if (fCont[i] && fCont[i]->TestBit(kNotDeleted)) {
+         if (fCont[i] && ! fCont[i]->IsDestructed()) {
             fCont[i]->~TObject();
          }
       }
@@ -516,7 +516,7 @@ void TClonesArray::ExpandCreate(Int_t n)
    for (i = 0; i < n; i++) {
       if (!fKeep->fCont[i]) {
          fKeep->fCont[i] = (TObject*)fClass->New();
-      } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
+      } else if (fKeep->fCont[i]->IsDestructed()) {
          // The object has been deleted (or never initialized)
          fClass->New(fKeep->fCont[i]);
       }
@@ -553,7 +553,7 @@ void TClonesArray::ExpandCreateFast(Int_t n)
    for (i = 0; i < n; i++) {
       if (i >= oldSize || !fKeep->fCont[i]) {
          fKeep->fCont[i] = (TObject*)fClass->New();
-      } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
+      } else if (fKeep->fCont[i]->IsDestructed()) {
          // The object has been deleted (or never initialized)
          fClass->New(fKeep->fCont[i]);
       }
@@ -571,23 +571,23 @@ void TClonesArray::ExpandCreateFast(Int_t n)
 
 TObject *TClonesArray::RemoveAt(Int_t idx)
 {
-   if (!BoundsOk("RemoveAt", idx)) return 0;
+   if (!BoundsOk("RemoveAt", idx)) return nullptr;
 
    int i = idx-fLowerBound;
 
-   if (fCont[i] && fCont[i]->TestBit(kNotDeleted)) {
+   if (fCont[i] && ! fCont[i]->IsDestructed()) {
       fCont[i]->~TObject();
    }
 
    if (fCont[i]) {
-      fCont[i] = 0;
+      fCont[i] = nullptr;
       // recalculate array size
       if (i == fLast)
-         do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
+         do { fLast--; } while (fLast >= 0 && !fCont[fLast]);
       Changed();
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -595,20 +595,20 @@ TObject *TClonesArray::RemoveAt(Int_t idx)
 
 TObject *TClonesArray::Remove(TObject *obj)
 {
-   if (!obj) return 0;
+   if (!obj) return nullptr;
 
    Int_t i = IndexOf(obj) - fLowerBound;
 
-   if (i == -1) return 0;
+   if (i == -1) return nullptr;
 
-   if (fCont[i] && fCont[i]->TestBit(kNotDeleted)) {
+   if (fCont[i] && ! fCont[i]->IsDestructed()) {
       fCont[i]->~TObject();
    }
 
-   fCont[i] = 0;
+   fCont[i] = nullptr;
    // recalculate array size
    if (i == fLast)
-      do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
+      do { fLast--; } while (fLast >= 0 && !fCont[fLast]);
    Changed();
    return obj;
 }
@@ -625,19 +625,19 @@ void TClonesArray::RemoveRange(Int_t idx1, Int_t idx2)
    idx2 -= fLowerBound;
 
    Bool_t change = kFALSE;
-   for (TObject **obj=fCont+idx1; obj<=fCont+idx2; obj++) {
+   for (TObject **obj = fCont+idx1; obj <= fCont+idx2; obj++) {
       if (!*obj) continue;
-      if ((*obj)->TestBit(kNotDeleted)) {
+      if (!(*obj)->IsDestructed()) {
          (*obj)->~TObject();
       }
-      *obj = 0;
+      *obj = nullptr;
       change = kTRUE;
    }
 
    // recalculate array size
    if (change) Changed();
    if (idx1 < fLast || fLast > idx2) return;
-   do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
+   do { fLast--; } while (fLast >= 0 && !fCont[fLast]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -771,9 +771,9 @@ void TClonesArray::Streamer(TBuffer &b)
       if (nobjects < 0)
          nobjects = -nobjects;  // still there for backward compatibility
       b >> fLowerBound;
-      if (fClass == 0) {
+      if (!fClass) {
          fClass = cl;
-         if (fKeep == 0) {
+         if (!fKeep) {
             fKeep  = new TObjArray(fSize);
             Expand(nobjects);
          }
@@ -801,7 +801,7 @@ void TClonesArray::Streamer(TBuffer &b)
          for (Int_t i = 0; i < nobjects; i++) {
             if (!fKeep->fCont[i]) {
                fKeep->fCont[i] = (TObject*)fClass->New();
-            } else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
+            } else if (fKeep->fCont[i]->IsDestructed()) {
                // The object has been deleted (or never initialized)
                fClass->New(fKeep->fCont[i]);
             }
@@ -836,7 +836,7 @@ void TClonesArray::Streamer(TBuffer &b)
             if (nch) {
                if (!fKeep->fCont[i])
                   fKeep->fCont[i] = (TObject*)fClass->New();
-               else if (!fKeep->fCont[i]->TestBit(kNotDeleted)) {
+               else if (fKeep->fCont[i]->IsDestructed()) {
                   // The object has been deleted (or never initialized)
                   fClass->New(fKeep->fCont[i]);
                }
@@ -846,7 +846,7 @@ void TClonesArray::Streamer(TBuffer &b)
             }
          }
       }
-      for (Int_t i = TMath::Max(nobjects,0); i < oldLast+1; ++i) fCont[i] = 0;
+      for (Int_t i = TMath::Max(nobjects,0); i < oldLast+1; ++i) fCont[i] = nullptr;
       Changed();
       b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
    } else {
@@ -922,7 +922,7 @@ TObject *&TClonesArray::operator[](Int_t idx)
       fKeep->fCont[idx] = (TObject*) TStorage::ObjectAlloc(fClass->Size());
       // Reset the bit so that:
       //    obj = myClonesArray[i];
-      //    obj->TestBit(TObject::kNotDeleted)
+      //    ! obj->IsDestructed()
       // will behave correctly.
       // TObject::kNotDeleted is one of the higher bit that is not settable via the public
       // interface. But luckily we are its friend.
@@ -943,7 +943,7 @@ TObject *TClonesArray::operator[](Int_t idx) const
 {
    if (idx < 0 || idx >= fSize) {
       Error("operator[]", "out of bounds at %d in %zx", idx, (size_t)this);
-      return 0;
+      return nullptr;
    }
 
    return fCont[idx];
@@ -957,11 +957,11 @@ TObject *TClonesArray::New(Int_t idx)
 {
    if (idx < 0) {
       Error("New", "out of bounds at %d in %zx", idx, (size_t)this);
-      return 0;
+      return nullptr;
    }
    if (!fClass) {
       Error("New", "invalid class specified in TClonesArray ctor");
-      return 0;
+      return nullptr;
    }
 
    return (TObject *)fClass->New(operator[](idx));
@@ -980,7 +980,7 @@ TObject *TClonesArray::New(Int_t idx)
 void TClonesArray::AbsorbObjects(TClonesArray *tc)
 {
    // tests
-   if (tc == 0 || tc == this || tc->GetEntriesFast() == 0) return;
+   if (!tc || tc == this || tc->GetEntriesFast() == 0) return;
    AbsorbObjects(tc, 0, tc->GetEntriesFast() - 1);
 }
 
@@ -993,7 +993,7 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc)
 void TClonesArray::AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2)
 {
    // tests
-   if (tc == 0 || tc == this || tc->GetEntriesFast() == 0) return;
+   if (!tc || tc == this || tc->GetEntriesFast() == 0) return;
    if (fClass != tc->fClass) {
       Error("AbsorbObjects", "cannot absorb objects when classes are different");
       return;
@@ -1010,7 +1010,7 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2)
 
    // cache the sorted status
    Bool_t wasSorted = IsSorted() && tc->IsSorted() &&
-                      (Last() == 0 || Last()->Compare(tc->First()) == -1);
+                      (!Last() || Last()->Compare(tc->First()) == -1);
 
    // expand this
    Int_t oldSize = GetEntriesFast();
@@ -1024,16 +1024,16 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2)
       fCont[newindex] = tc->fCont[i];
       R__ReleaseMemory(fClass,fKeep->fCont[newindex]);
       (*fKeep)[newindex] = (*(tc->fKeep))[i];
-      tc->fCont[i] = 0;
-      (*(tc->fKeep))[i] = 0;
+      tc->fCont[i] = nullptr;
+      (*(tc->fKeep))[i] = nullptr;
    }
 
    // cleanup
    for (Int_t i = idx2+1; i < tc->GetEntriesFast(); i++) {
       tc->fCont[i-(idx2-idx1+1)] = tc->fCont[i];
       (*(tc->fKeep))[i-(idx2-idx1+1)] = (*(tc->fKeep))[i];
-      tc->fCont[i] = 0;
-      (*(tc->fKeep))[i] = 0;
+      tc->fCont[i] = nullptr;
+      (*(tc->fKeep))[i] = nullptr;
    }
    tc->fLast = tc->GetEntriesFast() - 2 - (idx2 - idx1);
    fLast = newSize-1;

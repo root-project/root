@@ -46,7 +46,6 @@ integrals, using the orthogonality properties of \f$Y_l^m\f$...
 
 **/
 
-#include "RooFit.h"
 #include "Riostream.h"
 #include <math.h>
 
@@ -111,7 +110,7 @@ RooSpHarmonic::RooSpHarmonic(const RooSpHarmonic& other, const char* name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooSpHarmonic::evaluate() const
+double RooSpHarmonic::evaluate() const
 {
     double n = _n*N(_l1,_m1)*N(_l2,_m2)*RooLegendre::evaluate();
     if (_sgn1!=0) n *= (_sgn1<0 ? sin(_m1*_phi) : cos(_m1*_phi) );
@@ -122,29 +121,29 @@ Double_t RooSpHarmonic::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace {
-  Bool_t fullRange(const RooRealProxy& x, const char* range, Bool_t phi)
+  bool fullRange(const RooRealProxy& x, const char* range, bool phi)
   {
     if (phi) {
       return range == 0 || strlen(range) == 0
-          ? std::fabs(x.max() - x.min() - TMath::TwoPi()) < 1.e-8
-          : std::fabs(x.max(range) - x.min(range) - TMath::TwoPi()) < 1.e-8;
+          ? std::abs(x.max() - x.min() - TMath::TwoPi()) < 1.e-8
+          : std::abs(x.max(range) - x.min(range) - TMath::TwoPi()) < 1.e-8;
     }
 
     return range == 0 || strlen(range) == 0
-        ? std::fabs(x.min() + 1.) < 1.e-8 && std::fabs(x.max() - 1.) < 1.e-8
-        : std::fabs(x.min(range) + 1.) < 1.e-8 && std::fabs(x.max(range) - 1.) < 1.e-8;
+        ? std::abs(x.min() + 1.) < 1.e-8 && std::abs(x.max() - 1.) < 1.e-8
+        : std::abs(x.min(range) + 1.) < 1.e-8 && std::abs(x.max(range) - 1.) < 1.e-8;
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TODO: check that phi.max - phi.min = 2 pi... ctheta.max = +1, and ctheta.min = -1
-/// we don't support indefinite integrals... maybe one day, when there is a use for it.....
+/// we don't support indefinite integrals. maybe one day, when there is a use for it.
 
 Int_t RooSpHarmonic::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
   // we don't support indefinite integrals... maybe one day, when there is a use for it.....
-  Bool_t cthetaOK = fullRange(_ctheta, rangeName, kFALSE);
-  Bool_t phiOK    = fullRange(_phi,    rangeName, kTRUE );
+  bool cthetaOK = fullRange(_ctheta, rangeName, false);
+  bool phiOK    = fullRange(_phi,    rangeName, true );
   if (cthetaOK && phiOK && matchArgs(allVars, analVars, _ctheta, _phi)) return 3;
   if (            phiOK && matchArgs(allVars, analVars,          _phi)) return 2;
   return RooLegendre::getAnalyticalIntegral(allVars, analVars, rangeName);
@@ -152,7 +151,7 @@ Int_t RooSpHarmonic::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooSpHarmonic::analyticalIntegral(Int_t code, const char* range) const
+double RooSpHarmonic::analyticalIntegral(Int_t code, const char* range) const
 {
   if (code==3) {
     return (_l1==_l2 && _sgn1*_m1==_sgn2*_m2 ) ? _n : 0 ;
@@ -171,7 +170,7 @@ Int_t RooSpHarmonic::getMaxVal( const RooArgSet& vars) const {
     return RooLegendre::getMaxVal(vars);
 }
 
-Double_t RooSpHarmonic::maxVal( Int_t code) const {
+double RooSpHarmonic::maxVal( Int_t code) const {
     double n = _n*N(_l1,_m1)*N(_l2,_m2);
     return n*RooLegendre::maxVal(code);
 }

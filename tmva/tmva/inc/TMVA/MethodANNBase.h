@@ -116,7 +116,7 @@ namespace TMVA {
       virtual void ReadWeightsFromStream( std::istream& istr );
 
       // calculate the MVA value
-      virtual Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
+      virtual Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
 
       virtual const std::vector<Float_t> &GetRegressionValues();
 
@@ -143,7 +143,7 @@ namespace TMVA {
       virtual void MakeClassSpecific( std::ostream&, const TString& ) const;
 
       std::vector<Int_t>* ParseLayoutString( TString layerSpec );
-      virtual void        BuildNetwork( std::vector<Int_t>* layout, std::vector<Double_t>* weights=NULL,
+      virtual void        BuildNetwork( std::vector<Int_t>* layout, std::vector<Double_t>* weights = nullptr,
                                         Bool_t fromFile = kFALSE );
       void     ForceNetworkInputs( const Event* ev, Int_t ignoreIndex = -1 );
       Double_t GetNetworkOutput() { return GetOutputNeuron()->GetActivationValue(); }
@@ -176,23 +176,23 @@ namespace TMVA {
       TH1F* fEstimatorHistTest;  // monitors convergence of independent test sample
 
       // monitoring histograms (not available for regression)
-      void CreateWeightMonitoringHists( const TString& bulkname, std::vector<TH1*>* hv = 0 ) const;
+      void CreateWeightMonitoringHists( const TString& bulkname, std::vector<TH1*>* hv = nullptr ) const;
       std::vector<TH1*> fEpochMonHistS; // epoch monitoring histograms for signal
       std::vector<TH1*> fEpochMonHistB; // epoch monitoring histograms for background
       std::vector<TH1*> fEpochMonHistW; // epoch monitoring histograms for weights
 
 
       // general
-      TMatrixD           fInvHessian;           // zjh
-      bool               fUseRegulator;         // zjh
+      TMatrixD           fInvHessian;           ///< zjh
+      bool               fUseRegulator;         ///< zjh
 
    protected:
-      Int_t                   fRandomSeed;      // random seed for initial synapse weights
+      Int_t                   fRandomSeed;      ///< random seed for initial synapse weights
 
-      Int_t                   fNcycles;         // number of epochs to train
+      Int_t                   fNcycles;         ///< number of epochs to train
 
-      TString                 fNeuronType;      // name of neuron activation function class
-      TString                 fNeuronInputType; // name of neuron input calculator class
+      TString                 fNeuronType;      ///< name of neuron activation function class
+      TString                 fNeuronInputType; ///< name of neuron input calculator class
 
 
    private:
@@ -216,12 +216,12 @@ namespace TMVA {
       void PrintNeuron(TNeuron* neuron) const;
 
       // private variables
-      TObjArray*              fInputLayer;      // cache this for fast access
-      std::vector<TNeuron*>   fOutputNeurons;   // cache this for fast access
-      TString                 fLayerSpec;       // layout specification option
+      TObjArray*              fInputLayer;      ///< cache this for fast access
+      std::vector<TNeuron*>   fOutputNeurons;   ///< cache this for fast access
+      TString                 fLayerSpec;       ///< layout specification option
 
       // some static flags
-      static const Bool_t fgDEBUG      = kTRUE;  // debug flag
+      static const Bool_t fgDEBUG      = kTRUE;  ///< debug flag
 
       ClassDef(MethodANNBase,0); // Base class for TMVA ANNs
    };

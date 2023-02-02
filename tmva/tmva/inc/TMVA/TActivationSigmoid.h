@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Matt Jachowski 
+// Author: Matt Jachowski
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -19,7 +19,7 @@
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
- **********************************************************************************/ 
+ **********************************************************************************/
 
 #ifndef ROOT_TMVA_TActivationSigmoid
 #define ROOT_TMVA_TActivationSigmoid
@@ -37,9 +37,9 @@
 #include "TMVA/TActivation.h"
 
 namespace TMVA {
-  
+
    class TActivationSigmoid : public TActivation {
-    
+
    public:
       TActivationSigmoid() {}
       ~TActivationSigmoid() {}

@@ -39,7 +39,7 @@ namespace TMVA
    {
 
    protected:
-      Float_t fSigma;          // width of gauss curve
+      Float_t fSigma;          ///< width of gauss curve
 
       // Square function (fastest implementation)
       template<typename T> T Sqr(T x) const { return x * x; }

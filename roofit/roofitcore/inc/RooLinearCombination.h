@@ -36,19 +36,19 @@ public:
   RooLinearCombination();
   RooLinearCombination(const char *name);
   RooLinearCombination(const RooLinearCombination &other, const char *name);
-  virtual void printArgs(std::ostream &os) const override;
-  ~RooLinearCombination();
-  virtual TObject *clone(const char *newname) const override;
+  void printArgs(std::ostream &os) const override;
+  ~RooLinearCombination() override;
+  TObject *clone(const char *newname) const override;
   void add(RooFit::SuperFloat c, RooAbsReal *t);
   void setCoefficient(size_t idx, RooFit::SuperFloat c);
   RooFit::SuperFloat getCoefficient(size_t idx);
-  virtual Double_t evaluate() const override;
-  virtual std::list<Double_t> *binBoundaries(RooAbsRealLValue &obs,
-                                             Double_t xlo,
-                                             Double_t xhi) const override;
-  virtual std::list<Double_t> *plotSamplingHint(RooAbsRealLValue &obs,
-                                                Double_t xlo,
-                                                Double_t xhi) const override;
+  double evaluate() const override;
+  std::list<double> *binBoundaries(RooAbsRealLValue &obs,
+                                             double xlo,
+                                             double xhi) const override;
+  std::list<double> *plotSamplingHint(RooAbsRealLValue &obs,
+                                                double xlo,
+                                                double xhi) const override;
 
   ClassDefOverride(RooLinearCombination, 1)
 };

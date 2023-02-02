@@ -830,7 +830,7 @@ TGeoManager* TEveManager::GetGeometryByAlias(const TString& alias)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the default geometry.
-/// It should be registered via RegisterGeometryName("Default", <URL>).
+/// It should be registered via RegisterGeometryName("Default", `<URL>`).
 
 TGeoManager* TEveManager::GetDefaultGeometry()
 {

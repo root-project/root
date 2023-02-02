@@ -118,7 +118,7 @@ void rf207_comptools()
    // The returned head node own all nodes that were cloned as part of
    // the build process so when cust_clone is deleted so will all other
    // nodes that were created in the process.
-   RooAbsPdf *cust_clone = (RooAbsPdf *)cust.build(kTRUE);
+   RooAbsPdf *cust_clone = (RooAbsPdf *)cust.build(true);
 
    // Print structure of clone of model with sig->sigsum replacement.
    cust_clone->Print("t");

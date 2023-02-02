@@ -90,7 +90,7 @@ In addition we use now the ROOT convention for all enumeration names defining th
 
 <p>
 <h4>MathCore Function interfaces</h4>
-Mathcore provides as well interfaces for the evaluation of mathematical and parametric functions to be used in the the numerical methods. This release contains the following changes:
+Mathcore provides as well interfaces for the evaluation of mathematical and parametric functions to be used in the numerical methods. This release contains the following changes:
 <ul>
 <li>The <tt>ROOT::Math::IParamFunction</tt>, <tt>ROOT::Math::IParamMultiFunction</tt> interfaces (used mainly for fitting) require now a pointer to the parameters (type <tt>const double *</tt>), when evaluating the function. The derived classes must implement now the const
 method <tt>DoEvalPar</tt> (and not <tt>DoEval</tt> as before). In addition the method

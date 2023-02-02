@@ -35,7 +35,7 @@ protected:
    GContext_t          fNormGC;      ///< entry drawing context
    FontStruct_t        fFontStruct;  ///< font
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
    static const TGFont *fgDefaultFont;
    static TGGC         *fgDefaultGC;
@@ -44,8 +44,8 @@ public:
    static FontStruct_t  GetDefaultFontStruct();
    static const TGGC   &GetDefaultGC();
 
-   TGTreeLBEntry(const TGWindow *p = 0, TGString *text = 0, const TGPicture *pic = 0,
-                 Int_t id = -1, TGString *path = 0, GContext_t norm = GetDefaultGC()(),
+   TGTreeLBEntry(const TGWindow *p = nullptr, TGString *text = nullptr, const TGPicture *pic = nullptr,
+                 Int_t id = -1, TGString *path = nullptr, GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t options = kHorizontalFrame, Pixel_t back = GetWhitePixel());
    virtual ~TGTreeLBEntry();
@@ -54,13 +54,13 @@ public:
    const TGPicture *GetPicture() const { return fPic; }
    const TGString  *GetPath() const { return fPath; }
 
-   virtual TGDimension GetDefaultSize() const;
+   TGDimension GetDefaultSize() const override;
 
-   virtual void Activate(Bool_t a);
-   virtual void Update(TGLBEntry *e);
-   virtual void DrawCopy(Handle_t id, Int_t x, Int_t y);
+   void Activate(Bool_t a) override;
+   void Update(TGLBEntry *e) override;
+   void DrawCopy(Handle_t id, Int_t x, Int_t y) override;
 
-   ClassDef(TGTreeLBEntry,0)  // TGFSComboBox entry
+   ClassDefOverride(TGTreeLBEntry,0)  // TGFSComboBox entry
 };
 
 
@@ -79,14 +79,14 @@ class TGFSComboBox : public TGComboBox {
    std::vector<Lbc_t> fLbc; ///<!  list of default entries
 
 public:
-   TGFSComboBox(const TGWindow *p = 0, Int_t id = -1,
+   TGFSComboBox(const TGWindow *p = nullptr, Int_t id = -1,
                 UInt_t options = kHorizontalFrame | kSunkenFrame |
                 kDoubleBorder, Pixel_t back = GetWhitePixel());
 
    virtual void Update(const char *path);
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGFSComboBox,0)  // Combo box widget for file system path
+   ClassDefOverride(TGFSComboBox,0)  // Combo box widget for file system path
 };
 
 #endif

@@ -88,7 +88,7 @@ namespace TMVA {
       void AddWeightsXMLTo( void* parent ) const;
       void ReadWeightsFromXML( void* wghtnode );
 
-      Double_t GetMvaValue( Double_t* err=0, Double_t* errUpper = 0 );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
 
       // regression response
       virtual const std::vector<Float_t>& GetRegressionValues();

@@ -13,7 +13,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 #include "RooFitResult.h"
@@ -33,7 +32,7 @@ void rf203_ranges()
 
    // Construct gaussx(x,mx,1)
    RooRealVar mx("mx", "mx", 0, -10, 10);
-   RooGaussian gx("gx", "gx", x, mx, RooConst(1));
+   RooGaussian gx("gx", "gx", x, mx, 1.0);
 
    // Construct px = 1 (flat in x)
    RooPolynomial px("px", "px", x);
@@ -49,7 +48,7 @@ void rf203_ranges()
    // ---------------------------
 
    // Fit pdf to all data
-   RooFitResult *r_full = model.fitTo(*modelData, Save(kTRUE));
+   RooFitResult *r_full = model.fitTo(*modelData, Save(true));
 
    // F i t   p a r t i a l   r a n g e
    // ----------------------------------
@@ -58,7 +57,7 @@ void rf203_ranges()
    x.setRange("signal", -3, 3);
 
    // Fit pdf only to data in "signal" range
-   RooFitResult *r_sig = model.fitTo(*modelData, Save(kTRUE), Range("signal"));
+   RooFitResult *r_sig = model.fitTo(*modelData, Save(true), Range("signal"));
 
    // P l o t   /   p r i n t   r e s u l t s
    // ---------------------------------------

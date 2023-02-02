@@ -11,9 +11,8 @@
 #include "TWebPadPainter.h"
 #include "TError.h"
 #include "TImage.h"
-#include "TVirtualPad.h"
+#include "TPad.h"
 #include "TWebCanvas.h"
-#include "TBufferJSON.h"
 
 
 /** \class TWebPadPainter
@@ -294,7 +293,8 @@ void TWebPadPainter::DrawTextNDC(Double_t  u , Double_t v, const wchar_t * /*tex
 
 void TWebPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t gtype) const
 {
-   if ((gtype == TImage::kPng) || (gtype == TImage::kJpeg))
-      TWebCanvas::ProduceImage(pad->GetCanvas(), fileName);
+   (void) gtype;
+   // if ((gtype == TImage::kPng) || (gtype == TImage::kJpeg))
+   TWebCanvas::ProduceImage(dynamic_cast<TPad *>(pad), fileName);
 }
 

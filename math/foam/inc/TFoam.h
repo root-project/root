@@ -43,7 +43,7 @@ protected:
 
    Int_t   fNoAct;            ///< Number of active cells
    Int_t   fLastCe;           ///< Index of the last cell
-   TFoamCell **fCells;        ///< [fNCells] Array of ALL cells
+   TFoamCell **fCells = nullptr; ///< [fNCells] Array of ALL cells
 
    TFoamMaxwt   *fMCMonit;    ///< Monitor of the MC weight for measuring MC efficiency
    Double_t   fMaxWtRej;      ///< Maximum weight in rejection for getting wt=1 events
@@ -67,7 +67,7 @@ protected:
    Double_t fSumOve;          ///< Total Sum of overweighted events
    Double_t fNevGen;          ///< Total number of the generated MC events
    Double_t fWtMax, fWtMin;   ///< Maximum/Minimum MC weight
-   Double_t fPrime;           ///< Primary integral R' (R=R'<wt>)
+   Double_t fPrime;           ///< Primary integral R' (R=R'`<wt>`)
    Double_t fMCresult;        ///< True Integral R from MC series
    Double_t fMCerror;         ///< and its error
 
@@ -76,7 +76,7 @@ protected:
 public:
    TFoam();                          // Default constructor (used only by ROOT streamer)
    TFoam(const Char_t*);             // Principal user-defined constructor
-   virtual ~TFoam();                 // Default destructor
+   ~TFoam() override;                 // Default destructor
    TFoam(const TFoam&);              // Copy Constructor  NOT USED
    // Initialization
    virtual void Initialize();                // Initialization of the FOAM (grid, cells, etc), mandatory!
@@ -85,7 +85,7 @@ public:
    virtual Int_t  CellFill(Int_t, TFoamCell*);  // Allocates new empty cell and return its index
    virtual void Explore(TFoamCell *Cell);       // Exploration of the new cell, determine <wt>, wtMax etc.
    virtual void Carver(Int_t&,Double_t&,Double_t&);// Determines the best edge, wt_max reduction
-   virtual void Varedu(Double_t [], Int_t&, Double_t&,Double_t&); // Determines the best edge, variance reduction
+   virtual void Varedu(Double_t [5], Int_t&, Double_t&,Double_t&); // Determines the best edge, variance reduction
    virtual void MakeAlpha();                 // Provides random point inside hyper-rectangle
    virtual void Grow();                      // Adds new cells to FOAM object until buffer is full
    virtual Long_t PeekMax();                 // Choose one active cell, used by Grow and also in MC generation
@@ -138,8 +138,9 @@ public:
    // Inline
 private:
    Double_t Sqr(Double_t x) const { return x*x;}      // Square function
+   TFoamCell* getCell(std::size_t i) const;
 
-   ClassDef(TFoam,2);   // General purpose self-adapting Monte Carlo event generator
+   ClassDefOverride(TFoam,2);   // General purpose self-adapting Monte Carlo event generator
 };
 
 #endif

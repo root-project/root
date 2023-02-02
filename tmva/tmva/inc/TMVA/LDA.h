@@ -67,15 +67,15 @@ namespace TMVA {
    private:
 
       // data members
-      Float_t       fTolerence;                    // documentation!
-      UInt_t        fNumParams;                    // documentation!
-      std::map<Int_t, std::vector<Float_t> > fMu;  // documentation!
-      TMatrixF*     fSigma;                        // documentation!
-      TMatrixF*     fSigmaInverse;                 // documentation!
-      std::map<Int_t, Float_t> fEventFraction;     // documentation!
-      Bool_t        fDebug;                        // documentation!
+      Float_t       fTolerence;                    ///< documentation!
+      UInt_t        fNumParams;                    ///< documentation!
+      std::map<Int_t, std::vector<Float_t> > fMu;  ///< documentation!
+      TMatrixF*     fSigma;                        ///< documentation!
+      TMatrixF*     fSigmaInverse;                 ///< documentation!
+      std::map<Int_t, Float_t> fEventFraction;     ///< documentation!
+      Bool_t        fDebug;                        ///< documentation!
 
-      mutable MsgLogger *fLogger;                  // message logging service
+      mutable MsgLogger *fLogger;                  ///< message logging service
    };
 }
 #endif

@@ -3,13 +3,6 @@
 
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
-#include "RooPlot.h"
-#include "RooFitResult.h"
-#include "RooDouble.h"
-#include "RooWorkspace.h"
-#include "Roo1DTable.h"
-#include "RooCurve.h"
-#include "RooHist.h"
 #include "RooRandom.h"
 #include "RooTrace.h"
 
@@ -38,7 +31,7 @@ using namespace RooFit ;
 //                                                                           //
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*_*//
 
-Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun) ;
+Int_t stressRooFit(const char* refFile, bool writeRef, Int_t doVerbose, Int_t oneTest, bool dryRun) ;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print test program number and its title
@@ -47,7 +40,7 @@ void StatusPrint(Int_t id,const TString &title,Int_t status)
 {
   const Int_t kMAX = 65;
   Char_t number[4];
-  sprintf(number,"%2d",id);
+  snprintf(number, 4, "%2d", id);
   TString header = TString("Test ")+number+" : "+title;
   const Int_t nch = header.Length();
   for (Int_t i = nch; i < kMAX; i++) header += '.';
@@ -59,7 +52,7 @@ void StatusPrint(Int_t id,const TString &title,Int_t status)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore, std::string const& batchMode)
+Int_t stressRooFit(const char* refFile, bool writeRef, Int_t doVerbose, Int_t oneTest, bool dryRun, bool doDump, bool doTreeStore, std::string const& batchMode)
 {
   Int_t retVal = 0;
   // Save memory directory location
@@ -69,7 +62,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
     RooAbsData::setDefaultStorageType(RooAbsData::Tree) ;
   }
 
-  TFile* fref = 0 ;
+  TFile* fref = nullptr ;
   if (!dryRun) {
     if (TString(refFile).Contains("http:")) {
       if (writeRef) {
@@ -179,7 +172,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   for (list<RooUnitTest*>::iterator iter = testList.begin () ; iter != testList.end() ; ++iter) {
     if (oneTest<0 || oneTest==i) {
       if (doDump) {
-         (*iter)->setDebug(kTRUE) ;
+         (*iter)->setDebug(true) ;
       }
       Int_t status = (*iter)->isTestAvailable()?(*iter)->runTest():-1;
       StatusPrint( i,(*iter)->GetName(), status);
@@ -198,16 +191,12 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
 
 
   //Print table with results
-  Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
+  bool UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
   printf("******************************************************************\n");
   if (UNIX) {
      TString sp = gSystem->GetFromPipe("uname -a");
      sp.Resize(60);
      printf("*  SYS: %s\n",sp.Data());
-     if (strstr(gSystem->GetBuildNode(),"Linux")) {
-        sp = gSystem->GetFromPipe("lsb_release -d -s");
-        printf("*  SYS: %s\n",sp.Data());
-     }
      if (strstr(gSystem->GetBuildNode(),"Darwin")) {
         sp  = gSystem->GetFromPipe("sw_vers -productVersion");
         sp += " Mac OS X ";
@@ -241,7 +230,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   }
 
   delete gBenchmark ;
-  gBenchmark = 0 ;
+  gBenchmark = nullptr ;
 
   return retVal;
 }
@@ -251,12 +240,12 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
 
 int main(int argc,const char *argv[])
 {
-  Bool_t doWrite     = kFALSE ;
+  bool doWrite     = false ;
   Int_t doVerbose    = 0 ;
   Int_t oneTest      = -1 ;
-  Int_t dryRun       = kFALSE ;
-  Bool_t doDump      = kFALSE ;
-  Bool_t doTreeStore = kFALSE ;
+  Int_t dryRun       = false ;
+  bool doDump      = false ;
+  bool doTreeStore = false ;
   std::string batchMode = "off";
 
   //string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
@@ -279,17 +268,17 @@ int main(int argc,const char *argv[])
 
     if (arg=="-w") {
       cout << "stressRooFit: running in writing mode to updating reference file" << endl ;
-      doWrite = kTRUE ;
+      doWrite = true ;
     }
 
     if (arg=="-mc") {
       cout << "stressRooFit: running in memcheck mode, no regression tests are performed" << endl ;
-      dryRun=kTRUE ;
+      dryRun=true ;
     }
 
     if (arg=="-ts") {
       cout << "stressRooFit: setting tree-based storage for datasets" << endl ;
-      doTreeStore=kTRUE ;
+      doTreeStore=true ;
     }
 
     auto verbosityOptionErrorMsg = std::string("Multiple verbosity-related options have been passed to stressRooFit! ")
@@ -325,7 +314,7 @@ int main(int argc,const char *argv[])
 
     if (arg=="-c") {
       cout << "stressRooFit: dumping comparison file for failed tests " << endl ;
-      doDump=kTRUE ;
+      doDump=true ;
     }
 
     if (arg=="-h" || arg == "--help") {
@@ -372,12 +361,12 @@ int main(int argc,const char *argv[])
 
 Int_t stressRooFit()
 {
-   Bool_t doWrite     = kFALSE ;
+   bool doWrite     = false ;
    Int_t doVerbose    = 0 ;
    Int_t oneTest      = -1 ;
-   Int_t dryRun       = kFALSE ;
-   Bool_t doDump      = kFALSE ;
-   Bool_t doTreeStore = kFALSE ;
+   Int_t dryRun       = false ;
+   bool doDump      = false ;
+   bool doTreeStore = false ;
    std::string batchMode = "off";
 
    //string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;

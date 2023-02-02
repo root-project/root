@@ -33,32 +33,32 @@ public:
   RooWrapperPdf(const char *name, const char *title, RooAbsReal& inputFunction) :
     RooAbsPdf(name, title),
     _func("inputFunction", "Function to be converted into a PDF", this, inputFunction) { }
-  virtual ~RooWrapperPdf() {};
+  ~RooWrapperPdf() override {};
 
-  RooWrapperPdf(const RooWrapperPdf& other, const char* name = 0) :
+  RooWrapperPdf(const RooWrapperPdf& other, const char *name = nullptr) :
     RooAbsPdf(other, name),
     _func("inputFunction", this, other._func) { }
 
-  virtual TObject* clone(const char* newname) const override {
+  TObject* clone(const char* newname) const override {
     return new RooWrapperPdf(*this, newname);
   }
 
   // Analytical Integration handling
-  Bool_t forceAnalyticalInt(const RooAbsArg& dep) const override {
+  bool forceAnalyticalInt(const RooAbsArg& dep) const override {
     return _func.arg().forceAnalyticalInt(dep);
   }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,
-      const char* rangeName=0) const override {
+      const char* rangeName=nullptr) const override {
     return _func.arg().getAnalyticalIntegralWN(allVars, analVars, normSet, rangeName);
   }
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars,
-      const char* rangeName=0) const override {
+      const char* rangeName=nullptr) const override {
     return _func.arg().getAnalyticalIntegral(allVars, numVars, rangeName);
   }
   double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const override {
     return _func.arg().analyticalIntegralWN(code, normSet, rangeName);
   }
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override {
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override {
     return _func.arg().analyticalIntegral(code, rangeName);
   }
 
@@ -70,14 +70,14 @@ public:
 //      bool /*staticInitOK = true*/) const override { return 0; }
 //  void initGenerator(Int_t /*code*/) override { }
 //  void generateEvent(Int_t /*code*/) override { }
-//  Bool_t isDirectGenSafe(const RooAbsArg& /*arg*/) const override { return false; }
+//  bool isDirectGenSafe(const RooAbsArg& /*arg*/) const override { return false; }
 
 
   // Hints for optimized brute-force sampling
   Int_t getMaxVal(const RooArgSet& vars) const override {
     return _func.arg().getMaxVal(vars);
   }
-  Double_t maxVal(Int_t code) const override {
+  double maxVal(Int_t code) const override {
     return _func.arg().maxVal(code);
   }
   Int_t minTrialSamples(const RooArgSet& arGenObs) const override {
@@ -85,13 +85,13 @@ public:
   }
 
   // Plotting and binning hints
-  Bool_t isBinnedDistribution(const RooArgSet& obs) const override {
+  bool isBinnedDistribution(const RooArgSet& obs) const override {
     return _func.arg().isBinnedDistribution(obs);
   }
-  std::list<Double_t>* binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
+  std::list<double>* binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const override {
     return _func.arg().binBoundaries(obs, xlo, xhi);
   }
-  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override {
     return _func.arg().plotSamplingHint(obs, xlo, xhi);
   }
 

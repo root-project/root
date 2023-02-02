@@ -10,8 +10,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_REMARKS_REMARK_FORMAT_H
-#define LLVM_REMARKS_REMARK_FORMAT_H
+#ifndef LLVM_REMARKS_REMARKFORMAT_H
+#define LLVM_REMARKS_REMARKFORMAT_H
 
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Error.h"
@@ -19,15 +19,18 @@
 namespace llvm {
 namespace remarks {
 
-constexpr StringRef Magic("REMARKS", 7);
+constexpr StringLiteral Magic("REMARKS");
 
 /// The format used for serializing/deserializing remarks.
-enum class Format { Unknown, YAML };
+enum class Format { Unknown, YAML, YAMLStrTab, Bitstream };
 
 /// Parse and validate a string for the remark format.
 Expected<Format> parseFormat(StringRef FormatStr);
 
+/// Parse and validate a magic number to a remark format.
+Expected<Format> magicToFormat(StringRef Magic);
+
 } // end namespace remarks
 } // end namespace llvm
 
-#endif /* LLVM_REMARKS_REMARK_FORMAT_H */
+#endif // LLVM_REMARKS_REMARKFORMAT_H

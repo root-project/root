@@ -45,7 +45,7 @@ the histogram represents counts
 	weights different than 1.
 
     -   "`P`" Use Pearson chi-square method, using expected errors instead of the observed one given by `TH1::GetBinError` (default case).
-         The expected error is instead estimated from the the square-root of the bin function value.
+         The expected error is instead estimated from the square-root of the bin function value.
 
 	-   "`Q`" Quiet mode (minimum printing)
 

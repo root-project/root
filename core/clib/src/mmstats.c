@@ -31,9 +31,7 @@ Boston, MA 02111-1307, USA.
    None of the internal mmalloc structures should be externally visible
    outside the library. */
 
-struct mmstats_t
-mmstats (md)
-  PTR md;
+struct mmstats_t mmstats(PTR md)
 {
   struct mmstats_t result;
   struct mdesc *mdp;

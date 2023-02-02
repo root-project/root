@@ -26,6 +26,14 @@ namespace RDF {
 template <typename T>
 class RResultPtr;
 
+namespace Experimental {
+template <typename T>
+class RResultMap;
+
+template <typename T>
+RResultMap<T> VariationsFor(RResultPtr<T> resPtr);
+} // namespace Experimental
+
 template <typename Proxied, typename DataSource>
 class RInterface;
 } // namespace RDF
@@ -33,21 +41,6 @@ class RInterface;
 namespace Internal {
 namespace RDF {
 class GraphCreatorHelper;
-
-// no-op overload
-template <typename T>
-inline void WarnOnLazySnapshotNotTriggered(const ROOT::RDF::RResultPtr<T> &)
-{
-}
-
-template <typename DS>
-void WarnOnLazySnapshotNotTriggered(
-   const ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager, DS>> &r)
-{
-   if (!r.IsReady()) {
-      Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
-   }
-}
 }
 } // namespace Internal
 
@@ -103,6 +96,10 @@ class RResultPtr {
    template <typename T1>
    friend RResultPtr<T1> RDFDetail::MakeResultPtr(const std::shared_ptr<T1> &, ::ROOT::Detail::RDF::RLoopManager &,
                                                   std::shared_ptr<RDFInternal::RActionBase>);
+
+   template <typename T1>
+   friend ROOT::RDF::Experimental::RResultMap<T1> ROOT::RDF::Experimental::VariationsFor(RResultPtr<T1> resPtr);
+
    template <class T1, class T2>
    friend bool operator==(const RResultPtr<T1> &lhs, const RResultPtr<T2> &rhs);
    template <class T1, class T2>
@@ -180,12 +177,6 @@ public:
    RResultPtr &operator=(const RResultPtr &) = default;
    RResultPtr &operator=(RResultPtr &&) = default;
    explicit operator bool() const { return bool(fObjPtr); }
-   ~RResultPtr()
-   {
-      if (fObjPtr.use_count() == 1) {
-         ROOT::Internal::RDF::WarnOnLazySnapshotNotTriggered(*this);
-      }
-   }
 
    /// Convert a RResultPtr<T2> to a RResultPtr<T>.
    ///

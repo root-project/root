@@ -17,7 +17,7 @@
 // TFriendElement                                                       //
 //                                                                      //
 // A TFriendElement TF describes a TTree object TF in a file.           //
-// When a TFriendElement TF is added to the the list of friends of an   //
+// When a TFriendElement TF is added to the list of friends of an   //
 // existing TTree T, any variable from TF can be referenced in a query  //
 // to T.                                                                //
 //                                                                      //
@@ -67,6 +67,8 @@ public:
            Bool_t      IsUpdated() const { return TestBit(kUpdated); }
            void        ResetUpdated() { ResetBit(kUpdated); }
            void        MarkUpdated() { SetBit(kUpdated); }
+   virtual void        RecursiveRemove(TObject *obj);
+
 
    ClassDef(TFriendElement,2)  //A friend element of another TTree
 };

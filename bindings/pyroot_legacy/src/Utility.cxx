@@ -162,7 +162,7 @@ ULong_t PyROOT::PyLongOrInt_AsULong( PyObject* pyobject )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert <pyobject> to C++ unsigned long long, with bounds checking.
+/// Convert `pyobject` to C++ unsigned long long, with bounds checking.
 
 ULong64_t PyROOT::PyLongOrInt_AsULong64( PyObject* pyobject )
 {

@@ -3,6 +3,9 @@ set(LLVM_LINK_COMPONENTS
   Object
   Option
   Support
+  TextAPI
+  Core
+  BinaryFormat
 )
 
 set(LLVM_TARGET_DEFINITIONS LipoOpts.td)
@@ -14,3 +17,7 @@ add_llvm_tool(llvm-lipo
   DEPENDS
   LipoOptsTableGen
 )
+
+if(LLVM_INSTALL_CCTOOLS_SYMLINKS)
+  add_llvm_tool_symlink(lipo llvm-lipo)
+endif()

@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_xml
-/// \notebook -nodraw
+///
 /// ROOT implementation of a XML DOM Parser
 ///
 /// This is an example of how Dom Parser works. It will parse the xml file
@@ -14,7 +14,6 @@
 ///
 /// Requires: person.xml and person.dtd
 ///
-/// \macro_output
 /// \macro_code
 ///
 /// \author Sergey Linev

@@ -72,7 +72,7 @@ public:
    /// assignment operators
    DistSamplerOptions & operator=(const DistSamplerOptions & opt);
 
-   /** non-static methods for  retrivieng options */
+   /** non-static methods for  retrieving options */
 
    /// set print level
    int PrintLevel() const { return fLevel; }
@@ -116,12 +116,11 @@ protected:
 
 private:
 
-   int fLevel;               // debug print level
-   std::string fSamplerType;   // DistSampler type (Unuran, Foam, etc...)xs
-   std::string fAlgoType;    // DistSampler algorithmic specification (for Unuran only)
+   int fLevel;               ///< debug print level
+   std::string fSamplerType; ///< DistSampler type (Unuran, Foam, etc...)xs
+   std::string fAlgoType;    ///< DistSampler algorithmic specification (for Unuran only)
 
-   // extra options
-   ROOT::Math::IOptions *   fExtraOptions;  // extra options
+   ROOT::Math::IOptions *   fExtraOptions;  ///< extra options
 
 };
 

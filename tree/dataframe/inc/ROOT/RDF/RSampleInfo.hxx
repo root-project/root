@@ -11,12 +11,15 @@
 #ifndef ROOT_RDF_RSAMPLEINFO
 #define ROOT_RDF_RSAMPLEINFO
 
+#include <ROOT/RDF/RDatasetGroup.hxx>
 #include <ROOT/RStringView.hxx>
 #include <Rtypes.h>
 
 #include <functional>
 #include <stdexcept>
 #include <string>
+
+#include <tuple>
 
 namespace ROOT {
 namespace RDF {
@@ -33,9 +36,20 @@ class RSampleInfo {
    std::string fID;
    std::pair<ULong64_t, ULong64_t> fEntryRange;
 
+   const ROOT::RDF::Experimental::RDatasetGroup *fDatasetGroup = nullptr; // non-owning
+
+   void ThrowIfNoDatasetGroup() const
+   {
+      if (fDatasetGroup == nullptr) {
+         const auto msg = "RSampleInfo: dataset group data was requested but no dataset groups are available.";
+         throw std::logic_error(msg);
+      }
+   }
+
 public:
-   explicit RSampleInfo(std::string_view id, std::pair<ULong64_t, ULong64_t> entryRange)
-      : fID(id), fEntryRange(entryRange)
+   RSampleInfo(std::string_view id, std::pair<ULong64_t, ULong64_t> entryRange,
+               const ROOT::RDF::Experimental::RDatasetGroup *datasetGroup = nullptr)
+      : fID(id), fEntryRange(entryRange), fDatasetGroup(datasetGroup)
    {
    }
    RSampleInfo() = default;
@@ -44,6 +58,36 @@ public:
    RSampleInfo(RSampleInfo &&) = default;
    RSampleInfo &operator=(RSampleInfo &&) = default;
    ~RSampleInfo() = default;
+
+   const std::string &GetGroupName() const
+   {
+      ThrowIfNoDatasetGroup();
+      return fDatasetGroup->GetGroupName();
+   }
+
+   unsigned int GetGroupId() const
+   {
+      ThrowIfNoDatasetGroup();
+      return fDatasetGroup->GetGroupId();
+   }
+
+   int GetI(const std::string &key) const
+   {
+      ThrowIfNoDatasetGroup();
+      return fDatasetGroup->GetMetaData().GetI(key);
+   }
+
+   double GetD(const std::string &key) const
+   {
+      ThrowIfNoDatasetGroup();
+      return fDatasetGroup->GetMetaData().GetD(key);
+   }
+
+   std::string GetS(const std::string &key) const
+   {
+      ThrowIfNoDatasetGroup();
+      return fDatasetGroup->GetMetaData().GetS(key);
+   }
 
    /// Check whether the sample name contains the given substring.
    bool Contains(std::string_view substr) const

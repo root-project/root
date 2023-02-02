@@ -114,7 +114,7 @@ template <typename T> class ROperator_GRU final : public ROperator {
 
    /*! \brief Initialize the model
     *
-    * \param Model model
+    * \param model Model
     */
    void Initialize(RModel & /*model*/);
 
@@ -126,9 +126,13 @@ template <typename T> class ROperator_GRU final : public ROperator {
 
    /*! \brief Generate the code for the Session internal data vectors
     *
-    * \param OpName name of the operator
+    * \param opName name of the operator
     */
    std::string GenerateSessionMembersCode(std::string opName);
+
+   /*! \brief Returns the blas routines needed to compile the generated code
+    */
+   std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Axpy") }; }
 };
 
 } // namespace SOFIE

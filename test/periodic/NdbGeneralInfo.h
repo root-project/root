@@ -12,9 +12,9 @@ public:
    NdbGeneralInfo()
       : NdbMF(1, "General Information") {}
 
-   ~NdbGeneralInfo() {}
+   ~NdbGeneralInfo() override {}
 
-   ClassDef(NdbGeneralInfo,1)
+   ClassDefOverride(NdbGeneralInfo,1)
 
 }; // NdbGeneralInfo
 

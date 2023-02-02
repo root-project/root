@@ -27,8 +27,6 @@ The combination only 'reject' can be chosen to be visible or not visible
 (and hence this efficiency is then equal to zero).
 **/
 
-#include "RooFit.h"
-
 #include "RooMultiBinomial.h"
 #include "RooStreamParser.h"
 #include "RooArgList.h"
@@ -49,7 +47,7 @@ ClassImp(RooMultiBinomial);
 RooMultiBinomial::RooMultiBinomial(const char *name, const char *title,
                const RooArgList& effFuncList,
                const RooArgList& catList,
-               Bool_t ignoreNonVisible) :
+               bool ignoreNonVisible) :
   RooAbsReal(name,title),
   _catList("catList","list of cats", this),
   _effFuncList("effFuncList","list of eff funcs",this),
@@ -87,13 +85,13 @@ RooMultiBinomial::~RooMultiBinomial()
 /// Calculate the raw value of the function which is the effFunc
 /// value if cat==1 and it is (1-effFunc) if cat==0
 
-Double_t RooMultiBinomial::evaluate() const
+double RooMultiBinomial::evaluate() const
 {
   Int_t effFuncListSize = _effFuncList.getSize();
 
   // Get efficiency function for category i
 
-  vector<Double_t> effFuncVal(effFuncListSize);
+  vector<double> effFuncVal(effFuncListSize);
   for (int i=0; i<effFuncListSize; ++i) {
     effFuncVal[i] = ((RooAbsReal&)_effFuncList[i]).getVal() ;
   }
@@ -112,8 +110,8 @@ Double_t RooMultiBinomial::evaluate() const
     }
   }
 
-  vector<Double_t> effValue(effFuncListSize);
-  Bool_t notVisible = true;
+  vector<double> effValue(effFuncListSize);
+  bool notVisible = true;
 
   // Calculate efficiency per accept/reject decision
 
@@ -131,7 +129,7 @@ Double_t RooMultiBinomial::evaluate() const
     }
   }
 
-  Double_t _effVal = 1.;
+  double _effVal = 1.;
 
   // Calculate efficiency for combination of accept/reject categories
   // put equal to zero if combination of only zeros AND chosen to be invisible

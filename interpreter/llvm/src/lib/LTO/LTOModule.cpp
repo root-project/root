@@ -28,6 +28,7 @@
 #include "llvm/MC/MCSymbol.h"
 #include "llvm/MC/SubtargetFeature.h"
 #include "llvm/Object/IRObjectFile.h"
+#include "llvm/Object/MachO.h"
 #include "llvm/Object/ObjectFile.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Host.h"
@@ -45,6 +46,7 @@ using namespace llvm::object;
 LTOModule::LTOModule(std::unique_ptr<Module> M, MemoryBufferRef MBRef,
                      llvm::TargetMachine *TM)
     : Mod(std::move(M)), MBRef(MBRef), _target(TM) {
+  assert(_target && "target machine is null");
   SymTab.addModule(Mod.get());
 }
 
@@ -220,7 +222,10 @@ LTOModule::makeLTOModule(MemoryBufferRef Buffer, const TargetOptions &options,
       CPU = "core2";
     else if (Triple.getArch() == llvm::Triple::x86)
       CPU = "yonah";
-    else if (Triple.getArch() == llvm::Triple::aarch64)
+    else if (Triple.isArm64e())
+      CPU = "apple-a12";
+    else if (Triple.getArch() == llvm::Triple::aarch64 ||
+             Triple.getArch() == llvm::Triple::aarch64_32)
       CPU = "cyclone";
   }
 
@@ -412,9 +417,8 @@ void LTOModule::addDefinedFunctionSymbol(StringRef Name, const Function *F) {
 
 void LTOModule::addDefinedSymbol(StringRef Name, const GlobalValue *def,
                                  bool isFunction) {
-  // set alignment part log2() can have rounding errors
-  uint32_t align = def->getAlignment();
-  uint32_t attr = align ? countTrailingZeros(align) : 0;
+  const GlobalObject *go = dyn_cast<GlobalObject>(def);
+  uint32_t attr = go ? Log2(go->getAlign().valueOrOne()) : 0;
 
   // set permissions part
   if (isFunction) {
@@ -541,7 +545,8 @@ void LTOModule::addPotentialUndefinedSymbol(ModuleSymbolTable::Symbol Sym,
     name.c_str();
   }
 
-  auto IterBool = _undefines.insert(std::make_pair(name, NameAndAttributes()));
+  auto IterBool =
+      _undefines.insert(std::make_pair(name.str(), NameAndAttributes()));
 
   // we already have the symbol
   if (!IterBool.second)
@@ -578,7 +583,7 @@ void LTOModule::parseSymbols() {
         SymTab.printSymbolName(OS, Sym);
         Buffer.c_str();
       }
-      StringRef Name(Buffer);
+      StringRef Name = Buffer;
 
       if (IsUndefined)
         addAsmGlobalSymbolUndef(Name);
@@ -674,4 +679,12 @@ const char *LTOModule::getDependentLibrary(lto::InputFile *input, size_t index,
   StringRef S = input->getDependentLibraries()[index];
   *size = S.size();
   return S.data();
+}
+
+Expected<uint32_t> LTOModule::getMachOCPUType() const {
+  return MachO::getCPUType(Triple(Mod->getTargetTriple()));
+}
+
+Expected<uint32_t> LTOModule::getMachOCPUSubType() const {
+  return MachO::getCPUSubType(Triple(Mod->getTargetTriple()));
 }

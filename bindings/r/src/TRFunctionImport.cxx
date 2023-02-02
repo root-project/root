@@ -10,8 +10,6 @@
 #include<TRFunctionImport.h>
 #include <TRObject.h>
 
-#include <Rcpp/Function.h>
-
 //______________________________________________________________________________
 /* Begin_Html
 End_Html

@@ -27,38 +27,38 @@ class RooResolutionModel : public RooAbsPdf {
 public:
 
   // Constructors, assignment etc
-  inline RooResolutionModel() : _basis(0) { }
+  inline RooResolutionModel() : _basis(nullptr) { }
   RooResolutionModel(const char *name, const char *title, RooAbsRealLValue& x) ;
-  RooResolutionModel(const RooResolutionModel& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const = 0 ;
-  virtual ~RooResolutionModel();
+  RooResolutionModel(const RooResolutionModel& other, const char* name=nullptr);
+  TObject* clone(const char* newname) const override = 0;
+  ~RooResolutionModel() override;
 
   virtual RooAbsGenContext* modelGenContext(const RooAbsAnaConvPdf&, const RooArgSet&,
                                             const RooDataSet*, const RooArgSet*,
-                                            Bool_t) const { return 0; }
+                                            bool) const { return nullptr; }
 
-  Double_t getValV(const RooArgSet* nset=0) const ;
+  double getValV(const RooArgSet* nset=nullptr) const override ;
 
   // If used as regular PDF, it also has to be normalized. If this resolution
   // model is used in a convolution, return unnormalized value regardless of
   // specified normalization set.
-  bool selfNormalized() const { return isConvolved() ; }
+  bool selfNormalized() const override { return isConvolved() ; }
 
   virtual RooResolutionModel* convolution(RooFormulaVar* basis, RooAbsArg* owner) const ;
   /// Return the convolution variable of the resolution model.
   RooAbsRealLValue& convVar() const {return *x;}
   const RooRealVar& basisConvVar() const ;
 
-  inline Bool_t isBasisSupported(const char* name) const { return basisCode(name)?kTRUE:kFALSE ; }
+  inline bool isBasisSupported(const char* name) const { return basisCode(name)?true:false ; }
   virtual Int_t basisCode(const char* name) const = 0 ;
 
   virtual void normLeafServerList(RooArgSet& list) const ;
-  Double_t getNorm(const RooArgSet* nset=0) const ;
+  double getNorm(const RooArgSet* nset=nullptr) const override ;
 
   inline const RooFormulaVar& basis() const { return _basis?*_basis:*identity() ; }
-  Bool_t isConvolved() const { return _basis ? true : false ; }
+  bool isConvolved() const { return _basis ? true : false ; }
 
-  virtual void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent="") const override ;
 
   static RooFormulaVar* identity() ;
 
@@ -68,19 +68,17 @@ protected:
 
   friend class RooConvGenContext ;
   friend class RooAddModel ;
-  RooTemplateProxy<RooAbsRealLValue> x;                   // Dependent/convolution variable
+  RooTemplateProxy<RooAbsRealLValue> x;                   ///< Dependent/convolution variable
 
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
-//  Bool_t traceEvalHook(Double_t value) const ;
-
+  bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
 
   friend class RooAbsAnaConvPdf ;
 
-  Int_t _basisCode ;         // Identifier code for selected basis function
-  RooFormulaVar* _basis ;    // Basis function convolved with this resolution model
-  Bool_t _ownBasis ;         // Flag indicating ownership of _basis 
+  Int_t _basisCode ;         ///< Identifier code for selected basis function
+  RooFormulaVar* _basis ;    ///< Basis function convolved with this resolution model
+  bool _ownBasis ;         ///< Flag indicating ownership of _basis
 
-  ClassDef(RooResolutionModel, 2) // Abstract Resolution Model
+  ClassDefOverride(RooResolutionModel, 2) // Abstract Resolution Model
 };
 
 #endif

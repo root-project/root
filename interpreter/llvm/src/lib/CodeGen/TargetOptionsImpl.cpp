@@ -28,20 +28,8 @@ bool TargetOptions::DisableFramePointerElim(const MachineFunction &MF) const {
 
   const Function &F = MF.getFunction();
 
-  // TODO: Remove support for old `fp elim` function attributes after fully
-  //       migrate to use "frame-pointer"
-  if (!F.hasFnAttribute("frame-pointer")) {
-    // Check to see if we should eliminate all frame pointers.
-    if (F.getFnAttribute("no-frame-pointer-elim").getValueAsString() == "true")
-      return true;
-
-    // Check to see if we should eliminate non-leaf frame pointers.
-    if (F.hasFnAttribute("no-frame-pointer-elim-non-leaf"))
-      return MF.getFrameInfo().hasCalls();
-
+  if (!F.hasFnAttribute("frame-pointer"))
     return false;
-  }
-
   StringRef FP = F.getFnAttribute("frame-pointer").getValueAsString();
   if (FP == "all")
     return true;
@@ -56,4 +44,14 @@ bool TargetOptions::DisableFramePointerElim(const MachineFunction &MF) const {
 /// that the rounding mode of the FPU can change from its default.
 bool TargetOptions::HonorSignDependentRoundingFPMath() const {
   return !UnsafeFPMath && HonorSignDependentRoundingFPMathOption;
+}
+
+/// NOTE: There are targets that still do not support the debug entry values
+/// production and that is being controlled with the SupportsDebugEntryValues.
+/// In addition, SCE debugger does not have the feature implemented, so prefer
+/// not to emit the debug entry values in that case.
+/// The EnableDebugEntryValues can be used for the testing purposes.
+bool TargetOptions::ShouldEmitDebugEntryValues() const {
+  return (SupportsDebugEntryValues && DebuggerTuning != DebuggerKind::SCE) ||
+         EnableDebugEntryValues;
 }

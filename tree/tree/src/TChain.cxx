@@ -68,25 +68,17 @@ ClassImp(TChain);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TChain::TChain()
-: TTree()
-, fTreeOffsetLen(100)
-, fNtrees(0)
-, fTreeNumber(-1)
-, fTreeOffset(0)
-, fCanDeleteRefs(kFALSE)
-, fTree(0)
-, fFile(0)
-, fFiles(0)
-, fStatus(0)
-, fProofChain(0)
+TChain::TChain(Mode mode)
+   : TTree(), fTreeOffsetLen(100), fNtrees(0), fTreeNumber(-1), fTreeOffset(0), fCanDeleteRefs(kFALSE), fTree(0),
+     fFile(0), fFiles(0), fStatus(0), fProofChain(0), fGlobalRegistration(mode == kWithGlobalRegistration)
 {
    fTreeOffset = new Long64_t[fTreeOffsetLen];
    fFiles = new TObjArray(fTreeOffsetLen);
    fStatus = new TList();
    fTreeOffset[0]  = 0;
-   if (gDirectory) gDirectory->Remove(this);
-   gROOT->GetListOfSpecials()->Add(this);
+   if (fGlobalRegistration) {
+      gROOT->GetListOfSpecials()->Add(this);
+   }
    fFile = 0;
    fDirectory = 0;
 
@@ -94,12 +86,14 @@ TChain::TChain()
    ResetBit(kProofUptodate);
    ResetBit(kProofLite);
 
-   // Add to the global list
-   gROOT->GetListOfDataSets()->Add(this);
+   if (fGlobalRegistration) {
+      // Add to the global list
+      gROOT->GetListOfDataSets()->Add(this);
 
-   // Make sure we are informed if the TFile is deleted.
-   R__LOCKGUARD(gROOTMutex);
-   gROOT->GetListOfCleanups()->Add(this);
+      // Make sure we are informed if the TFile is deleted.
+      R__LOCKGUARD(gROOTMutex);
+      gROOT->GetListOfCleanups()->Add(this);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -142,18 +136,10 @@ TChain::TChain()
 ///     }
 /// ~~~
 
-TChain::TChain(const char* name, const char* title)
-:TTree(name, title, /*splitlevel*/ 99, nullptr)
-, fTreeOffsetLen(100)
-, fNtrees(0)
-, fTreeNumber(-1)
-, fTreeOffset(0)
-, fCanDeleteRefs(kFALSE)
-, fTree(0)
-, fFile(0)
-, fFiles(0)
-, fStatus(0)
-, fProofChain(0)
+TChain::TChain(const char *name, const char *title, Mode mode)
+   : TTree(name, title, /*splitlevel*/ 99, nullptr), fTreeOffsetLen(100), fNtrees(0), fTreeNumber(-1), fTreeOffset(0),
+     fCanDeleteRefs(kFALSE), fTree(0), fFile(0), fFiles(0), fStatus(0), fProofChain(0),
+     fGlobalRegistration(mode == kWithGlobalRegistration)
 {
    //
    //*-*
@@ -168,14 +154,16 @@ TChain::TChain(const char* name, const char* title)
    ResetBit(kProofUptodate);
    ResetBit(kProofLite);
 
-   R__LOCKGUARD(gROOTMutex);
+   if (fGlobalRegistration) {
+      R__LOCKGUARD(gROOTMutex);
 
-   // Add to the global lists
-   gROOT->GetListOfSpecials()->Add(this);
-   gROOT->GetListOfDataSets()->Add(this);
+      // Add to the global lists
+      gROOT->GetListOfSpecials()->Add(this);
+      gROOT->GetListOfDataSets()->Add(this);
 
-   // Make sure we are informed if the TFile is deleted.
-   gROOT->GetListOfCleanups()->Add(this);
+      // Make sure we are informed if the TFile is deleted.
+      gROOT->GetListOfCleanups()->Add(this);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -185,7 +173,7 @@ TChain::~TChain()
 {
    bool rootAlive = gROOT && !gROOT->TestBit(TObject::kInvalidObject);
 
-   if (rootAlive) {
+   if (rootAlive && fGlobalRegistration) {
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfCleanups()->Remove(this);
    }
@@ -213,7 +201,7 @@ TChain::~TChain()
    fTreeOffset = 0;
 
    // Remove from the global lists
-   if (rootAlive) {
+   if (rootAlive && fGlobalRegistration) {
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSpecials()->Remove(this);
       gROOT->GetListOfDataSets()->Remove(this);
@@ -298,7 +286,7 @@ Int_t TChain::Add(TChain* chain)
 /// - Tagging the name of the tree with a slash (e.g. \p /tree_name ) is only
 ///   supported for backward compatibility; it requires the file name to contain
 ///   the string '.root' and its use is deprecated. Instead, use the form
-///   \p ?#tree_name (that is an "?" followed by an empty query), for example:
+///   \p ?#%tree_name (that is an "?" followed by an empty query), for example:
 ///   ~~~{.cpp}
 ///   TChain c;
 ///   // DO NOT DO THIS
@@ -520,7 +508,8 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = TTree::kMaxEntrie
       TFile* file;
       {
          TDirectory::TContext ctxt;
-         file = TFile::Open(filename);
+         const char *option = fGlobalRegistration ? "READ" : "READ_WITHOUT_GLOBALREGISTRATION";
+         file = TFile::Open(filename, option);
       }
       if (!file || file->IsZombie()) {
          delete file;
@@ -747,7 +736,6 @@ TFriendElement* TChain::AddFriend(TTree* chain, const char* alias, Bool_t /* war
    if (!t) {
       Warning("AddFriend","Unknown TChain %s",chain->GetName());
    }
-   chain->RegisterExternalFriend(fe);
    return fe;
 }
 
@@ -1507,8 +1495,10 @@ Long64_t TChain::LoadTree(Long64_t entry)
    //        if we did not delete it above.
    {
       TDirectory::TContext ctxt;
-      fFile = TFile::Open(element->GetTitle());
-      if (fFile) fFile->SetBit(kMustCleanup);
+      const char *option = fGlobalRegistration ? "READ" : "READ_WITHOUT_GLOBALREGISTRATION";
+      fFile = TFile::Open(element->GetTitle(), option);
+      if (fFile && fGlobalRegistration)
+         fFile->SetBit(kMustCleanup);
    }
 
    // ----- Begin of modifications by MvL
@@ -1535,6 +1525,8 @@ Long64_t TChain::LoadTree(Long64_t entry)
          // We do not return yet so that 'fEntries' can be updated with the
          // sum of the entries of all the other trees.
          returnCode = -4;
+      } else if (!fGlobalRegistration) {
+         fTree->ResetBit(kMustCleanup);
       }
    }
 
@@ -1881,7 +1873,7 @@ void TChain::ls(Option_t* option) const
 /// ~~~ {.cpp}
 ///     TFile* file = TFile::Open("newfile.root", "RECREATE");
 ///     file->mkdir("mydir")->cd();
-///     ch.Merge(file);
+///     ch.Merge(file, 0);
 /// ~~~
 
 Long64_t TChain::Merge(const char* name, Option_t* option)
@@ -1946,7 +1938,7 @@ Long64_t TChain::Merge(TCollection* /* list */, TFileMergeInfo *)
 /// ~~~ {.cpp}
 ///     TFile* file = TFile::Open("newfile.root", "RECREATE");
 ///     file->mkdir("mydir")->cd();
-///     ch.Merge(file);
+///     ch.Merge(file, 0);
 /// ~~~
 /// If 'option' contains the word 'fast' the merge will be done without
 /// unzipping or unstreaming the baskets (i.e., a direct copy of the raw
@@ -2134,7 +2126,7 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 ///     [xxx://host]/a/path/file#treename
 /// ~~~
 /// i.e. anchor but no options (query), the filename will be the full path, as
-/// the anchor may be the internal file name of an archive. Use '?#treename' to
+/// the anchor may be the internal file name of an archive. Use '?#%treename' to
 /// pass the treename if the query field is empty.
 ///
 /// \param[in] name        is the original name
@@ -2406,19 +2398,7 @@ void TChain::SavePrimitive(std::ostream &out, Option_t *option)
    }
    out << std::endl;
 
-   if (GetMarkerColor() != 1) {
-      if (GetMarkerColor() > 228) {
-         TColor::SaveColor(out, GetMarkerColor());
-         out << "   " << chName.Data() << "->SetMarkerColor(ci);" << std::endl;
-      } else
-         out << "   " << chName.Data() << "->SetMarkerColor(" << GetMarkerColor() << ");" << std::endl;
-   }
-   if (GetMarkerStyle() != 1) {
-      out << "   " << chName.Data() << "->SetMarkerStyle(" << GetMarkerStyle() << ");" << std::endl;
-   }
-   if (GetMarkerSize() != 1) {
-      out << "   " << chName.Data() << "->SetMarkerSize(" << GetMarkerSize() << ");" << std::endl;
-   }
+   SaveMarkerAttributes(out, chName.Data(), 1, 1, 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2956,7 +2936,7 @@ void TChain::SetEventList(TEventList *evlist)
 
 void TChain::SetName(const char* name)
 {
-   {
+   if (fGlobalRegistration) {
       // Should this be extended to include the call to TTree::SetName?
       R__WRITE_LOCKGUARD(ROOT::gCoreMutex); // Take the lock once rather than 3 times.
       gROOT->GetListOfCleanups()->Remove(this);
@@ -2964,14 +2944,13 @@ void TChain::SetName(const char* name)
       gROOT->GetListOfDataSets()->Remove(this);
    }
    TTree::SetName(name);
-   {
+   if (fGlobalRegistration) {
       // Should this be extended to include the call to TTree::SetName?
       R__WRITE_LOCKGUARD(ROOT::gCoreMutex); // Take the lock once rather than 3 times.
       gROOT->GetListOfCleanups()->Add(this);
       gROOT->GetListOfSpecials()->Add(this);
       gROOT->GetListOfDataSets()->Add(this);
    }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

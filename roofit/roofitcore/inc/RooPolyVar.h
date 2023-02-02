@@ -31,14 +31,14 @@ public:
   RooPolyVar() ;
   RooPolyVar(const char* name, const char* title, RooAbsReal& x) ;
   RooPolyVar(const char *name, const char *title,
-		RooAbsReal& _x, const RooArgList& _coefList, Int_t lowestOrder=0) ;
+      RooAbsReal& _x, const RooArgList& _coefList, Int_t lowestOrder=0) ;
 
-  RooPolyVar(const RooPolyVar& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooPolyVar(*this, newname); }
-  virtual ~RooPolyVar() ;
+  RooPolyVar(const RooPolyVar& other, const char *name = nullptr);
+  TObject* clone(const char* newname) const override { return new RooPolyVar(*this, newname); }
+  ~RooPolyVar() override ;
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
 protected:
 
@@ -46,11 +46,11 @@ protected:
   RooListProxy _coefList ;
   Int_t _lowestOrder ;
 
-  mutable std::vector<Double_t> _wksp; //! do not persist
+  mutable std::vector<double> _wksp; ///<! do not persist
 
-  Double_t evaluate() const;
+  double evaluate() const override;
 
-  ClassDef(RooPolyVar,1) // Polynomial function
+  ClassDefOverride(RooPolyVar,1) // Polynomial function
 };
 
 #endif

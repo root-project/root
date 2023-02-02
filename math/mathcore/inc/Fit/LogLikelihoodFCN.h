@@ -67,7 +67,7 @@ public:
       Constructor from unbin data set and model function (pdf) for object managed by users
    */
    LogLikelihoodFCN (const UnBinData & data, const IModelFunction & func, int weight = 0, bool extended = false, const ::ROOT::EExecutionPolicy &executionPolicy = ::ROOT::EExecutionPolicy::kSequential) :
-      BaseFCN(std::shared_ptr<UnBinData>(const_cast<UnBinData*>(&data), DummyDeleter<UnBinData>()), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
+      BaseFCN(std::make_shared<UnBinData>(data), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
       fIsExtended(extended),
       fWeight(weight),
       fNEffPoints(0),
@@ -118,12 +118,12 @@ public:
    virtual unsigned int NFitPoints() const { return fNEffPoints; }
 
    /// i-th likelihood contribution and its gradient
-   virtual double DataElement(const double * x, unsigned int i, double * g) const {
+   virtual double DataElement(const double * x, unsigned int i, double * g, double *  h = nullptr, bool fullHessian = false) const {
       if (i==0) this->UpdateNCalls();
-      return FitUtil::EvaluatePdf(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
+      return FitUtil::Evaluate<T>::EvalPdf(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g, h, BaseFCN::IsAGradFCN(), fullHessian);
    }
 
-   // need to be virtual to be instantited
+   // need to be virtual to be instantiated
    virtual void Gradient(const double *x, double *g) const {
       // evaluate the chi2 gradient
       FitUtil::Evaluate<typename BaseFCN::T>::EvalLogLGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g,
@@ -165,15 +165,15 @@ private:
 
 
       //data member
-   bool fIsExtended;  // flag for indicating if likelihood is extended
-   int  fWeight;  // flag to indicate if needs to evaluate using weight or weight squared (default weight = 0)
+   bool fIsExtended;  ///< flag for indicating if likelihood is extended
+   int  fWeight;  ///< flag to indicate if needs to evaluate using weight or weight squared (default weight = 0)
 
 
-   mutable unsigned int fNEffPoints;  // number of effective points used in the fit
+   mutable unsigned int fNEffPoints;  ///< number of effective points used in the fit
 
-   mutable std::vector<double> fGrad; // for derivatives
+   mutable std::vector<double> fGrad; ///< for derivatives
 
-   ::ROOT::EExecutionPolicy fExecutionPolicy; // Execution policy
+   ::ROOT::EExecutionPolicy fExecutionPolicy; ///< Execution policy
 };
       // define useful typedef's
       // using LogLikelihoodFunction_v = LogLikelihoodFCN<ROOT::Math::IMultiGenFunction, ROOT::Math::IParametricFunctionMultiDimTempl<T>>;

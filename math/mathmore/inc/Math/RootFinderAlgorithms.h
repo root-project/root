@@ -59,7 +59,7 @@ namespace Roots {
    public:
 
       Bisection();
-      virtual ~Bisection();
+      ~Bisection() override;
 
    private:
       // usually copying is non trivial, so we make this unaccessible
@@ -81,7 +81,7 @@ namespace Roots {
    public:
 
       FalsePos();
-      virtual ~FalsePos();
+      ~FalsePos() override;
 
    private:
       // usually copying is non trivial, so we make this unaccessible
@@ -106,7 +106,7 @@ namespace Roots {
    public:
 
       Brent();
-      virtual ~Brent();
+      ~Brent() override;
 
    private:
       // usually copying is non trivial, so we make this unaccessible
@@ -134,7 +134,7 @@ namespace Roots {
    public:
 
       Newton();
-      virtual ~Newton();
+      ~Newton() override;
 
    private:
       // usually copying is non trivial, so we make this unaccessible
@@ -157,7 +157,7 @@ namespace Roots {
    public:
 
       Secant();
-      virtual ~Secant();
+      ~Secant() override;
 
    private:
       // usually copying is non trivial, so we make this unaccessible
@@ -180,7 +180,7 @@ namespace Roots {
    public:
 
       Steffenson();
-      virtual ~Steffenson();
+      ~Steffenson() override;
 
    private:
       // usually copying is non trivial, so we make this unaccessible

@@ -23,7 +23,7 @@ using namespace RooFit;
 void rf507_debugtools()
 {
    // Activate RooFit memory tracing
-   RooTrace::active(kTRUE);
+   RooTrace::active(true);
 
    // Construct gauss(x,m,s)
    RooRealVar x("x", "x", -10, 10);
@@ -35,7 +35,7 @@ void rf507_debugtools()
    RooTrace::dump();
 
    // Activate verbose mode
-   RooTrace::verbose(kTRUE);
+   RooTrace::verbose(true);
 
    // Construct poly(x,p0)
    RooRealVar p0("p0", "p0", 0.01, 0., 1.);

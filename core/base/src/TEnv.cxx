@@ -231,8 +231,8 @@ private:
    EEnvLevel fLevel;
 
 public:
-   TReadEnvParser(TEnv *e, FILE *f, EEnvLevel l) : TEnvParser(e, f), fLevel(l) { }
-   void KeyValue(const TString &name, const TString &value, const TString &type)
+   TReadEnvParser(TEnv *e, FILE *f, EEnvLevel l) : TEnvParser(e, f), fLevel(l) {}
+   void KeyValue(const TString &name, const TString &value, const TString &type) override
       { fEnv->SetValue(name, value, fLevel, type); }
 };
 
@@ -245,9 +245,9 @@ private:
    FILE *fOfp;
 
 public:
-   TWriteEnvParser(TEnv *e, FILE *f, FILE *of) : TEnvParser(e, f), fOfp(of) { }
-   void KeyValue(const TString &name, const TString &value, const TString &type);
-   void Char(Int_t c) { fputc(c, fOfp); }
+   TWriteEnvParser(TEnv *e, FILE *f, FILE *of) : TEnvParser(e, f), fOfp(of) {}
+   void KeyValue(const TString &name, const TString &value, const TString &type) override;
+   void Char(Int_t c) override { fputc(c, fOfp); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -581,7 +581,7 @@ void TEnv::PrintEnv(EEnvLevel level) const
 
    while ((er = (TEnvRec*) next()))
       if (er->fLevel == level || level == kEnvAll)
-         Printf("%-25s %-30s [%s]", Form("%s:", er->fName.Data()),
+         Printf("%-25s %-30s [%s]", TString::Format("%s:", er->fName.Data()).Data(),
                 er->fValue.Data(), lc[er->fLevel]);
 }
 
@@ -632,7 +632,7 @@ Int_t TEnv::WriteFile(const char *fname, EEnvLevel level)
       TEnvRec *er;
       while ((er = (TEnvRec*) next()))
          if (er->fLevel == level || level == kEnvAll)
-            fprintf(ofp, "%-40s %s\n", Form("%s:", er->fName.Data()),
+            fprintf(ofp, "%-40s %s\n", TString::Format("%s:", er->fName.Data()).Data(),
                     er->fValue.Data());
       fclose(ofp);
       return 0;
@@ -692,7 +692,7 @@ void TEnv::SaveLevel(EEnvLevel level)
    else
       return;
 
-   if ((ofp = fopen(Form("%s.new", rootrcdir.Data()), "w"))) {
+   if ((ofp = fopen(TString::Format("%s.new", rootrcdir.Data()).Data(), "w"))) {
       ifp = fopen(rootrcdir.Data(), "r");
       if (ifp == nullptr) {     // try to create file
          ifp = fopen(rootrcdir.Data(), "w");
@@ -714,15 +714,15 @@ void TEnv::SaveLevel(EEnvLevel level)
                if (er->fLevel == kEnvChange) er->fLevel = level;
                if (er->fLevel == level) {
                   er->fModified = kFALSE;
-                  fprintf(ofp, "%-40s %s\n", Form("%s:", er->fName.Data()),
+                  fprintf(ofp, "%-40s %s\n", TString::Format("%s:", er->fName.Data()).Data(),
                           er->fValue.Data());
                }
             }
          }
          fclose(ifp);
          fclose(ofp);
-         gSystem->Rename(rootrcdir.Data(), Form("%s.bak", rootrcdir.Data()));
-         gSystem->Rename(Form("%s.new", rootrcdir.Data()), rootrcdir.Data());
+         gSystem->Rename(rootrcdir.Data(), TString::Format("%s.bak", rootrcdir.Data()).Data());
+         gSystem->Rename(TString::Format("%s.new", rootrcdir.Data()).Data(), rootrcdir.Data());
          return;
       }
       fclose(ofp);
@@ -775,7 +775,7 @@ void TEnv::SetValue(const char *name, EEnvLevel level)
 
 void TEnv::SetValue(const char *name, Int_t value)
 {
-   SetValue(name, Form("%d", value));
+   SetValue(name, TString::Format("%d", value).Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -783,7 +783,7 @@ void TEnv::SetValue(const char *name, Int_t value)
 
 void TEnv::SetValue(const char *name, Double_t value)
 {
-   SetValue(name, Form("%g", value));
+   SetValue(name, TString::Format("%g", value).Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -27,7 +27,7 @@ int df014_CSVDataSource()
    auto fileName = "df014_CsvDataSource_MuRun2010B_cpp.csv";
    if(gSystem->AccessPathName(fileName))
       TFile::Cp(fileNameUrl, fileName);
-   auto df = ROOT::RDF::MakeCsvDataFrame(fileName);
+   auto df = ROOT::RDF::FromCSV(fileName);
 
    // Now we will apply a first filter based on two columns of the CSV,
    // and we will define a new column that will contain the invariant mass.
@@ -47,7 +47,7 @@ int df014_CSVDataSource()
    invMass->DrawClone();
 
    // We will now produce a plot also for the J/Psi particle. We will plot
-   // on the same canvas the full spectrum and the zoom in the J/psi particle.
+   // on the same canvas the full spectrum and the zoom in on the J/psi particle.
    // First we will create the full spectrum histogram from the invariant mass
    // column, using a different histogram model than before.
    auto fullSpectrum =

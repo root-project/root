@@ -246,4 +246,56 @@ TEST(TThreadExecutor, ThreadSafety) {
    EXPECT_TRUE(std::equal(counters.begin(), counters.end(), target.begin()));
 }
 
+// Checking if we correctly handle uneven chunks
+TEST(TThreadExecutor, StdVectorChunks)
+{
+   ROOT::TThreadExecutor ttex;
+   auto func = [](int x) -> int { return x; };
+   // redfunc must be such that does not have 0 as identity (i.e. not addition but multiplication)
+   auto redfunc = [](const std::vector<int> &v) {
+      return std::accumulate(v.begin(), v.end(), 1, std::multiplies<int>());
+   };
+
+   // will be calculating 7 factorial = 5040, const and non-const vectors to invoke different overloads
+   std::vector<int> vec{1, 2, 3, 4, 5, 6, 7};
+   const std::vector<int> cvec{1, 2, 3, 4, 5, 6, 7};
+
+   EXPECT_EQ(ttex.MapReduce(func, vec, redfunc, 3), 5040); // with 3 chunks, last chunk is smaller
+   EXPECT_EQ(ttex.MapReduce(func, cvec, redfunc, 3), 5040);
+
+   EXPECT_EQ(ttex.MapReduce(func, vec, redfunc, 9), 5040); // with 9 chunks, 2 empty chunks
+   EXPECT_EQ(ttex.MapReduce(func, cvec, redfunc, 9), 5040);
+}
+
+TEST(TThreadExecutor, TSeqActions)
+{
+   ROOT::TThreadExecutor ttex;
+   auto func = [](int x) -> int { return x; };
+   auto redfunc = [](const std::vector<int> &v) { return std::accumulate(v.begin(), v.end(), 0); };
+
+   // MapReduce on TSeq with end specified only
+   EXPECT_EQ(ttex.MapReduce(func, ROOT::TSeqI(5), redfunc, 3), 10); // with 3 chunks
+   EXPECT_EQ(ttex.MapReduce(func, ROOT::TSeqI(5), redfunc), 10);    // with 0 chunks
+
+   // MapReduce on TSeq with begin and end specified only
+   EXPECT_EQ(ttex.MapReduce(func, ROOT::TSeqI(2, 5), redfunc, 3), 9);
+   EXPECT_EQ(ttex.MapReduce(func, ROOT::TSeqI(2, 5), redfunc), 9);
+
+   // MapReduce on increasing and decreasing TSeq with begin, end and step specified
+   EXPECT_EQ(ttex.MapReduce(func, ROOT::TSeqI(2, 5, 2), redfunc, 3), 6);
+   EXPECT_EQ(ttex.MapReduce(func, ROOT::TSeqI(2, 5, 2), redfunc), 6);
+   EXPECT_EQ(ttex.MapReduce(func, ROOT::TSeqI(5, 2, -2), redfunc, 3), 8);
+   EXPECT_EQ(ttex.MapReduce(func, ROOT::TSeqI(5, 2, -2), redfunc), 8);
+
+   // Map on TSeq with end specified only
+   EXPECT_EQ(redfunc(ttex.Map(func, ROOT::TSeqI(5))), 10);
+
+   // Map on TSeq with begin and end specified only
+   EXPECT_EQ(redfunc(ttex.Map(func, ROOT::TSeqI(2, 5))), 9);
+
+   // Map on increasing and decreasing TSeq with begin, end and step specified
+   EXPECT_EQ(redfunc(ttex.Map(func, ROOT::TSeqI(2, 5, 2))), 6);
+   EXPECT_EQ(redfunc(ttex.Map(func, ROOT::TSeqI(5, 2, -2))), 8);
+}
+
 #endif

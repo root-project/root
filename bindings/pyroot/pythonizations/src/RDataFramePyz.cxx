@@ -13,7 +13,7 @@
 #include "CPPInstance.h"
 #include "ProxyWrappers.h"
 #include "PyROOTPythonize.h"
-#include "RConfig.h"
+#include "ROOT/RConfig.hxx"
 #include "TInterpreter.h"
 #include "CPyCppyy/API.h"
 
@@ -22,11 +22,12 @@
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Make an RDataFrame from a dictionary of numpy arrays
+/// \param[in] self Always null, since this is a module function.
 /// \param[in] pydata Dictionary with numpy arrays
 ///
 /// This function takes a dictionary of numpy arrays and creates an RDataFrame
 /// using the keys as column names and the numpy arrays as data.
-PyObject *PyROOT::MakeNumpyDataFrame(PyObject * /*self*/, PyObject * pydata)
+PyObject *PyROOT::MakeNumpyDataFrameImpl(PyObject * /*self*/, PyObject * pydata)
 {
    if (!pydata) {
       PyErr_SetString(PyExc_RuntimeError, "Object not convertible: Invalid Python object.");

@@ -60,7 +60,7 @@ void rf104_classfactory()
    // To use this class,
    //    - Compile and link class with '.x MyPdfV3.cxx+'
    //
-   RooClassFactory::makePdf("MyPdfV3", "x,A,B", "", "A*fabs(x)+pow(x-B,2)", kTRUE, kFALSE,
+   RooClassFactory::makePdf("MyPdfV3", "x,A,B", "", "A*fabs(x)+pow(x-B,2)", true, false,
                             "x:(A/2)*(pow(x.max(rangeName),2)+pow(x.min(rangeName),2))+(1./"
                             "3)*(pow(x.max(rangeName)-B,3)-pow(x.min(rangeName)-B,3))");
 

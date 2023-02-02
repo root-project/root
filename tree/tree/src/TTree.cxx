@@ -1267,7 +1267,7 @@ bool CheckReshuffling(TTree &mainTree, TTree &friendTree)
 /// see other AddFriend functions
 ///
 /// A TFriendElement TF describes a TTree object TF in a file.
-/// When a TFriendElement TF is added to the the list of friends of an
+/// When a TFriendElement TF is added to the list of friends of an
 /// existing TTree T, any variable from TF can be referenced in a query
 /// to T.
 ///
@@ -1409,10 +1409,10 @@ TFriendElement *TTree::AddFriend(TTree *tree, const char *alias, Bool_t warn)
               tree->GetName(), fe->GetFile() ? fe->GetFile()->GetName() : "(memory resident)", t->GetEntries(),
               fEntries);
    }
-   if (CheckReshuffling(*this, *t)) {
+   if (CheckReshuffling(*this, *t))
       fFriends->Add(fe);
-      tree->RegisterExternalFriend(fe);
-   }
+   else
+      tree->RemoveExternalFriend(fe);
    return fe;
 }
 
@@ -1547,7 +1547,7 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 /// Same as TTree::Branch() with added check that addobj matches className.
 ///
-/// See TTree::Branch() for other details.
+/// \see TTree::Branch() for other details.
 ///
 
 TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel)
@@ -1596,7 +1596,7 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Same as TTree::Branch but automatic detection of the class name.
-/// See TTree::Branch for other details.
+/// \see TTree::Branch for other details.
 
 TBranch* TTree::BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel)
 {
@@ -1629,7 +1629,7 @@ TBranch* TTree::BranchImp(const char* branchname, TClass* ptrClass, void* addobj
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Same as TTree::Branch but automatic detection of the class name.
-/// See TTree::Branch for other details.
+/// \see TTree::Branch for other details.
 
 TBranch* TTree::BranchImpRef(const char* branchname, const char *classname, TClass* ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel)
 {
@@ -1689,7 +1689,7 @@ TBranch* TTree::BranchImpRef(const char* branchname, const char *classname, TCla
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Same as TTree::Branch but automatic detection of the class name.
-/// See TTree::Branch for other details.
+/// \see TTree::Branch for other details.
 
 TBranch* TTree::BranchImpRef(const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel)
 {
@@ -2630,7 +2630,7 @@ void TTree::Browse(TBrowser* b)
 /// If an index is already existing, this is replaced by the new one without being
 /// deleted. This behaviour prevents the deletion of a previously external index
 /// assigned to the TTree via the TTree::SetTreeIndex() method.
-/// See also comments in TTree::SetTreeIndex().
+/// \see also comments in TTree::SetTreeIndex().
 
 Int_t TTree::BuildIndex(const char* majorname, const char* minorname /* = "0" */)
 {
@@ -3721,7 +3721,7 @@ void TTree::Delete(Option_t* option /* = "" */)
    TFile *file = GetCurrentFile();
 
    // delete all baskets and header from file
-   if (file && !strcmp(option,"all")) {
+   if (file && option && !strcmp(option,"all")) {
       if (!file->IsWritable()) {
          Error("Delete","File : %s is not writable, cannot delete Tree:%s", file->GetName(),GetName());
          return;
@@ -3773,7 +3773,7 @@ void TTree::Delete(Option_t* option /* = "" */)
       fDirectory->Remove(this);
       //delete the file cache if it points to this Tree
       MoveReadCache(file,0);
-      fDirectory = 0;
+      fDirectory = nullptr;
       ResetBit(kMustCleanup);
    }
 
@@ -4500,7 +4500,6 @@ void TTree::DropBaskets()
 void TTree::DropBuffers(Int_t)
 {
    // Be careful not to remove current read/write buffers.
-   Int_t ndrop = 0;
    Int_t nleaves = fLeaves.GetEntriesFast();
    for (Int_t i = 0; i < nleaves; ++i)  {
       TLeaf* leaf = (TLeaf*) fLeaves.UncheckedAt(i);
@@ -4512,7 +4511,7 @@ void TTree::DropBuffers(Int_t)
          }
          TBasket* basket = (TBasket*)branch->GetListOfBaskets()->UncheckedAt(j);
          if (basket) {
-            ndrop += basket->DropBuffers();
+            basket->DropBuffers();
             if (fTotalBuffers < fMaxVirtualSize) {
                return;
             }
@@ -4813,10 +4812,13 @@ TBranch* TTree::FindBranch(const char* branchname)
    // We already have been visited while recursively looking
    // through the friends tree, let return
    if (kFindBranch & fFriendLockStatus) {
-      return 0;
+      return nullptr;
    }
 
-   TBranch* branch = 0;
+   if (!branchname)
+      return nullptr;
+
+   TBranch* branch = nullptr;
    // If the first part of the name match the TTree name, look for the right part in the
    // list of branches.
    // This will allow the branchname to be preceded by
@@ -4840,11 +4842,11 @@ TBranch* TTree::FindBranch(const char* branchname)
 
    // Search in list of friends.
    if (!fFriends) {
-      return 0;
+      return nullptr;
    }
    TFriendLock lock(this, kFindBranch);
    TIter nextf(fFriends);
-   TFriendElement* fe = 0;
+   TFriendElement* fe = nullptr;
    while ((fe = (TFriendElement*) nextf())) {
       TTree* t = fe->GetTree();
       if (!t) {
@@ -4853,12 +4855,12 @@ TBranch* TTree::FindBranch(const char* branchname)
       // If the alias is present replace it with the real name.
       const char *subbranch = strstr(branchname, fe->GetName());
       if (subbranch != branchname) {
-         subbranch = 0;
+         subbranch = nullptr;
       }
       if (subbranch) {
          subbranch += strlen(fe->GetName());
          if (*subbranch != '.') {
-            subbranch = 0;
+            subbranch = nullptr;
          } else {
             ++subbranch;
          }
@@ -4874,7 +4876,7 @@ TBranch* TTree::FindBranch(const char* branchname)
          return branch;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4882,26 +4884,29 @@ TBranch* TTree::FindBranch(const char* branchname)
 
 TLeaf* TTree::FindLeaf(const char* searchname)
 {
+   if (!searchname)
+      return nullptr;
+
    // We already have been visited while recursively looking
    // through the friends tree, let's return.
    if (kFindLeaf & fFriendLockStatus) {
-      return 0;
+      return nullptr;
    }
 
    // This will allow the branchname to be preceded by
    // the name of this tree.
-   char* subsearchname = (char*) strstr(searchname, GetName());
+   const char* subsearchname = strstr(searchname, GetName());
    if (subsearchname != searchname) {
-      subsearchname = 0;
+      subsearchname = nullptr;
    }
    if (subsearchname) {
       subsearchname += strlen(GetName());
       if (*subsearchname != '.') {
-         subsearchname = 0;
+         subsearchname = nullptr;
       } else {
          ++subsearchname;
-         if (subsearchname[0]==0) {
-            subsearchname = 0;
+         if (subsearchname[0] == 0) {
+            subsearchname = nullptr;
          }
       }
    }
@@ -4915,7 +4920,7 @@ TLeaf* TTree::FindLeaf(const char* searchname)
 
    // For leaves we allow for one level up to be prefixed to the name.
    TIter next(GetListOfLeaves());
-   TLeaf* leaf = 0;
+   TLeaf* leaf = nullptr;
    while ((leaf = (TLeaf*) next())) {
       leafname = leaf->GetName();
       Ssiz_t dim = leafname.First('[');
@@ -4976,25 +4981,25 @@ TLeaf* TTree::FindLeaf(const char* searchname)
    }
    // Search in list of friends.
    if (!fFriends) {
-      return 0;
+      return nullptr;
    }
    TFriendLock lock(this, kFindLeaf);
    TIter nextf(fFriends);
-   TFriendElement* fe = 0;
+   TFriendElement* fe = nullptr;
    while ((fe = (TFriendElement*) nextf())) {
       TTree* t = fe->GetTree();
       if (!t) {
          continue;
       }
       // If the alias is present replace it with the real name.
-      subsearchname = (char*) strstr(searchname, fe->GetName());
+      subsearchname = strstr(searchname, fe->GetName());
       if (subsearchname != searchname) {
-         subsearchname = 0;
+         subsearchname = nullptr;
       }
       if (subsearchname) {
          subsearchname += strlen(fe->GetName());
          if (*subsearchname != '.') {
-            subsearchname = 0;
+            subsearchname = nullptr;
          } else {
             ++subsearchname;
          }
@@ -5009,7 +5014,7 @@ TLeaf* TTree::FindLeaf(const char* searchname)
          return leaf;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5192,7 +5197,7 @@ const char* TTree::GetAlias(const char* aliasName) const
    // We already have been visited while recursively looking
    // through the friends tree, let's return.
    if (kGetAlias & fFriendLockStatus) {
-      return 0;
+      return nullptr;
    }
    if (fAliases) {
       TObject* alias = fAliases->FindObject(aliasName);
@@ -5201,11 +5206,11 @@ const char* TTree::GetAlias(const char* aliasName) const
       }
    }
    if (!fFriends) {
-      return 0;
+      return nullptr;
    }
    TFriendLock lock(const_cast<TTree*>(this), kGetAlias);
    TIter nextf(fFriends);
-   TFriendElement* fe = 0;
+   TFriendElement* fe = nullptr;
    while ((fe = (TFriendElement*) nextf())) {
       TTree* t = fe->GetTree();
       if (t) {
@@ -5222,7 +5227,7 @@ const char* TTree::GetAlias(const char* aliasName) const
          }
       }
    }
-   return 0;
+   return nullptr;
 }
 
 namespace {
@@ -5257,13 +5262,14 @@ TBranch *R__GetBranch(const TObjArray &branches, const char *name)
 
 TBranch* TTree::GetBranch(const char* name)
 {
-   if (name == 0) return 0;
-
    // We already have been visited while recursively
    // looking through the friends tree, let's return.
    if (kGetBranch & fFriendLockStatus) {
-      return 0;
+      return nullptr;
    }
+
+   if (!name)
+      return nullptr;
 
    // Look for an exact match in the list of top level
    // branches.
@@ -5291,13 +5297,13 @@ TBranch* TTree::GetBranch(const char* name)
    }
 
    if (!fFriends) {
-      return 0;
+      return nullptr;
    }
 
    // Search in list of friends.
    TFriendLock lock(this, kGetBranch);
    TIter next(fFriends);
-   TFriendElement* fe = 0;
+   TFriendElement* fe = nullptr;
    while ((fe = (TFriendElement*) next())) {
       TTree* t = fe->GetTree();
       if (t) {
@@ -5316,7 +5322,7 @@ TBranch* TTree::GetBranch(const char* name)
       if (!t) {
          continue;
       }
-      char* subname = (char*) strstr(name, fe->GetName());
+      const char* subname = strstr(name, fe->GetName());
       if (subname != name) {
          continue;
       }
@@ -5331,7 +5337,7 @@ TBranch* TTree::GetBranch(const char* name)
          return branch;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6066,7 +6072,7 @@ TIterator* TTree::GetIteratorOnAllLeaves(Bool_t dir)
 
 TLeaf* TTree::GetLeafImpl(const char* branchname, const char *leafname)
 {
-   TLeaf *leaf = 0;
+   TLeaf *leaf = nullptr;
    if (branchname) {
       TBranch *branch = FindBranch(branchname);
       if (branch) {
@@ -6119,7 +6125,7 @@ TLeaf* TTree::GetLeafImpl(const char* branchname, const char *leafname)
       }
       return leaf;
    }
-   if (!fFriends) return 0;
+   if (!fFriends) return nullptr;
    TFriendLock lock(this,kGetLeaf);
    TIter next(fFriends);
    TFriendElement *fe;
@@ -6137,8 +6143,8 @@ TLeaf* TTree::GetLeafImpl(const char* branchname, const char *leafname)
    next.Reset();
    while ((fe = (TFriendElement*)next())) {
       TTree *t = fe->GetTree();
-      if (t==0) continue;
-      char *subname = (char*)strstr(leafname,fe->GetName());
+      if (!t) continue;
+      const char *subname = strstr(leafname,fe->GetName());
       if (subname != leafname) continue;
       Int_t l = strlen(fe->GetName());
       subname += l;
@@ -6148,7 +6154,7 @@ TLeaf* TTree::GetLeafImpl(const char* branchname, const char *leafname)
       leaf = t->GetLeaf(branchname,subname);
       if (leaf) return leaf;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6175,10 +6181,10 @@ TLeaf* TTree::GetLeaf(const char* branchname, const char *leafname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return pointer to first leaf named \param[name] in any branch of this
+/// Return pointer to first leaf named "name" in any branch of this
 /// tree or its friend trees.
 ///
-/// \param[name] may be in the form 'branch/leaf'
+/// \param[in] name may be in the form 'branch/leaf'
 ///
 
 TLeaf* TTree::GetLeaf(const char *name)
@@ -7221,7 +7227,7 @@ void TTree::Print(Option_t* option) const
    Printf("******************************************************************************");
 
    // Avoid many check of option validity
-   if (option == nullptr)
+   if (!option)
       option = "";
 
    if (strncmp(option,"clusters",strlen("clusters"))==0) {
@@ -7274,8 +7280,8 @@ void TTree::Print(Option_t* option) const
 
    Int_t nl = const_cast<TTree*>(this)->GetListOfLeaves()->GetEntries();
    Int_t l;
-   TBranch* br = 0;
-   TLeaf* leaf = 0;
+   TBranch* br = nullptr;
+   TLeaf* leaf = nullptr;
    if (strstr(option, "toponly")) {
       Long64_t *count = new Long64_t[nl];
       Int_t keep =0;
@@ -7501,9 +7507,9 @@ TSQLResult* TTree::Query(const char* varexp, const char* selection, Option_t* op
 /// - If the type of the first variable is not specified, it is assumed to be "/F"
 /// - If the type of any other variable is not specified, the type of the previous
 ///   variable is assumed. eg
-///     - `x:y:z`      (all variables are assumed of type "F"
-///     - `x/D:y:z`    (all variables are of type "D"
-///     - `x:y/D:z`    (x is type "F", y and z of type "D"
+///     - `x:y:z`      (all variables are assumed of type "F")
+///     - `x/D:y:z`    (all variables are of type "D")
+///     - `x:y/D:z`    (x is type "F", y and z of type "D")
 ///
 /// delimiter allows for the use of another delimiter besides whitespace.
 /// This provides support for direct import of common data file formats
@@ -7532,6 +7538,11 @@ TSQLResult* TTree::Query(const char* varexp, const char* selection, Option_t* op
 
 Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor, char delimiter)
 {
+   if (!filename || !*filename) {
+      Error("ReadFile","File name not specified");
+      return 0;
+   }
+
    std::ifstream in;
    in.open(filename);
    if (!in.good()) {
@@ -7539,7 +7550,7 @@ Long64_t TTree::ReadFile(const char* filename, const char* branchDescriptor, cha
       return 0;
    }
    const char* ext = strrchr(filename, '.');
-   if(ext != NULL && ((strcmp(ext, ".csv") == 0) || (strcmp(ext, ".CSV") == 0)) && delimiter == ' ') {
+   if(ext && ((strcmp(ext, ".csv") == 0) || (strcmp(ext, ".CSV") == 0)) && delimiter == ' ') {
       delimiter = ',';
    }
    return ReadStream(in, branchDescriptor, delimiter);
@@ -7574,7 +7585,7 @@ char TTree::GetNewlineValue(std::istream &inputStream)
 ////////////////////////////////////////////////////////////////////////////////
 /// Create or simply read branches from an input stream.
 ///
-/// See reference information for TTree::ReadFile
+/// \see reference information for TTree::ReadFile
 
 Long64_t TTree::ReadStream(std::istream& inputStream, const char *branchDescriptor, char delimiter)
 {
@@ -8053,7 +8064,7 @@ void TTree::ResetBranchAddresses()
 /// - If varexp = "*" print all columns.
 ///
 /// Otherwise a columns selection can be made using "var1:var2:var3".
-/// See TTreePlayer::Scan for more information
+/// \see TTreePlayer::Scan for more information
 
 Long64_t TTree::Scan(const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
@@ -8284,16 +8295,19 @@ Long64_t TTree::GetMedianClusterSize()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function may be called at the start of a program to change
-/// the default value for fAutoSave (and for SetAutoSave) is -300000000, ie 300 MBytes.
-/// When filling the Tree the branch buffers as well as the Tree header
-/// will be flushed to disk when the watermark is reached.
-/// If fAutoSave is positive the watermark is reached when a multiple of fAutoSave
-/// entries have been written.
-/// If fAutoSave is negative the watermark is reached when -fAutoSave bytes
-/// have been written to the file.
-/// In case of a program crash, it will be possible to recover the data in the Tree
-/// up to the last AutoSave point.
+/// In case of a program crash, it will be possible to recover the data in the
+/// tree up to the last AutoSave point.
+/// This function may be called before filling a TTree to specify when the
+/// branch buffers and TTree header are flushed to disk as part of
+/// TTree::Fill().
+/// The default is -300000000, ie the TTree will write data to disk once it
+/// exceeds 300 MBytes.
+/// CASE 1: If fAutoSave is positive the watermark is reached when a multiple of
+/// fAutoSave entries have been filled.
+/// CASE 2: If fAutoSave is negative the watermark is reached when -fAutoSave
+/// bytes can be written to the file.
+/// CASE 3: If fAutoSave is 0, AutoSave() will never be called automatically
+/// as part of TTree::Fill().
 
 void TTree::SetAutoSave(Long64_t autos)
 {
@@ -8495,7 +8509,7 @@ void TTree::SetBranchStatus(const char* bname, Bool_t status, UInt_t* found)
       return;
    }
 
-   if (0 == strcmp(bname, "")) {
+   if (!bname || !*bname) {
       Error("SetBranchStatus", "Input regexp is an empty string: no match against branch names will be attempted.");
       return;
    }
@@ -8531,7 +8545,7 @@ void TTree::SetBranchStatus(const char* bname, Bool_t status, UInt_t* found)
          else        bcount->SetBit(kDoNotProcess);
       }
    }
-   if (nb==0 && strchr(bname,'*')==0) {
+   if (nb==0 && !strchr(bname,'*')) {
       branch = GetBranch(bname);
       if (branch) {
          if (status) branch->ResetBit(kDoNotProcess);
@@ -8549,14 +8563,14 @@ void TTree::SetBranchStatus(const char* bname, Bool_t status, UInt_t* found)
       TString name;
       while ((fe = (TFriendElement*)nextf())) {
          TTree *t = fe->GetTree();
-         if (t==0) continue;
+         if (!t) continue;
 
          // If the alias is present replace it with the real name.
-         char *subbranch = (char*)strstr(bname,fe->GetName());
-         if (subbranch!=bname) subbranch = 0;
+         const char *subbranch = strstr(bname,fe->GetName());
+         if (subbranch!=bname) subbranch = nullptr;
          if (subbranch) {
             subbranch += strlen(fe->GetName());
-            if ( *subbranch != '.' ) subbranch = 0;
+            if ( *subbranch != '.' ) subbranch = nullptr;
             else subbranch ++;
          }
          if (subbranch) {
@@ -8568,7 +8582,7 @@ void TTree::SetBranchStatus(const char* bname, Bool_t status, UInt_t* found)
       }
    }
    if (!nb && !foundInFriend) {
-      if (found==0) {
+      if (!found) {
          if (status) {
             if (strchr(bname,'*') != 0)
                Error("SetBranchStatus", "No branch name is matching wildcard -> %s", bname);
@@ -9589,7 +9603,7 @@ void TTree::Streamer(TBuffer& b)
 ///
 /// funcname is a TF1 function.
 ///
-/// See TTree::Draw for explanations of the other parameters.
+/// \see TTree::Draw for explanations of the other parameters.
 ///
 /// Fit the variable varexp using the function funcname using the
 /// selection cuts given by selection.

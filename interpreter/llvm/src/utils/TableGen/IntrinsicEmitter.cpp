@@ -15,27 +15,29 @@
 #include "SequenceToOffsetTable.h"
 #include "TableGenBackends.h"
 #include "llvm/ADT/StringExtras.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/TableGen/Error.h"
 #include "llvm/TableGen/Record.h"
 #include "llvm/TableGen/StringMatcher.h"
-#include "llvm/TableGen/TableGenBackend.h"
 #include "llvm/TableGen/StringToOffsetTable.h"
+#include "llvm/TableGen/TableGenBackend.h"
 #include <algorithm>
 using namespace llvm;
+
+cl::OptionCategory GenIntrinsicCat("Options for -gen-intrinsic-enums");
+cl::opt<std::string>
+    IntrinsicPrefix("intrinsic-prefix",
+                    cl::desc("Generate intrinsics with this target prefix"),
+                    cl::value_desc("target prefix"), cl::cat(GenIntrinsicCat));
 
 namespace {
 class IntrinsicEmitter {
   RecordKeeper &Records;
-  bool TargetOnly;
-  std::string TargetPrefix;
 
 public:
-  IntrinsicEmitter(RecordKeeper &R, bool T)
-    : Records(R), TargetOnly(T) {}
+  IntrinsicEmitter(RecordKeeper &R) : Records(R) {}
 
   void run(raw_ostream &OS, bool Enums);
-
-  void EmitPrefix(raw_ostream &OS);
 
   void EmitEnumInfo(const CodeGenIntrinsicTable &Ints, raw_ostream &OS);
   void EmitTargetInfo(const CodeGenIntrinsicTable &Ints, raw_ostream &OS);
@@ -47,7 +49,6 @@ public:
   void EmitAttributes(const CodeGenIntrinsicTable &Ints, raw_ostream &OS);
   void EmitIntrinsicToBuiltinMap(const CodeGenIntrinsicTable &Ints, bool IsGCC,
                                  raw_ostream &OS);
-  void EmitSuffix(raw_ostream &OS);
 };
 } // End anonymous namespace
 
@@ -58,12 +59,7 @@ public:
 void IntrinsicEmitter::run(raw_ostream &OS, bool Enums) {
   emitSourceFileHeader("Intrinsic Function Source Fragment", OS);
 
-  CodeGenIntrinsicTable Ints(Records, TargetOnly);
-
-  if (TargetOnly && !Ints.empty())
-    TargetPrefix = Ints[0].TargetPrefix;
-
-  EmitPrefix(OS);
+  CodeGenIntrinsicTable Ints(Records);
 
   if (Enums) {
     // Emit the enum information.
@@ -90,40 +86,64 @@ void IntrinsicEmitter::run(raw_ostream &OS, bool Enums) {
     // Emit code to translate MS builtins into LLVM intrinsics.
     EmitIntrinsicToBuiltinMap(Ints, false, OS);
   }
-
-  EmitSuffix(OS);
-}
-
-void IntrinsicEmitter::EmitPrefix(raw_ostream &OS) {
-  OS << "// VisualStudio defines setjmp as _setjmp\n"
-        "#if defined(_MSC_VER) && defined(setjmp) && \\\n"
-        "                         !defined(setjmp_undefined_for_msvc)\n"
-        "#  pragma push_macro(\"setjmp\")\n"
-        "#  undef setjmp\n"
-        "#  define setjmp_undefined_for_msvc\n"
-        "#endif\n\n";
-}
-
-void IntrinsicEmitter::EmitSuffix(raw_ostream &OS) {
-  OS << "#if defined(_MSC_VER) && defined(setjmp_undefined_for_msvc)\n"
-        "// let's return it to _setjmp state\n"
-        "#  pragma pop_macro(\"setjmp\")\n"
-        "#  undef setjmp_undefined_for_msvc\n"
-        "#endif\n\n";
 }
 
 void IntrinsicEmitter::EmitEnumInfo(const CodeGenIntrinsicTable &Ints,
                                     raw_ostream &OS) {
-  OS << "// Enum values for Intrinsics.h\n";
-  OS << "#ifdef GET_INTRINSIC_ENUM_VALUES\n";
-  for (unsigned i = 0, e = Ints.size(); i != e; ++i) {
+  // Find the TargetSet for which to generate enums. There will be an initial
+  // set with an empty target prefix which will include target independent
+  // intrinsics like dbg.value.
+  const CodeGenIntrinsicTable::TargetSet *Set = nullptr;
+  for (const auto &Target : Ints.Targets) {
+    if (Target.Name == IntrinsicPrefix) {
+      Set = &Target;
+      break;
+    }
+  }
+  if (!Set) {
+    std::vector<std::string> KnownTargets;
+    for (const auto &Target : Ints.Targets)
+      if (!Target.Name.empty())
+        KnownTargets.push_back(Target.Name);
+    PrintFatalError("tried to generate intrinsics for unknown target " +
+                    IntrinsicPrefix +
+                    "\nKnown targets are: " + join(KnownTargets, ", ") + "\n");
+  }
+
+  // Generate a complete header for target specific intrinsics.
+  if (!IntrinsicPrefix.empty()) {
+    std::string UpperPrefix = StringRef(IntrinsicPrefix).upper();
+    OS << "#ifndef LLVM_IR_INTRINSIC_" << UpperPrefix << "_ENUMS_H\n";
+    OS << "#define LLVM_IR_INTRINSIC_" << UpperPrefix << "_ENUMS_H\n\n";
+    OS << "namespace llvm {\n";
+    OS << "namespace Intrinsic {\n";
+    OS << "enum " << UpperPrefix << "Intrinsics : unsigned {\n";
+  }
+
+  OS << "// Enum values for intrinsics\n";
+  for (unsigned i = Set->Offset, e = Set->Offset + Set->Count; i != e; ++i) {
     OS << "    " << Ints[i].EnumName;
-    OS << ((i != e-1) ? ", " : "  ");
+
+    // Assign a value to the first intrinsic in this target set so that all
+    // intrinsic ids are distinct.
+    if (i == Set->Offset)
+      OS << " = " << (Set->Offset + 1);
+
+    OS << ", ";
     if (Ints[i].EnumName.size() < 40)
-      OS << std::string(40-Ints[i].EnumName.size(), ' ');
+      OS.indent(40 - Ints[i].EnumName.size());
     OS << " // " << Ints[i].Name << "\n";
   }
-  OS << "#endif\n\n";
+
+  // Emit num_intrinsics into the target neutral enum.
+  if (IntrinsicPrefix.empty()) {
+    OS << "    num_intrinsics = " << (Ints.size() + 1) << "\n";
+  } else {
+    OS << "}; // enum\n";
+    OS << "} // namespace Intrinsic\n";
+    OS << "} // namespace llvm\n\n";
+    OS << "#endif\n";
+  }
 }
 
 void IntrinsicEmitter::EmitTargetInfo(const CodeGenIntrinsicTable &Ints,
@@ -220,13 +240,22 @@ enum IIT_Info {
   IIT_STRUCT7 = 39,
   IIT_STRUCT8 = 40,
   IIT_F128 = 41,
-  IIT_VEC_ELEMENT = 42
+  IIT_VEC_ELEMENT = 42,
+  IIT_SCALABLE_VEC = 43,
+  IIT_SUBDIVIDE2_ARG = 44,
+  IIT_SUBDIVIDE4_ARG = 45,
+  IIT_VEC_OF_BITCASTS_TO_INT = 46,
+  IIT_V128 = 47,
+  IIT_BF16 = 48,
+  IIT_STRUCT9 = 49,
+  IIT_V256 = 50,
+  IIT_AMX  = 51
 };
 
 static void EncodeFixedValueType(MVT::SimpleValueType VT,
                                  std::vector<unsigned char> &Sig) {
   if (MVT(VT).isInteger()) {
-    unsigned BitWidth = MVT(VT).getSizeInBits();
+    unsigned BitWidth = MVT(VT).getFixedSizeInBits();
     switch (BitWidth) {
     default: PrintFatalError("unhandled integer type width in intrinsic!");
     case 1: return Sig.push_back(IIT_I1);
@@ -241,12 +270,14 @@ static void EncodeFixedValueType(MVT::SimpleValueType VT,
   switch (VT) {
   default: PrintFatalError("unhandled MVT in intrinsic!");
   case MVT::f16: return Sig.push_back(IIT_F16);
+  case MVT::bf16: return Sig.push_back(IIT_BF16);
   case MVT::f32: return Sig.push_back(IIT_F32);
   case MVT::f64: return Sig.push_back(IIT_F64);
   case MVT::f128: return Sig.push_back(IIT_F128);
   case MVT::token: return Sig.push_back(IIT_TOKEN);
   case MVT::Metadata: return Sig.push_back(IIT_METADATA);
   case MVT::x86mmx: return Sig.push_back(IIT_MMX);
+  case MVT::x86amx: return Sig.push_back(IIT_AMX);
   // MVT::OtherVT is used to mean the empty struct type here.
   case MVT::Other: return Sig.push_back(IIT_EMPTYSTRUCT);
   // MVT::isVoid is used to represent varargs here.
@@ -292,6 +323,12 @@ static void EncodeFixedType(Record *R, std::vector<unsigned char> &ArgCodes,
       Sig.push_back(IIT_PTR_TO_ELT);
     else if (R->isSubClassOf("LLVMVectorElementType"))
       Sig.push_back(IIT_VEC_ELEMENT);
+    else if (R->isSubClassOf("LLVMSubdivide2VectorType"))
+      Sig.push_back(IIT_SUBDIVIDE2_ARG);
+    else if (R->isSubClassOf("LLVMSubdivide4VectorType"))
+      Sig.push_back(IIT_SUBDIVIDE4_ARG);
+    else if (R->isSubClassOf("LLVMVectorOfBitcastsToInt"))
+      Sig.push_back(IIT_VEC_OF_BITCASTS_TO_INT);
     else
       Sig.push_back(IIT_ARG);
     return Sig.push_back((Number << 3) | 7 /*IITDescriptor::AK_MatchType*/);
@@ -339,7 +376,9 @@ static void EncodeFixedType(Record *R, std::vector<unsigned char> &ArgCodes,
 
   if (MVT(VT).isVector()) {
     MVT VVT = VT;
-    switch (VVT.getVectorNumElements()) {
+    if (VVT.isScalableVector())
+      Sig.push_back(IIT_SCALABLE_VEC);
+    switch (VVT.getVectorMinNumElements()) {
     default: PrintFatalError("unhandled vector type width in intrinsic!");
     case 1: Sig.push_back(IIT_V1); break;
     case 2: Sig.push_back(IIT_V2); break;
@@ -348,6 +387,8 @@ static void EncodeFixedType(Record *R, std::vector<unsigned char> &ArgCodes,
     case 16: Sig.push_back(IIT_V16); break;
     case 32: Sig.push_back(IIT_V32); break;
     case 64: Sig.push_back(IIT_V64); break;
+    case 128: Sig.push_back(IIT_V128); break;
+    case 256: Sig.push_back(IIT_V256); break;
     case 512: Sig.push_back(IIT_V512); break;
     case 1024: Sig.push_back(IIT_V1024); break;
     }
@@ -433,6 +474,7 @@ static void ComputeFixedEncoding(const CodeGenIntrinsic &Int,
       case 6: TypeSig.push_back(IIT_STRUCT6); break;
       case 7: TypeSig.push_back(IIT_STRUCT7); break;
       case 8: TypeSig.push_back(IIT_STRUCT8); break;
+      case 9: TypeSig.push_back(IIT_STRUCT9); break;
       default: llvm_unreachable("Unhandled case in struct");
     }
 
@@ -542,8 +584,17 @@ struct AttributeComparator {
     if (L->isNoDuplicate != R->isNoDuplicate)
       return R->isNoDuplicate;
 
+    if (L->isNoMerge != R->isNoMerge)
+      return R->isNoMerge;
+
     if (L->isNoReturn != R->isNoReturn)
       return R->isNoReturn;
+
+    if (L->isNoSync != R->isNoSync)
+      return R->isNoSync;
+
+    if (L->isNoFree != R->isNoFree)
+      return R->isNoFree;
 
     if (L->isWillReturn != R->isWillReturn)
       return R->isWillReturn;
@@ -576,11 +627,7 @@ void IntrinsicEmitter::EmitAttributes(const CodeGenIntrinsicTable &Ints,
                                       raw_ostream &OS) {
   OS << "// Add parameter attributes that are not common to all intrinsics.\n";
   OS << "#ifdef GET_INTRINSIC_ATTRIBUTES\n";
-  if (TargetOnly)
-    OS << "static AttributeList getAttributes(LLVMContext &C, " << TargetPrefix
-       << "Intrinsic::ID id) {\n";
-  else
-    OS << "AttributeList Intrinsic::getAttributes(LLVMContext &C, ID id) {\n";
+  OS << "AttributeList Intrinsic::getAttributes(LLVMContext &C, ID id) {\n";
 
   // Compute the maximum number of attribute arguments and the map
   typedef std::map<const CodeGenIntrinsic*, unsigned,
@@ -594,13 +641,13 @@ void IntrinsicEmitter::EmitAttributes(const CodeGenIntrinsicTable &Ints,
       std::max(maxArgAttrs, unsigned(intrinsic.ArgumentAttributes.size()));
     unsigned &N = UniqAttributes[&intrinsic];
     if (N) continue;
-    assert(AttrNum < 256 && "Too many unique attributes for table!");
     N = ++AttrNum;
+    assert(N < 65536 && "Too many unique attributes for table!");
   }
 
   // Emit an array of AttributeList.  Most intrinsics will have at least one
   // entry, for the function itself (index ~1), which is usually nounwind.
-  OS << "  static const uint8_t IntrinsicsToAttributesMap[] = {\n";
+  OS << "  static const uint16_t IntrinsicsToAttributesMap[] = {\n";
 
   for (unsigned i = 0, e = Ints.size(); i != e; ++i) {
     const CodeGenIntrinsic &intrinsic = Ints[i];
@@ -613,195 +660,167 @@ void IntrinsicEmitter::EmitAttributes(const CodeGenIntrinsicTable &Ints,
   OS << "  AttributeList AS[" << maxArgAttrs + 1 << "];\n";
   OS << "  unsigned NumAttrs = 0;\n";
   OS << "  if (id != 0) {\n";
-  OS << "    switch(IntrinsicsToAttributesMap[id - ";
-  if (TargetOnly)
-    OS << "Intrinsic::num_intrinsics";
-  else
-    OS << "1";
-  OS << "]) {\n";
+  OS << "    switch(IntrinsicsToAttributesMap[id - 1]) {\n";
   OS << "    default: llvm_unreachable(\"Invalid attribute number\");\n";
-  for (UniqAttrMapTy::const_iterator I = UniqAttributes.begin(),
-       E = UniqAttributes.end(); I != E; ++I) {
-    OS << "    case " << I->second << ": {\n";
+  for (auto UniqAttribute : UniqAttributes) {
+    OS << "    case " << UniqAttribute.second << ": {\n";
 
-    const CodeGenIntrinsic &intrinsic = *(I->first);
+    const CodeGenIntrinsic &Intrinsic = *(UniqAttribute.first);
 
     // Keep track of the number of attributes we're writing out.
     unsigned numAttrs = 0;
 
     // The argument attributes are alreadys sorted by argument index.
-    unsigned ai = 0, ae = intrinsic.ArgumentAttributes.size();
-    if (ae) {
-      while (ai != ae) {
-        unsigned argNo = intrinsic.ArgumentAttributes[ai].first;
-        unsigned attrIdx = argNo + 1; // Must match AttributeList::FirstArgIndex
+    unsigned Ai = 0, Ae = Intrinsic.ArgumentAttributes.size();
+    if (Ae) {
+      while (Ai != Ae) {
+        unsigned AttrIdx = Intrinsic.ArgumentAttributes[Ai].Index;
 
-        OS << "      const Attribute::AttrKind AttrParam" << attrIdx << "[]= {";
-        bool addComma = false;
+        OS << "      const Attribute::AttrKind AttrParam" << AttrIdx << "[]= {";
+        ListSeparator LS(",");
 
+        bool AllValuesAreZero = true;
+        SmallVector<uint64_t, 8> Values;
         do {
-          switch (intrinsic.ArgumentAttributes[ai].second) {
+          switch (Intrinsic.ArgumentAttributes[Ai].Kind) {
           case CodeGenIntrinsic::NoCapture:
-            if (addComma)
-              OS << ",";
-            OS << "Attribute::NoCapture";
-            addComma = true;
+            OS << LS << "Attribute::NoCapture";
+            break;
+          case CodeGenIntrinsic::NoAlias:
+            OS << LS << "Attribute::NoAlias";
+            break;
+          case CodeGenIntrinsic::NoUndef:
+            OS << LS << "Attribute::NoUndef";
             break;
           case CodeGenIntrinsic::Returned:
-            if (addComma)
-              OS << ",";
-            OS << "Attribute::Returned";
-            addComma = true;
+            OS << LS << "Attribute::Returned";
             break;
           case CodeGenIntrinsic::ReadOnly:
-            if (addComma)
-              OS << ",";
-            OS << "Attribute::ReadOnly";
-            addComma = true;
+            OS << LS << "Attribute::ReadOnly";
             break;
           case CodeGenIntrinsic::WriteOnly:
-            if (addComma)
-              OS << ",";
-            OS << "Attribute::WriteOnly";
-            addComma = true;
+            OS << LS << "Attribute::WriteOnly";
             break;
           case CodeGenIntrinsic::ReadNone:
-            if (addComma)
-              OS << ",";
-            OS << "Attribute::ReadNone";
-            addComma = true;
+            OS << LS << "Attribute::ReadNone";
             break;
           case CodeGenIntrinsic::ImmArg:
-            if (addComma)
-              OS << ',';
-            OS << "Attribute::ImmArg";
-            addComma = true;
+            OS << LS << "Attribute::ImmArg";
+            break;
+          case CodeGenIntrinsic::Alignment:
+            OS << LS << "Attribute::Alignment";
             break;
           }
+          uint64_t V = Intrinsic.ArgumentAttributes[Ai].Value;
+          Values.push_back(V);
+          AllValuesAreZero &= (V == 0);
 
-          ++ai;
-        } while (ai != ae && intrinsic.ArgumentAttributes[ai].first == argNo);
+          ++Ai;
+        } while (Ai != Ae && Intrinsic.ArgumentAttributes[Ai].Index == AttrIdx);
         OS << "};\n";
+
+        // Generate attribute value array if not all attribute values are zero.
+        if (!AllValuesAreZero) {
+          OS << "      const uint64_t AttrValParam" << AttrIdx << "[]= {";
+          ListSeparator LSV(",");
+          for (const auto V : Values)
+            OS << LSV << V;
+          OS << "};\n";
+        }
+
         OS << "      AS[" << numAttrs++ << "] = AttributeList::get(C, "
-           << attrIdx << ", AttrParam" << attrIdx << ");\n";
+           << AttrIdx << ", AttrParam" << AttrIdx;
+        if (!AllValuesAreZero)
+          OS << ", AttrValParam" << AttrIdx;
+        OS << ");\n";
       }
     }
 
-    if (!intrinsic.canThrow ||
-        (intrinsic.ModRef != CodeGenIntrinsic::ReadWriteMem && !intrinsic.hasSideEffects) ||
-        intrinsic.isNoReturn || intrinsic.isWillReturn || intrinsic.isCold ||
-        intrinsic.isNoDuplicate || intrinsic.isConvergent ||
-        intrinsic.isSpeculatable) {
+    if (!Intrinsic.canThrow ||
+        (Intrinsic.ModRef != CodeGenIntrinsic::ReadWriteMem &&
+         !Intrinsic.hasSideEffects) ||
+        Intrinsic.isNoReturn || Intrinsic.isNoSync || Intrinsic.isNoFree ||
+        Intrinsic.isWillReturn || Intrinsic.isCold || Intrinsic.isNoDuplicate ||
+        Intrinsic.isNoMerge || Intrinsic.isConvergent ||
+        Intrinsic.isSpeculatable) {
       OS << "      const Attribute::AttrKind Atts[] = {";
-      bool addComma = false;
-      if (!intrinsic.canThrow) {
-        OS << "Attribute::NoUnwind";
-        addComma = true;
-      }
-      if (intrinsic.isNoReturn) {
-        if (addComma)
-          OS << ",";
-        OS << "Attribute::NoReturn";
-        addComma = true;
-      }
-      if (intrinsic.isWillReturn) {
-        if (addComma)
-          OS << ",";
-        OS << "Attribute::WillReturn";
-        addComma = true;
-      }
-      if (intrinsic.isCold) {
-        if (addComma)
-          OS << ",";
-        OS << "Attribute::Cold";
-        addComma = true;
-      }
-      if (intrinsic.isNoDuplicate) {
-        if (addComma)
-          OS << ",";
-        OS << "Attribute::NoDuplicate";
-        addComma = true;
-      }
-      if (intrinsic.isConvergent) {
-        if (addComma)
-          OS << ",";
-        OS << "Attribute::Convergent";
-        addComma = true;
-      }
-      if (intrinsic.isSpeculatable) {
-        if (addComma)
-          OS << ",";
-        OS << "Attribute::Speculatable";
-        addComma = true;
-      }
+      ListSeparator LS(",");
+      if (!Intrinsic.canThrow)
+        OS << LS << "Attribute::NoUnwind";
+      if (Intrinsic.isNoReturn)
+        OS << LS << "Attribute::NoReturn";
+      if (Intrinsic.isNoSync)
+        OS << LS << "Attribute::NoSync";
+      if (Intrinsic.isNoFree)
+        OS << LS << "Attribute::NoFree";
+      if (Intrinsic.isWillReturn)
+        OS << LS << "Attribute::WillReturn";
+      if (Intrinsic.isCold)
+        OS << LS << "Attribute::Cold";
+      if (Intrinsic.isNoDuplicate)
+        OS << LS << "Attribute::NoDuplicate";
+      if (Intrinsic.isNoMerge)
+        OS << LS << "Attribute::NoMerge";
+      if (Intrinsic.isConvergent)
+        OS << LS << "Attribute::Convergent";
+      if (Intrinsic.isSpeculatable)
+        OS << LS << "Attribute::Speculatable";
 
-      switch (intrinsic.ModRef) {
+      switch (Intrinsic.ModRef) {
       case CodeGenIntrinsic::NoMem:
-        if (intrinsic.hasSideEffects)
+        if (Intrinsic.hasSideEffects)
           break;
-        if (addComma)
-          OS << ",";
+        OS << LS;
         OS << "Attribute::ReadNone";
         break;
       case CodeGenIntrinsic::ReadArgMem:
-        if (addComma)
-          OS << ",";
+        OS << LS;
         OS << "Attribute::ReadOnly,";
         OS << "Attribute::ArgMemOnly";
         break;
       case CodeGenIntrinsic::ReadMem:
-        if (addComma)
-          OS << ",";
+        OS << LS;
         OS << "Attribute::ReadOnly";
         break;
       case CodeGenIntrinsic::ReadInaccessibleMem:
-        if (addComma)
-          OS << ",";
+        OS << LS;
         OS << "Attribute::ReadOnly,";
         OS << "Attribute::InaccessibleMemOnly";
         break;
       case CodeGenIntrinsic::ReadInaccessibleMemOrArgMem:
-        if (addComma)
-          OS << ",";
+        OS << LS;
         OS << "Attribute::ReadOnly,";
         OS << "Attribute::InaccessibleMemOrArgMemOnly";
         break;
       case CodeGenIntrinsic::WriteArgMem:
-        if (addComma)
-          OS << ",";
+        OS << LS;
         OS << "Attribute::WriteOnly,";
         OS << "Attribute::ArgMemOnly";
         break;
       case CodeGenIntrinsic::WriteMem:
-        if (addComma)
-          OS << ",";
+        OS << LS;
         OS << "Attribute::WriteOnly";
         break;
       case CodeGenIntrinsic::WriteInaccessibleMem:
-        if (addComma)
-          OS << ",";
+        OS << LS;
         OS << "Attribute::WriteOnly,";
         OS << "Attribute::InaccessibleMemOnly";
         break;
       case CodeGenIntrinsic::WriteInaccessibleMemOrArgMem:
-        if (addComma)
-          OS << ",";
+        OS << LS;
         OS << "Attribute::WriteOnly,";
         OS << "Attribute::InaccessibleMemOrArgMemOnly";
         break;
       case CodeGenIntrinsic::ReadWriteArgMem:
-        if (addComma)
-          OS << ",";
+        OS << LS;
         OS << "Attribute::ArgMemOnly";
         break;
       case CodeGenIntrinsic::ReadWriteInaccessibleMem:
-        if (addComma)
-          OS << ",";
+        OS << LS;
         OS << "Attribute::InaccessibleMemOnly";
         break;
       case CodeGenIntrinsic::ReadWriteInaccessibleMemOrArgMem:
-        if (addComma)
-          OS << ",";
+        OS << LS;
         OS << "Attribute::InaccessibleMemOrArgMemOnly";
         break;
       case CodeGenIntrinsic::ReadWriteMem:
@@ -857,21 +876,12 @@ void IntrinsicEmitter::EmitIntrinsicToBuiltinMap(
   OS << "// in as TargetPrefix.  The result is assigned to 'IntrinsicID'.\n";
   OS << "#ifdef GET_LLVM_INTRINSIC_FOR_" << CompilerName << "_BUILTIN\n";
 
-  if (TargetOnly) {
-    OS << "static " << TargetPrefix << "Intrinsic::ID "
-       << "getIntrinsicFor" << CompilerName << "Builtin(const char "
-       << "*TargetPrefixStr, StringRef BuiltinNameStr) {\n";
-  } else {
-    OS << "Intrinsic::ID Intrinsic::getIntrinsicFor" << CompilerName
-       << "Builtin(const char "
-       << "*TargetPrefixStr, StringRef BuiltinNameStr) {\n";
-  }
+  OS << "Intrinsic::ID Intrinsic::getIntrinsicFor" << CompilerName
+     << "Builtin(const char "
+     << "*TargetPrefixStr, StringRef BuiltinNameStr) {\n";
 
   if (Table.Empty()) {
-    OS << "  return ";
-    if (!TargetPrefix.empty())
-      OS << "(" << TargetPrefix << "Intrinsic::ID)";
-    OS << "Intrinsic::not_intrinsic;\n";
+    OS << "  return Intrinsic::not_intrinsic;\n";
     OS << "}\n";
     OS << "#endif\n\n";
     return;
@@ -895,43 +905,39 @@ void IntrinsicEmitter::EmitIntrinsicToBuiltinMap(
   OS << "  StringRef TargetPrefix(TargetPrefixStr);\n\n";
 
   // Note: this could emit significantly better code if we cared.
-  for (BIMTy::iterator I = BuiltinMap.begin(), E = BuiltinMap.end();I != E;++I){
+  for (auto &I : BuiltinMap) {
     OS << "  ";
-    if (!I->first.empty())
-      OS << "if (TargetPrefix == \"" << I->first << "\") ";
+    if (!I.first.empty())
+      OS << "if (TargetPrefix == \"" << I.first << "\") ";
     else
       OS << "/* Target Independent Builtins */ ";
     OS << "{\n";
 
     // Emit the comparisons for this target prefix.
-    OS << "    static const BuiltinEntry " << I->first << "Names[] = {\n";
-    for (const auto &P : I->second) {
+    OS << "    static const BuiltinEntry " << I.first << "Names[] = {\n";
+    for (const auto &P : I.second) {
       OS << "      {Intrinsic::" << P.second << ", "
          << Table.GetOrAddStringOffset(P.first) << "}, // " << P.first << "\n";
     }
     OS << "    };\n";
-    OS << "    auto I = std::lower_bound(std::begin(" << I->first << "Names),\n";
-    OS << "                              std::end(" << I->first << "Names),\n";
+    OS << "    auto I = std::lower_bound(std::begin(" << I.first << "Names),\n";
+    OS << "                              std::end(" << I.first << "Names),\n";
     OS << "                              BuiltinNameStr);\n";
-    OS << "    if (I != std::end(" << I->first << "Names) &&\n";
+    OS << "    if (I != std::end(" << I.first << "Names) &&\n";
     OS << "        I->getName() == BuiltinNameStr)\n";
     OS << "      return I->IntrinID;\n";
     OS << "  }\n";
   }
   OS << "  return ";
-  if (!TargetPrefix.empty())
-    OS << "(" << TargetPrefix << "Intrinsic::ID)";
   OS << "Intrinsic::not_intrinsic;\n";
   OS << "}\n";
   OS << "#endif\n\n";
 }
 
-void llvm::EmitIntrinsicEnums(RecordKeeper &RK, raw_ostream &OS,
-                              bool TargetOnly) {
-  IntrinsicEmitter(RK, TargetOnly).run(OS, /*Enums=*/true);
+void llvm::EmitIntrinsicEnums(RecordKeeper &RK, raw_ostream &OS) {
+  IntrinsicEmitter(RK).run(OS, /*Enums=*/true);
 }
 
-void llvm::EmitIntrinsicImpl(RecordKeeper &RK, raw_ostream &OS,
-                             bool TargetOnly) {
-  IntrinsicEmitter(RK, TargetOnly).run(OS, /*Enums=*/false);
+void llvm::EmitIntrinsicImpl(RecordKeeper &RK, raw_ostream &OS) {
+  IntrinsicEmitter(RK).run(OS, /*Enums=*/false);
 }

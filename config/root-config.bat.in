@@ -75,7 +75,11 @@ for %%w in (%*) do (
       for %%f in (%features%) do (
          if %%f==!feature! (
             set res=%%f
-            set out=!out! yes
+            if not "!out!"=="" (
+               set out=!out! yes
+            ) else (
+               set out=yes
+            )
          )
       )
       if !res!=="" (
@@ -86,10 +90,14 @@ for %%w in (%*) do (
          )
          if !known!=="" (
             set out=!out! --has-!feature!: unknown feature^^!
+            set err=1
          ) else (
-            set out=!out! no
+            if not "!out!"=="" (
+               set out=!out! no
+            ) else (
+               set out=no
+            )
          )
-         set err=1
       )
    )
    if "!arg!"=="--version" (
