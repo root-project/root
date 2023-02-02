@@ -217,7 +217,7 @@ public:
       if (!p.has_child("epsilon")) {
          RooJSONFactoryWSTool::error("no epsilon given in '" + name + "'");
       }
-      double epsilon(p["epsilon"].val_float());
+      double epsilon(p["epsilon"].val_double());
 
       RooBinSamplingPdf thepdf(name.c_str(), name.c_str(), *obs, *pdf, epsilon);
       tool->workspace()->import(thepdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));

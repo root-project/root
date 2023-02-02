@@ -251,7 +251,7 @@ std::string TJSONTree::Node::val() const
    case nlohmann::json::value_t::boolean: return node->get().get<bool>() ? "true" : "false";
    case nlohmann::json::value_t::number_integer: return std::to_string(node->get().get<int>());
    case nlohmann::json::value_t::number_unsigned: return std::to_string(node->get().get<unsigned int>());
-   case nlohmann::json::value_t::number_float: return std::to_string(node->get().get<float>());
+   case nlohmann::json::value_t::number_float: return std::to_string(node->get().get<double>());
    default:
       throw std::runtime_error(std::string("node " + node->key() + ": implicit string conversion for type " +
                                            node->get().type_name() + " not supported!"));
@@ -262,9 +262,9 @@ int TJSONTree::Node::val_int() const
 {
    return node->get().get<int>();
 }
-float TJSONTree::Node::val_float() const
+double TJSONTree::Node::val_double() const
 {
-   return node->get().get<float>();
+   return node->get().get<double>();
 }
 bool TJSONTree::Node::val_bool() const
 {
