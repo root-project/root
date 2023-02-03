@@ -308,15 +308,46 @@ static auto MakeDatasetColReadersKey(const std::string &colName, const std::type
    return colName + ':' + ti.name();
 }
 
-std::size_t PickBulkSizeForTree(TTreeReader &r, Long64_t globalEntry, Long64_t endEntry, std::size_t maxEventsPerBulk)
+/// Calculate how many more entries we have in this cluster, taking TEntryLists into account if present
+Long64_t RemainingEntriesInCluster(TTreeReader &r, Long64_t globalEntry)
 {
-   const auto treeOffset = r.GetTree()->GetChainOffset();
-   const auto localEntry = globalEntry - treeOffset;
+   auto *entryList = r.GetEntryList();
+
+   if (!entryList) {
+      const auto treeOffset = r.GetTree()->GetChainOffset();
+      const auto localEntry = globalEntry - treeOffset;
+      auto it = r.GetTree()->GetTree()->GetClusterIterator(localEntry);
+      const auto clusterEnd = (it.Next(), it.Next()); // calling it twice to get the beginning of the _next_ cluster
+      return clusterEnd - localEntry;
+   }
+
+   // Otherwise we have a TEntryList and we must:
+   // 1. convert globalEntry (i.e. the index in the entry list) to the actual local entry number
+   auto localEntry =  entryList->GetEntry(globalEntry);
+   // 2. find end of cluster according to TTree
    auto it = r.GetTree()->GetTree()->GetClusterIterator(localEntry);
    const auto clusterEnd = (it.Next(), it.Next()); // calling it twice to get the beginning of the _next_ cluster
-   const auto remainingEntriesInCluster = clusterEnd - localEntry;
-   const auto remainingEntriesInRange = endEntry - globalEntry;
-   const auto bulkSize = std::min({Long64_t(maxEventsPerBulk), remainingEntriesInCluster, remainingEntriesInRange});
+   // 3. walk TEntryList to find out how many of its entries are within that cluster boundary
+   Long64_t entryListEntriesInCluster = 0u;
+   while (localEntry < clusterEnd && localEntry != -1) {
+      ++entryListEntriesInCluster;
+      ++globalEntry;
+      localEntry = entryList->GetEntry(globalEntry);
+   }
+
+   return entryListEntriesInCluster;
+}
+
+/// Select a reasonable bulk size depending on the state of the TTree event loop
+/// The main heuristic is that we try to return a number that's as large as possible while staying withing the same
+/// TTree cluster (to avoid back and forth between different clusters when retrieving a bulk of column values).
+std::size_t PickBulkSizeForTree(TTreeReader &r, Long64_t globalEntry, Long64_t endEntry, std::size_t maxEventsPerBulk)
+{
+   const Long64_t remainingEntriesInCluster = RemainingEntriesInCluster(r, globalEntry);
+   const Long64_t remainingEntriesInRange = endEntry - globalEntry;
+
+   auto bulkSize = std::min({Long64_t(maxEventsPerBulk), remainingEntriesInCluster, remainingEntriesInRange});
+
    return bulkSize;
 }
 } // anonymous namespace
