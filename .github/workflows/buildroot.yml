@@ -63,7 +63,8 @@ jobs:
   build-linux:
     strategy:
       matrix:
-        image: ["fedora32", "fedora34", "centos8", "ubuntu18", "ubuntu20", "ubuntu22"]
+        image: ["fedora32"]
+        #, "fedora34", "centos8", "ubuntu18", "ubuntu20", "ubuntu22"]
         config: ["Release"]
         #, "Debug", "RelWithDebInfo"]
       fail-fast: false
