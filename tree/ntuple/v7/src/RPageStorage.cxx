@@ -309,6 +309,25 @@ ROOT::Experimental::Detail::RPageSink::AddColumn(DescriptorId_t fieldId, const R
    return ColumnHandle_t{columnId, &column};
 }
 
+void ROOT::Experimental::Detail::RPageSink::FixUpColumnRepresentative(RFieldBase &field)
+{
+   if (GetWriteOptions().GetCompression() != 0)
+      return;
+   if (!field.HasDefaultColumnRepresentative())
+      return;
+   const auto &rep = field.GetColumnRepresentative();
+   if (rep == RFieldBase::ColumnRepresentation_t({EColumnType::kSplitReal64})) {
+      field.SetColumnRepresentative({EColumnType::kReal64});
+   } else if (rep == RFieldBase::ColumnRepresentation_t({EColumnType::kSplitReal32})) {
+      field.SetColumnRepresentative({EColumnType::kReal32});
+   } else if (rep == RFieldBase::ColumnRepresentation_t({EColumnType::kSplitInt64})) {
+      field.SetColumnRepresentative({EColumnType::kInt64});
+   } else if (rep == RFieldBase::ColumnRepresentation_t({EColumnType::kSplitInt32})) {
+      field.SetColumnRepresentative({EColumnType::kInt32});
+   } else if (rep == RFieldBase::ColumnRepresentation_t({EColumnType::kSplitInt16})) {
+      field.SetColumnRepresentative({EColumnType::kInt16});
+   }
+}
 
 void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
 {
@@ -319,6 +338,7 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
    fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(fieldZero).FieldId(0).MakeDescriptor().Unwrap());
    fieldZero.SetOnDiskId(0);
    for (auto &f : fieldZero) {
+      FixUpColumnRepresentative(f);
       auto fieldId = descriptor.GetNFields();
       fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
       fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fieldId);
