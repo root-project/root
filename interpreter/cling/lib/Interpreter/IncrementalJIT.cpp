@@ -15,6 +15,7 @@
 #include "cling/Utils/Output.h"
 #include "cling/Utils/Utils.h"
 
+#include <clang/Basic/TargetInfo.h>
 #include <clang/Basic/TargetOptions.h>
 #include <clang/Frontend/CompilerInstance.h>
 
@@ -292,45 +293,32 @@ Error RTDynamicLibrarySearchGenerator::tryToGenerate(
 }
 
 static std::unique_ptr<TargetMachine>
-CreateHostTargetMachine(const clang::CompilerInstance& CI) {
-  const clang::TargetOptions& TargetOpts = CI.getTargetOpts();
-  const clang::CodeGenOptions& CGOpt = CI.getCodeGenOpts();
-  const std::string& Triple = TargetOpts.Triple;
-
-  std::string Error;
-  const Target *TheTarget = TargetRegistry::lookupTarget(Triple, Error);
-  if (!TheTarget) {
-    cling::errs() << "cling::IncrementalExecutor: unable to find target:\n"
-                  << Error;
-    return std::unique_ptr<TargetMachine>();
-  }
-
+CreateTargetMachine(const clang::CompilerInstance& CI) {
   CodeGenOpt::Level OptLevel = CodeGenOpt::Default;
-  switch (CGOpt.OptimizationLevel) {
+  switch (CI.getCodeGenOpts().OptimizationLevel) {
     case 0: OptLevel = CodeGenOpt::None; break;
     case 1: OptLevel = CodeGenOpt::Less; break;
     case 2: OptLevel = CodeGenOpt::Default; break;
     case 3: OptLevel = CodeGenOpt::Aggressive; break;
     default: OptLevel = CodeGenOpt::Default;
   }
-  using namespace llvm::orc;
-  auto JTMB = JITTargetMachineBuilder::detectHost();
-  if (!JTMB)
-    logAllUnhandledErrors(JTMB.takeError(), llvm::errs(),
-                          "Error detecting host");
 
-  JTMB->setCodeGenOptLevel(OptLevel);
+  using namespace llvm::orc;
+  auto JTMB = JITTargetMachineBuilder(CI.getTarget().getTriple());
+  JTMB.addFeatures(CI.getTargetOpts().Features);
+
+  JTMB.setCodeGenOptLevel(OptLevel);
 #ifdef _WIN32
-  JTMB->getOptions().EmulatedTLS = false;
+  JTMB.getOptions().EmulatedTLS = false;
 #endif // _WIN32
 
 #if defined(__powerpc64__) || defined(__PPC64__)
   // We have to use large code model for PowerPC64 because TOC and text sections
   // can be more than 2GB apart.
-  JTMB->setCodeModel(CodeModel::Large);
+  JTMB.setCodeModel(CodeModel::Large);
 #endif
 
-  std::unique_ptr<TargetMachine> TM = cantFail(JTMB->createTargetMachine());
+  std::unique_ptr<TargetMachine> TM = cantFail(JTMB.createTargetMachine());
 
   // Forcefully disable GlobalISel, it might be enabled on AArch64 without
   // optimizations. In tests on an Apple M1 after the upgrade to LLVM 9, this
@@ -365,7 +353,7 @@ IncrementalJIT::IncrementalJIT(
     std::unique_ptr<llvm::orc::ExecutorProcessControl> EPC, Error& Err,
     void *ExtraLibHandle, bool Verbose)
     : SkipHostProcessLookup(false),
-      TM(CreateHostTargetMachine(CI)),
+      TM(CreateTargetMachine(CI)),
       SingleThreadedContext(std::make_unique<LLVMContext>()) {
   ErrorAsOutParameter _(&Err);
 
