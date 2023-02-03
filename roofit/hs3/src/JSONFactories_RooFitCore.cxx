@@ -301,16 +301,8 @@ public:
    {
       const RooRealSumPdf *pdf = static_cast<const RooRealSumPdf *>(func);
       elem["type"] << key();
-      auto &samples = elem["samples"];
-      samples.set_seq();
-      auto &coefs = elem["coefficients"];
-      coefs.set_seq();
-      for (const auto &s : pdf->funcList()) {
-         samples.append_child() << s->GetName();
-      }
-      for (const auto &c : pdf->coefList()) {
-         coefs.append_child() << c->GetName();
-      }
+      elem["samples"].fill_seq(pdf->funcList(), [](auto const &item) { return item->GetName(); });
+      elem["coefficients"].fill_seq(pdf->coefList(), [](auto const &item) { return item->GetName(); });
       elem["extended"] << (pdf->extendMode() == RooAbsPdf::CanBeExtended);
       return true;
    }
@@ -327,16 +319,8 @@ public:
    {
       const RooRealSumFunc *pdf = static_cast<const RooRealSumFunc *>(func);
       elem["type"] << key();
-      auto &samples = elem["samples"];
-      samples.set_seq();
-      auto &coefs = elem["coefficients"];
-      coefs.set_seq();
-      for (const auto &s : pdf->funcList()) {
-         samples.append_child() << s->GetName();
-      }
-      for (const auto &c : pdf->coefList()) {
-         coefs.append_child() << c->GetName();
-      }
+      elem["samples"].fill_seq(pdf->funcList(), [](auto const &item) { return item->GetName(); });
+      elem["coefficients"].fill_seq(pdf->coefList(), [](auto const &item) { return item->GetName(); });
       return true;
    }
 };
@@ -482,10 +466,7 @@ public:
    {
       const RooProdPdf *pdf = static_cast<const RooProdPdf *>(func);
       elem["type"] << key();
-      auto &factors = elem["pdfs"];
-      for (const auto &f : pdf->pdfList()) {
-         factors.append_child() << f->GetName();
-      }
+      elem["pdfs"].fill_seq(pdf->pdfList(), [](auto const &f) { return f->GetName(); });
       return true;
    }
 };
@@ -502,10 +483,7 @@ public:
       const RooGenericPdf *pdf = static_cast<const RooGenericPdf *>(func);
       elem["type"] << key();
       elem["formula"] << pdf->expression();
-      auto &factors = elem["dependents"];
-      for (const auto &f : pdf->dependents()) {
-         factors.append_child() << f->GetName();
-      }
+      elem["dependents"].fill_seq(pdf->dependents(), [](auto const &f) { return f->GetName(); });
       return true;
    }
 };
@@ -539,10 +517,7 @@ public:
       const RooFormulaVar *var = static_cast<const RooFormulaVar *>(func);
       elem["type"] << key();
       elem["formula"] << var->expression();
-      auto &factors = elem["dependents"];
-      for (const auto &f : var->dependents()) {
-         factors.append_child() << f->GetName();
-      }
+      elem["dependents"].fill_seq(var->dependents(), [](auto const &f) { return f->GetName(); });
       return true;
    }
 };
@@ -555,7 +530,8 @@ STATIC_EXECUTE(
 
    using namespace RooFit::JSONIO;
 
-   registerImporter<RooProdPdfFactory>("pdfprod", false); registerImporter<RooGenericPdfFactory>("genericpdf", false);
+   registerImporter<RooProdPdfFactory>("pdfprod", false);
+   registerImporter<RooGenericPdfFactory>("genericpdf", false);
    registerImporter<RooFormulaVarFactory>("formulavar", false);
    registerImporter<RooBinSamplingPdfFactory>("binsampling", false);
    registerImporter<RooAddPdfFactory>("pdfsum", false);
@@ -575,7 +551,6 @@ STATIC_EXECUTE(
    registerExporter<RooGenericPdfStreamer>(RooGenericPdf::Class(), false);
    registerExporter<RooFormulaVarStreamer>(RooFormulaVar::Class(), false);
    registerExporter<RooRealSumPdfStreamer>(RooRealSumPdf::Class(), false);
-   registerExporter<RooRealSumFuncStreamer>(RooRealSumFunc::Class(), false);
-)
+   registerExporter<RooRealSumFuncStreamer>(RooRealSumFunc::Class(), false);)
 
 } // namespace

@@ -560,18 +560,13 @@ public:
    }
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
-      const RooStats::HistFactory::FlexibleInterpVar *fip =
-         static_cast<const RooStats::HistFactory::FlexibleInterpVar *>(func);
+      auto fip = static_cast<const RooStats::HistFactory::FlexibleInterpVar *>(func);
       elem["type"] << key();
-      auto &vars = elem["vars"];
-      elem["interpolationCodes"] << fip->interpolationCodes();
-      vars.set_seq();
-      for (const auto &v : fip->variables()) {
-         vars.append_child() << v->GetName();
-      }
+      elem["vars"].fill_seq(fip->variables(), [](auto const &item) { return item->GetName(); });
+      elem["interpolationCodes"].fill_seq(fip->interpolationCodes());
       elem["nom"] << fip->nominal();
-      elem["high"] << fip->high();
-      elem["low"] << fip->low();
+      elem["high"].fill_seq(fip->high());
+      elem["low"].fill_seq(fip->low());
       return true;
    }
 };
@@ -587,27 +582,13 @@ public:
    {
       const PiecewiseInterpolation *pip = static_cast<const PiecewiseInterpolation *>(func);
       elem["type"] << key();
-      elem["interpolationCodes"] << pip->interpolationCodes();
-      auto &vars = elem["vars"];
-      vars.set_seq();
-      for (const auto &v : pip->paramList()) {
-         vars.append_child() << v->GetName();
-      }
-
+      elem["interpolationCodes"].fill_seq(pip->interpolationCodes());
+      elem["vars"].fill_seq(pip->paramList(), [](auto const &item) { return item->GetName(); });
       auto &nom = elem["nom"];
       nom << pip->nominalHist()->GetName();
 
-      auto &high = elem["high"];
-      high.set_seq();
-      for (const auto &v : pip->highList()) {
-         high.append_child() << v->GetName();
-      }
-
-      auto &low = elem["low"];
-      low.set_seq();
-      for (const auto &v : pip->lowList()) {
-         low.append_child() << v->GetName();
-      }
+      elem["high"].fill_seq(pip->highList(), [](auto const &item) { return item->GetName(); });
+      elem["low"].fill_seq(pip->lowList(), [](auto const &item) { return item->GetName(); });
       return true;
    }
 };
@@ -823,11 +804,7 @@ public:
          auto &s = samples[samplename];
          s.set_map();
 
-         for (const auto &norm : norms) {
-            auto &nfs = s["normFactors"];
-            nfs.set_seq();
-            nfs.append_child() << norm->GetName();
-         }
+         s["normFactors"].fill_seq(norms, [](auto const &item) { return item->GetName(); });
 
          if (pip) {
             auto &systs = s["histogramSystematics"];
