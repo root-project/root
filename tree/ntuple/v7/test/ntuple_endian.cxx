@@ -285,20 +285,34 @@ TEST(RColumnElementEndian, Int16)
    ROOT::Experimental::Detail::RColumnElement<std::int16_t, EColumnType::kInt16> element(nullptr);
    EXPECT_EQ(element.IsMappable(), false);
 
-   RPageSinkMock sink(element);
+   RPageSinkMock sink1(element);
    unsigned char buf1[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                            0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
    RPage page1(0, buf1, 2, 8);
    page1.GrowUnchecked(8);
-   sink.CommitPageImpl(RPageStorage::ColumnHandle_t{}, page1);
+   sink1.CommitPageImpl(RPageStorage::ColumnHandle_t{}, page1);
 
    EXPECT_EQ(
-      0, memcmp(sink.GetPages()[0].fBuffer, "\x01\x00\x03\x02\x05\x04\x07\x06\x09\x08\x0b\x0a\x0d\x0c\x0f\x0e", 16));
+      0, memcmp(sink1.GetPages()[0].fBuffer, "\x01\x00\x03\x02\x05\x04\x07\x06\x09\x08\x0b\x0a\x0d\x0c\x0f\x0e", 16));
 
-   RPageSourceMock source(sink.GetPages(), element);
-   auto page2 = source.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   RPageSourceMock source1(sink1.GetPages(), element);
+   auto page2 = source1.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
    std::unique_ptr<unsigned char[]> buf2(static_cast<unsigned char *>(page2.GetBuffer())); // adopt buffer
    EXPECT_EQ(0, memcmp(buf2.get(), "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f", 16));
+
+   ROOT::Experimental::Detail::RColumnElement<int16_t, EColumnType::kSplitInt16> splitElement(nullptr);
+   RPageSinkMock sink2(splitElement);
+   RPage page3(0, buf1, 2, 8);
+   page3.GrowUnchecked(8);
+   sink2.CommitPageImpl(RPageStorage::ColumnHandle_t{}, page3);
+
+   EXPECT_EQ(
+      0, memcmp(sink2.GetPages()[0].fBuffer, "\x01\x03\x05\x07\x09\x0b\x0d\x0f\x00\x02\x04\x06\x08\x0a\x0c\x0e", 16));
+
+   RPageSourceMock source2(sink2.GetPages(), splitElement);
+   auto page4 = source2.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   std::unique_ptr<unsigned char[]> buf3(static_cast<unsigned char *>(page4.GetBuffer())); // adopt buffer
+   EXPECT_EQ(0, memcmp(buf3.get(), "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f", 16));
 }
 
 TEST(RColumnElementEndian, UInt16)

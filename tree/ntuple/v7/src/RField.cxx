@@ -770,7 +770,7 @@ void ROOT::Experimental::RField<double>::AcceptVisitor(Detail::RFieldVisitor &vi
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::int16_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kInt16}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kInt16}, {EColumnType::kSplitInt16}}, {{}});
    return representations;
 }
 
@@ -795,7 +795,7 @@ void ROOT::Experimental::RField<std::int16_t>::AcceptVisitor(Detail::RFieldVisit
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::uint16_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kInt16}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kInt16}, {EColumnType::kSplitInt16}}, {{}});
    return representations;
 }
 
