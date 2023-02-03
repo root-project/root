@@ -1583,6 +1583,11 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
    // to disable spell checking.
    fInterpreter->getCI()->getLangOpts().SpellChecking = false;
 
+   // Sync modules on/off between clang and us: clang turns it on for C++ >= 20.
+   auto isModulesArg = [](const char* arg) { return !strcmp(arg, "-fmodules"); };
+   bool hasModulesArg = std::find_if(interpArgs.begin(), interpArgs.end(), isModulesArg) != interpArgs.end();
+   fInterpreter->getCI()->getLangOpts().Modules = hasModulesArg;
+
    // We need stream that doesn't close its file descriptor, thus we are not
    // using llvm::outs. Keeping file descriptor open we will be able to use
    // the results in pipes (Savannah #99234).
