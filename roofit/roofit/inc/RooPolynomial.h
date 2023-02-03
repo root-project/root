@@ -40,6 +40,15 @@ public:
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
+  /// Get the x variable.
+  RooAbsReal const& x() const { return _x.arg(); }
+
+  /// Get the coefficient list.
+  RooArgList const& coefList() const { return _coefList; }
+
+  /// Return the order for the first coefficient in the list.
+  int lowestOrder() const { return _lowestOrder; }
+
 protected:
 
   RooRealProxy _x;
