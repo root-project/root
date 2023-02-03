@@ -545,6 +545,9 @@ void RLoopManager::RunTreeProcessorMT()
    // global entry number. Used to set RLoopManager::fUniqueRDFEntry, see also GetUniqueRDFEntry().
    std::atomic<Long64_t> uniqueEntry(0ll);
 
+   // TTreeProcessorMT called SetEntriesRange on this TTreeReader. That's useful even if we then manually set
+   // entry numbers with TTreeReader::SetEntry because it triggers a call to fTree->SetCacheEntryRange that avoids
+   // too much pre-fetching.
    tp->Process([this, &slotStack, &uniqueEntry](TTreeReader &r) -> void {
       ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
       auto slot = slotRAII.fSlot;
@@ -594,6 +597,9 @@ void RLoopManager::RunTreeReader()
    // Apply the range if there is any
    // In case of a chain with a total of N entries, calling SetEntriesRange(N + 1, ...) does not error out
    // This is a bug, reported here: https://github.com/root-project/root/issues/10774
+   // TODO in principle, as we are calling r.SetEntry() manually rather than r.Next(), we don't need the
+   // SetEntriesRange anymore. However it produces some diagnostics (that we test for) in case of bad
+   // ranges so I left it here for now.
    if (fBeginEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
       if (r.SetEntriesRange(fBeginEntry, fEndEntry) != TTreeReader::kEntryValid)
          throw std::logic_error("Something went wrong in initializing the TTreeReader.");
