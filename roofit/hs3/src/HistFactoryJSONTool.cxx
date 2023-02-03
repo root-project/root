@@ -137,7 +137,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       }
    }
 
-   auto &pdflist = n["pdfs"];
+   auto &pdflist = n["distributions"];
    pdflist.set_map();
 
    auto &likelihoodlist = n["likelihoods"];
@@ -214,7 +214,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    }
 
    // the data
-   auto &datalist = n["data"];
+   auto &datalist = n["observations"];
    datalist.set_map();
    // auto &obsdata = datalist["obsData"];
    // obsdata.set_map();

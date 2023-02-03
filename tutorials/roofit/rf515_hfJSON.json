@@ -20,7 +20,7 @@
             "obs": "observed_channel1"
         }
     },
-    "pdfs": {
+    "distributions": {
         "model_channel1": {
             "type": "histfactory",
             "observables": {
@@ -103,7 +103,7 @@
             ]
         }
     },
-    "data": {
+    "observations": {
         "observed_channel1": {
             "observables": {
                 "obs_x_channel1": {
