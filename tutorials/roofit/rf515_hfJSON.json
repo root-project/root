@@ -1,18 +1,26 @@
 {
-    "pdfs": {
+    "analyses": {
         "main": {
-            "dict": {
-                "InterpolationScheme": ""
-            },
-            "index": "channelCat",
-            "type": "simultaneous",
-            "tags": [
-                "toplevel"
+            "likelihoods": [
+                "channel1"
             ],
-            "channels": {
-                "channel1" : "model_channel1"
-            }
-        },
+            "pois": [
+                "mu"
+            ],
+            "observables": [
+                "obs_x_channel1"
+            ],
+            "InterpolationScheme": "",
+            "combinedObservationName": "observed"
+        }
+    },
+    "likelihoods": {
+        "channel1": {
+            "dist": "model_channel1",
+            "obs": "observed_channel1"
+        }
+    },
+    "pdfs": {
         "model_channel1": {
             "type": "histfactory",
             "observables": {
@@ -96,21 +104,18 @@
         }
     },
     "data": {
-        "observed": {
-            "index": "channelCat",
-            "channel1": {
-                "observables": {
-                    "obs_x_channel1": {
-                        "nbins": 2,
-                        "min": 1,
-                        "max": 2
-                    }
-                },
-                "counts": [
-                    122,
-                    112
-                ]
-            }
+        "observed_channel1": {
+            "observables": {
+                "obs_x_channel1": {
+                    "nbins": 2,
+                    "min": 1,
+                    "max": 2
+                }
+            },
+            "counts": [
+                122,
+                112
+            ]
         }
     }
 }
