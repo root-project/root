@@ -29,8 +29,7 @@ TEST(RPageStorage, ReadSealedPages)
    {
       RNTupleWriteOptions options;
       options.SetCompression(0);
-      RNTupleWriter ntuple(std::move(model),
-         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
+      RNTupleWriter ntuple(std::move(model), std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), options));
       ntuple.Fill();
       ntuple.CommitCluster();
       for (unsigned i = 0; i < 100000; ++i) {
