@@ -13,6 +13,9 @@
 
 using namespace ROOT::RDF;
 
+// FIXME This test does not compile with bulk processing: we do not support non-copiable/non-movable types anymore.
+// We can probably remove this test entirely as well as RNonCopiableColumnDS.
+/*
 TEST(RNonCopiableColumnDS, UseNonCopiableColumnType)
 {
    std::unique_ptr<RDataSource> tds(new RNonCopiableColumnDS());
@@ -25,6 +28,7 @@ TEST(RNonCopiableColumnDS, UseNonCopiableColumnType)
 
    EXPECT_EQ(dummy.fValue, m);
 }
+*/
 
 TEST(RStreamingDS, MultipleEntryRanges)
 {

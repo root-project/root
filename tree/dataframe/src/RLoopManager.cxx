@@ -307,6 +307,18 @@ static auto MakeDatasetColReadersKey(const std::string &colName, const std::type
    //    df.Sum<RVecI>("stdVectorBranch");
    return colName + ':' + ti.name();
 }
+
+std::size_t PickBulkSizeForTree(TTreeReader &r, Long64_t globalEntry, Long64_t endEntry, std::size_t maxEventsPerBulk)
+{
+   const auto treeOffset = r.GetTree()->GetChainOffset();
+   const auto localEntry = globalEntry - treeOffset;
+   auto it = r.GetTree()->GetTree()->GetClusterIterator(localEntry);
+   const auto clusterEnd = (it.Next(), it.Next()); // calling it twice to get the beginning of the _next_ cluster
+   const auto remainingEntriesInCluster = clusterEnd - localEntry;
+   const auto remainingEntriesInRange = endEntry - globalEntry;
+   const auto bulkSize = std::min({Long64_t(maxEventsPerBulk), remainingEntriesInCluster, remainingEntriesInRange});
+   return bulkSize;
+}
 } // anonymous namespace
 
 namespace ROOT {
@@ -511,22 +523,29 @@ void RLoopManager::RunTreeProcessorMT()
       const auto entryRange = r.GetEntriesRange(); // we trust TTreeProcessorMT to call SetEntriesRange
       const auto nEntries = entryRange.second - entryRange.first;
       fUniqueRDFEntry[slot] = uniqueEntry.fetch_add(nEntries);
+      auto treeEntry = entryRange.first;
       try {
-         // recursive call to check filters and conditionally execute actions
-         while (r.Next()) {
-            if (fNewSampleNotifier.CheckFlag(slot)) {
+         r.SetEntry(treeEntry);
+         while (treeEntry < entryRange.second && r.GetEntryStatus() == TTreeReader::kEntryValid) {
+            if (fNewSampleNotifier.CheckFlag(slot))
                UpdateSampleInfo(slot, r);
-            }
-            RunAndCheckFilters(slot, fUniqueRDFEntry[slot], /*bulkSize*/1u);
-            ++fUniqueRDFEntry[slot];
+
+            const std::size_t bulkSize = PickBulkSizeForTree(r, treeEntry, entryRange.second, fMaxEventsPerBulk);
+
+            RunAndCheckFilters(slot, treeEntry, bulkSize);
+            fUniqueRDFEntry[slot] += bulkSize;
+            treeEntry += bulkSize;
+            r.SetEntry(treeEntry);
          }
       } catch (...) {
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      // fNStopsReceived < fNChildren is always true at the moment as we don't support event loop early quitting in
+      // fNStopsReceived == fNChildren is always false at the moment as we don't support event loop early quitting in
       // multi-thread runs, but it costs nothing to be safe and future-proof in case we add support for that later.
-      if (r.GetEntryStatus() != TTreeReader::kEntryBeyondEnd && fNStopsReceived < fNChildren) {
+      const bool stopOk = fNStopsReceived == fNChildren || r.GetEntryStatus() == TTreeReader::kEntryBeyondEnd ||
+                          treeEntry == entryRange.second;
+      if (!stopOk) {
          // something went wrong in the TTreeReader event loop
          throw std::runtime_error("An error was encountered while processing the data. TTreeReader status code is: " +
                                   std::to_string(r.GetEntryStatus()));
@@ -552,21 +571,32 @@ void RLoopManager::RunTreeReader()
    InitNodeSlots(&r, 0);
    R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing(TreeDatasetLogInfo(r, 0u));
 
-   // recursive call to check filters and conditionally execute actions
-   // in the non-MT case processing can be stopped early by ranges, hence the check on fNStopsReceived
+   Long64_t globalEntry = fBeginEntry;
+
    try {
-      while (r.Next() && fNStopsReceived < fNChildren) {
-         if (fNewSampleNotifier.CheckFlag(0)) {
+      r.SetEntry(globalEntry);
+      // in the non-MT case processing can be stopped early by ranges, hence the check on fNStopsReceived
+      while (globalEntry < fEndEntry && r.GetEntryStatus() == TTreeReader::kEntryValid &&
+             fNStopsReceived < fNChildren) {
+         if (fNewSampleNotifier.CheckFlag(0))
             UpdateSampleInfo(/*slot*/0, r);
-         }
-         fUniqueRDFEntry[0] = r.GetCurrentEntry();
-         RunAndCheckFilters(0, fUniqueRDFEntry[0], /*bulkSize*/ 1u);
+
+         fUniqueRDFEntry[0] = globalEntry;
+
+         const std::size_t bulkSize = PickBulkSizeForTree(r, globalEntry, fEndEntry, fMaxEventsPerBulk);
+
+         RunAndCheckFilters(0, globalEntry, bulkSize); // recursive call to check filters and conditionally execute actions
+
+         globalEntry += bulkSize;
+         r.SetEntry(globalEntry);
       }
    } catch (...) {
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";
       throw;
    }
-   if (r.GetEntryStatus() != TTreeReader::kEntryBeyondEnd && fNStopsReceived < fNChildren) {
+   const bool stopOk =
+      fNStopsReceived == fNChildren || r.GetEntryStatus() == TTreeReader::kEntryBeyondEnd || globalEntry == fEndEntry;
+   if (!stopOk) {
       // something went wrong in the TTreeReader event loop
       throw std::runtime_error("An error was encountered while processing the data. TTreeReader status code is: " +
                                std::to_string(r.GetEntryStatus()));

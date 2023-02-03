@@ -28,9 +28,12 @@ namespace RDF {
 /// RTreeColumnReader specialization for TTree values read via TTreeReaderValues
 template <typename T>
 class R__CLING_PTRCHECK(off) RTreeColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
+   TTreeReader *fTreeReader = nullptr; ///< Non-owning pointer to the TTreeReader. Never null.
    std::unique_ptr<TTreeReaderValue<T>> fTreeValue;
-   T *fValuePtr = nullptr;
-   RMaskedEntryRange fMask{1ul};
+   ROOT::RVec<T> fCachedValues; // RVec rather than std::vector to avoid vector<bool> shenanigans.
+                                // We would not need this cache if the I/O layer already returned a contiguous buffer
+                                // (or an iterator over the bulk).
+   RMaskedEntryRange fMask;
 
    void LoadImpl(const Internal::RDF::RMaskedEntryRange &requestedMask, std::size_t bulkSize) final
    {
@@ -41,19 +44,23 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader final : public ROOT::Detail::RDF:
 
       for (std::size_t i = 0ul; i < bulkSize; ++i) {
          if (requestedMask[i] && !fMask[i]) { // we don't have a value for this entry yet
-            // TODO change fValuePtr to an array of cached results per slot
-            fValuePtr = fTreeValue->Get();
+            fTreeReader->SetEntry(requestedMask.FirstEntry() + i);
+            // TODO avoid copy with bulk I/O when possible?
+            // need a copy-assign here (rather than a move-assign) because multiple TTreeReader{Value,Array} might
+            // be using the same underlying object and if one moves the contents out the next will find it moved from.
+            fCachedValues[i] = *fTreeValue->Get();
             fMask[i] = true;
          }
       }
    }
 
-   void *GetImpl(std::size_t) final { return fValuePtr; }
+   void *GetImpl(std::size_t offset) final { return &fCachedValues[offset]; }
 
 public:
    /// Construct the RTreeColumnReader. Actual initialization is performed lazily by the Init method.
-   RTreeColumnReader(TTreeReader &r, const std::string &colName)
-      : fTreeValue(std::make_unique<TTreeReaderValue<T>>(r, colName.c_str()))
+   RTreeColumnReader(TTreeReader &r, const std::string &colName, std::size_t maxEventsPerBulk)
+      : fTreeReader(&r), fTreeValue(std::make_unique<TTreeReaderValue<T>>(r, colName.c_str())),
+        fCachedValues(maxEventsPerBulk), fMask(maxEventsPerBulk)
    {
    }
 
@@ -73,137 +80,49 @@ public:
 /// TTreeReaderArrays are used whenever the RDF column type is RVec<T>.
 template <typename T>
 class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Detail::RDF::RColumnReaderBase {
+   TTreeReader *fTreeReader; ///< Non-owning pointer to the TTreeReader. Never null.
    std::unique_ptr<TTreeReaderArray<T>> fTreeArray;
 
    /// Enumerator for the memory layout of the branch
    enum class EStorageType : char { kContiguous, kUnknown, kSparse };
 
-   /// We return a reference to this RVec to clients, to guarantee a stable address and contiguous memory layout.
-   RVec<T> fRVec;
+   /// We return references to the inner RVecs to clients, to guarantee a stable address and contiguous memory layout.
+   /// fCachedValues (the outer vector) has size equal to maxEventsPerBulk.
+   std::vector<RVec<T>> fCachedValues;
 
    /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
    /// in contiguous memory.
    EStorageType fStorageType = EStorageType::kUnknown;
-   RMaskedEntryRange fMask{1ul};
+   RMaskedEntryRange fMask;
 
    /// Whether we already printed a warning about performing a copy of the TTreeReaderArray contents
    bool fCopyWarningPrinted = false;
 
-   void LoadImpl(const Internal::RDF::RMaskedEntryRange &requestedMask, std::size_t /*bulkSize*/) final
+   void LoadImpl(const Internal::RDF::RMaskedEntryRange &requestedMask, std::size_t bulkSize) final
    {
       if (requestedMask.FirstEntry() != fMask.FirstEntry()) { // new bulk
          fMask.SetAll(false);
          fMask.SetFirstEntry(requestedMask.FirstEntry());
       }
 
-      // TODO the logic below assumes bulk size == 1 always, we'll have to lift this assumption.
-      if (!requestedMask[0])
-         return;
-      else
-         fMask[0] = true;
+      for (std::size_t i = 0ul; i < bulkSize; ++i) {
+         if (requestedMask[i] && !fMask[i]) { // we don't have a value for this entry yet
+            fTreeReader->SetEntry(requestedMask.FirstEntry() + i);
 
-      auto &readerArray = *fTreeArray;
-      // We only use TTreeReaderArrays to read columns that users flagged as type `RVec`, so we need to check
-      // that the branch stores the array as contiguous memory that we can actually wrap in an `RVec`.
-      // Currently we need the first entry to have been loaded to perform the check
-      // TODO Move check to constructor once ROOT-10823 is fixed and TTreeReaderArray itself exposes this information
-      const auto readerArraySize = readerArray.GetSize();
-      if (EStorageType::kUnknown == fStorageType && readerArraySize > 1) {
-         // We can decide since the array is long enough
-         fStorageType = EStorageType::kContiguous;
-         for (auto i = 0u; i < readerArraySize - 1; ++i) {
-            if ((char *)&readerArray[i + 1] - (char *)&readerArray[i] != sizeof(T)) {
-               fStorageType = EStorageType::kSparse;
-               break;
-            }
-         }
-      }
-
-      if (EStorageType::kContiguous == fStorageType ||
-          (EStorageType::kUnknown == fStorageType && readerArray.GetSize() < 2)) {
-         if (readerArraySize > 0) {
-            // trigger loading of the contents of the TTreeReaderArray
-            // the address of the first element in the reader array is not necessarily equal to
-            // the address returned by the GetAddress method
-            auto readerArrayAddr = &readerArray.At(0);
-            RVec<T> rvec(readerArrayAddr, readerArraySize);
-            swap(fRVec, rvec);
-         } else {
-            RVec<T> emptyVec{};
-            swap(fRVec, emptyVec);
-         }
-      } else {
-         // The storage is not contiguous or we don't know yet: we cannot but copy into the rvec
-#ifndef NDEBUG
-         if (!fCopyWarningPrinted) {
-            Warning("RTreeColumnReader::Get",
-                    "Branch %s hangs from a non-split branch. A copy is being performed in order "
-                    "to properly read the content.",
-                    readerArray.GetBranchName());
-            fCopyWarningPrinted = true;
-         }
-#else
-         (void)fCopyWarningPrinted;
-#endif
-         if (readerArraySize > 0) {
-            RVec<T> rvec(readerArray.begin(), readerArray.end());
-            swap(fRVec, rvec);
-         } else {
-            RVec<T> emptyVec{};
-            swap(fRVec, emptyVec);
+            // TODO I hate these copies. Could avoid them with bulk I/O when possible.
+            RVec<T> rvec(fTreeArray->begin(), fTreeArray->end());
+            swap(fCachedValues[i], rvec);
+            fMask[i] = true;
          }
       }
    }
 
-   void *GetImpl(std::size_t) final
-   {
-      return &fRVec;
-   }
+   void *GetImpl(std::size_t offset) final { return &fCachedValues[offset]; }
 
 public:
-   RTreeColumnReader(TTreeReader &r, const std::string &colName)
-      : fTreeArray(std::make_unique<TTreeReaderArray<T>>(r, colName.c_str()))
-   {
-   }
-
-   /// See the other class template specializations for an explanation.
-   ~RTreeColumnReader() override { fTreeArray.reset(); }
-};
-
-/// RTreeColumnReader specialization for arrays of boolean values read via TTreeReaderArrays.
-///
-/// TTreeReaderArray<bool> is used whenever the RDF column type is RVec<bool>.
-template <>
-class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<bool>> final : public ROOT::Detail::RDF::RColumnReaderBase {
-
-   std::unique_ptr<TTreeReaderArray<bool>> fTreeArray;
-
-   /// We return a reference to this RVec to clients, to guarantee a stable address and contiguous memory layout
-   RVec<bool> fRVec;
-
-   // We always copy the contents of TTreeReaderArray<bool> into an RVec<bool> (never take a view into the memory
-   // buffer) because the underlying memory buffer might be the one of a std::vector<bool>, which is not a contiguous
-   // slab of bool values.
-   // Note that this also penalizes the case in which the column type is actually bool[], but the possible performance
-   // gains in this edge case is probably not worth the extra complication required to differentiate the two cases.
-   void *GetImpl(std::size_t) final
-   {
-      auto &readerArray = *fTreeArray;
-      const auto readerArraySize = readerArray.GetSize();
-      if (readerArraySize > 0) {
-         // always perform a copy
-         RVec<bool> rvec(readerArray.begin(), readerArray.end());
-         swap(fRVec, rvec);
-      } else {
-         RVec<bool> emptyVec{};
-         swap(fRVec, emptyVec);
-      }
-      return &fRVec;
-   }
-
-public:
-   RTreeColumnReader(TTreeReader &r, const std::string &colName)
-      : fTreeArray(std::make_unique<TTreeReaderArray<bool>>(r, colName.c_str()))
+   RTreeColumnReader(TTreeReader &r, const std::string &colName, std::size_t maxEventsPerBulk)
+      : fTreeReader(&r), fTreeArray(std::make_unique<TTreeReaderArray<T>>(r, colName.c_str())),
+        fCachedValues(maxEventsPerBulk), fMask(maxEventsPerBulk)
    {
    }
 

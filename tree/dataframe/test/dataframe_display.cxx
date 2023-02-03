@@ -307,6 +307,8 @@ TEST(RDFDisplayTests, BoolArray)
    EXPECT_EQ(r->AsString(), expected);
 }
 
+// FIXME With bulk processing, move-only column types like unique_ptr<T> are not supported anymore
+/*
 TEST(RDFDisplayTests, UniquePtr)
 {
    auto r = ROOT::RDataFrame(1)
@@ -320,7 +322,7 @@ TEST(RDFDisplayTests, UniquePtr)
                          "+-----+----------------------------+\n";
    EXPECT_EQ(r->AsString(), expected);
 }
-
+*/
 
 // GitHub issue #6371
 TEST(RDFDisplayTests, SubBranch)
