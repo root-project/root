@@ -524,6 +524,7 @@ std::uint16_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnTy
    case EColumnType::kSplitReal32: return SerializeUInt16(0x11, buffer);
    case EColumnType::kSplitInt64: return SerializeUInt16(0x13, buffer);
    case EColumnType::kSplitInt32: return SerializeUInt16(0x14, buffer);
+   case EColumnType::kSplitInt16: return SerializeUInt16(0x15, buffer);
    default: throw RException(R__FAIL("ROOT bug: unexpected column type"));
    }
 }
@@ -552,6 +553,7 @@ RResult<std::uint16_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    case 0x11: type = EColumnType::kSplitReal32; break;
    case 0x13: type = EColumnType::kSplitInt64; break;
    case 0x14: type = EColumnType::kSplitInt32; break;
+   case 0x15: type = EColumnType::kSplitInt16; break;
    default: return R__FAIL("unexpected on-disk column type");
    }
    return result;
