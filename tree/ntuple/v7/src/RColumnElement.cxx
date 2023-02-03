@@ -41,7 +41,10 @@ ROOT::Experimental::Detail::RColumnElementBase::Generate<void>(EColumnType type)
    case EColumnType::kInt8: return std::make_unique<RColumnElement<std::int8_t, EColumnType::kInt8>>(nullptr);
    case EColumnType::kSplitReal64: return std::make_unique<RColumnElement<double, EColumnType::kSplitReal64>>(nullptr);
    case EColumnType::kSplitReal32: return std::make_unique<RColumnElement<float, EColumnType::kSplitReal32>>(nullptr);
-   case EColumnType::kSplitInt64: return std::make_unique<RColumnElement<float, EColumnType::kSplitInt64>>(nullptr);
+   case EColumnType::kSplitInt64:
+      return std::make_unique<RColumnElement<std::int64_t, EColumnType::kSplitInt64>>(nullptr);
+   case EColumnType::kSplitInt32:
+      return std::make_unique<RColumnElement<std::int32_t, EColumnType::kSplitInt32>>(nullptr);
    default: R__ASSERT(false);
    }
    // never here
@@ -67,6 +70,7 @@ std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(ECo
    case EColumnType::kSplitReal64: return 64;
    case EColumnType::kSplitReal32: return 32;
    case EColumnType::kSplitInt64: return 64;
+   case EColumnType::kSplitInt32: return 32;
    default: R__ASSERT(false);
    }
    // never here
@@ -89,6 +93,7 @@ std::string ROOT::Experimental::Detail::RColumnElementBase::GetTypeName(EColumnT
    case EColumnType::kSplitReal64: return "SplitReal64";
    case EColumnType::kSplitReal32: return "SplitReal32";
    case EColumnType::kSplitInt64: return "kSplitInt64";
+   case EColumnType::kSplitInt32: return "kSplitInt32";
    default: return "UNKNOWN";
    }
 }
