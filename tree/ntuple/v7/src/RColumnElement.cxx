@@ -191,3 +191,36 @@ void ROOT::Experimental::Detail::RColumnElement<std::int64_t, ROOT::Experimental
 #endif
    }
 }
+
+void ROOT::Experimental::Detail::RColumnElement<std::int64_t, ROOT::Experimental::EColumnType::kSplitInt32>::Pack(
+   void *dst, void *src, std::size_t count) const
+{
+   std::int64_t *int64Array = reinterpret_cast<std::int64_t *>(src);
+   char *int32SplitArray = reinterpret_cast<char *>(dst);
+   for (std::size_t i = 0; i < count; ++i) {
+      std::int32_t v = int64Array[i];
+#if R__LITTLE_ENDIAN == 0
+      v = RByteSwap<4>::bswap(v);
+#endif
+      for (std::size_t b = 0; b < 4; ++b) {
+         int32SplitArray[b * count + i] = reinterpret_cast<char *>(&v)[b];
+      }
+   }
+}
+
+void ROOT::Experimental::Detail::RColumnElement<std::int64_t, ROOT::Experimental::EColumnType::kSplitInt32>::Unpack(
+   void *dst, void *src, std::size_t count) const
+{
+   char *int32SplitArray = reinterpret_cast<char *>(src);
+   std::int64_t *int64Array = reinterpret_cast<std::int64_t *>(dst);
+   for (std::size_t i = 0; i < count; ++i) {
+      std::int32_t v;
+      for (std::size_t b = 0; b < 4; ++b) {
+         reinterpret_cast<char *>(&v)[b] = int32SplitArray[b * count + i];
+      }
+#if R__LITTLE_ENDIAN == 0
+      v = RByteSwap<4>::bswap(v);
+#endif
+      int64Array[i] = v;
+   }
+}
