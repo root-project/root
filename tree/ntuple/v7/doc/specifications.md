@@ -599,6 +599,7 @@ The following fundamental types are stored as `leaf` fields with a single column
 | double                           | SplitReal64            | Real64                |
 
 Possibly available `const` and `volatile` qualifiers of the C++ types are ignored for serialization.
+If the ntuple is stored uncompressed, the default changes from split encoding to non-split encoding where applicable.
 
 ### STL Types and Collections
 
@@ -628,7 +629,7 @@ They are stored as two fields:
 Fixed-sized arrays are stored as two fields:
   - A repetitive field of type `std::array<T, N>` with no attached columns. The array size `N` is stored in the field meta-data.
   - Child field of type `T`, which must be a type with RNTuple I/O support.
-  
+
 Multi-dimensional arrays of the form `T[N][M]...` are currently not supported.
 
 #### std::variant<T1, T2, ..., Tn>

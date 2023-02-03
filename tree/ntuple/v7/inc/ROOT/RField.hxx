@@ -345,6 +345,8 @@ public:
    /// Otherwise, or if the provided representation is not in the list of GetColumnRepresentations,
    /// an exception is thrown
    void SetColumnRepresentative(const ColumnRepresentation_t &representative);
+   /// Whether or not an explicit column representative was set
+   bool HasDefaultColumnRepresentative() const { return fColumnRepresentative == nullptr; }
 
    /// Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
    /// can be read or written.  In order to find the field in the page storage, the field's on-disk ID has to be set.
