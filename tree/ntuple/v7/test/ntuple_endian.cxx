@@ -341,18 +341,36 @@ TEST(RColumnElementEndian, Int64Int32)
    ROOT::Experimental::Detail::RColumnElement<std::int64_t, EColumnType::kInt32> element(nullptr);
    EXPECT_EQ(element.IsMappable(), false);
 
-   RPageSinkMock sink(element);
+   RPageSinkMock sink1(element);
    std::int64_t buf1[] = {0x0a0b0c0d11223344, 0x0a0b0c0d55667788};
    RPage page1(0, buf1, 8, 2);
    page1.GrowUnchecked(2);
-   sink.CommitPageImpl(RPageStorage::ColumnHandle_t{}, page1);
+   sink1.CommitPageImpl(RPageStorage::ColumnHandle_t{}, page1);
 
-   EXPECT_EQ(0, memcmp(sink.GetPages()[0].fBuffer, "\x44\x33\x22\x11\x88\x77\x66\x55", 8));
+   EXPECT_EQ(0, memcmp(sink1.GetPages()[0].fBuffer, "\x44\x33\x22\x11\x88\x77\x66\x55", 8));
 
-   RPageSourceMock source(sink.GetPages(), element);
-   auto page2 = source.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   RPageSourceMock source1(sink1.GetPages(), element);
+   auto page2 = source1.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
    std::unique_ptr<unsigned char[]> buf2(static_cast<unsigned char *>(page2.GetBuffer())); // adopt buffer
    auto ints = reinterpret_cast<std::int64_t *>(buf2.get());
+   EXPECT_EQ(ints[0], 0x0000000011223344);
+   EXPECT_EQ(ints[1], 0x0000000055667788);
+
+   ROOT::Experimental::Detail::RColumnElement<std::int64_t, EColumnType::kSplitInt32> splitElement(nullptr);
+   EXPECT_EQ(splitElement.IsMappable(), false);
+
+   RPageSinkMock sink2(splitElement);
+   std::int64_t buf3[] = {0x0a0b0c0d11223344, 0x0a0b0c0d55667788};
+   RPage page3(0, buf3, 8, 2);
+   page3.GrowUnchecked(2);
+   sink2.CommitPageImpl(RPageStorage::ColumnHandle_t{}, page3);
+
+   EXPECT_EQ(0, memcmp(sink2.GetPages()[0].fBuffer, "\x44\x88\x33\x77\x22\x66\x11\x55", 8));
+
+   RPageSourceMock source2(sink2.GetPages(), splitElement);
+   auto page4 = source2.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   std::unique_ptr<unsigned char[]> buf4(static_cast<unsigned char *>(page4.GetBuffer())); // adopt buffer
+   ints = reinterpret_cast<std::int64_t *>(buf4.get());
    EXPECT_EQ(ints[0], 0x0000000011223344);
    EXPECT_EQ(ints[1], 0x0000000055667788);
 }

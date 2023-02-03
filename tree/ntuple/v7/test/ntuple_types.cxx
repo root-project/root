@@ -477,24 +477,33 @@ TEST(RNTuple, UnsupportedStdTypes)
 TEST(RNTuple, Casting)
 {
    FileRaii fileGuard("test_ntuple_casting.root");
-   auto modelA = RNTupleModel::Create();
-   modelA->MakeField<std::int32_t>("myInt", 42);
-   auto fld = ROOT::Experimental::Detail::RFieldBase::Create("field", "float").Unwrap();
-   fld->SetColumnRepresentative({EColumnType::kReal32});
+
+   auto fldI1 = RFieldBase::Create("i1", "std::int32_t").Unwrap();
+   fldI1->SetColumnRepresentative({EColumnType::kInt32});
+   auto fldI2 = RFieldBase::Create("i2", "std::int32_t").Unwrap();
+   fldI2->SetColumnRepresentative({EColumnType::kSplitInt32});
+   auto fldF = ROOT::Experimental::Detail::RFieldBase::Create("F", "float").Unwrap();
+   fldF->SetColumnRepresentative({EColumnType::kReal32});
    try {
-      fld->SetColumnRepresentative({EColumnType::kBit});
+      fldF->SetColumnRepresentative({EColumnType::kBit});
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid column representative"));
    }
-   modelA->AddField(std::move(fld));
+
+   auto modelA = RNTupleModel::Create();
+   modelA->AddField(std::move(fldI1));
+   modelA->AddField(std::move(fldI2));
+   modelA->AddField(std::move(fldF));
    {
       auto writer = RNTupleWriter::Recreate(std::move(modelA), "ntuple", fileGuard.GetPath());
+      *writer->GetModel()->GetDefaultEntry()->Get<std::int32_t>("i1") = 42;
+      *writer->GetModel()->GetDefaultEntry()->Get<std::int32_t>("i2") = 137;
       writer->Fill();
    }
 
    try {
       auto model = RNTupleModel::Create();
-      auto f = ROOT::Experimental::Detail::RFieldBase::Create("myInt", "std::int32_t").Unwrap();
+      auto f = ROOT::Experimental::Detail::RFieldBase::Create("i1", "std::int32_t").Unwrap();
       f->SetColumnRepresentative({EColumnType::kInt32});
       model->AddField(std::move(f));
       auto reader = RNTupleReader::Open(std::move(model), "ntuple", fileGuard.GetPath());
@@ -506,7 +515,7 @@ TEST(RNTuple, Casting)
 
    try {
       auto modelB = RNTupleModel::Create();
-      auto fieldCast = modelB->MakeField<float>("myInt");
+      auto fieldCast = modelB->MakeField<float>("i1");
       auto reader = RNTupleReader::Open(std::move(modelB), "ntuple", fileGuard.GetPath());
       FAIL() << "should not be able to cast int to float";
    } catch (const RException& err) {
@@ -515,10 +524,12 @@ TEST(RNTuple, Casting)
    }
 
    auto modelC = RNTupleModel::Create();
-   auto fieldCast = modelC->MakeField<std::int64_t>("myInt");
+   auto fieldCast1 = modelC->MakeField<std::int64_t>("i1");
+   auto fieldCast2 = modelC->MakeField<std::int64_t>("i2");
    auto reader = RNTupleReader::Open(std::move(modelC), "ntuple", fileGuard.GetPath());
    reader->LoadEntry(0);
-   EXPECT_EQ(42, *fieldCast);
+   EXPECT_EQ(42, *fieldCast1);
+   EXPECT_EQ(137, *fieldCast2);
 }
 
 TEST(RNTuple, TClass)

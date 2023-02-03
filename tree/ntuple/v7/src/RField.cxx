@@ -896,7 +896,7 @@ const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::int64_t>::GetColumnRepresentations() const
 {
    static RColumnRepresentations representations({{EColumnType::kSplitInt64}, {EColumnType::kInt64}},
-                                                 {{EColumnType::kInt32}});
+                                                 {{EColumnType::kInt32}, {EColumnType::kSplitInt32}});
    return representations;
 }
 
