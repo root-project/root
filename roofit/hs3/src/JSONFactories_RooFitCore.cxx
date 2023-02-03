@@ -24,6 +24,7 @@
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
 #include <RooProdPdf.h>
+#include <RooPolynomial.h>
 #include <RooRealSumFunc.h>
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
@@ -286,6 +287,41 @@ public:
    }
 };
 
+class RooPolynomialFactory : public RooFit::JSONIO::Importer {
+public:
+   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      if (!p.has_child("x")) {
+         RooJSONFactoryWSTool::error("no x given in '" + name + "'");
+      }
+      if (!p.has_child("coefficients")) {
+         RooJSONFactoryWSTool::error("no coefficients given in '" + name + "'");
+      }
+      RooAbsReal *x = tool->request<RooAbsReal>(p["x"].val(), name);
+      RooArgList coefs;
+      int order = 0;
+      int lowestOrder = 0;
+      for (const auto &coef : p["coefficients"].children()) {
+         // As long as the coefficients match the default coefficients in
+         // RooFit, we don't have to instantiate RooFit objects but can
+         // increase the lowestOrder flag.
+         if (order == 0 && coef.val() == "1.0") {
+            ++lowestOrder;
+         } else if (coefs.empty() && coef.val() == "0.0") {
+            ++lowestOrder;
+         } else {
+            coefs.add(*tool->request<RooAbsReal>(coef.val(), name));
+         }
+         ++order;
+      }
+
+      RooPolynomial pdf(name.c_str(), name.c_str(), *x, coefs, lowestOrder);
+      tool->workspace()->import(pdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      return true;
+   }
+};
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // specialized exporter implementations
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -522,6 +558,32 @@ public:
    }
 };
 
+class RooPolynomialStreamer : public RooFit::JSONIO::Exporter {
+public:
+   std::string const &key() const override
+   {
+      static const std::string keystring = "polynomialPdf";
+      return keystring;
+   }
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   {
+      auto *pdf = static_cast<const RooPolynomial *>(func);
+      elem["type"] << key();
+      elem["x"] << pdf->x().GetName();
+      auto &coefs = elem["coefficients"];
+      // Write out the default coefficient that RooFit uses for the lower
+      // orders before the order of the first coefficient. Like this, the
+      // output is more self-documenting.
+      for (int i = 0; i < pdf->lowestOrder(); ++i) {
+         coefs.append_child() << (i == 0 ? "1.0" : "0.0");
+      }
+      for (const auto &coef : pdf->coefList()) {
+         coefs.append_child() << coef->GetName();
+      }
+      return true;
+   }
+};
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // instantiate all importers and exporters
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -540,6 +602,7 @@ STATIC_EXECUTE([]() {
    registerImporter<RooBinWidthFunctionFactory>("binwidth", false);
    registerImporter<RooRealSumPdfFactory>("sumpdf", false);
    registerImporter<RooRealSumFuncFactory>("sumfunc", false);
+   registerImporter<RooPolynomialFactory>("polynomialPdf", false);
 
    registerExporter<RooBinWidthFunctionStreamer>(RooBinWidthFunction::Class(), false);
    registerExporter<RooProdPdfStreamer>(RooProdPdf::Class(), false);
@@ -551,6 +614,7 @@ STATIC_EXECUTE([]() {
    registerExporter<RooFormulaVarStreamer>(RooFormulaVar::Class(), false);
    registerExporter<RooRealSumPdfStreamer>(RooRealSumPdf::Class(), false);
    registerExporter<RooRealSumFuncStreamer>(RooRealSumFunc::Class(), false);
+   registerExporter<RooPolynomialStreamer>(RooPolynomial::Class(), false);
 });
 
 } // namespace
