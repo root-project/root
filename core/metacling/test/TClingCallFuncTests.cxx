@@ -1,5 +1,6 @@
 #include "ROOT/TestSupport.hxx"
 #include "TInterpreter.h"
+#include "TCollection.h"
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
