@@ -523,7 +523,19 @@ It is now possible to do the same with the ROOT TGraph:
 
 ## 3D Graphics Libraries
 
-- REve / Eve7 now uses `RenderCore` to visualize 3D objects in JavaScript, replacing the use of `Three.js`.
+REve now uses `RenderCore` to visualize 3D objects in JavaScript, replacing the use of `Three.js`.
+RenderCore is an open source WebGL rendering engine maintained by University of Ljubljana and tailored to the needs of the REve visualization framework. The minimized version is now included in ROOT source as built-in.
+REve with use of RendeCore gains:
+
+- Controllable line widths
+- Better outline algorithms for meshes, lines, and markers
+- Clearer rendering of markers using textures
+- Custom lighting model and custom material properties to improve clarity of scene objects and general esthetics
+- Support of future-proof WebGPU rather than WebGL
+
+![REve screenshot 1](wo2Single.png)
+![REve screenshot 2](wo3Single.png)
+![REve screenshot 3](wo4Single.png)
 
 
 ## Geometry Libraries
@@ -589,7 +601,7 @@ accessing widget via configured ssh tunnel.
 - Building external applications that use ROOT oftentimes fail if there is a mismatch in the C++ standard between ROOT and the application. As of v6.28, suchs builds will issue a warning if the C++ standard does not match ROOT's, i.e. if there is a mismatch in the value of the `__cplusplus` preprocessor macro w.r.t. when ROOT was configured.
 - Builtin packages have been upgraded to davix 0.8.1, Vc 1.4.3, vdt 0.4.4, xrootd 5.4.1, gtest v1.12.1
 - Builtin xrootd is now built with openssl3 support.
-- GCC 11, clang 15, and Xcode 4.2 are now supported.
+- GCC 11, clang 15, and Xcode 14.2 are now supported.
 - Large parts of ROOT have been updated to use `override`.
 
 ## PyROOT
