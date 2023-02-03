@@ -54,6 +54,9 @@ env:
 
 jobs:
   build-linux:
+    permissions:
+      contents: read
+
     strategy:
       matrix:
         image: ["fedora37", "centos8", "ubuntu18", "ubuntu20", "ubuntu22"]
@@ -80,7 +83,7 @@ jobs:
         run: echo "$GITHUB_CONTEXT"
 
       - name: Print debug info
-        run:  'printf "%s@%s %s\\n" "$(whoami)" "$(hostname)";
+        run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
                ls -la
               '
 
