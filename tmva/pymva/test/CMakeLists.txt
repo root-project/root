@@ -70,7 +70,7 @@ if(PY_TORCH_FOUND)
 
    ROOT_EXECUTABLE(testPyTorchClassification testPyTorchClassification.C
       LIBRARIES ${Libraries})
-   ROOT_ADD_TEST(PyMVA-Torch-Classification COMMAND testPyTorchClassification DEPENDS PyMVA-Torch-Classification-depends)
+   ROOT_ADD_TEST(PyMVA-Torch-Classification COMMAND testPyTorchClassification DEPENDS ${PyMVA-Torch-Classification-depends})
 
    # Test PyTorch: Regression
    ROOT_EXECUTABLE(testPyTorchRegression testPyTorchRegression.C
@@ -80,7 +80,7 @@ if(PY_TORCH_FOUND)
    # Test PyTorch: Multi-class classification
    ROOT_EXECUTABLE(testPyTorchMulticlass testPyTorchMulticlass.C
       LIBRARIES ${Libraries})
-   ROOT_ADD_TEST(PyMVA-Torch-Multiclass COMMAND testPyTorchMulticlass DEPENDS PyMVA-Torch-Multiclass-depends)
+   ROOT_ADD_TEST(PyMVA-Torch-Multiclass COMMAND testPyTorchMulticlass DEPENDS ${PyMVA-Torch-Multiclass-depends})
 
    # Test RModelParser_PyTorch
    add_executable(emitFromPyTorch
@@ -142,18 +142,18 @@ if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOU
    # Test PyKeras: Binary classification
    ROOT_EXECUTABLE(testPyKerasClassification testPyKerasClassification.C
       LIBRARIES ${Libraries})
-   ROOT_ADD_TEST(PyMVA-Keras-Classification COMMAND testPyKerasClassification DEPENDS PyMVA-Keras-Classification-depends)
+   ROOT_ADD_TEST(PyMVA-Keras-Classification COMMAND testPyKerasClassification DEPENDS ${PyMVA-Keras-Classification-depends})
 
    # Test PyKeras: Regression
    ROOT_EXECUTABLE(testPyKerasRegression testPyKerasRegression.C
       LIBRARIES ${Libraries})
-   ROOT_ADD_TEST(PyMVA-Keras-Regression COMMAND testPyKerasRegression DEPENDS PyMVA-Keras-Regression-depends)
+   ROOT_ADD_TEST(PyMVA-Keras-Regression COMMAND testPyKerasRegression DEPENDS ${PyMVA-Keras-Regression-depends})
 
 
    # Test PyKeras: Multi-class classification
    ROOT_EXECUTABLE(testPyKerasMulticlass testPyKerasMulticlass.C
       LIBRARIES ${Libraries})
-   ROOT_ADD_TEST(PyMVA-Keras-Multiclass COMMAND testPyKerasMulticlass DEPENDS PyMVA-Keras-Multiclass-depends)
+   ROOT_ADD_TEST(PyMVA-Keras-Multiclass COMMAND testPyKerasMulticlass DEPENDS ${PyMVA-Keras-Multiclass-depends})
 
    # Test RModelParser_Keras
    add_executable(emitFromKeras
