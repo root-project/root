@@ -499,7 +499,6 @@ void RooJSONFactoryWSTool::exportAttributes(const RooAbsArg *arg, JSONNode &n)
    }
    if (arg->attributes().size() > 0) {
       auto &tags = n["tags"];
-      tags.set_seq();
       for (const auto &it : arg->attributes()) {
          RooJSONFactoryWSTool::append(tags, it);
       }
@@ -640,16 +639,10 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
          return nullptr;
       }
 
-      RooListProxy *l = dynamic_cast<RooListProxy *>(p);
-      if (l) {
-         auto &items = elem[k->second];
-         items.set_seq();
-         for (auto e : *l) {
-            items.append_child() << e->GetName();
-         }
+      if (auto l = dynamic_cast<RooListProxy *>(p)) {
+         elem[k->second].fill_seq(*l, [](auto const &e) { return e->GetName(); });
       }
-      RooRealProxy *r = dynamic_cast<RooRealProxy *>(p);
-      if (r) {
+      if (auto r = dynamic_cast<RooRealProxy *>(p)) {
          elem[k->second] << r->arg().GetName();
       }
    }
@@ -980,14 +973,9 @@ void RooJSONFactoryWSTool::exportData(RooAbsData *data, JSONNode &n)
       for (int i = 0; i < ds->numEntries(); ++i) {
          ds->get(i);
          if (!(Config::stripObservables && singlePoint)) {
-            auto &coordinates = output["coordinates"];
-            coordinates.set_seq();
-            auto &point = coordinates.append_child();
-            point.set_seq();
-            for (const auto &obs : reduced_obs) {
-               RooRealVar *rv = (RooRealVar *)(obs);
-               point.append_child() << rv->getVal();
-            }
+            auto &coords = output["coordinates"];
+            coords.set_seq();
+            coords.append_child().fill_seq(reduced_obs, [](auto x) { return static_cast<RooRealVar *>(x)->getVal(); });
          }
          weights.append_child() << ds->weight();
       }
@@ -1266,7 +1254,6 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
                if (auto *v = dynamic_cast<RooRealVar *>(obs)) {
                   exportVariable(v, vars);
                   auto &tags = vars[v->GetName()]["tags"];
-                  tags.set_seq();
                   RooJSONFactoryWSTool::append(tags, "observable");
                }
             }
@@ -1276,7 +1263,6 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
                if (auto *v = dynamic_cast<RooRealVar *>(poi)) {
                   exportVariable(v, vars);
                   auto &tags = vars[v->GetName()]["tags"];
-                  tags.set_seq();
                   RooJSONFactoryWSTool::append(tags, "poi");
                }
             }
@@ -1286,7 +1272,6 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
                if (auto *v = dynamic_cast<RooRealVar *>(np)) {
                   exportVariable(v, vars);
                   auto &tags = vars[v->GetName()]["tags"];
-                  tags.set_seq();
                   RooJSONFactoryWSTool::append(tags, "np");
                }
             }
@@ -1296,7 +1281,6 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
                if (auto *v = dynamic_cast<RooRealVar *>(np)) {
                   exportVariable(v, vars);
                   auto &tags = vars[v->GetName()]["tags"];
-                  tags.set_seq();
                   RooJSONFactoryWSTool::append(tags, "glob");
                }
             }
@@ -1333,10 +1317,8 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       RooJSONFactoryWSTool::exportObject(pdf);
       auto &node = pdfs[pdf->GetName()];
       node.set_map();
-      auto &tags = node["tags"];
-      tags.set_seq();
       if (!pdf->getAttribute("toplevel"))
-         RooJSONFactoryWSTool::append(tags, "toplevel");
+         RooJSONFactoryWSTool::append(node["tags"], "toplevel");
       auto &dict = node["dict"];
       dict.set_map();
       dict["ModelConfig"] << mc->GetName();
@@ -1347,10 +1329,8 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       RooJSONFactoryWSTool::exportObject(pdf);
       auto &node = pdfs[pdf->GetName()];
       node.set_map();
-      auto &tags = node["tags"];
-      tags.set_seq();
       if (!pdf->getAttribute("toplevel"))
-         RooJSONFactoryWSTool::append(tags, "toplevel");
+         RooJSONFactoryWSTool::append(node["tags"], "toplevel");
       auto &dict = node["dict"];
       dict.set_map();
       if (toplevel.size() + mcs.size() == 1) {

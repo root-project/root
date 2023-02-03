@@ -42,11 +42,7 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &s)
    }
 
    if (sample.GetNormFactorList().size() > 0) {
-      auto &normFactors = s["normFactors"];
-      normFactors.set_seq();
-      for (auto &sys : sample.GetNormFactorList()) {
-         normFactors.append_child() << sys.GetName();
-      }
+      s["normFactors"].fill_seq(sample.GetNormFactorList(), [](auto const &x) { return x.GetName(); });
    }
 
    if (sample.GetHistoSysList().size() > 0) {
