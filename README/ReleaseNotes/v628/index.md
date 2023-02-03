@@ -638,7 +638,7 @@ with TDirectory.TContext():
 * [[#9607](https://github.com/root-project/root/issues/9607)] - [MSVC][std:c++latest][permissive-] root failed to build on MSVC
 * [[#9600](https://github.com/root-project/root/issues/9600)] - Missing dependency when building roottest as part of ROOT.
 * [[#9740](https://github.com/root-project/root/issues/9740)] - Crash after zoom and unzoom with secondary axes
-* [[#8363](https://github.com/root-project/root/issues/8363)] - RDataFrame::GraphAsymmErrors
+* [[#8363](https://github.com/root-project/root/issues/8363)] - `RDataFrame::GraphAsymmErrors`
 * [[#9763](https://github.com/root-project/root/issues/9763)] - Image artifact with zoombox on 1D hist if SetFillStyle 0 on Ubuntu
 * [[#9556](https://github.com/root-project/root/issues/9556)] - [DF] Prettier, more helpful graphviz computation graph representations
 * [[#9870](https://github.com/root-project/root/issues/9870)] - By default, bars are invisible in bar plots 
@@ -667,7 +667,7 @@ with TDirectory.TContext():
 * [[#10136](https://github.com/root-project/root/issues/10136)] - [textinput] Esc,L and Esc,U not finding word boundary
 * [[#10066](https://github.com/root-project/root/issues/10066)] - [doxy] qch and tag as compressed files
 * [[#10170](https://github.com/root-project/root/issues/10170)] - Crashes when reading a ttree with a friend
-* [[#8549](https://github.com/root-project/root/issues/8549)] - A crash when opening a ttree and its friend on TFile::Close()
+* [[#8549](https://github.com/root-project/root/issues/8549)] - A crash when opening a ttree and its friend on `TFile::Close()`
 * [[#10017](https://github.com/root-project/root/issues/10017)] - Failures due to "incompatible ASan runtimes"
 * [[#10107](https://github.com/root-project/root/issues/10107)] - [RF] v6-26-00-patches branch fails to build on ubuntu 18.04
 * [[#10147](https://github.com/root-project/root/issues/10147)] - Compile macro inside temp build directory
@@ -679,9 +679,9 @@ with TDirectory.TContext():
 * [[#10137](https://github.com/root-project/root/issues/10137)] - [textinput] forward search
 * [[#10209](https://github.com/root-project/root/issues/10209)] - [textinput] right or left arrow introduce stray characters while history search
 * [[#10266](https://github.com/root-project/root/issues/10266)] - TGraph2D interpolation hangs for degenerate points
-* [[#10279](https://github.com/root-project/root/issues/10279)] - TAxis::ChangeLabel documentation
+* [[#10279](https://github.com/root-project/root/issues/10279)] - `TAxis::ChangeLabel` documentation
 * [[#10283](https://github.com/root-project/root/issues/10283)] - [CMake] Imported targets improperly forwarded
-* [[#10299](https://github.com/root-project/root/issues/10299)] - TColor::GetColorTransparent() does not re-use previously defined transparent colors
+* [[#10299](https://github.com/root-project/root/issues/10299)] - `TColor::GetColorTransparent()` does not re-use previously defined transparent colors
 * [[#10278](https://github.com/root-project/root/issues/10278)] - [RF] RooDataSet incorrectly loads RooCategory values from TTree branch of type Short_t
 * [[#10225](https://github.com/root-project/root/issues/10225)] - TChain doesn't recognise `ROOT::VecOps::RVec<double>` as a column type
 * [[#10233](https://github.com/root-project/root/issues/10233)] - [RDataFrame] RDataFrame.Redefine does not work with Snapshot
@@ -701,14 +701,14 @@ with TDirectory.TContext():
 * [[#10353](https://github.com/root-project/root/issues/10353)] - Thread-safety issue in TClassEdit (StdLen)?  [6.24.06]
 * [[#9954](https://github.com/root-project/root/issues/9954)] - [RF] Disable `RooFit` banner with `CMAKE_CXX_FLAGS` option `__ROOFIT_NOBANNER` by default
 * [[#10385](https://github.com/root-project/root/issues/10385)] - [RF] verbose printout of some RooFit classes broken
-* [[#6951](https://github.com/root-project/root/issues/6951)] - [RF] Broken weights after reducing RooDataSet created with RooAbsPdf::generate()
+* [[#6951](https://github.com/root-project/root/issues/6951)] - [RF] Broken weights after reducing RooDataSet created with `RooAbsPdf::generate()`
 * [[#8806](https://github.com/root-project/root/issues/8806)] - Interpreter prints unexpected values when `auto` is used for pointer types
 * [[#10390](https://github.com/root-project/root/issues/10390)] - Wrong file names created in distributed Snapshot
 * [[#10430](https://github.com/root-project/root/issues/10430)] - df105_WBosonAnalysis.py does not convert in notebook using `nbconvert`
 * [[#10404](https://github.com/root-project/root/issues/10404)] - Broken interaction between `TThreadExecutor` and `TSeq` with specified beginning/range
 * [[#10386](https://github.com/root-project/root/issues/10386)] - Cling crash on valid c++ code (stack variable pointer).
 * [[#10041](https://github.com/root-project/root/issues/10041)] - Allow GraphAsymmErrors to accept systematic variations
-* [[#9321](https://github.com/root-project/root/issues/9321)] - [RF] Segfault in RooProduct::Print("v")
+* [[#9321](https://github.com/root-project/root/issues/9321)] - [RF] Segfault in `RooProduct::Print("v")`
 * [[#10452](https://github.com/root-project/root/issues/10452)] - Cling symbols not exported in win32 and win64
 * [[#10503](https://github.com/root-project/root/issues/10503)] - Failure to build master branch due to xrootd SHA256 checksum mismatch
 * [[#10323](https://github.com/root-project/root/issues/10323)] - [ntuple] Verify object (de-)serialization with EBO
@@ -716,7 +716,7 @@ with TDirectory.TContext():
 * [[#8787](https://github.com/root-project/root/issues/8787)] - [RF] RooDataSet columns added with addColumns method not copied correctly in reduce
 * [[#10473](https://github.com/root-project/root/issues/10473)] - [RF] Crash when RooSimultaneous does not contain a pdf for each value of the index category
 * [[#8015](https://github.com/root-project/root/issues/8015)] - [RF] Bug in building a combined RooDataHist
-* [[#10351](https://github.com/root-project/root/issues/10351)] - macOS 12: TViewPubDataMembers uses deprecated std::iterator
+* [[#10351](https://github.com/root-project/root/issues/10351)] - macOS 12: TViewPubDataMembers uses deprecated `std::iterator`
 * [[#10478](https://github.com/root-project/root/issues/10478)] - `runtime_cxxmodules` fails to build with GCC12
 * [[#10389](https://github.com/root-project/root/issues/10389)] - `RBrowser` does not list in-memory objects when written objects are present in `TDirectory` context
 * [[#9070](https://github.com/root-project/root/issues/9070)] - [RF] Inconsistent behavior when editing constraint terms in HistFactory models
@@ -733,8 +733,8 @@ with TDirectory.TContext():
 * [[#10466](https://github.com/root-project/root/issues/10466)] - [ntuple] `GetViewCollection` semantics are unclear
 * [[#10538](https://github.com/root-project/root/issues/10538)] - [RF] AdditionalData is not exported to XML
 * [[#10604](https://github.com/root-project/root/issues/10604)] - External XrootD built from git commit is not detected
-* [[#10324](https://github.com/root-project/root/issues/10324)] - [ntuple] Add I/O support for std::pair
-* [[#10440](https://github.com/root-project/root/issues/10440)] - [RF] Making two times RooMinimizer::contour does not give back the same plot 
+* [[#10324](https://github.com/root-project/root/issues/10324)] - [ntuple] Add I/O support for `std::pair`
+* [[#10440](https://github.com/root-project/root/issues/10440)] - [RF] Making two times `RooMinimizer::contour` does not give back the same plot 
 * [[#10557](https://github.com/root-project/root/issues/10557)] - [RF] Inconsistent behavior of `RooAbsPdf::createChi2()` and `RooChi2Var`
 * [[#10681](https://github.com/root-project/root/issues/10681)] - Some TMath function help is missing
 * [[#10732](https://github.com/root-project/root/issues/10732)] - CMSSW build fails with root master 4c13caa0ac
@@ -751,16 +751,16 @@ with TDirectory.TContext():
 * [[#7825](https://github.com/root-project/root/issues/7825)] - [RF] RooAddition and RooRealSumFunc largely duplicate each other
 * [[#10403](https://github.com/root-project/root/issues/10403)] - Update civetweb to 1.16 once it's released
 * [[#10719](https://github.com/root-project/root/issues/10719)] - [ntuple] Enable page vector writes
-* [[#10840](https://github.com/root-project/root/issues/10840)] - [RF] HistFactory PreprocessFunction::PrintXML() needs to escape special characters to produce valid XML
+* [[#10840](https://github.com/root-project/root/issues/10840)] - [RF] HistFactory `PreprocessFunction::PrintXML()` needs to escape special characters to produce valid XML
 * [[#10869](https://github.com/root-project/root/issues/10869)] - [RF] sPlot does not work with RooAddPdf in 6.26/04
 * [[#9360](https://github.com/root-project/root/issues/9360)] - [RF] Update Python version of rf408 tutorial
 * [[#7252](https://github.com/root-project/root/issues/7252)] - [RF] RooAddPdf can fit, but not generate negative coefficients
 * [[#10919](https://github.com/root-project/root/issues/10919)] - Histograms copy constructor has wrong implementation
 * [[#7702](https://github.com/root-project/root/issues/7702)] - [DF] Allow running on a subset of the entries also in multi-thread runs
 * [[#8080](https://github.com/root-project/root/issues/8080)] - [ntuple, daos] Improve DAOS object mapping
-* [[#8615](https://github.com/root-project/root/issues/8615)] - [RF] Add documentation for RooAbsData::Expected 
+* [[#8615](https://github.com/root-project/root/issues/8615)] - [RF] Add documentation for `RooAbsData::Expected`
 * [[#10931](https://github.com/root-project/root/issues/10931)] - [RF] Improve the position of the legend in the RooMCStudy output
-* [[#10988](https://github.com/root-project/root/issues/10988)] - [RF] RooAddPdf::fixCoefRange cache issue with createIntegral
+* [[#10988](https://github.com/root-project/root/issues/10988)] - [RF] `RooAddPdf::fixCoefRange` cache issue with createIntegral
 * [[#10759](https://github.com/root-project/root/issues/10759)] - `root-config` fails if spaces are part of `ROOTSYS` path
 * [[#11026](https://github.com/root-project/root/issues/11026)] - Integer overflow in TEntryList
 * [[#10872](https://github.com/root-project/root/issues/10872)] - [DF] Wrong entries are loaded from friend trees with distributed RDF
@@ -769,10 +769,10 @@ with TDirectory.TContext():
 * [[#8777](https://github.com/root-project/root/issues/8777)] - [RF] Migration from RooAbsCollection and RooLinkedList legacy iterators to range-based loops
 * [[#11080](https://github.com/root-project/root/issues/11080)] - Backport the fix on computation of the radiation and nuclear interaction lengths to v6.24
 * [[#11128](https://github.com/root-project/root/issues/11128)] - Clang can't build ROOT anymore due to a new added diagnostic about undefined behavior
-* [[#11186](https://github.com/root-project/root/issues/11186)] - [RF] heap-use-after-free and stack-use-after-return for RooFit::UniqueId
+* [[#11186](https://github.com/root-project/root/issues/11186)] - [RF] heap-use-after-free and stack-use-after-return for `RooFit::UniqueId`
 * [[#10009](https://github.com/root-project/root/issues/10009)] - [RF] heap-use-after-free for RooAbsRealWrapper
 * [[#10016](https://github.com/root-project/root/issues/10016)] - heap-buffer-overflow in TRandom3
-* [[#9859](https://github.com/root-project/root/issues/9859)] - [RF] Avoid printing false warning when passing both `FillColor/FillStyle` and `VisualizeError` to RooAbsReal::plotOn()
+* [[#9859](https://github.com/root-project/root/issues/9859)] - [RF] Avoid printing false warning when passing both `FillColor/FillStyle` and `VisualizeError` to `RooAbsReal::plotOn()`
 * [[#11130](https://github.com/root-project/root/issues/11130)] - ROOT doesn't compile with new nlohmann-json version 3.11.0
 * [[#11215](https://github.com/root-project/root/issues/11215)] - [I/O] Cannot create a `std::pair<int, int>` branch at prompt
 * [[#11239](https://github.com/root-project/root/issues/11239)] - Build failure on Ubuntu22.04, when ROOT builds FTGL itself
@@ -782,10 +782,10 @@ with TDirectory.TContext():
 * [[#11050](https://github.com/root-project/root/issues/11050)] - C++ exceptions are not correctly propagated by Dask
 * [[#11124](https://github.com/root-project/root/issues/11124)] - Several improvements of df103_NanoAODHiggsAnalysis.C
 * [[#11207](https://github.com/root-project/root/issues/11207)] - [DF] Bad interaction between `Alias` and TTree sub-branches
-* [[#11272](https://github.com/root-project/root/issues/11272)] - Segfault in TGeoMixture::ComputeDerivedQuantities
+* [[#11272](https://github.com/root-project/root/issues/11272)] - Segfault in `TGeoMixture::ComputeDerivedQuantities`
 * [[#10645](https://github.com/root-project/root/issues/10645)] - [TTreeReader] Cannot read Float16_t branch
 * [[#11260](https://github.com/root-project/root/issues/11260)] - `TTreeReaderArray` does not support `Double32_t `
-* [[#11259](https://github.com/root-project/root/issues/11259)] - genreflex crash in TMetaUtils::ReSubstTemplateArg with gcc12 headers
+* [[#11259](https://github.com/root-project/root/issues/11259)] - genreflex crash in `TMetaUtils::ReSubstTemplateArg` with gcc12 headers
 * [[#11250](https://github.com/root-project/root/issues/11250)] - Draw options "X+" and "Y+" not working with TMultiGraph
 * [[#11312](https://github.com/root-project/root/issues/11312)] - Build failure with nlohmann/json 3.11
 * [[#11280](https://github.com/root-project/root/issues/11280)] - [TGaxis] wrong secondary axis defined with TF1, erratic behavior of SetNdivisions
@@ -795,15 +795,15 @@ with TDirectory.TContext():
 * [[#11396](https://github.com/root-project/root/issues/11396)] - [RF] Buggy range overlap check in createNLL when SplitRange option is used
 * [[#11414](https://github.com/root-project/root/issues/11414)] - [RF] Renaming dataset fails when total number of dataset in workspace reached 10
 * [[#11330](https://github.com/root-project/root/issues/11330)] - [core] kNotDeleted mechanism is broken on some platforms
-* [[#10828](https://github.com/root-project/root/issues/10828)] - TH1::Merge does not extend axes properly for certain histograms with labels
-* [[#11333](https://github.com/root-project/root/issues/11333)] - THnSparse::Add() does not preserve weights
+* [[#10828](https://github.com/root-project/root/issues/10828)] - `TH1::Merge` does not extend axes properly for certain histograms with labels
+* [[#11333](https://github.com/root-project/root/issues/11333)] - `THnSparse::Add()` does not preserve weights
 * [[#11233](https://github.com/root-project/root/issues/11233)] - [cmake][PyROOT] Pythonizations in build directory don't get updated in incremental builds
 * [[#10382](https://github.com/root-project/root/issues/10382)] - [TNDArrayT] Backward incompatibility: Error reading from ROOT Files created with earlier versions - Streamer bug
 * [[#11447](https://github.com/root-project/root/issues/11447)] - [RF] NLL from RooSimultaneous doesn't give the expected value in multi-range fits
 * [[#11421](https://github.com/root-project/root/issues/11421)] - [RF] RooCmdArg pythonization drops temporary RooArgSets too early
 * [[#11436](https://github.com/root-project/root/issues/11436)] - Missing StreamerInfo in file containing nested collection that is non-split but stored member wise
 * [[#10799](https://github.com/root-project/root/issues/10799)] - Python 3.11 failures
-* [[#9741](https://github.com/root-project/root/issues/9741)] - [RF] RooPlot::pullHist only uses upper range
+* [[#9741](https://github.com/root-project/root/issues/9741)] - [RF] `RooPlot::pullHist` only uses upper range
 * [[#8808](https://github.com/root-project/root/issues/8808)] - [RF] Updates to RooFit tutorials necessary before the next release
 * [[#11418](https://github.com/root-project/root/issues/11418)] - [RF] Wrong CmdArg name in documentation of RooAbsPdf class
 * [[#11437](https://github.com/root-project/root/issues/11437)] - [cmake] Build tries to compile incompatible pythonization sources with Python 2
@@ -813,7 +813,7 @@ with TDirectory.TContext():
 * [[#8962](https://github.com/root-project/root/issues/8962)] - SetClusterPrefetch(true) breaks BulkIO with more than one basket
 * [[#11515](https://github.com/root-project/root/issues/11515)] - Error in `TInterpreter::Calc` with no output stack in seemingly random distributed rdf test execution
 * [[#11048](https://github.com/root-project/root/issues/11048)] - Resolve the alerts produced by "LGTM analysis: Python"
-* [[#11456](https://github.com/root-project/root/issues/11456)] - Documentation of TH1::GetRMS does not mention the fact that it is not the RMS anymore
+* [[#11456](https://github.com/root-project/root/issues/11456)] - Documentation of `TH1::GetRMS` does not mention the fact that it is not the RMS anymore
 * [[#10510](https://github.com/root-project/root/issues/10510)] - modules_idx_deps CMakeCache.txt variable grows boundless (and does not update properly for module that are turned off)
 * [[#11221](https://github.com/root-project/root/issues/11221)] - [RF] AddressSanitizer failures in two RooFit tests
 * [[#11136](https://github.com/root-project/root/issues/11136)] - Misleading warning with `builtin_clang=OFF`
@@ -832,9 +832,9 @@ with TDirectory.TContext():
 * [[#11523](https://github.com/root-project/root/issues/11523)] - [ntuple] Support the storage of collections that use legacy `TVirtualCollectionProxy`
 * [[#11686](https://github.com/root-project/root/issues/11686)] - Missing Rint dependency for rootcling 
 * [[#10958](https://github.com/root-project/root/issues/10958)] - [ntuple,daos] Allow multiple ntuples to be stored in a DAOS container
-* [[#10039](https://github.com/root-project/root/issues/10039)] - TFile's ctor's error message should point to TFile::Open when filename contains "://"
-* [[#11738](https://github.com/root-project/root/issues/11738)] - [RF] ROOT v6.26/08 plots wrong pull distribution with RooPlot::pullHist
-* [[#11723](https://github.com/root-project/root/issues/11723)] - [IO] TFile::DrawMap plots can be improved
+* [[#10039](https://github.com/root-project/root/issues/10039)] - TFile's ctor's error message should point to `TFile::Open` when filename contains "://"
+* [[#11738](https://github.com/root-project/root/issues/11738)] - [RF] ROOT v6.26/08 plots wrong pull distribution with `RooPlot::pullHist`
+* [[#11723](https://github.com/root-project/root/issues/11723)] - [IO] `TFile::DrawMap` plots can be improved
 * [[#11476](https://github.com/root-project/root/issues/11476)] - [RF] RooAddPdf still emits unexpected errors about missing normalization sets
 * [[#11757](https://github.com/root-project/root/issues/11757)] - [RF] Documentation for the RooVoigtian
 * [[#10868](https://github.com/root-project/root/issues/10868)] - [RF] Wrong integral for RooPoisson if integrated from a > 0 to infinity
@@ -848,7 +848,7 @@ with TDirectory.TContext():
 * [[#11730](https://github.com/root-project/root/issues/11730)] - [ntuple] Allow users to specify a per-field read callback function
 * [[#10875](https://github.com/root-project/root/issues/10875)] - `_HAS_CONDITIONAL_EXPLICIT=0` won't work with VS 2022 17.4
 * [[#9845](https://github.com/root-project/root/issues/9845)] - [RF] Various flaws in the RooLagrangianMorphFunc
-* [[#11875](https://github.com/root-project/root/issues/11875)] - [RF]  RooAbsPdf::fitTo: would it be possible to add an option to control maximal number of calls? 
+* [[#11875](https://github.com/root-project/root/issues/11875)] - [RF]  `RooAbsPdf::fitTo`: would it be possible to add an option to control maximal number of calls? 
 * [[#11913](https://github.com/root-project/root/issues/11913)] - `TExec::SavePrimitive` fails when string args used inside command
 * [[#11916](https://github.com/root-project/root/issues/11916)] - `TColor::SaveColor` sometimes does not store color
 * [[#11933](https://github.com/root-project/root/issues/11933)] - [cling] Crash when dictionary headers can not be found
@@ -864,6 +864,15 @@ with TDirectory.TContext():
 * [[#12170](https://github.com/root-project/root/issues/12170)] - Crash when training a PyTorch model within PyMVA 
 * [[#12164](https://github.com/root-project/root/issues/12164)] - Strange behaviour in interpreter in master/6.28 when initialising vectors
 
+* [[ROOT-5219](https://sft.its.cern.ch/jira/browse/ROOT-5219)] - Improve error message for incomplete input to `TROOT::ProcessLine()`
+* [[ROOT-5805](https://sft.its.cern.ch/jira/browse/ROOT-5805)] - `RooHist` does not correctly handle negative scale factor
+* [[ROOT-8040](https://sft.its.cern.ch/jira/browse/ROOT-8040)] - `RooAbsData` reduce with `CutRange` not applying cut to unselected variables
+* [[ROOT-8827](https://sft.its.cern.ch/jira/browse/ROOT-8827)] - `TTreeReaderArray<T>` does not work for VLEN branches whose length branch is not of type int
+* [[ROOT-9649](https://sft.its.cern.ch/jira/browse/ROOT-9649)] - Wrong normalization of variable-bin-width `RooHistPdf` plotted in range
+* [[ROOT-9687](https://sft.its.cern.ch/jira/browse/ROOT-9687)] - value printing of automatic variable is broken (off by one level of indirection?)
+* [[ROOT-9752](https://sft.its.cern.ch/jira/browse/ROOT-9752)] - NLL values when fitting with ranges
+* [[ROOT-10088](https://sft.its.cern.ch/jira/browse/ROOT-10088)] - lsb_release is not specified as a ROOT dependency
+* [[ROOT-11023](https://sft.its.cern.ch/jira/browse/ROOT-11023)] - [RDataFrame] Remove global state in `ROOT::RDF::SaveGraph`
 
 
 ## HEAD of the v6-28-00-patches branch
