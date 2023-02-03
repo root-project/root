@@ -79,6 +79,8 @@ public:
    ColumnId_t GetColumnId() const { return fColumnId; }
    /// The space taken by column elements in the buffer
    ClusterSize_t::ValueType GetNBytes() const { return fElementSize * fNElements; }
+   /// The capacity of the underlying page buffer in bytes
+   ClusterSize_t::ValueType GetMaxBytes() const { return fElementSize * fMaxElements; }
    ClusterSize_t::ValueType GetElementSize() const { return fElementSize; }
    ClusterSize_t::ValueType GetNElements() const { return fNElements; }
    ClusterSize_t::ValueType GetMaxElements() const { return fMaxElements; }

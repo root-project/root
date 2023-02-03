@@ -1,15 +1,43 @@
 #include "ntuple_test.hxx"
 
+template <>
+thread_local RPageAllocatorCache<RPageAllocatorHeap, 2>::RPageCache
+   RPageAllocatorCache<RPageAllocatorHeap, 2>::gCache{};
+
 TEST(Pages, Allocation)
 {
    RPageAllocatorHeap allocator;
-
    auto page = allocator.NewPage(42, 4, 16);
    EXPECT_FALSE(page.IsNull());
    EXPECT_EQ(16U, page.GetMaxElements());
    EXPECT_EQ(0U, page.GetNElements());
    EXPECT_EQ(0U, page.GetNBytes());
    allocator.DeletePage(page);
+
+   auto testRPageAllocatorCache = []() {
+      RPageAllocatorCache<RPageAllocatorHeap, 2> cache;
+      auto page1 = cache.NewPage(42, 4, 16);
+      auto page2 = cache.NewPage(42, 4, 32);
+      auto page3 = cache.NewPage(42, 4, 64);
+      EXPECT_TRUE(!page1.IsNull() && !page2.IsNull() && !page3.IsNull());
+      EXPECT_EQ(64U, page1.GetMaxBytes());
+      EXPECT_EQ(128U, page2.GetMaxBytes());
+      EXPECT_EQ(256U, page3.GetMaxBytes());
+      cache.DeletePage(page3);
+      cache.DeletePage(page2);
+      cache.DeletePage(page1);
+      auto page4 = cache.NewPage(42, 4, 16);
+      EXPECT_EQ(page4.GetBuffer(), page2.GetBuffer());
+      cache.DeletePage(page4);
+      auto page5 = cache.NewPage(42, 4, 16);
+      EXPECT_EQ(page5.GetBuffer(), page2.GetBuffer());
+      cache.DeletePage(page5);
+   };
+   // RPageAllocatorCache keeps a thread_local queue of allocations to be reused
+   std::thread t1(testRPageAllocatorCache);
+   std::thread t2(testRPageAllocatorCache);
+   t1.join();
+   t2.join();
 }
 
 TEST(Pages, Pool)

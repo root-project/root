@@ -31,3 +31,7 @@ void ROOT::Experimental::Detail::RPageAllocatorHeap::DeletePage(const RPage& pag
 {
    delete[] reinterpret_cast<unsigned char *>(page.GetBuffer());
 }
+
+template <>
+thread_local ROOT::Experimental::Detail::RPageAllocatorCache<>::RPageCache
+   ROOT::Experimental::Detail::RPageAllocatorCache<>::gCache{};

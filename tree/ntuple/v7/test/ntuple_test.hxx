@@ -92,6 +92,8 @@ using RNTuplePlainTimer = ROOT::Experimental::Detail::RNTuplePlainTimer;
 using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
 using RPage = ROOT::Experimental::Detail::RPage;
 using RPageAllocatorHeap = ROOT::Experimental::Detail::RPageAllocatorHeap;
+template <typename AllocT, std::size_t CacheSize>
+using RPageAllocatorCache = ROOT::Experimental::Detail::RPageAllocatorCache<AllocT, CacheSize>;
 using RPageDeleter = ROOT::Experimental::Detail::RPageDeleter;
 using RPagePool = ROOT::Experimental::Detail::RPagePool;
 using RPageSink = ROOT::Experimental::Detail::RPageSink;

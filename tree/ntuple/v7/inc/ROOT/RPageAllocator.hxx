@@ -19,7 +19,9 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>
 
+#include <algorithm>
 #include <cstddef>
+#include <deque>
 #include <functional>
 
 namespace ROOT {
@@ -75,6 +77,56 @@ public:
    static RPage NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements);
    /// Releases the memory pointed to by page and resets the page's information
    static void DeletePage(const RPage &page);
+};
+
+// clang-format off
+/**
+\class ROOT::Experimental::Detail::RPageAllocatorCache
+\ingroup NTuple
+\brief Reuse memory allocations from a small thread-local cache
+
+This allocator returns pages that have at least the required capacity. `DeletePage()` does not immediately deallocate
+memory; instead, pages are returned to a thread-local cache, dropping the smallest allocated buffer if the cache is full.
+If a previous page cannot be recycled, `AllocT` is used to allocate memory.
+*/
+// clang-format on
+template <typename AllocT = RPageAllocatorHeap, std::size_t CacheSize = 16>
+class RPageAllocatorCache {
+   thread_local static struct RPageCache {
+      std::deque<RPage> fPages;
+      ~RPageCache()
+      {
+         for (const auto &page : fPages)
+            AllocT::DeletePage(page);
+      }
+   } gCache;
+
+public:
+   /// Request a page from the cache with at least the specified capacity. If there isn't a suitable page in the cache,
+   /// a new allocation is made.
+   static RPage NewPage(ColumnId_t columnId, std::size_t elementSize, std::size_t nElements)
+   {
+      const auto szPage = elementSize * nElements;
+      auto it = std::find_if(gCache.fPages.begin(), gCache.fPages.end(),
+                             [szPage](const auto &p) { return p.GetMaxBytes() >= szPage; });
+      if (it == gCache.fPages.end())
+         return AllocT::NewPage(columnId, elementSize, nElements);
+      RPage page(columnId, it->GetBuffer(), it->GetElementSize(), it->GetMaxElements());
+      gCache.fPages.erase(it);
+      return page;
+   }
+   /// Return a page to the cache for reuse. If the cache is full, the smallest memory buffer is deallocated.
+   static void DeletePage(const RPage &page)
+   {
+      gCache.fPages.emplace_front(kInvalidColumnId, page.GetBuffer(), page.GetElementSize(), page.GetMaxElements());
+      if (gCache.fPages.size() <= CacheSize)
+         return;
+      auto itSmallest = std::min_element(gCache.fPages.begin(), gCache.fPages.end(), [](const auto &a, const auto &b) {
+         return a.GetMaxBytes() < b.GetMaxBytes();
+      });
+      AllocT::DeletePage(*itSmallest);
+      gCache.fPages.erase(itSmallest);
+   }
 };
 
 } // namespace Detail
