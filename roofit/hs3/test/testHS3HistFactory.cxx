@@ -105,11 +105,11 @@ TEST(TestHS3HistFactoryJSON, Closure)
 
    using namespace RooFit;
 
-   pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()),
-              GlobalObservables(*mc->GetGlobalObservables()));
+   pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()), GlobalObservables(*mc->GetGlobalObservables()),
+              PrintLevel(-1));
 
    pdfFromJson->fitTo(*dataFromJson, Strategy(1), Minos(*mcFromJson->GetParametersOfInterest()),
-                      GlobalObservables(*mcFromJson->GetGlobalObservables()));
+                      GlobalObservables(*mcFromJson->GetGlobalObservables()), PrintLevel(-1));
 
    const double muVal = ws->var("mu")->getVal();
    const double muJsonVal = wsFromJson->var("mu")->getVal();

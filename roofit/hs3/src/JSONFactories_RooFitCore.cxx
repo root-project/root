@@ -168,27 +168,7 @@ public:
 
 class RooSimultaneousFactory : public RooFit::JSONIO::Importer {
 public:
-   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
-   {
-      std::string name(RooJSONFactoryWSTool::name(p));
-      if (!p.has_child("channels")) {
-         RooJSONFactoryWSTool::error("no channel components of '" + name + "'");
-      }
-      std::map<std::string, RooAbsPdf *> components;
-      std::string indexname(p["index"].val());
-      RooCategory cat(indexname.c_str(), indexname.c_str());
-      for (const auto &comp : p["channels"].children()) {
-         std::string catname(RooJSONFactoryWSTool::name(comp));
-         RooJSONFactoryWSTool::log(RooFit::INFO) << "importing category " << catname << std::endl;
-         std::string pdfname(comp.has_val() ? comp.val() : RooJSONFactoryWSTool::name(comp));
-         RooAbsPdf *pdf = tool->request<RooAbsPdf>(pdfname, name);
-         components[catname] = pdf;
-         cat.defineType(catname.c_str());
-      }
-      RooSimultaneous simpdf(name.c_str(), name.c_str(), components, cat);
-      tool->workspace()->import(simpdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
-      return true;
-   }
+   bool importPdf(RooJSONFactoryWSTool * /*tool*/, const JSONNode & /*p*/) const override { return true; }
 };
 
 class RooBinSamplingPdfFactory : public RooFit::JSONIO::Importer {
@@ -368,21 +348,8 @@ public:
       const static std::string keystring = "simultaneous";
       return keystring;
    }
-   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg * /*func*/, JSONNode & /*elem*/) const override
    {
-      const RooSimultaneous *sim = static_cast<const RooSimultaneous *>(func);
-      elem["type"] << key();
-      elem["index"] << sim->indexCat().GetName();
-      auto &channels = elem["channels"];
-      channels.set_map();
-      const auto &indexCat = sim->indexCat();
-      for (const auto &cat : indexCat) {
-         const auto catname = cat.first.c_str();
-         RooAbsPdf *pdf = sim->getPdf(catname);
-         if (!pdf)
-            RooJSONFactoryWSTool::error("no pdf found for category");
-         channels[catname] << pdf->GetName();
-      }
       return true;
    }
 };
