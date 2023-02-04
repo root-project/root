@@ -53,8 +53,7 @@ std::unique_ptr<RooDataHist> generateBinnedAsimov(RooAbsPdf const &pdf, RooRealV
 
 std::unique_ptr<RooDataSet> dataHistToDataSet(RooDataHist const &dataH)
 {
-   RooRealVar w("w", "weight", 0., 0., dataH.sumEntries());
-   auto data = std::make_unique<RooDataSet>("data", "data", RooArgSet{*dataH.get(), w}, RooFit::WeightVar(w));
+   auto data = std::make_unique<RooDataSet>("data", "data", *dataH.get(), RooFit::WeightVar());
    for (int i = 0; i < dataH.numEntries(); ++i) {
       auto coords = dataH.get(i);
       data->add(*coords, dataH.weight());

@@ -329,6 +329,8 @@ protected:
 
   StorageType storageType;
 
+  void initializeVars(RooArgSet const& vars);
+
   double corrcov(const RooRealVar& x, const RooRealVar& y, const char* cutSpec, const char* cutRange, bool corr) const  ;
   TMatrixDSym* corrcovMatrix(const RooArgList& vars, const char* cutSpec, const char* cutRange, bool corr) const  ;
 
