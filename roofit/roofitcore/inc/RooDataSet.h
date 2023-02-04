@@ -176,7 +176,7 @@ protected:
 
 private:
 
-  void loadValuesFromSlices(RooCategory &indexCat, std::map<std::string, RooDataSet *> const &slices,
+  void loadValuesFromSlices(RooCategory &indexCat, std::map<std::string, RooAbsData *> const &slices,
                             const char *rangeName, RooFormulaVar const *cutVar, const char *cutSpec);
 
 #ifdef USEMEMPOOLFORDATASET
