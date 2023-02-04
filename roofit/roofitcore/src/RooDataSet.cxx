@@ -203,8 +203,8 @@ RooDataSet::RooDataSet() : _wgtVar(0)
 ///     <td> Import contents of given RooDataSet. Only observables that are common with the definition of this dataset will be imported
 /// <tr><td> Index(RooCategory&)         <td> Prepare import of datasets into a N+1 dimensional RooDataSet
 ///                                where the extra discrete dimension labels the source of the imported histogram.
-/// <tr><td> Import(const char*, RooDataSet&)
-///     <td> Import a dataset to be associated with the given state name of the index category
+/// <tr><td> Import(const char*, RooAbsData&)
+///     <td> Import a RooDataSet or RooDataHist to be associated with the given state name of the index category
 ///                    specified in Index(). If the given state name is not yet defined in the index
 ///                    category it will be added on the fly. The import command can be specified multiple times.
 /// <tr><td> Link(const char*, RooDataSet&) <td> Link contents of supplied RooDataSet to this dataset for given index category state name.
@@ -212,8 +212,8 @@ RooDataSet::RooDataSet() : _wgtVar(0)
 ///                                   of this dataset. Note that link is active for both reading and writing, so modifications
 ///                                   to the aggregate dataset will also modify its components. Link() and Import() are mutually exclusive.
 /// <tr><td> OwnLinked()                    <td> Take ownership of all linked datasets
-/// <tr><td> Import(map<string,RooDataSet*>&) <td> As above, but allows specification of many imports in a single operation
-/// <tr><td> Link(map<string,RooDataSet*>&)   <td> As above, but allows specification of many links in a single operation
+/// <tr><td> Import(std::map<string,RooAbsData*>&) <td> As above, but allows specification of many imports in a single operation
+/// <tr><td> Link(std::map<string,RooDataSet*>&)   <td> As above, but allows specification of many links in a single operation
 /// <tr><td> Cut(const char*) <br>
 ///     Cut(RooFormulaVar&)
 ///     <td> Apply the given cut specification when importing data
@@ -383,7 +383,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
 
 
     // Make import mapping if index category is specified
-    map<string,RooDataSet*> hmap ;
+    std::map<string,RooAbsData*> hmap ;
     if (indexCat) {
       auto hiter = impSliceData.begin() ;
       for (const auto& token : ROOT::Split(impSliceNames, ",")) {
@@ -429,12 +429,13 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
 
       } else if (indexCat) {
 
-        RooDataSet* firstDS = hmap.begin()->second ;
-        if (firstDS->_wgtVar && vars.find(firstDS->_wgtVar->GetName())) {
-          initialize(firstDS->_wgtVar->GetName()) ;
-        } else {
-          initialize(0) ;
+        const char* weightName = nullptr;
+        if(auto firstDS = dynamic_cast<RooDataSet*>(hmap.begin()->second)) {
+          if (firstDS->_wgtVar && vars.find(firstDS->_wgtVar->GetName())) {
+            weightName = firstDS->_wgtVar->GetName();
+          }
         }
+        initialize(weightName);
       } else {
         initialize(0) ;
       }
@@ -1874,9 +1875,10 @@ void RooDataSet::convertToTreeStore()
 }
 
 
-// Compile-time test if we can still use TStrings for the constructors of
-// RooDataClasses, either for both name and title or for only one of them.
 namespace {
+
+  // Compile-time test if we can still use TStrings for the constructors of
+  // RooDataClasses, either for both name and title or for only one of them.
   TString tstr = "tstr";
   const char * cstr = "cstr";
   RooRealVar x{"x", "x", 1.0};
@@ -1884,10 +1886,25 @@ namespace {
   RooDataSet d1(tstr, tstr, vars, nullptr);
   RooDataSet d2(tstr, cstr, vars, nullptr);
   RooDataSet d3(cstr, tstr, vars, nullptr);
+
+// generating an unbinned dataset from a binned one
+
+std::unique_ptr<RooDataSet> makeDataSetFromDataHist(RooDataHist const &hist)
+{
+   RooArgSet obs(*hist.get());
+   RooRealVar weight{"weight", "weight", 1.0};
+   obs.add(weight, true);
+   auto data = std::make_unique<RooDataSet>(hist.GetName(), hist.GetTitle(), obs, RooFit::WeightVar("weight"));
+   for (int i = 0; i < hist.numEntries(); ++i) {
+      data->add(*hist.get(i), hist.weight(i));
+   }
+   return data;
 }
 
+} // namespace
 
-void RooDataSet::loadValuesFromSlices(RooCategory &indexCat, std::map<std::string, RooDataSet *> const &slices,
+
+void RooDataSet::loadValuesFromSlices(RooCategory &indexCat, std::map<std::string, RooAbsData *> const &slices,
                                       const char *rangeName, RooFormulaVar const *cutVar, const char *cutSpec)
 {
 
@@ -1898,6 +1915,15 @@ void RooDataSet::loadValuesFromSlices(RooCategory &indexCat, std::map<std::strin
    auto &indexCatInData = *static_cast<RooCategory *>(_vars.find(indexCat.GetName()));
 
    for (auto const &item : slices) {
+      std::unique_ptr<RooDataSet> sliceDataSet;
+      RooAbsData* sliceData = item.second;
+
+      // If we are importing a RooDataHist, first convert it to a RooDataSet
+      if(sliceData->InheritsFrom(RooDataHist::Class())) {
+         sliceDataSet = makeDataSetFromDataHist(static_cast<RooDataHist const &>(*sliceData));
+         sliceData = sliceDataSet.get();
+      }
+
       // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
       if (!indexCat.hasLabel(item.first)) {
          indexCat.defineType(item.first);
@@ -1910,9 +1936,9 @@ void RooDataSet::loadValuesFromSlices(RooCategory &indexCat, std::map<std::strin
       indexCatInData.setLabel(item.first.c_str());
       std::unique_ptr<RooFormulaVar> cutVarTmp;
       if (cutSpec) {
-         cutVarTmp = std::make_unique<RooFormulaVar>(cutSpec, cutSpec, item.second->_vars);
+         cutVarTmp = std::make_unique<RooFormulaVar>(cutSpec, cutSpec, *sliceData->get());
          cutVar = cutVarTmp.get();
       }
-      _dstore->loadValues(item.second->store(), cutVar, rangeName);
+      _dstore->loadValues(sliceData->store(), cutVar, rangeName);
    }
 }
