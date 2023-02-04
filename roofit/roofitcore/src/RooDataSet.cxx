@@ -207,6 +207,18 @@ FinalizeVarsOutput finalizeVars(RooArgSet const &vars,
 
    out.weightVarName = wgtVarName ? wgtVarName : "";
 
+   if(out.weightVarName.empty()) {
+      // Even if no weight variable is specified, we want to have one if we are
+      // importing weighted datasets
+
+      for(auto * data : static_range_cast<RooAbsData*>(impSliceData)) {
+         if(data->isWeighted()) {
+            out.weightVarName = RooFit::WeightVar().getString(0); // to get the default weight variable name
+            break;
+         }
+      }
+   }
+
    // If the weight variable is required but is not in the set, create and add
    // it on the fly
    if (!out.weightVarName.empty() && !out.finalVars.find(out.weightVarName.c_str())) {
@@ -330,8 +342,16 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
   Int_t ownLinked = pc.getInt("ownLinked") ;
   Int_t newWeight = pc.getInt("newWeight1") + pc.getInt("newWeight2") ;
 
+  // Lookup name of weight variable if it was specified by object reference
+  if(wgtVar) {
+    wgtVarName = wgtVar->GetName();
+  }
+
   auto finalVarsInfo = finalizeVars(vars,indexCat,wgtVarName,impSliceData);
   initializeVars(finalVarsInfo.finalVars);
+  if(!finalVarsInfo.weightVarName.empty()) {
+    wgtVarName = finalVarsInfo.weightVarName.c_str();
+  }
 
   // Case 1 --- Link multiple dataset as slices
   if (lnkSliceNames) {
@@ -348,12 +368,6 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
         token = strtok(0, ",");
         ++hiter;
       }
-    }
-
-    // Lookup name of weight variable if it was specified by object reference
-    if (wgtVar) {
-      // coverity[UNUSED_VALUE]
-      wgtVarName = wgtVar->GetName() ;
     }
 
     appendToDir(this,true) ;
@@ -388,10 +402,6 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
     _dstore = std::make_unique<RooCompositeDataStore>(name,title,_vars,*icat,storeMap) ;
 
   } else {
-
-    if (wgtVar) {
-      wgtVarName = wgtVar->GetName() ;
-    }
 
     // Clone weight variable of imported dataset if we are not weighted
     if (!wgtVar && !wgtVarName && impData && impData->_wgtVar) {
