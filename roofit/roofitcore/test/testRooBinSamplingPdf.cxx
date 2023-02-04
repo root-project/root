@@ -52,8 +52,7 @@ TEST_P(ParamTest, LinearPdfCrossCheck)
 
    RooGenericPdf pdf("lin", "x", {x});
    std::unique_ptr<RooDataHist> dataH(pdf.generateBinned(x, 10000));
-   RooRealVar w("w", "weight", 0., 0., 10000.);
-   RooDataSet data("data", "data", {x, w}, RooFit::WeightVar(w));
+   RooDataSet data("data", "data", x, RooFit::WeightVar());
    for (int i = 0; i < dataH->numEntries(); ++i) {
       auto coords = dataH->get(i);
       data.add(*coords, dataH->weight());
@@ -83,8 +82,7 @@ TEST_P(ParamTest, LinearPdfSubRangeCrossCheck)
 
    RooGenericPdf pdf("lin", "x", {x});
    std::unique_ptr<RooDataHist> dataH(pdf.generateBinned(x, 10000));
-   RooRealVar w("w", "weight", 0., 0., 10000.);
-   RooDataSet data("data", "data", {x, w}, RooFit::WeightVar(w));
+   RooDataSet data("data", "data", x, RooFit::WeightVar());
    for (int i = 0; i < dataH->numEntries(); ++i) {
       auto coords = dataH->get(i);
       data.add(*coords, dataH->weight());
