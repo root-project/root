@@ -778,21 +778,6 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-// generating an unbinned dataset from a binned one
-
-std::unique_ptr<RooDataSet> RooJSONFactoryWSTool::unbinned(RooDataHist const &hist)
-{
-   RooArgSet obs(*hist.get());
-   RooRealVar *weight = this->getWeightVar("weight");
-   obs.add(*weight, true);
-   auto data = std::make_unique<RooDataSet>(hist.GetName(), hist.GetTitle(), obs, RooFit::WeightVar(*weight));
-   for (int i = 0; i < hist.numEntries(); ++i) {
-      data->add(*hist.get(i), hist.weight(i));
-   }
-   return data;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////
 // generating a weight variable
 
 RooRealVar *RooJSONFactoryWSTool::getWeightVar(const char *weightName)
@@ -869,22 +854,13 @@ std::map<std::string, std::unique_ptr<RooAbsData>> RooJSONFactoryWSTool::loadDat
          } else {
             RooArgSet allVars;
             allVars.add(*channelCat, true);
-            std::stack<std::unique_ptr<RooDataSet>> ownedDataSets;
-            std::map<std::string, RooDataSet *> datasets;
             for (const auto &subd : subMap) {
                allVars.add(*subd.second->get(), true);
-               if (subd.second->InheritsFrom(RooDataHist::Class())) {
-                  ownedDataSets.push(unbinned(static_cast<RooDataHist const &>(*subd.second)));
-                  datasets[subd.first] = ownedDataSets.top().get();
-               } else {
-                  datasets[subd.first] = static_cast<RooDataSet *>(subd.second.get());
-               }
             }
             RooRealVar *weightVar = this->getWeightVar("weight");
             allVars.add(*weightVar, true);
-            dataMap[name] =
-               std::make_unique<RooDataSet>(name.c_str(), name.c_str(), allVars, RooFit::Index(*channelCat),
-                                            RooFit::Import(datasets), RooFit::WeightVar(*weightVar));
+            dataMap[name] = std::make_unique<RooDataSet>(name, name, allVars, RooFit::Index(*channelCat),
+                                                         RooFit::Import(subMap), RooFit::WeightVar(*weightVar));
          }
       } else {
          std::stringstream ss;
