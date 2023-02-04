@@ -156,10 +156,7 @@ RooDataSet *RooBinnedGenContext::generate(double nEvt, bool /*skipInit*/, bool e
   _pdf->fillDataHist(_hist,_vars,1,true) ;
 
   // Output container
-  RooRealVar weight("weight","weight",0,1e9) ;
-  RooArgSet tmp(*_vars) ;
-  tmp.add(weight) ;
-  RooDataSet* wudata = new RooDataSet("wu","wu",tmp,RooFit::WeightVar("weight")) ;
+  RooDataSet* wudata = new RooDataSet("wu","wu",*_vars,RooFit::WeightVar()) ;
 
   vector<int> histOut(_hist->numEntries()) ;
   double histMax(-1) ;

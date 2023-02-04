@@ -185,9 +185,40 @@ RooDataSet::RooDataSet() : _wgtVar(0)
   TRACE_CREATE
 }
 
+namespace {
 
+struct FinalizeVarsOutput {
+   RooArgSet finalVars;
+   std::unique_ptr<RooRealVar> weight;
+   std::string weightVarName;
+};
 
+FinalizeVarsOutput finalizeVars(RooArgSet const &vars,
+                                RooAbsArg * indexCat,
+                                const char* wgtVarName,
+                                RooLinkedList const &impSliceData)
+{
+   FinalizeVarsOutput out;
+   out.finalVars.add(vars);
 
+   if (indexCat) {
+      out.finalVars.add(*indexCat, true);
+   }
+
+   out.weightVarName = wgtVarName ? wgtVarName : "";
+
+   // If the weight variable is required but is not in the set, create and add
+   // it on the fly
+   if (!out.weightVarName.empty() && !out.finalVars.find(out.weightVarName.c_str())) {
+      const char* name = out.weightVarName.c_str();
+      out.weight = std::make_unique<RooRealVar>(name, name, 1.0);
+      out.finalVars.add(*out.weight);
+   }
+
+   return out;
+}
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct an unbinned dataset from a RooArgSet defining the dimensions of the data space. Optionally, data
@@ -230,7 +261,7 @@ RooDataSet::RooDataSet() : _wgtVar(0)
 
 RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet& vars, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
              const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8)  :
-  RooAbsData(name,title,RooArgSet(vars,(RooAbsArg*)RooCmdConfig::decodeObjOnTheFly("RooDataSet::RooDataSet", "IndexCat",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)))
+  RooAbsData(name,title,{})
 {
   // Define configuration for this method
   RooCmdConfig pc(Form("RooDataSet::ctor(%s)",GetName())) ;
@@ -298,6 +329,9 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
   const char* tname = pc.getString("tname") ;
   Int_t ownLinked = pc.getInt("ownLinked") ;
   Int_t newWeight = pc.getInt("newWeight1") + pc.getInt("newWeight2") ;
+
+  auto finalVarsInfo = finalizeVars(vars,indexCat,wgtVarName,impSliceData);
+  initializeVars(finalVarsInfo.finalVars);
 
   // Case 1 --- Link multiple dataset as slices
   if (lnkSliceNames) {
@@ -1891,10 +1925,7 @@ namespace {
 
 std::unique_ptr<RooDataSet> makeDataSetFromDataHist(RooDataHist const &hist)
 {
-   RooArgSet obs(*hist.get());
-   RooRealVar weight{"weight", "weight", 1.0};
-   obs.add(weight, true);
-   auto data = std::make_unique<RooDataSet>(hist.GetName(), hist.GetTitle(), obs, RooFit::WeightVar("weight"));
+   auto data = std::make_unique<RooDataSet>(hist.GetName(), hist.GetTitle(), *hist.get(), RooFit::WeightVar());
    for (int i = 0; i < hist.numEntries(); ++i) {
       data->add(*hist.get(i), hist.weight(i));
    }
