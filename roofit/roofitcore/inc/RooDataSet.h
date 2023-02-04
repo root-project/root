@@ -16,10 +16,12 @@
 #ifndef ROO_DATA_SET
 #define ROO_DATA_SET
 
-class TDirectory;
 class RooAbsRealLValue;
-class RooRealVar;
+class RooCategory;
 class RooDataHist;
+class RooRealVar;
+
+class TDirectory;
 
 #include "RooAbsData.h"
 #include "RooDirItem.h"
@@ -173,6 +175,10 @@ protected:
   RooRealVar* _wgtVar ;    ///< Pointer to weight variable (if set)
 
 private:
+
+  void loadValuesFromSlices(RooCategory &indexCat, std::map<std::string, RooDataSet *> const &slices,
+                            const char *rangeName, RooFormulaVar const *cutVar, const char *cutSpec);
+
 #ifdef USEMEMPOOLFORDATASET
   typedef MemPoolForRooSets<RooDataSet, 5*150> MemPool; ///< 150 = about 100kb
   static MemPool * memPool();

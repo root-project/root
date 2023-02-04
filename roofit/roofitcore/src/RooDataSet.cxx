@@ -445,24 +445,8 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
 
       // Create a RooFormulaVar cut from given cut expression
       if (indexCat) {
-
         // Case 2a --- Import multiple RooDataSets as slices with cutspec
-        RooCategory* icat = (RooCategory*) _vars.find(indexCat->GetName()) ;
-        for (map<string,RooDataSet*>::iterator hiter = hmap.begin() ; hiter!=hmap.end() ; ++hiter) {
-          // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
-          if (!indexCat->hasLabel(hiter->first)) {
-            indexCat->defineType(hiter->first) ;
-            coutI(InputArguments) << "RooDataSet::ctor(" << GetName() << ") defining state \"" << hiter->first << "\" in index category " << indexCat->GetName() << endl ;
-          }
-          if (!icat->hasLabel(hiter->first)) {
-            icat->defineType(hiter->first) ;
-          }
-          icat->setLabel(hiter->first.c_str()) ;
-
-          RooFormulaVar cutVarTmp(cutSpec,cutSpec,hiter->second->_vars) ;
-          _dstore->loadValues(hiter->second->store(),&cutVarTmp,cutRange) ;
-        }
-
+        loadValuesFromSlices(*indexCat, hmap, cutRange, nullptr, cutSpec);
       } else if (impData) {
 
         // Case 3a --- Import RooDataSet with cutspec
@@ -508,24 +492,8 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
     } else if (cutVar) {
 
       if (indexCat) {
-
         // Case 2b --- Import multiple RooDataSets as slices with cutvar
-
-        RooCategory* icat = (RooCategory*) _vars.find(indexCat->GetName()) ;
-        for (map<string,RooDataSet*>::iterator hiter = hmap.begin() ; hiter!=hmap.end() ; ++hiter) {
-          // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
-          if (!indexCat->hasLabel(hiter->first)) {
-            indexCat->defineType(hiter->first) ;
-            coutI(InputArguments) << "RooDataSet::ctor(" << GetName() << ") defining state \"" << hiter->first << "\" in index category " << indexCat->GetName() << endl ;
-          }
-          if (!icat->hasLabel(hiter->first)) {
-            icat->defineType(hiter->first) ;
-          }
-          icat->setLabel(hiter->first.c_str()) ;
-          _dstore->loadValues(hiter->second->store(),cutVar,cutRange) ;
-        }
-
-
+        loadValuesFromSlices(*indexCat, hmap, cutRange, cutVar, nullptr);
       } else if (impData) {
         // Case 3b --- Import RooDataSet with cutvar
         _dstore->loadValues(impData->store(),cutVar,cutRange);
@@ -565,22 +533,8 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
     } else {
 
       if (indexCat) {
-
-        RooCategory* icat = (RooCategory*) _vars.find(indexCat->GetName()) ;
-        for (map<string,RooDataSet*>::iterator hiter = hmap.begin() ; hiter!=hmap.end() ; ++hiter) {
-          // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
-          if (!indexCat->hasLabel(hiter->first)) {
-            indexCat->defineType(hiter->first) ;
-            coutI(InputArguments) << "RooDataSet::ctor(" << GetName() << ") defining state \"" << hiter->first << "\" in index category " << indexCat->GetName() << endl ;
-          }
-          if (!icat->hasLabel(hiter->first)) {
-            icat->defineType(hiter->first) ;
-          }
-          icat->setLabel(hiter->first.c_str()) ;
-          // Case 2c --- Import multiple RooDataSets as slices
-          _dstore->loadValues(hiter->second->store(),0,cutRange) ;
-        }
-
+        // Case 2c --- Import multiple RooDataSets as slices
+        loadValuesFromSlices(*indexCat, hmap, cutRange, nullptr, nullptr);
       } else if (impData) {
         // Case 3c --- Import RooDataSet
         _dstore->loadValues(impData->store(),0,cutRange);
@@ -1930,4 +1884,35 @@ namespace {
   RooDataSet d1(tstr, tstr, vars, nullptr);
   RooDataSet d2(tstr, cstr, vars, nullptr);
   RooDataSet d3(cstr, tstr, vars, nullptr);
+}
+
+
+void RooDataSet::loadValuesFromSlices(RooCategory &indexCat, std::map<std::string, RooDataSet *> const &slices,
+                                      const char *rangeName, RooFormulaVar const *cutVar, const char *cutSpec)
+{
+
+   if (cutVar && cutSpec) {
+      throw std::invalid_argument("Only one of cutVar or cutSpec should be not a nullptr!");
+   }
+
+   auto &indexCatInData = *static_cast<RooCategory *>(_vars.find(indexCat.GetName()));
+
+   for (auto const &item : slices) {
+      // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
+      if (!indexCat.hasLabel(item.first)) {
+         indexCat.defineType(item.first);
+         coutI(InputArguments) << "RooDataSet::ctor(" << GetName() << ") defining state \"" << item.first
+                               << "\" in index category " << indexCat.GetName() << std::endl;
+      }
+      if (!indexCatInData.hasLabel(item.first)) {
+         indexCatInData.defineType(item.first);
+      }
+      indexCatInData.setLabel(item.first.c_str());
+      std::unique_ptr<RooFormulaVar> cutVarTmp;
+      if (cutSpec) {
+         cutVarTmp = std::make_unique<RooFormulaVar>(cutSpec, cutSpec, item.second->_vars);
+         cutVar = cutVarTmp.get();
+      }
+      _dstore->loadValues(item.second->store(), cutVar, rangeName);
+   }
 }
