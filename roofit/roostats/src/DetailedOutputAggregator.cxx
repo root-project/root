@@ -127,8 +127,7 @@ namespace RooStats {
    void DetailedOutputAggregator::CommitSet(double weight) {
       if (fResult == nullptr) {
          // Store dataset as a tree - problem with VectorStore and StoreError (bug #94908)
-         RooRealVar wgt("weight","weight",1.0);
-         fResult = new RooDataSet("", "", RooArgSet(*fBuiltSet,wgt), RooFit::WeightVar(wgt));
+         fResult = new RooDataSet("", "", *fBuiltSet, RooFit::WeightVar());
       }
       fResult->add(RooArgSet(*fBuiltSet), weight);
 
@@ -153,8 +152,7 @@ namespace RooStats {
          fResult = nullptr;   // we no longer own the dataset
          temp->SetNameTitle( name.Data(), title.Data() );
       }else{
-         RooRealVar wgt("weight","weight",1.0);
-         temp = new RooDataSet(name.Data(), title.Data(), RooArgSet(wgt), RooFit::WeightVar(wgt));
+         temp = new RooDataSet(name.Data(), title.Data(), {}, RooFit::WeightVar());
       }
       delete fBuiltSet;
       fBuiltSet = nullptr;

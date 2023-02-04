@@ -142,7 +142,6 @@ private:
    const RooFit::Detail::JSONNode &irootnode() const;
 
    std::map<std::string, std::unique_ptr<RooAbsData>> loadData(const RooFit::Detail::JSONNode &n);
-   RooRealVar *getWeightVar(const char *name);
    static RooRealVar *createObservable(RooWorkspace &ws, const std::string &name, const RooJSONFactoryWSTool::Var &var);
 
    class MissingRootnodeError : public std::exception {
