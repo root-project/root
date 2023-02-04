@@ -778,19 +778,6 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-// generating a weight variable
-
-RooRealVar *RooJSONFactoryWSTool::getWeightVar(const char *weightName)
-{
-   RooRealVar *weightVar = _workspace.var(weightName);
-   if (!weightVar) {
-      _workspace.factory(std::string(weightName) + "[0.,0.,10000000]");
-   }
-   weightVar = _workspace.var(weightName);
-   return weightVar;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////
 // importing data
 std::map<std::string, std::unique_ptr<RooAbsData>> RooJSONFactoryWSTool::loadData(const JSONNode &n)
 {
@@ -816,9 +803,7 @@ std::map<std::string, std::unique_ptr<RooAbsData>> RooJSONFactoryWSTool::loadDat
          RooArgSet vars;
          this->getObservables(_workspace, p, name, vars);
          RooArgList varlist(vars);
-         RooRealVar *weightVar = this->getWeightVar("weight");
-         vars.add(*weightVar, true);
-         auto data = std::make_unique<RooDataSet>(name, name, vars, RooFit::WeightVar(*weightVar));
+         auto data = std::make_unique<RooDataSet>(name, name, vars, RooFit::WeightVar());
          auto &coords = p["coordinates"];
          auto &weights = p["weights"];
          if (coords.num_children() != weights.num_children()) {
@@ -853,14 +838,11 @@ std::map<std::string, std::unique_ptr<RooAbsData>> RooJSONFactoryWSTool::loadDat
             logInputArgumentsError(std::move(ss));
          } else {
             RooArgSet allVars;
-            allVars.add(*channelCat, true);
             for (const auto &subd : subMap) {
                allVars.add(*subd.second->get(), true);
             }
-            RooRealVar *weightVar = this->getWeightVar("weight");
-            allVars.add(*weightVar, true);
             dataMap[name] = std::make_unique<RooDataSet>(name, name, allVars, RooFit::Index(*channelCat),
-                                                         RooFit::Import(subMap), RooFit::WeightVar(*weightVar));
+                                                         RooFit::Import(subMap));
          }
       } else {
          std::stringstream ss;

@@ -177,6 +177,30 @@ RooAbsData::RooAbsData()
   RooTrace::create(this) ;
 }
 
+void RooAbsData::initializeVars(RooArgSet const& vars)
+{
+   if(!_vars.empty()) {
+      throw std::runtime_error("RooAbsData::initializeVars(): the variables are already initialized!");
+   }
+
+   // clone the fundamentals of the given data set into internal buffer
+   for (const auto var : vars) {
+      if (!var->isFundamental()) {
+         coutE(InputArguments) << "RooAbsDataStore::initialize(" << GetName()
+                               << "): Data set cannot contain non-fundamental types, ignoring " << var->GetName()
+                               << endl;
+         throw std::invalid_argument(std::string("Only fundamental variables can be placed into datasets. This is violated for ") + var->GetName());
+      } else {
+         _vars.addClone(*var);
+      }
+   }
+
+   // reconnect any parameterized ranges to internal dataset observables
+   for (auto var : _vars) {
+      var->attachArgs(_vars);
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from a set of variables. Only fundamental elements of vars
 /// (RooRealVar,RooCategory etc) are stored as part of the dataset
@@ -197,22 +221,7 @@ RooAbsData::RooAbsData(RooStringView name, RooStringView title, const RooArgSet&
    // cout << "created dataset " << this << endl ;
    claimVars(this);
 
-   // clone the fundamentals of the given data set into internal buffer
-   for (const auto var : vars) {
-      if (!var->isFundamental()) {
-         coutE(InputArguments) << "RooAbsDataStore::initialize(" << GetName()
-                               << "): Data set cannot contain non-fundamental types, ignoring " << var->GetName()
-                               << endl;
-         throw std::invalid_argument(std::string("Only fundamental variables can be placed into datasets. This is violated for ") + var->GetName());
-      } else {
-         _vars.addClone(*var);
-      }
-   }
-
-   // reconnect any parameterized ranges to internal dataset observables
-   for (auto var : _vars) {
-      var->attachArgs(_vars);
-   }
+   initializeVars(vars);
 
    _namePtr = RooNameReg::instance().constPtr(GetName()) ;
 

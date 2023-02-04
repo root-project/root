@@ -1695,13 +1695,9 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
     }
     else {
       size_t step = data.numEntries()/nEvents;
-      RooArgSet tinyVars(*data.get());
-      RooRealVar weight("weight","weight",1);
 
-      if (data.isWeighted()) tinyVars.add(weight);
-
-      RooDataSet tiny("tiny", "tiny", tinyVars,
-          data.isWeighted() ? RooFit::WeightVar(weight) : RooCmdArg());
+      RooDataSet tiny("tiny", "tiny", *data.get(),
+          data.isWeighted() ? RooFit::WeightVar() : RooCmdArg());
 
       for (int i=0; i<data.numEntries(); i+=step)
       {
