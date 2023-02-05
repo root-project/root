@@ -183,7 +183,7 @@ RooCmdArg Import(std::map<std::string,DataPtr_t> const& map) {
 
 RooCmdArg Link(const char* state, RooAbsData& data) ;
 RooCmdArg Link(const std::map<std::string,RooAbsData*>&) ;
-RooCmdArg Import(RooDataSet& data) ;
+RooCmdArg Import(RooAbsData& data) ;
 RooCmdArg Import(TTree& tree) ;
 RooCmdArg ImportFromFile(const char* fname, const char* tname) ;
 RooCmdArg StoreError(const RooArgSet& aset) ;

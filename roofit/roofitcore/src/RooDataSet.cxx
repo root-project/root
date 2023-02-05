@@ -196,6 +196,7 @@ struct FinalizeVarsOutput {
 FinalizeVarsOutput finalizeVars(RooArgSet const &vars,
                                 RooAbsArg * indexCat,
                                 const char* wgtVarName,
+                                RooAbsData* impData,
                                 RooLinkedList const &impSliceData)
 {
    FinalizeVarsOutput out;
@@ -208,13 +209,27 @@ FinalizeVarsOutput finalizeVars(RooArgSet const &vars,
    out.weightVarName = wgtVarName ? wgtVarName : "";
 
    if(out.weightVarName.empty()) {
-      // Even if no weight variable is specified, we want to have one if we are
-      // importing weighted datasets
-
+      // Gather all imported weighted datasets to infer the weight variable name
+      std::vector<RooAbsData*> weightedImpDatas;
+      if(impData && impData->isWeighted()) weightedImpDatas.push_back(impData);
       for(auto * data : static_range_cast<RooAbsData*>(impSliceData)) {
          if(data->isWeighted()) {
-            out.weightVarName = RooFit::WeightVar().getString(0); // to get the default weight variable name
+            weightedImpDatas.push_back(data);
+         }
+      }
+
+      // Even if no weight variable is specified, we want to have one if we are
+      // importing weighted datasets
+      for(RooAbsData * data : weightedImpDatas) {
+         if(auto ds = dynamic_cast<RooDataSet*>(data)) {
+            // If the imported data is a RooDataSet, we take over its weight variable name
+            out.weightVarName = ds->weightVar()->GetName();
             break;
+         } else {
+            out.weightVarName = RooFit::WeightVar().getString(0); // to get the default weight variable name
+            // Don't break here! The next imported data might be a RooDataSet,
+            // and in that case we want to take over its weight name instead of
+            // using the default one.
          }
       }
    }
@@ -230,6 +245,16 @@ FinalizeVarsOutput finalizeVars(RooArgSet const &vars,
    return out;
 }
 
+// generating an unbinned dataset from a binned one
+std::unique_ptr<RooDataSet> makeDataSetFromDataHist(RooDataHist const &hist)
+{
+   auto data = std::make_unique<RooDataSet>(hist.GetName(), hist.GetTitle(), *hist.get(), RooFit::WeightVar());
+   for (int i = 0; i < hist.numEntries(); ++i) {
+      data->add(*hist.get(i), hist.weight(i));
+   }
+   return data;
+}
+
 } // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -242,8 +267,8 @@ FinalizeVarsOutput finalizeVars(RooArgSet const &vars,
 ///                                corresponding to those of the RooAbsArgs that define the RooDataSet are
 ///                                imported.
 /// <tr><td> ImportFromFile(const char* fileName, const char* treeName) <td> Import tree with given name from file with given name.
-/// <tr><td> Import(RooDataSet&)
-///     <td> Import contents of given RooDataSet. Only observables that are common with the definition of this dataset will be imported
+/// <tr><td> Import(RooAbsData&)
+///     <td> Import contents of given RooDataSet or RooDataHist. Only observables that are common with the definition of this dataset will be imported
 /// <tr><td> Index(RooCategory&)         <td> Prepare import of datasets into a N+1 dimensional RooDataSet
 ///                                where the extra discrete dimension labels the source of the imported histogram.
 /// <tr><td> Import(const char*, RooAbsData&)
@@ -326,7 +351,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
 
   // Extract relevant objects
   TTree* impTree = static_cast<TTree*>(pc.getObject("impTree")) ;
-  RooDataSet* impData = static_cast<RooDataSet*>(pc.getObject("impData")) ;
+  auto impData = static_cast<RooAbsData*>(pc.getObject("impData")) ;
   RooFormulaVar* cutVar = static_cast<RooFormulaVar*>(pc.getObject("cutVar")) ;
   const char* cutSpec = pc.getString("cutSpec","",true) ;
   const char* cutRange = pc.getString("cutRange","",true) ;
@@ -349,7 +374,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
     wgtVarName = wgtVar->GetName();
   }
 
-  auto finalVarsInfo = finalizeVars(vars,indexCat,wgtVarName,impSliceData);
+  auto finalVarsInfo = finalizeVars(vars,indexCat,wgtVarName,impData,impSliceData);
   initializeVars(finalVarsInfo.finalVars);
   if(!finalVarsInfo.weightVarName.empty()) {
     wgtVarName = finalVarsInfo.weightVarName.c_str();
@@ -406,13 +431,6 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
     return;
   }
 
-    // Clone weight variable of imported dataset if we are not weighted
-    if (!wgtVar && !wgtVarName && impData && impData->_wgtVar) {
-      _wgtVar = (RooRealVar*) impData->_wgtVar->createFundamental() ;
-      _vars.addOwned(*_wgtVar) ;
-      wgtVarName = _wgtVar->GetName() ;
-    }
-
     // Create empty datastore
     RooTreeDataStore* tstore = nullptr;
     if (defaultStorageType==Tree) {
@@ -455,38 +473,10 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
       }
     }
 
-    // Lookup name of weight variable if it was specified by object reference
-    if (wgtVar) {
-      wgtVarName = wgtVar->GetName() ;
-    }
-
-
     appendToDir(this,true) ;
 
     // Initialize RooDataSet with optional weight variable
-    if (wgtVarName && *wgtVarName) {
-      // Use the supplied weight column
-      initialize(wgtVarName) ;
-
-    } else {
-      if (impData && impData->_wgtVar && vars.find(impData->_wgtVar->GetName())) {
-
-        // Use the weight column of the source data set
-        initialize(impData->_wgtVar->GetName()) ;
-
-      } else if (indexCat) {
-
-        const char* weightName = nullptr;
-        if(auto firstDS = dynamic_cast<RooDataSet*>(hmap.begin()->second)) {
-          if (firstDS->_wgtVar && vars.find(firstDS->_wgtVar->GetName())) {
-            weightName = firstDS->_wgtVar->GetName();
-          }
-        }
-        initialize(weightName);
-      } else {
-        initialize(0) ;
-      }
-    }
+    initialize(wgtVarName);
 
    // Import one or more datasets
    std::unique_ptr<RooFormulaVar> cutVarTmp;
@@ -496,8 +486,15 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
       loadValuesFromSlices(*indexCat, hmap, cutRange, cutVar, cutSpec);
    } else if (impData) {
       // Case 3 --- Import RooDataSet
+      std::unique_ptr<RooDataSet> impDataSet;
+
+      // If we are importing a RooDataHist, first convert it to a RooDataSet
+      if(impData->InheritsFrom(RooDataHist::Class())) {
+         impDataSet = makeDataSetFromDataHist(static_cast<RooDataHist const &>(*impData));
+         impData = impDataSet.get();
+      }
       if (cutSpec) {
-         cutVarTmp = std::make_unique<RooFormulaVar>(cutSpec, cutSpec, impData->_vars);
+         cutVarTmp = std::make_unique<RooFormulaVar>(cutSpec, cutSpec, *impData->get());
          cutVar = cutVarTmp.get();
       }
       _dstore->loadValues(impData->store(), cutVar, cutRange);
@@ -1857,17 +1854,6 @@ namespace {
   RooDataSet d1(tstr, tstr, vars, nullptr);
   RooDataSet d2(tstr, cstr, vars, nullptr);
   RooDataSet d3(cstr, tstr, vars, nullptr);
-
-// generating an unbinned dataset from a binned one
-
-std::unique_ptr<RooDataSet> makeDataSetFromDataHist(RooDataHist const &hist)
-{
-   auto data = std::make_unique<RooDataSet>(hist.GetName(), hist.GetTitle(), *hist.get(), RooFit::WeightVar());
-   for (int i = 0; i < hist.numEntries(); ++i) {
-      data->add(*hist.get(i), hist.weight(i));
-   }
-   return data;
-}
 
 } // namespace
 
