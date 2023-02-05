@@ -51,16 +51,6 @@ std::unique_ptr<RooDataHist> generateBinnedAsimov(RooAbsPdf const &pdf, RooRealV
    return dataH;
 }
 
-std::unique_ptr<RooDataSet> dataHistToDataSet(RooDataHist const &dataH)
-{
-   auto data = std::make_unique<RooDataSet>("data", "data", *dataH.get(), RooFit::WeightVar());
-   for (int i = 0; i < dataH.numEntries(); ++i) {
-      auto coords = dataH.get(i);
-      data->add(*coords, dataH.weight());
-   }
-   return data;
-}
-
 } // namespace
 
 class TestStatisticTest : public testing::TestWithParam<std::tuple<std::string>> {
@@ -97,7 +87,7 @@ TEST_P(TestStatisticTest, IntegrateBins)
    using namespace RooFit;
 
    std::unique_ptr<RooDataHist> dataH(generateBinnedAsimov(pdf, x, 10000));
-   std::unique_ptr<RooDataSet> dataS = dataHistToDataSet(*dataH);
+   auto dataS = std::make_unique<RooDataSet>("data", "data", x, Import(*dataH));
 
    std::unique_ptr<RooPlot> frame(x.frame());
    dataH->plotOn(frame.get(), MarkerColor(kRed));
@@ -146,7 +136,7 @@ TEST_P(TestStatisticTest, IntegrateBins_SubRange)
    using namespace RooFit;
 
    std::unique_ptr<RooDataHist> dataH(generateBinnedAsimov(pdf, x, 10000));
-   std::unique_ptr<RooDataSet> dataS = dataHistToDataSet(*dataH);
+   auto dataS = std::make_unique<RooDataSet>("data", "data", x, Import(*dataH));
 
    std::unique_ptr<RooPlot> frame(x.frame());
    dataH->plotOn(frame.get(), MarkerColor(kRed));
@@ -198,7 +188,7 @@ TEST_P(TestStatisticTest, IntegrateBins_CustomBinning)
    using namespace RooFit;
 
    std::unique_ptr<RooDataHist> dataH(generateBinnedAsimov(pdf, x, 50000));
-   std::unique_ptr<RooDataSet> dataS = dataHistToDataSet(*dataH);
+   auto dataS = std::make_unique<RooDataSet>("data", "data", x, Import(*dataH));
 
    std::unique_ptr<RooPlot> frame(x.frame());
    dataH->plotOn(frame.get(), Name("dataHist"), MarkerColor(kRed));

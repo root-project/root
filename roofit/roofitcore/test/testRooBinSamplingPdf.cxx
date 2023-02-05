@@ -52,11 +52,7 @@ TEST_P(ParamTest, LinearPdfCrossCheck)
 
    RooGenericPdf pdf("lin", "x", {x});
    std::unique_ptr<RooDataHist> dataH(pdf.generateBinned(x, 10000));
-   RooDataSet data("data", "data", x, RooFit::WeightVar());
-   for (int i = 0; i < dataH->numEntries(); ++i) {
-      auto coords = dataH->get(i);
-      data.add(*coords, dataH->weight());
-   }
+   RooDataSet data("data", "data", x, RooFit::Import(*dataH));
 
    std::unique_ptr<RooAbsReal> nll1(pdf.createNLL(data));
    std::unique_ptr<RooAbsReal> nll2(pdf.createNLL(data, IntegrateBins(1.E-3)));
@@ -82,11 +78,7 @@ TEST_P(ParamTest, LinearPdfSubRangeCrossCheck)
 
    RooGenericPdf pdf("lin", "x", {x});
    std::unique_ptr<RooDataHist> dataH(pdf.generateBinned(x, 10000));
-   RooDataSet data("data", "data", x, RooFit::WeightVar());
-   for (int i = 0; i < dataH->numEntries(); ++i) {
-      auto coords = dataH->get(i);
-      data.add(*coords, dataH->weight());
-   }
+   RooDataSet data("data", "data", x, RooFit::Import(*dataH));
 
    std::unique_ptr<RooAbsReal> nll1(pdf.createNLL(data, Range("range")));
    std::unique_ptr<RooAbsReal> nll2(pdf.createNLL(data, Range("range"), IntegrateBins(1.E-3)));
