@@ -171,7 +171,7 @@ namespace RooFit {
   RooCmdArg WeightVar(const RooRealVar& arg, bool reinterpretAsWeight)  { return RooCmdArg("WeightVar",reinterpretAsWeight,0,0,0,0,0,&arg,0) ; }
   RooCmdArg Link(const char* state, RooAbsData& data)   { return RooCmdArg("LinkDataSlice",0,0,0,0,state,0,&data,0) ;}
   RooCmdArg Import(const char* state, RooAbsData& data) { return RooCmdArg("ImportDataSlice",0,0,0,0,state,0,&data,0) ; }
-  RooCmdArg Import(RooDataSet& data)                    { return RooCmdArg("ImportData",0,0,0,0,0,0,&data,0) ; }
+  RooCmdArg Import(RooAbsData& data)                    { return RooCmdArg("ImportData",0,0,0,0,0,0,&data,0) ; }
   RooCmdArg Import(TTree& tree)                         { return RooCmdArg("ImportTree",0,0,0,0,0,0,reinterpret_cast<TObject*>(&tree),0) ; }
   RooCmdArg ImportFromFile(const char* fname, const char* tname){ return RooCmdArg("ImportFromFile",0,0,0,0,fname,tname,0,0) ; }
   RooCmdArg StoreError(const RooArgSet& aset)           { return RooCmdArg("StoreError",0,0,0,0,0,0,0,0,0,0,&aset) ; }
