@@ -191,16 +191,37 @@ struct FinalizeVarsOutput {
    RooArgSet finalVars;
    std::unique_ptr<RooRealVar> weight;
    std::string weightVarName;
+   RooArgSet errorSet;
 };
 
 FinalizeVarsOutput finalizeVars(RooArgSet const &vars,
                                 RooAbsArg * indexCat,
                                 const char* wgtVarName,
                                 RooAbsData* impData,
-                                RooLinkedList const &impSliceData)
+                                RooLinkedList const &impSliceData,
+                                RooArgSet * errorSet)
 {
    FinalizeVarsOutput out;
    out.finalVars.add(vars);
+
+   // Gather all imported weighted datasets to infer the weight variable name
+   // and whether we need weight errors
+   std::vector<RooAbsData*> weightedImpDatas;
+   if(impData && impData->isWeighted()) weightedImpDatas.push_back(impData);
+   for(auto * data : static_range_cast<RooAbsData*>(impSliceData)) {
+      if(data->isWeighted()) {
+         weightedImpDatas.push_back(data);
+      }
+   }
+
+   bool needsWeightErrors = false;
+
+   // Figure out if the weight needs to store errors
+   for(RooAbsData * data : weightedImpDatas) {
+      if(dynamic_cast<RooDataHist const*>(data)) {
+         needsWeightErrors = true;
+      }
+   }
 
    if (indexCat) {
       out.finalVars.add(*indexCat, true);
@@ -209,19 +230,10 @@ FinalizeVarsOutput finalizeVars(RooArgSet const &vars,
    out.weightVarName = wgtVarName ? wgtVarName : "";
 
    if(out.weightVarName.empty()) {
-      // Gather all imported weighted datasets to infer the weight variable name
-      std::vector<RooAbsData*> weightedImpDatas;
-      if(impData && impData->isWeighted()) weightedImpDatas.push_back(impData);
-      for(auto * data : static_range_cast<RooAbsData*>(impSliceData)) {
-         if(data->isWeighted()) {
-            weightedImpDatas.push_back(data);
-         }
-      }
-
       // Even if no weight variable is specified, we want to have one if we are
       // importing weighted datasets
       for(RooAbsData * data : weightedImpDatas) {
-         if(auto ds = dynamic_cast<RooDataSet*>(data)) {
+         if(auto ds = dynamic_cast<RooDataSet const*>(data)) {
             // If the imported data is a RooDataSet, we take over its weight variable name
             out.weightVarName = ds->weightVar()->GetName();
             break;
@@ -236,11 +248,20 @@ FinalizeVarsOutput finalizeVars(RooArgSet const &vars,
 
    // If the weight variable is required but is not in the set, create and add
    // it on the fly
-   if (!out.weightVarName.empty() && !out.finalVars.find(out.weightVarName.c_str())) {
+   RooAbsArg * wgtVar = out.finalVars.find(out.weightVarName.c_str());
+   if (!out.weightVarName.empty() && !wgtVar) {
       const char* name = out.weightVarName.c_str();
       out.weight = std::make_unique<RooRealVar>(name, name, 1.0);
+      wgtVar = out.weight.get();
       out.finalVars.add(*out.weight);
    }
+
+   if(needsWeightErrors) {
+      out.errorSet.add(*wgtVar);
+   }
+
+   // Combine the error set figured out by finalizeVars and the ones passed by the user
+   if(errorSet) out.errorSet.add(*errorSet, /*silent=*/true);
 
    return out;
 }
@@ -248,10 +269,21 @@ FinalizeVarsOutput finalizeVars(RooArgSet const &vars,
 // generating an unbinned dataset from a binned one
 std::unique_ptr<RooDataSet> makeDataSetFromDataHist(RooDataHist const &hist)
 {
-   auto data = std::make_unique<RooDataSet>(hist.GetName(), hist.GetTitle(), *hist.get(), RooFit::WeightVar());
+   using namespace RooFit;
+
+   RooCmdArg const& wgtVarCmdArg = RooFit::WeightVar();
+   const char* wgtName = wgtVarCmdArg.getString(0);
+   // Instantiate weight variable here such that we can pass it to StoreError()
+   RooRealVar wgtVar{wgtName, wgtName, 1.0};
+
+   RooArgSet vars{*hist.get(), wgtVar};
+
+   // We have to explicitly store the errors that are implied by the sum of weights squared.
+   auto data = std::make_unique<RooDataSet>(hist.GetName(), hist.GetTitle(), vars, wgtVarCmdArg, StoreError(wgtVar));
    for (int i = 0; i < hist.numEntries(); ++i) {
-      data->add(*hist.get(i), hist.weight(i));
+      data->add(*hist.get(i), hist.weight(i), std::sqrt(hist.weightSquared(i)));
    }
+
    return data;
 }
 
@@ -362,7 +394,6 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
   const char* lnkSliceNames = pc.getString("lnkSliceState","",true) ;
   const RooLinkedList& lnkSliceData = pc.getObjectList("lnkSliceData") ;
   RooCategory* indexCat = static_cast<RooCategory*>(pc.getObject("indexCat")) ;
-  RooArgSet* errorSet = pc.getSet("errorSet") ;
   RooArgSet* asymErrorSet = pc.getSet("asymErrSet") ;
   const char* fname = pc.getString("fname") ;
   const char* tname = pc.getString("tname") ;
@@ -374,11 +405,13 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
     wgtVarName = wgtVar->GetName();
   }
 
-  auto finalVarsInfo = finalizeVars(vars,indexCat,wgtVarName,impData,impSliceData);
+  auto finalVarsInfo = finalizeVars(vars,indexCat,wgtVarName,impData,impSliceData, pc.getSet("errorSet"));
   initializeVars(finalVarsInfo.finalVars);
   if(!finalVarsInfo.weightVarName.empty()) {
     wgtVarName = finalVarsInfo.weightVarName.c_str();
   }
+
+  RooArgSet* errorSet =  finalVarsInfo.errorSet.empty() ? nullptr : &finalVarsInfo.errorSet;
 
   // Case 1 --- Link multiple dataset as slices
   if (lnkSliceNames) {
