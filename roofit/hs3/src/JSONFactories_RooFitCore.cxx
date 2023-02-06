@@ -526,8 +526,7 @@ public:
 // instantiate all importers and exporters
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-STATIC_EXECUTE(
-
+STATIC_EXECUTE([]() {
    using namespace RooFit::JSONIO;
 
    registerImporter<RooProdPdfFactory>("pdfprod", false);
@@ -551,6 +550,7 @@ STATIC_EXECUTE(
    registerExporter<RooGenericPdfStreamer>(RooGenericPdf::Class(), false);
    registerExporter<RooFormulaVarStreamer>(RooFormulaVar::Class(), false);
    registerExporter<RooRealSumPdfStreamer>(RooRealSumPdf::Class(), false);
-   registerExporter<RooRealSumFuncStreamer>(RooRealSumFunc::Class(), false);)
+   registerExporter<RooRealSumFuncStreamer>(RooRealSumFunc::Class(), false);
+});
 
 } // namespace
