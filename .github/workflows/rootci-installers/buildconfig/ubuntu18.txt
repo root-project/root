@@ -1,5 +1,5 @@
 CMAKE_BUILD_TYPE=RelWithDebInfo
-CMAKE_CXX_STANDARD=17
+CMAKE_CXX_STANDARD=14
 LLVM_ENABLE_ASSERTIONS=On
 alien=Off
 arrow=Off
@@ -78,6 +78,7 @@ pythia8=On
 qt5web=On
 qt6web=Off
 r=On
+root7=Off
 roofit=On
 roofit_multiprocess=On
 roottest=ON
