@@ -1202,51 +1202,65 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
 
    std::unique_ptr<RooSimultaneous> newSimPdf{static_cast<RooSimultaneous *>(this->Clone())};
 
-   const char *rangeName = newSimPdf->getStringAttribute("RangeName");
-   bool splitRange = newSimPdf->getAttribute("SplitRange");
+   const char *rangeName = this->getStringAttribute("RangeName");
+   bool splitRange = this->getAttribute("SplitRange");
 
    RooArgSet newPdfs;
-   for (auto *cat : static_range_cast<RooAbsCategoryLValue *>(newSimPdf->flattenedCatList())) {
+   std::vector<std::string> catNames;
 
-      for (auto const &catState : *cat) {
-         std::string const &catName = catState.first;
-         const std::string prefix = "_" + catName + "_";
+   for (auto *proxy : static_range_cast<RooRealProxy *>(newSimPdf->_pdfProxyList)) {
+      catNames.emplace_back(proxy->GetName());
+      std::string const &catName = catNames.back();
+      const std::string prefix = "_" + catName + "_";
 
-         if (RooAbsPdf *pdf = getPdf(catName.c_str())) {
-            const std::string origname = pdf->GetName();
+      const std::string origname = proxy->arg().GetName();
 
-            std::unique_ptr<RooAbsPdf> pdfClone{static_cast<RooAbsPdf *>(pdf->cloneTree())};
+      std::unique_ptr<RooAbsPdf> pdfClone{static_cast<RooAbsPdf *>(proxy->arg().cloneTree())};
 
-            prefixArgs(pdfClone.get(), prefix, normSet);
+      prefixArgs(pdfClone.get(), prefix, normSet);
 
-            auto binnedInfo = RooHelpers::getBinnedL(*pdfClone);
+      auto binnedInfo = RooHelpers::getBinnedL(*pdfClone);
 
-            pdf = binnedInfo.binnedPdf ? binnedInfo.binnedPdf : pdfClone.get();
+      RooAbsPdf &pdf = binnedInfo.binnedPdf ? *binnedInfo.binnedPdf : *pdfClone;
 
-            if (binnedInfo.isBinnedL) {
-               pdf->setAttribute("BinnedLikelihoodActive");
-            }
-
-            std::unique_ptr<RooArgSet> pdfNormSet(static_cast<RooArgSet *>(
-               std::unique_ptr<RooArgSet>(pdf->getVariables())->selectByAttrib("__obs__", true)));
-
-            if (rangeName) {
-               pdf->setNormRange(RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, catName).c_str());
-            }
-
-            auto *pdfFinal = RooFit::Detail::CompileContext{*pdfNormSet}.compile(*pdf, *newSimPdf, *pdfNormSet);
-            pdfFinal->fixAddCoefNormalization(*pdfNormSet, false);
-
-            pdfClone->SetName((std::string("_") + pdfClone->GetName()).c_str());
-            pdfFinal->addOwnedComponents(std::move(pdfClone));
-
-            pdfFinal->setAttribute(("ORIGNAME:" + origname).c_str());
-            newPdfs.add(*pdfFinal);
-         }
+      if (binnedInfo.isBinnedL) {
+         pdf.setAttribute("BinnedLikelihoodActive");
       }
+
+      std::unique_ptr<RooArgSet> pdfNormSet(
+         static_cast<RooArgSet *>(std::unique_ptr<RooArgSet>(pdf.getVariables())->selectByAttrib("__obs__", true)));
+
+      if (rangeName) {
+         pdf.setNormRange(RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, catName).c_str());
+      }
+
+      auto *pdfFinal = RooFit::Detail::CompileContext{*pdfNormSet}.compile(pdf, *newSimPdf, *pdfNormSet);
+      pdfFinal->fixAddCoefNormalization(*pdfNormSet, false);
+
+      pdfClone->SetName((std::string("_") + pdfClone->GetName()).c_str());
+      pdfFinal->addOwnedComponents(std::move(pdfClone));
+
+      pdfFinal->setAttribute(("ORIGNAME:" + origname).c_str());
+      newPdfs.add(*pdfFinal);
+
+      // We will remove the old pdf server because we will fill the new ones by
+      // hand via the creation of new proxies.
+      newSimPdf->removeServer(const_cast<RooAbsReal&>(proxy->arg()), true);
    }
 
-   newSimPdf->redirectServers(newPdfs, false, true);
+   // Replace pdfs with compiled pdfs. Don't use RooAbsArg::redirectServers()
+   // here, because it doesn't support replacing two servers with the same name
+   // (it can happen in a RooSimultaneous that two pdfs have the same name).
+
+   // First delete old proxies (we have already removed the servers before).
+   newSimPdf->_pdfProxyList.Delete();
+
+   // Recreate the _pdfProxyList with the compiled pdfs
+   for (std::size_t i = 0; i < newPdfs.size(); ++i) {
+      const char *label = catNames[i].c_str();
+      newSimPdf->_pdfProxyList.Add(
+         new RooRealProxy(label, label, newSimPdf.get(), *static_cast<RooAbsReal *>(newPdfs[i])));
+   }
 
    ctx.compileServers(*newSimPdf, normSet); // to trigger compling also the index category
 
