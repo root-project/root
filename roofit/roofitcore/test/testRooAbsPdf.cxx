@@ -17,20 +17,41 @@
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
+#include <RooRandom.h>
 
 #include <TClass.h>
 #include <TRandom.h>
 
 #include <gtest/gtest.h>
 
+// Backward compatibility for gtest version < 1.10.0
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
+
 #include <memory>
 
+class FitTest : public testing::TestWithParam<std::tuple<std::string>> {
+   void SetUp() override
+   {
+      RooRandom::randomGenerator()->SetSeed(1337ul);
+      _batchMode = std::get<0>(GetParam());
+      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
+   }
+
+   void TearDown() override { _changeMsgLvl.reset(); }
+
+protected:
+   std::string _batchMode;
+
+private:
+   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
+};
+
 // ROOT-10668: Asympt. correct errors don't work when title and name differ
-TEST(RooAbsPdf, AsymptoticallyCorrectErrors)
+TEST_P(FitTest, AsymptoticallyCorrectErrors)
 {
    using namespace RooFit;
-
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    RooRealVar x("x", "xxx", 0, 0, 10);
    RooRealVar a("a", "aaa", 2, 0, 10);
@@ -48,9 +69,9 @@ TEST(RooAbsPdf, AsymptoticallyCorrectErrors)
    ASSERT_NE(weightedData.weight(), 1);
 
    a = 1.2;
-   auto result = pdf.fitTo(weightedData, Save(), AsymptoticError(true), PrintLevel(-1));
+   auto result = pdf.fitTo(weightedData, Save(), AsymptoticError(true), PrintLevel(-1), BatchMode(_batchMode));
    a = 1.2;
-   auto result2 = pdf.fitTo(weightedData, Save(), SumW2Error(false), PrintLevel(-1));
+   auto result2 = pdf.fitTo(weightedData, Save(), SumW2Error(false), PrintLevel(-1), BatchMode(_batchMode));
 
    // Set relative tolerance for errors to large value to only check for values
    EXPECT_TRUE(result->isIdenticalNoCov(*result2, 1e-6, 10.0)) << "Fit results should be very similar.";
@@ -142,10 +163,9 @@ TEST(RooAbsPdf, ConditionalFitBatchMode)
 }
 
 // ROOT-9530: RooFit side-band fit inconsistent with fit to full range
-TEST(RooAbsPdf, MultiRangeFit)
+TEST_P(FitTest, MultiRangeFit)
 {
    using namespace RooFit;
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    RooWorkspace ws;
 
@@ -181,17 +201,19 @@ TEST(RooAbsPdf, MultiRangeFit)
    for (auto *model : {static_cast<RooAbsPdf *>(&modelSimple), static_cast<RooAbsPdf *>(&modelExtended)}) {
 
       std::unique_ptr<RooAbsData> dataSet{model->generate(x, nEvents)};
-      std::unique_ptr<RooAbsData> dataHist{static_cast<RooDataSet&>(*dataSet).binnedClone()};
+      std::unique_ptr<RooAbsData> dataHist{static_cast<RooDataSet &>(*dataSet).binnedClone()};
 
       // loop over binned fit and unbinned fit
       for (auto *data : {dataSet.get(), dataHist.get()}) {
          // full range
          resetValues();
-         std::unique_ptr<RooFitResult> fitResultFull{model->fitTo(*data, Range("full"), Save(), PrintLevel(-1))};
+         std::unique_ptr<RooFitResult> fitResultFull{
+            model->fitTo(*data, Range("full"), Save(), PrintLevel(-1), BatchMode(_batchMode))};
 
          // part (side band fit, but the union of the side bands is the full range)
          resetValues();
-         std::unique_ptr<RooFitResult> fitResultPart{model->fitTo(*data, Range("low,high"), Save(), PrintLevel(-1))};
+         std::unique_ptr<RooFitResult> fitResultPart{
+            model->fitTo(*data, Range("low,high"), Save(), PrintLevel(-1), BatchMode(_batchMode))};
 
          EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull))
             << "Results of fitting " << model->GetName() << " to a " << data->ClassName() << " should be very similar.";
@@ -200,10 +222,9 @@ TEST(RooAbsPdf, MultiRangeFit)
 }
 
 // ROOT-9530: RooFit side-band fit inconsistent with fit to full range (2D case)
-TEST(RooAbsPdf, MultiRangeFit2D)
+TEST_P(FitTest, MultiRangeFit2D)
 {
    using namespace RooFit;
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    // model taken from the rf312_multirangefit.C tutorial
    RooWorkspace ws;
@@ -260,11 +281,13 @@ TEST(RooAbsPdf, MultiRangeFit2D)
    for (auto *data : {static_cast<RooAbsData *>(dataSet.get()), static_cast<RooAbsData *>(dataHist.get())}) {
       // full range
       resetValues();
-      std::unique_ptr<RooFitResult> fitResultFull{model.fitTo(*data, Range("FULL"), Save(), PrintLevel(-1))};
+      std::unique_ptr<RooFitResult> fitResultFull{
+         model.fitTo(*data, Range("FULL"), Save(), PrintLevel(-1), BatchMode(_batchMode))};
 
       // part (side band fit, but the union of the side bands is the full range)
       resetValues();
-      std::unique_ptr<RooFitResult> fitResultPart{model.fitTo(*data, Range("SB1,SB2,SIG"), Save(), PrintLevel(-1))};
+      std::unique_ptr<RooFitResult> fitResultPart{
+         model.fitTo(*data, Range("SB1,SB2,SIG"), Save(), PrintLevel(-1), BatchMode(_batchMode))};
 
       EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull))
          << "Results of fitting " << model.GetName() << " to a " << data->ClassName() << " should be very similar.";
@@ -275,7 +298,7 @@ TEST(RooAbsPdf, MultiRangeFit2D)
 // correctly after servers are redirected. This is a reduced version of a code
 // provided in the ROOT forum that originally unveiled this problem:
 // https://root-forum.cern.ch/t/problems-with-2d-simultaneous-fit/48249/4
-TEST(RooAbsPdf, ProblemsWith2DSimultaneousFit)
+TEST_P(FitTest, ProblemsWith2DSimultaneousFit)
 {
    using namespace RooFit;
 
@@ -306,7 +329,7 @@ TEST(RooAbsPdf, ProblemsWith2DSimultaneousFit)
    simPdf.addPdf(model, "cat0");
    simPdf.addPdf(model, "cat1");
 
-   simPdf.fitTo(data, PrintLevel(-1));
+   simPdf.fitTo(data, PrintLevel(-1), BatchMode(_batchMode));
 }
 
 // Verifies that a server pdf gets correctly reevaluated when the normalization
@@ -330,3 +353,10 @@ TEST(RooAbsPdf, NormSetChange)
    // value, so val2 should be different from val1. }
    EXPECT_NE(v1, v2);
 }
+
+INSTANTIATE_TEST_SUITE_P(RooAbsPdf, FitTest, testing::Combine(testing::Values("Off", "Cpu")),
+                         [](testing::TestParamInfo<FitTest::ParamType> const &paramInfo) {
+                            std::stringstream ss;
+                            ss << "BatchMode" << std::get<0>(paramInfo.param);
+                            return ss.str();
+                         });
