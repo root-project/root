@@ -575,7 +575,7 @@ void RooVectorDataStore::loadValues(const RooAbsDataStore *ads, const RooFormula
       continue ;
     }
 
-    _varsww.assignValueOnly(*otherVarsww) ;
+    _varsww.assign(*otherVarsww) ;
 
     fill() ;
   }
