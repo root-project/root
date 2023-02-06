@@ -955,8 +955,7 @@ public:
    }
 };
 
-STATIC_EXECUTE(
-
+STATIC_EXECUTE([]() {
    using namespace RooFit::JSONIO;
 
    registerImporter<RooRealSumPdfFactory>("histfactory", true);
@@ -965,7 +964,6 @@ STATIC_EXECUTE(
    registerExporter<FlexibleInterpVarStreamer>(RooStats::HistFactory::FlexibleInterpVar::Class(), true);
    registerExporter<PiecewiseInterpolationStreamer>(PiecewiseInterpolation::Class(), true);
    registerExporter<HistFactoryStreamer>(RooProdPdf::Class(), true);
-
-)
+});
 
 } // namespace
