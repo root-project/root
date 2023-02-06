@@ -354,3 +354,26 @@ TEST(RooDataSet, ReduceWithSelectVarsAndCutRange)
 
    EXPECT_EQ(reduced->numEntries(), 1);
 }
+
+// Test that importing a RooDataHist to a RooDataSet works and that it gives
+// the right weight() and weightSquared().
+TEST(RooDataSet, ImportDataHist)
+{
+   RooRealVar x{"x", "x", 0, 3};
+   x.setBins(3);
+
+   RooDataHist dh{"dh", "dh", x};
+
+   dh.set(0, 10, 5);
+   dh.set(1, 20, 15);
+   dh.set(2, 30, 20);
+
+   RooDataSet ds{"ds", "ds", x, RooFit::Import(dh)};
+
+   for (int i = 0; i < x.numBins(); ++i) {
+      dh.get(i);
+      ds.get(i);
+      EXPECT_FLOAT_EQ(ds.weight(), dh.weight()) << "weight() is off in bin " << i;
+      EXPECT_FLOAT_EQ(ds.weightSquared(), dh.weightSquared()) << "weightSquared() is off in bin " << i;
+   }
+}
