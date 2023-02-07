@@ -37,7 +37,7 @@ class TFile;
 
 class RooUnitTest : public TNamed {
 public:
-  RooUnitTest(const char* name, TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode="off") ;
+  RooUnitTest(const char* name, TFile* refFile, bool writeRef, Int_t verbose) ;
   ~RooUnitTest() override ;
 
   void setDebug(bool flag) { _debug = flag ; }
@@ -77,7 +77,6 @@ protected:
   bool _debug ;
   bool _write ;
   Int_t _verb ;
-  std::string _batchMode="off";
    std::list<std::pair<RooPlot*, std::string> > _regPlots ;
    std::list<std::pair<RooFitResult*, std::string> > _regResults ;
    std::list<std::pair<double, std::string> > _regValues ;
