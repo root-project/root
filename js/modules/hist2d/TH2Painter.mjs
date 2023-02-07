@@ -481,6 +481,8 @@ class TH2Painter extends THistPainter {
       // no need to refill statistic if histogram is dummy
       if (this.isIgnoreStatsFill()) return false;
 
+      if (dostat == 1) dostat = 1111;
+
       let data = this.countStat(),
           print_name = Math.floor(dostat % 10),
           print_entries = Math.floor(dostat / 10) % 10,
@@ -1338,7 +1340,7 @@ class TH2Painter extends THistPainter {
           pad = this.getPadPainter().getRootPad(true),
           test_cutg = this.options.cutg;
 
-      if (pad && pad.fLogz && (absmax > 0)) {
+      if (pad?.fLogz && (absmax > 0)) {
          uselogz = true;
          let logmax = Math.log(absmax);
          if (absmin > 0)
@@ -1885,6 +1887,8 @@ class TH2Painter extends THistPainter {
           scale = this.options.ScatCoef * ((this.gmaxbin) > 2000 ? 2000. / this.gmaxbin : 1.),
           rnd = new TRandom(handle.sumz);
 
+      handle.ScatterPlot = true;
+
       if (scale*handle.sumz < 1e5) {
          // one can use direct drawing of scatter plot without any patterns
 
@@ -2369,7 +2373,7 @@ class TH2Painter extends THistPainter {
                  'y = ' + funcs.axisAsText('y', realy));
       if (numpoints > 0)
          lines.push('npnts = ' + numpoints);
-      lines.push('bin = ' + binname);
+      lines.push(`bin = ${binname}`);
       if (bin.fContent === Math.round(bin.fContent))
          lines.push('content = ' + bin.fContent);
       else
@@ -2431,8 +2435,8 @@ class TH2Painter extends THistPainter {
 
          let res = { name: histo.fName, title: histo.fTitle,
                      x: pnt.x, y: pnt.y,
-                     color1: this.lineatt ? this.lineatt.color : 'green',
-                     color2: this.fillatt ? this.fillatt.getFillColorAlt('blue') : 'blue',
+                     color1: this.lineatt?.color ?? 'green',
+                     color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
                      exact: true, menu: true,
                      lines: this.getPolyBinTooltips(foundindx, realx, realy) };
 
@@ -2481,8 +2485,8 @@ class TH2Painter extends THistPainter {
 
          let res = { name: histo.fName, title: histo.fTitle,
                      x: pnt.x, y: pnt.y,
-                     color1: this.lineatt ? this.lineatt.color : 'green',
-                     color2: this.fillatt ? this.fillatt.getFillColorAlt('blue') : 'blue',
+                     color1: this.lineatt?.color ?? 'green',
+                     color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
                      lines: this.getCandleTooltips(p), exact: true, menu: true };
 
          if (pnt.disabled) {
@@ -2579,8 +2583,8 @@ class TH2Painter extends THistPainter {
 
       let res = { name: histo.fName, title: histo.fTitle,
                   x: pnt.x, y: pnt.y,
-                  color1: this.lineatt ? this.lineatt.color : 'green',
-                  color2: this.fillatt ? this.fillatt.getFillColorAlt('blue') : 'blue',
+                  color1: this.lineatt?.color ?? 'green',
+                  color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
                   lines: this.getBinTooltips(i, j), exact: true, menu: true };
 
       if (this.options.Color) res.color2 = this.getHistPalette().getColor(colindx);

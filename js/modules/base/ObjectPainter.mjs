@@ -98,7 +98,7 @@ class ObjectPainter extends BasePainter {
    getObject() { return this.draw_object; }
 
    /** @summary Returns drawn object class name */
-   getClassName() { return this.getObject()?._typename || ''; }
+   getClassName() { return this.getObject()?._typename ?? ''; }
 
    /** @summary Checks if drawn object matches with provided typename
      * @param {string|object} arg - typename (or object with _typename member)
@@ -149,7 +149,7 @@ class ObjectPainter extends BasePainter {
                if (this.options[k] !== this.options_store[k])
                   changed = true;
          }
-         if (changed)
+         if (changed && isFunc(this.options.asString))
             return this.options.asString(this.isMainPainter(), pp?.getRootPad());
       }
 
@@ -162,11 +162,10 @@ class ObjectPainter extends BasePainter {
       let pp = this.getPadPainter(),
           obj = this.getObject();
 
-      if (!obj?._typename || !pp?.getObjectDrawSettings)
+      if (!obj?._typename || !isFunc(pp?.getObjectDrawSettings))
          return [];
 
-      let sett = pp.getObjectDrawSettings('ROOT.' + obj._typename, 'nosame');
-      return sett?.opts;
+      return pp.getObjectDrawSettings(`ROOT.${obj._typename}`, 'nosame')?.opts;
    }
 
    /** @summary Central place to update objects drawing
@@ -203,11 +202,8 @@ class ObjectPainter extends BasePainter {
      * Such string typically used as object tooltip.
      * If result string larger than 20 symbols, it will be cutted. */
    getObjectHint() {
-      let res = this.getItemName(), obj = this.getObject();
-      if (!res) res = obj && obj.fName ? obj.fName : '';
-      if (!res) res = this.getClassName();
-      if (res.length > 20) res = res.slice(0, 17) + '...';
-      return res;
+      let hint = this.getItemName() || this.getObject()?.fName || this.getClassName() || '';
+      return (hint.length <= 20) ? hint : hint.slice(0, 17) + '...';
    }
 
    /** @summary returns color from current list of colors
@@ -411,7 +407,7 @@ class ObjectPainter extends BasePainter {
      * @protected */
    getAxisToSvgFunc(isndc, nornd) {
       let func = { isndc, nornd },
-          use_frame = this.draw_g && this.draw_g.property('in_frame');
+          use_frame = this.draw_g?.property('in_frame');
       if (use_frame) func.main = this.getFramePainter();
       if (func.main?.grx && func.main?.gry) {
          if (nornd) {
@@ -474,12 +470,10 @@ class ObjectPainter extends BasePainter {
      * @return {number} value of requested coordiantes
      * @protected */
    svgToAxis(axis, coord, ndc) {
-      let use_frame = this.draw_g && this.draw_g.property('in_frame');
+      let use_frame = this.draw_g?.property('in_frame');
 
-      if (use_frame) {
-         let main = this.getFramePainter();
-         return main?.revertAxis(axis, coord) ?? 0;
-      }
+      if (use_frame)
+         return this.getFramePainter()?.revertAxis(axis, coord) ?? 0;
 
       let pp = this.getPadPainter(),
           value = !pp ? 0 : ((axis == 'y') ? (1 - coord / pp.getPadHeight()) : coord / pp.getPadWidth()),
@@ -721,8 +715,7 @@ class ObjectPainter extends BasePainter {
      * @return {Promise} when pad redraw completed
      * @protected */
    async redrawPad(reason) {
-      let pp = this.getPadPainter();
-      return pp ? pp.redrawPad(reason) : false;
+      return this.getPadPainter()?.redrawPad(reason) ?? false;
    }
 
    /** @summary execute selected menu command, either locally or remotely
@@ -769,9 +762,9 @@ class ObjectPainter extends BasePainter {
    fillContextMenu(menu) {
       let title = this.getObjectHint(), obj = this.getObject();
       if (obj?._typename)
-         title = obj._typename + '::' + title;
+         title = `${obj._typename}::${title}`;
 
-      menu.add('header:' + title);
+      menu.add(`header:${title}`);
 
       menu.addAttributesMenu(this);
 
@@ -837,7 +830,7 @@ class ObjectPainter extends BasePainter {
             .property('text_factor', 0.)
             .property('max_text_width', 0) // keep maximal text width, use it later
             .property('max_font_size', max_font_size)
-            .property('_fast_drawing', this.getPadPainter()?._fast_drawing || false);
+            .property('_fast_drawing', this.getPadPainter()?._fast_drawing ?? false);
 
       if (draw_g.property('_fast_drawing'))
          draw_g.property('_font_too_small', (max_font_size && (max_font_size < 5)) || (font.size < 4));
@@ -1288,7 +1281,7 @@ class ObjectPainter extends BasePainter {
 
          let items = reply ? reply.fItems : null;
 
-         if (items && items.length) {
+         if (items?.length) {
             if (_menu.size() > 0)
                _menu.add('separator');
 
@@ -1478,7 +1471,7 @@ function drawRawText(dom, txt /*, opt*/) {
    }
 
    painter.drawText = async function() {
-      let txt = (this.txt._typename && (this.txt._typename == clTObjString)) ? this.txt.fString : this.txt.value;
+      let txt = (this.txt._typename == clTObjString) ? this.txt.fString : this.txt.value;
       if (!isStr(txt)) txt = '<undefined>';
 
       let mathjax = this.txt.mathjax || (settings.Latex == constants.Latex.AlwaysMathJax);
@@ -1541,13 +1534,9 @@ let $active_pp = null;
   * @private */
 function selectActivePad(args) {
    if (args.active) {
-      let fp = $active_pp ? $active_pp.getFramePainter() : null;
-      if (fp) fp.setFrameActive(false);
-
+      $active_pp?.getFramePainter()?.setFrameActive(false);
       $active_pp = args.pp;
-
-      fp = $active_pp ? $active_pp.getFramePainter() : null;
-      if (fp) fp.setFrameActive(true);
+      $active_pp?.getFramePainter()?.setFrameActive(true);
    } else if ($active_pp === args.pp) {
       $active_pp = null;
    }

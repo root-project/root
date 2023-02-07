@@ -1,11 +1,11 @@
-import { gStyle, settings, isObject, isFunc, isStr } from '../core.mjs';
+import { gStyle, settings, isObject, isFunc, isStr, nsREX } from '../core.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 
 
 /** @summary assign methods for the RAxis objects
   * @private */
 function assignRAxisMethods(axis) {
-   if ((axis._typename == 'ROOT::Experimental::RAxisEquidistant') || (axis._typename == 'ROOT::Experimental::RAxisLabels')) {
+   if ((axis._typename == `${nsREX}RAxisEquidistant`) || (axis._typename == `${nsREX}RAxisLabels`)) {
       if (axis.fInvBinWidth === 0) {
          axis.$dummy = true;
          axis.fInvBinWidth = 1;
@@ -18,7 +18,7 @@ function assignRAxisMethods(axis) {
       axis.GetNumBins = function() { return this.fNBinsNoOver; }
       axis.GetBinCoord = function(bin) { return this.fLow + bin/this.fInvBinWidth; }
       axis.FindBin = function(x,add) { return Math.floor((x - this.fLow)*this.fInvBinWidth + add); }
-   } else if (axis._typename == 'ROOT::Experimental::RAxisIrregular') {
+   } else if (axis._typename == `${nsREX}RAxisIrregular`) {
       axis.min = axis.fBinBorders[0];
       axis.max = axis.fBinBorders[axis.fBinBorders.length - 1];
       axis.GetNumBins = function() { return this.fBinBorders.length; }
@@ -46,7 +46,7 @@ function assignRAxisMethods(axis) {
 /** @summary Returns real histogram impl
   * @private */
 function getHImpl(obj) {
-   return (obj && obj.fHistImpl) ? obj.fHistImpl.fIO : null;
+   return obj?.fHistImpl?.fIO || null;
 }
 
 
@@ -75,8 +75,7 @@ class RHistPainter extends RObjectPainter {
 
    /** @summary Returns true if RHistDisplayItem is used */
    isDisplayItem() {
-      let obj = this.getObject();
-      return obj && obj.fAxes ? true : false;
+      return this.getObject()?.fAxes ? true : false;
    }
 
    /** @summary get histogram */
@@ -120,7 +119,7 @@ class RHistPainter extends RObjectPainter {
                return Math.sqrt(Math.abs(this.fStatistics.fBinContent[x-1]));
             }
          }
-      } else if (!histo && obj && obj.fAxes) {
+      } else if (!histo && obj?.fAxes) {
          // case of RHistDisplayItem
 
          histo = obj;
@@ -334,14 +333,14 @@ class RHistPainter extends RObjectPainter {
    getAxis(name) {
       let histo = this.getHisto(), obj = this.getObject(), axis = null;
 
-      if (obj && obj.fAxes) {
+      if (obj?.fAxes) {
          switch(name) {
             case 'x': axis = obj.fAxes[0]; break;
             case 'y': axis = obj.fAxes[1]; break;
             case 'z': axis = obj.fAxes[2]; break;
             default: axis = obj.fAxes[0]; break;
          }
-      } else if (histo && histo.fAxes) {
+      } else if (histo?.fAxes) {
          switch(name) {
             case 'x': axis = histo.fAxes._0; break;
             case 'y': axis = histo.fAxes._1; break;
@@ -359,7 +358,7 @@ class RHistPainter extends RObjectPainter {
    /** @summary Get tip text for axis bin */
    getAxisBinTip(name, bin, step) {
       let pmain = this.getFramePainter(),
-          handle = pmain[name+'_handle'],
+          handle = pmain[`${name}_handle`],
           axis = this.getAxis(name),
           x1 = axis.GetBinCoord(bin);
 
@@ -371,7 +370,7 @@ class RHistPainter extends RObjectPainter {
       if (handle.kind === 'time')
          return pmain.axisAsText(name, (x1+x2)/2);
 
-      return '[' + pmain.axisAsText(name, x1) + ', ' + pmain.axisAsText(name, x2) + ')';
+      return `[${pmain.axisAsText(name, x1)}, ${pmain.axisAsText(name, x2)})`;
    }
 
    /** @summary Extract axes ranges and bins numbers
@@ -408,7 +407,7 @@ class RHistPainter extends RObjectPainter {
       let ismain = this.isMainPainter(),
           second_axis = this.options.second_x || this.options.second_y,
           fp = ismain || second_axis ? this.getFramePainter() : null;
-      return fp ? fp.addInteractivity(!ismain && second_axis) : true;
+      return fp?.addInteractivity(!ismain && second_axis) ?? true;
    }
 
    /** @summary Process item reply */
@@ -445,7 +444,7 @@ class RHistPainter extends RObjectPainter {
          if (handle.incomplete)
             return new Promise(resolveFunc => {
                // use empty kind to always submit request
-               let req = this.v7SubmitRequest('', { _typename: 'ROOT::Experimental::RHistDrawableBase::RRequest' },
+               let req = this.v7SubmitRequest('', { _typename: `${nsREX}RHistDrawableBase::RRequest` },
                                                   this.processItemReply.bind(this));
                if (req) {
                   this.current_item_reqid = req.reqid; // ignore all previous requests, only this one will be processed
@@ -475,8 +474,8 @@ class RHistPainter extends RObjectPainter {
       if (this.options.second_y && axis == 'y') axis = 'y2';
 
       let main = this.getFramePainter(),
-          min = main ? main['zoom_' + axis + 'min'] : 0,
-          max = main ? main['zoom_' + axis + 'max'] : 0;
+          min = main ? main[`zoom_${axis}min`] : 0,
+          max = main ? main[`zoom_${axis}max`] : 0;
 
       if ((min !== max) && taxis) {
          if (size == 'left')
@@ -604,7 +603,7 @@ class RHistPainter extends RObjectPainter {
       let pmain = this.getFramePainter();
       if (!pmain) return;
       let prefix = pmain.isAxisZoomed(arg) ? 'zoom_' + arg : arg,
-          curr = '[' + pmain[prefix+'min'] + ',' + pmain[prefix+'max'] + ']';
+          curr = '[' + pmain[`${prefix}min`] + ',' + pmain[`${prefix}max`] + ']';
       menu.input('Enter values range for axis ' + arg + ' like [0,100] or empty string to unzoom', curr).then(res => {
          res = res ? JSON.parse(res) : [];
          if (!isObject(res) || (res.length != 2) || !Number.isFinite(res[0]) || !Number.isFinite(res[1]))
@@ -684,7 +683,7 @@ class RHistPainter extends RObjectPainter {
    /** @summary Update palette drawing */
    updatePaletteDraw() {
       if (this.isMainPainter())
-         this.getPadPainter().findPainterFor(undefined, undefined, 'ROOT::Experimental::RPaletteDrawable')?.drawPalette();
+         this.getPadPainter().findPainterFor(undefined, undefined, `${nsREX}RPaletteDrawable`)?.drawPalette();
    }
 
    /** @summary Fill menu entries for palette */

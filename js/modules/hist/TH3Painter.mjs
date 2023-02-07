@@ -56,7 +56,7 @@ class TH3Painter extends THistPainter {
           k1 = this.getSelectIndex('z', 'left'),
           k2 = this.getSelectIndex('z', 'right'),
           fp = this.getFramePainter(),
-          res = { name: histo.fName, entries: 0, integral: 0, meanx: 0, meany: 0, meanz: 0, rmsx: 0, rmsy: 0, rmsz: 0 },
+          res = {name: histo.fName, entries: 0, integral: 0, meanx: 0, meany: 0, meanz: 0, rmsx: 0, rmsy: 0, rmsz: 0},
           xi, yi, zi, xx, xside, yy, yside, zz, zside, cont,
           has_counted_stat = (Math.abs(histo.fTsumw) > 1e-300) && !fp.isAxisZoomed('x') && !fp.isAxisZoomed('y') && !fp.isAxisZoomed('z');
 
@@ -125,6 +125,8 @@ class TH3Painter extends THistPainter {
       if (this.isIgnoreStatsFill())
          return false;
 
+      if (dostat == 1) dostat = 1111;
+
       let data = this.countStat(),
           print_name = dostat % 10,
           print_entries = Math.floor(dostat / 10) % 10,
@@ -169,17 +171,16 @@ class TH3Painter extends THistPainter {
    getBinTooltips(ix, iy, iz) {
       let lines = [], histo = this.getHisto();
 
-      lines.push(this.getObjectHint());
-
-      lines.push(`x = ${this.getAxisBinTip('x', histo.fXaxis, ix)}  xbin=${ix+1}`);
-      lines.push(`y = ${this.getAxisBinTip('y', histo.fYaxis, iy)}  ybin=${iy+1}`);
-      lines.push(`z = ${this.getAxisBinTip('z', histo.fZaxis, iz)}  zbin=${iz+1}`);
+      lines.push(this.getObjectHint(),
+                 `x = ${this.getAxisBinTip('x', histo.fXaxis, ix)}  xbin=${ix+1}`,
+                 `y = ${this.getAxisBinTip('y', histo.fYaxis, iy)}  ybin=${iy+1}`,
+                 `z = ${this.getAxisBinTip('z', histo.fZaxis, iz)}  zbin=${iz+1}`);
 
       let binz = histo.getBinContent(ix+1, iy+1, iz+1);
       if (binz === Math.round(binz))
-         lines.push('entries = ' + binz);
+         lines.push(`entries = ${binz}`);
       else
-         lines.push('entries = ' + floatToString(binz, gStyle.fStatFormat));
+         lines.push(`entries = ${floatToString(binz, gStyle.fStatFormat)}`);
 
       return lines;
    }
@@ -315,7 +316,7 @@ class TH3Painter extends THistPainter {
          if (this.options.GLBox === 12) use_colors = true;
 
          let geom = main.webgl ? new SphereGeometry(0.5, 16, 12) : new SphereGeometry(0.5, 8, 6);
-         geom.applyMatrix4( new Matrix4().makeRotationX( Math.PI / 2 ) );
+         geom.applyMatrix4(new Matrix4().makeRotationX(Math.PI/2));
          geom.computeVertexNormals();
 
          let indx = geom.getIndex().array,

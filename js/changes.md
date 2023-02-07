@@ -1,9 +1,12 @@
 # JSROOT changelog
 
 ## Changes in dev
-1. Upgrade d3.js to v7.8.0
-2. Upgrade three.js to r148
+1. Upgrade d3.js to v7.8.2
+2. Upgrade three.js to r149
 3. Support "[cutg]" draw option for TH2
+4. Correctly handle "same0" draw option for TH2
+5. Fix several issues with axis reverse order
+6. Implement reverse axis on lego plots
 
 
 ## Changes in 7.3.0

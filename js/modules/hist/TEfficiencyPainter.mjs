@@ -61,7 +61,7 @@ class TEfficiencyPainter extends ObjectPainter {
             bb = total - passed + beta;
          }
 
-         if (!obj.TestBit(kPosteriorMode) )
+         if (!obj.TestBit(kPosteriorMode))
             return BetaMean(aa,bb);
          else
             return BetaMode(aa,bb);
@@ -168,7 +168,7 @@ class TEfficiencyPainter extends ObjectPainter {
    drawFunction(indx) {
       const eff = this.getObject();
 
-      if (!eff || !eff.fFunctions || indx >= eff.fFunctions.arr.length)
+      if (!eff?.fFunctions || (indx >= eff.fFunctions.arr.length))
          return this;
 
        return TF1Painter.draw(this.getDom(), eff.fFunctions.arr[indx], eff.fFunctions.opt[indx]).then(() => this.drawFunction(indx+1));
