@@ -39,10 +39,13 @@ public:
 
    void compileServers(RooAbsArg &arg, RooArgSet const &normSet);
 
+   void markAsCompiled(RooAbsArg &arg) const;
+
 private:
    RooAbsArg *compileImpl(RooAbsArg &arg, RooAbsArg &owner, RooArgSet const &normSet);
    void add(RooAbsArg &arg);
    RooAbsArg *find(RooAbsArg &arg) const;
+   bool isMarkedAsCompiled(RooAbsArg const &arg) const;
 
    RooArgSet const &_topLevelNormSet;
    std::unordered_map<TNamed const *, RooAbsArg *> _clonedArgsSet;
