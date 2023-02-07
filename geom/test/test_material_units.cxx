@@ -19,11 +19,6 @@ struct PDG_material {
    double mass;        // g/mole
    double density;     // g/cm3
    double length_unit; // For pdg, tgeo: 1, g4: 10
-   PDG_material() = default;
-   PDG_material(PDG_material &&) = default;
-   PDG_material(const PDG_material &) = default;
-   ~PDG_material() = default;
-   PDG_material &operator=(const PDG_material &) = default;
 };
 
 // Radiation/interaction length must be within 2 % of pdg values
