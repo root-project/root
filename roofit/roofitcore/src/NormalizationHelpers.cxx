@@ -55,16 +55,26 @@ RooAbsArg *RooFit::Detail::CompileContext::compileImpl(RooAbsArg &arg, RooAbsArg
    if (arg.isFundamental() && !_topLevelNormSet.find(arg)) {
       return nullptr;
    }
-   if (arg.getAttribute("_COMPILED")) {
+   if (isMarkedAsCompiled(arg)) {
       return nullptr;
    }
 
    std::unique_ptr<RooAbsArg> newArg = arg.compileForNormSet(normSet, *this);
-   newArg->setAttribute("_COMPILED");
+   markAsCompiled(*newArg);
    const std::string attrib = std::string("ORIGNAME:") + arg.GetName();
    newArg->setAttribute(attrib.c_str());
    this->add(*newArg);
    RooAbsArg *out = newArg.get();
    owner.addOwnedComponents(std::move(newArg));
    return out;
+}
+
+void RooFit::Detail::CompileContext::markAsCompiled(RooAbsArg &arg) const
+{
+   arg.setAttribute("_COMPILED");
+}
+
+bool RooFit::Detail::CompileContext::isMarkedAsCompiled(RooAbsArg const &arg) const
+{
+   return arg.getAttribute("_COMPILED");
 }
