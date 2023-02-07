@@ -117,7 +117,6 @@ class TGraphPolargramPainter extends ObjectPainter {
       this.processFrameTooltipEvent(null); // remove all tooltips
 
       let polar = this.getObject();
-
       if (!polar) return;
 
       let delta = evnt.wheelDelta ? -evnt.wheelDelta : (evnt.deltaY || evnt.detail);
@@ -377,9 +376,8 @@ class TGraphPolarPainter extends ObjectPainter {
 
          let pos = main.translate(graph.fX[n], graph.fY[n]);
 
-         if (this.options.mark) {
+         if (this.options.mark)
             mpath += this.markeratt.create(pos.x, pos.y);
-         }
 
          if (this.options.line || this.options.fill) {
             lpath += (lpath ? 'L' : 'M') + pos.x + ',' + pos.y;
@@ -412,7 +410,7 @@ class TGraphPolarPainter extends ObjectPainter {
       if (epath)
          this.draw_g.append('svg:path')
              .attr('d', epath)
-             .style('fill','none')
+             .style('fill', 'none')
              .call(this.lineatt.func);
 
       if (mpath)
@@ -453,13 +451,13 @@ class TGraphPolarPainter extends ObjectPainter {
       }
 
       let match_distance = 5;
-      if (this.markeratt && this.markeratt.used) match_distance = this.markeratt.getFullSize();
+      if (this.markeratt?.used) match_distance = this.markeratt.getFullSize();
 
       if (Math.sqrt(best_dist2) > match_distance) return null;
 
       let res = { name: this.getObject().fName, title: this.getObject().fTitle,
                   x: bestpos.x, y: bestpos.y,
-                  color1: this.markeratt && this.markeratt.used ? this.markeratt.color : this.lineatt.color,
+                  color1: this.markeratt?.used ? this.markeratt.color : this.lineatt.color,
                   exact: Math.sqrt(best_dist2) < 4,
                   lines: [ this.getObjectHint() ],
                   binindx: bestindx,
@@ -467,14 +465,14 @@ class TGraphPolarPainter extends ObjectPainter {
                   radius: match_distance
                 };
 
-      res.lines.push('r = ' + main.axisAsText('r', graph.fY[bestindx]));
-      res.lines.push('phi = ' + main.axisAsText('phi',graph.fX[bestindx]));
+      res.lines.push(`r = ${main.axisAsText('r', graph.fY[bestindx])}`,
+                     `phi = ${main.axisAsText('phi', graph.fX[bestindx])}`);
 
       if (graph.fEY && graph.fEY[bestindx])
-         res.lines.push('error r = ' + main.axisAsText('r', graph.fEY[bestindx]));
+         res.lines.push(`error r = ${main.axisAsText('r', graph.fEY[bestindx])}`);
 
       if (graph.fEX && graph.fEX[bestindx])
-         res.lines.push('error phi = ' + main.axisAsText('phi', graph.fEX[bestindx]));
+         res.lines.push(`error phi = ${main.axisAsText('phi', graph.fEX[bestindx])}`);
 
       return res;
    }

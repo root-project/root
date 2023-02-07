@@ -521,12 +521,12 @@ class TAxisPainter extends ObjectPainter {
 
    /** @summary Return scale min */
    getScaleMin() {
-      return this.func ? this.func.domain()[0] : 0;
+      return this.func?.domain()[0] ?? 0;
    }
 
    /** @summary Return scale max */
    getScaleMax() {
-      return this.func ? this.func.domain()[1] : 0;
+      return this.func?.domain()[1] ?? 0;
    }
 
    /** @summary Provide label for axis value */
@@ -613,7 +613,7 @@ class TAxisPainter extends ObjectPainter {
             this.kind = 2;
          }
 
-         if ((this.nmajor < this.major.length) && (Math.abs(this.grpos - this.func(this.major[this.nmajor])) < 1) ) {
+         if ((this.nmajor < this.major.length) && (Math.abs(this.grpos - this.func(this.major[this.nmajor])) < 1)) {
             this.nmajor++;
             this.kind = 1;
          }
@@ -947,7 +947,7 @@ class TAxisPainter extends ObjectPainter {
 
             if (center_lbls) {
                let gap = arg.gap_after || arg.gap_before;
-               pos = Math.round(pos - (this.vertical ? 0.5*gap : -0.5*gap));
+               pos = Math.round(pos - ((this.vertical != this.reverse) ? 0.5*gap : -0.5*gap));
                if ((pos < -5) || (pos > (this.vertical ? h : w) + 5)) continue;
             }
 
@@ -1014,8 +1014,7 @@ class TAxisPainter extends ObjectPainter {
    extractDrawAttributes(scalingSize, w, h) {
       let axis = this.getObject(),
           is_gaxis = axis?._typename === clTGaxis,
-          pp = this.getPadPainter(),
-          frect = pp?.getFrameRect(),
+          frect = this.getPadPainter()?.getFrameRect(),
           pad_w = Math.round((frect?.width || 8)/0.8), // use factor 0.8 as ratio between frame and pad size, frame size is visible and more obvios
           pad_h = Math.round((frect?.height || 8)/0.8),
           tickSize = 0, tickScalingSize = 0, titleColor;

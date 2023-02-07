@@ -92,7 +92,8 @@ class JSRootMenu {
       }
 
       if (!without_sub) this.add('sub:' + top_name, () => {
-         this.input('Provide draw option', opts[0], 'text').then(call_back);
+         let opt = isFunc(this.painter?.getDrawOpt) ? this.painter.getDrawOpt() : opts[0];
+         this.input('Provide draw option', opt, 'text').then(call_back);
       });
 
       for (let i = 0; i < opts.length; ++i) {

@@ -1,4 +1,4 @@
-import { settings, isBatchMode, isFunc, isStr, gStyle } from '../core.mjs';
+import { settings, isBatchMode, isFunc, isStr, gStyle, nsREX } from '../core.mjs';
 import { floatToString, makeTranslate } from '../base/BasePainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { ensureRCanvas } from '../gpad/RCanvasPainter.mjs';
@@ -197,25 +197,25 @@ class RLegendPainter extends RPavePainter {
             if (entry.fMarker) objp.createv7AttMarker();
          }
 
-         if (objp && entry.fFill && objp.fillatt)
+         if (entry.fFill && objp?.fillatt)
             this.draw_g
               .append('svg:path')
               .attr('d', `M${Math.round(margin_x)},${Math.round(posy + stepy*0.1)}h${w4}v${Math.round(stepy*0.8)}h${-w4}z`)
               .call(objp.fillatt.func);
 
-         if (objp && entry.fLine && objp.lineatt)
+         if (entry.fLine && objp?.lineatt)
             this.draw_g
               .append('svg:path')
               .attr('d', `M${Math.round(margin_x)},${Math.round(posy + stepy/2)}h${w4}`)
               .call(objp.lineatt.func);
 
-         if (objp && entry.fError && objp.lineatt)
+         if (entry.fError && objp?.lineatt)
             this.draw_g
               .append('svg:path')
               .attr('d', `M${Math.round(margin_x + width/8)},${Math.round(posy + stepy*0.2)}v${Math.round(stepy*0.6)}`)
               .call(objp.lineatt.func);
 
-         if (objp && entry.fMarker && objp.markeratt)
+         if (entry.fMarker && objp?.markeratt)
             this.draw_g.append('svg:path')
                 .attr('d', objp.markeratt.create(margin_x + width/8, posy + stepy/2))
                 .call(objp.markeratt.func);
@@ -413,7 +413,7 @@ class RHistStatsPainter extends RPavePainter {
          text_g.selectAll('*').remove();
 
       textFont.setSize(height/(nlines * 1.2));
-      this.startTextDrawing(textFont, 'font' , text_g);
+      this.startTextDrawing(textFont, 'font', text_g);
 
       if (nlines == 1) {
          this.drawText({ width: width, height: height, text: lines[0], latex: 1, draw_g: text_g });
@@ -477,7 +477,7 @@ class RHistStatsPainter extends RPavePainter {
    async redraw(reason) {
       if (reason && isStr(reason) && (reason.indexOf('zoom') == 0) && this.v7NormalMode()) {
          let req = {
-            _typename: 'ROOT::Experimental::RHistStatBoxBase::RRequest',
+            _typename: `${nsREX}RHistStatBoxBase::RRequest`,
             mask: this.getObject().fShowMask // lines to show in stat box
          };
 

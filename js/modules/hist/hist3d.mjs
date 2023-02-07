@@ -219,10 +219,10 @@ function create3DScene(render3d, x3dscale, y3dscale) {
          let tip = null, mesh = null, zoom_mesh = null;
 
          for (let i = 0; i < intersects.length; ++i) {
-            if (intersects[i].object.tooltip) {
+            if (isFunc(intersects[i].object?.tooltip)) {
                tip = intersects[i].object.tooltip(intersects[i]);
                if (tip) { mesh = intersects[i].object; break; }
-            } else if (intersects[i].object.zoom && !zoom_mesh) {
+            } else if (intersects[i].object?.zoom && !zoom_mesh) {
                zoom_mesh = intersects[i].object;
             }
          }
@@ -239,7 +239,7 @@ function create3DScene(render3d, x3dscale, y3dscale) {
 
          frame_painter.highlightBin3D(tip, mesh);
 
-         if (!tip && zoom_mesh && frame_painter.get3dZoomCoord) {
+         if (!tip && zoom_mesh && isFunc(frame_painter.get3dZoomCoord)) {
             let pnt = zoom_mesh.globalIntersect(this.raycaster),
                 axis_name = zoom_mesh.zoom,
                 axis_value = frame_painter.get3dZoomCoord(pnt, axis_name);
@@ -516,7 +516,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       this.x_handle.snapid = this.snapid;
    }
    this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, xmin, xmax, false, [grminx, grmaxx],
-                               { log: pad ? pad.fLogx : 0 });
+                               { log: pad?.fLogx ?? 0, reverse: opts.reverse_x });
    this.x_handle.assignFrameMembers(this, 'x');
    this.x_handle.extractDrawAttributes(scalingSize);
 
@@ -526,7 +526,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       this.y_handle.snapid = this.snapid;
    }
    this.y_handle.configureAxis('yaxis', this.ymin, this.ymax, ymin, ymax, false, [grminy, grmaxy],
-                               { log: pad && !opts.use_y_for_z ? pad.fLogy : 0 });
+                               { log: pad && !opts.use_y_for_z ? pad.fLogy : 0, reverse: opts.reverse_y });
    this.y_handle.assignFrameMembers(this, 'y');
    this.y_handle.extractDrawAttributes(scalingSize);
 
@@ -536,7 +536,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       this.z_handle.snapid = this.snapid;
    }
    this.z_handle.configureAxis('zaxis', this.zmin, this.zmax, zmin, zmax, false, [grminz, grmaxz],
-                               { log: pad ? pad.fLogz : 0 });
+                               { log: pad?.fLogz ?? 0, reverse: opts.reverse_z });
    this.z_handle.assignFrameMembers(this, 'z');
    this.z_handle.extractDrawAttributes(scalingSize);
 
@@ -590,6 +590,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
              draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
          text3d.center = true; // place central
 
+
+
          text3d.offsety = this.x_handle.labelsOffset + (grmaxy - grminy) * 0.005;
 
          maxtextheight = Math.max(maxtextheight, draw_height);
@@ -599,8 +601,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
          let space = 0;
          if (!xticks.last_major()) {
-            space = (xticks.next_major_grpos() - grx);
-            if (draw_width > 0)
+            space = Math.abs(xticks.next_major_grpos() - grx);
+            if ((draw_width > 0) && (space > 0))
                text_scale = Math.min(text_scale, 0.9*space/draw_width);
          }
 
@@ -746,6 +748,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       let w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
           posx = lbl.center ? lbl.grx - w/2 : (lbl.opposite ? grminx : grmaxx - w),
           m = new Matrix4();
+
       // matrix to swap y and z scales and shift along z to its position
       m.set(text_scale, 0,           0,  posx,
             0,          text_scale,  0,  -maxtextheight*text_scale - this.x_handle.ticksSize - lbl.offsety,
@@ -771,6 +774,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       let w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
           posx = (lbl.center ? lbl.grx + w/2 : lbl.opposite ? grminx + w : grmaxx),
           m = new Matrix4();
+
       // matrix to swap y and z scales and shift along z to its position
       m.set(-text_scale, 0,          0, posx,
             0,           text_scale, 0, -maxtextheight*text_scale - this.x_handle.ticksSize - lbl.offsety,
@@ -813,7 +817,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
          let space = 0;
          if (!yticks.last_major()) {
-            space = (yticks.next_major_grpos() - gry);
+            space = Math.abs(yticks.next_major_grpos() - gry);
             if (draw_width > 0)
                text_scale = Math.min(text_scale, 0.9*space/draw_width);
          }
@@ -1299,24 +1303,27 @@ function drawBinsLego(painter, is_v7 = false) {
                handle = this.handle,
                main = p.getFramePainter(),
                histo = p.getHisto(),
-               tip = p.get3DToolTip(this.face_to_bins_index[intersect.faceIndex]);
+               tip = p.get3DToolTip(this.face_to_bins_index[intersect.faceIndex]),
+               x1 = Math.min(main.size_x3d, Math.max(-main.size_x3d, handle.grx[tip.ix-1] + handle.xbar1*(handle.grx[tip.ix] - handle.grx[tip.ix-1]))),
+               x2 = Math.min(main.size_x3d, Math.max(-main.size_x3d, handle.grx[tip.ix-1] + handle.xbar2*(handle.grx[tip.ix] - handle.grx[tip.ix-1]))),
+               y1 = Math.min(main.size_y3d, Math.max(-main.size_y3d, handle.gry[tip.iy-1] + handle.ybar1*(handle.gry[tip.iy] - handle.gry[tip.iy-1]))),
+               y2 = Math.min(main.size_y3d, Math.max(-main.size_y3d, handle.gry[tip.iy-1] + handle.ybar2*(handle.gry[tip.iy] - handle.gry[tip.iy-1])));
 
-         tip.x1 = Math.max(-main.size_x3d,  handle.grx[tip.ix-1] + handle.xbar1*(handle.grx[tip.ix] - handle.grx[tip.ix-1]));
-         tip.x2 = Math.min(main.size_x3d, handle.grx[tip.ix-1] + handle.xbar2*(handle.grx[tip.ix] - handle.grx[tip.ix-1]));
-
-         tip.y1 = Math.max(-main.size_y3d, handle.gry[tip.iy-1] + handle.ybar1*(handle.gry[tip.iy] - handle.gry[tip.iy-1]));
-         tip.y2 = Math.min(main.size_y3d, handle.gry[tip.iy-1] + handle.ybar2*(handle.gry[tip.iy] - handle.gry[tip.iy-1]));
+         tip.x1 = Math.min(x1, x2);
+         tip.x2 = Math.max(x1, x2);
+         tip.y1 = Math.min(y1, y2);
+         tip.y2 = Math.max(y1, y2);
 
          let binz1 = this.baseline, binz2 = tip.value;
          if (histo.$baseh) binz1 = histo.$baseh.getBinContent(tip.ix, tip.iy);
-         if (binz2<binz1) { let v = binz1; binz1 = binz2; binz2 = v; }
+         if (binz2 < binz1) [binz1, binz2] = [binz2, binz1];
 
-         tip.z1 = main.grz(Math.max(this.zmin,binz1));
-         tip.z2 = main.grz(Math.min(this.zmax,binz2));
+         tip.z1 = main.grz(Math.max(this.zmin, binz1));
+         tip.z2 = main.grz(Math.min(this.zmax, binz2));
 
          tip.color = this.tip_color;
 
-         if (p.is_projection && (p.getDimension()==2)) tip.$painter = p; // used only for projections
+         if (p.is_projection && (p.getDimension() == 2)) tip.$painter = p; // used only for projections
 
          return tip;
       };
@@ -1528,12 +1535,16 @@ function drawBinsError3D(painter, is_v7 = false) {
        let p = this.painter,
            histo = p.getHisto(),
            main = p.getFramePainter(),
-           tip = p.get3DToolTip(this.intersect_index[pos]);
+           tip = p.get3DToolTip(this.intersect_index[pos]),
+           x1 = Math.min(main.size_x3d, Math.max(-main.size_x3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix)))),
+           x2 = Math.min(main.size_x3d, Math.max(-main.size_x3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix+1)))),
+           y1 = Math.min(main.size_y3d, Math.max(-main.size_y3d, main.gry(histo.fYaxis.GetBinLowEdge(tip.iy)))),
+           y2 = Math.min(main.size_y3d, Math.max(-main.size_y3d, main.gry(histo.fYaxis.GetBinLowEdge(tip.iy+1))));
 
-       tip.x1 = Math.max(-main.size_x3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix)));
-       tip.x2 = Math.min(main.size_x3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix+1)));
-       tip.y1 = Math.max(-main.size_y3d, main.gry(histo.fYaxis.GetBinLowEdge(tip.iy)));
-       tip.y2 = Math.min(main.size_y3d, main.gry(histo.fYaxis.GetBinLowEdge(tip.iy+1)));
+       tip.x1 = Math.min(x1, x2);
+       tip.x2 = Math.max(x1, x2);
+       tip.y1 = Math.min(y1, y2);
+       tip.y2 = Math.max(y1, y2);
 
        tip.z1 = main.grz(tip.value-tip.error < this.zmin ? this.zmin : tip.value-tip.error);
        tip.z2 = main.grz(tip.value+tip.error > this.zmax ? this.zmax : tip.value+tip.error);
@@ -1551,7 +1562,7 @@ function drawBinsError3D(painter, is_v7 = false) {
 function drawBinsContour3D(painter, realz = false, is_v7 = false) {
    // for contour plots one requires handle with full range
    let main = painter.getFramePainter(),
-       handle = painter.prepareDraw({rounding: false, use3d: true, extra: 100, middle: 0.0 }),
+       handle = painter.prepareDraw({rounding: false, use3d: true, extra: 100, middle: 0.0}),
        histo = painter.getHisto(), // get levels
        levels = painter.getContourLevels(), // init contour if not exists
        palette = painter.getHistPalette(),
@@ -1584,7 +1595,7 @@ function drawBinsContour3D(painter, realz = false, is_v7 = false) {
 function drawBinsSurf3D(painter, is_v7 = false) {
    let histo = painter.getHisto(),
        main = painter.getFramePainter(),
-       handle = painter.prepareDraw({rounding: false, use3d: true, extra: 1, middle: 0.5 }),
+       handle = painter.prepareDraw({rounding: false, use3d: true, extra: 1, middle: 0.5}),
        i,j, x1, y1, x2, y2, z11, z12, z21, z22,
        axis_zmin = main.z_handle.getScaleMin();
        // axis_zmax = main.z_handle.getScaleMax();
@@ -1957,7 +1968,7 @@ function drawBinsSurf3D(painter, is_v7 = false) {
 
              if (pnts.length < 3) return;
 
-             const faces = ShapeUtils.triangulateShape(pnts , []);
+             const faces = ShapeUtils.triangulateShape(pnts, []);
 
              if (!faces || (faces.length === 0)) return;
 

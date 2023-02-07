@@ -1,7 +1,8 @@
 import { httpRequest, decodeUrl, browser, source_dir,
          settings, internals, constants, create, clone,
          findFunction, isBatchMode, isNodeJs, getDocument, isObject, isFunc, isStr, getPromise,
-         clTNamed, clTList, clTObjArray, clTPolyMarker3D, clTPolyLine3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix } from '../core.mjs';
+         clTNamed, clTList, clTObjArray, clTPolyMarker3D, clTPolyLine3D,
+         clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX } from '../core.mjs';
 import { REVISION, DoubleSide, FrontSide,
          Color, Vector2, Vector3, Matrix4, Object3D, Box3, Group, Plane,
          Euler, Quaternion, MathUtils,
@@ -33,7 +34,7 @@ const _ENTIRE_SCENE = 0, _BLOOM_SCENE = 1,
       clTGeoManager = 'TGeoManager', clTEveGeoShapeExtract = 'TEveGeoShapeExtract',
       clTGeoOverlap = 'TGeoOverlap', clTGeoVolumeAssembly = 'TGeoVolumeAssembly',
       clTEveTrack = 'TEveTrack', clTEvePointSet = 'TEvePointSet',
-      clREveGeoShapeExtract = 'ROOT::Experimental::REveGeoShapeExtract';
+      clREveGeoShapeExtract = `${nsREX}REveGeoShapeExtract`;
 
 /** @summary Function used to build hierarchy of elements of overlap object
   * @private */
@@ -1356,7 +1357,7 @@ class TGeoPainter extends ObjectPainter {
 
       this._camera.layers.enable( _BLOOM_SCENE );
       this._bloomComposer = new EffectComposer( this._renderer );
-      this._bloomComposer.addPass( new RenderPass( this._scene, this._camera ) );
+      this._bloomComposer.addPass(new RenderPass(this._scene, this._camera));
       this._bloomPass = new UnrealBloomPass(new Vector2( window.innerWidth, window.innerHeight ), 1.5, 0.4, 0.85);
       this._bloomPass.threshold = 0;
       this._bloomPass.strength = this.ctrl.bloom.strength;
@@ -1824,8 +1825,8 @@ class TGeoPainter extends ObjectPainter {
             this._tcontrols.setSpace( this._tcontrols.space === 'local' ? 'world' : 'local' );
             break;
          case 'Control':
-            this._tcontrols.setTranslationSnap( Math.ceil( this._overall_size ) / 50 );
-            this._tcontrols.setRotationSnap( MathUtils.degToRad( 15 ) );
+            this._tcontrols.setTranslationSnap(Math.ceil(this._overall_size) / 50);
+            this._tcontrols.setRotationSnap(MathUtils.degToRad(15));
             break;
          case 't': // Translate
             this._tcontrols.setMode( 'translate' );
@@ -2816,7 +2817,7 @@ class TGeoPainter extends ObjectPainter {
 
          if (this._controls) {
             this._controls.autoRotate = this.ctrl.rotate;
-            this._controls.autoRotateSpeed = rotSpeed * ( current.getTime() - last.getTime() ) / 16.6666;
+            this._controls.autoRotateSpeed = rotSpeed * (current.getTime() - last.getTime()) / 16.6666;
             this._controls.update();
          }
          last = new Date();
@@ -2935,7 +2936,7 @@ class TGeoPainter extends ObjectPainter {
             if (!tracks) return this;
 
             // FIXME: probably tracks should be remembered?
-            return this.drawExtras(tracks, '', false).then(()=> {
+            return this.drawExtras(tracks, '', false).then(() => {
                this.updateClipping(true);
                return this.render3D(100);
             });
@@ -3062,10 +3063,10 @@ class TGeoPainter extends ObjectPainter {
       } else if (obj._typename === clTPolyLine3D) {
          if (!add_objects || this.addExtra(obj, itemname))
             promise = this.drawPolyLine(obj, itemname);
-      } else if ((obj._typename === clTEveTrack) || (obj._typename === 'ROOT::Experimental::REveTrack')) {
+      } else if ((obj._typename === clTEveTrack) || (obj._typename === `${nsREX}REveTrack`)) {
          if (!add_objects || this.addExtra(obj, itemname))
             promise = this.drawEveTrack(obj, itemname);
-      } else if ((obj._typename === clTEvePointSet) || (obj._typename === 'ROOT::Experimental::REvePointSet') || (obj._typename === clTPolyMarker3D)) {
+      } else if ((obj._typename === clTEvePointSet) || (obj._typename === `${nsREX}REvePointSet`) || (obj._typename === clTPolyMarker3D)) {
          if (!add_objects || this.addExtra(obj, itemname))
             promise = this.drawHit(obj, itemname);
       } else if ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)) {
@@ -3159,7 +3160,7 @@ class TGeoPainter extends ObjectPainter {
       line.geo_object = track;
       line.hightlightWidthScale = 2;
 
-      if (itemname && itemname.indexOf('<prnt>/Tracks') == 0)
+      if (itemname?.indexOf('<prnt>/Tracks') === 0)
          line.main_track = true;
 
       this.addToExtrasContainer(line);
@@ -4291,7 +4292,7 @@ class TGeoPainter extends ObjectPainter {
          if (check_extras) {
             // if extra object where append, redraw them at the end
             this.getExtrasContainer('delete'); // delete old container
-            let extras = (this._main_painter ? this._main_painter._extraObjects : null) || this._extraObjects;
+            let extras = this._main_painter?._extraObjects || this._extraObjects;
             return this.drawExtras(extras, '', false);
          }
       }).then(() => {
@@ -4547,7 +4548,7 @@ class TGeoPainter extends ObjectPainter {
      * @private */
    ownedByTransformControls(child) {
       let obj = child.parent;
-      while (obj && !(obj instanceof TransformControls) )
+      while (obj && !(obj instanceof TransformControls))
          obj = obj.parent;
       return obj && (obj instanceof TransformControls);
    }

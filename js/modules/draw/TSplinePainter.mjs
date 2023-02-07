@@ -111,8 +111,7 @@ class TSplinePainter extends ObjectPainter {
 
       let cleanup = false,
           spline = this.getObject(),
-          main = this.getFramePainter(),
-          funcs = main?.getGrFuncs(this.options.second_x, this.options.second_y),
+          funcs = this.getFramePainter()?.getGrFuncs(this.options.second_x, this.options.second_y),
           xx, yy, knot = null, indx = 0;
 
       if ((pnt === null) || !spline || !funcs) {
@@ -169,17 +168,16 @@ class TSplinePainter extends ObjectPainter {
 
       let name = this.getObjectHint();
       if (name) res.lines.push(name);
-      res.lines.push('x = ' + funcs.axisAsText('x', xx));
-      res.lines.push('y = ' + funcs.axisAsText('y', yy));
+      res.lines.push(`x = ${funcs.axisAsText('x', xx)}`,
+                     `y = ${funcs.axisAsText('y', yy)}`);
       if (knot !== null) {
-         res.lines.push('knot = ' + indx);
-         res.lines.push('B = ' + floatToString(knot.fB, gStyle.fStatFormat));
-         res.lines.push('C = ' + floatToString(knot.fC, gStyle.fStatFormat));
-         res.lines.push('D = ' + floatToString(knot.fD, gStyle.fStatFormat));
-         if ((knot.fE !== undefined) && (knot.fF !== undefined)) {
-            res.lines.push('E = ' + floatToString(knot.fE, gStyle.fStatFormat));
-            res.lines.push('F = ' + floatToString(knot.fF, gStyle.fStatFormat));
-         }
+         res.lines.push(`knot = ${indx}`,
+                        `B = ${floatToString(knot.fB, gStyle.fStatFormat)}`,
+                        `C = ${floatToString(knot.fC, gStyle.fStatFormat)}`,
+                        `D = ${floatToString(knot.fD, gStyle.fStatFormat)}`);
+         if ((knot.fE !== undefined) && (knot.fF !== undefined))
+            res.lines.push(`E = ${floatToString(knot.fE, gStyle.fStatFormat)}`,
+                           `F = ${floatToString(knot.fF, gStyle.fStatFormat)}`);
       }
 
       return res;
@@ -191,7 +189,7 @@ class TSplinePainter extends ObjectPainter {
 
       let spline = this.getObject(),
           pmain = this.getFramePainter(),
-          funcs = pmain?.getGrFuncs(this.options.second_x, this.options.second_y),
+          funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
           w = pmain.getFrameWidth(),
           h = pmain.getFrameHeight();
 
@@ -273,11 +271,8 @@ class TSplinePainter extends ObjectPainter {
    canZoomInside(axis/*,min,max*/) {
       if (axis !== 'x') return false;
 
-      let spline = this.getObject();
-      if (!spline) return false;
-
-      // if function calculated, one always could zoom inside
-      return true;
+      // spline can always be calculated and therefore one can zoom inside
+      return this.getObject() ? true : false;
    }
 
    /** @summary Decode options for TSpline drawing */

@@ -99,7 +99,7 @@ class TF1Painter extends ObjectPainter {
          if (gxmax < xmax) xmax = gxmax;
       }
 
-      if (main && main.logx && (xmin > 0) && (xmax > 0)) {
+      if (main?.logx && (xmin > 0) && (xmax > 0)) {
          logx = true;
          xmin = Math.log(xmin);
          xmax = Math.log(xmax);

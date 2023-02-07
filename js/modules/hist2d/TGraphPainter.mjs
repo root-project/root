@@ -3,7 +3,7 @@ import { gStyle, BIT, settings, create, createHistogram, isBatchMode, isFunc, is
 import { select as d3_select } from '../d3.mjs';
 import { DrawOptions, buildSvgPath, makeTranslate } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
-import { TH1Painter } from './TH1Painter.mjs';
+import { TH1Painter, setHistTitle } from './TH1Painter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { TAttFillHandler } from '../base/TAttFillHandler.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
@@ -189,8 +189,7 @@ class TGraphPainter extends ObjectPainter {
          // check if axis should be drawn
          // either graph drawn directly or
          // graph is first object in list of primitives
-         let pp = this.getPadPainter(),
-             pad = pp?.getRootPad(true);
+         let pad = this.getPadPainter()?.getRootPad(true);
          if (!pad || (pad?.fPrimitives?.arr[0] === graph)) res.Axis = 'AXIS';
       } else if (res.Axis.indexOf('A') < 0) {
          res.Axis = 'AXIS,' + res.Axis;
@@ -313,7 +312,7 @@ class TGraphPainter extends ObjectPainter {
       if (graph.fMaximum != kNoZoom) maximum = graph.fMaximum;
       if ((minimum < 0) && (ymin >= 0)) minimum = 0.9*ymin;
 
-      histo.fTitle = graph.fTitle;
+      setHistTitle(histo, graph.fTitle);
 
       if (set_x) {
          histo.fXaxis.fXmin = uxmin;
@@ -413,7 +412,7 @@ class TGraphPainter extends ObjectPainter {
    get_main() {
       let pmain = this.getFramePainter();
 
-      if (pmain && pmain.grx && pmain.gry) return pmain;
+      if (pmain?.grx && pmain?.gry) return pmain;
 
       // FIXME: check if needed, can be removed easily
       let pp = this.getPadPainter(),
@@ -884,7 +883,7 @@ class TGraphPainter extends ObjectPainter {
                fillatt = new TAttFillHandler({ attr: graph.fAttFill[k], std: false, svg: this.getCanvSvg() });
             }
             let sub_g = this.draw_g.append('svg:g'),
-                options = k < this.options.blocks.length ? this.options.blocks[k] : this.options;
+                options = (k < this.options.blocks.length) ? this.options.blocks[k] : this.options;
             this.extractGmeErrors(k);
             this.drawBins(funcs, options, sub_g, w, h, lineatt, fillatt);
          }
@@ -960,7 +959,7 @@ class TGraphPainter extends ObjectPainter {
 
        res.user_info = { obj: gr, name: gr.fName, bin: d.indx, cont: d.y, grx: d.grx1, gry: d.gry1 };
 
-      if (this.fillatt && this.fillatt.used && !this.fillatt.empty())
+      if (this.fillatt?.used && !this.fillatt?.empty())
          res.color2 = this.fillatt.getFillColor();
 
       if (best.exact) res.exact = true;
@@ -1155,7 +1154,7 @@ class TGraphPainter extends ObjectPainter {
          res.menu_dist = Math.sqrt((pnt.x-res.x)**2 + Math.min(Math.abs(pnt.y-res.gry1), Math.abs(pnt.y-res.gry2))**2);
       }
 
-      if (this.fillatt && this.fillatt.used && !this.fillatt.empty())
+      if (this.fillatt?.used && !this.fillatt?.empty())
          res.color2 = this.fillatt.getFillColor();
 
       if (!islines) {
@@ -1433,7 +1432,7 @@ class TGraphPainter extends ObjectPainter {
       const st = gStyle;
 
       stats = create(clTPaveStats);
-      Object.assign(stats, { fName : 'stats', fOptStat: 0, fOptFit: st.fOptFit || 111, fBorderSize: 1 });
+      Object.assign(stats, { fName: 'stats', fOptStat: 0, fOptFit: st.fOptFit || 111, fBorderSize: 1 });
 
       stats.fX1NDC = st.fStatX - st.fStatW;
       stats.fY1NDC = st.fStatY - st.fStatH;
@@ -1481,15 +1480,14 @@ class TGraphPainter extends ObjectPainter {
       if (indx >= (graph?.fFunctions?.arr?.length || 0))
          return this;
 
-      let pp = this.getPadPainter(),
-          func = graph.fFunctions.arr[indx],
+      let func = graph.fFunctions.arr[indx],
           opt = graph.fFunctions.opt[indx];
 
       //  required for stats filling
       // TODO: use weak reference (via pad list of painters and any kind of string)
       func.$main_painter = this;
 
-      return pp.drawObject(this.getDom(), func, opt).then(() => this.drawNextFunction(indx+1));
+      return this.getPadPainter().drawObject(this.getDom(), func, opt).then(() => this.drawNextFunction(indx+1));
    }
 
    /** @summary Draw axis histogram

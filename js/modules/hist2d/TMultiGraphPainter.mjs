@@ -211,10 +211,8 @@ class TMultiGraphPainter extends ObjectPainter {
       if (!mgraph.fFunctions || (indx >= mgraph.fFunctions.arr.length))
          return this;
 
-      let pp = this.getPadPainter()
-
-      return pp.drawObject(this.getDom(), mgraph.fFunctions.arr[indx], mgraph.fFunctions.opt[indx])
-               .then(() => this.drawNextFunction(indx+1));
+      return this.getPadPainter().drawObject(this.getDom(), mgraph.fFunctions.arr[indx], mgraph.fFunctions.opt[indx])
+                                 .then(() => this.drawNextFunction(indx+1));
    }
 
    /** @summary Draw graph  */
@@ -270,8 +268,7 @@ class TMultiGraphPainter extends ObjectPainter {
       let promise = Promise.resolve(true);
       if (d.check('A') || !painter.getMainPainter()) {
           let mgraph = painter.getObject(),
-              pp = painter.getPadPainter(),
-              histo = painter.scanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, pp?.getRootPad(true));
+              histo = painter.scanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, painter.getPadPainter()?.getRootPad(true));
 
          promise = painter.drawAxisHist(histo, hopt).then(ap => {
             painter.firstpainter = ap;
