@@ -551,7 +551,11 @@ class THistDrawOptions {
          if (this.y3dscale !== 1) res += '_Y3DSC' + Math.round(this.y3dscale * 100);
 
       } else {
-         if (this.Scat) {
+         if (this.Candle) {
+            res = 'CANDLE' + this.Candle;
+         } else if (this.Violin) {
+            res = 'VIOLIN' + this.Violin;
+         } else if (this.Scat) {
             res = 'SCAT';
          } else if (this.Color) {
             res = 'COL';

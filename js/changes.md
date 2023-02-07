@@ -2,6 +2,8 @@
 
 ## Changes in 7.3.x
 1. Fix - TGeo update in the TWebCanvas
+2. Fix - several tutorials with three.js modules loading
+3. Fix - redraw pad when change text align attributes
 
 
 ## Changes in 7.3.0

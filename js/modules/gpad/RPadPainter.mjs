@@ -379,6 +379,11 @@ class RPadPainter extends RObjectPainter {
       return true;
    }
 
+   /** @summary Draw item name on canvas, dummy for RPad
+     * @private */
+   drawItemNameOnCanvas() {
+   }
+
    /** @summary Enlarge pad draw element when possible */
    enlargePad(evnt) {
 

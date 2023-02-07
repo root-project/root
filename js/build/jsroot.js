@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.3.0
+// https://root.cern/js/ v7.3.1
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -11,7 +11,7 @@ let version_id = '7.3.x';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '19/12/2022';
+let version_date = '7/02/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -44685,7 +44685,7 @@ class TAxisPainter extends ObjectPainter {
 
             if (center_lbls) {
                let gap = arg.gap_after || arg.gap_before;
-               pos = Math.round(pos - (this.vertical ? 0.5*gap : -0.5*gap));
+               pos = Math.round(pos - ((this.vertical != this.reverse) ? 0.5*gap : -0.5*gap));
                if ((pos < -5) || (pos > (this.vertical ? h : w) + 5)) continue;
             }
 
@@ -48101,7 +48101,7 @@ class JSRootMenu {
          this.addchk(align[n] == obj.fTextAlign,
             align[n], align[n],
             // align[n].toString() + '_h:' + hnames[Math.floor(align[n]/10) - 1] + '_v:' + vnames[align[n]%10-1], align[n],
-            function(arg) { this.getObject().fTextAlign = parseInt(arg); this.interactiveRedraw(true, `exec:SetTextAlign(${arg})`); }.bind(painter));
+            function(arg) { this.getObject().fTextAlign = parseInt(arg); this.interactiveRedraw('pad', `exec:SetTextAlign(${arg})`); }.bind(painter));
       }
       this.add('endsub:');
 
@@ -57609,7 +57609,7 @@ class TPavePainter extends ObjectPainter {
          menu.add('sub:SetOptStat', () => {
             menu.input('Enter OptStat', pave.fOptStat, 'int').then(fmt => {
                pave.fOptStat = fmt;
-               this.interactiveRedraw(true, `exec:SetOptStat(${fmt}`);
+               this.interactiveRedraw(true, `exec:SetOptStat(${fmt})`);
             });
          });
          function AddStatOpt(pos, name) {
@@ -58531,7 +58531,11 @@ class THistDrawOptions {
          if (this.y3dscale !== 1) res += '_Y3DSC' + Math.round(this.y3dscale * 100);
 
       } else {
-         if (this.Scat) {
+         if (this.Candle) {
+            res = 'CANDLE' + this.Candle;
+         } else if (this.Violin) {
+            res = 'VIOLIN' + this.Violin;
+         } else if (this.Scat) {
             res = 'SCAT';
          } else if (this.Color) {
             res = 'COL';
@@ -61132,19 +61136,21 @@ class TH1Painter$2 extends THistPainter {
       if (funcs.swap_xy)
          [pnt_x, pnt_y, width, height] = [pnt_y, pnt_x, height, width];
 
+      let descent_order = funcs.swap_xy != pmain.x_handle.reverse;
+
       while (l < r-1) {
          let m = Math.round((l+r)*0.5), xx = GetBinGrX(m);
          if ((xx === null) || (xx < pnt_x - 0.5)) {
-            if (funcs.swap_xy) r = m; else l = m;
+            if (descent_order) r = m; else l = m;
          } else if (xx > pnt_x + 0.5) {
-            if (funcs.swap_xy) l = m; else r = m;
+            if (descent_order) l = m; else r = m;
          } else { l++; r--; }
       }
 
       findbin = r = l;
       grx1 = GetBinGrX(findbin);
 
-      if (pmain.swap_xy) {
+      if (descent_order) {
          while ((l > left) && (GetBinGrX(l-1) < grx1 + 2)) --l;
          while ((r < right) && (GetBinGrX(r+1) > grx1 - 2)) ++r;
       } else {
@@ -92858,9 +92864,11 @@ class TRatioPlotPainter extends ObjectPainter {
             up_fp._ratio_painter = this;
 
             up_fp.zoom = function(xmin,xmax,ymin,ymax,zmin,zmax) {
-               this._ratio_painter.setGridsRange(xmin, xmax);
-               this._ratio_low_fp.o_zoom(xmin,xmax);
-               return this.o_zoom(xmin,xmax,ymin,ymax,zmin,zmax);
+               return this.o_zoom(xmin,xmax,ymin,ymax,zmin,zmax).then(res => {
+                  this._ratio_painter.setGridsRange(up_fp.scale_xmin, up_fp.scale_xmax);
+                  this._ratio_low_fp.o_zoom(up_fp.scale_xmin, up_fp.scale_xmax);
+                  return res;
+               });
             };
 
             up_fp.o_sizeChanged = up_fp.sizeChanged;
@@ -97906,6 +97914,11 @@ class RPadPainter extends RObjectPainter {
          this.alignButtons(btns, rect.width, rect.height);
 
       return true;
+   }
+
+   /** @summary Draw item name on canvas, dummy for RPad
+     * @private */
+   drawItemNameOnCanvas() {
    }
 
    /** @summary Enlarge pad draw element when possible */

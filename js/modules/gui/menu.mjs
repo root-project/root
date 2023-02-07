@@ -387,7 +387,7 @@ class JSRootMenu {
          this.addchk(align[n] == obj.fTextAlign,
             align[n], align[n],
             // align[n].toString() + '_h:' + hnames[Math.floor(align[n]/10) - 1] + '_v:' + vnames[align[n]%10-1], align[n],
-            function(arg) { this.getObject().fTextAlign = parseInt(arg); this.interactiveRedraw(true, `exec:SetTextAlign(${arg})`); }.bind(painter));
+            function(arg) { this.getObject().fTextAlign = parseInt(arg); this.interactiveRedraw('pad', `exec:SetTextAlign(${arg})`); }.bind(painter));
       }
       this.add('endsub:');
 
