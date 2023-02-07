@@ -904,7 +904,7 @@ class TPavePainter extends ObjectPainter {
          menu.add('sub:SetOptStat', () => {
             menu.input('Enter OptStat', pave.fOptStat, 'int').then(fmt => {
                pave.fOptStat = fmt;
-               this.interactiveRedraw(true, `exec:SetOptStat(${fmt}`);
+               this.interactiveRedraw(true, `exec:SetOptStat(${fmt})`);
             });
          });
          function AddStatOpt(pos, name) {

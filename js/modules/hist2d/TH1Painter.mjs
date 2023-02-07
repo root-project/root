@@ -820,19 +820,21 @@ class TH1Painter extends THistPainter {
       if (funcs.swap_xy)
          [pnt_x, pnt_y, width, height] = [pnt_y, pnt_x, height, width];
 
+      let descent_order = funcs.swap_xy != pmain.x_handle.reverse;
+
       while (l < r-1) {
          let m = Math.round((l+r)*0.5), xx = GetBinGrX(m);
          if ((xx === null) || (xx < pnt_x - 0.5)) {
-            if (funcs.swap_xy) r = m; else l = m;
+            if (descent_order) r = m; else l = m;
          } else if (xx > pnt_x + 0.5) {
-            if (funcs.swap_xy) l = m; else r = m;
+            if (descent_order) l = m; else r = m;
          } else { l++; r--; }
       }
 
       findbin = r = l;
       grx1 = GetBinGrX(findbin);
 
-      if (pmain.swap_xy) {
+      if (descent_order) {
          while ((l > left) && (GetBinGrX(l-1) < grx1 + 2)) --l;
          while ((r < right) && (GetBinGrX(r+1) > grx1 - 2)) ++r;
       } else {
