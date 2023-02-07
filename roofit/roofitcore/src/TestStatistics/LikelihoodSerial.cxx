@@ -14,6 +14,9 @@
 
 #include <RooFit/TestStatistics/RooAbsL.h>
 #include "RooRealVar.h"
+#include "RooNaNPacker.h"
+
+#include "TMath.h" // IsNaN
 
 namespace RooFit {
 namespace TestStatistics {
@@ -83,8 +86,10 @@ void LikelihoodSerial::evaluate()
    }
    case LikelihoodType::sum: {
       result = ROOT::Math::KahanSum<double>();
+      RooNaNPacker packedNaN;
       for (std::size_t comp_ix = 0; comp_ix < likelihood_->getNComponents(); ++comp_ix) {
          auto component_result = likelihood_->evaluatePartition({0, 1}, comp_ix, comp_ix + 1);
+         packedNaN.accumulate(component_result.Sum());
 
          if (do_offset_ && shared_offset_.offsets()[comp_ix] != ROOT::Math::KahanSum<double>(0, 0)) {
             result += (component_result - shared_offset_.offsets()[comp_ix]);
@@ -92,8 +97,15 @@ void LikelihoodSerial::evaluate()
             result += component_result;
          }
       }
+      if (packedNaN.getPayload() != 0) {
+         result = ROOT::Math::KahanSum<double>(packedNaN.getNaNWithPayload());
+      }
       break;
    }
+   }
+
+   if (TMath::IsNaN(result.Sum())) {
+      RooAbsReal::logEvalError(nullptr, GetName().c_str(), "function value is NAN");
    }
 }
 
