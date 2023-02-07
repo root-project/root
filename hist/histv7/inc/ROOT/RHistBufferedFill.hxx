@@ -17,6 +17,7 @@
 #define ROOT7_RHistBufferedFill
 
 #include "ROOT/RSpan.hxx"
+#include <array>
 
 namespace ROOT {
 namespace Experimental {
