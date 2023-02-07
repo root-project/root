@@ -179,9 +179,9 @@ TEST(HistFillTest, FillNCoordsEntries)
 {
    ROOT::Experimental::RH1F hist({100, 0., 1});
    EXPECT_EQ(0, hist.GetEntries());
-   hist.FillN({{0.1111}, {0.2222}, {0.3333}});
+   hist.FillN({0.1111, 0.2222, 0.3333});
    EXPECT_EQ(3, hist.GetEntries());
-   hist.FillN({{0.1111}, {0.3333}});
+   hist.FillN({0.1111, 0.3333});
    EXPECT_EQ(5, hist.GetEntries());
 }
 
@@ -193,12 +193,12 @@ TEST(HistFillTest, FillNCoordsContent)
    EXPECT_FLOAT_EQ(.0f, hist.GetBinContent({0.2222}));
    EXPECT_FLOAT_EQ(.0f, hist.GetBinContent({0.3333}));
 
-   hist.FillN({{0.1111}, {0.2222}, {0.3333}});
+   hist.FillN({0.1111, 0.2222, 0.3333});
    EXPECT_FLOAT_EQ(1.f, hist.GetBinContent({0.1111}));
    EXPECT_FLOAT_EQ(1.f, hist.GetBinContent({0.2222}));
    EXPECT_FLOAT_EQ(1.f, hist.GetBinContent({0.3333}));
 
-   hist.FillN({{0.1111}, {0.3333}});
+   hist.FillN({0.1111, 0.3333});
    EXPECT_FLOAT_EQ(2.f, hist.GetBinContent({0.1111}));
    EXPECT_FLOAT_EQ(1.f, hist.GetBinContent({0.2222}));
    EXPECT_FLOAT_EQ(2.f, hist.GetBinContent({0.3333}));
@@ -212,12 +212,12 @@ TEST(HistFillTest, FillNCoordsUncertainty)
    EXPECT_FLOAT_EQ(.0f, hist.GetBinUncertainty({0.2222}));
    EXPECT_FLOAT_EQ(.0f, hist.GetBinUncertainty({0.3333}));
 
-   hist.FillN({{0.1111}, {0.2222}, {0.3333}});
+   hist.FillN({0.1111, 0.2222, 0.3333});
    EXPECT_FLOAT_EQ(1.f, hist.GetBinUncertainty({0.1111}));
    EXPECT_FLOAT_EQ(1.f, hist.GetBinUncertainty({0.2222}));
    EXPECT_FLOAT_EQ(1.f, hist.GetBinUncertainty({0.3333}));
 
-   hist.FillN({{0.1111}, {0.3333}});
+   hist.FillN({0.1111, 0.3333});
    EXPECT_FLOAT_EQ(std::sqrt(2.f), hist.GetBinUncertainty({0.1111}));
    EXPECT_FLOAT_EQ(1.f, hist.GetBinUncertainty({0.2222}));
    EXPECT_FLOAT_EQ(std::sqrt(2.f), hist.GetBinUncertainty({0.3333}));
@@ -228,9 +228,9 @@ TEST(HistFillTest, FillNCoordsWeightsEntries)
 {
    ROOT::Experimental::RH1F hist({100, 0., 1});
    EXPECT_EQ(0, hist.GetEntries());
-   hist.FillN({{0.1111}, {0.2222}, {0.3333}}, {.42f, .32f, .52f});
+   hist.FillN({0.1111, 0.2222, 0.3333}, {.42f, .32f, .52f});
    EXPECT_EQ(3, hist.GetEntries());
-   hist.FillN({{0.1111}, {0.3333}}, {.42f, .32f});
+   hist.FillN({0.1111, 0.3333}, {.42f, .32f});
    EXPECT_EQ(5, hist.GetEntries());
 }
 
@@ -242,12 +242,12 @@ TEST(HistFillTest, FillNCoordsWeightsContent)
    EXPECT_FLOAT_EQ(.0f, hist.GetBinContent({0.2222}));
    EXPECT_FLOAT_EQ(.0f, hist.GetBinContent({0.3333}));
 
-   hist.FillN({{0.1111}, {0.2222}, {0.3333}}, {.42f, .32f, .52f});
+   hist.FillN({0.1111, 0.2222, 0.3333}, {.42f, .32f, .52f});
    EXPECT_FLOAT_EQ(.42f, hist.GetBinContent({0.1111}));
    EXPECT_FLOAT_EQ(.32f, hist.GetBinContent({0.2222}));
    EXPECT_FLOAT_EQ(.52f, hist.GetBinContent({0.3333}));
 
-   hist.FillN({{0.1111}, {0.3333}}, {.42f, .32f});
+   hist.FillN({0.1111, 0.3333}, {.42f, .32f});
    EXPECT_FLOAT_EQ(.42f + .42f, hist.GetBinContent({0.1111}));
    EXPECT_FLOAT_EQ(.32f, hist.GetBinContent({0.2222}));
    EXPECT_FLOAT_EQ(.52f + .32f, hist.GetBinContent({0.3333}));
@@ -265,12 +265,12 @@ TEST(HistFillTest, FillNCoordsWeightsUncertainty)
    float weight2 = .32f;
    float weight3 = .52f;
 
-   hist.FillN({{0.1111}, {0.2222}, {0.3333}}, {weight1, weight2, weight3});
+   hist.FillN({0.1111, 0.2222, 0.3333}, {weight1, weight2, weight3});
    EXPECT_FLOAT_EQ(std::sqrt(weight1 * weight1), hist.GetBinUncertainty({0.1111}));
    EXPECT_FLOAT_EQ(std::sqrt(weight2 * weight2), hist.GetBinUncertainty({0.2222}));
    EXPECT_FLOAT_EQ(std::sqrt(weight3 * weight3), hist.GetBinUncertainty({0.3333}));
 
-   hist.FillN({{0.1111}, {0.3333}}, {weight1, weight2});
+   hist.FillN({0.1111, 0.3333}, {weight1, weight2});
    EXPECT_FLOAT_EQ(std::sqrt((weight1 * weight1) + (weight1 * weight1)), hist.GetBinUncertainty({0.1111}));
    EXPECT_FLOAT_EQ(std::sqrt(weight2 * weight2), hist.GetBinUncertainty({0.2222}));
    EXPECT_FLOAT_EQ(std::sqrt((weight3 * weight3) + (weight2 * weight2)), hist.GetBinUncertainty({0.3333}));
@@ -565,7 +565,7 @@ TEST(HistFillTest, FillN3DCoordsUncertainty)
    EXPECT_FLOAT_EQ(.0f, hist.GetBinUncertainty({0.1111, 4.22, 7.33}));
    EXPECT_FLOAT_EQ(.0f, hist.GetBinUncertainty({0.2222, 4.33, 7.11}));
    EXPECT_FLOAT_EQ(.0f, hist.GetBinUncertainty({0.3333, 4.11, 7.22}));
-   
+
    hist.FillN({{0.1111, 4.22, 7.33}, {0.2222, 4.33, 7.11}, {0.3333, 4.11, 7.22}});
    EXPECT_FLOAT_EQ(1.f, hist.GetBinUncertainty({0.1111, 4.22, 7.33}));
    EXPECT_FLOAT_EQ(1.f, hist.GetBinUncertainty({0.2222, 4.33, 7.11}));
@@ -601,7 +601,7 @@ TEST(HistFillTest, FillN3DCoordsWeightsContent)
    EXPECT_FLOAT_EQ(.32f, hist.GetBinContent({0.2222, 4.33, 7.11}));
    EXPECT_FLOAT_EQ(.52f, hist.GetBinContent({0.3333, 4.11, 7.22}));
 
-   hist.FillN({{0.1111, 4.22, 7.33}, {0.3333, 4.11, 7.22}}, {.42f, .32f});
+   hist.FillN({{{0.1111, 4.22, 7.33}, {0.3333, 4.11, 7.22}}}, {{.42f, .32f}});
    EXPECT_FLOAT_EQ(.42f + .42f, hist.GetBinContent({0.1111, 4.22, 7.33}));
    EXPECT_FLOAT_EQ(.32f, hist.GetBinContent({0.2222, 4.33, 7.11}));
    EXPECT_FLOAT_EQ(.52f + .32f, hist.GetBinContent({0.3333, 4.11, 7.22}));
@@ -619,12 +619,12 @@ TEST(HistFillTest, FillN3DCoordsWeightsUncertainty)
    float weight2 = .32f;
    float weight3 = .52f;
 
-   hist.FillN({{0.1111, 4.22, 7.33}, {0.2222, 4.33, 7.11}, {0.3333, 4.11, 7.22}}, {weight1, weight2, weight3});
+   hist.FillN({{{0.1111, 4.22, 7.33}, {0.2222, 4.33, 7.11}, {0.3333, 4.11, 7.22}}}, {{weight1, weight2, weight3}});
    EXPECT_FLOAT_EQ(std::sqrt(weight1 * weight1), hist.GetBinUncertainty({0.1111, 4.22, 7.33}));
    EXPECT_FLOAT_EQ(std::sqrt(weight2 * weight2), hist.GetBinUncertainty({0.2222, 4.33, 7.11}));
    EXPECT_FLOAT_EQ(std::sqrt(weight3 * weight3), hist.GetBinUncertainty({0.3333, 4.11, 7.22}));
 
-   hist.FillN({{0.1111, 4.22, 7.33}, {0.3333, 4.11, 7.22}}, {weight1, weight2});
+   hist.FillN({{{0.1111, 4.22, 7.33}, {0.3333, 4.11, 7.22}}}, {{weight1, weight2}});
    EXPECT_FLOAT_EQ(std::sqrt((weight1 * weight1) + (weight1 * weight1)), hist.GetBinUncertainty({0.1111, 4.22, 7.33}));
    EXPECT_FLOAT_EQ(std::sqrt(weight2 * weight2), hist.GetBinUncertainty({0.2222, 4.33, 7.11}));
    EXPECT_FLOAT_EQ(std::sqrt((weight3 * weight3) + (weight2 * weight2)), hist.GetBinUncertainty({0.3333, 4.11, 7.22}));
