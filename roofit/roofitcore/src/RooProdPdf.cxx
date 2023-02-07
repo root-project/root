@@ -2377,7 +2377,7 @@ std::unique_ptr<RooAbsArg>
 RooProdPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
 {
    std::unique_ptr<RooProdPdf> prodPdfClone{static_cast<RooProdPdf *>(this->Clone())};
-   prodPdfClone->setAttribute("_COMPILED");
+   ctx.markAsCompiled(*prodPdfClone);
 
    RooArgList serverClones;
    for (const auto server : prodPdfClone->servers()) {
@@ -2394,7 +2394,7 @@ RooProdPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileC
    prodPdfClone->redirectServers(serverClones, false, true);
 
    auto fixedProdPdf = std::make_unique<RooFixedProdPdf>(std::move(prodPdfClone), normSet);
-   fixedProdPdf->setAttribute("_COMPILED");
+   ctx.markAsCompiled(*fixedProdPdf);
 
    return fixedProdPdf;
 }
