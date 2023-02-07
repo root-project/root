@@ -140,7 +140,7 @@ class TASImagePainter extends ObjectPainter {
    async drawImage() {
       let obj = this.getObject(),
           fp = this.getFramePainter(),
-          rect = fp ? fp.getFrameRect() : this.getPadPainter().getPadRect();
+          rect = fp?.getFrameRect() ?? this.getPadPainter().getPadRect();
 
       this.wheel_zoomy = true;
 
@@ -256,15 +256,15 @@ class TASImagePainter extends ObjectPainter {
          return null;
       }
 
-      let frame_painter = this.getFramePainter();
+      let fp = this.getFramePainter();
 
       // keep palette width
-      if (can_move && frame_painter) {
+      if (can_move && fp) {
          let pal = this.draw_palette;
-         pal.fX2NDC = frame_painter.fX2NDC + 0.01 + (pal.fX2NDC - pal.fX1NDC);
-         pal.fX1NDC = frame_painter.fX2NDC + 0.01;
-         pal.fY1NDC = frame_painter.fY1NDC;
-         pal.fY2NDC = frame_painter.fY2NDC;
+         pal.fX2NDC = fp.fX2NDC + 0.01 + (pal.fX2NDC - pal.fX1NDC);
+         pal.fX1NDC = fp.fX2NDC + 0.01;
+         pal.fY1NDC = fp.fY1NDC;
+         pal.fY2NDC = fp.fY2NDC;
       }
 
       if (pal_painter) {
@@ -291,10 +291,7 @@ class TASImagePainter extends ObjectPainter {
    /** @summary Toggle colz draw option
      * @private */
    toggleColz() {
-      let obj = this.getObject(),
-          can_toggle = obj && obj.fPalette;
-
-      if (can_toggle) {
+      if (this.getObject()?.fPalette) {
          this.options.Zscale = !this.options.Zscale;
          this.drawColorPalette(this.options.Zscale, true);
       }
@@ -302,7 +299,7 @@ class TASImagePainter extends ObjectPainter {
 
    /** @summary Redraw image */
    redraw(reason) {
-      let img = this.draw_g ? this.draw_g.select('image') : null,
+      let img = this.draw_g?.select('image'),
           fp = this.getFramePainter();
 
       if (img && !img.empty() && (reason !== 'zoom') && fp) {
@@ -326,8 +323,8 @@ class TASImagePainter extends ObjectPainter {
 
    /** @summary Fill pad toolbar for TASImage */
    fillToolbar() {
-      let pp = this.getPadPainter(), obj = this.getObject();
-      if (pp && obj?.fPalette) {
+      let pp = this.getPadPainter();
+      if (pp && this.getObject()?.fPalette) {
          pp.addPadButton('th2colorz', 'Toggle color palette', 'ToggleColorZ');
          pp.showPadButtons();
       }

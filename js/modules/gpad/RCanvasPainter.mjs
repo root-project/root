@@ -1,4 +1,4 @@
-import { settings, create, parse, toJSON, loadScript, registerMethods, isBatchMode, isFunc, isStr } from '../core.mjs';
+import { settings, create, parse, toJSON, loadScript, registerMethods, isBatchMode, isFunc, isStr, nsREX } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
@@ -239,7 +239,7 @@ class RCanvasPainter extends RPadPainter {
          this.syncDraw(true)
              .then(() => this.redrawPadSnap(snap))
              .then(() => {
-                 handle.send('SNAPDONE:' + snapid); // send ready message back when drawing completed
+                 handle.send(`SNAPDONE:${snapid}`); // send ready message back when drawing completed
                  this.confirmDraw();
               });
       } else if (msg.slice(0,4) == 'JSON') {
@@ -253,7 +253,7 @@ class RCanvasPainter extends RPadPainter {
          let p1 = msg.indexOf(':'),
              cmdid = msg.slice(0,p1),
              cmd = msg.slice(p1+1),
-             reply = 'REPLY:' + cmdid + ':';
+             reply = `REPLY:${cmdid}:`;
          if ((cmd == 'SVG') || (cmd == 'PNG') || (cmd == 'JPEG')) {
             this.createImage(cmd.toLowerCase())
                 .then(res => handle.send(reply + res));
@@ -373,7 +373,7 @@ class RCanvasPainter extends RPadPainter {
    async submitMenuRequest(painter, menukind, reqid) {
       return new Promise(resolveFunc => {
          this.submitDrawableRequest('', {
-            _typename: 'ROOT::Experimental::RDrawableMenuRequest',
+            _typename: `${nsREX}RDrawableMenuRequest`,
             menukind: menukind || '',
             menureqid: reqid, // used to identify menu request
          }, painter, resolveFunc);
@@ -397,10 +397,7 @@ class RCanvasPainter extends RPadPainter {
             return console.log(`not recoginzed subelem ${subelem} in SubmitExec`);
        }
 
-      this.submitDrawableRequest('', {
-         _typename: 'ROOT::Experimental::RDrawableExecRequest',
-         exec: exec
-      }, painter);
+      this.submitDrawableRequest('', { _typename: `${nsREX}RDrawableExecRequest`, exec }, painter);
    }
 
    /** @summary Process reply from request to RDrawable */
@@ -620,7 +617,7 @@ class RCanvasPainter extends RPadPainter {
    static async draw(dom, can /*, opt */) {
       let nocanvas = !can;
       if (nocanvas)
-         can = create('ROOT::Experimental::RCanvas');
+         can = create(`${nsREX}RCanvas`);
 
       let painter = new RCanvasPainter(dom, can);
       painter.normal_canvas = !nocanvas;
@@ -661,7 +658,7 @@ async function ensureRCanvas(painter, frame_kind) {
       return Promise.reject(Error('Painter not provided in ensureRCanvas'));
 
    // simple check - if canvas there, can use painter
-   let pr = painter.getCanvSvg().empty() ? RCanvasPainter.draw(painter.getDom(), null /* , noframe */) : Promise.resolve(true);
+   let pr = painter.getCanvSvg().empty() ? RCanvasPainter.draw(painter.getDom(), null /* noframe */) : Promise.resolve(true);
 
    return pr.then(() => {
       if ((frame_kind !== false) && painter.getFrameSvg().select('.main_layer').empty())
@@ -720,7 +717,7 @@ function drawRFrameTitle(reason, drag) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-registerMethods('ROOT::Experimental::RPalette', {
+registerMethods(`${nsREX}RPalette`, {
 
    extractRColor(rcolor) {
      return rcolor.fColor || 'black';

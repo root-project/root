@@ -89,7 +89,7 @@ class RAxisPainter extends RObjectPainter {
             toffset = parseFloat(toffset);
             if (Number.isFinite(toffset)) this.timeoffset = toffset*1000;
          }
-      } else if (this.axis && this.axis.fLabelsIndex) {
+      } else if (this.axis?.fLabelsIndex) {
          this.kind = 'labels';
          delete this.own_labels;
       } else if (opts.labels) {
@@ -205,7 +205,7 @@ class RAxisPainter extends RObjectPainter {
    /** @summary Provide label for axis value */
    formatLabels(d) {
       let indx = Math.round(d);
-      if (this.axis && this.axis.fLabelsIndex) {
+      if (this.axis?.fLabelsIndex) {
          if ((indx < 0) || (indx >= this.axis.fNBinsNoOver)) return null;
          for (let i = 0; i < this.axis.fLabelsIndex.length; ++i) {
             let pair = this.axis.fLabelsIndex[i];
@@ -266,7 +266,7 @@ class RAxisPainter extends RObjectPainter {
             this.kind = 2;
          }
 
-         if ((this.nmajor < this.major.length) && (Math.abs(this.grpos - this.func(this.major[this.nmajor])) < 1) ) {
+         if ((this.nmajor < this.major.length) && (Math.abs(this.grpos - this.func(this.major[this.nmajor])) < 1)) {
             this.nmajor++;
             this.kind = 1;
          }
@@ -292,8 +292,8 @@ class RAxisPainter extends RObjectPainter {
          let maxorder = 0, minorder = 0, exclorder3 = false;
 
          if (!optionNoexp) {
-            let maxtick = Math.max(Math.abs(handle.major[0]),Math.abs(handle.major[handle.major.length-1])),
-                mintick = Math.min(Math.abs(handle.major[0]),Math.abs(handle.major[handle.major.length-1])),
+            let maxtick = Math.max(Math.abs(handle.major[0]), Math.abs(handle.major[handle.major.length-1])),
+                mintick = Math.min(Math.abs(handle.major[0]), Math.abs(handle.major[handle.major.length-1])),
                 ord1 = (maxtick > 0) ? Math.round(Math.log10(maxtick)/3)*3 : 0,
                 ord2 = (mintick > 0) ? Math.round(Math.log10(mintick)/3)*3 : 0;
 
@@ -847,9 +847,9 @@ class RAxisPainter extends RObjectPainter {
       if (side === undefined) side = 1;
 
       if (!this.standalone) {
-         axis_g = layer.select('.' + this.name + '_container');
+         axis_g = layer.select(`.${this.name}_container`);
          if (axis_g.empty())
-            axis_g = layer.append('svg:g').attr('class', this.name + '_container');
+            axis_g = layer.append('svg:g').attr('class', `${this.name}_container`);
          else
             axis_g.selectAll('*').remove();
       }

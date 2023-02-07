@@ -1,4 +1,4 @@
-import { isStr, isFunc } from '../core.mjs';
+import { isStr, isFunc, nsREX } from '../core.mjs';
 import { FontHandler } from './FontHandler.mjs';
 import { ObjectPainter } from './ObjectPainter.mjs';
 
@@ -31,12 +31,12 @@ class RObjectPainter extends ObjectPainter {
          return res;
       };
 
-      if (obj.fAttr && obj.fAttr.m) {
+      if (obj.fAttr?.m) {
          let value = obj.fAttr.m[name];
          if (value) return type_check(value.v); // found value direct in attributes
       }
 
-      if (this.rstyle && this.rstyle.fBlocks) {
+      if (this.rstyle?.fBlocks) {
          let blks = this.rstyle.fBlocks;
          for (let k = 0; k < blks.length; ++k) {
             let block = blks[k],
@@ -44,7 +44,7 @@ class RObjectPainter extends ObjectPainter {
                         (obj.fId && (block.selector == ('#' + obj.fId))) ||
                         (obj.fCssClass && (block.selector == ('.' + obj.fCssClass)));
 
-            if (match && block.map && block.map.m) {
+            if (match && block.map?.m) {
                let value = block.map.m[name.toLowerCase()];
                if (value) return type_check(value.v);
             }
@@ -59,7 +59,7 @@ class RObjectPainter extends ObjectPainter {
       let obj = this.getObject();
       if (this.cssprefix) name = this.cssprefix + name;
 
-      if (obj && obj.fAttr && obj.fAttr.m)
+      if (obj?.fAttr?.m)
          obj.fAttr.m[name] = { v: value };
    }
 
@@ -152,8 +152,7 @@ class RObjectPainter extends ObjectPainter {
          let ordinal = parseFloat(val.slice(1, val.length-1));
          val = 'black';
          if (Number.isFinite(ordinal)) {
-             let pp = this.getPadPainter(),
-                 pal = pp?.getHistPalette();
+             let pal = this.getPadPainter()?.getHistPalette();
              if (pal) val = pal.getColorOrdinal(ordinal);
          }
       }
@@ -223,10 +222,8 @@ class RObjectPainter extends ObjectPainter {
           size = this.v7EvalAttr(prefix + 'size', 0.01),
           style = this.v7EvalAttr(prefix + 'style', 1),
           refsize = 1;
-      if (size < 1) {
-         let pp = this.getPadPainter();
-         refsize = pp?.getPadHeight() || 100;
-      }
+      if (size < 1)
+         refsize = this.getPadPainter()?.getPadHeight() || 100;
 
       this.createAttMarker({ color, size, style, refsize });
    }
@@ -238,7 +235,7 @@ class RObjectPainter extends ObjectPainter {
          return false;
 
       if (!req._typename) {
-         req._typename = 'ROOT::Experimental::RChangeAttrRequest';
+         req._typename = `${nsREX}RChangeAttrRequest`;
          req.ids = [];
          req.names = [];
          req.values = [];
@@ -261,7 +258,7 @@ class RObjectPainter extends ObjectPainter {
             case 'boolean': kind = 'boolean'; break;
          }
 
-      obj = { _typename: 'ROOT::Experimental::RAttrMap::' };
+      obj = { _typename: `${nsREX}RAttrMap::` };
       switch(kind) {
          case 'none': obj._typename += 'NoValue_t'; break;
          case 'boolean': obj._typename += 'BoolValue_t'; obj.v = value ? true : false; break;

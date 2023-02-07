@@ -444,7 +444,7 @@ class TPadPainter extends ObjectPainter {
 
          if (!isBatchMode())
             frect.style('pointer-events', 'visibleFill')
-                 .on('dblclick', evnt => this.enlargePad(evnt))
+                 .on('dblclick', evnt => this.enlargePad(evnt, true))
                  .on('click', () => this.selectObjectPainter())
                  .on('mouseenter', () => this.showObjectStatus())
                  .on('contextmenu', settings.ContextMenu ? evnt => this.padContextMenu(evnt) : null);
@@ -559,12 +559,16 @@ class TPadPainter extends ObjectPainter {
    }
 
    /** @summary Enlarge pad draw element when possible */
-   enlargePad(evnt) {
+   enlargePad(evnt, is_dblclick) {
 
       if (evnt) {
          evnt.preventDefault();
          evnt.stopPropagation();
       }
+
+      // ignore double click on canvas itself for enlarge
+      if (is_dblclick && this._websocket && (this.enlargeMain('state') == 'off'))
+         return;
 
       let svg_can = this.getCanvSvg(),
           pad_enlarged = svg_can.property('pad_enlarged');
@@ -634,7 +638,7 @@ class TPadPainter extends ObjectPainter {
 
          if (!isBatchMode())
             svg_rect.style('pointer-events', 'visibleFill') // get events also for not visible rect
-                    .on('dblclick', evnt => this.enlargePad(evnt))
+                    .on('dblclick', evnt => this.enlargePad(evnt, true))
                     .on('click', () => this.selectObjectPainter())
                     .on('mouseenter', () => this.showObjectStatus())
                     .on('contextmenu', settings.ContextMenu ? evnt => this.padContextMenu(evnt) : null);
@@ -711,7 +715,7 @@ class TPadPainter extends ObjectPainter {
 
       if ((obj._typename == clTObjArray) && (obj.name == 'ListOfColors')) {
 
-         if (this.options && this.options.CreatePalette) {
+         if (this.options?.CreatePalette) {
             let arr = [];
             for (let n = obj.arr.length - this.options.CreatePalette; n<obj.arr.length; ++n) {
                let col = getRGBfromTColor(obj.arr[n]);
@@ -725,7 +729,7 @@ class TPadPainter extends ObjectPainter {
             adoptRootColors(obj);
 
          // copy existing colors and extend with new values
-         if (this.options && this.options.LocalColors)
+         if (this.options?.LocalColors)
             this.root_colors = extendRootColors(null, obj);
          return true;
       }
@@ -1286,7 +1290,7 @@ class TPadPainter extends ObjectPainter {
             adoptRootColors(ListOfColors);
 
          // copy existing colors and extend with new values
-         if (this.options && this.options.LocalColors)
+         if (this.options?.LocalColors)
             this.root_colors = extendRootColors(null, ListOfColors);
 
          // set palette
@@ -1970,7 +1974,7 @@ class TPadPainter extends ObjectPainter {
                menu.add('separator');
                let shown = [];
                this.painters.forEach((pp,indx) => {
-                  let obj = pp ? pp.getObject() : null;
+                  let obj = pp?.getObject();
                   if (!obj || (shown.indexOf(obj) >= 0)) return;
                   if (pp.$secondary) return;
                   let name = ('_typename' in obj) ? (obj._typename + '::') : '';

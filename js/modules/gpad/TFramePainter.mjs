@@ -274,8 +274,7 @@ const TooltipHandler = {
    /** @desc only canvas info_layer can be used while other pads can overlay
      * @return layer where frame tooltips are shown */
    hints_layer() {
-      let pp = this.getCanvPainter();
-      return pp ? pp.getLayerSvg('info_layer') : d3_select(null);
+      return this.getCanvPainter()?.getLayerSvg('info_layer') ?? d3_select(null);
    },
 
    /** @return true if tooltip is shown, use to prevent some other action */
@@ -296,7 +295,7 @@ const TooltipHandler = {
 
       if (pnt?.handler) {
          // special use of interactive handler in the frame painter
-         let rect = this.draw_g ? this.draw_g.select('.main_layer') : null;
+         let rect = this.draw_g?.select('.main_layer');
          if (!rect || rect.empty()) {
             pnt = null; // disable
          } else if (pnt.touch && evnt) {
@@ -1856,7 +1855,7 @@ class TFramePainter extends ObjectPainter {
                                            log: this.swap_xy ? pad.fLogy : pad.fLogx,
                                            logcheckmin: this.swap_xy,
                                            logminfactor: 0.0001 });
-         this.x2_handle.assignFrameMembers(this,'x2');
+         this.x2_handle.assignFrameMembers(this, 'x2');
       }
 
       if (opts.second_y) {
@@ -1871,7 +1870,7 @@ class TFramePainter extends ObjectPainter {
                                            log_min_nz: opts.ymin_nz && (opts.ymin_nz < 0.01*this.y2max) ? 0.3 * opts.ymin_nz : 0,
                                            logminfactor: 3e-4 });
 
-         this.y2_handle.assignFrameMembers(this,'y2');
+         this.y2_handle.assignFrameMembers(this, 'y2');
       }
    }
 
@@ -1969,7 +1968,7 @@ class TFramePainter extends ObjectPainter {
             else
                gridx += `M${this.x_handle.ticks[n]},0v${h}`;
 
-         let colid = (gStyle.fGridColor > 0) ? gStyle.fGridColor : (this.getAxis('x') ? this.getAxis('x').fAxisColor : 1),
+         let colid = (gStyle.fGridColor > 0) ? gStyle.fGridColor : (this.getAxis('x')?.fAxisColor ?? 1),
              grid_color = this.getColor(colid) || 'black';
 
          if (gridx)
@@ -1990,7 +1989,7 @@ class TFramePainter extends ObjectPainter {
             else
                gridy += `M0,${this.y_handle.ticks[n]}h${w}`;
 
-         let colid = (gStyle.fGridColor > 0) ? gStyle.fGridColor : (this.getAxis('y') ? this.getAxis('y').fAxisColor : 1),
+         let colid = (gStyle.fGridColor > 0) ? gStyle.fGridColor : (this.getAxis('y')?.fAxisColor ?? 1),
              grid_color = this.getColor(colid) || 'black';
 
          if (gridy)
@@ -1998,14 +1997,14 @@ class TFramePainter extends ObjectPainter {
                 .attr('class', 'ygrid')
                 .attr('d', gridy)
                 .style('stroke', grid_color)
-                .style('stroke-width',gStyle.fGridWidth)
+                .style('stroke-width', gStyle.fGridWidth)
                 .style('stroke-dasharray', getSvgLineStyle(grid_style));
       }
    }
 
    /** @summary Converts 'raw' axis value into text */
    axisAsText(axis, value) {
-      let handle = this[axis+'_handle'];
+      let handle = this[`${axis}_handle`];
 
       if (handle)
          return handle.axisAsText(value, settings[axis.toUpperCase() + 'ValuesFormat']);
@@ -2038,11 +2037,11 @@ class TFramePainter extends ObjectPainter {
           pad = pp.getRootPad(true);
 
       this.x_handle.invert_side = (AxisPos >= 10);
-      this.x_handle.lbls_both_sides = !this.x_handle.invert_side && pad && (pad.fTickx > 1); // labels on both sides
+      this.x_handle.lbls_both_sides = !this.x_handle.invert_side && (pad?.fTickx > 1); // labels on both sides
       this.x_handle.has_obstacle = has_x_obstacle;
 
       this.y_handle.invert_side = ((AxisPos % 10) === 1);
-      this.y_handle.lbls_both_sides = !this.y_handle.invert_side && pad && (pad.fTicky > 1); // labels on both sides
+      this.y_handle.lbls_both_sides = !this.y_handle.invert_side && (pad?.fTicky > 1); // labels on both sides
       this.y_handle.has_obstacle = has_y_obstacle;
 
       let draw_horiz = this.swap_xy ? this.y_handle : this.x_handle,
@@ -2164,7 +2163,7 @@ class TFramePainter extends ObjectPainter {
       if (this.fillatt === undefined) {
          if (tframe)
             this.createAttFill({ attr: tframe });
-         else if (pad && pad.fFrameFillColor)
+         else if (pad?.fFrameFillColor)
             this.createAttFill({ pattern: pad.fFrameFillStyle, color: pad.fFrameFillColor });
          else if (pad)
             this.createAttFill({ attr: pad });
@@ -2417,7 +2416,7 @@ class TFramePainter extends ObjectPainter {
 
       pp._interactively_changed = true;
 
-      let name = 'fLog' + axis;
+      let name = `fLog${axis}`;
 
       // do not allow log scale for labels
       if (!pad[name]) {
@@ -2425,7 +2424,7 @@ class TFramePainter extends ObjectPainter {
             axis = 'y';
          else if (this.swap_xy && axis === 'y')
             axis = 'x';
-         let handle = this[axis + '_handle'];
+         let handle = this[`${axis}_handle`];
          if (handle?.kind === 'labels') return;
       }
 
@@ -2435,7 +2434,7 @@ class TFramePainter extends ObjectPainter {
       // directly change attribute in the pad
       pad[name] = value;
 
-      this.interactiveRedraw('pad', 'log'+axis);
+      this.interactiveRedraw('pad', `log${axis}`);
    }
 
    /** @summary Toggle log state on the specified axis */
@@ -2482,7 +2481,7 @@ class TFramePainter extends ObjectPainter {
             main.fillPaletteMenu(menu);
 
          if (faxis) {
-            let handle = this[kind+'_handle'];
+            let handle = this[`${kind}_handle`];
 
             if ((handle?.kind == 'labels') && (faxis.fNbins > 20))
                menu.add('Find label', () => menu.input('Label id').then(id => {
@@ -2571,7 +2570,7 @@ class TFramePainter extends ObjectPainter {
          y: this._frame_y || 0,
          width: this.getFrameWidth(),
          height: this.getFrameHeight(),
-         transform: this.draw_g ? this.draw_g.attr('transform') : '',
+         transform: this.draw_g?.attr('transform') || '',
          hint_delta_x: 0,
          hint_delta_y: 0
       }
@@ -2720,8 +2719,8 @@ class TFramePainter extends ObjectPainter {
          this.forEachPainter(obj => {
             if (!isFunc(obj.canZoomInside)) return;
             if (zoom_v && obj.canZoomInside(name[0], vmin, vmax)) {
-               this['zoom_' + name + 'min'] = vmin;
-               this['zoom_' + name + 'max'] = vmax;
+               this[`zoom_${name}min`] = vmin;
+               this[`zoom_${name}max`] = vmax;
                changed = true;
                zoom_v = false;
             }
@@ -2729,8 +2728,8 @@ class TFramePainter extends ObjectPainter {
 
       // and process unzoom, if any
       if (unzoom_v) {
-         if (this['zoom_' + name + 'min'] !== this['zoom_' + name + 'max']) changed = true;
-         this['zoom_' + name + 'min'] = this['zoom_' + name + 'max'] = 0;
+         if (this[`zoom_${name}min`] !== this[`zoom_${name}max`]) changed = true;
+         this[`zoom_${name}min`] = this[`zoom_${name}max`] = 0;
       }
 
       if (!changed) return false;
@@ -2740,7 +2739,7 @@ class TFramePainter extends ObjectPainter {
 
    /** @summary Checks if specified axis zoomed */
    isAxisZoomed(axis) {
-      return this['zoom_'+axis+'min'] !== this['zoom_'+axis+'max'];
+      return this[`zoom_${axis}min`] !== this[`zoom_${axis}max`];
    }
 
    /** @summary Unzoom speicified axes
@@ -2797,14 +2796,11 @@ class TFramePainter extends ObjectPainter {
    }
 
    /** @summary Convert graphical coordinate into axis value */
-   revertAxis(axis, pnt) {
-      let handle = this[axis+'_handle'];
-      return handle ? handle.revertPoint(pnt) : 0;
-   }
+   revertAxis(axis, pnt) { return this[`${axis}_handle`]?.revertPoint(pnt) ?? 0; }
 
    /** @summary Show axis status message
-    * @desc method called normally when mouse enter main object element
-    * @private */
+     * @desc method called normally when mouse enter main object element
+     * @private */
    showAxisStatus(axis_name, evnt) {
       let taxis = this.getAxis(axis_name), hint_name = axis_name, hint_title = clTAxis,
           m = d3_pointer(evnt, this.getFrameSvg().node()), id = (axis_name == 'x') ? 0 : 1;
@@ -2817,7 +2813,7 @@ class TFramePainter extends ObjectPainter {
 
       let axis_value = this.revertAxis(axis_name, m[id]);
 
-      this.showObjectStatus(hint_name, hint_title, axis_name + ' : ' + this.axisAsText(axis_name, axis_value), m[0] + ',' + m[1]);
+      this.showObjectStatus(hint_name, hint_title, `${axis_name} : ${this.axisAsText(axis_name, axis_value)}`, `${m[0]},${m[1]}`);
    }
 
    /** @summary Add interactive keys handlers

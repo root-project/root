@@ -226,6 +226,8 @@ class TH1Painter extends THistPainter {
       // no need to refill statistic if histogram is dummy
       if (this.isIgnoreStatsFill()) return false;
 
+      if (dostat == 1) dostat = 1111;
+
       let histo = this.getHisto(),
           data = this.countStat(),
           print_name = dostat % 10,
@@ -820,19 +822,21 @@ class TH1Painter extends THistPainter {
       if (funcs.swap_xy)
          [pnt_x, pnt_y, width, height] = [pnt_y, pnt_x, height, width];
 
+      let descent_order = funcs.swap_xy != pmain.x_handle.reverse;
+
       while (l < r-1) {
          let m = Math.round((l+r)*0.5), xx = GetBinGrX(m);
          if ((xx === null) || (xx < pnt_x - 0.5)) {
-            if (funcs.swap_xy) r = m; else l = m;
+            if (descent_order) r = m; else l = m;
          } else if (xx > pnt_x + 0.5) {
-            if (funcs.swap_xy) l = m; else r = m;
+            if (descent_order) l = m; else r = m;
          } else { l++; r--; }
       }
 
       findbin = r = l;
       grx1 = GetBinGrX(findbin);
 
-      if (pmain.swap_xy) {
+      if (descent_order) {
          while ((l > left) && (GetBinGrX(l-1) < grx1 + 2)) --l;
          while ((r < right) && (GetBinGrX(r+1) > grx1 - 2)) ++r;
       } else {
@@ -956,8 +960,8 @@ class TH1Painter extends THistPainter {
 
       let res = { name: histo.fName, title: histo.fTitle,
                   x: midx, y: midy, exact: true,
-                  color1: this.lineatt ? this.lineatt.color : 'green',
-                  color2: this.fillatt ? this.fillatt.getFillColorAlt('blue') : 'blue',
+                  color1: this.lineatt?.color ?? 'green',
+                  color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
                   lines: this.getBinTooltips(findbin) };
 
       if (pnt.disabled) {
@@ -1033,7 +1037,7 @@ class TH1Painter extends THistPainter {
 
          this.decodeOptions(arg);
 
-         if (this.options.need_fillcol && this.fillatt && this.fillatt.empty())
+         if (this.options.need_fillcol && this.fillatt?.empty())
             this.fillatt.change(5,1001);
 
          // redraw all objects in pad, inform dependent objects
@@ -1180,4 +1184,25 @@ class TH1Painter extends THistPainter {
 
 } // class TH1Painter
 
-export { TH1Painter };
+
+/**
+ * @summary Set histogram title
+ * @desc If provided, also change axes title
+ * @private
+ */
+
+function setHistTitle(histo, title)
+{
+   if (!histo) return;
+   if (title.indexOf(';') < 0) {
+      histo.fTitle = title;
+   } else {
+      let arr = title.split(';');
+      histo.fTitle = arr[0];
+      if (arr.length > 1) histo.fXaxis.fTitle = arr[1];
+      if (arr.length > 2) histo.fYaxis.fTitle = arr[2];
+      if (arr.length > 3) histo.fZaxis.fTitle = arr[3];
+   }
+}
+
+export { TH1Painter, setHistTitle };

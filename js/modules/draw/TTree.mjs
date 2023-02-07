@@ -12,6 +12,7 @@ import { TGraphPainter } from '../hist/TGraphPainter.mjs';
 import { drawPolyMarker3D } from '../draw/TPolyMarker3D.mjs';
 import { showProgress, registerForResize } from '../gui/utils.mjs';
 
+
 /** @summary Show TTree::Draw progress during processing */
 TDrawSelector.prototype.ShowProgress = function(value) {
    if ((typeof document == 'undefined') || isBatchMode()) return;
@@ -103,7 +104,7 @@ async function treeDrawProgress(obj, final) {
       if (isFunc(internals.drawInspector))
          return internals.drawInspector(this.drawid, obj);
       let str = create(clTObjString);
-      str.fString = toJSON(obj,2);
+      str.fString = toJSON(obj, 2);
       return drawRawText(this.drawid, str);
    }
 
@@ -150,7 +151,7 @@ function createTreePlayer(player) {
 
    player.showExtraButtons = function(args) {
       let main = this.selectDom(),
-         numentries = this.local_tree ? this.local_tree.fEntries : 0;
+         numentries = this.local_tree?.fEntries || 0;
 
       main.select('.treedraw_more').remove(); // remove more button first
 
@@ -277,7 +278,7 @@ function createTreePlayer(player) {
           pos = expr.indexOf('>>');
 
       if (pos < 0) {
-         expr += '>>' + hname;
+         expr += `>>${hname}`;
       } else {
          hname = expr.slice(pos+2);
          if (hname[0] == '+') hname = hname.slice(1);
@@ -295,13 +296,13 @@ function createTreePlayer(player) {
          url += `&prototype="const char*,const char*,Option_t*,Long64_t,Long64_t"&varexp="${expr}"&selection="${cut}"`;
 
          // provide all optional arguments - default value kMaxEntries not works properly in ROOT6
-         if (nentries == '') nentries = (this.root_version >= 394499) ? 'TTree::kMaxEntries': '1000000000'; // kMaxEntries available since ROOT 6.05/03
-         if (firstentry == '') firstentry = '0';
+         if (!nentries) nentries = 'TTree::kMaxEntries'; // kMaxEntries available since ROOT 6.05/03
+         if (!firstentry) firstentry = '0';
          url += `&option="${option}"&nentries=${nentries}&firstentry=${firstentry}`;
       } else {
          url += `&prototype="Option_t*"&opt="${expr}"`;
       }
-      url += '&_ret_object_=' + hname;
+      url += `&_ret_object_=${hname}`;
 
       const submitDrawRequest = () => {
          httpRequest(url, 'object').then(res => {

@@ -290,7 +290,7 @@ function getTreeBranch(tree, id) {
    if (!Number.isInteger(id)) return;
    let res, seq = 0;
    function scan(obj) {
-      if (obj && obj.fBranches)
+      if (obj?.fBranches)
          obj.fBranches.arr.forEach(br => {
             if (seq++ === id) res = br;
             if (!res) scan(br);
@@ -1050,7 +1050,7 @@ class TDrawSelector extends TSelector {
       res.k = res.nbins / (res.max - res.min);
 
       res.GetBin = function(value) {
-         const bin = this.lbls ? this.lbls.indexOf(value) : Math.floor((value - this.min) * this.k);
+         const bin = this.lbls?.indexOf(value) ?? Math.floor((value - this.min) * this.k);
          return (bin < 0) ? 0 : ((bin > this.nbins) ? this.nbins + 1 : bin + 1);
       };
 

@@ -347,7 +347,7 @@ class WebWindowHandle {
    /** @summary Close connection */
    close(force) {
       if (this.master) {
-         this.master.send('CLOSECH=' + this.channelid, 0);
+         this.master.send(`CLOSECH=${this.channelid}`, 0);
          delete this.master.channels[this.channelid];
          delete this.master;
          return;
@@ -537,7 +537,7 @@ class WebWindowHandle {
 
             let key = this.key || '';
 
-            this.send('READY=' + key, 0); // need to confirm connection
+            this.send(`READY=${key}`, 0); // need to confirm connection
             this.invokeReceiver(false, 'onWebsocketOpened');
          };
 

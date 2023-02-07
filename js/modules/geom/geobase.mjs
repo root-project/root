@@ -1025,7 +1025,7 @@ function createTubeBuffer( shape, faces_limit) {
 
 /** @summary Creates eltu geometrey
   * @private */
-function createEltuBuffer( shape , faces_limit ) {
+function createEltuBuffer(shape, faces_limit) {
    let radiusSegments = Math.max(4, Math.round(360/cfg.GradPerSegm));
 
    if (faces_limit < 0) return radiusSegments*4;
@@ -1353,7 +1353,7 @@ function createXtruBuffer( shape, faces_limit ) {
    for (let vert = 0; vert < shape.fNvert; ++vert)
       pnts.push(new Vector2(shape.fX[vert], shape.fY[vert]));
 
-   let faces = ShapeUtils.triangulateShape(pnts , []);
+   let faces = ShapeUtils.triangulateShape(pnts, []);
    if (faces.length < pnts.length-2) {
       geoWarn(`Problem with XTRU shape ${shape.fName} with ${pnts.length} vertices`);
       faces = [];
@@ -1974,28 +1974,28 @@ function createGeometry(shape, limit) {
 
    try {
       switch (shape._typename) {
-         case clTGeoBBox: return createCubeBuffer( shape, limit );
-         case clTGeoPara: return createParaBuffer( shape, limit );
+         case clTGeoBBox: return createCubeBuffer(shape, limit);
+         case clTGeoPara: return createParaBuffer(shape, limit);
          case clTGeoTrd1:
-         case clTGeoTrd2: return createTrapezoidBuffer( shape, limit );
+         case clTGeoTrd2: return createTrapezoidBuffer(shape, limit);
          case clTGeoArb8:
          case clTGeoTrap:
-         case clTGeoGtra: return createArb8Buffer( shape, limit );
-         case clTGeoSphere: return createSphereBuffer( shape , limit );
+         case clTGeoGtra: return createArb8Buffer(shape, limit);
+         case clTGeoSphere: return createSphereBuffer(shape, limit);
          case clTGeoCone:
          case clTGeoConeSeg:
          case clTGeoTube:
          case clTGeoTubeSeg:
-         case clTGeoCtub: return createTubeBuffer( shape, limit );
-         case clTGeoEltu: return createEltuBuffer( shape, limit );
-         case clTGeoTorus: return createTorusBuffer( shape, limit );
+         case clTGeoCtub: return createTubeBuffer(shape, limit);
+         case clTGeoEltu: return createEltuBuffer(shape, limit);
+         case clTGeoTorus: return createTorusBuffer(shape, limit);
          case clTGeoPcon:
-         case clTGeoPgon: return createPolygonBuffer( shape, limit );
-         case clTGeoXtru: return createXtruBuffer( shape, limit );
-         case clTGeoParaboloid: return createParaboloidBuffer( shape, limit );
-         case clTGeoHype: return createHypeBuffer( shape, limit );
-         case 'TGeoTessellated': return createTessellatedBuffer( shape, limit );
-         case clTGeoCompositeShape: return createComposite( shape, limit );
+         case clTGeoPgon: return createPolygonBuffer(shape, limit);
+         case clTGeoXtru: return createXtruBuffer(shape, limit);
+         case clTGeoParaboloid: return createParaboloidBuffer(shape, limit);
+         case clTGeoHype: return createHypeBuffer(shape, limit);
+         case 'TGeoTessellated': return createTessellatedBuffer(shape, limit);
+         case clTGeoCompositeShape: return createComposite(shape, limit);
          case clTGeoShapeAssembly: break;
          case clTGeoScaledShape: {
             let res = createGeometry(shape.fShape, limit);
@@ -2398,7 +2398,7 @@ class ClonedNodes {
    createClones(obj, sublevel, kind) {
       if (!sublevel) {
 
-         if (obj && obj._typename == '$$Shape$$')
+         if (obj?._typename == '$$Shape$$')
             return this.createClonesForShape(obj);
 
          this.origin = [];
@@ -2414,9 +2414,9 @@ class ClonedNodes {
 
       let chlds = null;
       if (kind === kindGeo)
-         chlds = (obj.fVolume && obj.fVolume.fNodes) ? obj.fVolume.fNodes.arr : null;
+         chlds = obj.fVolume?.fNodes?.arr || null;
       else
-         chlds = obj.fElements ? obj.fElements.arr : null;
+         chlds = obj.fElements?.arr || null;
 
       if (chlds !== null) {
          checkDuplicates(obj, chlds);

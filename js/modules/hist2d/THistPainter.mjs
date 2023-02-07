@@ -227,7 +227,7 @@ class THistDrawOptions {
               Render3D: constants.Render3D.Default,
               FrontBox: true, BackBox: true,
               _pmc: false, _plc: false, _pfc: false, need_fillcol: false,
-              minimum: kNoZoom, maximum: kNoZoom, ymin: 0, ymax: 0, cutg: null });
+              minimum: kNoZoom, maximum: kNoZoom, ymin: 0, ymax: 0, cutg: null, IgnoreMainScale: false });
    }
 
    /** @summary Decode histogram draw options */
@@ -296,12 +296,16 @@ class THistDrawOptions {
       if (d.check('X3DSC', true)) this.x3dscale = d.partAsInt(0, 100) / 100;
       if (d.check('Y3DSC', true)) this.y3dscale = d.partAsInt(0, 100) / 100;
 
-      let lx = false, ly = false, check3dbox = '', check3d = (hdim == 3);
-      if (d.check('LOGXY')) lx = ly = true;
-      if (d.check('LOGX')) lx = true;
-      if (d.check('LOGY')) ly = true;
-      if (lx && pad) { pad.fLogx = 1; pad.fUxmin = 0; pad.fUxmax = 1; pad.fX1 = 0; pad.fX2 = 1; }
-      if (ly && pad) { pad.fLogy = 1; pad.fUymin = 0; pad.fUymax = 1; pad.fY1 = 0; pad.fY2 = 1; }
+      let lx = 0, ly = 0, check3dbox = '', check3d = (hdim == 3);
+      if (d.check('LOG2XY')) lx = ly = 2;
+      if (d.check('LOGXY')) lx = ly = 1;
+      if (d.check('LOG2X')) lx = 2;
+      if (d.check('LOGX')) lx = 1;
+      if (d.check('LOG2Y')) ly = 2;
+      if (d.check('LOGY')) ly = 1;
+      if (lx && pad) { pad.fLogx = lx; pad.fUxmin = 0; pad.fUxmax = 1; pad.fX1 = 0; pad.fX2 = 1; }
+      if (ly && pad) { pad.fLogy = ly; pad.fUymin = 0; pad.fUymax = 1; pad.fY1 = 0; pad.fY2 = 1; }
+      if (d.check('LOG2Z') && pad) pad.fLogz = 2;
       if (d.check('LOGZ') && pad) pad.fLogz = 1;
       if (d.check('GRIDXY') && pad) pad.fGridx = pad.fGridy = 1;
       if (d.check('GRIDX') && pad) pad.fGridx = 1;
@@ -336,6 +340,7 @@ class THistDrawOptions {
       if (d.check('X+')) { this.AxisPos = 10; this.second_x = has_main; }
       if (d.check('Y+')) { this.AxisPos += 1; this.second_y = has_main; }
 
+      if (d.check('SAME0')) { this.Same = true; this.IgnoreMainScale = true; }
       if (d.check('SAMES')) { this.Same = true; this.ForceStat = true; }
       if (d.check('SAME')) { this.Same = true; this.Func = true; }
 
@@ -484,8 +489,8 @@ class THistDrawOptions {
 
       if (d.check('A')) this.Axis = -1;
 
-      if (d.check('RX') || (pad && pad.$RX)) this.RevX = true;
-      if (d.check('RY') || (pad && pad.$RY)) this.RevY = true;
+      if (d.check('RX') || pad?.$RX) this.RevX = true;
+      if (d.check('RY') || pad?.$RY) this.RevY = true;
       const check_axis_bit = (opt, axis, bit) => {
          let flag = d.check(opt);
          if (pad && pad['$'+opt]) { flag = true; pad['$'+opt] = undefined; }
@@ -561,7 +566,11 @@ class THistDrawOptions {
          if (this.y3dscale !== 1) res += `_Y3DSC${Math.round(this.y3dscale * 100)}`;
 
       } else {
-         if (this.Scat) {
+         if (this.Candle) {
+            res = 'CANDLE' + this.Candle;
+         } else if (this.Violin) {
+            res = 'VIOLIN' + this.Violin;
+         } else if (this.Scat) {
             res = 'SCAT';
          } else if (this.Color) {
             res = 'COL';
@@ -601,9 +610,18 @@ class THistDrawOptions {
       }
 
       if (is_main_hist && pad && res) {
-         if (pad.fLogx) res += '_LOGX';
-         if (pad.fLogy) res += '_LOGY';
-         if (pad.fLogz) res += '_LOGZ';
+         if (pad.fLogx == 2)
+            res += '_LOG2X';
+         else if (pad.fLogx)
+            res += '_LOGX';
+         if (pad.fLogy == 2)
+            res += '_LOG2Y';
+         else if (pad.fLogy)
+            res += '_LOGY';
+         if (pad.fLogz == 2)
+            res += '_LOG2Z';
+         else if (pad.fLogz)
+            res += '_LOGZ';
          if (pad.fGridx) res += '_GRIDX';
          if (pad.fGridy) res += '_GRIDY';
          if (pad.fTickx) res += '_TICKX';
@@ -1060,7 +1078,7 @@ class THistPainter extends ObjectPainter {
                      }
                   // or just in generic list of painted objects
                   if (!funcpainter && func.fName)
-                     funcpainter = pp ? pp.findPainterFor(null, func.fName, func._typename) : null;
+                     funcpainter = pp?.findPainterFor(null, func.fName, func._typename);
 
                   if (funcpainter) {
                      funcpainter.updateObject(func);
@@ -1316,8 +1334,7 @@ class THistPainter extends ObjectPainter {
    processTitleChange(arg) {
 
       let histo = this.getHisto(),
-          pp = this.getPadPainter(),
-          tpainter = pp?.findPainterFor(null, 'title');
+          tpainter = this.getPadPainter()?.findPainterFor(null, 'title');
 
       if (!histo || !tpainter) return null;
 
@@ -1355,7 +1372,7 @@ class THistPainter extends ObjectPainter {
      * @private */
    toggleStat(arg) {
 
-      let stat = this.findStat(), pp = this.getPadPainter(), statpainter;
+      let stat = this.findStat(), statpainter;
 
       if (!arg) arg = '';
 
@@ -1364,7 +1381,7 @@ class THistPainter extends ObjectPainter {
          // when statbox created first time, one need to draw it
          stat = this.createStat(true);
       } else {
-         statpainter = pp?.findPainterFor(stat);
+         statpainter = this.getPadPainter()?.findPainterFor(stat);
       }
 
       if (arg == 'only-check')
@@ -1489,7 +1506,7 @@ class THistPainter extends ObjectPainter {
    /** @summary Check if such function should be drawn directly */
    needDrawFunc(histo, func) {
       if (func._typename === clTPaveStats)
-          return !histo.TestBit(TH1StatusBits.kNoStats) && !this.options.NoStat;
+          return (func.fName !== 'stats') || (!histo.TestBit(TH1StatusBits.kNoStats) && !this.options.NoStat);
 
        if (func._typename === clTF1)
           return !func.TestBit(BIT(9));
@@ -1551,7 +1568,7 @@ class THistPainter extends ObjectPainter {
      * @desc be aware - here indexes starts from 0 */
    getSelectIndex(axis, side, add) {
       let indx = 0,
-          nbin = this['nbins'+axis] || 0,
+          nbin = this[`nbins${axis}`] ?? 0,
           taxis = this.getAxis(axis);
 
       if (this.options.second_x && axis == 'x') axis = 'x2';
@@ -1625,14 +1642,14 @@ class THistPainter extends ObjectPainter {
    async addInteractivity() {
       let ismain = this.isMainPainter(),
           second_axis = (this.options.AxisPos > 0),
-          fp = ismain || second_axis ? this.getFramePainter() : null;
-      return fp ? fp.addInteractivity(!ismain && second_axis) : false;
+          fp = (ismain || second_axis) ? this.getFramePainter() : null;
+      return fp?.addInteractivity(!ismain && second_axis) ?? false;
    }
 
    /** @summary Invoke dialog to enter and modify user range */
    changeUserRange(menu, arg) {
       let histo = this.getHisto(),
-          taxis = histo ? histo['f'+arg+'axis'] : null;
+          taxis = histo ? histo[`f${arg}axis`] : null;
       if (!taxis) return;
 
       let curr = `[1,${taxis.fNbins}]`;
@@ -1854,7 +1871,7 @@ class THistPainter extends ObjectPainter {
       } else {
          if (nlevels < 2) nlevels = gStyle.fNumberContours;
          let pad = this.getPadPainter().getRootPad(true);
-         cntr.createNormal(nlevels, pad ? pad.fLogz : 0, zminpositive);
+         cntr.createNormal(nlevels, pad?.fLogz ?? 0, zminpositive);
       }
 
       cntr.configIndicies(this.options.Zero ? -1 : 0, (cntr.colzmin != 0) || !this.options.Zero || this.isTH2Poly() ? 0 : -1);
@@ -1877,19 +1894,22 @@ class THistPainter extends ObjectPainter {
       let main = this.getMainPainter(),
           fp = this.getFramePainter();
 
-      if (main?.fContour && (main !== this)) {
+      if (main?.fContour && (main !== this) && !this.options.IgnoreMainScale) {
          this.fContour = main.fContour;
          return this.fContour;
       }
 
       // if not initialized, first create contour array
       // difference from ROOT - fContour includes also last element with maxbin, which makes easier to build logz
+      // when no same0 draw option specified, use main painter for creating contour, also ignore scatter drawing for main painer
       let histo = this.getObject(), nlevels = 0, apply_min,
-          zmin = this.minbin, zmax = this.maxbin, zminpos = this.minposbin,
+          src = (this !== main) && (main?.minbin !== undefined) && !this.options.IgnoreMainScale && !main?.tt_handle?.ScatterPlot ? main : this,
+          zmin = src.minbin, zmax = src.maxbin, zminpos = src.minposbin,
           custom_levels;
-      if (zmin === zmax) { zmin = this.gminbin; zmax = this.gmaxbin; zminpos = this.gminposbin; }
+      if (zmin === zmax) { zmin = src.gminbin; zmax = src.gmaxbin; zminpos = src.gminposbin; }
+
       let gzmin = zmin, gzmax = zmax;
-      if (this.options.minimum !== kNoZoom) { zmin = this.options.minimum; gzmin = Math.min(gzmin,zmin); apply_min = true; }
+      if (this.options.minimum !== kNoZoom) { zmin = this.options.minimum; gzmin = Math.min(gzmin, zmin); apply_min = true; }
       if (this.options.maximum !== kNoZoom) { zmax = this.options.maximum; gzmax = Math.max(gzmax, zmax); apply_min = false; }
       if (zmin >= zmax) {
          if (apply_min) zmax = zmin + 1; else zmin = zmax - 1;
@@ -1958,7 +1978,7 @@ class THistPainter extends ObjectPainter {
       // only when create new palette, one could change frame size
       let mp = this.getMainPainter();
       if (mp !== this) {
-         if (mp && (mp.draw_content !== false))
+         if (mp && (mp.draw_content !== false) && mp.options.Zscale)
             return null;
       }
 
@@ -2224,7 +2244,7 @@ class THistPainter extends ObjectPainter {
 
       let funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y);
 
-       // calculate graphical coordinates in advance
+      // calculate graphical coordinates in advance
       for (i = res.i1; i <= res.i2; ++i) {
          x = xaxis.GetBinCoord(i + args.middle);
          if (funcs.logx && (x <= 0)) { res.i1 = i+1; continue; }
@@ -2233,8 +2253,16 @@ class THistPainter extends ObjectPainter {
          if (args.rounding) res.grx[i] = Math.round(res.grx[i]);
 
          if (args.use3d) {
-            if (res.grx[i] < -pmain.size_x3d) { res.i1 = i; res.grx[i] = -pmain.size_x3d; }
-            if (res.grx[i] > pmain.size_x3d) { res.i2 = i; res.grx[i] = pmain.size_x3d; }
+            if (res.grx[i] < -pmain.size_x3d) {
+               res.grx[i] = -pmain.size_x3d;
+               if (this.options.RevX) res.i2 = i;
+                                 else res.i1 = i;
+            }
+            if (res.grx[i] > pmain.size_x3d) {
+               res.grx[i] = pmain.size_x3d;
+               if (this.options.RevX) res.i1 = i;
+                                 else res.i2 = i;
+            }
          }
       }
 
@@ -2250,8 +2278,16 @@ class THistPainter extends ObjectPainter {
          if (args.rounding) res.gry[j] = Math.round(res.gry[j]);
 
          if (args.use3d) {
-            if (res.gry[j] < -pmain.size_y3d) { res.j1 = j; res.gry[j] = -pmain.size_y3d; }
-            if (res.gry[j] > pmain.size_y3d) { res.j2 = j; res.gry[j] = pmain.size_y3d; }
+            if (res.gry[j] < -pmain.size_y3d) {
+               res.gry[j] = -pmain.size_y3d;
+               if (this.options.RevY) res.j2 = j;
+                                 else res.j1 = j;
+            }
+            if (res.gry[j] > pmain.size_y3d) {
+               res.gry[j] = pmain.size_y3d;
+               if (this.options.RevY) res.j1 = j;
+                                 else res.j2 = j;
+            }
          }
       }
 
@@ -2277,7 +2313,7 @@ class THistPainter extends ObjectPainter {
                this.minbin = Math.min(this.minbin, binz);
             }
             if (binz > 0)
-               if ((this.minposbin === null) || (binz<this.minposbin)) this.minposbin = binz;
+               if ((this.minposbin === null) || (binz < this.minposbin)) this.minposbin = binz;
          }
       }
 
@@ -2291,7 +2327,7 @@ class THistPainter extends ObjectPainter {
    getAxisBinTip(name, axis, bin) {
       let pmain = this.getFramePainter(),
           funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
-          handle = funcs[name+'_handle'],
+          handle = funcs[`${name}_handle`],
           x1 = axis.GetBinLowEdge(bin+1);
 
       if (handle.kind === 'labels')

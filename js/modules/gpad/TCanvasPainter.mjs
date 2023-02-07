@@ -314,7 +314,7 @@ class TCanvasPainter extends TPadPainter {
             this.completeCanvasSnapDrawing();
             let ranges = this.getWebPadOptions(); // all data, including subpads
             if (ranges) ranges = ':' + ranges;
-            handle.send('READY6:' + version + ranges); // send ready message back when drawing completed
+            handle.send(`READY6:${version}${ranges}`); // send ready message back when drawing completed
             this.confirmDraw();
          });
       } else if (msg.slice(0,5) == 'MENU:') {
@@ -329,7 +329,7 @@ class TCanvasPainter extends TPadPainter {
          let p1 = msg.indexOf(':'),
              cmdid = msg.slice(0,p1),
              cmd = msg.slice(p1+1),
-             reply = 'REPLY:' + cmdid + ':';
+             reply = `REPLY:${cmdid}:`;
          if ((cmd == 'SVG') || (cmd == 'PNG') || (cmd == 'JPEG')) {
             this.createImage(cmd.toLowerCase())
                 .then(res => handle.send(reply + res));

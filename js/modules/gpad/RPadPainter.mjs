@@ -1,5 +1,5 @@
 import { gStyle, settings, constants, internals, addMethods,
-         isPromise, getPromise, isBatchMode, isObject, isFunc, isStr, btoa_func, clTPad } from '../core.mjs';
+         isPromise, getPromise, isBatchMode, isObject, isFunc, isStr, btoa_func, clTPad, nsREX } from '../core.mjs';
 import { pointer as d3_pointer } from '../d3.mjs';
 import { ColorPalette, addColor, getRootColors } from '../base/colors.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
@@ -173,13 +173,13 @@ class RPadPainter extends RObjectPainter {
    /** @summary Returns palette associated with pad.
      * @desc Either from existing palette painter or just default palette */
    getHistPalette() {
-      let pp = this.findPainterFor(undefined, undefined, 'ROOT::Experimental::RPaletteDrawable');
+      let pp = this.findPainterFor(undefined, undefined, `${nsREX}RPaletteDrawable`);
 
       if (pp) return pp.getHistPalette();
 
       if (!this.fDfltPalette) {
          this.fDfltPalette = {
-            _typename: 'ROOT::Experimental::RPalette',
+            _typename: `${nsREX}RPalette`,
             fColors: [{ fOrdinal: 0,     fColor: { fColor: 'rgb(53, 42, 135)' } },
                       { fOrdinal: 0.125, fColor: { fColor: 'rgb(15, 92, 221)' } },
                       { fOrdinal: 0.25,  fColor: { fColor: 'rgb(20, 129, 214)' } },
@@ -192,7 +192,7 @@ class RPadPainter extends RObjectPainter {
              fInterpolate: true,
              fNormalized: true
          };
-         addMethods(this.fDfltPalette, 'ROOT::Experimental::RPalette');
+         addMethods(this.fDfltPalette, `${nsREX}RPalette`);
       }
 
       return this.fDfltPalette;
@@ -296,7 +296,7 @@ class RPadPainter extends RObjectPainter {
          frect = svg.append('svg:path').attr('class','canvas_fillrect');
          if (!isBatchMode())
             frect.style('pointer-events', 'visibleFill')
-                 .on('dblclick', evnt => this.enlargePad(evnt))
+                 .on('dblclick', evnt => this.enlargePad(evnt, true))
                  .on('click', () => this.selectObjectPainter(this, null))
                  .on('mouseenter', () => this.showObjectStatus())
                  .on('contextmenu', settings.ContextMenu ? evnt => this.padContextMenu(evnt) : null);
@@ -379,13 +379,22 @@ class RPadPainter extends RObjectPainter {
       return true;
    }
 
+   /** @summary Draw item name on canvas, dummy for RPad
+     * @private */
+   drawItemNameOnCanvas() {
+   }
+
    /** @summary Enlarge pad draw element when possible */
-   enlargePad(evnt) {
+   enlargePad(evnt, is_dblclick) {
 
       if (evnt) {
          evnt.preventDefault();
          evnt.stopPropagation();
       }
+
+      // ignore double click on canvas itself for enlarge
+      if (is_dblclick && this._websocket && (this.enlargeMain('state') == 'off'))
+         return;
 
       let svg_can = this.getCanvSvg(),
           pad_enlarged = svg_can.property('pad_enlarged');
@@ -430,7 +439,7 @@ class RPadPainter extends RObjectPainter {
           w = width, h = height, x = 0, y = 0,
           svg_pad = null, svg_rect = null, btns = null;
 
-      if (this.pad && this.pad.fPos && this.pad.fSize) {
+      if (this.pad?.fPos && this.pad?.fSize) {
          x = Math.round(width * this.pad.fPos.fHoriz.fArr[0]);
          y = Math.round(height * this.pad.fPos.fVert.fArr[0]);
          w = Math.round(width * this.pad.fSize.fHoriz.fArr[0]);
@@ -476,7 +485,7 @@ class RPadPainter extends RObjectPainter {
 
          if (!isBatchMode())
             svg_rect.style('pointer-events', 'visibleFill') // get events also for not visible rect
-                    .on('dblclick', evnt => this.enlargePad(evnt))
+                    .on('dblclick', evnt => this.enlargePad(evnt, true))
                     .on('click', () => this.selectObjectPainter(this, null))
                     .on('mouseenter', () => this.showObjectStatus());
       }
@@ -520,8 +529,7 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary returns true if any objects beside sub-pads exists in the pad */
    hasObjectsToDraw() {
-      let arr = this.pad ? this.pad.fPrimitives : null;
-      return arr && arr.find(obj => obj._typename != 'ROOT::Experimental::RPadDisplayItem') ? true : false;
+      return this.pad?.fPrimitives?.find(obj => obj._typename != `${nsREX}RPadDisplayItem`) ? true : false;
    }
 
    /** @summary sync drawing/redrawing/resize of the pad
@@ -572,7 +580,7 @@ class RPadPainter extends RObjectPainter {
             this._start_tm = new Date().getTime();
 
          // set number of primitves
-         this._num_primitives = this.pad && this.pad.fPrimitives ? this.pad.fPrimitives.length : 0;
+         this._num_primitives = this.pad?.fPrimitives?.length ?? 0;
 
          return this.syncDraw(true).then(() => this.drawPrimitives(0));
       }
@@ -904,13 +912,13 @@ class RPadPainter extends RObjectPainter {
 
       if (objpainter) {
 
-         if (snap._typename == 'ROOT::Experimental::RPadDisplayItem')  // subpad
+         if (snap._typename == `${nsREX}RPadDisplayItem`)  // subpad
             return objpainter.redrawPadSnap(snap).then(ppainter => {
                this.addObjectPainter(ppainter, lst, indx);
                return this.drawNextSnap(lst, indx);
             });
 
-         if (snap._typename === 'ROOT::Experimental::TObjectDisplayItem')
+         if (snap._typename === `${nsREX}TObjectDisplayItem`)
             this.extractTObjectProp(snap);
 
          let promise;
@@ -921,7 +929,7 @@ class RPadPainter extends RObjectPainter {
          return getPromise(promise).then(() => this.drawNextSnap(lst, indx)); // call next
       }
 
-      if (snap._typename == 'ROOT::Experimental::RPadDisplayItem') { // subpad
+      if (snap._typename == `${nsREX}RPadDisplayItem`) { // subpad
 
          let subpad = snap; // not subpad, but just attributes
 
@@ -948,7 +956,7 @@ class RPadPainter extends RObjectPainter {
       // will be used in addToPadPrimitives to assign style to sub-painters
       this.next_rstyle = lst[indx].fStyle || this.rstyle;
 
-      if (snap._typename === 'ROOT::Experimental::TObjectDisplayItem') {
+      if (snap._typename === `${nsREX}TObjectDisplayItem`) {
 
          // identifier used in RObjectDrawable
          const webSnapIds = { kNone: 0,  kObject: 1, kColors: 4, kStyle: 5, kPalette: 6 };
@@ -1235,7 +1243,7 @@ class RPadPainter extends RObjectPainter {
          }
 
          let main = pp.getFramePainter();
-         if (!main || !isFunc(main.render3D) || !isFunc(main.access3dKind)) return;
+         if (!isFunc(main?.render3D) || !isFunc(main?.access3dKind)) return;
 
          let can3d = main.access3dKind();
 

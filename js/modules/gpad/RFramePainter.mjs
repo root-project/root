@@ -1,4 +1,4 @@
-import { gStyle, settings, create, isBatchMode, isFunc, isStr, clTAxis } from '../core.mjs';
+import { gStyle, settings, create, isBatchMode, isFunc, isStr, clTAxis, nsREX } from '../core.mjs';
 import { pointer as d3_pointer } from '../d3.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { makeTranslate} from '../base/BasePainter.mjs';
@@ -160,7 +160,7 @@ class RFramePainter extends RObjectPainter {
          this.x_handle.draw_grid = gridx;
 
       // add a grid on x axis, if the option is set
-      if (this.x_handle && this.x_handle.draw_grid) {
+      if (this.x_handle?.draw_grid) {
          let grid = '';
          for (let n = 0; n < this.x_handle.ticks.length; ++n)
             if (this.swap_xy)
@@ -181,7 +181,7 @@ class RFramePainter extends RObjectPainter {
          this.y_handle.draw_grid = gridy;
 
       // add a grid on y axis, if the option is set
-      if (this.y_handle && this.y_handle.draw_grid) {
+      if (this.y_handle?.draw_grid) {
          let grid = '';
          for (let n = 0; n < this.y_handle.ticks.length; ++n)
             if (this.swap_xy)
@@ -201,20 +201,17 @@ class RFramePainter extends RObjectPainter {
 
    /** @summary Converts 'raw' axis value into text */
    axisAsText(axis, value) {
-      let handle = this[axis+'_handle'];
+      let handle = this[`${axis}_handle`];
 
-      if (handle)
-         return handle.axisAsText(value, settings[axis.toUpperCase() + 'ValuesFormat']);
-
-      return value.toPrecision(4);
+      return handle ? handle.axisAsText(value, settings[axis.toUpperCase() + 'ValuesFormat']) : value.toPrecision(4);
    }
 
    /** @summary Set axix range */
    _setAxisRange(prefix, vmin, vmax) {
-      let nmin = prefix + 'min', nmax = prefix + 'max';
+      let nmin = `${prefix}min`, nmax = `${prefix}max`;
       if (this[nmin] != this[nmax]) return;
-      let min = this.v7EvalAttr(prefix + '_min'),
-          max = this.v7EvalAttr(prefix + '_max');
+      let min = this.v7EvalAttr(`${prefix}_min`),
+          max = this.v7EvalAttr(`${prefix}_max`);
 
       if (min !== undefined) vmin = min;
       if (max !== undefined) vmax = max;
@@ -224,11 +221,11 @@ class RFramePainter extends RObjectPainter {
          this[nmax] = vmax;
       }
 
-      let nzmin = 'zoom_' + prefix + 'min', nzmax = 'zoom_' + prefix + 'max';
+      let nzmin = `zoom_${prefix}min`, nzmax = `zoom_${prefix}max`;
 
       if ((this[nzmin] == this[nzmax]) && !this.zoomChangedInteractive(prefix)) {
-         min = this.v7EvalAttr(prefix + '_zoomMin');
-         max = this.v7EvalAttr(prefix + '_zoomMax');
+         min = this.v7EvalAttr(`${prefix}_zoomMin`);
+         max = this.v7EvalAttr(`${prefix}_zoomMax`);
 
          if ((min !== undefined) || (max !== undefined)) {
             this[nzmin] = (min === undefined) ? this[nmin] : min;
@@ -328,7 +325,7 @@ class RFramePainter extends RObjectPainter {
                                         logcheckmin: this.swap_xy,
                                         logminfactor: 0.0001 });
 
-      this.x_handle.assignFrameMembers(this,'x');
+      this.x_handle.assignFrameMembers(this, 'x');
 
       this.y_handle = new TAxisPainter(this.getDom(), yaxis, true);
       this.y_handle.setPadName(this.getPadName());
@@ -342,7 +339,7 @@ class RFramePainter extends RObjectPainter {
                                         log_min_nz: opts.ymin_nz && (opts.ymin_nz < 0.01*this.ymax) ? 0.3 * opts.ymin_nz : 0,
                                         logminfactor: 3e-4 });
 
-      this.y_handle.assignFrameMembers(this,'y');
+      this.y_handle.assignFrameMembers(this, 'y');
    }
 
    /** @summary Identify if requested axes are drawn
@@ -409,10 +406,10 @@ class RFramePainter extends RObjectPainter {
          this.z_handle.snapid = this.snapid;
 
          this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, false, [0,w], w, { reverse: false });
-         this.x_handle.assignFrameMembers(this,'x');
+         this.x_handle.assignFrameMembers(this, 'x');
 
          this.y_handle.configureAxis('yaxis', this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, true, [h,0], -h, { reverse: false });
-         this.y_handle.assignFrameMembers(this,'y');
+         this.y_handle.assignFrameMembers(this, 'y');
 
          // only get basic properties like log scale
          this.z_handle.configureZAxis('zaxis', this);
@@ -424,9 +421,9 @@ class RFramePainter extends RObjectPainter {
 
       let draw_horiz = this.swap_xy ? this.y_handle : this.x_handle,
           draw_vertical = this.swap_xy ? this.x_handle : this.y_handle,
-          pp = this.getPadPainter(), pr;
+          pr;
 
-      if (pp?._fast_drawing) {
+      if (this.getPadPainter()?._fast_drawing) {
          pr = Promise.resolve(true); // do nothing
       } else if (this.v6axes) {
 
@@ -455,18 +452,18 @@ class RFramePainter extends RObjectPainter {
          let arr = [];
 
          if (ticksx > 0)
-            arr.push(draw_horiz.drawAxis(layer, (sidex > 0) ? `translate(0,${h})` : null, sidex));
+            arr.push(draw_horiz.drawAxis(layer, makeTranslate(0, sidex > 0 ? h : 0), sidex));
 
          if (ticksy > 0)
-            arr.push(draw_vertical.drawAxis(layer, (sidey > 0) ? `translate(0,${h})` : `translate(${w},${h})`, sidey));
+            arr.push(draw_vertical.drawAxis(layer, makeTranslate(sidey > 0 ? 0 : w, h), sidey));
 
          pr = Promise.all(arr).then(() => {
             arr = [];
             if (ticksx > 1)
-               arr.push(draw_horiz.drawAxisOtherPlace(layer, (sidex < 0) ? `translate(0,${h})` : null, -sidex, ticksx == 2));
+               arr.push(draw_horiz.drawAxisOtherPlace(layer, makeTranslate(0, sidex < 0 ? h : 0), -sidex, ticksx == 2));
 
             if (ticksy > 1)
-               arr.push(draw_vertical.drawAxisOtherPlace(layer, (sidey < 0) ? `translate(0,${h})` : `translate(${w},${h})`, -sidey, ticksy == 2));
+               arr.push(draw_vertical.drawAxisOtherPlace(layer, makeTranslate(sidey < 0 ? 0 : w, h), -sidey, ticksy == 2));
             return Promise.all(arr);
          }).then(() => this.drawGrids());
       }
@@ -496,7 +493,7 @@ class RFramePainter extends RObjectPainter {
          this.x2_handle.snapid = this.snapid;
 
          this.x2_handle.configureAxis('x2axis', this.x2min, this.x2max, this.scale_x2min, this.scale_x2max, false, [0,w], w, { reverse: false });
-         this.x2_handle.assignFrameMembers(this,'x2');
+         this.x2_handle.assignFrameMembers(this, 'x2');
 
          pr1 = this.x2_handle.drawAxis(layer, null, -1);
       }
@@ -515,7 +512,7 @@ class RFramePainter extends RObjectPainter {
          this.y2_handle.snapid = this.snapid;
 
          this.y2_handle.configureAxis('y2axis', this.y2min, this.y2max, this.scale_y2min, this.scale_y2max, true, [h,0], -h, { reverse: false });
-         this.y2_handle.assignFrameMembers(this,'y2');
+         this.y2_handle.assignFrameMembers(this, 'y2');
 
          pr2 = this.y2_handle.drawAxis(layer, makeTranslate(w, h), -1);
       }
@@ -793,7 +790,7 @@ class RFramePainter extends RObjectPainter {
          y: this._frame_y || 0,
          width: this.getFrameWidth(),
          height: this.getFrameHeight(),
-         transform: this.draw_g ? this.draw_g.attr('transform') : '',
+         transform: this.draw_g?.attr('transform') || '',
          hint_delta_x: 0,
          hint_delta_y: 0
       }
@@ -865,11 +862,11 @@ class RFramePainter extends RObjectPainter {
 
       let changed = false,
           r_x = '', r_y = '', r_z = '', is_any_check = false,
-         req = {
-            _typename: 'ROOT::Experimental::RFrame::RUserRanges',
+          req = {
+            _typename: `${nsREX}RFrame::RUserRanges`,
             values: [0, 0, 0, 0, 0, 0],
             flags: [false, false, false, false, false, false]
-         };
+          };
 
       const checkZooming = (painter, force) => {
          if (!force && !isFunc(painter.canZoomInside)) return;
@@ -932,7 +929,7 @@ class RFramePainter extends RObjectPainter {
       if (!changed) return false;
 
       if (this.v7NormalMode())
-         this.v7SubmitRequest('zoom', { _typename: 'ROOT::Experimental::RFrame::RZoomRequest', ranges: req });
+         this.v7SubmitRequest('zoom', { _typename: `${nsREX}RFrame::RZoomRequest`, ranges: req });
 
       return this.interactiveRedraw('pad', 'zoom' + r_x + r_y + r_z).then(() => true);
    }
@@ -960,7 +957,7 @@ class RFramePainter extends RObjectPainter {
 
       let changed = false, is_any_check = false,
           req = {
-             _typename: 'ROOT::Experimental::RFrame::RUserRanges',
+             _typename: `${nsREX}RFrame::RUserRanges`,
              values: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
              flags: [false, false, false, false, false, false, false, false, false, false]
           };
@@ -997,14 +994,14 @@ class RFramePainter extends RObjectPainter {
       if (!changed) return false;
 
       if (this.v7NormalMode())
-         this.v7SubmitRequest('zoom', { _typename: 'ROOT::Experimental::RFrame::RZoomRequest', ranges: req });
+         this.v7SubmitRequest('zoom', { _typename: `${nsREX}RFrame::RZoomRequest`, ranges: req });
 
-      return this.interactiveRedraw('pad', 'zoom' + indx).then(() => true);
+      return this.interactiveRedraw('pad', `zoom${indx}`).then(() => true);
    }
 
    /** @summary Checks if specified axis zoomed */
    isAxisZoomed(axis) {
-      return this['zoom_'+axis+'min'] !== this['zoom_'+axis+'max'];
+      return this[`zoom_${axis}min`] !== this[`zoom_${axis}max`];
    }
 
    /** @summary Unzoom specified axes
@@ -1148,10 +1145,7 @@ class RFramePainter extends RObjectPainter {
    }
 
    /** @summary Convert graphical coordinate into axis value */
-   revertAxis(axis, pnt) {
-      let handle = this[axis+'_handle'];
-      return handle ? handle.revertPoint(pnt) : 0;
-   }
+   revertAxis(axis, pnt) { return this[`${axis}_handle`]?.revertPoint(pnt) ?? 0; }
 
    /** @summary Show axis status message
      * @desc method called normally when mouse enter main object element
@@ -1167,7 +1161,7 @@ class RFramePainter extends RObjectPainter {
 
       let axis_value = this.revertAxis(axis_name, m[id]);
 
-      this.showObjectStatus(hint_name, hint_title, axis_name + ' : ' + this.axisAsText(axis_name, axis_value), Math.round(m[0]) + ',' + Math.round(m[1]));
+      this.showObjectStatus(hint_name, hint_title, `${axis_name} : ${this.axisAsText(axis_name, axis_value)}`, `${Math.round(m[0])},${Math.round(m[1])}`);
    }
 
    /** @summary Add interactive keys handlers
