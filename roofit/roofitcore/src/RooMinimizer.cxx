@@ -956,6 +956,10 @@ double &RooMinimizer::maxFCN()
 {
    return _fcn->GetMaxFCN();
 }
+double &RooMinimizer::fcnOffset() const
+{
+   return _fcn->getOffset();
+}
 
 int RooMinimizer::Config::getDefaultWorkers()
 {

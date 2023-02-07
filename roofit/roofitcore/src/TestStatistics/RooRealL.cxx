@@ -14,6 +14,8 @@
 #include <RooFit/TestStatistics/RooAbsL.h>
 #include <RooRealVar.h>
 
+#include "TMath.h" // IsNaN
+
 namespace RooFit {
 namespace TestStatistics {
 
@@ -28,7 +30,8 @@ namespace TestStatistics {
  **/
 
 RooRealL::RooRealL(const char *name, const char *title, std::shared_ptr<RooAbsL> likelihood)
-   : RooAbsReal(name, title), likelihood_(std::move(likelihood)),
+   : RooAbsReal(name, title),
+     likelihood_(std::move(likelihood)),
      vars_proxy_("varsProxy", "proxy set of parameters", this)
 {
    std::unique_ptr<RooArgSet> params{likelihood_->getParameters()};
@@ -39,7 +42,7 @@ RooRealL::RooRealL(const char *name, const char *title, std::shared_ptr<RooAbsL>
 RooRealL::RooRealL(const RooRealL &other, const char *name)
    : RooAbsReal(other, name), likelihood_(other.likelihood_), vars_proxy_("varsProxy", this, other.vars_proxy_)
 {
-   vars_obs_.add(other.vars_obs_) ;
+   vars_obs_.add(other.vars_obs_);
 }
 
 double RooRealL::evaluate() const
@@ -51,7 +54,7 @@ double RooRealL::evaluate() const
          const auto parg = vars_proxy_[i];
 
          if (harg != parg) {
-            (static_cast<RooAbsRealLValue*>(harg))->setVal((static_cast<RooAbsReal*>(parg))->getVal());
+            (static_cast<RooAbsRealLValue *>(harg))->setVal((static_cast<RooAbsReal *>(parg))->getVal());
          }
       }
    }
@@ -63,6 +66,10 @@ double RooRealL::evaluate() const
    const double norm = globalNormalization();
    double ret = ret_kahan.Sum() / norm;
    eval_carry = ret_kahan.Carry() / norm;
+
+   if (TMath::IsNaN(ret)) {
+      RooAbsReal::logEvalError("function value is NAN");
+   }
 
    return ret;
 }

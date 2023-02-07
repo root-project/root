@@ -39,6 +39,13 @@ class RooRealVar;
 class RooArgSet;
 class RooPlot;
 class RooDataSet;
+#ifdef ROOFIT_MULTIPROCESS
+namespace RooFit {
+namespace TestStatistics {
+class LikelihoodGradientJob;
+}
+} // namespace RooFit
+#endif // ROOFIT_MULTIPROCESS
 
 class RooMinimizer : public TObject {
 public:
@@ -68,10 +75,10 @@ public:
       // argument is ignored when parallelize is 0
       bool enableParallelDescent = false;
 
-      bool verbose = false;           // local config
-      bool profile = false;           // local config
-      bool timingAnalysis = false;    // local config
-      std::string minimizerType;      // local config
+      bool verbose = false;        // local config
+      bool profile = false;        // local config
+      bool timingAnalysis = false; // local config
+      std::string minimizerType;   // local config
    private:
       int getDefaultWorkers();
    };
@@ -136,16 +143,10 @@ public:
    static RooFit::OwningPtr<RooFitResult> lastMinuitFit();
    static RooFit::OwningPtr<RooFitResult> lastMinuitFit(const RooArgList &varList);
 
-   void saveStatus(const char *label, int status)
-   {
-      _statusHistory.emplace_back(label, status);
-   }
+   void saveStatus(const char *label, int status) { _statusHistory.emplace_back(label, status); }
 
    /// Clears the Minuit status history.
-   void clearStatusHistory()
-   {
-      _statusHistory.clear();
-   }
+   void clearStatusHistory() { _statusHistory.clear(); }
 
    int evalCounter() const;
    void zeroEvalCount();
@@ -162,6 +163,9 @@ public:
 private:
    friend class RooAbsMinimizerFcn;
    friend class RooMinimizerFcn;
+#ifdef ROOFIT_MULTIPROCESS
+   friend class RooFit::TestStatistics::LikelihoodGradientJob;
+#endif // ROOFIT_MULTIPROCESS
 
    std::unique_ptr<RooAbsReal::EvalErrorContext> makeEvalErrorContext() const;
 
@@ -172,6 +176,7 @@ private:
 
    std::ofstream *logfile();
    double &maxFCN();
+   double &fcnOffset() const;
 
    bool fitFcn() const;
 
