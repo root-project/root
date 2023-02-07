@@ -58,8 +58,8 @@ TDirectory* RooUnitTest::gMemDir = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooUnitTest::RooUnitTest(const char* name, TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : TNamed(name,name),
-                                  _refFile(refFile), _debug(false), _write(writeRef), _verb(verbose), _batchMode(batchMode)
+RooUnitTest::RooUnitTest(const char* name, TFile* refFile, bool writeRef, Int_t verbose) : TNamed(name,name),
+                                  _refFile(refFile), _debug(false), _write(writeRef), _verb(verbose)
 {
 }
 
