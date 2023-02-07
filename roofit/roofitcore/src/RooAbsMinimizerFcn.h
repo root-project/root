@@ -58,7 +58,7 @@ public:
    Int_t evalCounter() const { return _evalCounter; }
    void zeroEvalCount() { _evalCounter = 0; }
    /// Return a possible offset that's applied to the function to separate invalid function values from valid ones.
-   double getOffset() const { return _funcOffset; }
+   double &getOffset() const { return _funcOffset; }
 
    /// Put Minuit results back into RooFit objects.
    void BackProp(const ROOT::Fit::FitResult &results);
