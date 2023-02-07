@@ -453,15 +453,17 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          }
 
          if (!stats && first_obj && (gStyle->GetOptStat() > 0) && CanCreateObject("TPaveStats")) {
-            stats  = new TPaveStats(
+            stats = new TPaveStats(
                            gStyle->GetStatX() - gStyle->GetStatW(),
                            gStyle->GetStatY() - gStyle->GetStatH(),
                            gStyle->GetStatX(),
                            gStyle->GetStatY(), "brNDC");
 
              stats->SetParent(hist);
-             stats->SetOptFit(gStyle->GetOptFit());
-             stats->SetOptStat(gStyle->GetOptStat());
+             // do not set optfit and optstat, they calling pad->Update,
+             // values correctly set already in TPaveStats constructor
+             // stats->SetOptFit(gStyle->GetOptFit());
+             // stats->SetOptStat(gStyle->GetOptStat());
              stats->SetFillColor(gStyle->GetStatColor());
              stats->SetFillStyle(gStyle->GetStatStyle());
              stats->SetBorderSize(gStyle->GetStatBorderSize());
