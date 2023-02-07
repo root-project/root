@@ -64,7 +64,7 @@ jobs:
     runs-on: [self-hosted, linux, x64]
 
     container:
-      image: ghcr.io/olemorud/${{ matrix.image }}:buildready
+      image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready
       options: '--security-opt label=disable
                 -v /home/rootci/clouds.yaml:/etc/openstack/clouds.yaml:ro'
       env: # S3 storage
