@@ -295,4 +295,19 @@ BinnedLOutput getBinnedL(RooAbsPdf &pdf)
    return {nullptr, false};
 }
 
+/// Get the topologically-sorted list of all nodes in the computation graph.
+void getSortedComputationGraph(RooAbsReal const &func, RooArgSet &out)
+{
+   // Get the set of nodes in the computation graph. Do the detour via
+   // RooArgList to avoid deduplication done after adding each element.
+   RooArgList serverList;
+   func.treeNodeServerList(&serverList, nullptr, true, true, false, true);
+   // If we fill the servers in reverse order, they are approximately in
+   // topological order so we save a bit of work in sortTopologically().
+   out.add(serverList.rbegin(), serverList.rend(), /*silent=*/true);
+   // Sort nodes topologically: the servers of any node will be before that
+   // node in the collection.
+   out.sortTopologically();
+}
+
 }
