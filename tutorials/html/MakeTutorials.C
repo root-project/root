@@ -60,7 +60,7 @@ void AppendLink(TString& links, int id, const TNamed* n)
    if (id == 2)
       // "next" has the text first
       links += entry + arrow;
-   else 
+   else
       links += arrow + entry;
 }
 
@@ -172,35 +172,35 @@ void writeTutorials(THtml& html) {
    // tutorials and their titles; ordered by "significance"
    const char* tutorials[][2] = {
       {"hist",     "Histograms"},
-      {"graphics", "Basic Graphics"}, 
-      {"graphs",   "TGraph, TGraphErrors, etc"}, 
-      {"gui",      "Graphics User Interface"}, 
-      {"fit",      "Fitting tutorials"}, 
-      {"fitsio",   "CFITSIO interface"}, 
-      {"io",       "Input/Output"}, 
-      {"tree",     "Trees I/O, Queries, Graphics"}, 
-      {"math",     "Math tutorials"}, 
-      {"matrix",   "Matrix packages tutorials"}, 
-      {"geom",     "Geometry package"}, 
-      {"gl",       "OpenGL examples"}, 
-      {"eve",      "Event Display"}, 
-      {"fft",      "Fast Fourier Transforms"}, 
-      {"foam",     "TFoam example"}, 
-      {"image",    "Image Processing"}, 
-      {"mlp",      "Neural Networks"}, 
-      {"net",      "Network, Client/server"}, 
-      {"physics",  "Physics misc"}, 
-      {"proof",    "PROOF tutorials"}, 
-      {"pyroot",   "Python-ROOT"}, 
-      {"pythia",   "Pythia event generator"}, 
-      {"quadp",    "Quadratic Programming package"}, 
-      {"roofit",   "RooFit tutorials"}, 
-      {"roostats", "Roostats tutorials"}, 
-      {"spectrum", "Peak Finder, Deconvolutions"}, 
-      {"splot",    "TSPlot example"}, 
-      {"sql",      "SQL Data Bases interfaces"}, 
-      {"thread",   "Multi-Threading examples"}, 
-      {"unuran",   "The Unuran package"}, 
+      {"graphics", "Basic Graphics"},
+      {"graphs",   "TGraph, TGraphErrors, etc"},
+      {"gui",      "Graphics User Interface"},
+      {"fit",      "Fitting tutorials"},
+      {"fitsio",   "CFITSIO interface"},
+      {"io",       "Input/Output"},
+      {"tree",     "Trees I/O, Queries, Graphics"},
+      {"math",     "Math tutorials"},
+      {"matrix",   "Matrix packages tutorials"},
+      {"geom",     "Geometry package"},
+      {"gl",       "OpenGL examples"},
+      {"eve",      "Event Display"},
+      {"fft",      "Fast Fourier Transforms"},
+      {"foam",     "TFoam example"},
+      {"image",    "Image Processing"},
+      {"mlp",      "Neural Networks"},
+      {"net",      "Network, Client/server"},
+      {"physics",  "Physics misc"},
+      {"proof",    "PROOF tutorials"},
+      {"pyroot",   "Python-ROOT"},
+      {"pythia",   "Pythia event generator"},
+      {"quadp",    "Quadratic Programming package"},
+      {"roofit",   "RooFit tutorials"},
+      {"roostats", "Roostats tutorials"},
+      {"spectrum", "Peak Finder, Deconvolutions"},
+      {"splot",    "TSPlot example"},
+      {"sql",      "SQL Data Bases interfaces"},
+      {"thread",   "Multi-Threading examples"},
+      {"unuran",   "The Unuran package"},
       {"xml",      "XML tools"},
       {0, 0}
    };
@@ -292,7 +292,7 @@ Bool_t IsNew(const char *filename) {
          Int_t filedate = 365*(year-1) + 12*(month-1) + day; //see TDatime::GetDate
          if (now-filedate< 6*30) isnew = kTRUE;
          break;
-      } 
+      }
    }
    fclose(fpdate);
    gSystem->Unlink("MakeTutorials-tmp.log");
@@ -327,7 +327,7 @@ Bool_t CreateOutput_Tutorial(const char* tut) {
       "line3Dfit",
       "gtime",
       "games",
-      "guiWithCINT",
+      "guiWithCLING",
       "Qt",
       "rs401d_FeldmanCousins",
       "graph_edit_playback",

@@ -152,7 +152,7 @@ void MyApplication::DoEnteredCommand()
    fTextView->ShowBottom();
 }
 
-void guiWithCINT()
+void guiWithCLING()
 {
    new MyApplication(gClient->GetRoot(),600,300);
 }
