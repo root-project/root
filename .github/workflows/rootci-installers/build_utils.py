@@ -1,10 +1,16 @@
 #!/usr/bin/env false
 
-import textwrap
-from typing import Dict, Tuple
+import json
 import os
 import subprocess
 import sys
+import textwrap
+from http import HTTPStatus
+from typing import Dict, Tuple
+
+from openstack.connection import Connection
+from requests import get
+
 
 def print_fancy(*values, sgr=1, **kwargs) -> None:
     """prints message using select graphic rendition, defaults to bold text
@@ -26,13 +32,15 @@ def error(*values, **kwargs):
 def subprocess_with_log(command: str, log="") -> Tuple[int, str]:
     """Runs <command> in shell and appends <command> to log"""
 
-    print_fancy(command, sgr=90)
+    print_fancy(textwrap.dedent(command), sgr=1)
 
-    print("\033[0m", end='')
     print("\033[90m", end='')
+    print("\033[90m", end='', file=sys.stderr)
 
     result = subprocess.run(command, shell=True, check=False)
 
+    print("\033[0m", end='')
+    print("\033[0m", end='', file=sys.stderr)
 
     return (result.returncode,
             log + '\n(\n' + textwrap.dedent(command.strip()) + '\n)')
@@ -57,7 +65,6 @@ def print_shell_log(log: str) -> None:
         """)
 
         print(shell_log)
-
 
 
 def load_config(filename) -> dict:
@@ -108,58 +115,59 @@ def cmake_options_from_dict(config: Dict[str, str]) -> str:
     return ' '.join(output)
 
 
-def upload_file(connection, container: str, name: str, path: str) -> None:
-    print(f"Attempting to upload {path} to {name}", file=sys.stderr)
+def upload_file(connection: Connection, container: str, dest_object: str, src_file: str) -> None:
+    print(f"Attempting to upload {src_file} to {dest_object}", file=sys.stderr)
 
-    if not os.path.exists(path):
-        raise Exception(f"No such file: {path}")
+    if not os.path.exists(src_file):
+        raise Exception(f"No such file: {src_file}")
 
-    gigabyte = 1024*1024*1024
+    gigabyte = 1024**3
     week_in_seconds = 60*60*24*7
 
     connection.create_object(
-        container,
-        name,
-        path,
+        container=container,
+        name=dest_object,
+        filename=src_file,
         segment_size=5*gigabyte,
         **{
-            'X-Delete-After':str(2*week_in_seconds)
+            'X-Delete-After': str(2*week_in_seconds)
         }
     )
 
-    print(f"Successfully uploaded to {name}")
+    print(f"Successfully uploaded to {dest_object}")
 
 
-def download_file(connection, container: str, name: str, destination: str) -> None:
-    print(f"\nAttempting to download {name} to {destination}", file=sys.stderr)
+def download_file(url: str, dest: str) -> None:
+    print(f"\nAttempting to download {url} to {dest}", file=sys.stderr)
 
-    if not os.path.exists(os.path.dirname(destination)):
-        os.makedirs(os.path.dirname(destination))
+    parent_dir = os.path.dirname(dest)
 
-    with open(destination, 'wb') as file:
-        connection.get_object(container, name, outfile=file)
+    if not os.path.exists(parent_dir):
+        os.makedirs(parent_dir)
+
+    with open(dest, 'wb') as f, get(url, timeout=300) as r:
+        f.write(r.content)
 
 
-def download_latest(connection, container: str, prefix: str, destination: str, shell_log: str) -> str:
+def download_latest(url: str, prefix: str, destination: str, shell_log: str) -> Tuple[str, str]:
     """Downloads latest build artifact starting with <prefix>,
-       and returns the file path to the downloaded file."""
+       and returns the file path to the downloaded file and shell_log."""
 
-    objects = connection.list_objects(container, prefix=prefix)
+    # https://docs.openstack.org/api-ref/object-store/#show-container-details-and-list-objects
+    with get(f"{url}/?prefix={prefix}&format=json", timeout=20) as r:
+        if r.status_code == HTTPStatus.NO_CONTENT or r.content == b'[]':
+            raise Exception(f"No object found with prefix: {prefix}")
+            
+        result = json.loads(r.content)
+        artifacts = [x['name'] for x in result if 'content_type' in x]
 
-    if not objects:
-        raise Exception(f"No object found with prefix: {prefix}")
-
-    artifacts = [obj.name for obj in objects]
     latest = max(artifacts)
-    file = latest.split(".tar.gz")[0] + ".tar.gz"  # < ugly fix because files
-                                                   # are sometimes segmented in openstack s3
-                                                   # so that they end in *.tar.gz/001, *.tar.gz/002 etc.
 
-    download_file(connection, container, file, f"{destination}/{file}")
+    download_file(f"{url}/{latest}", f"{destination}/artifacts.tar.gz")
 
     if os.name == 'nt':
-        shell_log += f"\n(new-object System.Net.WebClient).DownloadFile('https://s3.cern.ch/swift/v1/{container}/{file}','{destination}')\n"
+        shell_log += f"\nInvoke-WebRequest {url}/{latest} -OutFile {destination}\\artifacts.tar.gz"
     else:
-        shell_log += f"\nwget https://s3.cern.ch/swift/v1/{container}/{file} -x -nH --cut-dirs 3\n"
+        shell_log += f"\nwget -x -O artifacts.tar.gz {url}/{latest}\n"
 
-    return f"{destination}/{file}", shell_log
+    return f"{destination}/artifacts.tar.gz", shell_log
