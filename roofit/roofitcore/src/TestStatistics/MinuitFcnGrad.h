@@ -52,7 +52,6 @@ public:
       }
    }
 
-   bool fit(ROOT::Fit::Fitter &fitter) const override { return fitter.FitFCN(*this); };
    ROOT::Math::IMultiGenFunction *getMultiGenFcn() override { return this; };
 
 private:
