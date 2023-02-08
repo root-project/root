@@ -7,7 +7,7 @@
 /// To execute this tutorial, you can do:
 ///
 /// ~~~{.cpp}
-/// root > .x fit2dHist.C  (executing via CINT, slow)
+/// root > .x fit2dHist.C  (executing via cling, slow)
 /// ~~~
 ///
 ///   or

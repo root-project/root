@@ -52,8 +52,8 @@
 ///
 ///  #### USAGE
 ///
-/// This macro can be executed via CINT or via ACLIC
-/// - via the interpretor, do
+/// This macro can be executed via CLING or via ACLIC
+/// - via the interpreter, do
 /// ~~~{.cpp}
 ///    root > .x solveLinear.C
 /// ~~~

@@ -22,7 +22,7 @@
 /// It's also possible to use your own function and pass it into TF1, please read
 /// TF1 documentation to learn how.
 ///
-/// This macro is to be compiled: TF1 is extremely slow with CINT's function
+/// This macro is to be compiled: TF1 is extremely slow with interpreted function
 /// as an argument.
 ///
 /// \macro_image(nobatch)
