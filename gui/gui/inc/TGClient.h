@@ -153,8 +153,6 @@ public:
    ClassDefOverride(TGClient,0)  // Class making connection to display server
 };
 
-#ifndef __CINT__
 #define gClient (TGClient::Instance())
-#endif
 
 #endif

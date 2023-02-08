@@ -441,8 +441,6 @@ public:
     */
    SMatrix<T,D1,D2,R>& operator*=(const T& rhs);
 
-#ifndef __CINT__
-
 
    /**
       multiplication with another compatible matrix (it is a real matrix multiplication)
@@ -457,7 +455,6 @@ public:
    template <class A, class R2>
    SMatrix<T,D1,D2,R>& operator*=(const Expr<A,T,D1,D2,R2>& rhs);
 
-#endif
 
    /**
       division with a scalar
@@ -705,15 +702,8 @@ inline std::ostream& operator<<(std::ostream& os, const ROOT::Math::SMatrix<T,D1
 
 
 
-
-
-
-#ifndef __CINT__
-
 #include "Math/SMatrix.icc"
 
 #include "Math/MatrixFunctions.h"
-
-#endif //__CINT__
 
 #endif  /* ROOT_Math_SMatrix  */

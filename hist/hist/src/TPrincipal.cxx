@@ -939,15 +939,12 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname,
       << "// See TPrincipal class documentation for more "
       << "information " << std::endl << "// " << std::endl;
    // Header files
-   outFile << "#ifndef __CINT__" << std::endl;
    if (isMethod)
       // If these are methods, we need the class header
       outFile << "#include \"" << classname << ".h\"" << std::endl;
    else
       // otherwise, we need the typedefs of Int_t and Double_t
       outFile << "#include <Rtypes.h> // needed for Double_t etc" << std::endl;
-   // Finish the preprocessor block
-   outFile << "#endif" << std::endl << std::endl;
 
    //
    // Now for the data

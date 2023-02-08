@@ -278,7 +278,6 @@ public:
 
 
 #ifdef OLD_IMPL
-#ifndef __CINT__
    /// self element-wise multiplication  with another vector
    SVector<T,D>& operator*=(const SVector<T,D>& rhs);
    /// self element-wise division with another vector
@@ -291,7 +290,6 @@ public:
    template <class A>
    SVector<T,D>& operator/=(const VecExpr<A,T,D>& rhs);
 
-#endif
 #endif
 
    /** @name --- Expert functions --- */
@@ -350,8 +348,6 @@ std::ostream& operator<<(std::ostream& os, const ROOT::Math::SVector<T,D>& rhs);
 
 
 
-#ifndef __CINT__
-
 // include implementation file
 #include "Math/SVector.icc"
 
@@ -359,8 +355,5 @@ std::ostream& operator<<(std::ostream& os, const ROOT::Math::SVector<T,D>& rhs);
 #include "Math/UnaryOperators.h"
 #include "Math/BinaryOperators.h"
 #include "Math/Functions.h"
-
-#endif // __CINT__
-
 
 #endif  /* ROOT_Math_SVector  */

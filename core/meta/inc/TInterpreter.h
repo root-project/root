@@ -570,10 +570,8 @@ public:
 typedef TInterpreter *CreateInterpreter_t(void* shlibHandle, const char* argv[]);
 typedef void *DestroyInterpreter_t(TInterpreter*);
 
-#ifndef __CINT__
 #define gInterpreter (TInterpreter::Instance())
 R__EXTERN TInterpreter* gCling;
-#endif
 
 inline ROOT::Internal::InterpreterMutexRegistrationRAII::InterpreterMutexRegistrationRAII(TVirtualMutex* mutex):
    fLockGuard(mutex)

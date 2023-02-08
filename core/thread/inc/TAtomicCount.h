@@ -57,11 +57,11 @@
 #include "RtypesCore.h"
 #include "RConfigure.h"
 
-#if (defined(__GLIBCPP__) || defined(__GLIBCXX__)) && !defined(__CINT__)
+#if (defined(__GLIBCPP__) || defined(__GLIBCXX__))
 #include "TAtomicCountGcc.h"
-#elif defined(_WIN32) && !defined(__CINT__)
+#elif defined(_WIN32)
 #include "TWin32AtomicCount.h"
-#elif defined(R__HAS_PTHREAD) && !defined(__CINT__)
+#elif defined(R__HAS_PTHREAD)
 #include "TAtomicCountPthread.h"
 #else
 class TAtomicCount {

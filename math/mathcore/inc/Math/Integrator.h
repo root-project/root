@@ -484,7 +484,6 @@ private:
 } // namespace ROOT
 
 
-#ifndef __CINT__
 
 
 #include "Math/WrappedFunction.h"
@@ -541,7 +540,6 @@ double ROOT::Math::IntegratorOneDim::IntegralCauchy(Function & f, double a, doub
 }
 
 
-#endif
 
 
 

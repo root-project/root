@@ -334,10 +334,8 @@ public:
    ClassDefOverride(TVirtualX,0)  //ABC defining a generic interface to graphics system
 };
 
-#ifndef __CINT__
 #define gVirtualX (TVirtualX::Instance())
 R__EXTERN TVirtualX *(*gPtr2VirtualX)();
-#endif
 R__EXTERN TVirtualX  *gGXBatch;
 
 #endif

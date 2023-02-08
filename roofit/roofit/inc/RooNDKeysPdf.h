@@ -34,16 +34,12 @@ class RooArgList;
 class RooArgSet;
 class RooChangeTracker;
 
-#ifndef __CINT__
 class VecVecDouble : public std::vector<std::vector<double> >  { } ;
 class VecTVecDouble : public std::vector<TVectorD> { } ;
 typedef std::pair<Int_t, VecVecDouble::iterator > iiPair;
 typedef std::vector< iiPair > iiVec;
 typedef std::pair<Int_t, VecTVecDouble::iterator > itPair;
 typedef std::vector< itPair > itVec;
-#else
-class itPair ;
-#endif
 
 class RooNDKeysPdf : public RooAbsPdf {
 

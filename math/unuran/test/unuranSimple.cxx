@@ -371,7 +371,6 @@ int unuranSimple( ) {
 
 }
 
-#ifndef __CINT__
 int main(int argc, char **argv)
 {
    int iret = 0;
@@ -385,5 +384,4 @@ int main(int argc, char **argv)
 
    return iret;
 }
-#endif
 

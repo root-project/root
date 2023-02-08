@@ -337,12 +337,6 @@ int testVectorIO(bool readOnly = false) {
 
   int iret = 0;
 
-// #ifdef __CINT__
-//   gSystem->Load("libMathCore");
-//   gSystem->Load("libPhysics");
-//   using namespace ROOT::Math;
-// #endif
-
   int nEvents = 100000;
   //int nEvents = 100;
 

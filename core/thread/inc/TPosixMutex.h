@@ -23,11 +23,7 @@
 
 #include "TMutexImp.h"
 
-#ifndef __CINT__
 #include <pthread.h>
-#else
-struct pthread_mutex_t;
-#endif
 
 class TPosixMutex : public TMutexImp {
 

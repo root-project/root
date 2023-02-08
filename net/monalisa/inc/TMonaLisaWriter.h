@@ -15,11 +15,7 @@
 #include "TVirtualMonitoring.h"
 #include "TStopwatch.h"
 
-#ifndef __CINT__
 #include <ApMon.h>
-#else
-struct ApMon;
-#endif
 
 #include <time.h>
 #include <map>

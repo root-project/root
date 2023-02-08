@@ -78,32 +78,32 @@ extern ErrorHandlerFunc_t SetErrorHandler(ErrorHandlerFunc_t newhandler);
 extern ErrorHandlerFunc_t GetErrorHandler();
 
 extern void Info(const char *location, const char *msgfmt, ...)
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
 __attribute__((format(printf, 2, 3)))
 #endif
 ;
 extern void Warning(const char *location, const char *msgfmt, ...)
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
 __attribute__((format(printf, 2, 3)))
 #endif
 ;
 extern void Error(const char *location, const char *msgfmt, ...)
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
 __attribute__((format(printf, 2, 3)))
 #endif
 ;
 extern void Break(const char *location, const char *msgfmt, ...)
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
 __attribute__((format(printf, 2, 3)))
 #endif
 ;
 extern void SysError(const char *location, const char *msgfmt, ...)
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
 __attribute__((format(printf, 2, 3)))
 #endif
 ;
 extern void Fatal(const char *location, const char *msgfmt, ...)
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
 __attribute__((format(printf, 2, 3)))
 #endif
 ;

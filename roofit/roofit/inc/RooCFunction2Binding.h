@@ -87,11 +87,9 @@ class RooCFunction2Map {
 
  private:
 
-#ifndef __CINT__
   std::map<std::string,VO (*)(VI1,VI2)> _ptrmap ; // Pointer-to-name map
   std::map<VO (*)(VI1,VI2),std::string> _namemap ; // Name-to-pointer map
   std::map<VO (*)(VI1,VI2),std::vector<std::string> > _argnamemap ; // Pointer-to-argnamelist map
-#endif
 } ;
 
 

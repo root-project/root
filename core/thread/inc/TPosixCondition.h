@@ -24,11 +24,7 @@
 
 #include "TConditionImp.h"
 
-#ifndef __CINT__
 #include <pthread.h>
-#else
-struct pthread_cond_t;
-#endif
 
 class TMutexImp;
 class TPosixMutex;

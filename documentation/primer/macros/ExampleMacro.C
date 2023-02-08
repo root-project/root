@@ -17,7 +17,6 @@
    not needed if the code is executed at the ROOT prompt.
                                                                             */
 
-//#ifndef __CINT__      // These include-statements are needed if the program is
 #include "TFile.h"    // run as a "stand-alone application", i.e. if it is not
 #include "TH1F.h"     // called from an interactive ROOT session.
 #include "TCanvas.h"
@@ -33,7 +32,6 @@ int main()
   ExampleMacro();
   return 0;
 }
-//#endif
 
 //______________________________________________________________________________
 

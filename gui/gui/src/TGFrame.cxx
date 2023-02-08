@@ -3439,7 +3439,7 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    out <<"// By ROOT version "<< gROOT->GetVersion() <<" on "<<t.AsSQLString()<< std::endl;
    out << std::endl;
 
-   out << "#if !defined( __CINT__) || defined (__MAKECINT__)" << std::endl << std::endl;
+   out << "#if defined (__MAKECINT__)" << std::endl << std::endl;
 
    TIter nexti(ilist);
    while((inc = (TObjString *)nexti())) {

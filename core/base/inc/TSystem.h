@@ -22,13 +22,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
 #include <cstdio>
 #include <cctype>
 #include <fcntl.h>
 #ifndef _WIN32
 #include <unistd.h>
-#endif
 #endif
 
 #include "TNamed.h"
@@ -232,11 +230,7 @@ enum ESendRecvOptions {
    kDontBlock          // send/recv as much data as possible without blocking
 };
 
-#ifdef __CINT__
-typedef void *Func_t;
-#else
 typedef void (*Func_t)();
-#endif
 
 R__EXTERN const char  *gRootDir;
 R__EXTERN const char  *gProgName;

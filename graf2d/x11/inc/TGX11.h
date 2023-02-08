@@ -14,8 +14,6 @@
 
 #include "TVirtualX.h"
 
-#if !defined(__CINT__)
-
 #ifdef Status
 // Convert Status from a CPP macro to a typedef:
 typedef Status X11Status_t;
@@ -30,7 +28,6 @@ static const unsigned long gX11None = None;
 static const unsigned long None = gX11None;
 #endif
 
-#endif
 
 typedef unsigned long XID;
 typedef XID Drawable;

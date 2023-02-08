@@ -204,27 +204,27 @@ public:
 
    //---- error handling
    virtual void     Info(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
 #endif
    ;
    virtual void     Warning(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
 #endif
    ;
    virtual void     Error(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
 #endif
    ;
    virtual void     SysError(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
 #endif
    ;
    virtual void     Fatal(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
 #endif
    ;
