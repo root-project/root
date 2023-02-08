@@ -130,7 +130,8 @@ class RLoopManager : public RNodeBase {
    /// Groups need to survive throughout the whole event loop, hence stored as an attribute
    std::vector<ROOT::RDF::Experimental::RDatasetGroup> fDatasetGroups;
 
-   std::vector<std::unique_ptr<TTree>> fFriends; ///< Friends of the fTree. Only used if we constructed fTree ourselves.
+   /// Friends of the fTree. Only used if we constructed fTree ourselves.
+   std::vector<std::unique_ptr<TChain>> fFriends;
    const ColumnNames_t fDefaultColumns;
    /// Range of entries created when no data source is specified.
    std::pair<ULong64_t, ULong64_t> fEmptyEntryRange{};
