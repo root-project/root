@@ -85,9 +85,6 @@ public:
    /// set the function to minimize
    void SetFunction(const ROOT::Math::IMultiGenFunction & func) override;
 
-   /// set the function to minimize
-   void SetFunction(const ROOT::Math::IMultiGradFunction & func) override;
-
    /// set free variable
    bool SetVariable(unsigned int ivar, const std::string & name, double val, double step) override;
 

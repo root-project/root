@@ -381,37 +381,30 @@ void Minuit2Minimizer::SetFunction(const ROOT::Math::IMultiGenFunction &func)
    if (fMinuitFCN)
       delete fMinuitFCN;
    fDim = func.NDim();
+   const bool hasGrad = func.HasGradient();
    if (!fUseFumili) {
-      fMinuitFCN = new ROOT::Minuit2::FCNAdapter<ROOT::Math::IMultiGenFunction>(func, ErrorDef());
+      fMinuitFCN = hasGrad ? static_cast<ROOT::Minuit2::FCNBase *>(new ROOT::Minuit2::FCNGradAdapter<ROOT::Math::IMultiGradFunction>(dynamic_cast<ROOT::Math::IMultiGradFunction const&>(func), ErrorDef()))
+                           : static_cast<ROOT::Minuit2::FCNBase *>(new ROOT::Minuit2::FCNAdapter<ROOT::Math::IMultiGenFunction>(func, ErrorDef()));
    } else {
-      // for Fumili the fit method function interface is required
-      const ROOT::Math::FitMethodFunction *fcnfunc = dynamic_cast<const ROOT::Math::FitMethodFunction *>(&func);
-      if (!fcnfunc) {
-         MnPrint print("Minuit2Minimizer", PrintLevel());
-         print.Error("Wrong Fit method function for Fumili");
-         return;
+      if(hasGrad) {
+         // for Fumili the fit method function interface is required
+         auto fcnfunc = dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(&func);
+         if (!fcnfunc) {
+            MnPrint print("Minuit2Minimizer", PrintLevel());
+            print.Error("Wrong Fit method function for Fumili");
+            return;
+         }
+         fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodGradFunction>(*fcnfunc, fDim, ErrorDef());
+      } else {
+         // for Fumili the fit method function interface is required
+         auto fcnfunc = dynamic_cast<const ROOT::Math::FitMethodFunction *>(&func);
+         if (!fcnfunc) {
+            MnPrint print("Minuit2Minimizer", PrintLevel());
+            print.Error("Wrong Fit method function for Fumili");
+            return;
+         }
+         fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodFunction>(*fcnfunc, fDim, ErrorDef());
       }
-      fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodFunction>(*fcnfunc, fDim, ErrorDef());
-   }
-}
-
-void Minuit2Minimizer::SetFunction(const ROOT::Math::IMultiGradFunction &func)
-{
-   // set function to be minimized
-   fDim = func.NDim();
-   if (fMinuitFCN)
-      delete fMinuitFCN;
-   if (!fUseFumili) {
-      fMinuitFCN = new ROOT::Minuit2::FCNGradAdapter<ROOT::Math::IMultiGradFunction>(func, ErrorDef());
-   } else {
-      // for Fumili the fit method function interface is required
-      const ROOT::Math::FitMethodGradFunction *fcnfunc = dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(&func);
-      if (!fcnfunc) {
-         MnPrint print("Minuit2Minimizer", PrintLevel());
-         print.Error("Wrong Fit method function for Fumili");
-         return;
-      }
-      fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodGradFunction>(*fcnfunc, fDim, ErrorDef());
    }
 }
 

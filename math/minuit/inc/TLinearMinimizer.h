@@ -65,9 +65,6 @@ public:
    /// set the fit model function
    void SetFunction(const ROOT::Math::IMultiGenFunction & func) override;
 
-   /// set the function to minimize
-   void SetFunction(const ROOT::Math::IMultiGradFunction & func) override;
-
    /// set free variable (dummy impl. since there is no need to set variables in the Linear Fitter)
    bool SetVariable(unsigned int , const std::string & , double , double ) override { return true; }
 

@@ -106,6 +106,10 @@ namespace ROOT {
          }
 #endif
 
+         // Indicate whether this class supports gradient calculations, i.e.,
+         // if it inherits from ROOT::Math::IGradientFunctionMultiDim.
+         virtual bool HasGradient() const { return false; }
+
 
       private:
 
@@ -169,6 +173,9 @@ namespace ROOT {
             return DoEval(*x);
          }
 
+         // Indicate whether this class supports gradient calculations, i.e.,
+         // if it inherits from ROOT::Math::IGradientFunctionOneDim.
+         virtual bool HasGradient() const { return false; }
 
 
       private:
@@ -386,6 +393,8 @@ namespace ROOT {
             Gradient(x, df);
          }
 
+         bool HasGradient() const { return true; }
+
          virtual bool returnsInMinuit2ParameterSpace() const { return false; }
       };
 
@@ -434,6 +443,7 @@ namespace ROOT {
             df = Derivative(x);
          }
 
+         bool HasGradient() const override { return true; }
 
 
       };
