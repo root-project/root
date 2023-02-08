@@ -276,7 +276,6 @@ namespace ROOT {
          // rotation and transformations
 
 
-#ifndef __CINT__
          /**
           rotation along X axis for a generic vector by an Angle alpha
           returning a new vector.
@@ -450,11 +449,6 @@ namespace ROOT {
             lv.SetXYZT(v.X(),v.Y(),z2,t2);
             return lv;
          }
-
-#endif
-
-
-
 
          // MATRIX VECTOR MULTIPLICATION
          // cannot define an operator * otherwise conflicts with rotations

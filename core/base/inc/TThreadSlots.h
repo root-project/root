@@ -38,8 +38,6 @@ namespace ROOT {
    };
 }
 
-#ifndef __CINT__
 R__EXTERN void **(*gThreadTsd)(void*,Int_t);
-#endif
 
 #endif // ROOT_TThreadSlots

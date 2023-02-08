@@ -576,7 +576,7 @@ struct Limits {
 #include <cfloat>
 #include <cmath>
 
-#if defined(R__WIN32) && !defined(__CINT__)
+#if defined(R__WIN32)
 #   ifndef finite
 #      define finite _finite
 #   endif

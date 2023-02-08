@@ -130,7 +130,6 @@ public:
    virtual ~TBtNode();
 
    virtual void Add(const TObject *obj, Int_t index) = 0;
-#ifndef __CINT__
    virtual TBtree *GetParentTree() const {return fTree;}
    virtual void Remove(Int_t index) = 0;
 
@@ -144,7 +143,6 @@ public:
    virtual TBtLeafNode *LastLeafNode() = 0;
 
    virtual void Split() = 0;
-#endif
    // virtual void PrintOn(std::ostream &os) const = 0;
    // friend std::ostream &operator<<(std::ostream &os, const TBtNode &node);
 };
@@ -193,7 +191,6 @@ public:
    TBtInnerNode(TBtInnerNode *parent, TBtree *tree, TBtNode *oldroot);
    ~TBtInnerNode();
 
-#ifndef __CINT__
    void      Add(const TObject *obj, Int_t idx) override;
    void      Add(TBtItem &i, Int_t idx);
    void      Add(Int_t at, TObject *obj, TBtNode *n);
@@ -255,7 +252,6 @@ public:
    Int_t     IsAlmostFull() const { return fLast >= MaxIndex() - 1; }
    Int_t     IsLow() const {  return fLast < fTree->fInnerLowWaterMark; }
    void      IsLow(TBtNode *n);
-#endif
 };
 
 
@@ -278,7 +274,6 @@ public:
    TBtLeafNode(TBtInnerNode *p, const TObject *obj = nullptr, TBtree *t = nullptr);
    ~TBtLeafNode();
 
-#ifndef __CINT__
    void       Add(const TObject *obj, Int_t idx) override;
    void       Remove(Int_t idx) override;
    void       RemoveItem(Int_t idx) { Remove(idx); }
@@ -319,7 +314,6 @@ public:
    Int_t      IsFull() const { return fLast == MaxIndex(); }
    Int_t      IsAlmostFull() const { return fLast >= MaxIndex() - 1; }
    Int_t      IsLow() const { return fLast < fTree->fLeafLowWaterMark; }
-#endif
 };
 
 

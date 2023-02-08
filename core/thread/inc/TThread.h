@@ -171,7 +171,7 @@ public:
 
    // XActions
    static void      Printf(const char *fmt, ...)   // format and print
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 1, 2)))
 #endif
    ;

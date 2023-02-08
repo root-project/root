@@ -11,10 +11,6 @@
 #ifndef ROOT_Varargs
 #define ROOT_Varargs
 
-#ifdef __CINT__
-#include <stdarg.h>
-#endif
-
 #if defined(sparc) && defined(__CC_ATT301__)
 
    extern "C" __builtin_va_arg_incr(...);
@@ -32,9 +28,7 @@
    };
 
 #else
-#   ifndef __CINT__
 #   include <stdarg.h>
-#   endif
 #   if defined(sparc) && !defined(__GNUG__) && !defined(__CC_SUN21__) && !defined(__SVR4)
 #      define va_(arg) __builtin_va_alist
 #   else

@@ -47,7 +47,7 @@
 #undef R__USEASMSWAP
 #endif
 
-#if defined(R__USEASMSWAP) && !defined(__CINT__)
+#if defined(R__USEASMSWAP)
 #include "Byteswap.h"
 #endif
 

@@ -374,8 +374,6 @@ inline TBuffer &operator<<(TBuffer &buf, Double_t d) { buf.WriteDouble(d); retur
 inline TBuffer &operator<<(TBuffer &buf, const Char_t *c)  { buf.WriteCharP(c);  return buf; }
 inline TBuffer &operator<<(TBuffer &buf, const TString &s) { buf.WriteTString(s);return buf; }
 
-#ifndef __CINT__
-
 #if defined(R__SOLARIS) && defined(R__GNU)
 #include <typeinfo>
 #endif
@@ -402,10 +400,6 @@ template <class Tmpl> TBuffer &operator<<(TBuffer &buf, const Tmpl *obj)
    buf.WriteObjectAny(obj, cl);
    return buf;
 }
-#else
-template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj);
-template <class Tmpl> TBuffer &operator<<(TBuffer &buf, Tmpl *&obj);
-#endif
 
 template <class T>
 inline Int_t TBuffer::WriteObject(const T *objptr, Bool_t cacheReuse)
