@@ -91,9 +91,6 @@ public:
    /// set the function to minimize
    void SetFunction(const ROOT::Math::IMultiGenFunction & func) override;
 
-   /// set gradient the function to minimize
-   void SetFunction(const ROOT::Math::IMultiGradFunction & func) override;
-
 
    /// method to perform the minimization
     bool Minimize() override;

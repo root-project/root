@@ -119,12 +119,6 @@ public:
    /// set the function to minimize
    virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func) = 0;
 
-   /// set a function to minimize using gradient
-   virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func)
-   {
-      SetFunction(static_cast<const ::ROOT::Math::IMultiGenFunction &> (func));
-   }
-
    /// set the function implementing Hessian computation (re-implemented by Minimizer using it)
    virtual void SetHessianFunction(std::function<bool(const std::vector<double> &, double *)> ) {}
 

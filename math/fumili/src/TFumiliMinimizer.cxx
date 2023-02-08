@@ -188,6 +188,27 @@ void TFumiliMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) 
    fDim = func.NDim();
    fFumili->SetParNumber(fDim);
 
+   if(func.HasGradient()) {
+      // In this case the function derivatives are provided
+      // by the user via this interface and there not calculated by Fumili.
+
+      fDim = func.NDim();
+      fFumili->SetParNumber(fDim);
+
+      // for Fumili the fit method function interface is required
+      const ROOT::Math::FitMethodGradFunction * fcnfunc = dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(&func);
+      if (!fcnfunc) {
+         Error("SetFunction","Wrong Fit method function type used for Fumili");
+         return;
+      }
+      // assign to the static pointer (NO Thread safety here)
+      fgFunc = 0;
+      fgGradFunc = const_cast<ROOT::Math::FitMethodGradFunction  *>(fcnfunc);
+      fFumili->SetFCN(&TFumiliMinimizer::Fcn);
+
+      return;
+   }
+
    // for Fumili the fit method function interface is required
    const ROOT::Math::FitMethodFunction * fcnfunc = dynamic_cast<const ROOT::Math::FitMethodFunction *>(&func);
    if (!fcnfunc) {
@@ -207,27 +228,6 @@ void TFumiliMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) 
          fgFunc = new FumiliFunction<ROOT::Fit::Chi2FCN<ROOT::Math::FitMethodFunction::BaseFunction> >(fFumili,fcnfunc);
    }
 #endif
-
-}
-
-void TFumiliMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & func) {
-   // Set the objective function to be minimized, by passing a function object implement the
-   // multi-dim gradient Function interface. In this case the function derivatives are provided
-   // by the user via this interface and there not calculated by Fumili.
-
-   fDim = func.NDim();
-   fFumili->SetParNumber(fDim);
-
-   // for Fumili the fit method function interface is required
-   const ROOT::Math::FitMethodGradFunction * fcnfunc = dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(&func);
-   if (!fcnfunc) {
-      Error("SetFunction","Wrong Fit method function type used for Fumili");
-      return;
-   }
-   // assign to the static pointer (NO Thread safety here)
-   fgFunc = 0;
-   fgGradFunc = const_cast<ROOT::Math::FitMethodGradFunction  *>(fcnfunc);
-   fFumili->SetFCN(&TFumiliMinimizer::Fcn);
 
 }
 

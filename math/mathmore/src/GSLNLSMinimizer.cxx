@@ -240,13 +240,7 @@ void GSLNLSMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) {
    // call base class method. It will clone the function and set number of dimensions
    BasicMinimizer::SetFunction(func);
    fNFree = NDim();
-   fUseGradFunction = false;
- }
-
-void GSLNLSMinimizer::SetFunction(const ROOT::Math::IMultiGradFunction & func ) {
-   // set the function to minimizer using gradient interface
-   BasicMinimizer::SetFunction(func);
-   fUseGradFunction = true;
+   fUseGradFunction = func.HasGradient();
 }
 
 

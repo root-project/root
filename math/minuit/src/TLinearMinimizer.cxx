@@ -118,21 +118,19 @@ TLinearMinimizer & TLinearMinimizer::operator = (const TLinearMinimizer &rhs)
 }
 
 
-void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & ) {
-   // Set function to be minimized. Flag an error since only support Gradient objective functions
-
-   Error("TLinearMinimizer::SetFunction(IMultiGenFunction)","Wrong type of function used for Linear fitter");
-}
-
-
-void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & objfunc) {
+void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & objfunc) {
    // Set the function to be minimized. The function must be a Chi2 gradient function
    // When performing a linear fit we need the basis functions, which are the partial derivatives with respect to the parameters of the model function.
+
+   if(!objfunc.HasGradient()) {
+      // Set function to be minimized. Flag an error since only support Gradient objective functions
+      Error("TLinearMinimizer::SetFunction(IMultiGenFunction)","Wrong type of function used for Linear fitter");
+   }
 
    typedef ROOT::Fit::Chi2FCN<ROOT::Math::IMultiGradFunction> Chi2Func;
    const Chi2Func * chi2func = dynamic_cast<const Chi2Func *>(&objfunc);
    if (chi2func ==0) {
-      Error("TLinearMinimizer::SetFunction(IMultiGradFunction)","Wrong type of function used for Linear fitter");
+      Error("TLinearMinimizer::SetFunction(IMultiGenFunction)","Wrong type of function used for Linear fitter");
       return;
    }
    fObjFunc = chi2func;

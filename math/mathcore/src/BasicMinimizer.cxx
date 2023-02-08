@@ -243,13 +243,6 @@ void BasicMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) {
    fDim = fObjFunc->NDim();
 }
 
-void BasicMinimizer::SetFunction(const ROOT::Math::IMultiGradFunction & func) {
-   // set the gradient function to minimize after cloning it
-   fObjFunc = dynamic_cast<const ROOT::Math::IMultiGradFunction *>( func.Clone());
-   assert(fObjFunc != 0);
-   fDim = fObjFunc->NDim();
-}
-
 
 bool BasicMinimizer::CheckDimension() const {
    unsigned int npar = fValues.size();
