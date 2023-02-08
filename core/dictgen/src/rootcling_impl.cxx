@@ -4700,9 +4700,20 @@ int RootClingMain(int argc,
 
    int rootclingRetCode(0);
 
-   if (linkdef.empty()) {
-      // There is no linkdef file, we added the 'default' #pragma to
-      // interpPragmaSource.
+   if (linkdef.empty() || ROOT::TMetaUtils::IsLinkdefFile(linkdefFilename.c_str())) {
+      if (ROOT::TMetaUtils::IsLinkdefFile(linkdefFilename.c_str())) {
+        std::ifstream file(linkdefFilename.c_str());
+        if (file.is_open()) {
+           ROOT::TMetaUtils::Info(nullptr, "Using linkdef file: %s\n", linkdefFilename.c_str());
+           file.close();
+        } else {
+           ROOT::TMetaUtils::Error(nullptr, "Linkdef file %s couldn't be opened!\n", linkdefFilename.c_str());
+        }
+
+        selectionRules.SetSelectionFileType(SelectionRules::kLinkdefFile);
+      }
+      // If there is no linkdef file, we added the 'default' #pragma to
+      // interpPragmaSource and we still need to process it.
 
       LinkdefReader ldefr(interp, constructorTypes);
       clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap
@@ -4738,34 +4749,6 @@ int RootClingMain(int argc,
          file.close();
       } else {
          ROOT::TMetaUtils::Error(nullptr, "XML file %s couldn't be opened!\n", linkdefFilename.c_str());
-      }
-
-   } else if (ROOT::TMetaUtils::IsLinkdefFile(linkdefFilename.c_str())) {
-
-      std::ifstream file(linkdefFilename.c_str());
-      if (file.is_open()) {
-         ROOT::TMetaUtils::Info(nullptr, "Using linkdef file: %s\n", linkdefFilename.c_str());
-         file.close();
-      } else {
-         ROOT::TMetaUtils::Error(nullptr, "Linkdef file %s couldn't be opened!\n", linkdefFilename.c_str());
-      }
-
-      selectionRules.SetSelectionFileType(SelectionRules::kLinkdefFile);
-
-      LinkdefReader ldefr(interp, constructorTypes);
-      clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap
-
-      if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
-                       llvmResourceDir.c_str())) {
-         ROOT::TMetaUtils::Error(nullptr, "Parsing Linkdef file %s\n", linkdefFilename.c_str());
-         rootclingRetCode += 1;
-      } else {
-         ROOT::TMetaUtils::Info(nullptr, "Linkdef file successfully parsed.\n");
-      }
-
-      if (! ldefr.LoadIncludes(extraIncludes)) {
-         ROOT::TMetaUtils::Error(nullptr, "Error loading the #pragma extra_include.\n");
-         return 1;
       }
 
    } else {
