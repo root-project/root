@@ -258,6 +258,8 @@ TEST_F(RDFAndFriends, FriendChainMT)
    ROOT::DisableImplicitMT();
 }
 
+#endif // R__USE_IMT
+
 // ROOT-9559
 void FillIndexedFriend(const char *mainfile, const char *auxfile)
 {
@@ -303,10 +305,10 @@ void FillIndexedFriend(const char *mainfile, const char *auxfile)
    f2.Close();
 }
 
-TEST(RDFAndFriendsNoFixture, IndexedFriend)
+void TestIndexedFriendChain()
 {
-   auto mainFile = "IndexedFriend_main.root";
-   auto auxFile = "IndexedFriend_aux.root";
+   auto mainFile = "IndexedFriendChain_main.root";
+   auto auxFile = "IndexedFriendChain_aux.root";
    FillIndexedFriend(mainFile, auxFile);
 
    TChain mainChain("mainTree", "mainTree");
@@ -321,14 +323,70 @@ TEST(RDFAndFriendsNoFixture, IndexedFriend)
    auto x = df.Take<int>("x");
    auto y = df.Take<int>("auxTree.y");
 
-   std::vector<int> refx{{1,2,3,4,5}};
+   std::vector<int> refx{{1, 2, 3, 4, 5}};
    EXPECT_TRUE(std::equal(x->begin(), x->end(), refx.begin()));
-   std::vector<int> refy{{7,7,7,5,5}};
+   std::vector<int> refy{{7, 7, 7, 5, 5}};
    EXPECT_TRUE(std::equal(y->begin(), y->end(), refy.begin()));
 
    gSystem->Unlink(mainFile);
    gSystem->Unlink(auxFile);
 }
+
+void TestIndexedFriendTree()
+{
+   auto mainFile = "IndexedFriendTree_main.root";
+   auto auxFile = "IndexedFriendTree_aux.root";
+   FillIndexedFriend(mainFile, auxFile);
+
+   TFile mainF(mainFile);
+   auto *mainTree = mainF.Get<TTree>("mainTree");
+   EXPECT_NE(mainTree, nullptr);
+
+   TFile auxF(auxFile);
+   auto *auxTree = auxF.Get<TTree>("auxTree");
+   EXPECT_NE(auxTree, nullptr);
+
+   auxTree->BuildIndex("idx");
+   mainTree->AddFriend(auxTree);
+
+   auto df = ROOT::RDataFrame(*mainTree);
+   auto x = df.Take<int>("x");
+   auto y = df.Take<int>("auxTree.y");
+
+   std::vector<int> refx{{1, 2, 3, 4, 5}};
+   EXPECT_TRUE(std::equal(x->begin(), x->end(), refx.begin()));
+   std::vector<int> refy{{7, 7, 7, 5, 5}};
+   EXPECT_TRUE(std::equal(y->begin(), y->end(), refy.begin()));
+
+   gSystem->Unlink(mainFile);
+   gSystem->Unlink(auxFile);
+}
+
+TEST(RDFAndFriendsNoFixture, IndexedFriendChain)
+{
+   TestIndexedFriendChain();
+}
+
+TEST(RDFAndFriendsNoFixture, IndexedFriendTree)
+{
+   TestIndexedFriendChain();
+}
+
+#ifdef R__USE_IMT
+TEST(RDFAndFriendsNoFixture, IndexedFriendChainMT)
+{
+   ROOT::EnableImplicitMT();
+   TestIndexedFriendChain();
+   ROOT::DisableImplicitMT();
+}
+
+TEST(RDFAndFriendsNoFixture, IndexedFriendTreeMT)
+{
+   ROOT::EnableImplicitMT();
+   TestIndexedFriendTree();
+   ROOT::DisableImplicitMT();
+}
+#endif // R__USE_IMT
 
 // Test for https://github.com/root-project/root/issues/6741
 TEST(RDFAndFriendsNoFixture, AutomaticFriendsLoad)
@@ -352,5 +410,3 @@ TEST(RDFAndFriendsNoFixture, AutomaticFriendsLoad)
 
    gSystem->Unlink(fname);
 }
-
-#endif // R__USE_IMT
