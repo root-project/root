@@ -490,7 +490,7 @@ TEST_P(OffsetBinTest, CrossCheck)
    EXPECT_NEAR(nllVal1, 0.0, 1e-8) << "NLL with bin offsetting is " << nllVal1 << ", and " << nllVal0 << " without it.";
 }
 
-INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Combine(testing::Values("Off", "Cpu")),
+INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values("Off", "Cpu"),
                          [](testing::TestParamInfo<TestStatisticTest::ParamType> const &paramInfo) {
                             std::stringstream ss;
                             ss << "BatchMode" << std::get<0>(paramInfo.param);
