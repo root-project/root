@@ -1,5 +1,5 @@
 
-name: 'Root Rebase and Build'
+name: 'Rebase and Build'
 
 on:
   schedule:
@@ -29,7 +29,7 @@ on:
         type: boolean
         required: true
         default: true
-  
+
   # Enables manual start of workflow
   workflow_dispatch:
     inputs:
@@ -67,9 +67,9 @@ jobs:
       image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready
       options: '--security-opt label=disable
                 -v /home/rootci/clouds.yaml:/etc/openstack/clouds.yaml:ro'
-      env: # S3 storage
+      env:
         PYTHONUNBUFFERED: true
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
