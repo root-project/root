@@ -354,7 +354,7 @@ TEST(RooAbsPdf, NormSetChange)
    EXPECT_NE(v1, v2);
 }
 
-INSTANTIATE_TEST_SUITE_P(RooAbsPdf, FitTest, testing::Combine(testing::Values("Off", "Cpu")),
+INSTANTIATE_TEST_SUITE_P(RooAbsPdf, FitTest, testing::Values("Off", "Cpu"),
                          [](testing::TestParamInfo<FitTest::ParamType> const &paramInfo) {
                             std::stringstream ss;
                             ss << "BatchMode" << std::get<0>(paramInfo.param);
