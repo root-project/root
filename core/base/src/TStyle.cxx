@@ -1997,7 +1997,7 @@ void TStyle::SaveSource(const char *filename, Option_t *option)
    char quote = '"';
 
    // Writes include.
-   out << "#if !defined( __CINT__) || defined (__MAKECINT__)" << std::endl << std::endl;
+   out << "#if defined (__MAKECINT__)" << std::endl << std::endl;
    out << "#ifndef ROOT_TStyle" << std::endl;
    out << "#include " << quote << "TStyle.h" << quote << std::endl;
    out << "#endif" << std::endl;

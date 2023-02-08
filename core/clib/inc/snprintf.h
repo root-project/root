@@ -12,9 +12,6 @@
 
 #include <ROOT/RConfig.hxx>
 #include <stdio.h>
-
-#ifndef __CINT__
-
 #ifdef NEED_SNPRINTF
 
 #include <stdarg.h>
@@ -42,11 +39,5 @@ int snprintf(char *string, size_t length, const char *format, ...);
 #endif
 
 #endif /* NEED_SNPRINTF */
-
-#else
-
-int snprintf(char *string, size_t length, const char *format, ...);
-
-#endif /* __CINT__ */
 
 #endif /* ROOT_snprintf */

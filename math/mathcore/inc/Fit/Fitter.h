@@ -642,7 +642,6 @@ void Fitter::SetFunction(const IGradModelFunction_v &func, bool useGradient)
 // implementation of inline methods
 
 
-#ifndef __CINT__
 
 #include "Math/WrappedFunction.h"
 
@@ -661,7 +660,5 @@ bool ROOT::Fit::Fitter::SetFCN(unsigned int npar, Function & f, const double * p
 
 
 
-
-#endif  // endif __CINT__
 
 #endif /* ROOT_Fit_Fitter */

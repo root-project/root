@@ -29,7 +29,6 @@ int TRandom1::fgNumEngines = 0;
 
 // Maximum index into the seed table
 int TRandom1::fgMaxIndex = 215;
-#ifndef __CINT__
 const UInt_t fgSeedTable[215][2] = {
                              {           9876, 54321    },
                              {     1299961164, 253987020 },
@@ -246,7 +245,6 @@ const UInt_t fgSeedTable[215][2] = {
                              {      356133630, 1676634527   },
                              {      242242374, 1863206182   },
                              {      957935844, 1490681416   }};
-#endif
 
 ClassImp(TRandom1);
 
