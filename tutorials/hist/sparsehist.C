@@ -23,8 +23,8 @@
 /// TParallelCoord.
 ///
 /// This macro should be run in compiled mode due to the many nested
-/// loops that force CINT to disable its optimization. If run
-/// interpreted one would not benchmark THnSparse but CINT.
+/// loops that force CLING to disable its optimization. If run
+/// interpreted one would not benchmark THnSparse but CLING.
 ///
 ///  Run as:
 /// ~~~{.cpp}

@@ -24,7 +24,7 @@ void first() {
    t.SetTextFont(62);
    t.SetTextSize(0.025);
    t.SetTextAlign(12);
-   t.DrawText(2,20.3,"ROOT is based on CINT, a powerful C/C++ interpreter.");
+   t.DrawText(2,20.3,"ROOT is based on CLING, a powerful C/C++ interpreter.");
    t.DrawText(2,19.3,"Blocks of lines can be entered within {...}.");
    t.DrawText(2,18.3,"Previous typed lines can be recalled.");
 
