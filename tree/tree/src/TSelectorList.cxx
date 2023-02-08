@@ -40,7 +40,7 @@ Bool_t TSelectorList::UnsetDirectory(TObject *obj)
    if (!callEnv.IsValid())
       return kFALSE;
 
-   callEnv.SetParam((Long_t) 0);
+   callEnv.SetParam((Longptr_t) nullptr);
    callEnv.Execute(obj);
 
    return kTRUE;
