@@ -32,7 +32,7 @@
 
 #include <iostream>
 
-// CINT does not understand some files included by LorentzVector
+// CLING does not understand some files included by LorentzVector
 #include "Math/Vector3D.h"
 #include "Math/Vector4D.h"
 

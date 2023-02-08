@@ -3,7 +3,7 @@
 /// \notebook -nodraw
 /// Demonstrate the TFoam class.
 ///
-///  To run this macro type from CINT command line
+///  To run this macro type from ROOT command line
 ///
 /// ~~~{.cpp}
 ///  root [0] gSystem->Load("libFoam.so")
@@ -144,6 +144,6 @@ Int_t foam_demo()
    cout << "***** End of Demonstration Program  *****" << endl;
 
    return 0;
-} 
+}
 
 

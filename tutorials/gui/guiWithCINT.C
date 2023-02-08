@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_gui
-/// A simple example of entering  CINT commands and having the CINT output in a ROOT GUI application window.
-/// An editable combo box is used as a CINT prompt, a text view widget displays the command output.
+/// A simple example of entering CLING commands and having the CLING output in a ROOT GUI application window.
+/// An editable combo box is used as a CLING prompt, a text view widget displays the command output.
 ///
 /// \macro_code
 ///
@@ -40,10 +40,10 @@ class MyApplication : public TGMainFrame {
 private:
    TGTextButton        *fExit;
    IDList               fIDs;
-   TGComboBox          *fComboCmd;   // CINT command combobox
+   TGComboBox          *fComboCmd;   // CLING command combobox
    TGTextBuffer        *fCommandBuf; // text buffer in use
-   TGTextEntry         *fCommand;    // text entry for CINT commands
-   TGTextView          *fTextView;   // display CINT output
+   TGTextEntry         *fCommand;    // text entry for CLING commands
+   TGTextView          *fTextView;   // display CLING output
    TString              fName;       // name of temp created file
 public:
    MyApplication(const TGWindow *p, UInt_t w, UInt_t h);
@@ -65,7 +65,7 @@ MyApplication::MyApplication(const TGWindow *p, UInt_t w, UInt_t h)
 
    TGHorizontalFrame *fHL2 = new TGHorizontalFrame(this, 70, 100);
    AddFrame(fHL2, new TGLayoutHints(kLHintsNormal, 5, 5, 5, 5));
-   TGLabel *fInlabel = new TGLabel(fHL2, "CINT Prompt:");
+   TGLabel *fInlabel = new TGLabel(fHL2, "CLING Prompt:");
    fHL2->AddFrame(fInlabel, new TGLayoutHints(kLHintsCenterY));
 
    TGLabel *fOutlabel = new TGLabel(this, "Output Window:");
@@ -99,7 +99,7 @@ MyApplication::MyApplication(const TGWindow *p, UInt_t w, UInt_t h)
    fHL3->AddFrame(fExit, new TGLayoutHints(kLHintsExpandX));
    AddFrame(fHL3, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 1, 1, 1, 1));
 
-   SetWindowName("GUI with CINT Input/Output");
+   SetWindowName("GUI with CLING Input/Output");
    MapSubwindows();
    Resize(GetDefaultSize());
    MapWindow();
@@ -124,7 +124,7 @@ void MyApplication::DoExit()
 
 void MyApplication::DoEnteredCommand()
 {
-   // Execute the CINT command after the ENTER key was pressed.
+   // Execute the CLING command after the ENTER key was pressed.
 
    const char *command = fCommand->GetTitle();
    TString prompt;

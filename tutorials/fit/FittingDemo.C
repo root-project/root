@@ -5,7 +5,7 @@
 /// This example can be executed with:
 ///
 /// ~~~{.cpp}
-/// root > .x FittingDemo.C  (using the CINT interpreter)
+/// root > .x FittingDemo.C  (using the cling interpreter)
 /// root > .x FittingDemo.C+ (using the native complier via ACLIC)
 /// ~~~
 ///
