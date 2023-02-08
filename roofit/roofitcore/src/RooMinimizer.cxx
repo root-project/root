@@ -298,7 +298,7 @@ ROOT::Fit::Fitter const *RooMinimizer::fitter() const
 
 bool RooMinimizer::fitFcn() const
 {
-   return _fcn->fit(*_theFitter);
+   return _theFitter->FitFCN(*_fcn->getMultiGenFcn());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
