@@ -499,7 +499,10 @@ sap.ui.define([
 
          this.getView().getModel().setProperty("/TooltipIcon", chk_icon(new_state));
 
-         if (p) p.setTooltipAllowed(new_state);
+         if (p) {
+            p.setTooltipAllowed(new_state);
+            p.processChanges("sbits", p);
+         }
       },
 
       isMenuBarShow() {
