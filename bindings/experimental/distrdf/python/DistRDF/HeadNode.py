@@ -379,6 +379,15 @@ class TreeHeadNode(HeadNode):
         if isinstance(args[0], ROOT.TTree):
             # RDataFrame(tree, defaultBranches = {})
             self.tree = args[0]
+            # TTreeIndex is not supported in distributed RDataFrame
+            list_of_friends = self.tree.GetListOfFriends()
+            if list_of_friends and list_of_friends.GetEntries() > 0:
+                for friend_element in list_of_friends:
+                    if friend_element.GetTree().GetTreeIndex():
+                        raise ValueError(
+                            f"Friend tree '{friend_element.GetName()}' has a TTreeIndex. "
+                            "This is not supported in distributed mode."
+                        )
             # Retrieve information about friend trees when user passes a TTree
             # or TChain object.
             fi = ROOT.Internal.TreeUtils.GetFriendInfo(args[0])
