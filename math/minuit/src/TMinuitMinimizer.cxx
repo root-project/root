@@ -218,33 +218,19 @@ void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) 
    GetGlobalFuncPtr() = const_cast<ROOT::Math::IMultiGenFunction *>(&func);
    fMinuit->SetFCN(&TMinuitMinimizer::Fcn);
 
-   // switch off gradient calculations
    double arglist[1];
    int ierr = 0;
-   fMinuit->mnexcm("SET NOGrad",arglist,0,ierr);
-}
 
-void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & func) {
-   // Set the objective function to be minimized, by passing a function object implement the
-   // multi-dim gradient Function interface. In this case the function derivatives are provided
-   // by the user via this interface and there not calculated by Minuit.
-
-   fDim = func.NDim();
-
-   // create TMinuit if needed
-   InitTMinuit(fDim);
-
-   // assign to the static pointer (NO Thread safety here)
-   GetGlobalFuncPtr() = const_cast<ROOT::Math::IMultiGradFunction *>(&func);
-   fMinuit->SetFCN(&TMinuitMinimizer::FcnGrad);
-
-   // set gradient
-   // by default do not check gradient calculation
-   // it cannot be done here, check can be done only after having defined the parameters
-   double arglist[1];
-   int ierr = 0;
-   arglist[0] = 1;
-   fMinuit->mnexcm("SET GRAD",arglist,1,ierr);
+   if(func.HasGradient()) {
+      // set gradient
+      // by default do not check gradient calculation
+      // it cannot be done here, check can be done only after having defined the parameters
+      arglist[0] = 1;
+      fMinuit->mnexcm("SET GRAD",arglist,1,ierr);
+   } else {
+      // switch off gradient calculations
+      fMinuit->mnexcm("SET NOGrad",arglist,0,ierr);
+   }
 }
 
 void TMinuitMinimizer::Fcn( int &, double * , double & f, double * x , int /* iflag */) {
