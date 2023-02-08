@@ -363,19 +363,36 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
    else if (GetAnalysisType() == Types::kRegression) fNOutputs = DataInfo().GetNTargets();
    else Log() << kFATAL << "Selected analysis type is not implemented" << Endl;
 
-   // Init evaluation (needed for getMvaValue)
-   fVals = new float[fNVars]; // holds values used for classification and regression
-   npy_intp dimsVals[2] = {(npy_intp)1, (npy_intp)fNVars};
-   PyArrayObject* pVals = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsVals, NPY_FLOAT, (void*)fVals);
-   PyDict_SetItemString(fLocalNS, "vals", (PyObject*)pVals);
-
-   fOutput.resize(fNOutputs); // holds classification probabilities or regression output
-   npy_intp dimsOutput[2] = {(npy_intp)1, (npy_intp)fNOutputs};
-   PyArrayObject* pOutput = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsOutput, NPY_FLOAT, (void*)&fOutput[0]);
-   PyDict_SetItemString(fLocalNS, "output", (PyObject*)pOutput);
-
    // Mark the model as setup
    fModelIsSetup = true;
+   fModelIsSetupForEval = false;
+}
+
+///Setting up model for evaluation
+/// Add here some needed optimizations like disabling eager execution
+void MethodPyKeras::SetupKerasModelForEval() {
+
+   // disable eager execution (model will evaluate > 100 faster)
+   // need to be done before loading the model
+   if (fUseTFKeras){
+      PyRunString("tf.compat.v1.disable_eager_execution()","Failed to disable eager execution");
+      Log() << kINFO << "Disabled TF eager execution when evaluating model " << Endl;
+   }
+
+   SetupKerasModel(true);
+
+   // Init evaluation (needed for getMvaValue)
+   fVals.resize(fNVars); // holds values used for classification and regression
+   npy_intp dimsVals[2] = {(npy_intp)1, (npy_intp)fNVars};
+   PyArrayObject* pVals = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsVals, NPY_FLOAT, (void*)fVals.data());
+   PyDict_SetItemString(fLocalNS, "vals", (PyObject*)pVals);
+   // setup output variables
+   fOutput.resize(fNOutputs); // holds classification probabilities or regression output
+   npy_intp dimsOutput[2] = {(npy_intp)1, (npy_intp)fNOutputs};
+   PyArrayObject* pOutput = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsOutput, NPY_FLOAT, (void*)fOutput.data());
+   PyDict_SetItemString(fLocalNS, "output", (PyObject*)pOutput);
+
+   fModelIsSetupForEval = true;
 }
 
 /// Initialization function called from MethodBase::SetupMethod()
@@ -395,6 +412,7 @@ void MethodPyKeras::Init() {
 
    // Set flag that model is not setup
    fModelIsSetup = false;
+   fModelIsSetupForEval = false;
 }
 
 void MethodPyKeras::Train() {
@@ -635,9 +653,9 @@ Double_t MethodPyKeras::GetMvaValue(Double_t *errLower, Double_t *errUpper) {
 
    // Check whether the model is setup
    // NOTE: unfortunately this is needed because during evaluation ProcessOptions is not called again
-   if (!fModelIsSetup) {
+   if (!fModelIsSetupForEval) {
       // Setup the trained model
-      SetupKerasModel(true);
+      SetupKerasModelForEval();
    }
 
    // Get signal probability (called mvaValue here)
@@ -654,9 +672,9 @@ Double_t MethodPyKeras::GetMvaValue(Double_t *errLower, Double_t *errUpper) {
 std::vector<Double_t> MethodPyKeras::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress) {
    // Check whether the model is setup
    // NOTE: Unfortunately this is needed because during evaluation ProcessOptions is not called again
-   if (!fModelIsSetup) {
+   if (!fModelIsSetupForEval) {
       // Setup the trained model
-      SetupKerasModel(true);
+      SetupKerasModelForEval();
    }
 
    // Load data to numpy array
@@ -715,9 +733,11 @@ std::vector<Double_t> MethodPyKeras::GetMvaValues(Long64_t firstEvt, Long64_t la
 std::vector<Float_t>& MethodPyKeras::GetRegressionValues() {
    // Check whether the model is setup
    // NOTE: unfortunately this is needed because during evaluation ProcessOptions is not called again
-   if (!fModelIsSetup){
+   if (!fModelIsSetupForEval){
       // Setup the model and load weights
-      SetupKerasModel(true);
+      //std::cout << "setup model for evaluation" << std::endl;
+      //PyRunString("tf.compat.v1.disable_eager_execution()","Failed to disable eager execution");
+      SetupKerasModelForEval();
    }
 
    // Get regression values
@@ -745,9 +765,9 @@ std::vector<Float_t>& MethodPyKeras::GetRegressionValues() {
 std::vector<Float_t>& MethodPyKeras::GetMulticlassValues() {
    // Check whether the model is setup
    // NOTE: unfortunately this is needed because during evaluation ProcessOptions is not called again
-   if (!fModelIsSetup){
+   if (!fModelIsSetupForEval){
       // Setup the model and load weights
-      SetupKerasModel(true);
+      SetupKerasModelForEval();
    }
 
    // Get class probabilites
