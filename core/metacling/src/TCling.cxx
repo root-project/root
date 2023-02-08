@@ -1093,7 +1093,11 @@ static GlobalModuleIndex *loadGlobalModuleIndex(cling::Interpreter &interp)
    // StringRef ModuleIndexPath = HSI.getModuleCachePath();
    // HeaderSearch& HSI = PP.getHeaderSearchInfo();
    // HSI.setModuleCachePath(TROOT::GetLibDir().Data());
+#ifdef R__WIN32
+   std::string ModuleIndexPath = TROOT::GetBinDir().Data();
+#else
    std::string ModuleIndexPath = TROOT::GetLibDir().Data();
+#endif
    if (ModuleIndexPath.empty())
       return nullptr;
    // Get an existing global index. This loads it if not already loaded.
@@ -1250,7 +1254,7 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
 #elif defined(R__MACOSX)
          true
 #else // Windows
-         false
+         true
 #endif
          ;
       // Allow forcefully enabling/disabling the GMI.
@@ -1510,7 +1514,11 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
          assert(llvm::sys::fs::exists(Env) && "Path does not exist!");
          ModulesCachePath = Env.str();
       } else {
+#ifdef R__WIN32
+         ModulesCachePath = TROOT::GetBinDir();
+#else
          ModulesCachePath = TROOT::GetLibDir();
+#endif
       }
 
       clingArgsStorage.push_back("-fmodules-cache-path=" + ModulesCachePath);
@@ -1639,8 +1647,13 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
       cling::DynamicLibraryManager& DLM = *fInterpreter->getDynamicLibraryManager();
       // Make sure cling looks into ROOT's libdir, even if not part of LD_LIBRARY_PATH
       // e.g. because of an RPATH build.
+#ifdef R__WIN32
+      DLM.addSearchPath(TROOT::GetBinDir().Data(), /*isUser=*/true,
+                        /*prepend=*/true);
+#else
       DLM.addSearchPath(TROOT::GetLibDir().Data(), /*isUser=*/true,
                         /*prepend=*/true);
+#endif
       auto ShouldPermanentlyIgnore = [](llvm::StringRef FileName) -> bool{
          llvm::StringRef stem = llvm::sys::path::stem(FileName);
          return stem.startswith("libNew") || stem.startswith("libcppyy_backend");
