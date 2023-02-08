@@ -157,6 +157,8 @@ struct BinnedLOutput {
 
 BinnedLOutput getBinnedL(RooAbsPdf &pdf);
 
+void getSortedComputationGraph(RooAbsReal const &func, RooArgSet &out);
+
 }
 
 #endif /* ROOFIT_ROOFITCORE_INC_ROOHELPERS_H_ */
