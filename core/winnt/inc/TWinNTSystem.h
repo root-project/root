@@ -24,17 +24,8 @@
 #include "TSystem.h"
 #include <string>
 
-#if !defined(__CINT__)
- #include "Windows4Root.h"
- #include <commctrl.h>
-#else
- typedef void* HANDLE;
- struct WIN32_FIND_DATA;
- typedef void* HIMAGELIST;
- typedef void* HICON;
- typedef UChar_t BOOL;
- struct FILE;
-#endif
+#include "Windows4Root.h"
+#include <commctrl.h>
 
 #ifndef MAX_SID_SIZE
 #define MAX_SID_SIZE   1024

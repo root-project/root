@@ -93,13 +93,11 @@ public:
    ClassDefOverride(TVirtualPerfStats,0)  // ABC for collecting PROOF statistics
 };
 
-
-#ifndef __CINT__
-#define gPerfStats (TVirtualPerfStats::CurrentPerfStats())
-
-#elif defined(__MAKECINT__)
+#ifdef __MAKECINT__
 // To properly handle the use of gPerfStats in header files (in static declarations)
 R__EXTERN TVirtualPerfStats *gPerfStats;
+#else
+#define gPerfStats (TVirtualPerfStats::CurrentPerfStats())
 #endif
 
 

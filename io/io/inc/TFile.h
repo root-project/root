@@ -337,12 +337,11 @@ public:
    ClassDefOverride(TFile,8)  //ROOT file
 };
 
-#ifndef __CINT__
-#define gFile (TFile::CurrentFile())
-
-#elif defined(__MAKECINT__)
+#ifdef __MAKECINT__
 // To properly handle the use of gFile in header files (in static declarations)
 R__EXTERN TFile   *gFile;
+#else
+#define gFile (TFile::CurrentFile())
 #endif
 
 /**

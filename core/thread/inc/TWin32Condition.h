@@ -26,7 +26,6 @@
 
 #include "Windows4Root.h"
 
-#ifndef __CINT__
 typedef struct
 {
    int waiters_count_;
@@ -48,9 +47,6 @@ typedef struct
    // Keeps track of whether we were broadcasting or signaling.  This
    // allows us to optimize the code if we're just signaling.
 } pthread_cond_t;
-#else
-struct pthread_cond_t;
-#endif
 
 class TMutexImp;
 class TWin32Mutex;
