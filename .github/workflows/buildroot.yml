@@ -5,7 +5,6 @@ on:
   schedule:
     - cron: '0 1 * * *'
 
-  # PR
   # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
   pull_request:
     branches:
@@ -119,5 +118,15 @@ jobs:
                     --incremental    ${{ inputs.incremental }}
                     --base_ref       ${{ inputs.base_ref }}
                     --head_ref       ${{ inputs.head_ref }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
+              "
+
+      - name: Install root nightly
+        if:   github.event_name == 'schedule'
+        run: ".github/workflows/rootci-installers/build_root.py
+                    --buildtype      ${{ matrix.config }}
+                    --platform       ${{ matrix.image }}
+                    --incremental    false
+                    --base_ref       ${{ github.base_ref }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
