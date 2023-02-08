@@ -50,7 +50,6 @@ public:
    void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override;
 
    void setOffsetting(bool flag) override;
-   bool fit(ROOT::Fit::Fitter &fitter) const override { return fitter.FitFCN(*this); };
    ROOT::Math::IMultiGenFunction *getMultiGenFcn() override { return this; };
 
 private:
