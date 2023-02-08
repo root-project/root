@@ -66,11 +66,6 @@ void DisableImplicitMT();
 bool IsImplicitMTEnabled();
 void EnableImplicitMT(UInt_t numthreads);
 class RDataFrame;
-namespace Internal {
-namespace RDF {
-class GraphCreatorHelper;
-}
-} // namespace Internal
 } // namespace ROOT
 namespace cling {
 std::string printValue(ROOT::RDataFrame *tdf);
@@ -90,7 +85,9 @@ using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
 
 namespace Internal {
 namespace RDF {
+class GraphCreatorHelper;
 void ChangeEmptyEntryRange(const ROOT::RDF::RNode &node, std::pair<ULong64_t, ULong64_t> &&newRange);
+void ChangeSpec(const ROOT::RDF::RNode &node, ROOT::RDF::Experimental::RDatasetSpec &&spec);
 } // namespace RDF
 } // namespace Internal
 
@@ -122,6 +119,7 @@ class RInterface : public RInterfaceBase {
 
    friend void RDFInternal::TriggerRun(RNode &node);
    friend void RDFInternal::ChangeEmptyEntryRange(const RNode &node, std::pair<ULong64_t, ULong64_t> &&newRange);
+   friend void RDFInternal::ChangeSpec(const RNode &node, ROOT::RDF::Experimental::RDatasetSpec &&spec);
 
    std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this RInterface.
 
