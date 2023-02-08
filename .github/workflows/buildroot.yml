@@ -12,6 +12,11 @@ on:
     paths-ignore:
       - 'doc/**'
       - 'documentation/**'
+  
+  push:
+    branches: 
+      - 'master'
+      - 'v*-*-*-patches'
 
   # Allows nightly builds to trigger one run for each branch easily
   workflow_call:
@@ -99,7 +104,7 @@ jobs:
                ls -la
               '
 
-      - name: Install root PR
+      - name: Pull Request Build
         if:   github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
         run: ".github/workflows/rootci-installers/build_root.py
                     --buildtype      ${{ matrix.config }}
@@ -110,7 +115,7 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
-      - name: Install root workflow dispatch/call
+      - name: Workflow dispatch/call
         if:   github.event_name == 'workflow_dispatch'
         run: ".github/workflows/rootci-installers/build_root.py
                     --buildtype      ${{ matrix.config }}
@@ -121,12 +126,22 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
-      - name: Install root nightly
+      - name: Nightly build
         if:   github.event_name == 'schedule'
         run: ".github/workflows/rootci-installers/build_root.py
                     --buildtype      ${{ matrix.config }}
                     --platform       ${{ matrix.image }}
                     --incremental    false
                     --base_ref       ${{ github.base_ref }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
+              "
+
+      - name: Update artifacts after push to release branch
+        if:   github.event_name == 'push'
+        run: ".github/workflows/rootci-installers/build_root.py
+                    --buildtype      ${{ matrix.config }}
+                    --platform       ${{ matrix.image }}
+                    --incremental    true
+                    --base_ref       ${{ github.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
