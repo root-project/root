@@ -62,7 +62,7 @@ namespace Math {
   */
 
 class Polynomial : public ParamFunction<IParamGradFunction>,
-                   public IGradientOneDim
+                   public IGradientFunctionOneDim
 {
 
 
@@ -138,7 +138,7 @@ public:
 
    /**
        Optimized method to evaluate at the same time the function value and derivative at a point x.
-       Implement the interface specified bby ROOT::Math::IGradientOneDim.
+       Implement the interface specified by ROOT::Math::IGradientOneDim.
        In the case of polynomial there is no advantage to compute both at the same time
    */
    void FdF (double x, double & f, double & df) const override {
