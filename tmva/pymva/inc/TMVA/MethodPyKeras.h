@@ -97,14 +97,16 @@ namespace TMVA {
       TString fUserCodeName; // filename of an optional user script that will be executed before loading the Keras model
       TString fKerasString;  // string identifying keras or tf.keras
 
-      bool fModelIsSetup = false; // flag whether model is loaded, needed for getMvaValue during evaluation
-      float* fVals = nullptr; // variables array used for GetMvaValue
+      bool fModelIsSetup = false; // flag whether current model is setup for being used
+      bool fModelIsSetupForEval = false; // flag to indicate whether model is setup for evaluation
+      std::vector<float> fVals; // variables array used for GetMvaValue
       std::vector<float> fOutput; // probability or regression output array used for GetMvaValue
       UInt_t fNVars {0}; // number of variables
       UInt_t fNOutputs {0}; // number of outputs (classes or targets)
       TString fFilenameTrainedModel; // output filename for trained model
 
       void SetupKerasModel(Bool_t loadTrainedModel); // setups the needed variables, loads the model
+      void SetupKerasModelForEval();  // optimizes model for evaluation
       UInt_t  GetNumValidationSamples();  // get number of validation events according to given option
 
       ClassDef(MethodPyKeras, 0);
