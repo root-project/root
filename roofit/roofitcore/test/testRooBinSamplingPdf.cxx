@@ -13,6 +13,11 @@
 
 #include <gtest/gtest.h>
 
+// Backward compatibility for gtest version < 1.10.0
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
+
 #include <memory>
 
 class ParamTest : public testing::TestWithParam<std::tuple<std::string>> {
@@ -123,7 +128,7 @@ TEST(RooBinSamplingPdf, CheckConsistentNormalization)
    EXPECT_FLOAT_EQ(int2->getVal(), int3->getVal());
 }
 
-INSTANTIATE_TEST_SUITE_P(RooBinSamplingPdf, ParamTest, testing::Combine(testing::Values("Off", "Cpu")),
+INSTANTIATE_TEST_SUITE_P(RooBinSamplingPdf, ParamTest, testing::Values("Off", "Cpu"),
                          [](testing::TestParamInfo<ParamTest::ParamType> const &paramInfo) {
                             std::stringstream ss;
                             ss << "BatchMode" << std::get<0>(paramInfo.param);
