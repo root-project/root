@@ -538,14 +538,16 @@ void RooJSONFactoryWSTool::append(JSONNode &n, const std::string &elem)
 void RooJSONFactoryWSTool::exportAttributes(const RooAbsArg *arg, JSONNode &n)
 {
    // export all string attributes of an object
-   if (arg->stringAttributes().size() > 0) {
-      auto &dict = n["dict"];
-      dict.set_map();
+   if (!arg->stringAttributes().empty()) {
       for (const auto &it : arg->stringAttributes()) {
+         // We don't want to span the JSON with the factory tags
+         if(it.first == "factory_tag") continue;
+         auto &dict = n["dict"];
+         dict.set_map();
          dict[it.first] << it.second;
       }
    }
-   if (arg->attributes().size() > 0) {
+   if (!arg->attributes().empty()) {
       auto &tags = n["tags"];
       for (const auto &it : arg->attributes()) {
          RooJSONFactoryWSTool::append(tags, it);
