@@ -334,7 +334,7 @@ if useKeras:
     model.add(Dense(64, activation='relu'))
     model.add(Dense(64, activation='relu'))
     model.add(Dense(2, activation='sigmoid'))
-    model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), metrics = ['accuracy'])
+    model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), weighted_metrics = ['accuracy'])
     model.save('model_higgs.h5')
     model.summary()
 
