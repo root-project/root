@@ -1309,25 +1309,25 @@ class TGraphPainter extends ObjectPainter {
    /** @summary Execute menu command
      * @private */
    executeMenuCommand(method, args) {
-      if (super.executeMenuCommand(method,args)) return true;
+      if (super.executeMenuCommand(method, args)) return true;
 
       let canp = this.getCanvPainter(), pmain = this.get_main();
 
       if ((method.fName == 'RemovePoint') || (method.fName == 'InsertPoint')) {
          if (!canp || canp._readonly) return true; // ignore function
 
-         let hint = this.extractTooltip(pnt);
+         let pnt = isFunc(pmain?.getLastEventPos) ? pmain.getLastEventPos() : null,
+             hint = this.extractTooltip(pnt);
 
          if (method.fName == 'InsertPoint') {
-            let pnt = isFunc(pmain.getLastEventPos) ? pmain.getLastEventPos() : null;
             if (pnt) {
                let funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
                    userx = funcs.revertAxis('x', pnt.x) ?? 0,
                    usery = funcs.revertAxis('y', pnt.y) ?? 0;
-               this.submitCanvExec(`AddPoint(${userx.toFixed(3)}, ${usery.toFixed(3)})`, this.args_menu_id);
+               this.submitCanvExec(`AddPoint(${userx.toFixed(3)}, ${usery.toFixed(3)})`, method.$execid);
             }
-         } else if (this.args_menu_id && (hint?.binindx !== undefined)) {
-            this.submitCanvExec(`RemovePoint(${hint.binindx})`, this.args_menu_id);
+         } else if (method.$execid && (hint?.binindx !== undefined)) {
+            this.submitCanvExec(`RemovePoint(${hint.binindx})`, method.$execid);
          }
 
          return true; // call is processed

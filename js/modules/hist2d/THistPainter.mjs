@@ -1,5 +1,6 @@
 import { gStyle, BIT, settings, constants, internals, create, isObject, isFunc, isStr, getPromise,
-         clTList, clTPave, clTPaveText, clTPaveStats, clTPaletteAxis, clTGaxis, clTF1, clTProfile, kNoZoom, clTCutG } from '../core.mjs';
+         clTList, clTPave, clTPaveText, clTPaveStats, clTPaletteAxis,
+         clTAxis, clTGaxis, clTF1, clTProfile, kNoZoom, clTCutG } from '../core.mjs';
 import { ColorPalette, toHex, getColor } from '../base/colors.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
@@ -234,12 +235,13 @@ class THistDrawOptions {
    decode(opt, hdim, histo, pp, pad, painter) {
       this.orginal = opt; // will be overwritten by storeDrawOpt call
 
+      this.cutg_name = '';
       if (isStr(opt) && (hdim === 2)) {
          let p1 = opt.lastIndexOf('['),  p2 = opt.lastIndexOf(']');
          if ((p1 >= 0) && (p2 > p1+1)) {
-            let name = opt.slice(p1+1, p2);
+            this.cutg_name = opt.slice(p1+1, p2);
             opt = opt.slice(0, p1) + opt.slice(p2+1);
-            this.cutg = pp?.findInPrimitives(name, clTCutG);
+            this.cutg = pp?.findInPrimitives(this.cutg_name, clTCutG);
             if (this.cutg) this.cutg.$redraw_pad = true;
          }
       }
@@ -627,6 +629,9 @@ class THistDrawOptions {
          if (pad.fTickx) res += '_TICKX';
          if (pad.fTicky) res += '_TICKY';
       }
+
+      if (this.cutg_name)
+         res += ` [${this.cutg_name}]`;
 
       return res;
    }
@@ -1694,6 +1699,35 @@ class THistPainter extends ObjectPainter {
 
          this.interactiveRedraw();
        });
+   }
+
+   /** @summary Execute histogram menu command
+     * @desc Used to catch standard menu items and provide local implementation */
+   executeMenuCommand(method, args) {
+      if (super.executeMenuCommand(method, args))
+         return true;
+
+      if (method.fClassName == clTAxis) {
+         let p = isStr(method.$execid) ? method.$execid.indexOf('#') : -1,
+             kind = p > 0 ? method.$execid.slice(p+1) : 'x',
+             fp = this.getFramePainter();
+         if (method.fName == 'UnZoom') {
+            fp?.unzoom(kind);
+            return true;
+         } else if (method.fName == 'SetRange') {
+            const axis = fp?.getAxis(kind), bins = JSON.parse(`[${args}]`);
+            if (axis && bins?.length == 2)
+               fp?.zoom(kind, axis.GetBinLowEdge(bins[0]), axis.GetBinLowEdge(bins[1]+1));
+            // let execute command on server
+         } else if (method.fName == 'SetRangeUser') {
+            const values = JSON.parse(`[${args}]`)
+            if (values?.length == 2)
+               fp?.zoom(kind, values[0], values[1]);
+            // let execute command on server
+         }
+      }
+
+      return false;
    }
 
    /** @summary Fill histogram context menu */

@@ -7,7 +7,7 @@ import { floatToString, makeTranslate } from '../base/BasePainter.mjs';
 import { getElementMainPainter, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
-import { createMenu } from '../gui/menu.mjs';
+import { showPainterMenu } from '../gui/menu.mjs';
 import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
 import { addDragHandler } from '../gpad/TFramePainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
@@ -364,8 +364,9 @@ class TPavePainter extends ObjectPainter {
           pad_height = pp.getPadHeight(),
           draw_header = (pt.fLabel.length > 0),
           promises = [],
+          margin_x = pt.fMargin * width,
           stepy = height / (nlines || 1),
-          margin_x = pt.fMargin * width, max_font_size = 0;
+          max_font_size = 0;
 
       // for single line (typically title) limit font size
       if ((nlines == 1) && (pt.fTextSize > 0)) {
@@ -408,21 +409,19 @@ class TPavePainter extends ObjectPainter {
                   if (num_default++ === 0)
                      this.startTextDrawing(pt.fTextFont, height/(nlines * 1.2), text_g, max_font_size);
 
-                  let arg = null;
+                  let arg = { x: 0, y: 0, width, height, align: entry.fTextAlign || pt.fTextAlign,
+                              draw_g: text_g, latex: entry._typename == clTText ? 0 : 1,
+                              text: entry.fTitle, fast  };
+                  let halign = Math.floor(arg.align / 10);
+                  // when horizontal align applied, just shift text, not change width to keep scaling
+                  arg.x = (halign == 1) ? margin_x : (halign == 3 ? -margin_x : 0);
 
-                  if (nlines == 1) {
-                     arg = { x: 0, y: 0, width, height };
-                  } else {
-                     arg = { x: margin_x, y: texty, width: width - 2*margin_x, height: stepy };
+                  if (nlines > 1) {
+                     arg.y = texty;
+                     arg.height = stepy;
                      if (entry.fTextColor) arg.color = this.getColor(entry.fTextColor);
                      if (entry.fTextSize) arg.font_size = Math.round(entry.fTextSize * pad_height);
                   }
-
-                  arg.align = entry.fTextAlign || pt.fTextAlign;
-                  arg.draw_g = text_g;
-                  arg.latex = (entry._typename == clTText ? 0 : 1);
-                  arg.text = entry.fTitle;
-                  arg.fast = fast;
                   if (!arg.color) { this.UseTextColor = true; arg.color = tcolor; }
                   this.drawText(arg);
                }
@@ -489,7 +488,11 @@ class TPavePainter extends ObjectPainter {
       switch(fmt) {
          case 'stat' : fmt = pave.fStatFormat || gStyle.fStatFormat; break;
          case 'fit': fmt = pave.fFitFormat || gStyle.fFitFormat; break;
-         case 'entries': if ((Math.abs(value) < 1e9) && (Math.round(value) == value)) return value.toFixed(0); fmt = '14.7g'; break;
+         case 'entries':
+            if ((Math.abs(value) < 1e9) && (Math.round(value) == value))
+               return value.toFixed(0);
+            fmt = '14.7g';
+            break;
          case 'last': fmt = this.lastformat; break;
       }
 
@@ -985,16 +988,9 @@ class TPavePainter extends ObjectPainter {
          let fp = this.getFramePainter();
          if (isFunc(fp?.showContextMenu))
              fp.showContextMenu('z', evnt);
-         return;
+      } else {
+         showPainterMenu(evnt, this, this.isTitle() ? 'title' : undefined);
       }
-
-      evnt.stopPropagation(); // disable main context menu
-      evnt.preventDefault();  // disable browser context menu
-
-      createMenu(evnt, this).then(menu => {
-         this.fillContextMenu(menu);
-         return this.fillObjectExecMenu(menu, this.isTitle() ? 'title' : undefined);
-       }).then(menu => menu.show());
    }
 
    /** @summary Returns true when stat box is drawn */

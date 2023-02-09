@@ -1,4 +1,4 @@
-import { loadScript, source_dir, settings, gStyle, internals, isObject, isFunc, isStr, clTGaxis } from '../core.mjs';
+import { settings, gStyle, isBatchMode, isObject, isFunc, isStr, clTGaxis } from '../core.mjs';
 import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
 import { injectStyle, selectgStyle, saveSettings, readSettings, saveStyle, getColorExec } from './utils.mjs';
 import { getColor } from '../base/colors.mjs';
@@ -1312,5 +1312,24 @@ function closeMenu(menuname) {
    return false;
 }
 
-export { createMenu, closeMenu };
+/** @summary Fill and show context menu for painter object
+  * @private */
+function showPainterMenu(evnt, painter, kind) {
+   evnt.stopPropagation(); // disable main context menu
+   evnt.preventDefault();  // disable browser context menu
+
+   createMenu(evnt, painter).then(menu => {
+      painter.fillContextMenu(menu);
+      return painter.fillObjectExecMenu(menu, kind);
+   }).then(menu => menu.show());
+}
+
+/** @summary Assign handler for context menu for painter draw element
+  * @private */
+function assignContextMenu(painter, kind) {
+   if (!isBatchMode() && painter?.draw_g)
+      painter.draw_g.on('contextmenu', settings.ContextMenu ? evnt => showPainterMenu(evnt, painter, kind) : null);
+}
+
+export { createMenu, closeMenu, showPainterMenu, assignContextMenu };
 
