@@ -93,14 +93,23 @@
             }
         }
     },
-    "variables": {
-        "mu": {
-            "value": 1,
-            "min": -3,
-            "max": 5,
-            "tags": [
-                "poi"
+    "domains": {
+        "default_domain": {
+            "type": "product_domain",
+            "variables": [
+                {
+                    "max": 5.0,
+                    "min": -3.0,
+                    "name": "mu"
+                }
             ]
+        }
+    },
+    "estimates": {
+        "default_values": {
+            "mu": {
+                "value": 1
+            }
         }
     },
     "observations": {
