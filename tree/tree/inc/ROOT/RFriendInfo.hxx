@@ -19,6 +19,7 @@
 #define ROOT_RFRIENDINFO_H
 
 #include <cstdint> // std::int64_t
+#include <limits>
 #include <string>
 #include <utility> // std::pair
 #include <vector>
@@ -58,13 +59,14 @@ struct RFriendInfo {
     */
    std::vector<std::vector<std::int64_t>> fNEntriesPerTreePerFriend;
 
-   void AddFriend(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias = "");
+   void AddFriend(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias = "",
+                  std::int64_t nEntries = std::numeric_limits<std::int64_t>::max());
 
-   void
-   AddFriend(const std::string &treeName, const std::vector<std::string> &fileNameGlobs, const std::string &alias = "");
+   void AddFriend(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
+                  const std::string &alias = "", const std::vector<std::int64_t> &nEntriesVec = {});
 
    void AddFriend(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-                  const std::string &alias = "");
+                  const std::string &alias = "", const std::vector<std::int64_t> &nEntriesVec = {});
 };
 
 } // namespace TreeUtils
