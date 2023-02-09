@@ -216,7 +216,7 @@ RooAbsReal *RooJSONFactoryWSTool::request<RooAbsReal>(const std::string &objname
    if (retval)
       return retval;
    if (isNumber(objname))
-      return dynamic_cast<RooAbsReal *>(_workspace.factory(objname));
+      return &RooFit::RooConst(std::stod(objname));
    if (irootnode().has_child("distributions")) {
       const JSONNode &pdfs = irootnode()["distributions"];
       if (pdfs.has_child(objname)) {
@@ -1287,8 +1287,9 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 
 void RooJSONFactoryWSTool::exportTopLevelPdf(JSONNode &node, RooAbsPdf const &pdf, std::string const &modelConfigName)
 {
-   auto * pdfNode = RooJSONFactoryWSTool::exportObject(&pdf);
-   if(!pdfNode) return;
+   auto *pdfNode = RooJSONFactoryWSTool::exportObject(&pdf);
+   if (!pdfNode)
+      return;
    if (!pdf.getAttribute("toplevel"))
       RooJSONFactoryWSTool::append((*pdfNode)["tags"], "toplevel");
    auto &dict = (*pdfNode)["dict"];
