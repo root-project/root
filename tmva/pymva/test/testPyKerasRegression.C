@@ -17,7 +17,7 @@ from tensorflow.keras.optimizers import SGD\n\
 model = Sequential()\n\
 model.add(Dense(64, activation=\"tanh\", input_dim=2))\n\
 model.add(Dense(1, activation=\"linear\"))\n\
-model.compile(loss=\"mean_squared_error\", optimizer=SGD(lr=0.01))\n\
+model.compile(loss=\"mean_squared_error\", optimizer=SGD(learning_rate=0.01), weighted_metrics=[])\n\
 model.save(\"kerasModelRegression.h5\")\n";
 
 int testPyKerasRegression(){

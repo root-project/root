@@ -313,7 +313,7 @@ We can then book the DL method using the built option string
       m.AddLine("model.add(Dense(64, activation='relu'))");
       m.AddLine("model.add(Dense(64, activation='relu'))");
       m.AddLine("model.add(Dense(2, activation='sigmoid'))");
-      m.AddLine("model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), metrics = ['accuracy'])");
+      m.AddLine("model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), weighted_metrics = ['accuracy'])");
       m.AddLine("model.save('Higgs_model.h5')");
       m.AddLine("model.summary()");
 

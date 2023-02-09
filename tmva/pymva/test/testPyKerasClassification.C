@@ -17,7 +17,7 @@ from tensorflow.keras.optimizers import SGD\n\
 model = Sequential()\n\
 model.add(Dense(64, activation=\"relu\", input_dim=4))\n\
 model.add(Dense(2, activation=\"softmax\"))\n\
-model.compile(loss=\"categorical_crossentropy\", optimizer=SGD(lr=0.01), metrics=[\"accuracy\",])\n\
+model.compile(loss=\"categorical_crossentropy\", optimizer=SGD(learning_rate=0.01), weighted_metrics=[\"accuracy\",])\n\
 model.save(\"kerasModelClassification.h5\")\n";
 
 int testPyKerasClassification(){

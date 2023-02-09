@@ -105,6 +105,7 @@ namespace TMVA {
       UInt_t fNOutputs {0}; // number of outputs (classes or targets)
       TString fFilenameTrainedModel; // output filename for trained model
 
+      void InitKeras();    //  initialize Keras (importing the readed modules)
       void SetupKerasModel(Bool_t loadTrainedModel); // setups the needed variables, loads the model
       void SetupKerasModelForEval();  // optimizes model for evaluation
       UInt_t  GetNumValidationSamples();  // get number of validation events according to given option
