@@ -21,16 +21,9 @@ import tarfile
 from hashlib import sha1
 
 import openstack
-from build_utils import (
-    cmake_options_from_dict,
-    die,
-    download_latest,
-    load_config,
-    print_shell_log,
-    subprocess_with_log,
-    upload_file,
-    warning,
-)
+from build_utils import (cmake_options_from_dict, die, download_latest,
+                         load_config, print_shell_log, subprocess_with_log,
+                         upload_file, warning)
 
 S3CONTAINER = 'ROOT-build-artifacts'  # Used for uploads
 S3URL = 'https://s3.cern.ch/swift/v1/' + S3CONTAINER  # Used for downloads
@@ -192,7 +185,7 @@ def main():
 def test(workdir, shell_log):
     result, shell_log = subprocess_with_log(f"""
         cd '{workdir}/build'
-        ctest -V -j{os.cpu_count()}
+        ctest -j{os.cpu_count()}
     """, shell_log)
     
     if result != 0:
