@@ -215,9 +215,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    // the data
    auto &datalist = n["observations"];
    datalist.set_map();
-   // auto &obsdata = datalist["obsData"];
-   // obsdata.set_map();
-   // obsdata["index"] << "channelCat";
+
    for (const auto &c : measurement.GetChannels()) {
       const std::vector<std::string> obsnames{"obs_x_" + c.GetName(), "obs_y_" + c.GetName(), "obs_z_" + c.GetName()};
 
@@ -225,8 +223,6 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
          analysisObservables.append_child() << obsnames[i];
       }
 
-      // auto &chdata = obsdata[c.GetName()];
-      // RooJSONFactoryWSTool::exportHistogram(*c.GetData().GetHisto(), chdata, obsnames);
       RooJSONFactoryWSTool::exportHistogram(*c.GetData().GetHisto(), datalist[std::string("obsData_") + c.GetName()],
                                             obsnames);
    }
