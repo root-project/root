@@ -449,7 +449,7 @@ void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1,
       m.AddLine("model.add(Flatten())");
       m.AddLine("model.add(Dense(256, activation = 'relu')) ");
       m.AddLine("model.add(Dense(2, activation = 'sigmoid')) ");
-      m.AddLine("model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), metrics = ['accuracy'])");
+      m.AddLine("model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), weighted_metrics = ['accuracy'])");
       m.AddLine("model.save('model_cnn.h5')");
       m.AddLine("model.summary()");
 
