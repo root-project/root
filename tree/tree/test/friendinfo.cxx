@@ -262,7 +262,7 @@ TEST_P(RFriendInfoTest, MakeFriendsFromAddFriendOverload3)
    }
    if (retrieveEntries) {
       friendInfo.AddFriend(treeAndFileNames, /*alias*/ "",
-                           std::vector<int64_t>(friendTreeNames.size(), nEntriesInFriendTree));
+                           std::vector<Long64_t>(friendTreeNames.size(), nEntriesInFriendTree));
    } else {
       friendInfo.AddFriend(treeAndFileNames);
    }
