@@ -19,9 +19,9 @@
 #define ROOT_RFRIENDINFO_H
 
 #include <string_view>
+#include <Rtypes.h> // Long64_t
 #include <TVirtualIndex.h>
 
-#include <cstdint> // std::int64_t
 #include <limits>
 #include <memory>
 #include <string>
@@ -62,7 +62,7 @@ struct RFriendInfo {
     * dimension of the vector tracks the n-th friend tree/chain, the inner
     * dimension tracks the number of entries of each tree in the current friend.
     */
-   std::vector<std::vector<std::int64_t>> fNEntriesPerTreePerFriend;
+   std::vector<std::vector<Long64_t>> fNEntriesPerTreePerFriend;
 
    /**
       Information on the friend's TTreeIndexes.
@@ -77,18 +77,18 @@ struct RFriendInfo {
    RFriendInfo(std::vector<std::pair<std::string, std::string>> friendNames,
                std::vector<std::vector<std::string>> friendFileNames,
                std::vector<std::vector<std::string>> friendChainSubNames,
-               std::vector<std::vector<std::int64_t>> nEntriesPerTreePerFriend,
+               std::vector<std::vector<Long64_t>> nEntriesPerTreePerFriend,
                std::vector<std::unique_ptr<TVirtualIndex>> treeIndexInfos);
 
    void AddFriend(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias = "",
-                  std::int64_t nEntries = std::numeric_limits<std::int64_t>::max(), TVirtualIndex *indexInfo = nullptr);
+                  Long64_t nEntries = std::numeric_limits<Long64_t>::max(), TVirtualIndex *indexInfo = nullptr);
 
    void AddFriend(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
-                  const std::string &alias = "", const std::vector<std::int64_t> &nEntriesVec = {},
+                  const std::string &alias = "", const std::vector<Long64_t> &nEntriesVec = {},
                   TVirtualIndex *indexInfo = nullptr);
 
    void AddFriend(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-                  const std::string &alias = "", const std::vector<std::int64_t> &nEntriesVec = {},
+                  const std::string &alias = "", const std::vector<Long64_t> &nEntriesVec = {},
                   TVirtualIndex *indexInfo = nullptr);
 };
 
