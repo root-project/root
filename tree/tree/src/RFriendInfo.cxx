@@ -18,11 +18,14 @@ namespace TreeUtils {
 /// \param[in] treeName Name of the tree.
 /// \param[in] fileNameGlob Path to the file. Refer to TChain::Add for globbing rules.
 /// \param[in] alias Alias for this friend.
-void RFriendInfo::AddFriend(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias)
+/// \param[in] nEntries Number of entries for this friend.
+void RFriendInfo::AddFriend(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias,
+                            std::int64_t nEntries)
 {
    fFriendNames.emplace_back(std::make_pair(treeName, alias));
    fFriendFileNames.emplace_back(std::vector<std::string>{fileNameGlob});
    fFriendChainSubNames.emplace_back();
+   fNEntriesPerTreePerFriend.push_back(std::vector<std::int64_t>({nEntries}));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -31,12 +34,16 @@ void RFriendInfo::AddFriend(const std::string &treeName, const std::string &file
 /// \param[in] treeName Name of the tree.
 /// \param[in] fileNameGlobs Paths to the files. Refer to TChain::Add for globbing rules.
 /// \param[in] alias Alias for this friend.
+/// \param[in] nEntriesVec Number of entries for each file of this friend.
 void RFriendInfo::AddFriend(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
-                            const std::string &alias)
+                            const std::string &alias, const std::vector<std::int64_t> &nEntriesVec)
 {
    fFriendNames.emplace_back(std::make_pair(treeName, alias));
    fFriendFileNames.emplace_back(fileNameGlobs);
    fFriendChainSubNames.emplace_back(std::vector<std::string>(fileNameGlobs.size(), treeName));
+   fNEntriesPerTreePerFriend.push_back(
+      nEntriesVec.empty() ? std::vector<int64_t>(fileNameGlobs.size(), std::numeric_limits<std::int64_t>::max())
+                          : nEntriesVec);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,8 +51,9 @@ void RFriendInfo::AddFriend(const std::string &treeName, const std::vector<std::
 ///
 /// \param[in] treeAndFileNameGlobs Pairs of (treename, filename). Refer to TChain::Add for globbing rules.
 /// \param[in] alias Alias for this friend.
+/// \param[in] nEntriesVec Number of entries for each file of this friend.
 void RFriendInfo::AddFriend(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-                            const std::string &alias)
+                            const std::string &alias, const std::vector<std::int64_t> &nEntriesVec)
 {
    fFriendNames.emplace_back(std::make_pair("", alias));
 
@@ -65,6 +73,9 @@ void RFriendInfo::AddFriend(const std::vector<std::pair<std::string, std::string
       *fSubNamesIt = names.first;
       *fNamesIt = names.second;
    }
+   fNEntriesPerTreePerFriend.push_back(
+      nEntriesVec.empty() ? std::vector<int64_t>(treeAndFileNameGlobs.size(), std::numeric_limits<std::int64_t>::max())
+                          : nEntriesVec);
 }
 
 } // namespace TreeUtils

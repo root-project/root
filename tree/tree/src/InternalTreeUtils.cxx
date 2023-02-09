@@ -222,9 +222,7 @@ ROOT::TreeUtils::RFriendInfo GetFriendInfo(const TTree &tree, bool retrieveEntri
          auto nFiles = chainFiles->GetEntries();
          fileNames.reserve(nFiles);
          chainSubNames.reserve(nFiles);
-         if (retrieveEntries) {
-            nEntriesInThisFriend.reserve(nFiles);
-         }
+         nEntriesInThisFriend.reserve(nFiles);
 
          // Retrieve the name of the chain and add a (name, alias) pair
          friendNames.emplace_back(std::make_pair(frChain->GetName(), alias));
@@ -248,6 +246,8 @@ ROOT::TreeUtils::RFriendInfo GetFriendInfo(const TTree &tree, bool retrieveEntri
                   throw std::runtime_error(std::string("GetFriendInfo: Could not retrieve TTree \"") + thisTreeName +
                                            "\" from file \"" + thisFileName + "\"");
                nEntriesInThisFriend.emplace_back(thisTree->GetEntries());
+            } else {
+               nEntriesInThisFriend.emplace_back(TTree::kMaxEntries);
             }
          }
       } else {
@@ -365,10 +365,7 @@ std::vector<std::unique_ptr<TChain>> MakeFriends(const ROOT::TreeUtils::RFriendI
       const auto &thisFriendName = finfo.fFriendNames[i].first;
       const auto &thisFriendFileNames = finfo.fFriendFileNames[i];
       const auto &thisFriendChainSubNames = finfo.fFriendChainSubNames[i];
-      const auto &thisFriendEntries =
-         finfo.fNEntriesPerTreePerFriend[i].empty()
-            ? std::vector<std::int64_t>(thisFriendFileNames.size(), std::numeric_limits<std::int64_t>::max())
-            : finfo.fNEntriesPerTreePerFriend[i];
+      const auto &thisFriendEntries = finfo.fNEntriesPerTreePerFriend[i];
 
       // Build a friend chain
       auto frChain = ROOT::Internal::TreeUtils::MakeChainForMT(thisFriendName);
