@@ -597,7 +597,7 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
    auto &n = orootnode()[func->InheritsFrom(RooAbsPdf::Class()) ? "distributions" : "functions"];
    n.set_map();
 
-   const char* name = func->GetName();
+   const char *name = func->GetName();
 
    // if this element already exists, skip
    if (n.has_child(name))
@@ -611,22 +611,16 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
    auto it = exporters.find(cl);
    if (it != exporters.end()) { // check if we have a specific exporter available
       for (auto &exp : it->second) {
-         try {
-            auto &elem = n[name];
-            elem.set_map();
-            if (!exp->exportObject(this, func, elem)) {
-               continue;
-            }
-            if (exp->autoExportDependants()) {
-               RooJSONFactoryWSTool::exportDependants(func);
-            }
-            RooJSONFactoryWSTool::exportAttributes(func, elem);
-            return &elem;
-         } catch (const std::exception &ex) {
-            std::cerr << "error exporting " << func->ClassName() << " " << name << ": " << ex.what()
-                      << ". skipping." << std::endl;
-            return nullptr;
+         auto &elem = n[name];
+         elem.set_map();
+         if (!exp->exportObject(this, func, elem)) {
+            continue;
          }
+         if (exp->autoExportDependants()) {
+            RooJSONFactoryWSTool::exportDependants(func);
+         }
+         RooJSONFactoryWSTool::exportAttributes(func, elem);
+         return &elem;
       }
    }
 
@@ -790,13 +784,14 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
          ::importAttributes(func, p);
       }
    } catch (const RooJSONFactoryWSTool::DependencyMissingError &ex) {
-      throw;
+      throw ex;
    } catch (const RooJSONFactoryWSTool::MissingRootnodeError &ex) {
-      throw;
+      throw ex;
    } catch (const std::exception &ex) {
       std::stringstream ss;
       ss << "RooJSONFactoryWSTool(): error importing " << name << ": " << ex.what() << ". skipping." << std::endl;
       logInputArgumentsError(std::move(ss));
+      throw ex;
    }
 }
 
@@ -929,7 +924,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData *data, JSONNode &n)
       for (int i = 0; i < dh->numEntries(); ++i) {
          double w = dh->weight(i);
          // To make sure there are no unnecessary floating points in the JSON
-         if(int(w) == w) {
+         if (int(w) == w) {
             weights.append_child() << int(w);
          } else {
             weights.append_child() << w;
@@ -1250,7 +1245,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
          exportModelConfig(n, *mcs.back());
       }
    }
-   for (RooAbsArg* pdf : _workspace.allPdfs()) {
+   for (RooAbsArg *pdf : _workspace.allPdfs()) {
 
       if (!pdf->hasClients() || pdf->getAttribute("toplevel")) {
          bool hasMC = false;

@@ -190,129 +190,126 @@ bool importHistSample(RooWorkspace &ws, Scope const &scope, const JSONNode &p)
    if (!p.has_child("data")) {
       RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
    }
-   try {
-      std::stack<std::unique_ptr<RooAbsArg>> ownedArgsStack;
-      RooArgSet shapeElems;
-      RooArgSet normElems;
-      RooArgSet varlist;
-      scope.getObservables(varlist);
 
-      auto getBinnedData = [&](std::string const &binnedDataName) -> RooDataHist & {
-         auto *dh = dynamic_cast<RooDataHist *>(ws.embeddedData(binnedDataName));
-         if (!dh) {
-            auto dhForImport = RooJSONFactoryWSTool::readBinnedData(p["data"], binnedDataName, varlist);
-            ws.import(*dhForImport, RooFit::Silence(true), RooFit::Embedded());
-            dh = static_cast<RooDataHist *>(ws.embeddedData(dhForImport->GetName()));
-         }
-         return *dh;
-      };
+   std::stack<std::unique_ptr<RooAbsArg>> ownedArgsStack;
+   RooArgSet shapeElems;
+   RooArgSet normElems;
+   RooArgSet varlist;
+   scope.getObservables(varlist);
 
-      RooDataHist &dh = getBinnedData(name);
-      auto hf = std::make_unique<RooHistFunc>(("hist_" + name).c_str(), RooJSONFactoryWSTool::name(p).c_str(),
-                                              *(dh.get()), dh);
-      ownedArgsStack.push(std::make_unique<RooBinWidthFunction>(
-         TString::Format("%s_binWidth", (!prefix.empty() ? prefix : name).c_str()).Data(),
-         TString::Format("%s_binWidth", (!prefix.empty() ? prefix : name).c_str()).Data(), *hf, true));
-      shapeElems.add(*ownedArgsStack.top());
-
-      if (p.has_child("statError") && p["statError"].val_bool()) {
-         RooAbsArg *phf = scope.getObject("mcstat");
-         if (phf) {
-            shapeElems.add(*phf);
-         } else {
-            RooJSONFactoryWSTool::error("function '" + name +
-                                        "' has 'statError' active, but no element called 'mcstat' in scope!");
-         }
+   auto getBinnedData = [&](std::string const &binnedDataName) -> RooDataHist & {
+      auto *dh = dynamic_cast<RooDataHist *>(ws.embeddedData(binnedDataName));
+      if (!dh) {
+         auto dhForImport = RooJSONFactoryWSTool::readBinnedData(p["data"], binnedDataName, varlist);
+         ws.import(*dhForImport, RooFit::Silence(true), RooFit::Embedded());
+         dh = static_cast<RooDataHist *>(ws.embeddedData(dhForImport->GetName()));
       }
+      return *dh;
+   };
 
-      if (p.has_child("normFactors")) {
-         for (const auto &nf : p["normFactors"].children()) {
-            std::string nfname(RooJSONFactoryWSTool::name(nf));
-            if (RooAbsReal *r = ws.var(nfname)) {
-               normElems.add(*r);
-            } else {
-               normElems.add(*static_cast<RooRealVar *>(ws.factory(nfname + "[1.]")));
-            }
-         }
-      }
+   RooDataHist &dh = getBinnedData(name);
+   auto hf =
+      std::make_unique<RooHistFunc>(("hist_" + name).c_str(), RooJSONFactoryWSTool::name(p).c_str(), *(dh.get()), dh);
+   ownedArgsStack.push(std::make_unique<RooBinWidthFunction>(
+      TString::Format("%s_binWidth", (!prefix.empty() ? prefix : name).c_str()).Data(),
+      TString::Format("%s_binWidth", (!prefix.empty() ? prefix : name).c_str()).Data(), *hf, true));
+   shapeElems.add(*ownedArgsStack.top());
 
-      if (p.has_child("overallSystematics")) {
-         RooArgList nps;
-         std::vector<double> low;
-         std::vector<double> high;
-         for (const auto &sys : p["overallSystematics"].children()) {
-            std::string sysname(RooJSONFactoryWSTool::name(sys));
-            std::string parname(sys.has_child("parameter") ? RooJSONFactoryWSTool::name(sys["parameter"])
-                                                           : "alpha_" + sysname);
-            if (RooRealVar *par = ::getNP(ws, parname.c_str())) {
-               nps.add(*par);
-               low.push_back(sys["low"].val_double());
-               high.push_back(sys["high"].val_double());
-            } else {
-               RooJSONFactoryWSTool::error("overall systematic '" + sysname + "' doesn't have a valid parameter!");
-            }
-         }
-         auto v = std::make_unique<RooStats::HistFactory::FlexibleInterpVar>(
-            ("overallSys_" + name).c_str(), ("overallSys_" + name).c_str(), nps, 1., low, high);
-         v->setAllInterpCodes(4); // default HistFactory interpCode
-         normElems.add(*v);
-         ownedArgsStack.push(std::move(v));
-      }
-
-      if (p.has_child("histogramSystematics")) {
-         RooArgList nps;
-         RooArgList low;
-         RooArgList high;
-         for (const auto &sys : p["histogramSystematics"].children()) {
-            std::string sysname(RooJSONFactoryWSTool::name(sys));
-            std::string parname(sys.has_child("parameter") ? RooJSONFactoryWSTool::name(sys["parameter"])
-                                                           : "alpha_" + sysname);
-            RooAbsReal *par = ::getNP(ws, parname.c_str());
-            nps.add(*par);
-            RooDataHist &dh_low = getBinnedData(sysname + "Low_" + name);
-            ownedArgsStack.push(std::make_unique<RooHistFunc>(
-               (sysname + "Low_" + name).c_str(), RooJSONFactoryWSTool::name(p).c_str(), *(dh_low.get()), dh_low));
-            low.add(*ownedArgsStack.top());
-            RooDataHist &dh_high = getBinnedData(sysname + "High_" + name);
-            ownedArgsStack.push(std::make_unique<RooHistFunc>(
-               (sysname + "High_" + name).c_str(), RooJSONFactoryWSTool::name(p).c_str(), *(dh_high.get()), dh_high));
-            high.add(*ownedArgsStack.top());
-         }
-         auto v = std::make_unique<PiecewiseInterpolation>(("histoSys_" + name).c_str(), ("histoSys_" + name).c_str(),
-                                                           *hf, low, high, nps, false);
-         v->setAllInterpCodes(4); // default interpCode for HistFactory
-         shapeElems.add(*v);
-         ownedArgsStack.push(std::move(v));
+   if (p.has_child("statError") && p["statError"].val_bool()) {
+      RooAbsArg *phf = scope.getObject("mcstat");
+      if (phf) {
+         shapeElems.add(*phf);
       } else {
-         shapeElems.add(*hf);
-         ownedArgsStack.push(std::move(hf));
+         RooJSONFactoryWSTool::error("function '" + name +
+                                     "' has 'statError' active, but no element called 'mcstat' in scope!");
       }
-
-      if (p.has_child("shapeSystematics")) {
-         for (const auto &sys : p["shapeSystematics"].children()) {
-            std::string sysname(RooJSONFactoryWSTool::name(sys));
-            std::string funcName = prefix + sysname + "_ShapeSys";
-            RooAbsArg *phf = scope.getObject(funcName);
-            if (!phf) {
-               RooJSONFactoryWSTool::error("PHF '" + funcName +
-                                           "' should have been created but cannot be found in scope.");
-            }
-            shapeElems.add(*phf);
-         }
-      }
-
-      RooProduct shape(name.c_str(), (name + "_shape").c_str(), shapeElems);
-      ws.import(shape, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
-      if (normElems.size() > 0) {
-         RooProduct norm((name + "_norm").c_str(), (name + "_norm").c_str(), normElems);
-         ws.import(norm, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
-      } else {
-         ws.factory("RooConstVar::" + name + "_norm(1.)");
-      }
-   } catch (const std::runtime_error &e) {
-      RooJSONFactoryWSTool::error("function '" + name +
-                                  "' is of histogram type, but 'data' is not a valid definition. " + e.what() + ".");
    }
+
+   if (p.has_child("normFactors")) {
+      for (const auto &nf : p["normFactors"].children()) {
+         std::string nfname(RooJSONFactoryWSTool::name(nf));
+         if (RooAbsReal *r = ws.var(nfname)) {
+            normElems.add(*r);
+         } else {
+            normElems.add(*static_cast<RooRealVar *>(ws.factory(nfname + "[1.]")));
+         }
+      }
+   }
+
+   if (p.has_child("overallSystematics")) {
+      RooArgList nps;
+      std::vector<double> low;
+      std::vector<double> high;
+      for (const auto &sys : p["overallSystematics"].children()) {
+         std::string sysname(RooJSONFactoryWSTool::name(sys));
+         std::string parname(sys.has_child("parameter") ? RooJSONFactoryWSTool::name(sys["parameter"])
+                                                        : "alpha_" + sysname);
+         if (RooRealVar *par = ::getNP(ws, parname.c_str())) {
+            nps.add(*par);
+            low.push_back(sys["low"].val_double());
+            high.push_back(sys["high"].val_double());
+         } else {
+            RooJSONFactoryWSTool::error("overall systematic '" + sysname + "' doesn't have a valid parameter!");
+         }
+      }
+      auto v = std::make_unique<RooStats::HistFactory::FlexibleInterpVar>(
+         ("overallSys_" + name).c_str(), ("overallSys_" + name).c_str(), nps, 1., low, high);
+      v->setAllInterpCodes(4); // default HistFactory interpCode
+      normElems.add(*v);
+      ownedArgsStack.push(std::move(v));
+   }
+
+   if (p.has_child("histogramSystematics")) {
+      RooArgList nps;
+      RooArgList low;
+      RooArgList high;
+      for (const auto &sys : p["histogramSystematics"].children()) {
+         std::string sysname(RooJSONFactoryWSTool::name(sys));
+         std::string parname(sys.has_child("parameter") ? RooJSONFactoryWSTool::name(sys["parameter"])
+                                                        : "alpha_" + sysname);
+         RooAbsReal *par = ::getNP(ws, parname.c_str());
+         nps.add(*par);
+         RooDataHist &dh_low = getBinnedData(sysname + "Low_" + name);
+         ownedArgsStack.push(std::make_unique<RooHistFunc>(
+            (sysname + "Low_" + name).c_str(), RooJSONFactoryWSTool::name(p).c_str(), *(dh_low.get()), dh_low));
+         low.add(*ownedArgsStack.top());
+         RooDataHist &dh_high = getBinnedData(sysname + "High_" + name);
+         ownedArgsStack.push(std::make_unique<RooHistFunc>(
+            (sysname + "High_" + name).c_str(), RooJSONFactoryWSTool::name(p).c_str(), *(dh_high.get()), dh_high));
+         high.add(*ownedArgsStack.top());
+      }
+      auto v = std::make_unique<PiecewiseInterpolation>(("histoSys_" + name).c_str(), ("histoSys_" + name).c_str(), *hf,
+                                                        low, high, nps, false);
+      v->setAllInterpCodes(4); // default interpCode for HistFactory
+      shapeElems.add(*v);
+      ownedArgsStack.push(std::move(v));
+   } else {
+      shapeElems.add(*hf);
+      ownedArgsStack.push(std::move(hf));
+   }
+
+   if (p.has_child("shapeSystematics")) {
+      for (const auto &sys : p["shapeSystematics"].children()) {
+         std::string sysname(RooJSONFactoryWSTool::name(sys));
+         std::string funcName = prefix + sysname + "_ShapeSys";
+         RooAbsArg *phf = scope.getObject(funcName);
+         if (!phf) {
+            RooJSONFactoryWSTool::error("PHF '" + funcName +
+                                        "' should have been created but cannot be found in scope.");
+         }
+         shapeElems.add(*phf);
+      }
+   }
+
+   RooProduct shape(name.c_str(), (name + "_shape").c_str(), shapeElems);
+   ws.import(shape, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+   if (normElems.size() > 0) {
+      RooProduct norm((name + "_norm").c_str(), (name + "_norm").c_str(), normElems);
+      ws.import(norm, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+   } else {
+      ws.factory("RooConstVar::" + name + "_norm(1.)");
+   }
+
    return true;
 }
 
@@ -472,41 +469,34 @@ public:
          std::string fname(RooJSONFactoryWSTool::name(comp));
          auto &def = comp.is_container() ? comp : p["functions"][fname.c_str()];
          std::string fprefix = RooJSONFactoryWSTool::genPrefix(def, true);
-         try {
-            if (observables.empty()) {
-               RooJSONFactoryWSTool::getObservables(ws, comp["data"], fprefix, observables);
-               scope.setObservables(observables);
-            }
-            if (def.has_child("overallSystematics"))
-               ::collectNames(def["overallSystematics"], sysnames);
-            if (def.has_child("histogramSystematics"))
-               ::collectNames(def["histogramSystematics"], sysnames);
-            if (def.has_child("shapeSystematics")) { // ShapeSys are special case. Create PHFs here if needed
-               std::vector<std::string> shapeSysNames;
-               ::collectNames(def["shapeSystematics"], shapeSysNames);
-               for (auto &sysname : shapeSysNames) {
-                  std::string phfname = name + "_" + sysname + "_ShapeSys";
-                  auto phf = scope.getObject(phfname);
-                  if (!phf) {
-                     auto newphf =
-                        createPHFShapeSys(def["shapeSystematics"][sysname], phfname, ws, constraints, observables);
-                     ws.import(*newphf, RooFit::RecycleConflictNodes(), RooFit::Silence(true));
-                     scope.setObject(phfname, ws.function(phfname.c_str()));
-                  }
+
+         if (observables.empty()) {
+            RooJSONFactoryWSTool::getObservables(ws, comp["data"], fprefix, observables);
+            scope.setObservables(observables);
+         }
+         if (def.has_child("overallSystematics"))
+            ::collectNames(def["overallSystematics"], sysnames);
+         if (def.has_child("histogramSystematics"))
+            ::collectNames(def["histogramSystematics"], sysnames);
+         if (def.has_child("shapeSystematics")) { // ShapeSys are special case. Create PHFs here if needed
+            std::vector<std::string> shapeSysNames;
+            ::collectNames(def["shapeSystematics"], shapeSysNames);
+            for (auto &sysname : shapeSysNames) {
+               std::string phfname = name + "_" + sysname + "_ShapeSys";
+               auto phf = scope.getObject(phfname);
+               if (!phf) {
+                  auto newphf =
+                     createPHFShapeSys(def["shapeSystematics"][sysname], phfname, ws, constraints, observables);
+                  ws.import(*newphf, RooFit::RecycleConflictNodes(), RooFit::Silence(true));
+                  scope.setObject(phfname, ws.function(phfname.c_str()));
                }
             }
-         } catch (const char *s) {
-            RooJSONFactoryWSTool::error("function '" + name + "' unable to collect observables from function " + fname +
-                                        ". " + s);
          }
-         try {
-            if (comp["statError"].val_bool()) {
-               ::stackError(def["data"], sumW, sumW2);
-            }
-         } catch (const char *s) {
-            RooJSONFactoryWSTool::error("function '" + name + "' unable to sum statError from function " + fname +
-                                        ". " + s);
+
+         if (comp["statError"].val_bool()) {
+            ::stackError(def["data"], sumW, sumW2);
          }
+
          funcnames.push_back(fprefix + fname);
          coefnames.push_back(fprefix + fname + "_norm");
       }
