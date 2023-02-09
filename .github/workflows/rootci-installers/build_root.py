@@ -21,9 +21,16 @@ import tarfile
 from hashlib import sha1
 
 import openstack
-from build_utils import (cmake_options_from_dict, die, download_latest,
-                         load_config, print_shell_log, subprocess_with_log,
-                         upload_file, warning)
+from build_utils import (
+    cmake_options_from_dict,
+    die,
+    download_latest,
+    load_config,
+    print_shell_log,
+    subprocess_with_log,
+    upload_file,
+    warning,
+)
 
 S3CONTAINER = 'ROOT-build-artifacts'  # Used for uploads
 S3URL = 'https://s3.cern.ch/swift/v1/' + S3CONTAINER  # Used for downloads
@@ -151,20 +158,47 @@ def main():
         die(result, f"Failed to pull {base_ref}", shell_log)
 
     if pull_request:
-        print("::group::Rebase and build")
+        print("::group::Rebase {base_ref} onto {head_ref}")
         shell_log = rebase(base_ref, head_ref, workdir, shell_log)
+        print("::endgroup::")
+
+        print("::group::Build")
         shell_log = build(workdir, options, buildtype, shell_log)
         print("::endgroup::")
+
+        if(    options_dict['testing'].lower() == "on"
+           and options_dict['roottest'].lower() == "on"):
+            print("::group::Run tests")
+            shell_log = test(workdir, shell_log)
+            print("::endgroup::")
     else:
-        print("::group::Build release branch")
+        print(f"::group::Build release branch {base_ref}")
         shell_log = build(workdir, options, buildtype, shell_log)
         print("::endgroup::")
+
+        if(    options_dict['testing'].lower() == "on"
+           and options_dict['roottest'].lower() == "on"):
+            print("::group::Run tests")
+            shell_log = test(workdir, shell_log)
+            print("::endgroup::")
 
         print("::group::Archive and upload")
         archive_and_upload(yyyy_mm_dd, workdir, connection, compressionlevel, obj_prefix)
         print("::endgroup::")
 
     print_shell_log(shell_log)
+
+
+def test(workdir, shell_log):
+    result, shell_log = subprocess_with_log(f"""
+        cd '{workdir}/build'
+        ctest -V -j{os.cpu_count()}
+    """, shell_log)
+    
+    if result != 0:
+        warning("Some tests failed")
+    
+    return shell_log
 
 
 def archive_and_upload(archive_name, workdir, connection, compressionlevel, prefix):
@@ -186,7 +220,8 @@ def build(workdir, options, buildtype, shell_log):
     if not os.path.exists(f'{workdir}/build/CMakeCache.txt'):
         result, shell_log = subprocess_with_log(f"""
             mkdir -p '{workdir}/build'
-            cmake -S '{workdir}/src' -B '{workdir}/build' {options} -DCMAKE_BUILD_TYPE={buildtype}
+            cmake -S '{workdir}/src' -B '{workdir}/build' {options} \\
+                -DCMAKE_BUILD_TYPE={buildtype}
         """, shell_log)
 
         if result != 0:
@@ -212,10 +247,12 @@ def rebase(base_ref, head_ref, workdir, shell_log) -> str:
         git config user.email "rootci@root.cern"
         git config user.name 'ROOT Continous Integration'
         
-        git fetch origin {head_ref}:head || exit 2
-        git checkout head || exit 3
+        git fetch origin {head_ref}:__tmp || exit 2
+        git checkout __tmp || exit 3
         
         git rebase {base_ref} || exit 5
+        git checkout {base_ref} || exit 6
+        git reset --hard __tmp || exit 7
     """, shell_log)
 
     if result != 0:
