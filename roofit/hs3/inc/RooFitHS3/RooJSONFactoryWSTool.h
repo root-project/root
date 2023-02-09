@@ -203,7 +203,7 @@ private:
 
    void exportAllObjects(RooFit::Detail::JSONNode &n);
    void exportDependants(const RooAbsArg *source);
-   void exportTopLevelPdf(RooFit::Detail::JSONNode &node, RooAbsPdf const &pdf, std::string const &modelConfigName);
+   void exportTopLevelPdf(RooAbsPdf const &pdf, std::string const &modelConfigName);
 
    void exportModelConfig(RooFit::Detail::JSONNode &n, RooStats::ModelConfig const &mc);
 
