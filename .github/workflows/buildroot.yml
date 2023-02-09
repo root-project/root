@@ -54,7 +54,7 @@ on:
         default: true
 
 env:
-  PYTHONUNBUFFERED: true
+  #PYTHONUNBUFFERED: true
   OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
   OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
   OS_AUTH_TYPE: 'v3applicationcredential'
@@ -88,7 +88,7 @@ jobs:
         OS_IDENTITY_API_VERSION: 3
         OS_INTERFACE: 'public'
         OS_REGION_NAME: 'cern'
-        PYTHONUNBUFFERED: true
+        #PYTHONUNBUFFERED: true
 
     steps:
       - name: Checkout

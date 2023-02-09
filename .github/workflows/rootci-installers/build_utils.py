@@ -22,11 +22,11 @@ def print_fancy(*values, sgr=1, **kwargs) -> None:
 
 
 def warning(*values, **kwargs):
-    print_fancy("Warning: ", *values, sgr=33, file=sys.stderr, **kwargs)
+    print_fancy("Warning: ", *values, sgr=33, **kwargs)
 
 
 def error(*values, **kwargs):
-    print_fancy("Fatal error: ", *values, sgr=31, file=sys.stderr, **kwargs)
+    print_fancy("Fatal error: ", *values, sgr=31, **kwargs)
 
 
 def subprocess_with_log(command: str, log="") -> Tuple[int, str]:
@@ -35,12 +35,10 @@ def subprocess_with_log(command: str, log="") -> Tuple[int, str]:
     print_fancy(textwrap.dedent(command), sgr=1)
 
     print("\033[90m", end='')
-    print("\033[90m", end='', file=sys.stderr)
 
-    result = subprocess.run(command, shell=True, check=False)
+    result = subprocess.run(command, shell=True, check=False, stderr=subprocess.STDOUT)
 
     print("\033[0m", end='')
-    print("\033[0m", end='', file=sys.stderr)
 
     return (result.returncode,
             log + '\n(\n' + textwrap.dedent(command.strip()) + '\n)')
@@ -116,7 +114,7 @@ def cmake_options_from_dict(config: Dict[str, str]) -> str:
 
 
 def upload_file(connection: Connection, container: str, dest_object: str, src_file: str) -> None:
-    print(f"Attempting to upload {src_file} to {dest_object}", file=sys.stderr)
+    print(f"Attempting to upload {src_file} to {dest_object}")
 
     if not os.path.exists(src_file):
         raise Exception(f"No such file: {src_file}")
@@ -138,7 +136,7 @@ def upload_file(connection: Connection, container: str, dest_object: str, src_fi
 
 
 def download_file(url: str, dest: str) -> None:
-    print(f"\nAttempting to download {url} to {dest}", file=sys.stderr)
+    print(f"\nAttempting to download {url} to {dest}")
 
     parent_dir = os.path.dirname(dest)
 
