@@ -160,7 +160,7 @@ UInt_t TMVA::MethodPyKeras::GetNumValidationSamples()
 
 /// Function processing the options
 /// This is called only when creating the method before training not when
-/// readinf from XML file. Called from MethodBase::ProcessSetup
+/// reading from XML file. Called from MethodBase::ProcessSetup
 /// that is called from Factory::BookMethod
 void MethodPyKeras::ProcessOptions() {
 
@@ -169,14 +169,15 @@ void MethodPyKeras::ProcessOptions() {
       fFilenameTrainedModel = GetWeightFileDir() + "/TrainedModel_" + GetName() + ".h5";
    }
 
+   InitKeras();
+
    // Setup model, either the initial model from `fFilenameModel` or
    // the trained model from `fFilenameTrainedModel`
    if (fContinueTraining) Log() << kINFO << "Continue training with trained model" << Endl;
    SetupKerasModel(fContinueTraining);
 }
 
-void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
-
+void MethodPyKeras::InitKeras() {
    // initialize first Keras. This is done only here when class has
    // all state variable set from options or read from XML file
    // Import Keras
@@ -316,6 +317,9 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
       }
    }
 
+}
+
+void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
    /*
     * Load Keras model from file
     */
@@ -371,6 +375,8 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
 ///Setting up model for evaluation
 /// Add here some needed optimizations like disabling eager execution
 void MethodPyKeras::SetupKerasModelForEval() {
+
+   InitKeras();
 
    // disable eager execution (model will evaluate > 100 faster)
    // need to be done before loading the model
