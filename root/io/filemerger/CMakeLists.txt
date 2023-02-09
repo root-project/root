@@ -133,7 +133,7 @@ endif()
 #TBD: add file generation as test fixture
 if(NOT TARGET hsimple)
       add_test(NAME roottest-root-io-filemerger-hsimple-create
-               COMMAND ${ROOT_root_CMD} -q -l -b ${ROOTSYS}/tutorials/hsimple.C -e "{ TFile f(\"hsimple.root\"); TTree *ntuple; f.GetObject(\"ntuple\",ntuple); return ntuple ? 0 : 1; }"
+               COMMAND ${ROOT_root_CMD} -q -l -b ${ROOT_TUTORIALS_DIR}/hsimple.C -e "{ TFile f(\"hsimple.root\"); TTree *ntuple; f.GetObject(\"ntuple\",ntuple); return ntuple ? 0 : 1; }"
                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
       add_test(NAME roottest-root-io-filemerger-hsimple
                COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root hsimple.root)

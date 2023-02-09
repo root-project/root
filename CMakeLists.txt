@@ -124,6 +124,7 @@ else()
     # Some roottest.git tests are checking LZ4 and ZSTD, which has different references depends on its version.
     # We recover LZ4/ZSTD version used in ROOT, stored in root-config --config output.
     exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--srcdir" OUTPUT_VARIABLE ROOT_SOURCE_DIR)
+    exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--tutdir" OUTPUT_VARIABLE ROOT_TUTORIALS_DIR)
     exec_program(${ROOT_CONFIG_EXECUTABLE} ARGS "--config" OUTPUT_VARIABLE ROOT_CONFIG_VARIABLES RETURN_VALUE RETVAR)
     separate_arguments(ROOT_CONFIG_VARIABLES)
     foreach(item ${ROOT_CONFIG_VARIABLES})
