@@ -11,8 +11,8 @@
 from .. import pythonization
 from .._rvec import _array_interface_dtype_map
 from libROOTPythonizations import GetEndianess, GetDataPointer, GetSizeOfType
+from cppyy.gbl import TMVA
 import cppyy
-
 
 def get_array_interface(self):
     """
@@ -114,6 +114,16 @@ def RTensorGetitem(self, idx):
         idxVec[i] = x
     return self(idxVec)
 
+def RTensorInit(self, data=None, shape=None, layout=TMVA.Experimental.MemoryLayout.RowMajor):
+    try:
+        import numpy as np
+    except:
+        print("Failed to import numpy in RTensor constructor")
+
+    if isinstance(data, np.ndarray):
+        shape = data.shape
+
+    return self._original_init_(data,shape,layout)
 
 @pythonization("RTensor<", ns="TMVA::Experimental", is_prefix=True)
 def pythonize_rtensor(klass, name):
@@ -125,3 +135,6 @@ def pythonize_rtensor(klass, name):
     add_array_interface_property(klass, name)
     # Get elements, including slices
     klass.__getitem__ = RTensorGetitem
+    # add initialization of RTensor (pythonization of constructor)
+    klass._original_init_ = klass.__init__
+    klass.__init__ = RTensorInit
