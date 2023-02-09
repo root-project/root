@@ -1219,7 +1219,7 @@ class ObjectPainter extends BasePainter {
      * @private */
    async fillObjectExecMenu(menu, kind) {
 
-      if (this._userContextMenuFunc)
+      if (isFunc(this._userContextMenuFunc))
          return this._userContextMenuFunc(menu, kind);
 
       let canvp = this.getCanvPainter();
@@ -1228,11 +1228,11 @@ class ObjectPainter extends BasePainter {
          return menu;
 
       function DoExecMenu(arg) {
-         let execp = this.exec_painter || this,
-            cp = execp.getCanvPainter(),
-            item = execp.args_menu_items[parseInt(arg)];
+         let execp = menu.exec_painter || this,
+             cp = execp.getCanvPainter(),
+             item = menu.exec_items[parseInt(arg)];
 
-         if (!item || !item.fName) return;
+         if (!item?.fName) return;
 
          // this is special entry, produced by TWebMenuItem, which recognizes editor entries itself
          if (item.fExec == 'Show:Editor') {
@@ -1242,21 +1242,21 @@ class ObjectPainter extends BasePainter {
          }
 
          if (isFunc(cp?.executeObjectMethod))
-            if (cp.executeObjectMethod(execp, item, execp.args_menu_id)) return;
+            if (cp.executeObjectMethod(execp, item, item.$execid)) return;
+
+         item.fClassName = execp.getClassName();
+         if ((item.$execid.indexOf('#x') > 0) || (item.$execid.indexOf('#y') > 0) || (item.$execid.indexOf('#z') > 0))
+            item.fClassName = clTAxis;
 
          if (execp.executeMenuCommand(item)) return;
 
-         if (!execp.args_menu_id) return;
+         if (!item.$execid) return;
 
-          if (!item.fArgs)
-             if (cp?.v7canvas)
-                return cp.submitExec(execp, item.fExec, kind);
-             else
-                return execp.submitCanvExec(item.fExec, execp.args_menu_id);
-
-         item.fClassName = execp.getClassName();
-         if ((execp.args_menu_id.indexOf('#x') > 0) || (execp.args_menu_id.indexOf('#y') > 0) || (execp.args_menu_id.indexOf('#z') > 0))
-            item.fClassName = clTAxis;
+         if (!item.fArgs)
+            if (cp?.v7canvas)
+               return cp.submitExec(execp, item.fExec, kind);
+            else
+               return execp.submitCanvExec(item.fExec, item.$execid);
 
           menu.showMethodArgsDialog(item).then(args => {
              if (!args) return;
@@ -1266,32 +1266,31 @@ class ObjectPainter extends BasePainter {
              if (cp?.v7canvas)
                 cp.submitExec(execp, exec, kind);
              else if (cp)
-                cp.sendWebsocket(`OBJEXEC:${execp.args_menu_id}:${exec}`);
+                cp.sendWebsocket(`OBJEXEC:${item.$execid}:${exec}`);
          });
       }
 
       const DoFillMenu = (_menu, _reqid, _resolveFunc, reply) => {
 
          // avoid multiple call of the callback after timeout
-         if (this._got_menu) return;
-         this._got_menu = true;
+         if (menu._got_menu) return;
+         menu._got_menu = true;
 
          if (reply && (_reqid !== reply.fId))
             console.error(`missmatch between request ${_reqid} and reply ${reply.fId} identifiers`);
 
-         let items = reply ? reply.fItems : null;
+         menu.exec_items = reply?.fItems;
 
-         if (items?.length) {
+         if (menu.exec_items?.length) {
             if (_menu.size() > 0)
                _menu.add('separator');
 
-            this.args_menu_items = items;
-            this.args_menu_id = reply.fId;
-
             let lastclname;
 
-            for (let n = 0; n < items.length; ++n) {
-               let item = items[n];
+            for (let n = 0; n < menu.exec_items.length; ++n) {
+               let item = menu.exec_items[n];
+               item.$execid = reply.fId;
+               item.$menu = menu;
 
                if (item.fClassName && lastclname && (lastclname != item.fClassName)) {
                   _menu.add('endsub:');
@@ -1320,11 +1319,11 @@ class ObjectPainter extends BasePainter {
       let reqid = this.snapid;
       if (kind) reqid += '#' + kind; // use # to separate object id from member specifier like 'x' or 'z'
 
-      this._got_menu = false;
+      menu._got_menu = false;
 
       // if menu painter differs from this, remember it for further usage
       if (menu.painter)
-         menu.painter.exec_painter = (menu.painter !== this) ? this : undefined;
+         menu.exec_painter = (menu.painter !== this) ? this : undefined;
 
       return new Promise(resolveFunc => {
 

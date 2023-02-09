@@ -1,12 +1,10 @@
-import { BIT, isBatchMode } from '../core.mjs';
-import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { TLinePainter } from './TLinePainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
-import { addMoveHandler } from '../gui/utils.mjs';
 
 
 /** @summary Drawing TArrow
   * @private */
-class TArrowPainter extends ObjectPainter {
+class TArrowPainter extends TLinePainter {
 
    /** @summary Create line segment with rotation */
    rotate(angle, x0, y0) {
@@ -49,46 +47,15 @@ class TArrowPainter extends ObjectPainter {
               path;
    }
 
-   /** @summary Start interactive moving */
-   moveStart(x,y) {
-      let fullsize = Math.sqrt((this.x1-this.x2)**2 + (this.y1-this.y2)**2),
-          sz1 = Math.sqrt((x-this.x1)**2 + (y-this.y1)**2)/fullsize,
-          sz2 = Math.sqrt((x-this.x2)**2 + (y-this.y2)**2)/fullsize;
-      if (sz1 > 0.9)
-         this.side = 1;
-      else if (sz2 > 0.9)
-         this.side = -1;
-      else
-         this.side = 0;
-   }
+   /** @summary calculate all TArrow coordinates */
+   prepareDraw() {
+      super.prepareDraw();
 
-   /** @summary Continue interactive moving */
-   moveDrag(dx,dy) {
-      if (this.side != 1) { this.x1 += dx; this.y1 += dy; }
-      if (this.side != -1) { this.x2 += dx; this.y2 += dy; }
-      this.draw_g.select('path').attr('d', this.createPath());
-   }
+      let arrow = this.getObject(),
+          oo = arrow.fOption,
+          rect = this.getPadPainter().getPadRect();
 
-   /** @summary Finish interactive moving */
-   moveEnd(not_changed) {
-      if (not_changed) return;
-      let arrow = this.getObject(), exec = '';
-      arrow.fX1 = this.svgToAxis('x', this.x1, this.isndc);
-      arrow.fX2 = this.svgToAxis('x', this.x2, this.isndc);
-      arrow.fY1 = this.svgToAxis('y', this.y1, this.isndc);
-      arrow.fY2 = this.svgToAxis('y', this.y2, this.isndc);
-      if (this.side != 1) exec += `SetX1(${arrow.fX1});;SetY1(${arrow.fY1});;`;
-      if (this.side != -1) exec += `SetX2(${arrow.fX2});;SetY2(${arrow.fY2});;`;
-      this.submitCanvExec(exec + 'Notify();;');
-   }
-
-   /** @summary Redraw arrow */
-   redraw() {
-      let arrow = this.getObject(), kLineNDC = BIT(14),
-          oo = arrow.fOption, rect = this.getPadPainter().getPadRect();
-
-      this.wsize = Math.max(3, Math.round(Math.max(rect.width, rect.height) * arrow.fArrowSize*0.8));
-      this.isndc = arrow.TestBit(kLineNDC);
+      this.wsize = Math.max(3, Math.round(Math.max(rect.width, rect.height) * arrow.fArrowSize * 0.8));
       this.angle2 = arrow.fAngle/2/180 * Math.PI;
       this.beg = this.mid = this.end = 0;
 
@@ -107,35 +74,20 @@ class TArrowPainter extends ObjectPainter {
       if ((p1 >= 0) && (p1 == len-1))
          this.end = ((p2 >= 0) && (p2 == len-2)) ? 11 : 1;
 
-      this.createAttLine({ attr: arrow });
+      this.createAttFill({ attr: arrow });
+   }
 
-      this.createG();
-
-      this.x1 = this.axisToSvg('x', arrow.fX1, this.isndc, true);
-      this.y1 = this.axisToSvg('y', arrow.fY1, this.isndc, true);
-      this.x2 = this.axisToSvg('x', arrow.fX2, this.isndc, true);
-      this.y2 = this.axisToSvg('y', arrow.fY2, this.isndc, true);
-
-      let elem = this.draw_g.append('svg:path')
-                     .attr('d', this.createPath())
-                     .call(this.lineatt.func);
-
-      if ((this.beg > 10) || (this.end > 10)) {
-         this.createAttFill({ attr: arrow });
+   /** @summary Add extras to path for TArrow */
+   addExtras(elem) {
+      if ((this.beg > 10) || (this.end > 10))
          elem.call(this.fillatt.func);
-      } else {
-         elem.style('fill','none');
-      }
-
-     if (!isBatchMode())
-        addMoveHandler(this);
-
-      return this;
+      else
+         elem.style('fill', 'none');
    }
 
    /** @summary Draw TArrow object */
    static async draw(dom, obj, opt) {
-      let painter = new TArrowPainter(dom, obj,opt);
+      let painter = new TArrowPainter(dom, obj, opt);
       return ensureTCanvas(painter, false).then(() => painter.redraw());
    }
 

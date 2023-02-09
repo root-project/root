@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '7/02/2023';
+let version_date = '9/02/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -12108,7 +12108,7 @@ class ObjectPainter extends BasePainter {
      * @private */
    async fillObjectExecMenu(menu, kind) {
 
-      if (this._userContextMenuFunc)
+      if (isFunc(this._userContextMenuFunc))
          return this._userContextMenuFunc(menu, kind);
 
       let canvp = this.getCanvPainter();
@@ -12117,11 +12117,11 @@ class ObjectPainter extends BasePainter {
          return menu;
 
       function DoExecMenu(arg) {
-         let execp = this.exec_painter || this,
-            cp = execp.getCanvPainter(),
-            item = execp.args_menu_items[parseInt(arg)];
+         let execp = menu.exec_painter || this,
+             cp = execp.getCanvPainter(),
+             item = menu.exec_items[parseInt(arg)];
 
-         if (!item || !item.fName) return;
+         if (!item?.fName) return;
 
          // this is special entry, produced by TWebMenuItem, which recognizes editor entries itself
          if (item.fExec == 'Show:Editor') {
@@ -12131,21 +12131,21 @@ class ObjectPainter extends BasePainter {
          }
 
          if (isFunc(cp?.executeObjectMethod))
-            if (cp.executeObjectMethod(execp, item, execp.args_menu_id)) return;
+            if (cp.executeObjectMethod(execp, item, item.$execid)) return;
+
+         item.fClassName = execp.getClassName();
+         if ((item.$execid.indexOf('#x') > 0) || (item.$execid.indexOf('#y') > 0) || (item.$execid.indexOf('#z') > 0))
+            item.fClassName = clTAxis;
 
          if (execp.executeMenuCommand(item)) return;
 
-         if (!execp.args_menu_id) return;
+         if (!item.$execid) return;
 
-          if (!item.fArgs)
-             if (cp?.v7canvas)
-                return cp.submitExec(execp, item.fExec, kind);
-             else
-                return execp.submitCanvExec(item.fExec, execp.args_menu_id);
-
-         item.fClassName = execp.getClassName();
-         if ((execp.args_menu_id.indexOf('#x') > 0) || (execp.args_menu_id.indexOf('#y') > 0) || (execp.args_menu_id.indexOf('#z') > 0))
-            item.fClassName = clTAxis;
+         if (!item.fArgs)
+            if (cp?.v7canvas)
+               return cp.submitExec(execp, item.fExec, kind);
+            else
+               return execp.submitCanvExec(item.fExec, item.$execid);
 
           menu.showMethodArgsDialog(item).then(args => {
              if (!args) return;
@@ -12155,32 +12155,31 @@ class ObjectPainter extends BasePainter {
              if (cp?.v7canvas)
                 cp.submitExec(execp, exec, kind);
              else if (cp)
-                cp.sendWebsocket(`OBJEXEC:${execp.args_menu_id}:${exec}`);
+                cp.sendWebsocket(`OBJEXEC:${item.$execid}:${exec}`);
          });
       }
 
       const DoFillMenu = (_menu, _reqid, _resolveFunc, reply) => {
 
          // avoid multiple call of the callback after timeout
-         if (this._got_menu) return;
-         this._got_menu = true;
+         if (menu._got_menu) return;
+         menu._got_menu = true;
 
          if (reply && (_reqid !== reply.fId))
             console.error(`missmatch between request ${_reqid} and reply ${reply.fId} identifiers`);
 
-         let items = reply ? reply.fItems : null;
+         menu.exec_items = reply?.fItems;
 
-         if (items?.length) {
+         if (menu.exec_items?.length) {
             if (_menu.size() > 0)
                _menu.add('separator');
 
-            this.args_menu_items = items;
-            this.args_menu_id = reply.fId;
-
             let lastclname;
 
-            for (let n = 0; n < items.length; ++n) {
-               let item = items[n];
+            for (let n = 0; n < menu.exec_items.length; ++n) {
+               let item = menu.exec_items[n];
+               item.$execid = reply.fId;
+               item.$menu = menu;
 
                if (item.fClassName && lastclname && (lastclname != item.fClassName)) {
                   _menu.add('endsub:');
@@ -12209,11 +12208,11 @@ class ObjectPainter extends BasePainter {
       let reqid = this.snapid;
       if (kind) reqid += '#' + kind; // use # to separate object id from member specifier like 'x' or 'z'
 
-      this._got_menu = false;
+      menu._got_menu = false;
 
       // if menu painter differs from this, remember it for further usage
       if (menu.painter)
-         menu.painter.exec_painter = (menu.painter !== this) ? this : undefined;
+         menu.exec_painter = (menu.painter !== this) ? this : undefined;
 
       return new Promise(resolveFunc => {
 
@@ -59736,7 +59735,7 @@ class TAxisPainter extends ObjectPainter {
           rotate_lbls = axis.TestBit(EAxisBits.kLabelsVert),
           textscale = 1, maxtextlen = 0, applied_scale = 0,
           label_g = [ axis_g.append('svg:g').attr('class','axis_labels') ],
-          lbl_pos = handle.lbl_pos || handle.major, lbl_tilt = false, max_textwidth = 0;
+          lbl_pos = handle.lbl_pos || handle.major, lbl_tilt = false, any_modified = false, max_textwidth = 0;
 
       if (this.lbls_both_sides)
          label_g.push(axis_g.append('svg:g').attr('class','axis_labels').attr('transform', this.vertical ? `translate(${w})` : `translate(0,${-h})`));
@@ -59756,7 +59755,8 @@ class TAxisPainter extends ObjectPainter {
             textscale = Math.min(textscale, (max_text_width - labeloffset) / textwidth);
          }
 
-         if ((textscale > 0.0001) && (textscale < 0.7) && !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (label_g.length == 1))
+         if ((textscale > 0.0001) && (textscale < 0.7) && !any_modified &&
+              !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (label_g.length == 1))
             lbl_tilt = true;
 
          let scale = textscale * (lbl_tilt ? 3 : 1);
@@ -59783,12 +59783,13 @@ class TAxisPainter extends ObjectPainter {
             let mod = this.findLabelModifier(axis, nmajor, lbl_pos.length);
             if (mod?.fTextSize === 0) continue;
 
+            if (mod) any_modified = true;
             if (mod?.fLabText) text = mod.fLabText;
 
             let arg = { text, color: labelsFont.color, latex: 1, draw_g: label_g[lcnt], normal_side: (lcnt == 0) },
                 pos = Math.round(this.func(lbl_pos[nmajor]));
 
-            if (mod && mod.fTextColor > 0) arg.color = this.getColor(mod.fTextColor);
+            if (mod?.fTextColor > 0) arg.color = this.getColor(mod.fTextColor);
 
             arg.gap_before = (nmajor > 0) ? Math.abs(Math.round(pos - this.func(lbl_pos[nmajor-1]))) : 0;
 
@@ -59814,6 +59815,8 @@ class TAxisPainter extends ObjectPainter {
 
             if (rotate_lbls)
                arg.rotate = 270;
+            else if (mod && mod.fTextAngle != -1)
+               arg.rotate = -mod.fTextAngle;
 
             // only for major text drawing scale factor need to be checked
             if (lcnt == 0) arg.post_process = process_drawtext_ready;
@@ -62574,7 +62577,8 @@ function detectRightButton(event) {
   * @private */
 function addMoveHandler(painter, enabled) {
 
-   if (enabled === undefined) enabled = true;
+   if (enabled === undefined)
+      enabled = true;
 
    if (!settings.MoveResize || isBatchMode() || !painter.draw_g) return;
 
@@ -62663,16 +62667,19 @@ function selectgStyle(name) {
          fCanvasColor: 0, fPadBorderMode: 0, fPadColor: 0, fStatColor: 0,
          fTitleAlign: 23, fTitleX: 0.5, fTitleBorderSize: 0, fTitleColor: 0, fTitleStyle: 0,
          fOptStat: 1111, fStatY: 0.935,
-         fLegendBorderSize: 1, fLegendFont: 42, fLegendTextSize: 0, fLegendFillColor: 0 }); break;
+         fLegendBorderSize: 1, fLegendFont: 42, fLegendTextSize: 0, fLegendFillColor: 0 });
+         break;
       case 'Plain': Object.assign(gStyle, {
          fFrameBorderMode: 0, fCanvasBorderMode: 0, fPadBorderMode: 0,
          fPadColor: 0, fCanvasColor: 0,
-         fTitleColor: 0, fTitleBorderSize: 0, fStatColor: 0, fStatBorderSize: 1, fLegendBorderSize: 1 }); break;
+         fTitleColor: 0, fTitleBorderSize: 0, fStatColor: 0, fStatBorderSize: 1, fLegendBorderSize: 1 });
+         break;
       case 'Bold': Object.assign(gStyle, {
          fCanvasColor: 10, fCanvasBorderMode: 0,
          fFrameLineWidth: 3, fFrameFillColor: 10,
          fPadColor: 10, fPadTickX: 1, fPadTickY: 1, fPadBottomMargin: 0.15, fPadLeftMargin: 0.15,
-         fTitleColor: 10, fTitleTextColor: 600, fStatColor: 10 }); break;
+         fTitleColor: 10, fTitleTextColor: 600, fStatColor: 10 });
+         break;
    }
 }
 
@@ -64130,6 +64137,25 @@ function closeMenu(menuname) {
    let x = document.getElementById(menuname || 'root_ctx_menu');
    if (x) { x.parentNode.removeChild(x); return true; }
    return false;
+}
+
+/** @summary Fill and show context menu for painter object
+  * @private */
+function showPainterMenu(evnt, painter, kind) {
+   evnt.stopPropagation(); // disable main context menu
+   evnt.preventDefault();  // disable browser context menu
+
+   createMenu$1(evnt, painter).then(menu => {
+      painter.fillContextMenu(menu);
+      return painter.fillObjectExecMenu(menu, kind);
+   }).then(menu => menu.show());
+}
+
+/** @summary Assign handler for context menu for painter draw element
+  * @private */
+function assignContextMenu(painter, kind) {
+   if (!isBatchMode() && painter?.draw_g)
+      painter.draw_g.on('contextmenu', settings.ContextMenu ? evnt => showPainterMenu(evnt, painter, kind) : null);
 }
 
 function setPainterTooltipEnabled(painter, on) {
@@ -71954,8 +71980,9 @@ class TPavePainter extends ObjectPainter {
           pad_height = pp.getPadHeight(),
           draw_header = (pt.fLabel.length > 0),
           promises = [],
+          margin_x = pt.fMargin * width,
           stepy = height / (nlines || 1),
-          margin_x = pt.fMargin * width, max_font_size = 0;
+          max_font_size = 0;
 
       // for single line (typically title) limit font size
       if ((nlines == 1) && (pt.fTextSize > 0)) {
@@ -71998,21 +72025,19 @@ class TPavePainter extends ObjectPainter {
                   if (num_default++ === 0)
                      this.startTextDrawing(pt.fTextFont, height/(nlines * 1.2), text_g, max_font_size);
 
-                  let arg = null;
+                  let arg = { x: 0, y: 0, width, height, align: entry.fTextAlign || pt.fTextAlign,
+                              draw_g: text_g, latex: entry._typename == clTText ? 0 : 1,
+                              text: entry.fTitle, fast  };
+                  let halign = Math.floor(arg.align / 10);
+                  // when horizontal align applied, just shift text, not change width to keep scaling
+                  arg.x = (halign == 1) ? margin_x : (halign == 3 ? -margin_x : 0);
 
-                  if (nlines == 1) {
-                     arg = { x: 0, y: 0, width, height };
-                  } else {
-                     arg = { x: margin_x, y: texty, width: width - 2*margin_x, height: stepy };
+                  if (nlines > 1) {
+                     arg.y = texty;
+                     arg.height = stepy;
                      if (entry.fTextColor) arg.color = this.getColor(entry.fTextColor);
                      if (entry.fTextSize) arg.font_size = Math.round(entry.fTextSize * pad_height);
                   }
-
-                  arg.align = entry.fTextAlign || pt.fTextAlign;
-                  arg.draw_g = text_g;
-                  arg.latex = (entry._typename == clTText ? 0 : 1);
-                  arg.text = entry.fTitle;
-                  arg.fast = fast;
                   if (!arg.color) { this.UseTextColor = true; arg.color = tcolor; }
                   this.drawText(arg);
                }
@@ -72079,7 +72104,11 @@ class TPavePainter extends ObjectPainter {
       switch(fmt) {
          case 'stat' : fmt = pave.fStatFormat || gStyle.fStatFormat; break;
          case 'fit': fmt = pave.fFitFormat || gStyle.fFitFormat; break;
-         case 'entries': if ((Math.abs(value) < 1e9) && (Math.round(value) == value)) return value.toFixed(0); fmt = '14.7g'; break;
+         case 'entries':
+            if ((Math.abs(value) < 1e9) && (Math.round(value) == value))
+               return value.toFixed(0);
+            fmt = '14.7g';
+            break;
          case 'last': fmt = this.lastformat; break;
       }
 
@@ -72575,16 +72604,9 @@ class TPavePainter extends ObjectPainter {
          let fp = this.getFramePainter();
          if (isFunc(fp?.showContextMenu))
              fp.showContextMenu('z', evnt);
-         return;
+      } else {
+         showPainterMenu(evnt, this, this.isTitle() ? 'title' : undefined);
       }
-
-      evnt.stopPropagation(); // disable main context menu
-      evnt.preventDefault();  // disable browser context menu
-
-      createMenu$1(evnt, this).then(menu => {
-         this.fillContextMenu(menu);
-         return this.fillObjectExecMenu(menu, this.isTitle() ? 'title' : undefined);
-       }).then(menu => menu.show());
    }
 
    /** @summary Returns true when stat box is drawn */
@@ -73099,12 +73121,13 @@ class THistDrawOptions {
    decode(opt, hdim, histo, pp, pad, painter) {
       this.orginal = opt; // will be overwritten by storeDrawOpt call
 
+      this.cutg_name = '';
       if (isStr(opt) && (hdim === 2)) {
          let p1 = opt.lastIndexOf('['),  p2 = opt.lastIndexOf(']');
          if ((p1 >= 0) && (p2 > p1+1)) {
-            let name = opt.slice(p1+1, p2);
+            this.cutg_name = opt.slice(p1+1, p2);
             opt = opt.slice(0, p1) + opt.slice(p2+1);
-            this.cutg = pp?.findInPrimitives(name, clTCutG);
+            this.cutg = pp?.findInPrimitives(this.cutg_name, clTCutG);
             if (this.cutg) this.cutg.$redraw_pad = true;
          }
       }
@@ -73492,6 +73515,9 @@ class THistDrawOptions {
          if (pad.fTickx) res += '_TICKX';
          if (pad.fTicky) res += '_TICKY';
       }
+
+      if (this.cutg_name)
+         res += ` [${this.cutg_name}]`;
 
       return res;
    }
@@ -74559,6 +74585,35 @@ class THistPainter extends ObjectPainter {
 
          this.interactiveRedraw();
        });
+   }
+
+   /** @summary Execute histogram menu command
+     * @desc Used to catch standard menu items and provide local implementation */
+   executeMenuCommand(method, args) {
+      if (super.executeMenuCommand(method, args))
+         return true;
+
+      if (method.fClassName == clTAxis) {
+         let p = isStr(method.$execid) ? method.$execid.indexOf('#') : -1,
+             kind = p > 0 ? method.$execid.slice(p+1) : 'x',
+             fp = this.getFramePainter();
+         if (method.fName == 'UnZoom') {
+            fp?.unzoom(kind);
+            return true;
+         } else if (method.fName == 'SetRange') {
+            const axis = fp?.getAxis(kind), bins = JSON.parse(`[${args}]`);
+            if (axis && bins?.length == 2)
+               fp?.zoom(kind, axis.GetBinLowEdge(bins[0]), axis.GetBinLowEdge(bins[1]+1));
+            // let execute command on server
+         } else if (method.fName == 'SetRangeUser') {
+            const values = JSON.parse(`[${args}]`);
+            if (values?.length == 2)
+               fp?.zoom(kind, values[0], values[1]);
+            // let execute command on server
+         }
+      }
+
+      return false;
    }
 
    /** @summary Fill histogram context menu */
@@ -77608,14 +77663,18 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       this.minbin = this.gminbin;
       this.minposbin = this.gminposbin;
 
-      let cntr = this.getContour(true), palette = this.getHistPalette();
+      let cntr = this.getContour(true), palette = this.getHistPalette(),
+          draw_lines = this.options.Line || this.options.Text;
 
       for (i = 0; i < len; ++i) {
          bin = histo.fBins.arr[i];
          colindx = cntr.getPaletteIndex(palette, bin.fContent);
-         if (colindx === null) continue;
+         if (colindx === null) {
+            if (!draw_lines) continue;
+            colindx = 0;
+         }
          if (bin.fContent === 0) {
-            if (!this.options.Zero || !this.options.Line) continue;
+            if (!this.options.Zero && !draw_lines) continue;
             colindx = 0; // make dummy fill color to draw only line
          }
 
@@ -77630,7 +77689,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          else
             colPaths[colindx] += cmd;
 
-         if (this.options.Text && bin.fContent) textbins.push(bin);
+         if (this.options.Text && bin.fContent)
+            textbins.push(bin);
       }
 
       for (colindx = 0; colindx < colPaths.length; ++colindx)
@@ -77639,7 +77699,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
                      .append('svg:path')
                      .style('fill', colindx ? this.fPalette.getColor(colindx) : 'none')
                      .attr('d', colPaths[colindx]);
-            if (this.options.Line)
+            if (draw_lines)
                item.call(this.lineatt.func);
          }
 
@@ -85698,6 +85758,9 @@ class TGeoPainter extends ObjectPainter {
 
       menu.addchk(this.ctrl.wireframe, 'Wire frame', () => this.toggleWireFrame());
 
+      if(!this.getCanvPainter())
+         menu.addchk(this.isTooltipAllowed(), 'Show tooltips', () => this.setTooltipAllowed('toggle'));
+
       menu.addchk(this.ctrl.highlight, 'Highlight volumes', () => {
          this.ctrl.highlight = !this.ctrl.highlight;
       });
@@ -86435,7 +86498,8 @@ class TGeoPainter extends ObjectPainter {
 
       if (this._controls || !this._webgl || isBatchMode()) return;
 
-      this.setTooltipAllowed(settings.Tooltip);
+      if (!this.getCanvPainter())
+         this.setTooltipAllowed(settings.Tooltip);
 
       this._controls = createOrbitControl(this, this._camera, this._scene, this._renderer, this._lookat);
 
@@ -86492,7 +86556,7 @@ class TGeoPainter extends ObjectPainter {
          let lines = provideObjectInfo(resolve.obj);
          lines.unshift(tooltip);
 
-         return { name: resolve.obj.fName, title: resolve.obj.fTitle || resolve.obj._typename, lines: lines };
+         return { name: resolve.obj.fName, title: resolve.obj.fTitle || resolve.obj._typename, lines };
       };
 
       this._controls.processMouseLeave = function() {
@@ -96654,7 +96718,7 @@ const drawFuncs = { lst: [
    { name: 'TPie', icon: 'img_graph', draw: () => import_more().then(h => h.drawPie), direct: true },
    { name: 'TPieSlice', icon: 'img_graph', dummy: true },
    { name: 'TExec', icon: 'img_graph', dummy: true },
-   { name: clTLine, icon: 'img_graph', draw: () => import_more().then(h => h.drawTLine) },
+   { name: clTLine, icon: 'img_graph', class: () => Promise.resolve().then(function () { return TLinePainter$1; }).then(h => h.TLinePainter) },
    { name: 'TArrow', icon: 'img_graph', class: () => Promise.resolve().then(function () { return TArrowPainter$1; }).then(h => h.TArrowPainter) },
    { name: clTPolyLine, icon: 'img_graph', draw: () => import_more().then(h => h.drawPolyLine), direct: true },
    { name: 'TCurlyLine', sameas: clTPolyLine },
@@ -103707,40 +103771,19 @@ async function drawText$1() {
          this.moveEnd = function(not_changed) {
             if (not_changed) return;
             let text = this.getObject();
-            text.fX = this.svgToAxis('x', this.pos_x + this.pos_dx, this.isndc),
+            text.fX = this.svgToAxis('x', this.pos_x + this.pos_dx, this.isndc);
             text.fY = this.svgToAxis('y', this.pos_y + this.pos_dy, this.isndc);
             this.submitCanvExec(`SetX(${text.fX});;SetY(${text.fY});;`);
          };
 
       addMoveHandler(this);
 
+      assignContextMenu(this);
+
       return this;
    });
 }
 
-/** @summary Draw TLine
-  * @private */
-async function drawTLine(dom, obj) {
-   let painter = new ObjectPainter(dom, obj);
-
-   painter.redraw = function() {
-      const kLineNDC = BIT(14),
-            line = this.getObject(),
-            lineatt = new TAttLineHandler(line),
-            isndc = line.TestBit(kLineNDC);
-
-      this.createG();
-
-      this.draw_g
-          .append('svg:path')
-          .attr('d', `M${this.axisToSvg('x',line.fX1,isndc)},${this.axisToSvg('y',line.fY1,isndc)}L${this.axisToSvg('x',line.fX2,isndc)},${this.axisToSvg('y',line.fY2,isndc)}`)
-          .call(lineatt.func);
-
-      return this;
-   };
-
-   return ensureTCanvas(painter, false).then(() => painter.redraw());
-}
 
 /** @summary Draw TPolyLine
   * @private */
@@ -103749,26 +103792,60 @@ function drawPolyLine() {
    this.createG();
 
    let polyline = this.getObject(),
-       lineatt = new TAttLineHandler(polyline),
-       fillatt = this.createAttFill(polyline),
        kPolyLineNDC = BIT(14),
        isndc = polyline.TestBit(kPolyLineNDC),
+       opt = this.getDrawOpt() || polyline.fOption,
+       dofill = (polyline._typename == clTPolyLine) && ((opt == 'f') || (opt == 'F')),
        cmd = '', func = this.getAxisToSvgFunc(isndc);
+
+   this.createAttLine({ attr: polyline });
+   this.createAttFill({ attr: polyline });
 
    for (let n = 0; n <= polyline.fLastPoint; ++n)
       cmd += `${n>0?'L':'M'}${func.x(polyline.fX[n])},${func.y(polyline.fY[n])}`;
 
-   if (polyline._typename != clTPolyLine)
-      fillatt.setSolidColor('none');
-
-   if (!fillatt.empty())
+   if (dofill)
       cmd += 'Z';
 
-   this.draw_g
-       .append('svg:path')
-       .attr('d', cmd)
-       .call(lineatt.func)
-       .call(fillatt.func);
+   let elem =  this.draw_g.append('svg:path').attr('d', cmd);
+
+   if (dofill)
+      elem.call(this.fillatt.func);
+   else
+      elem.call(this.lineatt.func)
+          .style('fill', 'none');
+
+   assignContextMenu(this);
+
+   addMoveHandler(this);
+
+   this.dx = 0;
+   this.dy = 0;
+   this.isndc = isndc;
+
+   this.moveDrag = function (dx,dy) {
+      this.dx += dx;
+      this.dy += dy;
+      this.draw_g.select('path').attr('transform', makeTranslate(this.dx, this.dy));
+   };
+
+   this.moveEnd = function(not_changed) {
+      if (not_changed) return;
+      let polyline = this.getObject(),
+          func = this.getAxisToSvgFunc(this.isndc),
+          exec = '';
+
+      for (let n = 0; n <= polyline.fLastPoint; ++n) {
+         let x = this.svgToAxis('x', func.x(polyline.fX[n]) + this.dx, this.isndc),
+             y = this.svgToAxis('y', func.y(polyline.fY[n]) + this.dy, this.isndc);
+         polyline.fX[n] = x;
+         polyline.fY[n] = y;
+         exec += `SetPoint(${n},${x},${y});;`;
+      }
+      this.submitCanvExec(exec + 'Notify();;');
+      this.redraw();
+   };
+
 }
 
 /** @summary Draw TEllipse
@@ -103850,11 +103927,34 @@ function drawEllipse() {
      path += 'Z';
    }
 
+   this.x = x;
+   this.y = y;
+
    this.draw_g
       .append('svg:path')
       .attr('transform', makeTranslate(x, y))
       .attr('d', path)
-      .call(this.lineatt.func).call(this.fillatt.func);
+      .call(this.lineatt.func)
+      .call(this.fillatt.func);
+
+   assignContextMenu(this);
+
+   addMoveHandler(this);
+
+   this.moveDrag = function (dx,dy) {
+      this.x += dx;
+      this.y += dy;
+      this.draw_g.select('path').attr('transform', makeTranslate(this.x, this.y));
+   };
+
+   this.moveEnd = function (not_changed) {
+      if (not_changed) return;
+      let ellipse = this.getObject();
+      ellipse.fX1 = this.svgToAxis('x', this.x);
+      ellipse.fY1 = this.svgToAxis('y', this.y);
+      this.submitCanvExec(`SetX1(${ellipse.fX1});;SetY1(${ellipse.fY1});;Notify();;`);
+   };
+
 }
 
 /** @summary Draw TPie
@@ -103881,9 +103981,10 @@ function drawPie() {
       total += pie.fPieSlices[n].fValue;
 
    for (let n = 0; n < nb; n++) {
-      let slice = pie.fPieSlices[n],
-          lineatt = new TAttLineHandler({attr: slice}),
-          fillatt = this.createAttFill(slice);
+      let slice = pie.fPieSlices[n];
+
+      this.createAttLine({ attr: slice }),
+      this.createAttFill({ attr: slice });
 
       af += slice.fValue/total*2*Math.PI;
       let x2 = Math.round(rx*Math.cos(af)), y2 = Math.round(ry*Math.sin(af));
@@ -103891,8 +103992,8 @@ function drawPie() {
       this.draw_g
           .append('svg:path')
           .attr('d', `M0,0L${x1},${y1}A${rx},${ry},0,0,0,${x2},${y2}z`)
-          .call(lineatt.func)
-          .call(fillatt.func);
+          .call(this.lineatt.func)
+          .call(this.fillatt.func);
       x1 = x2; y1 = y2;
    }
 }
@@ -103902,84 +104003,193 @@ function drawPie() {
 function drawBox$1() {
    let box = this.getObject(),
        opt = this.getDrawOpt(),
-       draw_line = (opt.toUpperCase().indexOf('L') >= 0),
-       lineatt = this.createAttLine(box),
-       fillatt = this.createAttFill(box);
+       draw_line = (opt.toUpperCase().indexOf('L') >= 0);
+
+   this.createAttLine({ attr: box }),
+   this.createAttFill({ attr: box });
+
+   // if box filled, contour line drawn only with 'L' draw option:
+   if (!this.fillatt.empty() && !draw_line)
+      this.lineatt.color = 'none';
 
    this.createG();
 
-   let x1 = this.axisToSvg('x', box.fX1),
-       x2 = this.axisToSvg('x', box.fX2),
-       y1 = this.axisToSvg('y', box.fY1),
-       y2 = this.axisToSvg('y', box.fY2),
-       xx = Math.min(x1,x2), yy = Math.min(y1,y2),
-       ww = Math.abs(x2-x1), hh = Math.abs(y1-y2);
+   this.x1 = this.axisToSvg('x', box.fX1);
+   this.x2 = this.axisToSvg('x', box.fX2);
+   this.y1 = this.axisToSvg('y', box.fY1);
+   this.y2 = this.axisToSvg('y', box.fY2);
+   this.borderMode = (box.fBorderMode && box.fBorderSize && this.fillatt.hasColor()) ? box.fBorderMode : 0;
+   this.borderSize = box.fBorderSize;
 
-   // if box filled, contour line drawn only with 'L' draw option:
-   if (!fillatt.empty() && !draw_line) lineatt.color = 'none';
+   this.getPathes = () => {
+      let xx = Math.min(this.x1, this.x2), yy = Math.min(this.y1, this.y2),
+          ww = Math.abs(this.x2 - this.x1), hh = Math.abs(this.y1 - this.y2);
 
-   this.draw_g
-       .append('svg:path')
-       .attr('d', `M${xx},${yy}h${ww}v${hh}h${-ww}z`)
-       .call(lineatt.func)
-       .call(fillatt.func);
-
-   if (box.fBorderMode && box.fBorderSize && fillatt.hasColor()) {
-      let pww = box.fBorderSize, phh = box.fBorderSize,
+      let path = `M${xx},${yy}h${ww}v${hh}h${-ww}z`;
+      if (!this.borderMode)
+         return [path];
+      let pww = this.borderSize, phh = this.borderSize,
           side1 = `M${xx},${yy}h${ww}l${-pww},${phh}h${2*pww-ww}v${hh-2*phh}l${-pww},${phh}z`,
           side2 = `M${xx+ww},${yy+hh}v${-hh}l${-pww},${phh}v${hh-2*phh}h${2*pww-ww}l${-pww},${phh}z`;
 
-      if (box.fBorderMode < 0) { let s = side1; side1 = side2; side2 = s; }
+      return (this.borderMode > 0) ? [path, side1, side2] : [path, side2, side1];
+   };
+
+   let paths = this.getPathes();
+
+   this.draw_g
+       .append('svg:path')
+       .attr('d', paths[0])
+       .call(this.lineatt.func)
+       .call(this.fillatt.func);
+
+   if (this.borderMode) {
+      this.draw_g.append('svg:path')
+                 .attr('d', paths[1])
+                 .call(this.fillatt.func)
+                 .style('fill', rgb(this.fillatt.color).brighter(0.5).formatHex());
 
       this.draw_g.append('svg:path')
-                 .attr('d', side1)
-                 .call(fillatt.func)
-                 .style('fill', rgb(fillatt.color).brighter(0.5).formatHex());
-
-      this.draw_g.append('svg:path')
-          .attr('d', side2)
-          .call(fillatt.func)
-          .style('fill', rgb(fillatt.color).darker(0.5).formatHex());
+                 .attr('d', paths[2])
+                 .call(this.fillatt.func)
+                 .style('fill', rgb(this.fillatt.color).darker(0.5).formatHex());
    }
+
+   assignContextMenu(this);
+
+   addMoveHandler(this);
+
+   this.moveStart = function (x,y) {
+      let ww = Math.abs(this.x2 - this.x1), hh = Math.abs(this.y1 - this.y2);
+
+      this.c_x1 = Math.abs(x - this.x2) > ww*0.1;
+      this.c_x2 = Math.abs(x - this.x1) > ww*0.1;
+      this.c_y1 = Math.abs(y - this.y2) > hh*0.1;
+      this.c_y2 = Math.abs(y - this.y1) > hh*0.1;
+      if (this.c_x1 != this.c_x2 && this.c_y1 && this.c_y2)
+         this.c_y1 = this.c_y2 = false;
+      if (this.c_y1 != this.c_y2 && this.c_x1 && this.c_x2)
+         this.c_x1 = this.c_x2 = false;
+   };
+
+   this.moveDrag = function (dx,dy) {
+      if (this.c_x1) this.x1 += dx;
+      if (this.c_x2) this.x2 += dx;
+      if (this.c_y1) this.y1 += dy;
+      if (this.c_y2) this.y2 += dy;
+
+      let nodes = this.draw_g.selectAll('path').nodes(),
+          pathes = this.getPathes();
+
+      pathes.forEach((path, i) => select(nodes[i]).attr('d', path));
+   };
+
+   this.moveEnd = function (not_changed) {
+      if (not_changed) return;
+      let box = this.getObject(), exec = '';
+      if (this.c_x1) { box.fX1 = this.svgToAxis('x', this.x1); exec += `SetX1(${box.fX1});;`; }
+      if (this.c_x2) { box.fX2 = this.svgToAxis('x', this.x2); exec += `SetX2(${box.fX2});;`; }
+      if (this.c_y1) { box.fY1 = this.svgToAxis('y', this.y1); exec += `SetY1(${box.fY1});;`; }
+      if (this.c_y2) { box.fY2 = this.svgToAxis('y', this.y2); exec += `SetY2(${box.fY2});;`; }
+      this.submitCanvExec(exec + 'Notify();;');
+   };
+
 }
 
 /** @summary Draw TMarker
   * @private */
 function drawMarker$1() {
    const marker = this.getObject(),
-         att = new TAttMarkerHandler(marker),
-         kMarkerNDC = BIT(14),
-         isndc = marker.TestBit(kMarkerNDC);
+         kMarkerNDC = BIT(14);
+
+   this.isndc = marker.TestBit(kMarkerNDC);
+
+   this.createAttMarker({ attr: marker });
 
    this.createG();
 
-   let x = this.axisToSvg('x', marker.fX, isndc),
-       y = this.axisToSvg('y', marker.fY, isndc),
-       path = att.create(x, y);
+   let x = this.axisToSvg('x', marker.fX, this.isndc),
+       y = this.axisToSvg('y', marker.fY, this.isndc),
+       path = this.markeratt.create(x, y);
 
    if (path)
       this.draw_g.append('svg:path')
           .attr('d', path)
-          .call(att.func);
+          .call(this.markeratt.func);
+
+   assignContextMenu(this);
+
+   addMoveHandler(this);
+
+   this.dx = 0;
+   this.dy = 0;
+
+   this.moveDrag = function (dx,dy) {
+      this.dx += dx;
+      this.dy += dy;
+      this.draw_g.select('path').attr('transform', makeTranslate(this.dx, this.dy));
+   };
+
+   this.moveEnd = function(not_changed) {
+      if (not_changed) return;
+      let marker = this.getObject();
+      marker.fX = this.svgToAxis('x', this.axisToSvg('x', marker.fX, this.isndc) + this.dx, this.isndc);
+      marker.fY = this.svgToAxis('y', this.axisToSvg('y', marker.fY, this.isndc) + this.dy, this.isndc);
+      this.submitCanvExec(`SetX(${marker.fX});;SetY(${marker.fY});;Notify();;`);
+      this.redraw();
+   };
 }
 
 /** @summary Draw TPolyMarker
   * @private */
 function drawPolyMarker() {
-   this.createG();
 
    let poly = this.getObject(),
-       att = new TAttMarkerHandler(poly),
        path = '',
        func = this.getAxisToSvgFunc();
 
-   for (let n = 0; n < poly.fN; ++n)
-      path += att.create(func.x(poly.fX[n]), func.y(poly.fY[n]));
+   this.createAttMarker({ attr: poly });
+
+   this.createG();
+
+   for (let n = 0; n <= poly.fLastPoint; ++n)
+      path += this.markeratt.create(func.x(poly.fX[n]), func.y(poly.fY[n]));
 
    if (path)
       this.draw_g.append('svg:path')
           .attr('d', path)
-          .call(att.func);
+          .call(this.markeratt.func);
+
+   assignContextMenu(this);
+
+   addMoveHandler(this);
+
+   this.dx = 0;
+   this.dy = 0;
+
+   this.moveDrag = function (dx,dy) {
+      this.dx += dx;
+      this.dy += dy;
+      this.draw_g.select('path').attr('transform', makeTranslate(this.dx, this.dy));
+   };
+
+   this.moveEnd = function(not_changed) {
+      if (not_changed) return;
+      let poly = this.getObject(),
+          func = this.getAxisToSvgFunc(),
+          exec = '';
+
+      for (let n = 0; n <= poly.fLastPoint; ++n) {
+         let x = this.svgToAxis('x', func.x(poly.fX[n]) + this.dx),
+             y = this.svgToAxis('y', func.y(poly.fY[n]) + this.dy);
+         poly.fX[n] = x;
+         poly.fY[n] = y;
+         exec += `SetPoint(${n},${x},${y});;`;
+      }
+      this.submitCanvExec(exec + 'Notify();;');
+      this.redraw();
+   };
+
 }
 
 /** @summary Draw JS image
@@ -104010,7 +104220,6 @@ drawMarker: drawMarker$1,
 drawPie: drawPie,
 drawPolyLine: drawPolyLine,
 drawPolyMarker: drawPolyMarker,
-drawTLine: drawTLine,
 drawText: drawText$1
 });
 
@@ -106963,25 +107172,25 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
    /** @summary Execute menu command
      * @private */
    executeMenuCommand(method, args) {
-      if (super.executeMenuCommand(method,args)) return true;
+      if (super.executeMenuCommand(method, args)) return true;
 
       let canp = this.getCanvPainter(), pmain = this.get_main();
 
       if ((method.fName == 'RemovePoint') || (method.fName == 'InsertPoint')) {
          if (!canp || canp._readonly) return true; // ignore function
 
-         let hint = this.extractTooltip(pnt);
+         let pnt = isFunc(pmain?.getLastEventPos) ? pmain.getLastEventPos() : null,
+             hint = this.extractTooltip(pnt);
 
          if (method.fName == 'InsertPoint') {
-            let pnt = isFunc(pmain.getLastEventPos) ? pmain.getLastEventPos() : null;
             if (pnt) {
                let funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
                    userx = funcs.revertAxis('x', pnt.x) ?? 0,
                    usery = funcs.revertAxis('y', pnt.y) ?? 0;
-               this.submitCanvExec(`AddPoint(${userx.toFixed(3)}, ${usery.toFixed(3)})`, this.args_menu_id);
+               this.submitCanvExec(`AddPoint(${userx.toFixed(3)}, ${usery.toFixed(3)})`, method.$execid);
             }
-         } else if (this.args_menu_id && (hint?.binindx !== undefined)) {
-            this.submitCanvExec(`RemovePoint(${hint.binindx})`, this.args_menu_id);
+         } else if (method.$execid && (hint?.binindx !== undefined)) {
+            this.submitCanvExec(`RemovePoint(${hint.binindx})`, method.$execid);
          }
 
          return true; // call is processed
@@ -107783,6 +107992,95 @@ __proto__: null,
 TEfficiencyPainter: TEfficiencyPainter
 });
 
+class TLinePainter extends ObjectPainter {
+
+   /** @summary Start interactive moving */
+   moveStart(x, y) {
+      let fullsize = Math.sqrt((this.x1-this.x2)**2 + (this.y1-this.y2)**2),
+          sz1 = Math.sqrt((x-this.x1)**2 + (y-this.y1)**2)/fullsize,
+          sz2 = Math.sqrt((x-this.x2)**2 + (y-this.y2)**2)/fullsize;
+      if (sz1 > 0.9)
+         this.side = 1;
+      else if (sz2 > 0.9)
+         this.side = -1;
+      else
+         this.side = 0;
+   }
+
+   /** @summary Continue interactive moving */
+   moveDrag(dx, dy) {
+      if (this.side != 1) { this.x1 += dx; this.y1 += dy; }
+      if (this.side != -1) { this.x2 += dx; this.y2 += dy; }
+      this.draw_g.select('path').attr('d', this.createPath());
+   }
+
+   /** @summary Finish interactive moving */
+   moveEnd(not_changed) {
+      if (not_changed) return;
+      let line = this.getObject(), exec = '';
+      line.fX1 = this.svgToAxis('x', this.x1, this.isndc);
+      line.fX2 = this.svgToAxis('x', this.x2, this.isndc);
+      line.fY1 = this.svgToAxis('y', this.y1, this.isndc);
+      line.fY2 = this.svgToAxis('y', this.y2, this.isndc);
+      if (this.side != 1) exec += `SetX1(${line.fX1});;SetY1(${line.fY1});;`;
+      if (this.side != -1) exec += `SetX2(${line.fX2});;SetY2(${line.fY2});;`;
+      this.submitCanvExec(exec + 'Notify();;');
+   }
+
+   /** @summary Calculate line coordinates */
+   prepareDraw() {
+      let line = this.getObject(), kLineNDC = BIT(14);
+
+      this.isndc = line.TestBit(kLineNDC);
+
+      this.x1 = this.axisToSvg('x', line.fX1, this.isndc, true);
+      this.y1 = this.axisToSvg('y', line.fY1, this.isndc, true);
+      this.x2 = this.axisToSvg('x', line.fX2, this.isndc, true);
+      this.y2 = this.axisToSvg('y', line.fY2, this.isndc, true);
+
+      this.createAttLine({ attr: line });
+   }
+
+   /** @summary Create path */
+   createPath() {
+      const x1 = Math.round(this.x1), x2 = Math.round(this.x2), y1 = Math.round(this.y1), y2 = Math.round(this.y2);
+      return `M${x1},${y1}` + (x1 == x2 ? `V${y2}` : (y1 == y2 ? `H${x2}` : `L${x2},${y2}`));
+   }
+
+   /** @summary Add extras - used for TArrow */
+   addExtras() {}
+
+   /** @summary Redraw line */
+   redraw() {
+      this.prepareDraw();
+
+      this.createG();
+
+      const elem = this.draw_g.append('svg:path')
+                       .attr('d', this.createPath())
+                       .call(this.lineatt.func);
+
+      this.addExtras(elem);
+
+      addMoveHandler(this);
+      assignContextMenu(this);
+
+      return this;
+   }
+
+   /** @summary Draw TLine object */
+   static async draw(dom, obj, opt) {
+      let painter = new TLinePainter(dom, obj, opt);
+      return ensureTCanvas(painter, false).then(() => painter.redraw());
+   }
+
+} // class TLinePainter
+
+var TLinePainter$1 = /*#__PURE__*/Object.freeze({
+__proto__: null,
+TLinePainter: TLinePainter
+});
+
 /**
  * @summary Painter class for TRatioPlot
  *
@@ -107899,7 +108197,7 @@ class TRatioPlotPainter extends ObjectPainter {
                   ratio.fGridlines.push(line);
                   if (currpad === undefined)
                      currpad = this.selectCurrentPad(ratio.fLowerPad.fName);
-                  arr.push(drawTLine(this.getDom(), line));
+                  arr.push(TLinePainter.draw(this.getDom(), line));
                }
             });
          }
@@ -108946,7 +109244,7 @@ TSplinePainter: TSplinePainter
 
 /** @summary Drawing TArrow
   * @private */
-class TArrowPainter extends ObjectPainter {
+class TArrowPainter extends TLinePainter {
 
    /** @summary Create line segment with rotation */
    rotate(angle, x0, y0) {
@@ -108989,46 +109287,15 @@ class TArrowPainter extends ObjectPainter {
               path;
    }
 
-   /** @summary Start interactive moving */
-   moveStart(x,y) {
-      let fullsize = Math.sqrt((this.x1-this.x2)**2 + (this.y1-this.y2)**2),
-          sz1 = Math.sqrt((x-this.x1)**2 + (y-this.y1)**2)/fullsize,
-          sz2 = Math.sqrt((x-this.x2)**2 + (y-this.y2)**2)/fullsize;
-      if (sz1 > 0.9)
-         this.side = 1;
-      else if (sz2 > 0.9)
-         this.side = -1;
-      else
-         this.side = 0;
-   }
+   /** @summary calculate all TArrow coordinates */
+   prepareDraw() {
+      super.prepareDraw();
 
-   /** @summary Continue interactive moving */
-   moveDrag(dx,dy) {
-      if (this.side != 1) { this.x1 += dx; this.y1 += dy; }
-      if (this.side != -1) { this.x2 += dx; this.y2 += dy; }
-      this.draw_g.select('path').attr('d', this.createPath());
-   }
+      let arrow = this.getObject(),
+          oo = arrow.fOption,
+          rect = this.getPadPainter().getPadRect();
 
-   /** @summary Finish interactive moving */
-   moveEnd(not_changed) {
-      if (not_changed) return;
-      let arrow = this.getObject(), exec = '';
-      arrow.fX1 = this.svgToAxis('x', this.x1, this.isndc);
-      arrow.fX2 = this.svgToAxis('x', this.x2, this.isndc);
-      arrow.fY1 = this.svgToAxis('y', this.y1, this.isndc);
-      arrow.fY2 = this.svgToAxis('y', this.y2, this.isndc);
-      if (this.side != 1) exec += `SetX1(${arrow.fX1});;SetY1(${arrow.fY1});;`;
-      if (this.side != -1) exec += `SetX2(${arrow.fX2});;SetY2(${arrow.fY2});;`;
-      this.submitCanvExec(exec + 'Notify();;');
-   }
-
-   /** @summary Redraw arrow */
-   redraw() {
-      let arrow = this.getObject(), kLineNDC = BIT(14),
-          oo = arrow.fOption, rect = this.getPadPainter().getPadRect();
-
-      this.wsize = Math.max(3, Math.round(Math.max(rect.width, rect.height) * arrow.fArrowSize*0.8));
-      this.isndc = arrow.TestBit(kLineNDC);
+      this.wsize = Math.max(3, Math.round(Math.max(rect.width, rect.height) * arrow.fArrowSize * 0.8));
       this.angle2 = arrow.fAngle/2/180 * Math.PI;
       this.beg = this.mid = this.end = 0;
 
@@ -109047,35 +109314,20 @@ class TArrowPainter extends ObjectPainter {
       if ((p1 >= 0) && (p1 == len-1))
          this.end = ((p2 >= 0) && (p2 == len-2)) ? 11 : 1;
 
-      this.createAttLine({ attr: arrow });
+      this.createAttFill({ attr: arrow });
+   }
 
-      this.createG();
-
-      this.x1 = this.axisToSvg('x', arrow.fX1, this.isndc, true);
-      this.y1 = this.axisToSvg('y', arrow.fY1, this.isndc, true);
-      this.x2 = this.axisToSvg('x', arrow.fX2, this.isndc, true);
-      this.y2 = this.axisToSvg('y', arrow.fY2, this.isndc, true);
-
-      let elem = this.draw_g.append('svg:path')
-                     .attr('d', this.createPath())
-                     .call(this.lineatt.func);
-
-      if ((this.beg > 10) || (this.end > 10)) {
-         this.createAttFill({ attr: arrow });
+   /** @summary Add extras to path for TArrow */
+   addExtras(elem) {
+      if ((this.beg > 10) || (this.end > 10))
          elem.call(this.fillatt.func);
-      } else {
-         elem.style('fill','none');
-      }
-
-     if (!isBatchMode())
-        addMoveHandler(this);
-
-      return this;
+      else
+         elem.style('fill', 'none');
    }
 
    /** @summary Draw TArrow object */
    static async draw(dom, obj, opt) {
-      let painter = new TArrowPainter(dom, obj,opt);
+      let painter = new TArrowPainter(dom, obj, opt);
       return ensureTCanvas(painter, false).then(() => painter.redraw());
    }
 

@@ -887,7 +887,7 @@ class TAxisPainter extends ObjectPainter {
           rotate_lbls = axis.TestBit(EAxisBits.kLabelsVert),
           textscale = 1, maxtextlen = 0, applied_scale = 0,
           label_g = [ axis_g.append('svg:g').attr('class','axis_labels') ],
-          lbl_pos = handle.lbl_pos || handle.major, lbl_tilt = false, max_textwidth = 0;
+          lbl_pos = handle.lbl_pos || handle.major, lbl_tilt = false, any_modified = false, max_textwidth = 0;
 
       if (this.lbls_both_sides)
          label_g.push(axis_g.append('svg:g').attr('class','axis_labels').attr('transform', this.vertical ? `translate(${w})` : `translate(0,${-h})`));
@@ -907,7 +907,8 @@ class TAxisPainter extends ObjectPainter {
             textscale = Math.min(textscale, (max_text_width - labeloffset) / textwidth);
          }
 
-         if ((textscale > 0.0001) && (textscale < 0.7) && !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (label_g.length == 1))
+         if ((textscale > 0.0001) && (textscale < 0.7) && !any_modified &&
+              !painter.vertical && !rotate_lbls && (maxtextlen > 5) && (label_g.length == 1))
             lbl_tilt = true;
 
          let scale = textscale * (lbl_tilt ? 3 : 1);
@@ -934,12 +935,13 @@ class TAxisPainter extends ObjectPainter {
             let mod = this.findLabelModifier(axis, nmajor, lbl_pos.length);
             if (mod?.fTextSize === 0) continue;
 
+            if (mod) any_modified = true;
             if (mod?.fLabText) text = mod.fLabText;
 
             let arg = { text, color: labelsFont.color, latex: 1, draw_g: label_g[lcnt], normal_side: (lcnt == 0) },
                 pos = Math.round(this.func(lbl_pos[nmajor]));
 
-            if (mod && mod.fTextColor > 0) arg.color = this.getColor(mod.fTextColor);
+            if (mod?.fTextColor > 0) arg.color = this.getColor(mod.fTextColor);
 
             arg.gap_before = (nmajor > 0) ? Math.abs(Math.round(pos - this.func(lbl_pos[nmajor-1]))) : 0;
 
@@ -965,6 +967,8 @@ class TAxisPainter extends ObjectPainter {
 
             if (rotate_lbls)
                arg.rotate = 270;
+            else if (mod && mod.fTextAngle != -1)
+               arg.rotate = -mod.fTextAngle;
 
             // only for major text drawing scale factor need to be checked
             if (lcnt == 0) arg.post_process = process_drawtext_ready;
