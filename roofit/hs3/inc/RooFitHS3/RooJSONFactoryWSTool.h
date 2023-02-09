@@ -135,6 +135,9 @@ public:
 
    static std::unique_ptr<RooFit::Detail::JSONTree> createNewJSONTree();
 
+   static RooFit::Detail::JSONNode &makeVariablesNode(RooFit::Detail::JSONNode &rootNode);
+   static RooFit::Detail::JSONNode const *getVariablesNode(RooFit::Detail::JSONNode const &rootNode);
+
 private:
    struct Config {
       static bool stripObservables;
