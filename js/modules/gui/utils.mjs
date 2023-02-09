@@ -284,7 +284,8 @@ function detectRightButton(event) {
   * @private */
 function addMoveHandler(painter, enabled) {
 
-   if (enabled === undefined) enabled = true;
+   if (enabled === undefined)
+      enabled = true;
 
    if (!settings.MoveResize || isBatchMode() || !painter.draw_g) return;
 
@@ -373,16 +374,19 @@ function selectgStyle(name) {
          fCanvasColor: 0, fPadBorderMode: 0, fPadColor: 0, fStatColor: 0,
          fTitleAlign: 23, fTitleX: 0.5, fTitleBorderSize: 0, fTitleColor: 0, fTitleStyle: 0,
          fOptStat: 1111, fStatY: 0.935,
-         fLegendBorderSize: 1, fLegendFont: 42, fLegendTextSize: 0, fLegendFillColor: 0 }); break;
+         fLegendBorderSize: 1, fLegendFont: 42, fLegendTextSize: 0, fLegendFillColor: 0 });
+         break;
       case 'Plain': Object.assign(gStyle, {
          fFrameBorderMode: 0, fCanvasBorderMode: 0, fPadBorderMode: 0,
          fPadColor: 0, fCanvasColor: 0,
-         fTitleColor: 0, fTitleBorderSize: 0, fStatColor: 0, fStatBorderSize: 1, fLegendBorderSize: 1 }); break;
+         fTitleColor: 0, fTitleBorderSize: 0, fStatColor: 0, fStatBorderSize: 1, fLegendBorderSize: 1 });
+         break;
       case 'Bold': Object.assign(gStyle, {
          fCanvasColor: 10, fCanvasBorderMode: 0,
          fFrameLineWidth: 3, fFrameFillColor: 10,
          fPadColor: 10, fPadTickX: 1, fPadTickY: 1, fPadBottomMargin: 0.15, fPadLeftMargin: 0.15,
-         fTitleColor: 10, fTitleTextColor: 600, fStatColor: 10 }); break;
+         fTitleColor: 10, fTitleTextColor: 600, fStatColor: 10 });
+         break;
    }
 }
 

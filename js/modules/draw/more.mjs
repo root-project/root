@@ -1,11 +1,8 @@
 import { BIT, isBatchMode, clTLatex, clTMathText, clTPolyLine } from '../core.mjs';
-import { rgb as d3_rgb } from '../d3.mjs';
+import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
 import { BasePainter, makeTranslate } from '../base/BasePainter.mjs';
-import { ObjectPainter } from '../base/ObjectPainter.mjs';
-import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
-import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
-import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
+import { assignContextMenu } from '../gui/menu.mjs';
 
 
 /** @summary Draw TText
@@ -78,40 +75,19 @@ async function drawText() {
          this.moveEnd = function(not_changed) {
             if (not_changed) return;
             let text = this.getObject();
-            text.fX = this.svgToAxis('x', this.pos_x + this.pos_dx, this.isndc),
+            text.fX = this.svgToAxis('x', this.pos_x + this.pos_dx, this.isndc);
             text.fY = this.svgToAxis('y', this.pos_y + this.pos_dy, this.isndc);
             this.submitCanvExec(`SetX(${text.fX});;SetY(${text.fY});;`);
          }
 
       addMoveHandler(this);
 
+      assignContextMenu(this);
+
       return this;
    });
 }
 
-/** @summary Draw TLine
-  * @private */
-async function drawTLine(dom, obj) {
-   let painter = new ObjectPainter(dom, obj);
-
-   painter.redraw = function() {
-      const kLineNDC = BIT(14),
-            line = this.getObject(),
-            lineatt = new TAttLineHandler(line),
-            isndc = line.TestBit(kLineNDC);
-
-      this.createG();
-
-      this.draw_g
-          .append('svg:path')
-          .attr('d', `M${this.axisToSvg('x',line.fX1,isndc)},${this.axisToSvg('y',line.fY1,isndc)}L${this.axisToSvg('x',line.fX2,isndc)},${this.axisToSvg('y',line.fY2,isndc)}`)
-          .call(lineatt.func);
-
-      return this;
-   }
-
-   return ensureTCanvas(painter, false).then(() => painter.redraw());
-}
 
 /** @summary Draw TPolyLine
   * @private */
@@ -120,26 +96,60 @@ function drawPolyLine() {
    this.createG();
 
    let polyline = this.getObject(),
-       lineatt = new TAttLineHandler(polyline),
-       fillatt = this.createAttFill(polyline),
        kPolyLineNDC = BIT(14),
        isndc = polyline.TestBit(kPolyLineNDC),
+       opt = this.getDrawOpt() || polyline.fOption,
+       dofill = (polyline._typename == clTPolyLine) && ((opt == 'f') || (opt == 'F')),
        cmd = '', func = this.getAxisToSvgFunc(isndc);
+
+   this.createAttLine({ attr: polyline });
+   this.createAttFill({ attr: polyline });
 
    for (let n = 0; n <= polyline.fLastPoint; ++n)
       cmd += `${n>0?'L':'M'}${func.x(polyline.fX[n])},${func.y(polyline.fY[n])}`;
 
-   if (polyline._typename != clTPolyLine)
-      fillatt.setSolidColor('none');
-
-   if (!fillatt.empty())
+   if (dofill)
       cmd += 'Z';
 
-   this.draw_g
-       .append('svg:path')
-       .attr('d', cmd)
-       .call(lineatt.func)
-       .call(fillatt.func);
+   let elem =  this.draw_g.append('svg:path').attr('d', cmd);
+
+   if (dofill)
+      elem.call(this.fillatt.func);
+   else
+      elem.call(this.lineatt.func)
+          .style('fill', 'none');
+
+   assignContextMenu(this);
+
+   addMoveHandler(this);
+
+   this.dx = 0;
+   this.dy = 0;
+   this.isndc = isndc;
+
+   this.moveDrag = function (dx,dy) {
+      this.dx += dx;
+      this.dy += dy;
+      this.draw_g.select('path').attr('transform', makeTranslate(this.dx, this.dy));
+   }
+
+   this.moveEnd = function(not_changed) {
+      if (not_changed) return;
+      let polyline = this.getObject(),
+          func = this.getAxisToSvgFunc(this.isndc),
+          exec = '';
+
+      for (let n = 0; n <= polyline.fLastPoint; ++n) {
+         let x = this.svgToAxis('x', func.x(polyline.fX[n]) + this.dx, this.isndc),
+             y = this.svgToAxis('y', func.y(polyline.fY[n]) + this.dy, this.isndc);
+         polyline.fX[n] = x;
+         polyline.fY[n] = y;
+         exec += `SetPoint(${n},${x},${y});;`;
+      }
+      this.submitCanvExec(exec + 'Notify();;');
+      this.redraw();
+   }
+
 }
 
 /** @summary Draw TEllipse
@@ -221,11 +231,34 @@ function drawEllipse() {
      path += 'Z';
    }
 
+   this.x = x;
+   this.y = y;
+
    this.draw_g
       .append('svg:path')
       .attr('transform', makeTranslate(x, y))
       .attr('d', path)
-      .call(this.lineatt.func).call(this.fillatt.func);
+      .call(this.lineatt.func)
+      .call(this.fillatt.func);
+
+   assignContextMenu(this);
+
+   addMoveHandler(this);
+
+   this.moveDrag = function (dx,dy) {
+      this.x += dx;
+      this.y += dy;
+      this.draw_g.select('path').attr('transform', makeTranslate(this.x, this.y));
+   }
+
+   this.moveEnd = function (not_changed) {
+      if (not_changed) return;
+      let ellipse = this.getObject();
+      ellipse.fX1 = this.svgToAxis('x', this.x);
+      ellipse.fY1 = this.svgToAxis('y', this.y);
+      this.submitCanvExec(`SetX1(${ellipse.fX1});;SetY1(${ellipse.fY1});;Notify();;`);
+   }
+
 }
 
 /** @summary Draw TPie
@@ -252,9 +285,10 @@ function drawPie() {
       total += pie.fPieSlices[n].fValue;
 
    for (let n = 0; n < nb; n++) {
-      let slice = pie.fPieSlices[n],
-          lineatt = new TAttLineHandler({attr: slice}),
-          fillatt = this.createAttFill(slice);
+      let slice = pie.fPieSlices[n];
+
+      this.createAttLine({ attr: slice }),
+      this.createAttFill({ attr: slice });
 
       af += slice.fValue/total*2*Math.PI;
       let x2 = Math.round(rx*Math.cos(af)), y2 = Math.round(ry*Math.sin(af));
@@ -262,8 +296,8 @@ function drawPie() {
       this.draw_g
           .append('svg:path')
           .attr('d', `M0,0L${x1},${y1}A${rx},${ry},0,0,0,${x2},${y2}z`)
-          .call(lineatt.func)
-          .call(fillatt.func);
+          .call(this.lineatt.func)
+          .call(this.fillatt.func);
       x1 = x2; y1 = y2;
    }
 }
@@ -273,84 +307,193 @@ function drawPie() {
 function drawBox() {
    let box = this.getObject(),
        opt = this.getDrawOpt(),
-       draw_line = (opt.toUpperCase().indexOf('L') >= 0),
-       lineatt = this.createAttLine(box),
-       fillatt = this.createAttFill(box);
+       draw_line = (opt.toUpperCase().indexOf('L') >= 0);
+
+   this.createAttLine({ attr: box }),
+   this.createAttFill({ attr: box });
+
+   // if box filled, contour line drawn only with 'L' draw option:
+   if (!this.fillatt.empty() && !draw_line)
+      this.lineatt.color = 'none';
 
    this.createG();
 
-   let x1 = this.axisToSvg('x', box.fX1),
-       x2 = this.axisToSvg('x', box.fX2),
-       y1 = this.axisToSvg('y', box.fY1),
-       y2 = this.axisToSvg('y', box.fY2),
-       xx = Math.min(x1,x2), yy = Math.min(y1,y2),
-       ww = Math.abs(x2-x1), hh = Math.abs(y1-y2);
+   this.x1 = this.axisToSvg('x', box.fX1);
+   this.x2 = this.axisToSvg('x', box.fX2);
+   this.y1 = this.axisToSvg('y', box.fY1);
+   this.y2 = this.axisToSvg('y', box.fY2);
+   this.borderMode = (box.fBorderMode && box.fBorderSize && this.fillatt.hasColor()) ? box.fBorderMode : 0;
+   this.borderSize = box.fBorderSize;
 
-   // if box filled, contour line drawn only with 'L' draw option:
-   if (!fillatt.empty() && !draw_line) lineatt.color = 'none';
+   this.getPathes = () => {
+      let xx = Math.min(this.x1, this.x2), yy = Math.min(this.y1, this.y2),
+          ww = Math.abs(this.x2 - this.x1), hh = Math.abs(this.y1 - this.y2);
 
-   this.draw_g
-       .append('svg:path')
-       .attr('d', `M${xx},${yy}h${ww}v${hh}h${-ww}z`)
-       .call(lineatt.func)
-       .call(fillatt.func);
-
-   if (box.fBorderMode && box.fBorderSize && fillatt.hasColor()) {
-      let pww = box.fBorderSize, phh = box.fBorderSize,
+      let path = `M${xx},${yy}h${ww}v${hh}h${-ww}z`;
+      if (!this.borderMode)
+         return [path];
+      let pww = this.borderSize, phh = this.borderSize,
           side1 = `M${xx},${yy}h${ww}l${-pww},${phh}h${2*pww-ww}v${hh-2*phh}l${-pww},${phh}z`,
           side2 = `M${xx+ww},${yy+hh}v${-hh}l${-pww},${phh}v${hh-2*phh}h${2*pww-ww}l${-pww},${phh}z`;
 
-      if (box.fBorderMode < 0) { let s = side1; side1 = side2; side2 = s; }
-
-      this.draw_g.append('svg:path')
-                 .attr('d', side1)
-                 .call(fillatt.func)
-                 .style('fill', d3_rgb(fillatt.color).brighter(0.5).formatHex());
-
-      this.draw_g.append('svg:path')
-          .attr('d', side2)
-          .call(fillatt.func)
-          .style('fill', d3_rgb(fillatt.color).darker(0.5).formatHex());
+      return (this.borderMode > 0) ? [path, side1, side2] : [path, side2, side1];
    }
+
+   let paths = this.getPathes();
+
+   this.draw_g
+       .append('svg:path')
+       .attr('d', paths[0])
+       .call(this.lineatt.func)
+       .call(this.fillatt.func);
+
+   if (this.borderMode) {
+      this.draw_g.append('svg:path')
+                 .attr('d', paths[1])
+                 .call(this.fillatt.func)
+                 .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatHex());
+
+      this.draw_g.append('svg:path')
+                 .attr('d', paths[2])
+                 .call(this.fillatt.func)
+                 .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatHex());
+   }
+
+   assignContextMenu(this);
+
+   addMoveHandler(this);
+
+   this.moveStart = function (x,y) {
+      let ww = Math.abs(this.x2 - this.x1), hh = Math.abs(this.y1 - this.y2);
+
+      this.c_x1 = Math.abs(x - this.x2) > ww*0.1;
+      this.c_x2 = Math.abs(x - this.x1) > ww*0.1;
+      this.c_y1 = Math.abs(y - this.y2) > hh*0.1;
+      this.c_y2 = Math.abs(y - this.y1) > hh*0.1;
+      if (this.c_x1 != this.c_x2 && this.c_y1 && this.c_y2)
+         this.c_y1 = this.c_y2 = false;
+      if (this.c_y1 != this.c_y2 && this.c_x1 && this.c_x2)
+         this.c_x1 = this.c_x2 = false;
+   }
+
+   this.moveDrag = function (dx,dy) {
+      if (this.c_x1) this.x1 += dx;
+      if (this.c_x2) this.x2 += dx;
+      if (this.c_y1) this.y1 += dy;
+      if (this.c_y2) this.y2 += dy;
+
+      let nodes = this.draw_g.selectAll('path').nodes(),
+          pathes = this.getPathes();
+
+      pathes.forEach((path, i) => d3_select(nodes[i]).attr('d', path));
+   }
+
+   this.moveEnd = function (not_changed) {
+      if (not_changed) return;
+      let box = this.getObject(), exec = '';
+      if (this.c_x1) { box.fX1 = this.svgToAxis('x', this.x1); exec += `SetX1(${box.fX1});;`; }
+      if (this.c_x2) { box.fX2 = this.svgToAxis('x', this.x2); exec += `SetX2(${box.fX2});;`; }
+      if (this.c_y1) { box.fY1 = this.svgToAxis('y', this.y1); exec += `SetY1(${box.fY1});;`; }
+      if (this.c_y2) { box.fY2 = this.svgToAxis('y', this.y2); exec += `SetY2(${box.fY2});;`; }
+      this.submitCanvExec(exec + 'Notify();;');
+   }
+
 }
 
 /** @summary Draw TMarker
   * @private */
 function drawMarker() {
    const marker = this.getObject(),
-         att = new TAttMarkerHandler(marker),
-         kMarkerNDC = BIT(14),
-         isndc = marker.TestBit(kMarkerNDC);
+         kMarkerNDC = BIT(14);
+
+   this.isndc = marker.TestBit(kMarkerNDC);
+
+   this.createAttMarker({ attr: marker });
 
    this.createG();
 
-   let x = this.axisToSvg('x', marker.fX, isndc),
-       y = this.axisToSvg('y', marker.fY, isndc),
-       path = att.create(x, y);
+   let x = this.axisToSvg('x', marker.fX, this.isndc),
+       y = this.axisToSvg('y', marker.fY, this.isndc),
+       path = this.markeratt.create(x, y);
 
    if (path)
       this.draw_g.append('svg:path')
           .attr('d', path)
-          .call(att.func);
+          .call(this.markeratt.func);
+
+   assignContextMenu(this);
+
+   addMoveHandler(this);
+
+   this.dx = 0;
+   this.dy = 0;
+
+   this.moveDrag = function (dx,dy) {
+      this.dx += dx;
+      this.dy += dy;
+      this.draw_g.select('path').attr('transform', makeTranslate(this.dx, this.dy));
+   }
+
+   this.moveEnd = function(not_changed) {
+      if (not_changed) return;
+      let marker = this.getObject();
+      marker.fX = this.svgToAxis('x', this.axisToSvg('x', marker.fX, this.isndc) + this.dx, this.isndc);
+      marker.fY = this.svgToAxis('y', this.axisToSvg('y', marker.fY, this.isndc) + this.dy, this.isndc);
+      this.submitCanvExec(`SetX(${marker.fX});;SetY(${marker.fY});;Notify();;`);
+      this.redraw();
+   }
 }
 
 /** @summary Draw TPolyMarker
   * @private */
 function drawPolyMarker() {
-   this.createG();
 
    let poly = this.getObject(),
-       att = new TAttMarkerHandler(poly),
        path = '',
        func = this.getAxisToSvgFunc();
 
-   for (let n = 0; n < poly.fN; ++n)
-      path += att.create(func.x(poly.fX[n]), func.y(poly.fY[n]));
+   this.createAttMarker({ attr: poly });
+
+   this.createG();
+
+   for (let n = 0; n <= poly.fLastPoint; ++n)
+      path += this.markeratt.create(func.x(poly.fX[n]), func.y(poly.fY[n]));
 
    if (path)
       this.draw_g.append('svg:path')
           .attr('d', path)
-          .call(att.func);
+          .call(this.markeratt.func);
+
+   assignContextMenu(this);
+
+   addMoveHandler(this);
+
+   this.dx = 0;
+   this.dy = 0;
+
+   this.moveDrag = function (dx,dy) {
+      this.dx += dx;
+      this.dy += dy;
+      this.draw_g.select('path').attr('transform', makeTranslate(this.dx, this.dy));
+   }
+
+   this.moveEnd = function(not_changed) {
+      if (not_changed) return;
+      let poly = this.getObject(),
+          func = this.getAxisToSvgFunc(),
+          exec = '';
+
+      for (let n = 0; n <= poly.fLastPoint; ++n) {
+         let x = this.svgToAxis('x', func.x(poly.fX[n]) + this.dx),
+             y = this.svgToAxis('y', func.y(poly.fY[n]) + this.dy);
+         poly.fX[n] = x;
+         poly.fY[n] = y;
+         exec += `SetPoint(${n},${x},${y});;`;
+      }
+      this.submitCanvExec(exec + 'Notify();;');
+      this.redraw();
+   }
+
 }
 
 /** @summary Draw JS image
@@ -372,5 +515,5 @@ function drawJSImage(dom, obj, opt) {
    return painter;
 }
 
-export { drawText, drawTLine, drawPolyLine, drawEllipse, drawPie, drawBox,
+export { drawText, drawPolyLine, drawEllipse, drawPie, drawBox,
          drawMarker, drawPolyMarker, drawJSImage };
