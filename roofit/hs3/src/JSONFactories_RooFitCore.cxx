@@ -28,7 +28,6 @@
 #include <RooRealSumFunc.h>
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
-#include <RooSimultaneous.h>
 #include <RooWorkspace.h>
 
 #include <TH1.h>
@@ -164,11 +163,6 @@ public:
       tool->workspace()->import(func, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
    }
-};
-
-class RooSimultaneousFactory : public RooFit::JSONIO::Importer {
-public:
-   bool importPdf(RooJSONFactoryWSTool * /*tool*/, const JSONNode & /*p*/) const override { return true; }
 };
 
 class RooBinSamplingPdfFactory : public RooFit::JSONIO::Importer {
@@ -337,19 +331,6 @@ public:
       elem["type"] << key();
       elem["samples"].fill_seq(pdf->funcList(), [](auto const &item) { return item->GetName(); });
       elem["coefficients"].fill_seq(pdf->coefList(), [](auto const &item) { return item->GetName(); });
-      return true;
-   }
-};
-
-class RooSimultaneousStreamer : public RooFit::JSONIO::Exporter {
-public:
-   std::string const &key() const override
-   {
-      const static std::string keystring = "simultaneous";
-      return keystring;
-   }
-   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg * /*func*/, JSONNode & /*elem*/) const override
-   {
       return true;
    }
 };
@@ -561,7 +542,6 @@ STATIC_EXECUTE([]() {
    registerImporter<RooAddPdfFactory>("pdfsum", false);
    registerImporter<RooHistFuncFactory>("histogram", false);
    registerImporter<RooHistPdfFactory>("histogramPdf", false);
-   registerImporter<RooSimultaneousFactory>("simultaneous", false);
    registerImporter<RooBinWidthFunctionFactory>("binwidth", false);
    registerImporter<RooRealSumPdfFactory>("sumpdf", false);
    registerImporter<RooRealSumFuncFactory>("sumfunc", false);
@@ -569,7 +549,6 @@ STATIC_EXECUTE([]() {
 
    registerExporter<RooBinWidthFunctionStreamer>(RooBinWidthFunction::Class(), false);
    registerExporter<RooProdPdfStreamer>(RooProdPdf::Class(), false);
-   registerExporter<RooSimultaneousStreamer>(RooSimultaneous::Class(), false);
    registerExporter<RooBinSamplingPdfStreamer>(RooBinSamplingPdf::Class(), false);
    registerExporter<RooHistFuncStreamer>(RooHistFunc::Class(), false);
    registerExporter<RooHistPdfStreamer>(RooHistPdf::Class(), false);
