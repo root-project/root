@@ -641,14 +641,6 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
          vect[cnt++]= &item;
 
       res = "DESCR:"s + TBufferJSON::ToJSON(&vect,GetJsonComp()).Data();
-
-      // example how iterator can be used
-      RGeomBrowserIter iter(*this);
-      int nelements = 0;
-      while (iter.NextNode())
-         nelements++;
-
-      // printf("Total number of valid nodes %d\n", nelements);
    } else {
       std::vector<Browsable::RItem> temp_nodes;
       bool toplevel = request->path.empty();
