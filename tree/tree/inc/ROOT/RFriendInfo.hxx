@@ -18,8 +18,12 @@
 #ifndef ROOT_RFRIENDINFO_H
 #define ROOT_RFRIENDINFO_H
 
+#include <ROOT/RStringView.hxx>
+#include <TVirtualIndex.h>
+
 #include <cstdint> // std::int64_t
 #include <limits>
+#include <memory>
 #include <string>
 #include <utility> // std::pair
 #include <vector>
@@ -28,6 +32,7 @@ class TTree;
 
 namespace ROOT {
 namespace TreeUtils {
+
 /**
 \struct ROOT::TreeUtils::RFriendInfo
 \brief Information about friend trees of a certain TTree or TChain object.
@@ -59,14 +64,32 @@ struct RFriendInfo {
     */
    std::vector<std::vector<std::int64_t>> fNEntriesPerTreePerFriend;
 
+   /**
+      Information on the friend's TTreeIndexes.
+   */
+   std::vector<std::unique_ptr<TVirtualIndex>> fTreeIndexInfos;
+
+   RFriendInfo() = default;
+   RFriendInfo(const RFriendInfo &);
+   RFriendInfo &operator=(const RFriendInfo &);
+   RFriendInfo(RFriendInfo &&) = default;
+   RFriendInfo &operator=(RFriendInfo &&) = default;
+   RFriendInfo(std::vector<std::pair<std::string, std::string>> friendNames,
+               std::vector<std::vector<std::string>> friendFileNames,
+               std::vector<std::vector<std::string>> friendChainSubNames,
+               std::vector<std::vector<std::int64_t>> nEntriesPerTreePerFriend,
+               std::vector<std::unique_ptr<TVirtualIndex>> treeIndexInfos);
+
    void AddFriend(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias = "",
-                  std::int64_t nEntries = std::numeric_limits<std::int64_t>::max());
+                  std::int64_t nEntries = std::numeric_limits<std::int64_t>::max(), TVirtualIndex *indexInfo = nullptr);
 
    void AddFriend(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
-                  const std::string &alias = "", const std::vector<std::int64_t> &nEntriesVec = {});
+                  const std::string &alias = "", const std::vector<std::int64_t> &nEntriesVec = {},
+                  TVirtualIndex *indexInfo = nullptr);
 
    void AddFriend(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-                  const std::string &alias = "", const std::vector<std::int64_t> &nEntriesVec = {});
+                  const std::string &alias = "", const std::vector<std::int64_t> &nEntriesVec = {},
+                  TVirtualIndex *indexInfo = nullptr);
 };
 
 } // namespace TreeUtils
