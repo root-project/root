@@ -190,7 +190,7 @@ function(REFLEX_GENERATE_DICTIONARY dictionary)
     COMMAND ${ROOT_genreflex_CMD}
     ARGS ${headerfiles} -o ${gensrcdict} ${rootmapopts} --select=${selectionfile}
          --gccxmlpath=${GCCXML_home}/bin ${ARG_OPTIONS}
-         "-I$<JOIN:${include_dirs},;-I>"
+         "-I$<JOIN:$<REMOVE_DUPLICATES:$<FILTER:${include_dirs},EXCLUDE,^$>>,;-I>"
          "$<$<BOOL:$<JOIN:${definitions},>>:-D$<JOIN:${definitions},;-D>>"
     DEPENDS ${headerfiles} ${selectionfile} ${ARG_DEPENDS}
 
