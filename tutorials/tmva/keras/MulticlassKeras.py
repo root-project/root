@@ -57,7 +57,7 @@ model.add(Dense(32, activation='relu', input_dim=4))
 model.add(Dense(4, activation='softmax'))
 
 # Set loss and optimizer
-model.compile(loss='categorical_crossentropy', optimizer=SGD(learning_rate=0.01), metrics=['accuracy',])
+model.compile(loss='categorical_crossentropy', optimizer=SGD(learning_rate=0.01), weighted_metrics=['accuracy',])
 
 # Store model to file
 model.save('modelMultiClass.h5')

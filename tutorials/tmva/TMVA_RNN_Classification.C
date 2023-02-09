@@ -423,7 +423,7 @@ the option string
             m.AddLine("model.add(Dense(64, activation = 'tanh')) ");
             m.AddLine("model.add(Dense(2, activation = 'sigmoid')) ");
             m.AddLine(
-               "model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), metrics = ['accuracy'])");
+               "model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), weighted_metrics = ['accuracy'])");
             m.AddLine(TString::Format("modelName = '%s'", modelName.Data()));
             m.AddLine("model.save(modelName)");
             m.AddLine("model.summary()");

@@ -475,7 +475,7 @@ if useKerasCNN:
     model.add(Dense(64, activation="tanh"))
     # model.add(Dropout(0.2))
     model.add(Dense(2, activation="sigmoid"))
-    model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate=0.001), metrics=["accuracy"])
+    model.compile(loss="binary_crossentropy", optimizer=Adam(learning_rate=0.001), weighted_metrics=["accuracy"])
     model.save("model_cnn.h5")
     model.summary()
 
