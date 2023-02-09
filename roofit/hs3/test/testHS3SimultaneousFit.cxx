@@ -53,7 +53,7 @@ std::unique_ptr<RooFitResult> writeJSONAndFitModel(std::string &jsonStr)
    // Channel 2: Crystal ball signal and polynomial background
    ws.factory("CBShape::sig_2(x_2[0, 10], mean[5.0, 0, 10], sigma_2[0.8, 0.1, 10.0], alpha[0.9, 0.1, 10.0], "
               "ncb[1.0, 0.1, 10.0])");
-   ws.factory("Polynomial::bkg_2(x_2, {a_0[3.0, -10, 10], a_1[-0.3, -10, 10], a_2[0.01, -10, 10]}, 0)");
+   ws.factory("Polynomial::bkg_2(x_2, {3.0, a_1[-0.3, -10, 10], a_2[0.01, -10, 10]}, 0)");
    ws.factory("SUM::model_2(n_sig_2[30000, 0, 10000000] * sig_2, nbkg_2[100000, 0, 10000000] * bkg_2)");
 
    // Simultaneous PDF and model config
