@@ -117,12 +117,13 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
                             {"TBox", false, true},  // can be handled via TWebPainter, disable for large number of primitives (like in greyscale.C)
                             {"TWbox"}, // some extra calls which cannot be handled via TWebPainter
                             {"TLine", false, true}, // can be handler via TWebPainter, disable for large number of primitives (like in greyscale.C)
+                            {"TEllipse", true, true},  // can be handled via TWebPainter, disable for large number of primitives (like in greyscale.C)
                             {"TText"},
                             {"TLatex"},
                             {"TMathText"},
                             {"TMarker"},
                             {"TPolyMarker"},
-                            // {"TPolyLine", false, true}, // can be handled via TWebPainter, simplify colors handling
+                            {"TPolyLine", true, true}, // can be handled via TWebPainter, simplify colors handling
                             {"TPolyMarker3D"},
                             {"TPolyLine3D"},
                             {"TGraphTime"},
