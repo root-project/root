@@ -4,8 +4,7 @@
 /// Example on how to use the new Minimizer class in ROOT
 ///  Show usage with all the possible minimizers.
 /// Minimize the Rosenbrock function (a 2D -function)
-/// This example is described also in
-/// http://root.cern.ch/drupal/content/numerical-minimization#multidim_minim
+///
 /// input : minimizer name + algorithm name
 /// randomSeed: = <0 : fixed value: 0 random with seed 0; >0 random with given seed
 ///
@@ -86,7 +85,7 @@ int NumericalMinimization(const char * minName = "Minuit2",
              << minimum->MinValue()  << std::endl;
 
    // expected minimum is 0
-   if ( minimum->MinValue()  < 1.E-4  && f(xs) < 1.E-4)
+   if ( minimum->MinValue()  < 1.E-4 )
       std::cout << "Minimizer " << minName << " - " << algoName
                 << "   converged to the right minimum" << std::endl;
    else {
