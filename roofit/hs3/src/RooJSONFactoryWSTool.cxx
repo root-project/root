@@ -29,10 +29,7 @@
 
 #include "Domains.h"
 
-#include "TROOT.h"
 #include "TH1.h"
-
-#include "RConfigure.h"
 
 #include <algorithm>
 #include <fstream>
@@ -212,11 +209,7 @@ RooAbsPdf *RooJSONFactoryWSTool::request<RooAbsPdf>(const std::string &objname, 
 template <>
 RooAbsReal *RooJSONFactoryWSTool::request<RooAbsReal>(const std::string &objname, const std::string &requestAuthor)
 {
-   RooAbsReal *retval = nullptr;
-   retval = _workspace.pdf(objname);
-   if (retval)
-      return retval;
-   retval = _workspace.function(objname);
+   RooAbsReal *retval = _workspace.function(objname);
    if (retval)
       return retval;
    retval = _workspace.var(objname);
@@ -541,7 +534,8 @@ void RooJSONFactoryWSTool::exportAttributes(const RooAbsArg *arg, JSONNode &n)
    if (!arg->stringAttributes().empty()) {
       for (const auto &it : arg->stringAttributes()) {
          // We don't want to span the JSON with the factory tags
-         if(it.first == "factory_tag") continue;
+         if (it.first == "factory_tag")
+            continue;
          auto &dict = n["dict"];
          dict.set_map();
          dict[it.first] << it.second;
@@ -563,7 +557,7 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &n)
       return;
 
    // for RooConstVar, if name and value are the same, we don't need to do anything
-   if(cv && strcmp(cv->GetName(), TString::Format("%g", cv->getVal()).Data()) == 0) {
+   if (cv && strcmp(cv->GetName(), TString::Format("%g", cv->getVal()).Data()) == 0) {
       return;
    }
 
@@ -597,7 +591,11 @@ void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &
 
 JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
 {
-   if (func->InheritsFrom(RooAbsCategory::Class())) {
+   if (func->InheritsFrom(RooSimultaneous::Class())) {
+      // RooSimultaneous is not used in the HS3 standard, we only export the dependents
+      RooJSONFactoryWSTool::exportDependants(func);
+      return nullptr;
+   } else if (func->InheritsFrom(RooAbsCategory::Class())) {
       // categories are created by the respective RooSimultaneous, so we're skipping the export here
       return nullptr;
    } else if (func->InheritsFrom(RooRealVar::Class()) || func->InheritsFrom(RooConstVar::Class())) {
@@ -615,7 +613,7 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
    if (n.has_child(func->GetName()))
       return &n[func->GetName()];
 
-   TClass *cl = TClass::GetClass(func->ClassName());
+   TClass *cl = func->IsA();
 
    auto it = exporters.find(cl);
    if (it != exporters.end()) { // check if we have a specific exporter available
@@ -642,24 +640,20 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
    // generic export using the factory expressions
    const auto &dict = exportKeys.find(cl);
    if (dict == exportKeys.end()) {
-      std::cerr << "unable to export class '" << cl->GetName() << "' - no export keys available!" << std::endl;
-      std::cerr << "there are several possible reasons for this:" << std::endl;
-      std::cerr << " 1. " << cl->GetName() << " is a custom class that you or some package you are using added."
-                << std::endl;
-      std::cerr << " 2. " << cl->GetName()
-                << " is a ROOT class that nobody ever bothered to write a serialization definition for." << std::endl;
-      std::cerr << " 3. something is wrong with your setup, e.g. you might have called "
+      std::cerr << "unable to export class '" << cl->GetName() << "' - no export keys available!\n"
+                << "there are several possible reasons for this:\n"
+                << " 1. " << cl->GetName() << " is a custom class that you or some package you are using added.\n"
+                << " 2. " << cl->GetName()
+                << " is a ROOT class that nobody ever bothered to write a serialization definition for.\n"
+                << " 3. something is wrong with your setup, e.g. you might have called "
                    "RooJSONFactoryWSTool::clearExportKeys() and/or never successfully read a file defining these "
-                   "keys with RooJSONFactoryWSTool::loadExportKeys(filename)"
-                << std::endl;
-      std::cerr << "either way, please make sure that:" << std::endl;
-      std::cerr << " 3: you are reading a file with export keys - call RooJSONFactoryWSTool::printExportKeys() to "
-                   "see what is available"
-                << std::endl;
-      std::cerr << " 2 & 1: you might need to write a serialization definition yourself. check "
+                   "keys with RooJSONFactoryWSTool::loadExportKeys(filename)\n"
+                << "either way, please make sure that:\n"
+                << " 3: you are reading a file with export keys - call RooJSONFactoryWSTool::printExportKeys() to "
+                   "see what is available\n"
+                << " 2 & 1: you might need to write a serialization definition yourself. check "
                    "https://github.com/root-project/root/blob/master/roofit/hs3/README.md to "
-                   "see how to do this!"
-                << std::endl;
+                   "see how to do this!\n";
       return nullptr;
    }
 
@@ -1293,14 +1287,11 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 
 void RooJSONFactoryWSTool::exportTopLevelPdf(JSONNode &node, RooAbsPdf const &pdf, std::string const &modelConfigName)
 {
-   auto &pdfs = node["distributions"];
-   pdfs.set_map();
-   RooJSONFactoryWSTool::exportObject(&pdf);
-   auto &pdfNode = pdfs[pdf.GetName()];
-   pdfNode.set_map();
+   auto * pdfNode = RooJSONFactoryWSTool::exportObject(&pdf);
+   if(!pdfNode) return;
    if (!pdf.getAttribute("toplevel"))
-      RooJSONFactoryWSTool::append(pdfNode["tags"], "toplevel");
-   auto &dict = pdfNode["dict"];
+      RooJSONFactoryWSTool::append((*pdfNode)["tags"], "toplevel");
+   auto &dict = (*pdfNode)["dict"];
    dict.set_map();
    dict["ModelConfig"] << modelConfigName;
 }
