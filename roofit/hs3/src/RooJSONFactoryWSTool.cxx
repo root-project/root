@@ -1161,21 +1161,6 @@ std::string RooJSONFactoryWSTool::name(const JSONNode &n)
    return ss.str();
 }
 
-void RooJSONFactoryWSTool::tagVariables(JSONNode &rootnode, RooArgSet const *args, const char *tag)
-{
-   if (args == nullptr)
-      return;
-
-   for (RooAbsArg *arg : *args) {
-      if (auto *v = dynamic_cast<RooRealVar *>(arg)) {
-         auto &vars = rootnode["variables"];
-         exportVariable(v, vars);
-         auto &tags = vars[v->GetName()]["tags"];
-         RooJSONFactoryWSTool::append(tags, tag);
-      }
-   }
-}
-
 void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::ModelConfig const &mc)
 {
    auto pdf = dynamic_cast<RooSimultaneous const *>(mc.GetPdf());
@@ -1234,19 +1219,22 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 {
    _domains = std::make_unique<Domains>();
 
+   // export all variables
+   {
+      auto &vars = n["variables"];
+      for (RooAbsArg *arg : _workspace.allVars()) {
+         exportVariable(arg, vars);
+      }
+   }
+
    // export all ModelConfig objects and attached Pdfs
    std::vector<RooStats::ModelConfig *> mcs;
    std::vector<RooAbsPdf *> toplevel;
    _rootnode_output = &n;
    for (auto obj : _workspace.allGenericObjects()) {
       if (obj->InheritsFrom(RooStats::ModelConfig::Class())) {
-         auto *mc = static_cast<RooStats::ModelConfig *>(obj);
-         tagVariables(n, mc->GetObservables(), "observable");
-         tagVariables(n, mc->GetParametersOfInterest(), "poi");
-         tagVariables(n, mc->GetNuisanceParameters(), "np");
-         tagVariables(n, mc->GetGlobalObservables(), "glob");
-         mcs.push_back(mc);
-         exportModelConfig(n, *mc);
+         mcs.push_back(static_cast<RooStats::ModelConfig *>(obj));
+         exportModelConfig(n, *mcs.back());
       }
    }
    for (auto pdf : _workspace.allPdfs()) {

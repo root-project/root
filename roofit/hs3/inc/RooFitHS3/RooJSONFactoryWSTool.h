@@ -202,8 +202,6 @@ private:
    void exportDependants(const RooAbsArg *source);
    void exportTopLevelPdf(RooFit::Detail::JSONNode &node, RooAbsPdf const &pdf, std::string const &modelConfigName);
 
-   void tagVariables(RooFit::Detail::JSONNode &rootnode, RooArgSet const *args, const char *tag);
-
    void exportModelConfig(RooFit::Detail::JSONNode &n, RooStats::ModelConfig const &mc);
 
    // member variables
