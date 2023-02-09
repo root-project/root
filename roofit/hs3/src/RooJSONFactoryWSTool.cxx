@@ -313,15 +313,6 @@ inline void genIndicesHelper(std::vector<std::vector<int>> &combinations, std::v
    }
 }
 
-std::string containerName(RooAbsArg const *elem)
-{
-   std::string contname = "functions";
-   if (elem->InheritsFrom(RooAbsPdf::Class()))
-      contname = "distributions";
-   if (elem->InheritsFrom(RooRealVar::Class()) || elem->InheritsFrom(RooConstVar::Class()))
-      contname = "variables";
-   return contname;
-}
 } // namespace
 
 bool RooJSONFactoryWSTool::Config::stripObservables = true;
@@ -603,15 +594,17 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
       return nullptr;
    }
 
-   auto &n = orootnode()[containerName(func)];
+   auto &n = orootnode()[func->InheritsFrom(RooAbsPdf::Class()) ? "distributions" : "functions"];
    n.set_map();
+
+   const char* name = func->GetName();
+
+   // if this element already exists, skip
+   if (n.has_child(name))
+      return &n[name];
 
    auto const &exporters = RooFit::JSONIO::exporters();
    auto const &exportKeys = RooFit::JSONIO::exportKeys();
-
-   // if this element already exists, skip
-   if (n.has_child(func->GetName()))
-      return &n[func->GetName()];
 
    TClass *cl = func->IsA();
 
@@ -619,7 +612,7 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
    if (it != exporters.end()) { // check if we have a specific exporter available
       for (auto &exp : it->second) {
          try {
-            auto &elem = n[func->GetName()];
+            auto &elem = n[name];
             elem.set_map();
             if (!exp->exportObject(this, func, elem)) {
                continue;
@@ -630,7 +623,7 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
             RooJSONFactoryWSTool::exportAttributes(func, elem);
             return &elem;
          } catch (const std::exception &ex) {
-            std::cerr << "error exporting " << func->Class()->GetName() << " " << func->GetName() << ": " << ex.what()
+            std::cerr << "error exporting " << func->ClassName() << " " << name << ": " << ex.what()
                       << ". skipping." << std::endl;
             return nullptr;
          }
@@ -659,7 +652,7 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
 
    RooJSONFactoryWSTool::exportDependants(func);
 
-   auto &elem = n[func->GetName()];
+   auto &elem = n[name];
    elem.set_map();
    elem["type"] << dict->second.type;
 
@@ -934,8 +927,13 @@ void RooJSONFactoryWSTool::exportData(RooAbsData *data, JSONNode &n)
       auto &weights = output["counts"];
       weights.set_seq();
       for (int i = 0; i < dh->numEntries(); ++i) {
-         dh->get(i);
-         weights.append_child() << dh->weight();
+         double w = dh->weight(i);
+         // To make sure there are no unnecessary floating points in the JSON
+         if(int(w) == w) {
+            weights.append_child() << int(w);
+         } else {
+            weights.append_child() << w;
+         }
       }
       return;
    }
@@ -943,7 +941,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData *data, JSONNode &n)
    output.set_map();
 
    // this is a regular unbinned dataset
-   RooDataSet *ds = (RooDataSet *)(data);
+   RooDataSet *ds = static_cast<RooDataSet *>(data);
 
    bool singlePoint = (ds->numEntries() <= 1);
    RooArgSet reduced_obs;
@@ -1252,7 +1250,8 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
          exportModelConfig(n, *mcs.back());
       }
    }
-   for (auto pdf : _workspace.allPdfs()) {
+   for (RooAbsArg* pdf : _workspace.allPdfs()) {
+
       if (!pdf->hasClients() || pdf->getAttribute("toplevel")) {
          bool hasMC = false;
          for (const auto &mc : mcs) {
@@ -1275,26 +1274,23 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       this->exportVariables(*snsh, snapshots[snsh->GetName()]);
    }
    for (const auto &mc : mcs) {
-      exportTopLevelPdf(n, *mc->GetPdf(), mc->GetName());
+      exportTopLevelPdf(*mc->GetPdf(), mc->GetName());
    }
    for (const auto &pdf : toplevel) {
-      exportTopLevelPdf(n, *pdf, std::string(pdf->GetName()) + "_modelConfig");
+      exportTopLevelPdf(*pdf, std::string(pdf->GetName()) + "_modelConfig");
    }
    _domains->writeJSON(n["domains"]);
    _domains.reset();
    _rootnode_output = nullptr;
 }
 
-void RooJSONFactoryWSTool::exportTopLevelPdf(JSONNode &node, RooAbsPdf const &pdf, std::string const &modelConfigName)
+void RooJSONFactoryWSTool::exportTopLevelPdf(RooAbsPdf const &pdf, std::string const &modelConfigName)
 {
    auto *pdfNode = RooJSONFactoryWSTool::exportObject(&pdf);
    if (!pdfNode)
       return;
    if (!pdf.getAttribute("toplevel"))
       RooJSONFactoryWSTool::append((*pdfNode)["tags"], "toplevel");
-   auto &dict = (*pdfNode)["dict"];
-   dict.set_map();
-   dict["ModelConfig"] << modelConfigName;
 }
 
 bool RooJSONFactoryWSTool::importJSONfromString(const std::string &s)
@@ -1335,7 +1331,7 @@ std::unique_ptr<JSONTree> RooJSONFactoryWSTool::createNewJSONTree()
    n.set_map();
    n["metadata"].set_map();
    // The currently implemented HS3 standard is version 0.1
-   n["metadata"]["version"] << "0.1";
+   n["metadata"]["version"] << "0.1.90";
    return tree;
 }
 
