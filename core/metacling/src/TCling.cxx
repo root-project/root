@@ -1092,12 +1092,8 @@ static GlobalModuleIndex *loadGlobalModuleIndex(cling::Interpreter &interp)
    assert(ModuleManager);
    // StringRef ModuleIndexPath = HSI.getModuleCachePath();
    // HeaderSearch& HSI = PP.getHeaderSearchInfo();
-   // HSI.setModuleCachePath(TROOT::GetLibDir().Data());
-#ifdef R__WIN32
-   std::string ModuleIndexPath = TROOT::GetBinDir().Data();
-#else
-   std::string ModuleIndexPath = TROOT::GetLibDir().Data();
-#endif
+   // HSI.setModuleCachePath(TROOT::GetSharedLibDir().Data());
+   std::string ModuleIndexPath = TROOT::GetSharedLibDir().Data();
    if (ModuleIndexPath.empty())
       return nullptr;
    // Get an existing global index. This loads it if not already loaded.
@@ -1471,11 +1467,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
       // ROOT usually knows better where its libraries are. This way we can
       // discover modules without having to should thisroot.sh and should fix
       // gnuinstall.
-#ifdef R__WIN32
-      Paths.push_back(TROOT::GetBinDir().Data());
-#else
-      Paths.push_back(TROOT::GetLibDir().Data());
-#endif
+      Paths.push_back(TROOT::GetSharedLibDir().Data());
       GetEnvVarPath("CLING_PREBUILT_MODULE_PATH", Paths);
       std::string EnvVarPath;
       for (const std::string& P : Paths)
@@ -1514,11 +1506,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
          assert(llvm::sys::fs::exists(Env) && "Path does not exist!");
          ModulesCachePath = Env.str();
       } else {
-#ifdef R__WIN32
-         ModulesCachePath = TROOT::GetBinDir();
-#else
-         ModulesCachePath = TROOT::GetLibDir();
-#endif
+         ModulesCachePath = TROOT::GetSharedLibDir();
       }
 
       clingArgsStorage.push_back("-fmodules-cache-path=" + ModulesCachePath);
@@ -1647,13 +1635,8 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
       cling::DynamicLibraryManager& DLM = *fInterpreter->getDynamicLibraryManager();
       // Make sure cling looks into ROOT's libdir, even if not part of LD_LIBRARY_PATH
       // e.g. because of an RPATH build.
-#ifdef R__WIN32
-      DLM.addSearchPath(TROOT::GetBinDir().Data(), /*isUser=*/true,
+      DLM.addSearchPath(TROOT::GetSharedLibDir().Data(), /*isUser=*/true,
                         /*prepend=*/true);
-#else
-      DLM.addSearchPath(TROOT::GetLibDir().Data(), /*isUser=*/true,
-                        /*prepend=*/true);
-#endif
       auto ShouldPermanentlyIgnore = [](llvm::StringRef FileName) -> bool{
          llvm::StringRef stem = llvm::sys::path::stem(FileName);
          return stem.startswith("libNew") || stem.startswith("libcppyy_backend");

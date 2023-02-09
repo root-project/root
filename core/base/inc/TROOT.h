@@ -354,6 +354,7 @@ public:
    static const TString& GetRootSys();
    static const TString& GetBinDir();
    static const TString& GetLibDir();
+   static const TString& GetSharedLibDir();
    static const TString& GetIncludeDir();
    static const TString& GetEtcDir();
    static const TString& GetDataDir();

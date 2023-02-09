@@ -2954,6 +2954,17 @@ const TString& TROOT::GetLibDir() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get the shared libraries directory in the installation. Static utility function.
+
+const TString& TROOT::GetSharedLibDir() {
+#if defined(R__WIN32)
+   return TROOT::GetBinDir();
+#else
+   return TROOT::GetLibDir();
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Get the include directory in the installation. Static utility function.
 
 const TString& TROOT::GetIncludeDir() {
