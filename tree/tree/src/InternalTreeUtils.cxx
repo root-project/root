@@ -21,7 +21,6 @@
 #include "TTree.h"
 #include "TVirtualIndex.h"
 
-#include <cstdint> // std::uint64_t
 #include <limits>
 #include <utility> // std::pair
 #include <vector>
@@ -176,7 +175,7 @@ ROOT::TreeUtils::RFriendInfo GetFriendInfo(const TTree &tree, bool retrieveEntri
    std::vector<std::pair<std::string, std::string>> friendNames;
    std::vector<std::vector<std::string>> friendFileNames;
    std::vector<std::vector<std::string>> friendChainSubNames;
-   std::vector<std::vector<std::int64_t>> nEntriesPerTreePerFriend;
+   std::vector<std::vector<Long64_t>> nEntriesPerTreePerFriend;
    std::vector<std::unique_ptr<TVirtualIndex>> treeIndexes;
 
    // Reserve space for all friends
