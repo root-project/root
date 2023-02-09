@@ -180,11 +180,10 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    }
 
    // the variables
-   auto &varlist = n["variables"];
-   varlist.set_map();
-   for (const auto &c : measurement.GetChannels()) {
-      for (const auto &s : c.GetSamples()) {
-         for (const auto &norm : s.GetNormFactorList()) {
+   JSONNode &varlist = RooJSONFactoryWSTool::makeVariablesNode(n);
+   for (const auto &channel : measurement.GetChannels()) {
+      for (const auto &sample : channel.GetSamples()) {
+         for (const auto &norm : sample.GetNormFactorList()) {
             if (!varlist.has_child(norm.GetName())) {
                auto &v = varlist[norm.GetName()];
                v.set_map();
@@ -192,7 +191,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
                domains.readVariable(norm.GetName().c_str(), norm.GetLow(), norm.GetHigh());
             }
          }
-         for (const auto &sys : s.GetOverallSysList()) {
+         for (const auto &sys : sample.GetOverallSysList()) {
             std::string parname("alpha_");
             parname += sys.GetName();
             if (!varlist.has_child(parname)) {

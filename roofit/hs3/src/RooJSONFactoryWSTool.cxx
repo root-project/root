@@ -136,6 +136,27 @@ void configureVariable(RooFit::JSONIO::Detail::Domains &domains, const JSONNode 
 
 } // namespace
 
+JSONNode &RooJSONFactoryWSTool::makeVariablesNode(JSONNode &rootNode)
+{
+   auto &estimates = rootNode["estimates"];
+   estimates.set_map();
+   auto &varlist = estimates["default_values"];
+   varlist.set_map();
+   return varlist;
+}
+
+JSONNode const *RooJSONFactoryWSTool::getVariablesNode(JSONNode const &rootNode)
+{
+   if (!rootNode.has_child("estimates")) {
+      return nullptr;
+   }
+   auto &estimates = rootNode["estimates"];
+   if (!estimates.has_child("default_values")) {
+      return nullptr;
+   }
+   return &estimates["default_values"];
+}
+
 RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
 
 RooJSONFactoryWSTool::~RooJSONFactoryWSTool() {}
@@ -159,10 +180,9 @@ RooRealVar *RooJSONFactoryWSTool::request<RooRealVar>(const std::string &objname
    RooRealVar *retval = _workspace.var(objname);
    if (retval)
       return retval;
-   if (irootnode().has_child("variables")) {
-      const JSONNode &vars = irootnode()["variables"];
-      if (vars.has_child(objname)) {
-         this->importVariable(vars[objname]);
+   if (JSONNode const *vars = getVariablesNode(irootnode())) {
+      if (vars->has_child(objname)) {
+         this->importVariable((*vars)[objname]);
          retval = _workspace.var(objname);
          if (retval)
             return retval;
@@ -213,10 +233,9 @@ RooAbsReal *RooJSONFactoryWSTool::request<RooAbsReal>(const std::string &objname
             return retval;
       }
    }
-   if (irootnode().has_child("variables")) {
-      const JSONNode &vars = irootnode()["variables"];
-      if (vars.has_child(objname)) {
-         this->importVariable(vars[objname]);
+   if (JSONNode const *vars = getVariablesNode(irootnode())) {
+      if (vars->has_child(objname)) {
+         this->importVariable((*vars)[objname]);
          retval = _workspace.var(objname);
          if (retval)
             return retval;
@@ -541,6 +560,11 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &n)
    if (!cv && !rrv)
       return;
 
+   // for RooConstVar, if name and value are the same, we don't need to do anything
+   if(cv && strcmp(cv->GetName(), TString::Format("%g", cv->getVal()).Data()) == 0) {
+      return;
+   }
+
    n.set_map();
 
    JSONNode &var = n[v->GetName()];
@@ -571,6 +595,14 @@ void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &
 
 JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
 {
+   if (func->InheritsFrom(RooAbsCategory::Class())) {
+      // categories are created by the respective RooSimultaneous, so we're skipping the export here
+      return nullptr;
+   } else if (func->InheritsFrom(RooRealVar::Class()) || func->InheritsFrom(RooConstVar::Class())) {
+      // for variables, skip it because they are all exported in the beginning
+      return nullptr;
+   }
+
    auto &n = orootnode()[containerName(func)];
    n.set_map();
 
@@ -580,19 +612,6 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
    // if this element already exists, skip
    if (n.has_child(func->GetName()))
       return &n[func->GetName()];
-
-   if (func->InheritsFrom(RooConstVar::Class()) &&
-       strcmp(func->GetName(), TString::Format("%g", ((RooConstVar *)func)->getVal()).Data()) == 0) {
-      // for RooConstVar, if name and value are the same, we don't need to do anything
-      return nullptr;
-   } else if (func->InheritsFrom(RooAbsCategory::Class())) {
-      // categories are created by the respective RooSimultaneous, so we're skipping the export here
-      return nullptr;
-   } else if (func->InheritsFrom(RooRealVar::Class()) || func->InheritsFrom(RooConstVar::Class())) {
-      // for variables, call the variable exporter
-      exportVariable(func, n);
-      return nullptr;
-   }
 
    TClass *cl = TClass::GetClass(func->ClassName());
 
@@ -1137,8 +1156,8 @@ void RooJSONFactoryWSTool::exportDependants(const RooAbsArg *source)
 void RooJSONFactoryWSTool::importDependants(const JSONNode &n)
 {
    // import all the dependants of an object
-   if (n.has_child("variables")) {
-      this->importVariables(n["variables"]);
+   if (JSONNode const *varsNode = getVariablesNode(n)) {
+      this->importVariables(*varsNode);
    }
    if (n.has_child("functions")) {
       this->importFunctions(n["functions"]);
@@ -1221,7 +1240,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 
    // export all variables
    {
-      auto &vars = n["variables"];
+      JSONNode &vars = makeVariablesNode(n);
       for (RooAbsArg *arg : _workspace.allVars()) {
          exportVariable(arg, vars);
       }
