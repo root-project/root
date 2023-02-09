@@ -602,7 +602,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(ColumnHandl
                      RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
    fPagePool->RegisterPage(
       newPage,
-      RPageDeleter([](const RPage &page, void * /*userData*/) { RPageAllocatorHeap::DeletePage(page); }, nullptr));
+      RPageDeleter([](const RPage &page, void * /*userData*/) { RPageAllocatorCache<>::DeletePage(page); }, nullptr));
    fCounters->fNPagePopulated.Inc();
    return newPage;
 }
@@ -816,7 +816,7 @@ void ROOT::Experimental::Detail::RPageSourceDaos::UnzipClusterImpl(RCluster *clu
             newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
             fPagePool->PreloadPage(
                newPage,
-               RPageDeleter([](const RPage &page, void * /*userData*/) { RPageAllocatorHeap::DeletePage(page); },
+               RPageDeleter([](const RPage &page, void * /*userData*/) { RPageAllocatorCache<>::DeletePage(page); },
                             nullptr));
          };
 
