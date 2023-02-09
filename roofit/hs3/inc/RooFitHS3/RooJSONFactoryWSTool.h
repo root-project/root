@@ -54,7 +54,13 @@ public:
    static std::string name(const RooFit::Detail::JSONNode &n);
 
    template <class T>
-   T *request(const std::string &objname, const std::string &requestAuthor);
+   T *request(const std::string &objname, const std::string &requestAuthor)
+   {
+      if (T *out = requestImpl<T>(objname)) {
+         return out;
+      }
+      throw DependencyMissingError(requestAuthor, objname, T::Class()->GetName());
+   }
 
    RooJSONFactoryWSTool(RooWorkspace &ws);
 
@@ -153,18 +159,11 @@ private:
       Var(const RooFit::Detail::JSONNode &val);
    };
 
-   RooFit::Detail::JSONNode &orootnode();
-   const RooFit::Detail::JSONNode &irootnode() const;
-
    std::map<std::string, std::unique_ptr<RooAbsData>> loadData(const RooFit::Detail::JSONNode &n);
    std::unique_ptr<RooDataSet> unbinned(RooDataHist const &hist);
    static RooRealVar *createObservable(RooWorkspace &ws, const std::string &name, const RooJSONFactoryWSTool::Var &var);
 
-   class MissingRootnodeError : public std::exception {
-   public:
-      const char *what() const noexcept override { return "no rootnode set"; }
-   };
-
+   // error handling helpers
    class DependencyMissingError : public std::exception {
       std::string _parent, _child, _class, _message;
 
@@ -180,7 +179,9 @@ private:
       const char *what() const noexcept override { return _message.c_str(); }
    };
 
-   // error handling helpers
+   template <class T>
+   T *requestImpl(const std::string &objname);
+
    void exportData(RooAbsData *data, RooFit::Detail::JSONNode &n);
    static std::vector<std::vector<int>> generateBinIndices(const RooArgList &vars);
    static std::map<std::string, RooJSONFactoryWSTool::Var>
@@ -188,7 +189,6 @@ private:
 
    void importAllNodes(const RooFit::Detail::JSONNode &n);
 
-   void importPdfs(const RooFit::Detail::JSONNode &n);
    void importVariables(const RooFit::Detail::JSONNode &n);
    void importVariable(const RooFit::Detail::JSONNode &n);
    void importDependants(const RooFit::Detail::JSONNode &n);
@@ -203,13 +203,12 @@ private:
 
    void exportAllObjects(RooFit::Detail::JSONNode &n);
    void exportDependants(const RooAbsArg *source);
-   void exportTopLevelPdf(RooAbsPdf const &pdf, std::string const &modelConfigName);
 
    void exportModelConfig(RooFit::Detail::JSONNode &n, RooStats::ModelConfig const &mc);
 
    // member variables
-   const RooFit::Detail::JSONNode *_rootnode_input = nullptr;
-   RooFit::Detail::JSONNode *_rootnode_output = nullptr;
+   const RooFit::Detail::JSONNode *_rootnodeInput = nullptr;
+   RooFit::Detail::JSONNode *_rootnodeOutput = nullptr;
    RooWorkspace &_workspace;
 
    // objects to represent intermediate information
