@@ -400,9 +400,22 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = TTree::kMaxEntries */
       l.Sort();
       TIter next(&l);
       TObjString *obj;
+      const TString hashMarkTreeName{"#" + treename};
       while ((obj = (TObjString*)next())) {
          file = obj->GetName();
-         nf += AddFile(TString::Format("%s/%s%s",directory.Data(),file,suffix.Data()),nentries);
+         if (suffix == hashMarkTreeName) {
+            // See https://github.com/root-project/root/issues/11483
+            // In case the input parameter 'name' contains both a glob and the
+            // '?#' token to identify the tree name, the call to
+            // `ParseTreeFileName` will produce a 'suffix' string of the form
+            // '#treename'. Passing this to the `AddFile` call produces a bogus
+            // file name that TChain won't be able to open afterwards. Thus,
+            // we do not pass the 'suffix' as part of the file name, instead we
+            // directly pass 'treename' to `AddFile`.
+            nf += AddFile(TString::Format("%s/%s", directory.Data(), file), nentries, treename);
+         } else {
+            nf += AddFile(TString::Format("%s/%s%s", directory.Data(), file, suffix.Data()), nentries);
+         }
       }
       l.Delete();
    }
