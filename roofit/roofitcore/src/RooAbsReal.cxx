@@ -241,6 +241,21 @@ double RooAbsReal::getValV(const RooArgSet* nset) const
   return hideOffset() ? _value + offset() : _value;
 }
 
+namespace {
+
+// Get the subset of normSet that arg actually depends on. If the input nomSet
+// is a nullptr, return an empty set.
+std::unique_ptr<RooArgSet> getActualNormSet(RooAbsArg const& arg, RooArgSet const* normSet) {
+   auto out = std::make_unique<RooArgSet>();
+
+   if(normSet != nullptr) {
+      arg.getObservables(normSet, *out);
+   }
+
+    return out;
+}
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute batch of values for input data stored in `evalData`.
@@ -269,7 +284,9 @@ RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalDat
     dataSpans[evalDataItem.first] = evalDataItem.second;
   }
 
-  std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(*this, normSet ? *normSet : RooArgSet{});
+  auto actualNormSet = getActualNormSet(*this, normSet);
+  std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(*this, *actualNormSet);
+
   ROOT::Experimental::RooFitDriver driver(*clone);
   driver.setData(dataSpans);
   auto& results = evalData.ownedMemory[this];
@@ -281,7 +298,9 @@ RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalDat
 ////////////////////////////////////////////////////////////////////////////////
 
 std::vector<double> RooAbsReal::getValues(RooAbsData const& data) const {
-  std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(*this, *data.get());
+  auto actualNormSet = getActualNormSet(*this, data.get());
+  std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(*this, *actualNormSet);
+
   ROOT::Experimental::RooFitDriver driver(*clone, RooFit::BatchModeOption::Cpu);
   driver.setData(data, "");
   return driver.getValues();
