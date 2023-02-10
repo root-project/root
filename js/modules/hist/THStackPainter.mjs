@@ -144,7 +144,7 @@ class THStackPainter extends ObjectPainter {
       let max0 = max, min0 = min, zoomed = false;
 
       if (stack.fMaximum != kNoZoom) {
-         max = stack.fMaximum*(1 + gStyle.fHistTopMargin);
+         max = stack.fMaximum;
          max0 = Math.max(max, max0);
          zoomed = true;
       }
