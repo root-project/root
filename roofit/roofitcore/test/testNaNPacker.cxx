@@ -4,6 +4,7 @@
 #include <RooAddPdf.h>
 #include <RooDataSet.h>
 #include <RooFitResult.h>
+#include <RooFormulaVar.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
 #include <RooMinimizer.h>
@@ -343,9 +344,9 @@ TEST(RooNaNPacker, Interface_RooAbsPdf_fitTo_RooRealSumPdf_DegenerateCoeff)
    RooRealVar x("x", "x", 0., 10);
    RooRealVar a1("a1", "a1", 0.3, -10., 10.);
    RooRealVar a2("a2", "a2", 0.4, -10., 10.);
-   RooGenericPdf pdf1("gen1", "exp(-0.5*x)", {x});
-   RooGenericPdf pdf2("gen2", "TMath::Gaus(x, 5, 0.7)", {x});
-   RooGenericPdf pdf3("gen3", "TMath::Gaus(x, 8, 0.8)", {x});
+   RooFormulaVar pdf1("gen1", "exp(-0.5*x)", {x});
+   RooFormulaVar pdf2("gen2", "TMath::Gaus(x, 5, 0.7)", {x});
+   RooFormulaVar pdf3("gen3", "TMath::Gaus(x, 8, 0.8)", {x});
    RooRealSumPdf pdf("sum", "a1*gen1 + a2*gen2 + (1-a1-a2)*gen3", {pdf1, pdf2, pdf3}, {a1, a2});
    std::unique_ptr<RooDataSet> data(pdf.generate(x, 5000));
 

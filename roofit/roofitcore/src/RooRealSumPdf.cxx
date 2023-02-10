@@ -203,6 +203,7 @@ RooAbsPdf::ExtendMode RooRealSumPdf::extendMode() const
 
 
 double RooRealSumPdf::evaluate(RooAbsReal const& caller,
+                               RooArgSet const* normSet,
                                RooArgList const& funcList,
                                RooArgList const& coefList,
                                bool doFloor,
@@ -214,7 +215,7 @@ double RooRealSumPdf::evaluate(RooAbsReal const& caller,
   for (unsigned int i = 0; i < funcList.size(); ++i) {
     const auto func = static_cast<RooAbsReal*>(&funcList[i]);
     const auto coef = static_cast<RooAbsReal*>(i < coefList.size() ? &coefList[i] : nullptr);
-    const double coefVal = coef != nullptr ? coef->getVal() : (1. - sumCoeff);
+    const double coefVal = coef != nullptr ? coef->getVal(normSet) : (1. - sumCoeff);
 
     // Warn about degeneration of last coefficient
     if (coef == nullptr && (coefVal < 0 || coefVal > 1.)) {
@@ -230,7 +231,7 @@ double RooRealSumPdf::evaluate(RooAbsReal const& caller,
     }
 
     if (func->isSelectedComp()) {
-      value += func->getVal() * coefVal;
+      value += func->getVal(normSet) * coefVal;
     }
 
     sumCoeff += coefVal;
@@ -245,7 +246,7 @@ double RooRealSumPdf::evaluate(RooAbsReal const& caller,
 
 double RooRealSumPdf::evaluate() const
 {
-  return evaluate(*this, _funcList, _coefList, _doFloor || _doFloorGlobal, _haveWarned);
+  return evaluate(*this, _funcList.nset(), _funcList, _coefList, _doFloor || _doFloorGlobal, _haveWarned);
 }
 
 
@@ -382,12 +383,12 @@ bool RooRealSumPdf::checkObservables(const RooArgSet* nset) const
 Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
                     const RooArgSet* normSet2, const char* rangeName) const
 {
-  return getAnalyticalIntegralWN(*this, _normIntMgr, _funcList, _coefList, allVars, analVars, normSet2, rangeName);
+  return getAnalyticalIntegralWN(*this, _normIntMgr, _funcList, allVars, analVars, normSet2 ? normSet2 : _funcList.nset(), rangeName);
 }
 
 
 Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooAbsReal const& caller, RooObjCacheManager & normIntMgr,
-                                             RooArgList const& funcList, RooArgList const& /*coefList*/,
+                                             RooArgList const& funcList,
                                              RooArgSet& allVars, RooArgSet& analVars,
                                              const RooArgSet* normSet2, const char* rangeName)
 {
@@ -419,7 +420,7 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooAbsReal const& caller, RooObjCac
   for (const auto elm : funcList) {
     const auto func = static_cast<RooAbsReal*>(elm);
 
-    std::unique_ptr<RooAbsReal> funcInt{func->createIntegral(analVars,rangeName)};
+    std::unique_ptr<RooAbsReal> funcInt{func->createIntegral(analVars,normSet2,nullptr,rangeName)};
     if(auto funcRealInt = dynamic_cast<RooRealIntegral*>(funcInt.get())) funcRealInt->setAllowComponentSelection(true);
     cache->_funcIntList.addOwned(std::move(funcInt));
     if (normSet && !normSet->empty()) {
@@ -745,56 +746,6 @@ void RooRealSumPdf::printMetaArgs(RooArgList const& funcList, RooArgList const& 
   }
 
   os << " " ;
-}
-
-std::unique_ptr<RooAbsArg>
-RooRealSumPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
-{
-   if (normSet.empty() || selfNormalized()) {
-      return RooAbsPdf::compileForNormSet({}, ctx);
-   }
-   std::unique_ptr<RooAbsPdf> pdfClone(static_cast<RooAbsPdf *>(this->Clone()));
-
-   if (ctx.likelihoodMode() && pdfClone->getAttribute("BinnedLikelihood")) {
-
-      // This has to be done before compiling the servers, such that the
-      // RooBinWidthFunctions know to disable themselves.
-      ctx.setBinnedLikelihoodMode(true);
-
-      ctx.markAsCompiled(*pdfClone);
-      ctx.compileServers(*pdfClone, {});
-
-      pdfClone->setAttribute("BinnedLikelihoodActive");
-      // If this is a binned likelihood, we're flagging it in the context.
-      // Then, the RooBinWidthFunctions know that they should not put
-      // themselves in the computation graph. Like this, the pdf values can
-      // directly be interpreted as yields, without multiplying them with the
-      // bin widths again in the NLL. However, the NLL class has to be careful
-      // to only skip the bin with multiplication when there actually were
-      // RooBinWidthFunctions! This is not the case for old workspace before
-      // ROOT 6.26. Therefore, we use the "BinnedLikelihoodActiveYields"
-      // attribute to let the NLL know what it should do.
-      if (ctx.binWidthFuncFlag()) {
-         pdfClone->setAttribute("BinnedLikelihoodActiveYields");
-      }
-      return pdfClone;
-   }
-
-   ctx.compileServers(*pdfClone, {});
-
-   RooArgSet depList;
-   pdfClone->getObservables(&normSet, depList);
-
-   auto newArg = std::make_unique<RooNormalizedPdf>(*pdfClone, depList);
-
-   // The direct servers are this pdf and the normalization integral, which
-   // don't need to be compiled further.
-   for (RooAbsArg *server : newArg->servers()) {
-      ctx.markAsCompiled(*server);
-   }
-   ctx.markAsCompiled(*newArg);
-   newArg->addOwnedComponents(std::move(pdfClone));
-   return newArg;
 }
 
 std::unique_ptr<RooAbsReal> RooRealSumPdf::createExpectedEventsFunc(const RooArgSet *nset) const
