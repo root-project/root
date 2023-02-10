@@ -17,7 +17,6 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
   HEADERS
     Roo2DKeysPdf.h
-    RooAbsCollection.h
     RooArgusBG.h
     RooBCPEffDecay.h
     RooBCPGenDecay.h
