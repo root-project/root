@@ -287,6 +287,21 @@ double RooAbsReal::getValV(const RooArgSet* nset) const
   return hideOffset() ? _value + offset() : _value;
 }
 
+namespace {
+
+// Get the subset of normSet that arg actually depends on. If the input nomSet
+// is a nullptr, return an empty set.
+std::unique_ptr<RooArgSet> getActualNormSet(RooAbsArg const& arg, RooArgSet const* normSet) {
+   auto out = std::make_unique<RooArgSet>();
+
+   if(normSet != nullptr) {
+      arg.getObservables(normSet, *out);
+   }
+
+    return out;
+}
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate current value of object, with error tracing wrapper
