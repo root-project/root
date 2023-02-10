@@ -41,6 +41,7 @@
 #include "TView.h"
 #include "TExec.h"
 #include "TVirtualX.h"
+#include "TMath.h"
 
 #include <cstdio>
 #include <cstring>
@@ -864,12 +865,9 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          pad->SetTicks(r.tickx, r.ticky);
       if ((pad->GetGridx() != (r.gridx > 0)) || (pad->GetGridy() != (r.gridy > 0)))
          pad->SetGrid(r.gridx, r.gridy);
-      if (r.logx != pad->GetLogx())
-         pad->SetLogx(r.logx);
-      if (r.logy != pad->GetLogy())
-         pad->SetLogy(r.logy);
-      if (r.logz != pad->GetLogz())
-         pad->SetLogz(r.logz);
+      pad->fLogx = r.logx;
+      pad->fLogy = r.logy;
+      pad->fLogz = r.logz;
 
       pad->SetLeftMargin(r.mleft);
       pad->SetRightMargin(r.mright);
@@ -877,34 +875,19 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
       pad->SetBottomMargin(r.mbottom);
 
       if (r.ranges) {
+         // avoid call of original methods, set members directly
+         // pad->Range(r.px1, r.py1, r.px2, r.py2);
+         // pad->RangeAxis(r.ux1, r.uy1, r.ux2, r.uy2);
 
-         Double_t ux1_, ux2_, uy1_, uy2_, px1_, px2_, py1_, py2_;
+         pad->fX1 = r.px1;
+         pad->fX2 = r.px2;
+         pad->fY1 = r.py1;
+         pad->fY2 = r.py2;
 
-         pad->GetRange(px1_, py1_, px2_, py2_);
-         pad->GetRangeAxis(ux1_, uy1_, ux2_, uy2_);
-
-         bool same_range = (r.ux1 == ux1_) && (r.ux2 == ux2_) && (r.uy1 == uy1_) && (r.uy2 == uy2_) &&
-                           (r.px1 == px1_) && (r.px2 == px2_) && (r.py1 == py1_) && (r.py2 == py2_);
-
-         if (!same_range) {
-
-            // avoid call of original methods, set members directly
-            // pad->Range(r.px1, r.py1, r.px2, r.py2);
-            // pad->RangeAxis(r.ux1, r.uy1, r.ux2, r.uy2);
-
-            pad->fX1 = r.px1;
-            pad->fY1 = r.py1;
-            pad->fX2 = r.px2;
-            pad->fY2 = r.py2;
-
-            pad->fUxmin = r.ux1;
-            pad->fUymin = r.uy1;
-            pad->fUxmax = r.ux2;
-            pad->fUymax = r.uy2;
-
-            if (gDebug > 1)
-               Info("DecodeAllRanges", "Change ranges for pad %s", pad->GetName());
-         }
+         pad->fUxmin = r.ux1;
+         pad->fUxmax = r.ux2;
+         pad->fUymin = r.uy1;
+         pad->fUymax = r.uy2;
       }
 
       // pad->SetPad(r.mleft, r.mbottom, 1-r.mright, 1-r.mtop);
@@ -976,6 +959,8 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          if (hist_holder == hist)
             hist_holder = nullptr;
 
+         Bool_t no_entries = hist->GetEntries();
+
          Double_t hmin = 0., hmax = 0.;
 
          if (r.zx1 == r.zx2)
@@ -986,6 +971,11 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          if (hist->GetDimension() == 1) {
             hmin = r.zy1;
             hmax = r.zy2;
+            if ((hmin == hmax) && !no_entries) {
+               // if there are no zooming on Y and histogram has no entries, hmin/hmax should be set to full range
+               hmin = pad->fLogy ? TMath::Power(pad->fLogy < 2 ? 10 : pad->fLogy, r.uy1) : r.uy1;
+               hmax = pad->fLogy ? TMath::Power(pad->fLogy < 2 ? 10 : pad->fLogy, r.uy2) : r.uy2;
+            }
          } else if (r.zy1 == r.zy2) {
             hist->GetYaxis()->SetRange(0., 0.);
          } else {
@@ -995,6 +985,11 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          if (hist->GetDimension() == 2) {
             hmin = r.zz1;
             hmax = r.zz2;
+            if ((hmin == hmax) && !no_entries) {
+               // z scale is not transformed
+               hmin = r.uz1;
+               hmax = r.uz2;
+            }
          } else if (hist->GetDimension() == 3) {
             if (r.zz1 == r.zz2) {
                hist->GetZaxis()->SetRange(0., 0.);
