@@ -1,4 +1,11 @@
+#include <string>
+#include <vector>
+
 #include "TChain.h"
+#include "TFile.h"
+#include "TSystem.h"
+#include "TTree.h"
+
 #include "gtest/gtest.h"
 
 TEST(TChainParsing, RemoteAdd)
@@ -67,4 +74,62 @@ TEST(TChainParsing, LocalAdd)
 
    EXPECT_STREQ(files->At(7)->GetTitle(), "/path/to/file.root");
    EXPECT_STREQ(files->At(7)->GetName(), "/treename");
+}
+
+void FillTree(const char *filename, const char *treeName)
+{
+   TFile f{filename, "RECREATE"};
+   if (f.IsZombie()) {
+      throw std::runtime_error("Could not create file for the test!");
+   }
+   TTree t{treeName, treeName};
+
+   int b;
+   t.Branch("b1", &b);
+
+   for (int i = 0; i < 5; ++i) {
+      b = i;
+      t.Fill();
+   }
+
+   const auto writtenBytes{t.Write()};
+   if (writtenBytes == 0) {
+      throw std::runtime_error("Could not write a tree for the test!");
+   }
+   f.Close();
+}
+
+TEST(TChainParsing, GlobbingWithTreenameToken)
+{
+   // Mix files with/without .root extension
+   // to cover both cases.
+   std::vector<std::string> fileNames{"tchain_globbingwithtreenametoken_0", "tchain_globbingwithtreenametoken_00",
+                                      "tchain_globbingwithtreenametoken_000.root",
+                                      "tchain_globbingwithtreenametoken_0000",
+                                      "tchain_globbingwithtreenametoken_00000.root"};
+   for (const auto &fileName : fileNames) {
+      FillTree(fileName.c_str(), "events");
+   }
+   TChain c;
+   c.Add("tchain_globbingwithtreenametoken_0*?#events");
+
+   const auto *chainFiles = c.GetListOfFiles();
+   ASSERT_TRUE(chainFiles);
+   EXPECT_EQ(chainFiles->GetEntries(), 5);
+
+   const auto *cwd = gSystem->WorkingDirectory();
+   for (std::size_t i = 0; i < 5; i++) {
+      const auto *fileName = chainFiles->At(i)->GetTitle();
+      const auto *treeName = chainFiles->At(i)->GetName();
+      EXPECT_STREQ(treeName, "events");
+      const auto *fullPathToFile = gSystem->ConcatFileName(cwd, fileNames[i].c_str());
+      const auto *normalizedPath = gSystem->UnixPathName(fullPathToFile);
+      EXPECT_STREQ(fileName, normalizedPath);
+      // The docs of `ConcatFileName` tell us we should delete the string
+      delete[] fullPathToFile;
+   }
+
+   for (const auto &fileName : fileNames) {
+      gSystem->Unlink(fileName.c_str());
+   }
 }
