@@ -196,7 +196,7 @@ def test(workdir: str, shell_log: str, extra_ctest_flags: str):
 
     result, shell_log = subprocess_with_log(f"""
         cd '{workdir}/build'
-        ctest -j{os.cpu_count()} {extra_ctest_flags}
+        ctest -j{os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
     """, shell_log)
     
     if result != 0:

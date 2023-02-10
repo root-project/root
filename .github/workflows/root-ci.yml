@@ -146,3 +146,19 @@ jobs:
                     --base_ref       ${{ github.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
+        
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        with:
+          name:  Test Results ${{ matrix.image }} ${{ matrix.config }}
+          path: /tmp/workspace/build/TestResults.xml
+
+  event_file:
+    name: "Upload Event Payload"
+    runs-on: ubuntu-latest
+    steps:
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: Event File
+        path: ${{ github.event_path }}
