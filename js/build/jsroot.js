@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '9/02/2023';
+let version_date = '10/02/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -70393,30 +70393,27 @@ class TPadPainter extends ObjectPainter {
       if (!r.ranges || p.empty()) return true;
 
       // calculate user range for full pad
-      const same = x => x,
-            direct_funcs = [same, Math.log10, x => Math.log10(x)/Math.log10(2)],
-            revert_funcs = [same, x => Math.pow(10, x), x => Math.pow(2, x)],
-            match = (v1, v0, range) => (Math.abs(v0-v1) < Math.abs(range)*1e-10) ? v0 : v1,
-            frect = main.getFrameRect();
+      const func = (log, value, err) => {
+         if (!log) return value;
+         if (value <= 0) return err;
+         value = Math.log10(value);
+         if (log > 1) value = value/Math.log10(log);
+         return value;
+      }, frect = main.getFrameRect();
 
-      let func = direct_funcs[main.logx],
-          func2 = revert_funcs[main.logx],
-          k = (func(main.scale_xmax) - func(main.scale_xmin))/frect.width,
-          x1 = func(main.scale_xmin) - k*frect.x,
-          x2 = x1 + k*this.getPadWidth();
+      r.ux1 = func(main.logx, r.ux1, 0);
+      r.ux2 = func(main.logx, r.ux2, 1);
 
-      r.px1 = match(func2(x1), r.px1, r.ux2-r.ux1);
-      r.px2 = match(func2(x2), r.px2, r.ux2-r.ux1);
+      let k = (r.ux1 - r.ux2)/frect.width;
+      r.px1 = r.ux1 - k*frect.x;
+      r.px2 = r.px1 + k*this.getPadWidth();
 
-      func = direct_funcs[main.logy];
-      func2 = revert_funcs[main.logy];
+      r.uy1 = func(main.logy, r.uy1, 0);
+      r.uy2 = func(main.logy, r.uy2, 1);
 
-      k = (func(main.scale_ymax) - func(main.scale_ymin))/frect.height;
-      let y2 = func(main.scale_ymax) + k*frect.y,
-          y1 = y2 - k*this.getPadHeight();
-
-      r.py1 = match(func2(y1), r.py1, r.uy2-r.uy1);
-      r.py2 = match(func2(y2), r.py2, r.uy2-r.uy1);
+      k = (r.uy2 - r.uy1)/frect.height;
+      r.py1 = r.uy1 - k*frect.y;
+      r.py2 = r.py1 + k*this.getPadHeight();
 
       return true;
    }
@@ -104361,7 +104358,7 @@ class THStackPainter extends ObjectPainter {
       let max0 = max, min0 = min, zoomed = false;
 
       if (stack.fMaximum != kNoZoom) {
-         max = stack.fMaximum*(1 + gStyle.fHistTopMargin);
+         max = stack.fMaximum;
          max0 = Math.max(max, max0);
          zoomed = true;
       }
