@@ -2,12 +2,14 @@ import unittest
 import ROOT
 RTensor = ROOT.TMVA.Experimental.RTensor
 import numpy as np
+import platform
 
 
 def check_shape(root_obj, np_obj):
     root_shape = tuple(root_obj.GetShape())
     np_shape = tuple(np_obj.shape)
     return root_shape == np_shape
+
 
 
 class AsRTensor(unittest.TestCase):
@@ -19,18 +21,30 @@ class AsRTensor(unittest.TestCase):
     dtypes = [
         "int32", "int64", "uint32", "uint64", "float32", "float64"
     ]
+    cpptypes = ["int", "long", "unsigned int", "unsigned long", "float", "double"]
 
     # Tests
     def test_dtypes(self):
         """
         Test adoption of numpy arrays with different data types
         """
+        #using long long on Linux does not work although it is same size as long
+        if (platform.system() == "Windows") :
+                self.cpptypes[1] = "long long"
+                self.cpptypes[3] = "unsigned long long"
+
+        i = 0
         for dtype in self.dtypes:
             np_obj = np.array([[1, 2], [3, 4], [5, 6]], dtype=dtype)
             root_obj = ROOT.TMVA.Experimental.AsRTensor(np_obj)
             self.assertTrue(check_shape(root_obj, np_obj))
             np_obj[0,0] = 42
             self.assertTrue(root_obj[0,0] == 42)
+            # test also direct conversion
+            #print("test type",self.dtypes[i],self.cpptypes[i])
+            root_obj = ROOT.TMVA.Experimental.RTensor(self.cpptypes[i])(np_obj)
+            self.assertTrue(check_shape(root_obj, np_obj))
+            i += 1
 
     def test_memoryLayout(self):
         """
