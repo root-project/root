@@ -240,7 +240,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       coutI(Generation) << "RooGenContext::ctor() prototype data provided, and "
                         << "model supports analytical maximum finding in the full phase space: "
                         << "can provide analytical pdf maximum to numeric generator" << endl ;
-      _maxVar = new RooRealVar("funcMax","function maximum",_pdfClone->maxVal(maxFindCode)) ;
+       double maxVal = _pdfClone->maxVal(maxFindCode) / _pdfClone->getNorm(&allVars);
+      _maxVar = new RooRealVar("funcMax", "function maximum", maxVal);
     } else {
       maxFindCode = _pdfClone->getMaxVal(_otherVars) ;
       if (maxFindCode != 0) {

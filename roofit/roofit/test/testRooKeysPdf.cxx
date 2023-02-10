@@ -1,9 +1,11 @@
 // Tests for the RooKeysPdf and friends
 // Authors: Jonas Rembser, CERN  07/2022
 
-#include <RooRealVar.h>
+#include <RooGenericPdf.h>
 #include <RooKeysPdf.h>
 #include <RooNDKeysPdf.h>
+#include <RooPlot.h>
+#include <RooRealVar.h>
 
 #include "gtest/gtest.h"
 
@@ -53,4 +55,30 @@ TEST(RooKeysPdf, WeightedDataset)
       x.setVal(xVal);
       xVal += 0.1;
    }
+}
+
+// Test generation with proto data, covering GitHub issue #12286.
+TEST(RooKeysPdf, GenerationWithProtoData)
+{
+   using namespace RooFit;
+
+   RooRealVar x{"x", "", 0, 1};
+   RooGenericPdf pdfX{"pdf_x", "x", {x}};
+
+   std::unique_ptr<RooDataSet> dtBase{pdfX.generate(x, 10000)};
+
+   RooKeysPdf pdfKeys{"pdf_keys", "", x, *dtBase, RooKeysPdf::MirrorBoth};
+
+   RooRealVar y{"y", "", 0, 1};
+   RooDataSet proto{"proto_y", "", y};
+   proto.add(y);
+
+   std::unique_ptr<RooDataSet> dtKeysWithProto{pdfKeys.generate(x, NumEvents(10000), ProtoData(proto))};
+
+   std::unique_ptr<RooPlot> frame{x.frame()};
+   dtKeysWithProto->plotOn(frame.get());
+   pdfKeys.plotOn(frame.get());
+
+   // If the dataset generation worked, the chi-square is not too terrible
+   EXPECT_LE(frame->chiSquare(), 2.0);
 }
