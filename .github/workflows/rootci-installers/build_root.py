@@ -21,9 +21,16 @@ import tarfile
 from hashlib import sha1
 
 import openstack
-from build_utils import (cmake_options_from_dict, die, download_latest,
-                         load_config, print_shell_log, subprocess_with_log,
-                         upload_file, warning)
+from build_utils import (
+    cmake_options_from_dict,
+    die,
+    download_latest,
+    load_config,
+    print_shell_log,
+    subprocess_with_log,
+    upload_file,
+    warning,
+)
 
 S3CONTAINER = 'ROOT-build-artifacts'  # Used for uploads
 S3URL = 'https://s3.cern.ch/swift/v1/' + S3CONTAINER  # Used for downloads
@@ -150,6 +157,9 @@ def main():
     if result != 0:
         die(result, f"Failed to pull {base_ref}", shell_log)
 
+
+    extra_ctest_flags = f"-C {buildtype}" if os.name == "nt" else ""
+
     if pull_request:
         print("::group::Rebase {base_ref} onto {head_ref}")
         shell_log = rebase(base_ref, head_ref, workdir, shell_log)
@@ -162,7 +172,7 @@ def main():
         if(    options_dict['testing'].lower() == "on"
            and options_dict['roottest'].lower() == "on"):
             print("::group::Run tests")
-            shell_log = test(workdir, shell_log)
+            shell_log = test(workdir, shell_log, extra_ctest_flags)
             print("::endgroup::")
     else:
         print(f"::group::Build release branch {base_ref}")
@@ -172,7 +182,7 @@ def main():
         if(    options_dict['testing'].lower() == "on"
            and options_dict['roottest'].lower() == "on"):
             print("::group::Run tests")
-            shell_log = test(workdir, shell_log)
+            shell_log = test(workdir, shell_log, extra_ctest_flags)
             print("::endgroup::")
 
         print("::group::Archive and upload")
@@ -182,10 +192,11 @@ def main():
     print_shell_log(shell_log)
 
 
-def test(workdir, shell_log):
+def test(workdir: str, shell_log: str, extra_ctest_flags: str):
+
     result, shell_log = subprocess_with_log(f"""
         cd '{workdir}/build'
-        ctest -j{os.cpu_count()}
+        ctest -j{os.cpu_count()} {extra_ctest_flags}
     """, shell_log)
     
     if result != 0:
