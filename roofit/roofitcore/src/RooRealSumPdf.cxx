@@ -225,6 +225,7 @@ RooAbsPdf::ExtendMode RooRealSumPdf::extendMode() const
 
 
 double RooRealSumPdf::evaluate(RooAbsReal const& caller,
+                               RooArgSet const* normSet,
                                RooArgList const& funcList,
                                RooArgList const& coefList,
                                bool doFloor,
@@ -236,7 +237,7 @@ double RooRealSumPdf::evaluate(RooAbsReal const& caller,
   for (unsigned int i = 0; i < funcList.size(); ++i) {
     const auto func = static_cast<RooAbsReal*>(&funcList[i]);
     const auto coef = static_cast<RooAbsReal*>(i < coefList.size() ? &coefList[i] : nullptr);
-    const double coefVal = coef != nullptr ? coef->getVal() : (1. - sumCoeff);
+    const double coefVal = coef != nullptr ? coef->getVal(normSet) : (1. - sumCoeff);
 
     // Warn about degeneration of last coefficient
     if (coef == nullptr && (coefVal < 0 || coefVal > 1.)) {
@@ -252,7 +253,7 @@ double RooRealSumPdf::evaluate(RooAbsReal const& caller,
     }
 
     if (func->isSelectedComp()) {
-      value += func->getVal() * coefVal;
+      value += func->getVal(normSet) * coefVal;
     }
 
     sumCoeff += coefVal;
@@ -267,7 +268,7 @@ double RooRealSumPdf::evaluate(RooAbsReal const& caller,
 
 double RooRealSumPdf::evaluate() const
 {
-  return evaluate(*this, _funcList, _coefList, _doFloor || _doFloorGlobal, _haveWarned);
+  return evaluate(*this, _funcList.nset(), _funcList, _coefList, _doFloor || _doFloorGlobal, _haveWarned);
 }
 
 
@@ -423,12 +424,12 @@ bool RooRealSumPdf::checkObservables(const RooArgSet* nset) const
 Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
                     const RooArgSet* normSet2, const char* rangeName) const
 {
-  return getAnalyticalIntegralWN(*this, _normIntMgr, _funcList, _coefList, allVars, analVars, normSet2, rangeName);
+  return getAnalyticalIntegralWN(*this, _normIntMgr, _funcList, allVars, analVars, normSet2 ? normSet2 : _funcList.nset(), rangeName);
 }
 
 
 Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooAbsReal const& caller, RooObjCacheManager & normIntMgr,
-                                             RooArgList const& funcList, RooArgList const& /*coefList*/,
+                                             RooArgList const& funcList,
                                              RooArgSet& allVars, RooArgSet& analVars,
                                              const RooArgSet* normSet2, const char* rangeName)
 {
@@ -460,7 +461,7 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooAbsReal const& caller, RooObjCac
   for (const auto elm : funcList) {
     const auto func = static_cast<RooAbsReal*>(elm);
 
-    std::unique_ptr<RooAbsReal> funcInt{func->createIntegral(analVars,rangeName)};
+    std::unique_ptr<RooAbsReal> funcInt{func->createIntegral(analVars,normSet2,nullptr,rangeName)};
     if(auto funcRealInt = dynamic_cast<RooRealIntegral*>(funcInt.get())) funcRealInt->setAllowComponentSelection(true);
     cache->_funcIntList.addOwned(std::move(funcInt));
     if (normSet && !normSet->empty()) {
@@ -783,29 +784,6 @@ void RooRealSumPdf::printMetaArgs(RooArgList const& funcList, RooArgList const& 
   }
 
   os << " " ;
-}
-
-std::unique_ptr<RooAbsArg> RooRealSumPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const
-{
-   if(normSet.empty() || selfNormalized()) {
-      return RooAbsPdf::compileForNormSet({}, ctx);
-   }
-   std::unique_ptr<RooAbsPdf> pdfClone(static_cast<RooAbsPdf*>(this->Clone()));
-   ctx.compileServers(*pdfClone, {});
-
-   RooArgSet depList;
-   pdfClone->getObservables(&normSet, depList);
-
-   auto newArg = std::make_unique<RooNormalizedPdf>(*pdfClone, depList);
-
-   // The direct servers are this pdf and the normalization integral, which
-   // don't need to be compiled further.
-   for(RooAbsArg * server : newArg->servers()) {
-      ctx.markAsCompiled(*server);
-   }
-   ctx.markAsCompiled(*newArg);
-   newArg->addOwnedComponents(std::move(pdfClone));
-   return newArg;
 }
 
 std::unique_ptr<RooAbsReal> RooRealSumPdf::createExpectedEventsFunc(const RooArgSet *nset) const
