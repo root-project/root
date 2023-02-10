@@ -12,6 +12,7 @@
  */
 
 #include <RooAbsPdf.h>
+#include <RooDataSet.h>
 #include <RooFuncWrapper.h>
 #include <RooGaussian.h>
 #include <RooHelpers.h>
@@ -55,11 +56,11 @@ TEST(RooFuncWrapper, GaussianNormalizedHardcoded)
    RooArgSet paramsGauss;
    RooArgSet paramsMyGauss;
 
-   std::string func = "const double arg = x[0] - x[1];"
-                      "const double sig = x[2];"
+   std::string func = "const double arg = params[0] - params[1];"
+                      "const double sig = params[2];"
                       "double out = std::exp(-0.5 * arg * arg / (sig * sig));"
                       "return 1. / (std::sqrt(TMath::TwoPi()) * sig) * out;";
-   RooFuncWrapper<> gaussFunc("myGauss1", "myGauss1", func, {x, mu, sigma});
+   RooFuncWrapper<> gaussFunc("myGauss1", "myGauss1", func, {x, mu, sigma}, {});
 
    // Check if functions results are the same even after changing parameters.
    EXPECT_NEAR(gauss.getVal(normSet), gaussFunc.getVal(), 1e-8);
@@ -82,6 +83,64 @@ TEST(RooFuncWrapper, GaussianNormalizedHardcoded)
    EXPECT_NEAR(getNumDerivative(gauss, x, normSet), dMyGauss[0], 1e-8);
    EXPECT_NEAR(getNumDerivative(gauss, mu, normSet), dMyGauss[1], 1e-8);
    EXPECT_NEAR(getNumDerivative(gauss, sigma, normSet), dMyGauss[2], 1e-8);
+}
+
+TEST(RooFuncWrapper, NllWithObservables)
+{
+   using namespace RooFit;
+
+   auto inf = std::numeric_limits<double>::infinity();
+   RooRealVar x("x", "x", 0, -inf, inf);
+   RooRealVar mu("mu", "mu", 0, -10, 10);
+   RooRealVar sigma("sigma", "sigma", 2.0, 0.01, 10);
+   RooGaussian gauss{"gauss", "gauss", x, mu, sigma};
+
+   RooArgSet normSet{x};
+
+   std::size_t nEvents = 10;
+   std::unique_ptr<RooDataSet> data{gauss.generate(x, nEvents)};
+   std::unique_ptr<RooAbsReal> nllRef{gauss.createNLL(*data)};
+
+   RooArgSet parameters;
+   gauss.getParameters(data->get(), parameters);
+
+   RooArgSet observables;
+   gauss.getObservables(data->get(), observables);
+
+   // clang-format off
+   std::stringstream func;
+   func <<  "double nllSum = 0;"
+            "const double sig = params[1];"
+            "for (int i = 0; i <" << data->numEntries() << "; i++) {"
+               "const double arg = obs[i] - params[0];"
+               "double out = std::exp(-0.5 * arg * arg / (sig * sig));"
+               "out = 1. / (std::sqrt(TMath::TwoPi()) * sig) * out;"
+               "nllSum -= std::log(out);"
+            "}"
+            "return nllSum;";
+   // clang-format on
+   RooFuncWrapper<> nllFunc("myNLL", "myNLL", func.str(), parameters, observables, data.get());
+
+   // Check if functions results are the same even after changing parameters.
+   EXPECT_NEAR(nllRef->getVal(normSet), nllFunc.getVal(), 1e-8);
+
+   mu.setVal(1);
+   EXPECT_NEAR(nllRef->getVal(normSet), nllFunc.getVal(), 1e-8);
+
+   // Check if the parameter layout and size is the same.
+   RooArgSet paramsMyNLL;
+   nllFunc.getParameters(&normSet, paramsMyNLL);
+
+   EXPECT_TRUE(paramsMyNLL.hasSameLayout(parameters));
+   EXPECT_EQ(paramsMyNLL.size(), parameters.size());
+
+   // Get AD based derivative
+   double dMyNLL[2] = {};
+   nllFunc.getGradient(dMyNLL);
+
+   // Check if derivatives are equal
+   EXPECT_NEAR(getNumDerivative(*nllRef, mu, normSet), dMyNLL[0], 1e-6);
+   EXPECT_NEAR(getNumDerivative(*nllRef, sigma, normSet), dMyNLL[1], 1e-6);
 }
 
 namespace {
@@ -213,7 +272,7 @@ TEST(DISABLED_RooFuncWrapper, GaussianNormalized)
    // generation might work like in the end
    std::string func = generateCode(*pdf, paramsGauss);
 
-   RooFuncWrapper<> gaussFunc("myGauss2", "myGauss2", func, paramsGauss);
+   RooFuncWrapper<> gaussFunc("myGauss2", "myGauss2", func, paramsGauss, {});
 
    // Check if functions results are the same even after changing parameters.
    EXPECT_NEAR(pdf->getVal(normSet), gaussFunc.getVal(), 1e-8);
