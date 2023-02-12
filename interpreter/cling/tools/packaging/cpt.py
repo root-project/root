@@ -671,6 +671,8 @@ def compile_for_binary(arg):
 def install_prefix():
     travis_fold_start("install")
     global prefix
+    CPT_SRC_DIR = os.path.join(CLING_SRC_DIR, 'tools', 'packaging')
+
     set_vars()
 
     box_draw("Filtering Cling's libraries and binaries")
@@ -2634,7 +2636,7 @@ if args['create_dev_env']:
             compile(
                 os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-'
                              + platform.machine().lower() + '-' + VERSION))
-    install_prefix()
+    CPT_SRC_DIR = install_prefix()
     if not args['no_test']:
         test_cling()
 
