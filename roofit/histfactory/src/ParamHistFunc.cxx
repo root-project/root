@@ -700,7 +700,7 @@ std::list<double>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double
   RooAbsLValue* lvarg = &obs;
 
   // Retrieve position of all bin boundaries
-  const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
+  const RooAbsBinning* binning = lvarg->getBinningPtr(nullptr);
   double* boundaries = binning->array() ;
 
   std::list<double>* hint = new std::list<double> ;
@@ -735,7 +735,7 @@ std::list<double>* ParamHistFunc::binBoundaries(RooAbsRealLValue& obs, double xl
   RooAbsLValue* lvarg = &obs;
 
   // Retrieve position of all bin boundaries
-  const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
+  const RooAbsBinning* binning = lvarg->getBinningPtr(nullptr);
   double* boundaries = binning->array() ;
 
   std::list<double>* hint = new std::list<double> ;

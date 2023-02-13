@@ -797,7 +797,7 @@ void RooDataHist::initialize(const char* binningName, bool fillTree)
     assert(lvarg);
     _lvvars.push_back(lvarg);
 
-    const RooAbsBinning* binning = lvarg->getBinningPtr(0);
+    const RooAbsBinning* binning = lvarg->getBinningPtr(nullptr);
     _lvbins.emplace_back(binning ? binning->clone() : nullptr);
   }
 

@@ -276,12 +276,12 @@ std::list<double>* RooBinSamplingPdf::plotSamplingHint(RooAbsRealLValue& obs, do
 /// \note When RooBinSamplingPdf is loaded from files, integrator options will fall back to the default values.
 std::unique_ptr<ROOT::Math::IntegratorOneDim>& RooBinSamplingPdf::integrator() const {
   if (!_integrator) {
-    _integrator.reset(new ROOT::Math::IntegratorOneDim(*this,
+    _integrator = std::make_unique<ROOT::Math::IntegratorOneDim>(*this,
         ROOT::Math::IntegrationOneDim::kADAPTIVE, // GSL Integrator. Will really get it only if MathMore enabled.
         -1., _relEpsilon, // Abs epsilon = default, rel epsilon set by us.
         0, // We don't limit the sub-intervals. Steer run time via _relEpsilon.
         2 // This should read ROOT::Math::Integration::kGAUSS21, but this is in MathMore, so we cannot include it here.
-        ));
+        );
   }
 
   return _integrator;

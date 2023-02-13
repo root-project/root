@@ -383,7 +383,7 @@ public:
          fIntegratorOneDim->Options().Print(ooccoutD(nullptr,NumIntegration) );
       }
       else if (fXmin.size() > 1) { // multiDim case
-         fIntegratorMultiDim.reset(new ROOT::Math::IntegratorMultiDim(ROOT::Math::IntegratorMultiDim::GetType(integType) ) );
+         fIntegratorMultiDim = std::make_unique<ROOT::Math::IntegratorMultiDim>(ROOT::Math::IntegratorMultiDim::GetType(integType));
          fIntegratorMultiDim->SetFunction(fLikelihood, fXmin.size());
          ROOT::Math::IntegratorMultiDimOptions opt = fIntegratorMultiDim->Options();
          if (niter > 0) {

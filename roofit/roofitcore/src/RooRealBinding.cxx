@@ -212,7 +212,7 @@ RooSpan<const double> RooRealBinding::getValues(std::vector<RooSpan<const double
 
   // Use _evalData to hold on to memory between integration calls
   if (!_evalData) {
-    _evalData.reset(new RooBatchCompute::RunContext());
+    _evalData = std::make_unique<RooBatchCompute::RunContext>();
   } else {
     _evalData->clear();
   }

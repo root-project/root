@@ -197,7 +197,7 @@ void HypoTestResult::Append(const HypoTestResult* other) {
    if( fFitInfo ) {
       if( other->GetFitInfo() ) fFitInfo->append( *other->GetFitInfo() );
    }else{
-      if( other->GetFitInfo() ) fFitInfo.reset(new RooDataSet( *other->GetFitInfo() ));
+      if( other->GetFitInfo() ) fFitInfo = std::make_unique<RooDataSet>( *other->GetFitInfo());
    }
 
    // if no data is present use the other HypoTestResult's data

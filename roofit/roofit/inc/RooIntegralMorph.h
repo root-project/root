@@ -68,7 +68,7 @@ public:
     void interpolateGap(Int_t ixlo, Int_t ixhi) ;
 
     RooIntegralMorph* _self ; //
-    RooArgSet* _nset ;
+    std::unique_ptr<RooArgSet> _nset ;
     RooAbsPdf* _pdf1 ; // PDF1
     RooAbsPdf* _pdf2 ; // PDF2
     RooRealVar* _x   ; // X
@@ -77,8 +77,8 @@ public:
     RooAbsReal* _c2 ; // CDF of PDF 2
     RooAbsFunc* _cb1 ; // Binding of CDF1
     RooAbsFunc* _cb2 ; // Binding of CDF2
-    RooBrentRootFinder* _rf1 ; // ROOT finder on CDF1
-    RooBrentRootFinder* _rf2 ; // ROOT finder of CDF2 ;
+    std::unique_ptr<RooBrentRootFinder> _rf1; // ROOT finder on CDF1
+    std::unique_ptr<RooBrentRootFinder> _rf2; // ROOT finder of CDF2 ;
 
     std::vector<double> _yatX ; //
     std::vector<double> _calcX; //

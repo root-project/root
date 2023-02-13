@@ -335,11 +335,11 @@ double RooAbsAnaConvPdf::evaluate() const
     auto conv = static_cast<RooAbsPdf*>(convArg);
     double coef = coefficient(index++) ;
     if (coef!=0.) {
-      double c = conv->getVal(0) ;
+      double c = conv->getVal(nullptr);
       double r = coef ;
       cxcoutD(Eval) << "RooAbsAnaConvPdf::evaluate(" << GetName() << ") val += coef*conv [" << index-1 << "/"
           << _convSet.getSize() << "] coef = " << r << " conv = " << c << endl ;
-      result += conv->getVal(0)*coef ;
+      result += conv->getVal(nullptr)*coef ;
     } else {
       cxcoutD(Eval) << "RooAbsAnaConvPdf::evaluate(" << GetName() << ") [" << index-1 << "/" << _convSet.getSize() << "] coef = 0" << endl ;
     }

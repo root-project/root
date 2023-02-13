@@ -377,7 +377,7 @@ RooNLLVar::ComputeResult RooNLLVar::computeBatchedFunc(const RooAbsPdf *pdfClone
   // Holding on to this struct in between function calls will make sure that the memory
   // is only allocated once.
   if (!evalData) {
-    evalData.reset(new RooBatchCompute::RunContext);
+    evalData = std::make_unique<RooBatchCompute::RunContext>();
   }
   evalData->clear();
   evalData->spans = dataClone->getBatches(firstEvent, nEvents);

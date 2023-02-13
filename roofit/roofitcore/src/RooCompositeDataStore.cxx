@@ -472,7 +472,7 @@ void RooCompositeDataStore::dump()
 /// (even if the weight is constant). Then, it returns a span.
 RooSpan<const double> RooCompositeDataStore::getWeightBatch(std::size_t first, std::size_t len) const {
   if (!_weightBuffer) {
-    _weightBuffer.reset(new std::vector<double>());
+    _weightBuffer = std::make_unique<std::vector<double>>();
     _weightBuffer->reserve(len);
 
     for (std::size_t i = 0; i < static_cast<std::size_t>(numEntries()); ++i) {

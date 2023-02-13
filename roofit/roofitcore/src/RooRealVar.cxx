@@ -1227,7 +1227,7 @@ void RooRealVar::Streamer(TBuffer &R__b)
       R__b >> fitMin;
       R__b >> fitMax;
       R__b >> fitBins;
-      _binning.reset(new RooUniformBinning(fitMin,fitMax,fitBins));
+      _binning = std::make_unique<RooUniformBinning>(fitMin,fitMax,fitBins);
     }
     R__b >> _error;
     R__b >> _asymErrLo;
