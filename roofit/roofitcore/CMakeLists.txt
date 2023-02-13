@@ -344,6 +344,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooFormulaVar.cxx
     src/RooFracRemainder.cxx
     src/RooFunctor.cxx
+    src/RooFuncWrapper.cxx
     src/RooGenContext.cxx
     src/RooGenericPdf.cxx
     src/RooGenFitStudy.cxx
