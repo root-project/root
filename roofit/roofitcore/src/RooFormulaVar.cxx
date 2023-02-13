@@ -77,9 +77,9 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* in
   _actualVars.add(dependents) ;
 
   if (_actualVars.empty()) {
-    _value = traceEval(0);
+    _value = traceEval(nullptr);
   } else {
-    _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars, checkVariables));
+    _formula = std::make_unique<RooFormula>(GetName(), _formExpr, _actualVars, checkVariables);
     _formExpr = _formula->formulaString().c_str();
   }
 }
@@ -103,7 +103,7 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgLi
   if (_actualVars.empty()) {
     _value = traceEval(0);
   } else {
-    _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars, checkVariables));
+    _formula = std::make_unique<RooFormula>(GetName(), _formExpr, _actualVars, checkVariables);
     _formExpr = _formula->formulaString().c_str();
   }
 }

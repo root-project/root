@@ -355,9 +355,9 @@ HypoTestInverter::HypoTestInverter( RooAbsData& data, ModelConfig &sbModel, Mode
    fNBins(0), fXmin(1), fXmax(1),
    fNumErr(0)
 {
-   if(fCalcType==kFrequentist) fHC.reset(new FrequentistCalculator(data, bModel, sbModel));
-   if(fCalcType==kHybrid) fHC.reset( new HybridCalculator(data, bModel, sbModel)) ;
-   if(fCalcType==kAsymptotic) fHC.reset( new AsymptoticCalculator(data, bModel, sbModel));
+   if(fCalcType==kFrequentist) fHC = std::make_unique<FrequentistCalculator>(data, bModel, sbModel);
+   if(fCalcType==kHybrid) fHC = std::make_unique<HybridCalculator>(data, bModel, sbModel);
+   if(fCalcType==kAsymptotic) fHC = std::make_unique<AsymptoticCalculator>(data, bModel, sbModel);
    fCalculator0 = fHC.get();
    // get scanned variable
    if (!fScannedVariable) {
@@ -795,7 +795,7 @@ bool HypoTestInverter::RunLimit(double &limit, double &limitErr, double absAccur
 
   TF1 expoFit("expoFit","[0]*exp([1]*(x-[2]))", rMin, rMax);
 
-  fLimitPlot.reset(new TGraphErrors());
+  fLimitPlot = std::make_unique<TGraphErrors>();
 
   if (fVerbose > 0) std::cout << "Search for upper limit to the limit" << std::endl;
   for (int tries = 0; tries < 6; ++tries) {

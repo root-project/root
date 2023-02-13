@@ -1201,7 +1201,7 @@ RooSpan<const double> RooTreeDataStore::getWeightBatch(std::size_t first, std::s
   }
 
   if (!_weightBuffer) {
-    _weightBuffer.reset(new std::vector<double>());
+    _weightBuffer = std::make_unique<std::vector<double>>();
     _weightBuffer->reserve(len);
 
     for (std::size_t i = 0; i < GetEntries(); ++i) {
