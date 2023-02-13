@@ -524,7 +524,7 @@ if(runtime_cxxmodules)
   if(WIN32)
     add_custom_command(OUTPUT ${library_output_dir}/modules.idx
                        COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
-                       COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} &&
+                       COMMAND set PATH=${library_output_dir} &&
                                set ROOTIGNOREPREFIX=1 && set ROOT_HIST=0 &&
                                $<TARGET_FILE:root.exe> -l -q -b
                        WORKING_DIRECTORY ${library_output_dir}
