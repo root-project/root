@@ -161,17 +161,17 @@ RooSpan<const double> RooDataProjBinding::getValues(std::vector<RooSpan<const do
   assert(isValid());
 
   if (!_batchBuffer)
-    _batchBuffer.reset(new std::vector<double>());
+    _batchBuffer = std::make_unique<std::vector<double>>();
   _batchBuffer->resize(coordinates.front().size());
 
-  std::unique_ptr<double[]> xVec( new double[coordinates.size()] );
+  std::vector<double> xVec(coordinates.size());
 
   for (std::size_t i=0; i < coordinates.front().size(); ++i) {
     for (unsigned int dim=0; dim < coordinates.size(); ++dim) {
-      xVec.get()[dim] = coordinates[dim][i];
+      xVec[dim] = coordinates[dim][i];
     }
 
-    (*_batchBuffer)[i] = this->operator()(xVec.get());
+    (*_batchBuffer)[i] = this->operator()(xVec.data());
   }
 
   return {*_batchBuffer};

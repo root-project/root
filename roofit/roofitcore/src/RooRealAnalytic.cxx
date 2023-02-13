@@ -53,7 +53,7 @@ RooSpan<const double> RooRealAnalytic::getValues(std::vector<RooSpan<const doubl
   _ncall += coordinates.front().size();
 
   if (!_batchBuffer)
-    _batchBuffer.reset(new std::vector<double>());
+    _batchBuffer = std::make_unique<std::vector<double>>();
   _batchBuffer->resize(coordinates.front().size());
   RooSpan<double> results(*_batchBuffer);
 

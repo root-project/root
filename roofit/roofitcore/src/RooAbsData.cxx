@@ -933,7 +933,7 @@ double RooAbsData::moment(const RooRealVar& var, double order, double offset, co
   // Setup RooFormulaVar for cutSpec if it is present
   std::unique_ptr<RooFormula> select;
   if (cutSpec) {
-    select.reset(new RooFormula("select",cutSpec,*get()));
+    select = std::make_unique<RooFormula>("select",cutSpec,*get());
   }
 
 
