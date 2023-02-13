@@ -183,7 +183,7 @@ void RooAbsCategoryLValue::setBin(Int_t ibin, const char* rangeName)
     return ;
   }
 
-  if (rangeName) {
+  if (rangeName && getBinningPtr(rangeName)) {
     coutF(InputArguments) << "RooAbsCategoryLValue::setBin(" << GetName() << ") ERROR: ranges not implemented"
         " for setting bins in categories." << std::endl;
     throw std::logic_error("Ranges not implemented for setting bins in categories.");
