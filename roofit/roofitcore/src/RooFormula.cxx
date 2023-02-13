@@ -232,13 +232,13 @@ RooFormula::RooFormula(const RooFormula& other, const char* name) :
   _origList.add(other._origList);
   _isCategory = findCategoryServers(_origList);
 
-  TFormula* newTF = nullptr;
+  std::unique_ptr<TFormula> newTF;
   if (other._tFormula) {
-    newTF = new TFormula(*other._tFormula);
+    newTF = std::make_unique<TFormula>(*other._tFormula);
     newTF->SetName(GetName());
   }
 
-  _tFormula.reset(newTF);
+  _tFormula = std::move(newTF);
 }
 
 
