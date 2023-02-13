@@ -105,8 +105,11 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
       }
       fInnerSink->CommitSealedPageV(toCommit);
 
-      for (auto &bufColumn : fBufferedColumns)
-         bufColumn.DrainBufferedPages();
+      for (auto &bufColumn : fBufferedColumns) {
+         auto drained = bufColumn.DrainBufferedPages();
+         for (auto &bufPage : std::get<std::deque<RColumnBuf::RPageZipItem>>(drained))
+            ReleasePage(bufPage.fPage);
+      }
       return fInnerSink->CommitCluster(nEntries);
    }
 
