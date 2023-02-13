@@ -127,4 +127,5 @@ ROOT::Math::Functor func4{functor, static_cast<unsigned int>(functor.nObs())};
 
 ## Build, Configuration and Testing Infrastructure
 
-
+* `root-config` can also print the path to the Python executable used when building ROOT. Options `--python-executable`,
+  `--python2-executable`, `--python3-executable` are now supported by the utility.

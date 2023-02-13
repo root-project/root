@@ -678,6 +678,12 @@ if(PYTHON_VERSION_STRING_Development_Other)
    set(python${PYTHON_VERSION_MAJOR_Development_Other}vers ${PYTHON_VERSION_STRING_Development_Other})
 endif()
 
+set(rootconfigpythonexecutable ${PYTHON_EXECUTABLE_Development_Main})
+set(rootconfigpython${PYTHON_VERSION_MAJOR_Development_Main}executable ${PYTHON_EXECUTABLE_Development_Main})
+if(PYTHON_EXECUTABLE_Development_Other)
+  set(rootconfigpython${PYTHON_VERSION_MAJOR_Development_Other}executable ${PYTHON_EXECUTABLE_Development_Other})
+endif()
+
 #---RConfigure.h---------------------------------------------------------------------------------------------
 try_compile(has__cplusplus "${CMAKE_BINARY_DIR}" SOURCES "${CMAKE_SOURCE_DIR}/config/__cplusplus.cxx"
             OUTPUT_VARIABLE __cplusplus_PPout)
