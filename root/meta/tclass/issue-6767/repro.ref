@@ -8,4 +8,6 @@ Error in <TGenCollectionProxy>: Could not retrieve the TClass for pair<CaloTower
 Error in <TGenCollectionProxy>: Could not retrieve the TClass for edm_test::FwdPtr<CaloTowerTest>
 Warning in <TClass::Init>: Collection proxy for vector<edm_test::FwdPtr<CaloTowerTest> > was not properly initialized!
 Error in <TGenCollectionProxy>: Could not retrieve the TClass for edm_test::FwdPtr<CaloTowerTest>
+Error in <TGenCollectionProxy::InitializeEx>: The TClass for CaloTowerTest used as the value type of the compiled collection proxy vector<CaloTowerTest*> is not loaded.
+Error in <TGenCollectionProxy::InitializeEx>: The TClass for CaloTowerTest used as the value type of the compiled collection proxy list<CaloTowerTest*> is not loaded.
 (int) 0
