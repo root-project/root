@@ -28,13 +28,11 @@ of the value. RooAbsCategoryLValue may be derived, but its functional relation
 to other RooAbsArgs must be invertible.
 */
 
-#include "RooAbsCategoryLValue.h"
+#include <RooAbsCategoryLValue.h>
 
-#include "RooArgSet.h"
-#include "RooRandom.h"
-#include "RooMsgService.h"
+#include <RooRandom.h>
+#include <RooMsgService.h>
 
-using namespace std;
 
 ClassImp(RooAbsCategoryLValue);
 
@@ -57,15 +55,6 @@ RooAbsCategoryLValue::RooAbsCategoryLValue(const char *name, const char *title) 
 
 RooAbsCategoryLValue::RooAbsCategoryLValue(const RooAbsCategoryLValue& other, const char* name) :
   RooAbsCategory(other, name), RooAbsLValue(other)
-{
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooAbsCategoryLValue::~RooAbsCategoryLValue()
 {
 }
 
@@ -176,7 +165,7 @@ void RooAbsCategoryLValue::setBin(Int_t ibin, const char* rangeName)
   // Check validity of ibin
   if (ibin<0 || ibin>=numBins(rangeName)) {
     coutE(InputArguments) << "RooAbsCategoryLValue::setBin(" << GetName() << ") ERROR: bin index " << ibin
-           << " is out of range (0," << numBins(rangeName)-1 << ")" << endl ;
+           << " is out of range (0," << numBins(rangeName)-1 << ")" << std::endl;
     return ;
   }
 
@@ -187,11 +176,11 @@ void RooAbsCategoryLValue::setBin(Int_t ibin, const char* rangeName)
   }
 
   // Retrieve state corresponding to bin
-  const auto& type = getOrdinal(ibin);
-  assert(type.second != std::numeric_limits<value_type>::min());
+  value_type val = getOrdinal(ibin).second;
+  assert(val != std::numeric_limits<value_type>::min());
 
   // Set value to requested state
-  setIndex(type.second);
+  setIndex(val);
 }
 
 

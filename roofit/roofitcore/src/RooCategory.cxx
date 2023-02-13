@@ -103,7 +103,7 @@ std::map<std::string, std::weak_ptr<RooCategory::RangeMap_t>> RooCategory::_shar
 
 RooCategory::RooCategory()
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -112,11 +112,11 @@ RooCategory::RooCategory()
 /// Constructor. Types must be defined using defineType() before variable can be used
 RooCategory::RooCategory(const char *name, const char *title) :
   RooAbsCategoryLValue(name,title),
-  _ranges(new RangeMap_t())
+  _ranges{std::make_unique<RangeMap_t>()}
 {
   setValueDirty() ;
   setShapeDirty() ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -127,7 +127,7 @@ RooCategory::RooCategory(const char *name, const char *title) :
 /// \param[in] allowedStates Map of allowed states. Pass e.g. `{ {"0Lep", 0}, {"1Lep:, 1} }`
 RooCategory::RooCategory(const char* name, const char* title, const std::map<std::string, int>& allowedStates) :
   RooAbsCategoryLValue(name,title),
-  _ranges(new RangeMap_t())
+  _ranges{std::make_unique<RangeMap_t>()}
 {
   defineTypes(allowedStates);
 }
@@ -141,7 +141,7 @@ RooCategory::RooCategory(const RooCategory& other, const char* name) :
   RooAbsCategoryLValue(other, name),
   _ranges(other._ranges)
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -150,7 +150,7 @@ RooCategory::RooCategory(const RooCategory& other, const char* name) :
 
 RooCategory::~RooCategory()
 {
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 
@@ -487,7 +487,7 @@ void RooCategory::installLegacySharedProp(const RooCategorySharedProperties* pro
     _ranges = std::move(existingObject);
   } else {
     // This range is unknown, make a new object
-    _ranges = std::make_shared<std::map<std::string, std::vector<value_type>>>();
+    _ranges = std::make_unique<std::map<std::string, std::vector<value_type>>>();
     auto& rangesMap = *_ranges;
 
     // Copy the data:
@@ -521,16 +521,12 @@ void RooCategory::installSharedRange(std::unique_ptr<RangeMap_t>&& rangeMap) {
     if (a.size() != b.size())
       return false;
 
-    auto vecsEqual = [](const std::vector<RooAbsCategory::value_type>& aa, const std::vector<RooAbsCategory::value_type>& bb) {
-      return aa.size() == bb.size() && std::equal(aa.begin(), aa.end(), bb.begin());
-    };
-
     for (const auto& itemA : a) {
       const auto itemB = b.find(itemA.first);
       if (itemB == b.end())
         return false;
 
-      if (!vecsEqual(itemA.second, itemB->second))
+      if (itemA.second != itemB->second)
         return false;
     }
 

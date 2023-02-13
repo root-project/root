@@ -16,11 +16,12 @@
 #ifndef ROO_ABS_CATEGORY_LVALUE
 #define ROO_ABS_CATEGORY_LVALUE
 
-#include "RooAbsCategory.h"
-#include "RooAbsLValue.h"
+#include <RooAbsCategory.h>
+#include <RooAbsLValue.h>
+
 #include <list>
 #include <string>
-#include <utility>
+#include <utility> // for std::pair
 
 class RooAbsCategoryLValue : public RooAbsCategory, public RooAbsLValue {
 public:
@@ -30,7 +31,7 @@ public:
   }
   RooAbsCategoryLValue(const char *name, const char *title);
   RooAbsCategoryLValue(const RooAbsCategoryLValue& other, const char* name=nullptr) ;
-  ~RooAbsCategoryLValue() override;
+  ~RooAbsCategoryLValue() override = default;
 
   // Value modifiers
   ////////////////////////////////////////////////////////////////////////////////
