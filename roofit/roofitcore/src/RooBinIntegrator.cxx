@@ -96,8 +96,8 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, int numBins):
   const bool useBatchMode = false;
 
   if (useBatchMode) {
-    _evalData.reset(new RooBatchCompute::RunContext());
-    _evalDataOrig.reset(new RooBatchCompute::RunContext());
+    _evalData = std::make_unique<RooBatchCompute::RunContext>();
+    _evalDataOrig = std::make_unique<RooBatchCompute::RunContext>();
   }
 
   for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
