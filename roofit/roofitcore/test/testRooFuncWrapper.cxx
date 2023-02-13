@@ -60,7 +60,7 @@ TEST(RooFuncWrapper, GaussianNormalizedHardcoded)
                       "const double sig = params[2];"
                       "double out = std::exp(-0.5 * arg * arg / (sig * sig));"
                       "return 1. / (std::sqrt(TMath::TwoPi()) * sig) * out;";
-   RooFuncWrapper<> gaussFunc("myGauss1", "myGauss1", func, {x, mu, sigma}, {});
+   RooFuncWrapper gaussFunc("myGauss1", "myGauss1", func, {x, mu, sigma}, {});
 
    // Check if functions results are the same even after changing parameters.
    EXPECT_NEAR(gauss.getVal(normSet), gaussFunc.getVal(), 1e-8);
@@ -119,7 +119,7 @@ TEST(RooFuncWrapper, NllWithObservables)
             "}"
             "return nllSum;";
    // clang-format on
-   RooFuncWrapper<> nllFunc("myNLL", "myNLL", func.str(), parameters, observables, data.get());
+   RooFuncWrapper nllFunc("myNLL", "myNLL", func.str(), parameters, observables, data.get());
 
    // Check if functions results are the same even after changing parameters.
    EXPECT_NEAR(nllRef->getVal(normSet), nllFunc.getVal(), 1e-8);
@@ -272,7 +272,7 @@ TEST(DISABLED_RooFuncWrapper, GaussianNormalized)
    // generation might work like in the end
    std::string func = generateCode(*pdf, paramsGauss);
 
-   RooFuncWrapper<> gaussFunc("myGauss2", "myGauss2", func, paramsGauss, {});
+   RooFuncWrapper gaussFunc("myGauss2", "myGauss2", func, paramsGauss, {});
 
    // Check if functions results are the same even after changing parameters.
    EXPECT_NEAR(pdf->getVal(normSet), gaussFunc.getVal(), 1e-8);
