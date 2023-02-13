@@ -2407,7 +2407,7 @@ void TGraph::SetNameTitle(const char *name, const char *title)
 /// Set statistics option on/off.
 ///
 /// By default, the statistics box is drawn.
-/// The paint options can be selected via gStyle->SetOptStats.
+/// The paint options can be selected via gStyle->SetOptStat.
 /// This function sets/resets the kNoStats bit in the graph object.
 /// It has priority over the Style option.
 
