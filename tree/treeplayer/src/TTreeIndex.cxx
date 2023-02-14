@@ -633,8 +633,8 @@ void TTreeIndex::UpdateFormulaLeaves(const TTree *parent)
 /// Because Trees in a TChain may have a different list of leaves, one
 /// must update the leaves numbers in the TTreeFormula used by the TreeIndex.
 
-void TTreeIndex::SetTree(const TTree *T)
+void TTreeIndex::SetTree(TTree *T)
 {
-   fTree = (TTree*)T;
+   fTree = T;
 }
 
