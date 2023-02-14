@@ -376,9 +376,15 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
       const auto &trees = group.GetTreeNames();
       const auto &files = group.GetFileNameGlobs();
       for (auto i = 0u; i < files.size(); ++i) {
-         const auto fullpath = files[i] + "/" + trees[i]; // TODO: use ?# once #11483 is solved
+         // We need to use `<filename>?#<treename>` as an argument to TChain::Add
+         // (see https://github.com/root-project/root/pull/8820 for why)
+         const auto fullpath = files[i] + "?#" + trees[i];
          chain->Add(fullpath.c_str());
-         fDatasetGroupMap[fullpath] = &group;
+         // ...but instead we use `<filename>/<treename>` as a sample ID (cannot
+         // change this easily because of backward compatibility: the sample ID
+         // is exposed to users via RSampleInfo and DefinePerSample).
+         const auto sampleId = files[i] + '/' + trees[i];
+         fDatasetGroupMap.insert({sampleId, &group});
       }
    }
 
@@ -408,10 +414,11 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
          }
       } else {
          // Otherwise, the new friend chain needs to be built using the nomenclature
-         // "filename/treename" as argument to `TChain::Add`
-         for (auto j = 0u; j < nFileNames; ++j) {
-            frChain->Add((thisFriendFiles[j] + "/" + thisFriendChainSubNames[j]).c_str());
-         }
+         // "filename#?treename" as argument to `TChain::Add`.
+         // See https://github.com/root-project/root/pull/8820 for why "filename#?treename"
+         // is better than "filename#?treename".
+         for (auto j = 0u; j < nFileNames; ++j)
+            frChain->Add((thisFriendFiles[j] + "?#" + thisFriendChainSubNames[j]).c_str());
       }
 
       // Make it friends with the main chain
