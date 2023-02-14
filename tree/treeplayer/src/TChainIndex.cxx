@@ -182,9 +182,11 @@ void TChainIndex::DeleteIndices()
 
 TChainIndex::~TChainIndex()
 {
-   DeleteIndices();
-   if (fTree && fTree->GetTreeIndex() == this)
-      fTree->SetTreeIndex(0);
+   if (fTree) {
+      DeleteIndices();
+      if (fTree->GetTreeIndex() == this)
+         fTree->SetTreeIndex(nullptr);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
