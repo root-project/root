@@ -379,9 +379,15 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
       const auto &trees = group.GetTreeNames();
       const auto &files = group.GetFileNameGlobs();
       for (auto i = 0u; i < files.size(); ++i) {
-         const auto fullpath = files[i] + "/" + trees[i]; // TODO: use ?# once #11483 is solved
+         // We need to use `<filename>?#<treename>` as an argument to TChain::Add
+         // (see https://github.com/root-project/root/pull/8820 for why)
+         const auto fullpath = files[i] + "?#" + trees[i];
          chain->Add(fullpath.c_str());
-         fDatasetGroupMap[fullpath] = &group;
+         // ...but instead we use `<filename>/<treename>` as a sample ID (cannot
+         // change this easily because of backward compatibility: the sample ID
+         // is exposed to users via RSampleInfo and DefinePerSample).
+         const auto sampleId = files[i] + '/' + trees[i];
+         fDatasetGroupMap.insert({sampleId, &group});
       }
    }
 
