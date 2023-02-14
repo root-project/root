@@ -68,7 +68,7 @@ public:
    virtual Bool_t         IsValidFor(const TTree *parent);
    virtual void           Print(Option_t *option="") const;
    virtual void           UpdateFormulaLeaves(const TTree *parent);
-   virtual void           SetTree(const TTree *T);
+   virtual void           SetTree(TTree *T);
 
    ClassDef(TTreeIndex,2);  //A Tree Index with majorname and minorname.
 };

@@ -399,7 +399,7 @@ void TChainIndex::UpdateFormulaLeaves(const TTree *parent)
 ////////////////////////////////////////////////////////////////////////////////
 /// See TTreeIndex::SetTree.
 
-void TChainIndex::SetTree(const TTree *T)
+void TChainIndex::SetTree(TTree *T)
 {
    R__ASSERT(fTree == 0 || fTree == T || T==0);
 }
