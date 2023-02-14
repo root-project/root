@@ -88,7 +88,7 @@ public:
    virtual Long64_t       GetN()            const {return fEntries.size();}
    virtual Bool_t         IsValidFor(const TTree *parent);
    virtual void           UpdateFormulaLeaves(const TTree *parent);
-   virtual void           SetTree(const TTree *T);
+   virtual void           SetTree(TTree *T);
 
    ClassDef(TChainIndex,1)  //A Tree Index with majorname and minorname.
 };
