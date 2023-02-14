@@ -408,7 +408,7 @@ PyObject* PyMethodBase::GetValueFromDict(PyObject* dict, const char* key){
    return PyDict_GetItemWithError(dict,PyUnicode_FromString(key));
    #else
    if(!PyDict_Contains(dict, PyUnicode_FromString(key))){
-      throw std::runtime_error("Key "+key+" does not exist in the dictionary.")
+      throw std::runtime_error(std::string("Key ")+key+" does not exist in the dictionary.");
    } else {
       return PyDict_GetItemString(dict, key);
    }
