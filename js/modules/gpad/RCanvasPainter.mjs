@@ -146,7 +146,7 @@ class RCanvasPainter extends RPadPainter {
      * @private */
    async drawInSidePanel(canv, opt) {
       let side = this.selectDom('origin').select('.side_panel');
-      return side.empty() ?  null : this.drawObject(side.node(), canv, opt);
+      return side.empty() ? null : this.drawObject(side.node(), canv, opt);
    }
 
    /** @summary Checks if canvas shown inside ui5 widget

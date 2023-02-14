@@ -136,8 +136,9 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Return actual draw options as string
+     * @param ignore_pad - do not include pad settings into histogram draw options
      * @desc if options are not modified - returns original string which was specified for object draw */
-   getDrawOpt() {
+   getDrawOpt(ignore_pad) {
       if (!this.options) return '';
 
       if (isFunc(this.options.asString)) {
@@ -150,7 +151,7 @@ class ObjectPainter extends BasePainter {
                   changed = true;
          }
          if (changed && isFunc(this.options.asString))
-            return this.options.asString(this.isMainPainter(), pp?.getRootPad());
+            return this.options.asString(this.isMainPainter(), ignore_pad ? null : pp?.getRootPad());
       }
 
       return this.options.original || ''; // nothing better, return original draw option
