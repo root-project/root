@@ -67,7 +67,7 @@ protected:
    void CheckWidgtesModified();
 
 public:
-   RBrowser(bool use_rcanvas = true);
+   RBrowser(bool use_rcanvas = false);
    virtual ~RBrowser();
 
    bool GetUseRCanvas() const { return fUseRCanvas; }
