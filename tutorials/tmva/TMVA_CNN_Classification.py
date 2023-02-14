@@ -25,6 +25,9 @@
 
 import ROOT
 
+#switch off MT in OpenMP (BLAS)
+ROOT.gSystem.Setenv("OMP_NUM_THREADS", "1")
+
 TMVA = ROOT.TMVA
 TFile = ROOT.TFile
 
@@ -105,6 +108,7 @@ def MakeImagesTree(n, nh, nw):
 hasGPU = ROOT.gSystem.GetFromPipe("root-config --has-tmva-gpu") == "yes"
 hasCPU = ROOT.gSystem.GetFromPipe("root-config --has-tmva-cpu") == "yes"
 
+nevt = 1000    # use a larger value to get better results
 opt = [1, 1, 1, 1, 1]
 useTMVACNN = opt[0] if len(opt) > 0  else False
 useKerasCNN = opt[1] if len(opt) > 1 else False
@@ -141,17 +145,13 @@ if not useTMVACNN:
 
 writeOutputFile = True
 
-num_threads = 0  # use default threads
+num_threads = 4  # use default threads
 max_epochs = 10  # maximum number of epochs used for training
 
 
 # do enable MT running
 if num_threads >= 0:
     ROOT.EnableImplicitMT(num_threads)
-    if (num_threads > 0) :
-        ROOT.gSystem.Setenv("OMP_NUM_THREADS", str(num_threads))
-else:
-    ROOT.gSystem.Setenv("OMP_NUM_THREADS", "1")
 
 print("Running with nthreads  = ", ROOT.GetThreadPoolSize())
 
@@ -218,7 +218,7 @@ inputFileName = "images_data_16x16.root"
 
 # if the input file does not exist create it
 if ROOT.gSystem.AccessPathName(inputFileName):
-    MakeImagesTree(5000, 16, 16)
+    MakeImagesTree(nevt, 16, 16)
 
 inputFile = TFile.Open(inputFileName)
 if inputFile is None:

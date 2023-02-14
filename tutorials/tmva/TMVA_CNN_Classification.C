@@ -107,7 +107,16 @@ void MakeImagesTree(int n, int nh, int nw)
    f.Close();
 }
 
-void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
+/// @brief Run the TMVA CNN Classification example
+/// @param nevts : number of signal/background events. Use by default a low value (1000)
+///                but increase to at least 5000 to get a good result
+/// @param opt :   vector of bool with method used (default all on if available). The order is:
+///                   - TMVA CNN
+///                   - Keras CNN
+///                   - TMVA DNN
+///                   - TMVA BDT
+///                   - PyTorch CNN
+void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1, 1, 1})
 {
 
    bool useTMVACNN = (opt.size() > 0) ? opt[0] : false;
@@ -125,17 +134,17 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
 
    bool writeOutputFile = true;
 
-   int num_threads = 0;  // use default threads
+   int num_threads = 4;  // use by default 4 threads if value is not set before
+   // switch off MT in OpenBLAS to avoid conflict with tbb
+   gSystem->Setenv("OMP_NUM_THREADS", "1");
 
    TMVA::Tools::Instance();
 
    // do enable MT running
    if (num_threads >= 0) {
       ROOT::EnableImplicitMT(num_threads);
-      if (num_threads > 0) gSystem->Setenv("OMP_NUM_THREADS", TString::Format("%d",num_threads));
    }
-   else
-      gSystem->Setenv("OMP_NUM_THREADS", "1");
+
 
    std::cout << "Running with nthreads  = " << ROOT::GetThreadPoolSize() << std::endl;
 
@@ -161,7 +170,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
     The factory is the major TMVA object you have to interact with. Here is the list of parameters you need to pass
 
     - The first argument is the base of the name of all the output
-    weightfiles in the directory weight/ that will be created with the
+    weight files in the directory weight/ that will be created with the
     method parameters
 
     - The second argument is the output file for the training results
@@ -208,7 +217,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
 
    // if file does not exists create it
    if (!fileExist) {
-      MakeImagesTree(5000, 16, 16);
+      MakeImagesTree(nevts, 16, 16);
    }
 
    // TString inputFileName = "tmva_class_example.root";
@@ -289,7 +298,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
    // Boosted Decision Trees
    if (useTMVABDT) {
       factory.BookMethod(loader, TMVA::Types::kBDT, "BDT",
-                         "!V:NTrees=400:MinNodeSize=2.5%:MaxDepth=2:BoostType=AdaBoost:AdaBoostBeta=0.5:"
+                         "!V:NTrees=200:MinNodeSize=2.5%:MaxDepth=2:BoostType=AdaBoost:AdaBoostBeta=0.5:"
                          "UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20");
    }
    /**

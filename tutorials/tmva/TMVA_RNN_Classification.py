@@ -22,6 +22,16 @@
 
 import ROOT
 
+num_threads = 4  # use max 4 threads
+# do enable MT running
+if ROOT.gSystem.GetFromPipe("root-config --has-imt") == "yes":
+    ROOT.EnableImplicitMT(num_threads)
+    ROOT.gSystem.Setenv("OMP_NUM_THREADS", "1")  # switch OFF MT in OpenBLAS
+    print("Running with nthreads  = {}".format(ROOT.GetThreadPoolSize()))
+else:
+    print("Running in serail mode since ROOT does not support MT")
+
+
 TMVA = ROOT.TMVA
 TFile = ROOT.TFile
 
@@ -141,7 +151,7 @@ ntime = 10
 batchSize = 100
 maxepochs = 10
 
-nTotEvts = 10000  # total events to be generated for signal or background
+nTotEvts = 2000  # total events to be generated for signal or background
 
 useKeras = True
 
@@ -184,21 +194,7 @@ if ROOT.gSystem.GetFromPipe("root-config --has-tmva-pymva") == "yes":
 else:
     useKeras = False
 
-num_threads = 0  # use by default all threads
-# do enable MT running
-if ROOT.gSystem.GetFromPipe("root-config --has-imt") == "yes":
-    if num_threads >= 0:
-        ROOT.EnableImplicitMT(num_threads)
-        if num_threads > 0:
-            ROOT.gSystem.Setenv("OMP_NUM_THREADS", str(num_threads))
-    else:
-        ROOT.gSystem.Setenv("OMP_NUM_THREADS", "1")
 
-
-    print("Running with nthreads  = {}".format(ROOT.GetThreadPoolSize()))
-
-else:
-    print("Running in serail mode since ROOT does not support MT")
 
 inputFileName = "time_data_t10_d30.root"
 
