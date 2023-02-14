@@ -1460,7 +1460,13 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          if (objlnk)
             objlnk->SetOption(arr->at(1).c_str());
       }
-
+   } else if (arg.compare(0, 8, "RESIZED:") == 0) {
+      auto arr = TBufferJSON::FromJSON<std::vector<int>>(arg.substr(8));
+      if (arr && arr->size() == 2) {
+         // set members directly to avoid redrawing of the client again
+         Canvas()->fCw = arr->at(0);
+         Canvas()->fCh = arr->at(1);
+      }
    } else if (arg == "INTERRUPT"s) {
       gROOT->SetInterrupt();
    } else {
