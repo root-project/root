@@ -540,7 +540,7 @@ add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 add_dependencies(hsimple onepcm)
 if(WIN32)
   add_custom_command(OUTPUT tutorials/hsimple.root
-                     COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} &&
+                     COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY};%PATH% &&
                              set ROOTIGNOREPREFIX=1 && set ROOT_HIST=0 &&
                              $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
                      WORKING_DIRECTORY tutorials
