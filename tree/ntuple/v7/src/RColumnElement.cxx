@@ -95,9 +95,9 @@ std::string ROOT::Experimental::Detail::RColumnElementBase::GetTypeName(EColumnT
    case EColumnType::kInt8: return "Int8";
    case EColumnType::kSplitReal64: return "SplitReal64";
    case EColumnType::kSplitReal32: return "SplitReal32";
-   case EColumnType::kSplitInt64: return "kSplitInt64";
-   case EColumnType::kSplitInt32: return "kSplitInt32";
-   case EColumnType::kSplitInt16: return "kSplitInt16";
+   case EColumnType::kSplitInt64: return "SplitInt64";
+   case EColumnType::kSplitInt32: return "SplitInt32";
+   case EColumnType::kSplitInt16: return "SplitInt16";
    default: return "UNKNOWN";
    }
 }
