@@ -330,6 +330,10 @@ else()
   endif()
 endif()
 
+if (NOT ROOT_vecgeom_FOUND)
+  set(vecgeom_veto geom/tessellatedNav.C)
+endif()
+
 if(root7)
   set(root7_veto dataframe/df013_InspectAnalysis.C
                  v7/browser.cxx
@@ -446,6 +450,7 @@ set(all_veto hsimple.C
              ${imt_veto}
              ${classic_veto}
              ${pythia_veto}
+             ${vecgeom_veto}
              ${root7_veto}
              ${xrootd_veto}
              ${mlp_veto}

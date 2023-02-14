@@ -141,8 +141,8 @@ public:
    bool IsClosedBody() const { return fClosedBody; }
    bool IsDefined() const { return fDefined; }
 
-   const TGeoFacet &GetFacet(int i) { return fFacets[i]; }
-   const Vertex_t &GetVertex(int i) { return fVertices[i]; }
+   const TGeoFacet &GetFacet(int i) const { return fFacets[i]; }
+   const Vertex_t &GetVertex(int i) const { return fVertices[i]; }
 
    virtual void AfterStreamer();
    virtual int DistancetoPrimitive(int, int) { return 99999; }
