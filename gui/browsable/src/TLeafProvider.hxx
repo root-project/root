@@ -89,7 +89,10 @@ public:
          expr.Remove(pos+1, 1);
          pos --;
          while ((pos > 0) && (expr[pos] != '.')) pos--;
-         if (pos > 0) expr.Insert(pos+1, "@");
+         if (pos > 0)
+            expr.Insert(pos+1, "@");
+         else
+            expr.Prepend("@");
       }
 
       expr.ReplaceAll("->@","@->");
