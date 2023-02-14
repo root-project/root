@@ -9,6 +9,8 @@ import { createMenu, closeMenu } from '../gui/menu.mjs';
 import { detectRightButton, injectStyle } from '../gui/utils.mjs';
 
 
+const logminfactorX = 0.0001, logminfactorY = 3e-4;
+
 function setPainterTooltipEnabled(painter, on) {
    if (!painter) return;
 
@@ -1776,12 +1778,13 @@ class TFramePainter extends ObjectPainter {
       this.x_handle.setPadName(this.getPadName());
       this.x_handle.setHistPainter(opts.hist_painter, 'x');
 
-      this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0,h] : [0,w],
+      this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0, h] : [0, w],
                                       { reverse: this.reverse_x,
                                         log: this.swap_xy ? pad.fLogy : pad.fLogx,
+                                        noexp_changed: this.x_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_y : opts.symlog_x,
                                         logcheckmin: this.swap_xy,
-                                        logminfactor: 0.0001 });
+                                        logminfactor: logminfactorX });
 
       this.x_handle.assignFrameMembers(this, 'x');
 
@@ -1789,13 +1792,14 @@ class TFramePainter extends ObjectPainter {
       this.y_handle.setPadName(this.getPadName());
       this.y_handle.setHistPainter(opts.hist_painter, 'y');
 
-      this.y_handle.configureAxis('yaxis', this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, !this.swap_xy, this.swap_xy ? [0,w] : [0,h],
+      this.y_handle.configureAxis('yaxis', this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, !this.swap_xy, this.swap_xy ? [0, w] : [0, h],
                                       { reverse: this.reverse_y,
                                         log: this.swap_xy ? pad.fLogx : pad.fLogy,
+                                        noexp_changed: this.y_noexp_changed,
                                         symlog: this.swap_xy ? opts.symlog_x : opts.symlog_y,
                                         logcheckmin: (opts.ndim < 2) || this.swap_xy,
                                         log_min_nz: opts.ymin_nz && (opts.ymin_nz < 0.01*this.ymax) ? 0.3 * opts.ymin_nz : 0,
-                                        logminfactor: 3e-4 });
+                                        logminfactor: logminfactorY });
 
       this.y_handle.assignFrameMembers(this, 'y');
 
@@ -1853,8 +1857,9 @@ class TFramePainter extends ObjectPainter {
          this.x2_handle.configureAxis('x2axis', this.x2min, this.x2max, this.scale_x2min, this.scale_x2max, this.swap_xy, this.swap_xy ? [0,h] : [0,w],
                                          { reverse: this.reverse_x2,
                                            log: this.swap_xy ? pad.fLogy : pad.fLogx,
+                                           noexp_changed: this.x2_noexp_changed,
                                            logcheckmin: this.swap_xy,
-                                           logminfactor: 0.0001 });
+                                           logminfactor: logminfactorX });
          this.x2_handle.assignFrameMembers(this, 'x2');
       }
 
@@ -1866,9 +1871,10 @@ class TFramePainter extends ObjectPainter {
          this.y2_handle.configureAxis('y2axis', this.y2min, this.y2max, this.scale_y2min, this.scale_y2max, !this.swap_xy, this.swap_xy ? [0,w] : [0,h],
                                          { reverse: this.reverse_y2,
                                            log: this.swap_xy ? pad.fLogx : pad.fLogy,
+                                           noexp_changed: this.y2_noexp_changed,
                                            logcheckmin: (opts.ndim < 2) || this.swap_xy,
                                            log_min_nz: opts.ymin_nz && (opts.ymin_nz < 0.01*this.y2max) ? 0.3 * opts.ymin_nz : 0,
-                                           logminfactor: 3e-4 });
+                                           logminfactor: logminfactorY });
 
          this.y2_handle.assignFrameMembers(this, 'y2');
       }
@@ -2450,51 +2456,56 @@ class TFramePainter extends ObjectPainter {
           pad = pp?.getRootPad(true);
 
       if ((kind == 'x') || (kind == 'y') || (kind == 'z') || (kind == 'x2') || (kind == 'y2')) {
-         let faxis = obj || this[kind+'axis'];
-         menu.add('header: ' + kind.toUpperCase() + ' axis');
+         let faxis = obj || this[kind+'axis'],
+             handle = this[`${kind}_handle`];
+         menu.add(`header: ${kind.toUpperCase()} axis`);
          menu.add('Unzoom', () => this.unzoom(kind));
          if (pad) {
-            menu.add('sub:SetLog '+kind[0]);
-            menu.addchk(pad['fLog' + kind[0]] == 0, 'linear', () => this.changeAxisLog(kind[0], 0));
-            menu.addchk(pad['fLog' + kind[0]] == 1, 'log', () => this.changeAxisLog(kind[0], 1));
-            menu.addchk(pad['fLog' + kind[0]] == 2, 'log2', () => this.changeAxisLog(kind[0], 2));
+            let member = 'fLog'+kind[0];
+            menu.add('sub:SetLog '+kind[0], () => {
+               menu.input('Enter log kind: 0 - off, 1 - log10, 2 - log2, 3 - ln, ...', pad[member], 'int', 0, 10000).then(v => {
+                  this.changeAxisLog(kind[0], v)
+            })});
+            menu.addchk(pad[member] == 0, 'linear', () => this.changeAxisLog(kind[0], 0));
+            menu.addchk(pad[member] == 1, 'log10', () => this.changeAxisLog(kind[0], 1));
+            menu.addchk(pad[member] == 2, 'log2', () => this.changeAxisLog(kind[0], 2));
+            menu.addchk(pad[member] == 3, 'ln', () => this.changeAxisLog(kind[0], 3));
+            menu.addchk(pad[member] == 4, 'log4', () => this.changeAxisLog(kind[0], 4));
+            menu.addchk(pad[member] == 8, 'log8', () => this.changeAxisLog(kind[0], 8));
             menu.add('endsub:');
          }
-         menu.addchk(faxis.TestBit(EAxisBits.kMoreLogLabels), 'More log',
-               flag => {
-                  faxis.InvertBit(EAxisBits.kMoreLogLabels);
-                  if (main?.snapid && (kind.length == 1))
-                     main.interactiveRedraw('pad', `exec:SetMoreLogLabels(${flag})`, kind);
-                  else
-                     this.interactiveRedraw('pad');
-               });
-         menu.addchk(faxis.TestBit(EAxisBits.kNoExponent), 'No exponent',
-               flag => {
-                  faxis.InvertBit(EAxisBits.kNoExponent);
-                  if (main?.snapid && (kind.length == 1))
-                     main.interactiveRedraw('pad', `exec:SetNoExponent(${flag})`, kind);
-                  else
-                     this.interactiveRedraw('pad');
-               });
+         menu.addchk(faxis.TestBit(EAxisBits.kMoreLogLabels), 'More log', flag => {
+            faxis.InvertBit(EAxisBits.kMoreLogLabels);
+            if (main?.snapid && (kind.length == 1))
+               main.interactiveRedraw('pad', `exec:SetMoreLogLabels(${flag})`, kind);
+            else
+               this.interactiveRedraw('pad');
+         });
+         menu.addchk(handle?.noexp ?? faxis.TestBit(EAxisBits.kNoExponent), 'No exponent', flag => {
+            if (flag != faxis.TestBit(EAxisBits.kNoExponent))
+               faxis.InvertBit(EAxisBits.kNoExponent);
+            if (handle) handle.noexp_changed = true;
+            this[`${kind}_noexp_changed`] = true;
+            if (main?.snapid && (kind.length == 1))
+               main.interactiveRedraw('pad', `exec:SetNoExponent(${flag})`, kind);
+            else
+               this.interactiveRedraw('pad');
+         });
 
          if ((kind === 'z') && main?.options?.Zscale && isFunc(main?.fillPaletteMenu))
             main.fillPaletteMenu(menu);
 
-         if (faxis) {
-            let handle = this[`${kind}_handle`];
+         if ((handle?.kind == 'labels') && (faxis.fNbins > 20))
+            menu.add('Find label', () => menu.input('Label id').then(id => {
+               if (!id) return;
+               for (let bin = 0; bin < faxis.fNbins; ++bin) {
+                  let lbl = handle.formatLabels(bin);
+                  if (lbl == id)
+                     return this.zoom(kind, Math.max(0, bin - 4), Math.min(faxis.fNbins, bin+5));
+                }
+            }));
 
-            if ((handle?.kind == 'labels') && (faxis.fNbins > 20))
-               menu.add('Find label', () => menu.input('Label id').then(id => {
-                  if (!id) return;
-                  for (let bin = 0; bin < faxis.fNbins; ++bin) {
-                     let lbl = handle.formatLabels(bin);
-                     if (lbl == id)
-                        return this.zoom(kind, Math.max(0, bin - 4), Math.min(faxis.fNbins, bin+5));
-                   }
-               }));
-
-            menu.addTAxisMenu(EAxisBits, main || this, faxis, kind);
-         }
+         menu.addTAxisMenu(EAxisBits, main || this, faxis, kind);
          return true;
       }
 
@@ -2624,7 +2635,9 @@ class TFramePainter extends ObjectPainter {
 
       if (zoom_y) {
          let cnt = 0;
-         if (ymin <= this.ymin) { ymin = this.ymin; cnt++; }
+         if ((ymin <= this.ymin) || (!this.ymin && this.logy &&
+              (!this.y_handle?.log_min_nz && ymin < logminfactorY*this.ymax) || (ymin < this.y_handle?.log_min_nz)))
+            { ymin = this.ymin; cnt++; }
          if (ymax >= this.ymax) { ymax = this.ymax; cnt++; }
          if (cnt === 2) { zoom_y = false; unzoom_y = true; }
       } else {

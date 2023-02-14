@@ -1,7 +1,7 @@
 import { create, isFunc, clTObjString, clTHashList, kNoZoom } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
-import { TH1Painter } from './TH1Painter.mjs';
+import { TH1Painter, PadDrawOptions } from './TH1Painter.mjs';
 import { TGraphPainter } from './TGraphPainter.mjs';
 
 /**
@@ -262,8 +262,8 @@ class TMultiGraphPainter extends ObjectPainter {
       painter._plc = d.check('PLC');
       painter._pmc = d.check('PMC');
 
-      let hopt = '', checkhopt = ['USE_PAD_TITLE', 'LOGXY', 'LOGX', 'LOGY', 'LOGZ', 'GRIDXY', 'GRIDX', 'GRIDY', 'TICKXY', 'TICKX', 'TICKY', 'FB'];
-      checkhopt.forEach(name => { if (d.check(name)) hopt += ';' + name; });
+      let hopt = '';
+      PadDrawOptions.forEach(name => { if (d.check(name)) hopt += ';' + name; });
 
       let promise = Promise.resolve(true);
       if (d.check('A') || !painter.getMainPainter()) {

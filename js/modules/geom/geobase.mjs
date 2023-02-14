@@ -1148,9 +1148,9 @@ function createTorusBuffer( shape, faces_limit ) {
    if (shape.fDphi !== 360)
       for (let t = 0; t <= tubularSegments; t += tubularSegments) {
          let tube1 = shape.fRmax, tube2 = shape.fRmin,
-             d1 = (t > 0) ? 0 : 1, d2 = 1 - d1,
-             skip = (shape.fRmin) > 0 ?  0 : 1,
-             nsign = (t > 0) ? 1 : -1;
+             d1 = t > 0 ? 0 : 1, d2 = 1 - d1,
+             skip = shape.fRmin > 0 ? 0 : 1,
+             nsign = t > 0 ? 1 : -1;
          for (let n = 0; n < radialSegments; ++n) {
             creator.addFace4((radius + tube1 * _cosr[n+d1]) * _cost[t], (radius + tube1 * _cosr[n+d1]) * _sint[t], tube1*_sinr[n+d1],
                              (radius + tube2 * _cosr[n+d1]) * _cost[t], (radius + tube2 * _cosr[n+d1]) * _sint[t], tube2*_sinr[n+d1],
