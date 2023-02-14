@@ -32,7 +32,7 @@ sap.ui.define([
                                      ToolbarIcon: chk_icon(false),
                                      TooltipIcon: chk_icon(true),
                                      StatusLbl1: "", StatusLbl2: "", StatusLbl3: "", StatusLbl4: "",
-                                     Standalone: true, isRoot6: true });
+                                     Standalone: true, isRoot6: true, canResize: true });
          this.getView().setModel(model);
 
          let cp = this.getView().getViewData()?.canvas_painter;
@@ -66,6 +66,8 @@ sap.ui.define([
             cp.showUI5Panel = this.showLeftArea.bind(this);
 
             if (cp.v7canvas) model.setProperty("/isRoot6", false);
+
+            model.setProperty("/canResize", !cp.embed_canvas && cp.online_canvas);
 
             let ws = cp._websocket || cp._window_handle;
             if (!cp.embed_canvas && ws?.addReloadKeyHandler)
@@ -561,6 +563,11 @@ sap.ui.define([
                break;
             case 'Clear canvas':
                cp.sendWebsocket('CLEAR:' + cp.snapid);
+               break;
+            default:
+               let sz = name.split('x');
+               if (cp.resizeBrowser && (sz?.length == 2))
+                  cp.resizeBrowser(Number.parseInt(sz[0]), Number.parseInt(sz[1]));
                break;
          }
       },
