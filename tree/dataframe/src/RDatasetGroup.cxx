@@ -39,7 +39,7 @@ RDatasetGroup::RDatasetGroup(const std::string &groupName,
 
    TChain chain;
    for (const auto &p : treeAndFileNameGlobs) {
-      const auto fullpath = p.second + "/" + p.first;
+      const auto fullpath = p.second + "?#" + p.first;
       chain.Add(fullpath.c_str());
    }
    const auto &expandedNames = chain.GetListOfFiles();
@@ -59,7 +59,7 @@ RDatasetGroup::RDatasetGroup(const std::string &groupName, const std::vector<std
       throw std::logic_error("Mismatch between number of trees and file globs.");
    TChain chain;
    for (auto i = 0u; i < fileNameGlobs.size(); ++i) {
-      const auto fullpath = fileNameGlobs[i] + "/" + (treeNames.size() == 1u ? treeNames[0] : treeNames[i]);
+      const auto fullpath = fileNameGlobs[i] + "?#" + (treeNames.size() == 1u ? treeNames[0] : treeNames[i]);
       chain.Add(fullpath.c_str());
    }
    const auto &expandedNames = chain.GetListOfFiles();
