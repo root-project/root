@@ -41,6 +41,15 @@
                      <items>
                         <MenuItem text="Style" enabled="false"/>
                         <MenuItem text="Divide" enabled="{/isRoot6}"/>
+                        <MenuItem text="Resize" enabled="{/canResize}">
+                           <items>
+                              <MenuItem text="700 x 500" tooltip="Resize draw canvas area"/>
+                              <MenuItem text="500 x 500" tooltip="Resize draw canvas area"/>
+                              <MenuItem text="1200 x 800" tooltip="Resize draw canvas area"/>
+                              <MenuItem text="900 x 900" tooltip="Resize draw canvas area"/>
+                              <MenuItem text="1600 x 1200" tooltip="Resize draw canvas area"/>
+                           </items>
+                        </MenuItem>
                         <MenuItem text="Clear pad" startsSection="true"/>
                         <MenuItem text="Clear canvas"/>
                      </items>
