@@ -636,6 +636,10 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
       args.SetWidth(win.GetWidth());
    if (args.GetHeight() <= 0)
       args.SetHeight(win.GetHeight());
+   if (args.GetX() < 0)
+      args.SetX(win.GetX());
+   if (args.GetY() < 0)
+      args.SetY(win.GetY());
 
    bool normal_http = !args.IsLocalDisplay();
    if (!normal_http && (gEnv->GetValue("WebGui.ForceHttp", 0) == 1))
