@@ -150,8 +150,8 @@ private:
    std::thread fWindowThrd;                         ///<! special thread for that window
    std::queue<QueueEntry> fInputQueue;              ///<! input queue for all callbacks
    std::mutex fInputQueueMutex;                     ///<! mutex to protect input queue
-   unsigned fWidth{0};                              ///<! initial window width when displayed
-   unsigned fHeight{0};                             ///<! initial window height when displayed
+   unsigned fWidth{0}, fHeight{0};                  ///<! initial window width and height when displayed, zeros are ignored
+   int fX{-1}, fY{-1};                              ///<! initial window position, -1 ignored
    float fOperationTmout{50.};                      ///<! timeout in seconds to perform synchronous operation, default 50s
    std::string fClientVersion;                      ///<! configured client version, used as prefix in scripts URL
    std::string fProtocolFileName;                   ///<! local file where communication protocol will be written
@@ -241,6 +241,13 @@ public:
       fHeight = height;
    }
 
+   /// Set window position. Will be applied if supported by used web display (like CEF or Chromium)
+   void SetPosition(unsigned x, unsigned y)
+   {
+      fX = x;
+      fY = y;
+   }
+
    /////////////////////////////////////////////////////////////////////////
    /// returns configured window width (0 - default)
    /// actual window width can be different
@@ -249,6 +256,14 @@ public:
    /////////////////////////////////////////////////////////////////////////
    /// returns configured window height (0 - default)
    unsigned GetHeight() const { return fHeight; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// returns configured window X position (-1 - default)
+   int GetX() const { return fX; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// returns configured window Y position (-1 - default)
+   int GetY() const { return fY; }
 
    void SetConnLimit(unsigned lmt = 0);
 
