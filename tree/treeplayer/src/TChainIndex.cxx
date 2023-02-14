@@ -402,5 +402,6 @@ void TChainIndex::UpdateFormulaLeaves(const TTree *parent)
 void TChainIndex::SetTree(TTree *T)
 {
    R__ASSERT(fTree == 0 || fTree == T || T==0);
+   fTree = T;
 }
 
