@@ -102,8 +102,8 @@ const AxisPainterMethods = {
 
    /** @summary Assign often used members of frame painter */
    assignFrameMembers(fp, axis) {
-      fp['gr'+axis] = this.gr;                    // fp.grx
-      fp['log'+axis] = this.log;                  // fp.logx
+      fp[`gr${axis}`] = this.gr;                 // fp.grx
+      fp[`log${axis}`] = this.log;               // fp.logx
       fp[`scale_${axis}min`] = this.scale_min;   // fp.scale_xmin
       fp[`scale_${axis}max`] = this.scale_max;   // fp.scale_xmax
    },
@@ -116,7 +116,7 @@ const AxisPainterMethods = {
    /** @summary Convert graphical point back into axis value */
    revertPoint(pnt) {
       let value = this.func.invert(pnt);
-      return (this.kind == 'time') ?  (value - this.timeoffset) / 1000 : value;
+      return this.kind == 'time' ? (value - this.timeoffset) / 1000 : value;
    },
 
    /** @summary Provide label for time axis */
@@ -135,8 +135,9 @@ const AxisPainterMethods = {
       if (this.moreloglabels || (Math.abs(vlog - Math.round(vlog)) < 0.001)) {
          if (!this.noexp && (asticks != 2))
             return this.formatExp(base, Math.floor(vlog+0.01), val);
-
-         return vlog < 0 ? val.toFixed(Math.round(-vlog+0.5)) : val.toFixed(0);
+         if (Math.abs(base - Math.E) < 0.001)
+            return floatToString(val, fmt || gStyle.fStatFormat);
+         return (vlog < 0) ? val.toFixed(Math.round(-vlog+0.5)) : val.toFixed(0);
       }
       return null;
    },
@@ -161,7 +162,7 @@ const AxisPainterMethods = {
          value = Math.round(value/Math.pow(base,order));
          if ((value!=0) && (value!=1)) res = value.toString() + (settings.Latex ? '#times' : 'x');
       }
-      if (Math.abs(base-Math.exp(1)) < 0.001)
+      if (Math.abs(base - Math.E) < 0.001)
          res += 'e';
       else
          res += base.toString();
@@ -386,6 +387,7 @@ class TAxisPainter extends ObjectPainter {
       this.kind = 'normal';
       this.vertical = vertical;
       this.log = opts.log || 0;
+      this.noexp_changed = opts.noexp_changed;
       this.symlog = opts.symlog || false;
       this.reverse = opts.reverse || false;
       this.swap_side = opts.swap_side || false;
@@ -404,7 +406,13 @@ class TAxisPainter extends ObjectPainter {
       if (this.kind == 'time') {
          this.func = d3_scaleTime().domain([this.convertDate(smin), this.convertDate(smax)]);
       } else if (this.log) {
-         this.logbase = this.log === 2 ? 2 : 10;
+         if ((this.log === 1) || (this.log === 10))
+            this.logbase =  10;
+         else if (this.log === 3)
+            this.logbase = Math.E;
+         else
+            this.logbase = Math.round(this.log);
+
          if (smax <= 0) smax = 1;
 
          if ((smin <= 0) && axis && !opts.logcheckmin)
@@ -414,19 +422,19 @@ class TAxisPainter extends ObjectPainter {
             }
 
          if ((smin <= 0) && opts.log_min_nz)
-            smin = opts.log_min_nz;
+            smin = this.log_min_nz = opts.log_min_nz;
 
          if ((smin <= 0) || (smin >= smax))
             smin = smax * (opts.logminfactor || 1e-4);
 
-         this.func = d3_scaleLog().base((this.log == 2) ? 2 : 10).domain([smin,smax]);
+         this.func = d3_scaleLog().base(this.logbase).domain([smin, smax]);
       } else if (this.symlog) {
          let v = Math.max(Math.abs(smin), Math.abs(smax));
          if (Number.isInteger(this.symlog) && (this.symlog > 0))
             v *= Math.pow(10,-1*this.symlog);
          else
             v *= 0.01;
-         this.func = d3_scaleSymlog().constant(v).domain([smin,smax]);
+         this.func = d3_scaleSymlog().constant(v).domain([smin, smax]);
       } else {
          this.func = d3_scaleLinear().domain([smin,smax]);
       }
@@ -488,10 +496,9 @@ class TAxisPainter extends ObjectPainter {
             this.nticks *= this.nticks2; // all log ticks (major or minor) created centrally
             this.nticks2 = 1;
          }
-         this.noexp = axis ? axis.TestBit(EAxisBits.kNoExponent) : false;
-         if ((this.scale_max < 300) && (this.scale_min > 0.3)) this.noexp = true;
-         this.moreloglabels = axis ? axis.TestBit(EAxisBits.kMoreLogLabels) : false;
-
+         this.noexp = axis?.TestBit(EAxisBits.kNoExponent);
+         if ((this.scale_max < 300) && (this.scale_min > 0.3) && !this.noexp_changed) this.noexp = true;
+         this.moreloglabels = axis?.TestBit(EAxisBits.kMoreLogLabels);
          this.format = this.formatLog;
 
       } else if (this.kind == 'labels') {

@@ -3,6 +3,10 @@ import { rgb as d3_rgb } from '../d3.mjs';
 import { floatToString, buildSvgPath } from '../base/BasePainter.mjs';
 import { THistPainter } from './THistPainter.mjs';
 
+
+const PadDrawOptions = ['USE_PAD_TITLE', 'LOGXY', 'LOGX', 'LOGY', 'LOGZ', 'LOG', 'LOG2X', 'LOG2Y', 'LOG2',
+                        'LNX', 'LNY', 'LN', 'GRIDXY', 'GRIDX', 'GRIDY', 'TICKXY', 'TICKX', 'TICKY', 'FB'];
+
 /**
  * @summary Painter for TH1 classes
  * @private
@@ -1205,4 +1209,4 @@ function setHistTitle(histo, title)
    }
 }
 
-export { TH1Painter, setHistTitle };
+export { TH1Painter, setHistTitle, PadDrawOptions };
