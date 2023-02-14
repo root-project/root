@@ -33,6 +33,11 @@ Bridge class for using a VecGeom solid as TGeoShape.
 #include "VecGeom/volumes/UnplacedScaledShape.h"
 #include "VecGeom/volumes/UnplacedGenTrap.h"
 #include "VecGeom/volumes/UnplacedSExtruVolume.h"
+#include "VecGeom/volumes/UnplacedTessellated.h"
+#include "VecGeom/volumes/UnplacedEllipticalTube.h"
+#include "VecGeom/volumes/UnplacedHype.h"
+#include "VecGeom/volumes/UnplacedCutTube.h"
+
 #include "TError.h"
 #include "TGeoManager.h"
 #include "TGeoMaterial.h"
@@ -54,6 +59,8 @@ Bridge class for using a VecGeom solid as TGeoShape.
 #include "TGeoTorus.h"
 #include "TGeoEltu.h"
 #include "TGeoXtru.h"
+#include "TGeoTessellated.h"
+#include "TGeoHype.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -122,6 +129,7 @@ vecgeom::cxx::Transformation3D *TGeoVGShape::Convert(TGeoMatrix const *const geo
 vecgeom::cxx::VUnplacedVolume *TGeoVGShape::Convert(TGeoShape const *const shape)
 {
    using namespace vecgeom;
+   using Vector3D = vecgeom::cxx::Vector3D<Precision>;
    VUnplacedVolume *unplaced_volume = nullptr;
 
    // THE BOX
@@ -287,20 +295,36 @@ vecgeom::cxx::VUnplacedVolume *TGeoVGShape::Convert(TGeoShape const *const shape
          GeoManager::MakeInstance<UnplacedScaledShape>(referenced_shape, scale_root[0], scale_root[1], scale_root[2]);
    }
 
-   // THE ELLIPTICAL TUBE AS SCALED TUBE
+   // THE CUT TUBE
+   if (shape->IsA() == TGeoCtub::Class()) {
+      TGeoCtub const *const p = static_cast<TGeoCtub const *>(shape);
+      auto low = p->GetNlow();
+      auto high = p->GetNhigh();
+      auto const bottomNormal = Vector3D{low[0], low[1], low[2]};
+      auto const topNormal = Vector3D{high[0], high[1], high[2]};
+
+      unplaced_volume =
+         GeoManager::MakeInstance<UnplacedCutTube>(p->GetRmin(), p->GetRmax(), p->GetDz(), kDegToRad * p->GetPhi1(),
+                                                   kDegToRad * (p->GetPhi2() - p->GetPhi1()), bottomNormal, topNormal);
+   }
+
+   // THE ELLIPTICAL TUBE
    if (shape->IsA() == TGeoEltu::Class()) {
       TGeoEltu const *const p = static_cast<TGeoEltu const *>(shape);
-      // Create the corresponding unplaced tube, with:
-      //   rmin=0, rmax=A, dz=dz, which is scaled with (1., A/B, 1.)
-      GenericUnplacedTube *tubeUnplaced = new GenericUnplacedTube(0, p->GetA(), p->GetDZ(), 0, kTwoPi);
-      unplaced_volume = new UnplacedScaledShape(tubeUnplaced, 1., p->GetB() / p->GetA(), 1.);
+      unplaced_volume = GeoManager::MakeInstance<UnplacedEllipticalTube>(p->GetA(), p->GetB(), p->GetDz());
+   }
+
+   // THE HYPERBOLOID
+   if (shape->IsA() == TGeoHype::Class()) {
+      TGeoHype const *const p = static_cast<TGeoHype const *>(shape);
+      unplaced_volume = GeoManager::MakeInstance<UnplacedHype>(p->GetRmin(), p->GetRmax(), kDegToRad * p->GetStIn(),
+                                                               kDegToRad * p->GetStOut(), p->GetDz());
    }
 
    // THE ARB8
    if (shape->IsA() == TGeoArb8::Class() || shape->IsA() == TGeoGtra::Class()) {
       TGeoArb8 *p = (TGeoArb8 *)(shape);
       // Create the corresponding GenTrap
-      std::vector<Vector3D<Precision>> vertexlist;
       const double *vertices = p->GetVertices();
       Precision verticesx[8], verticesy[8];
       for (auto ivert = 0; ivert < 8; ++ivert) {
@@ -336,6 +360,32 @@ vecgeom::cxx::VUnplacedVolume *TGeoVGShape::Convert(TGeoShape const *const shape
          delete[] x;
          delete[] y;
       }
+   }
+
+   // THE TESSELLATED
+   if (shape->IsA() == TGeoTessellated::Class()) {
+      TGeoTessellated const *const tsl = static_cast<TGeoTessellated const *>(shape);
+      unplaced_volume = GeoManager::MakeInstance<UnplacedTessellated>();
+      auto vtsl = static_cast<UnplacedTessellated *>(unplaced_volume);
+
+      for (auto i = 0; i < tsl->GetNfacets(); ++i) {
+         auto const &facet = tsl->GetFacet(i);
+         int nvert = facet.GetNvert();
+         auto const &v0 = facet.GetVertex(0);
+         auto const &v1 = facet.GetVertex(1);
+         auto const &v2 = facet.GetVertex(2);
+         if (nvert == 3) {
+            vtsl->AddTriangularFacet(Vector3D(v0[0], v0[1], v0[2]), Vector3D(v1[0], v1[1], v1[2]),
+                                     Vector3D(v2[0], v2[1], v2[2]));
+         } else if (nvert == 4) {
+            auto const &v3 = facet.GetVertex(3);
+            vtsl->AddQuadrilateralFacet(Vector3D(v0[0], v0[1], v0[2]), Vector3D(v1[0], v1[1], v1[2]),
+                                        Vector3D(v2[0], v2[1], v2[2]), Vector3D(v3[0], v3[1], v3[2]));
+         } else {
+            return nullptr; // should never happen
+         }
+      }
+      vtsl->Close();
    }
 
    // New volumes should be implemented here...
