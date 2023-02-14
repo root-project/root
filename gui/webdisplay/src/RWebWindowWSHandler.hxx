@@ -90,6 +90,8 @@ protected:
       int credits = gEnv->GetValue("WebGui.ConnCredits", 10);
       if ((credits > 0) && (credits != 10))
          more_args.append("credits: "s + std::to_string(credits) + ","s);
+      if ((fWindow.GetWidth() > 0) && (fWindow.GetHeight() > 0))
+         more_args.append("winW:"s + std::to_string(fWindow.GetWidth()) + ",winH:"s + std::to_string(fWindow.GetHeight()) + ","s);
       auto user_args = fWindow.GetUserArgs();
       if (!user_args.empty())
          more_args.append("user_args: "s + user_args + ","s);
