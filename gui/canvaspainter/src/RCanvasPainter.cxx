@@ -580,8 +580,13 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
       } else {
          R__LOG_ERROR(CanvasPainerLog()) << "Fail to parse RDrawableRequest";
       }
+   } else if (check_header("RESIZED:")) {
+      auto sz = TBufferJSON::FromJSON<std::vector<int>>(cdata);
+      if (sz && sz->size() == 2) {
+         fCanvas.SetWidth(sz->at(0));
+         fCanvas.SetHeight(sz->at(1));
+      }
    } else if (check_header("CLEAR")) {
-
       fCanvas.Wipe();
       fCanvas.Modified();
    } else {
