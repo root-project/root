@@ -306,6 +306,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       // create observable
       auto obs = static_cast<RooRealVar*>(proto->factory(
           Form("%s[%f,%f]", fObsNameVec[idx].c_str(), xmin, xmax)));
+      if(strlen(axis->GetTitle())>0) obs->SetTitle(axis->GetTitle());
       obs->setBins(nbins);
       if (axis->IsVariableBinSize()) {
         RooBinning binning(nbins, axis->GetXbins()->GetArray());
@@ -686,7 +687,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
           name = name.substr(0, pos) + "shapes";
         }
 
-        RooProduct shapeProduct(name.c_str(), name.c_str(), RooArgSet(thisSampleHistFuncs.begin(), thisSampleHistFuncs.end()));
+        RooProduct shapeProduct(name.c_str(), thisSampleHistFuncs.front()->GetTitle(), RooArgSet(thisSampleHistFuncs.begin(), thisSampleHistFuncs.end()));
         proto->import(shapeProduct, RecycleConflictNodes());
         shapeList.add(*proto->function(name.c_str()));
       }
@@ -921,6 +922,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
         sampleHistFuncs.push_back( makeLinInterp(interpParams, nominalHistFunc, proto,
             sample.GetHistoSysList(), constraintPrefix, observables) );
       }
+
+      sampleHistFuncs.front()->SetTitle( (nominal && strlen(nominal->GetTitle())>0) ? nominal->GetTitle() : sample.GetName().c_str() );
 
       ////////////////////////////////////
       // Add StatErrors to this Channel //
@@ -1351,6 +1354,10 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
         ("model_"+channel_name).c_str(),    // MB : have changed this into conditional pdf. Much faster for toys!
         "product of Poissons accross bins for a single channel",
         constraintTerms, Conditional(likelihoodTerms,observables));
+    // can give channel a title by setting title of corresponding data histogram
+    if (channel.GetData().GetHisto() && strlen(channel.GetData().GetHisto()->GetTitle())>0) {
+       model->SetTitle(channel.GetData().GetHisto()->GetTitle());
+    }
     proto->import(*model,RecycleConflictNodes());
 
     proto_config->SetPdf(*model);
