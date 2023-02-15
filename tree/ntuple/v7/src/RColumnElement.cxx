@@ -165,10 +165,9 @@ void ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColum
    }
 }
 
-
 void ROOT::Experimental::Detail::RColumnElement<
-   ROOT::Experimental::ClusterSize_t, ROOT::Experimental::EColumnType::kIndex32>::Pack(
-   void *dst, void *src, std::size_t count) const
+   ROOT::Experimental::ClusterSize_t, ROOT::Experimental::EColumnType::kIndex32>::Pack(void *dst, void *src,
+                                                                                       std::size_t count) const
 {
    std::int64_t *int64Array = reinterpret_cast<std::int64_t *>(src);
    std::int32_t *int32Array = reinterpret_cast<std::int32_t *>(dst);
@@ -181,8 +180,8 @@ void ROOT::Experimental::Detail::RColumnElement<
 }
 
 void ROOT::Experimental::Detail::RColumnElement<
-   ROOT::Experimental::ClusterSize_t, ROOT::Experimental::EColumnType::kIndex32>::Unpack(
-   void *dst, void *src, std::size_t count) const
+   ROOT::Experimental::ClusterSize_t, ROOT::Experimental::EColumnType::kIndex32>::Unpack(void *dst, void *src,
+                                                                                         std::size_t count) const
 {
    std::int32_t *int32Array = reinterpret_cast<std::int32_t *>(src);
    std::int64_t *int64Array = reinterpret_cast<std::int64_t *>(dst);
