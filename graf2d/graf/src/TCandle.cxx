@@ -16,12 +16,8 @@
 #include "TVirtualPad.h"
 #include "TH2D.h"
 #include "TRandom2.h"
+#include "TStyle.h"
 #include "strlcpy.h"
-
-Double_t TCandle::fWhiskerRange  = 1.0;
-Double_t TCandle::fBoxRange      = 0.5;
-Bool_t TCandle::fScaledCandle = false;
-Bool_t TCandle::fScaledViolin = true;
 
 ClassImp(TCandle);
 
@@ -176,54 +172,59 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, TH1D *pro
 ////////////////////////////////////////////////////////////////////////////////
 /// TCandle default destructor.
 
-TCandle::~TCandle() {
+TCandle::~TCandle()
+{
    if (fIsRaw && fProj) delete fProj;
 }
 
-Bool_t TCandle::IsCandleScaled()
-{
-   return fScaledCandle;
-}
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if candle plot should be scaled
 
-Bool_t TCandle::IsViolinScaled()
+Bool_t TCandle::IsCandleScaled() const
 {
-   return fScaledViolin;
+   return gStyle->GetCandleScaled();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function to set fWhiskerRange, by setting whisker-range, one can force
+/// Returns true if violin plot should be scaled
+
+Bool_t TCandle::IsViolinScaled() const
+{
+   return gStyle->GetViolinScaled();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to set WhiskerRange, by setting whisker-range, one can force
 /// the whiskers to cover the fraction of the distribution.
 /// Set wRange between 0 and 1. Default is 1
 /// TCandle::SetWhiskerRange(0.95) will set all candle-charts to cover 95% of
 /// the distribution with the whiskers.
 /// Can only be used with the standard-whisker definition
 
-void TCandle::SetWhiskerRange(const Double_t wRange) {
-   if (wRange < 0) fWhiskerRange = 0;
-   else if (wRange > 1) fWhiskerRange = 1;
-   else fWhiskerRange = wRange;
-
+void TCandle::SetWhiskerRange(const Double_t wRange)
+{
+   gStyle->SetCandleWhiskerRange(wRange);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function to set fBoxRange, by setting whisker-range, one can force the
+/// Static function to set BoxRange, by setting box-range, one can force the
 /// box of the candle-chart to cover that given fraction of the distribution.
 /// Set bRange between 0 and 1. Default is 0.5
 /// TCandle::SetBoxRange(0.68) will set all candle-charts to cover 68% of the
 /// distribution by the box
 
-void TCandle::SetBoxRange(const Double_t bRange) {
-   if (bRange < 0) fBoxRange = 0;
-   else if (bRange > 1) fBoxRange = 1;
-   else fBoxRange = bRange;
+void TCandle::SetBoxRange(const Double_t bRange)
+{
+   gStyle->SetCandleBoxRange(bRange);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function to set scaling between candles-withs. A candle containing
-/// 100 entries with be two times wider than a candle containing 50 entries
+/// 100 entries will be two times wider than a candle containing 50 entries
 
-void TCandle::SetScaledCandle(const Bool_t cScale) {
-   fScaledCandle = cScale;
+void TCandle::SetScaledCandle(const Bool_t cScale)
+{
+   gStyle->SetCandleScaled(cScale);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -231,8 +232,9 @@ void TCandle::SetScaledCandle(const Bool_t cScale) {
 /// with a maximum bin content to 100 will be two times as high as a violin with
 /// a maximum bin content of 50
 
-void TCandle::SetScaledViolin(const Bool_t vScale) {
-   fScaledViolin = vScale;
+void TCandle::SetScaledViolin(const Bool_t vScale)
+{
+   gStyle->SetViolinScaled(vScale);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -391,20 +393,24 @@ void TCandle::Calculate() {
    // Determining the quantiles
    Double_t prob[5];
 
-   if (fWhiskerRange >= 1) {
+   Double_t wRange = gStyle->GetCandleWhiskerRange();
+   Double_t bRange = gStyle->GetCandleBoxRange();
+
+
+   if (wRange >= 1) {
       prob[0] = 1e-15;
       prob[4] = 1-1e-15;
    } else {
-      prob[0] = 0.5 - fWhiskerRange/2.;
-      prob[4] = 0.5 + fWhiskerRange/2.;
+      prob[0] = 0.5 - wRange/2.;
+      prob[4] = 0.5 + wRange/2.;
    }
 
-   if (fBoxRange >= 1) {
+   if (bRange >= 1) {
       prob[1] = 1E-14;
       prob[3] = 1-1E-14;
    } else {
-      prob[1] = 0.5 - fBoxRange/2.;
-      prob[3] = 0.5 + fBoxRange/2.;
+      prob[1] = 0.5 - bRange/2.;
+      prob[3] = 0.5 + bRange/2.;
    }
 
    prob[2] = 0.5;

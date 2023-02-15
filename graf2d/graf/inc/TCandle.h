@@ -88,12 +88,6 @@ protected:
    Double_t fAxisMin;                     ///< The Minimum which is visible by the axis (used by zero indicator)
    Double_t fAxisMax;                     ///< The Maximum which is visible by the axis (used by zero indicator)
 
-   static Double_t fWhiskerRange;         ///< The fraction which is covered by the whiskers (0 < x < 1), default 1
-   static Double_t fBoxRange;             ///< The fraction which is covered by the box (0 < x < 1), default 0.5
-
-   static Bool_t fScaledCandle;           ///< shall the box-width be scaled to each other by the integral of a box?
-   static Bool_t fScaledViolin;           ///< shall the violin or histos be scaled to each other by the maximum height?
-
    void Calculate();
 
    int  GetCandleOption(const int pos) const {return (fOption/(long)TMath::Power(10,pos))%10;}
@@ -117,8 +111,8 @@ public:
    Double_t       GetQ3() const {return fBoxDown;}
    Bool_t         IsHorizontal() const {return IsOption(kHorizontal); }
    Bool_t         IsVertical() const {return !IsOption(kHorizontal); }
-   Bool_t         IsCandleScaled();
-   Bool_t         IsViolinScaled();
+   Bool_t         IsCandleScaled() const;
+   Bool_t         IsViolinScaled() const;
 
    void           SetOption(CandleOption opt) { fOption = opt; }
    void           SetLog(int x, int y, int z) { fLogX = x; fLogY = y; fLogZ = z;}
