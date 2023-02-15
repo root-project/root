@@ -16,6 +16,7 @@
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAttMarker.h"
+#include "TString.h"
 
 #include "TMath.h"
 
@@ -79,7 +80,7 @@ protected:
    int  fNHistoPoints;
 
    CandleOption fOption;                  ///< Setting the style of the candle
-   char fOptionStr[128];                  ///< String to draw the candle
+   TString fOptionStr;                    ///< String to draw the candle
    int fLogX;                             ///< make the candle appear logx-like
    int fLogY;                             ///< make the candle appear logy-like
    int fLogZ;                             ///< make the candle appear logz-like
@@ -95,7 +96,7 @@ protected:
 
    void Calculate();
 
-   int  GetCandleOption(const int pos) {return (fOption/(long)TMath::Power(10,pos))%10;}
+   int  GetCandleOption(const int pos) const {return (fOption/(long)TMath::Power(10,pos))%10;}
 
    void PaintBox(Int_t nPoints, Double_t *x, Double_t *y, Bool_t swapXY);
    void PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Bool_t swapXY);
@@ -114,8 +115,8 @@ public:
    Double_t       GetQ1() const {return fBoxUp;}
    Double_t       GetQ2() const {return fMedian;}
    Double_t       GetQ3() const {return fBoxDown;}
-   Bool_t         IsHorizontal() {return (IsOption(kHorizontal)); }
-   Bool_t         IsVertical() {return (!IsOption(kHorizontal)); }
+   Bool_t         IsHorizontal() const {return IsOption(kHorizontal); }
+   Bool_t         IsVertical() const {return !IsOption(kHorizontal); }
    Bool_t         IsCandleScaled();
    Bool_t         IsViolinScaled();
 
@@ -137,9 +138,9 @@ public:
    virtual void   SetQ3(Double_t q3) { fBoxDown = q3; }
 
    int            ParseOption(char *optin);
-   const char    *GetDrawOption() { return fOptionStr; }
-   long           GetOption() { return fOption; }
-   bool           IsOption(CandleOption opt);
+   const char    *GetDrawOption() const { return fOptionStr.Data(); }
+   long           GetOption() const { return fOption; }
+   bool           IsOption(CandleOption opt) const;
    static void    SetWhiskerRange(const Double_t wRange);
    static void    SetBoxRange(const Double_t bRange);
    static void    SetScaledCandle(const Bool_t cScale = true);
