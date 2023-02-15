@@ -326,13 +326,12 @@ int RooMinimizer::minimize(const char *type, const char *alg)
    _theFitter->Config().SetMinimizer(type, alg);
 
    profileStart();
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
-   RooAbsReal::clearEvalErrorLog();
+   {
+      auto ctx = makeEvalErrorContext();
 
-   bool ret = fitFcn();
-   _status = ((ret) ? _theFitter->Result().Status() : -1);
-
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
+      bool ret = fitFcn();
+      _status = ((ret) ? _theFitter->Result().Status() : -1);
+   }
    profileStop();
    _fcn->BackProp(_theFitter->Result());
 
@@ -351,14 +350,13 @@ int RooMinimizer::migrad()
 {
    _fcn->Synchronize(_theFitter->Config().ParamsSettings());
    profileStart();
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
-   RooAbsReal::clearEvalErrorLog();
+   {
+      auto ctx = makeEvalErrorContext();
 
-   _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "migrad");
-   bool ret = fitFcn();
-   _status = ((ret) ? _theFitter->Result().Status() : -1);
-
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
+      _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "migrad");
+      bool ret = fitFcn();
+      _status = ((ret) ? _theFitter->Result().Status() : -1);
+   }
    profileStop();
    _fcn->BackProp(_theFitter->Result());
 
@@ -382,14 +380,14 @@ int RooMinimizer::hesse()
 
       _fcn->Synchronize(_theFitter->Config().ParamsSettings());
       profileStart();
-      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
-      RooAbsReal::clearEvalErrorLog();
+      {
+         auto ctx = makeEvalErrorContext();
 
-      _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str());
-      bool ret = _theFitter->CalculateHessErrors();
-      _status = ((ret) ? _theFitter->Result().Status() : -1);
+         _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str());
+         bool ret = _theFitter->CalculateHessErrors();
+         _status = ((ret) ? _theFitter->Result().Status() : -1);
 
-      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
+      }
       profileStop();
       _fcn->BackProp(_theFitter->Result());
 
@@ -414,14 +412,14 @@ int RooMinimizer::minos()
 
       _fcn->Synchronize(_theFitter->Config().ParamsSettings());
       profileStart();
-      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
-      RooAbsReal::clearEvalErrorLog();
+      {
+         auto ctx = makeEvalErrorContext();
 
-      _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str());
-      bool ret = _theFitter->CalculateMinosErrors();
-      _status = ((ret) ? _theFitter->Result().Status() : -1);
+         _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str());
+         bool ret = _theFitter->CalculateMinosErrors();
+         _status = ((ret) ? _theFitter->Result().Status() : -1);
+      }
 
-      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
       profileStop();
       _fcn->BackProp(_theFitter->Result());
 
@@ -446,31 +444,31 @@ int RooMinimizer::minos(const RooArgSet &minosParamList)
 
       _fcn->Synchronize(_theFitter->Config().ParamsSettings());
       profileStart();
-      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
-      RooAbsReal::clearEvalErrorLog();
+      {
+         auto ctx = makeEvalErrorContext();
 
-      // get list of parameters for Minos
-      std::vector<unsigned int> paramInd;
-      for (RooAbsArg *arg : minosParamList) {
-         RooAbsArg *par = _fcn->GetFloatParamList()->find(arg->GetName());
-         if (par && !par->isConstant()) {
-            int index = _fcn->GetFloatParamList()->index(par);
-            paramInd.push_back(index);
+         // get list of parameters for Minos
+         std::vector<unsigned int> paramInd;
+         for (RooAbsArg *arg : minosParamList) {
+            RooAbsArg *par = _fcn->GetFloatParamList()->find(arg->GetName());
+            if (par && !par->isConstant()) {
+               int index = _fcn->GetFloatParamList()->index(par);
+               paramInd.push_back(index);
+            }
          }
+
+         if (paramInd.size()) {
+            // set the parameter indeces
+            _theFitter->Config().SetMinosErrors(paramInd);
+
+            _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str());
+            bool ret = _theFitter->CalculateMinosErrors();
+            _status = ((ret) ? _theFitter->Result().Status() : -1);
+            // to avoid that following minimization computes automatically the Minos errors
+            _theFitter->Config().SetMinosErrors(false);
+         }
+
       }
-
-      if (paramInd.size()) {
-         // set the parameter indeces
-         _theFitter->Config().SetMinosErrors(paramInd);
-
-         _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str());
-         bool ret = _theFitter->CalculateMinosErrors();
-         _status = ((ret) ? _theFitter->Result().Status() : -1);
-         // to avoid that following minimization computes automatically the Minos errors
-         _theFitter->Config().SetMinosErrors(false);
-      }
-
-      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
       profileStop();
       _fcn->BackProp(_theFitter->Result());
 
@@ -490,14 +488,13 @@ int RooMinimizer::seek()
 {
    _fcn->Synchronize(_theFitter->Config().ParamsSettings());
    profileStart();
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
-   RooAbsReal::clearEvalErrorLog();
+   {
+      auto ctx = makeEvalErrorContext();
 
-   _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "seek");
-   bool ret = fitFcn();
-   _status = ((ret) ? _theFitter->Result().Status() : -1);
-
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
+      _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "seek");
+      bool ret = fitFcn();
+      _status = ((ret) ? _theFitter->Result().Status() : -1);
+   }
    profileStop();
    _fcn->BackProp(_theFitter->Result());
 
@@ -516,14 +513,14 @@ int RooMinimizer::simplex()
 {
    _fcn->Synchronize(_theFitter->Config().ParamsSettings());
    profileStart();
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
-   RooAbsReal::clearEvalErrorLog();
+   {
+      auto ctx = makeEvalErrorContext();
 
-   _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "simplex");
-   bool ret = fitFcn();
-   _status = ((ret) ? _theFitter->Result().Status() : -1);
+      _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "simplex");
+      bool ret = fitFcn();
+      _status = ((ret) ? _theFitter->Result().Status() : -1);
 
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
+   }
    profileStop();
    _fcn->BackProp(_theFitter->Result());
 
@@ -542,14 +539,14 @@ int RooMinimizer::improve()
 {
    _fcn->Synchronize(_theFitter->Config().ParamsSettings());
    profileStart();
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
-   RooAbsReal::clearEvalErrorLog();
+   {
+      auto ctx = makeEvalErrorContext();
 
-   _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "migradimproved");
-   bool ret = fitFcn();
-   _status = ((ret) ? _theFitter->Result().Status() : -1);
+      _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "migradimproved");
+      bool ret = fitFcn();
+      _status = ((ret) ? _theFitter->Result().Status() : -1);
 
-   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
+   }
    profileStop();
    _fcn->BackProp(_theFitter->Result());
 
@@ -974,4 +971,10 @@ int RooMinimizer::Config::getDefaultWorkers()
 #else
    return 0;
 #endif
+}
+
+std::unique_ptr<RooAbsReal::EvalErrorContext> RooMinimizer::makeEvalErrorContext() const
+{
+   RooAbsReal::clearEvalErrorLog();
+   return std::make_unique<RooAbsReal::EvalErrorContext>(RooAbsReal::CollectErrors);
 }
