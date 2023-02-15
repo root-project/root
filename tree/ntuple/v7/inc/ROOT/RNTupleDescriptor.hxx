@@ -207,7 +207,7 @@ public:
       DescriptorId_t fPhysicalColumnId = kInvalidDescriptorId;
       /// A 64bit element index
       NTupleSize_t fFirstElementIndex = kInvalidNTupleIndex;
-      /// A 32bit value for the number of column elements in the cluster
+      /// The number of column elements in the cluster
       ClusterSize_t fNElements = kInvalidClusterIndex;
       /// The usual format for ROOT compression settings (see Compression.h).
       /// The pages of a particular column in a particular cluster are all compressed with the same settings.
@@ -232,7 +232,7 @@ public:
       /// the page belongs
       struct RPageInfo {
          /// The sum of the elements of all the pages must match the corresponding fNElements field in fColumnRanges
-         ClusterSize_t fNElements = kInvalidClusterIndex;
+         std::uint32_t fNElements = std::uint32_t(-1);
          /// The meaning of fLocator depends on the storage backend.
          RNTupleLocator fLocator;
 

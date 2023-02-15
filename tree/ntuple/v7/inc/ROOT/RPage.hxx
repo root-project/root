@@ -59,10 +59,10 @@ public:
 private:
    ColumnId_t fColumnId;
    void *fBuffer;
-   ClusterSize_t::ValueType fElementSize;
-   ClusterSize_t::ValueType fNElements;
+   std::uint32_t fElementSize;
+   std::uint32_t fNElements;
    /// The capacity of the page in number of elements
-   ClusterSize_t::ValueType fMaxElements;
+   std::uint32_t fMaxElements;
    NTupleSize_t fRangeFirst;
    RClusterInfo fClusterInfo;
 
@@ -78,10 +78,10 @@ public:
 
    ColumnId_t GetColumnId() const { return fColumnId; }
    /// The space taken by column elements in the buffer
-   ClusterSize_t::ValueType GetNBytes() const { return fElementSize * fNElements; }
-   ClusterSize_t::ValueType GetElementSize() const { return fElementSize; }
-   ClusterSize_t::ValueType GetNElements() const { return fNElements; }
-   ClusterSize_t::ValueType GetMaxElements() const { return fMaxElements; }
+   std::uint32_t GetNBytes() const { return fElementSize * fNElements; }
+   std::uint32_t GetElementSize() const { return fElementSize; }
+   std::uint32_t GetNElements() const { return fNElements; }
+   std::uint32_t GetMaxElements() const { return fMaxElements; }
    NTupleSize_t GetGlobalRangeFirst() const { return fRangeFirst; }
    NTupleSize_t GetGlobalRangeLast() const { return fRangeFirst + NTupleSize_t(fNElements) - 1; }
    ClusterSize_t::ValueType GetClusterRangeFirst() const { return fRangeFirst - fClusterInfo.GetIndexOffset(); }

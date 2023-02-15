@@ -1474,7 +1474,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
             result = DeserializeLocator(bytes, fnInnerFrameSizeLeft(), locator);
             if (!result)
                return R__FORWARD_ERROR(result);
-            pageRange.fPageInfos.push_back({ClusterSize_t(nElements), locator});
+            pageRange.fPageInfos.push_back({nElements, locator});
             bytes += result.Unwrap();
          }
 

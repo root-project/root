@@ -166,6 +166,34 @@ void ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColum
 }
 
 
+void ROOT::Experimental::Detail::RColumnElement<
+   ROOT::Experimental::ClusterSize_t, ROOT::Experimental::EColumnType::kIndex>::Pack(
+   void *dst, void *src, std::size_t count) const
+{
+   std::int64_t *int64Array = reinterpret_cast<std::int64_t *>(src);
+   std::int32_t *int32Array = reinterpret_cast<std::int32_t *>(dst);
+   for (std::size_t i = 0; i < count; ++i) {
+      int32Array[i] = int64Array[i];
+#if R__LITTLE_ENDIAN == 0
+      int32Array[i] = RByteSwap<4>::bswap(int32Array[i]);
+#endif
+   }
+}
+
+void ROOT::Experimental::Detail::RColumnElement<
+   ROOT::Experimental::ClusterSize_t, ROOT::Experimental::EColumnType::kIndex>::Unpack(
+   void *dst, void *src, std::size_t count) const
+{
+   std::int32_t *int32Array = reinterpret_cast<std::int32_t *>(src);
+   std::int64_t *int64Array = reinterpret_cast<std::int64_t *>(dst);
+   for (std::size_t i = 0; i < count; ++i) {
+      int64Array[i] = int32Array[i];
+#if R__LITTLE_ENDIAN == 0
+      int64Array[i] = RByteSwap<8>::bswap(int64Array[i]);
+#endif
+   }
+}
+
 void ROOT::Experimental::Detail::RColumnElement<std::int64_t, ROOT::Experimental::EColumnType::kInt32>::Pack(
   void *dst, void *src, std::size_t count) const
 {
