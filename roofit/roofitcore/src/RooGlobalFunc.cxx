@@ -275,7 +275,10 @@ namespace RooFit {
   RooCmdArg EvalErrorWall(bool flag)                   { return RooCmdArg("EvalErrorWall",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg SumW2Error(bool flag)                      { return RooCmdArg("SumW2Error",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg AsymptoticError(bool flag)                      { return RooCmdArg("AsymptoticError",flag,0,0,0,0,0,0,0) ; }
-  RooCmdArg CloneData(bool flag)                       { return RooCmdArg("CloneData",flag,0,0,0,0,0,0,0) ; }
+  RooCmdArg CloneData(bool flag)                       {
+      oocoutI(nullptr, InputArguments) << "The deprecated RooFit::CloneData(" << flag << ") option passed to createNLL() is ignored." << std::endl;
+      return RooCmdArg("CloneData",flag,0,0,0,0,0,0,0) ;
+  }
   RooCmdArg Integrate(bool flag)                       { return RooCmdArg("Integrate",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Minimizer(const char* type, const char* alg) { return RooCmdArg("Minimizer",0,0,0,0,type,alg,0,0) ; }
 
