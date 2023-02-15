@@ -195,7 +195,7 @@ std::uint32_t SerializeColumnListV1(
          if (c.GetModel().GetIsSorted())
             flags |= RNTupleSerializer::kFlagSortAscColumn;
          // TODO(jblomer): fix for unsigned integer types
-         if (type == ROOT::Experimental::EColumnType::kIndex)
+         if (type == ROOT::Experimental::EColumnType::kIndex32)
             flags |= RNTupleSerializer::kFlagNonNegativeColumn;
          pos += RNTupleSerializer::SerializeUInt32(flags, *where);
 
@@ -228,7 +228,7 @@ RResult<std::uint32_t> DeserializeColumnV1(
    bytes += result.Unwrap();
 
    // Initialize properly for SerializeColumnType
-   EColumnType type{EColumnType::kIndex};
+   EColumnType type{EColumnType::kIndex32};
    std::uint16_t bitsOnStorage;
    std::uint32_t fieldId;
    std::uint32_t flags;
@@ -508,7 +508,7 @@ std::uint16_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnTy
 {
    using EColumnType = ROOT::Experimental::EColumnType;
    switch (type) {
-   case EColumnType::kIndex: return SerializeUInt16(0x02, buffer);
+   case EColumnType::kIndex32: return SerializeUInt16(0x02, buffer);
    case EColumnType::kSwitch: return SerializeUInt16(0x03, buffer);
    case EColumnType::kByte: return SerializeUInt16(0x04, buffer);
    case EColumnType::kChar: return SerializeUInt16(0x05, buffer);
@@ -537,7 +537,7 @@ RResult<std::uint16_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    std::uint16_t onDiskType;
    auto result = DeserializeUInt16(buffer, onDiskType);
    switch (onDiskType) {
-   case 0x02: type = EColumnType::kIndex; break;
+   case 0x02: type = EColumnType::kIndex32; break;
    case 0x03: type = EColumnType::kSwitch; break;
    case 0x04: type = EColumnType::kByte; break;
    case 0x05: type = EColumnType::kChar; break;

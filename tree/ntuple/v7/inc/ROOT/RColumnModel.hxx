@@ -43,9 +43,9 @@ When changed, remember to update
 enum class EColumnType {
    kUnknown = 0,
    // type for root columns of (nested) collections; 32bit integers that count relative to the current cluster
-   kIndex,
-   // 64 bit column that uses the lower 32bits as kIndex and the higher 32bits as a dispatch tag; used, e.g.,
-   // in order to serialize std::variant
+   kIndex32,
+   // 64 bit column that uses the lower 44 bits like kIndex64, higher 20 bits are a dispatch tag to a column ID;
+   // used to serialize std::variant.
    kSwitch,
    kByte,
    kChar,
@@ -79,7 +79,7 @@ private:
 
 public:
    RColumnModel() : fType(EColumnType::kUnknown), fIsSorted(false) {}
-   explicit RColumnModel(EColumnType type) : fType(type), fIsSorted(type == EColumnType::kIndex) {}
+   explicit RColumnModel(EColumnType type) : fType(type), fIsSorted(type == EColumnType::kIndex32) {}
    RColumnModel(EColumnType type, bool isSorted) : fType(type), fIsSorted(isSorted) {}
 
    EColumnType GetType() const { return fType; }

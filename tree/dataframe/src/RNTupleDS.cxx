@@ -73,7 +73,7 @@ public:
 
    const RColumnRepresentations &GetColumnRepresentations() const final
    {
-      static RColumnRepresentations representations({{EColumnType::kIndex}}, {{}});
+      static RColumnRepresentations representations({{EColumnType::kIndex32}}, {{}});
       return representations;
    }
    // Field is only used for reading

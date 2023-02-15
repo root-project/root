@@ -1635,7 +1635,7 @@ template <>
 class RField<std::string> : public Detail::RFieldBase {
 private:
    ClusterSize_t fIndex;
-   Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> fElemIndex;
+   Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex32> fElemIndex;
 
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final {
       return std::make_unique<RField>(newName);
@@ -1853,7 +1853,7 @@ protected:
          auto itemValue = fSubFields[0]->CaptureValue(&typedValue->data()[i]);
          nbytes += fSubFields[0]->Append(itemValue);
       }
-      Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex> elemIndex(&this->fNWritten);
+      Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex32> elemIndex(&this->fNWritten);
       this->fNWritten += count;
       fColumns[0]->Append(elemIndex);
       return nbytes + sizeof(elemIndex);

@@ -568,7 +568,7 @@ public:
 };
 
 template <>
-class RColumnElement<ClusterSize_t, EColumnType::kIndex> : public RColumnElementBase {
+class RColumnElement<ClusterSize_t, EColumnType::kIndex32> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(ClusterSize_t);
@@ -663,7 +663,7 @@ template <typename CppT>
 std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(EColumnType type)
 {
    switch (type) {
-   case EColumnType::kIndex: return std::make_unique<RColumnElement<CppT, EColumnType::kIndex>>(nullptr);
+   case EColumnType::kIndex32: return std::make_unique<RColumnElement<CppT, EColumnType::kIndex32>>(nullptr);
    case EColumnType::kSwitch: return std::make_unique<RColumnElement<CppT, EColumnType::kSwitch>>(nullptr);
    case EColumnType::kByte: return std::make_unique<RColumnElement<CppT, EColumnType::kByte>>(nullptr);
    case EColumnType::kChar: return std::make_unique<RColumnElement<CppT, EColumnType::kChar>>(nullptr);

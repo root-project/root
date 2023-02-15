@@ -28,7 +28,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RColumnElementBase>
 ROOT::Experimental::Detail::RColumnElementBase::Generate<void>(EColumnType type)
 {
    switch (type) {
-   case EColumnType::kIndex: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex>>(nullptr);
+   case EColumnType::kIndex32: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex32>>(nullptr);
    case EColumnType::kSwitch: return std::make_unique<RColumnElement<RColumnSwitch, EColumnType::kSwitch>>(nullptr);
    case EColumnType::kByte: return std::make_unique<RColumnElement<std::uint8_t, EColumnType::kByte>>(nullptr);
    case EColumnType::kChar: return std::make_unique<RColumnElement<char, EColumnType::kChar>>(nullptr);
@@ -55,7 +55,7 @@ ROOT::Experimental::Detail::RColumnElementBase::Generate<void>(EColumnType type)
 
 std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(EColumnType type) {
    switch (type) {
-   case EColumnType::kIndex: return 32;
+   case EColumnType::kIndex32: return 32;
    case EColumnType::kSwitch: return 64;
    case EColumnType::kByte: return 8;
    case EColumnType::kChar: return 8;
@@ -79,7 +79,7 @@ std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(ECo
 
 std::string ROOT::Experimental::Detail::RColumnElementBase::GetTypeName(EColumnType type) {
    switch (type) {
-   case EColumnType::kIndex: return "Index";
+   case EColumnType::kIndex32: return "Index";
    case EColumnType::kSwitch: return "Switch";
    case EColumnType::kByte: return "Byte";
    case EColumnType::kChar: return "Char";
@@ -167,7 +167,7 @@ void ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColum
 
 
 void ROOT::Experimental::Detail::RColumnElement<
-   ROOT::Experimental::ClusterSize_t, ROOT::Experimental::EColumnType::kIndex>::Pack(
+   ROOT::Experimental::ClusterSize_t, ROOT::Experimental::EColumnType::kIndex32>::Pack(
    void *dst, void *src, std::size_t count) const
 {
    std::int64_t *int64Array = reinterpret_cast<std::int64_t *>(src);
@@ -181,7 +181,7 @@ void ROOT::Experimental::Detail::RColumnElement<
 }
 
 void ROOT::Experimental::Detail::RColumnElement<
-   ROOT::Experimental::ClusterSize_t, ROOT::Experimental::EColumnType::kIndex>::Unpack(
+   ROOT::Experimental::ClusterSize_t, ROOT::Experimental::EColumnType::kIndex32>::Unpack(
    void *dst, void *src, std::size_t count) const
 {
    std::int32_t *int32Array = reinterpret_cast<std::int32_t *>(src);
