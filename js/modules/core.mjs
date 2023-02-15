@@ -361,7 +361,11 @@ let gStyle = {
    fLegendTextSize: 0,
    fLegendFillColor: 0,
    fHatchesLineWidth: 1,
-   fHatchesSpacing: 1
+   fHatchesSpacing: 1,
+   fCandleWhiskerRange: 1.0,
+   fCandleBoxRange: 0.5,
+   fCandleScaled: false,
+   fViolinScaled: true
 };
 
 /** @summary Method returns current document in use
