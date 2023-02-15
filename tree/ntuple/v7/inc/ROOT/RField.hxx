@@ -199,8 +199,6 @@ protected:
    /// Called by `ConnectPageSource()` only once connected; derived classes may override this
    /// as appropriate
    virtual void OnConnectPageSource() {}
-   /// Called by `ConnectPageSink()` before the columns are generated. Used to fix column encoding.
-   virtual void OnConnectPageSink() {}
 
 public:
    /// Iterates over the sub tree of fields in depth-first search order
