@@ -139,6 +139,12 @@ private:
    /// Free text set by the user
    std::string fDescription;
 
+   void InvokeReadCallbacks(RFieldValue &value)
+   {
+      for (const auto &func : fReadCallbacks)
+         func(value);
+   }
+
 protected:
    /// Collections and classes own sub fields
    std::vector<std::unique_ptr<RFieldBase>> fSubFields;
@@ -193,13 +199,8 @@ protected:
    /// Called by `ConnectPageSource()` only once connected; derived classes may override this
    /// as appropriate
    virtual void OnConnectPageSource() {}
-
-private:
-   void InvokeReadCallbacks(RFieldValue &value)
-   {
-      for (const auto &func : fReadCallbacks)
-         func(value);
-   }
+   /// Called by `ConnectPageSink()` before the columns are generated. Used to fix column encoding.
+   virtual void OnConnectPageSink() {}
 
 public:
    /// Iterates over the sub tree of fields in depth-first search order

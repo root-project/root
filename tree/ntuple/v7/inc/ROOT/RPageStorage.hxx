@@ -242,9 +242,6 @@ protected:
    /// GetMetrics() member function.
    void EnableDefaultMetrics(const std::string &prefix);
 
-   /// Fix-up default encoding: if the ntuple is uncompressed, the default encoding should be non-split
-   void FixUpColumnRepresentative(RFieldBase &field);
-
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
