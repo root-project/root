@@ -1243,16 +1243,7 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       LoadModules(FIXMEModules, clingInterp);
 
       GlobalModuleIndex *GlobalIndex = nullptr;
-      // Conservatively enable platform by platform.
-      bool supportedPlatform =
-#ifdef R__LINUX
-         true
-#elif defined(R__MACOSX)
-         true
-#else // Windows
-         true
-#endif
-         ;
+      bool supportedGMI = true;
       // Allow forcefully enabling/disabling the GMI.
       llvm::Optional<std::string> envUseGMI = llvm::sys::Process::GetEnv("ROOT_USE_GMI");
       if (envUseGMI.hasValue()) {
@@ -1263,13 +1254,13 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
 
          bool value = envUseGMI->empty() || ROOT::FoundationUtils::ConvertEnvValueToBool(*envUseGMI);
 
-         if (supportedPlatform == value)
+         if (supportedGMI == value)
             ::Warning("TCling__RegisterCxxModules", "Global module index is%sused already!",
                      (value) ? " " :" not ");
-         supportedPlatform = value;
+         supportedGMI = value;
       }
 
-      if (supportedPlatform) {
+      if (supportedGMI) {
          loadGlobalModuleIndex(clingInterp);
          // FIXME: The ASTReader still calls loadGlobalIndex and loads the file
          // We should investigate how to suppress it completely.
