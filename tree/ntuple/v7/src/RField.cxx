@@ -589,7 +589,7 @@ void ROOT::Experimental::RFieldZero::AcceptVisitor(Detail::RFieldVisitor &visito
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kIndex}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kIndex32}}, {{}});
    return representations;
 }
 
@@ -614,7 +614,7 @@ void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::AcceptVisito
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kIndex}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kIndex32}}, {{}});
    return representations;
 }
 
@@ -938,7 +938,7 @@ void ROOT::Experimental::RField<std::int64_t>::AcceptVisitor(Detail::RFieldVisit
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::string>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kIndex, EColumnType::kChar}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kIndex32, EColumnType::kChar}}, {{}});
    return representations;
 }
 
@@ -1296,7 +1296,7 @@ void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t glob
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RCollectionClassField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kIndex}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kIndex32}}, {{}});
    return representations;
 }
 
@@ -1557,7 +1557,7 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RVectorField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kIndex}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kIndex32}}, {{}});
    return representations;
 }
 
@@ -1728,7 +1728,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, De
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RRVecField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kIndex}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kIndex32}}, {{}});
    return representations;
 }
 
@@ -1915,7 +1915,7 @@ void ROOT::Experimental::RField<std::vector<bool>>::ReadGlobalImpl(NTupleSize_t 
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::vector<bool>>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kIndex}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kIndex32}}, {{}});
    return representations;
 }
 
@@ -2341,7 +2341,7 @@ ROOT::Experimental::RCollectionField::RCollectionField(
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RCollectionField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kIndex}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kIndex32}}, {{}});
    return representations;
 }
 
