@@ -2,6 +2,7 @@ import { BIT, settings, create, parse, toJSON, loadScript, isBatchMode, isFunc, 
 import { select as d3_select } from '../d3.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
+import { getElementRect } from '../base/BasePainter.mjs';
 import { cleanup, resize, selectActivePad, EAxisBits } from '../base/ObjectPainter.mjs';
 import { TAxisPainter } from './TAxisPainter.mjs';
 import { TFramePainter } from './TFramePainter.mjs';
@@ -685,6 +686,29 @@ class TCanvasPainter extends TPadPainter {
          canv.fPrimitives.Clear();
 
       return res;
+   }
+
+   /** @summary resize browser window to get requested canvas sizes */
+   resizeBrowser(canvW, canvH) {
+      if (!isFunc(window?.resizeTo) || !canvW || !canvH || isBatchMode() || this.embed_canvas || this.batch_mode)
+         return;
+
+      let cW = this.getPadWidth(), cH = this.getPadHeight();
+      if (!cW || !cH) {
+         let dom = this.selectDom('origin');
+         if (dom.empty()) return;
+         let rect = getElementRect(dom);
+         cW = rect.width;
+         cH = rect.height;
+         if (!cW || !cH) return;
+      }
+
+      let fullW = window.innerWidth - cW + canvW,
+          fullH = window.innerHeight - cH + canvH;
+      if ((fullW > 0) && (fullH > 0) && ((cW != canvW) || (cH != canvH))) {
+          window.resizeTo(fullW, fullH);
+          return true;
+      }
    }
 
    /** @summary draw TCanvas */
