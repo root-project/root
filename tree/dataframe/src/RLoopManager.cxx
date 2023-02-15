@@ -693,7 +693,7 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
    if (range.second == -1) {
       range.second = tree->GetEntries(); // convert '-1', i.e. 'until the end', to the actual entry number
    }
-   const std::string &id = fname + "/" + treename;
+   const std::string &id = fname + '/' + treename;
    fSampleInfos[slot] =
       fDatasetGroupMap.empty() ? RSampleInfo(id, range) : RSampleInfo(id, range, fDatasetGroupMap[id]);
 }
