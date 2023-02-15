@@ -138,7 +138,6 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, Long64_t 
    fNHistoPoints  = 0;
    fAxisMin       = 0.;
    fAxisMax       = 0.;
-   snprintf(fOptionStr, sizeof(fOptionStr), " ");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +171,6 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, TH1D *pro
    fNHistoPoints  = 0;
    fAxisMin       = 0.;
    fAxisMax       = 0.;
-   snprintf(fOptionStr, sizeof(fOptionStr), " ");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -295,17 +293,17 @@ int TCandle::ParseOption(char * opt) {
             if (wasHorizontal && !IsHorizontal()) {fOption = (CandleOption)(fOption + kHorizontal);}
             memcpy(brOpen,"                ",brClose-brOpen+1); //Cleanup
 
-            snprintf(fOptionStr, sizeof(fOptionStr), "CANDLE%c(%ld)",direction,(long)fOption);
+            fOptionStr.Form("CANDLE%c(%ld)", direction, (long)fOption);
          } else {
             fOption = (CandleOption)(fOption + fallbackCandle);
          }
       } else {
-         snprintf(fOptionStr, sizeof(fOptionStr), "CANDLE%c%c",direction,preset);
+         fOptionStr.Form("CANDLE%c%c",direction,preset);
       }
       //Handle option "CANDLE" ,"CANDLEX" or "CANDLEY" to behave like "CANDLEX1" or "CANDLEY1"
       if (!useIndivOption && !fOption ) {
          fOption = fallbackCandle;
-         snprintf(fOptionStr, sizeof(fOptionStr), "CANDLE%c2",direction);
+         fOptionStr.Form("CANDLE%c2",direction);
       }
    }
 
@@ -352,17 +350,17 @@ int TCandle::ParseOption(char * opt) {
             if (wasHorizontal && !IsHorizontal()) {fOption = (CandleOption)(fOption + kHorizontal);}
             memcpy(brOpen,"                ",brClose-brOpen+1); //Cleanup
 
-            snprintf(fOptionStr, sizeof(fOptionStr), "VIOLIN%c(%ld)",direction,(long)fOption);
+            fOptionStr.Form("VIOLIN%c(%ld)", direction, (long)fOption);
          } else {
             fOption = (CandleOption)(fOption + fallbackCandle);
          }
       } else {
-         snprintf(fOptionStr, sizeof(fOptionStr), "VIOLIN%c%c",direction,preset);
+         fOptionStr.Form("VIOLIN%c%c", direction, preset);
       }
       //Handle option "VIOLIN" ,"VIOLINX" or "VIOLINY" to behave like "VIOLINX1" or "VIOLINY1"
       if (!useIndivOption && !fOption ) {
          fOption = fallbackCandle;
-         snprintf(fOptionStr, sizeof(fOptionStr), "VIOLIN%c1",direction);
+         fOptionStr.Form("VIOLIN%c1", direction);
       }
    }
 
@@ -834,7 +832,7 @@ void TCandle::Paint(Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true is this option is activated in fOption
 
-bool TCandle::IsOption(CandleOption opt) {
+bool TCandle::IsOption(CandleOption opt) const {
    long myOpt = 9;
    int pos = 0;
    for (pos = 0; pos < 16; pos++) {
@@ -844,7 +842,7 @@ bool TCandle::IsOption(CandleOption opt) {
    myOpt /= 9;
    int thisOpt = GetCandleOption(pos);
 
-   return ((thisOpt * myOpt) == opt);
+   return (thisOpt * myOpt) == opt;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
