@@ -568,13 +568,17 @@ public:
 };
 
 template <>
-class RColumnElement<ClusterSize_t, EColumnType::kIndex> : public RColumnElementLE<ClusterSize_t::ValueType> {
+class RColumnElement<ClusterSize_t, EColumnType::kIndex> : public RColumnElementBase {
 public:
-   static constexpr std::size_t kSize = sizeof(ROOT::Experimental::ClusterSize_t);
-   static constexpr std::size_t kBitsOnStorage = kSize * 8;
-   explicit RColumnElement(ClusterSize_t *value) : RColumnElementLE(value, kSize) {}
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(ClusterSize_t);
+   static constexpr std::size_t kBitsOnStorage = 32;
+   explicit RColumnElement(ClusterSize_t *value) : RColumnElementBase(value, kSize) {}
    bool IsMappable() const final { return kIsMappable; }
    std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+
+   void Pack(void *dst, void *src, std::size_t count) const final;
+   void Unpack(void *dst, void *src, std::size_t count) const final;
 };
 
 template <>
@@ -582,7 +586,7 @@ class RColumnElement<RColumnSwitch, EColumnType::kSwitch> : public RColumnElemen
 public:
    static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(ROOT::Experimental::RColumnSwitch);
-   static constexpr std::size_t kBitsOnStorage = kSize * 8;
+   static constexpr std::size_t kBitsOnStorage = 64;
    explicit RColumnElement(RColumnSwitch *value) : RColumnElementBase(value, kSize) {}
    bool IsMappable() const final { return kIsMappable; }
    std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
