@@ -67,6 +67,8 @@ sap.ui.define([
 
             if (cp.v7canvas) model.setProperty("/isRoot6", false);
 
+            cp.enforceCanvasSize = !cp.embed_canvas && cp.online_canvas;
+
             model.setProperty("/canResize", !cp.embed_canvas && cp.online_canvas);
 
             let ws = cp._websocket || cp._window_handle;
@@ -113,6 +115,8 @@ sap.ui.define([
 
          return this.showGed(true).then(() => {
             canvp.selectObjectPainter(painter);
+
+            canvp.enforceCanvasSize = true;
 
             if (typeof canvp.processChanges == 'function')
                canvp.processChanges("sbits", canvp);
@@ -300,7 +304,10 @@ sap.ui.define([
          let ged = this.getLeftController("Ged"),
              p = this.getCanvasPainter();
          if (p) p.registerForPadEvents(null);
-         if (ged) ged.cleanupGed();
+         if (ged) {
+            ged.cleanupGed();
+            if (p) p.enforceCanvasSize = true;
+         }
          if (typeof p?.processChanges == 'function')
             p.processChanges('sbits', p);
       },
@@ -336,10 +343,11 @@ sap.ui.define([
             split.removeContentArea(split.getContentAreas()[0]);
          }
 
+         let canvp = this.getCanvasPainter();
+         if (canvp) canvp.enforceCanvasSize = true;
+
          if (!panel_name)
             return Promise.resolve(null);
-
-         let canvp = this.getCanvasPainter();
 
          let viewName = panel_name;
 
@@ -482,7 +490,10 @@ sap.ui.define([
          this.getView().getModel().setProperty("/StatusIcon", chk_icon(new_state));
 
          let canvp = this.getCanvasPainter();
-         if (canvp) canvp.processChanges("sbits", canvp);
+         if (canvp) {
+            canvp.enforceCanvasSize = true;
+            canvp.processChanges("sbits", canvp);
+         }
       },
 
       toggleToolBar(new_state) {
