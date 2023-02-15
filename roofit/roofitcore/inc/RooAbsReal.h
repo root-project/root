@@ -324,6 +324,22 @@ public:
   } ;
 
   enum ErrorLoggingMode { PrintErrors, CollectErrors, CountErrors, Ignore } ;
+
+  /// Context to temporarily change the error logging mode as long as the context is alive.
+  class EvalErrorContext {
+  public:
+     EvalErrorContext(ErrorLoggingMode m) : _old{evalErrorLoggingMode()} { setEvalErrorLoggingMode(m); }
+
+     EvalErrorContext(EvalErrorContext const&) = delete;
+     EvalErrorContext(EvalErrorContext &&) = delete;
+     EvalErrorContext& operator=(EvalErrorContext const&) = delete;
+     EvalErrorContext& operator=(EvalErrorContext &&) = delete;
+
+     ~EvalErrorContext() { setEvalErrorLoggingMode(_old); }
+  private:
+     ErrorLoggingMode _old;
+  };
+
   static ErrorLoggingMode evalErrorLoggingMode() ;
   static void setEvalErrorLoggingMode(ErrorLoggingMode m) ;
   void logEvalError(const char* message, const char* serverValueString=nullptr) const ;
