@@ -1760,7 +1760,7 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
             modified = true;
          }
       }
-   } else if (item.fcust.compare("pave") == 0) {
+   } else if (item.fcust.compare(0,4,"pave") == 0) {
       if (obj && obj->InheritsFrom(TPave::Class())) {
          TPave *pave = static_cast<TPave *>(obj);
          if ((item.fopt.size() >= 4) && objpad) {
@@ -1776,6 +1776,17 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
             modified = true;
 
             pave->ConvertNDCtoPad();
+         }
+         if ((item.fcust.length() > 4) && pave->InheritsFrom(TPaveStats::Class())) {
+            // add text lines for statsbox
+            auto stats = static_cast<TPaveStats *>(pave);
+            stats->Clear();
+            size_t pos_start = 6, pos_end;
+            while ((pos_end = item.fcust.find(";;", pos_start)) != std::string::npos) {
+               stats->AddText(item.fcust.substr(pos_start, pos_end - pos_start).c_str());
+               pos_start = pos_end + 2;
+            }
+            stats->AddText(item.fcust.substr(pos_start).c_str());
          }
       }
    }
