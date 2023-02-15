@@ -137,6 +137,10 @@ private:
    Double_t      fTimeOffset;        ///< Time offset to the beginning of an axis
    Bool_t        fIsReading;         ///<! Set to FALSE when userclass::UseCurrentStyle is called by the style manager
    Float_t       fImageScaling;      ///< Image scaling to produce high definition bitmap images
+   Double_t      fCandleWhiskerRange;///< Candle plot, the fraction which is covered by the whiskers (0 < x < 1), default 1
+   Double_t      fCandleBoxRange;    ///< Candle plot, The fraction which is covered by the box (0 < x < 1), default 0.5
+   Bool_t        fCandleScaled;      ///< Candle plot, shall the box-width be scaled to each other by the integral of a box?
+   Bool_t        fViolinScaled;      ///< Violin plot, shall the violin or histos be scaled to each other by the maximum height?
 
 public:
    enum EPaperSize { kA4, kUSLetter };
@@ -279,6 +283,10 @@ public:
    Int_t            GetJoinLinePS() const {return fJoinLinePS;} ///< Returns the line join method used for PostScript, PDF and SVG output. See `TPostScript::SetLineJoin` for details.
    Int_t            GetCapLinePS()  const {return fCapLinePS;}  ///< Returns the line cap method used for PostScript, PDF and SVG output. See `TPostScript::SetLineCap` for details.
    Float_t          GetLineScalePS() const {return fLineScalePS;}
+   Double_t         GetCandleWhiskerRange() const {return fCandleWhiskerRange;}
+   Double_t         GetCandleBoxRange() const {return fCandleBoxRange;}
+   Bool_t           GetCandleScaled() const {return fCandleScaled;}
+   Bool_t           GetViolinScaled() const {return fViolinScaled;}
 
    Bool_t           IsReading() const {return fIsReading;}
    void             Paint(Option_t *option="") override;
@@ -404,10 +412,15 @@ public:
    void             SetIsReading(Bool_t reading=kTRUE);
    void             SetPalette(Int_t ncolors = kBird, Int_t *colors = nullptr, Float_t alpha = 1.);
    void             SetPalette(TString fileName, Float_t alpha = 1.);
+   void             SetCandleWhiskerRange(Double_t wRange=1.0);
+   void             SetCandleBoxRange(Double_t bRange=0.5);
+   void             SetCandleScaled(Bool_t on=kFALSE) {fCandleScaled=on;}
+   void             SetViolinScaled(Bool_t on=kTRUE) {fViolinScaled=on;}
+
    void             SavePrimitive(std::ostream &out, Option_t * = "") override;
    void             SaveSource(const char *filename, Option_t *option = nullptr);
 
-   ClassDefOverride(TStyle, 19);  //A collection of all graphics attributes
+   ClassDefOverride(TStyle, 20);  //A collection of all graphics attributes
 };
 
 
