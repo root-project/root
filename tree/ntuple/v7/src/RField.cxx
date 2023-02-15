@@ -474,6 +474,23 @@ void ROOT::Experimental::Detail::RFieldBase::RemoveReadCallback(size_t idx)
 void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink)
 {
    R__ASSERT(fColumns.empty());
+
+   /// Fix-up default encoding: if the ntuple is uncompressed, the default encoding should be non-split
+   if ((pageSink.GetWriteOptions().GetCompression() == 0) && HasDefaultColumnRepresentative()) {
+      const auto &rep = GetColumnRepresentative();
+      if (rep == ColumnRepresentation_t({EColumnType::kSplitReal64})) {
+         SetColumnRepresentative({EColumnType::kReal64});
+      } else if (rep == ColumnRepresentation_t({EColumnType::kSplitReal32})) {
+         SetColumnRepresentative({EColumnType::kReal32});
+      } else if (rep == ColumnRepresentation_t({EColumnType::kSplitInt64})) {
+         SetColumnRepresentative({EColumnType::kInt64});
+      } else if (rep == ColumnRepresentation_t({EColumnType::kSplitInt32})) {
+         SetColumnRepresentative({EColumnType::kInt32});
+      } else if (rep == ColumnRepresentation_t({EColumnType::kSplitInt16})) {
+         SetColumnRepresentative({EColumnType::kInt16});
+      }
+   }
+
    GenerateColumnsImpl();
    if (!fColumns.empty())
       fPrincipalColumn = fColumns[0].get();
