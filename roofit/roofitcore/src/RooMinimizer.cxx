@@ -974,5 +974,9 @@ int RooMinimizer::Config::getDefaultWorkers()
 std::unique_ptr<RooAbsReal::EvalErrorContext> RooMinimizer::makeEvalErrorContext() const
 {
    RooAbsReal::clearEvalErrorLog();
-   return std::make_unique<RooAbsReal::EvalErrorContext>(RooAbsReal::CollectErrors);
+   // If evaluation error printing is disabled, we don't need to collect the
+   // errors and only need to count them. This significantly reduces the
+   // performance overhead when having evaluation errors.
+   auto m = _cfg.printEvalErrors < 0 ? RooAbsReal::CountErrors : RooAbsReal::CollectErrors;
+   return std::make_unique<RooAbsReal::EvalErrorContext>(m);
 }
