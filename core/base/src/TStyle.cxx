@@ -796,6 +796,11 @@ void TStyle::Reset(Option_t *opt)
 
    fTimeOffset = 788918400; // UTC time at 01/01/95
 
+   fCandleWhiskerRange  = 1.0;
+   fCandleBoxRange      = 0.5;
+   fCandleScaled = kFALSE;
+   fViolinScaled = kTRUE;
+
    TString style_name = opt;
 
    if (strcmp(style_name,"Modern") == 0) {
@@ -1819,6 +1824,41 @@ void TStyle::SetTimeOffset(Double_t toffset)
 void TStyle::SetStripDecimals(Bool_t strip)
 {
    fStripDecimals = strip;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// By setting whisker-range for candle plot, one can force
+/// the whiskers to cover the fraction of the distribution.
+/// Set wRange between 0 and 1. Default is 1
+/// gStyle->SetCandleWhiskerRange(0.95) will set all candle-charts to cover 95% of
+/// the distribution with the whiskers.
+/// Can only be used with the standard-whisker definition
+
+void TStyle::SetCandleWhiskerRange(Double_t wRange)
+{
+   if (wRange < 0)
+      fCandleWhiskerRange = 0;
+   else if (wRange > 1)
+      fCandleWhiskerRange = 1;
+   else
+      fCandleWhiskerRange = wRange;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// By setting box-range for candle plot, one can force the
+/// box of the candle-chart to cover that given fraction of the distribution.
+/// Set bRange between 0 and 1. Default is 0.5
+/// gStyle->SetCandleBoxRange(0.68) will set all candle-charts to cover 68% of the
+/// distribution by the box
+
+void TStyle::SetCandleBoxRange(Double_t bRange)
+{
+   if (bRange < 0)
+      fCandleBoxRange = 0;
+   else if (bRange > 1)
+      fCandleBoxRange = 1;
+   else
+      fCandleBoxRange = bRange;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
