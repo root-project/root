@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '14/02/2023';
+let version_date = '15/02/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -69118,7 +69118,7 @@ class TPadPainter extends ObjectPainter {
 
       if (check_resize > 0) {
 
-         if (this._fixed_size) return (check_resize > 1); // flag used to force re-drawing of all subpads
+         if (this._fixed_size) return check_resize > 1; // flag used to force re-drawing of all subpads
 
          svg = this.getCanvSvg();
 
@@ -69862,7 +69862,8 @@ class TPadPainter extends ObjectPainter {
 
       if (!force) force = this.needRedrawByResize();
 
-      let changed = false,
+      let handle_online = this.iscan && this.pad && this.online_canvas && !this.embed_canvas && !this.batch_mode,
+          changed = false,
           redrawNext = indx => {
              if (!changed || (indx >= this.painters.length)) {
                 this.confirmDraw();
@@ -69875,6 +69876,31 @@ class TPadPainter extends ObjectPainter {
       return sync_promise.then(() => {
 
          changed = this.createCanvasSvg(force ? 2 : 1, size);
+
+         if (this.enforceCanvasSize) {
+            // mode when after window resize one tries to preserve canvas size
+            delete this.enforceCanvasSize;
+
+            if (changed && handle_online && isFunc(this.resizeBrowser) && this.pad?.fCw && this.pad?.fCh)
+               if (this.resizeBrowser(this.pad.fCw, this.pad.fCh))
+                  handle_online = false;
+         }
+
+         if (changed && handle_online) {
+            if (this._resize_tmout)
+               clearTimeout(this._resize_tmout);
+            this._resize_tmout = setTimeout(() => {
+               delete this._resize_tmout;
+               if (!this.pad) return;
+               let cw = this.getPadWidth(), ch = this.getPadHeight();
+               if ((cw > 0) && (ch > 0) && (this.pad.fCw != cw) || (this.pad.fCh != ch)) {
+                  this.pad.fCw = cw;
+                  this.pad.fCh = ch;
+                  console.log(`RESIZED:[${cw},${ch}]`);
+                  this.sendWebsocket(`RESIZED:[${cw},${ch}]`);
+               }
+            }, 1000); // long enough delay to prevent multiple occurence
+         }
 
          // if canvas changed, redraw all its subitems.
          // If redrawing was forced for canvas, same applied for sub-elements
@@ -70161,6 +70187,11 @@ class TPadPainter extends ObjectPainter {
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas
             registerForResize(this.brlayout);
          }
+
+         // when getting first message from server, resize browser window
+         if (this.online_canvas && !this.batch_mode && this.use_openui && !this.embed_canvas &&
+              (first.fCw > 0) && (first.fCh > 0) && isFunc(this.resizeBrowser))
+               this.resizeBrowser(first.fCw, first.fCh);
 
          this.createCanvasSvg(0);
 
@@ -71541,6 +71572,29 @@ class TCanvasPainter extends TPadPainter {
          canv.fPrimitives.Clear();
 
       return res;
+   }
+
+   /** @summary resize browser window to get requested canvas sizes */
+   resizeBrowser(canvW, canvH) {
+      if (!isFunc(window?.resizeTo) || !canvW || !canvH || isBatchMode() || this.embed_canvas || this.batch_mode)
+         return;
+
+      let cW = this.getPadWidth(), cH = this.getPadHeight();
+      if (!cW || !cH) {
+         let dom = this.selectDom('origin');
+         if (dom.empty()) return;
+         let rect = getElementRect(dom);
+         cW = rect.width;
+         cH = rect.height;
+         if (!cW || !cH) return;
+      }
+
+      let fullW = window.innerWidth - cW + canvW,
+          fullH = window.innerHeight - cH + canvH;
+      if ((fullW > 0) && (fullH > 0) && ((cW != canvW) || (cH != canvH))) {
+          window.resizeTo(fullW, fullH);
+          return true;
+      }
    }
 
    /** @summary draw TCanvas */
@@ -113539,7 +113593,8 @@ class RPadPainter extends RObjectPainter {
 
       if (!force) force = this.needRedrawByResize();
 
-      let changed = false,
+      let handle_online = this.iscan && this.pad && this.online_canvas && !this.embed_canvas && !this.batch_mode,
+          changed = false,
           redrawNext = indx => {
              if (!changed || (indx >= this.painters.length)) {
                 this.confirmDraw();
@@ -113552,6 +113607,30 @@ class RPadPainter extends RObjectPainter {
       return sync_promise.then(() => {
 
          changed = this.createCanvasSvg(force ? 2 : 1, size);
+
+         if (this.enforceCanvasSize) {
+            // mode when after window resize one tries to preserve canvas size
+            delete this.enforceCanvasSize;
+
+            if (changed && handle_online && isFunc(this.resizeBrowser) && this.pad?.fWinSize)
+               if (this.resizeBrowser(this.pad.fWinSize[0], this.pad.fWinSize[1]))
+                  handle_online = false;
+         }
+
+         if (changed && handle_online) {
+            if (this._resize_tmout)
+               clearTimeout(this._resize_tmout);
+            this._resize_tmout = setTimeout(() => {
+               delete this._resize_tmout;
+               if (!this.pad?.fWinSize) return;
+               let cw = this.getPadWidth(), ch = this.getPadHeight();
+               if ((cw > 0) && (ch > 0) && (this.pad.fWinSize[0] != cw) || (this.pad.fWinSize[1] != ch)) {
+                  this.pad.fWinSize[0] = cw;
+                  this.pad.fWinSize[1] = ch;
+                  this.sendWebsocket(`RESIZED:[${cw},${ch}]`);
+               }
+            }, 1000); // long enough delay to prevent multiple occurence
+         }
 
          // if canvas changed, redraw all its subitems.
          // If redrawing was forced for canvas, same applied for sub-elements
@@ -113841,6 +113920,11 @@ class RPadPainter extends RObjectPainter {
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas
             registerForResize(this.brlayout);
          }
+
+         // when getting first message from server, resize browser window
+         if (this.online_canvas && !this.batch_mode && this.use_openui && !this.embed_canvas && snap.fWinSize &&
+              (snap.fWinSize[0] > 0) && (snap.fWinSize[1] > 0) && isFunc(this.resizeBrowser))
+                  this.resizeBrowser(snap.fWinSize[0], snap.fWinSize[1]);
 
          this.createCanvasSvg(0);
          this.addPadButtons(true);
@@ -115605,6 +115689,30 @@ class RCanvasPainter extends RPadPainter {
       console.error('RCanvasPainter.produceJSON not yet implemented');
       return '';
    }
+
+   /** @summary resize browser window  */
+   resizeBrowser(canvW, canvH) {
+      if (!isFunc(window?.resizeTo) || !canvW || !canvH || isBatchMode() || this.embed_canvas || this.batch_mode)
+         return;
+
+      let cW = this.getPadWidth(), cH = this.getPadHeight();
+      if (!cW || !cH) {
+         let dom = this.selectDom('origin');
+         if (dom.empty()) return;
+         let rect = getElementRect(dom);
+         cW = rect.width;
+         cH = rect.height;
+         if (!cW || !cH) return;
+      }
+
+      let fullW = window.innerWidth - cW + canvW,
+          fullH = window.innerHeight - cH + canvH;
+      if ((fullW > 0) && (fullH > 0) && ((cW != canvW) || (cH != canvH))) {
+          window.resizeTo(fullW, fullH);
+          return true;
+      }
+   }
+
 
    /** @summary draw RCanvas object */
    static async draw(dom, can /*, opt */) {

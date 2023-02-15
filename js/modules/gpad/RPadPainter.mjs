@@ -766,7 +766,8 @@ class RPadPainter extends RObjectPainter {
 
       if (!force) force = this.needRedrawByResize();
 
-      let changed = false,
+      let handle_online = this.iscan && this.pad && this.online_canvas && !this.embed_canvas && !this.batch_mode,
+          changed = false,
           redrawNext = indx => {
              if (!changed || (indx >= this.painters.length)) {
                 this.confirmDraw();
@@ -779,6 +780,30 @@ class RPadPainter extends RObjectPainter {
       return sync_promise.then(() => {
 
          changed = this.createCanvasSvg(force ? 2 : 1, size);
+
+         if (this.enforceCanvasSize) {
+            // mode when after window resize one tries to preserve canvas size
+            delete this.enforceCanvasSize;
+
+            if (changed && handle_online && isFunc(this.resizeBrowser) && this.pad?.fWinSize)
+               if (this.resizeBrowser(this.pad.fWinSize[0], this.pad.fWinSize[1]))
+                  handle_online = false;
+         }
+
+         if (changed && handle_online) {
+            if (this._resize_tmout)
+               clearTimeout(this._resize_tmout);
+            this._resize_tmout = setTimeout(() => {
+               delete this._resize_tmout;
+               if (!this.pad?.fWinSize) return;
+               let cw = this.getPadWidth(), ch = this.getPadHeight();
+               if ((cw > 0) && (ch > 0) && (this.pad.fWinSize[0] != cw) || (this.pad.fWinSize[1] != ch)) {
+                  this.pad.fWinSize[0] = cw;
+                  this.pad.fWinSize[1] = ch;
+                  this.sendWebsocket(`RESIZED:[${cw},${ch}]`);
+               }
+            }, 1000); // long enough delay to prevent multiple occurence
+         }
 
          // if canvas changed, redraw all its subitems.
          // If redrawing was forced for canvas, same applied for sub-elements
@@ -1068,6 +1093,11 @@ class RPadPainter extends RObjectPainter {
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas
             registerForResize(this.brlayout);
          }
+
+         // when getting first message from server, resize browser window
+         if (this.online_canvas && !this.batch_mode && this.use_openui && !this.embed_canvas && snap.fWinSize &&
+              (snap.fWinSize[0] > 0) && (snap.fWinSize[1] > 0) && isFunc(this.resizeBrowser))
+                  this.resizeBrowser(snap.fWinSize[0], snap.fWinSize[1]);
 
          this.createCanvasSvg(0);
          this.addPadButtons(true);

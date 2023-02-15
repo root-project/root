@@ -2,7 +2,7 @@ import { settings, create, parse, toJSON, loadScript, registerMethods, isBatchMo
 import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
-import { makeTranslate } from '../base/BasePainter.mjs';
+import { makeTranslate, getElementRect } from '../base/BasePainter.mjs';
 import { selectActivePad, cleanup, resize, EAxisBits } from '../base/ObjectPainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { RAxisPainter } from './RAxisPainter.mjs';
@@ -612,6 +612,30 @@ class RCanvasPainter extends RPadPainter {
       console.error('RCanvasPainter.produceJSON not yet implemented');
       return '';
    }
+
+   /** @summary resize browser window  */
+   resizeBrowser(canvW, canvH) {
+      if (!isFunc(window?.resizeTo) || !canvW || !canvH || isBatchMode() || this.embed_canvas || this.batch_mode)
+         return;
+
+      let cW = this.getPadWidth(), cH = this.getPadHeight();
+      if (!cW || !cH) {
+         let dom = this.selectDom('origin');
+         if (dom.empty()) return;
+         let rect = getElementRect(dom);
+         cW = rect.width;
+         cH = rect.height;
+         if (!cW || !cH) return;
+      }
+
+      let fullW = window.innerWidth - cW + canvW,
+          fullH = window.innerHeight - cH + canvH;
+      if ((fullW > 0) && (fullH > 0) && ((cW != canvW) || (cH != canvH))) {
+          window.resizeTo(fullW, fullH);
+          return true;
+      }
+   }
+
 
    /** @summary draw RCanvas object */
    static async draw(dom, can /*, opt */) {
