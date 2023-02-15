@@ -32,6 +32,9 @@ protected:
    Int_t fNIn;
    Int_t fKOrd;   //!
    Int_t fKCur;   //!
+
+   Double_t RetrieveBinContent(Int_t bin) const override { return GetBinContent(bin); }
+
 public:
    TH1K();
    TH1K(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup,Int_t k=0);
