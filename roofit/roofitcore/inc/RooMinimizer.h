@@ -45,14 +45,14 @@ public:
    /// Config argument to RooMinimizer ctor
    struct Config {
       Config() {}
-      double recoverFromNaN = 10.;        // RooAbsMinimizerFcn config
-      int printEvalErrors = 10;           // RooAbsMinimizerFcn config
-      int doEEWall = 1;                   // RooAbsMinimizerFcn config
-      int offsetting = -1;                // RooAbsMinimizerFcn config
-      const char *logf = nullptr;         // RooAbsMinimizerFcn config
+      double recoverFromNaN = 10.; // RooAbsMinimizerFcn config
+      int printEvalErrors = 10;    // RooAbsMinimizerFcn config
+      int doEEWall = 1;            // RooAbsMinimizerFcn config
+      int offsetting = -1;         // RooAbsMinimizerFcn config
+      const char *logf = nullptr;  // RooAbsMinimizerFcn config
 
-      // RooAbsMinimizerFcn config that can only be set in ctor, 0 means no parallelization (default), 
-      // -1 is parallelization with the number of workers controlled by RooFit::MultiProcess which 
+      // RooAbsMinimizerFcn config that can only be set in ctor, 0 means no parallelization (default),
+      // -1 is parallelization with the number of workers controlled by RooFit::MultiProcess which
       // defaults to the number of available processors, n means parallelization with n CPU's
       int parallelize = 0;
 
@@ -64,10 +64,10 @@ public:
       // argument is ignored when parallelize is 0
       bool enableParallelDescent = false;
 
-      bool verbose = false;               // local config
-      bool profile = false;               // local config
-      bool timingAnalysis = false;            // local config
-      std::string minimizerType = "";     // local config
+      bool verbose = false;           // local config
+      bool profile = false;           // local config
+      bool timingAnalysis = false;    // local config
+      std::string minimizerType = ""; // local config
    private:
       int getDefaultWorkers();
    };
