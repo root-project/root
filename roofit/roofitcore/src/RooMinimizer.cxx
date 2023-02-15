@@ -115,9 +115,10 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
                                   << "also setting parallel gradient calculation mode." << std::endl;
             _cfg.enableParallelGradient = 1;
          }
-         // If _cfg.parallelize is larger than zero set the number of workers to that value. Otherwise do not do anything and let 
-         // RooFit::MultiProcess handle the number of workers
-         if (_cfg.parallelize > 0) RooFit::MultiProcess::Config::setDefaultNWorkers(_cfg.parallelize);
+         // If _cfg.parallelize is larger than zero set the number of workers to that value. Otherwise do not do
+         // anything and let RooFit::MultiProcess handle the number of workers
+         if (_cfg.parallelize > 0)
+            RooFit::MultiProcess::Config::setDefaultNWorkers(_cfg.parallelize);
          RooFit::MultiProcess::Config::setTimingAnalysis(_cfg.timingAnalysis);
 
          _fcn = std::make_unique<RooFit::TestStatistics::MinuitFcnGrad>(
@@ -131,14 +132,14 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _cfg(cfg)
             "please recompile with -Droofit_multiprocess=ON for parallel evaluation");
 #endif
       } else { // modular test statistic non parallel
-         coutW(InputArguments) << "Requested modular likelihood without gradient parallelization, some features such as offsetting "
-                               << "may not work yet. Non-modular likelihoods are more reliable without parallelization." 
-                               << std::endl;
-         // The RooRealL that is used in the case where the modular likelihood is being passed to a RooMinimizerFcn does not have
-         // offsetting implemented. Therefore, offsetting will not work in this case. Other features might also not work since the 
-         // RooRealL was not intended for minimization. Further development is required to make the MinuitFcnGrad also handle serial gradient
-         // minimization. The MinuitFcnGrad accepts a RooAbsL and has offsetting implemented, thus omitting the need for RooRealL
-         // minimization altogether.
+         coutW(InputArguments)
+            << "Requested modular likelihood without gradient parallelization, some features such as offsetting "
+            << "may not work yet. Non-modular likelihoods are more reliable without parallelization." << std::endl;
+         // The RooRealL that is used in the case where the modular likelihood is being passed to a RooMinimizerFcn does
+         // not have offsetting implemented. Therefore, offsetting will not work in this case. Other features might also
+         // not work since the RooRealL was not intended for minimization. Further development is required to make the
+         // MinuitFcnGrad also handle serial gradient minimization. The MinuitFcnGrad accepts a RooAbsL and has
+         // offsetting implemented, thus omitting the need for RooRealL minimization altogether.
          _fcn = std::make_unique<RooMinimizerFcn>(&function, this);
       }
    } else {
@@ -314,10 +315,9 @@ int RooMinimizer::minimize(const char *type, const char *alg)
 #ifdef R__HAS_ROOFIT_MULTIPROCESS
       addParamsToProcessTimer();
 #else
-      throw std::logic_error(
-            "ProcessTimer, but ROOT was not compiled with multiprocessing enabled, "
-            "please recompile with -Droofit_multiprocess=ON for logging with the "
-            "ProcessTimer.");
+      throw std::logic_error("ProcessTimer, but ROOT was not compiled with multiprocessing enabled, "
+                             "please recompile with -Droofit_multiprocess=ON for logging with the "
+                             "ProcessTimer.");
 #endif
    _fcn->Synchronize(_theFitter->Config().ParamsSettings());
 
@@ -385,7 +385,6 @@ int RooMinimizer::hesse()
          _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str());
          bool ret = _theFitter->CalculateHessErrors();
          _status = ((ret) ? _theFitter->Result().Status() : -1);
-
       }
       profileStop();
       _fcn->BackProp(_theFitter->Result());
@@ -466,7 +465,6 @@ int RooMinimizer::minos(const RooArgSet &minosParamList)
             // to avoid that following minimization computes automatically the Minos errors
             _theFitter->Config().SetMinosErrors(false);
          }
-
       }
       profileStop();
       _fcn->BackProp(_theFitter->Result());
@@ -518,7 +516,6 @@ int RooMinimizer::simplex()
       _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "simplex");
       bool ret = fitFcn();
       _status = ((ret) ? _theFitter->Result().Status() : -1);
-
    }
    profileStop();
    _fcn->BackProp(_theFitter->Result());
@@ -544,7 +541,6 @@ int RooMinimizer::improve()
       _theFitter->Config().SetMinimizer(_cfg.minimizerType.c_str(), "migradimproved");
       bool ret = fitFcn();
       _status = ((ret) ? _theFitter->Result().Status() : -1);
-
    }
    profileStop();
    _fcn->BackProp(_theFitter->Result());
@@ -755,15 +751,15 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
 void RooMinimizer::addParamsToProcessTimer()
 {
 #ifdef R__HAS_ROOFIT_MULTIPROCESS
-  // parameter indices for use in timing heat matrix
-  std::vector<std::string> parameter_names;
-  for (auto && parameter : *_fcn->GetFloatParamList()) {
-    parameter_names.push_back(parameter->GetName());
-    if (_cfg.verbose) {
-      coutI(Minimization) << "parameter name: " << parameter_names.back() << std::endl;
-    }
-  }
-  RooFit::MultiProcess::ProcessTimer::add_metadata(parameter_names);
+   // parameter indices for use in timing heat matrix
+   std::vector<std::string> parameter_names;
+   for (auto &&parameter : *_fcn->GetFloatParamList()) {
+      parameter_names.push_back(parameter->GetName());
+      if (_cfg.verbose) {
+         coutI(Minimization) << "parameter name: " << parameter_names.back() << std::endl;
+      }
+   }
+   RooFit::MultiProcess::ProcessTimer::add_metadata(parameter_names);
 #else
    coutI(Minimization) << "Not adding parameters to processtimer because multiprocessing "
                        << "is not enabled." << std::endl;
