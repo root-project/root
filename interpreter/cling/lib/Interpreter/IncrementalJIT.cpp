@@ -358,6 +358,7 @@ IncrementalJIT::IncrementalJIT(
   ErrorAsOutParameter _(&Err);
 
   LLJITBuilder Builder;
+  Builder.setDataLayout(TM->createDataLayout());
   Builder.setExecutorProcessControl(std::move(EPC));
 
   // Create ObjectLinkingLayer with our own MemoryManager.
