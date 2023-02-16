@@ -148,6 +148,8 @@ protected:
 
    void ProcessExecs(TPad *pad, TExec *extra = nullptr);
 
+   void ProcessLinesForObject(TObject *obj, const std::string &lines);
+
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly = kTRUE);
    virtual ~TWebCanvas() = default;
