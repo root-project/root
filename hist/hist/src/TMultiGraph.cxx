@@ -1050,8 +1050,15 @@ TH1F *TMultiGraph::GetHistogram()
    if (rwymin == rwymax) rwymax += 1.;
    double dx = 0.05*(rwxmax-rwxmin);
    double dy = 0.05*(rwymax-rwymin);
-   rwxmin = rwxmin - dx;
-   rwxmax = rwxmax + dx;
+   if (gPad && gPad->GetLogx()) {
+      if (rwxmin <= 0) rwxmin = 0.001*rwxmax;
+      double r = rwxmax/rwxmin;
+      rwxmin = rwxmin/(1+0.5*TMath::Log10(r));
+      rwxmax = rwxmax*(1+0.2*TMath::Log10(r));
+   } else {
+      rwxmin = rwxmin - dx;
+      rwxmax = rwxmax + dx;
+   }
    if (gPad && gPad->GetLogy()) {
       if (rwymin <= 0) rwymin = 0.001*rwymax;
       double r = rwymax/rwymin;
