@@ -1130,6 +1130,32 @@ void TWebCanvas::ProcessExecs(TPad *pad, TExec *extra)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Execute one or several methods for selected object
+/// String can be separated by ";;" to let execute several methods at once
+void TWebCanvas::ProcessLinesForObject(TObject *obj, const std::string &lines)
+{
+   std::string buf = lines;
+
+   while (obj && !buf.empty()) {
+      std::string sub = buf;
+      auto pos = buf.find(";;");
+      if (pos == std::string::npos) {
+         sub = buf;
+         buf.clear();
+      } else {
+         sub = buf.substr(0,pos);
+         buf = buf.substr(pos+2);
+      }
+      if (sub.empty()) continue;
+
+      std::stringstream exec;
+      exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj << ")->" << sub << ";";
+      Info("ProcessData", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
+      gROOT->ProcessLine(exec.str().c_str());
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Handle data from web browser
 /// Returns kFALSE if message was not processed
 
@@ -1365,25 +1391,10 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
         TPad *objpad = nullptr;
 
         TObject *obj = FindPrimitive(sid, 1, nullptr, &lnk, &objpad);
+
         if (obj && !buf.empty()) {
 
-           while (!buf.empty()) {
-              std::string sub = buf;
-              pos = buf.find(";;");
-              if (pos == std::string::npos) {
-                 sub = buf;
-                 buf.clear();
-              } else {
-                 sub = buf.substr(0,pos);
-                 buf = buf.substr(pos+2);
-              }
-              if (sub.empty()) continue;
-
-              std::stringstream exec;
-              exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj << ")->" << sub << ";";
-              Info("ProcessData", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
-              gROOT->ProcessLine(exec.str().c_str());
-           }
+           ProcessLinesForObject(obj, buf);
 
            if (objpad)
               objpad->Modified();
@@ -1774,7 +1785,9 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
       modified = true;
    }
 
-   if (item.fcust.compare("frame") == 0) {
+   if (item.fcust.compare(0,10,"auto_exec:") == 0) {
+      ProcessLinesForObject(obj, item.fcust.substr(10));
+   } else if (item.fcust.compare("frame") == 0) {
       if (obj && obj->InheritsFrom(TFrame::Class())) {
          TFrame *frame = static_cast<TFrame *>(obj);
          if (item.fopt.size() >= 4) {
@@ -1815,6 +1828,7 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
          }
       }
    }
+
 
    return modified ? objpad : nullptr;
 }
