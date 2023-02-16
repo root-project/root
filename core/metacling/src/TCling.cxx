@@ -1243,29 +1243,10 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       LoadModules(FIXMEModules, clingInterp);
 
       GlobalModuleIndex *GlobalIndex = nullptr;
-      bool supportedGMI = true;
-      // Allow forcefully enabling/disabling the GMI.
-      llvm::Optional<std::string> envUseGMI = llvm::sys::Process::GetEnv("ROOT_USE_GMI");
-      if (envUseGMI.hasValue()) {
-         if (!envUseGMI->empty() && !ROOT::FoundationUtils::CanConvertEnvValueToBool(*envUseGMI))
-            ::Warning("TCling__RegisterCxxModules",
-                      "Cannot convert '%s' to bool, setting to false!",
-                      envUseGMI->c_str());
-
-         bool value = envUseGMI->empty() || ROOT::FoundationUtils::ConvertEnvValueToBool(*envUseGMI);
-
-         if (supportedGMI == value)
-            ::Warning("TCling__RegisterCxxModules", "Global module index is%sused already!",
-                     (value) ? " " :" not ");
-         supportedGMI = value;
-      }
-
-      if (supportedGMI) {
-         loadGlobalModuleIndex(clingInterp);
-         // FIXME: The ASTReader still calls loadGlobalIndex and loads the file
-         // We should investigate how to suppress it completely.
-         GlobalIndex = CI.getASTReader()->getGlobalIndex();
-      }
+      loadGlobalModuleIndex(clingInterp);
+      // FIXME: The ASTReader still calls loadGlobalIndex and loads the file
+      // We should investigate how to suppress it completely.
+      GlobalIndex = CI.getASTReader()->getGlobalIndex();
 
       llvm::StringSet<> KnownModuleFileNames;
       if (GlobalIndex)
