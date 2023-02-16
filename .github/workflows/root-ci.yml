@@ -12,7 +12,7 @@ on:
     paths-ignore:
       - 'doc/**'
       - 'documentation/**'
-  
+
   push:
     branches: 
       - 'master'
@@ -106,17 +106,19 @@ jobs:
               '
 
       - name: Pull Request Build
-        if:   github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+        if: github.event_name == 'pull_request'
+        env:
+          INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ matrix.config }}
                     --platform       ${{ matrix.image }}
-                    --incremental    true
+                    --incremental    $INCREMENTAL
                     --base_ref       ${{ github.base_ref }}
                     --head_ref       refs/pull/${{ github.event.pull_request.number }}/head
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
-      - name: Workflow dispatch/call
+      - name: Workflow dispatch
         if:   github.event_name == 'workflow_dispatch'
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ matrix.config }}
