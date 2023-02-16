@@ -50,6 +50,8 @@ public:
   void generateEvent(Int_t code) override;
 
   const TMatrixDSym& covarianceMatrix() const { return _cov ; }
+  const RooArgList& xVec() const { return _x;}
+  const RooArgList& muVec() const { return _mu; }
 
   class AnaIntData {
   public:
