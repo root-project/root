@@ -573,6 +573,7 @@ public:
       const PiecewiseInterpolation *pip = static_cast<const PiecewiseInterpolation *>(func);
       elem["type"] << key();
       elem["interpolationCodes"].fill_seq(pip->interpolationCodes());
+      elem["positiveDefinite"] << pip->positiveDefinite();
       elem["vars"].fill_seq(pip->paramList(), [](auto const &item) { return item->GetName(); });
       auto &nom = elem["nom"];
       nom << pip->nominalHist()->GetName();
@@ -628,6 +629,8 @@ public:
       }
 
       PiecewiseInterpolation pip(name.c_str(), name.c_str(), *nominal, low, high, vars);
+
+      pip.setPositiveDefinite(p["positiveDefinite"].val_bool());
 
       if (p.has_child("interpolationCodes")) {
          for (size_t i = 0; i < vars.size(); ++i) {
