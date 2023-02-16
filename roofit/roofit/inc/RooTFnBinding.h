@@ -24,6 +24,10 @@ public:
 
   void printArgs(std::ostream& os) const override ;
 
+  const RooArgList& observables() const { return _olist;}
+  const RooArgList& parameters() const { return _plist; }
+  const TF1& function() const { return *_func; }
+
 protected:
 
   RooListProxy _olist ;
