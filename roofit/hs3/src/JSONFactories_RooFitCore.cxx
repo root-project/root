@@ -21,6 +21,9 @@
 #include <RooFitHS3/JSONIO.h>
 #include <RooFormulaVar.h>
 #include <RooGenericPdf.h>
+#include <RooMultiVarGaussian.h>
+#include <RooTFnBinding.h>
+#include <TF1.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
 #include <RooProdPdf.h>
@@ -47,21 +50,23 @@ public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      if (!p.has_child("dependents")) {
-         RooJSONFactoryWSTool::error("no dependents of '" + name + "'");
+      if (!p.has_child("arguments")) {
+         RooJSONFactoryWSTool::error("no arguments of '" + name + "'");
       }
-      if (!p.has_child("formula")) {
-         RooJSONFactoryWSTool::error("no formula given for '" + name + "'");
+      if (!p.has_child("expression")) {
+         RooJSONFactoryWSTool::error("no expression given for '" + name + "'");
       }
+      TString formula(p["expression"].val());
       RooArgList dependents;
-      for (const auto &d : p["dependents"].children()) {
-         std::string objname(RooJSONFactoryWSTool::name(d));
+      for (const auto &d : p["arguments"].children()) {
+         std::string key = d.key();
+         std::string objname = d.val();
          TObject *obj = tool->workspace()->obj(objname);
+         formula.ReplaceAll(key, objname);
          if (obj->InheritsFrom(RooAbsArg::Class())) {
             dependents.add(*static_cast<RooAbsArg *>(obj));
          }
       }
-      TString formula(p["formula"].val());
       RooGenericPdf thepdf(name.c_str(), formula.Data(), dependents);
       tool->workspace()->import(thepdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
@@ -73,21 +78,23 @@ public:
    bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      if (!p.has_child("dependents")) {
-         RooJSONFactoryWSTool::error("no dependents of '" + name + "'");
+      if (!p.has_child("arguments")) {
+         RooJSONFactoryWSTool::error("no arguments of '" + name + "'");
       }
-      if (!p.has_child("formula")) {
-         RooJSONFactoryWSTool::error("no formula given for '" + name + "'");
+      if (!p.has_child("expression")) {
+         RooJSONFactoryWSTool::error("no expression given for '" + name + "'");
       }
+      TString formula(p["expression"].val());
       RooArgList dependents;
-      for (const auto &d : p["dependents"].children()) {
-         std::string objname(RooJSONFactoryWSTool::name(d));
+      for (const auto &d : p["arguments"].children()) {
+         std::string key = d.key();
+         std::string objname = d.val();
          TObject *obj = tool->workspace()->obj(objname);
+         formula.ReplaceAll(key, objname);
          if (obj->InheritsFrom(RooAbsArg::Class())) {
             dependents.add(*static_cast<RooAbsArg *>(obj));
          }
       }
-      TString formula(p["formula"].val());
       RooFormulaVar thevar(name.c_str(), formula.Data(), dependents);
       tool->workspace()->import(thevar, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
@@ -296,6 +303,69 @@ public:
    }
 };
 
+class RooMultiVarGaussianFactory : public RooFit::JSONIO::Importer {
+public:
+   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      if (!p.has_child("x")) {
+         RooJSONFactoryWSTool::error("no x given in '" + name + "'");
+      }
+      if (!p.has_child("mean")) {
+         RooJSONFactoryWSTool::error("no mean given in '" + name + "'");
+      }
+      bool has_cov = p.has_child("covariances");
+      bool has_corr = p.has_child("correlations") && p.has_child("standard_deviations");
+      if (!has_cov && !has_corr) {
+         RooJSONFactoryWSTool::error("no covariances or correlations+standard_deviations given in '" + name + "'");
+      }
+
+      RooArgList xVec;
+      for (const auto &x : p["x"].children()) {
+         RooAbsReal *xvar = tool->request<RooAbsReal>(x.val(), name);
+         xVec.add(*xvar);
+      }
+      RooArgList muVec;
+      for (const auto &mu : p["mean"].children()) {
+         RooAbsReal *muvar = tool->request<RooAbsReal>(mu.val(), name);
+         muVec.add(*muvar);
+      }
+      TMatrixDSym covmat;
+
+      if (has_cov) {
+         int n = p["covariances"].num_children();
+         int i = 0;
+         covmat.ResizeTo(n, n);
+         for (const auto &row : p["covariances"].children()) {
+            int j = 0;
+            for (const auto &val : row.children()) {
+               covmat(i, j) = val.val_double();
+               ++j;
+            }
+            ++i;
+         }
+      } else {
+         std::vector<double> variances;
+         for (const auto &v : p["standard_deviations"].children()) {
+            variances.push_back(v.val_double());
+         }
+         covmat.ResizeTo(variances.size(), variances.size());
+         int i = 0;
+         for (const auto &row : p["correlations"].children()) {
+            int j = 0;
+            for (const auto &val : row.children()) {
+               covmat(i, j) = val.val_double() * variances[i] * variances[j];
+               ++j;
+            }
+            ++i;
+         }
+      }
+      RooMultiVarGaussian mvg(name.c_str(), name.c_str(), xVec, muVec, covmat);
+      tool->workspace()->import(mvg, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      return true;
+   }
+};
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // specialized exporter implementations
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -439,7 +509,7 @@ class RooProdPdfStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
    {
-      static const std::string keystring = "pdfprod";
+      static const std::string keystring = "product_dist";
       return keystring;
    }
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
@@ -455,15 +525,19 @@ class RooGenericPdfStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
    {
-      static const std::string keystring = "genericpdf";
+      static const std::string keystring = "generic_dist";
       return keystring;
    }
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooGenericPdf *pdf = static_cast<const RooGenericPdf *>(func);
       elem["type"] << key();
-      elem["formula"] << pdf->expression();
-      elem["dependents"].fill_seq(pdf->dependents(), [](auto const &f) { return f->GetName(); });
+      elem["expression"] << pdf->expression();
+      auto &args = elem["arguments"];
+      args.set_map();
+      for (const auto &v : pdf->dependents()) {
+         args[v->GetName()] << v->GetName();
+      }
       return true;
    }
 };
@@ -489,15 +563,19 @@ class RooFormulaVarStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
    {
-      static const std::string keystring = "formulavar";
+      static const std::string keystring = "generic_function";
       return keystring;
    }
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooFormulaVar *var = static_cast<const RooFormulaVar *>(func);
       elem["type"] << key();
-      elem["formula"] << var->expression();
-      elem["dependents"].fill_seq(var->dependents(), [](auto const &f) { return f->GetName(); });
+      elem["expression"] << var->expression();
+      auto &args = elem["arguments"];
+      args.set_map();
+      for (const auto &v : var->dependents()) {
+         args[v->GetName()] << v->GetName();
+      }
       return true;
    }
 };
@@ -506,7 +584,7 @@ class RooPolynomialStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
    {
-      static const std::string keystring = "polynomialPdf";
+      static const std::string keystring = "polynomial_dist";
       return keystring;
    }
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
@@ -528,6 +606,54 @@ public:
    }
 };
 
+class RooMultiVarGaussianStreamer : public RooFit::JSONIO::Exporter {
+public:
+   std::string const &key() const override
+   {
+      static const std::string keystring = "multinormal_dist";
+      return keystring;
+   }
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   {
+      auto *pdf = static_cast<const RooMultiVarGaussian *>(func);
+      elem["type"] << key();
+      elem["x"].fill_seq(pdf->xVec(), [](auto const &item) { return item->GetName(); });
+      elem["mean"].fill_seq(pdf->muVec(), [](auto const &item) { return item->GetName(); });
+      elem["covariances"].fill_mat(pdf->covarianceMatrix());
+      return true;
+   }
+};
+
+class RooTFnBindingStreamer : public RooFit::JSONIO::Exporter {
+public:
+   std::string const &key() const override
+   {
+      static const std::string keystring = "generic_function";
+      return keystring;
+   }
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   {
+      auto *pdf = static_cast<const RooTFnBinding *>(func);
+      elem["type"] << key();
+      auto &vars = elem["arguments"];
+      vars.set_map();
+      if (pdf->observables().size() > 0) {
+         vars["x"] << pdf->observables()[0].GetName();
+      }
+      if (pdf->observables().size() > 1) {
+         vars["y"] << pdf->observables()[1].GetName();
+      }
+      if (pdf->observables().size() > 2) {
+         vars["z"] << pdf->observables()[2].GetName();
+      }
+      if (pdf->parameters().size() > 0) {
+         elem["parameters"].fill_seq(pdf->parameters(), [](auto const &item) { return item->GetName(); });
+      }
+      elem["expression"] << pdf->function().GetExpFormula().Data();
+      return true;
+   }
+};
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // instantiate all importers and exporters
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -535,9 +661,9 @@ public:
 STATIC_EXECUTE([]() {
    using namespace RooFit::JSONIO;
 
-   registerImporter<RooProdPdfFactory>("pdfprod", false);
-   registerImporter<RooGenericPdfFactory>("genericpdf", false);
-   registerImporter<RooFormulaVarFactory>("formulavar", false);
+   registerImporter<RooProdPdfFactory>("product_dist", false);
+   registerImporter<RooGenericPdfFactory>("generic_dist", false);
+   registerImporter<RooFormulaVarFactory>("generic_function", false);
    registerImporter<RooBinSamplingPdfFactory>("binsampling", false);
    registerImporter<RooAddPdfFactory>("pdfsum", false);
    registerImporter<RooHistFuncFactory>("histogram", false);
@@ -545,7 +671,8 @@ STATIC_EXECUTE([]() {
    registerImporter<RooBinWidthFunctionFactory>("binwidth", false);
    registerImporter<RooRealSumPdfFactory>("sumpdf", false);
    registerImporter<RooRealSumFuncFactory>("sumfunc", false);
-   registerImporter<RooPolynomialFactory>("polynomialPdf", false);
+   registerImporter<RooPolynomialFactory>("polynomial_dist", false);
+   registerImporter<RooMultiVarGaussianFactory>("multinormal_dist", false);
 
    registerExporter<RooBinWidthFunctionStreamer>(RooBinWidthFunction::Class(), false);
    registerExporter<RooProdPdfStreamer>(RooProdPdf::Class(), false);
@@ -557,6 +684,8 @@ STATIC_EXECUTE([]() {
    registerExporter<RooRealSumPdfStreamer>(RooRealSumPdf::Class(), false);
    registerExporter<RooRealSumFuncStreamer>(RooRealSumFunc::Class(), false);
    registerExporter<RooPolynomialStreamer>(RooPolynomial::Class(), false);
+   registerExporter<RooMultiVarGaussianStreamer>(RooMultiVarGaussian::Class(), false);
+   registerExporter<RooTFnBindingStreamer>(RooTFnBinding::Class(), false);
 });
 
 } // namespace
