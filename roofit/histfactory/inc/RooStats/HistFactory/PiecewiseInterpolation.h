@@ -58,6 +58,7 @@ public:
   double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
 
   void setPositiveDefinite(bool flag=true){_positiveDefinite=flag;}
+  bool positiveDefinite() const {return _positiveDefinite;}
 
   void setInterpCode(RooAbsReal& param, int code, bool silent=false);
   void setAllInterpCodes(int code);
