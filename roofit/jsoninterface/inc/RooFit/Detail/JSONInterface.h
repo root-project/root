@@ -132,6 +132,19 @@ public:
          append_child() << func(item);
       }
    }
+
+   template <typename Matrix>
+   void fill_mat(Matrix const &mat)
+   {
+      set_seq();
+      for (int i = 0; i < mat.GetNrows(); ++i) {
+         auto &row = append_child();
+         row.set_seq();
+         for (int j = 0; j < mat.GetNcols(); ++j) {
+            row.append_child() << mat(i, j);
+         }
+      }
+   }
 };
 
 class JSONTree {
